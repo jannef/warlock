@@ -35,8 +35,10 @@ transparent and not walkable, not stairs or a door), `sides` (`{ good = LIGHT, e
 room draws a hidden side, its feature a light per side; the lights are resolved after they load,
 `RoomEffects::resolve_places`), `dressing` (`{ terrain, per_cells, most }`, `content::Dressing`:
 a terrain as a feature's, `per_cells` at least 1, `most` 1 to `MAX_DRESSING` 16; never pervades),
-`offers` (`{ pray = TABLE }` or `{ temper = TABLE }`, exactly one: `Offer::Pray`/`Offer::Temper`
-and an outcome table id, checked in `resolve_places` once `data/outcomes/` is loaded; `offers` and
+`offers` (`{ pray = TABLE }`, `{ drink = TABLE }`, or `{ temper = true }`, exactly one:
+`Offer::Pray`/`Offer::Drink` and an outcome table id, checked in `resolve_places` once
+`data/outcomes/` is loaded, or `Offer::Temper` with no table; `Content::offer` says what a terrain
+offers, `Content::offer_at` the same with its table, for those with one; `offers` and
 `sides` need a `feature`), `shrine` (`{ regen, status, welcome, unwelcome }`, `content::Shrine`,
 `content/room_shrine.rs`: a shrine of a side; needs `sides`; `status` resolved and held to a
 room status's easing), `hoard` (a tempting hoard, `content::Treasure`: `items` 1 to 16, `loot_level`,
@@ -71,7 +73,7 @@ guardians = [2, 4], danger = 1 }`, #415), cursed (6, mark
 `g`, `needs_danger`, `level_chance` 5, `rise = { faction = "undead", after = "2m" }`, `unholy`,
 #408), altar (8, "altar room",
 `min_cells = 9`, `feature = "forgotten_altar"`, `sides`, `offers = { pray = "forgotten_altar" }`,
-#406), forge (3, mark `F`, `min_cells = 9`, `feature = "anvil"`, `offers = { temper = "forge" }`,
+#406), forge (3, mark `F`, `min_cells = 9`, `feature = "anvil"`, `offers = { temper = true }`,
 #418), shrine (4, mark `i`, `min_cells = 9`, `feature = "shrine_stone"`, `sides` with the
 altar's lights, `shrine = { regen = 200, status = "unwelcome", ... }`, #413), haunted (5, mark
 `q`, `needs_danger`, `haunt = { faction = "undead", every = "1h" }`, `unholy`, #417), scriptorium (5, mark
@@ -324,8 +326,9 @@ and the hoard do). The test `mapgen/scriptorium_tests.rs` checks the level is ot
 without the loot.
 
 Training (`world/train.rs`, the one hook): `World::train` scales each mark rule's chance by
-`Here::train(skill)` at the player's cell (percents multiply, room and level; capped at 100), so
-Decipher script's 50 % mark for a study is certain inside. Nothing is saved; no action, no ability.
+`Here::train(skill)` at the player's cell (percents multiply, room and level); each whole hundred is a mark for certain and the rest a chance
+of one more. Decipher script's one mark, a check to read a scroll (100 %, #1024), is one mark
+anywhere and two in the scriptorium (200). Nothing is saved; no action, no ability.
 
 ## Forgotten altars and prayer
 
@@ -437,40 +440,42 @@ south of its altars.
 
 ## Forges and tempering
 
-#418, the design's §9.12. Data: the `forge` effect, the terrain `anvil` (`π`, no light, a
-`description`), the `temper` action cost (1000 a turn), the outcome table
-`data/outcomes/forge.toml` (`seconds = 600`, kinds boon 35 / nothing 30 / bane 35, `lean = 20`,
-`exhaust = 0`, so no `spent`), and Metalcraft's `temper` benefit and mark (`data/skills.toml`;
-`skills::Effect::Temper`, `Use::Temper`). The table's outcomes use the `work` hook
-(`content::Work`: `improve`, `flaw`, `ruin`): improved is the boon, flawed (25) and ruined (10)
-share the bane, so the lean moves weight from both in proportion.
+#418, #1022, `docs/design/skill-uses.md` §6.7 M0 (the owner's rule, not bound by the house rules
+on retrying). Data: the `forge` effect, the terrain `anvil` (`π`, no light, a `description`), the
+`temper` action cost (1000 a turn), `data/temper.toml` (`content::TemperRules`: `seconds = 600`,
+`difficulty = 13`, `per_attempt = 2`, `most = 3`, `most` at most `worked::GRADES`' length), and
+Metalcraft's `temper` benefit and mark (`data/skills.toml`; `skills::Effect::Temper`, `Use::Temper`,
+which is `StatUse::Forged` too). No outcome table, and no `spent`: the anvil is never spent.
 
 `Ability::Temper` (`Source::Place`, had by no one, listed by `Ability::here` beside an anvil) is
-an ability with `Aim::Item` (as the Identify spell is): the abilities menu (`input.rs::use_ability`) opens
-`ScreenName::Temper` (`ObjectList::Temper`, the stacks `world::temperable` accepts: an item kind
-of weapon, launcher, shield, or armour), and choosing one applies `Ability::action_on(content, item)`,
-`Action::Temper { item }`. The dump's aim word is `an item you carry`.
+an ability with `Aim::Item` (as the Identify spell is): the abilities menu (`input.rs::use_ability`)
+or a walk into the anvil (`input.rs::offer_dialog`, #975, reading `Content::offer`) opens
+`ScreenName::Temper` (`ObjectList::Temper`, the stacks `world::workable` accepts), and choosing one
+applies `Ability::action_on(content, item)`, `Action::Temper { item }`. The dump's aim word is
+`an item you carry`.
 
-`world/temper.rs`: `start_temper` (refused with no time: no anvil beside, no such stack, not
-temperable), `Spent::Temper(Tempering)`, `World::temper` (`keep_at` for `seconds`, as a prayer),
-then `tempered`: the Strength check's natural roll (`combat::roll_natural`, gameplay stream) plus
-the Strength modifier, `skill_effect(Effect::Temper)`, and `TalentMods::check(Strength)`, less
-`DIFFICULTY` (13), times `POINTS_PER_MARGIN` (2), clamped to the table's `lean` (`lean_for`);
-`OutcomeTable::leaned`; `set_apart` (one of a stack of several moved to the pack's end);
-`draw_outcome`; `befall_on(outcome, anvil, Some(item))`; then, unless ruined, `identify` (and
-"This is ...!" when the work changed an already known item) and `rejoin` (a set-apart one joins
-its like again); last the Metalcraft mark. `exhaust = 0`: no exhaustion draw.
+`world/temper.rs`: `temperable` (an item kind of weapon, launcher, shield, or armour, main part of
+`group = "metal"`, not a spirit weapon, and with an aspect to better), `workable` (and under
+`most` improvements); `start_temper` (the refusals, no time), `Spent::Temper(Tempering)`,
+`World::temper` (`keep_at` for `seconds`, as a prayer), then `tempered`: the natural roll
+(`combat::roll_natural`) plus the Strength modifier, `skill_effect(Effect::Temper)`, and
+`TalentMods::check(Strength)` against `TemperRules::against(attempts)` (`check_made`: a natural 2
+fails, a natural 24 succeeds); the attempt counted; `set_apart` (one of a stack of several moved to
+the pack's end; being worked it joins nothing again); `work_out`, the table (one `index` draw among
+`worked::aspects` for an improvement; `remove_stacks` and `keep_hp_within_max` for the end of it);
+`identify`, and "This is ...!" with its new name if that did not already say it; last the
+Metalcraft mark.
 
-The `work` hook (`world/outcome.rs::work_on`, the last in `hooks`, only with an item, so a
-prayer's table could not use it): `magic::temper::improve` (a free kind of the rarity first, by
-one `chance(50)` when both are free, `loot::roll_affix` at the item's level, or for a plain item
-the floor's item level, making it magic; else `raise`, the highest tier with a next tier, the
-first of equal ones, its value `range` in the new tier and the item level raised to that tier's)
-or `flaw` (one `index` draw; a unique keeps its last) set through `Stack::set_magic`; `ruin`
-takes the stack out with `remove_stacks` (equipment shifted). Each then
-`keep_hp_within_max` (a lost Toughness affix). `otherwise` lines cover improved with nothing to
-add or raise and flawed with nothing to lose. Nothing new is saved. The showcase's `forge`
-scenario (a dwarf craftsperson; arms and armour on the floor) is the place to try it.
+`magic/worked.rs` holds the state and its pure rules: `Stack::worked: Option<Box<Worked>>`,
+`Worked { improved: Vec<Aspect>, attempts: u8, damaged: bool }`, `Aspect` (`Die`, `ToHit`, `Damage`,
+`Defence`, `Protection`), `GRADES` (word and worth), `Worked::{word, value, sides, count}`. The
+numbers have one reader each: `Mods::local` (`add_worked`: to hit, plus damage, Protection, and
+Defence as `Armour`, `Shield`, or `Parry`, whichever the base item gives), so `melee`, `ranged`,
+`thrown`, `off_hand_blow`, `Numbers::of`, and every shown attack follow; `Stack::attack` for the
+dice, where those and `Actor::weapon`/`off_hand` take them from the object. `Stack::protection`
+reads `Mods::local` for a worked item too. A damaged item adds nothing to either. The name goes
+ahead of the rest in `magic/name.rs` (`ahead`). The showcase's `forge` scenario (a dwarf
+craftsperson; arms and armour on the floor) is the place to try it.
 
 ## Healing springs
 
@@ -825,13 +830,14 @@ level still joined, the sides one to two to one), `world/outcome_tests.rs` (Pray
 altar not spent, a minute, a broken prayer, the lean and Pious, the draw's shares, the nothing
 lines, each hook, the explosion, the deed, exhaustion near half and a spent altar after a save
 and load), `world/temper_tests.rs` (Temper only beside an anvil, refusals with no time, ten
-minutes, identifying and the Metalcraft mark, an interrupted one changing nothing, the lean,
-the draw's shares, improve on plain, full magic, and rare items, flaw and ruin (a wielded item
-too), one of a stack set apart, the anvil never spent), `content/room_lore_tests.rs` (`loot` and `train`: parsed, checked, resolved, unknown names
+minutes, identifying and the Metalcraft mark, an interrupted one changing nothing and counting
+nothing, metal only, the rising check through damage and repair, each row of the table, the
+numbers, names, and worth, affixes kept and lost, one of a stack worked apart, saves and the hash,
+the anvil never spent), `content/room_lore_tests.rs` (`loot` and `train`: parsed, checked, resolved, unknown names
 refused, never over a whole level, `Here::train` folding, the built-in scriptorium),
 `mapgen/scriptorium_tests.rs` (one shelf a room, two to four scrolls, the rest of the level
-unchanged), `world/scriptorium_tests.rs` (Decipher script's marks certain inside and about half
-outside, other skills as anywhere, a study inside marking, the near and enter lines and look
+unchanged), `world/scriptorium_tests.rs` (Decipher script's marks two a check inside and one outside, other skills
+as anywhere, a check inside marking and a study not, the near and enter lines and look
 mode's shelves), `world/unstable_room_tests.rs` (the unstable room: about one step in ten inside
 warps the player and a creature, never outside, no draw outside, the messages, a free landing
 cell, saving), `content/room_collapse_tests.rs` (the `collapse` field, its refusals, never

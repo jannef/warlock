@@ -94,6 +94,8 @@ No creature goes in. They walk around it, wait on the shore nearest you, shoot a
 you swim beside them. Your allies wait ashore too, and none will swap places with you into the water.
 It never freezes.
 
+Deep water is rarer than the pools of shallow water. About one cave floor in six has a pool with a deep middle (the shore of it stays shallow), and the middle of a lake beside a wilderness area is deep. Ponds, rivers, and brooks are always wadeable, and no hand-made level, vault, or special room has deep water.
+
 ## Ice
 
 Below [freezing](temperature.md), water grows ice: [thin ice](temperature.md#walking-on-ice), ice, and thick ice, by how thick it is. You walk on it

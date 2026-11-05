@@ -34,7 +34,8 @@
 //! and a study is [`Action::Study`].
 //!
 //! The temper screen (the Temper ability beside a forge's anvil, spec §7 "Special rooms") lists
-//! the weapons and armour the player carries; choosing one tempers it ([`Action::Temper`]).
+//! the metal arms and armour the player carries that can be made finer; choosing one tempers it
+//! ([`Action::Temper`]).
 //! The give screen (the Give ability, spec §8 "Allies") lists what fits a neck; choosing one
 //! fastens it on the player's kept beast beside them ([`Action::Give`]; with two, input asks
 //! which way first).
@@ -117,7 +118,7 @@ impl ObjectList {
             ObjectList::Read => "You have nothing to read.",
             ObjectList::Study => "You carry no scroll whose spell you could learn.",
             ObjectList::Identify(_) => "You carry nothing unidentified.",
-            ObjectList::Temper => "You carry no weapon or armour to temper.",
+            ObjectList::Temper => "You carry no metal arms or armour to work.",
             ObjectList::Give => "You carry nothing for a beast's neck.",
         }
     }
@@ -269,7 +270,7 @@ impl ObjectScreen {
                 .map(Item::Pack)
                 .collect(),
             ObjectList::Temper => (0..pack.len())
-                .filter(|&i| warlock_core::world::temperable(content, &pack[i]))
+                .filter(|&i| warlock_core::world::workable(content, &pack[i]))
                 .map(Item::Pack)
                 .collect(),
             ObjectList::Give => (0..pack.len())

@@ -570,7 +570,9 @@ fn feature_state(level: &LevelState, content: &Content, room: &SpecialRoom) -> &
     let (Some(feature), Some((_, table))) = (effect.feature, effect.offers.as_ref()) else {
         return "";
     };
-    let spent = content.outcomes().get(table).and_then(|t| t.spent);
+    let spent = (table.as_deref())
+        .and_then(|t| content.outcomes().get(t))
+        .and_then(|t| t.spent);
     let cells = room.cells();
     let terrains: Vec<_> = cells.iter().filter_map(|&p| level.terrain_at(p)).collect();
     if terrains.contains(&feature) {
@@ -1311,7 +1313,7 @@ fn spell_does(view: &PerceptionView<'_>, spell: crate::content::SpellId) -> Vec<
 /// The spells the player knows (`[{"id", "level", "cost", "roll", "damage_type", "reach"}]`:
 /// the roll's text as the abilities menu shows it, `"healed"` for a heal's type, `"called"` for
 /// a summon's count, `reach` with
-/// `range`, `length`, `radius`; each null where none) and the scrolls they could study
+/// `range`, `length`, `radius`, `jumps`; each null where none) and the scrolls they could study
 /// (`[{"letter", "spell", "chance"}]`).
 fn spells_json(view: &PerceptionView<'_>) -> (Value, Value) {
     use crate::content::Shape;
@@ -1336,7 +1338,12 @@ fn spells_json(view: &PerceptionView<'_>) -> (Value, Value) {
                 "cost": view.own_spell_cost(spell),
                 "roll": roll.map(|r| r.text),
                 "damage_type": damage_type,
-                "reach": { "range": range, "length": length, "radius": reach.radius },
+                "reach": {
+                    "range": range,
+                    "length": length,
+                    "radius": reach.radius,
+                    "jumps": reach.jumps,
+                },
             }))
         })
         .collect();

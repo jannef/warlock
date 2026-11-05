@@ -28,6 +28,7 @@ mod creature_body_tests;
 mod creature_rarity;
 mod damage_type;
 pub mod danger;
+mod decipher;
 #[cfg(test)]
 mod demon_roster_tests;
 #[cfg(test)]
@@ -149,6 +150,7 @@ mod swim;
 mod tag;
 mod talent;
 mod talent_alike;
+mod temper;
 mod terrain;
 mod throw;
 mod trap;
@@ -200,6 +202,7 @@ pub use creature::{
 pub use creature_rarity::{COMMON, CreatureRarity, FACTOR};
 pub use damage_type::{DamageTypeDef, DamageTypeId, MAX_DAMAGE_TYPES};
 pub use danger::{Count, DangerRule, PlayerScale, Spawning};
+pub use decipher::DecipherRules;
 pub use dialogue::{
     Dialogue, DialogueId, MAX_LINE, MAX_REPLY, MAX_TOPICS, MUTTER_CHANCES, Mutter, Service,
     ServiceKind, Speaker, Topic,
@@ -255,7 +258,7 @@ pub use object::{
 pub use offer::TradeOffer;
 pub use outcome::{
     Amount, Explosion, Harmful, Near, OutcomeDef, OutcomeEffect, OutcomeKind, OutcomeSummon,
-    OutcomeTable, OutcomeTables, OutcomeTier, Work,
+    OutcomeTable, OutcomeTables, OutcomeTier,
 };
 pub use overworld::{Landscape, LocalArea, local_area_id, parse_local_area};
 pub use part::{MAX_OBJECT_PARTS, MAX_PARTS, Part, PartDef, PartId, PartRole, and_list};
@@ -303,9 +306,9 @@ pub use slot::{MAX_SLOTS, SlotDef, SlotId};
 pub use smite::SmiteRules;
 pub use spell::{BOLT_LENGTHS, BURST_RADII, Bolt, Burst, BurstIce};
 pub use spell_def::{
-    Grows, MAX_CASTS, MAX_CONE, MAX_REACH, MAX_SPELL_LEVEL, MAX_SUMMON_MINUTES, Ratio, Resolution,
-    STUDY_DIFFICULTY, School, Shape, SpellData, SpellEffect, SpellId, SpellLook, SpellPurpose,
-    SpellRules, SpellSummon,
+    ARC_REACH, Grows, MAX_ARCS, MAX_CASTS, MAX_CONE, MAX_REACH, MAX_SPELL_LEVEL,
+    MAX_SUMMON_MINUTES, Ratio, Resolution, STUDY_DIFFICULTY, School, Shape, SpellData, SpellEffect,
+    SpellId, SpellLook, SpellPurpose, SpellRules, SpellSummon,
 };
 pub use spell_ladder::{
     Ladder as SpellLadder, MAX_RUNGS, MAX_SCORE, RungValue, Unit as LadderUnit,
@@ -330,6 +333,7 @@ pub use talent::{
     SongOn, SystemDef, SystemId, TalentActive, TalentBook, TalentDef, TalentEffect, TalentId,
     TreeDef, TreeId,
 };
+pub use temper::TemperRules;
 pub use terrain::{
     Breakable, Freeze, FreezeSpec, MAX_HARDNESS, MAX_HEIGHT, StairsDir, TerrainDef, TerrainId,
 };
@@ -656,6 +660,8 @@ pub struct Content {
     trap_avoid: TrapAvoid,
     /// The numbers of searching for hidden features (`data/search.toml`, spec §8 "Searching").
     search: SearchRules,
+    /// The numbers of working an item at an anvil (`data/temper.toml`, spec §7 "Special rooms").
+    temper: TemperRules,
     /// The numbers of encounters (`data/encounters.toml`, spec §7 "Leaving an outdoor area").
     encounters: EncounterRules,
     /// What becomes of a creature that catches the player stealing (`data/steal.toml`, spec §8
@@ -750,6 +756,8 @@ pub struct Content {
     spell_rules: Option<SpellRules>,
     /// The study check and its time (`data/study.toml`, spec §8 "Spells"); none without it.
     study: Option<StudyRules>,
+    /// The check of reading a scroll (`data/decipher.toml`, spec §8 "Scrolls"); none without it.
+    decipher: Option<DecipherRules>,
     /// What a failed study may bring (`data/mishaps/`), in path order.
     mishaps: Vec<Mishap>,
     /// What rods do (`data/rod_effects/`, spec §8 "Magic items": "Rods"), in path order.
@@ -836,6 +844,7 @@ impl Content {
             trap_ids: BTreeMap::new(),
             trap_avoid: TrapAvoid::default(),
             search: SearchRules::default(),
+            temper: TemperRules::default(),
             encounters: EncounterRules::default(),
             steal: None,
             surprise: None,
@@ -843,6 +852,7 @@ impl Content {
             encounter_tables: Vec::new(),
             forage: None,
             intimidate: None,
+            decipher: None,
             swim: None,
             ranged: RangedRules::default(),
             prayer: None,
@@ -1164,6 +1174,10 @@ impl Content {
             content.study = Some(StudyRules::parse(path, text)?);
         }
         content.mishaps = learning::parse(files.table("mishaps"), &content)?;
+        let path = "data/decipher.toml";
+        if let Some(text) = files.get_optional(path) {
+            content.decipher = Some(DecipherRules::parse(path, text)?);
+        }
         let path = "data/encounters.toml";
         if let Some(text) = files.get_optional(path) {
             content.encounters = EncounterRules::parse(path, text)?;
@@ -1171,6 +1185,10 @@ impl Content {
         let path = "data/search.toml";
         if let Some(text) = files.get_optional(path) {
             content.search = SearchRules::parse(path, text)?;
+        }
+        let path = "data/temper.toml";
+        if let Some(text) = files.get_optional(path) {
+            content.temper = TemperRules::parse(path, text)?;
         }
         let path = "data/steal.toml";
         if let Some(text) = files.get_optional(path) {
@@ -3783,6 +3801,12 @@ impl Content {
         self.spell_rules.as_ref()
     }
 
+    /// The numbers of working an item at an anvil (spec §7 "Special rooms"; `data/temper.toml`,
+    /// else [`TemperRules::default`]).
+    pub fn temper(&self) -> &TemperRules {
+        &self.temper
+    }
+
     /// What every spell of damage type `kind` does beyond its damage (`[types]` in
     /// `data/spells.toml`): none for a type without an entry.
     pub fn spell_type(&self, kind: Option<DamageTypeId>) -> Option<&SpellType> {
@@ -3793,6 +3817,12 @@ impl Content {
     /// and then nothing can be studied.
     pub fn study_rules(&self) -> Option<&StudyRules> {
         self.study.as_ref()
+    }
+
+    /// The check of reading a scroll (`data/decipher.toml`, spec §8 "Scrolls"): none without
+    /// it, and then every scroll simply reads.
+    pub fn decipher(&self) -> Option<&DecipherRules> {
+        self.decipher.as_ref()
     }
 
     /// What a failed study may bring (`data/mishaps/`), in path order.
@@ -3855,8 +3885,17 @@ impl Content {
             .filter(|e| e.feature == Some(terrain))
             .find_map(|e| {
                 let (offer, table) = e.offers.as_ref()?;
-                Some((*offer, self.outcomes.get(table)?))
+                Some((*offer, self.outcomes.get(table.as_deref()?)?))
             })
+    }
+
+    /// What a place offers beside a cell of terrain `terrain`, with an outcome table or without
+    /// one (Temper has its own rules): the first effect whose `feature` it is and that `offers`
+    /// something.
+    pub fn offer(&self, terrain: TerrainId) -> Option<Offer> {
+        (self.room_effects.defs().iter())
+            .filter(|e| e.feature == Some(terrain))
+            .find_map(|e| e.offers.as_ref().map(|(offer, _)| *offer))
     }
 
     /// The spells (`data/spells/`, spec §8 "Spells"), in path order: a [`SpellId`] is an index.

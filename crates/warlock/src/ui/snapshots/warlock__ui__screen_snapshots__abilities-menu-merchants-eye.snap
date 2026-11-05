@@ -2,8 +2,8 @@
 source: crates/warlock/src/ui/screen_snapshots.rs
 expression: "render(case, content.clone())"
 ---
- Your appraise improves. (×36) You learn Attuned. You learn Clear mind. You learn Deep well. You
- learn Meditation. You learn Petrifying gaze.
+ Your appraise improves. (×36) You learn Clear mind. You learn Deep well. You learn Meditation. You
+ learn Scroll savant. You learn Petrifying gaze.
 
 
 

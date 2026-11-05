@@ -90,10 +90,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     beside the talents' (§8 "Spells": "Hooks", `Actor::spell_mods`; no tag filter on an item:
     each acts on every spell): `spell_rungs` rungs, `spell_bonus` (Potent: +1, +2, +3 at item
     levels 3, 7, 11) on the roll, `spell_sides`, `spell_dice`, `spell_reroll`, `spell_reach`
-    cells of range or length with School focus's, `spell_duration` degrees. `caster_level` (of the Adept) is read in `Actor::caster_level`; **Attuned**
-    (Scholar, Intelligence 12, level 6) counts the caster level magic items give half again,
-    rounded up (+1 → +2, +3 → +5) (affixes design §10; its stamina twin, Bellows, was cut in
-    #774).
+    cells of range or length with School focus's, `spell_duration` degrees. Nothing gives caster level any more: of the Adept and the talent Attuned were
+    removed (#988), and of the Scholar (Spellcraft) is the one affix of learning, on staffs too.
     The utility hooks
     are in (#631), worn by the player or a creature, identified or not: `door_kick` adds to a
     kick's Strength as Lockbreaker's does (a door's and a chest's), `dig_percent` is that much
@@ -124,8 +122,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     Stag (athletics), the Leech (heal), the Picklock (open lock), Disarming (disable device),
     Appraisal (appraise), Haggling (negotiation, #666), the Scholar (spellcraft), Letters (decipher script), the Cutpurse
     (steal), on the ladder (Spot, Open lock, Disable device, Heal, Steal, and Appraise give nothing to the
-    untrained, so their suffixes help the trained only); of Wounding (an extra damage die); the systems' (#635): of the
-    Adept (caster level), of Thrift (mana costs), of the Magus (spell to-hit), of Farcasting
+    untrained, so their suffixes help the trained only); of Wounding (an extra damage die); the systems' (#635): of Thrift (mana costs), of the Magus (spell to-hit), of Farcasting
     (spell reach), of Lingering (spell degrees), of Siphoning (mana on a kill), of Wands (wand
     level), of Breath (stamina pace), of Ease (weapon feats' stamina), of the Hunt (stamina on a
     kill), of Fury, of Steadiness, of Stillness, of Guile, of the Muse (the maxima of rage,
@@ -248,6 +245,24 @@ developer notes (CLAUDE.md, `docs/dev/`).
   kind ("Read it at what?", "Read it on what?"), the player's own cell ("You cannot aim at
   yourself."), out of reach ("That is out of range."), a spell on the overworld, or a stack
   there is nothing to learn about ("You already know what a dagger is.").
+  - **Making out a scroll** (`world/decipher.rs`, data `data/decipher.toml`; #1024, the skill
+    uses design §6.6, the owner's rule: Decipher script is how non-casters use scrolls, by a
+    check; a caster with enough Spellcraft bypasses it; this overrides the no-caster-level
+    design's line that reading works for anyone). Once nothing refuses the reading and before the
+    scroll is used up: **a known spell** reads at once, no draw, and still marks Decipher script
+    (on a trained skill; a scroll the player wrote too); else **a bypass**, trained in Spellcraft with a learning (§8 "Spells":
+    "Learning, the number") of at least the scroll's spell level, no draw, no mark, no words; a
+    scroll with no spell behind it (restoration) counts as level 0. **Otherwise a check**, never
+    a refusal: 2d12 + the Intelligence modifier + talents' additions to its checks + Decipher
+    script's `decipher` benefit (curve 0, +8 at 100, +12 at 200; 0 for one without the skill, whatever they wear that raises it), against `base` (10) + the spell level ÷ `levels_per_point` (5).
+    Two gameplay draws, only when it is asked. **Made**, the scroll reads as anywhere in this
+    section (Scroll adept, Scroll savant, an unknown type identified). **Failed**, "The writing
+    swims before your eyes.": a read's price, the scroll kept, a label still unknown, no cast, no
+    Scroll savant draw, no Read training; try again. **Marks**: `Use::Decipher` 100 % per check
+    (Decipher script's only mark; the training stream); Spellcraft gets none from a read. The
+    scroll of identify is read by the same rule on the stack named, after its own refusals.
+    Scribe (below) writes with no check; what it writes reads by the rule, for the writer too.
+    Without the file every scroll simply reads.
   - **Unidentified scrolls** (`scroll_label.rs`, data `data/scroll_labels.toml`; #393): a
     readable scroll type (an object with `read`) is unknown until the player identifies it,
     and meanwhile shows by a **label**, "a scroll labelled ZUNBAR" (`name`/`plural` with
@@ -335,8 +350,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     and buy the scrolls class, and a generated one always lays out scrolls of identify, §7
     "Shops"; Cēaptūn's has three), and the trap hall beside its arrival (two each of fireball,
     lightning, and frost, three scrolls of identify, and an unidentified dagger). The showcase
-    has none. Spellcraft and Decipher script (§8 "Skills") help studying a scroll (§8 "Spells":
-    "Learning"), not reading one.
+    has none. Spellcraft (§8 "Skills") helps studying a scroll (§8 "Spells": "Learning") and
+    reading one; Decipher script helps reading one, not studying it.
 
 - **Wands** (`warlock-core/src/world/zap.rs`, data `wand` in `data/objects/` §7, `content/wand.rs`;
   the magic design §9; #398): objects (`-`, the wands class, one at a time) whose `[object.wand]`

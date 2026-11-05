@@ -525,9 +525,15 @@ fn a_character_not_trained_in_spellcraft_cannot_study_cantrips_included() {
     assert!(!w.perception().can_learn());
     let me = w.state.player();
     assert_eq!(study_odds(me, &w.content, None, sp("spark")), None);
-    // A scroll of a spell still reads, to cast it.
-    assert!(run(&mut w, "read:c:3,1")[0].took_turn);
-    assert_eq!(count(&w, "scroll_of_frost"), 1);
+    // A scroll of a spell still reads, to cast it: by the check, which takes time and may be
+    // tried again (`decipher_tests.rs`).
+    for _ in 0..40 {
+        assert!(run(&mut w, "read:c:3,1")[0].took_turn);
+        if count(&w, "scroll_of_frost") == 1 {
+            return;
+        }
+    }
+    panic!("never read");
 }
 
 #[test]

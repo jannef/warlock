@@ -249,7 +249,7 @@ pub fn dice_text(damage: Roll, extra: Option<Dice>) -> String {
 /// damage (`None` if it adds nothing).
 fn attack(stack: &Stack, content: &Content) -> Option<AttackNumbers> {
     let def = content.object(stack.object);
-    let (base, role, mods) = match def.attack {
+    let (base, role, mods) = match stack.attack(content) {
         Some(attack) => (attack, Role::Weapon, Mods::local(stack, content)),
         None if def.ammo.is_some() => (nothing(), Role::Ammo, Mods::local(stack, content)),
         None => (nothing(), Role::Worn, Mods::global(stack, content)),

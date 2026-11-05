@@ -65,6 +65,8 @@ paid from the keeper's purse; the thing stays on the shop floor, for sale. Choos
 has no use for what it does not buy, and you cannot leave it lying there. A shop pays only part
 of what a thing is worth, and always less than it asks for it.
 
+An item worked at an [anvil](special-rooms.md#forges) is worth more for each improvement, and half as much while damaged.
+
 Rotten food is worth nothing (see [Food](food.md#food-spoils)): a keeper sniffs at it and will
 not buy it at any price, and what rots on a shop's floor is no longer for sale.
 

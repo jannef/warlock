@@ -41,7 +41,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     reported where it happens: Strength burdened (an action but waiting under a slowing load),
     blow (a melee blow of the player's that hits, kicks and bashes too), critical (a confirmed
     critical of theirs in melee), block (a blow on them their shield blocked), dig (a turn),
-    kick (a door or a chest), forged (a tempering at an anvil done), struggled (a struggle
+    kick (a door or a chest), forged (an attempt at an anvil done), struggled (a struggle
     against a hold, won or not), waded (a step into deep water, water that freezes and slows a
     step to double, unless its ice held), hauled (a pick-up with a stack of 20 kg or more);
     Dexterity dodge, parry (a blow on them their Parry turned), shot (a shot or

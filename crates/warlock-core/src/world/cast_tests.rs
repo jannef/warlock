@@ -26,6 +26,9 @@ fn content_with_bolt(body: &str) -> Arc<Content> {
 fn wizard(content: Arc<Content>) -> World {
     let mut w = world_with(content, "wizard");
     reach(&mut w, 18);
+    // `levelup:auto` takes Frugal caster at 18 (it took Attuned before it went); these tests
+    // read the plain costs.
+    w.player_mut().talents.forget("frugal_caster");
     w
 }
 
@@ -240,6 +243,9 @@ fn a_touch_reaches_only_the_next_cell() {
 fn armour_makes_spells_dearer() {
     let mut w = world_with(Arc::new(Content::builtin().expect("content")), "wizard");
     reach(&mut w, 18);
+    // `levelup:auto` takes Frugal caster at 18 (it took Attuned before it went); these tests
+    // read the plain costs.
+    w.player_mut().talents.forget("frugal_caster");
     let content = w.content().clone();
     let bolt = content.class_spell(sp("arcane_bolt")).expect("the bolt");
     assert_eq!(w.state.player().spell_cost(&content, bolt), 11);

@@ -316,7 +316,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     hands, Grave breath, Mend, Ray of frost, Spark; 3 Barkskin, Blessing, Cure wounds, Curse of sloth, Hex of weakness, Magic
     missile; 4 Cause wounds; 5 Call of the wild; 6 Arcane bolt, Frost, Identify,
     Sleep; 7 Blight, Scorching ray, Web; 11 Call lightning, Fireball (the wizard's Fire burst
-    folded into it), Haste, Lightning bolt, Remove disease; 12 Flame; 20 Call of the forest; 35
+    folded into it), Haste, Lightning bolt, Remove disease; 12 Flame; 20 Call of the forest, Chain lightning; 35
     Call the elements (the druid's calls, #839: summons, §8b "Allies"). A spell is cast by its
     data id (`use:magic_missile:12,5`, any `use:ID` that is no class or birth sign ability; one
     that is no spell either is a weapon active's, §8i "Weapon abilities");
@@ -338,7 +338,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     comes at, never above the class's caster level then (character level × `casting` ÷ 100, at
     least 1; the content test, until #990 removes that clause), whatever the character's
     Spellcraft. Wizard: Ray of
-    frost (1), Burning hands (1), Magic missile (3), Arcane bolt (18). Priest: Mend (1),
+    frost (1), Burning hands (1), Magic missile (3), Arcane bolt (18), Chain lightning (24). Priest: Mend (1),
     Blessing (3), Cure wounds (3) (their rite is the prayer, §8i). Druid: Spark (1), Barkskin (3), Call of
     the wild (6), Call lightning (12), Call of the forest (25), Call the elements (40), Flame and
     frost (50). Witch: Evil eye (1), Grave breath (1), Hex of weakness (3), Cause wounds
@@ -457,11 +457,22 @@ developer notes (CLAUDE.md, `docs/dev/`).
     maximum hit points; `immune_tags = ["undead"]`: laid on those creature types' `resist` at load,
     so an immunity to the type from whatever harm. **Acid**: Corroded 1, certain; never armour.
     **Corroded** (`data/status.toml`): max 3, adding; 1 hit point of acid per 6 s, a degree easing
-    per 12 s: two points a degree. The menu, the `spells` dump,
+    per 12 s: two points a degree. **Electricity** spreads from
+    every creature it harmed, at the cast's one roll, with no roll to hit and no Evasion, and
+    spares no one, the caster included. `conducts`: everyone standing in that creature's body of
+    water (open water connected over 8 neighbours, on terrain with a `freeze` table; ice is not
+    water) not yet struck, in actor id order; a burst and a cone conduct too. Then `arc = { chance
+    = 25 }`, a ray's, a bolt's, a touch's, or a line's only: the nearest creature beside it not
+    yet struck, ties by actor id, one draw when there is one to jump to. A spell's `[spell.effect]
+    arcs` (1 to 12; its `count` ladder grows them) takes that many jumps with no draw, and its
+    jumps reach 2 cells, never through what stops sight (Chain lightning, 3 to 6). **Conductor**
+    (Spellcraft, level 12): the player's electricity spells arc every time, and they resist
+    electricity 25 %; the arcs still jump back and the water still conducts. A spell turned back
+    or a mishap spreads nothing. The menu, the `spells` dump,
     and a wand's description say the rule after the roll (`4d6 fire, burns one in four`, the
     type's `words`). The aiming mode previews nothing. Determinism: one `below(100)` per living
     creature harmed, only for a `chance` below 100, from the gameplay stream, in the order they
-    were struck.
+    were struck; then the spread's draws, in the order it strikes.
   - **No cap** (decision 16): nothing checks a spell's strength when the content loads, and
     nothing holds a roll when it is cast: the rungs, the hooks, and a critical add what they
     add.
@@ -516,7 +527,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     25: wizard, witch, priest, and druid 100, bard and aristocrat 75, paladin, ranger, and ascetic
     50, everyone else 25; 100 without a class), a creature's its type's level, rounded down; plus
     the `caster_level` talent effect (racial and birth-sign gifts are talents; flat, or `value`
-    per `per_levels` character levels: the wizard's Arcane training, +1 per 5) and affix effect;
+    per `per_levels` character levels; no talent ships it now);
     never below 0, and at least 1 for anyone whose maximum mana is
     above 0. It sets nothing in play since learning became Spellcraft's (#987; the no-caster-level
     design removes the rest, #990); never a spell's roll, reach, or mana (decisions 1 and 10). The player knows
@@ -530,8 +541,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
     character trained in Spellcraft. A character **not trained** in it (the skill not in their
     trained set: an item's or a talent's bonus to a skill they do not have trains nobody) has no
     learning and cannot study a scroll at all, cantrips included: refused, no time, "You have no
-    training in Spellcraft; you cannot make sense of how to learn a spell from a scroll." Reading a
-    scroll to cast it, and the spells a class grants, need no Spellcraft. Starting Spellcraft by
+    training in Spellcraft; you cannot make sense of how to learn a spell from a scroll." The
+    spells a class grants need no Spellcraft, nor does reading a scroll to cast it, though with
+    no learning that reaches its level the reader must make it out by a check (§8 "Scrolls":
+    "Making out a scroll"). Starting Spellcraft by
     class (§7e): wizard, witch, priest, druid `2d6+10`; bard, paladin, ranger `2d4+4`; aristocrat
     35 % `2d4+4`, ascetic 20 % `2d4` (optional skills); no other class, race, or birth sign gives
     any; two background lines add to it (both name classes that have it already), and it grows by
@@ -561,8 +574,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
       0 or less the spell is learned, no draw, unless the spell is made hard to learn
       (`study_difficulty` above 0: a check at any learning, overreach counted as at least
       0). Above, a 2d12 check with
-      the Intelligence modifier + the skills' `study` benefit (Spellcraft and Decipher script,
-      each value ÷ 10, at most 20) + the class's `affinity` with the spell's school
+      the Intelligence modifier + Spellcraft's `study` benefit (value ÷ 10, at most 20) + the
+      class's `affinity` with the spell's school
       (`data/classes/`, −10 to 10) + Quick study's bonus (2), against `base` (12) +
       `per_overreach` (1) × overreach′ + the sum of the levels of the spells known ÷
       `known_per_point` (20) (`data/study.toml`) + the spell's `study_difficulty` (−20 to 40,
@@ -580,9 +593,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
       a drain (`World::drain`: a Willpower check or points off a stat for good); a hostile
       summoned next to the reader (a dretch); or, lucky, a training mark of Intelligence or the
       spell learned anyway. A failure loses only that scroll: the spell can come again.
-    - **Training**: the `study` use (Spellcraft's and Decipher script's marks; an Intelligence
-      mark), whatever comes of it; in a scriptorium (§7 "Special rooms") Decipher script's
-      mark is twice as likely. Spending mana on a spell is practice for Spellcraft too (its `cast`
+    - **Training**: the `study` use (Spellcraft's mark; an Intelligence mark), whatever comes
+      of it. Spending mana on a spell is practice for Spellcraft too (its `cast`
       mark, 25 %, as Concentration's); reading a scroll to cast it marks nothing of its own.
     - **Determinism**: the check's two gameplay draws only when there is a check, the mishap's
       one only on a failure, then its effect's own.

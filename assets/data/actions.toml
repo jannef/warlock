@@ -55,7 +55,8 @@ ready = 1000
 # objects.toml; corpses by their creature's size, hunger.toml).
 eat = 1000
 # Reading a scroll (`r`; spec §8 "Scrolls"): casting the spell written on it, or identifying an
-# item. The scroll is used up.
+# item. The scroll is used up, unless the reader fails to make it out (decipher.toml): the time is
+# spent all the same.
 read = 1000
 # A turn of studying a spell from a scroll (spec §8 "Spells"): a study takes study.toml's
 # turns_base of them and turns_per_level more for each level of the spell (100 and 20: 10
@@ -85,9 +86,8 @@ drink = 1000
 # forage.toml's `seconds` (10 minutes), a turn of this after another.
 forage = 1000
 
-# A turn of tempering an item at a forge's anvil (the Temper ability; spec §7 "Special rooms"):
-# tempering takes its outcome table's `seconds` (data/outcomes/forge.toml), a turn of this after
-# another.
+# A turn of working an item at a forge's anvil (the Temper ability; spec §7 "Special rooms"): an
+# attempt takes `seconds` (data/temper.toml), a turn of this after another.
 temper = 1000
 # Trying to disarm a trap you know of next to you (the Disarm ability; spec §8 "Disarming traps"):
 # careful work, whether it comes off, fails, or sets the trap off.

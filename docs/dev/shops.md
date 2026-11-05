@@ -11,7 +11,9 @@ first, a stack each, before its drawn goods: the general store's scrolls of iden
 the general store's and the provisioner's elixirs, #568; none may also be in `always`),
 `stock`/`buys` by item class (`ItemClassId`, ids
 in `data/item_classes.toml`, `docs/dev/objects.md`), `items`, `markup`, `pays`; `Shops::price`/`offer` are the one place
-prices are made, from `Stack::value`, the value of what the stack is made of: its parts, a gem
+prices are made, from `Stack::value` (an item worked at an anvil by its `Worked::value`, and a
+bill's `same_goods` and `goods` keep it apart, at its worth; docs/dev/special-rooms.md), the value
+of what the stack is made of: its parts, a gem
 by its size and cut, `docs/dev/objects.md`; `Shops::trades`/`buys` take the stack, so a loose gem,
 whose object is worth 0, is traded by its gem; the general store buys gems and no shop stocks
 them). Every object has a `value` (required; test fixtures with their own objects need
