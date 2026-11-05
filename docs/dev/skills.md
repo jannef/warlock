@@ -109,7 +109,8 @@ below it), called for the modifier of the player's check against a creature's dr
 `Use::Discover` beside the first-kill and arrival XP (`world/experience.rs`). The player only, and
 only against a creature: no bonus, no draw otherwise. Tests `world/knowledge_tests.rs`.
 Metalcraft's `temper` benefit is read in
-`world/temper.rs::tempered` (the forge's Strength check, docs/dev/special-rooms.md); Metalcraft
+`world/temper.rs::tempered` (the Strength check of an attempt at an anvil, whose difficulty rises
+with every attempt on the item, docs/dev/special-rooms.md); Metalcraft
 stays a skill "not usable yet" in the abilities menu, since Temper is offered by the anvil to
 anyone. A new
 effect or use is a variant there plus its one hook. The player sees values only

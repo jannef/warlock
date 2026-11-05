@@ -229,8 +229,8 @@ pub enum Effect {
     /// Points added to picking a lock (spec §8 "Doors"; `world/lockpick.rs`); a skill with it,
     /// trained, lets the actor pick locks at all (the Pick lock ability).
     Pick,
-    /// Points added to the check that leans a forge's outcome (spec §7 "Special rooms": Temper
-    /// at an anvil; `world/temper.rs`). Anyone may temper; the skill only leans it.
+    /// Points added to the check of an attempt at an anvil (spec §7 "Special rooms": Temper;
+    /// `world/temper.rs`). Anyone may temper; the skill only helps.
     Temper,
     /// Percent faster the actor regains mana (spec §8 "Mana"; `World::mana_rate`), added to its
     /// items' and talents' percent; only a trained skill gives it ([`crate::world::Actor::mind`]).
@@ -338,7 +338,7 @@ pub enum Use {
     Kick,
     /// A try at picking a lock (spec §8 "Doors"), whatever comes of it.
     Pick,
-    /// An item worked at a forge's anvil to the end (spec §7 "Special rooms"), whatever comes of
+    /// An attempt on an item at a forge's anvil done (spec §7 "Special rooms"), whatever comes of
     /// it.
     Temper,
     /// A deal made in a shop (spec §7 "Shops"): goods paid for, or the player's own sold.

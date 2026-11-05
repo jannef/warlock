@@ -1580,7 +1580,7 @@ fn offer_dialog(view: &PerceptionView<'_>, dir: Dir) -> Option<Dialog> {
         CellView::Visible(t) | CellView::Remembered(t) => t,
         CellView::Unknown => return None,
     };
-    let (offer, _) = view.content().offer_at(terrain)?;
+    let offer = view.content().offer(terrain)?;
     if view.actor_at(to).is_some() {
         return None;
     }

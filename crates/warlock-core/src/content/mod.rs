@@ -147,6 +147,7 @@ mod surprise;
 mod tag;
 mod talent;
 mod talent_alike;
+mod temper;
 mod terrain;
 mod throw;
 mod trap;
@@ -252,7 +253,7 @@ pub use object::{
 pub use offer::TradeOffer;
 pub use outcome::{
     Amount, Explosion, Harmful, Near, OutcomeDef, OutcomeEffect, OutcomeKind, OutcomeSummon,
-    OutcomeTable, OutcomeTables, OutcomeTier, Work,
+    OutcomeTable, OutcomeTables, OutcomeTier,
 };
 pub use overworld::{Landscape, LocalArea, local_area_id, parse_local_area};
 pub use part::{MAX_OBJECT_PARTS, MAX_PARTS, Part, PartDef, PartId, PartRole, and_list};
@@ -325,6 +326,7 @@ pub use talent::{
     SongOn, SystemDef, SystemId, TalentActive, TalentBook, TalentDef, TalentEffect, TalentId,
     TreeDef, TreeId,
 };
+pub use temper::TemperRules;
 pub use terrain::{
     Breakable, Freeze, FreezeSpec, MAX_HARDNESS, MAX_HEIGHT, StairsDir, TerrainDef, TerrainId,
 };
@@ -650,6 +652,8 @@ pub struct Content {
     trap_avoid: TrapAvoid,
     /// The numbers of searching for hidden features (`data/search.toml`, spec §8 "Searching").
     search: SearchRules,
+    /// The numbers of working an item at an anvil (`data/temper.toml`, spec §7 "Special rooms").
+    temper: TemperRules,
     /// The numbers of encounters (`data/encounters.toml`, spec §7 "Leaving an outdoor area").
     encounters: EncounterRules,
     /// What becomes of a creature that catches the player stealing (`data/steal.toml`, spec §8
@@ -827,6 +831,7 @@ impl Content {
             trap_ids: BTreeMap::new(),
             trap_avoid: TrapAvoid::default(),
             search: SearchRules::default(),
+            temper: TemperRules::default(),
             encounters: EncounterRules::default(),
             steal: None,
             surprise: None,
@@ -1160,6 +1165,10 @@ impl Content {
         let path = "data/search.toml";
         if let Some(text) = files.get_optional(path) {
             content.search = SearchRules::parse(path, text)?;
+        }
+        let path = "data/temper.toml";
+        if let Some(text) = files.get_optional(path) {
+            content.temper = TemperRules::parse(path, text)?;
         }
         let path = "data/steal.toml";
         if let Some(text) = files.get_optional(path) {
@@ -3703,6 +3712,12 @@ impl Content {
         self.spell_rules.as_ref()
     }
 
+    /// The numbers of working an item at an anvil (spec §7 "Special rooms"; `data/temper.toml`,
+    /// else [`TemperRules::default`]).
+    pub fn temper(&self) -> &TemperRules {
+        &self.temper
+    }
+
     /// The study check and its time (`data/study.toml`, spec §8 "Spells"): none without it,
     /// and then nothing can be studied.
     pub fn study_rules(&self) -> Option<&StudyRules> {
@@ -3769,8 +3784,17 @@ impl Content {
             .filter(|e| e.feature == Some(terrain))
             .find_map(|e| {
                 let (offer, table) = e.offers.as_ref()?;
-                Some((*offer, self.outcomes.get(table)?))
+                Some((*offer, self.outcomes.get(table.as_deref()?)?))
             })
+    }
+
+    /// What a place offers beside a cell of terrain `terrain`, with an outcome table or without
+    /// one (Temper has its own rules): the first effect whose `feature` it is and that `offers`
+    /// something.
+    pub fn offer(&self, terrain: TerrainId) -> Option<Offer> {
+        (self.room_effects.defs().iter())
+            .filter(|e| e.feature == Some(terrain))
+            .find_map(|e| e.offers.as_ref().map(|(offer, _)| *offer))
     }
 
     /// The spells (`data/spells/`, spec §8 "Spells"), in path order: a [`SpellId`] is an index.

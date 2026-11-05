@@ -570,7 +570,9 @@ fn feature_state(level: &LevelState, content: &Content, room: &SpecialRoom) -> &
     let (Some(feature), Some((_, table))) = (effect.feature, effect.offers.as_ref()) else {
         return "";
     };
-    let spent = content.outcomes().get(table).and_then(|t| t.spent);
+    let spent = (table.as_deref())
+        .and_then(|t| content.outcomes().get(t))
+        .and_then(|t| t.spent);
     let cells = room.cells();
     let terrains: Vec<_> = cells.iter().filter_map(|&p| level.terrain_at(p)).collect();
     if terrains.contains(&feature) {

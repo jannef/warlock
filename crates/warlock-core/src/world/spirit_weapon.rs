@@ -18,7 +18,7 @@
 //! `remove:SLOT`); a drop or a sale takes it off and lets it fade instead of letting it go
 //! ([`World::release_spirit`]: the shop never sees it); a throw is refused ("It will not leave
 //! your hand."); quests never count it (`shop::count_of`); what takes it out of the pack (an
-//! altar's tithe, a forge's ruin) takes spirit-stuff, which is called again. Creatures never hold
+//! altar's tithe) takes spirit-stuff, which is called again. Creatures never hold
 //! one (no creature has the talent, and no gear names a spirit stack). Nothing here draws at
 //! random.
 
