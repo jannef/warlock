@@ -435,7 +435,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
     waiting (not a rest's turns) taken while the player's burden slows them, as it began
     (`burdened`; a dwarf's Burdened does not), a step on the overworld (`travel`), a kick at a
     closed door (`kick`; Athletics is also marked by `burdened` and `travel`, 5 % each, #548, so
-    its speed grows with plain play), a turn spent searching, whatever it finds (`search`), noticing
+    its speed grows with plain play), a check against bonds, whatever came of it (`escape`, Escape
+    artist's; §8 "Status effects"), a climb out of a pit (`climb`, Escape artist's and Athletics';
+    §8 "Traps"), a turn spent searching, whatever it finds (`search`), noticing
     something hidden in passing, not a trap (`spot`; §8 "Searching"), finding a hidden trap,
     searching or in passing (`find_trap`, Detect traps' use), an attempt to steal, whatever comes of
     it (`steal`; "Stealing" below), a try at treating oneself, whatever comes of it (`heal`;

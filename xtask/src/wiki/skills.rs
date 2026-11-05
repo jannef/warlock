@@ -62,6 +62,8 @@ pub(super) fn gated_effect(effect: Effect) -> bool {
             | Effect::Freshness
             | Effect::Identify
             | Effect::Disarm
+            | Effect::Escape
+            | Effect::Climb
             | Effect::Pick
             | Effect::Steal
             | Effect::Heal
@@ -110,6 +112,8 @@ fn effect_name(effect: Effect) -> &'static str {
         Effect::SurpriseEase => "less time lost when you are surprised",
         Effect::Heal => "treating your bleeding, poison, and diseases",
         Effect::Tame => "taming beasts at all, and better",
+        Effect::Escape => "slipping bonds",
+        Effect::Climb => "out of a pit quicker",
         Effect::Pick => "picking locks",
         Effect::Intimidate => {
             "your threats and your war cry are harder to stand against, and a threat frightens longer"
@@ -169,6 +173,8 @@ pub(super) fn skill_benefits(content: &Content) -> String {
             Effect::SurpriseEase => "surprise's extra cost",
             Effect::Heal => "treating",
             Effect::Tame => "taming",
+            Effect::Escape => "slipping bonds",
+            Effect::Climb => "a pit's climb",
             Effect::Pick => "picking locks",
             Effect::Intimidate => "threat's difficulty",
             Effect::SongDegrees => "song degrees",
@@ -205,6 +211,7 @@ pub(super) fn skill_benefits(content: &Content) -> String {
                 | Effect::Heal
                 | Effect::Tame
                 | Effect::Disarm
+                | Effect::Escape
                 | Effect::Pick
                 | Effect::Intimidate
                 | Effect::SongDegrees
@@ -214,6 +221,8 @@ pub(super) fn skill_benefits(content: &Content) -> String {
                 | Effect::Surprise
                 | Effect::Initiative
                 | Effect::Resist => format!("+{n}"),
+                Effect::Climb if n == 1 => "halved".to_string(),
+                Effect::Climb => "skipped".to_string(),
                 Effect::SneakDice => format!("{n}d6"),
                 Effect::SurpriseEase | Effect::Wade => format!("\u{2212}{n}%"),
                 Effect::SearchReach => format!("+{n} cell{}", if n == 1 { "" } else { "s" }),
