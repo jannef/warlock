@@ -16,6 +16,7 @@
 //! diseases, potions; docs/design/affixes-systems.md) are summed here, the resource ones by
 //! their pool ([`Mods::resource`]), and get their readers with their hooks.
 
+use super::worked::{Aspect, Worked};
 use super::{Effect, Magic};
 use crate::combat::{CRITS, Profile, THREATS};
 use crate::content::{
@@ -201,7 +202,24 @@ impl Mods {
             mods.values[Effect::ToHit.index()] += hit;
             mods.values[Effect::Damage.index()] += damage;
         }
+        if let Some(worked) = stack.worked() {
+            mods.add_worked(worked, content.object(stack.object));
+        }
         mods
+    }
+
+    /// Adds what an anvil's work did to an item of base item `def` (`worked.rs`; its dice are
+    /// [`Stack::attack`]'s). Its Defence goes where the item gives Defence.
+    fn add_worked(&mut self, worked: &Worked, def: &crate::content::ObjectDef) {
+        self.values[Effect::ToHit.index()] += worked.count(Aspect::ToHit);
+        self.values[Effect::Damage.index()] += worked.count(Aspect::Damage);
+        self.values[Effect::Protection.index()] += worked.count(Aspect::Protection);
+        let defence = match (def.armour, def.shield) {
+            (0, 0) => Effect::Parry,
+            (0, _) => Effect::Shield,
+            _ => Effect::Armour,
+        };
+        self.values[defence.index()] += worked.count(Aspect::Defence);
     }
 
     /// What `stack`'s affixes do to whoever wears or wields it (its global effects alone: what

@@ -902,7 +902,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     swapped for steel, moved to the missile weapon slot) it fades at once ("The long sword fades
     from your hand."); a drop or a sale takes it off and lets it fade instead of letting it go
     (the shop never sees it, the floor never holds it); a throw is refused with no time ("It will
-    not leave your hand."); quests never count it; a tithe or a forge's ruin takes spirit-stuff,
+    not leave your hand."); quests never count it; a tithe takes spirit-stuff,
     which is called again. Its description adds the effect's `phrase` as a power line, its
     numbers and critical range fold the gifts in, and "Pierces armour"; item lists mark it
     `(spirit)`; the character screen's attack says `pierces armour`. Creatures never hold one.

@@ -115,7 +115,8 @@ reads `Actor::known_resistances` (`world/knowledge.rs`), the type's `resist` in 
 never gear or statuses, no marks; JSON dumps carry it as a seen actor's `known`; `ui/look.rs::known`
 writes the line. Tests `world/knowledge_tests.rs`.
 Metalcraft's `temper` benefit is read in
-`world/temper.rs::tempered` (the forge's Strength check, docs/dev/special-rooms.md); Metalcraft
+`world/temper.rs::tempered` (the Strength check of an attempt at an anvil, whose difficulty rises
+with every attempt on the item, docs/dev/special-rooms.md); Metalcraft
 stays a skill "not usable yet" in the abilities menu, since Temper is offered by the anvil to
 anyone. A new
 effect or use is a variant there plus its one hook. The player sees values only

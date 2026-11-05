@@ -11,7 +11,8 @@ Magic items (spec §8 "Magic items", #149) live in `warlock-core`: `content/affi
 `attack_cost`; the weapon skill `category` names the item in descriptions, `weapon_noun`; loot
 also draws scrolls, which have no `kind` and are never magic), and
 `magic/` (`mod.rs`: `Magic`/`Affix`, the instance on a `Stack` (saved, hashed), `check`;
-`mods.rs`: `Mods::local` (an item's own and its attacks') and `Mods::worn` (what an actor wears
+`mods.rs`: `Mods::local` (an item's own and its attacks', with what an anvil's work added,
+`magic/worked.rs`, docs/dev/special-rooms.md) and `Mods::worn` (what an actor wears
 and wields, global), the one aggregation every rule reads; `loot.rs`: `roll`, its draw order;
 `name.rs`: the names around `Stack::names`, the item as it is made (its gems, #191, and its
 material, #193), so the order is [prefix] [ornament] [material] base [suffix] and a rare item's

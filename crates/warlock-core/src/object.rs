@@ -28,9 +28,10 @@
 //! joins a stack of the same food whatever its age, and the stack keeps the oldest.
 
 use crate::color::Rgb;
+use crate::combat::Attack;
 use crate::content::{Content, Cutting, DamageTypeId, MaterialId, ObjectId, Part, Rarity, part};
 use crate::item_parts::{self, ItemPart};
-use crate::magic::{Effect, Magic, Mods, name};
+use crate::magic::{Effect, Magic, Mods, Worked, name};
 use crate::rng::Rng;
 use crate::scroll_label::Lore;
 use crate::time::GameTime;
@@ -82,6 +83,11 @@ pub struct Stack {
     /// (`world/spirit_weapon.rs`). Otherwise it is its base object in every rule.
     #[serde(default, skip_serializing_if = "is_false")]
     spirit: bool,
+    /// What an anvil's work has done to it (spec §7 "Special rooms": Temper; [`Worked`]); `None`
+    /// for an item no one has worked. Boxed: most stacks have none. A worked item is like no
+    /// other and never stacks. Its attempts are ground truth, for the rules and the dev dump.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    worked: Option<Box<Worked>>,
 }
 
 /// The mode of a carried light ([`Stack`]'s `light`; spec §5 "Light sources"): what `u`, the
@@ -149,6 +155,7 @@ impl Stack {
             wand_rung: None,
             light: LightMode::Unlit,
             spirit: false,
+            worked: None,
         }
     }
 
@@ -216,9 +223,30 @@ impl Stack {
         self.magic.as_deref()
     }
 
-    /// Sets what it rolled (a forge's tempering, `magic/temper.rs`): `None` makes it plain.
-    pub(crate) fn set_magic(&mut self, magic: Option<Magic>) {
-        self.magic = magic.map(Box::new);
+    /// What an anvil's work has done to it, if any: ground truth, for the rules and dev tools.
+    pub(crate) fn worked(&self) -> Option<&Worked> {
+        self.worked.as_deref()
+    }
+
+    /// Sets what an anvil's work has done to it (`world/temper.rs`).
+    pub(crate) fn set_worked(&mut self, worked: Worked) {
+        self.worked = Some(Box::new(worked));
+    }
+
+    /// What its anvil work calls it, ahead of the rest of its name, whatever is identified:
+    /// "Fine", "damaged".
+    fn worked_word(&self) -> Option<&'static str> {
+        self.worked().and_then(Worked::word)
+    }
+
+    /// What it does when it attacks, if it can: its object's attack, its dice as an anvil's work
+    /// left them (the one place they are read; to hit and plus damage are [`Mods::local`]'s).
+    pub fn attack(&self, content: &Content) -> Option<Attack> {
+        let mut attack = content.object(self.object).attack?;
+        if let Some(worked) = self.worked() {
+            attack.damage = attack.damage.grow(worked.sides());
+        }
+        Some(attack)
     }
 
     /// Normal, magic, or rare: this the player sees at once.
@@ -368,9 +396,9 @@ impl Stack {
     /// [`Stack::base_protection`]), plus what a Protection affix adds (the one reader of that
     /// effect; rules only, as the player knows it only once identified).
     pub(crate) fn protection(&self, content: &Content) -> i32 {
-        let more = match self.magic {
-            Some(_) => Mods::local(self, content).get(Effect::Protection),
-            None => 0,
+        let more = match self.magic.is_some() || self.worked.is_some() {
+            true => Mods::local(self, content).get(Effect::Protection),
+            false => 0,
         };
         self.base_protection(content) + more
     }
@@ -428,10 +456,12 @@ impl Stack {
 
     /// What it is worth, in gold coins: each one's value, made of its [`Stack::parts`]
     /// ([`crate::content::ObjectDef::value_with`]: a gem by its size and cut), times the count.
-    /// Magic does not change it.
+    /// Magic does not change it; an anvil's work does ([`Worked::value`]).
     pub fn value(&self, content: &Content) -> u64 {
         let def = content.object(self.object);
-        u64::from(def.value_with(&self.parts(content), content)) * u64::from(self.count)
+        let each = u64::from(def.value_with(&self.parts(content), content));
+        let each = self.worked().map_or(each, |w| w.value(each));
+        each * u64::from(self.count)
     }
 
     /// What it is called as it is made, singular and plural, without an article, a count, or
@@ -491,7 +521,8 @@ impl Stack {
     pub fn describe(&self, content: &Content) -> String {
         let names = self.names(content);
         let known = self.is_identified();
-        let text = name::describe(&names, self.count, self.magic(), known, content);
+        let word = self.worked_word();
+        let text = name::describe(&names, word, self.count, self.magic(), known, content);
         match self.light.word() {
             Some(mode) => format!("{text} ({mode})"),
             None => text,
@@ -512,13 +543,15 @@ impl Stack {
     /// "Sharp long sword of the Bear", "Grim Bite".
     pub fn title(&self, content: &Content) -> String {
         let names = self.names(content);
-        name::title(&names, self.magic(), self.is_identified(), content)
+        let word = self.worked_word();
+        name::title(&names, word, self.magic(), self.is_identified(), content)
     }
 
     /// As it truly is, identified or not: for dev tools only.
     pub(crate) fn describe_truth(&self, content: &Content) -> String {
         let names = self.names(content);
-        let mut text = name::describe(&names, self.count, self.magic(), true, content);
+        let word = self.worked_word();
+        let mut text = name::describe(&names, word, self.count, self.magic(), true, content);
         if let Some(mode) = self.light.word() {
             text += &format!(" ({mode})");
         }
@@ -527,6 +560,14 @@ impl Stack {
         }
         if let Some(rung) = self.wand_rung(content) {
             text += &format!(" (rung {rung})");
+        }
+        if let Some(worked) = self.worked() {
+            let improved: Vec<&str> = worked.improved.iter().map(|a| a.id()).collect();
+            text += &if improved.is_empty() {
+                format!(" (attempts {})", worked.attempts)
+            } else {
+                format!(" (attempts {}: {})", worked.attempts, improved.join(" "))
+            };
         }
         match self.magic() {
             Some(m) if !m.identified => format!("{text} (unidentified)"),
@@ -556,19 +597,21 @@ impl Stack {
             && (self.wand_rung.is_none() || def.wand.is_some())
             && (self.light.is_unlit() || def.carried_light.is_some())
             && (!self.spirit || (self.count == 1 && def.attack.is_some()))
+            && (self.worked()).is_none_or(|w| self.count == 1 && w.is_valid(def))
     }
 
-    /// The same goods as `other`: the same object made the same way (what a shop's bill counts
-    /// by, whatever the magic or age).
+    /// The same goods as `other`: the same object made the same way, and as worked at an anvil
+    /// (what a shop's bill counts by, whatever the magic or age).
     pub fn same_goods(&self, other: &Stack) -> bool {
-        self.object == other.object && self.parts == other.parts
+        self.object == other.object && self.parts == other.parts && self.worked == other.worked
     }
 
-    /// `count` of these goods as a shop's bill counts them: the object and what it is made of,
-    /// without magic or age.
+    /// `count` of these goods as a shop's bill counts them: the object, what it is made of, and
+    /// what an anvil has done to it, without magic or age.
     pub(crate) fn goods(&self, count: u32) -> Stack {
         Stack {
             parts: self.parts.clone(),
+            worked: self.worked.clone(),
             ..Stack::new(self.object, count)
         }
     }
@@ -661,7 +704,7 @@ pub fn phrase_with(
 /// `stacks` if it stacks; returns whether it did. Food joins whatever its age, and keeps the
 /// oldest.
 fn join(stacks: &mut [Stack], stack: &Stack, content: &Content) -> bool {
-    if !content.object(stack.object).stackable {
+    if !content.object(stack.object).stackable || stack.worked.is_some() {
         return false;
     }
     match (stacks.iter_mut()).find(|s| s.same_goods(stack) && s.magic == stack.magic) {

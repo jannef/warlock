@@ -304,7 +304,7 @@ pub(crate) use stars::{RISEN, RISEN_TWICE};
 pub(crate) use swim::shore_refusal;
 pub use talent::Due;
 pub use talk::{Conversation, Talk, TopicView};
-pub use temper::{DIFFICULTY as TEMPER_DIFFICULTY, POINTS_PER_MARGIN, lean_for, temperable};
+pub use temper::{temperable, workable};
 use travel::{enter_room, instantiate_level, level_template};
 pub use voice::VOICE_RANGE;
 

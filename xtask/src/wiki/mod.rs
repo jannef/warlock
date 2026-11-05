@@ -65,6 +65,7 @@ mod spells;
 mod stats;
 mod surprise;
 mod talents;
+mod temper;
 mod temperature;
 mod terrain;
 mod text;
@@ -385,8 +386,8 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("teeming-dens.md", rooms::teeming_dens),
         ("altar-outcomes.md", outcomes::altar_outcomes),
         ("altar-shares.md", outcomes::altar_shares),
-        ("forge-outcomes.md", outcomes::forge_outcomes),
-        ("forge-shares.md", outcomes::forge_shares),
+        ("temper-odds.md", temper::temper_odds),
+        ("temper-grades.md", temper::temper_grades),
         ("spring-outcomes.md", outcomes::spring_outcomes),
         ("risings.md", rooms::risings),
         ("magic-rarity.md", magic::magic_rarity),
