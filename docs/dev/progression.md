@@ -19,7 +19,7 @@ hit points a level gives) is `docs/dev/experience.md`.
 | `world/skill_roll.rs` | The skill rolls (#230, `docs/dev/skills.md`): `roll_count`/`skill_roll` (the count's parts and a roll's dice, shared with the level-up screen, #543), `level_rolls`, `advance_skill` (`advance:SKILL`), `advance_auto` (`levelup:auto`'s rolls). `World::due()` and `candidate()`. |
 | `world/experience.rs` | `grant_xp` scales every gain by `TalentMods::xp_percent` and calls `level_up`; the dev `xp:N` (`grant_xp_dev`). |
 | `perception.rs` | `due()`, `dues()` (every level's, for the level-up screen's sequence), `roll_count()`, `skill_roll(skill)` (the skill-roll step's numbers, #543), `bonus_trees()`, `own_talents()` (`OwnTalent`), `talents()` (`TalentView`: held rank, the next rank's needs with `met`, `openings`): what the level-up screen (`ui/level_up_screen.rs`), the Talents page (`ui/talents_screen.rs`), and the creation step (`ui/chargen_talents_screen.rs`) read (`docs/dev/screens.md`). |
-| `dump.rs` | layers `talents` (held, `Apprentice (stealth) 2/3`) and `progress` (dev: dues, `due level 3: 3 skill rolls, 1 talent`, `rolls a level 3 (class 2, race 1, intelligence 0, talents 0)`, `roll dice athletics 1d3, balance +2`, takeable ids with choices, discovered kills, `empathy broken rat`); JSON `talents`, `due` (`level`, `talents`, `rolls`) |
+| `dump.rs` | layers `talents` (held, `Skill focus (stealth)`) and `progress` (dev: dues, `due level 3: 3 skill rolls, 1 talent`, `rolls a level 3 (class 2, race 1, intelligence 0, talents 0)`, `roll dice athletics 1d3, balance +2`, takeable ids with choices, discovered kills, `empathy broken rat`); JSON `talents`, `due` (`level`, `talents`, `rolls`) |
 | `action.rs` | `Talent { id, choice }` (`talent:hardy`, `talent:weapon_focus:long_blades`; ids keep their case), `Advance(skill)`, dev `LevelUpAuto` (`levelup:auto`), `GrantXp` (`xp:N`); all `Spent::NoTime` or refused. |
 | `rng.rs` | `Rng::levels(seed)`, the `levels` stream, kept in `WorldState::levels_rng: Option<Rng>` **from the first draw** (the stat checks of each level, `world/stat_training.rs`; skill rolls, `world/skill_roll.rs`), so runs that never drew hash as before. |
 | `xtask/src/wiki/talents.rs` | `talents.md` (trees with the rules), `talents-by-system.md` (the coverage matrix, class abilities beside the talents); `effect_text`, the rule of one effect, shared with the class tables. |
@@ -203,7 +203,6 @@ wiki's effect text appends "while raging".
 | `stout` | `burden::load` → `Load::stout`; `Load::penalty` gives Burdened while Strained (left out of the JSON while false) |
 | `small_target` | `World::small_target` (`world/racial.rs`) |
 | `launcher_range { skill }` | `Actor::launcher_range` through `TalentMods::launcher_range_for` (the launcher's `skill` id) |
-| `train_skill` | handed out, not read: `take_talent` → `train_chosen` rolls the dice from `levels_rng` into the chosen skill (`Skills::add`: trained at the roll, or raised by it) |
 | `weapon_ranks` | handed out, not read: `class::hand_out` (`raise_ranks`) raises every row of `skills` (none named: every weapon skill and style of the content but schools and hidden styles, read from the table, never a list) held below `to` to it, `WeaponSkills::raise_to` (defaults with it); its `news` said by `grant_class` (Travelled hands, the bard's) |
 | `take_up_skills` | handed out, not read: `World::take_up_skills` (`world/jack.rs`, from `grant_class`, `take_talent`, and `bestow`) trains every skill of the content the player lacks, but `except`, at `dice` from `levels_rng` in file order; its `news` said by `grant_class` (Jack of all trades rank 1, the bard's) |
 | `ignore_burdened` | `burden::load` (`Load::ignores_burdened`, as a dwarf's) |
@@ -219,7 +218,7 @@ wiki's effect text appends "while raging".
 | `gem_worth` | `PerceptionView::appraisal` → `magic::describe::appraised` (the describe screen) |
 | `identify_carried` | `World::appraise_carried` from `live`: `Magic::carried` counts the seconds (saved, left out while 0) |
 | `gem_find_percent` | `gem::find_with` (the gems' chance scaled, at most 100) through `magic::loot::Luck` (`Luck::of(talents)`: with `loot_magic_percent`, from `level_template` and `World::loot_of`) |
-| `skill` | `Actor::skill_effect`, as magic items' skill bonuses |
+| `skill` (its `skill` left out: the chosen one, Skill focus) | `Actor::skill_effect`, as magic items' skill bonuses |
 | `distrusted` | `World::refusal`: no one budges (Trusted by none) |
 | `checks` | the stat checks: `disease.rs` (both), `search_modifier`, `lockpick.rs`, `disarm_modifier`, `steps_lightly` |
 | `critical_confirm` | `Actor::stanced` → `Profile::confirm`, added to the confirmation roll in `combat::strike` |
@@ -587,8 +586,8 @@ passive's rule, the actives and their cooldowns, the holy gifts unanswered outsi
 prerequisites in words, Hardy's growth, several levels at once and `levelup:auto`,
 dropped picks, every hook, a free-blow talent, saves and replays, perception and dumps).
 
-**One rank per talent** (#952, `docs/design/talent-ranks.md`). No talent has more than one rank
-but Apprentice, until Skill focus replaces it (#963); the rank machinery goes then (#966). Extra
+**One rank per talent** (#952, `docs/design/talent-ranks.md`). No talent has more than one rank; the rank
+machinery, unused now, goes next (#966). Skill focus took Apprentice's place in the Scholar tree (#963). Extra
 ranks that repeated a number were dropped (Hardy, Thick skin, Deep well, Brawn, Quick, Keen ears,
 Pack mule, Elemental ward); Armour training's two were folded into `max_dex` 2. Those that did a
 different thing are follow-ups needing the first: Great cleave (Might; level 18), Breaker (Might;
@@ -652,8 +651,9 @@ The statuses Winded (Second wind's cooldown) and Staggered (`cost = 150`, until 
 Scholar, Grit, and Delver (#240) ship whole; their five mana talents (Deep well, Clear mind,
 Meditation, Frugal caster, Blood magic) came with #242 (H6; `docs/dev/mana.md`,
 `world/mana_talent_tests.rs`), which took the `mana` system's `pending` off. `talent_wits_tests.rs` covers
-each rule. Apprentice is the first talent with a `skill` choice (any
-skill, trained or not; `talent:apprentice:stealth`, three ranks per skill), Treasure hunter the
+each rule. Skill focus is the talent with a `skill` choice (a skill the
+taker is trained in, `talent::may_take` refuses another as a `BadChoice`;
+`talent:skill_focus:athletics`, one pick per skill; `skill { value = 25 }`), Treasure hunter the
 first with an `either` prerequisite (`Need::Either`, "Intelligence 12 or Appraise 20").
 
 The racial talents (#241) are the `racial` tree (`no_free`: each asks for its race): Elven

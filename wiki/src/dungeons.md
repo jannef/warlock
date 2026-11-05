@@ -55,7 +55,10 @@ least 25 and at most 80) is chosen as above and spread over its plain floor, nev
 steps of a [staircase](terrain.md#stairs), never in a [shop](shops.md), a [sanctuary](special-rooms.md#room-sanctuary), or a [teeming den](special-rooms.md#teeming-dens). Most walk a short beat, back and forth;
 where there is no room for one, they wait where they stand. They come armed as their kind is
 (see the creatures' gear), on top of the few the floor's own rooms and vaults hold. A creature
-marked "once a run" that you have met already is not among them. A hand-made place with a
+marked "once a run" that you have met already is not among them. Some vaults hold a
+crowd of their own, chosen as above when the floor is made, on top of the population (a guard
+post keeps two of the floor's creatures beside its guard), so who is inside differs from one
+visit to the next. A hand-made place with a
 danger starts as it was made; only the arrivals below fill it up. A [teeming den](special-rooms.md#teeming-dens)
 holds its sleepers on top of the population, and they count toward it below.
 
@@ -63,7 +66,8 @@ holds its sleepers on top of the population, and they count toward it below.
 
 While you are on a floor with a danger, the creatures that live there keep coming: every so
 often (two minutes of game time, unless a place says otherwise) one may come, with a 60 percent
-chance, as long as the floor holds fewer creatures [hostile](creatures.md#factions) to you than its population. It comes
+chance, as long as the floor holds fewer creatures [hostile](creatures.md#factions) to you than its population; a vault's
+own crowd is not counted, so leaving a vault shut does not stop the arrivals. It comes
 somewhere you cannot see, never within 8 steps of you, never on [stairs](terrain.md#stairs), in a doorway, on a shop
 floor, or in a [sanctuary](special-rooms.md#room-sanctuary). A cleared floor fills up again while you stay; a [long rest](resting.md#how-resting-works) below lets
 it refill. A floor you are not on is frozen: nothing comes while you are away, and the clock

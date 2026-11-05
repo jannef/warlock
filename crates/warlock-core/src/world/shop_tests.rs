@@ -663,8 +663,15 @@ fn level_files_mark_shops_with_known_kinds_and_posts() {
 
 #[test]
 fn generated_shops_are_kept_by_their_keepers() {
-    // The Depths of seed 2 have an alchemist's on their first level.
-    let w = World::new(content(), "depths", Some(2)).expect("depths");
+    // The first Depths with an alchemist's on their first level (searched for: a change to the
+    // generators moves which seed has one).
+    let w = (0..100)
+        .map(|seed| World::new(content(), "depths", Some(seed)).expect("depths"))
+        .find(|w| {
+            (w.state.current().shops.first())
+                .is_some_and(|s| shops(w).get(s.kind).id == "alchemist")
+        })
+        .expect("an alchemist's within a hundred seeds");
     let shop = shop(&w);
     let def = shops(&w).get(shop.kind);
     assert_eq!(def.id, "alchemist");

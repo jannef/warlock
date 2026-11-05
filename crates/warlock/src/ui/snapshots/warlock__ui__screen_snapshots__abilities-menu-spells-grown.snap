@@ -13,22 +13,22 @@ expression: "render(case, content.clone())"
                     │ Spells                                                   │
                     │   c  Ray of frost     1d8 cold, 1 mana, aimed            │
                     │ > d  Magic missile    3d4+1 force, 2 mana, aimed         │
-                    │   e  Burning hands    3d4+2 fire, 5 mana, aimed          │
-                    │   f  Arcane bolt      3d6+4 force, 9 mana, aimed         │
+                    │   e  Burning hands    3d4+2 fire, 4 mana, aimed          │
+                    │   f  Arcane bolt      3d6+4 force, 7 mana, aimed         │
                     │ Skills                                                   │
-                    │   g  Bluff            not usable yet                     │
-                    │   h  Decipher script  not usable yet                     │
-                    │   i  Heal             nothing to treat                   │
-                    │   j  Knowledge        not usable yet                     │
+                    │   g  Decipher script  not usable yet                     │
+                    │   h  Heal             nothing to treat                   │
+                    │   i  Knowledge        not usable yet                     │
                     │ Weapon skills                                            │
-                    │   k  Shield bash      you hold no shield                 │
+                    │   j  Shield bash      you hold no shield                 │
                     │                                                          │
                     │ A dart of force toward a place you aim at: it never      │
                     │ misses the first creature in its way. Range 8.           │
                     │                                                          │
                     │                                                          │
-                    │ a-k or Enter use   Esc close                             │
+                    │ a-j or Enter use   Esc close                             │
                     └──────────────────────────────────────────────────────────┘
 
 
- The Hub  ·  HP 43/43  ·  MP 298/299  ·  Keen  ·  Lv 32  ·  08:00  ·  11 Darkening       ? controls
+
+ The Hub  ·  HP 43/43  ·  MP 306/308  ·  Keen  ·  Lv 32  ·  08:00  ·  11 Darkening       ? controls

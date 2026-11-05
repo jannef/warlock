@@ -2,7 +2,7 @@
 //! with doors where corridors enter rooms.
 //!
 //! 1. Stamp the vaults the branch level names (each for certain, else the attempt fails), then
-//!    maybe one other; a vault joins the level like a room whose only doors are its entrances.
+//!    maybe one other (one in five levels); a vault joins the level like a room whose only doors are its entrances.
 //! 2. Scatter non-overlapping rooms (random attempts, at least two cells of rock apart).
 //! 3. Join the rooms along a minimum spanning tree of their centers, so everything is connected,
 //!    plus a few extra corridors for loops. A corridor is the cheapest path from a door spot on one
@@ -31,7 +31,7 @@ const GAP: i32 = 2;
 /// The most rooms a level locks (with the branch's key).
 const MAX_LOCKED: usize = 2;
 /// Chance (percent) that a level gets a vault.
-const VAULT_CHANCE: u32 = 50;
+const VAULT_CHANCE: u32 = 20;
 /// Chance (percent) that a room other than the arrival room has torches.
 const LIT_CHANCE: u32 = 80;
 

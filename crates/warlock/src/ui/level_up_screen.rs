@@ -565,19 +565,20 @@ mod tests {
         spend_rolls(&mut world, &roll);
         spend_rolls(&mut world, &roll);
         let mut screen = LevelUpScreen::new(Some(&world.perception()));
-        let apprentice = (screen.entries.iter())
-            .position(|e| e.name == "Apprentice")
-            .expect("Apprentice is listed");
-        assert_eq!(screen.choose(apprentice), ScreenAction::Stay);
+        let focus = (screen.entries.iter())
+            .position(|e| e.name == "Skill focus")
+            .expect("Skill focus is listed");
+        assert_eq!(screen.choose(focus), ScreenAction::Stay);
         let drawn = text(&screen);
-        assert!(drawn.contains("Stealth"), "the skills to choose: {drawn}");
+        assert!(drawn.contains("Athletics"), "the trained skills: {drawn}");
+        assert!(!drawn.contains("Stealth"), "no untrained skill: {drawn}");
         let ScreenAction::Act(Action::Talent { id, choice }) = screen.handle(&Press::typed('a'))
         else {
             panic!("a choice");
         };
-        assert_eq!(id, "apprentice");
+        assert_eq!(id, "skill_focus");
         assert!(choice.is_some());
-        screen.choose(apprentice);
+        screen.choose(focus);
         assert_eq!(screen.handle(&Press::nav(Nav::Back)), ScreenAction::Stay);
         assert!(screen.choosing.is_none(), "Esc returns to the talents");
     }

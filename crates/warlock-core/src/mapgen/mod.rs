@@ -50,9 +50,9 @@ mod vault;
 
 use crate::chest::Chest;
 use crate::content::{
-    Content, CreatureId, CreatureSpawn, Flow, Generator, LevelKind, LevelTemplate, LightId,
-    ObjectId, Place, RoomEffectId, RoomOdds, Secret, ShopOdds, ShopPlan, SpecialRoom, StairsDir,
-    StairsLink, TerrainId, Trap, Vault, secret_look,
+    Content, CreatureId, CreatureSpawn, DungeonDef, Flow, Generator, LevelKind, LevelTemplate,
+    LightId, ObjectId, Place, RoomEffectId, RoomOdds, Secret, ShopOdds, ShopPlan, SpecialRoom,
+    StairsDir, StairsLink, TerrainId, Trap, Vault, VaultMonsters, secret_look,
 };
 use crate::door::Lock;
 use crate::geom::{Dir, Pos};
@@ -192,6 +192,8 @@ pub(crate) struct Canvas<'a> {
     pub traps: BTreeMap<Pos, Trap>,
     /// Where vaults stamped loot to roll, and what it may be.
     pub loot: Vec<(Pos, LootPool)>,
+    /// Where vaults stamped monster pools to draw, and who may come.
+    pub monsters: Vec<VaultMonsters>,
     /// Locks on closed doors: stamped from vaults, and on locked rooms (spec §8 "Doors").
     pub locks: BTreeMap<Pos, Lock>,
     /// Secret doors stamped from vaults (spec §8 "Searching").
@@ -242,6 +244,7 @@ impl<'a> Canvas<'a> {
             objects: BTreeMap::new(),
             traps: BTreeMap::new(),
             loot: Vec::new(),
+            monsters: Vec::new(),
             locks: BTreeMap::new(),
             secrets: BTreeMap::new(),
             chests: BTreeMap::new(),
@@ -414,6 +417,36 @@ pub fn generate_with(
     generate_for(content, (campaign, seed), id, entered_from, &visit)
 }
 
+/// A branch's floors repeat a random vault only every this many floors at the soonest.
+const VAULT_PHASES: usize = 4;
+
+/// The vaults that may be stamped on `def`'s level at `depth` ([`Vault::stamps_on`]): pinned ones
+/// (named by a level, so stamped by [`Needs::vaults`] anyway) as they are, and of the random ones
+/// only the phase of this depth. The run's seed shuffles the branch's random vaults and deals them
+/// round the phases, so a vault can come at most every [`VAULT_PHASES`] floors of the branch, and
+/// which ones differs from run to run and branch to branch; a run keeps no count of what it met.
+fn spaced_vaults<'a>(
+    content: &'a Content,
+    seed: u64,
+    def: &DungeonDef,
+    depth: u32,
+) -> Vec<&'a Vault> {
+    let mut all: Vec<&Vault> = (content.vaults().iter())
+        .filter(|v| v.stamps_on(def, depth))
+        .collect();
+    let mut random: Vec<&Vault> = all.iter().copied().filter(|v| !v.pinned).collect();
+    // Sorted by id first: the content's order must not decide the deal.
+    random.sort_by(|a, b| a.id().cmp(b.id()));
+    Rng::stream(seed, &format!("vault_phases/{}", def.id)).shuffle(&mut random);
+    let phase = depth as usize % VAULT_PHASES;
+    let mine: Vec<&Vault> = (random.iter().copied().enumerate())
+        .filter(|(i, _)| i % VAULT_PHASES == phase)
+        .map(|(_, v)| v)
+        .collect();
+    all.retain(|v| v.pinned || mine.iter().any(|m| m.id() == v.id()));
+    all
+}
+
 /// Whom a level is generated for, as they first come: what their talents give their finds
 /// (`luck`), their level (a player-scaled danger reads it), and the unique creature types the
 /// run has met (none comes twice). Only the loot and the initial population read it, so the map
@@ -462,9 +495,7 @@ pub fn generate_for(
 
     for attempt in 0..MAX_ATTEMPTS {
         let mut rng = Rng::map(seed, id, attempt);
-        let vaults = (content.vaults().iter())
-            .filter(|v| v.stamps_on(def, depth))
-            .collect();
+        let vaults = spaced_vaults(content, seed, def, depth);
         let size = (plan.width, plan.height);
         let mut canvas = Canvas::new(content, pal, odds, vaults, size);
         canvas.danger = content.spawning(id).is_some();
@@ -540,6 +571,8 @@ pub fn generate_for(
             exit: None,
             item_level,
             loot: Vec::new(),
+            monsters: Vec::new(),
+            outside_cap: Default::default(),
             temperature: plan.temperature,
             ice: Default::default(),
             // Its branch's, asked of [`Content::spawning`].
@@ -562,7 +595,13 @@ pub fn generate_for(
             );
             if let Some((rule, depth, spawning)) = content.spawning(id) {
                 let danger = rule.at(depth, visit.player_level);
-                population::populate(&mut template, content, seed, (pal, danger, spawning), visit);
+                population::populate(
+                    &mut template,
+                    content,
+                    seed,
+                    (pal, danger, spawning),
+                    (visit, &canvas.monsters),
+                );
                 den::fill(&mut template, content, seed, (pal, danger, spawning), visit);
                 hoard::fill(&mut template, content, seed, (pal, danger), visit);
             }
@@ -869,3 +908,5 @@ mod special_tests;
 mod tests;
 #[cfg(test)]
 mod treasury_tests;
+#[cfg(test)]
+mod vault_monsters_tests;

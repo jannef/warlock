@@ -37,8 +37,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
     by the lowest `max_dex` of what the actor wears and by its burden, +3 Burdened, +1 Strained,
     0 Overloaded ("Burden" below), the lowest cap winning; a penalty counts in full), **Armour** (worn
     `armour`), **Shield** (held `shield`), **Parry** (a wielded weapon's `parry`; against blows
-    only: a shot, a throw, a trap's missile, or a bolt is not parried, but by an actor with
-    Measure, a weapon ability, §8i "Weapon abilities"; `World::target_against`), **Natural** (the
+    only: a shot, a throw, a trap's missile, or a bolt is not parried, but a shot from beside its
+    target is ("Ranged combat" below), and all of them are by an actor with Measure, a weapon
+    ability, §8i "Weapon abilities"; `World::target_against`), **Natural** (the
     creature type's `natural` armour, or a magic item's), **Dodge** (the tumble skill's bonus,
     "Skills" below, and magic items), **Deflection** (magic items), and **Wall** (an
     incorporeal creature's `wall_defence` while it stands inside solid terrain, §8 "Incorporeal
@@ -493,6 +494,16 @@ developer notes (CLAUDE.md, `docs/dev/`).
     (`World::missile_hits`: rolled against their Defence, no noise of its own), until one is hit;
     on a miss it flies on. At the cell aimed at it comes down if nobody stands there; past
     someone it missed there it flies on.
+  - **Distance** (`data/ranged.toml`, `RangedRules::to_hit_at`; #956): a shot (`AttackKind::
+    Ranged`, the player's or a creature's, Point-blank's free one too; never a throw) is less sure
+    the farther its target stands: beyond 50 % of the weapon's range -1 to hit, beyond 75 % -2,
+    measured as the range is (the squared distance against that share of `radius2(range)`).
+    Worked out as each creature on the line is attacked, from the shooter to where it stands, not
+    to the cell aimed at, so a bystander is judged by its own distance; nothing is saved. A target
+    adjacent to the shooter (Chebyshev 1, diagonals too) instead takes -2, whatever band its cell
+    lies in (a penalty does not stack), and keeps its **Parry** Defence, which a shot from
+    anywhere else ignores (but for Measure). The listed attacks (character screen, `attacks` dump)
+    have no target and show the base to-hit.
   - **Coming down**: on the cell of whom it hit, else on the last cell it reached (before
     something solid, at the end of its range, or the cell aimed at), on top of the pile there, to
     be picked up again (stackable ammunition joins its stack). On a hit it breaks with its

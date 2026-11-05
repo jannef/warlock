@@ -22,8 +22,7 @@
 
 use super::{Spent, World, class};
 use crate::action::Action;
-use crate::content::{TalentEffect, TalentId, TreeId};
-use crate::rng::Rng;
+use crate::content::{TalentId, TreeId};
 use crate::talent::{self, Candidate};
 use serde::{Deserialize, Serialize};
 
@@ -294,7 +293,6 @@ impl World {
         let player = self.player_mut();
         player.talents.take(id, choice);
         class::hand_out(&content, player, def, rank, level);
-        self.train_chosen(def.effects_at(rank), choice);
         self.take_up_skills(def.effects_at(rank));
         self.hand_down(def.effects_at(rank));
         let due = &mut self.state.progress.due[at];
@@ -310,28 +308,6 @@ impl World {
             true => format!("You learn {name} ({rank})."),
             false => format!("You learn {name}."),
         })
-    }
-
-    /// Apprentice (spec §8 "Talents"): every `train_skill` of `effects`, a rank just taken for
-    /// skill `choice`, trains it at its dice or adds them to it, rolled from the `levels`
-    /// stream (never the gameplay stream: a pick moves no fight).
-    pub(super) fn train_chosen(
-        &mut self,
-        effects: impl Iterator<Item = TalentEffect>,
-        choice: Option<&str>,
-    ) {
-        let Some(skill) = choice.and_then(|c| self.content.skill_id(c)) else {
-            return;
-        };
-        for effect in effects {
-            let TalentEffect::TrainSkill { dice } = effect else {
-                continue;
-            };
-            let seed = self.state.seed;
-            let rng = (self.state.levels_rng).get_or_insert_with(|| Rng::levels(seed));
-            let rolled = dice.roll(rng);
-            self.player_mut().skills.add(skill, rolled);
-        }
     }
 
     /// The dev action `levelup:auto` ([`Action::LevelUpAuto`]): spends every choice due with

@@ -8,6 +8,7 @@ use super::text::{Term, anchored, capital, signed};
 use std::fmt::Write as _;
 use warlock_core::combat;
 use warlock_core::content::{ActionKind, BASE_TURN, Content, price};
+use warlock_core::geom::Pos;
 
 /// The natural rolls of a threat range: `22–24`, or `24` alone.
 pub(super) fn threat_range(threat: u8) -> String {
@@ -111,6 +112,47 @@ pub(super) fn finesse_weapons(content: &Content) -> String {
         [one] => format!("The one finesse weapon is {one}.\n"),
         [rest @ .., last] => format!("The finesse weapons are {}, and {last}.\n", rest.join(", ")),
     }
+}
+
+/// Shots by distance (`data/ranged.toml`): each penalty, then where each missile weapon's bands
+/// begin along a straight line.
+pub(super) fn shot_distance(content: &Content) -> String {
+    let rules = content.ranged();
+    let mut out = String::from("| Target | To hit |\n|---|:---:|\n");
+    let _ = writeln!(out, "| Beside the shooter | {:+} |", rules.adjacent);
+    for band in &rules.bands {
+        let _ = writeln!(
+            out,
+            "| Beyond {} % of the range | {:+} |",
+            band.beyond, band.to_hit
+        );
+    }
+    out.push_str("\n| Missile weapon | Range |");
+    for band in &rules.bands {
+        let _ = write!(out, " {:+} from |", band.to_hit);
+    }
+    out.push_str("\n|---|:---:|");
+    out.push_str(&":---:|".repeat(rules.bands.len()));
+    out.push('\n');
+    let from = Pos::new(0, 0);
+    for (_, o) in order::objects(content) {
+        let (Some(range), Some(_)) = (o.range, &o.launches) else {
+            continue;
+        };
+        let _ = write!(out, "| {} | {range} cells |", capital(&o.name));
+        for band in &rules.bands {
+            // The first cell along a row, past the neighbour, that pays this band.
+            let first =
+                (2..=range).find(|&d| rules.to_hit_at(range, from, Pos::new(d, 0)) == band.to_hit);
+            let _ = write!(
+                out,
+                " {} |",
+                first.map_or("-".to_string(), |d| format!("{d} cells"))
+            );
+        }
+        out.push('\n');
+    }
+    out
 }
 
 /// What a launcher kind of ammunition is called: every object of that kind, in the plural, in

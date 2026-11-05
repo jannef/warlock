@@ -292,6 +292,7 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("finesse-weapons.md", combat::finesse_weapons),
         ("light-weapons.md", combat::light_weapons),
         ("launchers.md", combat::launchers),
+        ("shot-distance.md", combat::shot_distance),
         ("ammunition.md", combat::ammunition),
         ("armour.md", combat::armour),
         ("piercing.md", combat::piercing),
