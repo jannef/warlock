@@ -939,13 +939,15 @@ impl Gameplay<'_> {
             (InputMode::Normal, KeyCommand::Rest) => InputMode::Rest,
             (InputMode::Normal, KeyCommand::Move(dir)) => {
                 // Leaving a shop owing anything (spec §7 "Shops"), stepping onto a known trap
-                // (spec §8 "Traps"), or setting out on the overworld Fainting or Starving (spec
-                // §8 "Hunger") asks first, in the dialog. A held key stops there (repeats never
-                // open the dialog).
+                // (spec §8 "Traps"), setting out on the overworld Fainting or Starving (spec §8
+                // "Hunger"), or walking into something that offers an action (spec §7 "Special
+                // rooms") asks first, in the dialog. A held key stops there (repeats never open
+                // the dialog).
                 let view = game.world.perception();
                 let dialog = (leaving_dialog(&view, dir))
                     .or_else(|| trap_dialog(&view, dir))
-                    .or_else(|| hunger_dialog(&view, dir));
+                    .or_else(|| hunger_dialog(&view, dir))
+                    .or_else(|| offer_dialog(&view, dir));
                 match dialog {
                     Some(dialog) if !key.repeat => open = Some(dialog.into()),
                     Some(_) => {}
@@ -1566,6 +1568,41 @@ fn hunger_dialog(view: &PerceptionView<'_>, dir: Dir) -> Option<Dialog> {
     )
 }
 
+/// The dialog a step in `dir` opens first, if it walks into a feature the player sees or remembers
+/// that offers an action (spec §7 "Special rooms"; what the abilities menu's Here group reads, so
+/// a spent altar blocks as any wall does), where no one they see stands (moving there would be an
+/// attack, or stop): "Would you like to pray at the forgotten altar?", to use its ability, just as
+/// the menu does (Temper goes on to its list), or leave it (the safe answer, selected first, and
+/// Esc's; it takes no time).
+fn offer_dialog(view: &PerceptionView<'_>, dir: Dir) -> Option<Dialog> {
+    let to = view.viewer().step(dir);
+    let terrain = match view.cell(to) {
+        CellView::Visible(t) | CellView::Remembered(t) => t,
+        CellView::Unknown => return None,
+    };
+    let (offer, _) = view.content().offer_at(terrain)?;
+    if view.actor_at(to).is_some() {
+        return None;
+    }
+    let ability = Ability::offered(offer);
+    let name = &view.content().terrain(terrain).name;
+    let mut letters = name.chars();
+    let title: String = (letters.next().iter().flat_map(|c| c.to_uppercase()))
+        .chain(letters)
+        .collect();
+    Some(
+        Dialog::new(
+            title,
+            format!("Would you like to {} the {name}?", offer.asks()),
+        )
+        .accept(
+            ability.name(view.content()).into_owned(),
+            ScreenAction::UseAbility(ability),
+        )
+        .cancel("Leave it", ScreenAction::Close),
+    )
+}
+
 /// The id of the profile after `current` in `profiles`, wrapping around.
 /// The weather after `now` (clear when it is not known, underground), wrapping around.
 fn next_weather(now: Option<Weather>) -> Weather {
@@ -1929,6 +1966,99 @@ mod tests {
                 assert!(dialog.is_none(), "{scenario}");
             }
         }
+    }
+
+    /// A run of `scenario` after `walk`.
+    fn walked_to(scenario: &str, walk: &str) -> warlock_core::World {
+        let content = std::sync::Arc::new(warlock_core::content::Content::builtin().unwrap());
+        let mut world = warlock_core::World::new(content, scenario, None).expect("a run");
+        for action in warlock_core::action::parse_actions(walk).unwrap() {
+            world.apply(&action);
+        }
+        world
+    }
+
+    #[test]
+    fn walking_into_what_offers_an_action_asks_first() {
+        let cases = [
+            (
+                "shrine",
+                "move:N open:N move:N*3",
+                "Forgotten altar",
+                "Would you like to pray at the forgotten altar?",
+                "Pray",
+                Ability::Pray,
+            ),
+            (
+                "spring",
+                "move:N*5",
+                "Spring",
+                "Would you like to drink from the spring?",
+                "Drink",
+                Ability::Drink,
+            ),
+            (
+                "forge",
+                "move:E",
+                "Anvil",
+                "Would you like to temper something at the anvil?",
+                "Temper",
+                Ability::Temper,
+            ),
+        ];
+        for (scenario, walk, title, text, label, ability) in cases {
+            let world = walked_to(scenario, walk);
+            let view = world.perception();
+            // It asks by the data, as the Here group lists it.
+            assert!(view.abilities().iter().any(|own| own.ability == ability));
+            assert_eq!(
+                offer_dialog(&view, Dir::N),
+                Some(
+                    Dialog::new(title, text)
+                        .accept(label, ScreenAction::UseAbility(ability))
+                        .cancel("Leave it", ScreenAction::Close)
+                ),
+                "{scenario}"
+            );
+            // Any other way is plain floor.
+            assert!(offer_dialog(&view, Dir::S).is_none(), "{scenario}");
+        }
+    }
+
+    #[test]
+    fn a_spent_altar_never_asks() {
+        let mut world = walked_to("shrine", "move:N open:N move:N*3");
+        assert!(offer_dialog(&world.perception(), Dir::N).is_some());
+        for _ in 0..8 {
+            world.apply(&Action::Pray);
+        }
+        let view = world.perception();
+        assert!(matches!(
+            view.cell(Pos::new(13, 3)),
+            CellView::Visible(t) if view.content().terrain(t).name == "spent altar"
+        ));
+        assert!(offer_dialog(&view, Dir::N).is_none());
+    }
+
+    /// The spring's cell beside the player, in the dark: they neither see nor remember it.
+    #[test]
+    fn what_the_player_does_not_know_never_asks() {
+        let mut files = warlock_core::content::ContentFiles::builtin();
+        files.insert(
+            "levels/dark_spring.toml",
+            "name = \"Dark\"\nambient = [0, 0, 0, 0]\nmap = '''\n#####\n#@S.#\n#####\n'''\n\
+             [legend]\n\".\" = \"floor\"\n\"#\" = \"wall\"\n\"S\" = \"spring\"\n\
+             \"@\" = { terrain = \"floor\", spawn = \"player\" }\n",
+        );
+        files.insert(
+            "scenarios/dark_spring.toml",
+            "name = \"Dark\"\nstart_level = \"dark_spring\"\n",
+        );
+        let content = std::sync::Arc::new(warlock_core::content::Content::load(&files).unwrap());
+        let world = warlock_core::World::new(content, "dark_spring", None).expect("a run");
+        let view = world.perception();
+        assert_eq!(view.cell(view.viewer().step(Dir::E)), CellView::Unknown);
+        assert!(offer_dialog(&view, Dir::E).is_none());
     }
 
     #[test]

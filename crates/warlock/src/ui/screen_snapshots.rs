@@ -1462,6 +1462,30 @@ fn hunger_stops_as_text() {
     }
 }
 
+/// Beside what offers an action, north of the player (spec §7 "Special rooms"): its scenario and
+/// the walk there.
+const OFFERS: [(&str, &str, &str); 3] = [
+    ("offer-dialog-altar", "shrine", "move:N open:N move:N*3"),
+    ("offer-dialog-spring", "spring", "move:N*5"),
+    ("offer-dialog-anvil", "forge", "move:E"),
+];
+
+/// #975: the question a step into each asks.
+#[test]
+fn walking_into_what_offers_an_action_as_text() {
+    let content = Arc::new(Content::builtin().expect("content"));
+    for (name, scenario, actions) in OFFERS {
+        let case = Case {
+            name,
+            scenario,
+            actions,
+            keys: Some("Up"),
+            ..BASE
+        };
+        insta::assert_snapshot!(case.name, render(&case, content.clone()));
+    }
+}
+
 /// Where the player stands and how many actions were applied.
 fn walked(app: &App) -> (Pos, u64) {
     let game = app.world().resource::<Game>();

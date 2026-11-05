@@ -1,0 +1,34 @@
+---
+source: crates/warlock/src/ui/screen_snapshots.rs
+expression: "render(&case, content.clone())"
+---
+ You open the door.
+ Clear water wells up in an old stone basin.
+
+
+
+
+
+
+
+
+                            ┌─ Spring ─────────────────────────────────┐
+                            │                                          │
+                            │ Would you like to drink from the spring? │
+                            │                                          │
+                            │             Drink  (y)                   │
+                            │           > Leave it  (n, Esc)           │
+                            │                                          │
+                            │ ↑/↓ choose  Enter select                 │
+                            └──────────────────────────────────────────┘
+
+
+
+
+
+
+
+
+
+
+ The Spring  ·  HP 18/18  ·  MP 14/14  ·  Lv 1  ·  08:00  ·  11 Darkening, Year 1444     ? controls

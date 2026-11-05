@@ -292,7 +292,7 @@ or mana spent).
 
 An altar room holds a **forgotten altar**: worn stone, its carvings rubbed smooth, its god's name
 long lost, and yet something there still listens. It is not a temple and not a god you serve:
-nothing to sacrifice, nothing to convert. It is a gamble. Stand beside it and choose **[Pray](abilities.md#ability-pray)**
+nothing to sacrifice, nothing to convert. It is a gamble. Walk into it and say yes when asked, or stand beside it and choose **[Pray](abilities.md#ability-pray)**
 from the [abilities menu](abilities.md#the-abilities-menu) (it is listed under *Here* only while you stand next to such an altar).
 A prayer takes a minute; anything that would stop a [rest](resting.md#how-resting-works) (a creature coming into view, a blow, a
 noise) breaks it, and a broken prayer gives nothing, though the minute is gone.
@@ -329,8 +329,8 @@ The outcomes, by kind and tier ("Of its kind" is its share of its kind's draws):
 
 ## Forges
 
-A forge is a cold smithy: soot on the walls and an **anvil**, its hammer chained beside it. Stand
-beside the anvil and choose **[Temper](abilities.md#ability-temper)** from the [abilities menu](abilities.md#the-abilities-menu) (listed under *Here* only there),
+A forge is a cold smithy: soot on the walls and an **anvil**, its hammer chained beside it. Walk
+into the anvil and say yes when asked, or stand beside it and choose **[Temper](abilities.md#ability-temper)** from the [abilities menu](abilities.md#the-abilities-menu) (listed under *Here* only there),
 then pick a weapon or a piece of armour you carry (a weapon, a bow or crossbow, body armour, a
 helmet, a cloak, gloves, boots, or a shield; never [ammunition](ammunition.md), rings, or amulets). Tempering is
 ten minutes of work; anything that would stop a [rest](resting.md#how-resting-works) stops it, and then the item is untouched
@@ -351,8 +351,8 @@ long as you are willing to risk the item.
 
 ## Healing springs
 
-A spring room holds a **healing spring**: clear water welling up in an old stone basin. Stand
-beside it and choose **[Drink](abilities.md#ability-drink)** from the [abilities menu](abilities.md#the-abilities-menu) (listed under *Here* only while you stand
+A spring room holds a **healing spring**: clear water welling up in an old stone basin. Walk
+into it and say yes when asked, or stand beside it and choose **[Drink](abilities.md#ability-drink)** from the [abilities menu](abilities.md#the-abilities-menu) (listed under *Here* only while you stand
 next to a spring). A drink takes ten seconds; anything that would stop a [rest](resting.md#how-resting-works) breaks it off, and
 a broken drink gives nothing. Most drinks are good, some taste only of stone, and now and then
 the water is foul and gives you [marsh ague](diseases.md#disease-marsh-ague), which a prayer (a temple's [cure](npcs.md#services)) or a remedy cures. A

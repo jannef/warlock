@@ -99,6 +99,19 @@ Which vaults a level may get (#337): `generate_for` keeps those whose `Vault::st
 depth)` holds (a dungeon vault, shared or of the branch's campaign, on a branch or level its
 `dungeons` names, if any) on the `Canvas` (`Canvas::vaults`, content order), and
 `vault::shuffled` shuffles that list. A branch no campaign vault names draws what it did before.
+
+How often, and how rarely the same one (#960): rooms floors roll `VAULT_CHANCE` 20 %
+(`rooms.rs`); cave floors 40 % for one (`caves.rs`), then 15 % for a second. Before it was 50 %
+and 1 + 30 %: on the six shared vaults (three stamp in a dungeon) a 600-floor sample of the
+Ascmearc's rooms and cave branches met 0.61 random vaults a floor, 184 of 369 a repeat within
+its branch, Flooded cell 148 times; now 0.15 a floor, 9 repeats of 89 (the same sample: 20 seeds of
+fyrdelf, cealdhlaw, fennmynster, and banfeld). `mapgen::spaced_vaults` (called by `generate_for`) keeps
+repeats apart without any saved state: the branch's random (unpinned) vaults, sorted by id, are
+shuffled by stream `vault_phases/<branch id>` of the run seed and dealt round `VAULT_PHASES` (4)
+phases; floor `depth` offers only the vaults of phase `depth % 4`. So no vault comes within four
+floors of itself in a branch, and the deal differs by run and branch. A level's own named
+(pinned) vaults are untouched. Adding vaults raises the count a floor may choose from, not the
+chance of one.
 The Ascmearc's branches (campaign design §7): Cealdhlāw (`cealdhlaw`, #337;
 `campaigns/ascmearc/data/dungeons/cealdhlaw.toml`), six floors of danger 1 to 6, rooms 80×21 on
 1–2 and caves 100×40 on 3–6, 30 creatures a thousand walkable cells (25 on the rooms floors,
