@@ -1231,6 +1231,9 @@ pub struct PerceptionView<'a> {
     pub(crate) snapshot: &'a Perception,
     /// The overworld encounter the player must answer, which they know.
     pub(crate) encounter: Option<&'a crate::world::Pending>,
+    /// The run's seed, for the freshness check (`world/freshness.rs`), which only draws a stream
+    /// of its own.
+    pub(crate) seed: u64,
 }
 
 impl<'a> PerceptionView<'a> {
@@ -2419,6 +2422,20 @@ impl<'a> PerceptionView<'a> {
             crate::rot::Stage::Old => Freshness::Turning,
             crate::rot::Stage::Rotten | crate::rot::Stage::Gone => Freshness::Rotten,
         })
+    }
+
+    /// How fresh `stack`, a corpse or food the player has in front of them, looks to an eye
+    /// trained in Appraise or Survival (spec §8 "Hunger"; `world/freshness.rs`): `fresh`, `old`,
+    /// or `rotten` when their check passes, `None` otherwise.
+    pub fn judge(&self, stack: &Stack) -> Option<&'static str> {
+        let stage = crate::world::freshness::judged(
+            self.content,
+            self.player,
+            self.seed,
+            stack,
+            self.time,
+        )?;
+        Some(stage.id())
     }
 
     /// The loudest sound perceived at `p`, if any.

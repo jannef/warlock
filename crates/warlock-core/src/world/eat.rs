@@ -156,6 +156,7 @@ impl World {
             return;
         };
         let def = content.object(food.object);
+        self.train_judged(&food, self.state.time);
         self.say(format!("You eat the {}.", def.name));
         self.ate_goods(dish.meal, &food);
         if let Some(creature) = def.corpse {

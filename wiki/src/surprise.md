@@ -45,7 +45,8 @@ beside you.
   more. With [Hair trigger](talents.md#talent-hair-trigger), when the one who tried it is a
   hostile beside you, you strike it at once, before its attack is rolled.
 - **Failed**: "You are taken by surprise!" (or "You catch the kobold unawares."), and the target
-  is [Surprised](status-effects.md#status-surprised) until it next acts:
+  is [Surprised](status-effects.md#status-surprised) until it next acts (a
+  [feint](skills.md#feinting) lasts through one action more):
   - it stays flat-footed: no Dexterity and no Dodge in its Defence;
   - it makes no free blow: no riposte, no blow at a foe stepping up or away, no
     [Point-blank shot](weapon-skills.md#weapon-ability-point-blank);

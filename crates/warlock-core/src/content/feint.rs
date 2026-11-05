@@ -1,0 +1,89 @@
+//! Feinting (`assets/data/feint.toml`, spec §8 "Skills": Bluff; #1016): the numbers of Bluff's
+//! use, a lie in combat.
+//!
+//! The rule itself lives in `world/feint.rs`: who can (anyone trained in a skill with the `feint`
+//! benefit, `data/skills.toml`), at whom (a hostile creature they see next to them, with a mind),
+//! the check (its Willpower against `difficulty` + their Presence modifier + their Bluff), and
+//! the status a failed check leaves.
+//!
+//! The file is optional: without it nobody feints, and Bluff stays a skill whose use is not in
+//! the game (the abilities menu's "not usable yet").
+
+use super::{Content, ContentError, StatusId};
+use serde::Deserialize;
+
+/// The rules of feinting that live in data.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct FeintRules {
+    /// The check's base difficulty, before the Presence modifier and Bluff are added.
+    pub difficulty: i32,
+    /// What a foe that fails suffers: `per_action`, `flat_footed`, one degree (Surprised).
+    pub status: StatusId,
+}
+
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct FeintFile {
+    difficulty: i32,
+    status: String,
+}
+
+impl FeintRules {
+    /// Parses `data/feint.toml`: the status must leave its sufferer flat-footed, ease by its
+    /// actions, and have one degree (one blow), and the difficulty be in range.
+    pub(super) fn parse(file: &str, text: &str, content: &Content) -> Result<Self, ContentError> {
+        let err = |m: String| ContentError::new(file, m);
+        let parsed: FeintFile = toml::from_str(text).map_err(|e| err(e.to_string()))?;
+        let status = (content.status_id(&parsed.status))
+            .ok_or_else(|| err(format!("unknown status `{}`", parsed.status)))?;
+        let def = content.status(status);
+        if !def.flat_footed || !def.per_action || def.max != 1 {
+            return Err(err(format!(
+                "`status`: `{}` must be `flat_footed` and `per_action` with `max = 1`",
+                parsed.status
+            )));
+        }
+        if !(0..=30).contains(&parsed.difficulty) {
+            return Err(err("`difficulty` is 0 to 30".into()));
+        }
+        Ok(Self {
+            difficulty: parsed.difficulty,
+            status,
+        })
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::content::{Content, ContentFiles};
+
+    const PATH: &str = "data/feint.toml";
+
+    #[test]
+    fn a_feint_leaves_a_foe_surprised() {
+        let content = Content::builtin().expect("content");
+        let rules = content.feint().expect("feinting is in the game");
+        assert_eq!(content.status(rules.status).id, "surprised");
+    }
+
+    #[test]
+    fn a_bad_file_is_refused_and_none_is_no_feinting() {
+        for (text, why) in [
+            (
+                "difficulty = 10\nstatus = \"frightened\"\n",
+                "must be `flat_footed`",
+            ),
+            ("difficulty = 10\nstatus = \"nobody\"\n", "unknown status"),
+            ("difficulty = 31\nstatus = \"surprised\"\n", "`difficulty`"),
+        ] {
+            let mut files = ContentFiles::builtin();
+            files.insert(PATH, text);
+            let err = Content::load(&files).expect_err(text);
+            assert!(err.message.contains(why), "{text}: {}", err.message);
+        }
+        let mut files = ContentFiles::builtin();
+        files.remove(PATH);
+        let content = Content::load(&files).expect("feinting is optional");
+        assert!(content.feint().is_none());
+    }
+}

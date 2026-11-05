@@ -185,6 +185,7 @@ above.
 | A skill's ladder (what it gives by value: Music's song degrees and difficulty, …) | `skills.md#what-skills-give` |
 | Slipping past (a creature with darkvision, unlit) | `skills.md#slipping-past` |
 | Stealing | `skills.md#stealing` |
+| Feinting (a lie in combat, Bluff's use) | `skills.md#feinting` |
 | Intimidating (a threat at one foe) | `skills.md#intimidating` |
 | Treating yourself, binding a wound | `skills.md#treating-yourself` |
 | Foraging | `skills.md#foraging` |

@@ -32,7 +32,9 @@
 #                 whatever comes of it), "pick" (a try at picking a
 #                 lock), "deal" (a deal made in a shop: goods paid for, or your own sold),
 #                 "appraise" (something you carry told for what it is: "identify" below),
+#                 "judged" (food whose freshness you could tell, eaten: "freshness" below),
 #                 "intimidate" (a war cry roared or a foe threatened, whatever comes of it),
+#                 "feint" (a feint at a foe, whatever comes of it),
 #                 "rough_step" (a step onto ground that slows and is not water: bush, reeds,
 #                 rubble, ice), "staggered" (an action taken Staggered),
 #                 "song" (a song sung, whatever it does), "wade" (a step wading through water
@@ -67,7 +69,9 @@
 #                 you forage at all: forage.toml), "bargain" (percent better
 #                 prices in shops, together with Presence at most half; shops.toml), "identify"
 #                 (percent chance, each game hour, of telling one unidentified thing you carry or
-#                 wear for what it is; trained only), "kick"
+#                 wear for what it is; trained only), "freshness" (percent chance, each game
+#                 hour, of telling in words how fresh a corpse or food is; the skills' add up,
+#                 trained only), "kick"
 #                 (points added to the Strength a kick at a closed door is rolled against, at most
 #                 40), "slip" (points added to slipping past a creature that would see you by
 #                 darkvision alone, at most 20: surprise.toml [slip]), "steal" (points added to stealing from someone, at most 20; trained, a
@@ -75,7 +79,9 @@
 #                 treating your bleeding, poison, or a disease, at most 20; trained, a skill with
 #                 it lets you treat them at all: the Heal ability), "pick" (points added to
 #                 picking a lock, at most 20; trained, a skill with it
-#                 lets you pick locks at all: the Pick lock ability), "intimidate" (points added to
+#                 lets you pick locks at all: the Pick lock ability), "feint" (points added to the difficulty of a
+#                 feint's Willpower check, at most 20; trained, a skill with it lets you feint at
+#                 all: feint.toml), "intimidate" (points added to
 #                 the difficulty of the Willpower check your war cry asks of those who hear and
 #                 see you, at most 20), "song_degrees" (degrees added to what your songs give,
 #                 up to the status's own most, at most 10), "song_craft" (points added to the
@@ -122,9 +128,14 @@ kind = "passive"
 # Now and then an eye for things tells one unidentified thing you carry or wear for what it is
 # (spec §8 "Skills"; #666): each game hour, this percent chance (2 % at the lowest, 12 % at 100,
 # 20 % at 200). Trained only. Each thing told this way trains it. The shops' prices are
-# Negotiation's.
-mark = [{ on = "appraise", chance = 100 }]
-benefit = [{ effect = "identify", curve = [[0, 2], [100, 12], [200, 20]] }]
+# Negotiation's. An eye for food (#1031): trained, each hour the chance of telling how fresh a
+# corpse or food is in words (summed with Survival's), 25 % at the lowest, 60 % at 100, 80 % at
+# 200; eating food whose freshness it told trains it.
+mark = [{ on = "appraise", chance = 100 }, { on = "judged", chance = 10 }]
+benefit = [
+    { effect = "identify", curve = [[0, 2], [100, 12], [200, 20]] },
+    { effect = "freshness", curve = [[0, 25], [100, 60], [200, 80]] },
+]
 
 [[skill]]
 id = "athletics"
@@ -170,8 +181,13 @@ benefit = [
 [[skill]]
 id = "bluff"
 name = "Bluff"
-description = "Lying with a straight face, feinting, and talking your way out."
+description = "Lying with a straight face, feinting, and talking your way past."
 kind = "action"
+# Marked by "feint" (a feint at a foe, feint.toml, the skill's use, whatever comes of it). Effect
+# "feint": points added to the difficulty of the Willpower check a feint asks, +8 at 100, +12 at
+# 200, at most 20. Being trained in it gives the Feint ability.
+mark = [{ on = "feint", chance = 50 }]
+benefit = [{ effect = "feint", curve = [[0, 0], [100, 8], [200, 12]] }]
 
 [[skill]]
 id = "concentration"
@@ -355,7 +371,8 @@ name = "Negotiation"
 description = "Haggling, striking a bargain, and knowing when to walk away."
 kind = "rules"
 mark = [{ on = "deal", chance = 25 }]
-# Haggling gets better prices in shops (shops.toml), 20 % at 100 (Appraise's until #666).
+# Haggling gets better prices in shops (shops.toml), 20 % at 100 (Appraise's until #666), and
+# at a healer's and a sage's (`service.rs`; a temple's price stays flat, #1031).
 benefit = [{ effect = "bargain", curve = [[0, 0], [100, 20], [200, 30]] }]
 
 [[skill]]
@@ -478,6 +495,7 @@ benefit = [
     { effect = "forage", curve = [[0, 0], [100, 15], [200, 30]] },
     { effect = "lookout", curve = [[0, 0], [100, 4], [200, 6]] },
     { effect = "evade", curve = [[0, 0], [100, 8], [200, 12]] },
+    { effect = "freshness", curve = [[0, 15], [100, 35], [200, 50]] },
 ]
 
 [[skill]]
