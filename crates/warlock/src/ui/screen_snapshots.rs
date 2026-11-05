@@ -1151,6 +1151,16 @@ const CASES: &[Case] = &[
         keys: Some("r d"),
         ..BASE
     },
+    // The Decipher ability's list (spec §8 "Scrolls"): the scrolls carried of a type not yet made
+    // out; a wizard is trained in Decipher script.
+    Case {
+        name: "scroll-decipher-list",
+        scenario: "traps",
+        character: Some("human,male,wizard"),
+        actions: "move:E pickup",
+        screen: Some("decipher"),
+        ..BASE
+    },
     Case {
         name: "scroll-too-close",
         scenario: "traps",

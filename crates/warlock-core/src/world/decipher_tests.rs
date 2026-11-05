@@ -512,3 +512,23 @@ fn the_ability_is_listed_for_the_trained_and_greyed_out_without_a_scroll() {
         Some(Action::Decipher { item: 3 })
     );
 }
+
+#[test]
+fn the_ability_is_refused_with_no_time_for_a_non_scroll() {
+    let reader = Reader {
+        spellcraft: None,
+        decipher: Some(10),
+    };
+    let mut w = world(&format!("{HASTE}, \"dagger\""), reader, 0);
+    let before = w.state.time;
+    let stack = w
+        .state
+        .player()
+        .inventory
+        .iter()
+        .position(|s| w.content.object(s.object).read.is_none())
+        .expect("a stack that is no scroll");
+    let out = run(&mut w, &format!("decipher:{stack}"));
+    assert!(!out[0].took_turn);
+    assert_eq!(w.state.time, before, "no time");
+}
