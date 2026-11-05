@@ -9,14 +9,20 @@
 //! - **Refusals** (no time, the scroll kept): no such stack, a thing that teaches nothing ("There
 //!   is no spell in it to learn."), a scroll under its label ("You do not know what this says."),
 //!   a spell known ("You know this spell already."), no mana at all ("You have no gift for
-//!   magic."), and whatever a status blocks (Raging blocks `study`).
+//!   magic."), no training in Spellcraft ([`UNTRAINED`]), and whatever a status blocks (Raging
+//!   blocks `study`).
+//! - **Learning** ([`Actor::learning`]): the spell level up to which a scroll teaches for certain,
+//!   the `learn` benefit of the skill that has one (Spellcraft) at the skill's value with what
+//!   items and talents add, at least 1. A character not trained in that skill has none and cannot
+//!   study at all, cantrips included; an item's or a talent's bonus alone trains nobody. Reading a
+//!   scroll to cast it, and the spells a class grants, need none of this.
 //! - **Time**: turn after turn of the `study` action ([`World::keep_at`], like a meal),
 //!   `turns_base + turns_per_level × level` of them (`data/study.toml`), Quick study's `percent`
 //!   less. It stops
 //!   early as a rest does (a creature that disturbs a rest comes into view, a message is said:
 //!   a blow, a status); then the time is lost and the scroll kept (design §14 q1's default).
 //! - **The check** at the end, on the scroll used up (Scroll savant never keeps it: §14 q7):
-//!   overreach is the spell's level less the caster level. At 0 or less the spell is learned, no
+//!   overreach is the spell's level less the learning. At 0 or less the spell is learned, no
 //!   draw. Above, a 2d12 check ([`check::check`]) with the bonuses (Intelligence's modifier, the
 //!   skills' `study` benefit (Spellcraft, Decipher script), the class's affinity with the
 //!   school, Quick study) against [`StudyRules::difficulty`] (the overreach, Overreach's third
@@ -47,6 +53,9 @@ use crate::skills::{Effect, Use};
 use crate::stats::Stat;
 use std::cell::Cell;
 
+/// What a character not trained in Spellcraft is told when they would study a scroll.
+pub const UNTRAINED: &str = "You have no training in Spellcraft; you cannot make sense of how to learn a spell from a scroll.";
+
 /// A study under way: the stack studied (its position and object as the study began), the
 /// spell it teaches, and the turns it takes.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -57,11 +66,11 @@ pub(super) struct Lesson {
     pub(super) turns: u32,
 }
 
-/// How a study of a spell would go: its overreach, and the check above the caster level
-/// (`None`: certain).
+/// How a study of a spell would go: its overreach, and the check above the learning (`None`:
+/// certain).
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Odds {
-    /// The spell's level less the caster level (before Overreach's cut, which only the check's
+    /// The spell's level less the learning (before Overreach's cut, which only the check's
     /// difficulty reads).
     pub overreach: i32,
     /// The check's bonus and difficulty, at overreach 1 or more.
@@ -92,6 +101,14 @@ impl Actor {
             .collect()
     }
 
+    /// The spell level up to which a scroll teaches it for certain (module docs), at least 1;
+    /// `None` when it is not trained in the skill that gives it, and so cannot learn from a
+    /// scroll.
+    pub fn learning(&self, content: &Content) -> Option<i32> {
+        (self.skills.trains_effect(content, Effect::Learn))
+            .then(|| self.skill_effect(content, Effect::Learn).max(1))
+    }
+
     /// The levels of the spells it knows, added up (the study check's small cumulative
     /// penalty).
     fn known_levels(&self, content: &Content) -> i32 {
@@ -113,19 +130,18 @@ fn affinity(content: &Content, character: Option<&Character>, spell: SpellId) ->
         .map_or(0, i32::from)
 }
 
-/// How `actor` (of `character`, at caster level `caster_level`) would study `spell` (module
-/// docs); `None` without the study rules or the spell's file.
+/// How `actor` (of `character`) would study `spell` (module docs); `None` when it cannot learn
+/// from a scroll ([`Actor::learning`]), or without the study rules or the spell's file.
 pub fn study_odds(
     actor: &Actor,
     content: &Content,
     character: Option<&Character>,
-    caster_level: i32,
     spell: SpellId,
 ) -> Option<Odds> {
     let (study, def) = (content.study_rules()?, content.spell_of(spell)?);
-    let overreach = i32::from(def.level) - caster_level;
+    let overreach = i32::from(def.level) - actor.learning(content)?;
     // A spell made hard to learn (`study_difficulty`, the owner's Q7 of #828) is a check at any
-    // caster level.
+    // learning.
     if overreach <= 0 && def.study_difficulty <= 0 {
         return Some(Odds {
             overreach,
@@ -157,9 +173,8 @@ pub fn study_turns(rules: &StudyRules, level: u8, percent: i32) -> u32 {
 impl World {
     /// The odds of the player studying `spell` now.
     pub(crate) fn player_study_odds(&self, spell: SpellId) -> Option<Odds> {
-        let level = self.caster_level(self.state.player);
         let character = self.state.character.as_ref();
-        study_odds(self.state.player(), &self.content, character, level, spell)
+        study_odds(self.state.player(), &self.content, character, spell)
     }
 
     /// The player begins to study inventory stack `item` (module docs), or is refused.
@@ -191,6 +206,10 @@ impl World {
         }
         if me.max_mana(&content) <= 0 {
             self.say("You have no gift for magic.");
+            return Spent::Nothing;
+        }
+        if me.learning(&content).is_none() {
+            self.say(UNTRAINED);
             return Spent::Nothing;
         }
         let (Some(rules), Some(def)) = (content.study_rules(), content.spell_of(spell)) else {

@@ -98,7 +98,9 @@ fn a_spell_scroll_casts_its_spell_free_of_mana_and_teaches_it() {
         said.iter().any(|m| m == "It is a scroll of magic missile."),
         "{said:?}"
     );
-    // Read, its type is known; it teaches its spell to whoever studies it.
+    // Read, its type is known; it teaches its spell to whoever trained in Spellcraft studies it.
+    let spellcraft = w.content.skill_id("spellcraft").expect("skill");
+    w.player_mut().skills.add(spellcraft, 0);
     let scroll = w
         .content
         .object_id("scroll_of_magic_missile")

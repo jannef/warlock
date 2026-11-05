@@ -1216,7 +1216,22 @@ fn progress_rows(world: &World) -> Vec<String> {
             why.join("; ")
         ));
     }
-    // The study check's exact odds (spec §8 "Spells"), for each scroll the player could study.
+    // What a scroll teaches for certain (spec §8 "Spells": "Learning"), then the study check's
+    // exact odds for each scroll the player could study.
+    let trained = (player.skills.iter()).find(|&(id, _)| {
+        let benefits = &world.content().skill(id).benefits;
+        benefits
+            .iter()
+            .any(|b| b.effect == crate::skills::Effect::Learn)
+    });
+    rows.push(match (player.learning(world.content()), trained) {
+        (Some(learning), Some((id, skill))) => format!(
+            "learning {learning} ({} {})",
+            world.content().skill(id).name,
+            skill.value
+        ),
+        _ => "cannot learn: not trained in Spellcraft".to_string(),
+    });
     for study in view.studies() {
         if let Some(odds) = world.player_study_odds(study.spell) {
             let check = match odds.check {

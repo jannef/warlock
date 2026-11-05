@@ -27,11 +27,13 @@ fn cost_and_range(w: &World, spell: &str) -> (i32, Option<i32>) {
 #[test]
 fn overreach_counts_a_third_less_in_the_study_and_never_touches_mana() {
     let mut w = world_with(BUILTIN.clone(), "wizard");
-    let level = w.caster_level(w.state.player);
-    assert_eq!(level, 1, "a level-1 wizard");
+    // At Spellcraft's floor: learning 1, whatever this run's dice gave.
+    let spellcraft = BUILTIN.skill_id("spellcraft").expect("skill");
+    w.player_mut().skills = crate::skills::Skills::default();
+    w.player_mut().skills.add(spellcraft, 0);
     let odds = |w: &World| {
         let character = w.state.character.as_ref();
-        study_odds(w.state.player(), &BUILTIN, character, level, sp("fireball")).expect("odds")
+        study_odds(w.state.player(), &BUILTIN, character, sp("fireball")).expect("odds")
     };
     let (fireball, before) = (cost_and_range(&w, "fireball").0, odds(&w));
     w.player_mut().talents.take("overreach", None);
