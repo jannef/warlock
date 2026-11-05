@@ -151,7 +151,7 @@ Heal ability: a status id with a `treat` table, `heal:poisoned`, or a showing di
 nothing to treat, or for a poison or disease already tried; docs/dev/status-effects.md);
 `feint:E` feints at the hostile creature east of the player (the Feint ability, Bluff's use, for
 those trained in it: a turn, the foe's Willpower check against `data/feint.toml`'s difficulty + their Presence modifier + Bluff; failed, it is
-Surprised, and the player's next blow finds it flat-footed; refused, with no time, without the skill, a foe there, or one with no mind (`Content::has_vitals`); `use:feint:E` stays the Duelist's weapon active; docs/dev/skills.md);
+Surprised, and the player's next blow finds it flat-footed; refused, with no time, without the skill, a foe there, or one with no mind (`Content::has_vitals`); `use:false_lead:E` is the Duelist's weapon active, False lead; docs/dev/skills.md);
 `intimidate:X,Y` threatens the hostile creature on level cell (X, Y), one the player sees within
 6 (the Intimidate ability, for those trained in it: War cry's check at one foe, Frightened for
 more degrees the better their Intimidate; refused, with no time, without the skill or a hostile

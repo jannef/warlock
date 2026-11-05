@@ -458,7 +458,7 @@ impl Target {
     }
 
     /// This target with nothing of `categories` counting toward its Defence (positive bonuses
-    /// only: a penalty stays): what a Feint ignores, and a surprised target's Dexterity and
+    /// only: a penalty stays): what a False lead ignores, and a surprised target's Dexterity and
     /// Dodge.
     pub fn without(mut self, categories: impl IntoIterator<Item = Category>) -> Self {
         for category in categories {

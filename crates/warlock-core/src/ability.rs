@@ -1291,6 +1291,22 @@ mod tests {
     }
 
     #[test]
+    fn no_two_abilities_share_an_id_or_a_name() {
+        let content = Content::builtin().expect("content");
+        let every = Ability::every(&content);
+        for (i, a) in every.iter().enumerate() {
+            for b in &every[i + 1..] {
+                // One weapon ability may be taught by several skills: the same row.
+                if matches!((a, b), (Ability::Weapon(_, x), Ability::Weapon(_, y)) if x == y) {
+                    continue;
+                }
+                assert_ne!(a.id(&content), b.id(&content), "{a:?} and {b:?}");
+                assert_ne!(a.name(&content), b.name(&content), "{a:?} and {b:?}");
+            }
+        }
+    }
+
+    #[test]
     fn stealing_asks_for_a_direction_and_is_had_by_those_trained_in_it() {
         let content = std::sync::Arc::new(Content::builtin().expect("content"));
         let steal = Ability::Steal;

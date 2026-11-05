@@ -77,7 +77,7 @@ would end with the foe's next action, which falls between the feint and the blow
 puts it on `World::fresh` (`weapon_ability.rs::spend_actions`): the foe's first action in the
 feint's turn does not ease it. `fresh` is emptied as a turn ends, so it is never saved across
 one. The foe's second action ends it; both cost it dear. The ability's id is `feint`, as the
-Duelist's weapon active is (`Ability::Weapon`, `use:feint:E`): the two rows are told apart by
+Duelist's weapon active, False lead, is (`Ability::Weapon`, `use:false_lead:E`): the two rows are told apart by
 `Source`, and nothing looks an ability up by id. No caught-out check (the owner): `World::steal`
 and the shops read nothing of Bluff. Tests: `world/feint_tests.rs`, `content/feint.rs`. Music's
 `song_degrees` (#870) is read in `World::sing` (`world/song.rs`): the degrees a song adds to its

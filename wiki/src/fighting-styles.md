@@ -106,7 +106,7 @@ hand, [Staggering block](fighting-styles.md#style-ability-staggering-block) a we
 [stamina](combat.md#stamina) and time, as a weapon skill's are (see
 [What a rank teaches](weapon-skills.md#what-a-rank-teaches)), and only in the style's grip:
 
-- **[Feint](fighting-styles.md#style-ability-feint)** is one blow rolled as if the foe had no Parry and no Shield.
+- **[False lead](fighting-styles.md#style-ability-false-lead)** is one blow rolled as if the foe had no Parry and no Shield.
 - **[Whirl](fighting-styles.md#style-ability-whirl)** and **[Staff sweep](fighting-styles.md#style-ability-staff-sweep)** strike every foe beside you, clockwise from the north, each at
   −2 to hit and each with the [free blows](combat.md#free-blows) the end of an attack brings; with a blade in each hand,
   the blades take turns.
