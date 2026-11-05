@@ -2557,6 +2557,22 @@ impl<'a> PerceptionView<'a> {
             .collect()
     }
 
+    /// Whether a step onto `to` would dive into deep water (spec §8 "Skills": Swim): from anything
+    /// else, into water the player sees or remembers where no one they see is, and open to them:
+    /// an untrained or a Strained player is refused by the rules, with no question to ask. Water
+    /// they do not know is never stepped into: the rules stop them at it first (`world/swim.rs`).
+    pub fn dives_at(&self, to: Pos) -> bool {
+        let swim = |p: Pos| match self.cell(p) {
+            CellView::Visible(t) | CellView::Remembered(t) => self.content.terrain(t).swim,
+            CellView::Unknown => false,
+        };
+        swim(to)
+            && !swim(self.viewer())
+            && self.actor_at(to).is_none()
+            && crate::world::shore_refusal(self.content, self.player, self.own_load().penalty())
+                .is_none()
+    }
+
     /// What the player owes, and to whom, if a step onto `to` leaves the open shop they stand in
     /// (onto ground they know is walkable): by a way out ([`ShopView::is_exit`]) the keeper turns
     /// them back, any other way is theft, so presentation asks first.

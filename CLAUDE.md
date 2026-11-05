@@ -46,7 +46,7 @@ Game flags (`cargo run -p warlock -- --help`):
   square of its town, Cēaptūn, with 60 gold; `depths` starts in the generated dungeon, `courtyard` in
   the sunlit courtyard at 06:30, `world` on the overworld beside the Hall, `forest` in the glade
   of a generated forest area of the overworld at 06:30, `arena` in the dark corner of the arena
-  where kobolds and giant rats fight, `quarry` in the quarry beside a pick-axe, `traps` in the
+  where kobolds and giant rats fight, `quarry` in the quarry beside a pick-axe (its pit holds a pool of deep water to swim in, with `--character lizardfolk,female,warrior`), `traps` in the
   trap hall, `summoners` in the summoning hall's south hall (three summoners behind doors), `chests`
   in the chest hall (every kind of chest, a mimic, and both treasure rooms), `cealdhlaw` on the first floor of Cealdhlāw, the Ascmearc's first dungeon, `fennmynster` on
   the first floor of Fennmynster, the drowned minster's cellars, `fyrdelf` on the first floor of Fyrdelf,

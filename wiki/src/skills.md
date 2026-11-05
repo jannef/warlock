@@ -68,7 +68,8 @@ The passive skills help you more the higher they are:
 - **[Swim](skills.md#skill-swim)** makes you quicker through [water](terrain.md#water) and [marsh](terrain.md#terrain-marsh) (of what wading adds to a step, 60%
   is spared at 100 and all of it at 200; the [Swimmer](talents.md#talent-swimmer) talent spares it all at once). And
   when you [plunge through the ice](temperature.md#falling-in), you make a check on your
-  [Toughness](stats.md#stat-toughness) plus the table's points against 11: made, half the hit points.
+  [Toughness](stats.md#stat-toughness) plus the table's points against 11: made, half the hit points. And it
+  is what lets you into [deep water](terrain.md#deep-water) at all.
 - **[Negotiation](skills.md#skill-negotiation)** gets you better prices in [shops](shops.md): you pay less and are offered
   more. A deal made (goods paid for, or your own sold) trains it now and then.
 - **[Appraise](skills.md#skill-appraise)** now and then tells you what something you carry or wear really is. On every
@@ -174,7 +175,7 @@ mark**. The chance is shown in the table of skills above; skills you use all the
   [Defence](combat.md#defence) explains (it would have missed anyone) counts as a dodge one time in four.
 - **[Balance](skills.md#skill-balance)**: doing anything but waiting while your load slows you down.
 - **[Survival](skills.md#skill-survival)**: a journey on the [overworld](overworld.md#travel).
-- **[Swim](skills.md#skill-swim)**: a step wading through [water](terrain.md#water) or [marsh](terrain.md#terrain-marsh) now and then, and every [plunge through the ice](temperature.md#falling-in).
+- **[Swim](skills.md#skill-swim)**: a step wading through [water](terrain.md#water) or [marsh](terrain.md#terrain-marsh) now and then (10 %), every [plunge through the ice](temperature.md#falling-in), and a quarter of the steps in [deep water](terrain.md#deep-water), made or not.
 - **[Steal](skills.md#skill-steal)**: every attempt to steal, whatever comes of it.
 - **[Open lock](skills.md#skill-open-lock)**: a try at picking a lock, whether it works or not.
 - **[Heal](skills.md#skill-heal)**: a try at treating yourself, whether it works or not.

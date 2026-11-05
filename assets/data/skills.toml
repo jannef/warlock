@@ -34,7 +34,8 @@
 #                 "appraise" (something you carry told for what it is: "identify" below),
 #                 "intimidate" (a war cry roared or a foe threatened, whatever comes of it),
 #                 "song" (a song sung, whatever it does), "wade" (a step wading through water
-#                 or marsh), "swim" (a Swim check, whatever comes of it). Marks gather until a level-up roll on the skill spends them ([ladder]
+#                 or marsh), "swim" (a Swim check, whatever comes of it), "stroke" (a step in deep water, whatever comes of
+#                 it). Marks gather until a level-up roll on the skill spends them ([ladder]
 #                 below). Only the player trains, for now.
 #   benefit       what it gives, by its value: a list of { effect = EFFECT, ... } growing either
 #                 by `steps` (one for each value reached, then one more for every `every` points
@@ -441,9 +442,10 @@ id = "swim"
 name = "Swim"
 description = "Staying afloat and making headway in deep water."
 kind = "rules"
-mark = [{ on = "wade", chance = 10 }, { on = "swim", chance = 100 }]
+mark = [{ on = "wade", chance = 10 }, { on = "swim", chance = 100 }, { on = "stroke", chance = 25 }]
 # Percent of what wading adds to a step that is spared, under Swimmer's and Undertow's all of it;
-# and points added to the Swim check of a plunge through the ice (made: half its hit points).
+# and points added to the Swim check of a plunge through the ice (made: half its hit points) and
+# of a step in deep water (made: the step; data/swim.toml).
 benefit = [
     { effect = "wade", curve = [[0, 0], [100, 60], [200, 100]] },
     { effect = "swim", curve = [[0, 0], [100, 8], [200, 12]] },

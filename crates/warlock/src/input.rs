@@ -938,13 +938,17 @@ impl Gameplay<'_> {
             (InputMode::Rest, _) => InputMode::Normal,
             (InputMode::Normal, KeyCommand::Rest) => InputMode::Rest,
             (InputMode::Normal, KeyCommand::Move(dir)) => {
-                // Leaving a shop owing anything (spec §7 "Shops"), stepping onto a known trap
-                // (spec §8 "Traps"), setting out on the overworld Fainting or Starving (spec §8
-                // "Hunger"), or walking into something that offers an action (spec §7 "Special
-                // rooms") asks first, in the dialog. A held key stops there (repeats never open
-                // the dialog).
+                // Diving into deep water (spec §8 "Skills": Swim), leaving a shop owing anything
+                // (spec §7 "Shops"), stepping onto a known trap (spec §8 "Traps"), setting out on
+                // the overworld Fainting or Starving (spec §8 "Hunger"), or walking into something
+                // that offers an action (spec §7 "Special rooms") asks first, in the dialog: one
+                // dialog a step, the first that applies. The dive comes first because it always
+                // asks (the owner's rule), and any other dialog's "go on" would step in unasked;
+                // its own "Dive in" is a plain move, which the rules still judge (the keeper turns
+                // back one who owes). A held key stops there (repeats never open the dialog).
                 let view = game.world.perception();
-                let dialog = (leaving_dialog(&view, dir))
+                let dialog = (deep_water_dialog(&view, dir))
+                    .or_else(|| leaving_dialog(&view, dir))
                     .or_else(|| trap_dialog(&view, dir))
                     .or_else(|| hunger_dialog(&view, dir))
                     .or_else(|| offer_dialog(&view, dir));
@@ -1530,6 +1534,17 @@ fn trap_dialog(view: &PerceptionView<'_>, dir: Dir) -> Option<Dialog> {
             .accept("Step onto it", Action::Move(dir))
             .cancel("Stay back", ScreenAction::Close),
     )
+}
+
+/// The dialog a step in `dir` opens first, if it dives into deep water from anything else (spec §8
+/// "Skills": Swim; [`PerceptionView::dives_at`]): always, no setting turns it off. To dive in or
+/// stay back (the safe answer, selected first, and Esc's; it takes no time).
+fn deep_water_dialog(view: &PerceptionView<'_>, dir: Dir) -> Option<Dialog> {
+    view.dives_at(view.viewer().step(dir)).then(|| {
+        Dialog::new("Deep water", "Really dive into the deep water?")
+            .accept("Dive in", Action::Move(dir))
+            .cancel("Stay back", ScreenAction::Close)
+    })
 }
 
 /// The dialog a step in `dir` opens first, if it is a journey on the overworld for a player who
