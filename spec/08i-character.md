@@ -445,9 +445,18 @@ developer notes (CLAUDE.md, `docs/dev/`).
     spent, a spell or an ability paid in it (`cast`; Concentration, 25 %, #668), discovery
     experience gained (`discover`: a first kill of a kind, an arrival that pays; Experience §8), a
     check rolled to resist a creature's ability, whatever comes of it (`resist`; "Knowledge"
-    below). Only the player trains for now; creatures keep their type's
+    below), a step wading (`wade`; Swim, below), a Swim check, whatever comes of it (`swim`). Only
+    the player trains for now; creatures keep their type's
     skills. Marks are a **reservoir**: they raise nothing by
     themselves and nothing is said; they gather until a level-up roll on the skill spends them.
+  - **Swim** (#1018): wading is quicker. A step onto wading terrain (`stars::wading`: water that
+    freezes, ground a disease is caught wading in; `move_cost` above 100, off the overworld) has
+    a percent of what it adds to a plain step spared: 60 at 100, all of it at 200
+    (`data/skills.toml`, `wade`), under the talents that spare all of it already (Swimmer,
+    Strong swimmer, Undertow). A player trained in it who plunges through the ice (§5 "Ice")
+    makes a **Swim check**: Toughness's modifier, the talents' Toughness checks, and the `swim`
+    benefit (+8 at 100, +12 at 200, at most 20) against 11; made, half the plunge's hit points,
+    rounded down. Marks: `wade` 10 %, reported per wading step whoever wades; `swim` 100 %.
   - **Level-up rolls** (design `docs/design/progression.md` §5): every level gives the player
     **skill rolls**: their class's `rolls` (`data/classes/`: 2; the thief and the ranger 3, the
     bard 4), their race's (`races.toml`: humans 1), and one more for an Intelligence score of

@@ -32,8 +32,9 @@
 //! shown but gives nothing. Athletics already adds to the Strength a kick at a door is rolled
 //! against ([`Effect::Kick`], [`Use::Kick`]) and makes the actor quicker ([`Effect::Speed`],
 //! marked by [`Use::Burdened`] and [`Use::Travel`] too), Open lock to picking a lock
-//! ([`Effect::Pick`], [`Use::Pick`]), and Metalcraft to tempering at a forge's anvil
-//! ([`Effect::Temper`], [`Use::Temper`]).
+//! ([`Effect::Pick`], [`Use::Pick`]), Metalcraft to tempering at a forge's anvil
+//! ([`Effect::Temper`], [`Use::Temper`]), and Swim to wading and a plunge through the ice
+//! ([`Effect::Wade`], [`Use::Wade`]; [`Effect::Swim`], [`Use::Swim`]).
 
 use crate::content::Content;
 use crate::dice::Dice;
@@ -97,6 +98,8 @@ pub const MAX_PICK_BONUS: i32 = 20;
 pub const MAX_FORAGE_BONUS: i32 = 30;
 /// The most a skill adds to tempering an item at an anvil (spec §7 "Special rooms": the forge).
 pub const MAX_TEMPER_BONUS: i32 = 20;
+/// The most a skill adds to a Swim check (spec §8 "Skills": a plunge through the ice).
+pub const MAX_SWIM_BONUS: i32 = 20;
 /// The most a skill adds to resisting a creature's ability (spec §8 "Skills": Knowledge): kept
 /// small, know your enemy.
 pub const MAX_RESIST_BONUS: i32 = 6;
@@ -166,6 +169,9 @@ pub enum Effect {
     Burden,
     /// Percent less time a journey on the overworld takes (spec §8 "Time").
     Travel,
+    /// Percent of what wading adds to a step that is spared (spec §8 "Skills": Swim;
+    /// `World::step_price`), under the talents that spare all of it.
+    Wade,
     /// Percent added to the chance of a forage finding food (spec §8 "Foraging";
     /// `world/forage.rs`); a skill with it, trained, lets the actor forage at all (the abilities
     /// menu's Forage).
@@ -232,6 +238,9 @@ pub enum Effect {
     /// Points added to the check that leans a forge's outcome (spec §7 "Special rooms": Temper
     /// at an anvil; `world/temper.rs`). Anyone may temper; the skill only leans it.
     Temper,
+    /// Points added to a Swim check (spec §8 "Skills": Swim; `world/ice.rs`, a plunge through the
+    /// ice); only a skill with it, trained, asks the check at all.
+    Swim,
     /// Percent faster the actor regains mana (spec §8 "Mana"; `World::mana_rate`), added to its
     /// items' and talents' percent; only a trained skill gives it ([`crate::world::Actor::mind`]).
     ManaRegen,
@@ -257,6 +266,7 @@ impl Effect {
             Effect::Quiet
             | Effect::Burden
             | Effect::Travel
+            | Effect::Wade
             | Effect::Bargain
             | Effect::Identify
             | Effect::SurpriseEase => 100,
@@ -277,6 +287,7 @@ impl Effect {
             Effect::Pick => MAX_PICK_BONUS,
             Effect::Forage => MAX_FORAGE_BONUS,
             Effect::Temper => MAX_TEMPER_BONUS,
+            Effect::Swim => MAX_SWIM_BONUS,
             Effect::ManaRegen => MAX_MANA_REGEN_BONUS,
             Effect::MaxMana => MAX_MANA_POOL_BONUS,
             Effect::SearchReach => MAX_SEARCH_REACH,
@@ -341,6 +352,10 @@ pub enum Use {
     /// An item worked at a forge's anvil to the end (spec §7 "Special rooms"), whatever comes of
     /// it.
     Temper,
+    /// A step onto wading terrain (spec §8 "Skills": Swim; `World::wade`).
+    Wade,
+    /// A Swim check, whatever comes of it (spec §8 "Skills": Swim; a plunge through the ice).
+    Swim,
     /// A deal made in a shop (spec §7 "Shops"): goods paid for, or the player's own sold.
     Deal,
     /// A carried thing told for what it is by looking it over (spec §8 "Skills": Appraise).
@@ -382,6 +397,8 @@ impl Use {
             Use::Kick => "kicking at a closed door",
             Use::Pick => "a try at picking a lock",
             Use::Temper => "tempering an item at an anvil",
+            Use::Wade => "a step wading through water or marsh",
+            Use::Swim => "a plunge through the ice",
             Use::Deal => "a deal made in a shop",
             Use::Appraise => "telling something you carry for what it is",
             Use::Discover => "gaining discovery experience (a first kill of a kind, a new place)",
@@ -502,6 +519,8 @@ impl Use {
             Use::Kick => "kick",
             Use::Pick => "pick",
             Use::Temper => "temper",
+            Use::Wade => "wade",
+            Use::Swim => "swim",
             Use::Deal => "deal",
             Use::Appraise => "appraise",
             Use::Discover => "discover",
@@ -525,6 +544,7 @@ impl Effect {
             Effect::Disarm => "disarm",
             Effect::Burden => "burden",
             Effect::Travel => "travel",
+            Effect::Wade => "wade",
             Effect::Forage => "forage",
             Effect::Bargain => "bargain",
             Effect::Identify => "identify",
@@ -545,6 +565,7 @@ impl Effect {
             Effect::Kick => "kick",
             Effect::Pick => "pick",
             Effect::Temper => "temper",
+            Effect::Swim => "swim",
             Effect::ManaRegen => "mana_regen",
             Effect::MaxMana => "max_mana",
             Effect::Speed => "speed",

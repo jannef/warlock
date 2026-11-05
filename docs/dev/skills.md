@@ -129,6 +129,16 @@ Intimidate `Ability::Intimidate` (above; aimed at a cell, `Ability::reach` from 
 A passive skill with a use of its own is listed as that use too (`Ability::every` asks
 `Ability::use_of` of every skill): Survival is `Ability::Forage` (below).
 
+**Swim** (spec §8 "Skills", #1018, `docs/design/skill-uses.md` §6.4; `kind = "rules"`, no menu
+row): `Effect::Wade` is read in `World::step_price` (`world/schedule.rs`), on a step
+`World::wading_step` calls wading (off the overworld, `move_cost` above 100, `stars::wading`): a
+percent of what the terrain adds over a plain step is spared (`surcharge_spared`, rounded up), 100
+for `swimmer` and `wades_free`, so Swim never goes past them. Its use `wade` is reported at the
+head of `World::wade` (`world/disease.rs`), before the talents' early return: a wader whom a
+talent spares still trains. `Effect::Swim` is read in `World::keeps_afloat` (`world/ice.rs`,
+`docs/dev/temperature.md`), which marks `swim` once a check; it is `Skills::trains_effect`-gated, so
+an item's Swim bonus alone asks no check. Tests `world/swim_tests.rs`.
+
 **Foraging** (spec §8 "Foraging", #547): `Action::Forage` (replay text `forage`, cost `forage`
 a turn, `ActionKind::Forage`), dispatched by one arm in `World::player_acts` to
 `World::start_forage` in `world/forage.rs` (`Spent::Forage(seconds)`, then `World::forage`, a

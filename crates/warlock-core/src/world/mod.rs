@@ -1886,6 +1886,8 @@ mod sun_tests;
 #[cfg(test)]
 mod surprise_tests;
 #[cfg(test)]
+mod swim_tests;
+#[cfg(test)]
 mod tag_tests;
 #[cfg(test)]
 mod talent_arms_tests;
