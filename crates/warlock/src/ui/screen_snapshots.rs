@@ -734,7 +734,7 @@ const CASES: &[Case] = &[
         character: Some("gnome,male,wizard"),
         actions: "xp:1000000 levelup:auto afflict:keen",
         screen: Some("abilities"),
-        keys: Some("Down Down Down"),
+        keys: Some("Down Down Down Down"),
         ..BASE
     },
     // A bard of level 25 with too little mana (#244): Throw your voice aimed at a place, Inspire
@@ -1361,6 +1361,40 @@ fn saying_words() {
             actions: concat!(hermit!(), " chat:SE"),
             screen: Some("dialogue"),
             keys,
+            ..BASE
+        };
+        insta::assert_snapshot!(case.name, render(&case, content.clone()));
+    }
+}
+
+/// Look mode with a wizard's Knowledge (#1030): the skeleton below it says what it resists on the
+/// hint's row, in words; the rotting drake above it says nothing more.
+#[test]
+fn looking_with_knowledge() {
+    let mut files = warlock_core::content::ContentFiles::builtin();
+    files.insert(
+        "levels/look_lore.toml",
+        "name = \"Lore\"\nambient = [255, 255, 255, 0]\nmap = '''\n\
+         #####\n#s.d#\n#@..#\n#####\n'''\n[legend]\n\".\" = \"floor\"\n\"#\" = \"wall\"\n\
+         \"@\" = { terrain = \"floor\", spawn = \"player\" }\n\
+         \"s\" = { terrain = \"floor\", creature = \"skeleton\" }\n\
+         \"d\" = { terrain = \"floor\", creature = \"rotting_drake\" }\n",
+    );
+    files.insert(
+        "scenarios/look_lore.toml",
+        "name = \"L\"\nstart_level = \"look_lore\"\n",
+    );
+    let content = Arc::new(Content::load(&files).expect("content"));
+    for (name, keys) in [
+        ("look-knowledge-tells", "l Up"),
+        ("look-knowledge-silent", "l Up Right Right"),
+    ] {
+        let case = Case {
+            name,
+            scenario: "look_lore",
+            character: Some("human,male,wizard"),
+            run: true,
+            keys: Some(keys),
             ..BASE
         };
         insta::assert_snapshot!(case.name, render(&case, content.clone()));

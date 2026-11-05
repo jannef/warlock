@@ -55,7 +55,7 @@ Poison works slowly: a [hit point](combat.md#hit-points) every couple of minutes
 points](combat.md#hit-points) come back only half as fast. **Strong poison** (a few doses at once) also makes you
 weaker and clumsier: your [Strength](stats.md#stat-strength) and [Dexterity](stats.md#stat-dexterity) count one less, in everything they do, from
 [hitting](combat.md#hitting) and [Defence](combat.md#defence) to how much you can [carry](burden.md#how-much-you-can-carry). The [character screen](controls.md#character) shows them lowered. Poison
-wears off by itself: "The poison wears off." Trained in **[Heal](skills.md#skill-heal)**, you may try once to draw out
+wears off by itself: "The poison wears off." Trained in **[Heal](skills.md#skill-heal)**, you may try to draw out
 some of a dose (see [Treating yourself](skills.md#treating-yourself)).
 
 You cannot tell whether a creature is poisoned by looking at it.

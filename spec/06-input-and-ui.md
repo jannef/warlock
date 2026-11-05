@@ -507,10 +507,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
   console too narrow for it every page's line goes by short names (`1 Char · 2 Inv · 3 Eqp ·
   4 Skl · 5 Weap · 6 Mag · 7 Qst · 8 Tal · 9 Story`), else by keys alone.
 - **Talents** (page 8, its own command `talents`, `G`; #236, #644; §8 "Talents"): the
-  player's talents ("Your talents"), by tree in tree order, each with its rank when it has
-  several (`Keen ears 1/2`) and, for those not picked, where it came from (`(class)`, `(birth
-  sign)`); then, dimmer, "Other talents": every other talent the player could still pick (not
-  given, not held to its last rank), by tree, with what its next rank needs below it (`Needs:
+  player's talents ("Your talents"), by tree in tree order, each, for those not picked, with
+  where it came from (`(class)`, `(birth sign)`); then, dimmer, "Other talents": every other talent the player could still pick (not
+  given, not held), by tree, with what it needs below it (`Needs:
   Toughness 13, Healthy`; each part met in the normal colour, each part not met dimmed;
   `Needs: nothing`). The class's coming abilities are not listed. ↑↓ choose (the list
   scrolls), the selected talent's description shows below; words only, never a rule's number.
@@ -539,8 +538,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   its description, `Rolls 1d5+1: practice (20 marks) gives 1d5, +1 as your class trains it.`;
   the owner's call, #543: numbers on this step, the dice the rule throws, never a pre-rolled
   result), a **bonus talent** of the class's trees, then the level's **talent**, listing only
-  the talents that may be taken now, by tree, each with its next rank (`1/3`) and the start of
-  its description, the selected one's whole description below. A talent with several choices
+  the talents that may be taken now, by tree, each with the start of its description, the selected one's whole description below. A talent with several choices
   (Skill focus, Weapon focus) lists them in its place (Esc back). A letter, or Enter on the `>`
   row, is that choice's action (`advance:athletics`, `talent:hardy`, `talent:skill_focus:athletics`):
   the screen closes, the action is applied and recorded like any other, and the screen opens

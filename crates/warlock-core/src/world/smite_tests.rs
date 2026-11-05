@@ -26,7 +26,7 @@ fn set(w: &mut World, value: u16) {
 fn a_new_paladin_smites_and_holds_zeal_at_five() {
     let w = world("paladin");
     assert_eq!(held(&w), Some(5), "granted at its start");
-    assert!(w.state.player().talents.has("smite", 1), "Smite at level 1");
+    assert!(w.state.player().talents.has("smite"), "Smite at level 1");
     // Every score 14 (+2): 10 + 2, at level 1.
     let max = w.resource_max(w.state.player, zeal(&w));
     assert_eq!(max, 12);

@@ -21,7 +21,7 @@ use crate::magic::Mods;
 use crate::noise::Heard;
 use crate::object::{Stack, Weight, weight_of};
 use crate::resource::Pools;
-use crate::skills::{Effect, Skills};
+use crate::skills::{Effect, SkillId, Skills};
 use crate::stats::{PerStat, Stat, StatDamage, Stats};
 use crate::status::Effects;
 use crate::talent::{TalentMods, Talents};
@@ -254,7 +254,7 @@ pub struct Actor {
     #[serde(default, skip_serializing_if = "Talents::is_empty")]
     pub talents: Talents,
     /// The talents a forgotten altar gave it for life (spec §7 "Special rooms": Chosen, a
-    /// talent; Forsaken, a flaw), each at rank 1 and also held in [`Actor::talents`]: never a
+    /// talent; Forsaken, a flaw), each also held in [`Actor::talents`]: never a
     /// level's pick, put back with a race's and a birth sign's gifts whenever those are
     /// (`world/stars.rs`), and marked as the altar's where talents are shown.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
@@ -276,6 +276,11 @@ pub struct Actor {
     /// whether the player has met it.
     #[serde(default, skip_serializing_if = "Talk::is_new")]
     pub talk: Talk,
+    /// The level it first left following the player down or up a staircase
+    /// (`world/stair_followers.rs`), where its kill counts for a quest; `None` for one that
+    /// never followed.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub home: Option<String>,
 }
 
 fn is_zero(n: &u32) -> bool {
@@ -471,6 +476,17 @@ impl Actor {
     /// value stands above `floor` (Knowledge against a creature of level `floor`,
     /// [`Effect::Resist`]).
     pub fn skill_effect_above(&self, content: &Content, effect: Effect, floor: u16) -> i32 {
+        (self.skills).effect_above(content, effect, &self.skill_bonus(content), floor)
+    }
+
+    /// Whether a skill of its giving `effect` stands above `floor`, counting what
+    /// [`Actor::skill_effect_above`] counts ([`Skills::stands_above`]).
+    pub(crate) fn skill_stands_above(&self, content: &Content, effect: Effect, floor: u16) -> bool {
+        (self.skills).stands_above(content, effect, &self.skill_bonus(content), floor)
+    }
+
+    /// What its talents and what it wears and wields add to its skills' values.
+    fn skill_bonus(&self, content: &Content) -> Vec<(SkillId, i32)> {
         // Talents (spec §8 "Class abilities": Commanding) raise skills as magic items do.
         let talents = match self.talents.is_empty() {
             true => Vec::new(),
@@ -486,11 +502,11 @@ impl Actor {
             }
         };
         if self.equipment.is_empty() && talents.is_empty() {
-            return (self.skills).effect_above(content, effect, &[], floor);
+            return Vec::new();
         }
         let mut bonus = self.mods(content).skills().to_vec();
         bonus.extend(talents);
-        (self.skills).effect_above(content, effect, &bonus, floor)
+        bonus
     }
 
     /// Its maximum hit points: its (effective) Toughness plus [`Actor::hp_base`] plus what it

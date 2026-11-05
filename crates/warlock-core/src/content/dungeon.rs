@@ -6,12 +6,17 @@
 //! to `depths:N-1` (on depth 1: back to the level it was first entered from) and its `>` to
 //! `depths:N+1` (the deepest level has none).
 //!
+//! A branch with `endless` instead of `depth` has no last floor (spec §7 "The endless branch",
+//! `world/endless.rs`): every staircase makes a new floor, only the current one exists, and each
+//! floor is drawn rooms or caves as it is made. It has one row of per-depth tables, read at every
+//! depth, and so no `[[dungeon.levels]]`, and with them no pinned vault.
+//!
 //! ```toml
 //! [[dungeon]]
 //! id = "depths"
 //! name = "The Depths"          # level names: "The Depths 3"; default: the id
 //! generator = "rooms"          # "rooms" (rooms and corridors) or "caves" (cellular automata)
-//! depth = 8
+//! depth = 8                     # or, instead: [dungeon.endless] (below)
 //! size = [80, 21]
 //! creatures = ["rat", "kobold"] # patrolling creatures generators may place; default none
 //! traps = ["arrow", "pit"]      # traps generators may hide (spec §8 "Traps"); default none
@@ -42,6 +47,10 @@
 //! temperature = 7               # default: the branch's temperature
 //! danger = { base = 9, per_depth = 2 }   # default: the branch's (which it needs)
 //! room_effects = { chance = 40 } # default: the branch's (below), field by field
+//!
+//! [dungeon.endless]             # instead of `depth`: floors without end (`generator` is "rooms")
+//! caves = 15                    # percent of floors that are caves, the rest rooms
+//! caves_size = [100, 40]        # the caves' size; the rooms' is the branch's `size`
 //!
 //! [dungeon.room_effects]        # optional: the branch's own special-room odds
 //! chance = 25                   # percent a room is special; default the shared `chance`
@@ -117,7 +126,10 @@ struct DungeonSpec {
     /// A line said each time the player arrives on its first level; default none.
     arrival: Option<String>,
     generator: Generator,
-    depth: u32,
+    /// How many levels it has; left out of a branch with `endless`.
+    depth: Option<u32>,
+    /// Floors without end, instead of `depth`.
+    endless: Option<EndlessSpec>,
     size: [i32; 2],
     #[serde(default)]
     ambient: Light,
@@ -158,6 +170,28 @@ struct DungeonSpec {
     shops: Option<ShopOddsSpec>,
     #[serde(default)]
     levels: Vec<LevelsSpec>,
+}
+
+/// A branch's `[dungeon.endless]` table.
+#[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+struct EndlessSpec {
+    caves: u8,
+    caves_size: [i32; 2],
+}
+
+/// What makes a branch endless (spec §7 "The endless branch"): the odds of a floor's generator,
+/// and how deep its danger still finds anything to draw.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct Endless {
+    /// Percent of floors that are caves; the rest are rooms, of the branch's size.
+    pub caves: u8,
+    /// The width and height of a caves floor.
+    pub caves_size: (i32, i32),
+    /// The deepest floor whose danger the branch's roster still reaches: floors below it draw as
+    /// it does ([`crate::content::Content::spawning`]). Filled once everything is loaded
+    /// (`Content::fill_generic`).
+    pub roster_depth: u32,
 }
 
 /// A branch's (or a range of its depths') `room_effects` table: each field left out falls back
@@ -480,8 +514,11 @@ pub struct DungeonDef {
     pub name: String,
     /// A line said each time the player arrives on its first level (`id:1`).
     pub arrival: Option<String>,
-    /// Number of levels: `id:1` to `id:depth`.
+    /// Number of levels: `id:1` to `id:depth`. An endless branch has no last floor and 1 here:
+    /// the one row of its tables, which is every floor's.
     pub depth: u32,
+    /// Floors without end (spec §7 "The endless branch"); `None`: `depth` levels.
+    pub endless: Option<Endless>,
     pub ambient: Light,
     /// Creatures generators may place on patrol.
     pub creatures: Vec<CreatureId>,
@@ -523,29 +560,40 @@ pub struct DungeonDef {
 }
 
 impl DungeonDef {
-    /// The plan for level `depth` (1-based), if the branch has that level.
-    pub fn plan(&self, depth: u32) -> Option<LevelPlan> {
+    /// The row of the per-depth tables level `depth` (1-based) reads: an endless branch's one row
+    /// at every depth.
+    fn row(&self, depth: u32) -> Option<usize> {
         let i = usize::try_from(depth.checked_sub(1)?).ok()?;
-        self.plans.get(i).copied()
+        Some(if self.endless.is_some() { 0 } else { i })
+    }
+
+    /// The plan for level `depth` (1-based), if the branch has that level. On an endless branch
+    /// its generator and size are the rooms': a floor's own are drawn as it is made
+    /// (`mapgen::generate_for`).
+    pub fn plan(&self, depth: u32) -> Option<LevelPlan> {
+        self.plans.get(self.row(depth)?).copied()
+    }
+
+    /// Whether level `depth` (1-based) has a way down.
+    pub fn leads_down(&self, depth: u32) -> bool {
+        self.endless.is_some() || depth < self.depth
     }
 
     /// The special-room odds of level `depth` (1-based), if the branch has that level.
     pub fn room_odds(&self, depth: u32) -> Option<&RoomOdds> {
-        self.room_odds
-            .get(usize::try_from(depth.checked_sub(1)?).ok()?)
+        self.room_odds.get(self.row(depth)?)
     }
 
     /// The shop odds of level `depth` (1-based); `None` without `shops.toml`.
     pub fn shop_odds(&self, depth: u32) -> Option<&ShopOdds> {
-        self.shop_odds
-            .get(usize::try_from(depth.checked_sub(1)?).ok()?)
+        self.shop_odds.get(self.row(depth)?)
     }
 
     /// The vaults (ids) level `depth` (1-based) stamps for certain: a `[[dungeon.levels]]`
     /// entry's `vaults`. A vault named by any branch level is stamped only where it is named.
     pub fn vaults(&self, depth: u32) -> &[String] {
-        let i = depth.checked_sub(1).and_then(|i| usize::try_from(i).ok());
-        i.and_then(|i| self.vaults.get(i))
+        (self.row(depth))
+            .and_then(|i| self.vaults.get(i))
             .map_or(&[], Vec::as_slice)
     }
 
@@ -619,9 +667,19 @@ impl DungeonFile {
             if defs.iter().any(|d| d.id == id) {
                 return Err(err(format!("duplicate dungeon id `{id}`")));
             }
-            if !(1..=99).contains(&spec.depth) {
-                return Err(err(format!("dungeon `{id}`: depth must be 1 to 99")));
-            }
+            let depth_of = match (spec.depth, &spec.endless) {
+                (Some(depth), None) if (1..=99).contains(&depth) => depth,
+                (Some(_), None) => {
+                    return Err(err(format!("dungeon `{id}`: depth must be 1 to 99")));
+                }
+                // One row of tables: every floor's.
+                (None, Some(_)) => 1,
+                _ => {
+                    return Err(err(format!(
+                        "dungeon `{id}`: give `depth` or `endless`, one of them"
+                    )));
+                }
+            };
             let check_size = |generator: Generator, [w, h]: [i32; 2]| {
                 let (min, max) = generator.size_limits();
                 if (min[0]..=max[0]).contains(&w) && (min[1]..=max[1]).contains(&h) {
@@ -634,6 +692,20 @@ impl DungeonFile {
                 }
             };
             check_size(spec.generator, spec.size)?;
+            if let Some(e) = &spec.endless {
+                check_size(Generator::Caves, e.caves_size)?;
+                if spec.generator != Generator::Rooms || e.caves > 100 {
+                    return Err(err(format!(
+                        "dungeon `{id}`: an endless branch's `generator` is \"rooms\", and its \
+                         `caves` a percent"
+                    )));
+                }
+                if !spec.levels.is_empty() {
+                    return Err(err(format!(
+                        "dungeon `{id}`: an endless branch has no `[[dungeon.levels]]`"
+                    )));
+                }
+            }
             let creatures = spec
                 .creatures
                 .iter()
@@ -659,10 +731,15 @@ impl DungeonFile {
             .resolve(true, &creatures, &creature_id, defaults)
             .map_err(|m| err(format!("dungeon `{id}`: {m}")))?;
             let branch_danger = spawning.as_ref().map(|(rule, _)| *rule);
+            if spec.endless.is_some() && branch_danger.is_none_or(|r| r.scales()) {
+                return Err(err(format!(
+                    "dungeon `{id}`: an endless branch needs a `danger`, without `player`"
+                )));
+            }
             let mut plans = Vec::new();
             let (mut room_odds, mut shop_odds) = (Vec::new(), Vec::new());
             let mut vaults = Vec::new();
-            for depth in 1..=spec.depth {
+            for depth in 1..=depth_of {
                 let over = spec
                     .levels
                     .iter()
@@ -730,10 +807,10 @@ impl DungeonFile {
             }
             for l in &spec.levels {
                 let to = l.to.unwrap_or(l.from);
-                if l.from < 1 || to < l.from || to > spec.depth {
+                if l.from < 1 || to < l.from || to > depth_of {
                     return Err(err(format!(
                         "dungeon `{id}`: levels {}..={to} are outside 1..={}",
-                        l.from, spec.depth
+                        l.from, depth_of
                     )));
                 }
             }
@@ -800,7 +877,12 @@ impl DungeonFile {
                 name: spec.name.unwrap_or_else(|| id.clone()),
                 arrival: spec.arrival,
                 id,
-                depth: spec.depth,
+                depth: depth_of,
+                endless: spec.endless.map(|e| Endless {
+                    caves: e.caves,
+                    caves_size: (e.caves_size[0], e.caves_size[1]),
+                    roster_depth: u32::MAX,
+                }),
                 ambient: spec.ambient,
                 creatures,
                 traps,

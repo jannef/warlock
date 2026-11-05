@@ -263,8 +263,7 @@ pub enum Unavailable {
     NoMana,
     /// One the place does not allow: foraging anywhere but in the wild (spec §8 "Foraging").
     NotHere,
-    /// The Heal ability with nothing to treat: no bleeding, and no poison or disease that may
-    /// still be tried.
+    /// The Heal ability with nothing to treat: no bleeding, poison, or disease that shows.
     NothingToTreat,
     /// A triggered weapon ability: it fires by itself, never chosen.
     FiresByItself,
@@ -366,10 +365,10 @@ impl Ability {
         let class = [Ability::ThrowVoice];
         // Talents: the active ones the talent table has.
         let wind = (content.talents().iter())
-            .flat_map(|(_, def)| def.effects_at(def.rank_count()))
+            .flat_map(|(_, def)| &def.effects)
             .any(|e| matches!(e, TalentEffect::SecondWind { .. }));
         let blood = (content.talents().iter())
-            .flat_map(|(_, def)| def.effects_at(def.rank_count()))
+            .flat_map(|(_, def)| &def.effects)
             .any(|e| matches!(e, TalentEffect::BloodMagic { .. }));
         let talents = (wind.then_some(Ability::SecondWind))
             .into_iter()

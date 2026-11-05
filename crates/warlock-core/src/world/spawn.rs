@@ -71,12 +71,13 @@ impl World {
     /// Dev: the danger of the current level, its creatures hostile to the player against its
     /// cap, and when the next attempt is due, for the dumps' headers; `None` on a level with no
     /// danger rule.
-    pub fn spawn_status(&self) -> Option<(u8, u32, u32, GameTime)> {
+    pub fn spawn_status(&self) -> Option<(u32, u32, u32, GameTime)> {
         let level = self.state.current();
         let (_, _, spawning) = self.content.spawning(&level.id)?;
         let at = level.spawner.as_ref()?.at;
         let cap = spawning.cap_for(self.walkable_cells());
-        Some((self.danger(&level.id), self.hostiles_here(), cap, at))
+        let danger = self.content.floor_danger(&level.id, self.player_level());
+        Some((danger, self.hostiles_here(), cap, at))
     }
 
     /// The walkable cells of the current level (what its population is counted by).
@@ -91,7 +92,7 @@ impl World {
 
     /// The creatures on the current level hostile to the player that its cap counts (a vault's
     /// monster pool stands outside it, [`Spawner::outside`]).
-    fn hostiles_here(&self) -> u32 {
+    pub(super) fn hostiles_here(&self) -> u32 {
         let (player, level) = (self.state.player, &self.state.current_level);
         let here = (self.state.actors.values()).filter(|a| a.level == *level && a.id != player);
         let spawner = self.state.current().spawner.as_ref();

@@ -89,7 +89,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     nothing twice); then the line's dice. Its effects: stat points (the score and its potential
     together, a score never below 1), gold (given, or taken down to none), items as kit lines (a
     magic one identified, a scroll or potion known), skill starts, weapon-skill marks (never a
-    rank), the starting alignment, and (#707, B5) a talent at rank 1 or a birth sign's flaw,
+    rank), the starting alignment, and (#707, B5) a talent or a birth sign's flaw,
     each with what it hands out and kept in `Actor::boons` as the forgotten altar's Chosen and
     Forsaken are (`World::bestow`), so every restore puts it back; never a given, class, or flaw
     talent as a `talent`, and never one held (the roll skips a line that would give one held or
@@ -445,9 +445,18 @@ developer notes (CLAUDE.md, `docs/dev/`).
     spent, a spell or an ability paid in it (`cast`; Concentration, 25 %, #668), discovery
     experience gained (`discover`: a first kill of a kind, an arrival that pays; Experience §8), a
     check rolled to resist a creature's ability, whatever comes of it (`resist`; "Knowledge"
-    below). Only the player trains for now; creatures keep their type's
+    below), a step wading (`wade`; Swim, below), a Swim check, whatever comes of it (`swim`). Only
+    the player trains for now; creatures keep their type's
     skills. Marks are a **reservoir**: they raise nothing by
     themselves and nothing is said; they gather until a level-up roll on the skill spends them.
+  - **Swim** (#1018): wading is quicker. A step onto wading terrain (`stars::wading`: water that
+    freezes, ground a disease is caught wading in; `move_cost` above 100, off the overworld) has
+    a percent of what it adds to a plain step spared: 60 at 100, all of it at 200
+    (`data/skills.toml`, `wade`), under the talents that spare all of it already (Swimmer,
+    Strong swimmer, Undertow). A player trained in it who plunges through the ice (§5 "Ice")
+    makes a **Swim check**: Toughness's modifier, the talents' Toughness checks, and the `swim`
+    benefit (+8 at 100, +12 at 200, at most 20) against 11; made, half the plunge's hit points,
+    rounded down. Marks: `wade` 10 %, reported per wading step whoever wades; `swim` 100 %.
   - **Level-up rolls** (design `docs/design/progression.md` §5): every level gives the player
     **skill rolls**: their class's `rolls` (`data/classes/`: 2; the thief and the ranger 3, the
     bard 4), their race's (`races.toml`: humans 1), and one more for an Intelligence score of
@@ -475,12 +484,16 @@ developer notes (CLAUDE.md, `docs/dev/`).
     creature's ability (a drain, §8 "Stats"; exposure to a disease its attack carries, §8
     "Diseases"; struggling free of its hold, §8 "Status effects") adds what the `resist` benefit
     gives, read at how far the skill's value stands **above the creature's level** (its type's),
-    not at the value: nothing at or below it, `curve = [[0, 0], [5, 1], [40, 4]]` (+1 at 5 above,
-    +4 from 40 above), at most 6 (`MAX_RESIST_BONUS`), magic items' and talents' skill bonuses
+    not at the value: nothing at or below it, `curve = [[0, 0], [5, 2], [40, 6]]` (+2 at 5 above,
+    +6 from 40 above), at most 6 (`MAX_RESIST_BONUS`), magic items' and talents' skill bonuses
     counted. Creatures resisting each other get nothing; a check no creature asked for (a scroll's
     backlash, rotten food, wading) neither. It is marked by `discover` (100 %) and `resist` (25 %).
     Nothing is said when it helps; the Skills screen's description says it in words; the wiki
-    has the curve. One hook, `World::resisting` (`world/knowledge.rs`).
+    has the curve. One hook, `World::resisting` (`world/knowledge.rs`). Look mode (§6) says what
+    a seen creature's kind resists, is immune to, and is vulnerable to, in the words of the
+    character screen's resistances and never a number, once the skill's value stands above its
+    level at all, with the same bonuses counted (#1030; `PerceptionView::known_resistances`): the
+    kind's own, not what this one wears or has on it. Knowing is not practising: no marks.
   - **Sneak attack** and **Initiative** (#682; §8 "Surprise and sneak attacks"): Sneak attack
     (`kind = "rules"`, after Search) gives `sneak_dice` (`steps = [1, 25, 50, 75, 100], every =
     50`: 1d6 trained at all, 5d6 at 100, 7d6 at 200; read by `World::sneak_dice`) and `surprise`
@@ -562,15 +575,13 @@ developer notes (CLAUDE.md, `docs/dev/`).
   degree) or the disease's own `difficulty`. Every try takes its time, may earn Heal a mark
   (`heal`), and makes no noise. A status that `stops` (bleeding) ends when the check is made
   ("You bind the wound." then its end line); failed ("The blood still runs.") it may be tried
-  again at once, any number of times. Any other status (poison) eases a degree when it is made
+  again at once, any number of times, as may every try below. Any other status (poison) eases a degree when it is made
   (ending at none); a disease made is eased: it counts as a progression check won toward its
   `recovery`, unless that would shake it off or it never recovers by itself, when its next
   progression is put off to a full interval from the try instead, so a try never cures. A poison
-  or a disease may be tried **once**, whatever comes of it ("You can do no more for the
-  poison." / "for the filth fever."): `Effect::treated` and `Infection::treated`, saved and
-  hashed, which go with the effect or the infection, so a new dose or a new infection may be
-  tried again. Refusals take no time and no draw: untrained ("You know nothing of healing."),
-  nothing to treat, or one already tried.
+  or a disease may be tried again and again, made or failed ("The poison will not come out."
+  / "You can do no more for the filth fever."): time is the price. Refusals take no time and no
+  draw: untrained ("You know nothing of healing."), or nothing to treat.
 - **Stealing** (`world/steal.rs`, data `data/steal.toml`, §7; #234, the progression design's
   B7): the Steal skill's use, the abilities menu's **Steal** (`Ability::Steal`, in the skill's
   place among the Skills; a direction; `Action::Steal`, replay text `steal:DIR`; cost `steal`;
@@ -633,11 +644,11 @@ developer notes (CLAUDE.md, `docs/dev/`).
   `world/talent.rs`, the picks; M30, #229; design `docs/design/progression.md` §7, §10): knacks
   a character picks as they level, each a typed effect read where the rules already read what
   magic items do.
-  - **Data** (§7): `data/talents.toml` (the settings: `max_ranks`, `[coverage]`, the `[[tree]]`s
+  - **Data** (§7): `data/talents.toml` (the settings: `[coverage]`, the `[[tree]]`s
     in display order, the closed `[[system]]` list) and `data/talents/<id>.toml`, one `[[talent]]`
-    a file (`id`, `name`, `tree`, `description` in the game's words, `ranks` 1 to `max_ranks`,
-    `choice` (`weapon_skill`, `style`, `skill`, `element`, `stat`), `needs`, `effects` per rank held,
-    `[[rank]]` with each rank's own `needs` and `effects`, `systems` from the list, `granted`:
+    a file (`id`, `name`, `tree`, `description` in the game's words,
+    `choice` (`weapon_skill`, `style`, `skill`, `element`, `stat`), `needs`, `effects`,
+    `systems` from the list, `granted`:
     given, never picked; `flaw`: a birth sign's flaw, granted, never a prerequisite). The first
     tree, **Stars** (`no_free`), holds the birth signs' gifts (§8 "Birth sign"). Without the
     files there are no talents and no level asks for one.
@@ -684,7 +695,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     child, which doubled the background story's luckier odds, was cut in #787 with its
     `background` system: no talent is left on the story's draw.)
   - **Prerequisites** (`Needs`; all must hold at the pick and are never checked again: a score
-    lowered later keeps the talent): other talents at a rank (a talent with a choice may be
+    lowered later keeps the talent): other talents (a talent with a choice may be
     needed only by one of the same choice, taken for the same), stat **scores** (the stored
     score, never the effective one), skill values, weapon skill or style ranks, any one of
     several weapon skills at a rank (`any_weapon_skill = { roles = ["melee", "unarmed"], of =
@@ -768,12 +779,12 @@ developer notes (CLAUDE.md, `docs/dev/`).
     Stalker's eye came at 2 with #788): a talent of the **Class abilities** tree (`class = true` in
     `data/talents.toml`; `granted`, never on a pick list) or an ordinary talent it hands out
     (the aristocrat's Riposte at 18, the commoner's Second wind at 32). The player is given each
-    at rank 1 as they reach its level ("You gain Fencing." with the level's news), level 1's at
+    as they reach its level ("You gain Fencing." with the level's news), level 1's at
     creation, and again whatever is missing when a run is restored, so a grown table reaches a
     save; one already held (picked earlier, or a story's boon) is not given again: its level
     brings a talent pick in its place instead ("You know Second wind already: choose a talent in
     its place.", #790; not on a restore), and nothing is taken away. What
-    a rank hands out once comes with it: hit points by level, and **stat gifts** (`stat`: score
+    a talent hands out once comes with it: hit points by level, and **stat gifts** (`stat`: score
     and potential, Iron will's Presence +1; a Toughness gift raises the hit points with the
     maximum). Its `bonus_talents` (`levels`, `trees`) add a **bonus pick** at those levels
     (`Due::bonus`), of a talent from those trees (none named: any, the commoner); a talent of
@@ -1066,7 +1077,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     and the stream are left out of the JSON while unused, so runs without talents hash as
     before. **Saves change.**
   - **What the player sees**: `PerceptionView::due`, `own_talents` (names for their choice,
-    the rank of how many, the description), `talents` (every talent with the next rank's
+    the description), `talents` (every talent with its
     prerequisites and whether each holds, and the ways it may be taken now); the dumps'
     `talents` and dev `progress` layers; JSON `talents`, `due`. Never a rule's number: the
     wiki's Talents page states them.
@@ -1280,11 +1291,12 @@ developer notes (CLAUDE.md, `docs/dev/`).
     Pack leader; its scroll is very hard to learn (`study_difficulty` 8, 10, 12).
   - **Wizard**: Scroll adept (reading −50 %; the spell scrolls read a rung higher, scrolls only:
     the spell scaling design, decision 12),
-    Ray of frost (level 1, at 1: a ray that rolls to hit, 1d6 cold; 1 mana), Arcane training
+    Ray of frost (level 1, at 1: a ray that rolls to hit, 1d6 cold; 1 mana), Burning hands
+    (level 1, at 1, #979: a cone of 3 cells, no hit roll, 1d4 fire, its ladder Intelligence 13:
+    1d6 to 22: 2d4+2; 3 mana, its own price), Arcane training
     (at 1: caster level +1 per 5 character levels, `caster_level` with `per_levels`), Magic missile
     (level 3, at 3: never misses, 1d4 force, its ladder Intelligence 13: 2d4 to 22: 3d4+1; 3
-    mana), Burning hands (level
-    4, at 12: a cone of 3 cells, 1d4 fire, its ladder to 3d4+2; 6 mana), Arcane bolt (level 6, at
+    mana), Arcane bolt (level 6, at
     18: a line of 6 cells, 2d6 force, its ladder to 3d6+4; 11 mana), Scribe (at 12: a scroll of
     a spell known written on a blank scroll, three times its mana; §8 "Scrolls"), Mage armour (Deflection +2 in no body armour),
     Empower (`spell_mod { rungs = 1 }`: its spells a rung higher on their ladders; spells' mana
@@ -1294,6 +1306,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     come from the Scholar and Spellcraft trees.
   - **Witch**: Herb lore (rotten food −50 %, a corpse's `on_eat` harm and vomiting never, the
     angelica root heals 1d6), Evil eye (level 0, at 1: Hexed 1 min a degree: −2 to hit; 1 mana),
+    Grave breath (level 1, at 1, #979: a cone of 3 cells, no hit roll, 1d4 necrotic, its ladder
+    Willpower 13: 1d6 to 22: 2d4+2; 3 mana, its own price),
     Hex of weakness (level 3, at 3: Weakened 2 min a degree: St −2, Dx −2; 3 mana), Cackle (at
     6, #904: `use:cackle`, nothing to aim, the time of a cast, no mana or cooldown; a voice 60
     loud, `Act::Cackle`; every effect on a creature the player's perception sees whose status a

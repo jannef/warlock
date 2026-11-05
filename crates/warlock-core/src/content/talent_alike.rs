@@ -1,8 +1,7 @@
 //! The identical-effects check on the talent table (#790; docs/dev/progression.md "Coverage
 //! policy", the #776 review's rule 3), run at load after every talent has parsed: no talent does
-//! at each of its ranks exactly what another does at the same ranks (a class ability that copies
-//! a pickable, Song of rest beside Fast healer, or a pickable copying another's first ranks). A
-//! class table names the pickable's id instead.
+//! exactly what another does (a class ability that copies a pickable, Song of rest beside Fast
+//! healer). A class table names the pickable's id instead.
 //!
 //! `alike` in `data/talents.toml` lists the pairs kept on purpose (Cleave and Cleaving strike:
 //! two cleave sources make a great cleave; the birth signs' gifts, which the owner keeps whole).
@@ -14,32 +13,22 @@ use super::{ContentError, StatusId, TalentBook, TalentDef, TalentEffect};
 /// the effect's identity, so `protection 2 while raging` is not Bulwark's plain `protection 2`.
 type Effect = (Option<StatusId>, TalentEffect);
 
-/// What `def` adds at `rank`, plain and conditional.
-fn effects_at(def: &TalentDef, rank: u8) -> impl Iterator<Item = Effect> + '_ {
-    (def.effects_at(rank).map(|e| (None, e)))
-        .chain(def.effects_while_at(rank).map(|(s, e)| (Some(s), e)))
-}
-
-/// What `def` does at each of its ranks: the effects that rank adds.
-fn signature(def: &TalentDef) -> Vec<Vec<Effect>> {
-    (1..=def.rank_count())
-        .map(|r| effects_at(def, r).collect())
-        .collect()
-}
-
 /// Whether two effect lists hold the same effects, in any order.
 fn same(a: &[Effect], b: &[Effect]) -> bool {
     a.len() == b.len() && a.iter().all(|e| b.contains(e)) && b.iter().all(|e| a.contains(e))
 }
 
-/// Whether `a` (no more ranks than `b`) does at each of its ranks what `b` does at the same
-/// rank, and does something: a clone of `b` or of its first ranks. Talents taken for different
-/// kinds of choice never match (Stylist's `weapon` reads a style, Schooled's a school).
-fn clone_of((a, sa): (&TalentDef, &[Vec<Effect>]), (b, sb): (&TalentDef, &[Vec<Effect>])) -> bool {
-    a.choice == b.choice
-        && sa.len() <= sb.len()
-        && sa.iter().any(|r| !r.is_empty())
-        && sa.iter().zip(sb).all(|(x, y)| same(x, y))
+/// What `def` adds, plain and conditional.
+fn signature(def: &TalentDef) -> Vec<Effect> {
+    (def.effects.iter().cloned().map(|e| (None, e)))
+        .chain((def.effects_while.iter().cloned()).map(|(s, e)| (Some(s), e)))
+        .collect()
+}
+
+/// Whether `a` does what `b` does, and does something. Talents taken for different kinds of
+/// choice never match (Stylist's `weapon` reads a style, Schooled's a school).
+fn clone_of((a, sa): (&TalentDef, &[Effect]), (b, sb): (&TalentDef, &[Effect])) -> bool {
+    a.choice == b.choice && !sa.is_empty() && same(sa, sb)
 }
 
 /// The check: the first clone not listed in `alike`, or the first listed pair that is none, in
@@ -51,15 +40,11 @@ pub(super) fn check(
 ) -> Result<(), ContentError> {
     let listed =
         |a: &str, b: &str| (alike.iter()).any(|[x, y]| (x == a && y == b) || (x == b && y == a));
-    let defs: Vec<(&TalentDef, Vec<Vec<Effect>>)> =
+    let defs: Vec<(&TalentDef, Vec<Effect>)> =
         book.iter().map(|(_, d)| (d, signature(d))).collect();
     let mut found: Vec<(&str, &str)> = Vec::new();
     for (i, (a, sa)) in defs.iter().enumerate() {
-        for (j, (b, sb)) in defs.iter().enumerate() {
-            // Each pair once, but a shorter clone of a longer talent either way round.
-            if i == j || (sa.len() == sb.len() && j < i) {
-                continue;
-            }
+        for (b, sb) in &defs[i + 1..] {
             if clone_of((a, sa), (b, sb)) {
                 found.push((&a.id, &b.id));
                 if !listed(&a.id, &b.id) {
@@ -152,37 +137,6 @@ systems = ["hit_points"]
             e.contains("`fast_healer` and `song_of_rest` have the same effects"),
             "{e}"
         );
-    }
-
-    #[test]
-    fn a_clone_of_a_talents_first_rank_is_refused() {
-        // The first rank of a talent of two under another id (the cut Whetstone).
-        let whetstone = r#"
-[[talent]]
-id = "whetstone"
-name = "Whetstone"
-tree = "class"
-granted = true
-description = "Sharper blows."
-effects = [{ kind = "melee_damage", value = 7 }]
-systems = ["combat"]
-"#;
-        let oilstone = r#"
-[[talent]]
-id = "oilstone"
-name = "Oilstone"
-tree = "class"
-granted = true
-ranks = 2
-description = "Sharper blows, and more so."
-effects = [{ kind = "melee_damage", value = 7 }]
-systems = ["combat"]
-"#;
-        let e = refusal(load(
-            &[("whetstone", whetstone), ("oilstone", oilstone)],
-            str::to_string,
-        ));
-        assert!(e.contains("`whetstone` and `oilstone`"), "{e}");
     }
 
     #[test]

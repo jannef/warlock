@@ -505,24 +505,21 @@ pub(super) fn check_talents(
         }
     }
     for (_, def) in talents.iter() {
-        let needs = std::iter::once(&def.needs).chain(def.ranks.iter().map(|r| &r.needs));
-        for needs in needs {
-            if let Some(animal) = &needs.animal
-                && !h.animals.iter().any(|a| &a.id == animal)
-            {
-                return Err(err(format!(
-                    "talent `{}` needs an unknown animal `{animal}`",
-                    def.id
-                )));
-            }
-            if let Some(element) = &needs.element
-                && !h.elements.iter().any(|e| &e.id == element)
-            {
-                return Err(err(format!(
-                    "talent `{}` needs an unknown element `{element}`",
-                    def.id
-                )));
-            }
+        if let Some(animal) = &def.needs.animal
+            && !h.animals.iter().any(|a| &a.id == animal)
+        {
+            return Err(err(format!(
+                "talent `{}` needs an unknown animal `{animal}`",
+                def.id
+            )));
+        }
+        if let Some(element) = &def.needs.element
+            && !h.elements.iter().any(|e| &e.id == element)
+        {
+            return Err(err(format!(
+                "talent `{}` needs an unknown element `{element}`",
+                def.id
+            )));
         }
     }
     Ok(())

@@ -363,11 +363,16 @@ impl World {
             return false;
         }
         let from = self.state.current_level.clone();
+        // Those beside the player and after them come too (`stair_followers.rs`).
+        let followers = self.stair_followers();
         if let Err(err) = self.travel(&to, None) {
             self.say(format!("The stairs are blocked ({err})."));
             return false;
         }
-        events.push(Event::LevelChanged { from, to });
+        events.push(Event::LevelChanged {
+            from: from.clone(),
+            to,
+        });
         let level = self.state.current();
         // A revealed location goes by its own name (spec §7 "Hidden locations").
         let name = link.name.unwrap_or_else(|| level.name.clone());
@@ -378,6 +383,7 @@ impl World {
             (_, _, StairsDir::Up) => format!("You climb the stairs to {name}."),
         };
         self.say(text);
+        self.followers_arrive(&followers, &from, way);
         true
     }
 
@@ -387,7 +393,7 @@ impl World {
     pub(super) fn travel(&mut self, to: &str, at: Option<Pos>) -> Result<(), WorldError> {
         let from = self.state.current_level.clone();
         let old = self.player_pos();
-        let new = !self.state.levels.contains_key(to);
+        let new = !self.state.levels.contains_key(to) && self.state.endless.pays(&self.content, to);
         self.visit(to, Some(&from))?;
         let target = &self.state.levels[to];
         let arrival = at
@@ -448,7 +454,10 @@ impl World {
             };
             let template = level_template(
                 &self.content,
-                (&self.state.campaign, self.state.seed),
+                (
+                    &self.state.campaign,
+                    self.state.level_seed(&self.content, id),
+                ),
                 id,
                 (from, &visit),
             )?;
@@ -459,24 +468,56 @@ impl World {
 
     /// `p` if no actor stands there, else the nearest walkable unoccupied cell (ring search).
     pub(super) fn free_cell_near(&self, level_id: &str, p: Pos) -> Pos {
-        let level = &self.state.levels[level_id];
-        let free = |q: Pos| {
-            level.is_walkable(&self.content, q) && self.state.actor_at(level_id, q).is_none()
-        };
         if self.state.actor_at(level_id, p).is_none() {
             return p;
         }
-        for r in 1..level.width().max(level.height()) {
+        let level = &self.state.levels[level_id];
+        let reach = level.width().max(level.height()) - 1;
+        self.free_cell_within(level_id, p, reach, |_| true)
+            .unwrap_or(p)
+    }
+
+    /// The nearest walkable unoccupied cell around `p` that `allowed` lets in, from one cell
+    /// away out to `reach` (ring search, in row order); `None` if there is none.
+    pub(super) fn free_cell_within(
+        &self,
+        level_id: &str,
+        p: Pos,
+        reach: i32,
+        allowed: impl Fn(Pos) -> bool,
+    ) -> Option<Pos> {
+        let level = &self.state.levels[level_id];
+        let free = |q: Pos| {
+            level.is_walkable(&self.content, q)
+                && self.state.actor_at(level_id, q).is_none()
+                && allowed(q)
+        };
+        for r in 1..=reach {
             for dy in -r..=r {
                 for dx in -r..=r {
                     let q = Pos::new(p.x + dx, p.y + dy);
                     if q.chebyshev(p) == r && free(q) {
-                        return q;
+                        return Some(q);
                     }
                 }
             }
         }
-        p
+        None
+    }
+
+    /// Actor `id` crosses to level `to` with the player, onto `pos`; what it heard stays behind.
+    /// The one way an actor changes level but the player (`World::follow_along`,
+    /// `World::followers_arrive`); each says what else it keeps of its mind.
+    pub(super) fn cross_to(&mut self, id: ActorId, to: &str, pos: Pos) {
+        if let Some(a) = self.state.actors.get_mut(&id) {
+            // A vault's monster pool stands outside its level's cap; on another level it counts.
+            let from = std::mem::replace(&mut a.level, to.to_string());
+            a.pos = pos;
+            a.heard.clear();
+            if let Some(s) = (self.state.levels.get_mut(&from)).and_then(|l| l.spawner.as_mut()) {
+                s.outside.remove(&id);
+            }
+        }
     }
 }
 
@@ -524,11 +565,12 @@ pub(super) fn instantiate_level(
     template: &LevelTemplate,
 ) {
     let id = template.id.as_str();
+    let seed = state.level_seed(content, id);
     let mut level = LevelState::from_template(template, content, state.time);
     crate::rot::made_at(level.objects.values_mut().flatten(), content, state.time);
     // The wands lying there and in its chests that have no rung yet (a level file's, a
     // vault's) draw theirs now, from the level's objects stream, pile by pile in cell order.
-    let mut rng = crate::rng::Rng::objects(state.seed, id);
+    let mut rng = crate::rng::Rng::objects(seed, id);
     let held = level.chests.values_mut().flat_map(|c| c.holds.iter_mut());
     for stack in level.objects.values_mut().flatten().chain(held) {
         stack.draw_wand_rung(content, &mut rng);
@@ -547,9 +589,10 @@ pub(super) fn instantiate_level(
     }
     // A level with a danger rule keeps what comes to it (spec §7 "Danger levels").
     if let Some((_, _, spawning)) = content.spawning(id) {
-        level.spawner = Some(Spawner::new(state.seed, id, state.time, spawning.every));
+        level.spawner = Some(Spawner::new(seed, id, state.time, spawning.every));
     }
     state.levels.insert(id.to_string(), level);
+    state.endless.made(content, id);
     // The hidden locations revealed before the overworld was made (spec §7 "Hidden locations").
     super::reveal::apply_revealed(state, id);
     // Under the open sky its water has frozen and thawed with the weather of the last weeks.
@@ -623,6 +666,7 @@ pub(super) fn make_creature(
         alignment_override: spawn.alignment,
         npc: spawn.npc.clone(),
         talk: Talk::default(),
+        home: None,
         spells: Default::default(),
         streak: None,
         satiation: None,

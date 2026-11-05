@@ -97,7 +97,7 @@ above.
 | Camping (resting on the overworld), the sleeper's lookout | `encounters.md#camping-and-foraging` |
 | An encounter table | `encounters.md#the-ascmearcs-encounters` (a table: `encounters.md#encounter-table-ID`) |
 | The Ascmearc and its places | `ascmearc.md#the-places` |
-| Terrain, walls, water, stairs | `terrain.md#walls`, `terrain.md#water`, `terrain.md#stairs` |
+| Terrain, walls, water, stairs, creatures following you on stairs | `terrain.md#walls`, `terrain.md#water`, `terrain.md#stairs` |
 | Digging, wall hardness | `digging.md#digging`, `digging.md#what-breaks-and-what-does-not` |
 | Explosions, blasts | `digging.md#explosions` |
 | Doors; locked, kicked, broken doors | `doors.md`, `doors.md#locked-doors`, `doors.md#kicking` |
@@ -109,6 +109,7 @@ above.
 | Dungeon, danger level, population | `dungeons.md`, `dungeons.md#who-lives-there-and-how-many` |
 | Out of depth, strays | `dungeons.md#who-lives-there-and-how-many` |
 | Lairs of the wanted | `dungeons.md#the-lairs-of-the-wanted` |
+| Grundlēas, floors forgotten | `dungeons.md#grundlēas` |
 | Special room | `special-rooms.md` (a room: its row) |
 | Forgotten altar, praying | `special-rooms.md#forgotten-altars` |
 | Forge, tempering | `special-rooms.md#forges` |
@@ -156,7 +157,7 @@ above.
 | Horoscope, animal, element, lucky day | `horoscope.md`, `horoscope.md#animals`, `horoscope.md#elements`, `horoscope.md#lucky-days` |
 | The great cycle | `horoscope.md#the-great-cycle` |
 | Alignment, good, evil, band | `alignment.md`, `alignment.md#what-moves-you` |
-| Talent, talent ranks, prerequisites | `talents.md`, `talents.md#ranks-choices-prerequisites` (a talent: its row) |
+| Talent, prerequisites | `talents.md`, `talents.md#choices-and-prerequisites` (a talent: its row) |
 | Racial talents | `talents.md#racial-talents` |
 | A talent tree (Vigour, Shadow, Delver, …) | its heading, `talents.md#delver` |
 | Class abilities | `talents.md#class-abilities`, `abilities.md` |

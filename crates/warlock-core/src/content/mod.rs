@@ -203,7 +203,7 @@ pub use dialogue::{
 };
 pub use disease::{DIFFICULTIES, DiseaseDef, DiseaseId, SOURCES, Wading};
 pub use dungeon::{
-    ChestOdds, DungeonDef, Generator, LevelPlan, RoomOdds, ShopOdds, parse_branch_level,
+    ChestOdds, DungeonDef, Endless, Generator, LevelPlan, RoomOdds, ShopOdds, parse_branch_level,
 };
 pub use effect::{
     Darken, EffectDef, EffectLight, EffectShape, FILL_GLYPH, MAX_BURST_RADIUS, MAX_DARKEN,
@@ -321,9 +321,9 @@ pub use summon::Summon;
 pub use surprise::SurpriseRules;
 pub use tag::{MAX_TAG, TAG_TARGET, spoken};
 pub use talent::{
-    AnyWeaponSkill, Choice, Coverage, DEFAULT_MAX_RANKS, FreeBlowTrigger, Need, Needs, Rank,
-    ResourceCost, SmiteRiderKind, SongOn, SystemDef, SystemId, TalentActive, TalentBook, TalentDef,
-    TalentEffect, TalentId, TreeDef, TreeId,
+    AnyWeaponSkill, Choice, Coverage, FreeBlowTrigger, Need, Needs, ResourceCost, SmiteRiderKind,
+    SongOn, SystemDef, SystemId, TalentActive, TalentBook, TalentDef, TalentEffect, TalentId,
+    TreeDef, TreeId,
 };
 pub use terrain::{
     Breakable, Freeze, FreezeSpec, MAX_HARDNESS, MAX_HEIGHT, StairsDir, TerrainDef, TerrainId,
@@ -2598,6 +2598,30 @@ impl Content {
                 s.generic = list;
             }
         }
+        self.fill_rosters();
+    }
+
+    /// How deep each endless branch's roster reaches: the floor whose danger is the highest level
+    /// that may be drawn there (a family's top counts), its population's or its strays'.
+    fn fill_rosters(&mut self) {
+        let none = BTreeSet::new();
+        let tops: Vec<Option<u32>> = (self.dungeons.values())
+            .map(|d| {
+                d.endless?;
+                let s = d.spawning.as_ref()?;
+                let kinds = s.population.iter().chain(&s.generic).copied();
+                let kinds: Vec<CreatureId> = kinds.collect();
+                let top = (self.candidates(&kinds, &none).iter())
+                    .map(|(_, (_, to), _)| *to)
+                    .max()?;
+                Some(d.plan(1)?.danger?.deepest_at(top))
+            })
+            .collect();
+        for (d, top) in self.dungeons.values_mut().zip(tops) {
+            if let (Some(e), Some(top)) = (d.endless.as_mut(), top) {
+                e.roster_depth = top;
+            }
+        }
     }
 
     /// Whether creature type `c` may come as a stray to an area whose population does not name
@@ -3521,7 +3545,37 @@ impl Content {
         }
         let (branch, depth) = self.branch_level(id)?;
         let rule = branch.plan(depth)?.danger?;
+        // Past the roster's top, an endless branch draws as at its top (spec §7 "The endless
+        // branch"): nothing above a danger is drawn, and nothing far below it.
+        let depth = (branch.endless).map_or(depth, |e| depth.min(e.roster_depth));
         Some((rule, depth, branch.spawning.as_ref()?))
+    }
+
+    /// The danger floor `id` stands at for a player of `player_level`: what [`Content::spawning`]
+    /// gives, but on an endless branch the number that keeps rising past what is drawn.
+    pub fn floor_danger(&self, id: &str, player_level: u8) -> u32 {
+        if let Some((def, depth)) = self.branch_level(id)
+            && def.endless.is_some()
+            && let Some(rule) = def.plan(depth).and_then(|p| p.danger)
+        {
+            return rule.rising(depth);
+        }
+        (self.spawning(id)).map_or(0, |(rule, depth, _)| rule.at(depth, player_level).into())
+    }
+
+    /// Whether `id` is a floor of an endless branch: made when it is reached, gone when it is
+    /// left (`world/endless.rs`).
+    pub fn is_endless_floor(&self, id: &str) -> bool {
+        self.branch_level(id)
+            .is_some_and(|(def, _)| def.endless.is_some())
+    }
+
+    /// The hand-made level whose stairs lead to level `id`, if one does: where an endless
+    /// branch's first floor climbs out to, however it was reached.
+    pub fn way_into(&self, id: &str) -> Option<&str> {
+        (self.levels.iter())
+            .find(|(_, l)| l.stairs.iter().any(|s| s.to.as_deref() == Some(id)))
+            .map(|(from, _)| from.as_str())
     }
 
     pub fn dungeon(&self, id: &str) -> Option<&DungeonDef> {
@@ -3628,10 +3682,7 @@ impl Content {
             return false;
         };
         (self.talents.iter()).any(|(_, def)| {
-            (def.effects
-                .iter()
-                .chain(def.ranks.iter().flat_map(|r| r.effects.iter())))
-            .any(|e| matches!(e, TalentEffect::Spell { spell: s } if s == name))
+            (def.effects.iter()).any(|e| matches!(e, TalentEffect::Spell { spell: s } if s == name))
         })
     }
 

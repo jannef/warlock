@@ -9,8 +9,8 @@ use warlock_core::content::{
 };
 use warlock_core::noise::SONG_NOISE;
 
-/// Every tree in display order: a heading, its description, and its talents (name, ranks, what
-/// each rank needs, what it does as the rule, and the systems it touches).
+/// Every tree in display order: a heading, its description, and its talents (name, what it
+/// needs, what it does as the rule, and the systems it touches).
 pub(super) fn talents(content: &Content) -> String {
     let book = content.talents();
     let mut out = String::new();
@@ -21,16 +21,15 @@ pub(super) fn talents(content: &Content) -> String {
             out.push_str("No talents yet.\n\n");
             continue;
         }
-        out.push_str("| Talent | Ranks | Needs | Effect | Systems |\n|---|---:|---|---|---|\n");
+        out.push_str("| Talent | Needs | Effect | Systems |\n|---|---|---|---|\n");
         for def in rows {
             let systems: Vec<&str> = (def.systems.iter())
                 .map(|s| book.system(*s).name.as_str())
                 .collect();
             let _ = writeln!(
                 out,
-                "| {} | {} | {} | {} | {} |",
+                "| {} | {} | {} | {} |",
                 anchored(Term::Talent, &def.id, &name(def)),
-                def.rank_count(),
                 needs_text(content, def),
                 effects_text(content, def),
                 systems.join(", ")
@@ -165,7 +164,7 @@ pub(super) fn prestige_levels(content: &Content) -> String {
 }
 
 /// One class's (or prestige class's) table: a heading, its bonus picks, then each row's
-/// ability with what it does (a talent handed out rank by rank, that rank's).
+/// ability with what it does.
 fn level_table(content: &Content, table: Table, out: &mut String) {
     let book = content.talents();
     let bonus = table.bonus_talents();
@@ -189,18 +188,11 @@ fn level_table(content: &Content, table: Table, out: &mut String) {
         );
     }
     out.push_str("| Level | Ability | Effect |\n|---:|---|---|\n");
-    for (level, id, rank) in table.abilities() {
+    for (level, id) in table.abilities() {
         let Some(talent) = book.id(id) else { continue };
         let def = book.get(talent);
-        // A talent of ranks the table hands out rank by rank: each row that rank's.
-        let (name, effects) = match def.rank_count() > 1 {
-            true => (
-                format!("{} {rank}/{}", def.name, def.rank_count()),
-                rank_text(content, def, *rank),
-            ),
-            false => (def.name.clone(), effects_text(content, def)),
-        };
-        let _ = writeln!(out, "| {level} | {name} | {effects} |");
+        let effects = effects_text(content, def);
+        let _ = writeln!(out, "| {level} | {} | {effects} |", def.name);
     }
     out.push('\n');
 }
@@ -259,8 +251,7 @@ fn name(def: &TalentDef) -> String {
     }
 }
 
-/// The prerequisites: the talent's own, then each rank's where they differ ("Toughness 11 / 14
-/// / 17"); "—" for none; a granted talent is never picked.
+/// The prerequisites; "—" for none; a granted talent is never picked.
 pub(super) fn needs_text(content: &Content, def: &TalentDef) -> String {
     if def.granted && content.talents().tree(def.tree).class {
         return "given by a class's table, never picked".into();
@@ -276,46 +267,20 @@ pub(super) fn needs_text(content: &Content, def: &TalentDef) -> String {
         }
         return "given by a birth sign, never picked".into();
     }
-    let words = |needs: &[Need]| -> String {
-        (needs.iter())
-            .map(|n| match n {
-                Need::Creation => "only at character creation".to_string(),
-                n => n.words(content),
-            })
-            .collect::<Vec<_>>()
-            .join(", ")
-    };
-    let common: Vec<Need> = def.needs.iter().collect();
-    let per_rank: Vec<Vec<Need>> = (def.ranks.iter())
-        .map(|r| r.needs.iter().collect())
-        .collect();
-    let mut parts = Vec::new();
-    if !common.is_empty() {
-        parts.push(words(&common));
+    if def.needs.is_empty() {
+        return "—".to_string();
     }
-    if per_rank.iter().any(|r| !r.is_empty()) {
-        let ranks: Vec<String> = (per_rank.iter().enumerate())
-            .map(|(i, r)| {
-                if r.is_empty() {
-                    format!("{}: —", i + 1)
-                } else {
-                    format!("{}: {}", i + 1, words(r))
-                }
-            })
-            .collect();
-        parts.push(ranks.join("; "));
-    }
-    if parts.is_empty() {
-        "—".to_string()
-    } else {
-        parts.join("; ")
-    }
+    (def.needs.iter())
+        .map(|n| match n {
+            Need::Creation => "only at character creation".to_string(),
+            n => n.words(content),
+        })
+        .collect::<Vec<_>>()
+        .join(", ")
 }
 
-/// What the talent does, as the rule: its per-rank effects ("per rank" when it has several
-/// ranks), then any rank's own.
+/// What the talent does, as the rule.
 pub(super) fn effects_text(content: &Content, def: &TalentDef) -> String {
-    let ranked = def.rank_count() > 1;
     let chosen = def.choice.is_some();
     let text_of = |e: &TalentEffect| match e {
         TalentEffect::SpellMod(spec) => spell_mod_text(content, spec, chosen),
@@ -327,34 +292,11 @@ pub(super) fn effects_text(content: &Content, def: &TalentDef) -> String {
         format!("{} while {name}", text_of(e))
     };
     let plain = (def.effects.iter()).map(text_of);
-    let mut parts: Vec<String> = (plain.chain(def.effects_while.iter().map(under)))
-        .map(|text| {
-            if ranked {
-                format!("{text} per rank")
-            } else {
-                text
-            }
-        })
-        .collect();
-    for (i, rank) in def.ranks.iter().enumerate() {
-        let own = (rank.effects.iter().map(text_of)).chain(rank.effects_while.iter().map(under));
-        for text in own {
-            parts.push(format!("rank {}: {text}", i + 1));
-        }
-    }
+    let mut parts: Vec<String> = plain.chain(def.effects_while.iter().map(under)).collect();
     if let Some(cost) = def.resource {
         let name = content.resource(cost.resource).name.to_lowercase();
         parts.push(format!("costs {} {name}", cost.amount));
     }
-    parts.join("; ")
-}
-
-/// What rank `rank` of `def` adds, as a class table gives it: the per-rank effects and that
-/// rank's own.
-fn rank_text(content: &Content, def: &TalentDef, rank: u8) -> String {
-    let parts: Vec<String> = (def.effects_at(rank))
-        .map(|e| effect_text(content, &e))
-        .collect();
     parts.join("; ")
 }
 

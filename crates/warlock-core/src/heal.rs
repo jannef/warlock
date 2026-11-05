@@ -5,10 +5,11 @@
 //! An **ailment** is a status with a `treat` table (`data/status.toml`: bleeding, poisoned) or a
 //! disease that shows (`data/diseases.toml`). One may be treated now when:
 //!
-//! - a status that `stops` (bleeding): always, while it lasts; a failed try may be made again;
-//! - any other status (poison): until it has been tried once ([`crate::status::Effect::treated`]);
-//! - a disease: once it shows, until it has been tried once ([`crate::disease::Infection::treated`]).
-//!   One still incubating is not known to its sufferer, so it is not offered.
+//! - a status with a `treat` table (bleeding, poison): always, while it lasts;
+//! - a disease: once it shows. One still incubating is not known to its sufferer, so it is not
+//!   offered.
+//!
+//! A failed or a made try may be made again at once, on any of them: time is the price.
 //!
 //! In status order, then disease order: what a bare `heal` treats is the first of them.
 //!
@@ -73,20 +74,11 @@ fn capitalized(s: &str) -> String {
     })
 }
 
-/// Whether `actor` may treat `ailment` now: they suffer it, and it is not spent (see the
-/// module's rules).
+/// Whether `actor` may treat `ailment` now: they suffer it (see the module's rules).
 pub fn may_treat(actor: &Actor, content: &Content, ailment: Ailment) -> bool {
     match ailment {
-        Ailment::Status(s) => {
-            let Some(treat) = content.status(s).treat.as_ref() else {
-                return false;
-            };
-            actor
-                .effects
-                .get(s)
-                .is_some_and(|e| treat.stops || !e.treated)
-        }
-        Ailment::Disease(d) => (actor.diseases.get(d)).is_some_and(|i| i.shown && !i.treated),
+        Ailment::Status(s) => content.status(s).treat.is_some() && actor.effects.get(s).is_some(),
+        Ailment::Disease(d) => (actor.diseases.get(d)).is_some_and(|i| i.shown),
     }
 }
 

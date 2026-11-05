@@ -200,7 +200,7 @@ fn travelled_hands_raises_every_weapon_skill_and_style_held_at_nothing_to_one() 
     assert!(said(&b).contains(&"You gain Travelled hands.".to_string()));
     assert!(said(&b).contains(&"Your hands know every weapon a little.".to_string()));
     // Blessing is no longer the bard's: a priest's spell.
-    assert!(!b.state.player().talents.has("blessing", 1));
+    assert!(!b.state.player().talents.has("blessing"));
     // The rank is real: a restored run keeps it, and marks carry it on.
     let restored = World::from_state(content.clone(), b.state().clone()).expect("restored");
     assert_eq!(rank(&restored, "long_blades"), 1);
@@ -234,7 +234,7 @@ fn weapon_ranks_walks_the_content_or_the_rows_it_names() {
     actor.weapon_skills = Default::default();
     let book = content.talents();
     let trade = book.get(book.id("fixture_trade").expect("the fixture"));
-    super::class::hand_out(&content, &mut actor, trade, 1, 1);
+    super::class::hand_out(&content, &mut actor, trade, 1);
     let ranked: Vec<&str> = (actor.weapon_skills.trained())
         .filter(|(_, t)| t.rank == 3)
         .map(|(id, _)| table.skill(id).id.as_str())
@@ -459,7 +459,6 @@ fn a_save_holding_a_talent_the_content_no_longer_has_is_refused() {
     let mut talents: Vec<crate::talent::Taken> = me.talents.iter().cloned().collect();
     talents.push(crate::talent::Taken {
         id: "trapfinding".into(),
-        rank: 1,
         choice: None,
     });
     me.talents =
@@ -696,12 +695,9 @@ fn jack_of_all_trades_takes_up_every_skill_but_sneak_attack_then_master_of_none_
     let mut b = world("bard");
     reach(&mut b, 11);
     let before = skill_values(&b);
-    assert!(!b.state.player().talents.has("jack_of_all_trades", 1));
+    assert!(!b.state.player().talents.has("jack_of_all_trades"));
     reach(&mut b, 12);
-    assert_eq!(
-        b.state.player().talents.rank_of("jack_of_all_trades", None),
-        1
-    );
+    assert!(b.state.player().talents.holds("jack_of_all_trades", None));
     let after = skill_values(&b);
     let content = b.content().clone();
     for (id, skill) in content.skill_ids() {
@@ -726,7 +722,7 @@ fn jack_of_all_trades_takes_up_every_skill_but_sneak_attack_then_master_of_none_
     reach(&mut b, 24);
     let kept = skill_values(&b);
     reach(&mut b, 25);
-    assert_eq!(b.state.player().talents.rank_of("master_of_none", None), 1);
+    assert!(b.state.player().talents.holds("master_of_none", None));
     assert!(said(&b).contains(&"You gain Master of none.".to_string()));
     // Master of none takes nothing up: the skills only grow by the level's rolls.
     assert_eq!(skill_values(&b).len(), kept.len());
@@ -754,8 +750,8 @@ fn a_restored_bard_past_25_is_given_both_and_a_skill_added_later_is_taken_up() {
     let restored = World::from_state(content.clone(), state).expect("restored");
     // Both talents, the first's skills taken up on the way (no news on a restore).
     let me = restored.state.player();
-    assert_eq!(me.talents.rank_of("jack_of_all_trades", None), 1);
-    assert_eq!(me.talents.rank_of("master_of_none", None), 1);
+    assert!(me.talents.holds("jack_of_all_trades", None));
+    assert!(me.talents.holds("master_of_none", None));
     assert_eq!(me.talent_mods(&content).trained_skills, 5);
     let juggling = content.skill_id("juggling").expect("juggling");
     assert!((2..=5).contains(&me.skills.value(juggling).expect("taken up")));

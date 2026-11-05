@@ -28,6 +28,18 @@ Per-tribe notes:
 Developer notes for working on this part of Warlock (moved from CLAUDE.md, #185); the
 rules it implements are in spec/08b-creatures.md. Keep it current with the code, as CLAUDE.md says.
 
+Stair followers (spec §8 "Stair followers", #985) live in `world/stair_followers.rs`, whose
+module docs are the rules: `take_stairs` asks `stair_followers` before `travel` (awareness reads
+the level being left) and `followers_arrive` after. A follower crosses through
+`travel.rs::cross_to`, the allies' way, and keeps its `Mind` with `last_seen` set to the player's
+arrival and `post`, `noise`, and `patrol` cleared, since those name the old level's cells. What
+reads a creature's old place: `Actor::home` (the level it first left) is what `fight.rs::dies`
+tallies a kill under, so `level`-scoped kill quests stay fair; `summon.rs::live_summons` counts a
+summoner's summons on its own level only; a hold (`hold.rs`) ends by itself if the holder stayed
+behind and goes on if it came. A den's sleepers don't follow until woken, a shop's keeper never;
+`hostiles_here` reads the level, so the spawn cap moves with the follower. Hoards, curses, and
+hauntings keep no ids, so losing a guardian to the stairs changes nothing there.
+
 Factions and creature behavior (spec §7 "Factions", §5 "Creature sight", §8 "Creature behavior"):
 `data/factions.toml` (`content/faction.rs`: `Factions`, symmetric hostility, `Stance`; optional,
 without it everyone is neutral, but then no creature may name a faction; monsters fight only the

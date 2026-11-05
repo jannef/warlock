@@ -301,7 +301,7 @@ fn the_wizard_learns_knock_at_level_four() {
         .find(|c| c.id == "wizard")
         .expect("wizard");
     assert!(
-        (wizard.abilities.iter()).any(|(level, talent, _)| *level == 4 && talent == "knock"),
+        (wizard.abilities.iter()).any(|(level, talent)| *level == 4 && talent == "knock"),
         "Knock at level 4"
     );
 }
