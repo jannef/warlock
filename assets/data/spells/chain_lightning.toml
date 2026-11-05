@@ -1,0 +1,28 @@
+# Chain lightning (the spell types design docs/design/spell-types-and-new-spells.md §7 entry 1): the
+# electricity type's arc made certain and long. `arcs` jumps are taken without a draw, each within
+# two cells; its `count` ladder grows them.
+[[spell]]
+id = "chain_lightning"
+name = "Chain lightning"
+description = "A bolt of lightning toward a place you aim at: it strikes the first creature in its way, then leaps to the next, and the next."
+level = 20
+school = "evocation"
+kind = "damage"
+shape = "bolt"
+resolution = "auto"
+damage_type = "electricity"
+range = 8
+damage = "3d6"
+effect = { arcs = 3 }
+
+[spell.cast]
+effect = "lightning_bolt"
+noun = "chain lightning"
+verb = "strikes"
+message = "Lightning leaps from your hands, and leaps again!"
+noise = { sound = "thunder", loudness = 120 }
+
+[spell.grows]
+damage = "intelligence 13 4d6, 16 5d6, 19 6d6, 25 6d6+3"
+range = "willpower 14 9, 18 10"
+count = "willpower 14 4, 18 5, 22 6"

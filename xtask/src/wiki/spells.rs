@@ -2,10 +2,10 @@
 //! casting percents, the spell list by spell level, the classes' guaranteed spells, the armour
 //! that makes casting dearer, and the wands.
 
-use super::text::{Term, anchored, link};
+use super::text::{Term, anchored, damage_link, link};
 use std::fmt::Write as _;
 use warlock_core::content::{
-    Content, Resolution, RodDoes, RodShape, Shape, SpellData, SpellPurpose, TalentEffect,
+    BurstIce, Content, Resolution, RodDoes, RodShape, Shape, SpellData, SpellPurpose, TalentEffect,
 };
 
 /// What each shape multiplies the base cost by; a burst by radius.
@@ -29,6 +29,86 @@ pub(super) fn shapes(content: &Content) -> String {
             let cost = rules.shape_cost(shape, 0);
             let _ = writeln!(out, "| {} | {area} | ×{} |", shape.id(), times(cost));
         }
+    }
+    out
+}
+
+/// What every spell of a damage type does beyond its damage (`[types]` in `data/spells.toml`), by
+/// the type's name.
+pub(super) fn types(content: &Content) -> String {
+    let Some(rules) = content.spell_rules() else {
+        return String::new();
+    };
+    let mut rows: Vec<(String, String, String, String)> = (rules.types.iter())
+        .map(|(&kind, rule)| {
+            let status = |s| {
+                let def = content.status(s);
+                link(Term::Status, &def.id, &def.name)
+            };
+            let mut harmed = Vec::new();
+            if let Some(rider) = rule.rider {
+                let mut text = format!("{} {}", status(rider.status), rider.severity);
+                if rider.chance < 100 {
+                    let _ = write!(text, ", {} % of the time", rider.chance);
+                }
+                harmed.push(text);
+            }
+            harmed.extend(rule.ends.iter().map(|&s| format!("ends {}", status(s))));
+            if let Some(chance) = rule.arc {
+                harmed.push(format!("arcs to one beside it, {chance} % of the time"));
+            }
+            if rule.conducts {
+                harmed.push("strikes everyone in its body of water".into());
+            }
+            if rule.shove {
+                harmed.push(
+                    "a [big hit](combat.md#damage) or a critical knocks it a cell away".to_string(),
+                );
+            }
+            if let Some(bite) = rule.bite {
+                harmed.push(format!(
+                    "{} % of the harm against one below {} % of its hit points",
+                    bite.percent, bite.below_percent
+                ));
+            }
+            for tag in &rule.immune_tags {
+                harmed.push(format!("{tag} creatures are immune"));
+            }
+            let mut cells = Vec::new();
+            match rule.ice {
+                Some(BurstIce::Melts) => cells.push("melts ice".to_string()),
+                Some(BurstIce::Freezes(um)) => {
+                    cells.push(format!("freezes water, {} cm thick", um / 10_000));
+                }
+                None => {}
+            }
+            if rule.douses {
+                cells.push("puts out fires".into());
+            }
+            if rule.shatter {
+                cells.push("a blast shatters ice thinner than 1 cm per 100 of the blast".into());
+            }
+            if rule.doors {
+                cells.push("a blast breaks shut doors, locked and trapped ones too".into());
+            }
+            let left = rule.fire.map_or_else(String::new, |(_, burns)| {
+                format!("a fire on its centre, {burns} s")
+            });
+            (
+                damage_link(content, kind),
+                harmed.join("; "),
+                cells.join("; "),
+                left,
+            )
+        })
+        .collect();
+    rows.sort();
+    let mut out = String::from(
+        "| Type | On each creature harmed | On the cells it reaches | A burst leaves |\n\
+         |---|---|---|---|\n",
+    );
+    for (name, harmed, cells, left) in rows {
+        let _ = writeln!(out, "| {name} | {harmed} | {cells} | {left} |");
     }
     out
 }
@@ -189,6 +269,8 @@ pub(super) fn grows_with(spell: &SpellData) -> String {
     let text: Vec<String> = (spell.grows.named().into_iter())
         .map(|(dim, ladder)| match dim {
             "damage" | "heal" => ladder.words(),
+            // Whole numbers of jumps, not a bonus's "+4".
+            "jumps" => format!("jumps {}", ladder.words().replace('+', "")),
             other => format!("{other} {}", ladder.words()),
         })
         .collect();
@@ -272,7 +354,20 @@ pub(super) fn does(content: &Content, spell: &SpellData) -> String {
     {
         let _ = write!(text, "; everyone it harms suffers {} ({n})", status(s));
     }
-    text.push_str(&super::traps::ice_text(spell.look.ice));
+    if let Some(n) = spell.effect.arcs {
+        let reach = warlock_core::content::ARC_REACH;
+        let _ = write!(
+            text,
+            "; it jumps {n} times for certain, every jump reaching {reach} cells"
+        );
+    }
+    // A spell's own `heat` or `frost` stands in for its type's; a burst's reaches its cells (the
+    // cell struck of a ray or a bolt is in the "Spell types" table).
+    let rule = content.spell_type(spell.damage_type);
+    let ice = spell.look.ice.or(rule.and_then(|r| r.ice));
+    if spell.shape == Shape::Burst {
+        text.push_str(&super::traps::ice_text(ice));
+    }
     if spell.look.blast > 0 {
         text.push_str("; it breaks walls");
     }

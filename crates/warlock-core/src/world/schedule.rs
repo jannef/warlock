@@ -53,6 +53,13 @@ fn shortened(price: i64, percent: i32) -> i64 {
     (price.saturating_mul(keep).saturating_add(99) / 100).max(1)
 }
 
+/// `price`, with `percent` of what it asks above `plain` spared (rounded up): `plain` at 100.
+fn surcharge_spared(price: i64, plain: i64, percent: i32) -> i64 {
+    let surcharge = price.saturating_sub(plain).max(0);
+    let keep = i64::from(100 - percent.clamp(0, 100));
+    price.min(plain + (surcharge.saturating_mul(keep).saturating_add(99) / 100))
+}
+
 /// An actor in the running turn's schedule.
 struct Scheduled {
     id: ActorId,
@@ -199,8 +206,10 @@ impl World {
     /// The energy price of actor `id` stepping onto terrain `to` on the current level, slowed by
     /// its burden ([`World::burdened`]); `fleeing` ([`World::flees`]) makes it as dear as its
     /// stance says. Terrain its talents price as another's (`terrain_as`: Pathfinder's forest,
-    /// Swimmer's water) costs that terrain's step. On the overworld its skills (survival; spec §8
-    /// "Skills") take their percent off the journey, rounded up (at least 1).
+    /// Swimmer's water) costs that terrain's step. Off the overworld wading is spared by Swim's
+    /// percent ([`Effect::Wade`]), all of it by the talents that spare it. On the overworld its
+    /// skills (survival; spec §8 "Skills") take their percent off the journey, rounded up (at
+    /// least 1).
     pub(super) fn step_price(&self, id: ActorId, to: &TerrainDef, fleeing: bool) -> i64 {
         let actor = &self.state.actors[&id];
         let talents = actor.talent_mods(&self.content);
@@ -215,14 +224,21 @@ impl World {
         };
         let mut price = level.step_price(to, step);
         // A strong swimmer (spec §8 "Birth sign") wades as if on dry land, and so does one
-        // Undertow (a Water-born's pick) bears.
-        if level.kind != LevelKind::Overworld
-            && to.move_cost > 100
-            && !actor.talents.is_empty()
-            && (talents.swimmer || talents.wades_free)
-            && super::stars::wading(&self.content, to)
-        {
-            price = price.min(crate::content::price(step, BASE_TURN).max(1));
+        // Undertow (a Water-born's pick) bears. Swim spares a part of it, never more.
+        if self.wading_step(to) {
+            let free = !actor.talents.is_empty() && (talents.swimmer || talents.wades_free);
+            let spared = if free {
+                100
+            } else {
+                actor.skill_effect(&self.content, Effect::Wade)
+            };
+            let plain = crate::content::price(step, BASE_TURN).max(1);
+            price = surcharge_spared(price, plain, spared);
+        } else if self.rough_step(to) {
+            // Rough ground that is not water: Balance spares a part of what it adds.
+            let spared = actor.skill_effect(&self.content, Effect::Footing);
+            let plain = crate::content::price(step, BASE_TURN).max(1);
+            price = surcharge_spared(price, plain, spared);
         }
         if level.kind == LevelKind::Overworld {
             price = shortened(price, actor.skill_effect(&self.content, Effect::Travel));
@@ -250,6 +266,14 @@ impl World {
         // Sure-footed (spec §8 "Talents"): less of the burden's and Bloated's slowdown on steps.
         let slowdown = actor.talent_mods(&self.content).step_slowdown_percent;
         self.slowed(id, price, slowdown)
+    }
+
+    /// Whether a step onto `to` on the current level is wading: off the overworld, onto wading
+    /// terrain, or deep water, that makes the step dearer.
+    pub(super) fn wading_step(&self, to: &TerrainDef) -> bool {
+        self.state.current().kind != LevelKind::Overworld
+            && to.move_cost > 100
+            && (to.swim || super::stars::wading(&self.content, to))
     }
 
     /// `price` as actor `id` pays it now: ×1.25 Burdened, ×1.5 Strained or Overloaded (spec §8

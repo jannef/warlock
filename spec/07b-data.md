@@ -129,7 +129,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
   flagstones, rubble, rocky ground, boulders, and the like), `stains` (whether blood stains it,
   §8 "Blood"; default true; false for water, running water, lava, fountains, braziers, wall
   torches, solid rock, and the overworld's river and lake), and for hearing a `step_noise` (how loud steps onto
-  it are, in percent of the walker's footsteps, 0 to 1000; default 100), a door's `toggle_noise`
+  it are, in percent of the walker's footsteps, 0 to 1000; default 100), `swim` (deep water: not
+  walkable, transparent, no freeze, but a trained swimmer may dive in, §8 "Skills": Swim; default
+  false), a door's `toggle_noise`
   (how loud opening the closed door or closing the open one is, at most 300; default 0, silent;
   only doors), and a `muffle` (the loudness a sound loses entering the cell, at most 300; default
   0, but solid terrain blocks sound unless it has one). A closed door may break when kicked
@@ -139,7 +141,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   "Digging"), terrain that breaks has a `hardness` (1 to 10 000, the work it takes: a pick-axe at
   Strength 10 does 10 a turn) and what it `becomes` (walkable, transparent open ground that does
   not break, no door or stairs: rubble), together; only solid terrain (not walkable, no door,
-  stairs, or light) breaks, so digging and blasts never break a door. Stone walls 600, packed
+  stairs, or light) breaks, so digging and blasts never break a door (but a force spell's blast, §8 "Spell types"). Stone walls 600, packed
   earth 100, granite 3000. Solid rock may have a `face`, the solid terrain it shows as once a cell
   next to it is broken open (`void`: `wall`). Overworld terrain has
   `travel_minutes` (1 to 1440; required for every walkable terrain on the overworld),

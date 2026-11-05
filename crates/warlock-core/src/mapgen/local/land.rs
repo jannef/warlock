@@ -123,8 +123,9 @@ impl<'a> Land<'a> {
     }
 
     pub fn is_water(&self, p: Pos) -> bool {
-        self.get(p)
-            .is_some_and(|t| t == self.kit.water || t == self.kit.running_water)
+        self.get(p).is_some_and(|t| {
+            t == self.kit.water || t == self.kit.deep_water || t == self.kit.running_water
+        })
     }
 
     /// Walkable and quick to cross: no water, thicket, or reeds.

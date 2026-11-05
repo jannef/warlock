@@ -54,9 +54,10 @@
 #   treat      how the Heal skill treats it (the Heal ability, spec §8 "Skills"): an Intelligence
 #              check plus Heal against { difficulty = 6, per_degree = 2 } (difficulty 0 to 40,
 #              plus 0 to 10 for each degree); `stops = true`: made, it ends, and a failed try may
-#              be made again at once; else, made, it eases a degree, and it may be tried once
-#              only, whatever comes of it, until it ends. `made` and `failed` are what you are
+#              be made again at once; else, made, it eases a degree, and a failed try may be
+#              made again too. `made` and `failed` are what you are
 #              told. None: Heal cannot treat it
+#   quenched   true: a step into water, or a fall into it, ends it (Burning)
 #   start, end what the player is told as it begins and ends ("end" lets a rest go on)
 #   dies       what a creature you see does when it kills it ("The giant rat bleeds to death.")
 #   death      the death screen's line when it kills you
@@ -82,6 +83,12 @@
 #              entry's `difficulty`, else this one, 1 to 40): made, they break free and step;
 #              failed, the turn is spent. A dose's degrees are drawn from `turns` (1 to max), and
 #              a hold needs `eases` (a degree a turn: 6), stacking "highest", and blocks "step"
+#   escape     bonds a trained Escape artist may slip: the difficulty (1 to 40) of the automatic
+#              check, the better of Strength and Dexterity plus the skill, when the status stops
+#              or slows what they try (world/hold.rs). Needs `blocks` or a `cost` above 100, and
+#              `seen` ("You struggle, but you are still caught in a web."); not on a hold, whose
+#              grip counts the same way. Slowed minds and bodies (Staggered, Stunned, Surprised,
+#              Transfixed, Sluggish, Drowsy) are no bonds and take none
 #   light      a light of lights.toml its sufferer sheds while it lasts (Lit; spec §5); the
 #              brightest of several
 # Creatures' attacks may cause statuses too: `on_hit` in creatures.toml. Diseases (diseases.toml)
@@ -116,6 +123,38 @@ death = "Bled to death"
 # minutes, so a stronger dose lasts longer; strong poison weakens. A sick head gathers mana at
 # half the pace.
 [[status]]
+id = "burning"
+name = "Burning"
+seen = "burning"
+max = 3
+stacking = "add"
+tick = 10
+damage = 1
+damage_type = "fire"
+eases = 30
+light = "ember"
+quenched = true
+start = "You are burning!"
+end = "The flames go out."
+dies = "burns to death"
+death = "Burnt to death"
+
+[[status]]
+id = "corroded"
+name = "Corroded"
+seen = "corroded"
+max = 3
+stacking = "add"
+tick = 6
+damage = 1
+damage_type = "acid"
+eases = 12
+start = "The acid keeps eating."
+end = "The acid is spent."
+dies = "is eaten away"
+death = "Eaten away by acid"
+
+[[status]]
 id = "poisoned"
 name = "Poisoned"
 max = 10
@@ -129,8 +168,8 @@ mana_regen = 50
 penalty = { from = 4, strength = -1, dexterity = -1 }
 # Cured at once by an antidote (the potion, spec §8 "Potions").
 cured_by = ["antidote"]
-# Eased a degree with the Heal skill, once; a failed try cannot be made again for this dose.
-treat = { difficulty = 8, per_degree = 1, made = "You draw out some of the poison.", failed = "You can do no more for the poison." }
+# Eased a degree with the Heal skill; a failed try may be made again at once.
+treat = { difficulty = 8, per_degree = 1, made = "You draw out some of the poison.", failed = "The poison will not come out." }
 start = "You feel sick."
 end = "The poison wears off."
 dies = "succumbs to poison"
@@ -510,6 +549,7 @@ max = 6
 stacking = "refresh"
 eases = 6
 blocks = ["step"]
+escape = 13
 start = "Sticky strands hold you fast."
 end = "You tear free of the web."
 
@@ -755,7 +795,7 @@ end = "You are free to move."
 
 # The weapon abilities' (the combat progression design §6): Pinned, a missile through the foot
 # (Pinning shot) or the legs taken by a staff (Trip): no step for an action a degree, a new pin
-# keeping the longer, never adding (at most 3 from any one); no struggle, as it is no grip.
+# keeping the longer, never adding (at most 3 from any one); no grip, so only a trained Escape artist struggles.
 # Light-footed, the skirmisher's step away after a strike (Hit and run): the next action costs
 # half, and it ends as that action is taken.
 [[status]]
@@ -766,6 +806,7 @@ max = 3
 stacking = "highest"
 per_action = true
 blocks = ["step"]
+escape = 13
 start = "You are pinned where you stand."
 end = "You can move again."
 

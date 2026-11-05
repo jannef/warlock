@@ -442,6 +442,13 @@ impl World {
         if !news.is_empty() && self.trains(Use::Hear) {
             self.train(Use::Hear);
         }
+        // A sound heard that is no news, at rest or waiting, trains it a little.
+        if self.perception.sounds().len() > news.len()
+            && (self.resting || self.waiting)
+            && self.trains(Use::Overhear)
+        {
+            self.train(Use::Overhear);
+        }
     }
 
     /// A message when the weather the player sees changes under the open sky (never on

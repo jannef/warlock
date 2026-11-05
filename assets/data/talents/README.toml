@@ -424,6 +424,9 @@
 #                                 (Light-footed) for no time (what it costs is the talent's
 #                                 `resource`: a point of ki); refused while it lasts
 #   The casters' (spec §8 "Class abilities"; the priest's, druid's, wizard's, witch's):
+#   spell_type { arc_chance, when }   the percent its spells of the damage types `when` arc at
+#                                 (`arc` in `[types]`, ../spells.toml; docs/dev/spells.md "Spell
+#                                 types"): Conductor
 #   spell_mod { ... }             what it does to its spells through the six hooks (the spell
 #                                 scaling design §7.1; docs/dev/spells.md "The hooks"), each
 #                                 field optional, at least one given: rungs (higher on an own
@@ -439,8 +442,8 @@
 #                                 none: every spell). On a talent with `choice = "school"` the
 #                                 choice is its filter and `when` is left out. Empower
 #                                 { rungs = 1 }, Keen mind { sides = 1 }, School focus { cost =
-#                                 -10, cells = 1 }, Numbing cold { rider = { status =
-#                                 "sluggish", severity = 1 }, when = ["cold"] }. Nothing bounds
+#                                 -10, cells = 1 }, a rider { rider = { status =
+#                                 "sluggish", severity = 1 }, when = ["fire"] }. Nothing bounds
 #                                 what it adds (decision 16)
 #   spell_mana_percent { value }  its spells cost that percent more mana (negative: less; at
 #                                 least 1)

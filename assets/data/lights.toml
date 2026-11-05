@@ -184,8 +184,9 @@ stability.intensity = { amount = 0.08, speed = 0.4 }
 stability.hue = { degrees = 6, speed = 0.2 }
 stability.dips = { depth = 0.08, every = 15, length = 1.6 }
 
-# Inner light (a birth sign's gift, spec §8 "Birth sign"): a dim ember about its bearer, enough
-# to make out the cells beside them in the dark; a soft flicker, as a banked fire.
+# Ember: a dim light about its bearer, enough to make out the cells beside them in the dark; a
+# soft flicker, as a banked fire. A birth sign's inner light (spec §8 "Birth sign") and the
+# burning status's (status.toml).
 [[light]]
 id = "ember"
 color = [180, 110, 50, 0]

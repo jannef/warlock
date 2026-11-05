@@ -61,11 +61,40 @@ in the old tongue worth reading (one deep in Fyrdelf keeps an oath; see
 Still water (ponds and pools) and running water (streams) are both wadeable but slow: a step into
 either takes twice as long as a step on dry ground, and [splashes loudly](hearing.md#how-loud). Running water flows in a
 direction you can see in the ripples, and foams where it meets a bank or rock. The current does
-not push you yet. Water glints with nearby [light](light.md#what-light-is).
+not push you yet. Water glints with nearby [light](light.md#what-light-is). [Swim](skills.md#skill-swim) spares some of the extra time of
+wading, here and in a marsh.
 
 [Shallow water](#terrain-shallow-water), ankle-deep over a stone floor, covers the floor of a [flooded room](special-rooms.md#room-flooded) (see
 [Special rooms](special-rooms.md)). It is paler than a pool. Wading through it is slower than
 walking, though quicker than wading a pool, and it splashes just as loudly.
+
+### Deep water
+
+[Deep water](#terrain-deep-water) is too deep to wade. Only one trained in [Swim](skills.md#skill-swim) may go in, and
+never [Strained](burden.md) or worse: "You cannot swim." and "You would sink." take no time. The game always
+asks first, whenever you step into it from anything else, and no setting turns the question off;
+staying back takes no time. Water you did not know was there (in the dark) stops you at its edge
+and tells you so, also taking no time, so that the next step can ask.
+
+Going in takes a step's time, twice a plain step's and as [loud](hearing.md#how-loud) as any water, and needs no check.
+It puts out your ready [lantern](light.md#what-light-is), and no light can be lit while you swim. Spells' light and everything else goes on.
+
+Every step that *starts* in the water, the step out onto the shore too, is a [check](skills.md#skill-swim):
+2d12 plus your [Toughness](stats.md#stat-toughness) modifier, your talents' Toughness checks, and Swim's points (the
+skills table's Swim check), against 11, and 2 more for each level of [burden](burden.md) above Unburdened. Made,
+you take the step, at a price that wading's discounts apply to ([Swim](skills.md#skill-swim), the
+[Swimmer](talents.md#talent-swimmer), [Strong swimmer](talents.md#talent-strong-swimmer), and [Undertow](talents.md#talent-undertow) talents). Failed, you spend the turn treading water, you do not move, and the
+cold takes 1 hit point, resisted as any [cold](damage-types.md), but never your last: nobody drowns. At even Toughness and no Swim points, that is 69 % unburdened, 54 %
+Burdened; at +4, 90 % and 81 %. Waiting asks no check.
+
+In the water you cannot drop or pick up anything ("It would sink."), rest, search, or dig; all of that is refused and takes no
+time. You can still fight, shoot, cast, read, and wait, and you lose nothing you carry. Your burden is all it asks.
+
+No creature goes in. They walk around it, wait on the shore nearest you, shoot and cast from there, and strike you if
+you swim beside them. Your allies wait ashore too, and none will swap places with you into the water.
+It never freezes.
+
+Deep water is rarer than the pools of shallow water. About one cave floor in six has a pool with a deep middle (the shore of it stays shallow), and the middle of a lake beside a wilderness area is deep. Ponds, rivers, and brooks are always wadeable, and no hand-made level, vault, or special room has deep water.
 
 ## Ice
 

@@ -294,6 +294,7 @@ fn ruins(land: &mut Land, rng: &mut Rng) {
     let (w, h) = (land.width(), land.height());
     let c = land.center();
     for vault in vaults {
+        let vault = super::vault::turned(vault, rng);
         let (vw, vh) = (vault.width(), vault.height());
         for _ in 0..30 {
             let at = Pos::new(rng.range(3, w - vw - 3), rng.range(2, h - vh - 2));

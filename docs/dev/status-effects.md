@@ -125,7 +125,20 @@ player's action, after each creature's turn, and after the loop. `World::struggl
 `player_acts` just before `refuse_blocked`, turns the held player's step (`kind_of` is `Step`)
 into a check against the grip: the holder's natural attack's `Affliction::Hold { difficulty }`,
 else `Hold::difficulty`; failed it returns `Spent::Turn(price_of(Step))`, made it removes the
-status silently (its own message instead) and lets the step go on. A creature's `on_hit` names a
+status silently (its own message instead) and lets the step go on. **Escape artist** (#1015; the
+owner: "an automatic skill check when player action is prevented/slowed because of status it can
+fix"): `World::struggle` takes the action's `kind_of` and the first status `blocking` it. Trained
+(`trains_effect(Effect::Escape)`), a hold's check reads `World::slipping` (the better of its stat
+and Dexterity, each with `talents.check`, plus `Effect::Escape`) with Knowledge's `resisting` on
+top. A status with `StatusDef::escape` (Webbed, Pinned; parse checks 1 to 40, no `hold`, `blocks`
+or `cost` above 100, and `seen`) is checked the same way without Knowledge, trained only: made,
+it is removed and `ended` says its `end`, and `None` lets the action go on; failed,
+`Spent::Turn(price_of(kind))` and "You struggle, but you are still {seen}.". Untrained or
+unmarked, `struggle` returns `None` with no draw and `refuse_blocked` refuses. With nothing
+blocking, a trained player's first marked status with `cost` above 100 (none in the data today)
+is checked and `None` is returned either way. Each check marks `StatUse::Struggled` and
+`Use::Escape` (`World::struggled`). A second blocking status is refused this attempt and asks on
+the next. Tests: `world/escape_tests.rs`. A creature's `on_hit` names a
 hold as `{ status = "held", chance = 10, difficulty = 15 }` (no `severity`; `difficulty` 1 to 40,
 optional; `OnHitSpec::resolve` gives `Affliction::Hold`, and `difficulty` on a non-hold status is
 refused). Draws: the turns' dice as a hold begins or is renewed, two for a struggle. Tests:
@@ -203,14 +216,12 @@ are the allies' list, computed each turn; `kind_of`
 maps it to `ActionKind::Heal`, so a status may block it). A status is treatable by its `treat`
 table (`content::Treat`: `difficulty`, `per_degree`, `stops`, `made`, `failed`; parse checks 0
 to 40, 0 to 10, non-empty words): `stops` (bleeding) ends it through `ended` on a made check and
-lets a failure be retried; without it (poison) a made check lowers the severity a degree (ending
-it through `ended` at none) and the effect's `treated` is set whatever comes of it. A shown
+lets a failure be retried (as does every ailment: no try is spent); without it (poison) a made check lowers the severity a degree (ending
+it through `ended` at none); any failure may be retried at once (#1012: the one-try rule went). A shown
 disease is treated against its own `difficulty`: made, `streak + 1` while that stays below
 `world/disease.rs::recovery_of` (Fever-proof's adjusted recovery; the one helper
 `disease_turn` uses too), else `left` raised to the disease's interval (within
-`longest_wait`, so `is_valid_for` holds); the infection's `treated` is set either way.
-**`Effect::treated` and `Infection::treated` are saved state** (serde-skipped while false, so
-hashes are unchanged). The ability is
+`longest_wait`, so `is_valid_for` holds). The ability is
 `Ability::Heal` (`Aim::Ailment`, `Unavailable::NothingToTreat`); the game's choice of what to
 treat is the one dialog (`input.rs::treat_dialog`). Tests: `world/heal_tests.rs`, the parse
 cases in `content/status.rs`.

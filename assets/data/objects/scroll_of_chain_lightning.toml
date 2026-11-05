@@ -1,0 +1,20 @@
+# A scroll of chain lightning (spec §8 "Scrolls", "Spells"): read it (`r`) and aim, and it casts
+# Chain lightning, free of mana; study it (`L`), and you may learn the spell for good. Level and
+# frequency by its spell's level (README.toml): the lower, the commoner the scroll.
+[[object]]
+id = "scroll_of_chain_lightning"
+name = "scroll of chain lightning"
+plural = "scrolls of chain lightning"
+glyph = "?"
+fg = "#a8c8ff"
+class = "scrolls"
+materials = ["paper"]
+weight = 50
+value = 320
+stackable = true
+level = 10
+frequency = 10
+
+[object.read]
+kind = "spell"
+spell = "chain_lightning"

@@ -486,8 +486,11 @@ struct StatusSpec {
     dies: Option<String>,
     death: Option<String>,
     hold: Option<Hold>,
+    escape: Option<i32>,
     treat: Option<Treat>,
     light: Option<String>,
+    #[serde(default)]
+    quenched: bool,
     vision: Option<String>,
     #[serde(default)]
     resist: BTreeMap<String, i32>,
@@ -597,10 +600,15 @@ pub struct StatusDef {
     pub death: Option<String>,
     /// What makes it a hold (Held), if it is one.
     pub hold: Option<Hold>,
+    /// Bonds a trained Escape artist may slip (`escape` in data): the difficulty of the check
+    /// (`world/hold.rs`). A status with a `hold` counts as bonds too, with its grip.
+    pub escape: Option<i32>,
     /// How the Heal skill treats it, if it can (bleeding, poison).
     pub treat: Option<Treat>,
     /// The light its bearer sheds while it lasts (Lit, the Light spell's; spec §5), if any.
     pub light: Option<LightId>,
+    /// A step or a fall into water ends it (Burning).
+    pub quenched: bool,
     /// The eyes it lends while it lasts (a potion's Owl-eyed; spec §8 "Potions"): an index into
     /// [`super::Content::vision_profiles`], bettering its sufferer's eyes part by part as a
     /// unique item's Vision power does (`Actor::eyes`).
@@ -823,6 +831,14 @@ fn resolve(
     if let Some(hold) = &spec.hold {
         check_hold(hold, spec.max, spec.eases, spec.stacking, &blocks)?;
     }
+    check_escape(
+        spec.escape,
+        spec.hold.is_some(),
+        blocks.is_empty() && spec.cost <= 100,
+    )?;
+    if spec.escape.is_some() && spec.seen.is_none() {
+        return Err("escape: the status needs a `seen` (\"you are still ...\")".into());
+    }
     if let Some(t) = &spec.treat
         && (!(0..=40).contains(&t.difficulty)
             || !(0..=10).contains(&t.per_degree)
@@ -885,8 +901,10 @@ fn resolve(
         dies: spec.dies,
         death: spec.death,
         hold: spec.hold,
+        escape: spec.escape,
         treat: spec.treat,
         light,
+        quenched: spec.quenched,
         vision,
         resist,
     })
@@ -914,6 +932,24 @@ fn check_hold(
     }
     if !blocks.contains(&ActionKind::Step) {
         return Err("hold: a hold blocks `step`".into());
+    }
+    Ok(())
+}
+
+/// Checks `escape`: a difficulty of 1 to 40, on no hold (its grip is its difficulty), on a status
+/// that blocks something or slows every action (not `idle`).
+fn check_escape(escape: Option<i32>, hold: bool, idle: bool) -> Result<(), String> {
+    let Some(escape) = escape else {
+        return Ok(());
+    };
+    if !(1..=40).contains(&escape) {
+        return Err("escape: difficulty must be 1 to 40".into());
+    }
+    if hold {
+        return Err("escape: a hold's grip is its difficulty".into());
+    }
+    if idle {
+        return Err("escape: the status must block an action or slow every action".into());
     }
     Ok(())
 }

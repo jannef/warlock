@@ -365,14 +365,17 @@ fn the_rung_shows_with_the_type_and_not_before() {
     assert!(rows(&w).contains("(rung 1)"), "{}", rows(&w));
     let view = w.perception();
     let stack = w.state.player().inventory.last().expect("the wand");
-    assert_eq!(view.wand_does(stack).as_deref(), Some("3d6 fire, radius 2"));
+    assert_eq!(
+        view.wand_does(stack).as_deref(),
+        Some("3d6 fire, burns one in four, radius 2")
+    );
     let lines: Vec<String> = (view.describe_item(stack).into_iter())
         .map(|l| l.text)
         .collect();
     assert!(
         lines
             .iter()
-            .any(|l| l == "Holds Fireball: 3d6 fire, radius 2"),
+            .any(|l| l == "Holds Fireball: 3d6 fire, burns one in four, radius 2"),
         "{lines:?}"
     );
 }

@@ -130,6 +130,7 @@ mod element_gifts;
 mod elixir;
 mod encounter;
 mod encounter_area;
+mod endless;
 mod equip;
 mod experience;
 mod eyes;
@@ -139,6 +140,7 @@ mod fight;
 mod flavour;
 mod fletch;
 mod focus;
+mod footing;
 mod forage;
 mod free_blow;
 mod frenzy;
@@ -215,8 +217,10 @@ mod song;
 mod spawn;
 mod spell;
 mod spell_aim;
+mod spell_arc;
 mod spell_mods;
 mod spell_rung;
+mod spell_type;
 mod spell_words;
 mod spirit_weapon;
 mod stair_followers;
@@ -229,6 +233,7 @@ mod stride;
 mod summon;
 mod summon_spell;
 pub(crate) mod surprise;
+mod swim;
 mod talent;
 mod talk;
 mod tame;
@@ -279,7 +284,7 @@ pub use gifts::{STARE_RANGE, Streak};
 pub use guild::GuildRank;
 pub(crate) use hash::fnv1a;
 pub(crate) use heal::allies_beside;
-pub use learn::{Odds, study_odds, study_turns};
+pub use learn::{Odds, UNTRAINED, study_odds, study_turns};
 pub use level::{Fire, LevelState};
 pub use loot::Identified;
 pub use mirrors::Image;
@@ -298,6 +303,7 @@ pub use spell_rung::CastBy;
 pub use spell_words::{SpellRoll, reach_words, reroll_words, roll_words};
 pub use spirit_weapon::{gift as spirit_gift, pierces_all, shapes as weapon_shapes};
 pub(crate) use stars::{RISEN, RISEN_TWICE};
+pub(crate) use swim::shore_refusal;
 pub use talent::Due;
 pub use talk::{Conversation, Talk, TopicView};
 pub use temper::{DIFFICULTY as TEMPER_DIFFICULTY, POINTS_PER_MARGIN, lean_for, temperable};
@@ -394,6 +400,9 @@ pub struct WorldState {
     /// The encounter the player must answer before anything else (`world/encounter.rs`).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub(crate) encounter: Option<encounter::Pending>,
+    /// The endless branches' floors made and depths reached (`world/endless.rs`).
+    #[serde(default, skip_serializing_if = "endless::EndlessFloors::is_empty")]
+    pub(crate) endless: endless::EndlessFloors,
     /// The parties encounters made, by their areas (`world/encounter.rs`).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub(crate) parties: Vec<encounter::Party>,
@@ -599,6 +608,8 @@ pub struct World {
     /// Whether the player is resting ([`World::rest`]; not saved: a rest is one action): they
     /// heal faster.
     resting: bool,
+    /// Whether the player's action is a wait (not saved): sounds heard then train Listen.
+    waiting: bool,
     /// The game time of the last perception (not saved: a loaded world has just perceived its
     /// moment): the birthday's note looks for the dawn between it and now.
     perceived_at: GameTime,
@@ -807,7 +818,10 @@ impl World {
         let campaign = def.campaign.clone().unwrap_or_default();
         let start = level_template(
             &content,
-            (&campaign, seed),
+            (
+                &campaign,
+                endless::floor_seed(&content, seed, &def.start_level, 0),
+            ),
             &def.start_level,
             (None, &Default::default()),
         )?;
@@ -841,6 +855,7 @@ impl World {
             overworld_step: None,
             encounters: None,
             encounter: None,
+            endless: Default::default(),
             parties: Vec::new(),
             wares: BTreeMap::new(),
             uniques_offered: BTreeSet::new(),
@@ -1083,6 +1098,7 @@ impl World {
             found: 0,
             mutters: Vec::new(),
             resting: false,
+            waiting: false,
             perceived_at: time,
             stood_on,
             acting: Some(player),
@@ -1249,7 +1265,10 @@ impl World {
         let load = self.load_of(self.state.player);
         let (burden, slowed) = (load.burden(), load.penalty() != Burden::Unburdened);
         let quests = self.quest_progress();
+        self.waiting = matches!(action, Action::Wait);
         let spent = self.player_acts(action, &mut events);
+        self.waiting = false;
+        self.forget_floors(&events);
         // Taking off what raised them lowers the player's maximum hit points, mana, and pools.
         self.keep_hp_within_max(self.state.player);
         self.keep_mana_within_max(self.state.player);
@@ -1360,8 +1379,8 @@ impl World {
         if let Some(refused) = self.refuse_pending(action) {
             return refused;
         }
-        // A step while held is a struggle to break free (`hold.rs`).
-        if let Some(spent) = self.struggle(action) {
+        // What bonds stop or slow is a struggle to break free (`hold.rs`).
+        if let Some(spent) = self.struggle(action, events) {
             return spent;
         }
         if let Some(refused) = self.refuse_blocked(action) {
@@ -1415,6 +1434,9 @@ impl World {
             Action::Study { item } => return self.start_study(*item),
             Action::Scribe { spell } => return self.start_scribe(spell),
             Action::Dig(dir) => return self.start_dig(*dir),
+            Action::Search(_) if self.refused_afloat("You cannot search in deep water.") => {
+                return Spent::Nothing;
+            }
             Action::Search(turns) => return Spent::Search(*turns),
             Action::Disarm(dir) => return self.disarm(*dir, events),
             Action::Heal { what, ally } => return self.heal(what.as_deref(), *ally, events),
@@ -1637,7 +1659,11 @@ mod elixir_tests;
 #[cfg(test)]
 mod encounter_tests;
 #[cfg(test)]
+mod endless_tests;
+#[cfg(test)]
 mod equip_tests;
+#[cfg(test)]
+mod escape_tests;
 #[cfg(test)]
 mod experience_tests;
 #[cfg(test)]
@@ -1652,6 +1678,8 @@ mod flavour_tests;
 mod fletch_tests;
 #[cfg(test)]
 mod focus_tests;
+#[cfg(test)]
+mod footing_tests;
 #[cfg(test)]
 mod forage_tests;
 #[cfg(test)]
@@ -1839,9 +1867,15 @@ mod spawn_tests;
 #[cfg(test)]
 mod speed_tests;
 #[cfg(test)]
+mod spell_arc_tests;
+#[cfg(test)]
 mod spell_list_tests;
 #[cfg(test)]
 mod spell_talent_tests;
+#[cfg(test)]
+mod spell_type_force_tests;
+#[cfg(test)]
+mod spell_type_tests;
 #[cfg(test)]
 mod spirit_weapon_tests;
 #[cfg(test)]
@@ -1882,6 +1916,10 @@ mod summon_tests;
 mod sun_tests;
 #[cfg(test)]
 mod surprise_tests;
+#[cfg(test)]
+mod swim_deep_tests;
+#[cfg(test)]
+mod swim_tests;
 #[cfg(test)]
 mod tag_tests;
 #[cfg(test)]

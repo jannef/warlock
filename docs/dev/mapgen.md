@@ -16,7 +16,7 @@ validation is regenerated from the next derived stream. A valid branch level the
 branch's traps (`mapgen::hide_traps`, from the stream `traps/<level id>`, so the map is the same
 with or without them), then a few of its doors (`mapgen::hide_secrets`, secret doors, from the
 stream `secrets/<level id>`, only where `connect::validate` still reaches the stairs and every key
-without them; `docs/dev/searching.md`). The insta snapshots in
+without them; `docs/dev/searching.md`). On about one `caves` floor in six a pool has a deep middle (`mapgen/deep.rs`, #1020: stream `deep_water/<level id>`, `Rng::deep_water`, drawn once the cave is built and before `build_walls`, so a floor without it is exactly its old self; a blob of 40 to 70 free floor cells becomes water, those with all eight neighbours in it `deep_water`; kept off creature routes and special rooms, and undone if it would cut any walkable cell off). Rooms floors, vaults, special rooms and hand-made levels never have it. The insta snapshots in
 `src/mapgen/snapshots/` and `src/mapgen/local/snapshots/` flag any change in generator output:
 review the maps in the diff, then accept them deliberately. Loot (`mapgen::place_loot`: floor
 items by the branch's `loot`, vault `loot` cells, each a grade or a pool of item classes,
@@ -100,6 +100,26 @@ depth)` holds (a dungeon vault, shared or of the branch's campaign, on a branch 
 `dungeons` names, if any) on the `Canvas` (`Canvas::vaults`, content order), and
 `vault::shuffled` shuffles that list. A branch no campaign vault names draws what it did before.
 
+Which way a vault lies (#959): `vault::turned` draws one of the eight `content::Turn`s from the
+generator's own map stream as each drawn vault is tried, then `Vault::turned` makes the vault a file
+drawn that way would load as, and the generator measures and stamps that (`vault::spots`, `fits`,
+`stamp`, and the rooms and caves code read its size and entrances, so nothing else knows). `ruins` in
+`mapgen/local/` does the same. A vault that may not turn (`Vault::may_turn`: pinned, or the file's
+`turns = false`) comes back borrowed with no draw, so a floor's named vaults draw what they did, and
+`caves::make_room`, which only named vaults reach, works on the size in the file. A level that tries
+no random vault draws nothing either; one that does moves after the draw, like any other change to
+its stream. Rotation swaps width and height: a floor with little height may not fit a vault turned
+across, which is then one more failed try, as for a vault too big. `content/vault_turn.rs` holds the
+transform: `turned_template` destructures `LevelTemplate` by every field, so a new field with a
+position or direction must be decided on there. It maps terrain, `creatures` (`pos`, `route`),
+`lights`, `flow` (`dir`), `objects` (`[[pile]]`, `[[item]]`), `traps` (a bolt's `dir`), `locks`,
+`chests`, `secrets`, `places`, `regions`, `loot`, `monsters` (cells kept in row order), `hidden`,
+`ice`, `player_start`, `stairs`; `rooms` and `shops` are refused on a vault, and no terrain has a
+direction of its own (a stair's `<`/`>` means up or down, a door or wall none). Entrances keep their
+row order too. Tests: `content/vault_turn_tests.rs` (a quarter turn against the same vault drawn by
+hand; every turn of every vault passes `Vault::new` again), `mapgen/vault_turn_tests.rs` (Flooded
+cell and Guard post on real floors, pinned vaults, the draw), `ruins_are_outdoor_vaults_stamped_some_way_round`.
+
 How often, and how rarely the same one (#960): rooms floors roll `VAULT_CHANCE` 20 %
 (`rooms.rs`); cave floors 40 % for one (`caves.rs`), then 15 % for a second. Before it was 50 %
 and 1 + 30 %: on the six shared vaults (three stamp in a dungeon) a 600-floor sample of the
@@ -112,6 +132,25 @@ phases; floor `depth` offers only the vaults of phase `depth % 4`. So no vault c
 floors of itself in a branch, and the deal differs by run and branch. A level's own named
 (pinned) vaults are untouched. Adding vaults raises the count a floor may choose from, not the
 chance of one.
+An endless branch (`DungeonDef::endless`, spec §7 "The endless branch", #1010; Grundlēas,
+`campaigns/ascmearc/data/dungeons/grundleas.toml`) has one row of per-depth tables, read at every
+depth (`DungeonDef::row`), and `depth` 1 for what loops over them; `leads_down` is always true.
+`generate_for` draws the floor's generator and size from stream `floor_kind/<level id>`
+(`endless_plan`), and its first floor's `<` is `Content::way_into`, not `entered_from`. The whole
+generation runs under the floor's own seed (`world/endless.rs::floor_seed`) with the usual stream
+labels, so `warlock-cli gen --level grundleas:3 --seed S` shows what that seed makes, not what the
+run of seed S makes on its third floor (that depends on how many floors it has made). Spaced
+vaults (`spaced_vaults`) deal anew for every floor under that seed: a random vault may come on two
+floors in a row, which no one can compare. `Content::spawning` reads the danger at
+`depth.min(roster_depth)`, filled by `Content::fill_rosters` from the highest level of the
+branch's population and strays, so every draw (population, dens, hoards, spawns) stops rising at
+the roster's top and a floor at any depth holds creatures; `Content::floor_danger` is the number
+that keeps rising. Other caps past that top: `Content::item_level` clamps at `MAX_ITEM_LEVEL` as
+ever; `hidden_at` and `locks_at` saturate and keep rising (the stairs never hang on a lock or a
+secret, `connect::validate`). Grundlēas gets its draws by `stray = 100` over the campaign's generic
+list and names only the rat as a `population`, which every other branch's strays already hold, so
+none of their lists move.
+
 The Ascmearc's branches (campaign design §7): Cealdhlāw (`cealdhlaw`, #337;
 `campaigns/ascmearc/data/dungeons/cealdhlaw.toml`), six floors of danger 1 to 6, rooms 80×21 on
 1–2 and caves 100×40 on 3–6, 30 creatures a thousand walkable cells (25 on the rooms floors,

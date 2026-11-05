@@ -1164,6 +1164,7 @@ const CASES: &[Case] = &[
     Case {
         name: "scroll-study-list",
         scenario: "traps",
+        character: Some("human,female,wizard"),
         actions: "move:E pickup identify",
         keys: Some("L"),
         ..BASE
@@ -1171,6 +1172,7 @@ const CASES: &[Case] = &[
     Case {
         name: "scroll-study-dialog",
         scenario: "traps",
+        character: Some("human,female,wizard"),
         actions: "move:E pickup identify",
         keys: Some("L a"),
         ..BASE
@@ -1178,7 +1180,17 @@ const CASES: &[Case] = &[
     Case {
         name: "scroll-study-none",
         scenario: "traps",
+        character: Some("human,female,bard"),
         actions: "move:E pickup",
+        keys: Some("L"),
+        ..BASE
+    },
+    // A character not trained in Spellcraft is told so, whatever they carry.
+    Case {
+        name: "scroll-study-untrained",
+        scenario: "traps",
+        character: Some("human,male,warrior"),
+        actions: "move:E pickup identify",
         keys: Some("L"),
         ..BASE
     },
@@ -1393,6 +1405,40 @@ fn saying_words() {
     }
 }
 
+/// Look mode with a wizard's Knowledge (#1030): the skeleton below it says what it resists on the
+/// hint's row, in words; the rotting drake above it says nothing more.
+#[test]
+fn looking_with_knowledge() {
+    let mut files = warlock_core::content::ContentFiles::builtin();
+    files.insert(
+        "levels/look_lore.toml",
+        "name = \"Lore\"\nambient = [255, 255, 255, 0]\nmap = '''\n\
+         #####\n#s.d#\n#@..#\n#####\n'''\n[legend]\n\".\" = \"floor\"\n\"#\" = \"wall\"\n\
+         \"@\" = { terrain = \"floor\", spawn = \"player\" }\n\
+         \"s\" = { terrain = \"floor\", creature = \"skeleton\" }\n\
+         \"d\" = { terrain = \"floor\", creature = \"rotting_drake\" }\n",
+    );
+    files.insert(
+        "scenarios/look_lore.toml",
+        "name = \"L\"\nstart_level = \"look_lore\"\n",
+    );
+    let content = Arc::new(Content::load(&files).expect("content"));
+    for (name, keys) in [
+        ("look-knowledge-tells", "l Up"),
+        ("look-knowledge-silent", "l Up Right Right"),
+    ] {
+        let case = Case {
+            name,
+            scenario: "look_lore",
+            character: Some("human,male,wizard"),
+            run: true,
+            keys: Some(keys),
+            ..BASE
+        };
+        insta::assert_snapshot!(case.name, render(&case, content.clone()));
+    }
+}
+
 /// A witch who tames a hound beside her familiar (a witch's Handle animal is one draw in four:
 /// here the content gives it): Give's list, then the way it asks with both beside her, and the
 /// fastening once the way is told (the owner, #907 Q4).
@@ -1510,6 +1556,21 @@ fn walking_into_what_offers_an_action_as_text() {
         };
         insta::assert_snapshot!(case.name, render(&case, content.clone()));
     }
+}
+
+/// #1019: a step into deep water asks, always, in the one dialog. Stay back is selected first.
+#[test]
+fn diving_into_deep_water_as_text() {
+    let content = Arc::new(Content::builtin().expect("content"));
+    let case = Case {
+        name: "deep-water-dialog",
+        scenario: "quarry",
+        character: Some("lizardfolk,female,warrior"),
+        actions: "move:E*27 move:S",
+        keys: Some("Right"),
+        ..BASE
+    };
+    insta::assert_snapshot!(case.name, render(&case, content));
 }
 
 /// Where the player stands and how many actions were applied.

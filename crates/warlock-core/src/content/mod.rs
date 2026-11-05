@@ -137,6 +137,7 @@ mod spell;
 mod spell_def;
 mod spell_ladder;
 mod spell_mod;
+mod spell_type;
 mod stance;
 mod stat_training;
 mod status;
@@ -145,6 +146,7 @@ mod summon;
 #[cfg(test)]
 mod summoner_roster_tests;
 mod surprise;
+mod swim;
 mod tag;
 mod talent;
 mod talent_alike;
@@ -157,6 +159,7 @@ mod troll_roster_tests;
 mod undead_roster_tests;
 mod unique;
 mod vault;
+mod vault_turn;
 mod vision;
 mod wand;
 mod weapon_ability;
@@ -204,7 +207,7 @@ pub use dialogue::{
 };
 pub use disease::{DIFFICULTIES, DiseaseDef, DiseaseId, SOURCES, Wading};
 pub use dungeon::{
-    ChestOdds, DungeonDef, Generator, LevelPlan, RoomOdds, ShopOdds, parse_branch_level,
+    ChestOdds, DungeonDef, Endless, Generator, LevelPlan, RoomOdds, ShopOdds, parse_branch_level,
 };
 pub use effect::{
     Darken, EffectDef, EffectLight, EffectShape, FILL_GLYPH, MAX_BURST_RADIUS, MAX_DARKEN,
@@ -302,14 +305,15 @@ pub use slot::{MAX_SLOTS, SlotDef, SlotId};
 pub use smite::SmiteRules;
 pub use spell::{BOLT_LENGTHS, BURST_RADII, Bolt, Burst, BurstIce};
 pub use spell_def::{
-    Grows, MAX_CASTS, MAX_CONE, MAX_REACH, MAX_SPELL_LEVEL, MAX_SUMMON_MINUTES, Ratio, Resolution,
-    STUDY_DIFFICULTY, School, Shape, SpellData, SpellEffect, SpellId, SpellLook, SpellPurpose,
-    SpellRules, SpellSummon,
+    ARC_REACH, Grows, MAX_ARCS, MAX_CASTS, MAX_CONE, MAX_REACH, MAX_SPELL_LEVEL,
+    MAX_SUMMON_MINUTES, Ratio, Resolution, STUDY_DIFFICULTY, School, Shape, SpellData, SpellEffect,
+    SpellId, SpellLook, SpellPurpose, SpellRules, SpellSummon,
 };
 pub use spell_ladder::{
     Ladder as SpellLadder, MAX_RUNGS, MAX_SCORE, RungValue, Unit as LadderUnit,
 };
 pub use spell_mod::{SpellMod, SpellModSpec, SpellMods, merge_rider};
+pub use spell_type::{SpellType, TypeBite, TypeRider};
 pub use stance::{CombatStance, StanceDef, Stances, percent_of};
 pub use stat_training::{
     DeedRule, HAUL_GRAMS, ODDS_SCALE, StatDeed, StatRule, StatTraining, StatUse,
@@ -321,6 +325,7 @@ pub use status::{
 pub use steal::StealRules;
 pub use summon::Summon;
 pub use surprise::SurpriseRules;
+pub use swim::SwimRules;
 pub use tag::{MAX_TAG, TAG_TARGET, spoken};
 pub use talent::{
     AnyWeaponSkill, Choice, Coverage, FreeBlowTrigger, Need, Needs, ResourceCost, SmiteRiderKind,
@@ -334,6 +339,7 @@ pub use throw::{THROW_RANGES, Throw};
 pub use trap::{MAX_CHARGES, Trap, TrapAvoid, TrapDef, TrapEffect, TrapId, TrapNoise};
 pub use unique::{Power, UNIQUE, UniqueDef, Uniques};
 pub use vault::Vault;
+pub use vault_turn::Turn;
 pub use vision::VisionProfile;
 pub use wand::{MAX_WAND_CHARGES, Wand};
 pub use weapon_ability::{
@@ -674,6 +680,9 @@ pub struct Content {
     /// The numbers of intimidating (`data/intimidate.toml`, spec §8 "Skills": Intimidate); none
     /// without the file, when nobody intimidates.
     intimidate: Option<IntimidateRules>,
+    /// The numbers of swimming in deep water (`data/swim.toml`, spec §8 "Skills": Swim); none
+    /// without the file, when nobody swims.
+    swim: Option<SwimRules>,
     /// The penalties of shots by distance (`data/ranged.toml`, spec §8 "Ranged combat"); none
     /// without the file.
     ranged: RangedRules,
@@ -840,6 +849,7 @@ impl Content {
             fletch: None,
             forage: None,
             intimidate: None,
+            swim: None,
             ranged: RangedRules::default(),
             prayer: None,
             allies: None,
@@ -1117,6 +1127,7 @@ impl Content {
         }
         content.mimics = mimic::Mimics::parse(files, &content)?;
         content.load_creatures(files)?;
+        spell_type::lay_immunities(&mut content);
         // A den's own population (an armoury's) names creatures.
         let mut room_effects = std::mem::take(&mut content.room_effects);
         let creature =
@@ -1191,6 +1202,10 @@ impl Content {
         if let Some(text) = files.get_optional(path) {
             content.intimidate = Some(IntimidateRules::parse(path, text, &content)?);
         }
+        let path = "data/swim.toml";
+        if let Some(text) = files.get_optional(path) {
+            content.swim = Some(SwimRules::parse(path, text, &content)?);
+        }
         let path = "data/ranged.toml";
         if let Some(text) = files.get_optional(path) {
             content.ranged = RangedRules::parse(path, text)?;
@@ -1248,6 +1263,9 @@ impl Content {
                     path,
                     "`dungeons`: only a vault names where it stamps",
                 ));
+            }
+            if vault::parse_turns(path, text)?.is_some() {
+                return Err(ContentError::new(path, "`turns`: only a vault turns"));
             }
             if let Some((at, _)) = level.loot.first() {
                 return Err(ContentError::new(
@@ -1310,6 +1328,7 @@ impl Content {
                 Vault::new(template, &content).map_err(|m| ContentError::new(path, m))?;
             vault.campaign = campaign::of_path(path).map(str::to_string);
             vault.dungeons = vault::parse_dungeons(path, text)?;
+            vault.turns = vault::parse_turns(path, text)?.unwrap_or(true);
             content.vaults.push(vault);
         }
         content.load_dungeons(files)?;
@@ -1464,6 +1483,7 @@ impl Content {
                 muffle: spec
                     .muffle
                     .or((spec.walkable || spec.transparent).then_some(0)),
+                swim: spec.swim,
                 freeze: match &spec.freeze {
                     None => None,
                     Some(f) => {
@@ -2608,6 +2628,30 @@ impl Content {
                 s.generic = list;
             }
         }
+        self.fill_rosters();
+    }
+
+    /// How deep each endless branch's roster reaches: the floor whose danger is the highest level
+    /// that may be drawn there (a family's top counts), its population's or its strays'.
+    fn fill_rosters(&mut self) {
+        let none = BTreeSet::new();
+        let tops: Vec<Option<u32>> = (self.dungeons.values())
+            .map(|d| {
+                d.endless?;
+                let s = d.spawning.as_ref()?;
+                let kinds = s.population.iter().chain(&s.generic).copied();
+                let kinds: Vec<CreatureId> = kinds.collect();
+                let top = (self.candidates(&kinds, &none).iter())
+                    .map(|(_, (_, to), _)| *to)
+                    .max()?;
+                Some(d.plan(1)?.danger?.deepest_at(top))
+            })
+            .collect();
+        for (d, top) in self.dungeons.values_mut().zip(tops) {
+            if let (Some(e), Some(top)) = (d.endless.as_mut(), top) {
+                e.roster_depth = top;
+            }
+        }
     }
 
     /// Whether creature type `c` may come as a stray to an area whose population does not name
@@ -3200,6 +3244,12 @@ impl Content {
         self.intimidate.as_ref()
     }
 
+    /// The numbers of swimming in deep water (spec §8 "Skills": Swim; `data/swim.toml`); `None`
+    /// without the file, when nobody swims.
+    pub fn swim(&self) -> Option<&SwimRules> {
+        self.swim.as_ref()
+    }
+
     /// The priest's prayer (spec §8 "Class abilities"; `data/prayer.toml`); `None` without the
     /// file, when every prayer is refused.
     pub fn prayer(&self) -> Option<&PrayerRules> {
@@ -3544,7 +3594,37 @@ impl Content {
         }
         let (branch, depth) = self.branch_level(id)?;
         let rule = branch.plan(depth)?.danger?;
+        // Past the roster's top, an endless branch draws as at its top (spec §7 "The endless
+        // branch"): nothing above a danger is drawn, and nothing far below it.
+        let depth = (branch.endless).map_or(depth, |e| depth.min(e.roster_depth));
         Some((rule, depth, branch.spawning.as_ref()?))
+    }
+
+    /// The danger floor `id` stands at for a player of `player_level`: what [`Content::spawning`]
+    /// gives, but on an endless branch the number that keeps rising past what is drawn.
+    pub fn floor_danger(&self, id: &str, player_level: u8) -> u32 {
+        if let Some((def, depth)) = self.branch_level(id)
+            && def.endless.is_some()
+            && let Some(rule) = def.plan(depth).and_then(|p| p.danger)
+        {
+            return rule.rising(depth);
+        }
+        (self.spawning(id)).map_or(0, |(rule, depth, _)| rule.at(depth, player_level).into())
+    }
+
+    /// Whether `id` is a floor of an endless branch: made when it is reached, gone when it is
+    /// left (`world/endless.rs`).
+    pub fn is_endless_floor(&self, id: &str) -> bool {
+        self.branch_level(id)
+            .is_some_and(|(def, _)| def.endless.is_some())
+    }
+
+    /// The hand-made level whose stairs lead to level `id`, if one does: where an endless
+    /// branch's first floor climbs out to, however it was reached.
+    pub fn way_into(&self, id: &str) -> Option<&str> {
+        (self.levels.iter())
+            .find(|(_, l)| l.stairs.iter().any(|s| s.to.as_deref() == Some(id)))
+            .map(|(from, _)| from.as_str())
     }
 
     pub fn dungeon(&self, id: &str) -> Option<&DungeonDef> {
@@ -3724,6 +3804,12 @@ impl Content {
     /// The spells' cost table (`data/spells.toml`, spec §8 "Spells"): none without the file.
     pub fn spell_rules(&self) -> Option<&SpellRules> {
         self.spell_rules.as_ref()
+    }
+
+    /// What every spell of damage type `kind` does beyond its damage (`[types]` in
+    /// `data/spells.toml`): none for a type without an entry.
+    pub fn spell_type(&self, kind: Option<DamageTypeId>) -> Option<&SpellType> {
+        self.spell_rules.as_ref()?.types.get(&kind?)
     }
 
     /// The study check and its time (`data/study.toml`, spec §8 "Spells"): none without it,
@@ -4144,6 +4230,25 @@ fn check_chests(defs: &[TerrainDef]) -> Result<(), String> {
                 of[0].id,
                 of[1].id,
                 state.id()
+            ));
+        }
+    }
+    for def in defs.iter().filter(|d| d.swim) {
+        if def.walkable
+            || !def.transparent
+            || def.freeze.is_some()
+            || def.ice.is_some()
+            || def.is_door()
+            || def.stairs.is_some()
+            || def.breaks.is_some()
+            || def.chest.is_some()
+            || def.light.is_some()
+            || def.travel_minutes.is_some()
+        {
+            return Err(format!(
+                "terrain `{}`: deep water (`swim`) is not walkable, is transparent, does not \
+                 freeze, and is no door, stairs, chest, breaking wall, light, or overworld terrain",
+                def.id
             ));
         }
     }
@@ -4690,6 +4795,7 @@ mod tests {
                 "handle_animal",
                 "initiative",
                 "listen",
+                "spellcraft",
                 "spot",
                 "survival",
                 "swim",

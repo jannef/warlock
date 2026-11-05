@@ -34,7 +34,14 @@
 #                 lock), "deal" (a deal made in a shop: goods paid for, or your own sold),
 #                 "appraise" (something you carry told for what it is: "identify" below),
 #                 "intimidate" (a war cry roared or a foe threatened, whatever comes of it),
-#                 "song" (a song sung, whatever it does). Marks gather until a level-up roll on the skill spends them ([ladder]
+#                 "rough_step" (a step onto ground that slows and is not water: bush, reeds,
+#                 rubble, ice), "staggered" (an action taken Staggered),
+#                 "song" (a song sung, whatever it does), "wade" (a step wading through water
+#                 or marsh), "swim" (a Swim check, whatever comes of it), "stroke" (a step in deep
+#                 water, whatever comes of it), "sight" (a creature
+#                 seen for the first time that has not noticed you), "sprung" (a hidden trap
+#                 going off under you, or under a creature you see, half as often), "overhear"
+#                 (a sound that is no news heard while resting or waiting). Marks gather until a level-up roll on the skill spends them ([ladder]
 #                 below). Only the player trains, for now.
 #   benefit       what it gives, by its value: a list of { effect = EFFECT, ... } growing either
 #                 by `steps` (one for each value reached, then one more for every `every` points
@@ -50,8 +57,12 @@
 #                 searching and in passing alike, in place of "search" and "spot", at most 20;
 #                 trained, a skill with it lets you notice traps in passing at all), "disarm" (points added to disarming a trap, spec §8 "Disarming
 #                 traps", at most 20; trained, a skill with it lets you disarm traps at all),
-#                 "burden" (percent less of your burden's slowdown), "travel"
-#                 (percent less time a journey on the overworld takes), "fletch" (points added
+#                 "burden" (percent less of your burden's slowdown), "footing" (percent of what
+#                 rough ground adds to a step that is spared), "steady_ease" (percent of
+#                 Staggered's extra cost that is spared), "travel"
+#                 (percent less time a journey on the overworld takes), "wade" (percent of what
+#                 wading adds to a step that is spared), "swim" (points added to a Swim check, at
+#                 most 20; only trained is one asked), "fletch" (points added
 #                 to the check of a batch of arrows or bolts, at most 12: fletch.toml), "forage" (percent added
 #                 to a forage's chance of finding food, at most 30; trained, a skill with it lets
 #                 you forage at all: forage.toml), "bargain" (percent better
@@ -125,12 +136,12 @@ kind = "rules"
 # overworld, so the speed below grows with plain play.
 mark = [
     { on = "kick", chance = 20 },
+    { on = "climb", chance = 50 },
     { on = "burdened", chance = 5 },
     { on = "travel", chance = 5 },
 ]
 # Kicking a door in (spec §8 "Doors"): added to the Strength the kick is rolled against, +8 at 100
-# (a closed door: 33 % at Strength 10 becomes 60 %), +12 at 200. Pending: climbing out of pits
-# (#128) will read it too. Speed (spec §8 "Speed", #548): percent quicker in everything, +5 at
+# (a closed door: 33 % at Strength 10 becomes 60 %), +12 at 200. Speed (spec §8 "Speed", #548): percent quicker in everything, +5 at
 # 100, +10 at 200, added to the talents' percent (Fleet-footed, Quick); the burden's slowdown is
 # applied to prices after, independently.
 benefit = [
@@ -143,9 +154,19 @@ id = "balance"
 name = "Balance"
 description = "Sure footing under a heavy load or on bad ground."
 kind = "passive"
-mark = [{ on = "burdened", chance = 5 }]
-# Burdened ×1.25 becomes ×1.10 at 100 (Strained ×1.5, ×1.2).
-benefit = [{ effect = "burden", curve = [[0, 0], [100, 60], [200, 80]] }]
+mark = [
+    { on = "burdened", chance = 5 },
+    { on = "rough_step", chance = 10 },
+    { on = "staggered", chance = 20 },
+]
+# Burdened ×1.25 becomes ×1.10 at 100 (Strained ×1.5, ×1.2). Footing: percent of what rough
+# ground (bush, reeds, rubble, ice; not water) adds to a step that is spared. Steady ease:
+# percent of Staggered's extra cost (150) that is spared (`world/footing.rs`).
+benefit = [
+    { effect = "burden", curve = [[0, 0], [100, 60], [200, 80]] },
+    { effect = "footing", curve = [[0, 0], [100, 60], [200, 100]] },
+    { effect = "steady_ease", curve = [[0, 0], [100, 50], [200, 75]] },
+]
 
 [[skill]]
 id = "bluff"
@@ -182,7 +203,12 @@ id = "detect_traps"
 name = "Detect traps"
 description = "Finding hidden traps before they find you."
 kind = "passive"
-mark = [{ on = "find_trap", chance = 50 }]
+mark = [
+  { on = "find_trap", chance = 50 },
+  { on = "sprung", chance = 100 },
+  { on = "disarm", chance = 30 },
+  { on = "search", chance = 3 },
+]
 # Finding hidden traps (spec §8 "Searching"), on the floor, on doors, and on chests: in place of
 # Search when you search and of Spot in passing; trained at all, you notice traps in passing (else
 # only elves and kobolds do, and dwarves on stone); added to both checks, +8 at 100 (a trap of 14
@@ -205,7 +231,20 @@ id = "escape_artist"
 name = "Escape artist"
 description = "Slipping out of bonds, grabs, and tight places."
 kind = "rules"
-# Pending: getting out of pits (#128) will read it (a benefit and a mark rule here then).
+# Marks: every automatic check against bonds, whatever comes of it (world/hold.rs), and every climb
+# out of a pit.
+mark = [
+    { on = "escape", chance = 100 },
+    { on = "climb", chance = 100 },
+]
+# Effect "escape": points added to the check against bonds (better of Strength and Dexterity
+# against a hold's grip or a status's `escape`), +8 at 100, +12 at 200; trained at all, an action
+# that Webbed or Pinned stops is that check, and untrained it is refused. Effect "climb": a pit's
+# climb halved from 50 and skipped from 100 (world/trap.rs). No ability: the check is automatic.
+benefit = [
+    { effect = "escape", curve = [[0, 0], [100, 8], [200, 12]] },
+    { effect = "climb", steps = [50, 100] },
+]
 
 [[skill]]
 id = "handle_animal"
@@ -264,24 +303,25 @@ benefit = [{ effect = "intimidate", curve = [[0, 0], [100, 8], [200, 12]] }]
 [[skill]]
 id = "knowledge"
 name = "Knowledge"
-description = "Lore of history, peoples, places, and the things that live there. Knowing your enemy helps you resist its powers."
+description = "Lore of history, peoples, places, and the things that live there. Knowing your enemy helps you resist its powers and tells you what it shrugs off and what it fears."
 kind = "action"
 # Know your enemy (#667; the use and the effect are documented here, not in the header, while
 # other skills' work is in flight): marked by "discover" (discovery experience gained: a first
 # kill of a kind, an arrival that pays) and by "resist" (a check rolled to resist a creature's
 # ability: a drain, a disease its attack carries, struggling free of its hold; whatever comes of
 # it). Effect "resist": points added to that check, read at how far the value stands ABOVE THE
-# CREATURE'S LEVEL (not at the value): nothing at or below it, +1 at 5 above, +4 at 40 above and
-# past (at most 6). The player's only: creatures resisting each other get nothing.
+# CREATURE'S LEVEL (not at the value): nothing at or below it, +2 at 5 above, +6 at 40 above and
+# past (at most 6). The player's only: creatures resisting each other get nothing. Standing above
+# the level at all also tells, in look mode, what the creature resists (#1030; no marks).
 mark = [{ on = "discover", chance = 100 }, { on = "resist", chance = 25 }]
-benefit = [{ effect = "resist", curve = [[0, 0], [5, 1], [40, 4]] }]
+benefit = [{ effect = "resist", curve = [[0, 0], [5, 2], [40, 6]] }]
 
 [[skill]]
 id = "listen"
 name = "Listen"
 description = "Hearing what others miss: faint steps, a door far off."
 kind = "passive"
-mark = [{ on = "hear", chance = 30 }]
+mark = [{ on = "hear", chance = 30 }, { on = "overhear", chance = 5 }]
 # One fainter for every 10 points.
 benefit = [{ effect = "hearing", every = 10 }]
 
@@ -366,17 +406,28 @@ id = "spellcraft"
 name = "Spellcraft"
 description = "Understanding spells: how they are woven and what they do."
 kind = "rules"
-mark = [{ on = "study", chance = 100 }]
-# Studying a spell from a scroll (spec §8 "Spells"): its value / 10 off the study check's
-# difficulty, +10 at 100, +20 at 200.
-benefit = [{ effect = "study", curve = [[0, 0], [200, 20]] }]
+# Studying a scroll is practice, and so is spending mana on a spell (#989), as Concentration's.
+mark = [{ on = "study", chance = 100 }, { on = "cast", chance = 25 }]
+# Learning a spell from a scroll (spec §8 "Spells": "Learning"): `learn` is the spell level up to
+# which a scroll teaches for certain, 10 at 60, 30 at the soft cap, the last spell level at 150
+# (at least 1 for anyone trained in the skill; those who are not cannot learn from a scroll at
+# all). `study` is the skill's value / 10 off the check above that, +10 at 100, +20 at 200.
+benefit = [
+    { effect = "learn", curve = [[0, 0], [10, 0], [60, 10], [100, 30], [150, 70]] },
+    { effect = "study", curve = [[0, 0], [200, 20]] },
+]
 
 [[skill]]
 id = "spot"
 name = "Spot"
 description = "Noticing what is hiding or out of place at a glance."
 kind = "passive"
-mark = [{ on = "spot", chance = 50 }, { on = "lookout", chance = 50 }]
+mark = [
+  { on = "spot", chance = 50 },
+  { on = "lookout", chance = 50 },
+  { on = "sight", chance = 25 },
+  { on = "search", chance = 3 },
+]
 # Noticing hidden features in passing (spec §8 "Searching"): secret doors, hollow walls, and
 # disguised mimics, not traps (Detect traps); trained at all, you notice them (else only elves
 # and dwarves do); added to the check, +8 at 100, +12 at 200. The lookout for a party on the
@@ -434,6 +485,14 @@ id = "swim"
 name = "Swim"
 description = "Staying afloat and making headway in deep water."
 kind = "rules"
+mark = [{ on = "wade", chance = 10 }, { on = "swim", chance = 100 }, { on = "stroke", chance = 25 }]
+# Percent of what wading adds to a step that is spared, under Swimmer's and Undertow's all of it;
+# and points added to the Swim check of a plunge through the ice (made: half its hit points) and
+# of a step in deep water (made: the step; data/swim.toml).
+benefit = [
+    { effect = "wade", curve = [[0, 0], [100, 60], [200, 100]] },
+    { effect = "swim", curve = [[0, 0], [100, 8], [200, 12]] },
+]
 
 [[skill]]
 id = "tumble"

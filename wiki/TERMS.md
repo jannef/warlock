@@ -98,6 +98,7 @@ above.
 | An encounter table | `encounters.md#the-ascmearcs-encounters` (a table: `encounters.md#encounter-table-ID`) |
 | The Ascmearc and its places | `ascmearc.md#the-places` |
 | Terrain, walls, water, stairs, creatures following you on stairs | `terrain.md#walls`, `terrain.md#water`, `terrain.md#stairs` |
+| Deep water, swimming | `terrain.md#deep-water` |
 | Digging, wall hardness | `digging.md#digging`, `digging.md#what-breaks-and-what-does-not` |
 | Explosions, blasts | `digging.md#explosions` |
 | Doors; locked, kicked, broken doors | `doors.md`, `doors.md#locked-doors`, `doors.md#kicking` |
@@ -109,6 +110,7 @@ above.
 | Dungeon, danger level, population | `dungeons.md`, `dungeons.md#who-lives-there-and-how-many` |
 | Out of depth, strays | `dungeons.md#who-lives-there-and-how-many` |
 | Lairs of the wanted | `dungeons.md#the-lairs-of-the-wanted` |
+| Grundlēas, floors forgotten | `dungeons.md#grundlēas` |
 | Special room | `special-rooms.md` (a room: its row) |
 | Forgotten altar, praying | `special-rooms.md#forgotten-altars` |
 | Forge, tempering | `special-rooms.md#forges` |
@@ -225,10 +227,15 @@ above.
 | Spending mana | `mana.md#spending-it` |
 | Magic, spells, casting | `magic.md`, `magic.md#the-spells` |
 | Caster level | `magic.md#caster-level` |
+| Learning (what a scroll teaches for certain, Spellcraft's curve) | `magic.md#learning` |
 | Spell level, cantrip | `magic.md#spell-levels` |
 | Ladder, rung, base | `magic.md#the-spells`, `magic.md#how-a-spell-grows` |
 | What talents and items do to a spell (a rung, bigger dice, a bonus, a reroll, a rider) | `magic.md#how-a-spell-grows` |
 | Spell shape (bolt, burst, cone, …) | `magic.md#shapes` |
+| Spell type, what a spell of a damage type does beyond its damage | `magic.md#spell-types` |
+| Arc, conducting through water, what an electricity spell does | `magic.md#spell-types` |
+| Burning | `status-effects.md#burning` |
+| Corroded | `status-effects.md#corroded` |
 | How a spell resolves (attack, auto, area, touch) | `magic.md#how-a-spell-finds-its-target` |
 | Mishap | `magic.md#learning-spells-from-scrolls` |
 | Studying a spell from a scroll, overreach | `magic.md#learning-spells-from-scrolls` |

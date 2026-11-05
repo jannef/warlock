@@ -36,6 +36,7 @@
 mod caves;
 mod chest;
 mod connect;
+mod deep;
 mod den;
 mod dress;
 mod hoard;
@@ -91,6 +92,8 @@ pub(crate) struct Palette {
     pub stairs_up: TerrainId,
     pub stairs_down: TerrainId,
     pub water: TerrainId,
+    /// Deep water: a cave pool's middle, where only a swimmer goes (`deep.rs`).
+    pub deep_water: TerrainId,
     /// Wall torches lighting rooms.
     pub sconce: TerrainId,
     /// Faintly glowing cave fungus.
@@ -116,6 +119,7 @@ impl Palette {
             stairs_up: terrain("stairs_up")?,
             stairs_down: terrain("stairs_down")?,
             water: terrain("water")?,
+            deep_water: terrain("deep_water")?,
             sconce: terrain("sconce")?,
             fungus: terrain("fungus")?,
             lamp: content
@@ -476,20 +480,24 @@ pub fn generate_for(
     let plan = def
         .plan(depth)
         .ok_or_else(|| GenError::NotAGeneratedLevel(id.to_string()))?;
+    let plan = def
+        .endless
+        .map_or(plan, |e| endless_plan(plan, e, seed, id));
     let pal = Palette::resolve(content).map_err(GenError::Content)?;
     let room_odds =
         (def.room_odds(depth)).ok_or_else(|| GenError::NotAGeneratedLevel(id.to_string()))?;
     let odds = (room_odds, def.shop_odds(depth));
     let needs = Needs {
-        down: depth < def.depth,
+        down: def.leads_down(depth),
         creatures: &def.creatures,
         key: def.key,
         vaults: def.vaults(depth),
     };
-    let up_to = if depth > 1 {
-        Some(def.level_id(depth - 1))
-    } else {
-        entered_from.map(str::to_string)
+    let up_to = match (depth > 1, def.endless) {
+        (true, _) => Some(def.level_id(depth - 1)),
+        // However the first floor was reached (from the second, it may be), it climbs out.
+        (false, Some(_)) => content.way_into(id).map(str::to_string),
+        (false, None) => entered_from.map(str::to_string),
     };
     let down_to = needs.down.then(|| def.level_id(depth + 1));
 
@@ -510,6 +518,9 @@ pub fn generate_for(
         };
         if built.is_none() {
             continue;
+        }
+        if plan.generator == Generator::Caves {
+            deep::lay(&mut canvas, seed, id);
         }
         canvas.build_walls();
         let (Some(up), down) = (canvas.up, canvas.down) else {
@@ -621,6 +632,26 @@ pub fn generate_for(
         }
     }
     Err(GenError::Exhausted(MAX_ATTEMPTS))
+}
+
+/// The generator and size of a floor of an endless branch, drawn as it is made from its own
+/// stream `floor_kind/<level id>` (spec §7 "The endless branch"), so the draw moves nothing else.
+fn endless_plan(
+    plan: crate::content::LevelPlan,
+    endless: crate::content::Endless,
+    seed: u64,
+    id: &str,
+) -> crate::content::LevelPlan {
+    if !Rng::stream(seed, &format!("floor_kind/{id}")).chance(endless.caves.into()) {
+        return plan;
+    }
+    let (width, height) = endless.caves_size;
+    crate::content::LevelPlan {
+        generator: Generator::Caves,
+        width,
+        height,
+        ..plan
+    }
 }
 
 /// Hides the branch's traps on a generated level (spec §8 "Traps"): `traps_per_level` of them,
@@ -887,6 +918,8 @@ mod cealdhlaw_tests;
 #[cfg(test)]
 mod chest_tests;
 #[cfg(test)]
+mod deep_tests;
+#[cfg(test)]
 mod fennmynster_tests;
 #[cfg(test)]
 mod fyrdelf_tests;
@@ -910,3 +943,5 @@ mod tests;
 mod treasury_tests;
 #[cfg(test)]
 mod vault_monsters_tests;
+#[cfg(test)]
+mod vault_turn_tests;

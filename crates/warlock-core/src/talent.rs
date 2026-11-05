@@ -229,6 +229,9 @@ pub struct TalentMods {
     /// per `spell_mod` effect, each with its tag filter
     /// ([`TalentMods::spell_mods`]).
     pub spell: Vec<crate::content::SpellMod>,
+    /// The percent chance its spells of a damage type arc at, one entry per type a `spell_type`
+    /// effect names ([`TalentMods::arc_chance`]; Conductor).
+    pub arc_chance: Vec<(crate::content::DamageTypeId, u8)>,
     /// Percent more the caster level its magic items give counts (Attuned;
     /// [`TalentMods::attuned`]).
     pub attuned_percent: i32,
@@ -1139,6 +1142,16 @@ impl TalentMods {
         sum
     }
 
+    /// The chance its spell of damage type `kind` arcs at, by its talents: the highest any gives
+    /// (0: none; the type's own stands then).
+    pub fn arc_chance(&self, kind: crate::content::DamageTypeId) -> u8 {
+        (self.arc_chance.iter())
+            .filter(|(k, _)| *k == kind)
+            .map(|&(_, chance)| chance)
+            .max()
+            .unwrap_or(0)
+    }
+
     /// The mana one of its spells that costs `mana` costs it: scaled by `spell_mana_percent`,
     /// at least 1.
     pub fn spell_mana(&self, mana: u16) -> i32 {
@@ -1701,6 +1714,10 @@ impl TalentMods {
                 }
             }
             TalentEffect::SpellMod(spec) => self.spell.push(spec.resolve(content, choice)),
+            TalentEffect::SpellType { arc_chance, when } => {
+                let kinds = when.iter().filter_map(|id| content.damage_type_id(id));
+                self.arc_chance.extend(kinds.map(|k| (k, arc_chance)));
+            }
             TalentEffect::SpellManaPercent { value } => self.spell_mana_percent += value,
             TalentEffect::DeflectionUnarmoured { value } => self.deflection_unarmoured += value,
             TalentEffect::Purify => self.purify = true,

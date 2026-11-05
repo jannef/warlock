@@ -191,8 +191,8 @@ pub enum Action {
     /// `heal:filth_fever`), else the player's first there is to treat (`heal`); `ally` the
     /// player's ally that way (`heal:bleeding:E`), which needs an ailment named. An Intelligence
     /// check plus Heal: bleeding stops, a poison eases a degree, a disease is eased. Takes the
-    /// time of `heal` whatever comes of it; refused (no time) without the skill, with nothing to
-    /// treat, with no ally of the player's that way, or for a poison or disease already tried.
+    /// time of `heal` whatever comes of it, and may be tried again at once; refused (no time)
+    /// without the skill, with nothing to treat, or with no ally of the player's that way.
     Heal {
         what: Option<String>,
         ally: Option<Dir>,

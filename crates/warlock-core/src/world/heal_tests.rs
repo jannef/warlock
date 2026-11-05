@@ -10,7 +10,6 @@ use crate::action::parse_actions;
 use crate::check;
 use crate::content::{ContentFiles, DiseaseId, StatusId};
 use crate::heal::Ailment;
-use crate::replay::Replay;
 use crate::skills::{Effect, SkillId, Trained};
 use crate::stats::Stat;
 use crate::time::Duration;
@@ -259,8 +258,8 @@ fn bleeding_is_an_intelligence_check_and_stops_or_may_be_tried_again() {
 }
 
 #[test]
-fn a_poison_is_tried_once_eased_a_degree_and_tried_again_once_it_ends() {
-    let mut made = 0;
+fn a_poison_may_be_tried_again_after_a_failure_and_after_a_success() {
+    let (mut made, mut failed) = (0, 0);
     for seed in 0..30 {
         let mut w = World::new(content(false), "room", Some(seed)).expect("world");
         train(&mut w, 0);
@@ -275,43 +274,39 @@ fn a_poison_is_tried_once_eased_a_degree_and_tried_again_once_it_ends() {
             .effects
             .get(poisoned)
             .expect("still poisoned");
-        assert!(effect.treated, "{seed}: one try");
         if expected {
             made += 1;
             assert_eq!(effect.severity, 3, "eased a degree");
             assert_eq!(last_message(&w), "You draw out some of the poison.");
         } else {
+            failed += 1;
             assert_eq!(effect.severity, 4);
-            assert_eq!(last_message(&w), "You can do no more for the poison.");
+            assert_eq!(last_message(&w), "The poison will not come out.");
         }
-        // Not again, whatever came of it: refused, no time.
-        assert_eq!(heal_in_menu(&w), Some(Some(Unavailable::NothingToTreat)));
-        let out = w.apply(&"heal:poisoned".parse().expect("action"));
-        assert!(!out.took_turn && out.elapsed.is_zero());
-        assert_eq!(last_message(&w), "You can do no more for the poison.");
-        let out = w.apply(&Action::Heal {
-            what: None,
-            ally: None,
-        });
-        assert!(!out.took_turn);
-        assert_eq!(last_message(&w), "There is nothing to treat.");
-        // A new dose after it ended may be tried again.
-        let player = w.state.player;
-        w.state
-            .actors
-            .get_mut(&player)
-            .expect("player")
-            .effects
-            .remove(poisoned);
-        afflict(&mut w, "poisoned", 2);
+        // Whatever came of it, it may be tried again at once.
         assert_eq!(heal_in_menu(&w), Some(None));
+        let severity_before = effect.severity;
+        let mut rng = w.state.rng.clone();
+        let expected = check::check(&mut rng, modifier(&w), 8 + i32::from(severity_before));
+        let out = w.apply(&"heal:poisoned".parse().expect("action"));
+        assert!(out.took_turn && !out.elapsed.is_zero());
+        let now = w.state.player().effects.get(poisoned).map(|e| e.severity);
+        assert_eq!(
+            now,
+            Some(if expected {
+                severity_before - 1
+            } else {
+                severity_before
+            }),
+            "{seed}: a second try is a try"
+        );
     }
-    assert!((5..=28).contains(&made), "{made} of 30");
+    assert!(made > 0 && failed > 0, "{made} made, {failed} failed");
 }
 
 #[test]
-fn a_disease_is_tried_once_eased_never_cured_and_tried_again_when_caught_again() {
-    let mut made = 0;
+fn a_disease_may_be_tried_again_eased_never_cured() {
+    let (mut made, mut failed) = (0, 0);
     for seed in 0..30 {
         let mut w = World::new(content(false), "room", Some(seed)).expect("world");
         train(&mut w, 0);
@@ -337,30 +332,26 @@ fn a_disease_is_tried_once_eased_never_cured_and_tried_again_when_caught_again()
             .diseases
             .get(fever)
             .expect("never cured outright");
-        assert!(after.treated);
         if expected {
             made += 1;
             assert_eq!(last_message(&w), "You ease the sickness somewhat.");
             // Filth fever is shaken off by two checks won in a row: this counts as one.
             assert_eq!(after.streak, before.streak + 1);
         } else {
+            failed += 1;
             assert_eq!(last_message(&w), "You can do no more for the sickness.");
             assert_eq!(after.streak, before.streak);
         }
+        // Made or failed, it may be tried again at once, and a try never cures it.
+        assert_eq!(heal_in_menu(&w), Some(None));
         let out = w.apply(&Action::Heal {
             what: Some("filth_fever".into()),
             ally: None,
         });
-        assert!(!out.took_turn);
-        assert_eq!(last_message(&w), "You can do no more for the sickness.");
-        // Rid of it and caught again, it may be tried again.
-        let player = w.state.player;
-        w.end_disease(player, fever, &mut Vec::new());
-        assert_eq!(heal_in_menu(&w), Some(Some(Unavailable::NothingToTreat)));
-        sicken(&mut w, "filth_fever");
-        assert_eq!(heal_in_menu(&w), Some(None));
+        assert!(out.took_turn);
+        assert!(w.state.player().diseases.get(fever).is_some());
     }
-    assert!((3..=27).contains(&made), "{made} of 30");
+    assert!(made > 0 && failed > 0, "{made} made, {failed} failed");
 }
 
 #[test]
@@ -427,41 +418,6 @@ fn a_try_may_earn_heal_a_mark() {
     let heal = heal_skill(&w);
     let marks = w.state.player().skills.get(heal).map(|t| t.marks);
     assert_eq!(marks, Some(1), "a try, whatever came of it");
-}
-
-#[test]
-fn treated_flags_save_replay_and_hash() {
-    let mut w = world("priest");
-    let mut replay = Replay::new(&w);
-    let text = "afflict:bleeding*2 afflict:poisoned*2 heal:poisoned heal heal heal wait";
-    for action in parse_actions(text).expect("actions") {
-        w.apply(&action);
-        replay.push(&action, &w);
-    }
-    let poisoned = status(&w, "poisoned");
-    assert!(
-        w.state
-            .player()
-            .effects
-            .get(poisoned)
-            .is_some_and(|e| e.treated)
-    );
-    let (again, divergence) = replay.play(content(false)).expect("plays");
-    assert!(divergence.is_none(), "the replay verifies");
-    assert_eq!(again.state_hash(), w.state_hash());
-    // The flags are saved state: an infection's too.
-    let fever = sicken(&mut w, "filth_fever");
-    let player = w.state.player;
-    (w.state.actors.get_mut(&player))
-        .and_then(|a| a.diseases.get_mut(fever))
-        .expect("it")
-        .treated = true;
-    let bytes = crate::save::encode_state(w.state(), w.fingerprint());
-    let loaded = crate::save::decode(&bytes, content(false)).expect("loads");
-    assert_eq!(loaded.state_hash(), w.state_hash());
-    let me = loaded.state.player();
-    assert!(me.effects.get(poisoned).is_some_and(|e| e.treated));
-    assert!(me.diseases.get(fever).is_some_and(|i| i.treated));
 }
 
 /// The player's one ally beside them: its id and the way to it.

@@ -90,16 +90,17 @@ hidden traps, whose checks read it in place of Search and Spot, `Skills::trains_
 `docs/dev/stealing.md`), heal in `world/heal.rs` (trained at all gives the Heal ability, on oneself or an ally beside one;
 `docs/dev/status-effects.md` "Treating oneself"), forage (Survival: percent added to a forage's chance; trained at all,
 the Forage ability) in `world/forage.rs`, study (Spellcraft and Decipher script: points off the study check) in
-`world/learn.rs::study_odds` (docs/dev/spells.md "Learning"; its use `Use::Study`, reported
+`world/learn.rs::study_odds` and learn (Spellcraft: the spell level a scroll teaches for certain, at least 1; trained at all lets
+the player learn from a scroll) in `Actor::learning` (docs/dev/spells.md "Learning"; their use `Use::Study`, reported
 when a study ends, is also `StatUse::Study`); each use
 is reported where it happens (`make_noise`, `hear`, `fight.rs::resolve`, `apply`, `player_moves`,
 `kick_door`, `search_turn` for `search`, `notice_hidden` for `spot`, both for `find_trap` (a
 trap found), `World::disarm` for
 `disarm`, `pick_lock` for `pick`, `World::steal` for `steal`, `World::heal` for `heal`, `World::forage_done` for `forage` (a forage that ran its time), `World::order` and `fight.rs::dies` for `handle` (an order given to one's allies, an ally's kill: Handle animal's marks, docs/dev/allies.md), `world/tame.rs::tame_check` for `handle` too (a try at taming), and the `tame` benefit read in `tame_odds` (trained at all, the Tame ability; docs/dev/companion.md "Taming"), `World::pay` and
 `World::trade` (a sale) in `world/shop.rs` for `deal`, `World::appraise` for `appraise`, `world/temper.rs::tempered` for `temper`, and `World::sidesteps` for a known trap avoided,
-`dodge`, besides `fight.rs::resolve`). Concentration's `mana_regen` and `max_mana` (trained only, `Actor::mind`) are read in
+`dodge`, besides `fight.rs::resolve`). Marks from plain play (#1014, `docs/design/skill-uses.md` 6.8, 6.9, 6.11): `Use::Sight` (Spot) in `surprise.rs::mark_noticed`, the first sighting of a creature that has not noticed the player; `Use::Sprung` (Detect traps) in `trap.rs::train_from_sprung`, a hidden trap going off under the player, or (half the time, a training-stream draw) under a creature they see; `Use::Overhear` (Listen) in `perceive.rs::hear`, a sound that is no news heard while resting or waiting (`World::waiting` is set around the player's wait); Detect traps also marks on `disarm` and, with Spot, on `search`, as data. Concentration's `mana_regen` and `max_mana` (trained only, `Actor::mind`) are read in
 `World::mana_rate` and `Actor::max_mana` (`world/concentration.rs`, docs/dev/mana.md), its `cast`
-use reported by `World::spend_mana`. Knowledge's `resist` (#667) is read
+use reported by `World::spend_mana` (Spellcraft's `cast` mark, 25 %, rides the same use, #989). Knowledge's `resist` (#667) is read
 in `world/knowledge.rs` (`World::resisting`, `resist_bonus`) through `Actor::skill_effect_above`
 (`Skills::effect_above`: each benefit read at the value less the creature's level, nothing at or
 below it), called for the modifier of the player's check against a creature's drain
@@ -107,7 +108,12 @@ below it), called for the modifier of the player's check against a creature's dr
 (`World::expose` with a `by`), and a struggle against its hold (`World::struggle`, the effect's
 `by`); the same call marks `Use::Resist` (training stream only), and `World::discovered` marks
 `Use::Discover` beside the first-kill and arrival XP (`world/experience.rs`). The player only, and
-only against a creature: no bonus, no draw otherwise. Tests `world/knowledge_tests.rs`.
+only against a creature: no bonus, no draw otherwise. The same skills standing above a creature's
+level at all (`Actor::skill_stands_above`, `Skills::stands_above`: one above is enough, though the
+curve gives nothing below 3) tell look mode what its kind resists (#1030): `PerceptionView::known_resistances`
+reads `Actor::known_resistances` (`world/knowledge.rs`), the type's `resist` in `ResistanceWord`s,
+never gear or statuses, no marks; JSON dumps carry it as a seen actor's `known`; `ui/look.rs::known`
+writes the line. Tests `world/knowledge_tests.rs`.
 Metalcraft's `temper` benefit is read in
 `world/temper.rs::tempered` (the forge's Strength check, docs/dev/special-rooms.md); Metalcraft
 stays a skill "not usable yet" in the abilities menu, since Temper is offered by the anvil to
@@ -140,6 +146,49 @@ words. The check reads Dexterity's modifier, `TalentMods::check`, `skill_effect(
 line read the trained value, `Skills::value_of_effect`, so no item or talent bonus moves them.
 Marks: `Use::Fletch` for every batch that ran its time, whatever it made. Fletcher's numbers are
 its effect's (`talents/fletcher.toml`).
+
+**Balance** (spec §8 "Skills", #1029, `docs/design/skill-uses.md` §6.13): besides `burden`,
+`Effect::Footing` is read in `World::step_price` (`world/schedule.rs`) in the `else` of the wading
+branch, on a step `World::rough_step` (`world/footing.rs`) calls rough: off the overworld,
+`move_cost` above 100, not `wading_step`; the same `surcharge_spared`. `Use::RoughStep` is marked by
+`World::train_rough_step` after `wade` in the step (`world/travel.rs`). `Effect::SteadyEase` is read
+in `World::status_cost` (`world/surprise.rs`) for the status `footing::STAGGERED` (`"staggered"`),
+beside Initiative's ease of Surprised; `Use::Staggered` is marked in `spend_actions`
+(`world/weapon_ability.rs`) for the player's action that eases Staggered (not the one that gave it).
+Tests `world/footing_tests.rs`.
+
+**Swim** (spec §8 "Skills", #1018, `docs/design/skill-uses.md` §6.4; `kind = "rules"`, no menu
+row): `Effect::Wade` is read in `World::step_price` (`world/schedule.rs`), on a step
+`World::wading_step` calls wading (off the overworld, `move_cost` above 100, `stars::wading`): a
+percent of what the terrain adds over a plain step is spared (`surcharge_spared`, rounded up), 100
+for `swimmer` and `wades_free`, so Swim never goes past them. Its use `wade` is reported at the
+head of `World::wade` (`world/disease.rs`), before the talents' early return: a wader whom a
+talent spares still trains. `Effect::Swim` is read in `World::keeps_afloat` (`world/ice.rs`,
+`docs/dev/temperature.md`), which marks `swim` once a check; it is `Skills::trains_effect`-gated, so
+an item's Swim bonus alone asks no check. Tests `world/swim_tests.rs`.
+
+**Deep water** (spec §8 "Skills": Swim, #1019; design §6.4 S2) is `world/swim.rs`, one line each
+in `player_moves`, the refused actions (`pick_up_objects`, `drop_objects`, `start_rest`, the
+search dispatch, `start_dig`, lighting in `use_tool`), and `equip`. The terrain's `swim = true`
+with `walkable = false` (`content/mod.rs` checks the pair) is why nothing else needs to know of it:
+paths, travel, spawning, teleports, blinks, and landings treat it as impassable. `at_the_shore`
+stops a step from anything else: water not in the level's memory is written there, with no time, so
+the step cannot go in unasked (presentation asks only of what the player knows,
+`PerceptionView::dives_at`); then `shore_refusal`, shared with `dives_at`. `stroke_fails` is the
+check of a step that starts in deep water, wherever it ends (**the dive itself asks none**: a
+"Dive in" that left you on the shore, cold, would make no sense; the issue left this open): two
+gameplay draws (the 2d12), `Use::Stroke` whatever came of it (a use of its own, as `swim` is 100 %
+for a plunge), then `Harm::Spared`. `data/swim.toml` has the numbers (`content/swim.rs`, optional:
+without it nobody swims); burden goes by `Load::penalty`, as every burden hook does. `dive_in` and
+`equip` put out the ready light (`douse_afloat`), so a second lantern, lit in the pack, cannot be
+made ready to cheat it. Prices: `wading_step` is true of `swim` terrain, so Wade, Swimmer
+(`terrain_as`), Strong swimmer, and Undertow apply; `World::wade` marks no `wade` for it.
+`route_to_shore` (close-in in `ai.rs`, Follow in `ally.rs`) widens a ring at a time up to
+`SHORE_REACH` when the target is afloat with no ground in reach, so creatures wait on the nearest
+shore; only then does it search more than once. A swimmer swaps with no one (`Refusal::Water`). An
+Overloaded swimmer cannot step (`can_step_to`, as anywhere) and cannot drop: they can still throw
+things away, eat, or teleport, so it is no trap. Tests `world/swim_deep_tests.rs`; the showcase's
+quarry pit holds a pool to try it in (the test world only; #1020 places it in the world).
 
 **Foraging** (spec §8 "Foraging", #547): `Action::Forage` (replay text `forage`, cost `forage`
 a turn, `ActionKind::Forage`), dispatched by one arm in `World::player_acts` to
@@ -176,5 +225,17 @@ through `Actor::skill_effect`, a party's lead type's through `Skills::effect`); 
 Listen's `hearing` (with Keen ears, capped at `MAX_ENCOUNTER_BONUS`) instead and reports
 `Use::Hear`.
 
-Pending hooks:
-athletics (climbing out of pits, #128) and escape artist (pits, #128).
+Escape artist (#1015) has no action and no ability row. `Effect::Escape` is read in
+`World::slipping` (`world/hold.rs`, docs/dev/status-effects.md "Holds"), `Effect::Climb` (steps at
+50 and 100: halved, then skipped) in `World::climb_price` (`world/trap.rs`, the pit's one arm);
+both only for those trained (`trains_effect`). `Use::Escape` is marked per check whatever came of
+it, `Use::Climb` per climb out (Escape artist 100 %, Athletics 50 % and no effect). Tests:
+`world/escape_tests.rs`.
+
+## Tumble: plain misses
+
+A blow at the player that comes back `Strike::Missed { by: None }` becomes a dodge one time in
+four (`World::plain_miss_dodged`, `world/train.rs`, called in `fight.rs` after `caught_shot`):
+one `chance(25)` on the training stream, so the gameplay stream does not move. Misses by a
+category stay as they are; blows between creatures or from the player draw nothing
+(`docs/design/skill-uses.md` Tu1). `balance_probe/training.rs` uses the same function.

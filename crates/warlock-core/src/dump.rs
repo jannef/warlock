@@ -1217,7 +1217,22 @@ fn progress_rows(world: &World) -> Vec<String> {
             why.join("; ")
         ));
     }
-    // The study check's exact odds (spec §8 "Spells"), for each scroll the player could study.
+    // What a scroll teaches for certain (spec §8 "Spells": "Learning"), then the study check's
+    // exact odds for each scroll the player could study.
+    let trained = (player.skills.iter()).find(|&(id, _)| {
+        let benefits = &world.content().skill(id).benefits;
+        benefits
+            .iter()
+            .any(|b| b.effect == crate::skills::Effect::Learn)
+    });
+    rows.push(match (player.learning(world.content()), trained) {
+        (Some(learning), Some((id, skill))) => format!(
+            "learning {learning} ({} {})",
+            world.content().skill(id).name,
+            skill.value
+        ),
+        _ => "cannot learn: not trained in Spellcraft".to_string(),
+    });
     for study in view.studies() {
         if let Some(odds) = world.player_study_odds(study.spell) {
             let check = match odds.check {
@@ -1296,7 +1311,7 @@ fn spell_does(view: &PerceptionView<'_>, spell: crate::content::SpellId) -> Vec<
 /// The spells the player knows (`[{"id", "level", "cost", "roll", "damage_type", "reach"}]`:
 /// the roll's text as the abilities menu shows it, `"healed"` for a heal's type, `"called"` for
 /// a summon's count, `reach` with
-/// `range`, `length`, `radius`; each null where none) and the scrolls they could study
+/// `range`, `length`, `radius`, `jumps`; each null where none) and the scrolls they could study
 /// (`[{"letter", "spell", "chance"}]`).
 fn spells_json(view: &PerceptionView<'_>) -> (Value, Value) {
     use crate::content::Shape;
@@ -1321,7 +1336,12 @@ fn spells_json(view: &PerceptionView<'_>) -> (Value, Value) {
                 "cost": view.own_spell_cost(spell),
                 "roll": roll.map(|r| r.text),
                 "damage_type": damage_type,
-                "reach": { "range": range, "length": length, "radius": reach.radius },
+                "reach": {
+                    "range": range,
+                    "length": length,
+                    "radius": reach.radius,
+                    "jumps": reach.jumps,
+                },
             }))
         })
         .collect();
@@ -1878,6 +1898,14 @@ pub fn json(world: &World, layers: &[Layer], include_state: bool) -> Value {
                 "id": a.id, "kind": a.kind, "creature": def.id, "glyph": a.glyph(content).to_string(),
                 "fg": a.fg(content).to_string(), "pos": a.pos, "health": a.health, "effects": effects,
             });
+            // What the player's Knowledge tells of it, in words (spec §8 "Skills").
+            let known = view.known_resistances(a);
+            if !known.is_empty() {
+                let known: serde_json::Map<String, Value> = (known.into_iter())
+                    .map(|(k, w)| (content.damage_type(k).id.clone(), json!(w.word())))
+                    .collect();
+                seen["known"] = Value::Object(known);
+            }
             // A composite's colours, top band first (spec §8 "Animated objects").
             let bands = a.shape.as_ref().map_or(&[][..], |s| s.bands());
             if !bands.is_empty() {
@@ -2175,7 +2203,8 @@ pub fn json(world: &World, layers: &[Layer], include_state: bool) -> Value {
     if include_state {
         out["state"] = serde_json::to_value(world.state()).expect("state serializes");
         // The current level's danger (spec §7 "Danger levels"): ground truth, never stored.
-        out["danger"] = json!(world.danger(&world.state().current_level));
+        let level = &world.state().current_level;
+        out["danger"] = json!(world.content().floor_danger(level, world.player_level()));
         // The encounter tables matching the player's overworld cell (ground truth).
         out["encounter_tables"] = json!(world.encounter_tables_here());
         // The callings of the campaign and where the player stands with each.

@@ -167,6 +167,10 @@ describes what you know about the cell under it:
 - a [sound](hearing.md) you heard there this turn ([Hearing](hearing.md));
 - or "You don't know what is there."
 
+Below it, on a [creature](creatures.md) whose level your [Knowledge](skills.md#skill-knowledge) stands above, is what you
+know of its kind: "You know the skeleton is immune to poison, resistant to piercing, and
+vulnerable to bludgeoning." (see [Skills](skills.md#skill-knowledge)).
+
 Looking takes no time. Press `l` or `Esc` to leave.
 
 ## Aiming

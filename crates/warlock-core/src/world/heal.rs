@@ -11,7 +11,8 @@
 //!   with no time ("You have no ally there.").
 //! - **What**: the ailment the action names (a status id or a disease id), else the player's
 //!   first there is to treat ([`crate::heal::treatable`]). Nothing to treat, or one that may not
-//!   be treated now (one try spent), is refused with no time and no draw.
+//!   be treated now (not suffered, or a disease still incubating), is refused with no time and
+//!   no draw.
 //! - **A try** is a check ([`crate::check`]): 2d12 plus the healer's Intelligence modifier (of the
 //!   effective score, spec §8 "Stats", and what talents add to every Intelligence check) plus
 //!   what Heal gives ([`Effect::Heal`]) against a status's `treat` difficulty at the patient's
@@ -21,10 +22,7 @@
 //!   at none; a disease is eased: it counts as a progression check won (toward its `recovery`),
 //!   unless that would shake it off or it never recovers by itself, when its next progression is
 //!   put off to a full interval from now instead. A try never cures a disease outright.
-//! - **Failed**: a status that `stops` may be tried again at once (time is the price, the
-//!   owner's rule); a poison or a disease may not be tried again (its effect's or infection's
-//!   `treated`, saved state, cleared as it ends). A poison or a disease is marked tried whatever
-//!   comes of the try: one try each.
+//! - **Failed**: any ailment may be tried again at once (time is the price, the owner's rule).
 
 use super::{Actor, ActorId, Spent, World, WorldState};
 use crate::ability::Ability;
@@ -84,16 +82,7 @@ impl World {
             return Spent::Nothing;
         };
         if !heal::may_treat(me, &content, ailment) {
-            let suffers = match ailment {
-                Ailment::Status(s) => me.effects.has(s),
-                Ailment::Disease(d) => me.diseases.get(d).is_some_and(|i| i.shown),
-            };
-            if !suffers {
-                self.say("There is nothing like that to treat.");
-            } else {
-                let said = self.failed_words(patient, ailment);
-                self.say(said);
-            }
+            self.say("There is nothing like that to treat.");
             return Spent::Nothing;
         }
         let healer = self.state.player();
@@ -139,20 +128,8 @@ impl World {
         }
     }
 
-    /// What the player is told when a try at `patient`'s `ailment` fails, or when it may not be
-    /// tried again.
-    fn failed_words(&self, patient: ActorId, ailment: Ailment) -> String {
-        match ailment {
-            Ailment::Status(s) => (self.content.status(s).treat.as_ref())
-                .map_or_else(String::new, |t| t.failed.clone()),
-            Ailment::Disease(d) => {
-                format!("You can do no more for {}.", self.disease_words(patient, d))
-            }
-        }
-    }
-
     /// The try at `patient`'s status `status` came out `made`: made, one that stops ends, any
-    /// other eases a degree; one that does not stop is spent either way.
+    /// other eases a degree.
     fn treat_status(
         &mut self,
         patient: ActorId,
@@ -176,9 +153,6 @@ impl World {
         let Some(effect) = actor.effects.get_mut(status) else {
             return;
         };
-        if !treat.stops {
-            effect.treated = true;
-        }
         if !made {
             return;
         }
@@ -192,7 +166,7 @@ impl World {
     }
 
     /// The try at `patient`'s disease `disease` came out `made`: made, it is eased (module
-    /// docs); either way it may not be tried again.
+    /// docs).
     fn treat_disease(&mut self, patient: ActorId, disease: DiseaseId, made: bool) {
         let content = self.content.clone();
         let def = content.disease(disease);
@@ -204,7 +178,6 @@ impl World {
         let Some(infection) = actor.diseases.get_mut(disease) else {
             return;
         };
-        infection.treated = true;
         if !made {
             self.say(format!("You can do no more for {words}."));
             return;
