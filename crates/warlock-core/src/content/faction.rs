@@ -2,7 +2,9 @@
 //!
 //! Every creature type belongs to a faction, and the player to the faction [`PLAYER_FACTION`].
 //! Relations are pairwise and symmetric: if faction A lists B as `hostile`, A and B are hostile
-//! to each other. Every pair that is not listed (a faction and itself included) is neutral.
+//! to each other. Every pair that is not listed (a faction and itself included) is neutral. A
+//! faction with `hostile_to_all` is hostile to every faction and to itself: friendly to nothing
+//! (the berserk risen, `world/corpse_spell.rs`).
 //!
 //! The file is optional: without it there are no factions and everyone is neutral to everyone.
 
@@ -41,6 +43,9 @@ pub(super) struct FactionSpec {
     /// wrath, spec §7 "Factions"); none: it stays.
     #[serde(default)]
     pub provoked: Option<String>,
+    /// Hostile to every faction, itself too.
+    #[serde(default)]
+    pub hostile_to_all: bool,
 }
 
 #[derive(Deserialize)]
@@ -59,6 +64,8 @@ pub struct FactionDef {
     /// The faction one of its creatures joins when the player attacks it
     /// (`World::provoke_court`); none: it stays.
     pub provoked: Option<FactionId>,
+    /// Hostile to every faction, itself too.
+    pub hostile_to_all: bool,
 }
 
 /// Every faction and the hostility between them.
@@ -66,7 +73,8 @@ pub struct FactionDef {
 pub struct Factions {
     defs: Vec<FactionDef>,
     ids: BTreeMap<String, FactionId>,
-    /// Row-major `defs.len()²` matrix, symmetric, false on the diagonal.
+    /// Row-major `defs.len()²` matrix, symmetric, false on the diagonal but a `hostile_to_all`
+    /// faction's.
     hostile: Vec<bool>,
 }
 
@@ -103,6 +111,18 @@ impl Factions {
                 hostile[a * n + b] = true;
                 hostile[b * n + a] = true;
             }
+            if spec.hostile_to_all {
+                if !spec.hostile.is_empty() {
+                    return Err(format!(
+                        "faction `{}` is `hostile_to_all`: it lists no `hostile`",
+                        spec.id
+                    ));
+                }
+                for b in 0..n {
+                    hostile[a * n + b] = true;
+                    hostile[b * n + a] = true;
+                }
+            }
         }
         let mut defs = Vec::with_capacity(n);
         for s in specs {
@@ -123,6 +143,7 @@ impl Factions {
                 name: s.name,
                 animal: s.animal,
                 provoked,
+                hostile_to_all: s.hostile_to_all,
             });
         }
         Ok(Self { defs, ids, hostile })
@@ -145,11 +166,14 @@ impl Factions {
         &self.defs
     }
 
-    /// Whether faction `a` is hostile to anyone at all.
+    /// Whether faction `a` is hostile to anyone at all, by its own quarrels: being on a
+    /// `hostile_to_all` faction's list is no quarrel of its own, or no one would be peaceable.
     pub fn has_enemies(&self, a: FactionId) -> bool {
         let n = self.defs.len();
         let a = usize::from(a.0);
-        a < n && self.hostile[a * n..(a + 1) * n].contains(&true)
+        a < n
+            && (self.defs[a].hostile_to_all
+                || (0..n).any(|b| self.hostile[a * n + b] && !self.defs[b].hostile_to_all))
     }
 
     /// How factions `a` and `b` stand toward each other; symmetric.
@@ -167,6 +191,63 @@ impl Factions {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn hostile_to_all_is_friendly_to_nothing_and_peace_stays_peace() {
+        let f = resolve(
+            r#"
+[[faction]]
+id = "player"
+name = "you"
+
+[[faction]]
+id = "villagers"
+name = "villagers"
+
+[[faction]]
+id = "berserk"
+name = "the berserk"
+hostile_to_all = true
+"#,
+        )
+        .expect("valid");
+        let id = |n: &str| f.id(n).expect("known");
+        for other in ["player", "villagers", "berserk"] {
+            assert_eq!(
+                f.stance(id("berserk"), id(other)),
+                Stance::Hostile,
+                "{other}"
+            );
+            assert_eq!(
+                f.stance(id(other), id("berserk")),
+                Stance::Hostile,
+                "{other}"
+            );
+        }
+        assert_eq!(f.stance(id("player"), id("villagers")), Stance::Neutral);
+        assert!(f.has_enemies(id("berserk")));
+        assert!(!f.has_enemies(id("villagers")), "still peaceable");
+        assert!(f.def(id("berserk")).hostile_to_all);
+    }
+
+    #[test]
+    fn hostile_to_all_lists_no_one() {
+        let err = resolve(
+            r#"
+[[faction]]
+id = "player"
+name = "you"
+
+[[faction]]
+id = "berserk"
+name = "the berserk"
+hostile_to_all = true
+hostile = ["player"]
+"#,
+        )
+        .unwrap_err();
+        assert!(err.contains("lists no `hostile`"), "{err}");
+    }
 
     fn resolve(text: &str) -> Result<Factions, String> {
         let file: FactionFile = toml::from_str(text).map_err(|e| e.to_string())?;

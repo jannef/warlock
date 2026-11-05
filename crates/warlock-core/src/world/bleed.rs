@@ -9,7 +9,7 @@ use super::{ActorId, World};
 use crate::action::AttackKind;
 use crate::blood::{self, Wound};
 use crate::combat::{Blow, Strike};
-use crate::content::LevelKind;
+use crate::content::{CreatureId, LevelKind};
 use crate::geom::Pos;
 
 impl World {
@@ -24,6 +24,35 @@ impl World {
         blow: Blow,
     ) {
         self.spill(attacker.0, target, (from, kind != AttackKind::Melee), blow);
+    }
+
+    /// A corpse of `creature` at `at` bursts, the blast from `from` (`corpse_spell.rs`): its
+    /// blood is spattered as a kill's, presentation data as all blood is.
+    pub(super) fn spill_corpse(&mut self, creature: CreatureId, at: Pos, from: Pos) {
+        let def = self.content.creature(creature);
+        let Some(color) = def.blood else {
+            return;
+        };
+        let wound = Wound {
+            from,
+            at,
+            missile: false,
+            damage: 0,
+            hp: 0,
+            max_hp: 1,
+            critical: false,
+            size: self.content.size(def.size).blood,
+            seed: blood::seed(self.state.turn, self.state.time, 0, u32::from(creature.0)),
+        };
+        let now = self.state.time;
+        let content = &self.content;
+        let level = self.state.current_mut();
+        if level.kind == LevelKind::Overworld {
+            return;
+        }
+        for spatter in wound.spatter(|p| level.is_opaque(content, p)) {
+            level.stain(content, spatter, color, now);
+        }
     }
 
     /// [`World::bleed`] for any blow: `source` only seeds where the blood lands (the attacker's

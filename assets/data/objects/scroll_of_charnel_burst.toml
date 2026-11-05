@@ -1,0 +1,19 @@
+# A scroll of charnel burst (spec §8 "Scrolls", "Spells"): read it (`r`) at a corpse you see, and
+# it casts Charnel burst, free of mana; study it (`L`), and you may learn the spell for good.
+[[object]]
+id = "scroll_of_charnel_burst"
+name = "scroll of charnel burst"
+plural = "scrolls of charnel burst"
+glyph = "?"
+fg = "#b0a080"
+class = "scrolls"
+materials = ["paper"]
+weight = 50
+value = 150
+stackable = true
+level = 5
+frequency = 25
+
+[object.read]
+kind = "spell"
+spell = "charnel_burst"

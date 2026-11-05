@@ -310,10 +310,10 @@ pub use slot::{MAX_SLOTS, SlotDef, SlotId};
 pub use smite::SmiteRules;
 pub use spell::{BOLT_LENGTHS, BURST_RADII, Bolt, Burst, BurstIce};
 pub use spell_def::{
-    ARC_REACH, Grows, MAX_ARCS, MAX_CASTS, MAX_CONE, MAX_REACH, MAX_SPELL_LEVEL,
+    ARC_REACH, CorpseUse, Grows, MAX_ARCS, MAX_CASTS, MAX_CONE, MAX_REACH, MAX_SPELL_LEVEL,
     MAX_SUMMON_MINUTES, OnlyTerrain, Ratio, Resolution, STUDY_DIFFICULTY, School, Shape,
-    SpellBlink, SpellData, SpellEffect, SpellId, SpellLook, SpellPurpose, SpellRules, SpellSummon,
-    SpellWeather, SpellZone, ZoneKind,
+    SpellBlink, SpellData, SpellEffect, SpellId, SpellLook, SpellPurpose, SpellRise, SpellRules,
+    SpellSummon, SpellWeather, SpellZone, ZoneKind,
 };
 pub use spell_ladder::{
     Ladder as SpellLadder, MAX_RUNGS, MAX_SCORE, RungValue, Unit as LadderUnit,

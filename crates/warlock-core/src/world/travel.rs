@@ -688,6 +688,7 @@ pub(super) fn make_creature(
             .or_else(|| super::court::join(content, state.seed, actor_id, spawn.creature)),
         summoner: None,
         ally: None,
+        risen: None,
         alignment: None,
         alignment_override: spawn.alignment,
         npc: spawn.npc.clone(),

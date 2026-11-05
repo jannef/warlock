@@ -273,6 +273,8 @@ pub(super) fn grows_with(spell: &SpellData) -> String {
 fn reach(spell: &SpellData) -> String {
     let n = |v: Option<u8>| v.map_or_else(String::new, |v| v.to_string());
     match spell.shape {
+        // Rouse the dead has no range: any corpse in sight will do.
+        Shape::Myself if spell.aims_corpse() => "a corpse you see".into(),
         Shape::Myself => "—".into(),
         Shape::Touch => "next to you".into(),
         Shape::Burst if spell.about_caster() => format!("about you, radius {}", n(spell.radius)),
@@ -298,10 +300,14 @@ pub(super) fn does(content: &Content, spell: &SpellData) -> String {
                 .effect
                 .heal
                 .map_or_else(String::new, |r| r.to_string());
+            let back = match spell.effect.mana {
+                Some(mana) => format!("{healed} hit points and {mana} mana back"),
+                None => format!("{healed} hit points back"),
+            };
             if spell.about_caster() {
-                format!("{healed} hit points back, one roll, to you and each ally of yours in it")
+                format!("{back}, one roll, to you and each ally of yours in it")
             } else {
-                format!("{healed} hit points back")
+                back
             }
         }
         SpellPurpose::Buff | SpellPurpose::Hex => match spell.effect.status {
@@ -333,6 +339,14 @@ pub(super) fn does(content: &Content, spell: &SpellData) -> String {
         }
         SpellPurpose::Utility => spell.description.clone(),
         SpellPurpose::Summon => match &spell.effect.summon {
+            None if spell.effect.rise.is_some() => {
+                let rise = spell.effect.rise.as_ref().expect("checked");
+                format!(
+                    "the corpse's own creature stands at {} % of its hit points to serve for {} \
+                     minutes, {} at most at once; {} % rise berserk, against everyone",
+                    rise.hit_points, rise.minutes, rise.most, rise.berserk
+                )
+            }
             Some(call) => {
                 let pool: Vec<&str> = (call.pool.iter())
                     .map(|&c| content.creature(c).name.as_str())
@@ -348,6 +362,12 @@ pub(super) fn does(content: &Content, spell: &SpellData) -> String {
             None => String::new(),
         },
     };
+    if spell.kind == SpellPurpose::Damage && spell.aims_corpse() {
+        text.push_str(", from a corpse you see, used up");
+    }
+    if spell.kind == SpellPurpose::Heal && spell.aims_corpse() {
+        text.push_str(", from a corpse beside you, used up");
+    }
     if let Some(zone) = spell.effect.zone {
         let what = match zone.kind {
             ZoneKind::Fire => "fire that burns",

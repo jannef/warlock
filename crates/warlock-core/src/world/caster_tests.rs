@@ -130,6 +130,7 @@ pub(super) fn kobold_at(world: &mut World, (dx, dy): (i32, i32), hp: i32) -> Act
         faction_override: None,
         summoner: None,
         ally: None,
+        risen: None,
         alignment_override: None,
         inventory: Vec::new(),
         equipment: Default::default(),
@@ -207,10 +208,13 @@ fn every_caster_has_its_table_by_level_sixty() {
                 "Cackle",
                 "Poison lore",
                 "Cause wounds",
+                "Grave feast",
                 "Malison",
+                "Charnel burst",
                 "Leech",
                 "Second sight",
                 "Familiar's sight",
+                "Rouse the dead",
                 "Curse of sloth",
                 "Blight",
                 "Cauldron",
@@ -340,6 +344,7 @@ fn the_spells_are_abilities_by_level() {
             "Arcane bolt",
             "Blink",
             "Frost",
+            "Grave feast",
             "Identify",
             "Sleep",
             "Slick",
@@ -351,6 +356,8 @@ fn the_spells_are_abilities_by_level() {
             "Web",
             "Bramble",
             "Shatter",
+            // Level 9.
+            "Charnel burst",
             "Leech",
             // Level 11.
             "Call lightning",
@@ -374,6 +381,8 @@ fn the_spells_are_abilities_by_level() {
             "Call of the forest",
             "Chain lightning",
             "Cloudburst",
+            // Level 24.
+            "Rouse the dead",
             // Level 35.
             "Call the elements",
         ]

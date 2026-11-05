@@ -163,10 +163,12 @@ fn the_courts_stand_as_planned() {
     assert_eq!(f.stance(wrathful, seelie), Neutral);
     assert_eq!(f.def(seelie).provoked, Some(wrathful));
     assert_eq!(f.def(unseelie).provoked, None);
-    // The courts keep to their own quarrel: every other faction is neutral to them.
+    // The courts keep to their own quarrel: every other faction is neutral to them, but the
+    // berserk, hostile to all.
     for (i, other) in f.defs().iter().enumerate() {
         let other_id = super::FactionId(i as u16);
-        if ["player", "seelie", "unseelie", "wrathful_fey"].contains(&other.id.as_str()) {
+        if ["player", "seelie", "unseelie", "wrathful_fey", "berserk"].contains(&other.id.as_str())
+        {
             continue;
         }
         for court in [seelie, unseelie, wrathful] {

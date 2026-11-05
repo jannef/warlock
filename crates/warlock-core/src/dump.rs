@@ -1406,6 +1406,7 @@ fn aim_word(aim: Aim) -> &'static str {
         Aim::Nothing => "nothing",
         Aim::Direction => "a direction",
         Aim::Cell => "a cell",
+        Aim::Corpse => "a corpse you see",
         Aim::Ailment => "what to treat",
         Aim::Item => "an item you carry",
         Aim::Shape => "a weapon's shape",
@@ -1652,6 +1653,19 @@ fn actor_rows(world: &World) -> Vec<String> {
                     format!(
                         "{court}; ally of {} ({source}{lasts}; {order}{retinue}{named})",
                         ally.master
+                    )
+                }
+                None => court,
+            };
+            // Risen berserk, serving no one (`world/corpse_spell.rs`): its faction and its clock.
+            let court = match a.risen {
+                Some(until) => {
+                    let faction = (a.faction(content))
+                        .map_or("none", |f| content.factions().def(f).id.as_str());
+                    let seconds = until.since(world.time()).as_seconds();
+                    format!(
+                        "{court}; risen, faction {faction}, {} min",
+                        seconds.div_ceil(60)
                     )
                 }
                 None => court,

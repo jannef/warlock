@@ -489,6 +489,11 @@ struct EffectSpec {
     #[serde(default)]
     identify: bool,
     summon: Option<SummonSpellSpec>,
+    /// `"consumed"` or `"kept"`: it is aimed at a corpse the caster sees.
+    corpse: Option<String>,
+    rise: Option<RiseSpec>,
+    /// A heal's mana back: a roll.
+    mana: Option<toml::Value>,
     /// A percent of the harm a single-target damage spell does that comes back to its caster.
     leech: Option<u8>,
     /// A burst's targets: only creatures of these tags (Rebuke).
@@ -508,6 +513,19 @@ struct EffectSpec {
     weather: Option<WeatherSpec>,
     zone: Option<SpellZone>,
     arcs: Option<u8>,
+}
+
+/// A rising spell's `rise = { most, minutes, hit_points, berserk, berserk_faction,
+/// berserk_message }` as written.
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct RiseSpec {
+    most: u8,
+    minutes: u16,
+    hit_points: u8,
+    berserk: u8,
+    berserk_faction: String,
+    berserk_message: String,
 }
 
 /// A utility spell's `blink = { cells, ends }` as written.
@@ -620,6 +638,13 @@ pub struct SpellEffect {
     pub identify: bool,
     /// A `summon`'s call.
     pub summon: Option<SpellSummon>,
+    /// That it is aimed at a corpse the caster sees, and what becomes of the corpse
+    /// (`world/corpse_spell.rs`).
+    pub corpse: Option<CorpseUse>,
+    /// A `summon` that raises the corpse it is aimed at, in place of `summon`.
+    pub rise: Option<SpellRise>,
+    /// A `heal`'s mana back, never past the maximum.
+    pub mana: Option<Roll>,
     /// The percent of the harm it does that comes back to its caster (Leech, 1 to 100).
     pub leech: Option<u8>,
     /// A burst's targets: only creatures with one of these tags, friend or foe (Rebuke); empty:
@@ -642,6 +667,35 @@ pub struct SpellEffect {
     /// A `damage` spell's jumps taken without a draw, each up to [`ARC_REACH`] cells (its `count`
     /// ladder grows them; Chain lightning; `world/spell_arc.rs`).
     pub arcs: Option<u8>,
+}
+
+/// What a spell aimed at a corpse does to it (`[spell.effect] corpse`).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum CorpseUse {
+    /// The corpse is used up: no meal, no second use.
+    Consumed,
+    /// The corpse stays where it lies.
+    Kept,
+}
+
+/// A summon spell's raising of a corpse (`[spell.effect] rise`; `world/corpse_spell.rs`): the
+/// corpse's own creature type stands up.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct SpellRise {
+    /// How many of this spell's risen the caster keeps at once: past it the oldest departs.
+    pub most: u8,
+    /// How long one stays at its base, in minutes (its `degrees` ladder grows it).
+    pub minutes: u16,
+    /// The hit points it stands at, in percent of its maximum (rounded up).
+    pub hit_points: u8,
+    /// The percent chance it rises berserk.
+    pub berserk: u8,
+    /// The faction one that rises berserk belongs to. Read at the cast: a world without it has
+    /// no berserk, and the shipped data's is checked by a test (a fixture's own factions need
+    /// not hold it).
+    pub berserk_faction: String,
+    /// Said in place of the spell's `message` when it rises berserk.
+    pub berserk_message: String,
 }
 
 /// The ground a spell with `only_terrain` reaches: a flag of `data/terrain.toml`.
@@ -773,12 +827,18 @@ impl SpellData {
     /// Whether it asks for a cell when cast: anything but a spell on oneself or a burst with
     /// `range = 0`, cast about the caster.
     pub fn aimed(&self) -> bool {
-        self.shape != Shape::Myself && !self.about_caster()
+        (self.shape != Shape::Myself && !self.about_caster()) || self.aims_corpse()
     }
 
     /// Whether it is a burst with `range = 0`: it goes off on the caster's own cell.
     pub fn about_caster(&self) -> bool {
         self.shape == Shape::Burst && self.range == Some(0)
+    }
+
+    /// Whether it is aimed at a corpse the caster sees (Charnel burst, Rouse the dead, Grave
+    /// feast).
+    pub fn aims_corpse(&self) -> bool {
+        self.effect.corpse.is_some()
     }
 
     /// Whether it asks for a stack the caster carries when cast (Identify).
@@ -796,7 +856,9 @@ impl SpellData {
     /// The base its degrees ladder grows: a buff's, a hex's, or a damage spell's status's
     /// severity, or a summon's minutes.
     pub fn base_degrees(&self) -> Option<u16> {
-        (self.effect.status.map(|(_, n)| n)).or(self.effect.summon.as_ref().map(|s| s.minutes))
+        (self.effect.status.map(|(_, n)| n))
+            .or(self.effect.summon.as_ref().map(|s| s.minutes))
+            .or(self.effect.rise.as_ref().map(|r| r.minutes))
     }
 
     /// Its roll at rung `rung` of its damage or heal ladder, before any hook: the rung's value,
@@ -1063,7 +1125,9 @@ fn resolve(spec: SpellSpec, rules: &SpellRules, content: &Content) -> Result<Spe
             (!effect.identify && effect.blink.is_none() && effect.weather.is_none())
                 .then_some("`identify`, `blink`, or `weather`")
         }
-        SpellPurpose::Summon => effect.summon.is_none().then_some("`summon`"),
+        SpellPurpose::Summon => {
+            (effect.summon.is_none() && effect.rise.is_none()).then_some("`summon` or `rise`")
+        }
         SpellPurpose::Damage => None,
     };
     if let Some(zone) = effect.zone {
@@ -1083,6 +1147,7 @@ fn resolve(spec: SpellSpec, rules: &SpellRules, content: &Content) -> Result<Spe
             spec.kind.id()
         ));
     }
+    corpse_fits(&effect, spec.kind, shape)?;
     let attack = spec.kind == SpellPurpose::Damage
         && matches!(spec.resolution, Resolution::Attack | Resolution::Touch);
     let aim = match &spec.aim {
@@ -1100,7 +1165,9 @@ fn resolve(spec: SpellSpec, rules: &SpellRules, content: &Content) -> Result<Spe
         .then_some(effect.status)
         .flatten()
         .map(|(s, n)| (n, content.status(s).max.min(MAX_SEVERITY)));
-    let summon_minutes = (effect.summon.as_ref()).map(|s| (s.minutes, MAX_SUMMON_MINUTES));
+    let summon_minutes = (effect.summon.as_ref().map(|s| s.minutes))
+        .or(effect.rise.as_ref().map(|r| r.minutes))
+        .map(|minutes| (minutes, MAX_SUMMON_MINUTES));
     let bases = Bases {
         damage,
         heal: effect.heal,
@@ -1485,10 +1552,34 @@ fn effect(
     {
         return Err(format!("`arcs` is 1 to {MAX_ARCS}"));
     }
+    only("rise", e.rise.is_some(), &[SpellPurpose::Summon])?;
+    only("mana", e.mana.is_some(), &[SpellPurpose::Heal])?;
     let lays = [SpellPurpose::Damage, SpellPurpose::Hex];
     only("zone", e.zone.is_some(), &lays)?;
     let summon = match e.summon {
         Some(s) => Some(summon_call(s)?),
+        None => None,
+    };
+    let rise = match e.rise {
+        Some(r) => Some(spell_rise(r)?),
+        None => None,
+    };
+    let corpse = match e.corpse.as_deref() {
+        None => None,
+        Some("consumed") => Some(CorpseUse::Consumed),
+        Some("kept") => Some(CorpseUse::Kept),
+        Some(other) => {
+            return Err(format!("`corpse` is `consumed` or `kept`, not `{other}`"));
+        }
+    };
+    let mana = match &e.mana {
+        Some(m) => {
+            let roll = base_roll("mana", m)?;
+            if roll.max() > MAX_HEAL_MANA {
+                return Err(format!("`mana` rolls at most {MAX_HEAL_MANA}"));
+            }
+            Some(roll)
+        }
         None => None,
     };
     let status = |name: &str| {
@@ -1551,6 +1642,9 @@ fn effect(
         diseases: e.diseases,
         identify: e.identify,
         summon,
+        corpse,
+        rise,
+        mana,
         leech: e.leech,
         only_tags: e.only_tags,
         only_terrain: e.only_terrain,
@@ -1561,6 +1655,58 @@ fn effect(
         weather,
         zone: e.zone,
         arcs: e.arcs,
+    })
+}
+
+/// The most a heal's `mana` may roll.
+const MAX_HEAL_MANA: i32 = 500;
+
+/// A spell's `corpse` and `rise` fit together and with its kind and shape: `corpse` on a burst of
+/// harm, a touch that heals, or a summon on `self` that raises (`rise`, which asks for `corpse`
+/// and stands in for `summon`).
+fn corpse_fits(effect: &SpellEffect, kind: SpellPurpose, shape: Shape) -> Result<(), String> {
+    if effect.rise.is_some() && effect.summon.is_some() {
+        return Err("a spell has `summon` or `rise`, not both".into());
+    }
+    if effect.rise.is_some() && effect.corpse.is_none() {
+        return Err("`rise` raises a corpse: it needs `corpse`".into());
+    }
+    let fits = match kind {
+        SpellPurpose::Damage => shape == Shape::Burst,
+        SpellPurpose::Heal => shape == Shape::Touch,
+        SpellPurpose::Summon => shape == Shape::Myself && effect.rise.is_some(),
+        _ => false,
+    };
+    if effect.corpse.is_some() && !fits {
+        return Err(
+            "`corpse` is a burst's of harm, a touch's that heals, or a `rise`'s on `self`".into(),
+        );
+    }
+    Ok(())
+}
+
+/// A rising spell's `rise` table, checked: `most` and `minutes` as a summon's, `hit_points` 1 to
+/// 100, `berserk` 0 to 100.
+fn spell_rise(r: RiseSpec) -> Result<SpellRise, String> {
+    if !(1..=summon::MAX_COUNT).contains(&i32::from(r.most)) {
+        return Err(format!("rise: `most` is 1 to {}", summon::MAX_COUNT));
+    }
+    if !(1..=MAX_SUMMON_MINUTES).contains(&r.minutes) {
+        return Err(format!("rise: `minutes` is 1 to {MAX_SUMMON_MINUTES}"));
+    }
+    if !(1..=100).contains(&r.hit_points) {
+        return Err("rise: `hit_points` is 1 to 100".into());
+    }
+    if r.berserk > 100 {
+        return Err("rise: `berserk` is 0 to 100".into());
+    }
+    Ok(SpellRise {
+        most: r.most,
+        minutes: r.minutes,
+        hit_points: r.hit_points,
+        berserk: r.berserk,
+        berserk_faction: r.berserk_faction,
+        berserk_message: r.berserk_message,
     })
 }
 
@@ -2369,6 +2515,7 @@ damage = "2d6"
             ("call_of_the_forest", 20, Some("+1"), 20, true),
             ("call_of_the_wild", 5, Some("+1"), 5, true),
             ("chain_lightning", 20, Some("3d6"), 20, true),
+            ("charnel_burst", 9, Some("2d6"), 16, true),
             ("call_the_elements", 35, Some("+1"), 35, true),
             ("cause_wounds", 4, Some("1d6"), 3, true),
             ("cloudburst", 20, None, 20, true),
@@ -2381,6 +2528,7 @@ damage = "2d6"
             ("frost", 6, Some("2d6"), 14, true),
             ("gale", 11, None, 20, true),
             ("grave_breath", 1, Some("1d4"), 3, true),
+            ("grave_feast", 6, Some("2d6"), 4, true),
             ("leech", 10, Some("2d6"), 10, true),
             ("haste", 11, None, 11, false),
             ("hex_of_weakness", 3, None, 3, true),
@@ -2394,6 +2542,7 @@ damage = "2d6"
             ("identify", 6, None, 60, false),
             ("reek", 13, Some("1d4"), 31, false),
             ("remove_disease", 11, None, 11, true),
+            ("rouse_the_dead", 24, None, 24, true),
             ("scorching_ray", 7, Some("1d6"), 7, false),
             ("sense_the_quick", 5, None, 5, true),
             ("shatter", 8, Some("2d6"), 14, true),

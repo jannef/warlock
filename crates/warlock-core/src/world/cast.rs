@@ -33,7 +33,8 @@
 //!   drawn as a burst around the caster over its cells); a ray or a bolt flies to the first
 //!   creature on its line; a touch reaches one cell; a hex falls on the creature the caster sees
 //!   at the cell aimed at; self is the caster (a summon calls creatures about them,
-//!   `summon_spell.rs`). A spell that identifies (Identify) asks for a
+//!   `summon_spell.rs`). A spell aimed at a corpse asks for a cell in sight with one, whatever
+//!   its shape (`corpse_spell.rs`). A spell that identifies (Identify) asks for a
 //!   stack the caster carries instead of a cell (`use:identify:c`, [`Action::CastOn`]).
 //! - **Explicit costs**: a spell with its own `mana` (Identify) costs that, armour and talents
 //!   counted, whatever its level ([`crate::content::SpellRules::mana`]).
@@ -303,6 +304,7 @@ impl World {
         };
         let done = match cast.def.kind {
             SpellPurpose::Buff => self.cast_buff(cast, events),
+            SpellPurpose::Heal if cast.def.aims_corpse() => self.cast_feast(cast, at, events),
             SpellPurpose::Heal => self.cast_heal(cast, at, events),
             SpellPurpose::Cleanse => self.cleanse(cast, events),
             SpellPurpose::Hex => self.cast_hex(cast, at, events),
@@ -323,6 +325,9 @@ impl World {
             SpellPurpose::Utility => {
                 self.say("Nothing happens.");
                 false
+            }
+            SpellPurpose::Summon if cast.def.effect.rise.is_some() => {
+                self.cast_rise(cast, at, events)
             }
             SpellPurpose::Summon => self.cast_summon(cast, events),
         };
@@ -752,11 +757,18 @@ impl World {
                 self.say("There is no one there to touch.");
                 return false;
             }
-        } else if !def.about_caster() && !self.within_reach(at, range, "cast") {
+        } else if !def.about_caster()
+            && !(def.aims_corpse() && at == self.player_pos())
+            && !self.within_reach(at, range, "cast")
+        {
             return false;
         }
         if def.open_sky && !self.under_open_sky() {
             self.say("You need the open sky above you for that.");
+            return false;
+        }
+        if def.aims_corpse() && self.corpse_in_sight(at).is_none() {
+            self.say("There is nothing there to burst.");
             return false;
         }
         let player = self.state.player;
@@ -786,10 +798,16 @@ impl World {
                     blast: def.look.blast,
                     ice: def.look.ice,
                 };
-                let center = self.burst_center(here, at, range);
+                // A corpse burst goes off where the corpse lies: it flies nowhere.
+                let (origin, center) = if def.aims_corpse() {
+                    self.corpse_bursts(def, at);
+                    (at, at)
+                } else {
+                    (here, self.burst_center(here, at, range))
+                };
                 self.sound_at(def.look.noise, center);
                 let only = &def.effect.only_tags;
-                let aim = (here, center);
+                let aim = (origin, center);
                 self.cast_burst_at(Caster::Actor(player), aim, (&burst, only), &mut made)
             }
             Shape::Line => {
