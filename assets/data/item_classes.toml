@@ -9,61 +9,74 @@
 #   kinds    the magic item kinds (`kind` in objects/) of its objects: an object of one of these
 #            kinds must be of this class, and each kind is of one class only
 #   corpses  corpses are of this class (one class; needed where creatures leave corpses)
+#   group    the word a vault's loot pool names it by with its fellows (`loot = { pool = "armour" }`
+#            in a vault's legend, docs/dev/content.md): never a class's own id
 
 [[class]]
 id = "melee_weapons"
 name = "Melee weapons"
 kinds = ["weapon"]
+group = "weapons"
 
 [[class]]
 id = "missile_weapons"
 name = "Missile weapons"
 kinds = ["launcher"]
+group = "weapons"
 
 [[class]]
 id = "missiles"
 name = "Missiles"
 kinds = ["ammo"]
+group = "weapons"
 
 [[class]]
 id = "shields"
 name = "Shields"
 kinds = ["shield"]
+group = "armour"
 
 [[class]]
 id = "body_armour"
 name = "Body armour"
 kinds = ["body"]
+group = "armour"
 
 [[class]]
 id = "helmets"
 name = "Helmets"
 kinds = ["helmet"]
+group = "armour"
 
 [[class]]
 id = "cloaks"
 name = "Cloaks"
 kinds = ["cloak"]
+group = "armour"
 
 [[class]]
 id = "gloves"
 name = "Gloves"
 kinds = ["gloves"]
+group = "armour"
 
 [[class]]
 id = "boots"
 name = "Boots"
 kinds = ["boots"]
+group = "armour"
 
 [[class]]
 id = "rings"
 name = "Rings"
 kinds = ["ring"]
+group = "jewellery"
 
 [[class]]
 id = "amulets"
 name = "Amulets"
 kinds = ["amulet"]
+group = "jewellery"
 
 [[class]]
 id = "light_sources"
@@ -108,10 +121,12 @@ name = "Rods"
 [[class]]
 id = "gems"
 name = "Gems"
+group = "money"
 
 [[class]]
 id = "coins"
 name = "Coins"
+group = "money"
 
 [[class]]
 id = "miscellaneous"

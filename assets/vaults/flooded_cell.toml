@@ -3,7 +3,7 @@ name = "Flooded cell"
 map = '''
 #########
 #,~~~~~,#
-#~~~.~~~#
+#~~~$~~~#
 #~~.*.~~#
 #,~~.~~,#
 ####+####
@@ -12,8 +12,6 @@ map = '''
 [legend]
 "," = "fungus"
 "*" = { terrain = "floor", light = "lamp" }
-
-# Objects (M11): rubies on the dry middle, under the lamp.
-[[pile]]
-at = [4, 2]
-objects = ["gem:ruby*2"]
+# On the dry middle, under the lamp, what someone left out of the water's reach: money or
+# jewellery of the floor's item level, rolled when the level is generated.
+"$" = { terrain = "floor", loot = { pool = ["money", "jewellery"] } }

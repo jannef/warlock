@@ -31,7 +31,8 @@ in place of the terrain glyph (no terrain animation or glow there); look mode na
 
 Item classes (spec §7 "Objects and materials", #189): `data/item_classes.toml`
 (`content/item_class.rs`: `ItemClassDef` with `id`, `name` (the header item lists show), `kinds`,
-`corpses`; `ItemClassId` an index in list order, not saved, so not in the fingerprint) is the
+`corpses`, `group` (the word a vault's loot pool names it by with its fellows, `Content::pool_classes`,
+`docs/dev/content.md`; never a class's id); `ItemClassId` an index in list order, not saved, so not in the fingerprint) is the
 ordered list, ADOM-like: melee weapons, missile weapons, missiles, shields, body armour, helmets,
 cloaks, gloves, boots, rings, amulets, light sources, tools, food, potions, scrolls, gems, coins,
 miscellaneous. **Every object names its class** (`class`, required; `ObjectDef::class`); a class
