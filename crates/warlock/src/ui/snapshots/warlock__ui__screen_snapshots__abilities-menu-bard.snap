@@ -2,33 +2,33 @@
 source: crates/warlock/src/ui/screen_snapshots.rs
 expression: "render(case, content.clone())"
 ---
- You learn Sworn fo┌─ Abilities ──────────────────────────────────── Page 1/2 ─┐
- You spend 106 mana│                                                           │
-                   │ Birth sign                                                │
-                   │ > a  Transfixing stare  at a place you see                │
-                   │ Class                                                     │
-                   │   b  Throw your voice   at a place you see                │
-                   │   c  Inspire            not enough inspiration            │
-                   │   d  Lullaby            you have too little mana          │
-                   │ Spells                                                    │
-                   │   e  Mend               1d3 healed, 1 mana, aimed         │
-                   │ Skills                                                    │
-                   │   f  Feint              in a direction                    │
-                   │   g  Decipher           no unknown scroll                 │
-                   │   h  Disarm a trap      in a direction                    │
-                   │   i  Tame               in a direction                    │
-                   │   j  Heal               nothing to treat                  │
-                   │   k  Intimidate         at a place you see                │
-                   │   l  Knowledge          not usable yet                    │
-                   │   m  Listen at a door   in a direction                    │
-                   │   n  Metalcraft         not usable yet                    │
-                   │   o  Pick lock          in a direction                    │
-                   │   p  Steal              in a direction                    │
-                   │   q  Forage             not usable here                   │
-                   │                                                           │
-                   │ The basilisk's stare: a foe nearby that sees you slows to │
-                   │ a crawl a moment; your eyes then rest two hours.          │
-                   │                                                           │
-                   │                                                           │
-                   │ a-q or Enter use   > < page   Esc close                   │
- The Hub  ·  HP 38/└───────────────────────────────────────────────────────────┘         ? controls
+ You learn┌─ Abilities ────────────────────────────────────────────────────── Page 1/2 ─┐
+ You spend│                                                                             │
+          │ Birth sign                                                                  │
+          │ > a  Transfixing stare  at a place you see                                  │
+          │ Class                                                                       │
+          │   b  Throw your voice   at a place you see                                  │
+          │   c  Inspire            not enough inspiration                              │
+          │   d  Lullaby            you have too little mana                            │
+          │ Spells                                                                      │
+          │   e  Mend               1d3 healed, 1 mana, aimed                           │
+          │   f  Mesmerise          5 mana: you have 4                                  │
+          │   g  Sense the quick    5 mana: you have 4                                  │
+          │   h  Thunderclap        2d6 force, shoves on a big hit, 13 mana: you have 4 │
+          │   i  Bind               9 mana: you have 4                                  │
+          │ Skills                                                                      │
+          │   j  Feint              in a direction                                      │
+          │   k  Decipher           no unknown scroll                                   │
+          │   l  Disarm a trap      in a direction                                      │
+          │   m  Tame               in a direction                                      │
+          │   n  Heal               nothing to treat                                    │
+          │   o  Intimidate         at a place you see                                  │
+          │   p  Knowledge          not usable yet                                      │
+          │   q  Listen at a door   in a direction                                      │
+          │                                                                             │
+          │ The basilisk's stare: a foe nearby that sees you slows to a crawl a moment; │
+          │ your eyes then rest two hours.                                              │
+          │                                                                             │
+          │                                                                             │
+          │ a-q or Enter use   > < page   Esc close                                     │
+ The Hub  └─────────────────────────────────────────────────────────────────────────────┘? controls

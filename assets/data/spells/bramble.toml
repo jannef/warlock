@@ -1,0 +1,20 @@
+# Bramble (the spell types design §7 entry 18): Web on living ground, nothing on stone.
+[[spell]]
+id = "bramble"
+name = "Bramble"
+description = "Where things grow, you call them up: everyone on living ground where you aim it is caught in thorn and root a while."
+level = 8
+school = "transmutation"
+kind = "hex"
+shape = "burst"
+resolution = "area"
+range = 8
+radius = 2
+effect = { status = "webbed", severity = 2, only_terrain = "plants" }
+
+[spell.cast]
+noise = { sound = "chanting", loudness = 20 }
+
+[spell.grows]
+range = "willpower 14 9, 18 10"
+degrees = "presence 14 3, 18 4"

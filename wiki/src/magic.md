@@ -8,13 +8,21 @@ from a scroll (below). Every spell is measured by the same rules below: its [spe
 ## What your class gives
 
 Each casting class gives only a few spells, with its [class table](classes.md#levels): a full
-caster a [cantrip](#spell-levels) at level 1 and about four in all (the [wizard](classes.md#wizard) and the [witch](classes.md#witch) also start
+caster a [cantrip](#spell-levels) at level 1 and from three to a dozen in all (the [wizard](classes.md#wizard) and the [witch](classes.md#witch) also start
 with a short [cone](#shapes) that needs no hit roll, [Burning hands](#spell-burning-hands) and [Grave breath](#spell-grave-breath): good for a
-fight with a few weak foes, and a few casts empty the pool), a bard, a paladin, or a ranger a cantrip or a
-boon, and the rest none. Every other spell is learned from scrolls, so a caster who finds few
+fight with a few weak foes, and a few casts empty the pool), a bard, a paladin, or a ranger a few
+boons and hexes, and the rest none. A class's spells are only where it meets them first: any
+spell can be learned from a scroll, and some come only from scrolls ([Acid arrow](#spell-acid-arrow),
+[Grave spear](#spell-grave-spear), [Slumber](#spell-slumber), [Glamour](#spell-glamour), and others), so a caster who finds few
 scrolls stays a modest one. A spell your class gives is yours at that level, whatever your [Spellcraft](skills.md#skill-spellcraft).
 
 {{#include generated/class-spells.md}}
+
+Three spells are aimed at a [corpse](food.md#corpses) you see, and any age will do: without one
+they are refused, for no time and no mana. [Charnel burst](#spell-charnel-burst) goes off where
+the corpse lies, flying nowhere, and what it kills leaves corpses for the next. [Grave
+feast](#spell-grave-feast) reaches only a corpse beside you or under your feet, and gives back
+hit points and mana, never past your maximum. [Rouse the dead](allies.md#the-risen) stands it up.
 
 ## The spells
 
@@ -202,6 +210,29 @@ half its hit points, before what it resists. The undead are immune to necrotic h
 
 **Acid keeps eating.** Every creature an acid spell harms is [Corroded](status-effects.md#corroded) a degree: two more hit points in the
 next twelve seconds. Acid does not eat armour.
+
+## Spells with a rule of their own
+
+Some [spells](#the-spells) do one thing no other does. None of them spares you or your [allies](allies.md).
+
+- **Thunderclap** and **Benison** go off about you: they ask for no aim, and you are at their
+  centre. Thunderclap strikes you with the full roll, as everyone at a burst's centre, and leaves
+  you [Stunned](status-effects.md#status-stunned) with the rest; the whole level hears it. Benison's one roll heals you and every ally of yours within it who is hurt; it does nothing to anyone
+  else, and it is not cast when no one there is hurt.
+- **Leech** gives you back half the [hit points](combat.md#hit-points) it takes, rounded down, never past your maximum. The undead, immune to [necrotic](#spell-types) harm, give nothing.
+- **Rebuke** reaches only the undead, yours and others': the living in it are not touched. It is
+  fire, so it [burns](status-effects.md#burning) as fire does and leaves a fire at its centre.
+- **Bramble** catches only those standing where things grow: grass, marsh, reeds, flowers, bushes,
+  forest floor, fungus (the [terrain](terrain.md) table says which). On stone it does nothing.
+- **Gale** drives everyone on its line a cell straight away from you, the nearest first: one with
+  someone behind it stays put, and so does one [held or webbed](status-effects.md#status-held). It harms no one, and it puts out the fires on its line and tears away the [zones](#zones) of fire, foul cloud, and darkness on it; slick ground stays. A shut door stops it.
+- **Blink** takes you to a free cell within 5, any of them as likely, through walls or not. It
+  works while you are [held](status-effects.md#status-held), [webbed](status-effects.md#status-webbed), or [pinned](status-effects.md#status-pinned), and ends all three.
+- **Sense the quick** lets you feel every living creature within 8 cells that you cannot see as a
+  heartbeat, [heard](hearing.md) up to 2 cells from where it is, every turn while it lasts. The undead, constructs, and
+  animated things have none.
+- **Cloudburst**, cast under the open sky, brings an hour of [rain](weather.md) and at once puts out every fire and
+  everyone [burning](status-effects.md#burning) under the open sky on the level.
 
 ## Zones
 
@@ -405,6 +436,9 @@ do: which kinds of magic, never how strong or for how long.
   it, and back in once that one is gone. With Reduced effects or Slides, camera off, none of this
   moves (nor do the glints or the arcs): a circle appears, changes, and goes at once. Reduced
   effects also takes the glow away ([Settings](settings.md)).
+
+Sleep is the one hex without a circle: a creature [asleep](status-effects.md#status-asleep), from
+[Slumber](#spell-slumber) or in a den, shows none and sheds no light.
 
 Every buff shows on a creature, whatever gave it: look mode names a hasted creature "quickened",
 a bark-skinned one "bark-skinned", one that drank a [potion of might](potions.md#potion-of-might) "fortified" (see

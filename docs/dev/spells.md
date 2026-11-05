@@ -237,6 +237,29 @@ cast path shares.
     banded 30, plate 40, great helm 10, large shield 10, tower shield 20. #397 retiered some
     of them for the first list (below): Blessing 1, Cure wounds 1 (a touch), Evil eye 0, Call
     lightning 3 (2d6 to 3d6), and Fire burst folded into Fireball.
+- **Spells aimed at a corpse** (#999; the spell types design §7 entries 2, 29, 30;
+  `world/corpse_spell.rs`, tests `world/corpse_spell_tests.rs`): `[spell.effect] corpse =
+  "consumed" | "kept"` (`CorpseUse`) on a burst of harm, a touch that heals, or a `self` summon with
+  `rise` (`spell_def::corpse_fits`, refused otherwise). `SpellData::aims_corpse`, so `aimed()` holds
+  whatever the shape; `Aim::Corpse` ("a corpse you see"; `Ability::action_at` as a cell's);
+  `Reading::aimed` for the read list, since a `self` spell's scroll has no range. The rules:
+  `World::corpse_in_sight` (the player sees the cell, by the perception; the pile's top-most corpse
+  stack; **no stage read**, decision Q10), `use_corpse` (one of the stack gone when `consumed`).
+  Presentation: `PerceptionView::{corpse_at, corpses_in_sight}`, read by the aiming mode (the cursor
+  starts on the nearest corpse, Tab cycles them, no last target, `Line::no_corpse` says "There is no
+  corpse there."). Refused, with no time and no mana, with no corpse.
+  - **Charnel burst** (`cast_damage`'s corpse arm): `within_reach` as its reach check (the caster's
+    own cell allowed: no one is spared), then the burst at the cell with `origin = center` (no flight,
+    no `burst_center`), `World::spill_corpse` (a kill's spatter by the corpse's creature).
+  - **Grave feast** (`cast_feast`, ahead of `cast_heal`): `effect.mana`, a roll to 500, on a heal.
+    The caster's own: nobody on the cell is touched. Refused beyond a touch and when neither pool has
+    room. The heal's roll, then the mana's, on the gameplay stream.
+  - **Rouse the dead** (`cast_rise`, ahead of `cast_summon`; `docs/dev/allies.md` "The risen"):
+    `effect.rise = { most, minutes, hit_points, berserk, berserk_faction, berserk_message }`,
+    refusals in this order: no allies data, the overworld, no corpse, a `unique`'s, no free cell, the
+    cap. Then one `below(100)` against `berserk`, whatever it is. `Grows::degrees` and
+    `base_degrees` read `rise.minutes`. `count` and `roll()` are none: one corpse, one creature. No
+    alignment deed, no caster level.
 - **The first list** (#397; design §7, §8; tests `world/spell_list_tests.rs`):
   - **Spells are data**: `SpellId` (an index in path order) is the one spell type; the
     twelve-variant `ClassSpell` of #395 is gone. `Action::Cast(String, _)` names the spell by its
@@ -266,6 +289,33 @@ cast path shares.
     (blocks `step`), `hasted` (cost 75: `COST_PERCENT` is now 50 to 1000, and `spell_def`
     refuses a status below 100 on anything but a buff, so only the caster is hastened and the
     rest batching stays exact), `barkskin` (Dodge +2). New effects: `frost_ray`, `spark` (bolts).
+  - **The data-only fourteen** (#998; the spell types design §7 entries 5, 7 to 10, 12, 13, 17,
+    19, 20, 22, 23, 27, 28; tests `world/spell_data_tests.rs` and the content tables in
+    `content/spell_def.rs`): 4 Nightsight (buff, `cat_eyed`, one degree so no ladder); 5 Acid
+    arrow (bolt, attack, acid; its own bolt look `acid_arrow` in `data/effects.toml`), Mesmerise
+    (ray hex, `transfixed`); 8 Flay (ray, auto, necrotic 1d4, Bleeding 2 to 4 by Presence),
+    Glamour (buff, new `glamoured`: Dodge +3), Unbinding (cleanse of the eight hex statuses); 9
+    Bind (ray hex, `pinned`), Rime (cone 4, cold); 10 Fear (area hex, `frightened`), Renewal
+    (buff, new `renewing`: `regen = 400`); 11 Silence (area hex, `silenced`, radius by
+    Willpower); 14 Grave spear (line 6, necrotic); 15 Slumber (ray hex, `asleep`); 30 Sunfire
+    (burst radius 3, fire, no blast). Each has its `scroll_of_<id>` at the README's numbers;
+    Acid arrow, Grave spear, Slumber, and Glamour come only from scrolls. Class rows (§8; a row
+    is a way to meet a spell, not part of it, Q13): witch 8 Flay, 36 Fear; druid 15 Rime; wizard
+    36 Sunfire; priest 9 Renewal, 12 Silence; bard 8 Mesmerise, 16 Bind; ranger 9 Nightsight;
+    paladin 20 Unbinding, each a granted `talents/<id>.toml` of `kind = "spell"`. Rules they
+    needed: `spell_def` allows a `degrees` ladder on a damage spell with an `effect.status`
+    (Flay), and `World::spell_lands` lays the spell's own status at the cast's degrees
+    (`Cast::degrees`, the base without a cast); Bleeding refuses the bloodless (Q7, below and
+    `docs/dev/status-effects.md`); and a status `regen` above 100 quickens healing when no status
+    or disease slows it (`Effects::regen`, `World::healing_rate_at`: the slowest counts while any
+    is below 100, else the fastest). Each new buff's and hex's status has a circle row
+    (`data/circles.toml`: `cat_eyed`, `glamoured`, `renewing`, `pinned`, `frightened`,
+    `silenced`, `transfixed`, `asleep`), so it sheds its school's faint light whatever laid it
+    (a Trip's Pinned, Intimidate's Frightened too), and Malison's `status_damage` rows name the
+    five new hex statuses. `spell_list_tests`' class check: a full caster three to twelve spells
+    (Q13), a hybrid (bard, paladin, ranger) up to five (the bard's: Mend, Mesmerise,
+    Thunderclap, Bind, Sense the quick), of any level or kind: spells are not class-specific
+    (the spell types design's Decisions), so Thunderclap, a damage spell, is the bard's.
   - **Identify** (#592; tests `world/identify_spell_tests.rs`): divination, `utility`, `self`,
     `[spell.effect] identify = true` (`SpellEffect::identify`, `SpellData::aims_item`; only a
     `utility` spell on `self` may have it, and a `utility` spell needs it). It asks for a stack,
@@ -306,7 +356,7 @@ cast path shares.
     the classes that give it. A spell a class gives is its holder's at that level, whatever
     their Spellcraft: its level is the author's call (`docs/design/no-caster-level.md` §4). The
     content test (`every_class_has_mana_and_its_guaranteed_spells`) holds a full caster (its
-    `FULL` list: druid, priest, witch, wizard) to a cantrip (level 0 or 1) at 1 and three to six spells (the priest's three:
+    `FULL` list: druid, priest, witch, wizard) to a cantrip (level 0 or 1) at 1 and three to twelve spells (the priest's three:
     their rite is the Orison, `docs/dev/prayer.md`), and the others to at
     most two boons of level 5 or less. Every class has `mana`
     at least 1 (the berserker and the warrior gained theirs); races keep their own.
@@ -658,7 +708,8 @@ Balefire, Reek, Mirk, and Slick (scroll only) lay one with `[spell.effect] zone 
   draws at a burn; ice under a fire melts as it is laid; `fire` and `slick` lie only on walkable ground
   out of open water, `fouled` and `dark` on anything sight passes through.
 - **Clearing**: `LevelState::clear_zone_cells(cells, kinds)`. Cold's `douses` reads it in
-  `spell_type.rs::douse` (`[Fire]`). Gale's `clears` (#1001) reads it too, whichever lands second.
+  `spell_type.rs::douse` (`[Fire]`). Gale's `clears` reads it in `spell_rule.rs::cast_gale`
+  (`[Fire, Fouled, Dark]` from its data) on the cells of its line.
 - **What the player knows**: `Perception::zones`, the zones on visible cells; `remember` keeps
   them in `zone_memory` as terrain is; `PerceptionView::zone_at` is visible, remembered, or nothing
   on a hidden cell. A dark cell is not visible without darkvision, so it shows by the dark itself.
@@ -760,3 +811,81 @@ What every spell of a damage type does beyond its damage (the design:
   burst outward and its centre, the report's order, doors locked and trapped, chests, Fireball's
   doors, thin ice and a plunge, poison and Blight's two, the bite's edge, the undead in the dump,
   Corroded's ticks), `content/spell_type.rs` (the load checks).
+
+## Small rules
+
+Ten spells with one rule each (#1001; the design `docs/design/spell-types-and-new-spells.md` §7
+entries 4, 6, 11, 18, 21, 31, 32, 33, 35, 36; §8 for their class rows and scrolls). Every one has
+its scroll (`objects/scroll_of_<id>.toml`) and a class row (`talents/<id>.toml`, granted: wizard 6
+Blink, 9 Shatter; priest 18 Rebuke, 24 Benison; druid 9 Bramble, 20 Gale, 30 Cloudburst; witch 24
+Leech; bard 12 Thunderclap, 20 Sense the quick). The rules live in `world/spell_rule.rs`, each
+behind one line of `cast.rs`; the fields in `[spell.effect]` (`spell_def::effect`, which now takes
+the shape too and refuses each field off its kind and shape).
+
+- **`range = 0` on a burst** (Thunderclap, Benison): `SpellData::about_caster`. Allowed on a
+  `damage` or a `heal` burst only, with no `range` ladder; `aimed()` is false (the menu's
+  `Aim::Nothing`, a scroll read at once), `base_range()` and `Actor::spell_reach`'s range `None`
+  (so no "range" in the words), `standing_aim` and `spell_aim` say `Myself`. `cast_damage` takes the
+  caster's cell for the missing aim and skips `within_reach`. No cell is left out: the caster is
+  in it and takes the centre's full roll (the edge's half is everyone else's at radius 1) and its
+  status (Thunderclap's Stunned 1; the owner's Q14). Force's shove has no away for the one at the
+  centre. Scroll savant's `spares_self` still spares a reader, as it does any own burst.
+- **A heal over an area** (Benison) is only a burst about its caster (`spell_def` refuses any other
+  area heal): `cast_heal_about`, one roll for the caster and every ally of theirs
+  (`Ally::master`, not in the retinue) in the burst who is hurt, in actor id order, each through
+  `World::spell_heals` (the touch heal's tail, said). Refused, no mana, no time, when none is hurt.
+- **`leech`** (Leech; 1 to 100, a single-target damage spell's): `spell_strikes` now returns the hit
+  points it took (after resistance and the bite; a kill's too), and `spell_attack`, the one place
+  a single target's roll is made, gives that share, rounded down, back to the striker through
+  `World::leech`, never past their maximum. Read there and not in `spell_strikes` (the design's
+  words) because `spell_strikes` does not know the spell. A reflected Leech mends the reflector, who
+  is its striker then. The menu's roll says `half of it yours` (`all`, `part`).
+- **`only_tags`** (Rebuke; a damage or hex burst's, each tag one some creature carries,
+  `spell_def::check_only_tags` once creatures load): `World::is_of_tags`. `cast_burst_at` is
+  `cast_burst` with the filter (the traps', the scrolls', and Blaze's calls are unchanged); the
+  untagged are not struck, so no event, no provoking. The burst's walls, ice, and type rule are its
+  own all the same (Rebuke's fire on its centre). An undead ally is struck.
+- **`only_terrain = "plants"`** (Bramble; an area hex's): `World::stands_on`, the `plants` flag in
+  `data/terrain.toml` (grass, tall and dry grass, marsh, reeds, flowers, buttercups, bluebells,
+  bush, forest floor, fungus).
+- **`push`, `douses`, and `clears`** (Gale; a line hex's, `push` 1 to 3): `cast_gale`, from `cast_hex` when the
+  spell has a `push` (a hex needs `status`, `push`, or `zone`). The creatures on `bolt_line` are listed in
+  path order first, then each driven once, nearest first, `push` times `drive_back` straight away
+  from the caster (`Dir::toward`): one with another behind it stays, one a status roots
+  (`World::rooted`, shared with force's shove) stays. Each is provoked (`provoke`,
+  `provoke_court`), said "driven back" where seen. Then its fires go out (`put_out`), and the zones of
+  the kinds in `clears` (a line hex's only) lose the line's cells (`clear_zone_cells`). The line
+  stops at an opaque cell, so a shut door stands.
+- **`blink = { cells, ends }`** (Blink; a utility on `self`, `cells` 1 to 10): `cast_blink`. The free
+  cells (walkable, no trap, no ice, no actor, not the caster's) within `cells` (a round reach,
+  `radius2`) in cell order, through walls or not, one `rng.below(n)`; refused, no mana, with none.
+  `World::teleport_to` (the teleport trap's move, split out of `teleport`), then each of `ends`
+  ends (`World::ended`: the end words come with the events). Held, webbed, and pinned block `step`,
+  not `cast`.
+- **`weather = { kind, hours }`** (Cloudburst; a utility on `self`, 1 to 24 hours): `cast_weather`
+  sets `WorldState::weather_override` to `weather::Override::lasting(kind, now, hours)`, refused
+  without the open sky when `open_sky`. A wet kind (rain, heavy rain) then puts out every fire on
+  an unroofed cell of a sky-exposed level and quenches (`World::quench`) everyone on one.
+- **`senses = { reach, kind }`** on a status (Quick-sensed, Sense the quick's buff; `reach` 1 to 20):
+  `World::heartbeats` at the end of `run_turn` pushes a `Heard` of `kind` at the player's own
+  hearing threshold (so faint: up to 2 cells off) for every creature on the level within `reach`
+  that is not undead, a construct (by tag), or an animated thing. Perception's `noise::perceive`
+  leaves out the ones the player sees and places the rest roughly; `Exact::All` (Tracker) never
+  places a heartbeat exactly. The deaf feel nothing. `SoundKind::Heartbeat`, "a heartbeat", `q` in
+  the sound layer. The circled status (`data/circles.toml`, divination) sheds its circle's light,
+  as every circled buff does.
+- **Shatter**: data only on force's rules, with the `shatter` burst effect (`data/effects.toml`:
+  white and brief); Thunderclap's look too.
+- **The class test** (`spell_list_tests.rs`): a full caster's book is three to twelve spells (Q13),
+  and a hybrid has at most four (the bard's Mend, Thunderclap, Sense the quick); the "low boons"
+  clause is gone, as a class row is not what a spell is.
+- **Determinism**: Blink's one draw, Benison's one roll, Leech's none (its strike's); the rest draw
+  nothing. **Saves**: `weather::Override` gains `since` (when it was given), read by `Override::at`
+  in place of `until` less three hours.
+- **Tests**: `world/spell_rule_tests.rs` (the leech's half and its cap, the undead's nothing, the
+  words; the blink's draw by seed, never onto a creature, out of held, webbed, and pinned, nowhere
+  to go; the clap on all in it, the caster too, no aim; the heal on allies only, refused; the
+  rebuke on an undead ally and foe and not the living; the bramble sparing stone; the gale's order,
+  the held, the door; the rain for an hour and what it puts out; the heartbeat rough and not for
+  the undead, past its reach, or in sight; Shatter on a door), `content/spell_def.rs` (the fields
+  refused off their kinds and shapes), `weather.rs` (an override's window), `noise/tests.rs`.

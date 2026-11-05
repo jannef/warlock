@@ -14,21 +14,21 @@ expression: "render(case, content.clone())"
                     │   d  Mend               1d4 healed, 1 mana, aimed        │
                     │   e  Blessing           3 mana                           │
                     │   f  Cure wounds        3d6 healed, 2 mana, aimed        │
+                    │   g  Renewal            10 mana                          │
+                    │   h  Silence            20 mana: you have 14             │
                     │ Skills                                                   │
-                    │   g  Decipher           no unknown scroll                │
-                    │   h  Heal               nothing to treat                 │
-                    │   i  Knowledge          not usable yet                   │
-                    │   j  Forage             not usable here                  │
-                    │   k  Fletch             you have no knife                │
-                    │   l  Whittle            you have no knife                │
+                    │   i  Decipher           no unknown scroll                │
+                    │   j  Heal               nothing to treat                 │
+                    │   k  Knowledge          not usable yet                   │
+                    │   l  Forage             not usable here                  │
+                    │   m  Fletch             you have no knife                │
                     │ Weapon skills                                            │
-                    │   m  Shield bash        in a direction                   │
+                    │   n  Shield bash        in a direction                   │
                     │                                                          │
                     │ The basilisk's stare: a foe nearby that sees you slows   │
                     │ to a crawl a moment; your eyes then rest two hours.      │
                     │                                                          │
                     │                                                          │
-                    │ a-m or Enter use   Esc close                             │
+                    │ a-n or Enter use   Esc close                             │
                     └──────────────────────────────────────────────────────────┘
-
  The Hub  ·  HP 44/44  ·  MP 14/123  ·  Blessed  ·  Lv 14  ·  08:00  ·  11 Darkening     ? controls

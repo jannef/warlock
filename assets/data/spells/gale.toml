@@ -1,0 +1,20 @@
+# Gale (the spell types design §7 entry 21): no harm: everyone on the line is driven a cell on, its
+# fires go out, and its cells are cleared of fire, foul cloud, and dark zones. A shut door stands:
+# it has no blast.
+[[spell]]
+id = "gale"
+name = "Gale"
+description = "A blast of wind from you toward a place you aim at: everyone on its line is driven a cell back, fires on it are blown out, and clouds are torn away."
+level = 11
+school = "evocation"
+kind = "hex"
+shape = "line"
+resolution = "area"
+length = 6
+effect = { push = 1, douses = true, clears = ["fire", "fouled", "dark"] }
+
+[spell.cast]
+noise = { sound = "explosion", loudness = 50 }
+
+[spell.grows]
+length = "willpower 14 7, 18 8"

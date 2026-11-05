@@ -74,6 +74,11 @@ pub enum Ability {
     /// skill's use. Whoever is trained in a skill with the `steal` benefit has it, in that
     /// skill's place among the skills.
     Steal,
+    /// Wedge shut the closed door next to the actor (spec §8 "Doors"; `world/wedge.rs`):
+    /// [`Action::Wedge`], Woodcraft's second use (the skill with the `wedge` effect). Had by
+    /// whoever is trained in it; usable whenever they have it (the rules refuse, taking no time,
+    /// where there is no closed door).
+    Wedge,
     /// Feint at a foe next to you (spec §8 "Skills": Bluff; #1016): [`Action::Feint`], Bluff's
     /// use (the skill with the `feint` benefit, listed as this in its place while
     /// `data/feint.toml` exists). Had by whoever is trained in it; usable whenever they have it
@@ -254,6 +259,8 @@ pub enum Aim {
     Direction,
     /// A cell, in the aiming mode, as a shot does ([`Ability::action_at`]).
     Cell,
+    /// A cell in sight with a corpse on it, in the aiming mode (`world/corpse_spell.rs`).
+    Corpse,
     /// What to treat, of what the player may treat now on themselves and their allies beside
     /// them ([`crate::heal::treatable`]): asked only when there is more than one (the Heal
     /// ability).
@@ -397,6 +404,10 @@ impl Ability {
             let whittle = (ability == Some(Ability::Fletch)).then_some(Ability::Whittle);
             ability.into_iter().chain(whittle)
         });
+        // Woodcraft's second use: wedging a door, while some skill gives it.
+        let wedge = (content.skills().iter())
+            .any(|def| def.benefits.iter().any(|b| b.effect == Effect::Wedge))
+            .then_some(Ability::Wedge);
         // Birth sign: the active gifts some sign grants, in their order.
         let signs = (SignActive::ALL.iter())
             .filter(|&&a| content.sign_active(a).is_some())
@@ -446,6 +457,7 @@ impl Ability {
             .chain(spells)
             .chain(talents)
             .chain(skills)
+            .chain(wedge)
             .chain(weapon_skills)
             .chain(here)
             .chain(Ability::orders(
@@ -564,6 +576,7 @@ impl Ability {
                     || actor.talent_mods(content).disarm
             }
             Ability::Listen => actor.skills.trains_effect(content, Effect::Hearing),
+            Ability::Wedge => actor.skills.trains_effect(content, Effect::Wedge),
             // A talent with the `pick_lock` or `steal` effect gives them without the skills.
             Ability::PickLock => {
                 actor.skills.trains_effect(content, Effect::Pick)
@@ -603,6 +616,7 @@ impl Ability {
             Ability::Listen => "listen",
             Ability::PickLock => "pick_lock",
             Ability::Steal => "steal",
+            Ability::Wedge => "wedge",
             Ability::Feint => "feint",
             Ability::Tame => "tame",
             Ability::Intimidate => "intimidate",
@@ -645,6 +659,7 @@ impl Ability {
             Ability::Listen => "Listen at a door",
             Ability::PickLock => "Pick lock",
             Ability::Steal => "Steal",
+            Ability::Wedge => "Wedge a door",
             Ability::Feint => "Feint",
             Ability::Tame => "Tame",
             Ability::Intimidate => "Intimidate",
@@ -688,6 +703,10 @@ impl Ability {
             Ability::Steal => {
                 "Lift a purse or a trinket from someone next to you who is not hostile; caught, \
                  they turn on you."
+            }
+            Ability::Wedge => {
+                "Drive a wedge under a closed door next to you for a turn: those who would open it \
+                 must kick it in. You open it as usual, pulling the wedge free."
             }
             Ability::Feint => {
                 "Make a lying move at a foe next to you: fooled, it is off its guard for your \
@@ -779,6 +798,7 @@ impl Ability {
             | Ability::Listen
             | Ability::PickLock
             | Ability::Steal
+            | Ability::Wedge
             | Ability::Feint
             | Ability::Tame
             | Ability::Intimidate
@@ -802,6 +822,7 @@ impl Ability {
             Ability::Sign(_) => Aim::Nothing,
             Ability::Class(active) if active.aimed() => Aim::Direction,
             Ability::Spell(spell) if aims_item(content, spell) => Aim::Item,
+            Ability::Spell(spell) if aims_corpse(content, spell) => Aim::Corpse,
             Ability::Spell(spell) if aimed(content, spell) => Aim::Cell,
             Ability::Spell(_) => Aim::Nothing,
             Ability::Class(active) if active.aims_cell() => Aim::Cell,
@@ -830,6 +851,7 @@ impl Ability {
             | Ability::Listen
             | Ability::PickLock
             | Ability::Steal
+            | Ability::Wedge
             | Ability::Feint
             | Ability::Tame
             | Ability::ShieldBash => Aim::Direction,
@@ -850,6 +872,8 @@ impl Ability {
             Ability::Listen => Some(ActionKind::Wait),
             Ability::PickLock => Some(ActionKind::PickLock),
             Ability::Steal => Some(ActionKind::Steal),
+            // A wedging is a turn of work.
+            Ability::Wedge => Some(ActionKind::Wait),
             Ability::Feint => Some(ActionKind::Feint),
             Ability::Tame => Some(ActionKind::Tame),
             Ability::Intimidate => Some(ActionKind::Intimidate),
@@ -886,6 +910,7 @@ impl Ability {
             | Ability::Listen
             | Ability::PickLock
             | Ability::Steal
+            | Ability::Wedge
             | Ability::Feint
             | Ability::Tame
             | Ability::Intimidate
@@ -968,6 +993,7 @@ impl Ability {
             (Ability::Listen, Some(dir)) => Some(Action::Listen(dir)),
             (Ability::PickLock, Some(dir)) => Some(Action::PickLock(dir)),
             (Ability::Steal, Some(dir)) => Some(Action::Steal(dir)),
+            (Ability::Wedge, Some(dir)) => Some(Action::Wedge(dir)),
             (Ability::Feint, Some(dir)) => Some(Action::Feint(dir)),
             (Ability::Tame, Some(dir)) => Some(Action::Tame(dir)),
             (Ability::ShieldBash, Some(dir)) => Some(Action::Bash(dir)),
@@ -976,6 +1002,7 @@ impl Ability {
                 | Ability::Listen
                 | Ability::PickLock
                 | Ability::Steal
+                | Ability::Wedge
                 | Ability::Feint
                 | Ability::Tame
                 | Ability::ShieldBash,
@@ -1035,6 +1062,7 @@ impl Ability {
             | Ability::Listen
             | Ability::PickLock
             | Ability::Steal
+            | Ability::Wedge
             | Ability::Feint
             | Ability::Tame
             | Ability::Forage
@@ -1124,6 +1152,7 @@ impl Ability {
             | Ability::Listen
             | Ability::PickLock
             | Ability::Steal
+            | Ability::Wedge
             | Ability::Feint
             | Ability::Intimidate
             | Ability::Forage
@@ -1243,6 +1272,11 @@ fn aimed(content: &Content, spell: SpellId) -> bool {
     content.spell_of(spell).is_some_and(|s| s.aimed())
 }
 
+/// Whether `spell` is aimed at a corpse the caster sees.
+fn aims_corpse(content: &Content, spell: SpellId) -> bool {
+    content.spell_of(spell).is_some_and(|s| s.aims_corpse())
+}
+
 /// Whether `spell` is cast on a stack the caster carries (Identify).
 fn aims_item(content: &Content, spell: SpellId) -> bool {
     content.spell_of(spell).is_some_and(|s| s.aims_item())
@@ -1359,6 +1393,7 @@ mod tests {
                 "forage",
                 "fletch",
                 "whittle",
+                "wedge",
             ]
         );
         let last: Vec<Ability> = every.iter().rev().take(7).rev().copied().collect();

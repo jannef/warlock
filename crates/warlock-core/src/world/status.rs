@@ -96,10 +96,13 @@ impl World {
         by: Option<ActorId>,
         events: &mut Vec<Event>,
     ) {
-        // Immune by its type (spec §8 "Status effects": an animated thing never bleeds).
-        if (self.state.actors.get(&id))
-            .is_some_and(|a| self.content.creature(a.creature).immune.contains(&status))
-        {
+        // Immune by its type (spec §8 "Status effects": an animated thing never bleeds), and a
+        // wound's status (Bleeding) takes only where there is blood: never on the bloodless.
+        let wound = self.content.status(status).wound.is_some();
+        if (self.state.actors.get(&id)).is_some_and(|a| {
+            let def = self.content.creature(a.creature);
+            def.immune.contains(&status) || (wound && def.blood.is_none())
+        }) {
             return;
         }
         // Chest-wise (spec §8 "Mimics"): a mimic's grip never holds it.
@@ -307,8 +310,14 @@ impl World {
         {
             return 0;
         }
+        // A disease that slows healing slows a quickened one too (`Effects::regen`).
         let statuses = actor.effects.regen(&self.content);
-        let mut rate = u32::from(statuses.min(actor.diseases.regen(&self.content)));
+        let diseases = actor.diseases.regen(&self.content);
+        let mut rate = u32::from(if diseases < 100 {
+            statuses.min(diseases)
+        } else {
+            statuses
+        });
         if self.resting && id == self.state.player {
             // Resting's pace, and half again with Fast healer (spec §8 "Talents").
             let faster = actor.talent_mods(&self.content).resting_percent;

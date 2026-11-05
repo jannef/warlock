@@ -75,6 +75,20 @@ scale = 0.6
 fade = 0.6
 glow = 0.8
 
+# Shatter's and Thunderclap's: a clap of force, white and brief, gone at once (the spell types
+# design §7 entry 4); no projectile, no particles, no shake.
+[[effect]]
+id = "shatter"
+shape = "burst"
+radius = 1
+speed = 40
+grow = 0.04
+impact = 0.1
+linger = 0.2
+flicker = 0.04
+glyphs = "*+·"
+colors = ["#ffffff", "#e8ecff", "#b8c0e0", "#707890", "#383c48"]
+
 [[effect]]
 id = "fireball"
 shape = "burst"
@@ -250,6 +264,22 @@ colors = ["#ffffff", "#fff4c8", "#e8d880", "#b8a050", "#706030", "#302810"]
 glow = 0.6
 branches = 0.04
 light = { color = [620, 600, 420], radius = 2 }
+
+# Acid arrow's (the spell types design §7 entry 5): a slow, sickly green dart, Blight's colours
+# on a line; no forks and no shake.
+[[effect]]
+id = "acid_arrow"
+shape = "bolt"
+speed = 250
+impact = 0.16
+flashes = 1
+linger = 0.3
+flicker = 0.06
+glyphs = "─"
+colors = ["#f0ffd0", "#d0f090", "#a8d070", "#78a040", "#4a6824", "#24340e"]
+glow = 0.5
+branches = 0.0
+light = { color = [380, 520, 240], radius = 2 }
 
 # A frost burst (spec §5 "Ice"): a quiet, cold flash of rime over the cells it reaches, which
 # freezes the water there (the dev action `freeze:X,Y,R` shows it with its own radius; frost

@@ -1,0 +1,8 @@
+[[talent]]
+id = "rouse_the_dead"
+name = "Rouse the dead"
+tree = "class"
+granted = true
+description = "A corpse you see rises as what it was to fight beside you for a while. Now and then it rises against everything, you too (a spell, paid in mana)."
+effects = [{ kind = "spell", spell = "rouse_the_dead" }]
+systems = ["spells", "mana", "allies"]

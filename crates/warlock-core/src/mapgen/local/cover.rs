@@ -212,7 +212,9 @@ fn shores(land: &mut Land, rng: &mut Rng) {
         // Within 2 columns and a row of still water.
         let near = (-1..=1)
             .any(|dy| (-2..=2).any(|dx| land.get(Pos::new(p.x + dx, p.y + dy)) == Some(k.water)));
+        // A ruin's own water (a mill-pond) is laid for good, as its ground is.
         let shallows = t == Some(k.water)
+            && land.may_cover(p)
             && Dir::ALL.iter().any(|d| {
                 land.get(p.step(*d)).is_some_and(|q| {
                     q != k.water && q != k.reeds && land.content.terrain(q).walkable

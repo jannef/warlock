@@ -1,0 +1,12 @@
+# Unbinding (the spell types design §7 entry 28): the hexes' statuses ended on oneself, as Remove
+# disease ends diseases.
+[[spell]]
+id = "unbinding"
+name = "Unbinding"
+description = "A word that breaks the hexes on you: the evil eye, weakness, sloth, drowsiness, webs, and fear are gone."
+level = 8
+school = "abjuration"
+kind = "cleanse"
+shape = "self"
+resolution = "auto"
+effect = { cures = ["ill_wished", "weakened", "sluggish", "drowsy", "webbed", "frightened", "transfixed", "pinned"] }

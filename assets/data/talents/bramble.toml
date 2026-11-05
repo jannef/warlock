@@ -1,0 +1,8 @@
+[[talent]]
+id = "bramble"
+name = "Bramble"
+tree = "class"
+granted = true
+description = "Thorn and root where things grow (paid in mana): everyone on living ground where you aim is caught."
+effects = [{ kind = "spell", spell = "bramble" }]
+systems = ["spells", "mana", "combat"]

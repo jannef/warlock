@@ -1259,7 +1259,9 @@ impl Gameplay<'_> {
         let content = game.world.content().clone();
         match (usable, ability.aim(&content)) {
             (true, ability::Aim::Direction) => *self.mode = InputMode::Ability(ability),
-            (true, ability::Aim::Cell) => self.aim(AimKind::Ability(ability)),
+            (true, ability::Aim::Cell | ability::Aim::Corpse) => {
+                self.aim(AimKind::Ability(ability));
+            }
             // Temper's and Give's lists; the identify list asks which stack (`identify_by`,
             // before this).
             (true, ability::Aim::Item) => {

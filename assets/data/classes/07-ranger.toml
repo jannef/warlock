@@ -38,6 +38,7 @@ abilities = [
     { level = 2, talent = "stalkers_eye" },
     { level = 6, talent = "tracker" },
     { level = 6, talent = "barkskin" },
+    { level = 9, talent = "nightsight" },
     { level = 12, talent = "rapid_shot" },
     { level = 12, talent = "water_walking" },
     { level = 18, talent = "pack_tactics" },

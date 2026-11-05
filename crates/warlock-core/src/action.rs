@@ -195,6 +195,10 @@ pub enum Action {
     /// Listen at the closed door in a direction (spec §5 "Hearing"; the Listen ability,
     /// `world/listen.rs`): a turn in which the player's hearing through that door is keener.
     Listen(Dir),
+    /// Wedge the closed door in a direction shut (spec §8 "Doors"; the Wedge ability,
+    /// `world/wedge.rs`): a turn, after which creatures that open doors must kick it in. Refused
+    /// (no time) without Woodcraft or a closed door that way.
+    Wedge(Dir),
     /// Treat oneself, or an ally beside one, with the Heal skill (spec §8 "Skills"; the Heal
     /// ability): the ailment named (a status id, `heal:bleeding`, or a disease id,
     /// `heal:filth_fever`), else the player's first there is to treat (`heal`); `ally` the
@@ -933,6 +937,7 @@ impl fmt::Display for Action {
             Action::Search(turns) => write!(f, "search:{turns}"),
             Action::Disarm(d) => write!(f, "disarm:{d}"),
             Action::Listen(d) => write!(f, "listen:{d}"),
+            Action::Wedge(d) => write!(f, "wedge:{d}"),
             Action::Heal { what: None, .. } => f.write_str("heal"),
             Action::Heal {
                 what: Some(id),
@@ -1080,6 +1085,7 @@ impl FromStr for Action {
             "dig" => dir().map(Action::Dig),
             "disarm" => dir().map(Action::Disarm),
             "listen" => dir().map(Action::Listen),
+            "wedge" => dir().map(Action::Wedge),
             "heal" => {
                 let usage = || {
                     "`heal:ID[:DIR]` names what to treat, e.g. `heal:bleeding` or \
@@ -1905,6 +1911,7 @@ mod tests {
                 Action::Dig(d),
                 Action::Disarm(d),
                 Action::Listen(d),
+                Action::Wedge(d),
             ]);
         }
         assert_eq!(parse_actions(&format_actions(&all)), Ok(all));

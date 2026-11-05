@@ -199,6 +199,18 @@ developer notes (CLAUDE.md, `docs/dev/`).
       `blocks` `pick_lock` ("You cannot pick locks while …", §8 "Status effects").
     - Lock difficulties are ground truth: never perceived, shown, or dumped but in the world
       state; the wiki gives the chances by difficulty.
+  - **Wedging** (#1027; the **Wedge** ability, Woodcraft's second use, §6 "Abilities", §8 "Skills";
+    `Action::Wedge(dir)`, replay text `wedge:DIR`; a turn): an actor trained in a skill with the
+    `wedge` effect (Woodcraft) wedges the closed door in a direction shut. Anyone else: "You do not
+    know how to wedge a door."; a cell with no closed door: "There is no closed door there to
+    wedge."; a door already wedged: "That door is wedged already."; all refused, no time. The door
+    is then **wedged** (per-cell state, `LevelState::wedged`, saved and hashed, holding the points
+    Woodcraft's `wedge` curve gave, `[[0, 0], [100, 8], [200, 12]]`): a creature that opens doors
+    cannot open it, and kicks it instead, one kick a turn, breaking it with the chance of its
+    Strength **score** in the door's sturdiness plus those points (as a locked door is kicked);
+    the player's own kick is rolled the same way. The player opens it as usual, pulling the wedge
+    free ("You pull the wedge free and open the door."; the wedge is no item). It goes with the
+    closed door (opened, broken, blasted). Marks Woodcraft 100 % per wedge.
   - **Kicking** (`k`, then a direction; `Action::Kick`, replay text `kick:DIR`; the `kick` action,
     6 s), ADOM-like:
     - **A closed door**, locked or not, breaks with a chance of the kicker's Strength **score**

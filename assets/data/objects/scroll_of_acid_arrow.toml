@@ -1,0 +1,20 @@
+# A scroll of acid arrow (spec §8 "Scrolls", "Spells"): read it (`r`), and it casts Acid arrow, a
+# level-5 spell, at its own rungs, free of mana; study it (`L`), and you may learn the spell for
+# good. Level and frequency by its spell's level (README.toml): the lower, the commoner the scroll.
+[[object]]
+id = "scroll_of_acid_arrow"
+name = "scroll of acid arrow"
+plural = "scrolls of acid arrow"
+glyph = "?"
+fg = "#a8d070"
+class = "scrolls"
+materials = ["paper"]
+weight = 50
+value = 100
+stackable = true
+level = 3
+frequency = 35
+
+[object.read]
+kind = "spell"
+spell = "acid_arrow"

@@ -370,7 +370,7 @@ fn perceived_glyph(view: &PerceptionView<'_>, layer: Layer, p: Pos) -> char {
 
 /// A heard sound in the `sound` layer: `f` footsteps, `o` a door opening, `c` a door closing,
 /// `x` fighting, `b` a bowstring, `m` chanting (magic), `k` banging (a door kicked), `d` digging,
-/// `v` a voice, `h` a howl, `a` an alarm bell, `e` an explosion, `t` a thunderclap; upper case
+/// `v` a voice, `h` a howl, `q` a heartbeat, `a` an alarm bell, `e` an explosion, `t` a thunderclap; upper case
 /// when loud.
 pub fn sound_char(sound: &PerceivedSound) -> char {
     let c = match sound.kind {
@@ -384,6 +384,7 @@ pub fn sound_char(sound: &PerceivedSound) -> char {
         SoundKind::Digging => 'd',
         SoundKind::Voice => 'v',
         SoundKind::Howl => 'h',
+        SoundKind::Heartbeat => 'q',
         SoundKind::Bell => 'a',
         SoundKind::Explosion => 'e',
         SoundKind::Thunder => 't',
@@ -1405,6 +1406,7 @@ fn aim_word(aim: Aim) -> &'static str {
         Aim::Nothing => "nothing",
         Aim::Direction => "a direction",
         Aim::Cell => "a cell",
+        Aim::Corpse => "a corpse you see",
         Aim::Ailment => "what to treat",
         Aim::Item => "an item you carry",
         Aim::Shape => "a weapon's shape",
@@ -1651,6 +1653,19 @@ fn actor_rows(world: &World) -> Vec<String> {
                     format!(
                         "{court}; ally of {} ({source}{lasts}; {order}{retinue}{named})",
                         ally.master
+                    )
+                }
+                None => court,
+            };
+            // Risen berserk, serving no one (`world/corpse_spell.rs`): its faction and its clock.
+            let court = match a.risen {
+                Some(until) => {
+                    let faction = (a.faction(content))
+                        .map_or("none", |f| content.factions().def(f).id.as_str());
+                    let seconds = until.since(world.time()).as_seconds();
+                    format!(
+                        "{court}; risen, faction {faction}, {} min",
+                        seconds.div_ceil(60)
                     )
                 }
                 None => court,

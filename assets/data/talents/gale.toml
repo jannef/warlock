@@ -1,0 +1,8 @@
+[[talent]]
+id = "gale"
+name = "Gale"
+tree = "class"
+granted = true
+description = "A blast of wind down a line (paid in mana): everyone on it is driven back, and fires on it go out."
+effects = [{ kind = "spell", spell = "gale" }]
+systems = ["spells", "mana", "combat"]

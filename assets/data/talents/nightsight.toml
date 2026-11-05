@@ -1,0 +1,8 @@
+[[talent]]
+id = "nightsight"
+name = "Nightsight"
+tree = "class"
+granted = true
+description = "Your eyes open to the dark a while (a spell, paid in mana): you see as a cat does."
+effects = [{ kind = "spell", spell = "nightsight" }]
+systems = ["spells", "mana", "status"]

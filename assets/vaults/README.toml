@@ -1,0 +1,46 @@
+# The rules every vault is written to (docs/design/generic-vaults.md §7). This file holds no
+# vault: the loader skips it. Read it before adding a file here or under a campaign's `vaults/`.
+#
+# 1. Name the decision. The first comment of a vault says, in one line, what choice it puts to
+#    the player. "A room with X and Y in it" is sent back: monotony is a room with loot and
+#    monsters in another shape.
+# 2. Finds pay for what the vault asks.
+#      no crowd                                    one find, `any`
+#      a crowd of 1 to 3 of the floor's own,
+#        or a known trap                           two finds, one `magic`
+#      a crowd of 4 or more, a hidden trap,
+#        or a lock                                 three or four finds, one `magic`, and a
+#                                                  `rare` where the crowd is 6 or more
+#    A deliberately cheap room (the Flooded cell) breaks this downward only.
+# 3. A crowd is behind something. Four or more of a pool stand behind a closed door, across
+#    water or lava, or in a dead end with one entrance; never loose in a vault with two
+#    entrances, which the generator may make the floor's route.
+# 4. Two entrances only for a vault that is a route by design (a kennel, a catacomb, a
+#    mead-hall); one for every other.
+# 5. `count` is at most two thirds of the cells it marks, so the empty cells move.
+# 6. A deep vault gets its `danger`. A tag pool whose shallowest type is above danger 1
+#    stamps an empty room above it, so give the vault `danger = { from = N }` and the draw
+#    keeps it off the floors where the pool would be empty (#1073).
+# 7. Nothing names a direction: no `note`, `name`, or comment says north, left, or far end.
+#    Routes, bolt `dir`s, `flow`, and piles turn with the vault. A vault whose text must name
+#    a direction says `turns = false` at the top of its file, and why in its comment.
+# 8. Symmetry is cheap variety: a vault that is the same mirrored gains nothing from the
+#    mirror; one that is not gains two looks.
+# 9. Size by floor. 9 tall and 19 wide fit beside the rooms of an 80x21 floor; bigger vaults are
+#    cave vaults, skipped on rooms floors. A quarter turn swaps width and height.
+# 10. Finds lie away from the door and off the pool's cells (a hidden trap of the branch may
+#    take a loot or monster cell and leave it empty: a known cost, no vault should fall apart
+#    over one empty cell).
+# 11. Fixed creatures carry keys and colour; pools carry the danger. A placed `creature` is
+#    level 2 on floor 20.
+# 12. Locks ship their key: one key object per lock id, in `assets/data/objects/`. A chest is
+#    the keyless lock. `locked = true` on a door is not used.
+# 13. A vault offers nothing to pray at, drink from, or temper on: anvils, springs, and altars
+#    are decoration until a room effect names them.
+# 14. Campaign lore stays in campaign vaults. A shared vault names no place, people, god, or
+#    event; its names are kinds of place (a mead-hall, a cairn).
+# 15. Borrowings are named in the file's comment.
+#
+# Finds are rolled: put a find on a legend cell with `loot` (a grade, or a pool of item
+# classes) rather than in a `[[pile]]`, so that a vault met twice is not the same room twice.
+# Food is no loot class and stays `objects` on a legend cell, as does a key.

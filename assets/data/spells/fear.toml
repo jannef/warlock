@@ -1,0 +1,21 @@
+# Fear (the spell types design §7 entry 13): dread over a burst, Intimidate's Frightened with no
+# check, on everyone it reaches but the caster.
+[[spell]]
+id = "fear"
+name = "Fear"
+description = "Dread bursts where you aim it: everyone it reaches runs from you a while, and fights only when cornered."
+level = 10
+school = "enchantment"
+kind = "hex"
+shape = "burst"
+resolution = "area"
+range = 8
+radius = 1
+effect = { status = "frightened", severity = 2 }
+
+[spell.cast]
+noise = { sound = "chanting", loudness = 30 }
+
+[spell.grows]
+range = "willpower 14 9, 18 10"
+degrees = "presence 14 3"

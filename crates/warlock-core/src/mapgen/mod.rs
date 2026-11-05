@@ -426,14 +426,16 @@ const VAULT_PHASES: usize = 4;
 
 /// The vaults that may be stamped on `def`'s level at `depth` ([`Vault::stamps_on`]): pinned ones
 /// (named by a level, so stamped by [`Needs::vaults`] anyway) as they are, and of the random ones
-/// only the phase of this depth. The run's seed shuffles the branch's random vaults and deals them
-/// round the phases, so a vault can come at most every [`VAULT_PHASES`] floors of the branch, and
-/// which ones differs from run to run and branch to branch; a run keeps no count of what it met.
+/// only the phase of this depth that suit the floor's `danger` ([`Vault::suits`]). The run's seed
+/// shuffles the branch's random vaults and deals them round the phases, so a vault can come at
+/// most every [`VAULT_PHASES`] floors of the branch, and which ones differs from run to run and
+/// branch to branch; a run keeps no count of what it met. The deal is made before the danger is
+/// asked, so a vault's `danger` changes no other vault's phase.
 fn spaced_vaults<'a>(
     content: &'a Content,
     seed: u64,
-    def: &DungeonDef,
-    depth: u32,
+    (def, depth): (&DungeonDef, u32),
+    danger: u8,
 ) -> Vec<&'a Vault> {
     let mut all: Vec<&Vault> = (content.vaults().iter())
         .filter(|v| v.stamps_on(def, depth))
@@ -447,7 +449,7 @@ fn spaced_vaults<'a>(
         .filter(|(i, _)| i % VAULT_PHASES == phase)
         .map(|(_, v)| v)
         .collect();
-    all.retain(|v| v.pinned || mine.iter().any(|m| m.id() == v.id()));
+    all.retain(|v| v.pinned || (v.suits(danger) && mine.iter().any(|m| m.id() == v.id())));
     all
 }
 
@@ -501,9 +503,11 @@ pub fn generate_for(
     };
     let down_to = needs.down.then(|| def.level_id(depth + 1));
 
+    // The danger the floor's pools draw at, which a vault's `danger` asks (`Vault::suits`).
+    let danger = (content.spawning(id)).map_or(0, |(rule, at, _)| rule.at(at, visit.player_level));
     for attempt in 0..MAX_ATTEMPTS {
         let mut rng = Rng::map(seed, id, attempt);
-        let vaults = spaced_vaults(content, seed, def, depth);
+        let vaults = spaced_vaults(content, seed, (def, depth), danger);
         let size = (plan.width, plan.height);
         let mut canvas = Canvas::new(content, pal, odds, vaults, size);
         canvas.danger = content.spawning(id).is_some();
@@ -582,7 +586,8 @@ pub fn generate_for(
             exit: None,
             item_level,
             loot: Vec::new(),
-            monsters: Vec::new(),
+            // Its vaults' pools, until they are drawn: a key one carries counts (`connect.rs`).
+            monsters: canvas.monsters,
             outside_cap: Default::default(),
             temperature: plan.temperature,
             ice: Default::default(),
@@ -604,6 +609,7 @@ pub fn generate_for(
                 &canvas.loot,
                 (Some(floor), luck),
             );
+            let monsters = std::mem::take(&mut template.monsters);
             if let Some((rule, depth, spawning)) = content.spawning(id) {
                 let danger = rule.at(depth, visit.player_level);
                 population::populate(
@@ -611,11 +617,12 @@ pub fn generate_for(
                     content,
                     seed,
                     (pal, danger, spawning),
-                    (visit, &canvas.monsters),
+                    (visit, &monsters),
                 );
                 den::fill(&mut template, content, seed, (pal, danger, spawning), visit);
                 hoard::fill(&mut template, content, seed, (pal, danger), visit);
             }
+            population::leave_unborne(&mut template, content, &monsters);
             room_loot::fill(&mut template, content, seed, pal);
             chest::fill_vaults(&mut template, content, (seed, luck));
             chest::fill(
@@ -941,6 +948,8 @@ mod special_tests;
 mod tests;
 #[cfg(test)]
 mod treasury_tests;
+#[cfg(test)]
+mod vault_danger_tests;
 #[cfg(test)]
 mod vault_monsters_tests;
 #[cfg(test)]

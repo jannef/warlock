@@ -9,7 +9,10 @@ terrain `step_noise` percent × the burden's `footsteps()` percent for `Act::Ste
 `toggle_noise` for `Act::OpenDoor`/`CloseDoor`, `VOICE_NOISE` for `Act::Mutter` and for
 `Act::ThrowVoice(at)`, which is made on that cell, not the actor's, `HOWL_NOISE` for `Act::Howl`
 (Hound's bay, #270: `SoundKind::Howl`, "a howl", `h` in the sound layer; `noise::hearers` tells
-the howler who hears it), `SONG_NOISE` (80) for `Act::Sing` (a song, `world/song.rs`, #870: a
+the howler who hears it; `SoundKind::Heartbeat`, "a heartbeat", `q`, is no noise: Sense the quick's
+`senses` status pushes it straight onto the player's heard list at their own threshold,
+`world/spell_rule.rs::heartbeats`, docs/dev/spells.md "Small rules", and `Exact::All` never places
+it exactly), `SONG_NOISE` (80) for `Act::Sing` (a song, `world/song.rs`, #870: a
 voice where the singer stands, untouched by stealth; the Lullaby, #873, asks
 `World::heard_by(Act::Sing)` before the noise is made, as War cry does, and checks the hostile
 hearers), the talent's `noise` (60) for `Act::Cackle` (the witch's Cackle, `world/witch.rs`,

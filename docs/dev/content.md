@@ -32,10 +32,22 @@ draw `monsters` too (`content/monster_pool.rs`): `monsters = { pool = "level", c
 (`"level"` the floor's population, or tags: `pool = "goblin"`, `pool = ["orc", "troll"]`; `count`
 over the entry's marked cells, default one on each; refused at load: `MonsterPoolSpec::resolve`,
 `VaultMonsters::counted`, `Vault::check_monsters`, `parse_level`'s checks; docs/dev/creatures.md
-for the draw and the cap). A vault that dangerous should be avoidable and pay better loot. A vault
+for the draw and the cap). Beside `monsters` the entry may give `status`, `carry`, and `route`
+(`level.rs::pool_cell` parses them into `VaultMonsters::{status, carry, route}` with the placed
+creature's parsers; the route is checked from every marked cell, `validate_walk`, and turns with
+the vault, `vault_turn.rs`; a pool's `carry` key counts in `LevelTemplate::has_key_for` when every
+marked cell is within reach); a `faction`, `alignment`, `npc`, `animated`, `wield`, or `wear`
+there is refused. A vault that dangerous should be avoidable and pay better loot. A vault
 file's `turns = false` keeps it as drawn when one is drawn at random (default: any of eight ways,
 `docs/dev/mapgen.md`): for text that depends on direction or a layout that must not turn; refused on
-a level. `secret =
+a level. A vault file's `danger = { from = 8 }`, `{ to = 6 }`, or both (`content::DangerRange`,
+each end included; absent, every danger) keeps a vault drawn at random to floors of that danger
+(`Vault::suits`, docs/dev/mapgen.md): give a deep vault, one whose pool's shallowest type is
+past danger 1, its `from`, and a shallow one its `to`. The level parser reads a top-level
+`danger` as a level's rule first (`level::DangerField`), then as this range, which
+`vault::parse_danger` reads again; refused at load: on a level, on an outdoor vault, on a vault
+a branch level names, with `from` above `to` or an end past 99, and a level's own rule
+(`danger = 3`) on a vault (`mapgen/vault_danger_tests.rs`). `secret =
 true` (or a difficulty) on a closed door makes it a secret door: the cell shows the wall around
 it until found (`docs/dev/searching.md`). Water: `~` is still water; running water (terrain with a
 `flow` anim) needs a flow on every cell from its legend entry (`flow = "S"`, optional

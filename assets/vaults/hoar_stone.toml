@@ -1,0 +1,13 @@
+# O9 (docs/design/generic-vaults.md §4): one old boundary stone, named, to steer by.
+# The decision: none, a landmark; look mode names it.
+name = "The Hoar-stone"
+kind = "outdoor"
+map = '''
+...
+.O.
+...
+'''
+
+[legend]
+"." = "grass"
+"O" = { terrain = "standing_stone", name = "the Hoar-stone", note = "A boundary stone older than any boundary it marked." }

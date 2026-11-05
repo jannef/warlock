@@ -99,6 +99,9 @@ pub enum SoundKind {
     Voice,
     /// A howl: a Barghest's Hound's bay (spec §8 "Birth sign").
     Howl,
+    /// A heartbeat: Sense the quick's, a living creature near (spec §8 "Spells"). No noise anyone
+    /// makes: only the player hears one, and never its exact place.
+    Heartbeat,
     /// A bell: an alarm trap (spec §8 "Traps").
     Bell,
     /// An explosion: a fireball trap.
@@ -121,6 +124,7 @@ impl SoundKind {
             SoundKind::Digging => "digging",
             SoundKind::Voice => "voice",
             SoundKind::Howl => "howl",
+            SoundKind::Heartbeat => "heartbeat",
             SoundKind::Bell => "bell",
             SoundKind::Explosion => "explosion",
             SoundKind::Thunder => "thunder",
@@ -140,6 +144,7 @@ impl SoundKind {
             SoundKind::Digging => "digging",
             SoundKind::Voice => "a voice",
             SoundKind::Howl => "a howl",
+            SoundKind::Heartbeat => "a heartbeat",
             SoundKind::Bell => "a bell ring",
             SoundKind::Explosion => "an explosion",
             SoundKind::Thunder => "a thunderclap",
@@ -562,7 +567,8 @@ impl Exact {
         match self {
             Exact::No => false,
             Exact::Footsteps => kind == SoundKind::Footsteps,
-            Exact::All => true,
+            // A heartbeat is felt, not heard: rough however sharp the ears.
+            Exact::All => kind != SoundKind::Heartbeat,
         }
     }
 }

@@ -1,0 +1,25 @@
+# Rime (the spell types design §7 entry 8): the druid's cone of cold, the cold type's rule on
+# everyone in it and the water in it frozen.
+[[spell]]
+id = "rime"
+name = "Rime"
+description = "A breath of killing frost from your hands toward a place you aim at: everyone in it is chilled and slowed, and the water in it freezes."
+level = 9
+school = "evocation"
+kind = "damage"
+shape = "cone"
+resolution = "area"
+damage_type = "cold"
+length = 4
+damage = "2d6"
+
+[spell.cast]
+effect = "frost_burst"
+noun = "rime"
+verb = "bites"
+message = "Frost pours from your hands!"
+noise = { sound = "explosion", loudness = 40 }
+
+[spell.grows]
+damage = "willpower 13 3d6, 16 4d6, 22 4d6+2"
+length = "willpower 18 5"

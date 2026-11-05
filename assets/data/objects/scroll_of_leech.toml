@@ -1,0 +1,20 @@
+# A scroll of leech (spec §8 "Scrolls", "Spells"): read it (`r`), and it casts Leech, a
+# level-10 spell, free of mana; study it (`L`), and you may learn the spell for good. Level and
+# frequency by its spell's level (README.toml): the lower, the commoner the scroll.
+[[object]]
+id = "scroll_of_leech"
+name = "scroll of leech"
+plural = "scrolls of leech"
+glyph = "?"
+fg = "#a0c080"
+class = "scrolls"
+materials = ["paper"]
+weight = 50
+value = 200
+stackable = true
+level = 5
+frequency = 20
+
+[object.read]
+kind = "spell"
+spell = "leech"

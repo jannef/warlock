@@ -6,8 +6,8 @@ name = "Guard post"
 map = '''
 ###########
 #g..g#....#
-#.k..L..*.#
-#g..g#.m..#
+#.k..L.a*.#
+#g..g#smf.#
 ###+#######
 '''
 
@@ -20,18 +20,10 @@ map = '''
 # A reward (spec §8 "Magic items"): something magic or rare left in the store room, rolled when
 # the level is generated.
 "m" = { terrain = "floor", loot = "magic" }
+# The store (spec §8 "Magic items"): spare arms rolled when the level is generated, food and a
+# skeleton key (which opens every lock) left as they are: food is no loot class, and the key is
+# the way past the lock when the guard is dead or its key lost.
+"a" = { terrain = "floor", loot = { pool = ["weapons", "armour"] } }
+"f" = { terrain = "floor", objects = ["dried_meat*4"] }
+"s" = { terrain = "floor", objects = ["skeleton_key"] }
 "L" = { terrain = "door_closed", lock = "guard_post" }
-
-# Objects (M11): the store room holds spare arms and food, and a skeleton key, which opens every
-# lock.
-[[pile]]
-at = [7, 1]
-objects = ["spear", "leather_jerkin"]
-
-[[pile]]
-at = [8, 3]
-objects = ["dried_meat*4"]
-
-[[pile]]
-at = [6, 3]
-objects = ["skeleton_key"]

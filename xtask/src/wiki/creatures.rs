@@ -159,10 +159,14 @@ pub(super) fn factions(content: &Content) -> String {
     for (i, f) in factions.defs().iter().enumerate() {
         let id = FactionId(i as u16);
         let enemies: Vec<String> = (factions.defs().iter().enumerate())
+            // Everyone is at war with the berserk: said on its own row, not on every row.
+            .filter(|&(_, e)| !e.hostile_to_all)
             .filter(|&(j, _)| factions.stance(id, FactionId(j as u16)) == Stance::Hostile)
             .map(|(_, e)| e.name.clone())
             .collect();
-        let enemies = if enemies.is_empty() {
+        let enemies = if f.hostile_to_all {
+            "everyone, its own too".to_string()
+        } else if enemies.is_empty() {
             "nobody".to_string()
         } else {
             enemies.join(", ")
@@ -326,7 +330,7 @@ fn dash(items: &[String]) -> String {
 }
 
 /// Each creature's hit points, its Defence with no gear (and its parts), its natural armour's
-/// Protection, and what it resists.
+/// Protection, and what it resists (a bloodless one never bleeds).
 pub(super) fn creature_defences(content: &Content) -> String {
     let mut out = String::from(
         "| Creature | Hit points | Defence | Protection | Resists |\n|---|:---:|---|---|---|\n",
@@ -351,7 +355,7 @@ pub(super) fn creature_defences(content: &Content) -> String {
             Some(hide) if hide.protection > 0 => format!("{} ({})", hide.protection, hide.name),
             _ => "-".into(),
         };
-        let resists: Vec<String> = (c.resist.iter())
+        let mut resists: Vec<String> = (c.resist.iter())
             .map(|&(kind, percent)| {
                 let name = damage_link(content, kind);
                 match percent {
@@ -361,6 +365,10 @@ pub(super) fn creature_defences(content: &Content) -> String {
                 }
             })
             .collect();
+        // Bloodless: no wound's status takes on it (Bleeding; `World::afflict_one`).
+        if c.blood.is_none() {
+            resists.push("never [bleeds](status-effects.md#bleeding)".into());
+        }
         let _ = writeln!(
             out,
             "| {} | {} | {defence} | {protection} | {} |",

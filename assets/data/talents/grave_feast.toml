@@ -1,0 +1,8 @@
+[[talent]]
+id = "grave_feast"
+name = "Grave feast"
+tree = "class"
+granted = true
+description = "Draw what life is left out of a corpse beside you, hit points and mana back (a spell, paid in mana)."
+effects = [{ kind = "spell", spell = "grave_feast" }]
+systems = ["spells", "mana"]

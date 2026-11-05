@@ -1,0 +1,8 @@
+[[talent]]
+id = "benison"
+name = "Benison"
+tree = "class"
+granted = true
+description = "A blessing over all beside you (paid in mana): hit points back to you and your allies."
+effects = [{ kind = "spell", spell = "benison" }]
+systems = ["spells", "mana", "hit_points"]

@@ -135,7 +135,12 @@ A vault's monster pools (#958, `content/monster_pool.rs`): `populate` draws them
 group, from `Rng::vault_monsters` with the same `content.candidates` and `danger::draw`
 (`MonsterPool::Level`: the floor's population and generic list; `MonsterPool::Tags`: the tag's
 types of the floor's campaign as both lists, so a stray stays in the tribe and an out-of-depth
-draw reaches deeper in it). Their cells stand in `LevelTemplate::outside_cap`, which
+draw reaches deeper in it). Each draw is placed with the pool's `status`, walks its `route` if it
+has one (a walk is drawn either way, so the stream is the same), and the first placed takes its
+`carry` (`gear::arm` puts rolled gear first and keeps what a spawn was given after it). A
+generated level holds its vaults' pools in `LevelTemplate::monsters` until they are drawn, so
+`connect::validate` sees a pool's key; `population::leave_unborne` then lays a `carry` no draw
+took on the pool's first cell. Their cells stand in `LevelTemplate::outside_cap`, which
 `travel::instantiate_level` turns into `Spawner::outside` (actor ids): `World::hostiles_here`
 leaves those out, so the spawner's cap and the dumps' `population 2/6` do not count them. Without
 this a floor laid down full would see nothing come until as many had died as the vault holds, and
@@ -240,3 +245,13 @@ wave, #335 the delf wave): content only, on the fields above. A wave adds
   too, or the shipped types naming it fail to load;
 - its rows in `world/bestiary_tests.rs`'s `WAVES` (the type and its owning campaign), and its
   stances in that file's faction test.
+
+**`hostile_to_all`** (`content/faction.rs`): a faction with it (`berserk`, Rouse the dead's,
+`docs/dev/allies.md` "The risen") fills its row, column, and own diagonal of the hostility matrix
+and may list no `hostile`. So `World::stance` of an actor and itself is `Neutral` by id
+(`stance_between`), and `Factions::has_enemies` counts a faction's own quarrels only: being on the
+berserk's list makes no one a fighter (`disturbs_rest`, hearing, `stride.rs`, the wiki's `fights`).
+`fixture_factions.rs` strips the line with the other grudges, so a fixture's berserk are at peace;
+the fixtures that write their own `data/factions.toml` have no such faction, which is why the
+spell's `berserk_faction` is read at the cast (none: it rises serving) and checked on the shipped
+data by a test rather than at load.

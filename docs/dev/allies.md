@@ -321,3 +321,16 @@ retinue across the showcase's overworld (never drawn, not in the way, stepping o
 one gone on the road, back into the retinue, saved), the dumps and the menu rows, and a replay
 through all of it without divergence. `content/ally.rs` checks the file. The showcase's dump
 snapshots are untouched: no scenario makes an ally.
+
+## The risen
+
+Rouse the dead (`world/corpse_spell.rs`, `docs/dev/spells.md` "Spells aimed at a corpse"): a summon
+spell with `effect.rise` in place of `effect.summon`. A serving one is made by `World::make_ally`
+with `AllySource::Summoned { spell }`, so it follows, takes orders, pays kills, and leaves nothing,
+as a call does; `calls_of` and `gives_way` (`summon_spell.rs`) are its `most`, `[allies] most` its
+cap, `ally_mod`'s `most`, `duration_percent`, and `lasting` read as there (`count` not). One that
+rises berserk is **not** an ally: `Actor::ally` is `None`, its `faction_override` is
+`berserk_faction`, and `Actor::risen` holds its clock (`duration_percent` counted, `lasting` not:
+it always ends), read by `allies_lapse` and at `fight.rs::creature_dies`'s early return. It counts
+toward neither `most` nor the cap, nor toward `hostiles_here` (a level's population). The dev
+`actors` layer says `; risen, faction berserk, 9 min`.

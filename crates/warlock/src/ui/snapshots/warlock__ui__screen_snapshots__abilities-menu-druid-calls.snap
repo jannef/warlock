@@ -11,24 +11,24 @@ expression: "render(case, content.clone())"
           │   c  Barkskin            3 mana                                             │
           │   d  Call of the wild    2 called, 5 mana                                   │
           │   e  Water walking       5 mana                                             │
-          │   f  Call lightning      3d6 electricity, may arc, conducts, 20 mana, aimed │
-          │   g  Call of the forest  2 called, 20 mana                                  │
+          │   f  Bramble             19 mana, aimed                                     │
+          │   g  Rime                3d6 cold, numbs, 14 mana, aimed                    │
+          │   h  Call lightning      3d6 electricity, may arc, conducts, 20 mana, aimed │
+          │   i  Gale                20 mana, aimed                                     │
+          │   j  Call of the forest  2 called, 20 mana                                  │
+          │   k  Cloudburst          20 mana                                            │
           │ Skills                                                                      │
-          │   h  Tame                in a direction                                     │
-          │   i  Heal                nothing to treat                                   │
-          │   j  Listen at a door    in a direction                                     │
-          │   k  Pick lock           in a direction                                     │
-          │   l  Forage              not usable here                                    │
-          │   m  Fletch              you have no knife                                  │
-          │   n  Whittle             you have no knife                                  │
-          │ Weapon skills                                                               │
-          │   o  Shield bash         you hold no shield                                 │
-          │ Allies                                                                      │
-          │   p  Come to heel                                                           │
+          │   l  Tame                in a direction                                     │
+          │   m  Heal                nothing to treat                                   │
+          │   n  Listen at a door    in a direction                                     │
+          │   o  Pick lock           in a direction                                     │
+          │   p  Forage              not usable here                                    │
+          │   q  Fletch              you have no knife                                  │
           │                                                                             │
           │ The basilisk's stare: a foe nearby that sees you slows to a crawl a moment; │
           │ your eyes then rest two hours.                                              │
           │                                                                             │
           │                                                                             │
-          │ a-p or Enter use   > < page   Esc close                                     │
- The Hub  └─────────────────────────────────────────────────────────────────────────────┘? controls
+          │ a-q or Enter use   > < page   Esc close                                     │
+          └─────────────────────────────────────────────────────────────────────────────┘
+ The Hub  ·  HP 98/98  ·  MP 217/228  ·  Lv 36  ·  08:00  ·  11 Darkening, Year 1444     ? controls

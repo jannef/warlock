@@ -74,6 +74,11 @@ pub struct LevelState {
     /// broken. Ground truth: a locked door looks like any closed door.
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty", with = "by_pos")]
     pub(crate) locks: BTreeMap<Pos, Lock>,
+    /// Doors wedged shut, by position (spec §8 "Doors"): the points the wedger's Woodcraft adds
+    /// to the door's sturdiness against a kick. A creature that opens doors kicks one in instead;
+    /// the player pulls it free as they open it. Gone with the closed door. Ground truth.
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty", with = "by_pos")]
+    pub(crate) wedged: BTreeMap<Pos, u8>,
     /// Chests, by position (spec §8 "Chests"): on every chest terrain cell, shut, open, or
     /// smashed, its level (its band follows) and, while shut, what it holds. Ground truth.
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty", with = "by_pos")]
@@ -186,6 +191,7 @@ impl LevelState {
             object_memory: BTreeMap::new(),
             fires: BTreeMap::new(),
             locks: template.locks.clone(),
+            wedged: BTreeMap::new(),
             chests: template.chests.clone(),
             secrets: template.secrets.clone(),
             hidden: template.hidden.clone(),

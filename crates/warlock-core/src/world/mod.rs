@@ -111,6 +111,7 @@ mod collar;
 mod companion;
 mod concentration;
 mod consecrate;
+mod corpse_spell;
 mod court;
 mod creation;
 mod curse;
@@ -222,6 +223,7 @@ mod spell;
 mod spell_aim;
 mod spell_arc;
 mod spell_mods;
+mod spell_rule;
 mod spell_rung;
 mod spell_type;
 mod spell_words;
@@ -255,6 +257,7 @@ mod wares;
 mod warp;
 mod weapon_ability;
 mod weapon_active;
+mod wedge;
 mod witch;
 mod words;
 mod wriggle;
@@ -914,6 +917,7 @@ impl World {
             faction_override: None,
             summoner: None,
             ally: None,
+            risen: None,
             alignment: content.alignment().map(|_| alignment),
             alignment_override: None,
             npc: None,
@@ -1461,6 +1465,7 @@ impl World {
             Action::Search(turns) => return Spent::Search(*turns),
             Action::Disarm(dir) => return self.disarm(*dir, events),
             Action::Listen(dir) => return self.listen(*dir),
+            Action::Wedge(dir) => return self.wedge(*dir),
             Action::Heal { what, ally } => return self.heal(what.as_deref(), *ally, events),
             Action::Pray => return self.start_prayer(),
             Action::Drink => return self.start_drink(),
@@ -1642,6 +1647,8 @@ mod collapse_tests;
 mod collar_tests;
 #[cfg(test)]
 mod concentration_tests;
+#[cfg(test)]
+mod corpse_spell_tests;
 #[cfg(test)]
 mod cost_tests;
 #[cfg(test)]
@@ -1903,7 +1910,11 @@ mod speed_tests;
 #[cfg(test)]
 mod spell_arc_tests;
 #[cfg(test)]
+mod spell_data_tests;
+#[cfg(test)]
 mod spell_list_tests;
+#[cfg(test)]
+mod spell_rule_tests;
 #[cfg(test)]
 mod spell_talent_tests;
 #[cfg(test)]
@@ -2000,6 +2011,9 @@ mod weapon_active_tests;
 mod weapon_skill_tests;
 #[cfg(test)]
 mod weather_tests;
+
+#[cfg(test)]
+mod wedge_tests;
 #[cfg(test)]
 mod whittle_tests;
 #[cfg(test)]
@@ -2021,7 +2035,8 @@ pub(crate) fn stance_between(
     a: &Actor,
     b: &Actor,
 ) -> Stance {
-    if beast_friend::befriended(state, content, a, b) {
+    // A faction friendly to nothing is hostile to its own, never to itself.
+    if a.id == b.id || beast_friend::befriended(state, content, a, b) {
         return Stance::Neutral;
     }
     content.stance_of(a.faction(content), b.faction(content))

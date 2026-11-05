@@ -1,0 +1,15 @@
+# Sense the quick (the spell types design §7 entry 32): Quick-sensed, the living felt as heartbeats
+# at rough places (a status's `senses`).
+[[spell]]
+id = "sense_the_quick"
+name = "Sense the quick"
+description = "For a while you feel the living about you: their heartbeats, roughly placed, as you hear a footstep."
+level = 5
+school = "divination"
+kind = "buff"
+shape = "self"
+resolution = "auto"
+effect = { status = "quick_sensed" }
+
+[spell.grows]
+degrees = "presence 14 2, 18 3"

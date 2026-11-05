@@ -1,0 +1,24 @@
+# Leech (the spell types design §7 entry 11): half the harm it does comes back to the caster.
+[[spell]]
+id = "leech"
+name = "Leech"
+description = "A ray of hunger toward a place you aim at: it strikes the first creature in its way, if it hits, and what it takes mends you."
+level = 10
+school = "necromancy"
+kind = "damage"
+shape = "ray"
+resolution = "attack"
+damage_type = "necrotic"
+range = 6
+damage = "2d6"
+effect = { leech = 50 }
+
+[spell.cast]
+effect = "frost_ray"
+noun = "leeching ray"
+verb = "drains"
+noise = { sound = "chanting", loudness = 20 }
+
+[spell.grows]
+damage = "willpower 13 3d6, 16 4d6, 25 4d6+2"
+range = "willpower 14 7, 18 8"

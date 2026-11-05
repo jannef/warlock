@@ -152,6 +152,16 @@ fn every_builtin_scroll_can_be_read() {
     // Wounded, so a healing scroll has something to heal.
     let dummy = at(&base, Pos::new(2, 1));
     base.state.actors.get_mut(&dummy).expect("dummy").hp -= 10;
+    base.player_mut().hp -= 10;
+    // A corpse beside the reader, for the scrolls aimed at one.
+    let rat = content.creature_id("rat").expect("rats");
+    let corpse = content.corpse_of(rat).expect("a rat leaves a corpse");
+    let stack = Stack::corpse(corpse, base.state.time);
+    base.state
+        .current_mut()
+        .set_pile(Pos::new(2, 1), vec![stack]);
+    *base.perception =
+        crate::perception::Perception::compute(&base.state, &base.content, &mut base.lights);
     for object in (0..content.object_defs().len()).map(|i| ObjectId(i as u16)) {
         let def = content.object(object);
         if content.item_class(def.class).id != "scrolls" || !def.id.starts_with("scroll_of_") {
@@ -175,6 +185,7 @@ fn every_builtin_scroll_can_be_read() {
                     _ if spell.open_sky => Some("open sky"),
                     SpellPurpose::Hex => Some("means you no harm"),
                     SpellPurpose::Cleanse => Some("nothing to cure"),
+                    SpellPurpose::Heal if spell.about_caster() => Some("No one here is hurt"),
                     _ => None,
                 }
             }
@@ -196,7 +207,7 @@ fn every_builtin_scroll_can_be_read() {
         }
         let target = match reading {
             _ if reading.on_item() => format!(":{}", letter(0)),
-            _ if reading.range().is_some() => ":2,1".to_string(),
+            _ if reading.aimed() => ":2,1".to_string(),
             _ => String::new(),
         };
         let action = format!("read:{}{target}", letter(item));

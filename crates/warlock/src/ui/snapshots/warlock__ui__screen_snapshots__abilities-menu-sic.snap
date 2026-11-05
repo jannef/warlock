@@ -2,7 +2,7 @@
 source: crates/warlock/src/ui/screen_snapshots.rs
 expression: "render(case, content.clone())"
 ---
- Your appraise impro┌─ Abilities ──────────────────────────────────────────────┐ learn Steady hand.
+ Your appraise impro┌─ Abilities ─────────────────────────────────── Page 1/2 ─┐ learn Steady hand.
  You learn Sworn foe│                                                          │(archer). --more--
                     │ Birth sign                                               │
                     │ > a  Transfixing stare  at a place you see               │
@@ -11,24 +11,24 @@ expression: "render(case, content.clone())"
                     │   c  Sic 'em            at a place you see               │
                     │ Spells                                                   │
                     │   d  Barkskin           3 mana                           │
-                    │   e  Water walking      5 mana                           │
+                    │   e  Nightsight         4 mana                           │
+                    │   f  Water walking      5 mana                           │
                     │ Skills                                                   │
-                    │   f  Tame               you already have a companion     │
-                    │   g  Listen at a door   in a direction                   │
-                    │   h  Forage             not usable here                  │
-                    │   i  Fletch                                              │
-                    │   j  Whittle            on something you carry           │
+                    │   g  Tame               you already have a companion     │
+                    │   h  Listen at a door   in a direction                   │
+                    │   i  Forage             not usable here                  │
+                    │   j  Fletch                                              │
+                    │   k  Wedge a door       in a direction                   │
                     │ Weapon skills                                            │
-                    │   k  Shield bash        you hold no shield               │
+                    │   l  Shield bash        you hold no shield               │
                     │ Allies                                                   │
-                    │   l  Come to heel                                        │
-                    │   m  Hold here                                           │
-                    │   n  Set on             at a place you see               │
-                    │   o  Give               on something you carry           │
+                    │   m  Come to heel                                        │
+                    │   n  Hold here                                           │
+                    │   o  Set on             at a place you see               │
                     │                                                          │
                     │ The basilisk's stare: a foe nearby that sees you slows   │
                     │ to a crawl a moment; your eyes then rest two hours.      │
                     │                                                          │
                     │                                                          │
-                    │ a-o or Enter use   Esc close                             │
+                    │ a-o or Enter use   > < page   Esc close                  │
  The Hub  ·  HP 133/└──────────────────────────────────────────────────────────┘         ? controls

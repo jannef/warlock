@@ -1,0 +1,8 @@
+[[talent]]
+id = "charnel_burst"
+name = "Charnel burst"
+tree = "class"
+granted = true
+description = "A corpse you see bursts where it lies and tears everyone beside it (a spell, paid in mana)."
+effects = [{ kind = "spell", spell = "charnel_burst" }]
+systems = ["spells", "mana", "combat"]

@@ -359,7 +359,7 @@ impl ObjectScreen {
                     mark: (!marks.is_empty()).then(|| marks.join(") (")),
                     weight: s.weight(content),
                     rarity: s.rarity(),
-                    aimed: reading(s).is_some_and(|r| r.range().is_some()),
+                    aimed: reading(s).is_some_and(|r| r.aimed()),
                     identify: reading(s).is_some_and(|r| r.on_item()),
                     study,
                 };

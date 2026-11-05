@@ -65,6 +65,7 @@ pub(super) fn gated_effect(effect: Effect) -> bool {
             | Effect::Escape
             | Effect::Climb
             | Effect::Pick
+            | Effect::Wedge
             | Effect::Steal
             | Effect::Feint
             | Effect::Heal
@@ -124,6 +125,7 @@ fn effect_name(effect: Effect) -> &'static str {
         Effect::SongDegrees => "your songs last longer",
         Effect::SongCraft => "your songs are harder to shake off",
         Effect::Fletch => "fletching: a better check for a batch of arrows or bolts",
+        Effect::Wedge => "a door you wedge shut is harder to kick in",
         Effect::Temper => "tempering at a forge's anvil",
         Effect::Whittle => "whittling wood with a knife",
         Effect::Wade => "wading through water and marsh is quicker",
@@ -189,6 +191,7 @@ pub(super) fn skill_benefits(content: &Content) -> String {
             Effect::SongDegrees => "song degrees",
             Effect::SongCraft => "song's difficulty",
             Effect::Fletch => "fletching",
+            Effect::Wedge => "wedged door's sturdiness",
             Effect::Temper => "tempering",
             Effect::Whittle => "whittling",
             Effect::Wade => "wading's extra cost",
@@ -232,6 +235,7 @@ pub(super) fn skill_benefits(content: &Content) -> String {
                 | Effect::SongDegrees
                 | Effect::SongCraft
                 | Effect::Fletch
+                | Effect::Wedge
                 | Effect::Temper
                 | Effect::Whittle
                 | Effect::Swim

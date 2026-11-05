@@ -1,0 +1,15 @@
+# Grave feast (the spell types design §7 entry 30): what life is left in a corpse beside the caster,
+# in hit points and mana. The stage of the corpse is not read: a rotten one feeds as a fresh one.
+[[spell]]
+id = "grave_feast"
+name = "Grave feast"
+description = "Draw what life is left out of a corpse beside you: hit points and mana back."
+level = 6
+school = "necromancy"
+kind = "heal"
+shape = "touch"
+resolution = "touch"
+effect = { heal = "2d6", corpse = "consumed", mana = "1d6" }
+
+[spell.grows]
+heal = "willpower 16 3d6, 22 4d6"

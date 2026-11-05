@@ -47,6 +47,7 @@ pub(super) fn abilities(content: &Content) -> String {
             Ability::Listen => "everyone trained in Listen".into(),
             Ability::PickLock => "everyone trained in Open lock".into(),
             Ability::Steal => "everyone trained in Steal".into(),
+            Ability::Wedge => "everyone trained in Woodcraft".into(),
             Ability::Feint => "everyone trained in Bluff".into(),
             Ability::Tame => {
                 "everyone trained in Handle animal, at any level (not while they have a companion; \
@@ -270,6 +271,7 @@ fn aim(aim: Aim) -> &'static str {
         Aim::Nothing => "nothing",
         Aim::Direction => "a direction",
         Aim::Cell => "a place you see",
+        Aim::Corpse => "a corpse you see",
         Aim::Ailment => "what to treat, when there is more than one",
         Aim::Item => "an item you carry",
         Aim::Shape => "a weapon's shape, from every melee weapon",

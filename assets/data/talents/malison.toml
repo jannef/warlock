@@ -12,6 +12,11 @@ effects = [
     { kind = "status_damage", status = "sluggish", value = 3 },
     { kind = "status_damage", status = "drowsy", value = 3 },
     { kind = "status_damage", status = "webbed", value = 3 },
+    { kind = "status_damage", status = "pinned", value = 3 },
+    { kind = "status_damage", status = "frightened", value = 3 },
+    { kind = "status_damage", status = "silenced", value = 3 },
+    { kind = "status_damage", status = "transfixed", value = 3 },
+    { kind = "status_damage", status = "asleep", value = 3 },
     { kind = "hex_tithe", per_levels = 2 },
 ]
 systems = ["status", "combat", "spells", "mana"]

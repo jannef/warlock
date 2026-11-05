@@ -1,0 +1,19 @@
+# O4 (docs/design/generic-vaults.md §4): the dead of an old fight, their arms among them.
+# The decision: whether to rob the dead of their weapons and armour.
+name = "The Old Battle"
+kind = "outdoor"
+map = '''
+.b...w..b
+..,T,..b.
+b.a,.,b..
+.,.b.w...
+b..,...b.
+'''
+
+[legend]
+"." = "dry_grass"
+"," = "rubble"
+"T" = "dead_tree"
+"b" = { terrain = "dry_grass", objects = ["bones"] }
+"w" = { terrain = "dry_grass", loot = { pool = "weapons" } }
+"a" = { terrain = "dry_grass", loot = { pool = "armour" } }

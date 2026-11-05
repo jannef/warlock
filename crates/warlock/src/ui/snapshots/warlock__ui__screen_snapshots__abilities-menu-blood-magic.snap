@@ -2,33 +2,33 @@
 source: crates/warlock/src/ui/screen_snapshots.rs
 expression: "render(case, content.clone())"
 ---
- You spend 16 mana (dev).
- You give you┌─ Abilities ───────────────────────────────────────────────────────────┐
-             │                                                                       │
-             │ Birth sign                                                            │
-             │ > a  Transfixing stare  at a place you see                            │
-             │ Class                                                                 │
-             │   b  Knock              in a direction                                │
-             │   c  Scribe             a scroll of a spell you know                  │
-             │ Spells                                                                │
-             │   d  Burning hands      2d4 fire, burns one in four, 2 mana, aimed    │
-             │   e  Ray of frost       1d8 cold, numbs, 1 mana, aimed                │
-             │   f  Magic missile      3d4 force, shoves on a big hit, 2 mana, aimed │
-             │ Talents                                                               │
-             │   g  Blood magic                                                      │
-             │ Skills                                                                │
-             │   h  Decipher           no unknown scroll                             │
-             │   i  Knowledge          not usable yet                                │
-             │   j  Listen at a door   in a direction                                │
-             │   k  Fletch             you have no knife                             │
-             │   l  Whittle            you have no knife                             │
-             │ Weapon skills                                                         │
-             │   m  Shield bash        you hold no shield                            │
-             │                                                                       │
-             │ The basilisk's stare: a foe nearby that sees you slows to a crawl a   │
-             │ moment; your eyes then rest two hours.                                │
-             │                                                                       │
-             │                                                                       │
-             │ a-m or Enter use   Esc close                                          │
-             └───────────────────────────────────────────────────────────────────────┘
+ You spend 16┌─ Abilities ────────────────────────────────────────────────────────────┐
+ You give you│                                                                        │
+             │ Birth sign                                                             │
+             │ > a  Transfixing stare  at a place you see                             │
+             │ Class                                                                  │
+             │   b  Knock              in a direction                                 │
+             │   c  Scribe             a scroll of a spell you know                   │
+             │ Spells                                                                 │
+             │   d  Burning hands      2d4 fire, burns one in four, 2 mana, aimed     │
+             │   e  Ray of frost       1d8 cold, numbs, 1 mana, aimed                 │
+             │   f  Magic missile      3d4 force, shoves on a big hit, 2 mana, aimed  │
+             │   g  Blink              5 mana                                         │
+             │   h  Shatter            3d6 force, shoves on a big hit, 11 mana, aimed │
+             │ Talents                                                                │
+             │   i  Blood magic                                                       │
+             │ Skills                                                                 │
+             │   j  Decipher           no unknown scroll                              │
+             │   k  Knowledge          not usable yet                                 │
+             │   l  Listen at a door   in a direction                                 │
+             │   m  Fletch             you have no knife                              │
+             │ Weapon skills                                                          │
+             │   n  Shield bash        you hold no shield                             │
+             │                                                                        │
+             │ The basilisk's stare: a foe nearby that sees you slows to a crawl a    │
+             │ moment; your eyes then rest two hours.                                 │
+             │                                                                        │
+             │                                                                        │
+             │ a-n or Enter use   Esc close                                           │
+             └────────────────────────────────────────────────────────────────────────┘
  The Hub  ·  HP 19/24  ·  MP 136/149  ·  Lv 15  ·  08:00  ·  11 Darkening, Year 1444     ? controls

@@ -1,0 +1,8 @@
+[[talent]]
+id = "silence"
+name = "Silence"
+tree = "class"
+granted = true
+description = "Silence falls where you aim it (a spell, paid in mana): everyone it reaches can neither cast nor read nor sing for a moment."
+effects = [{ kind = "spell", spell = "silence" }]
+systems = ["spells", "mana", "status"]

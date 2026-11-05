@@ -98,6 +98,22 @@ score itself (see [Stats](stats.md)).
 Chests are kicked open the same way, and their locks are picked and opened as a door's: see
 [Chests](chests.md).
 
+## Wedging a door
+
+Anyone trained in [Woodcraft](skills.md#skill-woodcraft) can **wedge** a closed door shut: choose
+[Wedge a door](abilities.md#ability-wedge) in the abilities menu and a direction. It takes a turn
+(a [normal action](turns.md#what-actions-cost)), and the door is wedged until it is opened or broken.
+Handy for a rest or a retreat.
+
+- **A creature that opens doors cannot open a wedged one.** It kicks it instead, one kick a turn, and
+  breaks it with the chance of its [Strength](stats.md#stat-strength) in the door's sturdiness plus the wedge's
+  points, as you would kick a locked door in. Woodcraft makes the wedge hold better: +8 at Woodcraft 100,
+  +12 at 200 (and nothing at 0), and your own kicks are rolled against the same.
+- **You open it as usual**: `You pull the wedge free and open the door.` The wedge is not an item.
+- A wedge that is refused takes no time, and says why: you lack Woodcraft, there is no closed door that way,
+  or the door is already wedged.
+- Every wedge earns [Woodcraft](skills.md#skill-woodcraft) a [training mark](skills.md#getting-better).
+
 ## Secret doors
 
 Some doors are **secret**: they look like the wall around them, and are that wall, until you find
@@ -113,8 +129,7 @@ through the open doorway does not. See [Traps](traps.md#trapped-doors).
 
 Some creatures open closed doors ([kobolds](creatures.md#creature-kobold) do; [rats](creatures.md#creature-rat) do not). A locked door stops them unless they
 carry a [key](#keys) that fits it: then they unlock it as they open it, as you do. A [kobold](creatures.md#creature-kobold) guard carrying
-the key to the room it guards will walk right through. No creature kicks doors or picks locks
-(yet).
+the key to the room it guards will walk right through. No creature picks locks, and none kicks a door but a wedged one (see [Wedging a door](#wedging-a-door)).
 
 ## Where you find them
 

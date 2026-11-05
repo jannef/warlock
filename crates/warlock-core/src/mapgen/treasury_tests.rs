@@ -306,7 +306,9 @@ fn a_greater_treasure_room_holds_more() {
             .iter()
             .filter(|p| level.chests.contains_key(p))
             .count();
-        assert!((2..=4).contains(&chests), "seed {seed}: {chests} chests");
+        // Two to four drawn; a cramped room fits fewer (no chest beside a door, on the floor's
+        // loot, or cut off from the rest: `treasury::fill`).
+        assert!((1..=4).contains(&chests), "seed {seed}: {chests} chests");
         let coins = count_in(level, &cells, gold);
         assert!((80..=1200).contains(&coins), "seed {seed}: {coins} gold");
         let stones = count_in(level, &cells, gems);
