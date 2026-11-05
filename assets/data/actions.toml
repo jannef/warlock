@@ -89,6 +89,10 @@ drink = 1000
 # forage.toml's `seconds` (10 minutes), a turn of this after another.
 forage = 1000
 
+# A turn of fletching (the Fletch ability; spec §8 "Fletching"): a batch takes fletch.toml's
+# `seconds` (10 minutes), a turn of this after another.
+fletch = 1000
+
 # A turn of working an item at a forge's anvil (the Temper ability; spec §7 "Special rooms"): an
 # attempt takes `seconds` (data/temper.toml), a turn of this after another.
 temper = 1000

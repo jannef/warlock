@@ -90,8 +90,12 @@ fn every_melee_weapon_is_a_shape_by_skill_then_id() {
     let ids: Vec<&str> = (shapes.iter())
         .map(|&o| HALL.object(o).id.as_str())
         .collect();
-    assert_eq!(ids.len(), 22, "{ids:?}");
-    assert_eq!(&ids[..2], ["dagger", "stiletto"], "daggers first, by id");
+    assert_eq!(ids.len(), 23, "{ids:?}");
+    assert_eq!(
+        &ids[..3],
+        ["dagger", "knife", "stiletto"],
+        "daggers first, by id"
+    );
     for id in [
         "long_sword",
         "great_axe",

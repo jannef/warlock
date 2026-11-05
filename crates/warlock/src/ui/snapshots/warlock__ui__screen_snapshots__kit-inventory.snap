@@ -8,27 +8,27 @@ expression: "render(case, content.clone())"
 │                                                                                                  │
 │ Melee weapons                                                                                    │
 │   a - ) a short sword (+0 hit, 1d6) (wielded)                                            1.1 kg  │
+│   b - ) a knife (+0 hit, 1d3)                                                             200 g  │
 │ Missile weapons                                                                                  │
-│   b - } a short bow (+0 hit, 1d6, range 10) (readied)                                     700 g  │
+│   c - } a short bow (+0 hit, 1d6, range 10) (readied)                                     700 g  │
 │ Missiles                                                                                         │
-│   c - / 24 arrows (quivered)                                                              720 g  │
+│   d - / 24 arrows (quivered)                                                              720 g  │
 │ Body armour                                                                                      │
-│   d - [ a leather jerkin (Dv +1, Pv 1) (being worn)                                      3.5 kg  │
+│   e - [ a leather jerkin (Dv +1, Pv 1) (being worn)                                      3.5 kg  │
 │ Boots                                                                                            │
-│   e - [ a pair of leather boots (Dv +0, Pv 0) (being worn)                                 1 kg  │
+│   f - [ a pair of leather boots (Dv +0, Pv 0) (being worn)                                 1 kg  │
 │ Tools                                                                                            │
-│   f - ( a lantern (in use)                                                                400 g  │
+│   g - ( a lantern (in use)                                                                400 g  │
 │ Food                                                                                             │
-│   g - % 3 strips of dried meat                                                            450 g  │
-│   h - % 2 loaves of bread                                                                 800 g  │
+│   h - % 3 strips of dried meat                                                            450 g  │
+│   i - % 2 loaves of bread                                                                 800 g  │
 │ Coins                                                                                            │
-│   i - $ 36 gold coins                                                                     360 g  │
+│   j - $ 36 gold coins                                                                     360 g  │
 │                                                                                                  │
-│ Carrying 9 kg   ·   Your weight 79 kg (you 70 kg)                                                │
+│ Carrying 9.2 kg   ·   Your weight 79.2 kg (you 70 kg)                                            │
 │ Burdened over 17.5 kg, strained over 35 kg, overloaded over 52.5 kg                              │
 │                                                                                                  │
-│ a-i look   I or Esc close                                                                        │
+│ a-j look   I or Esc close                                                                        │
 └─ 1 Char · 2 Inv · 3 Eqp · 4 Skl · 5 Weap · 6 Mag · 7 Qst · 8 Tal · 9 Story ──────────────────────┘
-
 
  The Wildlands  ·  HP 23/23  ·  MP 4/4  ·  Sta 10/10  ·  Lv 1  ·  Lēof  ·  08:00         ? controls

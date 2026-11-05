@@ -1,0 +1,16 @@
+# A fletcher's first tries: a shaft cut by eye and a sharpened tip. It flies once, and is not sold
+# (no `kind` or `frequency`, as the flaming arrow).
+[[object]]
+id = "brittle_arrow"
+name = "brittle arrow"
+glyph = "/"
+fg = "#b8a080"
+class = "missiles"
+materials = ["wood"]
+weight = 25
+value = 0
+stackable = true
+slot = "missiles"
+ammo = "arrow"
+breaks = 100
+missile = "→"

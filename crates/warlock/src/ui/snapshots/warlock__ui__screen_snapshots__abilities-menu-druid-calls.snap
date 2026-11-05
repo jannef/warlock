@@ -2,7 +2,7 @@
 source: crates/warlock/src/ui/screen_snapshots.rs
 expression: "render(case, content.clone())"
 ---
- You learn┌─ Abilities ─────────────────────────────────────────────────────────────────┐
+ You learn┌─ Abilities ────────────────────────────────────────────────────── Page 1/2 ─┐
  You call,│                                                                             │
           │ Birth sign                                                                  │
           │ > a  Transfixing stare   at a place you see                                 │
@@ -19,16 +19,16 @@ expression: "render(case, content.clone())"
           │   j  Listen at a door    in a direction                                     │
           │   k  Pick lock           in a direction                                     │
           │   l  Forage              not usable here                                    │
+          │   m  Fletch              you have no knife                                  │
           │ Weapon skills                                                               │
-          │   m  Shield bash         you hold no shield                                 │
+          │   n  Shield bash         you hold no shield                                 │
           │ Allies                                                                      │
-          │   n  Come to heel                                                           │
-          │   o  Hold here                                                              │
-          │   p  Set on              at a place you see                                 │
+          │   o  Come to heel                                                           │
+          │   p  Hold here                                                              │
           │                                                                             │
           │ The basilisk's stare: a foe nearby that sees you slows to a crawl a moment; │
           │ your eyes then rest two hours.                                              │
           │                                                                             │
           │                                                                             │
-          │ a-p or Enter use   Esc close                                                │
+          │ a-p or Enter use   > < page   Esc close                                     │
  The Hub  └─────────────────────────────────────────────────────────────────────────────┘? controls

@@ -107,7 +107,8 @@ one chose (`new_run_screen::fresh_seed`; see `docs/dev/screens.md`); developer b
 seed field, and only they show the seed on the summary. Code comments, data comments, the spec, and
 these notes keep explaining the determinism exactly.
 
-**Starting kits** (spec §8 "Character creation", #257): the data side is `content/kit.rs`
+**Starting kits** (spec §8 "Character creation", #257; the ranger's has a knife, carried, not
+wielded, for Fletching, #1021): the data side is `content/kit.rs`
 (`KitLineSpec`, parsed with the race, class, or sign as written, a string or a table;
 `Content::load_kits` resolves them into `Kit` (`KitItem { keep: Keep, one_of, trained,
 gender, magic }`) once objects, gems, slots, and weapon skills are known, checking each

@@ -1,0 +1,51 @@
+# Fletching (spec §8 "Fletching"; docs/design/skill-uses.md §6.5 W1): making arrows and bolts, the
+# Fletch ability of the abilities menu, in Woodcraft's place among the Skills. Anyone may, anywhere,
+# trained in Woodcraft or not, with a knife carried and a launcher listed below ready. No material
+# is used up.
+#
+# A batch takes `seconds` of game time, in turns of the `fletch` action (actions.toml); a creature
+# coming into view, a message, or a blow stops it, and a batch cut short makes nothing. One that
+# runs its time rolls one Dexterity check: 2d12 + Dexterity's modifier + talents + Woodcraft's
+# `fletch` points (skills.toml) against `difficulty`, and `count` plus one for each full
+# `value_per_count` of Woodcraft. The check's margin scales that count:
+#
+#   0 or more              the whole count
+#   down to -`half_within` half, rounded up
+#   down to -`one_within`  one
+#   below                  none
+#
+# The ranger's Fletcher (talents/fletcher.toml, the effect's numbers there) changes all of this.
+#
+# Fields:
+#   seconds          how long a batch takes, in seconds (60 to 3600)
+#   difficulty       what the check must reach for the whole count
+#   count            dice: how many before Woodcraft (at least 1)
+#   value_per_count  Woodcraft's value that gives one more (1 or more)
+#   half_within      how far below the difficulty still makes half (0 or more)
+#   one_within       how far below the difficulty still makes one (at least `half_within`)
+#   plain_from       Woodcraft's value from which they come out plain, not brittle
+#   knives           the weapon skill whose weapons are knives (a stack of it carried, in the
+#                    pack, worn or wielded or neither, is a knife)
+#   [[makes]]        one row per thing a launcher's `launches` may be
+#     launches       what the launcher shoots (objects' `launches`, `ammo`), once
+#     brittle        the object made under `plain_from`: of that ammunition
+#     plain          the object made from `plain_from`: of that ammunition
+
+seconds = 600
+difficulty = 12
+count = "1d4"
+value_per_count = 25
+half_within = 3
+one_within = 6
+plain_from = 25
+knives = "daggers"
+
+[[makes]]
+launches = "arrow"
+brittle = "brittle_arrow"
+plain = "arrow"
+
+[[makes]]
+launches = "bolt"
+brittle = "brittle_bolt"
+plain = "bolt"

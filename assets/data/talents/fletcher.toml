@@ -1,0 +1,10 @@
+# The ranger's level 1 (#1021; docs/design/skill-uses.md §6.5 W1, the owner's decision): anyone may
+# fletch with a knife and a bow ready, but a ranger does it far better. Read by world/fletch.rs.
+[[talent]]
+id = "fletcher"
+name = "Fletcher"
+tree = "class"
+granted = true
+description = "You make your own arrows and bolts, and make them well: in half the time, twice as many, more surely, and never brittle."
+effects = [{ kind = "fletcher", check = 4, count_times = 2, time_percent = 50 }]
+systems = ["ranged"]
