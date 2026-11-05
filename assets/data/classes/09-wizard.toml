@@ -40,6 +40,7 @@ abilities = [
     { level = 4, talent = "knock" },
     { level = 12, talent = "scribe" },
     { level = 18, talent = "arcane_bolt" },
+    { level = 24, talent = "chain_lightning" },
     { level = 25, talent = "mage_armour" },
     { level = 32, talent = "empower" },
     { level = 40, talent = "magister" },

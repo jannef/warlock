@@ -63,7 +63,7 @@ cast path shares.
   rungs are at or below the score), `value(rung)` (`None` at 0, the base), `words()` (the wiki's
   `Intelligence 13: 3d6, 16: 4d6`), `Display` as data writes it, `MAX_RUNGS` 8, `MAX_SCORE` 40):
   one string, the stat's id then `AT VALUE` rungs separated by commas, `AT` strictly
-  ascending. `SpellData::grows: Grows { damage, heal, range, length, radius, degrees }`, each
+  ascending. `SpellData::grows: Grows { damage, heal, count, jumps, range, length, radius, degrees }`, each
   optional (`Grows::roll`, `reach`, `named`). `spell_def::grows` checks them against the
   spell's `Bases` (§6.3): a ladder only for a dimension the spell has (`damage` a damage roll,
   `heal` a heal, `range` a ray, bolt, or burst, `length` a cone or line, `radius` a burst,
@@ -658,6 +658,28 @@ What every spell of a damage type does beyond its damage (the design:
     flies its whole range: no bridge could be built), else the last it reached. A line's arm in
     `cast_damage` calls it on the line's last cell: not `cast_bolt`, which Fire breath shares. A
     cone has no world rule.
+  - `spell_type_spreads` (`world/spell_arc.rs`) in `cast_damage`, once, after the shape's arm and
+    before `spell_lands`, so `say_spell`, the riders, and the marks read every strike alike. Each
+    arm hands back what it rolled (`cast_burst`, `cast_bolt`, `cast_cone`, `cast_single`,
+    `spell_attack`), and each spread strike is `spell_strikes` at that number: no dice, no roll to
+    hit, no Evasion (`spell_hurts` is an area's). It walks `made` by index as it grows, so a creature
+    harmed, however it was struck, conducts and then arcs once; `Strike::Hit` only, on the cell
+    in its event (a dead one's too). `conducts` for every shape, `arc` for a ray, bolt, touch, or
+    line. `World::water_body` fills 8 neighbours of `LevelState::is_open_water` into a
+    `BTreeSet`, one per body per cast; a `retinue` never stands anywhere. Fire breath shares
+    `cast_bolt` and a mishap `cast_burst`, but only `cast_damage` calls this, and the turned-back
+    flight runs after it, so a reflected spell spreads nothing. The event drawn is the first
+    flight only: an arc is told by `Event::Attacked`, as the owner's Q4 and the design's
+    "Perception" have it, with no preview on aiming.
+  - `SpellData::effect.arcs` and the `count` key of `[spell.grows]` on such a spell
+    (`Grows::jumps`, whole rungs, 1 to 12; `Grows::count` stays a summon's): `Actor::spell_reach`
+    gives them as `Reach::jumps`, climbed as a reach ladder, and `reach_words` says `jumps 3`.
+    With `arcs` the reach is `ARC_REACH` (2) for every jump, certain or by the draw, and a jump
+    needs a line clear of what is opaque (the design says only "within 2 cells"; a chain through
+    a wall would strike what no one could see). `arcs` is refused at load off those four shapes
+    and on a type with no `arc`.
+  - `TalentEffect::SpellType { arc_chance, when }` (`TalentMods::arc_chance`, the highest): read
+    in `spell_type_spreads`, by the caster's talents. Conductor's. It needs no `alike` line.
 - **`World::lay_fire`** (`spell_type.rs`): the one laying of a fire on a walkable cell, longest
   wins; Blaze's `kindle` calls it, and a burning missile's `come_down` keeps its own (it adds to a
   pile). `douses` goes through `shoot.rs::put_out`, burning objects there with it.
@@ -671,8 +693,11 @@ What every spell of a damage type does beyond its damage (the design:
 - **Numbing cold** is gone (its rider is cold's). The `rider` hook on `spell_mod` stays, with no
   shipped user, for a talent that wants one (`when = ["fire"]` works beside the type's own).
 - **Determinism**: one `below(100)` per living creature harmed, only for a `chance` below 100,
-  in `spell_lands`' order. **Saves**: nothing new: a status is data, a fire is `LevelState::fires`.
+  in `spell_lands`' order; before those, one per creature harmed with someone to arc to, past the
+  certain jumps and below a chance of 100, in the order struck. **Saves**: nothing new: a status is data, a fire is `LevelState::fires`.
 - **Tests**: `world/spell_type_tests.rs` (the draw by seed, the fire-immune, the light, water, the
   numbing on hit and miss, cold ending Burning, a ray's one cell, a burst by its type, a spell's
   own field, the fire left and doused, a place's burst reading nothing, the rider hook, the words,
-  a mishap), `content/spell_type.rs` (the load checks).
+  a mishap), `world/spell_arc_tests.rs` (the arc's draw by seed, the jump back at the caster and an
+  ally, a chain's jumps and end, the wall, the pond in id order, Conductor, ice, a burst, the
+  `arcs` load checks), `content/spell_type.rs` (the load checks).

@@ -230,6 +230,7 @@ above.
 | What talents and items do to a spell (a rung, bigger dice, a bonus, a reroll, a rider) | `magic.md#how-a-spell-grows` |
 | Spell shape (bolt, burst, cone, …) | `magic.md#shapes` |
 | Spell type, what a fire or a cold spell does beyond its damage | `magic.md#spell-types` |
+| Arc, conducting through water, what an electricity spell does | `magic.md#spell-types` |
 | Burning | `status-effects.md#burning` |
 | How a spell resolves (attack, auto, area, touch) | `magic.md#how-a-spell-finds-its-target` |
 | Mishap | `magic.md#learning-spells-from-scrolls` |

@@ -45,7 +45,7 @@ marks `Use::Swim` whatever came of it; no check and no draw for one untrained or
 `frost`; dev `freeze:x,y,r`, which also shows the `frost_burst` effect of `data/effects.toml`
 through `World::frost_look`) and `World::shock` (`Shock::Heat` melts: the fireball trap, a burst
 with `heat`; `Shock::Blast(um)` shatters thinner ice, for blasts without heat, none yet; dev
-`thaw:x,y,r`) are the hooks traps (`world/trap.rs`, `docs/dev/traps.md`) and spell types (`docs/dev/spells.md`, a single cell at radius 0) call. Saved and hashed. Tests: `ice.rs`, `temperature.rs`,
+`thaw:x,y,r`) are the hooks traps (`world/trap.rs`, `docs/dev/traps.md`) and spell types (`docs/dev/spells.md`, a single cell at radius 0) call. Saved and hashed. **Water bodies**: `World::water_body(cell)` (`world/spell_arc.rs`) is the open water (`LevelState::is_open_water`) connected to a cell over 8 neighbours, filled when electricity harms a creature standing in it (`docs/dev/spells.md`): ice looks like ice, so it is not water and it parts a pond; nothing is stored. Tests: `ice.rs`, `temperature.rs`,
 `world/ice_tests.rs` (growth/melt over rests, weight, falling in, climbing out, sinking objects,
 creatures, bursts, saves, replays, a year's catch-up). Tune the look with captures of the Frost
 Grotto (hub stairs nook, the `>` below the first) and the courtyard in winter (`skip:` into
