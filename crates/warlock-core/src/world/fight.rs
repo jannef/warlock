@@ -856,6 +856,7 @@ impl World {
         }
         // Diamond soul's catch (`ascetic.rs`): a missile's hit undone for a point of ki.
         let blow = self.caught_shot(target, (missile, with), blow, events);
+        let blow = self.plain_miss_dodged(attacker, target, blow);
         events.push(Event::Attacked {
             attacker,
             target,

@@ -161,3 +161,11 @@ Listen's `hearing` (with Keen ears, capped at `MAX_ENCOUNTER_BONUS`) instead and
 
 Pending hooks:
 athletics (climbing out of pits, #128) and escape artist (pits, #128).
+
+## Tumble: plain misses
+
+A blow at the player that comes back `Strike::Missed { by: None }` becomes a dodge one time in
+four (`World::plain_miss_dodged`, `world/train.rs`, called in `fight.rs` after `caught_shot`):
+one `chance(25)` on the training stream, so the gameplay stream does not move. Misses by a
+category stay as they are; blows between creatures or from the player draw nothing
+(`docs/design/skill-uses.md` Tu1). `balance_probe/training.rs` uses the same function.

@@ -688,3 +688,39 @@ fn burdened_acts_and_journeys_train_athletics() {
     assert!(moved > 0);
     assert_eq!(marks(&w, "athletics"), Some(moved));
 }
+
+#[test]
+fn a_plain_miss_at_the_player_is_a_dodge_one_time_in_four() {
+    use crate::combat::{Blow, Category, Strike};
+    let mut w = world("yard");
+    let player = w.state.player;
+    let foe = w
+        .state
+        .actors
+        .iter()
+        .map(|a| *a.0)
+        .find(|&id| id != player)
+        .unwrap_or(player);
+    let gameplay = w.state.rng.clone();
+    let plain = Some(Blow::missed(None));
+    let mut dodges = 0;
+    for _ in 0..400 {
+        let out = w.plain_miss_dodged(foe, player, plain).expect("a blow");
+        match out.strike {
+            Strike::Missed {
+                by: Some(Category::Dodge),
+            } => dodges += 1,
+            Strike::Missed { by: None } => {}
+            s => panic!("{s:?}"),
+        }
+    }
+    assert!((60..=140).contains(&dodges), "{dodges}");
+    assert_eq!(w.state.rng, gameplay, "the gameplay stream is untouched");
+    // Misses by a category, and blows at others, draw nothing and change nothing.
+    let training = w.state.training.clone();
+    let armour = Some(Blow::missed(Some(Category::Armour)));
+    assert_eq!(w.plain_miss_dodged(foe, player, armour), armour);
+    assert_eq!(w.plain_miss_dodged(player, foe, plain), plain);
+    assert_eq!(w.plain_miss_dodged(foe, player, None), None);
+    assert_eq!(w.state.training, training);
+}
