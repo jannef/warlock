@@ -1,0 +1,34 @@
+---
+source: crates/warlock/src/ui/screen_snapshots.rs
+expression: "render(&case, content.clone())"
+---
+ Welcome to World. Press ? for controls.
+ You and a band of talkers see each other at the same moment.
+
+
+
+
+
+
+
+                            ┌─ A band of talkers ──────────────────────┐
+                            │                                          │
+                            │ You and a band of talkers see each other │
+                            │           at the same moment.            │
+                            │                                          │
+                            │           > Give them the slip           │
+                            │             Talk your way past           │
+                            │             Stand and fight              │
+                            │                                          │
+                            │ ↑/↓ choose  Enter select                 │
+                            └──────────────────────────────────────────┘
+
+
+
+
+
+
+
+
+
+ The Wildlands  ·  HP 15/15  ·  MP 9/9  ·  Sta 9/9  ·  Lv 1  ·  08:00  ·  Clear          ? controls

@@ -185,14 +185,20 @@ developer notes (CLAUDE.md, `docs/dev/`).
   difficulty + the leader's stalk + cover + the dark + rain; the leader's Willpower modifier +
   its lookout against the difficulty + the player's stalk + cover + the dark for eyes without
   darkvision + rain − a carried lit light at night): the player alone, the drop (lie in wait,
-  slip past, fight); both, met (give them the slip, fight); the party alone, ambushed (the area
+  slip past, fight); both, met (give them the slip, talk your way past, fight); the party alone, ambushed (the area
   opens at once, the player startled and one action behind); neither, nothing. A sleeping player
   hears instead (Willpower modifier + hearing + Alert against the difficulty + stalk + rain;
   made, met; failed, ambushed). A peaceful entry asks hail or pass by, a wildlife one hunt or let
   them be; an entry's `npc` dialogue is given to the members of its lead's type. The question
   must be answered: everything else but the free actions is refused. Slipping away is a
   Dexterity check (+ Survival's evade, + stalk from the drop) against its difficulty + pursuit +
-  awareness, the detour half the step's time again; failed, the fight opens close. Fights open
+  awareness, the detour half the step's time again; failed, the fight opens close. Talking past
+  (#1017) is offered only when met, to a player trained in Bluff, and only for an entry flagged
+  `talk_past` (a hostile group: the Ascmearc's footpads, its vale footpad, the duergar at Ascdūn,
+  and the fen's cultists; never a `draw`): the leader's Willpower modifier against the feint's
+  difficulty + the player's Presence modifier + their talents' Presence checks + Bluff's `feint`;
+  the leader failed, the party lets them go after a chat's time; made, the fight opens as a
+  chosen fight does. Every try marks Bluff. Fights open
   in the cell's local area, the player nearer the edge they came from the better the encounter
   went (`[positions]`), the party at its distance; a party the player got away from stays there
   and is met again as the same one. The Ascmearc's tables are its roads, vale, downs (and their

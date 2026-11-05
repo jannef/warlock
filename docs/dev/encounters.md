@@ -21,7 +21,7 @@ pedlar's offer: "The pedlar's offer" below). Keep it current with the code, as C
 - `campaigns/<id>/data/encounters/*.toml`: `[[table]]` (`id`, `when`, `rate_percent`,
   `replaces`, `[[table.entry]]`: `id`, `name`, `weight`, `when`, `group = [{ creature, count }]`,
   `lead`, `stance = hostile|peaceful|wildlife`, `draw = { pool, danger, count }` instead of a
-  `group`, `npc`), read by `content/encounter.rs::parse` from
+  `group`, `npc`, `talk_past`), read by `content/encounter.rs::parse` from
   `ContentFiles::table("encounters")` less the rules file, after the quests, sorted by campaign
   and id. A table outside every campaign is refused. `when`: `regions`, `landscapes`,
   `terrains`, `phase`, `weather` (`clear`, `overcast`, `rain`, `heavy_rain`), `level = { max }`
@@ -39,7 +39,8 @@ pedlar's offer: "The pedlar's offer" below). Keep it current with the code, as C
   `replaces` another table, entry ids unique in the campaign; a `draw` only on a hostile entry,
   without a `group` or a `lead`, its pool a branch of the campaign with a population, danger 1 to
   99, a count of 1 to 12; an `npc` only on a peaceful entry, a dialogue `npc = ID` of the
-  campaign's.
+  campaign's; `talk_past` only on a hostile entry with a `group` (never a `draw`: what is drawn
+  may be anything).
 - **`draw`** (`EncounterDraw`; `World::draw_members`): the count's dice, then `danger::draw` per
   member on the `encounters` stream, from the branch's `population` and `generic` lists
   (`Content::candidates`, the uniques met left out) with its odds, uniques and types not hostile
@@ -87,10 +88,34 @@ pedlar's offer: "The pedlar's offer" below). Keep it current with the code, as C
 4. While pending, `refuse_pending` (after `refuse_due` in `player_acts`) refuses everything but
    `encounter:CHOICE`, the level's picks, the stance, and the dev switches that take no time
    ("You must decide what to do about them."). The dialog cannot be closed (the owner, Q9; E2).
-5. `answer_encounter`: `pass` (no time); `evade` (half the step's price again whatever comes of
+5. `answer_encounter` (refused, no time, for a choice `talk_past::offered` does not list): `pass`
+   (no time); `bluff` ("Talking past" below); `evade` (half the step's price again whatever comes of
    it; a check; failed, the area opens `Close`); `ambush` (`wait_seconds` of waits); `fight`,
    `hail`, `hunt` (the `stairs` action, as `>`). The area opens after that turn, in
    `encounter_tick`, so no wait is ever spent in the area.
+
+## Talking past (#1017)
+
+Bluff's overworld use (`docs/design/skill-uses.md` §6.2 B3; `world/talk_past.rs`). The owner:
+no talking out of being caught anywhere (B2), and "be careful what to flag".
+
+- **Offered** (`talk_past::offered`, which the view, the dumps' `choices`, the dialog, and
+  `answer_encounter` all read; `Outcome::choices` stays the constant list for anyone):
+  `Choice::Bluff`, id `bluff`, "Talk your way past", between Evade and Fight, only for an entry
+  with `talk_past = true`, only in `Outcome::Met` (face to face: never the drop, a known party
+  met is as any party of the entry), and only to a player trained in a skill with the `feint`
+  benefit (Bluff; `Ability::Feint`'s test) while `data/feint.toml` loads.
+- **The check** (gameplay stream, two draws): the lead type's (`World::lead_of`) Willpower
+  modifier against `feint.toml`'s `difficulty` + the player's Presence modifier + their talents'
+  Presence checks + Bluff's `feint` points (a feint's contest, at the party's lead). The lead
+  failed: "You talk your way past.", the party lets the player go as `pass` does (nothing made),
+  and the try takes a `chat` action's price. Made: "They are not fooled.", the fight opens as
+  `fight` opens it (`How::Fight`, the `stairs` price, the same positions).
+- **Marks**: `Use::Bluffed` (`talk_past`), 100 % per try on Bluff, whatever comes of it.
+- **Flagged** (the Ascmearc, `ascmearc_encounter_tests.rs` checks exactly these):
+  `road_footpads`, `road_footpads_night`, `woods_footpads`, `vale_footpad`, `ascdun_duergar`,
+  `fen_cultists`. Not Wystan's archers, kobolds, goblins, orcs, beasts, the dead, the fen's
+  things, the troll, or any `draw`.
 
 ## Camping and foraging (#807)
 
@@ -204,18 +229,20 @@ level's picks, which `refuse_due` asks first, show over it. The messages are the
 ## Tests
 
 `content/encounter_tests.rs` (the shipped file, the all-or-none tables, ranges, a fixture table,
-each refusal); `world/encounter_tests.rs` (no draws without tables or while pending, a certain
+each refusal; #1017: `talk_past_is_only_for_a_hostile_group`); `world/encounter_tests.rs` (no draws without tables or while pending, a certain
 roll, the choices by outcome, pass by makes nothing, the positions and awareness by outcome and
 their order from the edge, the ambushing party unaware and in debt, the ambushed player
 startled once, evade both ways, the known party, a save mid-question, replays through every
 outcome, the dumps; #807: no draws resting without tables, a share, or the overworld, a rest stopped
-and never the drop for a sleeper, met and ambushed, a forage cut short, camping replays);
+and never the drop for a sleeper, met and ambushed, a forage cut short, camping replays; #1017:
+talking past offered only when flagged, met, and trained, made and failed by chance, time, marks,
+a replay);
 `world/ascmearc_encounter_tests.rs` (#806: the regions and no level gates, every land cell
 covered, the road's rate, a replay through a forced encounter of each outcome and kind, the
 pedlar's topics and his way marked, the villagers' npc, a `draw`'s members, the variant, quest,
-and days conditions); `content/encounter_tests.rs::draws_npcs_and_quest_variants_are_checked`;
+and days conditions; #1017: exactly the six entries flagged, a bard's replay on the road); `content/encounter_tests.rs::draws_npcs_and_quest_variants_are_checked`;
 the wiki's `xtask/src/wiki/encounters.rs` (`wiki/src/encounters.md`: rates, checks, odds,
 ladders, positions, the Ascmearc's tables); `magic/tests.rs::skill_reader` names `encounter.rs` for the three benefits. The app:
 `ui/screen_snapshots.rs::encounters_as_text` (`encounter-drop`, with Esc and `1` pressed over it,
-`encounter-met`, `encounter-peaceful`, `encounter-wildlife`, on a fixture table, the dialog as a
+`encounter-met`, `encounter-peaceful`, `encounter-wildlife`, `encounter-talk-past` (a bard), on a fixture table, the dialog as a
 load opens it) and `an_encounter_row_answers_it`; `dialog_screen.rs`'s required dialog.

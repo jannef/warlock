@@ -50,3 +50,6 @@ id = "fen_cultists"
 name = "cultists on the fen road"
 weight = 4
 group = [{ creature = "cultist", count = "1d3+1" }, { creature = "cult_priest", count = "1d2-1" }]
+# Robed folk on a road, who may take a stranger's word that they are one of them: one trained in
+# Bluff may talk their way past.
+talk_past = true

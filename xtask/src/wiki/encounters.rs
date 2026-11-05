@@ -423,6 +423,9 @@ fn tables(content: &Content, campaign: &str) -> String {
         );
         for e in &t.entries {
             let kind = match e.stance {
+                EntryStance::Hostile if e.talk_past => {
+                    "hostile, [talked past](encounters.md#talking-past)"
+                }
                 EntryStance::Hostile => "hostile",
                 EntryStance::Peaceful => "peaceful",
                 EntryStance::Wildlife => "wildlife",
@@ -489,6 +492,8 @@ mod tests {
             "{tables}"
         );
         assert!(!tables.contains("up to level"), "no level gates: {tables}");
+        let talked = tables.matches("[talked past]").count();
+        assert_eq!(talked, 6, "the flagged entries: {tables}");
         assert!(
             tables.contains("only for a [bard](classes.md#bard) of level"),
             "the Strange Spirit's calling: {tables}"

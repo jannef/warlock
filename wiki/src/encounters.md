@@ -78,6 +78,16 @@ you can do nothing else (but pick what a new level brings, or change your
   quicker than you. The detour takes half the step's time again, whatever comes of it. Made, you
   are on your way ("You slip away unseen.", "You lose them in the woods."); failed, they are
   onto you, and the fight starts close.
+- <a id="talking-past"></a>**Talk your way past** (when you met, if you are trained in
+  [Bluff](skills.md#skill-bluff), and only for the few parties who would rather hear a story
+  than fight: footpads on the road, in the woods, and in the vale, the duergar prospectors at
+  Ascdūn, and the cultists on the fen road; the tables below say "talked past"): their leader
+  rolls 2d12 plus its [Willpower](stats.md#stat-willpower) [modifier](stats.md#modifiers) against
+  the same difficulty a [feint](skills.md#feinting) asks, plus your
+  [Presence](stats.md#stat-presence) modifier, plus what your talents add to Presence checks,
+  plus what your Bluff adds to a feint. Short of it, "You talk your way past.": they let you go,
+  and it took as long as a word with someone. Otherwise, "They are not fooled.", and the fight
+  starts as if you had stood to fight. Every try trains Bluff.
 - **Stand and fight**: you go to meet them in the cell's [local area](overworld.md#local-areas).
 - **Hail them** or **Pass by** (travellers who mean you no harm): hailed, you meet them in the
   local area, where you can [talk](npcs.md#chatting) to them as to anyone.

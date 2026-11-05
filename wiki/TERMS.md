@@ -94,6 +94,7 @@ above.
 | Encounter, meeting someone on the way, its chance | `encounters.md`, `encounters.md#the-chance-of-meeting-someone` |
 | Lookout, stalk, having the drop, ambushed, passing each other by | `encounters.md#who-sees-whom` |
 | Lying in wait, slipping past, giving them the slip, hailing, hunting | `encounters.md#deciding-what-to-do` |
+| Talking your way past a party (Bluff's overworld use) | `encounters.md#talking-past` |
 | Camping (resting on the overworld), the sleeper's lookout | `encounters.md#camping-and-foraging` |
 | An encounter table | `encounters.md#the-ascmearcs-encounters` (a table: `encounters.md#encounter-table-ID`) |
 | The Ascmearc and its places | `ascmearc.md#the-places` |
