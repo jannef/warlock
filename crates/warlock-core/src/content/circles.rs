@@ -13,7 +13,7 @@
 //! Load-time checks: every row's status exists and has `seen` (a circle shows only what look mode
 //! may say); its school is one of the seven and has a colour and a `circle_<school>` light; the
 //! status is a buff or hex spell's (which says whether its circle is a buff's or a hex's), and
-//! every buff or hex spell's status has a row.
+//! every buff or hex spell's status has a row but a sleep's (`sleeps`: never circled).
 
 use super::{Content, ContentError, LightId, School, SpellPurpose, StatusId};
 use crate::color::Rgb;
@@ -125,7 +125,11 @@ pub(super) fn parse(
             SpellPurpose::Hex => true,
             _ => continue,
         };
-        if let Some((status, _)) = spell.effect.status {
+        // Asleep is never circled (docs/design/buff-circles.md §9: a den's sleepers would
+        // glow), Slumber's either.
+        if let Some((status, _)) = spell.effect.status
+            && !content.status(status).sleeps
+        {
             spell_kind.entry(status).or_insert((hex, &spell.id));
         }
     }
@@ -221,7 +225,7 @@ mod tests {
         assert_eq!(row("webbed"), Some((School::Transmutation, true)));
         assert_eq!(row("ill_wished"), Some((School::Enchantment, true)));
         assert_eq!(row("fortified"), None, "a potion's boost has no circle");
-        assert_eq!(circles.rows().len(), 12);
+        assert_eq!(circles.rows().len(), 19);
         assert_eq!(circles.color(School::Abjuration).to_string(), "#80b4e0");
     }
 
