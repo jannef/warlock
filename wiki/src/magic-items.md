@@ -139,7 +139,7 @@ Warmth*, *of the Adder*, *of the Storm*, *of Glass*, *of the Anvil*, and *of the
 types](damage-types.md)). The casters'
 suffixes (of the Adept, of Thrift, of the Magus, of Farcasting, of Lingering, of Siphoning, of
 Wands) are told on the [Magic](magic.md) and [Mana](mana.md) pages: *of Wands* makes the [wands](magic.md#wands) you use cast a
-rung or two higher, and *of the Adept* raises your [caster level](magic.md#caster-level), which is how far your learning
+rung or two higher, and *of the Adept* raises your [caster level](magic.md#caster-level), which no longer decides how far your learning
 reaches (it never changes what a spell does or costs); of Breath, of Ease, and of the
 Hunt help [stamina](resources.md#resource-stamina). *Of Fury*, *of Steadiness*, *of Stillness*, *of Guile*, and *of the Muse* raise
 the most [rage](resources.md#rage), [focus](resources.md#resource-focus), [ki](resources.md#resource-ki), [openings](resources.md#resource-openings), or [inspiration](resources.md#resource-inspiration) you can hold: only [berserkers](classes.md#berserker), [rangers](classes.md#ranger), [ascetics](classes.md#ascetic),

@@ -375,11 +375,24 @@ cast path shares.
     time lost, scroll kept (design §14 q1, the default). Done: the scroll is found again by
     object (positions may shift), the `study` use is trained, the odds are taken now, the
     scroll used up (`use_scroll`, never Scroll savant's keeping: §14 q7, decided no), then the check.
-  - **Odds** (`study_odds(actor, content, character, caster_level, spell) -> Odds`, pure;
-    `World::player_study_odds`): `Odds::overreach` = the spell's level − the caster level; at 0
+  - **Learning, the number** (`Actor::learning(content) -> Option<i32>`, #987,
+    `docs/design/no-caster-level.md` §2): the `learn` benefit (`skills::Effect::Learn`, Spellcraft's
+    in `data/skills.toml`; ceiling `MAX_SPELL_LEVEL`) through `Actor::skill_effect`, so skill
+    affixes and the talents' `skill` bonuses count, at least 1; `None` when
+    `Skills::trains_effect(Effect::Learn)` is false, whatever bonuses are worn. `None` means no
+    learning at all: `study_odds` gives none, `PerceptionView::studies` lists nothing,
+    `PerceptionView::can_learn` is false (the study list says `world::UNTRAINED` instead of its
+    empty words), `start_study` refuses with `UNTRAINED` after the other refusals and before any
+    time. The dev `progress` layer prints `learning 36 (Spellcraft 108)` (the trained value,
+    before what items and talents add) or `cannot learn: not trained in Spellcraft`. Study is no
+    ability, so the `abilities` layer and `Unavailable` have no row for it. Caster level is not
+    read here any more; a class's granted spells (`TalentMods::has_spell`) never read this.
+    Starting Spellcraft is the class files' (`docs/dev/character-creation.md`).
+  - **Odds** (`study_odds(actor, content, character, spell) -> Option<Odds>`, pure;
+    `World::player_study_odds`): `Odds::overreach` = the spell's level − the learning; at 0
     or less `check: None` (certain, no draw), unless the spell's `study_difficulty`
     (`SpellData::study_difficulty`, −20 to 40, default 0; the owner's Q7 of #828: the calls'
-    scrolls are very hard to learn) is above 0, which makes it a check at any caster level with
+    scrolls are very hard to learn) is above 0, which makes it a check at any learning with
     the overreach counted as at least 0; else `(bonus, difficulty)`: Intelligence
     modifier + `skill_effect(Effect::Study)` + the class's affinity with the school +
     `TalentMods::study_bonus`, against `StudyRules::difficulty(overreach′, known levels)`, where

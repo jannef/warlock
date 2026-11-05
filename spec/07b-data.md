@@ -129,7 +129,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
   flagstones, rubble, rocky ground, boulders, and the like), `stains` (whether blood stains it,
   §8 "Blood"; default true; false for water, running water, lava, fountains, braziers, wall
   torches, solid rock, and the overworld's river and lake), and for hearing a `step_noise` (how loud steps onto
-  it are, in percent of the walker's footsteps, 0 to 1000; default 100), a door's `toggle_noise`
+  it are, in percent of the walker's footsteps, 0 to 1000; default 100), `swim` (deep water: not
+  walkable, transparent, no freeze, but a trained swimmer may dive in, §8 "Skills": Swim; default
+  false), a door's `toggle_noise`
   (how loud opening the closed door or closing the open one is, at most 300; default 0, silent;
   only doors), and a `muffle` (the loudness a sound loses entering the cell, at most 300; default
   0, but solid terrain blocks sound unless it has one). A closed door may break when kicked

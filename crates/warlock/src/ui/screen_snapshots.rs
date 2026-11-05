@@ -1155,6 +1155,7 @@ const CASES: &[Case] = &[
     Case {
         name: "scroll-study-list",
         scenario: "traps",
+        character: Some("human,female,wizard"),
         actions: "move:E pickup identify",
         keys: Some("L"),
         ..BASE
@@ -1162,6 +1163,7 @@ const CASES: &[Case] = &[
     Case {
         name: "scroll-study-dialog",
         scenario: "traps",
+        character: Some("human,female,wizard"),
         actions: "move:E pickup identify",
         keys: Some("L a"),
         ..BASE
@@ -1169,7 +1171,17 @@ const CASES: &[Case] = &[
     Case {
         name: "scroll-study-none",
         scenario: "traps",
+        character: Some("human,female,bard"),
         actions: "move:E pickup",
+        keys: Some("L"),
+        ..BASE
+    },
+    // A character not trained in Spellcraft is told so, whatever they carry.
+    Case {
+        name: "scroll-study-untrained",
+        scenario: "traps",
+        character: Some("human,male,warrior"),
+        actions: "move:E pickup identify",
         keys: Some("L"),
         ..BASE
     },
@@ -1535,6 +1547,21 @@ fn walking_into_what_offers_an_action_as_text() {
         };
         insta::assert_snapshot!(case.name, render(&case, content.clone()));
     }
+}
+
+/// #1019: a step into deep water asks, always, in the one dialog. Stay back is selected first.
+#[test]
+fn diving_into_deep_water_as_text() {
+    let content = Arc::new(Content::builtin().expect("content"));
+    let case = Case {
+        name: "deep-water-dialog",
+        scenario: "quarry",
+        character: Some("lizardfolk,female,warrior"),
+        actions: "move:E*27 move:S",
+        keys: Some("Right"),
+        ..BASE
+    };
+    insta::assert_snapshot!(case.name, render(&case, content));
 }
 
 /// Where the player stands and how many actions were applied.

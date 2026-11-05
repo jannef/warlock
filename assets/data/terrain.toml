@@ -1051,6 +1051,22 @@ landscape = "lake"
 anim = { kind = "wave", speed = 0.15, amount = 0.06 }
 stains = false
 
+# Deep water (spec §8 "Skills": Swim): not walkable, so it stays out of paths, travel, spawning,
+# teleports, and landings; `swim` lets a trained swimmer dive in, and nothing else. The overworld's
+# `lake` looks the same and stays as it is: nobody swims at map scale. It does not freeze.
+[[terrain]]
+id = "deep_water"
+name = "deep water"
+glyph = "~"
+fg = "#3a74c8"
+bg = "#061226"
+walkable = false
+swim = true
+move_cost = 200
+step_noise = 200
+anim = { kind = "wave", speed = 0.15, amount = 0.06 }
+stains = false
+
 [[terrain]]
 id = "road"
 name = "road"

@@ -34,7 +34,8 @@
 #                 "appraise" (something you carry told for what it is: "identify" below),
 #                 "intimidate" (a war cry roared or a foe threatened, whatever comes of it),
 #                 "song" (a song sung, whatever it does), "wade" (a step wading through water
-#                 or marsh), "swim" (a Swim check, whatever comes of it). Marks gather until a level-up roll on the skill spends them ([ladder]
+#                 or marsh), "swim" (a Swim check, whatever comes of it), "stroke" (a step in deep water, whatever comes of
+#                 it). Marks gather until a level-up roll on the skill spends them ([ladder]
 #                 below). Only the player trains, for now.
 #   benefit       what it gives, by its value: a list of { effect = EFFECT, ... } growing either
 #                 by `steps` (one for each value reached, then one more for every `every` points
@@ -369,9 +370,14 @@ name = "Spellcraft"
 description = "Understanding spells: how they are woven and what they do."
 kind = "rules"
 mark = [{ on = "study", chance = 100 }]
-# Studying a spell from a scroll (spec §8 "Spells"): its value / 10 off the study check's
-# difficulty, +10 at 100, +20 at 200.
-benefit = [{ effect = "study", curve = [[0, 0], [200, 20]] }]
+# Learning a spell from a scroll (spec §8 "Spells": "Learning"): `learn` is the spell level up to
+# which a scroll teaches for certain, 10 at 60, 30 at the soft cap, the last spell level at 150
+# (at least 1 for anyone trained in the skill; those who are not cannot learn from a scroll at
+# all). `study` is the skill's value / 10 off the check above that, +10 at 100, +20 at 200.
+benefit = [
+    { effect = "learn", curve = [[0, 0], [10, 0], [60, 10], [100, 30], [150, 70]] },
+    { effect = "study", curve = [[0, 0], [200, 20]] },
+]
 
 [[skill]]
 id = "spot"
@@ -436,9 +442,10 @@ id = "swim"
 name = "Swim"
 description = "Staying afloat and making headway in deep water."
 kind = "rules"
-mark = [{ on = "wade", chance = 10 }, { on = "swim", chance = 100 }]
+mark = [{ on = "wade", chance = 10 }, { on = "swim", chance = 100 }, { on = "stroke", chance = 25 }]
 # Percent of what wading adds to a step that is spared, under Swimmer's and Undertow's all of it;
-# and points added to the Swim check of a plunge through the ice (made: half its hit points).
+# and points added to the Swim check of a plunge through the ice (made: half its hit points) and
+# of a step in deep water (made: the step; data/swim.toml).
 benefit = [
     { effect = "wade", curve = [[0, 0], [100, 60], [200, 100]] },
     { effect = "swim", curve = [[0, 0], [100, 8], [200, 12]] },

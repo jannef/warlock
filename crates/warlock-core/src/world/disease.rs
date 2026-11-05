@@ -114,11 +114,12 @@ impl World {
     /// that they do not carry, one draw for its chance (`per_hour` percent an hour, by the
     /// step's length; none when it is sure), then exposure. Creatures do not catch diseases
     /// from the land, nor does one with Nature's ward (no draw). A wading step may also earn Swim
-    /// a mark, whoever wades ([`Use::Wade`]).
+    /// a mark, whoever wades ([`Use::Wade`]); deep water has marks of its own (`swim.rs`).
     pub(super) fn wade(&mut self, terrain: TerrainId, seconds: u64) {
         let player = self.state.player;
         let content = self.content.clone();
-        if self.wading_step(content.terrain(terrain)) && self.trains(Use::Wade) {
+        let def = content.terrain(terrain);
+        if self.wading_step(def) && !def.swim && self.trains(Use::Wade) {
             self.train(Use::Wade);
         }
         // A strong swimmer (spec §8 "Birth sign") never catches anything wading, nor does a
