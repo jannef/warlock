@@ -213,6 +213,14 @@ Each spell that rolls (harm or healing) of the schools the trained caster knows 
 
 | Spell (level, res) | L | rung | school rank | roll | hexed | mana / pool |
 |---|---|---|---|---|---|---|
+| Burning hands (1, area) | 10 | 2 | 5–6 (Sniper 5–6) | 3d5 1s again, 9.1 (rank 0: 2d4, 5.0) | – | 2 (3) / 104 |
+| Burning hands (1, area) | 20 | 2 | 7 (Sniper 7) | 3d5 1s again, 10.3 (rank 0: 2d4, 5.0) | – | 2 (3) / 213 |
+| Burning hands (1, area) | 30 | 2–3 | 8 (Sniper 8–9) | 3d5 1s and 2s again, 11.7 (rank 0: 2d4, 5.3) | – | 2 (3) / 334 |
+| Burning hands (1, area) | 60 | 3 | 10 (Sniper 10) | 4d6+2 1s and 2s again, 18.7 (rank 0: 2d4+2, 7.0) | – | 1 (3) / 748 |
+| Grave breath (1, area) | 10 | 2 | 0 (Sniper 5–6) | 2d4, 5.0 (rank 0: 2d4, 5.0) | – | 3 (3) / 104 |
+| Grave breath (1, area) | 20 | 2–3 | 0 (Sniper 7) | 2d4+2, 5.7 (rank 0: 2d4+2, 5.7) | – | 3 (3) / 213 |
+| Grave breath (1, area) | 30 | 2–3 | 0 (Sniper 8–9) | 2d4+2, 6.7 (rank 0: 2d4+2, 6.7) | – | 3 (3) / 334 |
+| Grave breath (1, area) | 60 | 3 | 0 (Sniper 10) | 2d4+2, 7.0 (rank 0: 2d4+2, 7.0) | – | 1 (3) / 748 |
 | Ray of frost (1, attack) | 10 | 1 | 5–6 (Sniper 5–6) | 1d9 1s again, 7.3 (rank 0: 1d8, 4.5) | – | 1 (1) / 103 |
 | Ray of frost (1, attack) | 20 | 1 | 7 (Sniper 7) | 2d9 1s again, 11.0 (rank 0: 1d8, 4.5) | – | 1 (1) / 213 |
 | Ray of frost (1, attack) | 30 | 1 | 8 (Sniper 8–9) | 2d9 1s and 2s again, 12.5 (rank 0: 1d8, 4.5) | – | 1 (1) / 334 |
@@ -225,10 +233,6 @@ Each spell that rolls (harm or healing) of the schools the trained caster knows 
 | Magic missile (3, auto) | 20 | 2 | 7 (Sniper 7) | 4d5 1s again, 13.7 (rank 0: 3d4, 7.5) | – | 2 (3) / 213 |
 | Magic missile (3, auto) | 30 | 2–3 | 8 (Sniper 8–9) | 4d5 1s and 2s again, 15.2 (rank 0: 3d4, 7.7) | – | 2 (3) / 334 |
 | Magic missile (3, auto) | 60 | 3 | 10 (Sniper 10) | 5d6+1 1s and 2s again, 21.8 (rank 0: 3d4+1, 8.5) | – | 1 (3) / 744 |
-| Burning hands (4, area) | 10 | 2 | 5–6 (Sniper 5–6) | 3d5 1s again, 11.3 (rank 0: 3d4, 7.5) | – | 5 (6) / 103 |
-| Burning hands (4, area) | 20 | 2 | 7 (Sniper 7) | 4d5 1s again, 13.7 (rank 0: 3d4, 7.5) | – | 5 (6) / 213 |
-| Burning hands (4, area) | 30 | 2–3 | 8 (Sniper 8–9) | 4d5 1s and 2s again, 15.3 (rank 0: 3d4, 7.8) | – | 5 (6) / 334 |
-| Burning hands (4, area) | 60 | 3 | 10 (Sniper 10) | 5d6+2 1s and 2s again, 22.8 (rank 0: 3d4+2, 9.5) | – | 1 (6) / 744 |
 | Cause wounds (4, touch) | 10 | 1–2 | 0 (Toucher 1–2) | 2d8, 7.7 (rank 0: 2d8, 7.7) | – | 3 (3) / 103 |
 | Cause wounds (4, touch) | 20 | 2 | 0 (Toucher 3) | 2d8, 9.0 (rank 0: 2d8, 9.0) | – | 3 (3) / 213 |
 | Cause wounds (4, touch) | 30 | 2–3 | 0 (Toucher 4–5) | 2d8+1, 10.3 (rank 0: 2d8, 9.3) | – | 3 (3) / 334 |
@@ -301,6 +305,10 @@ The three tables are #905's run (Malison's hexed column: a damage spell's mean o
 
 | Spell (level, res) | L | rung | school rank | roll | hexed | mana / pool |
 |---|---|---|---|---|---|---|
+| Grave breath (1, area) | 10 | 2 | 6–7 (Sniper 2–4) | 2d4+2 1s again, 7.8 (rank 0: 2d4, 5.0) | – | 2 (3) / 90 |
+| Grave breath (1, area) | 20 | 2–3 | 7–9 (Sniper 6–7) | 2d4+4 1s again, 10.1 (rank 0: 2d4+2, 6.7) | 13.1 | 2 (3) / 195 |
+| Grave breath (1, area) | 30 | 3 | 9–10 (Sniper 8–9) | 3d4+5 1s and 2s again, 14.3 (rank 0: 2d4+2, 7.0) | 17.3 | 2 (3) / 311 |
+| Grave breath (1, area) | 60 | 3 | 10 (Sniper 9–10) | 3d4+6 1s and 2s again, 15.0 (rank 0: 2d4+2, 7.0) | 18.0 | 2 (3) / 708 |
 | Cause wounds (4, touch) | 10 | 1–2 | 6–7 (Toucher 6–7) | 2d8+3 1s again, 12.4 (rank 0: 2d8, 8.3) | – | 2 (3) / 89 |
 | Cause wounds (4, touch) | 20 | 2 | 7–9 (Toucher 6–9) | 2d8+3 1s again, 16.6 (rank 0: 2d8, 9.0) | 19.6 | 2 (3) / 193 |
 | Cause wounds (4, touch) | 30 | 2–3 | 9–10 (Toucher 6–10) | 3d8+4 1s and 2s again, 21.6 (rank 0: 2d8, 10.0) | 24.6 | 2 (3) / 308 |
@@ -327,11 +335,13 @@ The three tables are #905's run (Malison's hexed column: a damage spell's mean o
 
 The trained caster's school and caster style as their casting trained them (`balance_probe/schools.rs`): each day of each level, one pool spent on the pace spell (of the school's spells, the most a cast among those costing at most a fifth of the pool, never one cast only under the open sky; for the priest a heal, at most one a kill), every cast landing on a monster of the caster's level through `World::practise`. Each row: the pace spell over the level before and its cost (seed 1's); casts a day from the pool, and the spell casts a day the same level's fights took (the stat training's careers, which refill the pool before every cast; the priest's one a kill); the school's rank and the caster style's at the level (the seeds' range); and the pool check, the pool over a single-target spell of the caster's own level (its base mana: the level; no rank's cut, no talent).
 
+The level 1 row has no level before it and practises nothing: it says what a starting caster's first pool buys of the spells they know (`schools::first_spell`: an area before a single target, then the most mean roll; a healer's heal), #979. These level 1 rows and the Burning hands and Grave breath rows of "Spells" are #979's run; the other rows of these tables are left as they were, so as not to mix that PR's numbers with what other PRs moved since the last full update.
+
 **Wizard** (evocation)
 
 | L | pace spell (mana) | casts a day: pool / fights | school rank | style rank | pool / level-L casts |
 |---|---|---|---|---|---|
-| 1 | – | 0.0 / 0.0 | 2 | – | 16 / 1 = 16.5 |
+| 1 | Burning hands (3) | 5.7 / 0.0 | 2 | Sniper 1 | 16 / 1 = 16.5 |
 | 5 | Scorching ray (7) | 5.8 / 122.5 | 3–4 | Sniper 3–4 | 51 / 5 = 10.3 |
 | 10 | Scorching ray (6) | 11.3 / 217.4 | 5–6 | Sniper 5–6 | 102 / 10 = 10.2 |
 | 15 | Flame (27) | 5.0 / 281.1 | 6 | Sniper 6 | 156 / 15 = 10.4 |
@@ -345,7 +355,7 @@ The trained caster's school and caster style as their casting trained them (`bal
 
 | L | pace spell (mana) | casts a day: pool / fights | school rank | style rank | pool / level-L casts |
 |---|---|---|---|---|---|
-| 1 | – | 0.0 / 0.0 | 1 | – | 13 / 1 = 13.0 |
+| 1 | Mend (1) | 13.0 / 0.0 | 1 | Toucher 1 | 13 / 1 = 13.0 |
 | 5 | Cure wounds (2) | 16.2 / 42.0 | 3–4 | Toucher 3–4 | 39 / 5 = 7.9 |
 | 10 | Cure wounds (1) | 68.2 / 73.0 | 7 | Toucher 7–8 | 78 / 10 = 7.8 |
 | 15 | Cure wounds (1) | 97.8 / 98.5 | 9 | Battle caster 8–9 | 119 / 15 = 7.9 |
@@ -359,7 +369,7 @@ The trained caster's school and caster style as their casting trained them (`bal
 
 | L | pace spell (mana) | casts a day: pool / fights | school rank | style rank | pool / level-L casts |
 |---|---|---|---|---|---|
-| 1 | – | 0.0 / 0.0 | 1 | – | 13 / 1 = 13.3 |
+| 1 | Grave breath (3) | 4.0 / 0.0 | 1 | Sniper 0 | 13 / 1 = 13.0 |
 | 5 | Cause wounds (3) | 11.3 / 126.7 | 3 | Toucher 3–4 | 43 / 5 = 8.6 |
 | 10 | Blight (16) | 20.7 / 237.4 | 6–7 | Sniper 3–7 | 89 / 10 = 8.9 |
 | 15 | Blight (15) | 34.5 / 347.4 | 7–8 | Sniper 5–9 | 140 / 15 = 9.3 |

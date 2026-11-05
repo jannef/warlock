@@ -191,10 +191,11 @@ fn every_caster_has_its_table_by_level_sixty() {
         ),
         (
             "witch",
-            3,
+            4,
             vec![
                 "Herb lore",
                 "Evil eye",
+                "Grave breath",
                 "Familiar",
                 "Hex of weakness",
                 "Cackle",
@@ -217,7 +218,12 @@ fn every_caster_has_its_table_by_level_sixty() {
         assert_eq!(class_rows(&w), rows, "{class} at 60");
     }
     let mut w = world("wizard");
-    let first = ["Scroll adept", "Ray of frost", "Arcane training"];
+    let first = [
+        "Scroll adept",
+        "Ray of frost",
+        "Burning hands",
+        "Arcane training",
+    ];
     assert_eq!(class_rows(&w), first);
     reach(&mut w, 12);
     assert_eq!(
@@ -225,13 +231,67 @@ fn every_caster_has_its_table_by_level_sixty() {
         [
             "Scroll adept",
             "Ray of frost",
+            "Burning hands",
             "Arcane training",
             "Magic missile",
             "Knock",
-            "Burning hands",
             "Scribe"
         ]
     );
+}
+
+/// The wizard's and the witch's first harm (#979): known at level 1, 3 mana, and everyone in the
+/// fan is hurt by the one roll, with no hit roll to miss; whoever stands aside is not.
+#[test]
+fn a_starting_caster_breathes_a_short_fan_that_needs_no_hit_roll() {
+    for (class, spell) in [("wizard", "burning_hands"), ("witch", "grave_breath")] {
+        for seed in 0..12 {
+            let mut w = world(class);
+            w.state.rng = crate::rng::Rng::gameplay(seed);
+            let id = w.content().spell_id(spell).expect("the spell");
+            assert!(w.state.player().knows_spell(w.content(), id), "{class}");
+            let mine = kobold_at(&mut w, (1, 0), 100);
+            let yours = kobold_at(&mut w, (2, 1), 100);
+            let theirs = kobold_at(&mut w, (3, -1), 100);
+            let aside = kobold_at(&mut w, (0, 2), 100);
+            let here = w.player_pos();
+            let mana = w.state.player().mana;
+            let out = w.apply(&Action::Cast(
+                spell.into(),
+                Some(Pos::new(here.x + 3, here.y)),
+            ));
+            assert!(out.took_turn, "{class}: {:?}", said(&w));
+            assert_eq!(mana - w.state.player().mana, 3, "{class}'s {spell}");
+            let lost = |id: ActorId| 100 - w.state.actors[&id].hp;
+            assert!(lost(mine) >= 1, "{class}: {:?}", said(&w));
+            assert_eq!(lost(mine), lost(yours), "{class}: one roll for the fan");
+            assert_eq!(lost(mine), lost(theirs), "{class}: one roll for the fan");
+            assert_eq!(lost(aside), 0, "{class}: beside the fan");
+        }
+    }
+}
+
+/// The size of it (#979): a pool buys several casts, and at the same price Magic missile always
+/// rolls more, a target at a time, and reaches further.
+#[test]
+fn the_first_fan_does_not_outclass_magic_missile() {
+    let content = BUILTIN.clone();
+    let rules = content.spell_rules().expect("the cost table");
+    let def = |id: &str| content.spell(content.spell_id(id).expect("a spell"));
+    let missile = def("magic_missile");
+    for fan in ["burning_hands", "grave_breath"] {
+        let fan = def(fan);
+        assert_eq!(rules.mana(fan, 0), rules.mana(missile, 0), "{}", fan.id);
+        assert!(i32::from(fan.level) <= 1, "{} from level 1", fan.id);
+        assert!(fan.length.map(i32::from) < missile.range.map(i32::from));
+        let rungs = |d: &crate::content::SpellData| {
+            (0..=3)
+                .map(|r| d.roll_at(r).expect("a roll").to_string())
+                .collect::<Vec<_>>()
+        };
+        assert_eq!(rungs(fan), ["1d4", "1d6", "2d4", "2d4+2"], "{}", fan.id);
+        assert_eq!(rungs(missile), ["1d4", "2d4", "3d4", "3d4+1"]);
+    }
 }
 
 #[test]
@@ -249,6 +309,8 @@ fn the_spells_are_abilities_by_level() {
             "Evil eye",
             "Light",
             // Level 1.
+            "Burning hands",
+            "Grave breath",
             "Mend",
             "Ray of frost",
             "Spark",
@@ -260,7 +322,6 @@ fn the_spells_are_abilities_by_level() {
             "Hex of weakness",
             "Magic missile",
             // Level 4.
-            "Burning hands",
             "Cause wounds",
             // Level 5.
             "Call of the wild",

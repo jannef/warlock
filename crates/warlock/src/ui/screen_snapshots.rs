@@ -734,7 +734,7 @@ const CASES: &[Case] = &[
         character: Some("gnome,male,wizard"),
         actions: "xp:1000000 levelup:auto afflict:keen",
         screen: Some("abilities"),
-        keys: Some("Down Down Down"),
+        keys: Some("Down Down Down Down"),
         ..BASE
     },
     // A bard of level 25 with too little mana (#244): Throw your voice aimed at a place, Inspire

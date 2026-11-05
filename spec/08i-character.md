@@ -1279,11 +1279,12 @@ developer notes (CLAUDE.md, `docs/dev/`).
     Pack leader; its scroll is very hard to learn (`study_difficulty` 8, 10, 12).
   - **Wizard**: Scroll adept (reading −50 %; the spell scrolls read a rung higher, scrolls only:
     the spell scaling design, decision 12),
-    Ray of frost (level 1, at 1: a ray that rolls to hit, 1d6 cold; 1 mana), Arcane training
+    Ray of frost (level 1, at 1: a ray that rolls to hit, 1d6 cold; 1 mana), Burning hands
+    (level 1, at 1, #979: a cone of 3 cells, no hit roll, 1d4 fire, its ladder Intelligence 13:
+    1d6 to 22: 2d4+2; 3 mana, its own price), Arcane training
     (at 1: caster level +1 per 5 character levels, `caster_level` with `per_levels`), Magic missile
     (level 3, at 3: never misses, 1d4 force, its ladder Intelligence 13: 2d4 to 22: 3d4+1; 3
-    mana), Burning hands (level
-    4, at 12: a cone of 3 cells, 1d4 fire, its ladder to 3d4+2; 6 mana), Arcane bolt (level 6, at
+    mana), Arcane bolt (level 6, at
     18: a line of 6 cells, 2d6 force, its ladder to 3d6+4; 11 mana), Scribe (at 12: a scroll of
     a spell known written on a blank scroll, three times its mana; §8 "Scrolls"), Mage armour (Deflection +2 in no body armour),
     Empower (`spell_mod { rungs = 1 }`: its spells a rung higher on their ladders; spells' mana
@@ -1293,6 +1294,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     come from the Scholar and Spellcraft trees.
   - **Witch**: Herb lore (rotten food −50 %, a corpse's `on_eat` harm and vomiting never, the
     angelica root heals 1d6), Evil eye (level 0, at 1: Hexed 1 min a degree: −2 to hit; 1 mana),
+    Grave breath (level 1, at 1, #979: a cone of 3 cells, no hit roll, 1d4 necrotic, its ladder
+    Willpower 13: 1d6 to 22: 2d4+2; 3 mana, its own price),
     Hex of weakness (level 3, at 3: Weakened 2 min a degree: St −2, Dx −2; 3 mana), Cackle (at
     6, #904: `use:cackle`, nothing to aim, the time of a cast, no mana or cooldown; a voice 60
     loud, `Act::Cackle`; every effect on a creature the player's perception sees whose status a
