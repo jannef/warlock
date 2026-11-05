@@ -108,6 +108,32 @@ On the first floor you feel cold air breathing up from the mound.
 
 {{#include generated/dungeon-floors.md}}
 
+### Grundlēas
+
+**Grundlēas**, the groundless, has no last floor, and it forgets. Anyone may walk there and go
+down. Every staircase, up or down, leads to a floor that has never been there before: whatever
+you left on the floor behind you is gone for good, every creature, [pile](objects.md#piles), and
+[chest](chests.md), and so is your memory of it. Going down and straight back up brings you to a
+different floor, standing on a staircase down; twenty floors down is twenty new floors back up.
+Up from the first floor you come out on the overworld.
+
+{{#include generated/dungeon-endless.md}}
+
+Each floor's [danger](#who-lives-there-and-how-many) is its depth. Nothing lives here of its own:
+every draw is a [stray](#who-lives-there-and-how-many), so whatever may stray in the Ascmearc comes
+at its danger. No creature stands higher than the top of that roster, so from the floor in the
+table on, the draws stay as they are while the floors go on. [Items](magic-items.md) stop improving
+where the [item level](magic-items.md#finding-them) ends. The [locks](doors.md#locked-doors) and the hidden things are harder for every floor down,
+without end. Its [traps](traps.md) are [arrows](traps.md#trap-arrow), [spears](traps.md#trap-spear),
+[pits](traps.md#trap-pit), and [alarms](traps.md#trap-alarm); it is [cold](temperature.md) (6 °C), and it has
+no [shops](shops.md).
+
+A floor pays [experience](experience.md#discovery) for arriving only if it is deeper than any you have reached here.
+
+Your [allies](allies.md) come with you as anywhere else. Those too far away stay, and that is the
+last of them; your [companion](allies.md#companions) or [familiar](allies.md#familiars) is never left, wherever it stands.
+A [named creature](creatures.md) on a floor you leave has not met its end, and may turn up again.
+
 ### Fennmynster
 
 **Fennmynster**, the fen minster, is what is left of a minster that sank into the marsh of

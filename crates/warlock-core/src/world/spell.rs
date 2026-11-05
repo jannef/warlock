@@ -15,7 +15,8 @@
 //! **Casting** ([`World::cast_burst`], [`World::cast_bolt`]): the one place a burst or a bolt
 //! does what it does, for traps (spec §8 "Traps") and scrolls (spec §8 "Scrolls") alike: the
 //! effect's event, one roll of its damage for everyone it reaches (in ascending actor id order),
-//! then a burst's blast against walls and its heat or frost. Only who cast it differs
+//! then a burst's blast against walls and its heat or frost (its own, else its spell type's,
+//! `spell_type.rs`, for an actor's). Only who cast it differs
 //! ([`Caster`]): a trap's blows are its own and its kills no one's; an actor's (the player
 //! reading a scroll) are theirs, and so are its kills, which earn them experience.
 
@@ -268,7 +269,26 @@ impl World {
         if burst.blast > 0 {
             self.blast(center, radius, burst.blast, events);
         }
-        match burst.ice {
+        // A spell's type (`spell_type.rs`), a spell's own `heat` or `frost` standing in for its;
+        // a trap's or a place's burst is no spell.
+        let typed = matches!(caster, Caster::Actor(_)).then_some(burst.kind);
+        let rule = typed.and_then(|kind| self.content.spell_type(kind));
+        let ice = burst.ice.or(rule.and_then(|r| r.ice));
+        self.burst_ice(center, radius, ice, events);
+        if let Some(kind) = typed {
+            self.spell_type_burst(kind, center, radius);
+        }
+    }
+
+    /// What a burst of `radius` around `center` does to the ice and water it reaches.
+    pub(super) fn burst_ice(
+        &mut self,
+        center: Pos,
+        radius: i32,
+        ice: Option<BurstIce>,
+        events: &mut Vec<Event>,
+    ) {
+        match ice {
             Some(BurstIce::Melts) => {
                 self.shock(center, radius, Shock::Heat, events);
             }

@@ -422,47 +422,6 @@ fn a_reroll_draws_once_more_per_die_it_sends_back_and_never_twice() {
     );
 }
 
-/// Numbing cold's rider (the rider hook): every target a cold spell harms is Sluggish besides,
-/// none it misses, and no other spell's.
-#[test]
-fn a_rider_lands_on_every_target_harmed_and_on_none_missed() {
-    let mut files = ContentFiles::builtin();
-    let text = "[[spell]]\nid = \"arcane_bolt\"\nname = \"Arcane bolt\"\ndescription = \"x\"\n\
-                level = 6\nschool = \"evocation\"\nkind = \"damage\"\ndamage_type = \"cold\"\n\
-                shape = \"ray\"\nresolution = \"attack\"\nrange = 6\ndamage = \"1d6\"\n";
-    files.insert("data/spells/arcane_bolt.toml", text);
-    let mut w = wizard(Arc::new(Content::load(&files).expect("the spell loads")));
-    w.player_mut().talents.take("numbing_cold", None);
-    let content = w.content().clone();
-    let sluggish = content.status_id("sluggish").expect("sluggish");
-    let target = kobold(&mut w, 1, 10_000);
-    let (mut hit, mut missed) = (0, 0);
-    for _ in 0..200 {
-        w.state.actors.get_mut(&target).expect("there").effects = Default::default();
-        let (strikes, _) = cast_at(&mut w, (3, 0), (target, (1, 0)));
-        let slowed = w.state.actors[&target].effects.has(sluggish);
-        if strikes[0].is_hit() {
-            hit += 1;
-            assert!(slowed, "harmed: Sluggish");
-        } else {
-            missed += 1;
-            assert!(!slowed, "missed: nothing");
-        }
-    }
-    assert!(hit > 0 && missed > 0, "{hit} hit, {missed} missed");
-    // A line of force harms everyone on it; the rider is a cold spell's only.
-    let mut w = wizard(content_with_bolt(
-        "shape = \"line\"\nresolution = \"area\"\nlength = 6\ndamage = \"2d6\"",
-    ));
-    w.player_mut().talents.take("numbing_cold", None);
-    let near = kobold(&mut w, 2, 100);
-    cast_at(&mut w, (4, 0), (near, (2, 0)));
-    assert!(
-        !w.state.actors[&near].effects.has(sluggish),
-        "force is not cold"
-    );
-}
-
 #[test]
 fn an_intelligent_caster_aims_a_spell_that_names_intelligence() {
     let mut w = wizard(content_with_bolt(

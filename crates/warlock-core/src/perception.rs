@@ -1853,14 +1853,19 @@ impl<'a> PerceptionView<'a> {
         self.player.known_spells(self.content)
     }
 
+    /// Whether the player may learn from a scroll at all (spec §8 "Spells": "Learning"): trained
+    /// in Spellcraft.
+    pub fn can_learn(&self) -> bool {
+        self.player.learning(self.content).is_some()
+    }
+
     /// The scrolls the player could study now (spec §8 "Spells"), in pack order: those whose
-    /// type they know that teach a spell they do not know, each with its chance in words. What
-    /// the study list offers.
+    /// type they know that teach a spell they do not know, each with its chance in words; none
+    /// for a character not trained in Spellcraft. What the study list offers.
     pub fn studies(&self) -> Vec<OwnStudy> {
         let Some(rules) = self.content.study_rules() else {
             return Vec::new();
         };
-        let level = self.own_caster_level();
         (self.player.inventory.iter().enumerate())
             .filter_map(|(item, stack)| {
                 let reading = self.content.object(stack.object).read.as_ref()?;
@@ -1870,13 +1875,8 @@ impl<'a> PerceptionView<'a> {
                 {
                     return None;
                 }
-                let odds = crate::world::study_odds(
-                    self.player,
-                    self.content,
-                    self.character,
-                    level,
-                    spell,
-                )?;
+                let odds =
+                    crate::world::study_odds(self.player, self.content, self.character, spell)?;
                 Some(OwnStudy {
                     item,
                     spell,
@@ -2242,6 +2242,20 @@ impl<'a> PerceptionView<'a> {
             .iter())
         .filter_map(|(kind, percent)| Some((kind, crate::damage::ResistanceWord::of(percent)?)))
         .collect()
+    }
+
+    /// What the player's Knowledge tells of a creature they see (spec §8 "Skills": Knowledge),
+    /// in words only: what its kind resists, is immune to, or is vulnerable to, in damage type
+    /// order; nothing while their Knowledge does not stand above its level, and never what it
+    /// wears or what has been done to it.
+    pub fn known_resistances(
+        &self,
+        actor: &SeenActor,
+    ) -> Vec<(DamageTypeId, crate::damage::ResistanceWord)> {
+        match actor.kind {
+            ActorKind::Player => Vec::new(),
+            _ => (self.player).known_resistances(self.content, actor.creature),
+        }
     }
 
     /// How the run ended, once the player has died (what killed them only if they saw it).

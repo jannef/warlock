@@ -3,7 +3,7 @@
 //! reach, Arcane training on the wizard's caster level, every talent combination casting with
 //! nothing holding its roll (decision 16), and the six spell hooks by their shipped users:
 //! Empower's and Archmage's rungs, Keen mind's dice, Sure hand's reroll, Brimming's die and
-//! cost, Numbing cold's rider, Scroll adept's scroll rung.
+//! cost, Scroll adept's scroll rung.
 
 use super::caster_tests::{kobold, reach, sp, world_with};
 use super::*;
@@ -27,11 +27,13 @@ fn cost_and_range(w: &World, spell: &str) -> (i32, Option<i32>) {
 #[test]
 fn overreach_counts_a_third_less_in_the_study_and_never_touches_mana() {
     let mut w = world_with(BUILTIN.clone(), "wizard");
-    let level = w.caster_level(w.state.player);
-    assert_eq!(level, 1, "a level-1 wizard");
+    // At Spellcraft's floor: learning 1, whatever this run's dice gave.
+    let spellcraft = BUILTIN.skill_id("spellcraft").expect("skill");
+    w.player_mut().skills = crate::skills::Skills::default();
+    w.player_mut().skills.add(spellcraft, 0);
     let odds = |w: &World| {
         let character = w.state.character.as_ref();
-        study_odds(w.state.player(), &BUILTIN, character, level, sp("fireball")).expect("odds")
+        study_odds(w.state.player(), &BUILTIN, character, sp("fireball")).expect("odds")
     };
     let (fireball, before) = (cost_and_range(&w, "fireball").0, odds(&w));
     w.player_mut().talents.take("overreach", None);
@@ -239,15 +241,12 @@ fn brimming_rolls_a_die_more_and_costs_a_tenth_more() {
 }
 
 #[test]
-fn sure_hand_and_numbing_cold_set_their_hooks() {
-    let w = plain_wizard(&[("sure_hand", None), ("numbing_cold", None)]);
+fn sure_hand_sets_its_hook() {
+    let w = plain_wizard(&[("sure_hand", None)]);
     let me = w.state.player();
     let frost = me.spell_mods(&BUILTIN, BUILTIN.spell(sp("ray_of_frost")));
     let fire = me.spell_mods(&BUILTIN, BUILTIN.spell(sp("fireball")));
-    let sluggish = BUILTIN.status_id("sluggish").expect("sluggish");
     assert_eq!((frost.reroll, fire.reroll), (1, 1), "every spell's 1s");
-    assert_eq!(frost.riders, [(sluggish, 1)], "a cold spell's rider");
-    assert!(fire.riders.is_empty(), "fire carries none");
 }
 
 #[test]

@@ -598,7 +598,13 @@ fn draw_messages(
             None => "Esc".to_string(),
         };
         let prompt = format!("Looking: direction keys move, {stop} to stop.");
-        console.print(1, 1, &prompt, TEXT_DIM);
+        // What Knowledge tells of a creature takes the row's start: the description above is
+        // long enough to clip, the hint can spare it.
+        let x = match look::known(&game.world.perception(), p) {
+            Some(known) => 2 + console.print(1, 1, &known, TEXT),
+            None => 1,
+        };
+        console.print(x, 1, &prompt, TEXT_DIM);
         return;
     }
     more::draw(console, game, mode, bindings);

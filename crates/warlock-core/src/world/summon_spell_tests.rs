@@ -305,23 +305,26 @@ fn a_slain_call_leaves_no_corpse_and_nothing_else() {
 }
 
 #[test]
-fn study_difficulty_makes_a_study_a_check_at_any_caster_level() {
+fn study_difficulty_makes_a_study_a_check_at_any_learning() {
     let content = content();
     let w = World::new(content.clone(), "circles", None).expect("world");
-    let me = w.state.player();
+    let spellcraft = content.skill_id("spellcraft").expect("skill");
     // Two spells of level 1, one made ten harder.
     let hard = content.spell_id("zz_hard").expect("the spell");
     let plain = content.spell_id("zz_call_one").expect("the spell");
-    let odds =
-        |at: i32, spell| super::learn::study_odds(me, &content, None, at, spell).expect("odds");
-    // Far above their level: the plain one is certain, the hard one still a check.
-    assert_eq!(odds(70, plain).check, None);
-    let (_, far) = odds(70, hard).check.expect("a check");
-    // One level short: both a check, the hard one ten harder.
-    let (_, plain_short) = odds(0, plain).check.expect("a check");
-    let (_, hard_short) = odds(0, hard).check.expect("a check");
-    assert_eq!(hard_short, plain_short + 10);
-    assert!(far < hard_short, "no overreach counted above its level");
+    let odds = |value: u16, spell| {
+        let mut me = w.state.player().clone();
+        me.skills = crate::skills::Skills::default();
+        me.skills.add(spellcraft, i32::from(value));
+        // Nothing known, so the known levels add nothing to the difficulty.
+        me.spells.clear();
+        super::learn::study_odds(&me, &content, None, spell).expect("odds")
+    };
+    // At any learning, even the most: the plain one is certain, the hard one still a check, ten
+    // harder than the plain one's base.
+    assert_eq!(odds(150, plain).check, None);
+    let (_, far) = odds(150, hard).check.expect("a check");
+    assert_eq!(far, 12 + 10, "no overreach counted above its level");
 }
 
 #[test]

@@ -45,6 +45,15 @@ Creatures bleed the same way, and you can see it: [look mode](controls.md#look-m
 rat (hostile, wounded, bleeding)". A creature can bleed to death after a fight: "The giant rat
 bleeds to death."
 
+## Burning
+
+A [fire spell](magic.md#spell-types) sometimes leaves what it harms burning. "You are burning!" It costs a [hit point](combat.md#hit-points) every
+ten seconds, faster the more degrees of it you have, and each degree burns out in half a minute: "The flames go out." What
+resists [fire](damage-types.md#damage-fire) takes it less, and what is immune never burns.
+
+What burns gives off a small light, so it cannot hide in the dark, and look mode names it: "A kobold (hostile, burning)".
+A step into [water](terrain.md#water), or a fall through ice into it, puts it out at once, and so does a [cold spell](magic.md#spell-types) that harms you.
+
 ## Poisoned
 
 Some creatures' attacks carry poison: now and then a [giant rat](creatures.md#creature-rat)'s filthy bite leaves you sick.
@@ -55,7 +64,7 @@ Poison works slowly: a [hit point](combat.md#hit-points) every couple of minutes
 points](combat.md#hit-points) come back only half as fast. **Strong poison** (a few doses at once) also makes you
 weaker and clumsier: your [Strength](stats.md#stat-strength) and [Dexterity](stats.md#stat-dexterity) count one less, in everything they do, from
 [hitting](combat.md#hitting) and [Defence](combat.md#defence) to how much you can [carry](burden.md#how-much-you-can-carry). The [character screen](controls.md#character) shows them lowered. Poison
-wears off by itself: "The poison wears off." Trained in **[Heal](skills.md#skill-heal)**, you may try once to draw out
+wears off by itself: "The poison wears off." Trained in **[Heal](skills.md#skill-heal)**, you may try to draw out
 some of a dose (see [Treating yourself](skills.md#treating-yourself)).
 
 You cannot tell whether a creature is poisoned by looking at it.

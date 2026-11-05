@@ -116,8 +116,8 @@ Restoration, transmutation, and divination teach none yet.
 
 {{#include generated/school-abilities.md}}
 
-A school ability and a talent that lays a status on what a spell harms (*[Numbing
-cold](talents.md#talent-numbing-cold)*) both work: one is the talent's, the other the rank's.
+A school ability and the [rule of a spell's type](magic.md#spell-types) both work: one is the rank's, the
+other the type's.
 
 ## Talents
 

@@ -323,7 +323,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
   - **Guaranteed spells** (design §8): a class's level table (`abilities`, §8 "Class
     abilities") gives its spells as class abilities with a `spell` effect, at the level each
     comes at, never above the class's caster level then (character level × `casting` ÷ 100, at
-    least 1; the content test). Wizard: Ray of
+    least 1; the content test, until #990 removes that clause), whatever the character's
+    Spellcraft. Wizard: Ray of
     frost (1), Burning hands (1), Magic missile (3), Arcane bolt (18). Priest: Mend (1),
     Blessing (3), Cure wounds (3) (their rite is the prayer, §8i). Druid: Spark (1), Barkskin (3), Call of
     the wild (6), Call lightning (12), Call of the forest (25), Call the elements (40), Flame and
@@ -348,9 +349,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
     levels more often (§7 "Shops").
   - **Levels** (the spell scaling design §5, decisions 1, 9, 10, 16): a spell has a **level**,
     0 to 70 (`MAX_SPELL_LEVEL`), one number with two meanings: its **base mana** (the level, at
-    least 1) and the **caster level at which a scroll of it teaches for certain**. A spell of
+    least 1) and the **learning at which a scroll of it teaches for certain** ("Learning" below). A spell of
     level 0 or 1 is a *cantrip* (1 mana unless it names its own `mana`, as Burning hands and Grave
-    breath do, 3; anyone with mana learns it for certain). There is no
+    breath do, 3; anyone trained in Spellcraft learns it for certain). There is no
     table of levels, no ceiling, and no check on how much a spell of a level may do: its own
     data says it (decision 16). A `tier` key is refused, saying to use `level`.
   - **Cost table** (`data/spells.toml`): the **shapes** multiply the base mana (ray, bolt,
@@ -411,11 +412,31 @@ developer notes (CLAUDE.md, `docs/dev/`).
     Nothing holds them but the engine's own limits (`MAX_REACH` 20, a cone 5, the burst
     table's length, a status's `max`). The shipped users: Empower (a rung), Archmage (two),
     Keen mind (a die size), School focus (10 % off, a cell), Scroll adept (a scroll rung), Wand
-    mastery (a wand rung), Sure hand (rerolls 1s), Brimming (a die more, +10 % mana), Numbing
-    cold (cold spells' targets a degree Sluggish); the affixes `spell_rungs`, `spell_bonus`
+    mastery (a wand rung), Sure hand (rerolls 1s), Brimming (a die more, +10 % mana) (the rider
+    has no shipped talent: a type's own rider is below); the affixes `spell_rungs`, `spell_bonus`
     (Potent: +1 / +2 / +3), `spell_sides`, `spell_dice`, `spell_reroll`, `wand_rungs` (of
     Wands), `spell_reach` (of Farcasting, cells), `spell_duration` (of Lingering, degrees).
     Derived at cast time; nothing saved.
+  - **Spell types** (`docs/design/spell-types-and-new-spells.md` §3, §4; `[types]` in
+    `data/spells.toml`, read into `SpellRules::types`, every status and light checked at load):
+    what every spell of a damage type does beyond its damage, always on, cast from mana, a
+    scroll, or a wand; a type without an entry does nothing more. Magic's alone: a weapon's blow
+    never reads it. It spares no one, the caster and their allies included. A `rider` (status,
+    severity, `chance` in percent, default certain) on every creature the spell harmed (took hit
+    points from: not a miss, nor one that resisted it all), then `ends`, the statuses it ends on
+    them. `heat`, `frost` (mm), `douses`: on a burst's cells, a single target's cell struck (the
+    cell aimed at when it finds no one), or a line's last cell; a cone's cells no. `fire`: a
+    burst's centre cell, if walkable, gets a fire of that light for that long (light only; fixed
+    cells, it never spreads). A spell's own `heat` or `frost` stands in for its type's. A trap's,
+    a place's, and a birth sign's bursts and bolts are no spells and read nothing. **Fire**:
+    Burning 1, one time in four per creature harmed; melts ice; `arrow_fire` for 60 s. **Cold**:
+    Sluggish 1, certain; ends Burning; `frost = 100`; douses. **Burning** (`data/status.toml`):
+    max 3, adding; 1 hit point of fire per 10 s at one degree, a degree easing per 30 s; sheds the
+    `ember` light; a step or a fall into water ends it (`quenched`). The menu, the `spells` dump,
+    and a wand's description say the rule after the roll (`4d6 fire, burns one in four`, the
+    type's `words`). The aiming mode previews nothing. Determinism: one `below(100)` per living
+    creature harmed, only for a `chance` below 100, from the gameplay stream, in the order they
+    were struck.
   - **No cap** (decision 16): nothing checks a spell's strength when the content loads, and
     nothing holds a roll when it is cast: the rungs, the hooks, and a critical add what they
     add.
@@ -472,9 +493,24 @@ developer notes (CLAUDE.md, `docs/dev/`).
     the `caster_level` talent effect (racial and birth-sign gifts are talents; flat, or `value`
     per `per_levels` character levels: the wizard's Arcane training, +1 per 5) and affix effect;
     never below 0, and at least 1 for anyone whose maximum mana is
-    above 0. It sets learning only; never a spell's roll, reach, or mana (decisions 1 and 10). The player knows
+    above 0. It sets nothing in play since learning became Spellcraft's (#987; the no-caster-level
+    design removes the rest, #990); never a spell's roll, reach, or mana (decisions 1 and 10). The player knows
     it: the dump `stats` layer's `Caster level N` (after the scores), JSON dumps' `caster_level`
     (`PerceptionView::own_caster_level`).
+  - **Learning, the number** (`Actor::learning`, `world/learn.rs`; derived, never stored;
+    `docs/design/no-caster-level.md`, #987): what a scroll teaches for certain comes from the
+    Spellcraft skill and nothing else, its `learn` benefit (`data/skills.toml`: 0 to 10, 10 at 60,
+    30 at the soft cap 100, 70, the last spell level, from 150) at the skill's value with what
+    skill affixes and the talents' `skill` bonuses add (`Actor::skill_effect`), **at least 1** for a
+    character trained in Spellcraft. A character **not trained** in it (the skill not in their
+    trained set: an item's or a talent's bonus to a skill they do not have trains nobody) has no
+    learning and cannot study a scroll at all, cantrips included: refused, no time, "You have no
+    training in Spellcraft; you cannot make sense of how to learn a spell from a scroll." Reading a
+    scroll to cast it, and the spells a class grants, need no Spellcraft. Starting Spellcraft by
+    class (§7e): wizard, witch, priest, druid `2d6+10`; bard, paladin, ranger `2d4+4`; aristocrat
+    35 % `2d4+4`, ascetic 20 % `2d4` (optional skills); no other class, race, or birth sign gives
+    any; two background lines add to it (both name classes that have it already), and it grows by
+    level-up rolls as any skill. Nothing else trains it: a character without it stays without it.
   - **Learning** (`world/learn.rs`, `content/learning.rs`; #396): a character knows a set of
     spells for good: those their class abilities give and those they learned
     (`Actor::spells`, saved by id, left out of the JSON while empty). Either kind is cast from
@@ -496,9 +532,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
       is said: a blow lands, a status begins); an interrupted study loses the time and keeps the
       scroll (design §14 q1). Once begun, the player cannot stop it themselves.
     - **The check**, as the last turn ends, on the scroll used up (Scroll savant never keeps a
-      studied scroll, design §14 q7): overreach is the spell's level less the caster level. At
+      studied scroll, design §14 q7): overreach is the spell's level less the learning. At
       0 or less the spell is learned, no draw, unless the spell is made hard to learn
-      (`study_difficulty` above 0: a check at any caster level, overreach counted as at least
+      (`study_difficulty` above 0: a check at any learning, overreach counted as at least
       0). Above, a 2d12 check with
       the Intelligence modifier + the skills' `study` benefit (Spellcraft and Decipher script,
       each value ÷ 10, at most 20) + the class's `affinity` with the spell's school
