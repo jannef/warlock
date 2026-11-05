@@ -21,14 +21,14 @@ expression: "render(case, content.clone())"
               │   j  Decipher script    not usable yet                              │
               │   k  Heal               nothing to treat                            │
               │   l  Knowledge          not usable yet                              │
+              │   m  Listen at a door   in a direction                              │
               │ Weapon skills                                                       │
-              │   m  Shield bash        in a direction                              │
+              │   n  Shield bash        in a direction                              │
               │                                                                     │
               │ Everything that ails you is answered at once: wounds, hunger,       │
               │ sickness and poison, hexes and holds, what was taken, and your mana │
               │ and every pool you hold, filled.                                    │
               │                                                                     │
-              │ a-m or Enter use   Esc close                                        │
+              │ a-n or Enter use   Esc close                                        │
               └─────────────────────────────────────────────────────────────────────┘
-
  The Hub  ·  HP 66/66  ·  MP 427/427  ·  Lv 60  ·  08:00  ·  11 Darkening, Year 1444     ? controls

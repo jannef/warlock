@@ -1279,10 +1279,12 @@ impl<'a> PerceptionView<'a> {
             .encounter_entry(self.campaign, &pending.entry)?;
         let id = crate::content::local_area_id(pending.cell);
         let area = self.content.local_area(self.campaign, &id);
+        let choices = crate::world::encounter_choices(pending, entry, self.player, self.content);
         Some(crate::world::encounter_view(
             pending,
             &entry.name,
             area.map(|a| a.landscape),
+            &choices,
         ))
     }
 

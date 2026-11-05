@@ -44,6 +44,7 @@ pub(super) fn abilities(content: &Content) -> String {
             }
             Ability::Skill(_) => "everyone trained in the skill".into(),
             Ability::Disarm => "everyone trained in Disable device".into(),
+            Ability::Listen => "everyone trained in Listen".into(),
             Ability::PickLock => "everyone trained in Open lock".into(),
             Ability::Steal => "everyone trained in Steal".into(),
             Ability::Feint => "everyone trained in Bluff".into(),

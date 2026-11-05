@@ -22,9 +22,9 @@ expression: "render(case, content.clone())"
           │   l  Heal               nothing to treat                                    │
           │   m  Intimidate         at a place you see                                  │
           │   n  Knowledge          not usable yet                                      │
-          │   o  Metalcraft         not usable yet                                      │
-          │   p  Pick lock          in a direction                                      │
-          │   q  Steal              in a direction                                      │
+          │   o  Listen at a door   in a direction                                      │
+          │   p  Metalcraft         not usable yet                                      │
+          │   q  Pick lock          in a direction                                      │
           │                                                                             │
           │ The basilisk's stare: a foe nearby that sees you slows to a crawl a moment; │
           │ your eyes then rest two hours.                                              │

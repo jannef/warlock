@@ -19,16 +19,16 @@ expression: "render(case, content.clone())"
           │ Skills                                                                      │
           │   k  Tame                in a direction                                     │
           │   l  Heal                nothing to treat                                   │
-          │   m  Pick lock           in a direction                                     │
-          │   n  Forage              not usable here                                    │
+          │   m  Listen at a door    in a direction                                     │
+          │   n  Pick lock           in a direction                                     │
+          │   o  Forage              not usable here                                    │
           │ Weapon skills                                                               │
-          │   o  Shield bash         you hold no shield                                 │
-          │ Allies                                                                      │
-          │   p  Come to heel                                                           │
+          │   p  Shield bash         you hold no shield                                 │
           │                                                                             │
           │ The basilisk's stare: a foe nearby that sees you slows to a crawl a moment; │
           │ your eyes then rest two hours.                                              │
           │                                                                             │
           │                                                                             │
           │ a-p or Enter use   > < page   Esc close                                     │
- The Hub  └─────────────────────────────────────────────────────────────────────────────┘? controls
+          └─────────────────────────────────────────────────────────────────────────────┘
+ The Hub  ·  HP 98/98  ·  MP 217/228  ·  Lv 36  ·  08:00  ·  11 Darkening, Year 1444     ? controls

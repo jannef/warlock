@@ -236,6 +236,45 @@ fn draws_npcs_and_quest_variants_are_checked() {
 }
 
 #[test]
+fn talk_past_is_only_for_a_hostile_group() {
+    // A hostile entry with a group may be talked past (#1017); unflagged, it may not.
+    let entry = |c: &Content| {
+        c.encounter_entry("showcase", "kobolds")
+            .unwrap()
+            .1
+            .talk_past
+    };
+    assert!(!entry(&load(TABLE).unwrap()));
+    let flagged = TABLE.replacen("weight = 3", "weight = 3\ntalk_past = true", 1);
+    assert!(entry(
+        &load(&flagged).expect("a flagged hostile group loads")
+    ));
+    // Never a peaceful or wildlife entry.
+    for stance in ["peaceful", "wildlife"] {
+        let table = flagged.replace("kobold\"", "hermit\"").replacen(
+            "weight = 3",
+            &format!("weight = 3\nstance = \"{stance}\""),
+            1,
+        );
+        let err = load(&table).expect_err(stance);
+        assert!(
+            err.contains("only a hostile entry is talked past"),
+            "{stance}: {err}"
+        );
+    }
+    // Never a draw: what is drawn may be anything.
+    let group = "group = [{ creature = \"kobold\", count = \"1d2+1\" }]";
+    let draw = "draw = { pool = \"wulfeshol\", danger = 3, count = \"1d3\" }";
+    let mut files = ContentFiles::builtin();
+    files.insert(
+        "campaigns/ascmearc/data/encounters/test.toml",
+        &flagged.replacen(group, draw, 1),
+    );
+    let err = Content::load(&files).expect_err("a draw").to_string();
+    assert!(err.contains("never talked past"), "{err}");
+}
+
+#[test]
 fn a_table_outside_every_campaign_is_refused() {
     let mut files = ContentFiles::builtin();
     files.insert("data/encounters/loose.toml", TABLE);
