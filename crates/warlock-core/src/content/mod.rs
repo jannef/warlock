@@ -344,7 +344,7 @@ pub use terrain::{
 pub use throw::{THROW_RANGES, Throw};
 pub use trap::{MAX_CHARGES, Trap, TrapAvoid, TrapDef, TrapEffect, TrapId, TrapNoise};
 pub use unique::{Power, UNIQUE, UniqueDef, Uniques};
-pub use vault::Vault;
+pub use vault::{DangerRange, Vault};
 pub use vault_turn::Turn;
 pub use vision::VisionProfile;
 pub use wand::{MAX_WAND_CHARGES, Wand};
@@ -1295,6 +1295,12 @@ impl Content {
             if vault::parse_turns(path, text)?.is_some() {
                 return Err(ContentError::new(path, "`turns`: only a vault turns"));
             }
+            if vault::parse_danger(path, text)?.is_some() {
+                return Err(ContentError::new(
+                    path,
+                    "`danger = { from, to }`: only a vault keeps to a range of dangers",
+                ));
+            }
             if let Some((at, _)) = level.loot.first() {
                 return Err(ContentError::new(
                     path,
@@ -1357,6 +1363,7 @@ impl Content {
             vault.campaign = campaign::of_path(path).map(str::to_string);
             vault.dungeons = vault::parse_dungeons(path, text)?;
             vault.turns = vault::parse_turns(path, text)?.unwrap_or(true);
+            vault.danger = vault::parse_danger(path, text)?.unwrap_or_default();
             content.vaults.push(vault);
         }
         content.load_dungeons(files)?;
@@ -2715,6 +2722,11 @@ impl Content {
                     let theirs = vault.campaign.as_deref().unwrap_or_default();
                     return Err(format!(
                         "vault `{name}` is {theirs}'s: a branch stamps its own campaign's or shared ones"
+                    ));
+                }
+                if vault.danger.is_given() {
+                    return Err(format!(
+                        "vault `{name}` has a `danger`: one a level names is stamped there for certain"
                     ));
                 }
                 vault.pinned = true;

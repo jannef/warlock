@@ -108,6 +108,7 @@ impl Vault {
             dungeons: self.dungeons.clone(),
             pinned: self.pinned,
             turns: self.turns,
+            danger: self.danger,
         }
     }
 }

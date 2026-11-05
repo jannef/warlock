@@ -29,10 +29,16 @@
 //! A branch level may name vaults (`vaults` in `[[dungeon.levels]]`): each is stamped on that
 //! level for certain, and a vault so named ([`Vault::pinned`]) is never drawn at random.
 //!
+//! A vault file's `danger = { from = 8 }`, `{ to = 6 }`, or both ([`DangerRange`]) keeps it to the
+//! floors whose danger lies in that range (the danger the floor's pools draw at; see
+//! [`Vault::suits`]): a deep vault stays deep and a shallow one shallow. It is for vaults drawn at
+//! random: refused on an outdoor vault (a local area has no danger) and on one a branch level names.
+//!
 //! A vault drawn at random lies any of eight ways, rotated or mirrored (`vault_turn.rs`), unless
 //! its file says `turns = false`, for text that depends on direction or a layout that must not
 //! turn. A vault a branch level names keeps the way its file draws it.
 
+use super::danger::MAX_DANGER;
 use super::dungeon::{DungeonDef, parse_branch_level};
 use super::level::{LevelKind, LevelTemplate};
 use super::{Content, ContentError, TerrainId};
@@ -60,6 +66,45 @@ pub struct Vault {
     /// Whether a random stamp may rotate or mirror it (a file's `turns`, default true; see
     /// [`Vault::may_turn`]).
     pub turns: bool,
+    /// The dangers it stamps at (a file's `danger`; default: every danger).
+    pub danger: DangerRange,
+}
+
+/// The dangers a vault drawn at random stamps at: `danger = { from = 8 }`, `{ to = 6 }`, or both,
+/// each end included; neither: every danger.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct DangerRange {
+    pub from: Option<u8>,
+    pub to: Option<u8>,
+}
+
+impl DangerRange {
+    /// Whether it holds `danger`.
+    pub fn holds(&self, danger: u8) -> bool {
+        self.from.is_none_or(|f| danger >= f) && self.to.is_none_or(|t| danger <= t)
+    }
+
+    /// Whether it narrows the dangers at all (a file gave `from` or `to`).
+    pub fn is_given(&self) -> bool {
+        self.from.is_some() || self.to.is_some()
+    }
+
+    /// Checks the ends: each a danger, `from` not above `to`.
+    fn check(&self) -> Result<(), String> {
+        let end = [self.from, self.to].into_iter().flatten().max();
+        if let Some(end) = end.filter(|e| *e > MAX_DANGER) {
+            return Err(format!(
+                "`danger`: {end} is past the deepest danger, {MAX_DANGER}"
+            ));
+        }
+        if let (Some(from), Some(to)) = (self.from, self.to)
+            && from > to
+        {
+            return Err(format!("`danger`: `from` {from} is above `to` {to}"));
+        }
+        Ok(())
+    }
 }
 
 /// The vault-only fields of a vault file (the level-file parser reads the rest and ignores them).
@@ -68,6 +113,8 @@ struct VaultFields {
     #[serde(default)]
     dungeons: Vec<String>,
     turns: Option<bool>,
+    /// A vault's `{ from, to }`, or a level's danger rule (the level parser reads that one).
+    danger: Option<toml::Value>,
 }
 
 /// The `dungeons` a vault file (or a level file, which may not give it) names.
@@ -78,6 +125,18 @@ pub(super) fn parse_dungeons(path: &str, text: &str) -> Result<Vec<String>, Cont
 /// The `turns` a vault file (or a level file, which may not give it) says.
 pub(super) fn parse_turns(path: &str, text: &str) -> Result<Option<bool>, ContentError> {
     Ok(parse_fields(path, text)?.turns)
+}
+
+/// The `danger = { from, to }` a vault file (or a level file, which may not give it) says; `None`
+/// for none, or for a level's own `danger` rule (`danger = 3`, `{ base = 2, per_depth = 1 }`).
+pub(super) fn parse_danger(path: &str, text: &str) -> Result<Option<DangerRange>, ContentError> {
+    let range = (parse_fields(path, text)?.danger)
+        .and_then(|v| DangerRange::deserialize(v).ok())
+        .filter(DangerRange::is_given);
+    if let Some(range) = range {
+        range.check().map_err(|m| ContentError::new(path, m))?;
+    }
+    Ok(range)
 }
 
 fn parse_fields(path: &str, text: &str) -> Result<VaultFields, ContentError> {
@@ -150,6 +209,13 @@ impl Vault {
         if !template.shops.is_empty() {
             return Err("a vault cannot have shops".into());
         }
+        // It draws at the floor's danger; its own `danger` says which floors (`DangerRange`).
+        if template.spawning.is_some() {
+            return Err(
+                "a vault has no danger rule of its own: its `danger` is `{ from, to }`, the floors it stamps on"
+                    .into(),
+            );
+        }
         let is_door = |p: Pos| {
             let def = content.terrain(terrain[p]);
             def.is_closed_door() || def.is_open_door()
@@ -197,6 +263,7 @@ impl Vault {
             dungeons: Vec::new(),
             pinned: false,
             turns: true,
+            danger: DangerRange::default(),
         })
     }
 
@@ -210,6 +277,13 @@ impl Vault {
             || (self.dungeons.iter()).any(|d| *d == def.id || *d == def.level_id(depth))
     }
 
+    /// Whether a floor of `danger` may draw it at random (its file's `danger`). The danger is the
+    /// one the floor's pools draw at (`Content::spawning`; 0 on a floor with none), so on an
+    /// endless branch past its roster's top it stays at the top's, as the draws do.
+    pub fn suits(&self, danger: u8) -> bool {
+        self.danger.holds(danger)
+    }
+
     /// Checks its `dungeons` once the branches are loaded: each a branch or one of its levels,
     /// of the vault's own campaign, and never on an outdoor vault.
     pub(super) fn check_dungeons(&self, content: &Content) -> Result<(), String> {
@@ -217,6 +291,9 @@ impl Vault {
             return Err(
                 "an outdoor vault stamps in no dungeon: `dungeons` is for dungeon vaults".into(),
             );
+        }
+        if self.is_outdoor() && self.danger.is_given() {
+            return Err("an outdoor vault has no `danger`: a local area has none".into());
         }
         for name in &self.dungeons {
             let def = match parse_branch_level(name) {

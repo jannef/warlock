@@ -99,6 +99,15 @@ impl LevelKind {
     }
 }
 
+/// A level's `danger` rule, or a vault's range of floors (`vault::parse_danger` reads that).
+#[derive(Debug, Deserialize)]
+#[serde(untagged)]
+enum DangerField {
+    Rule(DangerSpec),
+    /// Parsed only so a vault file loads; `vault::parse_danger` reads it again.
+    Range(#[expect(dead_code, reason = "read by `vault::parse_danger`")] super::vault::DangerRange),
+}
+
 #[derive(Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
 struct LevelFile {
@@ -134,8 +143,9 @@ struct LevelFile {
     /// Shops (spec §7 "Shops").
     #[serde(default)]
     shop: Vec<ShopSpec>,
-    /// How dangerous it is (spec §7 "Danger levels"); none: 0, nothing comes.
-    danger: Option<DangerSpec>,
+    /// How dangerous it is (spec §7 "Danger levels"); none: 0, nothing comes. A vault's is a
+    /// range of floors instead (read by `vault::parse_danger`; refused on a level).
+    danger: Option<DangerField>,
     /// The creature types that live there (needed with a `danger`).
     population: Option<Vec<String>>,
     population_count: Option<CountSpec>,
@@ -1136,7 +1146,10 @@ pub(super) fn parse_level(
         c => c.map(|c| Temperature::degrees(c.into())),
     };
     let spawning = SpawningSpec {
-        danger: parsed.danger,
+        danger: match parsed.danger {
+            Some(DangerField::Rule(rule)) => Some(rule),
+            Some(DangerField::Range(_)) | None => None,
+        },
         population: parsed.population,
         population_count: parsed.population_count,
         odds: OddsSpec {
