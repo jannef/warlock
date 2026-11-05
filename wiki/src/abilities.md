@@ -71,12 +71,19 @@ own: [Weapon skills](weapon-skills.md#what-a-rank-teaches) and
 - **Disarm a trap**: everyone trained in [Disable device](skills.md#skill-disable-device) (the [thief](classes.md#thief)) has it, in place of the
   skill. Choose a direction, toward a [trap](traps.md#finding-traps) you know of next to you, on the floor or on a [door](doors.md):
   you try to take it apart (see [Traps](traps.md#disarming-traps)).
+- **Listen at a door**: everyone trained in [Listen](skills.md#skill-listen) has it, in place of the skill. Choose a direction,
+  toward a closed [door](doors.md) next to you: you stop a turn and hear what moves beyond it (see
+  [Hearing](hearing.md#listening-at-a-door)).
 - **Pick lock**: everyone trained in [Open lock](skills.md#skill-open-lock) (the [thief](classes.md#thief)) has it, in place of the skill. Choose a
   direction, toward a closed [door](doors.md) next to you: you try its lock (see
   [Doors](doors.md#picking-locks)).
 - **Steal**: anyone trained in the [Steal](skills.md#skill-steal) skill has it, in the skill's place among the Skills.
   It asks for a direction and tries to lift something from whoever stands there, if they are
   not hostile to you (see [Stealing](skills.md#stealing)).
+- **Feint**: anyone trained in the [Bluff](skills.md#skill-bluff) skill has it, in the skill's place among the Skills.
+  It asks for a direction and lies to the hostile creature there: unless it sees through you it is
+  [surprised](status-effects.md#status-surprised), and your next blow finds it off its guard (see
+  [Feinting](skills.md#feinting)). Not the [False lead](fighting-styles.md#style-ability-false-lead) of the Duelist's style, a blow.
 - **Intimidate**: anyone trained in the [Intimidate](skills.md#skill-intimidate) skill has it, in the skill's place among
   the Skills. It asks for a place you see, within 6 cells, and threatens the hostile creature
   there: unless it keeps its nerve it is [frightened](status-effects.md#status-frightened) and

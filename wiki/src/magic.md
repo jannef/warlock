@@ -83,15 +83,6 @@ Every class that casts starts trained, and [its dice are in the class table](ski
 and an [ascetic](classes.md#ascetic) one in five (20 %, 2d4). Other classes do not start with it. Two
 [background stories](background.md) add to it, for classes that already have it, and level-up rolls raise it like any other skill.
 
-### Caster level
-
-Your caster level no longer decides what you can learn. It is your
-[level](experience.md#levels) times your class's **casting** share, rounded down, plus what
-[talents](talents.md) add; nothing in play
-reads it now, and it is on its way out of the game.
-
-{{#include generated/spell-casting.md}}
-
 ## What a spell costs
 
 A spell's mana is its [level](#spell-levels), at least 1, times its [shape](#shapes)'s share (below), times its
@@ -364,7 +355,7 @@ strongest creature its sleep or terror takes. Its reach (how far a line digs, ho
 flies, how far away a burst may land) is read as a [spell's](#how-a-spell-grows) is: the first number is
 what anyone reaches, and each rung after it is the reach of a user whose Willpower is at least
 the rung's score. Sleep and terror take only creatures of a level up to the rod's own (20); the
-others shrug it off. Your caster level plays no part: no skill makes a rod better or cheaper,
+others shrug it off. Your level plays no part: no skill makes a rod better or cheaper,
 and what it costs and how far it reaches are the same in anyone's hands of the same Willpower.
 
 - **Digging** breaks every [wall](terrain.md#walls) on a straight line toward where you aim, as if dug through,

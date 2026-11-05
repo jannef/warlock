@@ -180,6 +180,7 @@ fn every_caster_has_its_table_by_level_sixty() {
                 "Spark",
                 "Barkskin",
                 "Call of the wild",
+                "Water walking",
                 "Call lightning",
                 "Nature's ward",
                 "Call of the forest",
@@ -325,6 +326,7 @@ fn the_spells_are_abilities_by_level() {
             "Cause wounds",
             // Level 5.
             "Call of the wild",
+            "Water walking",
             // Level 6.
             "Arcane bolt",
             "Frost",
@@ -333,6 +335,7 @@ fn the_spells_are_abilities_by_level() {
             "Slick",
             // Level 7.
             "Blight",
+            "Brand",
             "Scorching ray",
             "Web",
             // Level 11.
@@ -342,6 +345,7 @@ fn the_spells_are_abilities_by_level() {
             "Lightning bolt",
             "Remove disease",
             // Level 12.
+            "Fire cloak",
             "Flame",
             "Mirk",
             // Level 13.

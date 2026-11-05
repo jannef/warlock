@@ -60,6 +60,11 @@ pub enum Ability {
     /// this in its place). Had by whoever is trained in it; usable whenever they have it (the
     /// rules refuse, taking no time, where they know of no trap).
     Disarm,
+    /// Listen at a closed door next to the actor (spec §5 "Hearing"; `world/listen.rs`):
+    /// [`Action::Listen`], the use of Listen (the skill with the hearing effect, listed as this
+    /// in its place). Had by whoever is trained in it; usable whenever they have it (the rules
+    /// refuse, taking no time, where there is no closed door).
+    Listen,
     /// Pick the lock of a door next to the actor (spec §8 "Doors"): [`Action::PickLock`], the
     /// use of Open lock (the skill with the pick effect, listed as this in its place). Had by
     /// whoever is trained in it; usable whenever they have it (the rules refuse, taking no time,
@@ -69,6 +74,11 @@ pub enum Ability {
     /// skill's use. Whoever is trained in a skill with the `steal` benefit has it, in that
     /// skill's place among the skills.
     Steal,
+    /// Feint at a foe next to you (spec §8 "Skills": Bluff; #1016): [`Action::Feint`], Bluff's
+    /// use (the skill with the `feint` benefit, listed as this in its place while
+    /// `data/feint.toml` exists). Had by whoever is trained in it; usable whenever they have it
+    /// (the rules refuse, taking no time, where there is no foe with a mind to fool).
+    Feint,
     /// Tame a beast next to you (spec §8 "Allies": Tame; `world/tame.rs`): [`Action::Tame`],
     /// Handle animal's use (the skill with the `tame` benefit, listed as this in its place while
     /// `data/companions.toml` and `data/allies.toml` exist). Had by whoever is trained in it, at
@@ -420,7 +430,8 @@ impl Ability {
     /// The ability that is the use of skill `def`, once that use is in the game: Disable device's
     /// (the disarm effect's) is [`Ability::Disarm`], Open lock's (the pick effect's)
     /// [`Ability::PickLock`], the Steal skill's (the `steal` benefit, with `data/steal.toml`)
-    /// [`Ability::Steal`], Heal's (the heal effect's) [`Ability::Heal`], Handle animal's (the
+    /// [`Ability::Steal`], Bluff's (the `feint` benefit, with `data/feint.toml`)
+    /// [`Ability::Feint`], Heal's (the heal effect's) [`Ability::Heal`], Handle animal's (the
     /// `tame` benefit, with `data/companions.toml` and `data/allies.toml`) [`Ability::Tame`],
     /// Intimidate's (the
     /// `intimidate` benefit, with `data/intimidate.toml`) [`Ability::Intimidate`], Survival's (the
@@ -429,6 +440,7 @@ impl Ability {
     fn use_of(def: &SkillDef, content: &Content) -> Option<Ability> {
         let gives = |effect| def.benefits.iter().any(|b| b.effect == effect);
         (gives(Effect::Disarm).then_some(Ability::Disarm))
+            .or_else(|| gives(Effect::Hearing).then_some(Ability::Listen))
             .or_else(|| gives(Effect::Pick).then_some(Ability::PickLock))
             .or_else(|| gives(Effect::Heal).then_some(Ability::Heal))
             .or_else(|| {
@@ -436,6 +448,9 @@ impl Ability {
                     && content.companions().is_some()
                     && content.allies().is_some())
                 .then_some(Ability::Tame)
+            })
+            .or_else(|| {
+                (gives(Effect::Feint) && content.feint().is_some()).then_some(Ability::Feint)
             })
             .or_else(|| {
                 (gives(Effect::Intimidate) && content.intimidate().is_some())
@@ -509,6 +524,7 @@ impl Ability {
                 actor.skills.trains_effect(content, Effect::Disarm)
                     || actor.talent_mods(content).disarm
             }
+            Ability::Listen => actor.skills.trains_effect(content, Effect::Hearing),
             // A talent with the `pick_lock` or `steal` effect gives them without the skills.
             Ability::PickLock => {
                 actor.skills.trains_effect(content, Effect::Pick)
@@ -522,6 +538,7 @@ impl Ability {
             Ability::Tame => actor.skills.trains_effect(content, Effect::Tame),
             Ability::Heal => actor.skills.trains_effect(content, Effect::Heal),
             Ability::Intimidate => actor.skills.trains_effect(content, Effect::Intimidate),
+            Ability::Feint => actor.skills.trains_effect(content, Effect::Feint),
             Ability::SecondWind => actor.talent_mods(content).second_wind.is_some(),
             Ability::BloodMagic => actor.talent_mods(content).blood_magic.is_some(),
             Ability::ThrowVoice => actor.talent_mods(content).throw_voice,
@@ -543,8 +560,10 @@ impl Ability {
             Ability::Skill(id) => &content.skill(id).id,
             Ability::ThrowVoice => "throw_voice",
             Ability::Disarm => "disarm",
+            Ability::Listen => "listen",
             Ability::PickLock => "pick_lock",
             Ability::Steal => "steal",
+            Ability::Feint => "feint",
             Ability::Tame => "tame",
             Ability::Intimidate => "intimidate",
             Ability::Forage => "forage",
@@ -580,8 +599,10 @@ impl Ability {
             Ability::Skill(id) => &content.skill(id).name,
             Ability::ThrowVoice => "Throw your voice",
             Ability::Disarm => "Disarm a trap",
+            Ability::Listen => "Listen at a door",
             Ability::PickLock => "Pick lock",
             Ability::Steal => "Steal",
+            Ability::Feint => "Feint",
             Ability::Tame => "Tame",
             Ability::Intimidate => "Intimidate",
             Ability::Forage => "Forage",
@@ -613,10 +634,18 @@ impl Ability {
             Ability::Disarm => {
                 "Take apart a trap you know of next to you; a clumsy try sets it off."
             }
+            Ability::Listen => {
+                "Press an ear to a closed door next to you for a turn, and hear what moves \
+                 beyond it."
+            }
             Ability::PickLock => "Open a locked door next to you without its key.",
             Ability::Steal => {
                 "Lift a purse or a trinket from someone next to you who is not hostile; caught, \
                  they turn on you."
+            }
+            Ability::Feint => {
+                "Make a lying move at a foe next to you: fooled, it is off its guard for your \
+                 next blow."
             }
             Ability::Tame => {
                 "Spend a while beside a beast next to you that is not your foe, or has not seen \
@@ -686,8 +715,10 @@ impl Ability {
             Ability::Spell(_) => Source::Spell,
             Ability::Skill(_)
             | Ability::Disarm
+            | Ability::Listen
             | Ability::PickLock
             | Ability::Steal
+            | Ability::Feint
             | Ability::Tame
             | Ability::Intimidate
             | Ability::Forage
@@ -731,8 +762,10 @@ impl Ability {
             Ability::ThrowVoice | Ability::SetOn | Ability::Intimidate => Aim::Cell,
             Ability::Heal => Aim::Ailment,
             Ability::Disarm
+            | Ability::Listen
             | Ability::PickLock
             | Ability::Steal
+            | Ability::Feint
             | Ability::Tame
             | Ability::ShieldBash => Aim::Direction,
         }
@@ -748,8 +781,11 @@ impl Ability {
             Ability::Skill(_) | Ability::Weapon(..) => None,
             Ability::ThrowVoice => Some(ActionKind::ThrowVoice),
             Ability::Disarm => Some(ActionKind::Disarm),
+            // A listen is a turn of keeping still.
+            Ability::Listen => Some(ActionKind::Wait),
             Ability::PickLock => Some(ActionKind::PickLock),
             Ability::Steal => Some(ActionKind::Steal),
+            Ability::Feint => Some(ActionKind::Feint),
             Ability::Tame => Some(ActionKind::Tame),
             Ability::Intimidate => Some(ActionKind::Intimidate),
             Ability::Forage => Some(ActionKind::Forage),
@@ -779,8 +815,10 @@ impl Ability {
             | Ability::Spell(_)
             | Ability::Skill(_)
             | Ability::Disarm
+            | Ability::Listen
             | Ability::PickLock
             | Ability::Steal
+            | Ability::Feint
             | Ability::Tame
             | Ability::Intimidate
             | Ability::Forage
@@ -856,14 +894,18 @@ impl Ability {
             (Ability::SecondWind, _) => Some(Action::UseTalent(TalentActive::SecondWind)),
             (Ability::BloodMagic, _) => Some(Action::UseTalent(TalentActive::BloodMagic)),
             (Ability::Disarm, Some(dir)) => Some(Action::Disarm(dir)),
+            (Ability::Listen, Some(dir)) => Some(Action::Listen(dir)),
             (Ability::PickLock, Some(dir)) => Some(Action::PickLock(dir)),
             (Ability::Steal, Some(dir)) => Some(Action::Steal(dir)),
+            (Ability::Feint, Some(dir)) => Some(Action::Feint(dir)),
             (Ability::Tame, Some(dir)) => Some(Action::Tame(dir)),
             (Ability::ShieldBash, Some(dir)) => Some(Action::Bash(dir)),
             (
                 Ability::Disarm
+                | Ability::Listen
                 | Ability::PickLock
                 | Ability::Steal
+                | Ability::Feint
                 | Ability::Tame
                 | Ability::ShieldBash,
                 None,
@@ -916,8 +958,10 @@ impl Ability {
             | Ability::Class(_)
             | Ability::Skill(_)
             | Ability::Disarm
+            | Ability::Listen
             | Ability::PickLock
             | Ability::Steal
+            | Ability::Feint
             | Ability::Tame
             | Ability::Forage
             | Ability::Heal
@@ -998,8 +1042,10 @@ impl Ability {
                 .then_some(Unavailable::NothingToTreat),
             Ability::ThrowVoice
             | Ability::Disarm
+            | Ability::Listen
             | Ability::PickLock
             | Ability::Steal
+            | Ability::Feint
             | Ability::Intimidate
             | Ability::Forage
             | Ability::BloodMagic
@@ -1218,13 +1264,14 @@ mod tests {
         assert_eq!(
             skills,
             [
-                "bluff",
+                "feint",
                 "decipher_script",
                 "disarm",
                 "tame",
                 "heal",
                 "intimidate",
                 "knowledge",
+                "listen",
                 "metalcraft",
                 "pick_lock",
                 "steal",
@@ -1264,6 +1311,22 @@ mod tests {
         assert!(every.contains(&Ability::Steal));
         let steal = content.skill_id("steal").expect("steal");
         assert!(!every.contains(&Ability::Skill(steal)));
+    }
+
+    #[test]
+    fn no_two_abilities_share_an_id_or_a_name() {
+        let content = Content::builtin().expect("content");
+        let every = Ability::every(&content);
+        for (i, a) in every.iter().enumerate() {
+            for b in &every[i + 1..] {
+                // One weapon ability may be taught by several skills: the same row.
+                if matches!((a, b), (Ability::Weapon(_, x), Ability::Weapon(_, y)) if x == y) {
+                    continue;
+                }
+                assert_ne!(a.id(&content), b.id(&content), "{a:?} and {b:?}");
+                assert_ne!(a.name(&content), b.name(&content), "{a:?} and {b:?}");
+            }
+        }
     }
 
     #[test]

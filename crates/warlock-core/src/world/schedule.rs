@@ -224,9 +224,10 @@ impl World {
         };
         let mut price = level.step_price(to, step);
         // A strong swimmer (spec §8 "Birth sign") wades as if on dry land, and so does one
-        // Undertow (a Water-born's pick) bears. Swim spares a part of it, never more.
+        // Undertow (a Water-born's pick) or Water walking bears. Swim spares a part of it, never
+        // more.
         if self.wading_step(to) {
-            let free = !actor.talents.is_empty() && (talents.swimmer || talents.wades_free);
+            let free = talents.swimmer || actor.wades_free(&self.content);
             let spared = if free {
                 100
             } else {

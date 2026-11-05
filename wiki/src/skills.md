@@ -25,12 +25,13 @@ Some skills work by themselves, all the time (**passive**); some will be used as
 them ([athletics](skills.md#skill-athletics) when you [kick a door](doors.md#kicking)). For now only the passive skills, [Appraise](skills.md#skill-appraise), [Negotiation](skills.md#skill-negotiation), [Athletics](skills.md#skill-athletics)
 (quicker in everything, and [kicking](doors.md#kicking) doors in, see [Doors](doors.md)), [Search](skills.md#skill-search) (see [Searching](searching.md)), [Disable
 device](skills.md#skill-disable-device) (disarming traps, see [Traps](traps.md#disarming-traps)), [Open lock](skills.md#skill-open-lock) (picking locks,
-see [Doors](doors.md#picking-locks)), [Steal](skills.md#skill-steal) (see [Stealing](#stealing) below), [Heal](skills.md#skill-heal) (see
+see [Doors](doors.md#picking-locks)), [Steal](skills.md#skill-steal) (see [Stealing](#stealing) below), [Bluff](skills.md#skill-bluff) (see
+[Feinting](#feinting) below), [Heal](skills.md#skill-heal) (see
 [Treating yourself](#treating-yourself) below), and [Survival](skills.md#skill-survival) (foraging, see
 [Foraging](#foraging) below) do something: the others are there to be trained, and get their uses
 as the game grows. The skills used as actions are in the [abilities
 menu](abilities.md) once you are trained in them, greyed out until their uses come; [Disable
-device](skills.md#skill-disable-device)'s use is there as **[Disarm a trap](abilities.md#ability-disarm)**, [Open lock](skills.md#skill-open-lock)'s as **[Pick lock](abilities.md#ability-pick-lock)**, [Steal](skills.md#skill-steal)'s as **[Steal](abilities.md#ability-steal)**,
+device](skills.md#skill-disable-device)'s use is there as **[Disarm a trap](abilities.md#ability-disarm)**, [Open lock](skills.md#skill-open-lock)'s as **[Pick lock](abilities.md#ability-pick-lock)**, [Steal](skills.md#skill-steal)'s as **[Steal](abilities.md#ability-steal)**, [Bluff](skills.md#skill-bluff)'s as **[Feint](abilities.md#ability-feint)**,
 [Heal](skills.md#skill-heal)'s as **[Heal](abilities.md#ability-heal)**, and [Survival](skills.md#skill-survival)'s, though it is a passive skill, as **[Forage](abilities.md#ability-forage)**.
 
 {{#include generated/skills.md}}
@@ -72,8 +73,8 @@ The passive skills help you more the higher they are:
   [Strength](stats.md#stat-strength) and [Dexterity](stats.md#stat-dexterity) plus the skill is
   checked as part of the attempt (see [Slipping bonds](status-effects.md#slipping-bonds); untrained,
   a web or a pin just refuses the step). +8 at 100, +12 at 200. It also shortens the climb out of
-  a [pit](traps.md#trap-pit): half from 50, none from 100. Every such check and every climb trains
-  it.
+  a [pit](traps.md#trap-pit): half from 50, none from 100. It also lets you [wriggle past](npcs.md#getting-past) someone who will not make way. Every such
+  check, climb, and half the wriggles train it.
 - **[Survival](skills.md#skill-survival)** makes your journeys on the [overworld](overworld.md) quicker (it does nothing for
   your steps in a local area or a dungeon), and lets you forage in the wild, finding food more
   often the higher it is (see [Foraging](#foraging)).
@@ -107,6 +108,10 @@ The passive skills help you more the higher they are:
   more often a try works (see [Doors](doors.md#picking-locks)).
 - **[Steal](skills.md#skill-steal)** lets you steal at all, and the higher it is, the likelier your hand goes unnoticed
   (see [Stealing](#stealing)).
+- **[Bluff](skills.md#skill-bluff)** lets you feint at all ([Feint](abilities.md#ability-feint) in the abilities menu;
+  see [Feinting](#feinting)) and to [talk your way past](encounters.md#talking-past) some parties met on the
+  overworld, and the higher it is, the harder your lies are to see through: the
+  [Willpower](stats.md#stat-willpower) check they ask is 8 harder at 100, 12 at 200 (at most 20).
 - **[Heal](skills.md#skill-heal)** lets you bind your [bleeding](status-effects.md#bleeding) and tend your [poisons](status-effects.md#poisoned) and [diseases](diseases.md#how-a-disease-goes) at all, and the higher
   it is, the more often a try works (see [Treating yourself](#treating-yourself)).
 - **[Knowledge](skills.md#skill-knowledge)** is knowing your enemy: it adds to your check against a [creature](creatures.md)'s [drain](stats.md#drained-stats), a
@@ -187,7 +192,7 @@ mark**. The chance is shown in the table of skills above; skills you use all the
 [balance](skills.md#skill-balance), earn marks rarely, so they do not race ahead.
 
 - **[Stealth](skills.md#skill-stealth)**: a step that a [creature](creatures.md) nearby could have heard, if you had not stepped softly.
-- **[Listen](skills.md#skill-listen)**: [hearing](hearing.md) something new.
+- **[Listen](skills.md#skill-listen)**: [hearing](hearing.md) something new, and every turn spent [listening at a door](hearing.md#listening-at-a-door).
 - **[Tumble](skills.md#skill-tumble)**: dodging an attack ("You dodge the kobold's spear.") or stepping past a [trap](traps.md#finding-traps) you
   know of ("You deftly avoid the arrow trap."). A blow that misses you for no reason your
   [Defence](combat.md#defence) explains (it would have missed anyone) counts as a dodge one time in four.
@@ -195,6 +200,7 @@ mark**. The chance is shown in the table of skills above; skills you use all the
 - **[Survival](skills.md#skill-survival)**: a journey on the [overworld](overworld.md#travel).
 - **[Swim](skills.md#skill-swim)**: a step wading through [water](terrain.md#water) or [marsh](terrain.md#terrain-marsh) now and then (10 %), every [plunge through the ice](temperature.md#falling-in), and a quarter of the steps in [deep water](terrain.md#deep-water), made or not.
 - **[Steal](skills.md#skill-steal)**: every attempt to steal, whatever comes of it.
+- **[Bluff](skills.md#skill-bluff)**: half of your feints, and every try at [talking your way past](encounters.md#talking-past) a party, whatever comes of them.
 - **[Open lock](skills.md#skill-open-lock)**: a try at picking a lock, whether it works or not.
 - **[Heal](skills.md#skill-heal)**: a try at treating yourself, whether it works or not.
 
@@ -286,6 +292,28 @@ is for sale, and taking it out without paying is theft by the shop's own rules. 
 whose purse you lifted unnoticed still trades with you, but cannot pay for what you sell.
 
 You may try as often as you like; someone who caught you stays angry, and that is the price.
+
+## Feinting
+
+If you are trained in **[Bluff](skills.md#skill-bluff)**, **[Feint](abilities.md#ability-feint)** is in your
+[abilities menu](abilities.md): choose it, then a direction, and you make a lying move at whoever stands
+there. It must be a [creature](creatures.md) you see, hostile to you, with a mind to fool: not a skeleton, a spirit, or
+an animated thing (those without [vitals](combat.md#criticals)). Otherwise it is refused and takes no time. A feint
+takes a turn.
+
+The foe rolls 2d12 plus its [Willpower](stats.md#stat-willpower) [modifier](stats.md#modifiers) against the difficulty
+below plus your [Presence](stats.md#stat-presence) modifier plus what your Bluff adds (the benefits table above). Short
+of it, "The kobold falls for it.": it is [surprised](status-effects.md#status-surprised), and the action it takes next
+does not end that, so your next blow finds it [flat-footed](surprise.md), with
+[sneak dice](surprise.md) if you have them. Its second action, like its first, costs it dear, and ends it. A foe quick
+enough to act twice before you do has recovered by your blow. Otherwise, "The kobold is not fooled.", and the turn is
+spent.
+
+{{#include generated/feinting.md}}
+
+You may feint as often as you like. Half of your feints train Bluff, whatever comes of them. There is
+no talking your way out of being [caught stealing](#stealing): a lie is for the fight, or for getting past a
+party on the road before it comes to one ([Talk your way past](encounters.md#talking-past)).
 
 ## Intimidating
 

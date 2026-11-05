@@ -12,6 +12,9 @@ name = "a band of footpads"
 weight = 3
 when = { phase = ["day", "twilight"] }
 group = [{ creature = "footpad", count = "1d3+1" }]
+# A purse is what they want, and a good story is worth hearing: one trained in Bluff may talk
+# their way past them when they meet face to face (#1017).
+talk_past = true
 
 # By night they bring their bowmen.
 [[table.entry]]
@@ -20,6 +23,7 @@ name = "a band of footpads"
 weight = 3
 when = { phase = ["night"] }
 group = [{ creature = "footpad", count = "1d3+1" }, { creature = "footpad_archer", count = "1d2-1" }]
+talk_past = true
 
 [[table.entry]]
 id = "road_goblins"

@@ -553,3 +553,137 @@ fn camping_replays_exactly() {
         }
     }
 }
+
+// Talking past (#1017; `talk_past.rs`).
+
+/// The fixture with a flagged entry of kobolds beside the rest (`talk_past = true`).
+fn talking() -> Arc<Content> {
+    let mut files = ContentFiles::builtin();
+    files.remove("data/weather.toml");
+    files.remove("data/hunger.toml");
+    let table = format!(
+        "{TABLE}[[table.entry]]\nid = \"talkers\"\nname = \"a band of talkers\"\nweight = 1\n\
+         group = [{{ creature = \"kobold\", count = \"2\" }}]\ntalk_past = true\n"
+    );
+    files.insert("campaigns/showcase/data/encounters/test.toml", &table);
+    Arc::new(Content::load(&files).expect("fixture content"))
+}
+
+/// A run of the fixture on `seed`, its player Presence `presence` (the rest 14) and Bluff
+/// `bluff` (`None`: untrained).
+fn talker(seed: u64, presence: u8, bluff: Option<u16>) -> World {
+    let mut w = World::new(talking(), "world", Some(seed)).expect("world");
+    let skill = w.content().skill_id("bluff").expect("bluff");
+    let p = w.player_mut();
+    let mut scores = crate::stats::PerStat::splat(14);
+    scores[crate::stats::Stat::Presence] = presence;
+    p.stats = crate::stats::Stats::new(scores, crate::stats::PerStat::splat(40));
+    let mut all: Vec<_> = p.skills.iter().filter(|(s, _)| *s != skill).collect();
+    if let Some(value) = bluff {
+        all.push((skill, crate::skills::Trained { value, marks: 0 }));
+    }
+    p.skills = all.into_iter().collect();
+    w
+}
+
+fn choice_ids(w: &World) -> Vec<&'static str> {
+    let v = w.perception().encounter().expect("pending");
+    v.choices.iter().map(|(_, c)| c.id()).collect()
+}
+
+#[test]
+fn talking_past_is_offered_only_when_flagged_met_and_trained() {
+    let mut w = talker(1, 14, Some(50));
+    act(&mut w, "meet:talkers:met");
+    assert_eq!(choice_ids(&w), ["evade", "bluff", "fight"]);
+    let v = w.perception().encounter().unwrap();
+    assert_eq!(v.choices[1].0, "Talk your way past");
+    let json = crate::dump::json(&w, &[], false);
+    assert_eq!(json["encounter"]["choices"][1]["id"], "bluff");
+    // Not from the drop: the party has not seen them.
+    let mut w = talker(1, 14, Some(50));
+    act(&mut w, "meet:talkers:drop");
+    assert_eq!(choice_ids(&w), ["ambush", "evade", "fight"]);
+    act(&mut w, "encounter:bluff");
+    assert_eq!(last(&w), "That is not a choice now.");
+    // Not untrained.
+    let mut w = talker(1, 14, None);
+    act(&mut w, "meet:talkers:met");
+    assert_eq!(choice_ids(&w), ["evade", "fight"]);
+    let rng = w.state.rng.clone();
+    act(&mut w, "encounter:bluff");
+    assert_eq!(last(&w), "That is not a choice now.");
+    assert_eq!(w.state.rng, rng, "a refusal draws nothing");
+    // Not for an entry without the flag.
+    let mut w = talker(1, 14, Some(50));
+    act(&mut w, "meet:kobolds:met");
+    assert_eq!(choice_ids(&w), ["evade", "fight"]);
+}
+
+#[test]
+fn talking_past_is_made_or_failed_by_chance_and_takes_time_either_way() {
+    let (mut made, mut failed) = (0, 0);
+    for seed in 0..40 {
+        let mut w = talker(seed, 16, Some(50));
+        act(&mut w, "meet:talkers:met");
+        let time = w.time();
+        act(&mut w, "encounter:bluff");
+        assert!(w.time() > time, "the try takes time");
+        assert!(w.state.encounter.is_none());
+        if w.state.current().kind == LevelKind::Overworld {
+            made += 1;
+            assert!(said(&w, "You talk your way past."));
+            assert!(party(&w).is_empty(), "they let the player go");
+        } else {
+            failed += 1;
+            assert!(said(&w, "They are not fooled."));
+            assert_eq!(party(&w).len(), 2, "the fight opens");
+            for m in party(&w) {
+                assert!(w.state.actors[&m].mind.last_seen.is_some(), "aware");
+            }
+        }
+    }
+    assert!(made > 0 && failed > 0, "both ways: {made} {failed}");
+    // A silver tongue mostly gets by; a clumsy one mostly does not.
+    let past = |presence, bluff| {
+        (0..40)
+            .filter(|&seed| {
+                let mut w = talker(seed, presence, Some(bluff));
+                act(&mut w, "meet:talkers:met encounter:bluff");
+                w.state.current().kind == LevelKind::Overworld
+            })
+            .count()
+    };
+    assert!(past(30, 200) > past(3, 1), "Presence and Bluff help");
+}
+
+#[test]
+fn every_try_at_talking_past_marks_bluff() {
+    let mut w = talker(3, 14, Some(50));
+    act(&mut w, "meet:talkers:met encounter:bluff");
+    let skill = w.content().skill_id("bluff").expect("bluff");
+    let marks = w.state.player().skills.get(skill).map_or(0, |t| t.marks);
+    assert!(marks > 0, "a mark every try");
+}
+
+#[test]
+fn talking_past_replays_exactly() {
+    let content = talking();
+    let spec: crate::character::CharacterSpec = "human,male,bard".parse().expect("a bard");
+    for seed in 0..6 {
+        let mut w =
+            World::with_character(content.clone(), "world", Some(seed), Some(&spec)).expect("w");
+        let mut replay = Replay::new(&w);
+        let actions = "meet:talkers:met encounter:bluff wait*2";
+        for action in parse_actions(actions).expect("actions") {
+            w.apply(&action);
+            replay.push(&action, &w);
+        }
+        assert!(said(&w, "past.") || said(&w, "fooled."), "seed {seed}");
+        let verified = Replay::from_json(&replay.to_json())
+            .expect("json")
+            .run(content.clone())
+            .expect("the replay verifies");
+        assert_eq!(verified.state_hash(), w.state_hash(), "seed {seed}");
+    }
+}

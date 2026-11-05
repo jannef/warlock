@@ -64,6 +64,7 @@ impl World {
             Action::Throw { .. } => ActionKind::Throw,
             Action::Chat(_) | Action::Ask { .. } | Action::Say { .. } => ActionKind::Chat,
             Action::Steal(_) => ActionKind::Steal,
+            Action::Feint(_) => ActionKind::Feint,
             Action::Tame(_) => ActionKind::Tame,
             Action::Intimidate(_) => ActionKind::Intimidate,
             Action::ThrowVoice(_) => ActionKind::ThrowVoice,
@@ -79,6 +80,7 @@ impl World {
             Action::Temper { .. } => ActionKind::Temper,
             Action::Give { .. } => ActionKind::Wear,
             Action::Disarm(_) => ActionKind::Disarm,
+            Action::Listen(_) => ActionKind::Wait,
             Action::Heal { .. } => ActionKind::Heal,
             Action::Use(active, _)
             | Action::UseAt(active, _)

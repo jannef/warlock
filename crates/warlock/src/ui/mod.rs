@@ -533,6 +533,7 @@ fn draw_messages(
     if let InputMode::Ability(ability) = mode {
         let prompt = match ability {
             Ability::Disarm => "Disarm in which direction? (Esc to cancel)".to_string(),
+            Ability::Listen => "Listen at which door? (Esc to cancel)".to_string(),
             // Two kept beasts beside: which is tended, or the player (`input.rs::tend_way`).
             Ability::Heal => match bindings.key_name(KeyCommand::Wait) {
                 Some(key) => format!("Tend to which side? ({key} yourself, Esc to cancel)"),

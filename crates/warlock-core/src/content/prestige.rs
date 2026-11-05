@@ -3,7 +3,7 @@
 //! (`ClassDef::max_level`) and they have been **called** ([`super::CallingDef`]). A prestige
 //! class is a class in everything a level reads (hit points, mana, skill rolls, the skills it is
 //! known for, bonus picks, and its level table of class abilities) and nothing a creation reads:
-//! no stats, kit, skills, weapon skills, casting, experience factor, or alignment. Its levels
+//! no stats, kit, skills, weapon skills, experience factor, or alignment. Its levels
 //! are its own, 1 to `levels`: total level `max_level + n` of the base class is its level `n`
 //! ([`crate::character::Character::class_of`]).
 //!

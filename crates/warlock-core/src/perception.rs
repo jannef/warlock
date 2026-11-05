@@ -1303,10 +1303,12 @@ impl<'a> PerceptionView<'a> {
             .encounter_entry(self.campaign, &pending.entry)?;
         let id = crate::content::local_area_id(pending.cell);
         let area = self.content.local_area(self.campaign, &id);
+        let choices = crate::world::encounter_choices(pending, entry, self.player, self.content);
         Some(crate::world::encounter_view(
             pending,
             &entry.name,
             area.map(|a| a.landscape),
+            &choices,
         ))
     }
 
@@ -2036,14 +2038,6 @@ impl<'a> PerceptionView<'a> {
     pub fn own_mana(&self) -> (i32, i32) {
         let max = self.player.max_mana(self.content);
         (self.player.mana.clamp(0, max), max)
-    }
-
-    /// The player's caster level (spec §8 "Spells"; [`crate::world::World::caster_level`]):
-    /// their level and their class's casting percent, with what their talents and items add.
-    /// They know it, as they know their level.
-    pub fn own_caster_level(&self) -> i32 {
-        let casting = crate::world::casting_percent(self.content, self.character);
-        (self.player).caster_level(self.content, self.own_experience().level, casting)
     }
 
     /// The player's alternative resources (spec §8 "Resources"), in resource order: each one

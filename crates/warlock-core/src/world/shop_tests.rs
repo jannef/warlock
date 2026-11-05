@@ -683,3 +683,41 @@ fn generated_shops_are_kept_by_their_keepers() {
     let goods = (w.state.current().objects.iter()).filter(|(p, _)| shop.contains(**p));
     assert!(goods.count() >= usize::from(def.items.0));
 }
+
+#[test]
+fn a_shops_keeper_is_immune_to_wriggling_past() {
+    let mut w = in_shop();
+    let keeper = keeper(&w);
+    apply(&mut w, "move:E move:NE pickup move:SW move:W");
+    assert_eq!(w.player_pos(), FRONT);
+    // Grimbold stands in the door, and the player is the best wriggler there is.
+    w.state.actors.get_mut(&keeper).expect("keeper").pos = DOOR;
+    let id = w.content().skill_id("escape_artist").expect("skill");
+    let skills = &mut w.player_mut().skills;
+    let mut all: Vec<_> = skills.iter().filter(|(s, _)| *s != id).collect();
+    all.push((
+        id,
+        crate::skills::Trained {
+            value: 200,
+            marks: 0,
+        },
+    ));
+    *skills = all.into_iter().collect();
+    // A keeper is immune: the refusal stands, with no time, no draw, and no mark.
+    for dir in ["move:W", "move:N"] {
+        w.state.actors.get_mut(&keeper).expect("keeper").pos =
+            if dir == "move:W" { DOOR } else { POST };
+        for _ in 0..30 {
+            let rng = (w.state.rng.clone(), w.state.training.clone());
+            let out = apply(&mut w, dir);
+            assert!(!out.took_turn, "{dir}");
+            assert_eq!(last(&w), "Grimbold doesn't budge.");
+            assert_eq!(w.player_pos(), FRONT);
+            assert_eq!((w.state.rng.clone(), w.state.training.clone()), rng);
+            assert_eq!(shop(&w).status, ShopStatus::Open, "no theft");
+            assert_eq!(shop(&w).unpaid.len(), 1, "still owed");
+        }
+    }
+    let trained = w.state.player().skills.get(id).expect("trained");
+    assert_eq!(trained.marks, 0);
+}

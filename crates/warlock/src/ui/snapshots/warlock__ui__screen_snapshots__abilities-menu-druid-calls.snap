@@ -2,33 +2,33 @@
 source: crates/warlock/src/ui/screen_snapshots.rs
 expression: "render(case, content.clone())"
 ---
- You learn Sworn foe (archer).
- You call,┌─ Abilities ─────────────────────────────────────────────────────────────────┐
-          │                                                                             │
+ You learn┌─ Abilities ─────────────────────────────────────────────────────────────────┐
+ You call,│                                                                             │
           │ Birth sign                                                                  │
           │ > a  Transfixing stare   at a place you see                                 │
           │ Spells                                                                      │
           │   b  Spark               1d4 electricity, may arc, conducts, 1 mana, aimed  │
           │   c  Barkskin            3 mana                                             │
           │   d  Call of the wild    2 called, 5 mana                                   │
-          │   e  Call lightning      3d6 electricity, may arc, conducts, 20 mana, aimed │
-          │   f  Call of the forest  2 called, 20 mana                                  │
+          │   e  Water walking       5 mana                                             │
+          │   f  Call lightning      3d6 electricity, may arc, conducts, 20 mana, aimed │
+          │   g  Call of the forest  2 called, 20 mana                                  │
           │ Skills                                                                      │
-          │   g  Tame                in a direction                                     │
-          │   h  Heal                nothing to treat                                   │
-          │   i  Pick lock           in a direction                                     │
-          │   j  Forage              not usable here                                    │
+          │   h  Tame                in a direction                                     │
+          │   i  Heal                nothing to treat                                   │
+          │   j  Listen at a door    in a direction                                     │
+          │   k  Pick lock           in a direction                                     │
+          │   l  Forage              not usable here                                    │
           │ Weapon skills                                                               │
-          │   k  Shield bash         you hold no shield                                 │
+          │   m  Shield bash         you hold no shield                                 │
           │ Allies                                                                      │
-          │   l  Come to heel                                                           │
-          │   m  Hold here                                                              │
-          │   n  Set on              at a place you see                                 │
+          │   n  Come to heel                                                           │
+          │   o  Hold here                                                              │
+          │   p  Set on              at a place you see                                 │
           │                                                                             │
           │ The basilisk's stare: a foe nearby that sees you slows to a crawl a moment; │
           │ your eyes then rest two hours.                                              │
           │                                                                             │
           │                                                                             │
-          │ a-n or Enter use   Esc close                                                │
-          └─────────────────────────────────────────────────────────────────────────────┘
- The Hub  ·  HP 98/98  ·  MP 217/228  ·  Lv 36  ·  08:00  ·  11 Darkening, Year 1444     ? controls
+          │ a-p or Enter use   Esc close                                                │
+ The Hub  └─────────────────────────────────────────────────────────────────────────────┘? controls

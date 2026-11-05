@@ -8,7 +8,6 @@ expression: "render(case, content.clone())"
 
 
 
-
                     ┌─ Abilities ──────────────────────────────────────────────┐
                     │                                                          │
                     │ Birth sign                                               │
@@ -16,16 +15,17 @@ expression: "render(case, content.clone())"
                     │ Class                                                    │
                     │   b  Stunning strike    in a direction                   │
                     │   c  Step of the wind                                    │
+                    │ Skills                                                   │
+                    │   d  Listen at a door   in a direction                   │
                     │ Weapon skills                                            │
-                    │   d  Shield bash        you hold no shield               │
+                    │   e  Shield bash        you hold no shield               │
                     │                                                          │
                     │ The basilisk's stare: a foe nearby that sees you slows   │
                     │ to a crawl a moment; your eyes then rest two hours.      │
                     │                                                          │
                     │                                                          │
-                    │ a-d or Enter use   Esc close                             │
+                    │ a-e or Enter use   Esc close                             │
                     └──────────────────────────────────────────────────────────┘
-
 
 
 

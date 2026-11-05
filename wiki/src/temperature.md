@@ -69,7 +69,8 @@ with a pack, 15 cm three quarters of a tonne. What counts is your weight: your o
 everything you carry, worn and wielded things included (see [Burden](burden.md)). Up to what the
 ice holds it holds you; beyond that it may give way, more likely the more you weigh, until at
 twice what it holds it surely does. When it held only by luck, it creaks under your weight: a
-warning. A heavily laden [dwarf](races.md#race-dwarf) falls in where a lightly packed [elf](races.md#race-elf) crosses.
+warning. A heavily laden [dwarf](races.md#race-dwarf) falls in where a lightly packed [elf](races.md#race-elf) crosses. Under someone
+[water-borne](status-effects.md#status-water-borne) ([Water walking](magic.md#spell-water-walking)) any ice holds, however thin.
 
 {{#include generated/ice.md}}
 
@@ -97,7 +98,8 @@ There is no going back once the ice cracks, but nothing is lost for good: only t
 ## Heat and frost
 
 Bursts of heat and frost change the ice at once (see [Traps](traps.md), and [spell types](magic.md#spell-types)): a
-[fireball](traps.md#trap-fireball) melts the ice it reaches, and whoever stood on it falls in; a [frost trap](traps.md#trap-frost) freezes the
+[fireball](traps.md#trap-fireball) melts the ice it reaches, and whoever stood on it falls in (but the ice under someone
+[water-borne](status-effects.md#status-water-borne) holds); a [frost trap](traps.md#trap-frost) freezes the
 [water](terrain.md#water) it reaches at once, into ice that holds a laden person (10 cm). A blast without heat (none
 yet) will shatter thin ice. Someone who makes way for you onto ice you stood on may break through
 it, if it is heavier than you.

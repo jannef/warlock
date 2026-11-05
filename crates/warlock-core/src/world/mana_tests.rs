@@ -460,6 +460,32 @@ fn levels_add_half_the_class_mana_and_the_better_mind_up_to_mana_level() {
     assert_eq!((me.mana_base, me.mana), (100 + 2 * 52, 102 + 2 * 52));
 }
 
+/// The mana the player's base gains as they go from level `level - 1` to `level`.
+fn mana_of_level(w: &mut World, level: u8) -> i32 {
+    let spec = w.state.character.as_ref().map(|c| c.spec.clone());
+    let factor = crate::content::Factor::of(w.content(), spec.as_ref());
+    w.state.experience = w.content().experience().threshold_for(level - 1, factor);
+    assert_eq!(w.player_level(), level - 1);
+    let before = w.state().player().mana_base;
+    let need = w.content().experience().threshold_for(level, factor);
+    w.grant_xp(need - w.player_xp());
+    assert_eq!(w.player_level(), level);
+    w.state().player().mana_base - before
+}
+
+#[test]
+fn mana_grows_with_every_level_to_60() {
+    // `mana_level` is 60, the last level, so a wizard's levels 31 and 60
+    // add mana as level 2 does.
+    let content = Arc::new(Content::builtin().expect("content"));
+    let spec: CharacterSpec = "human,male,wizard".parse().expect("a character");
+    let mut w = World::with_character(content, "showcase", Some(7), Some(&spec)).expect("world");
+    let early = mana_of_level(&mut w, 2);
+    assert!(early > 0, "a wizard's level brings mana");
+    assert_eq!(mana_of_level(&mut w, 31), early);
+    assert_eq!(mana_of_level(&mut w, 60), early);
+}
+
 #[test]
 fn mana_is_saved_in_the_state_hash_and_replays() {
     let content = content_with(MAGE, &[]);

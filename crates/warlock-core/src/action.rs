@@ -118,6 +118,12 @@ pub enum Action {
     /// Willpower; caught, it turns on them. Takes the time of `steal`; refused (no time) when the
     /// player sees no one there, or someone hostile.
     Steal(Dir),
+    /// Feint at the creature in a direction (spec §8 "Skills": Bluff; `world/feint.rs`): a
+    /// hostile one the player sees, with a mind to fool, checks its Willpower against
+    /// `data/feint.toml`'s difficulty + the player's Presence modifier + Bluff's `feint` points,
+    /// and is Surprised if it fails. Takes the time of `feint`, whatever comes of it; refused (no
+    /// time) untrained, at no one seen, at one not hostile, or at one without a mind.
+    Feint(Dir),
     /// Tame the beast in a direction (spec §8 "Allies": Tame; `world/tame.rs`): `[tame] turns`
     /// actions beside it (`data/companions.toml`), each the time of `tame`, then a Willpower
     /// check; made, it is the player's companion. Refused (no time) untrained, with a companion
@@ -155,7 +161,7 @@ pub enum Action {
     /// Study one of inventory stack `item`, a scroll whose type the player knows, to learn the
     /// spell it teaches for good (spec §8 "Spells"): turn after turn of the `study` action (by
     /// the spell's level), stopping early like a rest (the scroll kept); at the end the scroll is
-    /// used up, and above the player's caster level a check decides whether they learn it or a mishap
+    /// used up, and above the player's learning a check decides whether they learn it or a mishap
     /// befalls them. Refused (no time) for a scroll that is not known or teaches nothing, or a
     /// spell already known.
     Study {
@@ -186,6 +192,9 @@ pub enum Action {
     /// it away; a bad failure sets it off at the player. Takes the time of `disarm`, whatever
     /// comes of it; refused (no time) without the skill or a known trap there.
     Disarm(Dir),
+    /// Listen at the closed door in a direction (spec §5 "Hearing"; the Listen ability,
+    /// `world/listen.rs`): a turn in which the player's hearing through that door is keener.
+    Listen(Dir),
     /// Treat oneself, or an ally beside one, with the Heal skill (spec §8 "Skills"; the Heal
     /// ability): the ailment named (a status id, `heal:bleeding`, or a disease id,
     /// `heal:filth_fever`), else the player's first there is to treat (`heal`); `ally` the
@@ -889,6 +898,7 @@ impl fmt::Display for Action {
             Action::Ask { dir, topic } => write!(f, "ask:{dir}:{topic}"),
             Action::Say { dir, words } => write!(f, "say:{dir}:{}", words.replace(' ', "_")),
             Action::Steal(d) => write!(f, "steal:{d}"),
+            Action::Feint(d) => write!(f, "feint:{d}"),
             Action::Tame(d) => write!(f, "tame:{d}"),
             Action::Intimidate(at) => write!(f, "intimidate:{},{}", at.x, at.y),
             Action::ThrowVoice(at) => write!(f, "throw_voice:{},{}", at.x, at.y),
@@ -900,6 +910,7 @@ impl fmt::Display for Action {
             Action::Search(1) => f.write_str("search"),
             Action::Search(turns) => write!(f, "search:{turns}"),
             Action::Disarm(d) => write!(f, "disarm:{d}"),
+            Action::Listen(d) => write!(f, "listen:{d}"),
             Action::Heal { what: None, .. } => f.write_str("heal"),
             Action::Heal {
                 what: Some(id),
@@ -1036,12 +1047,14 @@ impl FromStr for Action {
                 })
             }
             "steal" => dir().map(Action::Steal),
+            "feint" => dir().map(Action::Feint),
             "tame" => dir().map(Action::Tame),
             "kick" => dir().map(Action::Kick),
             "pick" => dir().map(Action::PickLock),
             "bash" => dir().map(Action::Bash),
             "dig" => dir().map(Action::Dig),
             "disarm" => dir().map(Action::Disarm),
+            "listen" => dir().map(Action::Listen),
             "heal" => {
                 let usage = || {
                     "`heal:ID[:DIR]` names what to treat, e.g. `heal:bleeding` or \
@@ -1845,12 +1858,14 @@ mod tests {
                 Action::Close(d),
                 Action::Chat(d),
                 Action::Steal(d),
+                Action::Feint(d),
                 Action::Tame(d),
                 Action::Kick(d),
                 Action::PickLock(d),
                 Action::Bash(d),
                 Action::Dig(d),
                 Action::Disarm(d),
+                Action::Listen(d),
             ]);
         }
         assert_eq!(parse_actions(&format_actions(&all)), Ok(all));
@@ -1873,6 +1888,8 @@ mod tests {
         assert_eq!(parse_actions("BASH:sw"), Ok(vec![Action::Bash(Dir::SW)]));
         assert!(parse_actions("bash").is_err());
         assert_eq!(parse_actions("Steal:N"), Ok(vec![Action::Steal(Dir::N)]));
+        assert_eq!(parse_actions("feint:E"), Ok(vec![Action::Feint(Dir::E)]));
+        assert!(parse_actions("feint").is_err());
         assert!(parse_actions("steal").is_err());
         assert_eq!(parse_actions("TAME:sw"), Ok(vec![Action::Tame(Dir::SW)]));
         assert!(parse_actions("tame").is_err());

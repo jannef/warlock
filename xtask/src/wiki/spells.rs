@@ -1,5 +1,5 @@
-//! Spells (spec §8 "Spells"): the shapes' and resolutions' cost multipliers, the classes'
-//! casting percents, the spell list by spell level, the classes' guaranteed spells, the armour
+//! Spells (spec §8 "Spells"): the shapes' and resolutions' cost multipliers, the
+//! spell list by spell level, the classes' guaranteed spells, the armour
 //! that makes casting dearer, and the wands.
 
 use super::text::{Term, anchored, damage_link, link};
@@ -146,19 +146,6 @@ pub(super) fn resolutions(content: &Content) -> String {
     out
 }
 
-/// Each class's casting percent, most first, then by name.
-pub(super) fn casting(content: &Content) -> String {
-    let mut classes: Vec<(&str, u8)> = (content.classes().iter())
-        .map(|c| (c.name.as_str(), c.casting))
-        .collect();
-    classes.sort_by(|a, b| b.1.cmp(&a.1).then(a.0.cmp(b.0)));
-    let mut out = String::from("| Class | Casting |\n|---|:---:|\n");
-    for (name, casting) in classes {
-        let _ = writeln!(out, "| {name} | {casting} % |");
-    }
-    out
-}
-
 /// Every spell, by spell level and then name: its school, shape and resolution, its base reach,
 /// what its base does, its ladders in words (what it grows with), its mana (no armour, no
 /// talents; whoever casts it), and its time in casts.
@@ -232,9 +219,8 @@ pub(super) fn class_spells(content: &Content) -> String {
     let book = content.talents();
     let mut classes: Vec<_> = content.classes().iter().collect();
     classes.sort_by(|a, b| a.name.cmp(&b.name));
-    let mut out = String::from(
-        "| Class | Casting | Guaranteed spells (spell level, from level) |\n|---|:---:|---|\n",
-    );
+    let mut out =
+        String::from("| Class | Guaranteed spells (spell level, from level) |\n|---|---|\n");
     for class in classes {
         let mut given: Vec<(u8, &str, u8)> = Vec::new();
         for (level, talent) in &class.abilities {
@@ -258,7 +244,7 @@ pub(super) fn class_spells(content: &Content) -> String {
                 .collect::<Vec<_>>()
                 .join(", ")
         };
-        let _ = writeln!(out, "| {} | {} % | {spells} |", class.name, class.casting);
+        let _ = writeln!(out, "| {} | {spells} |", class.name);
     }
     out
 }
