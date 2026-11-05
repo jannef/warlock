@@ -872,7 +872,7 @@ fn random_vaults_are_spaced_by_phase() {
     let def = CONTENT.dungeon("depths").expect("the depths");
     for seed in 0..20 {
         let ids = |depth: u32| -> Vec<String> {
-            spaced_vaults(&CONTENT, seed, def, depth)
+            spaced_vaults(&CONTENT, seed, (def, depth), 0)
                 .iter()
                 .filter(|v| !v.pinned)
                 .map(|v| v.id().to_string())
