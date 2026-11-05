@@ -240,3 +240,13 @@ wave, #335 the delf wave): content only, on the fields above. A wave adds
   too, or the shipped types naming it fail to load;
 - its rows in `world/bestiary_tests.rs`'s `WAVES` (the type and its owning campaign), and its
   stances in that file's faction test.
+
+**`hostile_to_all`** (`content/faction.rs`): a faction with it (`berserk`, Rouse the dead's,
+`docs/dev/allies.md` "The risen") fills its row, column, and own diagonal of the hostility matrix
+and may list no `hostile`. So `World::stance` of an actor and itself is `Neutral` by id
+(`stance_between`), and `Factions::has_enemies` counts a faction's own quarrels only: being on the
+berserk's list makes no one a fighter (`disturbs_rest`, hearing, `stride.rs`, the wiki's `fights`).
+`fixture_factions.rs` strips the line with the other grudges, so a fixture's berserk are at peace;
+the fixtures that write their own `data/factions.toml` have no such faction, which is why the
+spell's `berserk_faction` is read at the cast (none: it rises serving) and checked on the shipped
+data by a test rather than at load.

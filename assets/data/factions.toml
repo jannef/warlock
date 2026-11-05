@@ -245,3 +245,10 @@ name = "merchants"
 id = "outraged"
 name = "outraged shopkeepers"
 hostile = ["player"]
+
+# The dead a spell raises and fails to hold (Rouse the dead's `berserk_faction`): friendly to
+# nothing, each other included.
+[[faction]]
+id = "berserk"
+name = "the berserk"
+hostile_to_all = true

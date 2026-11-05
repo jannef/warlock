@@ -244,6 +244,7 @@ fn aim(aim: Aim) -> &'static str {
         Aim::Nothing => "nothing",
         Aim::Direction => "a direction",
         Aim::Cell => "a place you see",
+        Aim::Corpse => "a corpse you see",
         Aim::Ailment => "what to treat, when there is more than one",
         Aim::Item => "an item you carry",
         Aim::Shape => "a weapon's shape, from every melee weapon",

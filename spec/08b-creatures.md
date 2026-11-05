@@ -166,6 +166,15 @@ developer notes (CLAUDE.md, `docs/dev/`).
   `[allies] most` (8) allies on one level. **Beast-bond** (Wayfarer; Handle animal 20): your
   allies strike +1 to hit and take Protection +1, read through you. The messages never say a
   number. The dev `ally:CREATURE[:N[:DURATION]]` makes allies for tests and captures.
+  **The risen** (`world/corpse_spell.rs`; #999): Rouse the dead stands a corpse's own creature type
+  (`ObjectDef::corpse`) on its cell or the nearest free one, at half its maximum hit points rounded
+  up, with no gear, pack, `npc` id, or mimic's disguise. It serves as a summon does (`most` 2, ten
+  minutes), and a second death leaves nothing. A `unique` type's corpse is refused. One time in ten
+  (one `below(100)` on the gameplay stream, after every refusal) it rises **berserk** instead: in
+  the faction `berserk`, `hostile_to_all` (hostile to every faction and to itself), by the plain
+  AI, no ally, under no orders, counted toward neither `most` nor the cap nor a level's population,
+  on the same clock (`Actor::risen`). Its kill pays as any of its type.
+
   **Summons** (`world/summon_spell.rs`; #837): a spell of `kind = "summon"`, cast on oneself,
   calls `count` creatures of its pool (`[spell.effect] summon`; the count a roll, grown by its
   `count` ladder and the dice hooks) beside the caster within `spread`, nearest first, on the

@@ -99,3 +99,8 @@ the actions queued behind it that frame (it takes the `ResMut` so a frame withou
 (`PerceptionView::level_kind`, the state alone); text cases `hunger-*` in `screen_snapshots.rs`.
 There is no multi-step movement to end (no run or travel command, on the overworld or anywhere): a
 held key's repeats are the only walking.
+
+**A corpse's other uses**: the spells aimed at one (`world/corpse_spell.rs`, `docs/dev/spells.md`
+"Spells aimed at a corpse") use up the top-most corpse of a pile the player sees, and read neither
+`Stack::died` nor its stage. A cursed room's rising looks for its corpse when it is due
+(`world/curse.rs`): one used by a spell does not rise.

@@ -310,6 +310,12 @@ developer notes (CLAUDE.md, `docs/dev/`).
   talents and items act on it through the hooks. The casters' spells (§8 "Class
   abilities") are spells of `data/spells/` cast by it, and so are the spells learned from
   scrolls and the spells scrolls cast. `docs/dev/spells.md` has the details.
+  - **Spells aimed at a corpse** (#999; the spell types design §7 entries 2, 29, 30): a spell with
+    `[spell.effect] corpse` asks for a cell where the caster sees a corpse, and uses the pile's
+    top-most corpse stack; `consumed` takes one. The corpse's stage is not read. Refused, no time
+    and no mana, with none. **Charnel burst** goes off where it lies; **Grave feast**, a touch,
+    heals and gives mana (`mana` on a heal), each held to its maximum; **Rouse the dead** raises
+    its own creature type (§8 "Allies": "The risen").
   - **The first list** (#397, design §7; names left for the world-language review, #378):
     by spell level (the spell scaling design §5.8): 0 Evil eye, Light (#589: the scroll of
     light's; Lit, its status, sheds a light about the caster, `light` on a status); 1 Burning

@@ -260,7 +260,7 @@ Defence and Protection, its alignment (`alignment evil`; the player's score and 
 are, "(unidentified)" marked, a wand's rung `(rung 2)`), what its magic items do to it (`magic strength +1`), its burden
 and carrying limit, its weapon skills with marks, its stats as score/potential, its status
 effects with severities, its diseases (progressions, checks won in a row, time to their next
-turn), stat damage, and drained points (`drained St 2`), the player's nutrition, its npc id and talk counts, if any, whose ally it is with what made it one, its minutes left, and its order (`; ally of #0 (summoned, 4 min; follow)`, `(summoned; stay at (12, 5))`, `; retinue` while travelling with the player), and what it resists in percent (`resists fire 25`); then
+turn), stat damage, and drained points (`drained St 2`), the player's nutrition, its npc id and talk counts, if any, whose ally it is with what made it one, its minutes left, and its order (`; ally of #0 (summoned, 4 min; follow)`, `(summoned; stay at (12, 5))`, `; retinue` while travelling with the player; `; risen, faction berserk, 9 min` for one that rose berserk, docs/dev/allies.md "The risen"), and what it resists in percent (`resists fire 25`); then
 all food on the level and in the packs of those on it with when it was made (a corpse: when it
 died) and its stage, `fresh`, `old`, `rotten`, or `gone`, which the player is never shown,
 **dev-only**), `progress` (the level-up choices due, `due level 3: 1 talent`, `due level 30: 1

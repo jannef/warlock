@@ -16,6 +16,12 @@ scrolls stays a modest one. A spell your class gives is yours at that level, wha
 
 {{#include generated/class-spells.md}}
 
+Three spells are aimed at a [corpse](food.md#corpses) you see, and any age will do: without one
+they are refused, for no time and no mana. [Charnel burst](#spell-charnel-burst) goes off where
+the corpse lies, flying nowhere, and what it kills leaves corpses for the next. [Grave
+feast](#spell-grave-feast) reaches only a corpse beside you or under your feet, and gives back
+hit points and mana, never past your maximum. [Rouse the dead](allies.md#the-risen) stands it up.
+
 ## The spells
 
 Every spell has a **[level](#spell-levels)**, 0 to 70: what it costs in [mana](mana.md#spending-it), and how learned a caster must
