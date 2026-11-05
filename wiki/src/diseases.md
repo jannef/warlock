@@ -105,7 +105,7 @@ A temple's **cure** does the same for gold, every disease included, and a **mend
 the [stat damage](#stat-damage) at once, and the points the undead drained (see [Services](npcs.md#services) and
 [Drained stats](stats.md#drained-stats)).
 
-The **[Heal](skills.md#skill-heal)** skill eases a disease that shows, one try a bout, but never cures it (see
+The **[Heal](skills.md#skill-heal)** skill eases a disease that shows, as many tries as you like, but never cures it (see
 [Treating yourself](skills.md#treating-yourself)).
 
 ## In the message line

@@ -531,9 +531,8 @@ cast path shares.
   }` since S1), School focus (`choice = "school"`, `Choice::School`: the seven schools then the
   non-physical damage types; `spell_mod { cost = -10, cells = 1 }`, one pick per choice, foci on
   the same spell add up), Keen mind (the same choice, `spell_mod { sides = 1 }`), and S2's three
-  (each hook ships with a user): Sure hand (level 12, `spell_mod { reroll = 1 }`), Numbing cold
-  (level 12, `spell_mod { rider = { status = "sluggish", severity = 1 }, when = ["cold"] }`),
-  Brimming (level 25, `spell_mod { dice = 1 }` and `spell_mana_percent` +10; systems `spells`
+  (each hook ships with a user, but the rider: "Spell types" below took Numbing cold's): Sure
+  hand (level 12, `spell_mod { reroll = 1 }`), Brimming (level 25, `spell_mod { dice = 1 }` and `spell_mana_percent` +10; systems `spells`
   and `mana`). The wizard's class talents: Scroll adept (at 1, reading −50 % and `spell_mod {
   scroll_rungs = 1 }`: scrolls only, decision 12), Arcane training (at 1: `caster_level` +1 per
   5 levels: learning only), Empower (at 32, `spell_mod { rungs = 1 }`, mana −10 %), Archmage
@@ -615,8 +614,7 @@ cast path shares.
   touch, armour, Willpower's reach ladder at 13, 14, 17, 18, no draws without a roll; S2: the
   rung by score and by stat damage, a cast at every rung drawing that rung's dice and nothing
   more, a rung's boundary changing the roll and nothing else, Sure hand's reroll drawing once
-  more per die and never twice, Numbing cold's rider on every target harmed and none missed and
-  on cold spells only, `aim` by Intelligence), `world/affix_spell_tests.rs` (the Magus, Potent's
+  more per die and never twice, `aim` by Intelligence), `world/affix_spell_tests.rs` (the Magus, Potent's
   bonus, Lingering, Farcasting past the ladder, Baleful, the old Potent read),
   `world/affix_draught_tests.rs` (of Wands' rungs beside Wand mastery, never past the ladder),
   `world/weapon_ability_tests.rs` (reflection carries the caster's climbed roll),
@@ -624,7 +622,7 @@ cast path shares.
   (#400: Overreach on the study check and never on mana, School focus by tag, Arcane
   training, every combination of the spell talents casting; S2: Empower and Archmage to the
   ladder's last rung and the other hooks after, Keen mind on its school only, Brimming's die
-  and cost, Sure hand's and Numbing cold's hooks, Scroll adept's scroll rung past the scroll's
+  and cost, Sure hand's hook, Scroll adept's scroll rung past the scroll's
   own roll), `world/learn_tests.rs` (study turns by level and Quick study, certain at or below the
   caster level, the difficulty by levels and known levels, the dumps), `world/spell_list_tests.rs` (#397:
   scrolls of spells read, the area hexes, Haste, one scroll a spell, the scrolls' loot by spell
@@ -632,3 +630,49 @@ cast path shares.
   `magic/tests.rs` (`spell_scrolls_drop_by_level`),
   `world/spell.rs` (cone geometry),
   `ui/target.rs` (aiming by shape).
+
+## Spell types
+
+What every spell of a damage type does beyond its damage (the design:
+`docs/design/spell-types-and-new-spells.md` §3 to §5, §10).
+
+- **Data**: `[types]` in `assets/data/spells.toml`, one entry a damage type, documented there;
+  `content/spell_type.rs` parses and checks it (`SpellRules::types`; `Content::spell_type(kind)`, none
+  for a type without an entry). `spell_type::parse` runs apart from `SpellRules::parse`, which
+  skips the table, because it needs the statuses and lights loaded. A new rule is a field on
+  `TypeSpec` and `SpellType`, a hook, and a row in the table of `xtask/src/wiki/spells.rs::types`.
+- **Hooks** (`world/spell_type.rs`, one line at each place on the cast path):
+  - `spell_type_lands` in `cast.rs::spell_lands`, after the cast's own status and riders: the
+    `rider`, then `ends`. It walks the `harmed` list: `Strike::Hit`, not the `reached` list its
+    own status falls on, which counts `Strike::Resisted` (one that resisted it all takes no burn
+    and makes no draw). A scroll's, a wand's, a reflected, and a mishap's cast all pass here
+    (`learn.rs::backfire_spell` goes through `spell_lands` for it, so the scroll's own status
+    falls on the reader too).
+  - `cast_burst` (`world/spell.rs`) for `Caster::Actor` only: the ice (`burst.ice`, a spell's own
+    `heat` or `frost`, or else the type's), then `spell_type_burst` (`douses`, `fire`).
+    `Caster::Trap` and `Caster::Place` keep their own data and read no type. Blaze is not on this
+    path.
+  - `spell_type_cell` in `cast.rs`: at radius 0, on the cell of the creature a single-target spell
+    struck, hit or missed; with no creature on the cell aimed at, if the ray got there (the
+    design's "last cell of the line" would freeze the far end of a ray, past the aim, and it
+    flies its whole range: no bridge could be built), else the last it reached. A line's arm in
+    `cast_damage` calls it on the line's last cell: not `cast_bolt`, which Fire breath shares. A
+    cone has no world rule.
+- **`World::lay_fire`** (`spell_type.rs`): the one laying of a fire on a walkable cell, longest
+  wins; Blaze's `kindle` calls it, and a burning missile's `come_down` keeps its own (it adds to a
+  pile). `douses` goes through `shoot.rs::put_out`, burning objects there with it.
+- **Burning**: `assets/data/status.toml`; the light is the status light (`StatusDef::light`,
+  `ember`, radius 1: `LightCache` sheds it for every actor). `quenched = true` is the status field
+  for "water ends it": `World::quench` from `ice.rs::after_tread` (every step's one hook, the
+  player's, a creature's, a displaced one's) on open water, and from `fall_in`. A knock-back or a
+  teleport into water does not (no step).
+- **Words**: `SpellType::words`, appended in `spell_words.rs::roll_words`, the one place the menu,
+  the `spells` dump, and a wand's description read.
+- **Numbing cold** is gone (its rider is cold's). The `rider` hook on `spell_mod` stays, with no
+  shipped user, for a talent that wants one (`when = ["fire"]` works beside the type's own).
+- **Determinism**: one `below(100)` per living creature harmed, only for a `chance` below 100,
+  in `spell_lands`' order. **Saves**: nothing new: a status is data, a fire is `LevelState::fires`.
+- **Tests**: `world/spell_type_tests.rs` (the draw by seed, the fire-immune, the light, water, the
+  numbing on hit and miss, cold ending Burning, a ray's one cell, a burst by its type, a spell's
+  own field, the fire left and doused, a place's burst reading nothing, the rider hook, the words,
+  a mishap), `content/spell_type.rs` (the load checks).

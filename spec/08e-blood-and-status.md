@@ -411,11 +411,31 @@ developer notes (CLAUDE.md, `docs/dev/`).
     Nothing holds them but the engine's own limits (`MAX_REACH` 20, a cone 5, the burst
     table's length, a status's `max`). The shipped users: Empower (a rung), Archmage (two),
     Keen mind (a die size), School focus (10 % off, a cell), Scroll adept (a scroll rung), Wand
-    mastery (a wand rung), Sure hand (rerolls 1s), Brimming (a die more, +10 % mana), Numbing
-    cold (cold spells' targets a degree Sluggish); the affixes `spell_rungs`, `spell_bonus`
+    mastery (a wand rung), Sure hand (rerolls 1s), Brimming (a die more, +10 % mana) (the rider
+    has no shipped talent: a type's own rider is below); the affixes `spell_rungs`, `spell_bonus`
     (Potent: +1 / +2 / +3), `spell_sides`, `spell_dice`, `spell_reroll`, `wand_rungs` (of
     Wands), `spell_reach` (of Farcasting, cells), `spell_duration` (of Lingering, degrees).
     Derived at cast time; nothing saved.
+  - **Spell types** (`docs/design/spell-types-and-new-spells.md` §3, §4; `[types]` in
+    `data/spells.toml`, read into `SpellRules::types`, every status and light checked at load):
+    what every spell of a damage type does beyond its damage, always on, cast from mana, a
+    scroll, or a wand; a type without an entry does nothing more. Magic's alone: a weapon's blow
+    never reads it. It spares no one, the caster and their allies included. A `rider` (status,
+    severity, `chance` in percent, default certain) on every creature the spell harmed (took hit
+    points from: not a miss, nor one that resisted it all), then `ends`, the statuses it ends on
+    them. `heat`, `frost` (mm), `douses`: on a burst's cells, a single target's cell struck (the
+    cell aimed at when it finds no one), or a line's last cell; a cone's cells no. `fire`: a
+    burst's centre cell, if walkable, gets a fire of that light for that long (light only; fixed
+    cells, it never spreads). A spell's own `heat` or `frost` stands in for its type's. A trap's,
+    a place's, and a birth sign's bursts and bolts are no spells and read nothing. **Fire**:
+    Burning 1, one time in four per creature harmed; melts ice; `arrow_fire` for 60 s. **Cold**:
+    Sluggish 1, certain; ends Burning; `frost = 100`; douses. **Burning** (`data/status.toml`):
+    max 3, adding; 1 hit point of fire per 10 s at one degree, a degree easing per 30 s; sheds the
+    `ember` light; a step or a fall into water ends it (`quenched`). The menu, the `spells` dump,
+    and a wand's description say the rule after the roll (`4d6 fire, burns one in four`, the
+    type's `words`). The aiming mode previews nothing. Determinism: one `below(100)` per living
+    creature harmed, only for a `chance` below 100, from the gameplay stream, in the order they
+    were struck.
   - **No cap** (decision 16): nothing checks a spell's strength when the content loads, and
     nothing holds a roll when it is cast: the rungs, the hooks, and a critical add what they
     add.

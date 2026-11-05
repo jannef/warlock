@@ -160,7 +160,7 @@ wiki's effect text appends "while raging".
 | `wind_step` (Step of the wind, the ascetic's at 6, #847) | `World::wind_step` (`world/ascetic.rs`), from `use_class`: a degree of its status (Light-footed), `Spent::NoTime`, the ki its talent's `resource`; `World::may_wind_step` refuses it before the spend while that status lasts |
 | `spell` (`{ kind = "spell", spell = "ID" }`, checked against `data/spells/`) | `TalentMods::spells` → `Ability::Spell`'s `had_by`; `world/cast.rs` |
 | `weapon` on a `choice = "school_skill"` talent (Schooled) or `role = "school"` (Magister); `school_marks_percent` (Devotee) | `TalentMods::weapon_benefit` through `Actor::benefit` (`Actor::school_benefit`); `TalentMods::marks(Role::School, _)` in `World::practise` (docs/dev/magic-skills.md) |
-| `spell_mod` (`SpellModSpec`: `rungs`, `scroll_rungs`, `wand_rungs`, `reach_rungs`, `degree_rungs`, `sides`, `dice`, `bonus`, `reroll`, `rider`, `cells`, `radius_cells`, `degrees`, `cost`, `when`; a talent chosen for a school or an element keys on the choice) | `TalentMods::spell` → `Actor::spell_mods` (`world/spell_mods.rs`), read by `world/spell_rung.rs` and the cast path (the spell scaling design §7.1: Empower, Archmage, Keen mind, School focus, Scroll adept, Wand mastery, Sure hand, Brimming, Numbing cold); `cost` in `Actor::spell_base` |
+| `spell_mod` (`SpellModSpec`: `rungs`, `scroll_rungs`, `wand_rungs`, `reach_rungs`, `degree_rungs`, `sides`, `dice`, `bonus`, `reroll`, `rider`, `cells`, `radius_cells`, `degrees`, `cost`, `when`; a talent chosen for a school or an element keys on the choice) | `TalentMods::spell` → `Actor::spell_mods` (`world/spell_mods.rs`), read by `world/spell_rung.rs` and the cast path (the spell scaling design §7.1: Empower, Archmage, Keen mind, School focus, Scroll adept, Wand mastery, Sure hand, Brimming; `rider` has no shipped user since the spell types took Numbing cold's, `docs/dev/spells.md`); `cost` in `Actor::spell_base` |
 | `spell_mana_percent` | `Actor::spell_cost` (the cast and `Unavailable::NoMana`) |
 | `caster_level` (`per_levels`: Arcane training) | `Actor::caster_level` (`TalentMods::caster_level_at`, at the character level) |
 | `attuned_percent` (Attuned) | `Actor::caster_level`'s items term (`TalentMods::attuned`: the worn `caster_level` this percent more, rounded up; a term below 0 as it is) |
@@ -467,7 +467,7 @@ effect kinds, `TalentMods` fields, and readers wherever nothing else used them (
 `quest_xp_percent`, `favour_cap`, `credit`, `item_worth`, `story_luck`, `sense_of_place`,
 `wake_percent`, `make_way`, `missile_breaks`, `steadfast`, `disease_still`,
 `sky_footsteps_percent`): 26 class abilities (Well dressed among them; their levels left
-empty), 12 picks, and Favoured child. Kept by the owner: the horoscope whole, Numbing cold, the
+empty), 12 picks, and Favoured child. Kept by the owner: the horoscope whole, Numbing cold (since gone: its rider is the cold spell type's, #995), the
 half-elf's Diplomat, and Haggler, now the merchant's level 1 class ability only (the one class
 ability on shop favour). Reworked:
 Stalker's eye is the ranger's class ability at level 2 (the lowest empty level of its table);

@@ -89,6 +89,22 @@ impl DangerRule {
         u8::try_from(danger.min(MAX_DANGER.into())).unwrap_or(MAX_DANGER)
     }
 
+    /// The danger of floor `depth` as it keeps rising, with no cap: an endless branch's
+    /// (`Content::floor_danger`), which draws at [`DangerRule::at`] of a floor no deeper than its
+    /// roster reaches. Whatever reads a floor's number reads this.
+    pub fn rising(&self, depth: u32) -> u32 {
+        let below = depth.saturating_sub(1);
+        u32::from(self.base).saturating_add(below.saturating_mul(self.per_depth.into()))
+    }
+
+    /// The deepest floor whose danger is still at most `danger`.
+    pub fn deepest_at(&self, danger: u8) -> u32 {
+        match self.per_depth {
+            0 => u32::MAX,
+            per => 1 + u32::from(danger.saturating_sub(self.base)) / u32::from(per),
+        }
+    }
+
     /// Whether the danger depends on the player's level.
     pub fn scales(&self) -> bool {
         self.player.is_some()

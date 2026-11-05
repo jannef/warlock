@@ -3,7 +3,7 @@
 //! reach, Arcane training on the wizard's caster level, every talent combination casting with
 //! nothing holding its roll (decision 16), and the six spell hooks by their shipped users:
 //! Empower's and Archmage's rungs, Keen mind's dice, Sure hand's reroll, Brimming's die and
-//! cost, Numbing cold's rider, Scroll adept's scroll rung.
+//! cost, Scroll adept's scroll rung.
 
 use super::caster_tests::{kobold, reach, sp, world_with};
 use super::*;
@@ -239,15 +239,12 @@ fn brimming_rolls_a_die_more_and_costs_a_tenth_more() {
 }
 
 #[test]
-fn sure_hand_and_numbing_cold_set_their_hooks() {
-    let w = plain_wizard(&[("sure_hand", None), ("numbing_cold", None)]);
+fn sure_hand_sets_its_hook() {
+    let w = plain_wizard(&[("sure_hand", None)]);
     let me = w.state.player();
     let frost = me.spell_mods(&BUILTIN, BUILTIN.spell(sp("ray_of_frost")));
     let fire = me.spell_mods(&BUILTIN, BUILTIN.spell(sp("fireball")));
-    let sluggish = BUILTIN.status_id("sluggish").expect("sluggish");
     assert_eq!((frost.reroll, fire.reroll), (1, 1), "every spell's 1s");
-    assert_eq!(frost.riders, [(sluggish, 1)], "a cold spell's rider");
-    assert!(fire.riders.is_empty(), "fire carries none");
 }
 
 #[test]

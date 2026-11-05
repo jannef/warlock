@@ -20,6 +20,11 @@
 # Micelfenn; Wulfeshol (5), a cave in Deorcholt; Bānfeld (6), a barrow field on Hlāwdūn; and
 # Brocenburg (7), the ruined fort in Holegnwudu.
 #
+# Grundlēas (9, "the groundless"; #1010) is open to anyone who walks there: bare steps going down
+# in the empty grass south of the Beorhtburna road, forty cells from Beorggeat. No road leads to
+# it, only the south road's nearest point nine cells north; by road and grass it is some sixty
+# steps from the pass. Its floors have no end and are never the same twice.
+#
 # The town leads into Cēaptūn (levels/ceaptun.toml). The locations that lead nowhere yet (the
 # barrow, the hidden two) get their levels from later work (the dungeon branches); the rest of
 # the design's forty sites
@@ -82,7 +87,7 @@ MMMMMMMMMMFFFFFFFFFFFFFFFFFFFFfffffff.ff...""""""""""""".""""""""sssss2sssssssss
 MMMMMMMMMMFFFFFFFF5FFFFFFFFFFFfffffffff."."""""""""""""""""""""""s"ssssssssssssssssss↘↘sssssssss.....wwwwwwwwwwwwwwwwwww
 MMMMMMMMMMMFFFFFFFFFFFFFFFFFfffffffff"""""""""""""""""""""""""""""""ssssssssssssssssss↘↘ssssss..s...wwwwwwwwwwwwwwwwwwww
 MMMMMMMMMMFMFFFFFFFFFFFFFFFFffffffffff"""""""""""""""""""""""""""""""sssssssssssssssssss↘↘ssss......wwwwwwwwwwwwwwwwwwww
-MMMMMMMMMMMMMMMMMFFFFFFFFFfffffffffff""""""""""""""""""""""""""""""""ssssssssssssssssssss↘↘wwwwwwwwwwwwwwwwwwwwwwwwwwwww
+MMMMMMMMMMMMMMMMMFFFFFFFFFfffffffffff"""""""""""""""9""""""""""""""""ssssssssssssssssssss↘↘wwwwwwwwwwwwwwwwwwwwwwwwwwwww
 MMMMMMMMMMMMMMMMMMMFFFFFFFFfffffffffff.""""""""""""""""""""""""""""""""sssss.sssssssssssss↓↓wwwwwwwwwwwwwwwwwwwwwwwwwwww
 MMMMMMMMMMMMMMMMMFFFfffffFffffffffff.."""""""""""""""""""""""""""""""s""""s"s...ss....s...wwwwwwwwwwwwwwwwwwwwwwwwwwwwww
 MMMMMMMMMMMMMMMMMMFFfffffffffffffffff.""."""""""""""""""""""""""""""""""""""....ss........wwwwwwwwwwwwwwwwwwwwwwwwwwwwww
@@ -116,6 +121,8 @@ MMMMMMMMMMMMMMMMMMM.ff..................................."......................
 "1" = { terrain = "barrow", name = "Cealdhlāw", to = "cealdhlaw:1" }
 # The little cave in the foot of the wall, two cells from the pass: the first and easiest dungeon.
 "8" = { terrain = "cave_mouth", name = "Lytelscræf", to = "lytelscraef:1" }
+# Open to anyone, far from the pass: the branch without a bottom, which forgets each floor left.
+"9" = { terrain = "dungeon_entrance", name = "Grundlēas", to = "grundleas:1", note = "Steps cut in bare rock, going down. Worn letters on the lintel: no stair goes twice to one place." }
 "2" = { terrain = "swamp", hidden = { id = "fennmynster", terrain = "dungeon_entrance", to = "fennmynster:1", name = "Fennmynster" } }
 "3" = { terrain = "hills", hidden = { id = "fyrdelf", terrain = "mine", to = "fyrdelf:1", name = "Fyrdelf" } }
 # The four lairs of the wanted (docs/design/adventurers-guild.md §8), on reserved sites: Wat

@@ -1,0 +1,33 @@
+# Grundlēas, "the groundless" (#1010; spec §7 "The endless branch"): steps going down in the empty
+# grass south of the Beorhtburna road, open to anyone who walks there. It has no last floor. Every
+# staircase, up or down, leads to a floor that has never been: what is left behind is gone, so
+# twenty floors down is twenty new floors back up.
+
+[[dungeon]]
+id = "grundleas"
+name = "Grundlēas"
+arrival = "Words are cut over the stair: no stair goes twice to one place."
+generator = "rooms"
+size = [80, 21]
+traps = ["arrow", "spear", "pit", "alarm"]
+secret_doors = [1, 2]
+hidden_per_depth = 1
+locks_per_depth = 1
+loot = [2, 4]
+key = "rusty_key"
+temperature = 6
+# Danger 1 on the first floor, 1 more each floor down, without end. No folk of its own: every draw
+# is a stray, so whatever the Ascmearc holds comes here at its danger, and past the roster's top
+# level a floor draws as at that top (`Content::spawning`). The rat is only what a `danger` asks
+# for; it lives everywhere already, so no other branch's strays change.
+danger = 1
+population = ["rat"]
+stray = 100
+population_count = { per_1000 = 30, least = 25, most = 80 }
+# A forgotten floor keeps no trade: a shop's stock and debts would be gone at every stair.
+shops = { chance = 0 }
+
+# Rooms most of the time, caves rarely; drawn as each floor is made.
+[dungeon.endless]
+caves = 15
+caves_size = [100, 40]

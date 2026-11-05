@@ -563,7 +563,11 @@ impl Stack {
         }
         if let Some(worked) = self.worked() {
             let improved: Vec<&str> = worked.improved.iter().map(|a| a.id()).collect();
-            text += &format!(" (attempts {}: {})", worked.attempts, improved.join(" "));
+            text += &if improved.is_empty() {
+                format!(" (attempts {})", worked.attempts)
+            } else {
+                format!(" (attempts {}: {})", worked.attempts, improved.join(" "))
+            };
         }
         match self.magic() {
             Some(m) if !m.identified => format!("{text} (unidentified)"),

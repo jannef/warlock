@@ -374,7 +374,7 @@ impl World {
     /// around the reader (its own radius, else 1) at the spell's base, no rung and no hooks (the
     /// spell scaling design §7.5); a spell of any other kind only fizzles (the mishap's message
     /// is all).
-    fn backfire_spell(
+    pub(super) fn backfire_spell(
         &mut self,
         scroll: crate::content::SpellScroll,
         object: ObjectId,
@@ -399,7 +399,7 @@ impl World {
         let mut made = Vec::new();
         self.sound_at(def.look.noise, here);
         self.cast_burst(Caster::Actor(player), (here, here), &burst, &mut made);
-        self.say_spell((&def.look.noun, &def.look.verb), made, events);
+        self.spell_lands(player, (def, &[]), made, None, events);
         if let Some(death) = &mut self.state.death {
             death.by = None;
             death.cause = Some(Cause::Scroll(object));

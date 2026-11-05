@@ -27,6 +27,23 @@ developer notes (CLAUDE.md, `docs/dev/`).
   that depth. A branch level is generated on its first visit from its own random stream (§8) and
   then persists like a hand-made level. Its `<` leads to `depths:N-1` (on depth 1, back to the
   level it was first entered from), its `>` to `depths:N+1` (the deepest level has none).
+  **The endless branch** (`[dungeon.endless]` instead of `depth`, #1010; `world/endless.rs`) has
+  no last floor and keeps no floor but the current one. Depth counts up from 1; each floor's danger
+  is its depth (one more per floor, as other branches, and it keeps rising with no cap) but draws
+  stop rising at the top of the branch's roster (the highest level it may draw), so a floor past
+  that top draws as the top does and is never empty. Any staircase leads to a new floor of the next
+  depth that way, with its own layout, the player arriving on the staircase that leads back; a fall
+  goes to a new floor one deeper; `<` on the first floor leads out to the overworld however it was
+  reached. Leaving discards the floor with everything on it and the player's memory of it. Each
+  floor's generator is drawn as it is made (`caves` percent caves, of `caves_size`; the rest rooms
+  of the branch's `size`). The floor's seed is a stream of the run seed (`endless/<n>`) named by a
+  saved count of floors made, so replays make the same floors and two visits to a depth differ. It
+  has no `[[dungeon.levels]]`, so no pinned vault, and no quest may name its levels. Its allies
+  cross as ever, and a companion or familiar always does; any other ally left behind is gone and the
+  player is told. A unique creature on a discarded floor may come again. Only a floor deeper than
+  any reached in the run pays the first arrival's experience. The Ascmearc's is **Grundlēas**
+  (`grundleas`), rooms 85 % and caves 15 %, its way in on the grass south of the Beorhtburna road, 40
+  cells from Beorggeat; no location reveal is needed.
   The Ascmearc's first branch is **Cealdhlāw** (`cealdhlaw`, #337; the campaign design §7), the
   cold barrow under Hlāwdūn, its way in on the overworld from the start: six floors, the barrow's
   passages (rooms, 80×21) on 1–2 and the hill's hollows (caves, 100×40) on 3–6, danger 1 to 6

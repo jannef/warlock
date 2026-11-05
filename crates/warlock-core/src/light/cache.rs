@@ -189,6 +189,12 @@ impl LightCache {
         }
     }
 
+    /// Drops everything cached of `level`, which is gone: a later level of the same id is another
+    /// (`world/endless.rs`).
+    pub fn forget(&mut self, level: &str) {
+        self.levels.remove(level);
+    }
+
     /// Number of cached masks on `level` (for tests and diagnostics).
     #[cfg(test)]
     pub fn cached_masks(&self, level: &str) -> usize {

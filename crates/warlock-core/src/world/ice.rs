@@ -32,12 +32,16 @@ use crate::fov::compute_fov;
 use crate::geom::Pos;
 use crate::ice::{self, Ice, Shock};
 use crate::object;
+use crate::skills::{Effect, Use};
+use crate::stats::Stat;
 use crate::temperature::{self, Temperature};
 use crate::time::GameTime;
 use std::collections::{BTreeMap, BTreeSet};
 
 /// What the player is told when they plunge through the ice.
 const PLUNGE: &str = "The ice cracks beneath you and you plunge into the freezing water!";
+/// What a plunge's Swim check is against ([`World::keeps_afloat`]).
+const PLUNGE_DIFFICULTY: i32 = 11;
 /// The effect a frost burst shows (`data/effects.toml`).
 const FROST_BURST: &str = "frost_burst";
 
@@ -372,6 +376,9 @@ impl World {
             }
             _ => {}
         }
+        if self.state.current().is_open_water(&self.content, at) {
+            self.quench(id, events);
+        }
     }
 
     /// The price of what `footing` adds to a step: climbing out of the water onto ice (less
@@ -408,18 +415,43 @@ impl World {
     /// last hit point: the cold does not kill yet, [`Harm::Spared`]); none, and no draw, for a
     /// Swimmer. A creature's fall is said when the player perceives it ([`World::perceive`]);
     /// the player's where it happens.
-    fn fall_in(&mut self, id: ActorId, at: Pos, events: &mut Vec<Event>) {
+    pub(super) fn fall_in(&mut self, id: ActorId, at: Pos, events: &mut Vec<Event>) {
         let water = self.state.current().water_at(&self.content, at);
         let proof =
             (self.state.actors.get(&id)).is_some_and(|a| a.talent_mods(&self.content).plunge_proof);
         let freeze = water
             .and_then(|w| self.content.terrain(w).freeze)
             .filter(|_| !proof);
-        let damage = freeze.map_or(0, |f| f.plunge.roll(&mut self.state.rng).max(0));
+        let mut damage = freeze.map_or(0, |f| f.plunge.roll(&mut self.state.rng).max(0));
+        if freeze.is_some() && id == self.state.player && self.keeps_afloat() {
+            damage /= 2;
+        }
         let kind = freeze.and_then(|f| f.kind);
         let taken = self.resisted(id, crate::damage::Damage::new(damage, kind));
         self.hurt(id, taken, Harm::Spared, events);
+        self.quench(id, events);
         events.push(Event::FellThroughIce { actor: id, at });
+    }
+
+    /// The Swim check of a player who plunged in, trained in it (no draw otherwise): Toughness and
+    /// [`Effect::Swim`] against [`PLUNGE_DIFFICULTY`]. Whether it was made; a mark either way.
+    fn keeps_afloat(&mut self) -> bool {
+        let content = self.content.clone();
+        let me = self.state.player();
+        if !me.skills.trains_effect(&content, Effect::Swim) {
+            return false;
+        }
+        let modifier = me.effective_stats(&content).modifier(Stat::Toughness)
+            + me.skill_effect(&content, Effect::Swim)
+            + me.talent_mods(&content).check(Stat::Toughness);
+        let made = crate::check::check(&mut self.state.rng, modifier, PLUNGE_DIFFICULTY);
+        if self.trains(Use::Swim) {
+            self.train(Use::Swim);
+        }
+        if made {
+            self.say("You keep your head, and the cold bites less deep.");
+        }
+        made
     }
 
     /// An instant frost (spec §5 "Ice"; spell effects and frost traps): the water within
@@ -503,7 +535,7 @@ impl World {
 
     /// The cells a burst of `radius` around `center` reaches on the player's level: within the
     /// radius and in line of sight of the centre.
-    fn burst(&self, center: Pos, radius: i32) -> BTreeSet<Pos> {
+    pub(super) fn burst(&self, center: Pos, radius: i32) -> BTreeSet<Pos> {
         let level = self.state.current();
         let content = &self.content;
         let mut cells = BTreeSet::new();

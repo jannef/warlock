@@ -350,6 +350,27 @@ fn failed_it_is_damaged_and_all_its_improvements_go() {
 }
 
 #[test]
+fn the_actors_dump_reads_the_attempts_and_the_improvements() {
+    let mut w = world(false);
+    give(&mut w, "long_sword");
+    let rows = |w: &World| crate::dump::layer_rows(w, crate::dump::Layer::Actors).join("\n");
+    assert!(!rows(&w).contains("(attempts"), "{}", rows(&w));
+    set_worked(&mut w, vec![Aspect::Die, Aspect::ToHit], 2, false);
+    let text = rows(&w);
+    assert!(
+        text.contains("Marvellous long sword (attempts 2: die to_hit)"),
+        "{text}"
+    );
+    set_worked(&mut w, Vec::new(), 3, true);
+    let text = rows(&w);
+    assert!(
+        text.contains("damaged long sword (attempts 3)"),
+        "no dangling colon: {text}"
+    );
+    assert!(!text.contains("attempts 3:"), "{text}");
+}
+
+#[test]
 fn damaged_it_is_repaired_or_destroyed() {
     let mut w = world(false);
     give(&mut w, "long_sword");
