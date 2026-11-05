@@ -1893,6 +1893,14 @@ pub fn json(world: &World, layers: &[Layer], include_state: bool) -> Value {
                 "id": a.id, "kind": a.kind, "creature": def.id, "glyph": a.glyph(content).to_string(),
                 "fg": a.fg(content).to_string(), "pos": a.pos, "health": a.health, "effects": effects,
             });
+            // What the player's Knowledge tells of it, in words (spec §8 "Skills").
+            let known = view.known_resistances(a);
+            if !known.is_empty() {
+                let known: serde_json::Map<String, Value> = (known.into_iter())
+                    .map(|(k, w)| (content.damage_type(k).id.clone(), json!(w.word())))
+                    .collect();
+                seen["known"] = Value::Object(known);
+            }
             // A composite's colours, top band first (spec §8 "Animated objects").
             let bands = a.shape.as_ref().map_or(&[][..], |s| s.bands());
             if !bands.is_empty() {
@@ -2190,7 +2198,8 @@ pub fn json(world: &World, layers: &[Layer], include_state: bool) -> Value {
     if include_state {
         out["state"] = serde_json::to_value(world.state()).expect("state serializes");
         // The current level's danger (spec §7 "Danger levels"): ground truth, never stored.
-        out["danger"] = json!(world.danger(&world.state().current_level));
+        let level = &world.state().current_level;
+        out["danger"] = json!(world.content().floor_danger(level, world.player_level()));
         // The encounter tables matching the player's overworld cell (ground truth).
         out["encounter_tables"] = json!(world.encounter_tables_here());
         // The callings of the campaign and where the player stands with each.

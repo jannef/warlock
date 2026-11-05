@@ -233,7 +233,7 @@ pub(super) struct CreatureSpec {
     #[serde(default = "yes")]
     pub vitals: bool,
     /// What it resists, in percent per damage type (spec §8 "Damage types"): `resist = { acid
-    /// = 50 }`; 100 is immune, negative a vulnerability. Rules only: never shown.
+    /// = 50 }`; 100 is immune, negative a vulnerability. Never its number; Knowledge tells it in words (#1030).
     #[serde(default)]
     pub resist: BTreeMap<String, i32>,
     /// Whether it leaves a corpse when it dies (spec §8 "Hunger"; with `data/hunger.toml`).
@@ -822,7 +822,8 @@ pub struct CreatureDef {
     /// wiki states it).
     pub vitals: bool,
     /// Gameplay: what it resists, in percent per damage type (spec §8 "Damage types"); 100 is
-    /// immune, negative a vulnerability. Rules only: the player learns it by play.
+    /// immune, negative a vulnerability. The player learns it by play, or in words by Knowledge
+    /// (`world/knowledge.rs`).
     pub resist: Vec<(DamageTypeId, i32)>,
     /// Gameplay: whether it leaves a corpse when it dies (spec §8 "Hunger"; only with
     /// `data/hunger.toml`, which says how corpses rot and feed).

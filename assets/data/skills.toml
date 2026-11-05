@@ -33,7 +33,8 @@
 #                 lock), "deal" (a deal made in a shop: goods paid for, or your own sold),
 #                 "appraise" (something you carry told for what it is: "identify" below),
 #                 "intimidate" (a war cry roared or a foe threatened, whatever comes of it),
-#                 "song" (a song sung, whatever it does). Marks gather until a level-up roll on the skill spends them ([ladder]
+#                 "song" (a song sung, whatever it does), "wade" (a step wading through water
+#                 or marsh), "swim" (a Swim check, whatever comes of it). Marks gather until a level-up roll on the skill spends them ([ladder]
 #                 below). Only the player trains, for now.
 #   benefit       what it gives, by its value: a list of { effect = EFFECT, ... } growing either
 #                 by `steps` (one for each value reached, then one more for every `every` points
@@ -50,7 +51,9 @@
 #                 trained, a skill with it lets you notice traps in passing at all), "disarm" (points added to disarming a trap, spec §8 "Disarming
 #                 traps", at most 20; trained, a skill with it lets you disarm traps at all),
 #                 "burden" (percent less of your burden's slowdown), "travel"
-#                 (percent less time a journey on the overworld takes), "forage" (percent added
+#                 (percent less time a journey on the overworld takes), "wade" (percent of what
+#                 wading adds to a step that is spared), "swim" (points added to a Swim check, at
+#                 most 20; only trained is one asked), "forage" (percent added
 #                 to a forage's chance of finding food, at most 30; trained, a skill with it lets
 #                 you forage at all: forage.toml), "bargain" (percent better
 #                 prices in shops, together with Presence at most half; shops.toml), "identify"
@@ -262,17 +265,18 @@ benefit = [{ effect = "intimidate", curve = [[0, 0], [100, 8], [200, 12]] }]
 [[skill]]
 id = "knowledge"
 name = "Knowledge"
-description = "Lore of history, peoples, places, and the things that live there. Knowing your enemy helps you resist its powers."
+description = "Lore of history, peoples, places, and the things that live there. Knowing your enemy helps you resist its powers and tells you what it shrugs off and what it fears."
 kind = "action"
 # Know your enemy (#667; the use and the effect are documented here, not in the header, while
 # other skills' work is in flight): marked by "discover" (discovery experience gained: a first
 # kill of a kind, an arrival that pays) and by "resist" (a check rolled to resist a creature's
 # ability: a drain, a disease its attack carries, struggling free of its hold; whatever comes of
 # it). Effect "resist": points added to that check, read at how far the value stands ABOVE THE
-# CREATURE'S LEVEL (not at the value): nothing at or below it, +1 at 5 above, +4 at 40 above and
-# past (at most 6). The player's only: creatures resisting each other get nothing.
+# CREATURE'S LEVEL (not at the value): nothing at or below it, +2 at 5 above, +6 at 40 above and
+# past (at most 6). The player's only: creatures resisting each other get nothing. Standing above
+# the level at all also tells, in look mode, what the creature resists (#1030; no marks).
 mark = [{ on = "discover", chance = 100 }, { on = "resist", chance = 25 }]
-benefit = [{ effect = "resist", curve = [[0, 0], [5, 1], [40, 4]] }]
+benefit = [{ effect = "resist", curve = [[0, 0], [5, 2], [40, 6]] }]
 
 [[skill]]
 id = "listen"
@@ -437,6 +441,13 @@ id = "swim"
 name = "Swim"
 description = "Staying afloat and making headway in deep water."
 kind = "rules"
+mark = [{ on = "wade", chance = 10 }, { on = "swim", chance = 100 }]
+# Percent of what wading adds to a step that is spared, under Swimmer's and Undertow's all of it;
+# and points added to the Swim check of a plunge through the ice (made: half its hit points).
+benefit = [
+    { effect = "wade", curve = [[0, 0], [100, 60], [200, 100]] },
+    { effect = "swim", curve = [[0, 0], [100, 8], [200, 12]] },
+]
 
 [[skill]]
 id = "tumble"

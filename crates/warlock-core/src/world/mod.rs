@@ -130,6 +130,7 @@ mod element_gifts;
 mod elixir;
 mod encounter;
 mod encounter_area;
+mod endless;
 mod equip;
 mod experience;
 mod eyes;
@@ -392,6 +393,9 @@ pub struct WorldState {
     /// The encounter the player must answer before anything else (`world/encounter.rs`).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub(crate) encounter: Option<encounter::Pending>,
+    /// The endless branches' floors made and depths reached (`world/endless.rs`).
+    #[serde(default, skip_serializing_if = "endless::EndlessFloors::is_empty")]
+    pub(crate) endless: endless::EndlessFloors,
     /// The parties encounters made, by their areas (`world/encounter.rs`).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub(crate) parties: Vec<encounter::Party>,
@@ -803,7 +807,10 @@ impl World {
         let campaign = def.campaign.clone().unwrap_or_default();
         let start = level_template(
             &content,
-            (&campaign, seed),
+            (
+                &campaign,
+                endless::floor_seed(&content, seed, &def.start_level, 0),
+            ),
             &def.start_level,
             (None, &Default::default()),
         )?;
@@ -837,6 +844,7 @@ impl World {
             overworld_step: None,
             encounters: None,
             encounter: None,
+            endless: Default::default(),
             parties: Vec::new(),
             wares: BTreeMap::new(),
             uniques_offered: BTreeSet::new(),
@@ -1246,6 +1254,7 @@ impl World {
         let (burden, slowed) = (load.burden(), load.penalty() != Burden::Unburdened);
         let quests = self.quest_progress();
         let spent = self.player_acts(action, &mut events);
+        self.forget_floors(&events);
         // Taking off what raised them lowers the player's maximum hit points, mana, and pools.
         self.keep_hp_within_max(self.state.player);
         self.keep_mana_within_max(self.state.player);
@@ -1631,6 +1640,8 @@ mod elixir_tests;
 #[cfg(test)]
 mod encounter_tests;
 #[cfg(test)]
+mod endless_tests;
+#[cfg(test)]
 mod equip_tests;
 #[cfg(test)]
 mod experience_tests;
@@ -1874,6 +1885,8 @@ mod summon_tests;
 mod sun_tests;
 #[cfg(test)]
 mod surprise_tests;
+#[cfg(test)]
+mod swim_tests;
 #[cfg(test)]
 mod tag_tests;
 #[cfg(test)]

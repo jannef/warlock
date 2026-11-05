@@ -65,6 +65,10 @@ The passive skills help you more the higher they are:
 - **[Survival](skills.md#skill-survival)** makes your journeys on the [overworld](overworld.md) quicker (it does nothing for
   your steps in a local area or a dungeon), and lets you forage in the wild, finding food more
   often the higher it is (see [Foraging](#foraging)).
+- **[Swim](skills.md#skill-swim)** makes you quicker through [water](terrain.md#water) and [marsh](terrain.md#terrain-marsh) (of what wading adds to a step, 60%
+  is spared at 100 and all of it at 200; the [Swimmer](talents.md#talent-swimmer) talent spares it all at once). And
+  when you [plunge through the ice](temperature.md#falling-in), you make a check on your
+  [Toughness](stats.md#stat-toughness) plus the table's points against 11: made, half the hit points.
 - **[Negotiation](skills.md#skill-negotiation)** gets you better prices in [shops](shops.md): you pay less and are offered
   more. A deal made (goods paid for, or your own sold) trains it now and then.
 - **[Appraise](skills.md#skill-appraise)** now and then tells you what something you carry or wear really is. On every
@@ -88,8 +92,10 @@ The passive skills help you more the higher they are:
   it is, the more often a try works (see [Treating yourself](#treating-yourself)).
 - **[Knowledge](skills.md#skill-knowledge)** is knowing your enemy: it adds to your check against a [creature](creatures.md)'s [drain](stats.md#drained-stats), a
   [disease](diseases.md#how-a-disease-goes) its attack carries, or its hold when you struggle, but only against creatures whose
-  level your [Knowledge](skills.md#skill-knowledge) stands above, and more the farther above (the table below; it never adds
-  much). It earns marks whenever you gain [discovery experience](experience.md#discovery) (a first kill of a kind, a new
+  level your [Knowledge](skills.md#skill-knowledge) stands above, and more the farther above (the table below; at most 6).
+  Standing above a creature's level by even 1 also tells you, in [look mode](controls.md#look-mode), what its kind
+  [resists, is immune to, and is vulnerable to](damage-types.md#armour-and-resistance), in words; that much is lore of its kind, so it
+  says nothing of what this one wears or has drunk, and earns no marks. It earns marks whenever you gain [discovery experience](experience.md#discovery) (a first kill of a kind, a new
   place that pays) and, now and then, whenever you roll to resist such a power, whatever comes
   of it. A [creature](creatures.md)'s level is in its [table](creatures.md).
 - **[Sneak attack](skills.md#skill-sneak-attack)** adds d6s to a hit on a foe that has not seen
@@ -168,6 +174,7 @@ mark**. The chance is shown in the table of skills above; skills you use all the
   [Defence](combat.md#defence) explains (it would have missed anyone) counts as a dodge one time in four.
 - **[Balance](skills.md#skill-balance)**: doing anything but waiting while your load slows you down.
 - **[Survival](skills.md#skill-survival)**: a journey on the [overworld](overworld.md#travel).
+- **[Swim](skills.md#skill-swim)**: a step wading through [water](terrain.md#water) or [marsh](terrain.md#terrain-marsh) now and then, and every [plunge through the ice](temperature.md#falling-in).
 - **[Steal](skills.md#skill-steal)**: every attempt to steal, whatever comes of it.
 - **[Open lock](skills.md#skill-open-lock)**: a try at picking a lock, whether it works or not.
 - **[Heal](skills.md#skill-heal)**: a try at treating yourself, whether it works or not.
