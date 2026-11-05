@@ -1017,7 +1017,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     The `spells` system (the magic design §10, #400) came with the **Spellcraft** tree: Quick
     study (free, #396: study +2, study time −50 %), Overreach (level 6,
     `study { overreach_percent = -33 }`, the spell scaling design §7.2: a spell's levels over
-    the caster level count a third fewer, rounded down, in the study check;
+    the learning count a third fewer, rounded down, in the study check;
     `TalentMods::study_overreach_percent`), and School focus (free, `choice = "school"`: a school or
     an element, the spell tags of §8 "Spells"; `spell_mod { cost = -10, cells = 1 }`: a spell
     carrying the tag costs a tenth less and reaches a cell farther, range or length); Keen mind

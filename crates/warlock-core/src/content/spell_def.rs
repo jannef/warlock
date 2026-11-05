@@ -5,7 +5,7 @@
 //! traps cast (`content/spell.rs`), whose code the cast path shares.
 //!
 //! - **Spell levels**: a spell has a level, 0 to [`MAX_SPELL_LEVEL`]: its base mana (at least
-//!   one) and the caster level at which a scroll of it teaches for certain. A spell of level 0
+//!   one) and the learning at which a scroll of it teaches for certain. A spell of level 0
 //!   or 1 is a cantrip. Nothing says how much a spell of a level may do (decision 16).
 //! - **The base and the ladders**: a spell's own roll and reach are its **base**, what anyone
 //!   who casts it does; `[spell.grows]` may give each dimension a ladder of the caster's
@@ -338,8 +338,8 @@ impl SpellRules {
     /// What `spell` costs a caster wearing armour that adds `armour` percent (the spell scaling
     /// design §5.3), before its talents: its base mana (its level, at least 1, unless it names
     /// `mana`) × its shape's percent (a burst's at its own `radius`) × its resolution's `cost`
-    /// percent × (100 + `armour`) %, rounded to the nearest once at the end, at least 1. No
-    /// caster level counts: a known spell costs the same whoever casts it.
+    /// percent × (100 + `armour`) %, rounded to the nearest once at the end, at least 1: a known
+    /// spell costs the same whoever casts it.
     pub fn mana(&self, spell: &SpellData, armour: u32) -> i32 {
         // An explicit cost (Identify's) stands in for the level's, the shape's, and the
         // resolution's: only the armour is added.
@@ -581,7 +581,7 @@ pub struct SpellData {
     /// One line.
     pub description: String,
     /// Its spell level, 0 to [`MAX_SPELL_LEVEL`] (0 and 1: a cantrip): its base mana, and the
-    /// caster level at which a scroll of it teaches for certain.
+    /// learning at which a scroll of it teaches for certain.
     pub level: u8,
     pub school: School,
     pub kind: SpellPurpose,
@@ -614,7 +614,7 @@ pub struct SpellData {
     /// Dexterity; a scroll's or a wand's always Dexterity).
     pub aim: Stat,
     /// Added to the study check's difficulty (0: none); a positive one makes the study a check
-    /// at any caster level (`world/learn.rs`).
+    /// at any learning (`world/learn.rs`).
     pub study_difficulty: i32,
 }
 

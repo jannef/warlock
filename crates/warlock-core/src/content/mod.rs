@@ -189,7 +189,7 @@ pub use chest::{ChestBand, ChestGold, ChestLoot, ChestRules};
 pub use circles::{CircleStatuses, CircledStatus, school_index};
 #[cfg(test)]
 pub(crate) use class::strip_tables as strip_class_tables;
-pub use class::{BonusTalents, CASTING, ClassActive, ClassDef};
+pub use class::{BonusTalents, ClassActive, ClassDef};
 pub use companion::{
     CHAPTER as COMPANION_CHAPTER, CompanionRules, Growth as CompanionGrowth, TameRules,
 };

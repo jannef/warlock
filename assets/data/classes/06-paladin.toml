@@ -5,7 +5,6 @@ description = "A holy knight sworn to an oath: strong and commanding, steadfast 
 stats = { strength = "1d3", dexterity = -1, intelligence = -1, willpower = 1, presence = "1d3" }
 hp = 6
 mana = 3
-casting = 50
 affinity = { restoration = 2, abjuration = 1, necromancy = -3 }
 experience = 110
 alignment = 550

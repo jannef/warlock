@@ -2,7 +2,7 @@
 //! table holds an effect no spell has, of the rod effects (`data/rod_effects/`, one
 //! `[[rod_effect]]` a file), and costs its user mana for each use instead of charges; its reach
 //! grows on a ladder of the user's stats as a spell's does (`grows.range`, the spell scaling
-//! design §7.5). No caster level is read: a rod is the same in anyone's hands. It goes in the
+//! design §7.5); nothing of the user's level is read: a rod is the same in anyone's hands. It goes in the
 //! missile weapon slot and is used as a missile weapon is (`t`, `fire:X,Y`), as a wand is.
 //!
 //! ```toml

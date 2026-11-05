@@ -607,16 +607,6 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
             "rods' mana costs {} (rounded to the nearest, at least 1), before other cuts",
             percent(value)
         ),
-        TalentEffect::CasterLevel {
-            value,
-            per_levels: 0,
-        } => format!("caster level {}", signed(value)),
-        TalentEffect::CasterLevel { value, per_levels } => {
-            format!(
-                "caster level {} per {per_levels} character levels",
-                signed(value)
-            )
-        }
         TalentEffect::BloodMagic { hp, mana } => format!(
             "active (the time of a wait): give {hp} hit points (never your last) for {mana} \
              mana, up to your maximum; not while your mana is full"
@@ -859,7 +849,7 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
             }
             if overreach_percent != 0 {
                 parts.push(format!(
-                    "the levels a spell is above your caster level count {} in the study \
+                    "the levels a spell is above your learning count {} in the study \
                      check, rounded down (a spell beyond your learning is that much less beyond \
                      you)",
                     percent(overreach_percent)

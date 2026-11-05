@@ -8,12 +8,12 @@
 # Once they are **called** (below) their cap grows by the prestige class's `levels`, and every
 # level past the class's cap is the prestige class's: a bard capped at 30 who is called becomes
 # Hunter 1 at total level 31 and Hunter 30 at 60. Nothing is taken away: the class's talents,
-# skills, casting, and kit stay, and the prestige class's table adds. Each level brings what the
+# skills, and kit stay, and the prestige class's table adds. Each level brings what the
 # class it falls in gives: its hit points (half `hp` plus the Toughness modifier), its mana, its
 # skill `rolls`, a bonus pick at its `bonus_talents` levels, and the class abilities of its
 # `abilities` table; a level-up roll on a skill either class is `known_for` steps up the ladder.
 # A prestige class is a class in everything a level reads and nothing a creation reads: it has
-# no stats, kit, skills, weapon skills, casting, experience factor, or alignment.
+# no stats, kit, skills, weapon skills, experience factor, or alignment.
 #
 # Fields:
 #   id, name      the prestige class's id (a class and a prestige class never share one) and name
