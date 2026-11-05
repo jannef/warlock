@@ -943,3 +943,5 @@ mod tests;
 mod treasury_tests;
 #[cfg(test)]
 mod vault_monsters_tests;
+#[cfg(test)]
+mod vault_turn_tests;

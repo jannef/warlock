@@ -100,6 +100,26 @@ depth)` holds (a dungeon vault, shared or of the branch's campaign, on a branch 
 `dungeons` names, if any) on the `Canvas` (`Canvas::vaults`, content order), and
 `vault::shuffled` shuffles that list. A branch no campaign vault names draws what it did before.
 
+Which way a vault lies (#959): `vault::turned` draws one of the eight `content::Turn`s from the
+generator's own map stream as each drawn vault is tried, then `Vault::turned` makes the vault a file
+drawn that way would load as, and the generator measures and stamps that (`vault::spots`, `fits`,
+`stamp`, and the rooms and caves code read its size and entrances, so nothing else knows). `ruins` in
+`mapgen/local/` does the same. A vault that may not turn (`Vault::may_turn`: pinned, or the file's
+`turns = false`) comes back borrowed with no draw, so a floor's named vaults draw what they did, and
+`caves::make_room`, which only named vaults reach, works on the size in the file. A level that tries
+no random vault draws nothing either; one that does moves after the draw, like any other change to
+its stream. Rotation swaps width and height: a floor with little height may not fit a vault turned
+across, which is then one more failed try, as for a vault too big. `content/vault_turn.rs` holds the
+transform: `turned_template` destructures `LevelTemplate` by every field, so a new field with a
+position or direction must be decided on there. It maps terrain, `creatures` (`pos`, `route`),
+`lights`, `flow` (`dir`), `objects` (`[[pile]]`, `[[item]]`), `traps` (a bolt's `dir`), `locks`,
+`chests`, `secrets`, `places`, `regions`, `loot`, `monsters` (cells kept in row order), `hidden`,
+`ice`, `player_start`, `stairs`; `rooms` and `shops` are refused on a vault, and no terrain has a
+direction of its own (a stair's `<`/`>` means up or down, a door or wall none). Entrances keep their
+row order too. Tests: `content/vault_turn_tests.rs` (a quarter turn against the same vault drawn by
+hand; every turn of every vault passes `Vault::new` again), `mapgen/vault_turn_tests.rs` (Flooded
+cell and Guard post on real floors, pinned vaults, the draw), `ruins_are_outdoor_vaults_stamped_some_way_round`.
+
 How often, and how rarely the same one (#960): rooms floors roll `VAULT_CHANCE` 20 %
 (`rooms.rs`); cave floors 40 % for one (`caves.rs`), then 15 % for a second. Before it was 50 %
 and 1 + 30 %: on the six shared vaults (three stamp in a dungeon) a 600-floor sample of the

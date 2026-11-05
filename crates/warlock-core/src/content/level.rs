@@ -150,6 +150,10 @@ struct LevelFile {
     /// level).
     #[serde(default, rename = "dungeons")]
     _dungeons: Vec<String>,
+    /// Whether a vault drawn at random may be rotated or mirrored, default true (read by
+    /// `vault::parse_turns`; refused on a level).
+    #[serde(rename = "turns")]
+    _turns: Option<bool>,
 }
 
 #[derive(Debug, Deserialize)]

@@ -44,7 +44,8 @@ plunge's dice: Toughness's modifier, `Effect::Swim`, and the talents' Toughness 
 marks `Use::Swim` whatever came of it; no check and no draw for one untrained or `plunge_proof`. Bursts: `World::frost` (instant freeze; the frost trap, a burst with
 `frost`; dev `freeze:x,y,r`, which also shows the `frost_burst` effect of `data/effects.toml`
 through `World::frost_look`) and `World::shock` (`Shock::Heat` melts: the fireball trap, a burst
-with `heat`; `Shock::Blast(um)` shatters thinner ice, for blasts without heat, none yet; dev
+with `heat`; `Shock::Blast(um)` shatters thinner ice: a spell type with `shatter`, force, with a `blast`,
+`spell_type.rs::SHATTERS_UM` a point; dev
 `thaw:x,y,r`) are the hooks traps (`world/trap.rs`, `docs/dev/traps.md`) and spell types (`docs/dev/spells.md`, a single cell at radius 0) call. Saved and hashed. Tests: `ice.rs`, `temperature.rs`,
 `world/ice_tests.rs` (growth/melt over rests, weight, falling in, climbing out, sinking objects,
 creatures, bursts, saves, replays, a year's catch-up). Tune the look with captures of the Frost

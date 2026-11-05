@@ -141,7 +141,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   "Digging"), terrain that breaks has a `hardness` (1 to 10 000, the work it takes: a pick-axe at
   Strength 10 does 10 a turn) and what it `becomes` (walkable, transparent open ground that does
   not break, no door or stairs: rubble), together; only solid terrain (not walkable, no door,
-  stairs, or light) breaks, so digging and blasts never break a door. Stone walls 600, packed
+  stairs, or light) breaks, so digging and blasts never break a door (but a force spell's blast, §8 "Spell types"). Stone walls 600, packed
   earth 100, granite 3000. Solid rock may have a `face`, the solid terrain it shows as once a cell
   next to it is broken open (`void`: `wall`). Overworld terrain has
   `travel_minutes` (1 to 1440; required for every walkable terrain on the overworld),

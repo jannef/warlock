@@ -178,6 +178,23 @@ laden person, and puts out the fires there.
 strikes, else the cell you aimed at. So [Ray of frost](#the-spells) makes a bridge across a lake, a cell a cast.
 A line does it to the last cell it reaches, a cone not at all.
 
+**Force pushes.** A force spell that takes at least a third of a creature's [hit points](combat.md#hit-points), or lands a
+[critical](combat.md#criticals), knocks it a cell away: from the centre of a burst, from you otherwise, and from you too for
+the one at the burst's centre. A cell that is not free stops it, and so does [being held or webbed](status-effects.md#status-held); you do not
+move when you are at the centre of your own burst, though you take the harm. A force burst with a blast
+breaks the [shut doors](doors.md) it reaches, however sturdy, locked or trapped, the trap going with the door and
+striking no one; [chests](chests.md) break under any blast below their hardness. It also shatters thin [ice](temperature.md#water-freezes), and whoever
+stands on that ice falls in. A fire blast leaves doors standing.
+
+**Poison lingers.** Every creature a poison spell harms is [Poisoned](status-effects.md#poisoned) a degree, besides what the spell's own
+line says.
+
+**Death takes the dying first.** A necrotic spell does half again as much, rounded down, to a creature below
+half its hit points, before what it resists. The undead are immune to necrotic harm.
+
+**Acid keeps eating.** Every creature an acid spell harms is [Corroded](status-effects.md#corroded) a degree: two more hit points in the
+next twelve seconds. Acid does not eat armour.
+
 ## How a spell grows
 
 Each spell's row lists its ladders: a stat and the scores at which the spell changes. Your score
@@ -264,6 +281,7 @@ the spell may come your way again.
 {{#include generated/mishaps.md}}
 
 Studying trains *[Spellcraft](skills.md#skill-spellcraft)*, *[Decipher script](skills.md#skill-decipher-script)*, and your [Intelligence](stats.md#stat-intelligence), whatever comes of it.
+Spending [mana](mana.md) on a spell also trains *[Spellcraft](skills.md#skill-spellcraft)*, one time in four.
 In a [scriptorium](special-rooms.md#room-scriptorium) ([Special rooms](special-rooms.md)) [Decipher script](skills.md#skill-decipher-script)'s mark is twice as likely,
 so certain.
 
