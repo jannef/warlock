@@ -364,9 +364,10 @@ fn the_spells_are_abilities_by_level() {
             "Fire cloak",
             "Flame",
             "Mirk",
-            "Rebuke",
             // Level 13.
             "Reek",
+            // Level 14.
+            "Rebuke",
             // Level 16.
             "Balefire",
             // Level 20.
