@@ -116,6 +116,8 @@ fn effect_name(effect: Effect) -> &'static str {
         Effect::SongCraft => "your songs are harder to shake off",
         Effect::Temper => "tempering at a forge's anvil",
         Effect::Wade => "wading through water and marsh is quicker",
+        Effect::Footing => "walking over rough ground (bush, reeds, rubble, ice) is quicker",
+        Effect::SteadyEase => "less time lost when you are staggered",
         Effect::Swim => {
             "a plunge through the ice may hurt half as much, and a step in deep water goes as you meant it"
         }
@@ -172,6 +174,8 @@ pub(super) fn skill_benefits(content: &Content) -> String {
             Effect::SongCraft => "song's difficulty",
             Effect::Temper => "tempering",
             Effect::Wade => "wading's extra cost",
+            Effect::Footing => "rough ground's extra cost",
+            Effect::SteadyEase => "staggering's extra cost",
             Effect::Swim => "Swim check",
             Effect::ManaRegen => "mana back",
             Effect::MaxMana => "mana pool",
@@ -212,7 +216,9 @@ pub(super) fn skill_benefits(content: &Content) -> String {
                 | Effect::Initiative
                 | Effect::Resist => format!("+{n}"),
                 Effect::SneakDice => format!("{n}d6"),
-                Effect::SurpriseEase | Effect::Wade => format!("\u{2212}{n}%"),
+                Effect::SurpriseEase | Effect::Wade | Effect::Footing | Effect::SteadyEase => {
+                    format!("\u{2212}{n}%")
+                }
                 Effect::SearchReach => format!("+{n} cell{}", if n == 1 { "" } else { "s" }),
                 Effect::Kick => format!("+{n} Strength"),
                 Effect::Quiet | Effect::Travel => format!("\u{2212}{n}%"),

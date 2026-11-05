@@ -130,6 +130,16 @@ Intimidate `Ability::Intimidate` (above; aimed at a cell, `Ability::reach` from 
 A passive skill with a use of its own is listed as that use too (`Ability::every` asks
 `Ability::use_of` of every skill): Survival is `Ability::Forage` (below).
 
+**Balance** (spec §8 "Skills", #1029, `docs/design/skill-uses.md` §6.13): besides `burden`,
+`Effect::Footing` is read in `World::step_price` (`world/schedule.rs`) in the `else` of the wading
+branch, on a step `World::rough_step` (`world/footing.rs`) calls rough: off the overworld,
+`move_cost` above 100, not `wading_step`; the same `surcharge_spared`. `Use::RoughStep` is marked by
+`World::train_rough_step` after `wade` in the step (`world/travel.rs`). `Effect::SteadyEase` is read
+in `World::status_cost` (`world/surprise.rs`) for the status `footing::STAGGERED` (`"staggered"`),
+beside Initiative's ease of Surprised; `Use::Staggered` is marked in `spend_actions`
+(`world/weapon_ability.rs`) for the player's action that eases Staggered (not the one that gave it).
+Tests `world/footing_tests.rs`.
+
 **Swim** (spec §8 "Skills", #1018, `docs/design/skill-uses.md` §6.4; `kind = "rules"`, no menu
 row): `Effect::Wade` is read in `World::step_price` (`world/schedule.rs`), on a step
 `World::wading_step` calls wading (off the overworld, `move_cost` above 100, `stars::wading`): a
