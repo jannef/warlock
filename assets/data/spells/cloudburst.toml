@@ -1,0 +1,17 @@
+# Cloudburst (the spell types design §7 entry 33): an hour of rain, which puts out what burns under
+# the open sky as it begins.
+[[spell]]
+id = "cloudburst"
+name = "Cloudburst"
+description = "Under the open sky you call the rain: it falls for an hour, puts out fires, and washes the burning clean."
+level = 20
+school = "transmutation"
+kind = "utility"
+shape = "self"
+resolution = "auto"
+open_sky = true
+effect = { weather = { kind = "rain", hours = 1 } }
+
+[spell.cast]
+message = "The sky darkens, and the rain comes."
+noise = { sound = "thunder", loudness = 60 }

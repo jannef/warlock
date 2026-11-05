@@ -1,0 +1,8 @@
+[[talent]]
+id = "sense_the_quick"
+name = "Sense the quick"
+tree = "class"
+granted = true
+description = "You feel the living about you a while (paid in mana): their heartbeats, roughly placed."
+effects = [{ kind = "spell", spell = "sense_the_quick" }]
+systems = ["spells", "mana"]

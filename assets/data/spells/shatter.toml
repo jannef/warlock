@@ -1,0 +1,27 @@
+# Shatter (the spell types design §7 entry 4): force, so it breaks shut doors and thin ice as well as
+# what its blast breaks; a burst look of its own.
+[[spell]]
+id = "shatter"
+name = "Shatter"
+description = "A clap of force that bursts where you aim it: it cracks walls, ice, shut doors, and shut chests, and batters everyone it reaches."
+level = 8
+school = "evocation"
+kind = "damage"
+shape = "burst"
+resolution = "area"
+damage_type = "force"
+range = 8
+radius = 1
+damage = "2d6"
+
+[spell.cast]
+effect = "shatter"
+noun = "shatter"
+verb = "batters"
+message = "The air cracks!"
+blast = 1000
+noise = { sound = "explosion", loudness = 100 }
+
+[spell.grows]
+damage = "intelligence 13 3d6, 19 3d6+2, 25 3d6+4"
+range = "willpower 14 9, 18 10"

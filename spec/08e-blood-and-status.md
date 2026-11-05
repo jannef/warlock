@@ -317,7 +317,19 @@ developer notes (CLAUDE.md, `docs/dev/`).
     missile; 4 Cause wounds; 5 Call of the wild; 6 Arcane bolt, Frost, Identify,
     Sleep; 7 Blight, Scorching ray, Web; 11 Call lightning, Fireball (the wizard's Fire burst
     folded into it), Haste, Lightning bolt, Remove disease; 12 Flame; 20 Call of the forest; 35
-    Call the elements (the druid's calls, #839: summons, §8b "Allies"). A spell is cast by its
+    Call the elements (the druid's calls, #839: summons, §8b "Allies"). #1001 adds ten of one
+    rule each (the spell types design §7): 5 Sense the quick (Quick-sensed: the living within 8
+    the player does not see, but the undead, constructs, and animated things, heard each turn as
+    heartbeats at rough places); 6 Blink (to a free cell within 5, drawn; it works while held,
+    webbed, or pinned and ends all three); 7 Thunderclap (a force burst about the caster,
+    `range = 0`, no aim: everyone in it Stunned 1, the caster too); 8 Bramble (Webbed on those
+    standing where things grow, terrain `plants`), Shatter (a force burst with a blast); 10 Leech
+    (a necrotic ray: half the hit points it takes come back to the caster); 11 Gale (a line that
+    drives everyone on it a cell on, nearest first, and puts its fires out; no harm); 12 Benison
+    (one heal roll for the caster and their allies in a burst about them, two casts' time); 14
+    Rebuke (fire on the undead in a burst alone, friend or foe, and Frightened 3); 20 Cloudburst
+    (an hour of rain under the open sky, putting out what burns there). No spell protects its
+    caster or their allies from it (the owner's Q14). A spell is cast by its
     data id (`use:magic_missile:12,5`, any `use:ID` that is no class or birth sign ability; one
     that is no spell either is a weapon active's, §8i "Weapon abilities");
     the abilities menu lists the spells known by spell level, then path order. Sleep and Web are

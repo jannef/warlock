@@ -1,0 +1,27 @@
+# Thunderclap (the spell types design §7 entry 6): a burst about the caster (`range = 0`: no aim).
+# Their cell is in it, so they are hit and Stunned too (the owner, Q14), and the level hears it.
+[[spell]]
+id = "thunderclap"
+name = "Thunderclap"
+description = "A clap of thunder about you: everyone beside you is battered and reels, you too, and the whole level hears it."
+level = 7
+school = "evocation"
+kind = "damage"
+shape = "burst"
+resolution = "area"
+damage_type = "force"
+range = 0
+radius = 1
+damage = "1d6"
+effect = { status = "stunned", severity = 1 }
+
+[spell.cast]
+effect = "shatter"
+noun = "thunderclap"
+verb = "batters"
+message = "Thunder cracks about you!"
+noise = { sound = "thunder", loudness = 150 }
+
+[spell.grows]
+damage = "presence 13 2d6, 19 2d6+2"
+radius = "willpower 18 2"
