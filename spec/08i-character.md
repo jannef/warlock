@@ -435,7 +435,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
     waiting (not a rest's turns) taken while the player's burden slows them, as it began
     (`burdened`; a dwarf's Burdened does not), a step on the overworld (`travel`), a kick at a
     closed door (`kick`; Athletics is also marked by `burdened` and `travel`, 5 % each, #548, so
-    its speed grows with plain play), a turn spent searching, whatever it finds (`search`), noticing
+    its speed grows with plain play), a check against bonds, whatever came of it (`escape`, Escape
+    artist's; §8 "Status effects"), a climb out of a pit (`climb`, Escape artist's and Athletics';
+    §8 "Traps"), a turn spent searching, whatever it finds (`search`), noticing
     something hidden in passing, not a trap (`spot`; §8 "Searching"), finding a hidden trap,
     searching or in passing (`find_trap`, Detect traps' use), an attempt to steal, whatever comes of
     it (`steal`; "Stealing" below), a try at treating oneself, whatever comes of it (`heal`;
@@ -445,10 +447,18 @@ developer notes (CLAUDE.md, `docs/dev/`).
     spent, a spell or an ability paid in it (`cast`; Concentration, 25 %, #668), discovery
     experience gained (`discover`: a first kill of a kind, an arrival that pays; Experience §8), a
     check rolled to resist a creature's ability, whatever comes of it (`resist`; "Knowledge"
-    below), a step wading (`wade`; Swim, below), a Swim check, whatever comes of it (`swim`), a step in deep water (`stroke`). Only
+    below), a step wading (`wade`; Swim, below), a Swim check, whatever comes of it (`swim`), a step in deep water (`stroke`), a step onto rough ground (`rough_step`; Balance), an action
+    taken Staggered (`staggered`; Balance). Only
     the player trains for now; creatures keep their type's
     skills. Marks are a **reservoir**: they raise nothing by
     themselves and nothing is said; they gather until a level-up roll on the skill spends them.
+  - **Balance** (#1029): sure footing under a load, on bad ground, and after a stagger. Besides
+    the burden's slowdown (`burden`), a step onto rough ground (off the overworld, `move_cost` over
+    100 and not wading: bush, reeds, rubble, ice) spares a percent of what the terrain adds over
+    a plain step (`footing`: 60 % at 100, all at 200; rounded up), and a Staggered actor's
+    extra cost (`cost = 150`) is eased by a percent (`steady_ease`: half of the extra at 100, three
+    quarters at 200, as Initiative's `surprise_ease` is for Surprised). Marks: `burdened` 5 %,
+    `rough_step` 10 % per step onto such ground, `staggered` 20 % per action taken Staggered.
   - **Swim** (#1018): wading is quicker. A step onto wading terrain (`stars::wading`: water that
     freezes, ground a disease is caught wading in; `move_cost` above 100, off the overworld) has
     a percent of what it adds to a plain step spared: 60 at 100, all of it at 200

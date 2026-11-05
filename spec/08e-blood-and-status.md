@@ -118,7 +118,20 @@ developer notes (CLAUDE.md, `docs/dev/`).
       the hold's own `difficulty` (13). Made, "You break free of the ghast." and the step goes
       ahead; failed, "You struggle, but the ghast holds you fast." and the turn is spent (a
       step's price). Creatures never struggle. A hold no one caused (`afflict:held`) ends only by
-      its turns or a struggle. Drowning grip's Held is the same status;
+      its turns or a struggle. Drowning grip's Held is the same status. A trained **Escape
+      artist** (no action, no ability row, no key: the check is part of the attempt, #1015) takes
+      the better of Strength and Dexterity, each with what talents add to its checks, plus the
+      skill's `escape` (+8 at 100, +12 at 200, at most 20) in this check, and the same, without
+      Knowledge, against other **bonds**: a status with `escape = DIFFICULTY` (Webbed, Pinned: 13;
+      Staggered, Stunned, Surprised, Transfixed, Sluggish, and Drowsy are no bonds). The first
+      status blocking the action's kind asks: made, it ends with its own `end` line and the
+      action goes ahead at its price; failed, the action's price, "You struggle, but you are still
+      caught in a web." (its `seen`). A second status blocking the same action asks on the next
+      attempt, and `refuse_blocked` refuses this one. Untrained, Webbed and Pinned refuse the
+      action, no time, as any blocking status does. A marked status that only slows (none in the
+      data today) takes the same check as the action is tried: made, it ends and the action costs
+      its plain price; failed, the action goes ahead slowed, at no extra cost. Two draws of the
+      gameplay stream a check; each marks `escape` (100 %) and `struggled`;
     - **be followed** (`follows = "exhausted"`): as it ends, worn off or cured, the status it names
       begins at one degree, caused by whoever caused the one that ended (Raging, then Exhausted:
       the ending's message, then the beginning's). A chain never leads back to where it began, a
@@ -303,7 +316,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     hands, Grave breath, Mend, Ray of frost, Spark; 3 Barkskin, Blessing, Cure wounds, Curse of sloth, Hex of weakness, Magic
     missile; 4 Cause wounds; 5 Call of the wild; 6 Arcane bolt, Frost, Identify,
     Sleep; 7 Blight, Scorching ray, Web; 11 Call lightning, Fireball (the wizard's Fire burst
-    folded into it), Haste, Lightning bolt, Remove disease; 12 Flame; 20 Call of the forest; 35
+    folded into it), Haste, Lightning bolt, Remove disease; 12 Flame; 20 Call of the forest, Chain lightning; 35
     Call the elements (the druid's calls, #839: summons, §8b "Allies"). A spell is cast by its
     data id (`use:magic_missile:12,5`, any `use:ID` that is no class or birth sign ability; one
     that is no spell either is a weapon active's, §8i "Weapon abilities");
@@ -325,7 +338,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     comes at, never above the class's caster level then (character level × `casting` ÷ 100, at
     least 1; the content test, until #990 removes that clause), whatever the character's
     Spellcraft. Wizard: Ray of
-    frost (1), Burning hands (1), Magic missile (3), Arcane bolt (18). Priest: Mend (1),
+    frost (1), Burning hands (1), Magic missile (3), Arcane bolt (18), Chain lightning (24). Priest: Mend (1),
     Blessing (3), Cure wounds (3) (their rite is the prayer, §8i). Druid: Spark (1), Barkskin (3), Call of
     the wild (6), Call lightning (12), Call of the forest (25), Call the elements (40), Flame and
     frost (50). Witch: Evil eye (1), Grave breath (1), Hex of weakness (3), Cause wounds
@@ -444,11 +457,22 @@ developer notes (CLAUDE.md, `docs/dev/`).
     maximum hit points; `immune_tags = ["undead"]`: laid on those creature types' `resist` at load,
     so an immunity to the type from whatever harm. **Acid**: Corroded 1, certain; never armour.
     **Corroded** (`data/status.toml`): max 3, adding; 1 hit point of acid per 6 s, a degree easing
-    per 12 s: two points a degree. The menu, the `spells` dump,
+    per 12 s: two points a degree. **Electricity** spreads from
+    every creature it harmed, at the cast's one roll, with no roll to hit and no Evasion, and
+    spares no one, the caster included. `conducts`: everyone standing in that creature's body of
+    water (open water connected over 8 neighbours, on terrain with a `freeze` table; ice is not
+    water) not yet struck, in actor id order; a burst and a cone conduct too. Then `arc = { chance
+    = 25 }`, a ray's, a bolt's, a touch's, or a line's only: the nearest creature beside it not
+    yet struck, ties by actor id, one draw when there is one to jump to. A spell's `[spell.effect]
+    arcs` (1 to 12; its `count` ladder grows them) takes that many jumps with no draw, and its
+    jumps reach 2 cells, never through what stops sight (Chain lightning, 3 to 6). **Conductor**
+    (Spellcraft, level 12): the player's electricity spells arc every time, and they resist
+    electricity 25 %; the arcs still jump back and the water still conducts. A spell turned back
+    or a mishap spreads nothing. The menu, the `spells` dump,
     and a wand's description say the rule after the roll (`4d6 fire, burns one in four`, the
     type's `words`). The aiming mode previews nothing. Determinism: one `below(100)` per living
     creature harmed, only for a `chance` below 100, from the gameplay stream, in the order they
-    were struck.
+    were struck; then the spread's draws, in the order it strikes.
   - **No cap** (decision 16): nothing checks a spell's strength when the content loads, and
     nothing holds a roll when it is cast: the rungs, the hooks, and a critical add what they
     add.

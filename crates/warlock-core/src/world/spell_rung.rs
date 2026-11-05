@@ -13,6 +13,7 @@
 //! - **The reach** ([`Actor::spell_reach`]): the range or length ladder's value (`reach_rungs`
 //!   on top of the stats' rungs), then `cells`; the radius ladder's, then `radius_cells`. Held
 //!   only by the engine's limits: [`MAX_REACH`] (a cone [`MAX_CONE`]), the burst table's length.
+//!   A spell with `arcs`: its certain jumps, its `count` ladder's value at the same rungs.
 //! - **The degrees** ([`Actor::spell_degrees`]): the degrees ladder's value (`degree_rungs` on
 //!   top), then `degrees`; the status's own `max` holds it as it is given (`Effects::add`).
 //! - **The aim** ([`Actor::spell_to_hit`]): the spell's `aim` stat's modifier (Dexterity unless
@@ -24,8 +25,8 @@ use super::Actor;
 use super::cast::Reach;
 use crate::combat;
 use crate::content::{
-    Content, Effect as ItemEffect, MAX_CONE, MAX_REACH, Shape, SpellData, SpellLadder as Ladder,
-    SpellMods,
+    Content, Effect as ItemEffect, MAX_CONE, MAX_REACH, RungValue, Shape, SpellData,
+    SpellLadder as Ladder, SpellMods,
 };
 use crate::dice::Roll;
 use crate::stats::{Stat, Stats};
@@ -150,6 +151,12 @@ impl Actor {
                 mods.radius_cells,
                 rules.max_radius(),
             ),
+            jumps: spell.effect.arcs.map(|base| {
+                let rung = (g.jumps.as_ref()).map_or(0, |l| climb(l, &stats, mods.reach_rungs));
+                (g.jumps.as_ref().and_then(|l| l.value(rung)))
+                    .and_then(RungValue::roll)
+                    .map_or(i32::from(base), |r| r.min())
+            }),
         }
     }
 

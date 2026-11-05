@@ -152,11 +152,35 @@ impl World {
             return;
         }
         let turn = self.state.turn;
-        for id in self.creatures_in_view() {
+        let player = self.state.player;
+        let in_view = self.creatures_in_view();
+        // Sighting a creature that has not noticed the player trains Spot, once per sighting.
+        if self.trains(Use::Sight) {
+            let mut first = false;
+            for &id in &in_view {
+                first |= self.player_unaware_before(id) && self.unaware(id, player);
+            }
+            if first {
+                self.train(Use::Sight);
+            }
+        }
+        for id in in_view {
             if let Some(actor) = self.state.actors.get_mut(&id) {
                 actor.mind.noticed = Some(turn);
             }
         }
+    }
+
+    /// Whether the player had not noticed creature `other` before this turn's perception: not
+    /// within `memory_turns` turns (what `noticed` keeps of [`World::player_unaware`]).
+    fn player_unaware_before(&self, other: ActorId) -> bool {
+        let Some(rules) = self.content.surprise() else {
+            return false;
+        };
+        (self.state.actors.get(&other)).is_some_and(|them| {
+            (them.mind.noticed)
+                .is_none_or(|turn| self.state.turn.saturating_sub(turn) > rules.memory_turns)
+        })
     }
 
     /// The Surprised status, if surprise is in the game.
@@ -274,20 +298,25 @@ impl World {
     }
 
     /// The `cost` percent status `status` puts on actor `id`'s actions: its data's, but
-    /// Surprised's extra eased by the actor's Initiative skill and talents (Cool head), together
-    /// at most all of it.
+    /// Surprised's extra eased by the actor's Initiative skill and talents (Cool head), and
+    /// Staggered's by its Balance ([`Effect::SteadyEase`]), together at most all of it.
     pub(super) fn status_cost(&self, id: ActorId, status: StatusId) -> u32 {
         let cost = self.content.status(status).cost;
-        if self.surprise_status() != Some(status) || cost <= 100 {
+        if cost <= 100 {
             return cost;
         }
-        let ease = (self.state.actors.get(&id))
-            .map_or(0, |a| {
-                a.talent_mods(&self.content).surprise_ease
-                    + a.skill_effect(&self.content, Effect::SurpriseEase)
-            })
-            .clamp(0, 100);
-        let ease = u32::try_from(ease).unwrap_or(0);
+        let Some(actor) = self.state.actors.get(&id) else {
+            return cost;
+        };
+        let ease = if self.surprise_status() == Some(status) {
+            actor.talent_mods(&self.content).surprise_ease
+                + actor.skill_effect(&self.content, Effect::SurpriseEase)
+        } else if self.content.status_id(super::footing::STAGGERED) == Some(status) {
+            actor.skill_effect(&self.content, Effect::SteadyEase)
+        } else {
+            return cost;
+        };
+        let ease = u32::try_from(ease.clamp(0, 100)).unwrap_or(0);
         100 + (cost - 100) * (100 - ease) / 100
     }
 }

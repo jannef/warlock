@@ -52,6 +52,11 @@ fn stairs(world: &World, dir: StairsDir) -> crate::content::StairsLink {
 
 /// The player, set on the staircase `dir`, takes it. Whoever stands there is moved aside.
 fn take(world: &mut World, dir: StairsDir) {
+    take_with(world, dir, |_| {});
+}
+
+/// [`take`], with `before` run once the player stands on the stairs, ready to go.
+fn take_with(world: &mut World, dir: StairsDir, before: impl FnOnce(&mut World)) {
     let at = stairs(world, dir).pos;
     let player = world.state.player;
     let here = world.state.current_level.clone();
@@ -66,6 +71,7 @@ fn take(world: &mut World, dir: StairsDir) {
     me.energy = me.energy.max(0);
     me.hp = me.max_hp(&content);
     me.effects = Default::default();
+    before(world);
     let action = match dir {
         StairsDir::Down => Action::Descend,
         StairsDir::Up => Action::Ascend,
@@ -414,6 +420,158 @@ fn a_unique_on_a_floor_left_may_come_again() {
         !w.state.progress.uniques.contains(&name),
         "it never met its end"
     );
+}
+
+/// A creature of type `name` on a free walkable cell beside the player, as a fresh spawn.
+fn put_beside(w: &mut World, name: &str) -> ActorId {
+    let creature = CONTENT.creature_id(name).expect("a creature type");
+    let me = w.player_pos();
+    let pos = Dir::ALL
+        .iter()
+        .map(|d| me.step(*d))
+        .find(|p| {
+            w.state.current().is_walkable(&CONTENT, *p)
+                && w.state.actor_at(&w.state.current_level, *p).is_none()
+        })
+        .expect("a free cell beside the player");
+    let spawn = crate::content::CreatureSpawn {
+        creature,
+        faction: None,
+        alignment: None,
+        npc: None,
+        pos,
+        route: Vec::new(),
+        carry: Vec::new(),
+        equipment: Default::default(),
+        rolls_gear: false,
+        asleep: false,
+        status: Vec::new(),
+    };
+    let here = w.state.current_level.clone();
+    travel::make_creature(&mut w.state, &CONTENT, &here, &spawn)
+}
+
+/// A kobold beside the player as they take the stairs `dir`; it is told of them.
+fn follower_on(w: &mut World, dir: StairsDir) -> ActorId {
+    let mut id = None;
+    take_with(w, dir, |w| {
+        let k = put_beside(w, "kobold");
+        let me = w.player_pos();
+        w.state.actors.get_mut(&k).expect("kobold").mind.last_seen = Some(me);
+        id = Some(k);
+    });
+    id.expect("placed")
+}
+
+#[test]
+fn a_hostile_beside_follows_down_and_up_and_the_floors_left_are_gone() {
+    let mut w = start(20);
+    let k = follower_on(&mut w, StairsDir::Down);
+    assert_eq!(w.state.current_level, floor(2));
+    let me = w.player_pos();
+    let kobold = &w.state.actors[&k];
+    assert_eq!(kobold.level, floor(2), "it came down");
+    assert_eq!(kobold.pos.chebyshev(me), 1, "and stands beside the player");
+    assert_eq!(floors(&w), vec![&floor(2)], "floor 1 is forgotten");
+    assert_eq!(kobold.home.as_deref(), Some(floor(1).as_str()));
+    w.state.check().expect("consistent");
+    // The kobold is beside them still: it comes up too, and floor 2 goes.
+    let me = w.player_pos();
+    let up = stairs(&w, StairsDir::Up).pos;
+    assert_eq!(me, up);
+    run(&mut w, "ascend");
+    assert_eq!(w.state.current_level, floor(1));
+    assert_eq!(w.state.actors[&k].level, floor(1), "it came up");
+    assert_eq!(floors(&w), vec![&floor(1)]);
+    w.state.check().expect("consistent");
+}
+
+#[test]
+fn a_kill_of_a_follower_from_a_forgotten_floor_is_tallied_soundly() {
+    let mut w = start(21);
+    let k = follower_on(&mut w, StairsDir::Down);
+    assert!(!w.state.levels.contains_key(&floor(1)));
+    // Kill it where it stands: its home is the floor that is gone.
+    w.state.actors.get_mut(&k).expect("kobold").hp = 1;
+    let player = w.state.player;
+    let (now, mut events) = (w.state.time, Vec::new());
+    w.dies(k, Some(player), None, now, &mut events);
+    assert!(!w.state.actors.contains_key(&k));
+    let tally: Vec<_> = w.state.quests.kills().collect();
+    assert_eq!(
+        tally,
+        vec![(floor(1).as_str(), "kobold", 1)],
+        "counted under the old id, harmlessly"
+    );
+    // No quest names the branch; the readers take the stale key without a panic.
+    run(&mut w, "wait*3");
+    take(&mut w, StairsDir::Down);
+    w.state.check().expect("consistent");
+    let _ = dump::layer_rows(&w, Layer::Progress);
+}
+
+#[test]
+fn a_vault_monster_that_follows_leaves_nothing_behind() {
+    let mut w = start(22);
+    let mut k = None;
+    take_with(&mut w, StairsDir::Down, |w| {
+        let id = put_beside(w, "kobold");
+        let me = w.player_pos();
+        w.state.actors.get_mut(&id).expect("kobold").mind.last_seen = Some(me);
+        let here = w.state.current_level.clone();
+        let level = w.state.levels.get_mut(&here).expect("level");
+        let spawner = level.spawner.as_mut().expect("a spawner on a danger floor");
+        spawner.outside.insert(id);
+        k = Some(id);
+    });
+    let k = k.expect("placed");
+    assert_eq!(w.state.actors[&k].level, floor(2));
+    assert_eq!(floors(&w), vec![&floor(2)]);
+    let spawner = w.state.current().spawner.as_ref().expect("spawner");
+    assert!(
+        !spawner.outside.contains(&k),
+        "the new floor's spawner counts it"
+    );
+    w.state.check().expect("consistent");
+}
+
+#[test]
+fn many_stair_uses_with_a_follower_keep_the_state_consistent() {
+    let mut w = start(23);
+    let mut k = follower_on(&mut w, StairsDir::Down);
+    for i in 0..24 {
+        let dir = if i % 3 == 2 {
+            StairsDir::Up
+        } else {
+            StairsDir::Down
+        };
+        // Keep a follower beside the player: the one that came, or a new one.
+        if !w.state.actors.contains_key(&k) {
+            k = follower_on(&mut w, dir);
+        } else {
+            take_with(&mut w, dir, |w| {
+                let me = w.player_pos();
+                let a = w.state.actors.get_mut(&k).expect("k");
+                a.level = w.state.current_level.clone();
+                let cell = Dir::ALL
+                    .iter()
+                    .map(|d| me.step(*d))
+                    .find(|p| w.state.current().is_walkable(&CONTENT, *p));
+                if let Some(cell) = cell {
+                    w.state.actors.get_mut(&k).expect("k").pos = cell;
+                }
+            });
+        }
+        w.state.check().expect("consistent");
+        assert!(floors(&w).len() <= 1, "{:?}", floors(&w));
+        assert!(
+            w.state
+                .actors
+                .values()
+                .all(|a| w.state.levels.contains_key(&a.level)),
+            "no actor on a floor that is gone"
+        );
+    }
 }
 
 #[test]

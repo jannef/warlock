@@ -87,6 +87,30 @@ modifier, as an [attack roll](combat.md#hitting); see [Stats](stats.md)) against
 creature's attack says otherwise. Made: "You break free of the ghast." and you take the step.
 Failed: "You struggle, but the ghast holds you fast." and the turn is gone.
 
+### Slipping bonds
+
+If you are trained in [Escape artist](skills.md#skill-escape-artist), you slip bonds without being
+asked: there is nothing to choose, no [ability](abilities.md) and no key. When
+[Held](status-effects.md#status-held), [Webbed](status-effects.md#status-webbed), or
+[Pinned](status-effects.md#status-pinned) stops what you try, the check happens as part of the
+attempt: the better of your [Strength](stats.md#stat-strength) and
+[Dexterity](stats.md#stat-dexterity) plus what [the skill](skills.md#what-skills-give) gives (and
+[Knowledge](skills.md#skill-knowledge), against a holder), 2d12 as an
+[attack roll](combat.md#hitting), against the grip, or 13 for a web or a pin. Made, the status ends
+and the action goes ahead at its usual time. Failed, the action's time is gone: "You struggle,
+but you are still caught in a web." It costs no more than the wait you would have had. If two
+bonds stop you, the other asks on your next attempt, and this step is refused at no cost. A
+[pin](status-effects.md#status-pinned) eases a degree with each action, a failed struggle too.
+
+Without the skill a hold is still a struggle of Strength alone, and a web or a pin simply refuses
+the step, at no cost, until it passes. Slowed minds and bodies
+([Staggered](status-effects.md#status-staggered), [Stunned](status-effects.md#status-stunned),
+[Surprised](status-effects.md#status-surprised), [Transfixed](status-effects.md#status-transfixed),
+[Sluggish](status-effects.md#status-sluggish), [Drowsy](status-effects.md#status-drowsy)) are no
+bonds, and the skill does nothing for them.
+
+### When a hold ends
+
 A hold also ends by itself, "You are free to move.":
 
 - when the holder dies, is knocked away, or ends up anywhere but beside you;

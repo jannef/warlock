@@ -32,6 +32,9 @@ struct TypeSpec {
     #[serde(default)]
     douses: bool,
     fire: Option<FireSpec>,
+    arc: Option<ArcSpec>,
+    #[serde(default)]
+    conducts: bool,
     #[serde(default)]
     shove: bool,
     #[serde(default)]
@@ -41,6 +44,12 @@ struct TypeSpec {
     bite: Option<BiteSpec>,
     #[serde(default)]
     immune_tags: Vec<String>,
+}
+
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct ArcSpec {
+    chance: u8,
 }
 
 #[derive(Deserialize)]
@@ -102,6 +111,11 @@ pub struct SpellType {
     pub douses: bool,
     /// The fire a burst leaves on its centre cell: its light, and the seconds it burns.
     pub fire: Option<(LightId, u32)>,
+    /// The percent chance a single-target or line strike jumps to a creature beside the one it
+    /// harmed (`world/spell_arc.rs`).
+    pub arc: Option<u8>,
+    /// Whether it strikes everyone standing in the body of water of a creature it harmed.
+    pub conducts: bool,
     /// Whether a big hit or a critical knocks the target a cell away.
     pub shove: bool,
     /// Whether a burst's blast shatters the thin ice it reaches.
@@ -203,6 +217,13 @@ fn resolve(spec: TypeSpec, content: &Content) -> Result<SpellType, String> {
         }
         None => None,
     };
+    if spec
+        .arc
+        .as_ref()
+        .is_some_and(|a| !CHANCES.contains(&a.chance))
+    {
+        return Err("arc: `chance` is 1 to 100 percent".into());
+    }
     let bite = match spec.bite {
         Some(b) => {
             if !CHANCES.contains(&b.below_percent) {
@@ -228,6 +249,8 @@ fn resolve(spec: TypeSpec, content: &Content) -> Result<SpellType, String> {
         ice,
         douses: spec.douses,
         fire,
+        arc: spec.arc.map(|a| a.chance),
+        conducts: spec.conducts,
         shove: spec.shove,
         shatter: spec.shatter,
         doors: spec.doors,
@@ -273,6 +296,9 @@ mod tests {
         assert!(of("acid").expect("acid").rider.is_some());
         assert!(content.spell_type(None).is_none());
         assert!(of("slashing").is_none(), "a blow's type has no entry");
+        let electricity = of("electricity").expect("electricity");
+        assert_eq!(electricity.arc, Some(25));
+        assert!(electricity.conducts);
     }
 
     #[test]
@@ -300,6 +326,8 @@ mod tests {
                 "no severity",
             ),
             ("cold = { heat = true, frost = 100 }", "not both"),
+            ("cold = { arc = { chance = 0 } }", "`chance`"),
+            ("cold = { arc = { chance = 101 } }", "`chance`"),
             ("cold = { words = \" \" }", "`words`"),
             (
                 "cold = { bite = { below_percent = 0, percent = 150 } }",

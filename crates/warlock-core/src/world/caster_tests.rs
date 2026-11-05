@@ -344,6 +344,7 @@ fn the_spells_are_abilities_by_level() {
             "Flame",
             // Level 20.
             "Call of the forest",
+            "Chain lightning",
             // Level 35.
             "Call the elements",
         ]
