@@ -439,3 +439,48 @@ fn print_areas() {
         println!("{}", describe(&level));
     }
 }
+
+/// A lake has deep water inside and a wadeable shore (#1020): deep cells never lie on the map's
+/// edge, and only lakes have them.
+#[test]
+fn lakes_have_deep_water_and_a_wadeable_shore() {
+    let deep = id("deep_water");
+    let shallow = [
+        deep,
+        id("water"),
+        id("reeds"),
+        id("bridge"),
+        id("dirt_road"),
+    ];
+    let (w, h) = SIZE;
+    for seed in 0..8 {
+        let a = area(seed, 65, 28);
+        let cells: Vec<Pos> = (a.terrain.iter())
+            .filter(|(_, t)| **t == deep)
+            .map(|(p, _)| p)
+            .collect();
+        assert!(cells.len() > 100, "seed {seed}: {}", cells.len());
+        for p in &cells {
+            assert!(
+                p.x > 0 && p.y > 0 && p.x < w - 1 && p.y < h - 1,
+                "seed {seed}: {p:?}"
+            );
+            // Shallow water, or a road's bridge, lies between it and the land.
+            let ringed = Dir::ALL
+                .iter()
+                .all(|d| shallow.contains(&a.terrain[p.step(*d)]));
+            let around: Vec<&str> = (Dir::ALL.iter())
+                .map(|d| CONTENT.terrain(a.terrain[p.step(*d)]).id.as_str())
+                .collect();
+            assert!(ringed, "seed {seed}: {p:?} {around:?}");
+        }
+        // Ponds, rivers, and brooks stay wadeable.
+        for (x, y) in [(42, 19), (57, 12), (60, 44)] {
+            let other = area(seed, x, y);
+            assert!(
+                !other.terrain.cells().contains(&deep),
+                "seed {seed}: {x},{y}"
+            );
+        }
+    }
+}

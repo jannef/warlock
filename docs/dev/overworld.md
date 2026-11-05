@@ -55,7 +55,7 @@ them so the land and herd are unchanged), `kit.rs` (the terrain and creature ids
 builds with, checked when content with an overworld loads), `noise.rs` (integer value noise and
 quantiles: "this share of the area"), `land.rs` (the canvas with per-cell `Claim`s: `Fixed` water,
 roads, ruins; `Clear` glade, banks, roadsides, no obstacles; `Free`), `water.rs` (river and lake
-bands, ponds, brooks, winding courses), `road.rs`, `cover.rs` (one function per landscape; wood
+bands, ponds, brooks, winding courses; a lake's still water more than 3 columns in is `deep_water` where all eight neighbours are still water, so never on the map's edge and the shore stays wadeable; ponds, rivers and brooks have none; #1020), `road.rs`, `cover.rs` (one function per landscape; wood
 share blends towards the neighbors), and `reach.rs` (trails, joining pockets, ways out,
 validation, `arrival`). Overworld terrain picks its generator with `landscape` in
 `data/terrain.toml`; outdoor vaults are vault files with `kind = "outdoor"`. Tune by eye:

@@ -997,6 +997,10 @@ pub enum TalentEffect {
     /// element: those of the choice). Empower, Archmage, Keen mind, School focus, Scroll
     /// adept, Wand mastery, Sure hand, Brimming.
     SpellMod(super::SpellModSpec),
+    /// What it does to a spell type's own rule (`[types]` in `data/spells.toml`) for the damage
+    /// types in `when`: `arc_chance`, the percent its spells of them arc at, read in
+    /// `world/spell_arc.rs` (Conductor).
+    SpellType { arc_chance: u8, when: Vec<String> },
     /// Its spells cost this percent more mana (negative: less; Archmage, Empower), at least 1.
     SpellManaPercent { value: i32 },
     /// Defence in the Deflection category, only while it wears no body armour (Mage armour).
@@ -1347,6 +1351,7 @@ impl TalentEffect {
                     | TalentEffect::Prayer { .. }
                     | TalentEffect::Communion
                     | TalentEffect::SpellMod(_)
+                    | TalentEffect::SpellType { .. }
                     | TalentEffect::WeaponStamina { .. }
                     | TalentEffect::WeaponRanks { .. }
                     | TalentEffect::TakeUpSkills { .. }
@@ -2209,6 +2214,20 @@ impl TalentEffect {
                 bonus(*value)
             }
             TalentEffect::SpellMod(spec) => spec.check(content, choice == Some(Choice::School)),
+            TalentEffect::SpellType { arc_chance, when } => {
+                if !(1..=100).contains(arc_chance) {
+                    return Err("`spell_type`: arc_chance is 1 to 100 percent".into());
+                }
+                if when.is_empty() {
+                    return Err("`spell_type`: `when` names at least one damage type".into());
+                }
+                match (when.iter()).find(|id| {
+                    !content.damage_types().is_empty() && content.damage_type_id(id).is_none()
+                }) {
+                    Some(id) => Err(format!("names an unknown damage type `{id}`")),
+                    None => Ok(()),
+                }
+            }
             TalentEffect::Study {
                 bonus: b,
                 percent: p,
