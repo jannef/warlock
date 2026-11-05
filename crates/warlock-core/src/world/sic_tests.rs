@@ -47,7 +47,6 @@ fn grant(w: &mut World, id: &str) {
     let mut talents: Vec<crate::talent::Taken> = me.talents.iter().cloned().collect();
     talents.push(crate::talent::Taken {
         id: id.into(),
-        rank: 1,
         choice: None,
     });
     me.talents =
@@ -135,9 +134,9 @@ fn sic(at: Pos) -> Action {
 fn the_ranger_gains_it_at_level_40_as_the_design_prices_it() {
     let class = BUILTIN.class("ranger").expect("the ranger");
     let row = (class.abilities.iter())
-        .find(|(_, id, _)| id == "sic")
+        .find(|(_, id)| id == "sic")
         .expect("Sic 'em in the table");
-    assert_eq!((row.0, row.2), (40, 1));
+    assert_eq!(row.0, 40);
     let active = crate::content::ClassActive::Sic;
     let talent = BUILTIN.class_active(active).expect("its talent");
     let cost = talent.resource.expect("a cost");

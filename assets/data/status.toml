@@ -54,8 +54,8 @@
 #   treat      how the Heal skill treats it (the Heal ability, spec §8 "Skills"): an Intelligence
 #              check plus Heal against { difficulty = 6, per_degree = 2 } (difficulty 0 to 40,
 #              plus 0 to 10 for each degree); `stops = true`: made, it ends, and a failed try may
-#              be made again at once; else, made, it eases a degree, and it may be tried once
-#              only, whatever comes of it, until it ends. `made` and `failed` are what you are
+#              be made again at once; else, made, it eases a degree, and a failed try may be
+#              made again too. `made` and `failed` are what you are
 #              told. None: Heal cannot treat it
 #   start, end what the player is told as it begins and ends ("end" lets a rest go on)
 #   dies       what a creature you see does when it kills it ("The giant rat bleeds to death.")
@@ -135,8 +135,8 @@ mana_regen = 50
 penalty = { from = 4, strength = -1, dexterity = -1 }
 # Cured at once by an antidote (the potion, spec §8 "Potions").
 cured_by = ["antidote"]
-# Eased a degree with the Heal skill, once; a failed try cannot be made again for this dose.
-treat = { difficulty = 8, per_degree = 1, made = "You draw out some of the poison.", failed = "You can do no more for the poison." }
+# Eased a degree with the Heal skill; a failed try may be made again at once.
+treat = { difficulty = 8, per_degree = 1, made = "You draw out some of the poison.", failed = "The poison will not come out." }
 start = "You feel sick."
 end = "The poison wears off."
 dies = "succumbs to poison"

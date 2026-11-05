@@ -143,7 +143,7 @@ fn raise(w: &mut World, name: &str, rank: u8) {
 }
 
 /// Whether the player of `w` at character level `level` may take `id` now.
-fn may(w: &World, id: &str, level: u8) -> Result<u8, Refusal> {
+fn may(w: &World, id: &str, level: u8) -> Result<(), Refusal> {
     let content = w.content();
     let book = content.talents();
     let def = book.get(book.id(id).expect(id));
@@ -177,7 +177,7 @@ fn every_pick_is_offered_only_under_its_sign() {
             raise(w, "twin_blades", 5);
             raise(w, "long_blades", 5);
         }
-        assert_eq!(may(&yes, id, 30), Ok(1), "{id} under its sign");
+        assert_eq!(may(&yes, id, 30), Ok(()), "{id} under its sign");
         assert!(
             matches!(may(&no, id, 30), Err(Refusal::Unmet(_))),
             "{id} under another"

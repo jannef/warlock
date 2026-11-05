@@ -58,7 +58,7 @@ fn the_fighting_classes_hold_it_from_level_one_and_the_others_do_not() {
         let w = start(class);
         assert_eq!(w.player_level(), 1);
         assert!(
-            w.state.player().talents.rank_of("trained_wind", None) > 0,
+            w.state.player().talents.holds("trained_wind", None),
             "{class} is given Trained wind"
         );
         assert_eq!(held(&w), Some(max(&w)), "{class} holds stamina, full");

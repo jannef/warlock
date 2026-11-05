@@ -76,7 +76,7 @@ pub(super) fn talents(content: &Content) -> String {
     };
     // The sign a pick asks for, as a sort key (the animals first) and a name.
     let sign = |def: &TalentDef| -> Option<(usize, String)> {
-        def.needs_at(1).find_map(|need| match need {
+        def.needs.iter().find_map(|need| match need {
             Need::Animal(id) => {
                 (h.animals.iter().position(|a| a.id == id)).map(|i| (i, h.animals[i].name.clone()))
             }

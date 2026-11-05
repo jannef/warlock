@@ -1,10 +1,12 @@
-# Burning hands (spec §8 "Spells", the first spell list): a short fan of flame from the caster's
-# hands; an area, so dearer and weaker than a single target.
+# Burning hands (spec §8 "Spells", the first spell list; #979): the wizard's first real spell, a
+# short fan of flame from the caster's hands. No hit roll and a little area, so dearer than Ray of
+# frost, and at Magic missile's price it rolls less than Magic missile and reaches far less.
 [[spell]]
 id = "burning_hands"
 name = "Burning hands"
 description = "A fan of flame from your hands toward a place you aim at: everyone in it is burnt."
-level = 4
+level = 1
+mana = 3
 school = "evocation"
 kind = "damage"
 shape = "cone"
@@ -20,4 +22,4 @@ message = "Flames fan out from your hands!"
 noise = { sound = "explosion", loudness = 40 }
 
 [spell.grows]
-damage = "intelligence 13 2d4, 16 3d4, 22 3d4+2"
+damage = "intelligence 13 1d6, 16 2d4, 22 2d4+2"

@@ -856,6 +856,7 @@ impl World {
         }
         // Diamond soul's catch (`ascetic.rs`): a missile's hit undone for a point of ki.
         let blow = self.caught_shot(target, (missile, with), blow, events);
+        let blow = self.plain_miss_dodged(attacker, target, blow);
         events.push(Event::Attacked {
             attacker,
             target,
@@ -1180,7 +1181,9 @@ impl World {
             if credited {
                 let percent = master.map_or(100, |_| self.ally_share());
                 self.earn_kill_at(creature, percent);
-                let level = self.state.current_level.clone();
+                // One that followed the player counts where it came from (`stair_followers.rs`).
+                let home = self.actor_or_fallen(id).and_then(|a| a.home.clone());
+                let level = home.unwrap_or_else(|| self.state.current_level.clone());
                 self.tally_kill(creature, &level);
                 self.judge_kill(id);
                 if master.is_some() && self.trains(Use::Handle) {

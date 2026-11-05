@@ -1,7 +1,6 @@
 //! Talents (spec §8 "Talents"; `assets/data/talents.toml` for the settings, one file per talent
 //! under `assets/data/talents/`): what a character may pick as they level up. A talent has a
-//! tree, up to [`TalentBook::max_ranks`] ranks, prerequisites ([`Needs`]) that must all hold when
-//! it is chosen, and typed effects ([`TalentEffect`]) summed by [`crate::talent::TalentMods`] and
+//! tree, prerequisites ([`Needs`]) that must all hold when it is chosen, and typed effects ([`TalentEffect`]) summed by [`crate::talent::TalentMods`] and
 //! read where the rules already read what magic items do. Every talent names the systems it
 //! touches from the closed list in the settings file; the **coverage check** at load fails when
 //! a system that is not `pending` has fewer talents than `[coverage]` asks, or a tree that is
@@ -41,8 +40,6 @@ pub struct TreeId(pub u8);
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct SystemId(pub u8);
 
-/// The most ranks a talent may have unless the settings say otherwise.
-pub const DEFAULT_MAX_RANKS: u8 = 3;
 /// What a stat prerequisite may ask for.
 const SCORES: std::ops::RangeInclusive<u8> = 1..=40;
 /// What a flat bonus (Dodge, natural armour, damage, hearing, noticing) may be.
@@ -422,7 +419,7 @@ pub enum TalentEffect {
     SkillRolls { value: i32 },
     /// One more talent pick at character level `level` (1: at creation; Versatile).
     ExtraPick { level: u8 },
-    /// Handed out once, as the rank is taken or given: every weapon skill and style of
+    /// Handed out once, as the talent is taken or given: every weapon skill and style of
     /// `skills` (none named: every row of `weapon_skills.toml` but the schools of magic and
     /// hidden styles, whatever the content holds) held below rank `to` rises to it, its defaults
     /// with it (Travelled hands; `WeaponSkills::raise_to`). `news` is said when a class table
@@ -434,7 +431,7 @@ pub enum TalentEffect {
         #[serde(default)]
         news: Option<String>,
     },
-    /// Handed out once, as the rank is taken or given: every skill of `skills.toml` the holder
+    /// Handed out once, as the talent is taken or given: every skill of `skills.toml` the holder
     /// is not trained in, but those `except` names, is trained at `dice`, rolled from the
     /// `levels` stream, whatever skills the content holds (Jack of all trades;
     /// `world/jack.rs`). `news` is said when a class table gives it.
@@ -965,7 +962,7 @@ pub enum TalentEffect {
     /// A trap it steps onto first gets a Dexterity check against its difficulty: won, it does
     /// not go off under it, and it is found (Light step).
     SureStep,
-    /// Pits never catch it (Light step's second rank).
+    /// Pits never catch it (Light step, Bedrock).
     PitProof,
     /// It can disarm traps (the Disarm ability) without Disable device.
     Disarm,
@@ -2512,8 +2509,8 @@ impl TalentEffect {
 /// One prerequisite of a talent, as it is checked and as it is shown ("Toughness 14").
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum Need {
-    /// Another talent, at this rank at least.
-    Talent(TalentId, u8),
+    /// Another talent.
+    Talent(TalentId),
     /// A stat score (the stored score, never the effective one) at least this.
     Stat(Stat, u8),
     /// A skill trained, at this value at least.
@@ -2546,17 +2543,10 @@ pub enum Need {
 
 impl Need {
     /// The prerequisite in words, as a refusal and the Talents page say it: "Toughness 14",
-    /// "Hardy 2", "Stealth 25", "to be a dwarf".
+    /// "Hardy", "Stealth 25", "to be a dwarf".
     pub fn words(&self, content: &Content) -> String {
         match self {
-            Need::Talent(id, rank) => {
-                let name = &content.talents().get(*id).name;
-                if *rank > 1 {
-                    format!("{name} {rank}")
-                } else {
-                    name.clone()
-                }
-            }
+            Need::Talent(id) => content.talents().get(*id).name.clone(),
             Need::Stat(stat, score) => format!("{} {score}", stat.name()),
             Need::Skill(id, value) => format!("{} {value}", content.skill(*id).name),
             Need::WeaponSkill(id, rank) => {
@@ -2612,11 +2602,11 @@ pub struct AnyWeaponSkill {
     pub words: String,
 }
 
-/// The prerequisites of a talent, or of one of its ranks (spec §8 "Talents"): all must hold
+/// The prerequisites of a talent (spec §8 "Talents"): all must hold
 /// when it is chosen; none is checked again later.
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub struct Needs {
-    pub talents: Vec<(TalentId, u8)>,
+    pub talents: Vec<TalentId>,
     /// Scores by stat; 0 asks nothing.
     pub stats: PerStat<u8>,
     pub skills: Vec<(SkillId, u16)>,
@@ -2649,7 +2639,7 @@ impl Needs {
     /// the choice, the level, the race, the eyes, the class, the sign, then any one of the
     /// alternatives.
     pub fn iter(&self) -> impl Iterator<Item = Need> + '_ {
-        let talents = self.talents.iter().map(|&(t, r)| Need::Talent(t, r));
+        let talents = self.talents.iter().map(|&t| Need::Talent(t));
         let stats = (self.stats.iter())
             .filter(|&(_, score)| score > 0)
             .map(|(stat, score)| Need::Stat(stat, score));
@@ -2684,16 +2674,6 @@ impl Needs {
     }
 }
 
-/// One rank of a talent: what it asks besides the talent's own needs, and what it adds besides
-/// the talent's per-rank effects.
-#[derive(Clone, Debug, Default, PartialEq, Eq)]
-pub struct Rank {
-    pub needs: Needs,
-    pub effects: Vec<TalentEffect>,
-    /// Its effects that count only while the holder suffers a status (`while`).
-    pub effects_while: Vec<(StatusId, TalentEffect)>,
-}
-
 /// A talent.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct TalentDef {
@@ -2704,15 +2684,13 @@ pub struct TalentDef {
     pub choice: Option<Choice>,
     /// What it does, in the game's words (the wiki has the rule).
     pub description: String,
-    /// What every rank asks.
+    /// What it asks.
     pub needs: Needs,
-    /// What every rank held adds.
+    /// What it adds.
     pub effects: Vec<TalentEffect>,
-    /// What every rank held adds only while the holder suffers a status (`while = "raging"`:
+    /// What it adds only while the holder suffers a status (`while = "raging"`:
     /// Battle-scarred's rage half), apart from the plain effects: only the one sum reads them.
     pub effects_while: Vec<(StatusId, TalentEffect)>,
-    /// Its ranks, first to last (at least one).
-    pub ranks: Vec<Rank>,
     /// The systems it touches (the coverage list).
     pub systems: Vec<SystemId>,
     /// Given, never picked (a race's, a birth sign's): off every pick list.
@@ -2739,38 +2717,9 @@ pub struct ResourceCost {
 }
 
 impl TalentDef {
-    /// How many ranks it has.
-    pub fn rank_count(&self) -> u8 {
-        self.ranks.len() as u8
-    }
-
-    /// What taking `rank` (1 first) asks: the talent's needs, then that rank's.
-    pub fn needs_at(&self, rank: u8) -> impl Iterator<Item = Need> + '_ {
-        let own = (self.ranks.get(usize::from(rank.max(1)) - 1)).map(|r| &r.needs);
-        self.needs
-            .iter()
-            .chain(own.into_iter().flat_map(Needs::iter))
-    }
-
-    /// What holding `rank` (1 first) adds: the per-rank effects, then that rank's own.
-    pub fn effects_at(&self, rank: u8) -> impl Iterator<Item = TalentEffect> + '_ {
-        let own = (self.ranks.get(usize::from(rank.max(1)) - 1)).map(|r| r.effects.as_slice());
-        (self.effects.iter().cloned()).chain(own.into_iter().flatten().cloned())
-    }
-
-    /// What holding `rank` (1 first) adds while its holder suffers a status, each with that
-    /// status: the per-rank ones, then that rank's own ([`TalentDef::effects_while`]).
-    pub fn effects_while_at(
-        &self,
-        rank: u8,
-    ) -> impl Iterator<Item = (StatusId, TalentEffect)> + '_ {
-        let own = (self.ranks.get(usize::from(rank.max(1)) - 1)).map(|r| &r.effects_while);
-        (self.effects_while.iter().cloned()).chain(own.into_iter().flatten().cloned())
-    }
-
-    /// Whether its first rank may be taken by anyone: no prerequisites at all.
+    /// Whether anyone may take it: no prerequisites at all.
     pub fn is_free(&self) -> bool {
-        !self.granted && self.needs_at(1).next().is_none()
+        !self.granted && self.needs.is_empty()
     }
 
     /// Its name with the choice it was taken for: "Weapon focus (long blades)".
@@ -2791,8 +2740,6 @@ pub struct TalentBook {
     pub trees: Vec<TreeDef>,
     pub systems: Vec<SystemDef>,
     pub coverage: Coverage,
-    /// The most ranks a talent may have.
-    pub max_ranks: u8,
     list: Vec<TalentDef>,
     ids: BTreeMap<String, TalentId>,
 }
@@ -2824,8 +2771,7 @@ impl TalentBook {
             return Ok(());
         }
         for (_, def) in self.iter() {
-            let effects = (def.effects.iter()).chain(def.ranks.iter().flat_map(|r| &r.effects));
-            for effect in effects {
+            for effect in &def.effects {
                 let TalentEffect::TerrainAs { terrains, like } = effect else {
                     continue;
                 };
@@ -2940,7 +2886,6 @@ impl TalentBook {
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
 struct TalentFile {
-    max_ranks: Option<u8>,
     coverage: Option<Coverage>,
     /// The pairs the identical-effects check lets be (`talent_alike.rs`).
     alike: Option<Vec<[String; 2]>>,
@@ -2982,15 +2927,12 @@ struct TalentSpec {
     id: String,
     name: String,
     tree: String,
-    ranks: Option<u8>,
     choice: Option<Choice>,
     description: String,
     #[serde(default)]
     needs: NeedsSpec,
     #[serde(default)]
     effects: Vec<EffectSpec>,
-    #[serde(default)]
-    rank: Vec<RankSpec>,
     #[serde(default)]
     systems: Vec<String>,
     #[serde(default)]
@@ -3049,18 +2991,9 @@ fn split_effects(
 }
 
 #[derive(Deserialize, Default)]
-#[serde(deny_unknown_fields)]
-struct RankSpec {
-    #[serde(default)]
-    needs: NeedsSpec,
-    #[serde(default)]
-    effects: Vec<EffectSpec>,
-}
-
-#[derive(Deserialize, Default)]
 #[serde(deny_unknown_fields, default)]
 struct NeedsSpec {
-    talents: BTreeMap<String, u8>,
+    talents: Vec<String>,
     stats: BTreeMap<String, u8>,
     skills: BTreeMap<String, u16>,
     weapon_skills: BTreeMap<String, u8>,
@@ -3162,22 +3095,18 @@ struct Pending<'a> {
 fn resolve_needs(
     spec: NeedsSpec,
     ids: &BTreeMap<String, TalentId>,
-    ranks_of: &dyn Fn(TalentId) -> u8,
     choice: Option<Choice>,
     content: &Content,
 ) -> Result<Needs, String> {
     let mut talents = Vec::new();
-    for (name, rank) in spec.talents {
+    for name in spec.talents {
         let id = *ids
             .get(&name)
             .ok_or_else(|| format!("needs an unknown talent `{name}`"))?;
-        if rank == 0 || rank > ranks_of(id) {
-            return Err(format!(
-                "needs `{name}` at rank {rank}, which it does not have (it has {})",
-                ranks_of(id)
-            ));
+        if talents.contains(&id) {
+            return Err(format!("needs `{name}` twice"));
         }
-        talents.push((id, rank));
+        talents.push(id);
     }
     let mut stats = PerStat::splat(0u8);
     for (name, score) in spec.stats {
@@ -3270,7 +3199,7 @@ fn resolve_needs(
                 return Err("`either` names fewer than two alternatives".into());
             }
             // Content without skills (a fixture) leaves a skill alternative out, as above.
-            let alternatives = resolve_needs(*alternatives, ids, ranks_of, choice, content)?;
+            let alternatives = resolve_needs(*alternatives, ids, choice, content)?;
             alternatives.iter().collect()
         }
         None => Vec::new(),
@@ -3298,8 +3227,7 @@ fn resolve_needs(
 /// names something else, in words.
 pub(super) fn check_heirlooms(content: &Content) -> Result<(), String> {
     for (_, def) in content.talents().iter() {
-        let effects = (def.effects.iter()).chain(def.ranks.iter().flat_map(|r| &r.effects));
-        for effect in effects {
+        for effect in &def.effects {
             let TalentEffect::Heirloom {
                 weapons, fallback, ..
             } = effect
@@ -3320,14 +3248,13 @@ pub(super) fn check_heirlooms(content: &Content) -> Result<(), String> {
     Ok(())
 }
 
-/// Parses the talent table: the settings (`max_ranks`, `[coverage]`, `[[tree]]`, `[[system]]`,
+/// Parses the talent table: the settings (`[coverage]`, `[[tree]]`, `[[system]]`,
 /// each set in at most one file) and the talents, resolved against `content`, which must have
 /// its skills, weapon skills, races, classes, vision profiles, and damage types already.
 pub(super) fn parse<'a>(
     files: impl IntoIterator<Item = (&'a str, &'a str)>,
     content: &Content,
 ) -> Result<TalentBook, ContentError> {
-    let mut max_ranks = Once::new("max_ranks");
     let mut coverage = Once::new("coverage");
     let mut alike = Once::new("alike");
     let mut first_file = None;
@@ -3338,7 +3265,6 @@ pub(super) fn parse<'a>(
         first_file.get_or_insert(file);
         let parsed: TalentFile =
             toml::from_str(text).map_err(|e| ContentError::new(file, e.to_string()))?;
-        max_ranks.take(file, parsed.max_ranks)?;
         coverage.take(file, parsed.coverage)?;
         alike.take(file, parsed.alike.map(|pairs| (file, pairs)))?;
         trees.extend(parsed.tree.into_iter().map(|t| (file, t)));
@@ -3346,16 +3272,11 @@ pub(super) fn parse<'a>(
         pending.extend(parsed.talent.into_iter().map(|spec| Pending { file, spec }));
     }
     let first_file = first_file.unwrap_or("data/talents.toml");
-    let max_ranks = max_ranks.get_or(DEFAULT_MAX_RANKS);
     let coverage = coverage.get_or(Coverage::default());
-    if max_ranks == 0 {
-        return Err(ContentError::new(first_file, "`max_ranks` is at least 1"));
-    }
     let mut book = TalentBook {
         trees: Vec::new(),
         systems: Vec::new(),
         coverage,
-        max_ranks,
         list: Vec::new(),
         ids: BTreeMap::new(),
     };
@@ -3408,7 +3329,6 @@ pub(super) fn parse<'a>(
     }
     // Every id first, so a talent may need one defined after it.
     let mut files: BTreeMap<String, &str> = BTreeMap::new();
-    let mut ranks: Vec<u8> = Vec::new();
     for (i, p) in pending.iter().enumerate() {
         let spec = &p.spec;
         if spec.id.is_empty() || spec.id.contains(':') || spec.id.contains(char::is_whitespace) {
@@ -3420,23 +3340,8 @@ pub(super) fn parse<'a>(
         if let Some(first) = files.insert(spec.id.clone(), p.file) {
             return Err(duplicate_id("talent", &spec.id, p.file, first));
         }
-        let err = |m: String| ContentError::new(p.file, format!("talent `{}`: {m}", spec.id));
-        let count = match (spec.ranks, spec.rank.len()) {
-            (None, 0) => 1,
-            (None, n) => n as u8,
-            (Some(r), 0) => r,
-            (Some(r), n) if usize::from(r) == n => r,
-            (Some(r), n) => {
-                return Err(err(format!("`ranks = {r}` but {n} `[[rank]]` entries")));
-            }
-        };
-        if count == 0 || count > max_ranks {
-            return Err(err(format!("a talent has 1 to {max_ranks} ranks")));
-        }
         book.ids.insert(spec.id.clone(), TalentId(i as u16));
-        ranks.push(count);
     }
-    let ranks_of = |id: TalentId| ranks[usize::from(id.0)];
     let mut spell_ids = std::collections::BTreeSet::new();
     for (i, p) in pending.into_iter().enumerate() {
         let spec = p.spec;
@@ -3469,10 +3374,8 @@ pub(super) fn parse<'a>(
             }
             systems.push(id);
         }
-        let count = ranks[i];
-        let needs =
-            resolve_needs(spec.needs, &book.ids, &ranks_of, spec.choice, content).map_err(err)?;
-        if needs.talents.iter().any(|(t, _)| *t == TalentId(i as u16)) {
+        let needs = resolve_needs(spec.needs, &book.ids, spec.choice, content).map_err(err)?;
+        if needs.talents.contains(&TalentId(i as u16)) {
             return Err(err("needs itself".into()));
         }
         let (effects, effects_while) =
@@ -3484,26 +3387,7 @@ pub(super) fn parse<'a>(
                 return Err(err(format!("spell `{spell}` is given twice")));
             }
         }
-        let mut rank_defs = Vec::new();
-        for (n, rank) in spec.rank.into_iter().enumerate() {
-            let own = resolve_needs(rank.needs, &book.ids, &ranks_of, spec.choice, content)
-                .map_err(|m| err(format!("rank {}: {m}", n + 1)))?;
-            if own.talents.iter().any(|(t, _)| *t == TalentId(i as u16)) {
-                return Err(err(format!("rank {}: needs itself", n + 1)));
-            }
-            let (own_effects, own_while) = split_effects(rank.effects, content, spec.choice)
-                .map_err(|m| err(format!("rank {}: {m}", n + 1)))?;
-            rank_defs.push(Rank {
-                needs: own,
-                effects: own_effects,
-                effects_while: own_while,
-            });
-        }
-        rank_defs.resize_with(usize::from(count), Rank::default);
-        if effects.is_empty()
-            && effects_while.is_empty()
-            && (rank_defs.iter()).all(|r| r.effects.is_empty() && r.effects_while.is_empty())
-        {
+        if effects.is_empty() && effects_while.is_empty() {
             return Err(err("does nothing: it needs `effects`".into()));
         }
         if spec.flaw && !spec.granted {
@@ -3549,7 +3433,6 @@ pub(super) fn parse<'a>(
             needs,
             effects,
             effects_while,
-            ranks: rank_defs,
             systems,
             granted: spec.granted,
             flaw: spec.flaw,
@@ -3560,9 +3443,7 @@ pub(super) fn parse<'a>(
     // A talent that needs one with a choice of its own kind is taken for the same choice: only
     // talents of the same choice kind may chain that way.
     for def in &book.list {
-        let needed =
-            (def.needs.talents.iter()).chain(def.ranks.iter().flat_map(|r| r.needs.talents.iter()));
-        for &(other, _) in needed {
+        for &other in &def.needs.talents {
             let other = book.get(other);
             if other.flaw {
                 return Err(ContentError::new(
@@ -3614,7 +3495,6 @@ mod tests {
     }
 
     const SETTINGS: &str = r#"
-max_ranks = 3
 [coverage]
 min_talents = 2
 min_class = 0
@@ -3652,16 +3532,10 @@ systems = ["hit_points"]
 id = "hardy"
 name = "Hardy"
 tree = "vigour"
-ranks = 3
 description = "More hit points."
+needs = { stats = { toughness = 17 }, talents = ["healthy"] }
 effects = [{ kind = "max_hp_per_levels", per_levels = 4, at_least = 3 }]
 systems = ["hit_points"]
-[[talent.rank]]
-needs = { stats = { toughness = 11 } }
-[[talent.rank]]
-needs = { stats = { toughness = 14 } }
-[[talent.rank]]
-needs = { stats = { toughness = 17 }, talents = { healthy = 1 } }
 "#;
 
     fn err(result: Result<Content, ContentError>) -> String {
@@ -3672,20 +3546,19 @@ needs = { stats = { toughness = 17 }, talents = { healthy = 1 } }
     }
 
     #[test]
-    fn talents_load_with_ranks_needs_and_effects() {
+    fn talents_load_with_needs_and_effects() {
         let content = load(SETTINGS, &[("healthy", HEALTHY), ("hardy", HARDY)]).expect("loads");
         let book = content.talents();
         assert_eq!(book.len(), 2);
         let hardy = book.get(book.id("hardy").expect("hardy"));
-        assert_eq!(hardy.rank_count(), 3);
         assert_eq!(hardy.tree, book.tree_id("vigour").expect("tree"));
-        let needs: Vec<String> = hardy.needs_at(3).map(|n| n.words(&content)).collect();
+        let needs: Vec<String> = hardy.needs.iter().map(|n| n.words(&content)).collect();
         assert_eq!(
             needs,
             ["Healthy", "Toughness 17"],
             "talents first, then scores"
         );
-        assert_eq!(hardy.effects_at(2).count(), 1);
+        assert_eq!(hardy.effects.len(), 1);
         assert!(!hardy.is_free());
         assert!(book.get(book.id("healthy").expect("healthy")).is_free());
         assert_eq!(book.by_tree().count(), 2);
@@ -3836,11 +3709,11 @@ needs = { stats = { toughness = 17 }, talents = { healthy = 1 } }
         );
         assert!(bad("effects = [{ kind = \"dodge\", value = 1 }]\nneeds = { stats = { toughness = 50 } }").contains("scores are"));
         assert!(
-            bad("effects = [{ kind = \"dodge\", value = 1 }]\nneeds = { talents = { hardy = 4 } }")
-                .contains("rank 4")
+            bad("effects = [{ kind = \"dodge\", value = 1 }]\nneeds = { talents = [\"hardy\", \"hardy\"] }")
+                .contains("needs `hardy` twice")
         );
         assert!(
-            bad("effects = [{ kind = \"dodge\", value = 1 }]\nneeds = { talents = { x = 1 } }")
+            bad("effects = [{ kind = \"dodge\", value = 1 }]\nneeds = { talents = [\"x\"] }")
                 .contains("needs itself")
         );
         assert!(
@@ -3854,13 +3727,6 @@ needs = { stats = { toughness = 17 }, talents = { healthy = 1 } }
         assert!(
             bad("effects = [{ kind = \"dodge\", value = 1 }]\nneeds = { chosen = 2 }")
                 .contains("needs a `choice`")
-        );
-        assert!(
-            bad("effects = [{ kind = \"dodge\", value = 1 }]\nranks = 4").contains("1 to 3 ranks")
-        );
-        assert!(
-            bad("effects = [{ kind = \"dodge\", value = 1 }]\nranks = 2\n[[talent.rank]]\n")
-                .contains("`ranks = 2` but 1")
         );
         assert!(bad("").contains("does nothing"));
         assert!(bad("effects = [{ kind = \"weapon_ranks\", to = 0 }]").contains("to is 1 to"));
@@ -3934,7 +3800,7 @@ needs = { stats = { toughness = 17 }, talents = { healthy = 1 } }
             SETTINGS,
             &[(
                 "hardy",
-                HARDY.replace(", talents = { healthy = 1 }", "").as_str(),
+                HARDY.replace(", talents = [\"healthy\"]", "").as_str(),
             )],
         ));
         assert!(e.contains("system `hit_points` has 1 talent but"), "{e}");
@@ -3973,7 +3839,7 @@ id = "specialization"
 name = "Specialization"
 tree = "vigour"
 description = "d"
-needs = { talents = { weapon_focus = 1 } }
+needs = { talents = ["weapon_focus"] }
 effects = [{ kind = "healing_percent", value = 10 }]
 systems = ["hit_points"]
 "#;

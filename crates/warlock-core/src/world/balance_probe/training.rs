@@ -304,6 +304,7 @@ fn fight(
         while theirs >= 1.0 {
             theirs -= 1.0;
             let blow = combat::strike(&them.blow, &me.target, rng);
+            let blow = w.plain_miss_dodged(foe, player, Some(blow)).unwrap_or(blow);
             let dodged = matches!(
                 blow.strike,
                 Strike::Missed {

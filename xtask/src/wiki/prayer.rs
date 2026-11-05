@@ -218,10 +218,10 @@ fn gained_at(content: &Content, id: PrayerUse) -> String {
 /// A class table's talents, with their levels.
 fn class_talents<'c>(
     content: &'c Content,
-    abilities: &'c [(u8, String, u8)],
+    abilities: &'c [(u8, String)],
 ) -> impl Iterator<Item = (u8, &'c TalentDef)> + 'c {
     let book = content.talents();
-    (abilities.iter()).filter_map(move |(level, id, _)| Some((*level, book.get(book.id(id)?))))
+    (abilities.iter()).filter_map(move |(level, id)| Some((*level, book.get(book.id(id)?))))
 }
 
 /// The prayer by the levels of each class that has one: what each talent adds, the prayer's name

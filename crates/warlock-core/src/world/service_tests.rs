@@ -219,7 +219,7 @@ fn a_mending_restores_every_point_but_not_while_a_disease_shows() {
 }
 
 #[test]
-fn pious_at_its_first_rank_pays_half_and_a_cure_mends_a_point() {
+fn pious_pays_half_and_a_cure_mends_a_point() {
     let mut w = world(100);
     w.player_mut().talents.take("pious", None);
     let prices: Vec<Option<u32>> = w.topics(ActorId(1)).iter().map(|t| t.price).collect();

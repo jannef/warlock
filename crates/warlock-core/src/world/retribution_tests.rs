@@ -25,7 +25,7 @@ fn set(w: &mut World, value: u16) {
 fn paladin_and_kobold() -> (World, ActorId) {
     let mut w = world("paladin");
     reach(&mut w, 25);
-    assert!(w.state.player().talents.has("retribution", 1), "at 25");
+    assert!(w.state.player().talents.has("retribution"), "at 25");
     let kobold = beside(&mut w, "kobold", 5000);
     // The player has noticed it: its attacks never catch them unawares (Surprised).
     let turn = w.state.turn;

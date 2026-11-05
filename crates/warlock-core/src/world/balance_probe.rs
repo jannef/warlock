@@ -916,7 +916,7 @@ fn career(
     let player = w.state.player;
     let mut out = Vec::new();
     let mut log = training::Log::default();
-    let mut paced = schools::Paced::default();
+    let mut paced = schools::first_spell(&w, build, seed);
     for level in 1..=*LEVELS.last().expect("levels") {
         if level > 1 {
             if trained {

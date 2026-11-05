@@ -75,8 +75,8 @@ fn held(w: &World, slot: &str) -> Option<String> {
 fn the_hunter_gains_it_at_its_first_level() {
     let hunter = HALL.prestige("hunter").expect("the Hunter");
     assert_eq!(hunter.levels, 30);
-    let at = (hunter.abilities.iter()).find(|(_, t, _)| t == "spirit_weapon");
-    assert_eq!(at.map(|(level, _, _)| *level), Some(1));
+    let at = (hunter.abilities.iter()).find(|(_, t)| t == "spirit_weapon");
+    assert_eq!(at.map(|(level, _)| *level), Some(1));
     let talents = HALL.talents();
     let id = talents.id("spirit_weapon").expect("the talent");
     assert!(talents.get(id).granted, "a class ability, never picked");
@@ -411,7 +411,7 @@ fn the_calling_into_the_hunter_gives_spirit_weapon() {
     let mut w = bard();
     run(&mut w, "call:hunter");
     assert_eq!(w.player_level(), 13, "Hunter 1");
-    assert!(w.state.player().talents.rank_of("spirit_weapon", None) > 0);
+    assert!(w.state.player().talents.holds("spirit_weapon", None));
     assert!(said(&w, "You gain Spirit weapon."));
     let talents = dump::layer_rows(&w, Layer::Talents);
     assert!(

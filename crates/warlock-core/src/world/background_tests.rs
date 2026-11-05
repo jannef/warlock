@@ -432,7 +432,7 @@ fn the_fateful_lines_at_pinned_seeds() {
         story(&w)
     );
     let me = w.state().player();
-    assert_eq!(me.talents.rank_of("hardy", None), 1);
+    assert!(me.talents.holds("hardy", None));
     assert!(me.boons.iter().any(|b| b.id == "hardy"));
     assert!(talent_rows(&w).contains(&"Hardy (story)".to_string()));
     // The named blade: a rare weapon, identified.
@@ -467,7 +467,7 @@ fn talent_rows(w: &World) -> Vec<String> {
 }
 
 #[test]
-fn a_story_talent_is_given_at_rank_one_and_kept() {
+fn a_story_talent_is_given_and_kept() {
     let content = only_chapters(&[(
         "01-blessed.toml",
         &forced(
@@ -481,10 +481,10 @@ fn a_story_talent_is_given_at_rank_one_and_kept() {
     let w = kitted(&content, character, &PICKS).expect("starts");
     assert_eq!(story(&w), ["blessed/told"]);
     let me = w.state().player();
-    assert_eq!(me.talents.rank_of("hardy", None), 1);
+    assert!(me.talents.holds("hardy", None));
     let boons: Vec<&str> = me.boons.iter().map(|b| b.id.as_str()).collect();
     assert_eq!(boons, ["hardy"]);
-    // What its rank hands out (Hardy's hit points at level 1), and the pool full.
+    // What it hands out (Hardy's hit points at level 1), and the pool full.
     let was = before.state().player().max_hp(&STORYLESS);
     assert!(me.max_hp(&content) > was, "{} > {was}", me.max_hp(&content));
     assert_eq!(me.hp, me.max_hp(&content));
@@ -496,7 +496,7 @@ fn a_story_talent_is_given_at_rank_one_and_kept() {
     let loaded = crate::save::decode(&crate::save::encode(&w), content.clone()).expect("loads");
     assert_eq!(loaded.state(), w.state());
     let again = loaded.state().player();
-    assert_eq!(again.talents.rank_of("hardy", None), 1);
+    assert!(again.talents.holds("hardy", None));
     assert_eq!(again.max_hp(&content), me.max_hp(&content));
     assert!(talent_rows(&loaded).contains(&"Hardy (story)".to_string()));
 }
@@ -530,7 +530,7 @@ fn a_held_talent_is_never_given_by_a_story() {
     let picked = kitted(&content, character, &PICKS).expect("starts");
     assert_eq!(story(&picked), ["first/plain", "again/plain"]);
     assert!(picked.state().player().boons.is_empty());
-    assert_eq!(picked.state().player().talents.rank_of("lean", None), 1);
+    assert!(picked.state().player().talents.holds("lean", None));
 }
 
 #[test]
@@ -569,7 +569,7 @@ fn a_class_table_naming_a_story_talent_later_gives_a_pick_in_its_place() {
     };
     assert_eq!((at(&w, 15), at(&w, 18)), (Some(1), Some(2)));
     let me = w.state().player();
-    assert_eq!(me.talents.rank_of("evasion", None), 1);
+    assert!(me.talents.holds("evasion", None));
     assert_eq!(me.boons.len(), 1);
     assert!(talent_rows(&w).contains(&"Evasion (story)".to_string()));
 }
@@ -583,7 +583,7 @@ fn a_story_flaw_is_a_sign_flaw_marked_as_the_storys() {
     let w = kitted(&content, "human,female,warrior", &PICKS).expect("starts");
     assert_eq!(story(&w), ["sickly/told"]);
     let me = w.state().player();
-    assert_eq!(me.talents.rank_of("thin_skinned", None), 1);
+    assert!(me.talents.holds("thin_skinned", None));
     assert_eq!(me.boons.len(), 1);
     let own = w.perception().own_talents();
     let frail = own.iter().find(|t| t.name == "Thin-skinned").expect("held");

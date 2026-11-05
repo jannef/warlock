@@ -100,7 +100,7 @@ impl World {
     }
 
     /// Whether the player, `victim`, steps onto the trap at `at` without setting it off (Light
-    /// step, spec §8 "Talents"): a pit never catches them at its second rank; else a Dexterity
+    /// step, spec §8 "Talents"): a pit never catches them; else a Dexterity
     /// check against the trap's difficulty (two draws of the gameplay stream, only with the
     /// talent and a trap there). Either way the trap stays, and is found.
     fn steps_lightly(&mut self, at: Pos, victim: ActorId) -> bool {

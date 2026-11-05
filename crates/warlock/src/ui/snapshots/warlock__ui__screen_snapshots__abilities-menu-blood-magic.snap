@@ -12,9 +12,9 @@ expression: "render(case, content.clone())"
                     │   b  Knock              in a direction                   │
                     │   c  Scribe             a scroll of a spell you know     │
                     │ Spells                                                   │
-                    │   d  Ray of frost       1d8 cold, 1 mana, aimed          │
-                    │   e  Magic missile      3d4 force, 3 mana, aimed         │
-                    │   f  Burning hands      3d4 fire, 6 mana, aimed          │
+                    │   d  Burning hands      2d4 fire, 3 mana, aimed          │
+                    │   e  Ray of frost       1d8 cold, 1 mana, aimed          │
+                    │   f  Magic missile      3d4 force, 3 mana, aimed         │
                     │ Talents                                                  │
                     │   g  Blood magic                                         │
                     │ Skills                                                   │

@@ -229,7 +229,7 @@ fn the_wizard_writes_from_12_and_is_magister_from_40() {
     let content = Arc::new(Content::builtin().expect("content"));
     let spec: crate::character::CharacterSpec = "human,female,wizard".parse().expect("spec");
     let mut w = World::with_character(content, "showcase", None, Some(&spec)).expect("world");
-    let has = |w: &World, id: &str| w.state.player().talents.rank_of(id, None) > 0;
+    let has = |w: &World, id: &str| w.state.player().talents.holds(id, None);
     while w.player_level() < 11 {
         run(&mut w, "xp:2000 levelup:auto");
     }

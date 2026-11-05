@@ -165,3 +165,11 @@ Escape artist (#1015) has no action and no ability row. `Effect::Escape` is read
 both only for those trained (`trains_effect`). `Use::Escape` is marked per check whatever came of
 it, `Use::Climb` per climb out (Escape artist 100 %, Athletics 50 % and no effect). Tests:
 `world/escape_tests.rs`.
+
+## Tumble: plain misses
+
+A blow at the player that comes back `Strike::Missed { by: None }` becomes a dodge one time in
+four (`World::plain_miss_dodged`, `world/train.rs`, called in `fight.rs` after `caught_shot`):
+one `chance(25)` on the training stream, so the gameplay stream does not move. Misses by a
+category stay as they are; blows between creatures or from the player draw nothing
+(`docs/design/skill-uses.md` Tu1). `balance_probe/training.rs` uses the same function.

@@ -1891,7 +1891,7 @@ damage = "2d6"
             ("barkskin", 3, None, 3, true),
             ("blessing", 3, None, 3, true),
             ("blight", 7, Some("2d6"), 17, true),
-            ("burning_hands", 4, Some("1d4"), 6, true),
+            ("burning_hands", 1, Some("1d4"), 3, true),
             ("call_lightning", 11, Some("2d6"), 20, true),
             ("call_of_the_forest", 20, Some("+1"), 20, true),
             ("call_of_the_wild", 5, Some("+1"), 5, true),
@@ -1903,6 +1903,7 @@ damage = "2d6"
             ("fireball", 11, Some("2d6"), 26, false),
             ("flame", 12, Some("3d6"), 29, true),
             ("frost", 6, Some("2d6"), 14, true),
+            ("grave_breath", 1, Some("1d4"), 3, true),
             ("haste", 11, None, 11, false),
             ("hex_of_weakness", 3, None, 3, true),
             ("light", 0, None, 1, false),
@@ -1944,7 +1945,7 @@ damage = "2d6"
         let p23 = "presence 14 2, 18 3";
         let mm = "intelligence 13 3d6, 16 4d6, 19 5d6, 25 5d6+2";
         let bolt = "intelligence 13 3d6, 19 3d6+2, 25 3d6+4";
-        let table: [(&str, &[(&str, &str)]); 26] = [
+        let table: [(&str, &[(&str, &str)]); 27] = [
             ("arcane_bolt", &[("damage", bolt), ("length", w78)]),
             ("barkskin", &[("degrees", p23)]),
             ("blessing", &[("degrees", p23)]),
@@ -1954,7 +1955,7 @@ damage = "2d6"
             ),
             (
                 "burning_hands",
-                &[("damage", "intelligence 13 2d4, 16 3d4, 22 3d4+2")],
+                &[("damage", "intelligence 13 1d6, 16 2d4, 22 2d4+2")],
             ),
             (
                 "call_lightning",
@@ -1979,6 +1980,10 @@ damage = "2d6"
                 ],
             ),
             ("frost", &[("damage", bolt), ("range", w1112)]),
+            (
+                "grave_breath",
+                &[("damage", "willpower 13 1d6, 16 2d4, 22 2d4+2")],
+            ),
             ("haste", &[("degrees", p23)]),
             ("hex_of_weakness", &[("range", w78), ("degrees", p23)]),
             ("identify", &[]),
