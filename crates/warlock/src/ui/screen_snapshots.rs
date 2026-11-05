@@ -1520,6 +1520,21 @@ fn walking_into_what_offers_an_action_as_text() {
     }
 }
 
+/// #1019: a step into deep water asks, always, in the one dialog. Stay back is selected first.
+#[test]
+fn diving_into_deep_water_as_text() {
+    let content = Arc::new(Content::builtin().expect("content"));
+    let case = Case {
+        name: "deep-water-dialog",
+        scenario: "quarry",
+        character: Some("lizardfolk,female,warrior"),
+        actions: "move:E*27 move:S",
+        keys: Some("Right"),
+        ..BASE
+    };
+    insta::assert_snapshot!(case.name, render(&case, content));
+}
+
 /// Where the player stands and how many actions were applied.
 fn walked(app: &App) -> (Pos, u64) {
     let game = app.world().resource::<Game>();
