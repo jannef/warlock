@@ -83,6 +83,12 @@
 #              entry's `difficulty`, else this one, 1 to 40): made, they break free and step;
 #              failed, the turn is spent. A dose's degrees are drawn from `turns` (1 to max), and
 #              a hold needs `eases` (a degree a turn: 6), stacking "highest", and blocks "step"
+#   escape     bonds a trained Escape artist may slip: the difficulty (1 to 40) of the automatic
+#              check, the better of Strength and Dexterity plus the skill, when the status stops
+#              or slows what they try (world/hold.rs). Needs `blocks` or a `cost` above 100, and
+#              `seen` ("You struggle, but you are still caught in a web."); not on a hold, whose
+#              grip counts the same way. Slowed minds and bodies (Staggered, Stunned, Surprised,
+#              Transfixed, Sluggish, Drowsy) are no bonds and take none
 #   light      a light of lights.toml its sufferer sheds while it lasts (Lit; spec §5); the
 #              brightest of several
 # Creatures' attacks may cause statuses too: `on_hit` in creatures.toml. Diseases (diseases.toml)
@@ -543,6 +549,7 @@ max = 6
 stacking = "refresh"
 eases = 6
 blocks = ["step"]
+escape = 13
 start = "Sticky strands hold you fast."
 end = "You tear free of the web."
 
@@ -788,7 +795,7 @@ end = "You are free to move."
 
 # The weapon abilities' (the combat progression design §6): Pinned, a missile through the foot
 # (Pinning shot) or the legs taken by a staff (Trip): no step for an action a degree, a new pin
-# keeping the longer, never adding (at most 3 from any one); no struggle, as it is no grip.
+# keeping the longer, never adding (at most 3 from any one); no grip, so only a trained Escape artist struggles.
 # Light-footed, the skirmisher's step away after a strike (Hit and run): the next action costs
 # half, and it ends as that action is taken.
 [[status]]
@@ -799,6 +806,7 @@ max = 3
 stacking = "highest"
 per_action = true
 blocks = ["step"]
+escape = 13
 start = "You are pinned where you stand."
 end = "You can move again."
 

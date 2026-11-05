@@ -11,14 +11,25 @@
 //!   above 100: staggered, transfixed, sluggish). Asked after the player's action, after every
 //!   creature's turn, and as the turn ends (`run_turn`). A hold no one caused (the dev
 //!   `afflict:held`) has no holder to lose: only its turns and a struggle end it.
-//! - **Struggling** ([`World::struggle`]): the held player's step (not an attack: those go
-//!   ahead) is an attempt to break free, a check of the hold's `check` stat (Strength: the
-//!   effective modifier, what talents add to its checks, and what Knowledge gives against the
-//!   holder, `knowledge.rs`) against the holder's grip, its
+//! - **Struggling** ([`World::struggle`], asked before [`World::refuse_blocked`]): the held
+//!   player's step (not an attack: those go ahead) is an attempt to break free, a check of the
+//!   hold's `check` stat (Strength: the effective modifier, what talents add to its checks, and
+//!   what Knowledge gives against the holder, `knowledge.rs`) against the holder's grip, its
 //!   attack's `difficulty` (its `on_hit` entry), else the hold's own. Made, the hold ends and the
 //!   step goes ahead; failed, the turn is spent, a step's price ("You struggle, but the ghast
 //!   holds you fast."). Two draws of the gameplay stream. Creatures never struggle: one held
 //!   fights its holder (`World::held_back`, `lucky.rs`).
+//! - **Escape artist** (no action, no ability row: the check is part of the attempt, the owner's
+//!   rule, #1015): trained, the check against a hold reads the better of its stat and Dexterity
+//!   and adds [`SkillEffect::Escape`]. Bonds that are no hold carry `escape = DIFFICULTY` in data
+//!   (Webbed, Pinned) and only the trained struggle against them, with the same modifier and no
+//!   Knowledge: made, the status ends with its own `end` line and the action goes ahead at its
+//!   price; failed, the action's price ("You struggle, but you are still caught in a web.").
+//!   Untrained, `refuse_blocked` refuses, no time, as it does a second status blocking the same
+//!   action, which asks on the next attempt. A marked status that only slows (`cost` above 100;
+//!   none in the data today) is checked the same way, and the action goes ahead either way: made,
+//!   at its plain price; failed, slowed, no worse. Every check marks [`Use::Escape`] (the
+//!   training stream) and `StatUse::Struggled`.
 //!
 //! Drowning grip (`lucky.rs`) is a hold too: the player's hit holds a creature, and a miss,
 //! another target, or a step lets go, as before; the rules here end it too.
@@ -27,6 +38,8 @@ use super::{ActorId, Spent, World};
 use crate::action::{Action, Event};
 use crate::check::check;
 use crate::content::{ActionKind, Affliction, StatusId};
+use crate::skills::{Effect as SkillEffect, Use};
+use crate::stats::Stat;
 use crate::status::Effect;
 
 impl World {
@@ -78,18 +91,45 @@ impl World {
         h.level == me.level && h.pos.chebyshev(me.pos) == 1 && !bound
     }
 
-    /// The player's `action`, if it is a step while a hold blocks their steps, is a struggle
-    /// (module docs): failed, the turn it cost; made, the hold ends and `None` lets the step go
-    /// ahead. `None` too for any other action.
-    pub(super) fn struggle(&mut self, action: &Action) -> Option<Spent> {
+    /// The player's `action`, if a status of theirs they can fix stops or slows it, is a struggle
+    /// (module docs): failed, the turn it cost when it stops it, and `None` when it only slows it;
+    /// made, the status ends and `None` lets the action go ahead. `None` too for any other action.
+    pub(super) fn struggle(&mut self, action: &Action, events: &mut Vec<Event>) -> Option<Spent> {
+        let kind = self.kind_of(action)?;
         let content = self.content.clone();
-        let player = self.state.player;
-        if self.kind_of(action) != Some(ActionKind::Step) {
+        let me = self.state.player();
+        let trained = me.skills.trains_effect(&content, SkillEffect::Escape);
+        if let Some(status) = me.effects.blocking(&content, kind) {
+            if content.status(status).hold.is_some() {
+                return self.struggle_hold(status, kind, trained);
+            }
+            let difficulty = content.status(status).escape.filter(|_| trained)?;
+            let free = self.slip(status, difficulty, events);
+            return (!free).then(|| Spent::Turn(self.price_of(self.state.player, kind)));
+        }
+        if !trained {
             return None;
         }
-        let me = self.state.player();
-        let status = me.effects.blocking(&content, ActionKind::Step)?;
+        let (status, difficulty) = me.effects.iter().find_map(|e| {
+            let def = content.status(e.status);
+            def.escape.filter(|_| def.cost > 100).map(|d| (e.status, d))
+        })?;
+        self.slip(status, difficulty, events);
+        None
+    }
+
+    /// A struggle against hold `status`, which blocks actions of `kind`: `trained`, with what
+    /// [`World::slipping`] says, else with the hold's own stat; what comes of it is the same.
+    fn struggle_hold(
+        &mut self,
+        status: StatusId,
+        kind: ActionKind,
+        trained: bool,
+    ) -> Option<Spent> {
+        let content = self.content.clone();
+        let player = self.state.player;
         let hold = content.status(status).hold?;
+        let me = self.state.player();
         let effect = *me.effects.get(status)?;
         let holder = effect.by.and_then(|by| self.state.actors.get(&by));
         let difficulty = holder
@@ -107,13 +147,18 @@ impl World {
         let name = holder
             .filter(|h| self.perception.sees_actors_at(h.pos))
             .map(|h| self.called(h));
-        let talents = me.talent_mods(&content);
-        let modifier = (me.effective_stats(&content).modifier(hold.check))
-            .saturating_add(talents.check(hold.check));
+        let modifier = match trained {
+            true => self.slipping(hold.check),
+            false => {
+                let talents = me.talent_mods(&content);
+                (me.effective_stats(&content).modifier(hold.check))
+                    .saturating_add(talents.check(hold.check))
+            }
+        };
         // Know your enemy (Knowledge, `knowledge.rs`): the holder's.
         let modifier = modifier.saturating_add(self.resisting(player, effect.by));
         let free = check(&mut self.state.rng, modifier, difficulty);
-        self.train_stat(crate::content::StatUse::Struggled);
+        self.struggled();
         if free {
             self.player_mut().effects.remove(status);
             self.say(match &name {
@@ -127,6 +172,46 @@ impl World {
             Some(name) => format!("You struggle, but {name} holds you fast."),
             None => "You struggle, but cannot break free.".to_string(),
         });
-        Some(Spent::Turn(self.price_of(player, ActionKind::Step)))
+        Some(Spent::Turn(self.price_of(player, kind)))
+    }
+
+    /// A trained player's check against bonds `status` that are no hold, of [`World::slipping`]
+    /// against `difficulty`. Made, it ends with its own `end` line; failed, its `seen` says so.
+    /// Whether it was made.
+    fn slip(&mut self, status: StatusId, difficulty: i32, events: &mut Vec<Event>) -> bool {
+        let modifier = self.slipping(Stat::Strength);
+        let free = check(&mut self.state.rng, modifier, difficulty);
+        self.struggled();
+        if free {
+            let player = self.state.player;
+            if let Some(effect) = self.state.player().effects.get(status).copied() {
+                self.player_mut().effects.remove(status);
+                self.ended(player, &[effect], events);
+            }
+        } else if let Some(seen) = &self.content.clone().status(status).seen {
+            self.say(format!("You struggle, but you are still {seen}."));
+        }
+        free
+    }
+
+    /// What a trained player adds to a check against bonds (the owner: "better of the two with
+    /// the skill"): the better of `stat` and Dexterity, each with what talents add to that
+    /// stat's checks, plus Escape artist.
+    pub(super) fn slipping(&self, stat: Stat) -> i32 {
+        let content = &self.content;
+        let me = self.state.player();
+        let stats = me.effective_stats(content);
+        let talents = me.talent_mods(content);
+        let of = |s: Stat| stats.modifier(s).saturating_add(talents.check(s));
+        (of(stat).max(of(Stat::Dexterity)))
+            .saturating_add(me.skill_effect(content, SkillEffect::Escape))
+    }
+
+    /// The marks of a check against bonds: the stats', and Escape artist's.
+    fn struggled(&mut self) {
+        self.train_stat(crate::content::StatUse::Struggled);
+        if self.trains(Use::Escape) {
+            self.train(Use::Escape);
+        }
     }
 }
