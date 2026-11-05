@@ -25,7 +25,7 @@ steel, moved to the missile weapon slot) is removed, its positions followed. A d
 trade first pass their positions through `World::release_spirit` (the spirit stacks taken off and
 faded, the rest renumbered), so neither the floor nor a shop ever holds one; `World::throw`
 refuses one; `shop::count_of` and the quests' counts skip it. What takes a stack out of the pack
-(an outcome's `remove_stacks`, the forge's ruin) needs nothing: the stack is gone either way.
+(an outcome's `remove_stacks`) needs nothing: the stack is gone either way.
 A kept beast's collar (`world/collar.rs`, `docs/dev/companion.md`) is the one thing handed over to
 a creature's `equipment` in play: the `neck` slot, by the Give ability.
 Creatures wield and wear from their spawn

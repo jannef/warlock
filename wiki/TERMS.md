@@ -113,7 +113,7 @@ above.
 | Grundlēas, floors forgotten | `dungeons.md#grundlēas` |
 | Special room | `special-rooms.md` (a room: its row) |
 | Forgotten altar, praying | `special-rooms.md#forgotten-altars` |
-| Forge, tempering | `special-rooms.md#forges` |
+| Forge, tempering, Fine, Marvellous, Masterwork, damaged items | `special-rooms.md#forges` |
 | Healing spring | `special-rooms.md#healing-springs` |
 | Trap, hidden trap, known trap | `traps.md#finding-traps` |
 | Disarming | `traps.md#disarming-traps` |
@@ -125,6 +125,7 @@ above.
 | Material, pieces | `objects.md#materials`, `objects.md#pieces` |
 | Gem, size and cut | `gems.md`, `gems.md#size-and-cut` |
 | Scroll, reading, unknown scrolls | `scrolls.md`, `scrolls.md#unknown-scrolls` |
+| Making out a scroll, the check to read one (Decipher script's use) | `scrolls.md#making-out-a-scroll` |
 | Potion, elixir | `potions.md`, `potions.md#elixirs` |
 | Equipment, slots, wielding and wearing | `equipment.md#what-fits-where` |
 | The equipment screen | `equipment.md#the-equipment-screen` |

@@ -106,7 +106,7 @@ pub enum ActionKind {
     Forage,
     /// A turn of fletching (spec §8 "Fletching"): a batch takes several.
     Fletch,
-    /// A turn of tempering an item at a forge's anvil (spec §7 "Special rooms"): a tempering
+    /// A turn of working an item at a forge's anvil (spec §7 "Special rooms"): an attempt
     /// takes many.
     Temper,
     /// Trying to disarm a trap (spec §8 "Disarming traps"), whatever comes of it.

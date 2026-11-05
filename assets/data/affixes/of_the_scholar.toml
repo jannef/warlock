@@ -4,7 +4,7 @@ name = "of the Scholar"
 effect = "skill"
 category = "spellcraft"
 skill = "spellcraft"
-bases = ["helmet", "ring", "amulet"]
+bases = ["weapon", "helmet", "ring", "amulet"]
 weight = 60
 tiers = [
   { level = 1, min = 8, max = 12 },

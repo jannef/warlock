@@ -12,8 +12,8 @@
 #   difficulty = base + per_overreach × overreach + (the levels of the spells known, added up) ÷
 #                known_per_point (rounded down)
 #
-# against which the roll adds the Intelligence modifier, the skills' `study` benefit (Spellcraft
-# and Decipher script, each its value ÷ 10), the class's affinity with the spell's school
+# against which the roll adds the Intelligence modifier, Spellcraft's `study` benefit (its value
+# ÷ 10), the class's affinity with the spell's school
 # (classes/), and Quick study's bonus. A failure draws a mishap (mishaps/) by the overreach:
 # slight below bad_from levels, bad below terrible_from, terrible from there, lucky ones beside
 # any.

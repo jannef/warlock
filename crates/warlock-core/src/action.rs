@@ -220,9 +220,11 @@ pub enum Action {
     Fletch,
     /// Temper the carried stack at this position at the anvil next to the player (spec §7
     /// "Special rooms"; the Temper ability, the abilities menu's Here group): ten minutes of turns
-    /// of the `temper` action, then a Strength check plus Metalcraft that leans the forge's table,
-    /// and one outcome drawn from it (improved, nothing, flawed, or ruined). Interrupted, it gives
-    /// nothing. Refused (no time) with no anvil next to the player or a stack that is not a
+    /// of the `temper` action, then a Strength check plus Metalcraft, harder for every attempt
+    /// ever made on the item: an improvement or damage, or on a damaged item its repair or its
+    /// end (`world/temper.rs`). Interrupted, it gives nothing and counts for nothing. Refused (no
+    /// time) with no anvil next to the player, a stack with all its improvements, or one that is
+    /// not a metal
     /// weapon or armour.
     Temper {
         item: usize,

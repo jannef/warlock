@@ -11,7 +11,7 @@ does, `read`: `docs/dev/scrolls.md`)
 (`content/object.rs`: `ObjectDef`, `ObjectId`, and the `"id*N"` placement strings;
 `content/material.rs`); the tables are directories read in path order, see "Content
 directories" in `docs/dev/content.md`. Every creature has a base `weight`. `object.rs` holds the runtime side: `Stack` (object + count; stackable objects join,
-others are stacks of one; food knows when it was made, `Stack::died`, and joins whatever its age,
+others are stacks of one (a stack worked at an anvil, `Stack::worked`, `magic/worked.rs`, is like no other and never joins one; docs/dev/special-rooms.md); food knows when it was made, `Stack::died`, and joins whatever its age,
 keeping the oldest: `docs/dev/hunger.md`), piles (`add_to_pile`: dropped stacks go on top, index 0 is the top the
 map shows), inventories (`add_to_inventory`: any number of stacks, weight is the only limit; new
 stacks go last),

@@ -116,6 +116,7 @@ mod court;
 mod creation;
 mod curse;
 mod dark_face;
+mod decipher;
 mod den;
 mod dev;
 mod dig;
@@ -306,7 +307,7 @@ pub(crate) use stars::{RISEN, RISEN_TWICE};
 pub(crate) use swim::shore_refusal;
 pub use talent::Due;
 pub use talk::{Conversation, Talk, TopicView};
-pub use temper::{DIFFICULTY as TEMPER_DIFFICULTY, POINTS_PER_MARGIN, lean_for, temperable};
+pub use temper::{temperable, workable};
 use travel::{enter_room, instantiate_level, level_template};
 pub use voice::VOICE_RANGE;
 
@@ -1537,7 +1538,6 @@ mod affix_spell_tests;
 #[cfg(test)]
 mod affix_stamina_tests;
 #[cfg(test)]
-mod affix_talent_tests;
 #[cfg(test)]
 mod affix_utility_tests;
 #[cfg(test)]
@@ -1632,6 +1632,8 @@ mod damage_talent_tests;
 mod damage_tests;
 #[cfg(test)]
 mod dark_face_tests;
+#[cfg(test)]
+mod decipher_tests;
 #[cfg(test)]
 mod den_tests;
 #[cfg(test)]

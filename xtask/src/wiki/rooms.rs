@@ -136,7 +136,7 @@ pub(super) fn special_rooms(content: &Content) -> String {
         if let Some(feature) = e.feature {
             let offers = match &e.offers {
                 Some((Offer::Pray, _)) => ": pray beside it (see Forgotten altars)",
-                Some((Offer::Temper, _)) => ": temper a weapon or armour beside it (see Forges)",
+                Some((Offer::Temper, _)) => ": work metal arms or armour beside it (see Forges)",
                 Some((Offer::Drink, _)) => ": drink beside it (see Healing springs)",
                 None => "",
             };
