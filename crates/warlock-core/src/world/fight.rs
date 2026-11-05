@@ -1307,7 +1307,13 @@ impl World {
     /// wield ([`Actor::kick`]: it draws on and trains unarmed fighting, and no fighting style),
     /// said and shown like any blow, with the free blows the end of an attack brings
     /// ([`World::after_attack`]).
-    pub(super) fn player_kicks(&mut self, target: ActorId, seen: bool, events: &mut Vec<Event>) {
+    pub(super) fn player_kicks(
+        &mut self,
+        target: ActorId,
+        dir: Dir,
+        seen: bool,
+        events: &mut Vec<Event>,
+    ) {
         let profile = self.state.player().kick(&self.content);
         let skills = AttackSkills::only(self.content.weapon_skills().of_role(Role::Unarmed));
         let blow = (None, profile, skills);
@@ -1319,6 +1325,10 @@ impl World {
             free_blow::parried(struck),
             events,
         );
+        // Breaker: the foe reels a cell back, once the free blows of the attack are done.
+        if self.state.player().talent_mods(&self.content).kick_back {
+            self.knock_back(target, dir, struck, None, events);
+        }
     }
 
     /// The player bashes whoever stands in `dir` with the shield they hold (spec §8 "Weapon

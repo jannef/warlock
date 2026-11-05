@@ -10,7 +10,8 @@ your food in points of **nutrition**; you never see the count, only how hungry y
 
 {{#include generated/hunger-states.md}}
 
-- **Hungry** is a warning: eat soon. Becoming hungry stops a rest (see [Resting](resting.md#how-resting-works)).
+- **Hungry** is a warning: eat soon. Becoming hungry stops a [rest](resting.md#how-resting-works) and
+  makes you read the [message](controls.md#messages) before you go on (see [What you see](#what-you-see)).
 - **Weak**: your [Strength](stats.md#stat-strength) and [Dexterity](stats.md#stat-dexterity) count for less, in a fight and in what you can carry
   (see [Stats](stats.md) and [Burden](burden.md)). The [character screen](controls.md#character) shows the lowered
   scores. Being fed again gives them back.
@@ -41,10 +42,16 @@ above).
 ## What you see
 
 - The **[status bar](controls.md#the-screen)** shows how hungry you are, unless you are not hungry: `Hungry`, `Weak`,
-  `Fainting`, `Starving`, `Satiated`, or `Bloated`. It is one of the last things to give way on
-  a narrow screen (see [Controls](controls.md#the-screen)).
-- A **[message](controls.md#messages)** says when it changes: "You are getting hungry.", "You feel weak from hunger.",
-  "You feel faint from hunger.", "You are starving!", and, eating, "You are no longer hungry.",
+  `Fainting`, `Starving`, `Satiated`, or `Bloated`. From `Hungry` down the word stands out as it
+  worsens: `Hungry` mild yellow, `Weak` strong orange, `Fainting` and `Starving` alarming reds. It never gives way on a
+  narrow screen; `Satiated` and `Bloated` are among the last things to (see [Controls](controls.md#the-screen)).
+- A **[message](controls.md#messages)** says when it changes: "You are getting hungry.", "You feel weak from hunger. You should eat soon.",
+  "You feel faint from hunger. Eat now, or you will starve!", "You are starving! Eat, or you will die!", and, eating, "You are no longer hungry.",
   "You feel satiated.", "You feel bloated."
+- **Getting hungrier stops you.** Becoming `Hungry`, `Weak`, `Fainting`, or `Starving` waits at
+  `--more--` until you have read it, even if the message fits, and a held key does not walk on past it.
+- **A journey asks first.** A step on the [overworld](overworld.md#travel) takes much longer than one anywhere else. While
+  you are `Fainting` or `Starving`, every step there asks whether to go on: staying takes no time, and is what `Esc` does.
+  The question goes by how hungry you are, not by whether this step would kill you. [Long fast](talents.md#talent-long-fast) is asked too.
 
 To eat, see [Food and corpses](food.md).

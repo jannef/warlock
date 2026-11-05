@@ -809,8 +809,8 @@ const CASES: &[Case] = &[
         name: "level-up-choice",
         character: Some("human,male,warrior"),
         actions: "xp:691 advance:athletics*6",
-        // Apprentice's letter on the talent list.
-        keys: Some("n"),
+        // Skill focus's letter on the talent list.
+        keys: Some("p"),
         size: (100, 40),
         ..BASE
     },
@@ -1416,6 +1416,195 @@ fn giving_with_two_kept_beasts_beside() {
     }
 }
 
+/// A run on the overworld beside the Hall that starts with `nutrition` (spec §8 "Hunger"), or if
+/// that is below 0 (no run starts so hungry), has just begun to starve.
+fn on_the_road(nutrition: i32) -> (Case, Arc<Content>) {
+    let mut files = warlock_core::content::ContentFiles::builtin();
+    let hunger = include_str!("../../../../assets/data/hunger.toml")
+        .replace("start = 3600", &format!("start = {}", nutrition.max(0)));
+    files.insert("data/hunger.toml", &hunger);
+    let content = Arc::new(Content::load(&files).expect("content"));
+    let case = Case {
+        scenario: "world",
+        run: true,
+        actions: if nutrition < 0 { "rest:2m wait" } else { "" },
+        ..BASE
+    };
+    (case, content)
+}
+
+/// The app of [`on_the_road`].
+fn road_app(nutrition: i32) -> App {
+    let (case, content) = on_the_road(nutrition);
+    start(&case, content)
+}
+
+/// #972: the road east beside the Hall, a step short of each worse state (the `--more--` stop,
+/// with the status bar's word), and the question a journey asks while Fainting and Starving.
+#[test]
+fn hunger_stops_as_text() {
+    let cases = [
+        ("hunger-more-hungry", 1441, "Right"),
+        ("hunger-more-weak", 721, "Right"),
+        ("hunger-more-fainting", 241, "Right"),
+        ("hunger-more-starving", 1, "Right y"),
+        ("hunger-dialog-fainting", 100, "Right"),
+        ("hunger-dialog-starving", -1, "Right"),
+    ];
+    for (name, nutrition, keys) in cases {
+        let (road, content) = on_the_road(nutrition);
+        let case = Case {
+            name,
+            keys: Some(keys),
+            ..road
+        };
+        insta::assert_snapshot!(case.name, render(&case, content));
+    }
+}
+
+/// Beside what offers an action, north of the player (spec §7 "Special rooms"): its scenario and
+/// the walk there.
+const OFFERS: [(&str, &str, &str); 3] = [
+    ("offer-dialog-altar", "shrine", "move:N open:N move:N*3"),
+    ("offer-dialog-spring", "spring", "move:N*5"),
+    ("offer-dialog-anvil", "forge", "move:E"),
+];
+
+/// #975: the question a step into each asks.
+#[test]
+fn walking_into_what_offers_an_action_as_text() {
+    let content = Arc::new(Content::builtin().expect("content"));
+    for (name, scenario, actions) in OFFERS {
+        let case = Case {
+            name,
+            scenario,
+            actions,
+            keys: Some("Up"),
+            ..BASE
+        };
+        insta::assert_snapshot!(case.name, render(&case, content.clone()));
+    }
+}
+
+/// Where the player stands and how many actions were applied.
+fn walked(app: &App) -> (Pos, u64) {
+    let game = app.world().resource::<Game>();
+    (game.world.player_pos(), game.applied)
+}
+
+/// A held key's repeat of `key`.
+fn repeat(app: &mut App, key: &str) {
+    let press = KeyboardInput {
+        repeat: true,
+        ..press(key)
+    };
+    app.world_mut().write_message(press);
+    app.update();
+    app.update();
+}
+
+#[test]
+fn a_worsening_state_stops_held_keys_at_more() {
+    let mut app = road_app(1441);
+    let start_at = walked(&app);
+    press_keys(&mut app, "Right");
+    let stopped = walked(&app);
+    assert_ne!(stopped, start_at, "the step is taken");
+    assert_eq!(*app.world().resource::<InputMode>(), InputMode::More(0));
+    // The message fits the line; it waits all the same, and neither a repeat nor another step
+    // goes past it.
+    assert!(text(app.world().resource::<Console>()).contains("hungry. --more--"));
+    repeat(&mut app, "Right");
+    press_keys(&mut app, "Right");
+    assert_eq!(walked(&app), stopped);
+    assert_eq!(*app.world().resource::<InputMode>(), InputMode::More(0));
+    // A repeat of the key that reads it does not read it, either.
+    repeat(&mut app, "Enter");
+    assert_eq!(*app.world().resource::<InputMode>(), InputMode::More(0));
+    press_keys(&mut app, "Enter");
+    assert_eq!(*app.world().resource::<InputMode>(), InputMode::Normal);
+    assert!(!text(app.world().resource::<Console>()).contains("--more--"));
+    // Read, the walk goes on, and the next step is no stop: it stays Hungry.
+    repeat(&mut app, "Right");
+    assert_ne!(walked(&app), stopped);
+    assert_eq!(*app.world().resource::<InputMode>(), InputMode::Normal);
+}
+
+#[test]
+fn steps_queued_behind_a_worsening_state_are_dropped() {
+    let mut app = road_app(1441);
+    let (_, applied) = walked(&app);
+    press_keys(&mut app, "Right Right Right");
+    assert_eq!(walked(&app).1, applied + 1);
+    // Steps that change nothing all go through.
+    let mut app = road_app(3000);
+    let (_, applied) = walked(&app);
+    press_keys(&mut app, "Right Right");
+    assert_eq!(walked(&app).1, applied + 2);
+    assert_eq!(*app.world().resource::<InputMode>(), InputMode::Normal);
+}
+
+#[test]
+fn staying_takes_no_time_and_going_on_is_the_step() {
+    for nutrition in [100, -1] {
+        for stay in ["Esc", "n", "Enter"] {
+            let mut app = road_app(nutrition);
+            let before = walked(&app);
+            let time = app.world().resource::<Game>().world.time();
+            press_keys(&mut app, "Right");
+            assert!(!app.world().resource::<ScreenStack>().is_empty(), "it asks");
+            press_keys(&mut app, stay);
+            assert!(app.world().resource::<ScreenStack>().is_empty());
+            assert_eq!(walked(&app), before, "{stay}");
+            assert_eq!(app.world().resource::<Game>().world.time(), time, "{stay}");
+        }
+        let mut app = road_app(nutrition);
+        let before = walked(&app);
+        press_keys(&mut app, "Right");
+        press_keys(&mut app, "y");
+        assert_ne!(walked(&app).0, before.0);
+    }
+    // Weak walks on, unasked.
+    let mut app = road_app(500);
+    let before = walked(&app);
+    press_keys(&mut app, "Right");
+    assert!(app.world().resource::<ScreenStack>().is_empty());
+    assert_ne!(walked(&app).0, before.0);
+}
+
+#[test]
+fn a_held_key_never_opens_the_question_nor_walks_past_it() {
+    let mut app = road_app(100);
+    let before = walked(&app);
+    repeat(&mut app, "Right");
+    assert!(app.world().resource::<ScreenStack>().is_empty());
+    assert_eq!(walked(&app), before);
+}
+
+#[test]
+fn the_status_bar_draws_each_hunger_word_in_its_colour() {
+    let cases = [
+        (1000, "Hungry", HUNGRY),
+        (500, "Weak", WEAK),
+        (100, "Fainting", FAINTING),
+        (-1, "Starving", STARVING),
+    ];
+    for (nutrition, word, colour) in cases {
+        let app = road_app(nutrition);
+        let console = app.world().resource::<Console>();
+        let y = console.rows() as i32 - 1;
+        let line: String = (0..console.cols() as i32)
+            .map(|x| console.get(x, y).map_or(' ', |c| c.ch))
+            .collect();
+        let at = line.find(word).expect("the word is shown");
+        let x = line[..at].chars().count() as i32;
+        let cell = |x| console.get(x, y).expect("a cell");
+        assert_eq!(cell(x).fg, colour, "{word}");
+        assert_eq!(cell(x + word.len() as i32 - 1).fg, colour, "{word}");
+        assert_eq!(cell(1).fg, TEXT, "the rest of the line is as it was");
+    }
+}
+
 /// The built-in content with an encounter table in the showcase campaign (which ships none):
 /// kobolds (hostile), deer (wildlife), and the hermit (peaceful), met by the dev `meet`.
 fn encounter_content() -> Arc<Content> {
@@ -1601,9 +1790,7 @@ pub(super) fn press_keys(app: &mut App, keys: &str) {
 
 /// Applies the actions input asked for, as the game plugin does.
 fn apply_actions(mut actions: MessageReader<PlayerAction>, mut game: ResMut<Game>) {
-    for PlayerAction(action) in actions.read() {
-        game.apply(action);
-    }
+    crate::game::apply_queued(actions.read(), &mut game);
 }
 
 /// A key press as `--keys` writes it: a named key, or a character that types itself.

@@ -330,8 +330,8 @@ fn ruins(land: &mut Land, rng: &mut Rng) {
             for (p, pile) in &template.objects {
                 land.objects.insert(shift(*p), pile.clone());
             }
-            for &(p, grade) in &template.loot {
-                land.loot.push((shift(p), grade));
+            for (p, pool) in &template.loot {
+                land.loot.push((shift(*p), pool.clone()));
             }
             for (p, lock) in &template.locks {
                 land.locks.insert(shift(*p), lock.clone());

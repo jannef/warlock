@@ -674,7 +674,7 @@ fn uncanny_dodge_fast_healer_and_jack_of_all_trades() {
         let bonus: Vec<_> = me.skills.iter().map(|(s, _)| (s, 5)).collect();
         me.skills.effect_with(&content, effect, &bonus)
     };
-    // Its first rank (12) takes skills up and adds nothing to them; its second (25) does.
+    // Jack of all trades (12) takes skills up and adds nothing to them; Master of none (25) does.
     reach(&mut b, 12);
     let plain = b.state.player().skills.effect(&content, effect);
     assert_eq!(b.state.player().skill_effect(&content, effect), plain);
@@ -692,7 +692,7 @@ fn skill_values(w: &World) -> Vec<(String, u16)> {
 }
 
 #[test]
-fn jack_of_all_trades_takes_up_every_skill_but_sneak_attack_then_raises_them() {
+fn jack_of_all_trades_takes_up_every_skill_but_sneak_attack_then_master_of_none_raises_them() {
     let mut b = world("bard");
     reach(&mut b, 11);
     let before = skill_values(&b);
@@ -718,26 +718,22 @@ fn jack_of_all_trades_takes_up_every_skill_but_sneak_attack_then_raises_them() {
     }
     assert!(said(&b).contains(&"You gain Jack of all trades.".to_string()));
     assert!(said(&b).contains(&"You find you know a little of everything.".to_string()));
-    // The talents layer shows the rank held of two.
     let rows = dump::layer_rows(&b, Layer::Talents);
     assert!(
-        rows.iter().any(|r| r == "Jack of all trades 1/2 (class)"),
+        rows.iter().any(|r| r == "Jack of all trades (class)"),
         "{rows:?}"
     );
     reach(&mut b, 24);
     let kept = skill_values(&b);
     reach(&mut b, 25);
-    assert_eq!(
-        b.state.player().talents.rank_of("jack_of_all_trades", None),
-        2
-    );
-    assert!(said(&b).contains(&"Your Jack of all trades grows.".to_string()));
-    // The second rank takes nothing up again: the skills only grow by the level's rolls.
+    assert_eq!(b.state.player().talents.rank_of("master_of_none", None), 1);
+    assert!(said(&b).contains(&"You gain Master of none.".to_string()));
+    // Master of none takes nothing up: the skills only grow by the level's rolls.
     assert_eq!(skill_values(&b).len(), kept.len());
 }
 
 #[test]
-fn a_restored_bard_past_both_ranks_is_given_each_and_a_skill_added_later_is_taken_up() {
+fn a_restored_bard_past_25_is_given_both_and_a_skill_added_later_is_taken_up() {
     // A skill the content adds later is the bard's too: the hand-out reads the content.
     let mut files = ContentFiles::builtin();
     files.edit_table("skills", |text| {
@@ -753,11 +749,13 @@ fn a_restored_bard_past_both_ranks_is_given_each_and_a_skill_added_later_is_take
     let player = state.player;
     let me = state.actors.get_mut(&player).expect("player");
     me.talents.forget("jack_of_all_trades");
+    me.talents.forget("master_of_none");
     let skills = me.skills.clone();
     let restored = World::from_state(content.clone(), state).expect("restored");
-    // Both ranks, the first's skills taken up on the way (no news on a restore).
+    // Both talents, the first's skills taken up on the way (no news on a restore).
     let me = restored.state.player();
-    assert_eq!(me.talents.rank_of("jack_of_all_trades", None), 2);
+    assert_eq!(me.talents.rank_of("jack_of_all_trades", None), 1);
+    assert_eq!(me.talents.rank_of("master_of_none", None), 1);
     assert_eq!(me.talent_mods(&content).trained_skills, 5);
     let juggling = content.skill_id("juggling").expect("juggling");
     assert!((2..=5).contains(&me.skills.value(juggling).expect("taken up")));

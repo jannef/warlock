@@ -199,9 +199,10 @@ fn only_the_branches_the_player_can_enter_are_drawn() {
     let content = w.content().clone();
     let open = population(&w, "cealdhlaw");
     let fen = population(&w, "fennmynster");
+    // Uniques and animated objects are never drawn.
     let unique = |c: &String| {
         let c = content.creature_id(c).expect("a type");
-        content.creature(c).unique
+        content.creature(c).unique || content.creature(c).animated.is_some()
     };
     let only_fen: Vec<&String> = (fen.iter())
         .filter(|c| !open.contains(c) && !unique(c))

@@ -38,10 +38,24 @@ developer notes (CLAUDE.md, `docs/dev/`).
     (×1.25), after the burden ("Costs" above). Satiated and Not hungry do nothing.
   - **Messages** on each change (`Hunger::news`): getting hungrier, "You no longer feel
     bloated.", "You no longer feel satiated.", "You are getting hungry.", "You feel weak from
-    hunger.", "You feel faint from hunger.", "You are starving!"; fed, "You are no longer
+    hunger. You should eat soon.", "You feel faint from hunger. Eat now, or you will starve!",
+    "You are starving! Eat, or you will die!"; fed, "You are no longer
     starving.", "You feel less faint.", "You feel less weak.", "You are no longer hungry.", "You
     feel satiated.", "You feel bloated." Getting hungrier into Hungry or worse is a message that
-    stops a rest (§6 "Rest"); the rest are only logged.
+    stops a rest and any other long action (§6 "Rest"); the rest are only logged.
+  - **Stopping the player** (#972; the game's input, the rules and replays never see it): getting
+    hungrier into Hungry or worse waits at `--more--` however short the message (§6 "Messages"),
+    and drops the steps queued behind it and a held key's repeats while it waits. A hit point lost
+    to starving stops a rest ("You are wasting away from hunger."), which would otherwise run on
+    to the player's death; the other long actions are short, and one may be the meal that saves
+    them, so they go on through it.
+  - **Asking before a journey** (#972): every step on the overworld while Fainting or Starving,
+    onto ground that may be walked with no one seen there, opens the dialog first (§6 "The
+    dialog"), as the step onto a known trap does: that the journey may kill them, Starving's words
+    the harshest, to go on or to stay. Staying takes no time; it is selected first and Esc's. It
+    is judged by the state alone, never by whether this step would be fatal, so it gives no
+    number away. Long fast is asked too: it spares its fainting, not its starving. A held key's
+    repeats never open it. A local level never asks: its steps take seconds.
   - **Meals** (`Action::Eat(Meal)`: one of an inventory stack, `Meal::Pack`, or of a stack of
     the pile on the player's cell, `Meal::Floor`; §6 "Consume"): a potion is drunk instead (§8
     "Potions", `World::drink_potion`, hunger or none); refused, taking no time, for a stack that
@@ -128,7 +142,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
     their pack rots away, what eating it does, and a shopkeeper refusing rotten food (§7
     "Shops"). The status bar shows the state unless it is Not hungry (`Hungry`, `Weak`,
     `Fainting`, `Starving`, `Satiated`, `Bloated`; after the hit points and before the burden,
-    giving way after the burden), and the character screen shows the effective scores. Dev
+    giving way after the burden; from Hungry down it never gives way, and its word is coloured as
+    it worsens, Hungry a mild yellow, Weak a strong orange, Fainting and Starving alarming reds,
+    colour only and no flashing), and the character screen shows the effective scores. Dev
     dumps: the ASCII header has `hunger hungry` unless Not hungry, JSON dumps `hunger` (the state
     id, or null without hunger), the `actors` layer the player's nutrition and all food on the
     level and in the packs of those on it with when it was made and its stage (`food bread*2

@@ -30,7 +30,8 @@ use bevy::input::ButtonState;
 use bevy::input::keyboard::{Key, KeyboardInput};
 use bevy::prelude::*;
 use warlock_core::ability::{self, Ability};
-use warlock_core::content::VisionProfile;
+use warlock_core::content::{LevelKind, VisionProfile};
+use warlock_core::hunger::Hunger;
 use warlock_core::perception::{CellView, PerceptionView};
 use warlock_core::time::Duration;
 use warlock_core::weather::Weather;
@@ -822,7 +823,7 @@ impl Gameplay<'_> {
             // skipping goes to play at once (the last page shows). Nothing else acts meanwhile.
             (InputMode::More(page), KeyCommand::MoreNext) => {
                 let cols = self.console.as_ref().map_or(0, |c| c.cols());
-                more::advance(page, more::page_count(game, cols, bindings))
+                more::advance(page, more::stops(game, cols, bindings))
             }
             (InputMode::More(_), KeyCommand::MoreSkip | KeyCommand::Cancel) => InputMode::Normal,
             (InputMode::More(page), _) => InputMode::More(page),
@@ -937,11 +938,17 @@ impl Gameplay<'_> {
             (InputMode::Rest, _) => InputMode::Normal,
             (InputMode::Normal, KeyCommand::Rest) => InputMode::Rest,
             (InputMode::Normal, KeyCommand::Move(dir)) => {
-                // Leaving a shop owing anything (spec §7 "Shops") or stepping onto a known trap
-                // (spec §8 "Traps") asks first, in the dialog. A held key stops there (repeats
-                // never open the dialog).
+                // Leaving a shop owing anything (spec §7 "Shops"), stepping onto a known trap
+                // (spec §8 "Traps"), setting out on the overworld Fainting or Starving (spec §8
+                // "Hunger"), or walking into something that offers an action (spec §7 "Special
+                // rooms") asks first, in the dialog. A held key stops there (repeats never open
+                // the dialog).
                 let view = game.world.perception();
-                match leaving_dialog(&view, dir).or_else(|| trap_dialog(&view, dir)) {
+                let dialog = (leaving_dialog(&view, dir))
+                    .or_else(|| trap_dialog(&view, dir))
+                    .or_else(|| hunger_dialog(&view, dir))
+                    .or_else(|| offer_dialog(&view, dir));
+                match dialog {
                     Some(dialog) if !key.repeat => open = Some(dialog.into()),
                     Some(_) => {}
                     None => {
@@ -1525,6 +1532,77 @@ fn trap_dialog(view: &PerceptionView<'_>, dir: Dir) -> Option<Dialog> {
     )
 }
 
+/// The dialog a step in `dir` opens first, if it is a journey on the overworld for a player who
+/// is Fainting or Starving (spec §8 "Hunger"), onto ground that may be walked, where no one they
+/// see stands (moving there would be an attack, or stop): that it may kill them, to go on or
+/// stay (the safe answer, selected first, and Esc's; it takes no time). Judged by the state
+/// alone, never by what this step would cost, so it tells no number. Long fast is asked too: it
+/// spares its fainting, not its starving.
+fn hunger_dialog(view: &PerceptionView<'_>, dir: Dir) -> Option<Dialog> {
+    if view.level_kind() != LevelKind::Overworld {
+        return None;
+    }
+    let hunger = view.own_hunger()?;
+    let text = match hunger {
+        Hunger::Fainting => {
+            "You are faint from hunger, and this journey may kill you. Go on without eating?"
+        }
+        Hunger::Starving => {
+            "You are starving to death, and every step takes what life you have left. This \
+             journey may well be your last. Go on without eating?"
+        }
+        _ => return None,
+    };
+    let to = view.viewer().step(dir);
+    let walkable = match view.cell(to) {
+        CellView::Visible(t) | CellView::Remembered(t) => view.content().terrain(t).walkable,
+        CellView::Unknown => true,
+    };
+    if !walkable || view.actor_at(to).is_some() {
+        return None;
+    }
+    Some(
+        Dialog::new(hunger.name(), text)
+            .accept("Go on", Action::Move(dir))
+            .cancel("Stay", ScreenAction::Close),
+    )
+}
+
+/// The dialog a step in `dir` opens first, if it walks into a feature the player sees or remembers
+/// that offers an action (spec §7 "Special rooms"; what the abilities menu's Here group reads, so
+/// a spent altar blocks as any wall does), where no one they see stands (moving there would be an
+/// attack, or stop): "Would you like to pray at the forgotten altar?", to use its ability, just as
+/// the menu does (Temper goes on to its list), or leave it (the safe answer, selected first, and
+/// Esc's; it takes no time).
+fn offer_dialog(view: &PerceptionView<'_>, dir: Dir) -> Option<Dialog> {
+    let to = view.viewer().step(dir);
+    let terrain = match view.cell(to) {
+        CellView::Visible(t) | CellView::Remembered(t) => t,
+        CellView::Unknown => return None,
+    };
+    let (offer, _) = view.content().offer_at(terrain)?;
+    if view.actor_at(to).is_some() {
+        return None;
+    }
+    let ability = Ability::offered(offer);
+    let name = &view.content().terrain(terrain).name;
+    let mut letters = name.chars();
+    let title: String = (letters.next().iter().flat_map(|c| c.to_uppercase()))
+        .chain(letters)
+        .collect();
+    Some(
+        Dialog::new(
+            title,
+            format!("Would you like to {} the {name}?", offer.asks()),
+        )
+        .accept(
+            ability.name(view.content()).into_owned(),
+            ScreenAction::UseAbility(ability),
+        )
+        .cancel("Leave it", ScreenAction::Close),
+    )
+}
+
 /// The id of the profile after `current` in `profiles`, wrapping around.
 /// The weather after `now` (clear when it is not known, underground), wrapping around.
 fn next_weather(now: Option<Weather>) -> Weather {
@@ -1835,6 +1913,152 @@ mod tests {
                     .cancel("Stay back", ScreenAction::Close)
             )
         );
+    }
+
+    /// A run of `scenario` that starts with `nutrition`, or if that is below 0 (no run starts so
+    /// hungry), has just begun to starve.
+    fn hungry_world(scenario: &str, nutrition: i32) -> warlock_core::World {
+        let mut files = warlock_core::content::ContentFiles::builtin();
+        let hunger = include_str!("../../../assets/data/hunger.toml")
+            .replace("start = 3600", &format!("start = {}", nutrition.max(0)));
+        files.insert("data/hunger.toml", &hunger);
+        let content = std::sync::Arc::new(warlock_core::content::Content::load(&files).unwrap());
+        let mut world = warlock_core::World::new(content, scenario, None).expect("a run");
+        if nutrition < 0 {
+            world.apply(&Action::Rest(Rest::For(Duration::minutes(2))));
+        }
+        world
+    }
+
+    #[test]
+    fn a_journey_asks_first_while_fainting_or_starving() {
+        for (nutrition, title, words) in [
+            (100, "Fainting", "this journey may kill you"),
+            (-1, "Starving", "may well be your last"),
+        ] {
+            let world = hungry_world("world", nutrition);
+            let dialog = hunger_dialog(&world.perception(), Dir::E).expect("it asks");
+            assert_eq!(dialog.title, title);
+            assert!(dialog.text.contains(words), "{}", dialog.text);
+            // No numbers: the state in words.
+            assert!(!dialog.text.chars().any(|c| c.is_ascii_digit()));
+            assert_eq!(
+                dialog,
+                Dialog::new(title, dialog.text.clone())
+                    .accept("Go on", Action::Move(Dir::E))
+                    .cancel("Stay", ScreenAction::Close),
+                "going on is the step; staying is Esc's, selected first, and does nothing"
+            );
+        }
+        // Weak, and anything better, walks on.
+        for nutrition in [500, 1000, 3600, 6000] {
+            let world = hungry_world("world", nutrition);
+            assert!(hunger_dialog(&world.perception(), Dir::E).is_none());
+        }
+    }
+
+    #[test]
+    fn a_step_off_the_overworld_never_asks_about_hunger() {
+        for scenario in ["courtyard", "forest", "showcase"] {
+            let world = hungry_world(scenario, -1);
+            for dir in [Dir::N, Dir::E, Dir::S, Dir::W] {
+                let dialog = hunger_dialog(&world.perception(), dir);
+                assert!(dialog.is_none(), "{scenario}");
+            }
+        }
+    }
+
+    /// A run of `scenario` after `walk`.
+    fn walked_to(scenario: &str, walk: &str) -> warlock_core::World {
+        let content = std::sync::Arc::new(warlock_core::content::Content::builtin().unwrap());
+        let mut world = warlock_core::World::new(content, scenario, None).expect("a run");
+        for action in warlock_core::action::parse_actions(walk).unwrap() {
+            world.apply(&action);
+        }
+        world
+    }
+
+    #[test]
+    fn walking_into_what_offers_an_action_asks_first() {
+        let cases = [
+            (
+                "shrine",
+                "move:N open:N move:N*3",
+                "Forgotten altar",
+                "Would you like to pray at the forgotten altar?",
+                "Pray",
+                Ability::Pray,
+            ),
+            (
+                "spring",
+                "move:N*5",
+                "Spring",
+                "Would you like to drink from the spring?",
+                "Drink",
+                Ability::Drink,
+            ),
+            (
+                "forge",
+                "move:E",
+                "Anvil",
+                "Would you like to temper something at the anvil?",
+                "Temper",
+                Ability::Temper,
+            ),
+        ];
+        for (scenario, walk, title, text, label, ability) in cases {
+            let world = walked_to(scenario, walk);
+            let view = world.perception();
+            // It asks by the data, as the Here group lists it.
+            assert!(view.abilities().iter().any(|own| own.ability == ability));
+            assert_eq!(
+                offer_dialog(&view, Dir::N),
+                Some(
+                    Dialog::new(title, text)
+                        .accept(label, ScreenAction::UseAbility(ability))
+                        .cancel("Leave it", ScreenAction::Close)
+                ),
+                "{scenario}"
+            );
+            // Any other way is plain floor.
+            assert!(offer_dialog(&view, Dir::S).is_none(), "{scenario}");
+        }
+    }
+
+    #[test]
+    fn a_spent_altar_never_asks() {
+        let mut world = walked_to("shrine", "move:N open:N move:N*3");
+        assert!(offer_dialog(&world.perception(), Dir::N).is_some());
+        for _ in 0..8 {
+            world.apply(&Action::Pray);
+        }
+        let view = world.perception();
+        assert!(matches!(
+            view.cell(Pos::new(13, 3)),
+            CellView::Visible(t) if view.content().terrain(t).name == "spent altar"
+        ));
+        assert!(offer_dialog(&view, Dir::N).is_none());
+    }
+
+    /// The spring's cell beside the player, in the dark: they neither see nor remember it.
+    #[test]
+    fn what_the_player_does_not_know_never_asks() {
+        let mut files = warlock_core::content::ContentFiles::builtin();
+        files.insert(
+            "levels/dark_spring.toml",
+            "name = \"Dark\"\nambient = [0, 0, 0, 0]\nmap = '''\n#####\n#@S.#\n#####\n'''\n\
+             [legend]\n\".\" = \"floor\"\n\"#\" = \"wall\"\n\"S\" = \"spring\"\n\
+             \"@\" = { terrain = \"floor\", spawn = \"player\" }\n",
+        );
+        files.insert(
+            "scenarios/dark_spring.toml",
+            "name = \"Dark\"\nstart_level = \"dark_spring\"\n",
+        );
+        let content = std::sync::Arc::new(warlock_core::content::Content::load(&files).unwrap());
+        let world = warlock_core::World::new(content, "dark_spring", None).expect("a run");
+        let view = world.perception();
+        assert_eq!(view.cell(view.viewer().step(Dir::E)), CellView::Unknown);
+        assert!(offer_dialog(&view, Dir::E).is_none());
     }
 
     #[test]

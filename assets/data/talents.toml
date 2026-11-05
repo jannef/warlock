@@ -6,14 +6,12 @@
 # The game shows a talent's `description` and its prerequisites in words; the wiki shows the
 # rules (cargo xtask wiki).
 
-# The most ranks a talent may have ("Hardy 2/3").
+# The most ranks a talent may have ("Name 2/3").
 max_ranks = 3
 
 # The identical-effects check (#790; docs/dev/progression.md "Coverage policy", the #776
-# review's rules 3 and 4): the game refuses to load when two talents do the same at every rank
-# the shorter has (a class table names the pickable's id, never a clone), or when a talent's one
-# talent prerequisite shares an effect kind with it (that is a rank of it, not a talent of its
-# own). The pairs here are kept on purpose; a pair that is no longer alike is an error too.
+# review's rule 3): the game refuses to load when two talents do the same at every rank the
+# shorter has (a class table names the pickable's id, never a clone). The pairs here are kept on purpose; a pair that is no longer alike is an error too.
 alike = [
     # Two cleave sources together cleave on and on (`TalentMods`: the warrior's Cleaving strike
     # beside the pickable Cleave is a great cleave).
@@ -170,7 +168,7 @@ id = "styles"
 name = "Fighting styles"
 
 # Weapon abilities (#561; the combat progression design §4): what weapon skill and style ranks
-# teach. It ships with Early mastery, Second blade's rend, and Brace of steel.
+# teach. It ships with Early mastery and Brace of steel.
 [[system]]
 id = "weapon_abilities"
 name = "Weapon abilities: what ranks teach"

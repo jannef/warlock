@@ -1,0 +1,8 @@
+[[talent]]
+id = "skill_focus"
+name = "Skill focus"
+tree = "scholar"
+choice = "skill"
+description = "You have a knack for one trade you know: your chosen skill counts higher than its training alone, however far that training goes."
+effects = [{ kind = "skill", value = 25 }]
+systems = ["skills"]

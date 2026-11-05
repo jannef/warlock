@@ -91,7 +91,7 @@ fn protection(w: &World) -> i32 {
 }
 
 #[test]
-fn weapon_focus_and_its_kind_sharpen_only_the_chosen_skill_rank_by_rank() {
+fn weapon_focus_and_its_kind_sharpen_only_the_chosen_skill() {
     let mut w = world();
     arm(&mut w, &["long_sword"]);
     let content = w.content().clone();
@@ -100,16 +100,50 @@ fn weapon_focus_and_its_kind_sharpen_only_the_chosen_skill_rank_by_rank() {
     give(&mut w, "weapon_focus", Some("axes"));
     assert_eq!(melee(&w).to_hit, plain.to_hit, "another skill's focus");
     give(&mut w, "weapon_focus", Some("long_blades"));
-    give(&mut w, "weapon_focus", Some("long_blades"));
     give(&mut w, "improved_critical", Some("long_blades"));
     let sharp = melee(&w);
     assert_eq!(sharp.to_hit, plain.to_hit + 1);
-    assert_eq!(sharp.bonus, plain.bonus + 2);
     assert_eq!(
         sharp.threat,
         plain.threat - 1,
         "threatens from one roll lower"
     );
+}
+
+#[test]
+fn weapon_specialization_reads_the_chosen_skill_a_rank_higher_but_never_past_the_top() {
+    let mut w = world();
+    let table = w.content().weapon_skills().clone();
+    let blades = skill(&w, "long_blades");
+    let axes = skill(&w, "axes");
+    set_rank(&mut w, "long_blades", 5);
+    set_rank(&mut w, "axes", 5);
+    give(&mut w, "weapon_specialization", Some("long_blades"));
+    assert_eq!(benefit(&w, "long_blades"), table.benefit(blades, 6));
+    assert_eq!(benefit(&w, "axes"), table.benefit(axes, 5), "another skill");
+    set_rank(&mut w, "long_blades", MAX_RANK);
+    assert_eq!(benefit(&w, "long_blades"), table.benefit(blades, MAX_RANK));
+}
+
+#[test]
+fn weapon_specialization_asks_for_weapon_focus_in_the_same_skill_and_for_rank_5() {
+    let mut w = world();
+    reach(&mut w, 3);
+    set_rank(&mut w, "long_blades", 5);
+    give(&mut w, "weapon_focus", Some("axes"));
+    run(&mut w, "talent:weapon_specialization:long_blades");
+    assert!(
+        last(&w).starts_with("You cannot take Weapon specialization (long blades): you need"),
+        "{}",
+        last(&w)
+    );
+    give(&mut w, "weapon_focus", Some("long_blades"));
+    set_rank(&mut w, "long_blades", 4);
+    run(&mut w, "talent:weapon_specialization:long_blades");
+    assert!(last(&w).contains("5"), "{}", last(&w));
+    set_rank(&mut w, "long_blades", 5);
+    run(&mut w, "talent:weapon_specialization:long_blades");
+    assert_eq!(last(&w), "You learn Weapon specialization (long blades).");
 }
 
 #[test]
@@ -203,11 +237,10 @@ fn far_shot_reaches_farther() {
 fn guard_talents_change_defence_and_protection() {
     let mut w = world();
     w.player_mut().stats = Stats::new(PerStat::splat(20), PerStat::splat(20));
-    // Plate caps Dexterity at 1: Armour training raises the cap one a rank.
+    // Plate caps Dexterity at 1: Armour training raises the cap by 2.
     arm(&mut w, &["plate_armour"]);
     let dex = defence(&w).bonus(Category::Dexterity);
     assert_eq!(dex, 1);
-    give(&mut w, "armour_training", None);
     give(&mut w, "armour_training", None);
     assert_eq!(defence(&w).bonus(Category::Dexterity), 3);
 
@@ -280,7 +313,7 @@ fn immune_to_pain_eases_every_hit_but_never_to_nothing() {
 }
 
 #[test]
-fn elemental_ward_resists_the_chosen_element_by_rank() {
+fn elemental_ward_resists_the_chosen_element() {
     let mut w = world();
     let content = w.content().clone();
     let fire = content.damage_type_id("fire");
@@ -289,8 +322,6 @@ fn elemental_ward_resists_the_chosen_element_by_rank() {
     give(&mut w, "elemental_ward", Some("fire"));
     assert_eq!(resists(&w, fire), 25);
     assert_eq!(resists(&w, cold), 0);
-    give(&mut w, "elemental_ward", Some("fire"));
-    assert_eq!(resists(&w, fire), 50);
 }
 
 #[test]
@@ -303,15 +334,14 @@ fn prerequisites_of_the_trees_are_said_in_words() {
         last(&w),
         "You cannot take Deadly aim: you need Dexterity 13 and a missile weapon skill 3."
     );
-    // Weapon focus's second rank (Weapon specialization before #790) asks for more of the
-    // chosen skill than its first.
+    // Weapon specialization asks for more of the chosen skill than Weapon focus.
     w.player_mut()
         .talents
         .take("weapon_focus", Some("long_blades"));
-    run(&mut w, "talent:weapon_focus:long_blades");
+    run(&mut w, "talent:weapon_specialization:long_blades");
     assert_eq!(
         last(&w),
-        "You cannot take Weapon focus (long blades): you need the chosen one at 5.",
+        "You cannot take Weapon specialization (long blades): you need the chosen one at 5.",
     );
     w.player_mut().talents.forget("weapon_focus");
     // A launcher at 3 meets "a missile weapon skill 3".
@@ -329,10 +359,10 @@ fn prerequisites_of_the_trees_are_said_in_words() {
     run(&mut w, "levelup:auto");
     reach(&mut w, 9);
     run(&mut w, "talent:armour_training");
-    assert_eq!(last(&w), "You learn Armour training (1).");
+    assert_eq!(last(&w), "You learn Armour training.");
     // The level's skill rolls come first, or the next level cannot be reached.
     run(&mut w, "levelup:auto");
     reach(&mut w, 12);
     run(&mut w, "talent:elemental_ward:cold");
-    assert_eq!(last(&w), "You learn Elemental ward (cold) (1).");
+    assert_eq!(last(&w), "You learn Elemental ward (cold).");
 }

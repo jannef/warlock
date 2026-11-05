@@ -132,6 +132,12 @@ const COLD: Rgb = Rgb::new(0xa8, 0xc8, 0xe8);
 const HOT: Rgb = Rgb::new(0xe8, 0xb8, 0x94);
 /// Hot enough for the warm hint: 30 °C, in tenths.
 const HOT_TENTHS: i32 = 300;
+/// The status bar's hunger word as it worsens (spec §8 "Hunger"): Hungry a mild yellow, Weak a
+/// strong orange, Fainting and Starving alarming reds. Colour only, no flashing.
+const HUNGRY: Rgb = Rgb::new(0xe8, 0xc8, 0x70);
+const WEAK: Rgb = Rgb::new(0xf0, 0x98, 0x40);
+const FAINTING: Rgb = Rgb::new(0xf0, 0x60, 0x48);
+const STARVING: Rgb = Rgb::new(0xff, 0x48, 0x38);
 
 pub struct UiPlugin;
 
@@ -685,9 +691,40 @@ fn draw_status(
         let x = line[..at].chars().count() as i32;
         console.print(1 + x, y, &text, tint);
     }
+    // The hunger word's colour, as it worsens.
+    if let Some(hunger) = game.world.perception().own_hunger()
+        && let Some(tint) = hunger_tint(hunger)
+        && let Some(x) = segment_x(&line, hunger.name())
+    {
+        console.print(1 + x, y, hunger.name(), tint);
+    }
     if show_hint {
         console.print(cols - hint_w - 1, y, hint, TEXT_DIM);
     }
+}
+
+/// The colour of the status bar's hunger word, if it has one of its own: from Hungry down.
+fn hunger_tint(hunger: Hunger) -> Option<Rgb> {
+    match hunger {
+        Hunger::Hungry => Some(HUNGRY),
+        Hunger::Weak => Some(WEAK),
+        Hunger::Fainting => Some(FAINTING),
+        Hunger::Starving => Some(STARVING),
+        Hunger::NotHungry | Hunger::Satiated | Hunger::Bloated => None,
+    }
+}
+
+/// Where segment `text` starts in `line` ([`fit_segments`]), in characters: the whole of a
+/// segment, so a level or a status effect with the word in its name is not taken for it.
+fn segment_x(line: &str, text: &str) -> Option<i32> {
+    let mut x = 0;
+    for segment in line.split(SEP) {
+        if segment == text {
+            return Some(x);
+        }
+        x += (segment.chars().count() + SEP.chars().count()) as i32;
+    }
+    None
 }
 
 /// The status bar's segments for `world`, in display order, the time on `clock` and the
@@ -707,7 +744,8 @@ fn status_segments(world: &World, clock: Clock, unit: TemperatureUnit) -> Vec<Se
     // "Resources"), giving way before mana: they outlast the time, and so do the status effects the player suffers (by name, the most
     // important first: the last gives way first), Dazzled (strong light on light-blind eyes,
     // spec §8 "Character creation"), hunger (shown unless the player is Not hungry), and the burden (shown
-    // when there is one), which slows everything the player does; hunger outlasts the burden. The
+    // when there is one), which slows everything the player does; hunger outlasts the burden, and
+    // from Hungry down it outlasts everything, the level's name too (spec §8 "Hunger"). The
     // character level (`Lv 3`) comes after them and goes before them, but after the time. The
     // temperature where the player is (always, underground too) sits after the weather; it
     // outlasts the turn, the position, the seed, and the moon, and gives way before the date.
@@ -739,13 +777,13 @@ fn status_segments(world: &World, clock: Clock, unit: TemperatureUnit) -> Vec<Se
         .collect();
     let stance = view.own_stance();
     let head = [
-        Segment::new(0, view.level_name()),
+        Segment::new(1, view.level_name()),
         Segment::new(1, format!("HP {hp}/{max_hp}")),
         Segment::new(1, format!("MP {mp}/{max_mp}")),
     ];
     let rest = [
         (view.dazzled()).then(|| Segment::new(1, "Dazzled")),
-        hunger.map(|h| Segment::new(1, h.name())),
+        hunger.map(|h| Segment::new(u8::from(hunger_tint(h).is_none()), h.name())),
         (burden != Burden::Unburdened).then(|| Segment::new(1, burden.name())),
         Some(Segment::new(
             1,
@@ -846,12 +884,14 @@ impl Segment {
     }
 }
 
+/// What the status bar's segments are joined with.
+const SEP: &str = "  ·  ";
+
 /// Joins `segments` with separators so the line fits in `width` characters: the segment with
 /// the highest priority number gives way first, cut down to its short form if it has one, else
 /// dropped. Then, most important first, segments take back the room that is left, until one
 /// that was dropped does not fit. Kept segments stay in their original order.
 fn fit_segments(segments: &[Segment], width: usize) -> String {
-    const SEP: &str = "  ·  ";
     let line = |forms: &[u8]| {
         (segments.iter().zip(forms))
             .filter_map(|(s, &form)| s.at(form))
@@ -1042,16 +1082,37 @@ mod tests {
             texts(&world)[..5],
             ["Hoard", "HP 10/10", "MP 0/0", "Hungry", "Burdened"]
         );
-        // Narrow: the time gives way first, then the burden, then hunger, before the mana, then
-        // the hit points.
+        // Narrow: the time gives way first, then the burden, then the mana, the hit points, and
+        // the level's name. From Hungry down, hunger never does.
         let line = "Hoard  ·  HP 10/10  ·  MP 0/0  ·  Hungry  ·  Burdened";
         assert_eq!(fit_segments(&segments, line.chars().count()), line);
         assert_eq!(
             fit_segments(&segments, line.chars().count() - 1),
             "Hoard  ·  HP 10/10  ·  MP 0/0  ·  Hungry"
         );
+        assert_eq!(fit_segments(&segments, 36), "Hoard  ·  HP 10/10  ·  Hungry");
+        assert_eq!(fit_segments(&segments, 25), "Hoard  ·  Hungry");
+        assert_eq!(fit_segments(&segments, 10), "Hungry");
+        // A well-fed word gives way as it did: before the mana, and the level's name goes last.
+        let fed = world_starting_at(5000);
+        let segments = status_segments(&fed, Clock::H24, TemperatureUnit::Celsius);
         assert_eq!(fit_segments(&segments, 36), "Hoard  ·  HP 10/10  ·  MP 0/0");
-        assert_eq!(fit_segments(&segments, 25), "Hoard  ·  HP 10/10");
+        assert_eq!(fit_segments(&segments, 10), "Hoard");
+    }
+
+    #[test]
+    fn the_status_bar_colours_the_hunger_word_as_it_worsens() {
+        assert_eq!(hunger_tint(Hunger::Hungry), Some(HUNGRY));
+        assert_eq!(hunger_tint(Hunger::Weak), Some(WEAK));
+        assert_eq!(hunger_tint(Hunger::Fainting), Some(FAINTING));
+        assert_eq!(hunger_tint(Hunger::Starving), Some(STARVING));
+        for fed in [Hunger::NotHungry, Hunger::Satiated, Hunger::Bloated] {
+            assert_eq!(hunger_tint(fed), None);
+        }
+        // The whole segment, not a word within another.
+        let line = "Weak Hollow  ·  HP 1/1  ·  Weakened  ·  Weak";
+        assert_eq!(segment_x(line, "Weak"), Some(40));
+        assert_eq!(segment_x("Hoard  ·  HP 1/1", "Weak"), None);
     }
 
     #[test]

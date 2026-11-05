@@ -11,7 +11,8 @@
 //! - **Fainting** (and Starving): at the start of each turn the player may faint (one draw of the
 //!   gameplay stream), losing turns while the others act ([`World::faint`]);
 //! - **Starving**: no hit points come back ([`World::healing_rate`], the one pace), and some are
-//!   lost by the clock ([`World::digest`]), until the player starves to death;
+//!   lost by the clock ([`World::digest`]), until the player starves to death; a rest does not
+//!   sleep through that: the first hit point lost stops it ([`World::starving_stops_rest`]);
 //! - **Bloated**: every price the player pays is raised, as a burden raises it
 //!   ([`World::bloated`], applied in `schedule.rs`).
 //!
@@ -95,6 +96,15 @@ impl World {
         (lost, Some(before))
     }
 
+    /// A hit point lost to starving stops a rest (spec §6 "Rest"), which would otherwise run on
+    /// to the player's death; the other long actions are short and may be what saves them (a
+    /// meal), so they go on. A traveller's step says nothing: the question was asked before it.
+    pub(super) fn starving_stops_rest(&mut self, id: ActorId) {
+        if self.resting && id == self.state.player {
+            self.say("You are wasting away from hunger.");
+        }
+    }
+
     /// The player exerts themselves doing `kind` (a blow, a shot, a throw): it burns the extra
     /// nutrition `data/hunger.toml` gives it, at their race's hunger.
     pub(super) fn exert(&mut self, kind: ActionKind) {
@@ -165,7 +175,7 @@ impl World {
         let Some(text) = Hunger::news(before, now) else {
             return;
         };
-        if Hunger::stops_rest(before, now) {
+        if Hunger::worsens(before, now) {
             self.say(text);
         } else {
             self.note(text);

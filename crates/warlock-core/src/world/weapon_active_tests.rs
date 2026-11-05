@@ -548,6 +548,94 @@ fn shield_rush_and_hip_throw_knock_back_but_not_into_a_wall() {
     }
 }
 
+/// Kicks the post east of the player until one lands: where the post ends up, and whether a
+/// blow landed at all.
+fn kick_post(w: &mut World) -> (i32, bool) {
+    let post = at(w, 2, 1);
+    let mut landed = false;
+    for _ in 0..50 {
+        let outcome = use_(w, "kick:E");
+        if strikes(&outcome, AttackKind::Melee)[0].is_some_and(|s| s.is_hit()) {
+            landed = true;
+            break;
+        }
+    }
+    (w.state.actors[&post].pos.x, landed)
+}
+
+#[test]
+fn breakers_kick_drives_a_foe_back_where_the_cell_is_free() {
+    let breaker = |map: &str| {
+        let mut w = world(map);
+        w.player_mut().talents.take("breaker", None);
+        w
+    };
+    let free = "######\n#@p..#\n######\n";
+    assert_eq!(kick_post(&mut breaker(free)), (3, true));
+    let mut plain = world(free);
+    plain.player_mut().talents.take("mighty_kick", None);
+    assert_eq!(
+        kick_post(&mut plain),
+        (2, true),
+        "Mighty kick alone does not"
+    );
+
+    // A wall, another creature, a trap, and ice behind it: the blow lands, the foe stays.
+    assert_eq!(
+        kick_post(&mut breaker("####\n#@p#\n####\n")),
+        (2, true),
+        "a wall"
+    );
+    assert_eq!(
+        kick_post(&mut breaker("#####\n#@pp#\n#####\n")),
+        (2, true),
+        "another creature"
+    );
+    let mut trapped = breaker(free);
+    let content = trapped.content().clone();
+    let kind = content.trap_id("pit").expect("a trap");
+    let trap = crate::content::Trap::new(kind, content.trap(kind), false, None);
+    (trapped.state.current_mut().traps).insert(Pos::new(3, 1), trap);
+    assert_eq!(kick_post(&mut trapped), (2, true), "a trap");
+    let mut iced = breaker(free);
+    let water = content.terrain_id("water").expect("water");
+    (iced.state.current_mut()).set_ice(&content, Pos::new(3, 1), water, 200_000);
+    assert_eq!(kick_post(&mut iced), (2, true), "ice");
+}
+
+#[test]
+fn breakers_kick_that_misses_or_kills_moves_nobody() {
+    // Behind a tower of a shield nearly every kick misses.
+    let mut w = world("######\n#@g..#\n######\n");
+    w.player_mut().talents.take("breaker", None);
+    let guard = at(&w, 2, 1);
+    let mut misses = 0;
+    for _ in 0..20 {
+        let outcome = use_(&mut w, "kick:E");
+        if strikes(&outcome, AttackKind::Melee)[0].is_some_and(|s| s.is_hit()) {
+            break;
+        }
+        misses += 1;
+        assert_eq!(w.state.actors[&guard].pos.x, 2, "a miss drives nobody back");
+    }
+    assert!(misses > 0, "the tower turned a kick");
+    // A kick that kills leaves nothing to drive back, and says nothing of it.
+    let mut w = world("######\n#@p..#\n######\n");
+    w.player_mut().talents.take("breaker", None);
+    let post = at(&w, 2, 1);
+    w.state.actors.get_mut(&post).expect("the post").hp = 1;
+    let mut alive = true;
+    for _ in 0..50 {
+        use_(&mut w, "kick:E");
+        alive = w.state.actors.get(&post).is_some_and(|a| a.hp > 0);
+        if !alive {
+            break;
+        }
+    }
+    assert!(!alive, "killed");
+    assert!(!said(&w).iter().any(|m| m.contains("driven back")));
+}
+
 #[test]
 fn feint_rolls_without_parry_and_shield() {
     let mut w = world("#####\n#@g.#\n#####\n");

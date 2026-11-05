@@ -89,9 +89,8 @@ bane on every bash in the grip, `Actor::bash` too), `World::shields_slowed`
 casts paid in mana only, before `perform`). Hidden: `WeaponSkills::shows` (no marks and no rank: not listed), read by the
 weapon skills screen, the `weapon_skills` dump layer and JSON, `PerceptionView::talents` (a
 talent needing a hidden skill the player has not trained), and `talent::may_take` (a hidden
-choice is a bad choice). Talent: `anvil_and_hammer`
-(`weapon { skill = "two_shields", bash }`), needing a rank of the style (Loose straps and
-Craven's wall were cut in #774). Tests: `world/two_shield_tests.rs`, `content/weapon_skill.rs`
+choice is a bad choice). No talent of its own: Anvil and hammer went in #965, and Loose straps
+and Craven's wall in #774. Tests: `world/two_shield_tests.rs`, `content/weapon_skill.rs`
 (the rank tables, the refusals), the screen's and the equipment screen's unit tests; wiki:
 the banes in `style-benefits.md` (`rank_table`'s bane columns).
 

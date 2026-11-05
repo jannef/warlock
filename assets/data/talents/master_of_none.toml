@@ -1,0 +1,8 @@
+[[talent]]
+id = "master_of_none"
+name = "Master of none"
+tree = "class"
+granted = true
+description = "Master of none, yet every trade you know comes a little easier: every skill you are trained in counts higher."
+effects = [{ kind = "trained_skills", value = 5 }]
+systems = ["skills"]

@@ -131,7 +131,7 @@ impl World {
             let unarmed = self.content.weapon_skills().of_role(Role::Unarmed);
             let skills = AttackSkills::only(unarmed);
             let price = self.attack_price(player, ActionKind::Kick, None, skills);
-            self.player_kicks(target, seen, events);
+            self.player_kicks(target, dir, seen, events);
             return Spent::Turn(price);
         }
         let def = level.terrain.get(at).map(|t| self.content.terrain(*t));
@@ -158,7 +158,7 @@ impl World {
     /// attack speed changes its time.
     /// The Strength the player's kick is rolled against, a door's or a chest's: their
     /// effective Strength, their athletics (spec §8 "Skills"), their talents' (Mighty kick,
-    /// Breaker, Lockbreaker; spec §8 "Talents"), and what they wear (Hobnailed; spec §8 "Magic
+    /// Lockbreaker; spec §8 "Talents"), and what they wear (Hobnailed; spec §8 "Magic
     /// items"): as if stronger.
     pub(super) fn kick_force(&self) -> u8 {
         let me = self.state.player();

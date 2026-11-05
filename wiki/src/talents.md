@@ -2,7 +2,7 @@
 
 A **talent** is a knack your character picks up as they grow: a little more of something the
 rules already measure, chosen by you. Talents come in **trees** (Vigour, Might, Finesse, and so
-on), some have several **ranks**, and most ask something of you first.
+on), and most ask something of you first.
 
 ## When you pick
 
@@ -33,7 +33,7 @@ already learned), the pick is simply lost, so a level never waits for the imposs
 
 The **[level-up screen](experience.md#what-a-level-gives)** opens by itself when a level comes. It walks the level's choices in
 order: the [skill rolls](skills.md) first (each [skill](skills.md) with the dice a roll on it adds), then a bonus talent, then the level's talent, listing
-only the talents you may take now, by tree. A talent with a choice ([Weapon focus](talents.md#talent-weapon-focus), [Apprentice](talents.md#talent-apprentice))
+only the talents you may take now, by tree. A talent with a choice ([Weapon focus](talents.md#talent-weapon-focus), [Skill focus](talents.md#talent-skill-focus))
 asks for it next. The screen can't be closed until everything is chosen. Two levels at once are
 one sequence, the lower level's choices first.
 
@@ -48,15 +48,14 @@ already learned is not given again: that level gives you a talent pick in its pl
 
 ## Ranks, choices, prerequisites
 
-- A talent with **ranks** (up to three) is picked once per rank, each pick a level's talent:
-  "Hardy (2)". Each rank may ask more than the last.
+- A talent is picked once.
 - A talent with a **choice** (a [weapon skill](weapon-skills.md), a [fighting style](fighting-styles.md), a [skill](skills.md), an element) is picked
   for that choice, and the same talent may be picked again for another: [Weapon focus](talents.md#talent-weapon-focus) with [long
   blades](weapon-skills.md#weapon-skill-long-blades) and Weapon focus with [bows](weapon-skills.md#weapon-skill-bows) are two talents. A [weapon skill](weapon-skills.md) chosen is one you attack with
-  (never [shield blocking](weapon-skills.md#weapon-skill-shield-block)); a [fighting style](fighting-styles.md) is chosen as a style; a [skill](skills.md) may be any skill,
-  trained or not ([Apprentice](talents.md#talent-apprentice), whose ranks count for each skill on its own).
+  (never [shield blocking](weapon-skills.md#weapon-skill-shield-block)); a [fighting style](fighting-styles.md) is chosen as a style; a [skill](skills.md) is one you are trained in
+  ([Skill focus](talents.md#talent-skill-focus)).
 - **Prerequisites** must all hold when you pick, and are never checked again: a [Strength](stats.md#stat-strength) lowered
-  by [disease](diseases.md#how-a-disease-goes) later does not take a talent away. They may be another talent (at a rank), a [stat](stats.md)
+  by [disease](diseases.md#how-a-disease-goes) later does not take a talent away. They may be another talent, a [stat](stats.md)
   score (the score itself, as the [character screen](character.md) shows it; never what items or
   a sickness do to it), a [skill](skills.md) at a value, a [weapon skill](weapon-skills.md) or
   style at a rank (or any of a kind: "a missile weapon skill 3" is [bows](weapon-skills.md#weapon-skill-bows), [crossbows](weapon-skills.md#weapon-skill-crossbows), or
@@ -110,9 +109,12 @@ status ([Winded](status-effects.md#status-winded)) during which it cannot be use
 waiting time: it costs [hit points](combat.md#hit-points) instead (see [Mana](mana.md#spending-it)). Five talents
 work on a [class](classes.md)'s [resources](resources.md#talents-on-resources) and can be taken only by that
 class ([Battle trance](talents.md#talent-battle-trance), [Inner calm](talents.md#talent-inner-calm), [Steady hand](talents.md#talent-steady-hand), [Patient blade](talents.md#talent-patient-blade), [Zealot](talents.md#talent-zealot)); one that needs the [lantern's hood](lantern.md#the-hood)
-(Hooded light) is still to come. [Apprentice](talents.md#talent-apprentice)'s
-[skill](skills.md) points are rolled once, as the rank is taken. [Treasure hunter](talents.md#talent-treasure-hunter) changes loot as it is made: a
+(Hooded light) is still to come. [Skill focus](talents.md#talent-skill-focus) adds 25 to the
+[skill](skills.md) you choose for [what it gives](skills.md#what-skills-give), past 100 too, and the
+value you trained stays as it was. [Treasure hunter](talents.md#talent-treasure-hunter) changes loot as it is made: a
 level you have already been to keeps what lies there, and the levels themselves never change.
+[Breaker](talents.md#talent-breaker)'s kick drives a foe one cell straight back when it hits, if that cell is
+free: a wall, a creature, a [trap](traps.md), or [ice](temperature.md) behind the foe holds it where it is.
 Where a
 talent scales ("one hit point per four levels"), what it gave earlier grows as you level: a
 talent taken at level 3 still matters at level 50.

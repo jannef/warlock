@@ -414,8 +414,6 @@ pub struct TalentMods {
     /// A forgotten altar's lean counts double when it agrees, and not at all when it opposes
     /// (Pious).
     pub devout: bool,
-    /// A forgotten altar's great bane becomes nothing (Pious's second rank).
-    pub penitent: bool,
     /// Percent more a special room's quickening of healing and mana (Old delver).
     pub room_pace_percent: i32,
     /// A collapsed floor never gives way under it (Old delver).
@@ -500,6 +498,8 @@ pub struct TalentMods {
     pub kick_die: Option<u8>,
     /// How much stronger its door kicks are.
     pub door_kick: i32,
+    /// A kick of its that hits drives the foe a cell back, when the cell is free (Breaker).
+    pub kick_back: bool,
     /// Percent louder its door kicks are (negative: quieter).
     pub kick_noise_percent: i32,
     /// Percent more often what a chest it kicks open holds breaks (negative: less; Deft
@@ -519,8 +519,6 @@ pub struct TalentMods {
     pub critical_confirm: i32,
     /// Ranks more its weapon abilities' thresholds read (Early mastery).
     pub ability_ranks: i32,
-    /// Its Rend rolls the off hand's dice too (Second blade's rend).
-    pub rend_off_hand: bool,
     /// Percent more time its weapon actives take (Practised technique: -25).
     pub weapon_energy_percent: i32,
     /// Stamina points less every weapon active of its costs (Drillmaster).
@@ -1450,8 +1448,7 @@ impl TalentMods {
             TalentEffect::SkillRolls { value } => self.skill_rolls += value,
             TalentEffect::ExtraPick { level } => self.extra_picks.push(level),
             // Handed out as the rank is taken (`World::take_talent`), never read after.
-            TalentEffect::TrainSkill { .. }
-            | TalentEffect::WeaponRanks { .. }
+            TalentEffect::WeaponRanks { .. }
             | TalentEffect::TakeUpSkills { .. }
             | TalentEffect::StartingGold { .. }
             | TalentEffect::StartingGems { .. }
@@ -1491,7 +1488,6 @@ impl TalentMods {
             TalentEffect::SeesMimics { value } => self.sees_mimics += value,
             TalentEffect::Slick => self.slick = true,
             TalentEffect::Devout => self.devout = true,
-            TalentEffect::Penitent => self.penitent = true,
             TalentEffect::RoomPacePercent { value } => self.room_pace_percent += value,
             TalentEffect::RoomStatusImmune { status } => {
                 if let Some(status) = content.status_id(&status) {
@@ -1503,7 +1499,11 @@ impl TalentMods {
             TalentEffect::GraveWarden => self.grave_warden = true,
             TalentEffect::SearchReach { value } => self.search_reach += value,
             TalentEffect::Skill { skill, value } => {
-                if let Some(id) = content.skill_id(&skill) {
+                if let Some(id) = skill
+                    .as_deref()
+                    .or(choice)
+                    .and_then(|s| content.skill_id(s))
+                {
                     match self.skills.iter_mut().find(|(s, _)| *s == id) {
                         Some((_, v)) => *v += value,
                         None => self.skills.push((id, value)),
@@ -1637,6 +1637,7 @@ impl TalentMods {
                 self.kick_die = Some(self.kick_die.map_or(sides, |s| s.max(sides)));
             }
             TalentEffect::DoorKick { value } => self.door_kick += value,
+            TalentEffect::KickBack => self.kick_back = true,
             TalentEffect::KickNoisePercent { value } => self.kick_noise_percent += value,
             TalentEffect::SmashDestroyPercent { value } => self.smash_destroy_percent += value,
             TalentEffect::DigPercent { value } => self.dig_percent += value,
@@ -1650,7 +1651,6 @@ impl TalentMods {
             }
             TalentEffect::CriticalConfirm { value } => self.critical_confirm += value,
             TalentEffect::AbilityRanks { value } => self.ability_ranks += value,
-            TalentEffect::RendOffHand => self.rend_off_hand = true,
             TalentEffect::WeaponEnergyPercent { value } => self.weapon_energy_percent += value,
             TalentEffect::WeaponStamina { value, abilities } if abilities.is_empty() => {
                 self.weapon_stamina += value;
@@ -2525,6 +2525,12 @@ pub fn may_take(
                     .is_some_and(|w| !who.weapon_skills.shows(content.weapon_skills(), w)) =>
         {
             return Err(Refusal::BadChoice(kind, id.to_string()));
+        }
+        // An untrained skill does not exist for its actor (Skill focus): nothing to be better at.
+        (Some(Choice::Skill), Some(id))
+            if (content.skill_id(id)).is_none_or(|s| who.skills.value(s).is_none()) =>
+        {
+            return Err(Refusal::BadChoice(Choice::Skill, id.to_string()));
         }
         _ => {}
     }

@@ -27,8 +27,9 @@ three prefixes, a third each; five are two or three, a half each; six are always
 
 - **On the floor** of every level of a generated dungeon (see [Dungeons and danger](dungeons.md)) lie a few items of loot (now and
   then a [scroll](scrolls.md), which is never magic).
-- **Vaults** hold a reward: the guard post's store room something magic, the shrine and the
-  roofless chapel something.
+- **Vaults** hold a reward of the floor's depth: the guard post's store room something magic,
+  the shrine and the roofless chapel something, the flooded cell coins, a [gem](gems.md), a ring,
+  or an amulet.
 - **Creatures** may drop something magic or rare where they die, besides what they carried: a
   [kobold](creatures.md#creature-kobold) now and then, a [kobold archer](creatures.md#creature-kobold-archer) a little more often, a [kobold shaman](creatures.md#creature-kobold-shaman) one time in two (see
   [Creatures](creatures.md)).

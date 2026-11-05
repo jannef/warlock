@@ -3,7 +3,7 @@ source: crates/warlock/src/ui/screen_snapshots.rs
 expression: "render(case, content.clone())"
 ---
  Your athletics improves. (×75) You learn Clotting. You learn Deep lungs. You learn Fever-proof.
- You learn Hardy (1). You learn Healthy. You learn Iron stomach. You learn Battle trance. --more--
+ You learn Hardy. You learn Healthy. You learn Iron stomach. You learn Unbowed. You learn --more--
 
 
 

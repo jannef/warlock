@@ -216,11 +216,11 @@ full under [Songs](abilities.md#songs): what they cost, how far they are heard, 
 **[Travelled hands](talents.md#talent-travelled-hands)** (level 3) raises every
 [weapon skill](weapon-skills.md) and [fighting style](fighting-styles.md) the bard has at rank 0 to rank 1, once (never a
 [school of magic](schools.md), and never a hidden style): a point surer with whatever comes to hand.
-**[Jack of all trades](talents.md#talent-jack-of-all-trades)** comes in two ranks, at levels 12
-and 25: the first trains every [skill](skills.md) the bard
-lacks (but Sneak attack, the thief's) at 1d4+1, whatever skills there are; from then on they are
-skills like any other, used, marked, and raised at a level. The second makes every skill count 5
-higher. A class table may give a talent rank by rank like this; a rank missed comes with the next.
+**[Jack of all trades](talents.md#talent-jack-of-all-trades)**, at level 12, trains every
+[skill](skills.md) the bard lacks (but Sneak attack, the thief's) at 1d4+1, whatever skills there
+are; from then on they are skills like any other, used, marked, and raised at a level.
+**[Master of none](talents.md#talent-master-of-none)**, at level 25, makes every skill they are
+trained in count 5 higher.
 
 ## Prestige classes
 

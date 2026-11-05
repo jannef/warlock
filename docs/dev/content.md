@@ -21,7 +21,13 @@ file's optional `arrival = "..."` line is said when the player arrives by stairs
 branch's on its first level, `Content::arrival`; a scenario's `arrival` once, as a run of it
 starts). A legend entry's `name` (and `note`) names the place on
 its cell (`docs/dev/overworld.md`, "Named places"); a vault's are stamped with it
-(`docs/dev/mapgen.md`). `secret =
+(`docs/dev/mapgen.md`). A vault's legend entry may roll `loot` when the level is generated: a
+grade (`loot = "magic"`: `any`, `magic`, or `rare`, anything of at least that) or a pool (`loot = {
+pool = ["armour", "rings"], grade = "magic" }`, `grade` optional, default `any`; `pool` one name or
+a list). A pool's names are item class ids or the `group`s of `data/item_classes.toml` (`weapons`,
+`armour`, `jewellery`, `money`); `LootPool::named` refuses at load a name that is neither, or that
+can hold nothing of the grade even at the highest item level (`magic/pool_tests.rs`). Use one
+cell per find; prefer a pool to a static `[[pile]]` in a generic vault. `secret =
 true` (or a difficulty) on a closed door makes it a secret door: the cell shows the wall around
 it until found (`docs/dev/searching.md`). Water: `~` is still water; running water (terrain with a
 `flow` anim) needs a flow on every cell from its legend entry (`flow = "S"`, optional

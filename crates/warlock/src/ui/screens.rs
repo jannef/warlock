@@ -1838,6 +1838,66 @@ mod tests {
         assert_eq!(actions(&app).len(), paid + 1);
     }
 
+    /// #975: walking into what offers an action asks; the question costs nothing, a held key
+    /// neither opens nor answers it, and yes uses the ability as the menu does.
+    #[test]
+    fn walking_into_what_offers_an_action_asks_and_a_press_answers() {
+        let yes = (KeyCode::KeyY, "y");
+        let held = |app: &mut App, (code, text): (KeyCode, &str)| {
+            let mut press = key(code, text);
+            press.repeat = true;
+            app.world_mut().write_message(press);
+            app.update();
+        };
+        for (scenario, walk, used) in [
+            ("shrine", "move:N open:N move:N*3", Some(Action::Pray)),
+            ("spring", "move:N*5", Some(Action::Drink)),
+            ("forge", "move:E", None),
+        ] {
+            let content = content();
+            let mut world = warlock_core::World::new(content.clone(), scenario, None).expect("run");
+            for action in warlock_core::action::parse_actions(walk).expect("walk") {
+                world.apply(&action);
+            }
+            let game = Game::from_world(world, "tamsin-1".into());
+            let mut app = app_with(content, Some(game));
+
+            // A held key arriving here stops, without a question or a step.
+            held(&mut app, NORTH);
+            assert!(names(&app).is_empty(), "{scenario}");
+            // A press opens it; repeats of that key, or of an answer, leave it unanswered.
+            frame(&mut app, &[NORTH]);
+            assert_eq!(names(&app), [ScreenName::Dialog], "{scenario}");
+            held(&mut app, NORTH);
+            held(&mut app, yes);
+            assert_eq!(names(&app), [ScreenName::Dialog], "{scenario}");
+            // Esc leaves it, and it stays gone while the key is held.
+            frame(&mut app, &[ESC]);
+            held(&mut app, NORTH);
+            assert!(names(&app).is_empty(), "{scenario}");
+            // So does Enter, on the safe answer selected first.
+            frame(&mut app, &[NORTH]);
+            frame(&mut app, &[ENTER]);
+            assert!(names(&app).is_empty(), "{scenario}");
+            assert!(actions(&app).is_empty(), "{scenario}: no action, no time");
+
+            frame(&mut app, &[NORTH]);
+            frame(&mut app, &[yes]);
+            match &used {
+                // The ability's action.
+                Some(action) => {
+                    assert!(names(&app).is_empty(), "{scenario}");
+                    assert_eq!(actions(&app), std::slice::from_ref(action), "{scenario}");
+                }
+                // Temper's list, as the ability opens it; nothing is done yet.
+                None => {
+                    assert_eq!(names(&app), [ScreenName::Temper], "{scenario}");
+                    assert!(actions(&app).is_empty(), "{scenario}");
+                }
+            }
+        }
+    }
+
     #[test]
     fn dropping_what_a_shop_buys_asks_whether_to_sell() {
         use warlock_core::Positions;
@@ -2641,11 +2701,11 @@ mod tests {
         // A turn of the fight says more than the message line holds at once.
         frame(&mut app, &[WAIT]);
         assert_eq!(mode(&app), InputMode::More(0));
-        let pages = {
+        let stops = {
             let (game, bindings) = (app.world().resource::<Game>(), Bindings::default());
-            super::super::more::page_count(game, 80, &bindings)
+            super::super::more::stops(game, 80, &bindings)
         };
-        assert!(pages >= 2, "{pages} pages");
+        assert!(stops >= 1, "{stops} stops");
         // Other keys do nothing: no move, no wait, no screen.
         frame(
             &mut app,
@@ -2662,8 +2722,8 @@ mod tests {
         app.update();
         assert_eq!(mode(&app), InputMode::More(0));
         // Space shows the next page, up to the last, which waits for nothing.
-        for page in 1..pages {
-            assert_eq!(mode(&app), InputMode::More(page - 1));
+        for page in 0..stops {
+            assert_eq!(mode(&app), InputMode::More(page));
             frame(&mut app, &[SPACE]);
         }
         assert_eq!(mode(&app), InputMode::Normal);

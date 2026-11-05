@@ -25,9 +25,8 @@ const ROOM: &str = "\
 
 const ALTAR: Pos = Pos::new(5, 2);
 
-/// The built-in content with [`ROOM`] (a neutral altar), and `table` in place of the altar's
-/// outcome table when given.
-fn world_with(table: Option<&str>) -> World {
+/// The built-in content with [`ROOM`] (a neutral altar).
+fn world() -> World {
     let mut files = ContentFiles::builtin();
     files.insert(
         "levels/test_altar.toml",
@@ -43,15 +42,8 @@ fn world_with(table: Option<&str>) -> World {
         "name = \"T\"\nstart_level = \"test_altar\"\n\
          character = { race = \"human\", gender = \"female\", class = \"warrior\" }\n",
     );
-    if let Some(table) = table {
-        files.insert("data/outcomes/forgotten_altar.toml", table);
-    }
     let content = Arc::new(Content::load(&files).expect("fixture content is valid"));
     World::new(content, "test_altar", None).expect("world")
-}
-
-fn world() -> World {
-    world_with(None)
 }
 
 fn outcome(w: &World, id: &str) -> OutcomeDef {
@@ -333,45 +325,4 @@ fn damned_brings_a_horde_around_the_altar() {
     w.befall(&outcome, feature, &mut Vec::new());
     let came = w.state.actors.len() - count;
     assert!((2..=8).contains(&came), "{came}");
-}
-
-/// A table whose only bane is `bane` (and a nothing line), drawn every time as a bane.
-fn bane_only(bane: &str) -> String {
-    format!(
-        "seconds = 60\nkinds = {{ nothing = 1, bane = 1000 }}\nexhaust = 0\n\
-         [[outcome]]\nkind = \"nothing\"\ntier = \"minor\"\nid = \"silence\"\nweight = 1\n\
-         message = \"Silence answers you.\"\n{bane}"
-    )
-}
-
-#[test]
-fn pious_at_its_second_rank_turns_a_great_bane_into_nothing_but_not_the_explosion() {
-    let wrath = "[[outcome]]\nkind = \"bane\"\ntier = \"great\"\nid = \"wrath\"\nweight = 1\n\
-                 effect = { wrath = \"1d3\" }\nmessage = \"You feel lessened, forever.\"\n";
-    let pious = |w: &mut World, ranks: u8| {
-        for _ in 0..ranks {
-            w.player_mut().talents.take("pious", None);
-        }
-    };
-    let mut w = world_with(Some(&bane_only(wrath)));
-    pious(&mut w, 2);
-    let before = scores(&w);
-    w.apply(&Action::Pray);
-    assert!(said(&w, "Silence answers you."));
-    assert!(!said(&w, "You feel lessened, forever."));
-    assert_eq!(scores(&w), before);
-    // At the first rank, and without the talent, the bane comes.
-    for ranks in [1, 0] {
-        let mut w = world_with(Some(&bane_only(wrath)));
-        pious(&mut w, ranks);
-        w.apply(&Action::Pray);
-        assert!(said(&w, "You feel lessened, forever."), "rank {ranks}");
-    }
-    // The explosion is moderate: it comes to the pious too.
-    let burst = "[[outcome]]\nkind = \"bane\"\ntier = \"moderate\"\nid = \"burst\"\nweight = 1\n\
-                 effect = { becomes = \"rubble\" }\nmessage = \"The altar bursts apart in fire!\"\n";
-    let mut w = world_with(Some(&bane_only(burst)));
-    pious(&mut w, 2);
-    w.apply(&Action::Pray);
-    assert!(said(&w, "The altar bursts apart in fire!"));
 }

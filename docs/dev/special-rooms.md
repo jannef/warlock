@@ -212,7 +212,7 @@ generator patrol walks, as for a den: it lies unguarded.
 Sealing (`world/hoard.rs`): `World::lift_in_hoard(at, stacks)` is the one line in
 `carry.rs::pick_up`, after the pick-up is said. Inside a room with a `hoard` that has not sealed,
 `SpecialRoom::lifted` grows by the stacks lifted; once it passes the player's
-`TalentMods::hoard_grace` (Old delver's second rank: 1) the room is `sealed` and `seal` runs: every cell of the
+`TalentMods::hoard_grace` (Old hand: 1) the room is `sealed` and `seal` runs: every cell of the
 room (`cells()`: a rooms level's rectangle holds its walls and doors) that is an open door with
 nothing in the doorway is shut (`set_terrain` to its `closes_to`), every closed door there then
 gets `Lock::new(None)` unless it is locked already (only a skeleton key fits; `lock_difficulty`
@@ -343,6 +343,15 @@ Outcome tables (`content/outcome.rs`, `Content::outcomes`, one file each, the id
 moves the lean; `Content::offer_at(terrain)` is what a feature cell offers (the first effect
 whose `feature` it is), so a spent altar, another terrain, offers nothing.
 
+Walking into a feature (#975): `input::offer_dialog`, beside the trap's question, asks for a step
+into a cell the perception shows (visible or remembered) whose terrain has an `offer_at`, with no
+actor seen on it. `Offer::asks` and the terrain's name make the question, `Ability::offered` the
+ability, and yes is `ScreenAction::UseAbility`, the menu's own path (Temper opens its list). A
+new feature with an existing offer asks with no code; a new `Offer` states its words in `asks`.
+The rules are unchanged: a `move` into one says it blocks the way, with no time. Doors and chests
+act on a step, and the rest that block (`shrine_stone`, `shelves`, `statue`, `fountain`) offer
+nothing, so none of them asks.
+
 Generation (`mapgen/special.rs`): `place` draws the side (one `below(4)` from the map stream:
 0 good, 3 evil, else neutral) only for an effect with `sides`, then `make` finds the feature's
 cell (`feature_cell`: plain free floor nearest the box's middle, nothing on it or on a patrol,
@@ -382,7 +391,7 @@ seen creature's line, `Harm::Place`), and `becomes` (the placed light removed, `
 Nothing new is saved but `SpecialRoom::side` (left out while `None`): the terrain is the record
 of a spent or blown altar. The `rooms` dev layer adds `, side good` and `, spent`/`, destroyed`
 (`dump.rs::feature_state`). The showcase's `shrine` scenario has a good, a neutral, and an evil
-altar side by side. Talent: Pious's first rank (system `special_rooms`, which holds prayer
+altar side by side. Talent: Pious (system `special_rooms`, which holds prayer
 since #773; `devout`, `TalentMods::devout`; hook `leaned_kinds`).
 
 The great outcomes (#407, `world/boons.rs`; tests `world/boons_tests.rs`) are five more hooks,
@@ -390,7 +399,7 @@ applied after `becomes`: `gift` (`Stats::gift` on a random stat), `wrath` (`Stat
 floor `DRAIN_FLOOR`, then stat damage clamped and `keep_hp_within_max`), `levels` (positive:
 `gain_level`, `add_xp` to the next threshold exactly, unscaled by `xp_percent`; negative:
 `World::lose_level`), `talent` (Chosen: `talent::offers` flattened to the ways not held, one
-drawn, `bestow`: `Talents::take`, `class::hand_out`, `train_chosen`, and pushed to
+drawn, `bestow`: `Talents::take`, `class::hand_out`, and pushed to
 `Actor::boons`), and `flaw` (Forsaken: the `flaw` talents not held, by id, one drawn, given
 likewise); `rarity` (`magic`/`rare`, only with `loot`) is the relic's floor, the `LootGrade`
 `loot::roll_with` takes. `Actor::boons` (saved, left out while empty) is read by
@@ -401,8 +410,7 @@ likewise); `rarity` (`magic`/`rare`, only with `loot`) is the relic's floor, the
 `level_mana` (up to `mana_level`) off the bases (hit points never below 1), drops `Due`s of
 that level and above, and raises `Progress::peak` (saved, left out at 0): `level_up` gives a
 level up to `peak` its hit points and mana again but no `Due`, no stat checks, and no class
-news. Pious's second rank (`penitent`, `TalentMods::penitent`) is read in `prayer_answered`: a drawn outcome of kind
-bane and tier great is replaced by `draw_in(table, nothing)`. Perception's `OwnTalent::boon`
+news. Perception's `OwnTalent::boon`
 marks them: `(altar)`/`(altar, flaw)` in the talents dump, "altar" on the Talents page, left
 out of the character screen's sign gifts; JSON adds `boon: true` only then.
 
@@ -494,7 +502,7 @@ glows add, flags OR. Readers: perception light and creature sight together (`roo
 part of a cell's light, `room_glow` in the base light; change `perception.rs` and `sight.rs`
 together, `special_rooms_keep_the_light_invariants` and `light_tests::check_invariants` check they
 agree), noise (`noise::noise`, `World::sound_at`), `World::healing_rate` and `World::mana_rate`
-(the room's pace through `World::room_pace`, where Old delver's second rank adds half again to a quickening),
+(the room's pace through `World::room_pace`, where Old hand adds half again to a quickening),
 and `World::shuns` (`ai.rs`, by the room only: no pervading effect is shunned). A flooded room's
 slower, louder steps come from its floor terrain. `PerceptionView::light_kept` lets the renderer
 dim its own transient light.
@@ -763,21 +771,20 @@ not name it. The `rooms` dev layer marks each room's plain ground, lists each ro
 
 ## Talents
 
-System `special_rooms` (`data/talents.toml`): Old delver (delver, two ranks, #775) and Pious
+System `special_rooms` (`data/talents.toml`): Old delver and Old hand (delver, #775, #952) and Pious
 (below). #787 cut Sense of place (`sense_of_place`) and Hush-foot (`wake_percent`) with their
-hooks. Its first rank (Willpower 11 or Dexterity 12): `collapse_proof` (hook
+hooks. Old delver (Willpower 11 or Dexterity 12): `collapse_proof` (hook
 `World::collapse_step`, which then draws nothing), `room_status_immune` `ebbing` (hook
-`World::dwell`), and `grave_warden` (hook `World::curse_corpse`); its second (level 10):
+`World::dwell`), and `grave_warden` (hook `World::curse_corpse`); Old hand (after it, level 10):
 `room_pace_percent` 50 (hook `World::room_pace`) and `hoard_grace` 1 (hook
-`World::lift_in_hoard`). It replaced the one-room talents Light tread, Anchored mind, Grave
+`World::lift_in_hoard`). They replaced the one-room talents Light tread, Anchored mind, Grave
 warden, Hallowed rest, and Hoard-wise; Mirror-wise (`sees_reflections`) and Treasure sense
 (`treasure_bearing`, the hint's bearing), information only, were dropped with their hooks.
 The class ability Consecrate (above) carries the
 system too. Prayer is part of the system (the `prayer` tag folded into it, #773): **Pious**
-(wayfarer, two ranks, #788, which merged Devout, Penitent, and Pilgrim; also `talk`, for the
-temple's services, `docs/dev/npcs.md`). Its first rank (free): `devout` (hook
-`world/outcome.rs::leaned_kinds`) and `pilgrim` (hook `world/service.rs`); its second
-(Willpower 12, level 10): `penitent` (hook `world/pray.rs::prayer_answered`). The forge
+(wayfarer, free, #788, which merged Devout and Pilgrim; also `talk`, for the temple's services,
+`docs/dev/npcs.md`): `devout` (hook `world/outcome.rs::leaned_kinds`) and `pilgrim` (hook
+`world/service.rs`). The forge
 adds no talent (the issue's "None new"): Metalcraft is its lean.
 
 ## Tests
@@ -836,7 +843,7 @@ and over a fixture branch of rooms and caves every generated collapsed floor's s
 sound way between its ways in), `world/hoard_tests.rs` (the
 tempting hoard: its data and refusals, the first stack sealing it with both doors shut and locked
 and two to four hostile guardians, the guardians on the edge and out of view, nothing lifted
-outside counting, Old delver's second rank, sealing once, an open door with something in it left open, a
+outside counting, Old hand, sealing once, an open door with something in it left open, a
 doorless room, no danger, the dump, saving, and a generated hoard's items with no one inside), `content/room_treasury_tests.rs` (the treasure room's fields parsed and refused, never over a
 whole level), `mapgen/treasury_tests.rs` (every door of a rooms level's treasure room secret and
 the level valid, no stairs or creature inside; a cave's box with one secret door; one or two

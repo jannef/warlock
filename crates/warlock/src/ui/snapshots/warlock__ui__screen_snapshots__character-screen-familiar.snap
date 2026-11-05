@@ -23,7 +23,7 @@ expression: "render(case, content.clone())"
 │ Lv  Level         1                                                                              │
 │ XP  Experience    0 / 221                                                                        │
 │     Talents       9                                                                              │
-│ HP  Hit points    13/13   MP  Mana       15/15                                                   │
+│ HP  Hit points    13/13   MP  Mana       13/13                                                   │
 │ Dv  Defence       11      Pv  Protection  0                                                      │
 │     Stance        Neutral                                                                        │
 │     Alignment     Callous                                                                        │

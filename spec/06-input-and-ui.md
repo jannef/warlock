@@ -29,7 +29,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   line (a direction to open, close, kick, or bash, to dig, or to chat, how long to rest, look
   mode, aiming a shot or a throw, `--more--`) are not screens.
 - **The dialog**: every question the game asks first (quitting, a step onto a known trap, a
-  shop's way out and its offers) is one dialog screen given its content: a title (on its
+  step into what offers an action, a shop's way out and its offers) is one dialog screen given its content: a title (on its
   frame), the question, and its options, each a label (`Pay 47 gold and leave`, `Stay`), a role
   (accept, decline, cancel, or plain), and what choosing it does (a menu choice, a game action,
   or a further dialog in its place). It sizes itself to its content and lists the options in a
@@ -45,6 +45,13 @@ developer notes (CLAUDE.md, `docs/dev/`).
   they are told to. A door's trap is never stepped on (§8 "Trapped doors"), so a door never asks:
   walking through a trapped doorway sets nothing off, and walking into a trapped closed door opens
   it as `o` does.
+- **Walking into what offers an action** (§7 "Special rooms"): a step into a feature that offers
+  an ability, which the player sees or remembers (where no creature they see stands), asks first,
+  in the dialog: `Would you like to pray at the forgotten altar?`, `Would you like to drink from
+  the spring?`, `Would you like to temper something at the anvil?`, with the ability's name
+  (accept: it is used as from the abilities menu, Temper going on to its list) and `Leave it`
+  (cancel, selected first; no time). What offers nothing (a spent altar, shelves, a statue) blocks
+  as ever. Asking is the interface's: in the rules a `move` into it just stops.
 - **Reading too close** (§8 "Scrolls"): a burst read from a scroll (fireball, frost) aimed where,
   as far as the player knows, it may catch them too (they stand within its radius of where it
   would go off: the first creature they see on the line of fire, the last cell before one they
@@ -534,8 +541,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
   result), a **bonus talent** of the class's trees, then the level's **talent**, listing only
   the talents that may be taken now, by tree, each with its next rank (`1/3`) and the start of
   its description, the selected one's whole description below. A talent with several choices
-  (Apprentice, Weapon focus) lists them in its place (Esc back). A letter, or Enter on the `>`
-  row, is that choice's action (`advance:athletics`, `talent:hardy`, `talent:apprentice:stealth`):
+  (Skill focus, Weapon focus) lists them in its place (Esc back). A letter, or Enter on the `>`
+  row, is that choice's action (`advance:athletics`, `talent:hardy`, `talent:skill_focus:athletics`):
   the screen closes, the action is applied and recorded like any other, and the screen opens
   again on what is left. No new keys: the list commands. Outside the skill-roll step, never a die, a mark, or a chance.
 - **Death screen** (§8 "Combat"): when the player dies, the death screen opens over the run as it
@@ -587,7 +594,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   sick."), a disease showing or worsening ("You feel feverish.", "Fever wracks you."; §8
   "Diseases"), a sound that is news (§5 "Hearing"), or rain starting or growing heavier (§5
   "Weather"), the player getting hungrier (into Hungry or worse) or fainting from hunger (§8
-  "Hunger"), and when the player dies;
+  "Hunger"), a hit point lost to starving (a rest only), and when the player dies;
   a sound already known goes on without stopping it, and so does other news of the weather (the
   rain easing or stopping, clouds gathering or parting), a status effect ending ("The bleeding
   stops."), a disease leaving ("Your fever breaks."), a full stomach settling ("You no longer
@@ -642,7 +649,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
   of this turn's messages, leaving the last page shown. A single message too long for the line is
   split across pages. While it waits no other key acts, and a held key's repeats never turn a
   page; a screen open over the run (the dialogue screen) keeps its keys, and `--more--` waits
-  beneath it. A rest or another long action shows what stopped it the same way. Presentation only:
+  beneath it. A rest or another long action shows what stopped it the same way. A turn that left
+  the player hungrier, into Hungry or worse, waits at `--more--` even if what it said fits (§8
+  "Hunger"), so the news cannot scroll past. Presentation only:
   the rules, replays, and dumps never see pages; captures show the first page.
 - **Message history** (`v`; ADOM's `:m`; #207): a screen of every message the log keeps (the
   last 200, which it says at the top), oldest first, the newest at the bottom, each wrapped to the
@@ -761,8 +770,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
   crescent. When the window is narrow, segments give way in priority order — seed, position,
   vision, light, turn, then the moon's phase (first cut down to its glyph), the
   temperature, region, date (first cut down to day and month, `12 Rainmoon`), weather, time,
-  burden, hunger, the status effects (the least important first), the resources (the last
-  first), mana, and hit points, the
-  level name last — and
+  burden, hunger (Satiated and Bloated here; from Hungry down it stays to the last, drawn in its
+  colour, §8 "Hunger"), the status effects (the least important first), the resources (the last
+  first), mana, hit points, and the
+  level name — and
   segments that fit again in the room left take it back, most important first. Outdoors the
   weather outranks the date: it changes the light and how far one sees.

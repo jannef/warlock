@@ -154,7 +154,7 @@ fn prerequisites_are_checked_and_said_in_words() {
 }
 
 #[test]
-fn ranks_come_one_at_a_time_and_hardy_grows_with_the_levels() {
+fn hardy_is_taken_once_and_grows_with_the_levels() {
     let mut w = world();
     set_scores(&mut w, 17);
     let content = w.content().clone();
@@ -163,25 +163,20 @@ fn ranks_come_one_at_a_time_and_hardy_grows_with_the_levels() {
     let before = max(&w);
     let hp_before = player(&w).hp;
     run(&mut w, "talent:hardy");
-    assert_eq!(last(&w), "You learn Hardy (1).");
+    assert_eq!(last(&w), "You learn Hardy.");
     assert_eq!(max(&w), before + 3, "at least 3 at level 3");
     assert_eq!(player(&w).hp, hp_before + 3, "the current hit points too");
-    let rank = |w: &World| player(w).talents.rank_of("hardy", None);
-    assert_eq!(rank(&w), 1);
     reach(&mut w, 6);
-    run(&mut w, "talent:hardy");
-    assert_eq!(last(&w), "You learn Hardy (2).");
-    reach(&mut w, 9);
-    run(&mut w, "talent:hardy");
-    assert_eq!(rank(&w), 3);
-    reach(&mut w, 12);
-    let at_12 = max(&w);
     run(&mut w, "talent:hardy");
     assert_eq!(last(&w), "You already have all of Hardy.");
     run(&mut w, "levelup:auto");
+    assert_eq!(player(&w).talents.rank_of("hardy", None), 1);
+    reach(&mut w, 12);
+    run(&mut w, "levelup:auto");
     assert_eq!(w.due(), None);
+    let at_12 = max(&w);
     // Levels 13 to 15 grow nothing from Hardy (3 is its floor until 16): what they add is the
-    // levels' own hit points, the same each level. Level 16 adds that, and 1 more per rank.
+    // levels' own hit points, the same each level. Level 16 adds that, and 1 more.
     reach(&mut w, 15);
     let at_15 = max(&w);
     let per_level = (at_15 - at_12) / 3;
@@ -192,11 +187,7 @@ fn ranks_come_one_at_a_time_and_hardy_grows_with_the_levels() {
     );
     run(&mut w, "levelup:auto");
     reach(&mut w, 16);
-    assert_eq!(
-        max(&w) - at_15,
-        per_level + 3,
-        "level 16: one more per rank"
-    );
+    assert_eq!(max(&w) - at_15, per_level + 1, "level 16: one more");
 }
 
 #[test]
@@ -229,10 +220,10 @@ fn a_pick_nothing_can_be_spent_on_is_dropped() {
     let turn = w.turn();
     run(&mut w, "wait");
     assert_eq!(w.turn(), turn + 1);
-    // With every talent the character qualifies for held, the pick is dropped too. Apprentice
-    // (any skill, three ranks each) would keep a pick open to the last level, and so would Sworn
+    // With every talent the character qualifies for held, the pick is dropped too. Skill focus
+    // (one pick per trained skill) would keep a pick open to the last level, and so would Sworn
     // foe (any creature tag) and School focus (any school or element): here they are an
-    // elf's, and Apprentice's tree waits for a free talent; Salvager, Unbinder, Overreach, Wand
+    // elf's, and Skill focus's tree waits for a free talent; Salvager, Unbinder, Overreach, Wand
     // mastery, Channeler, Appraiser's eye, Deep lungs, Second breath,
     // Quick study of the body, Early mastery, Gifted (six stats), Sure hand,
     // Numbing cold, Brimming, and Devotee are held back the same way so the picks fit in
@@ -240,8 +231,8 @@ fn a_pick_nothing_can_be_spent_on_is_dropped() {
     let mut files = ContentFiles::builtin();
     files.edit_table("talents", |text| {
         text.replace(
-            "ranks = 3\ndescription = \"You take up",
-            "ranks = 3\nneeds = { race = \"elf\" }\ndescription = \"You take up",
+            "choice = \"skill\"\n",
+            "choice = \"skill\"\nneeds = { race = \"elf\" }\n",
         )
         .replace(
             "ranks = 2\ndescription = \"You know how a bound",
@@ -540,16 +531,12 @@ fn perception_and_dumps_show_talents_in_words_only() {
     let hardy = (view.talents().into_iter())
         .find(|t| t.name == "Hardy")
         .expect("hardy");
-    assert_eq!((hardy.held, hardy.ranks), (1, 3));
-    assert_eq!(
-        hardy.needs[0].words, "Toughness 14",
-        "the next rank's prerequisites"
-    );
+    assert_eq!((hardy.held, hardy.ranks), (1, 1));
     assert_eq!(
         dump::ascii(&w, &[Layer::Talents])
             .lines()
             .rfind(|l| !l.is_empty()),
-        Some("Hardy 1/3")
+        Some("Hardy")
     );
     let json = dump::json(&w, &[Layer::View], false);
     assert_eq!(json["talents"][1]["id"], "hardy");

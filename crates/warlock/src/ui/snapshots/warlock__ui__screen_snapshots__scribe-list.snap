@@ -2,8 +2,8 @@
 source: crates/warlock/src/ui/screen_snapshots.rs
 expression: "render(case, content.clone())"
 ---
- Your concentration improves. (×68) You learn Apprentice (appraise) (1). You learn Apprentice
- (appraise) (2). You learn Apprentice (appraise) (3). You learn Apprentice (athletics) --more--
+ Your concentration improves. (×68) You learn Attuned. You learn Blood magic. You learn Clear mind.
+ You learn Deep well. You learn Petrifying gaze. You learn Undertow. You learn Deep lungs.
 
 
 
@@ -31,4 +31,4 @@ expression: "render(case, content.clone())"
 
 
 
- The Hub  ·  HP 29/29  ·  MP 153/158  ·  Lv 18  ·  08:00  ·  11 Darkening, Year 1444     ? controls
+ The Hub  ·  HP 29/29  ·  MP 157/162  ·  Lv 18  ·  08:00  ·  11 Darkening, Year 1444     ? controls

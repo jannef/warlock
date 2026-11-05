@@ -533,8 +533,11 @@ impl World {
                 }
             }
             let (starved, hunger) = self.digest(id, step);
-            if starved > 0 && self.hurt(id, starved, Harm::Starving(when), events) {
-                return;
+            if starved > 0 {
+                if self.hurt(id, starved, Harm::Starving(when), events) {
+                    return;
+                }
+                self.starving_stops_rest(id);
             }
             self.train_shaking_off(id, &spent);
             self.ended(id, &spent, events);

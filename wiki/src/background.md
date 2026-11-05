@@ -50,7 +50,7 @@ A sentence may give or take:
 - **a skill**: a start in a [skill](skills.md), or more of one you have;
 - **marks** in a [weapon skill](weapon-skills.md#marks-and-ranks), never a rank;
 - a nudge to your starting [alignment](alignment.md);
-- **a talent**, at its first [rank](talents.md#ranks-choices-prerequisites), for life, whatever
+- **a [talent](talents.md#ranks-choices-prerequisites)**, for life, whatever
   it would ask of you (the flux's [Hardy](talents.md#talent-hardy)): never one you hold already,
   so a sentence that would give it is not told to you; a class whose table names it later gives
   you a [talent pick](talents.md) in its place at that level. The Talents page marks it "(story)";

@@ -5,7 +5,8 @@
 //! Every object names its class (`class` in `data/objects/`). A class lists the magic item kinds
 //! its objects may be (`kinds`, [`ItemKind`]), and each kind belongs to one class at most, so an
 //! object's class and its kind cannot say different things. Corpses are of the class that
-//! takes them (`corpses = true`).
+//! takes them (`corpses = true`). A class may belong to a `group` (`armour`, `jewellery`), a word
+//! a vault's loot pool names several classes by (`magic/loot.rs`, [`super::Content::pool_classes`]).
 
 use super::ContentError;
 use super::affix::ItemKind;
@@ -33,6 +34,8 @@ struct ItemClassSpec {
     kinds: Vec<ItemKind>,
     #[serde(default)]
     corpses: bool,
+    #[serde(default)]
+    group: Option<String>,
 }
 
 #[derive(serde::Deserialize)]
@@ -52,6 +55,8 @@ pub struct ItemClassDef {
     pub kinds: Vec<ItemKind>,
     /// Corpses are of this class.
     pub corpses: bool,
+    /// The word a vault's loot pool names it by with its fellows: `armour`, never a class's id.
+    pub group: Option<String>,
 }
 
 /// Parses `data/item_classes.toml`.
@@ -82,7 +87,15 @@ pub(super) fn parse(file: &str, text: &str) -> Result<Vec<ItemClassDef>, Content
             name: spec.name,
             kinds: spec.kinds,
             corpses: spec.corpses,
+            group: spec.group,
         });
+    }
+    if let Some(class) = (defs.iter()).find(|d| d.group.as_ref().is_some_and(|g| ids.contains(g))) {
+        return Err(err(format!(
+            "class `{}`: group `{}` is a class's id",
+            class.id,
+            class.group.as_deref().unwrap_or_default()
+        )));
     }
     if defs.iter().filter(|d| d.corpses).count() > 1 {
         return Err(err(

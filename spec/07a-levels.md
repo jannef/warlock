@@ -72,7 +72,16 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   arena's is 2); a branch level's is its depth. A vault's legend entry may give `loot = "any"`,
   `"magic"`, or `"rare"`: a cell where an item of loot at least that good is rolled when the
   vault is stamped into a generated level (only vaults: in a level file it is a content error);
-  the guard post's store room holds a magic one, the shrine and the roofless chapel any.
+  the guard post's store room holds a magic one, the shrine and the roofless chapel any. Or a
+  **loot pool**, to say what kind of thing: `loot = { pool = "jewellery" }`, `loot = { pool =
+  ["armour", "rings"], grade = "magic" }` (`grade` as above, default `any`). `pool` names item
+  classes and class groups (§7 "Objects and materials"; a class's `group`: `weapons`, `armour`,
+  `jewellery`, `money`). The cell rolls one find at the floor's item level: one of the pool's
+  classes evenly, among those holding something there, then an object of it by `frequency` and
+  made as any loot is; coins are the purse of a chest of that level, gems a loose gem. A name that
+  is no class or group, or that can hold nothing of the grade at any level (magic coins, a magic
+  potion), is a content error; a pool whose objects are all first found deeper leaves the cell
+  bare on a shallower floor. The flooded cell holds `["money", "jewellery"]`.
 - **Locks in level files** (M19, §8 "Doors"): a legend entry on a closed door locks it with
   `lock = "pantry"` (a lock id: keys with that id open it, and skeleton keys) or `locked = true`
   (a lock without an id: only a skeleton key opens it), and `lock_difficulty = N` with either

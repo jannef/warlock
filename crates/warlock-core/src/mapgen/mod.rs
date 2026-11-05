@@ -50,17 +50,16 @@ mod vault;
 
 use crate::chest::Chest;
 use crate::content::{
-    Content, CreatureId, CreatureSpawn, Flow, Generator, LevelKind, LevelTemplate, LightId,
-    ObjectId, Place, RoomEffectId, RoomOdds, Secret, ShopOdds, ShopPlan, SpecialRoom, StairsDir,
-    StairsLink, TerrainId, Trap, Vault, secret_look,
+    Content, CreatureId, CreatureSpawn, DungeonDef, Flow, Generator, LevelKind, LevelTemplate,
+    LightId, ObjectId, Place, RoomEffectId, RoomOdds, Secret, ShopOdds, ShopPlan, SpecialRoom,
+    StairsDir, StairsLink, TerrainId, Trap, Vault, secret_look,
 };
 use crate::door::Lock;
 use crate::geom::{Dir, Pos};
 use crate::grid::Grid;
-use crate::magic::{LootGrade, loot, loot::Luck};
+use crate::magic::{LootGrade, LootPool, loot, loot::Luck};
 use crate::object::{Stack, add_to_pile};
 use crate::rng::Rng;
-use crate::variant::Source;
 use std::collections::BTreeMap;
 
 /// Attempts before giving up on a level (each with its own derived stream).
@@ -191,8 +190,8 @@ pub(crate) struct Canvas<'a> {
     pub objects: BTreeMap<Pos, Vec<Stack>>,
     /// Traps stamped from vaults.
     pub traps: BTreeMap<Pos, Trap>,
-    /// Where vaults stamped loot to roll, and the least it may be.
-    pub loot: Vec<(Pos, LootGrade)>,
+    /// Where vaults stamped loot to roll, and what it may be.
+    pub loot: Vec<(Pos, LootPool)>,
     /// Locks on closed doors: stamped from vaults, and on locked rooms (spec §8 "Doors").
     pub locks: BTreeMap<Pos, Lock>,
     /// Secret doors stamped from vaults (spec §8 "Searching").
@@ -415,6 +414,36 @@ pub fn generate_with(
     generate_for(content, (campaign, seed), id, entered_from, &visit)
 }
 
+/// A branch's floors repeat a random vault only every this many floors at the soonest.
+const VAULT_PHASES: usize = 4;
+
+/// The vaults that may be stamped on `def`'s level at `depth` ([`Vault::stamps_on`]): pinned ones
+/// (named by a level, so stamped by [`Needs::vaults`] anyway) as they are, and of the random ones
+/// only the phase of this depth. The run's seed shuffles the branch's random vaults and deals them
+/// round the phases, so a vault can come at most every [`VAULT_PHASES`] floors of the branch, and
+/// which ones differs from run to run and branch to branch; a run keeps no count of what it met.
+fn spaced_vaults<'a>(
+    content: &'a Content,
+    seed: u64,
+    def: &DungeonDef,
+    depth: u32,
+) -> Vec<&'a Vault> {
+    let mut all: Vec<&Vault> = (content.vaults().iter())
+        .filter(|v| v.stamps_on(def, depth))
+        .collect();
+    let mut random: Vec<&Vault> = all.iter().copied().filter(|v| !v.pinned).collect();
+    // Sorted by id first: the content's order must not decide the deal.
+    random.sort_by(|a, b| a.id().cmp(b.id()));
+    Rng::stream(seed, &format!("vault_phases/{}", def.id)).shuffle(&mut random);
+    let phase = depth as usize % VAULT_PHASES;
+    let mine: Vec<&Vault> = (random.iter().copied().enumerate())
+        .filter(|(i, _)| i % VAULT_PHASES == phase)
+        .map(|(_, v)| v)
+        .collect();
+    all.retain(|v| v.pinned || mine.iter().any(|m| m.id() == v.id()));
+    all
+}
+
 /// Whom a level is generated for, as they first come: what their talents give their finds
 /// (`luck`), their level (a player-scaled danger reads it), and the unique creature types the
 /// run has met (none comes twice). Only the loot and the initial population read it, so the map
@@ -463,9 +492,7 @@ pub fn generate_for(
 
     for attempt in 0..MAX_ATTEMPTS {
         let mut rng = Rng::map(seed, id, attempt);
-        let vaults = (content.vaults().iter())
-            .filter(|v| v.stamps_on(def, depth))
-            .collect();
+        let vaults = spaced_vaults(content, seed, def, depth);
         let size = (plan.width, plan.height);
         let mut canvas = Canvas::new(content, pal, odds, vaults, size);
         canvas.danger = content.spawning(id).is_some();
@@ -714,26 +741,26 @@ pub(crate) struct Floor {
 
 /// Rolls a generated level's loot (spec §8 "Magic items") at its item level, from its own
 /// stream `loot/<level id>` so that the map is the same with or without it: first an item on
-/// each of `markers` (vaults' loot cells, at least of their grade), then the floor loot, one draw
+/// each of `markers` (vaults' loot cells, from their pools), then the floor loot, one draw
 /// for how many (between the fewest and the most) and, for each, one for a cell of `floor`
 /// terrain where nothing lies, stands, shines, or leads away (in row order), then the item,
-/// with the finder's `luck` ([`loot::roll_with`]).
+/// with the finder's `luck` ([`loot::roll_pool`]).
 pub(crate) fn place_loot(
     template: &mut LevelTemplate,
     content: &Content,
     seed: u64,
-    markers: &[(Pos, LootGrade)],
+    markers: &[(Pos, LootPool)],
     (floor, luck): (Option<Floor>, Luck),
 ) {
     let mut rng = Rng::loot(seed, &template.id);
     let level = template.item_level;
-    let place = |template: &mut LevelTemplate, rng: &mut Rng, p: Pos, grade: LootGrade| {
-        if let Some(stack) = loot::roll_with(content, rng, level, grade, Source::Loot, luck) {
+    let place = |template: &mut LevelTemplate, rng: &mut Rng, p: Pos, pool: &LootPool| {
+        if let Some(stack) = loot::roll_pool(content, rng, level, pool, luck) {
             add_to_pile(template.objects.entry(p).or_default(), &[stack], content);
         }
     };
-    for &(p, grade) in markers {
-        place(template, &mut rng, p, grade);
+    for (p, pool) in markers {
+        place(template, &mut rng, *p, pool);
     }
     let Some(floor) = floor else { return };
     let [fewest, most] = floor.count.map(i32::from);
@@ -755,7 +782,7 @@ pub(crate) fn place_loot(
             break;
         }
         let p = free.remove(rng.index(free.len()));
-        place(template, &mut rng, p, LootGrade::Any);
+        place(template, &mut rng, p, &LootGrade::Any.into());
     }
 }
 

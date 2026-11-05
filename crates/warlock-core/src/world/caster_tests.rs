@@ -483,7 +483,9 @@ fn hexes_fall_on_a_foe_the_witch_sees_within_reach() {
     assert!(suffers(&w, near, "weakened"), "{:?}", said(&w));
     cast(&mut w, "curse_of_sloth", cell(3));
     assert!(suffers(&w, near, "sluggish"));
-    assert_eq!(w.state.player().mana, 33, "level 3's 3 each");
+    assert!(w.state.player().talents.has("frugal_caster", 1));
+    // Level 3's 3 each, less Frugal caster's fifth (`levelup:auto` took it).
+    assert_eq!(w.state.player().mana, 35, "2 each");
     // Presence 14 (+2): one degree more of each hex, so it lasts twice as long.
     let sluggish = status(&w, "sluggish");
     assert_eq!(
@@ -525,8 +527,10 @@ fn bolts_and_bursts_strike_as_scrolls_do_and_cost_mana() {
     let before = w.state.actors[&target].hp;
     w.apply(&Action::Cast("fireball".into(), Some(far)));
     assert!(w.state.actors[&target].hp < before);
-    // Level 11 × 2.4 for a burst of radius 2, less Empower's tenth (23).
-    assert_eq!(w.state.player().mana, 17);
+    assert!(w.state.player().talents.has("frugal_caster", 1));
+    // Level 11 × 2.4 for a burst of radius 2, less Empower's tenth (23), less Frugal caster's
+    // fifth (18; `levelup:auto` took it).
+    assert_eq!(w.state.player().mana, 22);
 }
 
 #[test]
@@ -649,7 +653,9 @@ fn blight_poisons_everyone_it_reaches() {
         Some(Pos::new(here.x + 3, here.y)),
     ));
     assert!(suffers(&w, target, "poisoned"));
-    assert_eq!(w.state.player().mana, 23, "level 7 × 2.4");
+    assert!(w.state.player().talents.has("frugal_caster", 1));
+    // Level 7 × 2.4 (17), less Frugal caster's fifth (`levelup:auto` took it).
+    assert_eq!(w.state.player().mana, 26, "14");
 }
 
 #[test]

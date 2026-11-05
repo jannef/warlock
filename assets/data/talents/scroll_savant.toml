@@ -2,14 +2,7 @@
 id = "scroll_savant"
 name = "Scroll savant"
 tree = "scholar"
-ranks = 2
-description = "You read scrolls much faster, and the bursts of the scrolls and spells you loose never catch you. At the second rank, now and then the writing does not fade from a scroll you read, and you may read it again."
-systems = ["scrolls"]
-
-[[talent.rank]]
+description = "You read scrolls much faster, and the bursts of the scrolls and spells you loose never catch you."
 needs = { stats = { intelligence = 13 } }
 effects = [{ kind = "read_percent", value = -50 }, { kind = "spares_self" }]
-
-[[talent.rank]]
-needs = { stats = { intelligence = 15 }, level = 12 }
-effects = [{ kind = "scroll_kept", chance = 25 }]
+systems = ["scrolls"]

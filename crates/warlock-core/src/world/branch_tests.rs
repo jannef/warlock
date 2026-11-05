@@ -182,13 +182,13 @@ fn generated_levels_depend_only_on_seed_and_id() {
 
 #[test]
 fn replays_through_generated_levels_verify() {
-    let mut world = depths(3);
+    let mut world = depths(4);
     let mut log = Vec::new();
     take(&mut world, StairsDir::Down, &mut log);
     take(&mut world, StairsDir::Down, &mut log);
     assert_eq!(world.perception().level_id(), "depths:3");
 
-    let mut recorded = depths(3);
+    let mut recorded = depths(4);
     let mut replay = Replay::new(&recorded);
     for action in &log {
         recorded.apply(action);

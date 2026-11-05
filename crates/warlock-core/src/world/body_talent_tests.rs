@@ -219,7 +219,7 @@ fn strong_constitution_and_fever_proof_are_read_by_disease_checks() {
 }
 
 #[test]
-fn mighty_kick_and_crusher_change_kicks_and_its_second_rank_digs_faster() {
+fn mighty_kick_and_crusher_change_kicks_and_breaker_digs_faster() {
     let mut w = world();
     let content = w.content().clone();
     let kick = |w: &World| w.state.player().kick(&content);
@@ -229,11 +229,10 @@ fn mighty_kick_and_crusher_change_kicks_and_its_second_rank_digs_faster() {
     give(&mut w, "crusher");
     assert_eq!(kick(&w).penetration, 2, "a kick is bludgeoning");
     let talents = w.state.player().talent_mods(&content);
-    assert_eq!(talents.door_kick, 4);
-    // The second rank (Breaker before #790).
-    give(&mut w, "mighty_kick");
+    assert_eq!((talents.door_kick, talents.dig_percent), (4, 0));
+    give(&mut w, "breaker");
     let talents = w.state.player().talent_mods(&content);
-    assert_eq!((talents.door_kick, talents.dig_percent), (8, 25));
+    assert_eq!((talents.door_kick, talents.dig_percent), (4, 25));
 }
 
 #[test]
@@ -379,9 +378,6 @@ fn quick_makes_the_player_quicker_once() {
     give(&mut w, "quick");
     assert_eq!(speed(&w), base * 105 / 100);
     assert_eq!(w.price_of(id, ActionKind::Wait), wait);
-    give(&mut w, "quick");
-    assert_eq!(speed(&w), base * 110 / 100);
-    assert_eq!(w.price_of(id, ActionKind::Wait), wait);
     // Creatures have no talents: unchanged.
     let rat = (w.state.actors.iter())
         .find(|(a, _)| **a != id)
@@ -411,7 +407,7 @@ fn deflect_missiles_dodges_missiles_and_evasion_halves_bursts() {
 #[test]
 fn free_blow_talents_switch_their_blows_on() {
     let mut w = world();
-    for id in ["cleave", "cleave", "riposte", "opportunist"] {
+    for id in ["cleave", "great_cleave", "riposte", "opportunist"] {
         give(&mut w, id);
     }
     let blows = w.free_blows_of(w.state.player());
@@ -441,7 +437,7 @@ fn a_prerequisite_may_ask_for_any_of_several_weapon_skills() {
     let axes = table.id("axes").expect("axes");
     w.player_mut().weapon_skills.raise(&table, axes, 3);
     run(&mut w, "talent:cleave");
-    assert_eq!(last(&w), "You learn Cleave (1).");
+    assert_eq!(last(&w), "You learn Cleave.");
 }
 
 #[test]
@@ -456,12 +452,10 @@ fn every_talent_of_the_three_trees_loads_with_its_effects() {
     let count = |tree: &str| book.of_tree(book.tree_id(tree).expect("tree")).count();
     // The design's 28, Battle trance and Inner calm (the class resources, R5) among them,
     // stamina's Deep lungs (#560), protection's Armour-breaker (#563), stat training's Hard
-    // training (#562), Second blade's rend (#561), the chests' Deft breaker, and potions'
-    // Lasting draughts (#567), the mimics' Slick, and the berserker's Wild guard (#680),
+    // training (#562), the chests' Deft breaker, and potions' Lasting draughts (#567), the mimics' Slick, and the berserker's Wild guard (#680),
     // surprise's Hair trigger (#687), and stat training's Late bloomer (#726); less the cull's
     // Second breath, Bellows, and Gifted (#774), and Deft breaker and Slick, merged into
-    // Lockbreaker and Chest-wise of the delver tree (#775), Great cleave and Breaker, now
-    // Cleave's and Mighty kick's second ranks (#790), and Hard training and Late bloomer, whose
-    // marks no one sees (#791).
-    assert_eq!(count("vigour") + count("might") + count("finesse"), 32);
+    // Lockbreaker and Chest-wise of the delver tree (#775), Hard training and Late bloomer,
+    // whose marks no one sees (#791), and Second blade's rend (#965).
+    assert_eq!(count("vigour") + count("might") + count("finesse"), 33);
 }

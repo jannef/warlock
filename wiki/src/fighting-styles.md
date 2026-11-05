@@ -74,9 +74,6 @@ bash is at a penalty to hit, every attack takes longer, and a spell you cast wit
 may fail, your hands full of shields: the mana and the time are spent all the same. The style
 eases all three, and from rank 9 none is left. A [scroll](scrolls.md) read or a [wand](magic.md#wands) used never fails so.
 
-A talent for those deep in the style (see [Talents](talents.md)): *[Anvil and hammer](talents.md#talent-anvil-and-hammer)* (Two Shields 6)
-brings the second shield's bash more often.
-
 ## What a rank gives
 
 As with weapon skills, the game never tells you what a rank gives in numbers. These are the

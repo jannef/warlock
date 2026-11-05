@@ -121,7 +121,7 @@ impl Choice {
         match self {
             Choice::WeaponSkill => "a weapon skill",
             Choice::Style => "a fighting style",
-            Choice::Skill => "a skill",
+            Choice::Skill => "a skill you are trained in",
             Choice::Element => "an element",
             Choice::Tag => "a kind of creature",
             Choice::School => "a school of magic or an element",
@@ -422,10 +422,6 @@ pub enum TalentEffect {
     SkillRolls { value: i32 },
     /// One more talent pick at character level `level` (1: at creation; Versatile).
     ExtraPick { level: u8 },
-    /// The chosen skill (the talent takes a `skill` choice) is trained at these dice, or grows
-    /// by them if trained already: rolled once, from the `levels` stream, as the rank is taken
-    /// (Apprentice).
-    TrainSkill { dice: crate::dice::Dice },
     /// Handed out once, as the rank is taken or given: every weapon skill and style of
     /// `skills` (none named: every row of `weapon_skills.toml` but the schools of magic and
     /// hidden styles, whatever the content holds) held below rank `to` rises to it, its defaults
@@ -540,9 +536,6 @@ pub enum TalentEffect {
     /// At a forgotten altar of the actor's own side the side's lean counts double, and an
     /// opposed one leans as a neutral one (Pious; the prayer draw, `World::lean`).
     Devout,
-    /// At a forgotten altar a great bane drawn becomes nothing (Pious; the prayer draw,
-    /// `world/pray.rs`).
-    Penitent,
     /// Where a special room quickens healing or mana, the quickening is this percent more
     /// (Old delver; the room's pace in `World::healing_rate` and `World::mana_rate`).
     RoomPacePercent { value: i32 },
@@ -558,8 +551,13 @@ pub enum TalentEffect {
     GraveWarden,
     /// Searching reaches this many cells farther.
     SearchReach { value: i32 },
-    /// A skill counts this much higher wherever its value is read (an untrained one from 0).
-    Skill { skill: String, value: i32 },
+    /// A skill counts this much higher wherever its value is read (an untrained one from 0):
+    /// `skill`, or left out the chosen one (Skill focus; the talent takes a `skill` choice).
+    Skill {
+        #[serde(default)]
+        skill: Option<String>,
+        value: i32,
+    },
     /// No one makes way for it (Trusted by none), whatever else would have them.
     Distrusted,
     /// A free blow the actor is given (spec §8 "Free blows").
@@ -915,6 +913,9 @@ pub enum TalentEffect {
     KickDie { sides: u8 },
     /// Its door kicks as if this much stronger.
     DoorKick { value: i32 },
+    /// A kick of its that hits drives the foe a cell back, when the cell is free (Breaker;
+    /// `World::kick_back`).
+    KickBack,
     /// Its door kicks are this percent louder (negative: quieter; Lockbreaker).
     KickNoisePercent { value: i32 },
     /// What a chest it kicks open holds breaks this percent more often (negative: less;
@@ -937,8 +938,6 @@ pub enum TalentEffect {
     /// Its weapon abilities come this many ranks sooner (Early mastery; the combat progression
     /// design §11): their thresholds read its ranks that much higher.
     AbilityRanks { value: i32 },
-    /// Its Rend rolls the off hand's damage dice too (Second blade's rend).
-    RendOffHand,
     /// Its weapon actives take this percent more time (negative: less; Practised technique),
     /// never below half the action's price (#564).
     WeaponEnergyPercent { value: i32 },
@@ -1352,7 +1351,6 @@ impl TalentEffect {
                     | TalentEffect::Communion
                     | TalentEffect::SpellMod(_)
                     | TalentEffect::WeaponStamina { .. }
-                    | TalentEffect::TrainSkill { .. }
                     | TalentEffect::WeaponRanks { .. }
                     | TalentEffect::TakeUpSkills { .. }
                     | TalentEffect::ExtraPick { .. }
@@ -1701,8 +1699,19 @@ impl TalentEffect {
                 Ok(())
             }
             TalentEffect::Skill { skill, value } => {
-                if !content.skills().is_empty() && content.skill_id(skill).is_none() {
-                    return Err(format!("names an unknown skill `{skill}`"));
+                match (skill, choice) {
+                    (Some(skill), _)
+                        if !content.skills().is_empty() && content.skill_id(skill).is_none() =>
+                    {
+                        return Err(format!("names an unknown skill `{skill}`"));
+                    }
+                    (None, Some(Choice::Skill)) | (Some(_), _) => {}
+                    (None, _) => {
+                        return Err(
+                            "`skill` names a skill, or is for the chosen one: `choice = \"skill\"`"
+                                .into(),
+                        );
+                    }
                 }
                 percent(*value)
             }
@@ -1755,13 +1764,6 @@ impl TalentEffect {
                 }
                 Ok(())
             }
-            TalentEffect::TrainSkill { dice } => match choice {
-                Some(Choice::Skill) if dice.min() >= 1 && dice.max() <= 100 => Ok(()),
-                Some(Choice::Skill) => Err("`train_skill`: its dice roll 1 to 100".into()),
-                _ => Err(
-                    "`train_skill` is for the chosen skill: it needs `choice = \"skill\"`".into(),
-                ),
-            },
             TalentEffect::WeaponRanks { to, skills, .. } => {
                 if !(1..=super::MAX_RANK).contains(to) {
                     return Err(format!("`weapon_ranks`: to is 1 to {}", super::MAX_RANK));
@@ -2416,7 +2418,6 @@ impl TalentEffect {
             TalentEffect::SilentDoors
             | TalentEffect::NoExertion
             | TalentEffect::RerollFumble
-            | TalentEffect::RendOffHand
             | TalentEffect::RebornWhole
             | TalentEffect::SecondRising
             | TalentEffect::StarvingHeals
@@ -2435,8 +2436,8 @@ impl TalentEffect {
             | TalentEffect::SparesSelf
             | TalentEffect::ChestWise
             | TalentEffect::Slick
+            | TalentEffect::KickBack
             | TalentEffect::Devout
-            | TalentEffect::Penitent
             | TalentEffect::CollapseProof
             | TalentEffect::ExactFootsteps
             | TalentEffect::SmellRot
@@ -3876,8 +3877,7 @@ needs = { stats = { toughness = 17 }, talents = { healthy = 1 } }
                 .contains("fewer than two")
         );
         assert!(
-            bad("effects = [{ kind = \"train_skill\", dice = \"1d6\" }]")
-                .contains("needs `choice = \"skill\"`")
+            bad("effects = [{ kind = \"skill\", value = 25 }]").contains("`choice = \"skill\"`")
         );
         // The Shadow and Wayfarer effects name what exists (#239).
         assert!(
