@@ -343,6 +343,15 @@ Outcome tables (`content/outcome.rs`, `Content::outcomes`, one file each, the id
 moves the lean; `Content::offer_at(terrain)` is what a feature cell offers (the first effect
 whose `feature` it is), so a spent altar, another terrain, offers nothing.
 
+Walking into a feature (#975): `input::offer_dialog`, beside the trap's question, asks for a step
+into a cell the perception shows (visible or remembered) whose terrain has an `offer_at`, with no
+actor seen on it. `Offer::asks` and the terrain's name make the question, `Ability::offered` the
+ability, and yes is `ScreenAction::UseAbility`, the menu's own path (Temper opens its list). A
+new feature with an existing offer asks with no code; a new `Offer` states its words in `asks`.
+The rules are unchanged: a `move` into one says it blocks the way, with no time. Doors and chests
+act on a step, and the rest that block (`shrine_stone`, `shelves`, `statue`, `fountain`) offer
+nothing, so none of them asks.
+
 Generation (`mapgen/special.rs`): `place` draws the side (one `below(4)` from the map stream:
 0 good, 3 evil, else neutral) only for an effect with `sides`, then `make` finds the feature's
 cell (`feature_cell`: plain free floor nearest the box's middle, nothing on it or on a patrol,
