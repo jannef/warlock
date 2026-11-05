@@ -32,7 +32,12 @@ draw `monsters` too (`content/monster_pool.rs`): `monsters = { pool = "level", c
 (`"level"` the floor's population, or tags: `pool = "goblin"`, `pool = ["orc", "troll"]`; `count`
 over the entry's marked cells, default one on each; refused at load: `MonsterPoolSpec::resolve`,
 `VaultMonsters::counted`, `Vault::check_monsters`, `parse_level`'s checks; docs/dev/creatures.md
-for the draw and the cap). A vault that dangerous should be avoidable and pay better loot. A vault
+for the draw and the cap). Beside `monsters` the entry may give `status`, `carry`, and `route`
+(`level.rs::pool_cell` parses them into `VaultMonsters::{status, carry, route}` with the placed
+creature's parsers; the route is checked from every marked cell, `validate_walk`, and turns with
+the vault, `vault_turn.rs`; a pool's `carry` key counts in `LevelTemplate::has_key_for` when every
+marked cell is within reach); a `faction`, `alignment`, `npc`, `animated`, `wield`, or `wear`
+there is refused. A vault that dangerous should be avoidable and pay better loot. A vault
 file's `turns = false` keeps it as drawn when one is drawn at random (default: any of eight ways,
 `docs/dev/mapgen.md`): for text that depends on direction or a layout that must not turn; refused on
 a level. A vault file's `danger = { from = 8 }`, `{ to = 6 }`, or both (`content::DangerRange`,

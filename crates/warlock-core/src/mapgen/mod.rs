@@ -586,7 +586,8 @@ pub fn generate_for(
             exit: None,
             item_level,
             loot: Vec::new(),
-            monsters: Vec::new(),
+            // Its vaults' pools, until they are drawn: a key one carries counts (`connect.rs`).
+            monsters: canvas.monsters,
             outside_cap: Default::default(),
             temperature: plan.temperature,
             ice: Default::default(),
@@ -608,6 +609,7 @@ pub fn generate_for(
                 &canvas.loot,
                 (Some(floor), luck),
             );
+            let monsters = std::mem::take(&mut template.monsters);
             if let Some((rule, depth, spawning)) = content.spawning(id) {
                 let danger = rule.at(depth, visit.player_level);
                 population::populate(
@@ -615,11 +617,12 @@ pub fn generate_for(
                     content,
                     seed,
                     (pal, danger, spawning),
-                    (visit, &canvas.monsters),
+                    (visit, &monsters),
                 );
                 den::fill(&mut template, content, seed, (pal, danger, spawning), visit);
                 hoard::fill(&mut template, content, seed, (pal, danger), visit);
             }
+            population::leave_unborne(&mut template, content, &monsters);
             room_loot::fill(&mut template, content, seed, pal);
             chest::fill_vaults(&mut template, content, (seed, luck));
             chest::fill(

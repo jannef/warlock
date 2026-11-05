@@ -135,7 +135,12 @@ A vault's monster pools (#958, `content/monster_pool.rs`): `populate` draws them
 group, from `Rng::vault_monsters` with the same `content.candidates` and `danger::draw`
 (`MonsterPool::Level`: the floor's population and generic list; `MonsterPool::Tags`: the tag's
 types of the floor's campaign as both lists, so a stray stays in the tribe and an out-of-depth
-draw reaches deeper in it). Their cells stand in `LevelTemplate::outside_cap`, which
+draw reaches deeper in it). Each draw is placed with the pool's `status`, walks its `route` if it
+has one (a walk is drawn either way, so the stream is the same), and the first placed takes its
+`carry` (`gear::arm` puts rolled gear first and keeps what a spawn was given after it). A
+generated level holds its vaults' pools in `LevelTemplate::monsters` until they are drawn, so
+`connect::validate` sees a pool's key; `population::leave_unborne` then lays a `carry` no draw
+took on the pool's first cell. Their cells stand in `LevelTemplate::outside_cap`, which
 `travel::instantiate_level` turns into `Spawner::outside` (actor ids): `World::hostiles_here`
 leaves those out, so the spawner's cap and the dumps' `population 2/6` do not count them. Without
 this a floor laid down full would see nothing come until as many had died as the vault holds, and
