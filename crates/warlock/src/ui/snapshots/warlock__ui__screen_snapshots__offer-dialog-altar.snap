@@ -1,0 +1,34 @@
+---
+source: crates/warlock/src/ui/screen_snapshots.rs
+expression: "render(&case, content.clone())"
+---
+ A faint glow rises from an altar ahead.
+ An old altar stands here, its god long forgotten.
+
+
+
+
+
+
+
+
+                            ┌─ Forgotten altar ───────────────────────┐
+                            │                                         │
+                            │ Would you like to pray at the forgotten │
+                            │                 altar?                  │
+                            │                                         │
+                            │            Pray  (y)                    │
+                            │          > Leave it  (n, Esc)           │
+                            │                                         │
+                            │ ↑/↓ choose  Enter select                │
+                            └─────────────────────────────────────────┘
+
+
+
+
+
+
+
+
+
+ The Shrine  ·  HP 18/18  ·  MP 14/14  ·  Lv 1  ·  08:00  ·  11 Darkening, Year 1444     ? controls

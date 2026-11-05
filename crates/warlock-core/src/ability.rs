@@ -398,14 +398,10 @@ impl Ability {
             (content.room_effects().defs().iter())
                 .any(|e| e.offers.as_ref().is_some_and(|(o, _)| *o == offer))
         };
-        let here = [
-            (Offer::Pray, Ability::Pray),
-            (Offer::Temper, Ability::Temper),
-            (Offer::Drink, Ability::Drink),
-        ]
-        .into_iter()
-        .filter(|&(offer, _)| offers(offer))
-        .map(|(_, ability)| ability);
+        let here = [Offer::Pray, Offer::Temper, Offer::Drink]
+            .into_iter()
+            .filter(|&offer| offers(offer))
+            .map(Ability::offered);
         let mut all: Vec<Ability> = (signs.chain(class))
             .chain(classes)
             .chain(spells)
@@ -461,15 +457,20 @@ impl Ability {
         let mut found: Vec<Ability> = (Dir::ALL.iter().map(|&d| at.step(d)))
             .filter_map(|p| level.terrain_at(p))
             .filter_map(|t| content.offer_at(t))
-            .map(|(offer, _)| match offer {
-                Offer::Pray => Ability::Pray,
-                Offer::Temper => Ability::Temper,
-                Offer::Drink => Ability::Drink,
-            })
+            .map(|(offer, _)| Ability::offered(offer))
             .collect();
         found.sort();
         found.dedup();
         found
+    }
+
+    /// The ability a place's `offer` is used through.
+    pub fn offered(offer: Offer) -> Ability {
+        match offer {
+            Offer::Pray => Ability::Pray,
+            Offer::Temper => Ability::Temper,
+            Offer::Drink => Ability::Drink,
+        }
     }
 
     /// The Allies group (spec §8 "Allies"), in menu order: the orders while `any`, the player has

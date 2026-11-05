@@ -29,7 +29,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   line (a direction to open, close, kick, or bash, to dig, or to chat, how long to rest, look
   mode, aiming a shot or a throw, `--more--`) are not screens.
 - **The dialog**: every question the game asks first (quitting, a step onto a known trap, a
-  shop's way out and its offers) is one dialog screen given its content: a title (on its
+  step into what offers an action, a shop's way out and its offers) is one dialog screen given its content: a title (on its
   frame), the question, and its options, each a label (`Pay 47 gold and leave`, `Stay`), a role
   (accept, decline, cancel, or plain), and what choosing it does (a menu choice, a game action,
   or a further dialog in its place). It sizes itself to its content and lists the options in a
@@ -45,6 +45,13 @@ developer notes (CLAUDE.md, `docs/dev/`).
   they are told to. A door's trap is never stepped on (§8 "Trapped doors"), so a door never asks:
   walking through a trapped doorway sets nothing off, and walking into a trapped closed door opens
   it as `o` does.
+- **Walking into what offers an action** (§7 "Special rooms"): a step into a feature that offers
+  an ability, which the player sees or remembers (where no creature they see stands), asks first,
+  in the dialog: `Would you like to pray at the forgotten altar?`, `Would you like to drink from
+  the spring?`, `Would you like to temper something at the anvil?`, with the ability's name
+  (accept: it is used as from the abilities menu, Temper going on to its list) and `Leave it`
+  (cancel, selected first; no time). What offers nothing (a spent altar, shelves, a statue) blocks
+  as ever. Asking is the interface's: in the rules a `move` into it just stops.
 - **Reading too close** (§8 "Scrolls"): a burst read from a scroll (fireball, frost) aimed where,
   as far as the player knows, it may catch them too (they stand within its radius of where it
   would go off: the first creature they see on the line of fire, the last cell before one they
