@@ -136,6 +136,27 @@ What each resolution does to a spell's cost:
 
 {{#include generated/spell-resolutions.md}}
 
+## Spell types
+
+Every spell of a [damage type](damage-types.md) carries that type's rule, whether cast from [mana](mana.md#spending-it), a [scroll](#learning-spells-from-scrolls), or a [wand](#wands). It
+is magic's alone: a [Flaming](magic-items.md#prefixes) sword's blow reads no rule. It spares no one: you and your [allies](allies.md) are struck like anyone it reaches.
+
+{{#include generated/spell-types.md}}
+
+**Fire catches.** One creature in four that a fire spell harms is left [burning](status-effects.md#burning), whatever the
+spell: a [Fireball](#the-spells) on five kobolds leaves one or two alight. A creature that takes no harm from it
+never burns. A fire burst melts the ice on the cells it reaches, and whoever stands on that ice
+[falls in](temperature.md#water-freezes); it leaves a fire on the cell at its centre, which gives light for a minute. No rule reads that
+fire, and it never spreads.
+
+**Cold slows the blood.** Every creature a cold spell harms is [Sluggish](status-effects.md#status-sluggish) besides, and whatever burned on it goes
+out; nothing on a miss. A cold burst freezes the [water](terrain.md#water) on the cells it reaches, into ice that holds a
+laden person, and puts out the fires there.
+
+**A ray, a bolt, or a touch** does to one cell what a burst does to all of its own: the cell of the creature it
+strikes, else the cell you aimed at. So [Ray of frost](#the-spells) makes a bridge across a lake, a cell a cast.
+A line does it to the last cell it reaches, a cone not at all.
+
 ## How a spell grows
 
 Each spell's row lists its ladders: a stat and the scores at which the spell changes. Your score
@@ -155,8 +176,6 @@ Your [talents](talents.md) and [magic items](magic-items.md) may add to that, ea
 - **A bonus**: *Potent* [magic items](magic-items.md#prefixes) add 1 to 3 to every spell's roll, harm or healing (a Potent +2 ring
   makes 4d6 into 4d6+2).
 - **A die rolled again**: *[Sure hand](talents.md#talent-sure-hand)* rolls a spell die that shows a 1 once more, and that roll stands.
-- **A rider**: *[Numbing cold](talents.md#talent-numbing-cold)* leaves everyone your cold spells harm a degree [Sluggish](status-effects.md#status-sluggish) besides;
-  nothing on a miss.
 - **Reach and degrees**: *[School focus](talents.md#talent-school-focus)*, taken for a school or an element, makes those spells reach
   a cell farther (range or length, not a burst's radius) and cost 10 % less; [magic items](magic-items.md#suffixes) *of
   Farcasting* add their cells to every spell's reach, *of Lingering* their degrees to every

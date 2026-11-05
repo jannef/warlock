@@ -15,7 +15,6 @@
 //!
 //! [`Action::Gift`]: crate::action::Action::Gift
 
-use super::level::Fire;
 use super::spell::{Caster, burst_cells};
 use super::{ActorId, Spent, World};
 use crate::action::{Event, SpellShape};
@@ -23,7 +22,6 @@ use crate::content::SignActive;
 use crate::damage::Damage;
 use crate::geom::Pos;
 use crate::ice::Shock;
-use crate::time::Duration;
 use std::collections::BTreeSet;
 
 impl World {
@@ -83,19 +81,10 @@ impl World {
         Spent::Turn(price)
     }
 
-    /// Fires on the walkable `cells` but `here` (Blaze's), each burning `seconds` with light
-    /// `light`, or the fire there burning on until then (as a burning missile's, `come_down`).
+    /// Fires on `cells` but `here` (Blaze's).
     fn kindle(&mut self, cells: &[Pos], here: Pos, light: crate::content::LightId, seconds: u32) {
-        let until = self.state.time + Duration::seconds(u64::from(seconds));
-        let content = self.content.clone();
-        let level = self.state.current_mut();
-        for &p in cells {
-            if p == here || !level.is_walkable(&content, p) {
-                continue;
-            }
-            let fire = (level.fires.entry(p)).or_insert(Fire { light, until });
-            fire.light = light;
-            fire.until = fire.until.max(until);
+        for &p in cells.iter().filter(|&&p| p != here) {
+            self.lay_fire(p, light, seconds);
         }
     }
 }
