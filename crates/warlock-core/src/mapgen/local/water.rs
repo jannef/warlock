@@ -12,6 +12,9 @@ use crate::rng::Rng;
 /// Flow speed of rivers and of brooks, in percent (brooks are narrower and quicker).
 const RIVER_SPEED: u16 = 100;
 const BROOK_SPEED: u16 = 150;
+/// A lake's still water deeper than this many columns in is deep water (not on the map's edge, so
+/// every side keeps its ways out), the shore three columns wide staying wadeable.
+const DEEP: i32 = 3;
 
 /// How far `p` lies from side `side` of the map, in columns (a row counts as two: cells are
 /// about twice as tall as wide); corners measure from the corner across the diagonal.
@@ -74,6 +77,7 @@ pub(super) fn sides(land: &mut Land, setting: &Setting, rng: &mut Rng) {
         let (dx, dy) = f.delta();
         (x + dx, y + dy)
     });
+    let mut middle = Vec::new();
     for p in land.cells() {
         // Banks wander up to 8 columns in or out; the water never leaves its side.
         let bend = ((meander[p] - noise::MAX / 2) * 30 / noise::MAX).clamp(-8, 8);
@@ -95,12 +99,26 @@ pub(super) fn sides(land: &mut Land, setting: &Setting, rng: &mut Rng) {
         if depth > 0 {
             match way {
                 Some(dir) => land.set_running(p, Flow::new(dir, RIVER_SPEED)),
-                None => land.set(p, land.kit.water),
+                None => {
+                    land.set(p, land.kit.water);
+                    if depth > DEEP {
+                        middle.push(p);
+                    }
+                }
             }
             land.set_claim(p, Claim::Fixed);
         } else if depth > -3 {
             land.claim_at_least(p, Claim::Clear);
         }
+    }
+    // Deep water only where still water lies all around it (never on the map's edge), so the
+    // shore stays wadeable however the banks wander.
+    let wet = |land: &Land, p: Pos| land.get(p) == Some(land.kit.water);
+    let deep: Vec<Pos> = (middle.iter().copied())
+        .filter(|p| Dir::ALL.iter().all(|d| wet(land, p.step(*d))))
+        .collect();
+    for p in deep {
+        land.set(p, land.kit.deep_water);
     }
 }
 

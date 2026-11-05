@@ -52,7 +52,10 @@ The passive skills help you more the higher they are:
 - **[Listen](skills.md#skill-listen)** lets you hear fainter sounds: your [hearing](hearing.md) threshold drops by the number shown (it
   never drops below 1).
 - **[Balance](skills.md#skill-balance)** takes some of the slowdown of a heavy load away (see [Burden](burden.md)): a
-  [burdened](burden.md#burden-1) master is slowed by a tenth, not a quarter.
+  [burdened](burden.md#burden-1) master is slowed by a tenth, not a quarter. It also spares a part of what rough ground
+  adds to a step ([bush](terrain.md#terrain-bush), [reeds](terrain.md#terrain-reeds), [rubble](terrain.md#terrain-rubble), ice; not water or
+  marsh, which are Swim's: 60 % of the extra at 100, all of it at 200), and a part of the extra time a
+  [staggered](status-effects.md#status-staggered) action costs (half at 100, three quarters at 200).
 - **[Music](skills.md#skill-music)** makes your [songs](abilities.md#songs) last longer (a
   degree more at 50, at 100, and every 100 after) and harder for those they are sung against to
   shake off (+4 to their difficulty at 100, +8 at 200); its two columns in the table below are
@@ -188,7 +191,7 @@ mark**. The chance is shown in the table of skills above; skills you use all the
 - **[Tumble](skills.md#skill-tumble)**: dodging an attack ("You dodge the kobold's spear.") or stepping past a [trap](traps.md#finding-traps) you
   know of ("You deftly avoid the arrow trap."). A blow that misses you for no reason your
   [Defence](combat.md#defence) explains (it would have missed anyone) counts as a dodge one time in four.
-- **[Balance](skills.md#skill-balance)**: doing anything but waiting while your load slows you down.
+- **[Balance](skills.md#skill-balance)**: doing anything but waiting while your load slows you down (5 %), a step onto rough ground that slows (10 %: bush, reeds, rubble, ice; not water), and an action taken [staggered](status-effects.md#status-staggered) (20 %).
 - **[Survival](skills.md#skill-survival)**: a journey on the [overworld](overworld.md#travel).
 - **[Swim](skills.md#skill-swim)**: a step wading through [water](terrain.md#water) or [marsh](terrain.md#terrain-marsh) now and then (10 %), every [plunge through the ice](temperature.md#falling-in), and a quarter of the steps in [deep water](terrain.md#deep-water), made or not.
 - **[Steal](skills.md#skill-steal)**: every attempt to steal, whatever comes of it.

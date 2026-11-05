@@ -183,6 +183,9 @@ pub enum Effect {
     /// Percent of what wading adds to a step that is spared (spec §8 "Skills": Swim;
     /// `World::step_price`), under the talents that spare all of it.
     Wade,
+    /// Percent of what rough ground (bush, reeds, rubble, ice: not water) adds to a step that is
+    /// spared (spec §8 "Skills": Balance; `World::step_price`).
+    Footing,
     /// Percent added to the chance of a forage finding food (spec §8 "Foraging";
     /// `world/forage.rs`); a skill with it, trained, lets the actor forage at all (the abilities
     /// menu's Forage).
@@ -224,6 +227,9 @@ pub enum Effect {
     /// Percent of the extra cost of the action the actor takes Surprised that is spared
     /// (`World::status_cost`), with its talents' at most all of it.
     SurpriseEase,
+    /// Percent of the extra cost of the action the actor takes Staggered that is spared
+    /// (`World::status_cost`).
+    SteadyEase,
     /// Points added to treating oneself (spec §8 "Skills": Heal; `world/heal.rs`): bleeding,
     /// poison, a disease; a skill with it, trained, lets the actor treat at all (the Heal
     /// ability).
@@ -289,6 +295,8 @@ impl Effect {
             | Effect::Burden
             | Effect::Travel
             | Effect::Wade
+            | Effect::Footing
+            | Effect::SteadyEase
             | Effect::Bargain
             | Effect::Freshness
             | Effect::Identify
@@ -384,6 +392,11 @@ pub enum Use {
     Temper,
     /// A step onto wading terrain (spec §8 "Skills": Swim; `World::wade`).
     Wade,
+    /// A step onto rough ground that is not water (spec §8 "Skills": Balance;
+    /// `World::train_rough_step`).
+    RoughStep,
+    /// An action taken Staggered (spec §8 "Skills": Balance; `World::spend_actions`).
+    Staggered,
     /// A Swim check, whatever comes of it (spec §8 "Skills": Swim; a plunge through the ice).
     Swim,
     /// A step in deep water, whatever comes of it (spec §8 "Skills": Swim; `world/swim.rs`).
@@ -400,6 +413,14 @@ pub enum Use {
     /// A check rolled to resist a creature's ability (spec §8 "Skills": Knowledge), whatever
     /// comes of it.
     Resist,
+    /// A creature seen for the first time that has not noticed the player (spec §8 "Surprise and
+    /// sneak attacks"): Spot's passive side.
+    Sight,
+    /// A hidden trap that went off under the player, or under a creature they see (spec §8
+    /// "Traps").
+    Sprung,
+    /// A sound heard that is not news while the player rests or waits (spec §5 "Hearing").
+    Overhear,
 }
 
 impl Use {
@@ -434,6 +455,8 @@ impl Use {
             Use::Pick => "a try at picking a lock",
             Use::Temper => "tempering an item at an anvil",
             Use::Wade => "a step wading through water or marsh",
+            Use::RoughStep => "a step onto rough ground that slows (bush, reeds, rubble, ice)",
+            Use::Staggered => "acting while Staggered",
             Use::Swim => "a plunge through the ice",
             Use::Stroke => "a step in deep water",
             Use::Deal => "a deal made in a shop",
@@ -441,6 +464,9 @@ impl Use {
             Use::Judged => "eating food whose freshness you could tell",
             Use::Discover => "gaining discovery experience (a first kill of a kind, a new place)",
             Use::Resist => "resisting a creature's ability (a drain, a disease, a hold)",
+            Use::Sight => "first seeing a creature that has not noticed you",
+            Use::Sprung => "a hidden trap going off under you, or under a creature you see",
+            Use::Overhear => "hearing a sound that is no news while resting or waiting",
         }
     }
 }
@@ -560,6 +586,8 @@ impl Use {
             Use::Pick => "pick",
             Use::Temper => "temper",
             Use::Wade => "wade",
+            Use::RoughStep => "rough_step",
+            Use::Staggered => "staggered",
             Use::Swim => "swim",
             Use::Stroke => "stroke",
             Use::Deal => "deal",
@@ -567,6 +595,9 @@ impl Use {
             Use::Judged => "judged",
             Use::Discover => "discover",
             Use::Resist => "resist",
+            Use::Sight => "sight",
+            Use::Sprung => "sprung",
+            Use::Overhear => "overhear",
         }
     }
 }
@@ -588,6 +619,8 @@ impl Effect {
             Effect::Burden => "burden",
             Effect::Travel => "travel",
             Effect::Wade => "wade",
+            Effect::Footing => "footing",
+            Effect::SteadyEase => "steady_ease",
             Effect::Forage => "forage",
             Effect::Freshness => "freshness",
             Effect::Bargain => "bargain",

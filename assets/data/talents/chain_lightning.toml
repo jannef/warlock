@@ -1,0 +1,8 @@
+[[talent]]
+id = "chain_lightning"
+name = "Chain lightning"
+tree = "class"
+granted = true
+description = "A bolt of lightning toward a place you aim at (a spell, paid in mana): it strikes the first creature in its way, then leaps to the next, and the next."
+effects = [{ kind = "spell", spell = "chain_lightning" }]
+systems = ["spells", "mana", "combat"]
