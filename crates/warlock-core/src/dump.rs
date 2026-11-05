@@ -237,6 +237,30 @@ pub fn parse_layers(text: &str) -> Result<Vec<Layer>, String> {
     text.split(',').map(|l| l.trim().parse()).collect()
 }
 
+/// Dev: the zones on the current level (`world/zone.rs`), one a line in the order laid:
+/// `zone fire by #0 until 09:15:00, harm 4: (12, 5) (13, 5)`.
+fn zone_rows(world: &World) -> Vec<String> {
+    (world.zones().iter())
+        .map(|z| {
+            let until = z.until();
+            let cells: Vec<String> = z.cells().map(|p| p.to_string()).collect();
+            let harm = match z.harm() {
+                0 => String::new(),
+                harm => format!(", harm {harm}"),
+            };
+            format!(
+                "zone {} by #{} until {:02}:{:02}:{:02}{harm}: {}",
+                z.kind().id(),
+                z.by().0,
+                until.hour(),
+                until.minute(),
+                until.second(),
+                cells.join(" ")
+            )
+        })
+        .collect()
+}
+
 /// Renders one layer as rows of text with trailing spaces trimmed.
 pub fn layer_rows(world: &World, layer: Layer) -> Vec<String> {
     match layer {
@@ -246,6 +270,7 @@ pub fn layer_rows(world: &World, layer: Layer) -> Vec<String> {
             truth_rows(world),
             chest_rows(world),
             hallow_rows(world),
+            zone_rows(world),
         ]
         .concat(),
         Layer::Actors => [spawn_header(world), actor_rows(world), rising_rows(world)].concat(),
@@ -2221,6 +2246,18 @@ pub fn json(world: &World, layers: &[Layer], include_state: bool) -> Value {
                 "answers": p.answers,
             });
         }
+        // The current level's zones (ground truth).
+        out["zones"] = (world.zones().iter())
+            .map(|z| {
+                json!({
+                    "kind": z.kind().id(),
+                    "cells": z.cells().collect::<Vec<_>>(),
+                    "until": z.until().seconds(),
+                    "by": z.by().0,
+                    "harm": z.harm(),
+                })
+            })
+            .collect();
         // The current level's hallowed ground (Sanctuary; ground truth).
         out["hallows"] = (world.hallows().iter())
             .map(|h| {

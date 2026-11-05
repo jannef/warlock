@@ -1,0 +1,20 @@
+# A scroll of balefire (spec §8 "Scrolls", "Spells"): read it (`r`) and aim, and it casts Balefire,
+# free of mana, at its base: a line of fire that burns a while where it was laid. Study it (`L`),
+# and you may learn the spell for good.
+[[object]]
+id = "scroll_of_balefire"
+name = "scroll of balefire"
+plural = "scrolls of balefire"
+glyph = "?"
+fg = "#e88a3c"
+class = "scrolls"
+materials = ["paper"]
+weight = 50
+value = 250
+stackable = true
+level = 8
+frequency = 15
+
+[object.read]
+kind = "spell"
+spell = "balefire"

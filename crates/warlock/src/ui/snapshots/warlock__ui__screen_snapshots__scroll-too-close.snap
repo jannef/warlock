@@ -2,8 +2,8 @@
 source: crates/warlock/src/ui/screen_snapshots.rs
 expression: "render(case, content.clone())"
 ---
- You pick up 10 objects.
- You read the scroll labelled ZIMULGAR. It is a scroll of identify. This is 2 scrolls of fireball!
+ You read the scroll labelled SANKLAABAR. It is a scroll of identify. This is 2 scrolls of
+ fireball!
 
 
 

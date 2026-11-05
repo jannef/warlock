@@ -109,6 +109,12 @@ impl World {
     /// the player perceive (events, noise) starts here too. What the creature heard since it
     /// last acted ([`super::Actor::heard`]) is read here and spent.
     pub(super) fn creature_turn(&mut self, id: ActorId, events: &mut Vec<Event>) -> i64 {
+        // A zone where it stands does what it does first, awake or not (`zone.rs`); it may not
+        // live to act.
+        self.zone_turn_start(id, events);
+        if !self.state.actors.contains_key(&id) {
+            return 0;
+        }
         // Asleep (a teeming den's sleeper, `den.rs`), it takes no turn.
         if let Some(price) = self.slumbers(id) {
             return price;
@@ -247,7 +253,7 @@ impl World {
     /// The nearest hostile actor creature `id` sees (ties: the lower id), and where it stands.
     /// Sight is computed only if a hostile is within the creature's sight radius, nearest first,
     /// and only as far as the first one it sees: line of sight only out to its distance.
-    fn nearest_hostile_in_sight(&mut self, id: ActorId) -> Option<(ActorId, Pos)> {
+    pub(super) fn nearest_hostile_in_sight(&mut self, id: ActorId) -> Option<(ActorId, Pos)> {
         self.nearest_in_sight(id, &|state, content, me, a| {
             content.stance_of(me.faction(content), a.faction(content)) == Stance::Hostile
                 && !beast_friend::befriended(state, content, me, a)
@@ -543,7 +549,7 @@ impl World {
             from,
             to,
         });
-        self.after_tread(id, to, footing, events);
+        self.after_tread(id, (from, to), footing, events);
         self.make_step_noise(id, to, fleeing);
         // It knows nothing of traps (spec §8 "Traps"): one there goes off; a pit costs it its
         // next action. Nothing of an incorporeal one presses down.

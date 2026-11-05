@@ -332,6 +332,7 @@ fn the_spells_are_abilities_by_level() {
             "Frost",
             "Identify",
             "Sleep",
+            "Slick",
             // Level 7.
             "Blight",
             "Brand",
@@ -346,6 +347,11 @@ fn the_spells_are_abilities_by_level() {
             // Level 12.
             "Fire cloak",
             "Flame",
+            "Mirk",
+            // Level 13.
+            "Reek",
+            // Level 16.
+            "Balefire",
             // Level 20.
             "Call of the forest",
             "Chain lightning",
