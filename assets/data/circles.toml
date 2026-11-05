@@ -71,6 +71,21 @@ school = "transmutation"
 status = "blessed"
 school = "abjuration"
 
+# Fire cloak.
+[[status]]
+status = "fire_cloaked"
+school = "abjuration"
+
+# Brand.
+[[status]]
+status = "branded_blade"
+school = "transmutation"
+
+# Water walking.
+[[status]]
+status = "water_borne"
+school = "transmutation"
+
 # Hexes.
 
 # Evil eye.

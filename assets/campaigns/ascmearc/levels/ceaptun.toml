@@ -12,7 +12,7 @@
 #
 # North of the square, four shops (spec §7 "Shops"), each a timber house with its door open on
 # the lane and its goods on the plank floor (the [[shop]] and [[pile]] tables at the end): the
-# general store (west), the Forge (a fire in the smith's corner), the Armourer's, and the
+# general store (west), the Forge (a fire and an anvil in the smith's corner; Temper works at the anvil), the Armourer's, and the
 # Provisioner's (food for the road; angelica root here and at the general store). Their keepers
 # are the shopkeepers of data/shops.toml, named here.
 #
@@ -36,7 +36,7 @@ TTTTTT#TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT
 ......#.WWWWWWWW...............................................................*......↓↓..
 .rrrr.#.WppppppW...WWWWWWWWWWWWW..WWWWWWWWWWW...WWWWWWWWWWW...WWWWWWWWWWW.....~~~~~...↓↓..
 .rxrr.#.WppppppW...WpppppppppppW..WBppppppppW...WpppppppppW...WpppppppppW....~~~~~~~.T↓↓..
-.rrrr.#.WppppppW...WppppplpppppW..WpppppppppW...WpppplppppW...WpppplppppW....~~~~~~~..↓↓.T
+.rrrr.#.WppppppW...WppppplpppppW..WAppppppppW...WpppplppppW...WpppplppppW....~~~~~~~..↓↓.T
 .rrrr.#.WppppppW...WpppppppppppW..WpppplppppW...WpppppppppW...WpppppppppW.....~~~~~...↓↓..
 ......#.WppppppW...WpppppppppppW..WpppppppppW...WpppppppppW...WpppppppppW........6....↓↓..
 ......#.WWW+WWWW...WpppppppppppW..WpppppppppW...WpppppppppW...WpppppppppW...T...**....↓↓..
@@ -80,6 +80,8 @@ TTTTTT#TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT
 "l" = { terrain = "plank_floor", light = "lamp" }
 "t" = "sconce"
 "B" = "brazier"
+# The smith's anvil, beside the Forge's fire: Temper is offered here (data/room_effects.toml, the forge's feature).
+"A" = "anvil"
 "↓" = { terrain = "running_water", flow = "S" }
 "@" = { terrain = "flagstones", spawn = "player" }
 # The townsfolk on their rounds.

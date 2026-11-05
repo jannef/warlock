@@ -363,8 +363,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
   shield (Sword and Board, the tier's `shield_rank`). Pieces are at least magic by 10 + L % (at
   most 40, armour) and 20 + L % (at most 80, panoply), rare from L20. Everything they wear and
   wield works for them as for anyone (`Mods::worn`: stats, riders, resistances, light, ...),
-  max mana, mana regeneration, and caster level too (#525, §8 "Mana": a pool and a caster
-  level for a creature that casts or summons; a panoply does neither yet). Fyrdelf
+  max mana and mana regeneration too (#525, §8 "Mana": a pool for a creature that casts or
+  summons; a panoply does neither yet). Fyrdelf
   lists `animated_armour`; no branch population lists `animated_panoply` yet (none reaches
   danger 20): it stands in armouries (§7 "Special rooms", #487), whose sleepers are drawn four
   dangers deeper, so on Fyrdelf's bottom floor, and comes by a legend or the dev `spawn`.
@@ -679,3 +679,13 @@ developer notes (CLAUDE.md, `docs/dev/`).
   when it is two sizes or more larger than the player (sizes in `data/sizes.toml` order; none of
   the built-in sizes is): "The giant is too big to squeeze past." A refusal the player does not
   see the creature for is "Something is in the way."
+  **Wriggling past** (`world/wriggle.rs`, #1032): a player trained in Escape artist who is refused
+  because the creature keeps its post, never gives way, or is `off_post` (not for a creature that
+  cannot move, one too big, or while swimming) is not refused: no action, no ability row, no key,
+  the step itself is a check (as the check against bonds is, §8 "Status effects"). Their Dexterity
+  modifier, what talents add to Dexterity's checks, and Escape artist's `escape` points, against
+  11 plus the creature's Willpower modifier (and its talents'); two gameplay draws. Made, "You
+  wriggle past the shopkeeper." and the step goes ahead as a swap; failed, "You try to wriggle
+  past the shopkeeper, but it is in the way.", the step's price, the player stays. Every try marks
+  Escape artist (`wriggle`, 50 %). A hostile creature is still struck, not wriggled past, and a shop's keeper is immune (the owner:
+  the refusal stands, with no draw, mark, or time; §7 "Shops").

@@ -332,6 +332,31 @@ fn also(content: &Content, def: &StatusDef) -> String {
             hold.difficulty
         ));
     }
+    let rider =
+        |r: warlock_core::damage::Rider| format!("{} {}", r.dice, content.damage_type(r.kind).name);
+    if let Some(r) = def.blows {
+        parts.push(format!(
+            "your melee blows do {} besides, in either hand (no spell type's rule)",
+            rider(r)
+        ));
+    }
+    if let Some(r) = def.retaliates {
+        parts.push(format!(
+            "a melee blow that lands on you does {} to the striker, as a spell of that type, its \
+             rule and all",
+            rider(r)
+        ));
+    }
+    if def.wades_free {
+        parts.push("wading costs no more than a step on dry land".to_string());
+    }
+    if def.ice_holds {
+        parts.push(
+            "ice never gives way under you, however thin, nor melts or shatters under you in a \
+             burst"
+                .to_string(),
+        );
+    }
     if let Some(light) = def.light {
         let preset = content.light(light);
         let reach = match preset.radius {

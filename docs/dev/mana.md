@@ -48,7 +48,7 @@ issue how it interacts with mana**, and hooks in at the one place below.
     `StatUse::Cast` (`train_stat`: a Willpower mark at 20 %, `data/stats.toml`). Spells (the one
     cast path, `world/cast.rs`, docs/dev/spells.md) call it after every check with
     `Actor::spell_base` (the cost table's price, `SpellRules::mana`: the spell's level, shape,
-    resolution, armour, no caster level; then Archmage's `spell_mana_percent`; the talents' cut is
+    resolution, armour; then Archmage's `spell_mana_percent`; the talents' cut is
     `spend_mana`'s), and `Actor::spell_cost` (`spell_base` through `Actor::mana_cost`) is the one
     spell cost hook, what the menu's `Unavailable::NoMana` compares
     (`ability::spell_unavailable`); abilities call it (and say why they could not); the dev `drain:N` (`Action::Drain`,
@@ -81,22 +81,20 @@ issue how it interacts with mana**, and hooks in at the one place below.
     `mana_level` (60; `World::level_mana`; the scenario's `mana` without a character). The race
     and class values and this formula are the progression design's (`docs/design/progression.md`
     §3.7). An ability short of mana is `Unavailable::NoMana` (a spell's through
-    `ability::spell_unavailable`, which knows the caster level).
+    `ability::spell_unavailable`, which knows the spell's cost).
 - **Presentation**: `PerceptionView::own_mana()` (current clamped to the maximum, and the
   maximum) is all the UI gets: the status bar's `MP 5/12` (`ui::status_segments`, priority 1
   right after HP, so it gives way after everything else of that priority, before the HP), the
   character screen's `MP  Mana  5/12` beside the hit points (`BESIDE`, as Protection beside
   Defence), the dump header's `mp`, the JSON dump's `mana: {current, max}`. The dev `actors`
-  layer shows every actor's `mp` (and, for one with mana, its caster level, `cl 8`). Never a
+  layer shows every actor's `mp`. Never a
   creature's mana or any pace in the game.
-- **Creatures** (#525): nothing above is the player's alone. A creature's maximum, pace, and
-  caster level read what it wears and wields through the same hooks (`Actor::max_mana`,
-  `World::mana_rate`, `World::caster_level`, each on `Mods::worn`), so a goblin wizard's Mystic
-  bone amulet or an animated panoply's rings give it a larger pool, filled as it is made
-  (`travel::make_creature` sets `mana` after its gear), a faster pace, and a higher caster
-  level; a summoner spends from that pool (`World::summons_at`, `spend_mana`). Creature spells
-  are still announced only, so its caster level is read by nothing in play yet; the dev
-  `actors` layer shows it. Creature gear never changes after it is made (stealing takes no worn
+- **Creatures** (#525): nothing above is the player's alone. A creature's maximum and pace
+  read what it wears and wields through the same hooks (`Actor::max_mana`, `World::mana_rate`,
+  each on `Mods::worn`), so a goblin wizard's Mystic bone amulet or an animated panoply's rings
+  give it a larger pool, filled as it is made (`travel::make_creature` sets `mana` after its
+  gear), and a faster pace; a summoner spends from that pool (`World::summons_at`,
+  `spend_mana`). Creature gear never changes after it is made (stealing takes no worn
   thing), so no creature's mana needs `keep_mana_within_max`.
 - **A hex's tithe** (Malison, #905): `World::hex_tithe(slain)` (`world/malison.rs`), from
   `World::dies` for any creature's death (every cause, anyone's hand, no range), before the
@@ -122,6 +120,6 @@ issue how it interacts with mana**, and hooks in at the one place below.
   creature mana and serialization, regeneration by Willpower and resting, time cut differently,
   drains, statuses, diseases, starving, rooms, burden and stances doing nothing, the penalty that
   passes, disease damage, spending and `drain:N`, levels, magic items, saves, replays),
-  `world/creature_magic_tests.rs` (a creature's pool, pace, and caster level with mana affixes
+  `world/creature_magic_tests.rs` (a creature's pool and pace with mana affixes
   worn and without; a summoner one short of its cost summons with a Mystic ring), and the
   content parsers' own tests.

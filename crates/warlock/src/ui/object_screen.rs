@@ -307,6 +307,11 @@ impl ObjectScreen {
                     .then(|| view.smell(s))
                     .flatten()
                     .map(|f| format!("smells {}", f.word()));
+                // A trained eye (Appraise, Survival; #1031) tells it in words, if the check passes.
+                let judged = (list == ObjectList::Eat && smell.is_none())
+                    .then(|| view.judge(s))
+                    .flatten()
+                    .map(|w| format!("looks {w}"));
                 // The study list: the spell it teaches, and the chance in words.
                 let study = match (list, item) {
                     (ObjectList::Study, Item::Pack(i)) => {
@@ -322,6 +327,7 @@ impl ObjectScreen {
                 let marks: Vec<String> = (teaches.into_iter())
                     .chain(mark)
                     .chain(smell)
+                    .chain(judged)
                     .chain(price)
                     .collect();
                 let entry = Entry {

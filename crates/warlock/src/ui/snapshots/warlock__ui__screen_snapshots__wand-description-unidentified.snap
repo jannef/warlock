@@ -3,7 +3,7 @@ source: crates/warlock/src/ui/screen_snapshots.rs
 expression: "render(case, content.clone())"
 ---
  There are several objects here. (×2)
- You pick up an iron wand and a silver wand.
+ You pick up an iron wand and a pine wand.
 
 
 

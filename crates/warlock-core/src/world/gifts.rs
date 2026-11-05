@@ -13,8 +13,9 @@ use super::talk::capitalized;
 use super::{ActorId, Spent, World};
 use crate::ability::{Ability, Unavailable};
 use crate::action::{AttackKind, Event};
-use crate::combat::Profile;
+use crate::combat::{Profile, Strike};
 use crate::content::{ActionKind, SignActive, Stance};
+use crate::damage::{Damage, Rider};
 use crate::geom::Pos;
 use crate::status::Effect;
 use serde::{Deserialize, Serialize};
@@ -201,7 +202,8 @@ impl World {
     }
 
     /// Barbed hide: `target`, hit in melee by `attacker` and alive, cuts it for its talent's
-    /// damage. Not a blow: no roll, no noise, and if it kills, no one earns anything.
+    /// damage. Not a blow: no roll, no noise, and if it kills, no one earns anything. A status
+    /// that strikes back ([`World::retaliate`]) answers first.
     pub(super) fn barbed(
         &mut self,
         attacker: ActorId,
@@ -212,6 +214,7 @@ impl World {
         if kind != AttackKind::Melee || attacker == target {
             return;
         }
+        self.retaliate(attacker, target, events);
         let barbs = (self.state.actors.get(&target))
             .filter(|a| !a.talents.is_empty())
             .map_or(0, |a| a.talent_mods(&self.content).barbs);
@@ -226,6 +229,45 @@ impl World {
             self.say(format!("{who} is cut by your barbs."));
         }
         self.hurt(attacker, barbs, Harm::Barbs, events);
+    }
+
+    /// A melee blow from `attacker` landed on `target`: each of its statuses that `retaliates`
+    /// (Fire cloak) strikes back, a spell of the target's in all but the casting: said by the
+    /// damage type's words ("The fire burns the kobold."), resisted, crediting the target with a
+    /// kill, and the type's rule on the striker if it was harmed. A draw for the dice, and the
+    /// rule's own; none for one without such a status.
+    fn retaliate(&mut self, attacker: ActorId, target: ActorId, events: &mut Vec<Event>) {
+        let content = self.content.clone();
+        let Some(me) = self.state.actors.get(&target) else {
+            return;
+        };
+        let from = me.pos;
+        let riders: Vec<Rider> = (me.effects.iter())
+            .filter_map(|e| content.status(e.status).retaliates)
+            .collect();
+        for rider in riders {
+            if !self.state.actors.contains_key(&attacker) || self.state.death.is_some() {
+                return;
+            }
+            let damage = Damage::new(rider.dice.roll(&mut self.state.rng), Some(rider.kind));
+            let hit = Strike::Hit { critical: false };
+            let mut made = Vec::new();
+            self.spell_strikes(target, attacker, (from, false), (damage, hit), &mut made);
+            let harmed = (made.iter()).any(|e| {
+                matches!(
+                    e,
+                    Event::Attacked {
+                        strike: Some(Strike::Hit { .. }),
+                        ..
+                    }
+                )
+            });
+            let def = content.damage_type(rider.kind);
+            self.say_spell((&def.name, &def.verb), made, events);
+            if harmed {
+                self.spell_type_lands(target, Some(rider.kind), &[attacker], events);
+            }
+        }
     }
 
     /// `price`, actor `id`'s step to `to`, as Slip away makes it: its percent off when some

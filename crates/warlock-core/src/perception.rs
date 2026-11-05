@@ -1231,6 +1231,9 @@ pub struct PerceptionView<'a> {
     pub(crate) snapshot: &'a Perception,
     /// The overworld encounter the player must answer, which they know.
     pub(crate) encounter: Option<&'a crate::world::Pending>,
+    /// The run's seed, for the freshness check (`world/freshness.rs`), which only draws a stream
+    /// of its own.
+    pub(crate) seed: u64,
 }
 
 impl<'a> PerceptionView<'a> {
@@ -2001,14 +2004,6 @@ impl<'a> PerceptionView<'a> {
         (self.player.mana.clamp(0, max), max)
     }
 
-    /// The player's caster level (spec §8 "Spells"; [`crate::world::World::caster_level`]):
-    /// their level and their class's casting percent, with what their talents and items add.
-    /// They know it, as they know their level.
-    pub fn own_caster_level(&self) -> i32 {
-        let casting = crate::world::casting_percent(self.content, self.character);
-        (self.player).caster_level(self.content, self.own_experience().level, casting)
-    }
-
     /// The player's alternative resources (spec §8 "Resources"), in resource order: each one
     /// they hold, what it holds now (at most its maximum), and its maximum. Never how fast it
     /// changes.
@@ -2419,6 +2414,20 @@ impl<'a> PerceptionView<'a> {
             crate::rot::Stage::Old => Freshness::Turning,
             crate::rot::Stage::Rotten | crate::rot::Stage::Gone => Freshness::Rotten,
         })
+    }
+
+    /// How fresh `stack`, a corpse or food the player has in front of them, looks to an eye
+    /// trained in Appraise or Survival (spec §8 "Hunger"; `world/freshness.rs`): `fresh`, `old`,
+    /// or `rotten` when their check passes, `None` otherwise.
+    pub fn judge(&self, stack: &Stack) -> Option<&'static str> {
+        let stage = crate::world::freshness::judged(
+            self.content,
+            self.player,
+            self.seed,
+            stack,
+            self.time,
+        )?;
+        Some(stage.id())
     }
 
     /// The loudest sound perceived at `p`, if any.

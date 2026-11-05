@@ -9,7 +9,7 @@
 //!   blocks casting (Raging).
 //! - **Reach**: the effect's `range`, then the rung of its `grows.range` ladder the user's
 //!   effective score in the ladder's stat (Willpower) reaches ([`Actor::rod_reach`]), as a
-//!   spell's reach is read. No caster level is read anywhere (the spell scaling design,
+//!   spell's reach is read. Nothing of the user's level is read (the spell scaling design,
 //!   decision 10): a status effect with an `up_to_level` takes only creatures whose level is at
 //!   most it, the same in anyone's hands.
 //! - **Effects**, each on existing code: `dig` breaks the walls on its line

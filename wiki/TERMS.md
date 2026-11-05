@@ -185,6 +185,7 @@ above.
 | A skill's ladder (what it gives by value: Music's song degrees and difficulty, …) | `skills.md#what-skills-give` |
 | Slipping past (a creature with darkvision, unlit) | `skills.md#slipping-past` |
 | Stealing | `skills.md#stealing` |
+| Feinting (a lie in combat, Bluff's use) | `skills.md#feinting` |
 | Intimidating (a threat at one foe) | `skills.md#intimidating` |
 | Treating yourself, binding a wound | `skills.md#treating-yourself` |
 | Foraging | `skills.md#foraging` |
@@ -226,7 +227,6 @@ above.
 | Mana on a kill | `mana.md#mana-on-a-kill` |
 | Spending mana | `mana.md#spending-it` |
 | Magic, spells, casting | `magic.md`, `magic.md#the-spells` |
-| Caster level | `magic.md#caster-level` |
 | Learning (what a scroll teaches for certain, Spellcraft's curve) | `magic.md#learning` |
 | Spell level, cantrip | `magic.md#spell-levels` |
 | Ladder, rung, base | `magic.md#the-spells`, `magic.md#how-a-spell-grows` |

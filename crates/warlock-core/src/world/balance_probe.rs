@@ -568,8 +568,7 @@ struct Cast {
     hexed: i32,
 }
 
-/// The spells that roll (harm or healing) `w`'s player would cast at their caster level: those
-/// they know, and those of the schools their class has an affinity with.
+/// The spells that roll (harm or healing) `w`'s player would cast: those they know, and those of the schools their class has an affinity with.
 fn casts(w: &World) -> Vec<Cast> {
     let content = &w.content;
     if content.spell_rules().is_none() {
@@ -659,7 +658,9 @@ struct Snap {
     first_rise: [Option<u32>; 6],
     marks_a_day: [f64; 6],
     mana: i32,
-    caster_level: i32,
+    /// Its Spellcraft (0 untrained) and its learning (0 when it cannot learn).
+    spellcraft: i32,
+    learning: i32,
     casts: Vec<Cast>,
     /// The level before this one's casting (`schools`) and its spell casts in the fights
     /// (`training`; a healer's one a kill), a day.
@@ -972,7 +973,10 @@ fn career(
                 first_rise: log.first_rise,
                 marks_a_day: log.earned.map(|m| m as f64 / days),
                 mana: me.max_mana(content),
-                caster_level: w2.caster_level(player),
+                spellcraft: (content.skill_id("spellcraft"))
+                    .and_then(|id| me.skills.value(id))
+                    .map_or(0, i32::from),
+                learning: me.learning(content).unwrap_or(0),
                 casts: if gear == Gear::Plain {
                     casts(&w2)
                 } else {

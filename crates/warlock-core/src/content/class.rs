@@ -39,13 +39,6 @@ fn two_rolls() -> u8 {
     2
 }
 
-fn least_casting() -> u8 {
-    25
-}
-
-/// The casting percents a class may have (spec §8 "Spells"): everyone casts a little.
-pub const CASTING: std::ops::RangeInclusive<u8> = 1..=100;
-
 /// The affinities a class may have with a school of magic, in study check points.
 pub const AFFINITY: std::ops::RangeInclusive<i8> = -10..=10;
 
@@ -75,8 +68,6 @@ struct ClassSpec {
     alignment: i32,
     #[serde(default)]
     mana: u16,
-    #[serde(default = "least_casting")]
-    casting: u8,
     #[serde(default)]
     affinity: BTreeMap<super::spell_def::School, i8>,
     #[serde(default)]
@@ -251,9 +242,6 @@ pub struct ClassDef {
     pub hp: i32,
     /// What the class adds to the mana (spec §8 "Mana"); half of it comes with each level.
     pub mana: i32,
-    /// Its casting percent (spec §8 "Spells"): a character's caster level is this percent of
-    /// their level (a wizard 100, a warrior 25), before talents and items.
-    pub casting: u8,
     /// Its affinity with the schools of magic (spec §8 "Spells"): points off the difficulty of
     /// studying a spell of the school (a malus when negative); a school it leaves out, 0.
     pub affinity: BTreeMap<super::spell_def::School, i8>,
@@ -375,14 +363,6 @@ impl ClassDef {
                 spec.mana
             )));
         }
-        if !CASTING.contains(&spec.casting) {
-            return Err(err(format!(
-                "class `{id}`: casting {} is out of range ({} to {} percent)",
-                spec.casting,
-                CASTING.start(),
-                CASTING.end()
-            )));
-        }
         if let Some((school, n)) = (spec.affinity.iter()).find(|(_, n)| !AFFINITY.contains(*n)) {
             return Err(err(format!(
                 "class `{id}`: affinity {n} with {} is out of range ({} to {})",
@@ -467,7 +447,6 @@ impl ClassDef {
             stats,
             hp: i32::from(spec.hp),
             mana: i32::from(spec.mana),
-            casting: spec.casting,
             affinity: spec.affinity,
             experience: spec.experience,
             alignment,
@@ -1066,22 +1045,6 @@ mod tests {
             "{}",
             e.message
         );
-    }
-
-    #[test]
-    fn classes_cast_a_percent_of_their_level() {
-        assert_eq!(parse(ONE).expect("valid")[0].casting, 25, "unless named");
-        let wizard = parse(&format!("{ONE}casting = 100\n")).expect("valid");
-        assert_eq!(wizard[0].casting, 100);
-        for bad in [0, 101] {
-            let e = parse(&format!("{ONE}casting = {bad}\n")).unwrap_err();
-            assert!(
-                e.message
-                    .contains(&format!("casting {bad} is out of range (1 to 100")),
-                "{}",
-                e.message
-            );
-        }
     }
 
     /// The built-in content with the aristocrat's file changed by `edit`, loaded.

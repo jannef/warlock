@@ -86,6 +86,14 @@
 #              entry's `difficulty`, else this one, 1 to 40): made, they break free and step;
 #              failed, the turn is spent. A dose's degrees are drawn from `turns` (1 to max), and
 #              a hold needs `eases` (a degree a turn: 6), stacking "highest", and blocks "step"
+#   retaliates a melee blow that lands on its sufferer strikes the striker back: { damage = "1d6",
+#              damage_type = "fire" }, as a spell of that type would, its type's rule and all
+#              (Fire cloak's)
+#   blows      what its sufferer's melee blows do besides: { damage = "1d4", damage_type = "fire" },
+#              a rider as a worn elemental affix's, which reads no type rule (Brand's)
+#   wades_free its sufferer wades as if on dry land (Water walking's)
+#   ice_holds  ice never gives way under its sufferer, however thin, nor melts or shatters under
+#              them in a burst (Water walking's)
 #   escape     bonds a trained Escape artist may slip: the difficulty (1 to 40) of the automatic
 #              check, the better of Strength and Dexterity plus the skill, when the status stops
 #              or slows what they try (world/hold.rs). Needs `blocks` or a `cost` above 100, and
@@ -422,6 +430,48 @@ combat = { to_hit = 1 }
 penalty = { from = 1, willpower = 1 }
 start = "You feel blessed."
 end = "Your blessing fades."
+
+# Fire cloak's: flames that burn whoever strikes the wearer, and show them to everyone. Up to
+# three degrees: the caster's Presence lengthens it (a degree is a minute; spells.toml).
+[[status]]
+id = "fire_cloaked"
+name = "Fire-cloaked"
+seen = "cloaked in flame"
+max = 3
+stacking = "refresh"
+eases = 60
+light = "ember"
+retaliates = { damage = "1d6", damage_type = "fire" }
+start = "Flames wrap about you, and do not burn."
+end = "The flames about you die away."
+
+# Brand's: the held weapon burns, and its fire is a blow's, which reads no spell type's rule. Up
+# to three degrees, a minute each, as Fire cloak's.
+[[status]]
+id = "branded_blade"
+name = "Burning blade"
+seen = "bearing a burning blade"
+max = 3
+stacking = "refresh"
+eases = 60
+light = "ember"
+blows = { damage = "1d4", damage_type = "fire" }
+start = "Fire runs along your weapon."
+end = "The fire on your weapon dies."
+
+# Water walking's: wading as Undertow's (talents/undertow.toml), and ice that holds. Up to three
+# degrees, two minutes each.
+[[status]]
+id = "water_borne"
+name = "Water-borne"
+seen = "water-borne"
+max = 3
+stacking = "refresh"
+eases = 120
+wades_free = true
+ice_holds = true
+start = "Water feels as firm as the road beneath you."
+end = "Water is only water again."
 
 # Inspire (the bard's song, spec §8 "Class abilities"): five minutes of a lifted heart a degree,
 # a little surer to hit and quicker to dodge. The degrees are time, not strength: one more at

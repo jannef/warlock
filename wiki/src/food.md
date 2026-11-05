@@ -28,7 +28,7 @@ All food **rots**, whether it lies on the floor or in your [pack](objects.md#you
 table above says how long; it is old past half of that), and some time after that it has rotted
 away altogether. Food in your [pack](objects.md#your-pack) that rots away
 is gone, and you are told ("Your loaf of bread has rotted away."); what lies on the floor is
-simply gone when you next look. Food never shows how old it is, and picked up or put down, food
+simply gone when you next look. Food never shows how old it is, unless you are trained in [Appraise](skills.md#skill-appraise) or [Survival](skills.md#skill-survival): then, now and then, the eat list and a look say *fresh*, *old*, or *rotten*. Picked up or put down, food
 of a kind keeps together in one [stack](objects.md#piles), as old as the oldest of it: remember where it came from
 and when.
 

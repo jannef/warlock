@@ -1,0 +1,14 @@
+# Brand (spec §8 "Spells"): the paladin's; a brand is a burning stick and a sword (Old English *brand*, both).
+[[spell]]
+id = "brand"
+name = "Brand"
+description = "Your held weapon burns a while: your blows do fire besides, and the blade lights your way a little."
+level = 7
+school = "transmutation"
+kind = "buff"
+shape = "self"
+resolution = "auto"
+effect = { status = "branded_blade" }
+
+[spell.grows]
+degrees = "presence 14 2, 18 3"

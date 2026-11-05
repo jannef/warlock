@@ -87,7 +87,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     (`Food::stage`, `rot::stage`): fresh, **old** past half of `keeps`, **rotten** past `keeps`,
     **gone** past `lasts`. Food of one kind joins one stack whatever its age, and the stack keeps
     the oldest (`object.rs`), so neither the pack nor a pile splits by age (which would show it).
-    Without `data/hunger.toml` food does not rot.
+    The player is never shown it, except in words to a trained eye (Appraise, Survival: §8 "Skills",
+    `freshness`, #1031). Without `data/hunger.toml` food does not rot.
     - **In a pack** (the player's and creatures'): food rots away at its exact moment as the
       carrier lives through the time (`World::rot_pack`, the last thing at a moment of
       `World::live`, "Status effects" above, which ends a step at it), so however the time is cut

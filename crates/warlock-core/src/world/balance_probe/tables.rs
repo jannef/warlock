@@ -48,12 +48,12 @@ pub(super) fn players(p: &Probe, out: &mut String) {
 
     writeln!(
         out,
-        "\nStats, hit points, and mana (plain gear; trained → untrained). Scores St/Dx/To/In/Wi/Pr, the seeds' mean.\n"
+        "\nStats, hit points, and mana (plain gear; trained → untrained). Scores St/Dx/To/In/Wi/Pr, the seeds' mean. Spellcraft (learning): the trained Spellcraft and the learning it gives; the auto-rolls spend every level-up roll on the first trained skill (Concentration for both), so it stays where it starts.\n"
     )
     .unwrap();
     writeln!(
         out,
-        "| L | Warrior | Thief | Wizard | Priest | HP W/T/Wz/P | MP Wz/P | Caster level Wz/P | Blows a round W/T |"
+        "| L | Warrior | Thief | Wizard | Priest | HP W/T/Wz/P | MP Wz/P | Spellcraft (learning) Wz/P | Blows a round W/T |"
     )
     .unwrap();
     writeln!(out, "|---|---|---|---|---|---|---|---|---|").unwrap();
@@ -83,11 +83,11 @@ pub(super) fn players(p: &Probe, out: &mut String) {
                 .iter()
                 .map(|s| f64::from(s.mana)))
         };
-        let cl = |class| {
-            avg(p
-                .of(class, level, Gear::Plain, true)
-                .iter()
-                .map(|s| f64::from(s.caster_level)))
+        let spellcraft = |class| {
+            let seeds = p.of(class, level, Gear::Plain, true);
+            let skill = avg(seeds.iter().map(|s| f64::from(s.spellcraft)));
+            let learning = avg(seeds.iter().map(|s| f64::from(s.learning)));
+            format!("{skill:.0} ({learning:.0})")
         };
         let blows = |class| {
             avg(p
@@ -97,11 +97,11 @@ pub(super) fn players(p: &Probe, out: &mut String) {
         };
         writeln!(
             out,
-            "{row} {:.0}/{:.0} | {:.0}/{:.0} | {:.2}/{:.2} |",
+            "{row} {:.0}/{:.0} | {}/{} | {:.2}/{:.2} |",
             mp("wizard"),
             mp("priest"),
-            cl("wizard"),
-            cl("priest"),
+            spellcraft("wizard"),
+            spellcraft("priest"),
             blows("warrior"),
             blows("thief")
         )

@@ -5,6 +5,8 @@
 //! actor whose weight (its own and everything it carries) is no more than what it holds; above
 //! that it gives way with a chance rising to certain at twice that (one draw of the gameplay
 //! stream, made only between the two). Ice that held only by luck creaks under the player.
+//! Ice never gives way under the bearer of a status with `ice_holds` (Water walking), however
+//! thin, with no draw; a burst leaves the ice they stand on.
 //! Wading into water with a skin of ice too thin to look like ice breaks the skin.
 //!
 //! **Breaking through**: the cell is open water again (the ice there is gone; it refreezes from
@@ -314,6 +316,10 @@ impl World {
             return Footing::Plain;
         }
         let actor = &self.state.actors[&id];
+        // Water walking (spec §8 "Status effects"): the ice holds it, however thin, with no draw.
+        if actor.ice_holds(&content) {
+            return Footing::Held { climb: wading };
+        }
         let weight = actor.weight(&content);
         // Winter-born (spec §8 "Talents"): the ice holds it as if it carried nothing.
         let load = if actor.talent_mods(&content).light_on_ice {
@@ -498,9 +504,12 @@ impl World {
             }
             // Only ice that looks like ice bears anyone: on a skin, one stands in the water.
             let bore = content.terrain(level.terrain[p]).ice.is_some();
-            let standing = (self.state.actors.values())
-                .find(|a| a.level == level.id && a.pos == p)
-                .map(|a| a.id);
+            let standing = (self.state.actors.values()).find(|a| a.level == level.id && a.pos == p);
+            // Water walking: the ice under its bearer holds through the burst.
+            if bore && standing.is_some_and(|a| a.ice_holds(&content)) {
+                continue;
+            }
+            let standing = standing.map(|a| a.id);
             self.break_ice(p);
             broke += 1;
             if let (true, Some(id)) = (bore, standing) {

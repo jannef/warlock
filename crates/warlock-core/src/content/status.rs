@@ -25,7 +25,7 @@ use super::action::ActionKind;
 use super::disease::DiseaseId;
 use super::stance::BONUS;
 use super::{ContentError, DamageTypeId, LightId};
-use crate::damage::{MAX_RESISTANCE, MIN_RESISTANCE};
+use crate::damage::{MAX_RESISTANCE, MIN_RESISTANCE, Rider};
 use crate::dice::Dice;
 use crate::stats::{ADJUSTMENTS, PerStat, Stat};
 use serde::{Deserialize, Serialize};
@@ -504,9 +504,24 @@ struct StatusSpec {
     #[serde(default)]
     quenched: bool,
     senses: Option<Senses>,
+    retaliates: Option<RiderSpec>,
+    blows: Option<RiderSpec>,
+    #[serde(default)]
+    wades_free: bool,
+    #[serde(default)]
+    ice_holds: bool,
     vision: Option<String>,
     #[serde(default)]
     resist: BTreeMap<String, i32>,
+}
+
+/// Dice of a damage type, as a status's `retaliates` and `blows` write them: `{ damage = "1d6",
+/// damage_type = "fire" }`.
+#[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+struct RiderSpec {
+    damage: Dice,
+    damage_type: String,
 }
 
 fn normal_regen() -> u16 {
@@ -624,6 +639,17 @@ pub struct StatusDef {
     pub quenched: bool,
     /// What its bearer, the player, feels about them while it lasts (Quick-sensed).
     pub senses: Option<Senses>,
+    /// What a melee blow that lands on its sufferer does to the striker, as a spell of its kind
+    /// would, the type's rule and all (Fire cloak's; `World::retaliate`).
+    pub retaliates: Option<Rider>,
+    /// What its sufferer's melee blows do besides, a rider as a worn `elemental` affix's: no
+    /// spell, so no type's rule (Brand's; [`crate::status::Effects::blows`]).
+    pub blows: Option<Rider>,
+    /// Its sufferer wades as if on dry land (Water walking's; `Actor::wades_free`).
+    pub wades_free: bool,
+    /// Ice never gives way under its sufferer, however thin, and a burst that would melt or
+    /// shatter it leaves the ice it stands on (Water walking's; `Actor::ice_holds`).
+    pub ice_holds: bool,
     /// The eyes it lends while it lasts (a potion's Owl-eyed; spec §8 "Potions"): an index into
     /// [`super::Content::vision_profiles`], bettering its sufferer's eyes part by part as a
     /// unique item's Vision power does (`Actor::eyes`).
@@ -673,6 +699,10 @@ impl StatusDef {
             && self.wound.is_none()
             && self.hold.is_none()
             && self.light.is_none()
+            && self.retaliates.is_none()
+            && self.blows.is_none()
+            && !self.wades_free
+            && !self.ice_holds
             && self.vision.is_none()
             && self.resist.is_empty()
     }
@@ -866,6 +896,22 @@ fn resolve(
                 .into(),
         );
     }
+    let rider = |what: &str, spec: &Option<RiderSpec>| {
+        spec.as_ref()
+            .map(|r| {
+                if r.damage.min() < 0 || r.damage.max() < 1 {
+                    return Err(format!("{what}: `damage` must be dice that can do harm"));
+                }
+                let kind = kind(&r.damage_type).map_err(|m| format!("{what}: {m}"))?;
+                Ok(Rider {
+                    kind,
+                    dice: r.damage,
+                })
+            })
+            .transpose()
+    };
+    let retaliates = rider("retaliates", &spec.retaliates)?;
+    let blows = rider("blows", &spec.blows)?;
     let light = (spec.light.as_deref())
         .map(|name| light(name).ok_or_else(|| format!("light: unknown light `{name}`")))
         .transpose()?;
@@ -926,6 +972,10 @@ fn resolve(
             }
             senses => senses,
         },
+        retaliates,
+        blows,
+        wades_free: spec.wades_free,
+        ice_holds: spec.ice_holds,
         vision,
         resist,
     })
