@@ -1,6 +1,6 @@
 # Warlock — Generic vaults, way more of them
 
-Design document for the owner's review (#961, part of #957). First pass, 2026-11-05, written against `origin/main` at d562ceb5. Nothing here is implemented; §8 cuts it into issues. Every rule quoted below was read from the files named; anything not checked is marked *(unchecked)*.
+Design document for the owner's review (#961, part of #957). First pass, 2026-11-05, written against `origin/main` at d562ceb5. Nothing here is implemented; §8 cuts it into issues. Every rule quoted below was read from the files named; anything not checked is marked *(unchecked)*. Second pass, 2026-11-05, after the owner's approval, checked against `origin/main` at 5b3326f9: the local areas' ruins come by a chance per landscape, not always (§1, §4), random orientation has landed with its real syntax (#959, §2), and what landed since (deep water #1019/#1020, zones #1000, stair followers #985, the endless branch #1010) is placed in §1 and §2; §9 records the decisions.
 
 **The owner's request** (#957, verbatim): the vaults are *"way too monotonous and appear way too often"*, and *"we need way way more of generic vaults"*; random contents rather than static piles, along the lines of *"20 monsters from dungeon monster pool"* or *"10 monsters from goblin tribe"*. And on proposals: dull and samey ones are rejected. So the standard this document holds every vault to: **a vault is a small situation with a decision in it**, not a room with loot and monsters in another shape. Each entry in the catalogue names its decision in one line; a vault with none was cut.
 
@@ -16,7 +16,7 @@ Design document for the owner's review (#961, part of #957). First pass, 2026-11
 6. Vaults that need a feature first
 7. The vault rules for authors
 8. Implementation issues
-9. Open questions
+9. Decisions
 
 ## 1. How many, and why
 
@@ -26,7 +26,9 @@ Design document for the owner's review (#961, part of #957). First pass, 2026-11
 |---|---|---|
 | rooms floor (80×21) | 20 % | `mapgen/rooms.rs::VAULT_CHANCE` |
 | cave floor (100×40, 120×60) | 40 %, then 15 % for a second | `mapgen/caves.rs` |
-| a local area of the overworld | one outdoor vault, always, if one fits | `mapgen/local/mod.rs::ruins` |
+| a local area of the overworld | by its landscape: hills 30 %; grassland, forest, and plains 15 %; dense forest and swamp 10 %; then one outdoor vault if one fits | `mapgen/local/mod.rs::features` (`ruins`), `build`: `if rng.chance(features.ruins) { ruins(..) }` |
+
+A road's area is generated as its neighbours' most common land (`Setting::read`), so it takes that land's chance; river and lake cells have no local area. When the chance comes up, `ruins` shuffles every outdoor vault, turns each (#959), and tries each 30 times for a spot whose centre is at least 24 cells from the area's centre (rows counted double), with a ring of free ground round it and no water under it or its ring; the first that fits is stamped and the rest are not tried. Outdoor vaults are not dealt into phases: each area shuffles all of them anew.
 
 A branch deals its random vaults round four phases by the run's chance (`mapgen::spaced_vaults`, `VAULT_PHASES` 4): floor `depth` may only draw the vaults of phase `depth % 4`, so no vault comes back within four floors of itself in a branch. **Adding vaults raises what a floor may choose from, not the chance of one** (docs/dev/mapgen.md). Pinned vaults (a branch level's `vaults`) are outside all of this and untouched by this design.
 
@@ -38,18 +40,22 @@ The Ascmearc's branches (`campaigns/ascmearc/data/dungeons/`): Lytelscræf 3 cav
 |---|---|---|---|
 | a full run, every branch to its bottom | 22 × 0.20 = 4.4 | 27 × 0.46 = 12.4 | **about 17** (plus the 9 pinned ones) |
 | a run that skips the four lairs | 2.4 | 8.7 | about 11 |
-| local areas | — | — | one ruin in **every** area entered |
+| Grundlēas, the endless branch (#1010) | 85 % of its floors (`[dungeon.endless] caves = 15`) | 15 % | about **one in four floors** (0.85 × 0.20 + 0.15 × 0.46 ≈ 0.24), without end |
 
-Today three shared vaults stamp in dungeons (Flooded cell, Guard post, Shrine; the other three are outdoor), so those 17 draws are 17 visits to three rooms: with the phase deal the same one comes every four floors of a branch, and every branch starts over. The owner's "appear way too often" is this. The outdoor side is worse: every local area gets one of three ruins.
+Grundlēas deals its vaults anew on every floor under that floor's own seed (docs/dev/mapgen.md), so there the phase deal does not space repeats: one vault may come on two floors in a row. Its floors are never remembered, so no one can compare them, but a deep dive is also where a small catalogue shows most. It is one more reason for the count, not a reason for a different one.
+
+**Local areas.** A local area is entered by choice (`>` on an overworld cell) or by an encounter fight that opens in the cell's area (docs/dev/encounters.md); nothing makes a player enter any. Of the Ascmearc's 5,010 overworld cells that have a local area, 1,315 are grassland, 1,297 plains, 793 forest, 592 hills, 534 dense forest, 335 swamp, and 144 road, so an area picked at random has a ruin about **one time in six** (16 %, weighted by those counts; the hills, Ascdūn's among them, twice that, the swamp of Micelfenn and the dense woods two thirds of it). A player who enters 30 areas over a run meets about 5 ruins; one who enters 60, about 10.
+
+Today three shared vaults stamp in dungeons (Flooded cell, Guard post, Shrine; the other three are outdoor), so those 17 draws are 17 visits to three rooms: with the phase deal the same one comes every four floors of a branch, and every branch starts over. The owner's "appear way too often" is this. The outdoor side has three ruins (Ruined chapel, Ruined tower, Stone circle) for those 5 to 10 meetings: fewer ruins than the dungeon side has draws, but from the same three every time.
 
 ### The target
 
 | Group | Now | Target | Why that number |
 |---|---|---|---|
 | shared dungeon vaults | 3 | **48** | 17 draws from 48 (12 a phase): the chance that any two draws of a run are the same vault is about 136 pairs × 1⁄48 ≈ 2.8 repeated pairs, so a full run sees about 14 *different* vaults of its 17, and a repeat has turned (#959) and rolled its pools, so it is not the same room. At 24 it would be 5.7 repeated pairs; at 72, 1.9: the curve flattens past 48, and 48 is three content batches of sixteen |
-| shared outdoor vaults | 3 | **12** | every area has one; twelve makes a repeat in the first dozen areas unlikely, and areas are entered far more often than dungeon floors. Outdoor vaults have no pools (§2), so their variety is in shape alone, which is why they need the count more than the depth |
+| shared outdoor vaults | 3 | **9** | about 5 ruins a run (30 areas entered), 10 for a player who explores (60). The number of *different* ruins met, N × (1 − (1 − 1⁄N)^k) for k ruins from N vaults: at 5 ruins, 2.6 of 3 today, 4.0 of 9, 4.2 of 12; at 10 ruins, 3.0 today, 6.2 of 9, 7.0 of 12. Nine gives a 5-ruin run four different ruins of five (80 %, the dungeon side's 85 % at 48), and twelve adds under one different ruin a run for three more files. Outdoor vaults have no pools (§2), so their variety is in shape and turn alone (#959 turns them too), which is why the count is not lower |
 
-The catalogue below has **25 dungeon vaults drawn in full** (§3), **9 outdoor** (§4), **the 6 existing** (§5), and **9 that wait on a feature** (§6), with a dozen sketched for the third batch (§3, at the end): 49 + 12 when every batch is in. No cap per run and no weights are proposed: the phase deal already spaces repeats, and a weight would be a hidden number to tune for no visible gain. If the count ever makes repeats rare enough that the deal is pointless, that is a later owner call.
+The catalogue below has **25 dungeon vaults drawn in full** (§3), **9 outdoor** (§4: six for the target, three marked optional, kept and not cut), **the 6 existing** (§5), and **9 that wait on a feature** (§6), with a dozen sketched for the third batch (§3, at the end): 49 dungeon + 9 outdoor when every batch is in (12 outdoor with the optional three). No cap per run and no weights are proposed: the phase deal already spaces repeats, and a weight would be a hidden number to tune for no visible gain. If the count ever makes repeats rare enough that the deal is pointless, that is a later owner call.
 
 ### Depth
 
@@ -73,12 +79,15 @@ What a vault file can say today, read from `content/level.rs` (`LegendDetail`), 
 | a lock | `lock = "guard_post"` on a closed door | its key must lie, or be carried, within reach of an unlocked entrance without unlocking a door; keys are objects with `key = "id"` (`brass_key` → `guard_post`, `iron_key` → `pantry`, `rusty_key` → `depths`, `bronze_key` → `barrow_chamber`, `skeleton_key` → `*`), so a new lock id ships its key file; `locked = true` without an id wants a skeleton key in reach: avoid it |
 | a secret door | `secret = true` on a closed door | dungeon vaults only |
 | a named place | `name = "..."`, `note = "..."` | stamped with the vault; look mode says them |
-| a pile | `objects = ["bones"]` on a cell, or `[[pile]] at = [x, y]` | prefer the legend form in a generic vault: it has no `at` to transform under #959 |
+| a pile | `objects = ["bones"]` on a cell, or `[[pile]] at = [x, y]` | prefer the legend form in a generic vault: the map is then the one place to read where things lie. Both turn with the vault (`content/vault_turn.rs` maps `objects` with the rest), so this is for the author, not for #959 |
 | outdoor | `kind = "outdoor"` | void is the area's ground; every open edge cell is a way in; **no traps, chests, secret doors, or monster pools** (a local area has no danger) |
 | shape | at least 3×3; a solid edge but entrance doors, never on a corner; everything walkable reachable from an entrance | a rooms floor is 80×21 with a one-cell ring of rock around the vault inside the inner 78×19: **at most 17 tall**; keep 9 or less to fit beside the rooms. Caves take 15×15 easily |
-| orientation (#959, in progress) | a vault says when it cannot turn | assumed here as a file-level flag; the catalogue has nothing that cannot turn, and nothing written that names a direction |
+| orientation (#959, landed in #1035) | `turns = false` at the top of the vault file | a vault drawn at random lies any of eight ways (four turns, each mirrored or not) unless its file says `turns = false`, "for text that depends on direction or a layout that must not turn" (docs/dev/content.md); refused on a level; a pinned vault (a branch level's `vaults`) never turns. `ruins` turns outdoor vaults too. Terrain, creatures and their `route`, lights, `flow`, piles, traps and a bolt's `dir`, locks, chests, secrets, places, loot, and `monsters` all turn with the vault (`content/vault_turn.rs`). The catalogue has nothing that cannot turn, and nothing written that names a direction, so no file in it says `turns = false` |
+| deep water (#1019, #1020) | `"D" = "deep_water"` in the vault's own legend (it has no shared glyph) | not walkable (`swim = true`): a trained swimmer may dive in, nothing else enters it. The vault's reachability check counts walkable cells and doors only (`Vault::new`), so nothing in a vault may be reachable only by swimming, and a find cannot lie in it (`loot` is for walkable terrain). The generators' deep pools never touch a vault (`mapgen/deep.rs`, docs/dev/mapgen.md). The catalogue uses none: its water is `water` (the shared `~`) and `shallow_water`, both wadeable, so the Mere, the Archers' Walk, the Well-house, and the Drowned Mill are wades, not swims |
 
-Who can leave a room: a creature without `opens_doors` cannot pass a closed door (`CreatureDef::opens_doors`, docs/dev/creatures.md); of the shipped types only the big and the clever have it (vampires, trolls, wight lords, the wild huntsman …). So **a closed door holds a crowd**, and an open doorway (`'`) does not: the catalogue leans on this.
+Not in the toolbox: **zones** (#1000: Balefire, Reek, Mirk, Slick) are laid in play by spells and their scrolls (`LevelState::zones`); a level or vault file cannot lay one. A vault's finds may roll the four scrolls like any other (they joined the loot pools).
+
+Who can leave a room: a creature without `opens_doors` cannot pass a closed door (`CreatureDef::opens_doors`, docs/dev/creatures.md); of the shipped types only the big and the clever have it (vampires, trolls, wight lords, the wild huntsman …). So **a closed door holds a crowd**, and an open doorway (`'`) does not: the catalogue leans on this. Once stamped, a pool's creatures are ordinary creatures of the floor: a hostile one beside the player when they take the stairs follows them (#985, `world/stair_followers.rs`; a den's sleepers only once woken), so a crowd fought at a vault's door can come down with a player who breaks off at the stairs. No vault has stairs, so this changes no map.
 
 Tag pools and their shallowest member (from the creature files): `undead` 1, `skeleton` 1, `vermin` 1, `elemental` 1, `goblin` 2, `kobold` 2, `spirit` 2, `fey` 2, `orc` 3, `archer` 3, `caster` 4, `marsh-thing` 4, `fiend` and `devil` 5, `cultist` 6, `outlaw` 6 (the Ascmearc's), `demon` and `duergar` and `summoner` 8, `troll` 9 (the marsh troll), `hag` 11, `giant` and `ogre` 12, `drow` 14. Beasts never come from a pool: `wildlife` is neutral, and a pool holds only what `Content::may_stray` (hostile to the player). **Nor do the fey**: a type that rolls its court per creature (`factions = { seelie = 50, unseelie = 50 }`) has no `faction`, so `Content::stance` reads it as neutral and `may_stray` leaves it out; the loader refuses `pool = "fey"` ("no creature that may be drawn has that tag"). The fey vault waits on §6, F9.
 
@@ -703,7 +712,7 @@ Suits danger 2 and deeper (corpse candles, then stone haunts, poltergeists, shad
 
 ### The third batch, sketched
 
-Twelve more for batch 3 (§8), each a line: the decision is the entry, the map is the batch's work. They bring the dungeon count to 49 with §5's three and §6's nine.
+Twelve more for batch 5 (§8), each a line: the decision is the entry, the map is the batch's work. They bring the dungeon count to 49 with §5's three and §6's nine.
 
 | Vault | Register | The situation and its decision | Pool | Suits |
 |---|---|---|---|---|
@@ -722,9 +731,9 @@ Twelve more for batch 3 (§8), each a line: the decision is the entry, the map i
 
 ## 4. The catalogue: outdoor vaults
 
-For the local areas of the overworld. No pools, no traps, no chests, no secret doors (§2): an outdoor vault is a shape, its finds, and at most a creature or two for flavour at a fixed level, never as a guard of anything worth having. Their decisions are small ones, and the count is what they need (§1).
+For the local areas of the overworld. No pools, no traps, no chests, no secret doors (§2): an outdoor vault is a shape, its finds, and at most a creature or two for flavour at a fixed level, never as a guard of anything worth having. Their decisions are small ones. A ruin comes in about one local area in six (§1), so the target is nine outdoor vaults: the three of §5 and six of these. The six are O3, O4, O6, O7, O8, and O9 (the Hoar-stone stays: the owner approved one landmark stone, §9). **O1, O2, and O5 are optional**, kept here and not cut, each the nearest to a ruin the game already has or this list keeps: the Cairn's ring of stones is the Stone circle's, the Hanging Oak's dead among the rubble is the Old Battle's on a smaller scale, and the Wayside Shrine's offering before a stone is the Ruined chapel's scroll before its altar. They are built when the owner asks for them, or when a later count calls for more.
 
-#### O1. The Cairn *(Old; Gaelic through Scots)*
+#### O1. The Cairn *(Old; Gaelic through Scots)* — optional
 
 A ring of standing stones about a heap of rubble, bones under it, and a piece of grave goods among them. Nothing in the way but the walk over loose stones.
 
@@ -752,7 +761,7 @@ O,,$,,O
 
 7×7.
 
-#### O2. The Hanging Oak *(Middle; the hanging tree of every crossroads)*
+#### O2. The Hanging Oak *(Middle; the hanging tree of every crossroads)* — optional
 
 A dead tree, bones at its foot, a rope among them, and the hanged man's purse where it fell.
 
@@ -834,7 +843,7 @@ b..,...b.
 
 9×5.
 
-#### O5. The Wayside Shrine *(Middle)*
+#### O5. The Wayside Shrine *(Middle)* — optional
 
 A shrine stone in a bed of flowers, and an offering left before it: a potion.
 
@@ -961,22 +970,22 @@ map = '''
 "O" = { terrain = "standing_stone", name = "the Hoar-stone", note = "A boundary stone older than any boundary it marked." }
 ```
 
-3×3. Nine such stones with nine names would be nine landmarks for the cost of nine small files; one is proposed, the rest are batch 3's if the owner likes it.
+3×3. Nine such stones with nine names would be nine landmarks for the cost of nine small files; one is built now (§9, decision 5); more stones are a later line if the owner likes steering by them.
 
-The three existing outdoor vaults (§5) make twelve.
+The three existing outdoor vaults (§5) and the six make nine, the target; with the optional three, twelve.
 
 ## 5. The six that exist
 
 | Vault | Kind | Stamps in dungeons | What is static now | What this design does |
 |---|---|---|---|---|
 | Flooded cell | dungeon | yes | nothing: its one find is already `loot = { pool = ["money", "jewellery"] }` (#967) | **kept as is.** The owner's example ("always 2 rubies") is already rolled. It is the shortest vault in the game and stays the easy one |
-| Guard post | dungeon | yes | three piles: `spear, leather_jerkin`, `dried_meat*4`, `skeleton_key`; the kobold's `route = "E2 W2"` | **converted**: the arms pile → `loot = { pool = ["weapons", "armour"] }`, the meat → `loot = { pool = "food" }`; the kobold stays (a fixed key-bearer is the pattern §2 allows); the skeleton key is open question 3; the route turns with #959 |
+| Guard post | dungeon | yes | three piles: `spear, leather_jerkin`, `dried_meat*4`, `skeleton_key`; the kobold's `route = "E2 W2"`. Its company is already drawn: `"g" = { terrain = "floor", monsters = { pool = "level", count = 2 } }` on four cells (#958) | **converted**: the arms pile → `loot = { pool = ["weapons", "armour"] }`; the meat stays placed, as `objects = ["dried_meat*4"]` on a legend cell (food is no loot class, §2: flavour, not a find); the kobold stays (a fixed key-bearer is the pattern §2 allows); the skeleton key stays (§9, decision 3); the route turns with the vault (#959, landed) |
 | Shrine | dungeon | yes | the `jade_amulet` offering on the spear trap | **converted**: the offering → `loot = { pool = "jewellery" }` on the trap cell (loot on a trap is allowed: `content/level.rs` refuses neither); the `m` find stays `any` |
 | Ruined chapel | outdoor | no | the `scroll_of_light` on the altar's steps | **converted**: → `loot = { pool = "scrolls" }` |
 | Ruined tower | outdoor | no | `copper_coin*3` in the rubble | **converted**: → `loot = { pool = "money" }` |
 | Stone circle | outdoor | no | nothing (it holds no find) | **kept**: a landmark; it gains a `name` on its altar ("the Stone Circle") so look mode names it, as the Hoar-stone |
 
-None of the six needs a pool it lacks. The guard post's `[[pile]]` entries become legend cells (`"w" = { terrain = "floor", loot = ... }`), so nothing in the file carries an `at` for #959 to transform but the route.
+None of the six needs a pool it lacks. The guard post's `[[pile]]` entries become legend cells (`"w" = { terrain = "floor", loot = ... }`), so the map is the one place that says where everything lies (#959 would turn the piles either way, §2).
 
 ## 6. Vaults that need a feature first
 
@@ -1008,9 +1017,9 @@ The rules the catalogue was written to, for `assets/vaults/README.toml` and docs
 | **Two entrances means a way through.** Give two only to vaults that are a route by design (the Kennels, the Catacomb, the Mead-hall), one to every other | the same |
 | **Counts below cells.** `count` is at most two thirds of the cells it marks, so the empty cells move | a pool with `count` = cells is a fixed layout in different faces |
 | **Pools with a shallow member.** A tag pool whose shallowest type is above danger 1 stamps an empty room above it until F1 lands; so either use `level`, or a list with a shallow tribe in it (`["orc", "ogre", "troll", "giant"]`), or accept the empty room and say so in the file | §1, "Depth" |
-| **Nothing names a direction.** No `note`, `name`, or comment that says north, left, or far end; no `[[pile]] at` where a legend cell does; routes and bolt `dir`s are allowed because #959 transforms them | no text that breaks under rotation (the brief) |
+| **Nothing names a direction.** No `note`, `name`, or comment that says north, left, or far end; routes, bolt `dir`s, `flow`, and `[[pile]] at` are allowed because #959 transforms them (prefer a legend cell to a `[[pile]]` all the same, §2). A vault whose text must name a direction says `turns = false` at the top of its file, and says why in its comment | no text that breaks under rotation (the brief) |
 | **Symmetry is cheap variety.** A vault that is the same mirrored gains nothing from #959's mirror; one that is not gains two looks. The Gauntlet's corridor on one side and guard-room on the other is the shape to prefer over the Shrine's four-way symmetry | #959 |
-| **Size by floor.** 9 tall or less and 19 wide or less fits beside the rooms of an 80×21 floor; bigger vaults are cave vaults and are skipped on rooms floors (`vault::shuffled` tries the next), which is allowed but not free: a vault that never fits rooms floors is dead weight there | §2 "shape" |
+| **Size by floor.** 9 tall or less and 19 wide or less fits beside the rooms of an 80×21 floor; bigger vaults are cave vaults and are skipped on rooms floors (`vault::shuffled` tries the next), which is allowed but not free: a vault that never fits rooms floors is dead weight there. A quarter turn (#959) swaps width and height, so a vault more than 17 wide fits a rooms floor only in the four ways that keep it lying across, and the others are failed tries (docs/dev/mapgen.md) | §2 "shape" |
 | **Finds away from the door, and off the pool's cells.** A branch's hidden trap may take a loot or monster cell and leave it empty (`hide_traps` avoids piles, not these); it is a known cost and no vault should fall apart over one empty cell | docs/dev/mapgen.md |
 | **Fixed creatures carry keys and colour; pools carry the danger.** A placed `creature` is level 2 on floor 20 | §2 |
 | **Locks ship their key**, one key object per lock id, in `assets/data/objects/`; a chest is the keyless lock; `locked = true` on a door is not used | §2 |
@@ -1024,11 +1033,11 @@ In order; each a PR; content only where it can be.
 
 | # | Issue | Kind | Contents | Depends on |
 |---|---|---|---|---|
-| 1 | Convert the six (§5) | content | Guard post, Shrine, Ruined chapel, Ruined tower to pools; a `name` on the Stone circle's altar; the `README.toml` with §7's rules | #959 merged (the guard post's route) |
+| 1 | Convert the six (§5) | content | Guard post, Shrine, Ruined chapel, Ruined tower to pools; a `name` on the Stone circle's altar; the `README.toml` with §7's rules | — (#959 has landed, #1035) |
 | 2 | Batch 1: eight any-depth dungeon vaults | content | The Kennels, The Reeve's Strong-room, The Spiteful Coffer, The Sealed Barrow (+ `lead_key`), The Gauntlet, The Catacomb, The Wights' Niches, The Ossuary | 1; a test that each stamps at least once in 100 seeds of a rooms branch and a caves branch (the outdoor vaults have this in `mapgen/local/tests.rs`; the dungeon ones do not) |
 | 3 | F1: a vault's `danger` | core, small | §6 F1; `spec/07c-generation.md`, docs/dev/mapgen.md, docs/dev/content.md | — |
 | 4 | Batch 2: the depth vaults | content | The Troll-bridge, The Mere, The Archers' Walk, The Mead-hall, The Bell and the Barracks, The Delving, Dead Men's Gear, The Reliquary, The Lectern, The Champion's Ring, The Rune-stone, The Dark Chapel, Old Enemies, The Conventicle, each with its `danger` | 3 |
-| 5 | Batch 3: the outdoor nine (§4) | content | O1–O9 | 1 |
+| 5 | Batch 3: six outdoor vaults (§4) | content | O3 The Burnt Steading, O4 The Old Battle, O6 The Fairy Ring, O7 The Hermit's Hut, O8 The Drowned Mill, O9 The Hoar-stone; O1, O2, and O5 are optional and not in it | 1 |
 | 6 | F2 + F3 + F4: statuses, a carried key, and a route on a pool cell | core, small ×3 | one PR: the three fields are read in the same two places | — |
 | 7 | Batch 4: the sleeping and keyed vaults | content | The Wyrm's Bed, The Dormitory, The Drunken Hall, One of Them Has It, The Watchmen | 6 |
 | 8 | Batch 5: the twelve sketched (§3, end) | content | drawn and checked as §3's were | 3 |
@@ -1038,14 +1047,15 @@ Tests each content batch runs: the loader's checks (every vault file is validate
 
 Wiki: vaults are not described on the wiki (no locations or level walkthroughs yet, CLAUDE.md), and this design changes no rule the wiki states.
 
-## 9. Open questions
+## 9. Decisions
 
-Only what the owner has to decide; each with a recommendation.
+The owner approved the design (PR #1034) with the recommendations of its five open questions, and one correction.
 
-| # | Question | Recommendation |
-|---|---|---|
-| 1 | **The target**: 48 dungeon and 12 outdoor shared vaults, in the batches of §8, or more, or fewer? | 48 + 12. The repeat curve flattens past 48 (§1), and five batches are enough PRs; beyond it, new vaults should come with new mechanics, not more shapes |
-| 2 | **Depth by a field (F1) or by pools alone?** Without F1 every deep vault is an empty room on the floors above its tribe, and every shallow one stamps at danger 40 | F1, before batch 2: it is one field and one check, and the "suits" column of the catalogue is written to it |
-| 3 | **The Guard post's skeleton key.** The store room's skeleton key is the one static find left in the shared vaults after §5: it is the vault's point (a locked room whose store holds the key to every lock), and it is also exactly the kind of fixed reward #957 complains of | keep it: it is a reward for a decision (take the store), not a pile; and it is the only one |
-| 4 | **Fixed creatures outdoors.** O6 places three level-2 sprites in a local area whatever the traveller's level | allow it for flavour only, as §7 says; no outdoor vault guards a find with a fixed creature |
-| 5 | **Landmarks.** The Hoar-stone (O9) is nine cells and a name; nine such stones would be nine landmarks to steer by | one now; if the owner likes steering by stones, the rest are a batch-3 line |
+| # | Decision |
+|---|---|
+| 1 | **The target**: 48 shared dungeon vaults, in the batches of §8. The repeat curve flattens past 48 (§1); beyond it, new vaults come with new mechanics, not more shapes. The outdoor target the first pass gave (12) rested on the wrong rate and is now nine: see the correction |
+| 2 | **Depth by a field**: F1, a vault file's `danger`, lands before batch 2; the catalogue's "suits" rows are written to it |
+| 3 | **The Guard post's skeleton key stays**: a reward for a decision (take the store), not a pile, and the only static find left in the shared vaults |
+| 4 | **Fixed creatures outdoors** are allowed for flavour only (O6's sprites); no outdoor vault guards a find with a fixed creature |
+| 5 | **Landmarks**: one now, the Hoar-stone (O9); more stones only if the owner asks |
+| Correction | **Ruins come by chance, not in every area.** `mapgen/local/mod.rs` rolls each landscape's ruins chance (hills 30 %; grassland, forest, plains 15 %; dense forest, swamp 10 %) before placing one, at least 24 cells from the centre on free ground out of water. A ruin is met in about one local area in six, 5 to 10 a run (§1). The outdoor target is nine: the three existing and six of §4's (O3, O4, O6, O7, O8, O9); O1, O2, and O5 are kept as optional, not cut |
