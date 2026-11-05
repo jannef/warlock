@@ -58,6 +58,7 @@ for the nearest one:
 - When it **[hears](hearing.md#what-makes-noise)** something it cannot see, it goes to have a look, if it has enemies at all
   (wildlife does not bother). See [Hearing](hearing.md).
 - With nothing left to chase, it walks back to where it left its routine and carries on.
+- Beside you when you take [stairs](terrain.md#stairs), it comes along.
 
 Creatures behave the same way every time in the same situation: there is no chance in it, but
 for whether you [slip past](skills.md#slipping-past) one in the dark. They

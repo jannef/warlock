@@ -276,6 +276,11 @@ pub struct Actor {
     /// whether the player has met it.
     #[serde(default, skip_serializing_if = "Talk::is_new")]
     pub talk: Talk,
+    /// The level it first left following the player down or up a staircase
+    /// (`world/stair_followers.rs`), where its kill counts for a quest; `None` for one that
+    /// never followed.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub home: Option<String>,
 }
 
 fn is_zero(n: &u32) -> bool {
