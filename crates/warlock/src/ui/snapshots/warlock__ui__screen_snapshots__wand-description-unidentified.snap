@@ -3,7 +3,7 @@ source: crates/warlock/src/ui/screen_snapshots.rs
 expression: "render(case, content.clone())"
 ---
  There are several objects here. (×2)
- You pick up a hazel wand and a birch wand.
+ You pick up a silver wand and a pine wand.
 
 
 
@@ -12,9 +12,9 @@ expression: "render(case, content.clone())"
 
                   ┌─ Item ───────────────────────────────────────────────────────┐
                   │                                                              │
-                  │ - Hazel wand                                                 │
+                  │ - Silver wand                                                │
                   │                                                              │
-                  │ Hazel wand · wood · 200 g                                    │
+                  │ Silver wand · wood · 200 g                                   │
                   │                                                              │
                   │ Readied: missile weapon                                      │
                   │                                                              │
