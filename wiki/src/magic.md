@@ -195,6 +195,24 @@ half its hit points, before what it resists. The undead are immune to necrotic h
 **Acid keeps eating.** Every creature an acid spell harms is [Corroded](status-effects.md#corroded) a degree: two more hit points in the
 next twelve seconds. Acid does not eat armour.
 
+## Zones
+
+A **zone** is an area that lies on the floor for a while: [Balefire](#the-spells) burns, [Reek](#the-spells) poisons, [Mirk](#the-spells) darkens, and [Slick](#the-spells)
+trips. All four come only from [scrolls](#learning-spells-from-scrolls) you find. A zone's cells stay as they were laid, and it never spreads. It
+takes you and your [allies](allies.md) like anyone: the caster has no protection against their own, though a
+kill it makes is theirs. A zone laid over another replaces it on the cells they share. It stays when you
+leave the level, its time running while you are away. No zone can be laid on the [overworld](overworld.md).
+
+| Kind | Who it takes | What it does |
+|---|---|---|
+| Fire | whoever starts a turn on it or steps onto it | the spell's [fire](#spell-types) harm, one number rolled as it is laid and the same for all its time, halved by [Evasion](talents.md#talent-evasion); then fire's one chance in four of [burning](status-effects.md#burning). Each cell sheds a fire's light, and the [ice](temperature.md#water-freezes) under it melts as it is laid. It lies only on walkable ground out of the water |
+| Foul cloud | whoever starts a turn in it | [Poisoned](status-effects.md#poisoned) one degree more, no other harm; nothing to the [poison-immune](damage-types.md). It does not block sight |
+| Slick ground | whoever steps onto it or off it | a [Dexterity](stats.md#stat-dexterity) check against 12: failed, [Staggered](status-effects.md#status-staggered), the next action half again as slow. The step is still taken. Nothing incorporeal slips. It lies only on walkable ground out of the water |
+| Darkness | no one directly | no light reaches its cells, the sun's included, and a light inside sheds none, a burning creature's too. Eyes that need light see nothing inside; [darkvision](vision.md#the-four-types) sees in as far as it reaches. The player's eyes follow the same rule, and from inside it they see only the cell they stand on and what is lit beyond |
+
+A [cold](#spell-types) spell puts out the fire on each cell it reaches, and the rest of the zone burns on. A zone shows as a still
+tint of its cells, and look mode names it.
+
 ## How a spell grows
 
 Each spell's row lists its ladders: a stat and the scores at which the spell changes. Your score
