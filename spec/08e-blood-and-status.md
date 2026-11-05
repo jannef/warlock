@@ -557,7 +557,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
       spell learned anyway. A failure loses only that scroll: the spell can come again.
     - **Training**: the `study` use (Spellcraft's and Decipher script's marks; an Intelligence
       mark), whatever comes of it; in a scriptorium (§7 "Special rooms") Decipher script's
-      mark is twice as likely.
+      mark is twice as likely. Spending mana on a spell is practice for Spellcraft too (its `cast`
+      mark, 25 %, as Concentration's); reading a scroll to cast it marks nothing of its own.
     - **Determinism**: the check's two gameplay draws only when there is a check, the mishap's
       one only on a failure, then its effect's own.
     - **Shown**: the chance in words only (`StudyRules::words`: "certain", "easy" from 96 of 144
