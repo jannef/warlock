@@ -5469,8 +5469,14 @@ mod tests {
         assert_eq!(
             ids,
             [
+                "burnt_steading",
+                "drowned_mill",
+                "fairy_ring",
                 "flooded_cell",
                 "guard_post",
+                "hermits_hut",
+                "hoar_stone",
+                "old_battle",
                 "ruined_chapel",
                 "ruined_tower",
                 "shrine",
@@ -5488,9 +5494,9 @@ mod tests {
                 "unhallowed_chapel"
             ]
         );
-        assert_eq!(content.vaults()[4].entrances.len(), 3);
+        assert_eq!(content.vaults()[10].entrances.len(), 3);
         let outdoor: Vec<_> = content.vaults().iter().filter(|v| v.is_outdoor()).collect();
-        assert_eq!(outdoor.len(), 3);
+        assert_eq!(outdoor.len(), 9);
     }
 
     #[test]

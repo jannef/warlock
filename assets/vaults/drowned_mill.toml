@@ -1,0 +1,19 @@
+# O8 (docs/design/generic-vaults.md §4): a mill-pond, the mill's stump in it, coin on the bottom.
+# The decision: whether to wade in for it (slow and loud; the water is wadeable, not deep).
+name = "The Drowned Mill"
+kind = "outdoor"
+map = '''
+  ~~~~~  
+ ~~r~~r~ 
+ ~~$~W~~ 
+~r~~W=W~~
+ ~~$~=~~ 
+ ~~r~~r~ 
+  ~~~~~  
+'''
+
+[legend]
+"r" = "reeds"
+"W" = "timber_wall"
+"=" = "plank_floor"
+"$" = { terrain = "water", loot = { pool = "money" } }
