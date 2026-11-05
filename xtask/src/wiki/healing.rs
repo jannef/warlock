@@ -365,6 +365,14 @@ fn also(content: &Content, def: &StatusDef) -> String {
         };
         parts.push(format!("you shed light {reach}"));
     }
+    if let Some(senses) = def.senses {
+        parts.push(format!(
+            "every living creature within {} cells you do not see (not the undead, animated \
+             things, or constructs) is heard as {} at a rough place, up to 2 cells off, each turn",
+            senses.reach,
+            senses.kind.heard_as()
+        ));
+    }
     if let Some(vision) = def.vision {
         let eyes = &content.vision_profiles()[vision];
         parts.push(format!(

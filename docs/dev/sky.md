@@ -44,8 +44,10 @@ content a clear sky, as the overworld tests do): stateless, `weather::conditions
 climate, override)` (weather and `Clouds`) and `weather_at` (just the weather, cheap). Blocks of
 ~3 h with a hashed start shift; a block's weather is the Irwin–Hall-spread sum of `WINDOW` block
 draws against the month's chances; clouds ramp over `CHANGE` around a change. Never keep weather
-state: only the dev override (`Action::SetWeather`, `weather:rain`, `WorldState::weather_override`,
-3 hours) lives in the world state. The clouds apply in `Sky::at(time, moons, conditions)`, and
+state: only the override (`WorldState::weather_override`, `weather::Override { weather, since,
+until }`) lives in the world state: the dev action's (`Action::SetWeather`, `weather:rain`, 3 hours,
+`Override::new`) or a spell's (Cloudburst, `[spell.effect] weather`, an hour,
+`Override::lasting`; docs/dev/spells.md "Small rules"), each holding from `since` to `until`. The clouds apply in `Sky::at(time, moons, conditions)`, and
 nowhere else (rounded up, so `is_up`/`shines` never change); `Sky::clear` is the sky without them;
 `WorldState::sky` is the sky of the moment for perception and creature sight alike.
 Perception knows the weather only on sky-exposed levels (`Sky::conditions`,

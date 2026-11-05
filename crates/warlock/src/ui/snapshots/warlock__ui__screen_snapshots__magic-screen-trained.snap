@@ -8,7 +8,6 @@ expression: "render(case, content.clone())"
 
 
 
-
 ┌─ Magic ─────────────────────────────────────────────────────────────────────────────────────────────────────┐
 │                                                                                                             │
 │ Mana 157/162                                                                                                │
@@ -32,10 +31,11 @@ expression: "render(case, content.clone())"
 │   Ray of frost            1d7 cold, numbs, 1 mana, aimed                                                    │
 │   Magic missile           2d5 force, shoves on a big hit, 2 mana, aimed                                     │
 │   Arcane bolt             3d7 force, shoves on a big hit, 8 mana, aimed                                     │
+│   Blink                   5 mana                                                                            │
+│   Shatter                 3d7 force, shoves on a big hit, 10 mana, aimed                                    │
 │                                                                                                             │
 │ Esc close                                                                                                   │
 └─ 1 Character · 2 Inventory · 3 Equipment · 4 Skills · 5 Weapons · 6 Magic · 7 Quests · 8 Talents · 9 Story ─┘
-
 
 
 

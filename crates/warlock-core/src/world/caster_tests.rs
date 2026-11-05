@@ -164,7 +164,9 @@ fn every_caster_has_its_table_by_level_sixty() {
                 "Consecrate",
                 "Communion with the dark",
                 "Prayer",
+                "Rebuke",
                 "Prayer of release",
+                "Benison",
                 "Litany",
                 "Litany of the mind",
                 "Benediction",
@@ -181,9 +183,12 @@ fn every_caster_has_its_table_by_level_sixty() {
                 "Barkskin",
                 "Call of the wild",
                 "Water walking",
+                "Bramble",
                 "Call lightning",
                 "Nature's ward",
+                "Gale",
                 "Call of the forest",
+                "Cloudburst",
                 "Pack leader",
                 "Call the elements",
                 "Flame and frost",
@@ -203,6 +208,7 @@ fn every_caster_has_its_table_by_level_sixty() {
                 "Poison lore",
                 "Cause wounds",
                 "Malison",
+                "Leech",
                 "Second sight",
                 "Familiar's sight",
                 "Curse of sloth",
@@ -236,6 +242,8 @@ fn every_caster_has_its_table_by_level_sixty() {
             "Arcane training",
             "Magic missile",
             "Knock",
+            "Blink",
+            "Shatter",
             "Scribe"
         ]
     );
@@ -326,9 +334,11 @@ fn the_spells_are_abilities_by_level() {
             "Cause wounds",
             // Level 5.
             "Call of the wild",
+            "Sense the quick",
             "Water walking",
             // Level 6.
             "Arcane bolt",
+            "Blink",
             "Frost",
             "Identify",
             "Sleep",
@@ -337,24 +347,33 @@ fn the_spells_are_abilities_by_level() {
             "Blight",
             "Brand",
             "Scorching ray",
+            "Thunderclap",
             "Web",
+            "Bramble",
+            "Shatter",
+            "Leech",
             // Level 11.
             "Call lightning",
             "Fireball",
+            "Gale",
             "Haste",
             "Lightning bolt",
             "Remove disease",
+            "Benison",
             // Level 12.
             "Fire cloak",
             "Flame",
             "Mirk",
             // Level 13.
             "Reek",
+            // Level 14.
+            "Rebuke",
             // Level 16.
             "Balefire",
             // Level 20.
             "Call of the forest",
             "Chain lightning",
+            "Cloudburst",
             // Level 35.
             "Call the elements",
         ]

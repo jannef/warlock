@@ -175,6 +175,7 @@ fn every_builtin_scroll_can_be_read() {
                     _ if spell.open_sky => Some("open sky"),
                     SpellPurpose::Hex => Some("means you no harm"),
                     SpellPurpose::Cleanse => Some("nothing to cure"),
+                    SpellPurpose::Heal if spell.about_caster() => Some("No one here is hurt"),
                     _ => None,
                 }
             }

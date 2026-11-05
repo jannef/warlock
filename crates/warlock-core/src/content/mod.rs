@@ -311,8 +311,9 @@ pub use smite::SmiteRules;
 pub use spell::{BOLT_LENGTHS, BURST_RADII, Bolt, Burst, BurstIce};
 pub use spell_def::{
     ARC_REACH, Grows, MAX_ARCS, MAX_CASTS, MAX_CONE, MAX_REACH, MAX_SPELL_LEVEL,
-    MAX_SUMMON_MINUTES, Ratio, Resolution, STUDY_DIFFICULTY, School, Shape, SpellData, SpellEffect,
-    SpellId, SpellLook, SpellPurpose, SpellRules, SpellSummon, SpellZone, ZoneKind,
+    MAX_SUMMON_MINUTES, OnlyTerrain, Ratio, Resolution, STUDY_DIFFICULTY, School, Shape,
+    SpellBlink, SpellData, SpellEffect, SpellId, SpellLook, SpellPurpose, SpellRules, SpellSummon,
+    SpellWeather, SpellZone, ZoneKind,
 };
 pub use spell_ladder::{
     Ladder as SpellLadder, MAX_RUNGS, MAX_SCORE, RungValue, Unit as LadderUnit,
@@ -1158,6 +1159,7 @@ impl Content {
         content.load_summons()?;
         // Summon spells' pools, once every creature type is known.
         spell_def::resolve_summons(&mut content)?;
+        spell_def::check_only_tags(&content).map_err(|m| ContentError::new("data/spells", m))?;
         let path = "data/shops.toml";
         if let Some(text) = files.get_optional(path) {
             content.shops = Some(Shops::parse(path, text, &content)?);
@@ -1512,6 +1514,7 @@ impl Content {
                 roofed: spec.roofed,
                 stains: spec.stains,
                 stone: spec.stone,
+                plants: spec.plants,
                 step_noise: spec.step_noise,
                 toggle_noise: spec.toggle_noise,
                 // Solid terrain blocks sound unless it muffles it; everything else passes it.

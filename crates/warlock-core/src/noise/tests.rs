@@ -584,3 +584,9 @@ fn a_quick_walker_s_steps_in_one_turn_are_one_sound() {
     let unseen = perceive(&level, &content, (&heard, 10, Exact::No), 5, |p| p.x > 5);
     assert_eq!(unseen.len(), 1);
 }
+
+#[test]
+fn a_heartbeat_is_rough_even_to_ears_that_place_every_sound() {
+    assert!(Exact::All.places(SoundKind::Footsteps));
+    assert!(!Exact::All.places(SoundKind::Heartbeat));
+}

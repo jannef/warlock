@@ -57,11 +57,21 @@ pub fn roll_words(content: &Content, spell: &SpellData, roll: Roll) -> SpellRoll
     };
     // The rule every spell of its type carries (`data/spells.toml`'s `[types]`).
     let rule = (content.spell_type(spell.damage_type)).and_then(|t| t.words.as_deref());
+    let mut text = match rule {
+        Some(rule) => format!("{shown} {what}, {rule}"),
+        None => format!("{shown} {what}"),
+    };
+    // What comes back to the caster (Leech), in words: the percent stays the wiki's.
+    if let Some(percent) = spell.effect.leech {
+        let share = match percent {
+            100 => "all",
+            50 => "half",
+            _ => "part",
+        };
+        text.push_str(&format!(", {share} of it yours"));
+    }
     SpellRoll {
-        text: match rule {
-            Some(rule) => format!("{shown} {what}, {rule}"),
-            None => format!("{shown} {what}"),
-        },
+        text,
         roll,
         damage_type: spell.damage_type,
     }

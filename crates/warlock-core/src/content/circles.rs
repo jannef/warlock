@@ -221,7 +221,7 @@ mod tests {
         assert_eq!(row("webbed"), Some((School::Transmutation, true)));
         assert_eq!(row("ill_wished"), Some((School::Enchantment, true)));
         assert_eq!(row("fortified"), None, "a potion's boost has no circle");
-        assert_eq!(circles.rows().len(), 12);
+        assert_eq!(circles.rows().len(), 13);
         assert_eq!(circles.color(School::Abjuration).to_string(), "#80b4e0");
     }
 

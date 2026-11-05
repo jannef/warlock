@@ -1,0 +1,8 @@
+[[talent]]
+id = "rebuke"
+name = "Rebuke"
+tree = "class"
+granted = true
+description = "Your faith burns the dead (paid in mana): every undead thing where you aim is seared and flees."
+effects = [{ kind = "spell", spell = "rebuke" }]
+systems = ["spells", "mana", "combat"]
