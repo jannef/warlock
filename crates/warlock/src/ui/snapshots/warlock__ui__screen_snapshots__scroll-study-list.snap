@@ -2,9 +2,8 @@
 source: crates/warlock/src/ui/screen_snapshots.rs
 expression: "render(case, content.clone())"
 ---
+ You pick up 10 objects.
  This is a Sharp dagger of the Lynx! This is 2 scrolls of fireball! This is 2 scrolls of lightning!
- This is 2 scrolls of frost! This is 3 scrolls of identify!
-
 
 
 
@@ -15,12 +14,13 @@ expression: "render(case, content.clone())"
           ┌─ Study ──────────────────────────────────────────────────────────────────────┐
           │                                                                              │
           │ Scrolls                                                                      │
-          │ > a - ? 2 scrolls of fireball (Fireball: far beyond you)              100 g  │
-          │   b - ? 2 scrolls of lightning (Lightning bolt: far beyond you)       100 g  │
-          │   c - ? 2 scrolls of frost (Frost: a struggle)                        100 g  │
-          │   d - ? 3 scrolls of identify (Identify: a struggle)                  150 g  │
+          │ > a - ? a scroll of light (Light: certain)                             50 g  │
+          │   b - ? 4 scrolls of identify (Identify: easy)                        200 g  │
+          │   c - ? 3 scrolls of frost (Frost: easy)                              150 g  │
+          │   d - ? 2 scrolls of fireball (Fireball: a struggle)                  100 g  │
+          │   e - ? 2 scrolls of lightning (Lightning bolt: a struggle)           100 g  │
           │                                                                              │
-          │ a-d or Enter study   Esc cancel                                              │
+          │ a-e or Enter study   Esc cancel                                              │
           └──────────────────────────────────────────────────────────────────────────────┘
 
 
@@ -31,4 +31,4 @@ expression: "render(case, content.clone())"
 
 
 
- The Trap Hall  ·  HP 22/22  ·  MP 2/2  ·  Sta 10/10  ·  Lv 1  ·  08:00                  ? controls
+ The Trap Hall  ·  HP 12/12  ·  MP 17/17  ·  Lv 1  ·  08:00  ·  11 Darkening  ·  10 °C   ? controls

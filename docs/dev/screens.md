@@ -90,7 +90,7 @@ to open, read keys for, or draw one:
   action closes it and is applied (`play.act`, which may answer with a dialog of its own: the
   sell offer), a follow-up dialog replaces it (`ScreenStack::handle`). Users: every quit path
   (`menu::quit_dialog(saving)` for the pause and main menu Quit and a bound `KeyCommand::Quit`,
-  `save_to_menu_dialog`), the step onto a known trap (`input::trap_dialog`, spec §8 "Traps"), an overworld step while Fainting or Starving (`input::hunger_dialog`, spec §8 "Hunger"), a step into a feature that offers an action (`input::offer_dialog`, `docs/dev/special-rooms.md`), a burst
+  `save_to_menu_dialog`), the step into deep water (`input::deep_water_dialog`, spec §8 "Skills": Swim; first in the step's chain, below), the step onto a known trap (`input::trap_dialog`, spec §8 "Traps"), an overworld step while Fainting or Starving (`input::hunger_dialog`, spec §8 "Hunger"), a step into a feature that offers an action (`input::offer_dialog`, `docs/dev/special-rooms.md`), a burst
   read so close it may catch the player (`input::burst_dialog`, spec §8 "Scrolls"), the shop (`input.rs`: `leaving_dialog`, `sale_dialog`; spec §7 "Shops"), and the overworld
   encounter (`ui/encounter.rs`: `on_encounter`, after `on_death` and before `on_level_up`, opens
   `dialog(view)` from `PerceptionView::encounter()` whenever the run changed with one pending and
@@ -175,7 +175,11 @@ to open, read keys for, or draw one:
   tells of the creature under the cursor, `look::known`, its hint after it: the hint clips first,
   docs/dev/skills.md); a question (the step onto a known trap,
   `input::trap_dialog`; a journey while Fainting or Starving, `input::hunger_dialog`; a walk into what offers an action,
-  `input::offer_dialog`) is the dialog (above).
+  `input::offer_dialog`) is the dialog (above). A step opens one dialog, the first that applies:
+  deep water, leaving a shop owing, a known trap, a journey while hungry, an offer. Deep water
+  comes first, as it always asks and any other answer would step in unasked; its "Dive in" is a
+  plain move, so the keeper still turns back one who owes, and a trap under it would still go off.
+  The hungry journey (overworld, walkable) and the offer cannot apply to a step into deep water.
 - **The message line and `--more--`** (`ui/more.rs`, spec §6 "Messages", #207): `Game::read` is
   the message log as it was when the player last acted (`Game::apply` takes it before applying;
   a new run starts with nothing read, so its welcome is news; `Game::from_world`, a resumed run,

@@ -1,0 +1,34 @@
+---
+source: crates/warlock/src/ui/screen_snapshots.rs
+expression: "render(&case, content)"
+---
+ Welcome to Quarry. Press ? for controls.
+ You see here a pick-axe.
+
+
+
+
+
+
+
+
+                                ┌─ Deep water ─────────────────────┐
+                                │                                  │
+                                │ Really dive into the deep water? │
+                                │                                  │
+                                │        Dive in  (y)              │
+                                │      > Stay back  (n, Esc)       │
+                                │                                  │
+                                │ ↑/↓ choose  Enter select         │
+                                └──────────────────────────────────┘
+
+
+
+
+
+
+
+
+
+
+ The Quarry  ·  HP 26/26  ·  MP 0/0  ·  Sta 12/12  ·  Lv 1  ·  08:02  ·  11 Darkening    ? controls

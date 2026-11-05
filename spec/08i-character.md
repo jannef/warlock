@@ -445,7 +445,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     spent, a spell or an ability paid in it (`cast`; Concentration, 25 %, #668), discovery
     experience gained (`discover`: a first kill of a kind, an arrival that pays; Experience §8), a
     check rolled to resist a creature's ability, whatever comes of it (`resist`; "Knowledge"
-    below), a step wading (`wade`; Swim, below), a Swim check, whatever comes of it (`swim`). Only
+    below), a step wading (`wade`; Swim, below), a Swim check, whatever comes of it (`swim`), a step in deep water (`stroke`). Only
     the player trains for now; creatures keep their type's
     skills. Marks are a **reservoir**: they raise nothing by
     themselves and nothing is said; they gather until a level-up roll on the skill spends them.
@@ -457,6 +457,23 @@ developer notes (CLAUDE.md, `docs/dev/`).
     makes a **Swim check**: Toughness's modifier, the talents' Toughness checks, and the `swim`
     benefit (+8 at 100, +12 at 200, at most 20) against 11; made, half the plunge's hit points,
     rounded down. Marks: `wade` 10 %, reported per wading step whoever wades; `swim` 100 %.
+    **Deep water** (#1019; terrain `deep_water`, `swim = true`, `walkable = false`, so nothing else
+    goes in: creatures path around it and wait on the nearest shore, shooting and casting from
+    there, allies too, and a swimmer swaps with no one). A step into it from anything else is
+    refused with no time for the untrained ("You cannot swim.") and for one Strained or worse
+    ("You would sink."), and otherwise **always asks first**, in the one dialog, with no setting to
+    turn it off (the owner; `input::deep_water_dialog`; "Dive in", "Stay back" selected first and
+    Esc's, no time; core `move:DIR` needs no dialog). Water the player does not know of stops them
+    at its edge with no time, and is then known, so the question comes before they are in. Going
+    in takes the step and no check, and puts out the ready light. **A step that starts in it**,
+    wherever it ends, is a Swim check against 11 + 2 per burden level above Unburdened
+    (`data/swim.toml`): made, the step, priced by `step_price` (Wade, Swimmer, Strong swimmer,
+    Undertow); failed, the turn is spent, no move, and 1 cold hit point through `hurt` with
+    `Harm::Spared` (never the last: no drowning; one who grows Strained in it swims on, harder).
+    Two gameplay draws a step; `stroke` 25 %. Afloat, dropping and picking up ("It would sink."),
+    resting, searching, digging, and lighting a light ("The water would only put it out.") are
+    refused with no time; fighting, firing, casting, reading, and waiting go on; a wait asks no
+    check; nothing carried is lost. A light made ready in it goes out too. It does not freeze.
   - **Level-up rolls** (design `docs/design/progression.md` §5): every level gives the player
     **skill rolls**: their class's `rolls` (`data/classes/`: 2; the thief and the ranger 3, the
     bard 4), their race's (`races.toml`: humans 1), and one more for an Intelligence score of

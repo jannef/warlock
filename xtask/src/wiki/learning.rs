@@ -1,9 +1,11 @@
-//! Learning spells (spec §8 "Spells"): the study check's chances by overreach and bonus, how
-//! long a study takes by spell level, the classes' affinities with the schools, and the mishaps.
+//! Learning spells (spec §8 "Spells"): Spellcraft's curve, the study check's chances by overreach
+//! and bonus, how long a study takes by spell level, the classes' affinities with the schools,
+//! and the mishaps.
 
 use std::fmt::Write as _;
 use warlock_core::check;
 use warlock_core::content::{Band, Content, MishapEffect};
+use warlock_core::skills::Effect;
 use warlock_core::time::Duration;
 
 /// The bonuses the chance table shows a column for.
@@ -12,6 +14,27 @@ const BONUSES: [i32; 7] = [-2, 0, 2, 4, 6, 8, 10];
 /// The spell levels the tables sample, one row each (the spell scaling design §5.9): where the
 /// spells and their successors sit.
 const LEVELS: [u8; 10] = [0, 3, 6, 11, 16, 22, 29, 37, 46, 56];
+
+/// The skill values the learning table shows.
+const SKILL_VALUES: [u16; 15] = [
+    0, 17, 22, 27, 35, 50, 60, 75, 90, 100, 110, 125, 140, 150, 200,
+];
+
+/// The learning a skill's value gives (the `learn` benefit, at least 1 for those trained in it).
+pub(super) fn curve(content: &Content) -> String {
+    let Some((skill, benefit)) = (content.skills().iter()).find_map(|s| {
+        (s.benefits.iter())
+            .find(|b| b.effect == Effect::Learn)
+            .map(|b| (s, b))
+    }) else {
+        return String::new();
+    };
+    let mut out = format!("| {} | Learning |\n|:---:|:---:|\n", skill.name);
+    for value in SKILL_VALUES {
+        let _ = writeln!(out, "| {value} | {} |", benefit.at(value).max(1));
+    }
+    out
+}
 
 /// The study check's difficulty by overreach in spell levels, and the chance of learning at each
 /// bonus, with nothing known; then what the levels known add, and the mishaps' bands.

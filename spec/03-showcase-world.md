@@ -133,7 +133,8 @@ walled by a granite face to the north and a bank of packed earth to the south, w
 stone and the rubble of old digging about and a cut into the granite. Behind the pit's east wall
 lies a sealed chamber with a lamp, rubies, and gold, and no way in but through a wall: its light
 spills into the pit once the wall gives way. The rock around (solid rock) shows as stone walls as
-it is bared. The `quarry` scenario starts there, beside the pick-axe.
+it is bared. The pit's old workings have flooded into a pool of deep water (§8 "Skills": Swim).
+The `quarry` scenario starts there, beside the pick-axe.
 
 **Summoning hall (41×10, #520)**: reached by no stairs; the `summoners` scenario (a human warrior,
 Hild) starts in the middle of its dimly lit south hall. Three rooms open onto the hall by closed

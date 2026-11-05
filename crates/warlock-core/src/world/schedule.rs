@@ -264,11 +264,11 @@ impl World {
     }
 
     /// Whether a step onto `to` on the current level is wading: off the overworld, onto wading
-    /// terrain that makes the step dearer.
+    /// terrain, or deep water, that makes the step dearer.
     pub(super) fn wading_step(&self, to: &TerrainDef) -> bool {
         self.state.current().kind != LevelKind::Overworld
             && to.move_cost > 100
-            && super::stars::wading(&self.content, to)
+            && (to.swim || super::stars::wading(&self.content, to))
     }
 
     /// `price` as actor `id` pays it now: ×1.25 Burdened, ×1.5 Strained or Overloaded (spec §8
