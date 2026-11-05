@@ -63,6 +63,10 @@ pub const MAX_DISARM_BONUS: i32 = 20;
 /// The most a skill takes off the difficulty of studying a spell (spec §8 "Spells").
 pub const MAX_STUDY_BONUS: i32 = 20;
 
+/// The most a skill adds to a character's learning (spec §8 "Spells": "Learning"), the last spell
+/// level.
+pub const MAX_LEARNING: i32 = crate::content::MAX_SPELL_LEVEL as i32;
+
 /// The most cells farther a search may reach than the cells around the searcher.
 pub const MAX_SEARCH_REACH: i32 = 2;
 
@@ -161,6 +165,9 @@ pub enum Effect {
     /// Points taken off the difficulty of studying a spell (spec §8 "Spells";
     /// `world/learn.rs`).
     Study,
+    /// The spell level up to which a scroll teaches for certain (spec §8 "Spells": "Learning";
+    /// `world/learn.rs`); a skill with it, trained, lets the actor learn from a scroll at all.
+    Learn,
     /// Points added to disarming a trap (spec §8 "Disarming traps"; `world/disarm.rs`); a skill
     /// with it, trained, lets the actor disarm traps at all (the Disarm ability).
     Disarm,
@@ -275,6 +282,7 @@ impl Effect {
             Effect::Kick => *crate::stats::SCORES.end() as i32,
             Effect::Search | Effect::Spot | Effect::DetectTraps => MAX_SEARCH_BONUS,
             Effect::Study => MAX_STUDY_BONUS,
+            Effect::Learn => MAX_LEARNING,
             Effect::Slip => MAX_SLIP_BONUS,
             Effect::Lookout | Effect::Stalk | Effect::Evade => MAX_ENCOUNTER_BONUS,
             Effect::Steal => MAX_STEAL_BONUS,
@@ -541,6 +549,7 @@ impl Effect {
             Effect::Spot => "spot",
             Effect::DetectTraps => "detect_traps",
             Effect::Study => "study",
+            Effect::Learn => "learn",
             Effect::Disarm => "disarm",
             Effect::Burden => "burden",
             Effect::Travel => "travel",

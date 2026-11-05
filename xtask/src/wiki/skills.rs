@@ -58,6 +58,7 @@ pub(super) fn gated_effect(effect: Effect) -> bool {
     matches!(
         effect,
         Effect::Spot
+            | Effect::Learn
             | Effect::Identify
             | Effect::Disarm
             | Effect::Pick
@@ -88,6 +89,7 @@ fn effect_name(effect: Effect) -> &'static str {
         Effect::Spot => "noticing hidden things in passing, not traps",
         Effect::DetectTraps => "finding hidden traps, searching and in passing",
         Effect::Study => "studying spells from scrolls",
+        Effect::Learn => "what a scroll teaches for certain",
         Effect::Disarm => "disarming traps",
         Effect::Burden => "less slowdown from your load",
         Effect::Travel => "quicker journeys on the overworld",
@@ -143,6 +145,7 @@ pub(super) fn skill_benefits(content: &Content) -> String {
             Effect::Spot => "noticing",
             Effect::DetectTraps => "finding traps",
             Effect::Study => "study check",
+            Effect::Learn => "learning",
             Effect::Disarm => "disarming traps",
             Effect::Burden => "Burdened / Strained",
             Effect::Travel => "journeys",
@@ -216,7 +219,7 @@ pub(super) fn skill_benefits(content: &Content) -> String {
                 Effect::Identify => format!("{n}%"),
                 Effect::Speed | Effect::ManaRegen => format!("+{n}%"),
                 Effect::MaxMana => format!("+{n} mana"),
-                Effect::Hearing => n.to_string(),
+                Effect::Hearing | Effect::Learn => n.to_string(),
                 Effect::Burden => {
                     let slowed = |b: Burden| factor(b.slow_eased(100, n));
                     format!(

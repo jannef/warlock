@@ -4729,6 +4729,7 @@ mod tests {
                 "handle_animal",
                 "initiative",
                 "listen",
+                "spellcraft",
                 "spot",
                 "survival",
                 "swim",

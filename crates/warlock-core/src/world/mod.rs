@@ -279,7 +279,7 @@ pub use gifts::{STARE_RANGE, Streak};
 pub use guild::GuildRank;
 pub(crate) use hash::fnv1a;
 pub(crate) use heal::allies_beside;
-pub use learn::{Odds, study_odds, study_turns};
+pub use learn::{Odds, UNTRAINED, study_odds, study_turns};
 pub use level::{Fire, LevelState};
 pub use loot::Identified;
 pub use mirrors::Image;
