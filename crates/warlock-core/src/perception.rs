@@ -1776,6 +1776,14 @@ impl<'a> PerceptionView<'a> {
                     Ability::Give if self.snapshot.kept_beside.is_empty() => {
                         Some(crate::ability::Unavailable::NotBeside)
                     }
+                    // Decipher needs a scroll of an unidentified type (`world/decipher.rs`).
+                    Ability::Decipher
+                        if !(self.player.inventory.iter()).any(|stack| {
+                            crate::world::undeciphered(self.content, &self.lore(), stack)
+                        }) =>
+                    {
+                        Some(crate::ability::Unavailable::NoUnknownScroll)
+                    }
                     // Sic 'em needs its beast on the level (`world/sic.rs`).
                     Ability::Class(crate::content::ClassActive::Sic) if !companion_here => {
                         Some(crate::ability::Unavailable::NoCompanion)

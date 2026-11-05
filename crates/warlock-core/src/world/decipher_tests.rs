@@ -447,3 +447,68 @@ fn a_read_by_the_check_saves_and_replays() {
     let played = replay.run(content).expect("replays");
     assert_eq!(played.state_hash(), w.state_hash());
 }
+
+/// The seed from 0 at which `decipher:a` by `reader` makes the scroll out (`true`) or fails.
+fn seed_deciphering(made: bool, reader: Reader) -> u64 {
+    (0..500)
+        .find(|&seed| {
+            let mut w = world(HASTE, reader, seed);
+            run(&mut w, "decipher:a");
+            let object = w.content.object_id("scroll_of_haste").expect("object");
+            w.lore().label(object).is_none() == made
+        })
+        .expect("a seed goes that way")
+}
+
+#[test]
+fn the_ability_learns_the_type_unread_and_a_failure_keeps_the_label() {
+    let reader = Reader {
+        spellcraft: None,
+        decipher: Some(10),
+    };
+    let object = |w: &World| w.content.object_id("scroll_of_haste").expect("object");
+    let mut w = world(HASTE, reader, seed_deciphering(true, reader));
+    let out = run(&mut w, "decipher:a");
+    assert!(out[0].took_turn);
+    assert_eq!(out[0].elapsed.as_seconds(), 600, "ten minutes");
+    assert!(w.lore().label(object(&w)).is_none(), "the type is known");
+    assert_eq!(carried(&w, "scroll_of_haste"), 2, "kept, unread");
+    assert!(said(&w, "You make out the writing: a scroll of haste."));
+    assert_eq!(marks(&w, "decipher_script"), 1, "the check's mark");
+    // Nothing left to make out: refused, no time.
+    let again = run(&mut w, "decipher:a");
+    assert!(!again[0].took_turn);
+
+    let mut w = world(HASTE, reader, seed_deciphering(false, reader));
+    let out = run(&mut w, "decipher:a");
+    assert!(out[0].took_turn, "the time is gone");
+    assert_eq!(out[0].elapsed.as_seconds(), 600);
+    assert!(said(&w, SWIMS));
+    assert!(w.lore().label(object(&w)).is_some(), "still a label");
+    assert_eq!(carried(&w, "scroll_of_haste"), 2);
+    assert_eq!(marks(&w, "decipher_script"), 1);
+}
+
+#[test]
+fn the_ability_is_listed_for_the_trained_and_greyed_out_without_a_scroll() {
+    use crate::ability::{Ability, Unavailable};
+    let reader = Reader {
+        spellcraft: None,
+        decipher: Some(10),
+    };
+    let row = |w: &World| {
+        (w.perception().abilities().iter())
+            .find(|a| a.ability == Ability::Decipher)
+            .map(|a| a.unavailable)
+    };
+    let w = world(HASTE, reader, 0);
+    assert_eq!(row(&w), Some(None), "usable with an unknown scroll");
+    let w = world("", reader, 0);
+    assert_eq!(row(&w), Some(Some(Unavailable::NoUnknownScroll)));
+    let w = world(HASTE, UNTRAINED, 0);
+    assert_eq!(row(&w), None, "untrained: not listed");
+    assert_eq!(
+        Ability::Decipher.action_on(&w.content, 3),
+        Some(Action::Decipher { item: 3 })
+    );
+}

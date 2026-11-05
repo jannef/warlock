@@ -17,7 +17,7 @@ expression: "render(case, content.clone())"
            │   f  Arcane bolt      3d6+4 force, shoves on a big hit, 7 mana, aimed      │
            │   g  Chain lightning  6d6+3 electricity, may arc, conducts, 14 mana, aimed │
            │ Skills                                                                     │
-           │   h  Decipher script  not usable yet                                       │
+           │   h  Decipher         no unknown scroll                                    │
            │   i  Heal             nothing to treat                                     │
            │   j  Knowledge        not usable yet                                       │
            │ Weapon skills                                                              │

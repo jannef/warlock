@@ -262,7 +262,14 @@ developer notes (CLAUDE.md, `docs/dev/`).
     (Decipher script's only mark; the training stream); Spellcraft gets none from a read. The
     scroll of identify is read by the same rule on the stack named, after its own refusals.
     Scribe (below) writes with no check; what it writes reads by the rule, for the writer too.
-    Without the file every scroll simply reads.
+    Without the file every scroll simply reads. **The Decipher ability** (#1025, design §6.6
+    D2; `Action::Decipher`, `decipher:b`; Decipher script's use in the abilities menu, aimed at
+    a scroll of the pack whose type is not yet identified, unavailable with none): `seconds`
+    (600) of turns of the `decipher` action, stopped by anything that stops a rest (and then
+    nothing comes of it); done, the same check by the same rule (a known spell or enough
+    Spellcraft reads at once); made, the type is learned (`learn_scroll`) and the scroll kept,
+    unread; failed, "The writing swims before your eyes." and the time gone, try again.
+    The mark is the check's own.
   - **Unidentified scrolls** (`scroll_label.rs`, data `data/scroll_labels.toml`; #393): a
     readable scroll type (an object with `read`) is unknown until the player identifies it,
     and meanwhile shows by a **label**, "a scroll labelled ZUNBAR" (`name`/`plural` with

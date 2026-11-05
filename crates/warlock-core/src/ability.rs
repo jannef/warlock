@@ -92,6 +92,13 @@ pub enum Ability {
     /// ([`crate::heal::treatable`]). It asks which ailment when there are several
     /// ([`Aim::Ailment`]).
     Heal,
+    /// Make out a scroll without reading it (spec §8 "Scrolls", "Skills": Decipher script;
+    /// `world/decipher.rs`): [`Action::Decipher`] on a scroll of a type not yet identified, the
+    /// skill's use (the skill with the `decipher` effect, listed as this in its place while
+    /// `data/decipher.toml` exists). Had by whoever is trained in it; unavailable
+    /// ([`Unavailable::NoUnknownScroll`], the perception knows) while the pack holds none. It
+    /// asks which scroll ([`Aim::Item`]).
+    Decipher,
     /// Catch a second wind (spec §8 "Talents"): [`Action::UseTalent`], the active of the
     /// Second wind talent (a talent with the `second_wind` effect). Had by whoever holds it;
     /// unavailable while its cooldown (Winded) lasts.
@@ -252,6 +259,8 @@ pub enum Unavailable {
     NoShield,
     /// A skill whose use is not in the game yet.
     NotYet,
+    /// Decipher with no scroll of an unidentified type in the pack.
+    NoUnknownScroll,
     /// While a status lasts (spec §8 "Status effects"): one that blocks the kind of action the
     /// ability is (a raging berserker cannot read), or the ability's cooldown, which the class
     /// abilities bring (Winded: "you are winded"). Only time lifts it.
@@ -294,6 +303,7 @@ impl Unavailable {
         match self {
             Unavailable::NoShield => "you hold no shield".into(),
             Unavailable::NotYet => "not usable yet".into(),
+            Unavailable::NoUnknownScroll => "no unknown scroll".into(),
             Unavailable::NoMana => "you have too little mana".into(),
             Unavailable::NotHere => "not usable here".into(),
             Unavailable::NothingToTreat => "nothing to treat".into(),
@@ -324,6 +334,7 @@ impl Unavailable {
         match self {
             Unavailable::NoShield => "no_shield".into(),
             Unavailable::NotYet => "not_yet".into(),
+            Unavailable::NoUnknownScroll => "no_unknown_scroll".into(),
             Unavailable::NoMana => "no_mana".into(),
             Unavailable::NotHere => "not_here".into(),
             Unavailable::NothingToTreat => "nothing_to_treat".into(),
@@ -424,7 +435,7 @@ impl Ability {
     /// `tame` benefit, with `data/companions.toml` and `data/allies.toml`) [`Ability::Tame`],
     /// Intimidate's (the
     /// `intimidate` benefit, with `data/intimidate.toml`) [`Ability::Intimidate`], Survival's (the
-    /// `forage` benefit, with `data/forage.toml`) [`Ability::Forage`]. `None` for a skill whose
+    /// `forage` benefit, with `data/forage.toml`) [`Ability::Forage`], Decipher script's (the `decipher` benefit, with `data/decipher.toml`) [`Ability::Decipher`]. `None` for a skill whose
     /// use is to come, or that has none.
     fn use_of(def: &SkillDef, content: &Content) -> Option<Ability> {
         let gives = |effect| def.benefits.iter().any(|b| b.effect == effect);
@@ -443,6 +454,10 @@ impl Ability {
             })
             .or_else(|| {
                 (gives(Effect::Steal) && content.steal().is_some()).then_some(Ability::Steal)
+            })
+            .or_else(|| {
+                (gives(Effect::Decipher) && content.decipher().is_some())
+                    .then_some(Ability::Decipher)
             })
             .or_else(|| {
                 (gives(Effect::Forage) && content.forage().is_some()).then_some(Ability::Forage)
@@ -519,6 +534,7 @@ impl Ability {
                     || actor.talent_mods(content).steal
             }
             Ability::Forage => actor.skills.trains_effect(content, Effect::Forage),
+            Ability::Decipher => actor.skills.trains_effect(content, Effect::Decipher),
             Ability::Tame => actor.skills.trains_effect(content, Effect::Tame),
             Ability::Heal => actor.skills.trains_effect(content, Effect::Heal),
             Ability::Intimidate => actor.skills.trains_effect(content, Effect::Intimidate),
@@ -548,6 +564,7 @@ impl Ability {
             Ability::Tame => "tame",
             Ability::Intimidate => "intimidate",
             Ability::Forage => "forage",
+            Ability::Decipher => "decipher",
             Ability::Heal => "heal",
             Ability::SecondWind => "second_wind",
             Ability::BloodMagic => "blood_magic",
@@ -585,6 +602,7 @@ impl Ability {
             Ability::Tame => "Tame",
             Ability::Intimidate => "Intimidate",
             Ability::Forage => "Forage",
+            Ability::Decipher => "Decipher",
             Ability::Heal => "Heal",
             Ability::SecondWind => "Second wind",
             Ability::BloodMagic => "Blood magic",
@@ -630,6 +648,11 @@ impl Ability {
             Ability::Forage => {
                 "Spend a while searching the wild around you for something to eat: berries, \
                  nuts, mushrooms, roots."
+            }
+            Ability::Decipher => {
+                "Pore over a scroll you carry, of a kind you have not identified, for ten \
+                 minutes: if you make out the writing, you learn what it is without reading it. \
+                 Failed, the time is gone and you may try again."
             }
             Ability::Heal => {
                 "Tend your own hurts or an ally's beside you: bind a bleeding wound, or try to \
@@ -691,6 +714,7 @@ impl Ability {
             | Ability::Tame
             | Ability::Intimidate
             | Ability::Forage
+            | Ability::Decipher
             | Ability::Heal => Source::Skill,
             Ability::ThrowVoice => Source::Class,
             Ability::SecondWind | Ability::BloodMagic => Source::Talent,
@@ -727,7 +751,7 @@ impl Ability {
             | Ability::Heel
             | Ability::Hold
             | Ability::Drink => Aim::Nothing,
-            Ability::Temper | Ability::Give => Aim::Item,
+            Ability::Temper | Ability::Give | Ability::Decipher => Aim::Item,
             Ability::ThrowVoice | Ability::SetOn | Ability::Intimidate => Aim::Cell,
             Ability::Heal => Aim::Ailment,
             Ability::Disarm
@@ -753,6 +777,7 @@ impl Ability {
             Ability::Tame => Some(ActionKind::Tame),
             Ability::Intimidate => Some(ActionKind::Intimidate),
             Ability::Forage => Some(ActionKind::Forage),
+            Ability::Decipher => Some(ActionKind::Decipher),
             Ability::Heal => Some(ActionKind::Heal),
             Ability::SecondWind | Ability::BloodMagic => Some(ActionKind::Wait),
             Ability::ShieldBash => Some(ActionKind::Melee),
@@ -784,6 +809,7 @@ impl Ability {
             | Ability::Tame
             | Ability::Intimidate
             | Ability::Forage
+            | Ability::Decipher
             | Ability::Heal
             | Ability::SecondWind
             | Ability::BloodMagic
@@ -872,7 +898,7 @@ impl Ability {
             (Ability::Drink, _) => Some(Action::Drink),
             (Ability::Forage, _) => Some(Action::Forage),
             // It asks for an item ([`Ability::action_on`]).
-            (Ability::Temper, _) => None,
+            (Ability::Temper | Ability::Decipher, _) => None,
             (Ability::Heel, _) => Some(Action::Order(Command::Heel)),
             (Ability::Hold, _) => Some(Action::Order(Command::Hold)),
             // It asks for a cell ([`Ability::action_at`]).
@@ -884,6 +910,7 @@ impl Ability {
     /// the player carries (Identify, Temper, Merchant's eye); `None` for any other.
     pub fn action_on(self, content: &Content, item: usize) -> Option<Action> {
         match self {
+            Ability::Decipher => Some(Action::Decipher { item }),
             Ability::Temper => Some(Action::Temper { item }),
             Ability::Give => Some(Action::Give { item, ally: None }),
             Ability::Class(active) if active.aims_item() => Some(Action::UseOn(active, item)),
@@ -920,6 +947,7 @@ impl Ability {
             | Ability::Steal
             | Ability::Tame
             | Ability::Forage
+            | Ability::Decipher
             | Ability::Heal
             | Ability::SecondWind
             | Ability::BloodMagic
@@ -1003,6 +1031,8 @@ impl Ability {
             | Ability::Intimidate
             | Ability::Forage
             | Ability::BloodMagic
+            // Whether the pack holds an unknown scroll is the perception's to say.
+            | Ability::Decipher
             // Whether the player has a companion is the perception's to say.
             | Ability::Tame
             | Ability::Pray
@@ -1219,7 +1249,7 @@ mod tests {
             skills,
             [
                 "bluff",
-                "decipher_script",
+                "decipher",
                 "disarm",
                 "tame",
                 "heal",
