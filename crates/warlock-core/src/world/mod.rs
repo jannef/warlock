@@ -1911,6 +1911,8 @@ mod speed_tests;
 #[cfg(test)]
 mod spell_arc_tests;
 #[cfg(test)]
+mod spell_data_tests;
+#[cfg(test)]
 mod spell_list_tests;
 #[cfg(test)]
 mod spell_rule_tests;

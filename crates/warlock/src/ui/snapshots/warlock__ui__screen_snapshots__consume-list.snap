@@ -16,9 +16,9 @@ expression: "render(case, content.clone())"
            │ Food                                                                       │
            │ > a - % 2 loaves of bread                                           800 g  │
            │ Potions                                                                    │
-           │   b - ! 2 pearly red potions (lying here)                           500 g  │
-           │   c - ! a resinous blue potion (lying here)                         250 g  │
-           │   d - ! a thick gold potion (lying here)                            250 g  │
+           │   b - ! 2 watery red potions (lying here)                           500 g  │
+           │   c - ! a speckled blue potion (lying here)                         250 g  │
+           │   d - ! a hazy gold potion (lying here)                             250 g  │
            │                                                                            │
            │ a-d or Enter consume   Esc cancel                                          │
            └────────────────────────────────────────────────────────────────────────────┘

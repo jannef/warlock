@@ -351,12 +351,16 @@ impl Effects {
     }
 
     /// How fast hit points come back while these last, in percent of normal: the slowest of
-    /// their statuses' `regen`, 100 without any.
+    /// their statuses' `regen` while any slows it (below 100), else the fastest (Renewal's
+    /// `renewing`), 100 without any.
     pub fn regen(&self, content: &Content) -> u16 {
-        (self.0.iter())
-            .map(|e| content.status(e.status).regen)
-            .min()
-            .unwrap_or(100)
+        let paces = (self.0.iter()).map(|e| content.status(e.status).regen);
+        let slowest = paces.clone().min().unwrap_or(100);
+        if slowest < 100 {
+            slowest
+        } else {
+            paces.max().unwrap_or(100)
+        }
     }
 
     /// How fast mana comes back while these last (spec §8 "Mana"): the slowest of their

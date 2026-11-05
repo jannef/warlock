@@ -1,0 +1,26 @@
+# Sunfire (the spell types design §7 entry 9): the biggest burst, the fire type over a radius of
+# three, and no blast: it burns, it does not dig.
+[[spell]]
+id = "sunfire"
+name = "Sunfire"
+description = "A piece of the sun bursts where you aim it: everything in it burns, the dark is driven out, and eyes that shun the light are dazzled."
+level = 30
+school = "evocation"
+kind = "damage"
+shape = "burst"
+resolution = "area"
+damage_type = "fire"
+range = 10
+radius = 3
+damage = "5d6"
+
+[spell.cast]
+effect = "fireball"
+noun = "sunfire"
+verb = "burns"
+message = "The sun itself bursts from your hands!"
+noise = { sound = "explosion", loudness = 200 }
+
+[spell.grows]
+damage = "intelligence 16 6d6, 19 7d6, 22 8d6, 25 8d6+4"
+range = "willpower 14 11, 18 12"

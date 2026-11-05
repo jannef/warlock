@@ -1,0 +1,8 @@
+[[talent]]
+id = "unbinding"
+name = "Unbinding"
+tree = "class"
+granted = true
+description = "A word that breaks the hexes on you (a spell, paid in mana): the evil eye, weakness, sloth, drowsiness, webs, and fear are gone."
+effects = [{ kind = "spell", spell = "unbinding" }]
+systems = ["spells", "mana", "status"]

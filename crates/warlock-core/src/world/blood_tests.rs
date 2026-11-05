@@ -249,30 +249,26 @@ fn blood_is_saved() {
     assert_eq!(loaded.state_hash(), w.state_hash());
 }
 
-/// The built-in content with every creature bloodless.
-fn bloodless() -> Arc<Content> {
-    let mut files = ContentFiles::builtin();
-    files.edit_table("creatures", |text| {
-        (text.lines())
-            .filter(|l| !l.starts_with("blood = "))
-            .map(|l| match l {
-                "[[creature]]" => "[[creature]]\nblood = \"none\"\n".to_string(),
-                l => format!("{l}\n"),
-            })
-            .collect()
-    });
-    Arc::new(Content::load(&files).expect("valid"))
+/// Every stain on every level of `w`, and the memory of them, gone.
+fn wash(w: &mut World) {
+    for level in w.state.levels.values_mut() {
+        level.blood.clear();
+        level.blood_memory.clear();
+    }
 }
 
 #[test]
 fn blood_never_changes_what_happens() {
-    // The arena's brawl, with blood and without: every roll, blow, death, message, and step is
-    // the same; only the stains differ.
+    // The arena's brawl twice, once with its stains washed away after every action: every
+    // roll, blow, death, message, and step is the same; only the stains differ. (Whether a
+    // creature has blood is a rule's: Bleeding never takes on the bloodless, `spell_data_tests`;
+    // what is spilt never is.)
     let builtin = Arc::new(Content::builtin().expect("builtin"));
-    let mut bloody = World::new(builtin, "arena", None).expect("arena");
-    let mut clean = World::new(bloodless(), "arena", None).expect("arena");
+    let mut bloody = World::new(builtin.clone(), "arena", None).expect("arena");
+    let mut clean = World::new(builtin, "arena", None).expect("arena");
     for action in parse_actions("wait*40").expect("waits") {
         assert_eq!(bloody.apply(&action), clean.apply(&action));
+        wash(&mut clean);
     }
     let (a, b) = (bloody.state(), clean.state());
     assert_eq!(a.rng, b.rng, "the gameplay stream is untouched");

@@ -93,9 +93,9 @@
 #                 stats rise. Every key optional; a dimension left out never grows by stats.
 #     damage      a `damage` spell's roll        heal      a `heal` spell's roll
 #     range       a ray's, bolt's, or burst's    length    a cone's or a line's
-#     radius      a burst's                      degrees   a buff's or a hex's status's degrees,
-#     count       a `summon`'s count (a roll,              a summon's or a charm's minutes (to 600)
-#                 each rung bringing 1 to 12); a spell
+#     radius      a burst's                      degrees   a buff's, a hex's, or a damage spell's
+#     count       a `summon`'s count (a roll,              status's degrees, or a summon's or
+#                 each rung bringing 1 to 12); a spell     a charm's minutes (to 600)
 #                 with `arcs`, its jumps (whole, 1 to 12)
 #                 A ladder is one string: the stat's id, then rungs separated by commas, each
 #                 `AT VALUE` with one space: `"intelligence 13 3d6, 16 4d6, 19 5d6, 25 5d6+2"`.

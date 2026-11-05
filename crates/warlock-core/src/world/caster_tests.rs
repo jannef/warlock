@@ -164,6 +164,8 @@ fn every_caster_has_its_table_by_level_sixty() {
                 "Daily bread",
                 "Consecrate",
                 "Communion with the dark",
+                "Renewal",
+                "Silence",
                 "Prayer",
                 "Rebuke",
                 "Prayer of release",
@@ -186,6 +188,7 @@ fn every_caster_has_its_table_by_level_sixty() {
                 "Water walking",
                 "Bramble",
                 "Call lightning",
+                "Rime",
                 "Nature's ward",
                 "Gale",
                 "Call of the forest",
@@ -206,6 +209,7 @@ fn every_caster_has_its_table_by_level_sixty() {
                 "Familiar",
                 "Hex of weakness",
                 "Cackle",
+                "Flay",
                 "Poison lore",
                 "Cause wounds",
                 "Grave feast",
@@ -216,6 +220,7 @@ fn every_caster_has_its_table_by_level_sixty() {
                 "Familiar's sight",
                 "Rouse the dead",
                 "Curse of sloth",
+                "Fear",
                 "Blight",
                 "Beguile",
                 "Cauldron",
@@ -337,8 +342,11 @@ fn the_spells_are_abilities_by_level() {
             "Magic missile",
             // Level 4.
             "Cause wounds",
+            "Nightsight",
             // Level 5.
+            "Acid arrow",
             "Call of the wild",
+            "Mesmerise",
             "Sense the quick",
             "Water walking",
             // Level 6.
@@ -355,11 +363,20 @@ fn the_spells_are_abilities_by_level() {
             "Scorching ray",
             "Thunderclap",
             "Web",
+            // Level 8.
             "Bramble",
+            "Flay",
+            "Glamour",
             "Shatter",
+            "Unbinding",
             // Level 9.
+            "Bind",
             "Charnel burst",
+            "Rime",
+            // Level 10.
+            "Fear",
             "Leech",
+            "Renewal",
             // Level 11.
             "Call lightning",
             "Fireball",
@@ -367,15 +384,19 @@ fn the_spells_are_abilities_by_level() {
             "Haste",
             "Lightning bolt",
             "Remove disease",
-            "Benison",
+            "Silence",
             // Level 12.
+            "Benison",
             "Fire cloak",
             "Flame",
             "Mirk",
             // Level 13.
             "Reek",
             // Level 14.
+            "Grave spear",
             "Rebuke",
+            // Level 15.
+            "Slumber",
             // Level 16.
             "Balefire",
             "Beguile",
@@ -385,6 +406,8 @@ fn the_spells_are_abilities_by_level() {
             "Cloudburst",
             // Level 24.
             "Rouse the dead",
+            // Level 30.
+            "Sunfire",
             // Level 35.
             "Call the elements",
         ]

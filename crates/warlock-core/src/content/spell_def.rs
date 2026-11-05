@@ -1193,10 +1193,14 @@ fn resolve(spec: SpellSpec, rules: &SpellRules, content: &Content) -> Result<Spe
         }
         Some(id) => Stat::from_id(id).ok_or_else(|| format!("`aim`: unknown stat `{id}`"))?,
     };
-    let status_degrees = matches!(spec.kind, SpellPurpose::Buff | SpellPurpose::Hex)
-        .then_some(effect.status)
-        .flatten()
-        .map(|(s, n)| (n, content.status(s).max.min(MAX_SEVERITY)));
+    // A damage spell's status too (Flay's Bleeding): it falls on everyone harmed.
+    let status_degrees = matches!(
+        spec.kind,
+        SpellPurpose::Buff | SpellPurpose::Hex | SpellPurpose::Damage
+    )
+    .then_some(effect.status)
+    .flatten()
+    .map(|(s, n)| (n, content.status(s).max.min(MAX_SEVERITY)));
     let summon_minutes = (effect.summon.as_ref().map(|s| s.minutes))
         .or(effect.rise.as_ref().map(|r| r.minutes))
         .or(effect.charm.as_ref().map(|c| c.minutes))
@@ -1399,7 +1403,7 @@ fn grows(spec: GrowsSpec, bases: &Bases) -> Result<Grows, String> {
             bases.degrees.map(|(d, _)| d),
             degrees_most,
             Unit::Degrees,
-            "a buff's or a hex's status, or a summon's minutes",
+            "a buff's, a hex's, or a damage spell's status, or a summon's minutes",
         )?,
     })
 }
@@ -2496,7 +2500,7 @@ damage = "2d6"
             (
                 burst,
                 "degrees = \"presence 14 2\"",
-                "`degrees` is for a buff's or a hex's",
+                "`degrees` is for a buff's, a hex's, or a damage spell's",
             ),
             (
                 burst,
@@ -2578,11 +2582,13 @@ damage = "2d6"
         // (spell, level, its base roll, mana, whether a class ability gives it; every other is
         // learned from scrolls only): the spell scaling design §5.8, §12.1.
         let table = [
+            ("acid_arrow", 5, Some("1d6"), 5, false),
             ("arcane_bolt", 6, Some("2d6"), 11, true),
             ("balefire", 16, Some("2d6"), 29, false),
             ("barkskin", 3, None, 3, true),
             ("beguile", 18, None, 18, true),
             ("benison", 12, Some("2d6"), 22, true),
+            ("bind", 9, None, 9, true),
             ("blessing", 3, None, 3, true),
             ("blight", 7, Some("2d6"), 17, true),
             ("blink", 6, None, 6, true),
@@ -2600,13 +2606,17 @@ damage = "2d6"
             ("cure_wounds", 3, Some("2d6"), 2, true),
             ("curse_of_sloth", 3, None, 3, true),
             ("evil_eye", 0, None, 1, true),
+            ("fear", 10, None, 18, true),
             ("fire_cloak", 12, None, 12, false),
             ("fireball", 11, Some("2d6"), 26, false),
             ("flame", 12, Some("3d6"), 29, true),
+            ("flay", 8, Some("1d4"), 8, true),
             ("frost", 6, Some("2d6"), 14, true),
             ("gale", 11, None, 20, true),
+            ("glamour", 8, None, 8, false),
             ("grave_breath", 1, Some("1d4"), 3, true),
             ("grave_feast", 6, Some("2d6"), 4, true),
+            ("grave_spear", 14, Some("2d6"), 25, false),
             ("leech", 10, Some("2d6"), 10, true),
             ("haste", 11, None, 11, false),
             ("hex_of_weakness", 3, None, 3, true),
@@ -2614,20 +2624,28 @@ damage = "2d6"
             ("lightning_bolt", 11, Some("2d6"), 20, false),
             ("magic_missile", 3, Some("1d4"), 3, true),
             ("mend", 1, Some("1d3"), 1, true),
+            ("mesmerise", 5, None, 5, true),
             ("mirk", 12, None, 29, false),
+            ("nightsight", 4, None, 4, true),
             ("ray_of_frost", 1, Some("1d6"), 1, true),
             ("rebuke", 14, Some("2d6"), 34, true),
             ("identify", 6, None, 60, false),
             ("reek", 13, Some("1d4"), 31, false),
             ("remove_disease", 11, None, 11, true),
+            ("renewal", 10, None, 10, true),
+            ("rime", 9, Some("2d6"), 14, true),
             ("rouse_the_dead", 24, None, 24, true),
             ("scorching_ray", 7, Some("1d6"), 7, false),
             ("sense_the_quick", 5, None, 5, true),
             ("shatter", 8, Some("2d6"), 14, true),
+            ("silence", 11, None, 20, true),
             ("sleep", 6, None, 11, false),
             ("slick", 6, None, 11, false),
+            ("slumber", 15, None, 15, false),
             ("spark", 1, Some("1d4"), 1, true),
+            ("sunfire", 30, Some("5d6"), 90, true),
             ("thunderclap", 7, Some("1d6"), 13, true),
+            ("unbinding", 8, None, 8, true),
             ("water_walking", 5, None, 5, true),
             ("web", 7, None, 13, false),
         ];
@@ -2658,7 +2676,55 @@ damage = "2d6"
         let p23 = "presence 14 2, 18 3";
         let mm = "intelligence 13 3d6, 16 4d6, 19 5d6, 25 5d6+2";
         let bolt = "intelligence 13 3d6, 19 3d6+2, 25 3d6+4";
-        let table: [(&str, &[(&str, &str)]); 30] = [
+        let table: [(&str, &[(&str, &str)]); 44] = [
+            (
+                "acid_arrow",
+                &[
+                    ("damage", "intelligence 13 2d6, 16 3d6, 25 3d6+2"),
+                    ("range", w910),
+                ],
+            ),
+            ("bind", &[("range", w78), ("degrees", "presence 14 3")]),
+            ("fear", &[("range", w910), ("degrees", "presence 14 3")]),
+            (
+                "flay",
+                &[
+                    ("damage", "willpower 16 1d6, 22 1d8"),
+                    ("range", w78),
+                    ("degrees", "presence 14 3, 18 4"),
+                ],
+            ),
+            ("glamour", &[("degrees", p23)]),
+            (
+                "grave_spear",
+                &[
+                    ("damage", "willpower 13 3d6, 16 4d6, 19 5d6, 25 5d6+2"),
+                    ("length", w78),
+                ],
+            ),
+            (
+                "mesmerise",
+                &[("range", w78), ("degrees", "presence 14 3, 18 4")],
+            ),
+            ("nightsight", &[]),
+            ("renewal", &[("degrees", p23)]),
+            (
+                "rime",
+                &[
+                    ("damage", "willpower 13 3d6, 16 4d6, 22 4d6+2"),
+                    ("length", "willpower 18 5"),
+                ],
+            ),
+            ("silence", &[("range", w910), ("radius", "willpower 18 2")]),
+            ("slumber", &[("range", w78)]),
+            (
+                "sunfire",
+                &[
+                    ("damage", "intelligence 16 6d6, 19 7d6, 22 8d6, 25 8d6+4"),
+                    ("range", w1112),
+                ],
+            ),
+            ("unbinding", &[]),
             ("arcane_bolt", &[("damage", bolt), ("length", w78)]),
             ("barkskin", &[("degrees", p23)]),
             ("blessing", &[("degrees", p23)]),

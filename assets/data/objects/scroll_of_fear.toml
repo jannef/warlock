@@ -1,0 +1,20 @@
+# A scroll of fear (spec §8 "Scrolls", "Spells"): read it (`r`), and it casts Fear, a
+# level-10 spell, at its own rungs, free of mana; study it (`L`), and you may learn the spell for
+# good. Level and frequency by its spell's level (README.toml): the lower, the commoner the scroll.
+[[object]]
+id = "scroll_of_fear"
+name = "scroll of fear"
+plural = "scrolls of fear"
+glyph = "?"
+fg = "#e0a8e0"
+class = "scrolls"
+materials = ["paper"]
+weight = 50
+value = 200
+stackable = true
+level = 5
+frequency = 20
+
+[object.read]
+kind = "spell"
+spell = "fear"

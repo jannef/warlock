@@ -15,7 +15,8 @@ pace:
 
 {{#include generated/healing.md}}
 
-When several [status effects](status-effects.md#how-they-work) slow your healing, the slowest counts; a [disease](diseases.md#how-a-disease-goes) that slows it more
+When several [status effects](status-effects.md#how-they-work) slow your healing, the slowest counts; one that
+quickens it ([Renewal](magic.md#spell-renewal)'s, four times the pace) counts only while nothing slows it; a [disease](diseases.md#how-a-disease-goes) that slows it more
 than being [Diseased](status-effects.md#status-diseased) does counts too (see [Diseases](diseases.md)). [Resting](resting.md#how-resting-works) makes up for some of
 it: resting while [poisoned](status-effects.md#poisoned) heals at the usual pace. While you [bleed](status-effects.md#bleeding) or starve, nothing heals you,
 [rest](resting.md#how-resting-works) or not. In a [sanctuary](special-rooms.md#room-sanctuary) (a [special room](special-rooms.md)) wounds heal three times as fast,

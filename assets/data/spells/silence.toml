@@ -1,0 +1,21 @@
+# Silence (the spell types design §7 entry 17): a burst of Silenced, no spell, scroll, or song
+# for a moment; short by its status's own easing.
+[[spell]]
+id = "silence"
+name = "Silence"
+description = "Silence falls where you aim it: everyone it reaches can neither cast nor read nor sing for a moment."
+level = 11
+school = "abjuration"
+kind = "hex"
+shape = "burst"
+resolution = "area"
+range = 8
+radius = 1
+effect = { status = "silenced", severity = 1 }
+
+[spell.cast]
+noise = { sound = "chanting", loudness = 10 }
+
+[spell.grows]
+range = "willpower 14 9, 18 10"
+radius = "willpower 18 2"

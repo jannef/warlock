@@ -1,0 +1,8 @@
+[[talent]]
+id = "rime"
+name = "Rime"
+tree = "class"
+granted = true
+description = "A breath of killing frost from your hands (a spell, paid in mana): everyone in it is chilled and slowed, and the water in it freezes."
+effects = [{ kind = "spell", spell = "rime" }]
+systems = ["spells", "mana", "combat"]

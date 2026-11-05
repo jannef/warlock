@@ -8,10 +8,12 @@ from a scroll (below). Every spell is measured by the same rules below: its [spe
 ## What your class gives
 
 Each casting class gives only a few spells, with its [class table](classes.md#levels): a full
-caster a [cantrip](#spell-levels) at level 1 and about four in all (the [wizard](classes.md#wizard) and the [witch](classes.md#witch) also start
+caster a [cantrip](#spell-levels) at level 1 and from three to a dozen in all (the [wizard](classes.md#wizard) and the [witch](classes.md#witch) also start
 with a short [cone](#shapes) that needs no hit roll, [Burning hands](#spell-burning-hands) and [Grave breath](#spell-grave-breath): good for a
-fight with a few weak foes, and a few casts empty the pool), a bard, a paladin, or a ranger a cantrip or a
-boon, and the rest none. Every other spell is learned from scrolls, so a caster who finds few
+fight with a few weak foes, and a few casts empty the pool), a bard, a paladin, or a ranger a few
+boons and hexes, and the rest none. A class's spells are only where it meets them first: any
+spell can be learned from a scroll, and some come only from scrolls ([Acid arrow](#spell-acid-arrow),
+[Grave spear](#spell-grave-spear), [Slumber](#spell-slumber), [Glamour](#spell-glamour), and others), so a caster who finds few
 scrolls stays a modest one. A spell your class gives is yours at that level, whatever your [Spellcraft](skills.md#skill-spellcraft).
 
 {{#include generated/class-spells.md}}
@@ -438,6 +440,9 @@ do: which kinds of magic, never how strong or for how long.
   it, and back in once that one is gone. With Reduced effects or Slides, camera off, none of this
   moves (nor do the glints or the arcs): a circle appears, changes, and goes at once. Reduced
   effects also takes the glow away ([Settings](settings.md)).
+
+Sleep is the one hex without a circle: a creature [asleep](status-effects.md#status-asleep), from
+[Slumber](#spell-slumber) or in a den, shows none and sheds no light.
 
 Every buff shows on a creature, whatever gave it: look mode names a hasted creature "quickened",
 a bark-skinned one "bark-skinned", one that drank a [potion of might](potions.md#potion-of-might) "fortified" (see
