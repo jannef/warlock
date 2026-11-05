@@ -15,13 +15,27 @@
 //! there: the scroll stays in the pack and a label stays unknown, with no draw for Scroll savant
 //! and no Intelligence mark for a read (`use_up` has both). Made: the scroll reads as any other.
 //!
+//! The Decipher ability (#1025, design §6.6 D2; [`Action::Decipher`], `decipher:b`): the same
+//! check on a scroll of a type not yet identified ([`undeciphered`]), without reading it.
+//! `data/decipher.toml`'s `seconds` of turns of the `decipher` action ([`World::keep_at`], as a
+//! forage); a creature coming into view or a blow stops it and nothing comes of it. Done, the
+//! check is [`World::deciphers`] with the scroll's spell and level; made, the type is learned
+//! (every scroll of it shows by its name from now on) and the scroll is kept, unread. Failed,
+//! the time is gone and the scroll stays a label: try again (no limit). The mark is the
+//! check's own. Refused, no time, with a stack that is not such a scroll.
+//!
 //! Only reading asks. Studying a scroll has its own check (`learn.rs`), writing one reads
 //! nothing (`scribe.rs`), and casting a spell one knows needs no scroll.
 
-use super::World;
-use crate::content::SpellId;
+use super::rest::Ended;
+use super::{Spent, World};
+use crate::action::Event;
+use crate::content::{ActionKind, Content, Reading, SpellId};
+use crate::object::Stack;
+use crate::scroll_label::Lore;
 use crate::skills::{Effect, Use};
 use crate::stats::Stat;
+use crate::time::Duration;
 
 /// What the player is told when they fail to make a scroll out.
 const SWIMS: &str = "The writing swims before your eyes.";
@@ -56,5 +70,88 @@ impl World {
             self.say(SWIMS);
         }
         made
+    }
+}
+
+/// One try at making out a scroll: which stack of the pack, for how long.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct Deciphering {
+    pub item: usize,
+    pub seconds: u32,
+}
+
+/// Whether `stack` is a scroll of a type the player has not identified (the Decipher ability's
+/// list): it has a label still.
+pub fn undeciphered(content: &Content, lore: &Lore<'_>, stack: &Stack) -> bool {
+    content.object(stack.object).read.is_some() && lore.label(stack.object).is_some()
+}
+
+impl World {
+    /// The player sets to making out a scroll of the pack (module docs); refused, taking no
+    /// time, for a stack that is not an unidentified scroll.
+    pub(super) fn start_decipher(&mut self, item: usize) -> Spent {
+        let content = self.content.clone();
+        let Some(rules) = content.decipher() else {
+            return Spent::Nothing;
+        };
+        let Some(stack) = self.state.player().inventory.get(item) else {
+            self.say("You carry no such thing.");
+            return Spent::Nothing;
+        };
+        if !undeciphered(&content, &self.lore(), stack) {
+            self.say("There is nothing there to make out.");
+            return Spent::Nothing;
+        }
+        self.say("You pore over the writing.");
+        Spent::Decipher(Deciphering {
+            item,
+            seconds: rules.seconds,
+        })
+    }
+
+    /// Pores over the scroll turn after turn until the time is up or something stops it.
+    pub(super) fn decipher(&mut self, work: Deciphering, events: &mut Vec<Event>) {
+        let until = self.state.time + Duration::seconds(u64::from(work.seconds));
+        let turn = self.price_of(self.state.player, ActionKind::Decipher);
+        let ended = self.keep_at(
+            events,
+            |w| w.state.time < until,
+            |w, _| turn.min(w.price_until(until)),
+        );
+        match ended {
+            Ended::Died => {}
+            _ if self.state.time >= until => self.deciphered(work.item),
+            Ended::Came(id) => {
+                let text = format!(
+                    "{} comes into view; you put the scroll away.",
+                    self.creature_called(id)
+                );
+                self.say(text);
+            }
+            Ended::Said | Ended::Done => self.say("You put the scroll away."),
+        }
+    }
+
+    /// The time is up: the check, and the type learned if it was made.
+    fn deciphered(&mut self, item: usize) {
+        let content = self.content.clone();
+        let Some(stack) = self.state.player().inventory.get(item) else {
+            return;
+        };
+        let object = stack.object;
+        if !undeciphered(&content, &self.lore(), stack) {
+            self.say("You have nothing left to make out.");
+            return;
+        }
+        let (spell, level) = match content.object(object).read.as_ref() {
+            Some(Reading::Cast(scroll)) => (Some(scroll.spell), content.spell(scroll.spell).level),
+            _ => (None, 0),
+        };
+        if !self.deciphers(spell, level) {
+            return;
+        }
+        self.learn_scroll(object);
+        let name = self.lore().describe_object(object, 1);
+        self.say(format!("You make out the writing: {name}."));
     }
 }

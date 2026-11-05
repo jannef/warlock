@@ -32,7 +32,7 @@ see [Doors](doors.md#picking-locks)), [Steal](skills.md#skill-steal) (see [Steal
 as the game grows. The skills used as actions are in the [abilities
 menu](abilities.md) once you are trained in them, greyed out until their uses come; [Disable
 device](skills.md#skill-disable-device)'s use is there as **[Disarm a trap](abilities.md#ability-disarm)**, [Open lock](skills.md#skill-open-lock)'s as **[Pick lock](abilities.md#ability-pick-lock)**, [Steal](skills.md#skill-steal)'s as **[Steal](abilities.md#ability-steal)**, [Bluff](skills.md#skill-bluff)'s as **[Feint](abilities.md#ability-feint)**,
-[Heal](skills.md#skill-heal)'s as **[Heal](abilities.md#ability-heal)**, and [Survival](skills.md#skill-survival)'s, though it is a passive skill, as **[Forage](abilities.md#ability-forage)**.
+[Heal](skills.md#skill-heal)'s as **[Heal](abilities.md#ability-heal)**, [Decipher script](skills.md#skill-decipher-script)'s as **[Decipher](abilities.md#ability-decipher)** (see [Deciphering a scroll unread](scrolls.md#deciphering-a-scroll-unread)), and [Survival](skills.md#skill-survival)'s, though it is a passive skill, as **[Forage](abilities.md#ability-forage)**.
 
 {{#include generated/skills.md}}
 

@@ -17,7 +17,7 @@ expression: "render(case, content.clone())"
                     │   f  Blessing           3 mana                           │
                     │   g  Cure wounds        3d6 healed, 2 mana, aimed        │
                     │ Skills                                                   │
-                    │   h  Decipher script    not usable yet                   │
+                    │   h  Decipher           no unknown scroll                │
                     │   i  Heal               nothing to treat                 │
                     │   j  Knowledge          not usable yet                   │
                     │   k  Listen at a door   in a direction                   │

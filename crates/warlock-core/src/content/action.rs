@@ -97,6 +97,9 @@ pub enum ActionKind {
     /// A turn of searching for hidden features (spec §8 "Searching"): searching for a while
     /// takes several.
     Search,
+    /// A turn of making out a labelled scroll (spec §8 "Scrolls": the Decipher ability): a
+    /// try takes many.
+    Decipher,
     /// A turn of praying at a forgotten altar (spec §7 "Special rooms"): a prayer takes several.
     Pray,
     /// A turn of drinking at a healing spring (spec §7 "Special rooms"): a drink takes one or
@@ -163,6 +166,7 @@ impl ActionKind {
         ActionKind::CallFamiliar,
         ActionKind::Dig,
         ActionKind::Search,
+        ActionKind::Decipher,
         ActionKind::Pray,
         ActionKind::Drink,
         ActionKind::Forage,
@@ -211,6 +215,7 @@ impl ActionKind {
             ActionKind::CallFamiliar => "call_familiar",
             ActionKind::Dig => "dig",
             ActionKind::Search => "search",
+            ActionKind::Decipher => "decipher",
             ActionKind::Pray => "pray",
             ActionKind::Drink => "drink",
             ActionKind::Forage => "forage",
@@ -278,6 +283,7 @@ impl ActionKind {
             ActionKind::CallFamiliar => "call a familiar",
             ActionKind::Dig => "dig",
             ActionKind::Search => "search",
+            ActionKind::Decipher => "decipher",
             ActionKind::Pray => "pray",
             ActionKind::Drink => "drink",
             ActionKind::Forage => "forage",

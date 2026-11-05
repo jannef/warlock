@@ -78,6 +78,9 @@ pub enum ObjectList {
     Identify(IdentifyBy),
     /// The weapons and armour in the pack: choose one to temper at the anvil beside the player.
     Temper,
+    /// The scrolls in the pack of a type not yet identified: choose one to make out, unread
+    /// (the Decipher ability; `world/decipher.rs`).
+    Decipher,
     /// What fits a neck, for a kept beast of the player's (the Give ability; `world/collar.rs`).
     Give,
 }
@@ -105,6 +108,7 @@ impl ObjectList {
             ObjectList::Study => " Study ",
             ObjectList::Identify(_) => " Identify ",
             ObjectList::Temper => " Temper ",
+            ObjectList::Decipher => " Decipher ",
             ObjectList::Give => " Give ",
         }
     }
@@ -119,6 +123,7 @@ impl ObjectList {
             ObjectList::Study => "You carry no scroll whose spell you could learn.",
             ObjectList::Identify(_) => "You carry nothing unidentified.",
             ObjectList::Temper => "You carry no metal arms or armour to work.",
+            ObjectList::Decipher => "You carry no scroll you have not made out.",
             ObjectList::Give => "You carry nothing for a beast's neck.",
         }
     }
@@ -137,6 +142,7 @@ impl ObjectList {
             // Pv 3) (being worn)`).
             | ObjectList::Identify(_)
             | ObjectList::Temper
+            | ObjectList::Decipher
             | ObjectList::Give => 78,
             // Room for the spell each teaches and the chance.
             ObjectList::Study => 80,
@@ -153,6 +159,7 @@ impl ObjectList {
                 | ObjectList::Study
                 | ObjectList::Identify(_)
                 | ObjectList::Temper
+                | ObjectList::Decipher
                 | ObjectList::Give
         )
     }
@@ -271,6 +278,10 @@ impl ObjectScreen {
                 .collect(),
             ObjectList::Temper => (0..pack.len())
                 .filter(|&i| warlock_core::world::workable(content, &pack[i]))
+                .map(Item::Pack)
+                .collect(),
+            ObjectList::Decipher => (0..pack.len())
+                .filter(|&i| warlock_core::world::undeciphered(content, &view.lore(), &pack[i]))
                 .map(Item::Pack)
                 .collect(),
             ObjectList::Give => (0..pack.len())
@@ -432,6 +443,9 @@ impl ObjectScreen {
             (ObjectList::Temper, item) => ScreenAction::Act(Action::Temper {
                 item: item.position(),
             }),
+            (ObjectList::Decipher, item) => ScreenAction::Act(Action::Decipher {
+                item: item.position(),
+            }),
             (ObjectList::Give, item) => ScreenAction::Act(Action::Give {
                 item: item.position(),
                 ally: None,
@@ -534,6 +548,7 @@ impl ObjectScreen {
                     | ObjectList::Study
                     | ObjectList::Identify(_)
                     | ObjectList::Temper
+                    | ObjectList::Decipher
                     | ObjectList::Give => Action::Drop(chosen),
                 });
             }
@@ -718,6 +733,7 @@ impl ObjectScreen {
             ObjectList::Study => format!("{}   {page}Esc cancel", either("study")),
             ObjectList::Identify(_) => format!("{}   {page}Esc cancel", either("identify")),
             ObjectList::Temper => format!("{}   {page}Esc cancel", either("temper")),
+            ObjectList::Decipher => format!("{}   {page}Esc cancel", either("decipher")),
             ObjectList::Give => format!("{}   {page}Esc cancel", either("give")),
             ObjectList::PickUp | ObjectList::Drop => {
                 let verb = if self.list == ObjectList::PickUp {

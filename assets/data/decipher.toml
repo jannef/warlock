@@ -9,5 +9,9 @@
 #   difficulty = base + the spell's level ÷ levels_per_point (rounded down)
 #
 # Failed, the read's time passes, the scroll is kept, and a label stays unknown: try again.
+# The Decipher ability (world/decipher.rs) makes the same check on a scroll of a type not yet
+# identified, without reading it: `seconds` of turns of the `decipher` action (actions.toml);
+# made, the type is learned, failed, the time is gone and it may be tried again.
+seconds = 600
 base = 10
 levels_per_point = 5
