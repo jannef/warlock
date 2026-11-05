@@ -220,11 +220,6 @@ pub struct TalentMods {
     pub mana_cost_percent: i32,
     /// Percent more mana a rod costs (negative: less; Channeler).
     pub rod_cost_percent: i32,
-    /// Added to its caster level (spec §8 "Spells").
-    pub caster_level: i32,
-    /// Caster level by character level, one entry per talent: `(per_levels, value)`
-    /// ([`TalentMods::caster_level_at`]; Arcane training).
-    pub caster_per_levels: Vec<(u8, i32)>,
     /// What it does to its spells through the six hooks (spec §8 "Spells": "Hooks"), one entry
     /// per `spell_mod` effect, each with its tag filter
     /// ([`TalentMods::spell_mods`]).
@@ -1099,15 +1094,6 @@ impl TalentMods {
         self.spells.contains(&spell)
     }
 
-    /// What its talents add to its caster level at character `level`: the flat `caster_level`,
-    /// and `value` per `per_levels` levels of each `caster_per_levels` (Arcane training).
-    pub fn caster_level_at(&self, level: u8) -> i32 {
-        let grown: i32 = (self.caster_per_levels.iter())
-            .map(|&(per, value)| i32::from(level / per.max(1)) * value)
-            .sum();
-        self.caster_level + grown
-    }
-
     /// What its talents do to a spell with `tags` (spec §8 "Spells": "Hooks"): every
     /// `spell_mod` whose filter the spell fits, summed.
     pub fn spell_mods(&self, tags: &[&str]) -> crate::content::SpellMods {
@@ -1353,13 +1339,6 @@ impl TalentMods {
             TalentEffect::ManaRestingPercent { value } => self.mana_resting_percent += value,
             TalentEffect::ManaCostPercent { value } => self.mana_cost_percent += value,
             TalentEffect::RodCostPercent { value } => self.rod_cost_percent += value,
-            TalentEffect::CasterLevel {
-                value,
-                per_levels: 0,
-            } => self.caster_level += value,
-            TalentEffect::CasterLevel { value, per_levels } => {
-                self.caster_per_levels.push((per_levels, value));
-            }
             TalentEffect::BloodMagic { hp, mana } => {
                 self.blood_magic = Some(BloodMagic { hp, mana });
             }

@@ -163,7 +163,6 @@ wiki's effect text appends "while raging".
 | `spell_mod` (`SpellModSpec`: `rungs`, `scroll_rungs`, `wand_rungs`, `reach_rungs`, `degree_rungs`, `sides`, `dice`, `bonus`, `reroll`, `rider`, `cells`, `radius_cells`, `degrees`, `cost`, `when`; a talent chosen for a school or an element keys on the choice) | `TalentMods::spell` → `Actor::spell_mods` (`world/spell_mods.rs`), read by `world/spell_rung.rs` and the cast path (the spell scaling design §7.1: Empower, Archmage, Keen mind, School focus, Scroll adept, Wand mastery, Sure hand, Brimming; `rider` has no shipped user since the spell types took Numbing cold's, `docs/dev/spells.md`); `cost` in `Actor::spell_base` |
 | `spell_type` (`arc_chance`, `when`: damage types; Conductor) | `TalentMods::arc_chance`, read in `world/spell_arc.rs::spell_type_spreads` (`docs/dev/spells.md` "Spell types") |
 | `spell_mana_percent` | `Actor::spell_cost` (the cast and `Unavailable::NoMana`) |
-| `caster_level` (`per_levels`) | `Actor::caster_level` (`TalentMods::caster_level_at`, at the character level) |
 | `study` | `World::start_study` (time), `study_odds` (bonus; `overreach_percent`: Overreach's third off the overreach the check counts) |
 | `deflection_unarmoured` | `Actor::defence` (Deflection, no body armour: Mage armour) |
 | `purify`, `corpse_harmless`, `meal_heals` | `eat.rs`: `eat_rotten` (no sickness, no exposure, no draw), `eat_fresh` (no `on_eat` harm or vomiting, no draw), `meal_heals` from `finish` (an object, or a fresh corpse) |
@@ -322,8 +321,7 @@ Tests: `world/caster_tests.rs`.
 since #773, `min_class = 0` until every class has its table, `free_per_tree = 1`); class
 abilities are counted by `Content::check_class_tables`. A `[[system]]` may still set its own
 `min_talents` in place of the bar's (`SystemDef::min_talents`); none does since the bar is one.
-`spells` (#394, docs/dev/spells.md) joined pending, with the
-`caster_level` talent effect and nothing taking it; #396 added the Spellcraft tree with its
+`spells` (#394, docs/dev/spells.md) joined pending, with nothing taking it; #396 added the Spellcraft tree with its
 first talent, Quick study (`TalentEffect::Study`), and #400 the rest (Overreach, School focus
 with the `school` choice: a school or an element), the wizard's Arcane training, Empower and
 Archmage reworked (they also lower costs; their dice are held to the cap, a scroll's too), and

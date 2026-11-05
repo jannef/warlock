@@ -227,7 +227,6 @@ above.
 | Mana on a kill | `mana.md#mana-on-a-kill` |
 | Spending mana | `mana.md#spending-it` |
 | Magic, spells, casting | `magic.md`, `magic.md#the-spells` |
-| Caster level | `magic.md#caster-level` |
 | Learning (what a scroll teaches for certain, Spellcraft's curve) | `magic.md#learning` |
 | Spell level, cantrip | `magic.md#spell-levels` |
 | Ladder, rung, base | `magic.md#the-spells`, `magic.md#how-a-spell-grows` |

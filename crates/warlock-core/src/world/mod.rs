@@ -103,7 +103,6 @@ mod calling;
 mod carry;
 mod cast;
 mod caster;
-mod caster_level;
 mod chest;
 mod class;
 mod class_ability;
@@ -264,7 +263,6 @@ pub use ally::{Ally, AllySource, MAX_DEV_ALLIES, Order};
 pub use attacks::{AttackSource, OwnAttack};
 pub use calling::CallingStatus;
 pub use cast::Reach;
-pub use caster_level::casting_percent;
 pub use collar::fits_neck;
 pub(crate) use companion::smelt_within;
 pub use companion::{CompanionData, draw as companion_draw, name_for as companion_name};
@@ -1585,8 +1583,6 @@ mod burden_tests;
 mod calling_tests;
 #[cfg(test)]
 mod cast_tests;
-#[cfg(test)]
-mod caster_level_tests;
 #[cfg(test)]
 mod caster_style_tests;
 #[cfg(test)]

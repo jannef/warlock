@@ -295,11 +295,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
   - **Shown**: the player's own mana and maximum (`PerceptionView::own_mana`): the status bar's
     `MP 5/12` right after the hit points, giving way like them (§6), the character screen beside
     the hit points, the dump header's `mp`, and JSON dumps' `mana`. Never a creature's mana, and
-    never the pace (hidden like `regen_seconds`); the dev `actors` layer shows every actor's
-    (and, with any mana, its caster level, `cl N`).
-  - **Creatures** (#525): a creature's maximum, pace, and caster level read what it wears and
-    wields exactly as the player's do (`max_mana`, `mana_regeneration`, and `caster_level`
-    affixes through `Mods::worn`); it is made with all of its larger pool, and a summoner pays
+    never the pace (hidden like `regen_seconds`); the dev `actors` layer shows every actor's.
+  - **Creatures** (#525): a creature's maximum and pace read what it wears and
+    wields exactly as the player's do (`max_mana` and `mana_regeneration` affixes through
+    `Mods::worn`); it is made with all of its larger pool, and a summoner pays
     for its summons from it. A creature without such things is as its type makes it.
   - **On a kill** (the affixes design §4, decision 7; #632): the `mana_on_kill` of what the
     slayer wears and wields (of Siphoning) raises its mana by their sum, never past its
@@ -314,8 +313,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     serializes as before).
 - **Spells** (the magic design, `docs/design/magic.md` §3 to §8, as the spell scaling design,
   `docs/design/spell-scaling.md`, revised it: levels for tiers, ladders and hooks for the cap
-  and the lift, caster level for learning only; `content/spell_def.rs`,
-  `world/caster_level.rs`, `world/cast.rs`, `world/learn.rs`; #394, #395, #396, #397, #759): the
+  and the lift, and learning by Spellcraft, `docs/design/no-caster-level.md`; `content/spell_def.rs`,
+  `world/cast.rs`, `world/learn.rs`; #394, #395, #396, #397, #759): the
   spell data, the one cast path, learning, and the first spell list. A spell's growth is
   written in its own file as ladders on the caster's stats and printed in the wiki as written;
   talents and items act on it through the hooks. The casters' spells (§8 "Class
@@ -346,9 +345,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     without the mana, without a stack, or on one already known.
   - **Guaranteed spells** (design §8): a class's level table (`abilities`, §8 "Class
     abilities") gives its spells as class abilities with a `spell` effect, at the level each
-    comes at, never above the class's caster level then (character level × `casting` ÷ 100, at
-    least 1; the content test, until #990 removes that clause), whatever the character's
-    Spellcraft. Wizard: Ray of
+    comes at, whatever the character's Spellcraft: a spell a class gives is its holder's at that
+    level, and the level is the author's call. Wizard: Ray of
     frost (1), Burning hands (1), Magic missile (3), Arcane bolt (18), Chain lightning (24). Priest: Mend (1),
     Blessing (3), Cure wounds (3) (their rite is the prayer, §8i). Druid: Spark (1), Barkskin (3), Call of
     the wild (6), Water walking (6), Call lightning (12), Call of the forest (25), Call the elements (40), Flame and
@@ -489,8 +487,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     add.
   - **Casting** (`World::cast_spell`, `world/cast.rs`; `Action::Cast`, `use:arcane_bolt:12,5`):
     - **Cost** (the one hook, `Actor::spell_cost`): `SpellRules::mana`: the spell's level, at
-      least 1 (no caster level anywhere in it: a known spell is cast at its level's mana, and
-      the pool is the gate) × the shape's percent (a
+      least 1 (a known spell is cast at its level's mana, and the pool is the gate) × the shape's percent (a
       burst's at its own `radius`) × the resolution's `cost` percent × (100 + the summed
       `spell_cost_percent` of what is worn, `data/objects/`: chain mail 10, scale 20, banded 30,
       plate 40, great helm and large shield 10, tower shield 20; each piece's less its own
@@ -533,17 +530,6 @@ developer notes (CLAUDE.md, `docs/dev/`).
     - **Determinism**: a cast draws only its own rolls (the attack roll, the dice, one draw a
       die in group order and one more a die the reroll hook sends back, an area's one roll for
       all); a spell without a roll, and a rider, draw nothing. Nothing new is saved.
-  - **Caster level** (`World::caster_level`, `Actor::caster_level`; derived, never stored): the
-    player's level times their class's `casting` percent (`data/classes/`, 1 to 100, default
-    25: wizard, witch, priest, and druid 100, bard and aristocrat 75, paladin, ranger, and ascetic
-    50, everyone else 25; 100 without a class), a creature's its type's level, rounded down; plus
-    the `caster_level` talent effect (racial and birth-sign gifts are talents; flat, or `value`
-    per `per_levels` character levels; no talent ships it now);
-    never below 0, and at least 1 for anyone whose maximum mana is
-    above 0. It sets nothing in play since learning became Spellcraft's (#987; the no-caster-level
-    design removes the rest, #990); never a spell's roll, reach, or mana (decisions 1 and 10). The player knows
-    it: the dump `stats` layer's `Caster level N` (after the scores), JSON dumps' `caster_level`
-    (`PerceptionView::own_caster_level`).
   - **Learning, the number** (`Actor::learning`, `world/learn.rs`; derived, never stored;
     `docs/design/no-caster-level.md`, #987): what a scroll teaches for certain comes from the
     Spellcraft skill and nothing else, its `learn` benefit (`data/skills.toml`: 0 to 10, 10 at 60,

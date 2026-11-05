@@ -232,7 +232,7 @@ and its thresholds),
 (the player's name, race, gender, and class (`Class Bard`; `Class Bard 30` at the class's cap;
 `Class Bard 30, Hunter 4` once called into a prestige class), age, birth date, and sign with a lucky day's title,
 `Sign Wood Salamander, the Racer`, then their own scores as the rules read them, then
-their caster level, `Caster level 3`, then their alignment band, `Alignment Kind`, then their combat stance when it is not neutral,
+their alignment band, `Alignment Kind`, then their combat stance when it is not neutral,
 `Stance Frenzy`, then each guild they belong to with their rank, `Guild
 Weyfarers' Gilde, Tin`, then
 `Effects Bleeding, Diseased` when they suffer any, then `Diseases filth fever`, the diseases they
@@ -257,7 +257,7 @@ follow`, the cell only where they see it, `Snel, a hound (grade 12): with you` i
 words; `no familiar` without one; docs/dev/familiar.md), `truth`
 (ground truth, hidden traps and secret doors (`S`) too, a sealed room's standing breach (`H`), a line per chest after the map, `chest 7 (hutch) at (12, 5): shut, locked, holds 3 stacks`, and hidden locations by their entrance's
 glyph, **dev-only**; on a level with a danger
-it and `actors` start with `danger 3 population 2/6 spawn next 08:15:00`), `actors` (every actor on the level with its hit points, mana (and, with any, its caster level, `cl 8`), its resources (`resources rage
+it and `actors` start with `danger 3 population 2/6 spawn next 08:15:00`), `actors` (every actor on the level with its hit points, mana, its resources (`resources rage
 11/20 (0)`, with progress), and
 Defence and Protection, its alignment (`alignment evil`; the player's score and band), its court (`court seelie`, a fey's), its weight, what it carries and of that wears and wields (magic items as they truly
 are, "(unidentified)" marked, a wand's rung `(rung 2)`, an anvil's work `(attempts 2: die to_hit)`), what its magic items do to it (`magic strength +1`), its burden
@@ -283,7 +283,7 @@ against 17, 36/144` (the overreach in spell levels; none for the untrained, nor 
 17/17` and `mp 3/3`, each resource they hold (`rage 11/20`), (and `dead` once the run has ended), `hunger hungry` unless Not hungry, `dazzled` while
 strong light dazzles light-blind eyes, `allies 2` while the player has allies on the level or in their retinue, `encounter pending: a band of kobolds (ambush, evade,
 fight)` while an overworld encounter waits for an answer, and the
-`temperature`; JSON dumps add `hp`, `mana` (`current`, `max`), `caster_level`, `resources` (the
+`temperature`; JSON dumps add `hp`, `mana` (`current`, `max`), `resources` (the
 ones held: `id`, `current`, `max`), `defence`, `protection`, `resistances` (by damage type id, the
 word: `{"cold": "resistant"}`), `burden` (`level`, `limit`), `alignment` (the band's id), `guilds` (`id`, `name`, `rank`; left out before joining one), `hunger`, `stance` (the combat stance's id), `dazzled`, `encounter` (the overworld encounter pending: `entry`, `name`, `outcome`, `title`, `text`, `choices` (`id`, `label`), or null; with `--state` also the dev `encounter_tables`, those matching the player's cell, and the dev `callings`, each of the campaign's with its `class`, `level`, `from`, and `status`: `open`, `level_not_met`, `not_from`, `called`), `effects`
 (status ids), `diseases` (the known ones' ids), `death` (with `of`, the status that killed,
@@ -369,7 +369,7 @@ file). Topics:
 - `docs/dev/status-effects.md` — statuses and severities, healing paces, checks, diseases and stat damage
 - `docs/dev/mana.md` — the second pool: its maximum, regeneration in the status loop, every modifier's one hook, spending, the dev drain
 - `docs/dev/magic-skills.md` — the schools of magic as skills: the `school` rows, `Benefit::spell_mods`, `practise_cast` and the `Outcome`, the `schools` talents and dump layer, the Magic page
-- `docs/dev/spells.md` — the spell data: spell levels (0 to 70), the cost table, the `[[spell]]` files and their checks (none on strength), tags, caster level
+- `docs/dev/spells.md` — the spell data: spell levels (0 to 70), the cost table, the `[[spell]]` files and their checks (none on strength), tags, learning
 - `docs/dev/resources.md` — alternative resources: the data, `Actor::resources`, grant, gain, spend, and end, time in the status loop, ability costs, the dev grant
 - `docs/dev/blood.md` — wounds and stains, bleeding, how blood is drawn
 - `docs/dev/creatures.md` — factions and stance, the AI, paths, creature sight, spawning, gear (a stable index: roster PRs edit only their own `docs/dev/creatures/<tribe>.md`, e.g. `undead.md`, never this file)
