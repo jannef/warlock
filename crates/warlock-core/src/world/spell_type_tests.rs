@@ -19,7 +19,7 @@ const HALL: &str = "name = \"Hall\"\nambient = [255, 255, 255, 0]\nmap = '''\n\
     \"~\" = { terrain = \"water\" }\n\
     \"K\" = { terrain = \"floor\", creature = \"kobold\" }\n";
 
-fn files() -> ContentFiles {
+pub(super) fn files() -> ContentFiles {
     let mut files = ContentFiles::builtin();
     files.insert("levels/hall.toml", HALL);
     files.insert(
@@ -29,7 +29,7 @@ fn files() -> ContentFiles {
     files
 }
 
-fn start(content: Arc<Content>, seed: u64) -> World {
+pub(super) fn start(content: Arc<Content>, seed: u64) -> World {
     let spec: CharacterSpec = "human,female,wizard".parse().expect("a character");
     let spec = spec.with_talents(vec!["keen_ears".into(), "lean".into(), "pious".into()]);
     let w = World::start_run(content.clone(), "hall", Some(seed), Some(&spec), None, true)
@@ -38,7 +38,10 @@ fn start(content: Arc<Content>, seed: u64) -> World {
     state.character.as_mut().expect("a character").sign = None;
     let mut w = World::from_state(content, state).expect("restores");
     w.player_mut().stats = Stats::new(PerStat::splat(14), PerStat::splat(40));
-    for spell in ["fireball", "frost", "scorching_ray", "ray_of_frost"] {
+    for spell in ["fireball", "frost", "scorching_ray", "ray_of_frost"]
+        .into_iter()
+        .chain(["magic_missile", "blight", "grave_breath"])
+    {
         w.player_mut().spells.insert(sp(spell));
     }
     w
@@ -48,16 +51,16 @@ fn hall(seed: u64) -> World {
     start(Arc::new(Content::load(&files()).expect("content")), seed)
 }
 
-fn status(w: &World, id: &str) -> StatusId {
+pub(super) fn status(w: &World, id: &str) -> StatusId {
     w.content().status_id(id).expect("a status")
 }
 
-fn cell(x: i32, y: i32) -> Pos {
+pub(super) fn cell(x: i32, y: i32) -> Pos {
     Pos::new(x, y)
 }
 
 /// `target` stands at `at` again, whole and untouched by any status.
-fn put_back(w: &mut World, target: ActorId, at: Pos) {
+pub(super) fn put_back(w: &mut World, target: ActorId, at: Pos) {
     let actor = w.state.actors.get_mut(&target).expect("there");
     actor.pos = at;
     actor.hp = 10_000;
@@ -66,7 +69,7 @@ fn put_back(w: &mut World, target: ActorId, at: Pos) {
 
 /// The player, whole and with mana, untrained so no rank grows the dice, casts `spell` at `at`:
 /// what the cast did to `target`.
-fn cast(w: &mut World, spell: &str, at: Pos, target: Option<ActorId>) -> Vec<Strike> {
+pub(super) fn cast(w: &mut World, spell: &str, at: Pos, target: Option<ActorId>) -> Vec<Strike> {
     let max = w.state.player().max_hp(w.content());
     w.player_mut().hp = max;
     w.player_mut().mana_base = 400;
@@ -357,6 +360,17 @@ fn the_menu_and_the_dump_say_the_rule_after_the_roll() {
             .map(|t| t.split_once(' ').map(|x| x.1.to_string())),
         Some(Some("fire, burns one in four".to_string()))
     );
+    // The dice left out: they grow with the score.
+    let rule = |id: &str| {
+        let text = view.own_spell_roll(sp(id)).expect("a roll").text;
+        text.split_once(", ").map(|x| x.1.to_string())
+    };
+    assert_eq!(
+        rule("magic_missile").as_deref(),
+        Some("shoves on a big hit")
+    );
+    assert_eq!(rule("blight").as_deref(), Some("poisons"));
+    assert_eq!(rule("grave_breath").as_deref(), Some("bites the wounded"));
 }
 
 #[test]

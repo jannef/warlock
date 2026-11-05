@@ -1368,8 +1368,8 @@ impl World {
         if let Some(refused) = self.refuse_pending(action) {
             return refused;
         }
-        // A step while held is a struggle to break free (`hold.rs`).
-        if let Some(spent) = self.struggle(action) {
+        // What bonds stop or slow is a struggle to break free (`hold.rs`).
+        if let Some(spent) = self.struggle(action, events) {
             return spent;
         }
         if let Some(refused) = self.refuse_blocked(action) {
@@ -1652,6 +1652,8 @@ mod endless_tests;
 #[cfg(test)]
 mod equip_tests;
 #[cfg(test)]
+mod escape_tests;
+#[cfg(test)]
 mod experience_tests;
 #[cfg(test)]
 mod feature_tests;
@@ -1855,6 +1857,8 @@ mod speed_tests;
 mod spell_list_tests;
 #[cfg(test)]
 mod spell_talent_tests;
+#[cfg(test)]
+mod spell_type_force_tests;
 #[cfg(test)]
 mod spell_type_tests;
 #[cfg(test)]

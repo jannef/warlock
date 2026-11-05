@@ -240,7 +240,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   a boar in a forest, a lynx in a dense forest, a badger in the hills (none or one each). Validation: the start is walkable, every walkable
   cell is reachable from it (4-connected), every side has at least 3 walkable cells, running water
   and only running water has a flow, and patrols are valid.
-- **Vaults** (`assets/vaults/*.toml`): hand-made pieces in the level-file format, stamped verbatim
+- **Vaults** (`assets/vaults/*.toml`): hand-made pieces in the level-file format, stamped whole
   (terrain, lights, objects, traps, locks, named places with their notes, creatures) where they fit — into rock with room for corridors or tunnels to
   every entrance. A vault's edge is solid except for its entrances (doors, not on a corner); it has
   no stairs, player start, or unique character (`npc`), and all its walkable cells are reachable
@@ -263,7 +263,12 @@ developer notes (CLAUDE.md, `docs/dev/`).
   own campaign, and named once a level. Vaults drawn at random are rare: a rooms floor gets one
   one time in five, a cave floor two times in five (and then a second one time in seven), and a
   branch deals its random vaults round four phases of floors by the run's chance, so one comes
-  back at the soonest four floors later (#960).
+  back at the soonest four floors later (#960). A vault drawn at random, a local area's ruins too,
+  lies any of eight ways, rotated by quarters or mirrored, with everything in it that has a position
+  or a direction turned along (#959): entrances, piles, loot and monster cells, lights, locks,
+  chests, secret doors, traps and a bolt's way, named places, a creature's place and patrol, the
+  flow of running water. A file with `turns = false` keeps the way it is drawn, for text that
+  depends on direction or a layout that must not turn; a vault a branch level names always does.
 - **Fennmynster** (#338; `campaigns/ascmearc/data/dungeons/fennmynster.toml`; the design is
   `docs/design/campaign.md` §7): the cellars and crypts of the drowned minster in Micelfenn, its
   way in a hidden location of the overworld (70, 48) leading to `fennmynster:1`. Eight levels of

@@ -62,7 +62,16 @@ The passive skills help you more the higher they are:
   (it adds to the quickness of [talents](talents.md) such as [Fleet-footed](talents.md#talent-fleet-footed) and [Quick](talents.md#talent-quick); see
   [Burden](burden.md) for the load, which slows you on top of it). It also helps you kick [doors](doors.md)
   in (see [Doors](doors.md)). Besides kicks, it is trained now and then by acting under a load
-  that slows you and by journeys on the [overworld](overworld.md#travel).
+  that slows you, by journeys on the [overworld](overworld.md#travel), and by climbing out of a
+  [pit](traps.md#trap-pit).
+- **[Escape artist](skills.md#skill-escape-artist)** slips bonds without being asked: when
+  [Held](status-effects.md#status-held), [Webbed](status-effects.md#status-webbed), or
+  [Pinned](status-effects.md#status-pinned) stops what you try, the better of your
+  [Strength](stats.md#stat-strength) and [Dexterity](stats.md#stat-dexterity) plus the skill is
+  checked as part of the attempt (see [Slipping bonds](status-effects.md#slipping-bonds); untrained,
+  a web or a pin just refuses the step). +8 at 100, +12 at 200. It also shortens the climb out of
+  a [pit](traps.md#trap-pit): half from 50, none from 100. Every such check and every climb trains
+  it.
 - **[Survival](skills.md#skill-survival)** makes your journeys on the [overworld](overworld.md) quicker (it does nothing for
   your steps in a local area or a dungeon), and lets you forage in the wild, finding food more
   often the higher it is (see [Foraging](#foraging)).
