@@ -417,8 +417,7 @@ impl World {
     /// the player's where it happens.
     pub(super) fn fall_in(&mut self, id: ActorId, at: Pos, events: &mut Vec<Event>) {
         let water = self.state.current().water_at(&self.content, at);
-        let proof =
-            (self.state.actors.get(&id)).is_some_and(|a| a.talent_mods(&self.content).plunge_proof);
+        let proof = (self.state.actors.get(&id)).is_some_and(|a| a.plunge_proof(&self.content));
         let freeze = water
             .and_then(|w| self.content.terrain(w).freeze)
             .filter(|_| !proof);

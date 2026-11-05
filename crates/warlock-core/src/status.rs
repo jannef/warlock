@@ -22,6 +22,8 @@
 //! - **Fighting** ([`Effects::sharpen`], [`Effects::defence`]): while it lasts, a status adds its
 //!   `combat` to-hit and damage to every attack and its Dodge and Parry to Defence, as a combat
 //!   stance does.
+//! - **Blows** ([`Effects::blows`], `World::retaliate`): a status may add a rider to its
+//!   sufferer's melee blows, or strike back whoever lands one on it.
 //! - **Slowness** ([`Effects::slow`]): each status multiplies the price of every action by its
 //!   `cost` percent.
 //! - **Blocks** ([`Effects::blocking`]): the actions a status refuses while it lasts, by kind.
@@ -33,6 +35,7 @@
 
 use crate::combat::{Category, Profile};
 use crate::content::{ActionKind, Content, Stacking, StatusDef, StatusId};
+use crate::damage::Rider;
 use crate::stats::{PerStat, Stat};
 use crate::talent::TalentMods;
 use crate::world::ActorId;
@@ -268,6 +271,17 @@ impl Effects {
             bonus: profile.bonus + damage,
             ..profile
         }
+    }
+
+    /// What its statuses add to its melee blows (`blows`: Brand's fire), in status order: riders,
+    /// as a worn `elemental` affix's are.
+    pub fn blows<'a>(&'a self, content: &'a Content) -> impl Iterator<Item = Rider> + 'a {
+        (self.0.iter()).filter_map(|e| content.status(e.status).blows)
+    }
+
+    /// Whether any of its statuses says so.
+    pub fn any(&self, content: &Content, says: impl Fn(&StatusDef) -> bool) -> bool {
+        self.0.iter().any(|e| says(content.status(e.status)))
     }
 
     /// The Defence bonuses its statuses give, one per status and category (none that are zero):
