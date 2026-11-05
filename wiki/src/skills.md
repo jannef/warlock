@@ -301,15 +301,12 @@ always fails and a roll of 24 always works.
   "The blood still runs.", and you may try again at once, as often as you like. The worse the
   [bleeding](status-effects.md#bleeding), the harder it is: 6 plus 2 for each degree.
 - **[Poison](status-effects.md#poisoned)**: made, you draw out some of it: it is a degree weaker ("You draw out some of the
-  poison."). You get **one try** at a dose, whatever comes of it: afterwards "You can do no more
-  for the poison." until it wears off; [poisoned](status-effects.md#poisoned) again later, you may try again. 8 plus 1 for each
+  poison."). Failed, "The poison will not come out."; you may try again at once, as often as you like. 8 plus 1 for each
   degree.
 - **A [disease](diseases.md#how-a-disease-goes)**: made, you ease it ("You ease the filth fever somewhat."): it counts as one of
   the checks in a row that shake it off, though never the last one, so treating never cures it
   by itself. A [disease](diseases.md#how-a-disease-goes) that never goes away by itself, or one a single won check from going,
-  instead takes a full interval from your try before it next gets worse. Again **one try** a
-  bout, whatever comes of it ("You can do no more for the filth fever."); caught again later,
-  you may try again. Its difficulty is the [disease](diseases.md#how-a-disease-goes)'s own.
+  instead takes a full interval from your try before it next gets worse. Failed, "You can do no more for the filth fever."; you may try again at once. Its difficulty is the [disease](diseases.md#how-a-disease-goes)'s own.
 
 {{#include generated/heal-targets.md}}
 

@@ -562,15 +562,13 @@ developer notes (CLAUDE.md, `docs/dev/`).
   degree) or the disease's own `difficulty`. Every try takes its time, may earn Heal a mark
   (`heal`), and makes no noise. A status that `stops` (bleeding) ends when the check is made
   ("You bind the wound." then its end line); failed ("The blood still runs.") it may be tried
-  again at once, any number of times. Any other status (poison) eases a degree when it is made
+  again at once, any number of times, as may every try below. Any other status (poison) eases a degree when it is made
   (ending at none); a disease made is eased: it counts as a progression check won toward its
   `recovery`, unless that would shake it off or it never recovers by itself, when its next
   progression is put off to a full interval from the try instead, so a try never cures. A poison
-  or a disease may be tried **once**, whatever comes of it ("You can do no more for the
-  poison." / "for the filth fever."): `Effect::treated` and `Infection::treated`, saved and
-  hashed, which go with the effect or the infection, so a new dose or a new infection may be
-  tried again. Refusals take no time and no draw: untrained ("You know nothing of healing."),
-  nothing to treat, or one already tried.
+  or a disease may be tried again and again, made or failed ("The poison will not come out."
+  / "You can do no more for the filth fever."): time is the price. Refusals take no time and no
+  draw: untrained ("You know nothing of healing."), or nothing to treat.
 - **Stealing** (`world/steal.rs`, data `data/steal.toml`, §7; #234, the progression design's
   B7): the Steal skill's use, the abilities menu's **Steal** (`Ability::Steal`, in the skill's
   place among the Skills; a direction; `Action::Steal`, replay text `steal:DIR`; cost `steal`;
