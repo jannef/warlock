@@ -131,6 +131,13 @@ column says which):
   you [heal](healing.md#how-fast) up to go again when it ends.
 - **Fighting.** It may add to your [to-hit](combat.md#hitting) and [damage](combat.md#damage), or to your [Dodge](combat.md#defence) and [Parry](combat.md#defence), as a
   [combat stance](combat.md#stances) does, on top of your stance. Creatures can suffer these too.
+- **Blows.** It may add damage of a [kind](damage-types.md) to your melee blows with either hand, as a
+  [Flaming](magic-items.md#prefixes) sword's: [Brand](magic.md#spell-brand) does 1d4 [fire](damage-types.md#damage-fire) more ([burning blade](status-effects.md#status-branded-blade)). A kick or a shield bash does not
+  carry it. No [spell type's rule](magic.md#spell-types) reads a blow, so it never leaves anyone [burning](status-effects.md#burning).
+- **Striking back.** It may hurt whoever lands a melee blow on you, as a spell of that kind would:
+  [Fire cloak](magic.md#spell-fire-cloak) does 1d6 fire to the striker ([fire-cloaked](status-effects.md#status-fire-cloaked)), and one time in four leaves them burning. What it kills is your kill.
+- **Water.** It may bear you up: [Water walking](magic.md#spell-water-walking) ([water-borne](status-effects.md#status-water-borne)) makes [wading](terrain.md#water) cost no more than a
+  step on dry land, and a [plunge through the ice](temperature.md#water-freezes) does no harm. You still fall in where the ice gives way.
 - **Slowness.** It may make everything you do take longer: at 150%, half again as long.
 - **What you cannot do.** It may keep you from doing something while it lasts: a [raging](status-effects.md#status-raging) fighter
   cannot read ("You cannot read while raging."). Trying takes no time. An

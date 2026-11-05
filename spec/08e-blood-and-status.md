@@ -77,6 +77,15 @@ developer notes (CLAUDE.md, `docs/dev/`).
     still raise, never).
   - **Buffs, hexes, and cooldowns** (`world/buff.rs`, #227; design `docs/design/progression.md`
     §4.1 B1): a status may also, while it lasts,
+    - **strike back or burn** (the spell types design §7, Fire cloak and Brand): `retaliates = {
+      damage, damage_type }` does those dice to whoever lands a melee blow on its sufferer, as a
+      spell of that type would (the type's rule on the striker, a kill the sufferer's; beside
+      Barbed hide's barbs), and `blows = { damage, damage_type }` adds a rider to its sufferer's
+      blows with either hand, as a worn `elemental` affix does, which reads no type rule. A kick
+      or a shield bash is not such a blow;
+    - **bear up on water** (Water walking): `wades_free` prices wading as a step on dry land and
+      `plunge_proof` spares a plunge's harm, Undertow's two effects, read with the talent's
+      through one `Actor::wades_free` and one `Actor::plunge_proof`;
     - **fight** better or worse (`combat = { to_hit, damage, dodge, parry, shield }`, each −20 to
       20, as a combat stance's, §8 "Stances"): to-hit and damage join every attack profile with
       the stance's (`Actor::stanced`), Dodge and Parry the actor's Defence (Dodge stacks, of Parry
@@ -301,9 +310,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
     by spell level (the spell scaling design §5.8): 0 Evil eye, Light (#589: the scroll of
     light's; Lit, its status, sheds a light about the caster, `light` on a status); 1 Burning
     hands, Grave breath, Mend, Ray of frost, Spark; 3 Barkskin, Blessing, Cure wounds, Curse of sloth, Hex of weakness, Magic
-    missile; 4 Cause wounds; 5 Call of the wild; 6 Arcane bolt, Frost, Identify,
-    Sleep; 7 Blight, Scorching ray, Web; 11 Call lightning, Fireball (the wizard's Fire burst
-    folded into it), Haste, Lightning bolt, Remove disease; 12 Flame; 20 Call of the forest; 35
+    missile; 4 Cause wounds; 5 Call of the wild, Water walking; 6 Arcane bolt, Frost, Identify,
+    Sleep; 7 Blight, Brand, Scorching ray, Web; 11 Call lightning, Fireball (the wizard's Fire
+    burst folded into it), Haste, Lightning bolt, Remove disease; 12 Fire cloak, Flame; 20 Call of the forest; 35
     Call the elements (the druid's calls, #839: summons, §8b "Allies"). A spell is cast by its
     data id (`use:magic_missile:12,5`, any `use:ID` that is no class or birth sign ability; one
     that is no spell either is a weapon active's, §8i "Weapon abilities");
@@ -326,10 +335,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
     least 1; the content test). Wizard: Ray of
     frost (1), Burning hands (1), Magic missile (3), Arcane bolt (18). Priest: Mend (1),
     Blessing (3), Cure wounds (3) (their rite is the prayer, §8i). Druid: Spark (1), Barkskin (3), Call of
-    the wild (6), Call lightning (12), Call of the forest (25), Call the elements (40), Flame and
+    the wild (6), Water walking (6), Call lightning (12), Call of the forest (25), Call the elements (40), Flame and
     frost (50). Witch: Evil eye (1), Grave breath (1), Hex of weakness (3), Cause wounds
     (12), Curse of sloth (32), Blight (40). Bard: Mend (1). Paladin: Blessing
-    (6). Ranger: Barkskin (6). Every other class none. Every class has some mana (the
+    (6), Brand (14). Ranger: Barkskin (6), Water walking (12). Every other class none. Every class has some mana (the
     berserker and the warrior 1); a race adds none unless its data says so.
   - **Spell scrolls** (§8 "Scrolls"): every spell comes on one scroll (`scroll_of_ID`, a
     `read` table of kind `spell`), which casts it through the cast path at the scroll's own

@@ -133,7 +133,7 @@ A passive skill with a use of its own is listed as that use too (`Ability::every
 row): `Effect::Wade` is read in `World::step_price` (`world/schedule.rs`), on a step
 `World::wading_step` calls wading (off the overworld, `move_cost` above 100, `stars::wading`): a
 percent of what the terrain adds over a plain step is spared (`surcharge_spared`, rounded up), 100
-for `swimmer` and `wades_free`, so Swim never goes past them. Its use `wade` is reported at the
+for `swimmer` and `Actor::wades_free`, so Swim never goes past them. Its use `wade` is reported at the
 head of `World::wade` (`world/disease.rs`), before the talents' early return: a wader whom a
 talent spares still trains. `Effect::Swim` is read in `World::keeps_afloat` (`world/ice.rs`,
 `docs/dev/temperature.md`), which marks `swim` once a check; it is `Skills::trains_effect`-gated, so

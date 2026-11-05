@@ -17,6 +17,12 @@ slot, item }` / `Action::Remove(slot)` take off what is in the way (a swap) and 
 action (`wield`, `wear`, `body_armor`, `ready` in `data/actions.toml`) of everything put on or
 taken off (`World::price_for`); dropping takes off first (`take_off_before_dropping`) and
 `Equipment::after_removal` follows the positions (past the 26th too: the pack has no count limit).
+**A status's blows** (Brand's `branded_blade`, #1002): `Actor::melee` and `Actor::off_hand_blow`
+extend the profile's riders with `Effects::blows` right after `Mods::sharpen` has added the worn
+`elemental` affixes', so it shows on the attack line and rolls and resists as they do. No type rule
+reads a rider. Fists and natural attacks take it through `melee`; `kick`, `bash_with`, and the
+missile profiles do not.
+
 **Spirit weapons** (the Hunter's Spirit weapon, #881, `world/spirit_weapon.rs`): a `Stack::spirit`
 exists only in a hand slot. `World::equip_saying` (what `World::equip` calls, with the call's own
 line, "A long sword of pale light is in your hand.") and `World::remove` end with

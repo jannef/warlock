@@ -252,7 +252,8 @@ cast path shares.
     the id string (checked against `data/spells/` at load, resolved in `TalentMods::spells`).
     `Content::spells_by_level` is the menu's order (spell level, then path), `Ability::every`'s
     too.
-  - **The list** (30 spells, by spell level, the spell scaling design §5.8): 0 Evil eye, Light
+  - **The list** (33 spells, by spell level, the spell scaling design §5.8; Water walking 5, Brand
+    7, and Fire cloak 12, #1002, are buffs of status fields, docs/dev/status-effects.md): 0 Evil eye, Light
     (self buff: Lit, whose `light` the light cache sheds about the caster; #589, the scroll of
     light's); 1 Burning hands (cone 3, `mana = 3`, #979), Grave breath (the same, necrotic, #979), Mend
     (touch heal), Ray of frost (ray, attack), Spark (bolt, auto); 3 Barkskin

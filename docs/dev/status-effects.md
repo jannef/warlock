@@ -3,6 +3,16 @@
 Developer notes for working on this part of Warlock (moved from CLAUDE.md, #185); the
 rules it implements are in spec/08e-blood-and-status.md. Keep it current with the code, as CLAUDE.md says.
 
+**Three fields of buffs** (#1002, `world/buff_field_tests.rs`; the spell types design §7 entries
+24 to 26). `retaliates = { damage, damage_type }` (Fire cloak's `fire_cloaked`): `World::retaliate`
+(`world/gifts.rs`), one clause at the head of `barbed`, so a melee blow that took hit points; it
+goes through `spell_strikes` and `say_spell`, words by the damage type ("The fire burns the
+kobold."), then `spell_type_lands` on a striker harmed; a kill pays the wearer, unlike the barbs.
+A draw for the dice, and one for the rule's chance; none without such a status. `blows = { damage,
+damage_type }` (Brand's `branded_blade`): `Effects::blows`, docs/dev/equipment.md. `wades_free`
+and `plunge_proof` (Water walking's `water_borne`): `Actor::wades_free` and `Actor::plunge_proof`
+ask the statuses and the talents, read in `World::step_price` and `World::fall_in`.
+
 Status effects and healing (spec §8 "Status effects", "Healing"; M24, #138; **diseases, #139,
 build on this**): statuses are data, `data/status.toml` (`content/status.rs`: `StatusDef` with
 `seen`, `max`, `stacking`, `tick`/`damage`, `eases`, `regen`, `penalty`, `wound`, `cured_by`,
@@ -56,7 +66,8 @@ status that lends something (a positive `penalty`, a `combat` bonus, a `cost` un
 it. **Circled statuses** (spec §4.8 "Spell circles"): `data/circles.toml` (`content/circles.rs`,
 `CircleStatuses`, `Content::circles()`; the rows' statuses and schools fingerprinted) gives each
 buff and hex spell's status a school, whose colour its spell circle about the actor is drawn in:
-`lit` (evocation), `hasted`, `barkskin` (transmutation), `blessed` (abjuration); `ill_wished`,
+`lit` (evocation), `hasted`, `barkskin`, `branded_blade`, `water_borne` (transmutation), `blessed`,
+`fire_cloaked` (abjuration); `ill_wished`,
 `drowsy` (enchantment), `weakened` (necromancy), `sluggish`, `webbed` (transmutation). A circled
 status must have `seen` (a load-time check: the circle shows only what look mode may say) and be
 laid by a buff or hex spell (which makes its circle a buff's or a hex's); every buff and hex
@@ -64,7 +75,7 @@ spell's status must have a row. **The circle's light** (docs/design/buff-circles
 `circles::shed_lights` fills `StatusDef::light` at load with the school's `circle_<school>` preset
 (`data/lights.toml`: radius 1, steady, luma 40 to 52 and UV 90 at the source) for every circled
 status without a light of its
-own (`lit` keeps `spell_light`). Nothing new reads it: `light/cache.rs` already pushes one source
+own (`lit` keeps `spell_light`; `fire_cloaked` and `branded_blade` `ember`, the one light of these that flickers). Nothing new reads it: `light/cache.rs` already pushes one source
 per actor for its status lights, the widest, the first in status order on a tie (key `CARRIED |
 LIT | id`, so the mask stays cached while the actor stands); severity and time left never scale
 it, and it ends with the status. An actor that hides (`disguised`) sheds no status light. So a

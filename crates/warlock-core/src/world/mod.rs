@@ -1559,6 +1559,8 @@ mod bond_tests;
 #[cfg(test)]
 mod branch_tests;
 #[cfg(test)]
+mod buff_field_tests;
+#[cfg(test)]
 mod buff_tests;
 #[cfg(test)]
 mod burden_tests;

@@ -1,0 +1,14 @@
+# Water walking (spec §8 "Spells"): the druid's and the ranger's, Undertow's two effects a while.
+[[spell]]
+id = "water_walking"
+name = "Water walking"
+description = "Water bears you a while: wading costs you no more than a step on dry land, and a plunge through the ice never hurts you."
+level = 5
+school = "transmutation"
+kind = "buff"
+shape = "self"
+resolution = "auto"
+effect = { status = "water_borne" }
+
+[spell.grows]
+degrees = "presence 14 2, 18 3"
