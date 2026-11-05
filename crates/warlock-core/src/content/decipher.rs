@@ -10,6 +10,8 @@ use serde::Deserialize;
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct DecipherRules {
+    /// How long the Decipher ability takes, in seconds of game time.
+    pub seconds: u32,
     /// The difficulty of a scroll of level 0.
     pub base: i32,
     /// How many spell levels make one point more, rounded down.
@@ -21,6 +23,9 @@ impl DecipherRules {
     pub(super) fn parse(file: &str, text: &str) -> Result<Self, ContentError> {
         let err = |m: String| ContentError::new(file, m);
         let parsed: Self = toml::from_str(text).map_err(|e| err(e.to_string()))?;
+        if parsed.seconds < 1 {
+            return Err(err("`seconds` must be at least 1".into()));
+        }
         if parsed.levels_per_point < 1 {
             return Err(err("`levels_per_point` must be at least 1".into()));
         }
