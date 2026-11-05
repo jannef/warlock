@@ -210,15 +210,15 @@ pub(super) fn class_spells(content: &Content) -> String {
     );
     for class in classes {
         let mut given: Vec<(u8, &str, u8)> = Vec::new();
-        for (level, talent, _) in &class.abilities {
+        for (level, talent) in &class.abilities {
             let Some(id) = book.id(talent) else {
                 continue;
             };
-            for effect in book.get(id).effects_at(1) {
+            for effect in &book.get(id).effects {
                 let TalentEffect::Spell { spell } = effect else {
                     continue;
                 };
-                if let Some(s) = content.spell_id(&spell).map(|s| content.spell(s)) {
+                if let Some(s) = content.spell_id(spell).map(|s| content.spell(s)) {
                     given.push((*level, s.name.as_str(), s.level));
                 }
             }

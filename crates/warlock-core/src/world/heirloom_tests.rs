@@ -75,7 +75,7 @@ fn the_heritage_talents_are_only_for_creation() {
     let world =
         start("human,male,warrior", &["family_wealth", "fathers_sword"], 1).expect("starts");
     let talents = &world.state().player().talents;
-    assert!(talents.has("family_wealth", 1) && talents.has("fathers_sword", 1));
+    assert!(talents.has("family_wealth") && talents.has("fathers_sword"));
     // Father's sword needs Family wealth.
     let err = start("human,male,warrior", &["fathers_sword"], 1).expect_err("needs Family wealth");
     assert!(err.to_string().contains("Family wealth"), "{err}");
@@ -101,7 +101,7 @@ fn the_heritage_talents_are_only_for_creation() {
         said,
         "You cannot take Family wealth: you need to be a new character."
     );
-    assert!(!world.state().player().talents.has("family_wealth", 1));
+    assert!(!world.state().player().talents.has("family_wealth"));
 }
 
 #[test]

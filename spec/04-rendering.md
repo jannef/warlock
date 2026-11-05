@@ -19,7 +19,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
 1. **Grid layer** — viewport-sized textures (glyph index, foreground, background, visual light,
    perception state) drawn as one quad with a custom 2D material. Terrain, remembered terrain,
    objects (the top object of each pile in place of the terrain's glyph, over its background, lit
-   like terrain; a cell with objects does not animate), known traps (their glyph over any objects
+   like terrain; a cell with objects does not animate; known stairs and locations keep their own
+   glyph over a pile, in the top object's colour, remembered cells too, so a corpse never hides
+   them), known traps (their glyph over any objects
    there: a danger shows first; §8 "Traps"), blood stains (§4.8), and in-cell animation.
 2. **Free-glyph layer** — instanced glyph quads from the same atlas for actors, particles, and
    anything that moves between cells or grows beyond its cell. Lit by sampling the light texture.

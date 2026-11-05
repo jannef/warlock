@@ -64,7 +64,7 @@ enum Group {
 #[derive(Clone, Debug, PartialEq, Eq)]
 struct Entry {
     name: String,
-    /// Beside the name: a skill's value and meter, a ranked talent's next rank ("2/3").
+    /// Beside the name: a skill's value and meter.
     detail: String,
     description: String,
     /// What choosing it does; `None` for a talent whose choices are listed next.
@@ -198,10 +198,6 @@ impl LevelUpScreen {
                             (_, Some(_)) => (None, choices),
                             (_, None) => (Some(take(&None)), Vec::new()),
                         };
-                        let detail = match t.ranks {
-                            1 => String::new(),
-                            n => format!("{}/{n}", t.held + 1),
-                        };
                         let name = match &action {
                             Some(Action::Talent {
                                 choice: Some(c), ..
@@ -210,7 +206,7 @@ impl LevelUpScreen {
                         };
                         let entry = Entry {
                             name,
-                            detail,
+                            detail: String::new(),
                             description: t.description.clone(),
                             action,
                             choices,
@@ -353,11 +349,11 @@ impl LevelUpScreen {
             console.print(x + 2, y, &format!("{letter}  {}", entry.name), color);
             let detail_x = x + 5 + name_w + 2;
             let room = (panel.x + panel.w - 2 - detail_x).max(0) as usize;
-            // A talent's rank, then the start of what it does, as room allows.
+            // The start of what a talent does, as room allows.
             let detail = match self.step {
                 Step::Rolls => entry.detail.clone(),
                 _ if self.choosing.is_some() => String::new(),
-                _ => format!("{:<4} {}", entry.detail, entry.description),
+                _ => entry.description.clone(),
             };
             let detail: String = match detail.chars().count() > room && room > 1 {
                 true => detail.chars().take(room - 1).collect::<String>() + "…",

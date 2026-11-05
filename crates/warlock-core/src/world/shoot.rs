@@ -394,7 +394,7 @@ impl World {
                     .filter(|a| a.id != shooter)
                     .map(|a| a.id);
                 if let Some(target) = inside {
-                    let profile = flight.profile.clone();
+                    let profile = self.flight_profile(&flight, from, cell);
                     let blow = self.missile_hits(shooter, target, with, profile, &mut attacks);
                     if blow.is_some_and(|b| b.strike.is_hit()) {
                         path.push(cell);
@@ -409,7 +409,7 @@ impl World {
                 .map(|a| a.id);
             match target {
                 Some(target) => {
-                    let profile = flight.profile.clone();
+                    let profile = self.flight_profile(&flight, from, cell);
                     let blow = self.missile_hits(shooter, target, with, profile, &mut attacks);
                     if blow.is_some_and(|b| b.strike.is_hit()) {
                         if std::mem::take(&mut pierce) {
@@ -447,6 +447,17 @@ impl World {
             },
         });
         events.extend(attacks);
+    }
+
+    /// What `flight`, loosed from `from`, attacks whoever stands on `cell` with: a shot is less
+    /// sure at long range and at an adjacent target (`data/ranged.toml`, spec §8 "Ranged combat"),
+    /// each target by its own distance; a throw is as it is.
+    pub(super) fn flight_profile(&self, flight: &Flight, from: Pos, cell: Pos) -> Profile {
+        let mut profile = flight.profile.clone();
+        if flight.kind == AttackKind::Ranged {
+            profile.to_hit += self.content.ranged().to_hit_at(flight.range, from, cell);
+        }
+        profile
     }
 
     /// One `missile` comes down on cell `p` of the current level, on top of the pile there. If

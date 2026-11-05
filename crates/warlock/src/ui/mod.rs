@@ -438,6 +438,8 @@ fn draw_map(
                 let def = content.terrain(t);
                 let (ch, fg) = match (trap, top) {
                     (Some(trap), _) => (trap.glyph, trap.fg),
+                    // Known stairs keep their glyph over a pile, in the top object's colour.
+                    (None, Some((_, fg))) if def.stairs.is_some() => (def.glyph_at(p), fg),
                     (None, Some(o)) => o,
                     (None, None) => (def.glyph_at(p), band.map_or(def.fg, |b| b.fg)),
                 };
@@ -1543,5 +1545,78 @@ mod tests {
         draw_map(&mut grid, &view, &anims, &key, true);
         assert_eq!(grid.free_terrain, vec![(Pos::new(5, 1), altar)]);
         assert_eq!(grid.console.cells()[at(5, 1)].map(|c| c.ch), Some(' '));
+    }
+
+    /// Known stairs under a dagger keep their glyph in the dagger's colour, in view and
+    /// remembered (dimmed); bare stairs keep their own colour.
+    #[test]
+    fn stairs_keep_their_glyph_over_a_pile() {
+        let mut files = ContentFiles::builtin();
+        files.insert(
+            "levels/stairs.toml",
+            "name = \"Stairs\"\nambient = [255, 255, 255, 0]\nmap = '''\n#########\n#>>@+>>.#\n#########\n'''\n\
+             [legend]\n\"@\" = { terrain = \"floor\", spawn = \"player\" }\n\
+             \".\" = { terrain = \"floor\" }\n\
+             \">\" = { terrain = \"stairs_down\", to = \"stairs\" }\n\
+             \"+\" = { terrain = \"door_closed\" }\n\
+             [[pile]]\nat = [1, 1]\nobjects = [\"dagger\"]\n\
+             [[pile]]\nat = [5, 1]\nobjects = [\"dagger\"]\n",
+        );
+        files.insert(
+            "scenarios/stairs.toml",
+            "name = \"S\"\nstart_level = \"stairs\"\n",
+        );
+        let content = Content::load(&files).expect("test content loads");
+        let mut world = World::new(Arc::new(content), "stairs", None).expect("scenario starts");
+        world.apply(&Action::Open(Dir::E));
+        world.apply(&Action::Close(Dir::E));
+        let anims = AnimTable::new(
+            world.perception().content(),
+            |_| 0,
+            true,
+            Default::default(),
+        );
+        let key = MapKey {
+            level_origin: IVec2::ZERO,
+            area: Rect2 {
+                x: 0,
+                y: 0,
+                w: 9,
+                h: 3,
+            },
+            covered: Vec::new(),
+            arriving: Vec::new(),
+            path: Vec::new(),
+        };
+        let mut grid = MapGrid::default();
+        grid.console.resize(9, 3);
+        let view = world.perception();
+        draw_map(&mut grid, &view, &anims, &key, true);
+        let content = view.content();
+        let stairs = content.terrain(content.terrain_id("stairs_down").unwrap());
+        let dagger = content.object(content.object_id("dagger").unwrap());
+        let at = |x: usize| grid.console.cells()[9 + x].unwrap();
+        // Cells 1 and 2 are in view (a pile, then bare); 5 and 6 are remembered behind the door.
+        assert!(view.is_visible(Pos::new(1, 1)) && !view.is_visible(Pos::new(5, 1)));
+        for (x, fg) in [
+            (1, dagger.fg),
+            (2, stairs.fg),
+            (5, remembered(dagger.fg)),
+            (6, remembered(stairs.fg)),
+        ] {
+            assert_eq!(at(x).ch, stairs.glyph, "glyph at {x}");
+            assert_eq!(at(x).fg, fg, "colour at {x}");
+        }
+        // Look mode names the stairs and the pile.
+        let text = look::describe(&view, Pos::new(1, 1), true);
+        assert!(
+            text.contains("dagger") && text.contains("staircase"),
+            "{text}"
+        );
+        let text = look::describe(&view, Pos::new(5, 1), true);
+        assert!(
+            text.contains("dagger") && text.contains("staircase"),
+            "{text}"
+        );
     }
 }

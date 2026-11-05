@@ -1,0 +1,20 @@
+# A scroll of grave breath (spec §8 "Scrolls", "Spells"): read it (`r`), and it casts Grave breath, a
+# cantrip, at its own caster level, free of mana; study it (`L`), and you may learn the spell for
+# good. Level and frequency by its spell's level (README.toml): the lower, the commoner the scroll.
+[[object]]
+id = "scroll_of_grave_breath"
+name = "scroll of grave breath"
+plural = "scrolls of grave breath"
+glyph = "?"
+fg = "#7aa83a"
+class = "scrolls"
+materials = ["paper"]
+weight = 50
+value = 40
+stackable = true
+level = 1
+frequency = 60
+
+[object.read]
+kind = "spell"
+spell = "grave_breath"

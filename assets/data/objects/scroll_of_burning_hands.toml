@@ -1,5 +1,5 @@
 # A scroll of burning hands (spec §8 "Scrolls", "Spells"): read it (`r`), and it casts Burning hands, a
-# level-4 spell, at its own caster level, free of mana; study it (`L`), and you may learn the spell for
+# cantrip, at its own caster level, free of mana; study it (`L`), and you may learn the spell for
 # good. Level and frequency by its spell's level (README.toml): the lower, the commoner the scroll.
 [[object]]
 id = "scroll_of_burning_hands"
@@ -10,10 +10,10 @@ fg = "#ff8a4a"
 class = "scrolls"
 materials = ["paper"]
 weight = 50
-value = 80
+value = 40
 stackable = true
-level = 2
-frequency = 45
+level = 1
+frequency = 60
 
 [object.read]
 kind = "spell"

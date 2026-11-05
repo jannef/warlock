@@ -64,10 +64,10 @@ fn arrive(world: &mut World, level: u8) {
 }
 
 fn holds(world: &World, id: &str) -> bool {
-    world.state.player().talents.rank_of(id, None) > 0
+    world.state.player().talents.holds(id, None)
 }
 
-/// The player holds talent `id` (one rank more), without a level to take it at.
+/// The player holds talent `id`, without a level to take it at.
 fn give(world: &mut World, id: &str) {
     world.player_mut().talents.take(id, None);
 }
@@ -118,7 +118,7 @@ fn a_talent_already_picked_is_not_given_again_but_brings_a_pick_in_its_place() {
     // Level 32 brings no pick of its own (picks come every third level and at the bonus
     // levels): only the one in Second wind's place (#790).
     arrive(&mut w, 32);
-    assert_eq!(w.state.player().talents.rank_of("second_wind", None), 1);
+    assert!(w.state.player().talents.holds("second_wind", None));
     assert!(!said(&w).contains(&"You gain Second wind.".to_string()));
     assert!(
         said(&w).contains(&"You know Second wind already: choose a talent in its place.".into()),
@@ -190,9 +190,7 @@ fn a_restore_gives_what_a_grown_table_gives_and_nothing_else_changes() {
     let actor = state.actors.get_mut(&player).expect("player");
     actor.talents = crate::talent::Talents::default();
     for t in picked {
-        for _ in 0..t.rank {
-            actor.talents.take(&t.id, t.choice.as_deref());
-        }
+        actor.talents.take(&t.id, t.choice.as_deref());
     }
     let back = World::from_state(BUILTIN.clone(), state).expect("restore");
     for id in ["haggler", "deep_pockets", "merchants_eye"] {

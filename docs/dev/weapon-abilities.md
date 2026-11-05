@@ -65,7 +65,9 @@ gatekeeper, Riposte, Cleaving sweep, Great cleave) and `parry_missiles` (Measure
 reader: `World::free_blows_of` folds the bits in beside the actor's own and its talents'
 (`either`, so a riposte from the style and the talent is one), and `World::target_against` asks
 for Measure. **Parry counts against blows only** (`target_against(id, missile)` removes a
-positive Parry for a shot, a throw, a trap's missile, a bolt) but for an actor with Measure.
+positive Parry for a shot, a throw, a trap's missile, a bolt) but for an actor with Measure
+(and `World::resolve` keeps it for a shot from beside its target, `target_shot`, #956; a parried
+shot brings no riposte, whose hook is on the melee paths).
 `World::brace_of(id)`: Brace of steel's `(to_hit, status)` when the actor's gatekeeper comes from
 a weapon ability (`gatekeeper` adds the to-hit, `step_up` the status on a hit).
 

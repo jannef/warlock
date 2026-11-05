@@ -31,7 +31,8 @@ Allies close to you when you take stairs or leave an area come along and appear 
 those farther away stay where they were, and wait (your [companion](#companions) comes along
 wherever it stands). On the overworld they travel with you unseen and step out beside you at
 the next place. A summon's time runs on wherever it is: one left behind, or on the road too long,
-is gone when you next look for it.
+is gone when you next look for it. Your allies find their places first when [hostile creatures
+follow you on the stairs](terrain.md#stairs).
 
 ## Experience
 

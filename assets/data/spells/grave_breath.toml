@@ -1,0 +1,26 @@
+# Grave breath (spec §8 "Spells", the first spell list; #979): the witch's first harm, a short
+# fan of the grave's cold breath; her Burning hands, in necromancy's own damage and on her
+# Willpower. No hit roll and a little area: the first thing she has that hurts at all.
+[[spell]]
+id = "grave_breath"
+name = "Grave breath"
+description = "The breath of an open grave toward a place you aim at: everyone in its fan withers."
+level = 1
+mana = 3
+school = "necromancy"
+kind = "damage"
+shape = "cone"
+resolution = "area"
+damage_type = "necrotic"
+length = 3
+damage = "1d4"
+
+[spell.cast]
+effect = "blight"
+noun = "grave breath"
+verb = "withers"
+message = "The breath of the grave rolls from your lips!"
+noise = { sound = "chanting", loudness = 30 }
+
+[spell.grows]
+damage = "willpower 13 1d6, 16 2d4, 22 2d4+2"

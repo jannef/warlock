@@ -59,13 +59,11 @@ impl Actor {
             };
             let def = book.get(id);
             let mut rungs = 0;
-            for rank in 1..=taken.rank.min(def.rank_count()) {
-                for effect in def.effects_at(rank) {
-                    if let crate::content::TalentEffect::SpellMod(spec) = effect {
-                        let one = spec.resolve(content, taken.choice.as_deref());
-                        if one.fits(&tags) {
-                            rungs += one.mods.rungs;
-                        }
+            for effect in &def.effects {
+                if let crate::content::TalentEffect::SpellMod(spec) = effect {
+                    let one = spec.resolve(content, taken.choice.as_deref());
+                    if one.fits(&tags) {
+                        rungs += one.mods.rungs;
                     }
                 }
             }

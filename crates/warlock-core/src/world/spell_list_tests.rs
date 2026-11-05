@@ -221,7 +221,7 @@ fn every_class_has_mana_and_its_guaranteed_spells_within_its_caster_level() {
     for class in content.classes() {
         assert!(class.mana >= 1, "{} has mana", class.id);
         let mut spells = Vec::new();
-        for (level, talent, _) in &class.abilities {
+        for (level, talent) in &class.abilities {
             let def = book.get(book.id(talent).expect("a talent"));
             for effect in &def.effects {
                 let TalentEffect::Spell { spell } = effect else {

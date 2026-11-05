@@ -6,7 +6,7 @@ id = "fathers_sword"
 name = "Father's sword"
 tree = "heritage"
 description = "Your family's weapon, the one your people favour, came down to you: magic, and you know what it does."
-needs = { creation = true, talents = { family_wealth = 1 } }
+needs = { creation = true, talents = ["family_wealth"] }
 effects = [
   { kind = "heirloom", fallback = "long_sword", min = 2, max = 4, level = 6, weapons = { drow = "rapier", duergar = "war_hammer", dwarf = "battle_axe", elf = "long_sword", goblin = "short_bow", gnome = "dagger", half_elf = "short_sword", half_orc = "scimitar", halfling = "sling", human = "long_sword", kobold = "dagger", lizardfolk = "trident", ratfolk = "stiletto" } },
 ]

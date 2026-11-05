@@ -128,6 +128,12 @@ stands on `to` (after `arrive_spawner`, before the arrival lines), with the play
   (the owner's Q4: its minutes run on in the retinue), and so is any left on `to` earlier whose
   time has passed (the owner's Q5).
 
+A crossing actor's move is `travel.rs::cross_to` (level, cell, what it heard), shared with
+hostile stair followers (`stair_followers.rs`, `docs/dev/creatures.md`). Those are placed after
+`travel` and only beside the arrival, so an ally is never dropped for one, whatever its order:
+Hold here and Set on reset to Follow as it comes, and a kept beast comes from anywhere and takes
+a cell first. In a tight spot the follower stays behind.
+
 `encounter_area.rs` recomputes the cells the party must avoid after `travel`, so the retinue
 stepping out beside the player is never stood on. The dev `ally:` on the overworld makes its
 allies in the retinue at once.

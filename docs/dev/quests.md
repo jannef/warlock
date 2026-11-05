@@ -32,7 +32,8 @@ died), each left out of the JSON while empty so runs without quests hash as befo
 is met by `slain` alone, whenever and however it died (the guild design §8.4: no softlock);
 `fight.rs::dies` tallies the
 player's kills (`tally_kill`, beside `earn_kill`, so a creature bled to death by the player's
-wound counts too), `travel` marks reach quests (`reach`), and `World::apply` snapshots active
+wound counts too; under the level it died on, or `Actor::home` for a stair follower,
+`stair_followers.rs`), `travel` marks reach quests (`reach`), and `World::apply` snapshots active
 quests' `progress` before the player acts and says what rose after it, and again after the
 turn (`quest_progress`/`quest_news`), so pick-ups, kills, and arrivals all report through one
 place. `reveal_at` (beside the answer at the two places a stage is set: `give` and

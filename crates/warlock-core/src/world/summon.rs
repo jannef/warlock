@@ -43,10 +43,12 @@ impl World {
             && !self.summon_cells(id, summon.spread).is_empty()
     }
 
-    /// How many creatures summoned by `id` live.
+    /// How many creatures summoned by `id` live beside it: not those it left on another level
+    /// when it followed the player (`stair_followers.rs`).
     pub(super) fn live_summons(&self, id: ActorId) -> usize {
+        let level = self.state.actors.get(&id).map(|a| a.level.as_str());
         (self.state.actors.values())
-            .filter(|a| a.summoner == Some(id))
+            .filter(|a| a.summoner == Some(id) && Some(a.level.as_str()) == level)
             .count()
     }
 

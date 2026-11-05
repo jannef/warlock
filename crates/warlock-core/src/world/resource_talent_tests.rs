@@ -60,7 +60,7 @@ fn set(w: &mut World, name: &str, value: u16) {
     w.player_mut().resources.set(id(name), value);
 }
 
-/// The player takes talent `id` (one rank more), without a level to pick it at.
+/// The player takes talent `id`, without a level to pick it at.
 fn give(w: &mut World, talent: &str) {
     assert!(CONTENT.talents().id(talent).is_some(), "{talent}");
     w.player_mut().talents.take(talent, None);
@@ -253,7 +253,7 @@ fn the_resource_talents_need_their_class_and_level() {
             bonus: 0,
         });
         run(&mut w, &format!("talent:{talent}"));
-        w.state.player().talents.rank_of(talent, None) == 1
+        w.state.player().talents.holds(talent, None)
     };
     assert!(pick("human,male,berserker", 6, "battle_trance"));
     assert!(

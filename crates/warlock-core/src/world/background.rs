@@ -16,7 +16,7 @@
 //! - **alignment**: the starting score moved, the start's fourth term (never `shift_alignment`:
 //!   nothing has happened yet);
 //! - **talent** and **flaw**: `World::bestow` (`world/boons.rs`, the forgotten altar's Chosen
-//!   and Forsaken with the id fixed): rank 1 with what it hands out, kept in `Actor::boons` so
+//!   and Forsaken with the id fixed): with what it hands out, kept in `Actor::boons` so
 //!   a restored run puts it back (the roll never draws a line giving what is held).
 //!
 //! Then hit points and mana to their maxima. A run that nobody chose (no kit) has no story.

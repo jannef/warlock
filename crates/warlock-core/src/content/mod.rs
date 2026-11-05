@@ -77,6 +77,7 @@ mod material;
 pub mod mimic;
 #[cfg(test)]
 mod mimic_roster_tests;
+mod monster_pool;
 mod names;
 mod object;
 mod offer;
@@ -93,6 +94,7 @@ mod prestige;
 mod quest;
 mod quest_roll;
 mod race;
+mod ranged;
 mod resource;
 mod rod;
 #[cfg(test)]
@@ -243,6 +245,7 @@ pub use level::{
 };
 pub use light::{Dips, Drift, HueDrift, LightId, LightPreset, MAX_LIGHT_RADIUS, Stability};
 pub use material::{ANY, Found, MAX_MATERIAL_VALUE, MaterialDef, MaterialId, VERY_RARE};
+pub use monster_pool::{MonsterPool, VaultMonsters};
 pub use names::{NameLists, Names};
 pub use object::{
     MAX_BONUS, MAX_DIG, MAX_PLACED, MAX_VALUE, ObjectDef, ObjectId, article, counted, weapon_noun,
@@ -266,6 +269,7 @@ pub use quest::{
 pub(crate) use quest_roll::roll_known;
 pub use quest_roll::{Candidate, MAX_VARIANTS, MAX_WEIGHT, Pick, Roll, Rolled, Variant, one_of};
 pub use race::{HUNGER, LightBlind, RaceDef, Races};
+pub use ranged::{RangeBand, RangedRules};
 pub use resource::{
     Build, MAX_EVERY, MAX_RESOURCE, MAX_SHORT, MaxFrom, OverTime, ResourceDef, ResourceId,
 };
@@ -319,9 +323,9 @@ pub use summon::Summon;
 pub use surprise::SurpriseRules;
 pub use tag::{MAX_TAG, TAG_TARGET, spoken};
 pub use talent::{
-    AnyWeaponSkill, Choice, Coverage, DEFAULT_MAX_RANKS, FreeBlowTrigger, Need, Needs, Rank,
-    ResourceCost, SmiteRiderKind, SongOn, SystemDef, SystemId, TalentActive, TalentBook, TalentDef,
-    TalentEffect, TalentId, TreeDef, TreeId,
+    AnyWeaponSkill, Choice, Coverage, FreeBlowTrigger, Need, Needs, ResourceCost, SmiteRiderKind,
+    SongOn, SystemDef, SystemId, TalentActive, TalentBook, TalentDef, TalentEffect, TalentId,
+    TreeDef, TreeId,
 };
 pub use terrain::{
     Breakable, Freeze, FreezeSpec, MAX_HARDNESS, MAX_HEIGHT, StairsDir, TerrainDef, TerrainId,
@@ -667,6 +671,9 @@ pub struct Content {
     /// The numbers of intimidating (`data/intimidate.toml`, spec §8 "Skills": Intimidate); none
     /// without the file, when nobody intimidates.
     intimidate: Option<IntimidateRules>,
+    /// The penalties of shots by distance (`data/ranged.toml`, spec §8 "Ranged combat"); none
+    /// without the file.
+    ranged: RangedRules,
     /// The priest's prayer (`data/prayer.toml`, spec §8 "Class abilities"): the strain, the
     /// faces, the uses in their order; none without the file, when every prayer is refused.
     prayer: Option<PrayerRules>,
@@ -829,6 +836,7 @@ impl Content {
             encounter_tables: Vec::new(),
             forage: None,
             intimidate: None,
+            ranged: RangedRules::default(),
             prayer: None,
             allies: None,
             companions: None,
@@ -1175,6 +1183,10 @@ impl Content {
         if let Some(text) = files.get_optional(path) {
             content.intimidate = Some(IntimidateRules::parse(path, text, &content)?);
         }
+        let path = "data/ranged.toml";
+        if let Some(text) = files.get_optional(path) {
+            content.ranged = RangedRules::parse(path, text)?;
+        }
         let path = "data/prayer.toml";
         if let Some(text) = files.get_optional(path) {
             content.prayer = Some(PrayerRules::parse(path, text, &content)?);
@@ -1235,6 +1247,15 @@ impl Content {
                     format!("`loot` at {at}: loot is rolled only in vaults"),
                 ));
             }
+            if let Some(group) = level.monsters.first() {
+                return Err(ContentError::new(
+                    path,
+                    format!(
+                        "`monsters` at {}: a monster pool is drawn only in vaults",
+                        group.cells[0]
+                    ),
+                ));
+            }
             let campaign = campaign::of_path(path).map(str::to_string);
             content.level_campaigns.insert(id.to_string(), campaign);
             content.levels.insert(id.to_string(), level);
@@ -1286,8 +1307,9 @@ impl Content {
         content.load_dungeons(files)?;
         content.fill_generic();
         for v in &content.vaults {
-            v.check_dungeons(&content)
-                .map_err(|m| ContentError::new(&v.file(), m))?;
+            (v.check_dungeons(&content)
+                .and_then(|()| v.check_monsters(&content)))
+            .map_err(|m| ContentError::new(&v.file(), m))?;
         }
         // A scenario outside every campaign (a test fixture) plays in its start level's.
         let loose: Vec<(String, Option<String>)> = (content.scenarios.values())
@@ -3145,6 +3167,12 @@ impl Content {
         self.forage.as_ref()
     }
 
+    /// The penalties of shots by distance (spec §8 "Ranged combat"; `data/ranged.toml`); none
+    /// without the file.
+    pub fn ranged(&self) -> &RangedRules {
+        &self.ranged
+    }
+
     /// The numbers of intimidating (spec §8 "Skills": Intimidate; `data/intimidate.toml`); `None`
     /// without the file, when nobody intimidates.
     pub fn intimidate(&self) -> Option<&IntimidateRules> {
@@ -3602,10 +3630,7 @@ impl Content {
             return false;
         };
         (self.talents.iter()).any(|(_, def)| {
-            (def.effects
-                .iter()
-                .chain(def.ranks.iter().flat_map(|r| r.effects.iter())))
-            .any(|e| matches!(e, TalentEffect::Spell { spell: s } if s == name))
+            (def.effects.iter()).any(|e| matches!(e, TalentEffect::Spell { spell: s } if s == name))
         })
     }
 

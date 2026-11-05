@@ -397,7 +397,7 @@ fn the_rules_of_the_new_gifts_are_in_their_talents() {
     let book = BUILTIN.talents();
     let effects = |id: &str| -> Vec<TalentEffect> {
         let def = book.get(book.id(id).expect(id));
-        def.effects_at(1).collect()
+        def.effects.clone()
     };
     assert!(matches!(
         effects("rise_from_ashes").as_slice(),

@@ -3,6 +3,6 @@ id = "immune_to_pain"
 name = "Immune to pain"
 tree = "guard"
 description = "Every hit on you does 1 less damage after your armour, though never none."
-needs = { talents = { thick_skin = 1 }, stats = { toughness = 16 }, level = 20 }
+needs = { talents = ["thick_skin"], stats = { toughness = 16 }, level = 20 }
 effects = [{ kind = "pain", value = 1 }]
 systems = ["protection"]

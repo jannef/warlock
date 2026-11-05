@@ -173,7 +173,7 @@ cargo xtask golden [--update | --local]                   # compare golden scree
   weapon skills and fighting styles (`weapon_skills`, by skill id: `{rank, progress}`, the
   progress a percent or null at rank 10), the styles in use (`styles_in_use`, style ids), the ready attacks (`attacks`: `{source, kind,
   name, to_hit, damage, range}`), the
-  talents (`talents`, in the order taken: `{id, name, rank, ranks, choice}`) and the level-up
+  talents (`talents`, in the order taken: `{id, name, choice}`) and the level-up
   choices due (`due`: `{level, talents}`, or null), the
   quest log (`quests`: `[{id, name,
   kind, active, completed, giver, objective, status}]`), the background story (`story`:

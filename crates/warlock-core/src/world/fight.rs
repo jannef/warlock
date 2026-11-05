@@ -697,18 +697,24 @@ impl World {
     /// not: Deflect missiles (spec §8 "Talents") adds its Dodge against missiles, and Parry
     /// counts against blows only, but for one with Measure (a weapon ability).
     pub(crate) fn target_against(&self, id: ActorId, missile: bool) -> Target {
+        self.target_shot(id, missile, false)
+    }
+
+    /// [`World::target_against`], for a shot from beside it if `close`: within a blade's reach,
+    /// its Parry counts too (spec §8 "Ranged combat").
+    fn target_shot(&self, id: ActorId, missile: bool, close: bool) -> Target {
         let mut target = self.target_of(id);
         let deflects =
             (self.state.actors.get(&id)).map_or(0, |a| a.talent_mods(&self.content).missile_dodge);
         if missile && deflects != 0 {
             target.defence = target.defence.plus(Category::Dodge, deflects);
         }
-        // A blade parries blows, not missiles, but for one that has learned the distance
-        // (Measure, a weapon ability: `weapon_ability.rs`).
+        // A blade parries blows and a shot from beside it, not missiles, but for one that has
+        // learned the distance (Measure, a weapon ability: `weapon_ability.rs`).
         let parry = target.defence.bonus(Category::Parry);
         let measured = (self.state.actors.get(&id))
             .is_some_and(|a| parry > 0 && self.ability_switches(a).parry_missiles);
-        if missile && parry > 0 && !measured {
+        if missile && parry > 0 && !measured && !close {
             target.defence = target.defence.plus(Category::Parry, -parry);
         }
         target
@@ -826,7 +832,8 @@ impl World {
             self.reveal_mimic(target, super::mimic::Reveal::Struck, events);
         }
         let profile = profile.map(|p| self.sneak_threat(attacker, unseen, p));
-        let struck = self.target_against(target, missile);
+        let close = kind == AttackKind::Ranged && from.chebyshev(to) <= 1;
+        let struck = self.target_shot(target, missile, close);
         let struck = self.vitals(target, struck);
         let struck = self.flat_footed(target, unaware, struck);
         let struck = self.small_target(attacker, target, struck);
@@ -1173,7 +1180,9 @@ impl World {
             if credited {
                 let percent = master.map_or(100, |_| self.ally_share());
                 self.earn_kill_at(creature, percent);
-                let level = self.state.current_level.clone();
+                // One that followed the player counts where it came from (`stair_followers.rs`).
+                let home = self.actor_or_fallen(id).and_then(|a| a.home.clone());
+                let level = home.unwrap_or_else(|| self.state.current_level.clone());
                 self.tally_kill(creature, &level);
                 self.judge_kill(id);
                 if master.is_some() && self.trains(Use::Handle) {

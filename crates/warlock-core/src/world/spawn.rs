@@ -26,6 +26,7 @@ use crate::perception::Perception;
 use crate::rng::Rng;
 use crate::time::{Duration, GameTime};
 use serde::{Deserialize, Serialize};
+use std::collections::BTreeSet;
 
 /// The fewest cells (Chebyshev) between the player and a creature that comes.
 pub const AWAY: i32 = 8;
@@ -41,6 +42,10 @@ pub struct Spawner {
     pub(crate) at: GameTime,
     /// The level's spawn stream, `spawn/<level id>`.
     pub(crate) rng: Rng,
+    /// The creatures the cap does not count: those of its vaults' monster pools, a deliberate
+    /// spike that leaves what comes to the rest of the floor as it was.
+    #[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
+    pub(crate) outside: BTreeSet<ActorId>,
 }
 
 impl Spawner {
@@ -49,6 +54,7 @@ impl Spawner {
         Self {
             at: now + every,
             rng: Rng::spawn(seed, id),
+            outside: BTreeSet::new(),
         }
     }
 }
@@ -83,12 +89,15 @@ impl World {
         u32::try_from(n).unwrap_or(u32::MAX)
     }
 
-    /// The creatures on the current level hostile to the player.
-    fn hostiles_here(&self) -> u32 {
+    /// The creatures on the current level hostile to the player that its cap counts (a vault's
+    /// monster pool stands outside it, [`Spawner::outside`]).
+    pub(super) fn hostiles_here(&self) -> u32 {
         let (player, level) = (self.state.player, &self.state.current_level);
         let here = (self.state.actors.values()).filter(|a| a.level == *level && a.id != player);
+        let spawner = self.state.current().spawner.as_ref();
+        let outside = |id: ActorId| spawner.is_some_and(|s| s.outside.contains(&id));
         let n = here
-            .filter(|a| self.stance(player, a.id) == Stance::Hostile)
+            .filter(|a| !outside(a.id) && self.stance(player, a.id) == Stance::Hostile)
             .count();
         u32::try_from(n).unwrap_or(u32::MAX)
     }

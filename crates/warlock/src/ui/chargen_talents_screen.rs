@@ -149,7 +149,7 @@ impl ChargenTalentsScreen {
                 add(world.creation_offers(marked).map_or(Vec::new(), |(_, o)| o));
             }
         }
-        // The marked ones are listed even when their last rank is taken.
+        // The marked ones stay listed, to be unmarked, though the draft holds them.
         for pick in &self.picks {
             let (id, choice) = split(pick);
             if let Some(talent) = book.id(id) {

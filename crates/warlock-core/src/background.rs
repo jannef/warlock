@@ -91,8 +91,8 @@ impl Witness<'_> {
             && w.lucky.is_none_or(|l| l == self.lucky)
             && w.band
                 .is_none_or(|r| self.band.is_some_and(|b| r.allows(b)))
-            && w.talents.iter().all(|t| self.talents.has(t, 1))
-            && !w.not_talents.iter().any(|t| self.talents.has(t, 1))
+            && w.talents.iter().all(|t| self.talents.has(t))
+            && !w.not_talents.iter().any(|t| self.talents.has(t))
             && w.skills.iter().all(|&s| self.skills.value(s).is_some())
             && w.tags.iter().all(|t| tags.contains(t))
             && !w.not_tags.iter().any(|t| tags.contains(t))
@@ -118,7 +118,7 @@ pub enum Rolled {
     WeaponMarks(Marks, u32),
     /// The starting alignment score moved.
     Alignment(i32),
-    /// A talent at rank 1 (by id, with its choice), kept among the boons.
+    /// A talent (by id, with its choice), kept among the boons.
     Talent(String, Option<String>),
     /// A birth sign's flaw (by id), kept among the boons.
     Flaw(String),
@@ -152,7 +152,7 @@ pub fn tell(content: &Content, seed: u64, witness: &Witness) -> Story {
         let fits = |l: &&StoryLine| {
             witness.fits(l, &tags)
                 && !gifts_of(l).any(|(id, choice)| {
-                    witness.talents.rank_of(id, choice) > 0
+                    witness.talents.holds(id, choice)
                         || given.iter().any(|(i, c)| i == id && c.as_deref() == choice)
                 })
         };

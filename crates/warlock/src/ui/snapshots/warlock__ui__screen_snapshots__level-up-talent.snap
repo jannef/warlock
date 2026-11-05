@@ -5,36 +5,36 @@ expression: "render(case, content.clone())"
  Welcome to ┌─ Level 3 · Talent 1 ────────────────────────────────────────── Page 1/2 ─┐
  Your athlet│                                                                          │
             │ Vigour                                                                   │
-            │ > a  Deep lungs                       Your stamina holds a good deal mo… │
-            │   b  Healthy                          Your hit points come back a quart… │
+            │ > a  Deep lungs                  Your stamina holds a good deal more.    │
+            │   b  Healthy                     Your hit points come back a quarter fa… │
             │ Might                                                                    │
-            │   c  Brawn                            Your blows up close hit harder: 1… │
-            │   d  Mighty kick                      Your kicks land like hammers: the… │
+            │   c  Brawn                       Your blows up close hit harder: 1 more… │
+            │   d  Mighty kick                 Your kicks land like hammers: they hur… │
             │ Finesse                                                                  │
-            │   e  Opportunist                      A foe that turns from you pays fo… │
+            │   e  Opportunist                 A foe that turns from you pays for it:… │
             │ Weaponcraft                                                              │
-            │   f  Far shot                         Your shots fly 2 cells farther, a… │
-            │   g  Sworn foe                        You have sworn yourself against o… │
-            │   h  Wand mastery                     You draw more from a wand than it… │
-            │   i  Weapon focus (long blades)       You have drilled with one kind of… │
+            │   f  Far shot                    Your shots fly 2 cells farther, and wh… │
+            │   g  Sworn foe                   You have sworn yourself against one ki… │
+            │   h  Wand mastery                You draw more from a wand than its mak… │
+            │   i  Weapon focus (long blades)  You have drilled with one kind of weap… │
             │ Guard                                                                    │
-            │   j  Armour training                  You move freely in armour: it ham… │
+            │   j  Armour training             You move freely in armour: it hampers … │
             │ Shadow                                                                   │
-            │   k  Lamplighter                      You tend your lantern well: it bu… │
+            │   k  Lamplighter                 You tend your lantern well: it burns b… │
             │ Wayfarer                                                                 │
-            │   l  Pious                            You keep the old observances: an … │
-            │   m  Swimmer                          Water does not slow you: you wade… │
+            │   l  Pious                       You keep the old observances: an altar… │
+            │   m  Swimmer                     Water does not slow you: you wade as q… │
             │ Scholar                                                                  │
-            │   n  Clear mind                       A mind at peace gathers its stren… │
-            │   o  Deep well                        Your power runs deep: more mana, … │
-            │   p  Skill focus                      You have a knack for one trade yo… │
+            │   n  Clear mind                  A mind at peace gathers its strength q… │
+            │   o  Deep well                   Your power runs deep: more mana, and m… │
+            │   p  Skill focus                 You have a knack for one trade you kno… │
             │ Spellcraft                                                               │
-            │   q  Keen mind                        One school of magic, or one eleme… │
-            │   r  Quick study                      Spells come easily to you: you le… │
-            │   s  School focus                     You have made one school of magic… │
+            │   q  Keen mind                   One school of magic, or one element, a… │
+            │   r  Quick study                 Spells come easily to you: you learn t… │
+            │   s  School focus                You have made one school of magic, or … │
             │ Grit                                                                     │
-            │   t  Lean                             You go hungry more slowly, and ex… │
-            │   u  Pack mule                        You can carry a tenth more.        │
+            │   t  Lean                        You go hungry more slowly, and exertin… │
+            │   u  Pack mule                   You can carry a tenth more.             │
             │                                                                          │
             │ Your stamina holds a good deal more.                                     │
             │                                                                          │

@@ -300,7 +300,7 @@ fn a_replay_of_the_wrath_verifies() {
         w.apply(&action);
         replay.push(&action, &w);
     }
-    assert!(w.state.player().talents.has("banishing_smite", 1));
+    assert!(w.state.player().talents.has("banishing_smite"));
     Replay::from_json(&replay.to_json())
         .expect("json")
         .run(content)

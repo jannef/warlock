@@ -30,7 +30,7 @@ pub(super) fn grant(
     grants.extend(boons.iter().map(|b| b.id.as_str()));
     talents.regrant(content, &grants);
     for boon in boons {
-        talents.hold(&boon.id, boon.choice.as_deref());
+        talents.take(&boon.id, boon.choice.as_deref());
     }
 }
 

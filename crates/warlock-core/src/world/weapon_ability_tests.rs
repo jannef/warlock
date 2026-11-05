@@ -208,7 +208,7 @@ fn content(map: &str, abilities: bool) -> Arc<Content> {
 
 /// A world on `map` where the posts, spearmen, and archers never get to act: they only stand
 /// (what they do comes of the triggers alone).
-fn world(map: &str) -> World {
+pub(super) fn world(map: &str) -> World {
     let mut w = World::new(content(map, true), "wa_yard", None).expect("world");
     let content = w.content().clone();
     for actor in w.state.actors.values_mut() {
@@ -220,7 +220,7 @@ fn world(map: &str) -> World {
 }
 
 /// Actor `id` holds `object` in a free slot it fits.
-fn give(w: &mut World, id: ActorId, object: &str) {
+pub(super) fn give(w: &mut World, id: ActorId, object: &str) {
     let content = w.content().clone();
     let me = w.state.actors.get_mut(&id).expect("the actor");
     let object = content.object_id(object).expect("an object");
@@ -232,7 +232,7 @@ fn give(w: &mut World, id: ActorId, object: &str) {
 }
 
 /// Actor `id`'s ranks are exactly `ranks` (and their defaults).
-fn ranks(w: &mut World, id: ActorId, ranks: &[(&str, u8)]) {
+pub(super) fn ranks(w: &mut World, id: ActorId, ranks: &[(&str, u8)]) {
     let content = w.content().clone();
     let table = content.weapon_skills();
     let ranks = ranks.iter().map(|&(s, r)| (table.id(s).expect(s), r));
@@ -243,7 +243,7 @@ fn ranks(w: &mut World, id: ActorId, ranks: &[(&str, u8)]) {
         .weapon_skills = WeaponSkills::from_ranks(table, ranks);
 }
 
-fn at(w: &World, x: i32, y: i32) -> ActorId {
+pub(super) fn at(w: &World, x: i32, y: i32) -> ActorId {
     let level = &w.state.current().id;
     w.state.actor_at(level, Pos::new(x, y)).expect("someone").id
 }

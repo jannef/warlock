@@ -1,5 +1,5 @@
 # Talents (spec §8 "Talents"), one file per talent, named by its id (`hardy.toml`); a file holds
-# one `[[talent]]`. The settings (max_ranks, [coverage], the trees, the systems) stay in
+# one `[[talent]]`. The settings ([coverage], the trees, the systems) stay in
 # ../talents.toml, and may be set in one file only. This file holds only the notes below: a file
 # of comments defines nothing. Saves name talents by id, so a new talent is a new file (never
 # edited into another's), a renamed id is a renamed file, and the same id in two files is a load
@@ -14,7 +14,6 @@
 #                 carrying, XP) the number may be said. The wiki shows the rule.
 #   systems       the systems it touches, ids from the closed list in ../talents.toml (at least
 #                 one): the coverage check counts them
-#   ranks         how many times it can be taken (1 to max_ranks, default 1): "Name 2/3"
 #   choice        what it is chosen for, if it takes a choice: "weapon_skill", "style", "skill"
 #                 (a skill the taker is trained in), "element" (a damage type that is no physical
 #                 kind), "school" (a school of magic, `evocation`, or an element: a spell
@@ -22,9 +21,9 @@
 #                 ../weapon_skills.toml of role `school`, `evocation`), or "tag" (a creature
 #                 tag some type carries); replays write it
 #                 `talent:weapon_focus:long_blades`, and each choice is a pick of its own
-#   needs         what taking any rank asks, all of which must hold at the pick (nothing is
+#   needs         what taking it asks, all of which must hold at the pick (nothing is
 #                 checked again later):
-#                   talents = { dodge = 1, hardy = 1 }   those talents at those ranks; a talent
+#                   talents = ["dodge", "hardy"]         those talents; a talent
 #                                                        with a choice may be needed only by one
 #                                                        of the same choice, taken for the same
 #                   stats = { toughness = 14 }           the stored score, never the effective
@@ -47,13 +46,11 @@
 #                   either = { stats = { intelligence = 12 }, skills = { appraise = 20 } }
 #                                                        any one of what it asks (at least two;
 #                                                        no `either` within it)
-#   effects       what every rank held adds: a list of { kind = ..., ... } (below); any effect
+#   effects       what it adds: a list of { kind = ..., ... } (below); any effect
 #                 the talents' sum reads (not an active, a spell given, or what is rolled or
 #                 handed down when it is taken) may also say
 #                   while = "raging"   it counts only while its holder suffers that status
 #                                      (../status.toml); left out, always
-#   [[talent.rank]]  one per rank, in order (as many as `ranks`, or none): its own `needs`
-#                 besides the talent's, and its own `effects` besides the per-rank ones
 #   granted       true: given (by a race, a birth sign, a class), never on a pick list; a birth sign's
 #                 gifts are in the `stars` tree and named by horoscope.toml's `grants`, a race's
 #                 in the `racial` tree and named by races.toml's `talents`
@@ -174,13 +171,13 @@
 #   xp_percent { value }          experience gained, that percent more
 #   skill_rolls { value }         skill rolls every level, that many more
 #   extra_pick { level }          one more talent pick at that character level (1: at creation)
-#   weapon_ranks { to, skills, news }   handed out once, as the rank is taken or given:
+#   weapon_ranks { to, skills, news }   handed out once, as the talent is taken or given:
 #                                 every weapon skill and style of `skills` (left out: every row
 #                                 of ../weapon_skills.toml but the schools of magic and hidden
 #                                 styles, whatever the content holds) held below rank `to` rises
 #                                 to it, its defaults with it; `news`, if any, said when a class
 #                                 table gives it
-#   take_up_skills { dice, except, news }   handed out once, as the rank is taken or given:
+#   take_up_skills { dice, except, news }   handed out once, as the talent is taken or given:
 #                                 every skill of ../skills.toml it is not trained in, but those
 #                                 `except` names, whatever the content holds, is trained at
 #                                 `dice` (1 to 100), rolled from the levels stream in file order;
