@@ -1,0 +1,21 @@
+# Vault: a locked barrow, the key lying before its door, the dead and their grave goods behind
+# it. The decision: turn the key.
+# The dead are locked in, not the player out: nothing undead opens a door. Open it and they come
+# through one doorway; or open, step back, and hold it; or leave the key and the dead in the dark.
+name = "The Sealed Barrow"
+map = '''
+###########
+#u.u.u.u.u#
+#.$..r..$.#
+#u.u.u.u.u#
+#####L#####
+#...k.....#
+#####+#####
+'''
+
+[legend]
+"u" = { terrain = "floor", monsters = { pool = "undead", count = 6 } }
+"$" = { terrain = "floor", loot = { pool = "jewellery", grade = "magic" } }
+"r" = { terrain = "floor", loot = "rare" }
+"L" = { terrain = "door_closed", lock = "barrow_seal" }
+"k" = { terrain = "floor", objects = ["lead_key"] }

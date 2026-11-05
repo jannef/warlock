@@ -1,0 +1,18 @@
+# Vault: a one-wide passage with the dead in niches down both sides. The decision: which end,
+# and whether to be caught in a line at all.
+# A fight in a line: one at a time, no stepping aside, and whoever is behind is behind. Both ends
+# are entrances, a route by design.
+name = "The Catacomb"
+map = '''
+###################
+#u#u#u#u#u#u#u#u#u#
++..$.....r.....m..+
+#u#u#u#u#u#u#u#u#u#
+###################
+'''
+
+[legend]
+"u" = { terrain = "floor", monsters = { pool = "undead", count = 8 } }
+"$" = { terrain = "floor", loot = { pool = ["jewellery", "money"] } }
+"m" = { terrain = "floor", loot = { pool = "jewellery", grade = "magic" } }
+"r" = { terrain = "floor", loot = "rare" }

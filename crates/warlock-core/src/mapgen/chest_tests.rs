@@ -8,9 +8,11 @@ use crate::chest::{ChestState, roll_contents};
 use crate::content::{ContentFiles, GOLD, Rarity};
 
 /// The built-in content with every branch's `chests` set to `odds` (a TOML inline table), or
-/// left as the data has it with `None`.
+/// left as the data has it with `None`; without the shared vaults, whose chests are their own
+/// (the Reeve's Strong-room's).
 fn content(odds: Option<&str>) -> Content {
     let mut files = ContentFiles::builtin();
+    files.remove("vaults/");
     if let Some(odds) = odds {
         files.edit_table("dungeons", |text| {
             text.replace("[[dungeon]]\n", &format!("[[dungeon]]\nchests = {odds}\n"))

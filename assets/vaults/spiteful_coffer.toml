@@ -1,0 +1,18 @@
+# Vault: one chest whose fireball trap is known from the door. The decision: disarm, blow it
+# open and keep the coin, or leave it.
+# `known = true` on a chest's trap is honoured as on a floor's: everyone sees the coffer is
+# trapped, and with what. Disable device, or Knock and stand well back (the lid lifts, the trap
+# goes, and the chest and most of what is in it with it), or walk on. One of the floor's own
+# keeps the room.
+name = "The Spiteful Coffer"
+map = '''
+#######
+#..C..#
+#.....#
+#.g.g.#
+###+###
+'''
+
+[legend]
+"C" = { terrain = "chest", locked = true, trap = "fireball", known = true }
+"g" = { terrain = "floor", monsters = { pool = "level", count = 1 } }

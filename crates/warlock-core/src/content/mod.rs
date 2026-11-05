@@ -5469,12 +5469,20 @@ mod tests {
         assert_eq!(
             ids,
             [
+                "catacomb",
                 "flooded_cell",
+                "gauntlet",
                 "guard_post",
+                "kennels",
+                "ossuary",
+                "reeves_strongroom",
                 "ruined_chapel",
                 "ruined_tower",
+                "sealed_barrow",
                 "shrine",
+                "spiteful_coffer",
                 "stone_circle",
+                "wights_niches",
                 // The campaigns' own, after the shared ones.
                 "barrow_chamber",
                 "captains_hall",
@@ -5488,7 +5496,8 @@ mod tests {
                 "unhallowed_chapel"
             ]
         );
-        assert_eq!(content.vaults()[4].entrances.len(), 3);
+        let shrine = (content.vaults().iter()).find(|v| v.id() == "shrine");
+        assert_eq!(shrine.expect("the shrine").entrances.len(), 3);
         let outdoor: Vec<_> = content.vaults().iter().filter(|v| v.is_outdoor()).collect();
         assert_eq!(outdoor.len(), 3);
     }

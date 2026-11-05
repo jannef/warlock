@@ -1,0 +1,18 @@
+# Vault: four locked chests in alcoves, one trapped, two guards. No key: pick, Knock, or kick.
+# The decision: how to open four locks with the floor listening.
+# Kicking is loud and picking takes time; Chest-wise shows which coffer bites. A trap sprung on a
+# shut chest blows it open, sparing only coin and gems. The chests are of the floor's band.
+name = "The Reeve's Strong-room"
+map = '''
+#########
+#C#T#C#C#
+#.......#
+#.g.g.g.#
+#.......#
+####+####
+'''
+
+[legend]
+"C" = { terrain = "chest", locked = true }
+"T" = { terrain = "chest", locked = true, trap = "arrow" }
+"g" = { terrain = "floor", monsters = { pool = "level", count = 2 } }

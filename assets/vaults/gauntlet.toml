@@ -1,0 +1,20 @@
+# Vault: a trapped corridor or a guard-room, both to the same prize. The decision: three known
+# arrow traps, or the floor's own one doorway at a time.
+# Disable device makes the corridor free and a sidestep is a gamble three times over; the
+# guard-room is a corridor-shaped fight through a doorway. One entrance, so the choice is made
+# inside. The arrows do not scale; the finds do.
+name = "The Gauntlet"
+map = '''
+###############
+#.^..^..^.....#
+#.###########m#
++.+ggg..ggg.+$#
+#.###########$#
+###############
+'''
+
+[legend]
+"^" = { terrain = "floor", trap = "arrow", known = true }
+"g" = { terrain = "floor", monsters = { pool = "level", count = 4 } }
+"m" = { terrain = "floor", loot = "magic" }
+"$" = { terrain = "floor", loot = "any" }

@@ -289,7 +289,12 @@ fn check(level: &LevelTemplate, depth: u32) -> Result<(), TestCaseError> {
     }
     for (p, trap) in &level.traps {
         let ground = content.terrain(terrain[*p]);
-        prop_assert!(!trap.known, "a known trap at {}", p);
+        // Known only where a vault lays it known (the Gauntlet's arrows, the Spiteful Coffer's).
+        prop_assert!(
+            !trap.known || laid_known_by_a_vault(content, level, *p),
+            "a known trap at {}",
+            p
+        );
         // A chest's trap lies in the chest (spec §8 "Chests").
         if ground.is_shut_chest() && level.chests.contains_key(p) {
             prop_assert!(content.trap(trap.kind).effect.fits_fixture());
@@ -667,12 +672,21 @@ fn generated_levels_hide_a_few_traps_of_their_own() {
     for seed in 0..10 {
         for depth in 1..=8 {
             let level = level(seed, depth);
-            let from_vaults: usize = (CONTENT.vaults().iter())
-                .map(|v| stamped_at(&level, v).len() * v.template.traps.len())
-                .sum();
+            // The cells of the vaults' traps, whichever way round each lies.
+            let mut from_vaults = std::collections::BTreeSet::new();
+            for vault in CONTENT.vaults() {
+                for turn in crate::content::Turn::ALL {
+                    let turned = vault.turned(turn);
+                    for at in stamped_at(&level, &turned) {
+                        let shift = |p: &Pos| Pos::new(at.x + p.x, at.y + p.y);
+                        from_vaults.extend(turned.template.traps.keys().map(shift));
+                    }
+                }
+            }
             // A chest's trap is its own (spec §8 "Chests").
-            let chests = (level.traps.keys()).filter(|p| level.chests.contains_key(p));
-            let own = level.traps.len() - from_vaults - chests.count();
+            let own = (level.traps.keys())
+                .filter(|p| !from_vaults.contains(*p) && !level.chests.contains_key(*p))
+                .count();
             assert!(
                 (least as usize..=most as usize).contains(&own),
                 "{} traps on depths:{depth}, seed {seed}",
@@ -708,6 +722,20 @@ fn only_branch_levels_generate() {
     );
 }
 
+/// Whether a vault stamped on `level`, some way round, lays a known trap on `p`.
+fn laid_known_by_a_vault(content: &Content, level: &LevelTemplate, p: Pos) -> bool {
+    (content.vaults().iter()).any(|vault| {
+        crate::content::Turn::ALL.into_iter().any(|turn| {
+            let turned = vault.turned(turn);
+            let known = |at: Pos| {
+                let q = Pos::new(p.x - at.x, p.y - at.y);
+                turned.template.traps.get(&q).is_some_and(|t| t.known)
+            };
+            stamped_at(level, &turned).into_iter().any(known)
+        })
+    })
+}
+
 /// Positions where `vault`'s terrain appears verbatim in `level`.
 fn stamped_at(level: &LevelTemplate, vault: &Vault) -> Vec<Pos> {
     let v = &vault.template.terrain;
@@ -728,7 +756,7 @@ fn vaults_are_stamped_whole_some_way_round_with_their_lights_and_creatures() {
         .filter(|v| v.campaign.is_none())
         .collect();
     let mut seen = vec![0; vaults.len()];
-    for seed in 0..10 {
+    for seed in 0..30 {
         for depth in 1..=8 {
             let level = level(seed, depth);
             for (i, vault) in vaults.iter().enumerate() {
@@ -740,9 +768,20 @@ fn vaults_are_stamped_whole_some_way_round_with_their_lights_and_creatures() {
                         for (p, light) in &turned.template.lights {
                             assert_eq!(level.lights.get(&shift(*p)), Some(light), "{}", vault.id());
                         }
-                        for (p, trap) in &turned.template.traps {
-                            assert_eq!(level.traps.get(&shift(*p)), Some(trap), "{}", vault.id());
-                        }
+                        // Chests look alike: the Reeve's Strong-room mirrored has the same terrain
+                        // with its trapped chest elsewhere, so the traps hold for some way round.
+                        let traps_hold = |turned: &Vault| {
+                            let shift = |p: Pos| Pos::new(at.x + p.x, at.y + p.y);
+                            (turned.template.traps.iter())
+                                .all(|(p, trap)| level.traps.get(&shift(*p)) == Some(trap))
+                        };
+                        assert!(
+                            (crate::content::Turn::ALL.into_iter())
+                                .map(|t| vault.turned(t))
+                                .any(|t| stamped_at(&level, &t).contains(&at) && traps_hold(&t)),
+                            "{} traps",
+                            vault.id()
+                        );
                         for spawn in &turned.template.creatures {
                             assert!(
                                 level

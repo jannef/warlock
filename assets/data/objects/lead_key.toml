@@ -1,0 +1,11 @@
+# The Sealed Barrow's door (vaults/sealed_barrow.toml); it lies before the door.
+[[object]]
+id = "lead_key"
+name = "lead key"
+glyph = "("
+fg = "#7c8088"
+class = "tools"
+materials = ["lead"]
+weight = 60
+value = 0
+key = "barrow_seal"
