@@ -310,6 +310,12 @@ impl World {
                 };
                 self.cast_identify(cast, on, events)
             }
+            SpellPurpose::Utility if cast.def.effect.blink.is_some() => {
+                self.cast_blink(cast, events)
+            }
+            SpellPurpose::Utility if cast.def.effect.weather.is_some() => {
+                self.cast_weather(cast, events)
+            }
             SpellPurpose::Utility => {
                 self.say("Nothing happens.");
                 false
@@ -456,6 +462,9 @@ impl World {
     /// A heal: its dice back to the caster (self), or to the one it touches
     /// (a touch: the cell next to the caster, or their own).
     fn cast_heal(&mut self, cast: &Cast<'_>, at: Option<Pos>, events: &mut Vec<Event>) -> bool {
+        if cast.def.about_caster() {
+            return self.cast_heal_about(cast, events);
+        }
         let player = self.state.player;
         let target = match (cast.def.shape, at) {
             (Shape::Touch, Some(at)) if at != self.player_pos() => {
@@ -491,18 +500,24 @@ impl World {
         };
         self.pay_cast(cast);
         let back = heal.roll(&mut self.state.rng, cast.reroll).max(0);
-        if target == player {
+        self.spell_heals(target, back);
+        self.spell_landed(cast, target, back > 0, events);
+        true
+    }
+
+    /// `target` gets `back` hit points of a heal, never past its maximum; said.
+    pub(super) fn spell_heals(&mut self, target: ActorId, back: i32) {
+        if target == self.state.player {
             self.heal_player(back);
             self.say("Your wounds close.");
-        } else {
+        } else if self.state.actors.contains_key(&target) {
+            let content = self.content.clone();
             let actor = self.state.actors.get_mut(&target).expect("there");
             let max = actor.max_hp(&content);
             actor.hp = (actor.hp + back).min(max).max(actor.hp);
             let who = capitalized(&self.called(&self.state.actors[&target]));
             self.say(format!("{who} looks better."));
         }
-        self.spell_landed(cast, target, back > 0, events);
-        true
     }
 
     /// A cleanse: the statuses it cures end, and with `diseases` every disease the player
@@ -560,6 +575,9 @@ impl World {
     /// A hex: its status, at the degrees its ladder and hooks give, on the creature the player
     /// sees at `at` within reach, that means them harm.
     fn cast_hex(&mut self, cast: &Cast<'_>, at: Option<Pos>, events: &mut Vec<Event>) -> bool {
+        if let (Some(at), Some(push)) = (at, cast.def.effect.push) {
+            return self.cast_gale(cast, at, push, events);
+        }
         let (Some(at), Some((status, _)), Some(severity)) =
             (at, cast.def.effect.status, cast.degrees)
         else {
@@ -622,6 +640,8 @@ impl World {
         let level = self.state.current_level.clone();
         let caught: Vec<ActorId> = (self.state.actors.values())
             .filter(|a| a.level == level && a.id != player && cells.contains(&a.pos))
+            .filter(|a| self.is_of_tags(a, &cast.def.effect.only_tags))
+            .filter(|a| self.stands_on(a.pos, cast.def.effect.only_terrain))
             .map(|a| a.id)
             .collect();
         let content = self.content.clone();
@@ -665,7 +685,7 @@ impl World {
 
     /// Whether the player stands under the open sky: a level under the sky, and no roof over
     /// their cell (whatever the clouds and the hour).
-    fn under_open_sky(&self) -> bool {
+    pub(super) fn under_open_sky(&self) -> bool {
         let level = self.state.current();
         let here = self.player_pos();
         level.kind.is_sky_exposed()
@@ -675,10 +695,11 @@ impl World {
     /// A damage spell at `at`, by its shape (module docs); everyone it harms who lives suffers
     /// its status too. A death of the player by it is put down to the spell.
     fn cast_damage(&mut self, cast: &Cast<'_>, at: Option<Pos>, events: &mut Vec<Event>) -> bool {
-        let Some(at) = at else {
+        let def = cast.def;
+        // A burst about its caster goes off on their own cell (`range = 0`).
+        let Some(at) = at.or(def.about_caster().then(|| self.player_pos())) else {
             return false;
         };
-        let def = cast.def;
         let range = cast.reach.range.unwrap_or(1);
         if !self.can_loose_here() {
             return false;
@@ -693,7 +714,7 @@ impl World {
                 self.say("There is no one there to touch.");
                 return false;
             }
-        } else if !self.within_reach(at, range, "cast") {
+        } else if !def.about_caster() && !self.within_reach(at, range, "cast") {
             return false;
         }
         if def.open_sky && !self.under_open_sky() {
@@ -724,7 +745,9 @@ impl World {
                 };
                 let center = self.burst_center(here, at, range);
                 self.sound_at(def.look.noise, center);
-                self.cast_burst(Caster::Actor(player), (here, center), &burst, &mut made);
+                let only = &def.effect.only_tags;
+                let aim = (here, center);
+                self.cast_burst_at(Caster::Actor(player), aim, (&burst, only), &mut made);
             }
             Shape::Line => {
                 let bolt = Bolt {
@@ -1018,7 +1041,8 @@ impl World {
             ),
         };
         let damage = Damage::new(amount + sneak, def.damage_type);
-        self.spell_strikes(by, target, source, (damage, strike), made);
+        let harm = self.spell_strikes(by, target, source, (damage, strike), made);
+        self.leech(by, def, harm);
         strike
     }
 }
@@ -1060,7 +1084,7 @@ pub(super) struct Cast<'c> {
     pub(super) spell: SpellId,
     pub(super) def: &'c SpellData,
     pay: Pay,
-    reach: Reach,
+    pub(super) reach: Reach,
     /// The school and the caster style it is cast in (`spell_aim.rs`), decided once before its
     /// kind runs: its marks, a rolling spell's attack and triggers.
     skills: AttackSkills,

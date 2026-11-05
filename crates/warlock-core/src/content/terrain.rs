@@ -99,6 +99,9 @@ pub(super) struct TerrainSpec {
     /// Whether it is stone (spec §8 "Searching": dwarves notice what is hidden on stone).
     #[serde(default)]
     pub stone: bool,
+    /// Whether things grow on it (spec §8 "Spells": Bramble calls them up).
+    #[serde(default)]
+    pub plants: bool,
     /// How loud steps onto it are, in percent of the walker's footsteps (spec §5 "Hearing").
     #[serde(default = "full_noise")]
     pub step_noise: u16,
@@ -251,6 +254,9 @@ pub struct TerrainDef {
     /// Gameplay: stone, worked or not (spec §8 "Searching"): dwarves notice the hidden features
     /// on it in passing (a secret door in a stone wall, a trap in a stone floor).
     pub stone: bool,
+    /// Gameplay: things grow on it (spec §8 "Spells"): a spell with `only_terrain = "plants"`
+    /// takes only those standing on it (Bramble).
+    pub plants: bool,
     /// Gameplay: how loud steps onto it are, in percent of the walker's footsteps
     /// ([`crate::noise::noise`]): water splashes (200), grass is soft (70).
     pub step_noise: u16,

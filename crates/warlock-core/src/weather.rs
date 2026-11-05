@@ -184,25 +184,30 @@ impl Conditions {
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Override {
     pub weather: Weather,
+    /// When it was given.
+    pub since: GameTime,
     pub until: GameTime,
 }
 
 impl Override {
-    /// `weather` for [`OVERRIDE`] from `now`.
+    /// `weather` for [`OVERRIDE`] from `now`: the dev action's.
     pub fn new(weather: Weather, now: GameTime) -> Self {
+        Self::lasting(weather, now, OVERRIDE)
+    }
+
+    /// `weather` for `length` from `now` (a spell's: Cloudburst's hour).
+    pub fn lasting(weather: Weather, now: GameTime, length: Duration) -> Self {
         Self {
             weather,
-            until: now + OVERRIDE,
+            since: now,
+            until: now + length,
         }
     }
 
-    /// The weather it sets at `time`: from when it was given (`until` less [`OVERRIDE`]) until
-    /// `until`. (Ice catching up with the past asks about moments before it was given.)
+    /// The weather it sets at `time`: from when it was given until `until`. (Ice catching up with
+    /// the past asks about moments before it was given.)
     fn at(over: Option<&Override>, time: GameTime) -> Option<Weather> {
-        let given = |o: &Override| {
-            GameTime::from_seconds(o.until.seconds().saturating_sub(OVERRIDE.as_seconds()))
-        };
-        over.filter(|o| given(o) <= time && time < o.until)
+        over.filter(|o| o.since <= time && time < o.until)
             .map(|o| o.weather)
     }
 }
@@ -562,6 +567,17 @@ mod tests {
             );
             prev = c;
         }
+    }
+
+    #[test]
+    fn a_lasting_override_holds_from_when_it_was_given_to_its_end_only() {
+        let now = GameTime::from_seconds(10 * HOUR);
+        let over = Override::lasting(Weather::Rain, now, Duration::hours(1));
+        let at = |s: u64| Override::at(Some(&over), GameTime::from_seconds(s));
+        assert_eq!(at(10 * HOUR - 1), None, "not before it was given");
+        assert_eq!(at(10 * HOUR), Some(Weather::Rain));
+        assert_eq!(at(11 * HOUR - 1), Some(Weather::Rain));
+        assert_eq!(at(11 * HOUR), None);
     }
 
     #[test]

@@ -108,16 +108,22 @@ impl World {
         };
         let critical = matches!(blow.strike, Strike::Hit { critical: true });
         let big = combat::big_hit(blow.damage, actor.max_hp(&content));
-        let held = (actor.effects)
-            .blocking(&content, ActionKind::Step)
-            .is_some();
-        if held || !(big || critical) {
+        if self.rooted(target) || !(big || critical) {
             return;
         }
         let at = actor.pos;
         if let Some(dir) = Dir::toward(origin, at).or_else(|| Dir::toward(caster, at)) {
             self.drive_back(target, dir, events);
         }
+    }
+
+    /// Whether a status holds actor `id` where it stands, so nothing drives it on.
+    pub(super) fn rooted(&self, id: ActorId) -> bool {
+        (self.state.actors.get(&id)).is_some_and(|a| {
+            (a.effects)
+                .blocking(&self.content, ActionKind::Step)
+                .is_some()
+        })
     }
 
     /// The shut doors a blast of a spell of `kind` around `center` would break, if its type's

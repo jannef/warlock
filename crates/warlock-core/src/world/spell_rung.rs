@@ -136,6 +136,7 @@ impl Actor {
         let range = match spell.shape {
             Shape::Touch => Some(1),
             Shape::Myself => None,
+            Shape::Burst if spell.about_caster() => None,
             Shape::Cone => grown(spell.length, g.length.as_ref(), mods.cells, MAX_CONE),
             Shape::Line => grown(spell.length, g.length.as_ref(), mods.cells, MAX_REACH),
             Shape::Ray | Shape::Bolt | Shape::Burst => {

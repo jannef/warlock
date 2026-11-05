@@ -38,6 +38,8 @@ pub const MAX_SEVERITY: u16 = 100;
 pub const MAX_REGEN: u16 = 1000;
 /// The most hit points one tick may cost.
 pub const MAX_TICK_DAMAGE: u16 = 1000;
+/// How far a status's `senses` may reach, in cells.
+pub const MAX_SENSES: i32 = 20;
 /// What a status may make every action cost, in percent: half as much (Hasted) to ten times as
 /// much. Only a spell's buff on its caster, the player, and Sic 'em's Savage on their companion
 /// may hasten (`spell_def` refuses a hex's or a damage spell's that would), so the quickest step
@@ -400,6 +402,16 @@ impl OnHitSpec {
     }
 }
 
+/// What a status lets its bearer feel (`senses`; spec §8 "Spells", Sense the quick): every living
+/// creature within `reach` cells it does not see, as a sound of `kind` at a rough place
+/// (`World::heartbeats`).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct Senses {
+    pub reach: i32,
+    pub kind: crate::noise::SoundKind,
+}
+
 /// The passive healing rules (spec §8 "Healing", "Mana"): `[healing]` in the file.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -491,6 +503,7 @@ struct StatusSpec {
     light: Option<String>,
     #[serde(default)]
     quenched: bool,
+    senses: Option<Senses>,
     vision: Option<String>,
     #[serde(default)]
     resist: BTreeMap<String, i32>,
@@ -609,6 +622,8 @@ pub struct StatusDef {
     pub light: Option<LightId>,
     /// A step or a fall into water ends it (Burning).
     pub quenched: bool,
+    /// What its bearer, the player, feels about them while it lasts (Quick-sensed).
+    pub senses: Option<Senses>,
     /// The eyes it lends while it lasts (a potion's Owl-eyed; spec §8 "Potions"): an index into
     /// [`super::Content::vision_profiles`], bettering its sufferer's eyes part by part as a
     /// unique item's Vision power does (`Actor::eyes`).
@@ -905,6 +920,12 @@ fn resolve(
         treat: spec.treat,
         light,
         quenched: spec.quenched,
+        senses: match spec.senses {
+            Some(senses) if !(1..=MAX_SENSES).contains(&senses.reach) => {
+                return Err(format!("`senses`: `reach` is 1 to {MAX_SENSES}"));
+            }
+            senses => senses,
+        },
         vision,
         resist,
     })

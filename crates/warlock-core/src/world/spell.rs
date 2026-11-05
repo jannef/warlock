@@ -230,8 +230,20 @@ impl World {
     pub(super) fn cast_burst(
         &mut self,
         caster: Caster,
-        (origin, center): (Pos, Pos),
+        at: (Pos, Pos),
         burst: &Burst,
+        events: &mut Vec<Event>,
+    ) {
+        self.cast_burst_at(caster, at, (burst, &[]), events);
+    }
+
+    /// [`World::cast_burst`], striking only creatures of the tags `only` (Rebuke's; none:
+    /// everyone). The walls, the ice, and the fire are its all the same.
+    pub(super) fn cast_burst_at(
+        &mut self,
+        caster: Caster,
+        (origin, center): (Pos, Pos),
+        (burst, only): (&Burst, &[String]),
         events: &mut Vec<Event>,
     ) {
         let level = self.state.current();
@@ -259,6 +271,7 @@ impl World {
         };
         let caught: Vec<(ActorId, Pos)> = (self.state.actors.values())
             .filter(|a| a.level == level && reached.contains(&a.pos) && !spared(a))
+            .filter(|a| self.is_of_tags(a, only))
             .map(|a| (a.id, a.pos))
             .collect();
         for (id, p) in caught {
@@ -384,7 +397,8 @@ impl World {
     /// "Status effects"): the event, a big hit's blood, the damage, which may kill (a kill by
     /// the player earns its experience), and if it lives the statuses its wound causes. A
     /// shopkeeper the player's spell reaches turns on them, as one they strike does; a miss
-    /// provokes too. No Evasion here: [`World::spell_hurts`] takes it off an area's first.
+    /// provokes too. No Evasion here: [`World::spell_hurts`] takes it off an area's first. The
+    /// hit points it took (a Leech's share is of them).
     pub(super) fn spell_strikes(
         &mut self,
         by: ActorId,
@@ -392,9 +406,9 @@ impl World {
         source: (Pos, bool),
         (damage, strike): (Damage, Strike),
         events: &mut Vec<Event>,
-    ) {
+    ) -> i32 {
         let Some(to) = self.state.actors.get(&target).map(|a| a.pos) else {
-            return;
+            return 0;
         };
         let from = self.state.actors.get(&by).map_or(source.0, |a| a.pos);
         // Poison lore's and Malison's bite lands with a spell as with a blow, before resistance;
@@ -439,7 +453,7 @@ impl World {
             self.break_hallow();
         }
         if taken <= 0 {
-            return;
+            return 0;
         }
         self.spill(by.0, target, source, blow);
         if self.hurt(target, taken, Harm::Actor(by), events) {
@@ -449,6 +463,7 @@ impl World {
             self.wounded(target, &blow, Some(by), events);
             self.spell_type_shove(target, (source.0, from), &blow, events);
         }
+        taken
     }
 }
 

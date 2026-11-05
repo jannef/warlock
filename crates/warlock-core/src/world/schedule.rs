@@ -414,6 +414,8 @@ impl World {
         self.haunt_tick(began);
         // Hallowed ground that fades meanwhile (`sanctuary.rs`).
         self.hallows_fade(began);
+        // The living the player feels about them (`spell_rule.rs`).
+        self.heartbeats();
     }
 
     /// How long from now no creature on the current level that disturbs a rest

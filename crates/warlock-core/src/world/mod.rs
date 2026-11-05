@@ -216,6 +216,7 @@ mod spawn;
 mod spell;
 mod spell_aim;
 mod spell_mods;
+mod spell_rule;
 mod spell_rung;
 mod spell_type;
 mod spell_words;
@@ -1856,6 +1857,8 @@ mod spawn_tests;
 mod speed_tests;
 #[cfg(test)]
 mod spell_list_tests;
+#[cfg(test)]
+mod spell_rule_tests;
 #[cfg(test)]
 mod spell_talent_tests;
 #[cfg(test)]
