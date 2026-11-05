@@ -845,3 +845,24 @@ fn a_plain_miss_at_the_player_is_a_dodge_one_time_in_four() {
     assert_eq!(w.plain_miss_dodged(foe, player, None), None);
     assert_eq!(w.state.training, training);
 }
+
+#[test]
+fn spending_mana_marks_spellcraft_only_when_trained() {
+    let mut w = world("showcase");
+    set(&mut w, "spellcraft", Some(20));
+    for _ in 0..80 {
+        w.player_mut().mana = 50;
+        assert!(w.spend_mana(w.player_id(), 1));
+    }
+    let got = marks(&w, "spellcraft").expect("trained");
+    assert!(
+        (5..=40).contains(&got),
+        "{got} marks from 80 spends at 25 %"
+    );
+
+    let mut w = world("showcase");
+    set(&mut w, "spellcraft", None);
+    w.player_mut().mana = 50;
+    assert!(w.spend_mana(w.player_id(), 1));
+    assert_eq!(marks(&w, "spellcraft"), None);
+}

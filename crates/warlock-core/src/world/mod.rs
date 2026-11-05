@@ -230,6 +230,7 @@ mod stride;
 mod summon;
 mod summon_spell;
 pub(crate) mod surprise;
+mod swim;
 mod talent;
 mod talk;
 mod tame;
@@ -279,7 +280,7 @@ pub use gifts::{STARE_RANGE, Streak};
 pub use guild::GuildRank;
 pub(crate) use hash::fnv1a;
 pub(crate) use heal::allies_beside;
-pub use learn::{Odds, study_odds, study_turns};
+pub use learn::{Odds, UNTRAINED, study_odds, study_turns};
 pub use level::{Fire, LevelState};
 pub use loot::Identified;
 pub use mirrors::Image;
@@ -298,6 +299,7 @@ pub use spell_rung::CastBy;
 pub use spell_words::{SpellRoll, reach_words, reroll_words, roll_words};
 pub use spirit_weapon::{gift as spirit_gift, pierces_all, shapes as weapon_shapes};
 pub(crate) use stars::{RISEN, RISEN_TWICE};
+pub(crate) use swim::shore_refusal;
 pub use talent::Due;
 pub use talk::{Conversation, Talk, TopicView};
 pub use temper::{DIFFICULTY as TEMPER_DIFFICULTY, POINTS_PER_MARGIN, lean_for, temperable};
@@ -1370,8 +1372,8 @@ impl World {
         if let Some(refused) = self.refuse_pending(action) {
             return refused;
         }
-        // A step while held is a struggle to break free (`hold.rs`).
-        if let Some(spent) = self.struggle(action) {
+        // What bonds stop or slow is a struggle to break free (`hold.rs`).
+        if let Some(spent) = self.struggle(action, events) {
             return spent;
         }
         if let Some(refused) = self.refuse_blocked(action) {
@@ -1425,6 +1427,9 @@ impl World {
             Action::Study { item } => return self.start_study(*item),
             Action::Scribe { spell } => return self.start_scribe(spell),
             Action::Dig(dir) => return self.start_dig(*dir),
+            Action::Search(_) if self.refused_afloat("You cannot search in deep water.") => {
+                return Spent::Nothing;
+            }
             Action::Search(turns) => return Spent::Search(*turns),
             Action::Disarm(dir) => return self.disarm(*dir, events),
             Action::Heal { what, ally } => return self.heal(what.as_deref(), *ally, events),
@@ -1650,6 +1655,8 @@ mod endless_tests;
 #[cfg(test)]
 mod equip_tests;
 #[cfg(test)]
+mod escape_tests;
+#[cfg(test)]
 mod experience_tests;
 #[cfg(test)]
 mod feature_tests;
@@ -1852,6 +1859,8 @@ mod spell_list_tests;
 #[cfg(test)]
 mod spell_talent_tests;
 #[cfg(test)]
+mod spell_type_force_tests;
+#[cfg(test)]
 mod spell_type_tests;
 #[cfg(test)]
 mod spirit_weapon_tests;
@@ -1893,6 +1902,8 @@ mod summon_tests;
 mod sun_tests;
 #[cfg(test)]
 mod surprise_tests;
+#[cfg(test)]
+mod swim_deep_tests;
 #[cfg(test)]
 mod swim_tests;
 #[cfg(test)]

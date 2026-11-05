@@ -385,7 +385,7 @@ impl World {
         match order {
             Order::Follow => {
                 let heel = rules.heel;
-                match self.route(id, home, heel, |q| q.chebyshev(home) <= heel) {
+                match self.route_to_shore(id, home, heel) {
                     Route::Step(dir) => Plan::Step(dir),
                     Route::There | Route::Wait | Route::Unreachable => Plan::Wait,
                 }

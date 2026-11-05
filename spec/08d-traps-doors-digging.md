@@ -46,7 +46,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
       cell, at most its `length` cells in all: every actor on it, from the trap outward, takes
       one roll of the damage.
     - **pit**: the victim takes the damage and loses its next action climbing out: its step
-      costs a `wait` more (6 s at normal speed; a creature's too).
+      costs a `wait` more (6 s at normal speed; a creature's too). Trained Escape artist halves
+      that from 50 and skips it from 100 (`climb`, #1015); each climb out marks `climb` (Escape
+      artist 100 %, Athletics 50 %, which gets no cut from it).
     - Every trap's damage is of a kind (`damage_type`, §8 "Damage types"): the arrow's and the
       spears' piercing (soaked by Protection like any blow), the fireball's fire, the frost's
       cold, the lightning's electricity, the pit's bludgeoning (a fall meets no armour, but the
@@ -162,6 +164,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
     property stays in one terrain definition; and a lock carries what a terrain id cannot: its
     optional **lock id** (§7 "Locks in level files"). A lock lies only on a closed door:
     unlocking it or breaking the door takes it away. Locking a door again is later work.
+  - **A force spell's blast** (§8 "Spell types", `doors`) breaks every closed door it reaches that
+    has a `breaks_to`, with no sturdiness check; its lock and any trap on it go, sprung at no one.
+    No other blast touches a door.
   - **Keys** are objects with a `key` (§7): the lock id they open, or `*` for a **skeleton key**,
     which opens every lock; a lock without an id opens only to a skeleton key. Opening a locked
     door (`o`, or walking into it) while carrying a key that fits unlocks it and opens it in one

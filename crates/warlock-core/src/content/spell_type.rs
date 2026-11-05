@@ -5,6 +5,7 @@
 
 use super::spell::BurstIce;
 use super::{Content, ContentError, DamageTypeId, LightId, StatusId};
+use crate::damage::IMMUNE;
 use crate::ice;
 use serde::Deserialize;
 use std::collections::BTreeMap;
@@ -31,6 +32,22 @@ struct TypeSpec {
     #[serde(default)]
     douses: bool,
     fire: Option<FireSpec>,
+    #[serde(default)]
+    shove: bool,
+    #[serde(default)]
+    shatter: bool,
+    #[serde(default)]
+    doors: bool,
+    bite: Option<BiteSpec>,
+    #[serde(default)]
+    immune_tags: Vec<String>,
+}
+
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct BiteSpec {
+    below_percent: u8,
+    percent: u16,
 }
 
 #[derive(Deserialize)]
@@ -62,6 +79,15 @@ pub struct TypeRider {
     pub chance: u8,
 }
 
+/// Harm made more against a target low on hit points.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct TypeBite {
+    /// It bites a target below this share of its maximum hit points, in percent.
+    pub below_percent: u8,
+    /// The harm against one, in percent, rounded down.
+    pub percent: u16,
+}
+
 /// What a spell of a damage type does beyond its damage.
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub struct SpellType {
@@ -76,6 +102,16 @@ pub struct SpellType {
     pub douses: bool,
     /// The fire a burst leaves on its centre cell: its light, and the seconds it burns.
     pub fire: Option<(LightId, u32)>,
+    /// Whether a big hit or a critical knocks the target a cell away.
+    pub shove: bool,
+    /// Whether a burst's blast shatters the thin ice it reaches.
+    pub shatter: bool,
+    /// Whether a burst's blast breaks the shut doors it reaches.
+    pub doors: bool,
+    /// More harm against a target low on hit points.
+    pub bite: Option<TypeBite>,
+    /// The creature tags immune to the type (`Content::load` lays it on their `resist`).
+    pub immune_tags: Vec<String>,
 }
 
 /// Reads and checks `[types]` of `data/spells.toml`: every key a damage type, every status and
@@ -97,6 +133,25 @@ pub(super) fn parse(
         types.insert(kind, rule);
     }
     Ok(types)
+}
+
+/// Every creature type of a tag a type's `immune_tags` names is immune to that type: on its
+/// `resist` line, so all that reads one knows (the blow, the status's dose, the Knowledge skill,
+/// the description, the wiki) and no creature file need say it. Once the creature types are in.
+pub(super) fn lay_immunities(content: &mut Content) {
+    let rules: Vec<(DamageTypeId, Vec<String>)> = (content.spell_rules.iter())
+        .flat_map(|rules| &rules.types)
+        .filter(|(_, rule)| !rule.immune_tags.is_empty())
+        .map(|(&kind, rule)| (kind, rule.immune_tags.clone()))
+        .collect();
+    for (kind, tags) in rules {
+        for def in &mut content.creatures {
+            if tags.iter().any(|tag| def.tags.contains(tag)) {
+                def.resist.retain(|&(k, _)| k != kind);
+                def.resist.push((kind, IMMUNE));
+            }
+        }
+    }
 }
 
 fn resolve(spec: TypeSpec, content: &Content) -> Result<SpellType, String> {
@@ -148,6 +203,24 @@ fn resolve(spec: TypeSpec, content: &Content) -> Result<SpellType, String> {
         }
         None => None,
     };
+    let bite = match spec.bite {
+        Some(b) => {
+            if !CHANCES.contains(&b.below_percent) {
+                return Err("bite: `below_percent` is 1 to 100 percent".into());
+            }
+            if b.percent == 0 {
+                return Err("bite: `percent` is at least 1".into());
+            }
+            Some(TypeBite {
+                below_percent: b.below_percent,
+                percent: b.percent,
+            })
+        }
+        None => None,
+    };
+    for tag in &spec.immune_tags {
+        super::tag::check(tag).map_err(|m| format!("`immune_tags`: {m}"))?;
+    }
     Ok(SpellType {
         words: spec.words,
         rider,
@@ -155,6 +228,11 @@ fn resolve(spec: TypeSpec, content: &Content) -> Result<SpellType, String> {
         ice,
         douses: spec.douses,
         fire,
+        shove: spec.shove,
+        shatter: spec.shatter,
+        doors: spec.doors,
+        bite,
+        immune_tags: spec.immune_tags,
     })
 }
 
@@ -185,6 +263,14 @@ mod tests {
         let cold = of("cold").expect("cold");
         assert_eq!(cold.rider.expect("a rider").chance, 100);
         assert!(cold.douses);
+        let force = of("force").expect("force");
+        assert!(force.shove && force.shatter && force.doors);
+        let poison = of("poison").expect("poison");
+        assert_eq!(poison.rider.expect("a rider").chance, 100);
+        let necrotic = of("necrotic").expect("necrotic");
+        assert_eq!(necrotic.immune_tags, ["undead"]);
+        assert_eq!(necrotic.bite.expect("a bite").percent, 150);
+        assert!(of("acid").expect("acid").rider.is_some());
         assert!(content.spell_type(None).is_none());
         assert!(of("slashing").is_none(), "a blow's type has no entry");
     }
@@ -215,6 +301,15 @@ mod tests {
             ),
             ("cold = { heat = true, frost = 100 }", "not both"),
             ("cold = { words = \" \" }", "`words`"),
+            (
+                "cold = { bite = { below_percent = 0, percent = 150 } }",
+                "`below_percent`",
+            ),
+            (
+                "cold = { bite = { below_percent = 50, percent = 0 } }",
+                "`percent`",
+            ),
+            ("cold = { immune_tags = [\"Not A Tag\"] }", "`immune_tags`"),
             ("cold = { nonsense = true }", "nonsense"),
             ("nether = { douses = true }", "unknown damage type `nether`"),
         ] {

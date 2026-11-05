@@ -116,6 +116,9 @@ pub(super) struct TerrainSpec {
     /// Solid rock deep in the ground: the terrain it shows as once a cell next to it is broken
     /// open (its wall face).
     pub face: Option<String>,
+    /// Deep water: not walkable, but a trained swimmer may dive in (spec §8 "Skills": Swim).
+    #[serde(default)]
+    pub swim: bool,
     /// Water: how ice grows on it (spec §5 "Ice").
     pub freeze: Option<FreezeSpec>,
     /// Ice: the thinnest ice that looks like this, in mm (spec §5 "Ice"); it lies on water.
@@ -266,6 +269,9 @@ pub struct TerrainDef {
     /// (rock bared by a dig shows its face, a wall), as generated levels turn rock that touches
     /// open ground into walls.
     pub face: Option<TerrainId>,
+    /// Gameplay: deep water, which nothing walks but a trained swimmer may dive into
+    /// (`world/swim.rs`); `walkable` is false, which keeps it out of everything else.
+    pub swim: bool,
     /// Gameplay: water that freezes, and how ([`crate::ice`]).
     pub freeze: Option<Freeze>,
     /// Gameplay: ice of at least this many mm looks like this terrain (thin ice, ice, thick ice),

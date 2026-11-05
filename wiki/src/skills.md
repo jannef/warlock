@@ -61,14 +61,24 @@ The passive skills help you more the higher they are:
   (it adds to the quickness of [talents](talents.md) such as [Fleet-footed](talents.md#talent-fleet-footed) and [Quick](talents.md#talent-quick); see
   [Burden](burden.md) for the load, which slows you on top of it). It also helps you kick [doors](doors.md)
   in (see [Doors](doors.md)). Besides kicks, it is trained now and then by acting under a load
-  that slows you and by journeys on the [overworld](overworld.md#travel).
+  that slows you, by journeys on the [overworld](overworld.md#travel), and by climbing out of a
+  [pit](traps.md#trap-pit).
+- **[Escape artist](skills.md#skill-escape-artist)** slips bonds without being asked: when
+  [Held](status-effects.md#status-held), [Webbed](status-effects.md#status-webbed), or
+  [Pinned](status-effects.md#status-pinned) stops what you try, the better of your
+  [Strength](stats.md#stat-strength) and [Dexterity](stats.md#stat-dexterity) plus the skill is
+  checked as part of the attempt (see [Slipping bonds](status-effects.md#slipping-bonds); untrained,
+  a web or a pin just refuses the step). +8 at 100, +12 at 200. It also shortens the climb out of
+  a [pit](traps.md#trap-pit): half from 50, none from 100. Every such check and every climb trains
+  it.
 - **[Survival](skills.md#skill-survival)** makes your journeys on the [overworld](overworld.md) quicker (it does nothing for
   your steps in a local area or a dungeon), and lets you forage in the wild, finding food more
   often the higher it is (see [Foraging](#foraging)).
 - **[Swim](skills.md#skill-swim)** makes you quicker through [water](terrain.md#water) and [marsh](terrain.md#terrain-marsh) (of what wading adds to a step, 60%
   is spared at 100 and all of it at 200; the [Swimmer](talents.md#talent-swimmer) talent spares it all at once). And
   when you [plunge through the ice](temperature.md#falling-in), you make a check on your
-  [Toughness](stats.md#stat-toughness) plus the table's points against 11: made, half the hit points.
+  [Toughness](stats.md#stat-toughness) plus the table's points against 11: made, half the hit points. And it
+  is what lets you into [deep water](terrain.md#deep-water) at all.
 - **[Negotiation](skills.md#skill-negotiation)** gets you better prices in [shops](shops.md): you pay less and are offered
   more. A deal made (goods paid for, or your own sold) trains it now and then.
 - **[Appraise](skills.md#skill-appraise)** now and then tells you what something you carry or wear really is. On every
@@ -174,7 +184,7 @@ mark**. The chance is shown in the table of skills above; skills you use all the
   [Defence](combat.md#defence) explains (it would have missed anyone) counts as a dodge one time in four.
 - **[Balance](skills.md#skill-balance)**: doing anything but waiting while your load slows you down.
 - **[Survival](skills.md#skill-survival)**: a journey on the [overworld](overworld.md#travel).
-- **[Swim](skills.md#skill-swim)**: a step wading through [water](terrain.md#water) or [marsh](terrain.md#terrain-marsh) now and then, and every [plunge through the ice](temperature.md#falling-in).
+- **[Swim](skills.md#skill-swim)**: a step wading through [water](terrain.md#water) or [marsh](terrain.md#terrain-marsh) now and then (10 %), every [plunge through the ice](temperature.md#falling-in), and a quarter of the steps in [deep water](terrain.md#deep-water), made or not.
 - **[Steal](skills.md#skill-steal)**: every attempt to steal, whatever comes of it.
 - **[Open lock](skills.md#skill-open-lock)**: a try at picking a lock, whether it works or not.
 - **[Heal](skills.md#skill-heal)**: a try at treating yourself, whether it works or not.
