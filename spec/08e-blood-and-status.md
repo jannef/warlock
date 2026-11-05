@@ -316,7 +316,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     hands, Grave breath, Mend, Ray of frost, Spark; 3 Barkskin, Blessing, Cure wounds, Curse of sloth, Hex of weakness, Magic
     missile; 4 Cause wounds; 5 Call of the wild; 6 Arcane bolt, Frost, Identify,
     Sleep; 7 Blight, Scorching ray, Web; 11 Call lightning, Fireball (the wizard's Fire burst
-    folded into it), Haste, Lightning bolt, Remove disease; 12 Flame; 20 Call of the forest; 35
+    folded into it), Haste, Lightning bolt, Remove disease; 12 Flame; 20 Call of the forest, Chain lightning; 35
     Call the elements (the druid's calls, #839: summons, §8b "Allies"). A spell is cast by its
     data id (`use:magic_missile:12,5`, any `use:ID` that is no class or birth sign ability; one
     that is no spell either is a weapon active's, §8i "Weapon abilities");
@@ -338,7 +338,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     comes at, never above the class's caster level then (character level × `casting` ÷ 100, at
     least 1; the content test, until #990 removes that clause), whatever the character's
     Spellcraft. Wizard: Ray of
-    frost (1), Burning hands (1), Magic missile (3), Arcane bolt (18). Priest: Mend (1),
+    frost (1), Burning hands (1), Magic missile (3), Arcane bolt (18), Chain lightning (24). Priest: Mend (1),
     Blessing (3), Cure wounds (3) (their rite is the prayer, §8i). Druid: Spark (1), Barkskin (3), Call of
     the wild (6), Call lightning (12), Call of the forest (25), Call the elements (40), Flame and
     frost (50). Witch: Evil eye (1), Grave breath (1), Hex of weakness (3), Cause wounds
@@ -457,11 +457,22 @@ developer notes (CLAUDE.md, `docs/dev/`).
     maximum hit points; `immune_tags = ["undead"]`: laid on those creature types' `resist` at load,
     so an immunity to the type from whatever harm. **Acid**: Corroded 1, certain; never armour.
     **Corroded** (`data/status.toml`): max 3, adding; 1 hit point of acid per 6 s, a degree easing
-    per 12 s: two points a degree. The menu, the `spells` dump,
+    per 12 s: two points a degree. **Electricity** spreads from
+    every creature it harmed, at the cast's one roll, with no roll to hit and no Evasion, and
+    spares no one, the caster included. `conducts`: everyone standing in that creature's body of
+    water (open water connected over 8 neighbours, on terrain with a `freeze` table; ice is not
+    water) not yet struck, in actor id order; a burst and a cone conduct too. Then `arc = { chance
+    = 25 }`, a ray's, a bolt's, a touch's, or a line's only: the nearest creature beside it not
+    yet struck, ties by actor id, one draw when there is one to jump to. A spell's `[spell.effect]
+    arcs` (1 to 12; its `count` ladder grows them) takes that many jumps with no draw, and its
+    jumps reach 2 cells, never through what stops sight (Chain lightning, 3 to 6). **Conductor**
+    (Spellcraft, level 12): the player's electricity spells arc every time, and they resist
+    electricity 25 %; the arcs still jump back and the water still conducts. A spell turned back
+    or a mishap spreads nothing. The menu, the `spells` dump,
     and a wand's description say the rule after the roll (`4d6 fire, burns one in four`, the
     type's `words`). The aiming mode previews nothing. Determinism: one `below(100)` per living
     creature harmed, only for a `chance` below 100, from the gameplay stream, in the order they
-    were struck.
+    were struck; then the spread's draws, in the order it strikes.
   - **No cap** (decision 16): nothing checks a spell's strength when the content loads, and
     nothing holds a roll when it is cast: the rungs, the hooks, and a critical add what they
     add.

@@ -112,7 +112,7 @@ is reported where it happens (`make_noise`, `hear`, `fight.rs::resolve`, `apply`
 trap found), `World::disarm` for
 `disarm`, `pick_lock` for `pick`, `World::steal` for `steal`, `World::heal` for `heal`, `World::forage_done` for `forage` (a forage that ran its time), `World::order` and `fight.rs::dies` for `handle` (an order given to one's allies, an ally's kill: Handle animal's marks, docs/dev/allies.md), `world/tame.rs::tame_check` for `handle` too (a try at taming), and the `tame` benefit read in `tame_odds` (trained at all, the Tame ability; docs/dev/companion.md "Taming"), `World::pay` and
 `World::trade` (a sale) in `world/shop.rs` for `deal`, `World::appraise` for `appraise`, `world/temper.rs::tempered` for `temper`, and `World::sidesteps` for a known trap avoided,
-`dodge`, besides `fight.rs::resolve`). Concentration's `mana_regen` and `max_mana` (trained only, `Actor::mind`) are read in
+`dodge`, besides `fight.rs::resolve`). Marks from plain play (#1014, `docs/design/skill-uses.md` 6.8, 6.9, 6.11): `Use::Sight` (Spot) in `surprise.rs::mark_noticed`, the first sighting of a creature that has not noticed the player; `Use::Sprung` (Detect traps) in `trap.rs::train_from_sprung`, a hidden trap going off under the player, or (half the time, a training-stream draw) under a creature they see; `Use::Overhear` (Listen) in `perceive.rs::hear`, a sound that is no news heard while resting or waiting (`World::waiting` is set around the player's wait); Detect traps also marks on `disarm` and, with Spot, on `search`, as data. Concentration's `mana_regen` and `max_mana` (trained only, `Actor::mind`) are read in
 `World::mana_rate` and `Actor::max_mana` (`world/concentration.rs`, docs/dev/mana.md), its `cast`
 use reported by `World::spend_mana` (Spellcraft's `cast` mark, 25 %, rides the same use, #989). Knowledge's `resist` (#667) is read
 in `world/knowledge.rs` (`World::resisting`, `resist_bonus`) through `Actor::skill_effect_above`
@@ -144,6 +144,16 @@ Intimidate `Ability::Intimidate` (above; aimed at a cell, `Ability::reach` from 
 Bluff `Ability::Feint` (above; in a direction).
 A passive skill with a use of its own is listed as that use too (`Ability::every` asks
 `Ability::use_of` of every skill): Survival is `Ability::Forage` (below).
+
+**Balance** (spec §8 "Skills", #1029, `docs/design/skill-uses.md` §6.13): besides `burden`,
+`Effect::Footing` is read in `World::step_price` (`world/schedule.rs`) in the `else` of the wading
+branch, on a step `World::rough_step` (`world/footing.rs`) calls rough: off the overworld,
+`move_cost` above 100, not `wading_step`; the same `surcharge_spared`. `Use::RoughStep` is marked by
+`World::train_rough_step` after `wade` in the step (`world/travel.rs`). `Effect::SteadyEase` is read
+in `World::status_cost` (`world/surprise.rs`) for the status `footing::STAGGERED` (`"staggered"`),
+beside Initiative's ease of Surprised; `Use::Staggered` is marked in `spend_actions`
+(`world/weapon_ability.rs`) for the player's action that eases Staggered (not the one that gave it).
+Tests `world/footing_tests.rs`.
 
 **Swim** (spec §8 "Skills", #1018, `docs/design/skill-uses.md` §6.4; `kind = "rules"`, no menu
 row): `Effect::Wade` is read in `World::step_price` (`world/schedule.rs`), on a step

@@ -583,6 +583,8 @@ impl World {
             .collect();
         let surprise = content.surprise().map(|s| s.status);
         let mut steadied = false;
+        let was_staggered =
+            (content.status_id(super::footing::STAGGERED)).is_some_and(|s| spent.contains(&s));
         for status in spent {
             let left = (actor.effects.get_mut(status)).map_or(0, |e| {
                 e.severity = e.severity.saturating_sub(1);
@@ -597,6 +599,10 @@ impl World {
                     began: false,
                 });
             }
+        }
+        // An action taken Staggered trains Balance.
+        if was_staggered && id == self.state.player {
+            self.train_staggered();
         }
         // Recovering one's wits after a surprise trains Willpower.
         if steadied && id == self.state.player {
