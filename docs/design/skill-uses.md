@@ -1,10 +1,10 @@
 # Warlock — Skill uses: what each skill does, how it trains, and what the gaps need
 
-Design document for the owner's review (#973). Written 2026-11-05 against `origin/main` at 24dc95dc. An investigation, not a feature: nothing here is implemented, no rule or data changed. Every effect and every mark below was checked in the code, not read off the skill's description: the reading function and the firing hook are named with file and line. Where a number was measured, §5 says how. What could not be established is marked *(not established)*.
+Design document, revised after the owner's approval of draft PR #984 (#973; §8 records the decisions). The investigation (§1 to §5) was written 2026-11-05 against `origin/main` at 24dc95dc, and checked again at d562ceb5 for this revision. An investigation first: nothing here is implemented, and no rule or data changed. Every effect and every mark below was checked in the code, not read off the skill's description: the reading function and the firing hook are named with file and line (the line numbers of §1 to §5 are those of 24dc95dc; §6 names functions and files). Where a number was measured, §5 says how. What could not be established is marked *(not established)*.
 
 **The owner's request** (#973): *"investigate whether we have enough ways to train skills, identify which skills have no uses yet, and propose uses for skills."*
 
-**Merging this PR approves the proposals the owner keeps**; each becomes an implementation issue linking to its entry in §6.
+**§1 to §5 are the state of the game before this work; §6 is what gets built**; each group in §6.1 becomes an implementation issue.
 
 ## Contents
 
@@ -13,9 +13,9 @@ Design document for the owner's review (#973). Written 2026-11-05 against `origi
 3. Which skills have no use
 4. Are there enough ways to train?
 5. Measurements: how the numbers were produced
-6. Proposals, ranked
+6. What gets built
 7. Work in flight that this touches
-8. Open questions
+8. Decisions
 
 ## 1. Summary
 
@@ -30,7 +30,7 @@ Columns: *Effect* is what the game reads today (the function, file:line); a valu
 | Balance | `burden`: 0–80 % less of the burden's slowdown (`world/schedule.rs:272`) | `burdened` 5 % (`mod.rs:1256`) · 0 unless the player carries too much on purpose (5 per 100 slowed actions) | **ascetic**, warrior | too few ways to train |
 | Bluff | **nothing** (no `benefit`; the abilities menu lists it "not usable yet", `ability.rs` the `Ability::Skill` row) | **none** (no `mark`) · 0 | half-elf; **bard**, aristocrat, **merchant**; bg ×1 | no use |
 | Concentration | `mana_regen`: mana back 0–60 % faster (`world/mana.rs:78`); `max_mana`: +0–8, at most a fifth (`world/concentration.rs:33`) | `cast` 25 % per mana spent (`mana.rs:106`) · 10–30 for a caster (a cast or two a fight) | priest, druid, ascetic, paladin, **wizard**, witch; bg ×2 | fine |
-| Decipher script | `study`: 0–20 off a study check (`world/learn.rs:137`) — **the same benefit as Spellcraft's**, summed | `study` 50 % per scroll studied (`learn.rs:250`; a scriptorium doubles it, `room_effects.toml:416`) · 0–2 (a spell scroll found a level at most; 30 scroll types exist) | bard, priest, wizard; bg ×2 | too few ways to train (and a duplicate) |
+| Decipher script | `study`: 0–20 off a study check (`world/learn.rs:137`) — **the same benefit as Spellcraft's**, summed | `study` 50 % per scroll studied (`learn.rs:250`; a scriptorium doubles it, `room_effects.toml:416`) · 0–2 (a spell scroll found a level at most; 30 scroll types exist) | bard, priest, wizard; bg ×2 | too few ways to train (and a duplicate, §6.6 removes it) |
 | Detect traps | `detect_traps`: +0–12 to finding hidden traps, searching and in passing (`world/search.rs:157`); trained at all, you notice traps in passing (`search.rs:191`) | `find_trap` 50 % per hidden trap found (`search.rs:272`, `:303`) · 1–2 (2–5 hidden traps a generated level, §5.3; half are sprung, not found) | kobold; **thief**; bg ×1 | too few ways to train |
 | Disable device | `disarm`: +0–12 to the Dexterity check (`world/disarm.rs:86`); trained at all, the Disarm ability (`ability.rs:509`) | `disarm` 20 % per try (`disarm.rs:55`; retries allowed, `disarm.rs:14`) · 2–6 (a few tries per known trap) | kobold; **thief** | fine |
 | Escape artist | **nothing** (no `benefit`; the pits hook of #128 is still "pending", `docs/dev/skills.md:162`) | **none** · 0 | ascetic, thief | no use |
@@ -46,7 +46,7 @@ Columns: *Effect* is what the game reads today (the function, file:line); a valu
 | Open lock | `pick`: +0–12 to the lock-picking check (`world/lockpick.rs:41`); trained at all, Pick lock (`ability.rs:514`) | `pick` 20 % per try (`lockpick.rs:74`) · 1–5 (0–3 locked doors and 0–1 chests a generated level, §5.3; retries allowed) | **thief** | fine |
 | Search | `search`: +0–12 to a search turn (`search.rs:164`); `search_reach`: a cell farther from 75 (`search.rs:260`) | `search` 10 % per search turn (`search.rs:277`) · 10–30 on purpose (measured: 27 per 300 turns) | dwarf; thief | fine |
 | Sneak attack | `sneak_dice`: 1d6 trained, up to 7d6 at 200 (`world/ambush.rs:67`); `surprise`: +0–12 to the victim's initiative difficulty (`surprise.rs:271`) | `sneak_attack` 50 % per sneak attack that hits (`ambush.rs:137`) · 10–30 for a thief | **thief**; drow (opt 40 %) | fine |
-| Spellcraft | `study`: 0–20 off a study check (`learn.rs:137`) | `study` 100 % per scroll studied (`learn.rs:250`) · 0–3 (as Decipher script's) | **wizard**, **witch**; priest (opt); bg ×2 | too few ways to train (#977 asks the same, its question 6) |
+| Spellcraft | `study`: 0–20 off a study check (`learn.rs:137`) | `study` 100 % per scroll studied (`learn.rs:250`) · 0–3 (as Decipher script's) | **wizard**, **witch**; priest (opt); bg ×2 | too few ways to train (#989 answers it: casting marks it) |
 | Spot | `spot`: +0–12 to noticing secret doors, hollows, mimics in passing (`search.rs:170`); trained at all, you notice them at all (`search.rs:191`); `lookout`: +0–12 on the overworld (`encounter.rs:812`). A creature's Spot is read against the player's slip (`slip.rs:74`) | `spot` 50 % per thing noticed in passing (`search.rs:307`); `lookout` 50 % per encounter lookout (`encounter.rs:827`) · 0–2 (0–2 secret doors a level, §5.3; measured 0 in every session) | elf, half-elf, drow; **ranger**, thief; bg ×2 | too few ways to train |
 | Steal | `steal`: +0–12 to Dexterity against Willpower (`world/steal.rs:80`); trained at all, Steal (`ability.rs:518`) | `steal` 50 % per try (`steal.rs:96`; retries allowed, `steal.rs:23`) · as often as tried | **thief**; bg ×1 | fine |
 | Stealth | `quiet`: 0–75 % less noise (`noise.rs:305`); `slip`: +0–12 past darkvision (`world/slip.rs:72`); `stalk`: +0–12 on the overworld (`encounter.rs:819`, `:968`) | `sneak` 15 % per step within earshot of something (`world/hearing.rs:50`; `encounter.rs:830`, `:998`) · 20–60 (measured: 16 per 120 steps among creatures; the progression design's 30–60) | halfling, goblin, drow, duergar, ratfolk; **thief**; bg ×1 | fine |
@@ -122,11 +122,11 @@ A **bard** and a **merchant** are known for Bluff, and a **ranger** and a **craf
    - **Spot** and **Detect traps** train only when something hidden is *found*: 0–2 secret doors and 2–5 hidden traps per generated level (§5.3), and a sprung trap teaches nothing. Spot earned 0 marks in every session. A player cannot go looking: searching trains Search, not these.
    - **Listen** trains only on sounds that are news (`noise.rs:622`): a creature walking turn after turn is one mark's chance, not thirty. A night's rest among kobolds, a night in Cealdhlāw, and 200 turns in the hub earned 0; a fight 2. Nobody can listen harder.
    - **Metalcraft** trains at a forge's anvil only, a special room drawn at weight 3 (`room_effects.toml:331`), so many runs never meet one; there is no anvil in a town.
-   - **Spellcraft** and **Decipher script** train only by studying a scroll (`learn.rs:250`), one a level at best, and share one benefit (`study`). #977 asks whether that is enough once learning depends on Spellcraft alone; it is not.
+   - **Spellcraft** and **Decipher script** train only by studying a scroll (`learn.rs:250`), one a level at best, and share one benefit (`study`). #977 settled it for Spellcraft: casting marks it (#989).
    - **Balance** trains only while the player's load slows them (`mod.rs:1256`). It *can* be practised (carry a boulder, walk), but at 5 % per action it is the slowest grind in the game and nobody is told it works that way.
 3. **Cannot be practised on purpose by design** (not counted as gaps): **Initiative** (being caught unawares) and the passive halves of Knowledge (`resist`) and Appraise (hourly). Their marks are certain (100 %) when they fire, which is the right shape for a passive skill.
 
-**One hidden catch in a "fine" skill**: Tumble's mark fires only when a miss is *attributed* to the Dexterity or Dodge category (`fight.rs:873–881`). A miss is attributed by a draw weighted by the defender's positive bonuses (`combat.rs:555–559`, `Defence::why_missed`, `combat.rs:224`): a target with **no** Dexterity bonus (Dexterity 11 or less) and Tumble under 20 (no Dodge bonus) has weight 0 → every miss is "plain" → **Tumble never trains**. The code is the proof (§5.2); the sessions agree without proving it: a human thief (Dx 11, Tumble 12) earned 0 marks in a fight where a halfling ascetic (Dx 15, no armour) and an elf thief (Dx 19) earned 5 each, but so did a halfling thief at Dx 14, and a twelve-turn fight is too short to tell luck from the rule. And an armoured fighter's misses are drawn as "armour" in proportion to its bonus (the jerkin's 1 against Dexterity's 2 for that halfling), so a warrior in mail trains Tumble rarely however nimble. Proposal Tu1 in §6.14 fixes the first.
+**One hidden catch in a "fine" skill**: Tumble's mark fires only when a miss is *attributed* to the Dexterity or Dodge category (`fight.rs:873–881`). A miss is attributed by a draw weighted by the defender's positive bonuses (`combat.rs:555–559`, `Defence::why_missed`, `combat.rs:224`): a target with **no** Dexterity bonus (Dexterity 11 or less) and Tumble under 20 (no Dodge bonus) has weight 0 → every miss is "plain" → **Tumble never trains**. The code is the proof (§5.2); the sessions agree without proving it: a human thief (Dx 11, Tumble 12) earned 0 marks in a fight where a halfling ascetic (Dx 15, no armour) and an elf thief (Dx 19) earned 5 each, but so did a halfling thief at Dx 14, and a twelve-turn fight is too short to tell luck from the rule. And an armoured fighter's misses are drawn as "armour" in proportion to its bonus (the jerkin's 1 against Dexterity's 2 for that halfling), so a warrior in mail trains Tumble rarely however nimble. Tu1 in §6.14 addresses the first.
 
 **Growth itself is not the problem.** The roll machinery, the ladder, and the known-for steps are as designed; what is missing is uses, and for the 15 fine skills the chances are well set (measured rates match the data: Search 9 % of turns, Stealth 13 % of steps, Survival 11 % and Athletics 4 % of overworld steps).
 
@@ -178,143 +178,331 @@ One seed; the generators draw differently per seed, so these are a sample, not t
 
 *(not established)*: marks over a whole real run (a player exploring, fighting, and resting for ten levels). No bot plays the game, and a hand script through a generated dungeon breaks with the generator (CLAUDE.md "Golden screenshots" says the same of walks). The sessions above isolate each hook's rate instead; the "typical a level" column multiplies them by a guessed day.
 
-## 6. Proposals, ranked
+## 6. What gets built
 
-For each skill not judged *fine* (and Tumble's catch), one to three proposals: what the player does, what the skill changes, how it earns marks, the size (**data** = `skills.toml` and a data file; **small rule** = a new `Use` or `Effect` with its one hook, or a new action on existing machinery; **new system** = state, AI, or terrain rules that do not exist). House rules kept throughout: time is the only penalty, nothing limits retrying, no lock-out on a failed roll, every active use is a row in the one abilities menu (`Ability::use_of`), numbers hidden in the game and stated in the wiki. Concepts borrowed from elsewhere are named so the owner can decide on them.
+For each skill not judged *fine* (and Tumble's catch), what the player does, what the skill changes, how it earns marks, and the size (**data** = `skills.toml` and a data file; **small rule** = a new `Use` or `Effect` with its one hook, or a new action on existing machinery; **new system** = state, AI, or terrain rules that do not exist). This section is the design as the owner approved it (§8); every entry is to be built unless it says otherwise. Time is the only penalty and retrying is open, except where the owner set otherwise (Metalcraft's rising difficulty and its destruction, §6.7). Numbers are hidden in the game and stated in the wiki. An active use is a row of the one abilities menu; a check the owner made automatic has no row.
 
-### 6.1 The top ten, across skills
+The owner's decisions override the talent rules and the house rules where they differ. Should a load check refuse something here, the implementing PR adds an exemption for it and says so.
 
-| # | Proposal | Skill | Size | Why first |
+### 6.1 The work in order
+
+| # | Work | Entries | Size | Comes after |
 |---|---|---|---|---|
-| 1 | **Feint** (§6.2 B1) | Bluff | small rule | gives the two classes known for Bluff a combat use with the thief's Sneak attack behind it; the Surprised status and `flat_footed` already exist |
-| 2 | **Struggle free** (§6.3 E1) | Escape artist | data + 2 hooks | the hold check exists and already takes Knowledge the same way; 23 creature files hold |
-| 3 | **Fletching** (§6.5 W1) | Woodcraft | small rule | the ranger's signature skill makes the ranger's ammunition; arrows break (`arrows.toml:14`) so the use repeats |
-| 4 | **Wading** (§6.4 S1) | Swim | data + 2 hooks | water is everywhere (marsh, streams, flooded rooms) and costs double; the birth sign's `swimmer` shows the hook |
-| 5 | **A plain miss by a nimble target is a dodge** (§6.14 Tu1) | Tumble | small rule | repairs the chicken-and-egg: Tumble cannot start under Dexterity 12 |
-| 6 | **Sighting trains Spot** (§6.11 Sp1) | Spot | data + 1 hook | the Stealth pattern (a passive mark from plain play) for the skill that has none |
-| 7 | **A sprung trap teaches** (§6.8 Dt1) | Detect traps | data + 1 hook | most traps are met by springing them; marks on what actually happens |
-| 8 | **Casting trains Spellcraft** (§6.10 Sc1) | Spellcraft | data only | one line; #977 needs an answer to its question 6 either way |
-| 9 | **Listen at a door** (§6.9 L1) | Listen | small rule | a deliberate use for a skill that has only accidents |
-| 10 | **An anvil in town** (§6.7 M1) | Metalcraft | content only | the cheapest fix there is: a place to practise on purpose |
+| 1 | Heal: the one-try rule goes | §6.16 H1 | small rule | — |
+| 2 | Tumble: one plain miss in four is a dodge | §6.14 Tu1 | small rule | — |
+| 3 | Marks from plain play: Spot, Detect traps, Listen | Sp1, Sp2, Dt1, Dt2, Dt3, L2 | data + hooks | — |
+| 4 | Escape artist: the automatic check, and out of the pit | E1, E2 | small rule | — |
+| 5 | Feint | B1 | small rule | — |
+| 6 | Talking past on the overworld | B3 | small rule + data | 5 |
+| 7 | Wading and the plunge | S1, S3 | data + hooks | — |
+| 8 | Deep water: the terrain and the swimming | S2, rules | new system | 7 |
+| 9 | Deep water: the generators | S2, placement | content + mapgen | 8 |
+| 10 | The knife and Fletching | W1 | small rule + data | — |
+| 11 | Metalcraft: the one action | M0 | new item state | — |
+| 12 | An anvil in Cēaptūn | M1 | content | 11 |
+| 13 | Decipher script: reading a scroll | D0 | small rule | #987 |
+| 14 | The Decipher ability | D2 | small rule | 13 |
+| 15 | Listen at a door | L1 | small rule | 3 |
+| 16 | Wedge a door | W2 | small rule | 10 |
+| 17 | Whittle | W3 | small rule | 10, 11 |
+| 18 | Balance: rough ground and Staggered | Ba1 | data + hooks | 7 |
+| 19 | Knowledge: words, and the curve | K1, K2 | small rule + data | — |
+| 20 | Appraise and Negotiation: freshness, services | A1, N1 | data + hooks | — |
+| 21 | Wriggle through | E3 | small rule | 4 |
 
-Then: fold Decipher script into Spellcraft (§6.6 D1), Balance eases Staggered and rough ground (§6.13 Ba1), Wedge a door (§6.5 W2), and the rest by skill below.
+Not built, each for a reason its entry gives: B2 (the owner), D1 and D3 (the owner, q2), M2 and M3 (replaced by M0), Ba2 (a fallback Ba1 makes needless), Sc1 and Sc2 (#989 owns Spellcraft's training).
 
 ### 6.2 Bluff — no use
 
-**B1. Feint** *(small rule)*. Ability **Feint** in the abilities menu (Bluff's row becomes it, as Steal is Steal's), aimed at a direction: `feint:DIR`, a turn. A Bluff check: the player's Presence modifier + Bluff's `feint` points (curve `[[0, 0], [100, 8], [200, 12]]`, at most 20) against the foe's Willpower check, made as Intimidate's threat is (`world/intimidate.rs`, `check::check`). Made: the foe is **Surprised** (`status.toml:786`, `max = 1`: one degree, one blow) — the player's next blow finds it flat-footed (`World::flat_footed`, `surprise.rs:185`): Sneak attack's dice for a thief, and the surprise craft for anyone. Failed: the turn is spent, the foe told nothing new ("The kobold is not fooled."); try again. A creature without a mind (an animated thing, `Content::has_vitals` false) cannot be feinted. Marks: `Use::Feint` 50 % per feint, whatever came of it. Borrowed: "feint" as a Bluff check in D&D 3.5 (the mechanic, not the numbers); the name is plain English. Data `data/feint.toml` (difficulty, the status). Who gains: bard and merchant (known for), half-elf, aristocrat; a thief who takes Bluff up. Not a talent: a skill's own active, as Steal is.
+**B1. Feint** *(small rule)*. Ability **Feint** in the abilities menu (Bluff's row becomes it, as Steal is Steal's), aimed at a direction: `feint:DIR`, a turn. A Bluff check: the player's Presence modifier + Bluff's `feint` points (curve `[[0, 0], [100, 8], [200, 12]]`, at most 20) against the foe's Willpower check, made as Intimidate's threat is (`world/intimidate.rs`, `check::check`). Made: the foe is **Surprised** (`status.toml`, `max = 1`: one degree, one blow), so the player's next blow finds it flat-footed (`World::flat_footed`): Sneak attack's dice for a thief, and the surprise craft for anyone. Failed: the turn is spent, the foe told nothing new ("The kobold is not fooled."); try again. A creature without a mind (an animated thing, `Content::has_vitals` false) cannot be feinted. Marks: `Use::Feint` 50 % per feint, whatever came of it. Data `data/feint.toml` (difficulty, the status). Who gains: bard and merchant (known for), half-elf, aristocrat; a thief who takes Bluff up. Not a talent: a skill's own active, as Steal is. Bluff's description in `skills.toml` loses "talking your way out": "Lying with a straight face, feinting, and talking your way past."
 
-**B2. Talk your way out when caught** *(small rule)*. In `World::steal` when the victim catches the player (`steal.rs:86`, before `caught_stealing`): a Bluff check (as B1's) against the victim's Willpower. Made: "You talk your way out of it": the victim keeps its thing, nothing turns hostile, and the player may try again later (the owner's rule: a victim that caught you may be tried again). Failed: as today. Marks: `Use::Feint` 100 % per such check (the same use: a lie told). Trained only: without Bluff there is no check, as today. The stat side: a Presence mark on a made check (`StatUse::Chat`'s kind, *not established* which; the stat-training design's matrix has Presence thin).
+**B2. Talking out of being caught: not built** (the owner: "we do not want the complications that come from talking way out when caught"). No Bluff check in `World::steal`, at a shop, or anywhere a caught player answers for it. A caught thief stays caught, as today.
 
-**B3. Talk past a band on the overworld** *(small rule + data)*. A new `Choice::Bluff` ("Talk your way past") on a hostile party met face to face (`encounter.rs:116`, the `Met` outcomes beside Fight and Evade), offered only when the player is trained. A Bluff check against the party's lead type's Willpower (as the lookout reads the lead type's Spot, `encounter.rs:812`): made, the band lets you pass (`How::Pass`); failed, it falls on you as `fight` with the party having noticed you (no worse than fighting would have been). Marks 100 % per try. Rank: after B1 and B2; it depends on the encounter tables having talking bands.
+**B3. Talk past a band on the overworld** *(small rule + data)*. A flag on the encounter entry, `talk_past = true` in `[[table.entry]]`. The choice is offered only for a flagged entry, only in the `Met` outcome (the party has seen the player, face to face), and only to a player trained in Bluff: `Choice::Bluff`, id `bluff`, label "Talk your way past", between Evade and Fight. `Outcome::choices` is a constant today, so the list gains a step that adds it (`encounter.rs`); the dumps' `choices` and the dialog read that list. Known parties take it as any party of the entry does.
+
+- **The check**: a contest as in B1: the player's Presence modifier, what talents add to its checks, and Bluff's `feint` points, against the party's lead type's Willpower (`World::lead_of`, as the lookouts read the lead type's Spot). Gameplay stream, as `evade`.
+- **Made**: "You talk your way past." The party lets the player go as `Choice::Pass` does; the try takes a `chat` action's price.
+- **Failed**: "They are not fooled." The fight opens as `Choice::Fight` opens it (`How::Fight`, `ActionKind::Stairs`'s price, the same positions): no worse than standing to fight.
+- **Marks**: `Use::Bluffed` 100 % per try (a mark rule `{ on = "talk_past", chance = 100 }` beside Feint's).
+- **Load checks** (`content/encounter.rs`): `talk_past` only on a hostile entry with a `group`. Never on a `draw` (what is drawn may be anything), never on a peaceful or wildlife entry.
+
+**The entries flagged**, all in `assets/campaigns/ascmearc/data/encounters/`, conservatively: people with something to gain from letting a stranger walk on.
+
+| Entry | Table | Why |
+|---|---|---|
+| `road_footpads`, `road_footpads_night`, `woods_footpads` | roads, woods | robbers on foot: a purse is what they want, and a good story is worth hearing |
+| `vale_footpad` | vale | one robber, who would as soon not fight |
+| `ascdun_duergar` | ascdun | prospectors at their work, not out for blood |
+| `fen_cultists` | fen_cult | robed folk on a road, who may take a stranger's word that they are one of them |
+
+**Not flagged**: `wystan_archers` (their quest's fight, set on the road for it, and hunting); kobolds, goblin raiders, and orc raiding parties (`*_kobolds`, `*_goblins`, `orc_raiders*`, `deep_orcs`: out to kill and rob whoever comes, and no talk stops them); every beast (`*_rats`, `*_wargs`, `*_spiders`, leeches, frogs); the dead and the things of the fen (skeletons, wights, ghouls, `fen_drowned`, `fen_bog_body`, `fen_wisp`, `deep_skeletal_wolves`); `ascdun_troll`; every `draw` entry (`ascdun_fyrdelf`, `deep_wulfeshol`, `downs_strays`). Peaceful and wildlife entries already pass by freely.
 
 ### 6.3 Escape artist — no use
 
-**E1. Struggle free** *(data + 2 hooks)*. `Effect::Escape` (curve `[[0, 0], [100, 8], [200, 12]]`, at most 20) added to the held player's struggle check (`world/hold.rs:84`, `World::struggle`: Strength's modifier plus talents plus Knowledge's `resist_bonus`, against the holder's grip) exactly where Knowledge's bonus is added; `Use::Struggle` 100 % per struggle, whatever came of it (the player's step while held). Drowning grip (`lucky.rs`) is a hold and gets it free. Escape artist's check is Strength's today; a question (§8) is whether a Dexterity-flavoured skill should let the player struggle by the better of Strength and Dexterity when trained.
+**E1. The automatic check** *(data + one hook; the owner: "Struggle free should not be an action")*. No action, no ability row, no key. When a status the skill can fix prevents or slows what the player tries to do, the check happens as part of that attempt.
 
-**E2. Out of the pit** *(small rule)*. The pit's climb costs an action's energy on top of the step (`sidestep.rs:30`, `trap.rs:183`). Trained Escape artist halves the climb's cost from 50 and skips it from 100 (`Effect::Climb`); `Use::Climb` 100 % per climb out. This is #128's pending hook (`docs/dev/skills.md:162`), which names Athletics too: give Athletics the same `climb` mark at 50 % and no effect (the strength to climb is Athletics' `speed`), or the effect too and let both sum, as study does. One hook in the pit's arm.
+**What it can fix**: bonds, the statuses a body can slip. In `status.toml` today three block a step, and all three are that: **Held** (`hold`, its grip), **Webbed**, **Pinned**. They are marked by data: a status with a `hold` counts, and any other carries a new field `escape = DIFFICULTY`; Webbed and Pinned take `escape = 13`, Held's own 13 and its holder's `difficulty` stand. It cannot fix a slowed mind or body: Staggered (Balance's, Ba1), Stunned, Surprised (Initiative's), Transfixed, Sluggish, and Drowsy stay out. So no status that merely slows is marked today; the hook covers that case anyway because the owner named it, and a later status of bonds that slows takes only the field.
 
-**E3. Wriggle through** *(small rule; rank last)*. A step into a cell held by a *neutral* creature that would block the way (an NPC in a corridor, a beast that does not move) swaps places with it when trained, by an Escape artist check against its Willpower, as `talk.rs::swap_places` (`talk.rs:498`) already moves the player past a talked-to NPC. Marks 50 %. A convenience with a fitting name; the owner may find it dull, which is why it is last.
+**The one hook** is `World::struggle` (`world/hold.rs`), already asked in `player_acts` before `refuse_blocked` (`world/mod.rs`). It looks at the action's kind (`kind_of`), and at the first status blocking that kind:
+
+| Status, player | The check | Made | Failed |
+|---|---|---|---|
+| Held, untrained | the hold's stat (Strength), talents, Knowledge's `resisting`, against the grip: today's rule, unchanged | the hold ends, the action goes ahead at its price | a step's price, "You struggle, but the ghast holds you fast." |
+| Held, trained | as above with the **better of Strength and Dexterity** (each with what talents add to that stat's checks; the owner, q4) + `Effect::Escape` | the same | the same |
+| Webbed or Pinned, untrained | none: refused by `refuse_blocked`, no time, until time eases it, as today | — | — |
+| Webbed or Pinned, trained | better of Strength and Dexterity + `Effect::Escape`, against its `escape` | the status ends with its own `end` line, the action goes ahead at its price | the action's price, "You struggle, but you are still caught in a web." (the status's `seen`) |
+| A marked status that slows (none today), trained | as above | it ends, and the action costs its plain price | no extra cost: the action goes ahead at the slowed price it already had |
+
+- `Effect::Escape`: curve `[[0, 0], [100, 8], [200, 12]]`, at most 20.
+- **The cost**: two draws of the gameplay stream per check. A failure costs the turn because a free failure could be repeated at no time at all; it costs no more than the wait the player would otherwise have had to make.
+- **The marks**: `Use::Escape` 100 % per check, whatever came of it; `StatUse::Struggled` as `struggle` fires it today.
+- A second status blocking the same action asks on the next attempt; `refuse_blocked` refuses this one.
+
+**E2. Out of the pit** *(small rule)*. The pit's climb costs an action's energy on top of the step (`sidestep.rs`, `trap.rs`). Trained Escape artist halves the climb's cost from 50 and skips it from 100 (`Effect::Climb`); `Use::Climb` 100 % per climb out, read in the pit's one arm. This is #128's pending hook (`docs/dev/skills.md`), which names Athletics too: Athletics takes the same `climb` mark at 50 % and no effect.
+
+**E3. Wriggle through** *(small rule)*. A step into a cell held by a *neutral* creature that refuses to make way (an NPC in a corridor, a beast that does not move) swaps places with it when trained, by an Escape artist check (Dexterity's modifier + `Effect::Escape`) against its Willpower, as `talk.rs::swap_places` already moves the player past a talked-to NPC. Made, the swap; failed, the step's price. Marks: `Use::Wriggle` 50 % per try. Last in the order.
 
 ### 6.4 Swim — no use
 
-**S1. Wading** *(data + 2 hooks)*. Wading terrain (water, running water, shallow water: `stars::wading`, `stars.rs:39`; marsh by its disease) costs 150–200 % of a step (`terrain.toml`). `Effect::Wade` (percent of the surcharge off: curve `[[0, 0], [100, 60], [200, 100]]`) read in `World::step_price` beside the `swimmer`/`wades_free` branch (`schedule.rs:217–224`: those zero the surcharge; Swim sits under them and never past them); `Use::Wade` 10 % per wading step (the same rate as `travel`), reported where `World::wade` reports the marsh's exposure (`disease.rs:116`) or in `player_moves`. Lizardfolk, berserkers, rangers, and warriors have it; every flooded room and ford trains it.
+**S1. Wading** *(data + 2 hooks)*. Wading terrain (`stars::wading`, `world/stars.rs`) costs 150–200 % of a step (`terrain.toml`). `Effect::Wade` (percent of the surcharge off: curve `[[0, 0], [100, 60], [200, 100]]`) is read in `World::step_price` beside the `swimmer` and `wades_free` branch: those zero the surcharge, Swim sits under them and never past them. `Use::Wade` 10 % per wading step, reported where `World::wade` reports the marsh's exposure (`disease.rs`). Lizardfolk, berserkers, rangers, and warriors have it; every flooded room and ford trains it.
 
-**S2. Deep water** *(new system)*. Trained Swim makes `lake` (and a campaign's rivers, if any are made `landscape = "lake"`) enterable: each step a Swim check (Toughness's modifier + Swim's points against the water's difficulty + 2 per burden level above Unburdened); made, the step; failed, the turn is spent treading water and the cold takes 1 hit point (never the last, as the plunge's rule, `ice.rs:12–14`). Strained or worse refuses ("You would sink."). Creatures never follow into deep water (aquatic monsters are deferred, #196), so deep water is a refuge and a shortcut: an owner call on whether that is wanted. The overworld's lakes would need the same thought at map scale. Marks 25 % per step. Rank below S1: S1 is a week's work less and proves the hooks.
+**S2. Deep water** *(new system; the owner, q3: "implement deep water, but do not make it as common as spills we have now. always ask confirmation before diving into deep water")*.
 
-**S3. The plunge** *(data + 1 hook)*. A Swim check where the player plunges through thin ice (`ice.rs`, `PLUNGE`): made, half the plunge's hit points; marks 100 %. A frill on S1; worth it only with S1.
+**The terrain**: a new `deep_water` in `terrain.toml`, the darker colours of `lake`, `move_cost = 200`, `step_noise = 200`, `stains = false`, transparent, `walkable = false`, and a new field `swim = true`. `walkable = false` is what keeps it out of everything else: paths, travel, running, spawning, teleports, blinks, and landings treat it as they treat any impassable cell. `swim` lets `player_moves` take the step for the one mover it permits. The overworld's `lake` stays as it is: nobody swims at map scale. Deep water does not freeze (no `freeze`): frost neither bridges it nor traps a swimmer.
+
+**Asking**: every step from anything else into deep water opens the one dialog first, `input::deep_water_dialog` beside `trap_dialog`: title "Deep water", "Really dive into the deep water?", "Dive in" and "Stay back", with Stay back selected first and Esc's, no time taken. No setting turns it off. A step from deep water to deep water does not ask: the player is already in. The core action `move:DIR` needs no dialog, as with a trap.
+
+**Who**: trained in Swim only. Untrained, the step is refused with no time and no dialog ("You cannot swim."). Strained or worse is refused at the shore with no time and no dialog ("You would sink.").
+
+**A step in it**: a Swim check, Toughness's modifier + talents + `Effect::Swim` points (curve `[[0, 0], [100, 8], [200, 12]]`, at most 20) against `difficulty = 11` + 2 per burden level above Unburdened (`data/swim.toml`). Made: the step, priced by `step_price` (S1's Wade, Swimmer, and Undertow all apply). Failed: the turn is spent treading water, the player does not move, and the cold takes 1 hit point, cold-typed, through `hurt` with `Harm::Spared` (never the last, the ice's rule). So at Toughness and burden even: 69 % unburdened, 54 % one level up; +4: 90 %, 81 %. Marks: `Use::Swim` 25 % per step in it, whatever came of it. Two draws of the gameplay stream a step.
+
+**Drowning**: none. The cold never takes the last hit point, nothing drags the swimmer down, and a swimmer who grows Strained in the water can still swim, harder.
+
+**Gear**: nothing is lost or dropped by going in. Burden is all it asks. In the water nothing can be dropped or picked up ("It would sink."), and resting, searching, and digging are refused with no time. Fighting, firing, casting, reading, and waiting go on as anywhere; a wait asks no check.
+
+**Carried light**: going in puts out the ready light through `World::snuff_light` (the altar's snuff; "Your lantern goes out."); a light cannot be lit while the player is in deep water ("The water would only put it out."). Spell light and other statuses are untouched.
+
+**Creatures**: none enter it. They path around it as around any impassable cell, wait at the shore, and shoot and cast from there; a creature beside the swimmer may strike, and the swimmer it. The player's allies stay ashore, and take up following at the shore again. So deep water is a refuge and a shortcut, as q3 was told; aquatic monsters stay deferred (#196).
+
+**Placing it** *(rarer than today's spills: every `caves` floor has 1–3 shallow pools a screen, `caves.rs::pools`)*:
+
+- **Caves**: one `caves` floor in six has one deep pool: a new stream `Rng::deep_water(run_seed, level)`, one `chance` per floor, so no other draw of the map stream moves. On those floors, once the map and its stairs are laid, a blob of 40–70 free floor cells becomes `water` as `pools` grows them, and every cell of it whose eight neighbours are all of it becomes `deep_water`. The shore stays wadeable, so every staircase stays reachable without swimming (a test over seeds). What `population` and the traps place later sees fewer cells on those floors only.
+- **Local areas**: where an overworld `lake` borders the area (`mapgen/local/water.rs`, `setting.lakes`), still water at `depth > 3` from its shore is `deep_water`. No new draw. Ponds and rivers stay wadeable.
+- Nowhere else; no vault, no special room, no hand-made level of the Ascmearc. Water that stands in a room stays shallow.
+
+**S3. The plunge** *(data + 1 hook)*. A Swim check where the player plunges through thin ice (`ice.rs`, `PLUNGE`): the same `Effect::Swim` + Toughness against 11; made, half the plunge's hit points; marks 100 %.
 
 ### 6.5 Woodcraft — no use
 
-**W1. Fletching** *(small rule + data)*. Ability **Fletch** (Woodcraft's row), anywhere, 10 minutes (`cost` in `data/fletch.toml`), needing a blade in hand (any `short_blades` weapon wielded) and a **wooden missile weapon readied** (so the kind follows the launcher: arrows for a bow, bolts for a crossbow; a thrower gets nothing). Makes `count` missiles (dice `1d4` + Woodcraft/25, data) of the plain kind; under Woodcraft 25, `brittle_arrow` instead (an object that exists). A Woodcraft check (Dexterity's modifier + its points) leans the count as Temper's margin leans its outcome (`data/outcomes/fletch.toml`: a bundle, a few, one, a wasted hour). Marks 100 % per batch. Arrows break 30 % of shots (`arrows.toml:14`), so the ranger keeps fletching all run. Borrowed: fletching is common roguelike fare (ADOM's Fletchery is the same idea); named so the owner can say.
+**W1. Fletching** *(small rule + data; the owner's: a universal action, a knife in the pack, the ranger far better at it)*. Ability **Fletch**, `fletch` in action text: anyone may, anywhere, trained in Woodcraft or not.
 
-**W2. Wedge a door** *(small rule; a door flag in the save, pinned to the version as the policy says)*. Ability **Wedge**, a direction, a turn, on a closed door beside the player: the door is wedged. A creature that opens doors (`docs/dev/doors.md`) cannot; it must kick or break it, against the lock-kick difficulty + Woodcraft's `wedge` points (curve `[[0, 0], [100, 8], [200, 12]]`), as a locked door is kicked (`door.rs:166`). The player opens it as usual (pulls the wedge; the wedge is not an item). A rest tool and a stealth tool, which is what a carpenter's skill should be in a dungeon. Marks 100 % per wedge. Rank after W1.
+*What it needs*, each the row's reason in the abilities menu when missing, and refused by the rules in the same words with no time:
 
-**W3. Whittle** *(data + a reuse of `temper.rs`; rank last)*. Temper's twin for wood: anywhere, with a blade, 10 minutes, a wooden weapon (bows, staves, clubs, spear shafts: the `materials` of the object, `arrows.toml:7` shows the shape) leaned by Woodcraft through `data/outcomes/whittle.toml` (improved, nothing, flawed, ruined). A duplicate of the forge's shape; cheap, but only worth it if the owner wants wood and metal symmetrical.
+- **A knife carried**, in the pack, worn or wielded or neither. `Unavailable::NoKnife`, "you have no knife". What counts is below.
+- **A launcher ready** in the missile weapon slot whose `launches` is listed in `data/fletch.toml`: arrows for a bow, bolts for a crossbow. `Unavailable::NoLauncher`, "you have no bow or crossbow ready". A sling or a thrower gets nothing. The launcher's own material does not matter (a horn composite bow counts).
 
-### 6.6 Decipher script — too few ways to train, a duplicate
+*What it does*: `ActionKind::Fletch`, ten minutes (`seconds = 600` in `data/fletch.toml`) by `keep_at`, as Temper's turns: interrupted, the time is spent and nothing is made. No material is consumed. Then a Woodcraft check: Dexterity's modifier + talents + `Effect::Fletch` points (curve `[[0, 0], [100, 8], [200, 12]]`) against `difficulty = 12`, whose margin scales `count` (dice `1d4` + Woodcraft's value ÷ 25):
 
-**D1. Fold it into Spellcraft** *(data only; recommended)*. Its one benefit is Spellcraft's own, summed (`learn.rs:137` reads both through `study`); its one mark is a half-chance copy of Spellcraft's. With #977 making Spellcraft the one learning skill, a second skill adding to the same check is noise the player cannot see through. Cut the skill; re-point the bard's, priest's, and wizard's `2d4+4` to Spellcraft (the bard and priest gain a study skill they lack), the two background lines (`04-youth.toml:65`, `:235`) and the scriptorium's `train` (`room_effects.toml:416`) likewise. Old replays' hashes change (a content change; the policy allows it).
+| Margin | Made |
+|---|---|
+| 0 or more | the whole count |
+| −1 to −3 | half, rounded up |
+| −4 to −6 | one |
+| below −6 | none: wasted time |
 
-**D2. Decipher a labelled scroll** *(small rule; the alternative if the skill stays)*. Ability **Decipher** on a labelled scroll carried (a scroll of a type not yet identified, the list `World::unidentified` already builds for the appraisal service, `service.rs:63`): 10 minutes; an Intelligence check + the skill's points against the type's spell level / 5 + 10 (data); made, the type is learned (`World::learn_scroll`) **without reading it**; failed, time, try again. Marks 100 %. Gives non-casters a way to know a scroll besides reading it blind, Appraise's hourly chance, or a shop's service. Overlap: Appraise's `identify` already covers scrolls (the same list) by the hour; D2 is the on-purpose version. If D2 is kept, D1 is not done and Decipher script's `study` benefit is dropped so it stops duplicating Spellcraft.
+*Of what*: under Woodcraft 25, `brittle_arrow` or `brittle_bolt`; from 25, plain `arrow` or `bolt`. The brittle kinds are new objects (the design's earlier "an object that exists" was wrong: `brittle_arrow` is only a test fixture, `shoot_tests.rs`): `breaks = 100`, value 0, no `kind` or `frequency`, as `flaming_arrow` (never in loot or shops). Marks: `Use::Fletch` 100 % per batch, for those trained. An arrow breaks 30 % of shots (`arrows.toml`), so a bow's owner keeps fletching.
 
-**D3. Maps** *(new system; from #196 "alternative unlocks": "rumours at the inn, maps")*. A found map object, deciphered (as D2's check), reveals a hidden location (`World::reveal`, the dev `reveal:` path). Needs the map objects, their loot placement, and the campaign's choice of which locations maps may reveal. Noted for the owner; not ranked.
+*The ranger's*: **no ranger ability touches fletching today** (nothing in `07-ranger.toml`, `talents/`, or `ability.rs`; `fletcher` is only a shop kind); the design's Fletching was Woodcraft's row. The owner's "change the ranger ability" therefore adds one: the talent **Fletcher**, `tree = "class"`, `granted = true`, `{ level = 1, talent = "fletcher" }` first in the ranger's table, a new effect kind `fletcher` (`TalentMods::fletcher`). Nobody else has it, and no other way gives it. With it:
+
+- half the time: five minutes;
+- twice the count, after the check's margin;
+- +4 to the check;
+- plain arrows and bolts at any Woodcraft, never brittle.
+
+So a level-1 ranger (Woodcraft 12–22, Dexterity's modifier + 4) makes about five plain arrows in five minutes, and fails rarely; a level-1 warrior with no Woodcraft (62 % at Dexterity even) makes about two brittle ones in ten.
+
+**Knives**: the data has no `knife` object and no `knife` category. A weapon's `category` is its weapon skill: `daggers`, named "Daggers and knives" (`weapon_skills.toml`), holds `dagger` and `stiletto`; `short_blades` holds `short_sword` and `scimitar`, and those do not count. `races.toml` already calls the goblin's stiletto "a sneaky knife" and the witch's kit calls her dagger "a ritual knife"; `cutlery` is a household thing with no category. So:
+
+- **The rule**: a knife is any carried stack whose object has `category = "daggers"` (`Content::is_knife`). Splitting the category would split a weapon skill; the requirement is the category.
+- **The new object**: `knife` (`objects/knife.toml`): `class = "melee_weapons"`, `category = "daggers"`, `kind = "weapon"`, `slot = "main_hand"`, `light_weapon`, `finesse`, damage `1d3`, weight 200, value 5, `materials = ["steel"]`, `made_of = ["metal", "bone", "stone"]`. The weaponsmith stocks it by its class.
+- **Rangers start with it**: `"knife"` in the ranger's `kit`, carried, not wielded. Thief, bard, witch, and merchant already carry a dagger; goblins a stiletto.
+
+**W2. Wedge a door** *(small rule; a door flag in the save, pinned to the version as the policy says)*. Ability **Wedge** (Woodcraft's, for those trained), a direction, a turn, on a closed door beside the player: the door is wedged. A creature that opens doors (`docs/dev/doors.md`) cannot; it must kick or break it, against the lock-kick difficulty + Woodcraft's `wedge` points (curve `[[0, 0], [100, 8], [200, 12]]`), as a locked door is kicked (`door.rs`). The player opens it as usual (pulls the wedge; the wedge is not an item). Marks 100 % per wedge.
+
+**W3. Whittle** *(small rule)*. Temper's twin for wood, on the same rules so that one item has one state: M0's check, attempts, improvements, names, and value, on a weapon whose main part is `wood` (bows, staves, clubs). Ability **Whittle**, `whittle:LETTER`, anywhere, with a knife carried (`Unavailable::NoKnife`), ten minutes; Dexterity's modifier + talents + Woodcraft's `whittle` points (curve as `temper`) against M0's difficulty. Marks `Use::Whittle` 100 % per attempt. The earlier outcome table (improved, nothing, flawed, ruined) goes as Temper's does.
+
+### 6.6 Decipher script — too few ways to train
+
+**D0. Reading a scroll is a check for those who cannot simply read it** *(small rule; the owner, q2: "decipher script for scroll use for non-casters. casters with sufficent spellcraft can bypass the check")*. Decipher script stays; D1 (folding it into Spellcraft) is not built.
+
+**The new rule, plainly**: reading a scroll asks one of two things. A character trained in Spellcraft whose **learning** is at least the scroll's spell level reads it at once. Everyone else makes a Decipher script check. This changes `docs/design/no-caster-level.md`, whose §1 and §4 say reading a scroll to cast works for anyone: it still needs no Spellcraft and is refused nobody, but it may now fail. The owner's words here win.
+
+- **"Enough" Spellcraft**: learning (`Actor::skill_effect(content, Effect::Learn)`, at least 1, trained only: #987's reading) ≥ the scroll's spell level. Exactly what a character could learn for certain, they can read for certain; no draw. So a level-1 wizard (learning 2–4) reads magic missile at once and makes the check for fireball until their Spellcraft grows. A scroll with no spell (restoration) counts as level 0, so any Spellcraft bypasses it.
+- **The check**: `World::read`, after its refusals and before `use_up`: Intelligence's modifier + talents + Decipher script's `decipher` points (curve `[[0, 0], [100, 8], [200, 12]]`), against `10 + spell level ÷ 5` (`data/decipher.toml`). Untrained, it is the modifier alone: a real chance, never a refusal. Two gameplay draws, only when asked.
+- **Made**: the scroll reads as today (Scroll adept, Scroll savant, an unknown scroll identified).
+- **Failed**: "The writing swims before your eyes." A read's price; the scroll is kept; a scroll under its label stays unknown; try again.
+- **The marks**: `Use::Decipher` 100 % per check. Reading gives Spellcraft no mark (#989's own test says so).
+- **What goes**: Decipher script's `study` benefit and its `study` mark (`skills.toml`), so `study_odds` reads only Spellcraft's tenth, and it no longer duplicates Spellcraft. Its `train = { decipher_script = 200 }` in the scriptorium stays: marks twice as often there.
+
+| Spell level | Difficulty | Modifier +0 | +4 | +8 |
+|---|---|---|---|---|
+| 0–4 | 10 | 75 % | 93 % | 99 % |
+| 11 (fireball) | 12 | 62 % | 85 % | 98 % |
+| 35 | 17 | 25 % | 54 % | 81 % |
+| 56 | 21 | 7 % | 25 % | 54 % |
+| 70 | 24 | 1 % | 10 % | 31 % |
+
+**D2. Decipher a labelled scroll** *(small rule)*. Ability **Decipher** (Decipher script's row, for those trained) on a labelled scroll carried (a scroll of a type not yet identified, the list `World::unidentified` already builds for the appraisal service, `service.rs`): 10 minutes; D0's check against D0's difficulty; made, the type is learned (`World::learn_scroll`) **without reading it**; failed, time, try again. Marks 100 %. Overlap: Appraise's `identify` covers scrolls by the hour; D2 is the on-purpose version.
+
+**D3. Maps: not built.** "Hints in ancient language" and the like are the owner's later ideas, and are not designed here; #196 keeps the maps line.
 
 ### 6.7 Metalcraft — too few ways to train
 
-**M1. An anvil in town** *(content only)*. Put an anvil (the `anvil` terrain the forge room uses) in Cēaptūn's smithy and in the Hall's yard: the Temper ability is offered by the terrain to anyone (`room_effects.toml:334`, `offers`), so a dwarf who wants Metalcraft high can go and practise, at ten minutes and a Strength check a try, and a flawed outcome risked. No rule changes. With #975 (walking into an anvil offers Temper) the player finds it by walking.
+**M0. Temper: one action on a metal item** *(new item state; replaces what Temper does at the anvil)*. The owner: "chance to improve or ruin metal items. first fail -> "damaged", improving "damaged" -> either completely destroys or removes damaged condition. just one action that does both."
 
-**M2. Mend** *(data + small rule)*. A second anvil use: an item Temper left **flawed** is made whole again (the outcome's reverse), by the same check; a ruined one never. Marks 100 %. Gives the forge a reason to return to and softens Temper's gamble without removing it (no lock-out: a flaw is undone by time and a check). Depends on how a flaw is stored on the item *(not established here)*.
+The action keeps its names (`Action::Temper`, `temper:LETTER`, `Ability::Temper`, `Offer::Temper`, #975's walk into an anvil, `ScreenName::Temper`) and its place, time, and interruption: beside an anvil, ten minutes by `keep_at`, interrupted it does nothing to the item and counts no attempt. Everything after the ten minutes is new.
 
-**M3. Merge with Woodcraft** *(cut; the fallback)*. One **Craft** skill for both if neither earns its place after W1–W3 and M1–M2: dwarves and craftspeople keep their dice. Not recommended while W1 is on the table: a ranger who fletches is not a smith.
+- **What may be worked**: a weapon, launcher, armour, or shield (`temperable`'s kinds) whose **main part** (the first part of `Stack::parts`, so a bone dagger is bone) is of material `group = "metal"`. Refused with no time otherwise ("Only metal can be worked at an anvil."). So leathers, wooden bows, and bone or stone arms are out (W3 has the wood). A spirit weapon is refused. The Temper list shows only what is accepted.
+- **The check**, one per attempt: Strength's modifier + talents' Strength checks + Metalcraft's `temper` points (curve unchanged), against `13 + 2 × attempts` (`data/temper.toml`: `seconds = 600`, `difficulty = 13`, `per_attempt = 2`, `most = 3`). A natural 2 always fails, a natural 24 always succeeds. **Every attempt on the item, made or failed, counts, for the item's whole life**, so each is harder than the last, through damage and repair too. Two gameplay draws.
+
+| | Item's state | Made | Failed |
+|---|---|---|---|
+| Improve | not damaged, under 3 improvements | one improvement: a random aspect it has | **damaged**: all its improvements are gone |
+| Repair | damaged | the damaged condition is gone: a plain base item with its attempts, to start over | **destroyed**: the item is gone, as `Work::Ruin` removes it today |
+| Refused, no time | 3 improvements | "It can be made no finer." | — |
+
+**Improvements**, drawn evenly on the gameplay stream among the aspects the base item has, and the same one may come twice:
+
+| Aspect | Who has it | Each improvement |
+|---|---|---|
+| Damage die | anything with an `attack` | +2 sides on its dice: `1d8` → `1d10`, `1d9` → `1d11`, `2d6` → `2d8` |
+| To hit | anything with an `attack` | +1 |
+| Plus damage | anything with an `attack` | +1 |
+| DV | a non-zero `armour` (armour, shields, a parrying weapon) | +1 |
+| PV | a non-zero `protection` | +1 |
+
+**Names**: 1 **Fine**, 2 **Marvellous**, 3 **Masterwork**, ahead of the rest of the name (`magic/name.rs`): "a Fine long sword", "a Marvellous Sharp long sword of the Bear", "a Masterwork chain mail shirt", and **"a damaged long sword"**. They show whatever the item's identification, and tell the worker what happened. The numbers show as any item's do (`Numbers`); attempts are hidden in the game and printed by the dev `actors` dump.
+
+**Damaged** does nothing more than the owner said: all improvements gone, and it must be repaired before it can be improved again. A damaged item fights and protects as its base does, so stopping there is a real choice. (The owner named no combat penalty; this one is decided in his direction, §8.)
+
+**Saved state**: a new `Stack` field beside `magic` and `parts`: `worked: Option<Box<Worked>>`, `Worked { improved: Vec<Aspect>, attempts: u8, damaged: bool }`, `skip_serializing_if` none, `crate::magic::worked` for its pure rules. A stack with any is unlike any other, so a worked item never stacks; a stack of several is worked one at a time (`set_apart`, as today). Saves are pinned to the version: no shim.
+
+**What reads it**: one place for the numbers, `Mods::local` for to-hit, plus damage, DV, and PV (the stack's local numbers, where affixes go) and the weapon's `Attack` where `melee`, `ranged`, and `Numbers::of` take it from the object, for the die. Dumps' `numbers` and every shown attack follow.
+
+**Value** (`Stack::value`, so shops and the wiki's prices agree): Fine ×2, Marvellous ×3, Masterwork ×5, damaged ×½ (rounded up), on top of what its parts and affixes are worth; attempts are worth nothing.
+
+**What happens to Temper's old outcomes**: all gone. `data/outcomes/forge.toml` is deleted, with `Work` (`improve`, `flaw`, `ruin`), `work_on`, the `work` hook in `content/outcome.rs` and `world/outcome.rs`, `magic/temper.rs` (no other user), `lean_for`, and `POINTS_PER_MARGIN`. So the anvil no longer adds or raises affixes, or takes one away: a magic item's affixes stay through improvement and damage, and go only when it is destroyed. `offers = { temper = "forge" }` in `room_effects.toml` becomes `offers = { temper = true }`, as Temper no longer names an outcome table (`Offer::Temper`'s parse and load check, `resolve_places`); `exhaust` goes with it: the anvil was never spent. A unique item may be destroyed, as `Work::Ruin` allowed.
+
+**Kept**: Temper identifies what survives, whatever came of it ("This is ...!" when that says something new). Marks: `Use::Temper` 100 % per attempt, whatever came of it, and `StatUse::Forged`. Who may: anyone at an anvil, as today; Metalcraft only leans the check.
+
+**The odds** of an attempt, by the check's modifier (Strength's modifier + Metalcraft's points; Metalcraft gives +8 at 100, +12 at 200) and the attempts already made:
+
+| Modifier | 1st | 2nd | 3rd | 4th | 5th | 6th |
+|---|---|---|---|---|---|---|
+| +0 | 54 % | 38 % | 25 % | 15 % | 7 % | 2 % |
+| +4 | 81 % | 69 % | 54 % | 38 % | 25 % | 15 % |
+| +8 | 96 % | 90 % | 81 % | 69 % | 54 % | 38 % |
+| +12 | 99 % | 99 % | 96 % | 90 % | 81 % | 69 % |
+
+So a smith at +8 usually reaches Masterwork in three attempts (69 %); an untrained character has a 54 % chance at one Fine and then gambles harder on the second.
+
+**M1. An anvil in town: where it can be done** *(content only)*. Forge rooms (weight 3) and the showcase's `forge` level keep theirs; one more `anvil` in Cēaptūn, in The Forge beside the smith's fire (`levels/ceaptun.toml`, the weaponsmith's area `[35, 4, 43, 8]`). `offer_at` reads the terrain, so no rule changes; #975 asks on walking into it. Free: the anvil is not the shop's service. So Metalcraft has a place to practise on purpose in every Ascmearc run.
+
+**M2 (Mend) and M3 (merging with Woodcraft): not built.** M0's repair is M2; M3 was a fallback.
 
 ### 6.8 Detect traps — too few ways to train
 
-**Dt1. A sprung trap teaches** *(data + 1 hook)*. `Use::Sprung` 100 % when a hidden trap goes off under the player, and 50 % when one goes off under a creature the player sees (`trap.rs:144`, `World::spring_trap`; the victim and the sight are known there). Trained only, as every mark. Most hidden traps are met this way (§5.3: 2–5 a level), so this alone lifts the skill over the 5-mark line.
+**Dt1. A sprung trap teaches** *(data + 1 hook)*. `Use::Sprung` 100 % when a hidden trap goes off under the player, and 50 % when one goes off under a creature the player sees (`World::spring_trap`, `trap.rs`). Trained only, as every mark. Most hidden traps are met this way (§5.3: 2–5 a level), so this alone lifts the skill over the 5-mark line.
 
-**Dt2. Taking one apart teaches what it looks like** *(data only)*. `{ on = "disarm", chance = 30 }` on Detect traps: `Use::Disarm` already fires per try (`disarm.rs:55`). One line.
+**Dt2. Taking one apart teaches what it looks like** *(data only)*. `{ on = "disarm", chance = 30 }` on Detect traps: `Use::Disarm` already fires per try.
 
-**Dt3. Looking hard counts a little** *(data only)*. `{ on = "search", chance = 3 }`: a search turn marks Detect traps 3 % whatever it finds. One line; keeps searching on purpose from being useless for it. Lower than Dt1 and Dt2 because it is a trickle from an action that is already Search's.
+**Dt3. Looking hard counts a little** *(data only)*. `{ on = "search", chance = 3 }`: a search turn marks Detect traps 3 % whatever it finds.
 
 ### 6.9 Listen — too few ways to train
 
-**L1. Listen at a door** *(small rule)*. Ability **Listen**, a direction, a turn, at a closed door beside the player: for that turn the player's hearing threshold through that door is lowered by Listen's value / 10 + 2 (the same scale as `hearing`), and what moves beyond is heard as sound markers (the `sound` layer's `f`, `x`, `v` …, the perception snapshot's existing path). Marks 100 % per listen, whatever is heard. A thief's reason to stop at a door. Borrowed: "listen at the door" is in D&D's Listen skill and in most dungeon fiction; the mechanic here is the existing hearing threshold.
+**L1. Listen at a door** *(small rule)*. Ability **Listen**, a direction, a turn, at a closed door beside the player: for that turn the player's hearing threshold through that door is lowered by Listen's value ÷ 10 + 2 (the same scale as `hearing`), and what moves beyond is heard as sound markers (the `sound` layer's `f`, `x`, `v` …, the perception snapshot's existing path). Marks 100 % per listen, whatever is heard.
 
-**L2. Listening while resting** *(data + 1 hook)*. While the player rests or waits, a sound heard that is not news marks Listen at 5 % a turn (today only news marks, `perceive.rs:443`). A night among wandering creatures then earns a few marks, which a night of nothing does not. The hook is one line beside the news check; the rate is low on purpose (a rest is 13,000 turns).
+**L2. Listening while resting** *(data + 1 hook)*. While the player rests or waits, a sound heard that is not news marks Listen at 5 % a turn (today only news marks, `perceive.rs`). A night among wandering creatures then earns a few marks, which a night of nothing does not. The hook is one line beside the news check; the rate is low on purpose (a rest is 13,000 turns).
 
 ### 6.10 Spellcraft — too few ways to train
 
-**Sc1. Casting trains it** *(data only)*. `{ on = "cast", chance = 10 }` on Spellcraft: `Use::Cast` already fires per mana spent (`mana.rs:106`), where Concentration takes 25 %. A caster who casts learns to read spells. One line; **#977 should decide it** (its question 6), and this document only puts the number on the table.
-
-**Sc2. Reading a spell scroll trains it** *(data + 1 hook)*. `Use::ReadSpell` 50 % per spell scroll read (`world/scroll.rs:40`, `World::read`, where a scroll's spell resolves). Scrolls are read more than studied; a non-caster reading scrolls gains a little Spellcraft, which under #977 is the way to learning.
+**#989 owns this**: casting marks Spellcraft at 25 % (`docs/design/no-caster-level.md` §6, approved). The earlier Sc1's 10 % is replaced by it, and Sc2's mark for reading a scroll is refused by that design and #989's test. Nothing here adds to it. D0's bypass reads Spellcraft and never marks it.
 
 ### 6.11 Spot — too few ways to train
 
-**Sp1. Sighting trains Spot** *(data + 1 hook)*. `Use::Sight` 25 % the first time the player sees a creature that has not noticed them (`perceive.rs`, where `mark_noticed` runs after `Perception::compute`, `docs/dev/surprise.md:32`; the creature's `unaware` is `World::unaware`, `surprise.rs:100`). The passive counterpart of Stealth's `sneak`: plain play trains it, a watchful player who sees things first trains it more. The one hook is where the sighting is already known; no draw of the gameplay stream (the training stream, as every mark).
+**Sp1. Sighting trains Spot** *(data + 1 hook)*. `Use::Sight` 25 % the first time the player sees a creature that has not noticed them (`perceive.rs`, where `mark_noticed` runs after `Perception::compute`, `docs/dev/surprise.md`; the creature's `unaware` is `World::unaware`). The passive counterpart of Stealth's `sneak`. The training stream, as every mark.
 
-**Sp2. Searching counts a little** *(data only)*. `{ on = "search", chance = 3 }` on Spot, as Dt3 for Detect traps. A trickle; rank below Sp1.
+**Sp2. Searching counts a little** *(data only)*. `{ on = "search", chance = 3 }` on Spot, as Dt3.
 
 ### 6.12 Knowledge — niche
 
-**K1. What you know of it** *(small rule, information)*. Look mode's description of a creature says, in words, what it resists and what it is immune to, when Knowledge stands above its level (the same read as `resist`, `Actor::skill_effect_above`): "You know the troll fears fire." Numbers stay hidden; words as the wiki's resistances table says them. No marks (knowing is not practising). The policy against info-only *talents* does not bar a skill's information read; the owner may still think it dull.
+**K1. What you know of it** *(small rule, information; the owner, q8: yes, in words, never numbers)*. Look mode's description of a creature says, in words, what it resists and what it is immune to, when Knowledge stands above its level (the same read as `resist`, `Actor::skill_effect_above`): "You know the troll fears fire." The words are those of the `stats` layer's resistances. No marks (knowing is not practising).
 
-**K2. Raise the curve** *(data only)*. `resist` is `[[0, 0], [5, 1], [40, 4]]`, at most 6: a wizard with Knowledge 60 gets +2 against a level-20 drainer and nothing against anything of level 60. Make it `[[0, 0], [5, 2], [40, 6]]` (the cap stands), or read it at the value and let the creature's level subtract half. Tuning, not a use.
+**K2. Raise the curve** *(data only)*. `resist` is `[[0, 0], [5, 1], [40, 4]]`, at most 6. It becomes `[[0, 0], [5, 2], [40, 6]]`, with the cap standing. The value stays read above the creature's level.
 
 ### 6.13 Balance — too few ways to train
 
-**Ba1. Rough ground and Staggered** *(data + 2 hooks)*. Two things in its own description ("bad ground"): (a) `Use::RoughStep` 10 % per step onto ground that slows but is not water (bush, reeds, rubble, ice: `move_cost > 100` and not `wading`), with `Effect::Footing` (percent of the surcharge off, as Swim's wading, S1, for land) read in `step_price` beside it; (b) Staggered (`status.toml:415`, `cost = 150`): `Effect::SteadyEase` takes Balance's percent off the status's extra cost, as Initiative's `surprise_ease` does for Surprised (`surprise.rs:287`), and `Use::Staggered` 20 % per action taken while Staggered. Both are the burden pattern again, on things that happen in every dungeon.
+**Ba1. Rough ground and Staggered** *(data + 2 hooks)*. (a) `Use::RoughStep` 10 % per step onto ground that slows but is not water (bush, reeds, rubble, ice: `move_cost > 100` and not `stars::wading`), with `Effect::Footing` (percent of the surcharge off, curve as S1's) read in `step_price`. (b) Staggered (`status.toml`, `cost = 150`): `Effect::SteadyEase` takes Balance's percent off the status's extra cost, as Initiative's `surprise_ease` does for Surprised, and `Use::Staggered` 20 % per action taken while Staggered.
 
-**Ba2. Merge into Athletics** *(cut; the fallback)*. If Ba1 is not wanted, Balance's one effect is a burden ease that Athletics' `speed` already resembles; fold `burden` into Athletics and re-point the ascetic's and warrior's dice. Not recommended with Ba1 on the table: the ascetic is known for Balance.
+**Ba2. Merging into Athletics: not built.** A fallback Ba1 makes needless.
 
 ### 6.14 Tumble — fine, with a catch
 
-**Tu1. A plain miss by a nimble target is a dodge** *(small rule)*. In `combat::strike` (`combat.rs:555`): when `total >= BASE_DEFENCE` and `weight == 0`, attribute the miss to `Category::Dexterity` instead of `None` (the attack would have hit a motionless target; nothing but the target's movement made it miss). Then `fight.rs:881` fires `Use::Dodge` for a Dx-11 thief with Tumble 12, and the Dexterity stat mark with it (`StatUse::Dodge`, `stat_training.rs:188`), which the stat-training design wanted ("Dexterity nothing from …" is its thin row). A natural 2 stays a plain miss. Nothing else reads the attribution but the messages ("You dodge" rather than a plain miss: a wording change to check in the combat snapshots).
+**Tu1. One plain miss in four is a dodge** *(small rule; the owner, q7: "Attribute plain miss to dodge only 1/4 times. Dodge DV misses are still always dodges.")*. A blow at the **player** that comes back `Strike::Missed { by: None }` is attributed to `Category::Dodge` one time in four. A miss with `by: Some(Dexterity | Dodge)` (the defender's own bonuses, `why_missed`) is a dodge as it always was. A miss by armour or a shield stays that.
+
+- **The stream**: the **training stream** (`WorldState::training`), `chance(25)`, one draw per plain miss at the player. `combat::strike` is unchanged and draws nothing new, so **the gameplay stream does not move**; a test holds it.
+- **What it disturbs**: every later training draw moves by one, so marks and state hashes differ from the plain miss on, as any new mark does: saves are pinned to the version, and replays are recreated. Blows between creatures, or at a creature from the player, draw nothing.
+- **The hook**: `fight.rs`, after the blow is made (past `caught_shot`) and before `Event::Attacked`, so everything after it sees one dodge: the words ("You dodge"), `Use::Dodge` at its 40 %, `StatUse::Dodge`, `free_blow::dodged`, and whatever answers a dodge (Poised, a weapon ability's dodge trigger). An answer fired that way draws the gameplay stream as it would for any dodge: the one way this reaches a fight, and it is the point of calling it a dodge.
+- All plain misses count, a natural 2 and a total under 10 too: "plain" is `by: None`, and no new information comes back from `strike`. Spells' misses (`cast.rs`) are not blows and are left out.
+- So a Dx-11 thief with Tumble 12 earns Tumble at last: 10 % a plain miss. `balance_probe/training.rs` reads the same attribution and is updated with it.
 
 ### 6.15 Appraise and Negotiation — niche, by design
 
-**A1. Freshness** *(data + 1 hook; from #196's first line, owner 2026-10-19: "some skill (and spells?) to be able to reveal more information")*. `Effect::Freshness` on **Appraise** ("what a thing is made of") and on **Survival** ("living off the land"), summed where both are trained: the eat list and look mode say a corpse's or food's stage in words (`rot::stage`, which the player is never shown today) when a check of the sum against the food's age passes; the dev `actors` dump already prints the stage. Marks: `Use::Judged` 10 % per food looked at, Appraise's. The one piece of the deferred idea that is a skill's; the spell half belongs to #980.
+**A1. Freshness** *(data + 1 hook; from #196's first line)*. `Effect::Freshness` on **Appraise** and on **Survival**, summed where both are trained: the eat list and look mode say a corpse's or food's stage in words (`rot::stage`, which the player is never shown today) when a check of the sum against the food's age passes; the dev `actors` dump already prints the stage. Marks: `Use::Judged` 10 % per food looked at, Appraise's. The spell half of the idea stays with #196.
 
-**N1. Services haggle a little** *(data + 1 hook)*. `favour` applies to a healer's and a sage's price (`service.rs:24` keeps temples flat), and `Use::Deal` fires on a service paid. Negotiation then trains in every town visit, not only the shop's.
+**N1. Services haggle a little** *(data + 1 hook)*. `favour` applies to a healer's and a sage's price (`service.rs` keeps temples flat), and `Use::Deal` fires on a service paid. Negotiation then trains in every town visit, not only the shop's.
 
-Neither is urgent: both skills do what their classes need and nothing more, and *niche* is a verdict the owner may keep.
+### 6.16 Heal — fine, with one rule gone
+
+**H1. No more one try** *(small rule; the owner, q5: "get rid of that rule i guess")*. A poison or a disease may be tried again, as bleeding, a lock, or a trap may: time is the price. `Effect::treated` (`status.rs`) and `Infection::treated` (`disease.rs`) go, with `heal.rs`'s `treatable` conditions on them and the lines that set them (`world/heal.rs`); saves are pinned. `Unavailable::NothingToTreat` is then only nothing there to treat, and its comment and the `heal` dump words follow. A try is unchanged otherwise: a made try eases a poison a degree, and a disease by a check won or a put-off progression; it never cures one outright. `Use::Heal` 30 % per try.
 
 ## 7. Work in flight that this touches
 
-| Work | What here depends on it |
+**Landed since this document was first written**: #975 (walking into an altar, spring, or anvil asks: M1's anvil is found by walking, and the dialog is `input::offer_dialog`, which deep water's sits beside); Skill focus (#963: every effect read through `skill_effect` gains it, so Escape, Swim, Fletch, and Decipher's points all do; a Skill focus on one of the four no-use skills stops being a waste); the caster level and spell type designs (#977, #980), merged; #970's ranged penalties and Parry (no effect here). Talent ranks are going (#952, #966): this design takes one talent, Fletcher, with one effect and no ranks.
+
+| Issue | What here depends on it |
 |---|---|
-| **#977** (no caster level; Spellcraft the one learning skill) | §6.10 Sc1 and Sc2 are its question 6's answer; §6.6 D1 (folding Decipher script into Spellcraft) is easier before its starting points are set, so its design should take D1 as given or refuse it. Nothing here reads caster level |
-| **#980** (spell types and new spells) | A1's spell half (a spell that tells freshness) is its; a web or hold spell on the player would be E1's. Nothing else |
-| **#963** (Skill focus, +25 to a trained skill) | every effect read through `skill_effect` gains it; the four no-use skills gain nothing from it until they have a benefit, which is one more reason to give them one (a Skill focus on Bluff is a wasted talent today) |
-| **#975** (walking into an altar, spring, or anvil offers its action) | M1's anvil in town is found by walking; the `offers` data is the one place both read |
-| **#952 / #966** (one rank per talent) | no talent here; a proposal needing one says so (none does) |
-| **#196** (deferred ideas) | A1 takes the freshness line; D3 the maps line; S2 is bounded by the aquatic-monsters line |
+| **#987** (learning is Spellcraft) | D0 comes after it: it needs `Effect::Learn`. It keeps "Decipher script ÷ 10" in the study check; D0 then removes it. It writes Spellcraft's row in `skills.toml` and the class files (a line apart from the ranger's `kit`, W1) |
+| **#988, #990** (Arcane training, caster level removed) | none on the rules; `07-ranger.toml` lines move (W1) |
+| **#989** (Spellcraft trains by casting) | owns §6.10; D0 adds no Spellcraft mark, and its test stands |
+| **#995–#1004** (spell types and spells) | #1001's Blink ends Held, Webbed, and Pinned, E1's three: no conflict, both remove the status. #1002 adds fields to `status.toml` where E1 adds `escape`: a textual neighbour. #1000's Slick and its `after_tread` sit on the step path deep water's branch changes in `player_moves`: a neighbour. #1000's Slick staggers, which Ba1 eases. A bind or web spell on the player is E1's by its status |
+| **#985 / PR #1006** (adjacent creatures follow on stairs) | none: nobody swims to stairs |
+| **#959, #958** (vaults) | `mapgen` snapshots only: S2's placement changes the caves floors that roll a deep pool and the local areas beside lakes |
+| **#196** (deferred ideas) | A1 takes the freshness line; S2 is bounded by the aquatic-monsters line; maps stay |
 
-## 8. Open questions
+At most about three PRs at once may add actions or save state (`CLAUDE.md`): those here are M0 (`Stack`), H1 (removes state), W2 (doors), and the actions of B1, W1, D2, L1, W2, W3.
 
-1. **Cut or build the four?** Bluff, Escape artist, Swim, and Woodcraft could instead be removed, their dice re-pointed (bard → Negotiation or Music; ranger → Survival; thief → Tumble; warrior → Athletics). **Recommendation: build B1, E1, S1, W1** (the top of §6.1); they are a small rule each on hooks that exist, and four classes are known for two of them.
-2. **Decipher script: fold (D1) or decipher (D2)?** **Recommendation: fold**, unless the owner wants a scroll-reading use for non-casters, in which case D2 without the `study` benefit.
-3. **Deep water (S2)?** A refuge no creature follows into, until aquatic monsters exist. **Recommendation: not yet**; S1 first, S2 when #196's aquatic line is picked up.
-4. **Escape artist's stat.** The struggle is a Strength check (`hold.rs:84`). Should a trained Escape artist struggle by the better of Strength and Dexterity? **Recommendation: yes** (the skill is about slipping, not breaking), as one line in E1.
-5. **Heal's one-try rule.** `heal.rs:24–26`: a poison or a disease "may not be tried again". That is a lock-out on one failed roll, which the house rule forbids elsewhere (steal, disarm, pick). Not this document's to change; **recommendation: raise it as its own issue** (a retry after a rest, say).
-6. **The "typical marks a level" column** is the probe's day model times measured rates, not a played run. **Recommendation: accept it as an order of magnitude**; a bot that plays is a bigger tool than this question is worth.
-7. **Tu1's wording.** Attributing a plain miss to Dexterity changes the miss message for unarmoured targets. **Recommendation: do it**, and read the combat snapshot diff.
-8. **Information reads (K1).** Is a skill's information use (what a creature resists, in words) wanted, given the owner's rule that the game stays vague? **Recommendation: yes in words, never numbers**; the owner decides.
+## 8. Decisions
+
+The owner on PR #984, in his words; §6 applies them. All earlier open questions are closed.
+
+- **Escape artist**: "Struggle free should not be an action. It should be an automatic skill check when player action is prevented/slowed because of status it can "fix"" (E1).
+- **Fletching**: "Let's change the ranger ability to make the new universal Fletching action much better. others needs to make do without that bonus. Do not require small blade in hand, just in inventory is fine. Rangers should start with it. The ability menu should say that you do not have a knife as reason. Remember that short blade is different category than knives. we probs want knife." (W1)
+- **Bluff**: "we do not want the complications that come from talking way out when caught. Talking past in overworld is fine for encounters flagged with that options - be careful what to flag." (B2 cut; B3)
+- **Metalcraft**: "chance to improve or ruin metal items. first fail -> "damaged", improving "damaged" -> either completely destroys or removes damaged condition. just one action that does both. Can attempt the improve multiple times, difficulty raises each time. damaged -> all improvements gone and need to start over. improves random aspect of the base item (damage die, to hit, + damage, dv, pv) perhaps max 3 improvements per item? "Fine x, Marvellous X, masterwork x)" (M0)
+- **q1, the four**: "others that what was mentioned before, build as suggested".
+- **q2, Decipher script**: "decipher script for scroll use for non-casters. casters with sufficent spellcraft can bypass the check. Perhaps we will have more uses later (like hints in ancient language etc)" (D0; the later uses are not designed).
+- **q3, deep water**: "sure, implement deep water, but do not make it as common as spills we have now. always ask confirmation before diving into deep water." (S2)
+- **q4, Escape artist's stat**: "better of the two with the skill" (E1).
+- **q5, Heal's one try**: "get rid of that rule i guess." (H1)
+- **q6, the "typical marks a level" column**: "i do not really care". It stays as it is, an order of magnitude.
+- **q7, Tumble**: "Attribute plain miss to dodge only 1/4 times. Dodge DV misses are still always dodges." (Tu1)
+- **q8, information reads**: "yeah" (K1, in words, never numbers).
+
+**Details the revision had to settle**, decided by the owner's evident direction:
+
+1. **There was no ranger fletching ability to change.** The ranger gets one, Fletcher, at level 1 (W1). "Rangers should start with it" then holds whether "it" is the knife or the ability.
+2. **Attempts never reset**, through damage and repair: "difficulty raises each time". A damaged item has no combat penalty, as the owner named none (M0).
+3. **W3 Whittle** uses M0's rules: Temper's old outcome table, which W3 copied, is gone (q1 says build it; "just one action" says not to keep a second shape).
+4. **D2 is built with D0**: q1 builds what is suggested, and it gives Decipher script a way to practise on purpose.
+5. **Deep water's untrained are refused**, as S2 proposed: there is nothing to confirm for one who cannot swim.
