@@ -99,6 +99,18 @@ impl World {
         climb
     }
 
+    /// A hidden trap going off teaches Detect traps (`Use::Sprung`): always when it goes off
+    /// under the player, half the time when it goes off under a creature they see.
+    fn train_from_sprung(&mut self, hidden: bool, at: Pos, victim: ActorId) {
+        if !hidden || !self.trains(Use::Sprung) {
+            return;
+        }
+        let seen = victim != self.state.player && self.perception.sees_actors_at(at);
+        if victim == self.state.player || (seen && self.state.training.chance(50)) {
+            self.train(Use::Sprung);
+        }
+    }
+
     /// Whether the player, `victim`, steps onto the trap at `at` without setting it off (Light
     /// step, spec §8 "Talents"): a pit never catches them; else a Dexterity
     /// check against the trap's difficulty (two draws of the gameplay stream, only with the
@@ -148,7 +160,7 @@ impl World {
         let Some(trap) = level.traps.get_mut(&at) else {
             return 0;
         };
-        let (kind, dir) = (trap.kind, trap.dir);
+        let (kind, dir, hidden) = (trap.kind, trap.dir, !trap.known);
         if let Some(charges) = &mut trap.charges {
             *charges = charges.saturating_sub(1);
             if *charges == 0 {
@@ -156,6 +168,7 @@ impl World {
             }
         }
         self.sprung += 1;
+        self.train_from_sprung(hidden, at, victim);
         events.push(Event::TrapSprung {
             trap: kind,
             at,
