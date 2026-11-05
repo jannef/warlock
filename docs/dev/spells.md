@@ -660,7 +660,24 @@ What every spell of a damage type does beyond its damage (the design:
     (`learn.rs::backfire_spell` goes through `spell_lands` for it, so the scroll's own status
     falls on the reader too).
   - `cast_burst` (`world/spell.rs`) for `Caster::Actor` only: the ice (`burst.ice`, a spell's own
-    `heat` or `frost`, or else the type's), then `spell_type_burst` (`douses`, `fire`).
+    `heat` or `frost`, or else the type's), then `spell_type_burst` (`shatter`, `douses`, `fire`).
+    With a `blast`, `doors_blasted` lists the shut doors before `World::blast`, so a blast never
+    reaches a door through a wall it breaks, and `blast_doors` breaks them after it. `shatter` reads
+    the burst's `blast` × `SHATTERS_UM` (100 µm a point: Shatter's 1000 is ice under 10 cm, what
+    bears a person; `blast` as µm would be a 1 mm skin that bears no one).
+  - `spell_type_bite` in `spell_strikes` (`world/spell.rs`), after Poison lore's bite and before
+    `resisted`: `bite` reads the target's hit points now.
+  - `spell_type_shove` in `spell_strikes`, after `wounded`, on one who lives: `combat::big_hit` on
+    the hit points taken, or a confirmed critical. Away from `source.0` (a burst's centre, a ray's
+    caster), else from the caster for the one at the centre; the caster there has no way and
+    stays. A status blocking `Step` holds it (`Effects::blocking`). `weapon_active.rs::drive_back`
+    moves it and pushes `Event::ActorMoved` to `made`; `read.rs::say_spell` reports it after the blow
+    (`knock_back`'s direct `say` would come before it) and a blast's `Event::DoorBroken`, seen, too.
+  - `immune_tags` has no hook on the cast path: `spell_type::lay_immunities` at load (after
+    `load_creatures`) sets the type to `IMMUNE` on the `resist` of every creature type of the tag,
+    so `Actor::resistances`, Knowledge's `known_resistances`, the creature's description, and the
+    wiki all read it, and no creature file names it. It stands against any harm of the type, as a
+    `resist` line does: a Withering blade too, though no blow reads the rest of the table.
     `Caster::Trap` and `Caster::Place` keep their own data and read no type. Blaze is not on this
     path.
   - `spell_type_cell` in `cast.rs`: at radius 0, on the cell of the creature a single-target spell
@@ -682,8 +699,12 @@ What every spell of a damage type does beyond its damage (the design:
 - **Numbing cold** is gone (its rider is cold's). The `rider` hook on `spell_mod` stays, with no
   shipped user, for a talent that wants one (`when = ["fire"]` works beside the type's own).
 - **Determinism**: one `below(100)` per living creature harmed, only for a `chance` below 100,
-  in `spell_lands`' order. **Saves**: nothing new: a status is data, a fire is `LevelState::fires`.
+  in `spell_lands`' order; the rest draw nothing. **Saves**: nothing new: a status is data, a fire
+  is `LevelState::fires`, a broken door terrain.
 - **Tests**: `world/spell_type_tests.rs` (the draw by seed, the fire-immune, the light, water, the
   numbing on hit and miss, cold ending Burning, a ray's one cell, a burst by its type, a spell's
   own field, the fire left and doused, a place's burst reading nothing, the rider hook, the words,
-  a mishap), `content/spell_type.rs` (the load checks).
+  a mishap), `world/spell_type_force_tests.rs` (a big hit and a small, a critical, the held, a
+  burst outward and its centre, the report's order, doors locked and trapped, chests, Fireball's
+  doors, thin ice and a plunge, poison and Blight's two, the bite's edge, the undead in the dump,
+  Corroded's ticks), `content/spell_type.rs` (the load checks).

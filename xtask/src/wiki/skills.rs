@@ -116,7 +116,9 @@ fn effect_name(effect: Effect) -> &'static str {
         Effect::SongCraft => "your songs are harder to shake off",
         Effect::Temper => "tempering at a forge's anvil",
         Effect::Wade => "wading through water and marsh is quicker",
-        Effect::Swim => "a plunge through the ice may hurt half as much",
+        Effect::Swim => {
+            "a plunge through the ice may hurt half as much, and a step in deep water goes as you meant it"
+        }
         Effect::ManaRegen => "mana back faster",
         Effect::MaxMana => "a slightly larger mana pool (at most a fifth more)",
         Effect::Speed => "quicker in everything",
@@ -170,7 +172,7 @@ pub(super) fn skill_benefits(content: &Content) -> String {
             Effect::SongCraft => "song's difficulty",
             Effect::Temper => "tempering",
             Effect::Wade => "wading's extra cost",
-            Effect::Swim => "plunge check",
+            Effect::Swim => "Swim check",
             Effect::ManaRegen => "mana back",
             Effect::MaxMana => "mana pool",
             Effect::Speed => "speed",

@@ -221,7 +221,8 @@ fn knowledge_above_a_creatures_level_tells_what_it_resists_and_at_it_nothing() {
     assert!(told.contains(&("piercing", "resistant")), "{told:?}");
     assert!(told.contains(&("bludgeoning", "vulnerable")), "{told:?}");
     assert!(told.contains(&("poison", "immune")), "{told:?}");
-    assert_eq!(told.len(), 3, "{told:?}");
+    assert!(told.contains(&("necrotic", "immune")), "{told:?}");
+    assert_eq!(told.len(), 4, "{told:?}");
 }
 
 #[test]

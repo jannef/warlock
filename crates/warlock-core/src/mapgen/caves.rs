@@ -172,7 +172,8 @@ fn place_vaults(canvas: &mut Canvas, rng: &mut Rng, vaults: &[&Vault], count: us
         if placed == count {
             break;
         }
-        let spots = vault::spots(canvas, v);
+        let v = vault::turned(v, rng);
+        let spots = vault::spots(canvas, &v);
         for _ in 0..8 {
             let Some(&at) = rng.pick(&spots) else { break };
             let inside = |p: Pos| {
@@ -187,7 +188,7 @@ fn place_vaults(canvas: &mut Canvas, rng: &mut Rng, vaults: &[&Vault], count: us
                 })
                 .collect();
             let Some(tunnels) = tunnels else { continue };
-            vault::stamp(canvas, v, at);
+            vault::stamp(canvas, &v, at);
             for p in tunnels.into_iter().flatten() {
                 if canvas.is_rock(p) {
                     canvas.set(p, canvas.pal.floor);

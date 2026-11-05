@@ -47,6 +47,11 @@ impl World {
             self.say("You have no light ready to use.");
             return Spent::Nothing;
         };
+        if self.state.player().inventory[item].light_mode() == LightMode::Unlit
+            && self.refused_afloat("The water would only put it out.")
+        {
+            return Spent::Nothing;
+        }
         let stack = &self.state.player().inventory[item];
         let name = stack.title(&self.content);
         let preset = self.content.object(stack.object).carried_light;

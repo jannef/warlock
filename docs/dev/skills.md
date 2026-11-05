@@ -100,7 +100,7 @@ trap found), `World::disarm` for
 `World::trade` (a sale) in `world/shop.rs` for `deal`, `World::appraise` for `appraise`, `world/temper.rs::tempered` for `temper`, and `World::sidesteps` for a known trap avoided,
 `dodge`, besides `fight.rs::resolve`). Concentration's `mana_regen` and `max_mana` (trained only, `Actor::mind`) are read in
 `World::mana_rate` and `Actor::max_mana` (`world/concentration.rs`, docs/dev/mana.md), its `cast`
-use reported by `World::spend_mana`. Knowledge's `resist` (#667) is read
+use reported by `World::spend_mana` (Spellcraft's `cast` mark, 25 %, rides the same use, #989). Knowledge's `resist` (#667) is read
 in `world/knowledge.rs` (`World::resisting`, `resist_bonus`) through `Actor::skill_effect_above`
 (`Skills::effect_above`: each benefit read at the value less the creature's level, nothing at or
 below it), called for the modifier of the player's check against a creature's drain
@@ -139,6 +139,29 @@ head of `World::wade` (`world/disease.rs`), before the talents' early return: a 
 talent spares still trains. `Effect::Swim` is read in `World::keeps_afloat` (`world/ice.rs`,
 `docs/dev/temperature.md`), which marks `swim` once a check; it is `Skills::trains_effect`-gated, so
 an item's Swim bonus alone asks no check. Tests `world/swim_tests.rs`.
+
+**Deep water** (spec §8 "Skills": Swim, #1019; design §6.4 S2) is `world/swim.rs`, one line each
+in `player_moves`, the refused actions (`pick_up_objects`, `drop_objects`, `start_rest`, the
+search dispatch, `start_dig`, lighting in `use_tool`), and `equip`. The terrain's `swim = true`
+with `walkable = false` (`content/mod.rs` checks the pair) is why nothing else needs to know of it:
+paths, travel, spawning, teleports, blinks, and landings treat it as impassable. `at_the_shore`
+stops a step from anything else: water not in the level's memory is written there, with no time, so
+the step cannot go in unasked (presentation asks only of what the player knows,
+`PerceptionView::dives_at`); then `shore_refusal`, shared with `dives_at`. `stroke_fails` is the
+check of a step that starts in deep water, wherever it ends (**the dive itself asks none**: a
+"Dive in" that left you on the shore, cold, would make no sense; the issue left this open): two
+gameplay draws (the 2d12), `Use::Stroke` whatever came of it (a use of its own, as `swim` is 100 %
+for a plunge), then `Harm::Spared`. `data/swim.toml` has the numbers (`content/swim.rs`, optional:
+without it nobody swims); burden goes by `Load::penalty`, as every burden hook does. `dive_in` and
+`equip` put out the ready light (`douse_afloat`), so a second lantern, lit in the pack, cannot be
+made ready to cheat it. Prices: `wading_step` is true of `swim` terrain, so Wade, Swimmer
+(`terrain_as`), Strong swimmer, and Undertow apply; `World::wade` marks no `wade` for it.
+`route_to_shore` (close-in in `ai.rs`, Follow in `ally.rs`) widens a ring at a time up to
+`SHORE_REACH` when the target is afloat with no ground in reach, so creatures wait on the nearest
+shore; only then does it search more than once. A swimmer swaps with no one (`Refusal::Water`). An
+Overloaded swimmer cannot step (`can_step_to`, as anywhere) and cannot drop: they can still throw
+things away, eat, or teleport, so it is no trap. Tests `world/swim_deep_tests.rs`; the showcase's
+quarry pit holds a pool to try it in (the test world only; #1020 places it in the world).
 
 **Foraging** (spec §8 "Foraging", #547): `Action::Forage` (replay text `forage`, cost `forage`
 a turn, `ActionKind::Forage`), dispatched by one arm in `World::player_acts` to

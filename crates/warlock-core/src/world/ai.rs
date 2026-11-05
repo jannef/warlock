@@ -319,7 +319,7 @@ impl World {
         if self.hurls_at(id, target, at) {
             return attack(AttackKind::Thrown);
         }
-        let close_in = || match self.route(id, at, 1, |q| q.chebyshev(at) <= 1) {
+        let close_in = || match self.route_to_shore(id, at, 1) {
             Route::Step(dir) => Plan::Step(dir),
             Route::There | Route::Wait | Route::Unreachable => Plan::Wait,
         };

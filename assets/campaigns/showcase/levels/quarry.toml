@@ -12,6 +12,8 @@
 # the granite. Beyond the pit's east wall lies a sealed chamber with a lamp and a little treasure:
 # no door leads in, so dig through the wall (six minutes with a pick-axe), and its light spills
 # into the pit. Rock (spaces) bared by a dig shows as stone walls; the level's edge never breaks.
+# The pit's old workings have flooded: a pool of deep water (w) in its south-east, for one trained
+# in Swim to dive into (spec §8 "Skills": Swim), asked first every time.
 arrival = "Chisel marks score the walls of the old quarry."
 name = "The Quarry"
 ambient = [0, 0, 0, 0]
@@ -25,9 +27,9 @@ map = '''
 # #...........##.............................###########       #
 # #...........##.............................#.........#       #
 # #..<..@....................................#......l..#       #
-# #...........##...........###...............#.........#       #
-# #...........##...........###.,.............#.........#       #
-# #...........##...........###,..............###########       #
+# #...........##...........###......wwwwwww..#.........#       #
+# #...........##...........###.,....wwwwwww..#.........#       #
+# #...........##...........###,.....wwwwwww..###########       #
 # #...........##....................,,.......#                 #
 # ##############........t.............,.t....#                 #
 #              EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE                 #
@@ -46,6 +48,7 @@ map = '''
 "E" = "packed_earth"
 "," = "rubble"
 "t" = "sconce"
+"w" = "deep_water"
 "l" = { terrain = "floor", light = "lamp" }
 
 # The tools: a pick-axe beside the start, a mattock below it.
