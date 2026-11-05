@@ -139,6 +139,7 @@ mod feature;
 mod fight;
 mod flavour;
 mod focus;
+mod footing;
 mod forage;
 mod free_blow;
 mod frenzy;
@@ -1669,6 +1670,8 @@ mod fixture_factions;
 mod flavour_tests;
 #[cfg(test)]
 mod focus_tests;
+#[cfg(test)]
+mod footing_tests;
 #[cfg(test)]
 mod forage_tests;
 #[cfg(test)]

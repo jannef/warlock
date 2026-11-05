@@ -796,7 +796,7 @@ fn skill_reader(effect: crate::skills::Effect) -> (&'static str, &'static str) {
         S::Search | S::SearchReach | S::Spot | S::DetectTraps => SEARCH,
         S::Study | S::Learn => ("world/learn.rs", include_str!("../world/learn.rs")),
         S::Disarm => ("world/disarm.rs", include_str!("../world/disarm.rs")),
-        S::Burden | S::Travel | S::Wade => SCHEDULE,
+        S::Burden | S::Travel | S::Wade | S::Footing => SCHEDULE,
         S::Forage => ("world/forage.rs", include_str!("../world/forage.rs")),
         S::Bargain => ("world/shop.rs", include_str!("../world/shop.rs")),
         S::Identify => ("world/appraise.rs", include_str!("../world/appraise.rs")),
@@ -817,7 +817,7 @@ fn skill_reader(effect: crate::skills::Effect) -> (&'static str, &'static str) {
         S::Swim => ("world/ice.rs", include_str!("../world/ice.rs")),
         S::Resist => ("world/knowledge.rs", include_str!("../world/knowledge.rs")),
         S::SneakDice => ("world/ambush.rs", include_str!("../world/ambush.rs")),
-        S::Surprise | S::Initiative | S::SurpriseEase => {
+        S::Surprise | S::Initiative | S::SurpriseEase | S::SteadyEase => {
             ("world/surprise.rs", include_str!("../world/surprise.rs"))
         }
         S::ManaRegen | S::MaxMana => (

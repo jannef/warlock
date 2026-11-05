@@ -183,6 +183,9 @@ pub enum Effect {
     /// Percent of what wading adds to a step that is spared (spec §8 "Skills": Swim;
     /// `World::step_price`), under the talents that spare all of it.
     Wade,
+    /// Percent of what rough ground (bush, reeds, rubble, ice: not water) adds to a step that is
+    /// spared (spec §8 "Skills": Balance; `World::step_price`).
+    Footing,
     /// Percent added to the chance of a forage finding food (spec §8 "Foraging";
     /// `world/forage.rs`); a skill with it, trained, lets the actor forage at all (the abilities
     /// menu's Forage).
@@ -220,6 +223,9 @@ pub enum Effect {
     /// Percent of the extra cost of the action the actor takes Surprised that is spared
     /// (`World::status_cost`), with its talents' at most all of it.
     SurpriseEase,
+    /// Percent of the extra cost of the action the actor takes Staggered that is spared
+    /// (`World::status_cost`).
+    SteadyEase,
     /// Points added to treating oneself (spec §8 "Skills": Heal; `world/heal.rs`): bleeding,
     /// poison, a disease; a skill with it, trained, lets the actor treat at all (the Heal
     /// ability).
@@ -285,6 +291,8 @@ impl Effect {
             | Effect::Burden
             | Effect::Travel
             | Effect::Wade
+            | Effect::Footing
+            | Effect::SteadyEase
             | Effect::Bargain
             | Effect::Identify
             | Effect::SurpriseEase => 100,
@@ -379,6 +387,11 @@ pub enum Use {
     Temper,
     /// A step onto wading terrain (spec §8 "Skills": Swim; `World::wade`).
     Wade,
+    /// A step onto rough ground that is not water (spec §8 "Skills": Balance;
+    /// `World::train_rough_step`).
+    RoughStep,
+    /// An action taken Staggered (spec §8 "Skills": Balance; `World::spend_actions`).
+    Staggered,
     /// A Swim check, whatever comes of it (spec §8 "Skills": Swim; a plunge through the ice).
     Swim,
     /// A step in deep water, whatever comes of it (spec §8 "Skills": Swim; `world/swim.rs`).
@@ -435,6 +448,8 @@ impl Use {
             Use::Pick => "a try at picking a lock",
             Use::Temper => "tempering an item at an anvil",
             Use::Wade => "a step wading through water or marsh",
+            Use::RoughStep => "a step onto rough ground that slows (bush, reeds, rubble, ice)",
+            Use::Staggered => "acting while Staggered",
             Use::Swim => "a plunge through the ice",
             Use::Stroke => "a step in deep water",
             Use::Deal => "a deal made in a shop",
@@ -563,6 +578,8 @@ impl Use {
             Use::Pick => "pick",
             Use::Temper => "temper",
             Use::Wade => "wade",
+            Use::RoughStep => "rough_step",
+            Use::Staggered => "staggered",
             Use::Swim => "swim",
             Use::Stroke => "stroke",
             Use::Deal => "deal",
@@ -593,6 +610,8 @@ impl Effect {
             Effect::Burden => "burden",
             Effect::Travel => "travel",
             Effect::Wade => "wade",
+            Effect::Footing => "footing",
+            Effect::SteadyEase => "steady_ease",
             Effect::Forage => "forage",
             Effect::Bargain => "bargain",
             Effect::Identify => "identify",
