@@ -112,6 +112,25 @@ phases; floor `depth` offers only the vaults of phase `depth % 4`. So no vault c
 floors of itself in a branch, and the deal differs by run and branch. A level's own named
 (pinned) vaults are untouched. Adding vaults raises the count a floor may choose from, not the
 chance of one.
+An endless branch (`DungeonDef::endless`, spec §7 "The endless branch", #1010; Grundlēas,
+`campaigns/ascmearc/data/dungeons/grundleas.toml`) has one row of per-depth tables, read at every
+depth (`DungeonDef::row`), and `depth` 1 for what loops over them; `leads_down` is always true.
+`generate_for` draws the floor's generator and size from stream `floor_kind/<level id>`
+(`endless_plan`), and its first floor's `<` is `Content::way_into`, not `entered_from`. The whole
+generation runs under the floor's own seed (`world/endless.rs::floor_seed`) with the usual stream
+labels, so `warlock-cli gen --level grundleas:3 --seed S` shows what that seed makes, not what the
+run of seed S makes on its third floor (that depends on how many floors it has made). Spaced
+vaults (`spaced_vaults`) deal anew for every floor under that seed: a random vault may come on two
+floors in a row, which no one can compare. `Content::spawning` reads the danger at
+`depth.min(roster_depth)`, filled by `Content::fill_rosters` from the highest level of the
+branch's population and strays, so every draw (population, dens, hoards, spawns) stops rising at
+the roster's top and a floor at any depth holds creatures; `Content::floor_danger` is the number
+that keeps rising. Other caps past that top: `Content::item_level` clamps at `MAX_ITEM_LEVEL` as
+ever; `hidden_at` and `locks_at` saturate and keep rising (the stairs never hang on a lock or a
+secret, `connect::validate`). Grundlēas gets its draws by `stray = 100` over the campaign's generic
+list and names only the rat as a `population`, which every other branch's strays already hold, so
+none of their lists move.
+
 The Ascmearc's branches (campaign design §7): Cealdhlāw (`cealdhlaw`, #337;
 `campaigns/ascmearc/data/dungeons/cealdhlaw.toml`), six floors of danger 1 to 6, rooms 80×21 on
 1–2 and caves 100×40 on 3–6, 30 creatures a thousand walkable cells (25 on the rooms floors,

@@ -489,6 +489,8 @@ struct StatusSpec {
     escape: Option<i32>,
     treat: Option<Treat>,
     light: Option<String>,
+    #[serde(default)]
+    quenched: bool,
     vision: Option<String>,
     #[serde(default)]
     resist: BTreeMap<String, i32>,
@@ -605,6 +607,8 @@ pub struct StatusDef {
     pub treat: Option<Treat>,
     /// The light its bearer sheds while it lasts (Lit, the Light spell's; spec §5), if any.
     pub light: Option<LightId>,
+    /// A step or a fall into water ends it (Burning).
+    pub quenched: bool,
     /// The eyes it lends while it lasts (a potion's Owl-eyed; spec §8 "Potions"): an index into
     /// [`super::Content::vision_profiles`], bettering its sufferer's eyes part by part as a
     /// unique item's Vision power does (`Actor::eyes`).
@@ -900,6 +904,7 @@ fn resolve(
         escape: spec.escape,
         treat: spec.treat,
         light,
+        quenched: spec.quenched,
         vision,
         resist,
     })

@@ -45,3 +45,21 @@ attack = { cost = 100 }
 auto = { cost = 100 }
 area = { cost = 100 }
 touch = { cost = 70 }
+
+# [types]: what every spell of a damage type does beyond its damage, whether cast from mana, a
+# scroll, or a wand (the spell types design docs/design/spell-types-and-new-spells.md §3, §4). It
+# is magic's alone: a weapon's blow never reads it. It spares no one. A type without an entry does
+# nothing beyond damage. Each key optional.
+#   words = "numbs"         the rule as the player reads it after the roll (`2d6 cold, numbs`)
+#   rider = { status, severity, chance }   laid on every creature the spell harms, `chance` in
+#            percent (default 100: certain), one draw a creature from the gameplay stream
+#   ends = ["burning"]      statuses it ends on every creature it harms
+#   heat = true             a burst melts ice on its cells; a ray, bolt, touch, or line the cell it
+#                           strikes (a spell's own `heat` or `frost` stands in for its type's)
+#   frost = 100             freezes water on those cells, that many mm thick
+#   douses = true           puts out the fires on those cells
+#   fire = { light = "arrow_fire", burns = 60 }   a burst leaves a fire on its centre cell: light
+#            only, on that cell only (it never spreads)
+[types]
+fire = { words = "burns one in four", rider = { status = "burning", severity = 1, chance = 25 }, heat = true, fire = { light = "arrow_fire", burns = 60 } }
+cold = { words = "numbs", rider = { status = "sluggish", severity = 1 }, ends = ["burning"], frost = 100, douses = true }

@@ -232,7 +232,9 @@ rate or animation.
     shallow water, where wading in picks it up. An actor that broke through from firm footing
     plunges in: "The ice cracks beneath you and you plunge into the freezing water!" (a creature
     the player sees: "The kobold falls through the ice!", `Event::FellThroughIce`), and loses the
-    water's `plunge` hit points (1d3; never the last one: the cold does not kill yet). The step
+    water's `plunge` hit points (1d3; never the last one: the cold does not kill yet). A player
+    trained in Swim makes a Swim check as they plunge ("Skills", §8): made, half of those hit
+    points, rounded down ("You keep your head, and the cold bites less deep."). The step
     was a step into the water. From the water, ice that cannot hold the actor breaks ahead of it
     ("You break through the ice."), without another plunge.
   - **Climbing out**: a step from open water onto ice that holds the actor also costs `climb`

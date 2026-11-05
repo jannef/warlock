@@ -223,5 +223,11 @@ A branch level's `vaults` (#339, docs/dev/mapgen.md) keeps the vaults it names t
 never another's (Fyrdelf's cabin and hoard, Fennmynster's sunken crypt, #338; the four lairs'
 still-room, robbers' hoard, unhallowed chapel, and captain's hall, #426, `docs/dev/guild.md`).
 
+Grundlēas (`grundleas`, #1010, `docs/dev/mapgen.md`, `world/endless.rs`) is the Ascmearc's
+endless branch: an ordinary location (`9` at (52, 52) on the overworld, no `hidden`), 40 cells from
+Beorggeat, so no reveal is needed and no one starts beside it. No quest names it: a reach quest
+naming an endless branch's level is refused at load, and `Pick::Creatures` lists leave it out. Its
+dev scenario is `grundleas`.
+
 Not yet (the design's later items): `dev = true` scenarios (not needed while a release build lists
 only the campaigns' starts: the dev scenarios `ceaptun`, `fyrdelf`, ... are never listed there).

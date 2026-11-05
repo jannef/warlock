@@ -16,6 +16,8 @@
 //!   ([`Actor::spell_roll`]); drawn with the roll hook's rerolls, and the rider hook's statuses
 //!   laid on every target harmed (`world/spell_mods.rs`). Nothing holds the roll (the spell
 //!   scaling design, decision 16).
+//! - **Type**: what every spell of its damage type does beyond its damage, on those it harmed
+//!   and the cells it reached (`world/spell_type.rs`).
 //! - **Resolution**: `area` (a burst, a cone, a line) strikes everyone in it with one roll, no
 //!   roll to hit, Evasion halving it ([`World::spell_hurts`]) and resistances taking their
 //!   share; `auto` (a ray or a bolt) strikes the first creature on its way, never missing;
@@ -48,7 +50,7 @@
 //! kills earn them their experience, and one that kills its caster is what killed them
 //! ([`Cause::Spell`]). Determinism: nothing here draws at random but the spell's own rolls (the
 //! attack roll, the dice), an area's one roll for all, in the order the shared code strikes
-//! (ascending actor id); a spell with no roll draws nothing.
+//! (ascending actor id), and its type's rider's chance; a spell with no roll draws nothing.
 //!
 //! [`Action::Cast`]: crate::action::Action::Cast
 //! [`Action::CastOn`]: crate::action::Action::CastOn
@@ -735,6 +737,7 @@ impl World {
                 let path = self.bolt_line(here, at, range);
                 self.sound_at(def.look.noise, here);
                 self.cast_bolt(Caster::Actor(player), here, &path, &bolt, &mut made);
+                self.spell_type_cell(def.damage_type, path.last().copied(), &mut made);
             }
             Shape::Cone => {
                 self.sound_at(def.look.noise, here);
@@ -770,7 +773,7 @@ impl World {
     /// lives its status and the cast's `riders` (the rider hook; a status of both merged). The
     /// player's own `cast` then hears of each creature it struck at, harmed or missed, in the
     /// order struck (an area's in ascending actor id; [`World::spell_landed`]).
-    fn spell_lands(
+    pub(super) fn spell_lands(
         &mut self,
         by: ActorId,
         (def, riders): (&SpellData, &[(StatusId, u16)]),
@@ -794,6 +797,19 @@ impl World {
             .filter(|&&(_, hit)| hit)
             .map(|&(id, _)| id)
             .collect();
+        // A spell type's rule falls on those it harmed: not one that resisted it all.
+        let harmed: Vec<ActorId> = (made.iter())
+            .filter_map(|e| match *e {
+                Event::Attacked {
+                    attacker,
+                    target,
+                    kind: AttackKind::Spell,
+                    strike: Some(Strike::Hit { .. }),
+                    ..
+                } if attacker == by => Some(target),
+                _ => None,
+            })
+            .collect();
         self.say_spell((&def.look.noun, &def.look.verb), made, events);
         let mut laid: Vec<(StatusId, u16)> = def.effect.status.into_iter().collect();
         for &(status, severity) in riders {
@@ -806,6 +822,7 @@ impl World {
                 }
             }
         }
+        self.spell_type_lands(by, def.damage_type, &harmed, events);
         if let Some(cast) = cast {
             for (target, hit) in struck {
                 self.spell_landed(cast, target, hit, events);
@@ -886,7 +903,15 @@ impl World {
                 cells: path.clone(),
             });
         }
-        let target = (path.last()).and_then(|&p| self.state.actor_at(&level, p).map(|a| a.id))?;
+        let last = path.last().copied();
+        let target = last.and_then(|p| self.state.actor_at(&level, p).map(|a| a.id));
+        let Some(target) = target else {
+            // Finding no one it flies on, but its nature falls where it was aimed, if it got
+            // that far: Ray of frost builds a bridge a cell at a time.
+            let cell = path.iter().copied().find(|&p| p == at).or(last);
+            self.spell_type_cell(def.damage_type, cell, made);
+            return None;
+        };
         let player = self.state.player;
         let me = self.state.player();
         let to_hit = if own.is_some() {
@@ -914,6 +939,7 @@ impl World {
         };
         let source = (here, def.shape != Shape::Touch);
         let strike = self.spell_attack(player, target, source, shot, made);
+        self.spell_type_cell(def.damage_type, last, made);
         if strike
             != (Strike::Missed {
                 by: Some(Category::Shield),

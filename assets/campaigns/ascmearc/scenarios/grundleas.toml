@@ -1,0 +1,9 @@
+# A dev scenario of the Ascmearc (spec §7 "The endless branch"): straight onto the first floor of
+# Grundlēas. Unlike the other branches' scenarios its `<` leads out: an endless branch's first
+# floor always climbs out to the overworld.
+name = "Grundlēas"
+description = "Straight into Grundlēas, the groundless: floors without end, none of them there twice."
+start_level = "grundleas:1"
+seed = 1
+character = { race = "human", gender = "female", class = "thief", name = "Eadgyth" }
+wield = ["lantern"]

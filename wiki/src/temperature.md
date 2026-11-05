@@ -78,7 +78,9 @@ A step onto ice is a careful one and takes a little longer than on dry ground; i
 ## Falling in
 
 When the ice gives way: "The ice cracks beneath you and you plunge into the freezing water!" The
-cold costs you a few [hit points](combat.md#hit-points), but never your last one (it cannot kill you yet). You are in the
+cold costs you a few [hit points](combat.md#hit-points), but never your last one (it cannot kill you yet). If you are trained in
+[Swim](skills.md#skill-swim) you make a check as you go in, [Toughness](stats.md#stat-toughness) plus Swim's points against 11; made, it costs half
+as much, rounded down ("You keep your head, and the cold bites less deep."). You are in the
 water where the ice was: a hole of open water, which freezes over again in time (a few hours in a
 hard frost).
 
@@ -94,7 +96,7 @@ There is no going back once the ice cracks, but nothing is lost for good: only t
 
 ## Heat and frost
 
-Bursts of heat and frost change the ice at once (see [Traps](traps.md); [spells](magic.md) will too): a
+Bursts of heat and frost change the ice at once (see [Traps](traps.md), and [spell types](magic.md#spell-types)): a
 [fireball](traps.md#trap-fireball) melts the ice it reaches, and whoever stood on it falls in; a [frost trap](traps.md#trap-frost) freezes the
 [water](terrain.md#water) it reaches at once, into ice that holds a laden person (10 cm). A blast without heat (none
 yet) will shatter thin ice. Someone who makes way for you onto ice you stood on may break through
