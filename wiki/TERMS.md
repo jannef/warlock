@@ -98,6 +98,7 @@ above.
 | An encounter table | `encounters.md#the-ascmearcs-encounters` (a table: `encounters.md#encounter-table-ID`) |
 | The Ascmearc and its places | `ascmearc.md#the-places` |
 | Terrain, walls, water, stairs, creatures following you on stairs | `terrain.md#walls`, `terrain.md#water`, `terrain.md#stairs` |
+| Deep water, swimming | `terrain.md#deep-water` |
 | Digging, wall hardness | `digging.md#digging`, `digging.md#what-breaks-and-what-does-not` |
 | Explosions, blasts | `digging.md#explosions` |
 | Doors; locked, kicked, broken doors | `doors.md`, `doors.md#locked-doors`, `doors.md#kicking` |
@@ -112,7 +113,7 @@ above.
 | Grundlēas, floors forgotten | `dungeons.md#grundlēas` |
 | Special room | `special-rooms.md` (a room: its row) |
 | Forgotten altar, praying | `special-rooms.md#forgotten-altars` |
-| Forge, tempering | `special-rooms.md#forges` |
+| Forge, tempering, Fine, Marvellous, Masterwork, damaged items | `special-rooms.md#forges` |
 | Healing spring | `special-rooms.md#healing-springs` |
 | Trap, hidden trap, known trap | `traps.md#finding-traps` |
 | Disarming | `traps.md#disarming-traps` |
@@ -124,6 +125,7 @@ above.
 | Material, pieces | `objects.md#materials`, `objects.md#pieces` |
 | Gem, size and cut | `gems.md`, `gems.md#size-and-cut` |
 | Scroll, reading, unknown scrolls | `scrolls.md`, `scrolls.md#unknown-scrolls` |
+| Making out a scroll, the check to read one (Decipher script's use) | `scrolls.md#making-out-a-scroll` |
 | Potion, elixir | `potions.md`, `potions.md#elixirs` |
 | Equipment, slots, wielding and wearing | `equipment.md#what-fits-where` |
 | The equipment screen | `equipment.md#the-equipment-screen` |
@@ -225,12 +227,15 @@ above.
 | Spending mana | `mana.md#spending-it` |
 | Magic, spells, casting | `magic.md`, `magic.md#the-spells` |
 | Caster level | `magic.md#caster-level` |
+| Learning (what a scroll teaches for certain, Spellcraft's curve) | `magic.md#learning` |
 | Spell level, cantrip | `magic.md#spell-levels` |
 | Ladder, rung, base | `magic.md#the-spells`, `magic.md#how-a-spell-grows` |
 | What talents and items do to a spell (a rung, bigger dice, a bonus, a reroll, a rider) | `magic.md#how-a-spell-grows` |
 | Spell shape (bolt, burst, cone, …) | `magic.md#shapes` |
-| Spell type, what a fire or a cold spell does beyond its damage | `magic.md#spell-types` |
+| Spell type, what a spell of a damage type does beyond its damage | `magic.md#spell-types` |
+| Arc, conducting through water, what an electricity spell does | `magic.md#spell-types` |
 | Burning | `status-effects.md#burning` |
+| Corroded | `status-effects.md#corroded` |
 | How a spell resolves (attack, auto, area, touch) | `magic.md#how-a-spell-finds-its-target` |
 | Mishap | `magic.md#learning-spells-from-scrolls` |
 | Studying a spell from a scroll, overreach | `magic.md#learning-spells-from-scrolls` |

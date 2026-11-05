@@ -723,10 +723,6 @@ fn reader(effect: Effect) -> (&'static str, &'static str) {
         }
         Effect::Carry => ("burden.rs", include_str!("../burden.rs")),
         Effect::Stealth => ("noise.rs", include_str!("../noise.rs")),
-        Effect::CasterLevel => (
-            "world/caster_level.rs",
-            include_str!("../world/caster_level.rs"),
-        ),
         Effect::SpellEase => ("world/cast.rs", include_str!("../world/cast.rs")),
         Effect::SpellToHit | Effect::SpellThreat => (
             "world/spell_rung.rs",
@@ -794,10 +790,12 @@ fn skill_reader(effect: crate::skills::Effect) -> (&'static str, &'static str) {
         S::Dodge | S::Hearing | S::Speed => ACTOR,
         S::Quiet => ("noise.rs", include_str!("../noise.rs")),
         S::Search | S::SearchReach | S::Spot | S::DetectTraps => SEARCH,
-        S::Study => ("world/learn.rs", include_str!("../world/learn.rs")),
+        S::Study | S::Learn => ("world/learn.rs", include_str!("../world/learn.rs")),
+        S::Decipher => ("world/decipher.rs", include_str!("../world/decipher.rs")),
         S::Disarm => ("world/disarm.rs", include_str!("../world/disarm.rs")),
-        S::Burden | S::Travel | S::Wade => SCHEDULE,
+        S::Burden | S::Travel | S::Wade | S::Footing => SCHEDULE,
         S::Forage => ("world/forage.rs", include_str!("../world/forage.rs")),
+        S::Freshness => ("world/freshness.rs", include_str!("../world/freshness.rs")),
         S::Bargain => ("world/shop.rs", include_str!("../world/shop.rs")),
         S::Identify => ("world/appraise.rs", include_str!("../world/appraise.rs")),
         S::Kick => ("world/door.rs", include_str!("../world/door.rs")),
@@ -810,12 +808,14 @@ fn skill_reader(effect: crate::skills::Effect) -> (&'static str, &'static str) {
         S::Tame => ("world/tame.rs", include_str!("../world/tame.rs")),
         S::Intimidate => ("world/war_cry.rs", include_str!("../world/war_cry.rs")),
         S::SongDegrees | S::SongCraft => ("world/song.rs", include_str!("../world/song.rs")),
+        S::Escape => ("world/hold.rs", include_str!("../world/hold.rs")),
+        S::Climb => ("world/trap.rs", include_str!("../world/trap.rs")),
         S::Pick => ("world/lockpick.rs", include_str!("../world/lockpick.rs")),
         S::Temper => ("world/temper.rs", include_str!("../world/temper.rs")),
         S::Swim => ("world/ice.rs", include_str!("../world/ice.rs")),
         S::Resist => ("world/knowledge.rs", include_str!("../world/knowledge.rs")),
         S::SneakDice => ("world/ambush.rs", include_str!("../world/ambush.rs")),
-        S::Surprise | S::Initiative | S::SurpriseEase => {
+        S::Surprise | S::Initiative | S::SurpriseEase | S::SteadyEase => {
             ("world/surprise.rs", include_str!("../world/surprise.rs"))
         }
         S::ManaRegen | S::MaxMana => (

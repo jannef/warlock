@@ -451,6 +451,11 @@ pub(super) fn status_effects(content: &Content) -> String {
             }
             None => "only when cured".to_string(),
         };
+        // Bonds a trained Escape artist may slip; a hold's grip is on the creature's attack.
+        let eases = match def.escape {
+            Some(d) => format!("{eases}; a trained Escape artist may slip it, against {d}"),
+            None => eases,
+        };
         let stats = def.penalty.as_ref().map_or_else(
             || "—".to_string(),
             |p| {

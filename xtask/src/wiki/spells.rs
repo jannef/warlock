@@ -54,6 +54,26 @@ pub(super) fn types(content: &Content) -> String {
                 harmed.push(text);
             }
             harmed.extend(rule.ends.iter().map(|&s| format!("ends {}", status(s))));
+            if let Some(chance) = rule.arc {
+                harmed.push(format!("arcs to one beside it, {chance} % of the time"));
+            }
+            if rule.conducts {
+                harmed.push("strikes everyone in its body of water".into());
+            }
+            if rule.shove {
+                harmed.push(
+                    "a [big hit](combat.md#damage) or a critical knocks it a cell away".to_string(),
+                );
+            }
+            if let Some(bite) = rule.bite {
+                harmed.push(format!(
+                    "{} % of the harm against one below {} % of its hit points",
+                    bite.percent, bite.below_percent
+                ));
+            }
+            for tag in &rule.immune_tags {
+                harmed.push(format!("{tag} creatures are immune"));
+            }
             let mut cells = Vec::new();
             match rule.ice {
                 Some(BurstIce::Melts) => cells.push("melts ice".to_string()),
@@ -64,6 +84,12 @@ pub(super) fn types(content: &Content) -> String {
             }
             if rule.douses {
                 cells.push("puts out fires".into());
+            }
+            if rule.shatter {
+                cells.push("a blast shatters ice thinner than 1 cm per 100 of the blast".into());
+            }
+            if rule.doors {
+                cells.push("a blast breaks shut doors, locked and trapped ones too".into());
             }
             let left = rule.fire.map_or_else(String::new, |(_, burns)| {
                 format!("a fire on its centre, {burns} s")
@@ -243,6 +269,8 @@ pub(super) fn grows_with(spell: &SpellData) -> String {
     let text: Vec<String> = (spell.grows.named().into_iter())
         .map(|(dim, ladder)| match dim {
             "damage" | "heal" => ladder.words(),
+            // Whole numbers of jumps, not a bonus's "+4".
+            "jumps" => format!("jumps {}", ladder.words().replace('+', "")),
             other => format!("{other} {}", ladder.words()),
         })
         .collect();
@@ -325,6 +353,13 @@ pub(super) fn does(content: &Content, spell: &SpellData) -> String {
         && let Some((s, n)) = spell.effect.status
     {
         let _ = write!(text, "; everyone it harms suffers {} ({n})", status(s));
+    }
+    if let Some(n) = spell.effect.arcs {
+        let reach = warlock_core::content::ARC_REACH;
+        let _ = write!(
+            text,
+            "; it jumps {n} times for certain, every jump reaching {reach} cells"
+        );
     }
     // A spell's own `heat` or `frost` stands in for its type's; a burst's reaches its cells (the
     // cell struck of a ray or a bolt is in the "Spell types" table).

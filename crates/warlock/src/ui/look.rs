@@ -175,7 +175,12 @@ fn describe_cell(view: &PerceptionView<'_>, p: Pos, blood: bool) -> String {
     let tag = |i: usize| {
         let numbers = Numbers::of(&objects[i], view.content()).text(view.content());
         let price = (view.price_tag(p, &objects[i])).map(|g| format!("for sale, {g} gold"));
-        let tags: Vec<String> = numbers.into_iter().chain(price).collect();
+        // A trained eye (Appraise, Survival; #1031) tells food's freshness of what it sees.
+        let fresh = matches!(view.cell(p), CellView::Visible(_))
+            .then(|| view.judge(&objects[i]))
+            .flatten()
+            .map(|w| format!("looks {w}"));
+        let tags: Vec<String> = numbers.into_iter().chain(fresh).chain(price).collect();
         (!tags.is_empty()).then(|| tags.join("; "))
     };
     let things = (!objects.is_empty()).then(|| phrase_with(objects, view.lore(), tag));
@@ -564,8 +569,8 @@ mod tests {
         assert_eq!(
             known(&view, Pos::new(1, 1)).as_deref(),
             Some(
-                "You know the skeleton is immune to poison, resistant to piercing, and \
-                 vulnerable to bludgeoning."
+                "You know the skeleton is immune to poison and necrotic, resistant to piercing, \
+                 and vulnerable to bludgeoning."
             )
         );
         assert_eq!(known(&view, Pos::new(5, 1)), None, "above their Knowledge");

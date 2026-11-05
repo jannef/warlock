@@ -10,20 +10,20 @@ expression: "render(case, content.clone())"
 
 
 
+
            ┌─ Temper ───────────────────────────────────────────────────────────────────┐
            │                                                                            │
            │ Melee weapons                                                              │
            │ > a - ) a long sword (+0 hit, 1d9)                                 1.8 kg  │
            │   b - ) a dagger (+0 hit, 1d4, range 5)                             450 g  │
-           │ Shields                                                                    │
-           │   c - [ a small shield (Dv +1)                                     2.5 kg  │
            │ Body armour                                                                │
-           │   d - [ a chain mail shirt (Dv +2, Pv 3)                            11 kg  │
+           │   c - [ a chain mail shirt (Dv +2, Pv 3)                            11 kg  │
            │ Helmets                                                                    │
-           │   e - [ an iron helm (Dv +0, Pv 1)                                 1.5 kg  │
+           │   d - [ an iron helm (Dv +0, Pv 1)                                 1.5 kg  │
            │                                                                            │
-           │ a-e or Enter temper   Esc cancel                                           │
+           │ a-d or Enter temper   Esc cancel                                           │
            └────────────────────────────────────────────────────────────────────────────┘
+
 
 
 

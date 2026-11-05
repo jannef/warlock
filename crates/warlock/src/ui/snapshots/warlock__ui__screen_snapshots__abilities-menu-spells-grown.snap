@@ -5,30 +5,30 @@ expression: "render(case, content.clone())"
  You learn Dragon's hoard.
  Your thoughts run keen and clear.
 
-               ┌─ Abilities ────────────────────────────────────────────────────────┐
-               │                                                                    │
-               │ Class                                                              │
-               │   a  Knock            in a direction                               │
-               │   b  Scribe           a scroll of a spell you know                 │
-               │ Spells                                                             │
-               │   c  Burning hands    2d4+2 fire, burns one in four, 2 mana, aimed │
-               │   d  Ray of frost     1d8 cold, numbs, 1 mana, aimed               │
-               │ > e  Magic missile    3d4+1 force, 2 mana, aimed                   │
-               │   f  Arcane bolt      3d6+4 force, 7 mana, aimed                   │
-               │ Skills                                                             │
-               │   g  Decipher script  not usable yet                               │
-               │   h  Heal             nothing to treat                             │
-               │   i  Knowledge        not usable yet                               │
-               │ Weapon skills                                                      │
-               │   j  Shield bash      you hold no shield                           │
-               │                                                                    │
-               │ A dart of force toward a place you aim at: it never misses the     │
-               │ first creature in its way. Range 8.                                │
-               │                                                                    │
-               │                                                                    │
-               │ a-j or Enter use   Esc close                                       │
-               └────────────────────────────────────────────────────────────────────┘
-
+           ┌─ Abilities ────────────────────────────────────────────────────────────────┐
+           │                                                                            │
+           │ Class                                                                      │
+           │   a  Knock            in a direction                                       │
+           │   b  Scribe           a scroll of a spell you know                         │
+           │ Spells                                                                     │
+           │   c  Burning hands    2d4+2 fire, burns one in four, 2 mana, aimed         │
+           │   d  Ray of frost     1d8 cold, numbs, 1 mana, aimed                       │
+           │ > e  Magic missile    3d4+1 force, shoves on a big hit, 2 mana, aimed      │
+           │   f  Arcane bolt      3d6+4 force, shoves on a big hit, 7 mana, aimed      │
+           │   g  Chain lightning  6d6+3 electricity, may arc, conducts, 14 mana, aimed │
+           │ Skills                                                                     │
+           │   h  Decipher script  not usable yet                                       │
+           │   i  Heal             nothing to treat                                     │
+           │   j  Knowledge        not usable yet                                       │
+           │ Weapon skills                                                              │
+           │   k  Shield bash      you hold no shield                                   │
+           │                                                                            │
+           │ A dart of force toward a place you aim at: it never misses the first       │
+           │ creature in its way. Range 8.                                              │
+           │                                                                            │
+           │                                                                            │
+           │ a-k or Enter use   Esc close                                               │
+           └────────────────────────────────────────────────────────────────────────────┘
 
 
  The Hub  ·  HP 43/43  ·  MP 306/308  ·  Keen  ·  Lv 32  ·  08:00  ·  11 Darkening       ? controls

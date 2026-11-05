@@ -2,7 +2,7 @@
 source: crates/warlock/src/ui/screen_snapshots.rs
 expression: "render(case, content.clone())"
 ---
- You pick up a brass wand and a willow wand.
+ You pick up a hazel wand and a birch wand.
  This is a wand of magic missile (12 charges)! This is a wand of fireball (7 charges)!
 
 
@@ -18,7 +18,7 @@ expression: "render(case, content.clone())"
                   │ Wand of magic missile · wood · 200 g                         │
                   │                                                              │
                   │ Readied: missile weapon                                      │
-                  │ Holds Magic missile: 2d4 force                               │
+                  │ Holds Magic missile: 2d4 force, shoves on a big hit          │
                   │ 12 charges left                                              │
                   │                                                              │
                   │ Esc close                                                    │

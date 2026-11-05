@@ -3,15 +3,17 @@
 #
 # A study takes turns_base turns of the `study` action (actions.toml) and turns_per_level more
 # for each level of the spell: 100 turns are 10 minutes, so a level-11 spell takes 320 turns, 32
-# minutes (Quick study: half). At the end the scroll is used up. A spell of a level at most the
-# caster level is learned for certain. Above it, by `overreach` levels (the spell's level less
-# the caster level; Overreach counts a third fewer, rounded down), a 2d12 check decides:
+# minutes (Quick study: half). At the end the scroll is used up. Only a character trained in
+# Spellcraft may study at all (spec §8 "Spells": "Learning"). A spell of a level at most the
+# learning (Spellcraft's `learn` curve, skills.toml; at least 1) is learned for certain. Above
+# it, by `overreach` levels (the spell's level less the learning; Overreach counts a third fewer,
+# rounded down), a 2d12 check decides:
 #
 #   difficulty = base + per_overreach × overreach + (the levels of the spells known, added up) ÷
 #                known_per_point (rounded down)
 #
-# against which the roll adds the Intelligence modifier, the skills' `study` benefit (Spellcraft
-# and Decipher script, each its value ÷ 10), the class's affinity with the spell's school
+# against which the roll adds the Intelligence modifier, Spellcraft's `study` benefit (its value
+# ÷ 10), the class's affinity with the spell's school
 # (classes/), and Quick study's bonus. A failure draws a mishap (mishaps/) by the overreach:
 # slight below bad_from levels, bad below terrible_from, terrible from there, lucky ones beside
 # any.

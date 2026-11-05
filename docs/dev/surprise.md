@@ -31,7 +31,7 @@ Keep it current with the code, as CLAUDE.md says.
     never without the rules.
   - `World::mark_noticed`: called from `perceive` right after `Perception::compute`, sets
     `noticed = Some(turn)` on each creature in view. Never from `from_state` (a loaded save's
-    perception is recomputed without writing state).
+    perception is recomputed without writing state). Before it sets `noticed`, a creature in view that the player had not noticed within `memory_turns` and that is `unaware` of the player marks Spot once (`Use::Sight`).
   - `World::startle(target, by, events)`: the one place anyone is surprised. A sleeper or a
     disguised mimic: `afflict(surprised)` with no check and no word. Else the initiative check
     (`check::check`: Dexterity modifier + `talents.check(Dexterity)` + `initiative_bonus` + the

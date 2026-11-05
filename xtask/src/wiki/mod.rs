@@ -65,6 +65,7 @@ mod spells;
 mod stats;
 mod surprise;
 mod talents;
+mod temper;
 mod temperature;
 mod terrain;
 mod text;
@@ -347,6 +348,7 @@ fn generate(content: &Content) -> Vec<(String, String)> {
             "caster-style-abilities.md",
             weapon_abilities::caster_style_abilities,
         ),
+        ("learning.md", learning::curve),
         ("study-chances.md", learning::chances),
         ("study-times.md", learning::times),
         ("study-affinities.md", learning::affinities),
@@ -384,8 +386,8 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("teeming-dens.md", rooms::teeming_dens),
         ("altar-outcomes.md", outcomes::altar_outcomes),
         ("altar-shares.md", outcomes::altar_shares),
-        ("forge-outcomes.md", outcomes::forge_outcomes),
-        ("forge-shares.md", outcomes::forge_shares),
+        ("temper-odds.md", temper::temper_odds),
+        ("temper-grades.md", temper::temper_grades),
         ("spring-outcomes.md", outcomes::spring_outcomes),
         ("risings.md", rooms::risings),
         ("magic-rarity.md", magic::magic_rarity),
@@ -396,6 +398,7 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("magic-systems.md", magic::systems),
         ("uniques.md", uniques::uniques),
         ("scrolls.md", scrolls::scrolls),
+        ("decipher-chances.md", scrolls::decipher_chances),
         ("potions.md", potions::potions),
         ("weapon-skills.md", weapon_skills::skills),
         ("weapon-defaults.md", weapon_skills::defaults),
@@ -553,11 +556,6 @@ mod tests {
         );
         row_has(&table, "| Tireless |", &["prefix", "Stamina", "Deep lungs"]);
         row_has(&table, "| of Fury |", &["Resources", "maximum rage"]);
-        row_has(
-            &table,
-            "| of the Adept |",
-            &["Spells", "Arcane training, Attuned"],
-        );
         row_has(&table, "| Delving |", &["Digging", "Tunneler"]);
         row_has(&table, "| of the Eagle |", &["Skills", "Spot (a skill)"]);
     }
@@ -1172,23 +1170,30 @@ mod tests {
         );
         assert!(skills.contains("| Swim | read by rules |"));
         assert_eq!(skills.matches("\n| ").count(), 1 + 29, "{skills}");
+        // Checked by column header and row value, so a column added elsewhere changes nothing.
         let benefits = text("skill-benefits.md");
-        assert!(
-            benefits.contains(
-                "| Value | Appraise: identifying, each hour | Athletics: kicking doors in | Athletics: speed | \
-                 Balance: Burdened / Strained | Concentration: mana back | Concentration: mana pool | \
-                 Decipher script: study check | Detect traps: finding traps | Disable device: disarming traps | \
-                 Handle animal: taming | Heal: treating | Initiative: initiative check | Initiative: surprise's extra cost | \
-                 Intimidate: threat's difficulty | Listen: hears fainter by | Metalcraft: tempering | Music: song degrees | Music: song's difficulty | Negotiation: prices | Open lock: picking locks | Search: searching | \
-                 Search: search reaches | Sneak attack: sneak attack dice | Sneak attack: their check's difficulty | \
-                 Spellcraft: study check | Spot: noticing | Spot: lookout | Steal: \
-                 stealing | Stealth: noise | Stealth: slipping past | Stealth: their lookout | Survival: journeys | \
-                 Survival: foraging | Survival: lookout | Survival: slipping away | Swim: wading's extra cost | \
-                 Swim: plunge check | Tumble: \
-                 Dodge |"
-            ),
-            "{benefits}"
-        );
+        let benefit = |value: &str, column: &str| -> String {
+            let rows: Vec<Vec<&str>> = benefits
+                .lines()
+                .filter(|l| l.starts_with('|'))
+                .map(|l| {
+                    l.trim()
+                        .trim_matches('|')
+                        .split('|')
+                        .map(str::trim)
+                        .collect()
+                })
+                .collect();
+            let at = rows[0]
+                .iter()
+                .position(|h| *h == column)
+                .unwrap_or_else(|| panic!("no column {column} in {benefits}"));
+            let row = rows
+                .iter()
+                .find(|r| r[0] == value)
+                .unwrap_or_else(|| panic!("no row {value} in {benefits}"));
+            row[at].to_string()
+        };
         let foraging = text("foraging.md");
         assert!(
             foraging.contains("A forage takes 10 minutes."),
@@ -1201,14 +1206,27 @@ mod tests {
             ),
             "{foraging}"
         );
-        assert!(benefits.contains(
-            "| 100 | 12% | +8 Strength | +5% | ×1.1 / ×1.2 | +40% | +5 mana | +10 | +8 | +8 | +10 | +8 | +8 | \u{2212}50% \
-             | +8 | 10 | +8 | +2 | +4 | 20% better | +8 | +8 | +1 cell | 5d6 | +8 | +10 | +8 | +8 | +8 | \u{2212}60% | +8 | +8 | \u{2212}20% | +15% | +4 | +8 | \u{2212}60% | +8 | +5 |"
-        ));
-        assert!(benefits.contains(
-            "| 150 | 16% | +10 Strength | +7% | ×1.08 / ×1.15 | +50% | +6 mana | +15 | +10 | +10 | +15 | +10 | +10 \
-             | \u{2212}62% | +10 | 15 | +10 | +2 | +6 | 25% better | +10 | +10 | +1 cell | 6d6 | +10 | +15 | +10 | +10 | +10 | \u{2212}75% | +10 | +10 | \u{2212}20% | +22% | +5 | +10 | \u{2212}80% | +10 | +7 |"
-        ));
+        assert_eq!(benefit("100", "Appraise: identifying, each hour"), "12%");
+        assert_eq!(benefit("100", "Athletics: speed"), "+5%");
+        assert_eq!(
+            benefit("100", "Balance: rough ground's extra cost"),
+            "\u{2212}60%"
+        );
+        assert_eq!(benefit("100", "Concentration: mana pool"), "+5 mana");
+        assert_eq!(benefit("100", "Decipher script: reading scrolls"), "+8");
+        assert_eq!(benefit("100", "Sneak attack: sneak attack dice"), "5d6");
+        assert_eq!(benefit("100", "Negotiation: prices"), "20% better");
+        assert_eq!(benefit("100", "Spellcraft: learning"), "30");
+        assert_eq!(benefit("100", "Swim: wading's extra cost"), "\u{2212}60%");
+        assert_eq!(benefit("100", "Tumble: Dodge"), "+5");
+        assert_eq!(benefit("150", "Appraise: identifying, each hour"), "16%");
+        assert_eq!(
+            benefit("150", "Balance: rough ground's extra cost"),
+            "\u{2212}80%"
+        );
+        assert_eq!(benefit("150", "Decipher script: reading scrolls"), "+10");
+        assert_eq!(benefit("150", "Sneak attack: sneak attack dice"), "6d6");
+        assert_eq!(benefit("150", "Tumble: Dodge"), "+7");
         // Treating oneself: the difficulty and odds of each ailment.
         let heal = text("heal-targets.md");
         assert!(
@@ -1450,6 +1468,11 @@ mod tests {
         );
         assert!(text("wands.md").contains("| wand of fireball | Fireball | 11 | 7 | 2d6 to 4d6 |"));
         assert!(text("spell-casting.md").contains("| Wizard | 100 % |"));
+        let learning = text("learning.md");
+        assert!(learning.contains("| Spellcraft | Learning |"), "{learning}");
+        for row in ["| 0 | 1 |", "| 60 | 10 |", "| 100 | 30 |", "| 150 | 70 |"] {
+            assert!(learning.contains(row), "{row}: {learning}");
+        }
         let resources = text("resources.md");
         assert!(
             resources.contains(

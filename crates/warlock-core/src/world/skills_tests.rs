@@ -56,12 +56,33 @@ map = '''
 "r" = { terrain = "floor", creature = "rat", faction = "peaceful", route = "E2 W2" }
 "##;
 
+/// A lit corridor: the player, a hidden arrow trap two cells east, and a peaceful rat standing on
+/// another hidden one beyond.
+const SNARES: &str = r##"
+name = "Snares"
+ambient = [255, 255, 255, 0]
+map = '''
+#########
+#@.a..R.#
+#########
+'''
+[legend]
+"@" = { terrain = "floor", spawn = "player" }
+"a" = { terrain = "floor", trap = "arrow" }
+"R" = { terrain = "floor", creature = "rat", faction = "peaceful", trap = "arrow" }
+"##;
+
 /// The built-in content plus the test levels, each with a scenario of its name whose player has
 /// no character (average stats, untrained in everything); with `eager`, every mark rule's chance
 /// is 100.
 fn files(eager: bool) -> ContentFiles {
     let mut files = ContentFiles::builtin();
-    for (name, level) in [("yard", YARD), ("pit", PIT), ("dark", DARK)] {
+    for (name, level) in [
+        ("yard", YARD),
+        ("pit", PIT),
+        ("dark", DARK),
+        ("snares", SNARES),
+    ] {
         files.insert(&format!("levels/{name}.toml"), level);
         files.insert(
             &format!("scenarios/{name}.toml"),
@@ -421,11 +442,111 @@ fn hearing_something_new_trains_listen() {
     assert!(heard > 0, "the pacing rat is heard");
     assert!(marks(&w, "listen") > Some(0), "{:?}", marks(&w, "listen"));
     assert_eq!(value(&w, "listen"), Some(5));
-    // Sounds already known are no news and train nothing.
-    let before = marks(&w, "listen");
+}
+
+#[test]
+fn sounds_that_are_no_news_train_listen_only_at_rest() {
+    let mut w = eager("dark");
+    set(&mut w, "listen", Some(5));
+    // A rest with no sound trains nothing.
+    let mut quiet = eager("yard");
+    set(&mut quiet, "listen", Some(5));
+    quiet.apply(&Action::Rest(crate::action::Rest::For(Duration::minutes(
+        5,
+    ))));
+    assert_eq!(marks(&quiet, "listen"), Some(0));
+    // A sound heard again (no news) while waiting marks it; walking, it does not.
+    let mut heard = false;
+    for _ in 0..60 {
+        w.apply(&Action::Wait);
+        if !w.perception().sounds().is_empty() {
+            heard = true;
+            break;
+        }
+    }
+    assert!(heard, "the pacing rat is heard");
+    // Heard on this perception already: the sound is no news now.
+    let before = marks(&w, "listen").expect("trained");
+    w.waiting = true;
+    w.hear();
+    assert_eq!(marks(&w, "listen"), Some(before + 1), "waiting: a mark");
+    w.waiting = false;
+    w.hear();
+    assert_eq!(marks(&w, "listen"), Some(before + 1), "not waiting: none");
+    let mut untrained = eager("dark");
+    untrained.waiting = true;
+    untrained.hear();
+    assert_eq!(marks(&untrained, "listen"), None);
+}
+
+#[test]
+fn a_hidden_trap_going_off_trains_detect_traps() {
+    let mut w = eager("snares");
+    set(&mut w, "detect_traps", Some(0));
+    w.apply(&Action::Move(Dir::E));
+    assert_eq!(marks(&w, "detect_traps"), Some(0));
+    w.apply(&Action::Move(Dir::E));
+    assert!(
+        marks(&w, "detect_traps") >= Some(1),
+        "the trap under the player"
+    );
+    // Untrained, nothing is marked.
+    let mut w = eager("snares");
+    w.apply(&Action::Move(Dir::E));
+    w.apply(&Action::Move(Dir::E));
+    assert_eq!(marks(&w, "detect_traps"), None);
+}
+
+#[test]
+fn a_hidden_trap_under_a_creature_the_player_sees_trains_detect_traps_half_the_time() {
+    let mut total = 0;
+    for n in 0..60 {
+        let mut w = eager("snares");
+        set(&mut w, "detect_traps", Some(0));
+        w.apply(&Action::Wait);
+        w.state.training = crate::rng::Rng::training(n);
+        let rat = *w
+            .state
+            .actors
+            .iter()
+            .find(|(id, _)| **id != w.state.player)
+            .expect("rat")
+            .0;
+        let at = w.state.actors[&rat].pos;
+        w.spring_trap(at, rat, &mut Vec::new());
+        total += marks(&w, "detect_traps").expect("trained");
+    }
+    assert!((15..=45).contains(&total), "{total} of 60");
+}
+
+#[test]
+fn disarming_and_searching_train_detect_traps_and_searching_trains_spot() {
+    let mut w = eager("snares");
+    set(&mut w, "detect_traps", Some(0));
+    set(&mut w, "spot", Some(0));
+    w.apply(&Action::Search(1));
+    assert!(marks(&w, "detect_traps") >= Some(1));
+    assert!(marks(&w, "spot") >= Some(1));
+}
+
+#[test]
+fn first_sighting_of_an_unaware_creature_trains_spot_once() {
+    let mut w = eager("yard");
+    set(&mut w, "spot", Some(0));
+    let rat = *w
+        .state
+        .actors
+        .iter()
+        .find(|(id, _)| **id != w.state.player)
+        .expect("rat")
+        .0;
+    let asleep = w.content.sleep_status().expect("asleep");
+    let def = w.content.status(asleep).clone();
+    (w.state.actors.get_mut(&rat).expect("rat").effects).add(asleep, &def, 1, None);
     w.apply(&Action::Wait);
+    assert_eq!(marks(&w, "spot"), Some(1), "seen, and asleep");
     w.apply(&Action::Wait);
-    assert_eq!(marks(&w, "listen"), before);
+    assert_eq!(marks(&w, "spot"), Some(1), "once, not each turn");
 }
 
 #[test]
@@ -723,4 +844,25 @@ fn a_plain_miss_at_the_player_is_a_dodge_one_time_in_four() {
     assert_eq!(w.plain_miss_dodged(player, foe, plain), plain);
     assert_eq!(w.plain_miss_dodged(foe, player, None), None);
     assert_eq!(w.state.training, training);
+}
+
+#[test]
+fn spending_mana_marks_spellcraft_only_when_trained() {
+    let mut w = world("showcase");
+    set(&mut w, "spellcraft", Some(20));
+    for _ in 0..80 {
+        w.player_mut().mana = 50;
+        assert!(w.spend_mana(w.player_id(), 1));
+    }
+    let got = marks(&w, "spellcraft").expect("trained");
+    assert!(
+        (5..=40).contains(&got),
+        "{got} marks from 80 spends at 25 %"
+    );
+
+    let mut w = world("showcase");
+    set(&mut w, "spellcraft", None);
+    w.player_mut().mana = 50;
+    assert!(w.spend_mana(w.player_id(), 1));
+    assert_eq!(marks(&w, "spellcraft"), None);
 }

@@ -218,11 +218,17 @@ pub fn unpaid_parts(inventory: &[Stack], unpaid: &[Stack]) -> Vec<u32> {
 /// [`MAX_FAVOUR`] either way. Talents (spec §8 "Class abilities": the merchant's Haggler) add
 /// theirs before the cap. Never shown.
 pub fn favour(content: &Content, shops: &Shops, actor: &super::Actor) -> i32 {
+    let alignment = super::alignment::keeper_favour(content, shops, actor);
+    (haggling(content, shops, actor) + alignment).clamp(-MAX_FAVOUR, MAX_FAVOUR)
+}
+
+/// What `actor`'s own gifts for haggling give, in percent, before the cap: their Presence,
+/// their skills, and their talents, without a keeper's view of their alignment. A service's
+/// price moves by it (`service.rs`: a healer's and a sage's, #1031).
+pub fn haggling(content: &Content, shops: &Shops, actor: &super::Actor) -> i32 {
     let presence = actor.stats.modifier(Stat::Presence) * i32::from(shops.presence);
     let bargain = actor.skill_effect(content, Effect::Bargain);
-    let alignment = super::alignment::keeper_favour(content, shops, actor);
-    let talents = actor.talent_mods(content);
-    (presence + bargain + alignment + talents.favour_percent).clamp(-MAX_FAVOUR, MAX_FAVOUR)
+    presence + bargain + actor.talent_mods(content).favour_percent
 }
 
 /// How many of `object` `stacks` hold.

@@ -84,6 +84,8 @@ const RAY: &str = "[[spell]]\nid = \"arcane_bolt\"\nname = \"Arcane bolt\"\ndesc
 /// The built-in content with the fixture affixes, and Arcane bolt as [`RAY`] when `ray`.
 fn content(ray: bool) -> Arc<Content> {
     let mut files = ContentFiles::builtin();
+    // Reads without the check (`decipher_tests.rs` has it): these are about what a read does.
+    files.remove("data/decipher.toml");
     files.insert("data/affixes/zz_spell_fixture.toml", AFFIXES);
     if ray {
         files.insert("data/spells/arcane_bolt.toml", RAY);
@@ -95,6 +97,9 @@ fn content(ray: bool) -> Arc<Content> {
 fn wizard(content: Arc<Content>) -> World {
     let mut w = world_with(content, "wizard");
     reach(&mut w, 18);
+    // `levelup:auto` takes Frugal caster at 18 (it took Attuned before it went); these tests
+    // read the plain costs.
+    w.player_mut().talents.forget("frugal_caster");
     w
 }
 

@@ -50,6 +50,7 @@ use crate::damage::Damage;
 use crate::geom::{Dir, Pos};
 use crate::object::Stack;
 use crate::perception::VIEW_RADIUS;
+use crate::skills::{Effect as SkillEffect, Use};
 use crate::stats::Stat;
 use crate::talent::TalentMods;
 use std::collections::BTreeSet;
@@ -96,6 +97,18 @@ impl World {
         };
         self.warp_step(at, victim, events);
         climb
+    }
+
+    /// A hidden trap going off teaches Detect traps (`Use::Sprung`): always when it goes off
+    /// under the player, half the time when it goes off under a creature they see.
+    fn train_from_sprung(&mut self, hidden: bool, at: Pos, victim: ActorId) {
+        if !hidden || !self.trains(Use::Sprung) {
+            return;
+        }
+        let seen = victim != self.state.player && self.perception.sees_actors_at(at);
+        if victim == self.state.player || (seen && self.state.training.chance(50)) {
+            self.train(Use::Sprung);
+        }
     }
 
     /// Whether the player, `victim`, steps onto the trap at `at` without setting it off (Light
@@ -147,7 +160,7 @@ impl World {
         let Some(trap) = level.traps.get_mut(&at) else {
             return 0;
         };
-        let (kind, dir) = (trap.kind, trap.dir);
+        let (kind, dir, hidden) = (trap.kind, trap.dir, !trap.known);
         if let Some(charges) = &mut trap.charges {
             *charges = charges.saturating_sub(1);
             if *charges == 0 {
@@ -155,6 +168,7 @@ impl World {
             }
         }
         self.sprung += 1;
+        self.train_from_sprung(hidden, at, victim);
         events.push(Event::TrapSprung {
             trap: kind,
             at,
@@ -184,12 +198,15 @@ impl World {
                 if !self.state.actors.contains_key(&victim) {
                     return 0;
                 }
-                let climb = self.price_of(victim, ActionKind::Wait);
+                let climb = self.climb_price(victim);
                 let fall = Damage::new(damage.roll(&mut self.state.rng), *of);
                 let from = self.state.actors.get(&victim).map_or(at, |a| a.pos);
                 self.trap_hurts(kind, victim, (from, false), fall, events);
                 if victim == self.state.player {
                     self.train_stat(StatUse::Climb);
+                    if self.trains(Use::Climb) {
+                        self.train(Use::Climb);
+                    }
                 }
                 return climb;
             }
@@ -197,6 +214,26 @@ impl World {
             TrapEffect::Teleport => self.teleport(victim, at, events),
         }
         0
+    }
+
+    /// What actor `victim`'s climb out of a pit costs on top of its step: an action's energy,
+    /// halved and then skipped as Escape artist's [`SkillEffect::Climb`] says, for those trained in it.
+    fn climb_price(&self, victim: ActorId) -> i64 {
+        let climb = self.price_of(victim, ActionKind::Wait);
+        let Some(actor) = self.state.actors.get(&victim) else {
+            return climb;
+        };
+        if !actor
+            .skills
+            .trains_effect(&self.content, SkillEffect::Climb)
+        {
+            return climb;
+        }
+        match actor.skill_effect(&self.content, SkillEffect::Climb) {
+            0 => climb,
+            1 => climb / 2,
+            _ => 0,
+        }
     }
 
     /// Trap `trap` attacks `target` with `profile` from `source` (a cell, and whether a missile

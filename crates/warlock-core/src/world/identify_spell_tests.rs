@@ -143,10 +143,9 @@ fn casting_identify_names_a_stack_and_spends_its_mana() {
 #[test]
 fn the_scroll_of_identify_teaches_identify() {
     let mut w = world(100);
-    // At the spell's level (6) or above, so the lesson is certain.
-    while w.player_level() < 8 {
-        run(&mut w, "xp:5000 levelup:auto");
-    }
+    // Spellcraft 40: learning 6, the spell's level, so the lesson is certain.
+    let spellcraft = w.content.skill_id("spellcraft").expect("skill");
+    w.player_mut().skills.add(spellcraft, 40);
     let id = spell(&w);
     assert!(!w.state.player().knows_spell(&w.content, id));
     let studies = w.perception().studies();

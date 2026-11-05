@@ -2,9 +2,31 @@
 
 A scroll (`?`) holds one [spell](magic.md#the-spells) or charm. Press `r` to **read** one: a list of the scrolls you
 carry opens; choose one with its letter (or the arrows and `Enter`). Reading takes a [turn](time.md#what-takes-time) and
-uses the scroll up.
+uses the scroll up, if you can [make it out](#making-out-a-scroll).
 
 {{#include generated/scrolls.md}}
+
+## Making out a scroll
+
+Reading a scroll asks one of three things, once nothing else stands in its way (no target, nothing to
+identify, nothing to restore: those are refused, and take no time).
+
+- **A spell you know**: if the scroll is of a spell you already know (one you wrote yourself too), you simply read it, and it still counts as a use of [Decipher script](skills.md#skill-decipher-script) if you are trained in it.
+- **Enough [Spellcraft](skills.md#skill-spellcraft)**: if you are trained in it and your
+  [learning](magic.md#learning) is at least the scroll's [spell level](magic.md#spell-levels), you simply read it. So
+  what you could learn for certain, you can read for certain. A scroll with no spell behind it
+  ([restoration](#the-scroll-of-restoration)) counts as level 0, so any Spellcraft will do.
+- **Everyone else makes a check**: 2d12 plus your [Intelligence](stats.md#stat-intelligence) [modifier](stats.md#modifiers), what
+  [talents](talents.md) add to its checks, and the points of [Decipher script](skills.md#skill-decipher-script), against 10 + the
+  spell level ÷ 5, rounded down. Nobody is refused: without the skill it is your Intelligence and talents alone, and nothing that raises the skill helps.
+  A natural 24 always succeeds and a natural 2 always fails.
+
+Make it, and the scroll reads as below. Fail, and "The writing swims before your eyes.": the
+[turn](time.md#what-takes-time) is spent, you keep the scroll, a [label](#unknown-scrolls) stays unknown, and nothing else
+happens. You may try again at once. Every check earns those trained in Decipher script a
+[training mark](skills.md#getting-better) in it (two in a [scriptorium](special-rooms.md)), made or failed; reading a scroll trains no Spellcraft.
+
+{{#include generated/decipher-chances.md}}
 
 ## Unknown scrolls
 
@@ -39,7 +61,7 @@ Every [spell](magic.md#the-spells) comes on a scroll of its own: a scroll of [ma
 resolution, its [damage](combat.md#damage)), as written in the [spell's row](magic.md#the-spells), at the rung the scroll's row says
 (the table's "Casts at"; the base for most): your stats do not grow a scroll's damage or
 healing (its reach and how long it lasts are yours, as for your own casts);
-[Scroll adept](talents.md#talent-scroll-adept) takes it a rung up. It is **free of [mana](mana.md#spending-it)**: anyone can read one, a [warrior](classes.md#warrior) too. A spell on yourself ([Haste](magic.md#spell-haste), [Barkskin](magic.md#spell-barkskin),
+[Scroll adept](talents.md#talent-scroll-adept) takes it a rung up. It is **free of [mana](mana.md#spending-it)**: anyone can try one, a [warrior](classes.md#warrior) too, by [the check](#making-out-a-scroll). A spell on yourself ([Haste](magic.md#spell-haste), [Barkskin](magic.md#spell-barkskin),
 [Blessing](magic.md#spell-blessing)) is read at once; any other is aimed first, as below; [Mend](magic.md#spell-mend) and [Cure wounds](magic.md#spell-cure-wounds) are aimed at
 the creature beside you to heal, or at yourself. Scrolls of lower [spell levels](magic.md#spell-levels) are found sooner and
 more often: cantrips from the first floors, spells of level 11 and 12 from [item level](magic-items.md#base-items) 6 (the table
@@ -85,7 +107,8 @@ Choose the scroll of identify and a second list opens: the unidentified items yo
 and rods you do not know (a wand's charges too; see [Magic](magic.md#wands)). Choose one, and you
 know what it is from then on: "This is a Sharp dagger of the Lynx!", "This is 2 scrolls of
 lightning!" (and every scroll of lightning shows by its name). With nothing unidentified, the
-list says so, and the scroll is kept.
+list says so, and the scroll is kept. It is [made out](#making-out-a-scroll) as any other scroll, a spell of level 6:
+if the writing swims, you keep the scroll and learn nothing of what you chose.
 
 Reading it casts the spell **[Identify](magic.md#spell-identify)** for you, free of [mana](mana.md#spending-it), and studying it may teach you the
 spell for good (see [Magic](magic.md#learning-spells-from-scrolls)); cast for [mana](mana.md#how-much), Identify is
@@ -97,7 +120,8 @@ and every [general store](shops.md) in the [dungeons](dungeons.md) has a [stack]
 
 ## The scroll of restoration
 
-The scroll of restoration casts no spell. Read it, and it is read at once, on you: every point of
+The scroll of restoration casts no spell. Read it (it is [made out](#making-out-a-scroll) as a spell of level 0), and
+it works at once, on you: every point of
 [stat damage](diseases.md#stat-damage) you carry mends, and every point [drains](stats.md#drained-stats) took comes back ("You feel your
 strength return.", one line for each stat), as Sister Hild's mending in Cēaptūn does (see
 [Services](npcs.md#services)), but wherever you are. It works with a [disease](diseases.md) still on you, though the
@@ -129,6 +153,8 @@ blank scroll you carry:
 - **The scroll** is the ordinary scroll of that spell, at its own [rung](scrolls.md#spell-scrolls) (as one found would
   be), and you know what it is. It reads, studies, and sells as any other (a shop buys it at
   its usual offer); [Scroll adept](talents.md#talent-scroll-adept) adds its rung when you read it.
+  Writing it asks no [check](#making-out-a-scroll), but reading it does as for any scroll: knowing a spell
+  you learned beyond your [learning](magic.md#learning) does not make its scroll plain to you.
 - **Refused**, with no time or mana spent: for a spell you do not know, with no blank scroll ("You
   have nothing to write on."), while raging, or with too little mana ("You lack the mana to
   write it."). Light and place do not matter.

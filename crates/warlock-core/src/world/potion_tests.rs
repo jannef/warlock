@@ -22,6 +22,8 @@ const POTIONS: &[&str] = &[
 /// potion of healing lying at `p` and two loaves of bread at `b`; `more` adds or replaces files.
 fn content_with(pack: &str, more: &[(&str, &str)]) -> Arc<Content> {
     let mut files = ContentFiles::builtin();
+    // Reads without the check (`decipher_tests.rs` has it): these are about what a read does.
+    files.remove("data/decipher.toml");
     files.insert(
         "levels/potion_hall.toml",
         "name = \"Hall\"\nambient = [255, 255, 255, 0]\nmap = '''\n##########\n#@pb.....#\n\

@@ -34,13 +34,14 @@
 //! and a study is [`Action::Study`].
 //!
 //! The temper screen (the Temper ability beside a forge's anvil, spec §7 "Special rooms") lists
-//! the weapons and armour the player carries; choosing one tempers it ([`Action::Temper`]).
+//! the metal arms and armour the player carries that can be made finer; choosing one tempers it
+//! ([`Action::Temper`]).
 //! The give screen (the Give ability, spec §8 "Allies") lists what fits a neck; choosing one
 //! fastens it on the player's kept beast beside them ([`Action::Give`]; with two, input asks
 //! which way first).
 
 use super::character_screen::{fit_joined, thresholds};
-use super::menu::{Hints, Nav, Panel, Press};
+use super::menu::{Hints, Nav, Panel, Press, wrap};
 use super::paged_list::{PagedList, Row, draw_header};
 use super::screens::ScreenAction;
 use super::target::AimKind;
@@ -117,7 +118,7 @@ impl ObjectList {
             ObjectList::Read => "You have nothing to read.",
             ObjectList::Study => "You carry no scroll whose spell you could learn.",
             ObjectList::Identify(_) => "You carry nothing unidentified.",
-            ObjectList::Temper => "You carry no weapon or armour to temper.",
+            ObjectList::Temper => "You carry no metal arms or armour to work.",
             ObjectList::Give => "You carry nothing for a beast's neck.",
         }
     }
@@ -200,6 +201,8 @@ pub struct ObjectScreen {
     list: ObjectList,
     /// The stacks listed, grouped by class and paged (`paged_list`).
     entries: PagedList<Entry>,
+    /// What an empty list says: [`ObjectList::empty`], or why studying is refused outright.
+    empty: &'static str,
     /// The marked stacks of a selection screen, by position: marks belong to stacks, not to
     /// the letters a page gives them, so they stay across pages.
     marked: Positions,
@@ -223,6 +226,7 @@ impl ObjectScreen {
             return Self {
                 list,
                 entries: PagedList::empty(),
+                empty: list.empty(),
                 marked: Positions::default(),
                 weight: Weight::default(),
                 load: None,
@@ -266,7 +270,7 @@ impl ObjectScreen {
                 .map(Item::Pack)
                 .collect(),
             ObjectList::Temper => (0..pack.len())
-                .filter(|&i| warlock_core::world::temperable(content, &pack[i]))
+                .filter(|&i| warlock_core::world::workable(content, &pack[i]))
                 .map(Item::Pack)
                 .collect(),
             ObjectList::Give => (0..pack.len())
@@ -303,6 +307,11 @@ impl ObjectScreen {
                     .then(|| view.smell(s))
                     .flatten()
                     .map(|f| format!("smells {}", f.word()));
+                // A trained eye (Appraise, Survival; #1031) tells it in words, if the check passes.
+                let judged = (list == ObjectList::Eat && smell.is_none())
+                    .then(|| view.judge(s))
+                    .flatten()
+                    .map(|w| format!("looks {w}"));
                 // The study list: the spell it teaches, and the chance in words.
                 let study = match (list, item) {
                     (ObjectList::Study, Item::Pack(i)) => {
@@ -318,6 +327,7 @@ impl ObjectScreen {
                 let marks: Vec<String> = (teaches.into_iter())
                     .chain(mark)
                     .chain(smell)
+                    .chain(judged)
                     .chain(price)
                     .collect();
                 let entry = Entry {
@@ -338,6 +348,11 @@ impl ObjectScreen {
         Self {
             list,
             entries: PagedList::new(entries, content),
+            empty: if list == ObjectList::Study && !view.can_learn() {
+                warlock_core::world::UNTRAINED
+            } else {
+                list.empty()
+            },
             marked: Positions::default(),
             weight: view.own_weight(),
             load: Some(view.own_load()),
@@ -602,7 +617,13 @@ impl ObjectScreen {
     pub fn draw(&self, console: &mut Console, bindings: &Bindings) {
         let read_only = self.list == ObjectList::Inventory;
         let (summary, extra, gap) = self.layout(console.cols(), console.rows());
-        let count = self.entries.tallest().max(1) as i32;
+        // An empty list's words, on as many rows as they take.
+        let width = self.list.width().min(console.cols() as i32) - 8;
+        let said = wrap(self.empty, width);
+        let count = match self.entries.is_empty() {
+            true => said.len(),
+            false => self.entries.tallest().max(1),
+        } as i32;
         let panel = Panel::new(console, self.list.title(), self.list.width(), count + extra);
         if self.list == ObjectList::Inventory {
             super::info_tabs::draw_tabs(console, &panel, bindings, super::ScreenName::Inventory);
@@ -611,7 +632,9 @@ impl ObjectScreen {
         let visible = (panel.h - extra).max(1) as usize;
         let (x, top) = (panel.inner_x(), panel.y + 1 + gap);
         if self.entries.is_empty() {
-            console.print(x + 2, top, self.list.empty(), TEXT_DIM);
+            for (line, y) in said.iter().zip(top..) {
+                console.print(x + 2, y, line, TEXT_DIM);
+            }
         }
         let cursor = self.entries.cursor();
         for (row, y) in self.entries.rows().into_iter().take(visible).zip(top..) {

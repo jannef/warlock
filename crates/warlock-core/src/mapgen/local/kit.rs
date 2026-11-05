@@ -23,6 +23,8 @@ pub(crate) struct Kit {
     pub standing_stone: TerrainId,
     /// Still water: ponds, pools, lake shores.
     pub water: TerrainId,
+    /// Deep water: the middle of a lake, where only a swimmer goes.
+    pub deep_water: TerrainId,
     /// Running water: rivers and brooks.
     pub running_water: TerrainId,
     pub road: TerrainId,
@@ -65,6 +67,7 @@ impl Kit {
             crag: terrain("crag")?,
             standing_stone: terrain("standing_stone")?,
             water: terrain("water")?,
+            deep_water: terrain("deep_water")?,
             running_water: terrain("running_water")?,
             road: terrain("dirt_road")?,
             bridge: terrain("bridge")?,

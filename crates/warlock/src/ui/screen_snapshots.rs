@@ -600,7 +600,7 @@ const CASES: &[Case] = &[
         ..BASE
     },
     // Beside a forge's anvil with arms and armour picked up: Temper in the Here group, asking
-    // for something carried; then its list, the weapons and armour only (not the lantern).
+    // for something carried; then its list, metal arms and armour only (not the lantern).
     Case {
         name: "abilities-menu-forge",
         scenario: "forge",
@@ -612,6 +612,23 @@ const CASES: &[Case] = &[
         name: "temper-list",
         scenario: "forge",
         actions: "move:SW move:S pickup move:W pickup move:E*2 pickup move:E pickup move:N*2",
+        screen: Some("temper"),
+        ..BASE
+    },
+    // An attempt made and one failed (spec §7 "Special rooms"): the name and numbers follow.
+    Case {
+        name: "temper-list-fine",
+        scenario: "forge",
+        actions: "move:SW move:S pickup move:W pickup move:E*2 pickup move:E pickup move:N*2 \
+                  temper:d",
+        screen: Some("temper"),
+        ..BASE
+    },
+    Case {
+        name: "temper-list-damaged",
+        scenario: "forge",
+        actions: "move:SW move:S pickup move:W pickup move:E*2 pickup move:E pickup move:N*2 \
+                  temper:d temper:d",
         screen: Some("temper"),
         ..BASE
     },
@@ -1020,6 +1037,15 @@ const CASES: &[Case] = &[
         screen: Some("eat"),
         ..BASE
     },
+    // A thief is trained in Appraise (#1031): the eat list says how fresh the food looks.
+    Case {
+        name: "eat-screen-judged",
+        seed: Some(6),
+        character: Some("human,male,thief"),
+        run: true,
+        screen: Some("eat"),
+        ..BASE
+    },
     // Nothing to consume (the arena's pack holds no food).
     Case {
         name: "consume-list-none",
@@ -1138,6 +1164,7 @@ const CASES: &[Case] = &[
     Case {
         name: "scroll-study-list",
         scenario: "traps",
+        character: Some("human,female,wizard"),
         actions: "move:E pickup identify",
         keys: Some("L"),
         ..BASE
@@ -1145,6 +1172,7 @@ const CASES: &[Case] = &[
     Case {
         name: "scroll-study-dialog",
         scenario: "traps",
+        character: Some("human,female,wizard"),
         actions: "move:E pickup identify",
         keys: Some("L a"),
         ..BASE
@@ -1152,7 +1180,17 @@ const CASES: &[Case] = &[
     Case {
         name: "scroll-study-none",
         scenario: "traps",
+        character: Some("human,female,bard"),
         actions: "move:E pickup",
+        keys: Some("L"),
+        ..BASE
+    },
+    // A character not trained in Spellcraft is told so, whatever they carry.
+    Case {
+        name: "scroll-study-untrained",
+        scenario: "traps",
+        character: Some("human,male,warrior"),
+        actions: "move:E pickup identify",
         keys: Some("L"),
         ..BASE
     },
@@ -1518,6 +1556,21 @@ fn walking_into_what_offers_an_action_as_text() {
         };
         insta::assert_snapshot!(case.name, render(&case, content.clone()));
     }
+}
+
+/// #1019: a step into deep water asks, always, in the one dialog. Stay back is selected first.
+#[test]
+fn diving_into_deep_water_as_text() {
+    let content = Arc::new(Content::builtin().expect("content"));
+    let case = Case {
+        name: "deep-water-dialog",
+        scenario: "quarry",
+        character: Some("lizardfolk,female,warrior"),
+        actions: "move:E*27 move:S",
+        keys: Some("Right"),
+        ..BASE
+    };
+    insta::assert_snapshot!(case.name, render(&case, content));
 }
 
 /// Where the player stands and how many actions were applied.

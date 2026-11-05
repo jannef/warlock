@@ -1,6 +1,6 @@
 //! The Spellcraft talents and the casters' reworked ones (#400; the magic design §10, the spell
 //! scaling design §7.2): Overreach on the study check, School focus on its tag's cost and
-//! reach, Arcane training on the wizard's caster level, every talent combination casting with
+//! reach, Arcane training's ten points of Spellcraft, every talent combination casting with
 //! nothing holding its roll (decision 16), and the six spell hooks by their shipped users:
 //! Empower's and Archmage's rungs, Keen mind's dice, Sure hand's reroll, Brimming's die and
 //! cost, Scroll adept's scroll rung.
@@ -27,11 +27,13 @@ fn cost_and_range(w: &World, spell: &str) -> (i32, Option<i32>) {
 #[test]
 fn overreach_counts_a_third_less_in_the_study_and_never_touches_mana() {
     let mut w = world_with(BUILTIN.clone(), "wizard");
-    let level = w.caster_level(w.state.player);
-    assert_eq!(level, 1, "a level-1 wizard");
+    // At Spellcraft's floor: learning 1, whatever this run's dice gave.
+    let spellcraft = BUILTIN.skill_id("spellcraft").expect("skill");
+    w.player_mut().skills = crate::skills::Skills::default();
+    w.player_mut().skills.add(spellcraft, 0);
     let odds = |w: &World| {
         let character = w.state.character.as_ref();
-        study_odds(w.state.player(), &BUILTIN, character, level, sp("fireball")).expect("odds")
+        study_odds(w.state.player(), &BUILTIN, character, sp("fireball")).expect("odds")
     };
     let (fireball, before) = (cost_and_range(&w, "fireball").0, odds(&w));
     w.player_mut().talents.take("overreach", None);
@@ -90,22 +92,21 @@ fn school_focus_is_chosen_among_schools_and_elements() {
 }
 
 #[test]
-fn arcane_training_grows_the_wizards_caster_level() {
-    for (class, level, expected) in [
-        ("wizard", 4, 4),
-        ("wizard", 5, 6),
-        ("wizard", 12, 14),
-        ("wizard", 30, 36),
-        ("priest", 12, 12),
-    ] {
-        let mut w = world_with(BUILTIN.clone(), class);
-        reach(&mut w, level);
-        assert_eq!(
-            w.caster_level(w.state.player),
-            expected,
-            "{class} at level {level}"
-        );
+fn arcane_training_reads_spellcraft_ten_points_deeper_for_the_trained_only() {
+    let mut w = world_with(BUILTIN.clone(), "wizard");
+    assert!(w.state.player().talents.holds("arcane_training", None));
+    let spellcraft = w.content.skill_id("spellcraft").expect("skill");
+    let learning = |w: &World| w.state.player().learning(&w.content);
+    for (raw, reach) in [(50, 10), (90, 30), (140, 70)] {
+        let me = w.player_mut();
+        let by = raw - i32::from(me.skills.value(spellcraft).unwrap_or(0));
+        me.skills.add(spellcraft, by);
+        // The curve reads 10 points more: 60 gives 10, 100 gives 30, 150 gives 70.
+        assert_eq!(learning(&w), Some(reach), "Spellcraft {raw} + 10");
     }
+    // A bonus alone never trains the skill.
+    w.player_mut().skills = crate::skills::Skills::default();
+    assert_eq!(learning(&w), None);
 }
 
 /// The player casts `spell` at a kobold `dx` cells east, its hit points and their mana full

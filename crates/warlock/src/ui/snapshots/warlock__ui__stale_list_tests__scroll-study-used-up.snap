@@ -2,8 +2,8 @@
 source: crates/warlock/src/ui/stale_list_tests.rs
 expression: shown
 ---
- You begin to study the scroll of fireball. The words twist away from you, and the scroll crumbles
- to dust. The spell tears loose from the page! The fireball burns you.
+ You begin to study the scroll of fireball. The scroll crumbles as its words settle in your mind:
+ you have learned Fireball.
 
 
 
@@ -31,4 +31,4 @@ expression: shown
 
 
 
- Hall  ·  HP 504/510  ·  MP 10/10  ·  Lv 1  ·  08:32  ·  11 Darkening, Year 1444         ? controls
+ Hall  ·  HP 13/13  ·  MP 16/16  ·  Lv 1  ·  08:33  ·  11 Darkening, Year 1444           ? controls

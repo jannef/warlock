@@ -229,9 +229,9 @@ pub struct TalentMods {
     /// per `spell_mod` effect, each with its tag filter
     /// ([`TalentMods::spell_mods`]).
     pub spell: Vec<crate::content::SpellMod>,
-    /// Percent more the caster level its magic items give counts (Attuned;
-    /// [`TalentMods::attuned`]).
-    pub attuned_percent: i32,
+    /// The percent chance its spells of a damage type arc at, one entry per type a `spell_type`
+    /// effect names ([`TalentMods::arc_chance`]; Conductor).
+    pub arc_chance: Vec<(crate::content::DamageTypeId, u8)>,
     /// The active Blood magic, if it has it.
     pub blood_magic: Option<BloodMagic>,
     /// Percent louder footsteps (negative: quieter).
@@ -1108,13 +1108,6 @@ impl TalentMods {
         self.caster_level + grown
     }
 
-    /// The caster level its magic items give, `items`, as it counts for it: Attuned's
-    /// `attuned_percent` more, rounded up (+1 → +2, +3 → +5); a negative `items` (a curse) is
-    /// left as it is.
-    pub fn attuned(&self, items: i32) -> i32 {
-        lift_by_percent(items, self.attuned_percent)
-    }
-
     /// What its talents do to a spell with `tags` (spec §8 "Spells": "Hooks"): every
     /// `spell_mod` whose filter the spell fits, summed.
     pub fn spell_mods(&self, tags: &[&str]) -> crate::content::SpellMods {
@@ -1123,6 +1116,16 @@ impl TalentMods {
             sum.add(&one.mods);
         }
         sum
+    }
+
+    /// The chance its spell of damage type `kind` arcs at, by its talents: the highest any gives
+    /// (0: none; the type's own stands then).
+    pub fn arc_chance(&self, kind: crate::content::DamageTypeId) -> u8 {
+        (self.arc_chance.iter())
+            .filter(|(k, _)| *k == kind)
+            .map(|&(_, chance)| chance)
+            .max()
+            .unwrap_or(0)
     }
 
     /// The mana one of its spells that costs `mana` costs it: scaled by `spell_mana_percent`,
@@ -1357,7 +1360,6 @@ impl TalentMods {
             TalentEffect::CasterLevel { value, per_levels } => {
                 self.caster_per_levels.push((per_levels, value));
             }
-            TalentEffect::AttunedPercent { value } => self.attuned_percent += value,
             TalentEffect::BloodMagic { hp, mana } => {
                 self.blood_magic = Some(BloodMagic { hp, mana });
             }
@@ -1676,6 +1678,10 @@ impl TalentMods {
                 }
             }
             TalentEffect::SpellMod(spec) => self.spell.push(spec.resolve(content, choice)),
+            TalentEffect::SpellType { arc_chance, when } => {
+                let kinds = when.iter().filter_map(|id| content.damage_type_id(id));
+                self.arc_chance.extend(kinds.map(|k| (k, arc_chance)));
+            }
             TalentEffect::SpellManaPercent { value } => self.spell_mana_percent += value,
             TalentEffect::DeflectionUnarmoured { value } => self.deflection_unarmoured += value,
             TalentEffect::Purify => self.purify = true,
@@ -2550,18 +2556,6 @@ pub fn offers(content: &Content, who: &Candidate<'_>) -> Vec<(TalentId, Vec<Opti
             (!ways.is_empty()).then_some((id, ways))
         })
         .collect()
-}
-
-/// `value` raised by `percent` of itself, rounded up (never below 0); `value` itself when it is
-/// not above 0 or `percent` is 0 (Attuned's and Bellows' items terms).
-fn lift_by_percent(value: i32, percent: i32) -> i32 {
-    if value <= 0 || percent == 0 {
-        return value;
-    }
-    let n = i64::from(value) * i64::from(percent);
-    // Rounded up: toward zero for a cut, away from it for a lift.
-    let more = if n >= 0 { (n + 99) / 100 } else { n / 100 };
-    i32::try_from((i64::from(value) + more).max(0)).unwrap_or(i32::MAX)
 }
 
 #[cfg(test)]

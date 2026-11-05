@@ -235,6 +235,11 @@ impl World {
             };
             let plain = crate::content::price(step, BASE_TURN).max(1);
             price = surcharge_spared(price, plain, spared);
+        } else if self.rough_step(to) {
+            // Rough ground that is not water: Balance spares a part of what it adds.
+            let spared = actor.skill_effect(&self.content, Effect::Footing);
+            let plain = crate::content::price(step, BASE_TURN).max(1);
+            price = surcharge_spared(price, plain, spared);
         }
         if level.kind == LevelKind::Overworld {
             price = shortened(price, actor.skill_effect(&self.content, Effect::Travel));
@@ -265,11 +270,11 @@ impl World {
     }
 
     /// Whether a step onto `to` on the current level is wading: off the overworld, onto wading
-    /// terrain that makes the step dearer.
+    /// terrain, or deep water, that makes the step dearer.
     pub(super) fn wading_step(&self, to: &TerrainDef) -> bool {
         self.state.current().kind != LevelKind::Overworld
             && to.move_cost > 100
-            && super::stars::wading(&self.content, to)
+            && (to.swim || super::stars::wading(&self.content, to))
     }
 
     /// `price` as actor `id` pays it now: ×1.25 Burdened, ×1.5 Strained or Overloaded (spec §8

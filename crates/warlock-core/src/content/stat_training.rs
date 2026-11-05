@@ -56,9 +56,9 @@ pub enum StatUse {
     Dig,
     /// A kick at a closed door or a chest (Athletics' use).
     Kick,
-    /// A tempering done at an anvil to its end, whatever came of it (Metalcraft's use).
+    /// An attempt at an anvil done to its end, whatever came of it (Metalcraft's use).
     Forged,
-    /// A struggle against a hold, won or not (Strength's and Willpower's both).
+    /// A struggle against a hold or other bonds, won or not (Strength's and Willpower's both).
     Struggled,
     /// A step through deep water (not over its ice).
     Waded,
@@ -209,8 +209,10 @@ impl StatUse {
             StatUse::Block => "a blow on you that your shield blocked",
             StatUse::Dig => "a turn of digging",
             StatUse::Kick => "kicking at a closed door or a chest",
-            StatUse::Forged => "tempering a weapon or armour at an anvil, whatever comes of it",
-            StatUse::Struggled => "struggling against a hold, won or not",
+            StatUse::Forged => {
+                "an attempt on metal arms or armour at an anvil, whatever comes of it"
+            }
+            StatUse::Struggled => "struggling against a hold or bonds, won or not",
             StatUse::Waded => "a step through deep water",
             StatUse::Hauled => "picking up something of 20 kg or more (a corpse, a heavy load)",
             StatUse::Dodge => {

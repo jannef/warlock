@@ -435,7 +435,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
     waiting (not a rest's turns) taken while the player's burden slows them, as it began
     (`burdened`; a dwarf's Burdened does not), a step on the overworld (`travel`), a kick at a
     closed door (`kick`; Athletics is also marked by `burdened` and `travel`, 5 % each, #548, so
-    its speed grows with plain play), a turn spent searching, whatever it finds (`search`), noticing
+    its speed grows with plain play), a check against bonds, whatever came of it (`escape`, Escape
+    artist's; §8 "Status effects"), a climb out of a pit (`climb`, Escape artist's and Athletics';
+    §8 "Traps"), a turn spent searching, whatever it finds (`search`), noticing
     something hidden in passing, not a trap (`spot`; §8 "Searching"), finding a hidden trap,
     searching or in passing (`find_trap`, Detect traps' use), an attempt to steal, whatever comes of
     it (`steal`; "Stealing" below), a try at treating oneself, whatever comes of it (`heal`;
@@ -445,10 +447,18 @@ developer notes (CLAUDE.md, `docs/dev/`).
     spent, a spell or an ability paid in it (`cast`; Concentration, 25 %, #668), discovery
     experience gained (`discover`: a first kill of a kind, an arrival that pays; Experience §8), a
     check rolled to resist a creature's ability, whatever comes of it (`resist`; "Knowledge"
-    below), a step wading (`wade`; Swim, below), a Swim check, whatever comes of it (`swim`). Only
+    below), a step wading (`wade`; Swim, below), a Swim check, whatever comes of it (`swim`), a step in deep water (`stroke`), a step onto rough ground (`rough_step`; Balance), an action
+    taken Staggered (`staggered`; Balance). Only
     the player trains for now; creatures keep their type's
     skills. Marks are a **reservoir**: they raise nothing by
     themselves and nothing is said; they gather until a level-up roll on the skill spends them.
+  - **Balance** (#1029): sure footing under a load, on bad ground, and after a stagger. Besides
+    the burden's slowdown (`burden`), a step onto rough ground (off the overworld, `move_cost` over
+    100 and not wading: bush, reeds, rubble, ice) spares a percent of what the terrain adds over
+    a plain step (`footing`: 60 % at 100, all at 200; rounded up), and a Staggered actor's
+    extra cost (`cost = 150`) is eased by a percent (`steady_ease`: half of the extra at 100, three
+    quarters at 200, as Initiative's `surprise_ease` is for Surprised). Marks: `burdened` 5 %,
+    `rough_step` 10 % per step onto such ground, `staggered` 20 % per action taken Staggered.
   - **Swim** (#1018): wading is quicker. A step onto wading terrain (`stars::wading`: water that
     freezes, ground a disease is caught wading in; `move_cost` above 100, off the overworld) has
     a percent of what it adds to a plain step spared: 60 at 100, all of it at 200
@@ -457,6 +467,23 @@ developer notes (CLAUDE.md, `docs/dev/`).
     makes a **Swim check**: Toughness's modifier, the talents' Toughness checks, and the `swim`
     benefit (+8 at 100, +12 at 200, at most 20) against 11; made, half the plunge's hit points,
     rounded down. Marks: `wade` 10 %, reported per wading step whoever wades; `swim` 100 %.
+    **Deep water** (#1019; terrain `deep_water`, `swim = true`, `walkable = false`, so nothing else
+    goes in: creatures path around it and wait on the nearest shore, shooting and casting from
+    there, allies too, and a swimmer swaps with no one). A step into it from anything else is
+    refused with no time for the untrained ("You cannot swim.") and for one Strained or worse
+    ("You would sink."), and otherwise **always asks first**, in the one dialog, with no setting to
+    turn it off (the owner; `input::deep_water_dialog`; "Dive in", "Stay back" selected first and
+    Esc's, no time; core `move:DIR` needs no dialog). Water the player does not know of stops them
+    at its edge with no time, and is then known, so the question comes before they are in. Going
+    in takes the step and no check, and puts out the ready light. **A step that starts in it**,
+    wherever it ends, is a Swim check against 11 + 2 per burden level above Unburdened
+    (`data/swim.toml`): made, the step, priced by `step_price` (Wade, Swimmer, Strong swimmer,
+    Undertow); failed, the turn is spent, no move, and 1 cold hit point through `hurt` with
+    `Harm::Spared` (never the last: no drowning; one who grows Strained in it swims on, harder).
+    Two gameplay draws a step; `stroke` 25 %. Afloat, dropping and picking up ("It would sink."),
+    resting, searching, digging, and lighting a light ("The water would only put it out.") are
+    refused with no time; fighting, firing, casting, reading, and waiting go on; a wait asks no
+    check; nothing carried is lost. A light made ready in it goes out too. It does not freeze.
   - **Level-up rolls** (design `docs/design/progression.md` §5): every level gives the player
     **skill rolls**: their class's `rolls` (`data/classes/`: 2; the thief and the ranger 3, the
     bard 4), their race's (`races.toml`: humans 1), and one more for an Intelligence score of
@@ -552,7 +579,12 @@ developer notes (CLAUDE.md, `docs/dev/`).
     anything unknown hashes as before. Untrained, never (a magic item's bonus alone does not
     give it). Each thing told may mark Appraise (`appraise`, 100 %). The classes trained in
     Appraise (bard, thief, craftsperson, merchant) have Negotiation at the same dice; the
-    merchant is known for both. Gnomes keep Appraise alone.
+    merchant is known for both. Gnomes keep Appraise alone. Appraise and Survival also tell food's freshness
+    (#1031, `freshness` benefit; §8 "Hunger"): in words (`fresh`, `old`, `rotten`) in the eat list and look mode, when
+    a per-hour check passes, summed percent chance (Appraise 25 / 60 / 80 % at 0 / 100 / 200, Survival 15 / 35 / 50 %,
+    rotten food 25 points easier, at most 95 %); eating such food marks Appraise (`judged`, 10 %). A healer's and a
+    sage's service price follows the same favour as a shop's (a `temple` service stays flat), and a service paid
+    marks Negotiation (`deal`).
 - **Treating oneself** (`heal.rs`, `world/heal.rs`; #549, the owner 2026-10-27): the Heal
   skill's use, the abilities menu's **Heal** (`Ability::Heal`, in the skill's place among the
   Skills; `Action::Heal`, replay text `heal`, `heal:ID`, or `heal:ID:DIR`; cost `heal`, 2500: a
@@ -875,7 +907,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     swapped for steel, moved to the missile weapon slot) it fades at once ("The long sword fades
     from your hand."); a drop or a sale takes it off and lets it fade instead of letting it go
     (the shop never sees it, the floor never holds it); a throw is refused with no time ("It will
-    not leave your hand."); quests never count it; a tithe or a forge's ruin takes spirit-stuff,
+    not leave your hand."); quests never count it; a tithe takes spirit-stuff,
     which is called again. Its description adds the effect's `phrase` as a power line, its
     numbers and critical range fold the gifts in, and "Pierces armour"; item lists mark it
     `(spirit)`; the character screen's attack says `pierces armour`. Creatures never hold one.
@@ -1293,7 +1325,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     Ray of frost (level 1, at 1: a ray that rolls to hit, 1d6 cold; 1 mana), Burning hands
     (level 1, at 1, #979: a cone of 3 cells, no hit roll, 1d4 fire, its ladder Intelligence 13:
     1d6 to 22: 2d4+2; 3 mana, its own price), Arcane training
-    (at 1: caster level +1 per 5 character levels, `caster_level` with `per_levels`), Magic missile
+    (at 1: Spellcraft +10, a `skill` effect: it helps only a character trained in it), Magic missile
     (level 3, at 3: never misses, 1d4 force, its ladder Intelligence 13: 2d4 to 22: 3d4+1; 3
     mana), Arcane bolt (level 6, at
     18: a line of 6 cells, 2d6 force, its ladder to 3d6+4; 11 mana), Scribe (at 12: a scroll of

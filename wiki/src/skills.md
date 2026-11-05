@@ -52,7 +52,10 @@ The passive skills help you more the higher they are:
 - **[Listen](skills.md#skill-listen)** lets you hear fainter sounds: your [hearing](hearing.md) threshold drops by the number shown (it
   never drops below 1).
 - **[Balance](skills.md#skill-balance)** takes some of the slowdown of a heavy load away (see [Burden](burden.md)): a
-  [burdened](burden.md#burden-1) master is slowed by a tenth, not a quarter.
+  [burdened](burden.md#burden-1) master is slowed by a tenth, not a quarter. It also spares a part of what rough ground
+  adds to a step ([bush](terrain.md#terrain-bush), [reeds](terrain.md#terrain-reeds), [rubble](terrain.md#terrain-rubble), ice; not water or
+  marsh, which are Swim's: 60 % of the extra at 100, all of it at 200), and a part of the extra time a
+  [staggered](status-effects.md#status-staggered) action costs (half at 100, three quarters at 200).
 - **[Music](skills.md#skill-music)** makes your [songs](abilities.md#songs) last longer (a
   degree more at 50, at 100, and every 100 after) and harder for those they are sung against to
   shake off (+4 to their difficulty at 100, +8 at 200); its two columns in the table below are
@@ -61,22 +64,38 @@ The passive skills help you more the higher they are:
   (it adds to the quickness of [talents](talents.md) such as [Fleet-footed](talents.md#talent-fleet-footed) and [Quick](talents.md#talent-quick); see
   [Burden](burden.md) for the load, which slows you on top of it). It also helps you kick [doors](doors.md)
   in (see [Doors](doors.md)). Besides kicks, it is trained now and then by acting under a load
-  that slows you and by journeys on the [overworld](overworld.md#travel).
+  that slows you, by journeys on the [overworld](overworld.md#travel), and by climbing out of a
+  [pit](traps.md#trap-pit).
+- **[Escape artist](skills.md#skill-escape-artist)** slips bonds without being asked: when
+  [Held](status-effects.md#status-held), [Webbed](status-effects.md#status-webbed), or
+  [Pinned](status-effects.md#status-pinned) stops what you try, the better of your
+  [Strength](stats.md#stat-strength) and [Dexterity](stats.md#stat-dexterity) plus the skill is
+  checked as part of the attempt (see [Slipping bonds](status-effects.md#slipping-bonds); untrained,
+  a web or a pin just refuses the step). +8 at 100, +12 at 200. It also shortens the climb out of
+  a [pit](traps.md#trap-pit): half from 50, none from 100. Every such check and every climb trains
+  it.
 - **[Survival](skills.md#skill-survival)** makes your journeys on the [overworld](overworld.md) quicker (it does nothing for
   your steps in a local area or a dungeon), and lets you forage in the wild, finding food more
   often the higher it is (see [Foraging](#foraging)).
 - **[Swim](skills.md#skill-swim)** makes you quicker through [water](terrain.md#water) and [marsh](terrain.md#terrain-marsh) (of what wading adds to a step, 60%
   is spared at 100 and all of it at 200; the [Swimmer](talents.md#talent-swimmer) talent spares it all at once). And
   when you [plunge through the ice](temperature.md#falling-in), you make a check on your
-  [Toughness](stats.md#stat-toughness) plus the table's points against 11: made, half the hit points.
+  [Toughness](stats.md#stat-toughness) plus the table's points against 11: made, half the hit points. And it
+  is what lets you into [deep water](terrain.md#deep-water) at all.
 - **[Negotiation](skills.md#skill-negotiation)** gets you better prices in [shops](shops.md): you pay less and are offered
-  more. A deal made (goods paid for, or your own sold) trains it now and then.
+  more, and a healer or a sage who sells a [service](npcs.md#services) asks less (a [temple](npcs.md#services) never haggles).
+  A deal made (goods paid for, your own sold, or a service paid) trains it now and then.
 - **[Appraise](skills.md#skill-appraise)** now and then tells you what something you carry or wear really is. On every
   hour of game time that passes ([resting](resting.md#how-resting-works) too), if you carry anything you do not fully know
   (an [unidentified](magic-items.md#unidentified-items) [magic item](magic-items.md), a [scroll](scrolls.md#unknown-scrolls) of a kind you have not identified, a [wand](magic.md#wands) whose
   charges you do not know), you have a small chance to tell one of them, picked at random:
   2 % an hour at 0, 12 % at 100, 20 % at 200 (the table below; items of Appraisal raise it).
   Only those trained in [Appraise](skills.md#skill-appraise) get it at all. Each thing told this way trains it.
+  Appraise also has an eye for food: an hour at a time, a trained eye may tell in words how fresh a corpse or food is
+  (*fresh*, *old*, or *rotten*), in the eat list and when you look at it (see [Food](food.md#food-spoils)). [Survival](skills.md#skill-survival)
+  gives the same eye, and where you have both the chances add up (25 % at 0, 60 % at 100, 80 % at 200 for Appraise; 15 %,
+  35 %, 50 % for Survival; rotten food is plainer to tell, 25 points more, and no chance is above 95 %). Eating food whose
+  freshness you could tell trains Appraise now and then.
 - **[Search](skills.md#skill-search)** helps you find [secret doors](doors.md#secret-doors) and other hidden things when you search (`s`, `S`),
   and a master's search reaches a cell farther (see [Searching](searching.md)).
 - **[Spot](skills.md#skill-spot)** lets you [notice hidden things in passing](searching.md#noticing-in-passing) at all, [traps](traps.md#finding-traps) aside, and the higher it is,
@@ -172,9 +191,9 @@ mark**. The chance is shown in the table of skills above; skills you use all the
 - **[Tumble](skills.md#skill-tumble)**: dodging an attack ("You dodge the kobold's spear.") or stepping past a [trap](traps.md#finding-traps) you
   know of ("You deftly avoid the arrow trap."). A blow that misses you for no reason your
   [Defence](combat.md#defence) explains (it would have missed anyone) counts as a dodge one time in four.
-- **[Balance](skills.md#skill-balance)**: doing anything but waiting while your load slows you down.
+- **[Balance](skills.md#skill-balance)**: doing anything but waiting while your load slows you down (5 %), a step onto rough ground that slows (10 %: bush, reeds, rubble, ice; not water), and an action taken [staggered](status-effects.md#status-staggered) (20 %).
 - **[Survival](skills.md#skill-survival)**: a journey on the [overworld](overworld.md#travel).
-- **[Swim](skills.md#skill-swim)**: a step wading through [water](terrain.md#water) or [marsh](terrain.md#terrain-marsh) now and then, and every [plunge through the ice](temperature.md#falling-in).
+- **[Swim](skills.md#skill-swim)**: a step wading through [water](terrain.md#water) or [marsh](terrain.md#terrain-marsh) now and then (10 %), every [plunge through the ice](temperature.md#falling-in), and a quarter of the steps in [deep water](terrain.md#deep-water), made or not.
 - **[Steal](skills.md#skill-steal)**: every attempt to steal, whatever comes of it.
 - **[Open lock](skills.md#skill-open-lock)**: a try at picking a lock, whether it works or not.
 - **[Heal](skills.md#skill-heal)**: a try at treating yourself, whether it works or not.

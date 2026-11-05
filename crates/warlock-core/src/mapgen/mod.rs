@@ -36,6 +36,7 @@
 mod caves;
 mod chest;
 mod connect;
+mod deep;
 mod den;
 mod dress;
 mod hoard;
@@ -91,6 +92,8 @@ pub(crate) struct Palette {
     pub stairs_up: TerrainId,
     pub stairs_down: TerrainId,
     pub water: TerrainId,
+    /// Deep water: a cave pool's middle, where only a swimmer goes (`deep.rs`).
+    pub deep_water: TerrainId,
     /// Wall torches lighting rooms.
     pub sconce: TerrainId,
     /// Faintly glowing cave fungus.
@@ -116,6 +119,7 @@ impl Palette {
             stairs_up: terrain("stairs_up")?,
             stairs_down: terrain("stairs_down")?,
             water: terrain("water")?,
+            deep_water: terrain("deep_water")?,
             sconce: terrain("sconce")?,
             fungus: terrain("fungus")?,
             lamp: content
@@ -515,6 +519,9 @@ pub fn generate_for(
         if built.is_none() {
             continue;
         }
+        if plan.generator == Generator::Caves {
+            deep::lay(&mut canvas, seed, id);
+        }
         canvas.build_walls();
         let (Some(up), down) = (canvas.up, canvas.down) else {
             continue;
@@ -911,6 +918,8 @@ mod cealdhlaw_tests;
 #[cfg(test)]
 mod chest_tests;
 #[cfg(test)]
+mod deep_tests;
+#[cfg(test)]
 mod fennmynster_tests;
 #[cfg(test)]
 mod fyrdelf_tests;
@@ -934,3 +943,5 @@ mod tests;
 mod treasury_tests;
 #[cfg(test)]
 mod vault_monsters_tests;
+#[cfg(test)]
+mod vault_turn_tests;
