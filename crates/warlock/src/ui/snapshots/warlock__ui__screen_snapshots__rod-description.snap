@@ -2,7 +2,7 @@
 source: crates/warlock/src/ui/screen_snapshots.rs
 expression: "render(case, content.clone())"
 ---
- You pick up a tin rod and a jade rod.
+ You pick up a jade rod and an agate rod.
  This is a rod of digging! This is a rod of sleep!
 
 

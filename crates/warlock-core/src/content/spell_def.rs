@@ -1949,6 +1949,7 @@ damage = "2d6"
             ("barkskin", 3, None, 3, true),
             ("blessing", 3, None, 3, true),
             ("blight", 7, Some("2d6"), 17, true),
+            ("brand", 7, None, 7, true),
             ("burning_hands", 1, Some("1d4"), 3, true),
             ("call_lightning", 11, Some("2d6"), 20, true),
             ("call_of_the_forest", 20, Some("+1"), 20, true),
@@ -1959,6 +1960,7 @@ damage = "2d6"
             ("cure_wounds", 3, Some("2d6"), 2, true),
             ("curse_of_sloth", 3, None, 3, true),
             ("evil_eye", 0, None, 1, true),
+            ("fire_cloak", 12, None, 12, false),
             ("fireball", 11, Some("2d6"), 26, false),
             ("flame", 12, Some("3d6"), 29, true),
             ("frost", 6, Some("2d6"), 14, true),
@@ -1975,6 +1977,7 @@ damage = "2d6"
             ("scorching_ray", 7, Some("1d6"), 7, false),
             ("sleep", 6, None, 11, false),
             ("spark", 1, Some("1d4"), 1, true),
+            ("water_walking", 5, None, 5, true),
             ("web", 7, None, 13, false),
         ];
         for (id, level, roll, mana, given) in table {
@@ -2004,10 +2007,11 @@ damage = "2d6"
         let p23 = "presence 14 2, 18 3";
         let mm = "intelligence 13 3d6, 16 4d6, 19 5d6, 25 5d6+2";
         let bolt = "intelligence 13 3d6, 19 3d6+2, 25 3d6+4";
-        let table: [(&str, &[(&str, &str)]); 27] = [
+        let table: [(&str, &[(&str, &str)]); 30] = [
             ("arcane_bolt", &[("damage", bolt), ("length", w78)]),
             ("barkskin", &[("degrees", p23)]),
             ("blessing", &[("degrees", p23)]),
+            ("brand", &[("degrees", p23)]),
             (
                 "blight",
                 &[("damage", "willpower 16 3d6, 22 3d6+3"), ("range", w910)],
@@ -2030,6 +2034,7 @@ damage = "2d6"
             ("cure_wounds", &[("heal", "willpower 16 3d6, 22 3d6+3")]),
             ("curse_of_sloth", &[("range", w78), ("degrees", p23)]),
             ("evil_eye", &[("range", w78), ("degrees", p23)]),
+            ("fire_cloak", &[("degrees", p23)]),
             ("fireball", &[("damage", mm), ("range", w1112)]),
             (
                 "flame",
@@ -2082,6 +2087,7 @@ damage = "2d6"
                     ("range", "willpower 14 6"),
                 ],
             ),
+            ("water_walking", &[("degrees", p23)]),
             (
                 "web",
                 &[("range", w910), ("degrees", "presence 14 4, 18 5, 22 6")],

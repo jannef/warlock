@@ -98,7 +98,7 @@ wiki's effect text appends "while raging".
 | `carry_percent` | `burden::load` (the limit before the affixes' kilograms, kept a multiple of 3) |
 | `travel_percent` | `World::step_price` on the overworld, after the survival skill |
 | `terrain_as` | `World::step_price`: the terrain stepped onto is priced as the one it names (local and overworld alike; its ids checked once the terrain loads, `TalentBook::check_terrain`) |
-| `plunge_proof` | `World::fall_in`: no plunge damage and no draw for it |
+| `plunge_proof` | `World::fall_in`: no plunge damage and no draw for it (Water walking's status has `ice_holds` instead: the ice never gives way, `docs/dev/status-effects.md`) |
 | `light_on_ice`, `climb_percent` | `World::tread` (the load on the ice is the body's weight alone), `World::tread_price` (the climb's price) |
 | `wading_proof` | `World::wade`: no exposure, no draw |
 | `beast_friend` | `beast_friend::befriended` (`world/beast_friend.rs`), read by `World::stance`, `ai::nearest_hostile_in_sight`, and `PerceptionView::stance`; `World::resolve` (an attack by the player) records the type in `Progress::empathy_broken` |
@@ -256,7 +256,7 @@ Sign-limited picks (#270; `world/sign_picks.rs`), and their hooks:
 | `off_hand_damage` | `Actor::off_hand_blow` |
 | `best_skill_threat` | `Actor::benefit` for a skill `Actor::knows_best` (a melee, unarmed, launcher, or thrown skill held at the top rank) |
 | `eats_rotten` | `eat.rs::eat_rotten`: as a race that `eats_rotten` |
-| `wades_free` | `World::step_price`, beside `swimmer` (no disease immunity) |
+| `wades_free` | `World::step_price` through `Actor::wades_free` (a status's too), beside `swimmer` (no disease immunity) |
 
 The rest (Roc's grip, Dragon's hoard, Deep roots' Dodge, Bedrock, Undertow's plunge) are
 existing kinds.
