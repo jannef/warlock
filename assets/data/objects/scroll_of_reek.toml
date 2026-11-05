@@ -1,0 +1,20 @@
+# A scroll of reek (spec §8 "Scrolls", "Spells"): read it (`r`) and aim, and it casts Reek, free of
+# mana, at its base: a foul cloud hangs where it was aimed. Study it (`L`), and you may learn the
+# spell for good.
+[[object]]
+id = "scroll_of_reek"
+name = "scroll of reek"
+plural = "scrolls of reek"
+glyph = "?"
+fg = "#9aa85c"
+class = "scrolls"
+materials = ["paper"]
+weight = 50
+value = 250
+stackable = true
+level = 7
+frequency = 15
+
+[object.read]
+kind = "spell"
+spell = "reek"

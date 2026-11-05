@@ -407,6 +407,10 @@ impl World {
                 actor.energy = s.energy;
             }
         }
+        // The player's next turn starts where they stand (`zone.rs`).
+        if self.state.death.is_none() {
+            self.zone_turn_start(player, events);
+        }
         // Allies whose time has run out depart (`ally.rs`).
         self.allies_lapse(events);
         // The player's next action is under way from here.
@@ -422,6 +426,8 @@ impl World {
         self.hallows_fade(began);
         // The living the player feels about them (`spell_rule.rs`).
         self.heartbeats();
+        // Zones past their end are dropped (`zone.rs`).
+        self.zones_fade();
     }
 
     /// How long from now no creature on the current level that disturbs a rest

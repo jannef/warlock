@@ -1,13 +1,13 @@
 //! The spells of one small rule each (`world/spell_rule.rs`): Leech's share, Blink's draw and what
 //! it ends, Thunderclap on its caster, Benison on allies alone, Rebuke on the undead alone,
-//! Bramble on living ground, Gale's order of pushes, Cloudburst's hour, Sense the quick's
-//! heartbeats.
+//! Bramble on living ground, Gale's order of pushes and the zones it clears, Cloudburst's hour,
+//! Sense the quick's heartbeats.
 
 use super::caster_tests::{kobold_at, run, said, sp};
 use super::spell_type_tests::{cell, start, status};
 use super::*;
 use crate::action::{Action, Event};
-use crate::content::ContentFiles;
+use crate::content::{ContentFiles, ZoneKind};
 use crate::noise::SoundKind;
 use crate::stats::{PerStat, Stats};
 
@@ -388,6 +388,29 @@ fn a_gale_leaves_the_held_where_they_are_and_a_shut_door_shut() {
     w.player_mut().mana = 100;
     w.apply(&Action::Cast("gale".into(), Some(cell(22, 3))));
     assert_eq!(pos(&w, at_door), cell(22, 3));
+}
+
+#[test]
+fn a_gale_tears_clouds_fire_and_darkness_off_its_line_and_leaves_slick_ground() {
+    let mut w = hall(7);
+    run(
+        &mut w,
+        "zone:fouled@5,4,1 zone:dark@3,3,0 zone:fire@8,4,0 zone:fire@8,3,0 zone:slick@7,3,0",
+    );
+    let kind = |w: &World, x, y| {
+        (w.state.current())
+            .zone_at(cell(x, y), w.state.time)
+            .map(|z| z.kind())
+    };
+    assert_eq!(kind(&w, 5, 3), Some(ZoneKind::Fouled));
+    see(&mut w);
+    w.apply(&Action::Cast("gale".into(), Some(cell(8, 3))));
+    for x in [3, 4, 5, 6, 8] {
+        assert_eq!(kind(&w, x, 3), None, "({x}, 3) is torn clear");
+    }
+    assert_eq!(kind(&w, 7, 3), Some(ZoneKind::Slick), "slick ground stays");
+    assert_eq!(kind(&w, 5, 4), Some(ZoneKind::Fouled), "off the line");
+    assert_eq!(kind(&w, 8, 4), Some(ZoneKind::Fire), "off the line");
 }
 
 #[test]

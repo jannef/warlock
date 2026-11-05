@@ -73,6 +73,7 @@ mod talents_screen;
 mod target;
 mod text_field;
 mod weapon_skills_screen;
+mod zone_tint;
 
 pub use dialog_screen::Dialog;
 pub use menu::{Press, quit_dialog};
@@ -434,6 +435,7 @@ fn draw_map(
             let band = chest.and_then(|c| content.chests().bands.get(c.band));
             let trap = (view.trap(p).filter(|_| chest.is_none())).map(|t| content.trap(t));
             let stain = view.blood(p).filter(|_| show_blood);
+            let zone = view.zone_at(p);
             let glyph = |t| {
                 let def = content.terrain(t);
                 let (ch, fg) = match (trap, top) {
@@ -452,7 +454,7 @@ fn draw_map(
                     }
                     None => (fg, def.bg),
                 };
-                (ch, fg, bg)
+                (ch, fg, zone.map_or(bg, |kind| zone_tint::tinted(bg, kind)))
             };
             let cell = match seen {
                 CellView::Unknown => continue,

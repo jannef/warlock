@@ -52,6 +52,8 @@ pub const ARC_REACH: i32 = 2;
 pub const MAX_ARCS: i32 = 12;
 /// The most minutes a summon spell's call may last, its ladder and base alike.
 pub const MAX_SUMMON_MINUTES: u16 = 600;
+/// The most of the player's turns a spell's zone may last.
+pub const MAX_ZONE_TURNS: u16 = 600;
 /// What a spell's `study_difficulty` may add to (or take from) the study check's difficulty.
 pub const STUDY_DIFFICULTY: std::ops::RangeInclusive<i32> = -20..=40;
 /// The percents a shape's or a resolution's multiplier may be.
@@ -137,6 +139,51 @@ impl SpellPurpose {
             SpellPurpose::Utility => "utility",
             SpellPurpose::Summon => "summon",
         }
+    }
+}
+
+/// What lies on a zone's cells (`[spell.effect] zone`, `world/zone.rs`; the spell types design
+/// §7 "Zones"): one reader a kind, each at an existing moment.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum ZoneKind {
+    /// Burns who starts a turn on it or steps onto it, and sheds a fire's light.
+    Fire,
+    /// Poisons who starts a turn in it.
+    Fouled,
+    /// Trips who steps onto it or off it.
+    Slick,
+    /// No light reaches it, and a source on it sheds none.
+    Dark,
+}
+
+impl ZoneKind {
+    /// Every kind, in the order they are documented.
+    pub const ALL: &'static [ZoneKind] = &[Self::Fire, Self::Fouled, Self::Slick, Self::Dark];
+
+    /// As written in data and action text.
+    pub const fn id(self) -> &'static str {
+        match self {
+            Self::Fire => "fire",
+            Self::Fouled => "fouled",
+            Self::Slick => "slick",
+            Self::Dark => "dark",
+        }
+    }
+
+    /// The damage type it does what it does in: the spell that lays it must be of it.
+    pub const fn damage_type(self) -> Option<&'static str> {
+        match self {
+            Self::Fire => Some("fire"),
+            Self::Fouled => Some("poison"),
+            Self::Slick | Self::Dark => None,
+        }
+    }
+
+    /// Whether it lies on the ground, so only on walkable ground out of the water: a cloud and
+    /// a darkness hang over anything sight passes through.
+    pub const fn on_ground(self) -> bool {
+        matches!(self, Self::Fire | Self::Slick)
     }
 }
 
@@ -454,8 +501,12 @@ struct EffectSpec {
     /// A line hex's: it puts out the fires on its cells (Gale).
     #[serde(default)]
     douses: bool,
+    /// A line hex's: the zones of these kinds lose the cells on it (Gale).
+    #[serde(default)]
+    clears: Vec<ZoneKind>,
     blink: Option<BlinkSpec>,
     weather: Option<WeatherSpec>,
+    zone: Option<SpellZone>,
     arcs: Option<u8>,
 }
 
@@ -580,10 +631,14 @@ pub struct SpellEffect {
     pub push: Option<u8>,
     /// A line hex puts out the fires on its cells (Gale).
     pub douses: bool,
+    /// A line hex clears its cells of zones of these kinds (Gale: fire, cloud, and dark).
+    pub clears: Vec<ZoneKind>,
     /// A `utility` spell's move (Blink).
     pub blink: Option<SpellBlink>,
     /// A `utility` spell's weather (Cloudburst).
     pub weather: Option<SpellWeather>,
+    /// The zone it leaves on its cells (`world/zone.rs`).
+    pub zone: Option<SpellZone>,
     /// A `damage` spell's jumps taken without a draw, each up to [`ARC_REACH`] cells (its `count`
     /// ladder grows them; Chain lightning; `world/spell_arc.rs`).
     pub arcs: Option<u8>,
@@ -611,6 +666,15 @@ pub struct SpellWeather {
     pub kind: Weather,
     /// How long it holds.
     pub lasts: Duration,
+}
+
+/// A spell's zone (`[spell.effect] zone = { kind, turns }`): what lies on the cells of its shape
+/// after the cast, and for how many of the player's turns.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct SpellZone {
+    pub kind: ZoneKind,
+    pub turns: u16,
 }
 
 /// A summon spell's call (`[spell.effect] summon`; spec §8 "Allies": "Summons";
@@ -989,7 +1053,8 @@ fn resolve(spec: SpellSpec, rules: &SpellRules, content: &Content) -> Result<Spe
         SpellPurpose::Heal => effect.heal.is_none().then_some("`heal`"),
         SpellPurpose::Buff => effect.status.is_none().then_some("`status`"),
         SpellPurpose::Hex => {
-            (effect.status.is_none() && effect.push.is_none()).then_some("`status` or `push`")
+            (effect.status.is_none() && effect.push.is_none() && effect.zone.is_none())
+                .then_some("`status`, `push`, or `zone`")
         }
         SpellPurpose::Cleanse => {
             (effect.cures.is_empty() && !effect.diseases).then_some("`cures` or `diseases`")
@@ -1001,6 +1066,9 @@ fn resolve(spec: SpellSpec, rules: &SpellRules, content: &Content) -> Result<Spe
         SpellPurpose::Summon => effect.summon.is_none().then_some("`summon`"),
         SpellPurpose::Damage => None,
     };
+    if let Some(zone) = effect.zone {
+        check_zone(zone, spec.kind, spec.damage_type.as_deref(), shape)?;
+    }
     if effect.identify && shape != Shape::Myself {
         return Err(
             "an `identify` spell is cast on `self`: it asks for a stack, not a cell".into(),
@@ -1332,6 +1400,30 @@ pub(super) fn check_effects(content: &Content) -> Result<(), String> {
     Ok(())
 }
 
+/// A spell's `zone`, checked: an area with cells to lay it on, its time within bounds, and laid
+/// by the spell its kind works through: a `damage` spell of the kind's own type, or a `hex`.
+fn check_zone(
+    zone: SpellZone,
+    kind: SpellPurpose,
+    damage_type: Option<&str>,
+    shape: Shape,
+) -> Result<(), String> {
+    if !matches!(shape, Shape::Burst | Shape::Line) {
+        return Err("a `zone` lies on a `burst`'s or a `line`'s cells".into());
+    }
+    if !(1..=MAX_ZONE_TURNS).contains(&zone.turns) {
+        return Err(format!("a `zone`'s `turns` is 1 to {MAX_ZONE_TURNS}"));
+    }
+    let id = zone.kind.id();
+    match zone.kind.damage_type() {
+        Some(wants) if kind != SpellPurpose::Damage || damage_type != Some(wants) => {
+            Err(format!("a `{id}` zone is a `damage` spell's of `{wants}`"))
+        }
+        None if kind != SpellPurpose::Hex => Err(format!("a `{id}` zone is a `hex`'s")),
+        _ => Ok(()),
+    }
+}
+
 /// A spell's `[spell.effect]`, checked: only what its kind and shape use.
 fn effect(
     e: EffectSpec,
@@ -1368,6 +1460,8 @@ fn effect(
     shaped("push", e.push.is_some(), &[Shape::Line])?;
     only("douses", e.douses, &[SpellPurpose::Hex])?;
     shaped("douses", e.douses, &[Shape::Line])?;
+    only("clears", !e.clears.is_empty(), &[SpellPurpose::Hex])?;
+    shaped("clears", !e.clears.is_empty(), &[Shape::Line])?;
     only("blink", e.blink.is_some(), &[SpellPurpose::Utility])?;
     only("weather", e.weather.is_some(), &[SpellPurpose::Utility])?;
     if e.leech.is_some_and(|p| !(1..=100).contains(&p)) {
@@ -1391,6 +1485,8 @@ fn effect(
     {
         return Err(format!("`arcs` is 1 to {MAX_ARCS}"));
     }
+    let lays = [SpellPurpose::Damage, SpellPurpose::Hex];
+    only("zone", e.zone.is_some(), &lays)?;
     let summon = match e.summon {
         Some(s) => Some(summon_call(s)?),
         None => None,
@@ -1460,8 +1556,10 @@ fn effect(
         only_terrain: e.only_terrain,
         push: e.push,
         douses: e.douses,
+        clears: e.clears,
         blink,
         weather,
+        zone: e.zone,
         arcs: e.arcs,
     })
 }
@@ -1937,7 +2035,10 @@ damage = "2d6"
                 spell("hex", "line", "length = 3\neffect = { push = 4 }"),
                 "`push` is 1 to",
             ),
-            (spell("hex", "line", "length = 3"), "`status` or `push`"),
+            (
+                spell("hex", "line", "length = 3"),
+                "`status`, `push`, or `zone`",
+            ),
             (
                 spell("utility", "self", "effect = { blink = { cells = 11 } }"),
                 "`cells` is 1 to",
@@ -2255,6 +2356,7 @@ damage = "2d6"
         // learned from scrolls only): the spell scaling design §5.8, §12.1.
         let table = [
             ("arcane_bolt", 6, Some("2d6"), 11, true),
+            ("balefire", 16, Some("2d6"), 29, false),
             ("barkskin", 3, None, 3, true),
             ("benison", 12, Some("2d6"), 22, true),
             ("blessing", 3, None, 3, true),
@@ -2286,14 +2388,17 @@ damage = "2d6"
             ("lightning_bolt", 11, Some("2d6"), 20, false),
             ("magic_missile", 3, Some("1d4"), 3, true),
             ("mend", 1, Some("1d3"), 1, true),
+            ("mirk", 12, None, 29, false),
             ("ray_of_frost", 1, Some("1d6"), 1, true),
             ("rebuke", 14, Some("2d6"), 34, true),
             ("identify", 6, None, 60, false),
+            ("reek", 13, Some("1d4"), 31, false),
             ("remove_disease", 11, None, 11, true),
             ("scorching_ray", 7, Some("1d6"), 7, false),
             ("sense_the_quick", 5, None, 5, true),
             ("shatter", 8, Some("2d6"), 14, true),
             ("sleep", 6, None, 11, false),
+            ("slick", 6, None, 11, false),
             ("spark", 1, Some("1d4"), 1, true),
             ("thunderclap", 7, Some("1d6"), 13, true),
             ("water_walking", 5, None, 5, true),

@@ -528,7 +528,7 @@ impl World {
             from,
             to,
         });
-        self.after_tread(id, to, footing, events);
+        self.after_tread(id, (from, to), footing, events);
         self.make_noise(id, Act::Step(to));
         self.say(format!("You swap places with {who}."));
         self.train_stat(StatUse::Swapped);

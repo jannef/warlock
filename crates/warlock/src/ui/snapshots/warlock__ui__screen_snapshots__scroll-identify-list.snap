@@ -16,9 +16,9 @@ expression: "render(case, content.clone())"
            │ Melee weapons                                                              │
            │ > a - ) a dagger (magic) (+0 hit, 1d4, range 5)                     450 g  │
            │ Scrolls                                                                    │
-           │   b - ? 2 scrolls labelled ULYO                                     100 g  │
-           │   c - ? 2 scrolls labelled NIHNIH                                   100 g  │
-           │   d - ? 2 scrolls labelled ZIMULGAR                                 100 g  │
+           │   b - ? 2 scrolls labelled ELPRA                                    100 g  │
+           │   c - ? 2 scrolls labelled OMPRA                                    100 g  │
+           │   d - ? 2 scrolls labelled NIHGARZUN                                100 g  │
            │                                                                            │
            │ a-d or Enter identify   Esc cancel                                         │
            └────────────────────────────────────────────────────────────────────────────┘

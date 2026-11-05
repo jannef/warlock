@@ -1,0 +1,20 @@
+# Slick (the spell types design §7 entry 15, §7 "Zones"; #1000): ground turned slick where it is
+# aimed: a charge laid at a doorway becomes a stumble. The player slips too. Scroll only.
+[[spell]]
+id = "slick"
+name = "Slick"
+description = "The ground where you aim it turns slick as ice a while: whoever steps on it may slip and lose their footing."
+level = 6
+school = "transmutation"
+kind = "hex"
+shape = "burst"
+resolution = "area"
+range = 8
+radius = 1
+effect = { zone = { kind = "slick", turns = 20 } }
+
+[spell.cast]
+noise = { sound = "chanting", loudness = 20 }
+
+[spell.grows]
+range = "willpower 14 9, 18 10"

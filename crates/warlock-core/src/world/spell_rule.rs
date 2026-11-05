@@ -154,11 +154,16 @@ impl World {
             self.spell_landed(cast, id, moved, events);
         }
         if cast.def.effect.douses {
-            for p in path {
+            for &p in &path {
                 if self.state.current().fires.contains_key(&p) {
                     self.put_out(p);
                 }
             }
+        }
+        // Clouds are torn away: the zones it clears lose the cells of its line (`zone.rs`).
+        let clears = &cast.def.effect.clears;
+        if !clears.is_empty() {
+            (self.state.current_mut()).clear_zone_cells(&path, clears);
         }
         true
     }

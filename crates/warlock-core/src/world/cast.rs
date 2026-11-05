@@ -598,6 +598,20 @@ impl World {
         if let (Some(at), Some(push)) = (at, cast.def.effect.push) {
             return self.cast_gale(cast, at, push, events);
         }
+        if let (Some(at), Some(_)) = (at, cast.def.effect.zone) {
+            let (range, radius) = (
+                cast.reach.range.unwrap_or(1),
+                cast.reach.radius.unwrap_or(1),
+            );
+            let done = self.cast_zone(cast, (at, range, radius), events);
+            // A zone laid is its work done, whoever comes to it.
+            let landed = Outcome {
+                landed: done,
+                ..cast.outcome.get()
+            };
+            cast.outcome.set(landed);
+            return done;
+        }
         let (Some(at), Some((status, _)), Some(severity)) =
             (at, cast.def.effect.status, cast.degrees)
         else {
@@ -755,6 +769,9 @@ impl World {
             self.say(text.clone());
         }
         let here = self.player_pos();
+        // Before the cast: who stands in its way may fall (`zone.rs`).
+        let radius = cast.reach.radius.unwrap_or(1);
+        let zone = self.zone_cells(cast, (here, at, range), radius);
         let effect = def.look.effect.clone().unwrap_or_default();
         let mut made = Vec::new();
         let mut turned = None;
@@ -806,6 +823,7 @@ impl World {
         };
         self.spell_type_spreads(player, (def, cast.reach.jumps), rolled, &mut made);
         self.spell_lands(player, (def, &cast.riders), made, Some(cast), events);
+        self.lay_spell_zone(cast, zone, events);
         // Spell reflection: the spell a shield blocked goes back at its caster (`reflect.rs`),
         // its riders the caster's.
         if let Some(turned) = turned {
