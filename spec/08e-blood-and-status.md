@@ -336,7 +336,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
   - **Guaranteed spells** (design §8): a class's level table (`abilities`, §8 "Class
     abilities") gives its spells as class abilities with a `spell` effect, at the level each
     comes at, never above the class's caster level then (character level × `casting` ÷ 100, at
-    least 1; the content test). Wizard: Ray of
+    least 1; the content test, until #990 removes that clause), whatever the character's
+    Spellcraft. Wizard: Ray of
     frost (1), Burning hands (1), Magic missile (3), Arcane bolt (18). Priest: Mend (1),
     Blessing (3), Cure wounds (3) (their rite is the prayer, §8i). Druid: Spark (1), Barkskin (3), Call of
     the wild (6), Call lightning (12), Call of the forest (25), Call the elements (40), Flame and
@@ -361,9 +362,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
     levels more often (§7 "Shops").
   - **Levels** (the spell scaling design §5, decisions 1, 9, 10, 16): a spell has a **level**,
     0 to 70 (`MAX_SPELL_LEVEL`), one number with two meanings: its **base mana** (the level, at
-    least 1) and the **caster level at which a scroll of it teaches for certain**. A spell of
+    least 1) and the **learning at which a scroll of it teaches for certain** ("Learning" below). A spell of
     level 0 or 1 is a *cantrip* (1 mana unless it names its own `mana`, as Burning hands and Grave
-    breath do, 3; anyone with mana learns it for certain). There is no
+    breath do, 3; anyone trained in Spellcraft learns it for certain). There is no
     table of levels, no ceiling, and no check on how much a spell of a level may do: its own
     data says it (decision 16). A `tier` key is refused, saying to use `level`.
   - **Cost table** (`data/spells.toml`): the **shapes** multiply the base mana (ray, bolt,
@@ -505,9 +506,24 @@ developer notes (CLAUDE.md, `docs/dev/`).
     the `caster_level` talent effect (racial and birth-sign gifts are talents; flat, or `value`
     per `per_levels` character levels: the wizard's Arcane training, +1 per 5) and affix effect;
     never below 0, and at least 1 for anyone whose maximum mana is
-    above 0. It sets learning only; never a spell's roll, reach, or mana (decisions 1 and 10). The player knows
+    above 0. It sets nothing in play since learning became Spellcraft's (#987; the no-caster-level
+    design removes the rest, #990); never a spell's roll, reach, or mana (decisions 1 and 10). The player knows
     it: the dump `stats` layer's `Caster level N` (after the scores), JSON dumps' `caster_level`
     (`PerceptionView::own_caster_level`).
+  - **Learning, the number** (`Actor::learning`, `world/learn.rs`; derived, never stored;
+    `docs/design/no-caster-level.md`, #987): what a scroll teaches for certain comes from the
+    Spellcraft skill and nothing else, its `learn` benefit (`data/skills.toml`: 0 to 10, 10 at 60,
+    30 at the soft cap 100, 70, the last spell level, from 150) at the skill's value with what
+    skill affixes and the talents' `skill` bonuses add (`Actor::skill_effect`), **at least 1** for a
+    character trained in Spellcraft. A character **not trained** in it (the skill not in their
+    trained set: an item's or a talent's bonus to a skill they do not have trains nobody) has no
+    learning and cannot study a scroll at all, cantrips included: refused, no time, "You have no
+    training in Spellcraft; you cannot make sense of how to learn a spell from a scroll." Reading a
+    scroll to cast it, and the spells a class grants, need no Spellcraft. Starting Spellcraft by
+    class (§7e): wizard, witch, priest, druid `2d6+10`; bard, paladin, ranger `2d4+4`; aristocrat
+    35 % `2d4+4`, ascetic 20 % `2d4` (optional skills); no other class, race, or birth sign gives
+    any; two background lines add to it (both name classes that have it already), and it grows by
+    level-up rolls as any skill. Nothing else trains it: a character without it stays without it.
   - **Learning** (`world/learn.rs`, `content/learning.rs`; #396): a character knows a set of
     spells for good: those their class abilities give and those they learned
     (`Actor::spells`, saved by id, left out of the JSON while empty). Either kind is cast from
@@ -529,9 +545,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
       is said: a blow lands, a status begins); an interrupted study loses the time and keeps the
       scroll (design §14 q1). Once begun, the player cannot stop it themselves.
     - **The check**, as the last turn ends, on the scroll used up (Scroll savant never keeps a
-      studied scroll, design §14 q7): overreach is the spell's level less the caster level. At
+      studied scroll, design §14 q7): overreach is the spell's level less the learning. At
       0 or less the spell is learned, no draw, unless the spell is made hard to learn
-      (`study_difficulty` above 0: a check at any caster level, overreach counted as at least
+      (`study_difficulty` above 0: a check at any learning, overreach counted as at least
       0). Above, a 2d12 check with
       the Intelligence modifier + the skills' `study` benefit (Spellcraft and Decipher script,
       each value ÷ 10, at most 20) + the class's `affinity` with the spell's school

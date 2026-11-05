@@ -149,7 +149,10 @@ fn wading_steps_mark_swim_one_chance_in_ten() {
             .map(|m| (m.on, m.chance))
             .collect::<Vec<_>>()
     };
-    assert_eq!(rules(&CONTENT), [(Use::Wade, 10), (Use::Swim, 100)]);
+    assert_eq!(
+        rules(&CONTENT),
+        [(Use::Wade, 10), (Use::Swim, 100), (Use::Stroke, 25)]
+    );
 
     let mut w = World::new(EAGER.clone(), "pond", Some(1)).expect("world");
     set_swim(&mut w, Some(10));

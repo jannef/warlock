@@ -38,7 +38,11 @@ it until found (`docs/dev/searching.md`). Water: `~` is still water; running wat
 `flow` anim) needs a flow on every cell from its legend entry (`flow = "S"`, optional
 `flow_speed` percent), and the shared legend draws it as arrows (`→` normal, `⇒` double speed).
 Flow is presentation data carried by `LevelTemplate::flow` / `LevelState::flow` and read by the
-renderer through `PerceptionView::flow` (visible cells only); no rule reads it.
+renderer through `PerceptionView::flow` (visible cells only); no rule reads it. Deep water
+(`terrain = "deep_water"`, no shared legend glyph: a level names it in its own legend) is `swim =
+true` with `walkable = false`; the loader refuses `swim` on anything walkable, solid, freezing, or
+a door, stairs, chest, breaking wall, light, or overworld terrain (`docs/dev/skills.md`).
+`data/swim.toml` holds a swim's numbers.
 
 ## Content directories
 
