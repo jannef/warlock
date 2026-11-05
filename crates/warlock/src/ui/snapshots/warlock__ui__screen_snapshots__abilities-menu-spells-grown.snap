@@ -17,7 +17,7 @@ expression: "render(case, content.clone())"
           │   h  Shatter           3d6+4 force, shoves on a big hit, 10 mana, aimed     │
           │   i  Chain lightning   6d6+3 electricity, may arc, conducts, 14 mana, aimed │
           │ Skills                                                                      │
-          │   j  Decipher script   not usable yet                                       │
+          │   j  Decipher          no unknown scroll                                    │
           │   k  Heal              nothing to treat                                     │
           │   l  Knowledge         not usable yet                                       │
           │   m  Listen at a door  in a direction                                       │

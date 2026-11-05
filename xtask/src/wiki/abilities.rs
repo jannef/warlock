@@ -54,6 +54,11 @@ pub(super) fn abilities(content: &Content) -> String {
                     .into()
             }
             Ability::Intimidate => "everyone trained in Intimidate".into(),
+            Ability::Decipher => {
+                "everyone trained in Decipher script (usable with a scroll of a kind they have not \
+                 identified in the pack; see [Scrolls](scrolls.md))"
+                    .into()
+            }
             Ability::Heal => "everyone trained in Heal (with something to treat)".into(),
             Ability::Forage => {
                 "everyone trained in Survival (usable in the wild: the overworld's land and its \
@@ -139,6 +144,10 @@ pub(super) fn abilities(content: &Content) -> String {
                 )
             }
             // A long action too: the forage's time.
+            Some(_) if a == Ability::Decipher => {
+                let minutes = content.decipher().map_or(0, |r| r.seconds / 60);
+                (aim(a.aim(content)), format!("{minutes} minutes (a try)"))
+            }
             Some(_) if a == Ability::Forage => {
                 let minutes = content.forage().map_or(0, |r| r.seconds / 60);
                 (aim(a.aim(content)), format!("{minutes} minutes (a forage)"))

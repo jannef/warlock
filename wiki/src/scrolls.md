@@ -28,6 +28,10 @@ happens. You may try again at once. Every check earns those trained in Decipher 
 
 {{#include generated/decipher-chances.md}}
 
+### Deciphering a scroll unread
+
+Those trained in [Decipher script](skills.md#skill-decipher-script) can use the **Decipher** [ability](abilities.md) on a scroll they carry of a kind they have not [identified](#unknown-scrolls), without reading it. It takes ten minutes (a creature coming into view, or a blow, stops it and nothing comes of it) and then makes the same check as reading it, with the same rules above: a scroll of a spell you know, or within your Spellcraft's learning, is made out at once. Make it, and you learn the kind: every scroll of it shows by its name from now on, and the scroll is kept, unread. Fail, and the ten minutes are gone and the scroll stays a label; you may try again. Every check earns a [training mark](skills.md#getting-better) in Decipher script, as a reading's does.
+
 ## Unknown scrolls
 
 A scroll you have never read shows by a **label** instead of its name: "a scroll labelled
