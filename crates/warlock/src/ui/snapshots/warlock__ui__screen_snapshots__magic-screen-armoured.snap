@@ -12,7 +12,7 @@ expression: "render(case, content.clone())"
 
 ┌─ Magic ─────────────────────────────────────────────────────────────────────────────────────────────────────┐
 │                                                                                                             │
-│ Mana 8/8                                                                                                    │
+│ Mana 6/6                                                                                                    │
 │                                                                                                             │
 │ Schools                                                                                                     │
 │   Evocation                0  ──────────                                                                    │
@@ -41,4 +41,4 @@ expression: "render(case, content.clone())"
 
 
 
- The Forge  ·  HP 20/20  ·  MP 8/8  ·  Sta 10/10  ·  Zeal 6/10  ·  Burdened  ·  Lv 1  ·  08:01       ? controls
+ The Forge  ·  HP 20/20  ·  MP 6/6  ·  Sta 10/10  ·  Zeal 6/11  ·  Burdened  ·  Lv 1  ·  08:01       ? controls

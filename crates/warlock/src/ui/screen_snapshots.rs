@@ -1138,6 +1138,7 @@ const CASES: &[Case] = &[
     Case {
         name: "scroll-study-list",
         scenario: "traps",
+        character: Some("human,female,wizard"),
         actions: "move:E pickup identify",
         keys: Some("L"),
         ..BASE
@@ -1145,6 +1146,7 @@ const CASES: &[Case] = &[
     Case {
         name: "scroll-study-dialog",
         scenario: "traps",
+        character: Some("human,female,wizard"),
         actions: "move:E pickup identify",
         keys: Some("L a"),
         ..BASE
@@ -1152,7 +1154,17 @@ const CASES: &[Case] = &[
     Case {
         name: "scroll-study-none",
         scenario: "traps",
+        character: Some("human,female,bard"),
         actions: "move:E pickup",
+        keys: Some("L"),
+        ..BASE
+    },
+    // A character not trained in Spellcraft is told so, whatever they carry.
+    Case {
+        name: "scroll-study-untrained",
+        scenario: "traps",
+        character: Some("human,male,warrior"),
+        actions: "move:E pickup identify",
         keys: Some("L"),
         ..BASE
     },
