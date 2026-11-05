@@ -1020,6 +1020,15 @@ const CASES: &[Case] = &[
         screen: Some("eat"),
         ..BASE
     },
+    // A thief is trained in Appraise (#1031): the eat list says how fresh the food looks.
+    Case {
+        name: "eat-screen-judged",
+        seed: Some(6),
+        character: Some("human,male,thief"),
+        run: true,
+        screen: Some("eat"),
+        ..BASE
+    },
     // Nothing to consume (the arena's pack holds no food).
     Case {
         name: "consume-list-none",

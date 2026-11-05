@@ -141,6 +141,7 @@ mod focus;
 mod forage;
 mod free_blow;
 mod frenzy;
+pub(crate) mod freshness;
 mod gifts;
 mod glare;
 mod guild;
@@ -1180,6 +1181,7 @@ impl World {
             lore: self.lore(),
             snapshot: &self.perception,
             encounter: self.state.encounter.as_ref(),
+            seed: self.state.seed,
         }
     }
 
@@ -1651,6 +1653,8 @@ mod free_blow_tests;
 #[cfg(test)]
 mod frenzy_tests;
 #[cfg(test)]
+mod freshness_tests;
+#[cfg(test)]
 mod gear_tests;
 #[cfg(test)]
 mod gem_tests;
@@ -1792,6 +1796,8 @@ mod scriptorium_tests;
 mod scroll_label_tests;
 #[cfg(test)]
 mod search_tests;
+#[cfg(test)]
+mod service_haggle_tests;
 #[cfg(test)]
 mod service_tests;
 #[cfg(test)]

@@ -539,7 +539,12 @@ developer notes (CLAUDE.md, `docs/dev/`).
     anything unknown hashes as before. Untrained, never (a magic item's bonus alone does not
     give it). Each thing told may mark Appraise (`appraise`, 100 %). The classes trained in
     Appraise (bard, thief, craftsperson, merchant) have Negotiation at the same dice; the
-    merchant is known for both. Gnomes keep Appraise alone.
+    merchant is known for both. Gnomes keep Appraise alone. Appraise and Survival also tell food's freshness
+    (#1031, `freshness` benefit; §8 "Hunger"): in words (`fresh`, `old`, `rotten`) in the eat list and look mode, when
+    a per-hour check passes, summed percent chance (Appraise 25 / 60 / 80 % at 0 / 100 / 200, Survival 15 / 35 / 50 %,
+    rotten food 25 points easier, at most 95 %); eating such food marks Appraise (`judged`, 10 %). A healer's and a
+    sage's service price follows the same favour as a shop's (a `temple` service stays flat), and a service paid
+    marks Negotiation (`deal`).
 - **Treating oneself** (`heal.rs`, `world/heal.rs`; #549, the owner 2026-10-27): the Heal
   skill's use, the abilities menu's **Heal** (`Ability::Heal`, in the skill's place among the
   Skills; `Action::Heal`, replay text `heal`, `heal:ID`, or `heal:ID:DIR`; cost `heal`, 2500: a

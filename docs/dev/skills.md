@@ -149,7 +149,8 @@ draws from its own stateless stream `Rng::stream(seed, "appraise/<hour>")`: `cha
 `skill_effect(Identify)` percent, then `index` for the stack. No state is saved, so how the time
 is cut never changes the outcome. `World::learn_item` (`world/loot.rs`) is `World::identify`
 without its "This is ...!" line; Appraise says "You realise your X is Y." and reports
-`Use::Appraise`. Tests: `world/appraise_tests.rs` (the split, prices, the line, untrained,
+`Use::Appraise`. Appraise also carries `Effect::Freshness` (with Survival's, #1031: the tell of how fresh
+food is, `world/freshness.rs`, docs/dev/hunger.md) and the mark `judged`. Tests: `world/appraise_tests.rs` (the split, prices, the line, untrained,
 cutting time, rest and skip, replays), `world/shop_tests.rs::deals_train_negotiation`.
 
 Overworld encounters (#804; `docs/dev/encounters.md`): Spot's and Survival's `lookout`,

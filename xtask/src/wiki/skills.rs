@@ -58,6 +58,7 @@ pub(super) fn gated_effect(effect: Effect) -> bool {
     matches!(
         effect,
         Effect::Spot
+            | Effect::Freshness
             | Effect::Identify
             | Effect::Disarm
             | Effect::Pick
@@ -91,7 +92,8 @@ fn effect_name(effect: Effect) -> &'static str {
         Effect::Burden => "less slowdown from your load",
         Effect::Travel => "quicker journeys on the overworld",
         Effect::Forage => "foraging at all, and finding food more often",
-        Effect::Bargain => "better prices in shops",
+        Effect::Bargain => "better prices in shops, and at a healer's or a sage's",
+        Effect::Freshness => "telling how fresh food and corpses are",
         Effect::Identify => "now and then telling something you carry for what it is",
         Effect::Kick => "more Strength for kicking doors in",
         Effect::Slip => "slipping past eyes that see in the dark",
@@ -145,6 +147,7 @@ pub(super) fn skill_benefits(content: &Content) -> String {
             Effect::Travel => "journeys",
             Effect::Forage => "foraging",
             Effect::Bargain => "prices",
+            Effect::Freshness => "telling freshness, each hour",
             Effect::Identify => "identifying, each hour",
             Effect::Kick => "kicking doors in",
             Effect::Slip => "slipping past",
@@ -207,7 +210,7 @@ pub(super) fn skill_benefits(content: &Content) -> String {
                 Effect::Quiet | Effect::Travel => format!("\u{2212}{n}%"),
                 Effect::Bargain => format!("{n}% better"),
                 Effect::Forage => format!("+{n}%"),
-                Effect::Identify => format!("{n}%"),
+                Effect::Freshness | Effect::Identify => format!("{n}%"),
                 Effect::Speed | Effect::ManaRegen => format!("+{n}%"),
                 Effect::MaxMana => format!("+{n} mana"),
                 Effect::Hearing => n.to_string(),

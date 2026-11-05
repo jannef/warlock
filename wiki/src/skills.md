@@ -66,13 +66,19 @@ The passive skills help you more the higher they are:
   your steps in a local area or a dungeon), and lets you forage in the wild, finding food more
   often the higher it is (see [Foraging](#foraging)).
 - **[Negotiation](skills.md#skill-negotiation)** gets you better prices in [shops](shops.md): you pay less and are offered
-  more. A deal made (goods paid for, or your own sold) trains it now and then.
+  more, and a healer or a sage who sells a [service](npcs.md#services) asks less (a [temple](npcs.md#services) never haggles).
+  A deal made (goods paid for, your own sold, or a service paid) trains it now and then.
 - **[Appraise](skills.md#skill-appraise)** now and then tells you what something you carry or wear really is. On every
   hour of game time that passes ([resting](resting.md#how-resting-works) too), if you carry anything you do not fully know
   (an [unidentified](magic-items.md#unidentified-items) [magic item](magic-items.md), a [scroll](scrolls.md#unknown-scrolls) of a kind you have not identified, a [wand](magic.md#wands) whose
   charges you do not know), you have a small chance to tell one of them, picked at random:
   2 % an hour at 0, 12 % at 100, 20 % at 200 (the table below; items of Appraisal raise it).
   Only those trained in [Appraise](skills.md#skill-appraise) get it at all. Each thing told this way trains it.
+  Appraise also has an eye for food: an hour at a time, a trained eye may tell in words how fresh a corpse or food is
+  (*fresh*, *old*, or *rotten*), in the eat list and when you look at it (see [Food](food.md#food-spoils)). [Survival](skills.md#skill-survival)
+  gives the same eye, and where you have both the chances add up (25 % at 0, 60 % at 100, 80 % at 200 for Appraise; 15 %,
+  35 %, 50 % for Survival; rotten food is plainer to tell, 25 points more, and no chance is above 95 %). Eating food whose
+  freshness you could tell trains Appraise now and then.
 - **[Search](skills.md#skill-search)** helps you find [secret doors](doors.md#secret-doors) and other hidden things when you search (`s`, `S`),
   and a master's search reaches a cell farther (see [Searching](searching.md)).
 - **[Spot](skills.md#skill-spot)** lets you [notice hidden things in passing](searching.md#noticing-in-passing) at all, [traps](traps.md#finding-traps) aside, and the higher it is,
