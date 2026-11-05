@@ -159,7 +159,7 @@ danger), entered from the overworld's `T` (`to = "ceaptun"`), arriving on the sq
 with no stairs, left by its edge back to that cell (or `<` when no enemy is about;
 docs/dev/overworld.md, the edge exit of a hand-made outdoor level and the quick leave). The map was drawn by a throwaway script and is edited by hand now. Its
 `[[shop]]`s (general store, weaponsmith, armourer, provisioner; keepers named in Old English)
-lay out `[[pile]]`s of goods each kind buys; the Mynster is a `sanctuary` `[[room]]`. The people
+lay out `[[pile]]`s of goods each kind buys; the Forge also has an `anvil` (legend `A`, at (35, 5) beside the smith's brazier), the `forge` effect's feature, so Temper is offered beside it and walking into it asks (#975, #1023; free, not the shop's service); the Mynster is a `sanctuary` `[[room]]`. The people
 are campaign creature types (`data/creatures/{villager,sister,innkeeper,reeve,mine_factor,guildmaster}.toml`)
 and their words are `data/dialogue/ceaptun.toml`: the `villager` type's one-liners and mutters,
 and the npcs `hild` (Sister Hild: two topics, the `cure` 60 and `mend` 40 services), `godgifu`
