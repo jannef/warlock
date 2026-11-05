@@ -103,7 +103,6 @@ mod calling;
 mod carry;
 mod cast;
 mod caster;
-mod caster_level;
 mod chest;
 mod class;
 mod class_ability;
@@ -137,6 +136,7 @@ mod experience;
 mod eyes;
 mod familiar;
 mod feature;
+mod feint;
 mod fight;
 mod flavour;
 mod focus;
@@ -254,6 +254,7 @@ mod weapon_ability;
 mod weapon_active;
 mod witch;
 mod words;
+mod wriggle;
 mod zap;
 
 pub use actor::{Actor, ActorId, ActorKind, AttackSkills, Mind, Patrol};
@@ -262,7 +263,6 @@ pub use ally::{Ally, AllySource, MAX_DEV_ALLIES, Order};
 pub use attacks::{AttackSource, OwnAttack};
 pub use calling::CallingStatus;
 pub use cast::Reach;
-pub use caster_level::casting_percent;
 pub use collar::fits_neck;
 pub(crate) use companion::smelt_within;
 pub use companion::{CompanionData, draw as companion_draw, name_for as companion_name};
@@ -1427,6 +1427,7 @@ impl World {
             Action::Ask { dir, topic } => return self.ask(*dir, topic, events),
             Action::Say { dir, words } => return self.say_to(*dir, words, events),
             Action::Steal(dir) => return self.steal(*dir),
+            Action::Feint(dir) => return self.feint(*dir, events),
             Action::Tame(dir) => return self.start_tame(*dir),
             Action::Intimidate(at) => return self.intimidate(*at, events),
             Action::ThrowVoice(at) => return self.throw_voice(*at, events),
@@ -1578,6 +1579,8 @@ mod bond_tests;
 #[cfg(test)]
 mod branch_tests;
 #[cfg(test)]
+mod buff_field_tests;
+#[cfg(test)]
 mod buff_tests;
 #[cfg(test)]
 mod burden_tests;
@@ -1585,8 +1588,6 @@ mod burden_tests;
 mod calling_tests;
 #[cfg(test)]
 mod cast_tests;
-#[cfg(test)]
-mod caster_level_tests;
 #[cfg(test)]
 mod caster_style_tests;
 #[cfg(test)]
@@ -1671,6 +1672,8 @@ mod escape_tests;
 mod experience_tests;
 #[cfg(test)]
 mod feature_tests;
+#[cfg(test)]
+mod feint_tests;
 #[cfg(test)]
 mod fight_tests;
 #[cfg(test)]
@@ -1975,6 +1978,8 @@ mod weather_tests;
 mod witch_tests;
 #[cfg(test)]
 mod words_tests;
+#[cfg(test)]
+mod wriggle_tests;
 #[cfg(test)]
 mod zap_tests;
 

@@ -284,6 +284,7 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("skill-rolls.md", skills::skill_rolls),
         ("slipping-past.md", skills::slipping_past),
         ("stealing.md", skills::stealing),
+        ("feinting.md", skills::feinting),
         ("intimidating.md", skills::intimidating),
         ("heal-targets.md", skills::heal_targets),
         ("abilities.md", abilities::abilities),
@@ -323,7 +324,6 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("mana-paces.md", mana::paces),
         ("spell-shapes.md", spells::shapes),
         ("spell-resolutions.md", spells::resolutions),
-        ("spell-casting.md", spells::casting),
         ("spell-list.md", spells::list),
         ("spell-types.md", spells::types),
         ("class-spells.md", spells::class_spells),
@@ -1212,6 +1212,7 @@ mod tests {
             benefit("100", "Balance: rough ground's extra cost"),
             "\u{2212}60%"
         );
+        assert_eq!(benefit("100", "Bluff: feint's difficulty"), "+8");
         assert_eq!(benefit("100", "Concentration: mana pool"), "+5 mana");
         assert_eq!(benefit("100", "Decipher script: reading scrolls"), "+8");
         assert_eq!(benefit("100", "Sneak attack: sneak attack dice"), "5d6");
@@ -1224,6 +1225,7 @@ mod tests {
             benefit("150", "Balance: rough ground's extra cost"),
             "\u{2212}80%"
         );
+        assert_eq!(benefit("150", "Bluff: feint's difficulty"), "+10");
         assert_eq!(benefit("150", "Decipher script: reading scrolls"), "+10");
         assert_eq!(benefit("150", "Sneak attack: sneak attack dice"), "6d6");
         assert_eq!(benefit("150", "Tumble: Dodge"), "+7");
@@ -1467,7 +1469,6 @@ mod tests {
             "{list}"
         );
         assert!(text("wands.md").contains("| wand of fireball | Fireball | 11 | 7 | 2d6 to 4d6 |"));
-        assert!(text("spell-casting.md").contains("| Wizard | 100 % |"));
         let learning = text("learning.md");
         assert!(learning.contains("| Spellcraft | Learning |"), "{learning}");
         for row in ["| 0 | 1 |", "| 60 | 10 |", "| 100 | 30 |", "| 150 | 70 |"] {

@@ -5,7 +5,6 @@ description = "A keeper of the old ways who speaks for forest and beast: hardy a
 stats = { toughness = "1d2", willpower = "2d2", presence = -1 }
 hp = 4
 mana = 9
-casting = 100
 affinity = { restoration = 2, transmutation = 2, evocation = 1, enchantment = 1 }
 experience = 115
 ally_share = 100  # a pet class: an ally's kill pays in full (allies.toml's ally_percent for others)
@@ -39,6 +38,7 @@ abilities = [
     { level = 1, talent = "spark" },
     { level = 3, talent = "barkskin" },
     { level = 6, talent = "call_of_the_wild" },
+    { level = 6, talent = "water_walking" },
     { level = 12, talent = "call_lightning" },
     { level = 18, talent = "natures_ward" },
     { level = 25, talent = "call_of_the_forest" },

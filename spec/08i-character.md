@@ -551,13 +551,26 @@ developer notes (CLAUDE.md, `docs/dev/`).
     the player pays no heed (no draw). Refused, with no time and no draw: untrained, at the
     player's own cell, out of range, at no creature seen, at one not hostile, or at one without
     vitals.
+  - **Bluff** (#1016; `kind = "action"`): gives `feint` (+8 at 100, +12 at 200, at most 20) on the
+    difficulty of a feint's Willpower check, marked by `feint` (50 %: a feint made, whatever came
+    of it). Its use is the **Feint** ability (the abilities menu's Skills group, in the skill's
+    place, while `data/feint.toml` exists; no key): in a direction, `feint:DIR`, at a hostile
+    creature the player sees there, with a mind to fool. It takes the `feint` action (a turn). The
+    foe rolls 2d12 + its Willpower modifier (+ its talents' Willpower checks; two gameplay draws)
+    against the file's `difficulty` 10 + the player's Presence modifier + what Bluff adds. Failed,
+    it is Surprised, caused by the player ("The kobold falls for it."): its first action in that
+    turn does not ease it, so the player's next blow finds it flat-footed (no Dexterity or Dodge
+    in its Defence, Sneak attack's dice); its action after that ends it. Made, the turn is spent
+    ("The kobold is not fooled."); try again. Refused, with no time and no draw: untrained, at no
+    creature seen, at one not hostile, or at one without vitals (`Content::has_vitals`). There
+    is no Bluff check when caught: a caught thief stays caught (the owner).
   - **Active uses**: skills get no keys of their own. Racial, class, skill, and style abilities
     are chosen from one abilities menu (§6 "Abilities", #156), unlike ADOM: each trained skill
     with an active use (`kind = "action"`) is an ability there (`warlock_core::ability`,
     `PerceptionView::abilities`), greyed out as "not usable yet": the uses come with their
     actions, and one whose use has come is that ability instead (Disable device's is "Disarm a
     trap", §8 "Disarming traps"; Open lock's "Pick lock", §8 "Doors"; Steal's "Steal",
-    "Stealing" below; Heal's "Heal", "Treating oneself" below); a passive skill with a use is listed as it too (Survival's "Forage",
+    "Stealing" below; Bluff's "Feint", above; Heal's "Heal", "Treating oneself" below); a passive skill with a use is listed as it too (Survival's "Forage",
     "Foraging" below). Never a benefit's number,
     a mark, a
     chance, an untrained skill, or a creature's skills; ground-truth dev dumps (`actors`, the
@@ -1022,7 +1035,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     The `spells` system (the magic design §10, #400) came with the **Spellcraft** tree: Quick
     study (free, #396: study +2, study time −50 %), Overreach (level 6,
     `study { overreach_percent = -33 }`, the spell scaling design §7.2: a spell's levels over
-    the caster level count a third fewer, rounded down, in the study check;
+    the learning count a third fewer, rounded down, in the study check;
     `TalentMods::study_overreach_percent`), and School focus (free, `choice = "school"`: a school or
     an element, the spell tags of §8 "Spells"; `spell_mod { cost = -10, cells = 1 }`: a spell
     carrying the tag costs a tenth less and reaches a cell farther, range or length); Keen mind

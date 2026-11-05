@@ -90,8 +90,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     beside the talents' (§8 "Spells": "Hooks", `Actor::spell_mods`; no tag filter on an item:
     each acts on every spell): `spell_rungs` rungs, `spell_bonus` (Potent: +1, +2, +3 at item
     levels 3, 7, 11) on the roll, `spell_sides`, `spell_dice`, `spell_reroll`, `spell_reach`
-    cells of range or length with School focus's, `spell_duration` degrees. Nothing gives caster level any more: of the Adept and the talent Attuned were
-    removed (#988), and of the Scholar (Spellcraft) is the one affix of learning, on staffs too.
+    cells of range or length with School focus's, `spell_duration` degrees. Of the
+    Scholar (Spellcraft) is the one affix of learning, on staffs too.
     The utility hooks
     are in (#631), worn by the player or a creature, identified or not: `door_kick` adds to a
     kick's Strength as Lockbreaker's does (a door's and a chest's), `dig_percent` is that much
@@ -430,8 +430,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
   - **Reach, by Willpower**: an effect's reach is its `range`, then the rung of its
     `grows.range` ladder (§8 "Spells": "Ladders", the same grammar and parser,
     `willpower 14 4, 18 5`) the user's effective score in the ladder's stat reaches, as a
-    spell's reach is read. **No caster level is read** (the spell scaling design §7.5,
-    decision 10: caster level is learning only): a status effect's `up_to_level` takes only
+    spell's reach is read. **Nothing of the user's level is read** (the spell scaling design
+    §7.5, decision 10): a status effect's `up_to_level` takes only
     creatures whose level is at most it, the same in anyone's hands ("The ogre shrugs it
     off."). No skill applies: there is no Use magic device skill (the owner).
   - **Effects** (`data/rod_effects/`, one `[[rod_effect]]` a file: `shape` line, bolt, or burst,

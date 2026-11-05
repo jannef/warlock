@@ -34,6 +34,7 @@
 #                 "appraise" (something you carry told for what it is: "identify" below),
 #                 "judged" (food whose freshness you could tell, eaten: "freshness" below),
 #                 "intimidate" (a war cry roared or a foe threatened, whatever comes of it),
+#                 "feint" (a feint at a foe, whatever comes of it),
 #                 "rough_step" (a step onto ground that slows and is not water: bush, reeds,
 #                 rubble, ice), "staggered" (an action taken Staggered),
 #                 "song" (a song sung, whatever it does), "wade" (a step wading through water
@@ -77,7 +78,9 @@
 #                 treating your bleeding, poison, or a disease, at most 20; trained, a skill with
 #                 it lets you treat them at all: the Heal ability), "pick" (points added to
 #                 picking a lock, at most 20; trained, a skill with it
-#                 lets you pick locks at all: the Pick lock ability), "intimidate" (points added to
+#                 lets you pick locks at all: the Pick lock ability), "feint" (points added to the difficulty of a
+#                 feint's Willpower check, at most 20; trained, a skill with it lets you feint at
+#                 all: feint.toml), "intimidate" (points added to
 #                 the difficulty of the Willpower check your war cry asks of those who hear and
 #                 see you, at most 20), "song_degrees" (degrees added to what your songs give,
 #                 up to the status's own most, at most 10), "song_craft" (points added to the
@@ -177,8 +180,13 @@ benefit = [
 [[skill]]
 id = "bluff"
 name = "Bluff"
-description = "Lying with a straight face, feinting, and talking your way out."
+description = "Lying with a straight face, feinting, and talking your way past."
 kind = "action"
+# Marked by "feint" (a feint at a foe, feint.toml, the skill's use, whatever comes of it). Effect
+# "feint": points added to the difficulty of the Willpower check a feint asks, +8 at 100, +12 at
+# 200, at most 20. Being trained in it gives the Feint ability.
+mark = [{ on = "feint", chance = 50 }]
+benefit = [{ effect = "feint", curve = [[0, 0], [100, 8], [200, 12]] }]
 
 [[skill]]
 id = "concentration"
@@ -239,10 +247,11 @@ name = "Escape artist"
 description = "Slipping out of bonds, grabs, and tight places."
 kind = "rules"
 # Marks: every automatic check against bonds, whatever comes of it (world/hold.rs), and every climb
-# out of a pit.
+# out of a pit, and half the tries at wriggling past a creature in the way (world/wriggle.rs).
 mark = [
     { on = "escape", chance = 100 },
     { on = "climb", chance = 100 },
+    { on = "wriggle", chance = 50 },
 ]
 # Effect "escape": points added to the check against bonds (better of Strength and Dexterity
 # against a hold's grip or a status's `escape`), +8 at 100, +12 at 200; trained at all, an action
