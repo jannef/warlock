@@ -27,7 +27,12 @@ pool = ["armour", "rings"], grade = "magic" }`, `grade` optional, default `any`;
 a list). A pool's names are item class ids or the `group`s of `data/item_classes.toml` (`weapons`,
 `armour`, `jewellery`, `money`); `LootPool::named` refuses at load a name that is neither, or that
 can hold nothing of the grade even at the highest item level (`magic/pool_tests.rs`). Use one
-cell per find; prefer a pool to a static `[[pile]]` in a generic vault. `secret =
+cell per find; prefer a pool to a static `[[pile]]` in a generic vault. A vault's legend entry may
+draw `monsters` too (`content/monster_pool.rs`): `monsters = { pool = "level", count = 20 }`
+(`"level"` the floor's population, or tags: `pool = "goblin"`, `pool = ["orc", "troll"]`; `count`
+over the entry's marked cells, default one on each; refused at load: `MonsterPoolSpec::resolve`,
+`VaultMonsters::counted`, `Vault::check_monsters`, `parse_level`'s checks; docs/dev/creatures.md
+for the draw and the cap). A vault that dangerous should be avoidable and pay better loot. `secret =
 true` (or a difficulty) on a closed door makes it a secret door: the cell shows the wall around
 it until found (`docs/dev/searching.md`). Water: `~` is still water; running water (terrain with a
 `flow` anim) needs a flow on every cell from its legend entry (`flow = "S"`, optional

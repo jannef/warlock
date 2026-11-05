@@ -285,10 +285,16 @@ fn perceived_glyph(view: &PerceptionView<'_>, layer: Layer, p: Pos) -> char {
         CellView::Unknown => ' ',
         CellView::Remembered(t) | CellView::Visible(t) => content.terrain(t).glyph,
     };
+    let stairs = |cell: CellView| match cell {
+        CellView::Unknown => false,
+        CellView::Remembered(t) | CellView::Visible(t) => content.terrain(t).stairs.is_some(),
+    };
     // A chest's known trap leaves the chest's glyph (spec §8 "Chests").
     let trap = view.trap(p).filter(|_| view.chest_at(p).is_none());
     let known_glyph = |cell: CellView| match (trap, view.objects(p).first()) {
         (Some(trap), _) => content.trap(trap).glyph,
+        // Known stairs keep their glyph over a pile (as the map draws them).
+        (None, Some(_)) if stairs(cell) => terrain_glyph(cell),
         (None, Some(top)) => content.object(top.object).glyph,
         (None, None) => terrain_glyph(cell),
     };

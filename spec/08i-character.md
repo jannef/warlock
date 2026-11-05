@@ -1693,8 +1693,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     once), `extra_damage` (Rend: the main hand's dice once more, no bonus, resisted, never
     soaked, after the blows), `free_shot` (Point-blank: a free shot with the missile weapon and
     the ammunition ready, else a throw of what is ready to throw; nothing without, no draw),
-    `parry_missiles` (Measure: Parry counts against shots and throws, which it otherwise never
-    does, "Combat" §8c), `reflect_spell` (Spell reflection: the blocked spell is cast again
+    `parry_missiles` (Measure: Parry counts against shots and throws, which it otherwise does
+    only for a shot from beside its target, "Combat" §8c), `reflect_spell` (Spell reflection: the blocked spell is cast again
     from the actor's cell at its caster, as the caster cast it, its roll, rerolls,
     to-hit, and riders, rolling its own attack against the caster's Defence; no mana spent
     again, nothing for the actor; at most `per_turn` (1) a turn of the actor's, and a reflected

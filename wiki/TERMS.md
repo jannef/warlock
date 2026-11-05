@@ -207,6 +207,7 @@ above.
 | Blood, stains | `combat.md#blood` |
 | Ranged combat, shooting, throwing | `ranged.md#shooting-and-throwing` |
 | Missile weapon, launcher, readied missiles | `ranged.md#getting-ready` |
+| Shot distance, long range, a shot from beside the target | `ranged.md#distance` |
 | Where a missile goes, missiles in flight | `ranged.md#where-a-missile-goes` |
 | Flaming arrows | `ranged.md#flaming-arrows` |
 | Weapon skill, rank, marks | `weapon-skills.md`, `weapon-skills.md#marks-and-ranks` |

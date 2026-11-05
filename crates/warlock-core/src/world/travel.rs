@@ -555,7 +555,12 @@ pub(super) fn instantiate_level(
     // Under the open sky its water has frozen and thawed with the weather of the last weeks.
     state.pre_roll_ice(content, id);
     for spawn in &template.creatures {
-        make_creature(state, content, id, spawn);
+        let made = make_creature(state, content, id, spawn);
+        if template.outside_cap.contains(&spawn.pos)
+            && let Some(spawner) = (state.levels.get_mut(id)).and_then(|l| l.spawner.as_mut())
+        {
+            spawner.outside.insert(made);
+        }
     }
 }
 

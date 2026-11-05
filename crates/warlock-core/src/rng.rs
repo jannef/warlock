@@ -105,6 +105,13 @@ impl Rng {
         Self::stream(run_seed, &format!("population/{level}"))
     }
 
+    /// The vault monsters stream of generated level `level` (spec §7 "Level file format"): who
+    /// its vaults' monster pools bring, their cells and routes, drawn just before its population
+    /// (so the map, traps, secrets, and loot are the same with any of them).
+    pub fn vault_monsters(run_seed: u64, level: &str) -> Self {
+        Self::stream(run_seed, &format!("vault_monsters/{level}"))
+    }
+
     /// The swarm stream of generated level `level` (spec §7 "Special rooms"): its teeming dens'
     /// sleepers, their cells, and their hoards, drawn once its population is (so the rest of the
     /// level is the same with or without a den).
