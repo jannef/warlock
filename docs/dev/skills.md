@@ -107,7 +107,12 @@ below it), called for the modifier of the player's check against a creature's dr
 (`World::expose` with a `by`), and a struggle against its hold (`World::struggle`, the effect's
 `by`); the same call marks `Use::Resist` (training stream only), and `World::discovered` marks
 `Use::Discover` beside the first-kill and arrival XP (`world/experience.rs`). The player only, and
-only against a creature: no bonus, no draw otherwise. Tests `world/knowledge_tests.rs`.
+only against a creature: no bonus, no draw otherwise. The same skills standing above a creature's
+level at all (`Actor::skill_stands_above`, `Skills::stands_above`: one above is enough, though the
+curve gives nothing below 3) tell look mode what its kind resists (#1030): `PerceptionView::known_resistances`
+reads `Actor::known_resistances` (`world/knowledge.rs`), the type's `resist` in `ResistanceWord`s,
+never gear or statuses, no marks; JSON dumps carry it as a seen actor's `known`; `ui/look.rs::known`
+writes the line. Tests `world/knowledge_tests.rs`.
 Metalcraft's `temper` benefit is read in
 `world/temper.rs::tempered` (the forge's Strength check, docs/dev/special-rooms.md); Metalcraft
 stays a skill "not usable yet" in the abilities menu, since Temper is offered by the anvil to

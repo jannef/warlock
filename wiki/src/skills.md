@@ -88,8 +88,10 @@ The passive skills help you more the higher they are:
   it is, the more often a try works (see [Treating yourself](#treating-yourself)).
 - **[Knowledge](skills.md#skill-knowledge)** is knowing your enemy: it adds to your check against a [creature](creatures.md)'s [drain](stats.md#drained-stats), a
   [disease](diseases.md#how-a-disease-goes) its attack carries, or its hold when you struggle, but only against creatures whose
-  level your [Knowledge](skills.md#skill-knowledge) stands above, and more the farther above (the table below; it never adds
-  much). It earns marks whenever you gain [discovery experience](experience.md#discovery) (a first kill of a kind, a new
+  level your [Knowledge](skills.md#skill-knowledge) stands above, and more the farther above (the table below; at most 6).
+  Standing above a creature's level by even 1 also tells you, in [look mode](controls.md#look-mode), what its kind
+  [resists, is immune to, and is vulnerable to](damage-types.md#armour-and-resistance), in words; that much is lore of its kind, so it
+  says nothing of what this one wears or has drunk, and earns no marks. It earns marks whenever you gain [discovery experience](experience.md#discovery) (a first kill of a kind, a new
   place that pays) and, now and then, whenever you roll to resist such a power, whatever comes
   of it. A [creature](creatures.md)'s level is in its [table](creatures.md).
 - **[Sneak attack](skills.md#skill-sneak-attack)** adds d6s to a hit on a foe that has not seen
