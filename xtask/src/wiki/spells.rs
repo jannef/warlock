@@ -54,6 +54,20 @@ pub(super) fn types(content: &Content) -> String {
                 harmed.push(text);
             }
             harmed.extend(rule.ends.iter().map(|&s| format!("ends {}", status(s))));
+            if rule.shove {
+                harmed.push(
+                    "a [big hit](combat.md#damage) or a critical knocks it a cell away".to_string(),
+                );
+            }
+            if let Some(bite) = rule.bite {
+                harmed.push(format!(
+                    "{} % of the harm against one below {} % of its hit points",
+                    bite.percent, bite.below_percent
+                ));
+            }
+            for tag in &rule.immune_tags {
+                harmed.push(format!("{tag} creatures are immune"));
+            }
             let mut cells = Vec::new();
             match rule.ice {
                 Some(BurstIce::Melts) => cells.push("melts ice".to_string()),
@@ -64,6 +78,12 @@ pub(super) fn types(content: &Content) -> String {
             }
             if rule.douses {
                 cells.push("puts out fires".into());
+            }
+            if rule.shatter {
+                cells.push("a blast shatters ice thinner than 1 cm per 100 of the blast".into());
+            }
+            if rule.doors {
+                cells.push("a blast breaks shut doors, locked and trapped ones too".into());
             }
             let left = rule.fire.map_or_else(String::new, |(_, burns)| {
                 format!("a fire on its centre, {burns} s")

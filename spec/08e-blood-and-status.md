@@ -118,7 +118,20 @@ developer notes (CLAUDE.md, `docs/dev/`).
       the hold's own `difficulty` (13). Made, "You break free of the ghast." and the step goes
       ahead; failed, "You struggle, but the ghast holds you fast." and the turn is spent (a
       step's price). Creatures never struggle. A hold no one caused (`afflict:held`) ends only by
-      its turns or a struggle. Drowning grip's Held is the same status;
+      its turns or a struggle. Drowning grip's Held is the same status. A trained **Escape
+      artist** (no action, no ability row, no key: the check is part of the attempt, #1015) takes
+      the better of Strength and Dexterity, each with what talents add to its checks, plus the
+      skill's `escape` (+8 at 100, +12 at 200, at most 20) in this check, and the same, without
+      Knowledge, against other **bonds**: a status with `escape = DIFFICULTY` (Webbed, Pinned: 13;
+      Staggered, Stunned, Surprised, Transfixed, Sluggish, and Drowsy are no bonds). The first
+      status blocking the action's kind asks: made, it ends with its own `end` line and the
+      action goes ahead at its price; failed, the action's price, "You struggle, but you are still
+      caught in a web." (its `seen`). A second status blocking the same action asks on the next
+      attempt, and `refuse_blocked` refuses this one. Untrained, Webbed and Pinned refuse the
+      action, no time, as any blocking status does. A marked status that only slows (none in the
+      data today) takes the same check as the action is tried: made, it ends and the action costs
+      its plain price; failed, the action goes ahead slowed, at no extra cost. Two draws of the
+      gameplay stream a check; each marks `escape` (100 %) and `struggled`;
     - **be followed** (`follows = "exhausted"`): as it ends, worn off or cured, the status it names
       begins at one degree, caused by whoever caused the one that ended (Raging, then Exhausted:
       the ending's message, then the beginning's). A chain never leads back to where it began, a
@@ -432,7 +445,19 @@ developer notes (CLAUDE.md, `docs/dev/`).
     Burning 1, one time in four per creature harmed; melts ice; `arrow_fire` for 60 s. **Cold**:
     Sluggish 1, certain; ends Burning; `frost = 100`; douses. **Burning** (`data/status.toml`):
     max 3, adding; 1 hit point of fire per 10 s at one degree, a degree easing per 30 s; sheds the
-    `ember` light; a step or a fall into water ends it (`quenched`). The menu, the `spells` dump,
+    `ember` light; a step or a fall into water ends it (`quenched`). **Force**: `shove`, after
+    the hurt, on one who lives: a blow of at least ⌈max hp / 3⌉ taken or a confirmed critical knocks
+    it a cell away from the cast's origin (a burst's centre, else the caster; the one at a burst's
+    centre from the caster, and the caster there stays), if the cell is free; a status that blocks
+    a step holds it. `shatter`: a burst's `blast` shatters ice thinner than 100 µm a point
+    (`Shock::Blast`). `doors`: a burst's `blast` breaks the closed doors in its line of sight, as it
+    stood before the blast, with a `breaks_to`, no check, lock and trap gone, sprung at no one; a
+    chest is any blast's already. **Poison**: Poisoned 1, certain (Blight's own line is 1). **Necrotic**:
+    `bite`, before resistance: 150 % of the harm, rounded down, against a target below 50 % of its
+    maximum hit points; `immune_tags = ["undead"]`: laid on those creature types' `resist` at load,
+    so an immunity to the type from whatever harm. **Acid**: Corroded 1, certain; never armour.
+    **Corroded** (`data/status.toml`): max 3, adding; 1 hit point of acid per 6 s, a degree easing
+    per 12 s: two points a degree. The menu, the `spells` dump,
     and a wand's description say the rule after the roll (`4d6 fire, burns one in four`, the
     type's `words`). The aiming mode previews nothing. Determinism: one `below(100)` per living
     creature harmed, only for a `chance` below 100, from the gameplay stream, in the order they
@@ -558,7 +583,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
       summoned next to the reader (a dretch); or, lucky, a training mark of Intelligence or the
       spell learned anyway. A failure loses only that scroll: the spell can come again.
     - **Training**: the `study` use (Spellcraft's mark; an Intelligence mark), whatever comes
-      of it.
+      of it. Spending mana on a spell is practice for Spellcraft too (its `cast`
+      mark, 25 %, as Concentration's); reading a scroll to cast it marks nothing of its own.
     - **Determinism**: the check's two gameplay draws only when there is a check, the mishap's
       one only on a failure, then its effect's own.
     - **Shown**: the chance in words only (`StudyRules::words`: "certain", "easy" from 96 of 144

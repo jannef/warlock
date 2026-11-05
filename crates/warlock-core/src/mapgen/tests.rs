@@ -102,9 +102,9 @@ fn special_room_snapshots() {
     let flooded = level(33, 2);
     assert_eq!(flooded.rooms.len(), 1);
     insta::assert_snapshot!("rooms_seed_33_depth_2_flooded", describe(&flooded));
-    let shadowed = level(20, 4);
+    let shadowed = level(42, 4);
     assert_eq!(shadowed.rooms.len(), 1);
-    insta::assert_snapshot!("caves_seed_20_depth_4_shadowed", describe(&shadowed));
+    insta::assert_snapshot!("caves_seed_42_depth_4_shadowed", describe(&shadowed));
     // Without the marks, the flooded room shows its water.
     let map = ascii(&flooded, &CONTENT);
     let water = CONTENT
@@ -722,7 +722,7 @@ fn stamped_at(level: &LevelTemplate, vault: &Vault) -> Vec<Pos> {
 }
 
 #[test]
-fn vaults_are_stamped_verbatim_with_their_lights_and_creatures() {
+fn vaults_are_stamped_whole_some_way_round_with_their_lights_and_creatures() {
     // The shared ones (a campaign's stamp in its own branches: `cealdhlaw_tests.rs`).
     let vaults: Vec<&Vault> = (CONTENT.vaults().iter())
         .filter(|v| v.campaign.is_none())
@@ -732,24 +732,27 @@ fn vaults_are_stamped_verbatim_with_their_lights_and_creatures() {
         for depth in 1..=8 {
             let level = level(seed, depth);
             for (i, vault) in vaults.iter().enumerate() {
-                for at in stamped_at(&level, vault) {
-                    seen[i] += 1;
-                    let shift = |p: Pos| Pos::new(at.x + p.x, at.y + p.y);
-                    for (p, light) in &vault.template.lights {
-                        assert_eq!(level.lights.get(&shift(*p)), Some(light), "{}", vault.id());
-                    }
-                    for (p, trap) in &vault.template.traps {
-                        assert_eq!(level.traps.get(&shift(*p)), Some(trap), "{}", vault.id());
-                    }
-                    for spawn in &vault.template.creatures {
-                        assert!(
-                            level
-                                .creatures
-                                .iter()
-                                .any(|c| c.pos == shift(spawn.pos) && c.route == spawn.route),
-                            "{} creature",
-                            vault.id()
-                        );
+                for turn in crate::content::Turn::ALL {
+                    let turned = vault.turned(turn);
+                    for at in stamped_at(&level, &turned) {
+                        seen[i] += 1;
+                        let shift = |p: Pos| Pos::new(at.x + p.x, at.y + p.y);
+                        for (p, light) in &turned.template.lights {
+                            assert_eq!(level.lights.get(&shift(*p)), Some(light), "{}", vault.id());
+                        }
+                        for (p, trap) in &turned.template.traps {
+                            assert_eq!(level.traps.get(&shift(*p)), Some(trap), "{}", vault.id());
+                        }
+                        for spawn in &turned.template.creatures {
+                            assert!(
+                                level
+                                    .creatures
+                                    .iter()
+                                    .any(|c| c.pos == shift(spawn.pos) && c.route == spawn.route),
+                                "{} creature",
+                                vault.id()
+                            );
+                        }
                     }
                 }
             }

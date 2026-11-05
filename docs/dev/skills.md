@@ -100,7 +100,7 @@ trap found), `World::disarm` for
 `World::trade` (a sale) in `world/shop.rs` for `deal`, `World::appraise` for `appraise`, `world/temper.rs::tempered` for `temper`, and `World::sidesteps` for a known trap avoided,
 `dodge`, besides `fight.rs::resolve`). Concentration's `mana_regen` and `max_mana` (trained only, `Actor::mind`) are read in
 `World::mana_rate` and `Actor::max_mana` (`world/concentration.rs`, docs/dev/mana.md), its `cast`
-use reported by `World::spend_mana`. Knowledge's `resist` (#667) is read
+use reported by `World::spend_mana` (Spellcraft's `cast` mark, 25 %, rides the same use, #989). Knowledge's `resist` (#667) is read
 in `world/knowledge.rs` (`World::resisting`, `resist_bonus`) through `Actor::skill_effect_above`
 (`Skills::effect_above`: each benefit read at the value less the creature's level, nothing at or
 below it), called for the modifier of the player's check against a creature's drain
@@ -198,8 +198,12 @@ through `Actor::skill_effect`, a party's lead type's through `Skills::effect`); 
 Listen's `hearing` (with Keen ears, capped at `MAX_ENCOUNTER_BONUS`) instead and reports
 `Use::Hear`.
 
-Pending hooks:
-athletics (climbing out of pits, #128) and escape artist (pits, #128).
+Escape artist (#1015) has no action and no ability row. `Effect::Escape` is read in
+`World::slipping` (`world/hold.rs`, docs/dev/status-effects.md "Holds"), `Effect::Climb` (steps at
+50 and 100: halved, then skipped) in `World::climb_price` (`world/trap.rs`, the pit's one arm);
+both only for those trained (`trains_effect`). `Use::Escape` is marked per check whatever came of
+it, `Use::Climb` per climb out (Escape artist 100 %, Athletics 50 % and no effect). Tests:
+`world/escape_tests.rs`.
 
 ## Tumble: plain misses
 
