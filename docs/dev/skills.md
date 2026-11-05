@@ -89,7 +89,8 @@ hidden traps, whose checks read it in place of Search and Spot, `Skills::trains_
 `docs/dev/stealing.md`), heal in `world/heal.rs` (trained at all gives the Heal ability, on oneself or an ally beside one;
 `docs/dev/status-effects.md` "Treating oneself"), forage (Survival: percent added to a forage's chance; trained at all,
 the Forage ability) in `world/forage.rs`, study (Spellcraft and Decipher script: points off the study check) in
-`world/learn.rs::study_odds` (docs/dev/spells.md "Learning"; its use `Use::Study`, reported
+`world/learn.rs::study_odds` and learn (Spellcraft: the spell level a scroll teaches for certain, at least 1; trained at all lets
+the player learn from a scroll) in `Actor::learning` (docs/dev/spells.md "Learning"; their use `Use::Study`, reported
 when a study ends, is also `StatUse::Study`); each use
 is reported where it happens (`make_noise`, `hear`, `fight.rs::resolve`, `apply`, `player_moves`,
 `kick_door`, `search_turn` for `search`, `notice_hidden` for `spot`, both for `find_trap` (a
