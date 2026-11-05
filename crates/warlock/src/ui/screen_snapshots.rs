@@ -809,8 +809,8 @@ const CASES: &[Case] = &[
         name: "level-up-choice",
         character: Some("human,male,warrior"),
         actions: "xp:691 advance:athletics*6",
-        // Apprentice's letter on the talent list.
-        keys: Some("n"),
+        // Skill focus's letter on the talent list.
+        keys: Some("p"),
         size: (100, 40),
         ..BASE
     },

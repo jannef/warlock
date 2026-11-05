@@ -71,7 +71,8 @@ status, capped by the status's `max`; `song_craft`, the difficulty a song on its
 their check, is read there too (the Lullaby's, #873). Its use `song` is marked once a song,
 whatever it does; Music is `kind = "rules"` (no abilities-menu row). Tests:
 `world/song_tests.rs`, `world/lullaby_tests.rs`. Rules read a benefit through `Actor::skill_effect`
-(the actor's skills plus what magic items' skill affixes add, `Skills::effect_with`), never
+(the actor's skills plus what magic items' skill affixes and talents add, Skill focus's chosen
+skill and Master of none's every one, `Skills::effect_with`), never
 `Skills::effect` directly. Each effect is read in one place: Dodge in
 `Actor::defence`, quiet in `noise::noise`, hearing in `Actor::hearing`, burden in
 `World::burdened` (`Burden::slow_eased`), travel in `World::step_price`, bargain (Negotiation

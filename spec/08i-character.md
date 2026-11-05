@@ -694,9 +694,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     (`animal`, `element`, `lucky`; §8 "Birth sign"); and any one of several (`either = { stats =
     { intelligence = 12 }, skills = { appraise = 20 } }`: "Intelligence 12 or Appraise 20").
     Never an alignment band (§8 "Alignment": alignment bars nothing). Refused in words: "You cannot
-    take Dodge: you need Dexterity 13." A talent is taken once ("You learn Hardy."), and only
-    Apprentice still has ranks, which come one at a time; a talent with a choice is one pick per
-    choice.
+    take Dodge: you need Dexterity 13." A talent is taken once ("You learn Hardy."); a talent with a choice is
+    one pick per choice.
   - **Effects** (`TalentEffect`, summed into `TalentMods` by `Actor::talent_mods`, one read
     each): `dodge` and `natural` in Defence (natural armour on top of the creature type's own
     or a magic item's, or alone), `melee_damage` on both hands' blows (after the affixes,
@@ -884,9 +883,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
     a find's least half again, so anything found is magic and rare more often and a creature's
     drop, always magic, rare more often; from the same draws of the loot streams, so a map never
     changes, and a level made before the talent keeps its loot); `skill_rolls` (Quick learner: a
-    roll more every level); `train_skill` (Apprentice, the `skill` choice, any skill, three ranks
-    for each: the chosen skill trained at 1d6+4, or raised by it, rolled from the `levels` stream
-    as the rank is taken); `ignore_burdened` (Porter: Burdened costs nothing, as a dwarf's);
+    roll more every level); `skill` without a `skill` field (Skill focus, the `skill` choice,
+    a skill the taker is trained in, one pick for each: the chosen skill counts 25 higher wherever
+    a benefit reads it, past 100 too, as an affix's bonus does, and sums with Master of none and
+    magic items; the value trained and shown does not move); `ignore_burdened` (Porter: Burdened costs nothing, as a dwarf's);
     `corpse_stats_percent` and `no_bloating` (Gourmand: a fresh corpse's stat training marks and
     its chances to widen a potential doubled, a chance at most certain; a meal stops one short of Bloated, what does not fit is lost, and
     nothing overeats); `step_slowdown_percent` (Sure-footed: half the slowdown the burden and
