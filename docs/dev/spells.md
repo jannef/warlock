@@ -538,7 +538,7 @@ cast path shares.
   (at 60, `spell_mod { rungs = 2 }`, mana −50 %); its bonus talents from Scholar and
   Spellcraft. Empower, Archmage, and Frugal caster name `spells` beside `mana` (Empower and
   Archmage no longer touch scrolls, so no longer `scrolls`); Scroll savant (which took in
-  Careful reader and Spell recall in #775) stays `scrolls` only. Wand mastery is in #398's wands; Channeler
+  Careful reader in #775) stays `scrolls` only. Wand mastery is in #398's wands; Channeler
   (`rod_cost_percent`, level 5) is in #399's rods.
 - **Balance** (#401; design §12, run against the data on 2026-10-27; `warlock-cli dump
   --character human,male,CLASS --actions "xp:N levelup:auto" --format json`, N the human

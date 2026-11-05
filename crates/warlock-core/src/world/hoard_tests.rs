@@ -209,15 +209,15 @@ fn nothing_lifted_outside_counts() {
 }
 
 #[test]
-fn old_delver_lifts_one_stack_before_it_seals_at_its_second_rank() {
-    // At the first rank the first stack seals it, as for anyone.
+fn old_hand_lifts_one_stack_before_it_seals() {
+    // With Old delver alone the first stack seals it, as for anyone.
     let mut w = world();
     w.player_mut().talents.take("old_delver", None);
     lift(&mut w, A);
-    assert!(room(&w).sealed, "the first rank gives no grace");
+    assert!(room(&w).sealed, "Old delver gives no grace");
     let mut w = world();
     w.player_mut().talents.take("old_delver", None);
-    w.player_mut().talents.take("old_delver", None);
+    w.player_mut().talents.take("old_hand", None);
     lift(&mut w, A);
     let first = room(&w);
     assert!(!first.sealed && first.lifted == 1, "one is free");

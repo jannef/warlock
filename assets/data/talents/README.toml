@@ -14,7 +14,7 @@
 #                 carrying, XP) the number may be said. The wiki shows the rule.
 #   systems       the systems it touches, ids from the closed list in ../talents.toml (at least
 #                 one): the coverage check counts them
-#   ranks         how many times it can be taken (1 to max_ranks, default 1): "Hardy 2/3"
+#   ranks         how many times it can be taken (1 to max_ranks, default 1): "Apprentice 2/3"
 #   choice        what it is chosen for, if it takes a choice: "weapon_skill", "style", "skill"
 #                 (any skill, trained or not), "element" (a damage type that is no physical
 #                 kind), "school" (a school of magic, `evocation`, or an element: a spell
@@ -24,7 +24,7 @@
 #                 `talent:weapon_focus:long_blades`, and each choice is a pick of its own
 #   needs         what taking any rank asks, all of which must hold at the pick (nothing is
 #                 checked again later):
-#                   talents = { dodge = 1, hardy = 2 }   those talents at those ranks; a talent
+#                   talents = { dodge = 1, hardy = 1 }   those talents at those ranks; a talent
 #                                                        with a choice may be needed only by one
 #                                                        of the same choice, taken for the same
 #                   stats = { toughness = 14 }           the stored score, never the effective
@@ -215,8 +215,6 @@
 #                                 a point of each damaged stat (Pious)
 #   devout                        at a forgotten altar of its own side the side's lean counts
 #                                 twice, at one of the other side not at all (Pious)
-#   penitent                      at a forgotten altar a great bane drawn becomes nothing
-#                                 (Pious's second rank)
 #   gem_worth                     item descriptions show what each gem in them is worth
 #   identify_carried { hours }    a magic item carried that many hours (1 to 240) from when it
 #                                 has the effect is identified
@@ -311,6 +309,7 @@
 #                                 apart (100: twice as far)
 #   kick_die { sides }            its kicks at creatures roll one die of that many sides
 #   door_kick { value }           its door kicks as if that much stronger
+#   kick_back                     a kick of its that hits drives the foe a cell back, if free
 #   kick_noise_percent { value }  its door kicks that percent louder (negative: quieter)
 #   smash_destroy_percent { value }   what a chest it kicks open holds breaks that percent more
 #                                 often (negative: less; a blown-up chest is not a kick)
@@ -330,7 +329,6 @@
 #   critical_confirm { value }    added to the roll that confirms its criticals
 #   ability_ranks { value }       its weapon abilities (weapon_abilities/) come that many ranks
 #                                 sooner: their thresholds read its ranks that much higher
-#   rend_off_hand                 its Rend rolls the off hand's damage dice too
 #   brace { to_hit, status }      its Brace's blow is at that much more to hit, and a foe it
 #                                 hits suffers that status (one degree)
 #   critical_penetration { value } its confirmed criticals (every attack) ignore that much more

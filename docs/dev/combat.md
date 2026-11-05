@@ -164,7 +164,8 @@ hostile that steps up beside a gatekeeper, from `World::step_up(id, from)` at th
 Callers: `World::attack` (creatures) and
 `player_attacks` run the first and second blows, then `World::after_attack(attacker, target,
 parried)`, which strikes the cleave or riposte and follows cleaves while `Cleaved` gives more;
-`player_kicks` and `bash` call `after_attack` after their one blow; `World::step_away(id, to)`
+`player_kicks` and `bash` call `after_attack` after their one blow (Breaker's kick then drives
+the foe back, `World::knock_back`); `World::step_away(id, to)`
 runs before a step in `travel.rs::player_moves` and `ai.rs::creature_steps` (after the step is
 decided, before `tread`: the mover may die, and then never steps), using `World::leaves` (the
 flee geometry `World::flees` also uses). `World::strike_free` strikes one: `resolve` for a

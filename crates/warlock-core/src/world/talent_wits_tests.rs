@@ -95,14 +95,14 @@ fn scroll_savant_reads_in_half_the_time_and_is_spared_its_burst() {
 }
 
 #[test]
-fn scroll_savant_now_and_then_keeps_the_scroll_at_its_second_rank() {
-    let read = |ranks: usize| {
+fn spell_recall_now_and_then_keeps_the_scroll() {
+    let read = |talents: &[&str]| {
         let mut w = hall(
             "##########\n#@.......#\n##########\n",
             "[\"scroll_of_fireball*20\"]",
         );
-        for _ in 0..ranks {
-            give(&mut w, "scroll_savant");
+        for talent in talents {
+            give(&mut w, talent);
         }
         run(&mut w, "read:a:7,1*12");
         let left = w.state.player().inventory.first().map_or(0, |s| s.count);
@@ -111,9 +111,13 @@ fn scroll_savant_now_and_then_keeps_the_scroll_at_its_second_rank() {
             .count();
         (left, kept)
     };
-    assert_eq!(read(0), (8, 0));
-    assert_eq!(read(1), (8, 0), "not at the first rank");
-    let (left, kept) = read(2);
+    assert_eq!(read(&[]), (8, 0));
+    assert_eq!(
+        read(&["scroll_savant"]),
+        (8, 0),
+        "not with the savant alone"
+    );
+    let (left, kept) = read(&["scroll_savant", "spell_recall"]);
     assert!(kept > 0 && kept < 12, "{kept}");
     assert_eq!(left as usize, 8 + kept);
 }

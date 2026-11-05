@@ -94,8 +94,7 @@ for the one attacked). Where each is raised (a line that already marks the event
 Effects (`WeaponDoes`, closed; a kind with no catalogue entry is not written): `Status` (on the
 other end or the actor, `World::afflict`; `turns` dice drawn once, clamped to the status's
 `max`; a defending trigger by the player says "The orc staggers from your shield."),
-`ExtraDamage` (Rend: the main hand's dice without their bonus once more, with Second blade's
-rend the off hand's too, rolled after the blows, of the blow's kind or the effect's,
+`ExtraDamage` (Rend: the main hand's dice without their bonus once more, rolled after the blows, of the blow's kind or the effect's,
 `World::resisted` but never soaked, `hurt` with `Harm::Actor`; "Your blades rend the orc.";
 "The orc's blades rend you."), `FreeShot` (Point-blank: `World::loose` with the missile weapon
 and ready ammunition, or what is ready to throw; nothing without, on the overworld, or for the
@@ -202,8 +201,7 @@ them through `ability_rank`).
 
 ## Talents
 
-System `weapon_abilities` (`talents.toml`), with Early mastery (`ability_ranks`), Second blade's
-rend (`rend_off_hand`), Brace of steel (`brace { to_hit, status }`), Practised technique
+System `weapon_abilities` (`talents.toml`), with Early mastery (`ability_ranks`), Brace of steel (`brace { to_hit, status }`), Practised technique
 (Weaponcraft, a weapon skill at 7: `weapon_energy_percent` −25, read in `active_price`), and the
 warrior's class ability Drillmaster (level 25: `weapon_stamina` 1, read in
 `Actor::weapon_stamina`). Armour-breaker (P1's) gained `weapon_stamina { value = 2, abilities =

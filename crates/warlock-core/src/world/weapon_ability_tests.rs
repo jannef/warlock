@@ -323,33 +323,6 @@ fn rend_fires_once_an_attack_with_both_blades_and_never_on_a_bash() {
 }
 
 #[test]
-fn second_blades_rend_rolls_the_off_hand_too() {
-    let lost = |talent: bool| {
-        let mut w = world("#####\n#@p.#\n#####\n");
-        let (player, post) = (w.player_id(), at(&w, 2, 1));
-        give(&mut w, player, "wa_knife");
-        give(&mut w, player, "wa_knife");
-        ranks(&mut w, player, &[("long_blades", 1), ("twin_blades", 6)]);
-        if talent {
-            w.player_mut().talents.take("second_blades_rend", None);
-        }
-        let hp = w.state.actors[&post].hp;
-        let outcome = w.apply(&Action::Move(Dir::E));
-        (
-            hits(&outcome, player, AttackKind::Melee),
-            hp - w.state.actors[&post].hp,
-        )
-    };
-    let (plain, with) = (lost(false), lost(true));
-    if plain.0 == 2 && with.0 == 2 {
-        assert!(
-            with.1 > plain.1,
-            "the off hand's dice more: {plain:?} {with:?}"
-        );
-    }
-}
-
-#[test]
 fn staggering_block_staggers_the_striker_and_only_refreshes() {
     let mut w = world("#####\n#@b.#\n#####\n");
     let (player, brute) = (w.player_id(), at(&w, 2, 1));

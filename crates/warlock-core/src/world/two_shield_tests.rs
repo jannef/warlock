@@ -225,17 +225,8 @@ fn a_spell_without_two_shields_draws_nothing_more() {
 }
 
 #[test]
-fn the_styles_talents_and_the_stylists_choice_wait_for_its_first_marks() {
+fn the_stylists_choice_waits_for_the_styles_first_marks() {
     let mut w = priest();
-    let ours = ["anvil_and_hammer"];
-    let listed = |w: &World| {
-        let book = w.content().talents();
-        (w.perception().talents().into_iter())
-            .filter(|t| ours.contains(&book.get(t.id).id.as_str()))
-            .map(|t| t.openings.len())
-            .collect::<Vec<_>>()
-    };
-    assert!(listed(&w).is_empty(), "hidden until marks");
     let stylist = |w: &World| {
         let book = w.content().talents();
         let def = book.get(book.id("stylist").expect("Stylist"));
@@ -257,7 +248,6 @@ fn the_styles_talents_and_the_stylists_choice_wait_for_its_first_marks() {
         .weapon_skills
         .train(content.weapon_skills(), id, 1);
     *w.perception = crate::perception::Perception::compute(&w.state, &w.content, &mut w.lights);
-    assert_eq!(listed(&w), vec![0], "listed, not yet takeable");
     assert!(!matches!(
         stylist(&w),
         Err(crate::talent::Refusal::BadChoice(..))

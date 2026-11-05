@@ -74,8 +74,8 @@ the [death](combat.md#death) screen ("Killed by their own scroll of fireball"). 
 heard like any noise (see [Hearing](hearing.md)). Spells cannot be read on the [overworld](overworld.md#travel).
 
 Reading a scroll uses it up. Scholars do better (see [Talents](talents.md)): [Scroll savant](talents.md#talent-scroll-savant) reads
-in half the time (with the [wizard](classes.md#wizard)'s Scroll adept as well, in a quarter: no less), and at its
-second rank one read in four leaves the scroll as it was ("The writing does not fade from the
+in half the time (with the [wizard](classes.md#wizard)'s Scroll adept as well, in a quarter: no less), and with
+[Spell recall](talents.md#talent-spell-recall) after it one read in four leaves the scroll as it was ("The writing does not fade from the
 scroll."). A scroll you study is always used up, Scroll savant or not.
 
 ## The scroll of identify
