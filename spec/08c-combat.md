@@ -137,7 +137,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     to fire", "Immune to poison", on the character screen and the `stats` dump layer, JSON
     `resistances` by type id); an item's kinds, added damage, per-kind Protection, and
     resistances in its description, and an affix's percentage once identified; never a
-    creature's resistances, which the player learns by play ("does no harm"). The dev `actors`
+    creature's resistances' numbers: the player learns them by play ("does no harm"), or in words by Knowledge (§8 "Skills"). The dev `actors`
     layer shows every actor's `resists`.
   - **Why it missed**: a miss whose natural roll plus to-hit is below 10 would have missed an
     unarmoured, motionless target: a plain miss. Otherwise one category with a positive bonus

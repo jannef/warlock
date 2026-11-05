@@ -109,6 +109,7 @@ above.
 | Dungeon, danger level, population | `dungeons.md`, `dungeons.md#who-lives-there-and-how-many` |
 | Out of depth, strays | `dungeons.md#who-lives-there-and-how-many` |
 | Lairs of the wanted | `dungeons.md#the-lairs-of-the-wanted` |
+| Grundlēas, floors forgotten | `dungeons.md#grundlēas` |
 | Special room | `special-rooms.md` (a room: its row) |
 | Forgotten altar, praying | `special-rooms.md#forgotten-altars` |
 | Forge, tempering | `special-rooms.md#forges` |
@@ -229,6 +230,8 @@ above.
 | Ladder, rung, base | `magic.md#the-spells`, `magic.md#how-a-spell-grows` |
 | What talents and items do to a spell (a rung, bigger dice, a bonus, a reroll, a rider) | `magic.md#how-a-spell-grows` |
 | Spell shape (bolt, burst, cone, …) | `magic.md#shapes` |
+| Spell type, what a fire or a cold spell does beyond its damage | `magic.md#spell-types` |
+| Burning | `status-effects.md#burning` |
 | How a spell resolves (attack, auto, area, touch) | `magic.md#how-a-spell-finds-its-target` |
 | Mishap | `magic.md#learning-spells-from-scrolls` |
 | Studying a spell from a scroll, overreach | `magic.md#learning-spells-from-scrolls` |

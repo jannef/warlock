@@ -31,6 +31,7 @@ use super::{Actor, ActorId, Spent, World};
 use crate::action::{DiseaseNews, Event};
 use crate::check::check;
 use crate::content::{DiseaseId, Effect, TerrainId};
+use crate::skills::Use;
 use crate::stats::Stat;
 use crate::talent::TalentMods;
 use crate::time::{DAY, GameTime};
@@ -112,10 +113,14 @@ impl World {
     /// The player stepped onto `terrain`, a step of `seconds`: for every disease caught there
     /// that they do not carry, one draw for its chance (`per_hour` percent an hour, by the
     /// step's length; none when it is sure), then exposure. Creatures do not catch diseases
-    /// from the land, nor does one with Nature's ward (no draw).
+    /// from the land, nor does one with Nature's ward (no draw). A wading step may also earn Swim
+    /// a mark, whoever wades ([`Use::Wade`]).
     pub(super) fn wade(&mut self, terrain: TerrainId, seconds: u64) {
         let player = self.state.player;
         let content = self.content.clone();
+        if self.wading_step(content.terrain(terrain)) && self.trains(Use::Wade) {
+            self.train(Use::Wade);
+        }
         // A strong swimmer (spec §8 "Birth sign") never catches anything wading, nor does a
         // druid with Nature's ward.
         let mods = self.state.player().talent_mods(&content);

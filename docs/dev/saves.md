@@ -30,6 +30,10 @@ releases every development build shares the version, so there the content finger
 decoder are what refuse a save a build cannot read (a renamed `.sav.bad`, as below); saves are
 not promised across development builds.
 
+A save holds only the current floor of an endless branch (`docs/dev/mapgen.md`,
+`world/endless.rs`): `WorldState::endless` is a count of floors made and the deepest depth by
+branch, left out while empty, so its size does not grow with depth.
+
 The summary beside a save records the version too (`Summary::version`; empty in a summary from
 before the pin, which counts as another version). `SavedCharacter::playable` is true when the
 summary names this version, or there is no readable summary (the save is tried, and the

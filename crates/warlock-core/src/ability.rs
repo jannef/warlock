@@ -268,8 +268,7 @@ pub enum Unavailable {
     NoMana,
     /// One the place does not allow: foraging anywhere but in the wild (spec §8 "Foraging").
     NotHere,
-    /// The Heal ability with nothing to treat: no bleeding, and no poison or disease that may
-    /// still be tried.
+    /// The Heal ability with nothing to treat: no bleeding, poison, or disease that shows.
     NothingToTreat,
     /// A triggered weapon ability: it fires by itself, never chosen.
     FiresByItself,

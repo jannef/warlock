@@ -62,8 +62,10 @@ hold ("Resists cold 20%", "+15% cold resistance", "Protection 3 (+1 against slas
 piercing)", "Adds 1d4 fire damage").
 
 Creatures have resistances and weaknesses of their own, and some are immune to a kind; the game
-never lists them. You learn them by play: a blow that is shrugged off says so, "The fireball does
-the salamander no harm.", and a blow that armour alone stopped glances off instead.
+never gives their numbers. You learn them by play: a blow that is shrugged off says so, "The
+fireball does the salamander no harm.", and a blow that armour alone stopped glances off instead.
+Or you know them: [look mode](controls.md#look-mode) tells them in words of a creature whose level your
+[Knowledge](skills.md#skill-knowledge) stands above.
 
 ## What else the kind decides
 

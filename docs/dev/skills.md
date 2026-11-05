@@ -121,7 +121,12 @@ below it), called for the modifier of the player's check against a creature's dr
 (`World::expose` with a `by`), and a struggle against its hold (`World::struggle`, the effect's
 `by`); the same call marks `Use::Resist` (training stream only), and `World::discovered` marks
 `Use::Discover` beside the first-kill and arrival XP (`world/experience.rs`). The player only, and
-only against a creature: no bonus, no draw otherwise. Tests `world/knowledge_tests.rs`.
+only against a creature: no bonus, no draw otherwise. The same skills standing above a creature's
+level at all (`Actor::skill_stands_above`, `Skills::stands_above`: one above is enough, though the
+curve gives nothing below 3) tell look mode what its kind resists (#1030): `PerceptionView::known_resistances`
+reads `Actor::known_resistances` (`world/knowledge.rs`), the type's `resist` in `ResistanceWord`s,
+never gear or statuses, no marks; JSON dumps carry it as a seen actor's `known`; `ui/look.rs::known`
+writes the line. Tests `world/knowledge_tests.rs`.
 Metalcraft's `temper` benefit is read in
 `world/temper.rs::tempered` (the forge's Strength check, docs/dev/special-rooms.md); Metalcraft
 stays a skill "not usable yet" in the abilities menu, since Temper is offered by the anvil to
@@ -138,6 +143,16 @@ Intimidate `Ability::Intimidate` (above; aimed at a cell, `Ability::reach` from 
 Bluff `Ability::Feint` (above; in a direction).
 A passive skill with a use of its own is listed as that use too (`Ability::every` asks
 `Ability::use_of` of every skill): Survival is `Ability::Forage` (below).
+
+**Swim** (spec §8 "Skills", #1018, `docs/design/skill-uses.md` §6.4; `kind = "rules"`, no menu
+row): `Effect::Wade` is read in `World::step_price` (`world/schedule.rs`), on a step
+`World::wading_step` calls wading (off the overworld, `move_cost` above 100, `stars::wading`): a
+percent of what the terrain adds over a plain step is spared (`surcharge_spared`, rounded up), 100
+for `swimmer` and `wades_free`, so Swim never goes past them. Its use `wade` is reported at the
+head of `World::wade` (`world/disease.rs`), before the talents' early return: a wader whom a
+talent spares still trains. `Effect::Swim` is read in `World::keeps_afloat` (`world/ice.rs`,
+`docs/dev/temperature.md`), which marks `swim` once a check; it is `Skills::trains_effect`-gated, so
+an item's Swim bonus alone asks no check. Tests `world/swim_tests.rs`.
 
 **Foraging** (spec §8 "Foraging", #547): `Action::Forage` (replay text `forage`, cost `forage`
 a turn, `ActionKind::Forage`), dispatched by one arm in `World::player_acts` to
@@ -176,3 +191,11 @@ Listen's `hearing` (with Keen ears, capped at `MAX_ENCOUNTER_BONUS`) instead and
 
 Pending hooks:
 athletics (climbing out of pits, #128) and escape artist (pits, #128).
+
+## Tumble: plain misses
+
+A blow at the player that comes back `Strike::Missed { by: None }` becomes a dodge one time in
+four (`World::plain_miss_dodged`, `world/train.rs`, called in `fight.rs` after `caught_shot`):
+one `chance(25)` on the training stream, so the gameplay stream does not move. Misses by a
+category stay as they are; blows between creatures or from the player draw nothing
+(`docs/design/skill-uses.md` Tu1). `balance_probe/training.rs` uses the same function.

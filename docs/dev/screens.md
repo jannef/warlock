@@ -171,7 +171,9 @@ to open, read keys for, or draw one:
   first draw (`--keys`). Screens hold stack positions (`Item::position`), never letters, and
   send actions by position.
 - Prompts in the message line (open/close/bash/chat direction, rest, look mode, aiming,
-  `--more--`) are `InputMode`s, not screens; a question (the step onto a known trap,
+  `--more--`) are `InputMode`s, not screens (look mode's second row starts with what Knowledge
+  tells of the creature under the cursor, `look::known`, its hint after it: the hint clips first,
+  docs/dev/skills.md); a question (the step onto a known trap,
   `input::trap_dialog`; a journey while Fainting or Starving, `input::hunger_dialog`; a walk into what offers an action,
   `input::offer_dialog`) is the dialog (above).
 - **The message line and `--more--`** (`ui/more.rs`, spec §6 "Messages", #207): `Game::read` is
