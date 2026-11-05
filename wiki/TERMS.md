@@ -97,7 +97,7 @@ above.
 | Camping (resting on the overworld), the sleeper's lookout | `encounters.md#camping-and-foraging` |
 | An encounter table | `encounters.md#the-ascmearcs-encounters` (a table: `encounters.md#encounter-table-ID`) |
 | The Ascmearc and its places | `ascmearc.md#the-places` |
-| Terrain, walls, water, stairs | `terrain.md#walls`, `terrain.md#water`, `terrain.md#stairs` |
+| Terrain, walls, water, stairs, creatures following you on stairs | `terrain.md#walls`, `terrain.md#water`, `terrain.md#stairs` |
 | Digging, wall hardness | `digging.md#digging`, `digging.md#what-breaks-and-what-does-not` |
 | Explosions, blasts | `digging.md#explosions` |
 | Doors; locked, kicked, broken doors | `doors.md`, `doors.md#locked-doors`, `doors.md#kicking` |

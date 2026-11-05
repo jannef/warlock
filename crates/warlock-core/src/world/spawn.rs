@@ -84,7 +84,7 @@ impl World {
     }
 
     /// The creatures on the current level hostile to the player.
-    fn hostiles_here(&self) -> u32 {
+    pub(super) fn hostiles_here(&self) -> u32 {
         let (player, level) = (self.state.player, &self.state.current_level);
         let here = (self.state.actors.values()).filter(|a| a.level == *level && a.id != player);
         let n = here

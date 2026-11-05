@@ -218,6 +218,7 @@ mod spell_mods;
 mod spell_rung;
 mod spell_words;
 mod spirit_weapon;
+mod stair_followers;
 mod stars;
 mod stat_deeds;
 mod stat_training;
@@ -881,6 +882,7 @@ impl World {
             alignment_override: None,
             npc: None,
             talk: Talk::default(),
+            home: None,
             // The scenario's spells, known from the start (a test world's fixture).
             spells: def.spells.iter().copied().collect(),
             streak: None,
@@ -1834,6 +1836,8 @@ mod spell_talent_tests;
 mod spirit_weapon_tests;
 #[cfg(test)]
 mod spring_tests;
+#[cfg(test)]
+mod stair_followers_tests;
 #[cfg(test)]
 mod stamina_tests;
 #[cfg(test)]

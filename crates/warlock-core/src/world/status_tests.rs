@@ -656,7 +656,8 @@ fn a_rest_goes_on_when_a_status_ends_and_says_so_once() {
 
 #[test]
 fn the_dev_skip_and_other_levels_pass_no_status_time() {
-    let mut w = world_on("#####\n#@>r#\n#####\n", "hp = 1000");
+    // A wall between them: a rat beside the stairs would follow (`stair_followers.rs`).
+    let mut w = world_on("######\n#@>#r#\n######\n", "hp = 1000");
     let (player, rat) = (w.player_id(), ActorId(1));
     afflict(&mut w, player, "poisoned", 2, None);
     afflict(&mut w, rat, "poisoned", 2, None);
