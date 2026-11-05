@@ -57,6 +57,7 @@
 #              be made again at once; else, made, it eases a degree, and a failed try may be
 #              made again too. `made` and `failed` are what you are
 #              told. None: Heal cannot treat it
+#   quenched   true: a step into water, or a fall into it, ends it (Burning)
 #   start, end what the player is told as it begins and ends ("end" lets a rest go on)
 #   dies       what a creature you see does when it kills it ("The giant rat bleeds to death.")
 #   death      the death screen's line when it kills you
@@ -115,6 +116,23 @@ death = "Bled to death"
 # Poison works slowly: a hit point every two minutes for each degree, easing a degree every two
 # minutes, so a stronger dose lasts longer; strong poison weakens. A sick head gathers mana at
 # half the pace.
+[[status]]
+id = "burning"
+name = "Burning"
+seen = "burning"
+max = 3
+stacking = "add"
+tick = 10
+damage = 1
+damage_type = "fire"
+eases = 30
+light = "ember"
+quenched = true
+start = "You are burning!"
+end = "The flames go out."
+dies = "burns to death"
+death = "Burnt to death"
+
 [[status]]
 id = "poisoned"
 name = "Poisoned"

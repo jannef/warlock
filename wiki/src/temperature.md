@@ -96,7 +96,7 @@ There is no going back once the ice cracks, but nothing is lost for good: only t
 
 ## Heat and frost
 
-Bursts of heat and frost change the ice at once (see [Traps](traps.md); [spells](magic.md) will too): a
+Bursts of heat and frost change the ice at once (see [Traps](traps.md), and [spell types](magic.md#spell-types)): a
 [fireball](traps.md#trap-fireball) melts the ice it reaches, and whoever stood on it falls in; a [frost trap](traps.md#trap-frost) freezes the
 [water](terrain.md#water) it reaches at once, into ice that holds a laden person (10 cm). A blast without heat (none
 yet) will shatter thin ice. Someone who makes way for you onto ice you stood on may break through

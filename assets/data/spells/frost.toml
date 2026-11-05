@@ -18,7 +18,6 @@ effect = "frost_burst"
 noun = "frost"
 verb = "bites"
 message = "Bitter cold bursts from your hands!"
-frost = 100
 
 [spell.grows]
 damage = "intelligence 13 3d6, 19 3d6+2, 25 3d6+4"

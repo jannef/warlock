@@ -19,7 +19,6 @@ noun = "flame"
 verb = "burns"
 message = "A ball of flame leaps from your hands!"
 blast = 1000
-heat = true
 noise = { sound = "explosion", loudness = 150 }
 
 [spell.grows]
