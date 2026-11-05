@@ -253,10 +253,11 @@ fn every_class_has_mana_and_its_guaranteed_spells() {
                 .count();
             assert!((3..=12).contains(&book), "{}: {spells:?}", class.id);
         }
-        // Only the casters and the hybrids have any, and a hybrid's are few: a class's row is a
-        // way to meet a spell, not what the spell is (the spell types design §8, Q13).
+        // Only the casters and the hybrids have any, and a hybrid's are few (the bard's five:
+        // Mend, Mesmerise, Thunderclap, Bind, Sense the quick): a class's row is a way to meet a
+        // spell, not what the spell is (the spell types design §8, Q13).
         if !full {
-            assert!(spells.len() <= 4, "{}: {spells:?}", class.id);
+            assert!(spells.len() <= 5, "{}: {spells:?}", class.id);
         }
     }
 }

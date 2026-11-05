@@ -1,0 +1,12 @@
+# Nightsight (the spell types design §7 entry 22): the potion of cat's eyes' status, half an
+# hour; it has one degree, so no ladder.
+[[spell]]
+id = "nightsight"
+name = "Nightsight"
+description = "Your eyes open to the dark a while: you see as a cat does."
+level = 4
+school = "transmutation"
+kind = "buff"
+shape = "self"
+resolution = "auto"
+effect = { status = "cat_eyed" }

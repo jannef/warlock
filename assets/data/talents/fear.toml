@@ -1,0 +1,8 @@
+[[talent]]
+id = "fear"
+name = "Fear"
+tree = "class"
+granted = true
+description = "Dread bursts where you aim it (a spell, paid in mana): everyone it reaches runs from you a while."
+effects = [{ kind = "spell", spell = "fear" }]
+systems = ["spells", "mana", "status"]

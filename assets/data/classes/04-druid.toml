@@ -41,6 +41,7 @@ abilities = [
     { level = 6, talent = "water_walking" },
     { level = 9, talent = "bramble" },
     { level = 12, talent = "call_lightning" },
+    { level = 15, talent = "rime" },
     { level = 18, talent = "natures_ward" },
     { level = 20, talent = "gale" },
     { level = 25, talent = "call_of_the_forest" },

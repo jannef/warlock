@@ -37,13 +37,16 @@ from what the player eats (#137), traps, diseases call it; a status with a `dama
 (poisoned: poison) meets the actor's resistance there as a dose, docs/dev/combat.md "Damage
 types": immune refuses it, else `damage::resist` on the severity; a creature type's `immune`
 list refuses its statuses first, nothing drawn: the animated objects' poisoned and bleeding,
-`docs/dev/animated.md`), `World::cure(actor, means, events)` (eating
+`docs/dev/animated.md`; and beside it a status with a `wound` table, Bleeding, takes only on a
+creature type with blood: `CreatureDef::blood` `None` (`blood = "none"`) refuses it, the one
+rule that reads blood, the spell types design Q7, `world/spell_data_tests.rs`), `World::cure(actor, means, events)` (eating
 a remedy, an object with `cures`, `world/eat.rs::remedy`, which says what ended at once; the Heal
 skill's bandage, #132), `World::after_blow` (wounds by `combat::big_hit` and criticals, of the
 kinds the status's `wound.from` names, `Wound::caused_by(blow.kind)`: bleeding from slashing
 and piercing; then `on_hit`
-with one gameplay draw per chance below 100), `World::healing_rate` (min of the statuses'
-`regen`, × resting for the player while `World::resting`, none for a Starving player, × a
+with one gameplay draw per chance below 100), `World::healing_rate` (the slowest of the statuses'
+and the showing diseases' `regen` while one is below 100, else the fastest, `Effects::regen`:
+Renewal's `renewing` 400, × resting for the player while `World::resting`, none for a Starving player, × a
 special room's `regen`, × (100 + the regeneration affixes of what the actor wears and wields) %),
 and `World::pass_time` → `live`, called by `run_turn` for every scheduled actor as the clock
 moves (a creature with nothing to live through, `untouched_by`: whole, no statuses, diseases,

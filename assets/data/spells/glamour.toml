@@ -1,0 +1,15 @@
+# Glamour (the spell types design §7 entry 23): Barkskin's cousin for the arcane, blows that miss
+# more often; a scroll's only.
+[[spell]]
+id = "glamour"
+name = "Glamour"
+description = "A glamour lies over you a while: you seem a little to one side of where you stand, and blows meant for you miss more often."
+level = 8
+school = "abjuration"
+kind = "buff"
+shape = "self"
+resolution = "auto"
+effect = { status = "glamoured" }
+
+[spell.grows]
+degrees = "presence 14 2, 18 3"

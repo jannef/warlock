@@ -831,7 +831,9 @@ pub struct CreatureDef {
     /// Gameplay: what eating its fresh corpse does, beyond feeding the eater. Hidden from the
     /// player until they try.
     pub on_eat: Option<OnEat>,
-    /// Presentation-only: the colour of its blood (spec §8 "Blood"); `None`: it does not bleed.
+    /// The colour of its blood (spec §8 "Blood"), presentation's; `None`: it does not bleed, and
+    /// the one rule that reads it: a wound's status (Bleeding) never takes on it
+    /// (`World::afflict_one`).
     pub blood: Option<Rgb>,
     /// Gameplay: the status effects it never suffers (spec §8 "Status effects"): refused where
     /// they are given (`World::afflict`), and the diseases' status for every disease

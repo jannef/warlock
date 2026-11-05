@@ -1,0 +1,20 @@
+# A scroll of sunfire (spec §8 "Scrolls", "Spells"): read it (`r`), and it casts Sunfire, a
+# level-30 spell, at its own rungs, free of mana; study it (`L`), and you may learn the spell for
+# good. Level and frequency by its spell's level (README.toml): the lower, the commoner the scroll.
+[[object]]
+id = "scroll_of_sunfire"
+name = "scroll of sunfire"
+plural = "scrolls of sunfire"
+glyph = "?"
+fg = "#ff8a4a"
+class = "scrolls"
+materials = ["paper"]
+weight = 50
+value = 500
+stackable = true
+level = 15
+frequency = 5
+
+[object.read]
+kind = "spell"
+spell = "sunfire"

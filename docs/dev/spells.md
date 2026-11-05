@@ -289,6 +289,33 @@ cast path shares.
     (blocks `step`), `hasted` (cost 75: `COST_PERCENT` is now 50 to 1000, and `spell_def`
     refuses a status below 100 on anything but a buff, so only the caster is hastened and the
     rest batching stays exact), `barkskin` (Dodge +2). New effects: `frost_ray`, `spark` (bolts).
+  - **The data-only fourteen** (#998; the spell types design §7 entries 5, 7 to 10, 12, 13, 17,
+    19, 20, 22, 23, 27, 28; tests `world/spell_data_tests.rs` and the content tables in
+    `content/spell_def.rs`): 4 Nightsight (buff, `cat_eyed`, one degree so no ladder); 5 Acid
+    arrow (bolt, attack, acid; its own bolt look `acid_arrow` in `data/effects.toml`), Mesmerise
+    (ray hex, `transfixed`); 8 Flay (ray, auto, necrotic 1d4, Bleeding 2 to 4 by Presence),
+    Glamour (buff, new `glamoured`: Dodge +3), Unbinding (cleanse of the eight hex statuses); 9
+    Bind (ray hex, `pinned`), Rime (cone 4, cold); 10 Fear (area hex, `frightened`), Renewal
+    (buff, new `renewing`: `regen = 400`); 11 Silence (area hex, `silenced`, radius by
+    Willpower); 14 Grave spear (line 6, necrotic); 15 Slumber (ray hex, `asleep`); 30 Sunfire
+    (burst radius 3, fire, no blast). Each has its `scroll_of_<id>` at the README's numbers;
+    Acid arrow, Grave spear, Slumber, and Glamour come only from scrolls. Class rows (§8; a row
+    is a way to meet a spell, not part of it, Q13): witch 8 Flay, 36 Fear; druid 15 Rime; wizard
+    36 Sunfire; priest 9 Renewal, 12 Silence; bard 8 Mesmerise, 16 Bind; ranger 9 Nightsight;
+    paladin 20 Unbinding, each a granted `talents/<id>.toml` of `kind = "spell"`. Rules they
+    needed: `spell_def` allows a `degrees` ladder on a damage spell with an `effect.status`
+    (Flay), and `World::spell_lands` lays the spell's own status at the cast's degrees
+    (`Cast::degrees`, the base without a cast); Bleeding refuses the bloodless (Q7, below and
+    `docs/dev/status-effects.md`); and a status `regen` above 100 quickens healing when no status
+    or disease slows it (`Effects::regen`, `World::healing_rate_at`: the slowest counts while any
+    is below 100, else the fastest). Each new buff's and hex's status has a circle row
+    (`data/circles.toml`: `cat_eyed`, `glamoured`, `renewing`, `pinned`, `frightened`,
+    `silenced`, `transfixed`, `asleep`), so it sheds its school's faint light whatever laid it
+    (a Trip's Pinned, Intimidate's Frightened too), and Malison's `status_damage` rows name the
+    five new hex statuses. `spell_list_tests`' class check: a full caster three to twelve spells
+    (Q13), a hybrid (bard, paladin, ranger) up to five (the bard's: Mend, Mesmerise,
+    Thunderclap, Bind, Sense the quick), of any level or kind: spells are not class-specific
+    (the spell types design's Decisions), so Thunderclap, a damage spell, is the bard's.
   - **Identify** (#592; tests `world/identify_spell_tests.rs`): divination, `utility`, `self`,
     `[spell.effect] identify = true` (`SpellEffect::identify`, `SpellData::aims_item`; only a
     `utility` spell on `self` may have it, and a `utility` spell needs it). It asks for a stack,

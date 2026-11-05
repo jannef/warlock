@@ -44,6 +44,7 @@ abilities = [
     { level = 24, talent = "chain_lightning" },
     { level = 25, talent = "mage_armour" },
     { level = 32, talent = "empower" },
+    { level = 36, talent = "sunfire" },
     { level = 40, talent = "magister" },
     { level = 50, talent = "arcane_mastery" },
     { level = 60, talent = "archmage" },

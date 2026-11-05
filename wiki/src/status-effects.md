@@ -43,7 +43,9 @@ again as often as it takes (see [Treating yourself](skills.md#treating-yourself)
 
 Creatures bleed the same way, and you can see it: [look mode](controls.md#look-mode) says "A giant
 rat (hostile, wounded, bleeding)". A creature can bleed to death after a fight: "The giant rat
-bleeds to death."
+bleeds to death." A creature without blood (a [skeleton](creatures.md#creature-skeleton), a ghost, an elemental: the
+[creature tables](creature-numbers.md#hit-points-defence-and-resistances) say which) never bleeds, whatever wounds it: neither a blow nor
+[Flay](magic.md#spell-flay) opens it.
 
 ## Burning
 

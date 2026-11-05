@@ -1,0 +1,24 @@
+# Grave spear (the spell types design §7 entry 10): a line of necrotic bone through everyone on
+# it, nothing to the undead (the necrotic type's `immune_tags`); a scroll's only.
+[[spell]]
+id = "grave_spear"
+name = "Grave spear"
+description = "A spear of grave-cold bone from your hand toward a place you aim at, through everyone on its line."
+level = 14
+school = "necromancy"
+kind = "damage"
+shape = "line"
+resolution = "area"
+damage_type = "necrotic"
+length = 6
+damage = "2d6"
+
+[spell.cast]
+effect = "arcane_bolt"
+noun = "grave spear"
+verb = "pierces"
+noise = { sound = "chanting", loudness = 40 }
+
+[spell.grows]
+damage = "willpower 13 3d6, 16 4d6, 19 5d6, 25 5d6+2"
+length = "willpower 14 7, 18 8"

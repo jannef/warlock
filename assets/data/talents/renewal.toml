@@ -1,0 +1,8 @@
+[[talent]]
+id = "renewal"
+name = "Renewal"
+tree = "class"
+granted = true
+description = "Your flesh knits fast a while (a spell, paid in mana): wounds close at four times the pace."
+effects = [{ kind = "spell", spell = "renewal" }]
+systems = ["spells", "mana", "status"]

@@ -1,0 +1,8 @@
+[[talent]]
+id = "bind"
+name = "Bind"
+tree = "class"
+granted = true
+description = "Bind a foe you see nearby where it stands (a spell, paid in mana): it cannot step for a few actions, though it may still strike."
+effects = [{ kind = "spell", spell = "bind" }]
+systems = ["spells", "mana", "status"]

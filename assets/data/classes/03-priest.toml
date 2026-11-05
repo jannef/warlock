@@ -39,6 +39,8 @@ abilities = [
     { level = 6, talent = "daily_bread" },
     { level = 9, talent = "consecrate" },
     { level = 9, talent = "communion" },
+    { level = 9, talent = "renewal" },
+    { level = 12, talent = "silence" },
     { level = 12, talent = "prayer_of_cleansing" },
     { level = 18, talent = "rebuke" },
     { level = 18, talent = "prayer_of_release" },
