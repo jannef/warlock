@@ -12,6 +12,9 @@ impl World {
     /// [`crate::action::Action::PickUp`]: picks up what `positions` names ([`World::pick_up`])
     /// and returns what it cost.
     pub(super) fn pick_up_objects(&mut self, positions: &Positions) -> Spent {
+        if self.refused_afloat("It would sink.") {
+            return Spent::Nothing;
+        }
         // Priced at the load the player has as they begin.
         let price = self.price_of(self.state.player, ActionKind::PickUp);
         if self.pick_up(positions) {
@@ -90,6 +93,9 @@ impl World {
     /// the player's cell, taking off first what of them is worn or wielded (which takes its time
     /// too).
     pub(super) fn drop_objects(&mut self, positions: &Positions) -> Spent {
+        if self.refused_afloat("It would sink.") {
+            return Spent::Nothing;
+        }
         // In an open shop, unpaid goods go back and the player's own are offered for.
         if let Some(spent) = self.trade(positions, false) {
             return spent;

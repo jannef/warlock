@@ -794,7 +794,7 @@ fn skill_reader(effect: crate::skills::Effect) -> (&'static str, &'static str) {
         S::Dodge | S::Hearing | S::Speed => ACTOR,
         S::Quiet => ("noise.rs", include_str!("../noise.rs")),
         S::Search | S::SearchReach | S::Spot | S::DetectTraps => SEARCH,
-        S::Study => ("world/learn.rs", include_str!("../world/learn.rs")),
+        S::Study | S::Learn => ("world/learn.rs", include_str!("../world/learn.rs")),
         S::Disarm => ("world/disarm.rs", include_str!("../world/disarm.rs")),
         S::Burden | S::Travel | S::Wade => SCHEDULE,
         S::Forage => ("world/forage.rs", include_str!("../world/forage.rs")),

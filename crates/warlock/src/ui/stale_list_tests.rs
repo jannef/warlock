@@ -10,7 +10,8 @@ use bevy::prelude::App;
 use std::sync::Arc;
 use warlock_core::content::{Content, ContentFiles};
 
-/// A quiet lit hall, the player with mana and `carry` in the pack (as a scenario's `carry`).
+/// A quiet lit hall, the player a wizard (trained in Spellcraft) with mana and `carry` in the
+/// pack (as a scenario's `carry`).
 fn hall(carry: &str) -> Arc<Content> {
     let mut files = ContentFiles::builtin();
     files.insert(
@@ -20,7 +21,10 @@ fn hall(carry: &str) -> Arc<Content> {
     );
     files.insert(
         "scenarios/hall.toml",
-        &format!("name = \"Hall\"\nstart_level = \"hall\"\nhp = 500\nmana = 10\ncarry = {carry}\n"),
+        &format!(
+            "name = \"Hall\"\nstart_level = \"hall\"\ncarry = {carry}\n\
+             character = {{ race = \"human\", gender = \"female\", class = \"wizard\", name = \"Ada\" }}\n"
+        ),
     );
     Arc::new(Content::load(&files).expect("test content is valid"))
 }

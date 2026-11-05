@@ -1856,14 +1856,19 @@ impl<'a> PerceptionView<'a> {
         self.player.known_spells(self.content)
     }
 
+    /// Whether the player may learn from a scroll at all (spec §8 "Spells": "Learning"): trained
+    /// in Spellcraft.
+    pub fn can_learn(&self) -> bool {
+        self.player.learning(self.content).is_some()
+    }
+
     /// The scrolls the player could study now (spec §8 "Spells"), in pack order: those whose
-    /// type they know that teach a spell they do not know, each with its chance in words. What
-    /// the study list offers.
+    /// type they know that teach a spell they do not know, each with its chance in words; none
+    /// for a character not trained in Spellcraft. What the study list offers.
     pub fn studies(&self) -> Vec<OwnStudy> {
         let Some(rules) = self.content.study_rules() else {
             return Vec::new();
         };
-        let level = self.own_caster_level();
         (self.player.inventory.iter().enumerate())
             .filter_map(|(item, stack)| {
                 let reading = self.content.object(stack.object).read.as_ref()?;
@@ -1873,13 +1878,8 @@ impl<'a> PerceptionView<'a> {
                 {
                     return None;
                 }
-                let odds = crate::world::study_odds(
-                    self.player,
-                    self.content,
-                    self.character,
-                    level,
-                    spell,
-                )?;
+                let odds =
+                    crate::world::study_odds(self.player, self.content, self.character, spell)?;
                 Some(OwnStudy {
                     item,
                     spell,
@@ -2572,6 +2572,22 @@ impl<'a> PerceptionView<'a> {
         (inventory.iter().zip(parts))
             .map(|(s, n)| (n > 0).then(|| view.bill(&part_of(s, n))))
             .collect()
+    }
+
+    /// Whether a step onto `to` would dive into deep water (spec §8 "Skills": Swim): from anything
+    /// else, into water the player sees or remembers where no one they see is, and open to them:
+    /// an untrained or a Strained player is refused by the rules, with no question to ask. Water
+    /// they do not know is never stepped into: the rules stop them at it first (`world/swim.rs`).
+    pub fn dives_at(&self, to: Pos) -> bool {
+        let swim = |p: Pos| match self.cell(p) {
+            CellView::Visible(t) | CellView::Remembered(t) => self.content.terrain(t).swim,
+            CellView::Unknown => false,
+        };
+        swim(to)
+            && !swim(self.viewer())
+            && self.actor_at(to).is_none()
+            && crate::world::shore_refusal(self.content, self.player, self.own_load().penalty())
+                .is_none()
     }
 
     /// What the player owes, and to whom, if a step onto `to` leaves the open shop they stand in

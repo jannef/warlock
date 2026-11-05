@@ -5,6 +5,7 @@
 //! the dispatch lines.
 
 use super::spawn::Spawner;
+use super::talk::Refusal;
 use super::{
     Actor, ActorId, ActorKind, FreeBlows, LevelState, Mind, Patrol, Shop, Spent, Talk, World,
     WorldError, WorldState,
@@ -125,10 +126,16 @@ impl World {
         if def.is_closed_door() || def.is_shut_chest() {
             return self.open_door(to, events);
         }
-        if !def.walkable {
+        if !def.walkable && !def.swim {
             let name = def.name.clone();
             self.say(format!("The {name} blocks your way."));
             return Spent::Nothing;
+        }
+        // Deep water, from the shore: seen first, and only for a swimmer (`swim.rs`).
+        if def.swim
+            && let Some(spent) = self.at_the_shore(from, to)
+        {
+            return spent;
         }
         // Someone there: the player attacks them if they are hostile (by their stance toward the
         // player, which the player knows from what they are), else swaps places with them
@@ -146,7 +153,8 @@ impl World {
             if self.stance(player, target) == Stance::Hostile {
                 return self.strike_at(target, seen, events);
             }
-            if let Some(why) = self.refusal(target) {
+            let refusal = (self.refusal(target)).or(self.swimming().then_some(Refusal::Water));
+            if let Some(why) = refusal {
                 self.refused(target, why, seen);
                 return Spent::Nothing;
             }
@@ -157,6 +165,10 @@ impl World {
         }
         if !self.can_step_to(to) {
             return Spent::Nothing;
+        }
+        // A step that starts in deep water is a stroke, and may make no headway (`swim.rs`).
+        if let Some(price) = self.stroke_fails(events) {
+            return Spent::Turn(price);
         }
         // Out of a shop's door owing anything: the keeper turns the player back (spec §7
         // "Shops"), a step the other way, or none at all if the shop floor is full; whoever
@@ -195,6 +207,7 @@ impl World {
         }
         // Moving, they let go of whatever they held (Drowning grip, `lucky.rs`).
         self.let_go(player, None);
+        self.dive_in(from, to);
         events.push(Event::ActorMoved {
             actor: player,
             from,

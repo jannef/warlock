@@ -40,7 +40,7 @@
 //! which way first).
 
 use super::character_screen::{fit_joined, thresholds};
-use super::menu::{Hints, Nav, Panel, Press};
+use super::menu::{Hints, Nav, Panel, Press, wrap};
 use super::paged_list::{PagedList, Row, draw_header};
 use super::screens::ScreenAction;
 use super::target::AimKind;
@@ -200,6 +200,8 @@ pub struct ObjectScreen {
     list: ObjectList,
     /// The stacks listed, grouped by class and paged (`paged_list`).
     entries: PagedList<Entry>,
+    /// What an empty list says: [`ObjectList::empty`], or why studying is refused outright.
+    empty: &'static str,
     /// The marked stacks of a selection screen, by position: marks belong to stacks, not to
     /// the letters a page gives them, so they stay across pages.
     marked: Positions,
@@ -223,6 +225,7 @@ impl ObjectScreen {
             return Self {
                 list,
                 entries: PagedList::empty(),
+                empty: list.empty(),
                 marked: Positions::default(),
                 weight: Weight::default(),
                 load: None,
@@ -344,6 +347,11 @@ impl ObjectScreen {
         Self {
             list,
             entries: PagedList::new(entries, content),
+            empty: if list == ObjectList::Study && !view.can_learn() {
+                warlock_core::world::UNTRAINED
+            } else {
+                list.empty()
+            },
             marked: Positions::default(),
             weight: view.own_weight(),
             load: Some(view.own_load()),
@@ -608,7 +616,13 @@ impl ObjectScreen {
     pub fn draw(&self, console: &mut Console, bindings: &Bindings) {
         let read_only = self.list == ObjectList::Inventory;
         let (summary, extra, gap) = self.layout(console.cols(), console.rows());
-        let count = self.entries.tallest().max(1) as i32;
+        // An empty list's words, on as many rows as they take.
+        let width = self.list.width().min(console.cols() as i32) - 8;
+        let said = wrap(self.empty, width);
+        let count = match self.entries.is_empty() {
+            true => said.len(),
+            false => self.entries.tallest().max(1),
+        } as i32;
         let panel = Panel::new(console, self.list.title(), self.list.width(), count + extra);
         if self.list == ObjectList::Inventory {
             super::info_tabs::draw_tabs(console, &panel, bindings, super::ScreenName::Inventory);
@@ -617,7 +631,9 @@ impl ObjectScreen {
         let visible = (panel.h - extra).max(1) as usize;
         let (x, top) = (panel.inner_x(), panel.y + 1 + gap);
         if self.entries.is_empty() {
-            console.print(x + 2, top, self.list.empty(), TEXT_DIM);
+            for (line, y) in said.iter().zip(top..) {
+                console.print(x + 2, y, line, TEXT_DIM);
+            }
         }
         let cursor = self.entries.cursor();
         for (row, y) in self.entries.rows().into_iter().take(visible).zip(top..) {

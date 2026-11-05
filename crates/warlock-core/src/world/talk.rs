@@ -116,6 +116,8 @@ pub enum Refusal {
     Budge,
     /// It is too big to squeeze past: two sizes or more larger than the player.
     TooBig,
+    /// The player is swimming, and it would have to take their place in deep water (`swim.rs`).
+    Water,
 }
 
 /// Which of `n` lines a speaker keyed `key` says `k`-th (from 0): every line once a round, each
@@ -484,6 +486,10 @@ impl World {
             (true, Refusal::TooBig) => {
                 let who = capitalized(&self.called(&self.state.actors[&id]));
                 format!("{who} is too big to squeeze past.")
+            }
+            (true, Refusal::Water) => {
+                let who = capitalized(&self.called(&self.state.actors[&id]));
+                format!("{who} will not go into the water.")
             }
         };
         self.say(text);

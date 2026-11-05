@@ -130,10 +130,10 @@ fn other_skills_train_inside_as_anywhere() {
 fn a_study_inside_earns_a_mark_for_certain() {
     let mut w = world(10);
     run(&mut w, "identify");
-    while w.player_level() < 6 {
-        run(&mut w, "xp:2000 levelup:auto");
-    }
     trained(&mut w);
+    // Spellcraft 40: learning 6, Frost's level.
+    let spellcraft = skill(&w, "spellcraft");
+    w.player_mut().skills.add(spellcraft, 40);
     place(&mut w, INSIDE);
     run(&mut w, "study:c");
     assert!(!w.state.player().spells.is_empty(), "frost learned");
