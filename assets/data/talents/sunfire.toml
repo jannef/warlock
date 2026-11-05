@@ -1,0 +1,8 @@
+[[talent]]
+id = "sunfire"
+name = "Sunfire"
+tree = "class"
+granted = true
+description = "A piece of the sun bursts where you aim it (a spell, paid in mana): everything in it burns, and the dark is driven out."
+effects = [{ kind = "spell", spell = "sunfire" }]
+systems = ["spells", "mana", "combat"]

@@ -1,0 +1,17 @@
+# Mesmerise (the spell types design §7 entry 19): the Transfixing stare's status for anyone who
+# learns the trick.
+[[spell]]
+id = "mesmerise"
+name = "Mesmerise"
+description = "Catch the eye of a foe you see nearby: transfixed a while, all it does takes twice as long."
+level = 5
+school = "enchantment"
+kind = "hex"
+shape = "ray"
+resolution = "auto"
+range = 6
+effect = { status = "transfixed", severity = 2 }
+
+[spell.grows]
+range = "willpower 14 7, 18 8"
+degrees = "presence 14 3, 18 4"

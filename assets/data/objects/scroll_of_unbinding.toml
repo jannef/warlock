@@ -1,0 +1,20 @@
+# A scroll of unbinding (spec §8 "Scrolls", "Spells"): read it (`r`), and it casts Unbinding, a
+# level-8 spell, at its own rungs, free of mana; study it (`L`), and you may learn the spell for
+# good. Level and frequency by its spell's level (README.toml): the lower, the commoner the scroll.
+[[object]]
+id = "scroll_of_unbinding"
+name = "scroll of unbinding"
+plural = "scrolls of unbinding"
+glyph = "?"
+fg = "#f0dca0"
+class = "scrolls"
+materials = ["paper"]
+weight = 50
+value = 130
+stackable = true
+level = 4
+frequency = 30
+
+[object.read]
+kind = "spell"
+spell = "unbinding"

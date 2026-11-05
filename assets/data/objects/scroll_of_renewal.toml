@@ -1,0 +1,20 @@
+# A scroll of renewal (spec §8 "Scrolls", "Spells"): read it (`r`), and it casts Renewal, a
+# level-10 spell, at its own rungs, free of mana; study it (`L`), and you may learn the spell for
+# good. Level and frequency by its spell's level (README.toml): the lower, the commoner the scroll.
+[[object]]
+id = "scroll_of_renewal"
+name = "scroll of renewal"
+plural = "scrolls of renewal"
+glyph = "?"
+fg = "#f0ecc0"
+class = "scrolls"
+materials = ["paper"]
+weight = 50
+value = 150
+stackable = true
+level = 5
+frequency = 25
+
+[object.read]
+kind = "spell"
+spell = "renewal"

@@ -11,6 +11,7 @@
 #              must have a light `circle_<id>` in lights.toml
 #
 # [[status]]   one row per circled status; every `kind = "buff"` or `"hex"` spell's status has one
+#              but a sleep's (`sleeps`: Slumber's `asleep`, a den's sleep too, is never circled)
 #   status     an id in data/status.toml; it must have `seen` (others see it on a creature)
 #   school     the school whose colour it is drawn in
 #
@@ -81,6 +82,21 @@ school = "transmutation"
 status = "water_borne"
 school = "transmutation"
 
+# Nightsight.
+[[status]]
+status = "cat_eyed"
+school = "transmutation"
+
+# Glamour.
+[[status]]
+status = "glamoured"
+school = "abjuration"
+
+# Renewal.
+[[status]]
+status = "renewing"
+school = "restoration"
+
 # Hexes.
 
 # Evil eye.
@@ -107,3 +123,23 @@ school = "enchantment"
 [[status]]
 status = "webbed"
 school = "transmutation"
+
+# Bind.
+[[status]]
+status = "pinned"
+school = "enchantment"
+
+# Fear.
+[[status]]
+status = "frightened"
+school = "enchantment"
+
+# Silence.
+[[status]]
+status = "silenced"
+school = "abjuration"
+
+# Mesmerise.
+[[status]]
+status = "transfixed"
+school = "enchantment"

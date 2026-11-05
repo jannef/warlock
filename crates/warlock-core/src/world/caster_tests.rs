@@ -163,6 +163,8 @@ fn every_caster_has_its_table_by_level_sixty() {
                 "Daily bread",
                 "Consecrate",
                 "Communion with the dark",
+                "Renewal",
+                "Silence",
                 "Prayer",
                 "Prayer of release",
                 "Litany",
@@ -182,6 +184,7 @@ fn every_caster_has_its_table_by_level_sixty() {
                 "Call of the wild",
                 "Water walking",
                 "Call lightning",
+                "Rime",
                 "Nature's ward",
                 "Call of the forest",
                 "Pack leader",
@@ -200,12 +203,14 @@ fn every_caster_has_its_table_by_level_sixty() {
                 "Familiar",
                 "Hex of weakness",
                 "Cackle",
+                "Flay",
                 "Poison lore",
                 "Cause wounds",
                 "Malison",
                 "Second sight",
                 "Familiar's sight",
                 "Curse of sloth",
+                "Fear",
                 "Blight",
                 "Cauldron",
                 "Hag's bargain",
@@ -324,8 +329,11 @@ fn the_spells_are_abilities_by_level() {
             "Magic missile",
             // Level 4.
             "Cause wounds",
+            "Nightsight",
             // Level 5.
+            "Acid arrow",
             "Call of the wild",
+            "Mesmerise",
             "Water walking",
             // Level 6.
             "Arcane bolt",
@@ -337,18 +345,35 @@ fn the_spells_are_abilities_by_level() {
             "Brand",
             "Scorching ray",
             "Web",
+            // Level 8.
+            "Flay",
+            "Glamour",
+            "Unbinding",
+            // Level 9.
+            "Bind",
+            "Rime",
+            // Level 10.
+            "Fear",
+            "Renewal",
             // Level 11.
             "Call lightning",
             "Fireball",
             "Haste",
             "Lightning bolt",
             "Remove disease",
+            "Silence",
             // Level 12.
             "Fire cloak",
             "Flame",
+            // Level 14.
+            "Grave spear",
+            // Level 15.
+            "Slumber",
             // Level 20.
             "Call of the forest",
             "Chain lightning",
+            // Level 30.
+            "Sunfire",
             // Level 35.
             "Call the elements",
         ]

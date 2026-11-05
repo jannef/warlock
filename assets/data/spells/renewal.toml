@@ -1,0 +1,15 @@
+# Renewal (the spell types design §7 entry 27): wounds close four times as fast a while; a buff
+# for the long walk, not a cure.
+[[spell]]
+id = "renewal"
+name = "Renewal"
+description = "Your flesh knits fast a while: wounds close at four times the pace, awake or asleep."
+level = 10
+school = "restoration"
+kind = "buff"
+shape = "self"
+resolution = "auto"
+effect = { status = "renewing" }
+
+[spell.grows]
+degrees = "presence 14 2, 18 3"

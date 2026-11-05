@@ -147,6 +147,7 @@ fn the_three_tables_come_with_the_levels() {
             "Stalker's eye",
             "Tracker",
             "Barkskin",
+            "Nightsight",
             "Rapid shot",
             "Water walking",
             "Pack tactics",

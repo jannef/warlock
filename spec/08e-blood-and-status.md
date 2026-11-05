@@ -172,7 +172,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
     untyped blow does); it costs hit points, stops healing, and
     eases by itself; it shows on creatures ("bleeding"). Blood dripping where the bleeder goes
     (the stains of #127) hooks in where it ticks (`World::drip_blood`). Its ticks are untyped:
-    nothing resists them.
+    nothing resists them. A bloodless creature (`blood = "none"`: the bone and spirit undead,
+    the elementals) never bleeds: a status with a `wound` table takes only on a creature with
+    blood (`World::afflict_one`, the spell types design Q7), whatever lays it (a blow, Flay).
   - **Poisoned**: from a giant rat's bite (one hit in ten, 2 degrees) and bad food (§8
     "Hunger": the sickness of a rotten corpse, or of some creatures' flesh); it costs hit points
     slowly, halves healing, and from 4 degrees lowers Strength and Dexterity by 1; stronger
@@ -209,7 +211,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
 - **Healing** (`world/status.rs`): a hurt actor's progress toward its next hit point back
   (`Actor::regen`, in hundredths of a second at the normal pace, saved) grows each second by its
   healing rate in percent: 100 normally, the slowest `regen` of its status effects (bleeding 0,
-  poison 50, Diseased 50) and of the diseases that show (marsh ague 25), times `[healing]
+  poison 50, Diseased 50) and of the diseases that show (marsh ague 25), or, when none of them
+  slows it, the fastest (Renewal's `renewing`, 400), times `[healing]
   resting` (200) while the player rests (creatures never rest), times the `regen` of a special
   room it stands in (a sanctuary 300, §7 "Special rooms"); every `regen_seconds(Toughness)` ×
   100 of it is a hit point ("Combat" above; the effective Toughness). Progress carries over and
@@ -324,15 +327,18 @@ developer notes (CLAUDE.md, `docs/dev/`).
     by spell level (the spell scaling design §5.8): 0 Evil eye, Light (#589: the scroll of
     light's; Lit, its status, sheds a light about the caster, `light` on a status); 1 Burning
     hands, Grave breath, Mend, Ray of frost, Spark; 3 Barkskin, Blessing, Cure wounds, Curse of sloth, Hex of weakness, Magic
-    missile; 4 Cause wounds; 5 Call of the wild, Water walking; 6 Arcane bolt, Frost, Identify,
-    Sleep; 7 Blight, Brand, Scorching ray, Web; 11 Call lightning, Fireball (the wizard's Fire
-    burst folded into it), Haste, Lightning bolt, Remove disease; 12 Fire cloak, Flame; 20 Call of the forest, Chain lightning; 35
-    Call the elements (the druid's calls, #839: summons, §8b "Allies"). A spell is cast by its
+    missile; 4 Cause wounds, Nightsight; 5 Acid arrow, Call of the wild, Mesmerise, Water
+    walking; 6 Arcane bolt, Frost, Identify, Sleep; 7 Blight, Brand, Scorching ray, Web; 8 Flay,
+    Glamour, Unbinding; 9 Bind, Rime; 10 Fear, Renewal; 11 Call lightning, Fireball (the
+    wizard's Fire burst folded into it), Haste, Lightning bolt, Remove disease, Silence; 12 Fire
+    cloak, Flame; 14 Grave spear; 15 Slumber; 20 Call of the forest, Chain lightning; 30
+    Sunfire; 35 Call the elements (the druid's calls, #839: summons, §8b "Allies"). A spell is cast by its
     data id (`use:magic_missile:12,5`, any `use:ID` that is no class or birth sign ability; one
     that is no spell either is a weapon active's, §8i "Weapon abilities");
     the abilities menu lists the spells known by spell level, then path order. Sleep and Web are
     **area hexes**: a burst whose status falls on everyone it reaches but the caster, friend or
-    foe (`World::cast_area_hex`). Haste is the one status that hastens (`cost` 75; statuses may
+    foe (`World::cast_area_hex`); so are Fear and Silence. Flay's Bleeding grows by a degrees
+    ladder, as a hex's status does (a damage spell's status may have one). Haste is the one status that hastens (`cost` 75; statuses may
     cost 50 to 1000 percent, and only a buff, on its caster, may hasten: a hex's or a damage
     spell's status that would is refused when the content loads).
   - **Identify** (#592): a divination `utility` spell on oneself that learns the truth of one
@@ -347,12 +353,16 @@ developer notes (CLAUDE.md, `docs/dev/`).
     abilities") gives its spells as class abilities with a `spell` effect, at the level each
     comes at, whatever the character's Spellcraft: a spell a class gives is its holder's at that
     level, and the level is the author's call. Wizard: Ray of
-    frost (1), Burning hands (1), Magic missile (3), Arcane bolt (18), Chain lightning (24). Priest: Mend (1),
-    Blessing (3), Cure wounds (3) (their rite is the prayer, §8i). Druid: Spark (1), Barkskin (3), Call of
-    the wild (6), Water walking (6), Call lightning (12), Call of the forest (25), Call the elements (40), Flame and
-    frost (50). Witch: Evil eye (1), Grave breath (1), Hex of weakness (3), Cause wounds
-    (12), Curse of sloth (32), Blight (40). Bard: Mend (1). Paladin: Blessing
-    (6), Brand (14). Ranger: Barkskin (6), Water walking (12). Every other class none. Every class has some mana (the
+    frost (1), Burning hands (1), Magic missile (3), Arcane bolt (18), Chain lightning (24),
+    Sunfire (36). Priest: Mend (1), Blessing (3), Cure wounds (3), Renewal (9), Silence (12)
+    (their rite is the prayer, §8i). Druid: Spark (1), Barkskin (3), Call of the wild (6), Water
+    walking (6), Call lightning (12), Rime (15), Call of the forest (25), Call the elements
+    (40), Flame and frost (50). Witch: Evil eye (1), Grave breath (1), Hex of weakness (3), Flay
+    (8), Cause wounds (12), Curse of sloth (32), Fear (36), Blight (40). Bard: Mend (1),
+    Mesmerise (8), Bind (16). Paladin: Blessing (6), Brand (14), Unbinding (20). Ranger:
+    Barkskin (6), Nightsight (9), Water walking (12). Every other class none. A class row is a
+    way to meet a spell, not part of it (the spell types design Q13): Acid arrow, Grave spear,
+    Slumber, and Glamour come only from scrolls. Every class has some mana (the
     berserker and the warrior 1); a race adds none unless its data says so.
   - **Spell scrolls** (§8 "Scrolls"): every spell comes on one scroll (`scroll_of_ID`, a
     `read` table of kind `spell`), which casts it through the cast path at the scroll's own
