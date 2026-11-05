@@ -77,9 +77,13 @@ impl World {
             Action::Pray => ActionKind::Pray,
             Action::Drink => ActionKind::Drink,
             Action::Forage => ActionKind::Forage,
+            Action::Fletch => ActionKind::Fletch,
+            Action::Decipher { .. } => ActionKind::Decipher,
             Action::Temper { .. } => ActionKind::Temper,
             Action::Give { .. } => ActionKind::Wear,
             Action::Disarm(_) => ActionKind::Disarm,
+            Action::Listen(_) => ActionKind::Wait,
+            Action::Wedge(_) => ActionKind::Wait,
             Action::Heal { .. } => ActionKind::Heal,
             Action::Use(active, _)
             | Action::UseAt(active, _)
@@ -122,7 +126,8 @@ impl World {
             | Action::Call(_)
             | Action::SetRank { .. }
             | Action::Freeze { .. }
-            | Action::Thaw { .. } => return None,
+            | Action::Thaw { .. }
+            | Action::Zone { .. } => return None,
         })
     }
 

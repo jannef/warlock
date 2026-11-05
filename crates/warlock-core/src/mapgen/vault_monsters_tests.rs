@@ -2,7 +2,7 @@
 //! How they stand with the spawner's cap: `world/spawn_tests.rs`.
 
 use super::*;
-use crate::content::{ContentFiles, danger};
+use crate::content::{ContentFiles, Turn, danger};
 use std::collections::BTreeSet;
 
 /// A hall behind a door: twelve marked cells, its pool from `legend`.
@@ -16,8 +16,23 @@ fn vault_file(legend: &str) -> String {
 /// The builtin content with a rooms branch of `danger` of one floor that stamps the vault above,
 /// no scenario of its own.
 fn content_with(legend: &str, danger: u8) -> Result<Content, String> {
+    content_of(&vault_file(legend), danger)
+}
+
+/// [`content_with`] for a whole vault file.
+fn content_of(vault: &str, danger: u8) -> Result<Content, String> {
+    content_in(
+        vault,
+        danger,
+        "[[dungeon.levels]]\nfrom = 1\nvaults = [\"crowd\"]\n",
+    )
+}
+
+/// [`content_of`] with `levels` the branch's `[[dungeon.levels]]`: none, and the vault is drawn
+/// at random, turned.
+fn content_in(vault: &str, danger: u8, levels: &str) -> Result<Content, String> {
     let mut files = ContentFiles::builtin();
-    files.insert("vaults/crowd.toml", &vault_file(legend));
+    files.insert("vaults/crowd.toml", vault);
     // The guard post has a pool of its own: here it stamps elsewhere.
     files.insert(
         "vaults/guard_post.toml",
@@ -26,8 +41,7 @@ fn content_with(legend: &str, danger: u8) -> Result<Content, String> {
     let branch = format!(
         "\n[[dungeon]]\nid = \"crowded\"\nname = \"Crowded\"\ngenerator = \"rooms\"\ndepth = 1\n\
          size = [80, 40]\ndanger = {danger}\npopulation = [\"kobold\", \"rat\"]\n\
-         population_count = 25\nspawn = {{ every = \"1m\", chance = 100 }}\n\
-         [[dungeon.levels]]\nfrom = 1\nvaults = [\"crowd\"]\n\
+         population_count = 25\nspawn = {{ every = \"1m\", chance = 100 }}\n{levels}\
          [[dungeon]]\nid = \"elsewhere\"\nname = \"Elsewhere\"\ngenerator = \"rooms\"\ndepth = 1\n\
          size = [80, 21]\n"
     );
@@ -235,4 +249,186 @@ fn the_guard_post_draws_two_of_the_floor_s_own_beside_its_guard() {
     // The fixed guard keeps the key.
     assert_eq!(guard.template.creatures.len(), 1);
     assert!(!guard.template.creatures[0].carry.is_empty());
+}
+
+/// A crowd in a hall before a locked store room, `legend` on its ten pool cells (`m`), and, when
+/// `behind`, on one more behind the lock; the brass key opens it.
+fn treasury(legend: &str, behind: bool) -> String {
+    let store = if behind { "m" } else { "." };
+    format!(
+        "name = \"Treasury\"\nmap = '''\n#########\n#mmmmm#{store}#\n#.....L.#\n#mmmmm#.#\n\
+         ####+####\n'''\n[legend]\n\"m\" = {{ terrain = \"floor\", {legend} }}\n\
+         \"L\" = {{ terrain = \"door_closed\", lock = \"guard_post\" }}\n"
+    )
+}
+
+fn holds_key(content: &Content, stacks: &[Stack]) -> bool {
+    (stacks.iter()).any(|s| content.object(s.object).id == "brass_key")
+}
+
+#[test]
+fn a_sleeping_pool_places_every_draw_asleep() {
+    let legend =
+        "monsters = { pool = \"goblin\", count = 10 }, status = [\"asleep\", \"weakened*2\"]";
+    let content = content_with(legend, 5).expect("content");
+    let asleep = content.status_id("asleep").expect("asleep");
+    let weakened = content.status_id("weakened").expect("weakened");
+    for seed in 1..=6 {
+        let level = floor(&content, seed);
+        let spawns = drawn(&level);
+        assert_eq!(spawns.len(), 10, "seed {seed}");
+        for spawn in spawns {
+            assert_eq!(
+                spawn.status,
+                vec![(asleep, 1), (weakened, 2)],
+                "seed {seed}"
+            );
+        }
+        // The floor's own population sleeps no more than it did.
+        let others = (level.creatures.iter()).filter(|c| !level.outside_cap.contains(&c.pos));
+        assert!(
+            others.into_iter().all(|c| c.status.is_empty()),
+            "seed {seed}"
+        );
+    }
+}
+
+#[test]
+fn a_pool_s_key_is_carried_by_exactly_one_draw_on_top_of_its_gear() {
+    let legend = "monsters = { pool = \"goblin\", count = 4 }, carry = [\"brass_key\"]";
+    let content = content_of(&treasury(legend, false), 5).expect("content");
+    let mut armed = 0;
+    for seed in 1..=8 {
+        let level = floor(&content, seed);
+        let spawns = drawn(&level);
+        assert_eq!(spawns.len(), 4, "seed {seed}");
+        let bearers: Vec<_> = (spawns.iter())
+            .filter(|s| holds_key(&content, &s.carry))
+            .collect();
+        assert_eq!(bearers.len(), 1, "seed {seed}: one key-bearer");
+        // Its rolled gear stands, the key after it.
+        let carry = &bearers[0].carry;
+        assert!(
+            holds_key(&content, &carry[carry.len() - 1..]),
+            "seed {seed}"
+        );
+        if carry.len() > 1 {
+            armed += 1;
+        }
+        assert!(
+            level
+                .objects
+                .values()
+                .all(|pile| !holds_key(&content, pile))
+        );
+    }
+    assert!(armed > 0, "a key-bearer rolls its gear too");
+}
+
+#[test]
+fn a_pool_s_key_counts_for_the_lock_only_when_every_cell_is_within_reach() {
+    let legend = "monsters = { pool = \"goblin\", count = 4 }, carry = [\"brass_key\"]";
+    content_of(&treasury(legend, false), 5).expect("the key is in the hall");
+    let plain = "monsters = { pool = \"goblin\", count = 4 }";
+    let err = content_of(&treasury(plain, false), 5).expect_err("no key");
+    assert!(err.contains("no key"), "{err}");
+    // One cell lies behind the lock, and the key may be drawn there.
+    let err = content_of(&treasury(legend, true), 5).expect_err("behind the lock");
+    assert!(err.contains("no key"), "{err}");
+}
+
+#[test]
+fn a_key_no_draw_carries_lies_on_the_pool_s_first_cell() {
+    // Trolls are far deeper than danger 1: nobody is drawn.
+    let legend = "monsters = { pool = \"troll\", count = 4 }, carry = [\"brass_key\"]";
+    let content = content_of(&treasury(legend, false), 1).expect("content");
+    for seed in 1..=4 {
+        let level = floor(&content, seed);
+        assert!(drawn(&level).is_empty(), "seed {seed}");
+        let piles = (level.objects.values()).filter(|pile| holds_key(&content, pile));
+        assert_eq!(piles.count(), 1, "seed {seed}: the key lies");
+    }
+}
+
+#[test]
+fn a_pool_s_route_is_walked_by_every_draw_and_turns_with_the_vault() {
+    // Drawn at random (only here: `dungeons`), so it comes turned.
+    let vault = "name = \"Hall\"\ndungeons = [\"crowded\"]\n\
+         map = '''\n########\n#mmmmmm#\n#......#\n###+####\n'''\n\
+         [legend]\n\"m\" = { terrain = \"floor\", monsters = { pool = \"goblin\", count = 4 }, \
+         route = \"S1 N1\" }\n";
+    let content = content_in(vault, 5, "").expect("content");
+    let way = |turn: Turn| vec![turn.dir(Dir::S), turn.dir(Dir::N)];
+    let ways: Vec<Vec<Dir>> = Turn::ALL.into_iter().map(way).collect();
+    let mut seen = BTreeSet::new();
+    for seed in 1..=40 {
+        let level = floor(&content, seed);
+        let spawns = drawn(&level);
+        if spawns.is_empty() {
+            continue;
+        }
+        assert_eq!(spawns.len(), 4, "seed {seed}");
+        let routes: BTreeSet<Vec<Dir>> = spawns.iter().map(|s| s.route.clone()).collect();
+        assert_eq!(routes.len(), 1, "seed {seed}: one route for all");
+        for spawn in spawns {
+            assert!(
+                ways.contains(&spawn.route),
+                "seed {seed}: {:?}",
+                spawn.route
+            );
+            let step = spawn.pos.step(spawn.route[0]);
+            assert!(content.terrain(level.terrain[step]).walkable, "seed {seed}");
+        }
+        seen.extend(routes);
+    }
+    assert!(
+        seen.len() > 1,
+        "the vault turns, its route with it: {seen:?}"
+    );
+    // The vault itself, every way it may lie.
+    let hall = (content.vaults().iter())
+        .find(|v| v.id() == "crowd")
+        .expect("the hall");
+    for turn in Turn::ALL {
+        assert_eq!(hall.turned(turn).template.monsters[0].route, way(turn));
+    }
+}
+
+#[test]
+fn a_pool_s_status_carry_and_route_are_checked_as_a_placed_creature_s() {
+    for (legend, says) in [
+        // From the cells of the far row the walk leaves the floor; from any it must come back.
+        (
+            "monsters = { pool = \"goblin\" }, route = \"S1 N1\"",
+            "leaves walkable",
+        ),
+        (
+            "monsters = { pool = \"goblin\" }, route = \"S1\"",
+            "loop back",
+        ),
+        (
+            "monsters = { pool = \"goblin\" }, route = \"Q2\"",
+            "legend `m`",
+        ),
+        (
+            "monsters = { pool = \"goblin\" }, status = [\"nothing\"]",
+            "unknown status",
+        ),
+        (
+            "monsters = { pool = \"goblin\" }, carry = [\"nothing\"]",
+            "carry",
+        ),
+        // A faction is not yet a pool's (F6), and its draws roll their own arms.
+        (
+            "monsters = { pool = \"goblin\" }, faction = \"peaceful\"",
+            "not a faction",
+        ),
+        (
+            "monsters = { pool = \"goblin\" }, wield = [\"dagger\"]",
+            "not a faction",
+        ),
+    ] {
+        let err = content_with(legend, 3).expect_err(legend);
+        assert!(err.contains(says), "{legend}: {err}");
+    }
 }

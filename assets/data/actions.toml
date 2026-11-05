@@ -74,6 +74,9 @@ dig = 1000
 # A turn of searching for secret doors and hidden traps around you (`s`; spec §8 "Searching"):
 # searching for a while (`z`) goes on turn after turn until something is found or interrupts it.
 search = 1000
+# A turn of making out a labelled scroll without reading it (the Decipher ability; spec §8
+# "Scrolls"): a try takes decipher.toml's `seconds`, a turn of this after another.
+decipher = 1000
 # A turn of praying at a forgotten altar (the Pray ability; spec §7 "Special rooms"): a prayer
 # takes its outcome table's `seconds` (data/outcomes/), a turn of this after another.
 pray = 1000
@@ -85,6 +88,10 @@ drink = 1000
 # A turn of foraging in the wild (the Forage ability; spec §8 "Foraging"): a forage takes
 # forage.toml's `seconds` (10 minutes), a turn of this after another.
 forage = 1000
+
+# A turn of fletching (the Fletch ability; spec §8 "Fletching"): a batch takes fletch.toml's
+# `seconds` (10 minutes), a turn of this after another.
+fletch = 1000
 
 # A turn of working an item at a forge's anvil (the Temper ability; spec §7 "Special rooms"): an
 # attempt takes `seconds` (data/temper.toml), a turn of this after another.

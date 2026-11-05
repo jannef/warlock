@@ -24,6 +24,8 @@ id = "ascdun_duergar"
 name = "duergar prospectors"
 weight = 2
 group = [{ creature = "duergar_miner", count = "1d2" }]
+# Prospectors at their work, not out for blood: one trained in Bluff may talk their way past.
+talk_past = true
 
 [[table.entry]]
 id = "ascdun_troll"

@@ -6,7 +6,7 @@ map = '''
    #####
  ##,...,##
 #,.......##
-#.........,
+#...$.....,
 #,.......,
  ##.....##
    ##,. #
@@ -15,8 +15,5 @@ map = '''
 [legend]
 "." = "flagstones"
 "," = "rubble"
-
-# Objects (M11): a few coins among the rubble.
-[[pile]]
-at = [4, 3]
-objects = ["copper_coin*3"]
+# A few coins among the rubble, rolled when the area is made.
+"$" = { terrain = "rubble", loot = { pool = "money" } }

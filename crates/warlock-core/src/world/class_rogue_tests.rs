@@ -114,6 +114,7 @@ fn beside(world: &mut World, creature: &str, hp: i32, dir: Dir) -> ActorId {
         faction_override: None,
         summoner: None,
         ally: None,
+        risen: None,
         alignment_override: None,
         inventory: Vec::new(),
         equipment: Default::default(),
@@ -135,12 +136,18 @@ fn the_three_tables_come_with_the_levels() {
     let mut w = world("ranger");
     assert_eq!(
         class_rows(&w),
-        ["Animal companion", "Favoured prey", "Trained wind"]
+        [
+            "Fletcher",
+            "Animal companion",
+            "Favoured prey",
+            "Trained wind"
+        ]
     );
     reach(&mut w, 60);
     assert_eq!(
         class_rows(&w),
         [
+            "Fletcher",
             "Animal companion",
             "Favoured prey",
             "Trained wind",

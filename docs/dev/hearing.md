@@ -9,7 +9,10 @@ terrain `step_noise` percent × the burden's `footsteps()` percent for `Act::Ste
 `toggle_noise` for `Act::OpenDoor`/`CloseDoor`, `VOICE_NOISE` for `Act::Mutter` and for
 `Act::ThrowVoice(at)`, which is made on that cell, not the actor's, `HOWL_NOISE` for `Act::Howl`
 (Hound's bay, #270: `SoundKind::Howl`, "a howl", `h` in the sound layer; `noise::hearers` tells
-the howler who hears it), `SONG_NOISE` (80) for `Act::Sing` (a song, `world/song.rs`, #870: a
+the howler who hears it; `SoundKind::Heartbeat`, "a heartbeat", `q`, is no noise: Sense the quick's
+`senses` status pushes it straight onto the player's heard list at their own threshold,
+`world/spell_rule.rs::heartbeats`, docs/dev/spells.md "Small rules", and `Exact::All` never places
+it exactly), `SONG_NOISE` (80) for `Act::Sing` (a song, `world/song.rs`, #870: a
 voice where the singer stands, untouched by stealth; the Lullaby, #873, asks
 `World::heard_by(Act::Sing)` before the noise is made, as War cry does, and checks the hostile
 hearers), the talent's `noise` (60) for `Act::Cackle` (the witch's Cackle, `world/witch.rs`,
@@ -38,3 +41,13 @@ on the overworld, at the player, out of reach, or at a cell not `sees_actors_at`
 one `make_noise(player, Act::ThrowVoice(at))`, so the AI's listening step sends creatures with
 enemies that do not see the cell there. Sounds carry at most `noise::MAX_REACH` (30) cells, under
 `VIEW_RADIUS`, which keeps rest batching (`out_of_view_for`) exact (a const assert guards it).
+
+Listening at a door (#1026, `world/listen.rs`): `Ability::Listen` (the Listen skill's use: the
+skill with the `hearing` effect, listed as it in its place) sends `Action::Listen(dir)` (`listen:E`),
+refused with no time without the skill or a closed door (a terrain with `opens_to`) that way.
+Else it sets `WorldState::listening` (`noise::Listening { at, keener }`, `keener` = the
+`hearing` effect plus `EXTRA_KEEN` 2; never saved, cleared as `World::apply` ends), marks
+`Use::Listen` (100 % in `skills.toml`), and spends a wait's time. While it is set, `noise::hearers`
+lowers the player's threshold by `keener` for the sound that reaches them by the door cell (the
+field's loudness there less one step), and `World::hear` tells every sound of the turn, news or
+not, or "You hear nothing beyond the door." Tests: `skills_tests.rs`.

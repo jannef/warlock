@@ -238,6 +238,17 @@ impl LevelLights {
             pos,
             preset: fire.light,
         }));
+        // A fire zone's cells, each a fire of light (`world/zone.rs`).
+        let zones = (level.zones.iter()).filter(|zone| zone.until > state.time);
+        for zone in zones {
+            if let Some(preset) = zone.light {
+                sources.extend(zone.cells.iter().map(|&pos| Source {
+                    key: zone_key(&level.id, pos),
+                    pos,
+                    preset,
+                }));
+            }
+        }
         let own_light = state.carried_light(content);
         for actor in state.actors.values().filter(|a| a.level == level.id) {
             let id = u64::from(actor.id.0);
@@ -308,7 +319,8 @@ impl LevelLights {
                 });
             }
         }
-        sources.retain(|s| !level.is_opaque(content, s.pos));
+        // Nor does one in a darkness (`world/zone.rs`).
+        sources.retain(|s| !level.is_opaque(content, s.pos) && !level.darkened(s.pos, state.time));
         sources
     }
 }
@@ -328,6 +340,12 @@ fn static_key(level: &str, p: Pos) -> u64 {
 /// a fire never shares a key with a light placed on its cell.
 fn fire_key(level: &str, p: Pos) -> u64 {
     cell_key(level, 0xfe, p)
+}
+
+/// The key of a fire zone's cell of `level`: a separator of its own, so a zone's fire never shares
+/// a key with a fire on its cell.
+fn zone_key(level: &str, p: Pos) -> u64 {
+    cell_key(level, 0xfd, p)
 }
 
 fn cell_key(level: &str, separator: u8, p: Pos) -> u64 {

@@ -83,7 +83,7 @@ Keep it current with the code, as CLAUDE.md says.
 - `combat::Target::no_criticals`: `strike_with` makes a threat a plain hit with no confirmation
   draw, and a sure critical a plain hit.
 - `combat::Target::without(categories)`: the strip of positive Defence bonuses, shared with
-  Feint (`weapon_active.rs::feinted`).
+  False lead (`weapon_active.rs::misled`).
 
 - `xtask/src/wiki/surprise.rs`, the player wiki's tables (#688; `wiki/src/surprise.md`, under
   Combat): `surprise-rules.md` (`difficulty`, `missile_reach` with Long reach, `memory_turns`,

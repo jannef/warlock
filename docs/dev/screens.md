@@ -10,6 +10,8 @@ an upper-case slot letter on the equipment screen), the character screen (`@`), 
 screen (`W`), the quest log (`q`), the message history (`v`), choosing what to
 pick up (`,`/`;` on several stacks), drop (`d`), eat (`e`), or read (`r`; then, for the scroll of
 identify, what to read it on, `ScreenName::Identify`, which takes the read list's place), the
+Decipher ability's list (`ScreenName::Decipher`, `ObjectList::Decipher`: the scrolls carried of a type
+not yet identified, `world::undeciphered`; choosing one sends `Action::Decipher`), the
 abilities menu (`a`), the
 dialogue screen (opened by
 `screens::converse` after an action this frame whose outcome is talk with topics,
@@ -355,6 +357,10 @@ owner's rule, #156) get no key of their own: they go into the one abilities menu
   `settings/keys.rs::ABILITY_KEYS` lists them: Controls and the `?` help show them last, below
   every context's group, under "Ability keys" (`controls_screen::Row::AbilityKeys`; text
   snapshot `controls-screen-bottom`).
+
+**Fletch** (#1021) is the one skill's use anyone has: its row stands in Woodcraft's place, greyed
+out "you have no knife" or "you have no bow or crossbow ready" (`abilities-menu-fletch`, `-no-knife`,
+`-no-launcher`).
 
 **Text snapshots** (#301): `ui/screen_snapshots.rs` (test only) checks the screens as text, in
 place of golden screenshots. Each `Case` starts a run the way a golden entry does (scenario,

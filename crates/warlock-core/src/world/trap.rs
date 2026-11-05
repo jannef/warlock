@@ -483,6 +483,16 @@ impl World {
         key.extend_from_slice(&at.x.to_le_bytes());
         key.extend_from_slice(&at.y.to_le_bytes());
         let to = free[(fnv1a(&key) % free.len() as u64) as usize];
+        self.teleport_to(victim, (from, to), events);
+    }
+
+    /// Moves `victim` from one cell to another, at once: no step, no tread.
+    pub(super) fn teleport_to(
+        &mut self,
+        victim: ActorId,
+        (from, to): (Pos, Pos),
+        events: &mut Vec<Event>,
+    ) {
         // A creature goes on from where it lands (back to its post, if it had left one).
         if let Some(actor) = self.state.actors.get_mut(&victim) {
             actor.pos = to;

@@ -1,0 +1,22 @@
+---
+source: crates/warlock/src/ui/look.rs
+expression: words
+---
+[
+    (
+        Fire,
+        "A stone floor wreathed in fire.",
+    ),
+    (
+        Fouled,
+        "A stone floor under a foul reek.",
+    ),
+    (
+        Slick,
+        "A stone floor slick underfoot.",
+    ),
+    (
+        Dark,
+        "You remember a stone floor here, slick underfoot.",
+    ),
+]

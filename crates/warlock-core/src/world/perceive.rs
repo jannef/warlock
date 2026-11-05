@@ -431,7 +431,17 @@ impl World {
         );
         let viewer = self.player_pos();
         let mut said: Vec<String> = Vec::new();
-        for sound in news.iter().filter(|s| s.kind != noise::SoundKind::Voice) {
+        // Listening at a door, everything heard is told, news or not, and so is a silence.
+        let listening = self.state.listening.is_some();
+        let told = if listening {
+            self.perception.sounds().to_vec()
+        } else {
+            news.clone()
+        };
+        if listening && told.is_empty() {
+            self.say("You hear nothing beyond the door.");
+        }
+        for sound in told.iter().filter(|s| s.kind != noise::SoundKind::Voice) {
             let text = sound.message(viewer);
             if !said.contains(&text) {
                 self.say(text.clone());

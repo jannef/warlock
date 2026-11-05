@@ -18,6 +18,12 @@ scrolls stays a modest one. A spell your class gives is yours at that level, wha
 
 {{#include generated/class-spells.md}}
 
+Three spells are aimed at a [corpse](food.md#corpses) you see, and any age will do: without one
+they are refused, for no time and no mana. [Charnel burst](#spell-charnel-burst) goes off where
+the corpse lies, flying nowhere, and what it kills leaves corpses for the next. [Grave
+feast](#spell-grave-feast) reaches only a corpse beside you or under your feet, and gives back
+hit points and mana, never past your maximum. [Rouse the dead](allies.md#the-risen) stands it up.
+
 ## The spells
 
 Every spell has a **[level](#spell-levels)**, 0 to 70: what it costs in [mana](mana.md#spending-it), and how learned a caster must
@@ -204,6 +210,47 @@ half its hit points, before what it resists. The undead are immune to necrotic h
 
 **Acid keeps eating.** Every creature an acid spell harms is [Corroded](status-effects.md#corroded) a degree: two more hit points in the
 next twelve seconds. Acid does not eat armour.
+
+## Spells with a rule of their own
+
+Some [spells](#the-spells) do one thing no other does. None of them spares you or your [allies](allies.md).
+
+- **Thunderclap** and **Benison** go off about you: they ask for no aim, and you are at their
+  centre. Thunderclap strikes you with the full roll, as everyone at a burst's centre, and leaves
+  you [Stunned](status-effects.md#status-stunned) with the rest; the whole level hears it. Benison's one roll heals you and every ally of yours within it who is hurt; it does nothing to anyone
+  else, and it is not cast when no one there is hurt.
+- **Leech** gives you back half the [hit points](combat.md#hit-points) it takes, rounded down, never past your maximum. The undead, immune to [necrotic](#spell-types) harm, give nothing.
+- **Rebuke** reaches only the undead, yours and others': the living in it are not touched. It is
+  fire, so it [burns](status-effects.md#burning) as fire does and leaves a fire at its centre.
+- **Bramble** catches only those standing where things grow: grass, marsh, reeds, flowers, bushes,
+  forest floor, fungus (the [terrain](terrain.md) table says which). On stone it does nothing.
+- **Gale** drives everyone on its line a cell straight away from you, the nearest first: one with
+  someone behind it stays put, and so does one [held or webbed](status-effects.md#status-held). It harms no one, and it puts out the fires on its line and tears away the [zones](#zones) of fire, foul cloud, and darkness on it; slick ground stays. A shut door stops it.
+- **Blink** takes you to a free cell within 5, any of them as likely, through walls or not. It
+  works while you are [held](status-effects.md#status-held), [webbed](status-effects.md#status-webbed), or [pinned](status-effects.md#status-pinned), and ends all three.
+- **Sense the quick** lets you feel every living creature within 8 cells that you cannot see as a
+  heartbeat, [heard](hearing.md) up to 2 cells from where it is, every turn while it lasts. The undead, constructs, and
+  animated things have none.
+- **Cloudburst**, cast under the open sky, brings an hour of [rain](weather.md) and at once puts out every fire and
+  everyone [burning](status-effects.md#burning) under the open sky on the level.
+
+## Zones
+
+A **zone** is an area that lies on the floor for a while: [Balefire](#the-spells) burns, [Reek](#the-spells) poisons, [Mirk](#the-spells) darkens, and [Slick](#the-spells)
+trips. All four come only from [scrolls](#learning-spells-from-scrolls) you find. A zone's cells stay as they were laid, and it never spreads. It
+takes you and your [allies](allies.md) like anyone: the caster has no protection against their own, though a
+kill it makes is theirs. A zone laid over another replaces it on the cells they share. It stays when you
+leave the level, its time running while you are away. No zone can be laid on the [overworld](overworld.md).
+
+| Kind | Who it takes | What it does |
+|---|---|---|
+| Fire | whoever starts a turn on it or steps onto it | the spell's [fire](#spell-types) harm, one number rolled as it is laid and the same for all its time, halved by [Evasion](talents.md#talent-evasion); then fire's one chance in four of [burning](status-effects.md#burning). Each cell sheds a fire's light, and the [ice](temperature.md#water-freezes) under it melts as it is laid. It lies only on walkable ground out of the water |
+| Foul cloud | whoever starts a turn in it | [Poisoned](status-effects.md#poisoned) one degree more, no other harm; nothing to the [poison-immune](damage-types.md). It does not block sight |
+| Slick ground | whoever steps onto it or off it | a [Dexterity](stats.md#stat-dexterity) check against 12: failed, [Staggered](status-effects.md#status-staggered), the next action half again as slow. The step is still taken. Nothing incorporeal slips. It lies only on walkable ground out of the water |
+| Darkness | no one directly | no light reaches its cells, the sun's included, and a light inside sheds none, a burning creature's too. Eyes that need light see nothing inside; [darkvision](vision.md#the-four-types) sees in as far as it reaches. The player's eyes follow the same rule, and from inside it they see only the cell they stand on and what is lit beyond |
+
+A [cold](#spell-types) spell puts out the fire on each cell it reaches, and the rest of the zone burns on. A zone shows as a still
+tint of its cells, and look mode names it.
 
 ## How a spell grows
 

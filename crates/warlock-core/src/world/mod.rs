@@ -111,6 +111,7 @@ mod collar;
 mod companion;
 mod concentration;
 mod consecrate;
+mod corpse_spell;
 mod court;
 mod creation;
 mod curse;
@@ -139,6 +140,7 @@ mod feature;
 mod feint;
 mod fight;
 mod flavour;
+mod fletch;
 mod focus;
 mod footing;
 mod forage;
@@ -166,6 +168,7 @@ mod knowledge;
 mod lamp;
 mod learn;
 mod level;
+mod listen;
 mod lockpick;
 mod loot;
 mod lucky;
@@ -220,6 +223,7 @@ mod spell;
 mod spell_aim;
 mod spell_arc;
 mod spell_mods;
+mod spell_rule;
 mod spell_rung;
 mod spell_type;
 mod spell_words;
@@ -237,6 +241,7 @@ pub(crate) mod surprise;
 mod swim;
 mod talent;
 mod talk;
+mod talk_past;
 mod tame;
 mod temper;
 mod thief;
@@ -252,10 +257,12 @@ mod wares;
 mod warp;
 mod weapon_ability;
 mod weapon_active;
+mod wedge;
 mod witch;
 mod words;
 mod wriggle;
 mod zap;
+mod zone;
 
 pub use actor::{Actor, ActorId, ActorKind, AttackSkills, Mind, Patrol};
 pub use alignment::Deed;
@@ -268,6 +275,7 @@ pub(crate) use companion::smelt_within;
 pub use companion::{CompanionData, draw as companion_draw, name_for as companion_name};
 pub use creation::{chosen_with_talents, creation_count, parse_talents, pick_text};
 pub use curse::{Rising, rise_candidates, rises_as};
+pub use decipher::undeciphered;
 pub use dig::{MAX_DIG, WORK_SCALE, dig_work, digs_to_break};
 pub use disarm::SPRINGS_SHORT_BY;
 pub(crate) use encounter::view as encounter_view;
@@ -278,6 +286,7 @@ pub use encounter::{
 pub use experience::{Discovered, Progress};
 pub use familiar::{draw as familiar_draw, name_for as familiar_name};
 pub use fight::{Cause, Death};
+pub(crate) use fletch::fletch_lack;
 pub(crate) use forage::forage_ground;
 pub use free_blow::FreeBlows;
 pub use gifts::{STARE_RANGE, Streak};
@@ -306,9 +315,11 @@ pub(crate) use stars::{RISEN, RISEN_TWICE};
 pub(crate) use swim::shore_refusal;
 pub use talent::Due;
 pub use talk::{Conversation, Talk, TopicView};
+pub(crate) use talk_past::offered as encounter_choices;
 pub use temper::{temperable, workable};
 use travel::{enter_room, instantiate_level, level_template};
 pub use voice::VOICE_RANGE;
+pub use zone::Zone;
 
 use crate::action::{Action, Event, Outcome, Rest};
 use crate::alignment::Score;
@@ -393,6 +404,11 @@ pub struct WorldState {
     /// then arrives on the side of the local area they came from. Cleared on any level change.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub(crate) overworld_step: Option<Dir>,
+    /// The closed door the player listens at during the turn being taken, and how much fainter
+    /// a sound they hear through it (`world/listen.rs`). Set by the action, cleared as it ends:
+    /// never in a save.
+    #[serde(skip)]
+    pub(crate) listening: Option<crate::noise::Listening>,
     /// The overworld encounters' random stream (spec §7 "Overworld encounters": the rate roll,
     /// the entry, the party's dice), made on the first roll (`world/encounter.rs`).
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -664,8 +680,12 @@ enum Spent {
     Pray(pray::Prayer),
     /// Drinking at a healing spring (see [`World::drink`]).
     Drink(drink::Draught),
+    /// Fletching for this many seconds (see [`World::fletch`]).
+    Fletch(u32),
     /// Foraging in the wild for this many seconds (see [`World::forage`]).
     Forage(u32),
+    /// Making out a labelled scroll (see [`World::decipher`]).
+    Decipher(decipher::Deciphering),
     /// Tempering an item at a forge's anvil (see [`World::temper`]).
     Temper(temper::Tempering),
     /// Taming a beast beside the player (see [`World::tame`]).
@@ -851,6 +871,7 @@ impl World {
             character,
             kit: with_kit,
             overworld_step: None,
+            listening: None,
             encounters: None,
             encounter: None,
             endless: Default::default(),
@@ -895,6 +916,7 @@ impl World {
             faction_override: None,
             summoner: None,
             ally: None,
+            risen: None,
             alignment: content.alignment().map(|_| alignment),
             alignment_override: None,
             npc: None,
@@ -1308,7 +1330,9 @@ impl World {
             Spent::Sanctuary(until) => self.sanctuary(until, &mut events),
             Spent::Pray(prayer) => self.pray(prayer, &mut events),
             Spent::Drink(draught) => self.drink(draught, &mut events),
+            Spent::Fletch(seconds) => self.fletch(seconds, &mut events),
             Spent::Forage(seconds) => self.forage(seconds, &mut events),
+            Spent::Decipher(work) => self.decipher(work, &mut events),
             Spent::Temper(work) => self.temper(work, &mut events),
             Spent::Tame(taming) => self.tame(taming, &mut events),
             Spent::Skip(duration) => {
@@ -1318,6 +1342,7 @@ impl World {
                 self.perceive(&mut events);
             }
         }
+        self.state.listening = None;
         self.encounter_tick(&mut events);
         if self.state.death.is_none() {
             self.burden_news(burden);
@@ -1438,10 +1463,14 @@ impl World {
             }
             Action::Search(turns) => return Spent::Search(*turns),
             Action::Disarm(dir) => return self.disarm(*dir, events),
+            Action::Listen(dir) => return self.listen(*dir),
+            Action::Wedge(dir) => return self.wedge(*dir),
             Action::Heal { what, ally } => return self.heal(what.as_deref(), *ally, events),
             Action::Pray => return self.start_prayer(),
             Action::Drink => return self.start_drink(),
             Action::Forage => return self.start_forage(),
+            Action::Fletch => return self.start_fletch(),
+            Action::Decipher { item } => return self.start_decipher(*item),
             Action::Temper { item } => return self.start_temper(*item),
             Action::Give { item, ally } => return self.give_collar(*item, *ally),
             Action::UseTalent(TalentActive::SecondWind) => return self.second_wind(events),
@@ -1489,6 +1518,9 @@ impl World {
             Action::Identify(positions) => return self.identify_dev(positions),
             Action::Freeze { at, radius } => return self.freeze_dev(*at, *radius, events),
             Action::Thaw { at, radius } => return self.thaw_dev(*at, *radius, events),
+            Action::Zone { kind, at, radius } => {
+                return self.zone_dev(*kind, *at, *radius, events);
+            }
             Action::Afflict(id) => return self.afflict_dev(id, events),
             Action::Drain(amount) => return self.drain_dev(*amount),
             Action::Resource(id) => return self.grant_resource_dev(id, events),
@@ -1614,6 +1646,8 @@ mod collar_tests;
 #[cfg(test)]
 mod concentration_tests;
 #[cfg(test)]
+mod corpse_spell_tests;
+#[cfg(test)]
 mod cost_tests;
 #[cfg(test)]
 mod court_tests;
@@ -1675,6 +1709,8 @@ mod fight_tests;
 mod fixture_factions;
 #[cfg(test)]
 mod flavour_tests;
+#[cfg(test)]
+mod fletch_tests;
 #[cfg(test)]
 mod focus_tests;
 #[cfg(test)]
@@ -1876,6 +1912,8 @@ mod spell_data_tests;
 #[cfg(test)]
 mod spell_list_tests;
 #[cfg(test)]
+mod spell_rule_tests;
+#[cfg(test)]
 mod spell_talent_tests;
 #[cfg(test)]
 mod spell_type_force_tests;
@@ -1971,6 +2009,9 @@ mod weapon_active_tests;
 mod weapon_skill_tests;
 #[cfg(test)]
 mod weather_tests;
+
+#[cfg(test)]
+mod wedge_tests;
 #[cfg(test)]
 mod witch_tests;
 #[cfg(test)]
@@ -1979,6 +2020,8 @@ mod words_tests;
 mod wriggle_tests;
 #[cfg(test)]
 mod zap_tests;
+#[cfg(test)]
+mod zone_tests;
 
 /// How actors `a` and `b` stand toward each other ([`World::stance`], for a borrowed state): the
 /// stance of their factions, [`Stance::Neutral`] for a Beast-friend and an animal they befriended.
@@ -1988,7 +2031,8 @@ pub(crate) fn stance_between(
     a: &Actor,
     b: &Actor,
 ) -> Stance {
-    if beast_friend::befriended(state, content, a, b) {
+    // A faction friendly to nothing is hostile to its own, never to itself.
+    if a.id == b.id || beast_friend::befriended(state, content, a, b) {
         return Stance::Neutral;
     }
     content.stance_of(a.faction(content), b.faction(content))

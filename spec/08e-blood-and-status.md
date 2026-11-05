@@ -323,6 +323,12 @@ developer notes (CLAUDE.md, `docs/dev/`).
   talents and items act on it through the hooks. The casters' spells (§8 "Class
   abilities") are spells of `data/spells/` cast by it, and so are the spells learned from
   scrolls and the spells scrolls cast. `docs/dev/spells.md` has the details.
+  - **Spells aimed at a corpse** (#999; the spell types design §7 entries 2, 29, 30): a spell with
+    `[spell.effect] corpse` asks for a cell where the caster sees a corpse, and uses the pile's
+    top-most corpse stack; `consumed` takes one. The corpse's stage is not read. Refused, no time
+    and no mana, with none. **Charnel burst** goes off where it lies; **Grave feast**, a touch,
+    heals and gives mana (`mana` on a heal), each held to its maximum; **Rouse the dead** raises
+    its own creature type (§8 "Allies": "The risen").
   - **The first list** (#397, design §7; names left for the world-language review, #378):
     by spell level (the spell scaling design §5.8): 0 Evil eye, Light (#589: the scroll of
     light's; Lit, its status, sheds a light about the caster, `light` on a status); 1 Burning
@@ -332,7 +338,19 @@ developer notes (CLAUDE.md, `docs/dev/`).
     Glamour, Unbinding; 9 Bind, Rime; 10 Fear, Renewal; 11 Call lightning, Fireball (the
     wizard's Fire burst folded into it), Haste, Lightning bolt, Remove disease, Silence; 12 Fire
     cloak, Flame; 14 Grave spear; 15 Slumber; 20 Call of the forest, Chain lightning; 30
-    Sunfire; 35 Call the elements (the druid's calls, #839: summons, §8b "Allies"). A spell is cast by its
+    Sunfire; 35 Call the elements (the druid's calls, #839: summons, §8b "Allies"). #1001 adds ten of one
+    rule each (the spell types design §7): 5 Sense the quick (Quick-sensed: the living within 8
+    the player does not see, but the undead, constructs, and animated things, heard each turn as
+    heartbeats at rough places); 6 Blink (to a free cell within 5, drawn; it works while held,
+    webbed, or pinned and ends all three); 7 Thunderclap (a force burst about the caster,
+    `range = 0`, no aim: everyone in it Stunned 1, the caster too); 8 Bramble (Webbed on those
+    standing where things grow, terrain `plants`), Shatter (a force burst with a blast); 10 Leech
+    (a necrotic ray: half the hit points it takes come back to the caster); 11 Gale (a line that
+    drives everyone on it a cell on, nearest first, and puts its fires out; no harm); 12 Benison
+    (one heal roll for the caster and their allies in a burst about them, two casts' time); 14
+    Rebuke (fire on the undead in a burst alone, friend or foe, and Frightened 3); 20 Cloudburst
+    (an hour of rain under the open sky, putting out what burns there). No spell protects its
+    caster or their allies from it (the owner's Q14). A spell is cast by its
     data id (`use:magic_missile:12,5`, any `use:ID` that is no class or birth sign ability; one
     that is no spell either is a weapon active's, §8i "Weapon abilities");
     the abilities menu lists the spells known by spell level, then path order. Sleep and Web are
@@ -449,6 +467,18 @@ developer notes (CLAUDE.md, `docs/dev/`).
     (Potent: +1 / +2 / +3), `spell_sides`, `spell_dice`, `spell_reroll`, `wand_rungs` (of
     Wands), `spell_reach` (of Farcasting, cells), `spell_duration` (of Lingering, degrees).
     Derived at cast time; nothing saved.
+  - **Zones** (`docs/design/spell-types-and-new-spells.md` §7 "Zones"; `[spell.effect] zone`, four
+    scroll-only spells, `world/zone.rs`): an area that lies on the floor for some of the player's
+    turns, on the cells of a burst or a line, never spreading, a new one replacing an old on shared
+    cells, kept when the player leaves the level, none on the overworld. It takes the caster and
+    their allies like anyone; its kills are the caster's. `fire` (Balefire): a creature that starts
+    a turn on it or steps onto it takes its harm, rolled once as it is laid, and the fire type's
+    rule; each cell sheds a fire's light; a cold spell's `douses` clears it cell by cell. `fouled`
+    (Reek): a creature that starts a turn in it takes the poison type's rule; it does not block
+    sight. `slick` (Slick): a step onto it or off it is a Dexterity check against 12, failed
+    Staggered 1, the step still taken. `dark` (Mirk): no light reaches its cells and a source on them
+    sheds none, so eyes that need light see nothing there. The player sees a zone as a still tint
+    and in look mode's words, where they see or remember the cell.
   - **Spell types** (`docs/design/spell-types-and-new-spells.md` §3, §4; `[types]` in
     `data/spells.toml`, read into `SpellRules::types`, every status and light checked at load):
     what every spell of a damage type does beyond its damage, always on, cast from mana, a

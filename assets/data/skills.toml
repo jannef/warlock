@@ -26,6 +26,8 @@
 #                 stepped past), "burdened"
 #                 (an action, not waiting, while your load slows you), "travel" (a journey: a step
 #                 on the overworld), "forage" (a forage that ran its time, whatever it found),
+#                 "fletch" (a batch of arrows or bolts that ran its time, whatever came of it),
+#                 "wedge" (a door wedged shut),
 #                 "steal" (an attempt to steal from someone, whatever comes of
 #                 it), "heal" (a try at treating yourself, whatever comes of it), "kick" (a kick
 #                 at a closed door), "study" (a spell studied from a scroll,
@@ -35,6 +37,8 @@
 #                 "judged" (food whose freshness you could tell, eaten: "freshness" below),
 #                 "intimidate" (a war cry roared or a foe threatened, whatever comes of it),
 #                 "feint" (a feint at a foe, whatever comes of it),
+#                 "talk_past" (a try at talking past a party met on the overworld, whatever
+#                 comes of it),
 #                 "rough_step" (a step onto ground that slows and is not water: bush, reeds,
 #                 rubble, ice), "staggered" (an action taken Staggered),
 #                 "song" (a song sung, whatever it does), "wade" (a step wading through water
@@ -42,7 +46,8 @@
 #                 water, whatever comes of it), "sight" (a creature
 #                 seen for the first time that has not noticed you), "sprung" (a hidden trap
 #                 going off under you, or under a creature you see, half as often), "overhear"
-#                 (a sound that is no news heard while resting or waiting). Marks gather until a level-up roll on the skill spends them ([ladder]
+#                 (a sound that is no news heard while resting or waiting), "listen" (a turn
+#                 spent listening at a closed door, whatever is heard). Marks gather until a level-up roll on the skill spends them ([ladder]
 #                 below). Only the player trains, for now.
 #   benefit       what it gives, by its value: a list of { effect = EFFECT, ... } growing either
 #                 by `steps` (one for each value reached, then one more for every `every` points
@@ -63,7 +68,10 @@
 #                 Staggered's extra cost that is spared), "travel"
 #                 (percent less time a journey on the overworld takes), "wade" (percent of what
 #                 wading adds to a step that is spared), "swim" (points added to a Swim check, at
-#                 most 20; only trained is one asked), "forage" (percent added
+#                 most 20; only trained is one asked), "fletch" (points added
+#                 to the check of a batch of arrows or bolts, at most 12: fletch.toml), "wedge" (points added
+#                 to the sturdiness of a door wedged shut, at most 12; trained, a skill with it
+#                 lets you wedge doors at all),"forage" (percent added
 #                 to a forage's chance of finding food, at most 30; trained, a skill with it lets
 #                 you forage at all: forage.toml), "bargain" (percent better
 #                 prices in shops, together with Presence at most half; shops.toml), "identify"
@@ -182,10 +190,13 @@ id = "bluff"
 name = "Bluff"
 description = "Lying with a straight face, feinting, and talking your way past."
 kind = "action"
-# Marked by "feint" (a feint at a foe, feint.toml, the skill's use, whatever comes of it). Effect
-# "feint": points added to the difficulty of the Willpower check a feint asks, +8 at 100, +12 at
-# 200, at most 20. Being trained in it gives the Feint ability.
-mark = [{ on = "feint", chance = 50 }]
+# Marked by "feint" (a feint at a foe, feint.toml, the skill's use, whatever comes of it) and by
+# "talk_past" (a try at talking past a party met on the overworld, an encounter entry flagged
+# `talk_past`, whatever comes of it). Effect "feint": points added to the difficulty of the
+# Willpower check a feint asks, and of the one a party's leader makes when you talk past them,
+# +8 at 100, +12 at 200, at most 20. Being trained in it gives the Feint ability and the choice
+# to talk past.
+mark = [{ on = "feint", chance = 50 }, { on = "talk_past", chance = 100 }]
 benefit = [{ effect = "feint", curve = [[0, 0], [100, 8], [200, 12]] }]
 
 [[skill]]
@@ -337,7 +348,7 @@ id = "listen"
 name = "Listen"
 description = "Hearing what others miss: faint steps, a door far off."
 kind = "passive"
-mark = [{ on = "hear", chance = 30 }, { on = "overhear", chance = 5 }]
+mark = [{ on = "hear", chance = 30 }, { on = "overhear", chance = 5 }, { on = "listen", chance = 100 }]
 # One fainter for every 10 points.
 benefit = [{ effect = "hearing", every = 10 }]
 
@@ -524,5 +535,14 @@ benefit = [{ effect = "dodge", steps = [20, 40, 60, 80, 100], every = 25 }]
 [[skill]]
 id = "woodcraft"
 name = "Woodcraft"
-description = "Working wood: carving, carpentry, and the making of bows."
+description = "Working wood: carving, carpentry, and the making of bows, arrows, and bolts."
 kind = "action"
+mark = [{ on = "fletch", chance = 100 }, { on = "wedge", chance = 100 }]
+# Fletching (spec §8 "Fletching", fletch.toml; the Fletch ability, which anyone has): +8 to the
+# check at 100, +12 at 200; the value also adds to the count and makes them plain (fletch.toml).
+# Wedging (spec §8 "Doors"; the Wedge ability, for those trained): the same curve, added to the
+# sturdiness of a door wedged shut.
+benefit = [
+    { effect = "fletch", curve = [[0, 0], [100, 8], [200, 12]] },
+    { effect = "wedge", curve = [[0, 0], [100, 8], [200, 12]] },
+]

@@ -157,6 +157,9 @@ pub enum ScreenName {
     /// Choose what to temper at a forge's anvil (the Temper ability, spec §7 "Special rooms"):
     /// the weapons and armour carried.
     Temper,
+    /// Choose a scroll to make out unread (the Decipher ability, spec §8 "Scrolls"): those of a
+    /// type not yet identified.
+    Decipher,
     /// Choose what to give a kept beast of the player's for its neck (the Give ability, spec §8
     /// "Allies"): what fits a neck, carried.
     Give,
@@ -213,6 +216,7 @@ impl ScreenName {
                 | ScreenName::Study
                 | ScreenName::Identify
                 | ScreenName::Temper
+                | ScreenName::Decipher
                 | ScreenName::Give
                 | ScreenName::Abilities
                 | ScreenName::Shape
@@ -437,6 +441,7 @@ impl Screen {
                 beneath.item.unwrap_or(0),
             ))),
             ScreenName::Temper => objects(ObjectList::Temper),
+            ScreenName::Decipher => objects(ObjectList::Decipher),
             ScreenName::Give => objects(ObjectList::Give),
             ScreenName::Abilities => Screen::Abilities(AbilitiesScreen::new(run, beneath.ability)),
             ScreenName::Shape => Screen::Shape(ShapeScreen::new(run)),
@@ -473,6 +478,7 @@ impl Screen {
                 ObjectList::Study => ScreenName::Study,
                 ObjectList::Identify(_) => ScreenName::Identify,
                 ObjectList::Temper => ScreenName::Temper,
+                ObjectList::Decipher => ScreenName::Decipher,
                 ObjectList::Give => ScreenName::Give,
             },
             Screen::Equipment(_) => ScreenName::Equipment,
@@ -2170,10 +2176,10 @@ mod tests {
     #[test]
     fn picking_a_lock_asks_for_a_direction_from_the_menu_or_its_own_key() {
         let mode = |app: &App| *app.world().resource::<InputMode>();
-        // The showcase's thief is trained in Open lock: `a` `c` (Pick lock, after their birth
-        // sign's stare and Disarm) asks for a direction.
+        // The showcase's thief is trained in Open lock: `a` `d` (Pick lock, after their birth
+        // sign's stare, Disarm, and Listen) asks for a direction.
         let mut app = app(true);
-        frame(&mut app, &[(KeyCode::KeyA, "a"), (KeyCode::KeyC, "c")]);
+        frame(&mut app, &[(KeyCode::KeyA, "a"), (KeyCode::KeyD, "d")]);
         assert!(names(&app).is_empty());
         assert_eq!(mode(&app), InputMode::Ability(Ability::PickLock));
         frame(&mut app, &[EAST]);
@@ -2197,10 +2203,10 @@ mod tests {
     #[test]
     fn stealing_asks_for_a_direction_from_the_menu_or_its_own_key() {
         let mode = |app: &App| *app.world().resource::<InputMode>();
-        // The showcase's thief can steal: `a` `d` (Steal) asks for a direction in the message
+        // The showcase's thief can steal: `a` `e` (Steal) asks for a direction in the message
         // line, and a direction steals.
         let mut app = app(true);
-        frame(&mut app, &[(KeyCode::KeyA, "a"), (KeyCode::KeyD, "d")]);
+        frame(&mut app, &[(KeyCode::KeyA, "a"), (KeyCode::KeyE, "e")]);
         assert!(names(&app).is_empty());
         assert_eq!(mode(&app), InputMode::Ability(Ability::Steal));
         frame(&mut app, &[EAST]);
@@ -2238,21 +2244,21 @@ mod tests {
         const ABILITIES: (KeyCode, &str) = (KeyCode::KeyA, "a");
         const REPEAT: (KeyCode, &str) = (KeyCode::KeyX, "X");
         let mode = |app: &App| *app.world().resource::<InputMode>();
-        // Without a shield: the menu opens on `a`; the shield bash (`e`) is greyed out, so its
+        // Without a shield: the menu opens on `a`; the shield bash (`g`) is greyed out, so its
         // letter only says why; Esc closes the menu, and no time passed.
         let mut app = app(true);
         frame(&mut app, &[ABILITIES]);
         assert_eq!(names(&app), [ScreenName::Abilities]);
-        frame(&mut app, &[(KeyCode::KeyE, "e")]);
+        frame(&mut app, &[(KeyCode::KeyG, "g")]);
         assert_eq!(names(&app), [ScreenName::Abilities]);
         frame(&mut app, &[ESC]);
         assert!(names(&app).is_empty() && actions(&app).is_empty());
         // The quick repeat with nothing used yet opens the menu.
         frame(&mut app, &[REPEAT]);
         assert_eq!(names(&app), [ScreenName::Abilities]);
-        // With a shield: `a` `e` closes the menu and asks for a direction; a direction bashes.
+        // With a shield: `a` `g` closes the menu and asks for a direction; a direction bashes.
         let mut app = with_a_shield();
-        frame(&mut app, &[ABILITIES, (KeyCode::KeyE, "e")]);
+        frame(&mut app, &[ABILITIES, (KeyCode::KeyG, "g")]);
         assert!(names(&app).is_empty());
         assert_eq!(mode(&app), InputMode::Ability(Ability::ShieldBash));
         frame(&mut app, &[EAST]);

@@ -59,6 +59,9 @@
 #              made again too. `made` and `failed` are what you are
 #              told. None: Heal cannot treat it
 #   quenched   true: a step into water, or a fall into it, ends it (Burning)
+#   senses     what its bearer, the player, feels while it lasts: { reach = 8, kind = "heartbeat" },
+#              every living creature within `reach` (1 to 20) they do not see, a sound of `kind` at
+#              a rough place, each turn (Quick-sensed; not the undead, animated things, constructs)
 #   start, end what the player is told as it begins and ends ("end" lets a rest go on)
 #   dies       what a creature you see does when it kills it ("The giant rat bleeds to death.")
 #   death      the death screen's line when it kills you
@@ -749,6 +752,18 @@ eases = 1800
 vision = "low_light"
 start = "The dark is less dark to you."
 end = "The dim grows dim again."
+
+# Sense the quick's (spec §8 "Spells"): the living about you, felt as heartbeats at rough places.
+[[status]]
+id = "quick_sensed"
+name = "Quick-sensed"
+seen = "listening"
+max = 3
+stacking = "refresh"
+eases = 60
+senses = { reach = 8, kind = "heartbeat" }
+start = "You feel the living about you."
+end = "The press of living things fades."
 
 [[status]]
 id = "owl_eyed"

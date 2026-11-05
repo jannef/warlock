@@ -71,6 +71,9 @@ own: [Weapon skills](weapon-skills.md#what-a-rank-teaches) and
 - **Disarm a trap**: everyone trained in [Disable device](skills.md#skill-disable-device) (the [thief](classes.md#thief)) has it, in place of the
   skill. Choose a direction, toward a [trap](traps.md#finding-traps) you know of next to you, on the floor or on a [door](doors.md):
   you try to take it apart (see [Traps](traps.md#disarming-traps)).
+- **Listen at a door**: everyone trained in [Listen](skills.md#skill-listen) has it, in place of the skill. Choose a direction,
+  toward a closed [door](doors.md) next to you: you stop a turn and hear what moves beyond it (see
+  [Hearing](hearing.md#listening-at-a-door)).
 - **Pick lock**: everyone trained in [Open lock](skills.md#skill-open-lock) (the [thief](classes.md#thief)) has it, in place of the skill. Choose a
   direction, toward a closed [door](doors.md) next to you: you try its lock (see
   [Doors](doors.md#picking-locks)).
@@ -80,7 +83,7 @@ own: [Weapon skills](weapon-skills.md#what-a-rank-teaches) and
 - **Feint**: anyone trained in the [Bluff](skills.md#skill-bluff) skill has it, in the skill's place among the Skills.
   It asks for a direction and lies to the hostile creature there: unless it sees through you it is
   [surprised](status-effects.md#status-surprised), and your next blow finds it off its guard (see
-  [Feinting](skills.md#feinting)). Not the [Feint](fighting-styles.md#style-ability-feint) of the Duelist's style, a blow.
+  [Feinting](skills.md#feinting)). Not the [False lead](fighting-styles.md#style-ability-false-lead) of the Duelist's style, a blow.
 - **Intimidate**: anyone trained in the [Intimidate](skills.md#skill-intimidate) skill has it, in the skill's place among
   the Skills. It asks for a place you see, within 6 cells, and threatens the hostile creature
   there: unless it keeps its nerve it is [frightened](status-effects.md#status-frightened) and
@@ -89,6 +92,13 @@ own: [Weapon skills](weapon-skills.md#what-a-rank-teaches) and
   treats you, or an [ally](allies.md) beside you: [bleeding](status-effects.md#bleeding), a [poison](status-effects.md#poisoned), or a [disease](diseases.md#how-a-disease-goes) that shows, asking which when there is more
   than one; greyed out "nothing to treat" otherwise (see
   [Treating yourself](skills.md#treating-yourself)).
+- **Fletch**: everyone has it, in [Woodcraft](skills.md#skill-woodcraft)'s place among the Skills. It asks for nothing: you
+  spend ten minutes cutting arrows or bolts for the bow or crossbow you have [ready](ranged.md#getting-ready). Greyed out
+  "you have no knife" without one, in your pack or anywhere on you, and "you have no bow or crossbow
+  ready" (see [Fletching](skills.md#fletching)).
+- **Wedge a door**: anyone trained in [Woodcraft](skills.md#skill-woodcraft) has it, in the skill's place among the Skills.
+  Choose a direction: a turn spent wedging the closed door that way shut, so that creatures must kick it in
+  (see [Wedging a door](doors.md#wedging-a-door)).
 - **Forage**: anyone trained in [Survival](skills.md#skill-survival) has it, in the skill's place among the Skills. It asks
   for nothing: you spend ten minutes searching the wild around you for food. Only in the wild,
   on the [overworld](overworld.md#travel) and in its [local areas](overworld.md#local-areas); elsewhere it is greyed out, "not usable here" (see

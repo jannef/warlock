@@ -55,6 +55,14 @@ fireball"). The scroll of identify casts Identify through the cast path
 scroll used up, and `World::identify` on the stack named, one place up if the used-up scroll
 stack was before it).
 
+**The Decipher ability** (#1025; `world/decipher.rs`): `Ability::Decipher` (Decipher script's use,
+skill source, `Aim::Item`; `Unavailable::NoUnknownScroll` from the perception when no stack
+passes `undeciphered`) sends `Action::Decipher { item }` (`decipher:b`). `start_decipher` refuses a
+stack that is no unidentified scroll (no time) and answers `Spent::Decipher`; `decipher` keeps turns
+of `ActionKind::Decipher` for `DecipherRules::seconds` as a forage does (`keep_at`), then `deciphered`
+calls `deciphers` with the scroll's spell and level (`Reading::Cast`, else none and 0), and on success
+`learn_scroll`s the type without using the scroll up. The UI list is `ObjectList::Decipher`.
+
 **Making out a scroll** (#1024, `world/decipher.rs`, `content/decipher.rs`,
 `data/decipher.toml`; the skill uses design §6.6): `World::deciphers(spell, level)` stands between a
 reading's refusals and its `use_up`. A spell the player knows (`Actor::knows_spell`, a scroll they

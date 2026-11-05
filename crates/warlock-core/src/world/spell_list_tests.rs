@@ -238,10 +238,9 @@ fn every_class_has_mana_and_its_guaranteed_spells() {
                 spells.push((*level, s.level, s.kind));
             }
         }
-        // A full caster: a cantrip at level 1 and three to twelve spells in all (the priest's
-        // few: their rite is the Orison, docs/dev/prayer.md; twelve: a class row is a way to
-        // meet a spell, not part of it, the spell types design Q13), the druid's calls
-        // (summons, #839) counted apart: they are its pack, not its spellbook.
+        // A full caster: a cantrip at level 1 and three to twelve spells in all (the spell types
+        // design §8, Q13; the priest's fewest: their rite is the Orison, docs/dev/prayer.md), the
+        // druid's calls (summons, #839) counted apart: they are its pack, not its spellbook.
         let full = FULL.contains(&class.id.as_str());
         if full {
             assert!(
@@ -254,15 +253,10 @@ fn every_class_has_mana_and_its_guaranteed_spells() {
                 .count();
             assert!((3..=12).contains(&book), "{}: {spells:?}", class.id);
         }
-        // Only the casters and the hybrids have any, and a hybrid's are a few boons and hexes
-        // of the lower levels.
+        // Only the casters and the hybrids have any, and a hybrid's are few: a class's row is a
+        // way to meet a spell, not what the spell is (the spell types design §8, Q13).
         if !full {
             assert!(spells.len() <= 4, "{}: {spells:?}", class.id);
-            assert!(
-                (spells.iter()).all(|&(_, t, k)| t <= 10 && k != SpellPurpose::Damage),
-                "{}: {spells:?}",
-                class.id
-            );
         }
     }
 }

@@ -99,6 +99,9 @@ pub enum SoundKind {
     Voice,
     /// A howl: a Barghest's Hound's bay (spec §8 "Birth sign").
     Howl,
+    /// A heartbeat: Sense the quick's, a living creature near (spec §8 "Spells"). No noise anyone
+    /// makes: only the player hears one, and never its exact place.
+    Heartbeat,
     /// A bell: an alarm trap (spec §8 "Traps").
     Bell,
     /// An explosion: a fireball trap.
@@ -121,6 +124,7 @@ impl SoundKind {
             SoundKind::Digging => "digging",
             SoundKind::Voice => "voice",
             SoundKind::Howl => "howl",
+            SoundKind::Heartbeat => "heartbeat",
             SoundKind::Bell => "bell",
             SoundKind::Explosion => "explosion",
             SoundKind::Thunder => "thunder",
@@ -140,6 +144,7 @@ impl SoundKind {
             SoundKind::Digging => "digging",
             SoundKind::Voice => "a voice",
             SoundKind::Howl => "a howl",
+            SoundKind::Heartbeat => "a heartbeat",
             SoundKind::Bell => "a bell ring",
             SoundKind::Explosion => "an explosion",
             SoundKind::Thunder => "a thunderclap",
@@ -497,6 +502,8 @@ pub(crate) fn hearers(state: &WorldState, content: &Content, noise: Noise) -> Ve
         return Vec::new();
     }
     let reach = i32::from(noise.loudness / STEP_LOSS);
+    // The player listening at a door hears fainter sounds that come through it.
+    let listening = state.listening;
     let listeners: Vec<(ActorId, Pos, u16)> = state
         .actors
         .values()
@@ -504,6 +511,10 @@ pub(crate) fn hearers(state: &WorldState, content: &Content, noise: Noise) -> Ve
         .filter(|a| a.pos.chebyshev(noise.at) <= reach)
         .filter_map(|a| {
             let threshold = a.hearing(content)?;
+            let keener = listening
+                .filter(|_| a.id == state.player)
+                .map_or(0, |l| l.keener);
+            let threshold = threshold.saturating_sub(keener).max(1);
             (threshold <= noise.loudness).then_some((a.id, a.pos, threshold))
         })
         .collect();
@@ -513,10 +524,31 @@ pub(crate) fn hearers(state: &WorldState, content: &Content, noise: Noise) -> Ve
     let field = propagate(level, content, noise.at, noise.loudness, floor);
     (listeners.into_iter())
         .filter_map(|(id, pos, threshold)| {
-            let loudness = field.at(pos);
-            (loudness >= threshold).then_some((id, loudness))
+            let direct = field.at(pos);
+            let plain = state.actors.get(&id).and_then(|a| a.hearing(content))?;
+            if direct >= plain {
+                return Some((id, direct));
+            }
+            // Only the sound that comes by the door is helped.
+            let door = listening.filter(|_| id == state.player)?;
+            let step = if door.at.x != pos.x && door.at.y != pos.y {
+                DIAGONAL_LOSS
+            } else {
+                STEP_LOSS
+            };
+            let through = field.at(door.at).saturating_sub(step);
+            (through >= threshold && field.at(door.at) > 0).then_some((id, through))
         })
         .collect()
+}
+
+/// A player listening at a closed door for a turn (`world/listen.rs`).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct Listening {
+    /// The door's cell.
+    pub at: Pos,
+    /// How much lower the hearing threshold is for a sound that comes through it.
+    pub keener: u16,
 }
 
 /// Which sounds a listener places where they were made, not roughly ([`perceive`]).
@@ -535,7 +567,8 @@ impl Exact {
         match self {
             Exact::No => false,
             Exact::Footsteps => kind == SoundKind::Footsteps,
-            Exact::All => true,
+            // A heartbeat is felt, not heard: rough however sharp the ears.
+            Exact::All => kind != SoundKind::Heartbeat,
         }
     }
 }

@@ -60,6 +60,11 @@ pub enum Ability {
     /// this in its place). Had by whoever is trained in it; usable whenever they have it (the
     /// rules refuse, taking no time, where they know of no trap).
     Disarm,
+    /// Listen at a closed door next to the actor (spec §5 "Hearing"; `world/listen.rs`):
+    /// [`Action::Listen`], the use of Listen (the skill with the hearing effect, listed as this
+    /// in its place). Had by whoever is trained in it; usable whenever they have it (the rules
+    /// refuse, taking no time, where there is no closed door).
+    Listen,
     /// Pick the lock of a door next to the actor (spec §8 "Doors"): [`Action::PickLock`], the
     /// use of Open lock (the skill with the pick effect, listed as this in its place). Had by
     /// whoever is trained in it; usable whenever they have it (the rules refuse, taking no time,
@@ -69,6 +74,11 @@ pub enum Ability {
     /// skill's use. Whoever is trained in a skill with the `steal` benefit has it, in that
     /// skill's place among the skills.
     Steal,
+    /// Wedge shut the closed door next to the actor (spec §8 "Doors"; `world/wedge.rs`):
+    /// [`Action::Wedge`], Woodcraft's second use (the skill with the `wedge` effect). Had by
+    /// whoever is trained in it; usable whenever they have it (the rules refuse, taking no time,
+    /// where there is no closed door).
+    Wedge,
     /// Feint at a foe next to you (spec §8 "Skills": Bluff; #1016): [`Action::Feint`], Bluff's
     /// use (the skill with the `feint` benefit, listed as this in its place while
     /// `data/feint.toml` exists). Had by whoever is trained in it; usable whenever they have it
@@ -86,6 +96,9 @@ pub enum Ability {
     /// this in its place while `data/intimidate.toml` exists). Had by whoever is trained in it;
     /// usable whenever they have it (the rules refuse, taking no time, without a foe there).
     Intimidate,
+    /// Make arrows or bolts (spec §8 "Fletching"): [`Action::Fletch`], in Woodcraft's place,
+    /// though anyone has it.
+    Fletch,
     /// Forage for food in the wild (spec §8 "Foraging"): [`Action::Forage`], Survival's use (the
     /// skill with the `forage` benefit, listed as this in its place, while `data/forage.toml`
     /// exists). Had by whoever is trained in it; unavailable ([`Unavailable::NotHere`]) anywhere
@@ -97,6 +110,13 @@ pub enum Ability {
     /// ([`crate::heal::treatable`]). It asks which ailment when there are several
     /// ([`Aim::Ailment`]).
     Heal,
+    /// Make out a scroll without reading it (spec §8 "Scrolls", "Skills": Decipher script;
+    /// `world/decipher.rs`): [`Action::Decipher`] on a scroll of a type not yet identified, the
+    /// skill's use (the skill with the `decipher` effect, listed as this in its place while
+    /// `data/decipher.toml` exists). Had by whoever is trained in it; unavailable
+    /// ([`Unavailable::NoUnknownScroll`], the perception knows) while the pack holds none. It
+    /// asks which scroll ([`Aim::Item`]).
+    Decipher,
     /// Catch a second wind (spec §8 "Talents"): [`Action::UseTalent`], the active of the
     /// Second wind talent (a talent with the `second_wind` effect). Had by whoever holds it;
     /// unavailable while its cooldown (Winded) lasts.
@@ -234,6 +254,8 @@ pub enum Aim {
     Direction,
     /// A cell, in the aiming mode, as a shot does ([`Ability::action_at`]).
     Cell,
+    /// A cell in sight with a corpse on it, in the aiming mode (`world/corpse_spell.rs`).
+    Corpse,
     /// What to treat, of what the player may treat now on themselves and their allies beside
     /// them ([`crate::heal::treatable`]): asked only when there is more than one (the Heal
     /// ability).
@@ -255,8 +277,14 @@ pub enum Aim {
 pub enum Unavailable {
     /// A shield bash without a shield to bash with.
     NoShield,
+    /// Fletch without a knife carried (spec §8 "Fletching").
+    NoKnife,
+    /// Fletch without a bow or a crossbow ready (spec §8 "Fletching").
+    NoLauncher,
     /// A skill whose use is not in the game yet.
     NotYet,
+    /// Decipher with no scroll of an unidentified type in the pack.
+    NoUnknownScroll,
     /// While a status lasts (spec §8 "Status effects"): one that blocks the kind of action the
     /// ability is (a raging berserker cannot read), or the ability's cooldown, which the class
     /// abilities bring (Winded: "you are winded"). Only time lifts it.
@@ -298,7 +326,10 @@ impl Unavailable {
     pub fn reason(self, content: &Content) -> Cow<'static, str> {
         match self {
             Unavailable::NoShield => "you hold no shield".into(),
+            Unavailable::NoKnife => "you have no knife".into(),
+            Unavailable::NoLauncher => "you have no bow or crossbow ready".into(),
             Unavailable::NotYet => "not usable yet".into(),
+            Unavailable::NoUnknownScroll => "no unknown scroll".into(),
             Unavailable::NoMana => "you have too little mana".into(),
             Unavailable::NotHere => "not usable here".into(),
             Unavailable::NothingToTreat => "nothing to treat".into(),
@@ -328,7 +359,10 @@ impl Unavailable {
     pub fn id(self, content: &Content) -> Cow<'static, str> {
         match self {
             Unavailable::NoShield => "no_shield".into(),
+            Unavailable::NoKnife => "no_knife".into(),
+            Unavailable::NoLauncher => "no_launcher".into(),
             Unavailable::NotYet => "not_yet".into(),
+            Unavailable::NoUnknownScroll => "no_unknown_scroll".into(),
             Unavailable::NoMana => "no_mana".into(),
             Unavailable::NotHere => "not_here".into(),
             Unavailable::NothingToTreat => "nothing_to_treat".into(),
@@ -362,6 +396,10 @@ impl Ability {
                 None => def.is_active().then_some(Ability::Skill(id)),
             }
         });
+        // Woodcraft's second use: wedging a door, while some skill gives it.
+        let wedge = (content.skills().iter())
+            .any(|def| def.benefits.iter().any(|b| b.effect == Effect::Wedge))
+            .then_some(Ability::Wedge);
         // Birth sign: the active gifts some sign grants, in their order.
         let signs = (SignActive::ALL.iter())
             .filter(|&&a| content.sign_active(a).is_some())
@@ -411,6 +449,7 @@ impl Ability {
             .chain(spells)
             .chain(talents)
             .chain(skills)
+            .chain(wedge)
             .chain(weapon_skills)
             .chain(here)
             .chain(Ability::orders(
@@ -430,11 +469,14 @@ impl Ability {
     /// `tame` benefit, with `data/companions.toml` and `data/allies.toml`) [`Ability::Tame`],
     /// Intimidate's (the
     /// `intimidate` benefit, with `data/intimidate.toml`) [`Ability::Intimidate`], Survival's (the
-    /// `forage` benefit, with `data/forage.toml`) [`Ability::Forage`]. `None` for a skill whose
+    /// `forage` benefit, with `data/forage.toml`) [`Ability::Forage`], Woodcraft's (the `fletch`
+    /// benefit, with `data/fletch.toml`) [`Ability::Fletch`], Decipher script's (the `decipher`
+    /// benefit, with `data/decipher.toml`) [`Ability::Decipher`]. `None` for a skill whose
     /// use is to come, or that has none.
     fn use_of(def: &SkillDef, content: &Content) -> Option<Ability> {
         let gives = |effect| def.benefits.iter().any(|b| b.effect == effect);
         (gives(Effect::Disarm).then_some(Ability::Disarm))
+            .or_else(|| gives(Effect::Hearing).then_some(Ability::Listen))
             .or_else(|| gives(Effect::Pick).then_some(Ability::PickLock))
             .or_else(|| gives(Effect::Heal).then_some(Ability::Heal))
             .or_else(|| {
@@ -454,7 +496,14 @@ impl Ability {
                 (gives(Effect::Steal) && content.steal().is_some()).then_some(Ability::Steal)
             })
             .or_else(|| {
+                (gives(Effect::Decipher) && content.decipher().is_some())
+                    .then_some(Ability::Decipher)
+            })
+            .or_else(|| {
                 (gives(Effect::Forage) && content.forage().is_some()).then_some(Ability::Forage)
+            })
+            .or_else(|| {
+                (gives(Effect::Fletch) && content.fletch().is_some()).then_some(Ability::Fletch)
             })
     }
 
@@ -507,7 +556,7 @@ impl Ability {
     /// oneself, if they are trained in a skill with the `heal` effect; foraging, if they are
     /// trained in Survival (the forage benefit's); second wind,
     /// if they hold the talent; throwing one's voice, if a talent gives it (the bard's); the
-    /// shield bash, everyone.
+    /// shield bash and fletching, everyone.
     pub(crate) fn had_by(self, actor: &Actor, content: &Content) -> bool {
         match self {
             Ability::Sign(active) => actor.talent_mods(content).has_sign_active(active),
@@ -518,6 +567,8 @@ impl Ability {
                 actor.skills.trains_effect(content, Effect::Disarm)
                     || actor.talent_mods(content).disarm
             }
+            Ability::Listen => actor.skills.trains_effect(content, Effect::Hearing),
+            Ability::Wedge => actor.skills.trains_effect(content, Effect::Wedge),
             // A talent with the `pick_lock` or `steal` effect gives them without the skills.
             Ability::PickLock => {
                 actor.skills.trains_effect(content, Effect::Pick)
@@ -528,6 +579,7 @@ impl Ability {
                     || actor.talent_mods(content).steal
             }
             Ability::Forage => actor.skills.trains_effect(content, Effect::Forage),
+            Ability::Decipher => actor.skills.trains_effect(content, Effect::Decipher),
             Ability::Tame => actor.skills.trains_effect(content, Effect::Tame),
             Ability::Heal => actor.skills.trains_effect(content, Effect::Heal),
             Ability::Intimidate => actor.skills.trains_effect(content, Effect::Intimidate),
@@ -535,7 +587,7 @@ impl Ability {
             Ability::SecondWind => actor.talent_mods(content).second_wind.is_some(),
             Ability::BloodMagic => actor.talent_mods(content).blood_magic.is_some(),
             Ability::ThrowVoice => actor.talent_mods(content).throw_voice,
-            Ability::ShieldBash => true,
+            Ability::ShieldBash | Ability::Fletch => true,
             Ability::Weapon(skill, id) => actor.weapon_abilities(content).contains(&(skill, id)),
             // A place offers it, not who one is ([`Ability::here`]); an order needs allies
             // ([`Ability::orders`]).
@@ -553,12 +605,16 @@ impl Ability {
             Ability::Skill(id) => &content.skill(id).id,
             Ability::ThrowVoice => "throw_voice",
             Ability::Disarm => "disarm",
+            Ability::Listen => "listen",
             Ability::PickLock => "pick_lock",
             Ability::Steal => "steal",
+            Ability::Wedge => "wedge",
             Ability::Feint => "feint",
             Ability::Tame => "tame",
             Ability::Intimidate => "intimidate",
             Ability::Forage => "forage",
+            Ability::Fletch => "fletch",
+            Ability::Decipher => "decipher",
             Ability::Heal => "heal",
             Ability::SecondWind => "second_wind",
             Ability::BloodMagic => "blood_magic",
@@ -591,12 +647,16 @@ impl Ability {
             Ability::Skill(id) => &content.skill(id).name,
             Ability::ThrowVoice => "Throw your voice",
             Ability::Disarm => "Disarm a trap",
+            Ability::Listen => "Listen at a door",
             Ability::PickLock => "Pick lock",
             Ability::Steal => "Steal",
+            Ability::Wedge => "Wedge a door",
             Ability::Feint => "Feint",
             Ability::Tame => "Tame",
             Ability::Intimidate => "Intimidate",
             Ability::Forage => "Forage",
+            Ability::Fletch => "Fletch",
+            Ability::Decipher => "Decipher",
             Ability::Heal => "Heal",
             Ability::SecondWind => "Second wind",
             Ability::BloodMagic => "Blood magic",
@@ -625,10 +685,18 @@ impl Ability {
             Ability::Disarm => {
                 "Take apart a trap you know of next to you; a clumsy try sets it off."
             }
+            Ability::Listen => {
+                "Press an ear to a closed door next to you for a turn, and hear what moves \
+                 beyond it."
+            }
             Ability::PickLock => "Open a locked door next to you without its key.",
             Ability::Steal => {
                 "Lift a purse or a trinket from someone next to you who is not hostile; caught, \
                  they turn on you."
+            }
+            Ability::Wedge => {
+                "Drive a wedge under a closed door next to you for a turn: those who would open it \
+                 must kick it in. You open it as usual, pulling the wedge free."
             }
             Ability::Feint => {
                 "Make a lying move at a foe next to you: fooled, it is off its guard for your \
@@ -646,6 +714,15 @@ impl Ability {
             Ability::Forage => {
                 "Spend a while searching the wild around you for something to eat: berries, \
                  nuts, mushrooms, roots."
+            }
+            Ability::Fletch => {
+                "Spend a while with a knife and a bow to hand, cutting arrows or bolts for it \
+                 from what wood there is. Anyone can, after a fashion."
+            }
+            Ability::Decipher => {
+                "Pore over a scroll you carry, of a kind you have not identified, for ten \
+                 minutes: if you make out the writing, you learn what it is without reading it. \
+                 Failed, the time is gone and you may try again."
             }
             Ability::Heal => {
                 "Tend your own hurts or an ally's beside you: bind a bleeding wound, or try to \
@@ -702,12 +779,16 @@ impl Ability {
             Ability::Spell(_) => Source::Spell,
             Ability::Skill(_)
             | Ability::Disarm
+            | Ability::Listen
             | Ability::PickLock
             | Ability::Steal
+            | Ability::Wedge
             | Ability::Feint
             | Ability::Tame
             | Ability::Intimidate
             | Ability::Forage
+            | Ability::Fletch
+            | Ability::Decipher
             | Ability::Heal => Source::Skill,
             Ability::ThrowVoice => Source::Class,
             Ability::SecondWind | Ability::BloodMagic => Source::Talent,
@@ -724,6 +805,7 @@ impl Ability {
             Ability::Sign(_) => Aim::Nothing,
             Ability::Class(active) if active.aimed() => Aim::Direction,
             Ability::Spell(spell) if aims_item(content, spell) => Aim::Item,
+            Ability::Spell(spell) if aims_corpse(content, spell) => Aim::Corpse,
             Ability::Spell(spell) if aimed(content, spell) => Aim::Cell,
             Ability::Spell(_) => Aim::Nothing,
             Ability::Class(active) if active.aims_cell() => Aim::Cell,
@@ -740,16 +822,19 @@ impl Ability {
             | Ability::SecondWind
             | Ability::BloodMagic
             | Ability::Forage
+            | Ability::Fletch
             | Ability::Pray
             | Ability::Heel
             | Ability::Hold
             | Ability::Drink => Aim::Nothing,
-            Ability::Temper | Ability::Give => Aim::Item,
+            Ability::Temper | Ability::Give | Ability::Decipher => Aim::Item,
             Ability::ThrowVoice | Ability::SetOn | Ability::Intimidate => Aim::Cell,
             Ability::Heal => Aim::Ailment,
             Ability::Disarm
+            | Ability::Listen
             | Ability::PickLock
             | Ability::Steal
+            | Ability::Wedge
             | Ability::Feint
             | Ability::Tame
             | Ability::ShieldBash => Aim::Direction,
@@ -766,12 +851,18 @@ impl Ability {
             Ability::Skill(_) | Ability::Weapon(..) => None,
             Ability::ThrowVoice => Some(ActionKind::ThrowVoice),
             Ability::Disarm => Some(ActionKind::Disarm),
+            // A listen is a turn of keeping still.
+            Ability::Listen => Some(ActionKind::Wait),
             Ability::PickLock => Some(ActionKind::PickLock),
             Ability::Steal => Some(ActionKind::Steal),
+            // A wedging is a turn of work.
+            Ability::Wedge => Some(ActionKind::Wait),
             Ability::Feint => Some(ActionKind::Feint),
             Ability::Tame => Some(ActionKind::Tame),
             Ability::Intimidate => Some(ActionKind::Intimidate),
             Ability::Forage => Some(ActionKind::Forage),
+            Ability::Fletch => Some(ActionKind::Fletch),
+            Ability::Decipher => Some(ActionKind::Decipher),
             Ability::Heal => Some(ActionKind::Heal),
             Ability::SecondWind | Ability::BloodMagic => Some(ActionKind::Wait),
             Ability::ShieldBash => Some(ActionKind::Melee),
@@ -798,12 +889,16 @@ impl Ability {
             | Ability::Spell(_)
             | Ability::Skill(_)
             | Ability::Disarm
+            | Ability::Listen
             | Ability::PickLock
             | Ability::Steal
+            | Ability::Wedge
             | Ability::Feint
             | Ability::Tame
             | Ability::Intimidate
             | Ability::Forage
+            | Ability::Fletch
+            | Ability::Decipher
             | Ability::Heal
             | Ability::SecondWind
             | Ability::BloodMagic
@@ -876,15 +971,19 @@ impl Ability {
             (Ability::SecondWind, _) => Some(Action::UseTalent(TalentActive::SecondWind)),
             (Ability::BloodMagic, _) => Some(Action::UseTalent(TalentActive::BloodMagic)),
             (Ability::Disarm, Some(dir)) => Some(Action::Disarm(dir)),
+            (Ability::Listen, Some(dir)) => Some(Action::Listen(dir)),
             (Ability::PickLock, Some(dir)) => Some(Action::PickLock(dir)),
             (Ability::Steal, Some(dir)) => Some(Action::Steal(dir)),
+            (Ability::Wedge, Some(dir)) => Some(Action::Wedge(dir)),
             (Ability::Feint, Some(dir)) => Some(Action::Feint(dir)),
             (Ability::Tame, Some(dir)) => Some(Action::Tame(dir)),
             (Ability::ShieldBash, Some(dir)) => Some(Action::Bash(dir)),
             (
                 Ability::Disarm
+                | Ability::Listen
                 | Ability::PickLock
                 | Ability::Steal
+                | Ability::Wedge
                 | Ability::Feint
                 | Ability::Tame
                 | Ability::ShieldBash,
@@ -893,8 +992,9 @@ impl Ability {
             (Ability::Pray, _) => Some(Action::Pray),
             (Ability::Drink, _) => Some(Action::Drink),
             (Ability::Forage, _) => Some(Action::Forage),
+            (Ability::Fletch, _) => Some(Action::Fletch),
             // It asks for an item ([`Ability::action_on`]).
-            (Ability::Temper, _) => None,
+            (Ability::Temper | Ability::Decipher, _) => None,
             (Ability::Heel, _) => Some(Action::Order(Command::Heel)),
             (Ability::Hold, _) => Some(Action::Order(Command::Hold)),
             // It asks for a cell ([`Ability::action_at`]).
@@ -906,6 +1006,7 @@ impl Ability {
     /// the player carries (Identify, Temper, Merchant's eye); `None` for any other.
     pub fn action_on(self, content: &Content, item: usize) -> Option<Action> {
         match self {
+            Ability::Decipher => Some(Action::Decipher { item }),
             Ability::Temper => Some(Action::Temper { item }),
             Ability::Give => Some(Action::Give { item, ally: None }),
             Ability::Class(active) if active.aims_item() => Some(Action::UseOn(active, item)),
@@ -938,11 +1039,15 @@ impl Ability {
             | Ability::Class(_)
             | Ability::Skill(_)
             | Ability::Disarm
+            | Ability::Listen
             | Ability::PickLock
             | Ability::Steal
+            | Ability::Wedge
             | Ability::Feint
             | Ability::Tame
             | Ability::Forage
+            | Ability::Fletch
+            | Ability::Decipher
             | Ability::Heal
             | Ability::SecondWind
             | Ability::BloodMagic
@@ -1016,17 +1121,22 @@ impl Ability {
                 .filter(|&cooldown| actor.effects.has(cooldown))
                 .map(Unavailable::While),
             Ability::Skill(_) => Some(Unavailable::NotYet),
+            Ability::Fletch => crate::world::fletch_lack(actor, content),
             Ability::Weapon(_, id) => weapon_unavailable(actor, content, id),
             Ability::Heal => (crate::heal::treatable(actor, content).is_empty())
                 .then_some(Unavailable::NothingToTreat),
             Ability::ThrowVoice
             | Ability::Disarm
+            | Ability::Listen
             | Ability::PickLock
             | Ability::Steal
+            | Ability::Wedge
             | Ability::Feint
             | Ability::Intimidate
             | Ability::Forage
             | Ability::BloodMagic
+            // Whether the pack holds an unknown scroll is the perception's to say.
+            | Ability::Decipher
             // Whether the player has a companion is the perception's to say.
             | Ability::Tame
             | Ability::Pray
@@ -1140,6 +1250,11 @@ fn aimed(content: &Content, spell: SpellId) -> bool {
     content.spell_of(spell).is_some_and(|s| s.aimed())
 }
 
+/// Whether `spell` is aimed at a corpse the caster sees.
+fn aims_corpse(content: &Content, spell: SpellId) -> bool {
+    content.spell_of(spell).is_some_and(|s| s.aims_corpse())
+}
+
 /// Whether `spell` is cast on a stack the caster carries (Identify).
 fn aims_item(content: &Content, spell: SpellId) -> bool {
     content.spell_of(spell).is_some_and(|s| s.aims_item())
@@ -1243,17 +1358,19 @@ mod tests {
             skills,
             [
                 "feint",
-                "decipher_script",
+                "decipher",
                 "disarm",
                 "tame",
                 "heal",
                 "intimidate",
                 "knowledge",
+                "listen",
                 "metalcraft",
                 "pick_lock",
                 "steal",
                 "forage",
-                "woodcraft",
+                "fletch",
+                "wedge",
             ]
         );
         let last: Vec<Ability> = every.iter().rev().take(7).rev().copied().collect();
@@ -1288,6 +1405,22 @@ mod tests {
         assert!(every.contains(&Ability::Steal));
         let steal = content.skill_id("steal").expect("steal");
         assert!(!every.contains(&Ability::Skill(steal)));
+    }
+
+    #[test]
+    fn no_two_abilities_share_an_id_or_a_name() {
+        let content = Content::builtin().expect("content");
+        let every = Ability::every(&content);
+        for (i, a) in every.iter().enumerate() {
+            for b in &every[i + 1..] {
+                // One weapon ability may be taught by several skills: the same row.
+                if matches!((a, b), (Ability::Weapon(_, x), Ability::Weapon(_, y)) if x == y) {
+                    continue;
+                }
+                assert_ne!(a.id(&content), b.id(&content), "{a:?} and {b:?}");
+                assert_ne!(a.name(&content), b.name(&content), "{a:?} and {b:?}");
+            }
+        }
     }
 
     #[test]

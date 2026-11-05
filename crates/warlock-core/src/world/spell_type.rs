@@ -25,7 +25,7 @@ use super::level::Fire;
 use super::{ActorId, World};
 use crate::action::Event;
 use crate::combat::{self, Blow, Strike};
-use crate::content::{ActionKind, DamageTypeId, LightId};
+use crate::content::{ActionKind, DamageTypeId, LightId, ZoneKind};
 use crate::geom::{Dir, Pos};
 use crate::ice::Shock;
 use crate::sight::LineOfSight;
@@ -108,16 +108,22 @@ impl World {
         };
         let critical = matches!(blow.strike, Strike::Hit { critical: true });
         let big = combat::big_hit(blow.damage, actor.max_hp(&content));
-        let held = (actor.effects)
-            .blocking(&content, ActionKind::Step)
-            .is_some();
-        if held || !(big || critical) {
+        if self.rooted(target) || !(big || critical) {
             return;
         }
         let at = actor.pos;
         if let Some(dir) = Dir::toward(origin, at).or_else(|| Dir::toward(caster, at)) {
             self.drive_back(target, dir, events);
         }
+    }
+
+    /// Whether a status holds actor `id` where it stands, so nothing drives it on.
+    pub(super) fn rooted(&self, id: ActorId) -> bool {
+        (self.state.actors.get(&id)).is_some_and(|a| {
+            (a.effects)
+                .blocking(&self.content, ActionKind::Step)
+                .is_some()
+        })
     }
 
     /// The shut doors a blast of a spell of `kind` around `center` would break, if its type's
@@ -209,13 +215,16 @@ impl World {
         }
     }
 
-    /// The fires within `radius` of `center`, in its line of sight, go out.
+    /// The fires within `radius` of `center`, in its line of sight, go out, and a fire zone
+    /// loses those cells (`zone.rs`).
     fn douse(&mut self, center: Pos, radius: i32) {
-        for p in self.burst(center, radius) {
+        let cells: Vec<Pos> = self.burst(center, radius).into_iter().collect();
+        for &p in &cells {
             if self.state.current().fires.contains_key(&p) {
                 self.put_out(p);
             }
         }
+        (self.state.current_mut()).clear_zone_cells(&cells, &[ZoneKind::Fire]);
     }
 
     /// A fire on `cell` of the current level, if it is walkable, burning `seconds` with light

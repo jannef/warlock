@@ -97,6 +97,9 @@ pub enum ActionKind {
     /// A turn of searching for hidden features (spec §8 "Searching"): searching for a while
     /// takes several.
     Search,
+    /// A turn of making out a labelled scroll (spec §8 "Scrolls": the Decipher ability): a
+    /// try takes many.
+    Decipher,
     /// A turn of praying at a forgotten altar (spec §7 "Special rooms"): a prayer takes several.
     Pray,
     /// A turn of drinking at a healing spring (spec §7 "Special rooms"): a drink takes one or
@@ -104,6 +107,8 @@ pub enum ActionKind {
     Drink,
     /// A turn of foraging in the wild (spec §8 "Foraging"): a forage takes several.
     Forage,
+    /// A turn of fletching (spec §8 "Fletching"): a batch takes several.
+    Fletch,
     /// A turn of working an item at a forge's anvil (spec §7 "Special rooms"): an attempt
     /// takes many.
     Temper,
@@ -163,9 +168,11 @@ impl ActionKind {
         ActionKind::CallFamiliar,
         ActionKind::Dig,
         ActionKind::Search,
+        ActionKind::Decipher,
         ActionKind::Pray,
         ActionKind::Drink,
         ActionKind::Forage,
+        ActionKind::Fletch,
         ActionKind::Temper,
         ActionKind::Disarm,
         ActionKind::Heal,
@@ -211,9 +218,11 @@ impl ActionKind {
             ActionKind::CallFamiliar => "call_familiar",
             ActionKind::Dig => "dig",
             ActionKind::Search => "search",
+            ActionKind::Decipher => "decipher",
             ActionKind::Pray => "pray",
             ActionKind::Drink => "drink",
             ActionKind::Forage => "forage",
+            ActionKind::Fletch => "fletch",
             ActionKind::Temper => "temper",
             ActionKind::Disarm => "disarm",
             ActionKind::Heal => "heal",
@@ -278,9 +287,11 @@ impl ActionKind {
             ActionKind::CallFamiliar => "call a familiar",
             ActionKind::Dig => "dig",
             ActionKind::Search => "search",
+            ActionKind::Decipher => "decipher",
             ActionKind::Pray => "pray",
             ActionKind::Drink => "drink",
             ActionKind::Forage => "forage",
+            ActionKind::Fletch => "fletch",
             ActionKind::Temper => "temper",
             ActionKind::Disarm => "disarm traps",
             ActionKind::Heal => "tend your hurts",

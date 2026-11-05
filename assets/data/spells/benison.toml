@@ -1,0 +1,19 @@
+# Benison (the spell types design §7 entry 35): a heal over a burst about the caster (`range = 0`):
+# the caster and their allies in it, hostiles nothing.
+[[spell]]
+id = "benison"
+name = "Benison"
+description = "A blessing spoken over all beside you: hit points back to you and every ally within reach; it takes a while to say."
+level = 12
+school = "restoration"
+kind = "heal"
+shape = "burst"
+resolution = "area"
+range = 0
+radius = 1
+casts = 2
+effect = { heal = "2d6" }
+
+[spell.grows]
+heal = "willpower 16 3d6, 22 3d6+3"
+radius = "willpower 18 2"

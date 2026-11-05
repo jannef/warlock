@@ -3,7 +3,7 @@
 use crate::combat::Strike;
 use crate::content::{
     ActionKind, ClassActive, CombatStance, DamageTypeId, DiseaseId, ObjectId, ResourceId,
-    SignActive, StatusId, TalentActive, TrapId,
+    SignActive, StatusId, TalentActive, TrapId, ZoneKind,
 };
 use crate::geom::{Dir, Pos};
 use crate::time::{DAY, Duration};
@@ -192,6 +192,13 @@ pub enum Action {
     /// it away; a bad failure sets it off at the player. Takes the time of `disarm`, whatever
     /// comes of it; refused (no time) without the skill or a known trap there.
     Disarm(Dir),
+    /// Listen at the closed door in a direction (spec §5 "Hearing"; the Listen ability,
+    /// `world/listen.rs`): a turn in which the player's hearing through that door is keener.
+    Listen(Dir),
+    /// Wedge the closed door in a direction shut (spec §8 "Doors"; the Wedge ability,
+    /// `world/wedge.rs`): a turn, after which creatures that open doors must kick it in. Refused
+    /// (no time) without Woodcraft or a closed door that way.
+    Wedge(Dir),
     /// Treat oneself, or an ally beside one, with the Heal skill (spec §8 "Skills"; the Heal
     /// ability): the ailment named (a status id, `heal:bleeding`, or a disease id,
     /// `heal:filth_fever`), else the player's first there is to treat (`heal`); `ally` the
@@ -218,6 +225,20 @@ pub enum Action {
     /// landscape and Survival. Interrupted, it finds nothing. Refused (no time) untrained, or
     /// anywhere but on land of the overworld or a local area of it.
     Forage,
+    /// Make arrows or bolts for the launcher ready (spec §8 "Fletching"; the Fletch ability, in
+    /// Woodcraft's place in the abilities menu): turns of the `fletch` action for
+    /// `data/fletch.toml`'s time, then a Dexterity check plus Woodcraft whose margin scales what
+    /// is made. Interrupted, it makes nothing. Refused (no time) with no knife carried, or no bow
+    /// or crossbow ready.
+    Fletch,
+    /// Make out the carried stack at this position, a scroll of a type not yet identified,
+    /// without reading it (spec §8 "Scrolls"; the Decipher ability, Decipher script's use;
+    /// `world/decipher.rs`): `data/decipher.toml`'s time of turns of the `decipher` action, then
+    /// the reading's check; made, the type is learned. Interrupted, nothing comes of it. Refused
+    /// (no time) with a stack that is no scroll of a type not yet known.
+    Decipher {
+        item: usize,
+    },
     /// Temper the carried stack at this position at the anvil next to the player (spec §7
     /// "Special rooms"; the Temper ability, the abilities menu's Here group): ten minutes of turns
     /// of the `temper` action, then a Strength check plus Metalcraft, harder for every attempt
@@ -408,6 +429,13 @@ pub enum Action {
     /// cell `at`, in its line of sight, melts at once, and whoever stood on it falls in. Takes no
     /// game time; recorded in replays.
     Thaw {
+        at: Pos,
+        radius: i32,
+    },
+    /// Dev command: a zone (`world/zone.rs`) of `kind` around cell `at`, within `radius` in its
+    /// line of sight, by the player, for ten turns. Takes no game time; recorded in replays.
+    Zone {
+        kind: ZoneKind,
         at: Pos,
         radius: i32,
     },
@@ -900,6 +928,8 @@ impl fmt::Display for Action {
             Action::Search(1) => f.write_str("search"),
             Action::Search(turns) => write!(f, "search:{turns}"),
             Action::Disarm(d) => write!(f, "disarm:{d}"),
+            Action::Listen(d) => write!(f, "listen:{d}"),
+            Action::Wedge(d) => write!(f, "wedge:{d}"),
             Action::Heal { what: None, .. } => f.write_str("heal"),
             Action::Heal {
                 what: Some(id),
@@ -912,6 +942,8 @@ impl fmt::Display for Action {
             Action::Pray => f.write_str("pray"),
             Action::Drink => f.write_str("drink"),
             Action::Forage => f.write_str("forage"),
+            Action::Fletch => f.write_str("fletch"),
+            Action::Decipher { item } => write!(f, "decipher:{}", position_text(*item)),
             Action::Temper { item } => write!(f, "temper:{}", position_text(*item)),
             Action::Give { item, ally } => {
                 write!(f, "give:{}", position_text(*item))?;
@@ -982,6 +1014,9 @@ impl fmt::Display for Action {
             Action::QuestRoll { quest, target } => write!(f, "quest_roll:{quest}:{target}"),
             Action::Freeze { at, radius } => write!(f, "freeze:{},{},{radius}", at.x, at.y),
             Action::Thaw { at, radius } => write!(f, "thaw:{},{},{radius}", at.x, at.y),
+            Action::Zone { kind, at, radius } => {
+                write!(f, "zone:{}@{},{},{radius}", kind.id(), at.x, at.y)
+            }
         }
     }
 }
@@ -1040,6 +1075,8 @@ impl FromStr for Action {
             "bash" => dir().map(Action::Bash),
             "dig" => dir().map(Action::Dig),
             "disarm" => dir().map(Action::Disarm),
+            "listen" => dir().map(Action::Listen),
+            "wedge" => dir().map(Action::Wedge),
             "heal" => {
                 let usage = || {
                     "`heal:ID[:DIR]` names what to treat, e.g. `heal:bleeding` or \
@@ -1075,6 +1112,12 @@ impl FromStr for Action {
             "pray" => bare(Action::Pray),
             "drink" => bare(Action::Drink),
             "forage" => bare(Action::Forage),
+            "fletch" => bare(Action::Fletch),
+            "decipher" => {
+                let usage = || "`decipher` needs a letter, e.g. `decipher:b`".to_string();
+                let item = arg.and_then(parse_position).ok_or_else(usage)?;
+                Ok(Action::Decipher { item })
+            }
             "temper" => {
                 let usage = || "`temper` needs a letter, e.g. `temper:b`".to_string();
                 let item = arg.and_then(parse_position).ok_or_else(usage)?;
@@ -1519,6 +1562,21 @@ impl FromStr for Action {
                     Action::Thaw { at, radius }
                 })
             }
+            "zone" => {
+                let usage = "`zone` needs a kind, a cell, and a radius, e.g. `zone:fire@12,5,3`";
+                let (kind, place) = arg.and_then(|a| a.split_once('@')).ok_or(usage)?;
+                let kind = (ZoneKind::ALL.iter())
+                    .find(|k| k.id() == kind)
+                    .copied()
+                    .ok_or_else(|| format!("`{s}`: no zone kind `{kind}`"))?;
+                let (cell, radius) = place.rsplit_once(',').ok_or(usage)?;
+                let at = parse_cell(cell).map_err(|_| usage)?;
+                let radius = match radius.trim().parse::<i32>() {
+                    Ok(r) if (0..=MAX_BURST).contains(&r) => r,
+                    _ => return Err(format!("`{s}`: the radius is 0 to {MAX_BURST}")),
+                };
+                Ok(Action::Zone { kind, at, radius })
+            }
             _ => Err(format!(
                 "unknown action `{s}` (expected move:DIR, wait, open:DIR, close:DIR, kick:DIR, \
                  pick:DIR, ascend, descend, use_tool, rest:1h|dawn|dusk, pickup[:LETTERS], \
@@ -1529,7 +1587,7 @@ impl FromStr for Action {
                  ask:DIR:TOPIC, steal:DIR, tame:DIR, throw_voice:X,Y, pray, stance:NAME, vision:ID, skip:DURATION, \
                  weather:clear|overcast|rain|heavy, effect:ID@X,Y[>X,Y], identify[:LETTERS], \
                  afflict:STATUS, drain:N, infect:DISEASE, reveal:ID, quest_roll:ID:TARGET, \
-                 rank:SKILL:N, freeze:X,Y,R, thaw:X,Y,R)"
+                 rank:SKILL:N, freeze:X,Y,R, thaw:X,Y,R, zone:KIND@X,Y,R)"
             )),
         }
     }
@@ -1745,6 +1803,8 @@ mod tests {
             Action::Advance("stealth".into()),
             Action::Pray,
             Action::Forage,
+            Action::Fletch,
+            Action::Decipher { item: 1 },
             Action::Temper { item: 0 },
             Action::Temper { item: 27 },
             Action::Give {
@@ -1799,6 +1859,11 @@ mod tests {
                 at: Pos::new(0, 7),
                 radius: 0,
             },
+            Action::Zone {
+                kind: ZoneKind::Fouled,
+                at: Pos::new(40, 12),
+                radius: 2,
+            },
             Action::Ask {
                 dir: Dir::S,
                 topic: "quest-rats".into(),
@@ -1830,6 +1895,8 @@ mod tests {
                 Action::Bash(d),
                 Action::Dig(d),
                 Action::Disarm(d),
+                Action::Listen(d),
+                Action::Wedge(d),
             ]);
         }
         assert_eq!(parse_actions(&format_actions(&all)), Ok(all));

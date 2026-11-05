@@ -44,8 +44,10 @@ pub(super) fn abilities(content: &Content) -> String {
             }
             Ability::Skill(_) => "everyone trained in the skill".into(),
             Ability::Disarm => "everyone trained in Disable device".into(),
+            Ability::Listen => "everyone trained in Listen".into(),
             Ability::PickLock => "everyone trained in Open lock".into(),
             Ability::Steal => "everyone trained in Steal".into(),
+            Ability::Wedge => "everyone trained in Woodcraft".into(),
             Ability::Feint => "everyone trained in Bluff".into(),
             Ability::Tame => {
                 "everyone trained in Handle animal, at any level (not while they have a companion; \
@@ -53,7 +55,15 @@ pub(super) fn abilities(content: &Content) -> String {
                     .into()
             }
             Ability::Intimidate => "everyone trained in Intimidate".into(),
+            Ability::Decipher => {
+                "everyone trained in Decipher script (usable with a scroll of a kind they have not \
+                 identified in the pack; see [Scrolls](scrolls.md))"
+                    .into()
+            }
             Ability::Heal => "everyone trained in Heal (with something to treat)".into(),
+            Ability::Fletch => {
+                "everyone (usable with a knife carried and a bow or a crossbow ready)".into()
+            }
             Ability::Forage => {
                 "everyone trained in Survival (usable in the wild: the overworld's land and its \
                  local areas)"
@@ -137,7 +147,16 @@ pub(super) fn abilities(content: &Content) -> String {
                     format!("{turns} turns, each {turn} (a ritual)"),
                 )
             }
+            // A long action too: the batch's time.
+            Some(_) if a == Ability::Fletch => {
+                let minutes = content.fletch().map_or(0, |r| r.seconds / 60);
+                (aim(a.aim(content)), format!("{minutes} minutes (a batch)"))
+            }
             // A long action too: the forage's time.
+            Some(_) if a == Ability::Decipher => {
+                let minutes = content.decipher().map_or(0, |r| r.seconds / 60);
+                (aim(a.aim(content)), format!("{minutes} minutes (a try)"))
+            }
             Some(_) if a == Ability::Forage => {
                 let minutes = content.forage().map_or(0, |r| r.seconds / 60);
                 (aim(a.aim(content)), format!("{minutes} minutes (a forage)"))
@@ -245,6 +264,7 @@ fn aim(aim: Aim) -> &'static str {
         Aim::Nothing => "nothing",
         Aim::Direction => "a direction",
         Aim::Cell => "a place you see",
+        Aim::Corpse => "a corpse you see",
         Aim::Ailment => "what to treat, when there is more than one",
         Aim::Item => "an item you carry",
         Aim::Shape => "a weapon's shape, from every melee weapon",

@@ -1,0 +1,19 @@
+# A scroll of rouse the dead (spec §8 "Scrolls", "Spells"): read it (`r`) at a corpse you see, and
+# it casts Rouse the dead, free of mana; study it (`L`), and you may learn the spell for good.
+[[object]]
+id = "scroll_of_rouse_the_dead"
+name = "scroll of rouse the dead"
+plural = "scrolls of rouse the dead"
+glyph = "?"
+fg = "#a08898"
+class = "scrolls"
+materials = ["paper"]
+weight = 50
+value = 400
+stackable = true
+level = 12
+frequency = 8
+
+[object.read]
+kind = "spell"
+spell = "rouse_the_dead"

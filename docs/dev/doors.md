@@ -47,5 +47,17 @@ at). Generated levels: `Needs::key` (the branch's `key` in `dungeons.toml`) make
 must hold their own keys (`content/vault.rs`, `check_keys`). The app binds `k` (`KeyCommand::Kick`,
 a direction prompt like open/close, bash, and dig) and bursts the door terrain's `toggle` particles on
 `Event::DoorKicked`/`DoorBroken`.
+**Wedging** (#1027, design `docs/design/skill-uses.md` §6.5 W2) is `world/wedge.rs`: `Action::Wedge(dir)`
+(replay text `wedge:DIR`, priced as a wait, `ActionKind::Wait` as Listen is), `Ability::Wedge` (had by
+whoever is trained in a skill with `Effect::Wedge`: Woodcraft's second benefit in `skills.toml`, curve
+`[[0, 0], [100, 8], [200, 12]]`, mark `wedge` 100 %; tests `world/wedge_tests.rs`). A wedged door is
+`LevelState::wedged: BTreeMap<Pos, u8>` (the points; saved with `skip_serializing_if`, so levels
+without one hash as before; hashed through the state; ground truth only, so perception shows nothing),
+dropped by `World::set_terrain` whenever the cell stops being a closed door. The AI paths through a
+wedged door at `ai::WEDGE` extra cost, and `creature_steps` makes a door-opening creature kick it
+(`World::creature_kicks_wedge`: a `kick`'s price, `kick_breaks(Strength score, sturdiness + points)`,
+the noise and trap of a kick, `Event::DoorKicked`/`DoorBroken`; a locked wedged door needs the key too).
+The player's `kick_door` adds the points to the sturdiness; `open_door` pulls the wedge as the door
+opens (set_terrain drops it).
 Chests (`docs/dev/chests.md`) are opened, unlocked, picked, kicked, and knocked through the
 same functions, one arm each for a shut chest's terrain.

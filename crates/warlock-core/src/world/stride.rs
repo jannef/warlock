@@ -138,6 +138,7 @@ impl World {
                 && !level.is_door(content, to)
                 && level.ice_at(to).is_none()
                 && !level.traps.contains_key(&to)
+                && level.zone_at(to, self.state.time).is_none()
                 // An unstable room's step may warp it (`warp.rs`): taken turn by turn.
                 && level.effects_at(content, to).warp() == 0
                 && !others.contains(&to)

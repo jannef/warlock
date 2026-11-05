@@ -52,6 +52,11 @@ color = "#d8d8e8"
 status = "lit"
 school = "evocation"
 
+# Sense the quick.
+[[status]]
+status = "quick_sensed"
+school = "divination"
+
 # Haste.
 [[status]]
 status = "hasted"

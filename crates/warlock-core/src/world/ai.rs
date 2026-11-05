@@ -53,6 +53,8 @@ const CROWD: u32 = 4;
 const DOOR: u32 = 1;
 /// Extra cost of a locked door on top of [`DOOR`], for a creature with the key: unlocking it.
 const UNLOCK: u32 = 1;
+/// Extra cost of a wedged door on top of [`DOOR`]: kicking it in takes several actions.
+const WEDGE: u32 = 6;
 /// Path searches look this many cells beyond the distance to their target...
 const SEARCH_MARGIN: i32 = 12;
 /// ...and at most this far from the creature.
@@ -109,6 +111,12 @@ impl World {
     /// the player perceive (events, noise) starts here too. What the creature heard since it
     /// last acted ([`super::Actor::heard`]) is read here and spent.
     pub(super) fn creature_turn(&mut self, id: ActorId, events: &mut Vec<Event>) -> i64 {
+        // A zone where it stands does what it does first, awake or not (`zone.rs`); it may not
+        // live to act.
+        self.zone_turn_start(id, events);
+        if !self.state.actors.contains_key(&id) {
+            return 0;
+        }
         // Asleep (a teeming den's sleeper, `den.rs`), it takes no turn.
         if let Some(price) = self.slumbers(id) {
             return price;
@@ -247,7 +255,7 @@ impl World {
     /// The nearest hostile actor creature `id` sees (ties: the lower id), and where it stands.
     /// Sight is computed only if a hostile is within the creature's sight radius, nearest first,
     /// and only as far as the first one it sees: line of sight only out to its distance.
-    fn nearest_hostile_in_sight(&mut self, id: ActorId) -> Option<(ActorId, Pos)> {
+    pub(super) fn nearest_hostile_in_sight(&mut self, id: ActorId) -> Option<(ActorId, Pos)> {
         self.nearest_in_sight(id, &|state, content, me, a| {
             content.stance_of(me.faction(content), a.faction(content)) == Stance::Hostile
                 && !beast_friend::befriended(state, content, me, a)
@@ -434,6 +442,7 @@ impl World {
                 1 + super::incorporeal::WALL
             } else if opens_doors && def.is_closed_door() {
                 match level.locks.get(&p) {
+                    None if level.wedged.contains_key(&p) => 1 + DOOR + WEDGE,
                     None => 1 + DOOR,
                     Some(lock) if me.key_for(&self.content, lock).is_some() => 1 + DOOR + UNLOCK,
                     Some(_) => return Cost::Impassable,
@@ -504,6 +513,15 @@ impl World {
         let through = phases && level.phaseable(&self.content, to);
         if !through && def.is_closed_door() && self.content.creature(actor.creature).opens_doors {
             let open = self.price_of(id, ActionKind::OpenDoor);
+            // A wedged door it cannot open: it kicks at it (`wedge.rs`).
+            let openable = level
+                .locks
+                .get(&to)
+                .is_none_or(|lock| actor.key_for(&self.content, lock).is_some());
+            if level.wedged.contains_key(&to) && openable {
+                let price = self.creature_kicks_wedge(id, to, events);
+                return Stepped::Opened(price);
+            }
             let stepped = match level.locks.get(&to) {
                 None => Stepped::Opened(open),
                 Some(lock) if actor.key_for(&self.content, lock).is_some() => {
@@ -543,7 +561,7 @@ impl World {
             from,
             to,
         });
-        self.after_tread(id, to, footing, events);
+        self.after_tread(id, (from, to), footing, events);
         self.make_step_noise(id, to, fleeing);
         // It knows nothing of traps (spec §8 "Traps"): one there goes off; a pit costs it its
         // next action. Nothing of an incorporeal one presses down.

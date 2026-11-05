@@ -1,0 +1,8 @@
+[[talent]]
+id = "blink"
+name = "Blink"
+tree = "class"
+granted = true
+description = "You are elsewhere, a few cells away (paid in mana), free of whatever held you."
+effects = [{ kind = "spell", spell = "blink" }]
+systems = ["spells", "mana", "combat"]

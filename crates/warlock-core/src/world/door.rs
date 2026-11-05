@@ -55,8 +55,12 @@ impl World {
         let player = self.state.player;
         let Some(lock) = self.state.current().locks.get(&p).cloned() else {
             let price = self.price_of(player, ActionKind::OpenDoor);
+            let wedged = self.state.current().wedged.contains_key(&p);
             self.swing_open(player, p, events);
-            self.say("You open the door.");
+            self.say(match wedged {
+                true => "You pull the wedge free and open the door.",
+                false => "You open the door.",
+            });
             return Spent::Turn(price);
         };
         let Some(key) = self.state.player().key_for(&self.content, &lock) else {
@@ -174,8 +178,9 @@ impl World {
         let price = self.price_of(player, ActionKind::Kick);
         let def = self.content.terrain(self.state.current().terrain[p]);
         let force = self.kick_force();
+        let wedge = self.wedge_at(p);
         let broken = def.kicked_in.and_then(|(to, sturdiness)| {
-            kick_breaks(force, sturdiness, &mut self.state.rng).then_some(to)
+            kick_breaks(force, sturdiness.saturating_add(wedge), &mut self.state.rng).then_some(to)
         });
         if self.trains(Use::Kick) {
             self.train(Use::Kick);

@@ -9,10 +9,16 @@
 //! mimics (a vault places none), so a draw stays in the tribe and only reaches deeper in it.
 //! `count` monsters come, each on a different marked cell of the entry; without one, every marked
 //! cell gets one.
+//!
+//! The entry may say what a placed creature's may (spec §7 "Level file format"): `status` (each
+//! draw is placed with it, `["asleep"]`), `carry` (the first placed carries it, a key to the
+//! vault's lock: `check_keys` counts it within reach when every marked cell is), and `route` (each
+//! draw walks it from its cell, checked from every marked cell as a placed creature's is).
 
 use super::level::OneOrMany;
-use super::{Content, CreatureId};
-use crate::geom::Pos;
+use super::{Content, CreatureId, StatusId};
+use crate::geom::{Dir, Pos};
+use crate::object::Stack;
 use serde::Deserialize;
 
 /// The word in a pool for the floor's own population.
@@ -66,6 +72,12 @@ pub struct VaultMonsters {
     pub count: u32,
     /// In row order.
     pub cells: Vec<Pos>,
+    /// The statuses each draw is placed with, at their degrees (`status = ["asleep"]`).
+    pub status: Vec<(StatusId, u16)>,
+    /// What the first draw placed carries on top of its gear (`carry = ["iron_key"]`).
+    pub carry: Vec<Stack>,
+    /// The patrol each draw walks from its cell; empty: a short walk drawn for each.
+    pub route: Vec<Dir>,
 }
 
 impl MonsterPoolSpec {
@@ -83,6 +95,9 @@ impl MonsterPoolSpec {
             pool,
             count: self.count.unwrap_or(0),
             cells: Vec::new(),
+            status: Vec::new(),
+            carry: Vec::new(),
+            route: Vec::new(),
         })
     }
 }

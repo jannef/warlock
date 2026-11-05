@@ -13,13 +13,14 @@ optional_skills = { heal = { chance = 15, dice = "2d4" }, search = { chance = 20
 rolls = 3
 weapon_skills = { bows = 2, short_blades = 1 }
 styles = { marksman = 1 }
-# Bow and quiver, a short sword, and leathers for the borderlands.
+# Bow and quiver, a short sword, leathers for the borderlands, and a knife to make more arrows.
 kit = [
     { wield = "short_bow" },
     { wield = "arrow*24" },
     { wield = "short_sword" },
     { wear = "leather_jerkin" },
     { wear = "leather_boots" },
+    "knife",
     "dried_meat*3",
     "gold_coin*8",
 ]
@@ -30,6 +31,7 @@ bonus_talents = { levels = [10, 20, 30, 45, 55], trees = ["weaponcraft", "wayfar
 # alternative resources (#225). Animal companion is the pet class's signature (#916): a beast
 # from the first turn.
 abilities = [
+    { level = 1, talent = "fletcher" },
     { level = 1, talent = "animal_companion" },
     { level = 1, talent = "favoured_prey" },
     { level = 1, talent = "trained_wind" },

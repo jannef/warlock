@@ -619,15 +619,16 @@ impl World {
     }
 
     /// The end of a turn (`run_turn`): every ally on the current level whose time has passed
-    /// departs, said if the player sees it ("The wolf fades away."). Nothing is left behind.
+    /// departs, said if the player sees it ("The wolf fades away."), and every berserk risen
+    /// whose time has (`corpse_spell.rs`). Nothing is left behind.
     pub(super) fn allies_lapse(&mut self, events: &mut Vec<Event>) {
         let now = self.state.time;
         let level = self.state.current_level.clone();
         let lapsed: Vec<ActorId> = (self.state.actors.values())
             .filter(|a| a.level == level && !a.in_retinue())
             .filter(|a| {
-                (a.ally.as_ref())
-                    .and_then(|x| x.until)
+                (a.ally.as_ref().and_then(|x| x.until))
+                    .or(a.risen)
                     .is_some_and(|u| u <= now)
             })
             .map(|a| a.id)

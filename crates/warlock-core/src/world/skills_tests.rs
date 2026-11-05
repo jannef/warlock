@@ -72,6 +72,20 @@ map = '''
 "R" = { terrain = "floor", creature = "rat", faction = "peaceful", trap = "arrow" }
 "##;
 
+/// A corridor with a closed door east of the player and a floor beyond it.
+const DOORWAY: &str = r##"
+name = "Doorway"
+ambient = [255, 255, 255, 0]
+map = '''
+#######
+#@+...#
+#######
+'''
+[legend]
+"@" = { terrain = "floor", spawn = "player" }
+"+" = { terrain = "door_closed" }
+"##;
+
 /// The built-in content plus the test levels, each with a scenario of its name whose player has
 /// no character (average stats, untrained in everything); with `eager`, every mark rule's chance
 /// is 100.
@@ -82,6 +96,7 @@ fn files(eager: bool) -> ContentFiles {
         ("pit", PIT),
         ("dark", DARK),
         ("snares", SNARES),
+        ("doorway", DOORWAY),
     ] {
         files.insert(&format!("levels/{name}.toml"), level);
         files.insert(
@@ -175,11 +190,11 @@ fn the_player_perceives_only_their_own_trained_skills() {
             .collect()
     };
     assert!(skill_abilities(&w).is_empty());
-    set(&mut w, "woodcraft", Some(18));
+    set(&mut w, "metalcraft", Some(18));
     assert_eq!(
         skill_abilities(&w),
         [OwnAbility {
-            ability: Ability::Skill(skill(&w, "woodcraft")),
+            ability: Ability::Skill(skill(&w, "metalcraft")),
             unavailable: Some(Unavailable::NotYet),
         }]
     );
@@ -195,8 +210,9 @@ fn the_player_perceives_only_their_own_trained_skills() {
     assert_eq!(
         own,
         [
+            Ability::Skill(skill(&w, "metalcraft")),
             Ability::PickLock,
-            Ability::Skill(skill(&w, "woodcraft")),
+            Ability::Fletch,
             Ability::ShieldBash
         ]
     );
@@ -865,4 +881,62 @@ fn spending_mana_marks_spellcraft_only_when_trained() {
     w.player_mut().mana = 50;
     assert!(w.spend_mana(w.player_id(), 1));
     assert_eq!(marks(&w, "spellcraft"), None);
+}
+
+/// A sound made beyond the doorway's door at `loudness` (nobody's), heard or not by the player.
+fn made_beyond_door(w: &mut World, loudness: u16) -> usize {
+    w.player_mut().heard.clear();
+    w.spread_noise(Noise {
+        kind: SoundKind::Footsteps,
+        at: Pos::new(4, 1),
+        loudness,
+        maker: None,
+    });
+    w.state.player().heard.len()
+}
+
+#[test]
+fn listening_at_a_door_hears_through_it_what_plain_ears_miss() {
+    let mut w = world("doorway");
+    set(&mut w, "listen", Some(50));
+    // The player's threshold is 5 with Listen 50; at their cell this sound is 2 loud.
+    assert_eq!(made_beyond_door(&mut w, 62), 0, "plain ears");
+    w.state.listening = Some(crate::noise::Listening {
+        at: Pos::new(2, 1),
+        keener: 5 + crate::world::listen::EXTRA_KEEN,
+    });
+    assert_eq!(made_beyond_door(&mut w, 62), 1, "ears to the door");
+    // Too faint even so.
+    assert_eq!(made_beyond_door(&mut w, 55), 0);
+    // Only what comes by the door is helped: a sound made on the player's side is unchanged.
+    w.state.listening = Some(crate::noise::Listening {
+        at: Pos::new(2, 1),
+        keener: 20,
+    });
+    w.player_mut().heard.clear();
+    w.spread_noise(Noise {
+        kind: SoundKind::Footsteps,
+        at: Pos::new(1, 1),
+        loudness: 0,
+        maker: None,
+    });
+    assert!(w.state.player().heard.is_empty());
+}
+
+#[test]
+fn a_listen_is_a_turn_that_marks_listen_and_leaves_the_ears_as_they_were() {
+    let mut w = eager("doorway");
+    set(&mut w, "listen", Some(5));
+    let out = w.apply(&parse_actions("listen:E").expect("parses")[0]);
+    assert!(out.took_turn);
+    assert!(said(&w, "You hear nothing beyond the door."));
+    assert_eq!(marks(&w, "listen"), Some(1), "a mark for the listen");
+    assert!(w.state.listening.is_none(), "back to plain ears");
+    // No door that way, or no skill: refused, no time.
+    for (skilled, dir) in [(true, "listen:N"), (false, "listen:E")] {
+        let mut w = eager("doorway");
+        set(&mut w, "listen", skilled.then_some(5));
+        let out = w.apply(&parse_actions(dir).expect("parses")[0]);
+        assert!(!out.took_turn, "{dir} skilled {skilled}");
+    }
 }

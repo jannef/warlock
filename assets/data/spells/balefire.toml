@@ -1,0 +1,26 @@
+# Balefire (the spell types design §7 entry 3, §7 "Zones"; #1000): a line of fire that stays, and
+# burns whoever starts a turn on it or steps onto it. Scroll only: a find.
+[[spell]]
+id = "balefire"
+name = "Balefire"
+description = "A line of fire from before you toward a place you aim at: it burns a while, and all who stand in it or cross it."
+level = 16
+school = "evocation"
+kind = "damage"
+shape = "line"
+resolution = "area"
+damage_type = "fire"
+length = 5
+damage = "2d6"
+effect = { zone = { kind = "fire", turns = 10 } }
+
+[spell.cast]
+effect = "fire_breath"
+noun = "balefire"
+verb = "burns"
+message = "Fire springs up along the ground!"
+noise = { sound = "explosion", loudness = 60 }
+
+[spell.grows]
+damage = "intelligence 13 3d6, 16 4d6, 25 4d6+2"
+length = "willpower 14 6, 18 7"

@@ -185,14 +185,20 @@ developer notes (CLAUDE.md, `docs/dev/`).
   difficulty + the leader's stalk + cover + the dark + rain; the leader's Willpower modifier +
   its lookout against the difficulty + the player's stalk + cover + the dark for eyes without
   darkvision + rain − a carried lit light at night): the player alone, the drop (lie in wait,
-  slip past, fight); both, met (give them the slip, fight); the party alone, ambushed (the area
+  slip past, fight); both, met (give them the slip, talk your way past, fight); the party alone, ambushed (the area
   opens at once, the player startled and one action behind); neither, nothing. A sleeping player
   hears instead (Willpower modifier + hearing + Alert against the difficulty + stalk + rain;
   made, met; failed, ambushed). A peaceful entry asks hail or pass by, a wildlife one hunt or let
   them be; an entry's `npc` dialogue is given to the members of its lead's type. The question
   must be answered: everything else but the free actions is refused. Slipping away is a
   Dexterity check (+ Survival's evade, + stalk from the drop) against its difficulty + pursuit +
-  awareness, the detour half the step's time again; failed, the fight opens close. Fights open
+  awareness, the detour half the step's time again; failed, the fight opens close. Talking past
+  (#1017) is offered only when met, to a player trained in Bluff, and only for an entry flagged
+  `talk_past` (a hostile group: the Ascmearc's footpads, its vale footpad, the duergar at Ascdūn,
+  and the fen's cultists; never a `draw`): the leader's Willpower modifier against the feint's
+  difficulty + the player's Presence modifier + their talents' Presence checks + Bluff's `feint`;
+  the leader failed, the party lets them go after a chat's time; made, the fight opens as a
+  chosen fight does. Every try marks Bluff. Fights open
   in the cell's local area, the player nearer the edge they came from the better the encounter
   went (`[positions]`), the party at its distance; a party the player got away from stays there
   and is met again as the same one. The Ascmearc's tables are its roads, vale, downs (and their
@@ -254,7 +260,15 @@ developer notes (CLAUDE.md, `docs/dev/`).
   generators use only dungeon vaults, local areas only outdoor ones. A shared vault
   (`assets/vaults/`) stamps in every branch; a campaign's (`campaigns/<id>/vaults/`) only in that
   campaign's branches; and a vault whose file gives `dungeons` (branch ids, or branch levels such
-  as `"cealdhlaw:2"`, of its own campaign) only there. A `[[dungeon.levels]]` range
+  as `"cealdhlaw:2"`, of its own campaign) only there. A vault drawn at random whose file gives
+  `danger = { from = 8 }`, `{ to = 6 }`, or both (`{ from = 2, to = 40 }`, each end included;
+  #1073) stamps only on floors whose danger lies in it, so a vault whose crowd lives deep is no
+  empty room near the top and a shallow one stays shallow: the danger the floor's creatures are
+  drawn at, for the player who first comes (a player-scaled branch's included), and on the
+  endless branch past its roster's top the top's, as its draws are. It filters what a floor may
+  draw, never how often a floor gets a vault. An outdoor vault has none (a local area has no
+  danger), nor one a branch level names (stamped there for certain), and a level file's
+  `danger` is its own rule (§7 "Danger levels"). A `[[dungeon.levels]]` range
   may name vaults (`vaults = ["drakes_hoard"]`, #339): each is stamped on every level of the range
   for certain (in a cave level with no rock left big enough to hold one, the generator first
   fills the spot that takes the least of the cave with rock; an attempt that still cannot fit one

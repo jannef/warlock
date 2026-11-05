@@ -37,6 +37,8 @@ abilities = [
     { level = 1, talent = "arcane_training" },
     { level = 3, talent = "magic_missile" },
     { level = 4, talent = "knock" },
+    { level = 6, talent = "blink" },
+    { level = 9, talent = "shatter" },
     { level = 12, talent = "scribe" },
     { level = 18, talent = "arcane_bolt" },
     { level = 24, talent = "chain_lightning" },

@@ -2,32 +2,32 @@
 source: crates/warlock/src/ui/screen_snapshots.rs
 expression: "render(case, content.clone())"
 ---
+ Welcome to Showcase. Press ? for controls.
  Two dire wargs come to your side.
- Your dire wargs come to heel.
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+                    ┌─ Abilities ──────────────────────────────────────────────┐
+                    │                                                          │
+                    │ Birth sign                                               │
+                    │   a  Transfixing stare  at a place you see               │
+                    │ Skills                                                   │
+                    │   b  Disarm a trap      in a direction                   │
+                    │   c  Listen at a door   in a direction                   │
+                    │   d  Pick lock          in a direction                   │
+                    │   e  Steal              in a direction                   │
+                    │ > f  Fletch             you have no knife                │
+                    │ Weapon skills                                            │
+                    │   g  Shield bash        you hold no shield               │
+                    │ Allies                                                   │
+                    │   h  Come to heel                                        │
+                    │   i  Hold here                                           │
+                    │   j  Set on             at a place you see               │
+                    │                                                          │
+                    │ Fletch: you have no knife.                               │
+                    │                                                          │
+                    │                                                          │
+                    │                                                          │
+                    │ a-j or Enter use   Esc close                             │
+                    └──────────────────────────────────────────────────────────┘
 
 
 

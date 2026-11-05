@@ -25,6 +25,7 @@ use crate::skills::{Effect, SkillId, Skills};
 use crate::stats::{PerStat, Stat, StatDamage, Stats};
 use crate::status::Effects;
 use crate::talent::{TalentMods, Talents};
+use crate::time::GameTime;
 use crate::weapon_skills::WeaponSkills;
 use serde::{Deserialize, Serialize};
 use std::borrow::Cow;
@@ -228,6 +229,11 @@ pub struct Actor {
     /// then, so runs without allies save and hash as before.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub ally: Option<Ally>,
+    /// When a risen creature that serves no one departs (`world/corpse_spell.rs`: Rouse the
+    /// dead's berserk): it leaves nothing when it falls again. `None` for every other actor, and
+    /// left out of saves and hashes then.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub risen: Option<GameTime>,
     /// Its alignment score (spec §8 "Alignment"; [`crate::alignment`]): the player's, when the
     /// content has alignment rules; creatures have none, and stand where [`Actor::nature`]
     /// says. Moved only by `World::shift_alignment`; never shown as a number.

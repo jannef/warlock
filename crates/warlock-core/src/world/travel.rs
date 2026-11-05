@@ -58,6 +58,7 @@ impl World {
         let def = self.content.terrain(terrain);
         // A lock stays on a closed door or a shut chest (spec §8 "Chests").
         let (closed_door, door) = (def.is_closed_door() || def.is_shut_chest(), def.is_door());
+        let closed_only = def.is_closed_door();
         let was_door = self.state.current().is_door(&self.content, p);
         let was_chest = self.state.current().is_shut_chest(&self.content, p);
         self.reshaped += 1;
@@ -65,6 +66,10 @@ impl World {
         level.terrain.set(p, terrain);
         if !closed_door {
             level.locks.remove(&p);
+        }
+        // A wedge holds only a closed door.
+        if !closed_only {
+            level.wedged.remove(&p);
         }
         // A trap on a door is part of it (spec §8 "Trapped doors"): it opens and shuts with the
         // door, and is gone when the door is.
@@ -220,7 +225,7 @@ impl World {
             from,
             to,
         });
-        self.after_tread(player, to, footing, events);
+        self.after_tread(player, (from, to), footing, events);
         self.make_step_noise(player, to, fleeing);
         // Wading through a marsh may give a disease, by how long the step takes.
         let speed = self.state.player().speed(&self.content);
@@ -683,6 +688,7 @@ pub(super) fn make_creature(
             .or_else(|| super::court::join(content, state.seed, actor_id, spawn.creature)),
         summoner: None,
         ally: None,
+        risen: None,
         alignment: None,
         alignment_override: spawn.alignment,
         npc: spawn.npc.clone(),

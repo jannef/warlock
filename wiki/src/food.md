@@ -55,6 +55,11 @@ and rots away altogether in a day or two, from the floor and from your pack alik
 rat corpse has rotted away."). A corpse does not show how old it is: remember when it fell.
 Eating a rotten one is as bad an idea as any rotten food: "Ugh! The kobold corpse was rotten."
 
+A corpse is good for more than a meal. [Necromancy](magic.md#spell-types) has three uses for one,
+of any age, each of them using it up: [Charnel burst](magic.md#spell-charnel-burst) blows it apart,
+[Grave feast](magic.md#spell-grave-feast) draws out what life is left, and [Rouse the
+dead](allies.md#the-risen) stands it up again.
+
 Eating a fresh corpse may do more than feed you. Some taste terrible and may come back up, some
 make you [sick](status-effects.md#poisoned), some do you good, and many feed your body's
 [training](stats.md#training): a corpse gives **marks** toward a stat, as using it does, and a

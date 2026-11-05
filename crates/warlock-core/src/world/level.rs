@@ -74,6 +74,11 @@ pub struct LevelState {
     /// broken. Ground truth: a locked door looks like any closed door.
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty", with = "by_pos")]
     pub(crate) locks: BTreeMap<Pos, Lock>,
+    /// Doors wedged shut, by position (spec §8 "Doors"): the points the wedger's Woodcraft adds
+    /// to the door's sturdiness against a kick. A creature that opens doors kicks one in instead;
+    /// the player pulls it free as they open it. Gone with the closed door. Ground truth.
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty", with = "by_pos")]
+    pub(crate) wedged: BTreeMap<Pos, u8>,
     /// Chests, by position (spec §8 "Chests"): on every chest terrain cell, shut, open, or
     /// smashed, its level (its band follows) and, while shut, what it holds. Ground truth.
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty", with = "by_pos")]
@@ -122,6 +127,13 @@ pub struct LevelState {
     /// `world/sanctuary.rs`), in the order laid; one past its end is dropped at the end of a turn.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub(crate) hallows: Vec<super::Hallow>,
+    /// The zones spells laid here (`world/zone.rs`), in the order laid, their cells never shared;
+    /// one past its end is dropped at the end of a turn.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub(crate) zones: Vec<super::Zone>,
+    /// The zones as the player last saw them, by position: a cell seen clear is forgotten.
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty", with = "by_pos")]
+    pub(crate) zone_memory: BTreeMap<Pos, crate::content::ZoneKind>,
     /// Traps, by position (spec §8 "Traps"), hidden or known; a spent one is gone.
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty", with = "by_pos")]
     pub(crate) traps: BTreeMap<Pos, Trap>,
@@ -179,6 +191,7 @@ impl LevelState {
             object_memory: BTreeMap::new(),
             fires: BTreeMap::new(),
             locks: template.locks.clone(),
+            wedged: BTreeMap::new(),
             chests: template.chests.clone(),
             secrets: template.secrets.clone(),
             hidden: template.hidden.clone(),
@@ -195,6 +208,8 @@ impl LevelState {
             pervading: template.pervading,
             risings: Vec::new(),
             hallows: Vec::new(),
+            zones: Vec::new(),
+            zone_memory: BTreeMap::new(),
             shops: Vec::new(),
             traps: template.traps.clone(),
             trap_memory: BTreeMap::new(),
@@ -449,6 +464,10 @@ impl LevelState {
             && (self.hidden.iter()).all(|(p, h)| known(&h.terrain) && self.terrain.in_bounds(*p))
             && (self.risings.iter()).all(|r| r.is_valid_for(content))
             && (self.hallows.iter()).all(|h| self.terrain.in_bounds(h.at))
+            && (self.zones.iter()).all(|z| {
+                z.cells.iter().all(|p| self.terrain.in_bounds(*p))
+                    && z.light.is_none_or(|l| usize::from(l.0) < lights)
+            })
             && (self.chests.keys()).all(|p| self.terrain.in_bounds(*p))
     }
 }

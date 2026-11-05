@@ -1,0 +1,20 @@
+# A scroll of gale (spec §8 "Scrolls", "Spells"): read it (`r`), and it casts Gale, a
+# level-11 spell, free of mana; study it (`L`), and you may learn the spell for good. Level and
+# frequency by its spell's level (README.toml): the lower, the commoner the scroll.
+[[object]]
+id = "scroll_of_gale"
+name = "scroll of gale"
+plural = "scrolls of gale"
+glyph = "?"
+fg = "#c0e8f0"
+class = "scrolls"
+materials = ["paper"]
+weight = 50
+value = 200
+stackable = true
+level = 6
+frequency = 20
+
+[object.read]
+kind = "spell"
+spell = "gale"

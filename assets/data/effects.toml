@@ -75,6 +75,20 @@ scale = 0.6
 fade = 0.6
 glow = 0.8
 
+# Shatter's and Thunderclap's: a clap of force, white and brief, gone at once (the spell types
+# design §7 entry 4); no projectile, no particles, no shake.
+[[effect]]
+id = "shatter"
+shape = "burst"
+radius = 1
+speed = 40
+grow = 0.04
+impact = 0.1
+linger = 0.2
+flicker = 0.04
+glyphs = "*+·"
+colors = ["#ffffff", "#e8ecff", "#b8c0e0", "#707890", "#383c48"]
+
 [[effect]]
 id = "fireball"
 shape = "burst"

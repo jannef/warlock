@@ -83,6 +83,8 @@ pub struct SpellScroll {
     /// Whether it is read on a stack the reader carries (Identify's scroll): the read list asks
     /// which.
     pub on_item: bool,
+    /// Whether it is read at a corpse the reader sees (`SpellData::aims_corpse`).
+    pub at_corpse: bool,
 }
 
 impl Reading {
@@ -90,6 +92,13 @@ impl Reading {
     /// oneself, a cleansing).
     pub fn range(&self) -> Option<i32> {
         self.scroll().and_then(|scroll| scroll.reach)
+    }
+
+    /// Whether it is read at a cell, a burst's or a corpse's: a scroll that raises a corpse has
+    /// no range and is aimed all the same.
+    pub fn aimed(&self) -> bool {
+        self.scroll()
+            .is_some_and(|scroll| scroll.reach.is_some() || scroll.at_corpse)
     }
 
     /// Whether it is read on a stack the reader carries (the scroll of identify).
@@ -155,6 +164,7 @@ impl ReadSpec {
             rungs,
             reach: def.base_range(),
             on_item: def.aims_item(),
+            at_corpse: def.aims_corpse(),
         }))
     }
 }

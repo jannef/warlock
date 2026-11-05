@@ -441,7 +441,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     something hidden in passing, not a trap (`spot`; §8 "Searching"), finding a hidden trap,
     searching or in passing (`find_trap`, Detect traps' use), an attempt to steal, whatever comes of
     it (`steal`; "Stealing" below), a try at treating oneself, whatever comes of it (`heal`;
-    "Treating oneself" below), a forage that ran its time, whatever it found (`forage`;
+    "Treating oneself" below), a batch of arrows or bolts that ran its time, whatever it made (`fletch`; "Fletching" below),
+    a forage that ran its time, whatever it found (`forage`;
     "Foraging" below), a deal made in a shop: goods paid for or the player's own sold (`deal`;
     Negotiation), something carried told for what it is (`appraise`; "Appraise" below), mana
     spent, a spell or an ability paid in it (`cast`; Concentration, 25 %, #668), discovery
@@ -563,7 +564,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
     in its Defence, Sneak attack's dice); its action after that ends it. Made, the turn is spent
     ("The kobold is not fooled."); try again. Refused, with no time and no draw: untrained, at no
     creature seen, at one not hostile, or at one without vitals (`Content::has_vitals`). There
-    is no Bluff check when caught: a caught thief stays caught (the owner).
+    is no Bluff check when caught: a caught thief stays caught (the owner). Its other use is
+    **talking past** a party met face to face on the overworld (#1017; §7 "Overworld
+    encounters"), marked by `talk_past` (100 %: every try).
   - **Active uses**: skills get no keys of their own. Racial, class, skill, and style abilities
     are chosen from one abilities menu (§6 "Abilities", #156), unlike ADOM: each trained skill
     with an active use (`kind = "action"`) is an ability there (`warlock_core::ability`,
@@ -661,6 +664,27 @@ developer notes (CLAUDE.md, `docs/dev/`).
     from a keeper takes from its pack: its purse.
   - No limit on trying again (the owner's rule): a victim that caught the player stays angry,
     and that is the price. Presentation shows only what comes of it, never a modifier or a roll.
+- **Fletching** (`world/fletch.rs`, data `data/fletch.toml`; #1021; the owner: "Do not require
+  small blade in hand, just in inventory is fine"): the abilities menu's **Fletch** (`Ability::Fletch`,
+  in Woodcraft's place among the Skills; nothing to aim; `Action::Fletch`, replay text `fletch`; no
+  key of its own). Anyone, anywhere, trained in Woodcraft or not.
+  - **Needs**: a knife carried, in the pack, worn or wielded or neither (`Content::is_knife`: an
+    object of the `daggers` weapon skill: a dagger, a stiletto, a knife; a short blade is none), and
+    a launcher ready whose `launches` has a row in the file (a bow, a crossbow; not a sling). The
+    menu greys it out "you have no knife" or "you have no bow or crossbow ready", and the rules
+    refuse in the same words, taking no time. No material is used up.
+  - **Time**: `seconds` (600: ten minutes), in turns of the `fletch` action, stopped like a rest
+    ("You put down the knife."): the time is spent and nothing is made. On the overworld the
+    encounter roll runs as for a forage.
+  - **The check**, at the end: 2d12 + Dexterity's modifier + talents + Woodcraft's `fletch` points
+    (curve `[[0, 0], [100, 8], [200, 12]]`) against `difficulty` (12). The count is `1d4` + Woodcraft's
+    value ÷ 25. Margin 0 or more makes the whole count; −1 to −3 half, rounded up; −4 to −6 one; below
+    −6 none. Gameplay stream. Woodcraft earns a mark on every batch that ran its time (`Use::Fletch`).
+  - **What**: under Woodcraft 25 `brittle_arrow` or `brittle_bolt` (`breaks = 100`, value 0, never in
+    loot or shops); from 25 `arrow` or `bolt`.
+  - **Fletcher** (`talents/fletcher.toml`, effect `fletcher`, `TalentMods::fletcher`): the ranger's at
+    level 1, nobody else's; five minutes, +4 to the check, twice the count after the margin, plain at
+    any Woodcraft. The ranger's kit has a knife, carried, not wielded.
 - **Foraging** (`world/forage.rs`, data `data/forage.toml`, §7; #547; the owner, 2026-10-27:
   "survival can be used on wilderness map, some chance to gather food items"): Survival's use,
   the abilities menu's **Forage** (`Ability::Forage`, in the skill's place among the Skills;
@@ -1808,7 +1832,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     action). An optional per-ability `cooldown` status exists in data; none is used. Effects:
     `reach_blow` (Lunge: the first hostile within `reach` along the direction, the cells between
     empty and walkable, nothing sprung; a foe beyond the first cell brings no free blows),
-    `sure_critical` (Vital strike), `ignore_defence` (Feint: rolled without the target's Parry and
+    `sure_critical` (Vital strike), `ignore_defence` (False lead: rolled without the target's Parry and
     Shield, read in `resolve` through the transient `Technique`), `ignore_protection` (Sunder,
     Gap shot: a penetration above any Protection), `sweep` (Whirl, Staff sweep: a blow at each
     hostile beside, clockwise from the north or the direction given, −2 each, the blades taking
@@ -1820,7 +1844,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     twice, bonus and riders once, −2 to hit). The catalogue (data; first guesses): Vital strike
     (blades 9; 4 stamina, a blow's time), Sunder (axes, maces, polearms 9; 4, 125 %), Lunge
     (spears, staves 9; 3, 100 %), Piercing shot (bows, crossbows, slings 9; 4, a shot's), Shield
-    wall (shield blocking 9; 5, a wait's), Feint (Duelist 7; 2, 100 %), Whirl (Twin Blades 7; 6,
+    wall (shield blocking 9; 5, a wait's), False lead (Duelist 7; 2, 100 %), Whirl (Twin Blades 7; 6,
     150 %), Mighty swing (Great Weapon 7; 5, 150 %), Shield rush (Sword and Board 7; 4, 125 %),
     Gap shot (Marksman 7; 4, 150 % of a shot), Hip throw (Brawler 7; 4, 125 %), Staff sweep
     (Staff Fighter 7; 5, 150 %). Each is its own action (no stacking of actives on one blow);

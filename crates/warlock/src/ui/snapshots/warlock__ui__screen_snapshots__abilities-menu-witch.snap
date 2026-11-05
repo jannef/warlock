@@ -13,11 +13,11 @@ expression: "render(case, content.clone())"
              │   d  Evil eye           1 mana, aimed                                  │
              │   e  Grave breath       1d6 necrotic, bites the wounded, 3 mana, aimed │
              │   f  Hex of weakness    3 mana, aimed                                  │
-             │   g  Flay               1d4 necrotic, bites the wounded, 8 mana, aimed │
              │ Skills                                                                 │
-             │   h  Heal               nothing to treat                               │
-             │   i  Intimidate         at a place you see                             │
-             │   j  Forage             not usable here                                │
+             │   g  Heal               nothing to treat                               │
+             │   h  Intimidate         at a place you see                             │
+             │   i  Forage             not usable here                                │
+             │   j  Fletch             you have no bow or crossbow ready              │
              │ Weapon skills                                                          │
              │   k  Shield bash        you hold no shield                             │
              │ Allies                                                                 │

@@ -649,6 +649,32 @@ const CASES: &[Case] = &[
         screen: Some("abilities"),
         ..BASE
     },
+    // A ranger after a batch (spec §8 "Fletching"): Fletch in Woodcraft's place, usable; the
+    // message line says what was made.
+    Case {
+        name: "abilities-menu-fletch",
+        character: Some("human,male,ranger"),
+        run: true,
+        actions: "fletch",
+        screen: Some("abilities"),
+        ..BASE
+    },
+    // A warrior carries no knife: Fletch greyed out, with the reason.
+    Case {
+        name: "abilities-menu-fletch-no-knife",
+        character: Some("human,male,warrior"),
+        run: true,
+        screen: Some("abilities"),
+        ..BASE
+    },
+    // A thief's dagger is a knife, but no bow is ready.
+    Case {
+        name: "abilities-menu-fletch-no-launcher",
+        character: Some("human,male,thief"),
+        run: true,
+        screen: Some("abilities"),
+        ..BASE
+    },
     // Beside a healing spring (spec §7 "Special rooms"): Drink in the Here group, last.
     Case {
         name: "abilities-menu-spring",
@@ -1149,6 +1175,16 @@ const CASES: &[Case] = &[
         scenario: "traps",
         actions: "move:E pickup",
         keys: Some("r d"),
+        ..BASE
+    },
+    // The Decipher ability's list (spec §8 "Scrolls"): the scrolls carried of a type not yet made
+    // out; a wizard is trained in Decipher script.
+    Case {
+        name: "scroll-decipher-list",
+        scenario: "traps",
+        character: Some("human,male,wizard"),
+        actions: "move:E pickup",
+        screen: Some("decipher"),
         ..BASE
     },
     Case {
@@ -1693,7 +1729,8 @@ fn the_status_bar_draws_each_hunger_word_in_its_colour() {
 }
 
 /// The built-in content with an encounter table in the showcase campaign (which ships none):
-/// kobolds (hostile), deer (wildlife), and the hermit (peaceful), met by the dev `meet`.
+/// kobolds (hostile; and talkers, the same flagged `talk_past`), deer (wildlife), and the hermit
+/// (peaceful), met by the dev `meet`.
 fn encounter_content() -> Arc<Content> {
     const TABLE: &str = r#"
 [[table]]
@@ -1703,6 +1740,12 @@ id = "kobolds"
 name = "a band of kobolds"
 weight = 1
 group = [{ creature = "kobold", count = "3" }]
+[[table.entry]]
+id = "talkers"
+name = "a band of talkers"
+weight = 1
+group = [{ creature = "kobold", count = "2" }]
+talk_past = true
 [[table.entry]]
 id = "deer"
 name = "a herd of deer"
@@ -1742,6 +1785,16 @@ fn encounters_as_text() {
         };
         insta::assert_snapshot!(case.name, render(&case, content.clone()));
     }
+    // A bard (trained in Bluff) met face to face by a party flagged `talk_past` (#1017).
+    let case = Case {
+        name: "encounter-talk-past",
+        scenario: "world",
+        character: Some("human,male,bard"),
+        actions: "meet:talkers:met",
+        keys: Some(""),
+        ..BASE
+    };
+    insta::assert_snapshot!(case.name, render(&case, content.clone()));
 }
 
 /// A row of the dialog answers the encounter: the dialog closes and the world has no question

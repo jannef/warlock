@@ -130,6 +130,7 @@ pub(super) fn kobold_at(world: &mut World, (dx, dy): (i32, i32), hp: i32) -> Act
         faction_override: None,
         summoner: None,
         ally: None,
+        risen: None,
         alignment_override: None,
         inventory: Vec::new(),
         equipment: Default::default(),
@@ -166,7 +167,9 @@ fn every_caster_has_its_table_by_level_sixty() {
                 "Renewal",
                 "Silence",
                 "Prayer",
+                "Rebuke",
                 "Prayer of release",
+                "Benison",
                 "Litany",
                 "Litany of the mind",
                 "Benediction",
@@ -183,10 +186,13 @@ fn every_caster_has_its_table_by_level_sixty() {
                 "Barkskin",
                 "Call of the wild",
                 "Water walking",
+                "Bramble",
                 "Call lightning",
                 "Rime",
                 "Nature's ward",
+                "Gale",
                 "Call of the forest",
+                "Cloudburst",
                 "Pack leader",
                 "Call the elements",
                 "Flame and frost",
@@ -206,9 +212,13 @@ fn every_caster_has_its_table_by_level_sixty() {
                 "Flay",
                 "Poison lore",
                 "Cause wounds",
+                "Grave feast",
                 "Malison",
+                "Charnel burst",
+                "Leech",
                 "Second sight",
                 "Familiar's sight",
+                "Rouse the dead",
                 "Curse of sloth",
                 "Fear",
                 "Blight",
@@ -241,6 +251,8 @@ fn every_caster_has_its_table_by_level_sixty() {
             "Arcane training",
             "Magic missile",
             "Knock",
+            "Blink",
+            "Shatter",
             "Scribe"
         ]
     );
@@ -334,44 +346,64 @@ fn the_spells_are_abilities_by_level() {
             "Acid arrow",
             "Call of the wild",
             "Mesmerise",
+            "Sense the quick",
             "Water walking",
             // Level 6.
             "Arcane bolt",
+            "Blink",
             "Frost",
+            "Grave feast",
             "Identify",
             "Sleep",
+            "Slick",
             // Level 7.
             "Blight",
             "Brand",
             "Scorching ray",
+            "Thunderclap",
             "Web",
             // Level 8.
+            "Bramble",
             "Flay",
             "Glamour",
+            "Shatter",
             "Unbinding",
             // Level 9.
             "Bind",
+            "Charnel burst",
             "Rime",
             // Level 10.
             "Fear",
+            "Leech",
             "Renewal",
             // Level 11.
             "Call lightning",
             "Fireball",
+            "Gale",
             "Haste",
             "Lightning bolt",
             "Remove disease",
             "Silence",
             // Level 12.
+            "Benison",
             "Fire cloak",
             "Flame",
+            "Mirk",
+            // Level 13.
+            "Reek",
             // Level 14.
             "Grave spear",
+            "Rebuke",
             // Level 15.
             "Slumber",
+            // Level 16.
+            "Balefire",
             // Level 20.
             "Call of the forest",
             "Chain lightning",
+            "Cloudburst",
+            // Level 24.
+            "Rouse the dead",
             // Level 30.
             "Sunfire",
             // Level 35.

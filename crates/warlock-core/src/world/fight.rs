@@ -848,8 +848,8 @@ impl World {
         let struck = self.vitals(target, struck);
         let struck = self.flat_footed(target, unaware, struck);
         let struck = self.small_target(attacker, target, struck);
-        // Feint (a weapon active, `weapon_active.rs`): rolled without the categories it ignores.
-        let struck = self.feinted(attacker, struck);
+        // False lead (a weapon active, `weapon_active.rs`): rolled without the categories it ignores.
+        let struck = self.misled(attacker, struck);
         let levels = (self.level_of(attacker), self.level_of(target));
         // A talent may roll a fumble again (a birth sign's Winner's luck).
         let lucky = (self.state.actors.get(&attacker))
@@ -1222,9 +1222,11 @@ impl World {
             let slain = def.id.clone();
             self.state.quests.slay(&slain);
         }
-        // A summoned ally leaves nothing: no corpse, no pile (spec §8 "Allies": "Summons").
-        if (actor.ally.as_ref())
-            .is_some_and(|a| matches!(a.source, super::AllySource::Summoned { .. }))
+        // A summoned ally leaves nothing: no corpse, no pile (spec §8 "Allies": "Summons"). Nor
+        // does one risen berserk (`corpse_spell.rs`).
+        if actor.risen.is_some()
+            || (actor.ally.as_ref())
+                .is_some_and(|a| matches!(a.source, super::AllySource::Summoned { .. }))
         {
             self.fallen.push(actor);
             return Vec::new();

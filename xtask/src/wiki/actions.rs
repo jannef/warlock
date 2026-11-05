@@ -74,7 +74,11 @@ pub(super) fn action_costs(content: &Content) -> String {
             ActionKind::Drink => {
                 "A turn of drinking at a healing spring (a drink takes ten seconds)"
             }
+            ActionKind::Decipher => {
+                "A turn of making out a scroll without reading it (a try takes ten minutes)"
+            }
             ActionKind::Forage => "A turn of foraging in the wild (a forage takes ten minutes)",
+            ActionKind::Fletch => "A turn of fletching (a batch takes ten minutes)",
             ActionKind::Temper => {
                 "A turn of tempering an item at a forge's anvil (tempering takes ten minutes)"
             }

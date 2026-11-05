@@ -97,8 +97,16 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   draw them (in a level file or an outdoor vault it is a content error), and a pool that can hold
   nothing (an unknown tag, one no drawable type has, a tag pool of a campaign vault with no type
   of its campaign), `"level"` beside tags, a `count` of 0 or over the cells, a cell that is a door
-  or not walkable, or one with a `creature` or `trap` too, is a content error. A vault that
-  dangerous should be avoidable (behind a door) and pay better loot. The guard post draws two.
+  or not walkable, or one with a `creature` or `trap` too, is a content error. The entry may also
+  give what a placed creature's may, applied to what is drawn (the draw itself is the same):
+  `status` (each draw is placed with it, `status = ["asleep"]`: a sleeping crowd), `carry` (the
+  first one placed carries it on top of its gear, `carry = ["brass_key"]`: the key to the vault's
+  lock on one of a crowd; it counts for the lock only when every cell the entry marks is within
+  reach, and if no one is drawn it lies on the entry's first cell), and `route` (each draw walks
+  it from its cell instead of a short walk of its own, checked from every marked cell as a placed
+  creature's is; it turns with the vault). A `faction`, `alignment`, `npc`, `animated`, `wield`,
+  or `wear` on such a cell is a content error. A vault that dangerous should be avoidable (behind
+  a door) and pay better loot. The guard post draws two.
 - **Locks in level files** (M19, §8 "Doors"): a legend entry on a closed door locks it with
   `lock = "pantry"` (a lock id: keys with that id open it, and skeleton keys) or `locked = true`
   (a lock without an id: only a skeleton key opens it), and `lock_difficulty = N` with either

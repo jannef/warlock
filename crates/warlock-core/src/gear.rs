@@ -104,7 +104,7 @@ fn make_piece(
 }
 
 /// Rolls the gear of every spawn of generated level `template` that has no fixed kit, from the
-/// level's own stream `gear/<level id>`, in spawn order.
+/// level's own stream `gear/<level id>`, in spawn order, on top of anything it carries already.
 pub fn arm(template: &mut LevelTemplate, content: &Content, seed: u64) {
     let mut rng = Rng::gear(seed, &template.id);
     let level = template.item_level;
@@ -113,7 +113,10 @@ pub fn arm(template: &mut LevelTemplate, content: &Content, seed: u64) {
             continue;
         }
         let pack = roll(content, &mut rng, spawn.creature, level);
-        spawn.carry = pack.items;
+        // What it was given already (a monster pool's key, `mapgen/population.rs`) comes after
+        // its gear, so the gear's equipment still points at it.
+        let given = std::mem::replace(&mut spawn.carry, pack.items);
+        spawn.carry.extend(given);
         spawn.equipment = pack.equipment;
         spawn.rolls_gear = false;
     }
