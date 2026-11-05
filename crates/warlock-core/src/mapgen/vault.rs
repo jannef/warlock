@@ -1,9 +1,10 @@
 //! Stamping [vaults](crate::content::Vault) into generated levels.
 
 use super::Canvas;
-use crate::content::{CreatureSpawn, Vault, VaultMonsters};
+use crate::content::{CreatureSpawn, Turn, Vault, VaultMonsters};
 use crate::geom::{Dir, Pos};
 use crate::rng::Rng;
+use std::borrow::Cow;
 
 /// The vaults that may be stamped on the level ([`Vault::stamps_on`]) in a random order, but
 /// those a branch level names ([`Vault::pinned`]): they are stamped only where named.
@@ -14,6 +15,19 @@ pub(super) fn shuffled<'c>(canvas: &Canvas<'c>, rng: &mut Rng) -> Vec<&'c Vault>
         .collect();
     rng.shuffle(&mut vaults);
     vaults
+}
+
+/// `vault` lying the way a random stamp finds it: any of the eight, drawn from `rng`. One that may
+/// not turn ([`Vault::may_turn`]: a pinned vault, or `turns = false`) lies as its file draws it,
+/// with no draw. Generators measure and stamp what this returns, so its size is the turned size.
+pub(super) fn turned<'v>(vault: &'v Vault, rng: &mut Rng) -> Cow<'v, Vault> {
+    if !vault.may_turn() {
+        return Cow::Borrowed(vault);
+    }
+    match Turn::ALL[rng.index(Turn::ALL.len())] {
+        Turn::NONE => Cow::Borrowed(vault),
+        turn => Cow::Owned(vault.turned(turn)),
+    }
 }
 
 /// The vaults `names` (a branch level's `vaults`, checked at load), in that order.

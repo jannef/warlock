@@ -36,7 +36,9 @@ is saved only when a level gives one (`skip_serializing_if`), so locks without o
 before. Level legends lock with `lock = "id"` or
 `locked = true` (and `lock_difficulty = N`, 1 to 50); objects are keys with `key = "id"` (`"*"`: skeleton); closed doors break with
 `breaks_to` + `sturdiness` (`TerrainDef::kicked_in`; digging and blasts break only terrain with a
-`hardness`, `TerrainDef::breaks`, never a door). The AI (`world/ai.rs`) paths through a locked door, and opens it, only
+`hardness`, `TerrainDef::breaks`, never a door, with one exception: a spell type with `doors`, force,
+breaks the closed doors its `blast` reaches, `World::blast_doors`, no sturdiness check, lock and trap
+gone with `set_terrain`, sprung at no one; `docs/dev/spells.md` "Spell types"). The AI (`world/ai.rs`) paths through a locked door, and opens it, only
 with a key (`Stepped::Unlocked`); `go_look` stops next to a spot no one can stand on (a door kicked
 at). Generated levels: `Needs::key` (the branch's `key` in `dungeons.toml`) makes `rooms.rs`'s
 `lock_rooms` lock up to two single-door rooms and drop the key in an unlocked room;

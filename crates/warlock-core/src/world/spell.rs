@@ -224,8 +224,9 @@ impl World {
     /// what is drawn is what is hit), one roll of its damage for
     /// everyone on them (but a caster its own burst spares, Scroll savant), half of it (at
     /// least 1) beyond radius − 1; then the walls its blast
-    /// breaks ([`World::blast`]), then the ice it melts ([`World::shock`]) or the water it
-    /// freezes ([`World::frost`]).
+    /// breaks ([`World::blast`]) and the doors it breaks (a spell's type's, [`World::blast_doors`]),
+    /// then the ice it melts or shatters ([`World::shock`]) or the water it freezes
+    /// ([`World::frost`]).
     pub(super) fn cast_burst(
         &mut self,
         caster: Caster,
@@ -266,17 +267,21 @@ impl World {
             let damage = Damage::new(damage, burst.kind);
             self.spell_hurts(caster, id, (center, false), damage, events);
         }
-        if burst.blast > 0 {
-            self.blast(center, radius, burst.blast, events);
-        }
         // A spell's type (`spell_type.rs`), a spell's own `heat` or `frost` standing in for its;
         // a trap's or a place's burst is no spell.
         let typed = matches!(caster, Caster::Actor(_)).then_some(burst.kind);
+        if burst.blast > 0 {
+            // The doors it reaches are found first: it never reaches through a wall it breaks.
+            let doors =
+                typed.map_or_else(Vec::new, |kind| self.doors_blasted(kind, center, radius));
+            self.blast(center, radius, burst.blast, events);
+            self.blast_doors(&doors, events);
+        }
         let rule = typed.and_then(|kind| self.content.spell_type(kind));
         let ice = burst.ice.or(rule.and_then(|r| r.ice));
         self.burst_ice(center, radius, ice, events);
         if let Some(kind) = typed {
-            self.spell_type_burst(kind, center, radius);
+            self.spell_type_burst(kind, (center, radius), burst.blast, events);
         }
     }
 
@@ -392,13 +397,18 @@ impl World {
             return;
         };
         let from = self.state.actors.get(&by).map_or(source.0, |a| a.pos);
-        // Poison lore's and Malison's bite lands with a spell as with a blow, before resistance.
+        // Poison lore's and Malison's bite lands with a spell as with a blow, before resistance;
+        // so does its type's (`spell_type.rs`).
         let damage = if damage.amount > 0 {
             let blow = Blow {
                 strike,
                 ..Blow::plain(damage.amount, damage.kind)
             };
-            Damage::new(self.lore_blow(by, target, blow).damage, damage.kind)
+            let amount = self.lore_blow(by, target, blow).damage;
+            Damage::new(
+                self.spell_type_bite(target, amount, damage.kind),
+                damage.kind,
+            )
         } else {
             damage
         };
@@ -437,6 +447,7 @@ impl World {
             self.siphon(by, (target, to));
         } else {
             self.wounded(target, &blow, Some(by), events);
+            self.spell_type_shove(target, (source.0, from), &blow, events);
         }
     }
 }

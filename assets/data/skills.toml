@@ -378,7 +378,8 @@ id = "spellcraft"
 name = "Spellcraft"
 description = "Understanding spells: how they are woven and what they do."
 kind = "rules"
-mark = [{ on = "study", chance = 100 }]
+# Studying a scroll is practice, and so is spending mana on a spell (#989), as Concentration's.
+mark = [{ on = "study", chance = 100 }, { on = "cast", chance = 25 }]
 # Learning a spell from a scroll (spec §8 "Spells": "Learning"): `learn` is the spell level up to
 # which a scroll teaches for certain, 10 at 60, 30 at the soft cap, the last spell level at 150
 # (at least 1 for anyone trained in the skill; those who are not cannot learn from a scroll at
