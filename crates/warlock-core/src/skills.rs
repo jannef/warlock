@@ -370,6 +370,9 @@ pub enum Use {
     Escape,
     /// A climb out of a pit (spec §8 "Traps"; `world/trap.rs`).
     Climb,
+    /// A try at wriggling past a creature that will not make way (spec §8 "Displacement";
+    /// `world/wriggle.rs`), whatever came of it.
+    Wriggle,
     /// A kick at a closed door (spec §8 "Doors").
     Kick,
     /// A try at picking a lock (spec §8 "Doors"), whatever comes of it.
@@ -431,6 +434,7 @@ impl Use {
             Use::Song => "singing a song",
             Use::Escape => "struggling against bonds, whatever comes of it",
             Use::Climb => "climbing out of a pit",
+            Use::Wriggle => "wriggling past a creature in the way, whatever comes of it",
             Use::Kick => "kicking at a closed door",
             Use::Pick => "a try at picking a lock",
             Use::Temper => "tempering an item at an anvil",
@@ -559,6 +563,7 @@ impl Use {
             Use::Song => "song",
             Use::Escape => "escape",
             Use::Climb => "climb",
+            Use::Wriggle => "wriggle",
             Use::Kick => "kick",
             Use::Pick => "pick",
             Use::Temper => "temper",

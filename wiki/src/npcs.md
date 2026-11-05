@@ -167,8 +167,19 @@ A few will not make way, and then the move takes no time and the message says wh
 - some never budge, and some keep their post: a [shopkeeper](creatures.md#creature-shopkeeper) keeps to the door of their shop
   ("Eadric doesn't budge.");
 - someone who cannot move at all, under too heavy a [load](burden.md), does not budge either;
+  (a character trained in [Escape artist](skills.md#skill-escape-artist) is not stopped by the
+  first kind: see below);
 - a creature two sizes or more larger than you is too big to squeeze past ("The giant is too big
   to squeeze past."). No creature in the game is that big yet.
+
+**Wriggling past.** Trained in [Escape artist](skills.md#skill-escape-artist), you are not stopped
+by someone who keeps their post or never budges: the step becomes a check, with no action of its
+own. Your [Dexterity](stats.md#stat-dexterity) modifier plus the skill's bonus (the same as for
+slipping [bonds](status-effects.md#slipping-bonds): +8 at 100, +12 at 200) is rolled against 11
+plus their [Willpower](stats.md#stat-willpower) modifier. Made, you swap places ("You wriggle past
+Eadric."); failed, the step's time is spent and you stay where you are. Someone who cannot move at
+all, a creature too big to squeeze past, and swimming are not helped. Each try may train the
+skill (half the time).
 
 If you cannot see what is in your way, you only learn that "Something is in the way.", or that
 you swapped places with something.

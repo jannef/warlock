@@ -216,10 +216,11 @@ name = "Escape artist"
 description = "Slipping out of bonds, grabs, and tight places."
 kind = "rules"
 # Marks: every automatic check against bonds, whatever comes of it (world/hold.rs), and every climb
-# out of a pit.
+# out of a pit, and half the tries at wriggling past a creature in the way (world/wriggle.rs).
 mark = [
     { on = "escape", chance = 100 },
     { on = "climb", chance = 100 },
+    { on = "wriggle", chance = 50 },
 ]
 # Effect "escape": points added to the check against bonds (better of Strength and Dexterity
 # against a hold's grip or a status's `escape`), +8 at 100, +12 at 200; trained at all, an action
