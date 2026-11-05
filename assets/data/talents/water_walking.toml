@@ -3,6 +3,6 @@ id = "water_walking"
 name = "Water walking"
 tree = "class"
 granted = true
-description = "Water bears you a while (a spell, paid in mana): wading costs you no more than a step on dry land, and a plunge through the ice never hurts you."
+description = "Water bears you a while (a spell, paid in mana): wading costs you no more than a step on dry land, and ice never gives way under you."
 effects = [{ kind = "spell", spell = "water_walking" }]
 systems = ["spells", "mana", "wading", "ice"]

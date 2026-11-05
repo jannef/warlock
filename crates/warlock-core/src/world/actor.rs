@@ -1306,11 +1306,10 @@ impl Actor {
             || (!self.talents.is_empty() && self.talent_mods(content).wades_free)
     }
 
-    /// Whether a plunge through the ice leaves it unharmed: a talent's (Undertow), or a status's
-    /// (Water walking).
-    pub fn plunge_proof(&self, content: &Content) -> bool {
-        self.effects.any(content, |s| s.plunge_proof)
-            || (!self.talents.is_empty() && self.talent_mods(content).plunge_proof)
+    /// Whether ice never gives way under it: a status's (Water walking; `World::tread` and
+    /// `World::shock`).
+    pub fn ice_holds(&self, content: &Content) -> bool {
+        self.effects.any(content, |s| s.ice_holds)
     }
 
     /// `profile` with the to-hit and damage of its combat stance, and of its status effects

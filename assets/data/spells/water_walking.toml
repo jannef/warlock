@@ -2,7 +2,7 @@
 [[spell]]
 id = "water_walking"
 name = "Water walking"
-description = "Water bears you a while: wading costs you no more than a step on dry land, and a plunge through the ice never hurts you."
+description = "Water bears you a while: wading costs you no more than a step on dry land, and ice never gives way under you."
 level = 5
 school = "transmutation"
 kind = "buff"

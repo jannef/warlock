@@ -83,9 +83,11 @@ developer notes (CLAUDE.md, `docs/dev/`).
       Barbed hide's barbs), and `blows = { damage, damage_type }` adds a rider to its sufferer's
       blows with either hand, as a worn `elemental` affix does, which reads no type rule. A kick
       or a shield bash is not such a blow;
-    - **bear up on water** (Water walking): `wades_free` prices wading as a step on dry land and
-      `plunge_proof` spares a plunge's harm, Undertow's two effects, read with the talent's
-      through one `Actor::wades_free` and one `Actor::plunge_proof`;
+    - **bear up on water** (Water walking): `wades_free` prices wading as a step on dry land,
+      Undertow's effect, read with the talent's through `Actor::wades_free`; `ice_holds` (the
+      owner's rule) means ice never gives way under the bearer, however thin, with no draw, and a
+      burst that melts or shatters ice leaves the cell they stand on (`Actor::ice_holds`, in
+      `World::tread` and `World::shock`): no plunge, no harm, no wet;
     - **fight** better or worse (`combat = { to_hit, damage, dodge, parry, shield }`, each −20 to
       20, as a combat stance's, §8 "Stances"): to-hit and damage join every attack profile with
       the stance's (`Actor::stanced`), Dodge and Parry the actor's Defence (Dodge stacks, of Parry

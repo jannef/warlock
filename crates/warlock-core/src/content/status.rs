@@ -495,7 +495,7 @@ struct StatusSpec {
     #[serde(default)]
     wades_free: bool,
     #[serde(default)]
-    plunge_proof: bool,
+    ice_holds: bool,
     vision: Option<String>,
     #[serde(default)]
     resist: BTreeMap<String, i32>,
@@ -628,9 +628,9 @@ pub struct StatusDef {
     pub blows: Option<Rider>,
     /// Its sufferer wades as if on dry land (Water walking's; `Actor::wades_free`).
     pub wades_free: bool,
-    /// A plunge through the ice does its sufferer no harm (Water walking's;
-    /// `Actor::plunge_proof`).
-    pub plunge_proof: bool,
+    /// Ice never gives way under its sufferer, however thin, and a burst that would melt or
+    /// shatter it leaves the ice it stands on (Water walking's; `Actor::ice_holds`).
+    pub ice_holds: bool,
     /// The eyes it lends while it lasts (a potion's Owl-eyed; spec §8 "Potions"): an index into
     /// [`super::Content::vision_profiles`], bettering its sufferer's eyes part by part as a
     /// unique item's Vision power does (`Actor::eyes`).
@@ -683,7 +683,7 @@ impl StatusDef {
             && self.retaliates.is_none()
             && self.blows.is_none()
             && !self.wades_free
-            && !self.plunge_proof
+            && !self.ice_holds
             && self.vision.is_none()
             && self.resist.is_empty()
     }
@@ -941,7 +941,7 @@ fn resolve(
         retaliates,
         blows,
         wades_free: spec.wades_free,
-        plunge_proof: spec.plunge_proof,
+        ice_holds: spec.ice_holds,
         vision,
         resist,
     })

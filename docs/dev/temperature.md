@@ -41,7 +41,10 @@ that), then `tread_price` (the `climb` action from water onto ice) and `after_tr
 player trained in Swim then makes a check (`World::keeps_afloat`, two gameplay draws after the
 plunge's dice: Toughness's modifier, `Effect::Swim`, and the talents' Toughness checks against
 `PLUNGE_DIFFICULTY`, 11), which halves the dice's hit points, rounded down, before resistance, and
-marks `Use::Swim` whatever came of it; no check and no draw for one untrained or `Actor::plunge_proof` (a talent or a status). Bursts: `World::frost` (instant freeze; the frost trap, a burst with
+marks `Use::Swim` whatever came of it; no check and no draw for one untrained or with the talents' `plunge_proof`. A status's
+`ice_holds` (Water walking's `water_borne`, `Actor::ice_holds`) keeps the ice whole under its
+bearer: `World::tread` holds them with no draw, however thin, and `World::shock` leaves the cell
+they stand on. Bursts: `World::frost` (instant freeze; the frost trap, a burst with
 `frost`; dev `freeze:x,y,r`, which also shows the `frost_burst` effect of `data/effects.toml`
 through `World::frost_look`) and `World::shock` (`Shock::Heat` melts: the fireball trap, a burst
 with `heat`; `Shock::Blast(um)` shatters thinner ice, for blasts without heat, none yet; dev

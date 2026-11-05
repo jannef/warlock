@@ -98,7 +98,7 @@ wiki's effect text appends "while raging".
 | `carry_percent` | `burden::load` (the limit before the affixes' kilograms, kept a multiple of 3) |
 | `travel_percent` | `World::step_price` on the overworld, after the survival skill |
 | `terrain_as` | `World::step_price`: the terrain stepped onto is priced as the one it names (local and overworld alike; its ids checked once the terrain loads, `TalentBook::check_terrain`) |
-| `plunge_proof` | `World::fall_in` through `Actor::plunge_proof` (a status's too): no plunge damage and no draw for it |
+| `plunge_proof` | `World::fall_in`: no plunge damage and no draw for it (Water walking's status has `ice_holds` instead: the ice never gives way, `docs/dev/status-effects.md`) |
 | `light_on_ice`, `climb_percent` | `World::tread` (the load on the ice is the body's weight alone), `World::tread_price` (the climb's price) |
 | `wading_proof` | `World::wade`: no exposure, no draw |
 | `beast_friend` | `beast_friend::befriended` (`world/beast_friend.rs`), read by `World::stance`, `ai::nearest_hostile_in_sight`, and `PerceptionView::stance`; `World::resolve` (an attack by the player) records the type in `Progress::empathy_broken` |

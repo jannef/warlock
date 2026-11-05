@@ -350,8 +350,12 @@ fn also(content: &Content, def: &StatusDef) -> String {
     if def.wades_free {
         parts.push("wading costs no more than a step on dry land".to_string());
     }
-    if def.plunge_proof {
-        parts.push("a plunge through the ice does no harm".to_string());
+    if def.ice_holds {
+        parts.push(
+            "ice never gives way under you, however thin, nor melts or shatters under you in a \
+             burst"
+                .to_string(),
+        );
     }
     if let Some(light) = def.light {
         let preset = content.light(light);

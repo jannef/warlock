@@ -89,7 +89,8 @@
 #   blows      what its sufferer's melee blows do besides: { damage = "1d4", damage_type = "fire" },
 #              a rider as a worn elemental affix's, which reads no type rule (Brand's)
 #   wades_free its sufferer wades as if on dry land (Water walking's)
-#   plunge_proof  a plunge through the ice does its sufferer no harm (Water walking's)
+#   ice_holds  ice never gives way under its sufferer, however thin, nor melts or shatters under
+#              them in a burst (Water walking's)
 #   light      a light of lights.toml its sufferer sheds while it lasts (Lit; spec §5); the
 #              brightest of several
 # Creatures' attacks may cause statuses too: `on_hit` in creatures.toml. Diseases (diseases.toml)
@@ -434,8 +435,8 @@ blows = { damage = "1d4", damage_type = "fire" }
 start = "Fire runs along your weapon."
 end = "The fire on your weapon dies."
 
-# Water walking's: Undertow's two effects a while (talents/undertow.toml). Up to three degrees,
-# two minutes each.
+# Water walking's: wading as Undertow's (talents/undertow.toml), and ice that holds. Up to three
+# degrees, two minutes each.
 [[status]]
 id = "water_borne"
 name = "Water-borne"
@@ -444,7 +445,7 @@ max = 3
 stacking = "refresh"
 eases = 120
 wades_free = true
-plunge_proof = true
+ice_holds = true
 start = "Water feels as firm as the road beneath you."
 end = "Water is only water again."
 

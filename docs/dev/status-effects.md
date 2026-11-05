@@ -10,8 +10,10 @@ goes through `spell_strikes` and `say_spell`, words by the damage type ("The fir
 kobold."), then `spell_type_lands` on a striker harmed; a kill pays the wearer, unlike the barbs.
 A draw for the dice, and one for the rule's chance; none without such a status. `blows = { damage,
 damage_type }` (Brand's `branded_blade`): `Effects::blows`, docs/dev/equipment.md. `wades_free`
-and `plunge_proof` (Water walking's `water_borne`): `Actor::wades_free` and `Actor::plunge_proof`
-ask the statuses and the talents, read in `World::step_price` and `World::fall_in`.
+(Water walking's `water_borne`): `Actor::wades_free` asks the statuses and the talents, read in
+`World::step_price`. `ice_holds` (`water_borne` too): `Actor::ice_holds` asks the statuses; in
+`World::tread` the ice holds its bearer at once, with no draw, and `World::shock` skips the cell
+it stands on, so no plunge (`fall_in`) ever comes of it.
 
 Status effects and healing (spec §8 "Status effects", "Healing"; M24, #138; **diseases, #139,
 build on this**): statuses are data, `data/status.toml` (`content/status.rs`: `StatusDef` with

@@ -137,7 +137,7 @@ column says which):
 - **Striking back.** It may hurt whoever lands a melee blow on you, as a spell of that kind would:
   [Fire cloak](magic.md#spell-fire-cloak) does 1d6 fire to the striker ([fire-cloaked](status-effects.md#status-fire-cloaked)), and one time in four leaves them burning. What it kills is your kill.
 - **Water.** It may bear you up: [Water walking](magic.md#spell-water-walking) ([water-borne](status-effects.md#status-water-borne)) makes [wading](terrain.md#water) cost no more than a
-  step on dry land, and a [plunge through the ice](temperature.md#water-freezes) does no harm. You still fall in where the ice gives way.
+  step on dry land, and [ice](temperature.md#walking-on-ice) never gives way under you, however thin: a burst of heat or force leaves the ice you stand on, so you never [fall in](temperature.md#falling-in).
 - **Slowness.** It may make everything you do take longer: at 150%, half again as long.
 - **What you cannot do.** It may keep you from doing something while it lasts: a [raging](status-effects.md#status-raging) fighter
   cannot read ("You cannot read while raging."). Trying takes no time. An

@@ -1,6 +1,6 @@
 //! The three buff statuses with fields of their own (`data/status.toml`, the spell types design
 //! `docs/design/spell-types-and-new-spells.md` §7 entries 24 to 26): Fire cloak's `retaliates`,
-//! Water walking's `wades_free` and `plunge_proof`, Brand's `blows`; and their spells' lights,
+//! Water walking's `wades_free` and `ice_holds`, Brand's `blows`; and their spells' lights,
 //! class rows, and scrolls.
 
 use super::caster_tests::{kobold_at, sp};
@@ -18,7 +18,7 @@ temperature = -5
 ambient = [255, 255, 255, 0]
 map = '''
 #####
-#@~t#
+#@t~#
 #####
 '''
 [legend]
@@ -27,7 +27,7 @@ map = '''
 "t" = { terrain = "water", ice = 20 }
 "#;
 
-const THIN: Pos = Pos::new(3, 1);
+const THIN: Pos = Pos::new(2, 1);
 
 static PONDED: LazyLock<Arc<Content>> = LazyLock::new(|| {
     let mut files = ContentFiles::builtin();
@@ -237,28 +237,59 @@ fn the_water_borne_wade_free_and_after_it_pay_again() {
     assert_eq!(price(&w, "water"), dry);
 }
 
+/// The player steps east onto the thin ice: whether they plunged in.
+fn step_onto_thin(w: &mut World) -> bool {
+    let mut fell = false;
+    for action in parse_actions("move:E").expect("step") {
+        let outcome = w.apply(&action);
+        fell |= (outcome.events.iter()).any(|e| matches!(e, Event::FellThroughIce { .. }));
+    }
+    assert_eq!(w.player_pos(), THIN);
+    fell
+}
+
 #[test]
-fn the_water_borne_plunge_unharmed_and_with_no_draw() {
+fn under_the_water_borne_thin_ice_holds() {
     let mut w = pond(3);
     let player = w.player_id();
-    let hp = w.state.player().hp;
-    assert!(!w.state.player().plunge_proof(w.content()));
+    assert!(!w.state.player().ice_holds(w.content()));
     on(&mut w, player, "water_borne");
-    assert!(w.state.player().plunge_proof(w.content()));
-    let rng = w.state.rng.clone();
-    let mut events = Vec::new();
-    w.fall_in(player, THIN, &mut events);
-    assert_eq!(w.state.rng, rng);
+    assert!(w.state.player().ice_holds(w.content()));
+    let hp = w.state.player().hp;
+    assert!(!step_onto_thin(&mut w), "no plunge");
+    assert!(w.state.current().ice_at(THIN).is_some(), "the ice is whole");
     assert_eq!(w.state.player().hp, hp);
     assert!(
-        (events.iter()).any(|e| matches!(e, Event::FellThroughIce { .. })),
-        "they still fall in: the spell carries the wader, not the ice"
+        !w.state.current().is_open_water(w.content(), THIN),
+        "not wet"
     );
-    // Without it the same plunge costs.
+    // Without it the same step plunges through.
     let mut plain = pond(3);
-    let player = plain.player_id();
-    plain.fall_in(player, THIN, &mut Vec::new());
+    let hp = plain.state.player().hp;
+    assert!(step_onto_thin(&mut plain));
+    assert!(plain.state.current().is_open_water(plain.content(), THIN));
     assert!(plain.state.player().hp < hp);
+}
+
+#[test]
+fn a_burst_of_heat_leaves_the_ice_under_the_water_borne() {
+    let mut w = pond(3);
+    let player = w.player_id();
+    on(&mut w, player, "water_borne");
+    step_onto_thin(&mut w);
+    let hp = w.state.player().hp;
+    let mut events = Vec::new();
+    let broke = w.shock(THIN, 1, crate::ice::Shock::Heat, &mut events);
+    assert_eq!(broke, 0, "the open water beside it has no ice to melt");
+    assert!(!(events.iter()).any(|e| matches!(e, Event::FellThroughIce { .. })));
+    assert_eq!(w.state.player().hp, hp);
+    assert!(w.state.current().ice_at(THIN).is_some_and(|i| i.um > 0));
+    // When it wears off, the next burst melts it under them.
+    let s = status(&w, "water_borne");
+    w.player_mut().effects.remove(s);
+    let mut events = Vec::new();
+    assert_eq!(w.shock(THIN, 0, crate::ice::Shock::Heat, &mut events), 1);
+    assert!((events.iter()).any(|e| matches!(e, Event::FellThroughIce { .. })));
 }
 
 /// A ranger with a bow, a sword, and a dagger in the off hand.
