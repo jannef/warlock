@@ -587,7 +587,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   sick."), a disease showing or worsening ("You feel feverish.", "Fever wracks you."; §8
   "Diseases"), a sound that is news (§5 "Hearing"), or rain starting or growing heavier (§5
   "Weather"), the player getting hungrier (into Hungry or worse) or fainting from hunger (§8
-  "Hunger"), and when the player dies;
+  "Hunger"), a hit point lost to starving (a rest only), and when the player dies;
   a sound already known goes on without stopping it, and so does other news of the weather (the
   rain easing or stopping, clouds gathering or parting), a status effect ending ("The bleeding
   stops."), a disease leaving ("Your fever breaks."), a full stomach settling ("You no longer
@@ -642,7 +642,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
   of this turn's messages, leaving the last page shown. A single message too long for the line is
   split across pages. While it waits no other key acts, and a held key's repeats never turn a
   page; a screen open over the run (the dialogue screen) keeps its keys, and `--more--` waits
-  beneath it. A rest or another long action shows what stopped it the same way. Presentation only:
+  beneath it. A rest or another long action shows what stopped it the same way. A turn that left
+  the player hungrier, into Hungry or worse, waits at `--more--` even if what it said fits (§8
+  "Hunger"), so the news cannot scroll past. Presentation only:
   the rules, replays, and dumps never see pages; captures show the first page.
 - **Message history** (`v`; ADOM's `:m`; #207): a screen of every message the log keeps (the
   last 200, which it says at the top), oldest first, the newest at the bottom, each wrapped to the
@@ -761,8 +763,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
   crescent. When the window is narrow, segments give way in priority order — seed, position,
   vision, light, turn, then the moon's phase (first cut down to its glyph), the
   temperature, region, date (first cut down to day and month, `12 Rainmoon`), weather, time,
-  burden, hunger, the status effects (the least important first), the resources (the last
-  first), mana, and hit points, the
-  level name last — and
+  burden, hunger (Satiated and Bloated here; from Hungry down it stays to the last, drawn in its
+  colour, §8 "Hunger"), the status effects (the least important first), the resources (the last
+  first), mana, hit points, and the
+  level name — and
   segments that fit again in the room left take it back, most important first. Outdoors the
   weather outranks the date: it changes the light and how far one sees.

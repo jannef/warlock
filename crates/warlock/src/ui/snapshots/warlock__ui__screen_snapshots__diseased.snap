@@ -2,7 +2,7 @@
 source: crates/warlock/src/ui/screen_snapshots.rs
 expression: "render(case, content.clone())"
 ---
- You stop resting after 12 hours and 1 minute.
+ You feel weak from hunger. You should eat soon. You stop resting after 12 hours. --more--
 ┌─ Character ──────────────────────────────────────────────────────────────────────────────────────┐
 │                                                                                                  │
 │ Tamsin                                                                                           │

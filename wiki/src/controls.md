@@ -245,7 +245,7 @@ Below the map, the **status bar** shows, from left to right:
 - what ails you, if anything, the most urgent first: `Bleeding`, `Poisoned`, `Diseased` (see
   [Status effects](status-effects.md) and [Diseases](diseases.md));
 - how [hungry](hunger.md#how-hungry-you-are) you are, unless you are not hungry: `Hungry`, `Weak`, `Fainting`, `Starving`,
-  `Satiated`, or `Bloated` (see [Hunger](hunger.md));
+  `Satiated`, or `Bloated`, from `Hungry` down in a colour that grows more alarming as it worsens (see [Hunger](hunger.md#what-you-see));
 - your [burden](burden.md#burden-1), when you have one: `Burdened`, `Strained`, or `Overloaded` (see
   [Burden](burden.md));
 - the time, the date, and the [phase of the moon](sun.md#phases) (see [Time and the calendar](time.md));
@@ -265,7 +265,7 @@ count; then it shortens the moon's [phase](sun.md#phases) to its picture, and on
 temperature, the region, then the year of the date, then the date. The [weather](weather.md#how-the-weather-changes), the time, your
 [burden](burden.md#burden-1), your [hunger](hunger.md#how-hungry-you-are), your [status effects](status-effects.md#how-they-work) (the least urgent first), your [resources](resources.md) (the last
 first), your [mana](mana.md#how-much), your [hit points](combat.md#hit-points),
-and the name of the level stay longest. Parts come back as soon as there is room.
+and the name of the level stay longest, and from `Hungry` down your hunger outlasts them all. Parts come back as soon as there is room.
 
 ## Messages
 

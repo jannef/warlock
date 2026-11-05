@@ -2641,11 +2641,11 @@ mod tests {
         // A turn of the fight says more than the message line holds at once.
         frame(&mut app, &[WAIT]);
         assert_eq!(mode(&app), InputMode::More(0));
-        let pages = {
+        let stops = {
             let (game, bindings) = (app.world().resource::<Game>(), Bindings::default());
-            super::super::more::page_count(game, 80, &bindings)
+            super::super::more::stops(game, 80, &bindings)
         };
-        assert!(pages >= 2, "{pages} pages");
+        assert!(stops >= 1, "{stops} stops");
         // Other keys do nothing: no move, no wait, no screen.
         frame(
             &mut app,
@@ -2662,8 +2662,8 @@ mod tests {
         app.update();
         assert_eq!(mode(&app), InputMode::More(0));
         // Space shows the next page, up to the last, which waits for nothing.
-        for page in 1..pages {
-            assert_eq!(mode(&app), InputMode::More(page - 1));
+        for page in 0..stops {
+            assert_eq!(mode(&app), InputMode::More(page));
             frame(&mut app, &[SPACE]);
         }
         assert_eq!(mode(&app), InputMode::Normal);

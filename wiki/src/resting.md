@@ -50,8 +50,8 @@ A rest stops early when:
 - under the open sky, [rain](weather.md) starts or grows heavier ("It starts to rain.", "It starts to pour.",
   "The rain grows heavy."). Other news of the [weather](weather.md), such as the rain stopping,
   and someone [muttering](npcs.md#muttering) to themselves, is written to the message line but lets you rest on, or
-- you get [hungrier](hunger.md#how-hungry-you-are): [hungry](hunger.md#how-hungry-you-are), [weak](hunger.md#how-hungry-you-are), [fainting](hunger.md#how-hungry-you-are), or [starving](hunger.md#how-hungry-you-are) ("You are getting hungry."), or you faint
-  from hunger. Resting burns [food](food.md#eating) like any other time (see [Hunger](hunger.md)); a full stomach
+- you get [hungrier](hunger.md#how-hungry-you-are): [hungry](hunger.md#how-hungry-you-are), [weak](hunger.md#how-hungry-you-are), [fainting](hunger.md#how-hungry-you-are), or [starving](hunger.md#how-hungry-you-are) ("You are getting hungry."), you faint
+  from hunger, or [starving](hunger.md#how-hungry-you-are) costs you a [hit point](combat.md#hit-points) ("You are wasting away from hunger."). Resting burns [food](food.md#eating) like any other time (see [Hunger](hunger.md)); a full stomach
   settling ("You no longer feel satiated.") lets you rest on, or
 - on the [overworld](overworld.md#travel), someone finds your camp (see
   [Camping and foraging](encounters.md#camping-and-foraging)).
