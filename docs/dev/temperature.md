@@ -37,11 +37,15 @@ alike, and one who makes way for the player onto their old cell, `talk.rs::swap_
 from `Actor::weight`, `ice::gives_way`: no draw up to what it holds, a gameplay draw up to twice
 that), then `tread_price` (the `climb` action from water onto ice) and `after_tread` (the plunge:
 `freeze.plunge` dice through `hurt` with `Harm::Spared`, never the last hit point,
-`Event::FellThroughIce`). Bursts: `World::frost` (instant freeze; the frost trap, a burst with
+`Event::FellThroughIce`). `World::fall_in` is the one place of a plunge, walked or by a burst: a
+player trained in Swim then makes a check (`World::keeps_afloat`, two gameplay draws after the
+plunge's dice: Toughness's modifier, `Effect::Swim`, and the talents' Toughness checks against
+`PLUNGE_DIFFICULTY`, 11), which halves the dice's hit points, rounded down, before resistance, and
+marks `Use::Swim` whatever came of it; no check and no draw for one untrained or `plunge_proof`. Bursts: `World::frost` (instant freeze; the frost trap, a burst with
 `frost`; dev `freeze:x,y,r`, which also shows the `frost_burst` effect of `data/effects.toml`
 through `World::frost_look`) and `World::shock` (`Shock::Heat` melts: the fireball trap, a burst
 with `heat`; `Shock::Blast(um)` shatters thinner ice, for blasts without heat, none yet; dev
-`thaw:x,y,r`) are the hooks traps (`world/trap.rs`, `docs/dev/traps.md`) and later spells call. Saved and hashed. Tests: `ice.rs`, `temperature.rs`,
+`thaw:x,y,r`) are the hooks traps (`world/trap.rs`, `docs/dev/traps.md`) and spell types (`docs/dev/spells.md`, a single cell at radius 0) call. Saved and hashed. Tests: `ice.rs`, `temperature.rs`,
 `world/ice_tests.rs` (growth/melt over rests, weight, falling in, climbing out, sinking objects,
 creatures, bursts, saves, replays, a year's catch-up). Tune the look with captures of the Frost
 Grotto (hub stairs nook, the `>` below the first) and the courtyard in winter (`skip:` into

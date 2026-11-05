@@ -110,10 +110,14 @@ pub(super) fn dungeons(content: &Content) -> String {
                 "nothing comes".into(),
             ),
         };
+        let floors = match d.endless {
+            Some(_) => "no end".to_string(),
+            None => d.depth.to_string(),
+        };
         let _ = writeln!(
             out,
-            "| {} | {} | {danger} | {lives} | {strays} | {count} | {back} |",
-            d.name, d.depth
+            "| {} | {floors} | {danger} | {lives} | {strays} | {count} | {back} |",
+            d.name
         );
     }
     let mut levels: Vec<_> = (content.levels())
@@ -135,6 +139,35 @@ pub(super) fn dungeons(content: &Content) -> String {
     out
 }
 
+/// The branches without end: the odds of a floor's generator, its sizes, and the floor from which
+/// the draws stay as they are, the roster's top. Branches by id.
+pub(super) fn endless_branches(content: &Content) -> String {
+    let mut out = String::from(
+        "| Place | Rooms | Rooms' size | Caves | Caves' size | Draws stop rising below |\n\
+         |---|:---:|:---:|:---:|:---:|:---:|\n",
+    );
+    let mut branches: Vec<_> = content.dungeons().collect();
+    branches.sort_by(|a, b| a.id.cmp(&b.id));
+    for d in branches {
+        let (Some(e), Some(plan)) = (d.endless, d.plan(1)) else {
+            continue;
+        };
+        let _ = writeln!(
+            out,
+            "| {} | {} % | {}×{} | {} % | {}×{} | floor {} |",
+            d.name,
+            100 - e.caves,
+            plan.width,
+            plan.height,
+            e.caves,
+            e.caves_size.0,
+            e.caves_size.1,
+            e.roster_depth
+        );
+    }
+    out
+}
+
 /// Every floor of every branch with a danger: its generator, size, danger, and the weight of
 /// each type that lives there at that danger. Branches by id, floors by depth.
 pub(super) fn dungeon_floors(content: &Content) -> String {
@@ -146,6 +179,10 @@ pub(super) fn dungeon_floors(content: &Content) -> String {
     let mut any = false;
     for d in branches {
         let Some(s) = &d.spawning else { continue };
+        // Its floors are drawn as they are made: `endless_branches` tells them.
+        if d.endless.is_some() {
+            continue;
+        }
         for depth in 1..=d.depth {
             let Some(plan) = d.plan(depth) else { continue };
             let Some(rule) = plan.danger else { continue };

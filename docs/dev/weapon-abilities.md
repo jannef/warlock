@@ -197,8 +197,8 @@ Four ship (`data/weapon_abilities/`, each `systems = ["weapon_abilities", "schoo
 "status"]`), all `spell_lands` with a `status` effect and no draw (no `turns`): Thunderstruck
 (evocation 10, Staggered on the other), Wasting (necromancy 10, Weakened), Aegis (abjuration 7,
 Spell ward on self: abjuration's one spell is Blessing, a buff), Lulling (enchantment 10,
-Sluggish). Restoration, transmutation, and divination teach none yet. A talent's rider (Numbing
-cold, `SpellMods`) and a school ability coexist; no talent of their own (Early mastery reaches
+Sluggish). Restoration, transmutation, and divination teach none yet. A talent's rider (`SpellMods`),
+a spell type's (`docs/dev/spells.md` "Spell types"), and a school ability coexist; no talent of their own (Early mastery reaches
 them through `ability_rank`).
 
 ## Talents

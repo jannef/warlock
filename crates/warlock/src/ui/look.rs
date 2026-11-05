@@ -4,7 +4,8 @@
 use crate::render::console::{Cell, Console};
 use warlock_core::Pos;
 use warlock_core::color::Rgb;
-use warlock_core::content::{ActionKind, Content, ServiceKind, Stance};
+use warlock_core::content::{ActionKind, Content, ServiceKind, Stance, and_list};
+use warlock_core::damage::ResistanceWord;
 use warlock_core::magic::Numbers;
 use warlock_core::object::{Stack, phrase, phrase_with};
 use warlock_core::perception::{CellView, PerceptionView, SeenActor};
@@ -42,6 +43,42 @@ pub fn describe(view: &PerceptionView<'_>, p: Pos, blood: bool) -> String {
         Some(description) => format!("{text} {description}"),
         None => text,
     }
+}
+
+/// What the player's Knowledge tells of the creature at `p`, if it tells anything: "You know the
+/// skeleton is immune to poison, resistant to piercing, and vulnerable to bludgeoning." Words of
+/// the `stats` layer's resistances, never a number (spec §8 "Skills": Knowledge).
+pub fn known(view: &PerceptionView<'_>, p: Pos) -> Option<String> {
+    let content = view.content();
+    let actor = view.actor_at(p)?;
+    let known = view.known_resistances(actor);
+    let parts: Vec<String> = [
+        ResistanceWord::Immune,
+        ResistanceWord::Resistant,
+        ResistanceWord::Vulnerable,
+    ]
+    .into_iter()
+    .filter_map(|word| {
+        let kinds: Vec<&str> = (known.iter())
+            .filter(|(_, w)| *w == word)
+            .map(|(k, _)| content.damage_type(*k).name.as_str())
+            .collect();
+        (!kinds.is_empty()).then(|| format!("{} to {}", word.word(), and_list(&kinds)))
+    })
+    .collect();
+    if parts.is_empty() {
+        return None;
+    }
+    let name = &content.creature(actor.creature).name;
+    let who = match proper_name(content, actor) {
+        Some(proper) => proper.to_string(),
+        None => {
+            let the = if actor.ally { "your" } else { "the" };
+            format!("{the} {name}{}", made_of(content, actor).0)
+        }
+    };
+    let parts: Vec<&str> = parts.iter().map(String::as_str).collect();
+    Some(format!("You know {who} is {}.", and_list(&parts)))
 }
 
 /// [`describe`] without a place's note.
@@ -189,9 +226,7 @@ fn describe_cell(view: &PerceptionView<'_>, p: Pos, blood: bool) -> String {
                 // A unique character the player knows by name: "Sister Hild (unhurt), who
                 // cures and mends for gold, on plank floor."; or a named monster by its type's
                 // proper name: "Black Wystan (hostile, unhurt), ...".
-                let proper = (actor.dialogue)
-                    .and_then(|d| content.dialogue(d).name.as_deref())
-                    .or_else(|| warlock_core::content::is_proper(name).then_some(name.as_str()));
+                let proper = proper_name(content, actor);
                 let ally = if actor.ally { "your ally, " } else { "" };
                 match proper {
                     Some(proper) => format!(
@@ -230,6 +265,14 @@ fn describe_cell(view: &PerceptionView<'_>, p: Pos, blood: bool) -> String {
         (CellView::Unknown, Some(heard)) => format!("{heard} here."),
         (CellView::Unknown, None) => "You don't know what is there.".to_string(),
     }
+}
+
+/// The proper name a seen creature goes by, if any: a unique character's or a named monster's.
+fn proper_name<'a>(content: &'a Content, actor: &SeenActor) -> Option<&'a str> {
+    let name = &content.creature(actor.creature).name;
+    (actor.dialogue)
+        .and_then(|d| content.dialogue(d).name.as_deref())
+        .or_else(|| warlock_core::content::is_proper(name).then_some(name.as_str()))
 }
 
 /// What a seen creature sells as a service, as it reads after its name: ", who cures and mends
@@ -497,6 +540,49 @@ mod tests {
 
     /// A disguised mimic is a coffer in look mode, word for word; found out, it is the creature
     /// (spec §8 "Mimics").
+    /// What a wizard's Knowledge tells, in the stats layer's words; nothing of a creature above
+    /// it, nor of what the player cannot see as a creature (a disguised mimic). The core tests
+    /// hold the level's edge (`knowledge_tests.rs`).
+    #[test]
+    fn knowledge_says_what_a_creature_resists_in_words() {
+        let mut files = warlock_core::content::ContentFiles::builtin();
+        files.insert(
+            "levels/look_lore.toml",
+            "name = \"Lore\"\nambient = [255, 255, 255, 0]\nmap = '''\n\
+             #######\n#s.M.d#\n#@.C..#\n#######\n'''\n[legend]\n\".\" = \"floor\"\n\
+             \"#\" = \"wall\"\n\
+             \"@\" = { terrain = \"floor\", spawn = \"player\" }\n\
+             \"s\" = { terrain = \"floor\", creature = \"skeleton\" }\n\
+             \"d\" = { terrain = \"floor\", creature = \"rotting_drake\" }\n\
+             \"M\" = { terrain = \"floor\", chest = 1, mimic = true }\n\
+             \"C\" = { terrain = \"chest\", chest = 1 }\n",
+        );
+        files.insert(
+            "scenarios/look_lore.toml",
+            "name = \"L\"\nstart_level = \"look_lore\"\n",
+        );
+        let content = Arc::new(Content::load(&files).expect("content"));
+        let spec = "human,male,wizard".parse().expect("a character");
+        let w = World::start_run(content, "look_lore", None, Some(&spec), None, true)
+            .expect("a wizard's run");
+        let view = w.perception();
+        assert_eq!(
+            known(&view, Pos::new(1, 1)).as_deref(),
+            Some(
+                "You know the skeleton is immune to poison, resistant to piercing, and \
+                 vulnerable to bludgeoning."
+            )
+        );
+        assert_eq!(known(&view, Pos::new(5, 1)), None, "above their Knowledge");
+        assert_eq!(
+            known(&view, Pos::new(3, 1)),
+            None,
+            "a chest, as they see it"
+        );
+        assert_eq!(known(&view, w.player_pos()), None);
+        assert_eq!(known(&view, Pos::new(2, 1)), None, "nobody there");
+    }
+
     #[test]
     fn a_disguised_mimic_looks_like_a_chest() {
         let mut files = warlock_core::content::ContentFiles::builtin();

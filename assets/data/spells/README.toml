@@ -62,8 +62,9 @@
 #                 name in lower case, and its damage type's verb)
 #     message     said as it is cast
 #     noise       { sound, loudness } where it goes off (a burst's centre, else the caster)
-#     blast, heat, frost  a burst's, as a scroll's: walls it breaks, ice it melts, water it
-#                 freezes
+#     blast       a burst's, as a scroll's: the walls it breaks
+#     heat, frost  a burst's, standing in for what its type does to ice and water (`[types]` in
+#                 ../spells.toml): only for a spell that wants other than its type's
 #   [spell.grows]  its ladders (the spell scaling design §4, §6): what it does as the caster's
 #                 stats rise. Every key optional; a dimension left out never grows by stats.
 #     damage      a `damage` spell's roll        heal      a `heal` spell's roll

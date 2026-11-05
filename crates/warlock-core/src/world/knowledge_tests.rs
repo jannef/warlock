@@ -59,7 +59,16 @@ fn knowledge_adds_only_above_the_creatures_level_a_little() {
         super::knowledge::resist_bonus(&BUILTIN, &me, at)
     };
     assert_eq!(bonus(&w, None), 0, "untrained gives nothing");
-    for (margin, expected) in [(-5, 0), (0, 0), (4, 0), (5, 1), (40, 4), (300, 4)] {
+    for (margin, expected) in [
+        (-5, 0),
+        (0, 0),
+        (2, 0),
+        (3, 1),
+        (4, 1),
+        (5, 2),
+        (40, 6),
+        (300, 6),
+    ] {
         assert_eq!(bonus(&w, Some(margin)), expected, "{margin} above");
     }
     // A rank of 0 stands above no creature of level 1 or more.
@@ -74,7 +83,7 @@ fn knowledge_adds_only_above_the_creatures_level_a_little() {
 #[test]
 fn knowledge_raises_the_check_against_a_creatures_drain_only() {
     let drain = drain();
-    // Each seed's outcome matches the check rolled with the bonus Knowledge gives (+4 at 40
+    // Each seed's outcome matches the check rolled with the bonus Knowledge gives (+6 at 40
     // above), and against no creature (a scroll's backlash) without it.
     let holds = |by_creature: bool| -> usize {
         let mut held = 0;
@@ -86,7 +95,7 @@ fn knowledge_raises_the_check_against_a_creatures_drain_only() {
             // What the rules add besides (talents, a sign's).
             let talents = w.state.player().talent_mods(&BUILTIN);
             let base = talents.check(Stat::Willpower) + talents.drain_checks;
-            let bonus = if by_creature { 4 } else { 0 };
+            let bonus = if by_creature { 6 } else { 0 };
             let mut expected = w.state.rng.clone();
             let resisted = check(&mut expected, base + bonus, drain.difficulty);
             let by = by_creature.then_some(creature);
@@ -120,7 +129,7 @@ fn resisting_marks_knowledge_and_creatures_get_nothing() {
         assert_eq!(w.resisting(player, None), 0);
         assert_eq!(w.state.training, training);
         let rng = w.state.rng.clone();
-        assert_eq!(w.resisting(player, Some(creature)), 4);
+        assert_eq!(w.resisting(player, Some(creature)), 6);
         assert_eq!(w.state.rng, rng, "never the gameplay stream");
         marked += w
             .state
@@ -151,4 +160,100 @@ fn discovery_experience_marks_knowledge() {
     assert_eq!(marks(&w), 1, "a first kill of a kind");
     w.earn_kill(kind);
     assert_eq!(marks(&w), 1, "the second pays no discovery");
+}
+
+/// A room of a skeleton (level 3; immune to poison, resistant to piercing, vulnerable to
+/// bludgeoning), a kobold (no resistance), and the player, with no Knowledge.
+fn lore_room() -> (World, Pos, Pos) {
+    let mut files = crate::content::ContentFiles::builtin();
+    files.insert(
+        "levels/know_room.toml",
+        "name = \"Room\"\nambient = [255, 255, 255, 0]\nmap = '''\n\
+         #####\n#s.k#\n#@..#\n#####\n'''\n[legend]\n\".\" = \"floor\"\n\"#\" = \"wall\"\n\
+         \"@\" = { terrain = \"floor\", spawn = \"player\" }\n\
+         \"s\" = { terrain = \"floor\", creature = \"skeleton\" }\n\
+         \"k\" = { terrain = \"floor\", creature = \"kobold\" }\n",
+    );
+    files.insert(
+        "scenarios/know_room.toml",
+        "name = \"R\"\nstart_level = \"know_room\"\n",
+    );
+    let content = Arc::new(Content::load(&files).expect("content"));
+    let mut w = World::new(content, "know_room", None).expect("world");
+    w.player_mut().skills = Default::default();
+    (w, Pos::new(1, 1), Pos::new(3, 1))
+}
+
+/// What the player's view says of whoever is seen at `at`, in the words' ids.
+fn known_at(w: &World, at: Pos) -> Vec<(String, &'static str)> {
+    let view = w.perception();
+    let actor = view.actor_at(at).expect("seen");
+    (view.known_resistances(actor).into_iter())
+        .map(|(kind, word)| (w.content().damage_type(kind).id.clone(), word.word()))
+        .collect()
+}
+
+fn train_knowledge(w: &mut World, value: i32) {
+    let id = w.content().skill_id("knowledge").expect("knowledge");
+    w.player_mut().skills.add(id, value);
+}
+
+fn resist_bonus_against(w: &World, at: Pos) -> i32 {
+    let view = w.perception();
+    let creature = view.actor_at(at).expect("seen").creature;
+    let level = u16::from(w.content().creature(creature).level);
+    super::knowledge::resist_bonus(w.content(), w.state.player(), level)
+}
+
+#[test]
+fn knowledge_above_a_creatures_level_tells_what_it_resists_and_at_it_nothing() {
+    let (mut w, skeleton, _) = lore_room();
+    assert!(known_at(&w, skeleton).is_empty(), "untrained");
+    train_knowledge(&mut w, 3);
+    assert!(known_at(&w, skeleton).is_empty(), "at its level");
+    // One above is enough, though the check's curve gives nothing yet.
+    train_knowledge(&mut w, 1);
+    assert_eq!(resist_bonus_against(&w, skeleton), 0);
+    let known = known_at(&w, skeleton);
+    let told: Vec<(&str, &str)> = (known.iter())
+        .map(|(kind, word)| (kind.as_str(), *word))
+        .collect();
+    assert!(told.contains(&("piercing", "resistant")), "{told:?}");
+    assert!(told.contains(&("bludgeoning", "vulnerable")), "{told:?}");
+    assert!(told.contains(&("poison", "immune")), "{told:?}");
+    assert_eq!(told.len(), 3, "{told:?}");
+}
+
+#[test]
+fn knowledge_tells_nothing_of_a_creature_with_no_resistance_nor_of_the_player() {
+    let (mut w, _, kobold) = lore_room();
+    train_knowledge(&mut w, 200);
+    assert!(known_at(&w, kobold).is_empty());
+    assert!(known_at(&w, w.player_pos()).is_empty(), "the stats' say");
+}
+
+#[test]
+fn knowledge_tells_the_kind_never_what_this_one_has_on_it() {
+    let (mut w, skeleton, _) = lore_room();
+    train_knowledge(&mut w, 200);
+    let before = known_at(&w, skeleton);
+    let id = w.perception().actor_at(skeleton).expect("seen").id;
+    let warmed = w.content().status_id("warmed").expect("warmed");
+    w.afflict(id, warmed, 1, None, &mut Vec::new());
+    let fire = w.content().damage_type_id("fire").expect("fire");
+    assert_eq!(
+        w.resistances_of(id).get(Some(fire)),
+        50,
+        "it does resist now"
+    );
+    assert_eq!(known_at(&w, skeleton), before);
+}
+
+#[test]
+fn knowing_is_not_practising_and_reading_it_changes_no_state() {
+    let (mut w, skeleton, _) = lore_room();
+    train_knowledge(&mut w, 200);
+    let hash = w.state_hash();
+    assert!(!known_at(&w, skeleton).is_empty());
+    assert_eq!(w.state_hash(), hash);
 }

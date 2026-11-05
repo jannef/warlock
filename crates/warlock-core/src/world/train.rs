@@ -13,11 +13,32 @@
 //!
 //! Only the player trains for now; creatures keep the skills their type gives them.
 
-use super::World;
+use super::{ActorId, World};
+use crate::combat::{Blow, Category, Strike};
 use crate::content::StatUse;
 use crate::skills::Use;
 
 impl World {
+    /// `blow`, a plain miss at the player (`Missed { by: None }`) made a dodge one time in
+    /// four, on the training stream (`docs/design/skill-uses.md` Tu1): everything after it sees
+    /// one dodge. Blows between creatures, and at creatures, draw nothing.
+    pub(super) fn plain_miss_dodged(
+        &mut self,
+        attacker: ActorId,
+        target: ActorId,
+        blow: Option<Blow>,
+    ) -> Option<Blow> {
+        let plain = blow.is_some_and(|b| matches!(b.strike, Strike::Missed { by: None }));
+        if plain
+            && target == self.state.player
+            && attacker != target
+            && self.state.training.chance(25)
+        {
+            return Some(Blow::missed(Some(Category::Dodge)));
+        }
+        blow
+    }
+
     /// Whether any of the player's trained skills earns marks on `used`: when none does, a use
     /// need not even be looked for.
     pub(super) fn trains(&self, used: Use) -> bool {

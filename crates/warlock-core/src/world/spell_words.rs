@@ -2,7 +2,8 @@
 //! 11: the owner's one exception to hidden numbers, a spell's roll shown as a weapon's is): its
 //! roll with its damage type, "healed", or a summon's "called" (`4d6 fire`, `3d6 healed`,
 //! `1d2 called`), its reach (`range 11`,
-//! `radius 2`), and a reroll (`Your 1s are rolled again.`). The abilities menu, the wand's
+//! `radius 2`), and a reroll (`Your 1s are rolled again.`). A damage spell's roll ends with its
+//! type's rule (`4d6 fire, burns one in four`, `data/spells.toml`'s `[types]`). The abilities menu, the wand's
 //! description, and the `spells` dump all say them so; built from what the caster has, never a
 //! hidden number of anyone else's.
 
@@ -19,7 +20,7 @@ pub struct SpellRoll {
     pub roll: Roll,
     /// The kind of harm; `None` for healing.
     pub damage_type: Option<DamageTypeId>,
-    /// The roll as the menu shows it: `4d6 fire`, `3d6 healed`.
+    /// The roll as the menu shows it: `4d6 fire, burns one in four`, `3d6 healed`.
     pub text: String,
 }
 
@@ -54,8 +55,13 @@ pub fn roll_words(content: &Content, spell: &SpellData, roll: Roll) -> SpellRoll
     } else {
         roll.to_string()
     };
+    // The rule every spell of its type carries (`data/spells.toml`'s `[types]`).
+    let rule = (content.spell_type(spell.damage_type)).and_then(|t| t.words.as_deref());
     SpellRoll {
-        text: format!("{shown} {what}"),
+        text: match rule {
+            Some(rule) => format!("{shown} {what}, {rule}"),
+            None => format!("{shown} {what}"),
+        },
         roll,
         damage_type: spell.damage_type,
     }
@@ -127,14 +133,26 @@ mod tests {
             assert_eq!(words.as_ref().map(|w| w.roll), roll, "{}", def.id);
             let Some(words) = words else { continue };
             let what = match def.damage_type {
-                Some(kind) => BUILTIN.damage_type(kind).name.clone(),
+                Some(kind) => {
+                    let name = &BUILTIN.damage_type(kind).name;
+                    match BUILTIN
+                        .spell_type(Some(kind))
+                        .and_then(|t| t.words.as_ref())
+                    {
+                        Some(rule) => format!("{name}, {rule}"),
+                        None => name.clone(),
+                    }
+                }
                 None => "healed".into(),
             };
             assert_eq!(words.text, format!("{} {what}", words.roll), "{}", def.id);
         }
         let text = |id: &str| view.own_spell_roll(sp(id)).map(|r| r.text);
         // Fireball at Intelligence 19: rung 3 by stats (5d6), Empower a rung more (5d6+2).
-        assert_eq!(text("fireball").as_deref(), Some("5d6+2 fire"));
+        assert_eq!(
+            text("fireball").as_deref(),
+            Some("5d6+2 fire, burns one in four")
+        );
         assert_eq!(text("cure_wounds").as_deref(), Some("3d6 healed"));
         assert_eq!(text("haste"), None, "a buff rolls nothing");
         assert_eq!(view.own_spell_reroll(sp("fireball")), 1, "Sure hand");
@@ -153,7 +171,7 @@ mod tests {
         let spells = value["spells"].as_array().expect("spells");
         let of = |id: &str| (spells.iter()).find(|s| s["id"] == id).expect(id);
         let fireball = of("fireball");
-        assert_eq!(fireball["roll"], "5d6+2 fire");
+        assert_eq!(fireball["roll"], "5d6+2 fire, burns one in four");
         assert_eq!(fireball["damage_type"], "fire");
         assert_eq!(fireball["reach"]["radius"], 2);
         assert!(fireball["reach"]["range"].is_number());

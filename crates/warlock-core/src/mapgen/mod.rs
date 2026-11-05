@@ -476,20 +476,24 @@ pub fn generate_for(
     let plan = def
         .plan(depth)
         .ok_or_else(|| GenError::NotAGeneratedLevel(id.to_string()))?;
+    let plan = def
+        .endless
+        .map_or(plan, |e| endless_plan(plan, e, seed, id));
     let pal = Palette::resolve(content).map_err(GenError::Content)?;
     let room_odds =
         (def.room_odds(depth)).ok_or_else(|| GenError::NotAGeneratedLevel(id.to_string()))?;
     let odds = (room_odds, def.shop_odds(depth));
     let needs = Needs {
-        down: depth < def.depth,
+        down: def.leads_down(depth),
         creatures: &def.creatures,
         key: def.key,
         vaults: def.vaults(depth),
     };
-    let up_to = if depth > 1 {
-        Some(def.level_id(depth - 1))
-    } else {
-        entered_from.map(str::to_string)
+    let up_to = match (depth > 1, def.endless) {
+        (true, _) => Some(def.level_id(depth - 1)),
+        // However the first floor was reached (from the second, it may be), it climbs out.
+        (false, Some(_)) => content.way_into(id).map(str::to_string),
+        (false, None) => entered_from.map(str::to_string),
     };
     let down_to = needs.down.then(|| def.level_id(depth + 1));
 
@@ -621,6 +625,26 @@ pub fn generate_for(
         }
     }
     Err(GenError::Exhausted(MAX_ATTEMPTS))
+}
+
+/// The generator and size of a floor of an endless branch, drawn as it is made from its own
+/// stream `floor_kind/<level id>` (spec §7 "The endless branch"), so the draw moves nothing else.
+fn endless_plan(
+    plan: crate::content::LevelPlan,
+    endless: crate::content::Endless,
+    seed: u64,
+    id: &str,
+) -> crate::content::LevelPlan {
+    if !Rng::stream(seed, &format!("floor_kind/{id}")).chance(endless.caves.into()) {
+        return plan;
+    }
+    let (width, height) = endless.caves_size;
+    crate::content::LevelPlan {
+        generator: Generator::Caves,
+        width,
+        height,
+        ..plan
+    }
 }
 
 /// Hides the branch's traps on a generated level (spec §8 "Traps"): `traps_per_level` of them,
