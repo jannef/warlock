@@ -475,12 +475,16 @@ developer notes (CLAUDE.md, `docs/dev/`).
     creature's ability (a drain, §8 "Stats"; exposure to a disease its attack carries, §8
     "Diseases"; struggling free of its hold, §8 "Status effects") adds what the `resist` benefit
     gives, read at how far the skill's value stands **above the creature's level** (its type's),
-    not at the value: nothing at or below it, `curve = [[0, 0], [5, 1], [40, 4]]` (+1 at 5 above,
-    +4 from 40 above), at most 6 (`MAX_RESIST_BONUS`), magic items' and talents' skill bonuses
+    not at the value: nothing at or below it, `curve = [[0, 0], [5, 2], [40, 6]]` (+2 at 5 above,
+    +6 from 40 above), at most 6 (`MAX_RESIST_BONUS`), magic items' and talents' skill bonuses
     counted. Creatures resisting each other get nothing; a check no creature asked for (a scroll's
     backlash, rotten food, wading) neither. It is marked by `discover` (100 %) and `resist` (25 %).
     Nothing is said when it helps; the Skills screen's description says it in words; the wiki
-    has the curve. One hook, `World::resisting` (`world/knowledge.rs`).
+    has the curve. One hook, `World::resisting` (`world/knowledge.rs`). Look mode (§6) says what
+    a seen creature's kind resists, is immune to, and is vulnerable to, in the words of the
+    character screen's resistances and never a number, once the skill's value stands above its
+    level at all, with the same bonuses counted (#1030; `PerceptionView::known_resistances`): the
+    kind's own, not what this one wears or has on it. Knowing is not practising: no marks.
   - **Sneak attack** and **Initiative** (#682; §8 "Surprise and sneak attacks"): Sneak attack
     (`kind = "rules"`, after Search) gives `sneak_dice` (`steps = [1, 25, 50, 75, 100], every =
     50`: 1d6 trained at all, 5d6 at 100, 7d6 at 200; read by `World::sneak_dice`) and `surprise`

@@ -262,17 +262,18 @@ benefit = [{ effect = "intimidate", curve = [[0, 0], [100, 8], [200, 12]] }]
 [[skill]]
 id = "knowledge"
 name = "Knowledge"
-description = "Lore of history, peoples, places, and the things that live there. Knowing your enemy helps you resist its powers."
+description = "Lore of history, peoples, places, and the things that live there. Knowing your enemy helps you resist its powers and tells you what it shrugs off and what it fears."
 kind = "action"
 # Know your enemy (#667; the use and the effect are documented here, not in the header, while
 # other skills' work is in flight): marked by "discover" (discovery experience gained: a first
 # kill of a kind, an arrival that pays) and by "resist" (a check rolled to resist a creature's
 # ability: a drain, a disease its attack carries, struggling free of its hold; whatever comes of
 # it). Effect "resist": points added to that check, read at how far the value stands ABOVE THE
-# CREATURE'S LEVEL (not at the value): nothing at or below it, +1 at 5 above, +4 at 40 above and
-# past (at most 6). The player's only: creatures resisting each other get nothing.
+# CREATURE'S LEVEL (not at the value): nothing at or below it, +2 at 5 above, +6 at 40 above and
+# past (at most 6). The player's only: creatures resisting each other get nothing. Standing above
+# the level at all also tells, in look mode, what the creature resists (#1030; no marks).
 mark = [{ on = "discover", chance = 100 }, { on = "resist", chance = 25 }]
-benefit = [{ effect = "resist", curve = [[0, 0], [5, 1], [40, 4]] }]
+benefit = [{ effect = "resist", curve = [[0, 0], [5, 2], [40, 6]] }]
 
 [[skill]]
 id = "listen"

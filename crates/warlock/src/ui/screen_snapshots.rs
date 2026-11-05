@@ -1367,6 +1367,40 @@ fn saying_words() {
     }
 }
 
+/// Look mode with a wizard's Knowledge (#1030): the skeleton below it says what it resists on the
+/// hint's row, in words; the rotting drake above it says nothing more.
+#[test]
+fn looking_with_knowledge() {
+    let mut files = warlock_core::content::ContentFiles::builtin();
+    files.insert(
+        "levels/look_lore.toml",
+        "name = \"Lore\"\nambient = [255, 255, 255, 0]\nmap = '''\n\
+         #####\n#s.d#\n#@..#\n#####\n'''\n[legend]\n\".\" = \"floor\"\n\"#\" = \"wall\"\n\
+         \"@\" = { terrain = \"floor\", spawn = \"player\" }\n\
+         \"s\" = { terrain = \"floor\", creature = \"skeleton\" }\n\
+         \"d\" = { terrain = \"floor\", creature = \"rotting_drake\" }\n",
+    );
+    files.insert(
+        "scenarios/look_lore.toml",
+        "name = \"L\"\nstart_level = \"look_lore\"\n",
+    );
+    let content = Arc::new(Content::load(&files).expect("content"));
+    for (name, keys) in [
+        ("look-knowledge-tells", "l Up"),
+        ("look-knowledge-silent", "l Up Right Right"),
+    ] {
+        let case = Case {
+            name,
+            scenario: "look_lore",
+            character: Some("human,male,wizard"),
+            run: true,
+            keys: Some(keys),
+            ..BASE
+        };
+        insta::assert_snapshot!(case.name, render(&case, content.clone()));
+    }
+}
+
 /// A witch who tames a hound beside her familiar (a witch's Handle animal is one draw in four:
 /// here the content gives it): Give's list, then the way it asks with both beside her, and the
 /// fastening once the way is told (the owner, #907 Q4).

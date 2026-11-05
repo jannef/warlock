@@ -1878,6 +1878,14 @@ pub fn json(world: &World, layers: &[Layer], include_state: bool) -> Value {
                 "id": a.id, "kind": a.kind, "creature": def.id, "glyph": a.glyph(content).to_string(),
                 "fg": a.fg(content).to_string(), "pos": a.pos, "health": a.health, "effects": effects,
             });
+            // What the player's Knowledge tells of it, in words (spec §8 "Skills").
+            let known = view.known_resistances(a);
+            if !known.is_empty() {
+                let known: serde_json::Map<String, Value> = (known.into_iter())
+                    .map(|(k, w)| (content.damage_type(k).id.clone(), json!(w.word())))
+                    .collect();
+                seen["known"] = Value::Object(known);
+            }
             // A composite's colours, top band first (spec §8 "Animated objects").
             let bands = a.shape.as_ref().map_or(&[][..], |s| s.bands());
             if !bands.is_empty() {

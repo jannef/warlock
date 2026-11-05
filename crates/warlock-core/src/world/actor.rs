@@ -21,7 +21,7 @@ use crate::magic::Mods;
 use crate::noise::Heard;
 use crate::object::{Stack, Weight, weight_of};
 use crate::resource::Pools;
-use crate::skills::{Effect, Skills};
+use crate::skills::{Effect, SkillId, Skills};
 use crate::stats::{PerStat, Stat, StatDamage, Stats};
 use crate::status::Effects;
 use crate::talent::{TalentMods, Talents};
@@ -476,6 +476,17 @@ impl Actor {
     /// value stands above `floor` (Knowledge against a creature of level `floor`,
     /// [`Effect::Resist`]).
     pub fn skill_effect_above(&self, content: &Content, effect: Effect, floor: u16) -> i32 {
+        (self.skills).effect_above(content, effect, &self.skill_bonus(content), floor)
+    }
+
+    /// Whether a skill of its giving `effect` stands above `floor`, counting what
+    /// [`Actor::skill_effect_above`] counts ([`Skills::stands_above`]).
+    pub(crate) fn skill_stands_above(&self, content: &Content, effect: Effect, floor: u16) -> bool {
+        (self.skills).stands_above(content, effect, &self.skill_bonus(content), floor)
+    }
+
+    /// What its talents and what it wears and wields add to its skills' values.
+    fn skill_bonus(&self, content: &Content) -> Vec<(SkillId, i32)> {
         // Talents (spec §8 "Class abilities": Commanding) raise skills as magic items do.
         let talents = match self.talents.is_empty() {
             true => Vec::new(),
@@ -491,11 +502,11 @@ impl Actor {
             }
         };
         if self.equipment.is_empty() && talents.is_empty() {
-            return (self.skills).effect_above(content, effect, &[], floor);
+            return Vec::new();
         }
         let mut bonus = self.mods(content).skills().to_vec();
         bonus.extend(talents);
-        (self.skills).effect_above(content, effect, &bonus, floor)
+        bonus
     }
 
     /// Its maximum hit points: its (effective) Toughness plus [`Actor::hp_base`] plus what it
