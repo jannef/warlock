@@ -80,6 +80,7 @@ impl World {
             Action::Temper { .. } => ActionKind::Temper,
             Action::Give { .. } => ActionKind::Wear,
             Action::Disarm(_) => ActionKind::Disarm,
+            Action::Listen(_) => ActionKind::Wait,
             Action::Heal { .. } => ActionKind::Heal,
             Action::Use(active, _)
             | Action::UseAt(active, _)

@@ -446,6 +446,8 @@ pub enum Use {
     Sprung,
     /// A sound heard that is not news while the player rests or waits (spec §5 "Hearing").
     Overhear,
+    /// A turn spent listening at a closed door (spec §5 "Hearing"), whatever is heard.
+    Listen,
 }
 
 impl Use {
@@ -496,6 +498,7 @@ impl Use {
             Use::Sight => "first seeing a creature that has not noticed you",
             Use::Sprung => "a hidden trap going off under you, or under a creature you see",
             Use::Overhear => "hearing a sound that is no news while resting or waiting",
+            Use::Listen => "a turn spent listening at a closed door",
         }
     }
 }
@@ -631,6 +634,7 @@ impl Use {
             Use::Sight => "sight",
             Use::Sprung => "sprung",
             Use::Overhear => "overhear",
+            Use::Listen => "listen",
         }
     }
 }
