@@ -111,7 +111,9 @@ terrain parse with). The model is `warlock-core/src/damage.rs`: `Damage { amount
 Option<DamageTypeId> }` (`None` untyped), `Kinds` (at most `MAX_KINDS` 2; `best(resistance,
 protection)` picks the kind a blow does, no draw), `Rider { kind, dice }` (added damage),
 `Resistances` (one percent per type; `sum(count, innate, gear)` caps at `MAX_RESISTANCE` 75 /
-`MIN_RESISTANCE` −100 and keeps an innate `IMMUNE` 100), `resist(amount, percent)` (nearest,
+`MIN_RESISTANCE` −100 and keeps an innate `IMMUNE` 100; a spell type's `immune_tags` is laid on the
+tagged creature types' `resist` at load, `content/spell_type.rs::lay_immunities`, so every reader
+has it: `docs/dev/spells.md` "Spell types"), `resist(amount, percent)` (nearest,
 half up), `Protection { base, against }`, and `ResistanceWord` (the player's words). **Every
 damage path goes through one of two doors**: a blow rolled against Defence through
 `combat::strike` (its `Profile` carries `kinds` and `riders`, set by `Actor::melee`,

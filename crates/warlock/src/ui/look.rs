@@ -564,8 +564,8 @@ mod tests {
         assert_eq!(
             known(&view, Pos::new(1, 1)).as_deref(),
             Some(
-                "You know the skeleton is immune to poison, resistant to piercing, and \
-                 vulnerable to bludgeoning."
+                "You know the skeleton is immune to poison and necrotic, resistant to piercing, \
+                 and vulnerable to bludgeoning."
             )
         );
         assert_eq!(known(&view, Pos::new(5, 1)), None, "above their Knowledge");

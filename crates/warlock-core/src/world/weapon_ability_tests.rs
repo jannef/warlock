@@ -1001,7 +1001,11 @@ fn a_reflection_spends_no_more_mana_and_keeps_the_casters_climbed_dice() {
         "a rung up from 3d6"
     );
     let mut most = 0;
+    let (home, spot) = (w.player_pos(), w.state.actors[&kobold].pos);
     for _ in 0..400 {
+        // A force spell's critical drives either back (`spell_type.rs`).
+        w.player_mut().pos = home;
+        w.state.actors.get_mut(&kobold).expect("kobold").pos = spot;
         w.spend_actions(kobold, &mut Vec::new());
         let blows = cast_at_kobold(&mut w, kobold, "use:arcane_bolt");
         // Paid once (a turn's regeneration may come back already).

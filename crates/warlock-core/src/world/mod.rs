@@ -1852,6 +1852,8 @@ mod spell_list_tests;
 #[cfg(test)]
 mod spell_talent_tests;
 #[cfg(test)]
+mod spell_type_force_tests;
+#[cfg(test)]
 mod spell_type_tests;
 #[cfg(test)]
 mod spirit_weapon_tests;
