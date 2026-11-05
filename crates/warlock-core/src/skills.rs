@@ -351,6 +351,14 @@ pub enum Use {
     /// A check rolled to resist a creature's ability (spec §8 "Skills": Knowledge), whatever
     /// comes of it.
     Resist,
+    /// A creature seen for the first time that has not noticed the player (spec §8 "Surprise and
+    /// sneak attacks"): Spot's passive side.
+    Sight,
+    /// A hidden trap that went off under the player, or under a creature they see (spec §8
+    /// "Traps").
+    Sprung,
+    /// A sound heard that is not news while the player rests or waits (spec §5 "Hearing").
+    Overhear,
 }
 
 impl Use {
@@ -386,6 +394,9 @@ impl Use {
             Use::Appraise => "telling something you carry for what it is",
             Use::Discover => "gaining discovery experience (a first kill of a kind, a new place)",
             Use::Resist => "resisting a creature's ability (a drain, a disease, a hold)",
+            Use::Sight => "first seeing a creature that has not noticed you",
+            Use::Sprung => "a hidden trap going off under you, or under a creature you see",
+            Use::Overhear => "hearing a sound that is no news while resting or waiting",
         }
     }
 }
@@ -506,6 +517,9 @@ impl Use {
             Use::Appraise => "appraise",
             Use::Discover => "discover",
             Use::Resist => "resist",
+            Use::Sight => "sight",
+            Use::Sprung => "sprung",
+            Use::Overhear => "overhear",
         }
     }
 }

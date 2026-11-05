@@ -50,6 +50,7 @@ use crate::damage::Damage;
 use crate::geom::{Dir, Pos};
 use crate::object::Stack;
 use crate::perception::VIEW_RADIUS;
+use crate::skills::Use;
 use crate::stats::Stat;
 use crate::talent::TalentMods;
 use std::collections::BTreeSet;
@@ -96,6 +97,18 @@ impl World {
         };
         self.warp_step(at, victim, events);
         climb
+    }
+
+    /// A hidden trap going off teaches Detect traps (`Use::Sprung`): always when it goes off
+    /// under the player, half the time when it goes off under a creature they see.
+    fn train_from_sprung(&mut self, hidden: bool, at: Pos, victim: ActorId) {
+        if !hidden || !self.trains(Use::Sprung) {
+            return;
+        }
+        let seen = victim != self.state.player && self.perception.sees_actors_at(at);
+        if victim == self.state.player || (seen && self.state.training.chance(50)) {
+            self.train(Use::Sprung);
+        }
     }
 
     /// Whether the player, `victim`, steps onto the trap at `at` without setting it off (Light
@@ -147,7 +160,7 @@ impl World {
         let Some(trap) = level.traps.get_mut(&at) else {
             return 0;
         };
-        let (kind, dir) = (trap.kind, trap.dir);
+        let (kind, dir, hidden) = (trap.kind, trap.dir, !trap.known);
         if let Some(charges) = &mut trap.charges {
             *charges = charges.saturating_sub(1);
             if *charges == 0 {
@@ -155,6 +168,7 @@ impl World {
             }
         }
         self.sprung += 1;
+        self.train_from_sprung(hidden, at, victim);
         events.push(Event::TrapSprung {
             trap: kind,
             at,
