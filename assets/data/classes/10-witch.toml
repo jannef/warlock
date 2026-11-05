@@ -47,6 +47,7 @@ abilities = [
     { level = 28, talent = "rouse_the_dead" },
     { level = 32, talent = "curse_of_sloth" },
     { level = 40, talent = "blight" },
+    { level = 44, talent = "beguile" },
     { level = 50, talent = "cauldron" },
     { level = 60, talent = "hags_bargain" },
 ]

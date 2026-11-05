@@ -15,10 +15,10 @@ expression: "render(case, content.clone())"
            ┌─ Read ─────────────────────────────────────────────────────────────────────┐
            │                                                                            │
            │ Scrolls                                                                    │
-           │ > a - ? 2 scrolls labelled ZIMULGAR                                 100 g  │
-           │   b - ? 2 scrolls labelled HUHU                                     100 g  │
-           │   c - ? 2 scrolls labelled XAMKATHU                                 100 g  │
-           │   d - ? 3 scrolls labelled NIHNIH                                   150 g  │
+           │ > a - ? 2 scrolls labelled SANKLAABAR                               100 g  │
+           │   b - ? 2 scrolls labelled ZIMIXDU                                  100 g  │
+           │   c - ? 2 scrolls labelled OMPRA                                    100 g  │
+           │   d - ? 3 scrolls labelled BEKYO                                    150 g  │
            │                                                                            │
            │ a-d or Enter read   Esc cancel                                             │
            └────────────────────────────────────────────────────────────────────────────┘

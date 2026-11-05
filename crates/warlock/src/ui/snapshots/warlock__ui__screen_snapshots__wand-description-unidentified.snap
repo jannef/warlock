@@ -3,7 +3,7 @@ source: crates/warlock/src/ui/screen_snapshots.rs
 expression: "render(case, content.clone())"
 ---
  There are several objects here. (×2)
- You pick up an elm wand and a cedar wand.
+ You pick up a copper wand and a holly wand.
 
 
 
@@ -12,9 +12,9 @@ expression: "render(case, content.clone())"
 
                   ┌─ Item ───────────────────────────────────────────────────────┐
                   │                                                              │
-                  │ - Elm wand                                                   │
+                  │ - Copper wand                                                │
                   │                                                              │
-                  │ Elm wand · wood · 200 g                                      │
+                  │ Copper wand · wood · 200 g                                   │
                   │                                                              │
                   │ Readied: missile weapon                                      │
                   │                                                              │

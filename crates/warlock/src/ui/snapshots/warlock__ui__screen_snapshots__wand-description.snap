@@ -2,7 +2,7 @@
 source: crates/warlock/src/ui/screen_snapshots.rs
 expression: "render(case, content.clone())"
 ---
- You pick up an elm wand and a cedar wand.
+ You pick up a copper wand and a holly wand.
  This is a wand of magic missile (12 charges)! This is a wand of fireball (7 charges)!
 
 

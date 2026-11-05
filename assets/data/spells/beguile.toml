@@ -1,0 +1,19 @@
+# Beguile (the spell types design §7 entry 34; `docs/dev/allies.md` "Charmed"): a creature you see
+# becomes your ally for a while, against its own band, and is itself again where it stands when
+# the charm ends, or as soon as you leave its level. No check, no level limit; refused on a
+# unique, an animated thing, and what has no mind (`mindless`, by tag).
+[[spell]]
+id = "beguile"
+name = "Beguile"
+description = "A creature you see nearby takes you for a friend a while: it fights beside you, and goes its own way when the charm ends."
+level = 18
+school = "enchantment"
+kind = "hex"
+shape = "ray"
+resolution = "auto"
+range = 6
+effect = { charm = { minutes = 5, mindless = ["undead", "construct", "vermin"], message = "takes you for a friend", ends = "shakes off the charm" } }
+
+[spell.grows]
+range = "willpower 14 7, 18 8"
+degrees = "presence 14 8, 18 12, 22 16"
