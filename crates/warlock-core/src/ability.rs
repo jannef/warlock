@@ -60,6 +60,11 @@ pub enum Ability {
     /// this in its place). Had by whoever is trained in it; usable whenever they have it (the
     /// rules refuse, taking no time, where they know of no trap).
     Disarm,
+    /// Listen at a closed door next to the actor (spec §5 "Hearing"; `world/listen.rs`):
+    /// [`Action::Listen`], the use of Listen (the skill with the hearing effect, listed as this
+    /// in its place). Had by whoever is trained in it; usable whenever they have it (the rules
+    /// refuse, taking no time, where there is no closed door).
+    Listen,
     /// Pick the lock of a door next to the actor (spec §8 "Doors"): [`Action::PickLock`], the
     /// use of Open lock (the skill with the pick effect, listed as this in its place). Had by
     /// whoever is trained in it; usable whenever they have it (the rules refuse, taking no time,
@@ -429,6 +434,7 @@ impl Ability {
     fn use_of(def: &SkillDef, content: &Content) -> Option<Ability> {
         let gives = |effect| def.benefits.iter().any(|b| b.effect == effect);
         (gives(Effect::Disarm).then_some(Ability::Disarm))
+            .or_else(|| gives(Effect::Hearing).then_some(Ability::Listen))
             .or_else(|| gives(Effect::Pick).then_some(Ability::PickLock))
             .or_else(|| gives(Effect::Heal).then_some(Ability::Heal))
             .or_else(|| {
@@ -509,6 +515,7 @@ impl Ability {
                 actor.skills.trains_effect(content, Effect::Disarm)
                     || actor.talent_mods(content).disarm
             }
+            Ability::Listen => actor.skills.trains_effect(content, Effect::Hearing),
             // A talent with the `pick_lock` or `steal` effect gives them without the skills.
             Ability::PickLock => {
                 actor.skills.trains_effect(content, Effect::Pick)
@@ -543,6 +550,7 @@ impl Ability {
             Ability::Skill(id) => &content.skill(id).id,
             Ability::ThrowVoice => "throw_voice",
             Ability::Disarm => "disarm",
+            Ability::Listen => "listen",
             Ability::PickLock => "pick_lock",
             Ability::Steal => "steal",
             Ability::Tame => "tame",
@@ -580,6 +588,7 @@ impl Ability {
             Ability::Skill(id) => &content.skill(id).name,
             Ability::ThrowVoice => "Throw your voice",
             Ability::Disarm => "Disarm a trap",
+            Ability::Listen => "Listen at a door",
             Ability::PickLock => "Pick lock",
             Ability::Steal => "Steal",
             Ability::Tame => "Tame",
@@ -612,6 +621,10 @@ impl Ability {
             }
             Ability::Disarm => {
                 "Take apart a trap you know of next to you; a clumsy try sets it off."
+            }
+            Ability::Listen => {
+                "Press an ear to a closed door next to you for a turn, and hear what moves \
+                 beyond it."
             }
             Ability::PickLock => "Open a locked door next to you without its key.",
             Ability::Steal => {
@@ -684,6 +697,7 @@ impl Ability {
             Ability::Spell(_) => Source::Spell,
             Ability::Skill(_)
             | Ability::Disarm
+            | Ability::Listen
             | Ability::PickLock
             | Ability::Steal
             | Ability::Tame
@@ -729,6 +743,7 @@ impl Ability {
             Ability::ThrowVoice | Ability::SetOn | Ability::Intimidate => Aim::Cell,
             Ability::Heal => Aim::Ailment,
             Ability::Disarm
+            | Ability::Listen
             | Ability::PickLock
             | Ability::Steal
             | Ability::Tame
@@ -746,6 +761,8 @@ impl Ability {
             Ability::Skill(_) | Ability::Weapon(..) => None,
             Ability::ThrowVoice => Some(ActionKind::ThrowVoice),
             Ability::Disarm => Some(ActionKind::Disarm),
+            // A listen is a turn of keeping still.
+            Ability::Listen => Some(ActionKind::Wait),
             Ability::PickLock => Some(ActionKind::PickLock),
             Ability::Steal => Some(ActionKind::Steal),
             Ability::Tame => Some(ActionKind::Tame),
@@ -777,6 +794,7 @@ impl Ability {
             | Ability::Spell(_)
             | Ability::Skill(_)
             | Ability::Disarm
+            | Ability::Listen
             | Ability::PickLock
             | Ability::Steal
             | Ability::Tame
@@ -854,12 +872,14 @@ impl Ability {
             (Ability::SecondWind, _) => Some(Action::UseTalent(TalentActive::SecondWind)),
             (Ability::BloodMagic, _) => Some(Action::UseTalent(TalentActive::BloodMagic)),
             (Ability::Disarm, Some(dir)) => Some(Action::Disarm(dir)),
+            (Ability::Listen, Some(dir)) => Some(Action::Listen(dir)),
             (Ability::PickLock, Some(dir)) => Some(Action::PickLock(dir)),
             (Ability::Steal, Some(dir)) => Some(Action::Steal(dir)),
             (Ability::Tame, Some(dir)) => Some(Action::Tame(dir)),
             (Ability::ShieldBash, Some(dir)) => Some(Action::Bash(dir)),
             (
                 Ability::Disarm
+                | Ability::Listen
                 | Ability::PickLock
                 | Ability::Steal
                 | Ability::Tame
@@ -914,6 +934,7 @@ impl Ability {
             | Ability::Class(_)
             | Ability::Skill(_)
             | Ability::Disarm
+            | Ability::Listen
             | Ability::PickLock
             | Ability::Steal
             | Ability::Tame
@@ -996,6 +1017,7 @@ impl Ability {
                 .then_some(Unavailable::NothingToTreat),
             Ability::ThrowVoice
             | Ability::Disarm
+            | Ability::Listen
             | Ability::PickLock
             | Ability::Steal
             | Ability::Intimidate
@@ -1223,6 +1245,7 @@ mod tests {
                 "heal",
                 "intimidate",
                 "knowledge",
+                "listen",
                 "metalcraft",
                 "pick_lock",
                 "steal",

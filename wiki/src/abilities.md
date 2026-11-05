@@ -71,6 +71,9 @@ own: [Weapon skills](weapon-skills.md#what-a-rank-teaches) and
 - **Disarm a trap**: everyone trained in [Disable device](skills.md#skill-disable-device) (the [thief](classes.md#thief)) has it, in place of the
   skill. Choose a direction, toward a [trap](traps.md#finding-traps) you know of next to you, on the floor or on a [door](doors.md):
   you try to take it apart (see [Traps](traps.md#disarming-traps)).
+- **Listen at a door**: everyone trained in [Listen](skills.md#skill-listen) has it, in place of the skill. Choose a direction,
+  toward a closed [door](doors.md) next to you: you stop a turn and hear what moves beyond it (see
+  [Hearing](hearing.md#listening-at-a-door)).
 - **Pick lock**: everyone trained in [Open lock](skills.md#skill-open-lock) (the [thief](classes.md#thief)) has it, in place of the skill. Choose a
   direction, toward a closed [door](doors.md) next to you: you try its lock (see
   [Doors](doors.md#picking-locks)).

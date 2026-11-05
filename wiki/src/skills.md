@@ -178,7 +178,7 @@ mark**. The chance is shown in the table of skills above; skills you use all the
 [balance](skills.md#skill-balance), earn marks rarely, so they do not race ahead.
 
 - **[Stealth](skills.md#skill-stealth)**: a step that a [creature](creatures.md) nearby could have heard, if you had not stepped softly.
-- **[Listen](skills.md#skill-listen)**: [hearing](hearing.md) something new.
+- **[Listen](skills.md#skill-listen)**: [hearing](hearing.md) something new, and every turn spent [listening at a door](hearing.md#listening-at-a-door).
 - **[Tumble](skills.md#skill-tumble)**: dodging an attack ("You dodge the kobold's spear.") or stepping past a [trap](traps.md#finding-traps) you
   know of ("You deftly avoid the arrow trap."). A blow that misses you for no reason your
   [Defence](combat.md#defence) explains (it would have missed anyone) counts as a dodge one time in four.
