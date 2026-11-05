@@ -1356,6 +1356,9 @@ impl Content {
         }
         let mut seen: BTreeMap<String, &str> = BTreeMap::new();
         for (path, id, text) in files.in_dir("vaults") {
+            if path == "vaults/README.toml" {
+                continue; // the authors' rules, comments only
+            }
             if let Some(first) = seen.insert(id.to_string(), path) {
                 return Err(duplicate_id("vault", id, path, first));
             }

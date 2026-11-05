@@ -20,7 +20,7 @@ skeletal_rat at (44, 17) route E W W N N N S S S E E W
 grave_worm at (7, 9) route N N N E E S N W W S S S
 crawling_hand at (26, 8) route N S S S E E W E W W N N N S
 crawling_hand at (26, 12) route W N N E E W W S S E
-rat at (6, 8) route S W N N N E E E E W W W W S S S E N
+rat at (6, 8) route S N N N E E E S S N N W W W S S S N
 crawling_hand at (41, 13) route S S W E W W W W E E E E W E N N
 bat at (33, 15) route E E E E E E E E W E W W W W W W W W
 crawling_hand at (2, 8) route S S N N N E W S S S N N
@@ -33,8 +33,8 @@ skeletal_rat at (5, 10) route E N N N S S S W
 bat at (13, 17) route S W E W N N E W S S E W E N
 grave_worm at (13, 18) route W N W N E E S S N N W W S E S E
 grave_worm at (41, 9) route S S S S S N N N N N
-pit trap at (4, 9)
-pit trap at (43, 11)
+pit trap at (5, 9)
+pit trap at (44, 11)
 arrow trap at (54, 7)
 pit trap at (57, 2)
 1 placed lights
@@ -43,18 +43,18 @@ pit trap at (57, 2)
                #####                                   #.^.....¡#
                #...#                                   #........#
           ######.<.########                            #¡.......#
- ##########....+...S......#                            ##&#######
+ ##########....+)..S......#                            ##&#######
  #¡.......#.####..¡######g###           #################.#
  #...z....S.#  #####   #...¡#           #.r.r.......z.^...#
  #z...r...#.############..z.#  #####    #.###############'###############
- #..^..w..+............+....####...#    #w#...#        #......>........¡#
+ #...^.w..+...*........+....####...#    #w#...#        #.....?>........¡#
  #...r..(¡#.############.......+.r.#    #b#%*.#        #..............aw#
- ##########.#          #....####¡z.#    #.#^.)#        #..........?.....#
+ ##########.#          #....####¡z.#    #.#)^.#        #................#
           #.#          #¡rz.#  ##'##    #.#(..#        #................#
           #w##         ######   #.#     #z##&##        #¡...............#
-          #..#                  #.#######"#r..#        ##################
+          #..#                  #.#######.#r..#        ##################
           ##&##                 #b..r.....+...#
           #...#                 ###########.k.#
-          #.[b#                           #rr.#
+          #..b#                           #rr.#
           #¡.w#                           #####
           #####
