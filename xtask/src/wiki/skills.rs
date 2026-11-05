@@ -59,6 +59,7 @@ pub(super) fn gated_effect(effect: Effect) -> bool {
         effect,
         Effect::Spot
             | Effect::Learn
+            | Effect::Freshness
             | Effect::Identify
             | Effect::Disarm
             | Effect::Escape
@@ -91,12 +92,14 @@ fn effect_name(effect: Effect) -> &'static str {
         Effect::Spot => "noticing hidden things in passing, not traps",
         Effect::DetectTraps => "finding hidden traps, searching and in passing",
         Effect::Study => "studying spells from scrolls",
-        Effect::Learn => "what a scroll teaches for certain",
+        Effect::Learn => "what a scroll teaches for certain, and reads for certain",
+        Effect::Decipher => "reading a scroll you cannot simply read",
         Effect::Disarm => "disarming traps",
         Effect::Burden => "less slowdown from your load",
         Effect::Travel => "quicker journeys on the overworld",
         Effect::Forage => "foraging at all, and finding food more often",
-        Effect::Bargain => "better prices in shops",
+        Effect::Bargain => "better prices in shops, and at a healer's or a sage's",
+        Effect::Freshness => "telling how fresh food and corpses are",
         Effect::Identify => "now and then telling something you carry for what it is",
         Effect::Kick => "more Strength for kicking doors in",
         Effect::Slip => "slipping past eyes that see in the dark",
@@ -120,6 +123,8 @@ fn effect_name(effect: Effect) -> &'static str {
         Effect::SongCraft => "your songs are harder to shake off",
         Effect::Temper => "tempering at a forge's anvil",
         Effect::Wade => "wading through water and marsh is quicker",
+        Effect::Footing => "walking over rough ground (bush, reeds, rubble, ice) is quicker",
+        Effect::SteadyEase => "less time lost when you are staggered",
         Effect::Swim => {
             "a plunge through the ice may hurt half as much, and a step in deep water goes as you meant it"
         }
@@ -152,11 +157,13 @@ pub(super) fn skill_benefits(content: &Content) -> String {
             Effect::DetectTraps => "finding traps",
             Effect::Study => "study check",
             Effect::Learn => "learning",
+            Effect::Decipher => "reading scrolls",
             Effect::Disarm => "disarming traps",
             Effect::Burden => "Burdened / Strained",
             Effect::Travel => "journeys",
             Effect::Forage => "foraging",
             Effect::Bargain => "prices",
+            Effect::Freshness => "telling freshness, each hour",
             Effect::Identify => "identifying, each hour",
             Effect::Kick => "kicking doors in",
             Effect::Slip => "slipping past",
@@ -178,6 +185,8 @@ pub(super) fn skill_benefits(content: &Content) -> String {
             Effect::SongCraft => "song's difficulty",
             Effect::Temper => "tempering",
             Effect::Wade => "wading's extra cost",
+            Effect::Footing => "rough ground's extra cost",
+            Effect::SteadyEase => "staggering's extra cost",
             Effect::Swim => "Swim check",
             Effect::ManaRegen => "mana back",
             Effect::MaxMana => "mana pool",
@@ -200,6 +209,7 @@ pub(super) fn skill_benefits(content: &Content) -> String {
                 | Effect::Spot
                 | Effect::DetectTraps
                 | Effect::Study
+                | Effect::Decipher
                 | Effect::Slip
                 | Effect::Lookout
                 | Effect::Stalk
@@ -221,13 +231,15 @@ pub(super) fn skill_benefits(content: &Content) -> String {
                 Effect::Climb if n == 1 => "halved".to_string(),
                 Effect::Climb => "skipped".to_string(),
                 Effect::SneakDice => format!("{n}d6"),
-                Effect::SurpriseEase | Effect::Wade => format!("\u{2212}{n}%"),
+                Effect::SurpriseEase | Effect::Wade | Effect::Footing | Effect::SteadyEase => {
+                    format!("\u{2212}{n}%")
+                }
                 Effect::SearchReach => format!("+{n} cell{}", if n == 1 { "" } else { "s" }),
                 Effect::Kick => format!("+{n} Strength"),
                 Effect::Quiet | Effect::Travel => format!("\u{2212}{n}%"),
                 Effect::Bargain => format!("{n}% better"),
                 Effect::Forage => format!("+{n}%"),
-                Effect::Identify => format!("{n}%"),
+                Effect::Freshness | Effect::Identify => format!("{n}%"),
                 Effect::Speed | Effect::ManaRegen => format!("+{n}%"),
                 Effect::MaxMana => format!("+{n} mana"),
                 Effect::Hearing | Effect::Learn => n.to_string(),

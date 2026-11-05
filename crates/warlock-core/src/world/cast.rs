@@ -17,7 +17,8 @@
 //!   laid on every target harmed (`world/spell_mods.rs`). Nothing holds the roll (the spell
 //!   scaling design, decision 16).
 //! - **Type**: what every spell of its damage type does beyond its damage, on those it harmed
-//!   and the cells it reached (`world/spell_type.rs`).
+//!   and the cells it reached (`world/spell_type.rs`), and how it spreads from them through
+//!   water and by arcs, at the same roll (`world/spell_arc.rs`).
 //! - **Resolution**: `area` (a burst, a cone, a line) strikes everyone in it with one roll, no
 //!   roll to hit, Evasion halving it ([`World::spell_hurts`]) and resistances taking their
 //!   share; `auto` (a ray or a bolt) strikes the first creature on its way, never missing;
@@ -50,7 +51,8 @@
 //! kills earn them their experience, and one that kills its caster is what killed them
 //! ([`Cause::Spell`]). Determinism: nothing here draws at random but the spell's own rolls (the
 //! attack roll, the dice), an area's one roll for all, in the order the shared code strikes
-//! (ascending actor id), and its type's rider's chance; a spell with no roll draws nothing.
+//! (ascending actor id), and its type's rider's and arc's chances; a spell with no roll draws
+//! nothing.
 //!
 //! [`Action::Cast`]: crate::action::Action::Cast
 //! [`Action::CastOn`]: crate::action::Action::CastOn
@@ -86,6 +88,8 @@ pub struct Reach {
     pub range: Option<i32>,
     /// A burst's radius.
     pub radius: Option<i32>,
+    /// A spell with `arcs`: the jumps it takes without a draw (`spell_arc.rs`).
+    pub jumps: Option<i32>,
 }
 
 impl Actor {
@@ -328,22 +332,30 @@ impl World {
         done
     }
 
-    /// Pays for `cast` as it is sure to go off: the caster's mana, or the scroll read (used
-    /// up, unless Scroll savant keeps it, and said as read).
-    pub(super) fn pay_cast(&mut self, cast: &Cast<'_>) {
+    /// Pays for `cast` as nothing refuses it any more: the caster's mana, or the scroll read
+    /// (used up, unless Scroll savant keeps it, and said as read). Whether it goes off: a
+    /// scroll the reader fails to make out does not (`decipher.rs`), and the caller ends the
+    /// cast there, its time spent and nothing else.
+    #[must_use]
+    pub(super) fn pay_cast(&mut self, cast: &Cast<'_>) -> bool {
         match cast.pay {
             Pay::Mana(mana) => {
                 self.spend_mana(self.state.player, mana);
             }
             Pay::Scroll(item, _) => {
+                let spell = self.content.spell_id(&cast.def.id);
+                if !self.deciphers(spell, cast.def.level) {
+                    return false;
+                }
                 let Some((scroll, kept)) = self.use_up(item) else {
-                    return;
+                    return true;
                 };
                 self.say_read(&scroll);
                 cast.read.set(Some((scroll.object, kept)));
             }
             Pay::Wand(item, _) => self.use_charge(item),
         }
+        true
     }
 
     /// The player's cast `cast` went off (spec §8 "Weapon skills": "Schools of magic",
@@ -408,7 +420,9 @@ impl World {
             return false;
         };
         let player = self.state.player;
-        self.pay_cast(cast);
+        if !self.pay_cast(cast) {
+            return true;
+        }
         self.afflict(player, status, severity, Some(player), events);
         self.spell_landed(cast, player, true, events);
         true
@@ -437,7 +451,9 @@ impl World {
             return false;
         }
         let before = self.state.player().inventory.len();
-        self.pay_cast(cast);
+        if !self.pay_cast(cast) {
+            return true;
+        }
         // A scroll used up moves the stacks after it a place up.
         let on = match cast.pay {
             Pay::Scroll(item, _) if on == item => return true,
@@ -489,7 +505,9 @@ impl World {
         let Some(heal) = cast.roll else {
             return false;
         };
-        self.pay_cast(cast);
+        if !self.pay_cast(cast) {
+            return true;
+        }
         let back = heal.roll(&mut self.state.rng, cast.reroll).max(0);
         if target == player {
             self.heal_player(back);
@@ -524,7 +542,9 @@ impl World {
             self.say("There is nothing to cure.");
             return false;
         }
-        self.pay_cast(cast);
+        if !self.pay_cast(cast) {
+            return true;
+        }
         self.say("A cleansing warmth runs through you.");
         let from = events.len();
         for e in &ended {
@@ -586,7 +606,9 @@ impl World {
             return false;
         };
         let player = self.state.player;
-        self.pay_cast(cast);
+        if !self.pay_cast(cast) {
+            return true;
+        }
         self.afflict(target, status, severity, Some(player), events);
         let who = capitalized(&self.called(&self.state.actors[&target]));
         let content = self.content.clone();
@@ -613,7 +635,9 @@ impl World {
         }
         let player = self.state.player;
         let here = self.player_pos();
-        self.pay_cast(cast);
+        if !self.pay_cast(cast) {
+            return true;
+        }
         if let Some(text) = &cast.def.look.message {
             self.say(text.clone());
         }
@@ -715,7 +739,9 @@ impl World {
             return false;
         }
         let player = self.state.player;
-        self.pay_cast(cast);
+        if !self.pay_cast(cast) {
+            return true;
+        }
         let roll = cast.roll.unwrap_or_default();
         let reroll = cast.reroll;
         if let Some(text) = &def.look.message {
@@ -728,7 +754,7 @@ impl World {
         let effect = def.look.effect.clone().unwrap_or_default();
         let mut made = Vec::new();
         let mut turned = None;
-        match def.shape {
+        let rolled = match def.shape {
             Shape::Burst => {
                 let burst = Burst {
                     spell: effect,
@@ -741,7 +767,7 @@ impl World {
                 };
                 let center = self.burst_center(here, at, range);
                 self.sound_at(def.look.noise, center);
-                self.cast_burst(Caster::Actor(player), (here, center), &burst, &mut made);
+                self.cast_burst(Caster::Actor(player), (here, center), &burst, &mut made)
             }
             Shape::Line => {
                 let bolt = Bolt {
@@ -753,22 +779,26 @@ impl World {
                 };
                 let path = self.bolt_line(here, at, range);
                 self.sound_at(def.look.noise, here);
-                self.cast_bolt(Caster::Actor(player), here, &path, &bolt, &mut made);
+                let rolled = self.cast_bolt(Caster::Actor(player), here, &path, &bolt, &mut made);
                 self.spell_type_cell(def.damage_type, path.last().copied(), &mut made);
+                rolled
             }
             Shape::Cone => {
                 self.sound_at(def.look.noise, here);
-                self.cast_cone((here, at, range), (&effect, roll, reroll), def, &mut made);
+                self.cast_cone((here, at, range), (&effect, roll, reroll), def, &mut made)
             }
             Shape::Ray | Shape::Bolt | Shape::Touch => {
                 self.sound_at(def.look.noise, here);
                 let own = matches!(cast.pay, Pay::Mana(_));
                 let aim = (here, at, range);
                 let by = (def, own.then_some(cast.skills));
-                turned = self.cast_single(aim, (&effect, roll, reroll), by, &mut made);
+                let rolled;
+                (turned, rolled) = self.cast_single(aim, (&effect, roll, reroll), by, &mut made);
+                rolled
             }
-            Shape::Myself => {}
-        }
+            Shape::Myself => 0,
+        };
+        self.spell_type_spreads(player, (def, cast.reach.jumps), rolled, &mut made);
         self.spell_lands(player, (def, &cast.riders), made, Some(cast), events);
         self.lay_spell_zone(cast, zone, events);
         // Spell reflection: the spell a shield blocked goes back at its caster (`reflect.rs`),
@@ -850,14 +880,14 @@ impl World {
 
     /// A cone from `here` toward `at`, `length` cells long: its effect drawn as a burst around
     /// the caster over its cells, then one roll of `roll` (with `reroll`) for everyone in it,
-    /// in ascending actor id order, as an area's (Evasion halves it).
+    /// in ascending actor id order, as an area's (Evasion halves it). What it rolled.
     fn cast_cone(
         &mut self,
         (here, at, length): (Pos, Pos, i32),
         (effect, roll, reroll): (&str, Roll, u32),
         def: &SpellData,
         made: &mut Vec<Event>,
-    ) {
+    ) -> i32 {
         let level = self.state.current();
         let opaque = |p: Pos| level.is_opaque(&self.content, p);
         let cells = cone_cells(here, at, length, opaque);
@@ -883,6 +913,7 @@ impl World {
             let damage = Damage::new(roll, def.damage_type);
             self.spell_hurts(Caster::Actor(player), id, (here, false), damage, made);
         }
+        roll
     }
 
     /// A ray, a bolt, or a touch from `here` toward `at` (`reach` cells at most): it flies to
@@ -892,14 +923,15 @@ impl World {
     /// spell (`own`: the school and the style it is cast in), else (a scroll, a wand) with
     /// Dexterity. One that finds no one strikes
     /// nothing. An attack roll missed by the target's Shield may be turned back (Spell
-    /// reflection, `reflect.rs`): what to cast back, if so.
+    /// reflection, `reflect.rs`): what to cast back, if so, and the harm it rolled (0: it rolled
+    /// none).
     fn cast_single<'s>(
         &mut self,
         (here, at, reach): (Pos, Pos, i32),
         (effect, roll, reroll): (&'s str, Roll, u32),
         (def, own): (&'s SpellData, Option<AttackSkills>),
         made: &mut Vec<Event>,
-    ) -> Option<Turned<'s>> {
+    ) -> (Option<Turned<'s>>, i32) {
         let level = self.state.current_level.clone();
         let path: Vec<Pos> = if def.shape == Shape::Touch {
             vec![at]
@@ -928,7 +960,7 @@ impl World {
             // that far: Ray of frost builds a bridge a cell at a time.
             let cell = path.iter().copied().find(|&p| p == at).or(last);
             self.spell_type_cell(def.damage_type, cell, made);
-            return None;
+            return (None, 0);
         };
         let player = self.state.player;
         let me = self.state.player();
@@ -956,21 +988,22 @@ impl World {
             skills,
         };
         let source = (here, def.shape != Shape::Touch);
-        let strike = self.spell_attack(player, target, source, shot, made);
+        let (strike, rolled) = self.spell_attack(player, target, source, shot, made);
         self.spell_type_cell(def.damage_type, last, made);
         if strike
             != (Strike::Missed {
                 by: Some(Category::Shield),
             })
         {
-            return None;
+            return (None, rolled);
         }
-        self.spell_blocked((target, player), (&path, here), shot, made)
+        let turned = self.spell_blocked((target, player), (&path, here), shot, made);
+        (turned, rolled)
     }
 
     /// `by`'s single-target spell `shot` strikes `target` from `source` as its resolution says:
     /// `auto` always, `attack` and `touch` by the attack roll (`shot`'s to-hit) against its
-    /// Defence. How it struck.
+    /// Defence. How it struck, and the harm it rolled, before what the target resists.
     pub(super) fn spell_attack(
         &mut self,
         by: ActorId,
@@ -978,7 +1011,7 @@ impl World {
         source: (Pos, bool),
         shot: Shot<'_>,
         made: &mut Vec<Event>,
-    ) -> Strike {
+    ) -> (Strike, i32) {
         let def = shot.def;
         let (amount, strike, sneak) = match def.resolution {
             Resolution::Attack | Resolution::Touch => {
@@ -1006,7 +1039,7 @@ impl World {
                 let unseen = self.sneaks(by, target, unaware, missile);
                 // Hair trigger's blow may cut the caster down before the spell lands.
                 if unaware && !self.startle(target, Some(by), made) {
-                    return Strike::Missed { by: None };
+                    return (Strike::Missed { by: None }, 0);
                 }
                 self.attacked_near(by, target);
                 let struck = self.target_against(target, missile);
@@ -1037,7 +1070,7 @@ impl World {
         };
         let damage = Damage::new(amount + sneak, def.damage_type);
         self.spell_strikes(by, target, source, (damage, strike), made);
-        strike
+        (strike, amount + sneak)
     }
 }
 

@@ -71,6 +71,12 @@ impl Rng {
         }
     }
 
+    /// The deep water stream of generated level `level` (`mapgen/deep.rs`): whether a cave floor
+    /// has a deep pool (one in six) and where, apart from its map's so no other draw moves.
+    pub fn deep_water(run_seed: u64, level: &str) -> Self {
+        Self::stream(run_seed, &format!("deep_water/{level}"))
+    }
+
     /// The stream that hides traps on generated level `level` (spec §8 "Traps"), apart from its
     /// map's, so a level is the same with or without traps.
     pub fn traps(run_seed: u64, level: &str) -> Self {

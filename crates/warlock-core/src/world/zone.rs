@@ -240,7 +240,9 @@ impl World {
         }
         let here = self.player_pos();
         let cells = self.zone_cells(cast, (here, at, range), radius);
-        self.pay_cast(cast);
+        if !self.pay_cast(cast) {
+            return true;
+        }
         if let Some(text) = &cast.def.look.message {
             self.say(text.clone());
         }

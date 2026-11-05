@@ -116,6 +116,7 @@ mod court;
 mod creation;
 mod curse;
 mod dark_face;
+mod decipher;
 mod den;
 mod dev;
 mod dig;
@@ -139,9 +140,11 @@ mod feature;
 mod fight;
 mod flavour;
 mod focus;
+mod footing;
 mod forage;
 mod free_blow;
 mod frenzy;
+pub(crate) mod freshness;
 mod gifts;
 mod glare;
 mod guild;
@@ -215,6 +218,7 @@ mod song;
 mod spawn;
 mod spell;
 mod spell_aim;
+mod spell_arc;
 mod spell_mods;
 mod spell_rung;
 mod spell_type;
@@ -303,7 +307,7 @@ pub(crate) use stars::{RISEN, RISEN_TWICE};
 pub(crate) use swim::shore_refusal;
 pub use talent::Due;
 pub use talk::{Conversation, Talk, TopicView};
-pub use temper::{DIFFICULTY as TEMPER_DIFFICULTY, POINTS_PER_MARGIN, lean_for, temperable};
+pub use temper::{temperable, workable};
 use travel::{enter_room, instantiate_level, level_template};
 pub use voice::VOICE_RANGE;
 pub use zone::Zone;
@@ -1196,6 +1200,7 @@ impl World {
             lore: self.lore(),
             snapshot: &self.perception,
             encounter: self.state.encounter.as_ref(),
+            seed: self.state.seed,
         }
     }
 
@@ -1534,7 +1539,6 @@ mod affix_spell_tests;
 #[cfg(test)]
 mod affix_stamina_tests;
 #[cfg(test)]
-mod affix_talent_tests;
 #[cfg(test)]
 mod affix_utility_tests;
 #[cfg(test)]
@@ -1630,6 +1634,8 @@ mod damage_tests;
 #[cfg(test)]
 mod dark_face_tests;
 #[cfg(test)]
+mod decipher_tests;
+#[cfg(test)]
 mod den_tests;
 #[cfg(test)]
 mod dig_tests;
@@ -1674,11 +1680,15 @@ mod flavour_tests;
 #[cfg(test)]
 mod focus_tests;
 #[cfg(test)]
+mod footing_tests;
+#[cfg(test)]
 mod forage_tests;
 #[cfg(test)]
 mod free_blow_tests;
 #[cfg(test)]
 mod frenzy_tests;
+#[cfg(test)]
+mod freshness_tests;
 #[cfg(test)]
 mod gear_tests;
 #[cfg(test)]
@@ -1822,6 +1832,8 @@ mod scroll_label_tests;
 #[cfg(test)]
 mod search_tests;
 #[cfg(test)]
+mod service_haggle_tests;
+#[cfg(test)]
 mod service_tests;
 #[cfg(test)]
 mod shoot_tests;
@@ -1859,6 +1871,8 @@ mod song_tests;
 mod spawn_tests;
 #[cfg(test)]
 mod speed_tests;
+#[cfg(test)]
+mod spell_arc_tests;
 #[cfg(test)]
 mod spell_list_tests;
 #[cfg(test)]

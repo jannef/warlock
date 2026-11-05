@@ -38,6 +38,10 @@ pub const MAX_CONE: u8 = 5;
 pub const MAX_CASTS: u8 = 10;
 /// The most mana a spell's explicit `mana` may ask.
 pub const MAX_SPELL_MANA: u16 = 500;
+/// How far (Chebyshev) a jump of a spell with `arcs` reaches; any other arc, one cell.
+pub const ARC_REACH: i32 = 2;
+/// The most jumps `arcs` may take, its ladder and base alike.
+pub const MAX_ARCS: i32 = 12;
 /// The most minutes a summon spell's call may last, its ladder and base alike.
 pub const MAX_SUMMON_MINUTES: u16 = 600;
 /// The most of the player's turns a spell's zone may last.
@@ -478,6 +482,7 @@ struct EffectSpec {
     identify: bool,
     summon: Option<SummonSpellSpec>,
     zone: Option<SpellZone>,
+    arcs: Option<u8>,
 }
 
 /// A summon spell's `summon ={ creatures, count, most, minutes, spread }` as written.
@@ -514,6 +519,8 @@ pub struct Grows {
     pub heal: Option<Ladder>,
     /// A `summon` spell's count, its roll.
     pub count: Option<Ladder>,
+    /// A damage spell's certain jumps (`[spell.effect] arcs`; its `count` key), whole numbers.
+    pub jumps: Option<Ladder>,
     /// A ray's, bolt's, or burst's range.
     pub range: Option<Ladder>,
     /// A cone's or a line's length.
@@ -543,6 +550,7 @@ impl Grows {
             ("damage", &self.damage),
             ("heal", &self.heal),
             ("count", &self.count),
+            ("jumps", &self.jumps),
             ("range", &self.range),
             ("length", &self.length),
             ("radius", &self.radius),
@@ -572,6 +580,9 @@ pub struct SpellEffect {
     pub summon: Option<SpellSummon>,
     /// The zone it leaves on its cells (`world/zone.rs`).
     pub zone: Option<SpellZone>,
+    /// A `damage` spell's jumps taken without a draw, each up to [`ARC_REACH`] cells (its `count`
+    /// ladder grows them; Chain lightning; `world/spell_arc.rs`).
+    pub arcs: Option<u8>,
 }
 
 /// A spell's zone (`[spell.effect] zone = { kind, turns }`): what lies on the cells of its shape
@@ -916,6 +927,15 @@ fn resolve(spec: SpellSpec, rules: &SpellRules, content: &Content) -> Result<Spe
             "a `summon` spell is cast on `self` with `auto`: they appear about the caster".into(),
         );
     }
+    if effect.arcs.is_some() {
+        if !matches!(shape, Shape::Ray | Shape::Bolt | Shape::Touch | Shape::Line) {
+            return Err("`arcs` is a ray's, a bolt's, a touch's, or a line's".into());
+        }
+        let rule = damage_type.and_then(|kind| rules.types.get(&kind));
+        if rule.is_none_or(|r| r.arc.is_none()) {
+            return Err("`arcs` needs a damage type that arcs (`[types]`)".into());
+        }
+    }
     let study_difficulty = spec.study_difficulty.unwrap_or(0);
     if !STUDY_DIFFICULTY.contains(&study_difficulty) {
         return Err(format!(
@@ -972,7 +992,9 @@ fn resolve(spec: SpellSpec, rules: &SpellRules, content: &Content) -> Result<Spe
     let bases = Bases {
         damage,
         heal: effect.heal,
-        count: effect.summon.as_ref().map(|s| s.count),
+        count: (effect.summon.as_ref().map(|s| s.count))
+            .or(effect.arcs.map(|n| Roll::fixed(i32::from(n)))),
+        jumps: effect.arcs.is_some(),
         range,
         length,
         radius,
@@ -1018,8 +1040,10 @@ fn resolve(spec: SpellSpec, rules: &SpellRules, content: &Content) -> Result<Spe
 struct Bases {
     damage: Option<Roll>,
     heal: Option<Roll>,
-    /// A summon's count.
+    /// A summon's count, or a damage spell's jumps.
     count: Option<Roll>,
+    /// Whether `count` is a damage spell's jumps.
+    jumps: bool,
     range: Option<u8>,
     length: Option<u8>,
     radius: Option<u8>,
@@ -1096,7 +1120,8 @@ fn grows(spec: GrowsSpec, bases: &Bases) -> Result<Grows, String> {
         MAX_REACH
     };
     let degrees_most = (bases.degrees).map_or(MAX_SEVERITY, |(_, most)| most);
-    let count = rolls("count", spec.count, bases.count, "a `summon` spell's count")?;
+    let why = "a `summon` spell's count, or a `damage` spell's `arcs`";
+    let count = rolls("count", spec.count, bases.count, why)?;
     if let Some(ladder) = &count
         && let Some(roll) = (ladder.values())
             .filter_map(RungValue::roll)
@@ -1107,6 +1132,21 @@ fn grows(spec: GrowsSpec, bases: &Bases) -> Result<Grows, String> {
             summon::MAX_COUNT
         ));
     }
+    if bases.jumps
+        && let Some(ladder) = &count
+        && let Some(roll) = (ladder.values())
+            .filter_map(RungValue::roll)
+            .find(|r| !r.is_fixed())
+    {
+        return Err(format!(
+            "grows: `count`'s rung `{roll}` is a number of jumps: no dice"
+        ));
+    }
+    let (count, jumps) = if bases.jumps {
+        (None, count)
+    } else {
+        (count, None)
+    };
     Ok(Grows {
         damage: rolls(
             "damage",
@@ -1116,6 +1156,7 @@ fn grows(spec: GrowsSpec, bases: &Bases) -> Result<Grows, String> {
         )?,
         heal: rolls("heal", spec.heal, bases.heal, "a `heal` spell's roll")?,
         count,
+        jumps,
         range: numbers(
             "range",
             spec.range,
@@ -1289,6 +1330,12 @@ fn effect(e: EffectSpec, kind: SpellPurpose, content: &Content) -> Result<SpellE
     only("diseases", e.diseases, &[SpellPurpose::Cleanse])?;
     only("identify", e.identify, &[SpellPurpose::Utility])?;
     only("summon", e.summon.is_some(), &[SpellPurpose::Summon])?;
+    only("arcs", e.arcs.is_some(), &[SpellPurpose::Damage])?;
+    if e.arcs
+        .is_some_and(|n| !(1..=MAX_ARCS).contains(&i32::from(n)))
+    {
+        return Err(format!("`arcs` is 1 to {MAX_ARCS}"));
+    }
     let lays = [SpellPurpose::Damage, SpellPurpose::Hex];
     only("zone", e.zone.is_some(), &lays)?;
     let summon = match e.summon {
@@ -1334,6 +1381,7 @@ fn effect(e: EffectSpec, kind: SpellPurpose, content: &Content) -> Result<SpellE
         identify: e.identify,
         summon,
         zone: e.zone,
+        arcs: e.arcs,
     })
 }
 
@@ -1998,6 +2046,7 @@ damage = "2d6"
             ("call_lightning", 11, Some("2d6"), 20, true),
             ("call_of_the_forest", 20, Some("+1"), 20, true),
             ("call_of_the_wild", 5, Some("+1"), 5, true),
+            ("chain_lightning", 20, Some("3d6"), 20, true),
             ("call_the_elements", 35, Some("+1"), 35, true),
             ("cause_wounds", 4, Some("1d6"), 3, true),
             ("cure_wounds", 3, Some("2d6"), 2, true),

@@ -92,8 +92,9 @@ while the class is still open to you. The words are cut into a statue deep in Fy
 A few people sell a **service**: a cure, a mending, or an identification, for [gold](shops.md#money). Services are
 listed on their screen after their topics, with the price: `A cure for what ails you (60 gold)`. Pick one as you
 would a topic. If there is something to do and you carry the gold, you pay (the coins go into
-their purse), they do it, and it takes the time of a chat; their price is fixed (no haggling:
-neither [Presence](stats.md#stat-presence) nor [Negotiation](skills.md#skill-negotiation) moves it).
+their purse), they do it, and it takes the time of a chat. A temple's price is fixed (no haggling), but a healer's or a
+sage's moves with your [Presence](stats.md#stat-presence) and [Negotiation](skills.md#skill-negotiation), as a
+[shop's](shops.md) does (at most half off, at least one gold), and any service paid trains Negotiation now and then.
 
 - **A cure** ends every [disease](diseases.md) you have, even one that has not broken out yet (they can tell),
   and [grave rot](diseases.md#grave-rot) too. Damage a [disease](diseases.md#how-a-disease-goes) did to your [stats](stats.md#drained-stats) stays and mends a point a day as usual,

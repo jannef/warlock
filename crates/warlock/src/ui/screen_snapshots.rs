@@ -600,7 +600,7 @@ const CASES: &[Case] = &[
         ..BASE
     },
     // Beside a forge's anvil with arms and armour picked up: Temper in the Here group, asking
-    // for something carried; then its list, the weapons and armour only (not the lantern).
+    // for something carried; then its list, metal arms and armour only (not the lantern).
     Case {
         name: "abilities-menu-forge",
         scenario: "forge",
@@ -612,6 +612,23 @@ const CASES: &[Case] = &[
         name: "temper-list",
         scenario: "forge",
         actions: "move:SW move:S pickup move:W pickup move:E*2 pickup move:E pickup move:N*2",
+        screen: Some("temper"),
+        ..BASE
+    },
+    // An attempt made and one failed (spec §7 "Special rooms"): the name and numbers follow.
+    Case {
+        name: "temper-list-fine",
+        scenario: "forge",
+        actions: "move:SW move:S pickup move:W pickup move:E*2 pickup move:E pickup move:N*2 \
+                  temper:d",
+        screen: Some("temper"),
+        ..BASE
+    },
+    Case {
+        name: "temper-list-damaged",
+        scenario: "forge",
+        actions: "move:SW move:S pickup move:W pickup move:E*2 pickup move:E pickup move:N*2 \
+                  temper:d temper:d",
         screen: Some("temper"),
         ..BASE
     },
@@ -1016,6 +1033,15 @@ const CASES: &[Case] = &[
         name: "eat-screen-smell",
         seed: Some(21),
         character: Some("human,male,warrior"),
+        run: true,
+        screen: Some("eat"),
+        ..BASE
+    },
+    // A thief is trained in Appraise (#1031): the eat list says how fresh the food looks.
+    Case {
+        name: "eat-screen-judged",
+        seed: Some(6),
+        character: Some("human,male,thief"),
         run: true,
         screen: Some("eat"),
         ..BASE

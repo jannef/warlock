@@ -2,7 +2,7 @@
 source: crates/warlock/src/ui/screen_snapshots.rs
 expression: "render(case, content.clone())"
 ---
- You spend 20 mana (dev).
+ You spend 16 mana (dev).
  You give your blood, and power wells up in you.
              ┌─ Abilities ───────────────────────────────────────────────────────────┐
              │                                                                       │
@@ -12,9 +12,9 @@ expression: "render(case, content.clone())"
              │   b  Knock              in a direction                                │
              │   c  Scribe             a scroll of a spell you know                  │
              │ Spells                                                                │
-             │   d  Burning hands      2d4 fire, burns one in four, 3 mana, aimed    │
+             │   d  Burning hands      2d4 fire, burns one in four, 2 mana, aimed    │
              │   e  Ray of frost       1d8 cold, numbs, 1 mana, aimed                │
-             │   f  Magic missile      3d4 force, shoves on a big hit, 3 mana, aimed │
+             │   f  Magic missile      3d4 force, shoves on a big hit, 2 mana, aimed │
              │ Talents                                                               │
              │   g  Blood magic                                                      │
              │ Skills                                                                │
@@ -31,4 +31,4 @@ expression: "render(case, content.clone())"
              └───────────────────────────────────────────────────────────────────────┘
 
 
- The Hub  ·  HP 19/24  ·  MP 132/149  ·  Lv 15  ·  08:00  ·  11 Darkening, Year 1444     ? controls
+ The Hub  ·  HP 19/24  ·  MP 136/149  ·  Lv 15  ·  08:00  ·  11 Darkening, Year 1444     ? controls

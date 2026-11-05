@@ -225,15 +225,15 @@ impl World {
     /// everyone on them (but a caster its own burst spares, Scroll savant), half of it (at
     /// least 1) beyond radius − 1; then the walls its blast
     /// breaks ([`World::blast`]) and the doors it breaks (a spell's type's, [`World::blast_doors`]),
-    /// then the ice it melts or shatters ([`World::shock`]) or the water it freezes
-    /// ([`World::frost`]).
+    /// then the ice it melts or shatters ([`World::shock`]) or the water it
+    /// freezes ([`World::frost`]). What it rolled.
     pub(super) fn cast_burst(
         &mut self,
         caster: Caster,
         (origin, center): (Pos, Pos),
         burst: &Burst,
         events: &mut Vec<Event>,
-    ) {
+    ) -> i32 {
         let level = self.state.current();
         let radius = burst.radius;
         // Its own cell never stops it: a trap's on a shut door bursts out on both sides.
@@ -283,6 +283,7 @@ impl World {
         if let Some(kind) = typed {
             self.spell_type_burst(kind, (center, radius), burst.blast, events);
         }
+        roll
     }
 
     /// What a burst of `radius` around `center` does to the ice and water it reaches.
@@ -307,7 +308,7 @@ impl World {
     /// `bolt` runs from `origin` over `path` (its cells in order, as far as it reaches), cast by
     /// `caster`: its effect ([`Event::Spell`], drawn along the cells after its origin: a trap's
     /// own cell, first in its path, is struck but not drawn), and one roll of its damage for
-    /// everyone on the path.
+    /// everyone on the path. What it rolled.
     pub(super) fn cast_bolt(
         &mut self,
         caster: Caster,
@@ -315,7 +316,7 @@ impl World {
         path: &[Pos],
         bolt: &Bolt,
         events: &mut Vec<Event>,
-    ) {
+    ) -> i32 {
         let drawn: Vec<Pos> = path.iter().copied().filter(|&p| p != origin).collect();
         if !drawn.is_empty() && !bolt.spell.is_empty() {
             events.push(Event::Spell {
@@ -335,6 +336,7 @@ impl World {
             let damage = Damage::new(roll, bolt.kind);
             self.spell_hurts(caster, id, (origin, true), damage, events);
         }
+        roll
     }
 
     /// What of a burst's or a bolt's `damage` reaches actor `id`: with Evasion (spec §8

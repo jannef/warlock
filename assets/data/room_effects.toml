@@ -320,8 +320,8 @@ sides = { good = "altar_good", evil = "altar_evil" }
 offers = { pray = "forgotten_altar" }
 
 # A forge (spec §7 "Special rooms"): a cold forge with an anvil. Temper beside it: ten minutes'
-# work on a weapon or armour you carry, which may improve it, flaw it, or break it; Metalcraft
-# leans the odds. data/outcomes/forge.toml has what tempering draws. Never spent.
+# work on metal arms or armour you carry, which may improve it or damage it, and mend a damaged
+# one or break it; Metalcraft helps. data/temper.toml has the numbers. Never spent.
 [[effect]]
 id = "forge"
 name = "forge"
@@ -331,7 +331,7 @@ near = "You smell old soot and cold iron."
 weight = 3
 min_cells = 9
 feature = "anvil"
-offers = { temper = "forge" }
+offers = { temper = true }
 
 # A healing spring: clear water in an old stone basin. Drink beside it, as often as one likes;
 # data/outcomes/spring.toml has what a drink draws, mostly good, sometimes foul.
@@ -402,7 +402,8 @@ haunt = { faction = "undead", every = "1h" }
 unholy = true
 
 # A scriptorium (spec §7 "Special rooms"): shelves at its middle, a few scrolls on its floor, and
-# studying inside earns Decipher script's training marks twice as often.
+# Decipher script's training marks at twice the chance inside (its one mark so far, a check to read
+# a scroll, is certain anywhere).
 [[effect]]
 id = "scriptorium"
 name = "scriptorium"

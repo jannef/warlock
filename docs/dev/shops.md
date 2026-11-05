@@ -11,7 +11,9 @@ first, a stack each, before its drawn goods: the general store's scrolls of iden
 the general store's and the provisioner's elixirs, #568; none may also be in `always`),
 `stock`/`buys` by item class (`ItemClassId`, ids
 in `data/item_classes.toml`, `docs/dev/objects.md`), `items`, `markup`, `pays`; `Shops::price`/`offer` are the one place
-prices are made, from `Stack::value`, the value of what the stack is made of: its parts, a gem
+prices are made, from `Stack::value` (an item worked at an anvil by its `Worked::value`, and a
+bill's `same_goods` and `goods` keep it apart, at its worth; docs/dev/special-rooms.md), the value
+of what the stack is made of: its parts, a gem
 by its size and cut, `docs/dev/objects.md`; `Shops::trades`/`buys` take the stack, so a loose gem,
 whose object is worth 0, is traded by its gem; the general store buys gems and no shop stocks
 them). Every object has a `value` (required; test fixtures with their own objects need
@@ -55,7 +57,9 @@ new. Keepers are NPCs: `budge = "off_post"` (no swapping at the post), one-liner
 `data/dialogue.toml`, and `World::called` names them by their shop ("Grimbold says: ...").
 Prices are by the goods, never their magic (`Stack::magic` is kept on what is sold and put back, never
 priced; keys and quest letters are worth 0). Generated shops avoid locked rooms and rooms with
-something lying in them, and `hide_traps`/`place_loot` leave shop floors alone. The player's `favour` (Presence modifier × `presence` + the Negotiation `Effect::Bargain` (Appraise's until #666), through `Actor::skill_effect` so of Haggling and skill talents count, + what
+something lying in them, and `hide_traps`/`place_loot` leave shop floors alone. A service's price (`world/service.rs`) follows `shop::haggling` (the same without a keeper's alignment) unless the
+service is `temple = true` (a temple's cure and mending stay flat, Pious aside), and a service paid reports `Use::Deal`
+(#1031). The player's `favour` (Presence modifier × `presence` + the Negotiation `Effect::Bargain` (Appraise's until #666), through `Actor::skill_effect` so of Haggling and skill talents count, + what
 a good keeper makes of their alignment band, `world/alignment.rs::keeper_favour`, at most
 `MAX_FAVOUR`) is never shown: presentation reads only prices
 (`PerceptionView::shop_at`/`shop_here`, `price_tag`, `unpaid`, `owed_on_leaving`, `sale`,

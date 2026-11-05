@@ -55,6 +55,9 @@
 #                 that brings 1 to 12, `most` (1 to 12) of this spell's calls kept at once (past
 #                 it the oldest departs), `minutes` (1 to 600) their stay, `spread` (1 to 5,
 #                 default 2) how far from the caster they appear
+#     arcs        a `damage` ray's, bolt's, touch's, or line's, of a type that arcs (`[types]` in
+#                 ../spells.toml), 1 to 12: that many jumps are taken without a draw, every jump of
+#                 it reaching 2 cells rather than the arc's one
 #     zone        `{ kind = "fire", turns = 10 }`: an area that stays on the cells of a burst's or
 #                 a line's shape for that many of the player's turns (1 to 600; the turn is 6 s;
 #                 docs/dev/spells.md "Zones"): `fire` (a `damage` spell of fire: burns who starts
@@ -77,7 +80,8 @@
 #     range       a ray's, bolt's, or burst's    length    a cone's or a line's
 #     radius      a burst's                      degrees   a buff's or a hex's status's degrees,
 #     count       a `summon`'s count (a roll,              or a summon's minutes (to 600)
-#                 each rung bringing 1 to 12)
+#                 each rung bringing 1 to 12); a spell
+#                 with `arcs`, its jumps (whole, 1 to 12)
 #                 A ladder is one string: the stat's id, then rungs separated by commas, each
 #                 `AT VALUE` with one space: `"intelligence 13 3d6, 16 4d6, 19 5d6, 25 5d6+2"`.
 #                 `AT` is a score, 1 to 40, strictly ascending; at most 8 rungs. `VALUE` is a

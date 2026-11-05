@@ -46,7 +46,7 @@ speaker), and does it: `World::cure(player, "prayer")` (every disease in `data/d
 lists `prayer`; with Pious a point of each damaged stat mends after, unless a disease still
 shows) or `World::mend` (`StatDamage::mend_all`, then `World::restore_drained`: drained points back, `docs/dev/stats.md` "Drain"),
 or, for `identify` (#432), `World::identify` on each of `World::unidentified` (the stacks
-`Lore::knows` does not), priced per stack: `service_price` (Pious only for `cure`/`mend`) times
+`Lore::knows` does not), priced per stack: `service_price` (Pious only for `cure`/`mend`; moved by `shop::haggling` unless the service is `temple = true`, #1031) times
 `service_items`, which `World::topics` also puts in `TopicView::items`; the dialogue screen
 lists such a service "(N gold each)" and, with things to pay for, asks first in the one dialog
 with the total (`DialogueScreen::pay_dialog`). The reply goes through `World::answer`, so the
