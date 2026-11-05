@@ -137,6 +137,7 @@ mod experience;
 mod eyes;
 mod familiar;
 mod feature;
+mod feint;
 mod fight;
 mod flavour;
 mod focus;
@@ -1423,6 +1424,7 @@ impl World {
             Action::Ask { dir, topic } => return self.ask(*dir, topic, events),
             Action::Say { dir, words } => return self.say_to(*dir, words, events),
             Action::Steal(dir) => return self.steal(*dir),
+            Action::Feint(dir) => return self.feint(*dir, events),
             Action::Tame(dir) => return self.start_tame(*dir),
             Action::Intimidate(at) => return self.intimidate(*at, events),
             Action::ThrowVoice(at) => return self.throw_voice(*at, events),
@@ -1666,6 +1668,8 @@ mod escape_tests;
 mod experience_tests;
 #[cfg(test)]
 mod feature_tests;
+#[cfg(test)]
+mod feint_tests;
 #[cfg(test)]
 mod fight_tests;
 #[cfg(test)]

@@ -87,6 +87,9 @@ pub const MAX_SNEAK_DICE: i32 = 25;
 /// The most a skill adds to the initiative check, or to its difficulty for those its holder
 /// catches unawares (spec §8 "Surprise and sneak attacks").
 pub const MAX_SURPRISE_BONUS: i32 = 20;
+/// The most a skill adds to the difficulty of the check a feint asks of a foe (spec §8 "Skills":
+/// Bluff).
+pub const MAX_FEINT_BONUS: i32 = 20;
 /// The most a skill adds to the difficulty of the check a war cry asks of those who hear it
 /// (spec §8 "Skills": Intimidate).
 pub const MAX_INTIMIDATE_BONUS: i32 = 20;
@@ -217,6 +220,10 @@ pub enum Effect {
     Stalk,
     /// Points added to slipping away from a party on the overworld (`world/encounter.rs`).
     Evade,
+    /// Points added to the difficulty of the Willpower check a feint asks (spec §8 "Skills":
+    /// Bluff; `world/feint.rs`); a skill with it, trained, lets the actor feint at all (the
+    /// abilities menu's Feint).
+    Feint,
     /// Points added to stealing from someone (spec §8 "Stealing"; `world/steal.rs`); a skill
     /// with it, trained, lets the actor steal at all (the abilities menu's Steal).
     Steal,
@@ -316,6 +323,7 @@ impl Effect {
             Effect::Slip => MAX_SLIP_BONUS,
             Effect::Lookout | Effect::Stalk | Effect::Evade => MAX_ENCOUNTER_BONUS,
             Effect::Steal => MAX_STEAL_BONUS,
+            Effect::Feint => MAX_FEINT_BONUS,
             Effect::Heal => MAX_HEAL_BONUS,
             Effect::Intimidate => MAX_INTIMIDATE_BONUS,
             Effect::Tame => MAX_TAME_BONUS,
@@ -373,6 +381,8 @@ pub enum Use {
     Forage,
     /// An attempt to steal from someone (spec §8 "Stealing"), whatever comes of it.
     Steal,
+    /// A feint at a foe (spec §8 "Skills": Bluff), whatever comes of it.
+    Feint,
     /// A sneak attack that hit (spec §8 "Surprise and sneak attacks"): its dice landed.
     SneakAttack,
     /// An initiative check made on being caught unawares, whatever comes of it.
@@ -450,6 +460,7 @@ impl Use {
             Use::Lookout => "keeping a lookout for those met on the overworld",
             Use::Forage => "foraging in the wild",
             Use::Steal => "trying to steal from someone",
+            Use::Feint => "feinting at a foe",
             Use::SneakAttack => "a sneak attack that hits",
             Use::Surprise => "being caught unawares (the initiative check, whatever comes of it)",
             Use::Heal => "trying to treat bleeding, poison, or a disease",
@@ -584,6 +595,7 @@ impl Use {
             Use::Lookout => "lookout",
             Use::Forage => "forage",
             Use::Steal => "steal",
+            Use::Feint => "feint",
             Use::SneakAttack => "sneak_attack",
             Use::Surprise => "surprise",
             Use::Heal => "heal",
@@ -641,6 +653,7 @@ impl Effect {
             Effect::Stalk => "stalk",
             Effect::Evade => "evade",
             Effect::Steal => "steal",
+            Effect::Feint => "feint",
             Effect::SneakDice => "sneak_dice",
             Effect::Surprise => "surprise",
             Effect::Initiative => "initiative",

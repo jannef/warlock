@@ -118,6 +118,12 @@ pub enum Action {
     /// Willpower; caught, it turns on them. Takes the time of `steal`; refused (no time) when the
     /// player sees no one there, or someone hostile.
     Steal(Dir),
+    /// Feint at the creature in a direction (spec §8 "Skills": Bluff; `world/feint.rs`): a
+    /// hostile one the player sees, with a mind to fool, checks its Willpower against
+    /// `data/feint.toml`'s difficulty + the player's Presence modifier + Bluff's `feint` points,
+    /// and is Surprised if it fails. Takes the time of `feint`, whatever comes of it; refused (no
+    /// time) untrained, at no one seen, at one not hostile, or at one without a mind.
+    Feint(Dir),
     /// Tame the beast in a direction (spec §8 "Allies": Tame; `world/tame.rs`): `[tame] turns`
     /// actions beside it (`data/companions.toml`), each the time of `tame`, then a Willpower
     /// check; made, it is the player's companion. Refused (no time) untrained, with a companion
@@ -882,6 +888,7 @@ impl fmt::Display for Action {
             Action::Ask { dir, topic } => write!(f, "ask:{dir}:{topic}"),
             Action::Say { dir, words } => write!(f, "say:{dir}:{}", words.replace(' ', "_")),
             Action::Steal(d) => write!(f, "steal:{d}"),
+            Action::Feint(d) => write!(f, "feint:{d}"),
             Action::Tame(d) => write!(f, "tame:{d}"),
             Action::Intimidate(at) => write!(f, "intimidate:{},{}", at.x, at.y),
             Action::ThrowVoice(at) => write!(f, "throw_voice:{},{}", at.x, at.y),
@@ -1026,6 +1033,7 @@ impl FromStr for Action {
                 })
             }
             "steal" => dir().map(Action::Steal),
+            "feint" => dir().map(Action::Feint),
             "tame" => dir().map(Action::Tame),
             "kick" => dir().map(Action::Kick),
             "pick" => dir().map(Action::PickLock),
@@ -1815,6 +1823,7 @@ mod tests {
                 Action::Close(d),
                 Action::Chat(d),
                 Action::Steal(d),
+                Action::Feint(d),
                 Action::Tame(d),
                 Action::Kick(d),
                 Action::PickLock(d),
@@ -1843,6 +1852,8 @@ mod tests {
         assert_eq!(parse_actions("BASH:sw"), Ok(vec![Action::Bash(Dir::SW)]));
         assert!(parse_actions("bash").is_err());
         assert_eq!(parse_actions("Steal:N"), Ok(vec![Action::Steal(Dir::N)]));
+        assert_eq!(parse_actions("feint:E"), Ok(vec![Action::Feint(Dir::E)]));
+        assert!(parse_actions("feint").is_err());
         assert!(parse_actions("steal").is_err());
         assert_eq!(parse_actions("TAME:sw"), Ok(vec![Action::Tame(Dir::SW)]));
         assert!(parse_actions("tame").is_err());
