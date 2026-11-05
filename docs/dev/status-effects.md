@@ -203,14 +203,12 @@ are the allies' list, computed each turn; `kind_of`
 maps it to `ActionKind::Heal`, so a status may block it). A status is treatable by its `treat`
 table (`content::Treat`: `difficulty`, `per_degree`, `stops`, `made`, `failed`; parse checks 0
 to 40, 0 to 10, non-empty words): `stops` (bleeding) ends it through `ended` on a made check and
-lets a failure be retried; without it (poison) a made check lowers the severity a degree (ending
-it through `ended` at none) and the effect's `treated` is set whatever comes of it. A shown
+lets a failure be retried (as does every ailment: no try is spent); without it (poison) a made check lowers the severity a degree (ending
+it through `ended` at none); any failure may be retried at once (#1012: the one-try rule went). A shown
 disease is treated against its own `difficulty`: made, `streak + 1` while that stays below
 `world/disease.rs::recovery_of` (Fever-proof's adjusted recovery; the one helper
 `disease_turn` uses too), else `left` raised to the disease's interval (within
-`longest_wait`, so `is_valid_for` holds); the infection's `treated` is set either way.
-**`Effect::treated` and `Infection::treated` are saved state** (serde-skipped while false, so
-hashes are unchanged). The ability is
+`longest_wait`, so `is_valid_for` holds). The ability is
 `Ability::Heal` (`Aim::Ailment`, `Unavailable::NothingToTreat`); the game's choice of what to
 treat is the one dialog (`input.rs::treat_dialog`). Tests: `world/heal_tests.rs`, the parse
 cases in `content/status.rs`.
