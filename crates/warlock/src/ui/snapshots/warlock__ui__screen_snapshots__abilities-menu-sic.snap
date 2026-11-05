@@ -17,18 +17,18 @@ expression: "render(case, content.clone())"
                     │   g  Listen at a door   in a direction                   │
                     │   h  Forage             not usable here                  │
                     │   i  Fletch                                              │
+                    │   j  Whittle            on something you carry           │
                     │ Weapon skills                                            │
-                    │   j  Shield bash        you hold no shield               │
+                    │   k  Shield bash        you hold no shield               │
                     │ Allies                                                   │
-                    │   k  Come to heel                                        │
-                    │   l  Hold here                                           │
-                    │   m  Set on             at a place you see               │
-                    │   n  Give               on something you carry           │
+                    │   l  Come to heel                                        │
+                    │   m  Hold here                                           │
+                    │   n  Set on             at a place you see               │
+                    │   o  Give               on something you carry           │
                     │                                                          │
                     │ The basilisk's stare: a foe nearby that sees you slows   │
                     │ to a crawl a moment; your eyes then rest two hours.      │
                     │                                                          │
                     │                                                          │
-                    │ a-n or Enter use   Esc close                             │
-                    └──────────────────────────────────────────────────────────┘
- The Hub  ·  HP 133/133  ·  MP 181/181  ·  Focus 10/10  ·  Sta 10/16  ·  Lv 60           ? controls
+                    │ a-o or Enter use   Esc close                             │
+ The Hub  ·  HP 133/└──────────────────────────────────────────────────────────┘         ? controls

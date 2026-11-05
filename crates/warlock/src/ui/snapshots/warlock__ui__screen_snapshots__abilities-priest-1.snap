@@ -19,16 +19,16 @@ expression: "render(case, content.clone())"
                     │   f  Knowledge          not usable yet                   │
                     │   g  Listen at a door   in a direction                   │
                     │   h  Fletch             you have no knife                │
+                    │   i  Whittle            you have no knife                │
                     │ Weapon skills                                            │
-                    │   i  Shield bash        in a direction                   │
+                    │   j  Shield bash        in a direction                   │
                     │                                                          │
                     │ Pray (a cast's time, no mana): what ails you most is     │
                     │ answered, as far as your prayers reach; for now, your    │
                     │ wounds. Pray too often and nothing answers a while.      │
                     │                                                          │
-                    │ a-i or Enter use   Esc close                             │
+                    │ a-j or Enter use   Esc close                             │
                     └──────────────────────────────────────────────────────────┘
-
 
 
  The Hub  ·  HP 17/17  ·  MP 14/14  ·  Lv 1  ·  08:00  ·  11 Darkening, Year 1444        ? controls

@@ -112,6 +112,8 @@ pub enum ActionKind {
     /// A turn of working an item at a forge's anvil (spec §7 "Special rooms"): an attempt
     /// takes many.
     Temper,
+    /// A turn of whittling a wooden item with a knife: an attempt takes many.
+    Whittle,
     /// Trying to disarm a trap (spec §8 "Disarming traps"), whatever comes of it.
     Disarm,
     /// Treating oneself (spec §8 "Skills": the Heal ability): binding a wound, easing a poison
@@ -174,6 +176,7 @@ impl ActionKind {
         ActionKind::Forage,
         ActionKind::Fletch,
         ActionKind::Temper,
+        ActionKind::Whittle,
         ActionKind::Disarm,
         ActionKind::Heal,
         ActionKind::Chat,
@@ -224,6 +227,7 @@ impl ActionKind {
             ActionKind::Forage => "forage",
             ActionKind::Fletch => "fletch",
             ActionKind::Temper => "temper",
+            ActionKind::Whittle => "whittle",
             ActionKind::Disarm => "disarm",
             ActionKind::Heal => "heal",
             ActionKind::Chat => "chat",
@@ -293,6 +297,7 @@ impl ActionKind {
             ActionKind::Forage => "forage",
             ActionKind::Fletch => "fletch",
             ActionKind::Temper => "temper",
+            ActionKind::Whittle => "whittle",
             ActionKind::Disarm => "disarm traps",
             ActionKind::Heal => "tend your hurts",
             ActionKind::Chat => "talk",

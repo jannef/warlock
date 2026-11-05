@@ -372,9 +372,10 @@ mod tests {
             "  d  Pick lock          in a direction",
             "  e  Steal              in a direction",
             "  f  Fletch             you have no knife",
+            "  g  Whittle            you have no knife",
             "Weapon skills",
-            "  g  Shield bash        you hold no shield",
-            "a-g or Enter use   Esc close",
+            "  h  Shield bash        you hold no shield",
+            "a-h or Enter use   Esc close",
         ] {
             assert!(text.contains(expected), "{expected:?} in\n{text}");
         }
@@ -390,7 +391,7 @@ mod tests {
         let b = Bindings::default();
         let world = thief(false);
         let mut screen = AbilitiesScreen::new(Some(&world.perception()), None);
-        assert_eq!(screen.handle(&Press::typed('g'), &b), ScreenAction::Stay);
+        assert_eq!(screen.handle(&Press::typed('h'), &b), ScreenAction::Stay);
         assert_eq!(screen.selected(), Some(Ability::ShieldBash));
         let text = drawn(&screen, 80, 30).join("\n");
         assert!(text.contains("Shield bash: you hold no shield."), "{text}");
@@ -412,12 +413,12 @@ mod tests {
         let mut screen = AbilitiesScreen::new(Some(&world.perception()), last);
         assert_eq!(screen.selected(), Some(Ability::ShieldBash));
         assert_eq!(
-            screen.handle(&Press::typed('g'), &b),
+            screen.handle(&Press::typed('h'), &b),
             ScreenAction::UseAbility(Ability::ShieldBash)
         );
         let text = drawn(&screen, 80, 30).join("\n");
         assert!(
-            text.contains("> g  Shield bash        in a direction"),
+            text.contains("> h  Shield bash        in a direction"),
             "{text}"
         );
         assert!(text.contains("Strike someone next to you with the shield you hold."));
@@ -471,7 +472,7 @@ mod tests {
         let last = Some(Ability::ShieldBash);
         let screen = AbilitiesScreen::new(Some(&world.perception()), last);
         let text = drawn(&screen, 80, 13).join("\n");
-        assert!(text.contains("Page 3/3"), "{text}");
-        assert!(text.contains("> b  Shield bash"), "{text}");
+        assert!(text.contains("Page 4/4"), "{text}");
+        assert!(text.contains("> a  Shield bash"), "{text}");
     }
 }

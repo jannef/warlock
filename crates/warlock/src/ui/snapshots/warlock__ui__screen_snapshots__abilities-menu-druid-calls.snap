@@ -20,11 +20,11 @@ expression: "render(case, content.clone())"
           │   k  Pick lock           in a direction                                     │
           │   l  Forage              not usable here                                    │
           │   m  Fletch              you have no knife                                  │
+          │   n  Whittle             you have no knife                                  │
           │ Weapon skills                                                               │
-          │   n  Shield bash         you hold no shield                                 │
+          │   o  Shield bash         you hold no shield                                 │
           │ Allies                                                                      │
-          │   o  Come to heel                                                           │
-          │   p  Hold here                                                              │
+          │   p  Come to heel                                                           │
           │                                                                             │
           │ The basilisk's stare: a foe nearby that sees you slows to a crawl a moment; │
           │ your eyes then rest two hours.                                              │

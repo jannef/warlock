@@ -157,6 +157,8 @@ pub enum ScreenName {
     /// Choose what to temper at a forge's anvil (the Temper ability, spec §7 "Special rooms"):
     /// the weapons and armour carried.
     Temper,
+    /// Choose a wooden weapon to whittle with a knife (the Whittle ability).
+    Whittle,
     /// Choose a scroll to make out unread (the Decipher ability, spec §8 "Scrolls"): those of a
     /// type not yet identified.
     Decipher,
@@ -216,6 +218,7 @@ impl ScreenName {
                 | ScreenName::Study
                 | ScreenName::Identify
                 | ScreenName::Temper
+                | ScreenName::Whittle
                 | ScreenName::Decipher
                 | ScreenName::Give
                 | ScreenName::Abilities
@@ -441,6 +444,7 @@ impl Screen {
                 beneath.item.unwrap_or(0),
             ))),
             ScreenName::Temper => objects(ObjectList::Temper),
+            ScreenName::Whittle => objects(ObjectList::Whittle),
             ScreenName::Decipher => objects(ObjectList::Decipher),
             ScreenName::Give => objects(ObjectList::Give),
             ScreenName::Abilities => Screen::Abilities(AbilitiesScreen::new(run, beneath.ability)),
@@ -478,6 +482,7 @@ impl Screen {
                 ObjectList::Study => ScreenName::Study,
                 ObjectList::Identify(_) => ScreenName::Identify,
                 ObjectList::Temper => ScreenName::Temper,
+                ObjectList::Whittle => ScreenName::Whittle,
                 ObjectList::Decipher => ScreenName::Decipher,
                 ObjectList::Give => ScreenName::Give,
             },
@@ -2244,21 +2249,21 @@ mod tests {
         const ABILITIES: (KeyCode, &str) = (KeyCode::KeyA, "a");
         const REPEAT: (KeyCode, &str) = (KeyCode::KeyX, "X");
         let mode = |app: &App| *app.world().resource::<InputMode>();
-        // Without a shield: the menu opens on `a`; the shield bash (`g`) is greyed out, so its
+        // Without a shield: the menu opens on `a`; the shield bash (`h`) is greyed out, so its
         // letter only says why; Esc closes the menu, and no time passed.
         let mut app = app(true);
         frame(&mut app, &[ABILITIES]);
         assert_eq!(names(&app), [ScreenName::Abilities]);
-        frame(&mut app, &[(KeyCode::KeyG, "g")]);
+        frame(&mut app, &[(KeyCode::KeyH, "h")]);
         assert_eq!(names(&app), [ScreenName::Abilities]);
         frame(&mut app, &[ESC]);
         assert!(names(&app).is_empty() && actions(&app).is_empty());
         // The quick repeat with nothing used yet opens the menu.
         frame(&mut app, &[REPEAT]);
         assert_eq!(names(&app), [ScreenName::Abilities]);
-        // With a shield: `a` `g` closes the menu and asks for a direction; a direction bashes.
+        // With a shield: `a` `h` closes the menu and asks for a direction; a direction bashes.
         let mut app = with_a_shield();
-        frame(&mut app, &[ABILITIES, (KeyCode::KeyG, "g")]);
+        frame(&mut app, &[ABILITIES, (KeyCode::KeyH, "h")]);
         assert!(names(&app).is_empty());
         assert_eq!(mode(&app), InputMode::Ability(Ability::ShieldBash));
         frame(&mut app, &[EAST]);

@@ -425,6 +425,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
     **Fletch** (`Ability::Fletch`, §8 "Fletching"), Woodcraft's use, which everyone has, trained
     or not, asking for nothing, in that skill's place, greyed out "you have no knife"
     (`Unavailable::NoKnife`) or "you have no bow or crossbow ready" (`Unavailable::NoLauncher`);
+    **Whittle** (`Ability::Whittle`, §8 "Skills", Woodcraft's second use), beside it, which everyone has,
+    asking for an item (the Whittle list: wooden weapons, `world::workable_wood`), greyed out "you
+    have no knife" (`Unavailable::NoKnife`);
     and each other skill used as
     an action (`kind = "action"`, §8 "Skills") the player
     is trained in, listed but never available until its use comes (it then becomes an ability of

@@ -94,6 +94,11 @@ pub enum Ability {
     /// Make arrows or bolts (spec §8 "Fletching"): [`Action::Fletch`], in Woodcraft's place,
     /// though anyone has it.
     Fletch,
+    /// Whittle a wooden weapon with a knife (spec §8 "Skills": Woodcraft; `world/temper.rs`):
+    /// [`Action::Whittle`], Temper's twin for wood, in Woodcraft's place beside Fletch, though
+    /// anyone has it. Unavailable ([`Unavailable::NoKnife`]) without a knife carried; it asks
+    /// which item ([`Aim::Item`]).
+    Whittle,
     /// Forage for food in the wild (spec §8 "Foraging"): [`Action::Forage`], Survival's use (the
     /// skill with the `forage` benefit, listed as this in its place, while `data/forage.toml`
     /// exists). Had by whoever is trained in it; unavailable ([`Unavailable::NotHere`]) anywhere
@@ -382,12 +387,15 @@ impl Ability {
     pub fn every(content: &Content) -> Vec<Ability> {
         // Skills: those used as actions, in skill order, each as its use once that is in the game,
         // and a passive skill with a use of its own (Survival's Forage) as that use.
-        let skills = (content.skills().iter().enumerate()).filter_map(|(i, def)| {
-            let id = SkillId(u8::try_from(i).ok()?);
-            match Ability::use_of(def, content) {
+        // Woodcraft has two: Fletch, and Whittle beside it.
+        let skills = (content.skills().iter().enumerate()).flat_map(|(i, def)| {
+            let id = u8::try_from(i).map(SkillId).ok();
+            let ability = match Ability::use_of(def, content) {
                 Some(ability) => Some(ability),
-                None => def.is_active().then_some(Ability::Skill(id)),
-            }
+                None => id.filter(|_| def.is_active()).map(Ability::Skill),
+            };
+            let whittle = (ability == Some(Ability::Fletch)).then_some(Ability::Whittle);
+            ability.into_iter().chain(whittle)
         });
         // Birth sign: the active gifts some sign grants, in their order.
         let signs = (SignActive::ALL.iter())
@@ -574,7 +582,7 @@ impl Ability {
             Ability::SecondWind => actor.talent_mods(content).second_wind.is_some(),
             Ability::BloodMagic => actor.talent_mods(content).blood_magic.is_some(),
             Ability::ThrowVoice => actor.talent_mods(content).throw_voice,
-            Ability::ShieldBash | Ability::Fletch => true,
+            Ability::ShieldBash | Ability::Fletch | Ability::Whittle => true,
             Ability::Weapon(skill, id) => actor.weapon_abilities(content).contains(&(skill, id)),
             // A place offers it, not who one is ([`Ability::here`]); an order needs allies
             // ([`Ability::orders`]).
@@ -600,6 +608,7 @@ impl Ability {
             Ability::Intimidate => "intimidate",
             Ability::Forage => "forage",
             Ability::Fletch => "fletch",
+            Ability::Whittle => "whittle",
             Ability::Decipher => "decipher",
             Ability::Heal => "heal",
             Ability::SecondWind => "second_wind",
@@ -641,6 +650,7 @@ impl Ability {
             Ability::Intimidate => "Intimidate",
             Ability::Forage => "Forage",
             Ability::Fletch => "Fletch",
+            Ability::Whittle => "Whittle",
             Ability::Decipher => "Decipher",
             Ability::Heal => "Heal",
             Ability::SecondWind => "Second wind",
@@ -699,6 +709,12 @@ impl Ability {
             Ability::Fletch => {
                 "Spend a while with a knife and a bow to hand, cutting arrows or bolts for it \
                  from what wood there is. Anyone can, after a fashion."
+            }
+            Ability::Whittle => {
+                "Work a wooden weapon you carry with your knife for ten minutes. It may come out \
+                 finer, or damaged and stripped of what was done to it; damaged, the next try \
+                 mends it or breaks it. Each try is harder than the last. Anyone can, after a \
+                 fashion."
             }
             Ability::Decipher => {
                 "Pore over a scroll you carry, of a kind you have not identified, for ten \
@@ -768,6 +784,7 @@ impl Ability {
             | Ability::Intimidate
             | Ability::Forage
             | Ability::Fletch
+            | Ability::Whittle
             | Ability::Decipher
             | Ability::Heal => Source::Skill,
             Ability::ThrowVoice => Source::Class,
@@ -806,7 +823,7 @@ impl Ability {
             | Ability::Heel
             | Ability::Hold
             | Ability::Drink => Aim::Nothing,
-            Ability::Temper | Ability::Give | Ability::Decipher => Aim::Item,
+            Ability::Temper | Ability::Whittle | Ability::Give | Ability::Decipher => Aim::Item,
             Ability::ThrowVoice | Ability::SetOn | Ability::Intimidate => Aim::Cell,
             Ability::Heal => Aim::Ailment,
             Ability::Disarm
@@ -838,6 +855,7 @@ impl Ability {
             Ability::Intimidate => Some(ActionKind::Intimidate),
             Ability::Forage => Some(ActionKind::Forage),
             Ability::Fletch => Some(ActionKind::Fletch),
+            Ability::Whittle => Some(ActionKind::Whittle),
             Ability::Decipher => Some(ActionKind::Decipher),
             Ability::Heal => Some(ActionKind::Heal),
             Ability::SecondWind | Ability::BloodMagic => Some(ActionKind::Wait),
@@ -873,6 +891,7 @@ impl Ability {
             | Ability::Intimidate
             | Ability::Forage
             | Ability::Fletch
+            | Ability::Whittle
             | Ability::Decipher
             | Ability::Heal
             | Ability::SecondWind
@@ -967,7 +986,7 @@ impl Ability {
             (Ability::Forage, _) => Some(Action::Forage),
             (Ability::Fletch, _) => Some(Action::Fletch),
             // It asks for an item ([`Ability::action_on`]).
-            (Ability::Temper | Ability::Decipher, _) => None,
+            (Ability::Temper | Ability::Whittle | Ability::Decipher, _) => None,
             (Ability::Heel, _) => Some(Action::Order(Command::Heel)),
             (Ability::Hold, _) => Some(Action::Order(Command::Hold)),
             // It asks for a cell ([`Ability::action_at`]).
@@ -981,6 +1000,7 @@ impl Ability {
         match self {
             Ability::Decipher => Some(Action::Decipher { item }),
             Ability::Temper => Some(Action::Temper { item }),
+            Ability::Whittle => Some(Action::Whittle { item }),
             Ability::Give => Some(Action::Give { item, ally: None }),
             Ability::Class(active) if active.aims_item() => Some(Action::UseOn(active, item)),
             Ability::Spell(spell) if aims_item(content, spell) => {
@@ -1019,6 +1039,7 @@ impl Ability {
             | Ability::Tame
             | Ability::Forage
             | Ability::Fletch
+            | Ability::Whittle
             | Ability::Decipher
             | Ability::Heal
             | Ability::SecondWind
@@ -1094,6 +1115,7 @@ impl Ability {
                 .map(Unavailable::While),
             Ability::Skill(_) => Some(Unavailable::NotYet),
             Ability::Fletch => crate::world::fletch_lack(actor, content),
+            Ability::Whittle => crate::world::whittle_lack(actor, content),
             Ability::Weapon(_, id) => weapon_unavailable(actor, content, id),
             Ability::Heal => (crate::heal::treatable(actor, content).is_empty())
                 .then_some(Unavailable::NothingToTreat),
@@ -1336,6 +1358,7 @@ mod tests {
                 "steal",
                 "forage",
                 "fletch",
+                "whittle",
             ]
         );
         let last: Vec<Ability> = every.iter().rev().take(7).rev().copied().collect();

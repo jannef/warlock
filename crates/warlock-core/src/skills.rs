@@ -111,6 +111,8 @@ pub const MAX_FLETCH_BONUS: i32 = 12;
 pub const MAX_FORAGE_BONUS: i32 = 30;
 /// The most a skill adds to tempering an item at an anvil (spec §7 "Special rooms": the forge).
 pub const MAX_TEMPER_BONUS: i32 = 20;
+/// The most a skill adds to whittling a wooden item with a knife (`world/temper.rs`).
+pub const MAX_WHITTLE_BONUS: i32 = 12;
 /// The most a skill adds to reading a scroll (spec §8 "Scrolls"; `world/decipher.rs`).
 pub const MAX_DECIPHER_BONUS: i32 = 20;
 /// The most a skill adds to a Swim check (spec §8 "Skills": a plunge through the ice).
@@ -282,6 +284,9 @@ pub enum Effect {
     /// Points added to the check of an attempt at an anvil (spec §7 "Special rooms": Temper;
     /// `world/temper.rs`). Anyone may temper; the skill only helps.
     Temper,
+    /// Points added to the check of an attempt at whittling a wooden item with a knife (Woodcraft;
+    /// `world/temper.rs`). Anyone may whittle; the skill only helps.
+    Whittle,
     /// Points added to a Swim check (spec §8 "Skills": Swim; `world/ice.rs`, a plunge through the
     /// ice; `world/swim.rs`, a step in deep water); only a skill with it, trained, asks the check
     /// at all.
@@ -341,6 +346,7 @@ impl Effect {
             Effect::Forage => MAX_FORAGE_BONUS,
             Effect::Fletch => MAX_FLETCH_BONUS,
             Effect::Temper => MAX_TEMPER_BONUS,
+            Effect::Whittle => MAX_WHITTLE_BONUS,
             Effect::Swim => MAX_SWIM_BONUS,
             Effect::ManaRegen => MAX_MANA_REGEN_BONUS,
             Effect::MaxMana => MAX_MANA_POOL_BONUS,
@@ -423,6 +429,8 @@ pub enum Use {
     /// An attempt on an item at a forge's anvil done (spec §7 "Special rooms"), whatever comes of
     /// it.
     Temper,
+    /// An attempt at whittling a wooden item done, whatever comes of it.
+    Whittle,
     /// A step onto wading terrain (spec §8 "Skills": Swim; `World::wade`).
     Wade,
     /// A step onto rough ground that is not water (spec §8 "Skills": Balance;
@@ -494,6 +502,7 @@ impl Use {
             Use::Pick => "a try at picking a lock",
             Use::Fletch => "fletching a batch of arrows or bolts",
             Use::Temper => "tempering an item at an anvil",
+            Use::Whittle => "whittling a wooden item with a knife",
             Use::Wade => "a step wading through water or marsh",
             Use::RoughStep => "a step onto rough ground that slows (bush, reeds, rubble, ice)",
             Use::Staggered => "acting while Staggered",
@@ -631,6 +640,7 @@ impl Use {
             Use::Pick => "pick",
             Use::Fletch => "fletch",
             Use::Temper => "temper",
+            Use::Whittle => "whittle",
             Use::Wade => "wade",
             Use::RoughStep => "rough_step",
             Use::Staggered => "staggered",
@@ -694,6 +704,7 @@ impl Effect {
             Effect::Pick => "pick",
             Effect::Fletch => "fletch",
             Effect::Temper => "temper",
+            Effect::Whittle => "whittle",
             Effect::Swim => "swim",
             Effect::ManaRegen => "mana_regen",
             Effect::MaxMana => "max_mana",

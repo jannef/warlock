@@ -125,6 +125,7 @@ fn effect_name(effect: Effect) -> &'static str {
         Effect::SongCraft => "your songs are harder to shake off",
         Effect::Fletch => "fletching: a better check for a batch of arrows or bolts",
         Effect::Temper => "tempering at a forge's anvil",
+        Effect::Whittle => "whittling wood with a knife",
         Effect::Wade => "wading through water and marsh is quicker",
         Effect::Footing => "walking over rough ground (bush, reeds, rubble, ice) is quicker",
         Effect::SteadyEase => "less time lost when you are staggered",
@@ -189,6 +190,7 @@ pub(super) fn skill_benefits(content: &Content) -> String {
             Effect::SongCraft => "song's difficulty",
             Effect::Fletch => "fletching",
             Effect::Temper => "tempering",
+            Effect::Whittle => "whittling",
             Effect::Wade => "wading's extra cost",
             Effect::Footing => "rough ground's extra cost",
             Effect::SteadyEase => "staggering's extra cost",
@@ -231,6 +233,7 @@ pub(super) fn skill_benefits(content: &Content) -> String {
                 | Effect::SongCraft
                 | Effect::Fletch
                 | Effect::Temper
+                | Effect::Whittle
                 | Effect::Swim
                 | Effect::Surprise
                 | Effect::Initiative

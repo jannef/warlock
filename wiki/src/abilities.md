@@ -96,6 +96,7 @@ own: [Weapon skills](weapon-skills.md#what-a-rank-teaches) and
   spend ten minutes cutting arrows or bolts for the bow or crossbow you have [ready](ranged.md#getting-ready). Greyed out
   "you have no knife" without one, in your pack or anywhere on you, and "you have no bow or crossbow
   ready" (see [Fletching](skills.md#fletching)).
+- **Whittle**: everyone has it, beside Fletch in [Woodcraft](skills.md#skill-woodcraft)'s place among the Skills. It asks which wooden weapon you carry to improve, and takes ten minutes. Greyed out "you have no knife" without one (see [Whittling](skills.md#whittling)).
 - **Forage**: anyone trained in [Survival](skills.md#skill-survival) has it, in the skill's place among the Skills. It asks
   for nothing: you spend ten minutes searching the wild around you for food. Only in the wild,
   on the [overworld](overworld.md#travel) and in its [local areas](overworld.md#local-areas); elsewhere it is greyed out, "not usable here" (see

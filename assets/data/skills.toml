@@ -534,7 +534,12 @@ id = "woodcraft"
 name = "Woodcraft"
 description = "Working wood: carving, carpentry, and the making of bows, arrows, and bolts."
 kind = "action"
-mark = [{ on = "fletch", chance = 100 }]
+mark = [{ on = "fletch", chance = 100 }, { on = "whittle", chance = 100 }]
 # Fletching (spec §8 "Fletching", fletch.toml; the Fletch ability, which anyone has): +8 to the
 # check at 100, +12 at 200; the value also adds to the count and makes them plain (fletch.toml).
-benefit = [{ effect = "fletch", curve = [[0, 0], [100, 8], [200, 12]] }]
+# Whittling (the Whittle ability, which anyone has with a knife; temper.toml's rules, for wood):
+# the same, added to the Dexterity check of an attempt.
+benefit = [
+    { effect = "fletch", curve = [[0, 0], [100, 8], [200, 12]] },
+    { effect = "whittle", curve = [[0, 0], [100, 8], [200, 12]] },
+]
