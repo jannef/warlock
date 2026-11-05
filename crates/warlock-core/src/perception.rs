@@ -2260,6 +2260,20 @@ impl<'a> PerceptionView<'a> {
         .collect()
     }
 
+    /// What the player's Knowledge tells of a creature they see (spec §8 "Skills": Knowledge),
+    /// in words only: what its kind resists, is immune to, or is vulnerable to, in damage type
+    /// order; nothing while their Knowledge does not stand above its level, and never what it
+    /// wears or what has been done to it.
+    pub fn known_resistances(
+        &self,
+        actor: &SeenActor,
+    ) -> Vec<(DamageTypeId, crate::damage::ResistanceWord)> {
+        match actor.kind {
+            ActorKind::Player => Vec::new(),
+            _ => (self.player).known_resistances(self.content, actor.creature),
+        }
+    }
+
     /// How the run ended, once the player has died (what killed them only if they saw it).
     pub fn death(&self) -> Option<&'a Death> {
         self.death

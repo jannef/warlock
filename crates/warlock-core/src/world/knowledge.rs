@@ -9,6 +9,11 @@
 //!   only a trained value past the creature's level helps (and an untrained skill gives nothing,
 //!   as every skill). Creatures resisting each other's abilities get nothing: the player's
 //!   Knowledge only. Nothing is said when it helps.
+//! - **What it knows of it** (#1030): what a creature's kind resists, is immune to, or suffers
+//!   from, in words, once the same skills' value stands above its level at all
+//!   ([`Actor::known_resistances`], read by `PerceptionView::known_resistances` for look mode).
+//!   The kind's own (`resist` in its data): lore says nothing of what this one wears or drank.
+//!   No marks: knowing is not practising.
 //! - **Marks**: each such check, whatever comes of it, is a [`Use::Resist`] (one mark draw of
 //!   the training stream per rule, as every use); discovery experience (a first kill of a kind,
 //!   an arrival that pays, `world/experience.rs`) is a [`Use::Discover`].
@@ -18,6 +23,8 @@
 //! were.
 
 use super::{Actor, ActorId, World};
+use crate::content::{Content, CreatureId, DamageTypeId};
+use crate::damage::{ResistanceWord, Resistances};
 use crate::skills::{Effect, Use};
 
 impl World {
@@ -50,6 +57,25 @@ impl World {
 
 /// What `actor`'s skills add to a check resisting the ability of a creature of level `level`
 /// ([`Effect::Resist`], read above the level).
-pub(crate) fn resist_bonus(content: &crate::content::Content, actor: &Actor, level: u16) -> i32 {
+pub(crate) fn resist_bonus(content: &Content, actor: &Actor, level: u16) -> i32 {
     actor.skill_effect_above(content, Effect::Resist, level)
+}
+
+impl Actor {
+    /// What its Knowledge tells of creatures of type `creature`, in words and in damage type
+    /// order: nothing unless a skill with [`Effect::Resist`] stands above the type's level.
+    pub(crate) fn known_resistances(
+        &self,
+        content: &Content,
+        creature: CreatureId,
+    ) -> Vec<(DamageTypeId, ResistanceWord)> {
+        let def = content.creature(creature);
+        if !self.skill_stands_above(content, Effect::Resist, u16::from(def.level)) {
+            return Vec::new();
+        }
+        let count = content.damage_types().len();
+        (Resistances::sum(count, def.resist.iter().copied(), []).iter())
+            .filter_map(|(kind, percent)| Some((kind, ResistanceWord::of(percent)?)))
+            .collect()
+    }
 }
