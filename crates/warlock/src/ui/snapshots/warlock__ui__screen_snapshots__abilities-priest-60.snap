@@ -3,8 +3,7 @@ source: crates/warlock/src/ui/screen_snapshots.rs
 expression: "render(case, content.clone())"
 ---
  Your athletics improves. (×177) You learn Deep lungs. You learn Healthy. You learn Cool head. You
- learn Iron will. You learn Lean. You learn Long fast. You learn Unbroken soul. You learn --more--
-                    ┌─ Abilities ──────────────────────────────────────────────┐
+ learn Iron will. Yo┌─ Abilities ──────────────────────────────────────────────┐You learn --more--
                     │                                                          │
                     │ Birth sign                                               │
                     │   a  Transfixing stare  at a place you see               │
@@ -20,15 +19,16 @@ expression: "render(case, content.clone())"
                     │   h  Decipher script    not usable yet                   │
                     │   i  Heal               nothing to treat                 │
                     │   j  Knowledge          not usable yet                   │
-                    │   k  Fletch             you have no knife                │
+                    │   k  Listen at a door   in a direction                   │
+                    │   l  Fletch             you have no knife                │
                     │ Weapon skills                                            │
-                    │   l  Shield bash        in a direction                   │
+                    │   m  Shield bash        in a direction                   │
                     │                                                          │
                     │ Everything that ails you is answered at once: wounds,    │
                     │ hunger, sickness and poison, hexes and holds, what was   │
                     │ taken, and your mana and every pool you hold, filled.    │
                     │                                                          │
-                    │ a-l or Enter use   Esc close                             │
+                    │ a-m or Enter use   Esc close                             │
                     └──────────────────────────────────────────────────────────┘
 
  The Hub  ·  HP 66/66  ·  MP 427/427  ·  Lv 60  ·  08:00  ·  11 Darkening, Year 1444     ? controls

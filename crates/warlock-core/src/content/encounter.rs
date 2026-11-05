@@ -465,6 +465,9 @@ pub struct EncounterEntry {
     /// A peaceful party's dialogue (an npc id of the campaign's dialogue), given to every member
     /// of the lead's type.
     pub npc: Option<String>,
+    /// A player trained in Bluff may talk their way past the party when met face to face
+    /// (#1017): only a hostile entry with a `group`.
+    pub talk_past: bool,
 }
 
 /// `draw = { pool = "wulfeshol", danger = 5, count = "1d3" }`: members drawn one by one from a
@@ -540,6 +543,8 @@ struct EntrySpec {
     #[serde(default)]
     stance: EntryStance,
     npc: Option<String>,
+    #[serde(default)]
+    talk_past: bool,
 }
 
 #[derive(Deserialize)]
@@ -662,6 +667,12 @@ fn entry(spec: EntrySpec, campaign: &str, content: &Content) -> Result<Encounter
             return Err("only a peaceful entry has an `npc`".into());
         }
     }
+    if spec.talk_past && spec.stance != EntryStance::Hostile {
+        return Err("only a hostile entry is talked past (`talk_past`)".into());
+    }
+    if spec.talk_past && spec.draw.is_some() {
+        return Err("a `draw` entry is never talked past: what is drawn may be anything".into());
+    }
     let player = content.creature_id("player");
     let mut group = Vec::new();
     for m in &spec.group {
@@ -720,6 +731,7 @@ fn entry(spec: EntrySpec, campaign: &str, content: &Content) -> Result<Encounter
         lead,
         stance: spec.stance,
         npc: spec.npc,
+        talk_past: spec.talk_past,
     })
 }
 

@@ -55,8 +55,7 @@ pub enum Layer {
     Equipment,
     /// Not a map: the player's character (`Race Dwarf`, `Gender Female`, `Class Warrior`), if
     /// any, then their own scores, one stat a line (`Strength 12`, lowered while a status effect
-    /// or stat damage lowers it), then their caster level (`Caster level 3`; spec §8 "Spells"),
-    /// then their alignment band (`Alignment Kind`; spec §8
+    /// or stat damage lowers it), then their alignment band (`Alignment Kind`; spec §8
     /// "Alignment", never the score), then their status effects by name (`Effects Bleeding,
     /// Diseased`) and the diseases they know they have (`Diseases filth fever`) if any; never
     /// potentials, modifiers, how severe an effect is, or a disease's timers.
@@ -853,7 +852,7 @@ fn equipment_rows(view: &PerceptionView<'_>) -> Vec<String> {
 /// The player's character, if any (`Name Brakka`, `Race Dwarf`, `Gender Female`, `Class
 /// Warrior`, `Age 27`, `Born 3 Seedtide 1417`, `Sign Fire Manticore`, with a lucky day's title
 /// `Sign Metal Manticore, the Iron Scourge`), then their own scores, one stat a line:
-/// `Strength 12`, then their caster level: `Caster level 3`.
+/// `Strength 12`.
 fn stat_rows(view: &PerceptionView<'_>) -> Vec<String> {
     let content = view.content();
     let mut rows = Vec::new();
@@ -879,7 +878,6 @@ fn stat_rows(view: &PerceptionView<'_>) -> Vec<String> {
         }
     }
     rows.extend((view.own_scores().iter()).map(|(stat, score)| format!("{} {score}", stat.name())));
-    rows.push(format!("Caster level {}", view.own_caster_level()));
     if let Some(band) = view.own_alignment() {
         rows.push(format!("Alignment {}", band.name()));
     }
@@ -1718,16 +1716,8 @@ fn actor_rows(world: &World) -> Vec<String> {
             } else {
                 format!("{resists}; images {}", mirrored.join(" "))
             };
-            // Its caster level (spec §8 "Spells"), for an actor with mana: its magic items'
-            // `caster_level` included, as for the player.
-            let max_mana = a.max_mana(content);
-            let caster = if max_mana > 0 {
-                format!(" cl {}", world.caster_level(a.id))
-            } else {
-                String::new()
-            };
             format!(
-                "{} {} at {}: hp {}/{} mp {}/{}{caster}{resources} dv {} pv {}{alignment}{court}; weight {} (base {} + carried {}: \
+                "{} {} at {}: hp {}/{} mp {}/{}{resources} dv {} pv {}{alignment}{court}; weight {} (base {} + carried {}: \
                  {carried}){equipped}; {} (limit {}){weapons}; stats {}{skills}{effects}{diseases}\
                  {hunger}{npc}{talk}{resists}",
                 a.id,
@@ -1736,7 +1726,7 @@ fn actor_rows(world: &World) -> Vec<String> {
                 a.hp,
                 a.max_hp(content),
                 a.mana,
-                max_mana,
+                a.max_mana(content),
                 world.defence_of(a.id).total(),
                 world.protection_of(a.id).base,
                 format_weight(w.total()),
@@ -2138,7 +2128,6 @@ pub fn json(world: &World, layers: &[Layer], include_state: bool) -> Value {
     let Value::Object(rest) = json!({
         "hp": { "current": hp, "max": max_hp },
         "mana": { "current": mana, "max": max_mana },
-        "caster_level": view.own_caster_level(),
         "resources": (view.own_resources().iter())
             .map(|r| json!({
                 "id": content.resource(r.resource).id,
@@ -2462,7 +2451,6 @@ mod tests {
                 "Intelligence 12",
                 "Willpower 11",
                 "Presence 9",
-                "Caster level 1",
                 "Alignment Callous"
             ]
         );
@@ -2554,6 +2542,7 @@ mod tests {
             [
                 "Transfixing stare (sign): a cell",
                 "Disarm a trap (skill): a direction",
+                "Listen at a door (skill): a direction",
                 "Pick lock (skill): a direction",
                 "Steal (skill): a direction",
                 "Fletch (skill): you have no knife",
@@ -2562,12 +2551,12 @@ mod tests {
         );
         let value = json(&world, &[], false);
         assert_eq!(
-            value["abilities"][4],
+            value["abilities"][5],
             json!({"id": "fletch", "source": "skill", "aim": "nothing",
                    "unavailable": "no_knife"})
         );
         assert_eq!(
-            value["abilities"][5],
+            value["abilities"][6],
             json!({"id": "shield_bash", "source": "weapon_skill", "aim": "a direction",
                    "unavailable": "no_shield"})
         );
@@ -2576,13 +2565,13 @@ mod tests {
             json!({"id": "disarm", "source": "skill", "aim": "a direction", "unavailable": null})
         );
         assert_eq!(
-            value["abilities"][2],
+            value["abilities"][3],
             json!({"id": "pick_lock", "source": "skill", "aim": "a direction",
                    "unavailable": null})
         );
         assert_eq!(value["abilities"][0]["aim"], "a cell");
         assert_eq!(
-            value["abilities"][3],
+            value["abilities"][4],
             json!({"id": "steal", "source": "skill", "aim": "a direction", "unavailable": null})
         );
         // The storeroom's small shield in hand: it can be used, in a direction.
@@ -2592,9 +2581,9 @@ mod tests {
             world.apply(&action);
         }
         let rows = layer_rows(&world, Layer::Abilities);
-        assert_eq!(rows[5], "Shield bash (weapon skill): a direction");
+        assert_eq!(rows[6], "Shield bash (weapon skill): a direction");
         assert_eq!(
-            json(&world, &[], false)["abilities"][5]["unavailable"],
+            json(&world, &[], false)["abilities"][6]["unavailable"],
             Value::Null
         );
         assert!(!Layer::Abilities.is_dev_only());

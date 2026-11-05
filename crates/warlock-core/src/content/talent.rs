@@ -278,14 +278,6 @@ pub enum TalentEffect {
     /// What rods cost in mana, this percent more (negative: less; never below 1; Channeler; spec
     /// §8 "Magic items": "Rods"), before [`TalentEffect::ManaCostPercent`].
     RodCostPercent { value: i32 },
-    /// Caster level, this much higher (negative: lower; spec §8 "Spells"), in
-    /// [`crate::world::World::caster_level`]; with `per_levels`, `value` per that many character
-    /// levels (Arcane training: +1 per 5).
-    CasterLevel {
-        value: i32,
-        #[serde(default)]
-        per_levels: u8,
-    },
     /// The active Blood magic: give `hp` hit points (never the last) for `mana` mana.
     BloodMagic { hp: i32, mana: i32 },
     /// Footsteps this percent louder (negative: quieter).
@@ -2211,12 +2203,6 @@ impl TalentEffect {
                 }
                 Ok(())
             }
-            TalentEffect::CasterLevel { value, per_levels } => {
-                if *per_levels > 20 {
-                    return Err("`caster_level`: per_levels is 0 to 20".into());
-                }
-                bonus(*value)
-            }
             TalentEffect::SpellMod(spec) => spec.check(content, choice == Some(Choice::School)),
             TalentEffect::SpellType { arc_chance, when } => {
                 if !(1..=100).contains(arc_chance) {
@@ -3737,10 +3723,6 @@ systems = ["hit_points"]
         assert!(
             bad("effects = [{ kind = \"spell_mod\", rungs = 1, lift = 10 }]")
                 .contains("unknown field")
-        );
-        assert!(
-            bad("effects = [{ kind = \"caster_level\", value = 1, per_levels = 50 }]")
-                .contains("per_levels is 0 to 20")
         );
         assert!(
             bad("effects = [{ kind = \"study\", overreach_percent = -200 }]").contains("a percent")

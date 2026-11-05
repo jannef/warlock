@@ -201,7 +201,7 @@ fn does(content: &Content, a: &WeaponAbility) -> String {
             };
             format!(
                 "the spell is cast back at its caster from your cell, as they cast it (their \
-                 caster level, cap, and to-hit), rolling its own attack against their Defence; \
+                 ladders, cap, and to-hit), rolling its own attack against their Defence; \
                  it costs them no more mana and you nothing; at most {times} a turn of yours, and \
                  a spell turned back is never turned back again. Bursts, cones, lines, and hexes \
                  roll no attack and are never turned back, nor a spell that missed you by your \

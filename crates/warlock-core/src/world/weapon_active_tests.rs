@@ -637,7 +637,7 @@ fn breakers_kick_that_misses_or_kills_moves_nobody() {
 }
 
 #[test]
-fn feint_rolls_without_parry_and_shield() {
+fn false_lead_rolls_without_parry_and_shield() {
     let mut w = world("#####\n#@g.#\n#####\n");
     let guard = at(&w, 2, 1);
     let mut target = w.target_of(guard);
@@ -650,20 +650,20 @@ fn feint_rolls_without_parry_and_shield() {
         .with(Category::Parry)
         .with(Category::Shield);
     let player = w.player_id();
-    let feinted = w.feinted(player, target.clone());
-    assert_eq!(feinted.defence.bonus(Category::Shield), 0);
-    assert_eq!(feinted.defence.bonus(Category::Parry), 0);
-    assert_eq!(feinted.defence.bonus(Category::Armour), 3);
+    let misled = w.misled(player, target.clone());
+    assert_eq!(misled.defence.bonus(Category::Shield), 0);
+    assert_eq!(misled.defence.bonus(Category::Parry), 0);
+    assert_eq!(misled.defence.bonus(Category::Armour), 3);
     // Taken by that one attack.
-    assert_eq!(w.feinted(player, target.clone()), target);
-    // Against the guard's tower, feints land where blows do not.
-    let count = |feint: bool| {
+    assert_eq!(w.misled(player, target.clone()), target);
+    // Against the guard's tower, false leads land where blows do not.
+    let count = |lead: bool| {
         let mut w = world("#####\n#@g.#\n#####\n");
         give(&mut w, "wt_knife");
         ranks(&mut w, &[("long_blades", 1), ("duelist", 7)]);
         let mut hits = 0;
         for _ in 0..12 {
-            let outcome = use_(&mut w, if feint { "use:feint:E" } else { "move:E" });
+            let outcome = use_(&mut w, if lead { "use:false_lead:E" } else { "move:E" });
             hits += (strikes(&outcome, AttackKind::Melee).first())
                 .is_some_and(|s| s.is_some_and(|s| s.is_hit())) as u32;
             refill(&mut w);
@@ -790,9 +790,9 @@ fn practised_technique_cuts_the_time_and_drillmaster_the_stamina() {
     use_(&mut w, "use:lunge:E");
     assert_eq!(stamina(&w), 12 - 2);
     // Never below 1, nor half the action's time.
-    let feint = w.content().weapon_ability_id("feint").unwrap();
+    let false_lead = w.content().weapon_ability_id("false_lead").unwrap();
     w.player_mut().talents.take("drillmaster", None);
-    assert_eq!(w.state.player().weapon_stamina(w.content(), feint), 1);
+    assert_eq!(w.state.player().weapon_stamina(w.content(), false_lead), 1);
     // Armour-breaker: Sunder 2 less.
     let sunder = w.content().weapon_ability_id("sunder").unwrap();
     let before = w.state.player().weapon_stamina(w.content(), sunder);

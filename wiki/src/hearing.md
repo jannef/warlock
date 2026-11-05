@@ -105,6 +105,16 @@ place within the last 10 turns (allowing for whatever made it to have moved a co
 turn). So a creature walking back and forth behind a door is reported once each time it comes
 back into earshot, not on every step.
 
+## Listening at a door
+
+Anyone trained in [Listen](skills.md#skill-listen) can stop at a closed [door](doors.md) next to them
+and listen: choose **Listen at a door** in the [abilities](abilities.md) menu and a direction. It
+takes a turn, as waiting does. For that turn, a sound that reaches you through that door counts
+as louder: your hearing threshold for it is lower by what Listen gives (one for every 10 points)
+and 2 more. Every sound you hear that turn is told, new or not, with its marker on the map as
+ever, or you are told you hear nothing beyond the door. A listen always marks Listen, whatever is
+heard.
+
 ## Resting
 
 A message stops a [rest](resting.md), so a new sound wakes you. A sound you already know about,

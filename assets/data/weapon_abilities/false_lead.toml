@@ -1,6 +1,6 @@
 [[weapon_ability]]
-id = "feint"
-name = "Feint"
+id = "false_lead"
+name = "False lead"
 description = "A false lead, then the true blow: the foe's blade and shield are not where they need to be."
 skills = ["duelist"]
 rank = 7

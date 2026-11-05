@@ -1719,7 +1719,8 @@ fn the_status_bar_draws_each_hunger_word_in_its_colour() {
 }
 
 /// The built-in content with an encounter table in the showcase campaign (which ships none):
-/// kobolds (hostile), deer (wildlife), and the hermit (peaceful), met by the dev `meet`.
+/// kobolds (hostile; and talkers, the same flagged `talk_past`), deer (wildlife), and the hermit
+/// (peaceful), met by the dev `meet`.
 fn encounter_content() -> Arc<Content> {
     const TABLE: &str = r#"
 [[table]]
@@ -1729,6 +1730,12 @@ id = "kobolds"
 name = "a band of kobolds"
 weight = 1
 group = [{ creature = "kobold", count = "3" }]
+[[table.entry]]
+id = "talkers"
+name = "a band of talkers"
+weight = 1
+group = [{ creature = "kobold", count = "2" }]
+talk_past = true
 [[table.entry]]
 id = "deer"
 name = "a herd of deer"
@@ -1768,6 +1775,16 @@ fn encounters_as_text() {
         };
         insta::assert_snapshot!(case.name, render(&case, content.clone()));
     }
+    // A bard (trained in Bluff) met face to face by a party flagged `talk_past` (#1017).
+    let case = Case {
+        name: "encounter-talk-past",
+        scenario: "world",
+        character: Some("human,male,bard"),
+        actions: "meet:talkers:met",
+        keys: Some(""),
+        ..BASE
+    };
+    insta::assert_snapshot!(case.name, render(&case, content.clone()));
 }
 
 /// A row of the dialog answers the encounter: the dialog closes and the world has no question

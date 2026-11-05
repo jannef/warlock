@@ -389,6 +389,10 @@ pub enum Use {
     Steal,
     /// A feint at a foe (spec §8 "Skills": Bluff), whatever comes of it.
     Feint,
+    /// A try at talking past a party on the overworld (spec §7 "Overworld encounters"; Bluff),
+    /// whatever comes of it. Named `talk_past` in the data.
+    #[serde(rename = "talk_past")]
+    Bluffed,
     /// A sneak attack that hit (spec §8 "Surprise and sneak attacks"): its dice landed.
     SneakAttack,
     /// An initiative check made on being caught unawares, whatever comes of it.
@@ -450,6 +454,8 @@ pub enum Use {
     Sprung,
     /// A sound heard that is not news while the player rests or waits (spec §5 "Hearing").
     Overhear,
+    /// A turn spent listening at a closed door (spec §5 "Hearing"), whatever is heard.
+    Listen,
 }
 
 impl Use {
@@ -472,6 +478,7 @@ impl Use {
             Use::Forage => "foraging in the wild",
             Use::Steal => "trying to steal from someone",
             Use::Feint => "feinting at a foe",
+            Use::Bluffed => "trying to talk your way past a party met on the way",
             Use::SneakAttack => "a sneak attack that hits",
             Use::Surprise => "being caught unawares (the initiative check, whatever comes of it)",
             Use::Heal => "trying to treat bleeding, poison, or a disease",
@@ -500,6 +507,7 @@ impl Use {
             Use::Sight => "first seeing a creature that has not noticed you",
             Use::Sprung => "a hidden trap going off under you, or under a creature you see",
             Use::Overhear => "hearing a sound that is no news while resting or waiting",
+            Use::Listen => "a turn spent listening at a closed door",
         }
     }
 }
@@ -609,6 +617,7 @@ impl Use {
             Use::Forage => "forage",
             Use::Steal => "steal",
             Use::Feint => "feint",
+            Use::Bluffed => "talk_past",
             Use::SneakAttack => "sneak_attack",
             Use::Surprise => "surprise",
             Use::Heal => "heal",
@@ -635,6 +644,7 @@ impl Use {
             Use::Sight => "sight",
             Use::Sprung => "sprung",
             Use::Overhear => "overhear",
+            Use::Listen => "listen",
         }
     }
 }

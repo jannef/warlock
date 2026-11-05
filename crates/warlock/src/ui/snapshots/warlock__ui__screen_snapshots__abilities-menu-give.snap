@@ -5,28 +5,28 @@ expression: "render(case, content.clone())"
  You see here a bone amulet.
  You pick up a bone amulet.
 
-
                     ┌─ Abilities ──────────────────────────────────────────────┐
                     │                                                          │
                     │ Birth sign                                               │
                     │ > a  Transfixing stare  at a place you see               │
                     │ Skills                                                   │
                     │   b  Tame               you already have a companion     │
-                    │   c  Forage             not usable here                  │
-                    │   d  Fletch                                              │
+                    │   c  Listen at a door   in a direction                   │
+                    │   d  Forage             not usable here                  │
+                    │   e  Fletch                                              │
                     │ Weapon skills                                            │
-                    │   e  Shield bash        you hold no shield               │
+                    │   f  Shield bash        you hold no shield               │
                     │ Allies                                                   │
-                    │   f  Come to heel                                        │
-                    │   g  Hold here                                           │
-                    │   h  Set on             at a place you see               │
-                    │   i  Give               on something you carry           │
+                    │   g  Come to heel                                        │
+                    │   h  Hold here                                           │
+                    │   i  Set on             at a place you see               │
+                    │   j  Give               on something you carry           │
                     │                                                          │
                     │ The basilisk's stare: a foe nearby that sees you slows   │
                     │ to a crawl a moment; your eyes then rest two hours.      │
                     │                                                          │
                     │                                                          │
-                    │ a-i or Enter use   Esc close                             │
+                    │ a-j or Enter use   Esc close                             │
                     └──────────────────────────────────────────────────────────┘
 
 

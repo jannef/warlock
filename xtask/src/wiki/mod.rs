@@ -325,7 +325,6 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("mana-paces.md", mana::paces),
         ("spell-shapes.md", spells::shapes),
         ("spell-resolutions.md", spells::resolutions),
-        ("spell-casting.md", spells::casting),
         ("spell-list.md", spells::list),
         ("spell-types.md", spells::types),
         ("class-spells.md", spells::class_spells),
@@ -1483,7 +1482,6 @@ mod tests {
             "{list}"
         );
         assert!(text("wands.md").contains("| wand of fireball | Fireball | 11 | 7 | 2d6 to 4d6 |"));
-        assert!(text("spell-casting.md").contains("| Wizard | 100 % |"));
         let learning = text("learning.md");
         assert!(learning.contains("| Spellcraft | Learning |"), "{learning}");
         for row in ["| 0 | 1 |", "| 60 | 10 |", "| 100 | 30 |", "| 150 | 70 |"] {

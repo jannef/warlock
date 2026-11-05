@@ -109,7 +109,8 @@ The passive skills help you more the higher they are:
 - **[Steal](skills.md#skill-steal)** lets you steal at all, and the higher it is, the likelier your hand goes unnoticed
   (see [Stealing](#stealing)).
 - **[Bluff](skills.md#skill-bluff)** lets you feint at all ([Feint](abilities.md#ability-feint) in the abilities menu;
-  see [Feinting](#feinting)), and the higher it is, the harder your lies are to see through: the
+  see [Feinting](#feinting)) and to [talk your way past](encounters.md#talking-past) some parties met on the
+  overworld, and the higher it is, the harder your lies are to see through: the
   [Willpower](stats.md#stat-willpower) check they ask is 8 harder at 100, 12 at 200 (at most 20).
 - **[Heal](skills.md#skill-heal)** lets you bind your [bleeding](status-effects.md#bleeding) and tend your [poisons](status-effects.md#poisoned) and [diseases](diseases.md#how-a-disease-goes) at all, and the higher
   it is, the more often a try works (see [Treating yourself](#treating-yourself)).
@@ -191,7 +192,7 @@ mark**. The chance is shown in the table of skills above; skills you use all the
 [balance](skills.md#skill-balance), earn marks rarely, so they do not race ahead.
 
 - **[Stealth](skills.md#skill-stealth)**: a step that a [creature](creatures.md) nearby could have heard, if you had not stepped softly.
-- **[Listen](skills.md#skill-listen)**: [hearing](hearing.md) something new.
+- **[Listen](skills.md#skill-listen)**: [hearing](hearing.md) something new, and every turn spent [listening at a door](hearing.md#listening-at-a-door).
 - **[Tumble](skills.md#skill-tumble)**: dodging an attack ("You dodge the kobold's spear.") or stepping past a [trap](traps.md#finding-traps) you
   know of ("You deftly avoid the arrow trap."). A blow that misses you for no reason your
   [Defence](combat.md#defence) explains (it would have missed anyone) counts as a dodge one time in four.
@@ -199,7 +200,7 @@ mark**. The chance is shown in the table of skills above; skills you use all the
 - **[Survival](skills.md#skill-survival)**: a journey on the [overworld](overworld.md#travel).
 - **[Swim](skills.md#skill-swim)**: a step wading through [water](terrain.md#water) or [marsh](terrain.md#terrain-marsh) now and then (10 %), every [plunge through the ice](temperature.md#falling-in), and a quarter of the steps in [deep water](terrain.md#deep-water), made or not.
 - **[Steal](skills.md#skill-steal)**: every attempt to steal, whatever comes of it.
-- **[Bluff](skills.md#skill-bluff)**: half of your feints, whatever comes of them.
+- **[Bluff](skills.md#skill-bluff)**: half of your feints, and every try at [talking your way past](encounters.md#talking-past) a party, whatever comes of them.
 - **[Open lock](skills.md#skill-open-lock)**: a try at picking a lock, whether it works or not.
 - **[Heal](skills.md#skill-heal)**: a try at treating yourself, whether it works or not.
 
@@ -311,7 +312,8 @@ spent.
 {{#include generated/feinting.md}}
 
 You may feint as often as you like. Half of your feints train Bluff, whatever comes of them. There is
-no talking your way out of being [caught stealing](#stealing): a lie is for the fight.
+no talking your way out of being [caught stealing](#stealing): a lie is for the fight, or for getting past a
+party on the road before it comes to one ([Talk your way past](encounters.md#talking-past)).
 
 ## Intimidating
 

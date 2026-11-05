@@ -3,7 +3,7 @@ source: crates/warlock/src/ui/screen_snapshots.rs
 expression: "render(case, content.clone())"
 ---
  Two dire wargs come to your side.
- Your dire wargs hold.
+ Your dire wargs come to heel.
 
 
 

@@ -82,7 +82,7 @@ gives it more life, armour of the Salamander takes the edge off [fire](damage-ty
 | [Light](light.md#what-light-is) | Yes: it glows |
 | [Skills](skills.md) | Yes, where a rule reads a creature's skill |
 | Weight | Its things weigh less, which changes nothing: it carries itself |
-| More [mana](mana.md#how-much), [mana regeneration](mana.md#how-fast-it-comes-back), [caster level](magic.md#caster-level) | Yes, as for any creature (see [Mana](mana.md)), though it casts no spells (yet) |
+| More [mana](mana.md#how-much), [mana regeneration](mana.md#how-fast-it-comes-back) | Yes, as for any creature (see [Mana](mana.md)), though it casts no spells (yet) |
 | [Carrying](burden.md#how-much-you-can-carry) | No, and it needs none |
 | Range, draw, durability ([missile weapons](ranged.md#getting-ready)) | No: it wields melee weapons only |
 

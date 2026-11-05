@@ -20,11 +20,11 @@ expression: "render(case, content.clone())"
                    │   j  Heal               nothing to treat                  │
                    │   k  Intimidate         at a place you see                │
                    │   l  Knowledge          not usable yet                    │
-                   │   m  Metalcraft         not usable yet                    │
-                   │   n  Pick lock          in a direction                    │
-                   │   o  Steal              in a direction                    │
-                   │   p  Forage             not usable here                   │
-                   │   q  Fletch             you have no bow or crossbow ready │
+                   │   m  Listen at a door   in a direction                    │
+                   │   n  Metalcraft         not usable yet                    │
+                   │   o  Pick lock          in a direction                    │
+                   │   p  Steal              in a direction                    │
+                   │   q  Forage             not usable here                   │
                    │                                                           │
                    │ The basilisk's stare: a foe nearby that sees you slows to │
                    │ a crawl a moment; your eyes then rest two hours.          │
