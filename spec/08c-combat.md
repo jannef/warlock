@@ -421,7 +421,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     (riposte, opportunist, gatekeeper, Point-blank's shot; its own attack's second blow and
     cleave stay); its next action costs 150 %, less what its Initiative skill (`surprise_ease`:
     half the extra at 100, three quarters at 200) and Cool head ease of the extra, together at
-    most all of it (`World::status_cost`, the one place); that action ends it ("You recover your
+    most all of it (`World::status_cost`, the one place); that action ends it (a Feint's, §8
+    "Skills": Bluff, lasts through its first action in the feint's own turn; "You recover your
     wits."). The surprising attack itself is rolled flat-footed whether the check is made or not.
     Flat-footedness is the status field `flat_footed` (#848), which Surprised and **Stunned**
     (the ascetic's Stunning strike, §8 "Character") take: the Defence strip, the free blows, and

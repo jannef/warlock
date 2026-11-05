@@ -65,7 +65,21 @@ status, the message) with `World::war_cry`. Its numbers are data, `data/intimida
 `IntimidateRules::degrees_at`); without the file the skill stays "not usable yet". It is
 marked once a threat, refused or not reached (no hearing, no sight) aside. Tests:
 `world/intimidate_tests.rs` (the menu row, refusals with no time and no draw, the turn and the
-voice and the mark, the check, the ladder), `content/intimidate.rs` (parsing, refusals). Music's
+voice and the mark, the check, the ladder), `content/intimidate.rs` (parsing, refusals). Bluff's
+`feint` (#1016; `docs/design/skill-uses.md` §6.2 B1) is read in `World::feint` (`world/feint.rs`),
+Bluff's use: `Action::Feint(Dir)` (replay text `feint:DIR`, cost `feint`, `ActionKind::Feint`),
+`Ability::Feint`, data `data/feint.toml` (`content/feint.rs`, `FeintRules`: `difficulty`, `status`,
+one that is `flat_footed` and `per_action` with `max = 1`). The foe's nerve (its Willpower modifier
+and talents' checks, two gameplay draws, `check::check`) against `difficulty` + the player's Presence
+modifier + the points; failed, Surprised, caused by the player. No noise, no need of being heard
+or seen. Marked by `Use::Feint` at 50 %, on the training stream, whatever came of it. Surprised
+would end with the foe's next action, which falls between the feint and the blow, so `World::feint`
+puts it on `World::fresh` (`weapon_ability.rs::spend_actions`): the foe's first action in the
+feint's turn does not ease it. `fresh` is emptied as a turn ends, so it is never saved across
+one. The foe's second action ends it; both cost it dear. The ability's id is `feint`, as the
+Duelist's weapon active is (`Ability::Weapon`, `use:feint:E`): the two rows are told apart by
+`Source`, and nothing looks an ability up by id. No caught-out check (the owner): `World::steal`
+and the shops read nothing of Bluff. Tests: `world/feint_tests.rs`, `content/feint.rs`. Music's
 `song_degrees` (#870) is read in `World::sing` (`world/song.rs`): the degrees a song adds to its
 status, capped by the status's `max`; `song_craft`, the difficulty a song on its hearers adds to
 their check, is read there too (the Lullaby's, #873). Its use `song` is marked once a song,
@@ -120,7 +134,8 @@ there (`warlock_core::ability`), unavailable ("not usable yet") until its use ex
 becomes an ability of its own in the skill's place (`Ability::use_of`): Disable device is
 `Ability::Disarm` (`docs/dev/traps.md`), Open lock `Ability::PickLock` (`docs/dev/doors.md`),
 Steal `Ability::Steal` (`docs/dev/stealing.md`), Heal `Ability::Heal` (`docs/dev/status-effects.md`),
-Intimidate `Ability::Intimidate` (above; aimed at a cell, `Ability::reach` from the data).
+Intimidate `Ability::Intimidate` (above; aimed at a cell, `Ability::reach` from the data),
+Bluff `Ability::Feint` (above; in a direction).
 A passive skill with a use of its own is listed as that use too (`Ability::every` asks
 `Ability::use_of` of every skill): Survival is `Ability::Forage` (below).
 
