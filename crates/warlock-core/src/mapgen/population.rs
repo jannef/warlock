@@ -21,7 +21,9 @@
 //! come on top of the count, and the spawner's cap does not count them
 //! ([`LevelTemplate::outside_cap`]). A marked cell is left to them whether it is drawn or not,
 //! but a hidden trap may lie on one (the traps come first, the same with any creatures): it stays
-//! empty.
+//! empty. A pool's draws take its `status`, walk its `route` (a walk is drawn regardless, so the
+//! stream is the same), and the first placed carries its `carry` ([`leave_unborne`] lays it down
+//! when no one was).
 
 use super::{Palette, Visit, out_and_back};
 use crate::content::danger::{self, Spawning};
@@ -29,6 +31,7 @@ use crate::content::{
     Content, CreatureId, CreatureSpawn, LevelTemplate, MonsterPool, VaultMonsters,
 };
 use crate::geom::{Dir, Pos};
+use crate::object::add_to_pile;
 use crate::rng::Rng;
 use std::collections::BTreeSet;
 
@@ -100,6 +103,8 @@ pub(super) fn populate(
         };
         let mut cells = group.cells.clone();
         cells.retain(|p| !template.traps.contains_key(p));
+        // The first placed carries it.
+        let mut carry = group.carry.clone();
         for _ in 0..group.count {
             if cells.is_empty() {
                 break;
@@ -111,9 +116,19 @@ pub(super) fn populate(
                 break;
             };
             let pos = cells.swap_remove(vault_rng.index(cells.len()));
-            let route = route_from(&mut vault_rng, pos, walks);
+            // A walk is drawn either way, so a pool's own route changes no draw after it.
+            let walk = route_from(&mut vault_rng, pos, walks);
+            let route = if group.route.is_empty() {
+                walk
+            } else {
+                group.route.clone()
+            };
             met_one(content, creature, &mut met);
-            placed.push(spawn_of(creature, pos, route));
+            placed.push(CreatureSpawn {
+                carry: std::mem::take(&mut carry),
+                status: group.status.clone(),
+                ..spawn_of(creature, pos, route)
+            });
         }
     }
     let outside: BTreeSet<Pos> = placed.iter().map(|s| s.pos).collect();
@@ -135,6 +150,24 @@ pub(super) fn populate(
     }
     template.creatures.extend(placed);
     template.outside_cap = outside;
+}
+
+/// What no draw of a monster pool carries (none was placed: nothing at the danger, a hidden trap
+/// on every cell, or a floor without danger) lies on its first cell, so the vault's lock keeps its
+/// key ([`LevelTemplate::has_key_for`]). Called once the pools are drawn, or not.
+pub(super) fn leave_unborne(
+    template: &mut LevelTemplate,
+    content: &Content,
+    monsters: &[VaultMonsters],
+) {
+    for group in monsters {
+        let borne = (template.creatures.iter()).any(|c| group.cells.contains(&c.pos));
+        if group.carry.is_empty() || borne {
+            continue;
+        }
+        let pile = template.objects.entry(group.cells[0]).or_default();
+        add_to_pile(pile, &group.carry, content);
+    }
 }
 
 /// A short out-and-back walk from `pos` over cells that `walks`, else a post (none).

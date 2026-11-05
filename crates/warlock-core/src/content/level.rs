@@ -595,7 +595,8 @@ pub struct LevelTemplate {
     /// Vaults: cells where loot is rolled when they are stamped into a generated level, each
     /// with what it may be. Empty on levels.
     pub loot: Vec<(Pos, LootPool)>,
-    /// Vaults: the monster pools its legend names, each with its cells. Empty on levels.
+    /// Vaults: the monster pools its legend names, each with its cells; a generated level: its
+    /// vaults' until they are drawn (`mapgen/population.rs`). Empty on levels.
     pub monsters: Vec<VaultMonsters>,
     /// A generated level: the cells of the creatures the spawner's cap does not count (those of
     /// its vaults' monster pools, `world/spawn.rs`).
@@ -613,7 +614,8 @@ pub struct LevelTemplate {
 
 impl LevelTemplate {
     /// Whether a key that opens `lock` lies in a pile, or is carried by a creature placed, on a
-    /// cell `within` accepts (spec §8 "Doors").
+    /// cell `within` accepts, or by a monster pool's draw when `within` accepts every cell it
+    /// marks (spec §8 "Doors").
     pub fn has_key_for(
         &self,
         content: &Content,
@@ -623,7 +625,12 @@ impl LevelTemplate {
         let fits =
             |s: &Stack| (content.object(s.object).key.as_ref()).is_some_and(|k| k.opens(lock));
         let lying = (self.objects.iter()).any(|(p, pile)| within(*p) && pile.iter().any(fits));
-        lying || (self.creatures.iter()).any(|c| within(c.pos) && c.carry.iter().any(fits))
+        // A monster pool's draw carries it on one of the cells the pool marks.
+        let pooled = (self.monsters.iter())
+            .any(|m| m.carry.iter().any(fits) && m.cells.iter().all(|p| within(*p)));
+        lying
+            || pooled
+            || (self.creatures.iter()).any(|c| within(c.pos) && c.carry.iter().any(fits))
     }
 
     /// The name of the first region containing `p`.
@@ -876,8 +883,8 @@ pub(super) fn parse_level(
                 let group = match monsters.entry(ch) {
                     Entry::Occupied(known) => known.into_mut(),
                     Entry::Vacant(new) => new.insert(
-                        (spec.resolve(content))
-                            .map_err(|m| err(format!("legend `{ch}`: monsters: {m}")))?,
+                        pool_cell(detail, spec, content)
+                            .map_err(|m| err(format!("legend `{ch}`: {m}")))?,
                     ),
                 };
                 group.cells.push(pos);
@@ -939,6 +946,19 @@ pub(super) fn parse_level(
                     asleep: false,
                     status,
                 });
+            } else if detail.monsters.is_some() {
+                if detail.animated.is_some()
+                    || detail.faction.is_some()
+                    || detail.alignment.is_some()
+                    || detail.npc.is_some()
+                    || detail.wield.is_some()
+                    || detail.wear.is_some()
+                {
+                    return Err(err(format!(
+                        "legend `{ch}`: a cell of `monsters` may have a status, carry, or route, \
+                         not a faction, alignment, npc, animated, wield, or wear"
+                    )));
+                }
             } else if detail.route.is_some()
                 || detail.animated.is_some()
                 || detail.faction.is_some()
@@ -1192,6 +1212,11 @@ pub(super) fn parse_level(
     };
     for spawn in &template.creatures {
         validate_route(&template, content, spawn).map_err(err)?;
+    }
+    for group in &template.monsters {
+        for &cell in &group.cells {
+            validate_walk(&template, content, cell, &group.route).map_err(err)?;
+        }
     }
     if template.kind == LevelKind::Overworld {
         let untimed = template.terrain.cells().iter().find(|t| {
@@ -1730,6 +1755,28 @@ fn check_sealed(
     Ok(())
 }
 
+/// A legend entry's monster pool with what its draws are given: its `status`, `carry`, and
+/// `route` (spec §7 "Level file format").
+fn pool_cell(
+    detail: &LegendDetail,
+    spec: &MonsterPoolSpec,
+    content: &Content,
+) -> Result<VaultMonsters, String> {
+    let mut group = spec
+        .resolve(content)
+        .map_err(|m| format!("monsters: {m}"))?;
+    if let Some(specs) = &detail.status {
+        group.status = parse_statuses(specs, content).map_err(|m| format!("status: {m}"))?;
+    }
+    if let Some(specs) = &detail.carry {
+        group.carry = parse_stacks(specs, content).map_err(|m| format!("carry: {m}"))?;
+    }
+    if let Some(route) = &detail.route {
+        group.route = parse_route(route)?;
+    }
+    Ok(group)
+}
+
 /// Parses a route like `"E4 S2 W4 N2"` (count defaults to 1).
 pub fn parse_route(route: &str) -> Result<Vec<Dir>, String> {
     let mut steps = Vec::new();
@@ -1864,11 +1911,22 @@ pub(crate) fn validate_route(
     content: &Content,
     spawn: &CreatureSpawn,
 ) -> Result<(), String> {
-    if spawn.route.is_empty() {
+    validate_walk(level, content, spawn.pos, &spawn.route)
+}
+
+/// [`validate_route`] for patrol `route` from `start` (a placed creature's, or a monster pool's
+/// from each cell it marks).
+fn validate_walk(
+    level: &LevelTemplate,
+    content: &Content,
+    start: Pos,
+    route: &[Dir],
+) -> Result<(), String> {
+    if route.is_empty() {
         return Ok(());
     }
-    let mut pos = spawn.pos;
-    for (i, dir) in spawn.route.iter().enumerate() {
+    let mut pos = start;
+    for (i, dir) in route.iter().enumerate() {
         pos = pos.step(*dir);
         let walkable = level
             .terrain
@@ -1876,16 +1934,14 @@ pub(crate) fn validate_route(
             .is_some_and(|t| content.terrain(*t).walkable);
         if !walkable {
             return Err(format!(
-                "patrol from {} leaves walkable terrain at step {} ({pos})",
-                spawn.pos,
+                "patrol from {start} leaves walkable terrain at step {} ({pos})",
                 i + 1
             ));
         }
     }
-    if pos != spawn.pos {
+    if pos != start {
         return Err(format!(
-            "patrol from {} ends at {pos}; routes must loop back to their start",
-            spawn.pos
+            "patrol from {start} ends at {pos}; routes must loop back to their start"
         ));
     }
     Ok(())

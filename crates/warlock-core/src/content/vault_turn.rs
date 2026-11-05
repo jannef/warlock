@@ -176,6 +176,9 @@ fn turned_template(template: &LevelTemplate, turn: Turn) -> LevelTemplate {
             *p = at(*p);
         }
         group.cells.sort_by_key(|p| row_order(*p));
+        for step in &mut group.route {
+            *step = turn.dir(*step);
+        }
     }
     LevelTemplate {
         id: id.clone(),
