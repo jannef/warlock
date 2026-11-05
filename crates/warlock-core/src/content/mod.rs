@@ -48,6 +48,7 @@ mod encounter_tests;
 mod experience;
 mod faction;
 mod familiar;
+mod feint;
 #[cfg(test)]
 mod fey_roster_tests;
 #[cfg(test)]
@@ -218,6 +219,7 @@ pub use experience::{
 };
 pub use faction::{FactionDef, FactionId, Factions, PLAYER_FACTION, Stance};
 pub use familiar::FamiliarRules;
+pub use feint::FeintRules;
 pub use flow::{FLOW_SPEEDS, Flow};
 pub use forage::{ForageGround, ForageRules};
 pub use gear::{Gear, GearLine, RACIAL_CHANCE};
@@ -666,6 +668,9 @@ pub struct Content {
     /// What foraging in the wild gives (`data/forage.toml`, spec §8 "Foraging"); none without
     /// the file.
     forage: Option<ForageRules>,
+    /// The numbers of feinting (`data/feint.toml`, spec §8 "Skills": Bluff); none without the
+    /// file, when nobody feints.
+    feint: Option<FeintRules>,
     /// The numbers of intimidating (`data/intimidate.toml`, spec §8 "Skills": Intimidate); none
     /// without the file, when nobody intimidates.
     intimidate: Option<IntimidateRules>,
@@ -833,6 +838,7 @@ impl Content {
             smite: None,
             encounter_tables: Vec::new(),
             forage: None,
+            feint: None,
             intimidate: None,
             ranged: RangedRules::default(),
             prayer: None,
@@ -1176,6 +1182,10 @@ impl Content {
         let path = "data/forage.toml";
         if let Some(text) = files.get_optional(path) {
             content.forage = Some(ForageRules::parse(path, text, &content)?);
+        }
+        let path = "data/feint.toml";
+        if let Some(text) = files.get_optional(path) {
+            content.feint = Some(FeintRules::parse(path, text, &content)?);
         }
         let path = "data/intimidate.toml";
         if let Some(text) = files.get_optional(path) {
@@ -3169,6 +3179,12 @@ impl Content {
     /// without the file.
     pub fn ranged(&self) -> &RangedRules {
         &self.ranged
+    }
+
+    /// The numbers of feinting (spec §8 "Skills": Bluff; `data/feint.toml`); `None` without the
+    /// file, when nobody feints.
+    pub fn feint(&self) -> Option<&FeintRules> {
+        self.feint.as_ref()
     }
 
     /// The numbers of intimidating (spec §8 "Skills": Intimidate; `data/intimidate.toml`); `None`

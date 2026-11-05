@@ -69,6 +69,11 @@ pub enum Ability {
     /// skill's use. Whoever is trained in a skill with the `steal` benefit has it, in that
     /// skill's place among the skills.
     Steal,
+    /// Feint at a foe next to you (spec §8 "Skills": Bluff; #1016): [`Action::Feint`], Bluff's
+    /// use (the skill with the `feint` benefit, listed as this in its place while
+    /// `data/feint.toml` exists). Had by whoever is trained in it; usable whenever they have it
+    /// (the rules refuse, taking no time, where there is no foe with a mind to fool).
+    Feint,
     /// Tame a beast next to you (spec §8 "Allies": Tame; `world/tame.rs`): [`Action::Tame`],
     /// Handle animal's use (the skill with the `tame` benefit, listed as this in its place while
     /// `data/companions.toml` and `data/allies.toml` exist). Had by whoever is trained in it, at
@@ -421,7 +426,8 @@ impl Ability {
     /// The ability that is the use of skill `def`, once that use is in the game: Disable device's
     /// (the disarm effect's) is [`Ability::Disarm`], Open lock's (the pick effect's)
     /// [`Ability::PickLock`], the Steal skill's (the `steal` benefit, with `data/steal.toml`)
-    /// [`Ability::Steal`], Heal's (the heal effect's) [`Ability::Heal`], Handle animal's (the
+    /// [`Ability::Steal`], Bluff's (the `feint` benefit, with `data/feint.toml`)
+    /// [`Ability::Feint`], Heal's (the heal effect's) [`Ability::Heal`], Handle animal's (the
     /// `tame` benefit, with `data/companions.toml` and `data/allies.toml`) [`Ability::Tame`],
     /// Intimidate's (the
     /// `intimidate` benefit, with `data/intimidate.toml`) [`Ability::Intimidate`], Survival's (the
@@ -437,6 +443,9 @@ impl Ability {
                     && content.companions().is_some()
                     && content.allies().is_some())
                 .then_some(Ability::Tame)
+            })
+            .or_else(|| {
+                (gives(Effect::Feint) && content.feint().is_some()).then_some(Ability::Feint)
             })
             .or_else(|| {
                 (gives(Effect::Intimidate) && content.intimidate().is_some())
@@ -523,6 +532,7 @@ impl Ability {
             Ability::Tame => actor.skills.trains_effect(content, Effect::Tame),
             Ability::Heal => actor.skills.trains_effect(content, Effect::Heal),
             Ability::Intimidate => actor.skills.trains_effect(content, Effect::Intimidate),
+            Ability::Feint => actor.skills.trains_effect(content, Effect::Feint),
             Ability::SecondWind => actor.talent_mods(content).second_wind.is_some(),
             Ability::BloodMagic => actor.talent_mods(content).blood_magic.is_some(),
             Ability::ThrowVoice => actor.talent_mods(content).throw_voice,
@@ -546,6 +556,7 @@ impl Ability {
             Ability::Disarm => "disarm",
             Ability::PickLock => "pick_lock",
             Ability::Steal => "steal",
+            Ability::Feint => "feint",
             Ability::Tame => "tame",
             Ability::Intimidate => "intimidate",
             Ability::Forage => "forage",
@@ -583,6 +594,7 @@ impl Ability {
             Ability::Disarm => "Disarm a trap",
             Ability::PickLock => "Pick lock",
             Ability::Steal => "Steal",
+            Ability::Feint => "Feint",
             Ability::Tame => "Tame",
             Ability::Intimidate => "Intimidate",
             Ability::Forage => "Forage",
@@ -618,6 +630,10 @@ impl Ability {
             Ability::Steal => {
                 "Lift a purse or a trinket from someone next to you who is not hostile; caught, \
                  they turn on you."
+            }
+            Ability::Feint => {
+                "Make a lying move at a foe next to you: fooled, it is off its guard for your \
+                 next blow."
             }
             Ability::Tame => {
                 "Spend a while beside a beast next to you that is not your foe, or has not seen \
@@ -687,6 +703,7 @@ impl Ability {
             | Ability::Disarm
             | Ability::PickLock
             | Ability::Steal
+            | Ability::Feint
             | Ability::Tame
             | Ability::Intimidate
             | Ability::Forage
@@ -732,6 +749,7 @@ impl Ability {
             Ability::Disarm
             | Ability::PickLock
             | Ability::Steal
+            | Ability::Feint
             | Ability::Tame
             | Ability::ShieldBash => Aim::Direction,
         }
@@ -749,6 +767,7 @@ impl Ability {
             Ability::Disarm => Some(ActionKind::Disarm),
             Ability::PickLock => Some(ActionKind::PickLock),
             Ability::Steal => Some(ActionKind::Steal),
+            Ability::Feint => Some(ActionKind::Feint),
             Ability::Tame => Some(ActionKind::Tame),
             Ability::Intimidate => Some(ActionKind::Intimidate),
             Ability::Forage => Some(ActionKind::Forage),
@@ -780,6 +799,7 @@ impl Ability {
             | Ability::Disarm
             | Ability::PickLock
             | Ability::Steal
+            | Ability::Feint
             | Ability::Tame
             | Ability::Intimidate
             | Ability::Forage
@@ -857,12 +877,14 @@ impl Ability {
             (Ability::Disarm, Some(dir)) => Some(Action::Disarm(dir)),
             (Ability::PickLock, Some(dir)) => Some(Action::PickLock(dir)),
             (Ability::Steal, Some(dir)) => Some(Action::Steal(dir)),
+            (Ability::Feint, Some(dir)) => Some(Action::Feint(dir)),
             (Ability::Tame, Some(dir)) => Some(Action::Tame(dir)),
             (Ability::ShieldBash, Some(dir)) => Some(Action::Bash(dir)),
             (
                 Ability::Disarm
                 | Ability::PickLock
                 | Ability::Steal
+                | Ability::Feint
                 | Ability::Tame
                 | Ability::ShieldBash,
                 None,
@@ -917,6 +939,7 @@ impl Ability {
             | Ability::Disarm
             | Ability::PickLock
             | Ability::Steal
+            | Ability::Feint
             | Ability::Tame
             | Ability::Forage
             | Ability::Heal
@@ -999,6 +1022,7 @@ impl Ability {
             | Ability::Disarm
             | Ability::PickLock
             | Ability::Steal
+            | Ability::Feint
             | Ability::Intimidate
             | Ability::Forage
             | Ability::BloodMagic
@@ -1217,7 +1241,7 @@ mod tests {
         assert_eq!(
             skills,
             [
-                "bluff",
+                "feint",
                 "decipher_script",
                 "disarm",
                 "tame",

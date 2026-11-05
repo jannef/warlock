@@ -33,6 +33,7 @@
 #                 lock), "deal" (a deal made in a shop: goods paid for, or your own sold),
 #                 "appraise" (something you carry told for what it is: "identify" below),
 #                 "intimidate" (a war cry roared or a foe threatened, whatever comes of it),
+#                 "feint" (a feint at a foe, whatever comes of it),
 #                 "song" (a song sung, whatever it does). Marks gather until a level-up roll on the skill spends them ([ladder]
 #                 below). Only the player trains, for now.
 #   benefit       what it gives, by its value: a list of { effect = EFFECT, ... } growing either
@@ -63,7 +64,9 @@
 #                 treating your bleeding, poison, or a disease, at most 20; trained, a skill with
 #                 it lets you treat them at all: the Heal ability), "pick" (points added to
 #                 picking a lock, at most 20; trained, a skill with it
-#                 lets you pick locks at all: the Pick lock ability), "intimidate" (points added to
+#                 lets you pick locks at all: the Pick lock ability), "feint" (points added to the difficulty of a
+#                 feint's Willpower check, at most 20; trained, a skill with it lets you feint at
+#                 all: feint.toml), "intimidate" (points added to
 #                 the difficulty of the Willpower check your war cry asks of those who hear and
 #                 see you, at most 20), "song_degrees" (degrees added to what your songs give,
 #                 up to the status's own most, at most 10), "song_craft" (points added to the
@@ -148,8 +151,13 @@ benefit = [{ effect = "burden", curve = [[0, 0], [100, 60], [200, 80]] }]
 [[skill]]
 id = "bluff"
 name = "Bluff"
-description = "Lying with a straight face, feinting, and talking your way out."
+description = "Lying with a straight face, feinting, and talking your way past."
 kind = "action"
+# Marked by "feint" (a feint at a foe, feint.toml, the skill's use, whatever comes of it). Effect
+# "feint": points added to the difficulty of the Willpower check a feint asks, +8 at 100, +12 at
+# 200, at most 20. Being trained in it gives the Feint ability.
+mark = [{ on = "feint", chance = 50 }]
+benefit = [{ effect = "feint", curve = [[0, 0], [100, 8], [200, 12]] }]
 
 [[skill]]
 id = "concentration"

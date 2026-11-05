@@ -8,7 +8,7 @@ use super::combat::percent;
 use super::text::{Term, anchored};
 use std::fmt::Write as _;
 use warlock_core::burden::Burden;
-use warlock_core::check::{CONTEST_WAYS, contest_ways};
+use warlock_core::check::{CONTEST_WAYS, contest_ways, ways};
 use warlock_core::content::{Content, OptionalSkill};
 use warlock_core::dice::Dice;
 use warlock_core::skills::{Effect, SkillId};
@@ -62,6 +62,7 @@ pub(super) fn gated_effect(effect: Effect) -> bool {
             | Effect::Disarm
             | Effect::Pick
             | Effect::Steal
+            | Effect::Feint
             | Effect::Heal
             | Effect::Tame
             | Effect::Forage
@@ -99,6 +100,7 @@ fn effect_name(effect: Effect) -> &'static str {
         Effect::Stalk => "going unseen by those you meet on the overworld",
         Effect::Evade => "slipping away from those you meet on the overworld",
         Effect::Steal => "stealing at all, and better",
+        Effect::Feint => "feinting at all, and your feints are harder to see through",
         Effect::SneakDice => "more damage on a foe that has not seen you or is surprised",
         Effect::Surprise => "those you catch unawares recover less often",
         Effect::Initiative => "keeping your wits when caught unawares",
@@ -152,6 +154,7 @@ pub(super) fn skill_benefits(content: &Content) -> String {
             Effect::Stalk => "their lookout",
             Effect::Evade => "slipping away",
             Effect::Steal => "stealing",
+            Effect::Feint => "feint's difficulty",
             Effect::SneakDice => "sneak attack dice",
             Effect::Surprise => "their check's difficulty",
             Effect::Initiative => "initiative check",
@@ -189,6 +192,7 @@ pub(super) fn skill_benefits(content: &Content) -> String {
                 | Effect::Stalk
                 | Effect::Evade
                 | Effect::Steal
+                | Effect::Feint
                 | Effect::Heal
                 | Effect::Tame
                 | Effect::Disarm
@@ -329,6 +333,33 @@ pub(super) fn stealing(_content: &Content) -> String {
             edge.abs(),
             percent(won, CONTEST_WAYS),
             percent(CONTEST_WAYS - won, CONTEST_WAYS)
+        );
+    }
+    out
+}
+
+/// How often a foe is fooled by the player's feint (spec §8 "Skills": Bluff; `data/feint.toml`),
+/// by the edge of their Presence modifier and what Bluff adds over its Willpower modifier.
+pub(super) fn feinting(content: &Content) -> String {
+    let Some(rules) = content.feint() else {
+        return "Nobody feints.\n".into();
+    };
+    let status = &content.status(rules.status).name;
+    let mut out = format!(
+        "The foe rolls 2d12 + its Willpower modifier against {} + your Presence modifier + what \
+         Bluff adds; short of it, it is {status}.\n\n\
+         | Your Presence and Bluff, less its Willpower | Fooled | Not fooled |\n|---:|---:|---:|\n",
+        rules.difficulty
+    );
+    for edge in [-6, -3, 0, 3, 6, 9, 12] {
+        let made = ways(0, rules.difficulty + edge);
+        let sign = if edge < 0 { "\u{2212}" } else { "+" };
+        let _ = writeln!(
+            out,
+            "| {sign}{} | {} | {} |",
+            edge.abs(),
+            percent(144 - made, 144),
+            percent(made, 144)
         );
     }
     out
