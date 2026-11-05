@@ -1,0 +1,23 @@
+# Shots by distance (spec §8 "Ranged combat"; #956). Optional: without it a shot is as accurate at
+# any distance.
+#
+# A shot (a missile weapon's, the player's or a creature's; not a throw) is rolled with a penalty
+# for how far its target stands from the shooter at that moment, each creature on the line by its
+# own distance. Distance is measured as the range is (`dist2` against `radius2(range)`): a cell is
+# beyond a band's percent when its squared distance is beyond that share of the range's. Only the
+# farthest band reached counts, and an adjacent target (diagonals too) takes `adjacent` instead of
+# any band: a short-range weapon's adjacent cell may lie beyond its 50 %.
+#
+# One point to hit is a large step on 2d12 (up to about 8 % of the rolls), so these stay small.
+
+# The to-hit of a shot at a target adjacent to the shooter.
+adjacent = -2
+
+# Beyond this percent of the weapon's range, this to-hit. Rising outward, each harsher.
+[[band]]
+beyond = 50
+to_hit = -1
+
+[[band]]
+beyond = 75
+to_hit = -2
