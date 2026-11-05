@@ -154,6 +154,7 @@ fn the_three_tables_come_with_the_levels() {
             "Tracker",
             "Barkskin",
             "Rapid shot",
+            "Water walking",
             "Pack tactics",
             "Hunter's bond",
             "Evasion",

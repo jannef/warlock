@@ -221,7 +221,7 @@ mod tests {
         assert_eq!(row("webbed"), Some((School::Transmutation, true)));
         assert_eq!(row("ill_wished"), Some((School::Enchantment, true)));
         assert_eq!(row("fortified"), None, "a potion's boost has no circle");
-        assert_eq!(circles.rows().len(), 9);
+        assert_eq!(circles.rows().len(), 12);
         assert_eq!(circles.color(School::Abjuration).to_string(), "#80b4e0");
     }
 
@@ -273,9 +273,17 @@ mod tests {
         assert_eq!(light("weakened"), Some("circle_necromancy"));
         assert_eq!(light("lit"), Some("spell_light"), "Light keeps its own");
         assert_eq!(light("fortified"), None, "no circle, no light");
+        assert_eq!(
+            light("fire_cloaked"),
+            Some("ember"),
+            "flames keep their own"
+        );
         for row in content.circles().rows() {
             let def = content.light(content.status(row.status).light.unwrap());
-            assert!(def.stability.is_stable(), "{}: steady", def.id);
+            // A status's own fire flickers (`ember`); a circle's faint glow never does.
+            if def.id.starts_with("circle_") {
+                assert!(def.stability.is_stable(), "{}: steady", def.id);
+            }
         }
         // A school without its light is refused.
         let mut files = ContentFiles::builtin();

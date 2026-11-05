@@ -21,8 +21,11 @@
 //!   such stack (not per piece), so the total is the data's price times their count.
 //!
 //! Then the speaker says the service's `reply`, and it takes the time of `chat`. The price is
-//! the data's, never moved by favour (a temple does not haggle): Pious halves a temple's
-//! (a cure's or a mending's, rounded up), and with Pious a cure also mends a point of each
+//! the data's, moved by the player's favour (their Presence, skills, and talents; a keeper's
+//! alignment is a shop's, not a service's) for a healer's or a sage's, and never for a
+//! `temple` service (a temple does not haggle, #1031): the price less the favour in percent,
+//! rounded up, at least 1. Every service paid trains Negotiation ([`Use::Deal`]). Pious halves
+//! a cure's or a mending's price (rounded up) first, and with Pious a cure also mends a point of each
 //! damaged stat ([`TalentMods::services`], the one hook). Lore and Connoisseur do not move an
 //! identification's price. No stream is drawn, and nothing new is saved: a service changes only what is
 //! saved already (the pack, the diseases, the stat damage, the scores and drained points).
@@ -30,10 +33,11 @@
 //! [`TalentMods::services`]: crate::talent::TalentMods::services
 
 use super::actor::undrained;
-use super::shop::count_of;
+use super::shop::{count_of, haggling};
 use super::{ActorId, Spent, World};
 use crate::action::Event;
-use crate::content::{ActionKind, DialogueId, Service, ServiceKind};
+use crate::content::{ActionKind, DialogueId, MAX_FAVOUR, Service, ServiceKind};
+use crate::skills::Use;
 
 /// The means a temple's cure names in `cured_by`.
 pub const PRAYER: &str = "prayer";
@@ -42,15 +46,24 @@ pub const PRAYER: &str = "prayer";
 const CURE_FIRST: &str = "Be cured first.";
 
 impl World {
-    /// What `service` costs the player now, per stack for an identification: a temple's (a cure
-    /// or a mending) half, rounded up, with Pious.
+    /// What `service` costs the player now, per stack for an identification: a cure's or a
+    /// mending's half, rounded up, with Pious; then, unless a temple sells it, less the player's
+    /// favour (see the module docs).
     pub fn service_price(&self, service: &Service) -> u32 {
-        let temple = service.does != ServiceKind::Identify;
-        if temple && self.state.player().talent_mods(&self.content).services {
+        let healing = service.does != ServiceKind::Identify;
+        let price = if healing && self.state.player().talent_mods(&self.content).services {
             service.price.div_ceil(2)
         } else {
             service.price
-        }
+        };
+        let Some(shops) = self.content.shops().filter(|_| !service.temple) else {
+            return price;
+        };
+        let favour =
+            haggling(&self.content, shops, self.state.player()).clamp(-MAX_FAVOUR, MAX_FAVOUR);
+        let percent = u64::from((100 - favour).unsigned_abs());
+        let haggled = (u64::from(price) * percent).div_ceil(100).max(1);
+        u32::try_from(haggled).unwrap_or(u32::MAX)
     }
 
     /// How many things `service` would be paid for now: the player's unidentified stacks for an
@@ -108,6 +121,7 @@ impl World {
         self.hand_over(player, id, price);
         let who = self.called(&self.state.actors[&id]);
         self.say(format!("You pay {who} {price} gold."));
+        self.train(Use::Deal);
         match service.does {
             ServiceKind::Cure => {
                 self.cure(player, PRAYER, events);

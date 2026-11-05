@@ -552,13 +552,26 @@ developer notes (CLAUDE.md, `docs/dev/`).
     the player pays no heed (no draw). Refused, with no time and no draw: untrained, at the
     player's own cell, out of range, at no creature seen, at one not hostile, or at one without
     vitals.
+  - **Bluff** (#1016; `kind = "action"`): gives `feint` (+8 at 100, +12 at 200, at most 20) on the
+    difficulty of a feint's Willpower check, marked by `feint` (50 %: a feint made, whatever came
+    of it). Its use is the **Feint** ability (the abilities menu's Skills group, in the skill's
+    place, while `data/feint.toml` exists; no key): in a direction, `feint:DIR`, at a hostile
+    creature the player sees there, with a mind to fool. It takes the `feint` action (a turn). The
+    foe rolls 2d12 + its Willpower modifier (+ its talents' Willpower checks; two gameplay draws)
+    against the file's `difficulty` 10 + the player's Presence modifier + what Bluff adds. Failed,
+    it is Surprised, caused by the player ("The kobold falls for it."): its first action in that
+    turn does not ease it, so the player's next blow finds it flat-footed (no Dexterity or Dodge
+    in its Defence, Sneak attack's dice); its action after that ends it. Made, the turn is spent
+    ("The kobold is not fooled."); try again. Refused, with no time and no draw: untrained, at no
+    creature seen, at one not hostile, or at one without vitals (`Content::has_vitals`). There
+    is no Bluff check when caught: a caught thief stays caught (the owner).
   - **Active uses**: skills get no keys of their own. Racial, class, skill, and style abilities
     are chosen from one abilities menu (§6 "Abilities", #156), unlike ADOM: each trained skill
     with an active use (`kind = "action"`) is an ability there (`warlock_core::ability`,
     `PerceptionView::abilities`), greyed out as "not usable yet": the uses come with their
     actions, and one whose use has come is that ability instead (Disable device's is "Disarm a
     trap", §8 "Disarming traps"; Open lock's "Pick lock", §8 "Doors"; Steal's "Steal",
-    "Stealing" below; Heal's "Heal", "Treating oneself" below); a passive skill with a use is listed as it too (Survival's "Forage",
+    "Stealing" below; Bluff's "Feint", above; Heal's "Heal", "Treating oneself" below); a passive skill with a use is listed as it too (Survival's "Forage",
     "Foraging" below). Never a benefit's number,
     a mark, a
     chance, an untrained skill, or a creature's skills; ground-truth dev dumps (`actors`, the
@@ -580,7 +593,12 @@ developer notes (CLAUDE.md, `docs/dev/`).
     anything unknown hashes as before. Untrained, never (a magic item's bonus alone does not
     give it). Each thing told may mark Appraise (`appraise`, 100 %). The classes trained in
     Appraise (bard, thief, craftsperson, merchant) have Negotiation at the same dice; the
-    merchant is known for both. Gnomes keep Appraise alone.
+    merchant is known for both. Gnomes keep Appraise alone. Appraise and Survival also tell food's freshness
+    (#1031, `freshness` benefit; §8 "Hunger"): in words (`fresh`, `old`, `rotten`) in the eat list and look mode, when
+    a per-hour check passes, summed percent chance (Appraise 25 / 60 / 80 % at 0 / 100 / 200, Survival 15 / 35 / 50 %,
+    rotten food 25 points easier, at most 95 %); eating such food marks Appraise (`judged`, 10 %). A healer's and a
+    sage's service price follows the same favour as a shop's (a `temple` service stays flat), and a service paid
+    marks Negotiation (`deal`).
 - **Treating oneself** (`heal.rs`, `world/heal.rs`; #549, the owner 2026-10-27): the Heal
   skill's use, the abilities menu's **Heal** (`Ability::Heal`, in the skill's place among the
   Skills; `Action::Heal`, replay text `heal`, `heal:ID`, or `heal:ID:DIR`; cost `heal`, 2500: a

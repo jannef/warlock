@@ -40,6 +40,7 @@ abilities = [
     { level = 6, talent = "tracker" },
     { level = 6, talent = "barkskin" },
     { level = 12, talent = "rapid_shot" },
+    { level = 12, talent = "water_walking" },
     { level = 18, talent = "pack_tactics" },
     { level = 25, talent = "hunters_bond" },
     { level = 32, talent = "evasion" },

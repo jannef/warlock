@@ -1,0 +1,17 @@
+# Feinting (#1016; spec §8 "Skills": Bluff): a lie in combat, Bluff's use, chosen from the
+# abilities menu (`a`, then a direction).
+#
+# Whoever is trained in Bluff (skills.toml: the skill with the `feint` benefit) can feint at a
+# hostile creature they see next to them, one with a mind to fool (not the bones, the spirits, or
+# the animated). It takes a turn (actions.toml `feint`) and may train Bluff, whatever comes of it:
+# the foe rolls 2d12 + its Willpower modifier against `difficulty` + your Presence modifier + what
+# your Bluff adds (skills.toml: +8 at 100). Short of it, it suffers `status`, so your next blow
+# finds it flat-footed; else the turn is spent, and you may try again.
+#
+# Refused, taking no time: untrained, at nobody you see, at someone not hostile to you, or at
+# something with no mind to fool.
+
+# The check's base difficulty (Intimidate's).
+difficulty = 10
+# What a foe that fails suffers: flat-footed, easing by its actions, one degree.
+status = "surprised"

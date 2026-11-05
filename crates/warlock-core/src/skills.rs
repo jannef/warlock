@@ -87,6 +87,9 @@ pub const MAX_SNEAK_DICE: i32 = 25;
 /// The most a skill adds to the initiative check, or to its difficulty for those its holder
 /// catches unawares (spec §8 "Surprise and sneak attacks").
 pub const MAX_SURPRISE_BONUS: i32 = 20;
+/// The most a skill adds to the difficulty of the check a feint asks of a foe (spec §8 "Skills":
+/// Bluff).
+pub const MAX_FEINT_BONUS: i32 = 20;
 /// The most a skill adds to the difficulty of the check a war cry asks of those who hear it
 /// (spec §8 "Skills": Intimidate).
 pub const MAX_INTIMIDATE_BONUS: i32 = 20;
@@ -197,6 +200,10 @@ pub enum Effect {
     /// `world/forage.rs`); a skill with it, trained, lets the actor forage at all (the abilities
     /// menu's Forage).
     Forage,
+    /// Percent chance, an hour at a time, of telling how fresh a corpse or food is (spec §8
+    /// "Hunger": Appraise, Survival; `world/freshness.rs`); only a skill with it, trained, gives
+    /// it at all.
+    Freshness,
     /// Percent better prices in shops (spec §7 "Shops"; `world/shop.rs`): less to pay and more
     /// offered, together with Presence at most half.
     Bargain,
@@ -215,6 +222,10 @@ pub enum Effect {
     Stalk,
     /// Points added to slipping away from a party on the overworld (`world/encounter.rs`).
     Evade,
+    /// Points added to the difficulty of the Willpower check a feint asks (spec §8 "Skills":
+    /// Bluff; `world/feint.rs`); a skill with it, trained, lets the actor feint at all (the
+    /// abilities menu's Feint).
+    Feint,
     /// Points added to stealing from someone (spec §8 "Stealing"; `world/steal.rs`); a skill
     /// with it, trained, lets the actor steal at all (the abilities menu's Steal).
     Steal,
@@ -304,6 +315,7 @@ impl Effect {
             | Effect::Footing
             | Effect::SteadyEase
             | Effect::Bargain
+            | Effect::Freshness
             | Effect::Identify
             | Effect::SurpriseEase => 100,
             Effect::SneakDice => MAX_SNEAK_DICE,
@@ -316,6 +328,7 @@ impl Effect {
             Effect::Slip => MAX_SLIP_BONUS,
             Effect::Lookout | Effect::Stalk | Effect::Evade => MAX_ENCOUNTER_BONUS,
             Effect::Steal => MAX_STEAL_BONUS,
+            Effect::Feint => MAX_FEINT_BONUS,
             Effect::Heal => MAX_HEAL_BONUS,
             Effect::Intimidate => MAX_INTIMIDATE_BONUS,
             Effect::Tame => MAX_TAME_BONUS,
@@ -374,6 +387,8 @@ pub enum Use {
     Forage,
     /// An attempt to steal from someone (spec §8 "Stealing"), whatever comes of it.
     Steal,
+    /// A feint at a foe (spec §8 "Skills": Bluff), whatever comes of it.
+    Feint,
     /// A sneak attack that hit (spec §8 "Surprise and sneak attacks"): its dice landed.
     SneakAttack,
     /// An initiative check made on being caught unawares, whatever comes of it.
@@ -392,6 +407,9 @@ pub enum Use {
     Escape,
     /// A climb out of a pit (spec §8 "Traps"; `world/trap.rs`).
     Climb,
+    /// A try at wriggling past a creature that will not make way (spec §8 "Displacement";
+    /// `world/wriggle.rs`), whatever came of it.
+    Wriggle,
     /// A kick at a closed door (spec §8 "Doors").
     Kick,
     /// A try at picking a lock (spec §8 "Doors"), whatever comes of it.
@@ -416,6 +434,8 @@ pub enum Use {
     Deal,
     /// A carried thing told for what it is by looking it over (spec §8 "Skills": Appraise).
     Appraise,
+    /// A food whose freshness the player's eye told, eaten (spec §8 "Hunger": Appraise).
+    Judged,
     /// Discovery experience gained (spec §8 "Experience": a first kill of a kind, an arrival
     /// that pays).
     Discover,
@@ -451,6 +471,7 @@ impl Use {
             Use::Lookout => "keeping a lookout for those met on the overworld",
             Use::Forage => "foraging in the wild",
             Use::Steal => "trying to steal from someone",
+            Use::Feint => "feinting at a foe",
             Use::SneakAttack => "a sneak attack that hits",
             Use::Surprise => "being caught unawares (the initiative check, whatever comes of it)",
             Use::Heal => "trying to treat bleeding, poison, or a disease",
@@ -461,6 +482,7 @@ impl Use {
             Use::Song => "singing a song",
             Use::Escape => "struggling against bonds, whatever comes of it",
             Use::Climb => "climbing out of a pit",
+            Use::Wriggle => "wriggling past a creature in the way, whatever comes of it",
             Use::Kick => "kicking at a closed door",
             Use::Pick => "a try at picking a lock",
             Use::Fletch => "fletching a batch of arrows or bolts",
@@ -472,6 +494,7 @@ impl Use {
             Use::Stroke => "a step in deep water",
             Use::Deal => "a deal made in a shop",
             Use::Appraise => "telling something you carry for what it is",
+            Use::Judged => "eating food whose freshness you could tell",
             Use::Discover => "gaining discovery experience (a first kill of a kind, a new place)",
             Use::Resist => "resisting a creature's ability (a drain, a disease, a hold)",
             Use::Sight => "first seeing a creature that has not noticed you",
@@ -585,6 +608,7 @@ impl Use {
             Use::Lookout => "lookout",
             Use::Forage => "forage",
             Use::Steal => "steal",
+            Use::Feint => "feint",
             Use::SneakAttack => "sneak_attack",
             Use::Surprise => "surprise",
             Use::Heal => "heal",
@@ -593,6 +617,7 @@ impl Use {
             Use::Song => "song",
             Use::Escape => "escape",
             Use::Climb => "climb",
+            Use::Wriggle => "wriggle",
             Use::Kick => "kick",
             Use::Pick => "pick",
             Use::Fletch => "fletch",
@@ -604,6 +629,7 @@ impl Use {
             Use::Stroke => "stroke",
             Use::Deal => "deal",
             Use::Appraise => "appraise",
+            Use::Judged => "judged",
             Use::Discover => "discover",
             Use::Resist => "resist",
             Use::Sight => "sight",
@@ -634,6 +660,7 @@ impl Effect {
             Effect::Footing => "footing",
             Effect::SteadyEase => "steady_ease",
             Effect::Forage => "forage",
+            Effect::Freshness => "freshness",
             Effect::Bargain => "bargain",
             Effect::Identify => "identify",
             Effect::Slip => "slip",
@@ -641,6 +668,7 @@ impl Effect {
             Effect::Stalk => "stalk",
             Effect::Evade => "evade",
             Effect::Steal => "steal",
+            Effect::Feint => "feint",
             Effect::SneakDice => "sneak_dice",
             Effect::Surprise => "surprise",
             Effect::Initiative => "initiative",

@@ -3,8 +3,7 @@ source: crates/warlock/src/ui/screen_snapshots.rs
 expression: "render(case, content.clone())"
 ---
  You learn Horn of plenty.
- Your zeal is not enough.
-                    ┌─ Abilities ──────────────────────────────────────────────┐
+ Your zeal is not en┌─ Abilities ──────────────────────────────────────────────┐
                     │                                                          │
                     │ Birth sign                                               │
                     │ > a  Horn's grace                                        │
@@ -15,20 +14,21 @@ expression: "render(case, content.clone())"
                     │   e  Consecrate                                          │
                     │ Spells                                                   │
                     │   f  Blessing        3 mana                              │
+                    │   g  Brand           7 mana                              │
                     │ Skills                                                   │
-                    │   g  Tame            in a direction                      │
-                    │   h  Heal            nothing to treat                    │
-                    │   i  Intimidate      at a place you see                  │
-                    │   j  Forage          not usable here                     │
-                    │   k  Fletch          you have no knife                   │
+                    │   h  Tame            in a direction                      │
+                    │   i  Heal            nothing to treat                    │
+                    │   j  Intimidate      at a place you see                  │
+                    │   k  Forage          not usable here                     │
+                    │   l  Fletch          you have no knife                   │
                     │ Weapon skills                                            │
-                    │   l  Shield bash     in a direction                      │
+                    │   m  Shield bash     in a direction                      │
                     │                                                          │
                     │ The unicorn's grace: your bleeding and poison end, and a │
                     │ disease is shaken off; then it rests a day.              │
                     │                                                          │
                     │                                                          │
-                    │ a-l or Enter use   Esc close                             │
+                    │ a-m or Enter use   Esc close                             │
                     └──────────────────────────────────────────────────────────┘
 
  The Hub  ·  HP 59/59  ·  MP 33/33  ·  Sta 9/15  ·  Zeal 5/13  ·  Lv 14  ·  08:00        ? controls
