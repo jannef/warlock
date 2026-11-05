@@ -252,12 +252,12 @@ developer notes (CLAUDE.md, `docs/dev/`).
     uses design §6.6, the owner's rule: Decipher script is how non-casters use scrolls, by a
     check; a caster with enough Spellcraft bypasses it; this overrides the no-caster-level
     design's line that reading works for anyone). Once nothing refuses the reading and before the
-    scroll is used up: **a bypass**, trained in Spellcraft with a learning (§8 "Spells":
+    scroll is used up: **a known spell** reads at once, no draw, and still marks Decipher script
+    (on a trained skill; a scroll the player wrote too); else **a bypass**, trained in Spellcraft with a learning (§8 "Spells":
     "Learning, the number") of at least the scroll's spell level, no draw, no mark, no words; a
     scroll with no spell behind it (restoration) counts as level 0. **Otherwise a check**, never
     a refusal: 2d12 + the Intelligence modifier + talents' additions to its checks + Decipher
-    script's `decipher` benefit (curve 0, +8 at 100, +12 at 200; 0 for one without the skill and
-    with nothing raising it), against `base` (10) + the spell level ÷ `levels_per_point` (5).
+    script's `decipher` benefit (curve 0, +8 at 100, +12 at 200; 0 for one without the skill, whatever they wear that raises it), against `base` (10) + the spell level ÷ `levels_per_point` (5).
     Two gameplay draws, only when it is asked. **Made**, the scroll reads as anywhere in this
     section (Scroll adept, Scroll savant, an unknown type identified). **Failed**, "The writing
     swims before your eyes.": a read's price, the scroll kept, a label still unknown, no cast, no

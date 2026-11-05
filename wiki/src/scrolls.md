@@ -8,22 +8,23 @@ uses the scroll up, if you can [make it out](#making-out-a-scroll).
 
 ## Making out a scroll
 
-Reading a scroll asks one of two things, once nothing else stands in its way (no target, nothing to
+Reading a scroll asks one of three things, once nothing else stands in its way (no target, nothing to
 identify, nothing to restore: those are refused, and take no time).
 
+- **A spell you know**: if the scroll is of a spell you already know (one you wrote yourself too), you simply read it, and it still counts as a use of [Decipher script](skills.md#skill-decipher-script) if you are trained in it.
 - **Enough [Spellcraft](skills.md#skill-spellcraft)**: if you are trained in it and your
   [learning](magic.md#learning) is at least the scroll's [spell level](magic.md#spell-levels), you simply read it. So
   what you could learn for certain, you can read for certain. A scroll with no spell behind it
   ([restoration](#the-scroll-of-restoration)) counts as level 0, so any Spellcraft will do.
 - **Everyone else makes a check**: 2d12 plus your [Intelligence](stats.md#stat-intelligence) [modifier](stats.md#modifiers), what
   [talents](talents.md) add to its checks, and the points of [Decipher script](skills.md#skill-decipher-script), against 10 + the
-  spell level ÷ 5, rounded down. Nobody is refused: without the skill it is your Intelligence alone.
+  spell level ÷ 5, rounded down. Nobody is refused: without the skill it is your Intelligence and talents alone, and nothing that raises the skill helps.
   A natural 24 always succeeds and a natural 2 always fails.
 
 Make it, and the scroll reads as below. Fail, and "The writing swims before your eyes.": the
 [turn](time.md#what-takes-time) is spent, you keep the scroll, a [label](#unknown-scrolls) stays unknown, and nothing else
 happens. You may try again at once. Every check earns those trained in Decipher script a
-[training mark](skills.md#getting-better) in it, made or failed; reading a scroll trains no Spellcraft.
+[training mark](skills.md#getting-better) in it (two in a [scriptorium](special-rooms.md)), made or failed; reading a scroll trains no Spellcraft.
 
 {{#include generated/decipher-chances.md}}
 

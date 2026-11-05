@@ -85,19 +85,20 @@ fn place(w: &mut World, at: Pos) {
 }
 
 #[test]
-fn the_room_doubles_decipher_scripts_chance_which_is_certain_already() {
+fn the_room_gives_two_marks_per_check_and_one_outside() {
     let mut w = world(0);
     trained(&mut w);
     let decipher = skill(&w, "decipher_script");
     assert_eq!(w.effects_at("hall", INSIDE).train(decipher), 200);
     assert_eq!(w.effects_at("hall", OUTSIDE).train(decipher), 100);
-    // Its rule is 100 % a check (#1024): certain inside, at most certain, and outside too.
-    for (at, want) in [(INSIDE, 40), (OUTSIDE, 80)] {
+    // Its rule is 100 % a check (#1024): 200 % is two marks for certain, 100 % one.
+    for (at, want) in [(INSIDE, 80), (OUTSIDE, 40)] {
         place(&mut w, at);
         for _ in 0..40 {
             w.train(Use::Decipher);
         }
         assert_eq!(marks(&w, "decipher_script"), want);
+        trained(&mut w);
     }
 }
 
@@ -128,7 +129,11 @@ fn a_check_inside_marks_decipher_script_and_a_study_does_not() {
     trained(&mut w);
     place(&mut w, INSIDE);
     run(&mut w, "read:c:20,3");
-    assert_eq!(marks(&w, "decipher_script"), 1, "a read by the check");
+    assert_eq!(
+        marks(&w, "decipher_script"),
+        2,
+        "a read by the check: two marks"
+    );
     // Spellcraft 40: learning 6, Frost's level.
     let spellcraft = skill(&w, "spellcraft");
     w.player_mut().skills.add(spellcraft, 40);
@@ -136,7 +141,7 @@ fn a_check_inside_marks_decipher_script_and_a_study_does_not() {
     assert!(!w.state.player().spells.is_empty(), "frost learned");
     assert_eq!(
         marks(&w, "decipher_script"),
-        1,
+        2,
         "a study marks only Spellcraft"
     );
 }

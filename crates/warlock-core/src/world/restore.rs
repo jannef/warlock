@@ -29,7 +29,7 @@ impl World {
             return false;
         }
         // A read with no spell behind it: level 0 (`decipher.rs`). Failed, its time and no more.
-        if !self.deciphers(0) {
+        if !self.deciphers(None, 0) {
             return true;
         }
         let Some((scroll, kept)) = self.use_up(item) else {

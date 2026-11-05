@@ -56,14 +56,15 @@ scroll used up, and `World::identify` on the stack named, one place up if the us
 stack was before it).
 
 **Making out a scroll** (#1024, `world/decipher.rs`, `content/decipher.rs`,
-`data/decipher.toml`; the skill uses design §6.6): `World::deciphers(level)` stands between a
-reading's refusals and its `use_up`. Trained in Spellcraft with `Actor::learning` at least `level`:
+`data/decipher.toml`; the skill uses design §6.6): `World::deciphers(spell, level)` stands between a
+reading's refusals and its `use_up`. A spell the player knows (`Actor::knows_spell`, a scroll they
+wrote too): true, no draw, and `Use::Decipher` still marks (a trained skill only). Else trained in Spellcraft with `Actor::learning` at least `level`:
 true, no draw, no mark, no words. Otherwise a `check::check` of the Intelligence modifier +
-`TalentMods::check(Intelligence)` + `skill_effect(Effect::Decipher)` against
+`TalentMods::check(Intelligence)` + `skill_effect(Effect::Decipher)` (0 unless trained in Decipher script) against
 `DecipherRules::difficulty` (`base` + level ÷ `levels_per_point`), then `Use::Decipher` (100 %,
 whatever came of it; the only mark Decipher script has, and none for Spellcraft), and on a failure
-"The writing swims before your eyes." An untrained reader's points are 0 unless something raises
-the skill (a suffix of Letters counts, as for any skill that is not trained-only). The hook is
+"The writing swims before your eyes." An untrained reader's points are 0, whatever
+they wear that raises the skill (a suffix of Letters does nothing without the skill). The hook is
 **`World::pay_cast`**, where every kind of cast has finished refusing: it returns false for a scroll
 not made out, and its eight callers end the cast with `return true`, so `read` still answers
 `Spent::Turn(price)` and nothing has been used up, said read, or cast (`Cast::read` stays `None`).
@@ -89,7 +90,7 @@ only, so the read list reads it at once, study refuses it ("There is no spell in
 learn."), a mishap never backfires it, and the aiming mode never sees it. `World::read` sends it
 to `World::read_cleanse` (`world/restore.rs`): refused, no time, with a target or with nothing to
 mend (no stat damage while `mends`, no drained point while `restores`: "There is nothing to
-restore."); otherwise `deciphers(0)` (above), `use_up` (Scroll savant's keep, the Read stat training), `say_read`, then
+restore."); otherwise `deciphers(None, 0)` (above), `use_up` (Scroll savant's keep, the Read stat training), `say_read`, then
 `StatDamage::mend_all` and `World::restore_drained` (the temple's `World::mend`, split by the two
 switches), and "You feel your strength return." for each stat that came back. No disease check
 (the temple's "Be cured first." is not a rule here), no stream drawn but the check's and Scroll savant's, nothing

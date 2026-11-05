@@ -339,7 +339,8 @@ impl World {
                 self.spend_mana(self.state.player, mana);
             }
             Pay::Scroll(item, _) => {
-                if !self.deciphers(cast.def.level) {
+                let spell = self.content.spell_id(&cast.def.id);
+                if !self.deciphers(spell, cast.def.level) {
                     return false;
                 }
                 let Some((scroll, kept)) = self.use_up(item) else {

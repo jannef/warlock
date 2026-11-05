@@ -92,7 +92,7 @@ hidden traps, whose checks read it in place of Search and Spot, `Skills::trains_
 the Forage ability) in `world/forage.rs`, study (Spellcraft: points off the study check) in
 `world/learn.rs::study_odds` and learn (Spellcraft: the spell level a scroll teaches for certain, at least 1, and reads with no check; trained at all lets
 the player learn from a scroll) in `Actor::learning` (docs/dev/spells.md "Learning"; their use `Use::Study`, reported
-when a study ends, is also `StatUse::Study`), decipher (Decipher script: points on the check of reading a scroll, read by anyone, so not trained-only) in `World::deciphers`, `world/decipher.rs` (docs/dev/scrolls.md "Making out a scroll"; its use `Use::Decipher`, reported per check, trains no stat, as a made read's Intelligence mark comes of `use_up`); each use
+when a study ends, is also `StatUse::Study`), decipher (Decipher script: points on the check of reading a scroll, read by anyone, but untrained it is 0: the skill does nothing without the skill, whatever raises it) in `World::deciphers`, `world/decipher.rs` (docs/dev/scrolls.md "Making out a scroll"; its use `Use::Decipher`, reported per check, trains no stat, as a made read's Intelligence mark comes of `use_up`); each use
 is reported where it happens (`make_noise`, `hear`, `fight.rs::resolve`, `apply`, `player_moves`,
 `kick_door`, `search_turn` for `search`, `notice_hidden` for `spot`, both for `find_trap` (a
 trap found), `World::disarm` for

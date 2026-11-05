@@ -249,7 +249,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     *haunted room* (5, #417; only on a level with a danger; unholy) haunts a rest inside (below;
     "You hear a whisper, and then nothing." when glimpsed, "It is very quiet here. Too quiet to
     sleep." on entering); a *scriptorium* (5, #414; only in a room of at least 9 floor cells) holds
-    shelves of rotting scrolls and a few scrolls, and doubles Decipher script's mark chance ("You smell dust
+    shelves of rotting scrolls and a few scrolls, and gives two marks of Decipher script for a check, not one ("You smell dust
     and old vellum." when glimpsed, "Shelves of rotting scrolls line the walls." on entering;
     below); an
     *armoury* (4, #487; as a teeming den) has weapon racks along its walls and hollow armour,
@@ -595,9 +595,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
     identified), on a plain floor cell of the room drawn anew (no stairs, light, or trap), all
     from the level's stream `swarm/<level id>`, so the rest of the level is the same; it needs
     no danger. While the player stands inside, each training mark of a skill the effect names
-    in `train` comes with that percent of its usual chance (at most certain): Decipher script's
-    mark for a check to read a scroll (§8 "Scrolls") is certain anywhere, so the room changes
-    nothing yet. Effects at a cell multiply, as
+    in `train` comes with that percent of its usual chance (each whole hundred a mark for
+    certain, the rest a chance of one more): Decipher script's mark for a check to read a scroll
+    (§8 "Scrolls") is one mark anywhere and two in a scriptorium. Effects at a cell multiply, as
     other percents do. Nothing is saved. A room with `loot` never covers a whole level.
   - **A status while inside** (`status`, #403): as time passes, at the start of each stretch of
     it (`World::pass_time`: so after every action, the player's and each creature's, at every

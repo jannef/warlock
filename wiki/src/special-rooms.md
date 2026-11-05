@@ -168,8 +168,7 @@ gets where a dungeon favours or bans nothing. "Only" says where it can come at a
 - **Scriptorium.** Shelves of rotting scrolls stand in the middle of the room (shown as `≡`),
   and you may smell the dust and old vellum before you see it. Two to four [scrolls](scrolls.md) lie on its
   floor, of the kinds the level would give anyway, unread. Inside, the chance of a
-  [training mark](skills.md#getting-better) in [Decipher script](skills.md#skill-decipher-script) is doubled, which so far changes nothing: its one use,
-  [making out a scroll](scrolls.md#making-out-a-scroll), already earns a mark every time. Only rooms of 9 floor cells or more
+  [training mark](skills.md#getting-better) in [Decipher script](skills.md#skill-decipher-script) is higher: [making out a scroll](scrolls.md#making-out-a-scroll) earns a mark every time, and two here. Only rooms of 9 floor cells or more
   can be one.
 
 The talent *[Old delver](talents.md#talent-old-delver)* (Delver; [Willpower](stats.md#stat-willpower) 11 or [Dexterity](stats.md#stat-dexterity) 12) makes you at home in strange rooms: a [collapsed floor](special-rooms.md#room-collapsed) never gives way under you,

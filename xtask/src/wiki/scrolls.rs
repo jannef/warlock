@@ -7,7 +7,7 @@ use warlock_core::check;
 use warlock_core::content::{Content, Reading};
 
 /// The bonuses the check's table shows a column for: Intelligence's modifier, talents, and
-/// Decipher script's points (at most 12 at 200, more with what raises the skill).
+/// Decipher script's points (at most 12 at 200, more with what raises the skill, for one trained in it).
 const DECIPHER_BONUSES: [i32; 7] = [-2, 0, 2, 4, 8, 12, 16];
 
 /// The spell levels the check's table samples, by rows of rising difficulty.

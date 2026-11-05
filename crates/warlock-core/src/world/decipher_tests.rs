@@ -353,17 +353,55 @@ fn scribe_asks_no_check_and_what_it_writes_reads_by_the_rule() {
         0,
         "the writer's learning reaches it"
     );
-    // A writer whose learning does not reach their own spell makes the check as anyone.
-    let failed = (0..500).any(|seed| {
+    // A writer whose learning does not reach their own spell still knows it: it reads at once.
+    for seed in 0..40 {
         let reader = Reader {
             spellcraft: Some(0),
-            decipher: None,
+            decipher: Some(10),
         };
         let mut w = scribe(reader, seed);
         run(&mut w, "read:a:6,1");
-        said(&w, SWIMS) && carried(&w, "scroll_of_fireball") == 1
-    });
-    assert!(failed);
+        assert!(!said(&w, SWIMS));
+        assert_eq!(carried(&w, "scroll_of_fireball"), 0);
+        assert_eq!(marks(&w, "decipher_script"), 1, "a known spell still marks");
+    }
+}
+
+#[test]
+fn a_known_spell_succeeds_with_no_draw_and_still_marks() {
+    let reader = Reader {
+        spellcraft: None,
+        decipher: Some(10),
+    };
+    // Untrained reader who would fail on some seed: the spell they know always reads.
+    let seed = seed_where(true, reader);
+    let mut w = world(HASTE, reader, seed);
+    w.player_mut().spells.insert(sp("haste"));
+    let rng = w.state.rng.clone();
+    run(&mut w, "read:a");
+    assert!(!said(&w, SWIMS));
+    assert_eq!(carried(&w, "scroll_of_haste"), 1, "read");
+    assert_eq!(rng, w.state.rng, "no draw");
+    assert_eq!(marks(&w, "decipher_script"), 1);
+    // Untrained in Decipher script: nothing to mark.
+    let mut w = world(HASTE, UNTRAINED, seed);
+    w.player_mut().spells.insert(sp("haste"));
+    run(&mut w, "read:a");
+    assert_eq!(carried(&w, "scroll_of_haste"), 1, "read");
+    assert_eq!(marks(&w, "decipher_script"), 0);
+}
+
+#[test]
+fn a_learning_that_reaches_the_level_without_the_spell_keeps_the_bypass() {
+    let reader = Reader {
+        spellcraft: Some(spellcraft_for(11)),
+        decipher: Some(10),
+    };
+    let mut w = world(HASTE, reader, 0);
+    let rng = w.state.rng.clone();
+    run(&mut w, "read:a");
+    assert_eq!(rng, w.state.rng, "no draw");
+    assert_eq!(marks(&w, "decipher_script"), 0, "no mark");
 }
 
 #[test]
