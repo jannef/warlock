@@ -82,6 +82,23 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   is no class or group, or that can hold nothing of the grade at any level (magic coins, a magic
   potion), is a content error; a pool whose objects are all first found deeper leaves the cell
   bare on a shallower floor. The flooded cell holds `["money", "jewellery"]`.
+  A vault's legend entry may also give `monsters`, a **monster pool**: `monsters = { pool =
+  "level", count = 20 }`, `monsters = { pool = ["orc", "troll"] }`. `pool` is `"level"`, the
+  floor's own population with its strays, or one tag or a list of them (a tribe is its tag, §8
+  "Creatures"): the types with such a tag that may come as strays, no mimic, of the floor's
+  campaign or of none. `count` monsters are drawn when the level is generated, by the population's
+  own draw at the floor's danger (a draw may go deeper as any does, and a tag pool stays in its
+  tags), each on a different cell the entry marks, each with a short walk where one fits (no door
+  on it) and its kind's gear; without a `count`, one on every marked cell. Monsters on a floor
+  with no danger, or from a tribe with nothing at the danger, leave the cells bare. They come on
+  top of the floor's population and outside the spawning cap (§7 "Danger levels"). A marked cell
+  is left to them, drawn or not: no population on it (a hidden trap may lie there, and the cell then
+  stays empty). Only dungeon vaults
+  draw them (in a level file or an outdoor vault it is a content error), and a pool that can hold
+  nothing (an unknown tag, one no drawable type has, a tag pool of a campaign vault with no type
+  of its campaign), `"level"` beside tags, a `count` of 0 or over the cells, a cell that is a door
+  or not walkable, or one with a `creature` or `trap` too, is a content error. A vault that
+  dangerous should be avoidable (behind a door) and pay better loot. The guard post draws two.
 - **Locks in level files** (M19, §8 "Doors"): a legend entry on a closed door locks it with
   `lock = "pantry"` (a lock id: keys with that id open it, and skeleton keys) or `locked = true`
   (a lock without an id: only a skeleton key opens it), and `lock_difficulty = N` with either

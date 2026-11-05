@@ -44,6 +44,7 @@ use super::danger::{
 use super::faction::FactionId;
 use super::flow::{FLOW_SPEEDS, Flow};
 use super::light::LightId;
+use super::monster_pool::{MonsterPoolSpec, VaultMonsters};
 use super::object::parse_stacks;
 use super::room_effect::{RoomEffectId, SpecialRoom};
 use super::search::{Secret, SecretSpec, secret_look};
@@ -67,7 +68,8 @@ use crate::magic::{Affix, LootGrade, LootPool, Magic};
 use crate::object::{Stack, add_to_pile};
 use crate::temperature::{LEVEL_TEMPERATURES, Temperature};
 use serde::{Deserialize, Serialize};
-use std::collections::BTreeMap;
+use std::collections::btree_map::Entry;
+use std::collections::{BTreeMap, BTreeSet};
 
 /// What kind of place a level is (spec §8 "Time"). It decides what a step there takes and
 /// whether the sun shines on it.
@@ -302,6 +304,9 @@ pub(super) struct LegendDetail {
     /// Vaults only: an item of loot rolled here when a level is generated: at least of a grade
     /// (`any`, `magic`, `rare`; spec §8 "Magic items"), or from a pool of item classes.
     loot: Option<LootSpec>,
+    /// Vaults only: a cell of a pool of monsters drawn when a level is generated
+    /// (`monsters = { pool = "level", count = 20 }`, [`MonsterPoolSpec`]).
+    monsters: Option<MonsterPoolSpec>,
     /// Objects the creature on this cell carries.
     carry: Option<Vec<String>>,
     /// Objects of what it carries that it wields (weapons, shields, missile weapons and
@@ -586,6 +591,11 @@ pub struct LevelTemplate {
     /// Vaults: cells where loot is rolled when they are stamped into a generated level, each
     /// with what it may be. Empty on levels.
     pub loot: Vec<(Pos, LootPool)>,
+    /// Vaults: the monster pools its legend names, each with its cells. Empty on levels.
+    pub monsters: Vec<VaultMonsters>,
+    /// A generated level: the cells of the creatures the spawner's cap does not count (those of
+    /// its vaults' monster pools, `world/spawn.rs`).
+    pub outside_cap: BTreeSet<Pos>,
     /// The temperature underground (spec §5 "Temperature"); `None`: the dungeon default (or,
     /// under the open sky, the weather's).
     pub temperature: Option<Temperature>,
@@ -671,6 +681,7 @@ pub(super) fn parse_level(
     let mut objects: BTreeMap<Pos, Vec<Stack>> = BTreeMap::new();
     let mut traps = BTreeMap::new();
     let mut loot = Vec::new();
+    let mut monsters: BTreeMap<char, VaultMonsters> = BTreeMap::new();
     let mut locks = BTreeMap::new();
     // Chests (spec §8 "Chests"): the level a legend gives each, and what each holds.
     let mut chest_levels: BTreeMap<Pos, u8> = BTreeMap::new();
@@ -844,6 +855,29 @@ pub(super) fn parse_level(
                     .map_err(|m| err(format!("legend `{ch}`: {m}")))?;
                 loot.push((pos, pool));
             }
+            if let Some(spec) = &detail.monsters {
+                let def = content.terrain(terrain);
+                if !def.walkable || def.is_door() {
+                    return Err(err(format!(
+                        "legend `{ch}` places monsters on terrain `{}`: they stand on walkable \
+                         ground, not a door",
+                        entry.terrain()
+                    )));
+                }
+                if detail.creature.is_some() || detail.trap.is_some() {
+                    return Err(err(format!(
+                        "legend `{ch}`: a cell of `monsters` holds no `creature` or `trap` too"
+                    )));
+                }
+                let group = match monsters.entry(ch) {
+                    Entry::Occupied(known) => known.into_mut(),
+                    Entry::Vacant(new) => new.insert(
+                        (spec.resolve(content))
+                            .map_err(|m| err(format!("legend `{ch}`: monsters: {m}")))?,
+                    ),
+                };
+                group.cells.push(pos);
+            }
             if let Some(creature) = &detail.creature {
                 let id = content.creature_id(creature).ok_or_else(|| {
                     err(format!("legend `{ch}` uses unknown creature `{creature}`"))
@@ -918,6 +952,10 @@ pub(super) fn parse_level(
             }
         }
     }
+
+    let monsters: Vec<VaultMonsters> = (monsters.into_iter())
+        .map(|(ch, group)| (group.counted()).map_err(|m| err(format!("legend `{ch}`: {m}"))))
+        .collect::<Result<_, _>>()?;
 
     let mut regions = Vec::with_capacity(parsed.region.len());
     for spec in parsed.region {
@@ -1142,6 +1180,8 @@ pub(super) fn parse_level(
         exit: None,
         item_level,
         loot,
+        monsters,
+        outside_cap: Default::default(),
         temperature,
         ice,
         spawning,

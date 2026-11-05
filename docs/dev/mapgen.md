@@ -24,7 +24,13 @@ items by the branch's `loot`, vault `loot` cells, each a grade or a pool of item
 map is valid, from its own stream `loot/<level id>`, so adding loot never changes the terrain of a
 generated level. It does shift what follows on that stream, and `hide_traps` avoids a vault's
 `[[pile]]` but not a `loot` cell, so turning a pile into a loot cell moves the floor's items and
-may move a hidden trap (a trap may lie under a loot cell). On a
+may move a hidden trap (a trap may lie under a loot cell). A vault's `monsters` cells
+(`content/monster_pool.rs`, `VaultMonsters`; `Canvas::monsters`) are drawn with the population,
+just before it, from their own stream `vault_monsters/<level id>`, through the same
+`danger::draw`; the population keeps off every marked cell, so a floor with such a vault moves its
+population (not its map, traps, secrets, or loot), and only that floor; `hide_traps` is untouched, so
+a hidden trap may take a marked cell, which then stays empty (`mapgen/vault_monsters_tests.rs`).
+On a floor with no danger nothing is drawn: the Depths' guard post keeps its one kobold. On a
 branch with a danger the initial population follows (`mapgen/population.rs`, stream
 `population/<level id>`; `docs/dev/creatures.md`: its own folk, now and then a stray from every
 hostile type of the campaign, populations or none, unless the branch's `stray_pool` says

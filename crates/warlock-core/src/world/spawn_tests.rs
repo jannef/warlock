@@ -374,6 +374,71 @@ fn the_spawn_dev_action_brings_one_and_replays() {
     );
 }
 
+/// A run on a floor of a branch of danger 3 whose vault holds twelve of a monster pool.
+fn crowded_run() -> World {
+    let mut files = files_with(HAUNT);
+    files.insert(
+        "vaults/crowd.toml",
+        "name = \"Crowd\"\nmap = '''\n########\n#mmmmmm#\n#......#\n#mmmmmm#\n####+###\n'''\n\
+         [legend]\n\"m\" = { terrain = \"floor\", monsters = { pool = \"level\" } }\n",
+    );
+    let dungeons = format!(
+        "{}{BARROW}\n[[dungeon]]\nid = \"crowded\"\nname = \"Crowded\"\ngenerator = \"rooms\"\n\
+         depth = 1\nsize = [80, 40]\ndanger = 3\npopulation = [\"kobold\", \"rat\"]\n\
+         population_count = 25\nspawn = {{ every = \"1m\", chance = 100 }}\n\
+         [[dungeon.levels]]\nfrom = 1\nvaults = [\"crowd\"]\n",
+        include_str!("../../../../assets/data/dungeons.toml")
+    );
+    files.insert("data/dungeons.toml", &dungeons);
+    files.insert(
+        "scenarios/crowded.toml",
+        "name = \"Crowded\"\nstart_level = \"crowded:1\"\nwield = [\"lantern\"]\nhp = 900\n",
+    );
+    let content = Arc::new(Content::load(&files).expect("content"));
+    World::new(content, "crowded", Some(5)).expect("world")
+}
+
+/// The creatures of the floor the cap counts go, and only those; returns those it does not.
+fn thin_to_the_vault(w: &mut World) -> BTreeSet<ActorId> {
+    let outside = (w.state.current().spawner.as_ref())
+        .map(|s| s.outside.clone())
+        .expect("a spawner");
+    for id in others(w) {
+        if !outside.contains(&id) {
+            w.state.actors.remove(&id);
+        }
+    }
+    outside
+}
+
+/// The issue's rule: a vault's monster pool stands outside the cap, as a deliberate spike. Were
+/// they counted, a floor laid down full would see nothing come until as many had died as the
+/// vault holds.
+#[test]
+fn a_vault_s_monster_pool_stands_outside_the_cap() {
+    let mut w = crowded_run();
+    let (_, counted, cap, _) = w.spawn_status().expect("a danger");
+    assert_eq!(cap, 25);
+    // The population and the generator's own patrols; not the vault's twelve.
+    let all = others(&w).len() as u32;
+    assert!(counted >= cap, "{counted} of {cap}: laid down full");
+    let outside = thin_to_the_vault(&mut w);
+    assert!(outside.len() >= 12);
+    assert!(counted + outside.len() as u32 <= all, "{counted} of {all}");
+    assert_eq!(w.spawn_status().expect("a danger").1, 0);
+    // Nothing of the vault's has died, and what comes comes all the same, up to the cap.
+    run(&mut w, "wait*600");
+    let came = others(&w).difference(&outside).count();
+    assert!(came > 0, "the floor fills again beside the vault's twelve");
+    let json = serde_json::to_string(&w.state).expect("serialize");
+    assert!(json.contains("\"outside\""), "saved with the level");
+    // Determinism: the same again.
+    let mut again = crowded_run();
+    thin_to_the_vault(&mut again);
+    run(&mut again, "wait*600");
+    assert_eq!(w.state_hash(), again.state_hash());
+}
+
 /// The barrow's first floor for the run with `seed`.
 fn barrow_floor(content: &Content, seed: u64) -> LevelTemplate {
     crate::mapgen::generate(content, ("showcase", seed), "barrow:1", None).expect("barrow:1")
@@ -452,7 +517,9 @@ fn a_generated_floor_is_laid_down_full_and_nothing_else_moves() {
         let count = spawning
             .count
             .for_cells(u32::try_from(walkable).expect("cells"));
-        assert_eq!(population.len(), count as usize, "seed {seed}");
+        // On top of it, a vault's monster pool (the guard post's two), drawn first.
+        let pools = with.outside_cap.len();
+        assert_eq!(population.len(), count as usize + pools, "seed {seed}");
         let danger = 2;
         let mut cells: BTreeSet<_> = own.iter().map(|s| s.pos).collect();
         for spawn in population {

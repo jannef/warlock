@@ -52,7 +52,7 @@ use crate::chest::Chest;
 use crate::content::{
     Content, CreatureId, CreatureSpawn, Flow, Generator, LevelKind, LevelTemplate, LightId,
     ObjectId, Place, RoomEffectId, RoomOdds, Secret, ShopOdds, ShopPlan, SpecialRoom, StairsDir,
-    StairsLink, TerrainId, Trap, Vault, secret_look,
+    StairsLink, TerrainId, Trap, Vault, VaultMonsters, secret_look,
 };
 use crate::door::Lock;
 use crate::geom::{Dir, Pos};
@@ -192,6 +192,8 @@ pub(crate) struct Canvas<'a> {
     pub traps: BTreeMap<Pos, Trap>,
     /// Where vaults stamped loot to roll, and what it may be.
     pub loot: Vec<(Pos, LootPool)>,
+    /// Where vaults stamped monster pools to draw, and who may come.
+    pub monsters: Vec<VaultMonsters>,
     /// Locks on closed doors: stamped from vaults, and on locked rooms (spec §8 "Doors").
     pub locks: BTreeMap<Pos, Lock>,
     /// Secret doors stamped from vaults (spec §8 "Searching").
@@ -242,6 +244,7 @@ impl<'a> Canvas<'a> {
             objects: BTreeMap::new(),
             traps: BTreeMap::new(),
             loot: Vec::new(),
+            monsters: Vec::new(),
             locks: BTreeMap::new(),
             secrets: BTreeMap::new(),
             chests: BTreeMap::new(),
@@ -540,6 +543,8 @@ pub fn generate_for(
             exit: None,
             item_level,
             loot: Vec::new(),
+            monsters: Vec::new(),
+            outside_cap: Default::default(),
             temperature: plan.temperature,
             ice: Default::default(),
             // Its branch's, asked of [`Content::spawning`].
@@ -562,7 +567,13 @@ pub fn generate_for(
             );
             if let Some((rule, depth, spawning)) = content.spawning(id) {
                 let danger = rule.at(depth, visit.player_level);
-                population::populate(&mut template, content, seed, (pal, danger, spawning), visit);
+                population::populate(
+                    &mut template,
+                    content,
+                    seed,
+                    (pal, danger, spawning),
+                    (visit, &canvas.monsters),
+                );
                 den::fill(&mut template, content, seed, (pal, danger, spawning), visit);
                 hoard::fill(&mut template, content, seed, (pal, danger), visit);
             }
@@ -869,3 +880,5 @@ mod special_tests;
 mod tests;
 #[cfg(test)]
 mod treasury_tests;
+#[cfg(test)]
+mod vault_monsters_tests;

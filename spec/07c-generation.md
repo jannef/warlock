@@ -100,7 +100,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
   attempt's time and the stream `spawn/<level id>`; none elsewhere, so other levels' states are as they
   were). At the end of every turn (`run_turn` → `spawn_tick`) each attempt due on the current
   level is made: skipped while the level holds as many creatures hostile to the player as its
-  cap, else with its chance a type is drawn and placed on a cell out of the player's view by the
+  cap (a vault's monster pool, §7 "Level file format", is not counted: a deliberate spike that
+  leaves the respawning of the rest of the floor as it was), else with its chance a type is drawn and placed on a cell out of the player's view by the
   perception rules and at least 8 cells (Chebyshev) from them, walkable, free, and no stairs,
   door, shop floor, or sanctuary (up to 32 tries, else nothing comes), with a short out-and-back
   route where one fits, else a post. Floors the player is not on stay frozen: on arrival the next
@@ -229,7 +230,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   from an entrance. Its locks
   come with their keys: a key to every lock lies, or is carried by a creature, within reach of an
   unlocked entrance without unlocking a door (the guard post: its store room locked, the brass
-  key carried by its kobold). Vaults of
+  key carried by its kobold). A legend entry may draw a monster pool (§7 "Level file format"). Vaults of
   `kind = "outdoor"` are ruins for local areas, stamped on open land with a ring of open ground
   around them: their spaces (`void`) keep the area's own ground, every open cell on their edge is
   a way in, and their walkable cells are reachable from the edge; they have no traps. Dungeon
