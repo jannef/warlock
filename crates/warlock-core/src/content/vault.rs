@@ -11,9 +11,11 @@
 //! Its locks (spec §8 "Doors") come with their keys: a key to every lock lies, or is carried by a
 //! creature, within reach of an unlocked entrance without unlocking a door. A legend's `loot` is
 //! rolled when it is stamped: a grade, or a pool of item classes (`magic/loot.rs`, [`LootPool`]),
-//! at the floor's item level.
+//! at the floor's item level. A legend's `monsters` draws creatures at the floor's danger
+//! ([`VaultMonsters`], `mapgen/population.rs`), on top of its population and outside the cap.
 //!
 //! [`LootPool`]: crate::magic::LootPool
+//! [`VaultMonsters`]: super::VaultMonsters
 //!
 //! A vault of kind `outdoor` (ruins for the local areas of the overworld) is stamped onto open
 //! ground instead of into rock: its `void` cells (the default legend's space) are the local
@@ -116,6 +118,13 @@ impl Vault {
                 "an outdoor vault cannot have secret doors (at {at})"
             ));
         }
+        // A monster pool is drawn at the floor's danger; a local area has none.
+        if let (LevelKind::Outdoor, Some(group)) = (template.kind, template.monsters.first()) {
+            return Err(format!(
+                "an outdoor vault cannot draw monsters: a local area has no danger (at {})",
+                group.cells[0]
+            ));
+        }
         // The level it is stamped into decides its temperature, and so its ice.
         if let Some(at) = template.ice.keys().next() {
             return Err(format!("a vault cannot lay ice (at {at})"));
@@ -203,6 +212,19 @@ impl Vault {
                 let theirs = def.campaign.as_deref().unwrap_or("no campaign");
                 return Err(format!(
                     "`dungeons`: `{name}` is {theirs}'s; a vault stamps only in its own campaign's branches"
+                ));
+            }
+        }
+        Ok(())
+    }
+
+    /// Checks its monster pools once it knows its campaign: each holds a type it may meet.
+    pub(super) fn check_monsters(&self, content: &Content) -> Result<(), String> {
+        for group in &self.template.monsters {
+            if group.pool.holds_none(content, self.campaign.as_deref()) {
+                return Err(format!(
+                    "the monster pool at {} holds no type of its campaign",
+                    group.cells[0]
                 ));
             }
         }

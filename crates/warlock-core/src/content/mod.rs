@@ -77,6 +77,7 @@ mod material;
 pub mod mimic;
 #[cfg(test)]
 mod mimic_roster_tests;
+mod monster_pool;
 mod names;
 mod object;
 mod offer;
@@ -243,6 +244,7 @@ pub use level::{
 };
 pub use light::{Dips, Drift, HueDrift, LightId, LightPreset, MAX_LIGHT_RADIUS, Stability};
 pub use material::{ANY, Found, MAX_MATERIAL_VALUE, MaterialDef, MaterialId, VERY_RARE};
+pub use monster_pool::{MonsterPool, VaultMonsters};
 pub use names::{NameLists, Names};
 pub use object::{
     MAX_BONUS, MAX_DIG, MAX_PLACED, MAX_VALUE, ObjectDef, ObjectId, article, counted, weapon_noun,
@@ -1243,6 +1245,15 @@ impl Content {
                     format!("`loot` at {at}: loot is rolled only in vaults"),
                 ));
             }
+            if let Some(group) = level.monsters.first() {
+                return Err(ContentError::new(
+                    path,
+                    format!(
+                        "`monsters` at {}: a monster pool is drawn only in vaults",
+                        group.cells[0]
+                    ),
+                ));
+            }
             let campaign = campaign::of_path(path).map(str::to_string);
             content.level_campaigns.insert(id.to_string(), campaign);
             content.levels.insert(id.to_string(), level);
@@ -1294,8 +1305,9 @@ impl Content {
         content.load_dungeons(files)?;
         content.fill_generic();
         for v in &content.vaults {
-            v.check_dungeons(&content)
-                .map_err(|m| ContentError::new(&v.file(), m))?;
+            (v.check_dungeons(&content)
+                .and_then(|()| v.check_monsters(&content)))
+            .map_err(|m| ContentError::new(&v.file(), m))?;
         }
         // A scenario outside every campaign (a test fixture) plays in its start level's.
         let loose: Vec<(String, Option<String>)> = (content.scenarios.values())

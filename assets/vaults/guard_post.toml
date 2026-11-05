@@ -1,17 +1,21 @@
-# Vault: a guard post. A kobold paces the front room; a locked door hides a lamp-lit store room.
+# Vault: a guard post. A kobold paces the front room with two of the floor's own for company,
+# drawn at its danger when the level is generated; a locked door hides a lamp-lit store room.
 # The guard carries the brass key to it (spec §8 "Doors"): kobolds open doors, and a locked one
 # only with its key. Take the key from the guard, or kick the door in.
 name = "Guard post"
 map = '''
 ###########
-#....#....#
+#g..g#....#
 #.k..L..*.#
-#....#.m..#
+#g..g#.m..#
 ###+#######
 '''
 
 [legend]
 "k" = { terrain = "floor", creature = "kobold", route = "E2 W2", carry = ["brass_key"] }
+# Whoever else is on duty: two of the floor's population on two of these four cells (none on a
+# floor without a danger).
+"g" = { terrain = "floor", monsters = { pool = "level", count = 2 } }
 "*" = { terrain = "floor", light = "lamp" }
 # A reward (spec §8 "Magic items"): something magic or rare left in the store room, rolled when
 # the level is generated.
