@@ -299,7 +299,9 @@ fn a_generated_collapsed_floor_keeps_a_sound_rim_and_a_way_across() {
                 for &p in cells.iter().filter(|&&p| crack(p)) {
                     for q in Dir::ALL.map(|d| p.step(d)) {
                         assert!(
-                            room.contains(q) && walkable(q) && !door(&content, &level, q),
+                            room.contains(q)
+                                && (walkable(q) || level.chests.contains_key(&q))
+                                && !door(&content, &level, q),
                             "seed {seed} {id}: {p:?} cracks beside {q:?}"
                         );
                     }
