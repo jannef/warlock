@@ -32,7 +32,10 @@ draw `monsters` too (`content/monster_pool.rs`): `monsters = { pool = "level", c
 (`"level"` the floor's population, or tags: `pool = "goblin"`, `pool = ["orc", "troll"]`; `count`
 over the entry's marked cells, default one on each; refused at load: `MonsterPoolSpec::resolve`,
 `VaultMonsters::counted`, `Vault::check_monsters`, `parse_level`'s checks; docs/dev/creatures.md
-for the draw and the cap). A vault that dangerous should be avoidable and pay better loot. `secret =
+for the draw and the cap). A vault that dangerous should be avoidable and pay better loot. A vault
+file's `turns = false` keeps it as drawn when one is drawn at random (default: any of eight ways,
+`docs/dev/mapgen.md`): for text that depends on direction or a layout that must not turn; refused on
+a level. `secret =
 true` (or a difficulty) on a closed door makes it a secret door: the cell shows the wall around
 it until found (`docs/dev/searching.md`). Water: `~` is still water; running water (terrain with a
 `flow` anim) needs a flow on every cell from its legend entry (`flow = "S"`, optional

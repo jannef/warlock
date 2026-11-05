@@ -28,6 +28,10 @@
 //! file names `dungeons` (branch ids, or branch levels such as `"cealdhlaw:2"`) only there.
 //! A branch level may name vaults (`vaults` in `[[dungeon.levels]]`): each is stamped on that
 //! level for certain, and a vault so named ([`Vault::pinned`]) is never drawn at random.
+//!
+//! A vault drawn at random lies any of eight ways, rotated or mirrored (`vault_turn.rs`), unless
+//! its file says `turns = false`, for text that depends on direction or a layout that must not
+//! turn. A vault a branch level names keeps the way its file draws it.
 
 use super::dungeon::{DungeonDef, parse_branch_level};
 use super::level::{LevelKind, LevelTemplate};
@@ -53,20 +57,31 @@ pub struct Vault {
     ///
     /// [`DungeonDef::vaults`]: super::DungeonDef::vaults
     pub pinned: bool,
+    /// Whether a random stamp may rotate or mirror it (a file's `turns`, default true; see
+    /// [`Vault::may_turn`]).
+    pub turns: bool,
 }
 
-/// The vault-only field of a vault file (the level-file parser reads the rest and ignores it).
+/// The vault-only fields of a vault file (the level-file parser reads the rest and ignores them).
 #[derive(Deserialize)]
-struct VaultPlaces {
+struct VaultFields {
     #[serde(default)]
     dungeons: Vec<String>,
+    turns: Option<bool>,
 }
 
 /// The `dungeons` a vault file (or a level file, which may not give it) names.
 pub(super) fn parse_dungeons(path: &str, text: &str) -> Result<Vec<String>, ContentError> {
-    let places: VaultPlaces =
-        toml::from_str(text).map_err(|e| ContentError::new(path, e.to_string()))?;
-    Ok(places.dungeons)
+    Ok(parse_fields(path, text)?.dungeons)
+}
+
+/// The `turns` a vault file (or a level file, which may not give it) says.
+pub(super) fn parse_turns(path: &str, text: &str) -> Result<Option<bool>, ContentError> {
+    Ok(parse_fields(path, text)?.turns)
+}
+
+fn parse_fields(path: &str, text: &str) -> Result<VaultFields, ContentError> {
+    toml::from_str(text).map_err(|e| ContentError::new(path, e.to_string()))
 }
 
 impl Vault {
@@ -181,6 +196,7 @@ impl Vault {
             campaign: None,
             dungeons: Vec::new(),
             pinned: false,
+            turns: true,
         })
     }
 

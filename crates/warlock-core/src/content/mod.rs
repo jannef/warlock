@@ -156,6 +156,7 @@ mod troll_roster_tests;
 mod undead_roster_tests;
 mod unique;
 mod vault;
+mod vault_turn;
 mod vision;
 mod wand;
 mod weapon_ability;
@@ -332,6 +333,7 @@ pub use throw::{THROW_RANGES, Throw};
 pub use trap::{MAX_CHARGES, Trap, TrapAvoid, TrapDef, TrapEffect, TrapId, TrapNoise};
 pub use unique::{Power, UNIQUE, UniqueDef, Uniques};
 pub use vault::Vault;
+pub use vault_turn::Turn;
 pub use vision::VisionProfile;
 pub use wand::{MAX_WAND_CHARGES, Wand};
 pub use weapon_ability::{
@@ -1239,6 +1241,9 @@ impl Content {
                     "`dungeons`: only a vault names where it stamps",
                 ));
             }
+            if vault::parse_turns(path, text)?.is_some() {
+                return Err(ContentError::new(path, "`turns`: only a vault turns"));
+            }
             if let Some((at, _)) = level.loot.first() {
                 return Err(ContentError::new(
                     path,
@@ -1300,6 +1305,7 @@ impl Content {
                 Vault::new(template, &content).map_err(|m| ContentError::new(path, m))?;
             vault.campaign = campaign::of_path(path).map(str::to_string);
             vault.dungeons = vault::parse_dungeons(path, text)?;
+            vault.turns = vault::parse_turns(path, text)?.unwrap_or(true);
             content.vaults.push(vault);
         }
         content.load_dungeons(files)?;
