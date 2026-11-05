@@ -172,7 +172,7 @@ fn place_seconds(content: &Content, a: Ability) -> Option<u32> {
     (content.room_effects().defs().iter())
         .filter_map(|e| e.offers.as_ref())
         .find(|(o, _)| *o == offer)
-        .and_then(|(_, table)| content.outcomes().get(table))
+        .and_then(|(_, table)| content.outcomes().get(table.as_deref()?))
         .map(|t| t.seconds)
 }
 

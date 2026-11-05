@@ -153,7 +153,7 @@ gets where a dungeon favours or bans nothing. "Only" says where it can come at a
   faint glow rises from it: you notice it from the doorway. Stand beside it and you may [pray](abilities.md#ability-pray)
   (see [Forgotten altars](#forgotten-altars) below). Only rooms of 9 floor cells or more can be one.
 - **Forge.** A cold forge with an old anvil in the middle of the room; you smell soot and cold
-  iron from the doorway. Stand beside the anvil and you may [temper](abilities.md#ability-temper) a weapon or armour you carry
+  iron from the doorway. Stand beside the anvil and you may [temper](abilities.md#ability-temper) metal arms or armour you carry
   (see [Forges](#forges) below). Only rooms of 9 floor cells or more can be one.
 - **Shrine.** A squat stone shrine stands in the middle of the room. Like a forgotten altar it
   has a hidden side, here only **[good or evil](alignment.md)** (as likely either way), and its stone's light
@@ -167,9 +167,8 @@ gets where a dungeon favours or bans nothing. "Only" says where it can come at a
   of 9 floor cells or more can be one.
 - **Scriptorium.** Shelves of rotting scrolls stand in the middle of the room (shown as `≡`),
   and you may smell the dust and old vellum before you see it. Two to four [scrolls](scrolls.md) lie on its
-  floor, of the kinds the level would give anyway, unread. Studying a spell from a scroll while
-  you stand inside (see [Magic](magic.md#learning-spells-from-scrolls)) always earns [Decipher script](skills.md#skill-decipher-script) a [training mark](skills.md#getting-better) if you
-  are trained in it, where elsewhere it is one study in two. Only rooms of 9 floor cells or more
+  floor, of the kinds the level would give anyway, unread. Inside, the chance of a
+  [training mark](skills.md#getting-better) in [Decipher script](skills.md#skill-decipher-script) is higher: [making out a scroll](scrolls.md#making-out-a-scroll) earns a mark every time, and two here. Only rooms of 9 floor cells or more
   can be one.
 
 The talent *[Old delver](talents.md#talent-old-delver)* (Delver; [Willpower](stats.md#stat-willpower) 11 or [Dexterity](stats.md#stat-dexterity) 12) makes you at home in strange rooms: a [collapsed floor](special-rooms.md#room-collapsed) never gives way under you,
@@ -331,23 +330,35 @@ The outcomes, by kind and tier ("Of its kind" is its share of its kind's draws):
 
 A forge is a cold smithy: soot on the walls and an **anvil**, its hammer chained beside it. Walk
 into the anvil and say yes when asked, or stand beside it and choose **[Temper](abilities.md#ability-temper)** from the [abilities menu](abilities.md#the-abilities-menu) (listed under *Here* only there),
-then pick a weapon or a piece of armour you carry (a weapon, a bow or crossbow, body armour, a
-helmet, a cloak, gloves, boots, or a shield; never [ammunition](ammunition.md), rings, or amulets). Tempering is
-ten minutes of work; anything that would stop a [rest](resting.md#how-resting-works) stops it, and then the item is untouched
-but the time is gone. Anyone may temper; *[Metalcraft](skills.md#skill-metalcraft)* only makes it go better. Every finished
-tempering may train [Metalcraft](skills.md#skill-metalcraft).
+then pick something of metal you carry: a weapon, a missile weapon, armour, or a shield whose main
+part is a metal, as its [description](objects.md#what-an-object-is) says (so no leather, wood, or bone, and never
+[ammunition](ammunition.md), rings, or amulets). An attempt is ten minutes of work; anything that would stop a
+[rest](resting.md#how-resting-works) stops it, and then the item is untouched and the attempt does not count, but the time
+is gone. Anyone may temper; *[Metalcraft](skills.md#skill-metalcraft)* only makes it go better. Every finished attempt may train
+[Metalcraft](skills.md#skill-metalcraft) and [Strength](stats.md#stat-strength), whatever came of it.
 
-At the end the metal comes out one of four ways: **improved** (it gains a new [affix](magic-items.md), if its
-[rarity](magic-items.md#rarity) has room for one: a plain item becomes magic; a full one has its strongest affix made a
-tier stronger), **nothing**, **flawed** (it loses one of its affixes; a plain item has nothing to
-lose), or **ruined** (it shatters and is gone, even from your hand). Whatever survives is
-[identified](magic-items.md#unidentified-items). A [Strength](stats.md#stat-strength) check, helped by Metalcraft, leans the odds toward improved, or, when it
-goes badly, toward flawed and ruined. The anvil never wears out: temper as often as you like, as
-long as you are willing to risk the item.
+It is one action, and what it does depends on the item:
 
-{{#include generated/forge-shares.md}}
+| The item | Made | Failed |
+|---|---|---|
+| Not damaged | It takes one **improvement** | It is **damaged**: all its improvements are gone |
+| Damaged | The damage is gone: a plain item again | It is **destroyed**, even from your hand, with its [affixes](magic-items.md) and however rare it is |
+| Three improvements | It can be made no finer, and the anvil will not take it | |
 
-{{#include generated/forge-outcomes.md}}
+**Every attempt is harder than the last, made or failed, for the item's whole life**, repairs too,
+so an item worked long enough will only ever break. Nothing tells you how many it has had.
+
+{{#include generated/temper-odds.md}}
+
+An improvement goes to something drawn at random, evenly, among what the item has, and the same may
+come twice. The item's name says how far it has come, whatever you know of its magic:
+
+{{#include generated/temper-grades.md}}
+
+A damaged item has no other fault: it fights and protects as a plain one does, so stopping there
+is a real choice. The anvil neither adds nor takes [affixes](magic-items.md); they stay through improvement, damage,
+and repair. Whatever survives is [identified](magic-items.md#unidentified-items). A worked item is like no other and never stacks;
+of a stack, one is worked at a time. The anvil never wears out.
 
 ## Healing springs
 

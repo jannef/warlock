@@ -123,7 +123,7 @@ pub enum Ability {
     /// it ([`Ability::here`]): listed only while the player stands next to such an altar (never
     /// a spent one), absent elsewhere.
     Pray,
-    /// Temper a carried weapon or armour at a forge's anvil (spec §7 "Special rooms"):
+    /// Work a carried metal weapon or armour at a forge's anvil (spec §7 "Special rooms"):
     /// [`Action::Temper`]. A place offers it ([`Ability::here`]): listed only while the player
     /// stands next to an anvil; it asks which item ([`Aim::Item`]).
     Temper,
@@ -239,7 +239,7 @@ pub enum Aim {
     /// ability).
     Ailment,
     /// A stack the player carries, from a list of those it may work on (the Identify spell on
-    /// the identify list; Temper: a weapon or armour, [`crate::world::temperable`];
+    /// the identify list; Temper: metal arms or armour, [`crate::world::workable`];
     /// [`Ability::action_on`]).
     Item,
     /// A weapon's shape, from the list of every one there is (the Hunter's Spirit weapon:
@@ -464,8 +464,8 @@ impl Ability {
     pub(crate) fn here(level: &LevelState, content: &Content, at: Pos) -> Vec<Ability> {
         let mut found: Vec<Ability> = (Dir::ALL.iter().map(|&d| at.step(d)))
             .filter_map(|p| level.terrain_at(p))
-            .filter_map(|t| content.offer_at(t))
-            .map(|(offer, _)| Ability::offered(offer))
+            .filter_map(|t| content.offer(t))
+            .map(Ability::offered)
             .collect();
         found.sort();
         found.dedup();
@@ -666,8 +666,10 @@ impl Ability {
                  answer, for good or ill."
             }
             Ability::Temper => {
-                "Work a weapon or a piece of armour you carry at the anvil beside you for ten \
-                 minutes. The metal may come out better, or worse, or break."
+                "Work a metal weapon or piece of armour you carry at the anvil beside you for \
+                 ten minutes. It may come out finer, or damaged and stripped of what was done to \
+                 it; damaged, the next try mends it or breaks it. Each try is harder than the \
+                 last."
             }
             Ability::Drink => {
                 "Drink from the spring beside you. Its water is mostly good, and now and then \

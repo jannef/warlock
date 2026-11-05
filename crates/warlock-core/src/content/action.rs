@@ -104,7 +104,7 @@ pub enum ActionKind {
     Drink,
     /// A turn of foraging in the wild (spec §8 "Foraging"): a forage takes several.
     Forage,
-    /// A turn of tempering an item at a forge's anvil (spec §7 "Special rooms"): a tempering
+    /// A turn of working an item at a forge's anvil (spec §7 "Special rooms"): an attempt
     /// takes many.
     Temper,
     /// Trying to disarm a trap (spec §8 "Disarming traps"), whatever comes of it.

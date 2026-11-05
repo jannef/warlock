@@ -3,7 +3,39 @@
 use super::text::{Term, anchored, capital};
 use super::traps::sound_text;
 use std::fmt::Write as _;
+use warlock_core::check;
 use warlock_core::content::{Content, Reading};
+
+/// The bonuses the check's table shows a column for: Intelligence's modifier, talents, and
+/// Decipher script's points (at most 12 at 200, more with what raises the skill, for one trained in it).
+const DECIPHER_BONUSES: [i32; 7] = [-2, 0, 2, 4, 8, 12, 16];
+
+/// The spell levels the check's table samples, by rows of rising difficulty.
+const DECIPHER_LEVELS: [u8; 8] = [0, 6, 11, 22, 35, 46, 56, 70];
+
+/// The check of reading a scroll: its difficulty by spell level, and the chance at each bonus.
+pub(super) fn decipher_chances(content: &Content) -> String {
+    let Some(rules) = content.decipher() else {
+        return String::new();
+    };
+    let mut out = String::from("| Spell level | Difficulty |");
+    for b in DECIPHER_BONUSES {
+        let _ = write!(out, " Bonus {b:+} |");
+    }
+    out.push_str("\n|:---:|:---:|");
+    out.push_str(&":---:|".repeat(DECIPHER_BONUSES.len()));
+    out.push('\n');
+    for level in DECIPHER_LEVELS {
+        let difficulty = rules.difficulty(level);
+        let _ = write!(out, "| {level} | {difficulty} |");
+        for b in DECIPHER_BONUSES {
+            let percent = f64::from(check::ways(b, difficulty)) * 100.0 / 144.0;
+            let _ = write!(out, " {percent:.0} % |");
+        }
+        out.push('\n');
+    }
+    out
+}
 
 /// The scrolls: what reading each does, the roll it casts at (its rung of the spell's ladder,
 /// before the reader's Scroll adept), how far it reaches, what it sounds like, from which item

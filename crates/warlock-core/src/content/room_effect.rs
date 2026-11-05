@@ -206,7 +206,7 @@ impl Dressing {
 #[serde(deny_unknown_fields)]
 struct OffersSpec {
     pray: Option<String>,
-    temper: Option<String>,
+    temper: Option<bool>,
     drink: Option<String>,
 }
 
@@ -216,7 +216,7 @@ struct OffersSpec {
 pub enum Offer {
     /// Pray at a forgotten altar.
     Pray,
-    /// Temper a carried weapon or armour at a forge's anvil.
+    /// Work a carried metal weapon or armour at a forge's anvil.
     Temper,
     /// Drink at a healing spring.
     Drink,
@@ -516,8 +516,9 @@ pub struct RoomEffectDef {
     /// the lights ([`RoomEffects::resolve_places`]).
     pub sides: Option<[Option<LightId>; 3]>,
     /// What it offers beside its feature, and the outcome table that draws it (an id in
-    /// `data/outcomes/`, checked once those are loaded).
-    pub offers: Option<(Offer, String)>,
+    /// `data/outcomes/`, checked once those are loaded; none for Temper, which has its own rules,
+    /// `data/temper.toml`).
+    pub offers: Option<(Offer, Option<String>)>,
     /// The `sides` lights as data names them, until resolved.
     side_lights: BTreeMap<Alignment, String>,
     /// A collapsed floor's: a step of the player inside may give way (`World::collapse_step`).
@@ -755,7 +756,7 @@ impl RoomEffects {
     ) -> Result<(), ContentError> {
         let err = |m: String| ContentError::new("data/room_effects.toml", m);
         for def in &mut self.defs {
-            if let Some((offer, table)) = &def.offers
+            if let Some((offer, Some(table))) = &def.offers
                 && outcomes.get(table).is_none()
             {
                 return Err(err(format!(
@@ -1113,14 +1114,11 @@ impl RoomEffects {
                     temper,
                     drink,
                 }) => {
-                    let named: Vec<(Offer, String)> = [
-                        (Offer::Pray, pray),
-                        (Offer::Temper, temper),
-                        (Offer::Drink, drink),
-                    ]
-                    .into_iter()
-                    .filter_map(|(offer, table)| Some((offer, table.clone()?)))
-                    .collect();
+                    let tables = [(Offer::Pray, pray), (Offer::Drink, drink)];
+                    let named: Vec<(Offer, Option<String>)> = (tables.into_iter())
+                        .filter_map(|(offer, table)| Some((offer, Some(table.clone()?))))
+                        .chain((*temper == Some(true)).then_some((Offer::Temper, None)))
+                        .collect();
                     match <[_; 1]>::try_from(named) {
                         Ok([one]) => Some(one),
                         Err(named) if named.is_empty() => {

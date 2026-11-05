@@ -271,7 +271,7 @@ fn lines_named(stack: &Stack, content: &Content, (name, plural): (String, String
     let def = content.object(stack.object);
     let mut out = Vec::new();
     let base = if stack.count == 1 {
-        name
+        super::name::ahead(stack.worked().and_then(super::Worked::word), &name)
     } else {
         format!("{} {plural}", stack.count)
     };
@@ -294,13 +294,16 @@ fn lines_named(stack: &Stack, content: &Content, (name, plural): (String, String
             format!("{}: {gem}", capitalized(kind)),
         ));
     }
-    // Its own stats as it is made: another material's damage and Protection (#193); a spirit
-    // weapon's with its gifts' threat and piercing (spec §8 "Prestige classes").
+    // Its own stats as it is made: another material's damage and Protection (#193), the dice an
+    // anvil's work left it; a spirit weapon's with its gifts' threat and piercing (spec §8
+    // "Prestige classes").
     let gift = crate::world::spirit_gift(content).filter(|_| stack.is_spirit());
     let spirit = gift.map(|(_, threat, pierces, _)| Spirit { threat, pierces });
     let (_, damage) = crate::variant::weapon(def, &parts, content);
+    let protection = stack.base_protection(content);
+    let attack = stack.attack(content);
     out.extend(
-        stats(def, content, damage, stack.base_protection(content), spirit)
+        stats(def, attack.as_ref(), content, damage, protection, spirit)
             .into_iter()
             .map(|t| line(LineKind::Stat, t)),
     );
@@ -380,7 +383,6 @@ pub fn phrase(rolled: &Rolled<'_>, kind: ItemKind, content: &Content) -> String 
         Effect::Regeneration => format!("hit points come back {v}% faster"),
         Effect::MaxMana => format!("+{v} to maximum mana"),
         Effect::ManaRegeneration => format!("mana comes back {v}% faster"),
-        Effect::CasterLevel => format!("+{v} to caster level"),
         Effect::ManaCost => format!("abilities cost {v}% less mana"),
         Effect::SpellEase => format!("hinders casting {v} {} less", points(v)),
         Effect::SpellToHit => format!("+{v} to hit with spells"),
@@ -485,7 +487,7 @@ fn dice(n: i32) -> &'static str {
 /// The base stats of `def` in words: how it is held or worn, its damage and criticals, how far it
 /// shoots or is thrown, what it needs, how quick it is, its Defence, and whether it breaks.
 pub fn base_stats(def: &ObjectDef, content: &Content) -> Vec<String> {
-    stats(def, content, 0, def.protection, None)
+    stats(def, def.attack.as_ref(), content, 0, def.protection, None)
 }
 
 /// What a spirit weapon's gifts change in its own stats: the threat lowered, and whether it
@@ -500,6 +502,7 @@ struct Spirit {
 /// `protection` its Protection.
 fn stats(
     def: &ObjectDef,
+    attack: Option<&crate::combat::Attack>,
     content: &Content,
     damage: i32,
     protection: i32,
@@ -509,7 +512,7 @@ fn stats(
     if let Some(held) = how_held(def, content) {
         out.push(held);
     }
-    if let Some(attack) = &def.attack {
+    if let Some(attack) = attack {
         let less = spirit.map_or(0, |s| i32::from(s.threat));
         let threat = (i32::from(attack.threat) - less).max(crate::combat::FUMBLE + 1);
         let critical = if threat >= SURE_HIT {

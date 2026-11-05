@@ -65,6 +65,7 @@ mod spells;
 mod stats;
 mod surprise;
 mod talents;
+mod temper;
 mod temperature;
 mod terrain;
 mod text;
@@ -386,8 +387,8 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("teeming-dens.md", rooms::teeming_dens),
         ("altar-outcomes.md", outcomes::altar_outcomes),
         ("altar-shares.md", outcomes::altar_shares),
-        ("forge-outcomes.md", outcomes::forge_outcomes),
-        ("forge-shares.md", outcomes::forge_shares),
+        ("temper-odds.md", temper::temper_odds),
+        ("temper-grades.md", temper::temper_grades),
         ("spring-outcomes.md", outcomes::spring_outcomes),
         ("risings.md", rooms::risings),
         ("magic-rarity.md", magic::magic_rarity),
@@ -398,6 +399,7 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("magic-systems.md", magic::systems),
         ("uniques.md", uniques::uniques),
         ("scrolls.md", scrolls::scrolls),
+        ("decipher-chances.md", scrolls::decipher_chances),
         ("potions.md", potions::potions),
         ("weapon-skills.md", weapon_skills::skills),
         ("weapon-defaults.md", weapon_skills::defaults),
@@ -555,11 +557,6 @@ mod tests {
         );
         row_has(&table, "| Tireless |", &["prefix", "Stamina", "Deep lungs"]);
         row_has(&table, "| of Fury |", &["Resources", "maximum rage"]);
-        row_has(
-            &table,
-            "| of the Adept |",
-            &["Spells", "Arcane training, Attuned"],
-        );
         row_has(&table, "| Delving |", &["Digging", "Tunneler"]);
         row_has(&table, "| of the Eagle |", &["Skills", "Spot (a skill)"]);
     }
@@ -1218,6 +1215,7 @@ mod tests {
         );
         assert_eq!(benefit("100", "Bluff: feint's difficulty"), "+8");
         assert_eq!(benefit("100", "Concentration: mana pool"), "+5 mana");
+        assert_eq!(benefit("100", "Decipher script: reading scrolls"), "+8");
         assert_eq!(benefit("100", "Sneak attack: sneak attack dice"), "5d6");
         assert_eq!(benefit("100", "Spellcraft: learning"), "30");
         assert_eq!(benefit("100", "Swim: wading's extra cost"), "\u{2212}60%");
@@ -1228,6 +1226,7 @@ mod tests {
             "\u{2212}80%"
         );
         assert_eq!(benefit("150", "Bluff: feint's difficulty"), "+10");
+        assert_eq!(benefit("150", "Decipher script: reading scrolls"), "+10");
         assert_eq!(benefit("150", "Sneak attack: sneak attack dice"), "6d6");
         assert_eq!(benefit("150", "Tumble: Dodge"), "+7");
         // Treating oneself: the difficulty and odds of each ailment.
