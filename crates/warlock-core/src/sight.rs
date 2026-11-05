@@ -248,7 +248,7 @@ pub(crate) fn light(
 
     // In the order the player's perception adds them: base light, the sources, the sun and the
     // moons, each as a special room there leaves it (a shadowed room keeps part of each).
-    let shade = |light: Light| level.room_shade(content, p, light);
+    let shade = |light: Light| level.shade(content, p, light, state.time);
     let mut light = shade(ambient.saturating_add(indirect));
     for (_, mask) in &near {
         if let Some(c) = mask.at(p) {

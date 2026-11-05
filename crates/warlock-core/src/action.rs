@@ -3,7 +3,7 @@
 use crate::combat::Strike;
 use crate::content::{
     ActionKind, ClassActive, CombatStance, DamageTypeId, DiseaseId, ObjectId, ResourceId,
-    SignActive, StatusId, TalentActive, TrapId,
+    SignActive, StatusId, TalentActive, TrapId, ZoneKind,
 };
 use crate::geom::{Dir, Pos};
 use crate::time::{DAY, Duration};
@@ -400,6 +400,13 @@ pub enum Action {
     /// cell `at`, in its line of sight, melts at once, and whoever stood on it falls in. Takes no
     /// game time; recorded in replays.
     Thaw {
+        at: Pos,
+        radius: i32,
+    },
+    /// Dev command: a zone (`world/zone.rs`) of `kind` around cell `at`, within `radius` in its
+    /// line of sight, by the player, for ten turns. Takes no game time; recorded in replays.
+    Zone {
+        kind: ZoneKind,
         at: Pos,
         radius: i32,
     },
@@ -973,6 +980,9 @@ impl fmt::Display for Action {
             Action::QuestRoll { quest, target } => write!(f, "quest_roll:{quest}:{target}"),
             Action::Freeze { at, radius } => write!(f, "freeze:{},{},{radius}", at.x, at.y),
             Action::Thaw { at, radius } => write!(f, "thaw:{},{},{radius}", at.x, at.y),
+            Action::Zone { kind, at, radius } => {
+                write!(f, "zone:{}@{},{},{radius}", kind.id(), at.x, at.y)
+            }
         }
     }
 }
@@ -1509,6 +1519,21 @@ impl FromStr for Action {
                     Action::Thaw { at, radius }
                 })
             }
+            "zone" => {
+                let usage = "`zone` needs a kind, a cell, and a radius, e.g. `zone:fire@12,5,3`";
+                let (kind, place) = arg.and_then(|a| a.split_once('@')).ok_or(usage)?;
+                let kind = (ZoneKind::ALL.iter())
+                    .find(|k| k.id() == kind)
+                    .copied()
+                    .ok_or_else(|| format!("`{s}`: no zone kind `{kind}`"))?;
+                let (cell, radius) = place.rsplit_once(',').ok_or(usage)?;
+                let at = parse_cell(cell).map_err(|_| usage)?;
+                let radius = match radius.trim().parse::<i32>() {
+                    Ok(r) if (0..=MAX_BURST).contains(&r) => r,
+                    _ => return Err(format!("`{s}`: the radius is 0 to {MAX_BURST}")),
+                };
+                Ok(Action::Zone { kind, at, radius })
+            }
             _ => Err(format!(
                 "unknown action `{s}` (expected move:DIR, wait, open:DIR, close:DIR, kick:DIR, \
                  pick:DIR, ascend, descend, use_tool, rest:1h|dawn|dusk, pickup[:LETTERS], \
@@ -1519,7 +1544,7 @@ impl FromStr for Action {
                  ask:DIR:TOPIC, steal:DIR, tame:DIR, throw_voice:X,Y, pray, stance:NAME, vision:ID, skip:DURATION, \
                  weather:clear|overcast|rain|heavy, effect:ID@X,Y[>X,Y], identify[:LETTERS], \
                  afflict:STATUS, drain:N, infect:DISEASE, reveal:ID, quest_roll:ID:TARGET, \
-                 rank:SKILL:N, freeze:X,Y,R, thaw:X,Y,R)"
+                 rank:SKILL:N, freeze:X,Y,R, thaw:X,Y,R, zone:KIND@X,Y,R)"
             )),
         }
     }
@@ -1788,6 +1813,11 @@ mod tests {
             Action::Thaw {
                 at: Pos::new(0, 7),
                 radius: 0,
+            },
+            Action::Zone {
+                kind: ZoneKind::Fouled,
+                at: Pos::new(40, 12),
+                radius: 2,
             },
             Action::Ask {
                 dir: Dir::S,

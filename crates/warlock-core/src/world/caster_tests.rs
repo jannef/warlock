@@ -330,6 +330,7 @@ fn the_spells_are_abilities_by_level() {
             "Frost",
             "Identify",
             "Sleep",
+            "Slick",
             // Level 7.
             "Blight",
             "Scorching ray",
@@ -342,6 +343,11 @@ fn the_spells_are_abilities_by_level() {
             "Remove disease",
             // Level 12.
             "Flame",
+            "Mirk",
+            // Level 13.
+            "Reek",
+            // Level 16.
+            "Balefire",
             // Level 20.
             "Call of the forest",
             // Level 35.

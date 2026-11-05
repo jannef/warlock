@@ -121,7 +121,8 @@ impl World {
             | Action::Call(_)
             | Action::SetRank { .. }
             | Action::Freeze { .. }
-            | Action::Thaw { .. } => return None,
+            | Action::Thaw { .. }
+            | Action::Zone { .. } => return None,
         })
     }
 

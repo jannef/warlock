@@ -355,11 +355,12 @@ impl World {
         Footing::Broke { plunge: !wading }
     }
 
-    /// After a step: actor `id`, now at `at`, plunged through the ice or climbed out onto it.
+    /// After a step from `from` to `at`: actor `id` plunged through the ice or climbed out onto
+    /// it, and what a zone at either end does to it (`zone.rs`).
     pub(super) fn after_tread(
         &mut self,
         id: ActorId,
-        at: Pos,
+        (from, at): (Pos, Pos),
         footing: Footing,
         events: &mut Vec<Event>,
     ) {
@@ -379,6 +380,7 @@ impl World {
         if self.state.current().is_open_water(&self.content, at) {
             self.quench(id, events);
         }
+        self.zone_tread(id, (from, at), events);
     }
 
     /// The price of what `footing` adds to a step: climbing out of the water onto ice (less

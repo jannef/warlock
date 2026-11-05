@@ -305,7 +305,7 @@ pub use spell::{BOLT_LENGTHS, BURST_RADII, Bolt, Burst, BurstIce};
 pub use spell_def::{
     Grows, MAX_CASTS, MAX_CONE, MAX_REACH, MAX_SPELL_LEVEL, MAX_SUMMON_MINUTES, Ratio, Resolution,
     STUDY_DIFFICULTY, School, Shape, SpellData, SpellEffect, SpellId, SpellLook, SpellPurpose,
-    SpellRules, SpellSummon,
+    SpellRules, SpellSummon, SpellZone, ZoneKind,
 };
 pub use spell_ladder::{
     Ladder as SpellLadder, MAX_RUNGS, MAX_SCORE, RungValue, Unit as LadderUnit,

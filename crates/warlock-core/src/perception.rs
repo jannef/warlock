@@ -86,7 +86,7 @@ use crate::content::{Choice, DialogueId, ResourceId, TalentId, TreeId};
 use crate::content::{
     CombatStance, Content, CreatureId, DamageTypeId, DiseaseId, FactionId, Factor, Flow,
     ItemClassId, LevelKind, LightId, MaterialId, ObjectId, Place, RaceDef, RoomEffectDef, SlotId,
-    Stance, StatusId, TerrainId, TrapId, VisionProfile, WeaponSkillId,
+    Stance, StatusId, TerrainId, TrapId, VisionProfile, WeaponSkillId, ZoneKind,
 };
 use crate::daylight::{self, DayPhase};
 use crate::equipment::Equipment;
@@ -115,6 +115,7 @@ use crate::world::{
     WorldState, count_of, favour, part_of, unpaid_parts,
 };
 use serde::Serialize;
+use std::collections::BTreeMap;
 
 /// Maximum sight distance, however bright the light.
 pub const VIEW_RADIUS: i32 = 40;
@@ -530,6 +531,8 @@ pub(crate) struct Perception {
     /// The disguised mimics of the level (`world/mimic.rs`), by position: each is a shut chest to
     /// the player, never an actor, but those Chest-wise sees through.
     disguises: Vec<Disguise>,
+    /// The zones on the cells the player sees (`world/zone.rs`), by position.
+    zones: BTreeMap<Pos, ZoneKind>,
     /// The player's allies, wherever they are (`world/ally.rs`), in actor id order: the player
     /// knows their own.
     allies: Vec<AllyView>,
@@ -728,7 +731,7 @@ impl Perception {
         };
         // A shadowed room keeps only part of every bit of a cell's light: its base light and each
         // source's contribution alike, so they still add up to the whole.
-        let shade = |p: Pos, light: Light| level.room_shade(content, p, light);
+        let shade = |p: Pos, light: Light| level.shade(content, p, light, state.time);
         let mut base = Grid::new(width, height, Light::DARK);
         for &p in lit_cells {
             base[p] = shade(p, ambient.saturating_add(indirect(p)));
@@ -936,6 +939,13 @@ impl Perception {
         // reach where the player sees it.
         let reach = talents.sees_mimics;
         let shut = content.chest_terrain(crate::chest::ChestState::Shut);
+        let zones: BTreeMap<Pos, ZoneKind> = if level.zones.is_empty() {
+            BTreeMap::new()
+        } else {
+            (visible_cells.iter())
+                .filter_map(|&p| Some((p, level.zone_at(p, state.time)?.kind())))
+                .collect()
+        };
         let disguises: Vec<Disguise> = (state.actors.values())
             .filter(|a| a.level == level.id && a.effects.hides(content))
             .filter(|a| {
@@ -1083,6 +1093,7 @@ impl Perception {
             images,
             dazzled: dazzled.is_some(),
             disguises,
+            zones,
             allies: allies_of(state, content),
             ally_ailments: crate::heal::of_allies(&crate::world::allies_beside(state), content),
             kept_beside: (crate::world::allies_beside(state).into_iter())
@@ -1161,6 +1172,19 @@ impl Perception {
                 && level.blood_memory.get(&p) != Some(stain)
             {
                 level.blood_memory.insert(p, *stain);
+            }
+        }
+        // The zones seen; with none seen and none remembered, nothing to look at.
+        if !self.zones.is_empty() || !level.zone_memory.is_empty() {
+            for &p in &self.visible_cells {
+                match self.zones.get(&p) {
+                    Some(&kind) => {
+                        level.zone_memory.insert(p, kind);
+                    }
+                    None => {
+                        level.zone_memory.remove(&p);
+                    }
+                }
             }
         }
         for &p in &self.visible_cells {
@@ -1320,6 +1344,16 @@ impl<'a> PerceptionView<'a> {
             return None;
         }
         self.level.hallows_at(p, self.time).next().map(|h| h.dark)
+    }
+
+    /// The zone on `p` as the player knows it (`world/zone.rs`): what lies there where they see
+    /// the cell, what they last saw there where they remember it, and nothing on a hidden cell.
+    pub fn zone_at(&self, p: Pos) -> Option<ZoneKind> {
+        match self.cell(p) {
+            CellView::Unknown => None,
+            CellView::Visible(_) => self.snapshot.zones.get(&p).copied(),
+            CellView::Remembered(_) => self.level.zone_memory.get(&p).copied(),
+        }
     }
 
     /// The percent of all light a special room keeps at a visible cell (a shadowed room's
