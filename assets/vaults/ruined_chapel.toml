@@ -7,7 +7,7 @@ map = '''
  ####  ### ###
  #,.."...,...##
    #...#...#m.#
-.........".._.#
+.........".s_.#
    #...#...#..#
  #,..."..,...##
  ###  #### ###
@@ -19,8 +19,5 @@ map = '''
 '"' = "tall_grass"
 # A reward (spec §8 "Magic items"): something left by the altar, rolled when the area is made.
 "m" = { terrain = "flagstones", loot = "any" }
-
-# Objects (M11): a scroll left on the steps of the altar.
-[[pile]]
-at = [11, 3]
-objects = ["scroll_of_light"]
+# A scroll left on the steps of the altar, rolled when the area is made.
+"s" = { terrain = "flagstones", loot = { pool = "scrolls" } }

@@ -17,3 +17,5 @@ O    *_*    O
 [legend]
 "O" = "standing_stone"
 "*" = "flowers"
+# The altar is named, so that look mode says what it is.
+"_" = { terrain = "altar", name = "the Stone Circle" }
