@@ -16,7 +16,7 @@
 //! given as it comes (`world/class.rs`).
 //!
 //! What a talent does is read through `Actor::talent_mods` where each rule lives; the hand-outs
-//! are hit points by level (Hardy): a rank's share at the pick, and each later level's growth as
+//! are hit points by level (Hardy): a share at the pick, and each later level's growth as
 //! the level comes, into the actor's base hit points, as levels' own hit points are; and stat
 //! gifts, once, at the pick (`world/class.rs`'s `hand_out`).
 
@@ -284,17 +284,16 @@ impl World {
         };
         let def = content.talents().get(talent);
         let name = def.name_for(&content, choice);
-        let rank = match talent::may_take(&content, &self.candidate(), def, choice) {
-            Ok(rank) => rank,
-            Err(why) => return Err(why.words(&content, &name)),
-        };
-        // The rank's hit points by level come now (each later level grows them), and its gifts.
+        if let Err(why) = talent::may_take(&content, &self.candidate(), def, choice) {
+            return Err(why.words(&content, &name));
+        }
+        // Its hit points by level come now (each later level grows them), and its gifts.
         let level = self.player_level();
         let player = self.player_mut();
         player.talents.take(id, choice);
-        class::hand_out(&content, player, def, rank, level);
-        self.take_up_skills(def.effects_at(rank));
-        self.hand_down(def.effects_at(rank));
+        class::hand_out(&content, player, def, level);
+        self.take_up_skills(def.effects.iter().cloned());
+        self.hand_down(def.effects.iter().cloned());
         let due = &mut self.state.progress.due[at];
         if as_bonus {
             due.bonus -= 1;
@@ -304,10 +303,7 @@ impl World {
         if due.is_spent() {
             self.state.progress.due.remove(at);
         }
-        Ok(match def.rank_count() > 1 {
-            true => format!("You learn {name} ({rank})."),
-            false => format!("You learn {name}."),
-        })
+        Ok(format!("You learn {name}."))
     }
 
     /// The dev action `levelup:auto` ([`Action::LevelUpAuto`]): spends every choice due with

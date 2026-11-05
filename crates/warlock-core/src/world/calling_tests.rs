@@ -99,7 +99,7 @@ fn settle(world: &mut World) {
 }
 
 fn holds(world: &World, id: &str) -> bool {
-    world.state.player().talents.rank_of(id, None) > 0
+    world.state.player().talents.holds(id, None)
 }
 
 fn stat_row(world: &World, start: &str) -> String {

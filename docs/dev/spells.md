@@ -19,7 +19,8 @@ cast path shares.
 - **Spell levels** (S1, #748; the spell scaling design §5, decisions 1, 9, 10, 16): every spell
   has `level = N`, 0 to `MAX_SPELL_LEVEL` (70), one number with two meanings: its **base mana**
   (`max(1, level)`) and the **caster level at which a scroll of it teaches for certain**. A
-  spell of level 0 or 1 is a cantrip. There is no table of levels, no ceiling, no cap, and no
+  spell of level 0 or 1 is a cantrip (a spell's own `mana` still replaces the base: Burning
+  hands and Grave breath, level 1 for the class tables' guard, cost 3, #979). There is no table of levels, no ceiling, no cap, and no
   load-time check on how much a spell does, now or in any later slice (decision 16): authors
   write the strength they intend. Each tier column became a rule of the level (§5.2): the
   comfortable level is the spell's level; the cost is the level; the overreach surcharge,
@@ -101,7 +102,7 @@ cast path shares.
   (`{ kind = "spell_mod", rungs = 1 }`), checked by `SpellModSpec::check` (something to do, the
   rider's status known and its severity 1 to `MAX_SEVERITY`, `when` tags known schools, kinds,
   shapes, or damage types, `cost` a percent, and on a talent chosen for a school or an element
-  no `when`: the choice is its filter), resolved into `TalentMods::spell` per rank held
+  no `when`: the choice is its filter), resolved into `TalentMods::spell`
   (`TalentMods::spell_mods(tags)` sums them). Items: `Effect::{SpellRungs, SpellBonus,
   SpellSides, SpellDice, SpellReroll, WandRungs}` and `SpellReach` (cells), `SpellDuration`
   (degrees), worn, unidentified too, with no tag filter (no shipped affix needs one; one is a
@@ -251,11 +252,12 @@ cast path shares.
     the id string (checked against `data/spells/` at load, resolved in `TalentMods::spells`).
     `Content::spells_by_level` is the menu's order (spell level, then path), `Ability::every`'s
     too.
-  - **The list** (29 spells, by spell level, the spell scaling design §5.8): 0 Evil eye, Light
+  - **The list** (30 spells, by spell level, the spell scaling design §5.8): 0 Evil eye, Light
     (self buff: Lit, whose `light` the light cache sheds about the caster; #589, the scroll of
-    light's); 1 Mend (touch heal), Ray of frost (ray, attack), Spark (bolt, auto); 3 Barkskin
+    light's); 1 Burning hands (cone 3, `mana = 3`, #979), Grave breath (the same, necrotic, #979), Mend
+    (touch heal), Ray of frost (ray, attack), Spark (bolt, auto); 3 Barkskin
     (buff), Blessing, Cure wounds (touch heal 2d6), Curse of sloth, Hex of weakness, Magic
-    missile (bolt, auto, force, 1d4 to 2d4); 4 Burning hands (cone 3), Cause wounds (touch,
+    missile (bolt, auto, force, 1d4 to 2d4); 4 Cause wounds (touch,
     necrotic); 6 Arcane bolt, Frost, Identify (#592, below), Sleep (area hex, burst radius 1);
     7 Blight, Scorching ray (ray, attack, 1d6 to 3d6, the design's "one to three rays" as
     dice), Web (area hex); 11 Call lightning, Fireball (2d6 to 3d6), Haste (buff), Lightning

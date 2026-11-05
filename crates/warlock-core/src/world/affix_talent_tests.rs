@@ -33,7 +33,7 @@ fn world(class: &str) -> World {
     w.player_mut().stats = Stats::new(PerStat::splat(10), PerStat::splat(40));
     reach(&mut w, 6);
     w.player_mut().stats = Stats::new(PerStat::splat(14), PerStat::splat(40));
-    assert_eq!(w.state.player().talents.rank_of("attuned", None), 0);
+    assert!(!w.state.player().talents.holds("attuned", None));
     w
 }
 

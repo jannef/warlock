@@ -288,7 +288,7 @@ word: `{"cold": "resistant"}`), `burden` (`level`, `limit`), `alignment` (the ba
 `spells` (the spells known: `id`, `level`, `cost`, `roll` (the menu's text, `4d6 fire`, or null), `damage_type` (`healed` for a heal, `called` for a summon's count, or null), `reach` (`range`, `length`, `radius`, each null where none)), `known_traps`, `known_hollows` (the hollow walls found: positions), `known_locations` (`pos`, `name`), `chests` (seen or remembered: `pos`, `band`, `state`, `locked` with Chest-wise, else null), `temperature` (°C to a tenth), `weapon_skills` (by skill id:
 `rank`, `progress`), `styles_in_use` (style ids), `attacks` (`source`, `kind`, `name`, `to_hit`, `damage` (the text),
 `range`), `talents` (in the order taken: `id`, `name`,
-`rank`, `ranks`, `choice`, `class`, `granted`, `flaw`), `character` (`name`, `race`, `gender`, `class`,
+`choice`, `class`, `granted`, `flaw`), `character` (`name`, `race`, `gender`, `class`,
 `raised`, `age`, `born`, `sign`, and `lucky`, a lucky day's title, only for one born on it, `prestige`, the prestige class once called, and `classes`, every class with its own level, `[{ class, level }]`), `due` (the level-up choices due: `level`, `talents`,
 `rolls`, `bonus`, or null), `abilities` (in menu order: `id`, `source`,
 `aim`, and `unavailable`, the reason's id or null), `quests` (the log: `id`, `name`, `kind`, `active`, `completed`, `giver`, `target` (what a rolled quest drew, else null),

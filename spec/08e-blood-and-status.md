@@ -259,8 +259,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     action `drain:N`, which stands in for an ability's cost ("You spend 5 mana (dev).",
     the cost as spent; refused, "You have only 3 mana (dev).", when short; no game time; recorded
     in replays).
-  - **Talents** (#242, the Scholar tree, §8 "Talents"): Deep well (`max_mana_per_levels`, 3
-    ranks: 1 mana per 4 character levels, at least 2, a rank; handed out into `mana_base` and
+  - **Talents** (#242, the Scholar tree, §8 "Talents"): Deep well (`max_mana_per_levels`:
+    1 mana per 4 character levels, at least 2; handed out into `mana_base` and
     the mana at the pick and as each later level comes, as Hardy's hit points, past `mana_level`
     too), Clear mind (`mana_regen_percent` +25), Meditation (`mana_resting_percent` +50, on
     resting's pace), Frugal caster (`mana_cost_percent` −20), and Blood magic (`blood_magic`, an
@@ -299,9 +299,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
   scrolls and the spells scrolls cast. `docs/dev/spells.md` has the details.
   - **The first list** (#397, design §7; names left for the world-language review, #378):
     by spell level (the spell scaling design §5.8): 0 Evil eye, Light (#589: the scroll of
-    light's; Lit, its status, sheds a light about the caster, `light` on a status); 1 Mend, Ray
-    of frost, Spark; 3 Barkskin, Blessing, Cure wounds, Curse of sloth, Hex of weakness, Magic
-    missile; 4 Burning hands, Cause wounds; 5 Call of the wild; 6 Arcane bolt, Frost, Identify,
+    light's; Lit, its status, sheds a light about the caster, `light` on a status); 1 Burning
+    hands, Grave breath, Mend, Ray of frost, Spark; 3 Barkskin, Blessing, Cure wounds, Curse of sloth, Hex of weakness, Magic
+    missile; 4 Cause wounds; 5 Call of the wild; 6 Arcane bolt, Frost, Identify,
     Sleep; 7 Blight, Scorching ray, Web; 11 Call lightning, Fireball (the wizard's Fire burst
     folded into it), Haste, Lightning bolt, Remove disease; 12 Flame; 20 Call of the forest; 35
     Call the elements (the druid's calls, #839: summons, §8b "Allies"). A spell is cast by its
@@ -325,10 +325,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
     comes at, never above the class's caster level then (character level × `casting` ÷ 100, at
     least 1; the content test, until #990 removes that clause), whatever the character's
     Spellcraft. Wizard: Ray of
-    frost (1), Magic missile (3), Burning hands (12), Arcane bolt (18). Priest: Mend (1),
+    frost (1), Burning hands (1), Magic missile (3), Arcane bolt (18). Priest: Mend (1),
     Blessing (3), Cure wounds (3) (their rite is the prayer, §8i). Druid: Spark (1), Barkskin (3), Call of
     the wild (6), Call lightning (12), Call of the forest (25), Call the elements (40), Flame and
-    frost (50). Witch: Evil eye (1), Hex of weakness (3), Cause wounds
+    frost (50). Witch: Evil eye (1), Grave breath (1), Hex of weakness (3), Cause wounds
     (12), Curse of sloth (32), Blight (40). Bard: Mend (1). Paladin: Blessing
     (6). Ranger: Barkskin (6). Every other class none. Every class has some mana (the
     berserker and the warrior 1); a race adds none unless its data says so.
@@ -350,7 +350,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
   - **Levels** (the spell scaling design §5, decisions 1, 9, 10, 16): a spell has a **level**,
     0 to 70 (`MAX_SPELL_LEVEL`), one number with two meanings: its **base mana** (the level, at
     least 1) and the **learning at which a scroll of it teaches for certain** ("Learning" below). A spell of
-    level 0 or 1 is a *cantrip* (1 mana; anyone with mana learns it for certain). There is no
+    level 0 or 1 is a *cantrip* (1 mana unless it names its own `mana`, as Burning hands and Grave
+    breath do, 3; anyone trained in Spellcraft learns it for certain). There is no
     table of levels, no ceiling, and no check on how much a spell of a level may do: its own
     data says it (decision 16). A `tier` key is refused, saying to use `level`.
   - **Cost table** (`data/spells.toml`): the **shapes** multiply the base mana (ray, bolt,

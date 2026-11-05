@@ -71,9 +71,9 @@ pub struct PrestigeDef {
     /// The skills it is known for (spec §8 "Skills"), in skill order: a level-up roll on one
     /// throws the die one step up the ladder, as the base class's do.
     pub known_for: Vec<SkillId>,
-    /// Its class abilities: at each of its own levels, the talent it gives, by id, and the
-    /// rank of it (1 first), ascending by level.
-    pub abilities: Vec<(u8, String, u8)>,
+    /// Its class abilities: at each of its own levels, the talent it gives, by id, ascending
+    /// by level.
+    pub abilities: Vec<(u8, String)>,
     /// Its bonus talent picks, at its own levels.
     pub bonus_talents: BonusTalents,
     /// The file it was read from, for the errors of [`PrestigeDef::check_table`].
@@ -250,8 +250,8 @@ impl<'c> Table<'c> {
         }
     }
 
-    /// Its level table: at each of its own levels, the talent it gives and its rank, ascending.
-    pub fn abilities(self) -> &'c [(u8, String, u8)] {
+    /// Its level table: at each of its own levels, the talent it gives, ascending.
+    pub fn abilities(self) -> &'c [(u8, String)] {
         match self {
             Table::Class(c) => &c.abilities,
             Table::Prestige(p) => &p.abilities,
@@ -266,27 +266,15 @@ impl<'c> Table<'c> {
         }
     }
 
-    /// The talents its table gives up to its own level `level`, in table order, each once (a
-    /// later rank names the talent again); none from a book without a class tree (a fixture's).
+    /// The talents its table gives up to its own level `level`, in table order; none from a
+    /// book without a class tree (a fixture's).
     pub fn abilities_to(self, book: &TalentBook, level: u8) -> Vec<TalentId> {
-        let mut given: Vec<TalentId> = Vec::new();
-        for (id, _) in self.ranks_to(book, level) {
-            if !given.contains(&id) {
-                given.push(id);
-            }
-        }
-        given
-    }
-
-    /// Each talent its table gives up to its own level `level` with the rank given there, in
-    /// table order; none from a book without a class tree.
-    pub fn ranks_to(self, book: &TalentBook, level: u8) -> Vec<(TalentId, u8)> {
         if !book.has_class_tree() {
             return Vec::new();
         }
         (self.abilities().iter())
-            .take_while(|(l, _, _)| *l <= level)
-            .filter_map(|(_, id, rank)| book.id(id).map(|t| (t, *rank)))
+            .take_while(|(l, _)| *l <= level)
+            .filter_map(|(_, id)| book.id(id))
             .collect()
     }
 
@@ -336,7 +324,7 @@ mod tests {
         let p = &list[0];
         assert_eq!((p.levels, p.hp, p.mana, p.rolls), (30, 7, 0, 2));
         assert_eq!(p.known_for, vec![SkillId(0), SkillId(1)], "in skill order");
-        assert_eq!(p.abilities, vec![(1, "spirit_weapon".to_string(), 1)]);
+        assert_eq!(p.abilities, vec![(1, "spirit_weapon".to_string())]);
         assert_eq!(p.bonus_talents.levels, vec![5, 10]);
         let table = Table::Prestige(p);
         assert!(table.is_prestige() && table.is_known_for(SkillId(1)));

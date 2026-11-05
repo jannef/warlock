@@ -31,7 +31,7 @@
 #   open_sky      true: it is cast only under the open sky (default false)
 #   mana          its base mana cost given outright (1 to 500), in place of its level's: the
 #                 shape and resolution do not count; the armour worn and the talents still do.
-#                 For a spell whose price is not its difficulty (Identify)
+#                 For a spell whose price is not its difficulty (Identify; Burning hands and Grave breath)
 #   damage        a `damage` spell's base roll: a roll, `"2d6"`, `"3d6+1d10"`, `"5d6+2"` (dice
 #                 of 2 to 20 sides, a d7 or a d9 like any other; the old table form is refused)
 #   aim           an `attack` or `touch` damage spell's: the stat whose modifier is added to

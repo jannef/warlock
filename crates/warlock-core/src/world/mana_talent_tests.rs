@@ -54,7 +54,7 @@ fn at_level_with_a_pick(w: &mut World, level: u8) {
     });
 }
 
-/// The player takes talent `id` (one rank more), without a level to pick it at.
+/// The player takes talent `id`, without a level to pick it at.
 fn give(w: &mut World, id: &str) {
     w.player_mut().talents.take(id, None);
 }
@@ -70,7 +70,7 @@ fn deep_well_hands_out_mana_at_the_pick_and_as_levels_come() {
     at_level_with_a_pick(&mut w, 9);
     let (base, now) = mana(&w);
     run(&mut w, "talent:deep_well");
-    assert_eq!(w.state.player().talents.rank_of("deep_well", None), 1);
+    assert!(w.state.player().talents.holds("deep_well", None));
     // Level 9: 9 / 4 = 2, and at least 2.
     assert_eq!(mana(&w), (base + 2, now + 2));
 
@@ -90,13 +90,13 @@ fn deep_well_asks_intelligence_or_willpower_then_levels() {
     w.player_mut().stats = Stats::new(PerStat::splat(10), PerStat::splat(40));
     at_level_with_a_pick(&mut w, 3);
     run(&mut w, "talent:deep_well");
-    assert_eq!(w.state.player().talents.rank_of("deep_well", None), 0);
+    assert!(!w.state.player().talents.holds("deep_well", None));
     // Willpower 12 alone will do.
     let mut stats = PerStat::splat(10);
     stats[Stat::Willpower] = 12;
     w.player_mut().stats = Stats::new(stats, PerStat::splat(40));
     run(&mut w, "talent:deep_well");
-    assert_eq!(w.state.player().talents.rank_of("deep_well", None), 1);
+    assert!(w.state.player().talents.holds("deep_well", None));
 }
 
 #[test]

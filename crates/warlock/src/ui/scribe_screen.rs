@@ -191,11 +191,11 @@ mod tests {
         }
         let mut screen = ScribeScreen::new(Some(&world.perception()));
         screen.fit(100, 60);
-        // Evocation first, lowest level first: Ray of frost.
+        // Evocation first, lowest level first: Burning hands.
         assert_eq!(
             screen.handle(&Press::typed('a'), &Bindings::default()),
             ScreenAction::Act(Action::Scribe {
-                spell: "ray_of_frost".into()
+                spell: "burning_hands".into()
             })
         );
         let nothing = ScribeScreen::new(None);

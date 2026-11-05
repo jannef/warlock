@@ -1,0 +1,8 @@
+[[talent]]
+id = "grave_breath"
+name = "Grave breath"
+tree = "class"
+granted = true
+description = "The breath of an open grave (a spell, paid in mana): everyone in its fan withers."
+effects = [{ kind = "spell", spell = "grave_breath" }]
+systems = ["spells", "mana", "combat"]

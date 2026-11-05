@@ -366,10 +366,10 @@ impl Ability {
         let class = [Ability::ThrowVoice];
         // Talents: the active ones the talent table has.
         let wind = (content.talents().iter())
-            .flat_map(|(_, def)| def.effects_at(def.rank_count()))
+            .flat_map(|(_, def)| &def.effects)
             .any(|e| matches!(e, TalentEffect::SecondWind { .. }));
         let blood = (content.talents().iter())
-            .flat_map(|(_, def)| def.effects_at(def.rank_count()))
+            .flat_map(|(_, def)| &def.effects)
             .any(|e| matches!(e, TalentEffect::BloodMagic { .. }));
         let talents = (wind.then_some(Ability::SecondWind))
             .into_iter()

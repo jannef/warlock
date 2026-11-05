@@ -192,7 +192,7 @@ that one is hostile and beside it, else a wait. Nothing draws at random. Tests:
 `world/lucky_tests.rs`; the screen snapshots `character-screen-lucky` (showcase seed 440, the
 Deep One) and `death-screen-lucky` (arena seed 142, the Iron Scourge).
 
-`world/stars.rs` puts the grants into `Actor::talents` (first, in grant order, rank 1;
+`world/stars.rs` puts the grants into `Actor::talents` (first, in grant order;
 `Talents::regrant` drops every granted talent of the `stars` tree first) in `World::with_character_named` and again
 in `World::from_state`: they are **never a stored choice**, so a gift added to the data reaches a
 saved character and a removed one leaves it. They change hashes of runs whose sign has gifts, as

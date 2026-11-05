@@ -54,14 +54,14 @@ fn told(w: &World) -> bool {
 fn the_witch_gains_it_at_eighteen() {
     let mut w = world("witch");
     let def = w.content().class("witch").expect("witch");
-    let at = (def.abilities.iter()).find(|(_, t, _)| t == "malison");
-    assert_eq!(at.map(|(level, _, _)| *level), Some(18));
+    let at = (def.abilities.iter()).find(|(_, t)| t == "malison");
+    assert_eq!(at.map(|(level, _)| *level), Some(18));
     let id = w.content().talents().id("malison").expect("the talent");
     assert!(w.content().talents().get(id).granted, "never picked");
     reach(&mut w, 17);
-    assert!(!w.state.player().talents.has("malison", 1));
+    assert!(!w.state.player().talents.has("malison"));
     reach(&mut w, 18);
-    assert!(w.state.player().talents.has("malison", 1));
+    assert!(w.state.player().talents.has("malison"));
 }
 
 #[test]

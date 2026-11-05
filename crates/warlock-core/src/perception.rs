@@ -162,7 +162,7 @@ pub struct OwnScribe {
 }
 
 /// One of the player's own talents (spec §8 "Talents"), as the Talents page and the character
-/// screen list it: its name for its choice, its rank of how many, and what it does in the
+/// screen list it: its name for its choice and what it does in the
 /// game's words. Never a rule's number.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct OwnTalent {
@@ -170,10 +170,6 @@ pub struct OwnTalent {
     /// "Hardy", "Weapon focus (long blades)".
     pub name: String,
     pub tree: TreeId,
-    /// The rank held.
-    pub rank: u8,
-    /// How many ranks it has.
-    pub ranks: u8,
     /// The choice it was taken for, by id.
     pub choice: Option<String>,
     pub description: String,
@@ -217,23 +213,21 @@ impl Freshness {
     }
 }
 
-/// A talent as the Talents page and the level-up screen list it (spec §8 "Talents"): the rank
-/// the player holds, what the next rank asks and whether each part holds, and the choices it
-/// may be taken for now.
+/// A talent as the Talents page and the level-up screen list it (spec §8 "Talents"): whether
+/// the player holds it, what it asks and whether each part holds, and the choices it may be
+/// taken for now.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct TalentView {
     pub id: TalentId,
     pub name: String,
     pub tree: TreeId,
     pub choice: Option<Choice>,
-    /// How many ranks it has.
-    pub ranks: u8,
-    /// The highest rank the player holds of it, for any choice (0: none).
-    pub held: u8,
+    /// Whether the player holds it, for any choice.
+    pub held: bool,
     /// Given, never picked.
     pub granted: bool,
     pub description: String,
-    /// What the next rank asks, in words, each with whether it holds now.
+    /// What it asks, in words, each with whether it holds now.
     pub needs: Vec<NeedView>,
     /// The ways it may be taken now: `[None]` for a talent without a choice, the choice ids
     /// for one with a choice; empty when it may not be taken now.
@@ -2141,15 +2135,13 @@ impl<'a> PerceptionView<'a> {
                     id,
                     name: def.name_for(self.content, taken.choice.as_deref()),
                     tree: def.tree,
-                    rank: taken.rank,
-                    ranks: def.rank_count(),
                     choice: taken.choice.clone(),
                     description: def.description.clone(),
                     granted: def.granted && !book.tree(def.tree).class,
                     race: def.granted && Some(def.tree) == book.tree_id("racial"),
                     flaw: def.flaw,
                     class: class.contains(&id),
-                    spent: (def.effects_at(taken.rank)).any(|e| spent(&e)),
+                    spent: def.effects.iter().any(&spent),
                     boon: boon && !story,
                     story,
                 })
@@ -2158,8 +2150,7 @@ impl<'a> PerceptionView<'a> {
     }
 
     /// Every talent of the game, tree by tree in display order (the Talents page and the pick
-    /// list): the rank the player holds, the prerequisites of the next rank with whether each
-    /// holds, and the ways it may be taken now (none: not now). A birth sign's pick for another
+    /// list): whether the player holds it, its prerequisites with whether each holds, and the ways it may be taken now (none: not now). A birth sign's pick for another
     /// sign is left out: the stars a character was born under never change (spec §8 "Birth
     /// sign"); so is one that asks for a hidden weapon skill or style (Two Shields) the player
     /// has no marks in yet.
@@ -2168,13 +2159,13 @@ impl<'a> PerceptionView<'a> {
         let content = self.content;
         let who = self.candidate();
         let born_for = |def: &crate::content::TalentDef| {
-            (def.needs_at(1))
+            (def.needs.iter())
                 .filter(|n| matches!(n, Need::Animal(_) | Need::Element(_) | Need::Lucky))
                 .all(|n| who.meets(content, &n, def.choice, None))
         };
         let table = content.weapon_skills();
         let found = |def: &crate::content::TalentDef| {
-            (def.needs_at(1)).all(|n| match n {
+            (def.needs.iter()).all(|n| match n {
                 Need::WeaponSkill(id, _) => who.weapon_skills.shows(table, id),
                 _ => true,
             })
@@ -2182,13 +2173,7 @@ impl<'a> PerceptionView<'a> {
         (content.talents().by_tree())
             .filter(|(_, def)| born_for(def) && found(def))
             .map(|(id, def)| {
-                let held = (self.player.talents.iter())
-                    .filter(|t| t.id == def.id)
-                    .map(|t| t.rank)
-                    .max()
-                    .unwrap_or(0);
-                let next = (held + 1).min(def.rank_count());
-                let needs = (def.needs_at(next))
+                let needs = (def.needs.iter())
                     .map(|need| NeedView {
                         met: who.meets(content, &need, def.choice, None),
                         words: need.words(content),
@@ -2199,8 +2184,7 @@ impl<'a> PerceptionView<'a> {
                     name: def.name.clone(),
                     tree: def.tree,
                     choice: def.choice,
-                    ranks: def.rank_count(),
-                    held,
+                    held: self.player.talents.has(&def.id),
                     granted: def.granted,
                     description: def.description.clone(),
                     needs,

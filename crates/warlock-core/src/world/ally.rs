@@ -582,10 +582,8 @@ impl World {
             } else {
                 self.free_cell_near(to, arrival)
             };
+            self.cross_to(id, to, pos);
             if let Some(a) = self.state.actors.get_mut(&id) {
-                a.level = to.to_string();
-                a.pos = pos;
-                a.heard.clear();
                 a.mind = Mind::default();
                 if let Some(ally) = a.ally.as_mut() {
                     ally.retinue = overworld;

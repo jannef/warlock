@@ -8,7 +8,9 @@ from a scroll (below). Every spell is measured by the same rules below: its [spe
 ## What your class gives
 
 Each casting class gives only a few spells, with its [class table](classes.md#levels): a full
-caster a [cantrip](#spell-levels) at level 1 and about four in all, a bard, a paladin, or a ranger a cantrip or a
+caster a [cantrip](#spell-levels) at level 1 and about four in all (the [wizard](classes.md#wizard) and the [witch](classes.md#witch) also start
+with a short [cone](#shapes) that needs no hit roll, [Burning hands](#spell-burning-hands) and [Grave breath](#spell-grave-breath): good for a
+fight with a few weak foes, and a few casts empty the pool), a bard, a paladin, or a ranger a cantrip or a
 boon, and the rest none. Every other spell is learned from scrolls, so a caster who finds few
 scrolls stays a modest one. A spell your class gives is yours at that level, whatever your [Spellcraft](skills.md#skill-spellcraft).
 
@@ -48,7 +50,8 @@ study it, the [scroll of identify](scrolls.md#scroll-of-identify) [Identify](#sp
 ## Spell levels
 
 Every spell has a level, 0 to 70. It is the spell's base [mana](mana.md#spending-it) cost, and the [learning](#learning) at which you
-learn it from a scroll for certain. A spell of level 0 or 1 is a *cantrip*: it costs 1 mana, and
+learn it from a scroll for certain. A spell of level 0 or 1 is a *cantrip*: it costs 1 mana (but for the few that
+name a price of their own: [Burning hands](#spell-burning-hands) and [Grave breath](#spell-grave-breath) cost 3), and
 anyone trained in [Spellcraft](skills.md#skill-spellcraft) learns it for certain. What a spell does is its own roll and ladders (the list
 above), whatever its level.
 
