@@ -226,7 +226,7 @@ fn a_pick_nothing_can_be_spent_on_is_dropped() {
     // elf's, and Skill focus's tree waits for a free talent; Salvager, Unbinder, Overreach, Wand
     // mastery, Channeler, Appraiser's eye, Deep lungs, Second breath,
     // Quick study of the body, Early mastery, Gifted (six stats), Sure hand,
-    // Numbing cold, Brimming, and Devotee are held back the same way so the picks fit in
+    // Brimming, and Devotee are held back the same way so the picks fit in
     // the levels there are.
     let mut files = ContentFiles::builtin();
     files.edit_table("talents", |text| {

@@ -16,6 +16,7 @@
 use super::effect::EffectShape;
 use super::spell::{Burst, BurstIce, SpellFields, check_effect, default_verb};
 use super::spell_ladder::{Ladder, RungValue, Unit};
+use super::spell_type::SpellType;
 use super::summon;
 use super::trap::TrapNoise;
 use super::{
@@ -231,6 +232,9 @@ pub struct Ratio {
 struct RulesFile {
     shapes: ShapesSpec,
     resolution: ResolutionSpec,
+    /// Read by [`super::spell_type::parse`], once the statuses it names are known.
+    #[serde(default, rename = "types")]
+    _types: serde::de::IgnoredAny,
 }
 
 #[derive(Deserialize)]
@@ -265,6 +269,8 @@ pub struct SpellRules {
     pub burst: Vec<u16>,
     /// Each resolution's cost, by [`Resolution::ALL`] order.
     resolutions: [Ratio; 4],
+    /// What every spell of a damage type does beyond its damage (`[types]`).
+    pub types: BTreeMap<DamageTypeId, SpellType>,
 }
 
 impl SpellRules {
@@ -295,6 +301,7 @@ impl SpellRules {
             shapes,
             burst: s.burst.clone(),
             resolutions,
+            types: BTreeMap::new(),
         })
     }
 
@@ -690,7 +697,10 @@ pub(super) fn parse<'a>(
     content: &Content,
 ) -> Result<(Option<SpellRules>, Vec<SpellData>), ContentError> {
     let rules = match rules {
-        Some((path, text)) => Some(SpellRules::parse(path, text)?),
+        Some((path, text)) => Some(SpellRules {
+            types: super::spell_type::parse(path, text, content)?,
+            ..SpellRules::parse(path, text)?
+        }),
         None => None,
     };
     let mut list = Vec::new();

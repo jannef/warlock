@@ -372,6 +372,9 @@ impl World {
             }
             _ => {}
         }
+        if self.state.current().is_open_water(&self.content, at) {
+            self.quench(id, events);
+        }
     }
 
     /// The price of what `footing` adds to a step: climbing out of the water onto ice (less
@@ -419,6 +422,7 @@ impl World {
         let kind = freeze.and_then(|f| f.kind);
         let taken = self.resisted(id, crate::damage::Damage::new(damage, kind));
         self.hurt(id, taken, Harm::Spared, events);
+        self.quench(id, events);
         events.push(Event::FellThroughIce { actor: id, at });
     }
 
@@ -503,7 +507,7 @@ impl World {
 
     /// The cells a burst of `radius` around `center` reaches on the player's level: within the
     /// radius and in line of sight of the centre.
-    fn burst(&self, center: Pos, radius: i32) -> BTreeSet<Pos> {
+    pub(super) fn burst(&self, center: Pos, radius: i32) -> BTreeSet<Pos> {
         let level = self.state.current();
         let content = &self.content;
         let mut cells = BTreeSet::new();

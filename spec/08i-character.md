@@ -985,8 +985,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     carrying the tag costs a tenth less and reaches a cell farther, range or length); Keen mind
     (free, the same choice: `spell_mod { sides = 1 }`, its spells' dice a size bigger); Sure
     hand (level 12: `spell_mod { reroll = 1 }`, a spell die showing 1 rolled again, once);
-    Numbing cold (level 12: `spell_mod { rider = { status = "sluggish", severity = 1 }, when =
-    ["cold"] }`, what a cold spell harms a degree Sluggish); Brimming (level 25: `spell_mod {
+    Brimming (level 25: `spell_mod {
     dice = 1 }` and `spell_mana_percent` +10, systems `spells` and `mana`) (the spell scaling
     design §7.2: every spell hook ships with a user); the casters' Empower, Archmage, Scroll
     adept, Frugal caster, the wizard's Arcane training, and every class spell name it too. Wand mastery comes with

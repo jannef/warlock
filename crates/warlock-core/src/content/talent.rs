@@ -998,7 +998,7 @@ pub enum TalentEffect {
     /// `content/spell_mod.rs`): rungs, dice, rerolls, riders, reach, degrees, and a cost
     /// percent, for every spell or those of its `when` tags (a talent chosen for a school or an
     /// element: those of the choice). Empower, Archmage, Keen mind, School focus, Scroll
-    /// adept, Wand mastery, Sure hand, Brimming, Numbing cold.
+    /// adept, Wand mastery, Sure hand, Brimming.
     SpellMod(super::SpellModSpec),
     /// Its spells cost this percent more mana (negative: less; Archmage, Empower), at least 1.
     SpellManaPercent { value: i32 },

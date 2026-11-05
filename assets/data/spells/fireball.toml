@@ -20,7 +20,6 @@ noun = "fireball"
 verb = "burns"
 message = "A fireball streaks from your hands and explodes!"
 blast = 1000
-heat = true
 noise = { sound = "explosion", loudness = 150 }
 
 [spell.grows]

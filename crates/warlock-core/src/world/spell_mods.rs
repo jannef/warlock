@@ -3,8 +3,7 @@
 //! once a cast from three sources, the first two filtered by the spell's tags:
 //!
 //! - its **talents**' `spell_mod` effects ([`crate::talent::TalentMods::spell_mods`]: Empower,
-//!   Archmage, Keen mind, School focus, Scroll adept, Wand mastery, Sure hand, Brimming,
-//!   Numbing cold);
+//!   Archmage, Keen mind, School focus, Scroll adept, Wand mastery, Sure hand, Brimming);
 //! - its **worn items**' spell effects, unidentified too (#629): `spell_rungs`, `spell_bonus`
 //!   (Potent), `spell_sides`, `spell_dice`, `spell_reroll`, `wand_rungs` (of Wands), and
 //!   `spell_reach` (of Farcasting) as cells and `spell_duration` (of Lingering) as degrees.

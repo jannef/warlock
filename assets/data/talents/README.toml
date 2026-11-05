@@ -442,8 +442,8 @@
 #                                 none: every spell). On a talent with `choice = "school"` the
 #                                 choice is its filter and `when` is left out. Empower
 #                                 { rungs = 1 }, Keen mind { sides = 1 }, School focus { cost =
-#                                 -10, cells = 1 }, Numbing cold { rider = { status =
-#                                 "sluggish", severity = 1 }, when = ["cold"] }. Nothing bounds
+#                                 -10, cells = 1 }, a rider { rider = { status =
+#                                 "sluggish", severity = 1 }, when = ["fire"] }. Nothing bounds
 #                                 what it adds (decision 16)
 #   spell_mana_percent { value }  its spells cost that percent more mana (negative: less; at
 #                                 least 1)

@@ -134,6 +134,7 @@ mod spell;
 mod spell_def;
 mod spell_ladder;
 mod spell_mod;
+mod spell_type;
 mod stance;
 mod stat_training;
 mod status;
@@ -304,6 +305,7 @@ pub use spell_ladder::{
     Ladder as SpellLadder, MAX_RUNGS, MAX_SCORE, RungValue, Unit as LadderUnit,
 };
 pub use spell_mod::{SpellMod, SpellModSpec, SpellMods, merge_rider};
+pub use spell_type::{SpellType, TypeRider};
 pub use stance::{CombatStance, StanceDef, Stances, percent_of};
 pub use stat_training::{
     DeedRule, HAUL_GRAMS, ODDS_SCALE, StatDeed, StatRule, StatTraining, StatUse,
@@ -3676,6 +3678,12 @@ impl Content {
     /// The spells' cost table (`data/spells.toml`, spec §8 "Spells"): none without the file.
     pub fn spell_rules(&self) -> Option<&SpellRules> {
         self.spell_rules.as_ref()
+    }
+
+    /// What every spell of damage type `kind` does beyond its damage (`[types]` in
+    /// `data/spells.toml`): none for a type without an entry.
+    pub fn spell_type(&self, kind: Option<DamageTypeId>) -> Option<&SpellType> {
+        self.spell_rules.as_ref()?.types.get(&kind?)
     }
 
     /// The study check and its time (`data/study.toml`, spec §8 "Spells"): none without it,

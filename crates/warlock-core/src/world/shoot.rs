@@ -494,7 +494,7 @@ impl World {
     }
 
     /// The fire on cell `p` goes out: it and the burning objects there are gone.
-    fn put_out(&mut self, p: Pos) {
+    pub(super) fn put_out(&mut self, p: Pos) {
         let content = self.content.clone();
         let level = self.state.current_mut();
         level.fires.remove(&p);

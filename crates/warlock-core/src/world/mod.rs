@@ -216,6 +216,7 @@ mod spell;
 mod spell_aim;
 mod spell_mods;
 mod spell_rung;
+mod spell_type;
 mod spell_words;
 mod spirit_weapon;
 mod stars;
@@ -1830,6 +1831,8 @@ mod speed_tests;
 mod spell_list_tests;
 #[cfg(test)]
 mod spell_talent_tests;
+#[cfg(test)]
+mod spell_type_tests;
 #[cfg(test)]
 mod spirit_weapon_tests;
 #[cfg(test)]
