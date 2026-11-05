@@ -57,10 +57,9 @@ use crate::content::{
 use crate::door::Lock;
 use crate::geom::{Dir, Pos};
 use crate::grid::Grid;
-use crate::magic::{LootGrade, loot, loot::Luck};
+use crate::magic::{LootGrade, LootPool, loot, loot::Luck};
 use crate::object::{Stack, add_to_pile};
 use crate::rng::Rng;
-use crate::variant::Source;
 use std::collections::BTreeMap;
 
 /// Attempts before giving up on a level (each with its own derived stream).
@@ -191,8 +190,8 @@ pub(crate) struct Canvas<'a> {
     pub objects: BTreeMap<Pos, Vec<Stack>>,
     /// Traps stamped from vaults.
     pub traps: BTreeMap<Pos, Trap>,
-    /// Where vaults stamped loot to roll, and the least it may be.
-    pub loot: Vec<(Pos, LootGrade)>,
+    /// Where vaults stamped loot to roll, and what it may be.
+    pub loot: Vec<(Pos, LootPool)>,
     /// Locks on closed doors: stamped from vaults, and on locked rooms (spec §8 "Doors").
     pub locks: BTreeMap<Pos, Lock>,
     /// Secret doors stamped from vaults (spec §8 "Searching").
@@ -714,26 +713,26 @@ pub(crate) struct Floor {
 
 /// Rolls a generated level's loot (spec §8 "Magic items") at its item level, from its own
 /// stream `loot/<level id>` so that the map is the same with or without it: first an item on
-/// each of `markers` (vaults' loot cells, at least of their grade), then the floor loot, one draw
+/// each of `markers` (vaults' loot cells, from their pools), then the floor loot, one draw
 /// for how many (between the fewest and the most) and, for each, one for a cell of `floor`
 /// terrain where nothing lies, stands, shines, or leads away (in row order), then the item,
-/// with the finder's `luck` ([`loot::roll_with`]).
+/// with the finder's `luck` ([`loot::roll_pool`]).
 pub(crate) fn place_loot(
     template: &mut LevelTemplate,
     content: &Content,
     seed: u64,
-    markers: &[(Pos, LootGrade)],
+    markers: &[(Pos, LootPool)],
     (floor, luck): (Option<Floor>, Luck),
 ) {
     let mut rng = Rng::loot(seed, &template.id);
     let level = template.item_level;
-    let place = |template: &mut LevelTemplate, rng: &mut Rng, p: Pos, grade: LootGrade| {
-        if let Some(stack) = loot::roll_with(content, rng, level, grade, Source::Loot, luck) {
+    let place = |template: &mut LevelTemplate, rng: &mut Rng, p: Pos, pool: &LootPool| {
+        if let Some(stack) = loot::roll_pool(content, rng, level, pool, luck) {
             add_to_pile(template.objects.entry(p).or_default(), &[stack], content);
         }
     };
-    for &(p, grade) in markers {
-        place(template, &mut rng, p, grade);
+    for (p, pool) in markers {
+        place(template, &mut rng, *p, pool);
     }
     let Some(floor) = floor else { return };
     let [fewest, most] = floor.count.map(i32::from);
@@ -755,7 +754,7 @@ pub(crate) fn place_loot(
             break;
         }
         let p = free.remove(rng.index(free.len()));
-        place(template, &mut rng, p, LootGrade::Any);
+        place(template, &mut rng, p, &LootGrade::Any.into());
     }
 }
 

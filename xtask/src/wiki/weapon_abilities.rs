@@ -181,7 +181,7 @@ fn does(content: &Content, a: &WeaponAbility) -> String {
             );
             format!(
                 "{dice} rolled once more (no bonus) on the target, {kind}: resistances count, \
-                 Protection does not (with Second blade's rend, the off hand's dice too)"
+                 Protection does not"
             )
         }
         WeaponDoes::FreeShot => "a free shot with your missile weapon and the ammunition you have \

@@ -34,9 +34,17 @@
 //!
 //! What is rolled is unidentified (its gems and material show at once: materials are not
 //! hidden).
+//!
+//! A vault's `loot` cell rolls from a [`LootPool`] ([`roll_pool`]): with no classes named exactly
+//! [`roll_with`]; with classes, one draw among those that hold something at the item level, then
+//! the find: coins (the purse of a chest of that level, [`crate::chest::purse`]), a loose gem
+//! ([`gem::loose`]), or step 1's draw among the class's objects and steps 2 to 8.
 
 use super::{Affix, AffixKind, Magic, Rarity, may_roll};
-use crate::content::{AffixDef, Content, ItemClassId, ItemKind, ObjectDef, ObjectId};
+use crate::chest;
+use crate::content::{
+    AffixDef, Content, ItemClassId, ItemKind, MAX_ITEM_LEVEL, ObjectDef, ObjectId,
+};
 use crate::gem;
 use crate::object::Stack;
 use crate::rng::Rng;
@@ -71,6 +79,59 @@ impl LootGrade {
             LootGrade::Any => Rarity::Normal,
             LootGrade::Magic => Rarity::Magic,
             LootGrade::Rare => Rarity::Rare,
+        }
+    }
+}
+
+/// What a vault's `loot` cell may hold (spec §7 "Level file format"): `loot = "magic"`, or
+/// `loot = { pool = ["armour", "rings"], grade = "magic" }`.
+#[derive(Clone, Debug, Default, PartialEq, Eq)]
+pub struct LootPool {
+    /// The least it may be.
+    pub grade: LootGrade,
+    /// The classes it is drawn from, evenly, in the order named; empty: anything.
+    pub classes: Vec<ItemClassId>,
+}
+
+impl LootPool {
+    /// The pool `names` (class ids and class groups) name at `grade`. Refused when one names
+    /// nothing or, at any item level, can hold nothing of that grade (coins are never magic), so
+    /// a vault's cell is never dead on every floor. A class named twice counts once.
+    pub fn named(content: &Content, names: &[String], grade: LootGrade) -> Result<Self, String> {
+        if names.is_empty() {
+            return Err("a loot pool must name a class or a group".into());
+        }
+        let mut classes = Vec::new();
+        for name in names {
+            let named = content.pool_classes(name);
+            if named.is_empty() {
+                return Err(format!(
+                    "loot pool: `{name}` is no item class or class group"
+                ));
+            }
+            if !named
+                .iter()
+                .any(|c| holds(content, *c, MAX_ITEM_LEVEL, grade))
+            {
+                return Err(format!(
+                    "loot pool: `{name}` can hold nothing of grade {grade:?} at any item level"
+                ));
+            }
+            for class in named {
+                if !classes.contains(&class) {
+                    classes.push(class);
+                }
+            }
+        }
+        Ok(Self { grade, classes })
+    }
+}
+
+impl From<LootGrade> for LootPool {
+    fn from(grade: LootGrade) -> Self {
+        Self {
+            grade,
+            classes: Vec::new(),
         }
     }
 }
@@ -128,16 +189,38 @@ pub fn roll_with(
     {
         return Some(gem);
     }
-    // The candidates by object id (the string), never by load order: a draw picks the same base
-    // however the object files are laid out (docs/dev/content.md).
+    let bases = loot_bases(content, level, grade, |_| true);
+    drawn(content, rng, &bases, (level, grade, luck), source)
+}
+
+/// The objects that are loot at item level `level` for `grade` among those `within` allows, by
+/// id (the string), never by load order: a draw picks the same base however the object files are
+/// laid out (docs/dev/content.md).
+fn loot_bases(
+    content: &Content,
+    level: u8,
+    grade: LootGrade,
+    within: impl Fn(&ObjectDef) -> bool,
+) -> Vec<(ObjectId, u32)> {
     let magic_only = grade != LootGrade::Any;
     let mut bases: Vec<(ObjectId, u32)> = (content.object_defs().iter().enumerate())
-        .filter(|(_, o)| o.frequency > 0 && o.level <= level)
+        .filter(|(_, o)| o.frequency > 0 && o.level <= level && within(o))
         .filter(|(_, o)| !magic_only || can_be_magic(content, o, level))
         .map(|(i, o)| (ObjectId(i as u16), o.frequency))
         .collect();
     bases.sort_by(|a, b| content.object(a.0).id.cmp(&content.object(b.0).id));
-    let object = *pick_weighted(rng, &bases)?;
+    bases
+}
+
+/// Steps 1 to 8 of the module docs: one of `bases`, and what is made of it.
+fn drawn(
+    content: &Content,
+    rng: &mut Rng,
+    bases: &[(ObjectId, u32)],
+    (level, grade, luck): (u8, LootGrade, Luck),
+    source: Source,
+) -> Option<Stack> {
+    let object = *pick_weighted(rng, bases)?;
     let count = if content.object(object).kind == Some(ItemKind::Ammo) {
         u32::try_from(rng.range(*AMMO.start(), *AMMO.end())).unwrap_or(1)
     } else {
@@ -151,6 +234,69 @@ pub fn roll_with(
         (level, grade, luck.magic),
         Some(source),
     ))
+}
+
+/// What a class is found as: coins and gems have no `frequency`, and are found by the purse and
+/// the gem's own draws.
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum Find {
+    Coins,
+    Gem,
+    Item,
+}
+
+fn find_of(content: &Content, class: ItemClassId) -> Find {
+    let of = |object: ObjectId| content.object(object).class == class;
+    if chest::currency(content).is_some_and(of) {
+        Find::Coins
+    } else if content.gems().is_some_and(|g| of(g.object)) {
+        Find::Gem
+    } else {
+        Find::Item
+    }
+}
+
+/// Whether class `class` holds anything of `grade` at item level `level`: what is never magic
+/// (coins, gems, a potion) holds nothing that must be.
+fn holds(content: &Content, class: ItemClassId, level: u8, grade: LootGrade) -> bool {
+    match find_of(content, class) {
+        Find::Coins => {
+            let band = content.chests().band_of(level);
+            grade == LootGrade::Any
+                && band.is_some_and(|b| b.loot.gold.dice.max() > 0 && b.loot.gold.each > 0)
+        }
+        Find::Gem => grade == LootGrade::Any,
+        Find::Item => !loot_bases(content, level, grade, |o| o.class == class).is_empty(),
+    }
+}
+
+/// Rolls an item of `pool` at item level `level` for a finder with `luck` (the module docs give
+/// the draws). `None` when none of its classes holds anything there yet: a shallow floor may
+/// leave a pool of deep things empty.
+pub fn roll_pool(
+    content: &Content,
+    rng: &mut Rng,
+    level: u8,
+    pool: &LootPool,
+    luck: Luck,
+) -> Option<Stack> {
+    let grade = pool.grade;
+    if pool.classes.is_empty() {
+        return roll_with(content, rng, level, grade, Source::Loot, luck);
+    }
+    let level = level.max(1);
+    let open: Vec<ItemClassId> = (pool.classes.iter().copied())
+        .filter(|c| holds(content, *c, level, grade))
+        .collect();
+    let class = *rng.pick(&open)?;
+    match find_of(content, class) {
+        Find::Coins => chest::purse(content, rng, level),
+        Find::Gem => gem::loose(content, rng, level),
+        Find::Item => {
+            let bases = loot_bases(content, level, grade, |o| o.class == class);
+            drawn(content, rng, &bases, (level, grade, luck), Source::Loot)
+        }
+    }
 }
 
 /// A base item of one of `classes` that is loot at item level `level` (its `level` at most it,

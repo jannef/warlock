@@ -5,7 +5,7 @@ rules it implements are in spec/08h-hunger.md. Keep it current with the code, as
 
 Hunger (spec §8 "Hunger"; M23, #137): the rules are `warlock-core/src/hunger.rs` (`Hunger`, the
 seven states from `Starving` up to `Bloated`, ordered so `<` is hungrier; `news(from, to)`,
-`stops_rest`; `Satiation { nutrition, banked, starving }` on `Actor::satiation`, the player's
+`worsens`; `Satiation { nutrition, banked, starving }` on `Actor::satiation`, the player's
 only, with `burn`/`starve`/`feed`), data `data/hunger.toml` (`content/hunger.rs`, `HungerDef`:
 `burn_seconds`, `start`, `max`, `vomit_leaves`, `[states]` least nutrition, `bloated_slow`,
 `weak` stats, `faint`, `starve`, `exertion` (only `EXERTIONS`: melee, shoot, throw),
@@ -78,6 +78,24 @@ by `corpse_stats_percent`; then heal, harm, feed; tests in `world/eat_tests.rs`)
 `Stack::died`, `Death::cause`).
 `creature_dies` calls `leave_corpse` (corpse on top); `perceive` calls `rot_away` (the current
 level's piles). Presentation: `PerceptionView::own_hunger` (the status bar segment
-after the HP, priority 1, hidden while Not hungry), `e` (`KeyCommand::Eat`, id `eat`, described "Consume") opens
+after the HP, priority 1 for Satiated and Bloated and 0 from Hungry down, so it outlasts even the
+level's name, hidden while Not hungry; `ui::hunger_tint` colours the word from Hungry down), `e` (`KeyCommand::Eat`, id `eat`, described "Consume") opens
 `ScreenName::Eat` (`ObjectList::Eat`). Long tests that rest or travel for days remove
 `data/hunger.toml` (or the player starves).
+
+**Stopping the player** (#972; no rule but one changed, no save state). Every long action is
+`World::keep_at`, which stops on any `say`, and `hunger_news` says a worsening: rest, eat, dig,
+search, forage, study, scribe, pray, drink, temper, tame, the sanctuary and the familiar's sitting
+all stop on it (`hunger_tests.rs`). Chat and ask are a single turn's time, with nothing to stop.
+The one rule: `World::starving_stops_rest`, called from the status loop as starving costs a hit
+point, says "You are wasting away from hunger." while `World::resting`, so a rest (up to 24 hours,
+enough to kill) stops at each hit point; the bounded long actions go on, and a step on the overworld
+says nothing, or a journey would log a line per ten minutes. In the game: `Game::apply` sets
+`Game::hunger_stop` when `Hunger::worsens(before, now)`; `ui::more` then waits at the last page too
+(`more::stops`; `pages`' `last_waits` leaves it room for `--more--`), and `game::apply_queued` drops
+the actions queued behind it that frame (it takes the `ResMut` so a frame without actions leaves the
+`Game` unchanged: `on_level_up` and `refresh` run on change). A replay's last step sets no stop.
+`input::hunger_dialog` asks before an overworld step while Fainting or Starving
+(`PerceptionView::level_kind`, the state alone); text cases `hunger-*` in `screen_snapshots.rs`.
+There is no multi-step movement to end (no run or travel command, on the overworld or anywhere): a
+held key's repeats are the only walking.

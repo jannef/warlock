@@ -20,8 +20,7 @@
 //! What a **generated** chest holds is rolled by [`roll_contents`] from its band's loot table
 //! (spec §8 "Chest loot"), on the level's chest stream (`mapgen/chest.rs`).
 
-use crate::content::{Content, GOLD, MAX_ITEM_LEVEL};
-use crate::item_parts::ItemPart;
+use crate::content::{Content, GOLD, MAX_ITEM_LEVEL, ObjectId};
 use crate::magic::LootGrade;
 use crate::magic::loot::{self, Luck};
 use crate::object::{Stack, add_to_pile};
@@ -153,20 +152,28 @@ pub fn roll_contents(content: &Content, rng: &mut Rng, level: u8, luck: Luck) ->
             add_to_pile(&mut holds, &[stack], content);
         }
     }
-    let coins = table.gold.dice.roll(rng).max(0) as u32 * table.gold.each;
-    let currency = (content.shops().map(|s| s.currency)).or_else(|| content.object_id(GOLD));
-    if let (true, Some(currency)) = (coins > 0, currency) {
-        add_to_pile(&mut holds, &[Stack::new(currency, coins)], content);
+    if let Some(coins) = purse(content, rng, level) {
+        add_to_pile(&mut holds, &[coins], content);
     }
     for _ in 0..table.gems.roll(rng).max(0) {
-        let (Some(gems), Some((gem, cutting))) =
-            (content.gems(), crate::gem::roll(content, rng, at, false))
-        else {
-            continue;
-        };
-        let parts = vec![ItemPart::gem(content, None, gem, cutting)];
-        let gem = Stack::one(gems.object).with_parts(parts);
-        add_to_pile(&mut holds, &[gem], content);
+        if let Some(gem) = crate::gem::loose(content, rng, at) {
+            add_to_pile(&mut holds, &[gem], content);
+        }
     }
     holds
+}
+
+/// What coins are: the shops' currency, else `gold_coin`.
+pub fn currency(content: &Content) -> Option<ObjectId> {
+    (content.shops().map(|s| s.currency)).or_else(|| content.object_id(GOLD))
+}
+
+/// The coins a chest of `level` holds: its band's purse (`dice` × `each` of [`currency`]), one
+/// roll of the dice. `None` without bands, or with no coins rolled. A vault's pool of coins pays
+/// the same (`magic/loot.rs`).
+pub fn purse(content: &Content, rng: &mut Rng, level: u8) -> Option<Stack> {
+    let gold = &content.chests().band_of(level)?.loot.gold;
+    let coins = gold.dice.roll(rng).max(0) as u32 * gold.each;
+    let currency = currency(content)?;
+    (coins > 0).then(|| Stack::new(currency, coins))
 }

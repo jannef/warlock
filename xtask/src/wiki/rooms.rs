@@ -193,8 +193,8 @@ pub(super) fn special_rooms(content: &Content) -> String {
                  you lift inside seals it: every door of it shuts (unless something is in the \
                  doorway) and locks with a lock of the level's depth that only a skeleton key \
                  opens, and {least} to {most} creatures hostile to you of the level's danger + \
-                 {} come on its edge, out of your sight where they can ([Old delver](talents.md#talent-old-delver) \
-                 at its second rank: the second stack). It seals once.",
+                 {} come on its edge, out of your sight where they can ([Old hand](talents.md#talent-old-hand): the \
+                 second stack). It seals once.",
                 h.items, h.loot_level, h.danger
             ));
         }

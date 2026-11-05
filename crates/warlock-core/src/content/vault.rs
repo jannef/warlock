@@ -9,7 +9,11 @@
 //! of the level. A vault has no stairs and no player start, and every walkable cell must be
 //! reachable from an entrance (doors count as passable), so stamping one never strands anything.
 //! Its locks (spec §8 "Doors") come with their keys: a key to every lock lies, or is carried by a
-//! creature, within reach of an unlocked entrance without unlocking a door.
+//! creature, within reach of an unlocked entrance without unlocking a door. A legend's `loot` is
+//! rolled when it is stamped: a grade, or a pool of item classes (`magic/loot.rs`, [`LootPool`]),
+//! at the floor's item level.
+//!
+//! [`LootPool`]: crate::magic::LootPool
 //!
 //! A vault of kind `outdoor` (ruins for the local areas of the overworld) is stamped onto open
 //! ground instead of into rock: its `void` cells (the default legend's space) are the local

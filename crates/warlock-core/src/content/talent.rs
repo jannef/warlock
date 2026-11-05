@@ -540,9 +540,6 @@ pub enum TalentEffect {
     /// At a forgotten altar of the actor's own side the side's lean counts double, and an
     /// opposed one leans as a neutral one (Pious; the prayer draw, `World::lean`).
     Devout,
-    /// At a forgotten altar a great bane drawn becomes nothing (Pious; the prayer draw,
-    /// `world/pray.rs`).
-    Penitent,
     /// Where a special room quickens healing or mana, the quickening is this percent more
     /// (Old delver; the room's pace in `World::healing_rate` and `World::mana_rate`).
     RoomPacePercent { value: i32 },
@@ -915,6 +912,9 @@ pub enum TalentEffect {
     KickDie { sides: u8 },
     /// Its door kicks as if this much stronger.
     DoorKick { value: i32 },
+    /// A kick of its that hits drives the foe a cell back, when the cell is free (Breaker;
+    /// `World::kick_back`).
+    KickBack,
     /// Its door kicks are this percent louder (negative: quieter; Lockbreaker).
     KickNoisePercent { value: i32 },
     /// What a chest it kicks open holds breaks this percent more often (negative: less;
@@ -937,8 +937,6 @@ pub enum TalentEffect {
     /// Its weapon abilities come this many ranks sooner (Early mastery; the combat progression
     /// design §11): their thresholds read its ranks that much higher.
     AbilityRanks { value: i32 },
-    /// Its Rend rolls the off hand's damage dice too (Second blade's rend).
-    RendOffHand,
     /// Its weapon actives take this percent more time (negative: less; Practised technique),
     /// never below half the action's price (#564).
     WeaponEnergyPercent { value: i32 },
@@ -2416,7 +2414,6 @@ impl TalentEffect {
             TalentEffect::SilentDoors
             | TalentEffect::NoExertion
             | TalentEffect::RerollFumble
-            | TalentEffect::RendOffHand
             | TalentEffect::RebornWhole
             | TalentEffect::SecondRising
             | TalentEffect::StarvingHeals
@@ -2435,8 +2432,8 @@ impl TalentEffect {
             | TalentEffect::SparesSelf
             | TalentEffect::ChestWise
             | TalentEffect::Slick
+            | TalentEffect::KickBack
             | TalentEffect::Devout
-            | TalentEffect::Penitent
             | TalentEffect::CollapseProof
             | TalentEffect::ExactFootsteps
             | TalentEffect::SmellRot

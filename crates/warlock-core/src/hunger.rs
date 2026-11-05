@@ -13,7 +13,8 @@
 //! Fainting (and Starving) now and then costs the player a few turns; Starving stops hit points
 //! coming back and takes them away, until the player starves to death; Bloated makes everything
 //! take longer, through the same prices as a burden. The player is told when the state changes,
-//! and a change for the hungrier (into Hungry or worse) stops a rest.
+//! and a change for the hungrier (into Hungry or worse, [`Hunger::worsens`]) stops a rest, and
+//! in the game waits at `--more--`.
 //!
 //! What the player knows is the state, in words (the status bar shows it unless it is Not
 //! hungry): never the counter.
@@ -101,9 +102,9 @@ impl Hunger {
             (true, Satiated) => "You no longer feel bloated.",
             (true, NotHungry) => "You no longer feel satiated.",
             (true, Hungry) => "You are getting hungry.",
-            (true, Weak) => "You feel weak from hunger.",
-            (true, Fainting) => "You feel faint from hunger.",
-            (true, Starving) => "You are starving!",
+            (true, Weak) => "You feel weak from hunger. You should eat soon.",
+            (true, Fainting) => "You feel faint from hunger. Eat now, or you will starve!",
+            (true, Starving) => "You are starving! Eat, or you will die!",
             (false, Fainting) => "You are no longer starving.",
             (false, Weak) => "You feel less faint.",
             (false, Hungry) => "You feel less weak.",
@@ -115,9 +116,10 @@ impl Hunger {
         })
     }
 
-    /// Whether going from `from` to `to` stops a rest: getting hungrier, into Hungry or worse
-    /// (spec §6 "Rest"). Satiation wearing off is only logged.
-    pub const fn stops_rest(from: Hunger, to: Hunger) -> bool {
+    /// Whether going from `from` to `to` is the player getting hungrier, into Hungry or worse:
+    /// it stops a rest (spec §6 "Rest") and any long action, and in the game the message waits at
+    /// `--more--` (`Game::apply`). Satiation wearing off is only logged.
+    pub const fn worsens(from: Hunger, to: Hunger) -> bool {
         (to as u8) < (from as u8) && (to as u8) <= (Hunger::Hungry as u8)
     }
 }
@@ -223,18 +225,30 @@ mod tests {
             "fed back up"
         );
         assert_eq!(Hunger::news(Hungry, Satiated), Some("You feel satiated."));
-        assert_eq!(Hunger::news(Fainting, Starving), Some("You are starving!"));
+        // The later states say so more strongly.
+        assert_eq!(
+            Hunger::news(Hungry, Weak),
+            Some("You feel weak from hunger. You should eat soon.")
+        );
+        assert_eq!(
+            Hunger::news(Weak, Fainting),
+            Some("You feel faint from hunger. Eat now, or you will starve!")
+        );
+        assert_eq!(
+            Hunger::news(Fainting, Starving),
+            Some("You are starving! Eat, or you will die!")
+        );
         assert_eq!(
             Hunger::news(Satiated, NotHungry),
             Some("You no longer feel satiated.")
         );
-        // Only getting hungrier, into Hungry or worse, stops a rest.
-        assert!(Hunger::stops_rest(NotHungry, Hungry));
-        assert!(Hunger::stops_rest(Weak, Fainting));
-        assert!(Hunger::stops_rest(Bloated, Weak));
-        assert!(!Hunger::stops_rest(Bloated, Satiated));
-        assert!(!Hunger::stops_rest(Satiated, NotHungry));
-        assert!(!Hunger::stops_rest(Weak, Hungry));
+        // Only getting hungrier, into Hungry or worse, stops the player.
+        assert!(Hunger::worsens(NotHungry, Hungry));
+        assert!(Hunger::worsens(Weak, Fainting));
+        assert!(Hunger::worsens(Bloated, Weak));
+        assert!(!Hunger::worsens(Bloated, Satiated));
+        assert!(!Hunger::worsens(Satiated, NotHungry));
+        assert!(!Hunger::worsens(Weak, Hungry));
     }
 
     #[test]

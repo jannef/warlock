@@ -309,7 +309,7 @@ fn floors_the_player_left_stay_frozen() {
     w.player_mut().pos = stairs;
     run(&mut w, "descend");
     assert_eq!(w.state.current_level, "barrow:1");
-    // Its first attempt 15 minutes after the player arrived (the stairs took a turn since).
+    // Its first attempt 2 minutes after the player arrived (the stairs took a turn since).
     let barrow = w
         .state
         .current()
@@ -318,7 +318,7 @@ fn floors_the_player_left_stay_frozen() {
         .expect("the barrow has a spawner");
     let after =
         |at: GameTime, t: GameTime, every: u64| at > t && at <= t + Duration::minutes(every);
-    assert!(after(barrow.at, w.state.time, 15));
+    assert!(after(barrow.at, w.state.time, 2));
     run(&mut w, "rest:24h");
     // Nothing came to the haunt meanwhile; back there, its clock starts again on arrival.
     assert!(

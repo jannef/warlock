@@ -7,6 +7,7 @@ use std::path::PathBuf;
 use std::sync::Arc;
 use warlock_core::character::CharacterSpec;
 use warlock_core::content::{Content, ContentFiles};
+use warlock_core::hunger::Hunger;
 use warlock_core::messages::{Message, MessageLog};
 use warlock_core::replay::{Divergence, Replay};
 use warlock_core::world::WorldError;
@@ -44,6 +45,10 @@ pub struct Game {
     /// that makes a run (not resumed, replayed, or captured). The app opens the story screen
     /// over its first turn once (`ui::screens::on_run_start`); nothing of it is saved.
     pub story_due: bool,
+    /// The last action left the player hungrier, in Hungry or worse (spec §8 "Hunger"): its
+    /// message waits at `--more--` however short (`ui::more`), and input queued behind it is
+    /// dropped ([`apply_queued`]). Presentation only; nothing of it is saved.
+    pub hunger_stop: bool,
     /// The message log as it was when the player last acted: what was logged since is this
     /// turn's news, which the message line shows first ([`Game::unread`], `ui::more`).
     read: MessageLog,
@@ -84,6 +89,7 @@ impl Game {
             applied: 0,
             save_id,
             story_due: false,
+            hunger_stop: false,
             recorder: None,
         }
     }
@@ -190,7 +196,12 @@ impl Game {
     /// Applies `action`, recording it if `--record` is on.
     pub fn apply(&mut self, action: &Action) {
         self.read = self.world.messages().clone();
+        let before = self.world.perception().own_hunger();
         self.last_outcome = self.world.apply(action);
+        self.hunger_stop = match (before, self.world.perception().own_hunger()) {
+            (Some(before), Some(now)) => Hunger::worsens(before, now),
+            _ => false,
+        };
         self.applied += 1;
         if let Some((replay, _)) = &mut self.recorder {
             replay.push(action, &self.world);
@@ -289,8 +300,19 @@ impl Plugin for GamePlugin {
 }
 
 fn apply_actions(mut actions: MessageReader<PlayerAction>, mut game: ResMut<Game>) {
-    for PlayerAction(action) in actions.read() {
-        game.apply(action);
+    apply_queued(actions.read(), &mut game);
+}
+
+/// Applies the actions input asked for this frame (the game is changed only if there are any). A
+/// worsening hunger state stops the player (spec §8 "Hunger"): the actions after it, a held key's
+/// repeats, are dropped.
+pub fn apply_queued<'a>(actions: impl Iterator<Item = &'a PlayerAction>, game: &mut ResMut<Game>) {
+    let mut stopped = false;
+    for PlayerAction(action) in actions {
+        if !stopped {
+            game.apply(action);
+            stopped = game.hunger_stop;
+        }
     }
 }
 

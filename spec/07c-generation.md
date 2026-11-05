@@ -59,7 +59,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   1000 walkable cells, 25 to 80; at most 200), the draw's odds `stray`, `out_of_depth`,
   `deeper` (percents) and `deeper_cap` (0 to 50), each defaulting to `data/dungeons.toml`'s
   `[defaults]` (5, 5, 5, 10; required once any area has a danger), and
-  `spawn = { every, chance, cap }` (default `15m`, 60 %, cap the population). A creature type's
+  `spawn = { every, chance, cap }` (default `2m`, 60 %, cap the population). A creature type's
   `level` is its danger; a draw at danger *D* weighs a type of level *L* 4 at `D` and `D − 1`, 2
   at `D − 2` and `D − 3`, 1 down to `D − 8`, else 0 (above *D* too), uniform among equal weights
   over the types sorted by id. A **family** of animated types (§8 "Animated objects":

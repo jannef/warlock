@@ -3,7 +3,7 @@ source: crates/warlock/src/ui/screen_snapshots.rs
 expression: "render(case, content.clone())"
 ---
  Your appraise improves. (×56) You learn Dodge. You learn Nimble. You learn Opportunist. You learn
- Quick (1). You learn Keen ears (1). You learn Petrifying gaze. You learn Undertow.
+ Quick. You learn Keen ears. You learn Petrifying gaze. You learn Undertow.
 
 
                     ┌─ Abilities ──────────────────────────────────────────────┐

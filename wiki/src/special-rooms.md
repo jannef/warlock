@@ -172,10 +172,9 @@ gets where a dungeon favours or bans nothing. "Only" says where it can come at a
   are trained in it, where elsewhere it is one study in two. Only rooms of 9 floor cells or more
   can be one.
 
-The talent *[Old delver](talents.md#talent-old-delver)* (Delver, two ranks) makes you at home in strange rooms. At its
-first rank ([Willpower](stats.md#stat-willpower) 11 or [Dexterity](stats.md#stat-dexterity) 12) a [collapsed floor](special-rooms.md#room-collapsed) never gives way under you,
+The talent *[Old delver](talents.md#talent-old-delver)* (Delver; [Willpower](stats.md#stat-willpower) 11 or [Dexterity](stats.md#stat-dexterity) 12) makes you at home in strange rooms: a [collapsed floor](special-rooms.md#room-collapsed) never gives way under you,
 the [Ebbing](status-effects.md#status-ebbing) of a [draining room](special-rooms.md#room-draining) never takes you, and nothing you kill ever rises in a
-[cursed room](special-rooms.md#room-cursed). At its second (level 10) a room that quickens healing or mana quickens it
+[cursed room](special-rooms.md#room-cursed). With *[Old hand](talents.md#talent-old-hand)* after it (level 10) a room that quickens healing or mana quickens it
 half again more for you (a [sanctuary](special-rooms.md#room-sanctuary)'s three times as fast becomes four times), and you
 can lift one thing from a [tempting hoard](special-rooms.md#room-hoard) before it seals; the second seals it.
 
@@ -322,8 +321,7 @@ Rarely, an altar marks you for good. The great boons raise a [stat](stats.md) fo
 an elixir (see [Potions](potions.md#elixirs)) at the altar's foot. The great banes lower a [stat](stats.md) for good, take a [level](experience.md#levels) away (what you chose at
 that level you keep, but gaining it again gives no new choices), mark you with a flaw for life,
 or call a horde around the altar. Talents an altar gave you are marked "altar" on the Talents
-page. *[Pious](talents.md#talent-pious)* at its second rank turns a great bane into nothing at all; the altar bursting
-is not great, and still happens.
+page.
 
 The outcomes, by kind and tier ("Of its kind" is its share of its kind's draws):
 

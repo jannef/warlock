@@ -197,7 +197,7 @@ fn the_bonus_picks_come_from_the_classs_trees() {
     );
     assert_eq!(w.due().map(|d| d.bonus), Some(1), "nothing spent");
     run(&mut w, "talent:armour_training");
-    assert_eq!(last(&w), "You learn Armour training (1).");
+    assert_eq!(last(&w), "You learn Armour training.");
     assert_eq!(w.due(), None);
     let progress = dump::layer_rows(&w, Layer::Progress);
     assert!(

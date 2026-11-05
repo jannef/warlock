@@ -434,7 +434,7 @@ fn the_fateful_lines_at_pinned_seeds() {
     let me = w.state().player();
     assert_eq!(me.talents.rank_of("hardy", None), 1);
     assert!(me.boons.iter().any(|b| b.id == "hardy"));
-    assert!(talent_rows(&w).contains(&"Hardy 1/3 (story)".to_string()));
+    assert!(talent_rows(&w).contains(&"Hardy (story)".to_string()));
     // The named blade: a rare weapon, identified.
     let w = run(398);
     assert!(
@@ -488,7 +488,7 @@ fn a_story_talent_is_given_at_rank_one_and_kept() {
     let was = before.state().player().max_hp(&STORYLESS);
     assert!(me.max_hp(&content) > was, "{} > {was}", me.max_hp(&content));
     assert_eq!(me.hp, me.max_hp(&content));
-    assert!(talent_rows(&w).contains(&"Hardy 1/3 (story)".to_string()));
+    assert!(talent_rows(&w).contains(&"Hardy (story)".to_string()));
     let own = w.perception().own_talents();
     let hardy = own.iter().find(|t| t.name == "Hardy").expect("held");
     assert!(hardy.story && !hardy.boon && !hardy.granted);
@@ -498,7 +498,7 @@ fn a_story_talent_is_given_at_rank_one_and_kept() {
     let again = loaded.state().player();
     assert_eq!(again.talents.rank_of("hardy", None), 1);
     assert_eq!(again.max_hp(&content), me.max_hp(&content));
-    assert!(talent_rows(&loaded).contains(&"Hardy 1/3 (story)".to_string()));
+    assert!(talent_rows(&loaded).contains(&"Hardy (story)".to_string()));
 }
 
 #[test]

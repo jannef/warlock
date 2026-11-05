@@ -97,15 +97,6 @@ fn deep_well_asks_intelligence_or_willpower_then_levels() {
     w.player_mut().stats = Stats::new(stats, PerStat::splat(40));
     run(&mut w, "talent:deep_well");
     assert_eq!(w.state.player().talents.rank_of("deep_well", None), 1);
-    // The second rank waits for level 10.
-    w.state.progress.due.push(Due {
-        level: 3,
-        talents: 1,
-        rolls: 0,
-        bonus: 0,
-    });
-    run(&mut w, "talent:deep_well");
-    assert_eq!(w.state.player().talents.rank_of("deep_well", None), 1);
 }
 
 #[test]

@@ -976,11 +976,6 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
                                   double (30 points from bane to boon), and an opposed one leans \
                                   as a neutral one"
             .into(),
-        TalentEffect::Penitent => "at a forgotten altar a great bane (Wrath of the forgotten, \
-                                    Unmade, Forsaken, Damned) becomes one of the nothing \
-                                    outcomes instead; the altar's explosion is not great and \
-                                    still happens"
-            .into(),
         TalentEffect::ChestWise => "sees whether a shut chest in sight is locked (look mode: \
             \"a locked coffer\", \"an unlocked coffer\"), and knows the trap of every shut chest \
             it sees, no check"
@@ -1037,7 +1032,7 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
             match trigger {
                 T::Cleave => {
                     "free blow: a melee blow that kills gives one at another hostile beside you \
-                     (Cleave and Cleaving strike together: on and on, as Cleave's second rank)"
+                     (Cleave and Cleaving strike together: on and on, as Great cleave)"
                 }
                 T::GreatCleave => {
                     "free blow: cleaving goes on while the blows kill (once at each hostile beside \
@@ -1681,6 +1676,9 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
              one that does not recover)"
         ),
         TalentEffect::KickDie { sides } => format!("kicks at creatures roll 1d{sides}"),
+        TalentEffect::KickBack => "a kick that hits drives the foe one cell straight back, \
+                                   when that cell is walkable, untrapped, unfrozen, and empty"
+            .into(),
         TalentEffect::DoorKick { value } => {
             format!("door kicks as if Strength {}", signed(value))
         }
@@ -1717,7 +1715,6 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
             if value == 1 { "" } else { "s" },
             signed(value)
         ),
-        TalentEffect::RendOffHand => "Rend rolls the off hand's damage dice too".into(),
         TalentEffect::WeaponEnergyPercent { value } => format!(
             "weapon actives take {}% time (never below half the action's price)",
             signed(value)

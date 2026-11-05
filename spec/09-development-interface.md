@@ -120,7 +120,7 @@ cargo xtask golden [--update | --local]                   # compare golden scree
   the styles they fight in now marked, `Duelist 1 (0%), in use`), `attacks` (the player's ready
   attacks as the character screen shows them, §6: `Main hand long sword: +4 to hit, 1d9+2
   slashing`, `Missile short bow: +3 to hit, 1d6 piercing, range 10`), `talents` (the player's
-  talents in the order taken, each for its choice with its rank of how many, `Hardy 2/3`,
+  talents in the order taken, each for its choice with its rank of how many where it has ranks, `Apprentice (stealth) 2/3`,
   `Weapon focus (long blades)`; never what a rank gives), `quests`
   (the quest log, active first: `Rats in the arena (active, from the old hermit): Kill 3 giant
   rats in the Arena. 0 / 3 killed.`), and `story` (the background story, a paragraph a line;

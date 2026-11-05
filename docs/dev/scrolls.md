@@ -152,7 +152,7 @@ length, default 0). Reading one is `World::read_cast` (`world/cast.rs`): the one
 `scroll_rungs` (Scroll adept; `CastBy::Scroll`, no stats), the reader's other hooks (a reroll,
 a rider, a die more) applying, and the reader's reach and degrees, never asking whether the
 reader knows the spell or
-has the mana; the scroll is used up (`use_up`, Scroll savant's second rank's chance) and said read
+has the mana; the scroll is used up (`use_up`, Spell recall's chance) and said read
 (`say_read`, which identifies its type) only once the cast is sure to go off, so a refusal
 keeps it and takes no time. An aimed spell needs its cell (`read:b:12,5`), a spell on a stack
 (Identify, `SpellScroll::on_item`) its stack (`read:b:c`); a spell on oneself

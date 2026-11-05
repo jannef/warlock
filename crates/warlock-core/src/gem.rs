@@ -109,6 +109,13 @@ pub fn find_with(content: &Content, rng: &mut Rng, level: u8, more: i32) -> Opti
     if gems.chance == 0 || !rng.chance(chance as u32) {
         return None;
     }
+    loose(content, rng, level)
+}
+
+/// A loose gem at item level `level` ([`roll`]'s draws): a stack of one. `None` without gems to
+/// find.
+pub fn loose(content: &Content, rng: &mut Rng, level: u8) -> Option<Stack> {
+    let gems = content.gems()?;
     let (gem, cutting) = roll(content, rng, level, false)?;
     Some(Stack::one(gems.object).with_parts(vec![ItemPart::gem(content, None, gem, cutting)]))
 }

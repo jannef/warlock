@@ -1,17 +1,10 @@
+# Every skill you lack, taken up a little (the levels stream), whatever skills the game has;
+# never Sneak attack, the thief's (the bard design §7).
 [[talent]]
 id = "jack_of_all_trades"
 name = "Jack of all trades"
 tree = "class"
 granted = true
-ranks = 2
 description = "You have picked up a little of everything on the road."
-systems = ["skills"]
-
-[[talent.rank]]
-# Every skill you lack, taken up a little (the levels stream), whatever skills the game has;
-# never Sneak attack, the thief's (the bard design §7).
 effects = [{ kind = "take_up_skills", dice = "1d4+1", except = ["sneak_attack"], news = "You find you know a little of everything." }]
-
-[[talent.rank]]
-# Every skill you have counts a little higher.
-effects = [{ kind = "trained_skills", value = 5 }]
+systems = ["skills"]

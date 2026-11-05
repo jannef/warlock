@@ -314,8 +314,9 @@ fn starving_takes_hit_points_until_the_player_starves_to_death() {
     assert_eq!(hunger(&w), Hunger::Starving);
     let player = w.state.player;
     w.state.actors.get_mut(&player).unwrap().hp = 30;
-    // Hurt as they are, no hit point comes back while starving: one goes every 10 minutes.
-    run(&mut w, "rest:1h");
+    // Hurt as they are, no hit point comes back while starving: one goes every 10 minutes, and
+    // each stops a rest.
+    run(&mut w, "rest:1h*6");
     assert_eq!(w.state.player().hp, 24);
     w.state.actors.get_mut(&player).unwrap().hp = 1;
     run(&mut w, "rest:1h");
@@ -333,6 +334,67 @@ fn starving_takes_hit_points_until_the_player_starves_to_death() {
     fed.state.actors.get_mut(&player).unwrap().hp = 30;
     run(&mut fed, "rest:1h");
     assert!(fed.state.player().hp > 30);
+}
+
+#[test]
+fn a_rest_stops_at_the_first_hit_point_starving_costs() {
+    let content = content_with(&[("chance = 5", "chance = 0")]);
+    let mut w = world_in(&content, "pantry");
+    set_nutrition(&mut w, -1);
+    let hp = w.state.player().hp;
+    let out = w.apply(&Action::Rest(Rest::For(Duration::hours(24))));
+    assert_eq!(w.state.player().hp, hp - 1);
+    assert!(out.elapsed <= Duration::minutes(10), "{:?}", out.elapsed);
+    assert!(said(&w, "You are wasting away from hunger."));
+    assert!(
+        texts(&w)
+            .last()
+            .unwrap()
+            .starts_with("You stop resting after")
+    );
+    // A rest begun Fainting stops as Starving begins, before it costs anything.
+    let mut w = world_in(&content, "pantry");
+    set_nutrition(&mut w, 1);
+    let hp = w.state.player().hp;
+    w.apply(&Action::Rest(Rest::For(Duration::hours(24))));
+    assert_eq!(hunger(&w), Hunger::Starving);
+    assert_eq!(w.state.player().hp, hp);
+    assert!(said(&w, "You are starving! Eat, or you will die!"));
+}
+
+#[test]
+fn other_long_actions_stop_on_getting_hungrier_but_not_on_each_hit_point() {
+    let content = content_with(&[("chance = 5", "chance = 0")]);
+    // A search of a hundred turns (ten minutes) stops as Hungry begins.
+    let mut w = world_in(&content, "pantry");
+    set_nutrition(&mut w, 1441);
+    let out = run(&mut w, "search:100").remove(0);
+    assert_eq!(hunger(&w), Hunger::Hungry);
+    assert!(out.elapsed < Duration::minutes(3), "{:?}", out.elapsed);
+    // While Starving it goes on through the hit point it costs: the words are the rest's alone.
+    let mut w = world_in(&content, "pantry");
+    set_nutrition(&mut w, -1);
+    let player = w.state.player;
+    let fed = (w.state.actors.get_mut(&player))
+        .and_then(|a| a.satiation.as_mut())
+        .expect("the player hungers");
+    fed.starving = 300;
+    let out = run(&mut w, "search:100").remove(0);
+    assert!(out.elapsed >= Duration::minutes(10), "{:?}", out.elapsed);
+    assert!(!said(&w, "You are wasting away from hunger."));
+}
+
+#[test]
+fn an_overworld_step_while_starving_says_nothing_for_each_hit_point() {
+    let content = content_with(&[("chance = 5", "chance = 0")]);
+    let mut w = world_in(&content, "world");
+    set_nutrition(&mut w, -1);
+    let hp = w.state.player().hp;
+    let before = w.messages().iter().count();
+    let out = w.apply(&Action::Move(Dir::E));
+    assert!(out.elapsed >= Duration::minutes(15));
+    assert!(w.state.player().hp < hp, "it costs hit points");
+    assert_eq!(w.messages().iter().count(), before);
 }
 
 #[test]

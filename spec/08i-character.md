@@ -694,8 +694,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
     (`animal`, `element`, `lucky`; §8 "Birth sign"); and any one of several (`either = { stats =
     { intelligence = 12 }, skills = { appraise = 20 } }`: "Intelligence 12 or Appraise 20").
     Never an alignment band (§8 "Alignment": alignment bars nothing). Refused in words: "You cannot
-    take Dodge: you need Dexterity 13." Ranks come one at a time ("You learn Hardy (2)."); a talent with a choice is
-    one pick per choice, each with its own ranks.
+    take Dodge: you need Dexterity 13." A talent is taken once ("You learn Hardy."), and only
+    Apprentice still has ranks, which come one at a time; a talent with a choice is one pick per
+    choice.
   - **Effects** (`TalentEffect`, summed into `TalentMods` by `Actor::talent_mods`, one read
     each): `dodge` and `natural` in Defence (natural armour on top of the creature type's own
     or a magic item's, or alone), `melee_damage` on both hands' blows (after the affixes,
@@ -710,19 +711,20 @@ developer notes (CLAUDE.md, `docs/dev/`).
     learner (cut in #774), Alert, Thick skin.
   - **Weaponcraft and Guard** (#238): `weapon` adds to the benefits of the chosen weapon skill
     or style (no `role`) or of every skill of a role, read in `Actor::benefit`, so every
-    attack, Defence, and price that reads a skill's benefits reads it: Weapon focus (+1 to hit;
-    its second rank +2 damage, Weapon specialization before #790), Improved critical (threat one roll wider), Stylist (the
+    attack, Defence, and price that reads a skill's benefits reads it: Weapon focus (+1 to hit),
+    Weapon specialization (after Weapon focus for the same skill, that skill at 5: its benefits
+    read a rank higher, never past 10), Improved critical (threat one roll wider), Stylist (the
     style's benefits one rank higher, never past 10, and only for a rank held), Two-weapon
     training (both two-weapon penalties eased by 2), Shield expert (Shield +1; Sword and
     Board's free bash 10 more likely where it has one), Deadly aim (+2 damage with shots),
     Thrower (+1 damage and 10 % cheaper throws), Rapid reload (reloading 25 % cheaper);
     `launcher_range` and `throw_range` (Far shot: +2 and +1 cells); `max_dex` (Armour
-    training: worn armour's Dexterity cap +1 a rank); `deflection` (Deflection +1);
+    training: worn armour's Dexterity cap +2); `deflection` (Deflection +1);
     `protection` (Heavy armour mastery: +1 while the armour piece worn with the most
     Protection has 3 or more; Shield wall: +1 while holding a shield); `stance_to_hit`
     (Stalwart: the defensive stance's to-hit penalty gone); `pain` (Immune
     to pain: a hit, a blow, shot, throw, or trap, does 1 less after the soak, never below 1;
-    a status's or starving's harm is no hit); `resist` (Elemental ward: 25 % a rank against
+    a status's or starving's harm is no hit); `resist` (Elemental ward: 25 % against
     the chosen element, any damage type that is no physical kind, summed and capped with the
     gear's). A weapon-skill choice is a skill that attacks: never shield blocking (it only
     defends) nor a style (chosen as a style). Steady hand (the ranger's focus) came with the
@@ -742,10 +744,12 @@ developer notes (CLAUDE.md, `docs/dev/`).
     each status's lowering of a score halved toward 0, raises untouched, `Effects::penalty_for`);
     `disease_checks` (Strong constitution, +2 on catching and on every progression) and
     `disease_recovery` (Fever-proof: a check fewer won in a row shakes a disease off, never
-    below 1, never one that does not recover); `free_blow` (Cleave, its second rank Great
-    cleave, a talent of its own before #790; Riposte, Opportunist); `kick_die` (Mighty kick: kicks
-    at creatures roll 1d6) and `door_kick` (Mighty kick, +4 a rank to a door kick's Strength);
-    `dig_percent` (Mighty kick's second rank, Breaker before #790: a quarter more work a turn); `two_handed_price` (Iron grip: blows with a two-handed weapon 10 % cheaper,
+    below 1, never one that does not recover); `free_blow` (Cleave, and Great cleave after it;
+    Riposte, Opportunist); `kick_die` (Mighty kick: kicks at creatures roll 1d6) and `door_kick`
+    (Mighty kick, +4 to a door kick's Strength); `kick_back` and `dig_percent` (Breaker, after
+    Mighty kick, Strength 14: a kick that hits drives the foe one cell along the kick when that
+    cell is walkable, untrapped, unfrozen, and empty, `World::knock_back`, no draw; a quarter
+    more work a turn of digging); `two_handed_price` (Iron grip: blows with a two-handed weapon 10 % cheaper,
     `World::attack_price`); `critical_status` (Staggering blow: a critical confirmed in melee
     leaves the target Staggered, `cost = 150` until its next action: that action half again
     as dear; `World::after_blow`, no draw of its own); `penetration` (Crusher: +2 on blows and kicks
@@ -754,7 +758,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     its difficulty first, two draws only with the talent; made, it does not go off and is found;
     pits never catch you; steps only, never a door's trap; the talent also has Silent feet's
     effects, folded into it: `footsteps_percent` -40 and `silent_doors`); `speed_percent` (Quick:
-    +5 % a rank, every price divided by it in `World::burdened`, as a higher speed; hidden in the
+    +5 %, every price divided by it in `World::burdened`, as a higher speed; hidden in the
     game); `missile_dodge` (Deflect missiles: Dodge +2 against shots, throws, and trap missiles,
     `World::target_against`); `spell_damage_percent` (Evasion: bursts and bolts, traps' and
     scrolls', do half, rounded down, before resistances). The statuses these name are checked
@@ -870,13 +874,13 @@ developer notes (CLAUDE.md, `docs/dev/`).
     came with #242: Deep well, Clear mind, Meditation, Frugal caster, Blood magic, §8 "Mana"). Their effects share what the class abilities use where the rules
     are the same (`checks` and `stat`: Iron will, +2 on Willpower checks and Presence +1). Iron will is a Grit talent the
     aristocrat's table also gives. #787 cut Keen appraiser, Silver tongue, and Well liked;
-    Haggler is the merchant's class ability alone. New: Scroll savant (Scholar, two ranks; #775 merged
-    Careful reader and Spell recall into it): at its first rank (Intelligence 13) `read_percent`
+    Haggler is the merchant's class ability alone. New: Scroll savant (Scholar; Intelligence 13; #775 merged
+    Careful reader into it): `read_percent`
     (reading takes half the time; with the wizard's Scroll adept a quarter, the least talents
     leave) and `spares_self` (the caster's own burst, a scroll's or a spell's, never catches
-    them, and the game does not warn before reading one close); at its second (Intelligence 15,
-    level 12) `scroll_kept` (one read in four keeps the scroll, one gameplay draw a read with
-    the rank, "The writing does not fade from the scroll."); `loot_magic_percent` (Treasure hunter: the weights of the rarities better than
+    them, and the game does not warn before reading one close); Spell recall (Scholar; after
+    Scroll savant, Intelligence 15, level 12) `scroll_kept` (one read in four keeps the scroll,
+    one gameplay draw a read with the talent, "The writing does not fade from the scroll."); `loot_magic_percent` (Treasure hunter: the weights of the rarities better than
     a find's least half again, so anything found is magic and rare more often and a creature's
     drop, always magic, rare more often; from the same draws of the loot streams, so a map never
     changes, and a level made before the talent keeps its loot); `skill_rolls` (Quick learner: a
@@ -909,7 +913,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     strength), `dig_percent` (Stonewise), `status_eases` and `no_penalty` (Regrowth's bleeding,
     Pure blood's poison), `disease_checks`, `speed_percent`.
   - **Damage-type talents** (#248; the design's §7.5 `#151` entries): Elemental ward (Guard;
-    2 ranks, To 12 / Lv 20; chosen for an element, any kind that is not physical: 25 % a rank,
+    To 12; chosen for an element, any kind that is not physical: 25 %,
     counted as gear in `Actor::resistances`, so it also shrinks the doses of a status that is
     damage, Poisoned for a ward against poison, and the character screen says "Resistant to
     fire" in words) and Crusher (Might; St 13, Maces and clubs or Unarmed 3: `penetration` +2
@@ -957,22 +961,20 @@ developer notes (CLAUDE.md, `docs/dev/`).
     spells sneak-attack 3 cells farther), beside Ambusher and the thief's Sneak attack, Improved
     sneak attack, Master thief, and Patient blade. The `danger` system (#326, §7 "Danger
     levels") came with Quiet delver (`spawn_every_percent`, Delver; Sixth sense was cut in #774). The `special_rooms` system (#402, §7
-    "Special rooms") came with Sense of place (cut in #787) and Old delver (Delver, two ranks, #775, which merged Light tread,
+    "Special rooms") came with Sense of place (cut in #787) and Old delver (Delver, #775, which merged Light tread,
     Anchored mind, Grave warden, Hallowed rest, and Hoard-wise into it and dropped Mirror-wise
-    and Treasure sense): at its first rank (Willpower 11 or Dexterity 12) `collapse_proof` (a
+    and Treasure sense; Willpower 11 or Dexterity 12): `collapse_proof` (a
     collapsed floor never gives way under them, `World::collapse_step`, which then draws
     nothing), `room_status_immune` `ebbing` (a draining room's or level's Ebbing never takes
     them, `World::dwell`), and `grave_warden` (nothing they kill rises in a cursed room,
-    `World::curse_corpse`); at its second (level 10) `room_pace_percent` 50 (where a room
+    `World::curse_corpse`); Old hand (Delver; after Old delver, level 10): `room_pace_percent` 50 (where a room
     quickens healing or mana, the quickening is half again more, `World::room_pace`: a
     sanctuary's 300 % becomes 400 %) and `hoard_grace` 1 (a tempting hoard seals only after the
-    second stack lifted inside it, `World::lift_in_hoard`); and Pious (Wayfarer, two ranks,
-    #788, which merged Devout, Penitent, and Pilgrim into it; also `talk`): at its first rank
-    (free) `devout` (at a forgotten altar of the player's own side the side's lean counts
+    second stack lifted inside it, `World::lift_in_hoard`); and Pious (Wayfarer, free,
+    #788, which merged Devout and Pilgrim into it; also `talk`): `devout` (at a forgotten altar of the player's own side the side's lean counts
     twice, at one of the other side not at all, `leaned_kinds`) and `pilgrim` (temple services
     cost half, rounded up, and a cure also mends a point of each damaged stat,
-    `world/service.rs`); at its second (Willpower 12, level 10) `penitent` (a great bane drawn
-    at a forgotten altar becomes one of the table's nothing lines, `World::prayer_answered`).
+    `world/service.rs`).
     Hush-foot (#405) was cut in #787.
     The `spells` system (the magic design §10, #400) came with the **Spellcraft** tree: Quick
     study (free, #396: study +2, study time −50 %), Overreach (level 6,
@@ -1040,9 +1042,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     quests, or XP** (#789): from class level 40 on a class ability changes what the character
     can do in a fight or a dungeon, and there is no XP or quest-reward effect at or above level
     30; a quest-reward effect is judged by its total over a campaign's fixed pool, not its
-    percent. **No clones, no chains of one effect** (#790): a class table names the pickable's
-    id, never a talent that does the same, and a talent whose one talent prerequisite shares an
-    effect kind with it is that talent's next rank; the load refuses either, but for the pairs
+    percent. **No clones** (#790): a class table names the pickable's
+    id, never a talent that does the same; the load refuses one, but for the pairs
     `alike` lists in `data/talents.toml` (Cleave and Cleaving strike, which stack into a great
     cleave; the birth signs' gifts). A pickable a class table gives that the character already
     picked brings a talent pick in its place at that level. **Flaws, the outdoors, hidden marks,
@@ -1337,7 +1338,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     5, 10, 15, 23, 28 (#874); thief (Finesse, Shadow, Delver) at 4, 10, 16, 22, 28, 34, 46, 58.
   - **The bard's 30 levels** (#874; the bard design §5): its table is the old one halved, every
     ability by 30 (Mend and Trained wind 1, Travelled hands 3, Fast healer 6, Inspire 9, Jack of
-    all trades 12 and its second rank 25, Throw your voice 16, Lullaby 20, Virtuoso 30), and the
+    all trades 12, Throw your voice 16, Lullaby 20, Master of none 25, Virtuoso 30), and the
     class ends there, `max_level = 30` ("Prestige classes" above): experience past it counts and
     buys nothing until the Hunter's calling, when Hunter 1 comes at total level 31.
   - **Actives**: Sic 'em (the ranger's, 40, #921: `use:sic:X,Y`, §8 "Allies": "Sic 'em"), Volley (the ranger's, 50: `Action::UseAt`, `use:volley:X,Y`, aimed at a cell
@@ -1427,13 +1428,11 @@ developer notes (CLAUDE.md, `docs/dev/`).
     `WeaponSkills::raise_to`, its defaults with it; "Your hands know every weapon a little.";
     the optional `skills` names the rows instead, for a later class's trade); Fast healer
     (the Vigour talent, given at 6; its copy Song of rest until #790: resting heals half again
-    as fast), Jack of all trades (two ranks, #872; the class table names the rank,
-    `{ level = 25, talent = "jack_of_all_trades", rank = 2 }`: rank 1 at 12, a hand-out once,
+    as fast), Jack of all trades (12, #872: a hand-out once,
     `take_up_skills { dice = "1d4+1", except = ["sneak_attack"] }`: every skill of the content
     the bard is not trained in, but Sneak attack, trained at 1d4+1 from the `levels` stream in
-    file order, `world/jack.rs`, "You find you know a little of everything."; rank 2 at 25,
-    "Your Jack of all trades grows.": every trained skill counts 5 higher, as a skill bonus in
-    `Actor::skill_effect`), Virtuoso (30, #874: every song costs nothing and gives a
+    file order, `world/jack.rs`, "You find you know a little of everything."), Master of none (25: `trained_skills`, every
+    trained skill counts 5 higher, as a skill bonus in `Actor::skill_effect`), Virtuoso (30, #874: every song costs nothing and gives a
     degree more; Inspire gives Inspired greatly, to hit +2 and Dodge +2 for 10 minutes, for
     nothing: neither mana nor inspiration).
   - **Resources**: the ranger's Focus (R2, #250), the thief's Openings (R3, #251), and the
@@ -1647,8 +1646,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     style is `hidden` (§7): no class or race gives it, it defaults to no style, and it is not
     listed (the weapon skills screen, the `weapon_skills` dump layer and its JSON, the Talents
     page for a talent that asks for it, Stylist's choices) until its owner has marks in it
-    (`WeaponSkills::shows`). Talent: Anvil and hammer (Two Shields 6: the follow-up 15 points
-    likelier).
+    (`WeaponSkills::shows`).
   - **Abilities**: a style's ranks teach abilities as weapon skills' do ("Weapon abilities"
     below), working only in the style's grip.
   - **What the player perceives**: their own ranks and marks (as weapon skills), and which

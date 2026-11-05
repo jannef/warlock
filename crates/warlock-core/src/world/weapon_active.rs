@@ -373,10 +373,11 @@ impl World {
         Some((target, seen))
     }
 
-    /// A foe the player's knockback `blow` hit is driven a cell on along `dir`, if that cell is
+    /// A foe the player's knockback `blow` (or Breaker's kick) hit is driven a cell on along
+    /// `dir`, if that cell is
     /// free (walkable, no trap, no ice, nobody there: a teleport's check, no draw), and suffers
     /// `status`. Into a wall or another it stays where it is; the blow landed all the same.
-    fn knock_back(
+    pub(super) fn knock_back(
         &mut self,
         target: ActorId,
         dir: Dir,
