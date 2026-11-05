@@ -60,6 +60,11 @@ touch = { cost = 70 }
 #   douses = true           puts out the fires on those cells
 #   fire = { light = "arrow_fire", burns = 60 }   a burst leaves a fire on its centre cell: light
 #            only, on that cell only (it never spreads)
+#   arc = { chance = 25 }   a ray, bolt, touch, or line strike that harms a creature jumps to the
+#            nearest beside it not yet struck, at the same roll, in percent, one draw a creature
+#   conducts = true         everyone standing in the body of water of a creature it harmed is
+#            struck at the same roll
 [types]
 fire = { words = "burns one in four", rider = { status = "burning", severity = 1, chance = 25 }, heat = true, fire = { light = "arrow_fire", burns = 60 } }
 cold = { words = "numbs", rider = { status = "sluggish", severity = 1 }, ends = ["burning"], frost = 100, douses = true }
+electricity = { words = "may arc, conducts", arc = { chance = 25 }, conducts = true }

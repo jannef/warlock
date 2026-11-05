@@ -31,6 +31,15 @@ struct TypeSpec {
     #[serde(default)]
     douses: bool,
     fire: Option<FireSpec>,
+    arc: Option<ArcSpec>,
+    #[serde(default)]
+    conducts: bool,
+}
+
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct ArcSpec {
+    chance: u8,
 }
 
 #[derive(Deserialize)]
@@ -76,6 +85,11 @@ pub struct SpellType {
     pub douses: bool,
     /// The fire a burst leaves on its centre cell: its light, and the seconds it burns.
     pub fire: Option<(LightId, u32)>,
+    /// The percent chance a single-target or line strike jumps to a creature beside the one it
+    /// harmed (`world/spell_arc.rs`).
+    pub arc: Option<u8>,
+    /// Whether it strikes everyone standing in the body of water of a creature it harmed.
+    pub conducts: bool,
 }
 
 /// Reads and checks `[types]` of `data/spells.toml`: every key a damage type, every status and
@@ -148,6 +162,13 @@ fn resolve(spec: TypeSpec, content: &Content) -> Result<SpellType, String> {
         }
         None => None,
     };
+    if spec
+        .arc
+        .as_ref()
+        .is_some_and(|a| !CHANCES.contains(&a.chance))
+    {
+        return Err("arc: `chance` is 1 to 100 percent".into());
+    }
     Ok(SpellType {
         words: spec.words,
         rider,
@@ -155,6 +176,8 @@ fn resolve(spec: TypeSpec, content: &Content) -> Result<SpellType, String> {
         ice,
         douses: spec.douses,
         fire,
+        arc: spec.arc.map(|a| a.chance),
+        conducts: spec.conducts,
     })
 }
 
@@ -187,6 +210,9 @@ mod tests {
         assert!(cold.douses);
         assert!(content.spell_type(None).is_none());
         assert!(of("slashing").is_none(), "a blow's type has no entry");
+        let electricity = of("electricity").expect("electricity");
+        assert_eq!(electricity.arc, Some(25));
+        assert!(electricity.conducts);
     }
 
     #[test]
@@ -214,6 +240,8 @@ mod tests {
                 "no severity",
             ),
             ("cold = { heat = true, frost = 100 }", "not both"),
+            ("cold = { arc = { chance = 0 } }", "`chance`"),
+            ("cold = { arc = { chance = 101 } }", "`chance`"),
             ("cold = { words = \" \" }", "`words`"),
             ("cold = { nonsense = true }", "nonsense"),
             ("nether = { douses = true }", "unknown damage type `nether`"),
