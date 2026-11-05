@@ -12,7 +12,7 @@ damage_type = "poison"
 range = 8
 radius = 2
 damage = "2d6"
-effect = { status = "poisoned", severity = 2 }
+effect = { status = "poisoned", severity = 1 }
 
 [spell.cast]
 effect = "blight"

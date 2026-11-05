@@ -375,11 +375,24 @@ cast path shares.
     time lost, scroll kept (design §14 q1, the default). Done: the scroll is found again by
     object (positions may shift), the `study` use is trained, the odds are taken now, the
     scroll used up (`use_scroll`, never Scroll savant's keeping: §14 q7, decided no), then the check.
-  - **Odds** (`study_odds(actor, content, character, caster_level, spell) -> Odds`, pure;
-    `World::player_study_odds`): `Odds::overreach` = the spell's level − the caster level; at 0
+  - **Learning, the number** (`Actor::learning(content) -> Option<i32>`, #987,
+    `docs/design/no-caster-level.md` §2): the `learn` benefit (`skills::Effect::Learn`, Spellcraft's
+    in `data/skills.toml`; ceiling `MAX_SPELL_LEVEL`) through `Actor::skill_effect`, so skill
+    affixes and the talents' `skill` bonuses count, at least 1; `None` when
+    `Skills::trains_effect(Effect::Learn)` is false, whatever bonuses are worn. `None` means no
+    learning at all: `study_odds` gives none, `PerceptionView::studies` lists nothing,
+    `PerceptionView::can_learn` is false (the study list says `world::UNTRAINED` instead of its
+    empty words), `start_study` refuses with `UNTRAINED` after the other refusals and before any
+    time. The dev `progress` layer prints `learning 36 (Spellcraft 108)` (the trained value,
+    before what items and talents add) or `cannot learn: not trained in Spellcraft`. Study is no
+    ability, so the `abilities` layer and `Unavailable` have no row for it. Caster level is not
+    read here any more; a class's granted spells (`TalentMods::has_spell`) never read this.
+    Starting Spellcraft is the class files' (`docs/dev/character-creation.md`).
+  - **Odds** (`study_odds(actor, content, character, spell) -> Option<Odds>`, pure;
+    `World::player_study_odds`): `Odds::overreach` = the spell's level − the learning; at 0
     or less `check: None` (certain, no draw), unless the spell's `study_difficulty`
     (`SpellData::study_difficulty`, −20 to 40, default 0; the owner's Q7 of #828: the calls'
-    scrolls are very hard to learn) is above 0, which makes it a check at any caster level with
+    scrolls are very hard to learn) is above 0, which makes it a check at any learning with
     the overreach counted as at least 0; else `(bonus, difficulty)`: Intelligence
     modifier + `skill_effect(Effect::Study)` + the class's affinity with the school +
     `TalentMods::study_bonus`, against `StudyRules::difficulty(overreach′, known levels)`, where
@@ -649,7 +662,24 @@ What every spell of a damage type does beyond its damage (the design:
     (`learn.rs::backfire_spell` goes through `spell_lands` for it, so the scroll's own status
     falls on the reader too).
   - `cast_burst` (`world/spell.rs`) for `Caster::Actor` only: the ice (`burst.ice`, a spell's own
-    `heat` or `frost`, or else the type's), then `spell_type_burst` (`douses`, `fire`).
+    `heat` or `frost`, or else the type's), then `spell_type_burst` (`shatter`, `douses`, `fire`).
+    With a `blast`, `doors_blasted` lists the shut doors before `World::blast`, so a blast never
+    reaches a door through a wall it breaks, and `blast_doors` breaks them after it. `shatter` reads
+    the burst's `blast` × `SHATTERS_UM` (100 µm a point: Shatter's 1000 is ice under 10 cm, what
+    bears a person; `blast` as µm would be a 1 mm skin that bears no one).
+  - `spell_type_bite` in `spell_strikes` (`world/spell.rs`), after Poison lore's bite and before
+    `resisted`: `bite` reads the target's hit points now.
+  - `spell_type_shove` in `spell_strikes`, after `wounded`, on one who lives: `combat::big_hit` on
+    the hit points taken, or a confirmed critical. Away from `source.0` (a burst's centre, a ray's
+    caster), else from the caster for the one at the centre; the caster there has no way and
+    stays. A status blocking `Step` holds it (`Effects::blocking`). `weapon_active.rs::drive_back`
+    moves it and pushes `Event::ActorMoved` to `made`; `read.rs::say_spell` reports it after the blow
+    (`knock_back`'s direct `say` would come before it) and a blast's `Event::DoorBroken`, seen, too.
+  - `immune_tags` has no hook on the cast path: `spell_type::lay_immunities` at load (after
+    `load_creatures`) sets the type to `IMMUNE` on the `resist` of every creature type of the tag,
+    so `Actor::resistances`, Knowledge's `known_resistances`, the creature's description, and the
+    wiki all read it, and no creature file names it. It stands against any harm of the type, as a
+    `resist` line does: a Withering blade too, though no blow reads the rest of the table.
     `Caster::Trap` and `Caster::Place` keep their own data and read no type. Blaze is not on this
     path.
   - `spell_type_cell` in `cast.rs`: at radius 0, on the cell of the creature a single-target spell
@@ -694,10 +724,14 @@ What every spell of a damage type does beyond its damage (the design:
   shipped user, for a talent that wants one (`when = ["fire"]` works beside the type's own).
 - **Determinism**: one `below(100)` per living creature harmed, only for a `chance` below 100,
   in `spell_lands`' order; before those, one per creature harmed with someone to arc to, past the
-  certain jumps and below a chance of 100, in the order struck. **Saves**: nothing new: a status is data, a fire is `LevelState::fires`.
+  certain jumps and below a chance of 100, in the order struck; the rest draw nothing. **Saves**: nothing new: a status is data, a fire
+  is `LevelState::fires`, a broken door terrain.
 - **Tests**: `world/spell_type_tests.rs` (the draw by seed, the fire-immune, the light, water, the
   numbing on hit and miss, cold ending Burning, a ray's one cell, a burst by its type, a spell's
   own field, the fire left and doused, a place's burst reading nothing, the rider hook, the words,
   a mishap), `world/spell_arc_tests.rs` (the arc's draw by seed, the jump back at the caster and an
   ally, a chain's jumps and end, the wall, the pond in id order, Conductor, ice, a burst, the
-  `arcs` load checks), `content/spell_type.rs` (the load checks).
+  `arcs` load checks), `world/spell_type_force_tests.rs` (a big hit and a small, a critical, the held, a
+  burst outward and its centre, the report's order, doors locked and trapped, chests, Fireball's
+  doors, thin ice and a plunge, poison and Blight's two, the bite's edge, the undead in the dump,
+  Corroded's ticks), `content/spell_type.rs` (the load checks).

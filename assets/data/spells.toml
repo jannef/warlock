@@ -64,7 +64,19 @@ touch = { cost = 70 }
 #            nearest beside it not yet struck, at the same roll, in percent, one draw a creature
 #   conducts = true         everyone standing in the body of water of a creature it harmed is
 #            struck at the same roll
+#   shove = true            a blow of at least a third of the target's maximum hit points, or a
+#                           critical, knocks it a cell away from the cast's origin
+#   shatter = true          a burst's `blast` shatters ice thinner than a tenth of a mm per point
+#   doors = true            a burst's `blast` breaks the shut doors it reaches, locks and traps
+#                           and all (a chest is every blast's already)
+#   bite = { below_percent = 50, percent = 150 }   the harm, before resistance, against a target
+#            below that share of its maximum hit points, rounded down
+#   immune_tags = ["undead"]   creatures of a tag are immune to the type, whatever harms them
 [types]
 fire = { words = "burns one in four", rider = { status = "burning", severity = 1, chance = 25 }, heat = true, fire = { light = "arrow_fire", burns = 60 } }
 cold = { words = "numbs", rider = { status = "sluggish", severity = 1 }, ends = ["burning"], frost = 100, douses = true }
+force = { words = "shoves on a big hit", shove = true, shatter = true, doors = true }
+poison = { words = "poisons", rider = { status = "poisoned", severity = 1 } }
+necrotic = { words = "bites the wounded", bite = { below_percent = 50, percent = 150 }, immune_tags = ["undead"] }
+acid = { words = "keeps eating", rider = { status = "corroded", severity = 1 } }
 electricity = { words = "may arc, conducts", arc = { chance = 25 }, conducts = true }

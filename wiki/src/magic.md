@@ -3,7 +3,7 @@
 A **spell** is cast from the [abilities menu](abilities.md#the-abilities-menu) (`a`), under its own heading *Spells*, and paid in
 [mana](mana.md). You know a spell for good once your class gives it or once you have learned it
 from a scroll (below). Every spell is measured by the same rules below: its [spell level](#spell-levels), its
-[shape](#shapes), and how it finds its target; your [caster level](#caster-level) is what you can learn.
+[shape](#shapes), and how it finds its target; your [learning](#learning) is what you can learn.
 
 ## What your class gives
 
@@ -12,8 +12,7 @@ caster a [cantrip](#spell-levels) at level 1 and about four in all (the [wizard]
 with a short [cone](#shapes) that needs no hit roll, [Burning hands](#spell-burning-hands) and [Grave breath](#spell-grave-breath): good for a
 fight with a few weak foes, and a few casts empty the pool), a bard, a paladin, or a ranger a cantrip or a
 boon, and the rest none. Every other spell is learned from scrolls, so a caster who finds few
-scrolls stays a modest one. A spell a class gives never comes above your [caster level](#caster-level) at the level
-it comes.
+scrolls stays a modest one. A spell your class gives is yours at that level, whatever your [Spellcraft](skills.md#skill-spellcraft).
 
 {{#include generated/class-spells.md}}
 
@@ -50,24 +49,46 @@ study it, the [scroll of identify](scrolls.md#scroll-of-identify) [Identify](#sp
 
 ## Spell levels
 
-Every spell has a level, 0 to 70. It is the spell's base [mana](mana.md#spending-it) cost, and the [caster level](#caster-level) at which you
+Every spell has a level, 0 to 70. It is the spell's base [mana](mana.md#spending-it) cost, and the [learning](#learning) at which you
 learn it from a scroll for certain. A spell of level 0 or 1 is a *cantrip*: it costs 1 mana (but for the few that
 name a price of their own: [Burning hands](#spell-burning-hands) and [Grave breath](#spell-grave-breath) cost 3), and
-anyone with mana learns it for certain. What a spell does is its own roll and ladders (the list
+anyone trained in [Spellcraft](skills.md#skill-spellcraft) learns it for certain. What a spell does is its own roll and ladders (the list
 above), whatever its level.
 
-## Caster level
+## Learning
 
-Your caster level is how far your learning reaches: a scroll of a spell at or below it teaches
-you for certain; above it, the study is a check (see [Learning](#learning-spells-from-scrolls)). It never changes what a
-spell does or costs: your [stats](stats.md) grow a spell (see [How a spell grows](#how-a-spell-grows)), and your
+Your **learning** is how far your study of magic reaches: a scroll of a spell at or below it
+teaches you for certain; above it, the study is a check (see [Learning spells from
+scrolls](#learning-spells-from-scrolls)). It never changes what a spell does or costs: your
+[stats](stats.md) grow a spell (see [How a spell grows](#how-a-spell-grows)), and your
 [mana](mana.md#how-much) is what holds you back.
 
-It is your [level](experience.md#levels) times your class's **casting** share, rounded down, plus what [talents](talents.md) and
-[magic items](magic-items.md) (*of the Adept*) add; anyone with any [mana](mana.md#how-much) has at least caster level 1. Everyone
-learns a little: a level-30 [warrior](classes.md#warrior) is a caster of level 7. A [wizard](classes.md#wizard)'s *[Arcane
-training](talents.md#talent-arcane-training)* adds a caster level for every 5 [character levels](experience.md#levels), so a level-30 [wizard](classes.md#wizard) learns spells
-of level 36 for certain; *[Attuned](talents.md#talent-attuned)* counts the caster level your magic items give half again.
+It comes from the [Spellcraft](skills.md#skill-spellcraft) skill and nothing else: the skill's
+value, with what [magic items](magic-items.md) (*of the Scholar*) and [talents](talents.md) add
+to it, read on this curve, and at least 1. The first fifty points buy the cantrips and the first
+spells, the soft cap of 100 reaches level 30, and 150 the last spell level:
+
+{{#include generated/learning.md}}
+
+**A character not trained in Spellcraft cannot learn a spell from a scroll at all**, cantrips
+included: the study is refused, and takes no time. Trained means the skill is among your
+[skills](skills.md); an item's or a talent's bonus to a skill you do not have does not train you.
+You can still read a scroll to [cast it](scrolls.md#spell-scrolls), and your class's own spells
+still come at their levels.
+
+Every class that casts starts trained, and [its dice are in the class table](skills.md):
+[wizards](classes.md#wizard), [witches](classes.md#witch), [priests](classes.md#priest), and
+[druids](classes.md#druid) 2d6+10; [bards](classes.md#bard), [paladins](classes.md#paladin), and
+[rangers](classes.md#ranger) 2d4+4; an [aristocrat](classes.md#aristocrat) one time in three (35 %, 2d4+4)
+and an [ascetic](classes.md#ascetic) one in five (20 %, 2d4). Other classes do not start with it. Two
+[background stories](background.md) add to it, for classes that already have it, and level-up rolls raise it like any other skill.
+
+### Caster level
+
+Your caster level no longer decides what you can learn. It is your
+[level](experience.md#levels) times your class's **casting** share, rounded down, plus what
+[talents](talents.md) and [magic items](magic-items.md) (*of the Adept*) add; nothing in play
+reads it now, and it is on its way out of the game.
 
 {{#include generated/spell-casting.md}}
 
@@ -75,7 +96,7 @@ of level 36 for certain; *[Attuned](talents.md#talent-attuned)* counts the caste
 
 A spell's mana is its [level](#spell-levels), at least 1, times its [shape](#shapes)'s share (below), times its
 [resolution](#how-a-spell-finds-its-target)'s (a touch is cheaper), times what your [armour](objects.md#class-body-armour) adds, rounded to the
-nearest point once at the end and never below 1. Your [caster level](#caster-level) never counts: a spell you know
+nearest point once at the end and never below 1. Your [learning](#learning) never counts: a spell you know
 costs the same whoever you are, and your [mana](mana.md#how-much) is what holds you back. Then your talents, their
 percents added up and rounded down, never below 1: *[School focus](talents.md#talent-school-focus)* takes 10 % off the spells of its
 school or element, *[Archmage](talents.md#talent-archmage)* 50 %, and *[Empower](talents.md#talent-empower)* 10 %, and *[Brimming](talents.md#talent-brimming)* adds 10 %; and then *[Frugal caster](talents.md#talent-frugal-caster)* takes a fifth off,
@@ -174,6 +195,23 @@ when no creature not yet struck is within reach of the last, or the last took no
 strikes, else the cell you aimed at. So [Ray of frost](#the-spells) makes a bridge across a lake, a cell a cast.
 A line does it to the last cell it reaches, a cone not at all.
 
+**Force pushes.** A force spell that takes at least a third of a creature's [hit points](combat.md#hit-points), or lands a
+[critical](combat.md#criticals), knocks it a cell away: from the centre of a burst, from you otherwise, and from you too for
+the one at the burst's centre. A cell that is not free stops it, and so does [being held or webbed](status-effects.md#status-held); you do not
+move when you are at the centre of your own burst, though you take the harm. A force burst with a blast
+breaks the [shut doors](doors.md) it reaches, however sturdy, locked or trapped, the trap going with the door and
+striking no one; [chests](chests.md) break under any blast below their hardness. It also shatters thin [ice](temperature.md#water-freezes), and whoever
+stands on that ice falls in. A fire blast leaves doors standing.
+
+**Poison lingers.** Every creature a poison spell harms is [Poisoned](status-effects.md#poisoned) a degree, besides what the spell's own
+line says.
+
+**Death takes the dying first.** A necrotic spell does half again as much, rounded down, to a creature below
+half its hit points, before what it resists. The undead are immune to necrotic harm.
+
+**Acid keeps eating.** Every creature an acid spell harms is [Corroded](status-effects.md#corroded) a degree: two more hit points in the
+next twelve seconds. Acid does not eat armour.
+
 ## How a spell grows
 
 Each spell's row lists its ladders: a stat and the scores at which the spell changes. Your score
@@ -224,7 +262,9 @@ spell for good, and uses the scroll up whatever comes of it.
 You can study a scroll once you know what it is (you have read one like it, or [identified](magic-items.md#unidentified-items) it)
 and only if you do not know its spell yet; an unknown scroll is refused ("You do not know what
 this says."), so [identify](magic-items.md#unidentified-items) your scrolls first. A scroll of a spell you know can still be read,
-sold, or given away. You need some [mana](mana.md#how-much) to learn at all.
+sold, or given away. You need some [mana](mana.md#how-much) to learn at all, and training in
+[Spellcraft](skills.md#skill-spellcraft): without it the study is refused, and takes no time ("You have no training in
+Spellcraft; you cannot make sense of how to learn a spell from a scroll.").
 
 A study takes time, by the spell's level: 10 minutes and 2 more a level, at a normal pace (Fireball,
 level 11: 32 minutes):
@@ -235,15 +275,15 @@ The world goes on around you. A creature coming into view, a blow, or anything e
 stop a rest stops the study: the time is lost, but you keep the scroll. Once you begin, you
 cannot stop of your own accord.
 
-A spell of a level at most your [caster level](#caster-level) is learned for certain. Above it, every level too
+A spell of a level at most your [learning](#learning) is learned for certain. Above it, every level too
 high (the **overreach**) makes it harder: a roll of 2d12 plus your bonus must reach the difficulty,
 12 + 1 per level of overreach (*[Overreach](talents.md#talent-overreach)* counts a third fewer, rounded down), a point more for
 every 20 levels of the spells you already know, added up. Your bonus is your [Intelligence](stats.md#stat-intelligence) [modifier](stats.md#modifiers), a tenth of your
 *[Spellcraft](skills.md#skill-spellcraft)* and of your *[Decipher script](skills.md#skill-decipher-script)* (each at most +20), your class's affinity with the
 spell's school, and *[Quick study](talents.md#talent-quick-study)*'s +2. A natural 24 always succeeds and a natural 2 always fails.
 A few spells are harder to learn than their level says: their own difficulty is added to the
-check, and a spell made harder this way is never learned for certain, however high your caster
-level (its overreach then counts as 0). [The spell list](#the-spells) says which, and by how much.
+check, and a spell made harder this way is never learned for certain, however high your
+learning (its overreach then counts as 0). [The spell list](#the-spells) says which, and by how much.
 The game tells you the chance in words: *certain*, *easy*, *a struggle*, or *far beyond you*.
 
 {{#include generated/study-chances.md}}
@@ -258,6 +298,7 @@ the spell may come your way again.
 {{#include generated/mishaps.md}}
 
 Studying trains *[Spellcraft](skills.md#skill-spellcraft)*, *[Decipher script](skills.md#skill-decipher-script)*, and your [Intelligence](stats.md#stat-intelligence), whatever comes of it.
+Spending [mana](mana.md) on a spell also trains *[Spellcraft](skills.md#skill-spellcraft)*, one time in four.
 In a [scriptorium](special-rooms.md#room-scriptorium) ([Special rooms](special-rooms.md)) [Decipher script](skills.md#skill-decipher-script)'s mark is twice as likely,
 so certain.
 

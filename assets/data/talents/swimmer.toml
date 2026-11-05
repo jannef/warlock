@@ -5,7 +5,7 @@ tree = "wayfarer"
 description = "Water does not slow you: you wade as quickly as you walk, and a plunge through the ice never hurts you."
 needs = { skills = { swim = 1 } }
 effects = [
-    { kind = "terrain_as", terrains = ["water", "running_water", "shallow_water"], like = "floor" },
+    { kind = "terrain_as", terrains = ["water", "running_water", "shallow_water", "deep_water"], like = "floor" },
     { kind = "plunge_proof" },
 ]
 systems = ["wading", "ice"]

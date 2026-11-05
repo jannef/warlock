@@ -253,6 +253,7 @@ fn special_rooms(canvas: &mut Canvas, rng: &mut Rng, rooms: &[Room], up_room: us
 /// Stamps one vault at a random spot that leaves room for corridors to its entrances.
 fn place_vault(canvas: &mut Canvas, rng: &mut Rng, rooms: &mut Vec<Room>) {
     for v in vault::shuffled(canvas, rng) {
+        let v = vault::turned(v, rng);
         let (max_x, max_y) = (
             canvas.width() - 2 - v.width(),
             canvas.height() - 2 - v.height(),
@@ -261,10 +262,10 @@ fn place_vault(canvas: &mut Canvas, rng: &mut Rng, rooms: &mut Vec<Room>) {
             continue;
         }
         let at = Pos::new(rng.range(2, max_x), rng.range(2, max_y));
-        if !vault::fits(canvas, v, at) {
+        if !vault::fits(canvas, &v, at) {
             continue;
         }
-        let doors = vault::stamp(canvas, v, at);
+        let doors = vault::stamp(canvas, &v, at);
         rooms.push(Room {
             x: at.x,
             y: at.y,

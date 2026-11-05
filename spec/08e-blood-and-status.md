@@ -118,7 +118,20 @@ developer notes (CLAUDE.md, `docs/dev/`).
       the hold's own `difficulty` (13). Made, "You break free of the ghast." and the step goes
       ahead; failed, "You struggle, but the ghast holds you fast." and the turn is spent (a
       step's price). Creatures never struggle. A hold no one caused (`afflict:held`) ends only by
-      its turns or a struggle. Drowning grip's Held is the same status;
+      its turns or a struggle. Drowning grip's Held is the same status. A trained **Escape
+      artist** (no action, no ability row, no key: the check is part of the attempt, #1015) takes
+      the better of Strength and Dexterity, each with what talents add to its checks, plus the
+      skill's `escape` (+8 at 100, +12 at 200, at most 20) in this check, and the same, without
+      Knowledge, against other **bonds**: a status with `escape = DIFFICULTY` (Webbed, Pinned: 13;
+      Staggered, Stunned, Surprised, Transfixed, Sluggish, and Drowsy are no bonds). The first
+      status blocking the action's kind asks: made, it ends with its own `end` line and the
+      action goes ahead at its price; failed, the action's price, "You struggle, but you are still
+      caught in a web." (its `seen`). A second status blocking the same action asks on the next
+      attempt, and `refuse_blocked` refuses this one. Untrained, Webbed and Pinned refuse the
+      action, no time, as any blocking status does. A marked status that only slows (none in the
+      data today) takes the same check as the action is tried: made, it ends and the action costs
+      its plain price; failed, the action goes ahead slowed, at no extra cost. Two draws of the
+      gameplay stream a check; each marks `escape` (100 %) and `struggled`;
     - **be followed** (`follows = "exhausted"`): as it ends, worn off or cured, the status it names
       begins at one degree, caused by whoever caused the one that ended (Raging, then Exhausted:
       the ending's message, then the beginning's). A chain never leads back to where it began, a
@@ -323,7 +336,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
   - **Guaranteed spells** (design §8): a class's level table (`abilities`, §8 "Class
     abilities") gives its spells as class abilities with a `spell` effect, at the level each
     comes at, never above the class's caster level then (character level × `casting` ÷ 100, at
-    least 1; the content test). Wizard: Ray of
+    least 1; the content test, until #990 removes that clause), whatever the character's
+    Spellcraft. Wizard: Ray of
     frost (1), Burning hands (1), Magic missile (3), Arcane bolt (18), Chain lightning (24). Priest: Mend (1),
     Blessing (3), Cure wounds (3) (their rite is the prayer, §8i). Druid: Spark (1), Barkskin (3), Call of
     the wild (6), Call lightning (12), Call of the forest (25), Call the elements (40), Flame and
@@ -348,9 +362,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
     levels more often (§7 "Shops").
   - **Levels** (the spell scaling design §5, decisions 1, 9, 10, 16): a spell has a **level**,
     0 to 70 (`MAX_SPELL_LEVEL`), one number with two meanings: its **base mana** (the level, at
-    least 1) and the **caster level at which a scroll of it teaches for certain**. A spell of
+    least 1) and the **learning at which a scroll of it teaches for certain** ("Learning" below). A spell of
     level 0 or 1 is a *cantrip* (1 mana unless it names its own `mana`, as Burning hands and Grave
-    breath do, 3; anyone with mana learns it for certain). There is no
+    breath do, 3; anyone trained in Spellcraft learns it for certain). There is no
     table of levels, no ceiling, and no check on how much a spell of a level may do: its own
     data says it (decision 16). A `tier` key is refused, saying to use `level`.
   - **Cost table** (`data/spells.toml`): the **shapes** multiply the base mana (ray, bolt,
@@ -431,7 +445,19 @@ developer notes (CLAUDE.md, `docs/dev/`).
     Burning 1, one time in four per creature harmed; melts ice; `arrow_fire` for 60 s. **Cold**:
     Sluggish 1, certain; ends Burning; `frost = 100`; douses. **Burning** (`data/status.toml`):
     max 3, adding; 1 hit point of fire per 10 s at one degree, a degree easing per 30 s; sheds the
-    `ember` light; a step or a fall into water ends it (`quenched`). **Electricity** spreads from
+    `ember` light; a step or a fall into water ends it (`quenched`). **Force**: `shove`, after
+    the hurt, on one who lives: a blow of at least ⌈max hp / 3⌉ taken or a confirmed critical knocks
+    it a cell away from the cast's origin (a burst's centre, else the caster; the one at a burst's
+    centre from the caster, and the caster there stays), if the cell is free; a status that blocks
+    a step holds it. `shatter`: a burst's `blast` shatters ice thinner than 100 µm a point
+    (`Shock::Blast`). `doors`: a burst's `blast` breaks the closed doors in its line of sight, as it
+    stood before the blast, with a `breaks_to`, no check, lock and trap gone, sprung at no one; a
+    chest is any blast's already. **Poison**: Poisoned 1, certain (Blight's own line is 1). **Necrotic**:
+    `bite`, before resistance: 150 % of the harm, rounded down, against a target below 50 % of its
+    maximum hit points; `immune_tags = ["undead"]`: laid on those creature types' `resist` at load,
+    so an immunity to the type from whatever harm. **Acid**: Corroded 1, certain; never armour.
+    **Corroded** (`data/status.toml`): max 3, adding; 1 hit point of acid per 6 s, a degree easing
+    per 12 s: two points a degree. **Electricity** spreads from
     every creature it harmed, at the cast's one roll, with no roll to hit and no Evasion, and
     spares no one, the caster included. `conducts`: everyone standing in that creature's body of
     water (open water connected over 8 neighbours, on terrain with a `freeze` table; ice is not
@@ -503,9 +529,24 @@ developer notes (CLAUDE.md, `docs/dev/`).
     the `caster_level` talent effect (racial and birth-sign gifts are talents; flat, or `value`
     per `per_levels` character levels: the wizard's Arcane training, +1 per 5) and affix effect;
     never below 0, and at least 1 for anyone whose maximum mana is
-    above 0. It sets learning only; never a spell's roll, reach, or mana (decisions 1 and 10). The player knows
+    above 0. It sets nothing in play since learning became Spellcraft's (#987; the no-caster-level
+    design removes the rest, #990); never a spell's roll, reach, or mana (decisions 1 and 10). The player knows
     it: the dump `stats` layer's `Caster level N` (after the scores), JSON dumps' `caster_level`
     (`PerceptionView::own_caster_level`).
+  - **Learning, the number** (`Actor::learning`, `world/learn.rs`; derived, never stored;
+    `docs/design/no-caster-level.md`, #987): what a scroll teaches for certain comes from the
+    Spellcraft skill and nothing else, its `learn` benefit (`data/skills.toml`: 0 to 10, 10 at 60,
+    30 at the soft cap 100, 70, the last spell level, from 150) at the skill's value with what
+    skill affixes and the talents' `skill` bonuses add (`Actor::skill_effect`), **at least 1** for a
+    character trained in Spellcraft. A character **not trained** in it (the skill not in their
+    trained set: an item's or a talent's bonus to a skill they do not have trains nobody) has no
+    learning and cannot study a scroll at all, cantrips included: refused, no time, "You have no
+    training in Spellcraft; you cannot make sense of how to learn a spell from a scroll." Reading a
+    scroll to cast it, and the spells a class grants, need no Spellcraft. Starting Spellcraft by
+    class (§7e): wizard, witch, priest, druid `2d6+10`; bard, paladin, ranger `2d4+4`; aristocrat
+    35 % `2d4+4`, ascetic 20 % `2d4` (optional skills); no other class, race, or birth sign gives
+    any; two background lines add to it (both name classes that have it already), and it grows by
+    level-up rolls as any skill. Nothing else trains it: a character without it stays without it.
   - **Learning** (`world/learn.rs`, `content/learning.rs`; #396): a character knows a set of
     spells for good: those their class abilities give and those they learned
     (`Actor::spells`, saved by id, left out of the JSON while empty). Either kind is cast from
@@ -527,9 +568,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
       is said: a blow lands, a status begins); an interrupted study loses the time and keeps the
       scroll (design §14 q1). Once begun, the player cannot stop it themselves.
     - **The check**, as the last turn ends, on the scroll used up (Scroll savant never keeps a
-      studied scroll, design §14 q7): overreach is the spell's level less the caster level. At
+      studied scroll, design §14 q7): overreach is the spell's level less the learning. At
       0 or less the spell is learned, no draw, unless the spell is made hard to learn
-      (`study_difficulty` above 0: a check at any caster level, overreach counted as at least
+      (`study_difficulty` above 0: a check at any learning, overreach counted as at least
       0). Above, a 2d12 check with
       the Intelligence modifier + the skills' `study` benefit (Spellcraft and Decipher script,
       each value ÷ 10, at most 20) + the class's `affinity` with the spell's school
@@ -552,7 +593,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
       spell learned anyway. A failure loses only that scroll: the spell can come again.
     - **Training**: the `study` use (Spellcraft's and Decipher script's marks; an Intelligence
       mark), whatever comes of it; in a scriptorium (§7 "Special rooms") Decipher script's
-      mark is twice as likely.
+      mark is twice as likely. Spending mana on a spell is practice for Spellcraft too (its `cast`
+      mark, 25 %, as Concentration's); reading a scroll to cast it marks nothing of its own.
     - **Determinism**: the check's two gameplay draws only when there is a check, the mishap's
       one only on a failure, then its effect's own.
     - **Shown**: the chance in words only (`StudyRules::words`: "certain", "easy" from 96 of 144

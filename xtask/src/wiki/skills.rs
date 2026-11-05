@@ -58,8 +58,11 @@ pub(super) fn gated_effect(effect: Effect) -> bool {
     matches!(
         effect,
         Effect::Spot
+            | Effect::Learn
             | Effect::Identify
             | Effect::Disarm
+            | Effect::Escape
+            | Effect::Climb
             | Effect::Pick
             | Effect::Steal
             | Effect::Heal
@@ -88,6 +91,7 @@ fn effect_name(effect: Effect) -> &'static str {
         Effect::Spot => "noticing hidden things in passing, not traps",
         Effect::DetectTraps => "finding hidden traps, searching and in passing",
         Effect::Study => "studying spells from scrolls",
+        Effect::Learn => "what a scroll teaches for certain",
         Effect::Disarm => "disarming traps",
         Effect::Burden => "less slowdown from your load",
         Effect::Travel => "quicker journeys on the overworld",
@@ -106,6 +110,8 @@ fn effect_name(effect: Effect) -> &'static str {
         Effect::SurpriseEase => "less time lost when you are surprised",
         Effect::Heal => "treating your bleeding, poison, and diseases",
         Effect::Tame => "taming beasts at all, and better",
+        Effect::Escape => "slipping bonds",
+        Effect::Climb => "out of a pit quicker",
         Effect::Pick => "picking locks",
         Effect::Intimidate => {
             "your threats and your war cry are harder to stand against, and a threat frightens longer"
@@ -114,7 +120,9 @@ fn effect_name(effect: Effect) -> &'static str {
         Effect::SongCraft => "your songs are harder to shake off",
         Effect::Temper => "tempering at a forge's anvil",
         Effect::Wade => "wading through water and marsh is quicker",
-        Effect::Swim => "a plunge through the ice may hurt half as much",
+        Effect::Swim => {
+            "a plunge through the ice may hurt half as much, and a step in deep water goes as you meant it"
+        }
         Effect::ManaRegen => "mana back faster",
         Effect::MaxMana => "a slightly larger mana pool (at most a fifth more)",
         Effect::Speed => "quicker in everything",
@@ -143,6 +151,7 @@ pub(super) fn skill_benefits(content: &Content) -> String {
             Effect::Spot => "noticing",
             Effect::DetectTraps => "finding traps",
             Effect::Study => "study check",
+            Effect::Learn => "learning",
             Effect::Disarm => "disarming traps",
             Effect::Burden => "Burdened / Strained",
             Effect::Travel => "journeys",
@@ -161,13 +170,15 @@ pub(super) fn skill_benefits(content: &Content) -> String {
             Effect::SurpriseEase => "surprise's extra cost",
             Effect::Heal => "treating",
             Effect::Tame => "taming",
+            Effect::Escape => "slipping bonds",
+            Effect::Climb => "a pit's climb",
             Effect::Pick => "picking locks",
             Effect::Intimidate => "threat's difficulty",
             Effect::SongDegrees => "song degrees",
             Effect::SongCraft => "song's difficulty",
             Effect::Temper => "tempering",
             Effect::Wade => "wading's extra cost",
-            Effect::Swim => "plunge check",
+            Effect::Swim => "Swim check",
             Effect::ManaRegen => "mana back",
             Effect::MaxMana => "mana pool",
             Effect::Speed => "speed",
@@ -197,6 +208,7 @@ pub(super) fn skill_benefits(content: &Content) -> String {
                 | Effect::Heal
                 | Effect::Tame
                 | Effect::Disarm
+                | Effect::Escape
                 | Effect::Pick
                 | Effect::Intimidate
                 | Effect::SongDegrees
@@ -206,6 +218,8 @@ pub(super) fn skill_benefits(content: &Content) -> String {
                 | Effect::Surprise
                 | Effect::Initiative
                 | Effect::Resist => format!("+{n}"),
+                Effect::Climb if n == 1 => "halved".to_string(),
+                Effect::Climb => "skipped".to_string(),
                 Effect::SneakDice => format!("{n}d6"),
                 Effect::SurpriseEase | Effect::Wade => format!("\u{2212}{n}%"),
                 Effect::SearchReach => format!("+{n} cell{}", if n == 1 { "" } else { "s" }),
@@ -216,7 +230,7 @@ pub(super) fn skill_benefits(content: &Content) -> String {
                 Effect::Identify => format!("{n}%"),
                 Effect::Speed | Effect::ManaRegen => format!("+{n}%"),
                 Effect::MaxMana => format!("+{n} mana"),
-                Effect::Hearing => n.to_string(),
+                Effect::Hearing | Effect::Learn => n.to_string(),
                 Effect::Burden => {
                     let slowed = |b: Burden| factor(b.slow_eased(100, n));
                     format!(

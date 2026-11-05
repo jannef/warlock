@@ -50,6 +50,7 @@ use crate::damage::Damage;
 use crate::geom::{Dir, Pos};
 use crate::object::Stack;
 use crate::perception::VIEW_RADIUS;
+use crate::skills::{Effect as SkillEffect, Use};
 use crate::stats::Stat;
 use crate::talent::TalentMods;
 use std::collections::BTreeSet;
@@ -184,12 +185,15 @@ impl World {
                 if !self.state.actors.contains_key(&victim) {
                     return 0;
                 }
-                let climb = self.price_of(victim, ActionKind::Wait);
+                let climb = self.climb_price(victim);
                 let fall = Damage::new(damage.roll(&mut self.state.rng), *of);
                 let from = self.state.actors.get(&victim).map_or(at, |a| a.pos);
                 self.trap_hurts(kind, victim, (from, false), fall, events);
                 if victim == self.state.player {
                     self.train_stat(StatUse::Climb);
+                    if self.trains(Use::Climb) {
+                        self.train(Use::Climb);
+                    }
                 }
                 return climb;
             }
@@ -197,6 +201,26 @@ impl World {
             TrapEffect::Teleport => self.teleport(victim, at, events),
         }
         0
+    }
+
+    /// What actor `victim`'s climb out of a pit costs on top of its step: an action's energy,
+    /// halved and then skipped as Escape artist's [`SkillEffect::Climb`] says, for those trained in it.
+    fn climb_price(&self, victim: ActorId) -> i64 {
+        let climb = self.price_of(victim, ActionKind::Wait);
+        let Some(actor) = self.state.actors.get(&victim) else {
+            return climb;
+        };
+        if !actor
+            .skills
+            .trains_effect(&self.content, SkillEffect::Climb)
+        {
+            return climb;
+        }
+        match actor.skill_effect(&self.content, SkillEffect::Climb) {
+            0 => climb,
+            1 => climb / 2,
+            _ => 0,
+        }
     }
 
     /// Trap `trap` attacks `target` with `profile` from `source` (a cell, and whether a missile

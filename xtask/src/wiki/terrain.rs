@@ -32,7 +32,7 @@ pub(super) fn local_terrain(content: &Content) -> String {
         .iter()
         .filter(|t| !is_overworld_terrain(t, &ids))
     {
-        let step_time = if t.walkable {
+        let step_time = if t.walkable || t.swim {
             at_normal_pace(t.step_price(step, LevelKind::Dungeon))
         } else if t.is_closed_door() {
             let open = content.action_costs().cost(ActionKind::OpenDoor);
@@ -43,6 +43,9 @@ pub(super) fn local_terrain(content: &Content) -> String {
         let mut notes = Vec::new();
         if t.is_closed_door() {
             notes.push("door: walking into it opens it".to_string());
+        }
+        if t.swim {
+            notes.push("only a swimmer goes in, after being asked; no creature does".to_string());
         }
         if let Some((to, sturdiness)) = t.kicked_in {
             let broken = content.terrain(to).name.to_lowercase();
@@ -79,7 +82,7 @@ pub(super) fn local_terrain(content: &Content) -> String {
             Some(0) => notes.push("lets sound through".into()),
             Some(m) => notes.push(format!("muffles sound by {m}")),
         }
-        let footsteps = if t.walkable {
+        let footsteps = if t.walkable || t.swim {
             footsteps_text(t.step_noise)
         } else {
             "-".into()

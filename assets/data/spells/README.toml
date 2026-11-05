@@ -9,8 +9,8 @@
 #   id, name      the spell's id and its name
 #   description   one line
 #   level         its spell level, 0 to 70: its base mana (the level, at least 1) and the
-#                 caster level at which a scroll of it teaches for certain (../study.toml). 0 and
-#                 1 are cantrips. (`tier` is refused: the levels replaced the tiers)
+#                 learning at which a scroll of it teaches for certain (../study.toml). 0 and 1
+#                 are cantrips. (`tier` is refused: the levels replaced the tiers)
 #   The tags (talents, abilities, items, and the wiki key on them; magic design §6):
 #   school        evocation, necromancy, abjuration, restoration, transmutation, enchantment,
 #                 or divination
@@ -38,7 +38,7 @@
 #                 its attack roll, as a blow adds Dexterity's (default `dexterity`). A scroll's
 #                 or a wand's always aims with Dexterity
 #   study_difficulty  added to the study check's difficulty (-20 to 40, default 0); above 0, a
-#                 study of it is a check at any caster level, never certain (the calls' scrolls
+#                 study of it is a check at any learning, never certain (the calls' scrolls
 #                 are very hard to learn: the owner, #828 Q7)
 #   [spell.effect]  what a spell of another kind does:
 #     heal        a `heal` spell's base hit points: a roll, as `damage`
