@@ -2244,21 +2244,21 @@ mod tests {
         const ABILITIES: (KeyCode, &str) = (KeyCode::KeyA, "a");
         const REPEAT: (KeyCode, &str) = (KeyCode::KeyX, "X");
         let mode = |app: &App| *app.world().resource::<InputMode>();
-        // Without a shield: the menu opens on `a`; the shield bash (`f`) is greyed out, so its
+        // Without a shield: the menu opens on `a`; the shield bash (`g`) is greyed out, so its
         // letter only says why; Esc closes the menu, and no time passed.
         let mut app = app(true);
         frame(&mut app, &[ABILITIES]);
         assert_eq!(names(&app), [ScreenName::Abilities]);
-        frame(&mut app, &[(KeyCode::KeyF, "f")]);
+        frame(&mut app, &[(KeyCode::KeyG, "g")]);
         assert_eq!(names(&app), [ScreenName::Abilities]);
         frame(&mut app, &[ESC]);
         assert!(names(&app).is_empty() && actions(&app).is_empty());
         // The quick repeat with nothing used yet opens the menu.
         frame(&mut app, &[REPEAT]);
         assert_eq!(names(&app), [ScreenName::Abilities]);
-        // With a shield: `a` `f` closes the menu and asks for a direction; a direction bashes.
+        // With a shield: `a` `g` closes the menu and asks for a direction; a direction bashes.
         let mut app = with_a_shield();
-        frame(&mut app, &[ABILITIES, (KeyCode::KeyF, "f")]);
+        frame(&mut app, &[ABILITIES, (KeyCode::KeyG, "g")]);
         assert!(names(&app).is_empty());
         assert_eq!(mode(&app), InputMode::Ability(Ability::ShieldBash));
         frame(&mut app, &[EAST]);

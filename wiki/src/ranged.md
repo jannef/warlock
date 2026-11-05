@@ -4,6 +4,8 @@ You can fight from a distance: shoot with a **[missile weapon](ranged.md#getting
 **[throw](ranged.md#shooting-and-throwing)** a throwing weapon (a dagger, a spear, a rock). [Hitting](combat.md#hitting), [criticals](combat.md#criticals), and [Defence](combat.md#defence) work as in
 [Combat](combat.md); here is what is different.
 
+Out of arrows or bolts? With a knife and your bow or crossbow [ready](#getting-ready), you can [fletch](skills.md#fletching) more.
+
 ## Getting ready
 
 Ready what you will shoot or throw on the [equipment](equipment.md) screen (`i`). The **Missile

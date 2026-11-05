@@ -16,16 +16,16 @@ expression: "render(case, content.clone())"
                     │ > b  Veteran's wind                                      │
                     │ Skills                                                   │
                     │   c  Intimidate      at a place you see                  │
+                    │   d  Fletch          you have no knife                   │
                     │ Weapon skills                                            │
-                    │   d  Shield bash     in a direction                      │
+                    │   e  Shield bash     in a direction                      │
                     │                                                          │
                     │ An old soldier's second breath (an ability): hit points  │
                     │ back at once, then winded a quarter hour.                │
                     │                                                          │
                     │                                                          │
-                    │ a-d or Enter use   Esc close                             │
+                    │ a-e or Enter use   Esc close                             │
                     └──────────────────────────────────────────────────────────┘
-
 
 
 

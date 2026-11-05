@@ -1,0 +1,16 @@
+# A crossbow bolt whittled by someone who has not learned how: it flies once, and is not sold
+# (no `kind` or `frequency`, as the flaming arrow).
+[[object]]
+id = "brittle_bolt"
+name = "brittle bolt"
+glyph = "/"
+fg = "#a89c8c"
+class = "missiles"
+materials = ["wood"]
+weight = 50
+value = 0
+stackable = true
+slot = "missiles"
+ammo = "bolt"
+breaks = 100
+missile = "→"

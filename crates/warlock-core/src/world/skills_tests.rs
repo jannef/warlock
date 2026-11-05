@@ -190,11 +190,11 @@ fn the_player_perceives_only_their_own_trained_skills() {
             .collect()
     };
     assert!(skill_abilities(&w).is_empty());
-    set(&mut w, "woodcraft", Some(18));
+    set(&mut w, "metalcraft", Some(18));
     assert_eq!(
         skill_abilities(&w),
         [OwnAbility {
-            ability: Ability::Skill(skill(&w, "woodcraft")),
+            ability: Ability::Skill(skill(&w, "metalcraft")),
             unavailable: Some(Unavailable::NotYet),
         }]
     );
@@ -210,8 +210,9 @@ fn the_player_perceives_only_their_own_trained_skills() {
     assert_eq!(
         own,
         [
+            Ability::Skill(skill(&w, "metalcraft")),
             Ability::PickLock,
-            Ability::Skill(skill(&w, "woodcraft")),
+            Ability::Fletch,
             Ability::ShieldBash
         ]
     );

@@ -221,6 +221,12 @@ pub enum Action {
     /// landscape and Survival. Interrupted, it finds nothing. Refused (no time) untrained, or
     /// anywhere but on land of the overworld or a local area of it.
     Forage,
+    /// Make arrows or bolts for the launcher ready (spec §8 "Fletching"; the Fletch ability, in
+    /// Woodcraft's place in the abilities menu): turns of the `fletch` action for
+    /// `data/fletch.toml`'s time, then a Dexterity check plus Woodcraft whose margin scales what
+    /// is made. Interrupted, it makes nothing. Refused (no time) with no knife carried, or no bow
+    /// or crossbow ready.
+    Fletch,
     /// Make out the carried stack at this position, a scroll of a type not yet identified,
     /// without reading it (spec §8 "Scrolls"; the Decipher ability, Decipher script's use;
     /// `world/decipher.rs`): `data/decipher.toml`'s time of turns of the `decipher` action, then
@@ -931,6 +937,7 @@ impl fmt::Display for Action {
             Action::Pray => f.write_str("pray"),
             Action::Drink => f.write_str("drink"),
             Action::Forage => f.write_str("forage"),
+            Action::Fletch => f.write_str("fletch"),
             Action::Decipher { item } => write!(f, "decipher:{}", position_text(*item)),
             Action::Temper { item } => write!(f, "temper:{}", position_text(*item)),
             Action::Give { item, ally } => {
@@ -1099,6 +1106,7 @@ impl FromStr for Action {
             "pray" => bare(Action::Pray),
             "drink" => bare(Action::Drink),
             "forage" => bare(Action::Forage),
+            "fletch" => bare(Action::Fletch),
             "decipher" => {
                 let usage = || "`decipher` needs a letter, e.g. `decipher:b`".to_string();
                 let item = arg.and_then(parse_position).ok_or_else(usage)?;
@@ -1789,6 +1797,7 @@ mod tests {
             Action::Advance("stealth".into()),
             Action::Pray,
             Action::Forage,
+            Action::Fletch,
             Action::Decipher { item: 1 },
             Action::Temper { item: 0 },
             Action::Temper { item: 27 },
