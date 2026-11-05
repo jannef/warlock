@@ -28,6 +28,7 @@ mod creature_body_tests;
 mod creature_rarity;
 mod damage_type;
 pub mod danger;
+mod decipher;
 #[cfg(test)]
 mod demon_roster_tests;
 #[cfg(test)]
@@ -199,6 +200,7 @@ pub use creature::{
 pub use creature_rarity::{COMMON, CreatureRarity, FACTOR};
 pub use damage_type::{DamageTypeDef, DamageTypeId, MAX_DAMAGE_TYPES};
 pub use danger::{Count, DangerRule, PlayerScale, Spawning};
+pub use decipher::DecipherRules;
 pub use dialogue::{
     Dialogue, DialogueId, MAX_LINE, MAX_REPLY, MAX_TOPICS, MUTTER_CHANCES, Mutter, Service,
     ServiceKind, Speaker, Topic,
@@ -748,6 +750,8 @@ pub struct Content {
     spell_rules: Option<SpellRules>,
     /// The study check and its time (`data/study.toml`, spec §8 "Spells"); none without it.
     study: Option<StudyRules>,
+    /// The check of reading a scroll (`data/decipher.toml`, spec §8 "Scrolls"); none without it.
+    decipher: Option<DecipherRules>,
     /// What a failed study may bring (`data/mishaps/`), in path order.
     mishaps: Vec<Mishap>,
     /// What rods do (`data/rod_effects/`, spec §8 "Magic items": "Rods"), in path order.
@@ -841,6 +845,7 @@ impl Content {
             encounter_tables: Vec::new(),
             forage: None,
             intimidate: None,
+            decipher: None,
             swim: None,
             ranged: RangedRules::default(),
             prayer: None,
@@ -1161,6 +1166,10 @@ impl Content {
             content.study = Some(StudyRules::parse(path, text)?);
         }
         content.mishaps = learning::parse(files.table("mishaps"), &content)?;
+        let path = "data/decipher.toml";
+        if let Some(text) = files.get_optional(path) {
+            content.decipher = Some(DecipherRules::parse(path, text)?);
+        }
         let path = "data/encounters.toml";
         if let Some(text) = files.get_optional(path) {
             content.encounters = EncounterRules::parse(path, text)?;
@@ -3786,6 +3795,12 @@ impl Content {
     /// and then nothing can be studied.
     pub fn study_rules(&self) -> Option<&StudyRules> {
         self.study.as_ref()
+    }
+
+    /// The check of reading a scroll (`data/decipher.toml`, spec §8 "Scrolls"): none without
+    /// it, and then every scroll simply reads.
+    pub fn decipher(&self) -> Option<&DecipherRules> {
+        self.decipher.as_ref()
     }
 
     /// What a failed study may bring (`data/mishaps/`), in path order.

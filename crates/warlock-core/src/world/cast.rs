@@ -328,22 +328,29 @@ impl World {
         done
     }
 
-    /// Pays for `cast` as it is sure to go off: the caster's mana, or the scroll read (used
-    /// up, unless Scroll savant keeps it, and said as read).
-    pub(super) fn pay_cast(&mut self, cast: &Cast<'_>) {
+    /// Pays for `cast` as nothing refuses it any more: the caster's mana, or the scroll read
+    /// (used up, unless Scroll savant keeps it, and said as read). Whether it goes off: a
+    /// scroll the reader fails to make out does not (`decipher.rs`), and the caller ends the
+    /// cast there, its time spent and nothing else.
+    #[must_use]
+    pub(super) fn pay_cast(&mut self, cast: &Cast<'_>) -> bool {
         match cast.pay {
             Pay::Mana(mana) => {
                 self.spend_mana(self.state.player, mana);
             }
             Pay::Scroll(item, _) => {
+                if !self.deciphers(cast.def.level) {
+                    return false;
+                }
                 let Some((scroll, kept)) = self.use_up(item) else {
-                    return;
+                    return true;
                 };
                 self.say_read(&scroll);
                 cast.read.set(Some((scroll.object, kept)));
             }
             Pay::Wand(item, _) => self.use_charge(item),
         }
+        true
     }
 
     /// The player's cast `cast` went off (spec §8 "Weapon skills": "Schools of magic",
@@ -408,7 +415,9 @@ impl World {
             return false;
         };
         let player = self.state.player;
-        self.pay_cast(cast);
+        if !self.pay_cast(cast) {
+            return true;
+        }
         self.afflict(player, status, severity, Some(player), events);
         self.spell_landed(cast, player, true, events);
         true
@@ -437,7 +446,9 @@ impl World {
             return false;
         }
         let before = self.state.player().inventory.len();
-        self.pay_cast(cast);
+        if !self.pay_cast(cast) {
+            return true;
+        }
         // A scroll used up moves the stacks after it a place up.
         let on = match cast.pay {
             Pay::Scroll(item, _) if on == item => return true,
@@ -489,7 +500,9 @@ impl World {
         let Some(heal) = cast.roll else {
             return false;
         };
-        self.pay_cast(cast);
+        if !self.pay_cast(cast) {
+            return true;
+        }
         let back = heal.roll(&mut self.state.rng, cast.reroll).max(0);
         if target == player {
             self.heal_player(back);
@@ -524,7 +537,9 @@ impl World {
             self.say("There is nothing to cure.");
             return false;
         }
-        self.pay_cast(cast);
+        if !self.pay_cast(cast) {
+            return true;
+        }
         self.say("A cleansing warmth runs through you.");
         let from = events.len();
         for e in &ended {
@@ -572,7 +587,9 @@ impl World {
             return false;
         };
         let player = self.state.player;
-        self.pay_cast(cast);
+        if !self.pay_cast(cast) {
+            return true;
+        }
         self.afflict(target, status, severity, Some(player), events);
         let who = capitalized(&self.called(&self.state.actors[&target]));
         let content = self.content.clone();
@@ -599,7 +616,9 @@ impl World {
         }
         let player = self.state.player;
         let here = self.player_pos();
-        self.pay_cast(cast);
+        if !self.pay_cast(cast) {
+            return true;
+        }
         if let Some(text) = &cast.def.look.message {
             self.say(text.clone());
         }
@@ -701,7 +720,9 @@ impl World {
             return false;
         }
         let player = self.state.player;
-        self.pay_cast(cast);
+        if !self.pay_cast(cast) {
+            return true;
+        }
         let roll = cast.roll.unwrap_or_default();
         let reroll = cast.reroll;
         if let Some(text) = &def.look.message {

@@ -55,7 +55,8 @@ ready = 1000
 # objects.toml; corpses by their creature's size, hunger.toml).
 eat = 1000
 # Reading a scroll (`r`; spec §8 "Scrolls"): casting the spell written on it, or identifying an
-# item. The scroll is used up.
+# item. The scroll is used up, unless the reader fails to make it out (decipher.toml): the time is
+# spent all the same.
 read = 1000
 # A turn of studying a spell from a scroll (spec §8 "Spells"): a study takes study.toml's
 # turns_base of them and turns_per_level more for each level of the spell (100 and 20: 10

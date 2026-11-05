@@ -14,6 +14,10 @@
 //! Identify on one unidentified stack the player carries ([`World::identify`]): "This is a
 //! Sharp long sword of the Bear!", or the type of a scroll still under its label.
 //!
+//! **Who can read one** (`decipher.rs`): once nothing refuses a reading, one trained in
+//! Spellcraft whose learning reaches the scroll's spell level reads it at once; anyone else
+//! makes a check. A failure takes the read's time and keeps the scroll, its label unknown.
+//!
 //! **Unknown scrolls** ([`crate::scroll_label`]) read just as known ones do; the read names the
 //! scroll by its label ("You read the scroll labelled ZUNBAR.") and identifies its type ("It is a
 //! scroll of fireball."), the scroll of identify's own too.

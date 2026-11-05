@@ -402,7 +402,8 @@ haunt = { faction = "undead", every = "1h" }
 unholy = true
 
 # A scriptorium (spec §7 "Special rooms"): shelves at its middle, a few scrolls on its floor, and
-# studying inside earns Decipher script's training marks twice as often.
+# Decipher script's training marks at twice the chance inside (its one mark so far, a check to read
+# a scroll, is certain anywhere).
 [[effect]]
 id = "scriptorium"
 name = "scriptorium"

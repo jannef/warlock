@@ -1,6 +1,6 @@
 //! The scriptorium (spec §7 "Special rooms", design §9.4): Decipher script's training marks come
-//! twice as often inside, studying a scroll there earns one for certain, other skills train as
-//! anywhere, and look mode and the messages name the room and its shelves.
+//! at twice the chance inside, at most certain (a check to read a scroll is certain anywhere,
+//! #1024), other skills train as anywhere, and look mode and the messages name the room and its shelves.
 
 use super::*;
 use crate::action::parse_actions;
@@ -85,25 +85,20 @@ fn place(w: &mut World, at: Pos) {
 }
 
 #[test]
-fn decipher_script_marks_come_twice_as_often_inside() {
+fn the_room_doubles_decipher_scripts_chance_which_is_certain_already() {
     let mut w = world(0);
     trained(&mut w);
     let decipher = skill(&w, "decipher_script");
     assert_eq!(w.effects_at("hall", INSIDE).train(decipher), 200);
     assert_eq!(w.effects_at("hall", OUTSIDE).train(decipher), 100);
-    // Its rule is 50 % a study: inside, doubled, every one marks.
-    place(&mut w, INSIDE);
-    for _ in 0..40 {
-        w.train(Use::Study);
+    // Its rule is 100 % a check (#1024): certain inside, at most certain, and outside too.
+    for (at, want) in [(INSIDE, 40), (OUTSIDE, 80)] {
+        place(&mut w, at);
+        for _ in 0..40 {
+            w.train(Use::Decipher);
+        }
+        assert_eq!(marks(&w, "decipher_script"), want);
     }
-    assert_eq!(marks(&w, "decipher_script"), 40);
-    // Outside, about half.
-    place(&mut w, OUTSIDE);
-    for _ in 0..400 {
-        w.train(Use::Study);
-    }
-    let outside = marks(&w, "decipher_script") - 40;
-    assert!((160..=240).contains(&outside), "{outside}");
 }
 
 #[test]
@@ -127,17 +122,23 @@ fn other_skills_train_inside_as_anywhere() {
 }
 
 #[test]
-fn a_study_inside_earns_a_mark_for_certain() {
+fn a_check_inside_marks_decipher_script_and_a_study_does_not() {
     let mut w = world(10);
     run(&mut w, "identify");
     trained(&mut w);
+    place(&mut w, INSIDE);
+    run(&mut w, "read:c:20,3");
+    assert_eq!(marks(&w, "decipher_script"), 1, "a read by the check");
     // Spellcraft 40: learning 6, Frost's level.
     let spellcraft = skill(&w, "spellcraft");
     w.player_mut().skills.add(spellcraft, 40);
-    place(&mut w, INSIDE);
     run(&mut w, "study:c");
     assert!(!w.state.player().spells.is_empty(), "frost learned");
-    assert_eq!(marks(&w, "decipher_script"), 1);
+    assert_eq!(
+        marks(&w, "decipher_script"),
+        1,
+        "a study marks only Spellcraft"
+    );
 }
 
 #[test]
