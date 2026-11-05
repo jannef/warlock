@@ -53,14 +53,18 @@ impl Actor {
     pub fn companion(&self) -> Option<&CompanionData> {
         match &self.ally.as_ref()?.source {
             AllySource::Companion(data) => Some(data),
-            AllySource::Summoned { .. } | AllySource::Familiar(_) => None,
+            AllySource::Summoned { .. } | AllySource::Familiar(_) | AllySource::Charmed { .. } => {
+                None
+            }
         }
     }
 
     pub(super) fn companion_mut(&mut self) -> Option<&mut CompanionData> {
         match &mut self.ally.as_mut()?.source {
             AllySource::Companion(data) => Some(data),
-            AllySource::Summoned { .. } | AllySource::Familiar(_) => None,
+            AllySource::Summoned { .. } | AllySource::Familiar(_) | AllySource::Charmed { .. } => {
+                None
+            }
         }
     }
 

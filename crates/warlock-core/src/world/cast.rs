@@ -603,6 +603,9 @@ impl World {
         if let (Some(at), Some(push)) = (at, cast.def.effect.push) {
             return self.cast_gale(cast, at, push, events);
         }
+        if let (Some(at), Some(charm)) = (at, &cast.def.effect.charm) {
+            return self.cast_charm(cast, charm, at, events);
+        }
         if let (Some(at), Some(_)) = (at, cast.def.effect.zone) {
             let (range, radius) = (
                 cast.reach.range.unwrap_or(1),
@@ -708,7 +711,7 @@ impl World {
 
     /// The creature a hex at `at` within `range` falls on: one the player sees there, that is
     /// not friendly to them. `None` (said) otherwise.
-    fn hex_target(&mut self, at: Pos, range: i32) -> Option<ActorId> {
+    pub(super) fn hex_target(&mut self, at: Pos, range: i32) -> Option<ActorId> {
         if !self.within_reach(at, range, "hex") {
             return None;
         }

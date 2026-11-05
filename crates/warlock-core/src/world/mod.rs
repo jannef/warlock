@@ -103,6 +103,7 @@ mod calling;
 mod carry;
 mod cast;
 mod caster;
+mod charm;
 mod chest;
 mod class;
 mod class_ability;
@@ -1625,6 +1626,8 @@ mod ceaptun_quest_tests;
 mod ceaptun_tests;
 #[cfg(test)]
 mod character_tests;
+#[cfg(test)]
+mod charm_tests;
 #[cfg(test)]
 mod chest_hall_tests;
 #[cfg(test)]
