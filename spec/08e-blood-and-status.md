@@ -431,7 +431,19 @@ developer notes (CLAUDE.md, `docs/dev/`).
     Burning 1, one time in four per creature harmed; melts ice; `arrow_fire` for 60 s. **Cold**:
     Sluggish 1, certain; ends Burning; `frost = 100`; douses. **Burning** (`data/status.toml`):
     max 3, adding; 1 hit point of fire per 10 s at one degree, a degree easing per 30 s; sheds the
-    `ember` light; a step or a fall into water ends it (`quenched`). The menu, the `spells` dump,
+    `ember` light; a step or a fall into water ends it (`quenched`). **Force**: `shove`, after
+    the hurt, on one who lives: a blow of at least ⌈max hp / 3⌉ taken or a confirmed critical knocks
+    it a cell away from the cast's origin (a burst's centre, else the caster; the one at a burst's
+    centre from the caster, and the caster there stays), if the cell is free; a status that blocks
+    a step holds it. `shatter`: a burst's `blast` shatters ice thinner than 100 µm a point
+    (`Shock::Blast`). `doors`: a burst's `blast` breaks the closed doors in its line of sight, as it
+    stood before the blast, with a `breaks_to`, no check, lock and trap gone, sprung at no one; a
+    chest is any blast's already. **Poison**: Poisoned 1, certain (Blight's own line is 1). **Necrotic**:
+    `bite`, before resistance: 150 % of the harm, rounded down, against a target below 50 % of its
+    maximum hit points; `immune_tags = ["undead"]`: laid on those creature types' `resist` at load,
+    so an immunity to the type from whatever harm. **Acid**: Corroded 1, certain; never armour.
+    **Corroded** (`data/status.toml`): max 3, adding; 1 hit point of acid per 6 s, a degree easing
+    per 12 s: two points a degree. The menu, the `spells` dump,
     and a wand's description say the rule after the roll (`4d6 fire, burns one in four`, the
     type's `words`). The aiming mode previews nothing. Determinism: one `below(100)` per living
     creature harmed, only for a `chance` below 100, from the gameplay stream, in the order they

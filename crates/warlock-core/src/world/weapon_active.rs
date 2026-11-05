@@ -388,10 +388,32 @@ impl World {
         if !blow.is_some_and(|b| b.strike.is_hit()) || self.state.death.is_some() {
             return;
         }
-        let Some((from, creature)) = (self.state.actors.get(&target)).map(|a| (a.pos, a.creature))
-        else {
+        let Some(from) = self.drive_back(target, dir, events) else {
             return;
         };
+        if self.perception.sees_actors_at(from) {
+            let creature = self.state.actors[&target].creature;
+            let name = crate::content::the_start(&self.content.creature(creature).name);
+            self.say(format!("{name} is driven back."));
+        }
+        if let Some(status) = status {
+            self.afflict(target, status, 1, Some(self.state.player), events);
+        }
+    }
+
+    /// `target` moves a cell along `dir`, if that cell is free (walkable, no trap, no ice, nobody
+    /// there: a teleport's check, no draw): where it was, if it moved. Into a wall or another it
+    /// stays where it is.
+    pub(super) fn drive_back(
+        &mut self,
+        target: ActorId,
+        dir: Dir,
+        events: &mut Vec<Event>,
+    ) -> Option<Pos> {
+        if self.state.death.is_some() {
+            return None;
+        }
+        let from = self.state.actors.get(&target)?.pos;
         let to = from.step(dir);
         let level = self.state.current();
         let free = level.is_walkable(&self.content, to)
@@ -399,7 +421,7 @@ impl World {
             && level.ice_at(to).is_none()
             && self.state.actor_at(&level.id, to).is_none();
         if !free {
-            return;
+            return None;
         }
         if let Some(actor) = self.state.actors.get_mut(&target) {
             actor.pos = to;
@@ -409,13 +431,7 @@ impl World {
             from,
             to,
         });
-        if self.perception.sees_actors_at(from) {
-            let name = crate::content::the_start(&self.content.creature(creature).name);
-            self.say(format!("{name} is driven back."));
-        }
-        if let Some(status) = status {
-            self.afflict(target, status, 1, Some(self.state.player), events);
-        }
+        Some(from)
     }
 
     /// Whirl and Staff sweep: a blow at every hostile beside the player, clockwise from `from`,

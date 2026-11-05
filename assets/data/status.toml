@@ -134,6 +134,21 @@ dies = "burns to death"
 death = "Burnt to death"
 
 [[status]]
+id = "corroded"
+name = "Corroded"
+seen = "corroded"
+max = 3
+stacking = "add"
+tick = 6
+damage = 1
+damage_type = "acid"
+eases = 12
+start = "The acid keeps eating."
+end = "The acid is spent."
+dies = "is eaten away"
+death = "Eaten away by acid"
+
+[[status]]
 id = "poisoned"
 name = "Poisoned"
 max = 10

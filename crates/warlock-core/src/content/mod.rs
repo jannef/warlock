@@ -309,7 +309,7 @@ pub use spell_ladder::{
     Ladder as SpellLadder, MAX_RUNGS, MAX_SCORE, RungValue, Unit as LadderUnit,
 };
 pub use spell_mod::{SpellMod, SpellModSpec, SpellMods, merge_rider};
-pub use spell_type::{SpellType, TypeRider};
+pub use spell_type::{SpellType, TypeBite, TypeRider};
 pub use stance::{CombatStance, StanceDef, Stances, percent_of};
 pub use stat_training::{
     DeedRule, HAUL_GRAMS, ODDS_SCALE, StatDeed, StatRule, StatTraining, StatUse,
@@ -1113,6 +1113,7 @@ impl Content {
         }
         content.mimics = mimic::Mimics::parse(files, &content)?;
         content.load_creatures(files)?;
+        spell_type::lay_immunities(&mut content);
         // A den's own population (an armoury's) names creatures.
         let mut room_effects = std::mem::take(&mut content.room_effects);
         let creature =
