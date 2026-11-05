@@ -116,6 +116,7 @@ mod court;
 mod creation;
 mod curse;
 mod dark_face;
+mod decipher;
 mod den;
 mod dev;
 mod dig;
@@ -1625,6 +1626,8 @@ mod damage_talent_tests;
 mod damage_tests;
 #[cfg(test)]
 mod dark_face_tests;
+#[cfg(test)]
+mod decipher_tests;
 #[cfg(test)]
 mod den_tests;
 #[cfg(test)]

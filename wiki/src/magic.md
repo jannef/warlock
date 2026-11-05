@@ -73,8 +73,8 @@ spells, the soft cap of 100 reaches level 30, and 150 the last spell level:
 **A character not trained in Spellcraft cannot learn a spell from a scroll at all**, cantrips
 included: the study is refused, and takes no time. Trained means the skill is among your
 [skills](skills.md); an item's or a talent's bonus to a skill you do not have does not train you.
-You can still read a scroll to [cast it](scrolls.md#spell-scrolls), and your class's own spells
-still come at their levels.
+You can still read a scroll to [cast it](scrolls.md#spell-scrolls), [by a check](scrolls.md#making-out-a-scroll) (your learning reads a scroll at or
+below it with none), and your class's own spells still come at their levels.
 
 Every class that casts starts trained, and [its dice are in the class table](skills.md):
 [wizards](classes.md#wizard), [witches](classes.md#witch), [priests](classes.md#priest), and
@@ -279,7 +279,7 @@ A spell of a level at most your [learning](#learning) is learned for certain. Ab
 high (the **overreach**) makes it harder: a roll of 2d12 plus your bonus must reach the difficulty,
 12 + 1 per level of overreach (*[Overreach](talents.md#talent-overreach)* counts a third fewer, rounded down), a point more for
 every 20 levels of the spells you already know, added up. Your bonus is your [Intelligence](stats.md#stat-intelligence) [modifier](stats.md#modifiers), a tenth of your
-*[Spellcraft](skills.md#skill-spellcraft)* and of your *[Decipher script](skills.md#skill-decipher-script)* (each at most +20), your class's affinity with the
+*[Spellcraft](skills.md#skill-spellcraft)* (at most +20), your class's affinity with the
 spell's school, and *[Quick study](talents.md#talent-quick-study)*'s +2. A natural 24 always succeeds and a natural 2 always fails.
 A few spells are harder to learn than their level says: their own difficulty is added to the
 check, and a spell made harder this way is never learned for certain, however high your
@@ -297,10 +297,9 @@ the spell may come your way again.
 
 {{#include generated/mishaps.md}}
 
-Studying trains *[Spellcraft](skills.md#skill-spellcraft)*, *[Decipher script](skills.md#skill-decipher-script)*, and your [Intelligence](stats.md#stat-intelligence), whatever comes of it.
+Studying trains *[Spellcraft](skills.md#skill-spellcraft)* and your [Intelligence](stats.md#stat-intelligence), whatever comes of it. *[Decipher script](skills.md#skill-decipher-script)* has no part in a
+study: it is for [making out a scroll](scrolls.md#making-out-a-scroll) you only want to read.
 Spending [mana](mana.md) on a spell also trains *[Spellcraft](skills.md#skill-spellcraft)*, one time in four.
-In a [scriptorium](special-rooms.md#room-scriptorium) ([Special rooms](special-rooms.md)) [Decipher script](skills.md#skill-decipher-script)'s mark is twice as likely,
-so certain.
 
 ## Wands
 

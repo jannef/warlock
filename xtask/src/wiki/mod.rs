@@ -398,6 +398,7 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("magic-systems.md", magic::systems),
         ("uniques.md", uniques::uniques),
         ("scrolls.md", scrolls::scrolls),
+        ("decipher-chances.md", scrolls::decipher_chances),
         ("potions.md", potions::potions),
         ("weapon-skills.md", weapon_skills::skills),
         ("weapon-defaults.md", weapon_skills::defaults),
@@ -1212,6 +1213,7 @@ mod tests {
             "\u{2212}60%"
         );
         assert_eq!(benefit("100", "Concentration: mana pool"), "+5 mana");
+        assert_eq!(benefit("100", "Decipher script: reading scrolls"), "+8");
         assert_eq!(benefit("100", "Sneak attack: sneak attack dice"), "5d6");
         assert_eq!(benefit("100", "Spellcraft: learning"), "30");
         assert_eq!(benefit("100", "Swim: wading's extra cost"), "\u{2212}60%");
@@ -1221,6 +1223,7 @@ mod tests {
             benefit("150", "Balance: rough ground's extra cost"),
             "\u{2212}80%"
         );
+        assert_eq!(benefit("150", "Decipher script: reading scrolls"), "+10");
         assert_eq!(benefit("150", "Sneak attack: sneak attack dice"), "6d6");
         assert_eq!(benefit("150", "Tumble: Dodge"), "+7");
         // Treating oneself: the difficulty and odds of each ailment.

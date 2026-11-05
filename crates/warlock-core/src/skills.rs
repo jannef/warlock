@@ -106,6 +106,8 @@ pub const MAX_PICK_BONUS: i32 = 20;
 pub const MAX_FORAGE_BONUS: i32 = 30;
 /// The most a skill adds to tempering an item at an anvil (spec §7 "Special rooms": the forge).
 pub const MAX_TEMPER_BONUS: i32 = 20;
+/// The most a skill adds to reading a scroll (spec §8 "Scrolls"; `world/decipher.rs`).
+pub const MAX_DECIPHER_BONUS: i32 = 20;
 /// The most a skill adds to a Swim check (spec §8 "Skills": a plunge through the ice).
 pub const MAX_SWIM_BONUS: i32 = 20;
 /// The most a skill adds to resisting a creature's ability (spec §8 "Skills": Knowledge): kept
@@ -172,6 +174,9 @@ pub enum Effect {
     /// The spell level up to which a scroll teaches for certain (spec §8 "Spells": "Learning";
     /// `world/learn.rs`); a skill with it, trained, lets the actor learn from a scroll at all.
     Learn,
+    /// Points added to reading a scroll one cannot simply read (spec §8 "Scrolls";
+    /// `world/decipher.rs`). The check is everyone's: none of it asks for the skill.
+    Decipher,
     /// Points added to disarming a trap (spec §8 "Disarming traps"; `world/disarm.rs`); a skill
     /// with it, trained, lets the actor disarm traps at all (the Disarm ability).
     Disarm,
@@ -302,6 +307,7 @@ impl Effect {
             Effect::Search | Effect::Spot | Effect::DetectTraps => MAX_SEARCH_BONUS,
             Effect::Study => MAX_STUDY_BONUS,
             Effect::Learn => MAX_LEARNING,
+            Effect::Decipher => MAX_DECIPHER_BONUS,
             Effect::Slip => MAX_SLIP_BONUS,
             Effect::Lookout | Effect::Stalk | Effect::Evade => MAX_ENCOUNTER_BONUS,
             Effect::Steal => MAX_STEAL_BONUS,
@@ -342,6 +348,8 @@ pub enum Use {
     FindTrap,
     /// A spell studied (spec §8 "Spells"), whatever comes of it.
     Study,
+    /// A check made to read a scroll (spec §8 "Scrolls"), whatever comes of it.
+    Decipher,
     /// Mana spent (spec §8 "Mana"): a spell cast, an ability paid in mana, whatever it costs.
     Cast,
     /// An attempt to disarm a trap (spec §8 "Disarming traps"), whatever comes of it.
@@ -426,6 +434,7 @@ impl Use {
             Use::Spot => "noticing something hidden in passing",
             Use::FindTrap => "finding a hidden trap, searching or in passing",
             Use::Study => "studying a spell from a scroll",
+            Use::Decipher => "making out a scroll you cannot simply read",
             Use::Cast => "spending mana: a spell, or an ability paid in it",
             Use::Disarm => "trying to disarm a trap",
             Use::Dodge => "dodging an attack or a known trap",
@@ -558,6 +567,7 @@ impl Use {
             Use::Spot => "spot",
             Use::FindTrap => "find_trap",
             Use::Study => "study",
+            Use::Decipher => "decipher",
             Use::Cast => "cast",
             Use::Disarm => "disarm",
             Use::Dodge => "dodge",
@@ -606,6 +616,7 @@ impl Effect {
             Effect::DetectTraps => "detect_traps",
             Effect::Study => "study",
             Effect::Learn => "learn",
+            Effect::Decipher => "decipher",
             Effect::Disarm => "disarm",
             Effect::Burden => "burden",
             Effect::Travel => "travel",

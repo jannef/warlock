@@ -4,10 +4,10 @@
 //! (`restores`), as a temple's mending does, free, wherever the reader is; a disease showing
 //! does not stop it (the temple's "Be cured first." is advice, not a rule here: the disease may
 //! damage the stat again). With nothing of either to mend it is refused, takes no time, and
-//! keeps the scroll, as a cure with nothing to cure is. Otherwise the scroll is used up (Scroll
-//! savant's chance keeps it, and the read trains its stat, through `use_up`), said read (which
+//! keeps the scroll, as a cure with nothing to cure is. Otherwise, once made out (`decipher.rs`,
+//! as a spell of level 0), the scroll is used up (Scroll savant's chance keeps it, and the read trains its stat, through `use_up`), said read (which
 //! identifies its type), and each stat that comes back is named: "You feel your strength
-//! return." No stream is drawn but Scroll savant's, and nothing new is saved.
+//! return." No stream is drawn but the check's and Scroll savant's, and nothing new is saved.
 
 use super::World;
 use crate::content::Cleansing;
@@ -27,6 +27,10 @@ impl World {
         if back.is_empty() {
             self.say("There is nothing to restore.");
             return false;
+        }
+        // A read with no spell behind it: level 0 (`decipher.rs`). Failed, its time and no more.
+        if !self.deciphers(None, 0) {
+            return true;
         }
         let Some((scroll, kept)) = self.use_up(item) else {
             return false;

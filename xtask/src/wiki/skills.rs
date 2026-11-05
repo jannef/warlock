@@ -91,7 +91,8 @@ fn effect_name(effect: Effect) -> &'static str {
         Effect::Spot => "noticing hidden things in passing, not traps",
         Effect::DetectTraps => "finding hidden traps, searching and in passing",
         Effect::Study => "studying spells from scrolls",
-        Effect::Learn => "what a scroll teaches for certain",
+        Effect::Learn => "what a scroll teaches for certain, and reads for certain",
+        Effect::Decipher => "reading a scroll you cannot simply read",
         Effect::Disarm => "disarming traps",
         Effect::Burden => "less slowdown from your load",
         Effect::Travel => "quicker journeys on the overworld",
@@ -154,6 +155,7 @@ pub(super) fn skill_benefits(content: &Content) -> String {
             Effect::DetectTraps => "finding traps",
             Effect::Study => "study check",
             Effect::Learn => "learning",
+            Effect::Decipher => "reading scrolls",
             Effect::Disarm => "disarming traps",
             Effect::Burden => "Burdened / Strained",
             Effect::Travel => "journeys",
@@ -204,6 +206,7 @@ pub(super) fn skill_benefits(content: &Content) -> String {
                 | Effect::Spot
                 | Effect::DetectTraps
                 | Effect::Study
+                | Effect::Decipher
                 | Effect::Slip
                 | Effect::Lookout
                 | Effect::Stalk
