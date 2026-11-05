@@ -321,6 +321,16 @@ pub(super) fn does(content: &Content, spell: &SpellData) -> String {
                 };
                 format!("{who} {} ({n})", status(s))
             }
+            None if spell.effect.charm.is_some() => {
+                let charm = spell.effect.charm.as_ref().expect("checked");
+                format!(
+                    "a hostile you see is your ally for {} minutes, then hostile again where it \
+                     stands; ends at once when you leave its level; never a unique, an animated \
+                     thing, or a mindless creature ({})",
+                    charm.minutes,
+                    charm.mindless.join(", ")
+                )
+            }
             None => match spell.effect.push {
                 Some(n) => format!(
                     "everyone on it, nearest first, is driven {n} cell{} on, unless held or \

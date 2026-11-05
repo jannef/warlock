@@ -22,6 +22,10 @@ the corpse lies, flying nowhere, and what it kills leaves corpses for the next. 
 feast](#spell-grave-feast) reaches only a corpse beside you or under your feet, and gives back
 hit points and mana, never past your maximum. [Rouse the dead](allies.md#the-risen) stands it up.
 
+[Beguile](#spell-beguile) makes a hostile creature you see your [ally](allies.md#the-charmed) for
+a few minutes, against its own band; it is itself again where it stands when the charm ends, or
+the moment you leave its level.
+
 ## The spells
 
 Every spell has a **[level](#spell-levels)**, 0 to 70: what it costs in [mana](mana.md#spending-it), and how learned a caster must

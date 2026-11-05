@@ -18,7 +18,7 @@ as before, old saves load, and `World::state_hash` covers it as every field):
 ```rust
 pub struct Ally {
     pub master: ActorId,          // the player, today; the field makes no assumption
-    pub source: AllySource,       // Summoned { spell: Option<SpellId> } | Companion(CompanionData) | Familiar(CompanionData)
+    pub source: AllySource,       // Summoned { spell: Option<SpellId> } | Companion(CompanionData) | Familiar(CompanionData) | Charmed { spell, faction }
     pub order: Order,             // Follow (default) | Stay { at } | Hunt { at }
     pub retinue: bool,            // travelling with the master off any level
     pub until: Option<GameTime>,  // when its stay ends, on the clock; None: until slain
@@ -334,3 +334,43 @@ rises berserk is **not** an ally: `Actor::ally` is `None`, its `faction_override
 it always ends), read by `allies_lapse` and at `fight.rs::creature_dies`'s early return. It counts
 toward neither `most` nor the cap, nor toward `hostiles_here` (a level's population). The dev
 `actors` layer says `; risen, faction berserk, 9 min`.
+
+## Charmed
+
+Beguile (#1003; the spell types design §7 entry 34; `world/charm.rs`): a `hex` ray or bolt with
+`[spell.effect] charm = { minutes, mindless, message, ends }` (`SpellEffect::charm:
+Option<SpellCharm>`; no `status`, `push`, or `zone` beside it; `minutes` 1 to
+`MAX_SUMMON_MINUTES`, the base its `degrees` ladder grows, `SpellData::base_degrees`).
+`cast.rs::cast_hex` hands it to `World::cast_charm` (one arm):
+
+1. Refused, no time and no mana: without `allies.toml`; at one already an ally of anyone's
+   ("The kobold is already at someone's side."); `hex_target`'s refusals (no one seen there, out
+   of reach, not hostile); a `unique` type or an actor with an `npc` ("... is no one's fool.");
+   an animated thing, a type with one of `mindless`'s tags (the shipped `undead`, `construct`,
+   `vermin`), or a risen berserk ("... has no mind to charm."); the player's allies on the level
+   at `[allies] most`. No check and no level limit.
+2. Paid; `Actor::ally = Ally { master: player, source: AllySource::Charmed { spell, faction },
+   order: Follow, retinue: false, until: now + degrees minutes }`, `faction` the actor's
+   `faction_override` as it was, and `faction_override` set to the player's faction. That one
+   assignment is the side, as for `make_ally`: its band turns on it, the AI's ally arm drives it,
+   orders reach it, its kills credit the player (`ally_share`), the friendly mark, look mode's
+   "Your kobold", and the dumps (`(charmed, 5 min; follow)`, JSON `source` `"charmed"`) follow
+   with no branch. Its `Mind`, gear, statuses, and hit points stay as they were. Said: "The kobold
+   takes you for a friend." (`message`). `ally_mod`'s summon fields are not read.
+3. **The end**, `World::charm_ends`: `faction_override` put back, `ally` cleared, where it
+   stands. A charmed summoner's calls (the plain enemy summoning, `summon.rs`, from the ally
+   arm's `fight`) took the player's faction from it: every actor it summoned still on that
+   faction goes back to the summoner's restored one. Its clock: `allies_lapse` → `ally_departs`, which takes this arm instead of
+   `departs` for a charmed one ("The kobold shakes off the charm." where the player sees it,
+   `ends`). Leaving: `follow_along` ends the charm of every charmed ally on the level left,
+   silently, before it picks who comes along: it never crosses and never joins the retinue (the
+   owner's Q12). Stair followers (`stair_followers.rs`) are chosen in `take_stairs` before
+   `travel`, while it is still an ally, so it never follows as a hostile either.
+
+A slain charmed creature is the creature it is: corpse, gear, and pack fall (`creature_dies`
+skips only `Summoned`). Saves: the variant (`docs/dev/saves.md`). Tests:
+`world/charm_tests.rs` (the side and the band, the kill credit, the end where it stands, the end
+on the stairs with neither ally nor follower crossing, the faction put back, the refusals, the
+dumps, a save and a replay's hashes). Content: `assets/data/spells/beguile.toml`, its scroll,
+the witch's level-44 row (`talents/beguile.toml`); the wiki's "The charmed"
+(`generated/charm-spells.md`, `xtask/src/wiki/allies.rs::charm_spells`).
