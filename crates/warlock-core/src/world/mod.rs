@@ -166,6 +166,7 @@ mod knowledge;
 mod lamp;
 mod learn;
 mod level;
+mod listen;
 mod lockpick;
 mod loot;
 mod lucky;
@@ -395,6 +396,11 @@ pub struct WorldState {
     /// then arrives on the side of the local area they came from. Cleared on any level change.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub(crate) overworld_step: Option<Dir>,
+    /// The closed door the player listens at during the turn being taken, and how much fainter
+    /// a sound they hear through it (`world/listen.rs`). Set by the action, cleared as it ends:
+    /// never in a save.
+    #[serde(skip)]
+    pub(crate) listening: Option<crate::noise::Listening>,
     /// The overworld encounters' random stream (spec §7 "Overworld encounters": the rate roll,
     /// the entry, the party's dice), made on the first roll (`world/encounter.rs`).
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -853,6 +859,7 @@ impl World {
             character,
             kit: with_kit,
             overworld_step: None,
+            listening: None,
             encounters: None,
             encounter: None,
             endless: Default::default(),
@@ -1320,6 +1327,7 @@ impl World {
                 self.perceive(&mut events);
             }
         }
+        self.state.listening = None;
         self.encounter_tick(&mut events);
         if self.state.death.is_none() {
             self.burden_news(burden);
@@ -1440,6 +1448,7 @@ impl World {
             }
             Action::Search(turns) => return Spent::Search(*turns),
             Action::Disarm(dir) => return self.disarm(*dir, events),
+            Action::Listen(dir) => return self.listen(*dir),
             Action::Heal { what, ally } => return self.heal(what.as_deref(), *ally, events),
             Action::Pray => return self.start_prayer(),
             Action::Drink => return self.start_drink(),

@@ -315,6 +315,9 @@ rate or animation.
   the bounding box of the cells in line of sight plus bounce's 3-cell reach, so they do not depend
   on where the viewer stands. Sunlight and moonlight are not cached (they move every minute).
 - **Hearing** (`warlock-core/src/noise.rs`; M10). Integer and deterministic, like sight:
+  - **Listening at a door**: the Listen ability (#1026), a direction, a turn at a closed door
+    next to the player: for that turn their hearing threshold for what reaches them by that door
+    is lower by Listen's `hearing` and 2; all that is heard is told.
   - **Noise**: actions make noise. A step makes the walker's `footsteps` (creature data: the
     player 60, kobold 80, kobold archer 70, kobold shaman 60, giant rat and deer 50, cave beetle
     30; bats fly silently) scaled by the `step_noise` of

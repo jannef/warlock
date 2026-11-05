@@ -192,6 +192,9 @@ pub enum Action {
     /// it away; a bad failure sets it off at the player. Takes the time of `disarm`, whatever
     /// comes of it; refused (no time) without the skill or a known trap there.
     Disarm(Dir),
+    /// Listen at the closed door in a direction (spec §5 "Hearing"; the Listen ability,
+    /// `world/listen.rs`): a turn in which the player's hearing through that door is keener.
+    Listen(Dir),
     /// Treat oneself, or an ally beside one, with the Heal skill (spec §8 "Skills"; the Heal
     /// ability): the ailment named (a status id, `heal:bleeding`, or a disease id,
     /// `heal:filth_fever`), else the player's first there is to treat (`heal`); `ally` the
@@ -900,6 +903,7 @@ impl fmt::Display for Action {
             Action::Search(1) => f.write_str("search"),
             Action::Search(turns) => write!(f, "search:{turns}"),
             Action::Disarm(d) => write!(f, "disarm:{d}"),
+            Action::Listen(d) => write!(f, "listen:{d}"),
             Action::Heal { what: None, .. } => f.write_str("heal"),
             Action::Heal {
                 what: Some(id),
@@ -1040,6 +1044,7 @@ impl FromStr for Action {
             "bash" => dir().map(Action::Bash),
             "dig" => dir().map(Action::Dig),
             "disarm" => dir().map(Action::Disarm),
+            "listen" => dir().map(Action::Listen),
             "heal" => {
                 let usage = || {
                     "`heal:ID[:DIR]` names what to treat, e.g. `heal:bleeding` or \
@@ -1830,6 +1835,7 @@ mod tests {
                 Action::Bash(d),
                 Action::Dig(d),
                 Action::Disarm(d),
+                Action::Listen(d),
             ]);
         }
         assert_eq!(parse_actions(&format_actions(&all)), Ok(all));
