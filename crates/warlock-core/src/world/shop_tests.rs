@@ -683,3 +683,34 @@ fn generated_shops_are_kept_by_their_keepers() {
     let goods = (w.state.current().objects.iter()).filter(|(p, _)| shop.contains(**p));
     assert!(goods.count() >= usize::from(def.items.0));
 }
+
+#[test]
+fn wriggling_past_a_keeper_in_the_door_does_not_get_round_the_debt() {
+    let mut w = in_shop();
+    let (player, keeper) = (w.player_id(), keeper(&w));
+    apply(&mut w, "move:E move:NE pickup move:SW move:W");
+    assert_eq!(w.player_pos(), FRONT);
+    // Grimbold stands in the door, and the player is the best wriggler there is.
+    w.state.actors.get_mut(&keeper).expect("keeper").pos = DOOR;
+    let id = w.content().skill_id("escape_artist").expect("skill");
+    let skills = &mut w.player_mut().skills;
+    let mut all: Vec<_> = skills.iter().filter(|(s, _)| *s != id).collect();
+    all.push((
+        id,
+        crate::skills::Trained {
+            value: 200,
+            marks: 0,
+        },
+    ));
+    *skills = all.into_iter().collect();
+    for _ in 0..30 {
+        apply(&mut w, "move:W");
+        assert_ne!(w.player_pos(), DOOR, "never out of the door");
+        assert!(shop(&w).contains(w.player_pos()), "still in the shop");
+        assert_eq!(shop(&w).status, ShopStatus::Open, "no theft");
+        assert_eq!(w.stance(player, keeper), Stance::Neutral);
+        assert_eq!(shop(&w).unpaid.len(), 1, "still owed");
+        assert_eq!(w.state.actors[&keeper].pos, DOOR, "the keeper stays put");
+        w.player_mut().pos = FRONT;
+    }
+}
