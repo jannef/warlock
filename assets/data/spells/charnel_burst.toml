@@ -1,0 +1,27 @@
+# Charnel burst (the spell types design §7 entry 2): a corpse the caster sees bursts where it lies,
+# used up, and tears everyone beside it. The stage of the corpse is not read. A kill it makes leaves
+# a corpse for the next.
+[[spell]]
+id = "charnel_burst"
+name = "Charnel burst"
+description = "Burst a corpse you see: its rot and bone tear everyone beside it."
+level = 9
+school = "necromancy"
+kind = "damage"
+shape = "burst"
+resolution = "area"
+damage_type = "necrotic"
+range = 8
+radius = 1
+damage = "2d6"
+effect = { corpse = "consumed" }
+
+[spell.cast]
+effect = "blight"
+noun = "burst"
+verb = "tears"
+noise = { sound = "explosion", loudness = 60 }
+
+[spell.grows]
+damage = "willpower 13 3d6, 16 4d6, 19 5d6, 25 5d6+2"
+range = "willpower 14 9, 18 10"

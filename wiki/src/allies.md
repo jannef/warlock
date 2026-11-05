@@ -61,6 +61,27 @@ Your own spells that harm an area hurt your allies in it too.
 scroll](magic.md#learning-spells-from-scrolls): the calls are very hard to learn, even for a
 caster well above their level.
 
+### The risen
+
+[Rouse the dead](magic.md#spell-rouse-the-dead) is aimed at a [corpse](food.md#corpses) you see, of
+any age. The corpse is used up and **what it was** stands where it lay, or on the nearest free
+cell: an ogre's corpse makes an ogre. It keeps everything of its kind, its
+[stats](creature-numbers.md), its natural attacks and armour, what it resists, and any
+[creature tag](creature-numbers.md) it had, but stands at a share of its hit points, with no gear
+and no pack, and has no name and no trade: a shopkeeper's corpse rises a mute, empty-handed body.
+A [mimic](mimics.md)'s corpse rises as a mimic, disguised as nothing. It serves as a summon does,
+and when it falls again or its time is up it leaves nothing, so nothing rises twice. The corpse of
+a unique creature will not rise for you. Whatever leaves no corpse never comes to this.
+
+Now and then it rises **berserk**: "The dead thing stands, and it knows no one." It joins
+[the berserk](creatures.md#factions), friendly to nothing: it attacks what it sees, you, your
+allies, the peaceful, and another berserk alike. It takes no orders and counts toward neither its
+spell's limit nor how many you may lead. Its time runs as a servant's would, however long your
+[talents](talents.md) would keep a summon. It leaves nothing when it falls, and killing it pays
+as killing any of its kind.
+
+{{#include generated/rise-spells.md}}
+
 ### The druid's calls
 
 The druid calls the wild: [Call of the wild](magic.md#spell-call-of-the-wild) at level 6,

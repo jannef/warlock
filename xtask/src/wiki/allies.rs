@@ -148,6 +148,45 @@ pub(super) fn summon_spells(content: &Content) -> String {
     out
 }
 
+/// The spells that raise a corpse (`[spell.effect] rise`): what the risen stand at, how long and
+/// how many serve, and how often one rises berserk.
+pub(super) fn rise_spells(content: &Content) -> String {
+    let Some(rules) = content.spell_rules() else {
+        return String::new();
+    };
+    let mut spells: Vec<&SpellData> = (content.spells().iter())
+        .filter(|s| s.effect.rise.is_some())
+        .collect();
+    spells.sort_by(|a, b| a.level.cmp(&b.level).then(a.name.cmp(&b.name)));
+    let mut out = String::from(
+        "| Spell | Level | School | Hit points | Minutes | At once | Berserk | Grows with | Mana | Learning |\n\
+         |---|:---:|---|:---:|:---:|:---:|:---:|---|:---:|:---:|\n",
+    );
+    for spell in spells {
+        let Some(rise) = &spell.effect.rise else {
+            continue;
+        };
+        let learning = match spell.study_difficulty {
+            0 => "—".to_string(),
+            n => format!("{n:+}"),
+        };
+        let _ = writeln!(
+            out,
+            "| {} | {} | {} | {} % | {} | {} | {} % | {} | {} | {learning} |",
+            link(Term::Spell, &spell.id, &spell.name),
+            spell.level,
+            link(Term::School, spell.school.id(), &capital(spell.school.id())),
+            rise.hit_points,
+            rise.minutes,
+            rise.most,
+            rise.berserk,
+            grows_with(spell),
+            rules.mana(spell, 0),
+        );
+    }
+    out
+}
+
 /// `word` with its first letter upper-case.
 fn capital(word: &str) -> String {
     let mut chars = word.chars();

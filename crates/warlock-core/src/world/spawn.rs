@@ -98,7 +98,8 @@ impl World {
         let spawner = self.state.current().spawner.as_ref();
         let outside = |id: ActorId| spawner.is_some_and(|s| s.outside.contains(&id));
         let n = here
-            .filter(|a| !outside(a.id) && self.stance(player, a.id) == Stance::Hostile)
+            .filter(|a| !outside(a.id) && a.risen.is_none())
+            .filter(|a| self.stance(player, a.id) == Stance::Hostile)
             .count();
         u32::try_from(n).unwrap_or(u32::MAX)
     }

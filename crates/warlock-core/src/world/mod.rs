@@ -111,6 +111,7 @@ mod collar;
 mod companion;
 mod concentration;
 mod consecrate;
+mod corpse_spell;
 mod court;
 mod creation;
 mod curse;
@@ -915,6 +916,7 @@ impl World {
             faction_override: None,
             summoner: None,
             ally: None,
+            risen: None,
             alignment: content.alignment().map(|_| alignment),
             alignment_override: None,
             npc: None,
@@ -1644,6 +1646,8 @@ mod collar_tests;
 #[cfg(test)]
 mod concentration_tests;
 #[cfg(test)]
+mod corpse_spell_tests;
+#[cfg(test)]
 mod cost_tests;
 #[cfg(test)]
 mod court_tests;
@@ -2025,7 +2029,8 @@ pub(crate) fn stance_between(
     a: &Actor,
     b: &Actor,
 ) -> Stance {
-    if beast_friend::befriended(state, content, a, b) {
+    // A faction friendly to nothing is hostile to its own, never to itself.
+    if a.id == b.id || beast_friend::befriended(state, content, a, b) {
         return Stance::Neutral;
     }
     content.stance_of(a.faction(content), b.faction(content))

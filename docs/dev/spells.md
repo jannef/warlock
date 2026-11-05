@@ -237,6 +237,29 @@ cast path shares.
     banded 30, plate 40, great helm 10, large shield 10, tower shield 20. #397 retiered some
     of them for the first list (below): Blessing 1, Cure wounds 1 (a touch), Evil eye 0, Call
     lightning 3 (2d6 to 3d6), and Fire burst folded into Fireball.
+- **Spells aimed at a corpse** (#999; the spell types design §7 entries 2, 29, 30;
+  `world/corpse_spell.rs`, tests `world/corpse_spell_tests.rs`): `[spell.effect] corpse =
+  "consumed" | "kept"` (`CorpseUse`) on a burst of harm, a touch that heals, or a `self` summon with
+  `rise` (`spell_def::corpse_fits`, refused otherwise). `SpellData::aims_corpse`, so `aimed()` holds
+  whatever the shape; `Aim::Corpse` ("a corpse you see"; `Ability::action_at` as a cell's);
+  `Reading::aimed` for the read list, since a `self` spell's scroll has no range. The rules:
+  `World::corpse_in_sight` (the player sees the cell, by the perception; the pile's top-most corpse
+  stack; **no stage read**, decision Q10), `use_corpse` (one of the stack gone when `consumed`).
+  Presentation: `PerceptionView::{corpse_at, corpses_in_sight}`, read by the aiming mode (the cursor
+  starts on the nearest corpse, Tab cycles them, no last target, `Line::no_corpse` says "There is no
+  corpse there."). Refused, with no time and no mana, with no corpse.
+  - **Charnel burst** (`cast_damage`'s corpse arm): `within_reach` as its reach check (the caster's
+    own cell allowed: no one is spared), then the burst at the cell with `origin = center` (no flight,
+    no `burst_center`), `World::spill_corpse` (a kill's spatter by the corpse's creature).
+  - **Grave feast** (`cast_feast`, ahead of `cast_heal`): `effect.mana`, a roll to 500, on a heal.
+    The caster's own: nobody on the cell is touched. Refused beyond a touch and when neither pool has
+    room. The heal's roll, then the mana's, on the gameplay stream.
+  - **Rouse the dead** (`cast_rise`, ahead of `cast_summon`; `docs/dev/allies.md` "The risen"):
+    `effect.rise = { most, minutes, hit_points, berserk, berserk_faction, berserk_message }`,
+    refusals in this order: no allies data, the overworld, no corpse, a `unique`'s, no free cell, the
+    cap. Then one `below(100)` against `berserk`, whatever it is. `Grows::degrees` and
+    `base_degrees` read `rise.minutes`. `count` and `roll()` are none: one corpse, one creature. No
+    alignment deed, no caster level.
 - **The first list** (#397; design §7, §8; tests `world/spell_list_tests.rs`):
   - **Spells are data**: `SpellId` (an index in path order) is the one spell type; the
     twelve-variant `ClassSpell` of #395 is gone. `Action::Cast(String, _)` names the spell by its
@@ -306,7 +329,7 @@ cast path shares.
     the classes that give it. A spell a class gives is its holder's at that level, whatever
     their Spellcraft: its level is the author's call (`docs/design/no-caster-level.md` §4). The
     content test (`every_class_has_mana_and_its_guaranteed_spells`) holds a full caster (its
-    `FULL` list: druid, priest, witch, wizard) to a cantrip (level 0 or 1) at 1 and three to six spells (the priest's three:
+    `FULL` list: druid, priest, witch, wizard) to a cantrip (level 0 or 1) at 1 and three to twelve spells (the priest's three:
     their rite is the Orison, `docs/dev/prayer.md`), and the others to at
     most two boons of level 5 or less. Every class has `mana`
     at least 1 (the berserker and the warrior gained theirs); races keep their own.

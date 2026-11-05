@@ -1,0 +1,20 @@
+# Rouse the dead (the spell types design §7 entry 29): the corpse's own creature type stands up at
+# half its hit points to serve for ten minutes, and now and then rises friendly to nothing.
+[[spell]]
+id = "rouse_the_dead"
+name = "Rouse the dead"
+description = "A corpse you see rises as what it was and fights beside you until it falls again, or ten minutes pass. Now and then it rises against everything, you too."
+level = 24
+school = "necromancy"
+kind = "summon"
+shape = "self"
+resolution = "auto"
+study_difficulty = 8
+effect = { rise = { most = 2, minutes = 10, hit_points = 50, berserk = 10, berserk_faction = "berserk", berserk_message = "The dead thing stands, and it knows no one." }, corpse = "consumed" }
+
+[spell.cast]
+message = "The dead thing stirs, and stands."
+noise = { sound = "chanting", loudness = 30 }
+
+[spell.grows]
+degrees = "presence 14 15, 18 20, 22 30"

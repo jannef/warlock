@@ -55,6 +55,15 @@
 #                 that brings 1 to 12, `most` (1 to 12) of this spell's calls kept at once (past
 #                 it the oldest departs), `minutes` (1 to 600) their stay, `spread` (1 to 5,
 #                 default 2) how far from the caster they appear
+#     corpse      `consumed` or `kept`: it is aimed at a corpse the caster sees, the pile's
+#                 top-most, and `consumed` uses it up; on a `damage` burst (it goes off there), a
+#                 `heal` touch (the caster heals), or a `summon` on `self` with `rise`
+#     rise        a `summon` spell's raising of the corpse, in place of `summon`: `{ most = 2,
+#                 minutes = 10, hit_points = 50, berserk = 10, berserk_faction = "berserk",
+#                 berserk_message = "..." }`: the corpse's own type stands at `hit_points` (1 to
+#                 100) percent of its hit points, `most` and `minutes` as a summon's; `berserk`
+#                 (0 to 100) percent rise in `berserk_faction` instead, saying `berserk_message`
+#     mana        a `heal` spell's mana back to the caster: a roll (at most 500)
 #     arcs        a `damage` ray's, bolt's, touch's, or line's, of a type that arcs (`[types]` in
 #                 ../spells.toml), 1 to 12: that many jumps are taken without a draw, every jump of
 #                 it reaching 2 cells rather than the arc's one

@@ -1,0 +1,18 @@
+# O7 (docs/design/generic-vaults.md §4): a hut, the hermit's bones in it, his book and a scroll.
+# The decision: whether to go in. The door stands open, not shut: a closed door is not walkable,
+# so the local area's generator would take the hut for a sealed pocket and give the area up.
+name = "The Hermit's Hut"
+kind = "outdoor"
+map = '''
+ WWWWW
+ W=b=W
+ W=s=W
+ WW+WW
+'''
+
+[legend]
+"W" = "timber_wall"
+"=" = "plank_floor"
+"+" = "door_open"
+"b" = { terrain = "plank_floor", objects = ["bones", "book"] }
+"s" = { terrain = "plank_floor", loot = { pool = "scrolls" } }
