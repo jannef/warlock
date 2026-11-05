@@ -22,13 +22,13 @@ expression: "render(case, content.clone())"
           │   m  Listen at a door    in a direction                                     │
           │   n  Pick lock           in a direction                                     │
           │   o  Forage              not usable here                                    │
+          │   p  Fletch              you have no knife                                  │
           │ Weapon skills                                                               │
-          │   p  Shield bash         you hold no shield                                 │
+          │   q  Shield bash         you hold no shield                                 │
           │                                                                             │
           │ The basilisk's stare: a foe nearby that sees you slows to a crawl a moment; │
           │ your eyes then rest two hours.                                              │
           │                                                                             │
           │                                                                             │
-          │ a-p or Enter use   > < page   Esc close                                     │
-          └─────────────────────────────────────────────────────────────────────────────┘
- The Hub  ·  HP 98/98  ·  MP 217/228  ·  Lv 36  ·  08:00  ·  11 Darkening, Year 1444     ? controls
+          │ a-q or Enter use   > < page   Esc close                                     │
+ The Hub  └─────────────────────────────────────────────────────────────────────────────┘? controls

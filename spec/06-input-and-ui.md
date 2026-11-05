@@ -422,6 +422,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
     it has, at a place they see (the aiming mode), in that skill's place; **Forage** (`Ability::Forage`,
     §8 "Foraging"), Survival's use, which whoever is trained in it has, asking for nothing, in
     that skill's place, greyed out "not usable here" (`Unavailable::NotHere`) outside the wild;
+    **Fletch** (`Ability::Fletch`, §8 "Fletching"), Woodcraft's use, which everyone has, trained
+    or not, asking for nothing, in that skill's place, greyed out "you have no knife"
+    (`Unavailable::NoKnife`) or "you have no bow or crossbow ready" (`Unavailable::NoLauncher`);
     and each other skill used as
     an action (`kind = "action"`, §8 "Skills") the player
     is trained in, listed but never available until its use comes (it then becomes an ability of

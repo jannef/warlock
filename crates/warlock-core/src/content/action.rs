@@ -107,6 +107,8 @@ pub enum ActionKind {
     Drink,
     /// A turn of foraging in the wild (spec §8 "Foraging"): a forage takes several.
     Forage,
+    /// A turn of fletching (spec §8 "Fletching"): a batch takes several.
+    Fletch,
     /// A turn of working an item at a forge's anvil (spec §7 "Special rooms"): an attempt
     /// takes many.
     Temper,
@@ -170,6 +172,7 @@ impl ActionKind {
         ActionKind::Pray,
         ActionKind::Drink,
         ActionKind::Forage,
+        ActionKind::Fletch,
         ActionKind::Temper,
         ActionKind::Disarm,
         ActionKind::Heal,
@@ -219,6 +222,7 @@ impl ActionKind {
             ActionKind::Pray => "pray",
             ActionKind::Drink => "drink",
             ActionKind::Forage => "forage",
+            ActionKind::Fletch => "fletch",
             ActionKind::Temper => "temper",
             ActionKind::Disarm => "disarm",
             ActionKind::Heal => "heal",
@@ -287,6 +291,7 @@ impl ActionKind {
             ActionKind::Pray => "pray",
             ActionKind::Drink => "drink",
             ActionKind::Forage => "forage",
+            ActionKind::Fletch => "fletch",
             ActionKind::Temper => "temper",
             ActionKind::Disarm => "disarm traps",
             ActionKind::Heal => "tend your hurts",

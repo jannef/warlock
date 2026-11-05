@@ -275,6 +275,7 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("prayer-uses.md", prayer::prayer_uses),
         ("prayer-levels.md", prayer::prayer_levels),
         ("prayer-rites.md", prayer::prayer_rites),
+        ("fletching.md", skills::fletching),
         ("foraging.md", skills::foraging),
         ("skills.md", skills::skills),
         ("skill-benefits.md", skills::skill_benefits),
@@ -1002,10 +1003,9 @@ mod tests {
             ", quarterstaff (both hands), ironwood staff (both hands), buckler, small shield, \
              large shield, tower shield |"
         ));
-        assert!(
-            equipment
-                .contains("| `f` | Off hand | Stiletto, dagger, short sword, hand axe, buckler, ")
-        );
+        assert!(equipment.contains(
+            "| `f` | Off hand | Knife, stiletto, dagger, short sword, hand axe, buckler, "
+        ));
         assert!(equipment.contains(
             "| `k` | Missile weapon | Short bow (shoots arrows), long war bow (shoots arrows), \
              composite bow (shoots arrows), crossbow (shoots crossbow bolts), heavy crossbow \
@@ -1015,8 +1015,21 @@ mod tests {
              other, any other weapon, and anything made for throwing |"
         ));
         assert!(equipment.contains(
-            "| `l` | Missiles | Sling stone, arrow, crossbow bolt, flaming arrow | 6 seconds |"
+            "| `l` | Missiles | Brittle arrow, brittle bolt, sling stone, arrow, crossbow bolt, \
+             flaming arrow | 6 seconds |"
         ));
+        let fletching = text("fletching.md");
+        assert!(
+            fletching.contains("| Time | 10 minutes | 5 minutes |"),
+            "{fletching}"
+        );
+        assert!(
+            fletching.contains(
+                "| What a launcher of arrows gets | brittle arrows; from Woodcraft 25, arrows | \
+                 arrows |"
+            ),
+            "{fletching}"
+        );
         assert!(equipment.contains("| `m` | Tool | Lantern, pick-axe, mattock | 6 seconds |"));
         let digging = text("digging.md");
         assert!(
@@ -1038,7 +1051,7 @@ mod tests {
         let launchers = text("launchers.md");
         assert!(
             launchers.contains(
-                "| Long war bow | 1d8+2 | 22–24 | ×3 | 14 | 15 cells | Arrows, flaming arrows | 6 \
+                "| Long war bow | 1d8+2 | 22–24 | ×3 | 14 | 15 cells | Brittle arrows, arrows, flaming arrows | 6 \
                  seconds |"
             ),
             "{launchers}"
@@ -1132,7 +1145,7 @@ mod tests {
             "{disarm}"
         );
         assert!(text("materials.md").contains(
-            "| Steel | metal | `#a8b0b8` | 100% | +0 / +0 | 100% | ×1 | no | stilettos, daggers, \
+            "| Steel | metal | `#a8b0b8` | 100% | +0 / +0 | 100% | ×1 | no | knives, stilettos, daggers, \
              short swords, scimitars,"
         ));
         assert!(text("pack.md").contains("| Your own weight | 70 kg |"));

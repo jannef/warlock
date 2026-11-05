@@ -189,6 +189,7 @@ above.
 | Feinting (a lie in combat, Bluff's use) | `skills.md#feinting` |
 | Intimidating (a threat at one foe) | `skills.md#intimidating` |
 | Treating yourself, binding a wound | `skills.md#treating-yourself` |
+| Fletching, brittle arrows and bolts, a knife | `skills.md#fletching` |
 | Foraging | `skills.md#foraging` |
 | Abilities, the abilities menu | `abilities.md#the-abilities-menu` |
 | Experience, XP, levels | `experience.md`, `experience.md#levels` |

@@ -15,11 +15,11 @@ expression: "render(case, content.clone())"
 │ With    Brūn, a hound                                                                            │
 │                                                                                                  │
 │ St  Strength      12   Main hand  short sword                                                    │
-│ Dx  Dexterity     12              -2 to hit, 1d6+1 slashing or piercing                          │
-│ To  Toughness     11   Off hand   dagger                                                         │
-│ In  Intelligence  11              -7 to hit, 1d4+1 piercing                                      │
-│ Wi  Willpower     14   Missile    short bow                                                      │
-│ Pr  Presence       8              +3 to hit, 1d6 piercing, range 10                              │
+│ Dx  Dexterity     12              +2 to hit, 1d6+1 slashing or piercing                          │
+│ To  Toughness     11   Missile    short bow                                                      │
+│ In  Intelligence  11              +3 to hit, 1d6 piercing, range 10                              │
+│ Wi  Willpower     14                                                                             │
+│ Pr  Presence       8                                                                             │
 │                                                                                                  │
 │ Lv  Level         1                                                                              │
 │ XP  Experience    0 / 202                                                                        │
@@ -31,7 +31,7 @@ expression: "render(case, content.clone())"
 │     Alignment     Neutral                                                                        │
 │     Resistant to  acid                                                                           │
 │                                                                                                  │
-│ Weight 83.2 kg (you 70 kg, carrying 13.2 kg)                                                     │
+│ Weight 83.4 kg (you 70 kg, carrying 13.4 kg)                                                     │
 │ Burdened over 17.5 kg, strained over 35 kg, overloaded over 52.5 kg                              │
 │                                                                                                  │
 │ @ or Esc close   A skills                                                                        │

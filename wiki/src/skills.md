@@ -32,7 +32,7 @@ see [Doors](doors.md#picking-locks)), [Steal](skills.md#skill-steal) (see [Steal
 as the game grows. The skills used as actions are in the [abilities
 menu](abilities.md) once you are trained in them, greyed out until their uses come; [Disable
 device](skills.md#skill-disable-device)'s use is there as **[Disarm a trap](abilities.md#ability-disarm)**, [Open lock](skills.md#skill-open-lock)'s as **[Pick lock](abilities.md#ability-pick-lock)**, [Steal](skills.md#skill-steal)'s as **[Steal](abilities.md#ability-steal)**, [Bluff](skills.md#skill-bluff)'s as **[Feint](abilities.md#ability-feint)**,
-[Heal](skills.md#skill-heal)'s as **[Heal](abilities.md#ability-heal)**, [Decipher script](skills.md#skill-decipher-script)'s as **[Decipher](abilities.md#ability-decipher)** (see [Deciphering a scroll unread](scrolls.md#deciphering-a-scroll-unread)), and [Survival](skills.md#skill-survival)'s, though it is a passive skill, as **[Forage](abilities.md#ability-forage)**.
+[Heal](skills.md#skill-heal)'s as **[Heal](abilities.md#ability-heal)**, [Decipher script](skills.md#skill-decipher-script)'s as **[Decipher](abilities.md#ability-decipher)** (see [Deciphering a scroll unread](scrolls.md#deciphering-a-scroll-unread)), [Survival](skills.md#skill-survival)'s, though it is a passive skill, as **[Forage](abilities.md#ability-forage)**, and [Woodcraft](skills.md#skill-woodcraft)'s, which everyone has trained or not, as **[Fletch](abilities.md#ability-fletch)** (see [Fletching](#fletching) below).
 
 {{#include generated/skills.md}}
 
@@ -364,6 +364,26 @@ always fails and a roll of 24 always works.
   instead takes a full interval from your try before it next gets worse. Failed, "You can do no more for the filth fever."; you may try again at once. Its difficulty is the [disease](diseases.md#how-a-disease-goes)'s own.
 
 {{#include generated/heal-targets.md}}
+
+## Fletching
+
+Anyone can make arrows and bolts, after a fashion: **[Fletch](abilities.md#ability-fletch)** is in everyone's [abilities menu](abilities.md),
+in [Woodcraft](skills.md#skill-woodcraft)'s place. It takes a knife carried, in your [pack](objects.md#your-pack) or wielded (a dagger or a stiletto
+will do, or anything else of the [Daggers and knives](weapon-skills.md#weapon-skill-daggers) skill; a short sword will not), and a bow or a
+crossbow [ready](ranged.md#getting-ready), for which it makes [arrows or bolts](ammunition.md) (nothing for a sling). Without them the
+menu greys it out, "you have no knife" or "you have no bow or crossbow ready". It uses no material
+up, and you can do it anywhere.
+
+Something coming into view, or anything else that would wake you from a [rest](resting.md#how-resting-works), stops the
+work: the time is spent and nothing is made. A batch that runs its time rolls a check on your
+[Dexterity](stats.md), helped by your Woodcraft, and the check's result decides how much of the count you
+get. Under Woodcraft 25 they come out brittle: they fly, but break on any hit. Your Woodcraft earns a
+training mark for every finished batch, if you are trained in it. Fletch as often as you like: the
+time is the price.
+
+A [ranger](classes.md#ranger)'s [Fletcher](talents.md#talent-fletcher) makes this far quicker and surer, and rangers start with a knife.
+
+{{#include generated/fletching.md}}
 
 ## Foraging
 

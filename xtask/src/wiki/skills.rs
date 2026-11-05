@@ -9,7 +9,7 @@ use super::text::{Term, anchored};
 use std::fmt::Write as _;
 use warlock_core::burden::Burden;
 use warlock_core::check::{CONTEST_WAYS, contest_ways, ways};
-use warlock_core::content::{Content, OptionalSkill};
+use warlock_core::content::{Content, OptionalSkill, TalentEffect};
 use warlock_core::dice::Dice;
 use warlock_core::skills::{Effect, SkillId};
 
@@ -123,6 +123,7 @@ fn effect_name(effect: Effect) -> &'static str {
         }
         Effect::SongDegrees => "your songs last longer",
         Effect::SongCraft => "your songs are harder to shake off",
+        Effect::Fletch => "fletching: a better check for a batch of arrows or bolts",
         Effect::Temper => "tempering at a forge's anvil",
         Effect::Wade => "wading through water and marsh is quicker",
         Effect::Footing => "walking over rough ground (bush, reeds, rubble, ice) is quicker",
@@ -186,6 +187,7 @@ pub(super) fn skill_benefits(content: &Content) -> String {
             Effect::Intimidate => "threat's difficulty",
             Effect::SongDegrees => "song degrees",
             Effect::SongCraft => "song's difficulty",
+            Effect::Fletch => "fletching",
             Effect::Temper => "tempering",
             Effect::Wade => "wading's extra cost",
             Effect::Footing => "rough ground's extra cost",
@@ -227,6 +229,7 @@ pub(super) fn skill_benefits(content: &Content) -> String {
                 | Effect::Intimidate
                 | Effect::SongDegrees
                 | Effect::SongCraft
+                | Effect::Fletch
                 | Effect::Temper
                 | Effect::Swim
                 | Effect::Surprise
@@ -477,6 +480,75 @@ pub(super) fn foraging(content: &Content) -> String {
             g.chance,
             g.count,
             finds.join(", ")
+        );
+    }
+    out
+}
+
+/// Fletching's numbers (spec §8 "Fletching"; `data/fletch.toml`, Woodcraft's curve, and Fletcher's
+/// effect): the time, the check, the count, the margin's bands, and what is made.
+pub(super) fn fletching(content: &Content) -> String {
+    let Some(rules) = content.fletch() else {
+        return "Nobody fletches.\n".into();
+    };
+    let fletcher = (content.talents().iter())
+        .flat_map(|(_, def)| &def.effects)
+        .find_map(|e| match e {
+            TalentEffect::Fletcher {
+                check,
+                count_times,
+                time_percent,
+            } => Some((*check, *count_times, *time_percent)),
+            _ => None,
+        });
+    let (check, times, time) = fletcher.unwrap_or((0, 1, 100));
+    let seconds = rules.seconds;
+    let per = rules.value_per_count;
+    let mut out = String::from("| | Anyone | With Fletcher |\n|---|:---:|:---:|\n");
+    let _ = writeln!(
+        out,
+        "| Time | {} minutes | {} minutes |",
+        seconds / 60,
+        seconds * time / 100 / 60
+    );
+    let _ = writeln!(
+        out,
+        "| Check | 2d12 + Dexterity modifier + talents + Woodcraft's points, against {} | the same, +{check} |",
+        rules.difficulty
+    );
+    let _ = writeln!(
+        out,
+        "| Count | `{}` + Woodcraft's value ÷ {per} | the same |",
+        rules.count
+    );
+    let _ = writeln!(
+        out,
+        "| Made, check {0} or more | the whole count | {times} times the count |",
+        rules.difficulty
+    );
+    let _ = writeln!(
+        out,
+        "| Made, up to {} short | half the count, rounded up | {times} times that |",
+        rules.half_within
+    );
+    let _ = writeln!(
+        out,
+        "| Made, up to {} short | one | {times} |",
+        rules.one_within
+    );
+    let _ = writeln!(out, "| Made, shorter still | none | none |");
+    let name = |id| content.object(id).plural.clone();
+    let mut rows: Vec<_> = rules.makes.iter().collect();
+    rows.sort_by(|a, b| a.launches.cmp(&b.launches));
+    for row in rows {
+        let _ = writeln!(
+            out,
+            "| What a launcher of {} gets | {}; from Woodcraft {}, {} | {} |",
+            content.object(row.plain).plural,
+            name(row.brittle),
+            rules.plain_from,
+            name(row.plain),
+            name(row.plain)
         );
     }
     out

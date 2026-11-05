@@ -656,6 +656,8 @@ pub struct TalentMods {
     pub attack_noise_percent: i32,
     /// How much easier hidden traps are for it to find (no talent carries it since #684).
     pub trap_ease: i32,
+    /// It fletches far better (Fletcher, the ranger's; `world/fletch.rs`).
+    pub fletcher: Option<Fletcher>,
     /// It has the Pick lock ability without Open lock.
     pub pick_lock: bool,
     /// It has the Steal ability without the Steal skill.
@@ -994,6 +996,18 @@ pub struct Guard {
 pub struct Unstoppable {
     pub numb: Vec<StatusId>,
     pub cost: u16,
+}
+
+/// What Fletcher does to a batch (spec §8 "Fletching"): plain arrows at any Woodcraft, and these
+/// numbers.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct Fletcher {
+    /// Added to the batch's check.
+    pub check: i32,
+    /// What the count is multiplied by, after the check's margin.
+    pub count_times: i32,
+    /// Percent of the batch's time it takes.
+    pub time_percent: u32,
 }
 
 /// The active Second wind (spec §8 "Talents"): hit points back at once, then a cooldown.
@@ -1370,6 +1384,17 @@ impl TalentMods {
             TalentEffect::SneakReach { value } => self.sneak_reach += value,
             TalentEffect::SeesUnaware => self.sees_unaware = true,
             TalentEffect::Companion => self.companion = true,
+            TalentEffect::Fletcher {
+                check,
+                count_times,
+                time_percent,
+            } => {
+                self.fletcher = Some(Fletcher {
+                    check,
+                    count_times,
+                    time_percent,
+                });
+            }
             TalentEffect::Familiar => self.familiar = true,
             TalentEffect::Tame { bonus } => self.tame += bonus,
             TalentEffect::SharedSight => self.shared_sight = true,
