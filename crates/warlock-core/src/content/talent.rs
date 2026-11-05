@@ -286,10 +286,6 @@ pub enum TalentEffect {
         #[serde(default)]
         per_levels: u8,
     },
-    /// The caster level its magic items give it counts this percent more, rounded up (Attuned:
-    /// half again), in [`crate::world::Actor::caster_level`]'s items term; a negative items
-    /// term (a curse) is left as it is.
-    AttunedPercent { value: i32 },
     /// The active Blood magic: give `hp` hit points (never the last) for `mana` mana.
     BloodMagic { hp: i32, mana: i32 },
     /// Footsteps this percent louder (negative: quieter).
@@ -2250,7 +2246,6 @@ impl TalentEffect {
             | TalentEffect::ManaRegenPercent { value }
             | TalentEffect::ManaRestingPercent { value }
             | TalentEffect::ManaCostPercent { value }
-            | TalentEffect::AttunedPercent { value }
             | TalentEffect::RodCostPercent { value }
             | TalentEffect::FootstepsPercent { value }
             | TalentEffect::CarryPercent { value }

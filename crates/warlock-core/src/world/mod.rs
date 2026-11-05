@@ -1519,7 +1519,6 @@ mod affix_spell_tests;
 #[cfg(test)]
 mod affix_stamina_tests;
 #[cfg(test)]
-mod affix_talent_tests;
 #[cfg(test)]
 mod affix_utility_tests;
 #[cfg(test)]

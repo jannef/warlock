@@ -22,12 +22,12 @@ expression: "render(case, content.clone())"
                   │ Prefix  Potent: +3 on every spell's roll, harm or healing    │
                   │ Prefix  Baleful: spells threaten a critical on 1 more roll   │
                   │ Prefix  Mystic: +6 to maximum mana                           │
-                  │ Suffix  of the Adept: +2 to caster level                     │
                   │ Suffix  of the Magus: +2 to hit with spells                  │
                   │ Suffix  of Siphoning: +2 mana on a kill close by             │
                   │                                                              │
                   │ Esc close                                                    │
                   └──────────────────────────────────────────────────────────────┘
+
 
 
 

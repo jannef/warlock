@@ -51,9 +51,7 @@ affixes, then the combat stance. The regeneration affix goes
 through `World::healing_rate` like every other pace change, the mana affixes (Mystic,
 `max_mana`; of Clarity, `mana_regeneration`) through `Actor::max_mana` and `World::mana_rate`
 (`docs/dev/mana.md`; mana follows the maximum down with `World::keep_mana_within_max`); the
-caster level effect (`caster_level`, no built-in affix yet) through `Actor::caster_level`,
-its items term lifted by Attuned (`TalentMods::attuned`: `attuned_percent`, rounded up; T1, #634)
-(`docs/dev/spells.md`); the Protection affix (Hardened, an
+(no caster level affix: of the Adept and Attuned went in #988); the Protection affix (Hardened, an
 item effect, local, on armour kinds: `ItemKind::is_armour`) through `Stack::protection`, which
 `Actor::protection` sums (docs/dev/combat.md); the typed effects (docs/dev/combat.md "Damage
 types"): `Effect::Elemental` (an attack effect, local on what attacks: `Mods::elemental` is one
@@ -95,7 +93,7 @@ the spell ones (`mana_cost`, `spell_ease`, `spell_to_hit`, `spell_threat`, `spel
 its parse, `Mods::add` arm (a sum), `describe::phrase`, and wiki words. The hooks came first,
 each in its own PR (A1 spells, B1 resources, D1 utility, E1 on a kill, E2 potions and wands),
 tested on fixture affixes; **the shipped files** came after (P1, #635), one under
-`data/affixes/` each, on the ladder: of the Adept, of Thrift, Mage-wrought, of the Magus,
+`data/affixes/` each, on the ladder: of Thrift, Mage-wrought, of the Magus,
 Baleful, Potent, of Farcasting, of Lingering, of Siphoning, of Wands, Tireless, of Breath, of
 Ease, of the Hunt, the five pool maxima (of Fury, of Steadiness, of Stillness, of Guile, of the
 Muse: dead loot on a character without the pool, by the owner's choice), Hobnailed, Delving, of

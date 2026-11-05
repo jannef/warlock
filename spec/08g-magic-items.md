@@ -90,10 +90,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     beside the talents' (§8 "Spells": "Hooks", `Actor::spell_mods`; no tag filter on an item:
     each acts on every spell): `spell_rungs` rungs, `spell_bonus` (Potent: +1, +2, +3 at item
     levels 3, 7, 11) on the roll, `spell_sides`, `spell_dice`, `spell_reroll`, `spell_reach`
-    cells of range or length with School focus's, `spell_duration` degrees. `caster_level` (of the Adept) is read in `Actor::caster_level`; **Attuned**
-    (Scholar, Intelligence 12, level 6) counts the caster level magic items give half again,
-    rounded up (+1 → +2, +3 → +5) (affixes design §10; its stamina twin, Bellows, was cut in
-    #774).
+    cells of range or length with School focus's, `spell_duration` degrees. Nothing gives caster level any more: of the Adept and the talent Attuned were
+    removed (#988), and of the Scholar (Spellcraft) is the one affix of learning, on staffs too.
     The utility hooks
     are in (#631), worn by the player or a creature, identified or not: `door_kick` adds to a
     kick's Strength as Lockbreaker's does (a door's and a chest's), `dig_percent` is that much
@@ -124,8 +122,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     Stag (athletics), the Leech (heal), the Picklock (open lock), Disarming (disable device),
     Appraisal (appraise), Haggling (negotiation, #666), the Scholar (spellcraft), Letters (decipher script), the Cutpurse
     (steal), on the ladder (Spot, Open lock, Disable device, Heal, Steal, and Appraise give nothing to the
-    untrained, so their suffixes help the trained only); of Wounding (an extra damage die); the systems' (#635): of the
-    Adept (caster level), of Thrift (mana costs), of the Magus (spell to-hit), of Farcasting
+    untrained, so their suffixes help the trained only); of Wounding (an extra damage die); the systems' (#635): of Thrift (mana costs), of the Magus (spell to-hit), of Farcasting
     (spell reach), of Lingering (spell degrees), of Siphoning (mana on a kill), of Wands (wand
     level), of Breath (stamina pace), of Ease (weapon feats' stamina), of the Hunt (stamina on a
     kill), of Fury, of Steadiness, of Stillness, of Guile, of the Muse (the maxima of rage,

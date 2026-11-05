@@ -95,6 +95,9 @@ fn content(ray: bool) -> Arc<Content> {
 fn wizard(content: Arc<Content>) -> World {
     let mut w = world_with(content, "wizard");
     reach(&mut w, 18);
+    // `levelup:auto` takes Frugal caster at 18 (it took Attuned before it went); these tests
+    // read the plain costs.
+    w.player_mut().talents.forget("frugal_caster");
     w
 }
 

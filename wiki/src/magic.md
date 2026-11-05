@@ -87,7 +87,7 @@ and an [ascetic](classes.md#ascetic) one in five (20 %, 2d4). Other classes do n
 
 Your caster level no longer decides what you can learn. It is your
 [level](experience.md#levels) times your class's **casting** share, rounded down, plus what
-[talents](talents.md) and [magic items](magic-items.md) (*of the Adept*) add; nothing in play
+[talents](talents.md) add; nothing in play
 reads it now, and it is on its way out of the game.
 
 {{#include generated/spell-casting.md}}

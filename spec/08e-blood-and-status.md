@@ -491,7 +491,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     25: wizard, witch, priest, and druid 100, bard and aristocrat 75, paladin, ranger, and ascetic
     50, everyone else 25; 100 without a class), a creature's its type's level, rounded down; plus
     the `caster_level` talent effect (racial and birth-sign gifts are talents; flat, or `value`
-    per `per_levels` character levels: the wizard's Arcane training, +1 per 5) and affix effect;
+    per `per_levels` character levels; no talent ships it now);
     never below 0, and at least 1 for anyone whose maximum mana is
     above 0. It sets nothing in play since learning became Spellcraft's (#987; the no-caster-level
     design removes the rest, #990); never a spell's roll, reach, or mana (decisions 1 and 10). The player knows

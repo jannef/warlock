@@ -380,7 +380,6 @@ pub fn phrase(rolled: &Rolled<'_>, kind: ItemKind, content: &Content) -> String 
         Effect::Regeneration => format!("hit points come back {v}% faster"),
         Effect::MaxMana => format!("+{v} to maximum mana"),
         Effect::ManaRegeneration => format!("mana comes back {v}% faster"),
-        Effect::CasterLevel => format!("+{v} to caster level"),
         Effect::ManaCost => format!("abilities cost {v}% less mana"),
         Effect::SpellEase => format!("hinders casting {v} {} less", points(v)),
         Effect::SpellToHit => format!("+{v} to hit with spells"),

@@ -508,6 +508,9 @@ fn hexes_fall_on_a_foe_the_witch_sees_within_reach() {
 fn bolts_and_bursts_strike_as_scrolls_do_and_cost_mana() {
     let mut w = world("wizard");
     reach(&mut w, 18);
+    // `levelup:auto` takes Frugal caster at 18 (it took Attuned before it went); these tests
+    // read the plain costs.
+    w.player_mut().talents.forget("frugal_caster");
     let target = kobold(&mut w, 2, 500);
     let here = w.player_pos();
     let at = Pos::new(here.x + 2, here.y);

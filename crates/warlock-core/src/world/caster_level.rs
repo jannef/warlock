@@ -1,16 +1,14 @@
 //! Caster level (spec §8 "Spells", the magic design §3): a derived number, never stored. The
 //! player's is their level times their class's casting percent (`casting` in `data/classes/`;
 //! all of it without a class), a creature's its type's level; then what its talents (racial
-//! and birth-sign gifts are talents too) and what it wears and wields add (`caster_level`, a
-//! talent effect, flat or by character level, Arcane training's, and an affix effect, which
-//! Attuned counts half again), rounded
-//! down, never below 0, and at least 1 for anyone with mana. It sets the learning check (a
+//! and birth-sign gifts are talents too) add (`caster_level`, a talent effect, flat or by
+//! character level), rounded down, never below 0, and at least 1 for anyone with mana. It sets the learning check (a
 //! spell of a level at most it is learned for certain, the spell scaling design §4.4) and,
 //! until the ladders replace them (S2), a spell's dice; never its mana.
 
 use super::{Actor, ActorId, World};
 use crate::character::Character;
-use crate::content::{Content, Effect as ItemEffect};
+use crate::content::Content;
 
 /// The casting percent of a player with `character` (spec §8 "Spells"): their class's, 100
 /// without a class (a scenario's own player, as a creature casts at its whole level).
@@ -20,15 +18,12 @@ pub fn casting_percent(content: &Content, character: Option<&Character>) -> u8 {
 
 impl Actor {
     /// Its caster level at character `level` with `casting` percent (spec §8 "Spells"): `level`
-    /// × `casting` ÷ 100 rounded down, plus its talents' (at `level`: Arcane training's grows
-    /// with it) and its magic items' `caster_level` (half again with Attuned, rounded up);
-    /// never below 0, and at least 1 while its maximum mana is above 0.
+    /// × `casting` ÷ 100 rounded down, plus its talents' (at `level`); never below 0, and at least 1 while its maximum mana is above 0.
     pub fn caster_level(&self, content: &Content, level: u8, casting: u8) -> i32 {
         let base = i32::from(level) * i32::from(casting) / 100;
         let mods = self.talent_mods(content);
         let talents = mods.caster_level_at(level);
-        let items = mods.attuned(self.mods(content).get(ItemEffect::CasterLevel));
-        let level = (base + talents + items).max(0);
+        let level = (base + talents).max(0);
         if self.max_mana(content) > 0 {
             level.max(1)
         } else {

@@ -1,13 +1,13 @@
 # The Eorcanstān (Old English, "the precious stone", as Beowulf names the gems of the hoard): one
 # of the pedlar's three, found only in his offer and very rarely (data/dialogue/road.toml's
 # `[dialogue.offer]`; #808). A caster's ring of black-torc power: a deeper well of mana, filled
-# faster and spent more slowly, spells struck harder and at a higher caster level, and a voice
+# faster and spent more slowly, spells struck harder and learning deeper, and a voice
 # no silence stills.
 [[unique]]
 id = "eorcanstan"
 name = "The Eorcanstān"
 object = "gold_ring"
-affixes = ["mystic:11", "potent:3", "hale:6", "of_the_adept:3", "of_clarity:12", "of_thrift:6"]
+affixes = ["mystic:11", "potent:3", "hale:6", "of_the_scholar:6", "of_clarity:12", "of_thrift:6"]
 level = 12
 power = { ward = "silenced", message = "The silence cannot still your voice.", phrase = "No silence stills its wearer's voice." }
 lore = "The stone is dark until a spell is spoken near it; then it is darker."
