@@ -11,7 +11,7 @@
 //! out_of_depth = 5                      # percent of draws made 1 deeper, then perhaps more
 //! deeper = 5                            # percent, again and again, of 1 deeper still
 //! deeper_cap = 10                       # the most dangers past the first one deeper
-//! spawn = { every = "15m", chance = 60, cap = 40 }
+//! spawn = { every = "2m", chance = 60, cap = 40 }
 //! ```
 //!
 //! The danger is never stored: [`DangerRule::at`] computes it from the depth and, for a
@@ -45,7 +45,7 @@ pub const POPULATION: Count = Count::PerCells {
 /// The most dangers an out-of-depth draw may go past its first one deeper (`deeper_cap`).
 pub const MAX_DEEPER_CAP: u8 = 50;
 /// The default time between two attempts to bring a creature.
-pub const EVERY: Duration = Duration::minutes(15);
+pub const EVERY: Duration = Duration::minutes(2);
 /// The default chance in percent that an attempt brings one.
 pub const CHANCE: u8 = 60;
 /// The shortest and longest time allowed between attempts.
@@ -338,7 +338,7 @@ pub(super) struct PerCellsSpec {
     most: u32,
 }
 
-/// `spawn = { every = "15m", chance = 60, cap = 40 }`, each optional.
+/// `spawn = { every = "2m", chance = 60, cap = 40 }`, each optional.
 #[derive(Clone, Debug, Default, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub(super) struct SpawnSpec {

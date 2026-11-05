@@ -62,7 +62,7 @@ holds its sleepers on top of the population, and they count toward it below.
 ## They keep coming
 
 While you are on a floor with a danger, the creatures that live there keep coming: every so
-often (a quarter of an hour of game time, unless a place says otherwise) one may come, with a
+often (two minutes of game time, unless a place says otherwise) one may come, with a 60 percent
 chance, as long as the floor holds fewer creatures [hostile](creatures.md#factions) to you than its population. It comes
 somewhere you cannot see, never within 8 steps of you, never on [stairs](terrain.md#stairs), in a doorway, on a shop
 floor, or in a [sanctuary](special-rooms.md#room-sanctuary). A cleared floor fills up again while you stay; a [long rest](resting.md#how-resting-works) below lets
