@@ -1,0 +1,27 @@
+# Reek (the spell types design §7 entry 16, §7 "Zones"; #1000): Blight's little brother that stays:
+# a cloud that poisons whoever starts a turn in it. It does not block sight. Scroll only.
+[[spell]]
+id = "reek"
+name = "Reek"
+description = "A cloud of foul vapour bursts where you aim it and hangs there a while: everyone in it is poisoned, and poisoned again while they stay."
+level = 13
+school = "necromancy"
+kind = "damage"
+shape = "burst"
+resolution = "area"
+damage_type = "poison"
+range = 8
+radius = 2
+damage = "1d4"
+effect = { zone = { kind = "fouled", turns = 10 } }
+
+[spell.cast]
+effect = "blight"
+noun = "reek"
+verb = "chokes"
+message = "A foul cloud bursts from your hands!"
+noise = { sound = "chanting", loudness = 30 }
+
+[spell.grows]
+damage = "willpower 16 2d4, 22 2d4+2"
+range = "willpower 14 9, 18 10"

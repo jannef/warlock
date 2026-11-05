@@ -630,6 +630,45 @@ cast path shares.
   `world/spell.rs` (cone geometry),
   `ui/target.rs` (aiming by shape).
 
+## Zones
+
+An area that lies on the floor for a time (`world/zone.rs`; the design's §7 "Zones", #1000).
+Balefire, Reek, Mirk, and Slick (scroll only) lay one with `[spell.effect] zone = { kind, turns }`
+(`SpellZone`, `ZoneKind`; `content/spell_def.rs::check_zone`: a burst or a line; `turns` 1 to
+`MAX_ZONE_TURNS`, of 6 s; `fire` a `damage` spell of fire, `fouled` of poison, `dark` and `slick` a
+`hex`, whose `status` is then not asked).
+
+- **State**: `LevelState::zones: Vec<Zone>` (`kind`, `cells`, `until`, `by`, `harm`, `light`,
+  `spell`), saved, hashed, left out while empty, and `LevelState::zone_memory`, what the player saw.
+- **Rules**: fixed cells, never spreading (owner, Q3); a new zone takes its cells from the old
+  (`lay_zone`); `by` is whose kill it is, never who it spares (Q14); past `until` it does nothing,
+  and `zones_fade` drops it at the end of the turn, on the current level, quietly. No zone on the
+  overworld (`can_loose_here`).
+- **Hooks**, one line each: `zone_turn_start` first in `ai.rs::creature_turn` (before a sleeper's
+  rest and a stride) and in `schedule.rs::run_turn` as the player's next turn begins (`fire`,
+  `fouled`); `zone_tread` in `ice.rs::after_tread`, every step's one hook (`fire` onto, `slick` onto
+  or off); `LevelState::darkened` in `LightCache::sources` and `LevelState::shade` in the light pass,
+  the player's (`perception.rs`) and a creature's (`sight.rs::light`) alike (`dark`); the fire's cells
+  are sources in `LightCache::sources`, each keyed by `zone_key`, a light of the fire type's
+  `fire.light`. A stride stops short of a zone's cell (`stride.rs`), so a coarse turn never crosses one
+  unburnt. Bounce light is not cut: light landing on a dark cell may still bounce faintly beside it.
+- **The cast**: `cast_damage` takes the cells before the cast (`zone_cells`: a burst's centre moves
+  when who stood in its way falls) and lays after `spell_lands`; `cast_hex` hands a hex with a zone
+  to `cast_zone`. A fire's `harm` is rolled once as it is laid (the spell's `Cast::roll`), so nothing
+  draws at a burn; ice under a fire melts as it is laid; `fire` and `slick` lie only on walkable ground
+  out of open water, `fouled` and `dark` on anything sight passes through.
+- **Clearing**: `LevelState::clear_zone_cells(cells, kinds)`. Cold's `douses` reads it in
+  `spell_type.rs::douse` (`[Fire]`). Gale's `clears` (#1001) reads it too, whichever lands second.
+- **What the player knows**: `Perception::zones`, the zones on visible cells; `remember` keeps
+  them in `zone_memory` as terrain is; `PerceptionView::zone_at` is visible, remembered, or nothing
+  on a hidden cell. A dark cell is not visible without darkvision, so it shows by the dark itself.
+  The words are `ui/look.rs::zone_words`, the tint `ui/zone_tint.rs`.
+- **Determinism**: a fire's roll at the cast; Slick's check (two draws) at the step; the type's
+  rider's chance per creature harmed; nothing else, and a level with no zone only reads an empty list.
+- **Dev**: `zone:KIND@X,Y,R` (`zone_dev`: by the player, ten turns, a fire's harm 4, no time); the
+  `truth` layer has a line a zone, JSON `--state` a `zones` list.
+- **Tests**: `world/zone_tests.rs`, `ui/look.rs` (the words' snapshot), `ui/zone_tint.rs`.
+
 ## Spell types
 
 What every spell of a damage type does beyond its damage (the design:

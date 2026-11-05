@@ -123,7 +123,7 @@ Action text syntax: whitespace-separated `move:DIR wait open:DIR close:DIR kick:
 pickup[:LETTERS] drop[:LETTERS] sell[:LETTERS] pay[:DIR] equip:SLOT:LETTER remove:SLOT bash:DIR fire:X,Y throw:LETTER:X,Y
 eat:LETTER eat:floor:LETTER fletch give:LETTER[:DIR] read:LETTER[:X,Y|:LETTER] study:LETTER scribe:SPELL dig:DIR search search:N disarm:DIR listen:DIR heal[:ID[:DIR]] feint:DIR intimidate:X,Y pray temper:LETTER decipher:LETTER drink use:ID[:DIR|:X,Y] chat:DIR ask:DIR:TOPIC say:DIR:WORDS steal:DIR tame:DIR throw_voice:X,Y order:follow|stay|hunt:X,Y rest:GOAL encounter:CHOICE stance:NAME vision:PROFILE
 talent:ID[:CHOICE] advance:SKILL levelup:auto xp:N call:ID rank:SKILL:N
-skip:DURATION weather:KIND spawn ally:CREATURE[:N[:DURATION]] meet:ENTRY[:OUTCOME] effect:ID@X,Y[>X,Y] identify[:LETTERS] afflict:STATUS drain:N resource:ID infect:DISEASE reveal:ID quest_roll:ID:TARGET`
+skip:DURATION weather:KIND spawn ally:CREATURE[:N[:DURATION]] meet:ENTRY[:OUTCOME] effect:ID@X,Y[>X,Y] zone:KIND@X,Y,R identify[:LETTERS] afflict:STATUS drain:N resource:ID infect:DISEASE reveal:ID quest_roll:ID:TARGET`
 (`DIR` = N
 NE E SE S SW W NW; `NAME` = aggressive, neutral, defensive, or coward (a stance, no time; `assets/data/stances.toml`; `frenzy` is refused: only rage gives it); `LETTERS` = stacks by position, as letters
 for the first 26 (`a` = 0, the first) or numbers for any (`0,2,30`; mixed works too, `ac,30`),
@@ -215,7 +215,7 @@ no game time; `reveal` is the dev reveal: hidden location `ID` of the overworld 
 instead (a creature, `tag:` a tag, or an object id its pool can hold, or a variant id; its kills
 count from then, a variant's reveal is made; `docs/dev/quests.md`), no game time;
 `freeze:X,Y,R` and `thaw:X,Y,R` are the dev frost and heat bursts (radius 0 to 20
-around level cell (X, Y), in its line of sight; no time); `ACTION*N` repeats one, e.g.
+around level cell (X, Y), in its line of sight; no time); `zone:KIND@X,Y,R` is the dev zone (`KIND` = `fire`, `fouled`, `slick`, `dark`; by the player, for ten turns, a fire's harm 4, within radius 0 to 20 in its line of sight; no time; refused on the overworld; `docs/dev/spells.md` "Zones"); `ACTION*N` repeats one, e.g.
 `wait*10`). Dump layers: `view` (what the player sees), `fov` (`*` visible),
 `memory` (seen terrain, remembered objects, and known traps), `light` (perceived brightness of
 visible cells as a digit, `0` dark to `9` fully lit), `sound` (heard sounds at their rough places
@@ -255,7 +255,7 @@ player's animal companion as they know it, `Snel, a hound (grade 12) at (12, 5):
 follow`, the cell only where they see it, `Snel, a hound (grade 12): with you` in the retinue,
 `no companion` without one; docs/dev/companion.md), `familiar` (the witch's familiar, in the same
 words; `no familiar` without one; docs/dev/familiar.md), `truth`
-(ground truth, hidden traps and secret doors (`S`) too, a sealed room's standing breach (`H`), a line per chest after the map, `chest 7 (hutch) at (12, 5): shut, locked, holds 3 stacks`, and hidden locations by their entrance's
+(ground truth, hidden traps and secret doors (`S`) too, a sealed room's standing breach (`H`), a line per chest after the map, `chest 7 (hutch) at (12, 5): shut, locked, holds 3 stacks`, a line per zone, `zone fire by #0 until 08:01:00, harm 4: (30, 14)`, and hidden locations by their entrance's
 glyph, **dev-only**; on a level with a danger
 it and `actors` start with `danger 3 population 2/6 spawn next 08:15:00`), `actors` (every actor on the level with its hit points, mana, its resources (`resources rage
 11/20 (0)`, with progress), and

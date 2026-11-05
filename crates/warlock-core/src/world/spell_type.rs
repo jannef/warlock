@@ -25,7 +25,7 @@ use super::level::Fire;
 use super::{ActorId, World};
 use crate::action::Event;
 use crate::combat::{self, Blow, Strike};
-use crate::content::{ActionKind, DamageTypeId, LightId};
+use crate::content::{ActionKind, DamageTypeId, LightId, ZoneKind};
 use crate::geom::{Dir, Pos};
 use crate::ice::Shock;
 use crate::sight::LineOfSight;
@@ -209,13 +209,16 @@ impl World {
         }
     }
 
-    /// The fires within `radius` of `center`, in its line of sight, go out.
+    /// The fires within `radius` of `center`, in its line of sight, go out, and a fire zone
+    /// loses those cells (`zone.rs`).
     fn douse(&mut self, center: Pos, radius: i32) {
-        for p in self.burst(center, radius) {
+        let cells: Vec<Pos> = self.burst(center, radius).into_iter().collect();
+        for &p in &cells {
             if self.state.current().fires.contains_key(&p) {
                 self.put_out(p);
             }
         }
+        (self.state.current_mut()).clear_zone_cells(&cells, &[ZoneKind::Fire]);
     }
 
     /// A fire on `cell` of the current level, if it is walkable, burning `seconds` with light

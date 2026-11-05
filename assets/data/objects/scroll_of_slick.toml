@@ -1,0 +1,20 @@
+# A scroll of slick (spec §8 "Scrolls", "Spells"): read it (`r`) and aim, and it casts Slick, free
+# of mana, at its base: the ground turns slick where it was aimed. Study it (`L`), and you may learn
+# the spell for good.
+[[object]]
+id = "scroll_of_slick"
+name = "scroll of slick"
+plural = "scrolls of slick"
+glyph = "?"
+fg = "#a9c7cf"
+class = "scrolls"
+materials = ["paper"]
+weight = 50
+value = 100
+stackable = true
+level = 3
+frequency = 35
+
+[object.read]
+kind = "spell"
+spell = "slick"

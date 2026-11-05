@@ -6,6 +6,7 @@ use super::text::{Term, anchored, damage_link, link};
 use std::fmt::Write as _;
 use warlock_core::content::{
     BurstIce, Content, Resolution, RodDoes, RodShape, Shape, SpellData, SpellPurpose, TalentEffect,
+    ZoneKind,
 };
 
 /// What each shape multiplies the base cost by; a burst by radius.
@@ -335,6 +336,21 @@ pub(super) fn does(content: &Content, spell: &SpellData) -> String {
             None => String::new(),
         },
     };
+    if let Some(zone) = spell.effect.zone {
+        let what = match zone.kind {
+            ZoneKind::Fire => "fire that burns",
+            ZoneKind::Fouled => "a cloud that poisons",
+            ZoneKind::Slick => "slick ground that trips",
+            ZoneKind::Dark => "a darkness no light reaches into",
+        };
+        let then = if text.is_empty() { "" } else { "; then " };
+        let _ = write!(
+            text,
+            "{then}[{what}](#zones) for {} turns ({} seconds)",
+            zone.turns,
+            u32::from(zone.turns) * 6
+        );
+    }
     if spell.kind == SpellPurpose::Damage
         && let Some((s, n)) = spell.effect.status
     {

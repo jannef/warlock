@@ -220,7 +220,7 @@ impl World {
             from,
             to,
         });
-        self.after_tread(player, to, footing, events);
+        self.after_tread(player, (from, to), footing, events);
         self.make_step_noise(player, to, fleeing);
         // Wading through a marsh may give a disease, by how long the step takes.
         let speed = self.state.player().speed(&self.content);

@@ -259,6 +259,7 @@ mod witch;
 mod words;
 mod wriggle;
 mod zap;
+mod zone;
 
 pub use actor::{Actor, ActorId, ActorKind, AttackSkills, Mind, Patrol};
 pub use alignment::Deed;
@@ -315,6 +316,7 @@ pub(crate) use talk_past::offered as encounter_choices;
 pub use temper::{temperable, workable};
 use travel::{enter_room, instantiate_level, level_template};
 pub use voice::VOICE_RANGE;
+pub use zone::Zone;
 
 use crate::action::{Action, Event, Outcome, Rest};
 use crate::alignment::Score;
@@ -1511,6 +1513,9 @@ impl World {
             Action::Identify(positions) => return self.identify_dev(positions),
             Action::Freeze { at, radius } => return self.freeze_dev(*at, *radius, events),
             Action::Thaw { at, radius } => return self.thaw_dev(*at, *radius, events),
+            Action::Zone { kind, at, radius } => {
+                return self.zone_dev(*kind, *at, *radius, events);
+            }
             Action::Afflict(id) => return self.afflict_dev(id, events),
             Action::Drain(amount) => return self.drain_dev(*amount),
             Action::Resource(id) => return self.grant_resource_dev(id, events),
@@ -2001,6 +2006,8 @@ mod words_tests;
 mod wriggle_tests;
 #[cfg(test)]
 mod zap_tests;
+#[cfg(test)]
+mod zone_tests;
 
 /// How actors `a` and `b` stand toward each other ([`World::stance`], for a borrowed state): the
 /// stance of their factions, [`Stance::Neutral`] for a Beast-friend and an animal they befriended.
