@@ -1,7 +1,7 @@
 //! Stamping [vaults](crate::content::Vault) into generated levels.
 
 use super::Canvas;
-use crate::content::{CreatureSpawn, Vault};
+use crate::content::{CreatureSpawn, Vault, VaultMonsters};
 use crate::geom::{Dir, Pos};
 use crate::rng::Rng;
 
@@ -48,8 +48,8 @@ pub(super) fn fits(canvas: &Canvas, vault: &Vault, at: Pos) -> bool {
 }
 
 /// Copies `vault` with its top-left corner at `at` (terrain, placed lights, the flow of running
-/// water, objects, traps, locks on doors and chests, secret doors, chests, named places with
-/// their notes, and creatures with their patrols) and
+/// water, objects, traps, loot and monster pools to roll, locks on doors and chests, secret doors,
+/// chests, named places with their notes, and creatures with their patrols) and
 /// marks its cells stamped. Returns its entrances in level coordinates, each with the direction
 /// leading out.
 pub(super) fn stamp(canvas: &mut Canvas, vault: &Vault, at: Pos) -> Vec<(Pos, Dir)> {
@@ -73,6 +73,12 @@ pub(super) fn stamp(canvas: &mut Canvas, vault: &Vault, at: Pos) -> Vec<(Pos, Di
     }
     for (p, pool) in &template.loot {
         canvas.loot.push((offset(*p), pool.clone()));
+    }
+    for group in &template.monsters {
+        canvas.monsters.push(VaultMonsters {
+            cells: group.cells.iter().map(|p| offset(*p)).collect(),
+            ..group.clone()
+        });
     }
     for (p, lock) in &template.locks {
         canvas.locks.insert(offset(*p), lock.clone());

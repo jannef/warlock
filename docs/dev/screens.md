@@ -90,7 +90,7 @@ to open, read keys for, or draw one:
   action closes it and is applied (`play.act`, which may answer with a dialog of its own: the
   sell offer), a follow-up dialog replaces it (`ScreenStack::handle`). Users: every quit path
   (`menu::quit_dialog(saving)` for the pause and main menu Quit and a bound `KeyCommand::Quit`,
-  `save_to_menu_dialog`), the step onto a known trap (`input::trap_dialog`, spec §8 "Traps"), an overworld step while Fainting or Starving (`input::hunger_dialog`, spec §8 "Hunger"), a burst
+  `save_to_menu_dialog`), the step onto a known trap (`input::trap_dialog`, spec §8 "Traps"), an overworld step while Fainting or Starving (`input::hunger_dialog`, spec §8 "Hunger"), a step into a feature that offers an action (`input::offer_dialog`, `docs/dev/special-rooms.md`), a burst
   read so close it may catch the player (`input::burst_dialog`, spec §8 "Scrolls"), the shop (`input.rs`: `leaving_dialog`, `sale_dialog`; spec §7 "Shops"), and the overworld
   encounter (`ui/encounter.rs`: `on_encounter`, after `on_death` and before `on_level_up`, opens
   `dialog(view)` from `PerceptionView::encounter()` whenever the run changed with one pending and
@@ -172,8 +172,8 @@ to open, read keys for, or draw one:
   send actions by position.
 - Prompts in the message line (open/close/bash/chat direction, rest, look mode, aiming,
   `--more--`) are `InputMode`s, not screens; a question (the step onto a known trap,
-  `input::trap_dialog`; a journey while Fainting or Starving, `input::hunger_dialog`) is the
-  dialog (above).
+  `input::trap_dialog`; a journey while Fainting or Starving, `input::hunger_dialog`; a walk into what offers an action,
+  `input::offer_dialog`) is the dialog (above).
 - **The message line and `--more--`** (`ui/more.rs`, spec §6 "Messages", #207): `Game::read` is
   the message log as it was when the player last acted (`Game::apply` takes it before applying;
   a new run starts with nothing read, so its welcome is news; `Game::from_world`, a resumed run,

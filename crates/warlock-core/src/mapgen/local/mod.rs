@@ -216,6 +216,8 @@ pub(super) fn generate(
             }),
             item_level: content.item_level(id),
             loot: Vec::new(),
+            monsters: Vec::new(),
+            outside_cap: Default::default(),
             // Under the open sky: the weather's temperature, and ice as it brings.
             temperature: None,
             ice: Default::default(),

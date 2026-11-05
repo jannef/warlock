@@ -6,7 +6,7 @@
 # The game shows a talent's `description` and its prerequisites in words; the wiki shows the
 # rules (cargo xtask wiki).
 
-# The most ranks a talent may have ("Apprentice 2/3").
+# The most ranks a talent may have ("Name 2/3").
 max_ranks = 3
 
 # The identical-effects check (#790; docs/dev/progression.md "Coverage policy", the #776

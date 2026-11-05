@@ -191,7 +191,6 @@ impl World {
         let boons = std::mem::take(&mut me.boons);
         super::stars::grant(&content, character.as_ref(), &boons, &mut me.talents);
         me.boons = boons;
-        self.train_chosen(def.effects_at(1), choice);
         self.take_up_skills(def.effects_at(1));
     }
 }

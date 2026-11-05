@@ -1,6 +1,6 @@
 //! The Talents page (spec §6 "Talents", §8 "Talents"; #236): page 8 of the info pages, also
 //! reached by its own rebindable command (`KeyCommand::Talents`, `G` by default). First the
-//! player's talents, grouped by tree, each with its rank ("Hardy 2/3") and where it came from
+//! player's talents, grouped by tree, each with its rank (`Name 2/3`, where one has ranks) and where it came from
 //! when they did not pick it (their class, their birth sign); then, dimmer, every other talent
 //! they could still pick, by tree, with what its next rank needs ("Needs: Toughness 14,
 //! Healthy"), each part met in the normal colour and each part not met dimmed, so a build can be

@@ -6,7 +6,7 @@
 //!    attempt.
 //! 3. Stamp the vaults the branch level names (each for certain: where no rock is left big
 //!    enough, the spot that takes the least of the cave is filled with rock first; else the
-//!    attempt fails), then one or two others, into solid rock (a random spot among all that fit)
+//!    attempt fails), then perhaps one or two others, into solid rock (a random spot among all that fit)
 //!    and tunnel from each entrance to the cave.
 //! 4. A few pools of shallow water.
 //! 5. The up staircase in a roomy spot; the down staircase in a roomy spot far from it (by walking
@@ -30,6 +30,10 @@ const SMOOTHING: usize = 5;
 const MIN_CAVE: i32 = 30;
 /// Side of the blocks lamps are scattered over.
 const LAMP_BLOCK: i32 = 16;
+/// Chance (percent) that a cave level gets a vault (besides the ones its branch level names).
+const VAULT_CHANCE: u32 = 40;
+/// Chance (percent) that a cave level with a vault gets a second.
+const SECOND_VAULT_CHANCE: u32 = 15;
 /// Longest tunnel from a vault entrance to the cave.
 const MAX_TUNNEL: usize = 40;
 
@@ -47,7 +51,11 @@ pub(super) fn build(canvas: &mut Canvas, rng: &mut Rng, needs: Needs) -> Option<
             return None;
         }
     }
-    let vaults = 1 + usize::from(rng.chance(30));
+    let vaults = if rng.chance(VAULT_CHANCE) {
+        1 + usize::from(rng.chance(SECOND_VAULT_CHANCE))
+    } else {
+        0
+    };
     let shuffled = vault::shuffled(canvas, rng);
     place_vaults(canvas, rng, &shuffled, vaults);
     pools(canvas, rng);

@@ -131,6 +131,17 @@ count by walkable cells, the draw by `danger::draw`, a cell from the free plain-
 row order (`swap_remove` of a drawn index), a route by `out_and_back`. Whom a level is made for
 is `mapgen::Visit` (the luck, the player's level for a scaled danger, the uniques met;
 `travel::level_template` builds it; `generate_with` is `generate_for` with only the luck).
+A vault's monster pools (#958, `content/monster_pool.rs`): `populate` draws them first, group by
+group, from `Rng::vault_monsters` with the same `content.candidates` and `danger::draw`
+(`MonsterPool::Level`: the floor's population and generic list; `MonsterPool::Tags`: the tag's
+types of the floor's campaign as both lists, so a stray stays in the tribe and an out-of-depth
+draw reaches deeper in it). Their cells stand in `LevelTemplate::outside_cap`, which
+`travel::instantiate_level` turns into `Spawner::outside` (actor ids): `World::hostiles_here`
+leaves those out, so the spawner's cap and the dumps' `population 2/6` do not count them. Without
+this a floor laid down full would see nothing come until as many had died as the vault holds, and
+an avoided vault would stop the floor's respawning for good; a teeming den's sleepers, by contrast,
+do count (spec §7 "Special rooms"). Tests: `mapgen/vault_monsters_tests.rs`,
+`world::spawn_tests::a_vault_s_monster_pool_stands_outside_the_cap`.
 Rarity (#373): `content/creature_rarity.rs` parses `data/creature_rarities.toml` (tiers in file
 order, each a `factor` in percent of a common type's weight, 1 to 1000; `common` required, the
 only tier without the file); `CreatureDef::rarity` is an index into `Content::creature_rarities`

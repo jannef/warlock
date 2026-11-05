@@ -507,9 +507,13 @@ impl World {
     /// `World::followers_arrive`); each says what else it keeps of its mind.
     pub(super) fn cross_to(&mut self, id: ActorId, to: &str, pos: Pos) {
         if let Some(a) = self.state.actors.get_mut(&id) {
-            a.level = to.to_string();
+            // A vault's monster pool stands outside its level's cap; on another level it counts.
+            let from = std::mem::replace(&mut a.level, to.to_string());
             a.pos = pos;
             a.heard.clear();
+            if let Some(s) = (self.state.levels.get_mut(&from)).and_then(|l| l.spawner.as_mut()) {
+                s.outside.remove(&id);
+            }
         }
     }
 }
@@ -589,7 +593,12 @@ pub(super) fn instantiate_level(
     // Under the open sky its water has frozen and thawed with the weather of the last weeks.
     state.pre_roll_ice(content, id);
     for spawn in &template.creatures {
-        make_creature(state, content, id, spawn);
+        let made = make_creature(state, content, id, spawn);
+        if template.outside_cap.contains(&spawn.pos)
+            && let Some(spawner) = (state.levels.get_mut(id)).and_then(|l| l.spawner.as_mut())
+        {
+            spawner.outside.insert(made);
+        }
     }
 }
 

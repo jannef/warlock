@@ -148,6 +148,22 @@ fn the_one_beside_follows_down_and_up_and_the_one_two_cells_off_stays() {
 }
 
 #[test]
+fn a_followed_vault_monster_counts_toward_the_new_levels_cap() {
+    use crate::world::spawn::Spawner;
+    let mut w = world();
+    let k = beside(&w);
+    let spawner = Spawner::new(1, "test_top", w.state.time, Duration::seconds(60));
+    let top = w.state.levels.get_mut("test_top").expect("top");
+    top.spawner = Some(spawner);
+    top.spawner.as_mut().expect("spawner").outside.insert(k);
+    run(&mut w, "descend");
+    assert_eq!(w.state.actors[&k].level, "test_below");
+    assert_eq!(w.hostiles_here(), 1, "it counts on the new level");
+    let top = &w.state.levels["test_top"];
+    assert!(top.spawner.as_ref().expect("spawner").outside.is_empty());
+}
+
+#[test]
 fn a_follower_keeps_its_hit_points_and_statuses_and_hunts_on() {
     let mut w = world();
     let k = beside(&w);

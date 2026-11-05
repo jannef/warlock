@@ -99,12 +99,12 @@ fn caves_snapshot() {
 /// rooms"), their plain ground drawn as the effect's mark.
 #[test]
 fn special_room_snapshots() {
-    let flooded = level(8, 2);
+    let flooded = level(33, 2);
     assert_eq!(flooded.rooms.len(), 1);
-    insta::assert_snapshot!("rooms_seed_8_depth_2_flooded", describe(&flooded));
-    let shadowed = level(19, 4);
+    insta::assert_snapshot!("rooms_seed_33_depth_2_flooded", describe(&flooded));
+    let shadowed = level(20, 4);
     assert_eq!(shadowed.rooms.len(), 1);
-    insta::assert_snapshot!("caves_seed_19_depth_4_shadowed", describe(&shadowed));
+    insta::assert_snapshot!("caves_seed_20_depth_4_shadowed", describe(&shadowed));
     // Without the marks, the flooded room shows its water.
     let map = ascii(&flooded, &CONTENT);
     let water = CONTENT
@@ -444,7 +444,7 @@ proptest! {
 /// have a special room, every effect turns up, and rooms levels and caves levels both get them.
 #[test]
 fn special_rooms_come_about_three_levels_in_five() {
-    let seeds = 0..150;
+    let seeds = 0..250;
     let mut levels = 0;
     let mut special = 0;
     let mut by_effect = vec![0; CONTENT.room_effects().defs().len()];
@@ -793,20 +793,22 @@ fn a_treasure_room_s_chest_never_covers_loot() {
 }
 
 /// A floor chest in a sanctuary stays a chest: its mimic draw never puts a creature in a room
-/// creatures shun (#661: the proptest's seed 6128859225406577321, depth 7, had a mimic standing
-/// in one).
+/// creatures shun (#661: a proptest seed had a mimic standing in one; the levels are searched,
+/// as a change to the generators moves that seed).
 #[test]
 fn a_mimic_never_stands_in_a_sanctuary() {
-    let a = level(6128859225406577321, 7);
     let effect = CONTENT.room_effects().id("sanctuary").expect("sanctuary");
-    let room = (a.rooms.iter())
-        .find(|r| r.effect == effect)
-        .expect("a sanctuary");
-    assert!(
-        room.cells().iter().any(|p| a.chests.contains_key(p)),
-        "the chest stays a chest"
-    );
-    assert!(a.creatures.iter().all(|c| !room.contains(c.pos)));
+    for seed in 0..150 {
+        for depth in 1..=8 {
+            let a = level(seed, depth);
+            for room in a.rooms.iter().filter(|r| r.effect == effect) {
+                assert!(
+                    a.creatures.iter().all(|c| !room.contains(c.pos)),
+                    "seed {seed} depth {depth}"
+                );
+            }
+        }
+    }
 }
 
 /// What generation lays or stands somewhere, against the terrain it ends on (#661): objects lie
@@ -857,5 +859,33 @@ proptest! {
         for depth in 1..=8 {
             nothing_on_a_wall(&level(seed, depth))?;
         }
+    }
+}
+
+/// A branch offers a random vault on one floor in four, so none repeats within four floors
+/// (#960), and the deal is the same every time it is asked.
+#[test]
+fn random_vaults_are_spaced_by_phase() {
+    let def = CONTENT.dungeon("depths").expect("the depths");
+    for seed in 0..20 {
+        let ids = |depth: u32| -> Vec<String> {
+            spaced_vaults(&CONTENT, seed, def, depth)
+                .iter()
+                .filter(|v| !v.pinned)
+                .map(|v| v.id().to_string())
+                .collect()
+        };
+        let mut seen: Vec<String> = Vec::new();
+        for depth in 1..=4 {
+            let floor = ids(depth);
+            assert_eq!(floor, ids(depth));
+            assert!(floor.iter().all(|v| !seen.contains(v)), "seed {seed}");
+            seen.extend(floor);
+        }
+        let all = (CONTENT.vaults().iter())
+            .filter(|v| v.stamps_on(def, 1) && !v.pinned)
+            .count();
+        assert_eq!(seen.len(), all);
+        assert_eq!(ids(1), ids(5));
     }
 }

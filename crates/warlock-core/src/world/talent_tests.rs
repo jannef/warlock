@@ -220,10 +220,10 @@ fn a_pick_nothing_can_be_spent_on_is_dropped() {
     let turn = w.turn();
     run(&mut w, "wait");
     assert_eq!(w.turn(), turn + 1);
-    // With every talent the character qualifies for held, the pick is dropped too. Apprentice
-    // (any skill, three ranks each) would keep a pick open to the last level, and so would Sworn
+    // With every talent the character qualifies for held, the pick is dropped too. Skill focus
+    // (one pick per trained skill) would keep a pick open to the last level, and so would Sworn
     // foe (any creature tag) and School focus (any school or element): here they are an
-    // elf's, and Apprentice's tree waits for a free talent; Salvager, Unbinder, Overreach, Wand
+    // elf's, and Skill focus's tree waits for a free talent; Salvager, Unbinder, Overreach, Wand
     // mastery, Channeler, Appraiser's eye, Deep lungs, Second breath,
     // Quick study of the body, Early mastery, Gifted (six stats), Sure hand,
     // Numbing cold, Brimming, and Devotee are held back the same way so the picks fit in
@@ -231,8 +231,8 @@ fn a_pick_nothing_can_be_spent_on_is_dropped() {
     let mut files = ContentFiles::builtin();
     files.edit_table("talents", |text| {
         text.replace(
-            "ranks = 3\ndescription = \"You take up",
-            "ranks = 3\nneeds = { race = \"elf\" }\ndescription = \"You take up",
+            "choice = \"skill\"\n",
+            "choice = \"skill\"\nneeds = { race = \"elf\" }\n",
         )
         .replace(
             "ranks = 2\ndescription = \"You know how a bound",

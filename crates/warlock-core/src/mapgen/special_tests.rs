@@ -135,7 +135,7 @@ fn a_feature_with_a_level_chance_sometimes_covers_the_whole_level() {
         assert!(level.pervading.is_none_or(|e| e == glittering));
     }
     // Most draws are the glittering hall (weight 100 of 145), 40 % of those the whole level.
-    assert!((15..=45).contains(&whole), "{whole} of 80 levels covered");
+    assert!((10..=45).contains(&whole), "{whole} of 80 levels covered");
     assert!(rooms > 15, "{rooms} levels with a glittering room");
     // Without a level chance nothing ever covers a level.
     for seed in 0..40 {

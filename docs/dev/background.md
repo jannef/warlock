@@ -158,7 +158,7 @@ whatever tier was drawn, so the heritage talents always force their lines.
 | skill | `Skills::add` (trained at the roll, or raised) |
 | weapon marks | `WeaponSkills::add_marks` (never a rank: stops one short of the next); `best` is the weapon skill (not a style) at the highest rank, ties by data order, none without a rank |
 | alignment | `Score::new(score + by)`: the start's fourth term, never `shift_alignment` |
-| talent, flaw | `World::bestow(id, choice)` (`world/boons.rs`, the body of the altar's Chosen and Forsaken with the id fixed, now `pub(super)`): `Talents::take`, `class::hand_out` at rank 1 (Hardy's hit points), `Actor::boons`, `stars::grant`'s order, `train_chosen`; no message (the story is shown, never told) |
+| talent, flaw | `World::bestow(id, choice)` (`world/boons.rs`, the body of the altar's Chosen and Forsaken with the id fixed, now `pub(super)`): `Talents::take`, `class::hand_out` at rank 1 (Hardy's hit points), `Actor::boons`, `stars::grant`'s order; no message (the story is shown, never told) |
 
 ## Talents and flaws (B5, #707)
 
