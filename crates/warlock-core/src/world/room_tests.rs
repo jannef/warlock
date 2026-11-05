@@ -578,14 +578,14 @@ fn a_room_seen_from_outside_says_its_near_line_once() {
 }
 
 #[test]
-fn old_delver_quickens_a_room_s_quickening_half_again_at_its_second_rank() {
+fn old_hand_quickens_a_room_s_quickening_half_again() {
     let mut w = hall("sanctuary");
     let player = w.state.player().clone();
     assert_eq!(w.room_pace(&player, 300), 300);
     w.player_mut().talents.take("old_delver", None);
     let player = w.state.player().clone();
-    assert_eq!(w.room_pace(&player, 300), 300, "not at the first rank");
-    w.player_mut().talents.take("old_delver", None);
+    assert_eq!(w.room_pace(&player, 300), 300, "not with Old delver alone");
+    w.player_mut().talents.take("old_hand", None);
     let player = w.state.player().clone();
     assert_eq!(
         w.room_pace(&player, 300),

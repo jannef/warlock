@@ -27,14 +27,14 @@ expression: "render(case, content.clone())"
               │ Guard                                                                │
               │   o  Armour training  You move freely in armour: it hampers your De… │
               │ Shadow                                                               │
-              │   p  Keen ears        You hear fainter sounds, fainter still at the… │
+              │   p  Keen ears        You hear fainter sounds.                       │
               │   q  Lamplighter      You tend your lantern well: it burns brighter… │
               │   r  Night eyes       Your eyes grow used to the dark: you see by h… │
               │ Wayfarer                                                             │
               │   s  Pious            You keep the old observances: an altar of you… │
               │ Scholar                                                              │
               │   t  Apprentice       You take up a skill you lack, or get better a… │
-              │   u  Deep well        Your power runs deep: more mana for each rank… │
+              │   u  Deep well        Your power runs deep: more mana, and more as … │
               │                                                                      │
               │ You were born to money: you set out with far more gold than most,    │
               │ and a few gems besides.                                              │

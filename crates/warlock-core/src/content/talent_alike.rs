@@ -1,19 +1,14 @@
 //! The identical-effects check on the talent table (#790; docs/dev/progression.md "Coverage
-//! policy", the #776 review's rules 3 and 4), run at load after every talent has parsed.
-//!
-//! - **No clones** (rule 3): no talent does at each of its ranks exactly what another does at
-//!   the same ranks (a class ability that copies a pickable, Song of rest beside Fast healer, or
-//!   a pickable copying another's first ranks). A class table names the pickable's id instead.
-//! - **No chains of one effect** (rule 4): a talent whose one talent prerequisite shares an
-//!   effect kind with it (Weapon specialization after Weapon focus, both `weapon`) is that
-//!   talent's next rank, not an id of its own.
+//! policy", the #776 review's rule 3), run at load after every talent has parsed: no talent does
+//! at each of its ranks exactly what another does at the same ranks (a class ability that copies
+//! a pickable, Song of rest beside Fast healer, or a pickable copying another's first ranks). A
+//! class table names the pickable's id instead.
 //!
 //! `alike` in `data/talents.toml` lists the pairs kept on purpose (Cleave and Cleaving strike:
 //! two cleave sources make a great cleave; the birth signs' gifts, which the owner keeps whole).
 //! A listed pair that is no longer alike is an error too, so the list stays honest.
 
 use super::{ContentError, StatusId, TalentBook, TalentDef, TalentEffect};
-use std::mem::discriminant;
 
 /// One effect with the status it counts only under (`while`), if any: the condition is part of
 /// the effect's identity, so `protection 2 while raging` is not Bulwark's plain `protection 2`.
@@ -47,34 +42,8 @@ fn clone_of((a, sa): (&TalentDef, &[Vec<Effect>]), (b, sb): (&TalentDef, &[Vec<E
         && sa.iter().zip(sb).all(|(x, y)| same(x, y))
 }
 
-/// Whether `a` needs exactly one other talent, `b`, and shares an effect kind with it.
-fn chained(a: &TalentDef, b: &TalentDef) -> bool {
-    let kinds = |d: &TalentDef| {
-        (1..=d.rank_count())
-            .flat_map(|r| {
-                effects_at(d, r)
-                    .map(|(s, e)| (s, discriminant(&e)))
-                    .collect::<Vec<_>>()
-            })
-            .collect::<Vec<_>>()
-    };
-    let (ka, kb) = (kinds(a), kinds(b));
-    ka.iter().any(|k| kb.contains(k))
-}
-
-/// The talents `def` needs, every rank's, each once.
-fn needed(def: &TalentDef) -> Vec<super::TalentId> {
-    let mut ids: Vec<_> = (def.needs.talents.iter())
-        .chain(def.ranks.iter().flat_map(|r| r.needs.talents.iter()))
-        .map(|&(id, _)| id)
-        .collect();
-    ids.sort();
-    ids.dedup();
-    ids
-}
-
-/// The check: the first clone or chain not listed in `alike`, or the first listed pair that is
-/// neither, in words, against `file` (`data/talents.toml`).
+/// The check: the first clone not listed in `alike`, or the first listed pair that is none, in
+/// words, against `file` (`data/talents.toml`).
 pub(super) fn check(
     book: &TalentBook,
     alike: &[[String; 2]],
@@ -100,23 +69,6 @@ pub(super) fn check(
                             "talents `{}` and `{}` have the same effects: a class table names \
                              the pickable's id instead of a clone, and a talent that adds \
                              nothing new is cut (list the pair in `alike` if it is deliberate)",
-                            a.id, b.id
-                        ),
-                    ));
-                }
-            }
-        }
-        if let [only] = needed(a)[..] {
-            let b = book.get(only);
-            if chained(a, b) {
-                found.push((&a.id, &b.id));
-                if !listed(&a.id, &b.id) {
-                    return Err(ContentError::new(
-                        file,
-                        format!(
-                            "talent `{}` needs only `{}` and shares an effect kind with it: make \
-                             it that talent's next rank (list the pair in `alike` if it is \
-                             deliberate)",
                             a.id, b.id
                         ),
                     ));
@@ -189,7 +141,7 @@ systems = ["hit_points"]
 "#;
 
     #[test]
-    fn the_builtin_talents_have_no_clone_or_chain_unlisted() {
+    fn the_builtin_talents_have_no_clone_unlisted() {
         Content::builtin().expect("the built-in content loads");
     }
 
@@ -204,7 +156,7 @@ systems = ["hit_points"]
 
     #[test]
     fn a_clone_of_a_talents_first_rank_is_refused() {
-        // Brawn's first rank under another id (the cut Whetstone).
+        // The first rank of a talent of two under another id (the cut Whetstone).
         let whetstone = r#"
 [[talent]]
 id = "whetstone"
@@ -212,11 +164,25 @@ name = "Whetstone"
 tree = "class"
 granted = true
 description = "Sharper blows."
-effects = [{ kind = "melee_damage", value = 1 }]
+effects = [{ kind = "melee_damage", value = 7 }]
 systems = ["combat"]
 "#;
-        let e = refusal(load(&[("whetstone", whetstone)], str::to_string));
-        assert!(e.contains("`whetstone` and `brawn`"), "{e}");
+        let oilstone = r#"
+[[talent]]
+id = "oilstone"
+name = "Oilstone"
+tree = "class"
+granted = true
+ranks = 2
+description = "Sharper blows, and more so."
+effects = [{ kind = "melee_damage", value = 7 }]
+systems = ["combat"]
+"#;
+        let e = refusal(load(
+            &[("whetstone", whetstone), ("oilstone", oilstone)],
+            str::to_string,
+        ));
+        assert!(e.contains("`whetstone` and `oilstone`"), "{e}");
     }
 
     #[test]
@@ -260,25 +226,6 @@ systems = ["protection"]
         ));
         assert!(
             e.contains("have the same effects") && e.contains("`raging_twin`"),
-            "{e}"
-        );
-    }
-
-    #[test]
-    fn a_chain_of_one_effect_kind_is_refused() {
-        let more = r#"
-[[talent]]
-id = "faster_healer"
-name = "Faster healer"
-tree = "vigour"
-description = "Rest mends you more quickly still."
-needs = { talents = { fast_healer = 1 }, level = 9 }
-effects = [{ kind = "resting_percent", value = 25 }]
-systems = ["hit_points"]
-"#;
-        let e = refusal(load(&[("faster_healer", more)], str::to_string));
-        assert!(
-            e.contains("`faster_healer` needs only `fast_healer` and shares an effect kind"),
             "{e}"
         );
     }

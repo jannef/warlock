@@ -1,0 +1,8 @@
+[[talent]]
+id = "old_hand"
+name = "Old hand"
+tree = "delver"
+description = "You take what a strange place gives, gladly: a room that quickens healing or mana quickens it half again more for you, and you lift one thing from a tempting hoard before it springs."
+needs = { talents = { old_delver = 1 }, level = 10 }
+effects = [{ kind = "room_pace_percent", value = 50 }, { kind = "hoard_grace", value = 1 }]
+systems = ["special_rooms"]

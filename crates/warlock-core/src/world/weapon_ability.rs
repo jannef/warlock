@@ -276,8 +276,7 @@ impl World {
 
     /// An `extra_damage` effect (Rend): `dice` rolled once more (no bonus, no riders) on the
     /// other end, of the blow's kind of damage (or `kind`), resisted but never soaked, after the
-    /// blow's own damage; with Second blade's rend, the off hand's dice too. Said: "Your blades
-    /// rend the orc."
+    /// blow's own damage. Said: "Your blades rend the orc."
     fn extra_damage(
         &mut self,
         by: ActorId,
@@ -297,14 +296,11 @@ impl World {
         };
         let main = me.weapon(&content).map(|(_, a)| bare(a.damage));
         let off = me.off_hand(&content).map(|(_, a)| bare(a.damage));
-        let mut rolls: Vec<Dice> = match dice {
+        let rolls: Vec<Dice> = match dice {
             ExtraDice::MainHand => main.into_iter().collect(),
             ExtraDice::OffHand => off.into_iter().collect(),
             ExtraDice::Fixed(d) => vec![d],
         };
-        if dice == ExtraDice::MainHand && me.talent_mods(&content).rend_off_hand {
-            rolls.extend(off);
-        }
         if rolls.is_empty() {
             return;
         }

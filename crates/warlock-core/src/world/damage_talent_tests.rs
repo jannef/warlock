@@ -70,8 +70,6 @@ fn elemental_ward_takes_its_share_off_the_chosen_element_only() {
     assert_eq!(w.resisted(me, fire), 10);
     give(&mut w, "elemental_ward", Some("fire"));
     assert_eq!(w.resisted(me, fire), 8, "25 %, rounded half up");
-    give(&mut w, "elemental_ward", Some("fire"));
-    assert_eq!(w.resisted(me, fire), 5, "50 % at the second rank");
     assert_eq!(w.resisted(me, cold), 10, "another element is untouched");
     assert_eq!(w.resisted(me, slash), 10, "a physical kind is untouched");
     // Every element gets its own ward, and the gear's share adds to it under the cap.
@@ -89,12 +87,11 @@ fn a_ward_against_poison_shrinks_poisons_damage_and_its_doses() {
     let poison = Damage::new(6, content.damage_type_id("poison"));
     let poisoned = content.status_id("poisoned").expect("poisoned");
     give(&mut w, "elemental_ward", Some("poison"));
-    give(&mut w, "elemental_ward", Some("poison"));
-    assert_eq!(w.resisted(me, poison), 3);
+    assert_eq!(w.resisted(me, poison), 5, "25 %, rounded half up");
     let mut events = Vec::new();
     w.afflict(me, poisoned, 4, None, &mut events);
     let severity = w.state.player().effects.get(poisoned).map(|e| e.severity);
-    assert_eq!(severity, Some(2), "half the dose");
+    assert_eq!(severity, Some(3), "a quarter off the dose");
 }
 
 #[test]
@@ -195,7 +192,7 @@ fn the_ward_is_chosen_for_an_element_only() {
         "a physical kind is no element"
     );
     run(&mut w, "talent:elemental_ward:fire");
-    assert_eq!(last(&w), "You learn Elemental ward (fire) (1).");
+    assert_eq!(last(&w), "You learn Elemental ward (fire).");
 }
 
 #[test]

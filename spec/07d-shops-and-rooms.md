@@ -349,7 +349,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     chamber has no doors: only the guardians come. A room seals once; the stacks lifted and
     whether it sealed are saved with the room (`SpecialRoom::lifted`, `sealed`; left out while
     nothing was lifted, so other rooms save and hash as before), and the `rooms` dev layer
-    lists them (`, lifted 1, sealed`). Old delver's second rank (§8 "Talents") lets one stack go first.
+    lists them (`, lifted 1, sealed`). Old hand (§8 "Talents") lets one stack go first.
     Never over a whole level.
   - **A treasure room** (`secret_doors = "all"`, `treasure = { chests = "1d2", gold = { heaps =
     "1d4+1", dice = "3d6", each = 2 }, gems = "1d3" }`, `arrive`, #617; `mapgen/treasury.rs`,
@@ -412,7 +412,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     everyone inside, the player and creatures alike, by their own side (`Actor::nature`: the
     player's band's side, a creature's type's or its level's): one of its side heals at `regen`
     percent of the pace (200: twice as fast; one fold in `World::healing_rate`, before the room's
-    pace, so Old delver's second rank quickens it too); one of the other side holds `status`, **Unwelcome**
+    pace, so Old hand quickens it too); one of the other side holds `status`, **Unwelcome**
     (§8 "Status effects": half the healing, −1 to hit), given as a room's `status` is (at the start
     of every stretch of time, and on arrival; it eases half a minute after leaving); a neutral one
     neither. The first entry's line says which: `welcome`, `unwelcome`, or the effect's `enter`.
@@ -527,8 +527,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
       toward level 2 is lost), *Forsaken* (a flaw talent of the birth signs the player lacks,
       kept for life in `Actor::boons`), *Damned* (2d4 hostiles of the floor's danger + 3, awake,
       around the altar). Talents an altar gave are shown "(altar)" (a flaw "(altar, flaw)").
-      Pious at its second rank (§8 "Talents") turns a great bane drawn into one of the nothing outcomes, drawn
-      in its place; the explosion is moderate and still comes. No outcome grants a wish.
+      No outcome grants a wish.
     - **The altar explodes** (the bane `burst`, 5 of the banes): "The altar bursts apart in
       fire!", then a fireball (3d6 fire, radius 2, `Caster::Place`) centred on the altar through
       the burst spell code: everyone in it is hurt, the player too, and it can kill ("The altar's
@@ -733,14 +732,12 @@ developer notes (CLAUDE.md, `docs/dev/`).
     (`PerceptionView::room`, on cells seen or remembered): look mode names it (§6); it
     never names the whole level's effect (`PerceptionView::pervading`, JSON dumps' `pervading`).
     The light it changes is seen like any light, before and after.
-  - **Talents** (system `special_rooms`, §8 "Talents"): Old delver (delver, two ranks,
+  - **Talents** (system `special_rooms`, §8 "Talents"): Old delver (delver,
     #775: a collapsed floor never gives way under them, a room's or a level's Ebbing never
-    takes them, and nothing they kill rises; at the second rank a room's quickening of healing
-    and mana half again more, and one stack lifted from a tempting hoard before it seals). It
-    merged #775's one-room talents (Light tread, Anchored mind, Grave warden, Hallowed rest,
+    takes them, and nothing they kill rises) and Old hand (delver, after it, level 10: a room's
+    quickening of healing and mana half again more, and one stack lifted from a tempting hoard
+    before it seals). They merged #775's one-room talents (Light tread, Anchored mind, Grave warden, Hallowed rest,
     Hoard-wise; Mirror-wise and Treasure sense, information only, were dropped), and Pious
-    (wayfarer, two ranks, #788, which merged Devout, #406, Penitent, #407, and Pilgrim: at the
-    first rank an altar of the player's side leans twice as far, an opposed one not at all, and
-    a temple's services cost half; at the second, Willpower 12 and level 10, a great bane
-    becomes nothing). #787 cut Sense of place and Hush-foot. The class ability Consecrate
+    (wayfarer, #788, which merged Devout, #406, and Pilgrim: an altar of the player's side leans
+    twice as far, an opposed one not at all, and a temple's services cost half). #787 cut Sense of place and Hush-foot. The class ability Consecrate
     (above) lifts an unholy room or level.

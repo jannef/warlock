@@ -1,0 +1,11 @@
+# A weapon skill's only, never a style's or a school's: Stylist and Schooled are those
+# (docs/design/talent-ranks.md).
+[[talent]]
+id = "weapon_specialization"
+name = "Weapon specialization"
+tree = "weaponcraft"
+choice = "weapon_skill"
+description = "You fight with your chosen weapon as one a rank more practised than you are."
+needs = { talents = { weapon_focus = 1 }, chosen = 5 }
+effects = [{ kind = "weapon", ranks = 1 }]
+systems = ["combat", "weapon_skills"]
