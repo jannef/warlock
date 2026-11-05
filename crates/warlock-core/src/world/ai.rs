@@ -160,10 +160,17 @@ impl World {
 
     /// Creature `id` steps in `dir` ([`World::creature_steps`]); returns what it did and its
     /// price: the step, opening the door in the way, or waiting when blocked.
-    fn step_or_wait(&mut self, id: ActorId, dir: Dir, events: &mut Vec<Event>) -> (Stepped, i64) {
+    pub(super) fn step_or_wait(
+        &mut self,
+        id: ActorId,
+        dir: Dir,
+        events: &mut Vec<Event>,
+    ) -> (Stepped, i64) {
         let stepped = self.creature_steps(id, dir, events);
         let price = match stepped {
             Stepped::Moved(price) | Stepped::Opened(price) | Stepped::Unlocked(price) => price,
+            // Struck down by a free blow as it turned to go, it is gone: nothing to price.
+            Stepped::Blocked if !self.state.actors.contains_key(&id) => 0,
             Stepped::Blocked => self.price_of(id, ActionKind::Wait),
         };
         (stepped, price)
