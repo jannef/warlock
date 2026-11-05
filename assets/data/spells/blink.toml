@@ -1,0 +1,16 @@
+# Blink (the spell types design §7 entry 31): a few cells away, drawn; held, webbed, and pinned block
+# a step, not a cast, and the blink ends them (the owner, Q11).
+[[spell]]
+id = "blink"
+name = "Blink"
+description = "You are elsewhere: a few cells away in a direction you do not choose, free of whatever held you."
+level = 6
+school = "transmutation"
+kind = "utility"
+shape = "self"
+resolution = "auto"
+effect = { blink = { cells = 5, ends = ["held", "webbed", "pinned"] } }
+
+[spell.cast]
+message = "You blink."
+noise = { sound = "chanting", loudness = 10 }

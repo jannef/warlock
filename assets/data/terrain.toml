@@ -17,7 +17,8 @@
 # stains (presentation-only, spec §8 "Blood": whether blood stains it; default true; water, lava,
 # and fire hold none), stone (gameplay, spec §8 "Searching": stone, worked or not; dwarves notice
 # what is hidden on it in passing, a secret door in a stone wall or a trap in a stone floor;
-# default false),
+# default false), plants (gameplay, spec §8 "Spells": things grow on it, so Bramble catches whoever
+# stands on it; default false),
 # anim (presentation-only, §4.3).
 # Noise (gameplay, spec §5 "Hearing"): step_noise (how loud steps onto it are, in percent of the
 # walker's footsteps, 0 to 1000; default 100), toggle_noise (doors and shut chests only: how loud
@@ -564,6 +565,7 @@ glow = 0.35
 
 [[terrain]]
 id = "fungus"
+plants = true
 name = "glowing fungus"
 glyph = '"'
 fg = "#70e8a8"
@@ -677,6 +679,7 @@ step_noise = 110
 
 [[terrain]]
 id = "grass"
+plants = true
 name = "grass"
 glyph = "."
 fg = "#86ba5c"
@@ -687,6 +690,7 @@ step_noise = 70
 
 [[terrain]]
 id = "flowers"
+plants = true
 name = "wildflowers"
 glyph = "*"
 fg = "#f0b4dc"
@@ -754,6 +758,7 @@ height = 2
 
 [[terrain]]
 id = "forest_floor"
+plants = true
 name = "forest floor"
 glyph = "."
 fg = "#9c8c5a"
@@ -773,6 +778,7 @@ step_noise = 110
 
 [[terrain]]
 id = "marsh"
+plants = true
 name = "marsh"
 glyph = '"'
 fg = "#628e6a"
@@ -783,6 +789,7 @@ step_noise = 150
 
 [[terrain]]
 id = "dry_grass"
+plants = true
 name = "dry grass"
 glyph = "."
 fg = "#bcae6a"
@@ -795,6 +802,7 @@ step_noise = 120
 
 [[terrain]]
 id = "tall_grass"
+plants = true
 name = "tall grass"
 glyph = '"'
 fg = "#a4c462"
@@ -804,6 +812,7 @@ step_noise = 110
 
 [[terrain]]
 id = "buttercups"
+plants = true
 name = "buttercups"
 glyph = "*"
 fg = "#f2d653"
@@ -813,6 +822,7 @@ step_noise = 70
 
 [[terrain]]
 id = "bluebells"
+plants = true
 name = "bluebells"
 glyph = "*"
 fg = "#9a9cf4"
@@ -822,6 +832,7 @@ step_noise = 70
 # Undergrowth: low enough to see over, slow and loud to push through. Its shadow is short.
 [[terrain]]
 id = "bush"
+plants = true
 name = "bush"
 glyph = "♧"
 fg = "#5cae4c"
@@ -875,6 +886,7 @@ height = 2
 
 [[terrain]]
 id = "reeds"
+plants = true
 name = "reeds"
 glyph = "¦"
 fg = "#9aac5e"

@@ -1,0 +1,27 @@
+# Rebuke (the spell types design §7 entry 36): fire, for there is no holy type (the owner, Q2), on
+# the undead in the burst alone, friend or foe; the living are not even touched.
+[[spell]]
+id = "rebuke"
+name = "Rebuke"
+description = "Hold up your faith against the dead, and it burns them: every undead thing where you aim it is seared, and flees from you a while."
+level = 14
+school = "abjuration"
+kind = "damage"
+shape = "burst"
+resolution = "area"
+damage_type = "fire"
+range = 8
+radius = 2
+damage = "2d6"
+effect = { status = "frightened", severity = 3, only_tags = ["undead"] }
+
+[spell.cast]
+effect = "blaze"
+noun = "rebuke"
+verb = "sears"
+message = "You hold up your faith against the dead!"
+noise = { sound = "chanting", loudness = 40 }
+
+[spell.grows]
+damage = "willpower 13 3d6, 16 4d6, 19 5d6, 25 5d6+2"
+range = "willpower 14 9, 18 10"

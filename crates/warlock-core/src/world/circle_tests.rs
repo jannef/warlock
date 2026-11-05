@@ -24,7 +24,7 @@ fn the_scenario_knows_every_buff_and_hex_spell() {
     let world = circles();
     let player = world.state.player();
     for spell in CONTENT.spells() {
-        // A hex that only lays a zone (Mirk, Slick) lays no status to circle.
+        // A hex that only lays a zone (Mirk, Slick) or pushes (Gale) lays no status to circle.
         let circled = matches!(spell.kind, SpellPurpose::Buff | SpellPurpose::Hex)
             && spell.effect.status.is_some();
         let id = CONTENT.spell_id(&spell.id).unwrap();

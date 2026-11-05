@@ -99,6 +99,13 @@ Which vaults a level may get (#337): `generate_for` keeps those whose `Vault::st
 depth)` holds (a dungeon vault, shared or of the branch's campaign, on a branch or level its
 `dungeons` names, if any) on the `Canvas` (`Canvas::vaults`, content order), and
 `vault::shuffled` shuffles that list. A branch no campaign vault names draws what it did before.
+`spaced_vaults` deals the branch's random vaults round the phases first, then keeps of this
+floor's phase only those whose file's `danger` holds the floor's (`Vault::suits`, #1073): the
+danger the pools draw at, `Content::spawning`'s rule at the `Visit`'s player level (0 on a floor
+with none), read once in `generate_for`. On the endless branch that is the roster's top past it,
+not `Content::floor_danger`'s rising number, because what the field guards is what the vault's
+pools can draw. Asked after the deal, the field moves no other vault's phase, and draws nothing:
+a floor whose list is unchanged draws what it did (`mapgen/vault_danger_tests.rs`).
 
 Which way a vault lies (#959): `vault::turned` draws one of the eight `content::Turn`s from the
 generator's own map stream as each drawn vault is tried, then `Vault::turned` makes the vault a file

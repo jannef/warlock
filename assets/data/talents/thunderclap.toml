@@ -1,0 +1,8 @@
+[[talent]]
+id = "thunderclap"
+name = "Thunderclap"
+tree = "class"
+granted = true
+description = "A clap of thunder about you (paid in mana): all beside you reel, you too, and the whole level hears."
+effects = [{ kind = "spell", spell = "thunderclap" }]
+systems = ["spells", "mana", "combat"]

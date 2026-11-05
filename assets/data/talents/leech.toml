@@ -1,0 +1,8 @@
+[[talent]]
+id = "leech"
+name = "Leech"
+tree = "class"
+granted = true
+description = "A ray of hunger (paid in mana): half of what it takes mends you."
+effects = [{ kind = "spell", spell = "leech" }]
+systems = ["spells", "mana", "combat", "hit_points"]

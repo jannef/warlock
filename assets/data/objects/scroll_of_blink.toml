@@ -1,0 +1,20 @@
+# A scroll of blink (spec §8 "Scrolls", "Spells"): read it (`r`), and it casts Blink, a
+# level-6 spell, free of mana; study it (`L`), and you may learn the spell for good. Level and
+# frequency by its spell's level (README.toml): the lower, the commoner the scroll.
+[[object]]
+id = "scroll_of_blink"
+name = "scroll of blink"
+plural = "scrolls of blink"
+glyph = "?"
+fg = "#d0b0ff"
+class = "scrolls"
+materials = ["paper"]
+weight = 50
+value = 130
+stackable = true
+level = 4
+frequency = 30
+
+[object.read]
+kind = "spell"
+spell = "blink"

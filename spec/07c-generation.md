@@ -260,7 +260,15 @@ developer notes (CLAUDE.md, `docs/dev/`).
   generators use only dungeon vaults, local areas only outdoor ones. A shared vault
   (`assets/vaults/`) stamps in every branch; a campaign's (`campaigns/<id>/vaults/`) only in that
   campaign's branches; and a vault whose file gives `dungeons` (branch ids, or branch levels such
-  as `"cealdhlaw:2"`, of its own campaign) only there. A `[[dungeon.levels]]` range
+  as `"cealdhlaw:2"`, of its own campaign) only there. A vault drawn at random whose file gives
+  `danger = { from = 8 }`, `{ to = 6 }`, or both (`{ from = 2, to = 40 }`, each end included;
+  #1073) stamps only on floors whose danger lies in it, so a vault whose crowd lives deep is no
+  empty room near the top and a shallow one stays shallow: the danger the floor's creatures are
+  drawn at, for the player who first comes (a player-scaled branch's included), and on the
+  endless branch past its roster's top the top's, as its draws are. It filters what a floor may
+  draw, never how often a floor gets a vault. An outdoor vault has none (a local area has no
+  danger), nor one a branch level names (stamped there for certain), and a level file's
+  `danger` is its own rule (§7 "Danger levels"). A `[[dungeon.levels]]` range
   may name vaults (`vaults = ["drakes_hoard"]`, #339): each is stamped on every level of the range
   for certain (in a cave level with no rock left big enough to hold one, the generator first
   fills the spot that takes the least of the cave with rock; an attempt that still cannot fit one
