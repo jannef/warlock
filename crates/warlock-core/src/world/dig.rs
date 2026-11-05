@@ -67,6 +67,9 @@ impl World {
     /// Starts digging toward `dir` (spec §8 "Digging"): refused, taking no time, without a
     /// digging tool ready, on the overworld, and toward anything that is no wall that breaks.
     pub(super) fn start_dig(&mut self, dir: Dir) -> Spent {
+        if self.refused_afloat("You cannot dig in deep water.") {
+            return Spent::Nothing;
+        }
         let content = self.content.clone();
         let player = self.state.player();
         if player.dig_tool(&content).is_none() {

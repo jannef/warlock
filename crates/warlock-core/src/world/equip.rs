@@ -15,7 +15,10 @@ impl World {
     /// Puts inventory stack `item` on in slot `slot` (an id), taking off first what is in the
     /// slots it takes, and moving it if it is in another slot.
     pub(super) fn equip(&mut self, slot: &str, item: usize) -> Spent {
-        self.equip_saying(slot, item, None)
+        let spent = self.equip_saying(slot, item, None);
+        // A light made ready in the water goes out at once (`swim.rs`).
+        self.douse_afloat();
+        spent
     }
 
     /// [`World::equip`], saying `put_on` in place of "You wield ..." (a spirit weapon called,

@@ -209,6 +209,9 @@ impl World {
 
     /// When a rest toward `goal` ends: at most [`MAX_REST`] from now.
     pub(super) fn start_rest(&mut self, goal: Rest) -> Spent {
+        if self.refused_afloat("You cannot rest in deep water.") {
+            return Spent::Nothing;
+        }
         let now = self.state.time;
         let until = match goal {
             Rest::For(duration) => now + duration.min(MAX_REST),

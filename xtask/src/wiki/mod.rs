@@ -1183,7 +1183,7 @@ mod tests {
                  Spellcraft: study check | Spot: noticing | Spot: lookout | Steal: \
                  stealing | Stealth: noise | Stealth: slipping past | Stealth: their lookout | Survival: journeys | \
                  Survival: foraging | Survival: lookout | Survival: slipping away | Swim: wading's extra cost | \
-                 Swim: plunge check | Tumble: \
+                 Swim: Swim check | Tumble: \
                  Dodge |"
             ),
             "{benefits}"
