@@ -1727,6 +1727,10 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
             .map(|id| content.spell(id))
             .map_or_else(|| spell.clone(), |def| spell_text(content, def)),
         TalentEffect::SpellMod(spec) => spell_mod_text(content, &spec, false),
+        TalentEffect::SpellType { arc_chance, when } => format!(
+            "your {} spells arc {arc_chance} % of the time",
+            when.join(", ")
+        ),
         TalentEffect::SpellManaPercent { value } => {
             format!("your spells' mana {} (at least 1)", percent(value))
         }

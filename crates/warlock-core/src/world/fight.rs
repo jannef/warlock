@@ -487,6 +487,17 @@ pub(super) fn death_message(who: End<'_>, dies: &str) -> String {
     }
 }
 
+/// What the player reads when a spell's shove drives `who` back (`spell_type.rs`).
+pub(super) fn driven_message(who: End<'_>) -> String {
+    match who {
+        End::You => "You are driven back.".into(),
+        End::Seen(name) => format!("{} is driven back.", crate::content::the_start(name)),
+        End::Yours(name) => format!("Your {name} is driven back."),
+        End::Named(name) => format!("{name} is driven back."),
+        End::Unseen | End::Trap(_) => "Something is driven back.".into(),
+    }
+}
+
 fn capitalized(text: &str) -> String {
     let mut chars = text.chars();
     chars

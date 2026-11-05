@@ -1,5 +1,5 @@
 use super::*;
-use crate::content::{Vault, local_area_id};
+use crate::content::{Turn, Vault, local_area_id};
 use crate::grid::Grid;
 use crate::rng::parse_seed;
 use proptest::prelude::*;
@@ -364,31 +364,38 @@ fn stamped_at(level: &LevelTemplate, vault: &Vault) -> Vec<Pos> {
 }
 
 #[test]
-fn ruins_are_outdoor_vaults_stamped_verbatim() {
+fn ruins_are_outdoor_vaults_stamped_some_way_round() {
     let outdoor: Vec<&Vault> = CONTENT.vaults().iter().filter(|v| v.is_outdoor()).collect();
     assert!(outdoor.len() >= 2);
-    let mut seen = vec![0; outdoor.len()];
+    let mut seen = vec![BTreeSet::new(); outdoor.len()];
     for seed in 0..40 {
         for (_, x, y) in CELLS {
             let level = area(seed, x, y);
             for (i, vault) in outdoor.iter().enumerate() {
-                for at in stamped_at(&level, vault) {
-                    seen[i] += 1;
-                    for (p, light) in &vault.template.lights {
-                        let shifted = Pos::new(at.x + p.x, at.y + p.y);
-                        assert_eq!(level.lights.get(&shifted), Some(light));
-                    }
-                    for (p, pile) in &vault.template.objects {
-                        let shifted = Pos::new(at.x + p.x, at.y + p.y);
-                        assert_eq!(level.objects.get(&shifted), Some(pile));
+                for (way, turn) in Turn::ALL.into_iter().enumerate() {
+                    let turned = vault.turned(turn);
+                    for at in stamped_at(&level, &turned) {
+                        seen[i].insert(way);
+                        for (p, light) in &turned.template.lights {
+                            let shifted = Pos::new(at.x + p.x, at.y + p.y);
+                            assert_eq!(level.lights.get(&shifted), Some(light));
+                        }
+                        for (p, pile) in &turned.template.objects {
+                            let shifted = Pos::new(at.x + p.x, at.y + p.y);
+                            assert_eq!(level.objects.get(&shifted), Some(pile));
+                        }
                     }
                 }
             }
         }
     }
-    for (vault, count) in outdoor.iter().zip(&seen) {
-        assert!(*count > 0, "vault `{}` never placed", vault.id());
+    for (vault, ways) in outdoor.iter().zip(&seen) {
+        assert!(!ways.is_empty(), "vault `{}` never placed", vault.id());
     }
+    assert!(
+        seen.iter().any(|ways| ways.len() > 1),
+        "ruins lie more than one way: {seen:?}"
+    );
 }
 
 #[test]
@@ -430,5 +437,50 @@ fn print_areas() {
         let (x, y) = cell.split_once(',').expect("x,y");
         let level = area(seed, x.parse().expect("x"), y.parse().expect("y"));
         println!("{}", describe(&level));
+    }
+}
+
+/// A lake has deep water inside and a wadeable shore (#1020): deep cells never lie on the map's
+/// edge, and only lakes have them.
+#[test]
+fn lakes_have_deep_water_and_a_wadeable_shore() {
+    let deep = id("deep_water");
+    let shallow = [
+        deep,
+        id("water"),
+        id("reeds"),
+        id("bridge"),
+        id("dirt_road"),
+    ];
+    let (w, h) = SIZE;
+    for seed in 0..8 {
+        let a = area(seed, 65, 28);
+        let cells: Vec<Pos> = (a.terrain.iter())
+            .filter(|(_, t)| **t == deep)
+            .map(|(p, _)| p)
+            .collect();
+        assert!(cells.len() > 100, "seed {seed}: {}", cells.len());
+        for p in &cells {
+            assert!(
+                p.x > 0 && p.y > 0 && p.x < w - 1 && p.y < h - 1,
+                "seed {seed}: {p:?}"
+            );
+            // Shallow water, or a road's bridge, lies between it and the land.
+            let ringed = Dir::ALL
+                .iter()
+                .all(|d| shallow.contains(&a.terrain[p.step(*d)]));
+            let around: Vec<&str> = (Dir::ALL.iter())
+                .map(|d| CONTENT.terrain(a.terrain[p.step(*d)]).id.as_str())
+                .collect();
+            assert!(ringed, "seed {seed}: {p:?} {around:?}");
+        }
+        // Ponds, rivers, and brooks stay wadeable.
+        for (x, y) in [(42, 19), (57, 12), (60, 44)] {
+            let other = area(seed, x, y);
+            assert!(
+                !other.terrain.cells().contains(&deep),
+                "seed {seed}: {x},{y}"
+            );
+        }
     }
 }

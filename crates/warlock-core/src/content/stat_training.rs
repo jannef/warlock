@@ -58,7 +58,7 @@ pub enum StatUse {
     Kick,
     /// An attempt at an anvil done to its end, whatever came of it (Metalcraft's use).
     Forged,
-    /// A struggle against a hold, won or not (Strength's and Willpower's both).
+    /// A struggle against a hold or other bonds, won or not (Strength's and Willpower's both).
     Struggled,
     /// A step through deep water (not over its ice).
     Waded,
@@ -212,7 +212,7 @@ impl StatUse {
             StatUse::Forged => {
                 "an attempt on metal arms or armour at an anvil, whatever comes of it"
             }
-            StatUse::Struggled => "struggling against a hold, won or not",
+            StatUse::Struggled => "struggling against a hold or bonds, won or not",
             StatUse::Waded => "a step through deep water",
             StatUse::Hauled => "picking up something of 20 kg or more (a corpse, a heavy load)",
             StatUse::Dodge => {

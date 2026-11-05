@@ -139,6 +139,7 @@ mod feature;
 mod fight;
 mod flavour;
 mod focus;
+mod footing;
 mod forage;
 mod free_blow;
 mod frenzy;
@@ -215,6 +216,7 @@ mod song;
 mod spawn;
 mod spell;
 mod spell_aim;
+mod spell_arc;
 mod spell_mods;
 mod spell_rung;
 mod spell_type;
@@ -604,6 +606,8 @@ pub struct World {
     /// Whether the player is resting ([`World::rest`]; not saved: a rest is one action): they
     /// heal faster.
     resting: bool,
+    /// Whether the player's action is a wait (not saved): sounds heard then train Listen.
+    waiting: bool,
     /// The game time of the last perception (not saved: a loaded world has just perceived its
     /// moment): the birthday's note looks for the dawn between it and now.
     perceived_at: GameTime,
@@ -1090,6 +1094,7 @@ impl World {
             found: 0,
             mutters: Vec::new(),
             resting: false,
+            waiting: false,
             perceived_at: time,
             stood_on,
             acting: Some(player),
@@ -1256,7 +1261,9 @@ impl World {
         let load = self.load_of(self.state.player);
         let (burden, slowed) = (load.burden(), load.penalty() != Burden::Unburdened);
         let quests = self.quest_progress();
+        self.waiting = matches!(action, Action::Wait);
         let spent = self.player_acts(action, &mut events);
+        self.waiting = false;
         self.forget_floors(&events);
         // Taking off what raised them lowers the player's maximum hit points, mana, and pools.
         self.keep_hp_within_max(self.state.player);
@@ -1367,8 +1374,8 @@ impl World {
         if let Some(refused) = self.refuse_pending(action) {
             return refused;
         }
-        // A step while held is a struggle to break free (`hold.rs`).
-        if let Some(spent) = self.struggle(action) {
+        // What bonds stop or slow is a struggle to break free (`hold.rs`).
+        if let Some(spent) = self.struggle(action, events) {
             return spent;
         }
         if let Some(refused) = self.refuse_blocked(action) {
@@ -1650,6 +1657,8 @@ mod endless_tests;
 #[cfg(test)]
 mod equip_tests;
 #[cfg(test)]
+mod escape_tests;
+#[cfg(test)]
 mod experience_tests;
 #[cfg(test)]
 mod feature_tests;
@@ -1661,6 +1670,8 @@ mod fixture_factions;
 mod flavour_tests;
 #[cfg(test)]
 mod focus_tests;
+#[cfg(test)]
+mod footing_tests;
 #[cfg(test)]
 mod forage_tests;
 #[cfg(test)]
@@ -1848,9 +1859,13 @@ mod spawn_tests;
 #[cfg(test)]
 mod speed_tests;
 #[cfg(test)]
+mod spell_arc_tests;
+#[cfg(test)]
 mod spell_list_tests;
 #[cfg(test)]
 mod spell_talent_tests;
+#[cfg(test)]
+mod spell_type_force_tests;
 #[cfg(test)]
 mod spell_type_tests;
 #[cfg(test)]

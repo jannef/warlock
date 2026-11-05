@@ -159,6 +159,7 @@ mod troll_roster_tests;
 mod undead_roster_tests;
 mod unique;
 mod vault;
+mod vault_turn;
 mod vision;
 mod wand;
 mod weapon_ability;
@@ -303,15 +304,15 @@ pub use slot::{MAX_SLOTS, SlotDef, SlotId};
 pub use smite::SmiteRules;
 pub use spell::{BOLT_LENGTHS, BURST_RADII, Bolt, Burst, BurstIce};
 pub use spell_def::{
-    Grows, MAX_CASTS, MAX_CONE, MAX_REACH, MAX_SPELL_LEVEL, MAX_SUMMON_MINUTES, Ratio, Resolution,
-    STUDY_DIFFICULTY, School, Shape, SpellData, SpellEffect, SpellId, SpellLook, SpellPurpose,
-    SpellRules, SpellSummon,
+    ARC_REACH, Grows, MAX_ARCS, MAX_CASTS, MAX_CONE, MAX_REACH, MAX_SPELL_LEVEL,
+    MAX_SUMMON_MINUTES, Ratio, Resolution, STUDY_DIFFICULTY, School, Shape, SpellData, SpellEffect,
+    SpellId, SpellLook, SpellPurpose, SpellRules, SpellSummon,
 };
 pub use spell_ladder::{
     Ladder as SpellLadder, MAX_RUNGS, MAX_SCORE, RungValue, Unit as LadderUnit,
 };
 pub use spell_mod::{SpellMod, SpellModSpec, SpellMods, merge_rider};
-pub use spell_type::{SpellType, TypeRider};
+pub use spell_type::{SpellType, TypeBite, TypeRider};
 pub use stance::{CombatStance, StanceDef, Stances, percent_of};
 pub use stat_training::{
     DeedRule, HAUL_GRAMS, ODDS_SCALE, StatDeed, StatRule, StatTraining, StatUse,
@@ -338,6 +339,7 @@ pub use throw::{THROW_RANGES, Throw};
 pub use trap::{MAX_CHARGES, Trap, TrapAvoid, TrapDef, TrapEffect, TrapId, TrapNoise};
 pub use unique::{Power, UNIQUE, UniqueDef, Uniques};
 pub use vault::Vault;
+pub use vault_turn::Turn;
 pub use vision::VisionProfile;
 pub use wand::{MAX_WAND_CHARGES, Wand};
 pub use weapon_ability::{
@@ -1124,6 +1126,7 @@ impl Content {
         }
         content.mimics = mimic::Mimics::parse(files, &content)?;
         content.load_creatures(files)?;
+        spell_type::lay_immunities(&mut content);
         // A den's own population (an armoury's) names creatures.
         let mut room_effects = std::mem::take(&mut content.room_effects);
         let creature =
@@ -1260,6 +1263,9 @@ impl Content {
                     "`dungeons`: only a vault names where it stamps",
                 ));
             }
+            if vault::parse_turns(path, text)?.is_some() {
+                return Err(ContentError::new(path, "`turns`: only a vault turns"));
+            }
             if let Some((at, _)) = level.loot.first() {
                 return Err(ContentError::new(
                     path,
@@ -1321,6 +1327,7 @@ impl Content {
                 Vault::new(template, &content).map_err(|m| ContentError::new(path, m))?;
             vault.campaign = campaign::of_path(path).map(str::to_string);
             vault.dungeons = vault::parse_dungeons(path, text)?;
+            vault.turns = vault::parse_turns(path, text)?.unwrap_or(true);
             content.vaults.push(vault);
         }
         content.load_dungeons(files)?;

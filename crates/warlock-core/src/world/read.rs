@@ -21,7 +21,7 @@
 //! **The scroll of restoration** casts no spell ([`Reading::Cleanse`], `restore.rs`): read on
 //! oneself, it mends every point of stat damage and gives back every point drains took.
 
-use super::fight::{End, Guard, Words, attack_message, death_message};
+use super::fight::{End, Guard, Words, attack_message, death_message, driven_message};
 use super::{Spent, World};
 use crate::action::{AttackKind, Event, Positions, ReadTarget};
 use crate::content::StatUse;
@@ -171,6 +171,20 @@ impl World {
                     if seen.is_some() {
                         events.push(event);
                     }
+                }
+                // A force spell's shove (`spell_type.rs`), of the one it just struck.
+                Event::ActorMoved { .. } => {
+                    if let Some((end, _)) = seen {
+                        said.push(driven_message(end));
+                    }
+                    events.push(event);
+                }
+                // A force blast's (`spell_type.rs`).
+                Event::DoorBroken { pos } => {
+                    if self.perception.is_visible(pos) {
+                        said.push("The door crashes open!".to_string());
+                    }
+                    events.push(event);
                 }
                 Event::Died { actor, .. } if actor == player => events.push(event),
                 Event::Died { .. } => {
