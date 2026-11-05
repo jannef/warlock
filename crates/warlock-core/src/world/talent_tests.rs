@@ -1,5 +1,5 @@
 //! Talents in the world (spec §8 "Talents"): a level every third brings a pick that must be
-//! made before anything else, prerequisites are checked in words, ranks come one at a time,
+//! made before anything else, prerequisites are checked in words, a talent is taken once,
 //! each talent changes the one rule it names, picks nothing can be spent on are dropped, and
 //! all of it survives saves and replays while runs without talents hash as before.
 
@@ -122,7 +122,7 @@ fn a_third_level_asks_for_a_talent_and_refuses_everything_else_until_it_is_made(
     run(&mut w, "talent:healthy");
     assert_eq!(last(&w), "You learn Healthy.");
     assert_eq!(w.due(), None);
-    assert_eq!(player(&w).talents.rank_of("healthy", None), 1);
+    assert!(player(&w).talents.holds("healthy", None));
     run(&mut w, "wait");
     assert_eq!(w.turn(), turn + 1, "free to act again");
     run(&mut w, "talent:healthy");
@@ -168,9 +168,9 @@ fn hardy_is_taken_once_and_grows_with_the_levels() {
     assert_eq!(player(&w).hp, hp_before + 3, "the current hit points too");
     reach(&mut w, 6);
     run(&mut w, "talent:hardy");
-    assert_eq!(last(&w), "You already have all of Hardy.");
+    assert_eq!(last(&w), "You have Hardy already.");
     run(&mut w, "levelup:auto");
-    assert_eq!(player(&w).talents.rank_of("hardy", None), 1);
+    assert!(player(&w).talents.holds("hardy", None));
     reach(&mut w, 12);
     run(&mut w, "levelup:auto");
     assert_eq!(w.due(), None);
@@ -233,10 +233,6 @@ fn a_pick_nothing_can_be_spent_on_is_dropped() {
         text.replace(
             "choice = \"skill\"\n",
             "choice = \"skill\"\nneeds = { race = \"elf\" }\n",
-        )
-        .replace(
-            "ranks = 2\ndescription = \"You know how a bound",
-            "ranks = 2\nneeds = { race = \"elf\" }\ndescription = \"You know how a bound",
         )
         .replace(
             "tree = \"weaponcraft\"\ndescription = \"You strike at the binding",
@@ -514,7 +510,7 @@ fn perception_and_dumps_show_talents_in_words_only() {
         .expect("healthy");
     assert_eq!(healthy.openings, [None]);
     assert!(healthy.needs.is_empty());
-    assert_eq!(healthy.held, 0);
+    assert!(!healthy.held);
     assert_eq!(
         talents[0].tree,
         w.content().talents().tree_id("stars").expect("stars"),
@@ -531,7 +527,7 @@ fn perception_and_dumps_show_talents_in_words_only() {
     let hardy = (view.talents().into_iter())
         .find(|t| t.name == "Hardy")
         .expect("hardy");
-    assert_eq!((hardy.held, hardy.ranks), (1, 1));
+    assert!(hardy.held);
     assert_eq!(
         dump::ascii(&w, &[Layer::Talents])
             .lines()
@@ -540,7 +536,7 @@ fn perception_and_dumps_show_talents_in_words_only() {
     );
     let json = dump::json(&w, &[Layer::View], false);
     assert_eq!(json["talents"][1]["id"], "hardy");
-    assert_eq!(json["talents"][1]["rank"], 1);
+    assert!(json["talents"][1].get("rank").is_none());
     assert_eq!(json["talents"][0]["choice"], serde_json::Value::Null);
     assert!(json["due"].is_null());
 }

@@ -494,12 +494,12 @@ fn check_talents(all: &[WeaponAbility], content: &Content) -> Result<(), Content
         return Ok(());
     }
     for (_, def) in content.talents().iter() {
-        for effect in def.effects_at(def.rank_count()) {
+        for effect in &def.effects {
             let super::TalentEffect::WeaponStamina { abilities, .. } = effect else {
                 continue;
             };
             for name in abilities {
-                if !all.iter().any(|a| a.id == name && a.active.is_some()) {
+                if !all.iter().any(|a| a.id == *name && a.active.is_some()) {
                     return Err(ContentError::new(
                         "data/talents",
                         format!("talent `{}`: `{name}` is no active weapon ability", def.id),

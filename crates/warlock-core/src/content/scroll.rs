@@ -163,8 +163,7 @@ impl ReadSpec {
 pub(super) fn check_spells(content: &Content) -> Result<(), String> {
     // The meals the talents name are objects (loaded after the talents).
     for (_, def) in content.talents().iter() {
-        let meals = (def.effects.iter()).chain(def.ranks.iter().flat_map(|r| r.effects.iter()));
-        for effect in meals {
+        for effect in &def.effects {
             if let super::TalentEffect::MealHeals {
                 object: Some(object),
                 ..

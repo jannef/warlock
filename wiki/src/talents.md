@@ -46,7 +46,7 @@ come (see [Classes](classes.md#levels)), you never pick them, and one your class
 already learned is not given again: that level gives you a talent pick in its place. Some are talents anyone may pick (the [aristocrat](classes.md#aristocrat)'s
 [Riposte](talents.md#talent-riposte), the [commoner](classes.md#commoner)'s [Second wind](talents.md#talent-second-wind)).
 
-## Ranks, choices, prerequisites
+## Choices and prerequisites
 
 - A talent is picked once.
 - A talent with a **choice** (a [weapon skill](weapon-skills.md), a [fighting style](fighting-styles.md), a [skill](skills.md), an element) is picked

@@ -16,7 +16,7 @@
 //!   the level: gained again, it gives its hit points and mana back but no choices and no stat
 //!   checks.
 //! - **Chosen** ([`World::bestow_talent`]): one of the talents the player may take now and does
-//!   not hold (by id and choice, [`talent::offers`]), drawn, given at rank 1 with what it hands
+//!   not hold (by id and choice, [`talent::offers`]), drawn, given with what it hands
 //!   out, and recorded in [`Actor::boons`](super::Actor): never a level's pick.
 //! - **Forsaken** ([`World::bestow_flaw`]): one of the flaw talents (a birth sign's `flaw`) the
 //!   player lacks, drawn, given likewise, and recorded in `Actor::boons`, which a restored run
@@ -129,7 +129,7 @@ impl World {
                 let id = content.talents().get(id).id.clone();
                 choices.into_iter().map(move |c| (id.clone(), c))
             })
-            .filter(|(id, c)| me.talents.rank_of(id, c.as_deref()) == 0)
+            .filter(|(id, c)| !me.talents.holds(id, c.as_deref()))
             .collect();
         if ways.is_empty() {
             return false;
@@ -151,7 +151,7 @@ impl World {
         let content = self.content.clone();
         let me = self.state.player();
         let mut flaws: Vec<String> = (content.talents().by_tree())
-            .filter(|(_, def)| def.flaw && !me.talents.has(&def.id, 1))
+            .filter(|(_, def)| def.flaw && !me.talents.has(&def.id))
             .map(|(_, def)| def.id.clone())
             .collect();
         flaws.sort();
@@ -168,7 +168,7 @@ impl World {
         true
     }
 
-    /// Talent `id` for `choice` is given to the player at rank 1, with what it hands out, and
+    /// Talent `id` for `choice` is given to the player, with what it hands out, and
     /// kept among their boons (a story's talent and flaw too, `world/background.rs`).
     pub(super) fn bestow(&mut self, id: &str, choice: Option<&str>) {
         let content = self.content.clone();
@@ -179,10 +179,9 @@ impl World {
         let level = self.player_level();
         let me = self.player_mut();
         me.talents.take(id, choice);
-        class::hand_out(&content, me, def, 1, level);
+        class::hand_out(&content, me, def, level);
         me.boons.push(Taken {
             id: id.to_string(),
-            rank: 1,
             choice: choice.map(str::to_string),
         });
         // Put in the order a restored run gives them (a flaw among the granted talents).
@@ -191,7 +190,7 @@ impl World {
         let boons = std::mem::take(&mut me.boons);
         super::stars::grant(&content, character.as_ref(), &boons, &mut me.talents);
         me.boons = boons;
-        self.take_up_skills(def.effects_at(1));
+        self.take_up_skills(def.effects.iter().cloned());
     }
 }
 

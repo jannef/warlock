@@ -254,7 +254,7 @@ pub struct Actor {
     #[serde(default, skip_serializing_if = "Talents::is_empty")]
     pub talents: Talents,
     /// The talents a forgotten altar gave it for life (spec §7 "Special rooms": Chosen, a
-    /// talent; Forsaken, a flaw), each at rank 1 and also held in [`Actor::talents`]: never a
+    /// talent; Forsaken, a flaw), each also held in [`Actor::talents`]: never a
     /// level's pick, put back with a race's and a birth sign's gifts whenever those are
     /// (`world/stars.rs`), and marked as the altar's where talents are shown.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]

@@ -149,7 +149,7 @@ fn the_lean_follows_the_altars_side_and_the_players_band() {
 }
 
 #[test]
-fn pious_at_its_first_rank_doubles_the_lean_of_an_altar_of_its_side() {
+fn pious_doubles_the_lean_of_an_altar_of_its_side() {
     // A good altar whose lean takes half the bane away from one of the good, and all of it with
     // the talent's doubled lean: every prayer of the pious is a boon.
     let table = "seconds = 60\nkinds = { boon = 10, bane = 20 }\nlean = 10\nexhaust = 0\n\

@@ -133,7 +133,7 @@ fn dark_adaptation_is_for_darkvision_or_low_light_eyes() {
     };
     for eyes in ["darkvision", "low_light"] {
         let may = crate::talent::may_take(&CONTENT, &who(Some(eyes)), def, None);
-        assert_eq!(may, Ok(1), "{eyes}");
+        assert_eq!(may, Ok(()), "{eyes}");
     }
     let refused = crate::talent::may_take(&CONTENT, &who(Some("normal")), def, None);
     let Err(refusal) = refused else {
