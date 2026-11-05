@@ -167,8 +167,8 @@ A few will not make way, and then the move takes no time and the message says wh
 - some never budge, and some keep their post: a [shopkeeper](creatures.md#creature-shopkeeper) keeps to the door of their shop
   ("Eadric doesn't budge.");
 - someone who cannot move at all, under too heavy a [load](burden.md), does not budge either;
-  (a character trained in [Escape artist](skills.md#skill-escape-artist) is not stopped by the
-  first kind: see below);
+  (a character trained in [Escape artist](skills.md#skill-escape-artist) can [wriggle past](#getting-past) most of the first
+  kind, but never a shop's keeper);
 - a creature two sizes or more larger than you is too big to squeeze past ("The giant is too big
   to squeeze past."). No creature in the game is that big yet.
 
@@ -177,7 +177,7 @@ by someone who keeps their post or never budges: the step becomes a check, with 
 own. Your [Dexterity](stats.md#stat-dexterity) modifier plus the skill's bonus (the same as for
 slipping [bonds](status-effects.md#slipping-bonds): +8 at 100, +12 at 200) is rolled against 11
 plus their [Willpower](stats.md#stat-willpower) modifier. Made, you swap places ("You wriggle past
-Eadric."); failed, the step's time is spent and you stay where you are. Someone who cannot move at
+Eadric."); failed, the step's time is spent and you stay where you are. A [shop's](shops.md) keeper never lets you by. Someone who cannot move at
 all, a creature too big to squeeze past, and swimming are not helped. Each try may train the
 skill (half the time).
 

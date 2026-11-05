@@ -685,9 +685,9 @@ fn generated_shops_are_kept_by_their_keepers() {
 }
 
 #[test]
-fn wriggling_past_a_keeper_in_the_door_does_not_get_round_the_debt() {
+fn a_shops_keeper_is_immune_to_wriggling_past() {
     let mut w = in_shop();
-    let (player, keeper) = (w.player_id(), keeper(&w));
+    let keeper = keeper(&w);
     apply(&mut w, "move:E move:NE pickup move:SW move:W");
     assert_eq!(w.player_pos(), FRONT);
     // Grimbold stands in the door, and the player is the best wriggler there is.
@@ -703,14 +703,21 @@ fn wriggling_past_a_keeper_in_the_door_does_not_get_round_the_debt() {
         },
     ));
     *skills = all.into_iter().collect();
-    for _ in 0..30 {
-        apply(&mut w, "move:W");
-        assert_ne!(w.player_pos(), DOOR, "never out of the door");
-        assert!(shop(&w).contains(w.player_pos()), "still in the shop");
-        assert_eq!(shop(&w).status, ShopStatus::Open, "no theft");
-        assert_eq!(w.stance(player, keeper), Stance::Neutral);
-        assert_eq!(shop(&w).unpaid.len(), 1, "still owed");
-        assert_eq!(w.state.actors[&keeper].pos, DOOR, "the keeper stays put");
-        w.player_mut().pos = FRONT;
+    // A keeper is immune: the refusal stands, with no time, no draw, and no mark.
+    for dir in ["move:W", "move:N"] {
+        w.state.actors.get_mut(&keeper).expect("keeper").pos =
+            if dir == "move:W" { DOOR } else { POST };
+        for _ in 0..30 {
+            let rng = (w.state.rng.clone(), w.state.training.clone());
+            let out = apply(&mut w, dir);
+            assert!(!out.took_turn, "{dir}");
+            assert_eq!(last(&w), "Grimbold doesn't budge.");
+            assert_eq!(w.player_pos(), FRONT);
+            assert_eq!((w.state.rng.clone(), w.state.training.clone()), rng);
+            assert_eq!(shop(&w).status, ShopStatus::Open, "no theft");
+            assert_eq!(shop(&w).unpaid.len(), 1, "still owed");
+        }
     }
+    let trained = w.state.player().skills.get(id).expect("trained");
+    assert_eq!(trained.marks, 0);
 }

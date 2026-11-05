@@ -10,7 +10,9 @@
 //! player stays. Every try marks Escape artist ([`Use::Wriggle`]) at the data's chance.
 //!
 //! Never for a hostile creature (the step is a blow then), a creature too big to squeeze past, one
-//! that cannot move at all (overloaded), or while swimming (those refusals stand).
+//! that cannot move at all (overloaded), or while swimming (those refusals stand), and never for a
+//! shop's keeper (the owner, #1032): it keeps its door, the refusal stands, and no draw, mark, or
+//! time is spent.
 
 use super::talk::Refusal;
 use super::*;
@@ -40,6 +42,7 @@ impl World {
         if why != Refusal::Budge
             || !me.skills.trains_effect(&content, SkillEffect::Escape)
             || !self.load_of(id).penalty().can_move()
+            || self.state.current().shops.iter().any(|s| s.keeper == id)
         {
             return Wriggled::No;
         }

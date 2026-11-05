@@ -687,4 +687,5 @@ developer notes (CLAUDE.md, `docs/dev/`).
   11 plus the creature's Willpower modifier (and its talents'); two gameplay draws. Made, "You
   wriggle past the shopkeeper." and the step goes ahead as a swap; failed, "You try to wriggle
   past the shopkeeper, but it is in the way.", the step's price, the player stays. Every try marks
-  Escape artist (`wriggle`, 50 %). A hostile creature is still struck, not wriggled past.
+  Escape artist (`wriggle`, 50 %). A hostile creature is still struck, not wriggled past, and a shop's keeper is immune (the owner:
+  the refusal stands, with no draw, mark, or time; §7 "Shops").
