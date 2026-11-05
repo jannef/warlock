@@ -1215,6 +1215,7 @@ mod tests {
         assert_eq!(benefit("100", "Concentration: mana pool"), "+5 mana");
         assert_eq!(benefit("100", "Decipher script: reading scrolls"), "+8");
         assert_eq!(benefit("100", "Sneak attack: sneak attack dice"), "5d6");
+        assert_eq!(benefit("100", "Negotiation: prices"), "20% better");
         assert_eq!(benefit("100", "Spellcraft: learning"), "30");
         assert_eq!(benefit("100", "Swim: wading's extra cost"), "\u{2212}60%");
         assert_eq!(benefit("100", "Tumble: Dodge"), "+5");

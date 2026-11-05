@@ -195,6 +195,10 @@ pub enum Effect {
     /// `world/forage.rs`); a skill with it, trained, lets the actor forage at all (the abilities
     /// menu's Forage).
     Forage,
+    /// Percent chance, an hour at a time, of telling how fresh a corpse or food is (spec §8
+    /// "Hunger": Appraise, Survival; `world/freshness.rs`); only a skill with it, trained, gives
+    /// it at all.
+    Freshness,
     /// Percent better prices in shops (spec §7 "Shops"; `world/shop.rs`): less to pay and more
     /// offered, together with Presence at most half.
     Bargain,
@@ -299,6 +303,7 @@ impl Effect {
             | Effect::Footing
             | Effect::SteadyEase
             | Effect::Bargain
+            | Effect::Freshness
             | Effect::Identify
             | Effect::SurpriseEase => 100,
             Effect::SneakDice => MAX_SNEAK_DICE,
@@ -408,6 +413,8 @@ pub enum Use {
     Deal,
     /// A carried thing told for what it is by looking it over (spec §8 "Skills": Appraise).
     Appraise,
+    /// A food whose freshness the player's eye told, eaten (spec §8 "Hunger": Appraise).
+    Judged,
     /// Discovery experience gained (spec §8 "Experience": a first kill of a kind, an arrival
     /// that pays).
     Discover,
@@ -463,6 +470,7 @@ impl Use {
             Use::Stroke => "a step in deep water",
             Use::Deal => "a deal made in a shop",
             Use::Appraise => "telling something you carry for what it is",
+            Use::Judged => "eating food whose freshness you could tell",
             Use::Discover => "gaining discovery experience (a first kill of a kind, a new place)",
             Use::Resist => "resisting a creature's ability (a drain, a disease, a hold)",
             Use::Sight => "first seeing a creature that has not noticed you",
@@ -594,6 +602,7 @@ impl Use {
             Use::Stroke => "stroke",
             Use::Deal => "deal",
             Use::Appraise => "appraise",
+            Use::Judged => "judged",
             Use::Discover => "discover",
             Use::Resist => "resist",
             Use::Sight => "sight",
@@ -624,6 +633,7 @@ impl Effect {
             Effect::Footing => "footing",
             Effect::SteadyEase => "steady_ease",
             Effect::Forage => "forage",
+            Effect::Freshness => "freshness",
             Effect::Bargain => "bargain",
             Effect::Identify => "identify",
             Effect::Slip => "slip",

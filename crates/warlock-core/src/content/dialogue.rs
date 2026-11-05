@@ -159,6 +159,10 @@ pub struct Service {
     pub price: u32,
     /// What it does.
     pub does: ServiceKind,
+    /// Whether a temple sells it: a temple's price is flat and never haggled; a healer's or a
+    /// sage's moves with the player's favour (#1031).
+    #[serde(default)]
+    pub temple: bool,
     /// What the speaker says when it is done.
     pub reply: String,
     /// What the speaker says when there is nothing to do: "Nothing ails you, child."
