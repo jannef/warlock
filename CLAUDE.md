@@ -50,7 +50,7 @@ Game flags (`cargo run -p warlock -- --help`):
   trap hall, `summoners` in the summoning hall's south hall (three summoners behind doors), `chests`
   in the chest hall (every kind of chest, a mimic, and both treasure rooms), `cealdhlaw` on the first floor of Cealdhlāw, the Ascmearc's first dungeon, `fennmynster` on
   the first floor of Fennmynster, the drowned minster's cellars, `fyrdelf` on the first floor of Fyrdelf,
-  its deepest, `shrine` before three forgotten altars, good, neutral, and evil, to pray at, `forge`
+  its deepest, `grundleas` on the first floor of Grundlēas, the endless branch that forgets each floor left, `shrine` before three forgotten altars, good, neutral, and evil, to pray at, `forge`
   beside a forge's anvil with arms and armour to temper, `spring` below a cave room with a healing
   spring to drink at, `circles` in a hall of peaceful kobolds already buffed and hexed, knowing
   every buff and hex spell with 300 mana, for the spell circles), `--seed S`

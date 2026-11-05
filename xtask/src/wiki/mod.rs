@@ -191,6 +191,7 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("mimic-bands.md", mimics::mimic_bands),
         ("dungeons.md", dungeons::dungeons),
         ("dungeon-floors.md", dungeons::dungeon_floors),
+        ("dungeon-endless.md", dungeons::endless_branches),
         ("danger-weights.md", dungeons::danger_weights),
         ("creature-rarities.md", dungeons::creature_rarities),
         ("draw-odds.md", dungeons::draw_odds),

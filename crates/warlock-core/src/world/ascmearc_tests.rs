@@ -18,6 +18,8 @@ const TOWN: Pos = Pos::new(18, 28);
 const BARROW: Pos = Pos::new(34, 25);
 /// Lytelscræf, the starter cave (#792): two cells from the pass, in sight of the start.
 const CAVE: Pos = Pos::new(14, 27);
+/// Grundlēas, the endless branch (#1010): open to anyone, far from the pass.
+const GROUNDLESS: Pos = Pos::new(52, 52);
 const FENNMYNSTER: Pos = Pos::new(70, 48);
 const FYRDELF: Pos = Pos::new(97, 21);
 /// The four lairs of the wanted (the guild design §8), hidden on reserved sites.
@@ -221,9 +223,11 @@ fn the_locations_are_named_and_six_cells_apart() {
         BTreeMap::from([
             (CAVE, ("cave_mouth", "Lytelscræf")),
             (BARROW, ("barrow", "Cealdhlāw")),
+            (GROUNDLESS, ("dungeon_entrance", "Grundlēas")),
             (TOWN, ("town", "Cēaptūn"))
         ])
     );
+    assert_eq!(GROUNDLESS.chebyshev(PASS), 40, "not near the start");
     let (at, fen) = CONTENT
         .hidden_location("ascmearc", "fennmynster")
         .expect("Fennmynster");
