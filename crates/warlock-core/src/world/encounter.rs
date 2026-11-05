@@ -44,6 +44,8 @@ use serde::{Deserialize, Serialize};
 pub enum Choice {
     /// Lie in wait: the party walks into the player's ambush (the drop only).
     Ambush,
+    /// Talk your way past: a Bluff check (`talk_past.rs`; a flagged entry, met, trained only).
+    Bluff,
     /// Slip past or away: a check.
     Evade,
     /// Stand and fight.
@@ -59,6 +61,7 @@ pub enum Choice {
 impl Choice {
     pub const ALL: &[Choice] = &[
         Choice::Ambush,
+        Choice::Bluff,
         Choice::Evade,
         Choice::Fight,
         Choice::Hail,
@@ -70,6 +73,7 @@ impl Choice {
     pub const fn id(self) -> &'static str {
         match self {
             Choice::Ambush => "ambush",
+            Choice::Bluff => "bluff",
             Choice::Evade => "evade",
             Choice::Fight => "fight",
             Choice::Hail => "hail",
@@ -108,7 +112,7 @@ impl Outcome {
         }
     }
 
-    /// The choices it offers, in the dialog's order.
+    /// The choices it offers anyone, in the dialog's order (`talk_past::offered` adds Bluff's).
     pub const fn choices(self) -> &'static [Choice] {
         match self {
             Outcome::Drop => &[Choice::Ambush, Choice::Evade, Choice::Fight],
@@ -122,6 +126,7 @@ impl Outcome {
     pub const fn label(self, choice: Choice) -> &'static str {
         match (self, choice) {
             (_, Choice::Ambush) => "Lie in wait",
+            (_, Choice::Bluff) => "Talk your way past",
             (Outcome::Met, Choice::Evade) => "Give them the slip",
             (_, Choice::Evade) => "Slip past",
             (_, Choice::Fight) => "Stand and fight",
@@ -304,8 +309,13 @@ fn told(outcome: Outcome, name: &str, landscape: Option<Landscape>, woken: bool)
     }
 }
 
-/// The view of `pending`, its entry named by `name`.
-pub(crate) fn view(pending: &Pending, name: &str, landscape: Option<Landscape>) -> EncounterView {
+/// The view of `pending`, its entry named by `name`, offering `choices`.
+pub(crate) fn view(
+    pending: &Pending,
+    name: &str,
+    landscape: Option<Landscape>,
+    choices: &[Choice],
+) -> EncounterView {
     let text = told(pending.outcome, name, landscape, pending.woken);
     let text = if pending.known {
         format!("{text} {KNOWN_LINE}")
@@ -316,7 +326,7 @@ pub(crate) fn view(pending: &Pending, name: &str, landscape: Option<Landscape>) 
         name: name.to_string(),
         title: capital(name),
         text,
-        choices: (pending.outcome.choices().iter())
+        choices: (choices.iter())
             .map(|&c| (pending.outcome.label(c).to_string(), c))
             .collect(),
     }
@@ -626,7 +636,7 @@ impl World {
 
     /// The type that leads a party of `entry` (rolled as `members`, or the known one in the
     /// area of `cell`): the entry's `lead`, else the first member (a `draw`'s first drawn).
-    fn lead_of(
+    pub(super) fn lead_of(
         &self,
         entry: &EncounterEntry,
         members: &[CreatureId],
@@ -911,16 +921,17 @@ impl World {
             self.say("There is nothing to decide.");
             return Spent::Nothing;
         };
-        if !pending.outcome.choices().contains(&choice) {
-            self.say("That is not a choice now.");
-            return Spent::Nothing;
-        }
         let content = self.content.clone();
         let Some((_, entry)) = content.encounter_entry(&self.state.campaign, &pending.entry) else {
             // Content changed under a save: the encounter is gone.
             self.state.encounter = None;
             return Spent::NoTime;
         };
+        let offered = super::talk_past::offered(&pending, entry, self.state.player(), &content);
+        if !offered.contains(&choice) {
+            self.say("That is not a choice now.");
+            return Spent::Nothing;
+        }
         self.state.encounter = None;
         let player = self.state.player;
         let open = |how| {
@@ -932,6 +943,7 @@ impl World {
         match choice {
             Choice::Pass => Spent::NoTime,
             Choice::Evade => self.evade(entry, pending),
+            Choice::Bluff => self.talk_past(entry, pending),
             Choice::Ambush => {
                 self.say("You wait in cover.");
                 self.encounter.opening = open(How::Ambush);

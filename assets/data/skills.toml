@@ -35,6 +35,8 @@
 #                 "judged" (food whose freshness you could tell, eaten: "freshness" below),
 #                 "intimidate" (a war cry roared or a foe threatened, whatever comes of it),
 #                 "feint" (a feint at a foe, whatever comes of it),
+#                 "talk_past" (a try at talking past a party met on the overworld, whatever
+#                 comes of it),
 #                 "rough_step" (a step onto ground that slows and is not water: bush, reeds,
 #                 rubble, ice), "staggered" (an action taken Staggered),
 #                 "song" (a song sung, whatever it does), "wade" (a step wading through water
@@ -182,10 +184,13 @@ id = "bluff"
 name = "Bluff"
 description = "Lying with a straight face, feinting, and talking your way past."
 kind = "action"
-# Marked by "feint" (a feint at a foe, feint.toml, the skill's use, whatever comes of it). Effect
-# "feint": points added to the difficulty of the Willpower check a feint asks, +8 at 100, +12 at
-# 200, at most 20. Being trained in it gives the Feint ability.
-mark = [{ on = "feint", chance = 50 }]
+# Marked by "feint" (a feint at a foe, feint.toml, the skill's use, whatever comes of it) and by
+# "talk_past" (a try at talking past a party met on the overworld, an encounter entry flagged
+# `talk_past`, whatever comes of it). Effect "feint": points added to the difficulty of the
+# Willpower check a feint asks, and of the one a party's leader makes when you talk past them,
+# +8 at 100, +12 at 200, at most 20. Being trained in it gives the Feint ability and the choice
+# to talk past.
+mark = [{ on = "feint", chance = 50 }, { on = "talk_past", chance = 100 }]
 benefit = [{ effect = "feint", curve = [[0, 0], [100, 8], [200, 12]] }]
 
 [[skill]]
