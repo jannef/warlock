@@ -490,7 +490,7 @@ impl World {
     /// The allies `ids` as the player's words name them: "your wolf", "your wolves", "your
     /// wolves and bear" (by type, in the order the ids run; a possessive takes no count), a
     /// companion by its name first ("Snel", "Snel and your wolves"; `companion.rs`).
-    fn pack_phrase(&self, ids: &[ActorId]) -> String {
+    pub(super) fn pack_phrase(&self, ids: &[ActorId]) -> String {
         let mut names: Vec<String> = Vec::new();
         let mut kinds: Vec<(CreatureId, u32)> = Vec::new();
         for id in ids {

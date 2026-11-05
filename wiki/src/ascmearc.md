@@ -68,6 +68,7 @@ have names of the same kind. Creatures keep their plain English names.
 | Blæcwæter | *blæc* "black" + *wæter* "water" | the black water | the big river, grey with ash |
 | Micelfenn | *micel* "great" + *fenn* "fen, marsh" | the great fen | the marsh |
 | Fennmynster | *fenn* + *mynster* "minster, abbey" | the fen minster | the second dungeon |
+| Grundlēas | *grundlēas* "without ground" | the groundless | the dungeon without a bottom |
 | Fennhām | *fenn* + *hām* "home, village" | the fen village | the marsh village |
 | Ascdūn | *asce* + *dūn* | the ash downs | the hills under the volcano |
 | Fyrdelf | *fȳr* "fire" + *gedelf* "digging, mine" | the fire diggings | the third dungeon |

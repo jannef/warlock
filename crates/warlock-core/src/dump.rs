@@ -2182,7 +2182,8 @@ pub fn json(world: &World, layers: &[Layer], include_state: bool) -> Value {
     if include_state {
         out["state"] = serde_json::to_value(world.state()).expect("state serializes");
         // The current level's danger (spec §7 "Danger levels"): ground truth, never stored.
-        out["danger"] = json!(world.danger(&world.state().current_level));
+        let level = &world.state().current_level;
+        out["danger"] = json!(world.content().floor_danger(level, world.player_level()));
         // The encounter tables matching the player's overworld cell (ground truth).
         out["encounter_tables"] = json!(world.encounter_tables_here());
         // The callings of the campaign and where the player stands with each.
