@@ -93,6 +93,7 @@ mod prestige;
 mod quest;
 mod quest_roll;
 mod race;
+mod ranged;
 mod resource;
 mod rod;
 #[cfg(test)]
@@ -265,6 +266,7 @@ pub use quest::{
 pub(crate) use quest_roll::roll_known;
 pub use quest_roll::{Candidate, MAX_VARIANTS, MAX_WEIGHT, Pick, Roll, Rolled, Variant, one_of};
 pub use race::{HUNGER, LightBlind, RaceDef, Races};
+pub use ranged::{RangeBand, RangedRules};
 pub use resource::{
     Build, MAX_EVERY, MAX_RESOURCE, MAX_SHORT, MaxFrom, OverTime, ResourceDef, ResourceId,
 };
@@ -665,6 +667,9 @@ pub struct Content {
     /// The numbers of intimidating (`data/intimidate.toml`, spec §8 "Skills": Intimidate); none
     /// without the file, when nobody intimidates.
     intimidate: Option<IntimidateRules>,
+    /// The penalties of shots by distance (`data/ranged.toml`, spec §8 "Ranged combat"); none
+    /// without the file.
+    ranged: RangedRules,
     /// The priest's prayer (`data/prayer.toml`, spec §8 "Class abilities"): the strain, the
     /// faces, the uses in their order; none without the file, when every prayer is refused.
     prayer: Option<PrayerRules>,
@@ -827,6 +832,7 @@ impl Content {
             encounter_tables: Vec::new(),
             forage: None,
             intimidate: None,
+            ranged: RangedRules::default(),
             prayer: None,
             allies: None,
             companions: None,
@@ -1172,6 +1178,10 @@ impl Content {
         let path = "data/intimidate.toml";
         if let Some(text) = files.get_optional(path) {
             content.intimidate = Some(IntimidateRules::parse(path, text, &content)?);
+        }
+        let path = "data/ranged.toml";
+        if let Some(text) = files.get_optional(path) {
+            content.ranged = RangedRules::parse(path, text)?;
         }
         let path = "data/prayer.toml";
         if let Some(text) = files.get_optional(path) {
@@ -3132,6 +3142,12 @@ impl Content {
     /// the file, when nobody forages.
     pub fn forage(&self) -> Option<&ForageRules> {
         self.forage.as_ref()
+    }
+
+    /// The penalties of shots by distance (spec §8 "Ranged combat"; `data/ranged.toml`); none
+    /// without the file.
+    pub fn ranged(&self) -> &RangedRules {
+        &self.ranged
     }
 
     /// The numbers of intimidating (spec §8 "Skills": Intimidate; `data/intimidate.toml`); `None`

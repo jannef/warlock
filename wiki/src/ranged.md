@@ -34,9 +34,32 @@ does a throw; see [Turns and movement](turns.md) for the times.
   Strength you lack** of what it needs costs a point to hit and a point of damage. A crossbow and
   a sling need no Strength. A thrown weapon does its own damage plus your **[Strength](stats.md#stat-strength)**, as a blow
   does.
-- **Range**: you cannot shoot or throw farther than the range. Aiming marks a target beyond it.
+- **Range**: you cannot shoot or throw farther than the range. Aiming marks a target beyond it. A
+  shot grows less sure as it nears the end of its range, and up close: see
+  [Distance](ranged.md#distance).
 - **[The noise](hearing.md#what-makes-noise)**: a bowstring is heard some way off ("You hear a bowstring."); a throw only as
   fighting, more quietly (see [Hearing](hearing.md)).
+
+## Distance
+
+A shot from a missile weapon, yours or a creature's, [hits](combat.md#hitting) less often far from
+the shooter and right beside them. Each creature in the way is judged by how far it stands from
+the shooter when the missile reaches it, not by where the shot was aimed.
+
+{{#include generated/shot-distance.md}}
+
+The share of a weapon's range is measured the way the range itself is, so the cells a band starts
+at lie in a rough circle around the shooter. A target beside the shooter takes only the penalty
+for being beside them, even with a weapon so short that the cell lies beyond a share of its range.
+
+A target beside the shooter also keeps the [Parry](combat.md#defence) of the weapon it holds, and
+may parry the missile. From anywhere else a shot ignores Parry, unless the target has learned
+Measure (see [Fighting styles](fighting-styles.md#what-a-rank-teaches)). This goes for a
+[Point-blank](weapon-skills.md#weapon-ability-point-blank) shot too: it is free, but it is at a foe
+beside you.
+
+Thrown weapons and creatures' throws take none of this: a throw is as sure at any distance within
+its range.
 
 ## Where a missile goes
 

@@ -1797,6 +1797,8 @@ mod shoot_tests;
 #[cfg(test)]
 mod shop_tests;
 #[cfg(test)]
+mod shot_range_tests;
+#[cfg(test)]
 mod shrine_tests;
 #[cfg(test)]
 mod sic_tests;

@@ -26,6 +26,21 @@ with `FreeGlyph::turn`, trail, embers via `particles::trail`, impact puff) and w
 `render::lighting::Transients` (the moving light of a burning missile, and landed lights held back
 until it arrives; `draw_map`, object glow, and object particles hold back what is `arriving` too).
 
+Shots by distance (spec §8 "Ranged combat": "Distance", #956): `data/ranged.toml` (optional;
+`content/ranged.rs`, `RangedRules`, `Content::ranged`) holds the `adjacent` penalty and the
+`[[band]]`s. `World::fly` asks `flight_profile` for the profile it attacks each creature with, by
+that creature's cell, so bystanders are judged by their own distance; only `AttackKind::Ranged`
+pays. `RangedRules::to_hit_at` is the one measure: adjacent (Chebyshev 1) wins, else the farthest
+band whose share of `radius2(range)` the squared distance exceeds. Parry: `World::resolve` reads
+`from` and `to` as it rolls and passes `close` to `target_shot`, so a shot from beside its target
+keeps Parry (`target_against`, every other caller, passes `false`). No state, no new draws, no AI
+change (a `Combat::Ranged` creature keeps shooting when adjacent). A creature's AI range is its
+`range` capped by its launcher's (`ai.rs`), while the bands are shares of the launcher's range
+alone, so an archer whose own `range` is far below its bow's seldom reaches the far band (a
+hobgoblin archer, `range` 8 with a long bow of 15, only ever pays the first band, at 8 cells).
+Tests: `world/shot_range_tests.rs` (with the same draws, a shot at a band strikes as one at a clean
+distance with the penalty added to its to-hit), `content/ranged.rs`.
+
 Creatures' throws (spec §8 "Ranged combat": "Creatures' throws", #457) live in
 `warlock-core/src/world/hurl.rs`: a creature type's `[creature.throw]` (`content/throw.rs`:
 `ThrowSpec` resolved like a natural attack, its `object` once objects are known,

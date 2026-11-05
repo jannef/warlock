@@ -67,7 +67,7 @@ protects you, in kinds:
 - **Parry**: a weapon that turns blows aside, such as the quarterstaff, and your rank with the
   weapon you wield (blades, spears, and staves), and in [Duelist](fighting-styles.md#style-duelist) or [Staff Fighter](fighting-styles.md#style-staff-fighter) while you fight
   that way. It counts against blows only: an [arrow](ammunition.md), a [bolt](ammunition.md), or a thrown thing is not parried, but
-  by a [duelist](fighting-styles.md#style-duelist) of rank 10 (Measure, see [Fighting styles](fighting-styles.md#what-a-rank-teaches)).
+  by a [duelist](fighting-styles.md#style-duelist) of rank 10 (Measure, see [Fighting styles](fighting-styles.md#what-a-rank-teaches)), and against a shot from beside you ([Distance](ranged.md#distance)).
 - **Natural**: a creature's hide, shell, or scales. You have none, unless your [race](races.md) gives you
   some (lizardfolk's scales soak blows but do not turn them: see
   [Races](races.md#the-evil-races)) or a [magic item](magic-items.md) does.
