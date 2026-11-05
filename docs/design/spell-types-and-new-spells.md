@@ -1,10 +1,10 @@
 # Warlock — Spell types, and thirty-six new spells
 
-Design document for the owner's review (#980). First pass, 2026-11-05. Written against `origin/main` at 6f43a36a. Nothing here is implemented; §9 cuts it into issues. Every number was read from the files named; anything not checked is marked *(unchecked)*. The balance probe was not run: the power notes reason from `docs/balance.md` "Spells".
+Design document (#980), approved by the owner on #982 on 2026-11-05 with the answers in §10. Revised against `origin/main` at b1c203a9. Nothing here is implemented; §9 cuts it into issues. Every number was read from the files named. The balance probe was not run: the power notes reason from `docs/balance.md`, and the first issue that adds spells reruns it.
 
 **The owner's request** (#980, verbatim): *"propose 20-40 new spells. some buffs, some damage spells, some crowd controls. also cool spells (like chain lightning, corpse explosion etc) that interact with the world little different than typical rogue like."* And: *"come up with some fantasy for spell types. Like fire spells could have small chance to leave targets burning. There was a numbing cold talent -- perhaps remove that and just give that to frost spells. Lightning spells could have a small chance to jump into adjacent target (and perhaps affect all targets in the same pool of water) etc etc"*
 
-**Work in flight this document accounts for but does not wait for**: #977 (caster level goes: nothing here reads it; a spell's level is its mana and its study difficulty only), #979 (a level 1 no-roll area spell per caster: the level 1 rows of the class tables are left to it; nothing here is a level 1 damage spell), #969/#966 (one rank per talent: the one talent here has one rank), #973 (skills' uses: untouched).
+**Work this document accounts for**: #977 (`docs/design/no-caster-level.md`, merged; #987 to #990 build it: caster level and the class `casting` share go, nothing here reads them, and a spell's level is its mana and its study difficulty only; a scroll is learned only by those trained in Spellcraft), #979 (open: a level 1 no-roll area spell per caster; the level 1 rows of the class tables are left to it, and nothing here is a level 1 damage spell), #952 (one rank per talent, merged: the one talent here has one rank), #973 (skills' uses: untouched).
 
 ## Contents
 
@@ -17,19 +17,19 @@ Design document for the owner's review (#980). First pass, 2026-11-05. Written a
 7. Part 2: the spells, entry by entry
 8. Who gets what: class tables and scrolls
 9. Implementation issues
-10. Open questions, each with a recommendation
+10. Decisions
 
 ## 1. Summary
 
-**Part 1.** Every damage type a spell can have gets a **fantasy** and a **rule that every spell of the type carries**, written once as data (`[types]` in `assets/data/spells.toml`) and read at one hook each on the existing cast path. Fire sometimes leaves its target **burning** (a new status that also makes them glow in the dark), melts ice, and leaves a fire where it lands. Cold **numbs** (the Numbing cold talent's rider, now the type's: the talent goes), freezes water, and puts fires out. Electricity **arcs** to a creature beside its target one time in four, and **conducts** through a body of water to everyone standing in it, the caster included. Force **shoves** (a big hit knocks the target a cell back) and **shatters** thin ice. Poison always **poisons** a degree. Necrotic **preys on the weak** (half again as much against a creature below half its hit points) and the undead are immune. Acid **corrodes** (a short tick after the hit). Holy stays deferred (the magic design §6, spec §8 "Alignment"). One talent and three spell fields are retired; one talent comes in the talent's place (Conductor, §5), under the existing `spells` system: no new tag.
+**Part 1.** Every damage type a spell can have gets a **fantasy** and a **rule that every spell of the type carries**, written once as data (`[types]` in `assets/data/spells.toml`) and read at one hook each on the existing cast path. Fire sometimes leaves its target **burning** (a new status that also makes them glow in the dark), melts ice, and leaves a fire where it lands. Cold **numbs** (the Numbing cold talent's rider, now the type's: the talent goes), freezes water, and puts fires out. Electricity **arcs** to a creature beside its target one time in four, and **conducts** through a body of water to everyone standing in it, the caster included. Force **shoves** (a big hit knocks the target a cell back) and **shatters** thin ice. Poison always **poisons** a degree. Necrotic **preys on the weak** (half again as much against a creature below half its hit points) and the undead are immune. Acid **corrodes** (a short tick after the hit). There is no holy damage type: Rebuke does fire (Q2). **No spell, type rule, or talent here protects the caster or their allies from their own magic** (Q14). The rules are magic's alone: weapon blows never read them (Q1). One talent and three spell fields are retired; one talent comes in the talent's place (Conductor, §5), under the existing `spells` system: no new tag.
 
-**Part 2.** Thirty-six spells: 11 damage, 10 crowd control, 7 buffs, 8 that read the world (corpses, water, weather, the dead, the living) or make allies. 14 ship as **data only** on the engine as it stands, 16 need a **small rule** (one function, one hook, no save state), and 6 need a **new mechanic** (zones that lie on the floor for a time, §7 "Zones"; a summon from a corpse; a charmed ally). Grouped so the owner can take a column at a time.
+**Part 2.** Thirty-six spells: 11 damage, 10 crowd control, 7 buffs, 8 that read the world (corpses, water, weather, the dead, the living) or make allies. 14 ship as **data only** on the engine as it stands, 16 need a **small rule** (one function, one hook, no save state), and 6 need a **new mechanic** (zones that lie on the floor for a time, §7 "Zones"; a corpse raised as its own creature, §7 entry 29; a charmed ally). Grouped so the owner can take a column at a time.
 
 | Build size | Count | Spells |
 |---|---:|---|
 | Data only | 14 | Acid arrow, Flay, Rime, Sunfire, Grave spear, Bind, Fear, Silence, Mesmerise, Slumber, Nightsight, Glamour, Renewal, Unbinding |
 | Small rule | 16 | Chain lightning, Charnel burst, Shatter, Thunderclap, Leech, Bramble, Gale, Fire cloak, Water walking, Brand, Grave feast, Blink, Sense the quick, Cloudburst, Benison, Rebuke |
-| New mechanic | 6 | Balefire, Mirk, Slick, Reek (the four zones), Rouse the dead (a summon from a corpse), Beguile (a charmed ally) |
+| New mechanic | 6 | Balefire, Mirk, Slick, Reek (the four zones), Rouse the dead (a corpse raised as its own creature), Beguile (a charmed ally) |
 
 ## 2. What exists today, in one table
 
@@ -43,40 +43,40 @@ Design document for the owner's review (#980). First pass, 2026-11-05. Written a
 | Statuses | `assets/data/status.toml` | `bleeding` (tick 40, 1 hp, eases 60), `poisoned` (tick 120), `sluggish` (cost 150, max 3), `drowsy`, `webbed`, `held`, `pinned`, `frightened` (`flees`), `stunned` (`flat_footed`, per action), `staggered`, `transfixed`, `asleep` (`sleeps`), `silenced` (`blocks cast`), `lit` (`light`), `warmed`/`chill_proof`/`earthed`/`poison_proof` (`resist`), `cat_eyed`, `spell_ward`; no burning, no corroded |
 | Water and ice | `docs/dev/temperature.md`; `world/ice.rs` | terrain with a `freeze` table is water (`water`, `running_water`, `shallow_water`; plunge dice); `World::frost(center, radius, um)` freezes; `World::shock(Shock::Heat)` melts (Fireball's `heat`); `Shock::Blast(um)` shatters thinner ice, **a hook with no user yet** ("for blasts without heat, none yet") |
 | Fires | `world/level.rs` `LevelState::fires: BTreeMap<Pos, Fire { light, until }>`, saved | a burning missile's or Blaze's fire: **a light source until it burns out, no rule reads it** (`docs/dev/ranged-combat.md`); the Fire-born's Blaze lays one on every cell of its burst (`blaze { fire = "arrow_fire", burns = 60 }`) |
-| Corpses | `docs/dev/hunger.md` | objects `<creature>_corpse` on a cell's pile, `Stack::died` (when it died, crate-private), stages fresh/old/rotten/gone; the player sees piles in sight and remembers them (`object_memory`) |
+| Corpses | `docs/dev/hunger.md`, `content/object.rs` | objects `<creature>_corpse` on a cell's pile, each naming its type (`ObjectDef::corpse: Option<CreatureId>`), one per type with `corpse = true` but the player (`content/mod.rs::load_hunger`), `Stack::died` (when it died, crate-private), stages fresh/old/rotten/gone; the player sees piles in sight and remembers them (`object_memory`). A cursed room's rising (`world/curse.rs`) already takes a corpse and stands a creature on its cell or the nearest free one |
 | Blood | `docs/dev/blood.md` | stains the player sees; **no rule reads blood** (a fight is identical with and without it, by test): this design keeps it so |
 | Light | `assets/data/lights.toml`, `LightCache::sources` | presets (`spell_light`, `ember`, `arrow_fire`); a status may shed a `light`; drow are `light_blind` (`glare = 250`: strong light dazzles them, `races.toml` 291) |
 | Hearing | `docs/dev/hearing.md` | `noise::make` delivers at once to every actor whose `hearing` the loudness reaches; `World::heard_by(Act)` lists the hearers (War cry, Lullaby) |
 | Hallowed ground | `world/sanctuary.rs` | the one **area that lies on the floor for a time**: `Hallow` in its level's state, saved and hashed, `lasts`, a check in `World::shuns`, a term in the healing pace, dropped at its end. The precedent for zones (§7) |
 | Summons | `docs/dev/allies.md`, `world/summon.rs` | `kind = "summon"`: `creatures`, `count`, `most`, `minutes`, `spread`; `summon_cells` and `summon_draw`; allies with `AllySource::Summoned`, a stay in minutes, orders |
-| Knock back, teleport, break a wall | `world/weapon_active.rs` 379 `knock_back` (private), `world/trap.rs` 420 `teleport(victim, at)`, `world/dig.rs` 216 `break_wall(p, Breach, events)` | force's shove, Blink, Shatter |
+| Knock back, teleport, break a wall | `world/weapon_active.rs` 380 `knock_back` (`pub(super)`), `world/trap.rs` 420 `teleport(victim, at)`, `world/dig.rs` 216 `break_wall(p, Breach, events)` | force's shove, Blink, Shatter |
 | Weather | the dev `weather:KIND` action (three hours of the kind) | Cloudburst |
 | School abilities | `docs/dev/weapon-abilities.md` 196–198 | Thunderstruck (evocation 10, Staggered on a spell landing), Wasting (necromancy 10, Weakened), Aegis, Lulling: **school** rules, not type rules; untouched, and the type rules are chosen not to double them |
-| The class tables | `assets/data/classes/*.toml` | wizard: Ray of frost 1, Magic missile 3, Burning hands 12, Arcane bolt 18; priest: Mend 1, Blessing 3, Cure wounds 3; druid: Spark 1, Barkskin 3, Call of the wild 6, Call lightning 12, Call of the forest 25, Call the elements 40, Flame and frost 50; witch: Evil eye 1, Hex of weakness 3, Cause wounds 12, Curse of sloth 32, Blight 40; bard: Mend 1; paladin: Blessing 6; ranger: Barkskin 6. `casting`: full casters 100, bard and aristocrat 75, paladin, ranger, ascetic 50 |
+| The class tables | `assets/data/classes/*.toml` | wizard: Ray of frost 1, Magic missile 3, Burning hands 12, Arcane bolt 18; priest: Mend 1, Blessing 3, Cure wounds 3; druid: Spark 1, Barkskin 3, Call of the wild 6, Call lightning 12, Call of the forest 25, Call the elements 40, Flame and frost 50; witch: Evil eye 1, Hex of weakness 3, Cause wounds 12, Curse of sloth 32, Blight 40; bard: Mend 1; paladin: Blessing 6; ranger: Barkskin 6. The `casting` share goes with #990: a table's level is the author's call (`docs/design/no-caster-level.md` §4) |
 | The class test | `world/spell_list_tests.rs` | "a full caster to a cantrip at 1 and **three to six spells**": §8 asks to raise it |
 | Scrolls | `assets/data/objects/scroll_of_*.toml`, the convention in `objects/README.toml` 232–238 | item level about half the spell's; frequency 60 (level 1) → 20 (6) → 10 (10) → 5 (18); value 40 → 200 → 320 → 500 |
-| Pools (`docs/balance.md` "Spells") | | wizard 33 / 106 / 254 / 502 at levels 3 / 12 / 30 / 60; priest, druid, witch about 27 / 90 / 216 / 426; bard 17 / 45–53 / 103–125; paladin, ranger 9–14 / 27–50 / 63–122. Between the anchors this document interpolates *(unchecked)* |
+| Pools (`docs/balance.md`, the stats table's `MP Wz/P`) | | wizard / priest: 16/13 at level 1, 52/39 at 5, 103/78 at 10, 156/119 at 15, 214/162 at 20, 334/253 at 30, 464/346 at 40, 602/446 at 50, 747/547 at 60. Between the rows this document takes the straight line; the druid and the witch are read at the priest's row, and the bard, paladin, and ranger have no row, so the cast counts below are for the wizard's and priest's rows and P1's probe rerun records the rest |
 
 ## 3. Part 1: what each spell type does
 
-The rule of a type is **always on** for every spell of that damage type, cast from mana, a scroll, or a wand (it is the spell's nature, not the caster's), and for a creature's spell once creatures cast through the path (today they are intents). It never reads the caster's level. "Harmed" below means a creature the spell took hit points from: `spell_lands` already walks exactly those.
+The rule of a type is **always on** for every spell of that damage type, cast from mana, a scroll, or a wand (it is the spell's nature, not the caster's), and for a creature's spell once creatures cast through the path (today they are intents). It never reads the caster's level. **It is magic's alone** (Q1): a Flaming sword's blow, a Freezing arrow, and Brand's fire read no type rule. **It spares no one** (Q14): the caster and their allies are struck like anyone the rule reaches. "Harmed" below means a creature the spell took hit points from: `spell_lands` already walks exactly those.
 
 | Type | The fantasy, in a line | Beyond damage: on the creature | Beyond damage: in the world | Draws |
 |---|---|---|---|---|
 | **Fire** | Fire catches, and what burns is seen | **Burning** (new status, §4): 1 degree, **one time in four** per creature harmed; a burning creature sheds `ember` light, so it cannot hide in the dark; a step into water, or a cold spell, puts it out | every fire burst **melts ice** on its cells (`heat`, today Fireball's and Flame's only, becomes the type's); a fire ray or bolt melts the cell it strikes; a fire burst **leaves a fire** on its centre cell (`arrow_fire`, 60 s, light only: Blaze's) | one `below(4)` per creature harmed, in the order struck |
 | **Cold** | Cold slows the blood | **Sluggish 1** on every creature harmed (Numbing cold's rider, certain); ends **Burning** on them | every cold burst **freezes water** on its cells (`frost = 100`, today Frost's only); a cold ray or bolt freezes the one cell it strikes (Ray of frost across a lake, one cell a cast: a bridge built by hand); **puts out fires** on its cells (`LevelState::fires` removed) | none |
-| **Electricity** | Lightning seeks the nearest path | **Arcs**: one time in four a bolt, ray, or line that harms a creature strikes once more at a creature beside it not yet struck (the same roll; the nearest, ties by actor id); never back at the caster | **Conducts**: a creature struck while standing in water is one of a **body of water** (the connected cells of terrain with a `freeze` table, ice left out), and everyone standing in that body is struck at the same roll, **the caster too** if they wade. A level 1 druid's Spark from the shore empties a pond of rats; from the ford it empties him | one `below(4)` per creature harmed for the arc; the body is a flood fill in cell order, no draw |
-| **Force** | Raw push | **Shove**: a hit that takes at least a third of the target's maximum hit points (the `wound` table's `big_hit` threshold) knocks it one cell straight away from the caster (`knock_back`), if that cell is free; a critical of an `attack` spell always shoves | a force burst's `blast` breaks walls as today, and **shatters thin ice** through `Shock::Blast(um)` (the hook with no user), so what stood on it plunges | none |
+| **Electricity** | Lightning seeks the nearest path | **Arcs**: one time in four a bolt, ray, or line that harms a creature strikes once more at a creature beside it not yet struck (the same roll; the nearest, ties by actor id), **the caster or an ally too** if they stand beside it (Q14): Spark at a rat beside you may jump back into you | **Conducts**: a creature struck while standing in water is one of a **body of water** (the connected cells of terrain with a `freeze` table, ice left out), and everyone standing in that body is struck at the same roll, **the caster too** if they wade. A level 1 druid's Spark from the shore empties a pond of rats; from the ford it empties him | one `below(4)` per creature harmed for the arc; the body is a flood fill in cell order, no draw |
+| **Force** | Raw push | **Shove**: a hit that takes at least a third of the target's maximum hit points (the `wound` table's `big_hit` threshold) knocks it one cell straight away from the caster (`knock_back`), if that cell is free; a critical of an `attack` spell always shoves | a force burst's `blast` breaks walls and blows shut chests apart as any blast does today, also **breaks shut doors** (Q5), and **shatters thin ice** through `Shock::Blast(um)` (the hook with no user), so what stood on it plunges | none |
 | **Poison** | Venom lingers | **Poisoned 1** on every creature harmed (certain; a resistant creature takes less, an immune one nothing: `damage_type` on the status already does this). Blight's own line drops to severity 1 so it still poisons 2 | none (the undead's immunity is their resist line, 33 types) | none |
 | **Necrotic** | Death takes the dying first | against a creature **below half** its maximum hit points the harm is **half again** (×150 %, rounded down), read before resistance; the **undead are immune** (a tag immunity, §4) | none | none |
-| **Acid** | It keeps eating | **Corroded 1** (new status, §4: 1 hp every 6 s for 12 s) on every creature harmed | none in this pass (eating armour is item state: Q6) | none |
-| **Holy, unholy** | — | deferred by the magic design §6 and spec §8 "Alignment"; the paladin's smites read alignment, not a type. Nothing proposed | | |
+| **Acid** | It keeps eating | **Corroded 1** (new status, §4: 1 hp every 6 s for 12 s) on every creature harmed | none: acid does not eat armour (Q6) | none |
+| **Holy, unholy** | — | no such damage type (Q2): Rebuke does fire; the paladin's smites read alignment, not a type | | |
 
 What each type **reads of the world** that already exists, and what it leaves alone:
 
 | World | Fire | Cold | Electricity | Force | Blood | Corpses | Light | Doors |
 |---|---|---|---|---|---|---|---|---|
-| Reads | ice (melts), fires (lays one) | water (freezes), fires (puts out), Burning (ends) | water bodies (conducts) | thin ice (shatters), walls (`blast`, as today) | — (no rule reads blood: kept) | — (spells read corpses in Part 2, not types) | Burning sheds light | — (Q5: force breaking doors) |
+| Reads | ice (melts), fires (lays one) | water (freezes), fires (puts out), Burning (ends) | water bodies (conducts) | thin ice (shatters), walls, shut doors, and shut chests (`blast`) | — (no rule reads blood: kept) | — (spells read corpses in Part 2, not types) | Burning sheds light | a force `blast` breaks shut doors (Q5) |
 
 A type rule is not a talent and not a rider: Numbing cold's rider on `spell_mod` stays a hook anyone may use (`when = ["fire"]` on a future talent still works), and a type's rule sits beside it.
 
@@ -99,6 +99,7 @@ The data, in `assets/data/spells.toml` (loaded into `SpellRules::types`, every s
 #   arc = { chance = 25 }   a single-target or line strike jumps to a creature beside the struck
 #   conducts = true         strikes everyone standing in the struck creature's body of water
 #   shove = true            a big hit knocks the target a cell away from the caster
+#   doors = true            a burst's blast breaks the shut doors in it (a chest is every blast's already)
 #   shatter = true          a burst's blast shatters thin ice (Shock::Blast)
 #   bite = { below_percent = 50, percent = 150 }   harm × percent against a target below that share of its hit points
 #   immune_tags = ["undead"]   creatures with the tag take nothing of it
@@ -106,7 +107,7 @@ The data, in `assets/data/spells.toml` (loaded into `SpellRules::types`, every s
 fire = { rider = { status = "burning", severity = 1, chance = 25 }, heat = true, fire = { light = "arrow_fire", burns = 60 } }
 cold = { rider = { status = "sluggish", severity = 1 }, ends = ["burning"], frost = 100, douses = true }
 electricity = { arc = { chance = 25 }, conducts = true }
-force = { shove = true, shatter = true }
+force = { shove = true, shatter = true, doors = true }
 poison = { rider = { status = "poisoned", severity = 1 } }
 necrotic = { bite = { below_percent = 50, percent = 150 }, immune_tags = ["undead"] }
 acid = { rider = { status = "corroded", severity = 1 } }
@@ -116,15 +117,18 @@ acid = { rider = { status = "corroded", severity = 1 } }
 |---|---|---|---|
 | `rider` with `chance`, `ends` | `cast.rs::spell_lands`, after the cast's own `effect.status` and its riders: `afflict` the type's rider (one `rng.below(100)` per creature when `chance` < 100, in the order `spell_lands` already walks), then `Effects::cure` each of `ends` | the walk and `afflict` exist; the draw is new | a scroll's and a wand's casts go through the same `spell_lands`; the mishap backfire too (it is the spell's nature) |
 | `heat`, `frost`, `douses` | `cast_burst` after the harm: `World::shock(Shock::Heat)` / `World::frost(centre, radius, um)` over the burst's cells, as the fields on the spell do today, then `LevelState::fires.remove` on each; `cast_single` and `cast_bolt`: the same at radius 0 on the cell struck (the last cell of the line) | `shock` and `frost` exist for bursts; radius 0 is a call | the spells' own `heat = true` and `frost = 100` fields go (§5); `blast` stays a spell's own (Fireball breaks walls; Frost does not) |
-| `fire` | `cast_burst` after the harm: insert `Fire { light, until: now + burns }` at the centre if the cell is walkable (Blaze's code in the stars' module, moved to one `World::lay_fire(cell, light, burns)` both call) | Blaze does it | light only; no rule reads a fire (Q3 asks about burning ground: recommended no) |
-| `arc` | `cast_single` (after the strike) and `cast_bolt` (after its targets): `World::arc_from(struck, cast)`: the creatures adjacent to the struck one, not yet struck by this cast and not the caster, sorted by distance then actor id; one `below(100)` against `chance`; the first is struck through `spell_strikes` at the cast's settled roll, then `spell_lands` runs over it (so it may arc once more: a chain of 25 % steps, which ends by itself); Chain lightning's `[spell.effect] arcs` makes the first N jumps certain (§7) | `spell_strikes` and the target walk exist; `arc_from` is new (one function) | a reflected spell arcs nothing (`spell_lands`' `cast` is `None` for it) |
+| `fire` | `cast_burst` after the harm: insert `Fire { light, until: now + burns }` at the centre if the cell is walkable (Blaze's code in the stars' module, moved to one `World::lay_fire(cell, light, burns)` both call) | Blaze does it | light only; no rule reads a fire, and it never spreads (Q3; wildfires are deferred to #196) |
+| `arc` | `cast_single` (after the strike) and `cast_bolt` (after its targets): `World::arc_from(struck, cast)`: the creatures adjacent to the struck one, not yet struck by this cast, the caster and allies among them (Q14), sorted by distance then actor id; one `below(100)` against `chance`; the first is struck through `spell_strikes` at the cast's settled roll, then `spell_lands` runs over it (so it may arc once more: a chain of 25 % steps, which ends by itself); Chain lightning's `[spell.effect] arcs` makes the first N jumps certain (§7) | `spell_strikes` and the target walk exist; `arc_from` is new (one function) | a reflected spell arcs nothing (`spell_lands`' `cast` is `None` for it) |
 | `conducts` | the same place, before `arc_from`: for each creature struck standing on a `freeze` terrain (`TerrainDef::freeze.is_some()`, ice excluded by its own id), `World::water_body(cell)` (a flood fill over 8-neighbours of `freeze` terrain in cell order, memoised per cast) and every actor standing in it not yet struck, the caster included, struck at the settled roll in actor id order | `burst_cells`' walk pattern; the flood fill is new | an area spell (Lightning bolt, Call lightning) conducts from each creature it harmed; ice is not water (frozen ponds do not conduct); the overworld has no water cells (its water is a map glyph): nothing there |
-| `shove` | `spell_strikes` after the hurt, when the target lives: if the blow took ≥ ⌈max_hp / 3⌉ (the `wound` table's `big_hit` test, `blood.rs::Wound` already decides this for bleeding) or was a confirmed critical, `World::knock_back(target, away from the cast's origin)` (`weapon_active.rs` 379, made `pub(super)`) | `knock_back` exists (the Breaker kick-back of the talent-ranks design calls it too) | a shove into water is a wade, onto thin ice the ice's own rule; a creature `held` or `webbed` is not moved (`blocks step` holds) |
+| `shove` | `spell_strikes` after the hurt, when the target lives: if the blow took ≥ ⌈max_hp / 3⌉ (the `wound` table's `big_hit` test, `blood.rs::Wound` already decides this for bleeding) or was a confirmed critical, `World::knock_back(target, away from the cast's origin)` (`weapon_active.rs` 380) | `knock_back` exists, `pub(super)` since Breaker's kick-back (#969) | a shove into water is a wade, onto thin ice the ice's own rule; a creature `held` or `webbed` is not moved (`blocks step` holds); a caster at the burst's centre has no "away" and stays |
 | `shatter` | `cast_burst`: a force burst with `blast` calls `World::shock(Shock::Blast(blast))` in place of nothing | the hook exists with no user (`temperature.md` 43) | so Shatter (§7) and a wand of it break ice under a creature |
+| `doors` | `cast_burst`: a burst of a type with `doors` and a spell with `blast` calls a new `World::blast_doors(center, radius, events)` after `World::blast`: every closed door in the burst's line of sight with a `breaks_to` (`TerrainDef::kicked_in`) becomes what it breaks to, with no sturdiness check; its lock and any trap on it go with it, sprung at no one, as a blown chest's do | `World::blast` already blows apart every shut chest whose band's `hardness` is below the blast (`world/dig.rs` 194–210, `docs/dev/chests.md`), for every blast; nothing new is needed for chests | Fireball's behaviour is unchanged (Q5): its fire type has no `doors`, so doors stand, and its `blast = 1000` blows chests apart as today. `doors.md`'s "never a door" gains this one exception |
 | `bite` | `spell_strikes`, on the damage after the strike and before `resist`: when `target.hp × 100 < max_hp × below_percent`, damage × percent / 100 | one multiplication | the only type rule that reads the target's hit points; the wiki states it |
 | `immune_tags` | `Actor::resistance(type)`: a creature whose type has any listed tag resists 100 % (the same place its `resist` line is read), after its own line | one clause | 93 undead files need no edit; a type's tag immunity shows in the `actors` dump as `resists necrotic 100` |
 
-**Determinism**: every draw named above is from the gameplay stream, one per creature in the order the cast already walks them (actor id for an area; the flight's order for a line; the arc's sorted list), and only when the rule arises (no draw for a type without a `chance`). **Perception**: nothing here reads perception; the player is told of a conducted or arced strike only as `perceive_events` already cuts `Event::Attacked` (a creature they see is named, an unseen one is "something", one out of earshot is nothing). The aiming mode shows no arc or water preview (Q4). **Saves**: the two new statuses are data; a fire laid is `LevelState::fires` as today; nothing else is stored. **Dumps**: the `spells` layer and the menu show a type's rule in words after the roll (`4d6 fire, burns one in four`): `spell_words.rs`, the one place.
+**Determinism**: every draw named above is from the gameplay stream, one per creature in the order the cast already walks them (actor id for an area; the flight's order for a line; the arc's sorted list), and only when the rule arises (no draw for a type without a `chance`). **Perception**: nothing here reads perception; the player is told of a conducted or arced strike only as `perceive_events` already cuts `Event::Attacked` (a creature they see is named, an unseen one is "something", one out of earshot is nothing). The aiming mode shows no arc or water preview: it only shows the aim (Q4). **Saves**: the two new statuses are data; a fire laid is `LevelState::fires` as today; nothing else is stored. **Dumps**: the `spells` layer and the menu show a type's rule in words after the roll (`4d6 fire, burns one in four`): `spell_words.rs`, the one place.
+
+**No protection** (Q14): nothing in this design leaves out the caster or their allies. Arcs, conduction, a burst, a line, a zone, a shove, and Burning take them like anyone. Three protections already in the game are not this design's and are left as they are: Scroll savant's `spares_self` (its own bursts never catch it, `world/spell.rs` 256), `cast_area_hex` leaving out the caster (`cast.rs` 622: Fear, Silence, and Bramble go through it, allies caught, the caster not), and Blaze leaving out its user's cell.
 
 **New statuses** (`assets/data/status.toml`, data):
 
@@ -140,14 +144,14 @@ Every talent, affix, and spell field that touches an element, with a verdict:
 | Talent / affix / field | Today | Verdict |
 |---|---|---|
 | **Numbing cold** (`talents/numbing_cold.toml`, Spellcraft, level 12, `spell_mod { rider = sluggish 1, when = ["cold"] }`) | the owner's example | **Removed.** Cold's own (§3). Its tests in `world/spell_talent_tests.rs` and `cast_tests.rs` ("Numbing cold's rider on every target harmed and none missed and on cold spells only") become the type's tests. Its Spellcraft slot at level 12 goes to **Conductor** (below) |
-| **Conductor** (new, `talents/conductor.toml`, Spellcraft, `needs = { level = 12 }`, systems `spells`) | — | *"Lightning knows your hand: your electricity spells arc every time, and never through the water you stand in."* `effects = [{ kind = "spell_type", arc_chance = 100, conducts_to_caster = false, when = ["electricity"] }]`: a new `TalentEffect::SpellType` read in `arc_from` (the chance) and `water_body`'s strike list (the caster left out). The one talent the type system ships with (CLAUDE.md "A new broad system ships with one talent"): it reads two of the type rules and changes a real choice (wading into the fight with Spark). One rank |
+| **Conductor** (new, `talents/conductor.toml`, Spellcraft, `needs = { level = 12 }`, systems `spells`) | — | *"Lightning knows your hand: your electricity spells arc every time, and what comes back at you bites less."* `effects = [{ kind = "spell_type", arc_chance = 100, when = ["electricity"] }, { kind = "resist", damage = "electricity", value = 25 }]`, as the owner set it (§10 Q14): a new `TalentEffect::SpellType` read in `arc_from` (the chance), and the existing `resist` kind with a named `damage`, as Flame-hardened has it. It is no protection: every arc may jump back and the water still conducts to the caster, each at 25 % less. A chain ends only when no creature not yet struck stands beside the last. The alike check (`content/talent_alike.rs`) compares a talent's whole effect list and its `choice`, so neither Elemental ward (`choice = "element"`, one `resist` with no `damage`) nor Flame-hardened is a clone of it, and no `alike` line is needed; if the check ever refused it, the pair goes in `alike` in `assets/data/talents.toml`. One rank |
 | Flame and frost (class, the druid's two spells) | a grant | stays |
 | Blaze, Wildfire, Kindled, Flame-hardened, Fire breath, Transfixing stare (`tree = "stars"`) | birth sign actives and resists | stay (they are not spells); Blaze's fire-laying becomes a call of the shared `lay_fire` |
 | Elemental ward (Guard, choice: element, `resist 25`) | the other side of the elements | stays (one rank, per the talent-ranks design) |
 | School focus, Keen mind (choice: a school or an element) | generic hooks (`cost`, `cells`, `sides`) | stay |
 | Sure hand, Brimming, Empower, Archmage, Scroll adept, Wand mastery | generic hooks | stay |
 | Thunderstruck, Wasting, Aegis, Lulling (school abilities at rank 7–10) | Staggered, Weakened, Spell ward, Drowsy on a spell landing | stay: **school** rules, and the type rules were picked to not double them (force shoves rather than staggers; necrotic bites rather than weakens) |
-| Flaming, Freezing, Shocking, Corrosive, Venomous, Withering (weapon affixes, `effect = "elemental"`) | elemental damage on blows | stay as they are; whether a flaming sword's blows burn is **Q1** (recommended: later, through the same `[types]` table, one call in `fight.rs`) |
+| Flaming, Freezing, Shocking, Corrosive, Venomous, Withering (weapon affixes, `effect = "elemental"`) | elemental damage on blows | stay as they are: type rules never apply to weapon blows (Q1) |
 | Baleful, of Lingering, of Farcasting, Potent, of the Magus, of Thrift, of Wands, Mage-wrought | generic spell hooks | stay |
 | of the Adept (`caster_level`) | learning only | goes with #977, not here |
 | Fireball's and Flame's `heat = true`, Frost's `frost = 100` (`[spell.cast]`) | the world reads on three spells | **Removed from the spells**: the type's. `spell_def` keeps accepting the keys for a campaign's spell that wants more or less than its type (an override), but the shipped three drop them |
@@ -189,21 +193,21 @@ Mana is the cost table's at the base reach (`level × shape × resolution`), bef
 | 22 | Nightsight | transmutation | 4 | self | — | 4 | ranger 9, scroll | D | — |
 | 23 | Glamour | abjuration | 8 | self | — | 8 | scroll | D | D&D (Blur) |
 | 24 | Fire cloak | abjuration | 12 | self | fire | 12 | scroll | S | D&D (Fire shield) |
-| 25 | Water walking | transmutation | 5 | self | — | 5 | ranger 12, druid 6 | S | D&D |
+| 25 | Water walking | transmutation | 5 | self | — | 5 | ranger 12, druid 6, scroll | S | D&D |
 | 26 | Brand | transmutation | 7 | self | fire | 7 | paladin 14, scroll | S | D&D (Flame blade) |
 | 27 | Renewal | restoration | 10 | self | — | 10 | priest 9, scroll | D | — |
 | 28 | Unbinding | abjuration | 8 | self | — | 8 | paladin 20, scroll | D | D&D (Dispel, narrowed) |
 | | **The world, the dead, the living** | | | | | | | | |
-| 29 | Rouse the dead | necromancy | 24 | a corpse, summon | — | 24 | witch 28, scroll | N | D&D (Animate dead) |
+| 29 | Rouse the dead | necromancy | 24 | a corpse, rises as its own creature | — | 24 | witch 28, scroll | N | D&D (Animate dead) |
 | 30 | Grave feast | necromancy | 6 | a corpse beside, touch | — | 4 | witch 14, scroll | S | — |
 | 31 | Blink | transmutation | 6 | self | — | 6 | wizard 6, scroll | S | D&D |
 | 32 | Sense the quick | divination | 5 | self | — | 5 | bard 20, scroll | S | — |
 | 33 | Cloudburst | transmutation | 20 | self, open sky | — | 20 | druid 30, scroll | S | — |
 | 34 | Beguile | enchantment | 18 | ray, auto | — | 18 | witch 44, scroll | N | D&D (Charm) |
 | 35 | Benison | restoration | 12 | burst r1 on the caster, heal | — | 22 | priest 24, scroll | S | D&D (Prayer of healing) |
-| 36 | Rebuke | abjuration | 14 | burst r2, range 8 | — | 34 | priest 18, scroll | S | D&D (Turn undead) |
+| 36 | Rebuke | abjuration | 14 | burst r2, range 8 | fire | 34 | priest 18, scroll | S | D&D (Turn undead) |
 
-Levels by class and shape, checked against the pools: a spell's mana at its class level is 10 to 20 casts from the class's pool for the bread-and-butter spells (Flay 8 at witch 8: pool about 60, 7 casts; Shatter 14 at wizard 9: pool about 80, 5 casts), 3 to 5 for the nukes (Sunfire 90 at wizard 36: pool about 300, 3 casts; Rebuke 34 at priest 18: pool about 130, 4), as Fireball's 26 at wizard 12 from 106 is 4 today *(pools between the anchors unchecked)*.
+Levels by class and shape, checked against the pools of §2: a spell's mana at its class level is 5 to 10 casts from the pool for the bread-and-butter spells (Flay 8 at witch 8: pool about 62, 7 casts; Shatter 14 at wizard 9: pool about 93, 6 casts), about 4 for the nukes (Sunfire 90 at wizard 36: pool about 412, 4 casts; Rebuke 34 at priest 18: pool about 145, 4), as Fireball's 26 at wizard 12 from about 124 is 4 today.
 
 ## 7. Part 2: the spells, entry by entry
 
@@ -220,7 +224,7 @@ A **zone** is an area that lies on the floor for a time, as hallowed ground does
 | `slick` | a creature that steps onto it, or starts its turn on it and moves, makes a Dexterity check against 12 (`check(rng, modifier, difficulty)`, `crate::check`): failed, it is Staggered 1 (the next action half again as slow) and its step is spent | `after_tread` |
 | `dark` | no light reaches its cells: the light cache sets their light to 0 and a source inside sheds nothing (one clause in the light pass); creatures without darkvision see nothing inside it, the player too, by the existing sight rules | `LightCache` (core: the light cache is the perception's, in `perception/light`; the renderer reads the perceived light as ever) |
 
-Rules: a zone's cells are fixed (it does not spread, Q3); a new zone over an old one replaces it on the shared cells; leaving the level keeps it; it ends at `until` and is dropped at the end of that turn, as a hallow is. Zones are ground truth: the player sees a zone's cells as the perception shows them (a fire by its light and its look, a cloud by a look-mode word, dark by the dark) and remembers them as terrain is remembered, through `Perception` (`PerceptionView::zone_at`, a new perception field; the `truth` dump lists them). The dev action `zone:KIND@X,Y,R` lays one for captures. Draws: Slick's check only, at the stepper's step. Effects: a zone shows as a still tint of its cells, no particles (subtle); a fire zone's light flickers as a fire's does.
+Rules: a zone's cells are fixed (it never spreads: Q3; wildfires are deferred to #196); it takes the caster and their allies like anyone (Q14: `by` is whose kill it is, never who it spares); a new zone over an old one replaces it on the shared cells; leaving the level keeps it; it ends at `until` and is dropped at the end of that turn, as a hallow is. Zones are ground truth: the player sees a zone's cells as the perception shows them (a fire by its light and its look, a cloud by a look-mode word, dark by the dark) and remembers them as terrain is remembered, through `Perception` (`PerceptionView::zone_at`, a new perception field; the `truth` dump lists them). The dev action `zone:KIND@X,Y,R` lays one for captures. Draws: Slick's check only, at the stepper's step. Effects: a zone shows as a still tint of its cells, no particles (subtle); a fire zone's light flickers as a fire's does.
 
 ### 1. Chain lightning
 
@@ -330,7 +334,7 @@ length = "willpower 14 6, 18 7"
 [[spell]]
 id = "shatter"
 name = "Shatter"
-description = "A clap of force that bursts where you aim it: it cracks walls, ice, and shut chests, and batters everyone it reaches."
+description = "A clap of force that bursts where you aim it: it cracks walls, ice, shut doors, and shut chests, and batters everyone it reaches."
 level = 8
 school = "evocation"
 kind = "damage"
@@ -354,7 +358,7 @@ range = "willpower 14 9, 18 10"
 
 | | |
 |---|---|
-| In the world | `blast = 1000` breaks what a Fireball breaks (earth and brick, not granite: `hardness` 600 breaks, 3000 does not), blows a shut chest apart as a trap's burst does (`docs/dev/chests.md`: "a burst on a shut chest blows it up", loot spilled, glass broken), and through the force type **shatters thin ice** on its cells (`Shock::Blast`): a band crossing a frozen pond is in the water. The shove: a big hit knocks each creature a cell outward. A locked door: Q5 |
+| In the world | `blast = 1000` breaks what a Fireball breaks (earth and brick, not granite: `hardness` 600 breaks, 3000 does not), blows apart every shut chest in the burst whose band's `hardness` is below 1000 (`World::blast`, as Fireball's does: coffer 200 to strongbox 900; a kist, 1200, and up hold), and through the force type **breaks every shut door in it**, locked or not (Q5), and **shatters thin ice** on its cells (`Shock::Blast`): a band crossing a frozen pond is in the water. The shove: a big hit knocks each creature a cell outward. A caster in reach of their own burst takes all of it |
 | Who | wizard 9 (a level 8 area for 14 mana from a pool of about 80), scroll (item level 4, frequency 30, value 130) |
 | Size | **S**: a burst's `effect` presentation needs a force burst look (`effects.toml`: a `shatter` burst, white and brief, no particles); the rest is the type's |
 
@@ -384,7 +388,7 @@ range = "willpower 14 9, 18 10"
 
 | | |
 |---|---|
-| In the world | the first acid spell: Corroded 1 on a hit (two more points over the next two turns), and nothing resists acid in the shipped rosters but a few oozes *(unchecked)*, so it is the ray for creatures that shrug off fire and cold |
+| In the world | the first acid spell: Corroded 1 on a hit (two more points over the next two turns), and only six shipped types resist acid (the beetle and five yugoloths), so it is the ray for creatures that shrug off fire and cold |
 | Who | scroll only (item level 3, frequency 35, value 100): a scroll worth finding for a wizard whose Scorching ray meets a fire-thing |
 | Size | **D** (a bolt effect: `blight`'s green serves until an `acid` bolt look is drawn) |
 
@@ -394,7 +398,7 @@ range = "willpower 14 9, 18 10"
 [[spell]]
 id = "thunderclap"
 name = "Thunderclap"
-description = "A clap of thunder about you: everyone beside you is battered and reels, and the whole level hears it."
+description = "A clap of thunder about you: everyone beside you is battered and reels, you too, and the whole level hears it."
 level = 7
 school = "evocation"
 kind = "damage"
@@ -418,9 +422,9 @@ radius = "willpower 18 2"
 
 | | |
 |---|---|
-| In the world | a burst **on the caster** (`range = 0`: no aim; the caster's own cell is left out, as Blaze's is): everyone beside is hit, Stunned 1 (flat-footed for its next action: the bard's sneak-attack set-up, and the way out of a ring), and shoved on a big hit. Loudness 150 is the level's alarm: every sleeper wakes (`sleeps` wakes at the den's threshold), every creature that hears it comes. Time is the penalty |
-| Who | bard 12 (spell level 7 ≤ 12 × 75 %), scroll (item level 4, frequency 30, value 130) |
-| Size | **S**: `range = 0` on a burst (`spell_def` allows 0 for a burst only: cast at the caster's cell, no aiming mode, `Aim::None`; the caster's cell excluded from `burst_cells`' harm as Blaze's is). The `damage` ladder on Presence is the bard's stat (the README: "unless the spell says otherwise") |
+| In the world | a burst **on the caster** (`range = 0`: no aim): everyone in it is hit and Stunned 1 (flat-footed for its next action), **the caster too** (Q14: their cell is in the burst, as any burst's is), and everyone else is shoved on a big hit (the caster, at the centre, has no "away"). It trades your next action for theirs: a price, with a ring of foes round you, that may be worth paying. Loudness 150 is the level's alarm: every sleeper wakes (`sleeps` wakes at the den's threshold), every creature that hears it comes. Time is the penalty |
+| Who | bard 12, scroll (item level 4, frequency 30, value 130) |
+| Size | **S**: `range = 0` on a burst (`spell_def` allows 0 for a burst only: cast at the caster's cell, no aiming mode, `Aim::None`; no cell left out). The `damage` ladder on Presence is the bard's stat (the README: "unless the spell says otherwise") |
 
 ### 7. Flay
 
@@ -451,7 +455,7 @@ degrees = "presence 14 3, 18 4"
 
 | | |
 |---|---|
-| In the world | little harm, but Bleeding 2 to 4 (a hit point every 40 s a degree, easing 60 s a degree: 2 degrees are about 5 points over two minutes, 4 degrees about 13): the witch's damage over time, and a blood trail on the floor (`bleed.rs` stains as the ticks hurt, presentation). A bloodless creature (`blood = "none"`: skeletons, elementals *(unchecked which)*) bleeds nothing: the status takes, the ticks hurt as any status's do (Q7 asks whether Bleeding should refuse the bloodless; recommended yes, one clause in `afflict`: a status with `wound` takes only on a creature with blood). The necrotic bite: the ticks are the status's, not the spell's, so only the 1d4 bites |
+| In the world | little harm, but Bleeding 2 to 4 (a hit point every 40 s a degree, easing 60 s a degree: 2 degrees are about 5 points over two minutes, 4 degrees about 13): the witch's damage over time, and a blood trail on the floor (`bleed.rs` stains as the ticks hurt, presentation). A bloodless creature (`blood = "none"`: 89 types, the bone and spirit undead and the elementals among them) refuses Bleeding (Q7: one clause in `afflict_one`, `world/status.rs`, beside the `immune` check: a status with a `wound` table takes only on a creature with blood), so Flay does nothing to a skeleton beyond its 1d4. The necrotic bite: the ticks are the status's, not the spell's, so only the 1d4 bites |
 | Who | witch 8 (her first damage at range), scroll (item level 4, frequency 30, value 130) |
 | Size | **D** (`degrees` on a damage spell's status: `spell_def` today allows `degrees` for a buff or a hex only; allowing it for a damage spell with an `effect.status` is a one-line widening: *small*) |
 
@@ -605,7 +609,7 @@ degrees = "presence 14 3"
 | | |
 |---|---|
 | In the world | Pinned (`blocks step`, per action, max 3): the target cannot step for its next 2 or 3 actions; it fights if beside, shoots if it can. Against an archer behind a door it is a held door; against a charging ogre it is three free shots. No level limit (the house rule: Sleep has none) |
-| Who | bard 16 (9 ≤ 12), scroll (item level 5, frequency 25, value 150) |
+| Who | bard 16, scroll (item level 5, frequency 25, value 150) |
 | Size | **D** (`pinned` is a hex's status as `webbed` is: `afflict` with the caster as giver) |
 
 ### 13. Fear
@@ -721,7 +725,7 @@ range = "willpower 14 9, 18 10"
 
 | | |
 |---|---|
-| In the world | Blight's little brother that stays: 1d4 and Poisoned 1 at the cast (the type's), then Poisoned 1 more to whoever starts a turn inside for 10 turns: six turns in it is Poisoned 7 (a point every 17 s, Strength and Dexterity −1 from degree 4). The undead and the 33 poison-immune types walk through it. It does not block sight (Q8: recommended no; sight-blocking is Mirk's) |
+| In the world | Blight's little brother that stays: 1d4 and Poisoned 1 at the cast (the type's), then Poisoned 1 more to whoever starts a turn inside for 10 turns: six turns in it is Poisoned 7 (a point every 17 s, Strength and Dexterity −1 from degree 4). The undead and the 33 poison-immune types walk through it. It does not block sight (Q8); that is Mirk's |
 | Who | scroll only (item level 7, frequency 15, value 250) |
 | Size | **N**: the zone mechanic's `fouled` kind |
 
@@ -751,7 +755,7 @@ radius = "willpower 18 2"
 |---|---|
 | In the world | Silenced (`blocks = ["cast", "read", "song", "throw_voice"]`, 10 s, max 1): the 37 `caster` creatures and the 6 `summoner`s lose a turn or two of spells; the shaman cannot call. Short by design (the status's own `eases`): it buys a charge, not a fight |
 | Who | priest 12 (abjuration, the priest's affinity 2), scroll (item level 6, frequency 20, value 200) |
-| Size | **D** (an area hex; whether creature intents read `blocks cast` is checked: `docs/dev/creatures.md` *(unchecked)*; if not, the one clause in the AI's cast intent) |
+| Size | **D** (an area hex; creatures already honour `blocks cast`: `ai.rs` 322, a blocked caster fights in melee, and `summon.rs::summons_at`) |
 
 ### 18. Bramble (entangle)
 
@@ -803,7 +807,7 @@ degrees = "presence 14 3, 18 4"
 | | |
 |---|---|
 | In the world | Transfixed (cost 200, 12 s a degree): the Transfixing stare's status for anyone (a birth sign gives the stare; the bard learns the trick). Stronger than Curse of sloth's Sluggish (150) and shorter |
-| Who | bard 8 (5 ≤ 6), scroll (item level 3, frequency 35, value 100) |
+| Who | bard 8, scroll (item level 3, frequency 35, value 100) |
 | Size | **D** |
 
 ### 20. Slumber
@@ -852,7 +856,7 @@ length = "willpower 14 7, 18 8"
 
 | | |
 |---|---|
-| In the world | every creature on the line is knocked a cell farther along it (`knock_back` away from the caster, nearest first so no one is pushed into another; a creature that cannot be moved stays, Q5's doors unaffected); every fire on the line is put out (`LevelState::fires` and a `fire` zone's cells on it); a `fouled` or `dark` zone loses the cells the line crosses. The druid clears the Reek off his bear, or blows the goblins off the bridge into the river |
+| In the world | every creature on the line is knocked a cell farther along it (`knock_back` away from the caster, nearest first so no one is pushed into another; a creature that cannot be moved stays; a shut door stands, for Gale has no `blast`); every fire on the line is put out (`LevelState::fires` and a `fire` zone's cells on it); a `fouled` or `dark` zone loses the cells the line crosses. The druid clears the Reek off his bear, or blows the goblins off the bridge into the river |
 | Who | druid 20, scroll (item level 6, frequency 20, value 200) |
 | Size | **S**: `[spell.effect] push` (cells, 1 to 3), `douses`, `clears` on a line hex: `cast_bolt`'s target walk with `knock_back` in place of a strike; zone cells removed by `LevelState::clear_zone_cells`. No harm, no roll, no draw |
 
@@ -869,14 +873,12 @@ kind = "buff"
 shape = "self"
 resolution = "auto"
 effect = { status = "cat_eyed" }
-[spell.grows]
-degrees = "presence 14 2, 18 3"
 ```
 
 | | |
 |---|---|
-| In the world | `cat_eyed` (a potion's status today: the vision it gives is the status's own data *(unchecked which profile)*) for the spell's degrees: a lantern left unlit is a stealthy ranger |
-| Who | ranger 9 (4 ≤ 4.5), scroll (item level 2, frequency 45, value 80) |
+| In the world | `cat_eyed` (a potion's status today: `low_light` vision, `max = 1`, `eases = 1800`), thirty minutes, so no degrees ladder: a lantern left unlit is a stealthy ranger |
+| Who | ranger 9, scroll (item level 2, frequency 45, value 80) |
 | Size | **D** |
 
 ### 23. Glamour
@@ -923,7 +925,7 @@ degrees = "presence 14 2, 18 3"
 |---|---|
 | In the world | a new status `fire_cloaked` (`max = 3`, `refresh`, `eases = 60`, `light = "ember"`, `retaliates = { damage = "1d6", damage_type = "fire" }`): a melee blow that lands on the wearer burns the striker 1d6 fire, through `spell_strikes` (so the fire type's Burning applies to the striker, one in four). The light is the price: a cloaked caster is seen |
 | Who | scroll only (item level 6, frequency 20, value 200) |
-| Size | **S**: `retaliates` on a status, read where Barbed hide's hook reads the stars' retaliation (`barbed_hide.toml`'s effect kind, `fight.rs::resolve` after the hurt *(the hook's name unchecked)*): one clause more there, no new place |
+| Size | **S**: `retaliates` on a status, read where Barbed hide's barbs are (`world/gifts.rs` 217–228): one clause more there, no new place |
 
 ### 25. Water walking
 
@@ -945,7 +947,7 @@ degrees = "presence 14 2, 18 3"
 | | |
 |---|---|
 | In the world | a new status `water_borne` (`max = 3`, `refresh`, `eases = 120`, `wades_free = true`, `plunge_proof = true`): Undertow's two effects (the Water sign's gifts, `talents/undertow.toml`) for two to six minutes. A lake is a road; the electricity type still conducts through the water one wades (the spell carries, it does not insulate: the choice stays) |
-| Who | druid 6, ranger 12 (5 ≤ 6), scroll (item level 3, frequency 35, value 100) |
+| Who | druid 6, ranger 12, scroll (item level 3, frequency 35, value 100) |
 | Size | **S**: `wades_free` and `plunge_proof` on a status, read where the talent's are (`TalentMods` → one `Actor::wades_free()` that asks both: the two call sites in `tread_price` and `after_tread` already read the talent) |
 
 ### 26. Brand
@@ -967,9 +969,9 @@ degrees = "presence 14 2, 18 3"
 
 | | |
 |---|---|
-| In the world | a new status `branded_blade` (`max = 3`, `refresh`, `eases = 60`, `light = "ember"`, `blows = { damage = "1d4", damage_type = "fire" }`): the wearer's melee blows do 1d4 fire more (as a Flaming affix's blow does, through the same `elemental` path on the attack profile); whether those burn is Q1. The paladin's smite-less fire, and a torch in the hand that is not a torch (the ember light) |
-| Who | paladin 14 (7 ≤ 7), scroll (item level 4, frequency 30, value 130) |
-| Size | **S**: `blows` on a status, summed into the attack profile where the worn `elemental` affixes are (`Actor::attack_profile` *(the name unchecked)*: one more source of the same `Elemental { type, dice }`). Brand's word: a brand is a burning stick and a sword (Old English *brand*, both) |
+| In the world | a new status `branded_blade` (`max = 3`, `refresh`, `eases = 60`, `light = "ember"`, `blows = { damage = "1d4", damage_type = "fire" }`): the wearer's melee blows do 1d4 fire more (as a Flaming affix's blow does, through the same `elemental` path on the attack profile); they do not burn, for type rules never reach a blow (Q1). The paladin's smite-less fire, and a torch in the hand that is not a torch (the ember light) |
+| Who | paladin 14, scroll (item level 4, frequency 30, value 130) |
+| Size | **S**: `blows` on a status, added where the worn `elemental` affixes become riders (`magic/mods.rs`, `MagicMods::sharpen`, 233–250: one more rider of its kind). Brand's word: a brand is a burning stick and a sword (Old English *brand*, both) |
 
 ### 27. Renewal
 
@@ -1012,7 +1014,7 @@ effect = { cures = ["ill_wished", "weakened", "sluggish", "drowsy", "webbed", "f
 | | |
 |---|---|
 | In the world | the hexes' statuses (the list Malison reads, plus this design's), ended at once on oneself. Nothing on allies (a touch form is a later spell) |
-| Who | paladin 20 (8 ≤ 10), scroll (item level 4, frequency 30, value 130) |
+| Who | paladin 20, scroll (item level 4, frequency 30, value 130) |
 | Size | **D** (a cleanse as Remove disease) |
 
 ### 29. Rouse the dead
@@ -1021,14 +1023,14 @@ effect = { cures = ["ill_wished", "weakened", "sluggish", "drowsy", "webbed", "f
 [[spell]]
 id = "rouse_the_dead"
 name = "Rouse the dead"
-description = "A corpse you see rises as a zombie and fights beside you until it falls again, or ten minutes pass."
+description = "A corpse you see rises as what it was and fights beside you until it falls again, or ten minutes pass. Now and then it rises against everything, you too."
 level = 24
 school = "necromancy"
 kind = "summon"
 shape = "self"
 resolution = "auto"
 study_difficulty = 8
-effect = { summon = { creatures = ["zombie"], count = "1", most = 2, minutes = 10 }, corpse = "consumed" }
+effect = { rise = { most = 2, minutes = 10, hit_points = 50, berserk = 10, berserk_faction = "berserk", berserk_message = "The dead thing stands, and it knows no one." }, corpse = "consumed" }
 [spell.cast]
 message = "The dead thing stirs, and stands."
 noise = { sound = "chanting", loudness = 30 }
@@ -1038,9 +1040,15 @@ degrees = "presence 14 15, 18 20, 22 30"
 
 | | |
 |---|---|
-| In the world | a summon that needs a **corpse the player sees** (the corpse aim of §2), rises **on the corpse's cell** (not `summon_cells` about the caster), and uses the corpse up: a `zombie` (the shipped type, `creatures/zombie.toml` *(its level unchecked)*) whatever the corpse was (Q9: a zombie by the corpse's size, or `<creature>_zombie` where one exists, `kobold_zombie`, `ogre_zombie`; recommended: the plain zombie now, the roster later). An ally as the druid's calls are (`AllySource::Summoned`, orders, the clock, the cap of `[allies] most`); `most = 2`: the third rouse sends the oldest back to the ground. The witch's dead walk; a priest's Rebuke (§36) scatters them like any undead |
+| In the world | aimed at a **corpse the player sees** (the corpse aim, entry 2, any stage: Q10): the corpse is used up and **its own creature type** stands on its cell, or the nearest free one (Q9): an ogre's corpse makes an ogre. One time in ten it rises **berserk**, friendly to nothing, and attacks whatever it sees, the caster included |
+| How it is made | the type is the corpse object's `ObjectDef::corpse`. `travel::make_creature` on a `CreatureSpawn` with `rolls_gear = false`, through `World::make_ally` when it serves (`AllySource::Summoned`, the player's faction, orders, kill credit, the cap of `[allies] most`), directly with the `berserk` faction as its `faction_override` when it does not. One `below(100)` against `berserk`, from the gameplay stream, after every refusal has passed |
+| What it keeps | everything of its type: stats, speed, natural attacks and armour, senses, tags, resistances, and `summon` table. A risen kobold is a kobold to every rule: Rebuke leaves it alone and necrotic harms it; a risen zombie is undead as any zombie. `hit_points = 50`: it stands at half its maximum (rounded up) |
+| What it loses | gear and pack (`rolls_gear = false`; what it carried fell when it died), any `npc` id (no shop, no quests, no talk: those were the actor's, never the corpse's), a mimic's disguise (taken off as it is made, `travel.rs` 642). A second death leaves nothing, no corpse, pile, or loot, so nothing rises twice |
+| What cannot rise | a corpse of a `unique` type: refused, no time, no mana ("It will not rise for you."). Whatever leaves no corpse never comes to this: animated objects (the generator writes `corpse = false`), bone and spirit undead, demons, devils, and any other type with `corpse = false`; the player leaves no corpse object. There is no level limit: what rises is what the caster could kill |
+| Serving | `most = 2`: the third rouse sends the oldest back to the ground. Ten minutes by default, `degrees` lengthening it, `ally_mod`'s `most`, `duration_percent`, and `lasting` read as in `cast_summon` (`count` not: one corpse, one creature). The allies' cap refuses before anything is spent |
+| Berserk | a new faction in `assets/data/factions.toml` (none today is hostile to all; every monster faction lists little but the player): `id = "berserk"`, `name = "the berserk"`, `hostile_to_all = true`, a new loader field in `content/faction.rs` that fills its row and column of the hostility matrix, **its own diagonal too** (friendly to nothing: two berserk risen fight each other). Inserted beside the `outraged` faction; `fixture_factions.rs` strips lines that start with `hostile`, so fixtures stand at peace with no edit. It counts toward neither `most` nor the allies' cap, takes no orders, and acts as any hostile by the plain AI (`nearest_hostile_in_sight`, as the arena's factions fight). It has the same clock: a new `Actor::risen: Option<GameTime>` (left out of saves and hashes while empty), read in `World::allies_lapse` (departing through `ally_departs`) and at the early return of `fight.rs::creature_dies`. Killing it pays as any kill of its type, for the player or their allies |
 | Who | witch 28, scroll (item level 12, frequency 8, value 400) |
-| Size | **N**: a summon placed at an aimed cell with a corpse (the `corpse` field on a summon: `cast_aim` asks for the corpse, `summon_cells` is bypassed for the one cell, the corpse removed); the alignment hook (`docs/dev/alignment.md`): raising the dead is an evil deed, one call of the existing deed function at the cast (recommended: as Cause wounds is judged today *(whether it is, unchecked)*) |
+| Size | **N**: `effect.rise` in place of `effect.summon` on a summon spell (checked at load: `most`, `minutes`, `hit_points` 1 to 100, `berserk` 0 to 100, a known faction), the corpse aim, `hostile_to_all`, `Actor::risen`, the two arms above. No alignment deed: no spell is judged today (`Deed`, `world/alignment.rs`, has none), and this one adds none |
 
 ### 30. Grave feast
 
@@ -1048,7 +1056,7 @@ degrees = "presence 14 15, 18 20, 22 30"
 [[spell]]
 id = "grave_feast"
 name = "Grave feast"
-description = "Draw what life is left out of a corpse beside you: hit points and mana back, more from the fresh and the strong."
+description = "Draw what life is left out of a corpse beside you: hit points and mana back."
 level = 6
 school = "necromancy"
 kind = "heal"
@@ -1061,7 +1069,7 @@ heal = "willpower 16 3d6, 22 4d6"
 
 | | |
 |---|---|
-| In the world | a touch at a corpse beside the caster (the corpse aim on a touch: the cell beside with a corpse the player sees): the corpse is used up, the caster heals the roll and gains the mana roll (never past the maxima). No stage read (a rotten corpse feeds as a fresh one: the description's "more from the fresh" is cut if Q10 says no stage read; recommended: no stage read, and the description says "what life is left"). It competes with eating the corpse (hunger, the corpse gifts) and with Charnel burst for the same corpse: a real choice on every kill |
+| In the world | a touch at a corpse beside the caster (the corpse aim on a touch: the cell beside with a corpse the player sees): the corpse is used up, the caster heals the roll and gains the mana roll (never past the maxima). No stage read (Q10): a rotten corpse feeds as a fresh one. It competes with eating the corpse (hunger, the corpse gifts) and with Charnel burst for the same corpse: a real choice on every kill |
 | Who | witch 14, scroll (item level 3, frequency 30, value 100) |
 | Size | **S**: `mana` on a heal (a roll, 1 to 500: `World::gain_mana` exists for Hex tithe) and the corpse aim on a touch |
 
@@ -1077,7 +1085,7 @@ school = "transmutation"
 kind = "utility"
 shape = "self"
 resolution = "auto"
-effect = { blink = 5 }
+effect = { blink = { cells = 5, ends = ["held", "webbed", "pinned"] } }
 [spell.cast]
 message = "You blink."
 noise = { sound = "chanting", loudness = 10 }
@@ -1085,9 +1093,9 @@ noise = { sound = "chanting", loudness = 10 }
 
 | | |
 |---|---|
-| In the world | the caster is moved to a walkable, empty cell within 5 (not their own; in line of sight or not: through a wall is the gamble), drawn evenly from those cells in cell order (one `rng.below(n)`), through `World::teleport` (the trap's: provoking and the empathy break as a teleport does). A held or webbed caster still blinks (teleport is not a step: Q11, recommended yes, that is the point of it). Out of a ring, or into the next one |
+| In the world | the caster is moved to a walkable, empty cell within 5 (not their own; in line of sight or not: through a wall is the gamble), drawn evenly from those cells in cell order (one `rng.below(n)`), through `World::teleport` (the trap's: provoking and the empathy break as a teleport does). A held, webbed, or pinned caster still blinks (those statuses block `step`, not `cast`), and **the blink ends all three** (Q11): each is cured with its own end words. Out of a ring, or into the next one |
 | Who | wizard 6, scroll (item level 3, frequency 35, value 100) |
-| Size | **S**: `[spell.effect] blink` (cells, 1 to 10) on a `utility` spell on `self` (the second utility after Identify: `SpellEffect::blink`); `World::cast_blink` collects the cells and calls `teleport` |
+| Size | **S**: `[spell.effect] blink` (`cells`, 1 to 10; `ends`, status ids checked at load) on a `utility` spell on `self` (the second utility after Identify: `SpellEffect::blink`); `World::cast_blink` collects the cells, calls `teleport`, then `Effects::cure` each of `ends` |
 
 ### 32. Sense the quick
 
@@ -1109,7 +1117,7 @@ degrees = "presence 14 2, 18 3"
 | | |
 |---|---|
 | In the world | a new status `quick_sensed` (`max = 3`, `refresh`, `eases = 60`, `senses = { reach = 8, kind = "heartbeat" }`): while it lasts, at the end of every turn each living creature (not undead, not animated, not a construct: by tag) within 8 of the player that they do not see is pushed to the player's heard list as a sound of kind `heartbeat` at its rough place (`noise::rough_place`, as footsteps are placed: never the exact cell, never the creature). It is a sound, so it goes through `PerceptionView::sounds()` and the sound layer (`q` in the dump), the one channel that already hides the source. The bard hears the ambush behind the door; the undead give it nothing |
-| Who | bard 20 (5 ≤ 15: late, because it is strong), scroll (item level 3, frequency 30, value 100) |
+| Who | bard 20 (late, because it is strong), scroll (item level 3, frequency 30, value 100) |
 | Size | **S**: `senses` on a status, one loop at the end of `run_turn` pushing `Heard { kind: Heartbeat, at, loudness }`; a `SoundKind::Heartbeat` (`q` in the sound layer, "a heartbeat" in words). Perception reads only what the rule pushed: no leak beyond the design's (a rough place within 8) |
 
 ### 33. Cloudburst
@@ -1133,7 +1141,7 @@ noise = { sound = "thunder", loudness = 60 }
 
 | | |
 |---|---|
-| In the world | the weather becomes rain for an hour of game time (the dev `weather:rain` override's code, three hours there, one here): what rain already does happens (the sky, the sounds, "rain wakes the player" in a rest, the temperature by weather, `docs/dev/sky.md`), and besides, as the rain begins, every fire on the level's outdoor cells is put out and every Burning creature under the open sky is quenched (one pass at the cast, in the same place `douses` is done). The druid's answer to the wizard's fire, and a way to end a dry grass fire season that does not exist (Q3) |
+| In the world | the weather becomes rain for an hour of game time (the dev `weather:rain` override's code, three hours there, one here): what rain already does happens (the sky, the sounds, "rain wakes the player" in a rest, the temperature by weather, `docs/dev/sky.md`), and besides, as the rain begins, every fire on the level's outdoor cells is put out and every Burning creature under the open sky is quenched (one pass at the cast, in the same place `douses` is done). The druid's answer to the wizard's fire |
 | Who | druid 30, scroll (item level 10, frequency 8, value 320) |
 | Size | **S**: `[spell.effect] weather` on a utility spell (kind one of `weather.toml`'s, hours 1 to 24); `World::set_weather` is the dev action's function |
 
@@ -1160,7 +1168,7 @@ degrees = "presence 14 8, 18 12, 22 16"
 |---|---|
 | In the world | the creature becomes an ally of the player (`Actor::ally` with a new `AllySource::Charmed`, the stay in minutes from `degrees`, on the player's side, following, under orders, the allies' cap): its friends turn on it, it fights for the witch, and at the end it is itself again (hostile, where it stands: `World::ally_departs` puts a summon away; a charmed creature is set back to its faction instead). Refused on a unique (an npc), an animated thing, a creature with no mind (undead, constructs, vermin: by tag), or one already an ally; no level limit, no check: 18 mana and a turn, and the charm ends. Beguile an ogre at the door, send it at its band, and be elsewhere when it wakes |
 | Who | witch 44, scroll (item level 9, frequency 8, value 400) |
-| Size | **N**: `AllySource::Charmed { until }` (saves change: an ally source variant), the end-of-stay arm that restores the faction, the refusals; the kill credit, orders, and the retinue are the allies' as they stand (`docs/dev/allies.md`). Whether a charmed creature joins the retinue across levels: Q12 (recommended: it stays on its level, and the charm ends when the player leaves) |
+| Size | **N**: `AllySource::Charmed { faction }` (the stay is `Ally::until`, as a summon's; `faction` is the `faction_override` to put back; saves change: an ally source variant), the end-of-stay arm that restores it, the refusals; the kill credit and orders are the allies' as they stand (`docs/dev/allies.md`). It never joins the retinue: when the player leaves the level the charm ends, and it is itself again where it stands (Q12): one arm where `follow_along` picks who comes along |
 
 ### 35. Benison
 
@@ -1185,7 +1193,7 @@ radius = "willpower 18 2"
 
 | | |
 |---|---|
-| In the world | a heal over a burst on the caster: the caster and every ally of theirs (and a neutral creature? no: allies and self only) in the burst heal one roll each; hostiles nothing. The companion, the familiar, the roused dead, the charmed ogre, and the priest together. Two casts' time, as Cure wounds |
+| In the world | a heal over a burst on the caster: the caster and every ally of theirs in the burst heal one roll each; hostiles nothing. The companion, the familiar, a serving risen creature, the charmed ogre, and the priest together. Two casts' time, as Cure wounds |
 | Who | priest 24, scroll (item level 6, frequency 15, value 250) |
 | Size | **S**: a heal of shape burst (`spell_def` allows `area` with `heal`; `cast_heal_area` walks `burst_cells` for allies and self, one roll shared, `spell_landed` on each healed); `range = 0` as Thunderclap's |
 
@@ -1195,21 +1203,21 @@ radius = "willpower 18 2"
 [[spell]]
 id = "rebuke"
 name = "Rebuke"
-description = "Hold up your faith against the dead: every undead thing where you aim it flees from you a while, and the lesser ones are struck down."
+description = "Hold up your faith against the dead, and it burns them: every undead thing where you aim it is seared, and flees from you a while."
 level = 14
 school = "abjuration"
 kind = "damage"
 shape = "burst"
 resolution = "area"
-damage_type = "force"
+damage_type = "fire"
 range = 8
 radius = 2
 damage = "2d6"
 effect = { status = "frightened", severity = 3, only_tags = ["undead"] }
 [spell.cast]
-effect = "shatter"
+effect = "blaze"
 noun = "rebuke"
-verb = "strikes"
+verb = "sears"
 message = "You hold up your faith against the dead!"
 noise = { sound = "chanting", loudness = 40 }
 [spell.grows]
@@ -1219,13 +1227,13 @@ range = "willpower 14 9, 18 10"
 
 | | |
 |---|---|
-| In the world | harm and Frightened 3 to the **undead only** in the burst (`only_tags`: a creature without the tag is untouched, friend or foe, not even an event); force because holy is deferred (Q2: the day holy exists, this spell's type is one line). The 93 undead types: a zombie flees, a lich flees too (no level limit) and comes back in 18 s |
+| In the world | harm and Frightened 3 to the **undead only** in the burst (`only_tags`: a creature without the tag is untouched, not even an event; an undead one is struck, friend or foe). Fire, for there is no holy type (Q2), so the fire type's rule comes with it: Burning one time in four on what it harms, ice on its cells melted, a fire left on its centre cell; an undead type's own fire resistance counts. The 93 undead types: a zombie flees, a lich flees too (no level limit) and comes back in 18 s |
 | Who | priest 18, scroll (item level 7, frequency 15, value 250) |
 | Size | **S**: `only_tags` on a damage spell's or area hex's targets (`spell_hurts` and `cast_area_hex` skip a creature whose type lacks every listed tag), one filter in the target walk; the same field serves Bramble's cousin and any later "the living only" spell |
 
 ## 8. Who gets what: class tables and scrolls
 
-Every row keeps the class's existing entries and adds this design's at the levels shown; a spell's level is at or below the class level × `casting` (full casters: the class level; bard ¾; paladin and ranger ½), so no row needs the class's caster level, which #977 removes. The level 1 rows are left to #979.
+Every row keeps the class's existing entries and adds this design's at the levels shown; a table's level is the author's call (#977 removes caster level and `casting`). The level 1 rows are left to #979. **These spells are not class-specific** (Q13): the owner's words, "they are not really class specifics even if they kinda fit fantasy of one class". A class row is a convenient way to meet a spell, not part of what the spell is, and where an entry calls a spell a class's, that is colour, not a rule.
 
 | Class | Today | Added | Count after (beside the cantrip) |
 |---|---|---|---|
@@ -1237,46 +1245,48 @@ Every row keeps the class's existing entries and adds this design's at the level
 | Paladin | 6 Blessing | 14 Brand, 20 Unbinding | 3 |
 | Ranger | 6 Barkskin | 9 Nightsight, 12 Water walking | 3 |
 
-**The class test** (`world/spell_list_tests.rs`: "a full caster to a cantrip at 1 and three to six spells") is raised to **three to twelve**: the tables are the cheapest way to make four casters play differently, and the owner's lists above are the tables' ceilings, each row a line the owner may strike. The druid's and witch's eleven read as a spell every four levels, the magic design §8's "about four" having been written before the druid's three calls and the witch's own hexes.
+**The class test** (`world/spell_list_tests.rs`: "a full caster to a cantrip at 1 and three to six spells") is raised to **three to twelve** (Q13). The druid's and witch's eleven read as a spell every four levels, and #979's one new level 1 spell apiece still fits. #990 keeps this clause and removes the one beside it, so the raise is made after #990.
 
-**Scrolls**: every spell has a scroll (`scroll_of_<id>`, the README's convention for level, frequency, and value: the numbers in each entry), so a wizard who finds a scroll of Rebuke may study it (abjuration, affinity 1) and a priest a scroll of Chain lightning (evocation, no affinity: the study check's overreach). The twelve scroll-only spells (Balefire, Acid arrow, Grave spear, Mirk, Slick, Reek, Slumber, Glamour, Fire cloak, and the rest marked "scroll" alone) are what makes finding scrolls worth it: a class's table never holds them. Wands: Shatter, Acid arrow, Flay, Bind, Mesmerise, and Fear are aimed and may be wands (`[object.wand]`, `rungs = { min = 0, max = 2 }`); recommended two now, **wand of shatter** (item level 7, 9 charges) and **wand of bind** (item level 8, 7 charges), the rest later.
+**Scrolls**: every spell has a scroll (`scroll_of_<id>`, the README's convention for level, frequency, and value: the numbers in each entry), so a wizard who finds a scroll of Rebuke may study it (abjuration, affinity 1) and a priest a scroll of Chain lightning (evocation, no affinity: the study check's overreach); anyone not trained in Spellcraft is refused (#987). The nine scroll-only spells (Balefire, Acid arrow, Grave spear, Mirk, Slick, Reek, Slumber, Glamour, Fire cloak) are what makes finding scrolls worth it: a class's table never holds them. Wands: Shatter, Acid arrow, Flay, Bind, Mesmerise, and Fear are aimed and may be wands (`[object.wand]`, `rungs = { min = 0, max = 2 }`); recommended two now, **wand of shatter** (item level 7, 9 charges) and **wand of bind** (item level 8, 7 charges), the rest later.
 
 **The wiki**: the spell list's generated table gains a column, "Beyond its damage" (the type's rule in words from `[types]`: `xtask/src/wiki/spells.rs`), a "Spell types" section on `wiki/src/magic.md` with the table of §3 and the exact chances, the two statuses in `status-effects.md`, the zones in a "Zones" section, and Conductor in the talents' tables. The game says it in words: the menu's row (`4d6 fire, burns one in four`), the description, look mode's "burning" on a creature.
 
 ## 9. Implementation issues
 
-Each issue names its slice of this document, its tests, and its docs; the order is the dependency order, and T1 to T4 are independent of P1 to P6 after T1.
+Each issue names its slice of this document, its tests, and its docs; the order is the dependency order. Every spell's scroll and class row come with the issue that builds the spell.
 
 | # | Issue | Builds | Tests | Docs |
 |---|---|---|---|---|
-| T1 | **Spell types: the table, fire and cold** | `[types]` in `spells.toml`, `SpellRules::types`, the `rider`/`ends`/`heat`/`frost`/`douses`/`fire` hooks, `lay_fire` shared with Blaze, the `burning` status, Numbing cold removed, Conductor's file (its effect read in T2), the three spells' `heat`/`frost` fields dropped, the menu's and dump's words | `world/spell_type_tests.rs`: a fire spell's burn draw by seed (one in four over the rolled sample, never on a fire-immune), a burning creature's light in the perception, a step into water ending it, a cold spell numbing every target harmed and none missed (Numbing cold's test moved), Ray of frost freezing the cell it strikes, Frost dousing a fire; a replay created and verified | `docs/dev/spells.md` "Spell types", `spec/08e` "Spells", the wiki's section, `docs/balance.md` unchanged |
-| T2 | **Electricity: arcs and water** | `arc_from`, `water_body`, `conducts`, `[spell.effect] arcs`, the `count` ladder on a damage spell, Conductor's two reads | the arc draw by seed, never back at the caster, the chain's certain jumps and its end, the pond (every wader struck, the caster too, not with Conductor), ice not water, actor-id order | the same, `docs/dev/temperature.md` (water bodies) |
-| T3 | **Force, poison, necrotic, acid** | `shove` (knock_back made `pub(super)`), `shatter` through `Shock::Blast`, `bite`, `immune_tags`, the `corroded` status, Blight's severity 1 | a big hit shoves and a small one does not, a held creature stays, a force burst with `blast` breaks thin ice, Cause wounds against a creature below half, a zombie immune to necrotic in the `actors` dump, Corroded's two ticks | `docs/dev/combat.md` (resistance by tag) |
-| P1 | **Spells: the data-only seventeen** | the spell files and their scrolls (§7 entries marked D), `degrees` allowed on a damage spell's status, the class table rows that need no rule (Flay, Rime, Sunfire, Renewal, Silence, Mesmerise, Bind, Fear, Nightsight, Unbinding) and the test's cap raised | the content tests (every spell loads, the ladders as written), the class tables within casting, one replay through each class's new spell, the balance probe rerun and `docs/balance.md` updated | `spec/`, `docs/dev/spells.md` "The list", the wiki |
-| P2 | **The corpse aim: Charnel burst, Grave feast, Rouse the dead** | `Aim::Corpse`, `[spell.effect] corpse`, the burst at a corpse, the touch at one, the summon on one (`AllySource::Summoned` as the calls), `mana` on a heal, the alignment call | refused with no corpse in sight, the corpse used up, the burst's kills leaving corpses for the next, the zombie rising on the cell and departing, the feast's heal and mana capped, the dumps | `docs/dev/spells.md`, `docs/dev/allies.md`, `docs/dev/hunger.md` (a corpse's other uses) |
+| T1 | **Spell types: the table, fire and cold** | `[types]` in `spells.toml`, `SpellRules::types`, the `rider`/`ends`/`heat`/`frost`/`douses`/`fire` hooks, `lay_fire` shared with Blaze, the `burning` status, Numbing cold removed (Conductor comes in T2, with what it reads), the three spells' `heat`/`frost` fields dropped, the menu's and dump's words | `world/spell_type_tests.rs`: a fire spell's burn draw by seed (one in four over the rolled sample, never on a fire-immune), a burning creature's light in the perception, a step into water ending it, a cold spell numbing every target harmed and none missed (Numbing cold's test moved), Ray of frost freezing the cell it strikes, Frost dousing a fire; a replay created and verified | `docs/dev/spells.md` "Spell types", `spec/08e` "Spells", the wiki's section, `docs/balance.md` unchanged |
+| T2 | **Electricity: arcs, water, Chain lightning, Conductor** | `arc_from`, `water_body`, `conducts`, `[spell.effect] arcs`, the `count` ladder on a damage spell, Chain lightning (its file, scroll, wizard 24), Conductor (its file, `TalentEffect::SpellType`, the `resist` effect) | the arc draw by seed, an arc jumping back to the caster and to an ally, the chain's certain jumps and its end, the pond (every wader struck, the caster too, with Conductor too, at 25 % less), Conductor's arcs every time, ice not water, actor-id order | the same, `docs/dev/temperature.md` (water bodies) |
+| T3 | **Force, poison, necrotic, acid** | `shove`, `shatter` through `Shock::Blast`, `doors` (`World::blast_doors`), `bite`, `immune_tags`, the `corroded` status, Blight's severity 1 | a big hit shoves and a small one does not, a held creature stays, a force burst with `blast` breaks thin ice and shut doors, locked and trapped ones too, and a chest below its hardness, a Fireball's doors standing and its chests as today, Cause wounds against a creature below half, a zombie immune to necrotic in the `actors` dump, Corroded's two ticks | `docs/dev/combat.md` (resistance by tag) |
+| P1 | **Spells: the data-only fourteen** | the spell files and their scrolls (§7 entries marked D), `degrees` allowed on a damage spell's status, Bleeding refusing the bloodless (Q7, Flay's), the class table rows of these spells (Flay, Rime, Sunfire, Renewal, Silence, Mesmerise, Bind, Fear, Nightsight, Unbinding) and the test's cap raised to twelve | the content tests (every spell loads, the ladders as written), Bleeding refused on a skeleton and taken on a kobold, one replay through each class's new spell, the balance probe rerun and `docs/balance.md` updated | `spec/`, `docs/dev/spells.md` "The list", the wiki |
+| P2 | **The corpse aim: Charnel burst, Grave feast, Rouse the dead** | `Aim::Corpse`, `[spell.effect] corpse`, the burst at a corpse, the touch at one, `effect.rise` (entry 29), the `berserk` faction and `hostile_to_all`, `Actor::risen`, `mana` on a heal | refused with no corpse in sight, the corpse used up, the burst's kills leaving corpses for the next, an ogre's corpse rising an ogre on its cell at half its hit points with no gear, serving and departing, refused on a unique's corpse, a mimic undisguised, the berserk draw by seed attacking the caster, an ally, and another berserk, its clock, a second death leaving nothing, the feast's heal and mana capped, the dumps | `docs/dev/spells.md`, `docs/dev/allies.md`, `docs/dev/creatures.md` (the faction), `docs/dev/hunger.md` (a corpse's other uses) |
 | P3 | **Zones: Balefire, Reek, Mirk, Slick** | `LevelState::zones`, the four kinds' hooks, the perception field, the look-mode words, the still tint, the dev `zone:` action, Gale's `clears` | a zone laid, saved, hashed, dropped at its end; a creature burnt at its turn's start and on a step; Poisoned per turn in the Reek; no light in the Mirk and a creature blind in it; Slick's check by seed; a snapshot of the look-mode words; one golden only if the fire zone's light cannot be checked by the `light` dump layer (it can: no golden) | `docs/dev/spells.md` "Zones", `docs/dev/rendering.md` (the tint), `docs/dev/saves.md` |
-| P4 | **Small rules, the single-target set** | Leech, Blink, Thunderclap's and Benison's `range = 0`, Benison's area heal, Rebuke's and Bramble's `only_tags`/`only_terrain` (the `plants` flag), Gale's push, Cloudburst's weather, Sense the quick's `senses` and `SoundKind::Heartbeat` | each rule's test in `world/spell_rule_tests.rs` (the leech capped at the maximum, the blink's draw by seed and never onto a creature, the clap stunning all beside and not the caster, the heal on allies only, the rebuke sparing the living, the bramble sparing stone, the gale's order of pushes, the rain for an hour, the heartbeat as a rough place and never for the undead) | `docs/dev/spells.md`, `docs/dev/hearing.md` (the heartbeat), `docs/dev/sky.md` (a spell's weather) |
-| P5 | **Buff statuses with fields: Glamour, Fire cloak, Water walking, Brand** | `retaliates`, `wades_free`/`plunge_proof`, `blows` on a status; the four spells and the four statuses | the striker burnt and the burn draw, the wade free and the plunge spared, the blow's fire on the profile, each status's light in the perception | `docs/dev/status-effects.md` (the three new fields), `docs/dev/equipment.md` (a status's blows beside the affixes') |
-| P6 | **Beguile** | `AllySource::Charmed`, the stay, the faction restored, the refusals, the retinue rule of Q12 | charmed, fighting its band, ending hostile where it stands, refused on an npc and an undead, the kill credit, the `allies` dump | `docs/dev/allies.md` "Charmed", `docs/dev/saves.md` |
+| P4 | **Small rules** | Shatter (its file, the `shatter` effect), Leech, Blink, Thunderclap's and Benison's `range = 0`, Benison's area heal, Rebuke's and Bramble's `only_tags`/`only_terrain` (the `plants` flag), Gale's push, Cloudburst's weather, Sense the quick's `senses` and `SoundKind::Heartbeat` | each rule's test in `world/spell_rule_tests.rs` (the leech capped at the maximum, the blink's draw by seed and never onto a creature, the blink out of held, webbed, and pinned ending each, the clap stunning all in it and the caster too, the heal on allies only, the rebuke's fire on an undead ally and none on the living, the bramble sparing stone, the gale's order of pushes, the rain for an hour, the heartbeat as a rough place and never for the undead) | `docs/dev/spells.md`, `docs/dev/hearing.md` (the heartbeat), `docs/dev/sky.md` (a spell's weather) |
+| P5 | **Buff statuses with fields: Fire cloak, Water walking, Brand** | `retaliates`, `wades_free`/`plunge_proof`, `blows` on a status; the three spells and the three statuses | the striker burnt and the burn draw, the wade free and the plunge spared, the blow's fire on the profile and no Burning from it, each status's light in the perception | `docs/dev/status-effects.md` (the three new fields), `docs/dev/equipment.md` (a status's blows beside the affixes') |
+| P6 | **Beguile** | `AllySource::Charmed`, the stay, the faction restored, the refusals, the charm ending when the player leaves (Q12) | charmed, fighting its band, ending hostile where it stands, ending when the player takes the stairs and left behind, refused on an npc and an undead, the kill credit, the `allies` dump | `docs/dev/allies.md` "Charmed", `docs/dev/saves.md` |
 | W | **Wands and the wiki** | wand of shatter, wand of bind, the "Beyond its damage" column, the "Spell types" and "Zones" sections | the wands' loot tests, `cargo xtask wiki --check-links` | the wiki |
 
 No golden screenshot is asked for: the fire zone's light and the Mirk's dark are read from the `light` dump layer, a burning creature's glow from the perception's light, and every status, menu row, and look-mode word from a text snapshot or a dump.
 
-## 10. Open questions, each with a recommendation
+## 10. Decisions
 
-| # | Question | Recommendation |
-|---|---|---|
-| Q1 | Do the type rules reach **weapon blows** of that type: a Flaming sword's burn, a Freezing arrow's numbing, a Branded blade's fire? | **Later, not here**: the hook is one call of the same `[types]` read in `fight.rs::resolve`, and it is a separate decision about melee's power (a warrior with a flaming sword leaving every third kobold burning is a melee change). This design leaves blows alone and says so in the wiki |
-| Q2 | **Holy** as a damage type now, so Rebuke and a future smite spell are holy rather than force? | **No**: the magic design and spec §8 defer it; Rebuke's `damage_type` is one line to change when it comes |
-| Q3 | Does fire **spread** over dry grass and tall grass, and does a fire zone grow? | **No**: fixed cells, a fire of light only, as the owner's "effects are subtle" and the engine's "no rule reads a fire" both say. A spreading wildfire is its own design if ever |
-| Q4 | Does the aiming mode **preview** an arc or a body of water (the cells a bolt would conduct through)? | **No**: the message tells, and a preview over remembered water would either leak the unseen pond or lie about it |
-| Q5 | Does a force `blast` **break a shut door** (`breaks_to`, as a kick does), so Shatter opens the way? | **Yes, for force only**: one clause in `break_wall`'s caller for a `blast` of a force spell (a door kicked in by a clap of force reads right; a Fireball still does not, as today). A locked door's lock goes with it |
-| Q6 | Does acid **eat armour** (a worn piece's Protection down a point for the status's life)? | **No**: item state the design does not need; Corroded's ticks are acid's number |
-| Q7 | Does **Bleeding refuse the bloodless** (`blood = "none"`), so Flay does nothing to a skeleton beyond its 1d4? | **Yes**: one clause in `afflict` for a status with a `wound` table; it also fixes a slashing critical "bleeding" a skeleton today *(whether that happens, unchecked)* |
-| Q8 | Does the Reek **block sight**? | **No**: sight-blocking is Mirk's one job; two sight rules on two zones is two mechanics |
-| Q9 | What rises from a corpse: the one `zombie`, or a zombie **by the corpse's creature** (`kobold_zombie`, `ogre_zombie` where the roster has one, else by size)? | **The one zombie now**; the roster's variants when the undead roster PR adds a `zombie_of` to creature files (one field, its own PR) |
-| Q10 | Does Grave feast read the corpse's **stage** (more from fresh, less from rotten)? | **No**: the stage is crate-private and never shown; reading it would make the spell tell the player what the corpse never does |
-| Q11 | Does Blink work while **held, webbed, or pinned**? | **Yes**: a teleport is not a step; that is what the spell is for, and `cast` is not among those statuses' `blocks` |
-| Q12 | Does a charmed creature **follow across levels** (the retinue) and travel the overworld? | **No**: the charm ends when the player leaves its level (it is itself again where it stands); a charm that travels is a companion, and the witch has a familiar |
-| Q13 | The class tables of §8 at eleven spells for the druid and the witch: **the cap** at twelve, or trim them? | **Twelve**, and strike rows by taste: the entries name the scroll each has, so a struck row loses the class nothing but the certainty |
-| Q14 | Conductor's second clause (no self-shock through water) in the Spellcraft tree, or a **birth sign** gift of the Water sign? | **Spellcraft**: it is the one talent the type system ships with, and it must be reachable by any caster |
+The owner's answers on #982, verbatim, and what each settles. No question is left open.
+
+| # | The question | The owner | What the design does |
+|---|---|---|---|
+| Q1 | Do type rules reach weapon blows? | "no, let's keep these magic specific" | Never. A Flaming sword, a Freezing arrow, and Brand's fire read no type rule |
+| Q2 | A holy damage type? | "no, let's make them fire damage" | None. Rebuke does fire, with the fire type's rule |
+| Q3 | Does fire spread? | "defer wildfires" | Fires and fire zones stay on fixed cells. Wildfires are on #196 |
+| Q4 | Does aiming preview an arc or a body of water? | "it's just for aiming" | Read as no: the aiming display only shows the aim, and there is no preview of arcs or water bodies |
+| Q5 | Does a force `blast` break a shut door? | "yes, also chests" | A force `blast` breaks shut doors, locked ones too, by the `doors` rule; chests blow apart by `World::blast` as they do for any blast below their hardness. Fireball's behaviour is unchanged |
+| Q6 | Does acid eat armour? | "no" | No. Corroded's ticks are acid's number |
+| Q7 | Does Bleeding refuse the bloodless? | "exactly like that" | Yes, by one clause in `afflict` for a status with a `wound` table |
+| Q8 | Does the Reek block sight? | "no" | No. That is Mirk's |
+| Q9 | What rises from a corpse? | "by corpses creature; give it small chance to go berserk (spawn it into faction friendly to nothing)" | The corpse's own creature type; one time in ten, data, it rises in the new `berserk` faction (§7 entry 29) |
+| Q10 | Does Grave feast read the corpse's stage? | "no" | No |
+| Q11 | Does Blink work while held, webbed, or pinned? | "yes and it breaks those conditions too" | Yes, and it ends all three |
+| Q12 | Does a charmed creature follow across levels? | "no" | No. The charm ends when the player leaves, and it is itself again where it stands |
+| Q13 | The class tables' cap? | "i really don't care. they are not really class specifics even if they kinda fit fantasy of one class" | Twelve. A spell's class row is not essential to it (§8) |
+| Q14 | Conductor's self-shock clause, and protection in general | "no friendly fire protection should be implemented, sucks to suck" | Nothing here protects the caster or allies (§4 "No protection"). The owner then set Conductor as "arcs every time" plus 25 % electricity resistance, whatever the talent rules say (§5). Arcs may jump back to the caster. Thunderclap strikes its caster too |
