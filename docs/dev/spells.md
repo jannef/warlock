@@ -364,7 +364,7 @@ cast path shares.
     table (`ScrollSpell::teaches`, a `SpellId`, checked as objects load; `Reading::teaches`
     is what every caller asks, a `spell` reading teaching its own);
     a class's `affinity` (`ClassDef::affinity`, school → −10 to 10 study points); the skills'
-    `study` benefit (`skills::Effect::Study`, Spellcraft and Decipher script, a curve to 20 at
+    `study` benefit (`skills::Effect::Study`, Spellcraft's since #1024, a curve to 20 at
     200) and `study` mark (`Use::Study`, which is also `StatUse::Study`: Intelligence 100 %);
     `ActionKind::Study` (`study` in `data/actions.toml`, a turn); Raging blocks `study`.
   - **The action** (`Action::Study { item }`, `study:b`; `World::start_study` →

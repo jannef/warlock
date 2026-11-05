@@ -505,8 +505,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
     character trained in Spellcraft. A character **not trained** in it (the skill not in their
     trained set: an item's or a talent's bonus to a skill they do not have trains nobody) has no
     learning and cannot study a scroll at all, cantrips included: refused, no time, "You have no
-    training in Spellcraft; you cannot make sense of how to learn a spell from a scroll." Reading a
-    scroll to cast it, and the spells a class grants, need no Spellcraft. Starting Spellcraft by
+    training in Spellcraft; you cannot make sense of how to learn a spell from a scroll." The
+    spells a class grants need no Spellcraft, nor does reading a scroll to cast it, though with
+    no learning that reaches its level the reader must make it out by a check (§8 "Scrolls":
+    "Making out a scroll"). Starting Spellcraft by
     class (§7e): wizard, witch, priest, druid `2d6+10`; bard, paladin, ranger `2d4+4`; aristocrat
     35 % `2d4+4`, ascetic 20 % `2d4` (optional skills); no other class, race, or birth sign gives
     any; two background lines add to it (both name classes that have it already), and it grows by
@@ -536,8 +538,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
       0 or less the spell is learned, no draw, unless the spell is made hard to learn
       (`study_difficulty` above 0: a check at any learning, overreach counted as at least
       0). Above, a 2d12 check with
-      the Intelligence modifier + the skills' `study` benefit (Spellcraft and Decipher script,
-      each value ÷ 10, at most 20) + the class's `affinity` with the spell's school
+      the Intelligence modifier + Spellcraft's `study` benefit (value ÷ 10, at most 20) + the
+      class's `affinity` with the spell's school
       (`data/classes/`, −10 to 10) + Quick study's bonus (2), against `base` (12) +
       `per_overreach` (1) × overreach′ + the sum of the levels of the spells known ÷
       `known_per_point` (20) (`data/study.toml`) + the spell's `study_difficulty` (−20 to 40,
@@ -555,9 +557,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
       a drain (`World::drain`: a Willpower check or points off a stat for good); a hostile
       summoned next to the reader (a dretch); or, lucky, a training mark of Intelligence or the
       spell learned anyway. A failure loses only that scroll: the spell can come again.
-    - **Training**: the `study` use (Spellcraft's and Decipher script's marks; an Intelligence
-      mark), whatever comes of it; in a scriptorium (§7 "Special rooms") Decipher script's
-      mark is twice as likely.
+    - **Training**: the `study` use (Spellcraft's mark; an Intelligence mark), whatever comes
+      of it.
     - **Determinism**: the check's two gameplay draws only when there is a check, the mishap's
       one only on a failure, then its effect's own.
     - **Shown**: the chance in words only (`StudyRules::words`: "certain", "easy" from 96 of 144

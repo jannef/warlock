@@ -248,6 +248,24 @@ developer notes (CLAUDE.md, `docs/dev/`).
   kind ("Read it at what?", "Read it on what?"), the player's own cell ("You cannot aim at
   yourself."), out of reach ("That is out of range."), a spell on the overworld, or a stack
   there is nothing to learn about ("You already know what a dagger is.").
+  - **Making out a scroll** (`world/decipher.rs`, data `data/decipher.toml`; #1024, the skill
+    uses design §6.6, the owner's rule: Decipher script is how non-casters use scrolls, by a
+    check; a caster with enough Spellcraft bypasses it; this overrides the no-caster-level
+    design's line that reading works for anyone). Once nothing refuses the reading and before the
+    scroll is used up: **a bypass**, trained in Spellcraft with a learning (§8 "Spells":
+    "Learning, the number") of at least the scroll's spell level, no draw, no mark, no words; a
+    scroll with no spell behind it (restoration) counts as level 0. **Otherwise a check**, never
+    a refusal: 2d12 + the Intelligence modifier + talents' additions to its checks + Decipher
+    script's `decipher` benefit (curve 0, +8 at 100, +12 at 200; 0 for one without the skill and
+    with nothing raising it), against `base` (10) + the spell level ÷ `levels_per_point` (5).
+    Two gameplay draws, only when it is asked. **Made**, the scroll reads as anywhere in this
+    section (Scroll adept, Scroll savant, an unknown type identified). **Failed**, "The writing
+    swims before your eyes.": a read's price, the scroll kept, a label still unknown, no cast, no
+    Scroll savant draw, no Read training; try again. **Marks**: `Use::Decipher` 100 % per check
+    (Decipher script's only mark; the training stream); Spellcraft gets none from a read. The
+    scroll of identify is read by the same rule on the stack named, after its own refusals.
+    Scribe (below) writes with no check; what it writes reads by the rule, for the writer too.
+    Without the file every scroll simply reads.
   - **Unidentified scrolls** (`scroll_label.rs`, data `data/scroll_labels.toml`; #393): a
     readable scroll type (an object with `read`) is unknown until the player identifies it,
     and meanwhile shows by a **label**, "a scroll labelled ZUNBAR" (`name`/`plural` with
@@ -335,8 +353,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     and buy the scrolls class, and a generated one always lays out scrolls of identify, §7
     "Shops"; Cēaptūn's has three), and the trap hall beside its arrival (two each of fireball,
     lightning, and frost, three scrolls of identify, and an unidentified dagger). The showcase
-    has none. Spellcraft and Decipher script (§8 "Skills") help studying a scroll (§8 "Spells":
-    "Learning"), not reading one.
+    has none. Spellcraft (§8 "Skills") helps studying a scroll (§8 "Spells": "Learning") and
+    reading one; Decipher script helps reading one, not studying it.
 
 - **Wands** (`warlock-core/src/world/zap.rs`, data `wand` in `data/objects/` §7, `content/wand.rs`;
   the magic design §9; #398): objects (`-`, the wands class, one at a time) whose `[object.wand]`

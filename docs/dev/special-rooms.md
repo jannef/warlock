@@ -324,8 +324,9 @@ and the hoard do). The test `mapgen/scriptorium_tests.rs` checks the level is ot
 without the loot.
 
 Training (`world/train.rs`, the one hook): `World::train` scales each mark rule's chance by
-`Here::train(skill)` at the player's cell (percents multiply, room and level; capped at 100), so
-Decipher script's 50 % mark for a study is certain inside. Nothing is saved; no action, no ability.
+`Here::train(skill)` at the player's cell (percents multiply, room and level; capped at 100).
+Decipher script's one mark, a check to read a scroll (100 % since #1024), is certain anywhere, so the
+scriptorium's 200 changes nothing until the skill has a mark below certain. Nothing is saved; no action, no ability.
 
 ## Forgotten altars and prayer
 
@@ -830,8 +831,8 @@ the draw's shares, improve on plain, full magic, and rare items, flaw and ruin (
 too), one of a stack set apart, the anvil never spent), `content/room_lore_tests.rs` (`loot` and `train`: parsed, checked, resolved, unknown names
 refused, never over a whole level, `Here::train` folding, the built-in scriptorium),
 `mapgen/scriptorium_tests.rs` (one shelf a room, two to four scrolls, the rest of the level
-unchanged), `world/scriptorium_tests.rs` (Decipher script's marks certain inside and about half
-outside, other skills as anywhere, a study inside marking, the near and enter lines and look
+unchanged), `world/scriptorium_tests.rs` (Decipher script's marks certain inside and out, other skills
+as anywhere, a check inside marking and a study not, the near and enter lines and look
 mode's shelves), `world/unstable_room_tests.rs` (the unstable room: about one step in ten inside
 warps the player and a creature, never outside, no draw outside, the messages, a free landing
 cell, saving), `content/room_collapse_tests.rs` (the `collapse` field, its refusals, never

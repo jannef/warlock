@@ -55,6 +55,32 @@ fireball"). The scroll of identify casts Identify through the cast path
 scroll used up, and `World::identify` on the stack named, one place up if the used-up scroll
 stack was before it).
 
+**Making out a scroll** (#1024, `world/decipher.rs`, `content/decipher.rs`,
+`data/decipher.toml`; the skill uses design §6.6): `World::deciphers(level)` stands between a
+reading's refusals and its `use_up`. Trained in Spellcraft with `Actor::learning` at least `level`:
+true, no draw, no mark, no words. Otherwise a `check::check` of the Intelligence modifier +
+`TalentMods::check(Intelligence)` + `skill_effect(Effect::Decipher)` against
+`DecipherRules::difficulty` (`base` + level ÷ `levels_per_point`), then `Use::Decipher` (100 %,
+whatever came of it; the only mark Decipher script has, and none for Spellcraft), and on a failure
+"The writing swims before your eyes." An untrained reader's points are 0 unless something raises
+the skill (a suffix of Letters counts, as for any skill that is not trained-only). The hook is
+**`World::pay_cast`**, where every kind of cast has finished refusing: it returns false for a scroll
+not made out, and its eight callers end the cast with `return true`, so `read` still answers
+`Spent::Turn(price)` and nothing has been used up, said read, or cast (`Cast::read` stays `None`).
+`read_cleanse` asks the same way, as level 0. The check is the player's alone: only they read. A
+failure saves nothing new; the labels stay as they were, because `say_read` never ran.
+
+Under this rule **the scroll of identify** still lists and refuses as it did (`cast_identify`'s
+refusals come before `pay_cast`, so a stack with nothing to tell draws nothing); read and failed, it
+is kept and identifies nothing. It is a spell of level 6, so a character trained in Spellcraft below
+learning 6 makes the check. **Scribe** (`world/scribe.rs`, below) reads nothing and asks no check:
+it needs the spell known, the blank, and the mana, as before, and its scroll is an ordinary scroll,
+which reads by this rule for its writer too (known by overreach above their learning, a check).
+The dev `identify` and F8 are not reads. Wands, rods, and spells cast for mana never ask. The file
+is optional (`Content::decipher`): without it every scroll simply reads; fixtures whose tests are
+about what a read does remove it (`files.remove("data/decipher.toml")`) rather than draw a check.
+Tests: `world/decipher_tests.rs`.
+
 **The scroll of restoration** (#887, the priest design §11) is the one scroll with no spell
 behind it: `read` of kind `cleanse` (`Reading::Cleanse(Cleansing { mends, restores })`; one of
 the two at least, neither with `spell` or `rungs`, nor they on a `spell` reading). `teaches()`
@@ -63,10 +89,10 @@ only, so the read list reads it at once, study refuses it ("There is no spell in
 learn."), a mishap never backfires it, and the aiming mode never sees it. `World::read` sends it
 to `World::read_cleanse` (`world/restore.rs`): refused, no time, with a target or with nothing to
 mend (no stat damage while `mends`, no drained point while `restores`: "There is nothing to
-restore."); otherwise `use_up` (Scroll savant's keep, the Read stat training), `say_read`, then
+restore."); otherwise `deciphers(0)` (above), `use_up` (Scroll savant's keep, the Read stat training), `say_read`, then
 `StatDamage::mend_all` and `World::restore_drained` (the temple's `World::mend`, split by the two
 switches), and "You feel your strength return." for each stat that came back. No disease check
-(the temple's "Be cured first." is not a rule here), no stream drawn but Scroll savant's, nothing
+(the temple's "Be cured first." is not a rule here), no stream drawn but the check's and Scroll savant's, nothing
 new saved. Adding it moved every label drawn after the scrolls (wands', rods', potions': the
 `identification` stream draws types in id order), hence the screen snapshots' new potion and
 wand words. `read_tests.rs::the_scroll_of_restoration_mends_and_restores`;
