@@ -230,7 +230,9 @@ Escape artist (#1015) has no action and no ability row. `Effect::Escape` is read
 50 and 100: halved, then skipped) in `World::climb_price` (`world/trap.rs`, the pit's one arm);
 both only for those trained (`trains_effect`). `Use::Escape` is marked per check whatever came of
 it, `Use::Climb` per climb out (Escape artist 100 %, Athletics 50 % and no effect). Tests:
-`world/escape_tests.rs`.
+`world/escape_tests.rs`. `Effect::Escape` is also read by `World::wriggle` (`world/wriggle.rs`,
+#1032: a step into a neutral creature that keeps its post, an automatic Dexterity check against
+11 plus its Willpower modifier, one more `Use::Wriggle` at 50 %; tests `wriggle_tests.rs`).
 
 ## Tumble: plain misses
 

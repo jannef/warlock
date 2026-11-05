@@ -26,7 +26,9 @@ its energy; it takes its old cell as its `Mind::post` and
 `ai.rs` walks it back, waiting beside the post while someone stands on it, then on with its
 route) unless `World::refusal` says why not (the type's `budge`: `never`, or `off_post` while its
 mind is calm, ready for shopkeepers, #145; it cannot move; or it is two sizes or more larger:
-sizes are listed smallest first). What an actor is called in messages comes from
+sizes are listed smallest first). A player trained in Escape artist is not refused for the
+`budge` (`World::wriggle`, `world/wriggle.rs`, #1032): an automatic check instead, Dexterity plus
+the `escape` points against 11 plus the creature's Willpower modifier; never a shop's keeper (`Shop::keeper`, the refusal stands untouched); tests `wriggle_tests.rs`. What an actor is called in messages comes from
 `World::called` ("the gardener"): named shopkeepers go there, and so do unique characters with a
 proper name (an npc dialogue's `name`, `Dialogue::name`, #336: "Sister Hild", no article; also
 `Content::speaker_name`/`speaker_called` for quest texts and the wiki). Presentation knows a seen

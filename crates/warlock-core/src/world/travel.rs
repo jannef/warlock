@@ -6,6 +6,7 @@
 
 use super::spawn::Spawner;
 use super::talk::Refusal;
+use super::wriggle::Wriggled;
 use super::{
     Actor, ActorId, ActorKind, FreeBlows, LevelState, Mind, Patrol, Shop, Spent, Talk, World,
     WorldError, WorldState,
@@ -155,8 +156,14 @@ impl World {
             }
             let refusal = (self.refusal(target)).or(self.swimming().then_some(Refusal::Water));
             if let Some(why) = refusal {
-                self.refused(target, why, seen);
-                return Spent::Nothing;
+                match self.wriggle(target, why, to, seen) {
+                    Wriggled::No => {
+                        self.refused(target, why, seen);
+                        return Spent::Nothing;
+                    }
+                    Wriggled::Stuck(spent) => return spent,
+                    Wriggled::Past => {}
+                }
             }
             swap = Some((target, seen));
         } else if let Some(price) = self.meets_glass(to) {
