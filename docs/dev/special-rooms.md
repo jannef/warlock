@@ -399,7 +399,7 @@ applied after `becomes`: `gift` (`Stats::gift` on a random stat), `wrath` (`Stat
 floor `DRAIN_FLOOR`, then stat damage clamped and `keep_hp_within_max`), `levels` (positive:
 `gain_level`, `add_xp` to the next threshold exactly, unscaled by `xp_percent`; negative:
 `World::lose_level`), `talent` (Chosen: `talent::offers` flattened to the ways not held, one
-drawn, `bestow`: `Talents::take`, `class::hand_out`, `train_chosen`, and pushed to
+drawn, `bestow`: `Talents::take`, `class::hand_out`, and pushed to
 `Actor::boons`), and `flaw` (Forsaken: the `flaw` talents not held, by id, one drawn, given
 likewise); `rarity` (`magic`/`rare`, only with `loot`) is the relic's floor, the `LootGrade`
 `loot::roll_with` takes. `Actor::boons` (saved, left out while empty) is read by

@@ -850,10 +850,6 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
         TalentEffect::SkillRolls { value } => format!("skill rolls every level {}", signed(value)),
         TalentEffect::ExtraPick { level: 1 } => "one more talent at creation".to_string(),
         TalentEffect::ExtraPick { level } => format!("one more talent at level {level}"),
-        TalentEffect::TrainSkill { dice } => format!(
-            "the chosen skill trained at {dice}, or raised by {dice} if trained (rolled as the \
-             rank is taken)"
-        ),
         TalentEffect::WeaponRanks { to, skills, .. } if skills.is_empty() => format!(
             "every [weapon skill](weapon-skills.md) and [fighting style](fighting-styles.md) \
              (not the schools of magic or a hidden style) below rank {to} rises to rank {to}, \
@@ -1022,7 +1018,13 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
             "damage traps do you {} (rounded down, at least 1)",
             percent(value)
         ),
-        TalentEffect::Skill { skill, value } => {
+        TalentEffect::Skill { skill: None, value } => {
+            format!("the chosen [skill](skills.md) counts {}", signed(value))
+        }
+        TalentEffect::Skill {
+            skill: Some(skill),
+            value,
+        } => {
             let name =
                 (content.skill_id(&skill)).map_or(skill.clone(), |s| content.skill(s).name.clone());
             format!("{name} counts {}", signed(value))

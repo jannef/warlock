@@ -14,9 +14,9 @@
 #                 carrying, XP) the number may be said. The wiki shows the rule.
 #   systems       the systems it touches, ids from the closed list in ../talents.toml (at least
 #                 one): the coverage check counts them
-#   ranks         how many times it can be taken (1 to max_ranks, default 1): "Apprentice 2/3"
+#   ranks         how many times it can be taken (1 to max_ranks, default 1): "Name 2/3"
 #   choice        what it is chosen for, if it takes a choice: "weapon_skill", "style", "skill"
-#                 (any skill, trained or not), "element" (a damage type that is no physical
+#                 (a skill the taker is trained in), "element" (a damage type that is no physical
 #                 kind), "school" (a school of magic, `evocation`, or an element: a spell
 #                 tag), "school_skill" (a school of magic as a skill: a row of
 #                 ../weapon_skills.toml of role `school`, `evocation`), or "tag" (a creature
@@ -174,8 +174,6 @@
 #   xp_percent { value }          experience gained, that percent more
 #   skill_rolls { value }         skill rolls every level, that many more
 #   extra_pick { level }          one more talent pick at that character level (1: at creation)
-#   train_skill { dice }          the chosen skill (choice skill) trained at those dice, or
-#                                 raised by them, as the rank is taken (the levels stream)
 #   weapon_ranks { to, skills, news }   handed out once, as the rank is taken or given:
 #                                 every weapon skill and style of `skills` (left out: every row
 #                                 of ../weapon_skills.toml but the schools of magic and hidden
@@ -233,7 +231,8 @@
 #   search { value }              added to every check to find hidden things (searching and in
 #                                 passing)
 #   search_reach { value }        searching reaches that many cells farther
-#   skill { skill, value }        that skill counts that much higher (an untrained one from 0)
+#   skill { skill, value }        that skill counts that much higher (an untrained one from 0);
+#                                 `skill` left out: the chosen one (choice skill)
 #   distrusted                    no one makes way for it
 #   free_blow { trigger }         a free blow: "cleave", "great_cleave", "riposte",
 #                                 "opportunist", "flurry" (a melee attack with nothing in

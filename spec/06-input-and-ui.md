@@ -541,8 +541,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
   result), a **bonus talent** of the class's trees, then the level's **talent**, listing only
   the talents that may be taken now, by tree, each with its next rank (`1/3`) and the start of
   its description, the selected one's whole description below. A talent with several choices
-  (Apprentice, Weapon focus) lists them in its place (Esc back). A letter, or Enter on the `>`
-  row, is that choice's action (`advance:athletics`, `talent:hardy`, `talent:apprentice:stealth`):
+  (Skill focus, Weapon focus) lists them in its place (Esc back). A letter, or Enter on the `>`
+  row, is that choice's action (`advance:athletics`, `talent:hardy`, `talent:skill_focus:athletics`):
   the screen closes, the action is applied and recorded like any other, and the screen opens
   again on what is left. No new keys: the list commands. Outside the skill-roll step, never a die, a mark, or a chance.
 - **Death screen** (§8 "Combat"): when the player dies, the death screen opens over the run as it

@@ -1448,8 +1448,7 @@ impl TalentMods {
             TalentEffect::SkillRolls { value } => self.skill_rolls += value,
             TalentEffect::ExtraPick { level } => self.extra_picks.push(level),
             // Handed out as the rank is taken (`World::take_talent`), never read after.
-            TalentEffect::TrainSkill { .. }
-            | TalentEffect::WeaponRanks { .. }
+            TalentEffect::WeaponRanks { .. }
             | TalentEffect::TakeUpSkills { .. }
             | TalentEffect::StartingGold { .. }
             | TalentEffect::StartingGems { .. }
@@ -1500,7 +1499,11 @@ impl TalentMods {
             TalentEffect::GraveWarden => self.grave_warden = true,
             TalentEffect::SearchReach { value } => self.search_reach += value,
             TalentEffect::Skill { skill, value } => {
-                if let Some(id) = content.skill_id(&skill) {
+                if let Some(id) = skill
+                    .as_deref()
+                    .or(choice)
+                    .and_then(|s| content.skill_id(s))
+                {
                     match self.skills.iter_mut().find(|(s, _)| *s == id) {
                         Some((_, v)) => *v += value,
                         None => self.skills.push((id, value)),
@@ -2522,6 +2525,12 @@ pub fn may_take(
                     .is_some_and(|w| !who.weapon_skills.shows(content.weapon_skills(), w)) =>
         {
             return Err(Refusal::BadChoice(kind, id.to_string()));
+        }
+        // An untrained skill does not exist for its actor (Skill focus): nothing to be better at.
+        (Some(Choice::Skill), Some(id))
+            if (content.skill_id(id)).is_none_or(|s| who.skills.value(s).is_none()) =>
+        {
+            return Err(Refusal::BadChoice(Choice::Skill, id.to_string()));
         }
         _ => {}
     }

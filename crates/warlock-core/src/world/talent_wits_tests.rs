@@ -1,5 +1,5 @@
 //! The Scholar, Grit, and Delver talents (spec §8 "Talents"; #240): each changes the one rule it
-//! names; Apprentice trains its chosen skill as the rank is taken; Treasure hunter's
+//! names; Skill focus raises the chosen trained skill, past 100 too; Treasure hunter's
 //! prerequisite is either of two.
 
 use super::search::{Hidden, Look};
@@ -195,37 +195,66 @@ fn quick_learner_brings_a_roll_more_every_level() {
 }
 
 #[test]
-fn apprentice_trains_the_chosen_skill_at_the_pick() {
-    let mut w = world();
-    run(&mut w, "xp:4000");
-    let due = &w.state.progress.due;
-    assert!(due.iter().any(|d| d.talents > 0), "{due:?}");
-    // A skill must be chosen.
-    run(&mut w, "talent:apprentice");
+fn skill_focus_counts_the_chosen_trained_skill_higher_past_100_too() {
+    use crate::skills::Effect;
+    let content = BUILTIN.clone();
+    let skill = content.skill_id("athletics").expect("athletics");
+    // A warrior with Athletics at `value`, whose kick (a curve of 8 at 100, 12 at 200, rounded
+    // down) reads the bonus; a talent due.
+    let at = |value: i32| {
+        let mut w = world();
+        run(&mut w, "xp:4000");
+        let due = &w.state.progress.due;
+        assert!(due.iter().any(|d| d.talents > 0), "{due:?}");
+        let had = i32::from(w.state.player().skills.value(skill).expect("trained"));
+        w.player_mut().skills.add(skill, value - had);
+        w
+    };
+    let kick = |w: &World| w.state.player().skill_effect(&content, Effect::Kick);
+
+    let mut w = at(70);
+    assert_eq!(kick(&w), 5);
+    // A skill must be chosen, and one the player is trained in.
+    run(&mut w, "talent:skill_focus");
     assert_eq!(
         said(&w).last().map(String::as_str),
-        Some("Apprentice needs a choice: a skill.")
+        Some("Skill focus needs a choice: a skill you are trained in.")
     );
-    let skill = w.content().skill_id("appraise").expect("appraise");
-    let before = w.state.player().skills.value(skill).unwrap_or(0);
-    run(&mut w, "talent:apprentice:appraise");
+    let stealth = content.skill_id("stealth").expect("stealth");
+    assert_eq!(w.state.player().skills.value(stealth), None);
+    run(&mut w, "talent:skill_focus:stealth");
     assert_eq!(
         said(&w).last().map(String::as_str),
-        Some("You learn Apprentice (appraise) (1).")
+        Some("`stealth` is not a skill you are trained in.")
     );
-    let after = w.state.player().skills.value(skill).expect("trained");
-    assert!((5..=10).contains(&(after - before)), "{before} → {after}");
+    // The list holds the trained skills alone.
+    let id = content.talents().id("skill_focus").expect("skill_focus");
+    let def = content.talents().get(id);
+    let ways = talent::openings(&content, &w.candidate(), def);
+    assert!(ways.contains(&Some("athletics".to_string())), "{ways:?}");
+    assert!(!ways.contains(&Some("stealth".to_string())), "{ways:?}");
+    // The pick: 25 higher, the trained value as it was.
+    run(&mut w, "talent:skill_focus:athletics");
     assert_eq!(
-        w.state
-            .player()
-            .talents
-            .rank_of("apprentice", Some("appraise")),
-        1
+        said(&w).last().map(String::as_str),
+        Some("You learn Skill focus (athletics).")
     );
-    assert!(
-        w.state.levels_rng.is_some(),
-        "rolled from the levels stream"
-    );
+    assert_eq!(kick(&w), 7, "read at 95");
+    assert_eq!(w.state.player().skills.value(skill), Some(70));
+    // One pick per skill.
+    assert!(matches!(
+        talent::may_take(&content, &w.candidate(), def, Some("athletics")),
+        Err(talent::Refusal::AtTop)
+    ));
+    // It sums with Master of none (5 for every trained skill).
+    give(&mut w, "master_of_none");
+    assert_eq!(kick(&w), 8, "read at 100");
+
+    // Past 100, the soft cap on growth and no ceiling.
+    let mut w = at(100);
+    assert_eq!(kick(&w), 8);
+    run(&mut w, "talent:skill_focus:athletics");
+    assert_eq!(kick(&w), 9, "read at 125");
 }
 
 #[test]

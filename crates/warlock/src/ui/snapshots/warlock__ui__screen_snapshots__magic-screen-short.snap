@@ -3,7 +3,7 @@ source: crates/warlock/src/ui/screen_snapshots.rs
 expression: "render(case, content.clone())"
 ---
 ┌─ Magic ──────────────────────────────────────────────────────────────────────┐
-│ Mana 153/158                                                                 │
+│ Mana 157/162                                                                 │
 │ Schools                                                                      │
 │   Evocation                2  ──────────                                     │
 │   Necromancy               0  ──────────                                     │

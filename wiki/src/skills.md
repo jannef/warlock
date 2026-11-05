@@ -119,6 +119,13 @@ The passive skills help you more the higher they are:
   also frightens longer the more it adds. Every threat and every cry trains it, whatever comes of
   it.
 
+[Skill focus](talents.md#talent-skill-focus) makes one skill you are trained in count 25 higher
+in the table below, as a [magic item](magic-items.md)'s bonus does: past 100 too (100 slows a
+skill's [growth](skills.md#getting-better), and is no ceiling), on top of
+[Master of none](talents.md#talent-master-of-none) and any magic item. Your Skills screen still
+shows the value you trained. On most skills the +25 is worth 2 points of what the skill gives below 100 and
+1 past it; on [Stealth](skills.md#skill-stealth)'s quiet, 15 % less noise below 100 and 7 % past it.
+
 {{#include generated/skill-benefits.md}}
 
 {{#include generated/skill-resist.md}}
