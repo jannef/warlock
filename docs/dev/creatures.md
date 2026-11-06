@@ -41,6 +41,17 @@ behind and goes on if it came. A den's sleepers don't follow until woken, a shop
 `hostiles_here` reads the level, so the spawn cap moves with the follower. Hoards, curses, and
 hauntings keep no ids, so losing a guardian to the stairs changes nothing there.
 
+Grades (spec §8 "Grades", #1135; `docs/design/monster-dread.md` §7.4) live in `grade.rs`, whose
+module docs are the rules: `grade::draw` is one line in `travel::make_creature`, after the court,
+on its own stream `grade/<actor id>` (`Rng::grade`), so adding or removing it moves no other
+draw. Per type: `grades` (default true; `CreatureSpec::resolve` forces it false for a unique, a
+mimic, and a generated type; the people's files, the peaceful and merchants factions, say
+`grades = false`) and `grade_words` (resolved at load: the file's, else `grade::TAG_WORDS` by tag,
+else `grade::DEFAULT_WORDS`). A spawn with an `npc` is never graded; `Actor::graded` is 0 for a
+kept beast. Perception copies it to `SeenActor::grade`; look mode puts the word before the name,
+the `actors` dump says `; grade WORD`, the JSON `grade`. The tests are `grade_tests.rs` (the
+draw's odds and determinism, the reads, the roster of the ungraded, saves and hash, the dumps).
+
 Factions and creature behavior (spec §7 "Factions", §5 "Creature sight", §8 "Creature behavior"):
 `data/factions.toml` (`content/faction.rs`: `Factions`, symmetric hostility, `Stance`; optional,
 without it everyone is neutral, but then no creature may name a faction; monsters fight only the

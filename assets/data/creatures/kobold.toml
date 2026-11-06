@@ -13,6 +13,8 @@ size = "small"
 light = "torch"
 faction = "kobolds"
 tags = ["kobold"]
+# Its grades (spec §8 "Grades"): the lesser and the greater.
+grade_words = ["scrawny", "big"]
 alignment = "evil"
 vision = "darkvision"
 opens_doors = true

@@ -134,6 +134,7 @@ fn actor(content: &Content, creature: &str) -> Actor {
         drained: Default::default(),
         weapon_skills: Default::default(),
         faction_override: None,
+        grade: 0,
         summoner: None,
         ally: None,
         risen: None,

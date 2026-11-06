@@ -258,13 +258,22 @@ fn describe_cell(view: &PerceptionView<'_>, p: Pos, blood: bool) -> String {
                         made_of(content, actor).0,
                         terrain(t)
                     ),
-                    None => format!(
-                        "{} {name}{} ({stance}{health}{effects}){}{gear}, on {}{here}.",
-                        if actor.ally { "Your" } else { article(name) },
-                        made_of(content, actor).0,
-                        waits(content, actor),
-                        terrain(t)
-                    ),
+                    // Its grade, which anyone sees (spec §8 "Grades"): "A big
+                    // kobold"; messages name its type alone.
+                    None => {
+                        let def = content.creature(actor.creature);
+                        let name = match warlock_core::grade::word(def, actor.grade) {
+                            Some(word) => format!("{word} {name}"),
+                            None => name.clone(),
+                        };
+                        format!(
+                            "{} {name}{} ({stance}{health}{effects}){}{gear}, on {}{here}.",
+                            if actor.ally { "Your" } else { article(&name) },
+                            made_of(content, actor).0,
+                            waits(content, actor),
+                            terrain(t)
+                        )
+                    }
                 }
             }
             (None, Some(things)) => format!("{}, on {}.", capitalize(things), terrain(t)),
@@ -912,7 +921,30 @@ mod tests {
             "{rat}"
         );
         let bat = of("bat").expect("a cave bat in view");
-        assert!(bat.starts_with("A cave bat (unhurt), on "), "{bat}");
+        assert!(bat.starts_with("A big cave bat (unhurt), on "), "{bat}");
+    }
+
+    #[test]
+    fn a_greater_or_lesser_creature_is_named_with_its_grade() {
+        let content = Arc::new(Content::builtin().expect("content"));
+        let mut w = World::new(content, "arena", None).expect("arena");
+        w.apply(&Action::Wait);
+        let view = w.perception();
+        let content = view.content();
+        let mut graded = 0;
+        for a in view.actors().iter().filter(|a| a.pos != view.viewer()) {
+            let def = content.creature(a.creature);
+            let text = describe(&view, a.pos, true);
+            match warlock_core::grade::word(def, a.grade) {
+                Some(word) => {
+                    graded += 1;
+                    let named = format!("{word} {} (", def.name);
+                    assert!(text.contains(&named), "{text}");
+                }
+                None => assert!(text.contains(&format!(" {} (", def.name)), "{text}"),
+            }
+        }
+        assert!(graded > 0, "some creature in view is graded");
     }
 
     #[test]
@@ -1002,7 +1034,7 @@ mod tests {
         );
         let archer = of("kobold_archer");
         assert!(
-            archer.starts_with("A kobold archer (hostile, ")
+            archer.starts_with("A big kobold archer (hostile, ")
                 && archer.contains("), with a short bow and ")
                 && archer.contains(" arrows ready, on "),
             "{archer}"
@@ -1209,8 +1241,11 @@ map = '''
                 describe(&w.perception(), Pos::new(4, 1), true)
             })
             .collect();
-        assert_eq!(said[0], "A deer (unhurt), on stone floor.");
-        assert_eq!(said[1], "A deer (unhurt, unaware of you), on stone floor.");
+        assert_eq!(said[0], "A big deer (unhurt), on stone floor.");
+        assert_eq!(
+            said[1],
+            "A big deer (unhurt, unaware of you), on stone floor."
+        );
     }
 
     #[test]

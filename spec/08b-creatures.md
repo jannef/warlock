@@ -498,6 +498,20 @@ developer notes (CLAUDE.md, `docs/dev/`).
   **Armour-breaker** (Might, needs axes, maces, or polearms 7; the `protection` system): its
   confirmed criticals ignore 2 more Protection (`critical_penetration`), and Sunder and Gap shot
   cost it 2 stamina less (`weapon_stamina`, #564).
+- **Grades** (`warlock-core/src/grade.rs`; #1135, `docs/design/monster-dread.md` §7.4): two of
+  the same creature are two fights. As a creature is made (`travel::make_creature`, after its
+  court) it draws its **grade** from its own stream `grade/<actor id>`: one in six is
+  **greater** (+25 % maximum hit points, +1 to hit and +2 damage on its melee blows, 10 % less
+  speed) and one in six **lesser** (the reverse: −25 %, −1, −2, 10 % more speed); the rest are
+  neither. `Actor::grade` (−1, 0, +1) is saved and hashed, left out at 0. None for a type with
+  `grades = false` (the people: the peaceful and merchants factions), a unique, a mimic, a
+  generated type (the animated objects), or a unique character (a spawn with an `npc`); a kept
+  beast (a companion or a familiar) reads as ungraded, its growth standing in. A kill pays its
+  kind's experience. The player sees it in look mode as a word before the name, the type's
+  `grade_words` (the kobolds' "a scrawny kobold", "a big kobold"), else its tags' (the undead
+  "withered", "ancient"), else "small" and "big"; messages name the type alone. The `actors`
+  dump says `; grade big`, the JSON a seen actor's `grade` (the word). No talent (a creature
+  gimmick).
 - **Creature gear** (`warlock-core/src/gear.rs`, the rolls; `content/gear.rs`, the data; #328,
   campaign design §10.3): a creature type may have a `racial_weapon` (a weapon it must have a
   rank in: the affinity is the rank, which combat applies) and `[[creature.gear]]` lines

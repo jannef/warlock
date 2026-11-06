@@ -31,6 +31,7 @@ pub mod fov;
 pub mod gear;
 pub mod gem;
 pub mod geom;
+pub mod grade;
 pub mod grid;
 pub mod heal;
 pub mod hunger;

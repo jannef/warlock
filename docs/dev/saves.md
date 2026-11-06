@@ -95,7 +95,8 @@ skip_serializing_if)]`) changes nothing a save from before holds; prestige class
 are not fingerprinted (they are read by id). `Stack::spirit` (#881, a spirit weapon in the hand)
 is the same: left out while false, saved and hashed while held. So are a level's zones
 (`LevelState::zones` and `zone_memory`, #1000; `docs/dev/spells.md` "Zones"), left out while
-empty, as its hallows are.
+empty, as its hallows are. `Actor::grade` (#1135, `grade.rs`) too: left out at 0, so a level
+of ungraded creatures saves and hashes as before.
 
 **Permadeath**: when the player dies, `screens::on_death` deletes that character's files, and no
 other character's (`SaveStore::delete_character(&game.save_id)`: its save, summary, and snapshot)
