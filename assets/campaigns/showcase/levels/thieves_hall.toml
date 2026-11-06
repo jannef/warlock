@@ -1,0 +1,40 @@
+# The thieves' hall (docs/design/monster-dread.md §5.6, #1130): the creatures that rob you as
+# they fight, and the one that blinks to reach you. You arrive in the lit hall with a purse and a
+# scroll at your feet. North, behind three doors: a pixie (p), a nymph (n), and an imp (i), each of
+# whose blows may snatch a stack from your pack (the pixie and the imp what is small, the nymph
+# anything), then take nothing for a minute; they fight on, and what they took falls where they
+# die. South, past a row of statues no paw gets through: a blink dog (C), which sees you across
+# them and is suddenly beside you. The fey are of the Unseelie court here, so they hunt you. The
+# `thieves` scenario starts here; no stairs lead in or out.
+item_level = 10
+name = "The Thieves' Hall"
+ambient = [48, 46, 42, 0]
+map = '''
+###########################
+#.......#.......#.........#
+#...p...#...n...#....i....#
+#t.....t#t.....t#t.......t#
+####+#######+#######+######
+#.........................#
+#t.@$....................t#
+#.........................#
+#SSSSSSSSSSSSSSSSSSSSSSSSS#
+#.........................#
+#t......................Ct#
+###########################
+'''
+
+[legend]
+"@" = { terrain = "floor", spawn = "player" }
+"$" = "floor"
+"t" = "sconce"
+"S" = "statue"
+"p" = { terrain = "floor", creature = "pixie", faction = "unseelie" }
+"n" = { terrain = "floor", creature = "nymph", faction = "unseelie" }
+"i" = { terrain = "floor", creature = "imp" }
+"C" = { terrain = "floor", creature = "blink_dog", faction = "unseelie" }
+
+# A purse and a scroll, for the thieves.
+[[pile]]
+at = [4, 6]
+objects = ["gold_coin*40", "scroll_of_light"]
