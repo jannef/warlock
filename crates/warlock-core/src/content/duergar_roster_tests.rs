@@ -3,6 +3,7 @@
 //! wield their racial weapons at a rank that grows with their level, the two who fight bare by
 //! the roster's dice, and every one of them resists poison and a little cold.
 
+use super::variance_roster_tests::{self, Shape};
 use super::{Combat, Content, Stance};
 use crate::stats::Stat;
 
@@ -40,9 +41,19 @@ impl Role {
         match self {
             Role::Older | Role::Standard | Role::Archer => 1.0,
             Role::Officer => 1.1,
-            Role::Quick => 0.9,
-            Role::Brute => 1.6,
-            Role::Caster => 0.8,
+            Role::Quick => 0.5,
+            Role::Brute => 2.0,
+            Role::Caster => 0.5,
+        }
+    }
+
+    /// What the role does to the to-hit and the blow (the variance pass, #1134).
+    fn shape(self) -> Shape {
+        match self {
+            Role::Older | Role::Archer | Role::Standard | Role::Officer => Shape::Standard,
+            Role::Quick => Shape::Striker,
+            Role::Brute => Shape::Brute,
+            Role::Caster => Shape::Caster,
         }
     }
 
@@ -147,6 +158,10 @@ fn the_duergar_keep_to_the_tribes_formulas() {
         let hp = f64::from(def.stats.score(Stat::Toughness)) + f64::from(def.base_hp);
         let want = max_hp(level, role);
         assert!(within(hp, want), "{id}: max HP {hp}, the formula {want:.1}");
+        variance_roster_tests::check(&content, def, role.shape());
+        if matches!(role, Role::Standard | Role::Archer) {
+            variance_roster_tests::rank_and_file(def);
+        }
         if role == Role::Older {
             continue;
         }

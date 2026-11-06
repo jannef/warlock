@@ -3,6 +3,7 @@
 
 use super::Content;
 use super::creature::CreatureId;
+use super::variance_roster_tests::{self, Shape};
 use crate::stats::Stat;
 
 /// How far a type's max HP and dice average may lie from the formulas, in percent.
@@ -31,9 +32,18 @@ impl Role {
     fn hp(self) -> f64 {
         match self {
             Role::Shambler => 1.5,
-            Role::Brute => 1.6,
+            Role::Brute => 2.0,
             Role::Standard => 1.0,
             Role::Small => 0.5,
+        }
+    }
+
+    /// What the role does to the to-hit and the blow (the variance pass, #1134).
+    fn shape(self) -> Shape {
+        match self {
+            Role::Shambler => Shape::Shambler,
+            Role::Brute => Shape::Brute,
+            Role::Standard | Role::Small => Shape::Standard,
         }
     }
 
@@ -124,6 +134,7 @@ fn the_devils_keep_to_the_roster() {
         let hp = f64::from(def.stats.score(Stat::Toughness)) + f64::from(def.base_hp);
         let want = max_hp(level, role);
         assert!(within(hp, want), "{id}: max HP {hp}, the formula {want:.1}");
+        variance_roster_tests::check(&content, def, role.shape());
         let attack = (def.attack.as_ref()).unwrap_or_else(|| panic!("{id}: no attack"));
         let damage = attack.attack.damage;
         let average = f64::from(damage.min() + damage.max()) / 2.0;

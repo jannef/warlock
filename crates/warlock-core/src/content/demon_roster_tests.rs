@@ -4,6 +4,7 @@
 
 use super::Content;
 use super::undead_roster_tests::{Role, dice_average, max_hp, within};
+use super::variance_roster_tests;
 use crate::stats::Stat;
 
 /// Every demon, its level, and its role (#449's table).
@@ -43,6 +44,7 @@ fn the_demons_keep_to_the_roster() {
         let hp = f64::from(def.stats.score(Stat::Toughness)) + f64::from(def.base_hp);
         let want = max_hp(level, role);
         assert!(within(hp, want), "{id}: max HP {hp}, the formula {want:.1}");
+        variance_roster_tests::check(&content, def, role.shape());
         let attack = def
             .attack
             .as_ref()

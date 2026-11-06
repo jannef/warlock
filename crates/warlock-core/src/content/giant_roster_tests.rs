@@ -3,6 +3,7 @@
 //! as their level says.
 
 use super::Content;
+use super::variance_roster_tests::{self, Shape};
 use crate::stats::Stat;
 
 /// How far a type's max HP and dice average may lie from the formulas, in percent.
@@ -31,8 +32,16 @@ impl Role {
     /// The factor on `base_hp` (2.5 L).
     fn hp(self) -> f64 {
         match self {
-            Role::Giant | Role::Ogre => 1.6,
-            Role::Caster => 0.8,
+            Role::Giant | Role::Ogre => 2.0,
+            Role::Caster => 0.5,
+        }
+    }
+
+    /// What the role does to the to-hit and the blow (the variance pass, #1134).
+    fn shape(self) -> Shape {
+        match self {
+            Role::Giant | Role::Ogre => Shape::Brute,
+            Role::Caster => Shape::Caster,
         }
     }
 
@@ -161,6 +170,7 @@ fn the_giants_keep_to_the_roster() {
         let hp = f64::from(def.stats.score(Stat::Toughness)) + f64::from(def.base_hp);
         let want = max_hp(level, role);
         assert!(within(hp, want), "{id}: max HP {hp}, the formula {want:.1}");
+        variance_roster_tests::check(&content, def, role.shape());
         let attack = (def.attack.as_ref()).unwrap_or_else(|| panic!("{id}: no attack"));
         let got = average(attack.attack.damage);
         let want = dice_average(level, role.step());
@@ -193,11 +203,12 @@ fn the_giants_keep_to_the_roster() {
 #[test]
 fn the_formulas_give_the_plans_numbers() {
     // #457's table: the hill giant's 105 hit points and 4d6 great club, its 3d8 boulder; the
-    // ogre's 70 and 2d8 fists; the jarl's 4d10 axe and 3d12 boulder.
-    assert_eq!(max_hp(20.0, Role::Giant).round(), 105.0);
+    // ogre's 70 and 2d8 fists; the jarl's 4d10 axe and 3d12 boulder. Since the variance pass
+    // (#1134: a brute's 2.0) the hit points are 125 and 82.
+    assert_eq!(max_hp(20.0, Role::Giant).round(), 125.0);
     assert_eq!(dice_average(20.0, 1), 14.0);
     assert_eq!(dice_average(20.0, 0), 13.5);
-    assert_eq!(max_hp(12.0, Role::Ogre).round(), 70.0);
+    assert_eq!(max_hp(12.0, Role::Ogre).round(), 82.0);
     assert_eq!(dice_average(12.0, 0), 9.0);
     assert_eq!(dice_average(50.0, 1), 22.0);
     assert_eq!(dice_average(50.0, 0), 19.5);

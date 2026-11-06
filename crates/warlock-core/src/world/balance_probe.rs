@@ -78,6 +78,7 @@ mod dragon;
 mod familiar;
 mod ranger;
 mod schools;
+mod spread;
 mod summons;
 mod tables;
 mod training;
@@ -1105,6 +1106,29 @@ fn fight_sides(
     pv: Option<fn(u8) -> i32>,
     rng: &mut Rng,
 ) -> Fight {
+    let rows = per_monster(sides, monsters, pv, rng);
+    let pick = |f: fn(&Row) -> f64| median(rows.iter().map(f).collect());
+    Fight {
+        hit: pick(|r| r.0),
+        struck: pick(|r| r.1),
+        dealt: pick(|r| r.2),
+        taken: pick(|r| r.3),
+        kill: pick(|r| r.4),
+        die: pick(|r| r.5),
+    }
+}
+
+/// One monster's fight, the mean over the players' seeds: player hit %, monster hit %, damage a
+/// round each way, rounds to kill and to die.
+type Row = (f64, f64, f64, f64, f64, f64);
+
+/// The players' `sides` against each of `monsters`, a [`Row`] each in their order.
+fn per_monster(
+    sides: &[&Side],
+    monsters: &[&Monster],
+    pv: Option<fn(u8) -> i32>,
+    rng: &mut Rng,
+) -> Vec<Row> {
     let mut rows = Vec::new();
     for m in monsters {
         let mut per = Vec::new();
@@ -1132,19 +1156,17 @@ fn fight_sides(
                 f64::from(me.hp) / taken.max(0.01),
             ));
         }
-        rows.push(per);
+        let mean = |f: fn(&Row) -> f64| avg(per.iter().map(f));
+        rows.push((
+            mean(|r| r.0),
+            mean(|r| r.1),
+            mean(|r| r.2),
+            mean(|r| r.3),
+            mean(|r| r.4),
+            mean(|r| r.5),
+        ));
     }
-    let pick = |f: fn(&(f64, f64, f64, f64, f64, f64)) -> f64| {
-        median(rows.iter().map(|per| avg(per.iter().map(f))).collect())
-    };
-    Fight {
-        hit: pick(|r| r.0),
-        struck: pick(|r| r.1),
-        dealt: pick(|r| r.2),
-        taken: pick(|r| r.3),
-        kill: pick(|r| r.4),
-        die: pick(|r| r.5),
-    }
+    rows
 }
 
 /// Rounds, short: one decimal under 10, whole above, `>999` past it.
@@ -1238,6 +1260,7 @@ fn balance_probe() {
     tables::monsters(&p, &mut out);
     tables::fights(&p, &mut rng, &mut out);
     tables::depth(&p, &mut rng, &mut out);
+    spread::spread(&p, &mut Rng::stream(1134, "spread"), &mut out);
     dragon::dragons(&p, &mut Rng::stream(1099, "dragons"), &mut out);
     casters::casters(&p, &mut Rng::stream(1102, "casters"), &mut out);
     tables::bodies(&p, &mut rng, &mut out);

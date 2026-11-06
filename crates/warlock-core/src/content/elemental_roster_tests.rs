@@ -2,6 +2,7 @@
 //! formulas (#383, `undead_roster_tests`) for its level and role, carries one element's tag, and
 //! each element has its ladder of rungs.
 
+use super::variance_roster_tests::{self, Shape};
 use super::{BurstWhen, Content};
 use crate::stats::Stat;
 
@@ -39,10 +40,19 @@ impl Role {
 
     fn hp(self) -> f64 {
         match self {
-            Role::Brute => 1.6,
+            Role::Brute => 2.0,
             Role::Standard => 1.0,
-            Role::Quick => 0.9,
+            Role::Quick => 0.5,
             Role::Small => 0.5,
+        }
+    }
+
+    /// What the role does to the to-hit and the blow (the variance pass, #1134).
+    fn shape(self) -> Shape {
+        match self {
+            Role::Brute => Shape::Brute,
+            Role::Standard | Role::Small => Shape::Standard,
+            Role::Quick => Shape::Striker,
         }
     }
 
@@ -136,6 +146,7 @@ fn the_elementals_keep_to_the_roster() {
         let hp = f64::from(def.stats.score(Stat::Toughness)) + f64::from(def.base_hp);
         let want = max_hp(level, role);
         assert!(within(hp, want), "{id}: max HP {hp}, the formula {want:.1}");
+        variance_roster_tests::check(&content, def, role.shape());
         // A vortex's burst is its whole offence (the dread design §5.3): the motes'.
         // A vortex's burst is its whole offence (the dread design §5.3): the motes'.
         match (&def.attack, &def.burst) {

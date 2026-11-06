@@ -11,9 +11,9 @@ const TOLERANCE: f64 = 35.0;
 /// The summoners of #520 by id. Others (the drow priestesses) bring their own roster's checks.
 const ROSTER: &[&str] = &["goblin_wizard", "necromancer", "dark_wizard"];
 
-/// #383's caster: Toughness 12 + 0.4 L plus base_hp 2.5 L × 0.8.
+/// #383's caster: Toughness 12 + 0.4 L plus base_hp 2.5 L × 0.5 (the variance pass, #1134).
 fn max_hp(level: f64) -> f64 {
-    12.0 + 0.4 * level + 2.5 * level * 0.8
+    12.0 + 0.4 * level + 2.5 * level * 0.5
 }
 
 #[test]

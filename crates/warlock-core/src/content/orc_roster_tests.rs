@@ -3,6 +3,7 @@
 //! rank that grows with their level, and the wargs bite by the roster's dice.
 
 use super::Content;
+use super::variance_roster_tests::{self, Shape};
 use crate::stats::Stat;
 
 /// How far a type's numbers may lie from the formulas, in percent.
@@ -37,9 +38,19 @@ impl Role {
         match self {
             Role::Small => 0.5,
             Role::Standard | Role::Archer => 1.0,
-            Role::Quick => 0.9,
-            Role::Brute => 1.6,
-            Role::Caster => 0.8,
+            Role::Quick => 0.5,
+            Role::Brute => 2.0,
+            Role::Caster => 0.5,
+        }
+    }
+
+    /// What the role does to the to-hit and the blow (the variance pass, #1134).
+    fn shape(self) -> Shape {
+        match self {
+            Role::Small | Role::Standard | Role::Archer => Shape::Standard,
+            Role::Quick => Shape::Striker,
+            Role::Brute => Shape::Brute,
+            Role::Caster => Shape::Caster,
         }
     }
 }
@@ -121,6 +132,10 @@ fn the_orcs_keep_to_the_tribes_formulas() {
         let hp = f64::from(def.stats.score(Stat::Toughness)) + f64::from(def.base_hp);
         let want = max_hp(level, role);
         assert!(within(hp, want), "{id}: max HP {hp}, the formula {want:.1}");
+        variance_roster_tests::check(&content, def, role.shape());
+        if matches!(role, Role::Standard | Role::Archer) {
+            variance_roster_tests::rank_and_file(def);
+        }
         let tagged = content.has_tag(content.creature_id(id).expect(id), "orc");
         if beast {
             assert!(!tagged, "{id}: a beast, not an orc");

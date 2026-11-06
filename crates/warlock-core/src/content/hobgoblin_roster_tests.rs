@@ -1,6 +1,7 @@
 //! The hobgoblins (#454), the goblin tribe's second tier: every `hobgoblin` type keeps to the
 //! issue's formulas, belongs to the goblins, and stands above the plain goblins.
 
+use super::variance_roster_tests::{self, Shape};
 use super::{Combat, Content};
 use crate::stats::Stat;
 
@@ -21,8 +22,16 @@ impl Role {
         match self {
             Role::Soldier => 1.0,
             Role::Archer => 0.9,
-            Role::Caster => 0.8,
+            Role::Caster => 0.5,
             Role::Officer => 1.1,
+        }
+    }
+
+    /// What the role does to the to-hit and the blow (the variance pass, #1134).
+    fn shape(self) -> Shape {
+        match self {
+            Role::Soldier | Role::Archer | Role::Officer => Shape::Standard,
+            Role::Caster => Shape::Caster,
         }
     }
 }
@@ -84,6 +93,10 @@ fn the_hobgoblins_keep_to_the_roster() {
             ((hp - want) / want * 100.0).abs() <= TOLERANCE,
             "{id}: max HP {hp}, the formula {want:.1}"
         );
+        variance_roster_tests::check(&content, def, role.shape());
+        if matches!(role, Role::Soldier | Role::Archer) {
+            variance_roster_tests::rank_and_file(def);
+        }
         assert!(def.gear.racial_weapon.is_some(), "{id}: armed");
         let tagged = |t: &str| def.tags.iter().any(|x| x == t);
         assert_eq!(

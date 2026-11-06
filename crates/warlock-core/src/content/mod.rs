@@ -176,6 +176,8 @@ mod troll_roster_tests;
 mod undead_roster_tests;
 mod unique;
 mod unseen;
+#[cfg(test)]
+mod variance_roster_tests;
 mod vault;
 mod vault_turn;
 mod vision;

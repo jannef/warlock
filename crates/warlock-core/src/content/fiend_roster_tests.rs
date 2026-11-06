@@ -3,6 +3,7 @@
 //! level and role, belong to the `fiends` faction, and carry the `fiend` tag. The demon, devil,
 //! and yugoloth rosters check their own.
 
+use super::variance_roster_tests::{self, Shape};
 use super::{Affliction, Combat, Content};
 use crate::alignment::Alignment;
 use crate::stats::Stat;
@@ -32,8 +33,17 @@ impl Role {
     fn hp(self) -> f64 {
         match self {
             Role::Standard => 1.0,
-            Role::Quick => 0.9,
-            Role::Caster => 0.8,
+            Role::Quick => 0.5,
+            Role::Caster => 0.5,
+        }
+    }
+
+    /// What the role does to the to-hit and the blow (the variance pass, #1134).
+    fn shape(self) -> Shape {
+        match self {
+            Role::Standard => Shape::Standard,
+            Role::Quick => Shape::Striker,
+            Role::Caster => Shape::Caster,
         }
     }
 
@@ -114,6 +124,7 @@ fn the_fiends_keep_to_the_roster() {
         let hp = f64::from(def.stats.score(Stat::Toughness)) + f64::from(def.base_hp);
         let want = max_hp(level, role);
         assert!(within(hp, want), "{id}: max HP {hp}, the formula {want:.1}");
+        variance_roster_tests::check(&content, def, role.shape());
         let attack = def.attack.as_ref().expect("an attack");
         let damage = attack.attack.damage;
         let average = f64::from(damage.min() + damage.max()) / 2.0;
