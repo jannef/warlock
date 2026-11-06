@@ -22,6 +22,7 @@ Per-tribe notes:
 - `docs/dev/creatures/demons.md`: the demons (#449; faction, tags, riders, attack costs)
 - `docs/dev/creatures/trolls.md`: the troll tribe (#456; faction, tag, formulas, attack cost, population)
 - `docs/dev/creatures/layer-bosses.md`: the layer bosses of Grundlēas (#1118; faction, the five bosses and their lairs)
+- `docs/dev/creatures/second-wave.md`: the dread design's second wave (#1138; the black pudding, cockatrice, hydra and its heads, rust monster, gorgon)
 - `docs/dev/creatures/summoners.md`: the summoners (#520; the `summoner` tag, the three types; the mechanism is `docs/dev/summoning.md`)
 
 ## Overview
@@ -138,14 +139,16 @@ attacks", #1099). **Data**: `Combat::Dragon` (`combat = "dragon"`) and `[creatur
 `CreatureDef::breath: Option<Breath>`, the damage type and the `breath` status's degrees,
 `ceil(cooldown / eases)`; refused out of bounds, with an unknown type, or without the status;
 `check_combat` refuses a dragon without a breath and a breath on any other type;
-`breath::check_effects` runs once effects are loaded: a burst effect). Natural attacks are one
+`breath::check_effects` runs once effects are loaded: a burst effect; its optional `riders`,
+`on_hit` entries resolved as a gaze's, statuses and drains only, #1138). Natural attacks are one
 table or a list (`creature::NaturalAttacks`, its own `Deserialize`: a table or an array of
 tables, so parse errors stay the field's): `CreatureDef::attack` is the first,
 `CreatureDef::more_attacks` the rest, `CreatureDef::natural_attacks()` all in order. **Rules**:
 `world/breath.rs` (`World::breathes_at`, one branch in `ai.rs::fight` after the summoning and
 the throw, `Plan::Breathe(at)`; `World::creature_breathes`: the status, `noise::Act::Roar`, the
 words, `World::cast_cone` in `spell.rs` (the one place a cone strikes, shared with Burning
-hands; reuse it for any creature's cone), `say_spell`, `spell_type_lands`); the cooldown is a
+hands; reuse it for any creature's cone), `say_spell`, `spell_type_lands`, then each rider by
+`World::rider` on each target harmed and alive: the gorgon's stiffening); the cooldown is a
 status in the actor's `effects`, saved as every status is. `world/natural.rs`
 (`World::more_natural_blows`, one line in `fight.rs::attack` after the second blow:
 `Actor::more_natural_blows` gives each later attack's profile, built by `Actor::melee_with`;

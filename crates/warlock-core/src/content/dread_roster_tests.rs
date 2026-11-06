@@ -57,6 +57,12 @@ const DREAD: &[(&str, &str)] = &[
     ("basilisk", "very_rare"),
     // The peoples
     ("drow_assassin", "rare"),
+    // The second wave (#1138, §15)
+    ("black_pudding", "rare"),
+    ("cockatrice", "rare"),
+    ("gorgon", "very_rare"),
+    ("hydra", "rare"),
+    ("rust_monster", "uncommon"),
 ];
 
 /// §8.3's moves of types not flagged dread, with the tier each moved to.
@@ -135,6 +141,9 @@ fn leavings_sit_on_the_types_they_suit() {
         def.leavings.clone()
     };
     assert_eq!(leaves("basilisk"), [Leaving::Statue]);
+    assert_eq!(leaves("cockatrice"), [Leaving::Statue]);
+    assert_eq!(leaves("gorgon"), [Leaving::Statue]);
+    assert_eq!(leaves("black_pudding"), [Leaving::AcidPit]);
     assert_eq!(leaves("barrow_spider"), [Leaving::Web]);
     assert_eq!(leaves("hezrou"), [Leaving::AcidPit]);
     assert_eq!(leaves("ember_beetle"), [Leaving::AcidPit]);

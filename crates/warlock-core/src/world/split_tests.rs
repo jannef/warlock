@@ -402,3 +402,18 @@ fn halves_and_crawlers_survive_a_save() {
     assert_eq!(loaded.state_hash(), w.state_hash());
     assert!((loaded.state.actors.values()).any(|a| a.split_from == Some(Split::Half)));
 }
+
+#[test]
+fn heads_crawl_out_of_a_dead_hydra() {
+    // #1138: the hydra's `dies_into`, its heads of its side.
+    let mut w = world_with("hydra", "long_sword");
+    let hydra = first(&w, "hydra");
+    let marsh = w.state.actors[&hydra].faction(w.content());
+    let player = w.state.player;
+    w.hurt(hydra, 1000, fight::Harm::Actor(player), &mut Vec::new());
+    let heads = of_kind(&w, "hydra_head");
+    assert!((1..=4).contains(&heads.len()), "{} heads", heads.len());
+    for head in &heads {
+        assert_eq!(head.faction(w.content()), marsh, "of the hydra's side");
+    }
+}

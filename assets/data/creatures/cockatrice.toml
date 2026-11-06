@@ -1,0 +1,42 @@
+# The second wave (#1138, the dread design §15 and §12 D14). A cock-sized lizard with a rooster's
+# comb and a serpent's tail, hissing in the dark: its peck stiffens the flesh it breaks
+# (Stiffening by touch, the basilisk's stone without the gaze), so a long fight with one ends in
+# stone. Small and soft: kill it before it pecks twice. What it stoned stands about as statues.
+[[creature]]
+id = "cockatrice"
+level = 7
+xp = 45
+rarity = "rare"
+dread = true
+name = "cockatrice"
+leavings = ["statue"]
+first_sight = "A cockatrice. Do not let it peck you."
+glyph = "c"
+fg = "#d8c040"
+speed = 1100
+faction = "vermin"
+alignment = "neutral"
+vision = "darkvision"
+sight = 8
+footsteps = 20
+hearing = 12
+weight = 4000
+size = "small"
+stats = { strength = 8, dexterity = 14, toughness = 11, intelligence = 2, willpower = 10, presence = 4 }
+base_hp = 9
+natural = { defence = 1, protection = 0, name = "feathers" }
+resist = { poison = 50 }
+on_eat = { message = "It tastes of chicken, and of stone dust.", vomit = 40, harm = "1d4" }
+blood = "#8a7a20"
+cry = { kind = "hiss", loudness = 30, every = 60 }
+# Its peck stiffens what it breaks: a Toughness check against 12 + level / 5, or a degree of
+# Stiffening (four are stone).
+[creature.attack]
+damage = "1d8"
+damage_type = "piercing"
+name = "beak"
+verb = "pecks"
+to_hit = 2
+on_hit = [
+    { status = "stiffening", chance = 25, severity = 1, check = "toughness", difficulty = 13 },
+]

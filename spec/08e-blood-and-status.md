@@ -164,7 +164,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     player for creatures bleeding to death from wounds they dealt.
     A status that `kills_at_max` kills as it reaches its max instead (`World::afflict`'s degree
     step, one hook: the status goes, then the bearer dies of it by whoever gave the last degree,
-    as a tick's death is). **Stiffening** (#1126, a basilisk's gaze) is one: four degrees
+    as a tick's death is). **Stiffening** (#1126, a basilisk's gaze; a cockatrice's peck and a gorgon's breath, #1138) is one: four degrees
     adding up, two minutes a degree to ease, half again as slow and Dexterity −4 from the second;
     its `stages` tell each degree lived to ("Your limbs stiffen.", "Your skin greys and
     hardens.", "You can barely move."), and at the fourth the bearer is stone: "Turned to stone"

@@ -182,7 +182,9 @@ Some [creatures](creatures.md) carry acid. The [hezrou](creatures.md#creature-he
 blows that lands has a chance (25% for the hezrou, 10% for the dretch) to **damage** one piece of
 armour or a shield you wear, drawn at random among those whose material corrodes. The [ember
 beetle](creatures.md#creature-ember-beetle)'s blood eats at what strikes it: each of your blows that lands has a 25% chance to damage the
-weapon (or the shield) it struck with. A damaged item loses its improvements and is a point worse
+weapon (or the shield) it struck with. The [rust monster](creatures.md#creature-rust-monster) and the
+[black pudding](creatures.md#creature-black-pudding) do both, each way at its own chance (50% for the
+rust monster, 25% for the pudding). A damaged item loses its improvements and is a point worse
 until it is mended, the same state as a failed attempt at an [anvil](special-rooms.md#forges), where it is mended; acid
 never damages an item twice and never destroys one.
 

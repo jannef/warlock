@@ -15,8 +15,10 @@
 //! in it, in ascending actor id order, with no roll to hit, Evasion halving it and resistances
 //! taking their share (the dragon's own kind, immune to its element, takes nothing); then
 //! its element's spell type falls on those it harmed (fire's burning, one in four;
-//! `spell_type.rs`). Its blows are the dragon's: one that kills the player is what killed them.
-//! The action costs a `cast`.
+//! `spell_type.rs`), and its `riders`, each by its own chance, on everyone it harmed who still
+//! lives (`World::rider`: a status's degrees, a drain's check; the gorgon's stiffening, #1138).
+//! Its blows are the dragon's: one that kills the player is what killed them. The action costs a
+//! `cast`.
 //!
 //! **Words**: the player who sees the dragon is told it breathes ("The fire drake breathes
 //! fire!"); each blow on someone they see is said as a spell's ("The fire burns you."). Unseen,
@@ -99,6 +101,14 @@ impl World {
         let verb = &content.damage_type(breath.kind).verb;
         self.say_spell((&breath.noun, verb), made, events);
         self.spell_type_lands(id, Some(breath.kind), &harmed, events);
+        for target in harmed {
+            for rider in breath.riders.clone() {
+                if !self.state.actors.contains_key(&target) || self.state.death.is_some() {
+                    break;
+                }
+                self.rider(id, target, rider, events);
+            }
+        }
         price
     }
 }

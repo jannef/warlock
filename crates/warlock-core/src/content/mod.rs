@@ -142,6 +142,8 @@ mod scenario;
 mod scroll;
 mod scroll_label;
 mod search;
+#[cfg(test)]
+mod second_wave_roster_tests;
 mod shop;
 mod size;
 mod skill;
@@ -1861,7 +1863,7 @@ impl Content {
             let attack = attacks.next();
             let more_attacks: Vec<_> = attacks.collect();
             let breath = (spec.breath.as_ref())
-                .map(|b| b.resolve(self))
+                .map(|b| b.resolve(self, status, |id| self.disease_id(id)))
                 .transpose()
                 .map_err(|m| err(format!("creature `{}`: {m}", spec.id)))?;
             let gaze = (spec.gaze.as_ref())
@@ -5260,8 +5262,11 @@ mod tests {
             let player = content.creature_id("player").expect("player");
             let c = content.creature_id(id).expect("id");
             let hostile = content.stance(c, player) == Stance::Hostile;
-            // The mimics come only through chests (`stray = false`).
-            let placed = def.animated.is_some() || def.mimic.is_some();
+            // The mimics come only through chests (`stray = false`), and what another type dies
+            // into only out of its corpse (the hydra's heads).
+            let offspring = (content.creature_defs().iter())
+                .any(|d| d.dies_into.as_ref().is_some_and(|i| i.pool.contains(&c)));
+            let placed = def.animated.is_some() || def.mimic.is_some() || (offspring && !def.stray);
             if hostile && !def.unique && !placed && campaign != Some("showcase") {
                 assert!(
                     def.stray,
@@ -5967,7 +5972,7 @@ mod tests {
         let content = Content::builtin().unwrap();
         let objects = content.object_defs();
         // With a corpse for every creature type but the player, and the magic base items.
-        assert!((15..=500).contains(&objects.len()), "{}", objects.len());
+        assert!((15..=600).contains(&objects.len()), "{}", objects.len());
         let glyphs = content.glyphs();
         for def in objects {
             assert!(def.weight > 0 && glyphs.contains(&def.glyph), "{}", def.id);

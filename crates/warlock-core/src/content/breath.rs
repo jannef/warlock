@@ -8,8 +8,9 @@
 //! (`summon.rs`).
 
 use super::damage_type::DamageTypeId;
+use super::disease::DiseaseId;
 use super::effect::EffectShape;
-use super::status::StatusId;
+use super::status::{Affliction, OnHit, OnHitSpec, StatusId};
 use super::{Content, ContentError};
 use crate::dice::Dice;
 use serde::Deserialize;
@@ -33,6 +34,8 @@ pub(super) struct BreathSpec {
     pub effect: String,
     pub noun: Option<String>,
     pub verb: Option<String>,
+    #[serde(default)]
+    pub riders: Vec<OnHitSpec>,
 }
 
 /// A creature type's breath, resolved.
@@ -55,12 +58,21 @@ pub struct Breath {
     pub noun: String,
     /// What the dragon does, in the message: "breathes fire" ("The fire drake breathes fire!").
     pub verb: String,
+    /// What it causes on everyone it harmed, each by its own chance, in data order (the
+    /// gorgon's stiffening).
+    pub riders: Vec<OnHit>,
 }
 
 impl BreathSpec {
     /// Resolves the breath against `content` (its damage type and the cooldown status, already
-    /// loaded): checked, with the status's degrees.
-    pub(super) fn resolve(&self, content: &Content) -> Result<Breath, String> {
+    /// loaded): checked, with the status's degrees; `status` and `disease` resolve its riders
+    /// as a gaze's (`gaze.rs`).
+    pub(super) fn resolve(
+        &self,
+        content: &Content,
+        status_of: impl Fn(&str) -> Option<(StatusId, u16, bool)>,
+        disease_of: impl Fn(&str) -> Option<DiseaseId>,
+    ) -> Result<Breath, String> {
         if self.damage.min() < 1 {
             return Err("breath: `damage` must roll at least 1".into());
         }
@@ -101,6 +113,19 @@ impl BreathSpec {
                     self.cooldown
                 )
             })?;
+        let riders = (self.riders.iter())
+            .map(|r| {
+                let rider = r
+                    .resolve(&status_of, &disease_of)
+                    .map_err(|m| format!("breath: {m}"))?;
+                match rider.what {
+                    Affliction::Status { .. } | Affliction::Drain(_) => Ok(rider),
+                    Affliction::Hold { .. } | Affliction::Disease(_) => Err(
+                        "breath: a rider is a status or a drain, never a hold or a disease".into(),
+                    ),
+                }
+            })
+            .collect::<Result<Vec<_>, String>>()?;
         Ok(Breath {
             damage: self.damage,
             kind,
@@ -111,6 +136,7 @@ impl BreathSpec {
             effect: self.effect.clone(),
             noun: self.noun.clone().unwrap_or_else(|| "breath".into()),
             verb: self.verb.clone().unwrap_or_else(|| "breathes".into()),
+            riders,
         })
     }
 }

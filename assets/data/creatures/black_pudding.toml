@@ -1,0 +1,38 @@
+# The second wave (#1138, the dread design §15 and §12 D14). A heap of black, eating slime that
+# flows along the floors of the deep and dissolves what it covers: a blade cuts it in two, and
+# both halves flow on (`splits`: blunt blows, fire, and spells do not); its acid eats at the
+# armour it touches and at the weapon that strikes it (`corrodes`, both ways). Slow: a mace and
+# a torch, or walking away.
+[[creature]]
+id = "black_pudding"
+level = 18
+xp = 100
+rarity = "rare"
+dread = true
+name = "black pudding"
+leavings = ["acid_pit"]
+first_sight = "A black pudding. A blade only makes more of it."
+glyph = "P"
+fg = "#4a4a5a"
+speed = 700
+faction = "vermin"
+alignment = "neutral"
+vision = "darkvision"
+sight = 4
+vitals = false
+footsteps = 10
+hearing = 6
+weight = 400000
+stats = { strength = 22, dexterity = 6, toughness = 24, intelligence = 1, willpower = 10, presence = 1 }
+base_hp = 68
+resist = { acid = 100, cold = 50, poison = 100 }
+splits = { on = ["slashing", "piercing"], least = 8 }
+corrodes = { chance = 25, what = "both" }
+corpse = false
+blood = "none"
+[creature.attack]
+damage = "3d6"
+damage_type = "acid"
+name = "pseudopod"
+verb = "smothers"
+to_hit = 3

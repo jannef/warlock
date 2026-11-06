@@ -203,6 +203,23 @@ glow = 0.8
 branches = 0.0
 light = { color = [800, 420, 130], radius = 3 }
 
+# The gorgon's breath (#1138): a grey vapour rolling out over the cone, slow and dim, no glow to
+# speak of; no projectile, darkening, or shake.
+[[effect]]
+id = "petrifying_breath"
+shape = "burst"
+radius = 5
+speed = 14
+grow = 0.25
+impact = 0.25
+linger = 0.8
+flicker = 0.1
+glyphs = "▒░·"
+fill = 0.5
+projectile = "*"
+colors = ["#e0e2e6", "#b8bcc4", "#8a9098", "#60666e", "#3a3e44", "#202226"]
+glow = 0.1
+
 # A fire-breathing dragon's breath (spec §8 "Creature behavior": "Dragons"; the fire drake): fire
 # breath's flames over the whole cone, drawn as a burst around the dragon that rolls out to the
 # cone's end and burns a little longer than Blaze; no projectile, darkening, or shake.

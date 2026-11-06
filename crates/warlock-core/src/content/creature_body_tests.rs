@@ -124,7 +124,7 @@ const PEOPLES: &[&str] = &[
 ];
 
 /// Types with no hide whose body is none past the hide's first point (level 18).
-const BODILESS: &[&str] = &["dryad"];
+const BODILESS: &[&str] = &["black_pudding", "dryad"];
 
 /// Whether `def`'s gear may roll a piece of armour (one with Protection or an armour bonus).
 fn rolls_armour(content: &Content, def: &CreatureDef) -> bool {

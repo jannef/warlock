@@ -1,0 +1,34 @@
+# The second wave (#1138, the dread design §15 and §12 D14). A long-legged, armoured insect with
+# a feathered tail and two long feelers that seek out iron: what it touches rusts, and what
+# touches it rusts too (`corrodes`, both ways). It kills no one; it costs the smith's bill. Fight
+# it with wood, bare hands, or spells, or in mithril; it is quick and comes to your iron.
+[[creature]]
+id = "rust_monster"
+level = 12
+xp = 70
+rarity = "uncommon"
+dread = true
+name = "rust monster"
+first_sight = "A rust monster. Its feelers twitch toward your iron."
+glyph = "R"
+fg = "#b7410e"
+speed = 1200
+faction = "vermin"
+alignment = "neutral"
+vision = "darkvision"
+sight = 8
+footsteps = 50
+hearing = 12
+weight = 90000
+stats = { strength = 14, dexterity = 15, toughness = 17, intelligence = 2, willpower = 10, presence = 4 }
+base_hp = 30
+natural = { defence = 2, protection = 2, name = "plates" }
+resist = { acid = 50 }
+corrodes = { chance = 50, what = "both" }
+on_eat = { message = "It tastes of old nails.", vomit = 40 }
+blood = "#7a3a1a"
+[creature.attack]
+damage = "2d6"
+damage_type = "bludgeoning"
+name = "feelers"
+verb = "lashes"

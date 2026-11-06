@@ -322,3 +322,52 @@ fn a_feeble_player_seen_by_the_basilisk_stiffens_a_hardy_one_seldom() {
         "the check holds it off"
     );
 }
+
+/// The kobold, made a gorgon, breathes at the player `n` times, its cooldown cleared each time.
+fn breathed(w: &mut World, n: usize) {
+    let player = w.state.player;
+    let kobold = kobold(w);
+    let gorgon = w.content().creature_id("gorgon").expect("gorgon");
+    w.state.actors.get_mut(&kobold).expect("kobold").creature = gorgon;
+    let cooldown = w.content().status_id("breath").expect("breath");
+    for _ in 0..n {
+        w.state
+            .actors
+            .get_mut(&kobold)
+            .expect("it")
+            .effects
+            .remove(cooldown);
+        w.perceive(&mut Vec::new());
+        let at = w.state.actors[&player].pos;
+        w.creature_breathes(kobold, at, &mut Vec::new());
+        if w.state.death.is_some() {
+            break;
+        }
+    }
+}
+
+#[test]
+fn the_gorgons_breath_stiffens_a_feeble_player_and_seldom_a_hardy_one() {
+    // #1138: a breath's riders fall on those it harmed, behind their Toughness check.
+    let mut feeble = world("stats = { toughness = 3 }");
+    breathed(&mut feeble, 2);
+    let player = feeble.state.player;
+    assert!(
+        severity(&feeble, player).is_some() || feeble.state.death.is_some(),
+        "two breaths, and a check failed"
+    );
+    assert!(
+        said(&feeble)
+            .iter()
+            .any(|l| l == "The gorgon breathes a grey vapour!"),
+        "{:?}",
+        said(&feeble)
+    );
+    let mut hardy = world("stats = { toughness = 30 }");
+    breathed(&mut hardy, 3);
+    let player = hardy.state.player;
+    assert!(
+        severity(&hardy, player).is_none_or(|d| d < 3) && hardy.state.death.is_none(),
+        "the check holds it off"
+    );
+}

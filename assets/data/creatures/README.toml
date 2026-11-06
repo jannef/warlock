@@ -159,7 +159,8 @@
 #             Only a brute of its level or a dread type regenerates (the dread design §5.9)
 #   corrodes  its acid (the dread design §5.8, world/corrode.rs): { chance = 25, what = "armour" }
 #             (a hit of its eats at a piece the player wears) or what = "weapon" (the player's
-#             hit on it eats at what struck); the materials' `corrodes` says what acid eats
+#             hit on it eats at what struck) or what = "both" (each, the rust monster's); the
+#             materials' `corrodes` says what acid eats
 #   attack    its natural attack, used when it wields no weapon (without one: bare hands, 1d3):
 #             { damage = "1d4", damage_type = "piercing", name = "bite", verb = "bites" } and
 #             optionally threat, crit, and to_hit as for weapons (objects.toml); Strength adds
@@ -181,7 +182,9 @@
 #             cooldown (seconds before the next, 6 to 600: the `breath` status of status.toml, a
 #             degree per 6 s), effect (a burst effect of effects.toml drawn over the cone), and
 #             optionally noun (what strikes, in the messages: "fire"; default "breath") and verb
-#             (what it does: "breathes fire"; default "breathes"). It breathes at a hostile it
+#             (what it does: "breathes fire"; default "breathes"), and riders (on_hit entries
+#             as a gaze's: statuses and drains, each by its own chance on everyone the cone
+#             harmed; the gorgon's stiffening; default none). It breathes at a hostile it
 #             sees in the cone with a clear line whenever the status is off, with no roll to hit:
 #             Evasion halves it and resistances take their share
 #   gaze      a rider at sight, not at touch (spec §8 "Creature behavior": "Gazes"; enemy-only):
