@@ -16,8 +16,9 @@
 //!   and what that slot (or both hands, for a two-handed thing) held falls on its cell. Priced
 //!   as the slot's action. Refused, no time, for what fits no slot.
 //! - **Home** ([`World::escorts_home`], from `World::travel` after the allies come along): the
-//!   escort standing on the quest's target level with the player completes the quest, the
-//!   escort saying `done`, the reward paid; it is no ally any more (its faction and stance put
+//!   escort standing on the quest's target level with the player completes the quest: the
+//!   escort says the quest's `thanks`, if any, then the giver, if on the level, else the escort,
+//!   says `done` and pays the reward; the escort is no ally any more (its faction and stance put
 //!   back, its post where it stands).
 //! - **Death** ([`World::escort_dies`], from `fight.rs::creature_dies`): an escort quest whose
 //!   escort dies, joined or not, fails ([`super::Stage::Failed`]). Nothing else is locked out.
@@ -133,10 +134,28 @@ impl World {
                         && a.escorting() == Some(def.id.as_str())
                 })
                 .map(|a| a.id);
-            if let Some(escort) = escort {
-                self.escort_released(escort);
-                self.complete_saying(escort, QuestId(i as u16), None);
+            let Some(escort) = escort else {
+                continue;
+            };
+            self.escort_released(escort);
+            if let Goal::Escort {
+                thanks: Some(thanks),
+                ..
+            } = &def.goal
+            {
+                let who = super::talk::capitalized(&self.called(&self.state.actors[&escort]));
+                self.say(format!("{who} says: \"{thanks}\""));
             }
+            // The giver thanks the player, if here to; else the escort does.
+            let giver = (self.state.actors.values())
+                .find(|a| {
+                    a.level == here
+                        && a.id != escort
+                        && !a.in_retinue()
+                        && self.dialogue_of(a) == Some(def.giver)
+                })
+                .map(|a| a.id);
+            self.complete_saying(giver.unwrap_or(escort), QuestId(i as u16), None);
         }
     }
 

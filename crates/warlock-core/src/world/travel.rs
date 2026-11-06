@@ -638,6 +638,8 @@ pub(super) fn instantiate_level(
             spawner.outside.insert(made);
         }
     }
+    // An escort a quest has waiting here (`escort_waits.rs`).
+    super::escort_waits::place_waiting(state, content, id);
 }
 
 /// Makes the creature `spawn` places on level `id` (it must exist): one of its type, with the
