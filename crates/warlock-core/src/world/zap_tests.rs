@@ -470,3 +470,22 @@ fn wand_data_is_checked() {
         assert!(load(wand).is_err(), "{wand}");
     }
 }
+
+/// The wands of shatter and bind (#1004) hold their spells and are loot at their item levels;
+/// only the damage spell has rungs (a hex has no ladder of rolls).
+#[test]
+fn the_wands_of_shatter_and_bind_are_loot_holding_their_spells() {
+    let content = Content::builtin().expect("content");
+    for (id, spell, level, charges, rungs) in [
+        ("wand_of_shatter", "shatter", 7, 9, (0, 2)),
+        ("wand_of_bind", "bind", 8, 7, (0, 0)),
+    ] {
+        let def = content.object(content.object_id(id).expect("a wand"));
+        let wand = def.wand.as_ref().expect("holds a spell");
+        assert_eq!(Some(wand.spell), content.spell_id(spell), "{id}");
+        assert_eq!(wand.charges, charges, "{id}");
+        assert_eq!((wand.min_rung, wand.max_rung), rungs, "{id}");
+        assert_eq!(def.level, level, "{id}");
+        assert!(def.frequency > 0, "{id} is found");
+    }
+}

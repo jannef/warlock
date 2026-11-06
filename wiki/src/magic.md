@@ -230,6 +230,9 @@ Some [spells](#the-spells) do one thing no other does. None of them spares you o
   forest floor, fungus (the [terrain](terrain.md) table says which). On stone it does nothing.
 - **Gale** drives everyone on its line a cell straight away from you, the nearest first: one with
   someone behind it stays put, and so does one [held or webbed](status-effects.md#status-held). It harms no one, and it puts out the fires on its line and tears away the [zones](#zones) of fire, foul cloud, and darkness on it; slick ground stays. A shut door stops it.
+- **Bind** holds one hostile you see where it stands: it is [Pinned](status-effects.md#status-pinned) two degrees (more
+  as your Presence grows), so it cannot step, though it may still strike. A pin eases a degree with each action it takes.
+  It never misses. A [wand of bind](#wands) casts it; **Shatter**'s [wand](#wands) is a [force](#spell-types) burst like the spell.
 - **Blink** takes you to a free cell within 5, any of them as likely, through walls or not. It
   works while you are [held](status-effects.md#status-held), [webbed](status-effects.md#status-webbed), or [pinned](status-effects.md#status-pinned), and ends all three.
 - **Sense the quick** lets you feel every living creature within 8 cells that you cannot see as a

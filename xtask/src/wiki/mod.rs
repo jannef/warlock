@@ -1012,7 +1012,7 @@ mod tests {
             "| `k` | Missile weapon | Short bow (shoots arrows), long war bow (shoots arrows), \
              composite bow (shoots arrows), crossbow (shoots crossbow bolts), heavy crossbow \
              (shoots crossbow bolts), sling (shoots sling stones), wand of burning hands, wand of \
-             magic missile, wand of scorching ray, wand of sleep, wand of web, wand of fireball, \
+             magic missile, wand of scorching ray, wand of sleep, wand of web, wand of shatter, wand of bind, wand of fireball, \
              wand of lightning bolt, rod of terror, rod of digging, rod of sleep, rod of teleport \
              other, any other weapon, and anything made for throwing |"
         ));

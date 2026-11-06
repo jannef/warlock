@@ -1,0 +1,21 @@
+# A wand of bind (spec §8 "Magic items": "Wands"): ready it in the missile weapon slot and
+# use it as a missile weapon (`t`), and it casts Bind at a rung of its own, a charge a cast
+# instead of mana. Its charges are its own; it is never recharged. Level and frequency by its
+# spell's level (objects/README.toml): the lower, the commoner the wand.
+[[object]]
+id = "wand_of_bind"
+name = "wand of bind"
+plural = "wands of bind"
+glyph = "-"
+fg = "#c8a8ff"
+class = "wands"
+materials = ["wood"]
+weight = 200
+value = 600
+slot = "missile_weapon"
+level = 8
+frequency = 5
+
+[object.wand]
+spell = "bind"
+charges = 7
