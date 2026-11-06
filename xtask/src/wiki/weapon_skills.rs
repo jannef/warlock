@@ -8,8 +8,8 @@ use super::order;
 use super::text::{Term, anchored, capital, link, thousands};
 use std::fmt::Write as _;
 use warlock_core::content::{
-    Benefit, ClassDef, Content, Grip, MAX_RANK, Role, TwoShields, TwoWeapons, WeaponSkillDef,
-    WeaponSkillId, WeaponSkillTable,
+    Benefit, ClassDef, Content, Grip, MAX_RANK, MOST_PERCENT, Role, TwoShields, TwoWeapons,
+    WeaponSkillDef, WeaponSkillId, WeaponSkillTable,
 };
 use warlock_core::dice::Dice;
 
@@ -164,15 +164,14 @@ pub fn marks(content: &Content) -> String {
         return String::new();
     };
     let mut out = format!(
-        "Every attempt earns **{}** {}, and a hit **{}** more. Against an opponent above your \
-         rank you earn **{}%** more for each level between you, below it {}% less for each, up \
-         to **{}%** in all and down to nothing:\n\n",
+        "Every attempt earns **{}** {}, and a hit **{}** more. Against an opponent below your \
+         rank you earn **{}%** less for each level between you, down to nothing; against one at \
+         your rank or above, the full marks (**{}%**, never more):\n\n",
         rules.attempt,
         if rules.attempt == 1 { "mark" } else { "marks" },
         rules.hit,
         rules.per_level,
-        rules.per_level,
-        rules.most
+        MOST_PERCENT
     );
     let differences: Vec<i32> = (-5..=5).collect();
     out.push_str("| The opponent's level against your rank |");

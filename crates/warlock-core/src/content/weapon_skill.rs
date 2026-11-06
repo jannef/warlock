@@ -41,7 +41,7 @@ pub const MAX_SAVING: u8 = 60;
 /// The most a rank may add to a critical's damage multiplier: from the least (×2) to the most
 /// (×5).
 pub const MAX_CRIT_BONUS: u8 = *CRITS.end() - *CRITS.start();
-/// The most marks one use may earn before scaling, and the most a percent may be.
+/// The most marks one use may earn before scaling.
 const MAX_MARKS: u32 = 1000;
 /// The most a school's rank may give of a die rerolled, sizes, dice, cells, or degrees: the
 /// table's own field range (the spell scaling design §8.2), not a bound on what a spell does.
@@ -487,23 +487,25 @@ impl Benefit {
 
 /// How marks are earned (ADOM-like): `attempt` for every use, `hit` more for a success (a hit, a
 /// blow blocked), scaled by `100 + per_level × (opponent's level − rank)` percent, kept within 0
-/// and `most`, rounded to the nearest mark (halves up): fewer against weak opponents and as the
-/// rank rises, more against strong ones.
+/// and 100 ([`MOST_PERCENT`]), rounded to the nearest mark (halves up): fewer against weak
+/// opponents and as the rank rises, never more than the full marks against strong ones (#1095).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct MarkRules {
     pub attempt: u32,
     pub hit: u32,
     pub per_level: u32,
-    pub most: u32,
 }
+
+/// The most percent of its base marks a use earns, however strong the opponent (#1095).
+pub const MOST_PERCENT: u32 = 100;
 
 impl MarkRules {
     /// The percent of the base marks a use earns against an opponent of `level` at `rank`.
     pub fn percent(&self, level: u32, rank: u8) -> u32 {
         let difference = i64::from(level) - i64::from(rank);
         let percent = 100 + i64::from(self.per_level) * difference;
-        percent.clamp(0, i64::from(self.most)) as u32
+        percent.clamp(0, i64::from(MOST_PERCENT)) as u32
     }
 
     /// Marks for one use at `rank` against an opponent of `level`: a `success` (a hit, a blow
@@ -785,11 +787,6 @@ impl WeaponSkillTable {
         if marks.attempt > MAX_MARKS || marks.hit > MAX_MARKS || marks.per_level > MAX_MARKS {
             return Err(err(format!(
                 "marks: `attempt`, `hit`, and `per_level` must be at most {MAX_MARKS}"
-            )));
-        }
-        if !(100..=MAX_MARKS).contains(&marks.most) {
-            return Err(err(format!(
-                "marks: `most` is a percent, 100 to {MAX_MARKS}"
             )));
         }
         let two = parsed.two_weapons;
@@ -1171,7 +1168,7 @@ impl WeaponSkillTable {
 mod tests {
     use super::*;
 
-    const MARKS: &str = "[marks]\nattempt = 1\nhit = 2\nper_level = 20\nmost = 200\n\
+    const MARKS: &str = "[marks]\nattempt = 1\nhit = 2\nper_level = 20\n\
                          [curves]\nmelee = [15, 30, 60, 120, 240, 480, 960, 1920, 3840, 7680]\n";
 
     fn skill(id: &str, role: &str, extra: &str) -> String {
@@ -1207,7 +1204,7 @@ mod tests {
             assert!(table.of_role(role).is_some(), "{role:?}");
         }
         assert_eq!(table.need(id("long_blades"), 0), Some(15));
-        assert_eq!(table.need(id("long_blades"), 9), Some(7680));
+        assert_eq!(table.need(id("long_blades"), 9), Some(88000));
         assert_eq!(table.need(id("long_blades"), 10), None);
         assert!(table.need(id("bows"), 0) < table.need(id("long_blades"), 0));
         for (skill, _) in table.ids() {
@@ -1317,7 +1314,7 @@ mod tests {
             let def = table.skill(id);
             assert_eq!(
                 (def.role, def.curve.as_str()),
-                (Role::School, "missile"),
+                (Role::School, "school"),
                 "{name}"
             );
             assert_eq!(def.school.map(School::id), Some(name));
@@ -1587,22 +1584,31 @@ mod tests {
             attempt: 1,
             hit: 2,
             per_level: 20,
-            most: 200,
         };
         assert_eq!(rules.percent(3, 3), 100);
-        assert_eq!(rules.percent(5, 3), 140);
-        assert_eq!(rules.percent(50, 0), 200, "at most `most`");
+        assert_eq!(rules.percent(2, 3), 80);
+        // A stronger opponent never speeds training (#1095): the full marks at most.
+        assert_eq!(rules.percent(5, 3), 100);
+        assert_eq!(rules.percent(50, 0), 100);
+        assert_eq!(rules.percent(70, 10), 100);
         assert_eq!(rules.percent(1, 6), 0, "nothing to learn from the weak");
         assert_eq!(rules.percent(1, 10), 0);
         // A miss earns `attempt`, a hit `attempt + hit`, scaled and rounded halves up.
         assert_eq!(rules.earned(false, 1, 1), 1);
         assert_eq!(rules.earned(true, 1, 1), 3);
-        assert_eq!(rules.earned(true, 1, 0), 4, "3 × 120 % = 3.6");
+        assert_eq!(rules.earned(true, 1, 0), 3, "3 × 100 %, not 120 %");
         assert_eq!(rules.earned(true, 1, 3), 2, "3 × 60 % = 1.8");
         assert_eq!(rules.earned(false, 1, 3), 1, "1 × 60 % = 0.6");
         assert_eq!(rules.earned(false, 1, 4), 0, "1 × 40 % = 0.4");
         assert_eq!(rules.earned(true, 1, 6), 0);
-        assert_eq!(rules.earned(true, 9, 2), 6, "3 × 200 %, the most");
+        assert_eq!(rules.earned(true, 9, 2), 3, "3 × 100 %, the most");
+        // Never above the base marks, whatever the levels.
+        for level in 0..=80 {
+            for rank in 0..=MAX_RANK {
+                assert!(rules.percent(level, rank) <= MOST_PERCENT);
+                assert!(rules.earned(true, level, rank) <= rules.attempt + rules.hit);
+            }
+        }
     }
 
     #[test]
@@ -1733,7 +1739,10 @@ mod tests {
                 MARKS.replace("15, 30", "30, 15") + &ok,
                 "each rank needs more marks",
             ),
-            (MARKS.replace("most = 200", "most = 50") + &ok, "`most`"),
+            (
+                MARKS.replace("per_level = 20", "per_level = 20\nmost = 200") + &ok,
+                "unknown field `most`",
+            ),
         ] {
             let e = parse(&text).unwrap_err();
             assert!(e.contains(why), "{why}: {e}");

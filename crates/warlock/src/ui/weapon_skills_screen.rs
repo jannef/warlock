@@ -370,8 +370,8 @@ mod tests {
             table.id("bows").expect("bows"),
         );
         let mut skills = WeaponSkills::from_ranks(table, [(daggers, 2), (bows, MAX_RANK)]);
-        // Daggers 2 needs 60 for rank 3: 24 marks fill four cells of ten.
-        skills.train(table, daggers, 24);
+        // Daggers 2 needs 190 for rank 3: 76 marks fill four cells of ten.
+        skills.train(table, daggers, 76);
         let screen = WeaponSkillsScreen::of(table, &skills, &[]);
         let text = drawn(&screen, 80, 40).join("\n");
         let done = BAR_DONE.to_string().repeat(4);

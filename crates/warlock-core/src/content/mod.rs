@@ -354,8 +354,8 @@ pub use weapon_ability::{
     STAMINA, Trigger, WeaponAbility, WeaponAbilityId, WeaponDoes,
 };
 pub use weapon_skill::{
-    Benefit, Grip, MAX_RANK, MarkRules, RANKS, Role, Section, SpellAttacks, Style, TwoShields,
-    TwoWeapons, WeaponSkillDef, WeaponSkillId, WeaponSkillTable,
+    Benefit, Grip, MAX_RANK, MOST_PERCENT, MarkRules, RANKS, Role, Section, SpellAttacks, Style,
+    TwoShields, TwoWeapons, WeaponSkillDef, WeaponSkillId, WeaponSkillTable,
 };
 pub use weather::{
     Climate, MAX_CHILL, MAX_SIGHT_LOSS, MAX_SWING, MILD, MILD_SWING, MONTH_TEMPERATURES, WeatherDef,

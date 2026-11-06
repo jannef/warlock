@@ -17,11 +17,11 @@ expression: "render(case, content.clone())"
 │   Maces and clubs          0  ──────────      Twin Blades              1  ──────────             │
 │   Spears                   0  ──────────      Great Weapon             0  ──────────             │
 │   Polearms                 0  ──────────      Sword and Board          0  ──────────             │
-│   Staves                   0  ──────────    • Marksman                 0  ━━━━━━━━──             │
+│   Staves                   0  ──────────    • Marksman                 0  ━━━━━━────             │
 │   Unarmed                  0  ──────────      Skirmisher               0  ──────────             │
 │                                             • Brawler                  0  ──────────             │
 │ Missile and thrown                            Staff Fighter            0  ──────────             │
-│   Bows                     0  ━━━━━━━━──                                                         │
+│   Bows                     0  ━━━━━━────                                                         │
 │   Crossbows                0  ──────────                                                         │
 │   Slings                   1  ──────────                                                         │
 │   Thrown weapons           1  ──────────                                                         │
