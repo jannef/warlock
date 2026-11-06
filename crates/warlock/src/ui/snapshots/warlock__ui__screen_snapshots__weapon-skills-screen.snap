@@ -2,8 +2,8 @@
 source: crates/warlock/src/ui/screen_snapshots.rs
 expression: "render(case, content.clone())"
 ---
- You shoot an arrow. You have no arrows left. The kobold shaman misses the giant rat. The giant rat
- bites the kobold shaman. The giant rat bites the kobold shaman hard!
+ You shoot an arrow. You have no arrows left. The kobold shaman casts spark at the giant rat. The
+ spark shocks the giant rat. The giant rat dies. (×2)
 
 
 ┌─ Weapon skills ──────────────────────────────────────────────────────────────────────────────────┐
