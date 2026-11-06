@@ -15,7 +15,8 @@ others are stacks of one (a stack worked at an anvil, `Stack::worked`, `magic/wo
 keeping the oldest: `docs/dev/hunger.md`), piles (`add_to_pile`: dropped stacks go on top, index 0 is the top the
 map shows), inventories (`add_to_inventory`: any number of stacks, weight is the only limit; new
 stacks go last),
-`Weight` (base + carried), `format_weight`, and `phrase` for messages. Piles live in
+`Weight` (base + carried), `format_weight`, and `phrase` for messages. An area spell may destroy
+items lying in piles (`world/ruin.rs`, `data/ruin.toml`; docs/dev/spells.md "Ruin"). Piles live in
 `LevelState::objects` (by position, never empty) with `object_memory` beside them (piles as last
 seen, updated by `Perception::remember` on cells where creatures would be seen); inventories in
 `Actor::inventory` (spawned from a level's `carry`). The rules know every actor's weight

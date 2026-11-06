@@ -451,6 +451,74 @@ pub(super) fn school_pace(p: &Probe, out: &mut String) {
     }
 }
 
+/// The fighters whose weapon pace is printed (`weapon_pace`).
+const FIGHTERS: [(&str, &str); 6] = [
+    ("warrior", "Warrior"),
+    ("thief", "Thief"),
+    ("priest", "Priest"),
+    ("berserker", "Berserker"),
+    ("ascetic", "Ascetic"),
+    ("paladin", "Paladin"),
+];
+
+/// The weapon pace (#1095): the level at which each trained fighter's weapon skill and style
+/// first stood at each rank, as the stat training's fights trained them blow by blow.
+pub(super) fn weapon_pace(p: &Probe, out: &mut String) {
+    writeln!(out, "\n## Weapon pace\n").unwrap();
+    writeln!(
+        out,
+        "The trained fighters' weapon skill and fighting style as their blows trained them (#1095; `balance_probe/training.rs`): every blow of the stat training's fights, each level's kills against the monsters within two levels of theirs, earns its marks through `World::practise` (the real `[marks]`, curves, and talents), the main hand's skill and style for both hands. Each cell: the level at which the skill first stood at the rank (the range over the seeds that fought with it; `>60` where a seed had not reached it by level 60). The untrained careers take these ranks from their trained twin; the skills the fights do not train (a shield, a second weapon skill) are set by level (`rank`, the warrior's pace).\n"
+    )
+    .unwrap();
+    let table = p.content.weapon_skills();
+    for (class, title) in FIGHTERS {
+        let snaps = p.of(class, *LEVELS.last().expect("levels"), Gear::Plain, true);
+        // Every skill a seed's fights trained; a seed that never fought with it is left out of
+        // its cells, and the header says how many seeds did.
+        let skills: std::collections::BTreeSet<_> = (snaps.iter())
+            .flat_map(|s| s.reached.keys().copied())
+            .collect();
+        if skills.is_empty() {
+            continue;
+        }
+        let names: Vec<String> = (skills.iter())
+            .map(|id| {
+                let by = snaps.iter().filter(|s| s.reached.contains_key(id)).count();
+                let name = table.skill(*id).name.clone();
+                if by == snaps.len() {
+                    name
+                } else {
+                    format!("{name} ({by} of {} seeds)", snaps.len())
+                }
+            })
+            .collect();
+        writeln!(
+            out,
+            "**{title}**\n\n| rank | {} |\n|---|{}",
+            names.join(" | "),
+            "---|".repeat(names.len())
+        )
+        .unwrap();
+        for rank in 1..=usize::from(crate::content::MAX_RANK) {
+            let cells: Vec<String> = (skills.iter())
+                .map(|id| {
+                    let at: Vec<Option<u8>> = (snaps.iter())
+                        .filter_map(|s| s.reached.get(id).map(|r| r[rank]))
+                        .collect();
+                    let reached: Vec<u8> = at.iter().flatten().copied().collect();
+                    match (reached.is_empty(), reached.len() < at.len()) {
+                        (true, _) => ">60".into(),
+                        (false, true) => format!("{}–>60", reached.iter().min().expect("one")),
+                        (false, false) => span(reached),
+                    }
+                })
+                .collect();
+            writeln!(out, "| {rank} | {} |", cells.join(" | ")).unwrap();
+        }
+        writeln!(out).unwrap();
+    }
+}
+
 /// The mean damage of `STRIKES` strikes of `p` against `t`, misses included, with `dice` added
 /// to each hit as a sneak attack's land (`World::ambushed`).
 fn sneak_mean(p: &Profile, t: &Target, dice: Option<Dice>, rng: &mut Rng) -> f64 {

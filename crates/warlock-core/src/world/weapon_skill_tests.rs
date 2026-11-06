@@ -344,9 +344,9 @@ fn blows_earn_marks_more_for_a_hit_and_fewer_as_the_rank_rises() {
         hits > 0 && misses > 0 && ranks >= 2,
         "{hits} {misses} {ranks}"
     );
-    // A miss earns 1 mark, a hit 3 more; at rank 0 against level 1 a fifth more (rounded).
+    // A miss earns 1 mark, a hit 3; at rank 0 against level 1 no more (never above 100 %).
     assert_eq!(rules.earned(false, UNLEVELLED, 0), 1);
-    assert_eq!(rules.earned(true, UNLEVELLED, 0), 4);
+    assert_eq!(rules.earned(true, UNLEVELLED, 0), 3);
     assert_eq!(rules.earned(true, UNLEVELLED, 1), 3);
     // Against level-1 opponents a rank 6 sword learns nothing more.
     set(&mut w, "long_blades", 6, 0);
@@ -359,17 +359,17 @@ fn blows_earn_marks_more_for_a_hit_and_fewer_as_the_rank_rises() {
 }
 
 #[test]
-fn stronger_opponents_teach_more() {
-    // A level-6 golem against long blades 1: five levels above, twice the marks.
+fn stronger_opponents_teach_no_more_than_the_full_marks() {
+    // A level-6 golem against long blades 1: five levels above, still the plain marks (#1095).
     let mut w = world_on("#####\n#.@g#\n#####\n");
     arm(&mut w, &["sword"]);
     set(&mut w, "long_blades", 1, 0);
     let rules = *w.content().weapon_skills().marks().expect("marks");
-    assert_eq!(rules.percent(6, 1), 200);
+    assert_eq!(rules.percent(6, 1), 100);
     let outcome = w.apply(&Action::Move(Dir::E));
     let strike = players_strike(&w, &outcome).expect("the player struck");
     let earned = rules.earned(strike.is_hit(), 6, 1);
-    assert_eq!(earned, if strike.is_hit() { 6 } else { 2 });
+    assert_eq!(earned, if strike.is_hit() { 3 } else { 1 });
     assert_eq!(
         training(&w, "long_blades"),
         Training {
@@ -386,7 +386,7 @@ fn a_rank_gained_raises_its_defaults_and_is_said() {
     let mut w = world_on(YARD);
     arm(&mut w, &["sword"]);
     // One mark short of long blades 3; short blades has marks of its own.
-    set(&mut w, "long_blades", 2, 59);
+    set(&mut w, "long_blades", 2, 189);
     set(&mut w, "short_blades", 0, 5);
     w.apply(&Action::Move(Dir::E));
     assert_eq!(training(&w, "long_blades").rank, 3);

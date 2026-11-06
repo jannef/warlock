@@ -204,6 +204,7 @@ mod reveal;
 mod rod;
 mod rooms;
 mod rot;
+mod ruin;
 mod rumour;
 mod sanctuary;
 mod schedule;
@@ -444,6 +445,11 @@ pub struct WorldState {
     /// draw ([`Rng::levels`]), so a run that never drew from it hashes as before.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub(crate) levels_rng: Option<Rng>,
+    /// The ruin random stream (spec §8 "Spells": "Ruin"): which items lying in an area spell
+    /// are lost. Made on the first draw ([`Rng::ruin`]), so a run that never drew from it hashes
+    /// as before.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub(crate) ruin_rng: Option<Rng>,
     /// When the daily stat check comes next (spec §8 "Stats": 06:00 game time;
     /// `world/stat_training.rs`). `None` while the content has no training rules (so content
     /// without them hashes as before) and in a save made before it: scheduled on load.
@@ -862,6 +868,7 @@ impl World {
             rng: Rng::gameplay(seed),
             training: Rng::training(seed),
             levels_rng: None,
+            ruin_rng: None,
             next_stat_check: None,
             turn: 0,
             time: def.start,
@@ -1861,6 +1868,8 @@ mod room_temperature_tests;
 mod room_tests;
 #[cfg(test)]
 mod rot_tests;
+#[cfg(test)]
+mod ruin_tests;
 #[cfg(test)]
 mod rumour_tests;
 #[cfg(test)]

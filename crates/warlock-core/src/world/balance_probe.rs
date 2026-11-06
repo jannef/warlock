@@ -23,8 +23,10 @@
 //!   monsters of the player's level through the game's training hooks, the day's other uses
 //!   (`training::COMMON` and the build's `extras`), and the daily check at 06:00
 //!   (`World::daily_stat_check`); then the level's own check: the game's rules on the game's
-//!   streams. **Untrained**: no marks. Weapon
-//!   skill ranks are set by level (`rank`), as ranks come from use, not levels. Gear: the kit,
+//!   streams. **Untrained**: no marks. Weapon skill ranks come from use (#1095): a trained
+//!   career's fights train the main hand's skill and style through `World::practise`; an
+//!   untrained career takes its trained twin's ranks; the skills no fight trains are set by
+//!   level (`rank`, the trained warrior's pace). Gear: the kit,
 //!   plain level-appropriate pieces, or the same pieces magic (rare from level 30, with an
 //!   amulet and two rings from 15), equipped with `equip:`.
 //! - **A fight**: one round is a normal turn. Each side's expected damage a round is its blows
@@ -85,8 +87,8 @@ use crate::action::{AttackKind, parse_actions};
 use crate::character::{CharacterSpec, Gender};
 use crate::combat::{self, Attack, Defence, Profile, Target};
 use crate::content::{
-    ActionKind, BASE_TURN, Content, CreatureId, CreatureSpawn, Factor, NORMAL_SPEED, Resolution,
-    SpellId, SpellPurpose, StatUse, price,
+    ActionKind, BASE_TURN, Content, CreatureId, CreatureSpawn, Factor, NORMAL_SPEED, RANKS,
+    Resolution, SpellId, SpellPurpose, StatUse, WeaponSkillId, price,
 };
 use crate::damage::Kinds;
 use crate::dice::{Dice, Roll};
@@ -94,6 +96,7 @@ use crate::magic::{LootGrade, loot};
 use crate::object::Stack;
 use crate::rng::Rng;
 use crate::stats::Stat;
+use std::collections::BTreeMap;
 use std::sync::Arc;
 
 /// The player levels measured.
@@ -118,17 +121,20 @@ fn sneak_value(level: u8) -> u16 {
     12 + u16::from(level) * 7 / 2
 }
 
-/// The weapon skill rank assumed at a character level (the 2026-10-27 report's).
+/// The weapon skill rank assumed at a character level for the skills the fights do not train
+/// (a shield, a second weapon skill; an untrained career's come from its trained twin): the
+/// trained warrior's long blades as `[marks]` and the melee curve bring them ("Weapon pace",
+/// #1095).
 fn rank(level: u8) -> u8 {
     match level {
         0..=2 => 2,
         3..=4 => 3,
-        5..=7 => 4,
-        8..=9 => 5,
+        5..=6 => 4,
+        7..=9 => 5,
         10..=14 => 6,
-        15..=19 => 7,
-        20..=29 => 8,
-        30..=39 => 9,
+        15..=22 => 7,
+        23..=31 => 8,
+        32..=41 => 9,
         _ => 10,
     }
 }
@@ -699,6 +705,9 @@ struct Snap {
     /// Its weapon skills and styles, and the rank of the caster style it was paced in.
     ranks: crate::weapon_skills::WeaponSkills,
     style_rank: Option<u8>,
+    /// The weapon skills and styles its fights trained (trained careers) and the level each
+    /// first stood at each rank (#1095, "Weapon pace").
+    reached: BTreeMap<WeaponSkillId, [Option<u8>; RANKS]>,
     /// Its sneak dice (`World::sneak_dice`) and Master thief's lower threat on a sneak attack.
     sneak: Option<Dice>,
     ambush_threat: u8,
@@ -920,12 +929,13 @@ fn dress(w: &mut World, build: &Build, level: u8, gear: Gear, seed: u64) {
     }
 }
 
-/// One career of `build` from level 1 to the last of [`LEVELS`], measured at each.
+/// One career of `build` from level 1 to the last of [`LEVELS`], measured at each. An
+/// untrained career takes the weapon ranks of its trained `twin` (the same build and seed).
 fn career(
     content: &Arc<Content>,
     build: &Build,
     seed: u64,
-    trained: bool,
+    (trained, twin): (bool, Option<&[Snap]>),
     monsters: &[Monster],
 ) -> Vec<Snap> {
     let spec = CharacterSpec {
@@ -962,6 +972,7 @@ fn career(
             act(&mut w, &format!("xp:{more}"));
             act(&mut w, "levelup:auto levelup:auto");
             log.rises(&w, before);
+            log.note_ranks(&w, level);
         }
         if !LEVELS.contains(&level) {
             continue;
@@ -969,7 +980,15 @@ fn career(
         let table = content.weapon_skills();
         for &(skill, less) in build.skills {
             let id = table.id(skill).expect(skill);
-            let r = rank(level).saturating_sub(less).max(1);
+            // Ranks trained by the fights' blows stay as they came (#1095).
+            if trained && log.practised.contains(&id) {
+                continue;
+            }
+            let twin = twin.and_then(|t| t.iter().find(|s| s.level == level));
+            let r = match twin {
+                Some(t) => t.ranks.rank(id),
+                None => rank(level).saturating_sub(less).max(1),
+            };
             if r > w.state.player().weapon_skills.rank(id) {
                 w.player_mut().weapon_skills.raise(table, id, r);
             }
@@ -1014,6 +1033,7 @@ fn career(
                 },
                 ranks: me.weapon_skills.clone(),
                 style_rank: paced.style_id.map(|id| me.weapon_skills.rank(id)),
+                reached: log.reached.clone(),
                 paced: paced.clone(),
                 fought_a_day: f64::from(log.fought_casts) / days,
                 sneak: w2.sneak_dice(player),
@@ -1169,9 +1189,10 @@ fn balance_probe() {
     let mut snaps = Vec::new();
     for build in &BUILDS {
         for seed in 1..=SEEDS {
-            for trained in [true, false] {
-                snaps.extend(career(&content, build, seed, trained, &monsters));
-            }
+            let trained = career(&content, build, seed, (true, None), &monsters);
+            let untrained = career(&content, build, seed, (false, Some(&trained)), &monsters);
+            snaps.extend(trained);
+            snaps.extend(untrained);
         }
     }
     let sweep = training::SWEEP
@@ -1192,7 +1213,7 @@ fn balance_probe() {
             let mut finals = Vec::new();
             for build in &BUILDS[..MELEE_TABLES] {
                 for seed in 1..=SEEDS {
-                    let last = career(&content, build, seed, true, &monsters);
+                    let last = career(&content, build, seed, (true, None), &monsters);
                     let snap = last.into_iter().last().expect("level 60");
                     finals.push((build.class, snap.scores));
                 }
@@ -1222,6 +1243,7 @@ fn balance_probe() {
     tables::bodies(&p, &mut rng, &mut out);
     tables::spells(&p, &mut out);
     tables::school_pace(&p, &mut out);
+    tables::weapon_pace(&p, &mut out);
     tables::sneak_attacks(&p, &mut rng, &mut out);
     tables::rage(&p, &mut rng, &mut out);
     tables::ki(&p, &mut rng, &mut out);

@@ -14,7 +14,7 @@ hit](magic.md#how-a-spell-finds-its-target) and fails) or finds nobody earns an 
 marks are weighed by the strongest creature the spell struck at, or by your own level when it
 struck at nobody (a buff, a fireball into an empty corridor). An area spell is one cast: it
 earns once, weighed by the strongest creature it caught, however many it caught. The marks and
-their weighing are the [weapon skills'](weapon-skills.md#marks-and-ranks), on the missile curve. Nothing
+their weighing are the [weapon skills'](weapon-skills.md#marks-and-ranks), on a gentler curve of their own (the School columns there). Nothing
 limits how often you may train: a [Light](magic.md#spell-light) cast ten times trains evocation
 ten times, for its mana and its time.
 

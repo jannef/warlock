@@ -623,7 +623,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   asks only that it is held; at most its `max`).
 - **Weapon skills** (`data/weapon_skills.toml`, optional; without it nobody has weapon skills and
   weapons name none; M22, §8 "Weapon skills"): `[marks]` (`attempt`, `hit`, `per_level`, at most
-  1000, and `most`, a percent 100 to 1000), `[curves]` (named lists of the marks each rank asks
+  1000; the scale is kept within 0 and 100 percent, #1095), `[curves]` (named lists of the marks each rank asks
   for, ranks 1 to 10: ten numbers, each more than the last, at most 1 000 000), `[[skill]]`s in
   the order the weapon skills screen lists them (at most 255): `id`, `name` (`Long blades`),
   `phrase` (the message's `with long blades`), `role` (`melee`, `launcher`, `thrown`, `unarmed`,
@@ -653,11 +653,13 @@ developer notes (CLAUDE.md, `docs/dev/`).
   larger of the two) from which a ranged spell's far benefits apply. `[[default]]`s, `between = [a, b]` and `penalty` (1 to 10), each pair once,
   symmetric; styles default only to styles, weapon skills only to weapon skills. The built-in
   file: marks 1 an attempt, 2 more
-  a hit, 20 % a level, at most 200 %; curves melee 15, 30, 60, 120, 240, 480, 960, 1920, 3840,
-  7680 and missile 10, 20, … 5120; fifteen skills: daggers and knives, short blades, long
+  a hit, 20 % a level, at most 100 % (#1095); curves melee 15, 45, 190, 500, 1750, 4000,
+  17 500, 38 000, 68 000, 88 000, missile 10, 30, 125, … 58 700, and school 10, 20, … 640,
+  1200, 2000, 3000;
+  fifteen skills: daggers and knives, short blades, long
   blades, great blades, axes, maces and clubs, spears, polearms, staves (`melee`), unarmed;
   bows, crossbows, slings (`launcher`, missile curve), thrown weapons (missile curve); shield
-  bashing; the seven schools of magic (`school`, missile curve, the spell scaling
+  bashing; the seven schools of magic (`school`, school curve, the spell scaling
   design §8: evocation, necromancy, abjuration, restoration, transmutation, enchantment,
   divination; defaults evocation ↔ transmutation, necromancy ↔ restoration, abjuration ↔
   enchantment −4); defaults: long ↔ short blades −2, long ↔ great blades −2, short
@@ -669,7 +671,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   fifteen skills and seven schools (§8 "Fighting styles": Duelist, Twin Blades, Great Weapon, Sword and Board,
   Two Shields (`hidden = true`: listed only once its owner has marks in it), Marksman (bows, crossbows, slings; missile curve), Skirmisher (missile curve),
   Brawler, Staff Fighter (staves), and the caster styles Sniper, Toucher, Battle caster
-  (missile curve)), with the defaults duelist ↔ sword and board −3, duelist ↔ twin blades −3,
+  (school curve)), with the defaults duelist ↔ sword and board −3, duelist ↔ twin blades −3,
   great weapon ↔ staff fighter −3, marksman ↔ skirmisher −4, sniper ↔ toucher −4, toucher ↔
   battle caster −3. The wiki shows the skills, the
   styles, the defaults, the marks and curves, and the benefits per rank in generated tables.

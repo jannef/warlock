@@ -5,8 +5,8 @@
 use super::text::{Term, anchored, damage_link, link};
 use std::fmt::Write as _;
 use warlock_core::content::{
-    BurstIce, Content, Resolution, RodDoes, RodShape, Shape, SpellData, SpellPurpose, TalentEffect,
-    ZoneKind,
+    BurstIce, Content, Resolution, RodDoes, RodShape, RuinOf, Shape, SpellData, SpellPurpose,
+    TalentEffect, ZoneKind,
 };
 
 /// What each shape multiplies the base cost by; a burst by radius.
@@ -110,6 +110,38 @@ pub(super) fn types(content: &Content) -> String {
     );
     for (name, harmed, cells, left) in rows {
         let _ = writeln!(out, "| {name} | {harmed} | {cells} | {left} |");
+    }
+    out
+}
+
+/// What an area spell of each damage type does to the items lying in it (`data/ruin.toml`), by
+/// the type's name, its rows in the order they are tried (the first that matches decides).
+pub(super) fn ruin(content: &Content) -> String {
+    let rules = content.ruin();
+    let mut rows: Vec<(String, usize, String, String)> = (rules.rows.iter().enumerate())
+        .map(|(i, row)| {
+            let what = match &row.of {
+                RuinOf::Class(class) => {
+                    let def = content.item_class(*class);
+                    link(Term::ItemClass, &def.id, &def.name)
+                }
+                RuinOf::Material(m) => {
+                    format!("[{}](objects.md#materials)", content.material(*m).name)
+                }
+                RuinOf::Group(group) => format!("anything of [{group}](objects.md#materials)"),
+            };
+            let chance = match row.percent {
+                0 => "never".to_string(),
+                p => format!("{p} %"),
+            };
+            (content.damage_type(row.kind).name.clone(), i, what, chance)
+        })
+        .collect();
+    rows.sort();
+    let mut out = String::from("| Type | What | Each item lost |\n|---|---|:---:|\n");
+    for (_, i, what, chance) in rows {
+        let kind = damage_link(content, rules.rows[i].kind);
+        let _ = writeln!(out, "| {kind} | {what} | {chance} |");
     }
     out
 }

@@ -638,7 +638,7 @@ cast path shares.
      single-target spell of the caster's own level (base mana = the level, the ranks' mana
      off), 10 to 13 for the wizard from level 5 to 60, 8 to 9 the priest, 8.5 to 12 the witch.
      Measured pace (the wizard): evocation 5 at level 10, 7 at 20, 8 at 30, 10 from 50, §8.4's
-     estimate; the schools stay on the missile curve (no row tuned). No casts-to-kill column.
+     estimate; the schools stayed on the missile curve (no row tuned; their own `school` curve since #1095). No casts-to-kill column.
   6. **Tests**: since S1 `the_shipped_cost_table_reads_as_the_design_has_it` and
      `the_shipped_table_makes_areas_dearer_and_touches_cheaper` (the cap check at load and the
      tier table's went with the table, and nothing replaces them: decision 16).
@@ -693,6 +693,39 @@ cast path shares.
   `magic/tests.rs` (`spell_scrolls_drop_by_level`),
   `world/spell.rs` (cone geometry),
   `ui/target.rs` (aiming by shape).
+
+## Ruin
+
+What an area spell does to the items lying in it (#1100; spec §8 "Spells", "Ruin").
+
+- **Data**: `assets/data/ruin.toml` (optional; without it nothing is ruined), parsed by
+  `content/ruin.rs` (`RuinRules`, `Content::ruin`): rows of a damage type and one of an item
+  `class`, a `material` (of the stack's main part, `Stack::parts().first()`), or a material
+  `group`, a `percent` (0 spares what it matches), and `says` (one item, several). Within a type the
+  first row that matches decides (`RuinRules::row`). The wiki's table is
+  `xtask/src/wiki/spells.rs::ruin` (`generated/spell-ruin.md`, on the magic page).
+- **Hook**: `World::ruin_items` (`world/ruin.rs`), one line after the damage in each of the shared
+  area functions of `world/spell.rs`: `cast_burst_at` (bursts: spells, scrolls, wands, a study
+  mishap), `cast_bolt` (lines; a birth sign's Fire breath too), `cast_cone` (cones and a dragon's
+  breath, `breath.rs`). `Caster::Actor` only: a trap's or a place's burst ruins nothing; a spell
+  with no damage type returns at once.
+- **Spared**: a stack whose magic is a unique (`Magic::unique`), and `World::quest_objects`: every
+  fixed quest's `hand_in` object (bring, deliver) until the quest is completed and not
+  repeatable, and an active rolled quest's drawn one (`Quests::given`). Rewards are not spared:
+  they only exist once their quest is done. Only `LevelState::objects` is read: inventories and
+  chests are never touched.
+- **Draws**: one `chance(percent)` per item, cells in position order, each pile top first, from
+  `WorldState::ruin_rng` (`Rng::ruin`, the `ruin` stream), made on the first draw like
+  `levels_rng`: a run whose spells never reached a pile the table touches hashes as before, and
+  the gameplay stream never moves for it.
+- **Told**: for the cells `Perception::sees_actors_at` (the snapshot before the cast), one `say`
+  per kind of goods lost (`Stack::same_goods` and the row's words), in the order first lost:
+  "The scroll labelled ZUNBAR burns up." (`Lore::title`), "3 potions of healing freeze and
+  shatter." (`Lore::describe`). Said directly, so the lines come before the cast's blows, which
+  `say_spell` reports after. The pile is set with `LevelState::set_pile` (an emptied one goes), and
+  the remembered pile follows when the cell is next seen.
+- **Tests**: `world/ruin_tests.rs` (the table at a fixed seed, the words, quest objects and
+  uniques, carried things, traps, the stream), `content/ruin.rs` (the file's checks).
 
 ## Zones
 

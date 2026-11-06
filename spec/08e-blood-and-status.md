@@ -483,6 +483,19 @@ developer notes (CLAUDE.md, `docs/dev/`).
     Staggered 1, the step still taken. `dark` (Mirk): no light reaches its cells and a source on them
     sheds none, so eyes that need light see nothing there. The player sees a zone as a still tint
     and in look mode's words, where they see or remember the cell.
+  - **Ruin** (#1100; `data/ruin.toml`, `world/ruin.rs`): an area spell (a burst, a cone, or a
+    line) with a damage type, cast by an actor (from mana, a scroll, or a wand; a dragon's breath
+    too), may destroy the items lying on the floor cells it reaches: each item of each stack there
+    is lost at the chance of the first row of the spell's type matching the stack's item class,
+    the material of its main part, or that material's group (fire burns scrolls, paper, wax,
+    cloth, food, and wood, and may boil a potion; cold shatters potions and glass; lightning
+    burns scrolls; acid eats most things but glass, stone, gems, and coins; force smashes potions
+    and glass; necrotic rots food). A stack may lose some or all. Never touched: what is carried,
+    worn, or in a chest, a unique item, and an object a quest asks to be brought or delivered
+    (a fixed quest's until it is done for good, a rolled quest's drawn object while active).
+    Traps' and places' bursts ruin nothing. The draws are the run's own `ruin` stream. Seen
+    cells say what went, a line per kind of item ("The scroll burns up.", "3 potions freeze and
+    shatter."); unseen, nothing is said.
   - **Spell types** (`docs/design/spell-types-and-new-spells.md` §3, §4; `[types]` in
     `data/spells.toml`, read into `SpellRules::types`, every status and light checked at load):
     what every spell of a damage type does beyond its damage, always on, cast from mana, a

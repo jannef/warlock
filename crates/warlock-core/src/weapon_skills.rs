@@ -235,13 +235,19 @@ mod tests {
         assert!(skills.train(&t, long, 14).is_empty());
         assert_eq!(skills.get(long), Training { rank: 0, marks: 14 });
         assert_eq!(skills.progress(&t, long), Some((14, 15)));
-        // The 15th mark gains rank 1; three left over count toward rank 2 (30).
+        // The 15th mark gains rank 1; three left over count toward rank 2 (45).
         assert_eq!(skills.train(&t, long, 4), [long]);
         assert_eq!(skills.get(long), Training { rank: 1, marks: 3 });
-        assert_eq!(skills.progress(&t, long), Some((3, 30)));
+        assert_eq!(skills.progress(&t, long), Some((3, 45)));
         // One rank at a time: a flood of marks stops short of the rank after.
         skills.train(&t, long, 10_000);
-        assert_eq!(skills.get(long), Training { rank: 2, marks: 59 });
+        assert_eq!(
+            skills.get(long),
+            Training {
+                rank: 2,
+                marks: 189
+            }
+        );
         // Rank 10 is the last: no more marks.
         let mut master = WeaponSkills::from_ranks(&t, [(long, 10)]);
         assert!(master.train(&t, long, 1_000_000).is_empty());
