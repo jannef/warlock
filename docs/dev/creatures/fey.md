@@ -22,10 +22,10 @@ Fixtures that write their own factions file list `seelie` and `unseelie`.
 
 **The roster.** Thirteen shared types, one file each in `assets/data/creatures/`, tagged `fey`,
 each of the Seelie or the Unseelie court by its weights (the creatures README's notes): sprite 2
-(small, a short bow, a poisoned stab), pixie 4 (small caster, a touch that transfixes), quickling
+(small, a short bow, a poisoned stab), pixie 4 (small caster, a touch that sends to sleep, `drowsy`, and steals what is small), quickling
 6 (speed 2000), boggle 7 (small, hard to hit, opens doors), darkling 9 (small, darkvision), satyr
-10, redcap 12 (small, quick, a heavy stamp), blink dog 14, meenlock 16 (claws that frighten and
-may hold), dryad 19 and nymph 22 (casters whose touch transfixes), korred 25 (small, very tough,
+10, redcap 12 (small, quick, a heavy stamp), blink dog 14 (blinks to reach you), meenlock 16 (claws that frighten and
+may hold), dryad 19 and nymph 22 (casters whose touch transfixes; the nymph steals anything), korred 25 (small, very tough,
 fists that may hold), yeth hound 31 (quick, a bite that frightens). Lean Unseelie: redcap and
 meenlock 10/90, quickling and yeth hound 25/75; lean Seelie: dryad and nymph 90/10, blink dog
 80/20; the rest even. `content/fey_roster_tests.rs` holds levels, roles, and court weights against
@@ -53,3 +53,9 @@ the meenlock is hurt. `bestiary_tests::the_sneak_attackers_carry_their_craft_and
 Spells (#1102, docs/dev/creatures.md "Casters"; in the order each prefers them): the pixie `evil_eye`, `spark` (mana 1); the dryad `barkskin`, `bind`, `acid_arrow` (mana 30); the nymph `mesmerise`, `magic_missile` (mana 25).
 
 Presence (#1128, `world/aura.rs`): the satyr's pipes (`drowsy`, heard, radius 3, loudness 60, Willpower 13, every 18 s); the yeth hound's fear aura (radius 2, 16) and howl; giggling cries on the pixie and the nymph. `content::aura_roster_tests` lists every row.
+Theft and the blink (docs/design/monster-dread.md §5.6, #1130; the mechanism is
+`docs/dev/creatures.md` "Theft and the blink"): the pixie (`steals` `small`; its touch gives
+`drowsy`, its dust, in place of transfixing) and the nymph (`steals` `any`) each take a stack a
+minute at most (`chance = 30`, `cooldown = 60`); the blink dog `blinks = { range = 6, cooldown =
+30 }`. The test world's `thieves` scenario (`levels/thieves_hall.toml`) has all three.
+`world/theft_tests.rs` checks the rows.

@@ -256,6 +256,18 @@
 #             "2d4", spread = 1 } (ids, each as likely, never the player, a unique, or itself;
 #             count 1 to 20; spread 1 to 5 cells, default 1), of its faction, each paying a tenth
 #             and counting for no quest; look mode calls it "writhing"
+#   steals    a thief (docs/design/monster-dread.md §5.6; enemy-only; a type with hands):
+#             { what = "small" | "any", chance = 30, cooldown = 60 }. A melee hit on the player
+#             that leaves them alive, while the `theft` status of status.toml is off, takes one
+#             stack from their pack by its chance (1 to 100; never what they wear or wield;
+#             "small": coins, gems, potions, rings, scrolls), and the thief takes the status for
+#             cooldown seconds (6 to 600, a degree per 6 s). It fights on; what it took is in its
+#             pack and falls where it dies. It never steals from a creature
+#   blinks    a blinker (docs/design/monster-dread.md §5.6; the blink dog's): { range = 6,
+#             cooldown = 30 }. A melee fighter whose path to its target is blocked, while the
+#             `blink` status is off, moves at once to a free cell beside the target within range
+#             (2 to 12, Chebyshev) and in its own line of sight, and takes the status for
+#             cooldown seconds (6 to 600). It never blinks away
 #   resist    what it resists, in percent per damage type (spec §8 "Damage types"):
 #             { acid = 50 }; -100 (it takes double) to 100 (immune: nothing of the kind hurts
 #             it, whatever it wears). What it wears adds up with this, capped at 75 short of

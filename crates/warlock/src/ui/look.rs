@@ -1141,13 +1141,16 @@ map = '''
         let content = Arc::new(Content::load(&files).expect("content"));
         let w = World::new(content, "hall", None).expect("hall");
         let view = w.perception();
-        assert_eq!(
-            describe(&view, Pos::new(2, 1), true),
-            "A wormhost (hostile, unhurt), writhing, on stone floor."
+        // Either may be graded ("A withered charnel heap"): the grade word is not the point.
+        let host = describe(&view, Pos::new(2, 1), true);
+        assert!(
+            host.ends_with("wormhost (hostile, unhurt), writhing, on stone floor."),
+            "{host}"
         );
-        assert_eq!(
-            describe(&view, Pos::new(4, 1), true),
-            "A charnel heap (hostile, unhurt), on stone floor."
+        let heap = describe(&view, Pos::new(4, 1), true);
+        assert!(
+            heap.ends_with("charnel heap (hostile, unhurt), on stone floor."),
+            "{heap}"
         );
     }
 

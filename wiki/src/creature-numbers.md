@@ -160,6 +160,31 @@ creature's level rolls, (2 + level ÷ 8)d6, rounded down. Unseen, a burst is hea
 explosion.
 
 {{#include generated/creature-bursts.md}}
+### Thieves
+
+Some creatures pick your pack as they fight you: the [pixie](creatures.md#creature-pixie), the
+[imp](creatures.md#creature-imp), the [succubus](creatures.md#creature-succubus) and the
+[incubus](creatures.md#creature-incubus) take only what is small (coins, gems, potions, rings, and
+scrolls), the [nymph](creatures.md#creature-nymph) anything. Each time one of their blows
+[hits](combat.md#hitting) you up close and leaves you alive, the chance below decides whether it
+also takes one whole stack of what you carry, picked at random among those it may take. Beside
+you, with its theft ready, a thief that casts spells strikes instead, to rob you. It never
+takes what you wear or wield, and it never robs anyone but you. Then it steals nothing more until
+the time below has passed. It does not run: it fights on, with your things in its pack, and they
+fall where it dies, as anything a creature carries does. The message log names what it took, so
+you know what to look for. Unseen, "Something" snatches it.
+
+{{#include generated/creature-thieves.md}}
+
+### Blinkers
+
+The [blink dog](creatures.md#creature-blink-dog) steps through nothing. When its way to you is
+blocked (a doorway held, a corridor full of its fellows, a door it cannot open) it is suddenly
+beside you, on a free cell next to you within its reach that it can see; then it runs on its
+paws until the time below has passed. It never blinks away. It blinks only to where it sees, so
+a closed door between you is still a door.
+
+{{#include generated/creature-blinks.md}}
 
 ### Spells
 

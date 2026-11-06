@@ -100,6 +100,7 @@ mod aura_tests;
 mod background;
 mod beast_friend;
 mod bleed;
+mod blink;
 mod bond;
 mod boons;
 mod breath;
@@ -232,6 +233,7 @@ mod siphon;
 mod skill_roll;
 mod slip;
 mod smite;
+mod snatch;
 mod song;
 mod spawn;
 mod spell;
@@ -2028,6 +2030,8 @@ mod tame_tests;
 mod temper_tests;
 #[cfg(test)]
 mod tests;
+#[cfg(test)]
+mod theft_tests;
 #[cfg(test)]
 mod time_tests;
 #[cfg(test)]

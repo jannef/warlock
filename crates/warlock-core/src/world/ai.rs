@@ -19,6 +19,7 @@
 //!    and the target stands in the cone's reach with a clear line (`breath.rs`), and fights in
 //!    melee otherwise. Leaving its routine, it remembers where it was (its post).
 //!    An unharmed lurker waits where it stands instead of stepping toward it (`lurk.rs`).
+//!    A blinker whose way to it is blocked blinks to its side (`blink.rs`).
 //! 3. **Search**: with no hostile in sight, it goes to where it last saw one.
 //! 4. **Listen**: failing that, to where it last heard a noise whose source it could not see
 //!    ([`crate::noise`]; what it heard since it last acted, the newest first). Only creatures
@@ -79,6 +80,8 @@ pub(super) enum Plan {
     Breathe(Pos),
     /// Look a hostile in the eye (`gaze.rs`).
     Gaze(ActorId),
+    /// Blink to the side of the hostile on this cell, its path there blocked (`blink.rs`).
+    Blink(Pos),
     /// Cast a spell of its list on someone (`creature_cast.rs`).
     Cast {
         spell: SpellId,
@@ -177,6 +180,7 @@ impl World {
             Plan::Summon => self.creature_summons(id, events),
             Plan::Breathe(at) => self.creature_breathes(id, at, events),
             Plan::Gaze(target) => self.creature_gazes(id, target, events),
+            Plan::Blink(at) => self.creature_blinks(id, at, events),
             Plan::Cast { spell, on } => self.creature_casts(id, (spell, on), events),
             Plan::Step(dir) => self.step_or_wait(id, dir, events).1,
             Plan::Patrol => self.patrol(id, events),
@@ -361,12 +365,18 @@ impl World {
         if self.breathes_at(id, target, at) {
             return Plan::Breathe(at);
         }
+        // A thief beside the player with its theft ready (`snatch.rs`) strikes to steal.
+        if self.snatches_at(id, target) {
+            return attack(AttackKind::Melee);
+        }
         // A caster (`creature_cast.rs`) casts whatever of its list goes from where it stands.
         if let Some((spell, on)) = self.creature_spell(id, target, at) {
             return Plan::Cast { spell, on };
         }
         let close_in = || match self.route_to_shore(id, at, 1) {
             Route::Step(dir) => Plan::Step(dir),
+            // A blinker (`blink.rs`) blinks past what blocks its way.
+            Route::Wait | Route::Unreachable if self.blinks_at(id, at) => Plan::Blink(at),
             Route::There | Route::Wait | Route::Unreachable => Plan::Wait,
         };
         let melee = || {

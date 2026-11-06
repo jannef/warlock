@@ -334,12 +334,32 @@ max = 100
 stacking = "refresh"
 eases = 6
 
+# A thief's cooldown (docs/design/monster-dread.md §5.6, the creatures' `steals`): a degree for
+# every six seconds of its `cooldown`; while it lasts the creature's hits take nothing.
+# Creatures only: no one sees it on them.
+[[status]]
+id = "theft"
+name = "Theft spent"
+max = 100
+stacking = "refresh"
+eases = 6
+
 # An aura's touch spent (the creatures' `[creature.aura]`, `world/aura.rs`): a degree for every six
 # seconds of its `every`; while it lasts the aura touches no one. Creatures only: no one sees it
 # on them.
 [[status]]
 id = "aura"
 name = "Aura spent"
+max = 100
+stacking = "refresh"
+eases = 6
+
+# A blinker's cooldown (docs/design/monster-dread.md §5.6, the creatures' `blinks`): a degree
+# for every six seconds of its `cooldown`; while it lasts the creature walks. Creatures only: no
+# one sees it on them.
+[[status]]
+id = "blink"
+name = "Blink spent"
 max = 100
 stacking = "refresh"
 eases = 6

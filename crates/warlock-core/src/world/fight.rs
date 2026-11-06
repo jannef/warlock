@@ -960,6 +960,8 @@ impl World {
                 self.barbed(attacker, target, kind, events);
                 // A thing cut in two is two things (`split.rs`).
                 self.split(target, blow.kind);
+                // A thief's hit may snatch from the player's pack (`snatch.rs`).
+                self.snatch(attacker, target, kind, events);
             }
         }
         // A familiar's touch is its master's hex (`familiar.rs`), on a hit that leaves it alive.
