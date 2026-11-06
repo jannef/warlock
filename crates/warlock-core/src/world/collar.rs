@@ -43,7 +43,7 @@ impl World {
     /// way named).
     fn collar_wearer(&self, way: Option<Dir>) -> Option<ActorId> {
         (allies_beside(&self.state).into_iter())
-            .filter(|(_, ally)| ally.kept().is_some())
+            .filter(|(_, ally)| ally.kept().is_some() || ally.escorting().is_some())
             .find(|(d, _)| way.is_none_or(|w| w == *d))
             .map(|(_, ally)| ally.id)
     }
@@ -51,8 +51,9 @@ impl World {
     /// The player gives one of the stack at `item` to a kept beast of theirs (the module docs).
     pub(super) fn give_collar(&mut self, item: usize, way: Option<Dir>) -> Spent {
         let player = self.state.player;
+        let takes = |a: &super::Actor| a.kept().is_some() || a.escorting().is_some();
         let Some(known) =
-            (self.allies_of(player).into_iter()).find(|id| self.state.actors[id].kept().is_some())
+            (self.allies_of(player).into_iter()).find(|id| takes(&self.state.actors[id]))
         else {
             self.say("You keep no beast to give it to.");
             return Spent::Nothing;
@@ -66,6 +67,10 @@ impl World {
             }
             return Spent::Nothing;
         };
+        // An escort takes anything it can put on (`escort.rs`).
+        if self.state.actors[&beast].escorting().is_some() {
+            return self.give_escort(item, beast);
+        }
         let name = self.ally_subject(beast);
         let Some(stack) = self.state.player().inventory.get(item).cloned() else {
             self.say("You carry no such thing.");
@@ -78,24 +83,32 @@ impl World {
         if !self.may_loose(item) {
             return Spent::Nothing;
         }
-        // Priced at the load the player has as they begin, as a drop is.
+        let (spent, one) = self.hand_over_one(item, ActionKind::Wear);
+        let what = definite(&self.lore().describe(&one));
+        self.say(format!("You fasten {what} about {name}'s neck."));
+        self.fasten(beast, one, &name);
+        spent
+    }
+
+    /// One of the stack at `item` leaves the player's pack to be handed to an ally, taken off
+    /// first if it was on them; with what that costs, priced as `put_on` (and the taking off) at
+    /// the load the player has as they begin, as a drop is.
+    pub(super) fn hand_over_one(&mut self, item: usize, put_on: ActionKind) -> (Spent, Stack) {
+        let count = self.state.player().inventory[item].count;
         let mut kinds = Vec::new();
-        if stack.count == 1 {
+        if count == 1 {
             kinds = self.take_off_before_dropping(std::iter::once(item));
         }
-        kinds.push(ActionKind::Wear);
+        kinds.push(put_on);
         let spent = self.price_for(&kinds);
-        let one = stack.single();
+        let one = self.state.player().inventory[item].single();
         let inventory = self.state.inventory_mut();
         inventory[item].count -= 1;
         if inventory[item].count == 0 {
             inventory.remove(item);
             (self.player_mut().equipment).after_removal(&Positions::of([item]));
         }
-        let what = definite(&self.lore().describe(&one));
-        self.say(format!("You fasten {what} about {name}'s neck."));
-        self.fasten(beast, one, &name);
-        spent
+        (spent, one)
     }
 
     /// `collar` goes on `beast`'s neck, and what was there falls on its cell.
@@ -131,7 +144,7 @@ impl World {
 }
 
 /// `a jade amulet` as `the jade amulet`.
-fn definite(what: &str) -> String {
+pub(super) fn definite(what: &str) -> String {
     match what.strip_prefix("an ").or_else(|| what.strip_prefix("a ")) {
         Some(rest) => format!("the {rest}"),
         None => what.to_string(),

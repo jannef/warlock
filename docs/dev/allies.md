@@ -335,6 +335,26 @@ it always ends), read by `allies_lapse` and at `fight.rs::creature_dies`'s early
 toward neither `most` nor the cap, nor toward `hostiles_here` (a level's population). The dev
 `actors` layer says `; risen, faction berserk, 9 min`.
 
+## Escorts
+
+An escort quest's character (#1139, `world/escort.rs`, `docs/dev/quests.md`): `AllySource::Escort
+{ quest, faction }` (dump id `escort`), set in place as a charm is (no `make_ally`, no cap):
+`faction_override` the player's (the old one kept), `stance` `CombatStance::Coward`, order
+*Follow*, `until` none. Everything else is the ally core's: it follows, crosses, rides in the
+retinue, pays kills, is healed and displaced. Its differences, each one line in `ally.rs`:
+`ally_plan` gives it only a target beside it (`near(pos, 1)`) whatever its order; `order`'s Set
+on takes the escorts out (`World::escorts_refuse`: "Eadgyth will not go looking for a fight.",
+no time when no one else is left); `pack_phrase` and `companion.rs::ally_subject` name it as
+`called` does. **Give** (`collar.rs`): `collar_wearer` and the "any to give to" check take kept
+beasts or escorts; an escort goes to `World::give_escort` (`escort_slot`: `free_slot`, else the
+first slot it `fits_properly`, its own kind first; `slots_taken` for two hands; what those slots
+held leaves its pack for its cell; priced by `hand_over_one` with the slot's action; refused, no
+time, for what fits no slot or a spirit weapon). The snapshot's `kept_beside` counts escorts
+(the way is asked with two beside), `escort_beside` widens the Give list to `fits_escort`, and
+`Ability::orders`' `kept` is true with an escort. Home (`escorts_home`): `escort_released` puts
+the faction back, the neutral stance, a fresh `Mind` with its post where it stands. Tests:
+`world/escort_tests.rs`.
+
 ## Charmed
 
 Beguile (#1003; the spell types design §7 entry 34; `world/charm.rs`): a `hex` ray or bolt with
