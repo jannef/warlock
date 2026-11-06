@@ -14,6 +14,8 @@ glyph = "h"
 fg = "#c8a070"
 speed = 1100
 faction = "merchants"
+# One of the people: never greater or lesser than their kind.
+grades = false
 alignment = "neutral"
 race = "duergar"
 vision = "darkvision"

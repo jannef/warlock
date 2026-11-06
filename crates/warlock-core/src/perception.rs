@@ -286,6 +286,10 @@ pub struct SeenActor {
     /// `familiar.rs`): its name is in [`PerceptionView::allies`] under its id.
     #[serde(skip)]
     pub companion: bool,
+    /// Its grade (spec §8 "Grades"), which anyone sees: −1 lesser, +1 greater, 0
+    /// neither ([`crate::grade::word`] names it).
+    #[serde(skip)]
+    pub grade: i8,
 }
 
 /// One of the player's allies as they know it (spec §8 "Allies"): never a number.
@@ -985,6 +989,7 @@ impl Perception {
                 unaware: false,
                 ally: a.master() == Some(state.player),
                 companion: a.master() == Some(state.player) && a.kept().is_some(),
+                grade: a.graded(),
             })
             .collect();
         // Stalker's eye: which of them have not noticed the player.

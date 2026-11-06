@@ -6,6 +6,8 @@ glyph = "@"
 fg = "#b9b09c"
 speed = 800
 faction = "peaceful"
+# One of the people: never greater or lesser than their kind.
+grades = false
 alignment = "good"
 race = "human"
 footsteps = 40

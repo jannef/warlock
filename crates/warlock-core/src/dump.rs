@@ -1634,6 +1634,12 @@ fn actor_rows(world: &World) -> Vec<String> {
                 }
                 _ => String::new(),
             };
+            // Its grade (spec §8 "Grades"): `; grade big`.
+            let def = content.creature(a.creature);
+            let court = match crate::grade::word(def, a.graded()) {
+                Some(word) => format!("{court}; grade {word}"),
+                None => court,
+            };
             // Who summoned it (spec §8 "Summoning"), and so whose side it took.
             let court = match a.summoner {
                 Some(by) => format!("{court}; summoned by {by}"),
@@ -1955,6 +1961,10 @@ pub fn json(world: &World, layers: &[Layer], include_state: bool) -> Value {
             if !bands.is_empty() {
                 let bands: Vec<String> = bands.iter().map(ToString::to_string).collect();
                 seen["bands"] = json!(bands);
+            }
+            // Its grade, the word (spec §8 "Grades").
+            if let Some(word) = crate::grade::word(def, a.grade) {
+                seen["grade"] = json!(word);
             }
             // Stalker's eye: it has not noticed the player (never told without the talent).
             if a.unaware {

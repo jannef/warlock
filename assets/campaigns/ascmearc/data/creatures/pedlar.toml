@@ -14,6 +14,8 @@ name = "pedlar"
 glyph = "@"
 fg = "#b88a4a"
 faction = "merchants"
+# One of the people: never greater or lesser than their kind.
+grades = false
 alignment = "neutral"
 race = "human"
 opens_doors = true

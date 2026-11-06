@@ -5,6 +5,8 @@ name = "wandering bard"
 glyph = "@"
 fg = "#d7a8e6"
 faction = "peaceful"
+# One of the people: never greater or lesser than their kind.
+grades = false
 alignment = "good"
 race = "human"
 footsteps = 50

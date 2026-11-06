@@ -115,6 +115,7 @@ melee = 1400
 // shooting cost, the shaman with its own (3 s).
 const CREATURES: &str = r##"
 [[creature]]
+grades = false
 id = "player"
 name = "you"
 glyph = "@"
@@ -123,6 +124,7 @@ weight = 70000
 speed = PLAYER_SPEED
 
 [[creature]]
+grades = false
 id = "walker"
 name = "walker"
 glyph = "w"
@@ -132,6 +134,7 @@ base_hp = 1000
 faction = "wildlife"
 
 [[creature]]
+grades = false
 id = "grunt"
 name = "grunt"
 glyph = "g"
@@ -141,6 +144,7 @@ base_hp = 1000
 faction = "foes"
 
 [[creature]]
+grades = false
 id = "brute"
 name = "brute"
 glyph = "B"
@@ -151,6 +155,7 @@ faction = "foes"
 attack_cost = 2000
 
 [[creature]]
+grades = false
 id = "archer"
 name = "archer"
 glyph = "a"
@@ -162,6 +167,7 @@ combat = "ranged"
 range = 3
 
 [[creature]]
+grades = false
 id = "shaman"
 name = "shaman"
 glyph = "s"
