@@ -1,0 +1,57 @@
+# Campaign-owned (docs/design/campaign.md §3.6): the Ascmearc's own type, which only its files
+# may name.
+#
+# The fifth layer boss of Grundlēas (#1118; spec §7 "The endless branch"): Grundwyrgen (Old
+# English, "the she-wolf of the deep"), the Mere-Wife, who keeps a black mere at the bottom of
+# the fiftieth floor and drags down what comes to it. Once a run (`unique`), in no population:
+# only her mere places her. Her fight is the grip: no breath and no calling, only strength, a
+# hide that turns blades, and claws that seize and hold whoever she strikes.
+[[creature]]
+id = "grundwyrgen"
+level = 51
+xp = 265
+xp_percent = 200
+rarity = "very_rare"
+loot = 100
+unique = true
+name = "Grundwyrgen the Mere-Wife"
+glyph = "h"
+fg = "#5ab0a0"
+speed = 1100
+faction = "layer_keepers"
+tags = ["hag"]
+alignment = "evil"
+vision = "darkvision"
+sight = 12
+opens_doors = true
+footsteps = 110
+hearing = 14
+weight = 180000
+stats = { strength = 38, dexterity = 20, toughness = 38, intelligence = 14, willpower = 30, presence = 20 }
+base_hp = 260
+natural = { defence = 4, protection = 5, name = "ancient hide" }
+resist = { cold = 50, fire = 25, poison = 25 }
+on_eat = { message = "Rank as the bottom of a mere.", vomit = 70, harm = "2d6" }
+blood = "#2a4a3a"
+# Two claws that seize and a bite, each struck in turn in one attack.
+[[creature.attack]]
+damage = "4d8"
+damage_type = "slashing"
+name = "claw"
+verb = "claws"
+to_hit = 10
+on_hit = [{ status = "held", chance = 25, difficulty = 22 }]
+[[creature.attack]]
+damage = "4d8"
+damage_type = "slashing"
+name = "claw"
+verb = "claws"
+to_hit = 10
+on_hit = [{ status = "held", chance = 25, difficulty = 22 }]
+[[creature.attack]]
+damage = "5d8"
+damage_type = "piercing"
+name = "bite"
+verb = "bites"
+to_hit = 12
+threat = 19

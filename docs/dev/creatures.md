@@ -21,6 +21,7 @@ Per-tribe notes:
 - `docs/dev/creatures/outlaws.md`: the outlaws (#424; faction, tag, the four criminals and their uniques, proper names)
 - `docs/dev/creatures/demons.md`: the demons (#449; faction, tags, riders, attack costs)
 - `docs/dev/creatures/trolls.md`: the troll tribe (#456; faction, tag, formulas, attack cost, population)
+- `docs/dev/creatures/layer-bosses.md`: the layer bosses of Grundlēas (#1118; faction, the five bosses and their lairs)
 - `docs/dev/creatures/summoners.md`: the summoners (#520; the `summoner` tag, the three types; the mechanism is `docs/dev/summoning.md`)
 
 ## Overview

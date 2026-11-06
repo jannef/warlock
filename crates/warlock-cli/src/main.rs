@@ -287,6 +287,14 @@ fn gen_command(content: &Content, args: &GenArgs) -> Result<(), String> {
         let to = stairs.to.as_deref().unwrap_or("nowhere");
         println!("stairs {:?} at {} -> {to}", stairs.dir, stairs.pos);
     }
+    // A layer boss's lair hides the way down until the boss dies (spec §7 "The endless branch").
+    for (p, hidden) in &level.hidden {
+        let to = hidden.to.as_deref().unwrap_or("nowhere");
+        println!(
+            "hidden stairs at {p} -> {to} (opens when {} dies)",
+            hidden.id
+        );
+    }
     if let Some(exit) = &level.exit {
         println!("edges -> {} at {}", exit.to, exit.pos);
     }

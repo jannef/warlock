@@ -481,6 +481,7 @@ impl World {
                 luck: Luck::of(&self.state.player().talent_mods(&self.content)),
                 player_level: self.player_level(),
                 uniques: Some(&self.state.progress.uniques),
+                slain: Some(self.state.quests.slain_set()),
             };
             let template = level_template(
                 &self.content,

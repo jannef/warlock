@@ -200,8 +200,10 @@ pub(super) fn validate(level: &LevelTemplate, content: &Content) -> Result<(), I
     {
         return Err(Invalid::Unreachable(p));
     }
-    if let Some(s) = level.stairs.iter().find(|s| !reached[s.pos]) {
-        return Err(Invalid::Unreachable(s.pos));
+    // A lair's hidden way down is as good as stairs (`world/layer_boss.rs`).
+    let ways = (level.stairs.iter().map(|s| s.pos)).chain(level.hidden.keys().copied());
+    if let Some(p) = ways.clone().find(|p| !reached[*p]) {
+        return Err(Invalid::Unreachable(p));
     }
     if !level.locks.is_empty() || !level.secrets.is_empty() {
         let chest = |p: Pos| (terrain.get(p)).is_some_and(|t| content.terrain(*t).is_shut_chest());
@@ -217,8 +219,8 @@ pub(super) fn validate(level: &LevelTemplate, content: &Content) -> Result<(), I
             passable(p) && !level.locks.contains_key(&p) && !level.secrets.contains_key(&p)
         };
         let open = flood(terrain.width(), terrain.height(), up, unlocked);
-        if let Some(s) = level.stairs.iter().find(|s| !open[s.pos]) {
-            return Err(Invalid::LockedAway(s.pos));
+        if let Some(p) = ways.clone().find(|p| !open[*p]) {
+            return Err(Invalid::LockedAway(p));
         }
         let keyless = |lock: &Lock| !level.has_key_for(content, lock, |p| open[p]);
         // A generated chest's lock wants no key: Pick lock, Knock, or a kick open it, and a

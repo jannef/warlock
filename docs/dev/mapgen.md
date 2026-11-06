@@ -199,6 +199,19 @@ secret, `connect::validate`). Grundlēas gets its draws by `stray = 100` over th
 list and names only the rat as a `population`, which every other branch's strays already hold, so
 none of their lists move.
 
+**Layer bosses** (#1118; spec §7 "The endless branch"): `[[dungeon.endless.boss]]` rows resolve to
+`DungeonDef::bosses` (`LayerBoss { depth, creature, vault }`, `boss_at`); `content/layer_boss.rs`
+checks each boss unique and each lair a dungeon vault of the branch's campaign with no `danger`,
+placing its boss once and marking one `>` (`Vault::down`, the one staircase a vault may have:
+`Vault::new` takes it out of the template; `check_lairs` refuses it on any vault no boss row
+names), and pins the lair. `generate_for` reads `Visit::slain` (the run's `Quests::slain`; `None`
+in `gen` and tests: the lair): for a boss not slain, `Needs::vaults` is the lair alone and
+`Needs::down` false, `vault::stamp` lays the `>` as `pal.floor` and records `Canvas::lair`, and the
+template's `hidden` holds it as a `HiddenLocation` (id the boss's type, terrain the stairs, `to`
+the next floor, name the boss's), which `connect::validate` reaches as it does stairs and
+`hide_traps` keeps clear. `world/layer_boss.rs::open_lair` (one line in `fight.rs::creature_dies`)
+turns it into stairs. `warlock-cli gen --level grundleas:10` prints `hidden stairs at ...`.
+
 The Ascmearc's branches (campaign design §7): Cealdhlāw (`cealdhlaw`, #337;
 `campaigns/ascmearc/data/dungeons/cealdhlaw.toml`), six floors of danger 1 to 6, rooms 80×21 on
 1–2 and caves 100×40 on 3–6, 30 creatures a thousand walkable cells (25 on the rooms floors,

@@ -31,3 +31,33 @@ shops = { chance = 0 }
 [dungeon.endless]
 caves = 15
 caves_size = [100, 40]
+
+# The layer bosses (#1118; spec §7 "The endless branch", `world/layer_boss.rs`): every tenth
+# floor is kept by a unique boss of its own in its lair, a vault, and the floor's only way down is
+# in the lair, hidden until the boss dies. Each floor of that depth makes them again until the
+# boss is slain; after that, it is an ordinary floor. Past the last row, a tenth floor is an
+# ordinary floor too.
+[[dungeon.endless.boss]]
+depth = 10
+creature = "gnaegan"
+vault = "gnaegans_midden"
+
+[[dungeon.endless.boss]]
+depth = 20
+creature = "attorcoppe"
+vault = "attorcoppes_web"
+
+[[dungeon.endless.boss]]
+depth = 30
+creature = "hrimwyrm"
+vault = "hrimwyrms_bed"
+
+[[dungeon.endless.boss]]
+depth = 40
+creature = "wealaf"
+vault = "wealafs_hall"
+
+[[dungeon.endless.boss]]
+depth = 50
+creature = "grundwyrgen"
+vault = "grundwyrgens_mere"

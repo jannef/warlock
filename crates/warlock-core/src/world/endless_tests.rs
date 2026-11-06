@@ -57,6 +57,7 @@ fn take(world: &mut World, dir: StairsDir) {
 
 /// [`take`], with `before` run once the player stands on the stairs, ready to go.
 fn take_with(world: &mut World, dir: StairsDir, before: impl FnOnce(&mut World)) {
+    open_lair(world);
     let at = stairs(world, dir).pos;
     let player = world.state.player;
     let here = world.state.current_level.clone();
@@ -82,6 +83,23 @@ fn take_with(world: &mut World, dir: StairsDir, before: impl FnOnce(&mut World))
         "{:?}",
         said(world).last()
     );
+}
+
+/// On a layer boss's floor (`layer_boss.rs`), the boss dies, so the way down opens: these tests
+/// are about the stairs.
+fn open_lair(world: &mut World) {
+    let hidden: Vec<String> = (world.state.current().hidden.values())
+        .map(|h| h.id.clone())
+        .collect();
+    let here = world.state.current_level.clone();
+    let bosses: Vec<ActorId> = (world.state.actors.values())
+        .filter(|a| a.level == here && hidden.contains(&world.content.creature(a.creature).id))
+        .map(|a| a.id)
+        .collect();
+    let (player, now) = (world.state.player, world.state.time);
+    for boss in bosses {
+        world.dies(boss, Some(player), None, now, &mut Vec::new());
+    }
 }
 
 /// The floors of the branch that exist now.

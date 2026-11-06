@@ -134,6 +134,18 @@ Your [allies](allies.md) come with you as anywhere else. Those too far away stay
 last of them; your [companion](allies.md#companions) or [familiar](allies.md#familiars) is never left, wherever it stands.
 A [named creature](creatures.md) on a floor you leave has not met its end, and may turn up again.
 
+#### The keepers of the layers
+
+Every tenth floor of Grundlēas is kept by a [named creature](creatures.md) of its own, in its lair,
+and that floor has no stairs down but one, in the lair, which opens only when the keeper dies, at
+your hand or any other. The stairs up are where they always are, so you may always leave. Leave
+with the keeper alive and the next floor of that depth holds it and its lair again, as often as
+you come; it never follows you up or down the stairs. Once it is dead it never comes back, and
+that depth's floors are ordinary from then on. A tenth floor past the last keeper below is
+ordinary too.
+
+{{#include generated/layer-bosses.md}}
+
 ### Fennmynster
 
 **Fennmynster**, the fen minster, is what is left of a minster that sank into the marsh of

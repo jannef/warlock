@@ -1,0 +1,26 @@
+# Vault of the Ascmearc: the wyrm's bed, the lair of Hrīmwyrm the White, Grundlēas's third layer
+# boss (#1118; spec §7 "The endless branch"). A wide cold hall lit blue by crystals in the rock,
+# black pools of still water along its sides, and the wyrm coiled on a hoard before the way
+# down. Room to breathe in: the hall is long, so its frost reaches far. Grundlēas's boss row for
+# its thirtieth floor names it, so it is stamped there, for certain, until the wyrm is slain, and
+# nowhere else. Its `>` is the floor's only way down: laid as plain floor, it opens when the wyrm
+# dies (`world/layer_boss.rs`).
+name = "The wyrm's bed"
+dungeons = ["grundleas"]
+map = '''
+#########################
+#C~~~~.....C.....~~~~~~C#
+#~~~.......$.$.......~~~#
++.........$.D.$.....>...#
+#~~~.......$.r.......~~~#
+#C~~~~.....C.....~~~~~~C#
+#########################
+'''
+
+[legend]
+"C" = { terrain = "crystal", light = "crystal_blue" }
+# The White on its hoard: it wakes to what it sees or hears.
+"D" = { terrain = "floor", creature = "hrimwyrm" }
+"$" = { terrain = "floor", objects = ["gold_coin*120"] }
+# The hoard's best, rolled when the level is made.
+"r" = { terrain = "floor", loot = "rare" }

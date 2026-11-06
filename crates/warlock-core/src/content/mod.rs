@@ -75,6 +75,7 @@ mod hunger;
 mod intimidate;
 mod item_class;
 mod kit;
+mod layer_boss;
 mod learning;
 mod level;
 mod light;
@@ -215,7 +216,8 @@ pub use dialogue::{
 };
 pub use disease::{DIFFICULTIES, DiseaseDef, DiseaseId, SOURCES, Wading};
 pub use dungeon::{
-    ChestOdds, DungeonDef, Endless, Generator, LevelPlan, RoomOdds, ShopOdds, parse_branch_level,
+    ChestOdds, DungeonDef, Endless, Generator, LayerBoss, LevelPlan, RoomOdds, ShopOdds,
+    parse_branch_level,
 };
 pub use effect::{
     Darken, EffectDef, EffectLight, EffectShape, FILL_GLYPH, MAX_BURST_RADIUS, MAX_DARKEN,
@@ -2664,10 +2666,13 @@ impl Content {
                 }
                 def.campaign = campaign::of_path(path).map(str::to_string);
                 self.pin_vaults(&def)
+                    .and_then(|()| self.pin_lairs(&def))
                     .map_err(|m| ContentError::new(path, format!("dungeon `{}`: {m}", def.id)))?;
                 self.dungeons.insert(def.id.clone(), def);
             }
         }
+        self.check_lairs()
+            .map_err(|m| ContentError::new("data/dungeons.toml", m))?;
         if !self.dungeons.is_empty() {
             crate::mapgen::Palette::resolve(self)
                 .map_err(|m| ContentError::new("data/dungeons.toml", m))?;
@@ -5633,16 +5638,21 @@ mod tests {
                 "wights_niches",
                 "wyrms_bed",
                 // The campaigns' own, after the shared ones.
+                "attorcoppes_web",
                 "barrow_chamber",
                 "captains_hall",
                 "drakes_hoard",
                 "foremans_cabin",
+                "gnaegans_midden",
+                "grundwyrgens_mere",
+                "hrimwyrms_bed",
                 "hunters_statue",
                 "kobolds_cache",
                 "robbers_hoard",
                 "still_room",
                 "sunken_crypt",
-                "unhallowed_chapel"
+                "unhallowed_chapel",
+                "wealafs_hall"
             ]
         );
         let shrine = (content.vaults().iter()).find(|v| v.id() == "shrine");

@@ -1,0 +1,29 @@
+# Vault of the Ascmearc: the unburied hall, the lair of Wēalāf the Unburied, Grundlēas's fourth
+# layer boss (#1118; spec §7 "The endless branch"). A barrow's hall never closed: braziers that
+# have burned since the king was laid here, his dead court standing in rows down the aisle, the
+# king on his throne at the end, grave goods heaped about it, and the way down behind it.
+# Grundlēas's boss row for its fortieth floor names it, so it is stamped there, for certain,
+# until the king is slain, and nowhere else. Its `>` is the floor's only way down: laid as plain
+# floor, it opens when he dies (`world/layer_boss.rs`).
+name = "The unburied hall"
+dungeons = ["grundleas"]
+map = '''
+#########################
+#Ω..z...z...z....$.o.$..#
+#.....................>.#
++...................W...#
+#.....................$.#
+#Ω..z...z...z....$.m.$..#
+#########################
+'''
+
+[legend]
+"Ω" = "brazier"
+# The king on his throne: he wakes to what he sees or hears.
+"W" = { terrain = "floor", creature = "wealaf" }
+# His court: the knights who were laid with him.
+"z" = { terrain = "floor", creature = "grave_knight" }
+"$" = { terrain = "floor", objects = ["gold_coin*200"] }
+# Grave goods, rolled when the level is made.
+"o" = { terrain = "floor", loot = "rare" }
+"m" = { terrain = "floor", loot = "magic" }

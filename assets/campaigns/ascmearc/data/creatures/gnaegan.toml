@@ -1,0 +1,65 @@
+# Campaign-owned (docs/design/campaign.md §3.6): the Ascmearc's own type, which only its files
+# may name.
+#
+# The first layer boss of Grundlēas (#1118; spec §7 "The endless branch"): Gnægan (Old English
+# gnagan, to gnaw), the Rat King, a knot of rats grown together by their tails into one thing
+# the size of a man, that keeps the tenth floor. Once a run (`unique`), in no population: only
+# its lair, Gnægan's midden, places it, on the tenth floor until it is slain. Its fight is the
+# swarm: it squeals up giant rats again and again while its breath lasts, and every one of its
+# many mouths bites in turn, filthy.
+[[creature]]
+id = "gnaegan"
+level = 11
+xp = 65
+xp_percent = 200
+rarity = "very_rare"
+loot = 100
+unique = true
+name = "Gnægan the Rat King"
+glyph = "r"
+fg = "#e0c070"
+speed = 1150
+faction = "layer_keepers"
+tags = ["vermin", "summoner"]
+alignment = "evil"
+vision = "darkvision"
+sight = 10
+footsteps = 40
+hearing = 6
+weight = 60000
+stats = { strength = 14, dexterity = 16, toughness = 16, intelligence = 6, willpower = 14, presence = 8 }
+base_hp = 64
+mana = 60
+skills = { initiative = 30, spot = 30 }
+natural = { defence = 2, protection = 0, name = "hairy hide" }
+resist = { poison = 50 }
+on_eat = { message = "It is rats, many rats, and none of them fresh.", vomit = 90, harm = "1d6" }
+blood = "#7a2a1a"
+# Three of its many mouths, each struck in turn in one attack.
+[[creature.attack]]
+damage = "1d8"
+damage_type = "piercing"
+name = "bite"
+verb = "bites"
+to_hit = 2
+on_hit = [{ disease = "filth_fever", chance = 15 }]
+[[creature.attack]]
+damage = "1d8"
+damage_type = "piercing"
+name = "bite"
+verb = "bites"
+to_hit = 2
+[[creature.attack]]
+damage = "1d8"
+damage_type = "piercing"
+name = "bite"
+verb = "bites"
+to_hit = 2
+# Its brood: two to six giant rats every eighteen seconds, twelve at most at once.
+[creature.summon]
+creatures = ["rat"]
+count = "2d3"
+cooldown = 18
+mana = 5
+most = 12
+verb = "squeals up"

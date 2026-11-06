@@ -73,7 +73,8 @@ impl World {
 }
 
 /// The overworld `level_id` as it is made: the locations revealed before it was are revealed on
-/// it now (called by `instantiate_level`; no other level has hidden locations).
+/// it now (called by `instantiate_level`; a layer boss's lair keeps its hidden stairs under the
+/// boss's id, never revealed this way: `world/layer_boss.rs`).
 pub(super) fn apply_revealed(state: &mut WorldState, level_id: &str) {
     let revealed: Vec<String> = state.revealed.iter().cloned().collect();
     for id in revealed {
