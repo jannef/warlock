@@ -1,0 +1,23 @@
+# Vault: one great sleeper on a heap of coin. The decision: fill a sack in silence, or wake it.
+# The sleeper lies on one of the two cells beside the coin, so the coin is always at its side and
+# the jewel a few quiet steps past it: every step and every pick-up may wake it. Ogres, trolls,
+# and giants, never the floor's own population: the shallowest of them (the marsh troll) is of
+# danger 9, so the room keeps to danger 9 and deeper. A crowd of one: two finds, one magic.
+# Borrows: the dragon on its hoard, without the dragon.
+name = "The Wyrm's Bed"
+danger = { from = 9 }
+map = '''
+###########
+#b.......m#
+#...g$g...#
+#.b.......#
+#####+#####
+'''
+
+[legend]
+# The bed: floor cracked under its weight, a little louder underfoot. One of two cells, so the
+# sleeper moves (two thirds at most).
+"g" = { terrain = "cracked_floor", monsters = { pool = ["ogre", "troll", "giant"], count = 1 }, status = ["asleep"] }
+"$" = { terrain = "cracked_floor", loot = { pool = "money" } }
+"m" = { terrain = "floor", loot = { pool = "jewellery", grade = "magic" } }
+"b" = { terrain = "floor", objects = ["bones"] }

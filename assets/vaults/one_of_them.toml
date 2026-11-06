@@ -1,0 +1,24 @@
+# Vault: a locked treasury off a hall, a crowd in the hall, and the key on one of them. The
+# decision: fight the whole crowd for the key, or pick the lock or kick it in with them at your
+# back.
+# Nothing shows which one carries the copper key; it falls where its bearer does. The hall has
+# the one entrance, so the crowd is behind its door, and the treasury opens only off the hall.
+# Seven of twelve cells, of kobolds, goblins, and orcs: four finds, one magic, one rare.
+name = "One of Them Has It"
+danger = { from = 2 }
+map = '''
+#############
+#g.g.g.g#$.r#
+#.......#...#
+#g.g.g.gL...#
+#.......#...#
+#g.g.g.g#m.$#
+######+######
+'''
+
+[legend]
+"g" = { terrain = "floor", monsters = { pool = ["kobold", "goblin", "orc"], count = 7 }, carry = ["copper_key"] }
+"L" = { terrain = "door_closed", lock = "treasury" }
+"$" = { terrain = "floor", loot = "any" }
+"m" = { terrain = "floor", loot = "magic" }
+"r" = { terrain = "floor", loot = "rare" }

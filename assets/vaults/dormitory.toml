@@ -1,0 +1,25 @@
+# Vault: a tribe asleep in rows behind a tripwire. The decision: disarm the wire and creep past
+# them to the finds, or spring it and fight the whole room awake.
+# The stealth vault. The wire is known and lies in the one-wide way in, so it is disarmed,
+# sprung, or the room is left; past it every step is beside a sleeper. The bell wakes the room
+# and the floor with it. Eight of twelve cells, one tribe (goblins shallow, hobgoblins deeper).
+# Borrows: the sleeping barracks of every heist story.
+name = "The Dormitory"
+danger = { from = 2 }
+map = '''
+#############
+#$.g.g.g.g.r#
+#...........#
+#m.g.g.g.g.$#
+#...........#
+#..g.g.g.g..#
+######^######
+######+######
+'''
+
+[legend]
+"g" = { terrain = "floor", monsters = { pool = "goblin", count = 8 }, status = ["asleep"] }
+"^" = { terrain = "floor", trap = "alarm", known = true }
+"$" = { terrain = "floor", loot = "any" }
+"m" = { terrain = "floor", loot = "magic" }
+"r" = { terrain = "floor", loot = "rare" }

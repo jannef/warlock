@@ -5471,7 +5471,9 @@ mod tests {
             [
                 "burnt_steading",
                 "catacomb",
+                "dormitory",
                 "drowned_mill",
+                "drunken_hall",
                 "fairy_ring",
                 "flooded_cell",
                 "gauntlet",
@@ -5480,6 +5482,7 @@ mod tests {
                 "hoar_stone",
                 "kennels",
                 "old_battle",
+                "one_of_them",
                 "ossuary",
                 "reeves_strongroom",
                 "ruined_chapel",
@@ -5488,7 +5491,9 @@ mod tests {
                 "shrine",
                 "spiteful_coffer",
                 "stone_circle",
+                "watchmen",
                 "wights_niches",
+                "wyrms_bed",
                 // The campaigns' own, after the shared ones.
                 "barrow_chamber",
                 "captains_hall",

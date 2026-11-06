@@ -127,10 +127,18 @@ row order too. Tests: `content/vault_turn_tests.rs` (a quarter turn against the 
 hand; every turn of every vault passes `Vault::new` again), `mapgen/vault_turn_tests.rs` (Flooded
 cell and Guard post on real floors, pinned vaults, the draw), `ruins_are_outdoor_vaults_stamped_some_way_round`,
 and `mapgen/vault_stamp_tests.rs` (#1072): every shared dungeon vault stamps at least once in 100
-seeds of a rooms branch (Bānfeld) and a cave branch (Wulfeshol), some way round, with its
-entrances reached from the up stairs (secret doors count as passable), its known traps known
-(a chest's too: the Spiteful Coffer's fireball), and the Sealed Barrow's lead key inside it. A
-new shared vault joins the test by being in `assets/vaults/`. Test fixtures at peace
+seeds of a rooms branch (Bānfeld) and a cave branch (Wulfeshol), dangers 6 to 9, some way round
+(a vault whose `danger` leaves out any of those: on Grundlēas's rooms floors and Fyrdelf's caves
+of dangers 9 to 16 instead, #1077), with its entrances reached from the up stairs (secret doors
+count as passable), its known traps known (a chest's too: the Spiteful Coffer's fireball), every
+draw of a pool with the pool's `status` and `route` (the route walkable and looping), every
+locked door with a key that opens it lying or carried inside the vault, reached from an entrance
+without passing a lock (the Sealed Barrow's lead key, One of Them Has It's copper key on one of
+the crowd, the Guard post's brass key), every pool's `carry` opening a lock of its vault, and a
+vault with patrols seen walking them more than one way (they turn with it). The terrain alone
+finds a stamp, so a vault that is a plain room in a plain shape gives itself a terrain of its own
+(the Wyrm's Bed's cracked floor), or an ordinary room passes for it. A new shared vault joins the
+test by being in `assets/vaults/`. Test fixtures at peace
 (`world/fixture_factions.rs::make_peace`) leave the shared vaults out: a tag pool holds only
 types hostile to the player.
 
