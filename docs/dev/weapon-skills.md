@@ -4,7 +4,8 @@ Developer notes for working on this part of Warlock (moved from CLAUDE.md, #185)
 rules it implements are in spec/08i-character.md. Keep it current with the code, as CLAUDE.md says.
 
 Weapon skills (spec §8 "Weapon skills"; M22, #134): data is `data/weapon_skills.toml`
-(`content/weapon_skill.rs`: `WeaponSkillTable` with `MarkRules`, named need curves, skills
+(`content/weapon_skill.rs`: `WeaponSkillTable` with `MarkRules` (the scale clamped at
+`MOST_PERCENT`, 100: a strong opponent never speeds training, #1095), named need curves, skills
 (`WeaponSkillDef`: `id`, `name`, `phrase`, `Role`, curve, `[Benefit; 11]` per rank) and the
 symmetric defaults; `SkillId` is an index in file order, in the content fingerprint). Weapons
 name theirs (`category` → `ObjectDef::skill`, its role checked against what the weapon is),

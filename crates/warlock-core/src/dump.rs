@@ -2555,20 +2555,20 @@ mod tests {
         let actors = layer_rows(&world, Layer::Actors);
         assert!(
             actors[0].contains(
-                "; weapon skills daggers 2 (0/60), thrown 1 (0/20), duelist 1 (0/30); stats"
+                "; weapon skills daggers 2 (0/190), thrown 1 (0/30), duelist 1 (0/45); stats"
             ),
             "{}",
             actors[0]
         );
         let kobold = actors.iter().find(|a| a.contains(" kobold at "));
-        assert!(kobold.is_some_and(|k| k.contains("weapon skills spears 1 (0/30)")));
+        assert!(kobold.is_some_and(|k| k.contains("weapon skills spears 1 (0/45)")));
         // Marks show as a share of the next rank.
         let content = world.content().clone();
         let table = content.weapon_skills();
         let daggers = table.id("daggers").expect("daggers");
         let mut state = world.state().clone();
         let me = state.actors.get_mut(&world.player_id()).expect("player");
-        me.weapon_skills.train(table, daggers, 24);
+        me.weapon_skills.train(table, daggers, 76);
         world = World::from_state(content.clone(), state).expect("valid");
         assert_eq!(
             layer_rows(&world, Layer::WeaponSkills)[0],

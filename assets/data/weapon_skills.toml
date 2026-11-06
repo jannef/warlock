@@ -8,21 +8,26 @@
 # here are rules and never shown in the game.
 #
 # Marks (ADOM-like): every use of a skill earns `attempt` marks (an attack, hit or miss), a
-# success `hit` more (a hit; for shield blocking, a blow the shield blocked), scaled by
-# 100 + per_level x (the opponent's level - the rank) percent, kept within 0 and `most`, and
+# success `hit` more (a hit), scaled by
+# 100 + per_level x (the opponent's level - the rank) percent, kept within 0 and 100, and
 # rounded to the nearest mark (halves up): fewer against weak opponents and as the rank rises,
-# more against strong ones. A rank is gained when the marks reach what its curve asks for the
+# never more than the full marks against strong ones (#1095). A rank is gained when the marks reach what its curve asks for the
 # next rank; the marks left over count toward the one after.
 [marks]
 attempt = 1
 hit = 2
 per_level = 20
-most = 200
 
-# The marks each rank asks for, ranks 1 to 10: exponential. Missile weapons train a bit quicker.
+# The marks each rank asks for, ranks 1 to 10 (#1095): the weapons' curves steepen sharply from
+# rank 7, so that for a fighter who fights the monsters of their level rank 6 comes about level
+# 10, rank 8 about 25, and rank 10 about 45 (docs/balance.md "Weapon pace"). Missile weapons ask
+# two thirds of the melee marks. The schools of magic and the caster styles, trained by far fewer
+# casts than blows, keep a gentle curve, doubling to rank 7 and flatter after it, so that the
+# 100 % cap leaves rank 10 within a long career (docs/balance.md "School pace").
 [curves]
-melee = [15, 30, 60, 120, 240, 480, 960, 1920, 3840, 7680]
-missile = [10, 20, 40, 80, 160, 320, 640, 1280, 2560, 5120]
+melee = [15, 45, 190, 500, 1750, 4000, 17500, 38000, 68000, 88000]
+missile = [10, 30, 125, 330, 1170, 2670, 11700, 25300, 45300, 58700]
+school = [10, 20, 40, 80, 160, 320, 640, 1200, 2000, 3000]
 
 # Fighting with a weapon in each hand (two-weapon fighting; the off hand holds only a light
 # weapon, `light_weapon` in objects.toml): both hands strike every melee attack, the main hand
@@ -272,7 +277,7 @@ name = "Evocation"
 phrase = "at evocation"
 role = "school"
 school = "evocation"
-curve = "missile"
+curve = "school"
 to_hit = [0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 6]
 threat = [0, 0, 0, 0, 1, 1, 1, 2, 2, 2, 3]
 reroll = [0, 0, 0, 1, 1, 1, 1, 1, 2, 2, 2]
@@ -286,7 +291,7 @@ name = "Necromancy"
 phrase = "at necromancy"
 role = "school"
 school = "necromancy"
-curve = "missile"
+curve = "school"
 to_hit = [0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 6]
 threat = [0, 0, 0, 0, 1, 1, 1, 2, 2, 2, 3]
 bonus = [0, 0, 1, 1, 1, 2, 2, 2, 3, 3, 4]
@@ -301,7 +306,7 @@ name = "Abjuration"
 phrase = "at abjuration"
 role = "school"
 school = "abjuration"
-curve = "missile"
+curve = "school"
 to_hit = [0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 6]
 threat = [0, 0, 0, 0, 1, 1, 1, 2, 2, 2, 3]
 degrees = [0, 0, 1, 1, 1, 2, 2, 2, 3, 3, 3]
@@ -314,7 +319,7 @@ name = "Restoration"
 phrase = "at restoration"
 role = "school"
 school = "restoration"
-curve = "missile"
+curve = "school"
 to_hit = [0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 6]
 threat = [0, 0, 0, 0, 1, 1, 1, 2, 2, 2, 3]
 bonus = [0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3]
@@ -330,7 +335,7 @@ name = "Transmutation"
 phrase = "at transmutation"
 role = "school"
 school = "transmutation"
-curve = "missile"
+curve = "school"
 to_hit = [0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 6]
 threat = [0, 0, 0, 0, 1, 1, 1, 2, 2, 2, 3]
 degrees = [0, 0, 1, 1, 1, 2, 2, 2, 3, 3, 3]
@@ -344,7 +349,7 @@ name = "Enchantment"
 phrase = "at enchantment"
 role = "school"
 school = "enchantment"
-curve = "missile"
+curve = "school"
 to_hit = [0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 6]
 threat = [0, 0, 0, 0, 1, 1, 1, 2, 2, 2, 3]
 degrees = [0, 0, 1, 1, 1, 2, 2, 2, 3, 3, 3]
@@ -357,7 +362,7 @@ name = "Divination"
 phrase = "at divination"
 role = "school"
 school = "divination"
-curve = "missile"
+curve = "school"
 to_hit = [0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 6]
 threat = [0, 0, 0, 0, 1, 1, 1, 2, 2, 2, 3]
 mana = [0, 0, 5, 10, 10, 15, 20, 20, 25, 30, 40]
@@ -530,7 +535,7 @@ name = "Sniper"
 phrase = "at casting from afar"
 role = "style"
 grip = "ranged_spell"
-curve = "missile"
+curve = "school"
 to_hit = [0, 1, 1, 1, 2, 2, 2, 3, 3, 4, 4]
 far_to_hit = [0, 0, 1, 1, 1, 2, 2, 2, 3, 3, 3]
 far_threat = [0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2]
@@ -542,7 +547,7 @@ name = "Toucher"
 phrase = "at casting up close"
 role = "style"
 grip = "touch_spell"
-curve = "missile"
+curve = "school"
 to_hit = [0, 1, 1, 2, 2, 2, 3, 3, 4, 4, 5]
 threat = [0, 0, 0, 0, 0, 1, 1, 1, 1, 2, 2]
 crit = [0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 2]
@@ -554,7 +559,7 @@ name = "Battle caster"
 phrase = "at casting in armour"
 role = "style"
 grip = "armoured_spell"
-curve = "missile"
+curve = "school"
 to_hit = [0, 0, 1, 1, 1, 2, 2, 2, 3, 3, 4]
 armour = [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50]
 
