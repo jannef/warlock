@@ -3,61 +3,62 @@ source: crates/warlock-core/src/mapgen/cealdhlaw_tests.rs
 expression: "describe_in(&CONTENT, &level(1, 1))"
 ---
 Cealdhlāw 1 (cealdhlaw:1) 80x21
-stairs Up at (30, 5) -> ascmearc
-stairs Down at (53, 16) -> cealdhlaw:2
-skeletal_rat at (62, 11) route W E W E W E W E W E W E
-skeletal_rat at (68, 7) route W E W E W E W E W E W E W E W E W E W E
-bat at (65, 7) route W E W E W E W E
-grave_worm at (74, 7) route W E W E W E W E W E W E W E W E W E
-crawling_hand at (74, 11) route W E W E W E W E W E W E W E W E
-grave_worm at (71, 11) route W E W E W E W E
-rat at (12, 14) route E E W W W S S S S E W N N N N E E E W W
-beetle at (28, 14) route N S S N N S S N N S
-grave_worm at (30, 15) route E N N E E E S S W E W E N N W W W S S W
-crawling_hand at (35, 14) route S W W W W E E W W E E E E N
-goblin at (19, 3) route W W W W E E E W W W E E E W W W E E E E carrying a club (wielded)
-skeletal_rat at (9, 15) route N E E E E E S S S S N N N N W W W W W S
-crawling_hand at (8, 4) route E W W N E E S N W W S E E W
-rat at (38, 4) route S S S S N N N N
-skeletal_rat at (32, 15) route E E E W W W E E E W W W
-grave_worm at (8, 9) route N N N S S S N N N S S S
-crawling_hand at (22, 7) route N N N N E E S N W W S S S S
-crawling_hand at (13, 15) route W N E E S N W W S E
-rat at (8, 7) route S N N S S S S S S N N N N N N S S N
-crawling_hand at (7, 16) route E E E E E E E E W W W W W W W W
-bat at (18, 16) route E S N N N S S S S N N N N S S S N W
-crawling_hand at (20, 6) route S W W W W E W E E E E N
-rat at (17, 5) route E E E E E E E W W W W W W W
-bat at (18, 18) route W W W W W W W E E E E E E E
-crawling_hand at (18, 6) route S W W N N W E S S E E N
-grave_worm at (16, 18) route N N N N S S S S
-rat at (13, 17) route E E E E E E S N W W W W W W
-skeletal_rat at (31, 13) route E E E S N W W W
-bat at (43, 14) route W W E E E E E W W W W W E E
-grave_worm at (27, 14) route E E W W N E E E W W W S E E W W
-grave_worm at (8, 10) route S S N N N S S S N N
-pit trap at (7, 2)
-pit trap at (15, 14)
-arrow trap at (32, 6)
-pit trap at (36, 7)
+stairs Up at (43, 17) -> ascmearc
+stairs Down at (63, 2) -> cealdhlaw:2
+skeletal_rat at (5, 12) route S S N N N N S S S S N N
+skeletal_rat at (5, 8) route S S N N N N S S S S N N N N S S S S N N
+bat at (5, 7) route S N N S N S S N
+grave_worm at (5, 13) route S N N N N N N N N S S S S S S S S N
+rat at (58, 10) route N E W W W S S S S E W N N N N E E E W S
+beetle at (69, 10) route N S S S N S N N N S
+grave_worm at (65, 12) route E N N N E E E E E S N W W W W W S S S W
+crawling_hand at (25, 11) route E W W W E E E W W W E E E W
+goblin at (16, 4) route W W W W E E E W W W E E E W W W E E E E carrying a club (wielded)
+skeletal_rat at (69, 11) route N N E E S S S S W W E E N N N N W W S S
+crawling_hand at (30, 4) route E E E E E E E W W W W W W W
+rat at (17, 5) route E E W W E E W W
+skeletal_rat at (70, 12) route E S W W W W E E E E N W
+grave_worm at (30, 8) route N N N N E E W W S S S S
+crawling_hand at (31, 7) route N N N E E E S N W W W S S S
+crawling_hand at (56, 12) route N N N E E W W S S S
+rat at (37, 6) route S W W W W W W W W E E E E E E E E N
+crawling_hand at (56, 13) route E E E E E E E E W W W W W W W W
+bat at (3, 14) route N S N S N S N S N S N S N S N S N S
+crawling_hand at (29, 6) route S S S S W E W E N N N N
+rat at (24, 5) route E E W W W W N S E E E E W W
+bat at (18, 11) route S S S N N N N S S S S N N N
+crawling_hand at (3, 6) route S N N N E W E W S S S N
+grave_worm at (56, 11) route N N E E W W S S
+rat at (57, 11) route E E E E E E E W W W W W W W
+skeletal_rat at (31, 10) route E N N N S S S W
+bat at (67, 11) route S S E E E E W E W W W W N N
+grave_worm at (9, 17) route E E W W E E E E W W W W E E W W
+grave_worm at (40, 9) route W W W W W E E E E E
+pit trap at (3, 8)
+arrow trap at (3, 9)
+arrow trap at (3, 12)
+arrow trap at (3, 15)
+arrow trap at (34, 6)
+pit trap at (54, 11)
+pit trap at (59, 2)
 0 placed lights
 
-     ######
-     #.^..### ##################
-     #....'.###....g..........¡#   ######
-     #¡.z.#...+................#   #..r¡#
-     ###S######..r............<#####....#
-       #.#    #...z.z..........+^..'....#                  #################
-       #r#    #¡[.....z........#####^...#                  ##[.#}b#?r#*.#[w#
-       #.#    ##############+###   #....#           #########+##+##+##+##+###
-       #w#                 #.#     ##+###           #......+.......".......+#
-       #w#                 #.#      #.#             #.#######+##+##+##+##+###
-       #.#                 #.#      #.#        ######'##   ##[r#).#*.#"w#[z#
-       #.#                ##'########.#        #.......#   #################
-      ##&############     #....r...¡#.##########.......#
-      #.....r..^....#     #wa......zS......b...........#
-      #..r...z......#     #¡..w.r)..############.......#
-      #z..........b.#     ###########          #.....>.#
-      #......r......#                          #########
-      #.........w.b.#
-      ###############
+                                                       ##########
+           ###########                               ###¡..^...>#
+  ######   #¡........###   ###############           #.+........#
+  #.)}!#   #....g....'.#####¡.z..........#           #.#.......¡#
+  #.#+##   #.....r..¡#..r..+.............#           #.####.#####
+  #z#.##   ########+########.z....^..r...#           #.#  #.#
+  #.#b##          #.#      #...z.........#           #.#  #.#
+  #^#r##          #.#    ###..w..........###    ######.####S#############
+  #^#.##         ##+###  #.+............w+.#    #...##.#................#
+  #.#.##         #...¡####.#...r........¡#.#    #...##.#..r..........a..#
+  #.#.##         #b...'..z.###############.#    #...'.^+wr.........b.r..#
+  #^#r##         #....######             #.######?..####z........w....r.#
+  #.#w##         #....#                  #......+...#  #z...............#
+  #b#.##         #....#                  ##.#####...#  ##################
+  #^#+##  #####  #¡...#                  #...#  #..¡#
+  #....####..¡#####S###                  #...#  #####
+  ###+###w....+.....#                    #.<.#
+    #.[...#...#######                    #¡..#
+    ###########                          #####

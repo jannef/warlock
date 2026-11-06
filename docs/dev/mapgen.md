@@ -129,11 +129,19 @@ cell and Guard post on real floors, pinned vaults, the draw), `ruins_are_outdoor
 and `mapgen/vault_stamp_tests.rs` (#1072): every shared dungeon vault stamps at least once in 300
 seeds of a rooms branch (Bānfeld) and a cave branch (Wulfeshol), some way round, only on a floor
 whose danger its `danger` holds (both branches run 6 to 9, so a vault of danger 8 and deeper
-meets their two bottom floors), with its
-entrances reached from the up stairs (secret doors count as passable), its known traps known
-(a chest's too: the Spiteful Coffer's fireball; the Reliquary's lightning rune with its find on
-it), the Sealed Barrow's lead key inside it, and the Delving's pick-axe. A
-new shared vault joins the test by being in `assets/vaults/`. Its
+meets only their bottom floors); a vault whose `danger` leaves out any of 6 to 9 is also looked
+for, in 100 seeds, on Grundlēas's rooms floors and Fyrdelf's caves of dangers 9 to 16 (#1077).
+Each stamp has its entrances reached from the up stairs (secret doors count as passable), its
+known traps known (a chest's too: the Spiteful Coffer's fireball), the Reliquary's lightning rune
+with its find on it, the Delving's pick-axe, every draw of a pool with the pool's `status` and
+`route` (the route walkable and looping), every locked door with a key that opens it lying or
+carried inside the vault, reached from an entrance without passing a lock (the Sealed Barrow's
+lead key, One of Them Has It's copper key on one of the crowd, the Guard post's brass key), and
+every pool's `carry` opening a lock of its vault; a vault with patrols is seen walking them more
+than one way (they turn with it). A stamp is found by the vault's terrain and its placed piles
+(`piles_hold`: the Wyrm's Bed, a plain room in a plain shape, is told from an ordinary room by
+its bones); a symmetric map matches more than one way round, and a stamp passes if any matching
+turn holds. A new shared vault joins the test by being in `assets/vaults/`. Its
 `old_enemies_halls_are_hostile_both_ways` checks the catalogue's open point for Old Enemies
 (#1074): every type the `demon` pool may draw and every type of the `devil` pool are hostile
 both ways, since a faction's `hostile` list binds both sides, so no `demon` line on `devil` is

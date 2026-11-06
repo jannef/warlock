@@ -756,13 +756,23 @@ fn vaults_are_stamped_whole_some_way_round_with_their_lights_and_creatures() {
         .filter(|v| v.campaign.is_none())
         .collect();
     let mut seen = vec![0; vaults.len()];
-    for seed in 0..30 {
+    for seed in 0..60 {
         for depth in 1..=8 {
             let level = level(seed, depth);
             for (i, vault) in vaults.iter().enumerate() {
                 for turn in crate::content::Turn::ALL {
                     let turned = vault.turned(turn);
-                    for at in stamped_at(&level, &turned) {
+                    // Its piles too: a plain room in a plain shape (the Wyrm's Bed) is told from
+                    // an ordinary room by its bones.
+                    let piles_hold = |at: &Pos| {
+                        (turned.template.objects.iter()).all(|(p, pile)| {
+                            let here = level.objects.get(&Pos::new(at.x + p.x, at.y + p.y));
+                            here.is_some_and(|h| {
+                                pile.iter().all(|s| h.iter().any(|t| t.object == s.object))
+                            })
+                        })
+                    };
+                    for at in stamped_at(&level, &turned).into_iter().filter(piles_hold) {
                         seen[i] += 1;
                         let shift = |p: Pos| Pos::new(at.x + p.x, at.y + p.y);
                         for (p, light) in &turned.template.lights {
@@ -798,7 +808,8 @@ fn vaults_are_stamped_whole_some_way_round_with_their_lights_and_creatures() {
         }
     }
     // Dungeons get every dungeon vault and never the ruins meant for the overworld's local areas,
-    // nor the vaults a branch level names (stamped only there).
+    // nor the vaults a branch level names (stamped only there), nor one whose `danger` the Depths'
+    // (none: 0) is outside of.
     for (vault, count) in vaults.iter().zip(&seen) {
         if vault.pinned {
             assert_eq!(*count, 0, "vault `{}` stamped where not named", vault.id());
@@ -928,6 +939,7 @@ fn random_vaults_are_spaced_by_phase() {
             assert!(floor.iter().all(|v| !seen.contains(v)), "seed {seed}");
             seen.extend(floor);
         }
+        // Of those the deal makes, the ones the Depths' danger (none: 0) suits.
         let all = (CONTENT.vaults().iter())
             .filter(|v| v.stamps_on(def, 1) && !v.pinned && v.suits(0))
             .count();

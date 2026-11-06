@@ -1,0 +1,11 @@
+# One of Them Has It's treasury (vaults/one_of_them.toml); one of the crowd before it carries it.
+[[object]]
+id = "copper_key"
+name = "copper key"
+glyph = "("
+fg = "#b87333"
+class = "tools"
+materials = ["copper"]
+weight = 40
+value = 0
+key = "treasury"

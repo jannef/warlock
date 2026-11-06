@@ -1,0 +1,24 @@
+# Vault: a yard round a strong-house, a watch pacing each long side. The decision: time the gaps
+# and slip round to its door, or take on one watch at a time.
+# Each watch walks out along its side and back. The way into the yard and the strong-house's door
+# are at opposite ends, so one side must be crossed whole, between a watch's passes or through
+# it. Two orcs to a watch, on two of three cells: three finds, one magic.
+# Borrows: the guard patrols of the stealth games, which are all about the gap.
+name = "The Watchmen"
+danger = { from = 3 }
+map = '''
+###################
+#a.a.a............#
+#.###############.#
++.#m......$......#.#
+#.#$.............+.#
+#.###############.#
+#b.b.b............#
+###################
+'''
+
+[legend]
+"a" = { terrain = "floor", monsters = { pool = "orc", count = 2 }, route = "E12 W12" }
+"b" = { terrain = "floor", monsters = { pool = "orc", count = 2 }, route = "E12 W12" }
+"m" = { terrain = "floor", loot = "magic" }
+"$" = { terrain = "floor", loot = { pool = "money" } }
