@@ -103,6 +103,8 @@ the `daggers` skill, which is what a knife is to `Content::is_knife` (a dagger a
 with no `kind` or `frequency`, are never in loot or shops; `Content::ammunition`'s lowest id keeps
 `arrow` and `bolt` the names of their kinds.
 
+Whittle (#1028) works the same `Stack::worked` state as Temper, on a weapon, launcher, shield, or armour whose main part is of a material of `group = "wood"` (`world/temper.rs`).
+
 **Materials and variants** (spec §7 "Materials", #193, #194). `content/material.rs`:
 `MaterialDef` gains `group`, `color`, `weight` (percent of steel's), `to_hit` and `damage`
 (`MaterialDef::weapon`: `None` when neither is given, it cannot be a weapon's working part),

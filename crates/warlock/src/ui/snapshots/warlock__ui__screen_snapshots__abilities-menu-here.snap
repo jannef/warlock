@@ -4,7 +4,6 @@ expression: "render(case, content.clone())"
 ---
  A faint glow rises from an altar ahead.
  An old altar stands here, its god long forgotten.
-
                     ┌─ Abilities ──────────────────────────────────────────────┐
                     │                                                          │
                     │ Birth sign                                               │
@@ -18,16 +17,17 @@ expression: "render(case, content.clone())"
                     │   e  Heal               nothing to treat                 │
                     │   f  Knowledge          not usable yet                   │
                     │   g  Fletch             you have no knife                │
+                    │   h  Whittle            you have no knife                │
                     │ Weapon skills                                            │
-                    │   h  Shield bash        you hold no shield               │
+                    │   i  Shield bash        you hold no shield               │
                     │ Here                                                     │
-                    │   i  Pray                                                │
+                    │   j  Pray                                                │
                     │                                                          │
                     │ The basilisk's stare: a foe nearby that sees you slows   │
                     │ to a crawl a moment; your eyes then rest two hours.      │
                     │                                                          │
                     │                                                          │
-                    │ a-i or Enter use   Esc close                             │
+                    │ a-j or Enter use   Esc close                             │
                     └──────────────────────────────────────────────────────────┘
 
 

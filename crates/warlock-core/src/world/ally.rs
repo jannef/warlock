@@ -52,8 +52,8 @@ use super::{Actor, ActorId, Mind, Spent, World, WorldState, stance_between};
 use crate::action::{Command, Event};
 use crate::combat::Profile;
 use crate::content::{
-    ActionKind, Content, CreatureId, CreatureSpawn, LevelKind, SpellId, Stance, and_list, counted,
-    the_start,
+    ActionKind, Content, CreatureId, CreatureSpawn, FactionId, LevelKind, SpellId, Stance,
+    and_list, counted, the_start,
 };
 use crate::geom::Pos;
 use crate::noise::Act;
@@ -99,6 +99,13 @@ pub enum AllySource {
     Companion(CompanionData),
     /// A familiar of the master's (the witch's, #929; `familiar.rs`): its name and grade.
     Familiar(CompanionData),
+    /// Charmed by a spell (Beguile, #1003; `charm.rs`): the spell, and the `faction_override` it
+    /// had, put back when the charm ends.
+    Charmed {
+        spell: SpellId,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        faction: Option<FactionId>,
+    },
 }
 
 impl AllySource {
@@ -108,6 +115,7 @@ impl AllySource {
             AllySource::Summoned { .. } => "summoned",
             AllySource::Companion(_) => "companion",
             AllySource::Familiar(_) => "familiar",
+            AllySource::Charmed { .. } => "charmed",
         }
     }
 
@@ -121,14 +129,14 @@ impl AllySource {
     pub const fn data(&self) -> Option<&CompanionData> {
         match self {
             AllySource::Companion(data) | AllySource::Familiar(data) => Some(data),
-            AllySource::Summoned { .. } => None,
+            AllySource::Summoned { .. } | AllySource::Charmed { .. } => None,
         }
     }
 
     pub(super) const fn data_mut(&mut self) -> Option<&mut CompanionData> {
         match self {
             AllySource::Companion(data) | AllySource::Familiar(data) => Some(data),
-            AllySource::Summoned { .. } => None,
+            AllySource::Summoned { .. } | AllySource::Charmed { .. } => None,
         }
     }
 }
@@ -543,8 +551,19 @@ impl World {
         // Those who come: the retinue, and the allies beside the player as they left.
         let mut coming: Vec<ActorId> = Vec::new();
         let mut left: Vec<ActorId> = Vec::new();
+        let mut charmed: Vec<ActorId> = Vec::new();
         for a in self.state.actors.values() {
             if a.master() != Some(player) {
+                continue;
+            }
+            if matches!(
+                a.ally.as_ref().map(|x| &x.source),
+                Some(AllySource::Charmed { .. })
+            ) {
+                // A charm never crosses: it ends as the player leaves (`charm.rs`).
+                if a.level == from {
+                    charmed.push(a.id);
+                }
                 continue;
             }
             if a.in_retinue() {
@@ -558,6 +577,9 @@ impl World {
                     left.push(a.id);
                 }
             }
+        }
+        for id in charmed {
+            self.charm_ends(id, false);
         }
         // Left behind, and seen: said before the arrival's own lines.
         let seen: Vec<ActorId> = (left.iter().copied())
@@ -638,9 +660,17 @@ impl World {
         }
     }
 
-    /// Ally `id` departs (its time is up): [`World::departs`].
+    /// Ally `id` departs (its time is up): [`World::departs`]; a charmed one is itself again
+    /// where it stands instead (`charm.rs`).
     pub(super) fn ally_departs(&mut self, id: ActorId, events: &mut Vec<Event>) {
-        self.departs(id, events);
+        let charmed = (self.state.actors.get(&id))
+            .and_then(|a| a.ally.as_ref())
+            .is_some_and(|a| matches!(a.source, AllySource::Charmed { .. }));
+        if charmed {
+            self.charm_ends(id, true);
+        } else {
+            self.departs(id, events);
+        }
     }
 
     /// Creature `id` departs: removed from the world with nothing left behind (no corpse, no

@@ -1,0 +1,23 @@
+# Acid arrow (the spell types design §7 entry 5): the first acid spell, a dart that keeps eating
+# what it strikes (the acid type's Corroded); a scroll's only.
+[[spell]]
+id = "acid_arrow"
+name = "Acid arrow"
+description = "A dart of acid toward a place you aim at: it strikes the first creature in its way, if it hits, and keeps eating."
+level = 5
+school = "evocation"
+kind = "damage"
+shape = "bolt"
+resolution = "attack"
+damage_type = "acid"
+range = 8
+damage = "1d6"
+
+[spell.cast]
+effect = "acid_arrow"
+noun = "acid arrow"
+noise = { sound = "chanting", loudness = 30 }
+
+[spell.grows]
+damage = "intelligence 13 2d6, 16 3d6, 25 3d6+2"
+range = "willpower 14 9, 18 10"

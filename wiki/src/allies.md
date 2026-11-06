@@ -82,6 +82,23 @@ as killing any of its kind.
 
 {{#include generated/rise-spells.md}}
 
+### The charmed
+
+[Beguile](magic.md#spell-beguile) is cast at a hostile creature you see: there is no check and no
+limit by level, and it takes. "The ogre takes you for a friend." From then it is your ally, by
+every rule above: it follows you, takes your [orders](#orders), pays you for its kills as any
+ally does, and its own band turns on it. When the charm's minutes are up it is itself again,
+hostile, wherever it stands ("The ogre shakes off the charm."). It never follows you to another
+level: the moment you leave, the charm ends, and it stays behind as it was. It keeps its gear, and
+when it dies it leaves its corpse and what it carried, as any of its kind.
+
+It never takes on a unique creature or anyone with a name and a trade, on an
+[animated thing](animated.md), or on what has no mind: the undead, constructs, and vermin, and
+whatever has risen [berserk](#the-risen). Nor on one already at someone's side, and not past how
+many allies you may lead.
+
+{{#include generated/charm-spells.md}}
+
 ### The druid's calls
 
 The druid calls the wild: [Call of the wild](magic.md#spell-call-of-the-wild) at level 6,

@@ -335,6 +335,7 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("ally-rules.md", allies::rules),
         ("summon-spells.md", allies::summon_spells),
         ("rise-spells.md", allies::rise_spells),
+        ("charm-spells.md", allies::charm_spells),
         ("companion-starts.md", companions::starts),
         ("companion-growth.md", companions::growth),
         ("companion-rules.md", companions::rules),
@@ -808,7 +809,7 @@ mod tests {
                 .contains("| You, while Lit | 6 cells | visible | 235, 235, 250, 0 | 236 |")
         );
         assert!(text("lights.md").contains(
-            "| Spell circle, abjuration (anyone blessed) | 1 cell | visible and UV | 32, 48, 68, 90 | 46 |"
+            "| Spell circle, abjuration (anyone blessed, glamoured, silenced) | 1 cell | visible and UV | 32, 48, 68, 90 | 46 |"
         ));
         assert!(
             text("status-effects.md")

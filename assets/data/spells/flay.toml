@@ -1,0 +1,26 @@
+# Flay (the spell types design §7 entry 7): the witch's damage over time, little harm and a
+# wound that bleeds; nothing bloodless bleeds (`World::afflict`).
+[[spell]]
+id = "flay"
+name = "Flay"
+description = "Open a foe you see nearby: its skin splits and it bleeds."
+level = 8
+school = "necromancy"
+kind = "damage"
+shape = "ray"
+resolution = "auto"
+damage_type = "necrotic"
+range = 6
+damage = "1d4"
+effect = { status = "bleeding", severity = 2 }
+
+[spell.cast]
+effect = "frost_ray"
+noun = "flaying"
+verb = "flays"
+noise = { sound = "chanting", loudness = 20 }
+
+[spell.grows]
+damage = "willpower 16 1d6, 22 1d8"
+range = "willpower 14 7, 18 8"
+degrees = "presence 14 3, 18 4"

@@ -1,0 +1,16 @@
+# Slumber (the spell types design §7 entry 20): one foe asleep until something wakes it; a
+# scroll's only.
+[[spell]]
+id = "slumber"
+name = "Slumber"
+description = "A foe you see nearby falls asleep where it stands, until a noise, a blow, or a cry wakes it."
+level = 15
+school = "enchantment"
+kind = "hex"
+shape = "ray"
+resolution = "auto"
+range = 6
+effect = { status = "asleep", severity = 1 }
+
+[spell.grows]
+range = "willpower 14 7, 18 8"

@@ -187,6 +187,44 @@ pub(super) fn rise_spells(content: &Content) -> String {
     out
 }
 
+/// The spells that charm (`[spell.effect] charm`): how long the charm holds, what it never takes,
+/// and what grows it.
+pub(super) fn charm_spells(content: &Content) -> String {
+    let Some(rules) = content.spell_rules() else {
+        return String::new();
+    };
+    let mut spells: Vec<&SpellData> = (content.spells().iter())
+        .filter(|s| s.effect.charm.is_some())
+        .collect();
+    spells.sort_by(|a, b| a.level.cmp(&b.level).then(a.name.cmp(&b.name)));
+    let mut out = String::from(
+        "| Spell | Level | School | Range | Minutes | Never charms | Grows with | Mana |\n\
+         |---|:---:|---|:---:|:---:|---|---|:---:|\n",
+    );
+    for spell in spells {
+        let Some(charm) = &spell.effect.charm else {
+            continue;
+        };
+        let mut never = vec!["uniques".to_string(), "animated things".to_string()];
+        never.extend(charm.mindless.iter().map(|t| format!("`{t}`")));
+        let _ = writeln!(
+            out,
+            "| {} | {} | {} | {} | {} | {} | {} | {} |",
+            link(Term::Spell, &spell.id, &spell.name),
+            spell.level,
+            link(Term::School, spell.school.id(), &capital(spell.school.id())),
+            spell
+                .base_range()
+                .map_or("—".to_string(), |r| r.to_string()),
+            charm.minutes,
+            never.join(", "),
+            grows_with(spell),
+            rules.mana(spell, 0),
+        );
+    }
+    out
+}
+
 /// `word` with its first letter upper-case.
 fn capital(word: &str) -> String {
     let mut chars = word.chars();

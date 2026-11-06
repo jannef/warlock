@@ -1,0 +1,8 @@
+[[talent]]
+id = "beguile"
+name = "Beguile"
+tree = "class"
+granted = true
+description = "A creature you see nearby takes you for a friend a while and fights beside you, until the charm ends or you leave it behind (a spell, paid in mana)."
+effects = [{ kind = "spell", spell = "beguile" }]
+systems = ["spells", "mana", "allies"]

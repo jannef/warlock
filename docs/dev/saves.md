@@ -30,6 +30,11 @@ releases every development build shares the version, so there the content finger
 decoder are what refuse a save a build cannot read (a renamed `.sav.bad`, as below); saves are
 not promised across development builds.
 
+A charmed ally (`world/charm.rs`, `docs/dev/allies.md` "Charmed") saves its charm in its
+`Actor::ally`: `AllySource::Charmed { spell, faction }`, the `faction_override` it had (left out
+while `None`) put back when the charm ends, and `Ally::until`. A save of this build with one
+does not load in a build before it (the variant is new), as the version pin already says.
+
 A save holds only the current floor of an endless branch (`docs/dev/mapgen.md`,
 `world/endless.rs`): `WorldState::endless` is a count of floors made and the deepest depth by
 branch, left out while empty, so its size does not grow with depth.
