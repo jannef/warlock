@@ -24,7 +24,7 @@ stats = { strength = 16, dexterity = 11, toughness = 16, intelligence = 10, will
 base_hp = 16
 resist = { poison = 25, cold = 10 }
 weapon_skills = { axes = 1, maces = 1 }
-attack = { damage = "1d4", damage_type = "bludgeoning", name = "fist", verb = "punches" }
+attack = { damage = "1d4", damage_type = "bludgeoning", name = "fist", verb = "punches", to_hit = 2 }
 on_eat = { message = "Tough and sour, like old leather.", vomit = 25 }
 racial_weapon = "hand_axe"
 [[creature.gear]]

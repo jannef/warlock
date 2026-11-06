@@ -24,6 +24,8 @@ kit = [
     "bread",
     "gold_coin*10",
 ]
+# Spell scrolls more, each a random spell below spell level 10 (#1104).
+random_scrolls = { count = "1d2", below_level = 10 }
 # Bonus talents from Vigour and Grit.
 bonus_talents = { levels = [10, 20, 30, 45, 55], trees = ["vigour", "grit"] }
 # The level table (spec §8 "Class abilities"; docs/design/priest.md). Mend, Blessing, and Cure

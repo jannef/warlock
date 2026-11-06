@@ -1245,8 +1245,33 @@ impl Actor {
     /// blow, at the main hand's penalty, less what the style eases ([`Actor::off_hand_blow`] is
     /// the other).
     pub fn melee(&self, content: &Content) -> Profile {
+        self.melee_with(content, content.creature(self.creature).attack.as_ref())
+    }
+
+    /// What its natural attacks after the first do (`[[creature.attack]]`: a dragon's claws
+    /// and bite), each as [`Actor::melee`] makes the first's, by its index among them all
+    /// ([`crate::content::CreatureDef::natural_attacks`]); none while it wields a weapon, whose
+    /// blow stands in for the first.
+    pub fn more_natural_blows(&self, content: &Content) -> Vec<(u8, Profile)> {
+        if self.weapon_item(content).is_some() {
+            return Vec::new();
+        }
+        let def = content.creature(self.creature);
+        (def.more_attacks.iter().enumerate())
+            .map(|(i, natural)| {
+                let index = u8::try_from(i + 1).unwrap_or(u8::MAX);
+                (index, self.melee_with(content, Some(natural)))
+            })
+            .collect()
+    }
+
+    /// [`Actor::melee`] with `natural` as its natural attack.
+    fn melee_with(
+        &self,
+        content: &Content,
+        natural: Option<&crate::content::NaturalAttack>,
+    ) -> Profile {
         let mods = self.mods(content);
-        let natural = content.creature(self.creature).attack.as_ref();
         let weapon = self.weapon_item(content).map(|i| &self.inventory[i]);
         let talents = self.talent_mods(content);
         // Martial arts (spec §8 "Class abilities"): bare hands roll a bigger die.
@@ -1276,6 +1301,13 @@ impl Actor {
         let benefit = self.attack_benefit(content, AttackKind::Melee, None);
         let mut profile = Profile::melee(&attack, &self.stats_with(content, &mods)).with(&benefit);
         profile.penetration = penetration;
+        // A natural attack's own `on_hit` (a giant rat's poison), first of what a hit causes:
+        // each of several natural attacks its own (`natural.rs`).
+        if weapon.is_none()
+            && let Some(natural) = natural
+        {
+            profile.on_hit = natural.on_hit.clone();
+        }
         // A companion's grade sharpens its blow (spec §8 "Allies"; `companion.rs`).
         profile = self.grown(content, profile);
         if self.off_hand(content).is_some() {

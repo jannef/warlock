@@ -29,5 +29,5 @@ damage = "4d10"
 damage_type = "piercing"
 name = "fork"
 verb = "gores"
-to_hit = 4
+to_hit = 12
 on_hit = [{ status = "bleeding", chance = 20, severity = 2 }]

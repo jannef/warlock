@@ -32,7 +32,7 @@ damage = "4d10"
 damage_type = "bludgeoning"
 name = "slam"
 verb = "slams"
-to_hit = 5
+to_hit = 14
 # Its gear (spec §8 "Creature gear"): the spear or glaive it hunted the dead with.
 [[creature.gear]]
 chance = 90

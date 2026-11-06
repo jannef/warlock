@@ -29,5 +29,5 @@ damage = "4d12"
 damage_type = "cold"
 name = "frost claws"
 verb = "rends"
-to_hit = 5
+to_hit = 13
 on_hit = [{ status = "sluggish", chance = 20, severity = 1 }]

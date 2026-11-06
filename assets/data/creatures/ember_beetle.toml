@@ -30,3 +30,4 @@ damage = "2d4"
 damage_type = "fire"
 name = "bite"
 verb = "bites"
+to_hit = 2

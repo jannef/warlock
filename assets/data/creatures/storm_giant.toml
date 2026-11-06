@@ -29,7 +29,7 @@ damage = "4d10"
 damage_type = ["slashing", "electricity"]
 name = "great sword"
 verb = "strikes"
-to_hit = 4
+to_hit = 11
 [creature.throw]
 object = "boulder"
 damage = "3d12"

@@ -28,4 +28,5 @@ damage = "2d8"
 damage_type = "bludgeoning"
 name = "tongue"
 verb = "lashes"
+to_hit = 4
 on_hit = [{ status = "held", chance = 20, difficulty = 17 }]

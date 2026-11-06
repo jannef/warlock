@@ -21,4 +21,4 @@ size = "small"
 stats = { strength = 10, dexterity = 16, toughness = 11, intelligence = 13, willpower = 13, presence = 15 }
 base_hp = 9
 natural = { defence = 2, protection = 0, name = "oily hide" }
-attack = { damage = "1d8", damage_type = "slashing", name = "claw", verb = "claws" }
+attack = { damage = "1d8", damage_type = "slashing", name = "claw", verb = "claws", to_hit = 1 }

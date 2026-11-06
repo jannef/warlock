@@ -33,7 +33,7 @@ damage = "4d8"
 damage_type = "slashing"
 name = "blade"
 verb = "cuts"
-to_hit = 3
+to_hit = 9
 # Her gear (spec §8 "Creature gear"): a sword and mail, often magic.
 [[creature.gear]]
 chance = 90

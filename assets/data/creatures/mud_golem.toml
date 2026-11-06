@@ -19,7 +19,7 @@ weight = 250000
 stats = { strength = 18, dexterity = 5, toughness = 20, intelligence = 1, willpower = 10, presence = 1 }
 base_hp = 18
 natural = { defence = 0, protection = 5, name = "mud" }
-attack = { damage = "2d6", damage_type = "bludgeoning", name = "fist", verb = "pounds" }
+attack = { damage = "2d6", damage_type = "bludgeoning", name = "fist", verb = "pounds", to_hit = 2 }
 resist = { poison = 100 }
 corpse = false
 blood = "none"

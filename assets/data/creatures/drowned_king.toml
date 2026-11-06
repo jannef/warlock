@@ -30,7 +30,7 @@ damage = "4d10"
 damage_type = "bludgeoning"
 name = "slam"
 verb = "slams"
-to_hit = 5
+to_hit = 12
 on_hit = [
     { disease = "marsh_ague", chance = 25 },
 ]

@@ -23,6 +23,8 @@ kit = [
     "bread",
     "gold_coin*30",
 ]
+# Spell scrolls more, each a random spell below spell level 10 (#1104).
+random_scrolls = { count = "1d4", below_level = 10 }
 # The bard's levels end at 30 (the bard design §5): experience past it still counts and buys
 # nothing until a calling opens a prestige class (the Hunter), when the levels banked come at once.
 max_level = 30

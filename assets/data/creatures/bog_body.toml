@@ -29,4 +29,5 @@ damage = "2d6"
 damage_type = "bludgeoning"
 name = "fist"
 verb = "pummels"
+to_hit = 2
 on_hit = [{ disease = "marsh_ague", chance = 15 }]

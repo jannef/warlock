@@ -1,0 +1,24 @@
+# A dev level of the Ascmearc (spec §8 "Creature behavior": "Dragons", #1099): the fire drake in
+# a hall like its hoard's at the bottom of Fyrdelf (vaults/drakes_hoard.toml), to watch a dragon
+# fight without walking twelve floors down. You arrive at the east end, eleven cells from the
+# drake: it comes on until you stand in its cone and breathes fire, then closes in with claws and
+# bite while its breath cools, and breathes again whenever it is ready. The `drake` scenario
+# starts here; no stairs lead in or out.
+# What the fallen drop is rolled at this item level (spec §8 "Magic items").
+item_level = 19
+name = "The Drake's Lair"
+ambient = [40, 24, 16, 0]
+map = '''
+###################
+#LLL...........LLL#
+#L...............L#
+#...D..........@..#
+#L...............L#
+#LLL...........LLL#
+###################
+'''
+
+[legend]
+"@" = { terrain = "floor", spawn = "player" }
+"L" = "lava"
+"D" = { terrain = "floor", creature = "fire_drake" }

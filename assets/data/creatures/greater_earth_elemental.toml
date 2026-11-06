@@ -28,7 +28,7 @@ blood = "none"
 [creature.attack]
 damage = "3d10"
 damage_type = "bludgeoning"
-to_hit = 2
+to_hit = 6
 name = "fist"
 verb = "pounds"
 on_hit = [{ status = "staggered", chance = 15, severity = 1 }]

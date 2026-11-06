@@ -27,4 +27,5 @@ damage = "2d8"
 damage_type = "bludgeoning"
 name = "fist"
 verb = "pummels"
+to_hit = 2
 on_hit = [{ disease = "grave_rot", chance = 10 }]

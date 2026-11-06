@@ -20,7 +20,7 @@ weight = 100
 stats = { strength = 14, dexterity = 16, toughness = 14, intelligence = 15, willpower = 21, presence = 15 }
 base_hp = 20
 natural = { defence = 3, protection = 0, name = "insubstantial form" }
-attack = { damage = "2d6", damage_type = "bludgeoning", name = "blow", verb = "hammers" }
+attack = { damage = "2d6", damage_type = "bludgeoning", name = "blow", verb = "hammers", to_hit = 3 }
 incorporeal = { wall_defence = 3 }
 resist = { slashing = 50, piercing = 50, bludgeoning = 50, cold = 50, poison = 100 }
 corpse = false

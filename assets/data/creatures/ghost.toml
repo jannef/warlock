@@ -18,7 +18,7 @@ hearing = 15
 weight = 1000
 stats = { strength = 12, dexterity = 14, toughness = 12, intelligence = 10, willpower = 18, presence = 14 }
 base_hp = 14
-attack = { damage = "1d8", damage_type = "cold", name = "touch", verb = "touches" }
+attack = { damage = "1d8", damage_type = "cold", name = "touch", verb = "touches", to_hit = 2 }
 incorporeal = { wall_defence = 2 }
 resist = { slashing = 50, piercing = 50, bludgeoning = 50, cold = 50, poison = 100 }
 corpse = false

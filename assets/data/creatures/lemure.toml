@@ -19,7 +19,7 @@ hearing = 15
 weight = 60000
 stats = { strength = 15, dexterity = 5, toughness = 19, intelligence = 2, willpower = 18, presence = 2 }
 base_hp = 19
-attack = { damage = "1d8", damage_type = "slashing", name = "claws", verb = "claws" }
+attack = { damage = "1d8", damage_type = "slashing", name = "claws", verb = "claws", to_hit = 1 }
 resist = { fire = 100, poison = 50 }
 corpse = false
 blood = "#4a1010"

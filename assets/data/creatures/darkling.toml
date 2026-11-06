@@ -23,4 +23,4 @@ stats = { strength = 11, dexterity = 16, toughness = 12, intelligence = 14, will
 base_hp = 11
 # A shadow with a knife: it strikes the unwary.
 skills = { sneak_attack = 30, initiative = 50 }
-attack = { damage = "1d10", damage_type = "piercing", name = "knife", verb = "stabs" }
+attack = { damage = "1d10", damage_type = "piercing", name = "knife", verb = "stabs", to_hit = 2 }

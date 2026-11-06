@@ -34,7 +34,7 @@ damage = "4d8"
 damage_type = "piercing"
 name = "touch"
 verb = "touches"
-to_hit = 4
+to_hit = 11
 on_hit = [
     { disease = "burrowing_worms", chance = 35 },
 ]

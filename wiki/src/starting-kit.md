@@ -39,6 +39,14 @@ halflings also start trained in the [weapon](weapon-skills.md) their race gives 
 - **Magic**: a few kits hold something that may be magic ("perhaps magic"), or surely is ("magic
   or rare"). Like anything you find, it is [unidentified](magic-items.md#unidentified-items) until you learn what it does (see
   [Magic items](magic-items.md)); you can tell its [rarity](magic-items.md#rarity) at once.
+- **Random scrolls**: the casters set out with a few [spell scrolls](scrolls.md) more, drawn at
+  random when your character is made: a [wizard](classes.md#wizard) or a [witch](classes.md#witch) 1d3, a [priest](classes.md#priest), [druid](classes.md#druid), or
+  [ranger](classes.md#ranger) 1d2, a [bard](classes.md#bard) 1d4 (the table above says the same). Each is the scroll of a
+  spell of [spell level](magic.md#spell-levels) 0 to 9, every such spell as likely as any other, so two may be the
+  same. Read one, or [study](magic.md#learning-spells-from-scrolls) it to learn its spell.
+- **Scrolls and potions you know**: every scroll and [potion](potions.md) you set out with, whoever you
+  are, you know by its true name from the first turn ("a scroll of magic missile", never an
+  [unknown label](scrolls.md#unknown-scrolls)), and so every other of its kind you find.
 - **Food** is fresh when you set out (see [Food](food.md)).
 - **Weight**: nobody starts [strained](burden.md#burden-1) under their kit, and an ordinary character starts
   unburdened, but for wealth and armour: a weak [aristocrat](classes.md#aristocrat) may stagger under that purse, a small

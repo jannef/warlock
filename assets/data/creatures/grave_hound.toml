@@ -27,4 +27,5 @@ damage = "2d6"
 damage_type = "piercing"
 name = "bite"
 verb = "bites"
+to_hit = 2
 on_hit = [{ disease = "grave_rot", chance = 10 }]

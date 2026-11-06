@@ -24,6 +24,8 @@ kit = [
     "dried_meat*3",
     "gold_coin*8",
 ]
+# Spell scrolls more, each a random spell below spell level 10 (#1104).
+random_scrolls = { count = "1d2", below_level = 10 }
 # Bonus talents from Weaponcraft and Wayfarer.
 bonus_talents = { levels = [10, 20, 30, 45, 55], trees = ["weaponcraft", "wayfarer"] }
 # The level table (spec §8 "Class abilities"). Evasion is the Finesse talent, given; Stalker's

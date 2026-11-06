@@ -30,5 +30,5 @@ damage = "4d6"
 damage_type = "bludgeoning"
 name = "fists"
 verb = "pounds"
-to_hit = 2
+to_hit = 6
 on_hit = [{ status = "staggered", chance = 20, severity = 1 }]

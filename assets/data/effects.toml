@@ -203,6 +203,40 @@ glow = 0.8
 branches = 0.0
 light = { color = [800, 420, 130], radius = 3 }
 
+# A fire-breathing dragon's breath (spec §8 "Creature behavior": "Dragons"; the fire drake): fire
+# breath's flames over the whole cone, drawn as a burst around the dragon that rolls out to the
+# cone's end and burns a little longer than Blaze; no projectile, darkening, or shake.
+[[effect]]
+id = "dragon_fire"
+shape = "burst"
+radius = 6
+speed = 24
+grow = 0.22
+impact = 0.28
+linger = 0.55
+flicker = 0.05
+glyphs = "▓▒░"
+fill = 0.7
+projectile = "●"
+colors = ["#fffff0", "#fff0a0", "#ffc040", "#ff7a18", "#d83c10", "#901808", "#400c06"]
+glow = 0.85
+light = { color = [800, 420, 130], radius = 6 }
+
+# Embers thrown out of the flames.
+[[effect.particles]]
+on = "impact"
+glyphs = "'`.,·"
+colors = ["#fff0a0", "#ffa030", "#c03010"]
+count = 1
+life = 0.6
+velocity = [0.0, -1.0]
+spread = [2.0, 1.6]
+gravity = 1.5
+area = [0.3, 0.3]
+scale = 0.6
+fade = 0.6
+glow = 0.8
+
 [[effect]]
 id = "lightning_bolt"
 shape = "bolt"

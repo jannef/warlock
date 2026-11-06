@@ -652,6 +652,11 @@ pub enum Event {
         /// sword's slashing or piercing by what was better); `None` for a miss, an intent, or
         /// an untyped attack.
         damage: Option<DamageTypeId>,
+        /// For a melee blow struck with one of the attacker's natural attacks after the first
+        /// (a dragon's claws and bite, `[[creature.attack]]`), its index among them all
+        /// (`CreatureDef::natural_attacks`), which its words are said with; `None` otherwise.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        natural: Option<u8>,
     },
     /// A missile flew (spec §8 "Ranged combat"): a shot or a throw. As the player perceives it
     /// (the rest of the turn's events are kept only when seen; this one is cut to what was

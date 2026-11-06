@@ -15,6 +15,7 @@ mod animated_tests;
 mod background;
 #[cfg(test)]
 mod beast_roster_tests;
+mod breath;
 mod calendar;
 mod calling;
 mod campaign;
@@ -185,6 +186,7 @@ pub use background::{
     AgeRange, Background, Chapter, ChapterWhen, Effect as StoryEffect, Line as StoryLine, Marks,
     Points, Tier as StoryTier, Tiers, When,
 };
+pub use breath::Breath;
 pub use calendar::Calendar;
 pub use calling::{CallingDef, MAX_MESSAGE as MAX_CALLING_MESSAGE};
 pub use campaign::{CAMPAIGNS, CampaignDef, CampaignKind};
@@ -245,7 +247,7 @@ pub use intimidate::IntimidateRules;
 #[cfg(test)]
 pub(crate) use item_class::BUILTIN as BUILTIN_ITEM_CLASSES;
 pub use item_class::{ItemClassDef, ItemClassId, MAX_ITEM_CLASSES};
-pub use kit::{Keep, Kit, KitItem};
+pub use kit::{Keep, Kit, KitItem, RandomScrolls};
 pub use learning::{Band, Mishap, MishapEffect, StudyRules, drawn_among};
 pub(crate) use level::validate_route;
 pub use level::{
@@ -1177,6 +1179,7 @@ impl Content {
         scroll::check_spells(&content).map_err(|m| ContentError::new("data/objects", m))?;
         talent::check_heirlooms(&content).map_err(|m| ContentError::new("data/talents", m))?;
         spell_def::check_effects(&content).map_err(|m| ContentError::new("data/spells", m))?;
+        breath::check_effects(&content)?;
         let path = "data/traps.toml";
         if let Some(text) = files.get_optional(path) {
             let (traps, ids, avoid) = trap::parse(path, text, &content)?;
@@ -1778,13 +1781,27 @@ impl Content {
                 let def = self.status(found);
                 Some((found, def.max, def.hold.is_some()))
             };
-            let kinds = (spec.attack.as_ref())
-                .map(|a| self.resolve_kinds(a.damage_type.as_ref()))
-                .transpose()
-                .map_err(|m| err(format!("creature `{}`: attack: {m}", spec.id)))?;
-            let attack = (spec.attack.clone())
-                .zip(kinds)
-                .map(|(a, kinds)| a.resolve(status, |id| self.disease_id(id), kinds))
+            // One natural attack or several, each struck in turn (`[[creature.attack]]`).
+            let written = spec.attack.as_ref().map_or(&[][..], |a| a.0.as_slice());
+            if spec.attack.is_some() && written.is_empty() {
+                return Err(err(format!(
+                    "creature `{}`: attack: an empty list",
+                    spec.id
+                )));
+            }
+            let mut attacks = Vec::new();
+            for a in written {
+                let kinds = (self.resolve_kinds(a.damage_type.as_ref()))
+                    .map_err(|m| err(format!("creature `{}`: attack: {m}", spec.id)))?;
+                let attack = (a.clone().resolve(status, |id| self.disease_id(id), kinds))
+                    .map_err(|m| err(format!("creature `{}`: {m}", spec.id)))?;
+                attacks.push(attack);
+            }
+            let mut attacks = attacks.into_iter();
+            let attack = attacks.next();
+            let more_attacks: Vec<_> = attacks.collect();
+            let breath = (spec.breath.as_ref())
+                .map(|b| b.resolve(self))
                 .transpose()
                 .map_err(|m| err(format!("creature `{}`: {m}", spec.id)))?;
             let throw = (spec.throw.clone())
@@ -1892,6 +1909,8 @@ impl Content {
                 stats,
                 skills,
                 attack,
+                more_attacks,
+                breath,
                 throw,
                 weapon_skills,
                 resist,
@@ -2224,8 +2243,19 @@ impl Content {
             Some(h) => Some((signs(&h.animals)?, signs(&h.elements)?)),
             None => None,
         };
-        for (class, kit) in self.classes.iter_mut().zip(classes) {
+        let scrolls = (self.classes.iter())
+            .map(|c| {
+                (c.random_scrolls_spec.as_ref())
+                    .map(|spec| kit::resolve_scrolls(spec, self))
+                    .transpose()
+                    .map_err(|m| {
+                        ContentError::new("data/classes/", format!("class `{}`: {m}", c.id))
+                    })
+            })
+            .collect::<Result<Vec<_>, _>>()?;
+        for ((class, kit), scrolls) in self.classes.iter_mut().zip(classes).zip(scrolls) {
             class.kit = kit;
+            class.random_scrolls = scrolls;
         }
         for (race, kit) in self.races.list.iter_mut().zip(races) {
             race.kit = kit;
@@ -4389,9 +4419,23 @@ fn check_combat(spec: &creature::CreatureSpec) -> Result<(), String> {
             spec.sight
         ));
     }
+    // A dragon (`world/breath.rs`) breathes, and only a dragon.
+    match (spec.combat, &spec.breath) {
+        (Combat::Dragon, None) => {
+            return Err(format!(
+                "creature `{id}`: a `dragon` needs a [creature.breath]"
+            ));
+        }
+        (Combat::Melee | Combat::Ranged | Combat::Caster, Some(_)) => {
+            return Err(format!(
+                "creature `{id}`: only a `combat = \"dragon\"` creature has a breath"
+            ));
+        }
+        _ => {}
+    }
     match (spec.combat, spec.range) {
-        (Combat::Melee, None) => Ok(()),
-        (Combat::Melee, Some(_)) => Err(format!(
+        (Combat::Melee | Combat::Dragon, None) => Ok(()),
+        (Combat::Melee | Combat::Dragon, Some(_)) => Err(format!(
             "creature `{id}`: only `ranged` and `caster` creatures have a `range`"
         )),
         (_, None) => Err(format!("creature `{id}` needs a `range` to shoot or cast")),

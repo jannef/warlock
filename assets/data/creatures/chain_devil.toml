@@ -30,5 +30,5 @@ damage = "4d8"
 damage_type = "slashing"
 name = "chains"
 verb = "lashes"
-to_hit = 4
+to_hit = 10
 on_hit = [{ status = "held", chance = 25, difficulty = 20 }]

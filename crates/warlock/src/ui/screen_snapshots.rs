@@ -1221,10 +1221,11 @@ const CASES: &[Case] = &[
         keys: Some("L a"),
         ..BASE
     },
+    // A paladin: trained in Spellcraft, and no caster's random scrolls (#1104) to study.
     Case {
         name: "scroll-study-none",
         scenario: "traps",
-        character: Some("human,female,bard"),
+        character: Some("human,male,paladin"),
         actions: "move:E pickup",
         keys: Some("L"),
         ..BASE

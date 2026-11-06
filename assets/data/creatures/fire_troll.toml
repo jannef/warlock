@@ -31,4 +31,4 @@ damage = "3d10"
 damage_type = "fire"
 name = "claws"
 verb = "sears"
-to_hit = 3
+to_hit = 8

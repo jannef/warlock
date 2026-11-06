@@ -30,7 +30,7 @@ damage = "4d6"
 damage_type = "slashing"
 name = "claws"
 verb = "claws"
-to_hit = 3
+to_hit = 8
 on_hit = [
     { status = "held", chance = 15, difficulty = 18 },
     { disease = "filth_fever", chance = 15 },

@@ -30,5 +30,5 @@ damage = "3d6"
 damage_type = "bludgeoning"
 name = "touch"
 verb = "touches"
-to_hit = 2
+to_hit = 5
 on_hit = [{ status = "transfixed", chance = 25, severity = 2 }]

@@ -29,4 +29,5 @@ damage = "1d8"
 damage_type = "bludgeoning"
 name = "fist"
 verb = "pummels"
+to_hit = 1
 on_hit = [{ disease = "filth_fever", chance = 20 }]
