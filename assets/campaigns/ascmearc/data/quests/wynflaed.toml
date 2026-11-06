@@ -1,0 +1,24 @@
+# Gammer Wynflæd's quest (#1141; the fields: data/quests.toml): the Ascmearc's first escort.
+# Ælfrun, a girl of Holtwīc, went to the holly wood's edge and the dark court took her into its
+# hall. Asked, the wise-woman marks Ælfhām on the player's map (the reveal), and the girl is made
+# on the moss bed at its bottom (`waits`, world/escort_waits.rs); spoken with, she follows, and
+# home in Holtwīc with the player she says her thanks and the wise-woman pays.
+
+[[quest]]
+id = "taken_under_the_hill"
+name = "Taken under the hill"
+giver = "wynflaed"
+type = "escort"
+target = "holtwic"
+escort = "aelfrun"
+waits = { creature = "cottar", level = "aelfham:3", at = "the moss bed" }
+joins = "You're real? You ain't one of them? Oh, take me 'ome, please. I'll keep right be'ind you, I swear."
+thanks = "Holtwīc! The well, an' the smoke, an' me mum's door. I never thought I'd see none of it again."
+reward = { gold = 60, xp = 200, items = ["potion_of_healing*2"] }
+alignment = 20
+reveals = { location = "aelfham" }
+offer = "It's Ælfrun, my dear, Osgar's girl. Went for kindling at the wood's edge three days gone, and never came home. They found her basket in a ring of toadstools. The dark ones have her, under their hill. Bring her back to us, before she forgets she ever had a home."
+accept = "Here, I'll show you where the mound is. Keep iron about you, and eat nothing they offer. She'll be at the very bottom of it."
+reminder = "Ælfrun's under the hill still, my dear, at the bottom of Ælfhām. Bring her home to Holtwīc."
+done = "Bless you, bless you. Home, and herself still. Take these, my own brewing, and mind you thank nobody for them in the wood."
+where = "Ælfhām lies in the holly wood, north-east of Holtwīc."

@@ -76,8 +76,17 @@ pub(super) fn potions(content: &Content) -> String {
                 let eyes = def
                     .vision
                     .map(|i| content.vision_profiles()[i].name.as_str());
-                format!("{} eyes ({})", eyes.unwrap_or("other"), def.name)
-                    + &lasting(content, *status, 1)
+                let eyes = eyes.map_or_else(
+                    || {
+                        if def.sees_unseen {
+                            "Seeing".into()
+                        } else {
+                            "other eyes".into()
+                        }
+                    },
+                    |e| format!("{e} eyes"),
+                );
+                format!("{eyes} ({})", def.name) + &lasting(content, *status, 1)
             }
             Draught::Haste { status, severity } => {
                 let def = content.status(*status);

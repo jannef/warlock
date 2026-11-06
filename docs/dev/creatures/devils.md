@@ -32,3 +32,6 @@ Presence (#1128, `world/aura.rs`): the barbed devil innate `barbed_hide` (status
 Theft (docs/design/monster-dread.md §5.6, #1130; `docs/dev/creatures.md` "Theft and the
 blink"): the imp `steals = { what = "small", chance = 30, cooldown = 60 }`, a coin purse at a
 time; its poison kept, its invisibility D8's. It is not dread (a trait, design §6).
+
+The imp (#1132, docs/dev/creatures.md "The unseen"): `[creature.invisible] cooldown = 300`,
+it fades from sight every five minutes and stays in the room; its poison kept.

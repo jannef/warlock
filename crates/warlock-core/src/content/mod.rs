@@ -175,6 +175,7 @@ mod troll_roster_tests;
 #[cfg(test)]
 mod undead_roster_tests;
 mod unique;
+mod unseen;
 mod vault;
 mod vault_turn;
 mod vision;
@@ -292,7 +293,7 @@ pub use prayer::{Face, FaceWords, Faced, PrayerRules, PrayerUse, UseDef};
 pub use prestige::{MAX_PRESTIGE_LEVELS, PrestigeDef, Table};
 pub use quest::{
     GOLD, Goal, KillTarget, MAX_COUNT, MAX_NAME, MAX_QUEST_XP, MAX_TAG_COUNT, QuestDef, QuestId,
-    QuestKind, QuestTexts, Reveal, RevealWhen, Reward,
+    QuestKind, QuestTexts, Reveal, RevealWhen, Reward, Waits,
 };
 pub(crate) use quest_roll::roll_known;
 pub use quest_roll::{Candidate, MAX_VARIANTS, MAX_WEIGHT, Pick, Roll, Rolled, Variant, one_of};
@@ -367,6 +368,7 @@ pub use theft::{Blinks, SMALL as SMALL_LOOT, Steals, Takes};
 pub use throw::{THROW_RANGES, Throw};
 pub use trap::{MAX_CHARGES, Trap, TrapAvoid, TrapDef, TrapEffect, TrapId, TrapNoise};
 pub use unique::{Power, UNIQUE, UniqueDef, Uniques};
+pub use unseen::Invisible;
 pub use vault::{DangerRange, Vault};
 pub use vault_turn::Turn;
 pub use vision::VisionProfile;
@@ -1850,6 +1852,10 @@ impl Content {
                 .map(|b| b.resolve(self))
                 .transpose()
                 .map_err(|m| err(format!("creature `{}`: {m}", spec.id)))?;
+            let invisible = (spec.invisible.map(|i| i.resolve(self)))
+                .transpose()
+                .map_err(|m| err(format!("creature `{}`: {m}", spec.id)))?
+                .flatten();
             let throw = (spec.throw.clone())
                 .map(|t| {
                     let kinds = self.resolve_kinds(t.damage_type.as_ref())?;
@@ -1979,6 +1985,7 @@ impl Content {
                 presence: aura::resolve(self, &spec).map_err(err)?,
                 steals,
                 blinks,
+                invisible,
                 weapon_skills,
                 resist,
                 immune,

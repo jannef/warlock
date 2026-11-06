@@ -35,15 +35,22 @@
 #     "escort"   target a level id; `escort` the npc id of a unique character with a dialogue
 #                (not the giver), and `joins` what they say as they fall in: chatted with while
 #                the quest is active, they follow you as an ally in the coward stance, put on
-#                what you give them, and the quest is done (they say `done`) when they stand on
-#                the target level with you. Their death fails it. Never repeatable or rolled
+#                what you give them, and the quest is done when they stand on the target level
+#                with you: they say `thanks` (optional), then the giver says `done` and pays if
+#                on that level, else they do. Their death fails it. Never repeatable or rolled.
+#                `waits = { creature, level, at }` (optional): for an escort no level places
+#                (a generated floor's vault holds no npc), the quest makes them as it is given,
+#                a creature of type `creature` on the named place `at` (a legend's `name`, of a
+#                hand-made level or a vault the branch level stamps for certain, exactly one)
+#                of level `level`, or the nearest free cell; made when that level is first made
+#                if it is not yet
 #   reward     { gold, items, xp }, each optional: gold coins, objects as levels place them
 #              (`["potion_of_healing*2"]`), and experience
 #   offer, accept, reminder   what the giver says when you ask about it (giving it), after the
 #              offer in the same reply (accept, optional), and when you ask again before it is
 #              done
 #   done       what whoever you hand it in to says: the recipient of a bring with `to` or a
-#              delivery, else the giver
+#              delivery, else the giver (an escort's: above)
 #   requires   a quest loaded before this one (earlier in the table), or a list of them
 #              (`["barrow_rats", "barrow_heart"]`), that must all be done first (optional)
 #   requires_alignment  the alignment bands you must be in for it to be offered (spec §8

@@ -63,3 +63,11 @@ them (Fyrdelf's runs 5 to 16, #534). Deferred (#453 "Follow-ups"): large size,
 water-bound behaviour, knockback, whirlwind, engulf, breath, elements at war, gem drops.
 
 Presence (#1128, `world/aura.rs`): the fire salamander is made with `fire_cloaked` and keeps it (innate: whoever strikes it burns; never shown in the look line).
+
+The invisible stalker (#1132, docs/design/monster-dread.md §5.11): the air line's kin of level 22
+(uncommon, dread), `invisible = true` and `hunts = true` (docs/dev/creatures.md "The unseen"):
+never seen, it comes to the player wherever they are on its level; a quick role (1500, `3d8`
+slashing), no corpse, no blood, and, as every elemental now, no heartbeat for Sense the quick. No
+population names the air elementals of its depth yet, so it comes as a stray. It keeps the roster's
+formulas (`elemental_roster_tests`). It bursts where it dies as the air elemental does (`4d6`, radius 1, a
+gust; #1127's death throes, `elemental_roster_tests::KIN`).

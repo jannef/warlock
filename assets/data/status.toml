@@ -61,13 +61,19 @@
 #   quenched   true: a step into water, or a fall into it, ends it (Burning)
 #   senses     what its bearer, the player, feels while it lasts: { reach = 8, kind = "heartbeat" },
 #              every living creature within `reach` (1 to 20) they do not see, a sound of `kind` at
-#              a rough place, each turn (Quick-sensed; not the undead, animated things, constructs)
+#              a rough place, each turn (Quick-sensed; not the undead, animated things, constructs, elementals)
 #   start, end what the player is told as it begins and ends ("end" lets a rest go on)
 #   dies       what a creature you see does when it kills it ("The giant rat bleeds to death.")
 #   death      the death screen's line when it kills you
 #   hides      true: a creature suffering it hides as a shut chest (a mimic's Disguised): it takes
 #              no turn, has seen no one, no creature sets on it, and perception shows the chest in
 #              its place, never it; only being found out ends it (spec §8 "Mimics")
+#   unseen     true: its sufferer is unseen by the player whatever the light and however near
+#              (Invisible): perception leaves it out, unless Blood scent, the companion's nose,
+#              Seeing, or a blow that just found it shows it; it sheds no light of its own type
+#              while it lasts (a will-o'-wisp's goes out), and is heard as ever
+#   sees_unseen true: its bearer, the player, sees the unseen and the shadowy while it lasts
+#              (Seeing)
 #   flat_footed true: its sufferer is flat-footed while it lasts (Surprised, Stunned): its
 #              Dexterity and Dodge count nothing toward its Defence, it makes no free blow out
 #              of its turn, and an attacker's sneak dice land on it (spec §8 "Surprise and sneak
@@ -313,6 +319,30 @@ name = "Summoning spent"
 max = 100
 stacking = "refresh"
 eases = 6
+
+# Invisibility spent (docs/dev/creatures.md "The unseen", the creatures' `[creature.invisible]`):
+# a degree for every six seconds of its `cooldown`; while it lasts the creature does not fade
+# again. Creatures only: no one sees it on them.
+[[status]]
+id = "invisibility"
+name = "Invisibility spent"
+max = 100
+stacking = "refresh"
+eases = 6
+
+# Invisible (docs/dev/creatures.md "The unseen"): what a creature's `[creature.invisible]` gives
+# it, two minutes of it, and the one status nobody sees: its sufferer is out of the player's
+# sight however lit and near (`unseen`). The dev `afflict:invisible` gives it to the player, who
+# is told; creatures see as ever.
+[[status]]
+id = "invisible"
+name = "Invisible"
+max = 1
+stacking = "refresh"
+eases = 120
+unseen = true
+start = "You fade from sight."
+end = "You can see yourself again."
 
 # A dragon's breath spent (spec §8 "Creature behavior": "Dragons", the creatures'
 # `[creature.breath]`): a degree for every six seconds of its `cooldown`; while it lasts the
@@ -839,6 +869,19 @@ eases = 60
 senses = { reach = 8, kind = "heartbeat" }
 start = "You feel the living about you."
 end = "The press of living things fades."
+
+# Seeing (See invisible's, and the potion of seeing's): five minutes in which the player sees the
+# invisible, and the shadowy in the dark (`sees_unseen`).
+[[status]]
+id = "seeing"
+name = "Seeing"
+seen = "keen-eyed"
+max = 1
+stacking = "refresh"
+eases = 300
+sees_unseen = true
+start = "Your eyes sharpen to what hides from them."
+end = "Your eyes lose their edge."
 
 [[status]]
 id = "owl_eyed"

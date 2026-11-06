@@ -37,3 +37,6 @@ one_of = ["hand_axe"]
 [[creature.gear]]
 chance = 40
 one_of = ["leather_cap"]
+# It fades from sight on a cooldown (docs/dev/creatures.md "The unseen").
+[creature.invisible]
+cooldown = 300

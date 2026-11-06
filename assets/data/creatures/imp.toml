@@ -1,6 +1,7 @@
 # The devil roster (#448). A tiny winged devil with a barbed tail, the familiar of those who
 # bargain with hell: quick, sly, and its sting is poisonous; it lifts a coin purse as it fights
-# (`steals`, #1130). Its shapes and its unseen flight wait for mechanics of their own. Not yet in any dungeon's population.
+# (`steals`, #1130), stings, and is gone from sight, though not from the room. Its shapes wait
+# for mechanics of their own. Not yet in any dungeon's population.
 [[creature]]
 id = "imp"
 level = 9
@@ -33,3 +34,6 @@ name = "sting"
 verb = "stings"
 to_hit = 2
 on_hit = [{ status = "poisoned", chance = 25, severity = 2 }]
+# It fades from sight on a cooldown (docs/dev/creatures.md "The unseen").
+[creature.invisible]
+cooldown = 300

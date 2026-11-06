@@ -42,7 +42,8 @@ Talking about quests takes no time.
   anything, though they come to heel and hold when told. [Give](abilities.md#ability-give) them a
   weapon or armour and they put it on at once, dropping what they held or wore there; what they
   cannot wear or wield they refuse. When they stand with you in the place they belong, the
-  quest is done there and then, and they stay. If they die, joined or not, the quest **fails**:
+  quest is done there and then: they say their thanks, the one who sent you thanks and pays
+  you if they are there (else the one you brought home does), and they stay. If they die, joined or not, the quest **fails**:
   the log says so, and it is never offered again.
 
 ## Sorts of creatures
@@ -113,7 +114,9 @@ In [Cēaptūn](ascmearc.md#the-places), three people have work for you, each a c
 the Mynster wants back what the barrow and the drowned minster keep, and marks [Fennmynster](dungeons.md#fennmynster) on
 your map; once you have been deep in the barrow and reached level 5, **[Factor Wulfrun](creatures.md#creature-mine-factor)** marks
 the old mine, [Fyrdelf](dungeons.md#fyrdelf) (ask her sooner and she tells you you are not ready, and gives you
-nothing). The table lists every quest in its chain's order, what it asks, what it pays, what
+nothing). In [Holtwīc](ascmearc.md#the-places), at the end of the north road, **[Gammer Wynflæd](creatures.md#creature-wise-woman)**
+the wise-woman asks you to bring home a girl the fair folk took, and marks [Ælfhām](dungeons.md#ælfhām),
+their hall in the holly wood, on your map: the girl waits at its very bottom. The table lists every quest in its chain's order, what it asks, what it pays, what
 must be done first, the level you must have reached for it to be given, and the [hidden place](overworld.md#hidden-locations) it
 shows you.
 

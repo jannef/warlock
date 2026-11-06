@@ -54,6 +54,13 @@ impl VisionProfile {
         self.perceive(light).brightness() >= self.threshold
     }
 
+    /// Whether perceived `light` is **dim** to this eye: under twice its threshold, darkvision
+    /// or not (a shadowy creature there is unseen, `world/unseen.rs`). Never for an eye that
+    /// needs no light.
+    pub fn dim(&self, light: Light) -> bool {
+        self.perceive(light).brightness() < self.threshold.saturating_mul(2)
+    }
+
     /// Whether squared distance `dist2` is within darkvision range.
     pub fn in_darkvision(&self, dist2: i32) -> bool {
         self.darkvision > 0 && dist2 <= radius2(self.darkvision)

@@ -2636,6 +2636,7 @@ damage = "2d6"
             ("rime", 9, Some("4d6"), 14, true),
             ("rouse_the_dead", 24, None, 24, true),
             ("scorching_ray", 7, Some("2d6"), 7, false),
+            ("see_invisible", 7, None, 7, false),
             ("sense_the_quick", 5, None, 5, true),
             ("shatter", 8, Some("4d6"), 14, true),
             ("silence", 11, None, 20, true),

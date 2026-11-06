@@ -35,6 +35,8 @@ const DREAD: &[(&str, &str)] = &[
     ("nightworm", "very_rare"),
     // Demons and devils
     ("chasme", "uncommon"),
+    // Elementals: the one new type (§5.11)
+    ("invisible_stalker", "uncommon"),
     ("hezrou", "uncommon"),
     ("balor", "very_rare"),
     ("barbed_devil", "common"),

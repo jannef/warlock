@@ -38,7 +38,8 @@ joins = "Oh, thank you! I'll keep right behind you."
 reward = { gold = 30, xp = 40 }
 offer = "Eadgyth went into the cave and has not come back. Bring her home."
 reminder = "Is she with you?"
-done = "Home! I never thought I'd see it again."
+thanks = "Home! I never thought I'd see it again."
+done = "You found her! Bless you."
 "##;
 
 // The hamlet: the wise woman south of the player, stairs down at the east end.
@@ -199,6 +200,9 @@ fn home_together_the_quest_completes_and_she_stays() {
         &w,
         "Eadgyth says: \"Home! I never thought I'd see it again.\""
     ));
+    // The giver is here: she thanks the player and pays.
+    assert!(heard(&w, "Wynn says: \"You found her! Bless you.\""));
+    assert!(heard(&w, "Wynn gives you 30 gold coins."));
     assert!(heard(&w, "Quest complete: Eadgyth."));
     assert_eq!(super::shop::count_of(&w.state.player().inventory, gold), 30);
     // She stays: the player goes down, and she does not come.

@@ -35,3 +35,6 @@ The balor bursts when it dies (the dread design §5.3, #1127: `[creature.burst]`
 "dies"`, `8d12` fire, radius 2, 50 % `burning`; `world/creature_burst.rs`), and is made with its Fire cloak
 (innate, #1128, below).
 Presence (#1128, `world/aura.rs`): the hezrou's stench (`poisoned`, radius 2, Toughness 16, every 30 s); the chasme's drone (`drowsy`, heard, radius 3, loudness 50, Willpower 16, every 18 s, a buzzing cry); fear auras on the vrock (radius 2, 17, a scream cry for its screech) and the nalfeshnee (radius 3, 19); the balor innate `fire_cloaked` (its burst is D3's). `content::aura_roster_tests` lists every row.
+
+The quasit (#1132, docs/dev/creatures.md "The unseen"): `[creature.invisible] cooldown =
+300`, it stings and is gone from sight, not from the room; its poison kept.

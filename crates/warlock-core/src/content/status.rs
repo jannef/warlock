@@ -496,6 +496,10 @@ struct StatusSpec {
     #[serde(default)]
     hides: bool,
     #[serde(default)]
+    unseen: bool,
+    #[serde(default)]
+    sees_unseen: bool,
+    #[serde(default)]
     flat_footed: bool,
     #[serde(default)]
     auto_critical: bool,
@@ -610,6 +614,11 @@ pub struct StatusDef {
     /// perception snapshot shows a shut chest in its place, never it (`world/mimic.rs`). Nothing
     /// ends it but being found out.
     pub hides: bool,
+    /// Its sufferer is unseen by the player whatever the light (Invisible; docs/dev/creatures.md
+    /// "The unseen"): perception leaves it out of the snapshot, and it sheds no light of its own.
+    pub unseen: bool,
+    /// Its bearer, the player, sees the unseen and the shadowy while it lasts (Seeing).
+    pub sees_unseen: bool,
     /// Its sufferer is flat-footed while it lasts (Surprised, Stunned; spec §8 "Surprise and
     /// sneak attacks"): its Dexterity and Dodge count nothing toward its Defence, it makes no
     /// free blow out of its turn, and sneak dice land on it (`world/surprise.rs`).
@@ -707,6 +716,8 @@ impl StatusDef {
             && !self.flees
             && !self.sleeps
             && !self.hides
+            && !self.unseen
+            && !self.sees_unseen
             && !self.flat_footed
             && !self.auto_critical
             && !self.per_action
@@ -965,6 +976,8 @@ fn resolve(
         flees: spec.flees,
         sleeps: spec.sleeps,
         hides: spec.hides,
+        unseen: spec.unseen,
+        sees_unseen: spec.sees_unseen,
         flat_footed: spec.flat_footed,
         auto_critical: spec.auto_critical,
         per_action: spec.per_action,

@@ -1,9 +1,9 @@
 # The people of Holtwīc, the village at the end of the north road (#1140; the fields:
 # data/dialogue.toml): the cottars (the `cottar` type), and Gammer Wynflæd, the village's
 # wise-woman, placed by the village's legend with `npc = "wynflaed"`. Country folk: the cottars
-# talk as the commoners of the march do, the wise-woman as an old countrywoman. Her quest (the
-# villager the fair folk took, #1141) comes as its own topic; until then she talks of the
-# village, the wood, and the fair folk, and reveals nothing.
+# talk as the commoners of the march do, the wise-woman as an old countrywoman. Her quest (Ælfrun,
+# the girl the fair folk took, data/quests/wynflaed.toml, #1141) comes first among her topics;
+# besides it she talks of the village, the wood, and the fair folk.
 
 # The cottars: one-liners and mutters, no topics.
 [[dialogue]]
@@ -68,3 +68,24 @@ reply = "Holegnwudu's older than the barrows. Boar in it, wolves in the deep par
 id = "fair_folk"
 name = "The fair folk"
 reply = "Don't name them, my dear: bad manners and worse luck. Two courts of them, my mother said, the bright and the dark. The bright ones only play tricks. The dark ones keep a hall under a hill in this wood, and what goes in doesn't come out the same, if it comes out at all."
+
+# Ælfrun, Osgar's girl, the cottar's daughter the dark court took (#1141): placed on the moss bed
+# at the bottom of Ælfhām by the wise-woman's quest (`waits`, data/quests/wynflaed.toml), not by
+# a level. Chatted with there, she says the quest's `joins` line and follows; her lines are a
+# frightened girl's on the way home, and her thanks once there.
+[[dialogue]]
+npc = "aelfrun"
+name = "Ælfrun"
+lines = [
+    "Is it much farther? Me legs won't stop shakin'.",
+    "Don't look at the lights. They want you to look at 'em.",
+    "They kept singin' at me. I can still 'ear it, sort of.",
+    "'Ow long was I down there? It felt like one long evenin'.",
+    "I never ate nuffink they give me. Gammer always said not to.",
+    "Thank you. Truly. I'd 'ave been down there for ever, else.",
+]
+mutter = { chance = 2, verb = "whispers", lines = [
+    "...don't look, don't look...",
+    "...me mum'll be in such a state...",
+    "...rowan at the door, iron at the sill...",
+] }

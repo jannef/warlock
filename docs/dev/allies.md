@@ -352,7 +352,9 @@ held leaves its pack for its cell; priced by `hand_over_one` with the slot's act
 time, for what fits no slot or a spirit weapon). The snapshot's `kept_beside` counts escorts
 (the way is asked with two beside), `escort_beside` widens the Give list to `fits_escort`, and
 `Ability::orders`' `kept` is true with an escort. Home (`escorts_home`): `escort_released` puts
-the faction back, the neutral stance, a fresh `Mind` with its post where it stands. Tests:
+the faction back, the neutral stance, a fresh `Mind` with its post where it stands; then the
+quest's `thanks` and the giver's `done` (`docs/dev/quests.md`). An escort a quest makes on a
+level (`waits`, `world/escort_waits.rs`) is an ordinary creature of its type until it joins. Tests:
 `world/escort_tests.rs`.
 
 ## Charmed

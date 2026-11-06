@@ -254,6 +254,10 @@ const RUNGS: &[(&str, [&[&str]; 5])] = &[
     ),
 ];
 
+/// Kin of a line on none of its rungs, with the rung whose death throes they share: the
+/// invisible stalker (D8, level 22) bursts as the air elemental beside it does.
+const KIN: &[(&str, usize, &str)] = &[("air", 1, "invisible_stalker")];
+
 /// A line's death throes (the dread design §5.3).
 struct Throes {
     kind: &'static str,
@@ -323,45 +327,45 @@ fn check_stones(content: &Content, id: &str, def: &super::CreatureDef) {
 fn every_line_but_earth_has_death_throes_and_earth_throws_stones() {
     let content = Content::builtin().expect("content");
     let mut listed = Vec::new();
-    for &(line, rungs) in RUNGS {
-        for (rung, ids) in rungs.iter().enumerate() {
-            for &id in *ids {
-                listed.push(id);
-                let c = content.creature_id(id).unwrap_or_else(|| panic!("{id}"));
-                assert!(content.has_tag(c, line), "{id}: of the {line} line");
-                let def = content.creature(c);
-                let Some(want) = throes(line) else {
-                    check_stones(&content, id, def);
-                    continue;
-                };
-                let burst = (def.burst.as_ref()).unwrap_or_else(|| panic!("{id}: death throes"));
-                assert_eq!(burst.when, BurstWhen::Dies, "{id}");
-                let kind = want.kind;
-                assert_eq!(
-                    Some(burst.kind),
-                    content.damage_type_id(kind),
-                    "{id}: {kind}"
-                );
-                assert_eq!(
-                    burst.radius, want.radii[rung],
-                    "{id}: the radius of rung {rung}"
-                );
-                // Half the doubled damage spells' dice of its level, (4 + L/4)d6: (2 + L/8)d6.
-                let dice = 2 + i32::from(def.level) / 8;
-                assert_eq!(
-                    (burst.damage.min(), burst.damage.max()),
-                    (dice, 6 * dice),
-                    "{id}: {dice}d6"
-                );
-                let rider: Vec<_> = (want.rider.filter(|&(_, from)| rung >= from))
-                    .map(|(status, _)| content.status_id(status).expect(status))
-                    .into_iter()
-                    .collect();
-                let riders: Vec<_> = burst.riders.iter().map(|r| r.status).collect();
-                assert_eq!(riders, rider, "{id}: its rider");
-                assert_eq!((burst.douses, burst.gust), (want.douses, want.gust), "{id}");
-            }
-        }
+    let on_rungs = RUNGS.iter().flat_map(|(line, rungs)| {
+        (rungs.iter().enumerate())
+            .flat_map(move |(rung, ids)| ids.iter().map(move |&id| (*line, rung, id)))
+    });
+    for (line, rung, id) in on_rungs.chain(KIN.iter().copied()) {
+        listed.push(id);
+        let c = content.creature_id(id).unwrap_or_else(|| panic!("{id}"));
+        assert!(content.has_tag(c, line), "{id}: of the {line} line");
+        let def = content.creature(c);
+        let Some(want) = throes(line) else {
+            check_stones(&content, id, def);
+            continue;
+        };
+        let burst = (def.burst.as_ref()).unwrap_or_else(|| panic!("{id}: death throes"));
+        assert_eq!(burst.when, BurstWhen::Dies, "{id}");
+        let kind = want.kind;
+        assert_eq!(
+            Some(burst.kind),
+            content.damage_type_id(kind),
+            "{id}: {kind}"
+        );
+        assert_eq!(
+            burst.radius, want.radii[rung],
+            "{id}: the radius of rung {rung}"
+        );
+        // Half the doubled damage spells' dice of its level, (4 + L/4)d6: (2 + L/8)d6.
+        let dice = 2 + i32::from(def.level) / 8;
+        assert_eq!(
+            (burst.damage.min(), burst.damage.max()),
+            (dice, 6 * dice),
+            "{id}: {dice}d6"
+        );
+        let rider: Vec<_> = (want.rider.filter(|&(_, from)| rung >= from))
+            .map(|(status, _)| content.status_id(status).expect(status))
+            .into_iter()
+            .collect();
+        let riders: Vec<_> = burst.riders.iter().map(|r| r.status).collect();
+        assert_eq!(riders, rider, "{id}: its rider");
+        assert_eq!((burst.douses, burst.gust), (want.douses, want.gust), "{id}");
     }
     for c in content.tagged("elemental") {
         let id = content.creature(c).id.as_str();
