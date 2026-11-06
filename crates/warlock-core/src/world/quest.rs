@@ -761,6 +761,11 @@ impl World {
         };
         self.answer(id, line, Some(topic.into()), events);
         self.reveal_at(id, &given, RevealWhen::Given);
+        if let Goal::Escort { waits: Some(w), .. } = &given.goal
+            && self.state.levels.contains_key(&w.level)
+        {
+            super::escort_waits::place_waiting(&mut self.state, &content, &w.level);
+        }
         if let Some(letter) = handed {
             let who = capitalized(&self.called(&self.state.actors[&id]));
             self.say(format!("{who} gives you {}.", letter.describe(&content)));

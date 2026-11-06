@@ -282,7 +282,7 @@ pub use prayer::{Face, FaceWords, Faced, PrayerRules, PrayerUse, UseDef};
 pub use prestige::{MAX_PRESTIGE_LEVELS, PrestigeDef, Table};
 pub use quest::{
     GOLD, Goal, KillTarget, MAX_COUNT, MAX_NAME, MAX_QUEST_XP, MAX_TAG_COUNT, QuestDef, QuestId,
-    QuestKind, QuestTexts, Reveal, RevealWhen, Reward,
+    QuestKind, QuestTexts, Reveal, RevealWhen, Reward, Waits,
 };
 pub(crate) use quest_roll::roll_known;
 pub use quest_roll::{Candidate, MAX_VARIANTS, MAX_WEIGHT, Pick, Roll, Rolled, Variant, one_of};

@@ -137,6 +137,7 @@ mod encounter_area;
 mod endless;
 mod equip;
 mod escort;
+mod escort_waits;
 mod experience;
 mod eyes;
 mod familiar;
@@ -2053,6 +2054,8 @@ mod witch_tests;
 mod words_tests;
 #[cfg(test)]
 mod wriggle_tests;
+#[cfg(test)]
+mod wynflaed_quest_tests;
 #[cfg(test)]
 mod zap_tests;
 #[cfg(test)]

@@ -698,11 +698,17 @@ developer notes (CLAUDE.md, `docs/dev/`).
     ("Eadgyth wields the long sword.") and what the slot held falls on its cell ("Eadgyth drops
     the club."); what fits no slot is refused with no time. When the escort stands on the target
     level with the player (checked as they arrive, or as it joins there), the quest is done: the
-    escort says `done`, the reward is paid as a hand-in's, and it is no one's ally (its own
+    escort says `thanks` (optional), the giver, if on that level (else the escort), says `done`,
+    the reward is paid as a hand-in's, and it is no one's ally (its own
     faction, the neutral stance, its post where it stands). Its death, joined or not, fails the
     quest ("Quest failed: Eadgyth."): the log keeps it among the finished ones, "Failed: Eadgyth
     is dead.", and it is never offered again; nothing else is locked. The log's status while
-    active: "Eadgyth follows you." or "Eadgyth is not with you."
+    active: "Eadgyth follows you." or "Eadgyth is not with you." An escort no level can place
+    (a generated floor: a vault holds no npc) is placed by the quest, `waits = { creature,
+    level, at }` (`world/escort_waits.rs`, #1141): a creature of that type, the escort, on the
+    named place `at` of that level (or the nearest free cell), as the quest is given or as the
+    level is first made after; once only. The Ascmearc's first: Gammer Wynflæd's "Taken under
+    the hill", Ælfrun on the moss bed at the bottom of Ælfhām, home to Holtwīc.
   - **Creature tags** (`content/tag.rs`, #421, #441): a creature type carries plain singular
     words, chosen by hand as a card game gives creatures types (`tags = ["goblin", "archer"]`);
     there is one flat pool and no registry: a tag exists because a creature carries it. A kill
