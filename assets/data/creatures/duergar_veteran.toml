@@ -23,7 +23,7 @@ stats = { strength = 19, dexterity = 14, toughness = 19, intelligence = 12, will
 base_hp = 43
 resist = { poison = 25, cold = 10 }
 on_eat = { message = "Tough and sour, like old leather.", vomit = 25 }
-weapon_skills = { axes = 3, shield_block = 2, sword_and_board = 1 }
+weapon_skills = { axes = 3, sword_and_board = 1 }
 racial_weapon = "battle_axe"
 [[creature.gear]]
 chance = 80

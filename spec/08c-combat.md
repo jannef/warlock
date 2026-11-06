@@ -34,7 +34,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     weapon's own attack, Dexterity to hit and Strength to damage.
   - **Weapon skills** ("Weapon skills" below): the rank in the skill an attack draws on adds to
     its to-hit and damage and widens its threat range; the wielded weapon's skill adds to its
-    Parry and shield blocking to a held shield's Shield; a high rank makes an attack cheaper.
+    Parry; a high rank makes an attack cheaper.
     The fighting style the attack is fought in adds its own ("Fighting styles" below).
   - **Defence** = 10 + one bonus per category: **Dexterity** (the Dexterity modifier, capped
     by the lowest `max_dex` of what the actor wears and by its burden, +3 Burdened, +1 Strained,

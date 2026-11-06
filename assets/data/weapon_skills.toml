@@ -60,14 +60,12 @@ far = 5
 #             launcher     missile weapons name it; their shots train it
 #             thrown       every throw trains it (things only thrown, a rock, name it too)
 #             unarmed      bare hands and natural attacks
-#             shield_block a blow blocked by a held shield trains it (a miss credited to the
-#                          Shield category of Defence); its `shield` adds to that category
 #             shield_bash  bashing with a held shield (an ability; spec §6 "Abilities")
 #             school       a school of magic (below): every spell of its school the caster
 #                          casts with their own mana trains it (a scroll read or a wand used
 #                          trains nothing), and its ranks lift that school's spells
 #             style        a fighting style (below)
-#           unarmed, thrown, shield_block, and shield_bash may have one skill each, and every
+#           unarmed, thrown, and shield_bash may have one skill each, and every
 #           school of magic one skill (`school`: its id, as the spells' `school` names it)
 #   curve   the curve above it trains along
 # and what each rank gives, as 11 numbers for ranks 0 to 10 (rank 0 gives nothing; a higher rank
@@ -80,7 +78,8 @@ far = 5
 #           the cast's (never a caster style's)
 #   parry   melee: added to the wielded weapon's Parry bonus to Defence
 #   reload  launcher: percent off the cost of reloading (a crossbow)
-#   shield  shield_block: added to the held shield's Shield bonus to Defence
+#   shield  a shield style (sword_and_board, two_shields): added to the held shield's Shield
+#           bonus to Defence
 # and a school (never `damage`, `crit`, `parry`, `reload`, or `shield`), on its own spells,
 #   reroll  a die showing this or less is rolled again, once (0 to 3)
 #   sides   every die this many sizes bigger, a d6 a d7 (0 to 3)
@@ -249,14 +248,6 @@ threat = [0, 0, 0, 0, 0, 0, 0, 1, 1, 2, 2]
 speed = [0, 0, 0, 0, 0, 0, 5, 10, 15, 20, 30]
 
 # Shields
-[[skill]]
-id = "shield_block"
-name = "Shield blocking"
-phrase = "at blocking with a shield"
-role = "shield_block"
-curve = "melee"
-shield = [0, 0, 1, 1, 1, 2, 2, 3, 4, 5, 6]
-
 [[skill]]
 id = "shield_bash"
 name = "Shield bashing"
@@ -629,10 +620,6 @@ penalty = 4
 
 [[default]]
 between = ["slings", "thrown"]
-penalty = 3
-
-[[default]]
-between = ["shield_block", "shield_bash"]
 penalty = 3
 
 # Between the schools of magic: a blast and a change both remake the stuff of the world; the

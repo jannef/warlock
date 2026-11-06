@@ -3,6 +3,6 @@ id = "shield_wall"
 name = "Shield wall"
 tree = "guard"
 description = "Behind a shield, what gets past it lands softer: Protection +1 while you hold one."
-needs = { weapon_skills = { shield_block = 3 } }
+needs = { weapon_skills = { sword_and_board = 3 } }
 effects = [{ kind = "protection", value = 1, shield = true }]
 systems = ["protection"]

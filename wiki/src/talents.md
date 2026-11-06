@@ -51,8 +51,7 @@ already learned is not given again: that level gives you a talent pick in its pl
 - A talent is picked once.
 - A talent with a **choice** (a [weapon skill](weapon-skills.md), a [fighting style](fighting-styles.md), a [skill](skills.md), an element) is picked
   for that choice, and the same talent may be picked again for another: [Weapon focus](talents.md#talent-weapon-focus) with [long
-  blades](weapon-skills.md#weapon-skill-long-blades) and Weapon focus with [bows](weapon-skills.md#weapon-skill-bows) are two talents. A [weapon skill](weapon-skills.md) chosen is one you attack with
-  (never [shield blocking](weapon-skills.md#weapon-skill-shield-block)); a [fighting style](fighting-styles.md) is chosen as a style; a [skill](skills.md) is one you are trained in
+  blades](weapon-skills.md#weapon-skill-long-blades) and Weapon focus with [bows](weapon-skills.md#weapon-skill-bows) are two talents. A [weapon skill](weapon-skills.md) chosen is one you attack with; a [fighting style](fighting-styles.md) is chosen as a style; a [skill](skills.md) is one you are trained in
   ([Skill focus](talents.md#talent-skill-focus)).
 - **Prerequisites** must all hold when you pick, and are never checked again: a [Strength](stats.md#stat-strength) lowered
   by [disease](diseases.md#how-a-disease-goes) later does not take a talent away. They may be another talent, a [stat](stats.md)

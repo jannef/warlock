@@ -3,6 +3,6 @@ id = "shield_line"
 name = "Shield line"
 tree = "class"
 granted = true
-description = "You hold the line behind a shield: Shield +1 to your Defence while you hold one."
-effects = [{ kind = "weapon", role = "shield_block", shield = 1 }]
+description = "You hold the line behind a shield: Shield +1 to your Defence while you fight with a shield and a weapon, or two shields."
+effects = [{ kind = "weapon", role = "style", shield = 1 }]
 systems = ["defence"]
