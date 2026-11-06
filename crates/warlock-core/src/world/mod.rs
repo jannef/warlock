@@ -1768,6 +1768,8 @@ mod hoard_tests;
 #[cfg(test)]
 mod hold_tests;
 #[cfg(test)]
+mod holtwic_tests;
+#[cfg(test)]
 mod hunger_tests;
 #[cfg(test)]
 mod hurl_tests;

@@ -5649,6 +5649,7 @@ mod tests {
                 "hunters_statue",
                 "kobolds_cache",
                 "ligetdrys_stones",
+                "moss_bower",
                 "nihtscinnas_warren",
                 "nithdracas_hoard",
                 "robbers_hoard",
