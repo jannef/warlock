@@ -27,3 +27,12 @@ attack = { damage = "2d6", damage_type = "fire", name = "bite", verb = "bites", 
 resist = { fire = 100, cold = -50, poison = 100 }
 corpse = false
 blood = "none"
+# Death throes (the dread design §5.3): it bursts where it dies.
+[creature.burst]
+damage = "2d6"
+damage_type = "fire"
+radius = 1
+when = "dies"
+effect = "blaze"
+noun = "flame"
+verb = "bursts apart in flame"

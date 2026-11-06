@@ -183,6 +183,28 @@ developer notes (CLAUDE.md, `docs/dev/`).
   keeps its drain), the hand of glory (transfixed, 3 cells), the ultroloth and the rakshasa
   (transfixed and frightened), the succubus and the incubus (transfixed; the kiss keeps its
   drain), and the duergar mindbreaker (frightened and transfixed). None is `averted` yet.
+- **Bursts** (`warlock-core/src/world/creature_burst.rs`, the rules; `content/burst.rs`, the
+  data; the dread design §5.3, #1127): a type's `[creature.burst]`: `damage` (dice),
+  `damage_type`, `radius` (0 to 3), `when`, `effect` (a burst effect), optionally `noun` (what
+  strikes: "flame"; default "burst"), `verb` (default "bursts", or "comes apart" for death
+  throes), `rider` (statuses with a severity and a chance), `douses` (a wave), `gust`. A
+  **vortex** (`when = "touches"`; no `attack`, `combat` melee) bursts instead of attacking: every
+  melee plan of its AI is a burst, after which it dies; killed, it never bursts. **Death throes**
+  (`when = "dies"`) go off where the creature dies, however it dies, on the player's level. The
+  burst is the spells' shared burst centred on its cell (`cast_burst_reaching`): one roll for
+  everyone on its cells in ascending actor id order, in full (no halving at the edge), no roll to
+  hit, Evasion halving it, resistances taking their share, creatures of its own type spared, the
+  floor's ruin and the spell type's cells as a spell's burst; then a wave ends what water ends
+  (Burning) on everyone reached and puts out the fires, a gust blows each pile on its cells but
+  the centre a cell outward onto a walkable cell, and its riders land by their chance on those
+  harmed (the spell types' riders do not). Its blows are the creature's, dead or not. Words: "The
+  ember mote bursts!", "The fire elemental comes apart in flame!" when the player sees its cell
+  (death throes after the death line), each blow seen as a spell's; unseen, an explosion
+  (`SoundKind::Explosion`, 150). Who: the six motes (vortices, `2d4` to `2d6`, radius 1), every
+  elemental line but earth (death throes of `(2 + L/8)d6`, half the doubled damage spells'
+  `(4 + L/4)d6` of their level; radius and rider by rung, `docs/dev/creatures/elementals.md`), the
+  burning skull, the magma crawler, and the balor. The earth line throws stones instead
+  (`[creature.throw]`).
 - **Casters** (`warlock-core/src/world/creature_cast.rs`, the rules;
   `content/creature_spells.rs`, the data; #1102): a `combat = "caster"` type has a `spells`
   list (ids in `data/spells/`, in the order it prefers them; only a caster has one), and only

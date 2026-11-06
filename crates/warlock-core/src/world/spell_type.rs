@@ -217,7 +217,7 @@ impl World {
 
     /// The fires within `radius` of `center`, in its line of sight, go out, and a fire zone
     /// loses those cells (`zone.rs`).
-    fn douse(&mut self, center: Pos, radius: i32) {
+    pub(super) fn douse(&mut self, center: Pos, radius: i32) {
         let cells: Vec<Pos> = self.burst(center, radius).into_iter().collect();
         for &p in &cells {
             if self.state.current().fires.contains_key(&p) {

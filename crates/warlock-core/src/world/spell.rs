@@ -51,6 +51,15 @@ pub(super) enum Caster {
     Place,
 }
 
+/// Whom a burst strikes, and how hard: those of the tags `only` (Rebuke's; none: everyone), but
+/// creatures of the type `spare`; half (at least 1) beyond radius − 1 unless `full`.
+#[derive(Clone, Copy, Debug)]
+pub(super) struct Reach<'a> {
+    pub only: &'a [String],
+    pub spare: Option<crate::content::CreatureId>,
+    pub full: bool,
+}
+
 /// The cells a burst around `center` of `radius` reaches: within the radius (rounded, like every
 /// radius) and in line of sight from the center, opaque cells left out. None if the center is
 /// opaque.
@@ -245,10 +254,28 @@ impl World {
     pub(super) fn cast_burst_at(
         &mut self,
         caster: Caster,
-        (origin, center): (Pos, Pos),
+        at: (Pos, Pos),
         (burst, only): (&Burst, &[String]),
         events: &mut Vec<Event>,
     ) -> i32 {
+        let reach = Reach {
+            only,
+            spare: None,
+            full: false,
+        };
+        self.cast_burst_reaching(caster, at, (burst, reach), events)
+    }
+
+    /// [`World::cast_burst_at`], striking as `reach` says: a creature's burst
+    /// (`creature_burst.rs`) spares its own kind and strikes everyone in full.
+    pub(super) fn cast_burst_reaching(
+        &mut self,
+        caster: Caster,
+        (origin, center): (Pos, Pos),
+        (burst, reach): (&Burst, Reach<'_>),
+        events: &mut Vec<Event>,
+    ) -> i32 {
+        let only = reach.only;
         let level = self.state.current();
         let radius = burst.radius;
         // Its own cell never stops it: a trap's on a shut door bursts out on both sides.
@@ -274,11 +301,11 @@ impl World {
         };
         let caught: Vec<(ActorId, Pos)> = (self.state.actors.values())
             .filter(|a| a.level == level && reached.contains(&a.pos) && !spared(a))
-            .filter(|a| self.is_of_tags(a, only))
+            .filter(|a| self.is_of_tags(a, only) && reach.spare != Some(a.creature))
             .map(|a| (a.id, a.pos))
             .collect();
         for (id, p) in caught {
-            let edge = p.dist2(center) > inner;
+            let edge = !reach.full && p.dist2(center) > inner;
             let damage = if edge { (roll / 2).max(1) } else { roll };
             let damage = Damage::new(damage, burst.kind);
             self.spell_hurts(caster, id, (center, false), damage, events);

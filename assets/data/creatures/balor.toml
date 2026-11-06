@@ -45,3 +45,13 @@ chance = 100
 one_of = ["great_sword"]
 keep = "wield"
 magic = 75
+# Death throes (the dread design §5.3): it bursts where it dies.
+[creature.burst]
+damage = "8d12"
+damage_type = "fire"
+radius = 2
+when = "dies"
+effect = "fireball"
+noun = "hellfire"
+verb = "comes apart in a blast of hellfire"
+rider = [{ status = "burning", severity = 1, chance = 50 }]

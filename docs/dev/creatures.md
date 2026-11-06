@@ -141,6 +141,27 @@ all); `World::avert_news` notes it beginning and ending. Status bar "Averted"; d
 `averted`, JSON `averted`; the cooldown shows among `actors`' effects. Nothing is `averted` until
 D2's basilisk. **Tests**: `world/gaze_tests.rs`, and `content/gaze.rs`'s roster of the moved
 riders (`MOVED`). Keep the rider generic: D2's stiffening is a status rider like any.
+Bursts: vortices and death throes (the dread design `docs/design/monster-dread.md` §5.3, #1127).
+**Data**: `[creature.burst]` (`content/burst.rs`: `BurstSpec` resolved in the creature loop into
+`CreatureDef::burst: Option<CreatureBurst>`: `damage`, `damage_type`, `radius` 0 to 3, `when`
+(`BurstWhen::Touches`, a vortex; `Dies`, death throes), `effect` (a burst effect, checked by
+`burst::check_effects` once effects load), optional `noun`/`verb`, `rider` (the spell types'
+rider form, `spell_type::rider`), `douses`, `gust`); `check_combat` refuses a `touches` burst on
+a type with an `attack` or a `combat` other than melee. **Rules**: `world/creature_burst.rs`:
+`ai.rs::creature_turn` sends every melee plan of a vortex (`World::bursts_on_touch`) to
+`World::creature_bursts` (a melee attack's price; the burst, then `dies` with no killer);
+`fight.rs::dies` calls `World::death_throes` after `creature_dies` (current level only; the
+words held and joined to the news, so they follow the death line). `World::go_off` is the
+burst: the words, the traps' `explosion` sound (`sound_at`), and
+`spell.rs::cast_burst_reaching` with `Reach { spare: its type, full: true }` (no halving at the
+edge; `cast_burst_at` is the same with the usual `Reach`), so the ruin, the spell type's cells,
+and `spell_strikes` are the spells'; then the wave (`quench` on everyone on its cells,
+`spell_type.rs::douse`), the gust (piles moved a cell outward), `say_spell`, and the riders by
+their chance on those harmed (no `spell_type_lands`). A dead burster's blows are its own: it is
+in `fallen`. **Wiki**: `creature_bursts` (`creature-bursts.md`, "Bursts" in
+`creature-numbers.md`), the creatures table's "bursts beside you" / "bursts when it dies", the
+attacks table's vortex row. **Tests**: `world/creature_burst_tests.rs`; the elementals' roster
+test pins every line's burst and the earth line's throw.
 
 Casters (spec §8 "Creature behavior": "Casters", #1102). **Data**: `spells = [...]` on a
 `combat = "caster"` type (`CreatureSpec::spells`, resolved in the creature loop by

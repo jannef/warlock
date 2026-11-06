@@ -33,3 +33,13 @@ to_hit = 9
 name = "touch"
 verb = "shocks"
 on_hit = [{ status = "staggered", chance = 20, severity = 1 }]
+# Death throes (the dread design §5.3): it bursts where it dies.
+[creature.burst]
+damage = "6d6"
+damage_type = "electricity"
+radius = 2
+when = "dies"
+effect = "shatter"
+noun = "lightning"
+verb = "comes apart in a crack of lightning"
+rider = [{ status = "staggered", severity = 1, chance = 50 }]

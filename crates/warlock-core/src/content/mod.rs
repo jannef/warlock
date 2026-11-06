@@ -16,6 +16,7 @@ mod background;
 #[cfg(test)]
 mod beast_roster_tests;
 mod breath;
+mod burst;
 mod calendar;
 mod calling;
 mod campaign;
@@ -194,6 +195,7 @@ pub use background::{
     Points, Tier as StoryTier, Tiers, When,
 };
 pub use breath::Breath;
+pub use burst::{BurstWhen, CreatureBurst, RADII as CREATURE_BURST_RADII};
 pub use calendar::Calendar;
 pub use calling::{CallingDef, MAX_MESSAGE as MAX_CALLING_MESSAGE};
 pub use campaign::{CAMPAIGNS, CampaignDef, CampaignKind};
@@ -1194,6 +1196,7 @@ impl Content {
         talent::check_heirlooms(&content).map_err(|m| ContentError::new("data/talents", m))?;
         spell_def::check_effects(&content).map_err(|m| ContentError::new("data/spells", m))?;
         breath::check_effects(&content)?;
+        burst::check_effects(&content)?;
         let path = "data/traps.toml";
         if let Some(text) = files.get_optional(path) {
             let (traps, ids, avoid) = trap::parse(path, text, &content)?;
@@ -1826,6 +1829,10 @@ impl Content {
                 .map(|g| g.resolve(self, status, |id| self.disease_id(id)))
                 .transpose()
                 .map_err(|m| err(format!("creature `{}`: {m}", spec.id)))?;
+            let burst = (spec.burst.as_ref())
+                .map(|b| b.resolve(self))
+                .transpose()
+                .map_err(|m| err(format!("creature `{}`: {m}", spec.id)))?;
             let throw = (spec.throw.clone())
                 .map(|t| {
                     let kinds = self.resolve_kinds(t.damage_type.as_ref())?;
@@ -1934,6 +1941,7 @@ impl Content {
                 more_attacks,
                 breath,
                 gaze,
+                burst,
                 throw,
                 weapon_skills,
                 resist,
@@ -4531,6 +4539,14 @@ fn check_combat(spec: &creature::CreatureSpec) -> Result<(), String> {
             ));
         }
         _ => {}
+    }
+    // A vortex's burst is its whole offence (`world/creature_burst.rs`): no attack beside it.
+    if (spec.burst.as_ref()).is_some_and(|b| b.when == crate::content::BurstWhen::Touches)
+        && (spec.attack.is_some() || spec.combat != Combat::Melee)
+    {
+        return Err(format!(
+            "creature `{id}`: a burst on touch is its offence: no attack, and `combat` melee"
+        ));
     }
     match (spec.combat, spec.range) {
         (Combat::Melee | Combat::Dragon, None) => Ok(()),

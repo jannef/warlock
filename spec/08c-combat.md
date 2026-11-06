@@ -540,8 +540,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
   - **Creatures' throws** (`warlock-core/src/world/hurl.rs`, #457): a creature type's natural
     ranged attack, `[creature.throw]` (`object`, `damage`, `damage_type`, `range` 2 to 20,
     `verb`; optional `name`, `cost`, `to_hit`, `threat`, `crit`, `on_hit`; `content::Throw`),
-    needing no ammunition: the giants' boulders. A creature with one that is not next to its
-    target throws whenever the target is within `range` with a clear line of fire (the archers'
+    needing no ammunition: the giants' boulders, the earth elementals' stones. A creature with one
+    that is not next to its target and not inside solid terrain throws whenever the target is within `range` with a clear line of fire (the archers'
     `clear_shot`), before any other plan; otherwise it closes in, and next to the target fights in
     melee. A throw is a thrown attack (`Actor::hurled`: Dexterity to hit, Strength to damage, its
     `thrown` rank, its affixes and stance; its `on_hit` riders as a natural attack's), priced as

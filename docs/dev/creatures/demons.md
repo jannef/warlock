@@ -30,3 +30,7 @@ immune to fire, a great sword, often magic, struck faster than one blow a turn, 
 that holds when it has no sword). Demons are evil, have darkvision, are immune to poison, resist
 fire (the balor is immune), and from level 24 resist cold and electricity a little; no corpse; dark
 ichor for blood.
+
+The balor bursts when it dies (the dread design §5.3, #1127: `[creature.burst]` `when =
+"dies"`, `8d12` fire, radius 2, 50 % `burning`; `world/creature_burst.rs`). Its innate Fire
+cloak waits for innate statuses (D4, #1128).

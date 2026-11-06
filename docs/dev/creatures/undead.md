@@ -112,3 +112,5 @@ did the spectre's Willpower drain (range 4, 40 %), the white lady's, the night m
 ghost lord's transfixion (range 5, 35 %; their touch keeps its drain), and the hand of glory's
 candle (range 3, 30 %). The washer at the ford's fear stays on her touch until #1128's aura.
 `world/bestiary_tests.rs` reads the spectre's drain on its gaze.
+The burning skull bursts when it dies (the dread design §5.3, #1127: `[creature.burst]`
+`when = "dies"`, `2d6` fire, radius 1; `world/creature_burst.rs`).
