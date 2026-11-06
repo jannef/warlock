@@ -236,7 +236,7 @@ Birth sign gifts, the Roc to the Barghest (#267), and their hooks:
 | `max_hp_percent` | `Actor::max_hp`, `lasting_max_hp` (`Actor::frail`, at least 1) |
 | `rise_from_ashes` | `World::hurt` → `World::rise_from_ashes` (`world/stars.rs`): the player at 0 hit points of anything but `Harm::Starving` (choking never passes `hurt`), while `Progress::once` lacks `risen`; sets it, afflicts the status, hit points to the share (of the maximum with it), `Event::Spell` over `burst_cells`, one gameplay roll of the damage for every creature reached (`spell_hurts`), `shock(Heat)` |
 | `smell_rot` | `PerceptionView::smell(stack)` (a `Freshness` word from `rot::stage`, never an age), the eat list's mark |
-| `free_blow` `gatekeeper` | `World::second_blow` on `Cue::Approaches` (`World::step_up` from `creature_steps`); with `one_in` (the Gatekeeper gift's 4) `TalentMods::gatekeeper_one_in`, a chance the stance scales (`World::gatekeeper_odds`, `gatekeeper_draw`), else `FreeBlows::gatekeeper`, every time |
+| `free_blow` `gatekeeper` | `World::second_blow` on `Cue::Approaches` (`World::step_up` from `creature_steps`) |
 
 `Progress::once` (saved, left out while empty) holds what may happen once in a life; the
 `talents` dump and `OwnTalent::spent` mark Rise from the ashes "(spent)" once it has.

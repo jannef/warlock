@@ -25,7 +25,7 @@ hags, the trader; at least 45 apart in RGB from all of them).
 casters In and Wp +4); `base_hp = 2.5 × L × role` (archer and standard 1.0, officer 1.1, quick
 0.9, brute 1.6, caster 0.8). The armed ones hold their racial weapon at rank `1 + L/7`; the two
 who fight bare (the spider rider, whose spider bites, and the mindbreaker's mind-lash) have a
-natural attack on #383's dice ladder (caster one step down), to-hit `L / 10`, and a rider.
+natural attack on #383's dice ladder (caster one step down), to-hit `L / 4`, and a rider.
 `content/duergar_roster_tests.rs` checks all of it (the three older types only for XP and hit
 points), the stances, and the gear rolls (armed nine times in ten, the shooters with ammunition).
 

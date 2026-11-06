@@ -4,9 +4,7 @@ Developer notes for working on this part of Warlock (moved from CLAUDE.md, #185)
 rules it implements are in spec/08c-combat.md. Keep it current with the code, as CLAUDE.md says.
 
 Combat (spec §8 "Combat"; M16, #116): the pure rules are `warlock-core/src/combat.rs` (2d12
-`roll_natural`, `hits`, `hit_ways`, `ways`; `FUMBLE` (2) always misses and every natural from
-`SURE_HIT` (22) to `HIGHEST` (24) always hits, #1096; checks keep a natural 24 alone as their sure
-success, `check::makes`, which temper's check shares; `Category` (Dexterity, Armour, Shield, Parry,
+`roll_natural`, `hits`, `hit_ways`, `ways`; `Category` (Dexterity, Armour, Shield, Parry,
 Natural, Dodge, Deflection, Wall: one entry each in its `categories!` list; Wall is an
 incorporeal creature's inside solid terrain, added by `World::defence_of`, `docs/dev/creatures.md`) and `Defence` (highest per
 category, Dodge stacks; `why_missed` weighs a miss by the positive bonuses); `Attack` (what data
@@ -164,12 +162,7 @@ ascetic's Patient defence, `world/ascetic.rs`, #849, and is raised only by `Worl
 `World::after_melee`: the player's attacks call `after_attack`, never dodged), `Cleaved` (great
 cleave's next), `Leaves` (`World::opportunist`), `Approaches` (`World::gatekeeper`, #267: a
 hostile that steps up beside a gatekeeper, from `World::step_up(id, from)` at the end of
-`ai.rs::creature_steps`, after the trap; each gatekeeper it was not beside before strikes;
-`World::gatekeeper_odds` decides who is one and how often: `FreeBlows::gatekeeper` (a class
-switch, Brace, a lurk) every time, the Gatekeeper gift's `TalentMods::gatekeeper_one_in` scaled by
-`StanceDef::gatekeeper` percent, capped at always, #1094; `gatekeeper_draw` draws once the blow
-would be struck, from the stream `gatekeeper/<keeper>/<mover>/<second>` derived on demand, so no
-other stream moves).
+`ai.rs::creature_steps`, after the trap; each gatekeeper it was not beside before strikes).
 Callers: `World::attack` (creatures) and
 `player_attacks` run the first and second blows, then `World::after_attack(attacker, target,
 parried)`, which strikes the cleave or riposte and follows cleaves while `Cleaved` gives more;

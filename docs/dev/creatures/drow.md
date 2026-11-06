@@ -24,7 +24,7 @@ In, Wp, and Pr `10 + 0.4L` (casters +4 each), within 1, capped at 40; by role (s
 archer Dx +3, quick Dx +5 To −1, caster St −3, officer St +2 To +2) and `base_hp = 2.5L × role`
 (standard 1.0, archer and quick 0.9, caster 0.8, officer 1.1), max HP within ±35 %; dice the
 ladder's nearest to `2 + 0.55L` (then `13 + 0.25(L − 20)`), casters one step lower, within
-±35 %; `to_hit = L / 10` from L20. Speeds are #383's (quick `1200 + 5L`, else 1000 then +4 a
+±35 %; `to_hit = L / 4` (#1097). Speeds are #383's (quick `1200 + 5L`, else 1000 then +4 a
 level past 20).
 
 ## Poisoned weapons

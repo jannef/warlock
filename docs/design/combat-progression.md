@@ -59,7 +59,7 @@ Design document for the owner's review (2026-10-27). Written against `origin/mai
 
 | Finding | Numbers |
 |---|---|
-| The player's unaided to-hit is Strength modifier + rank to-hit, capped at +5 at rank 10 | a plain warrior goes +4 → +8 from level 1 to 60; monsters go −1 → +17 (Strength up to 40, plus `to_hit = L/10` in the rosters) |
+| The player's unaided to-hit is Strength modifier + rank to-hit, capped at +5 at rank 10 | a plain warrior goes +4 → +8 from level 1 to 60; monsters go −1 → +17 (Strength up to 40, plus `to_hit = L/10` in the rosters; `L/4` since #1097) |
 | Hit chances cross over | the plain warrior's hit chance falls 85 % → 46 % (monster Dv 12 → 21); the monster's rises 19 % → 75 % against plain armour |
 | Magic armour decides whether the player is ever hit | a full magic set is Dv 25 to 39 from level 8; monsters need a natural 24 from level 5 to 40 (a fight of 500+ rounds for the monster) |
 | Hit points stop at level 20 (`hp_level`), monster damage and hit points do not | monster damage per blow 14 → 32 and HP 71 → 221 from level 20 to 60; player damage per hit 10 → 15 |
