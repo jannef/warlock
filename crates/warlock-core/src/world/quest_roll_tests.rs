@@ -29,13 +29,13 @@ done = "That's the one."
 where = "{Targets} are known in {branch}."
 
 [[quest]]
-id = "hundred"
-name = "The hundred"
+id = "score"
+name = "A score and five"
 giver = "godgifu"
 type = "kill"
-count = 100
+count = 25
 pick = { tags = ["kobold", "goblin"] }
-offer = "A hundred {targets}: {members}."
+offer = "A score and five {targets}: {members}."
 reminder = "{Count} {targets}."
 done = "Done."
 
@@ -247,18 +247,18 @@ fn kills_before_the_giving_do_not_count() {
 #[test]
 fn a_tag_pick_names_its_members() {
     let mut w = town(2);
-    act(&mut w, "ask:E:quest-hundred");
-    let drawn = roll(&w, "hundred").expect("drawn");
+    act(&mut w, "ask:E:quest-score");
+    let drawn = roll(&w, "score").expect("drawn");
     assert!(
         ["tag:goblin", "tag:kobold"].contains(&drawn.target.as_str()),
         "{drawn:?}"
     );
-    assert_eq!(drawn.count, 100);
-    let objective = logged(&w, "hundred").objective;
+    assert_eq!(drawn.count, 25);
+    let objective = logged(&w, "score").objective;
     let expected = if drawn.target == "tag:kobold" {
-        "Godgifu wants you to kill 100 kobolds: kobolds, kobold archers, and kobold shamans."
+        "Godgifu wants you to kill 25 kobolds: kobolds, kobold archers, and kobold shamans."
     } else {
-        "Godgifu wants you to kill 100 goblins:"
+        "Godgifu wants you to kill 25 goblins:"
     };
     assert!(objective.starts_with(expected), "{objective}");
 }

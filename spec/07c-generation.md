@@ -59,6 +59,16 @@ developer notes (CLAUDE.md, `docs/dev/`).
   Hrīmwyrm the White (a frost dragon's breath) in the wyrm's bed, 40 Wēalāf the Unburied (calls up
   the dead, a strength-draining blade) in the unburied hall with his court, 50 Grundwyrgen the
   Mere-Wife (a brute whose claws seize and hold) by the black mere; 60 and 70 are to come (#1122).
+  **Ways up** (`below = "fyrdelf:12"`, #1117; `mapgen/way_up.rs`, `world/reveal.rs`): a bounded
+  branch whose `below` names a level of another bounded branch of its campaign is a way between
+  that level and the overworld. Its deepest level's `>` leads to that level, which gains a `<` back
+  up besides its own (placed on the roomy spot nearest, by walking, to the entrance of a vault the
+  level names, else to its own `<`), and its first level's `<` climbs out to its way in on the
+  overworld however the branch was entered. A way in that is a hidden location is revealed when
+  the player first climbs out through it (they arrive on it, and are told "You mark … on your
+  map."), as a quest's reveal would; arriving on the overworld any other way reveals nothing. A
+  `below` naming the branch itself, an unknown level, an endless branch's, or another campaign's
+  is a content error, as is `below` on an endless branch.
   The Ascmearc's first branch is **Cealdhlāw** (`cealdhlaw`, #337; the campaign design §7), the
   cold barrow under Hlāwdūn, its way in on the overworld from the start: six floors, the barrow's
   passages (rooms, 80×21) on 1–2 and the hill's hollows (caves, 100×40) on 3–6, danger 1 to 6
@@ -332,3 +342,13 @@ developer notes (CLAUDE.md, `docs/dev/`).
   drake on its gold, a rare and a magic find, ringed with lava). The drake is not in the population, so it is met there
   only (Factor Wulfrun's last quest). Its `arrival`: "The galleries smell of sulphur." The
   `fyrdelf` dev scenario starts on level 1.
+- **Ūtgang** (#1117; `campaigns/ascmearc/data/dungeons/utgang.toml`): "the way out", the
+  duergar's old air-shaft workings from the drake's deep up through the volcano's flank, a way up
+  (`below = "fyrdelf:12"`, see "Ways up"). Three floors of rooms (80×21, no caverns), danger 13 to
+  15 (Fyrdelf's deep workings run 13 to 15 on 9 to 11, its bottom 16), 14, 18, and 22 °C from the
+  top down; the deep workings' population without the galleries' fillers; Fyrdelf's traps,
+  secret doors, hidden things and locks per depth, loot, and brass key; no shops. Fyrdelf 12's
+  stairs up to it stand near the drake's hoard. Its way in, a cave mouth on the volcano's south
+  foot (103, 17), is a hidden location revealed only by climbing out of it, never by a quest. Its
+  `arrival`: "Warm air breathes up the shaft from far below." The `utgang` dev scenario starts on
+  level 1.

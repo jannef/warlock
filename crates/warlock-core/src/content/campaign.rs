@@ -376,6 +376,7 @@ mod tests {
                 "fyrdelf",
                 "grundleas",
                 "rat_king",
+                "utgang",
             ]
             .contains(&scenario.id.as_str())
             {

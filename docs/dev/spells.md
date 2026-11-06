@@ -193,8 +193,8 @@ cast path shares.
     spell's status and the caster's riders on a hit (`spell_lands`, by the reflector); no mana again, nothing for
     the reflector, and no one practises it (the `Shot` goes back without spell skills: no
     benefit, marks, or triggers). The reflected flight never raises the trigger (the mark): no ping-pong. A
-    death by it is put down to the spell, as a death by one's own spell is. Creature spells are
-    still intents, so only the player's spells (cast, read, or zapped) are reflected today.
+    death by it is put down to the spell, as a death by one's own spell is. A caster's rays and
+    bolts (`world/creature_cast.rs`, through `cast_single`) are reflected the same way.
   - **Geometry**: `spell::cone_cells(from, toward, length, opaque)` (exported as
     `warlock_core::world::cone_cells` for the aiming mode): cells within the rounded radius, in
     line of sight from `from`, not opaque, `dot > 0` and `2·dot² ≥ |v|²·|d|²` (45° either side),
@@ -209,6 +209,15 @@ cast path shares.
   - **Saves**: nothing new in #395 (costs and reaches are derived); a spell is a `SpellId`
     (an index, in the content fingerprint) since #397. Old replays that cast verify only if the spell's cost is the same as
     the placeholder's; the regenerated costs change the state hash of any that cast.
+- **Creatures' casts** (#1102, `world/creature_cast.rs`, docs/dev/creatures.md "Casters"): a
+  `combat = "caster"` creature casts its type's `spells` through the same pieces: `Cast::by_creature`
+  (reach, roll, degrees at its stats, `Pay::Creature`, `CastBy::Own`), its mana spent first with
+  `Actor::spell_base` through `World::spend_mana`, then the shared strikes (`cast_burst_at`,
+  `cast_bolt`, `cast_cone`, `cast_single` with the caster's id) and `spell_lands`. Its casts
+  train nothing and raise no school trigger (`spell_landed` returns for any pay but mana). Not
+  for creatures (refused at load, `content/creature_spells.rs`): zones, corpses, the open sky,
+  pushes, charms, ground- or tag-bound hexes, heals not by touch, summons, cleansings, and
+  utilities.
 - **Choices** (design §14 and the issue's open points, decided here):
   - The attack roll's skill: rays, bolts, and touches aim with their `aim` stat (Dexterity unless
     the spell names another; none does), threat and critical at the blows' defaults, plus since

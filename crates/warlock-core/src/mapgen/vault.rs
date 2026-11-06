@@ -117,6 +117,9 @@ pub(super) fn stamp(canvas: &mut Canvas, vault: &Vault, at: Pos) -> Vec<(Pos, Di
             ..spawn.clone()
         });
     }
+    if vault.pinned {
+        (canvas.named_doors).extend(vault.entrances.iter().map(|(p, _)| offset(*p)));
+    }
     vault
         .entrances
         .iter()

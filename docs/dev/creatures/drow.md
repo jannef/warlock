@@ -86,3 +86,5 @@ drow place. They wait for a deep place of their own.
 Poison on wielded
 weapons, creature light sensitivity (the race's `light_blind`), damaging creature spells, spider
 mounts, and a drow place to give them a population.
+
+Spells (#1102, docs/dev/creatures.md "Casters"; in the order each prefers them): the drow mage `web`, `lightning_bolt`, `magic_missile` (mana 70); the drow priestess `cure_wounds`, `silence`, `leech` (mana 75); the drow archmage `haste`, `web`, `chain_lightning`, `fireball` (mana 130); the drow high priestess `cure_wounds`, `silence`, `web`, `leech` (mana 100); the drow matron `cure_wounds`, `silence`, `web`, `chain_lightning`, `leech` (mana 130).

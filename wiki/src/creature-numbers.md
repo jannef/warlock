@@ -88,6 +88,28 @@ as a roar.
 
 {{#include generated/creature-breaths.md}}
 
+### Spells
+
+Casters cast real [spells](magic.md), the very ones you may learn, rolled at their own
+[stats](stats.md) as yours are at yours: the same [reach and dice](magic.md#how-a-spell-grows),
+the same [areas](magic.md#shapes), [spell types](magic.md#spell-types), and
+[resistances](damage-types.md#armour-and-resistance). A spell that rolls to hit adds a quarter of
+the caster's level to the roll, as its blows do. Each cast costs the [mana](mana.md#how-much)
+below from its pool, which comes back as slowly as anyone's, so a caster casts a handful of
+spells and then fights with whatever it holds; one that cannot cast
+([silenced](status-effects.md#status-silenced)) fights the same way.
+
+A caster casts the first spell of its list that it has the mana for and that would do something
+from where it stands: a buff it does not have yet, a heal by touch on itself or a friend beside
+it below half its hit points, a hex you are not under (and are not immune to) within reach, or
+harm within reach, with nothing solid and nobody between you for a ray, a bolt, a cone, or a
+line. It never casts an area that would catch a friend of its own. Failing all that, it comes
+closer, to where its longest spell would reach. [Spell reflection](fighting-styles.md#style-ability-spell-reflection)
+turns its rays and bolts back at it, as it turns anyone's. Casters up to level 10 know only the
+weakest spells and are very rare. Unseen, a caster is heard chanting.
+
+{{#include generated/creature-spells.md}}
+
 ## Surprise
 
 The creatures with a craft for [surprise](status-effects.md#status-surprised). Their

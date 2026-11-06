@@ -14,3 +14,5 @@ the faction and tags, levels above every other goblin's, and a racial weapon. Fy
 population has all but the captain (19; it left when Fyrdelf's danger was squished to 5–16,
 #534) and the warlord, which no place is deep enough for yet; they and the duergar
 fight on sight (`bestiary_tests`' stances).
+
+Spells (#1102, docs/dev/creatures.md "Casters"; in the order each prefers them): the hobgoblin warcaster `frost`, `arcane_bolt`, `magic_missile` (mana 40).

@@ -50,7 +50,7 @@ Game flags (`cargo run -p warlock -- --help`):
   trap hall, `summoners` in the summoning hall's south hall (three summoners behind doors), `chests`
   in the chest hall (every kind of chest, a mimic, and both treasure rooms), `cealdhlaw` on the first floor of Cealdhlāw, the Ascmearc's first dungeon, `fennmynster` on
   the first floor of Fennmynster, the drowned minster's cellars, `fyrdelf` on the first floor of Fyrdelf,
-  its deepest, `grundleas` on the first floor of Grundlēas, the endless branch that forgets each floor left, `rat_king` on its tenth floor, kept by its first layer boss, Gnægan the Rat King, whose death opens the way down (a level-1 warrior: give levels with `xp:` and `levelup:auto`), `drake`
+  its deepest, `grundleas` on the first floor of Grundlēas, the endless branch that forgets each floor left, `rat_king` on its tenth floor, kept by its first layer boss, Gnægan the Rat King, whose death opens the way down (a level-1 warrior: give levels with `xp:` and `levelup:auto`), `utgang` on the top floor of Ūtgang, the way up from Fyrdelf's bottom (its `<` climbs out and reveals its hidden way in), `drake`
   in a lava hall eleven cells from the fire drake, a dragon (a level-1 warrior: give levels with `xp:` and `levelup:auto`), `shrine` before three forgotten altars, good, neutral, and evil, to pray at, `forge`
   beside a forge's anvil with arms and armour to temper, `spring` below a cave room with a healing
   spring to drink at, `circles` in a hall of peaceful kobolds already buffed and hexed, knowing

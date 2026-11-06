@@ -70,6 +70,20 @@ Wyrtholm and Wulfeshol caves 100×40, Bānfeld and Brocenburg rooms 80×21, four
 name their criminal's vault on floor 4 (`mapgen/lairs_tests.rs`, with a snapshot of each bottom
 floor and a check over four seeds that the criminal is there once and on no floor above).
 
+Ways up (#1117, spec §7 "Ways up"): a branch's `below` (`DungeonDef::below`, checked in
+`Content::validate`: a level of another bounded branch of its campaign) makes `leads_down` true on
+its deepest level, whose `>` leads there (`DungeonDef::down_to`), and its first level's `<` is
+`Content::way_into` whatever it was entered from, as an endless branch's is. The level below gets
+one `<` per such branch (`Content::ways_up_from`), placed by `mapgen/way_up.rs` right after the
+generator builds and before `deep::lay`: the roomy spot (3×3 free floor) nearest by walking to an
+entrance of a vault the level names (`Canvas::named_doors`, recorded by `vault::stamp` for
+`Vault::pinned` vaults), ties in row order, else nearest to its own `<`; no stream is drawn, so
+every other level is unchanged and only Fyrdelf 12 changed (where its pools, traps, and folk fall). The link
+is a plain `StairsLink` after the generator's two, so `World::travel` arrives on it from the
+branch above. Tests: `mapgen/way_up_tests.rs` (Ūtgang's three rooms floors and links, the top's
+`<` however entered, Fyrdelf 12's second `<` within 30 steps of the drake for twelve seeds and
+no other floor's, the `below` content checks).
+
 Special rooms (spec §7 "Special rooms") have their own topic file, `docs/dev/special-rooms.md`:
 the effects' data, the draw (`mapgen/special.rs`, last, from the level's map stream), the whole-level
 version, and what the rules ask of them.

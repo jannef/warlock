@@ -109,6 +109,30 @@ the players of its level (docs/balance.md "Dragons"). **Tests**: `world/breath_t
 Adding a dragon: `combat = "dragon"`, a `[creature.breath]` of its element with a burst effect
 of that element in `data/effects.toml`, `[[creature.attack]]`s, and the tag `dragon`.
 
+Casters (spec §8 "Creature behavior": "Casters", #1102). **Data**: `spells = [...]` on a
+`combat = "caster"` type (`CreatureSpec::spells`, resolved in the creature loop by
+`content/creature_spells.rs::resolve` into `CreatureDef::spells: Vec<SpellId>`, in preference
+order; spells load before creatures). Refused: a caster without a list, a list on any other
+type, an unknown or repeated id, and a spell no creature casts (`creature_spells::castable`:
+zones, corpses, the open sky, pushes, charms, ground- or tag-bound hexes, heals not by touch,
+summons, cleansings, utilities). A caster's `mana` is its pool (summoners' summons share it).
+**Rules**: `world/creature_cast.rs`: `World::creature_spell` (one branch in `ai.rs::fight`
+after the breath, `Plan::Cast { spell, on }`), `World::spell_reach_at` (how far the AI closes
+in; `None` sends it to a launcher or to melee: never idle), `World::creature_casts` (mana
+through `World::spend_mana`, a spell's noise, the words, then by kind: a buff or a hex through
+`World::afflict`, a heal, or harm through the shared `cast_burst_at`, `cast_bolt`, `cast_cone`,
+and `cast.rs::cast_single`, which now takes its caster's id, then `spell_type_spreads` and
+`spell_lands`). `Cast::by_creature` settles reach, roll, and degrees at the creature's stats
+(`Pay::Creature`: nothing paid there, nothing practised, no school trigger);
+`World::creature_aim` adds the level's quarter to an `attack` spell's to-hit. Spell reflection
+(`reflect.rs`) turns a caster's rays and bolts back at it. **Wiki**: `creature_spells`
+(`creature-spells.md`, "Spells" in `creature-numbers.md`). **Probe**:
+`balance_probe/casters.rs` (docs/balance.md "Casters"). **Tests**:
+`world/creature_cast_tests.rs`, the silent vault's in `silent_tests.rs`. Adding a caster:
+`combat = "caster"`, a `range`, `spells` (up to level 10 only level-1 harm and level ≤ 3 hexes,
+heals, and buffs, and `rarity = "very_rare"`; the content test checks it), and `mana` for a
+handful of its main spell.
+
 Natural Protection by body and level (spec §8 "Natural Protection by body and level", #563,
 `docs/design/combat-progression.md` §8): data only. Every type's `natural.protection` is the
 body's at its level, the hide's `name` picking the body: none 0, hide (L − 10) ÷ 8, bony L ÷ 6,

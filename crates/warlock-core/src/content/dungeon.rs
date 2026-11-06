@@ -6,6 +6,11 @@
 //! to `depths:N-1` (on depth 1: back to the level it was first entered from) and its `>` to
 //! `depths:N+1` (the deepest level has none).
 //!
+//! A branch with `below` (a level of another branch, `below = "fyrdelf:12"`) is a way between
+//! that level and the overworld (spec §7 "Ways up"): its deepest level's `>` leads there, that
+//! level gets a `<` back up (`mapgen/way_up.rs`), and its first level's `<` climbs out to its way
+//! in, however the branch was entered.
+//!
 //! A branch with `endless` instead of `depth` has no last floor (spec §7 "The endless branch",
 //! `world/endless.rs`): every staircase makes a new floor, only the current one exists, and each
 //! floor is drawn rooms or caves as it is made. It has one row of per-depth tables, read at every
@@ -133,6 +138,8 @@ struct DungeonSpec {
     generator: Generator,
     /// How many levels it has; left out of a branch with `endless`.
     depth: Option<u32>,
+    /// The level (another branch's) its deepest level's stairs down lead to; default none.
+    below: Option<String>,
     /// Floors without end, instead of `depth`.
     endless: Option<EndlessSpec>,
     size: [i32; 2],
@@ -545,6 +552,9 @@ pub struct DungeonDef {
     /// Number of levels: `id:1` to `id:depth`. An endless branch has no last floor and 1 here:
     /// the one row of its tables, which is every floor's.
     pub depth: u32,
+    /// The level of another branch its deepest level's `>` leads to, which gets a `<` back up
+    /// (checked by `Content::validate`); `None`: the deepest level has no way down.
+    pub below: Option<String>,
     /// Floors without end (spec §7 "The endless branch"); `None`: `depth` levels.
     pub endless: Option<Endless>,
     /// An endless branch's layer bosses, by depth (none for any other branch).
@@ -606,7 +616,15 @@ impl DungeonDef {
 
     /// Whether level `depth` (1-based) has a way down.
     pub fn leads_down(&self, depth: u32) -> bool {
-        self.endless.is_some() || depth < self.depth
+        self.endless.is_some() || depth < self.depth || self.below.is_some()
+    }
+
+    /// Where level `depth`'s `>` leads: the next level, or below the deepest, [`Self::below`].
+    pub fn down_to(&self, depth: u32) -> Option<String> {
+        if self.endless.is_none() && depth >= self.depth {
+            return self.below.clone();
+        }
+        Some(self.level_id(depth + 1))
     }
 
     /// The special-room odds of level `depth` (1-based), if the branch has that level.
@@ -748,6 +766,11 @@ impl DungeonFile {
                     )));
                 }
             };
+            if spec.below.is_some() && spec.endless.is_some() {
+                return Err(err(format!(
+                    "dungeon `{id}`: an endless branch has no deepest level for `below`"
+                )));
+            }
             let check_size = |generator: Generator, [w, h]: [i32; 2]| {
                 let (min, max) = generator.size_limits();
                 if (min[0]..=max[0]).contains(&w) && (min[1]..=max[1]).contains(&h) {
@@ -948,6 +971,7 @@ impl DungeonFile {
                 id,
                 depth: depth_of,
                 bosses,
+                below: spec.below,
                 endless: spec.endless.map(|e| Endless {
                     caves: e.caves,
                     caves_size: (e.caves_size[0], e.caves_size[1]),

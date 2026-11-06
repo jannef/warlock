@@ -208,6 +208,19 @@ to the one who waited for them on the road; and the road gave them each a blade.
 with lava where the [fire drake](creatures.md#creature-fire-drake) sleeps on its gold, with a rare treasure and a magic one. The
 drake lives nowhere else.
 
+Near the hoard, a second stair climbs from the drake's floor into **Ūtgang**, the way out.
+
+### Ūtgang
+
+**Ūtgang**, the way out, is the duergar's old air-shaft workings: three floors of hewn rooms and
+passages, no caves, cut from the drake's deep up through the volcano's flank. Its bottom floor's
+stairs down lead to the bottom of [Fyrdelf](#fyrdelf), beside the drake's hoard; its top floor's
+stairs up lead out onto the overworld. That way in is [hidden](overworld.md#hidden-locations), and no quest tells of it:
+you find it by climbing out, and from then on it is on your map, a quick way back down to the
+drake. Its floors are as dangerous as the deep workings just above Fyrdelf's bottom (see the
+tables above), warmer the deeper they go (14 °C, then 18 °C, and 22 °C at the bottom), with
+Fyrdelf's traps and locks, the deep workings' folk, and no shops.
+
 ### The lairs of the wanted
 
 Four more dungeons, each four floors deep, of danger 6 on the first floor and 9 on the fourth, are

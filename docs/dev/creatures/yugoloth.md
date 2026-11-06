@@ -15,3 +15,5 @@ exists: the canoloth's barbed tongue holds (20 % at 18) and bleeds, the nycaloth
 the arcanaloth's poison, the ultroloth's blows carry its gaze (transfixed, frightened). They ship
 in no population (no danger window reaches level 22 yet), so they come only as strays drawn far
 out of depth (docs/dev/creatures.md).
+
+Spells (#1102, docs/dev/creatures.md "Casters"; in the order each prefers them): the arcanaloth `fire_cloak`, `chain_lightning`, `fireball`, `magic_missile` (mana 130).

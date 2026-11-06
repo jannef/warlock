@@ -3,7 +3,8 @@
 //! An attack ([`World::attack`]) is resolved by the rules in [`crate::combat`] with the
 //! attacker's [`Profile`] (its weapon, natural attack, or bare hands in melee; its missile weapon
 //! for a shot) against the target's [`Defence`](crate::combat::Defence), drawing from the
-//! gameplay random stream. Spells stay intents: nothing is rolled or damaged. Every attack is an
+//! gameplay random stream. Spells are cast elsewhere (`cast.rs`, a creature's `creature_cast.rs`);
+//! an attack of kind `Spell` here is an intent only: nothing is rolled or damaged. Every attack is an
 //! [`Event::Attacked`] with what came of it, and a noise.
 //!
 //! Protection (spec §8 "Combat"): what the target wears and its hide soak damage off every hit
@@ -519,7 +520,7 @@ impl World {
     /// Actor `attacker` attacks actor `target`: a melee blow with what it wields (else its
     /// natural attack, else its bare hands) and the blows that may follow it
     /// ([`World::second_blow`]), a shot with the missile weapon it has ready (with none, an
-    /// intent only), or a spell (an intent only, until magic is designed). Returns the (first)
+    /// intent only), or a spell (an intent only: spells are cast by `cast.rs`). Returns the (first)
     /// blow, if one was struck.
     pub(super) fn attack(
         &mut self,

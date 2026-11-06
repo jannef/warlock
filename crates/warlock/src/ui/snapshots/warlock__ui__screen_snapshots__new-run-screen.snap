@@ -13,6 +13,7 @@ expression: "render(case, content.clone())"
                     │   Fyrdelf                                                │
                     │   Grundlēas                                              │
                     │   Rat King                                               │
+                    │   Ūtgang                                                 │
                     │ The Showcase                                             │
                     │   Showcase                                               │
                     │   Arena                                                  │
@@ -26,7 +27,6 @@ expression: "render(case, content.clone())"
                     │   Shrine                                                 │
                     │   Spring                                                 │
                     │   Summoners                                              │
-                    │   Trap hall                                              │
                     │                                                          │
                     │   Come down through Beorggeat into the Ascmearc; the     │
                     │   market town of Cēaptūn lies a short way east along the │

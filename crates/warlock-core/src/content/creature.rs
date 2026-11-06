@@ -89,8 +89,8 @@ fn yes() -> bool {
 pub struct CreatureId(pub u16);
 
 /// How a creature fights (spec §8 "Creature behavior"): up close, shooting with the missile
-/// weapon it has ready, casting (spells are intents only: nothing is damaged), or breathing
-/// its element when its breath is ready and fighting up close while it is not.
+/// weapon it has ready, casting the spells of its list (`world/creature_cast.rs`), or
+/// breathing its element when its breath is ready and fighting up close while it is not.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
 pub enum Combat {
@@ -99,7 +99,8 @@ pub enum Combat {
     Melee,
     /// Shoots from up to its `range` away, with a clear line of fire.
     Ranged,
-    /// Casts spells from up to its `range` away, with a clear line of fire.
+    /// Casts the spells of its `spells` list from up to its `range` away, with a clear line of
+    /// fire, while it has the mana; else fights as a melee creature.
     Caster,
     /// Breathes its `[creature.breath]` at a hostile within the cone's reach whenever it is
     /// ready (`world/breath.rs`), else closes in and attacks from an adjacent cell.
@@ -163,6 +164,10 @@ pub(super) struct CreatureSpec {
     pub combat: Combat,
     /// How far a `ranged` or `caster` creature reaches, in cells.
     pub range: Option<i32>,
+    /// A `caster`'s spells (spec §8 "Creature behavior": "Casters"), ids in `data/spells/`, in
+    /// the order it prefers them.
+    #[serde(default)]
+    pub spells: Vec<String>,
     /// Whether it opens closed doors in its way.
     #[serde(default)]
     pub opens_doors: bool,
@@ -692,6 +697,7 @@ pub(super) struct Resolved {
     pub weapon_skills: WeaponSkills,
     pub resist: Vec<(DamageTypeId, i32)>,
     pub immune: Vec<StatusId>,
+    pub spells: Vec<super::SpellId>,
 }
 
 impl CreatureSpec {
@@ -715,6 +721,7 @@ impl CreatureSpec {
             sight: self.sight,
             combat: self.combat,
             range: self.range.unwrap_or(1),
+            spells: r.spells,
             opens_doors: self.opens_doors,
             lurks: self.lurks,
             budge: self.budge,
@@ -833,6 +840,10 @@ pub struct CreatureDef {
     pub combat: Combat,
     /// How far its attacks reach, in cells: 1 for melee.
     pub range: i32,
+    /// Gameplay: a `caster`'s spells, in the order it prefers them (spec §8 "Creature
+    /// behavior": "Casters"; `world/creature_cast.rs`); empty for every other type. Rules
+    /// only (the wiki states them).
+    pub spells: Vec<super::SpellId>,
     /// Whether it opens closed doors in its way.
     pub opens_doors: bool,
     /// Whether it lurks (spec §8 "Creature behavior"; `ai.rs::fight`): a hostile it sees, it

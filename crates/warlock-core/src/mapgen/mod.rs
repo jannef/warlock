@@ -48,6 +48,7 @@ mod shop;
 mod special;
 mod treasury;
 mod vault;
+mod way_up;
 
 use crate::chest::Chest;
 use crate::content::{
@@ -224,6 +225,9 @@ pub(crate) struct Canvas<'a> {
     pub shops: Vec<ShopPlan>,
     /// Cells stamped from vaults; later passes leave them alone.
     pub stamped: Grid<bool>,
+    /// The entrances of the vaults the level names (`Needs::vaults`), as stamped: what a way up
+    /// from below is placed near (`way_up.rs`).
+    pub named_doors: Vec<Pos>,
     pub up: Option<Pos>,
     pub down: Option<Pos>,
     /// A layer boss's lair's hidden way down, stamped as floor: its cell and the stairs' terrain
@@ -265,6 +269,7 @@ impl<'a> Canvas<'a> {
             population: &[],
             shops: Vec::new(),
             stamped: Grid::new(width, height, false),
+            named_doors: Vec::new(),
             up: None,
             down: None,
             lair: None,
@@ -507,13 +512,16 @@ pub fn generate_for(
         key: def.key,
         vaults: boss.map_or(def.vaults(depth), |b| std::slice::from_ref(&b.vault)),
     };
-    let up_to = match (depth > 1, def.endless) {
+    let up_to = match (depth > 1, def.endless.is_some() || def.below.is_some()) {
         (true, _) => Some(def.level_id(depth - 1)),
-        // However the first floor was reached (from the second, it may be), it climbs out.
-        (false, Some(_)) => content.way_into(id).map(str::to_string),
-        (false, None) => entered_from.map(str::to_string),
+        // However the first floor was reached (from the second, it may be), it climbs out: an
+        // endless branch's, and a way up's (spec §7 "Ways up").
+        (false, true) => content.way_into(id).map(str::to_string),
+        (false, false) => entered_from.map(str::to_string),
     };
-    let down_to = def.leads_down(depth).then(|| def.level_id(depth + 1));
+    // A lair's hidden way down leads where the `>` would (the stairs need not be placed).
+    let down_to = def.leads_down(depth).then(|| def.down_to(depth)).flatten();
+    let ways_up = content.ways_up_from(id);
 
     // The danger the floor's pools draw at, which a vault's `danger` asks (`Vault::suits`).
     let danger = (content.spawning(id)).map_or(0, |(rule, at, _)| rule.at(at, visit.player_level));
@@ -535,6 +543,9 @@ pub fn generate_for(
         if built.is_none() {
             continue;
         }
+        let Some(extra) = way_up::place(&mut canvas, &ways_up) else {
+            continue;
+        };
         if plan.generator == Generator::Caves {
             deep::lay(&mut canvas, seed, id);
         }
@@ -559,6 +570,7 @@ pub fn generate_for(
                 name: None,
             });
         }
+        stairs.extend(extra);
         let item_level = content.item_level(id);
         // A vault's chests are of the floor's level (spec §8 "Chests").
         let chests = (canvas.chests.into_iter())
@@ -994,3 +1006,5 @@ mod vault_monsters_tests;
 mod vault_stamp_tests;
 #[cfg(test)]
 mod vault_turn_tests;
+#[cfg(test)]
+mod way_up_tests;

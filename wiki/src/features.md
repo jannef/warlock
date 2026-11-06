@@ -3,8 +3,7 @@
 An overview of what the game does today, feature by feature; the other pages explain the
 rules behind each.
 
-This is the engine and framework phase: [creatures](creatures.md) hunt you, fight, shoot, and die (their [spells](magic.md)
-are only announced so far, though yours are real), [death](combat.md#death) is permanent, and you grow by [experience levels](experience.md#levels) and by [skills](skills.md) that
+This is the engine and framework phase: [creatures](creatures.md) hunt you, fight, shoot, cast [spells](magic.md), and die, [death](combat.md#death) is permanent, and you grow by [experience levels](experience.md#levels) and by [skills](skills.md) that
 improve with use. You come into **[the Ascmearc](ascmearc.md)** through a mountain pass that closes behind you
 (see [The Ascmearc](ascmearc.md)): an ADOM-like **[overworld](overworld.md)** with [day and night](time.md#days) and [weather](weather.md#how-the-weather-changes),
 outdoor areas [generated from it](overworld.md#local-areas), the market town of [Cēaptūn](ascmearc.md#the-places), and procedurally generated

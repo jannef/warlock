@@ -40,8 +40,10 @@ every new run starts in it.
   dungeon of three easy floors two cells from the pass, in sight from the start, #792), and three
   dungeon branches of rising danger: **Cealdhlāw** (the cold barrow, visible from the start, in the downs east of the
   town), **Fennmynster** (the fen minster, hidden in Micelfenn), and **Fyrdelf** (the fire
-  diggings, hidden in Ascdūn, §7 "Fyrdelf"). A hidden one is its plain terrain until a quest
-  reveals it (§7 "Hidden locations"). The rest of the design's forty sites are reserved: plain
+  diggings, hidden in Ascdūn, §7 "Fyrdelf"), with **Ūtgang** (the way out, three floors from
+  Fyrdelf's bottom up to a hidden cave on the volcano's foot, found by climbing out of it, §7
+  "Ūtgang"). A hidden one is its plain terrain until a quest reveals it (§7 "Hidden locations"),
+  or, for Ūtgang, until the player comes out of it. The rest of the design's forty sites are reserved: plain
   cells today, spaced so a later level drops in without moving anything.
 - **Quests** (#340, design §6.2; `campaigns/ascmearc/data/quests/`): three people in Cēaptūn
   give a chain each (three quests, Wulfrun's two), every quest offered once the one before it
@@ -64,17 +66,17 @@ every new run starts in it.
     it is given and never drawn again, each offered once the one before it is done and with no
     other gate (level, alignment, or another quest): "A bounty" (kill one of a creature type
     drawn from the non-unique populations of Cealdhlāw, Fennmynster, and Fyrdelf, those the
-    player can enter; 40 gold, 60 XP), "The hundred" (kill 100 of a creature tag drawn from
+    player can enter; 40 gold, 60 XP), "A score and five" (kill 25 of a creature tag drawn from
     kobold, goblin, undead, vermin, marsh-thing, duergar, and fire-thing, those living in a
     branch the player can enter; 250 gold, 2 red potions, 500 XP), "A scroll for the Gilde"
     (bring a scroll drawn from those loot can hold; 200 gold, 150 XP), "Wanted" (kill one of
     four wanted criminals, drawn from the quest's four variants, each revealing its own lair as
     it is given: the other three stay hidden for the run; a named monster, met by its death at
-    any hand; 500 gold, 800 XP, alignment 10). Being given the first makes the player a **Tin**
-    of the Gilde, the second done a **Pewter**, the fourth done an **Iron**; the ranks are
+    any hand; 500 gold, 800 XP, alignment 10), "Eleven floors down" (#1119: reach the eleventh floor of Grundlēas, past the tenth's boss; 600 gold, 900 XP, alignment 5). Being given the first makes the player a **Tin**
+    of the Gilde, the second done a **Pewter**, the fourth done an **Iron**, the fifth done a **Steel**; the ranks are
     seven, titles named by metals of the game's materials ordered by their value (Tin, Pewter,
     Iron, Steel, Duralumin, Electrum, Gold; `campaigns/ascmearc/data/guilds/weyfarers.toml`),
-    the later ones reserved for the chain's later links.
+    the last three reserved for the chain's later links.
   - **The four lairs** (#426; the guild design §8): four hidden branches of four floors each,
     danger 6 to 9, on reserved sites of the overworld, each with its criminal's pinned vault on
     the fourth floor and no shops: **Wyrtholm** ("herb islet", Mother Sallow; caves 100×40 under
@@ -87,7 +89,7 @@ every new run starts in it.
     §8.2 with the footpads. Sister Hild has a line on Osrick.
     The chain is likely a requirement of the story's ending, to come.
   Every quest of the three helps someone and is a little good (`alignment` 5 to 30); of Wat's,
-  only "The hundred" is (5). Each reach and bring
+  only "A score and five" is (5). Each reach and bring
   quest says in the log where its goal lies (`where`). The chalice and the
   reliquary are objects of their own, worth nothing to a shop. The three
   branches' first levels each have an `arrival` line: "Cold air breathes up from the mound.",

@@ -20,13 +20,14 @@ race = "drow"
 vision = "darkvision"
 combat = "caster"
 range = 8
+spells = ["cure_wounds", "silence", "web", "chain_lightning", "leech"]
 opens_doors = true
 footsteps = 70
 hearing = 14
 weight = 57000
 stats = { strength = 28, dexterity = 24, toughness = 31, intelligence = 34, willpower = 34, presence = 34 }
 base_hp = 100
-mana = 60
+mana = 130
 skills = { concentration = 130, spellcraft = 135 }
 resist = { poison = 50 }
 on_eat = { message = "Lean and bitter, with an aftertaste of old poisons.", vomit = 40, skills = { decipher_script = { gives = 14, up_to = 110 } } }

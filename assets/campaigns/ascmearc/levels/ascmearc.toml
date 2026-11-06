@@ -18,7 +18,8 @@
 # swamp of Micelfenn and Fyrdelf (3) in the hills of Ascdūn; no road leads to either. So are the
 # four lairs of the wanted (the adventurers' guild's link 4): Wyrtholm (4), an islet out in
 # Micelfenn; Wulfeshol (5), a cave in Deorcholt; Bānfeld (6), a barrow field on Hlāwdūn; and
-# Brocenburg (7), the ruined fort in Holegnwudu.
+# Brocenburg (7), the ruined fort in Holegnwudu. Ūtgang (0), a cave on the volcano's south foot, is
+# the way up from the drake's deep at the bottom of Fyrdelf, found only by climbing out of it.
 #
 # Grundlēas (9, "the groundless"; #1010) is open to anyone who walks there: bare steps going down
 # in the empty grass south of the Beorhtburna road, forty cells from Beorggeat. No road leads to
@@ -52,7 +53,7 @@ MMMMMMMMMMM.........ffffffffFFfFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFffffffffff.........
 MMMMMMMMMM........fffffffffffFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFfffffffffff............MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM
 MMMMMMMMMM........ffffffffffffFFFFFFFFFFFFFFFFFFFFFFFFFFFFFfffffffffff.f.............M.MMMMMM↓↓MMMMM^^MMMMMM.MMMMMMMMMMM
 MMMMMMMMMM..........ffffffffffffFFFFFFFFFFFFFFFFFFFFFFFFFFffffffffffff.................hhhMMM↙↙MMMMM^^MMMMMMM.......MMM.
-MMMMMMMMMM..........ffffffffffffFFFFFFFFFFFFFFFFFFFFFFFfFfffffffffffff................hhhhMM↓↓hhhhhhhhhh..hM............
+MMMMMMMMMM..........ffffffffffffFFFFFFFFFFFFFFFFFFFFFFFfFfffffffffffff................hhhhMM↓↓hhhhhhhhh0..hM............
 MMMMMMMMMM........=...ffffffffffffffFFFFFFFFFFFFFFFFFFffffffffffffffff......hh.hh.h...hhhhhh↓↓hhhhhhh...................
 MMMMMMMMMM........=...ffffffffffffffFfFFFFFFFFFFFFfFFffffffffffffffff"...h..hhhhhhhhhhhhhhhh↙↙hhhhhhhh..................
 MMMMMMMMMM........=....fffffffffffhfffFfffffffffffFfffFffffffffffffff"...h.hhhhhhhhhhhhhhhh↓↓hhhhhhhhh.hhh..............
@@ -125,6 +126,9 @@ MMMMMMMMMMMMMMMMMMM.ff..................................."......................
 "9" = { terrain = "dungeon_entrance", name = "Grundlēas", to = "grundleas:1", note = "Steps cut in bare rock, going down. Worn letters on the lintel: no stair goes twice to one place." }
 "2" = { terrain = "swamp", hidden = { id = "fennmynster", terrain = "dungeon_entrance", to = "fennmynster:1", name = "Fennmynster" } }
 "3" = { terrain = "hills", hidden = { id = "fyrdelf", terrain = "mine", to = "fyrdelf:1", name = "Fyrdelf" } }
+# The way out from the drake's deep (#1117), on the volcano's south foot: hidden until the player
+# first climbs out of it (spec §7 "Ways up"), never by a quest.
+"0" = { terrain = "hills", hidden = { id = "utgang", terrain = "cave_mouth", to = "utgang:1", name = "Ūtgang" } }
 # The four lairs of the wanted (docs/design/adventurers-guild.md §8), on reserved sites: Wat
 # One-Eye's "Wanted" reveals the one whose criminal it names, and the other three stay hidden.
 "4" = { terrain = "swamp", hidden = { id = "wyrtholm", terrain = "cave_mouth", to = "wyrtholm:1", name = "Wyrtholm" } }

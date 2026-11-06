@@ -173,7 +173,7 @@ fn creatures_inside_are_silenced_and_a_caster_fights_in_melee() {
         // Standing in the vault as the run starts, it is silenced before it acts.
         assert_eq!(creature(&w).effects.has(silenced(&w)), room);
         run(&mut w, "wait*3");
-        let cast = (w.messages().iter()).any(|m| m.text.contains("casts a spell"));
+        let cast = (w.messages().iter()).any(|m| m.text.contains("casts spark at you"));
         (cast, creature(&w).pos.x)
     };
     let (cast, x) = shaman(false);

@@ -36,3 +36,5 @@ veteran, and bowman (level 17: only out of depth, at the bottom). The war chief 
 when its danger was squished to 5–16 (#534); it, the dire warg, high shaman, and warlord are in
 none. Riders on `on_hit` fire only on natural attacks, so the armed orcs have
 none; the wargs' bites carry `bleeding` (the mana tests' status fixture lists it for them).
+
+Spells (#1102, docs/dev/creatures.md "Casters"; in the order each prefers them): the orc shaman `mend`, `burning_hands`, `spark` (mana 7); the orc high shaman `cure_wounds`, `blessing`, `fireball` (mana 90).

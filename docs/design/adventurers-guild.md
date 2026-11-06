@@ -256,7 +256,7 @@ The chain is four `[[quest]]`s in `campaigns/ascmearc/data/quests/wat.toml`, eac
 | # | Id, topic | Goal | Pool | Reward | Alignment | Rank once done |
 |---|---|---|---|---|---|---|
 | 1 | `guild_quarry`, "A bounty" | kill 1 of a rolled type (decision 2) | any non-unique of Cealdhlāw, Fennmynster, Fyrdelf, those open when given (§5.5) | 40 gold, 60 XP | 0 | (Tin from the giving) |
-| 2 | `guild_hundred`, "The hundred" | kill 100 of a rolled tribe | `tribes = "all"`, reachable | 250 gold, 500 XP, 2 red potions | 5 | **Pewter** |
+| 2 | `guild_score`, "A score and five" | kill 25 of a rolled tribe | `tribes = "all"`, reachable | 250 gold, 500 XP, 2 red potions | 5 | **Pewter** |
 | 3 | `guild_scroll`, "A scroll for the Gilde" | bring 1 rolled scroll to Wat | `objects = { class = "scrolls", loot = true }`: fireball, lightning, frost, identify (the scroll of light, sold in town and never loot, is out) | 200 gold, 150 XP | 0 | — |
 | 4 | `guild_wanted`, "Wanted" | kill the rolled criminal (a named monster: any death counts, §8.4) | four variants, §8 | 500 gold, 800 XP (the unique item is the criminal's, §9) | 10 | **Iron** |
 
@@ -268,7 +268,7 @@ The target comes from the normal population and spawner: the guild places nothin
 
 ### 7.2 Link 2: the hundred
 
-100 is long by design: about four floors' populations. The log counts ("37 / 100 killed."), as kill quests already do; which types belong is told in the offer and the log (§6.3) and exactly in the wiki.
+25 (a "score and five") is the count since 2026-11-06; it was 100, about four floors' populations, and tedious. The log counts ("17 / 25 killed."), as kill quests already do; which types belong is told in the offer and the log (§6.3) and exactly in the wiki.
 
 ### 7.3 Link 3: a scroll
 
@@ -313,7 +313,7 @@ name = "the Weyfarers' Gilde"
 master = "wat"
 ranks = [
   { title = "Tin",       material = "tin",       given = "guild_quarry" },
-  { title = "Pewter",    material = "pewter",    done = "guild_hundred" },
+  { title = "Pewter",    material = "pewter",    done = "guild_score" },
   { title = "Iron",      material = "iron",      done = "guild_wanted" },
   { title = "Steel",     material = "steel" },      # later links: a rank with no quest is not
   { title = "Duralumin", material = "duralumin" },  # reached yet (allowed only after the ranks

@@ -391,6 +391,7 @@ impl World {
         let from = self.state.current_level.clone();
         // Those beside the player and after them come too (`stair_followers.rs`).
         let followers = self.stair_followers();
+        let found = self.reveal_way_out(&from, &to);
         if let Err(err) = self.travel(&to, None) {
             self.say(format!("The stairs are blocked ({err})."));
             return false;
@@ -409,6 +410,9 @@ impl World {
             (_, _, StairsDir::Up) => format!("You climb the stairs to {name}."),
         };
         self.say(text);
+        if let Some(found) = found {
+            self.say(format!("You mark {found} on your map."));
+        }
         self.followers_arrive(&followers, &from, way);
         true
     }

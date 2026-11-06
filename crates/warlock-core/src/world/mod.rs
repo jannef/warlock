@@ -116,6 +116,7 @@ mod consecrate;
 mod corpse_spell;
 mod court;
 mod creation;
+mod creature_cast;
 mod curse;
 mod dark_face;
 mod decipher;
@@ -1671,6 +1672,8 @@ mod court_tests;
 #[cfg(test)]
 mod creation_tests;
 #[cfg(test)]
+mod creature_cast_tests;
+#[cfg(test)]
 mod creature_magic_tests;
 #[cfg(test)]
 mod curse_tests;
@@ -2022,6 +2025,8 @@ mod voice_tests;
 mod war_cry_tests;
 #[cfg(test)]
 mod wares_tests;
+#[cfg(test)]
+mod way_out_tests;
 #[cfg(test)]
 mod weapon_ability_tests;
 #[cfg(test)]

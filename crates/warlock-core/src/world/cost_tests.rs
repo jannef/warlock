@@ -169,8 +169,6 @@ fg = "#a040a0"
 weight = 1000
 base_hp = 1000
 faction = "foes"
-combat = "caster"
-range = 3
 attack_cost = 500
 "##;
 

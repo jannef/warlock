@@ -5,7 +5,7 @@
 id = "orc_shaman"
 level = 10
 xp = 60
-rarity = "rare"
+rarity = "very_rare"
 loot = 50
 name = "orc shaman"
 glyph = "o"
@@ -16,6 +16,8 @@ alignment = "evil"
 vision = "darkvision"
 combat = "caster"
 range = 5
+spells = ["mend", "burning_hands", "spark"]
+mana = 7
 opens_doors = true
 footsteps = 110
 hearing = 12

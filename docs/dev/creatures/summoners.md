@@ -29,3 +29,5 @@ Brocenburg: that lair's population is the guild design's (§8.2), and at its dan
 level-8 summoner would be the strongest thing drawn there, a third of its floors' draws. The three
 drow priestesses (#536) summon demons: their table is in `docs/dev/creatures/drow.md` (the drow
 roster's checks cover them, not this file's `ROSTER`).
+
+Spells (#1102, docs/dev/creatures.md "Casters"; in the order each prefers them): the goblin wizard `burning_hands`, `spark` (mana 28); the necromancer `hex_of_weakness`, `leech`, `blight` (mana 60); the dark wizard `haste`, `fireball`, `lightning_bolt`, `magic_missile` (mana 110).

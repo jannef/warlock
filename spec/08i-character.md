@@ -1793,8 +1793,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     to-hit, and riders, rolling its own attack against the caster's Defence; no mana spent
     again, nothing for the actor; at most `per_turn` (1) a turn of the actor's, and a reflected
     spell is never reflected again. Bursts, cones, lines, and hexes roll no attack and are never
-    reflected, nor a miss by Parry or Dexterity. Creature spells are still intents, so today it
-    turns the player's spells back at them).
+    reflected, nor a miss by Parry or Dexterity. A caster's rays and bolts are turned back at it
+    the same way, §8 "Creature behavior": "Casters").
   - **The catalogue** (data; ranks first guesses): Deep cut (blades 5: a big hit bleeds a
     degree more), Crushing blow (axes, maces, polearms 5: a big hit staggers), Brace (spears,
     staves 5), Point-blank (bows, crossbows, slings, thrown 5), Stunning bash (shield bashing 5:

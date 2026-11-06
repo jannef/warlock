@@ -2,7 +2,8 @@
 //! quest reveals it, the plain terrain its cell shows, in every way (as a secret door is the wall
 //! it looks like). Revealing it turns the cell into its entrance, links the entrance to the
 //! level it leads to, and marks it on the player's map (their memory of the overworld), wherever
-//! they are. `world/quest.rs` reveals at a quest's stage ([`crate::content::RevealWhen`]); the
+//! they are. Climbing out through one reveals it too ([`World::reveal_way_out`], called by
+//! `world/travel.rs::take_stairs`). `world/quest.rs` reveals at a quest's stage ([`crate::content::RevealWhen`]); the
 //! dev action `reveal:ID` ([`crate::action::Action::Reveal`]) at once. `world/mod.rs` has only
 //! the dispatch line.
 
@@ -40,6 +41,20 @@ impl World {
         true
     }
 
+    /// Climbing out through a hidden way reveals it (spec §7 "Ways up"): before the stairs from
+    /// level `from` take the player to `to`, a hidden location of the overworld `to` that leads
+    /// to `from` and is still hidden is revealed, so they arrive on it. Returns its name.
+    pub(super) fn reveal_way_out(&mut self, from: &str, to: &str) -> Option<String> {
+        let overworld = self.content.overworld_of(&self.state.campaign)?;
+        if overworld.id != to {
+            return None;
+        }
+        let location = (overworld.hidden.values())
+            .find(|h| h.to.as_deref() == Some(from) && !self.state.revealed.contains(&h.id))?;
+        let (id, name) = (location.id.clone(), location.name.clone());
+        self.reveal_location(&id).then_some(name)
+    }
+
     /// The dev action `reveal:ID` ([`crate::action::Action::Reveal`]): reveals hidden location
     /// `id` as a quest would, marking it on the map. Takes no time.
     pub(super) fn reveal_dev(&mut self, id: &str) -> Spent {
@@ -58,7 +73,8 @@ impl World {
 }
 
 /// The overworld `level_id` as it is made: the locations revealed before it was are revealed on
-/// it now (called by `instantiate_level`; no other level has hidden locations).
+/// it now (called by `instantiate_level`; a layer boss's lair keeps its hidden stairs under the
+/// boss's id, never revealed this way: `world/layer_boss.rs`).
 pub(super) fn apply_revealed(state: &mut WorldState, level_id: &str) {
     let revealed: Vec<String> = state.revealed.iter().cloned().collect();
     for id in revealed {

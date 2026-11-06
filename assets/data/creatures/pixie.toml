@@ -6,7 +6,7 @@
 id = "pixie"
 level = 4
 xp = 30
-rarity = "uncommon"
+rarity = "very_rare"
 loot = 15
 name = "pixie"
 glyph = "f"
@@ -18,6 +18,8 @@ vision = "low_light"
 sight = 12
 combat = "caster"
 range = 5
+spells = ["evil_eye", "spark"]
+mana = 1
 hearing = 14
 weight = 1000
 size = "small"

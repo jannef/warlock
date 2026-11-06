@@ -24,7 +24,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
      the throw's range with a clear line of fire. A summoner ("Summoning" below) summons before
      all of this whenever it may. A `dragon` ("Dragons" below) breathes whenever its breath is
      ready and the target stands in its cone with a clear line, and else fights as a `melee`
-     one. A **lurker** (a type with `lurks = true`: the meenlock, the
+     one. A `caster` ("Casters" below) casts whatever spell of its list goes from where it
+     stands, else closes to where one would, and with none it can cast (out of mana, Silenced)
+     shoots if it can, else fights as a `melee` one. A **lurker** (a type with `lurks = true`: the meenlock, the
      barrow spider; `world/lurk.rs`) never steps toward the target it sees: it waits where it
      stands, aware of it, attacking once the target is beside it (or shooting or casting when it
      can from where it stands), until it has been harmed (hit points below its maximum), when it
@@ -54,8 +56,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
   across the threshold or shoot in.
 
   **Attacks** are resolved by the rules of combat ("Combat" below): melee blows and shots hurt
-  and kill (a shot is a missile, "Ranged combat" below); a creature's spells stay intents (the
-  player's go through the one cast path, §8 "Spells"; creatures do not cast through it yet). An attack is an event (`Event::Attacked { attacker, target, kind: Melee | Ranged |
+  and kill (a shot is a missile, "Ranged combat" below), and so do a caster's spells ("Casters"
+  below, through the player's cast path, §8 "Spells"). An attack is an event (`Event::Attacked { attacker, target, kind: Melee | Ranged |
   Thrown | Spell, from, to, strike, with }`, `strike` what came of it, `None` for an intent,
   `with` the missile of a shot or throw), a noise (§5), and a message when the player perceives
   it (§6). The event reaches presentation only
@@ -154,6 +156,32 @@ developer notes (CLAUDE.md, `docs/dev/`).
   (`World::spell_type_lands`: fire's burning, one in four). Its blows and kills are the
   dragon's. The action costs a `cast`. Words: "The fire drake breathes fire!" when the player
   sees it, then each blow seen as a spell's ("The fire burns you."); unseen, the roar is heard.
+- **Casters** (`warlock-core/src/world/creature_cast.rs`, the rules;
+  `content/creature_spells.rs`, the data; #1102): a `combat = "caster"` type has a `spells`
+  list (ids in `data/spells/`, in the order it prefers them; only a caster has one), and only
+  spells a creature can cast: harm (no zone, no corpse, no open sky), a hex laying a plain
+  status (no zone, push, charm, or ground it needs), a heal by touch, a buff laying a status.
+  It casts them through the player's cast path: the same reach, roll, and degrees ladders at
+  its own stats (`Cast::by_creature`), the same bursts, lines, cones, and single blows
+  (`cast_single`, so a shield that turns spells turns its spells back), the spell types,
+  riders, and resistances; an `attack` spell's roll adds its level's quarter, as its natural
+  attacks' do. Each cast costs the spell's mana (`Actor::spell_cost`) from its pool (its type's
+  `mana` and its mental stats'), which comes back at the usual slow pace; a cast trains
+  nothing and costs a `cast`. In step 2, after a summoning, a throw, and a breath, it casts the
+  first spell of its list that it has the mana for, its casting not blocked (Silenced, a silent
+  vault), off the overworld, and that goes from where it stands: a buff it lacks, on itself; a
+  heal by touch on itself or a friend beside it below half its hit points; a hex at its target
+  if the target lacks the status and its type is not immune to it, in reach; harm in reach. In
+  reach is the shape's: a ray or a bolt within its range with a clear line, a touch beside it,
+  a burst within range with a clear line and the caster outside its cells (one about the caster:
+  the target in its cells), a cone or a line whose cells hold the target with a clear line; an
+  area is never cast over a friend of the caster's (anyone not hostile to it). Else it closes to
+  the farthest reach of the aimed spells it could cast at the target (at most its type's
+  `range`), and with none fights on ("Fight" above). Deciding draws nothing. Words: "The kobold
+  shaman casts spark at you!" (or "at the goblin.", "casts haste.", "casts mend on the kobold.")
+  when the player sees it, then each blow as a spell's ("The spark shocks you."); unseen, its
+  chanting is heard. Up to level 10 a caster knows only level-1 harm and hexes, heals, and buffs
+  of level 3 or less, and is very rare.
 - **Several natural attacks** (`warlock-core/src/world/natural.rs`; #1099): a creature type may
   list its natural attacks (`[[creature.attack]]`, a dragon's two claws and a bite) instead of
   one. Wielding no weapon, its melee attack strikes the first as its blow and then each of the

@@ -29,3 +29,5 @@ squished to 5–16, #534); the giants ship in no population until a
 deep place takes them (until then they come only as strays, docs/dev/creatures.md). Only small and medium sizes exist, so they are medium with huge weights (a
 large size is a follow-up). The `boulder` object (miscellaneous, no kind) is what flies; it is
 never loot, never in a shop, never placed.
+
+Spells (#1102, docs/dev/creatures.md "Casters"; in the order each prefers them): the ogre mage `rime`, `frost`, `magic_missile` (mana 45); the giant shaman `cure_wounds`, `rime`, `lightning_bolt` (mana 80).

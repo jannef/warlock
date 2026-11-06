@@ -5,7 +5,7 @@
 id = "will_o_wisp"
 level = 7
 xp = 45
-rarity = "rare"
+rarity = "very_rare"
 name = "will-o'-wisp"
 plural = "will-o'-wisps"
 glyph = "y"
@@ -19,6 +19,8 @@ vision = "darkvision"
 sight = 12
 combat = "caster"
 range = 5
+spells = ["spark"]
+mana = 1
 hearing = 12
 weight = 100
 size = "small"
