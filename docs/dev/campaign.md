@@ -229,6 +229,13 @@ Beorggeat, so no reveal is needed and no one starts beside it. No quest names it
 naming an endless branch's level is refused at load, and `Pick::Creatures` lists leave it out. Its
 dev scenario is `grundleas`.
 
+Ūtgang (`utgang`, #1117, `docs/dev/mapgen.md` "Ways up", `docs/dev/overworld.md`) is the
+Ascmearc's way up: three rooms floors, `below = "fyrdelf:12"`, so its bottom's `>` leads to
+Fyrdelf's bottom (which gains a `<` near the drake's hoard) and its top's `<` climbs out to its
+hidden way in (`0` at (103, 17)), revealed when the player first climbs out. No quest reveals or
+names it; it opens to rolled quests once revealed (`World::branch_open`). Its dev scenario is
+`utgang`.
+
 The dev scenario `drake` (#1099, `docs/dev/creatures.md` "Dragons") starts on `drakes_lair`, a
 hand-made Ascmearc level with no stairs: the fire drake in a lava hall like its hoard's, for
 replays and captures of a dragon's fight.

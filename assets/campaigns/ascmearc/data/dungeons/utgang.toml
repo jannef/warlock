@@ -1,0 +1,56 @@
+# Ūtgang, "the way out" (#1117; the fields: data/dungeons.toml): the duergar's old air-shaft
+# workings, cut from the drake's deep up through the volcano's flank to let the heat out. Three
+# floors of hewn halls, no caverns. Its stairs up from the bottom of Fyrdelf (`below`) stand near
+# the drake's hoard; its top floor climbs out on the slopes of Fyrbeorg, at a place hidden on the
+# overworld until the player first comes out there (spec §7 "Ways up"), and from then on it is a
+# quick way back down to the drake.
+
+[[dungeon]]
+id = "utgang"
+name = "Ūtgang"
+arrival = "Warm air breathes up the shaft from far below."
+generator = "rooms"
+depth = 3
+size = [80, 21]
+below = "fyrdelf:12"
+traps = ["arrow", "spear", "fireball", "lightning_bolt", "alarm"]
+# As Fyrdelf's deep workings: few secret doors, hidden things and locks as hard as there at about
+# the same depth (Fyrdelf's per-depth step counted from its ninth floor).
+secret_doors = [0, 2]
+hidden_per_depth = 1
+locks_per_depth = 2
+loot = [3, 5]
+key = "brass_key"
+# No traders this far from the galleries.
+shops = { chance = 0 }
+# Danger 13 at the top to 15 at the bottom, beside Fyrdelf 12's 16: the floors between its deep
+# workings (13 to 15 on 9 to 11) and the surface. The deep workings' folk, without the shallow
+# galleries' fillers (bats, kobolds, centipedes, motes) and with nothing above level 17.
+danger = 13
+population = [
+    "ember_beetle", "duergar_miner", "ogre_zombie", "lesser_fire_elemental", "grave_hound",
+    "dretch", "duergar_warrior", "duergar_smith", "ogre", "burning_skull", "quasit", "troll",
+    "earth_elemental", "knocker", "hell_hound", "hill_troll", "fire_salamander",
+    "magma_crawler", "spectre", "charred_dead", "ash_wraith", "duergar_skeleton",
+    "duergar_slinger", "duergar_crossbowman", "duergar_veteran",
+    "ogre_mauler", "basilisk", "cinder_elemental", "rotting_troll",
+    "hobgoblin_legionnaire", "hobgoblin_warcaster", "hobgoblin_sergeant",
+    "orc_berserker", "orc_veteran", "orc_bowman",
+    "animated_blade", "animated_armour",
+    "lesser_earth_elemental", "lesser_air_elemental", "water_elemental",
+    "lesser_lightning_elemental", "lemure", "imp", "goblin_wizard", "meenlock",
+    "draugr", "barghest", "hand_of_glory", "vampire_spawn", "gallows_dead",
+]
+
+# Warmer with every floor down, toward the drake's 24 °C.
+[[dungeon.levels]]
+from = 1
+temperature = 14
+
+[[dungeon.levels]]
+from = 2
+temperature = 18
+
+[[dungeon.levels]]
+from = 3
+temperature = 22

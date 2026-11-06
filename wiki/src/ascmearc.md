@@ -37,7 +37,8 @@ see from the road; **[Fennmynster](dungeons.md#fennmynster)**, the cellars of a 
 looks like (see [Hidden locations](overworld.md#hidden-locations)). So are the [four lairs](dungeons.md#the-lairs-of-the-wanted) of
 the criminals the [Weyfarers' Gilde](guild.md#the-wanted) wants dead: Wyrtholm in the fen,
 Wulfeshol in Deorcholt, Bānfeld on the downs, and Brocenburg in the holly wood; you are shown
-only one of them. The map below shows them all anyway. Places that lead "nowhere yet" are still being built: for now `>` there says so.
+only one of them. Under the volcano, **[Ūtgang](dungeons.md#ūtgang)**, a way up from the bottom of
+Fyrdelf, is hidden too, and no one tells of it: you find its mouth by climbing out of it. The map below shows them all anyway. Places that lead "nowhere yet" are still being built: for now `>` there says so.
 
 ## The places
 
@@ -73,6 +74,7 @@ have names of the same kind. Creatures keep their plain English names.
 | Ascdūn | *asce* + *dūn* | the ash downs | the hills under the volcano |
 | Fyrdelf | *fȳr* "fire" + *gedelf* "digging, mine" | the fire diggings | the third dungeon |
 | Fyrbeorg | *fȳr* + *beorg* | the fire mountain | the volcano |
+| Ūtgang | *ūtgang* "going out, exit" | the way out | the way up from the drake's deep |
 | Wyrtholm | *wyrt* "herb, root" + *holm* "islet" | the herb islet | Mother Sallow's lair |
 | Wulfeshol | *wulfes* "wolf's" + *hol* "hole, den" | the wolf's hole | Black Wystan's lair |
 | Bānfeld | *bān* "bone" + *feld* "field" | the bone field | Brother Osrick's lair |

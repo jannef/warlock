@@ -2023,6 +2023,8 @@ mod war_cry_tests;
 #[cfg(test)]
 mod wares_tests;
 #[cfg(test)]
+mod way_out_tests;
+#[cfg(test)]
 mod weapon_ability_tests;
 #[cfg(test)]
 mod weapon_active_tests;

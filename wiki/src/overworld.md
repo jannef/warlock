@@ -50,7 +50,9 @@ it, and leave it as you leave a local area ([Leaving an area](#leaving-an-area))
 Some locations are **hidden**: until someone tells you where one is, its cell is just the land
 it looks like, a stretch of swamp or forest, in every way. Walking onto it is a journey through
 that land, and `>` explores it like any other cell. [Searching](searching.md#searching-1) does not find one: **only a
-[quest](quests.md) reveals it**. A [quest](quests.md) that does, as it is given to you or as you hand it in,
+[quest](quests.md) reveals it**, or coming out of it from below: a few dungeons have a second way
+in, deep down, and climbing out through it marks its hidden mouth on your map as you step out onto
+it ("You mark … on your map."). A [quest](quests.md) that does, as it is given to you or as you hand it in,
 has its giver mark the place on your map ("… marks the old barrow on your map."):
 from then on the overworld shows the way in at that cell, wherever you were when you heard of
 it, and it leads in like any other location. The [quest log](quests.md#the-quest-log) may say in words where the place
