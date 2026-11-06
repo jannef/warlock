@@ -25,6 +25,8 @@ kit = [
     "apple*2",
     "gold_coin*6",
 ]
+# Spell scrolls more, each a random spell below spell level 10 (#1104).
+random_scrolls = { count = "1d3", below_level = 10 }
 # Bonus talents from Scholar and Grit.
 bonus_talents = { levels = [10, 20, 30, 45, 55], trees = ["scholar", "grit"] }
 # The level table (spec §8 "Class abilities").

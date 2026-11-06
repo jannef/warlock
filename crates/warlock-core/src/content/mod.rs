@@ -247,7 +247,7 @@ pub use intimidate::IntimidateRules;
 #[cfg(test)]
 pub(crate) use item_class::BUILTIN as BUILTIN_ITEM_CLASSES;
 pub use item_class::{ItemClassDef, ItemClassId, MAX_ITEM_CLASSES};
-pub use kit::{Keep, Kit, KitItem};
+pub use kit::{Keep, Kit, KitItem, RandomScrolls};
 pub use learning::{Band, Mishap, MishapEffect, StudyRules, drawn_among};
 pub(crate) use level::validate_route;
 pub use level::{
@@ -2243,8 +2243,19 @@ impl Content {
             Some(h) => Some((signs(&h.animals)?, signs(&h.elements)?)),
             None => None,
         };
-        for (class, kit) in self.classes.iter_mut().zip(classes) {
+        let scrolls = (self.classes.iter())
+            .map(|c| {
+                (c.random_scrolls_spec.as_ref())
+                    .map(|spec| kit::resolve_scrolls(spec, self))
+                    .transpose()
+                    .map_err(|m| {
+                        ContentError::new("data/classes/", format!("class `{}`: {m}", c.id))
+                    })
+            })
+            .collect::<Result<Vec<_>, _>>()?;
+        for ((class, kit), scrolls) in self.classes.iter_mut().zip(classes).zip(scrolls) {
             class.kit = kit;
+            class.random_scrolls = scrolls;
         }
         for (race, kit) in self.races.list.iter_mut().zip(races) {
             race.kit = kit;

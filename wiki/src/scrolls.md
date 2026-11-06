@@ -51,7 +51,7 @@ You learn what a kind of scroll is, for good, in one of four ways:
   the abilities menu: it tells the scroll for what it is, as the scroll of identify would.
 - **An appraisal**: Factor Wulfrun in Cēaptūn identifies everything you carry for 100 [gold](shops.md#money) per
   [unidentified](magic-items.md#unidentified-items) [stack](objects.md#piles) (see [Services](npcs.md#services)).
-- **Your [starting kit](starting-kit.md)**: you know the scrolls you start with.
+- **Your [starting kit](starting-kit.md)**: you know the scrolls you start with, a caster's random ones too.
 
 Knowing what a scroll is does not teach you its spell: a scroll you know by name is still only a
 scroll, but once you know it you may study it to learn its spell for good (see

@@ -11,9 +11,33 @@ use warlock_core::object::Stack;
 pub(super) fn class_kits(content: &Content) -> String {
     let mut out = String::from("| Class | Starts with |\n|---|---|\n");
     for c in content.classes() {
-        let _ = writeln!(out, "| {} | {} |", c.name, kit_text(content, &c.kit));
+        let mut text = kit_text(content, &c.kit);
+        if let Some(random) = &c.random_scrolls {
+            let _ = write!(
+                text,
+                "; {} random [spell scrolls](scrolls.md) (each the scroll of one of the {} spells of \
+                 [spell level](magic.md#spell-levels) {} or below, as likely as any other)",
+                random.count,
+                random.scrolls.len(),
+                highest_level(content, &random.scrolls),
+            );
+        }
+        let _ = writeln!(out, "| {} | {text} |", c.name);
     }
     out
+}
+
+/// The highest spell level among the spells `scrolls` cast.
+fn highest_level(content: &Content, scrolls: &[warlock_core::content::ObjectId]) -> u8 {
+    (scrolls.iter())
+        .filter_map(|&o| match &content.object(o).read {
+            Some(warlock_core::content::Reading::Cast(cast)) => {
+                Some(content.spell(cast.spell).level)
+            }
+            _ => None,
+        })
+        .max()
+        .unwrap_or(0)
 }
 
 /// What each race adds to its class's kit, one row each.
