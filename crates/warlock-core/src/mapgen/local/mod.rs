@@ -203,6 +203,7 @@ pub(super) fn generate(
             traps: Default::default(),
             locks: land.locks,
             chests: Default::default(),
+            statues: Default::default(),
             secrets: Default::default(),
             hidden: Default::default(),
             places: Default::default(),

@@ -199,7 +199,7 @@ impl LevelState {
             locks: template.locks.clone(),
             wedged: BTreeMap::new(),
             chests: template.chests.clone(),
-            statues: BTreeMap::new(),
+            statues: template.statues.clone(),
             secrets: template.secrets.clone(),
             hidden: template.hidden.clone(),
             // A hand-made level's places are read from its template in `Content`.

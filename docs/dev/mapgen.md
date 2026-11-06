@@ -34,7 +34,13 @@ On a floor with no danger nothing is drawn: the Depths' guard post keeps its one
 branch with a danger the initial population follows (`mapgen/population.rs`, stream
 `population/<level id>`; `docs/dev/creatures.md`: its own folk, now and then a stray from every
 hostile type of the campaign, populations or none, unless the branch's `stray_pool` says
-`"populations"`), then what its vaults' empty chests hold (`chest::fill_vaults`, stream
+`"populations"`), and, from the same stream after its draws, the **leavings** about every creature
+it and the vaults' pools placed whose type has `leavings` (`mapgen/leavings.rs`: each kind's
+count, `Leaving::count`, on plain floor within 4 cells that nothing claims, no creature, walk,
+object, trap, light, lock, chest, shop, or kept-clear room; a statue only with open ground all
+eight ways round, `LevelTemplate::statues` holding a nobody of the branch's population, not
+unique or dread, holding nothing; webs and acid pits change the terrain, torn cloth joins the
+pile), then what its vaults' empty chests hold (`chest::fill_vaults`, stream
 `vault_chests/<level id>`), then the floor's chests (`mapgen/chest.rs`, stream `chests/<level id>`, one
 floor in five by default; `docs/dev/chests.md`), then its treasure rooms' chests, gold, and
 gems (`mapgen/treasury.rs`, stream `treasure/<level id>`; `docs/dev/special-rooms.md`; a

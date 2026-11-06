@@ -151,6 +151,7 @@ mod familiar;
 mod feature;
 mod feint;
 mod fight;
+mod first_sight;
 mod flavour;
 mod fletch;
 mod focus;
@@ -1751,6 +1752,8 @@ mod feature_tests;
 mod feint_tests;
 #[cfg(test)]
 mod fight_tests;
+#[cfg(test)]
+mod first_sight_tests;
 #[cfg(test)]
 mod fixture_factions;
 #[cfg(test)]

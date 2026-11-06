@@ -214,6 +214,19 @@ wherever you are on its level.
 
 {{#include generated/creature-unseen.md}}
 
+### Warning signs
+
+Some creatures leave signs about them where they are found: a floor's
+[basilisk](creatures.md#creature-basilisk) stands among statues of what it stoned (nobodies of
+the floor's own kind, holding nothing, dug and kicked as any statue), spiders among old webs
+(which catch no one), and acid-hided things on floor eaten into pits, and torn cloth lies where
+a light-fingered thing has been. They are laid within four cells of each creature a floor is
+peopled with or a vault holds (a statue only where open ground is all about it), from one to a
+few of each kind. The more dreadful creatures are named once, the first time in a life you see
+one, with the line below; the life remembers which.
+
+{{#include generated/creature-signs.md}}
+
 ### Spells
 
 Casters cast real [spells](magic.md), the very ones you may learn, rolled at their own

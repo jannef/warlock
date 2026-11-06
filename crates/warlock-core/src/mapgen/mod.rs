@@ -40,6 +40,7 @@ mod deep;
 mod den;
 mod dress;
 mod hoard;
+mod leavings;
 pub mod local;
 mod population;
 mod room_loot;
@@ -600,6 +601,7 @@ pub fn generate_for(
             traps: canvas.traps,
             locks: canvas.locks,
             chests,
+            statues: BTreeMap::new(),
             secrets: canvas.secrets,
             hidden: (boss.zip(canvas.lair))
                 .map(|(b, lair)| layer_boss_stairs(content, b, lair, down_to.clone()))
@@ -990,6 +992,8 @@ mod fyrdelf_tests;
 mod homes_tests;
 #[cfg(test)]
 mod lairs_tests;
+#[cfg(test)]
+mod leavings_tests;
 #[cfg(test)]
 mod lytelscraef_tests;
 #[cfg(test)]

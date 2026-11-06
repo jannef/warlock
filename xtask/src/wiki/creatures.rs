@@ -12,8 +12,8 @@ use warlock_core::burden::{self, Burden};
 use warlock_core::combat::Category;
 use warlock_core::content::{
     ActionKind, Affliction, BASE_TURN, Benefit, BurstWhen, Combat, Content, CorrodesWhat,
-    CreatureDef, CreatureId, FactionId, Invisible, NORMAL_COST, NaturalAttack, OnHit, Stance,
-    Takes, article, price, spoken,
+    CreatureDef, CreatureId, FactionId, Invisible, Leaving, NORMAL_COST, NaturalAttack, OnHit,
+    Stance, Takes, article, price, spoken,
 };
 use warlock_core::geom::Pos;
 use warlock_core::object::format_weight;
@@ -820,6 +820,38 @@ pub(super) fn creature_blinks(content: &Content) -> String {
             link(Term::Creature, &c.id, &capital(&c.name)),
             blinks.range,
             blinks.cooldown
+        );
+    }
+    out
+}
+
+/// Warning signs (docs/design/monster-dread.md §9): every creature that leaves something about
+/// it where the generator places it, or has a line said the first time it is seen.
+pub(super) fn creature_signs(content: &Content) -> String {
+    let mut out = String::from(
+        "| Creature | Level | Rarity | Leaves | First seen |\n|---|---:|---|---|---|\n",
+    );
+    for (_, c) in listed(content) {
+        if c.leavings.is_empty() && c.first_sight.is_none() {
+            continue;
+        }
+        let leaves: Vec<String> = (c.leavings.iter())
+            .map(|l| match l {
+                Leaving::Statue => "statues",
+                Leaving::Web => "old webs",
+                Leaving::AcidPit => "acid-pitted floor",
+                Leaving::TornCloth => "torn cloth",
+            })
+            .map(String::from)
+            .collect();
+        let _ = writeln!(
+            out,
+            "| {} | {} | {} | {} | {} |",
+            link(Term::Creature, &c.id, &capital(&c.name)),
+            c.level,
+            rarity_cell(content, c),
+            dash(&leaves),
+            c.first_sight.as_deref().unwrap_or("-"),
         );
     }
     out

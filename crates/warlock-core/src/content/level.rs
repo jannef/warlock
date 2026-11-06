@@ -579,6 +579,9 @@ pub struct LevelTemplate {
     /// Chests, by position (spec §8 "Chests"): one on every chest terrain cell, its level and
     /// what it holds.
     pub chests: BTreeMap<Pos, Chest>,
+    /// Statues of the stoned, by position (spec §8 "Statues"): one on every statue terrain cell
+    /// the generator laid as a leaving (`mapgen/leavings.rs`); none in a level file.
+    pub statues: BTreeMap<Pos, crate::world::Statue>,
     /// Secret doors, by position (spec §8 "Searching"): the terrain there is the wall each
     /// looks like until it is found.
     pub secrets: BTreeMap<Pos, Secret>,
@@ -1209,6 +1212,7 @@ pub(super) fn parse_level(
         traps,
         locks,
         chests,
+        statues: BTreeMap::new(),
         secrets,
         hidden,
         places,
