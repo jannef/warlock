@@ -22,6 +22,7 @@
 //! the player does not see the gazer. At a creature the player sees the gazer stare at: "The
 //! vampire stares at the wolf."
 
+use super::fight::End;
 use super::{ActorId, World};
 use crate::action::Event;
 use crate::content::{ActionKind, Gaze, the, the_start};
@@ -86,11 +87,16 @@ impl World {
                 (false, false) => format!("You tear your eyes from {}'s.", the(&def.name)),
             };
             self.say(line);
-        } else if self.perception.sees_actors_at(here)
-            && let Some(them) = self.state.actors.get(&target)
-        {
-            let them = self.called(them);
-            self.say(format!("{gazer} stares at {them}."));
+        } else if self.perception.sees_actors_at(here) {
+            // As the fight's lines name them: "Your vampire", "the hobgoblin", "Snel".
+            let seen = (self.state.actors.get(&target))
+                .is_some_and(|t| self.perception.sees_actors_at(t.pos));
+            let line = format!(
+                "{} stares at {}.",
+                self.end_of(id, true).subject(),
+                self.end_of(target, seen).object()
+            );
+            self.say(line);
         }
         if caught {
             for rider in gaze.riders.clone() {
@@ -101,6 +107,20 @@ impl World {
             }
         }
         price
+    }
+
+    /// Actor `id` as the fight's lines name it, `seen` or not (`fight.rs::End`).
+    fn end_of(&self, id: ActorId, seen: bool) -> End<'_> {
+        let player = self.state.player;
+        match self.state.actors.get(&id) {
+            _ if id == player => End::You,
+            Some(a) if seen && a.master() == Some(player) => match a.kept() {
+                Some(data) => End::Named(data.name.as_str()),
+                None => End::Yours(self.content.creature(a.creature).name.as_str()),
+            },
+            Some(a) if seen => End::Seen(self.content.creature(a.creature).name.as_str()),
+            _ => End::Unseen,
+        }
     }
 
     /// Whether `gaze` catches the eyes it met: its chance, a glance's share of it against

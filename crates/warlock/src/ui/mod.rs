@@ -1007,6 +1007,35 @@ mod tests {
     }
 
     #[test]
+    fn the_status_bar_says_averted_while_an_averted_gaze_is_in_sight() {
+        let mut files = ContentFiles::builtin();
+        files.insert(
+            "data/creatures/starer.toml",
+            "[[creature]]\nid = \"starer\"\nname = \"starer\"\nglyph = \"S\"\nfg = \"#40a040\"\n\
+             weight = 1000\nfaction = \"undead\"\nlevel = 1\nxp = 1\n\
+             [creature.gaze]\nrange = 4\naverted = true\n\
+             riders = [{ status = \"transfixed\", chance = 100, severity = 1 }]\n",
+        );
+        files.insert(
+            "levels/stare.toml",
+            "name = \"Stare\"\nambient = [255, 255, 255, 0]\nmap = '''\n########\n#@....S#\n########\n'''\n\
+             [legend]\n\"@\" = { terrain = \"floor\", spawn = \"player\" }\n\
+             \"S\" = { terrain = \"floor\", creature = \"starer\" }\n",
+        );
+        files.insert(
+            "scenarios/stare.toml",
+            "name = \"Stare\"\nstart_level = \"stare\"\n",
+        );
+        let content = Arc::new(Content::load(&files).expect("valid"));
+        let world = World::new(content, "stare", None).expect("world");
+        let texts: Vec<String> = status_segments(&world, Clock::H24, TemperatureUnit::Celsius)
+            .into_iter()
+            .map(|s| s.text)
+            .collect();
+        assert!(texts.contains(&"Averted".to_string()), "{texts:?}");
+    }
+
+    #[test]
     fn the_status_bar_says_dazzled_while_strong_light_dazzles_light_blind_eyes() {
         let world_as = |race: &str| {
             let mut files = ContentFiles::builtin();

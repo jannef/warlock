@@ -157,6 +157,18 @@
 #             (what it does: "breathes fire"; default "breathes"). It breathes at a hostile it
 #             sees in the cone with a clear line whenever the status is off, with no roll to hit:
 #             Evasion halves it and resistances take their share
+#   gaze      a rider at sight, not at touch (spec §8 "Creature behavior": "Gazes"; enemy-only):
+#             [creature.gaze] with range (it gazes at a hostile it sees within this many cells,
+#             1 to 8), riders (on_hit entries, as for attack: statuses with a severity, drains
+#             with their check, each by its own chance; never a disease or a hold), and
+#             optionally chance (percent that eyes that meet it are caught, 1 to 100; default
+#             100), cooldown (seconds before the next, 6 to 600: the `gaze` status of
+#             status.toml, a degree per 6 s; default 12), averted (true: the player averts their
+#             eyes by reflex while they see it, fighting at -4 to hit with Dodge halved and no
+#             free blows; default false) and glance (with averted: the share of chance it takes
+#             at against averted eyes, percent; default 25). It gazes before it throws, whenever
+#             the cooldown is off, at a target with vitals; the eyes must meet both ways (the
+#             player sees it, or a creature by its own eyes), else the stare is only felt
 #   natural   its natural armour: { defence = 1, protection = 3, name = "shell" }: defence in
 #             the Natural category of Defence, protection the damage it soaks off every hit
 #             (adding up with what it wears; each 0 to 20, not both 0); "Your sword glances off

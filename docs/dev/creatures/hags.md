@@ -8,7 +8,8 @@ bheur hag 42 (caster), shared types in `assets/data/creatures/` on the undead ro
 ±35 %) and checks the `hag` tag, which the bog hag (faction `marsh`, the fen's) carries too.
 Faction `hags` (hostile to the player only), so the fixtures that write their own factions file
 list it. Their riders are existing mechanics only: the green hag's `transfixed` and `ill_wished`
-(illusions and misery), the sea hag's `frightened` and a Toughness drain (her death gaze), the
+(illusions and misery), the sea hag's `frightened` and a Toughness drain (her death gaze, `[creature.gaze]` since #1125:
+range 4, 35 %; docs/dev/creatures.md "Gazes"), the
 annis hag's `held` (her embrace, grip 18), the bheur hag's cold damage and `sluggish` (no hunger
 rider exists); `world/mana_tests.rs` drops the green and bheur hags with its own status file.
 Illusions, death gazes, blizzards, shapeshifting, covens, and water-dwelling (the sea hag walks

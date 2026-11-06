@@ -12,7 +12,7 @@ use warlock_core::burden::{self, Burden};
 use warlock_core::combat::Category;
 use warlock_core::content::{
     ActionKind, Affliction, BASE_TURN, Benefit, Combat, Content, CreatureDef, CreatureId,
-    FactionId, NORMAL_COST, NaturalAttack, Stance, article, price, spoken,
+    FactionId, NORMAL_COST, NaturalAttack, OnHit, Stance, article, price, spoken,
 };
 use warlock_core::geom::Pos;
 use warlock_core::object::format_weight;
@@ -394,7 +394,12 @@ pub(super) fn creature_defences(content: &Content) -> String {
 /// What a hit with `attack` may cause: each status with its degrees and each disease, with its
 /// chance.
 pub(super) fn on_hit(content: &Content, attack: &NaturalAttack) -> Vec<String> {
-    (attack.on_hit.iter())
+    riders(content, &attack.on_hit)
+}
+
+/// What `riders` cause (an attack's `on_hit`, a gaze's riders), each with its chance.
+fn riders(content: &Content, riders: &[OnHit]) -> Vec<String> {
+    (riders.iter())
         .map(|o| match o.what {
             Affliction::Status { status, severity } => {
                 let degrees = if severity == 1 { "degree" } else { "degrees" };
@@ -600,6 +605,35 @@ pub(super) fn creature_breaths(content: &Content) -> String {
             damage_link(content, breath.kind),
             breath.length,
             breath.cooldown
+        );
+    }
+    out
+}
+
+/// Each gazer's gaze (spec §8 "Creature behavior": "Gazes"): how far it reaches, the chance that
+/// eyes that meet it are caught (and a glance's against averted ones), what it then causes, and
+/// how long before it looks again.
+pub(super) fn creature_gazes(content: &Content) -> String {
+    let mut out = String::from(
+        "| Creature | Reach | Catches the eye | Averted eyes | Then | Again after |\n\
+         |---|---:|---:|---|---|---:|\n",
+    );
+    for (_, c) in listed(content) {
+        let Some(gaze) = &c.gaze else {
+            continue;
+        };
+        let averted = match gaze.averted {
+            true => format!("forced; {}%", gaze.chance_against(true)),
+            false => "—".to_string(),
+        };
+        let _ = writeln!(
+            out,
+            "| {} | {} cells | {}% | {averted} | {} | {} s |",
+            link(Term::Creature, &c.id, &capital(&c.name)),
+            gaze.range,
+            gaze.chance,
+            riders(content, &gaze.riders).join(", "),
+            gaze.cooldown
         );
     }
     out
