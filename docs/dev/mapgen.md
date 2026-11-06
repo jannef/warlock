@@ -193,7 +193,10 @@ floors in a row, which no one can compare. `Content::spawning` reads the danger 
 `depth.min(roster_depth)`, filled by `Content::fill_rosters` from the highest level of the
 branch's population and strays, so every draw (population, dens, hoards, spawns) stops rising at
 the roster's top and a floor at any depth holds creatures; `Content::floor_danger` is the number
-that keeps rising. Other caps past that top: `Content::item_level` clamps at `MAX_ITEM_LEVEL` as
+that keeps rising. The dread draws do not stop rising: `[dungeon.endless] dread` (`content/dread.rs`,
+`DungeonDef::dread`) gives `dread_one_in` by the floor's true depth (`Content::draw_odds_at`, which
+`generate_for` patches into the `Spawning` the population and dens draw by; docs/dev/creatures.md
+"Dread"), Grundlēas's falling from one in 40 at 70 to one in 5 from 100. Other caps past that top: `Content::item_level` clamps at `MAX_ITEM_LEVEL` as
 ever; `hidden_at` and `locks_at` saturate and keep rising (the stairs never hang on a lock or a
 secret, `connect::validate`). Grundlēas gets its draws by `stray = 100` over the campaign's generic
 list and names only the rat as a `population`, which every other branch's strays already hold, so

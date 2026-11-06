@@ -8,6 +8,7 @@ id = "ghost_lord"
 level = 53
 xp = 275
 rarity = "rare"
+dread = true
 name = "ghost lord"
 glyph = "G"
 fg = "#f0e8f8"

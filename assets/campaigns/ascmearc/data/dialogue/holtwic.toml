@@ -1,0 +1,70 @@
+# The people of Holtwīc, the village at the end of the north road (#1140; the fields:
+# data/dialogue.toml): the cottars (the `cottar` type), and Gammer Wynflæd, the village's
+# wise-woman, placed by the village's legend with `npc = "wynflaed"`. Country folk: the cottars
+# talk as the commoners of the march do, the wise-woman as an old countrywoman. Her quest (the
+# villager the fair folk took, #1141) comes as its own topic; until then she talks of the
+# village, the wood, and the fair folk, and reveals nothing.
+
+# The cottars: one-liners and mutters, no topics.
+[[dialogue]]
+creature = "cottar"
+greet = "Mornin'. Come up the road from Cēaptūn, 'ave yer? Not many does."
+greet_evil = [
+    "We don't want yer sort in Holtwīc. Go on, back down the road.",
+    "Keep off my field, you. And off my step.",
+]
+lines = [
+    "Road stops 'ere. Past us it's all wood, and the wood ain't ours.",
+    "Ask Gammer Wynflæd about the wood. Knows its ways, she does.",
+    "Don't go in them trees after dark. Don't whistle in 'em neither.",
+    "Barley's thin this year. Ash on it from the mountain, see.",
+    "Cēaptūn folk call us bumpkins. Still eat our bread, don't they.",
+    "If yer 'ear pipes in the wood, you walk the other way. Quick, like.",
+    "Leave a drop o' milk on the step for the little folk. Costs nuffink.",
+    "Wolves in the deep wood, boar in the near. Goblins, some winters.",
+]
+mutter = { chance = 2, lines = [
+    "Where's that cow got to?",
+    "Rowan over the door. Rowan over the door.",
+    "Me back's killin' me.",
+    "Butter won't come again. Somebody's 'ad it.",
+    "Rain by evenin'.",
+] }
+
+# Gammer Wynflæd, the wise-woman: herbs, the old ways, and the wood's queer places.
+[[dialogue]]
+npc = "wynflaed"
+name = "Gammer Wynflæd"
+greet = "Come in, my dear, and shut out the draught. The wood's listening."
+greet_evil = [
+    "There's a dark on you I'll not have over my sill. Go your way.",
+    "The wood'd have you and welcome, I think. Not my door.",
+]
+lines = [
+    "Rowan and red thread. Keeps most things out. Most.",
+    "Feverfew for the head, yarrow for a cut. Never pick 'em by moonlight.",
+    "Born in Holtwīc, and I'll be buried here. Been to Cēaptūn but twice.",
+    "Mind you thank nobody in the wood. Thanks is a debt, to them.",
+    "Bread and salt's the old way. Never eat what's offered under a hill.",
+    "My mother kept this door before me, and hers before her.",
+]
+mutter = { chance = 2, verb = "murmurs", lines = [
+    "...rowan at the door, iron at the sill...",
+    "...one for the house, one for the hearth, one for the hill...",
+    "...hush now. Hush...",
+] }
+
+[[dialogue.topic]]
+id = "holtwic"
+name = "Holtwīc"
+reply = "Holtwīc's the end of the road, my dear. Past us there's only the holly wood, Holegnwudu, all the way to the hills. A dozen households, the fields, the well, and me. We grow barley and keep our heads down, and the wood mostly lets us be."
+
+[[dialogue.topic]]
+id = "wood"
+name = "The holly wood"
+reply = "Holegnwudu's older than the barrows. Boar in it, wolves in the deep part, goblins some winters. But it's not the beasts I mind. There's places where the trees stand too close, in a ring, and the light goes queer, and you hear pipes. Walk round those, if you've sense."
+
+[[dialogue.topic]]
+id = "fair_folk"
+name = "The fair folk"
+reply = "Don't name them, my dear: bad manners and worse luck. Two courts of them, my mother said, the bright and the dark. The bright ones only play tricks. The dark ones keep a hall under a hill in this wood, and what goes in doesn't come out the same, if it comes out at all."

@@ -8,6 +8,7 @@ id = "sea_hag"
 level = 26
 xp = 140
 rarity = "rare"
+dread = true
 loot = 40
 name = "sea hag"
 glyph = "h"

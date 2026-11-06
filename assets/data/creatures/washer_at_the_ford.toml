@@ -8,6 +8,7 @@ id = "washer_at_the_ford"
 level = 48
 xp = 250
 rarity = "rare"
+dread = true
 name = "washer at the ford"
 plural = "washers at the ford"
 glyph = "G"

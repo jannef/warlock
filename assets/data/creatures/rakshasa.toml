@@ -8,6 +8,7 @@ id = "rakshasa"
 level = 52
 xp = 270
 rarity = "very_rare"
+dread = true
 loot = 60
 name = "rakshasa"
 glyph = "f"

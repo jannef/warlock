@@ -5,7 +5,8 @@
 id = "charnel_heap"
 level = 22
 xp = 120
-rarity = "common"
+rarity = "uncommon"
+dread = true
 name = "charnel heap"
 glyph = "Z"
 fg = "#7a7048"

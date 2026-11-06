@@ -368,6 +368,7 @@ mod tests {
         );
         for scenario in content.scenarios() {
             let owner = if [
+                "aelfham",
                 "ascmearc",
                 "ceaptun",
                 "cealdhlaw",
@@ -375,6 +376,7 @@ mod tests {
                 "fennmynster",
                 "fyrdelf",
                 "grundleas",
+                "holtwic",
                 "rat_king",
                 "utgang",
             ]

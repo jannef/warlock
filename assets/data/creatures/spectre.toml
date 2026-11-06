@@ -6,6 +6,7 @@ id = "spectre"
 level = 14
 xp = 80
 rarity = "rare"
+dread = true
 name = "spectre"
 glyph = "G"
 fg = "#90a8d0"

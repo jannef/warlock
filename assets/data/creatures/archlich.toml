@@ -8,6 +8,7 @@ id = "archlich"
 level = 54
 xp = 280
 rarity = "very_rare"
+dread = true
 loot = 100
 name = "archlich"
 glyph = "L"

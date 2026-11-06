@@ -1,0 +1,14 @@
+# The wise-woman of Holtwīc (#1140): Gammer Wynflæd, who knows herbs and the old ways and the
+# holly wood's queer places (her npc dialogue, campaigns/ascmearc/data/dialogue/holtwic.toml).
+[[creature]]
+id = "wise_woman"
+name = "wise-woman"
+glyph = "@"
+fg = "#8fb07a"
+faction = "peaceful"
+alignment = "good"
+race = "human"
+footsteps = 35
+hearing = 14
+weight = 55000
+stats = { strength = 8, toughness = 10, intelligence = 14, willpower = 16, presence = 14 }

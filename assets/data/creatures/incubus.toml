@@ -8,6 +8,7 @@ id = "incubus"
 level = 27
 xp = 145
 rarity = "rare"
+dread = true
 name = "incubus"
 glyph = "n"
 fg = "#9a50c0"

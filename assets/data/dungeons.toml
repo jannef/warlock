@@ -67,6 +67,10 @@
 #              the generic list is drawn there instead
 #   deeper     percent of each further step deeper (0 to 100, default `[defaults]`'s)
 #   deeper_cap  the most steps past the first (0 to 50, default `[defaults]`'s)
+#   dread_one_in  one draw in this many (1 or more, default `[defaults]`'s) is made among the
+#              dread types alone (a creature's `dread = true`), each by its level and rarity,
+#              and every other draw among the rest; where the side rolled has nothing to draw,
+#              the draw is made among the other. A vault's monster pool rolls none
 #   spawn      `{ every = "15m", chance = 60, cap = N }` (the defaults; cap: the population):
 #              while the player is on a floor, every `every` a creature comes with `chance` %
 #              unless the floor holds `cap` creatures hostile to the player
@@ -82,14 +86,14 @@
 #              e.g. `shops = { chance = 0 }` for none
 #   [[dungeon.levels]]  per-depth overrides, first match wins:
 #              from, to (inclusive; default `from`), generator, size, temperature, danger,
-#              room_effects, shops (each default the branch's; a danger here needs the branch's;
-#              a table field by field), and `vaults` (vault ids, shared or the branch's
+#              dread_one_in, room_effects, shops (each default the branch's; a danger or a
+#              dread_one_in here needs the branch's danger; a table field by field), and `vaults` (vault ids, shared or the branch's
 #              campaign's: each stamped on every level of the range for certain, and never drawn
 #              at random anywhere, e.g. `vaults = ["drakes_hoard"]`)
 #
 # [defaults] (this file only; required once any branch or level has a danger): the odds every
-# area with a danger draws by unless it gives its own `stray`, `out_of_depth`, `deeper`, and
-# `deeper_cap` (spec §7 "Danger levels").
+# area with a danger draws by unless it gives its own `stray`, `out_of_depth`, `deeper`,
+# `deeper_cap`, and `dread_one_in` (spec §7 "Danger levels"; `dread_one_in` defaults to 100).
 #
 # Generators build with the terrain void, wall, floor, door_closed, door_open, stairs_up,
 # stairs_down, water, sconce, fungus and the light lamp, and stamp vaults (assets/vaults).
@@ -103,3 +107,6 @@ out_of_depth = 5
 deeper = 5
 # ... at most this many times (a safety cap: ten more at 5 % each is one in 10^13).
 deeper_cap = 10
+# One draw in this many is made among the dread types alone, every other among the rest
+# (docs/design/monster-dread.md §8; the owner: "let's increase the default to 1-in-100").
+dread_one_in = 100

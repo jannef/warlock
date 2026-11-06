@@ -139,7 +139,7 @@ pub(super) fn fill(
 /// The candidates of `candidates` that are not unique.
 fn plain(content: &Content, candidates: Vec<Candidate>) -> Vec<Candidate> {
     (candidates.into_iter())
-        .filter(|&(c, _, _)| !content.creature(c).unique)
+        .filter(|&(c, ..)| !content.creature(c).unique)
         .collect()
 }
 
@@ -148,7 +148,7 @@ fn plain(content: &Content, candidates: Vec<Candidate>) -> Vec<Candidate> {
 fn sleepers(content: &Content, swarm: &Swarm, candidates: &[Candidate]) -> Vec<Candidate> {
     let player = content.creature_id("player");
     (candidates.iter().copied())
-        .filter(|&(c, _, _)| {
+        .filter(|&(c, ..)| {
             if swarm.factions.is_empty() {
                 player.is_some_and(|p| content.stance(c, p) == Stance::Hostile)
             } else {
@@ -263,7 +263,14 @@ impl Theme {
         if !warren && at >= u32::from(themes.kind) + u32::from(themes.faction) {
             return Theme::Mixed;
         }
-        let Some(first) = danger::draw(rng, own, generic, danger, &spawning.odds) else {
+        // The type a warren or a tribe starts from is no dread type (a warren of basilisks is no
+        // den), drawn with no dread roll; a tribe's sleepers roll as any draw does.
+        let ordinary = |list: &[Candidate]| -> Vec<Candidate> {
+            list.iter().copied().filter(|&(.., dread)| !dread).collect()
+        };
+        let odds = spawning.odds.without_dread();
+        let first = danger::draw(rng, &ordinary(own), &ordinary(generic), danger, &odds);
+        let Some(first) = first else {
             return Theme::Mixed;
         };
         if warren {
@@ -272,7 +279,7 @@ impl Theme {
         let faction = content.creature(first).faction;
         let of = |list: &[Candidate]| -> Vec<Candidate> {
             (list.iter().copied())
-                .filter(|&(c, _, _)| content.creature(c).faction == faction)
+                .filter(|&(c, ..)| content.creature(c).faction == faction)
                 .collect()
         };
         Theme::Faction(first, of(own), of(generic))

@@ -7,6 +7,7 @@ id = "eldest_vampire"
 level = 69
 xp = 355
 rarity = "very_rare"
+dread = true
 loot = 100
 name = "eldest vampire"
 glyph = "V"

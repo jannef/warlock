@@ -1,0 +1,10 @@
+# A dev scenario of the Ascmearc (#1140): straight into Ælfhām, the Unseelie court's hall under
+# the fairy mound in the holly wood. Its first level's `<` leads nowhere here (the run did not
+# come down from the overworld, and the mound is still hidden); come in from the overworld once
+# it is revealed, it leads back to the wood.
+name = "Ælfhām"
+description = "Straight into Ælfhām, the Unseelie court's hall under the hill: three floors of the fey's own country."
+start_level = "aelfham:1"
+seed = 1
+character = { race = "human", gender = "male", class = "warrior", name = "Æthelric" }
+wield = ["lantern"]

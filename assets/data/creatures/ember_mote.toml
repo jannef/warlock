@@ -5,7 +5,7 @@
 id = "ember_mote"
 level = 2
 xp = 20
-rarity = "common"
+rarity = "uncommon"
 name = "ember mote"
 glyph = "e"
 fg = "#ff7a30"
