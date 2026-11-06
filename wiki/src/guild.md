@@ -17,7 +17,7 @@ and stands until it is done. Kills count only from the giving on.
 1. **A bounty**: kill one creature of a kind drawn from those that live in [Cealdhlāw](dungeons.md#the-dungeons),
    [Fennmynster](dungeons.md#fennmynster), and [Fyrdelf](dungeons.md#fyrdelf) (never a named monster), of the dungeons you can get into when Wat
    gives it. 40 [gold](shops.md#money), 60 [experience](experience.md).
-2. **The hundred**: kill 100 creatures of one sort, drawn from [kobolds](creatures.md#creature-kobold), [goblins](creatures.md#creature-goblin), the undead,
+2. **A score and five**: kill 25 creatures of one sort, drawn from [kobolds](creatures.md#creature-kobold), [goblins](creatures.md#creature-goblin), the undead,
    vermin, marsh things, duergar, and fire things, of those living in a dungeon you can get
    into. Any kind of the sort counts, anywhere; the [quest log](quests.md#the-quest-log) lists the kinds. 250 [gold](shops.md#money), two red
    [potions](objects.md#class-potions), 500 [experience](experience.md). [A little good](alignment.md).
@@ -52,7 +52,7 @@ Their numbers are in [Creatures](creatures.md).
 
 ## Ranks
 
-Being given the first job makes you a member: a **Tin** of the Gilde. Finishing the hundred makes
+Being given the first job makes you a member: a **Tin** of the Gilde. Finishing a score and five makes
 you a **Pewter**, and bringing down your wanted criminal an **Iron**. Wat names you each time ("Wat One-Eye names you a Pewter of the Weyfarers'
 Gilde."), and the character screen ([Your character](character.md)) shows the rank in the colour of its metal. A
 rank is a title: the town calls you by it, and nothing else changes. There are seven, each

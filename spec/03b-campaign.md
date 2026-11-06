@@ -64,7 +64,7 @@ every new run starts in it.
     it is given and never drawn again, each offered once the one before it is done and with no
     other gate (level, alignment, or another quest): "A bounty" (kill one of a creature type
     drawn from the non-unique populations of Cealdhlāw, Fennmynster, and Fyrdelf, those the
-    player can enter; 40 gold, 60 XP), "The hundred" (kill 100 of a creature tag drawn from
+    player can enter; 40 gold, 60 XP), "A score and five" (kill 25 of a creature tag drawn from
     kobold, goblin, undead, vermin, marsh-thing, duergar, and fire-thing, those living in a
     branch the player can enter; 250 gold, 2 red potions, 500 XP), "A scroll for the Gilde"
     (bring a scroll drawn from those loot can hold; 200 gold, 150 XP), "Wanted" (kill one of
@@ -87,7 +87,7 @@ every new run starts in it.
     §8.2 with the footpads. Sister Hild has a line on Osrick.
     The chain is likely a requirement of the story's ending, to come.
   Every quest of the three helps someone and is a little good (`alignment` 5 to 30); of Wat's,
-  only "The hundred" is (5). Each reach and bring
+  only "A score and five" is (5). Each reach and bring
   quest says in the log where its goal lies (`where`). The chalice and the
   reliquary are objects of their own, worth nothing to a shop. The three
   branches' first levels each have an `arrival` line: "Cold air breathes up from the mound.",

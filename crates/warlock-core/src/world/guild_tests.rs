@@ -98,14 +98,14 @@ fn wats_topics_give_the_chain_one_link_at_a_time() {
     let mut w = town();
     assert_eq!(topics(&w), ["quest-guild_quarry", "guild", "board"]);
     done(&mut w, &["guild_quarry"]);
-    assert_eq!(topics(&w), ["quest-guild_hundred", "guild", "board"]);
-    done(&mut w, &["guild_quarry", "guild_hundred"]);
+    assert_eq!(topics(&w), ["quest-guild_score", "guild", "board"]);
+    done(&mut w, &["guild_quarry", "guild_score"]);
     assert_eq!(topics(&w), ["quest-guild_scroll", "guild", "board"]);
-    done(&mut w, &["guild_quarry", "guild_hundred", "guild_scroll"]);
+    done(&mut w, &["guild_quarry", "guild_score", "guild_scroll"]);
     assert_eq!(topics(&w), ["quest-guild_wanted", "guild", "board"]);
     let chain = [
         "guild_quarry",
-        "guild_hundred",
+        "guild_score",
         "guild_scroll",
         "guild_wanted",
     ];
@@ -116,8 +116,8 @@ fn wats_topics_give_the_chain_one_link_at_a_time() {
     w.player_mut().alignment = Some(crate::alignment::Score::new(-1000));
     assert_eq!(topics(&w)[0], "quest-guild_quarry");
     done(&mut w, &["guild_quarry"]);
-    assert_eq!(topics(&w)[0], "quest-guild_hundred");
-    done(&mut w, &["guild_quarry", "guild_hundred"]);
+    assert_eq!(topics(&w)[0], "quest-guild_score");
+    done(&mut w, &["guild_quarry", "guild_score"]);
     assert_eq!(topics(&w)[0], "quest-guild_scroll");
 }
 
@@ -151,27 +151,27 @@ fn being_given_the_bounty_makes_the_player_a_tin_once() {
 }
 
 #[test]
-fn the_hundred_done_makes_the_player_a_pewter() {
+fn the_score_and_five_done_makes_the_player_a_pewter() {
     let mut w = town();
     done(&mut w, &["guild_quarry"]);
     assert_eq!(rank(&w).as_deref(), Some("Tin"), "done counts as given");
     beside_wat(&mut w);
-    act(&mut w, "ask:S:quest-guild_hundred");
+    act(&mut w, "ask:S:quest-guild_score");
     assert!(promotions(&w).is_empty(), "already Tin");
     let tag = (w
         .quests()
-        .record("guild_hundred")
+        .record("guild_score")
         .and_then(|r| r.roll.clone()))
     .expect("drawn")
     .target;
     let tag = tag.strip_prefix("tag:").unwrap_or(&tag);
     let member = (CONTENT.tagged(tag).next()).unwrap_or_else(|| panic!("a member of {tag}"));
-    for _ in 0..100 {
+    for _ in 0..25 {
         w.tally_kill(member, "cealdhlaw");
     }
-    act(&mut w, "ask:S:quest-guild_hundred");
+    act(&mut w, "ask:S:quest-guild_score");
     assert!(
-        said(&w).contains(&"Quest complete: The hundred.".to_string()),
+        said(&w).contains(&"Quest complete: A score and five.".to_string()),
         "{:?}",
         said(&w)
     );
@@ -188,7 +188,7 @@ fn the_hundred_done_makes_the_player_a_pewter() {
 #[test]
 fn the_scroll_handed_in_leaves_the_pack_and_an_unpaid_one_stays_billed() {
     let mut w = town();
-    done(&mut w, &["guild_quarry", "guild_hundred"]);
+    done(&mut w, &["guild_quarry", "guild_score"]);
     beside_wat(&mut w);
     act(
         &mut w,

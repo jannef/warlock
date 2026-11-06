@@ -19,26 +19,26 @@ done = "That's the one. 'Ere's the Gilde's coin, fair earned."
 where = "{Targets} are known in {branch}."
 
 [[quest]]
-id = "guild_hundred"
-name = "The hundred"
+id = "guild_score"
+name = "A score and five"
 giver = "wat"
 requires = "guild_quarry"
 type = "kill"
-count = 100
+count = 25
 pick = { tags = ["kobold", "goblin", "undead", "vermin", "marsh-thing", "duergar", "fire-thing"] }
 reward = { gold = 250, xp = 500, items = ["potion_of_healing*2"] }
 alignment = 5
-offer = "An 'undred {targets} for the Gilde. Every sort of 'em counts, an' I'll write you down which. Anywhere you like, so long as it's your 'and does it. Counts from today."
+offer = "A score an' five {targets} for the Gilde. Every sort of 'em counts, an' I'll write you down which. Anywhere you like, so long as it's your 'and does it. Counts from today."
 accept = "Count 'em careful. I will."
-reminder = "An 'undred {targets}, all told. {Where}"
-done = "An 'undred! I 'ad me doubts, I don't mind sayin'. Pewter suits you. Potions an' all."
+reminder = "A score an' five {targets}, all told. {Where}"
+done = "A score an' five! I 'ad me doubts, I don't mind sayin'. Pewter suits you. Potions an' all."
 where = "{Targets} are known in {branch}."
 
 [[quest]]
 id = "guild_scroll"
 name = "A scroll for the Gilde"
 giver = "wat"
-requires = "guild_hundred"
+requires = "guild_score"
 type = "bring"
 pick = { objects = { class = "scrolls", loot = true } }
 reward = { gold = 200, xp = 150 }
