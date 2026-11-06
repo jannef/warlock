@@ -177,7 +177,7 @@ fn check_finds(level: &LevelTemplate, vault: &Vault, at: Pos, turn: Turn) -> Res
     match vault.id() {
         "reliquary" => {
             let lightning = CONTENT.trap_id("lightning_bolt").expect("the trap");
-            for (p, _) in &turned.template.traps {
+            for p in turned.template.traps.keys() {
                 if level.traps.get(&shift(*p)).map(|t| t.kind) != Some(lightning) {
                     return Err(format!("{}: no lightning rune", shift(*p)));
                 }

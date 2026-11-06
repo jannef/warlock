@@ -756,7 +756,7 @@ fn vaults_are_stamped_whole_some_way_round_with_their_lights_and_creatures() {
         .filter(|v| v.campaign.is_none())
         .collect();
     let mut seen = vec![0; vaults.len()];
-    for seed in 0..30 {
+    for seed in 0..60 {
         for depth in 1..=8 {
             let level = level(seed, depth);
             for (i, vault) in vaults.iter().enumerate() {
