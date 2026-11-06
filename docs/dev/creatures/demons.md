@@ -38,3 +38,7 @@ Presence (#1128, `world/aura.rs`): the hezrou's stench (`poisoned`, radius 2, To
 
 The quasit (#1132, docs/dev/creatures.md "The unseen"): `[creature.invisible] cooldown =
 300`, it stings and is gone from sight, not from the room; its poison kept.
+
+## Variance
+
+The variance pass (#1134, `docs/dev/creatures.md` "Variance by role") sets the roles' to-hit (striker `L/4 + L/8`, brute and caster `L/4 − L/8`, the armed `L/4`), threat and crit (striker 19, brute 24 at ×3), and hit-point factors (quick and caster 0.5, brute 2.0). **Speed**: chaos runs at every pace, 900 (the dretch) to 1200 (the quasit, the balgura); the dread at the edges, the hezrou at 700, the chasme and the balor at 1400.

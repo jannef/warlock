@@ -4,7 +4,7 @@ General conventions: `docs/dev/creatures.md`; the mechanism: `docs/dev/summoning
 
 The summoners (#520): the tag `summoner` on every type with a `[creature.summon]`, each also of
 another tribe. Three shared types, one file each in `assets/data/creatures/`, on #383's formulas
-for a caster (XP `5L + 10`, St −3, base_hp `2.5 × L × 0.8`, In and Wp +4 over the living base):
+for a caster (XP `5L + 10`, St −3, base_hp `2.5 × L × 0.5` (#1134), In and Wp +4 over the living base):
 
 | L | id | faction | tags | calls forth | count | mana (cost) | most |
 |---|---|---|---|---|---|---|---|
@@ -31,3 +31,7 @@ drow priestesses (#536) summon demons: their table is in `docs/dev/creatures/dro
 roster's checks cover them, not this file's `ROSTER`).
 
 Spells (#1102, docs/dev/creatures.md "Casters"; in the order each prefers them): the goblin wizard `burning_hands`, `spark` (mana 28); the necromancer `hex_of_weakness`, `leech`, `blight` (mana 60); the dark wizard `haste`, `fireball`, `lightning_bolt`, `magic_missile` (mana 110).
+
+## Variance
+
+The variance pass (#1134, `docs/dev/creatures.md` "Variance by role") sets the roles' to-hit (striker `L/4 + L/8`, brute and caster `L/4 − L/8`, the armed `L/4`), threat and crit (striker 19, brute 24 at ×3), and hit-point factors (quick and caster 0.5, brute 2.0). **Speed**: the summoners keep their tribes' pace, 1000.

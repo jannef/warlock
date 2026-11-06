@@ -42,6 +42,21 @@ rolled when the hit lands and the target lives; [a disease](diseases.md) is then
 
 {{#include generated/creature-attacks.md}}
 
+### By role
+
+Two creatures of one level are not the same fight: each kind has a role, and the role sets its
+numbers around its level's L. A natural attack hits at a quarter of L (each part of these
+rounded down); a **quick** one (or an assassin) adds an eighth of L, at most +20, and its blow
+[threatens a critical](combat.md#criticals) from 19; a **brute** takes an eighth off, and its
+critical comes only on a natural 24 but does three times the damage; a **shambler** or a
+**caster** takes the eighth off too. A creature placed with a weapon hits at a quarter of L and
+fights with its weapon's numbers. Its [hit points](combat.md#hit-points) are a standard's
+(about `12 + 2.9 L`) times the role's factor, within 35 % either way: 0.5 for the quick, the
+small, and the casters, 0.6 for the spirits, 1.5 for the shamblers, and 2.0 for the brutes. Its
+[speed](turns.md#speed) is its kind's temperament, 800 to 1250 for most, 950 to 1050 for the
+rank and file of a people (orcs, hobgoblins, drow, duergar); a [dread](dungeons.md#dread) one
+moves at 600 or 700, slow and awful, or at 1400 and more.
+
 ### Throws
 
 Giants hurl boulders: a throw flies like any missile, along its line as far as its range,

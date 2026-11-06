@@ -71,3 +71,7 @@ slashing), no corpse, no blood, and, as every elemental now, no heartbeat for Se
 population names the air elementals of its depth yet, so it comes as a stray. It keeps the roster's
 formulas (`elemental_roster_tests`). It bursts where it dies as the air elemental does (`4d6`, radius 1, a
 gust; #1127's death throes, `elemental_roster_tests::KIN`).
+
+## Variance
+
+The variance pass (#1134, `docs/dev/creatures.md` "Variance by role") sets the roles' to-hit (striker `L/4 + L/8`, brute and caster `L/4 − L/8`, the armed `L/4`), threat and crit (striker 19, brute 24 at ×3), and hit-point factors (quick and caster 0.5, brute 2.0). **Speed**, by element: earth grinds at 800, ice at 850 to 950, fire and water at 1000 to 1100, air and lightning and the motes at 1250, the top of the bulk; the invisible stalker at 1500.

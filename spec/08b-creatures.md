@@ -637,6 +637,16 @@ developer notes (CLAUDE.md, `docs/dev/`).
   "withered", "ancient"), else "small" and "big"; messages name the type alone. The `actors`
   dump says `; grade big`, the JSON a seen actor's `grade` (the word). No talent (a creature
   gimmick).
+- **Variance by role** (#1134, `docs/design/monster-dread.md` §7.2; data only, the roster tests
+  hold it, `docs/dev/creatures.md` "Variance by role"): two monsters of one level are not the
+  same fight. A natural attack hits at `L/4` for the standard, `L/4 + L/8` for a striker (the
+  quick and the assassins, at most +20), and `L/4 − L/8` for a brute, shambler, or caster (each
+  part rounded down); an armed type keeps `L/4`, its spread the gear's. A striker's blow
+  threatens from 19 (×2), a brute's crits ×3 on the natural 24 only. Hit points by role run 0.5
+  (quick, small, caster) to 2.0 (brute) of the standard's, ±35 %. Speed is bimodal: the bulk
+  between 800 and 1250 by the tribe's temperament (a people's rank-and-file at 950 to 1050, no
+  tribe all at 1000), the dread at 600 or 700 or at 1400 and up. No talent (it extends the
+  creatures).
 - **The unseen** (`warlock-core/src/world/unseen.rs`; #1132, `docs/design/monster-dread.md`
   §5.10, §5.11): a **shadowy** type (`shadowy = true`: the shadow, the greater shadow, the
   deathshade, the darkling, the sluagh) on a cell **dim** to the player's eyes (perceived light

@@ -19,3 +19,7 @@ reaches the green hag's level, and a volcano is no place for her. They come only
 Spells (#1102, docs/dev/creatures.md "Casters"; in the order each prefers them): the green hag `curse_of_sloth`, `mesmerise`, `blight` (mana 45); the bheur hag `curse_of_sloth`, `rime`, `frost` (mana 70).
 
 Presence (#1128, `world/aura.rs`): the bheur hag's cold aura (`sluggish`, radius 2, Toughness 18, cold). Her hunger rider (design §5.12) is not built yet.
+
+## Variance
+
+The variance pass (#1134, `docs/dev/creatures.md` "Variance by role") sets the roles' to-hit (striker `L/4 + L/8`, brute and caster `L/4 − L/8`, the armed `L/4`), threat and crit (striker 19, brute 24 at ×3), and hit-point factors (quick and caster 0.5, brute 2.0). **Speed**: the hags hobble at 1000 (the bheur hag's winter at 1100); the sea hag, dread, at 700, slow and awful out of the water.

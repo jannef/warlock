@@ -18,3 +18,7 @@ in no population (no danger window reaches level 22 yet), so they come only as s
 out of depth (docs/dev/creatures.md).
 
 Spells (#1102, docs/dev/creatures.md "Casters"; in the order each prefers them): the arcanaloth `fire_cloak`, `chain_lightning`, `fireball`, `magic_missile` (mana 130).
+
+## Variance
+
+The variance pass (#1134, `docs/dev/creatures.md` "Variance by role") sets the roles' to-hit (striker `L/4 + L/8`, brute and caster `L/4 − L/8`, the armed `L/4`), threat and crit (striker 19, brute 24 at ×3), and hit-point factors (quick and caster 0.5, brute 2.0). **Speed**: mercenaries at a soldier's pace, 1000 to 1100, the canoloth's hunt at 1250; the ultroloth, dread, at 1400.
