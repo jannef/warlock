@@ -1,0 +1,21 @@
+# A potion of seeing (spec §8 "Potions"; docs/design/monster-dread.md §5.11): five minutes of
+# Seeing, the invisible and the shadowy plain to the drinker's eyes. Vision potions are violet.
+[[object]]
+id = "potion_of_seeing"
+name = "potion of seeing"
+plural = "potions of seeing"
+glyph = "!"
+fg = "#8a50c0"
+class = "potions"
+materials = ["glass"]
+weight = 250
+value = 150
+stackable = true
+level = 8
+frequency = 8
+
+[object.drink]
+kind = "vision"
+status = "seeing"
+colour = "violet"
+marks = { willpower = 15 }

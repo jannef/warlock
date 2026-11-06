@@ -37,3 +37,7 @@ The barrow spider sneak-attacks and lurks (#686, spec §8 "Surprise and sneak at
 sees the player waits in its passage until they come beside it or it is hurt, so Cealdhlāw's
 dark holds a thing that waits rather than one that comes.
 `bestiary_tests::the_sneak_attackers_carry_their_craft_and_two_lurk` checks the numbers.
+
+The will-o'-wisp (#1132, docs/dev/creatures.md "The unseen"): `[creature.invisible] cooldown =
+300`, it winks out with its light (an invisible creature sheds none of its own) and comes again
+unseen; its spark sets the struck one's mana ebbing (`ebbing`, 30 % of hits).

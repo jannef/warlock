@@ -32,3 +32,6 @@ one_of = ["small_shield"]
 chance = 60
 one_of = ["chain_mail"]
 magic = 5
+# It fades from sight on a cooldown (docs/dev/creatures.md "The unseen").
+[creature.invisible]
+cooldown = 300

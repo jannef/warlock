@@ -336,6 +336,17 @@ impl Effects {
         !self.0.is_empty() && self.0.iter().any(|e| content.status(e.status).hides)
     }
 
+    /// Whether one of its statuses leaves its sufferer unseen by the player (`unseen`:
+    /// Invisible; docs/dev/creatures.md "The unseen").
+    pub fn unseen(&self, content: &Content) -> bool {
+        !self.0.is_empty() && self.0.iter().any(|e| content.status(e.status).unseen)
+    }
+
+    /// Whether one of its statuses lets its bearer see the unseen (`sees_unseen`: Seeing).
+    pub fn sees_unseen(&self, content: &Content) -> bool {
+        !self.0.is_empty() && self.0.iter().any(|e| content.status(e.status).sees_unseen)
+    }
+
     /// Whether one of its statuses leaves its sufferer flat-footed (`flat_footed`: Surprised,
     /// Stunned; spec §8 "Surprise and sneak attacks").
     pub fn flat_footed(&self, content: &Content) -> bool {

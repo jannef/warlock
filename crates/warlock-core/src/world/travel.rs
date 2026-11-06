@@ -100,6 +100,7 @@ impl World {
         // Priced as the attack begins (every attack is), before the blows and the exertion,
         // which may burn enough to leave the player hungrier.
         let price = self.attack_price(player, ActionKind::Melee, with, melee);
+        self.strike_at_unseen(target);
         self.player_attacks(target, seen, events);
         self.exert(ActionKind::Melee);
         Spent::Turn(price)

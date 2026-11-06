@@ -168,6 +168,7 @@ mod troll_roster_tests;
 #[cfg(test)]
 mod undead_roster_tests;
 mod unique;
+mod unseen;
 mod vault;
 mod vault_turn;
 mod vision;
@@ -355,6 +356,7 @@ pub use terrain::{
 pub use throw::{THROW_RANGES, Throw};
 pub use trap::{MAX_CHARGES, Trap, TrapAvoid, TrapDef, TrapEffect, TrapId, TrapNoise};
 pub use unique::{Power, UNIQUE, UniqueDef, Uniques};
+pub use unseen::Invisible;
 pub use vault::{DangerRange, Vault};
 pub use vault_turn::Turn;
 pub use vision::VisionProfile;
@@ -1820,6 +1822,10 @@ impl Content {
                 .map(|b| b.resolve(self))
                 .transpose()
                 .map_err(|m| err(format!("creature `{}`: {m}", spec.id)))?;
+            let invisible = (spec.invisible.map(|i| i.resolve(self)))
+                .transpose()
+                .map_err(|m| err(format!("creature `{}`: {m}", spec.id)))?
+                .flatten();
             let throw = (spec.throw.clone())
                 .map(|t| {
                     let kinds = self.resolve_kinds(t.damage_type.as_ref())?;
@@ -1928,6 +1934,7 @@ impl Content {
                 more_attacks,
                 breath,
                 throw,
+                invisible,
                 weapon_skills,
                 resist,
                 immune,

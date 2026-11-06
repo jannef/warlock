@@ -175,6 +175,13 @@ fn a_banishing_smite_unmakes_the_summoned_whatever_its_hit_points() {
     let player = w.state.player;
     let imp = foe(&mut w, "imp", 100_000);
     w.state.actors.get_mut(&imp).expect("the imp").summoner = Some(player);
+    // It does not fade from sight meanwhile (`unseen.rs`).
+    let content = w.content.clone();
+    let spent = content.status_id("invisibility").expect("the cooldown");
+    let imp_actor = w.state.actors.get_mut(&imp).expect("the imp");
+    imp_actor
+        .effects
+        .add(spent, content.status(spent), 100, None);
     // Summoned, its smite is a plain smite's dice: the unmaking is what it does.
     let plain = w.smite_profile(imp).expect("a smite");
     let banish = w.mode_profile(SmiteMode::Banishing, imp).expect("a smite");

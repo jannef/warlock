@@ -12,7 +12,7 @@ use warlock_core::burden::{self, Burden};
 use warlock_core::combat::Category;
 use warlock_core::content::{
     ActionKind, Affliction, BASE_TURN, Benefit, Combat, Content, CreatureDef, CreatureId,
-    FactionId, NORMAL_COST, NaturalAttack, Stance, article, price, spoken,
+    FactionId, Invisible, NORMAL_COST, NaturalAttack, Stance, article, price, spoken,
 };
 use warlock_core::geom::Pos;
 use warlock_core::object::format_weight;
@@ -600,6 +600,40 @@ pub(super) fn creature_breaths(content: &Content) -> String {
             damage_link(content, breath.kind),
             breath.length,
             breath.cooldown
+        );
+    }
+    out
+}
+
+/// The unseen (docs/dev/creatures.md "The unseen"): every creature that is shadowy, invisible by
+/// its kind, or fades from sight on a cooldown, with how long its Invisible status lasts and how
+/// soon it fades again, and whether it hunts by scent.
+pub(super) fn creature_unseen(content: &Content) -> String {
+    let mut out = String::from(
+        "| Creature | Level | Rarity | Unseen | Lasts | Again after | Hunts by scent |\n\
+         |---|---:|---|---|---:|---:|:---:|\n",
+    );
+    for (_, c) in listed(content) {
+        let (how, lasts, again) = match c.invisible {
+            Some(Invisible::Innate) => ("always".to_string(), "-".into(), "-".into()),
+            Some(Invisible::Fades {
+                status, cooldown, ..
+            }) => {
+                let def = content.status(status);
+                let lasts = def.eases.map_or("-".into(), |s| format!("{s} s"));
+                let how = link(Term::Status, &def.id, "fades from sight");
+                (how, lasts, format!("{cooldown} s"))
+            }
+            None if c.shadowy => ("in the dim".to_string(), "-".into(), "-".into()),
+            None => continue,
+        };
+        let _ = writeln!(
+            out,
+            "| {} | {} | {} | {how} | {lasts} | {again} | {} |",
+            link(Term::Creature, &c.id, &capital(&c.name)),
+            c.level,
+            rarity_cell(content, c),
+            yes(c.hunts),
         );
     }
     out

@@ -51,3 +51,6 @@ redcap 40 (2d6) and 40, the meenlock 30 (2d6) and 30. The meenlock **lurks** (`l
 the meenlock is hurt. `bestiary_tests::the_sneak_attackers_carry_their_craft_and_two_lurk` checks the numbers.
 
 Spells (#1102, docs/dev/creatures.md "Casters"; in the order each prefers them): the pixie `evil_eye`, `spark` (mana 1); the dryad `barkskin`, `bind`, `acid_arrow` (mana 30); the nymph `mesmerise`, `magic_missile` (mana 25).
+
+The darkling (#1132, docs/dev/creatures.md "The unseen"): `shadowy = true`, unseen in the
+dim but beside the player, its sneak attack kept.

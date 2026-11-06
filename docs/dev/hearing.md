@@ -26,8 +26,9 @@ every other actor on the level whose `hearing` threshold it reaches (`propagate`
 pushing a `Heard { kind, at, loudness }` onto `Actor::heard`. A creature's list is what it heard
 since it last acted and is cleared as it acts in `World::creature_turn` (the AI reads it there
 before clearing); the player's is cleared in `World::run_turn` once the player has acted, and
-becomes `PerceptionView::sounds()` (sources not visible only; kind, `Volume`, and `rough_place`,
-never the actor; a walker's several steps within one turn are one sound; a listener with
+becomes `PerceptionView::sounds()` (sources not visible only, the cell of one the player does not
+see for being unseen counting as not visible: an invisible duergar's hobnails, the fighting where
+an unseen blow came from, `world/unseen.rs`; kind, `Volume`, and `rough_place`, never the actor; a walker's several steps within one turn are one sound; a listener with
 Watchful's `exact_footsteps`, #267, places footsteps at their own cell, and the ranger's Tracker,
 `exact_sounds` (#244), every sound: `noise::perceive`'s `exact`, a `noise::Exact`). In
 `noise::noise` the thief's talents (#244) quiet the player: Hide in plain sight's `silent_unburdened` (no footsteps while the burden is

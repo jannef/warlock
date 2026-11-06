@@ -57,6 +57,11 @@ school = "evocation"
 status = "quick_sensed"
 school = "divination"
 
+# See invisible.
+[[status]]
+status = "seeing"
+school = "divination"
+
 # Haste.
 [[status]]
 status = "hasted"

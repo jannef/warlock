@@ -283,10 +283,13 @@ impl DrinkSpec {
             "vision" => {
                 only(&[lending.as_slice(), &[("severity", self.severity.is_some())]].concat())?;
                 let status = status(self.status.as_deref())?;
-                if content.status(status).vision.is_none() {
-                    let id = &content.status(status).id;
+                // Eyes of another profile, or Seeing's sight of the unseen.
+                let def = content.status(status);
+                if def.vision.is_none() && !def.sees_unseen {
+                    let id = &def.id;
                     return Err(format!(
-                        "`drink`: a vision's status `{id}` lends no `vision`"
+                        "`drink`: a vision's status `{id}` lends no `vision` and does not \
+                         `sees_unseen`"
                     ));
                 }
                 Draught::Vision { status }

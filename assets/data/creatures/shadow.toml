@@ -8,6 +8,7 @@ level = 8
 xp = 50
 rarity = "rare"
 dread = true
+shadowy = true
 name = "shadow"
 glyph = "G"
 fg = "#70708a"

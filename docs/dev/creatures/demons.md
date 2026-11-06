@@ -30,3 +30,6 @@ immune to fire, a great sword, often magic, struck faster than one blow a turn, 
 that holds when it has no sword). Demons are evil, have darkvision, are immune to poison, resist
 fire (the balor is immune), and from level 24 resist cold and electricity a little; no corpse; dark
 ichor for blood.
+
+The quasit (#1132, docs/dev/creatures.md "The unseen"): `[creature.invisible] cooldown =
+300`, it stings and is gone from sight, not from the room; its poison kept.

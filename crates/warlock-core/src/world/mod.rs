@@ -257,6 +257,7 @@ mod trap;
 mod travel;
 mod treasury;
 mod two_shields;
+mod unseen;
 mod voice;
 mod volley;
 mod war_cry;
@@ -327,6 +328,7 @@ pub(crate) use talk_past::offered as encounter_choices;
 pub(crate) use temper::whittle_lack;
 pub use temper::{temperable, workable, workable_wood};
 use travel::{enter_room, instantiate_level, level_template};
+pub(crate) use unseen::{Concealed, DRAUGHT, unseen_by_player};
 pub use voice::VOICE_RANGE;
 pub use zone::Zone;
 
@@ -2020,6 +2022,8 @@ mod treasury_tests;
 mod two_shield_tests;
 #[cfg(test)]
 mod unique_tests;
+#[cfg(test)]
+mod unseen_tests;
 #[cfg(test)]
 mod unstable_room_tests;
 #[cfg(test)]
