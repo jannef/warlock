@@ -12,7 +12,7 @@ resolution = "area"
 damage_type = "poison"
 range = 8
 radius = 2
-damage = "1d4"
+damage = "2d4"
 effect = { zone = { kind = "fouled", turns = 10 } }
 
 [spell.cast]
@@ -23,5 +23,5 @@ message = "A foul cloud bursts from your hands!"
 noise = { sound = "chanting", loudness = 30 }
 
 [spell.grows]
-damage = "willpower 16 2d4, 22 2d4+2"
+damage = "willpower 16 4d4, 22 4d4+2"
 range = "willpower 14 9, 18 10"

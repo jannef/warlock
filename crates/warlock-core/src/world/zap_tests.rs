@@ -242,18 +242,18 @@ fn a_wand_casts_at_its_own_rung_and_wand_mastery_raises_it() {
         let r = w.state.player().spell_roll(&content, def, by);
         r.map(|r| r.to_string()).unwrap_or_default()
     };
-    // The wand's own rung, whatever the user's Intelligence: rung 1 is 3d6.
+    // The wand's own rung, whatever the user's Intelligence: rung 1 is 6d6.
     super::cast_tests::scores(&mut w, &[(crate::stats::Stat::Intelligence, 25)]);
     let one = with_rung(&w.state.player().inventory[4], Some(1));
     w.player_mut().inventory[4] = one;
-    assert_eq!(roll(&w), "3d6");
+    assert_eq!(roll(&w), "6d6");
     w.player_mut().talents.take("wand_mastery", None);
-    assert_eq!(roll(&w), "4d6", "a rung higher");
+    assert_eq!(roll(&w), "8d6", "a rung higher");
 }
 
 #[test]
 fn the_zap_casts_at_the_stacks_rung() {
-    // Magic missile: 1d4 at rung 0, 3d4 at rung 2 (it never misses).
+    // Magic missile: 2d4 at rung 0, 6d4 at rung 2 (it never misses).
     let most = |rung: u8| {
         let mut w = world();
         let target = rat(&mut w);
@@ -268,8 +268,8 @@ fn the_zap_casts_at_the_stacks_rung() {
         }
         most
     };
-    assert!(most(0) <= 4, "1d4 at rung 0");
-    assert!(most(2) > 4, "3d4 at rung 2");
+    assert!(most(0) <= 8, "2d4 at rung 0");
+    assert!(most(2) > 8, "6d4 at rung 2");
 }
 
 #[test]
@@ -367,7 +367,7 @@ fn the_rung_shows_with_the_type_and_not_before() {
     let stack = w.state.player().inventory.last().expect("the wand");
     assert_eq!(
         view.wand_does(stack).as_deref(),
-        Some("3d6 fire, burns one in four, radius 2")
+        Some("6d6 fire, burns one in four, radius 2")
     );
     let lines: Vec<String> = (view.describe_item(stack).into_iter())
         .map(|l| l.text)
@@ -375,7 +375,7 @@ fn the_rung_shows_with_the_type_and_not_before() {
     assert!(
         lines
             .iter()
-            .any(|l| l == "Holds Fireball: 3d6 fire, burns one in four, radius 2"),
+            .any(|l| l == "Holds Fireball: 6d6 fire, burns one in four, radius 2"),
         "{lines:?}"
     );
 }

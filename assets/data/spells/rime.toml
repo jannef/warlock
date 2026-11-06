@@ -11,7 +11,7 @@ shape = "cone"
 resolution = "area"
 damage_type = "cold"
 length = 4
-damage = "2d6"
+damage = "4d6"
 
 [spell.cast]
 effect = "frost_burst"
@@ -21,5 +21,5 @@ message = "Frost pours from your hands!"
 noise = { sound = "explosion", loudness = 40 }
 
 [spell.grows]
-damage = "willpower 13 3d6, 16 4d6, 22 4d6+2"
+damage = "willpower 13 6d6, 16 8d6, 22 8d6+2"
 length = "willpower 18 5"

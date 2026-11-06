@@ -13,7 +13,7 @@ shape = "cone"
 resolution = "area"
 damage_type = "necrotic"
 length = 3
-damage = "1d4"
+damage = "2d4"
 
 [spell.cast]
 effect = "blight"
@@ -23,4 +23,4 @@ message = "The breath of the grave rolls from your lips!"
 noise = { sound = "chanting", loudness = 30 }
 
 [spell.grows]
-damage = "willpower 13 1d6, 16 2d4, 22 2d4+2"
+damage = "willpower 13 2d6, 16 4d4, 22 4d4+2"

@@ -771,7 +771,7 @@ mod tests {
         );
         assert!(
             scrolls.contains(
-                "| 3d6 fire | 10 cells | Explosion, very loud (150) | item level 6, frequency 20 | 200 gold |"
+                "| 6d6 fire | 10 cells | Explosion, very loud (150) | item level 6, frequency 20 | 200 gold |"
             ),
             "{scrolls}"
         );
@@ -781,7 +781,7 @@ mod tests {
             "{scrolls}"
         );
         assert!(
-            scrolls.contains("| 4d6 electricity | 8 cells |"),
+            scrolls.contains("| 8d6 electricity | 8 cells |"),
             "{scrolls}"
         );
         assert!(
@@ -1481,11 +1481,11 @@ mod tests {
         let list = text("spell-list.md");
         assert!(
             list.contains(
-                "| burst, area | range 10, radius 2 | 2d6 fire damage; it melts the ice it reaches, and whoever stands on it falls in; it breaks walls | Intelligence 13: 3d6, 16: 4d6, 19: 5d6, 25: 5d6+2; range Willpower 14: 11, 18: 12 | 26 | 1 |"
+                "| burst, area | range 10, radius 2 | 4d6 fire damage; it melts the ice it reaches, and whoever stands on it falls in; it breaks walls | Intelligence 13: 6d6, 16: 8d6, 19: 10d6, 25: 10d6+2; range Willpower 14: 11, 18: 12 | 26 | 1 |"
             ),
             "{list}"
         );
-        assert!(text("wands.md").contains("| wand of fireball | Fireball | 11 | 7 | 2d6 to 4d6 |"));
+        assert!(text("wands.md").contains("| wand of fireball | Fireball | 11 | 7 | 4d6 to 8d6 |"));
         let learning = text("learning.md");
         assert!(learning.contains("| Spellcraft | Learning |"), "{learning}");
         for row in ["| 0 | 1 |", "| 60 | 10 |", "| 100 | 30 |", "| 150 | 70 |"] {

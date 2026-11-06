@@ -353,7 +353,7 @@ fn the_menu_and_the_dump_say_the_rule_after_the_roll() {
     let w = hall(1);
     let view = w.perception();
     let text = |id: &str| view.own_spell_roll(sp(id)).map(|r| r.text);
-    assert_eq!(text("ray_of_frost").as_deref(), Some("1d6 cold, numbs"));
+    assert_eq!(text("ray_of_frost").as_deref(), Some("2d6 cold, numbs"));
     assert_eq!(
         text("scorching_ray")
             .as_deref()
@@ -386,6 +386,7 @@ fn a_backfired_scroll_of_a_type_carries_its_rule() {
     let Some(Reading::Cast(scroll)) = content.object(object).read else {
         panic!("a spell's scroll");
     };
+    w.player_mut().hp = 1000;
     let mut events = Vec::new();
     w.backfire_spell(scroll, object, &mut events);
     assert!(w.state.player().effects.has(sluggish));

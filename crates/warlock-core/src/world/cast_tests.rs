@@ -122,8 +122,8 @@ fn auto_and_area_spells_never_miss_nor_critical() {
 
 #[test]
 fn empower_climbs_a_rung_and_nothing_holds_it() {
-    // The shipped Arcane bolt: a line of 2d6, then 3d6 at Intelligence 13; Empower's rung
-    // reaches 3d6 at Intelligence 10, 18 at most.
+    // The shipped Arcane bolt: a line of 4d6, then 6d6 at Intelligence 13; Empower's rung
+    // reaches 6d6 at Intelligence 10, 18 at most.
     let mut w = world_with(Arc::new(Content::builtin().expect("content")), "wizard");
     reach(&mut w, 32);
     scores(&mut w, &[]);
@@ -132,7 +132,7 @@ fn empower_climbs_a_rung_and_nothing_holds_it() {
     let roll = w.state.player().spell_roll(&content, bolt, CastBy::Own);
     assert_eq!(
         roll.map(|r| r.to_string()).as_deref(),
-        Some("3d6"),
+        Some("6d6"),
         "Empower"
     );
     let target = kobold(&mut w, 2, 10_000);
@@ -141,7 +141,7 @@ fn empower_climbs_a_rung_and_nothing_holds_it() {
         let (_, hurt) = cast_at(&mut w, (2, 0), (target, (2, 0)));
         most = most.max(hurt);
     }
-    assert!(most > 12, "3d6 passes the base's 12: {most}");
+    assert!(most > 24, "6d6 passes the base's 24: {most}");
 }
 
 #[test]
@@ -390,8 +390,8 @@ fn a_rungs_boundary_changes_the_roll_and_nothing_else() {
     let before = read(&w);
     scores(&mut w, &[(Stat::Intelligence, 16)]);
     let after = read(&w);
-    assert_eq!(before.0.as_deref(), Some("3d6"));
-    assert_eq!(after.0.as_deref(), Some("4d6"));
+    assert_eq!(before.0.as_deref(), Some("6d6"));
+    assert_eq!(after.0.as_deref(), Some("8d6"));
     assert_eq!((before.1, before.2, before.3), (after.1, after.2, after.3));
 }
 

@@ -12,7 +12,7 @@ resolution = "area"
 damage_type = "force"
 range = 8
 radius = 1
-damage = "2d6"
+damage = "4d6"
 
 [spell.cast]
 effect = "shatter"
@@ -23,5 +23,5 @@ blast = 1000
 noise = { sound = "explosion", loudness = 100 }
 
 [spell.grows]
-damage = "intelligence 13 3d6, 19 3d6+2, 25 3d6+4"
+damage = "intelligence 13 6d6, 19 6d6+2, 25 6d6+4"
 range = "willpower 14 9, 18 10"

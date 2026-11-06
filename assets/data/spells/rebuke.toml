@@ -12,7 +12,7 @@ resolution = "area"
 damage_type = "fire"
 range = 8
 radius = 2
-damage = "2d6"
+damage = "4d6"
 effect = { status = "frightened", severity = 3, only_tags = ["undead"] }
 
 [spell.cast]
@@ -23,5 +23,5 @@ message = "You hold up your faith against the dead!"
 noise = { sound = "chanting", loudness = 40 }
 
 [spell.grows]
-damage = "willpower 13 3d6, 16 4d6, 19 5d6, 25 5d6+2"
+damage = "willpower 13 6d6, 16 8d6, 19 10d6, 25 10d6+2"
 range = "willpower 14 9, 18 10"
