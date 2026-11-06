@@ -231,7 +231,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
   Made with nothing that corrodes: the first time in a life, "The acid runs off your mithril
   chain mail shirt." (`Progress::once`). Draws: one for the chance, then one for the piece and
   one for `"half"`. The materials' `corrodes` (true, false, `"half"`; default by group: metal and
-  hide) is spec §7's. The ember beetle (weapon, 25), the hezrou (armour, 25), the dretch (armour,
+  hide) is spec §7's. The ember beetle (weapon, 25; its acid blood, the innate `acid_blood`,
+  also strikes back at a melee blow for `1d3` acid), the hezrou (armour, 25), the dretch (armour,
   10).
 - **Regeneration** (`world/regen.rs`; #1131, the dread design §5.9): a type's `regen` (percent of
   the normal healing pace, 0 to 1000, default 100) counts among its statuses' paces in

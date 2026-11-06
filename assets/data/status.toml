@@ -490,6 +490,17 @@ stacking = "refresh"
 eases = 60
 retaliates = { damage = "1d6", damage_type = "piercing" }
 
+# An ember beetle's acid blood (its `innate`, `world/aura.rs`; the dread design §5.8): it spatters
+# whoever strikes it in melee. Refreshed each turn its bearer takes; never shown on it, since its
+# kind always has it.
+[[status]]
+id = "acid_blood"
+name = "Acid blood"
+max = 1
+stacking = "refresh"
+eases = 60
+retaliates = { damage = "1d3", damage_type = "acid" }
+
 # Brand's: the held weapon burns, and its fire is a blow's, which reads no spell type's rule. Up
 # to three degrees, a minute each, as Fire cloak's.
 [[status]]

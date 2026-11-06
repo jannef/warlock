@@ -39,6 +39,6 @@ dark holds a thing that waits rather than one that comes.
 `bestiary_tests::the_sneak_attackers_carry_their_craft_and_two_lurk` checks the numbers.
 
 The dread design's D7 (#1131): the ember beetle's acid blood pits a weapon that strikes it
-(`corrodes = { chance = 25, what = "weapon" }`, `world/corrode.rs`; its `retaliates` acid `1d3`
-waits for D4's innate statuses), and the marsh troll is a brute that regenerates (`regen = 400`,
+(`corrodes = { chance = 25, what = "weapon" }`, `world/corrode.rs`) and spatters whoever strikes it in melee (`innate = ["acid_blood"]`, a
+status that `retaliates` acid `1d3`, #1128's innate statuses), and the marsh troll is a brute that regenerates (`regen = 400`,
 `2d8`, `base_hp` 36; `docs/dev/creatures/trolls.md`).

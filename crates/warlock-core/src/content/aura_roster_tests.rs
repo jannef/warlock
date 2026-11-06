@@ -52,6 +52,7 @@ const INNATE: &[(&str, &str)] = &[
     ("balor", "fire_cloaked"),
     ("pit_fiend", "fire_cloaked"),
     ("barbed_devil", "barbed_hide"),
+    ("ember_beetle", "acid_blood"),
 ];
 
 const CRIES: &[(&str, SoundKind)] = &[
