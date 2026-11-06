@@ -10,6 +10,8 @@ glyph = "@"
 fg = "#e0c070"
 speed = 1200
 faction = "merchants"
+# One of the people: never greater or lesser than their kind.
+grades = false
 alignment = "good"
 race = "human"
 # It keeps to its post by the door: it does not swap places with you there.

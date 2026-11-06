@@ -224,6 +224,25 @@ The exact numbers are on [Creatures in numbers](creature-numbers.md).
   material by the creature's level, as the drops are. What falls is
   [unidentified](magic-items.md#unidentified-items), as any find is.
 
+## Grades
+
+Two of the same creature need not be the same fight. As a creature comes into being, chance
+makes one in six of them **greater** than its kind and one in six **lesser**; the rest are
+ordinary. A greater one has more [hit points](combat.md#hit-points), hits more surely and harder up close,
+and moves a little more [slowly](turns.md#speed); a lesser one is the reverse. [Look
+mode](controls.md#look-mode) tells you which, with a word before its name: "a big
+[kobold](creatures.md#creature-kobold)", "a scrawny kobold", "an ancient zombie"; messages call
+it by its kind alone. Killing one is worth what its kind is worth in
+[experience](experience.md), whatever its grade. Unique creatures, the peaceful and trading folk,
+[animated objects](animated.md), and [mimics](mimics.md) are never graded, and neither is
+your own [companion](allies.md#companions) or [familiar](allies.md#familiars): they [grow](allies.md#growth) with you instead.
+
+{{#include generated/creature-grades.md}}
+
+The words for each:
+
+{{#include generated/creature-grade-words.md}}
+
 ## The creatures
 
 "Drops magic" is the chance that a creature drops a [magic or rare](magic-items.md#rarity) item where it dies, besides

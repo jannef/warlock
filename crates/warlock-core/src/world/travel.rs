@@ -695,6 +695,7 @@ pub(super) fn make_creature(
         weapon_skills,
         faction_override: (spawn.faction)
             .or_else(|| super::court::join(content, state.seed, actor_id, spawn.creature)),
+        grade: crate::grade::draw(content, state.seed, actor_id, spawn),
         summoner: None,
         ally: None,
         risen: None,

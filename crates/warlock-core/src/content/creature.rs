@@ -278,6 +278,14 @@ pub(super) struct CreatureSpec {
     /// Its nose: it smells a hostile within this many cells, however dark and through a closed
     /// door (1 to 20; only on a `tameable` type; a companion's reads it).
     pub nose: Option<i32>,
+    /// Whether one of it may come greater or lesser than its kind (spec §8 "Grades";
+    /// [`crate::grade`]); `grades = false` for a type that has none. Never a unique,
+    /// a mimic, or a generated type, whatever the file says.
+    #[serde(default = "yes")]
+    pub grades: bool,
+    /// The words for its lesser and its greater grade, in that order (`["scrawny", "big"]`);
+    /// none: its tags' ([`crate::grade::TAG_WORDS`]), else "small" and "big".
+    pub grade_words: Option<[String; 2]>,
     /// Its ranks in weapon skills (spec §8 "Weapon skills"), by skill id.
     #[serde(default)]
     pub weapon_skills: BTreeMap<String, u8>,
@@ -706,6 +714,7 @@ pub(super) struct Resolved {
 
 impl CreatureSpec {
     pub(super) fn resolve(self, r: Resolved) -> CreatureDef {
+        let grade_words = crate::grade::words(self.grade_words.clone(), &self.tags);
         CreatureDef {
             // The loader fills it from the plural dictionary when content gives none.
             plural: self.plural.unwrap_or_else(|| format!("{}s", self.name)),
@@ -763,6 +772,8 @@ impl CreatureSpec {
             depart: self.depart,
             tameable: self.tameable,
             nose: self.nose,
+            grades: self.grades && !self.unique && self.animated.is_none() && self.mimic.is_none(),
+            grade_words,
             animated: self.animated,
             mimic: self.mimic,
             weapon_skills: r.weapon_skills,
@@ -959,6 +970,13 @@ pub struct CreatureDef {
     /// Gameplay: whether it may be tamed and kept as a companion (spec §8 "Allies"; the ranger's
     /// starting beast is drawn from the `tameable` types; `world/companion.rs`).
     pub tameable: bool,
+    /// Gameplay: whether one of it may be made greater or lesser than its kind (spec §8
+    /// "Grades"; [`crate::grade`]): false for a unique, a mimic, a generated type,
+    /// or one whose file says `grades = false` (the people).
+    pub grades: bool,
+    /// Presentation-only: the words of its lesser and greater grade in look mode ("scrawny",
+    /// "big"): its file's, else its tags' default, else "small" and "big".
+    pub grade_words: [String; 2],
     /// Gameplay: its nose, in cells: a companion of this type smells a hostile of its master's
     /// within so many cells (Chebyshev), however dark and through a closed door (`docs/dev/companion.md`);
     /// `None`: it hunts by eye alone. Rules only (the wiki states it).

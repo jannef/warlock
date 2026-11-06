@@ -8,6 +8,8 @@ name = "guildmaster"
 glyph = "@"
 fg = "#a88a5c"
 faction = "peaceful"
+# One of the people: never greater or lesser than their kind.
+grades = false
 alignment = "neutral"
 race = "human"
 footsteps = 50

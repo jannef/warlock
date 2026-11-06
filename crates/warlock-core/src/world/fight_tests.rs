@@ -220,6 +220,7 @@ hostile = ["player", "vermin"]
 // The rat is frail and slow to anger; the brute hits hard and often; the turtle is all shell.
 const CREATURES: &str = r##"
 [[creature]]
+grades = false
 id = "player"
 name = "you"
 glyph = "@"
@@ -227,6 +228,7 @@ fg = "#ffffff"
 weight = 70000
 
 [[creature]]
+grades = false
 id = "rat"
 name = "giant rat"
 glyph = "r"
@@ -237,6 +239,7 @@ stats = { toughness = 4 }
 attack = { damage = "1d2", name = "bite", verb = "bites" }
 
 [[creature]]
+grades = false
 id = "brute"
 name = "kobold brute"
 glyph = "k"
@@ -247,6 +250,7 @@ stats = { strength = 30, toughness = 20 }
 base_hp = 20
 
 [[creature]]
+grades = false
 id = "turtle"
 name = "turtle"
 glyph = "t"
@@ -257,6 +261,7 @@ natural = { defence = 15, name = "shell" }
 base_hp = 1000
 
 [[creature]]
+grades = false
 id = "lurker"
 name = "lurker"
 glyph = "l"
