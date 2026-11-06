@@ -124,6 +124,7 @@ fn causes(content: &Content, status: usize, def: &StatusDef) -> String {
         Affliction::Hold {
             status: s,
             difficulty,
+            ..
         } if usize::from(s.0) == status => {
             let grip = difficulty.or(def.hold.map(|h| h.difficulty)).unwrap_or(0);
             Some(format!(", grip {grip}"))

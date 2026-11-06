@@ -62,6 +62,16 @@ reads it as it reads a kobold, and the guideline and roster tests cover it with 
 Two creature fields came with it, for any creature: `immune` (status ids; `diseased` is every
 disease) and `dies` (the death line's verb, `CreatureDef::death_verb`).
 
+- **The dread design's part** (`docs/design/monster-dread.md` §13, #1136): a body's `on_hit`
+  and `burst` go into its spec as a creature file's do (the attack's `on_hit`, the
+  `[creature.burst]` table, passed through as TOML and checked by the creature loader). The
+  rug's `on_hit` engulfs (`engulfed` at grip 12 and `damage = 1`, the hold's own harm a tick,
+  `world/hold.rs::hold_harms`), the bellows' staggers, the lantern bursts as it dies (`1d6` fire,
+  radius 1). **Grades**: `Animated::common` writes `grades` into every generated spec, true only
+  for a tier with `grade_words` (the blades' "notched"/"keen", written as the type's
+  `grade_words`); `CreatureSpec` no longer forces generated types ungraded, so the tier's word
+  is the one switch. The household things, hollow armour, and panoplies name none.
+
 ## Composition (`animated.rs`)
 
 `animated::compose(content, rng, creature)` makes a household creature's body: one draw for a
@@ -189,7 +199,9 @@ of their own: the `animated` system and its Salvager, Unbinder, and Appraiser's 
 collisions and bad bodies), `world/animated_tests.rs` (the legend's body, composition and its
 stream, material weights, the cutlery's count, immunities, stealing, the drop rule and
 broken bodies as their parts with the break line, a loose gem and a book's leather,
-saves and a replay), `world/animated_blade_tests.rs` (the family's ids and numbers, a
+saves and a replay), `world/animated_dread_tests.rs` (the rug's engulfing at a point a tick against no one's two,
+letting go as it dies; the bellows' rider; the lantern's burst on the player beside it with its
+line; the blades' grades and words and no other animated type's), `world/animated_blade_tests.rs` (the family's ids and numbers, a
 blade's weapon, rank, stream, odds, and fight, first kills, quests, and the tag objective
 counting the family once, saves), `world/animated_panoply_tests.rs` (the composites' ids and
 numbers, slot lines by `from` and `count`, the two-handed rule, ranks, shape, stream, the

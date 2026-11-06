@@ -114,6 +114,9 @@ slots = [{ slot = "main_hand", classes = ["melee_weapons"], chance = 100 }]
 magic = { base = 0, per_level = 2, most = 40 }
 rare = { from = 15, base = 1, per_level = 1, most = 5 }
 weapon_rank = { base = 1, per_level = 0.1, most = 8 }   # ranks in its weapon's skill: 1 + L/10
+# Graded, as other creatures are (spec §8 "Grades"): one in six notched, one in six keen. The
+# other tiers name no words and are never graded.
+grade_words = ["notched", "keen"]
 
 # Hollow armour: a suit with nobody inside, one type per level (`animated_armour_12` …
 # `animated_armour_35`), the family `animated_armour`. Slow, hard to hurt, and loud; it fights

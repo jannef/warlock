@@ -124,16 +124,16 @@ the same way, and lets go the same way; it does not struggle, it fights you inst
 
 ### Engulfed, swallowed, latched
 
-Worse holds hurt while they last. The [charnel heap](creatures.md#creature-charnel-heap) and the
-greater water elementals close over you ([Engulfed](status-effects.md#status-engulfed): "It closes
+Worse holds hurt while they last. The [charnel heap](creatures.md#creature-charnel-heap), the
+greater water elementals, and the [animated rug](creatures.md#creature-animated-rug) close over you ([Engulfed](status-effects.md#status-engulfed): "It closes
 over you."), the [nightworm](creatures.md#creature-nightworm) swallows you whole
 ([Swallowed](status-effects.md#status-swallowed)), and a [giant leech](creatures.md#creature-giant-leech)
 or a [canoloth](creatures.md#creature-canoloth)'s tongue fastens on
 ([Latched](status-effects.md#status-latched)). Each is a hold like any other: the struggle, the
 grip (14 unless the attack says otherwise), and the endings above, but it lasts **2d4 turns** at
 most, and each costs [hit points](combat.md#hit-points) as it ticks: Engulfed 2 every 6 seconds
-for each turn it has left, Swallowed 4, Latched 1 every 12 seconds, so the harm is heaviest
-as it begins. Engulfed and Swallowed also stop you shooting, throwing, and reading; your blows and
+for each turn it has left (1 in the rug's folds), Swallowed 4, Latched 1 every 12 seconds, so
+the harm is heaviest as it begins. Engulfed and Swallowed also stop you shooting, throwing, and reading; your blows and
 your spells still go, so you can hack your way out of what holds you.
 
 ## Ebbing

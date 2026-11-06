@@ -166,6 +166,10 @@ pub struct Tier {
     /// Whether its types open doors (gauntlets).
     #[serde(default)]
     pub opens_doors: bool,
+    /// The words of its lesser and greater grade (spec §8 "Grades"; the blades' "notched" and
+    /// "keen"): with them its types are graded, without them never (the household things, the
+    /// composites).
+    pub grade_words: Option<[String; 2]>,
     /// A family's id (`animated_blade`): what populations, kill quests, and first kills name.
     #[serde(skip)]
     pub family: String,
@@ -271,6 +275,8 @@ pub struct BodySpec {
     pub moves: Option<String>,
     pub dies: Option<String>,
     pub light: Option<String>,
+    /// Its burst, as a creature file's `[creature.burst]` (the lantern's death throes).
+    pub burst: Option<toml::Value>,
 }
 
 /// A household body, its object resolved.
@@ -518,6 +524,10 @@ impl Animated {
         if tier.opens_doors {
             table.insert("opens_doors".into(), toml::Value::Boolean(true));
         }
+        if let Some(words) = &tier.grade_words {
+            let words = words.iter().map(|w| s(w)).collect();
+            table.insert("grade_words".into(), toml::Value::Array(words));
+        }
         if let Some(blow) = &tier.attack {
             let mut attack = toml::Table::new();
             attack.insert("damage".into(), s(numbers.dice));
@@ -568,6 +578,9 @@ impl Animated {
         t.insert("blood".into(), s("none"));
         let immune = (self.creature.immune.iter()).map(|x| s(x)).collect();
         t.insert("immune".into(), toml::Value::Array(immune));
+        // Graded only where its tier names the words (the blades).
+        let graded = tier.grade_words.is_some();
+        t.insert("grades".into(), toml::Value::Boolean(graded));
         t
     }
 
@@ -635,6 +648,9 @@ impl Animated {
         }
         if let Some(light) = &body.spec.light {
             t.insert("light".into(), s(light));
+        }
+        if let Some(burst) = &body.spec.burst {
+            t.insert("burst".into(), burst.clone());
         }
         let dies = (body.spec.dies.as_deref())
             .or(group.map(|g| g.dies.as_str()))
