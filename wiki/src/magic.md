@@ -215,6 +215,21 @@ half its hit points, before what it resists. The undead are immune to necrotic h
 **Acid keeps eating.** Every creature an acid spell harms is [Corroded](status-effects.md#corroded) a degree: two more hit points in the
 next twelve seconds. Acid does not eat armour.
 
+### What lies in its way
+
+An area spell (a burst, a cone, or a line; [shapes](#shapes)) with a [damage type](damage-types.md) may destroy the
+[items lying on the floor](objects.md#piles) it reaches, whether cast from [mana](mana.md#spending-it), a
+[scroll](#learning-spells-from-scrolls), or a [wand](#wands), and so may a dragon's breath: a
+[Fireball](#the-spells) can burn the scrolls it lands on, a blast of [Frost](#the-spells) shatter potions. Every
+item of every stack there is lost at the chance of the first row below of the spell's type that fits it, by its
+[item class](objects.md#item-classes) or the [material](objects.md#materials) of its main part, so a stack may lose
+some of its items or all of them. A stack no row fits is never touched. What you carry or wear, what lies in a
+[chest](chests.md), a [unique item](magic-items.md), and anything a [quest](quests.md) asks you to bring or deliver
+(until that quest is done for good) are never touched, and [traps](traps.md) ruin nothing. A [corpse](food.md) that
+burns away never rises. You are told what you see go: "The scroll burns up.", "3 potions freeze and shatter."
+
+{{#include generated/spell-ruin.md}}
+
 ## Spells with a rule of their own
 
 Some [spells](#the-spells) do one thing no other does. None of them spares you or your [allies](allies.md).
