@@ -320,6 +320,16 @@ max = 100
 stacking = "refresh"
 eases = 6
 
+# An aura's touch spent (the creatures' `[creature.aura]`, `world/aura.rs`): a degree for every six
+# seconds of its `every`; while it lasts the aura touches no one. Creatures only: no one sees it
+# on them.
+[[status]]
+id = "aura"
+name = "Aura spent"
+max = 100
+stacking = "refresh"
+eases = 6
+
 # Blaze's cooldown (the Fire-born's gift, spec §8 "Birth sign"): twelve hours before the fire in
 # them kindles again. Nothing else; time is the penalty.
 [[status]]
@@ -455,6 +465,16 @@ light = "ember"
 retaliates = { damage = "1d6", damage_type = "fire" }
 start = "Flames wrap about you, and do not burn."
 end = "The flames about you die away."
+
+# A barbed devil's hide (its `innate`, `world/aura.rs`): barbs that stab whoever strikes it in
+# melee. Refreshed each turn its bearer takes; never shown on it, since its kind always has it.
+[[status]]
+id = "barbed_hide"
+name = "Barbed hide"
+max = 1
+stacking = "refresh"
+eases = 60
+retaliates = { damage = "1d6", damage_type = "piercing" }
 
 # Brand's: the held weapon burns, and its fire is a blow's, which reads no spell type's rule. Up
 # to three degrees, a minute each, as Fire cloak's.

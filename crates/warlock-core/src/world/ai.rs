@@ -142,6 +142,8 @@ impl World {
         let heard = (self.state.actors.get_mut(&id))
             .map(|a| std::mem::take(&mut a.heard))
             .unwrap_or_default();
+        // Its innate statuses, then its aura (`aura.rs`).
+        self.aura_turn(id, events);
         // Frightened (Hound's bay, `sign_picks.rs`), it runs; held fast (Drowning grip,
         // `lucky.rs`), it fights back instead of stepping.
         let plan = self.decide(id, &heard);
@@ -171,8 +173,9 @@ impl World {
             Plan::Patrol => self.patrol(id, events),
             Plan::Wait => self.price_of(id, ActionKind::Wait),
         };
-        // Going about its routine, it may mutter to itself (`talk.rs`).
+        // Going about its routine, it may mutter to itself (`talk.rs`), or cry (`aura.rs`).
         self.mutter(id);
+        self.cry(id, plan);
         if slow {
             price.saturating_mul(i64::from(super::stride::STRIDE))
         } else {

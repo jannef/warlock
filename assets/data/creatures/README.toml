@@ -193,6 +193,24 @@
 #             message's: "calls forth"; default "summons"). It summons before anything else it
 #             would do; what comes takes its faction and pays its experience when killed. A type
 #             with a summoning carries the tag `summoner` (content::summoner_roster_tests)
+#   aura      a status it gives every hostile near it now and then (design monster-dread §5.4;
+#             world/aura.rs): [creature.aura] with status (status.toml; no hold), radius (1 to 6
+#             cells), touch (the words of its first touch on the player who sees it, the bearer
+#             as {the}: "A chill comes off {the}."), and optionally severity (degrees, default
+#             1), check and difficulty (a stat and 1 to 40: made, it does not take; none: it
+#             always takes), every (seconds between touches, 6 to 600, default 12: the `aura`
+#             status of status.toml, a degree per 6 s), heard = true with loudness (it reaches by
+#             hearing, as a voice that loud where it stands, through walls; default 50; else by
+#             line of sight), damage_type (the resistance that takes its share of the dose), and
+#             unseen (the words when the player does not see it: "A wail rises through the
+#             walls.")
+#   innate    statuses it is made with and keeps, refreshed each turn it takes, never shown in the
+#             look line: ["fire_cloaked"] (its retaliates burns whoever strikes it). No hold,
+#             disguise, fear, or sleep
+#   cry       an idle sound it makes now and then where it stands, heard by the hearing rules:
+#             { kind = "hiss", loudness = 40, every = 60 }: kind banging, voice, howl, buzzing,
+#             giggle, hiss, rattle, scream, or wail; loudness 1 to 300; every the seconds between
+#             cries on average, 6 to 3600 (a chance of 6 in every on a turn it does not fight)
 #   resist    what it resists, in percent per damage type (spec §8 "Damage types"):
 #             { acid = 50 }; -100 (it takes double) to 100 (immune: nothing of the kind hurts
 #             it, whatever it wears). What it wears adds up with this, capped at 75 short of

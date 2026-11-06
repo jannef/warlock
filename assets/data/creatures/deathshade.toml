@@ -26,6 +26,13 @@ incorporeal = { wall_defence = 8 }
 resist = { slashing = 50, piercing = 50, bludgeoning = 50, cold = 50, poison = 100 }
 corpse = false
 blood = "none"
+[creature.aura]
+status = "frightened"
+severity = 2
+radius = 3
+check = "willpower"
+difficulty = 21
+touch = "Dread pours off {the}."
 [creature.attack]
 damage = "4d8"
 damage_type = "cold"

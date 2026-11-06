@@ -24,6 +24,17 @@ natural = { defence = 1, protection = 4, name = "chitin" }
 resist = { fire = 50, cold = 25, electricity = 25, poison = 100 }
 corpse = false
 blood = "#2a2a3a"
+cry = { kind = "buzzing", loudness = 50, every = 30 }
+[creature.aura]
+status = "drowsy"
+radius = 3
+check = "willpower"
+difficulty = 16
+every = 18
+heard = true
+loudness = 50
+touch = "The drone of {the} weighs on your eyes."
+unseen = "A droning weighs on your eyes."
 [creature.attack]
 damage = "4d6"
 damage_type = "piercing"

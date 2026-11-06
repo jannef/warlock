@@ -24,6 +24,12 @@ incorporeal = { wall_defence = 3 }
 resist = { slashing = 50, piercing = 50, bludgeoning = 50, cold = 50, poison = 100 }
 corpse = false
 blood = "none"
+[creature.aura]
+status = "silenced"
+radius = 3
+every = 6
+touch = "The gibbering of {the} drowns your voice."
+unseen = "A gibbering drowns your voice."
 [creature.attack]
 damage = "2d6"
 damage_type = "cold"

@@ -41,6 +41,17 @@ behind and goes on if it came. A den's sleepers don't follow until woken, a shop
 `hostiles_here` reads the level, so the spawn cap moves with the follower. Hoards, curses, and
 hauntings keep no ids, so losing a guardian to the stairs changes nothing there.
 
+Auras, innate statuses, and cries (#1128, design `docs/design/monster-dread.md` §5.4, §9) live in
+`world/aura.rs`, whose module docs are the rules, with the data in `content/aura.rs`
+(`[creature.aura]`, `innate`, `cry`; `CreatureDef::{aura, innate, cry}`). Two lines in
+`ai.rs::creature_turn`: `aura_turn` as the turn starts (after the slumber and coarse-turn
+returns, before `decide`; it puts the innate statuses back first) and `cry` beside `mutter` once
+the plan is done; `travel.rs::make_creature` calls `aura::wear_innate`, and `perception.rs`
+leaves a type's innate statuses out of the seen effects. The aura's cooldown is the `aura`
+status; its draws (a check's two per target) and the cry's one are the gameplay stream's, on
+the bearer's turn. `content::aura_roster_tests` holds the bearers' rows; the tribe files say
+whose is whose.
+
 Factions and creature behavior (spec §7 "Factions", §5 "Creature sight", §8 "Creature behavior"):
 `data/factions.toml` (`content/faction.rs`: `Factions`, symmetric hostility, `Stance`; optional,
 without it everyone is neutral, but then no creature may name a faction; monsters fight only the

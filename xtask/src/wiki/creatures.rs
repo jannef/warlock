@@ -627,6 +627,59 @@ pub(super) fn creature_spells(content: &Content) -> String {
     out
 }
 
+/// Each creature's presence (`world/aura.rs`): its aura (the status, its degrees, how far, by
+/// sight or by hearing and how loud, the check that keeps it off, how often), the statuses its
+/// kind always has, and its cry (what it sounds like, how loud, how often on average).
+pub(super) fn creature_auras(content: &Content) -> String {
+    let mut out = String::from(
+        "| Creature | Aura | Reach | Kept off by | Every | Always has | Cry |\n\
+         |---|---|---|---|---:|---|---|\n",
+    );
+    for (_, c) in listed(content) {
+        if c.aura.is_none() && c.innate.is_empty() && c.cry.is_none() {
+            continue;
+        }
+        let status = |s| {
+            let def = content.status(s);
+            link(Term::Status, &def.id, &def.name.to_lowercase())
+        };
+        let (aura, reach, check, every) = match &c.aura {
+            None => ("-".into(), "-".into(), "-".into(), "-".into()),
+            Some(a) => {
+                let mut aura = format!("{} ({})", status(a.status), a.severity);
+                if let Some(kind) = a.kind {
+                    let _ = write!(aura, ", resisted as {}", damage_link(content, kind));
+                }
+                let reach = match a.heard {
+                    Some(loud) => format!("{} cells, heard (loudness {loud})", a.radius),
+                    None => format!("{} cells, in sight", a.radius),
+                };
+                let check = match a.check {
+                    Some((stat, d)) => format!("{} {d}", stat.name()),
+                    None => "nothing".into(),
+                };
+                (aura, reach, check, format!("{} s", a.every))
+            }
+        };
+        let innate: Vec<String> = c.innate.iter().map(|&s| status(s)).collect();
+        let cry = c.cry.map_or("-".to_string(), |cry| {
+            format!(
+                "{} (loudness {}, every {} s)",
+                cry.kind.heard_as(),
+                cry.loudness,
+                cry.every
+            )
+        });
+        let _ = writeln!(
+            out,
+            "| {} | {aura} | {reach} | {check} | {every} | {} | {cry} |",
+            link(Term::Creature, &c.id, &capital(&c.name)),
+            dash(&innate)
+        );
+    }
+    out
+}
+
 /// Each creature's speed and how long a normal action takes it, how far and with which eyes it
 /// sees, how faint a sound it hears (its listen skill included), how loud its steps are, its
 /// nose as a companion (spec §8 "Allies") and whether it may be tamed, what it weighs, its size,

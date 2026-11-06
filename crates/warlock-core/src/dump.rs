@@ -370,8 +370,9 @@ fn perceived_glyph(view: &PerceptionView<'_>, layer: Layer, p: Pos) -> char {
 
 /// A heard sound in the `sound` layer: `f` footsteps, `o` a door opening, `c` a door closing,
 /// `x` fighting, `b` a bowstring, `m` chanting (magic), `k` banging (a door kicked), `d` digging,
-/// `v` a voice, `h` a howl, `q` a heartbeat, `a` an alarm bell, `e` an explosion, `t` a thunderclap; upper case
-/// when loud.
+/// `v` a voice, `h` a howl, `r` a roar, `z` buzzing, `g` giggling, `s` a hiss, `l` a rattle, `y` a
+/// scream, `w` a wail, `q` a heartbeat, `a` an alarm bell, `e` an explosion, `t` a thunderclap; upper
+/// case when loud.
 pub fn sound_char(sound: &PerceivedSound) -> char {
     let c = match sound.kind {
         SoundKind::Footsteps => 'f',
@@ -385,6 +386,12 @@ pub fn sound_char(sound: &PerceivedSound) -> char {
         SoundKind::Voice => 'v',
         SoundKind::Howl => 'h',
         SoundKind::Roar => 'r',
+        SoundKind::Buzzing => 'z',
+        SoundKind::Giggle => 'g',
+        SoundKind::Hiss => 's',
+        SoundKind::Rattle => 'l',
+        SoundKind::Scream => 'y',
+        SoundKind::Wail => 'w',
         SoundKind::Heartbeat => 'q',
         SoundKind::Bell => 'a',
         SoundKind::Explosion => 'e',

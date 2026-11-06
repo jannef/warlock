@@ -25,6 +25,13 @@ natural = { defence = 2, protection = 2, name = "bony hide" }
 resist = { fire = 100, poison = 100, cold = 50 }
 corpse = false
 blood = "none"
+[creature.aura]
+status = "frightened"
+severity = 2
+radius = 2
+check = "willpower"
+difficulty = 17
+touch = "Terror rolls off {the}."
 [creature.attack]
 damage = "3d10"
 damage_type = "piercing"

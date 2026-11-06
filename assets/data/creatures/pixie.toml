@@ -26,6 +26,7 @@ size = "small"
 stats = { strength = 9, dexterity = 15, toughness = 10, intelligence = 12, willpower = 12, presence = 14 }
 base_hp = 5
 skills = { concentration = 22, spellcraft = 27 }
+cry = { kind = "giggle", loudness = 40, every = 60 }
 [creature.attack]
 damage = "1d6"
 damage_type = "piercing"

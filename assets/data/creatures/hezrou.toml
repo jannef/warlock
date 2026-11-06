@@ -25,6 +25,14 @@ natural = { defence = 2, protection = 2, name = "warty hide" }
 resist = { fire = 50, cold = 25, electricity = 25, poison = 100 }
 corpse = false
 blood = "#3a4a1a"
+[creature.aura]
+status = "poisoned"
+radius = 2
+check = "toughness"
+difficulty = 16
+every = 30
+touch = "The stench of {the} turns your stomach."
+unseen = "A stench turns your stomach."
 [creature.attack]
 damage = "4d8"
 damage_type = "slashing"

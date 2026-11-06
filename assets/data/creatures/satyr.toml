@@ -21,6 +21,16 @@ base_hp = 25
 attack = { damage = "2d6", damage_type = "bludgeoning", name = "butt", verb = "butts", to_hit = 2 }
 on_eat = { message = "It tastes of goat and wine.", vomit = 20 }
 # Its gear (spec §8 "Creature gear"): its music.
+[creature.aura]
+status = "drowsy"
+radius = 3
+check = "willpower"
+difficulty = 13
+every = 18
+heard = true
+loudness = 60
+touch = "The pipes of {the} lull you."
+unseen = "Soft piping lulls you."
 [[creature.gear]]
 chance = 25
 one_of = ["lute", "pipe"]

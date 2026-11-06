@@ -12,6 +12,9 @@ mod anim;
 pub mod animated;
 #[cfg(test)]
 mod animated_tests;
+mod aura;
+#[cfg(test)]
+mod aura_roster_tests;
 mod background;
 #[cfg(test)]
 mod beast_roster_tests;
@@ -185,6 +188,7 @@ pub use alignment::{AlignmentRules, BandDef, ByAlignment, Shifts};
 pub use ally::AllyRules;
 pub use anim::GlyphAnim;
 pub use animated::{Animated, AnimatedDef, Body, ID_PREFIX, Line, Numbers, Ramp, SlotLine};
+pub use aura::{Aura, CRY_TURN, Cry};
 pub use background::{
     AgeRange, Background, Chapter, ChapterWhen, Effect as StoryEffect, Line as StoryLine, Marks,
     Points, Tier as StoryTier, Tiers, When,
@@ -1925,6 +1929,7 @@ impl Content {
                 more_attacks,
                 breath,
                 throw,
+                presence: aura::resolve(self, &spec).map_err(err)?,
                 weapon_skills,
                 resist,
                 immune,

@@ -25,6 +25,15 @@ incorporeal = { wall_defence = 6 }
 resist = { slashing = 50, piercing = 50, bludgeoning = 50, cold = 50, poison = 100 }
 corpse = false
 blood = "none"
+[creature.aura]
+status = "sluggish"
+severity = 3
+radius = 2
+check = "toughness"
+difficulty = 18
+damage_type = "cold"
+touch = "A chill comes off {the}."
+unseen = "A chill creeps over you."
 [creature.attack]
 damage = "4d6"
 damage_type = "cold"

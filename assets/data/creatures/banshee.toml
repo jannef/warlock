@@ -25,6 +25,18 @@ incorporeal = { wall_defence = 4 }
 resist = { slashing = 50, piercing = 50, bludgeoning = 50, cold = 50, poison = 100 }
 corpse = false
 blood = "none"
+cry = { kind = "wail", loudness = 100, every = 60 }
+[creature.aura]
+status = "frightened"
+severity = 2
+radius = 6
+check = "willpower"
+difficulty = 15
+every = 24
+heard = true
+loudness = 100
+touch = "{the} wails, and your heart quails."
+unseen = "A wail rises through the walls, and your heart quails."
 [creature.attack]
 damage = "2d8"
 damage_type = "cold"

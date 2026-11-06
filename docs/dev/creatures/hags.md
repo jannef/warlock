@@ -16,3 +16,5 @@ the land only, #196) are follow-ups. They ship in no population (checked again i
 reaches the green hag's level, and a volcano is no place for her. They come only as strays (docs/dev/creatures.md).
 
 Spells (#1102, docs/dev/creatures.md "Casters"; in the order each prefers them): the green hag `curse_of_sloth`, `mesmerise`, `blight` (mana 45); the bheur hag `curse_of_sloth`, `rime`, `frost` (mana 70).
+
+Presence (#1128, `world/aura.rs`): the bheur hag's cold aura (`sluggish`, radius 2, Toughness 18, cold). Her hunger rider (design §5.12) is not built yet.

@@ -22,6 +22,7 @@ natural = { defence = 2, protection = 2, name = "scales" }
 resist = { poison = 50 }
 on_eat = { message = "Your tongue goes numb.", vomit = 40, harm = "1d4" }
 blood = "#4a6a1a"
+cry = { kind = "hiss", loudness = 40, every = 60 }
 [creature.attack]
 damage = "2d8"
 damage_type = "piercing"

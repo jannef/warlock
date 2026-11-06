@@ -24,6 +24,15 @@ natural = { defence = 4, protection = 9, name = "chitin" }
 resist = { fire = 100, poison = 50, cold = 100 }
 corpse = false
 blood = "#1a2a3a"
+[creature.aura]
+status = "sluggish"
+severity = 2
+radius = 2
+check = "toughness"
+difficulty = 20
+damage_type = "cold"
+touch = "Bitter cold comes off {the}."
+unseen = "A bitter cold creeps over you."
 [creature.attack]
 damage = "4d12"
 damage_type = "cold"

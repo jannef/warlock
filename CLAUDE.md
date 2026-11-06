@@ -221,7 +221,7 @@ around level cell (X, Y), in its line of sight; no time); `zone:KIND@X,Y,R` is t
 `memory` (seen terrain, remembered objects, and known traps), `light` (perceived brightness of
 visible cells as a digit, `0` dark to `9` fully lit), `sound` (heard sounds at their rough places
 over the view: `f` footsteps, `o`/`c` a door opening/closing, `x` fighting, `b` a bowstring, `m`
-chanting, `k` banging (a door kicked), `d` digging, `v` a voice, `h` a howl, `r` a roar (a dragon's breath), `q` a heartbeat, `a` an alarm bell, `e` an
+chanting, `k` banging (a door kicked), `d` digging, `v` a voice, `h` a howl, `r` a roar (a dragon's breath), a creature's cries `z` buzzing, `g` giggling, `s` a hiss, `l` a rattle, `y` a scream, `w` a wail, `q` a heartbeat, `a` an alarm bell, `e` an
 explosion, `t` a thunderclap, upper case when loud), `blood` (blood the
 player sees or remembers as a digit over the view, `1` a few drops to `9` soaked), `inventory`
 (what the player

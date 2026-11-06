@@ -33,6 +33,14 @@ natural = { defence = 3, protection = 2, name = "frost-hard skin" }
 resist = { cold = 100, fire = -25 }
 on_eat = { message = "Cold as a grave in winter.", vomit = 60, harm = "1d4", skills = { decipher_script = { gives = 12, up_to = 95 } } }
 blood = "#4a5a6a"
+[creature.aura]
+status = "sluggish"
+radius = 2
+check = "toughness"
+difficulty = 18
+damage_type = "cold"
+touch = "A winter chill comes off {the}."
+unseen = "A chill creeps over you."
 [creature.attack]
 damage = "3d10"
 damage_type = "cold"

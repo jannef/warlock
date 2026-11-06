@@ -1023,13 +1023,16 @@ impl Perception {
                 })
             })
             .collect();
-        // So do the statuses that show, such as bleeding; others (poison) do not.
+        // So do the statuses that show, such as bleeding; others (poison) do not, nor those its
+        // kind always has (`world/aura.rs`: a salamander is always cloaked in flame).
         let effects = (seen.iter())
             .filter(|a| a.kind == ActorKind::Creature)
             .flat_map(|a| {
+                let innate = &content.creature(a.creature).innate;
                 shown(a).into_iter().flat_map(move |id| {
                     (a.effects.iter())
                         .filter(|e| content.status(e.status).seen.is_some())
+                        .filter(|e| !innate.contains(&e.status))
                         .map(move |e| (id, e.status))
                 })
             })

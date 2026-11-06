@@ -25,6 +25,7 @@ natural = { defence = 1, protection = 2, name = "scales" }
 resist = { fire = 100, cold = -100 }
 on_eat = { message = "It burns your tongue and warms you through.", vomit = 20, train = { toughness = 18 } }
 blood = "#e06a10"
+innate = ["fire_cloaked"]
 [creature.attack]
 damage = "2d6"
 damage_type = "fire"

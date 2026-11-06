@@ -3,6 +3,7 @@
 use super::DamageTypeId;
 use super::anim::GlyphAnim;
 use super::animated::AnimatedDef;
+use super::aura::{Aura, AuraSpec, Cry, CrySpec};
 use super::breath::{Breath, BreathSpec};
 use super::damage_type::TypeNames;
 use super::disease::DiseaseId;
@@ -235,6 +236,13 @@ pub(super) struct CreatureSpec {
     pub throw: Option<ThrowSpec>,
     /// Its summoning (spec §8 "Summoning"): the creatures it calls forth.
     pub summon: Option<SummonSpec>,
+    /// Its aura (`content/aura.rs`): a status it gives every hostile near it now and then.
+    pub aura: Option<AuraSpec>,
+    /// The statuses it is made with and keeps (`content/aura.rs`): Fire-cloaked.
+    #[serde(default)]
+    pub innate: Vec<String>,
+    /// Its idle cry (`content/aura.rs`): a hiss, a wail, a howl.
+    pub cry: Option<CrySpec>,
     /// Its natural armour: hide, shell, or scales.
     pub natural: Option<Hide>,
     /// Whether it passes through solid terrain, and its Defence inside it (spec §8
@@ -694,6 +702,7 @@ pub(super) struct Resolved {
     pub more_attacks: Vec<NaturalAttack>,
     pub breath: Option<Breath>,
     pub throw: Option<Throw>,
+    pub presence: super::aura::Presence,
     pub weapon_skills: WeaponSkills,
     pub resist: Vec<(DamageTypeId, i32)>,
     pub immune: Vec<StatusId>,
@@ -746,6 +755,9 @@ impl CreatureSpec {
             throw: r.throw,
             summon: None,
             summon_spec: self.summon,
+            aura: r.presence.aura,
+            innate: r.presence.innate,
+            cry: r.presence.cry,
             natural: self.natural,
             incorporeal: self.incorporeal,
             vitals: self.vitals,
@@ -917,6 +929,14 @@ pub struct CreatureDef {
     pub summon: Option<Summon>,
     /// Its summoning as written, resolved by `Content::load_summons`.
     pub(super) summon_spec: Option<SummonSpec>,
+    /// Gameplay: its aura (`world/aura.rs`), the status it gives the hostiles near it; `None`:
+    /// none. Rules only (the wiki states it).
+    pub aura: Option<Aura>,
+    /// Gameplay: the statuses it is made with and that are refreshed each turn it takes
+    /// (`world/aura.rs`); never shown in the look line.
+    pub innate: Vec<StatusId>,
+    /// Gameplay: its idle cry (`world/aura.rs`), a sound now and then; `None`: none.
+    pub cry: Option<Cry>,
     /// Gameplay: its natural armour, if any.
     pub natural: Option<Hide>,
     /// Gameplay: whether it passes through solid terrain and stands inside it, and its Defence

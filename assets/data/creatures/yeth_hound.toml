@@ -20,6 +20,14 @@ weight = 45000
 stats = { strength = 23, dexterity = 23, toughness = 23, intelligence = 22, willpower = 22, presence = 24 }
 base_hp = 70
 natural = { defence = 2, protection = 2, name = "dark hide" }
+cry = { kind = "howl", loudness = 150, every = 120 }
+[creature.aura]
+status = "frightened"
+severity = 2
+radius = 2
+check = "willpower"
+difficulty = 16
+touch = "Terror rolls off {the}."
 [creature.attack]
 damage = "3d10"
 damage_type = "piercing"

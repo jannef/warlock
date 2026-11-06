@@ -27,3 +27,5 @@ fixture, which replaces the statuses, drops the three devils whose riders it doe
 Waiting for mechanics (#448's follow-ups): several attacks a turn, flight, the imp's shapes and
 invisibility, creature spells, animated chains, thorns, summoning, auras, infernal wounds, a
 `large` size, a place in a population.
+
+Presence (#1128, `world/aura.rs`): the barbed devil innate `barbed_hide` (status.toml: `retaliates` `1d6` piercing, "The barbed hide stabs you."); fear auras on the bone devil (radius 2, Willpower 17) and the pit fiend (radius 3, 22, and innate `fire_cloaked`); the ice devil's cold aura (`sluggish` 2, radius 2, Toughness 20, cold). `content::aura_roster_tests` lists every row.

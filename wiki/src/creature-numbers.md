@@ -110,6 +110,27 @@ weakest spells and are very rare. Unseen, a caster is heard chanting.
 
 {{#include generated/creature-spells.md}}
 
+### Auras and cries
+
+Some creatures carry something about them. An **aura** touches every foe within its reach on
+the creature's turn, then not again until its time below has passed: one in its line of sight
+(no light needed: a chill comes in the dark), or, a heard aura, anyone within the reach who hears
+a voice as loud as the one given, through doors and round corners by the rules of
+[hearing](hearing.md). Each foe it reaches makes the check in the "kept off by" column (2d12 plus
+the stat's modifier against the number, as any [check](stats.md)), or suffers the status's
+degrees, caused by the creature; a [resistance](damage-types.md#armour-and-resistance) to the
+type named takes its share of them, and an [immunity](status-effects.md) keeps it off. The first
+touch you suffer anew names its cause ("A chill comes off the wraith."). Distance is the
+answer: the reach is short, so shoot it.
+
+What a creature **always has** comes back every turn it takes, and is never shown when you look
+at it: a fire salamander is always [cloaked in flame](status-effects.md#status-fire-cloaked), and
+whoever strikes it burns. A **cry** is a sound it makes now and then where it stands, on a turn it
+does not fight (a chance of 6 in the seconds given each turn), heard by the rules of
+[hearing](hearing.md) as any sound is: the hound heard before it is seen.
+
+{{#include generated/creature-auras.md}}
+
 ## Surprise
 
 The creatures with a craft for [surprise](status-effects.md#status-surprised). Their

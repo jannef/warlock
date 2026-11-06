@@ -25,6 +25,14 @@ natural = { defence = 2, protection = 3, name = "feathers" }
 resist = { fire = 50, cold = 25, electricity = 25, poison = 100 }
 corpse = false
 blood = "#3a1a2a"
+cry = { kind = "scream", loudness = 100, every = 90 }
+[creature.aura]
+status = "frightened"
+severity = 2
+radius = 2
+check = "willpower"
+difficulty = 17
+touch = "Terror rolls off {the}."
 [creature.attack]
 damage = "3d10"
 damage_type = "slashing"

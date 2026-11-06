@@ -30,3 +30,5 @@ immune to fire, a great sword, often magic, struck faster than one blow a turn, 
 that holds when it has no sword). Demons are evil, have darkvision, are immune to poison, resist
 fire (the balor is immune), and from level 24 resist cold and electricity a little; no corpse; dark
 ichor for blood.
+
+Presence (#1128, `world/aura.rs`): the hezrou's stench (`poisoned`, radius 2, Toughness 16, every 30 s); the chasme's drone (`drowsy`, heard, radius 3, loudness 50, Willpower 16, every 18 s, a buzzing cry); fear auras on the vrock (radius 2, 17, a scream cry for its screech) and the nalfeshnee (radius 3, 19); the balor innate `fire_cloaked` (its burst is D3's). `content::aura_roster_tests` lists every row.
