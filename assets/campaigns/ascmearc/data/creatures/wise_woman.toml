@@ -6,6 +6,8 @@ name = "wise-woman"
 glyph = "@"
 fg = "#8fb07a"
 faction = "peaceful"
+# One of the people: never greater or lesser than their kind.
+grades = false
 alignment = "good"
 race = "human"
 footsteps = 35
