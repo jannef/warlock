@@ -1,0 +1,29 @@
+# Vault of the Ascmearc: Gnægan's midden, the lair of the Rat King, Grundlēas's first layer boss
+# (#1118; spec §7 "The endless branch"). A long low hall heaped with the leavings of everything
+# the rats ever dragged down, gnawed bones and what the dead carried, the king in the middle of
+# it with his brood about him. Grundlēas's boss row for its tenth floor names it, so it is
+# stamped there, for certain, until the king is slain, and nowhere else. Its `>` is the floor's
+# only way down: laid as plain floor, it opens when the king dies (`world/layer_boss.rs`).
+name = "Gnægan's midden"
+dungeons = ["grundleas"]
+map = '''
+#######################
+#b,..r....b....r...,.b#
+#..r..b..$..o..b..r...#
++.,....b...G...b....>.#
+#..r..b..$..m..b..r...#
+#b,..r....b....r...,.b#
+#######################
+'''
+
+[legend]
+"," = "fungus"
+# The Rat King on his heap: he wakes to what he sees or hears.
+"G" = { terrain = "floor", creature = "gnaegan" }
+# His brood.
+"r" = { terrain = "floor", creature = "rat" }
+"b" = { terrain = "floor", objects = ["bones"] }
+# What the dead carried, rolled when the level is made.
+"o" = { terrain = "floor", loot = "any" }
+"m" = { terrain = "floor", loot = "magic" }
+"$" = { terrain = "floor", objects = ["gold_coin*40"] }

@@ -212,6 +212,14 @@ id = "yugoloth"
 name = "yugoloths"
 hostile = ["player"]
 
+# The layer bosses of Grundlēas (#1118; spec §7 "The endless branch"): each the one keeper of
+# its layer, alone in its lair, and what it calls up fights at its side. They hunt the player and
+# no one else. Not animals: a Beast-friend calms no rat king.
+[[faction]]
+id = "layer_keepers"
+name = "keepers of the layers"
+hostile = ["player"]
+
 # Folk who mean the player no harm, whatever they are: the showcase's people (the gardener, the
 # bard, the hermit) by type, and others placed here by levels with `faction = "peaceful"` in a
 # legend entry (the showcase hub and caverns), overriding the faction of the creature's type.

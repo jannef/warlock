@@ -1,0 +1,53 @@
+# Campaign-owned (docs/design/campaign.md §3.6): the Ascmearc's own type, which only its files
+# may name.
+#
+# The fourth layer boss of Grundlēas (#1118; spec §7 "The endless branch"): Wēalāf (Old English,
+# "what woe leaves", the remnant of a slaughter), the Unburied, a king whose barrow was never
+# closed, who sits his throne on the fortieth floor with his dead court about him. Once a run
+# (`unique`), in no population: only his hall places him. His fight is the court: he calls the
+# dead up out of the floor while his will lasts, and his barrow-blade's cold saps the strength
+# of whoever it cuts.
+[[creature]]
+id = "wealaf"
+level = 41
+xp = 215
+xp_percent = 200
+rarity = "very_rare"
+loot = 100
+unique = true
+name = "Wēalāf the Unburied"
+glyph = "W"
+fg = "#c8b0ff"
+speed = 1050
+faction = "layer_keepers"
+tags = ["undead", "summoner"]
+alignment = "evil"
+vision = "darkvision"
+sight = 12
+opens_doors = true
+footsteps = 90
+hearing = 12
+weight = 70000
+stats = { strength = 30, dexterity = 18, toughness = 34, intelligence = 20, willpower = 32, presence = 30 }
+base_hp = 190
+mana = 120
+natural = { defence = 3, protection = 3, name = "dead flesh" }
+resist = { poison = 100, cold = 50 }
+corpse = false
+blood = "none"
+[creature.attack]
+damage = "5d8"
+damage_type = "slashing"
+name = "barrow-blade"
+verb = "cuts"
+to_hit = 10
+on_hit = [{ drain = "strength", points = 1, chance = 20, difficulty = 20 }]
+# His court: one to three of the dead between levels 20 and 35 every half minute, six at most.
+[creature.summon]
+tag = "undead"
+levels = [20, 35]
+count = "1d3"
+cooldown = 30
+mana = 30
+most = 6
+verb = "calls up"

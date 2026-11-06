@@ -1,0 +1,10 @@
+# A dev scenario of the Ascmearc (spec §7 "The endless branch", #1118): straight onto the tenth
+# floor of Grundlēas, the first layer boss's, Gnægan the Rat King in his midden with the floor's
+# way down hidden in it. A new character here is level 1: give them levels with the dev `xp:`
+# and `levelup:auto` first. Its `<` climbs to a new ninth floor, as on any floor.
+name = "Rat King"
+description = "Grundlēas's tenth floor, kept by Gnægan the Rat King in his midden: no way down until he dies."
+start_level = "grundleas:10"
+seed = 1
+character = { race = "human", gender = "male", class = "warrior", name = "Wulfric" }
+wield = ["lantern"]

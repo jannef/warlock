@@ -1,0 +1,28 @@
+# Vault of the Ascmearc: the black mere, the lair of Grundwyrgen the Mere-Wife, Grundlēas's
+# fifth layer boss (#1118; spec §7 "The endless branch"). A cave hall half drowned: deep black
+# water fills its heart, a shelf of wet stone runs round it, the bones of what she dragged down
+# lie at the water's edge, and she waits on the far shore beside the way down. Grundlēas's boss
+# row for its fiftieth floor names it, so it is stamped there, for certain, until she is slain,
+# and nowhere else. Its `>` is the floor's only way down: laid as plain floor, it opens when she
+# dies (`world/layer_boss.rs`).
+name = "The black mere"
+dungeons = ["grundleas"]
+map = '''
+#########################
+#b...,..........,....b..#
+#..≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈..o.#
++..≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈.G>.#
+#..≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈..r.#
+#b...,..........,....b..#
+#########################
+'''
+
+[legend]
+"," = "fungus"
+"≈" = "deep_water"
+# The Mere-Wife on her shore: she wakes to what she sees or hears.
+"G" = { terrain = "floor", creature = "grundwyrgen" }
+"b" = { terrain = "floor", objects = ["bones"] }
+# What the drowned carried, rolled when the level is made.
+"o" = { terrain = "floor", loot = "rare" }
+"r" = { terrain = "floor", loot = "magic" }

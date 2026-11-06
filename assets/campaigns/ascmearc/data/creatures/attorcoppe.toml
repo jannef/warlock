@@ -1,0 +1,52 @@
+# Campaign-owned (docs/design/campaign.md §3.6): the Ascmearc's own type, which only its files
+# may name.
+#
+# The second layer boss of Grundlēas (#1118; spec §7 "The endless branch"): Āttorcoppe (Old
+# English āttorcoppe, "poison-head", a spider), the Spinner, mother of every spider that ever
+# spun in the barrows, that keeps the twentieth floor. Once a run (`unique`), in no population:
+# only her lair, the web-hall, places her. Her fight is the wait and the venom: she lurks in the
+# dark of her hall until her prey is beside her or she is hurt, calls her brood down from the
+# roof, and her bite poisons and binds in silk.
+[[creature]]
+id = "attorcoppe"
+level = 21
+xp = 115
+xp_percent = 200
+rarity = "very_rare"
+loot = 100
+unique = true
+name = "Āttorcoppe the Spinner"
+glyph = "S"
+fg = "#b070d0"
+speed = 1300
+faction = "layer_keepers"
+tags = ["vermin", "summoner"]
+alignment = "evil"
+vision = "darkvision"
+sight = 10
+lurks = true
+hearing = 10
+weight = 300000
+stats = { strength = 22, dexterity = 22, toughness = 22, intelligence = 8, willpower = 18, presence = 6 }
+base_hp = 118
+mana = 64
+skills = { sneak_attack = 40, initiative = 50, spot = 40 }
+natural = { defence = 3, protection = 3, name = "chitin" }
+resist = { poison = 100 }
+on_eat = { message = "Bitter beyond bearing, and your mouth goes numb.", vomit = 80, harm = "2d4" }
+blood = "#4a6a2a"
+[creature.attack]
+damage = "3d8"
+damage_type = "piercing"
+name = "bite"
+verb = "bites"
+to_hit = 5
+on_hit = [{ status = "poisoned", chance = 40, severity = 4 }, { status = "webbed", chance = 30, severity = 2 }]
+# Her brood: one to four barrow spiders every twenty-four seconds, eight at most at once.
+[creature.summon]
+creatures = ["barrow_spider"]
+count = "1d4"
+cooldown = 24
+mana = 8
+most = 8
+verb = "calls down"
