@@ -21,18 +21,19 @@ shield: shield bashing; a shot: the launcher's; a throw: thrown; a kick, spec §
 whatever is wielded, `World::player_kicks`), and `fight.rs::resolve` takes the skills its caller
 picked (`AttackSkills`: the weapon skill and the fighting style); `Profile::with(&Benefit)` and
 `Actor::melee`/`ranged`/`thrown`/`bash`/`kick` apply to-hit, damage, and threat; `Actor::defence` adds
-parry and shield blocking; `World::attack_price` takes `speed` off the cost and
+parry, and the style's `shield` (Sword and Board, Two Shields) to a held shield's (there is no
+shield blocking skill since #1093); `World::attack_price` takes `speed` off the cost and
 `World::reload_price` `reload` (`World::attack_cost`: with the weapon's `attack_cost` and magic
 items' speed; a shield bash costs a blow with the shield, never the wielded weapon's cost);
-`World::resolve` (`fight.rs`) earns the player's marks (`practise`; a Shield-credited miss on
-the player trains shield blocking; `World::level_of` weighs the opponent by its creature type's
+`World::resolve` (`fight.rs`) earns the player's marks (`practise`; a blow the player's shield
+blocks trains no weapon skill; `World::level_of` weighs the opponent by its creature type's
 `level`, spec §8 "Experience") and pushes "You feel more skilled ..." into the unsaved
 `World::news`, said after the attack's own messages (`say_news`, also at the end of
 `perceive` for a block in a creature's turn). Starting ranks roll from
 their own stream (`character/weapon-skills/...`), so stat rolls never move. Presentation reads
 `PerceptionView::own_weapon_skills` only: ranks and a bar, **never a benefit**. The rank tables (#554, docs/design/combat-progression.md §3, §5): ranks 1 to 5 keep the first
 tables' values, ranks 6 to 10 grow by family (light blades, precise, heavy, middling, launchers
-and thrown, shield blocking; a pattern for writing the arrays, not a data concept);
+and thrown; a pattern for writing the arrays, not a data concept);
 `rank_ten_holds_the_family_tables` holds every skill's and style's rank 10 to the design's table
 and every array to never less at a higher rank. `MAX_SAVING` is 60 (crossbows' `reload` at rank
 10); a saving past 100 % in all (crossbows 10 with Marksman 10) prices the reload at the floor,

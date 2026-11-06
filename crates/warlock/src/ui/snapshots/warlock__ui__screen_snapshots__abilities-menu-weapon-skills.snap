@@ -2,8 +2,8 @@
 source: crates/warlock/src/ui/screen_snapshots.rs
 expression: "render(case, content.clone())"
 ---
- You feel more skilled at bashing with a shield. You have learned the stunning bash. You feel more
- skilled at blocking with a shield.
+ You feel more skilled at fighting with weapon and shield. You have learned the staggering block.
+ You feel more skilled at bashing with a shield. You have learned the stunning bash.
 
                    ┌─ Abilities ────────────────────────────────────────────────┐
                    │                                                            │

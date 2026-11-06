@@ -185,10 +185,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
   little. Each class also has two to five optional skills, modest ones at `2d4` (10 to 35 %;
   the thief balance, bluff, and listen; the warrior heal, metalcraft, and survival; the commoner
   heal, metalcraft, survival, swim, and woodcraft; the full lists are in the wiki). Weapon skills: berserker unarmed 1 and axes 2 or great blades 2, bard short blades 1
-  and daggers `1d2`, priest maces 2 and shield blocking 1, druid staves 2 and slings 1, ascetic
-  unarmed 2 and staves 1, paladin long blades 2, shield blocking `1d2`, and shield bashing 1,
+  and daggers `1d2`, priest maces 2, druid staves 2 and slings 1, ascetic
+  unarmed 2 and staves 1, paladin long blades 2 and shield bashing 1,
   ranger bows 2 and short blades 1, thief daggers 2 and thrown 1, wizard staves 1, witch daggers
-  1 and staves 1, warrior long blades 2 and shield blocking `1d2`, aristocrat long blades 1,
+  1 and staves 1, warrior long blades 2, aristocrat long blades 1,
   commoner maces 1, craftsperson axes 1, merchant daggers 1. Fighting styles: berserker great
   weapon 1, bard duelist 1, priest sword and board 1, druid staff fighter 1, ascetic brawler 1 or
   staff fighter 1, paladin sword and board 1, ranger marksman 1, thief twin blades 1 or duelist

@@ -126,11 +126,10 @@ impl Choice {
         }
     }
 
-    /// Whether a weapon skill of `role` may be chosen as a weapon skill: one that attacks
-    /// (shield blocking only defends, a style is chosen as a style, and a school of magic as a
-    /// school).
+    /// Whether a weapon skill of `role` may be chosen as a weapon skill: one that attacks (a
+    /// style is chosen as a style, and a school of magic as a school).
     fn attacks(role: Role) -> bool {
-        !matches!(role, Role::Style | Role::ShieldBlock | Role::School)
+        !matches!(role, Role::Style | Role::School)
     }
 
     /// Whether it chooses a row of the weapon skill table: a weapon skill, a style, or a

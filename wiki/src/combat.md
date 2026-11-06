@@ -62,8 +62,8 @@ protects you, in kinds:
   you are [burdened](burden.md#burden-1), +1 when [strained](burden.md#burden-1), nothing when [overloaded](burden.md#burden-1) (see [Burden](burden.md)). The
   lower limit counts.
 - **Armour**: what you wear on your body.
-- **Shield**: a [shield](objects.md#class-shields) held in your off hand, and more with your [rank](weapon-skills.md#marks-and-ranks) in [shield blocking](weapon-skills.md#weapon-skill-shield-block) (and in
-  [Sword and Board](fighting-styles.md#style-sword-and-board), with a weapon in the other hand).
+- **Shield**: a [shield](objects.md#class-shields) held in your off hand, and more with your [rank](weapon-skills.md#marks-and-ranks) in
+  [Sword and Board](fighting-styles.md#style-sword-and-board), with a weapon in the other hand (or in [Two Shields](fighting-styles.md#style-two-shields), with a shield in each).
 - **Parry**: a weapon that turns blows aside, such as the quarterstaff, and your rank with the
   weapon you wield (blades, spears, and staves), and in [Duelist](fighting-styles.md#style-duelist) or [Staff Fighter](fighting-styles.md#style-staff-fighter) while you fight
   that way. It counts against blows only: an [arrow](ammunition.md), a [bolt](ammunition.md), or a thrown thing is not parried, but

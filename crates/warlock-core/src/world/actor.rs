@@ -610,18 +610,16 @@ impl Actor {
     /// wields (each with what its own affixes add), its natural armour ([`Actor::hide`]), the Dodge
     /// its skills give (tumble; spec §8 "Skills"), and the Dodge, Deflection, and natural armour
     /// its magic items give (spec §8 "Magic items"). Weapon skills add (spec §8 "Weapon skills"):
-    /// the wielded weapon's skill to its parry, shield blocking to a held shield's; and so does
-    /// the fighting style its hands are in (spec §8 "Fighting styles": a duelist's parry, sword
-    /// and board's shield). Its combat stance and its status effects add their Dodge and Parry
+    /// the wielded weapon's skill to its parry; and so does the fighting style its hands are in
+    /// (spec §8 "Fighting styles": a duelist's parry, sword and board's shield, added to a held
+    /// shield's). Its combat stance and its status effects add their Dodge and Parry
     /// (spec §8 "Stances", "Status effects").
     pub fn defence(&self, content: &Content, burden: Burden, race: Option<&RaceDef>) -> Defence {
         let mods = self.mods(content);
         let weapon = self.weapon_item(content);
         let style = self.benefit(content, self.style(content, AttackKind::Melee, None));
         let parry_skill = self.benefit(content, self.melee_skill(content)).parry + style.parry;
-        let block = (content.weapon_skills().of_role(Role::ShieldBlock))
-            .map_or(0, |id| self.benefit(content, Some(id)).shield)
-            + style.shield;
+        let block = style.shield;
         let equipped: Vec<(usize, &ObjectDef, Mods, bool)> = (self.equipment.items().into_iter())
             .filter_map(|(slot, item)| {
                 Some((item, content.slot(slot).hand, self.inventory.get(item)?))
