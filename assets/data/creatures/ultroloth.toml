@@ -1,7 +1,6 @@
 # The yugoloths (#446): mercenary fiends of the lower planes. The ultroloth is their commander: a
 # grey figure with a nearly featureless face and enormous eyes whose shifting colours hold those
-# who meet them fast, or send them running. Its gaze is a rider on its blows until a gaze can be
-# its own attack. Not yet in any dungeon's population: no danger window reaches it.
+# who meet them fast, or send them running. Its gaze is its own, met at a few cells (#1125). Not yet in any dungeon's population: no danger window reaches it.
 [[creature]]
 id = "ultroloth"
 level = 58
@@ -34,7 +33,10 @@ damage_type = "bludgeoning"
 name = "fist"
 verb = "strikes"
 to_hit = 14
-on_hit = [
-    { status = "transfixed", chance = 20, severity = 2 },
-    { status = "frightened", chance = 15, severity = 1 },
+[creature.gaze]
+range = 5
+chance = 40
+riders = [
+    { status = "transfixed", chance = 100, severity = 2 },
+    { status = "frightened", chance = 100, severity = 1 },
 ]

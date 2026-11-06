@@ -1,8 +1,8 @@
 # The leftover fiends (#450). The fiend that comes to women in the night in the shape of their
 # desire and drinks their life with a kiss: what it takes is the body's vigour, Toughness, for
 # good unless the body holds on (a temple's mending gives it back). The succubus is the same fiend
-# under its other name, and the two share their numbers. Its shapes, its wings, and its charm
-# wait for mechanics of their own.
+# under its other name, and the two share their numbers. Its gaze holds the eye
+# (#1125); its shapes and its wings wait for mechanics of their own.
 [[creature]]
 id = "incubus"
 level = 27
@@ -35,3 +35,9 @@ name = "kiss"
 verb = "kisses"
 to_hit = 6
 on_hit = [{ drain = "toughness", points = 1, chance = 15, check = "toughness", difficulty = 17 }]
+[creature.gaze]
+range = 4
+chance = 30
+riders = [
+    { status = "transfixed", chance = 100, severity = 1 },
+]

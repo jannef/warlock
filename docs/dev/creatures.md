@@ -120,6 +120,28 @@ the players of its level (docs/balance.md "Dragons"). **Tests**: `world/breath_t
 Adding a dragon: `combat = "dragon"`, a `[creature.breath]` of its element with a burst effect
 of that element in `data/effects.toml`, `[[creature.attack]]`s, and the tag `dragon`.
 
+Gazes and averted eyes (spec §8 "Creature behavior": "Gazes", #1125, design
+`docs/design/monster-dread.md` §5.1). **Data**: `[creature.gaze]` (`content/gaze.rs`:
+`GazeSpec` resolved in the creature loop into `CreatureDef::gaze: Option<Gaze>`; `range` 1 to 8,
+`chance` (default 100), `cooldown` 6 to 600 s (default 12, the `gaze` status's
+`ceil(cooldown / eases)` degrees), `averted`, `glance` (only with `averted`, default 25), and
+`riders`, `on_hit` entries resolved by `OnHitSpec::resolve`, a status or a drain only).
+**Rules**: `world/gaze.rs` (`World::gazes_at`, one branch in `ai.rs::fight` after the summoning
+and before the throw, `Plan::Gaze(target)`: in range, the cooldown off, the target with vitals
+(its type's `vitals` and `Content::has_vitals`); `World::creature_gazes`: the cooldown status,
+a `cast`'s price, then the eyes must meet: the player's by `Perception::sees_actors_at` on the
+gazer's cell (the snapshot's sight, no disguise), a creature's by `World::sees_now`; unmet, the
+player is told "You feel a cold stare on you."; met, one draw at `Gaze::chance_against` (below
+100 only) and each rider by `World::rider` in `status.rs`, the one place a blow's riders fall
+too). No noise. `world/avert.rs`: Averted is `Perception::averted` (a seen hostile whose gaze is
+`averted`), derived in `Perception::compute`, never saved and out of the hash; read by
+`World::averted_blow` in `fight.rs::resolve` (`AVERTED_TO_HIT`, −4), `World::averted_defence`
+in `fight.rs::defence_of` (a positive Dodge halved), and `free_blow.rs::free_blows_of` (none at
+all); `World::avert_news` notes it beginning and ending. Status bar "Averted"; dump header
+`averted`, JSON `averted`; the cooldown shows among `actors`' effects. Nothing is `averted` until
+D2's basilisk. **Tests**: `world/gaze_tests.rs`, and `content/gaze.rs`'s roster of the moved
+riders (`MOVED`). Keep the rider generic: D2's stiffening is a status rider like any.
+
 Casters (spec §8 "Creature behavior": "Casters", #1102). **Data**: `spells = [...]` on a
 `combat = "caster"` type (`CreatureSpec::spells`, resolved in the creature loop by
 `content/creature_spells.rs::resolve` into `CreatureDef::spells: Vec<SpellId>`, in preference

@@ -8,7 +8,8 @@
 //!    slip past it (`slip.rs::looks_at`), unseen by its darkvision.
 //! 2. **Fight**: a melee creature attacks a target next to it, else steps along a shortest path
 //!    toward it; one that throws (a giant's boulders, `hurl.rs`) throws on the way whenever the
-//!    target is in range with a clear line of fire. A ranged creature shoots when the target is
+//!    target is in range with a clear line of fire; one that gazes (`gaze.rs`) looks it in the
+//!    eye first whenever its gaze is ready and the target within its range. A ranged creature shoots when the target is
 //!    within its range with a clear line of fire (no opaque cell and nobody in between), else
 //!    steps toward the nearest cell that gives it one (failing that, toward the target). A
 //!    caster casts the first spell of its list that goes from where it stands
@@ -76,6 +77,8 @@ pub(super) enum Plan {
     Summon,
     /// Breathe its element at the cell a hostile stands on (`breath.rs`).
     Breathe(Pos),
+    /// Look a hostile in the eye (`gaze.rs`).
+    Gaze(ActorId),
     /// Cast a spell of its list on someone (`creature_cast.rs`).
     Cast {
         spell: SpellId,
@@ -166,6 +169,7 @@ impl World {
             }
             Plan::Summon => self.creature_summons(id, events),
             Plan::Breathe(at) => self.creature_breathes(id, at, events),
+            Plan::Gaze(target) => self.creature_gazes(id, target, events),
             Plan::Cast { spell, on } => self.creature_casts(id, (spell, on), events),
             Plan::Step(dir) => self.step_or_wait(id, dir, events).1,
             Plan::Patrol => self.patrol(id, events),
@@ -336,6 +340,10 @@ impl World {
         // A summoner (`summon.rs`) summons whenever it may.
         if self.summons_at(id, at) {
             return Plan::Summon;
+        }
+        // A gazer (`gaze.rs`) looks it in the eye whenever it may.
+        if self.gazes_at(id, target, at) {
+            return Plan::Gaze(target);
         }
         // A creature that throws (`hurl.rs`) throws whenever it can from where it stands.
         if self.hurls_at(id, target, at) {

@@ -117,7 +117,10 @@ fn the_fiends_keep_to_the_roster() {
         let attack = def.attack.as_ref().expect("an attack");
         let damage = attack.attack.damage;
         let average = f64::from(damage.min() + damage.max()) / 2.0;
-        let drains = (attack.on_hit.iter()).any(|h| matches!(h.what, Affliction::Drain(_)));
+        // A drain on its gaze (#1125) counts as one on its blow.
+        let drains = (attack.on_hit.iter())
+            .chain(def.gaze.iter().flat_map(|g| &g.riders))
+            .any(|h| matches!(h.what, Affliction::Drain(_)));
         let want = dice_average(level, role, drains);
         assert!(
             within(average, want),

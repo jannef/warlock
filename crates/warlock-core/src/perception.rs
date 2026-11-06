@@ -532,6 +532,9 @@ pub(crate) struct Perception {
     images: Vec<Pos>,
     /// Whether strong light dazzles the player's light-blind eyes (their race's `light_blind`).
     dazzled: bool,
+    /// Whether the player averts their eyes from a gaze marked `averted` they see
+    /// (`world/avert.rs`): derived here, never saved.
+    averted: bool,
     /// The disguised mimics of the level (`world/mimic.rs`), by position: each is a shut chest to
     /// the player, never an actor, but those Chest-wise sees through.
     disguises: Vec<Disguise>,
@@ -976,6 +979,13 @@ impl Perception {
             .filter(|a| !a.in_retinue())
             .filter(|a| !hidden(a))
             .collect();
+        // Averted eyes (`world/avert.rs`): a hostile whose gaze is marked `averted`, seen.
+        let looker = state.player().faction(content);
+        let averted = (seen.iter()).any(|a| {
+            a.id != state.player
+                && (content.creature(a.creature).gaze.as_ref()).is_some_and(|g| g.averted)
+                && content.stance_of(a.faction(content), looker) == Stance::Hostile
+        });
         let mut actors: Vec<SeenActor> = (seen.iter())
             .map(|a| SeenActor {
                 id: a.id,
@@ -1101,6 +1111,7 @@ impl Perception {
             blood,
             images,
             dazzled: dazzled.is_some(),
+            averted,
             disguises,
             zones,
             allies: allies_of(state, content),
@@ -1134,6 +1145,11 @@ impl Perception {
     /// Whether strong light dazzles the player's light-blind eyes.
     pub(crate) fn dazzled(&self) -> bool {
         self.dazzled
+    }
+
+    /// Whether the player averts their eyes from a gaze marked `averted` (`world/avert.rs`).
+    pub(crate) fn averted(&self) -> bool {
+        self.averted
     }
 
     /// Sounds heard during the last turn from sources the player does not see.
@@ -2387,6 +2403,12 @@ impl<'a> PerceptionView<'a> {
     /// and fight worse. Only that it does, never how much.
     pub fn dazzled(&self) -> bool {
         self.snapshot.dazzled
+    }
+
+    /// Whether the player averts their eyes from a gaze they see (`world/avert.rs`): they fight
+    /// half-blind. Only that they do, never how much.
+    pub fn averted(&self) -> bool {
+        self.snapshot.averted
     }
 
     /// The player's allies (spec §8 "Allies"), wherever they are, in actor id order.

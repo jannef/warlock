@@ -203,6 +203,10 @@ impl World {
             riposte: blows.riposte || self.poised(actor),
             ..blows
         };
+        // Averted (`avert.rs`), the player strikes no free blow at all.
+        if self.averted(actor.id) {
+            return FreeBlows::default();
+        }
         // Flat-footed (Surprised, Stunned), it strikes nothing out of its turn (`surprise.rs`).
         if self.off_guard(actor.id) {
             return FreeBlows {

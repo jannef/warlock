@@ -15,7 +15,9 @@ type's level, faction, tags, alignment, XP, and the HP and dice formulas (within
 undead's), and that the faction holds no type it does not list. Riders map onto what exists: fire
 damage for the hound's bite and the steed's hooves, a Toughness drain (difficulty 17, checked by
 Toughness) for the kiss, `held` (15 % at 18: the hag on the sleeper's chest) and `frightened` for
-the night hag, `transfixed` and `frightened` for the rakshasa. The hell hound is in Fyrdelf's
+the night hag, `transfixed` and `frightened` for the rakshasa, now on its gaze (#1125: range 5,
+35 %), as is the succubus's and the incubus's `transfixed` (range 4, 30 %; the kiss keeps its
+drain; docs/dev/creatures.md "Gazes"). The hell hound is in Fyrdelf's
 population (its 13 inside danger 5–16, at home in the fires); the rest ship in none. Breath,
 shapes, flight, charm, summoning, and dream-walking are #450's follow-ups.
 

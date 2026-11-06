@@ -69,6 +69,30 @@ summoner that cannot cast ([silenced](status-effects.md#status-silenced)) cannot
 
 {{#include generated/creature-summons.md}}
 
+### Gazes
+
+Some creatures harm with a look: a [vampire](creatures.md#creature-vampire)'s stare holds you
+[transfixed](status-effects.md#status-transfixed), a [sea hag](creatures.md#creature-sea-hag)'s
+sends you [frightened](status-effects.md#status-frightened) and [drains](stats.md#drained-stats)
+your Toughness, a [spectre](creatures.md#creature-spectre)'s drains your will. A gazer that sees
+you within its reach looks you in the eye before it does anything else but summon, and takes as
+long as a spell. The eyes must meet both ways: it needs a
+[line of sight](sight.md#line-of-sight) to you, and you must see it. A gazer in a cell too dark
+for your eyes, behind a wall or a closed [door](doors.md), cannot catch your eye: you only feel
+its cold stare, and it has wasted its look. Met, the gaze catches your eye at the chance below,
+and then does what its row says, each by its own chance (a drain is still resisted by its
+check). Either way it must wait before it looks again. A creature with no
+[vitals](combat.md#criticals) has no eyes to meet, and is never gazed at; the gazers look at
+your allies as they look at you.
+
+A gaze marked **forced** in the table makes you **avert your eyes** by reflex while you see its
+gazer: no choice, and nothing to switch. Averted, you fight half-blind: −4 to
+[hit](combat.md#hitting), your [Dodge](combat.md#defence) halved, and no
+[free blows](combat.md#free-blows). Its gaze still finds a glance you cannot help, at the chance
+in that column. Darkness, a wall, or a door between you ends the averting as it ends the gaze.
+
+{{#include generated/creature-gazes.md}}
+
 ### Breath
 
 Dragons breathe their element: the [fire drake](creatures.md#creature-fire-drake) a long fan of

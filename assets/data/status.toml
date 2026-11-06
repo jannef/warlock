@@ -320,6 +320,16 @@ max = 100
 stacking = "refresh"
 eases = 6
 
+# A gaze spent (spec §8 "Creature behavior": "Gazes", the creatures' `[creature.gaze]`): a degree
+# for every six seconds of its `cooldown`; while it lasts the creature looks no one in the eye.
+# Creatures only: no one sees it on them.
+[[status]]
+id = "gaze"
+name = "Gaze spent"
+max = 100
+stacking = "refresh"
+eases = 6
+
 # Blaze's cooldown (the Fire-born's gift, spec §8 "Birth sign"): twelve hours before the fire in
 # them kindles again. Nothing else; time is the penalty.
 [[status]]

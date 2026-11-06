@@ -38,3 +38,9 @@ on_hit = [
     { drain = "toughness", points = 1, chance = 15, check = "toughness", difficulty = 19 },
     { disease = "filth_fever", chance = 15 },
 ]
+[creature.gaze]
+range = 5
+chance = 35
+riders = [
+    { status = "transfixed", chance = 100, severity = 1 },
+]

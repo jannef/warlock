@@ -64,6 +64,7 @@ mod flow;
 mod forage;
 #[cfg(test)]
 mod forge_tests;
+mod gaze;
 mod gear;
 mod gem;
 #[cfg(test)]
@@ -239,6 +240,7 @@ pub use feint::FeintRules;
 pub use fletch::{FletchMakes, FletchRules};
 pub use flow::{FLOW_SPEEDS, Flow};
 pub use forage::{ForageGround, ForageRules};
+pub use gaze::Gaze;
 pub use gear::{Gear, GearLine, RACIAL_CHANCE};
 pub use gem::{
     Cut, CutId, Cutting, GemDef, GemSize, GemSizeId, Gems, MAX_GEM_VALUE, MAX_GEM_WEIGHT,
@@ -1820,6 +1822,10 @@ impl Content {
                 .map(|b| b.resolve(self))
                 .transpose()
                 .map_err(|m| err(format!("creature `{}`: {m}", spec.id)))?;
+            let gaze = (spec.gaze.as_ref())
+                .map(|g| g.resolve(self, status, |id| self.disease_id(id)))
+                .transpose()
+                .map_err(|m| err(format!("creature `{}`: {m}", spec.id)))?;
             let throw = (spec.throw.clone())
                 .map(|t| {
                     let kinds = self.resolve_kinds(t.damage_type.as_ref())?;
@@ -1927,6 +1933,7 @@ impl Content {
                 attack,
                 more_attacks,
                 breath,
+                gaze,
                 throw,
                 weapon_skills,
                 resist,

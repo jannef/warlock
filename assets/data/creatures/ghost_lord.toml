@@ -1,6 +1,6 @@
 # The undead roster (#383, batch 5). The greatest of the ghosts, a lord of the unquiet dead who
-# keeps a hall of them: a caster (its spells announced until magic is designed) whose touch holds
-# the living still and wears the will out of them, for good unless it holds (a temple's mending
+# keeps a hall of them: a caster (its spells announced until magic is designed) whose gaze holds
+# the living still and whose touch wears the will out of them, for good unless it holds (a temple's mending
 # gives it back). It drifts through walls and doors; blades and clubs pass half through it. Not
 # yet in any dungeon's population.
 [[creature]]
@@ -38,7 +38,10 @@ damage_type = "cold"
 name = "touch"
 verb = "touches"
 to_hit = 13
-on_hit = [
-    { status = "transfixed", chance = 20, severity = 2 },
-    { drain = "willpower", points = 2, chance = 10, difficulty = 22 },
+on_hit = [{ drain = "willpower", points = 2, chance = 10, difficulty = 22 }]
+[creature.gaze]
+range = 5
+chance = 35
+riders = [
+    { status = "transfixed", chance = 100, severity = 2 },
 ]

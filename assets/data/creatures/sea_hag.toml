@@ -1,8 +1,8 @@
 # The hags (#451): the bog hag's kin, shared types on the undead roster's formulas (#383). A
 # hideous hag of the shores and fens, hung with weed and barnacles: the sight of her sends the
 # brave running, and her gaze withers the body for good unless it holds on (a temple's mending
-# gives it back). She walks the land only: water-dwelling creatures wait (#196), and her gaze
-# that kills outright waits for a mechanic of its own.
+# gives it back). Her gaze is her own, met at a few cells (#1125). She walks the land only:
+# water-dwelling creatures wait (#196).
 [[creature]]
 id = "sea_hag"
 level = 26
@@ -34,7 +34,10 @@ damage_type = "slashing"
 name = "claws"
 verb = "claws"
 to_hit = 6
-on_hit = [
-    { status = "frightened", chance = 20, severity = 2 },
-    { drain = "toughness", points = 1, chance = 10, check = "toughness", difficulty = 17 },
+[creature.gaze]
+range = 4
+chance = 35
+riders = [
+    { status = "frightened", chance = 100, severity = 2 },
+    { drain = "toughness", points = 1, chance = 100, check = "toughness", difficulty = 17 },
 ]

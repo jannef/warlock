@@ -22,7 +22,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
      as a `melee` one. A creature with a throw (§8 "Ranged combat": "Creatures' throws", the
      giants' boulders) that is not next to its target throws first whenever the target is within
      the throw's range with a clear line of fire. A summoner ("Summoning" below) summons before
-     all of this whenever it may. A `dragon` ("Dragons" below) breathes whenever its breath is
+     all of this whenever it may, and a gazer ("Gazes" below) then looks it in the eye
+     whenever its gaze is ready and the target within its range. A `dragon` ("Dragons" below) breathes whenever its breath is
      ready and the target stands in its cone with a clear line, and else fights as a `melee`
      one. A `caster` ("Casters" below) casts whatever spell of its list goes from where it
      stands, else closes to where one would, and with none it can cast (out of mana, Silenced)
@@ -156,6 +157,32 @@ developer notes (CLAUDE.md, `docs/dev/`).
   (`World::spell_type_lands`: fire's burning, one in four). Its blows and kills are the
   dragon's. The action costs a `cast`. Words: "The fire drake breathes fire!" when the player
   sees it, then each blow seen as a spell's ("The fire burns you."); unseen, the roar is heard.
+- **Gazes** (`warlock-core/src/world/gaze.rs`, the rules; `content/gaze.rs`, the data; #1125):
+  an enemy-only creature ability, a rider at sight and not at touch. A type's `[creature.gaze]`
+  has a `range` (1 to 8 cells), `riders` (statuses with a severity, drains with their check, each
+  by its own chance, as a blow's `on_hit`; never a disease or a hold), and optionally `chance`
+  (percent, default 100), `cooldown` (6 to 600 s, default 12: the `gaze` status), `averted`,
+  and `glance` (percent, default 25). In step 2, after a summoning and before a throw, a gazer
+  whose cooldown is off looks its target in the eye when it stands within `range` and has
+  vitals (what has none has no eyes to meet); its target is one it sees, so never through a
+  wall. It takes the cooldown and spends a `cast`. The eyes must meet both ways: the player
+  sees the gazer (its cell in their sight, not disguised), a creature by its own eyes. Unmet,
+  the stare is wasted: "You feel a cold stare on you." Met, one draw at `chance` (a `glance`'s
+  share of it against averted eyes) catches them: "The vampire's eyes find yours.", then each
+  rider falls as a hit's would (the status's own `start` line); missed, "You tear your eyes from
+  the vampire's." (averted: "You keep your eyes from the basilisk's."). At a creature the player
+  sees the gazer stare: "The vampire stares at the wolf." A gaze is silent. **Averted eyes,
+  forced** (the owner): while the player sees a hostile whose gaze is `averted`, they avert their
+  eyes by reflex: no toggle, no action, nothing saved, derived each turn from what they
+  perceive as being dazzled is. Averted, they fight at −4 to hit, their Dodge halved, with no
+  free blows, and the status bar says "Averted" ("You avert your eyes." / "You raise your eyes
+  again."). Anything else that keeps them from seeing the gazer (darkness, a wall or a door, a
+  disguise) means neither the penalty nor the gaze. The gazers: the vampires (transfixed; the
+  bite keeps its Toughness drain), the sea hag (frightened and a Toughness drain), the spectre
+  (a Willpower drain), the white lady, the night mare, and the ghost lord (transfixed; the touch
+  keeps its drain), the hand of glory (transfixed, 3 cells), the ultroloth and the rakshasa
+  (transfixed and frightened), the succubus and the incubus (transfixed; the kiss keeps its
+  drain), and the duergar mindbreaker (frightened and transfixed). None is `averted` yet.
 - **Casters** (`warlock-core/src/world/creature_cast.rs`, the rules;
   `content/creature_spells.rs`, the data; #1102): a `combat = "caster"` type has a `spells`
   list (ids in `data/spells/`, in the order it prefers them; only a caster has one), and only

@@ -34,7 +34,10 @@ damage_type = "piercing"
 name = "bite"
 verb = "bites"
 to_hit = 17
-on_hit = [
-    { drain = "toughness", points = 3, chance = 15, check = "toughness", difficulty = 25 },
-    { status = "transfixed", chance = 25, severity = 3 },
+on_hit = [{ drain = "toughness", points = 3, chance = 15, check = "toughness", difficulty = 25 }]
+[creature.gaze]
+range = 6
+chance = 50
+riders = [
+    { status = "transfixed", chance = 100, severity = 3 },
 ]
