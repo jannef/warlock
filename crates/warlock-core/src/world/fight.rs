@@ -956,6 +956,8 @@ impl World {
                 self.big_hit_trigger((attacker, target), (kind, skills), blow, events);
                 self.after_blow(attacker, target, kind, (&blow, &made), events);
                 self.barbed(attacker, target, kind, events);
+                // A thief's hit may snatch from the player's pack (`snatch.rs`).
+                self.snatch(attacker, target, kind, events);
             }
         }
         // A familiar's touch is its master's hex (`familiar.rs`), on a hit that leaves it alive.

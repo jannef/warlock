@@ -466,12 +466,7 @@ impl World {
             .collect();
         let free: Vec<Pos> = (level.terrain.iter())
             .map(|(p, _)| p)
-            .filter(|p| {
-                level.is_walkable(&self.content, *p)
-                    && !level.traps.contains_key(p)
-                    && level.ice_at(*p).is_none()
-                    && !taken.contains(p)
-            })
+            .filter(|p| self.lands_on(*p) && !taken.contains(p))
             .collect();
         if free.is_empty() {
             return;
@@ -484,6 +479,21 @@ impl World {
         key.extend_from_slice(&at.y.to_le_bytes());
         let to = free[(fnv1a(&key) % free.len() as u64) as usize];
         self.teleport_to(victim, (from, to), events);
+    }
+
+    /// Whether a teleport may land on cell `p` of the current level, someone standing there
+    /// aside: walkable, with no trap and no ice. The blink (`blink.rs`) lands the same way.
+    pub(super) fn lands_on(&self, p: Pos) -> bool {
+        let level = self.state.current();
+        level.is_walkable(&self.content, p)
+            && !level.traps.contains_key(&p)
+            && level.ice_at(p).is_none()
+    }
+
+    /// Whether a teleport may land on cell `p` of the current level now: [`World::lands_on`],
+    /// with no one there.
+    pub(super) fn may_land(&self, p: Pos) -> bool {
+        self.lands_on(p) && self.state.actor_at(&self.state.current_level, p).is_none()
     }
 
     /// Moves `victim` from one cell to another, at once: no step, no tread.

@@ -13,6 +13,7 @@ use super::object::MAX_BONUS;
 use super::particles::ParticleEmitter;
 use super::status::{OnHit, OnHitSpec, StatusId};
 use super::summon::{Summon, SummonSpec};
+use super::theft::{Blinks, BlinksSpec, Steals, StealsSpec};
 use super::throw::{Throw, ThrowSpec};
 use crate::alignment::Alignment;
 use crate::color::Rgb;
@@ -239,6 +240,11 @@ pub(super) struct CreatureSpec {
     pub throw: Option<ThrowSpec>,
     /// Its summoning (spec §8 "Summoning"): the creatures it calls forth.
     pub summon: Option<SummonSpec>,
+    /// Its theft (docs/design/monster-dread.md §5.6): a hit that snatches from the player's pack.
+    pub steals: Option<StealsSpec>,
+    /// Its blink (docs/design/monster-dread.md §5.6): to the target's side when its path is
+    /// blocked.
+    pub blinks: Option<BlinksSpec>,
     /// Its natural armour: hide, shell, or scales.
     pub natural: Option<Hide>,
     /// Whether it passes through solid terrain, and its Defence inside it (spec §8
@@ -698,6 +704,8 @@ pub(super) struct Resolved {
     pub more_attacks: Vec<NaturalAttack>,
     pub breath: Option<Breath>,
     pub throw: Option<Throw>,
+    pub steals: Option<Steals>,
+    pub blinks: Option<Blinks>,
     pub weapon_skills: WeaponSkills,
     pub resist: Vec<(DamageTypeId, i32)>,
     pub immune: Vec<StatusId>,
@@ -751,6 +759,8 @@ impl CreatureSpec {
             throw: r.throw,
             summon: None,
             summon_spec: self.summon,
+            steals: r.steals,
+            blinks: r.blinks,
             natural: self.natural,
             incorporeal: self.incorporeal,
             vitals: self.vitals,
@@ -926,6 +936,14 @@ pub struct CreatureDef {
     pub summon: Option<Summon>,
     /// Its summoning as written, resolved by `Content::load_summons`.
     pub(super) summon_spec: Option<SummonSpec>,
+    /// Gameplay: its theft (docs/design/monster-dread.md §5.6, `world/snatch.rs`): a melee hit
+    /// on the player, with the cooldown off, may take a stack from their pack; `None`: it
+    /// steals nothing. Rules only (the wiki states it).
+    pub steals: Option<Steals>,
+    /// Gameplay: its blink (docs/design/monster-dread.md §5.6, `world/blink.rs`): with its path
+    /// to its target blocked, it moves to a free cell beside the target in its line of sight;
+    /// `None`: it walks. Rules only (the wiki states it).
+    pub blinks: Option<Blinks>,
     /// Gameplay: its natural armour, if any.
     pub natural: Option<Hide>,
     /// Gameplay: whether it passes through solid terrain and stands inside it, and its Defence

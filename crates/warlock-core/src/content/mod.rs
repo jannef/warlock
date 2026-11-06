@@ -161,6 +161,7 @@ mod talent;
 mod talent_alike;
 mod temper;
 mod terrain;
+mod theft;
 mod throw;
 mod trap;
 #[cfg(test)]
@@ -352,6 +353,7 @@ pub use temper::TemperRules;
 pub use terrain::{
     Breakable, Freeze, FreezeSpec, MAX_HARDNESS, MAX_HEIGHT, StairsDir, TerrainDef, TerrainId,
 };
+pub use theft::{Blinks, SMALL as SMALL_LOOT, Steals, Takes};
 pub use throw::{THROW_RANGES, Throw};
 pub use trap::{MAX_CHARGES, Trap, TrapAvoid, TrapDef, TrapEffect, TrapId, TrapNoise};
 pub use unique::{Power, UNIQUE, UniqueDef, Uniques};
@@ -1820,6 +1822,14 @@ impl Content {
                 .map(|b| b.resolve(self))
                 .transpose()
                 .map_err(|m| err(format!("creature `{}`: {m}", spec.id)))?;
+            let steals = (spec.steals.as_ref())
+                .map(|t| t.resolve(self))
+                .transpose()
+                .map_err(|m| err(format!("creature `{}`: {m}", spec.id)))?;
+            let blinks = (spec.blinks.as_ref())
+                .map(|b| b.resolve(self))
+                .transpose()
+                .map_err(|m| err(format!("creature `{}`: {m}", spec.id)))?;
             let throw = (spec.throw.clone())
                 .map(|t| {
                     let kinds = self.resolve_kinds(t.damage_type.as_ref())?;
@@ -1928,6 +1938,8 @@ impl Content {
                 more_attacks,
                 breath,
                 throw,
+                steals,
+                blinks,
                 weapon_skills,
                 resist,
                 immune,
