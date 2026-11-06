@@ -1,0 +1,19 @@
+# Vault: a rare find lying on a known lightning rune before an altar. The decision: disarm, eat
+# the bolt, or leave it.
+# The bolt is aimed down the aisle at whoever comes up it, and turns with the vault. Nothing else
+# is in the room: the trap is the guard. Its bolt does not scale and the find does, so it is
+# deadly on the first floors and a sting deep down.
+name = "The Reliquary"
+map = '''
+#########
+#B.....B#
+#..._...#
+#...R...#
+#.......#
+#.......#
+####+####
+'''
+
+[legend]
+"B" = "brazier"
+"R" = { terrain = "floor", loot = "rare", trap = "lightning_bolt", known = true, dir = "S" }

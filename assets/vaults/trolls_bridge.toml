@@ -1,0 +1,23 @@
+# Vault: a causeway over lava and the bridge-keeper at its end. The decision: fight on the
+# bridge, or shoot across the lava.
+# The causeway is one cell wide: no stepping aside and no flanking, and the keeper's one way to
+# the player is the bridge. The lava lights the hall, so the keeper sees the player come. The
+# keeper deepens with the floor: an orc, then an ogre, a troll, a giant.
+# Borrows: the troll under the bridge of the folk tale.
+name = "The Troll-bridge"
+danger = { from = 3 }
+map = '''
+#############
+#..LLLLLLL..#
+#..LLLLLLL.$#
++.........T$#
+#..LLLLLLL.$#
+#..LLLLLLL..#
+#############
+'''
+
+[legend]
+"L" = "lava"
+# One keeper on its one cell: the bridge is always kept.
+"T" = { terrain = "floor", monsters = { pool = ["orc", "ogre", "troll", "giant"] } }
+"$" = { terrain = "floor", loot = { pool = ["weapons", "armour"], grade = "magic" } }

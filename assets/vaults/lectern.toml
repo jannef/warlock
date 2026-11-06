@@ -1,0 +1,21 @@
+# Vault: a reading-room with scrolls and a wand on the desks and two casters at their study. The
+# decision: rush them, or shoot from the door.
+# Casters in a small room are fireballs in a box, and they are soft. The scrolls are not going
+# anywhere, and neither are they.
+name = "The Lectern"
+danger = { from = 4 }
+map = '''
+###########
+#SSS...SSS#
+#.s.....s.#
+#..c.w.c..#
+#.s.....c.#
+#.........#
+#####+#####
+'''
+
+[legend]
+"S" = "shelves"
+"s" = { terrain = "floor", loot = { pool = "scrolls" } }
+"w" = { terrain = "floor", loot = { pool = "wands" } }
+"c" = { terrain = "floor", monsters = { pool = "caster", count = 2 } }

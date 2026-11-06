@@ -1,0 +1,20 @@
+# Vault: an unlit chapel, spirits in the dark, jewellery by a cold altar. The decision: carry a
+# light and be seen, or go dark and see nothing.
+# It lays no light on purpose: the altar is the spent kind, which does not glow. Whoever carries
+# a light is seen by everything in the room; whoever does not sees nothing of what stands there.
+name = "The Dark Chapel"
+danger = { from = 2 }
+map = '''
+###########
+#p.......p#
+#.........#
+#.p.$A$.p.#
+#.........#
+#p.......p#
+#####+#####
+'''
+
+[legend]
+"A" = "spent_altar"
+"p" = { terrain = "floor", monsters = { pool = "spirit", count = 3 } }
+"$" = { terrain = "floor", loot = { pool = ["rings", "amulets"], grade = "magic" } }
