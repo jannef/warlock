@@ -211,22 +211,34 @@ impl World {
         let mut hits = self.on_hit_of(attacker, kind);
         hits.extend_from_slice(made);
         for hit in hits {
-            let lands = hit.chance >= 100 || self.state.rng.chance(u32::from(hit.chance));
-            if !lands {
-                continue;
+            self.rider(attacker, target, hit, events);
+        }
+    }
+
+    /// An `on_hit` entry `hit` of `attacker`'s falls on `target` by its chance (one draw of the
+    /// gameplay stream, below 100 only): a blow's riders, and a gaze's (`gaze.rs`).
+    pub(super) fn rider(
+        &mut self,
+        attacker: ActorId,
+        target: ActorId,
+        hit: OnHit,
+        events: &mut Vec<Event>,
+    ) {
+        let lands = hit.chance >= 100 || self.state.rng.chance(u32::from(hit.chance));
+        if !lands {
+            return;
+        }
+        match hit.what {
+            Affliction::Status { status, severity } => {
+                self.afflict(target, status, severity, Some(attacker), events);
             }
-            match hit.what {
-                Affliction::Status { status, severity } => {
-                    self.afflict(target, status, severity, Some(attacker), events);
-                }
-                Affliction::Hold { status, .. } => {
-                    self.afflict(target, status, 1, Some(attacker), events);
-                }
-                Affliction::Disease(disease) => {
-                    self.expose(target, disease, Some(attacker));
-                }
-                Affliction::Drain(drain) => self.drain(target, drain, Some(attacker), events),
+            Affliction::Hold { status, .. } => {
+                self.afflict(target, status, 1, Some(attacker), events);
             }
+            Affliction::Disease(disease) => {
+                self.expose(target, disease, Some(attacker));
+            }
+            Affliction::Drain(drain) => self.drain(target, drain, Some(attacker), events),
         }
     }
 
@@ -309,7 +321,9 @@ impl World {
             return 0;
         }
         // A disease that slows healing slows a quickened one too (`Effects::regen`).
-        let statuses = actor.effects.regen(&self.content);
+        // Its own pace (a troll's), which a slowing status still slows.
+        let innate = self.content.creature(actor.creature).regen;
+        let statuses = actor.effects.regen(&self.content, innate);
         let diseases = actor.diseases.regen(&self.content);
         let mut rate = u32::from(if diseases < 100 {
             statuses.min(diseases)
@@ -352,7 +366,9 @@ impl World {
             if dwelling {
                 self.dwell(id, events);
             }
+            let before = self.regenerating_hp(id);
             self.live(id, start, seconds, events);
+            self.say_wounds_close(id, before);
         }
     }
 

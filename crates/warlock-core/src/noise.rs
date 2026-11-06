@@ -101,6 +101,18 @@ pub enum SoundKind {
     Howl,
     /// A roar: a dragon's breath (spec §8 "Creature behavior": "Dragons").
     Roar,
+    /// A creature's cries (`world/aura.rs`): a buzzing (the chasme's drone).
+    Buzzing,
+    /// Giggling (the pixie, the nymph).
+    Giggle,
+    /// A hiss (the basilisk, the crocodile).
+    Hiss,
+    /// A rattle of bones (the charnel heap, the bone dragon).
+    Rattle,
+    /// A scream (the screaming skull, the vrock's screech).
+    Scream,
+    /// A wail (the banshee: her aura too).
+    Wail,
     /// A heartbeat: Sense the quick's, a living creature near (spec §8 "Spells"). No noise anyone
     /// makes: only the player hears one, and never its exact place.
     Heartbeat,
@@ -127,6 +139,12 @@ impl SoundKind {
             SoundKind::Voice => "voice",
             SoundKind::Howl => "howl",
             SoundKind::Roar => "roar",
+            SoundKind::Buzzing => "buzzing",
+            SoundKind::Giggle => "giggle",
+            SoundKind::Hiss => "hiss",
+            SoundKind::Rattle => "rattle",
+            SoundKind::Scream => "scream",
+            SoundKind::Wail => "wail",
             SoundKind::Heartbeat => "heartbeat",
             SoundKind::Bell => "bell",
             SoundKind::Explosion => "explosion",
@@ -148,6 +166,12 @@ impl SoundKind {
             SoundKind::Voice => "a voice",
             SoundKind::Howl => "a howl",
             SoundKind::Roar => "a roar",
+            SoundKind::Buzzing => "buzzing",
+            SoundKind::Giggle => "giggling",
+            SoundKind::Hiss => "a hiss",
+            SoundKind::Rattle => "a rattle",
+            SoundKind::Scream => "a scream",
+            SoundKind::Wail => "a wail",
             SoundKind::Heartbeat => "a heartbeat",
             SoundKind::Bell => "a bell ring",
             SoundKind::Explosion => "an explosion",
@@ -205,6 +229,9 @@ pub enum Act {
     Howl,
     /// Roars, where it stands: a dragon's breath (`world/breath.rs`).
     Roar,
+    /// Cries, where it stands: its type's idle `cry` of this kind (`world/aura.rs`), as loud as
+    /// the cry says.
+    Cry(SoundKind),
     /// Sings a song, where it stands (the bard's songs, `world/song.rs`): a voice.
     Sing,
     /// Calls an order to its allies, where it stands (spec §8 "Allies"): a voice, as loud as
@@ -312,7 +339,13 @@ pub fn noise(
     }
     if matches!(
         act,
-        Act::Mutter | Act::Cackle | Act::ThrowVoice(_) | Act::Howl | Act::Sing | Act::Order
+        Act::Mutter
+            | Act::Cackle
+            | Act::ThrowVoice(_)
+            | Act::Howl
+            | Act::Cry(_)
+            | Act::Sing
+            | Act::Order
     ) {
         return Some(plain);
     }
@@ -386,6 +419,11 @@ pub fn plain_noise(
         Act::ThrowVoice(at) => (SoundKind::Voice, at, u32::from(VOICE_NOISE)),
         Act::Howl => (SoundKind::Howl, actor.pos, u32::from(HOWL_NOISE)),
         Act::Roar => (SoundKind::Roar, actor.pos, u32::from(ROAR_NOISE)),
+        Act::Cry(kind) => {
+            let cry = content.creature(actor.creature).cry;
+            let loudness = cry.filter(|c| c.kind == kind).map_or(0, |c| c.loudness);
+            (kind, actor.pos, u32::from(loudness))
+        }
         Act::Sing => (SoundKind::Voice, actor.pos, u32::from(SONG_NOISE)),
         Act::Order => {
             let loudness = content.allies().map_or(VOICE_NOISE, |r| r.order_noise);

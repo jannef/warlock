@@ -2,6 +2,7 @@
 id = "horn"
 name = "horn"
 group = "bone"
+corrodes = "half"
 color = "#8c7a5b"
 weight = 50
 to_hit = 0

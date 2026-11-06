@@ -25,6 +25,7 @@ natural = { defence = 4, protection = 5, name = "dead flesh" }
 resist = { poison = 100 }
 on_eat = { message = "Grave-cold meat, and wild.", vomit = 80, harm = "1d4" }
 blood = "#2a2a38"
+cry = { kind = "howl", loudness = 150, every = 120 }
 [creature.attack]
 damage = "4d10"
 damage_type = "piercing"

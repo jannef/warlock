@@ -26,6 +26,13 @@ natural = { defence = 4, protection = 5, name = "hide" }
 resist = { fire = 75, cold = 25, electricity = 25, poison = 100 }
 corpse = false
 blood = "#2a0a1a"
+[creature.aura]
+status = "frightened"
+severity = 2
+radius = 3
+check = "willpower"
+difficulty = 19
+touch = "Terror rolls off {the}."
 [creature.attack]
 damage = "4d10"
 damage_type = "piercing"

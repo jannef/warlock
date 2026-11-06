@@ -20,6 +20,7 @@ hearing = 14
 weight = 500000
 stats = { strength = 30, dexterity = 13, toughness = 33, intelligence = 9, willpower = 16, presence = 7 }
 base_hp = 120
+regen = 400
 natural = { defence = 2, protection = 2, name = "hide" }
 resist = { fire = -50 }
 on_eat = { message = "Twice the troll, and twice as tough.", vomit = 50 }

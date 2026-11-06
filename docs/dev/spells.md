@@ -706,8 +706,9 @@ What an area spell does to the items lying in it (#1100; spec §8 "Spells", "Rui
   `xtask/src/wiki/spells.rs::ruin` (`generated/spell-ruin.md`, on the magic page).
 - **Hook**: `World::ruin_items` (`world/ruin.rs`), one line after the damage in each of the shared
   area functions of `world/spell.rs`: `cast_burst_at` (bursts: spells, scrolls, wands, a study
-  mishap), `cast_bolt` (lines; a birth sign's Fire breath too), `cast_cone` (cones and a dragon's
-  breath, `breath.rs`). `Caster::Actor` only: a trap's or a place's burst ruins nothing; a spell
+  mishap; through `cast_burst_reaching`, which a creature's burst calls directly with its own
+  `Reach`: its kind spared, no halving at the edge, `creature_burst.rs`), `cast_bolt` (lines; a
+  birth sign's Fire breath too), `cast_cone` (cones and a dragon's breath, `breath.rs`). `Caster::Actor` only: a trap's or a place's burst ruins nothing; a spell
   with no damage type returns at once.
 - **Spared**: a stack whose magic is a unique (`Magic::unique`), and `World::quest_objects`: every
   fixed quest's `hand_in` object (bring, deliver) until the quest is completed and not

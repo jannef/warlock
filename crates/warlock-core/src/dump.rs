@@ -370,8 +370,9 @@ fn perceived_glyph(view: &PerceptionView<'_>, layer: Layer, p: Pos) -> char {
 
 /// A heard sound in the `sound` layer: `f` footsteps, `o` a door opening, `c` a door closing,
 /// `x` fighting, `b` a bowstring, `m` chanting (magic), `k` banging (a door kicked), `d` digging,
-/// `v` a voice, `h` a howl, `q` a heartbeat, `a` an alarm bell, `e` an explosion, `t` a thunderclap; upper case
-/// when loud.
+/// `v` a voice, `h` a howl, `r` a roar, `z` buzzing, `g` giggling, `s` a hiss, `l` a rattle, `y` a
+/// scream, `w` a wail, `q` a heartbeat, `a` an alarm bell, `e` an explosion, `t` a thunderclap; upper
+/// case when loud.
 pub fn sound_char(sound: &PerceivedSound) -> char {
     let c = match sound.kind {
         SoundKind::Footsteps => 'f',
@@ -385,6 +386,12 @@ pub fn sound_char(sound: &PerceivedSound) -> char {
         SoundKind::Voice => 'v',
         SoundKind::Howl => 'h',
         SoundKind::Roar => 'r',
+        SoundKind::Buzzing => 'z',
+        SoundKind::Giggle => 'g',
+        SoundKind::Hiss => 's',
+        SoundKind::Rattle => 'l',
+        SoundKind::Scream => 'y',
+        SoundKind::Wail => 'w',
         SoundKind::Heartbeat => 'q',
         SoundKind::Bell => 'a',
         SoundKind::Explosion => 'e',
@@ -1853,7 +1860,8 @@ fn rows(width: i32, height: i32, glyph: impl Fn(Pos) -> char) -> Vec<String> {
 
 /// One-line summary used as the dump header; under the open sky it names the weather (and the
 /// weather coming, `then rain`, for a Weather-wise player), and it has the temperature where the
-/// player is (and `dazzled` while strong light dazzles them).
+/// player is (and `dazzled` while strong light dazzles them, `averted` while they avert their
+/// eyes from a gaze).
 fn summary(world: &World) -> String {
     let view = world.perception();
     // Spelled as in the JSON dump (`heavy_rain`).
@@ -1878,6 +1886,8 @@ fn summary(world: &World) -> String {
         .filter(|h| *h != Hunger::NotHungry)
         .map_or(String::new(), |h| format!(" hunger {}", h.id()));
     let dazzled = if view.dazzled() { " dazzled" } else { "" };
+    // Averted eyes (`world/avert.rs`), as the status bar shows them.
+    let averted = if view.averted() { " averted" } else { "" };
     // The allies with the player: on the level or in the retinue (spec §8 "Allies").
     let allies = match view.allies_with() {
         0 => String::new(),
@@ -1889,7 +1899,7 @@ fn summary(world: &World) -> String {
         format!(" encounter pending: {} ({})", e.name, choices.join(", "))
     });
     format!(
-        "turn {} time {} level {} viewer {} hp {hp}/{max} mp {mp}/{max_mp}{resources}{dead}{hunger}{dazzled}{allies}{encounter}{weather} \
+        "turn {} time {} level {} viewer {} hp {hp}/{max} mp {mp}/{max_mp}{resources}{dead}{hunger}{dazzled}{averted}{allies}{encounter}{weather} \
          temperature {temperature} hash {:016x}",
         world.turn(),
         world.time(),
@@ -2205,6 +2215,7 @@ pub fn json(world: &World, layers: &[Layer], include_state: bool) -> Value {
         "hunger": view.own_hunger(),
         "stance": view.own_stance().id(),
         "dazzled": view.dazzled(),
+        "averted": view.averted(),
         // The player's allies, wherever they are (spec §8 "Allies").
         "allies": (view.allies().iter())
             .map(|a| json!({

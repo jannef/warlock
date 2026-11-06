@@ -6,7 +6,9 @@ rules it implements are in spec/08e-blood-and-status.md. Keep it current with th
 **Three fields of buffs** (#1002, `world/buff_field_tests.rs`; the spell types design §7 entries
 24 to 26). `retaliates = { damage, damage_type }` (Fire cloak's `fire_cloaked`): `World::retaliate`
 (`world/gifts.rs`), one clause at the head of `barbed`, so a melee blow that took hit points; it
-goes through `spell_strikes` and `say_spell`, words by the damage type ("The fire burns the
+goes through `spell_strikes` and `say_spell`, words by the damage type, or for a physical type
+by the status's name (an innate `barbed_hide`: "The barbed hide stabs you."; #1128: a creature
+type's `innate` statuses, `world/aura.rs`, put back each turn and left out of the look line) ("The fire burns the
 kobold."), then `spell_type_lands` on a striker harmed; a kill pays the wearer, unlike the barbs.
 A draw for the dice, and one for the rule's chance; none without such a status. `blows = { damage,
 damage_type }` (Brand's `branded_blade`): `Effects::blows`, docs/dev/equipment.md. `wades_free`
@@ -45,8 +47,9 @@ skill's bandage, #132), `World::after_blow` (wounds by `combat::big_hit` and cri
 kinds the status's `wound.from` names, `Wound::caused_by(blow.kind)`: bleeding from slashing
 and piercing; then `on_hit`
 with one gameplay draw per chance below 100), `World::healing_rate` (the slowest of the statuses'
-and the showing diseases' `regen` while one is below 100, else the fastest, `Effects::regen`:
-Renewal's `renewing` 400, × resting for the player while `World::resting`, none for a Starving player, × a
+and the showing diseases' `regen` while one is below 100, else the fastest, `Effects::regen`,
+which counts the creature type's own `regen` (a troll's 400, #1131) among the statuses' paces, so
+Burning's and Corroded's `regen = 0` stop it: Renewal's `renewing` 400, × resting for the player while `World::resting`, none for a Starving player, × a
 special room's `regen`, × (100 + the regeneration affixes of what the actor wears and wields) %),
 and `World::pass_time` → `live`, called by `run_turn` for every scheduled actor as the clock
 moves (a creature with nothing to live through, `untouched_by`: whole, no statuses, diseases,
@@ -127,10 +130,20 @@ one degree with the ended effect's `by`, and calls `keep_hp_within_max` (now the
 `lasting_max_hp` and `max_hp`, so the hit points a raised Toughness allowed fall back as the
 raise ends, while a passing penalty still keeps them). A cooldown is a status with `eases` and no
 tick; the class abilities (I1–I4) give theirs with `afflict(player, status, 1, player)` and add
-`Unavailable::While(cooldown)` in `Ability::unavailable` while it lasts. Creature AI reads `blocks`
+`Unavailable::While(cooldown)` in `Ability::unavailable` while it lasts; a creature's gaze
+(`world/gaze.rs`) takes the `gaze` status as a summoning takes `summoning`, and its riders fall
+through `World::rider`, the one place an `on_hit` entry is drawn and applied (a blow's too).
+Averted (`world/avert.rs`) is no status: it is derived from the perception. Creature AI reads `blocks`
 for steps only: a creature a status of its blocks `step` (Held, Drowning grip's, #269) never
 steps or opens a door (`creature_steps`) and attacks its holder instead (`World::held_back`,
-`world/lucky.rs`). **Holds** (#431, `world/hold.rs`): a status with `hold` (`content::Hold`:
+`world/lucky.rs`). **Engulfing** (docs/design/monster-dread.md §5.7, #1129) is data on holds,
+no code: `engulfed` (a hold with `tick = 6`, `damage = 2`, blocking `step`, `shoot`, `throw`,
+`read`; the charnel heap, the greater and elder water elementals, the brimwolf), `swallowed`
+(the same at `damage = 4`; the nightworm), and `latched` (`tick = 12`, `damage = 1`, blocking
+`step` only; the giant leech, the canoloth's tongue); the hold's grip is the rider's
+`difficulty`, else 14, its turns `2d4`. A tick at n degrees comes n times as often, so the harm
+is heaviest as the hold begins and eases with it. A blow and a spell still go from inside.
+`world/split_tests.rs` checks the data, the tick, and the holder's death letting go. **Holds** (#431, `world/hold.rs`): a status with `hold` (`content::Hold`:
 `check`, `difficulty`, `turns`; parse checks `eases`, `stacking = "highest"`, `blocks` step, and
 `turns` within 1..=`max`) is held by its effect's `by`. `World::afflict` draws a hold's degrees
 from `turns` (`World::hold_turns`; the passed severity is ignored, so Drowning grip's

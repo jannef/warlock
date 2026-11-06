@@ -10,6 +10,9 @@ effects = [
     { kind = "no_penalty_to", stat = "willpower" },
     { kind = "stillness", name = "Stillness", statuses = [
         "held",
+        "engulfed",
+        "swallowed",
+        "latched",
         "pinned",
         "staggered",
         "stunned",

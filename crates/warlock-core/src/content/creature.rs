@@ -3,16 +3,21 @@
 use super::DamageTypeId;
 use super::anim::GlyphAnim;
 use super::animated::AnimatedDef;
+use super::aura::{Aura, AuraSpec, Cry, CrySpec};
 use super::breath::{Breath, BreathSpec};
+use super::burst::{BurstSpec, CreatureBurst};
 use super::damage_type::TypeNames;
 use super::disease::DiseaseId;
 use super::faction::FactionId;
+use super::gaze::{Gaze, GazeSpec};
 use super::gear::{Gear, GearLineSpec, GearSpec};
 use super::light::LightId;
 use super::object::MAX_BONUS;
 use super::particles::ParticleEmitter;
+use super::split::{DiesInto, DiesIntoSpec, Splits, SplitsSpec};
 use super::status::{OnHit, OnHitSpec, StatusId};
 use super::summon::{Summon, SummonSpec};
+use super::theft::{Blinks, BlinksSpec, Steals, StealsSpec};
 use super::throw::{Throw, ThrowSpec};
 use crate::alignment::Alignment;
 use crate::color::Rgb;
@@ -66,6 +71,34 @@ fn normal_speed() -> u32 {
 
 fn full_percent() -> u32 {
     100
+}
+
+fn full_regen() -> u16 {
+    100
+}
+
+/// The most a creature's `regen` may be, in percent of the normal pace.
+pub const MAX_REGEN: u16 = 1000;
+
+/// A creature's acid (`corrodes = { chance = 25, what = "armour" }`; spec §8 "Creature
+/// gimmicks", `world/corrode.rs`): the chance in percent (1 to 100) that a blow eats at gear,
+/// and whose.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct Corrodes {
+    pub chance: u8,
+    pub what: CorrodesWhat,
+}
+
+/// Whose gear a creature's acid eats.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum CorrodesWhat {
+    /// A hit of its that lands eats at a piece the target wears (its filth, the hezrou's).
+    Armour,
+    /// A blow that strikes it eats at the weapon that struck (its acid blood, the ember
+    /// beetle's).
+    Weapon,
 }
 
 fn first_level() -> u8 {
@@ -206,6 +239,10 @@ pub(super) struct CreatureSpec {
     /// Hit points beyond its Toughness (spec §8 "Combat").
     #[serde(default)]
     pub base_hp: u16,
+    /// How fast its wounds close, in percent of the normal pace (a status's `regen`; spec §8
+    /// "Healing"): 400 for a troll's; default 100. Burning and Corroded stop it.
+    #[serde(default = "full_regen")]
+    pub regen: u16,
     /// Mana beyond its mental stats' modifiers (spec §8 "Mana"); casters, later.
     #[serde(default)]
     pub mana: u16,
@@ -246,10 +283,30 @@ pub(super) struct CreatureSpec {
     pub attack: Option<NaturalAttacks>,
     /// Its breath (spec §8 "Creature behavior": "Dragons"): a `combat = "dragon"` type's.
     pub breath: Option<BreathSpec>,
+    /// Its gaze (spec §8 "Creature behavior": "Gazes"): a rider at sight, not at touch.
+    pub gaze: Option<GazeSpec>,
+    /// Its burst (the dread design §5.3): a vortex's on touch, an elemental's death throes.
+    pub burst: Option<BurstSpec>,
     /// Its throw (spec §8 "Ranged combat": "Creatures' throws"): a giant's boulders.
     pub throw: Option<ThrowSpec>,
     /// Its summoning (spec §8 "Summoning"): the creatures it calls forth.
     pub summon: Option<SummonSpec>,
+    /// Its aura (`content/aura.rs`): a status it gives every hostile near it now and then.
+    pub aura: Option<AuraSpec>,
+    /// The statuses it is made with and keeps (`content/aura.rs`): Fire-cloaked.
+    #[serde(default)]
+    pub innate: Vec<String>,
+    /// Its idle cry (`content/aura.rs`): a hiss, a wail, a howl.
+    pub cry: Option<CrySpec>,
+    /// Its splitting (docs/design/monster-dread.md §5.5 G5a): blows of these kinds cut it in two.
+    pub splits: Option<SplitsSpec>,
+    /// What crawls out of its corpse (docs/design/monster-dread.md §5.5 G5b).
+    pub dies_into: Option<DiesIntoSpec>,
+    /// Its theft (docs/design/monster-dread.md §5.6): a hit that snatches from the player's pack.
+    pub steals: Option<StealsSpec>,
+    /// Its blink (docs/design/monster-dread.md §5.6): to the target's side when its path is
+    /// blocked.
+    pub blinks: Option<BlinksSpec>,
     /// Its natural armour: hide, shell, or scales.
     pub natural: Option<Hide>,
     /// Whether it passes through solid terrain, and its Defence inside it (spec §8
@@ -264,6 +321,8 @@ pub(super) struct CreatureSpec {
     /// = 50 }`; 100 is immune, negative a vulnerability. Never its number; Knowledge tells it in words (#1030).
     #[serde(default)]
     pub resist: BTreeMap<String, i32>,
+    /// Its acid (spec §8 "Creature gimmicks"; `world/corrode.rs`): what of a foe's gear it eats.
+    pub corrodes: Option<Corrodes>,
     /// Whether it leaves a corpse when it dies (spec §8 "Hunger"; with `data/hunger.toml`).
     #[serde(default = "yes")]
     pub corpse: bool,
@@ -716,7 +775,12 @@ pub(super) struct Resolved {
     pub attack: Option<NaturalAttack>,
     pub more_attacks: Vec<NaturalAttack>,
     pub breath: Option<Breath>,
+    pub gaze: Option<Gaze>,
+    pub burst: Option<CreatureBurst>,
     pub throw: Option<Throw>,
+    pub presence: super::aura::Presence,
+    pub steals: Option<Steals>,
+    pub blinks: Option<Blinks>,
     pub invisible: Option<super::Invisible>,
     pub weapon_skills: WeaponSkills,
     pub resist: Vec<(DamageTypeId, i32)>,
@@ -760,6 +824,7 @@ impl CreatureSpec {
             stats: r.stats,
             skills: r.skills,
             base_hp: i32::from(self.base_hp),
+            regen: self.regen,
             base_mana: i32::from(self.mana),
             level: self.level,
             xp: self.xp,
@@ -772,13 +837,24 @@ impl CreatureSpec {
             attack: r.attack,
             more_attacks: r.more_attacks,
             breath: r.breath,
+            gaze: r.gaze,
+            burst: r.burst,
             throw: r.throw,
             summon: None,
             summon_spec: self.summon,
+            aura: r.presence.aura,
+            innate: r.presence.innate,
+            cry: r.presence.cry,
+            splits: None,
+            dies_into: None,
+            split_spec: (self.splits, self.dies_into),
+            steals: r.steals,
+            blinks: r.blinks,
             natural: self.natural,
             incorporeal: self.incorporeal,
             vitals: self.vitals,
             resist: r.resist,
+            corrodes: self.corrodes,
             corpse: self.corpse,
             on_eat: self.on_eat,
             blood: r.blood,
@@ -917,6 +993,9 @@ pub struct CreatureDef {
     /// Gameplay: hit points beyond its Toughness (spec §8 "Combat"); the player's come from the
     /// scenario instead.
     pub base_hp: i32,
+    /// Gameplay: how fast its wounds close, in percent of the normal pace (100; a troll's 400),
+    /// read with its statuses' paces ([`crate::status::Effects::regen`]).
+    pub regen: u16,
     /// Gameplay: mana beyond its mental stats' modifiers (spec §8 "Mana"); the player's come
     /// from their race and class (the scenario's without a character). Never shown.
     pub base_mana: i32,
@@ -954,6 +1033,14 @@ pub struct CreatureDef {
     /// type's: the cone of its element it breathes when the cooldown is off. Rules only (the
     /// wiki states it).
     pub breath: Option<Breath>,
+    /// Gameplay: its gaze (spec §8 "Creature behavior": "Gazes"): the riders a look gives a
+    /// hostile within its range that sees it, when the cooldown is off (`world/gaze.rs`).
+    /// Rules only (the wiki states it).
+    pub gaze: Option<Gaze>,
+    /// Gameplay: its burst (the dread design §5.3, `world/creature_burst.rs`): the burst of its
+    /// element it goes off in beside its target instead of attacking (a vortex), or where it
+    /// dies (death throes). Rules only (the wiki states it).
+    pub burst: Option<CreatureBurst>,
     /// Gameplay: its throw, a natural ranged attack with no ammunition (spec §8 "Ranged combat":
     /// "Creatures' throws"); `None`: it throws nothing. Rules only (the wiki states it).
     pub throw: Option<Throw>,
@@ -963,6 +1050,30 @@ pub struct CreatureDef {
     pub summon: Option<Summon>,
     /// Its summoning as written, resolved by `Content::load_summons`.
     pub(super) summon_spec: Option<SummonSpec>,
+    /// Gameplay: its aura (`world/aura.rs`), the status it gives the hostiles near it; `None`:
+    /// none. Rules only (the wiki states it).
+    pub aura: Option<Aura>,
+    /// Gameplay: the statuses it is made with and that are refreshed each turn it takes
+    /// (`world/aura.rs`); never shown in the look line.
+    pub innate: Vec<StatusId>,
+    /// Gameplay: its idle cry (`world/aura.rs`), a sound now and then; `None`: none.
+    pub cry: Option<Cry>,
+    /// Gameplay: its splitting (`content/split.rs`, `world/split.rs`): a blow of a listed kind
+    /// that leaves it with at least twice `least` hit points cuts it in two; `None`: never.
+    pub splits: Option<Splits>,
+    /// Gameplay: what crawls out of its corpse when it dies (`content/split.rs`); `None`:
+    /// nothing.
+    pub dies_into: Option<DiesInto>,
+    /// Its `splits` and `dies_into` as written, resolved by `Content::load_splits`.
+    pub(super) split_spec: (Option<SplitsSpec>, Option<DiesIntoSpec>),
+    /// Gameplay: its theft (docs/design/monster-dread.md §5.6, `world/snatch.rs`): a melee hit
+    /// on the player, with the cooldown off, may take a stack from their pack; `None`: it
+    /// steals nothing. Rules only (the wiki states it).
+    pub steals: Option<Steals>,
+    /// Gameplay: its blink (docs/design/monster-dread.md §5.6, `world/blink.rs`): with its path
+    /// to its target blocked, it moves to a free cell beside the target in its line of sight;
+    /// `None`: it walks. Rules only (the wiki states it).
+    pub blinks: Option<Blinks>,
     /// Gameplay: its natural armour, if any.
     pub natural: Option<Hide>,
     /// Gameplay: whether it passes through solid terrain and stands inside it, and its Defence
@@ -977,6 +1088,8 @@ pub struct CreatureDef {
     /// immune, negative a vulnerability. The player learns it by play, or in words by Knowledge
     /// (`world/knowledge.rs`).
     pub resist: Vec<(DamageTypeId, i32)>,
+    /// Gameplay: its acid, eating at a foe's gear (`world/corrode.rs`).
+    pub corrodes: Option<Corrodes>,
     /// Gameplay: whether it leaves a corpse when it dies (spec §8 "Hunger"; only with
     /// `data/hunger.toml`, which says how corpses rot and feed).
     pub corpse: bool,

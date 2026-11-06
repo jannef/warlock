@@ -93,9 +93,14 @@ mod animated;
 mod appraise;
 mod ascetic;
 mod attacks;
+mod aura;
+#[cfg(test)]
+mod aura_tests;
+mod avert;
 mod background;
 mod beast_friend;
 mod bleed;
+mod blink;
 mod bond;
 mod boons;
 mod breath;
@@ -114,8 +119,10 @@ mod companion;
 mod concentration;
 mod consecrate;
 mod corpse_spell;
+mod corrode;
 mod court;
 mod creation;
+mod creature_burst;
 mod creature_cast;
 mod curse;
 mod dark_face;
@@ -152,6 +159,7 @@ mod forage;
 mod free_blow;
 mod frenzy;
 pub(crate) mod freshness;
+mod gaze;
 mod gifts;
 mod glare;
 mod guild;
@@ -200,6 +208,7 @@ mod racial;
 mod rage;
 mod read;
 mod reflect;
+mod regen;
 mod resource;
 mod rest;
 mod restore;
@@ -225,6 +234,7 @@ mod siphon;
 mod skill_roll;
 mod slip;
 mod smite;
+mod snatch;
 mod song;
 mod spawn;
 mod spell;
@@ -236,6 +246,7 @@ mod spell_rung;
 mod spell_type;
 mod spell_words;
 mod spirit_weapon;
+mod split;
 mod stair_followers;
 mod stars;
 mod stat_deeds;
@@ -934,6 +945,7 @@ impl World {
             faction_override: None,
             grade: 0,
             summoner: None,
+            split_from: None,
             ally: None,
             risen: None,
             alignment: content.alignment().map(|_| alignment),
@@ -1672,11 +1684,15 @@ mod concentration_tests;
 #[cfg(test)]
 mod corpse_spell_tests;
 #[cfg(test)]
+mod corrode_tests;
+#[cfg(test)]
 mod cost_tests;
 #[cfg(test)]
 mod court_tests;
 #[cfg(test)]
 mod creation_tests;
+#[cfg(test)]
+mod creature_burst_tests;
 #[cfg(test)]
 mod creature_cast_tests;
 #[cfg(test)]
@@ -1751,6 +1767,8 @@ mod free_blow_tests;
 mod frenzy_tests;
 #[cfg(test)]
 mod freshness_tests;
+#[cfg(test)]
+mod gaze_tests;
 #[cfg(test)]
 mod gear_tests;
 #[cfg(test)]
@@ -1956,6 +1974,8 @@ mod spell_type_tests;
 #[cfg(test)]
 mod spirit_weapon_tests;
 #[cfg(test)]
+mod split_tests;
+#[cfg(test)]
 mod spring_tests;
 #[cfg(test)]
 mod stair_followers_tests;
@@ -2013,6 +2033,8 @@ mod tame_tests;
 mod temper_tests;
 #[cfg(test)]
 mod tests;
+#[cfg(test)]
+mod theft_tests;
 #[cfg(test)]
 mod time_tests;
 #[cfg(test)]

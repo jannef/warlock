@@ -11,11 +11,23 @@ and the ogre), tag `troll` on every troll (the marsh troll stays `marsh`, the ro
 of "the goblins' ogres and trolls" is now of the `troll` faction, so the spec's duergar stance
 (hostile to the goblins) reads as hostile to the trolls too.
 
-A troll's regeneration is its Toughness: there is no per-creature healing rate, so the tribe's
-formulas are the undead roster's (#383) with Toughness 4 higher, and fire hurts all but the fire
-troll (`resist fire` negative). `content/troll_roster_tests.rs` checks every living troll
-(`ROLES`: brute, standard, quick, caster) against the formulas (XP guideline, ±35 % of max HP and
-dice average) and the span's ends.
+A troll heals by its Toughness, so the tribe's formulas are the undead roster's (#383) with
+Toughness 4 higher, and fire hurts all but the fire troll (`resist fire` negative).
+`content/troll_roster_tests.rs` checks every living troll (`ROLES`: brute, standard, quick,
+caster) against the formulas (XP guideline, ±35 % of max HP and dice average) and the span's
+ends.
+
+**Regeneration** (#1131, the dread design §5.9): the brutes carry `regen = 400` (four times the
+pace, `world/regen.rs`; Burning and Corroded stop it, `regen = 0` on both statuses), and only
+they: the owner's rule ("regenerating sack of potatoes is just free weapon marks!"), pinned by
+`only_a_brute_regenerates` (a type with `regen` above 100 is a brute of `ROLES` or `dread`) and by
+`the_trolls_keep_to_the_tribe` (a troll regenerates if and only if it is a brute). So the marsh
+troll 9 became a brute (`2d8`, `base_hp` 36), and so did the troll 13 (`3d6`, `base_hp` 52) and
+the troll chieftain 37 (its `4d8` already a brute's; `base_hp` 120), the design's "trolls proper";
+the hill, ice, two-headed, and elder trolls were brutes already. The forest troll (quick), the
+troll shaman (a caster that heals itself), the stone troll (stone), and the fire troll (it would
+burn its own wounds shut) do not regenerate, nor does the rotting troll (undead: its rot is its
+trait).
 
 ## Roster
 
@@ -33,7 +45,7 @@ stagger). The marsh troll stays a marsh thing and the rotting troll undead; both
 `troll` tag.
 
 The two-headed troll is the first type with an `attack_cost` (700; `world/cost_tests.rs` names
-it). Only the hill troll joined a population (Fyrdelf, beside the troll). Follow-ups: fire or
-acid stopping a troll's healing, the stone troll and sunlight, a `large` size.
+it). Only the hill troll joined a population (Fyrdelf, beside the troll). Follow-ups: the stone
+troll and sunlight, a `large` size.
 
 Spells (#1102, docs/dev/creatures.md "Casters"; in the order each prefers them): the troll shaman `cure_wounds`, `rime`, `lightning_bolt` (mana 60).

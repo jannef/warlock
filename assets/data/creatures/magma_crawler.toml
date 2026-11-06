@@ -33,3 +33,14 @@ damage_type = "fire"
 name = "touch"
 verb = "sears"
 to_hit = 3
+on_hit = [{ status = "burning", chance = 25, severity = 1 }]
+# Death throes (the dread design §5.3): it bursts where it dies.
+[creature.burst]
+damage = "2d8"
+damage_type = "fire"
+radius = 1
+when = "dies"
+effect = "blaze"
+noun = "magma"
+verb = "bursts in a spray of magma"
+rider = [{ status = "burning", severity = 1, chance = 50 }]

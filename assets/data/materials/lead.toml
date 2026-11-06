@@ -3,6 +3,7 @@
 [[material]]
 id = "lead"
 name = "lead"
+corrodes = true
 color = "#7c8088"
 weight = 144
 value = 20

@@ -32,5 +32,15 @@ name = "wave"
 verb = "slams"
 on_hit = [
     { status = "sluggish", chance = 20, severity = 1 },
-    { status = "held", chance = 10, difficulty = 20 },
+    { status = "engulfed", chance = 10, difficulty = 20 },
 ]
+# Death throes (the dread design §5.3): it bursts where it dies.
+[creature.burst]
+damage = "7d6"
+damage_type = "bludgeoning"
+radius = 2
+when = "dies"
+effect = "shatter"
+noun = "wave"
+verb = "breaks in a crashing wave"
+douses = true

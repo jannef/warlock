@@ -698,6 +698,7 @@ pub(super) fn make_creature(
             .or_else(|| super::court::join(content, state.seed, actor_id, spawn.creature)),
         grade: crate::grade::draw(content, state.seed, actor_id, spawn),
         summoner: None,
+        split_from: None,
         ally: None,
         risen: None,
         alignment: None,
@@ -726,6 +727,8 @@ pub(super) fn make_creature(
             .effects
             .add(status, content.status(status), degrees, None);
     }
+    // What its kind always has (`aura.rs`): Fire-cloaked, a devil's barbs.
+    super::aura::wear_innate(&mut actor, content);
     // A mimic is placed disguised as a chest (`mimic.rs`).
     if let Some(disguise) = content.disguise_status().filter(|_| def.mimic.is_some()) {
         actor

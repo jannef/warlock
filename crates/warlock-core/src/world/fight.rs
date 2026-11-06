@@ -663,7 +663,7 @@ impl World {
 
     /// The Defence of actor `id`, its burden capping its Dexterity (spec §8 "Burden"), and the
     /// wall around an incorporeal creature inside one adding its Wall bonus
-    /// (`incorporeal.rs`).
+    /// (`incorporeal.rs`), and averted eyes halving the player's Dodge (`avert.rs`).
     pub(crate) fn defence_of(&self, id: ActorId) -> combat::Defence {
         let actor = &self.state.actors[&id];
         let defence = actor.defence(
@@ -671,7 +671,7 @@ impl World {
             self.state.load(&self.content, actor).penalty(),
             self.state.race_of(&self.content, actor),
         );
-        self.wall_defence(id, defence)
+        self.averted_defence(id, self.wall_defence(id, defence))
     }
 
     /// The Protection of actor `id` (spec §8 "Combat"): what it wears and its hide soak off
@@ -813,6 +813,8 @@ impl World {
             return None;
         };
         let profile = profile.map(|p| self.glared(attacker, p));
+        // Averted eyes (`avert.rs`): a fight half-blind.
+        let profile = profile.map(|p| self.averted_blow(attacker, p));
         // Relentless (spec §8 "Birth sign"): a streak of blows at one creature.
         let profile = profile.map(|p| self.relentless(attacker, target, kind, p));
         // Favoured prey and a sneak attack (spec §8 "Class abilities").
@@ -959,11 +961,17 @@ impl World {
                 self.big_hit_trigger((attacker, target), (kind, skills), blow, events);
                 self.after_blow(attacker, target, kind, (&blow, &made), events);
                 self.barbed(attacker, target, kind, events);
+                // A thing cut in two is two things (`split.rs`).
+                self.split(target, blow.kind);
+                // A thief's hit may snatch from the player's pack (`snatch.rs`).
+                self.snatch(attacker, target, kind, events);
             }
         }
         // A familiar's touch is its master's hex (`familiar.rs`), on a hit that leaves it alive.
         if blow.is_some_and(|b| b.strike.is_hit()) {
             self.familiar_touch(attacker, target, kind, events);
+            // Acid on gear, either way round (`corrode.rs`).
+            self.corrode((attacker, target), (kind, with));
         }
         // Drowning grip (spec §8 "Birth sign"): a hit holds, a miss or another target lets go.
         self.grip(attacker, target, kind, blow.as_ref(), events);
@@ -1156,7 +1164,9 @@ impl World {
         when: GameTime,
         events: &mut Vec<Event>,
     ) {
-        let Some((at, creature)) = self.state.actors.get(&id).map(|a| (a.pos, a.creature)) else {
+        let Some((at, creature, level)) =
+            (self.state.actors.get(&id)).map(|a| (a.pos, a.creature, a.level.clone()))
+        else {
             return;
         };
         events.push(Event::Died { actor: id, at, of });
@@ -1187,11 +1197,15 @@ impl World {
             }
             if credited {
                 let percent = master.map_or(100, |_| self.ally_share());
+                // A half, or what crawled out of a corpse, pays less and counts for no quest.
+                let (percent, counts) = self.offspring_share(id, percent);
                 self.earn_kill_at(creature, percent);
                 // One that followed the player counts where it came from (`stair_followers.rs`).
                 let home = self.actor_or_fallen(id).and_then(|a| a.home.clone());
                 let level = home.unwrap_or_else(|| self.state.current_level.clone());
-                self.tally_kill(creature, &level);
+                if counts {
+                    self.tally_kill(creature, &level);
+                }
                 self.judge_kill(id);
                 if master.is_some() && self.trains(Use::Handle) {
                     self.train(Use::Handle);
@@ -1199,8 +1213,13 @@ impl World {
             }
             // Malison: a death under the player's hex pays them mana (`malison.rs`).
             self.hex_tithe(id);
+            // What crawls out of its corpse (`split.rs`).
+            let crawled = self.dies_into(id);
             let lines = self.creature_dies(id, credited);
-            self.news.splice(earned..earned, lines);
+            self.news
+                .splice(earned..earned, lines.into_iter().chain(crawled));
+            // Death throes go off where it died (`creature_burst.rs`), after what crawled out.
+            self.death_throes(id, (at, &level), creature, events);
         }
     }
 

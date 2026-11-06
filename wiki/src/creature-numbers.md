@@ -62,12 +62,56 @@ on free cells around it that it can see, nearest first. How many come is rolled 
 are real creatures of the summoner's side that fight, carry gear, drop it where they die, and give
 their full experience when you kill them. Killing the summoner does not send them away.
 
-Each summoning costs the summoner [mana](mana.md#how-much) and a while before it can summon again; it never has more
-of its summoned alive at once than the last column says. Its mana comes back as anyone's does
+Each summoning costs the summoner [mana](mana.md#how-much) (a few, the breeders, pay none) and a while before it can summon again; it never has more
+of its summoned alive at once than the last column says. A breeder calls forth its own brood
+while it fights, the [wormlord](creatures.md#creature-wormlord) its grave worms: kill it first,
+or the fight gets worse the longer it lasts. Its mana comes back as anyone's does
 (see [Mana](mana.md)), so a summoner that has spent itself summons again only much later. A
 summoner that cannot cast ([silenced](status-effects.md#status-silenced)) cannot summon. You cannot summon.
 
 {{#include generated/creature-summons.md}}
+
+### Gazes
+
+Some creatures harm with a look: a [vampire](creatures.md#creature-vampire)'s stare holds you
+[transfixed](status-effects.md#status-transfixed), a [sea hag](creatures.md#creature-sea-hag)'s
+sends you [frightened](status-effects.md#status-frightened) and [drains](stats.md#drained-stats)
+your Toughness, a [spectre](creatures.md#creature-spectre)'s drains your will. A gazer that sees
+you within its reach looks you in the eye before it does anything else but summon, and takes as
+long as a spell. The eyes must meet both ways: it needs a
+[line of sight](sight.md#line-of-sight) to you, and you must see it. A gazer in a cell too dark
+for your eyes, behind a wall or a closed [door](doors.md), cannot catch your eye: you only feel
+its cold stare, and it has wasted its look. Met, the gaze catches your eye at the chance below,
+and then does what its row says, each by its own chance (a drain is still resisted by its
+check). Either way it must wait before it looks again. A creature with no
+[vitals](combat.md#criticals) has no eyes to meet, and is never gazed at; the gazers look at
+your allies as they look at you.
+
+A gaze marked **forced** in the table makes you **avert your eyes** by reflex while you see its
+gazer: no choice, and nothing to switch. Averted, you fight half-blind: −4 to
+[hit](combat.md#hitting), your [Dodge](combat.md#defence) halved, and no
+[free blows](combat.md#free-blows). Its gaze still finds a glance you cannot help, at the chance
+in that column. Darkness, a wall, or a door between you ends the averting as it ends the gaze.
+
+{{#include generated/creature-gazes.md}}
+### Splitting and dying into
+
+A blow of a kind a creature **splits** under (the [charnel heap](creatures.md#creature-charnel-heap)'s: a blade's
+[slashing](damage-types.md#damage-slashing) and [piercing](damage-types.md#damage-piercing)) that leaves it alive
+with at least twice the hit points in the third column cuts it in two: it keeps the greater
+half of what it has left, and a second one of it, with the other half and nothing it carried,
+stands on the nearest free cell beside it, of its side and hunting what it hunted. With no free
+cell beside it, it does not split. Blunt blows, fire, acid, and every other kind leave it whole,
+and below twice that floor it dies like anything. A half you kill gives a **quarter** of the
+creature's experience (an ally's kill a quarter of the ally's share), and no
+[quest](quests.md) counts it.
+
+A creature that **dies into** something lets it out of its corpse as it dies: so many of what
+the table says, each drawn at random, on free cells it could see within that many cells, of the
+dead one's side. Each gives a **tenth** of its experience when killed, and no quest counts them
+either. Look mode tells such a creature by its *writhing*.
+
+{{#include generated/creature-splits.md}}
 
 ### Breath
 
@@ -87,6 +131,60 @@ turn and rolled on its own (the table above, one row each). Unseen, a dragon's b
 as a roar.
 
 {{#include generated/creature-breaths.md}}
+
+### Bursts
+
+Some creatures go off in a burst of their element. The motes are **vortices**: a
+[vortex](creatures.md#creature-ember-mote) has no blow at all, and once it is beside its target it
+bursts instead, and is gone. Killed before it gets there, it goes out quietly, so shoot or throw
+at one as it comes, or close a door on it (a mote opens none). The elementals but the earth line,
+the [burning skull](creatures.md#creature-burning-skull), the
+[magma crawler](creatures.md#creature-magma-crawler), and the [balor](creatures.md#creature-balor)
+have **death throes**: they burst where they die, however they die, so an elemental is best killed
+from a cell or more away. The earth elementals do not burst; they hurl stones at what is not
+beside them, as the giants do (the throws above), and pound what is.
+
+A burst is centred on the creature's own cell and reaches everyone within its radius in its
+line, but creatures of its own kind: one roll of its damage strikes each of them in full, with no
+roll [to hit](combat.md#hitting) and no halving at the edge;
+[Evasion](talents.md#talent-evasion) halves it and
+[resistance](damage-types.md#armour-and-resistance) takes its share. It strikes your
+[allies](allies.md) and other creatures as readily as you. It does to the floor what an area
+[spell](magic.md#what-lies-in-its-way) of its element does, so the scrolls under a dying fire elemental may burn,
+and its element does to the cells what such a spell's burst does (fire left burning, water
+frozen). The spell types' riders do not come with it; its own do, by the chance below, on those it
+harmed. A water elemental's wave puts out the [burning](status-effects.md#status-burning) of
+everyone it reaches and the fires there; an air elemental's gust blows what lies loose on its
+cells a cell farther out. The dice of a death throe are half of what a damage spell of the
+creature's level rolls, (2 + level ÷ 8)d6, rounded down. Unseen, a burst is heard as an
+explosion.
+
+{{#include generated/creature-bursts.md}}
+### Thieves
+
+Some creatures pick your pack as they fight you: the [pixie](creatures.md#creature-pixie), the
+[imp](creatures.md#creature-imp), the [succubus](creatures.md#creature-succubus) and the
+[incubus](creatures.md#creature-incubus) take only what is small (coins, gems, potions, rings, and
+scrolls), the [nymph](creatures.md#creature-nymph) anything. Each time one of their blows
+[hits](combat.md#hitting) you up close and leaves you alive, the chance below decides whether it
+also takes one whole stack of what you carry, picked at random among those it may take. Beside
+you, with its theft ready, a thief that casts spells strikes instead, to rob you. It never
+takes what you wear or wield, and it never robs anyone but you. Then it steals nothing more until
+the time below has passed. It does not run: it fights on, with your things in its pack, and they
+fall where it dies, as anything a creature carries does. The message log names what it took, so
+you know what to look for. Unseen, "Something" snatches it.
+
+{{#include generated/creature-thieves.md}}
+
+### Blinkers
+
+The [blink dog](creatures.md#creature-blink-dog) steps through nothing. When its way to you is
+blocked (a doorway held, a corridor full of its fellows, a door it cannot open) it is suddenly
+beside you, on a free cell next to you within its reach that it can see; then it runs on its
+paws until the time below has passed. It never blinks away. It blinks only to where it sees, so
+a closed door between you is still a door.
+
+{{#include generated/creature-blinks.md}}
 
 ### The unseen
 
@@ -128,6 +226,27 @@ turns its rays and bolts back at it, as it turns anyone's. Casters up to level 1
 weakest spells and are very rare. Unseen, a caster is heard chanting.
 
 {{#include generated/creature-spells.md}}
+
+### Auras and cries
+
+Some creatures carry something about them. An **aura** touches every foe within its reach on
+the creature's turn, then not again until its time below has passed: one in its line of sight
+(no light needed: a chill comes in the dark), or, a heard aura, anyone within the reach who hears
+a voice as loud as the one given, through doors and round corners by the rules of
+[hearing](hearing.md). Each foe it reaches makes the check in the "kept off by" column (2d12 plus
+the stat's modifier against the number, as any [check](stats.md)), or suffers the status's
+degrees, caused by the creature; a [resistance](damage-types.md#armour-and-resistance) to the
+type named takes its share of them, and an [immunity](status-effects.md) keeps it off. The first
+touch you suffer anew names its cause ("A chill comes off the wraith."). Distance is the
+answer: the reach is short, so shoot it.
+
+What a creature **always has** comes back every turn it takes, and is never shown when you look
+at it: a fire salamander is always [cloaked in flame](status-effects.md#status-fire-cloaked), and
+whoever strikes it burns. A **cry** is a sound it makes now and then where it stands, on a turn it
+does not fight (a chance of 6 in the seconds given each turn), heard by the rules of
+[hearing](hearing.md) as any sound is: the hound heard before it is seen.
+
+{{#include generated/creature-auras.md}}
 
 ## Surprise
 

@@ -28,4 +28,7 @@ damage_type = "piercing"
 name = "sucker"
 verb = "latches onto"
 to_hit = 1
-on_hit = [{ status = "bleeding", chance = 40, severity = 1 }]
+on_hit = [
+    { status = "bleeding", chance = 40, severity = 1 },
+    { status = "latched", chance = 25, difficulty = 10 },
+]

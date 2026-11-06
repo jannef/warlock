@@ -452,14 +452,26 @@ fn the_attacks_read_the_dice_as_they_were_worked() {
 }
 
 #[test]
-fn a_damaged_item_fights_and_protects_as_its_base_does() {
+fn a_damaged_item_is_a_point_worse_than_its_base_until_mended() {
     let mut w = world(false);
     let c = w.content.clone();
     give(&mut w, "long_sword");
     let plain = Numbers::of(first(&w), &c);
     set_worked(&mut w, Vec::new(), 3, true);
+    assert_ne!(Numbers::of(first(&w), &c), plain);
+    // A weapon's damage; armour's Protection.
+    let mods = Mods::local(first(&w), &c);
+    assert_eq!((mods.get(Effect::Damage), mods.get(Effect::ToHit)), (-1, 0));
+    set_worked(&mut w, Vec::new(), 3, false);
     assert_eq!(Numbers::of(first(&w), &c), plain);
-    assert!(Mods::local(first(&w), &c).is_empty());
+    let mut w = world(false);
+    give(&mut w, "chain_mail");
+    set_worked(&mut w, Vec::new(), 1, true);
+    let mods = Mods::local(first(&w), &c);
+    assert_eq!(
+        (mods.get(Effect::Protection), mods.get(Effect::Armour)),
+        (-1, 0)
+    );
 }
 
 #[test]

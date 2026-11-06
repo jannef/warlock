@@ -1,7 +1,7 @@
 # The undead roster (#383, batch 3). A corpse that green worms live in and move: they wriggle
 # from its flesh into the wounds its fists make, and burrow inward. Caught, burrowing worms are
-# quick and may kill; a temple's cure, or a root that cures disease, ends them. Not yet in any
-# dungeon's population.
+# quick and may kill; a temple's cure, or a root that cures disease, ends them. Killed, its worms
+# crawl out of it (`dies_into`). Not yet in any dungeon's population.
 [[creature]]
 id = "wormhost"
 level = 26
@@ -23,6 +23,7 @@ stats = { strength = 21, dexterity = 16, toughness = 22, intelligence = 2, willp
 base_hp = 65
 natural = { defence = 1, protection = 2, name = "dead flesh" }
 resist = { poison = 100 }
+dies_into = { creatures = ["grave_worm"], count = "2d4", spread = 1 }
 on_eat = { message = "It is still moving inside.", vomit = 90, harm = "1d6" }
 blood = "#3a4020"
 [creature.attack]

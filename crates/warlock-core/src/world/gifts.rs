@@ -242,10 +242,13 @@ impl World {
             return;
         };
         let from = me.pos;
-        let riders: Vec<Rider> = (me.effects.iter())
-            .filter_map(|e| content.status(e.status).retaliates)
+        let riders: Vec<(Rider, &str)> = (me.effects.iter())
+            .filter_map(|e| {
+                let def = content.status(e.status);
+                def.retaliates.map(|r| (r, def.name.as_str()))
+            })
             .collect();
-        for rider in riders {
+        for (rider, status) in riders {
             if !self.state.actors.contains_key(&attacker) || self.state.death.is_some() {
                 return;
             }
@@ -262,8 +265,14 @@ impl World {
                     }
                 )
             });
+            // Fire burns ("The fire burns you."); a physical kind strikes by the status's name
+            // (an innate Barbed hide: "The barbed hide stabs you.").
             let def = content.damage_type(rider.kind);
-            self.say_spell((&def.name, &def.verb), made, events);
+            let noun = match def.physical {
+                true => status.to_lowercase(),
+                false => def.name.clone(),
+            };
+            self.say_spell((&noun, &def.verb), made, events);
             if harmed {
                 self.spell_type_lands(target, Some(rider.kind), &[attacker], events);
             }

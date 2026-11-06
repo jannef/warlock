@@ -20,16 +20,21 @@ types with an attack cost. Only the dretch and the quasit are in a population (F
 rest wait for deep places.
 
 Creatures (what each one is): in Fyrdelf's population, the dretch 8 (small, slow, filthy claws
-that give filth fever) and the quasit 12 (small, quick, claws that poison and weaken). In no
+that give filth fever and eat at armour, `corrodes` 10, #1131) and the quasit 12 (small, quick, claws that poison and weaken). In no
 population yet, waiting for deep places: the balgura 24 (a savage ape, a brute on quick feet),
 the chasme 28 (a giant fly whose drone transfixes), the hezrou 30 (a hulking toad whose stench
-sickens: claws that poison), the vrock 34 (a vulture whose screech frightens), the marilith 40
+sickens: claws that poison, and whose filth eats at armour, `corrodes` 25, #1131), the vrock 34 (a vulture whose screech frightens), the marilith 40
 (six blades, striking twice as often), the glabrezu 44 (pincers that hold fast), the nalfeshnee 50
 (a winged boar whose bite fills with horror), and the balor 62 (wreathed in fire and lit by it,
 immune to fire, a great sword, often magic, struck faster than one blow a turn, and a flaming whip
 that holds when it has no sword). Demons are evil, have darkvision, are immune to poison, resist
 fire (the balor is immune), and from level 24 resist cold and electricity a little; no corpse; dark
 ichor for blood.
+
+The balor bursts when it dies (the dread design §5.3, #1127: `[creature.burst]` `when =
+"dies"`, `8d12` fire, radius 2, 50 % `burning`; `world/creature_burst.rs`), and is made with its Fire cloak
+(innate, #1128, below).
+Presence (#1128, `world/aura.rs`): the hezrou's stench (`poisoned`, radius 2, Toughness 16, every 30 s); the chasme's drone (`drowsy`, heard, radius 3, loudness 50, Willpower 16, every 18 s, a buzzing cry); fear auras on the vrock (radius 2, 17, a scream cry for its screech) and the nalfeshnee (radius 3, 19); the balor innate `fire_cloaked` (its burst is D3's). `content::aura_roster_tests` lists every row.
 
 The quasit (#1132, docs/dev/creatures.md "The unseen"): `[creature.invisible] cooldown =
 300`, it stings and is gone from sight, not from the room; its poison kept.

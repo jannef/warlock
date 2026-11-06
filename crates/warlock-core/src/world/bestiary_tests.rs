@@ -341,7 +341,8 @@ fn the_roster_spirits_pass_through_walls_and_the_drainers_drain() {
     for (id, stat, check, difficulty, want) in [
         ("shadow", Stat::Strength, Stat::Willpower, 13, 10),
         ("wraith", Stat::Toughness, Stat::Toughness, 14, 10),
-        ("spectre", Stat::Willpower, Stat::Willpower, 14, 10),
+        // The spectre's rides its gaze (#1125): the gaze's chance.
+        ("spectre", Stat::Willpower, Stat::Willpower, 14, 40),
         ("vampire_spawn", Stat::Toughness, Stat::Toughness, 15, 10),
         (
             "gibbering_shade",
@@ -366,7 +367,13 @@ fn the_roster_spirits_pass_through_walls_and_the_drainers_drain() {
             Affliction::Drain(d) => Some((d, h.chance)),
             _ => None,
         });
-        let (drain, chance) = drain.unwrap_or_else(|| panic!("{id}: a drain"));
+        let gazed = (def.gaze.iter()).find_map(|g| {
+            (g.riders.iter()).find_map(|h| match h.what {
+                Affliction::Drain(d) => Some((d, g.chance)),
+                _ => None,
+            })
+        });
+        let (drain, chance) = drain.or(gazed).unwrap_or_else(|| panic!("{id}: a drain"));
         assert_eq!(drain.stat, Some(stat), "{id}");
         assert_eq!(
             (drain.points, drain.check, drain.difficulty, chance),

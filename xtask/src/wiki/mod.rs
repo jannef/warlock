@@ -180,9 +180,15 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("creature-attacks.md", creatures::creature_attacks),
         ("creature-throws.md", creatures::creature_throws),
         ("creature-summons.md", creatures::creature_summons),
+        ("creature-splits.md", creatures::creature_splits),
         ("creature-breaths.md", creatures::creature_breaths),
+        ("creature-gazes.md", creatures::creature_gazes),
+        ("creature-bursts.md", creatures::creature_bursts),
+        ("creature-thieves.md", creatures::creature_thieves),
+        ("creature-blinks.md", creatures::creature_blinks),
         ("creature-unseen.md", creatures::creature_unseen),
         ("creature-spells.md", creatures::creature_spells),
+        ("creature-auras.md", creatures::creature_auras),
         ("creature-surprise.md", creatures::creature_surprise),
         ("creature-senses.md", creatures::creature_senses),
         ("creature-grades.md", creatures::creature_grades),
@@ -898,13 +904,13 @@ mod tests {
                 .contains("| Gold and ruby amulet | `\"` | amulets | gold chain, ruby setting |")
         );
         assert!(text("materials.md").contains(
-            "| Ruby | - | `#d3213b` | 100% | - | - | ×1 | yes | gold and ruby amulets, loose gems, \
+            "| Ruby | - | `#d3213b` | 100% | - | - | ×1 | yes | no | gold and ruby amulets, loose gems, \
              and items set with one |"
         ));
         // Materials (#193, #194): their properties on steel's scale, how often they are found,
         // what each item may be made of, and a long sword and chain mail in each metal.
         assert!(text("materials.md").contains(
-            "| Bronze | metal | `#cd7f32` | 112% | +0 / −1 | 80% | ×0.8 | no | bronze keys, minster reliquaries |"
+            "| Bronze | metal | `#cd7f32` | 112% | +0 / −1 | 80% | ×0.8 | no | yes | bronze keys, minster reliquaries |"
         ));
         assert!(
             text("material-finds.md")
@@ -1158,7 +1164,7 @@ mod tests {
             "{disarm}"
         );
         assert!(text("materials.md").contains(
-            "| Steel | metal | `#a8b0b8` | 100% | +0 / +0 | 100% | ×1 | no | knives, stilettos, daggers, \
+            "| Steel | metal | `#a8b0b8` | 100% | +0 / +0 | 100% | ×1 | no | yes | knives, stilettos, daggers, \
              short swords, scimitars,"
         ));
         assert!(text("pack.md").contains("| Your own weight | 70 kg |"));

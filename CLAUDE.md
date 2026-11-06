@@ -49,7 +49,7 @@ Game flags (`cargo run -p warlock -- --help`):
   the sunlit courtyard at 06:30, `world` on the overworld beside the Hall, `forest` in the glade
   of a generated forest area of the overworld at 06:30, `arena` in the dark corner of the arena
   where kobolds and giant rats fight, `quarry` in the quarry beside a pick-axe (its pit holds a pool of deep water to swim in, with `--character lizardfolk,female,warrior`), `traps` in the
-  trap hall, `summoners` in the summoning hall's south hall (three summoners behind doors), `chests`
+  trap hall, `summoners` in the summoning hall's south hall (three summoners behind doors), `thieves` in the thieves' hall (a pixie, a nymph, and an imp that rob you as they fight, behind doors; a blink dog past statues), `chests`
   in the chest hall (every kind of chest, a mimic, and both treasure rooms), `cealdhlaw` on the first floor of Cealdhlāw, the Ascmearc's first dungeon, `fennmynster` on
   the first floor of Fennmynster, the drowned minster's cellars, `fyrdelf` on the first floor of Fyrdelf,
   its deepest, `grundleas` on the first floor of Grundlēas, the endless branch that forgets each floor left, `rat_king` on its tenth floor, kept by its first layer boss, Gnægan the Rat King, whose death opens the way down (a level-1 warrior: give levels with `xp:` and `levelup:auto`), `utgang` on the top floor of Ūtgang, the way up from Fyrdelf's bottom (its `<` climbs out and reveals its hidden way in), `drake`
@@ -223,7 +223,7 @@ around level cell (X, Y), in its line of sight; no time); `zone:KIND@X,Y,R` is t
 `memory` (seen terrain, remembered objects, and known traps), `light` (perceived brightness of
 visible cells as a digit, `0` dark to `9` fully lit), `sound` (heard sounds at their rough places
 over the view: `f` footsteps, `o`/`c` a door opening/closing, `x` fighting, `b` a bowstring, `m`
-chanting, `k` banging (a door kicked), `d` digging, `v` a voice, `h` a howl, `r` a roar (a dragon's breath), `q` a heartbeat, `a` an alarm bell, `e` an
+chanting, `k` banging (a door kicked), `d` digging, `v` a voice, `h` a howl, `r` a roar (a dragon's breath), a creature's cries `z` buzzing, `g` giggling, `s` a hiss, `l` a rattle, `y` a scream, `w` a wail, `q` a heartbeat, `a` an alarm bell, `e` an
 explosion, `t` a thunderclap, upper case when loud), `blood` (blood the
 player sees or remembers as a digit over the view, `1` a few drops to `9` soaked), `inventory`
 (what the player

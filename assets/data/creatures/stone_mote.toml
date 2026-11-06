@@ -8,7 +8,7 @@ rarity = "uncommon"
 name = "stone mote"
 glyph = "e"
 fg = "#9a8a70"
-speed = 800
+speed = 1000
 faction = "elemental"
 tags = ["elemental", "earth"]
 alignment = "neutral"
@@ -24,9 +24,12 @@ natural = { protection = 1, name = "stone body" }
 resist = { slashing = 25, piercing = 50, electricity = 100, poison = 100 }
 corpse = false
 blood = "none"
-[creature.attack]
-damage = "1d3"
+# A vortex (the dread design §5.3): beside its target it bursts instead of attacking, and is
+# gone; killed from afar it goes out quietly.
+[creature.burst]
+damage = "2d4"
 damage_type = "bludgeoning"
-name = "bulk"
-verb = "strikes"
-on_hit = [{ status = "staggered", chance = 10, severity = 1 }]
+radius = 1
+when = "touches"
+effect = "shatter"
+noun = "shards"

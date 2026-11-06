@@ -15,7 +15,9 @@ type's level, faction, tags, alignment, XP, and the HP and dice formulas (within
 undead's), and that the faction holds no type it does not list. Riders map onto what exists: fire
 damage for the hound's bite and the steed's hooves, a Toughness drain (difficulty 17, checked by
 Toughness) for the kiss, `held` (15 % at 18: the hag on the sleeper's chest) and `frightened` for
-the night hag, `transfixed` and `frightened` for the rakshasa. The hell hound is in Fyrdelf's
+the night hag, `transfixed` and `frightened` for the rakshasa, now on its gaze (#1125: range 5,
+35 %), as is the succubus's and the incubus's `transfixed` (range 4, 30 %; the kiss keeps its
+drain; docs/dev/creatures.md "Gazes"). The hell hound is in Fyrdelf's
 population (its 13 inside danger 5–16, at home in the fires); the rest ship in none. Breath,
 shapes, flight, charm, summoning, and dream-walking are #450's follow-ups.
 
@@ -23,3 +25,7 @@ Fixtures that write their own factions file list `fiends` (`equip_tests`, `magic
 `object_tests`, `read_tests`).
 
 Spells (#1102, docs/dev/creatures.md "Casters"; in the order each prefers them): the night hag `slumber`, `leech`, `blight` (mana 70); the rakshasa `glamour`, `mesmerise`, `flame`, `lightning_bolt` (mana 130).
+
+Theft (docs/design/monster-dread.md §5.6, #1130; `docs/dev/creatures.md` "Theft and the
+blink"): the succubus and the incubus `steals = { what = "small", chance = 30, cooldown = 60 }`
+(a seduction is a theft; it stays, as a seducer does), the shared numbers kept.

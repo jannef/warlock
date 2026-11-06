@@ -184,7 +184,9 @@ fn the_duergar_keep_to_the_tribes_formulas() {
                     within(average, want),
                     "{id}: attack {average}, the formula {want}"
                 );
-                assert!(!attack.on_hit.is_empty(), "{id}: a rider");
+                // The mindbreaker's rides its gaze (#1125).
+                let rider = !attack.on_hit.is_empty() || def.gaze.is_some();
+                assert!(rider, "{id}: a rider");
             }
         }
     }

@@ -30,3 +30,13 @@ damage_type = "fire"
 name = "touch"
 verb = "burns"
 to_hit = 4
+on_hit = [{ status = "burning", chance = 25, severity = 1 }]
+# Death throes (the dread design §5.3): it bursts where it dies.
+[creature.burst]
+damage = "4d6"
+damage_type = "fire"
+radius = 1
+when = "dies"
+effect = "fireball"
+noun = "flame"
+verb = "comes apart in flame"

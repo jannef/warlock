@@ -11,8 +11,9 @@ use warlock_core::action::AttackKind;
 use warlock_core::burden::{self, Burden};
 use warlock_core::combat::Category;
 use warlock_core::content::{
-    ActionKind, Affliction, BASE_TURN, Benefit, Combat, Content, CreatureDef, CreatureId,
-    FactionId, Invisible, NORMAL_COST, NaturalAttack, Stance, article, price, spoken,
+    ActionKind, Affliction, BASE_TURN, Benefit, BurstWhen, Combat, Content, CorrodesWhat,
+    CreatureDef, CreatureId, FactionId, Invisible, NORMAL_COST, NaturalAttack, OnHit, Stance,
+    Takes, article, price, spoken,
 };
 use warlock_core::geom::Pos;
 use warlock_core::object::format_weight;
@@ -62,8 +63,10 @@ fn creature_table(content: &Content, campaign: Option<&str>) -> String {
                 (faction, stance.to_string())
             }
         };
+        let vortex = (c.burst.as_ref()).is_some_and(|b| b.when == BurstWhen::Touches);
         let mut attacks = match c.combat {
             _ if !fights(content, c) => "never",
+            _ if vortex => "bursts beside you",
             Combat::Melee => "up close",
             Combat::Ranged => "shoots from afar",
             Combat::Caster => "casts spells from afar",
@@ -76,6 +79,9 @@ fn creature_table(content: &Content, campaign: Option<&str>) -> String {
         if let (true, Some(throw)) = (fights(content, c), &c.throw) {
             let noun = &throw.attack.name;
             let _ = write!(attacks, ", throws {} {noun} from afar", article(noun));
+        }
+        if (c.burst.as_ref()).is_some_and(|b| b.when == BurstWhen::Dies) {
+            attacks.push_str(", bursts when it dies");
         }
         // The chance it drops a magic or rare item where it dies.
         let drops = match c.loot {
@@ -380,11 +386,22 @@ pub(super) fn creature_defences(content: &Content) -> String {
         if c.blood.is_none() {
             resists.push("never [bleeds](status-effects.md#bleeding)".into());
         }
+        // Acid blood (`world/corrode.rs`): what strikes it may come away damaged.
+        if let Some(acid) = c.corrodes.filter(|a| a.what == CorrodesWhat::Weapon) {
+            resists.push(format!(
+                "{}% to [damage](objects.md#corrosion) the weapon that strikes it",
+                acid.chance
+            ));
+        }
+        // Regeneration (`world/regen.rs`): its own healing pace, stopped by fire and acid.
+        let hp = match c.regen {
+            100 => actor.max_hp(content).to_string(),
+            pace => format!("{}, heals {} as fast", actor.max_hp(content), times(pace)),
+        };
         let _ = writeln!(
             out,
-            "| {} | {} | {defence} | {protection} | {} |",
+            "| {} | {hp} | {defence} | {protection} | {} |",
             link(Term::Creature, &c.id, &capital(&c.name)),
-            actor.max_hp(content),
             dash(&resists)
         );
     }
@@ -394,7 +411,12 @@ pub(super) fn creature_defences(content: &Content) -> String {
 /// What a hit with `attack` may cause: each status with its degrees and each disease, with its
 /// chance.
 pub(super) fn on_hit(content: &Content, attack: &NaturalAttack) -> Vec<String> {
-    (attack.on_hit.iter())
+    riders(content, &attack.on_hit)
+}
+
+/// What `riders` cause (an attack's `on_hit`, a gaze's riders), each with its chance.
+fn riders(content: &Content, riders: &[OnHit]) -> Vec<String> {
+    (riders.iter())
         .map(|o| match o.what {
             Affliction::Status { status, severity } => {
                 let degrees = if severity == 1 { "degree" } else { "degrees" };
@@ -440,6 +462,19 @@ pub(super) fn creature_attacks(content: &Content) -> String {
             Combat::Dragon => "breathes, and up close".to_string(),
         };
         let actor = bare(content, id);
+        // A vortex has no blow: its burst (the bursts' table).
+        if c.burst
+            .as_ref()
+            .is_some_and(|b| b.when == BurstWhen::Touches)
+        {
+            let _ = writeln!(
+                out,
+                "| {} | {fight} | its burst | the bursts' table | - | - | {} | - |",
+                link(Term::Creature, &c.id, &capital(&c.name)),
+                at_speed(blow_price(content, &actor), c.speed),
+            );
+            continue;
+        }
         // A family that wields what it is made of (animated blades): its weapon's blow.
         if c.attack.is_none() && content.family_levels(id).is_some() {
             let _ = writeln!(
@@ -473,7 +508,14 @@ pub(super) fn creature_attacks(content: &Content) -> String {
                 ),
                 Some(_) => (format!("then {attack}"), "with the first".to_string()),
             };
-            let caused = natural.map_or_else(Vec::new, |a| on_hit(content, a));
+            let mut caused = natural.map_or_else(Vec::new, |a| on_hit(content, a));
+            // Its filth (`world/corrode.rs`): a worn piece damaged.
+            if let Some(acid) = c.corrodes.filter(|a| a.what == CorrodesWhat::Armour) {
+                caused.push(format!(
+                    "{}% [damages](objects.md#corrosion) a piece worn",
+                    acid.chance
+                ));
+            }
             let _ = writeln!(
                 out,
                 "| {} | {fight} | {attack} | {} | {} | {} ×{} | {takes} | {} |",
@@ -580,6 +622,55 @@ pub(super) fn creature_summons(content: &Content) -> String {
     out
 }
 
+/// What cuts each creature in two, and what crawls out of it when it dies
+/// (docs/design/monster-dread.md §5.5): the kinds of damage that split it and the fewest hit
+/// points a half keeps, then what its corpse lets out, how many, and how far from it.
+pub(super) fn creature_splits(content: &Content) -> String {
+    let mut out = String::from(
+        "| Creature | Splits under | A half keeps at least | Dies into | How many | Within |\n\
+         |---|---|---:|---|:---:|---:|\n",
+    );
+    for (_, c) in listed(content) {
+        if c.splits.is_none() && c.dies_into.is_none() {
+            continue;
+        }
+        let (on, least) = match &c.splits {
+            Some(s) => (
+                (s.on.iter())
+                    .map(|&k| damage_link(content, k))
+                    .collect::<Vec<_>>()
+                    .join(", "),
+                format!("{} hit points", s.least),
+            ),
+            None => ("—".into(), "—".into()),
+        };
+        let (into, count, spread) = match &c.dies_into {
+            Some(d) => {
+                let mut names: Vec<String> = (d.pool.iter())
+                    .map(|&p| {
+                        let other = content.creature(p);
+                        link(Term::Creature, &other.id, &other.plural)
+                    })
+                    .collect();
+                names.sort();
+                names.dedup();
+                (
+                    names.join(", "),
+                    d.count.to_string(),
+                    format!("{} cell{}", d.spread, if d.spread == 1 { "" } else { "s" }),
+                )
+            }
+            None => ("—".into(), "—".into(), "—".into()),
+        };
+        let _ = writeln!(
+            out,
+            "| {} | {on} | {least} | {into} | {count} | {spread} |",
+            link(Term::Creature, &c.id, &capital(&c.name)),
+        );
+    }
+    out
+}
+
 /// What each dragon (spec §8 "Creature behavior": "Dragons") breathes: its element, the damage
 /// rolled once for everyone in the cone, how long the cone is, and how long before it breathes
 /// again.
@@ -600,6 +691,125 @@ pub(super) fn creature_breaths(content: &Content) -> String {
             damage_link(content, breath.kind),
             breath.length,
             breath.cooldown
+        );
+    }
+    out
+}
+
+/// Each gazer's gaze (spec §8 "Creature behavior": "Gazes"): how far it reaches, the chance that
+/// eyes that meet it are caught (and a glance's against averted ones), what it then causes, and
+/// how long before it looks again.
+pub(super) fn creature_gazes(content: &Content) -> String {
+    let mut out = String::from(
+        "| Creature | Reach | Catches the eye | Averted eyes | Then | Again after |\n\
+         |---|---:|---:|---|---|---:|\n",
+    );
+    for (_, c) in listed(content) {
+        let Some(gaze) = &c.gaze else {
+            continue;
+        };
+        let averted = match gaze.averted {
+            true => format!("forced; {}%", gaze.chance_against(true)),
+            false => "—".to_string(),
+        };
+        let _ = writeln!(
+            out,
+            "| {} | {} cells | {}% | {averted} | {} | {} s |",
+            link(Term::Creature, &c.id, &capital(&c.name)),
+            gaze.range,
+            gaze.chance,
+            riders(content, &gaze.riders).join(", "),
+            gaze.cooldown
+        );
+    }
+    out
+}
+
+/// Each thief's theft (docs/design/monster-dread.md §5.6): what it takes, its chance on a hit,
+/// and how long before it steals again.
+pub(super) fn creature_thieves(content: &Content) -> String {
+    let mut out =
+        String::from("| Creature | Takes | Chance on a hit | Again after |\n|---|---|---:|---:|\n");
+    for (_, c) in listed(content) {
+        let Some(steals) = &c.steals else {
+            continue;
+        };
+        let takes = match steals.what {
+            Takes::Small => "coins, gems, potions, rings, scrolls",
+            Takes::Any => "anything",
+        };
+        let _ = writeln!(
+            out,
+            "| {} | {takes} | {}% | {} s |",
+            link(Term::Creature, &c.id, &capital(&c.name)),
+            steals.chance,
+            steals.cooldown
+        );
+    }
+    out
+}
+
+/// What each creature that bursts (the dread design §5.3) bursts in: when (beside its target
+/// instead of a blow, or where it dies), the damage rolled once for everyone around it, how far
+/// it reaches, and what else it does to those it harms and the cells it reaches.
+pub(super) fn creature_bursts(content: &Content) -> String {
+    let mut out = String::from(
+        "| Creature | Bursts | Damage | Radius | On those harmed | Also |\n\
+         |---|---|---|---:|---|---|\n",
+    );
+    for (_, c) in listed(content) {
+        let Some(burst) = &c.burst else {
+            continue;
+        };
+        let when = match burst.when {
+            BurstWhen::Touches => "beside its target, and is gone",
+            BurstWhen::Dies => "where it dies",
+        };
+        let riders: Vec<String> = (burst.riders.iter())
+            .map(|r| {
+                let status = content.status(r.status);
+                format!(
+                    "{}% {}",
+                    r.chance,
+                    link(Term::Status, &status.id, &status.name.to_lowercase())
+                )
+            })
+            .collect();
+        let mut also = Vec::new();
+        if burst.douses {
+            also.push("puts out the burning and the fires");
+        }
+        if burst.gust {
+            also.push("blows what lies loose a cell outward");
+        }
+        let _ = writeln!(
+            out,
+            "| {} | {when} | {} {} | {} | {} | {} |",
+            link(Term::Creature, &c.id, &capital(&c.name)),
+            damage_text(burst.damage.into(), 0),
+            damage_link(content, burst.kind),
+            burst.radius,
+            dash(&riders),
+            dash(&also.iter().map(|s| s.to_string()).collect::<Vec<_>>())
+        );
+    }
+    out
+}
+
+/// Each blinker's blink (docs/design/monster-dread.md §5.6): how far, and how long before it
+/// blinks again.
+pub(super) fn creature_blinks(content: &Content) -> String {
+    let mut out = String::from("| Creature | Reach | Again after |\n|---|---:|---:|\n");
+    for (_, c) in listed(content) {
+        let Some(blinks) = &c.blinks else {
+            continue;
+        };
+        let _ = writeln!(
+            out,
+            "| {} | {} cells | {} s |",
+            link(Term::Creature, &c.id, &capital(&c.name)),
+            blinks.range,
+            blinks.cooldown
         );
     }
     out
@@ -666,6 +876,59 @@ pub(super) fn creature_spells(content: &Content) -> String {
             content.creature_rarity(c.rarity).name,
             actor.max_mana(content),
             spells.join(", ")
+        );
+    }
+    out
+}
+
+/// Each creature's presence (`world/aura.rs`): its aura (the status, its degrees, how far, by
+/// sight or by hearing and how loud, the check that keeps it off, how often), the statuses its
+/// kind always has, and its cry (what it sounds like, how loud, how often on average).
+pub(super) fn creature_auras(content: &Content) -> String {
+    let mut out = String::from(
+        "| Creature | Aura | Reach | Kept off by | Every | Always has | Cry |\n\
+         |---|---|---|---|---:|---|---|\n",
+    );
+    for (_, c) in listed(content) {
+        if c.aura.is_none() && c.innate.is_empty() && c.cry.is_none() {
+            continue;
+        }
+        let status = |s| {
+            let def = content.status(s);
+            link(Term::Status, &def.id, &def.name.to_lowercase())
+        };
+        let (aura, reach, check, every) = match &c.aura {
+            None => ("-".into(), "-".into(), "-".into(), "-".into()),
+            Some(a) => {
+                let mut aura = format!("{} ({})", status(a.status), a.severity);
+                if let Some(kind) = a.kind {
+                    let _ = write!(aura, ", resisted as {}", damage_link(content, kind));
+                }
+                let reach = match a.heard {
+                    Some(loud) => format!("{} cells, heard (loudness {loud})", a.radius),
+                    None => format!("{} cells, in sight", a.radius),
+                };
+                let check = match a.check {
+                    Some((stat, d)) => format!("{} {d}", stat.name()),
+                    None => "nothing".into(),
+                };
+                (aura, reach, check, format!("{} s", a.every))
+            }
+        };
+        let innate: Vec<String> = c.innate.iter().map(|&s| status(s)).collect();
+        let cry = c.cry.map_or("-".to_string(), |cry| {
+            format!(
+                "{} (loudness {}, every {} s)",
+                cry.kind.heard_as(),
+                cry.loudness,
+                cry.every
+            )
+        });
+        let _ = writeln!(
+            out,
+            "| {} | {aura} | {reach} | {check} | {every} | {} | {cry} |",
+            link(Term::Creature, &c.id, &capital(&c.name)),
+            dash(&innate)
         );
     }
     out
@@ -825,6 +1088,15 @@ pub(super) fn creature_surprise(content: &Content) -> String {
         );
     }
     out
+}
+
+/// A pace in percent of the normal as a factor: "four times" for 400, else "×1.5".
+fn times(percent: u16) -> String {
+    match percent {
+        200 => "twice".into(),
+        p if p % 100 == 0 => format!("{} times", p / 100),
+        p => format!("×{}.{:02}", p / 100, p % 100),
+    }
 }
 
 #[cfg(test)]

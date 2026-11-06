@@ -271,8 +271,8 @@ fn guilds_are_checked_at_load() {
     .expect("a valid guild");
     for (ranks, error) in [
         (
-            r#"{ title = "Mithril", material = "mithril" }"#,
-            "unknown material `mithril`",
+            r#"{ title = "Orichalcum", material = "orichalcum" }"#,
+            "unknown material `orichalcum`",
         ),
         (
             r#"{ title = "Tin", material = "tin", given = "nothing" }"#,

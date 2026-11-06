@@ -32,6 +32,13 @@ natural = { defence = 6, protection = 11, name = "skull" }
 resist = { slashing = 50, piercing = 50, bludgeoning = 50, poison = 100 }
 corpse = false
 blood = "none"
+[creature.aura]
+status = "frightened"
+severity = 2
+radius = 3
+check = "willpower"
+difficulty = 22
+touch = "A terrible will bears down from {the}."
 [creature.attack]
 damage = "3d12"
 damage_type = "cold"

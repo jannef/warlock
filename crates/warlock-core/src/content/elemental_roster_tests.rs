@@ -2,8 +2,18 @@
 //! formulas (#383, `undead_roster_tests`) for its level and role, carries one element's tag, and
 //! each element has its ladder of rungs.
 
-use super::Content;
+use super::{BurstWhen, Content};
 use crate::stats::Stat;
+
+/// The vortices (the dread design §5.3): every mote.
+const VORTICES: &[&str] = &[
+    "stone_mote",
+    "ember_mote",
+    "dust_devil",
+    "water_mote",
+    "frost_mote",
+    "spark_mote",
+];
 
 /// How far a type's max HP and dice average may lie from the formulas, in percent.
 const TOLERANCE: f64 = 35.0;
@@ -126,14 +136,28 @@ fn the_elementals_keep_to_the_roster() {
         let hp = f64::from(def.stats.score(Stat::Toughness)) + f64::from(def.base_hp);
         let want = max_hp(level, role);
         assert!(within(hp, want), "{id}: max HP {hp}, the formula {want:.1}");
-        let attack = (def.attack.as_ref()).unwrap_or_else(|| panic!("{id}: no attack"));
-        let damage = attack.attack.damage;
-        let average = f64::from(damage.min() + damage.max()) / 2.0;
-        let want = dice_average(level, role);
-        assert!(
-            within(average, want),
-            "{id}: dice average {average}, the formula {want}"
-        );
+        // A vortex's burst is its whole offence (the dread design §5.3): the motes'.
+        // A vortex's burst is its whole offence (the dread design §5.3): the motes'.
+        match (&def.attack, &def.burst) {
+            (Some(attack), _) => {
+                let damage = attack.attack.damage;
+                let average = f64::from(damage.min() + damage.max()) / 2.0;
+                let want = dice_average(level, role);
+                assert!(
+                    within(average, want),
+                    "{id}: dice average {average}, the formula {want}"
+                );
+            }
+            (None, Some(burst)) if burst.when == BurstWhen::Touches => {
+                assert!(VORTICES.contains(&id), "{id}: only a mote is a vortex");
+                assert!(
+                    (4..=6).contains(&(burst.damage.max() / 2)) && burst.damage.min() == 2,
+                    "{id}: a vortex bursts for 2d4 to 2d6"
+                );
+                assert_eq!(burst.radius, 1, "{id}: a vortex's radius");
+            }
+            _ => panic!("{id}: no attack"),
+        }
         let resists = |t| def.resist.iter().any(|&(r, v)| r == t && v == 100);
         assert!(resists(poison), "{id}: immune to poison");
         if let Some(immune) = immune {
@@ -163,4 +187,191 @@ fn the_cinder_elemental_is_the_fire_lines_rung() {
     let cinder = content.creature_id("cinder_elemental").expect("cinder");
     assert!(content.has_tag(cinder, "elemental") && content.has_tag(cinder, "fire"));
     assert!(content.has_tag(cinder, "fire-thing"), "still the delf's");
+}
+
+/// Each line's rungs (lesser, plain, greater, elder, eldest; the dread design §5.3), with the
+/// cinder elemental on the fire line's lesser rung.
+const RUNGS: &[(&str, [&[&str]; 5])] = &[
+    (
+        "fire",
+        [
+            &["lesser_fire_elemental", "cinder_elemental"],
+            &["fire_elemental"],
+            &["greater_fire_elemental"],
+            &["elder_fire_elemental"],
+            &["balefire"],
+        ],
+    ),
+    (
+        "lightning",
+        [
+            &["lesser_lightning_elemental"],
+            &["lightning_elemental"],
+            &["greater_lightning_elemental"],
+            &["elder_lightning_elemental"],
+            &["thunderhead"],
+        ],
+    ),
+    (
+        "ice",
+        [
+            &["lesser_ice_elemental"],
+            &["ice_elemental"],
+            &["greater_ice_elemental"],
+            &["elder_ice_elemental"],
+            &["rimethurse"],
+        ],
+    ),
+    (
+        "air",
+        [
+            &["lesser_air_elemental"],
+            &["air_elemental"],
+            &["greater_air_elemental"],
+            &["elder_air_elemental"],
+            &["welkin_wind"],
+        ],
+    ),
+    (
+        "water",
+        [
+            &["lesser_water_elemental"],
+            &["water_elemental"],
+            &["greater_water_elemental"],
+            &["elder_water_elemental"],
+            &["brimwolf"],
+        ],
+    ),
+    (
+        "earth",
+        [
+            &["lesser_earth_elemental"],
+            &["earth_elemental"],
+            &["greater_earth_elemental"],
+            &["elder_earth_elemental"],
+            &["hoarstone"],
+        ],
+    ),
+];
+
+/// Kin of a line on none of its rungs, with the rung whose death throes they share: the
+/// invisible stalker (D8, level 22) bursts as the air elemental beside it does.
+const KIN: &[(&str, usize, &str)] = &[("air", 1, "invisible_stalker")];
+
+/// A line's death throes (the dread design §5.3).
+struct Throes {
+    kind: &'static str,
+    /// By rung, lesser to eldest.
+    radii: [i32; 5],
+    /// Its rider's status, and the first rung that has it.
+    rider: Option<(&'static str, usize)>,
+    douses: bool,
+    gust: bool,
+}
+
+/// Every line's death throes; earth has none.
+fn throes(line: &str) -> Option<Throes> {
+    let wide = [1, 2, 2, 3, 3];
+    let narrow = [1, 1, 2, 2, 3];
+    let of = |kind, radii, rider| Throes {
+        kind,
+        radii,
+        rider,
+        douses: false,
+        gust: false,
+    };
+    match line {
+        "fire" => Some(of("fire", wide, Some(("burning", 1)))),
+        "lightning" => Some(of("electricity", wide, Some(("staggered", 0)))),
+        "ice" => Some(of("cold", wide, Some(("sluggish", 0)))),
+        "air" => Some(Throes {
+            gust: true,
+            ..of("bludgeoning", narrow, Some(("staggered", 0)))
+        }),
+        "water" => Some(Throes {
+            douses: true,
+            ..of("bludgeoning", narrow, None)
+        }),
+        _ => None,
+    }
+}
+
+/// The earth line's stones (the dread design §5.3): the giants' rule, range 5 + L/10, the
+/// fist's dice a step less (as many dice, a die a size smaller), a throw's 1500, bludgeoning,
+/// and the stone staggers.
+fn check_stones(content: &Content, id: &str, def: &super::CreatureDef) {
+    assert!(def.burst.is_none(), "{id}: stone does not burst");
+    let throw = def
+        .throw
+        .as_ref()
+        .unwrap_or_else(|| panic!("{id}: a throw"));
+    let level = i32::from(def.level);
+    assert_eq!(throw.range, 5 + level / 10, "{id}: range 5 + L/10");
+    assert_eq!(throw.cost, Some(1500), "{id}: a throw's cost");
+    let dice = |d: crate::dice::Roll| (d.min(), d.max() / d.min().max(1));
+    let fist = def.attack.as_ref().expect("a fist").attack.damage;
+    let ((n, sides), (m, less)) = (dice(fist), dice(throw.attack.attack.damage));
+    assert_eq!(n, m, "{id}: as many dice");
+    let step = if sides == 4 { 3 } else { sides - 2 };
+    assert_eq!(less, step, "{id}: the dice a step less");
+    let bludgeoning = content.damage_type_id("bludgeoning").expect("bludgeoning");
+    assert_eq!(throw.attack.attack.kinds.main(), Some(bludgeoning), "{id}");
+    let staggered = content.status_id("staggered").expect("staggered");
+    let staggers = (throw.attack.on_hit.iter()).any(|h| {
+        matches!(h.what, super::status::Affliction::Status { status, .. } if status == staggered)
+    });
+    assert!(staggers, "{id}: a stone staggers");
+}
+
+#[test]
+fn every_line_but_earth_has_death_throes_and_earth_throws_stones() {
+    let content = Content::builtin().expect("content");
+    let mut listed = Vec::new();
+    let on_rungs = RUNGS.iter().flat_map(|(line, rungs)| {
+        (rungs.iter().enumerate())
+            .flat_map(move |(rung, ids)| ids.iter().map(move |&id| (*line, rung, id)))
+    });
+    for (line, rung, id) in on_rungs.chain(KIN.iter().copied()) {
+        listed.push(id);
+        let c = content.creature_id(id).unwrap_or_else(|| panic!("{id}"));
+        assert!(content.has_tag(c, line), "{id}: of the {line} line");
+        let def = content.creature(c);
+        let Some(want) = throes(line) else {
+            check_stones(&content, id, def);
+            continue;
+        };
+        let burst = (def.burst.as_ref()).unwrap_or_else(|| panic!("{id}: death throes"));
+        assert_eq!(burst.when, BurstWhen::Dies, "{id}");
+        let kind = want.kind;
+        assert_eq!(
+            Some(burst.kind),
+            content.damage_type_id(kind),
+            "{id}: {kind}"
+        );
+        assert_eq!(
+            burst.radius, want.radii[rung],
+            "{id}: the radius of rung {rung}"
+        );
+        // Half the doubled damage spells' dice of its level, (4 + L/4)d6: (2 + L/8)d6.
+        let dice = 2 + i32::from(def.level) / 8;
+        assert_eq!(
+            (burst.damage.min(), burst.damage.max()),
+            (dice, 6 * dice),
+            "{id}: {dice}d6"
+        );
+        let rider: Vec<_> = (want.rider.filter(|&(_, from)| rung >= from))
+            .map(|(status, _)| content.status_id(status).expect(status))
+            .into_iter()
+            .collect();
+        let riders: Vec<_> = burst.riders.iter().map(|r| r.status).collect();
+        assert_eq!(riders, rider, "{id}: its rider");
+        assert_eq!((burst.douses, burst.gust), (want.douses, want.gust), "{id}");
+    }
+    for c in content.tagged("elemental") {
+        let id = content.creature(c).id.as_str();
+        assert!(
+            listed.contains(&id) || VORTICES.contains(&id),
+            "{id}: on no rung of its line"
+        );
+    }
 }

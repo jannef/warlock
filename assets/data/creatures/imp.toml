@@ -1,7 +1,7 @@
 # The devil roster (#448). A tiny winged devil with a barbed tail, the familiar of those who
-# bargain with hell: quick, sly, and its sting is poisonous; it stings and is gone from sight,
-# though not from the room. Its shapes wait for mechanics of their own. Not yet in any dungeon's
-# population.
+# bargain with hell: quick, sly, and its sting is poisonous; it lifts a coin purse as it fights
+# (`steals`, #1130), stings, and is gone from sight, though not from the room. Its shapes wait
+# for mechanics of their own. Not yet in any dungeon's population.
 [[creature]]
 id = "imp"
 level = 9
@@ -24,6 +24,7 @@ weight = 4000
 stats = { strength = 11, dexterity = 16, toughness = 12, intelligence = 14, willpower = 19, presence = 14 }
 base_hp = 11
 resist = { fire = 100, poison = 50 }
+steals = { what = "small", chance = 30, cooldown = 60 }
 corpse = false
 blood = "#4a1010"
 [creature.attack]

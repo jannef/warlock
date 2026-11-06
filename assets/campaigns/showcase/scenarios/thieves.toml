@@ -1,0 +1,6 @@
+name = "Thieves"
+description = "Creatures that rob you as they fight, behind three doors: a pixie, a nymph, and an imp. Past a row of statues, a blink dog that is suddenly beside you."
+start_level = "thieves_hall"
+seed = 1
+character = { race = "human", gender = "female", class = "warrior", name = "Hild" }
+wield = ["lantern"]

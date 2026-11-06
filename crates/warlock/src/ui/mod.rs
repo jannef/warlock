@@ -755,7 +755,8 @@ fn status_segments(world: &World, clock: Clock, unit: TemperatureUnit) -> Vec<Se
     // then each alternative resource the player holds (`Rage 7`, `Focus 7/10`; spec §8
     // "Resources"), giving way before mana: they outlast the time, and so do the status effects the player suffers (by name, the most
     // important first: the last gives way first), Dazzled (strong light on light-blind eyes,
-    // spec §8 "Character creation"), hunger (shown unless the player is Not hungry), and the burden (shown
+    // spec §8 "Character creation"), Averted (eyes kept from a gaze, spec §8 "Creature
+    // behavior"), hunger (shown unless the player is Not hungry), and the burden (shown
     // when there is one), which slows everything the player does; hunger outlasts the burden, and
     // from Hungry down it outlasts everything, the level's name too (spec §8 "Hunger"). The
     // character level (`Lv 3`) comes after them and goes before them, but after the time. The
@@ -795,6 +796,7 @@ fn status_segments(world: &World, clock: Clock, unit: TemperatureUnit) -> Vec<Se
     ];
     let rest = [
         (view.dazzled()).then(|| Segment::new(1, "Dazzled")),
+        (view.averted()).then(|| Segment::new(1, "Averted")),
         hunger.map(|h| Segment::new(u8::from(hunger_tint(h).is_none()), h.name())),
         (burden != Burden::Unburdened).then(|| Segment::new(1, burden.name())),
         Some(Segment::new(
@@ -1002,6 +1004,35 @@ mod tests {
             "Hoard  ·  HP 10/10  ·  MP 0/0"
         );
         assert!(fit_segments(&segments, 66).contains("Burdened  ·  Lv 1  ·  08:"));
+    }
+
+    #[test]
+    fn the_status_bar_says_averted_while_an_averted_gaze_is_in_sight() {
+        let mut files = ContentFiles::builtin();
+        files.insert(
+            "data/creatures/starer.toml",
+            "[[creature]]\nid = \"starer\"\nname = \"starer\"\nglyph = \"S\"\nfg = \"#40a040\"\n\
+             weight = 1000\nfaction = \"undead\"\nlevel = 1\nxp = 1\n\
+             [creature.gaze]\nrange = 4\naverted = true\n\
+             riders = [{ status = \"transfixed\", chance = 100, severity = 1 }]\n",
+        );
+        files.insert(
+            "levels/stare.toml",
+            "name = \"Stare\"\nambient = [255, 255, 255, 0]\nmap = '''\n########\n#@....S#\n########\n'''\n\
+             [legend]\n\"@\" = { terrain = \"floor\", spawn = \"player\" }\n\
+             \"S\" = { terrain = \"floor\", creature = \"starer\" }\n",
+        );
+        files.insert(
+            "scenarios/stare.toml",
+            "name = \"Stare\"\nstart_level = \"stare\"\n",
+        );
+        let content = Arc::new(Content::load(&files).expect("valid"));
+        let world = World::new(content, "stare", None).expect("world");
+        let texts: Vec<String> = status_segments(&world, Clock::H24, TemperatureUnit::Celsius)
+            .into_iter()
+            .map(|s| s.text)
+            .collect();
+        assert!(texts.contains(&"Averted".to_string()), "{texts:?}");
     }
 
     #[test]

@@ -62,7 +62,9 @@ then calls `World::blast` (walls, `docs/dev/digging.md`), and one with `ice`
 (`content::BurstIce`, from `heat = true` or `frost = MM` in data) `World::shock` with
 `Shock::Heat` (the fireball melts the ice, and whoever stood on it falls in) or `World::frost`
 (the frost trap freezes the water), `docs/dev/temperature.md`. A teleport's destination is an
-FNV-1a hash, never the gameplay stream. A rest (and every long action through `World::keep_at`)
+FNV-1a hash, never the gameplay stream. Where a teleport may land is `World::lands_on` (walkable, no
+trap, no ice) with no one there (`World::may_land`), shared with the blink dog's blink
+(`world/blink.rs`, #1130), whose cell beside its target is a gameplay draw. A rest (and every long action through `World::keep_at`)
 perceives every turn in which a trap went off (`World::sprung`), besides those in which the player
 heard something.
 

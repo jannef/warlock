@@ -41,6 +41,17 @@ behind and goes on if it came. A den's sleepers don't follow until woken, a shop
 `hostiles_here` reads the level, so the spawn cap moves with the follower. Hoards, curses, and
 hauntings keep no ids, so losing a guardian to the stairs changes nothing there.
 
+Auras, innate statuses, and cries (#1128, design `docs/design/monster-dread.md` §5.4, §9) live in
+`world/aura.rs`, whose module docs are the rules, with the data in `content/aura.rs`
+(`[creature.aura]`, `innate`, `cry`; `CreatureDef::{aura, innate, cry}`). Two lines in
+`ai.rs::creature_turn`: `aura_turn` as the turn starts (after the slumber and coarse-turn
+returns, before `decide`; it puts the innate statuses back first) and `cry` beside `mutter` once
+the plan is done; `travel.rs::make_creature` calls `aura::wear_innate`, and `perception.rs`
+leaves a type's innate statuses out of the seen effects. The aura's cooldown is the `aura`
+status; its draws (a check's two per target) and the cry's one are the gameplay stream's, on
+the bearer's turn. `content::aura_roster_tests` holds the bearers' rows; the tribe files say
+whose is whose.
+
 Grades (spec §8 "Grades", #1135; `docs/design/monster-dread.md` §7.4) live in `grade.rs`, whose
 module docs are the rules: `grade::draw` is one line in `travel::make_creature`, after the court,
 on its own stream `grade/<actor id>` (`Rng::grade`), so adding or removing it moves no other
@@ -148,6 +159,70 @@ roar in the hearing table. **Probe**: the monsters' sides sum every natural atta
 the players of its level (docs/balance.md "Dragons"). **Tests**: `world/breath_tests.rs`.
 Adding a dragon: `combat = "dragon"`, a `[creature.breath]` of its element with a burst effect
 of that element in `data/effects.toml`, `[[creature.attack]]`s, and the tag `dragon`.
+
+Gazes and averted eyes (spec §8 "Creature behavior": "Gazes", #1125, design
+`docs/design/monster-dread.md` §5.1). **Data**: `[creature.gaze]` (`content/gaze.rs`:
+`GazeSpec` resolved in the creature loop into `CreatureDef::gaze: Option<Gaze>`; `range` 1 to 8,
+`chance` (default 100), `cooldown` 6 to 600 s (default 12, the `gaze` status's
+`ceil(cooldown / eases)` degrees), `averted`, `glance` (only with `averted`, default 25), and
+`riders`, `on_hit` entries resolved by `OnHitSpec::resolve`, a status or a drain only).
+**Rules**: `world/gaze.rs` (`World::gazes_at`, one branch in `ai.rs::fight` after the summoning
+and before the throw, `Plan::Gaze(target)`: in range, the cooldown off, the target with vitals
+(its type's `vitals` and `Content::has_vitals`); `World::creature_gazes`: the cooldown status,
+a `cast`'s price, then the eyes must meet: the player's by `Perception::sees_actors_at` on the
+gazer's cell (the snapshot's sight, no disguise), a creature's by `World::sees_now`; unmet, the
+player is told "You feel a cold stare on you."; met, one draw at `Gaze::chance_against` (below
+100 only) and each rider by `World::rider` in `status.rs`, the one place a blow's riders fall
+too). No noise. `world/avert.rs`: Averted is `Perception::averted` (a seen hostile whose gaze is
+`averted`), derived in `Perception::compute`, never saved and out of the hash; read by
+`World::averted_blow` in `fight.rs::resolve` (`AVERTED_TO_HIT`, −4), `World::averted_defence`
+in `fight.rs::defence_of` (a positive Dodge halved), and `free_blow.rs::free_blows_of` (none at
+all); `World::avert_news` notes it beginning and ending. Status bar "Averted"; dump header
+`averted`, JSON `averted`; the cooldown shows among `actors`' effects. Nothing is `averted` until
+D2's basilisk. **Tests**: `world/gaze_tests.rs`, and `content/gaze.rs`'s roster of the moved
+riders (`MOVED`). Keep the rider generic: D2's stiffening is a status rider like any.
+Bursts: vortices and death throes (the dread design `docs/design/monster-dread.md` §5.3, #1127).
+**Data**: `[creature.burst]` (`content/burst.rs`: `BurstSpec` resolved in the creature loop into
+`CreatureDef::burst: Option<CreatureBurst>`: `damage`, `damage_type`, `radius` 0 to 3, `when`
+(`BurstWhen::Touches`, a vortex; `Dies`, death throes), `effect` (a burst effect, checked by
+`burst::check_effects` once effects load), optional `noun`/`verb`, `rider` (the spell types'
+rider form, `spell_type::rider`), `douses`, `gust`); `check_combat` refuses a `touches` burst on
+a type with an `attack` or a `combat` other than melee. **Rules**: `world/creature_burst.rs`:
+`ai.rs::creature_turn` sends every melee plan of a vortex (`World::bursts_on_touch`) to
+`World::creature_bursts` (a melee attack's price; the burst, then `dies` with no killer);
+`fight.rs::dies` calls `World::death_throes` after `creature_dies` (current level only; the
+words held and joined to the news, so they follow the death line). `World::go_off` is the
+burst: the words, the traps' `explosion` sound (`sound_at`), and
+`spell.rs::cast_burst_reaching` with `Reach { spare: its type, full: true }` (no halving at the
+edge; `cast_burst_at` is the same with the usual `Reach`), so the ruin, the spell type's cells,
+and `spell_strikes` are the spells'; then the wave (`quench` on everyone on its cells,
+`spell_type.rs::douse`), the gust (piles moved a cell outward), `say_spell`, and the riders by
+their chance on those harmed (no `spell_type_lands`). A dead burster's blows are its own: it is
+in `fallen`. **Wiki**: `creature_bursts` (`creature-bursts.md`, "Bursts" in
+`creature-numbers.md`), the creatures table's "bursts beside you" / "bursts when it dies", the
+attacks table's vortex row. **Tests**: `world/creature_burst_tests.rs`; the elementals' roster
+test pins every line's burst and the earth line's throw.
+Theft and the blink (docs/design/monster-dread.md §5.6, #1130). **Data**: `steals = { what,
+chance, cooldown }` and `blinks = { range, cooldown }` on a type (`content/theft.rs`:
+`StealsSpec` and `BlinksSpec`, resolved in the creature loop into `CreatureDef::steals:
+Option<Steals>` and `CreatureDef::blinks: Option<Blinks>` with their cooldown statuses' degrees,
+`theft` and `blink` in `data/status.toml`, a degree per 6 s; `what` is `small`, the classes of
+`theft::SMALL`, or `any`). **Rules**: `world/snatch.rs` (`World::snatches_at`, a guard in `ai.rs::fight` before a cast: a thief
+beside the player, its cooldown off, strikes in melee; `World::snatch`, one line in `fight.rs`
+after `barbed`, so a thief cut down by barbs takes nothing): a melee hit on the
+player that leaves them alive, the cooldown off, one `chance` draw, then one stack of the loose
+ones its `what` allows, `index(n)` with two or more (the Steal ability's pick); the stack into
+the thief's pack, the cooldown on it; it fights on, and its pack falls where it dies
+(`fight.rs::dies`). With nothing to take, no cooldown. `world/blink.rs` (`World::blinks_at`, a
+guard in `ai.rs::fight`'s `close_in` on `Route::Wait | Route::Unreachable`, `Plan::Blink(at)`;
+`World::creature_blinks`): a cell beside the target within `range` of the blinker and in its
+line of sight that the teleport trap would land on (`trap.rs::may_land`), not shunned, drawn
+with `index(n)` in row order; `teleport_to`, the cooldown, a step's price. The two draws come
+after the AI decided, on the gameplay stream. **Words**: "The pixie snatches 40 gold coins
+from you!" ("Something" unseen); "The blink dog is suddenly beside you." where the player sees
+it land, nothing unseen. **Wiki**: `creature_thieves` and `creature_blinks`
+(`creature-thieves.md`, `creature-blinks.md`, "Thieves" and "Blinkers" in
+`creature-numbers.md`). **Tests**: `world/theft_tests.rs`. No talent (design §11).
 
 Casters (spec §8 "Creature behavior": "Casters", #1102). **Data**: `spells = [...]` on a
 `combat = "caster"` type (`CreatureSpec::spells`, resolved in the creature loop by
@@ -294,6 +369,15 @@ branch's odds. Tests: `content::danger::tests` (the roll, the fallbacks, determi
 `content::dread_roster_tests` (the sort's flags and tiers, no unique dread), and
 `world::spawn_tests::the_spawner_rolls_for_dread_at_the_levels_own_odds`,
 `draw_odds_take_the_most_specific_dread_one_in`.
+Splitting and dying into (docs/design/monster-dread.md §5.5, #1129; spec §8 "Splitting and dying
+into"): `CreatureDef::splits` (`content::Splits`: damage types, `least`) and `dies_into`
+(`content::DiesInto`: pool, count, spread), resolved in `Content::load_splits`
+(`content/split.rs`, after `load_summons`). The rules are `world/split.rs`: `World::split`, one
+line in `fight.rs::resolve` after a blow that left the target alive; `World::dies_into`, one
+line in `fight.rs::dies` before `creature_dies` (its line is said after the death's break
+lines); `World::offspring_share` in `dies` for the credit; `Actor::split_from` (`Split::Half`,
+`Split::Corpse`; saved, left out while `None`). Look mode's ", writhing" is the UI's
+(`ui/look.rs`). Tests: `world/split_tests.rs`, `ui::look::tests::what_lives_in_a_wormhost_shows_writhing`.
 Where the rosters are met (#531): the showcase's Depths has no danger (its patrol of rats, bats,
 and kobolds only; there is no general candidate pool). In the Ascmearc a type of level 17 or less
 (level 11 or less in Fennmynster, whose danger runs 3 to 10) is placed in a population where it

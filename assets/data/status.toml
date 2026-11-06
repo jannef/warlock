@@ -150,6 +150,8 @@ tick = 10
 damage = 1
 damage_type = "fire"
 eases = 30
+# Fire stops every regeneration while it burns, a troll's too (the dread design §5.9).
+regen = 0
 light = "ember"
 quenched = true
 start = "You are burning!"
@@ -167,6 +169,8 @@ tick = 6
 damage = 1
 damage_type = "acid"
 eases = 12
+# Acid stops every regeneration while it eats, a troll's too (the dread design §5.9).
+regen = 0
 start = "The acid keeps eating."
 end = "The acid is spent."
 dies = "is eaten away"
@@ -350,6 +354,46 @@ max = 100
 stacking = "refresh"
 eases = 6
 
+# A gaze spent (spec §8 "Creature behavior": "Gazes", the creatures' `[creature.gaze]`): a degree
+# for every six seconds of its `cooldown`; while it lasts the creature looks no one in the eye.
+# Creatures only: no one sees it on them.
+[[status]]
+id = "gaze"
+name = "Gaze spent"
+max = 100
+stacking = "refresh"
+eases = 6
+
+# A thief's cooldown (docs/design/monster-dread.md §5.6, the creatures' `steals`): a degree for
+# every six seconds of its `cooldown`; while it lasts the creature's hits take nothing.
+# Creatures only: no one sees it on them.
+[[status]]
+id = "theft"
+name = "Theft spent"
+max = 100
+stacking = "refresh"
+eases = 6
+
+# An aura's touch spent (the creatures' `[creature.aura]`, `world/aura.rs`): a degree for every six
+# seconds of its `every`; while it lasts the aura touches no one. Creatures only: no one sees it
+# on them.
+[[status]]
+id = "aura"
+name = "Aura spent"
+max = 100
+stacking = "refresh"
+eases = 6
+
+# A blinker's cooldown (docs/design/monster-dread.md §5.6, the creatures' `blinks`): a degree
+# for every six seconds of its `cooldown`; while it lasts the creature walks. Creatures only: no
+# one sees it on them.
+[[status]]
+id = "blink"
+name = "Blink spent"
+max = 100
+stacking = "refresh"
+eases = 6
+
 # Blaze's cooldown (the Fire-born's gift, spec §8 "Birth sign"): twelve hours before the fire in
 # them kindles again. Nothing else; time is the penalty.
 [[status]]
@@ -485,6 +529,27 @@ light = "ember"
 retaliates = { damage = "1d6", damage_type = "fire" }
 start = "Flames wrap about you, and do not burn."
 end = "The flames about you die away."
+
+# A barbed devil's hide (its `innate`, `world/aura.rs`): barbs that stab whoever strikes it in
+# melee. Refreshed each turn its bearer takes; never shown on it, since its kind always has it.
+[[status]]
+id = "barbed_hide"
+name = "Barbed hide"
+max = 1
+stacking = "refresh"
+eases = 60
+retaliates = { damage = "1d6", damage_type = "piercing" }
+
+# An ember beetle's acid blood (its `innate`, `world/aura.rs`; the dread design §5.8): it spatters
+# whoever strikes it in melee. Refreshed each turn its bearer takes; never shown on it, since its
+# kind always has it.
+[[status]]
+id = "acid_blood"
+name = "Acid blood"
+max = 1
+stacking = "refresh"
+eases = 60
+retaliates = { damage = "1d3", damage_type = "acid" }
 
 # Brand's: the held weapon burns, and its fire is a blow's, which reads no spell type's rule. Up
 # to three degrees, a minute each, as Fire cloak's.
@@ -940,6 +1005,62 @@ blocks = ["step"]
 hold = { check = "strength", difficulty = 13, turns = "3d4" }
 start = "You are held fast."
 end = "You are free to move."
+
+# Engulfing (docs/design/monster-dread.md §5.7, G7): a hold with a tick. The charnel heap's mass,
+# a greater water elemental's drowning wave closes over its victim: no step, no shot, no throw,
+# no reading, and every tick inside costs hit points (a tick every 6 s a degree, so the more
+# turns the hold has left the faster it hurts). A blow and a spell still go: hack your way out,
+# or break free with the struggle (the hold's rules, world/hold.rs). Size makes no difference.
+[[status]]
+id = "engulfed"
+name = "Engulfed"
+seen = "engulfed"
+max = 12
+stacking = "highest"
+eases = 6
+tick = 6
+damage = 2
+blocks = ["step", "shoot", "throw", "read"]
+hold = { check = "strength", difficulty = 14, turns = "2d4" }
+start = "It closes over you."
+end = "You tear yourself free."
+dies = "is crushed to death"
+death = "Smothered"
+
+# Swallowed: engulfing's worst, the nightworm's (§6), twice the harm of a tick.
+[[status]]
+id = "swallowed"
+name = "Swallowed"
+seen = "swallowed"
+max = 12
+stacking = "highest"
+eases = 6
+tick = 6
+damage = 4
+blocks = ["step", "shoot", "throw", "read"]
+hold = { check = "strength", difficulty = 14, turns = "2d4" }
+start = "It swallows you whole."
+end = "You cut your way out."
+dies = "is digested"
+death = "Swallowed whole"
+
+# Latched: engulfing's weaker cousin (§5.7), a mouth fastened on: the giant leech's sucker, the
+# canoloth's tongue. A point of harm a tick, half as often; it blocks only the step.
+[[status]]
+id = "latched"
+name = "Latched"
+seen = "latched"
+max = 12
+stacking = "highest"
+eases = 6
+tick = 12
+damage = 1
+blocks = ["step"]
+hold = { check = "strength", difficulty = 14, turns = "2d4" }
+start = "Something latches onto you."
+end = "You tear it off."
+dies = "is drained dry"
+death = "Drained dry"
 
 # The weapon abilities' (the combat progression design §6): Pinned, a missile through the foot
 # (Pinning shot) or the legs taken by a staff (Trip): no step for an action a degree, a new pin

@@ -22,7 +22,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
      as a `melee` one. A creature with a throw (§8 "Ranged combat": "Creatures' throws", the
      giants' boulders) that is not next to its target throws first whenever the target is within
      the throw's range with a clear line of fire. A summoner ("Summoning" below) summons before
-     all of this whenever it may. A `dragon` ("Dragons" below) breathes whenever its breath is
+     all of this whenever it may, and a gazer ("Gazes" below) then looks it in the eye
+     whenever its gaze is ready and the target within its range. A `dragon` ("Dragons" below) breathes whenever its breath is
      ready and the target stands in its cone with a clear line, and else fights as a `melee`
      one. A `caster` ("Casters" below) casts whatever spell of its list goes from where it
      stands, else closes to where one would, and with none it can cast (out of mana, Silenced)
@@ -118,8 +119,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
 - **Summoning** (`warlock-core/src/world/summon.rs`, the rules; `content/summon.rs`, the data;
   #520): an enemy-only creature ability; the player has none. A creature type's
   `[creature.summon]` names its pool (creature ids, each as likely, or a tag within a level
-  window, uniques and itself left out; a shared type calls only shared types), `count` (dice, 1
-  to 12), `cooldown` (6 to 600 s), `mana` (its cost; the type must have mana), and optionally
+  window, uniques and itself left out; a shared type calls only shared types; a list may name
+  the summoner's own type, a breeder's, docs/design/monster-dread.md §5.5 G5c), `count` (dice, 1
+  to 12), `cooldown` (6 to 600 s), `mana` (its cost, 1 to 1000; the type must then have mana;
+  left out, none: a breeder's, whose cooldown and `most` are its limits), and optionally
   `range` (default 8), `spread` (default 2), `most` (default 6), and `verb` (default
   "summons"). As step 2 begins, a creature with one summons when it sees a hostile within
   `range`, its casting is not blocked (a status that blocks `cast`: Silenced), its cooldown
@@ -139,6 +142,38 @@ developer notes (CLAUDE.md, `docs/dev/`).
   goblins and a warg!", "something" when they see none of it); an unseen summoner's creatures
   only as they appear in sight ("A skeleton appears!"); nothing seen, nothing said. Sight is the
   last turn's perception, so a summoning in the turn a door opens may go unseen.
+- **Auras, innate statuses, and cries** (`warlock-core/src/world/aura.rs`, the rules;
+  `content/aura.rs`, the data; #1128, design `docs/design/monster-dread.md` §5.4, §9). A type's
+  `[creature.aura]` (`status`, `severity`, `radius` 1 to 6, optional `check` and `difficulty`,
+  `every` 6 to 600 s (default 12), `heard` with `loudness`, `damage_type`, `touch`, `unseen`):
+  as its turn starts, unless its cooldown status `aura` is on, every hostile within the radius
+  that it reaches (line of sight, or for a heard aura the hearing rules for a voice that loud
+  where it stands) makes the check or takes the status, caused by it, the damage type's
+  resistance taking its share; anyone reached starts the cooldown, `ceil(every / 6)` degrees.
+  The player taking it anew hears its `touch` first ("A chill comes off the wraith."), its
+  `unseen` line when they do not see the bearer. No time, no noise. An ally of the player's has
+  none. `innate` statuses: an actor is made with them and they come back as each of its turns
+  starts; the look line never shows them. A `cry = { kind, loudness, every }`: after a turn
+  that was not a fight, a chance of 6 in `every` (one gameplay draw on its turn) of
+  `Act::Cry(kind)`, a noise heard by the hearing rules ("You hear a hiss.", the sound layer).
+- **Splitting and dying into** (`warlock-core/src/world/split.rs`, the rules;
+  `content/split.rs`, the data; docs/design/monster-dread.md §5.5 G5a and G5b, #1129): an
+  enemy-only creature gimmick. `splits = { on = ["slashing", "piercing"], least = 8 }`: a blow
+  (melee or missile, anyone's) of a listed damage type that leaves the creature alive with at
+  least `2 × least` hit points halves them; it keeps the greater half, and a second creature of
+  its type takes the other on the first of `summon_cells(id, 1)` (none free: no split), with no
+  gear, the spawner's cap ignored, its side, summoner, and mind copied, and `Actor::split_from =
+  Half`. No draw. `dies_into = { creatures = [...], count = "2d4", spread = 1 }` (count 1 to 20,
+  spread 1 to 5, default 1; never the player, a unique, or itself): as it dies, on the
+  player's level, `count` is rolled on the gameplay stream and each is one `below(pool.len())`
+  draw, made on the next of `summon_cells(id, spread)` with the dead one's faction and no gear,
+  `split_from = Corpse`. A kill of a half pays 25 % of its experience (after an ally's share), of
+  a corpse's creature 10 %, and neither counts toward a quest's kills (`tally_kill`). Words: the
+  first split of a type the player sees in a run, "The charnel heap comes apart, and both
+  halves crawl." (`Progress::once` `split:<type>`), later "The charnel heap splits in two.";
+  "3 grave worms crawl out of the wormhost!" with the death, for what the player sees; look
+  mode adds ", writhing" after a `dies_into` type's parentheses. Bearers: the charnel heap
+  (splits), the wormhost and wormlord (die into grave worms; the wormlord breeds them too).
 - **Dragons** (`warlock-core/src/world/breath.rs`, the rules; `content/breath.rs`, the data;
   #1099): an enemy-only creature ability. A `combat = "dragon"` type has a `[creature.breath]`
   (and only a dragon has one): `damage` (dice), `damage_type` (its element, one type),
@@ -156,6 +191,96 @@ developer notes (CLAUDE.md, `docs/dev/`).
   (`World::spell_type_lands`: fire's burning, one in four). Its blows and kills are the
   dragon's. The action costs a `cast`. Words: "The fire drake breathes fire!" when the player
   sees it, then each blow seen as a spell's ("The fire burns you."); unseen, the roar is heard.
+- **Gazes** (`warlock-core/src/world/gaze.rs`, the rules; `content/gaze.rs`, the data; #1125):
+  an enemy-only creature ability, a rider at sight and not at touch. A type's `[creature.gaze]`
+  has a `range` (1 to 8 cells), `riders` (statuses with a severity, drains with their check, each
+  by its own chance, as a blow's `on_hit`; never a disease or a hold), and optionally `chance`
+  (percent, default 100), `cooldown` (6 to 600 s, default 12: the `gaze` status), `averted`,
+  and `glance` (percent, default 25). In step 2, after a summoning and before a throw, a gazer
+  whose cooldown is off looks its target in the eye when it stands within `range` and has
+  vitals (what has none has no eyes to meet); its target is one it sees, so never through a
+  wall. It takes the cooldown and spends a `cast`. The eyes must meet both ways: the player
+  sees the gazer (its cell in their sight, not disguised), a creature by its own eyes. Unmet,
+  the stare is wasted: "You feel a cold stare on you." Met, one draw at `chance` (a `glance`'s
+  share of it against averted eyes) catches them: "The vampire's eyes find yours.", then each
+  rider falls as a hit's would (the status's own `start` line); missed, "You tear your eyes from
+  the vampire's." (averted: "You keep your eyes from the basilisk's."). At a creature the player
+  sees the gazer stare: "The vampire stares at the wolf." A gaze is silent. **Averted eyes,
+  forced** (the owner): while the player sees a hostile whose gaze is `averted`, they avert their
+  eyes by reflex: no toggle, no action, nothing saved, derived each turn from what they
+  perceive as being dazzled is. Averted, they fight at −4 to hit, their Dodge halved, with no
+  free blows, and the status bar says "Averted" ("You avert your eyes." / "You raise your eyes
+  again."). Anything else that keeps them from seeing the gazer (darkness, a wall or a door, a
+  disguise) means neither the penalty nor the gaze. The gazers: the vampires (transfixed; the
+  bite keeps its Toughness drain), the sea hag (frightened and a Toughness drain), the spectre
+  (a Willpower drain), the white lady, the night mare, and the ghost lord (transfixed; the touch
+  keeps its drain), the hand of glory (transfixed, 3 cells), the ultroloth and the rakshasa
+  (transfixed and frightened), the succubus and the incubus (transfixed; the kiss keeps its
+  drain), and the duergar mindbreaker (frightened and transfixed). None is `averted` yet.
+- **Bursts** (`warlock-core/src/world/creature_burst.rs`, the rules; `content/burst.rs`, the
+  data; the dread design §5.3, #1127): a type's `[creature.burst]`: `damage` (dice),
+  `damage_type`, `radius` (0 to 3), `when`, `effect` (a burst effect), optionally `noun` (what
+  strikes: "flame"; default "burst"), `verb` (default "bursts", or "comes apart" for death
+  throes), `rider` (statuses with a severity and a chance), `douses` (a wave), `gust`. A
+  **vortex** (`when = "touches"`; no `attack`, `combat` melee) bursts instead of attacking: every
+  melee plan of its AI is a burst, after which it dies; killed, it never bursts. **Death throes**
+  (`when = "dies"`) go off where the creature dies, however it dies, on the player's level. The
+  burst is the spells' shared burst centred on its cell (`cast_burst_reaching`): one roll for
+  everyone on its cells in ascending actor id order, in full (no halving at the edge), no roll to
+  hit, Evasion halving it, resistances taking their share, creatures of its own type spared, the
+  floor's ruin and the spell type's cells as a spell's burst; then a wave ends what water ends
+  (Burning) on everyone reached and puts out the fires, a gust blows each pile on its cells but
+  the centre a cell outward onto a walkable cell, and its riders land by their chance on those
+  harmed (the spell types' riders do not). Its blows are the creature's, dead or not. Words: "The
+  ember mote bursts!", "The fire elemental comes apart in flame!" when the player sees its cell
+  (death throes after the death line), each blow seen as a spell's; unseen, an explosion
+  (`SoundKind::Explosion`, 150). Who: the six motes (vortices, `2d4` to `2d6`, radius 1), every
+  elemental line but earth (death throes of `(2 + L/8)d6`, half the doubled damage spells'
+  `(4 + L/4)d6` of their level; radius and rider by rung, `docs/dev/creatures/elementals.md`), the
+  burning skull, the magma crawler, and the balor. The earth line throws stones instead
+  (`[creature.throw]`).
+- **Corroding gear** (`warlock-core/src/world/corrode.rs`; #1131, the dread design §5.8): a type's
+  `corrodes = { chance, what }` (chance 1 to 100). `what = "armour"`: its melee hit that lands
+  on the player rolls the chance; made, one piece the player wears (armour or a shield) whose
+  main part's material corrodes and is not damaged yet is drawn and damaged (`Worked::damage`,
+  the anvil's state: improvements gone, a point worse until mended): "The acid eats at your
+  chain mail shirt." `what = "weapon"`: the player's melee hit on it rolls on what struck (the
+  main hand's weapon, the off hand's, or the bashing shield): "Your long sword comes away
+  pitted." Any acid resistance halves the chance; a `"half"` material takes a second roll at
+  50; nothing is damaged twice or destroyed; a spirit weapon and a stack of several are left be.
+  Made with nothing that corrodes: the first time in a life, "The acid runs off your mithril
+  chain mail shirt." (`Progress::once`). Draws: one for the chance, then one for the piece and
+  one for `"half"`. The materials' `corrodes` (true, false, `"half"`; default by group: metal and
+  hide) is spec §7's. The ember beetle (weapon, 25; its acid blood, the innate `acid_blood`,
+  also strikes back at a melee blow for `1d3` acid), the hezrou (armour, 25), the dretch (armour,
+  10).
+- **Regeneration** (`world/regen.rs`; #1131, the dread design §5.9): a type's `regen` (percent of
+  the normal healing pace, 0 to 1000, default 100) counts among its statuses' paces in
+  `Effects::regen`, so a status that slows healing slows it (Burning and Corroded have `regen =
+  0`: fire and acid stop every healing, the player's too). The player who sees a creature with
+  `regen` above 100 get a tenth of its hit points back in one passing of time is told "The
+  troll's wounds close.". Only a brute of its level or a dread type regenerates (the roster
+  test): every troll brute at 400; never the rotting troll.
+- **Theft** (`warlock-core/src/world/snatch.rs`, the rules; `content/theft.rs`, the data;
+  docs/design/monster-dread.md §5.6, #1130): an enemy-only creature ability. `steals = { what,
+  chance, cooldown }` on a type with hands (`what` = `small`, coins, gems, potions, rings, and
+  scrolls, or `any`; `chance` 1 to 100; `cooldown` 6 to 600 s): when one of its melee blows hits
+  the player and leaves them alive while its cooldown status `theft` is off, the chance is drawn;
+  made, it takes one whole stack of what the player carries and neither wears nor wields, of the
+  classes `what` allows, picked uniformly, into its own pack, and takes `ceil(cooldown / eases)`
+  degrees of `theft`. Beside the player with its theft ready, a thief strikes in melee rather than
+  cast (`World::snatches_at`). With nothing it may take, nothing happens. It never robs a creature, and it
+  neither flees nor blinks away: it fights on, and what it took falls where it dies. Words:
+  "The pixie snatches 40 gold coins from you!" ("Something" when unseen). The pixie, the imp,
+  the succubus, and the incubus take what is small, the nymph anything.
+- **The blink** (`warlock-core/src/world/blink.rs`; `content/theft.rs`; #1130): `blinks =
+  { range, cooldown }` (2 to 12 cells, 6 to 600 s), the blink dog's alone. In step 2, a melee
+  fighter whose way to its target is blocked (its path held by someone, or none: a door it
+  cannot open, a gap no paw crosses) while its cooldown status `blink` is off moves at once to a
+  free cell beside the target, within `range` of it and in its own line of sight, where a
+  teleport could land (no trap, no ice), drawn among those cells; it takes `ceil(cooldown /
+  eases)` degrees of `blink`, and the blink costs a step. It never blinks away. Words: "The
+  blink dog is suddenly beside you." where the player sees it land; unseen, nothing.
 - **Casters** (`warlock-core/src/world/creature_cast.rs`, the rules;
   `content/creature_spells.rs`, the data; #1102): a `combat = "caster"` type has a `spells`
   list (ids in `data/spells/`, in the order it prefers them; only a caster has one), and only

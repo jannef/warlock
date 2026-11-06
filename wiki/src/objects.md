@@ -176,6 +176,23 @@ bone (horn, ivory, chitin, and dragonbone with it), stone, hide, cloth, glass, a
 
 {{#include generated/materials.md}}
 
+### Corrosion
+
+Some [creatures](creatures.md) carry acid. The [hezrou](creatures.md#creature-hezrou) and the [dretch](creatures.md#creature-dretch) eat at what you wear: each of their
+blows that lands has a chance (25% for the hezrou, 10% for the dretch) to **damage** one piece of
+armour or a shield you wear, drawn at random among those whose material corrodes. The [ember
+beetle](creatures.md#creature-ember-beetle)'s blood eats at what strikes it: each of your blows that lands has a 25% chance to damage the
+weapon (or the shield) it struck with. A damaged item loses its improvements and is a point worse
+until it is mended, the same state as a failed attempt at an [anvil](special-rooms.md#forges), where it is mended; acid
+never damages an item twice and never destroys one.
+
+The **Corrodes** column above says which materials acid eats: yes (the common metals, leather,
+fur, and cloth), half (bone, horn, ivory, and chitin: at half the chance), or no (gold, silver,
+electrum, chromium, nicrosil, mithril, adamantium, dragonscale, dragonbone, wood, stone, glass,
+and the gems). Any [resistance](damage-types.md) to acid halves the chance. If nothing you wear (or the weapon
+that struck) corrodes, nothing happens, and the first time you are told so: *The acid runs off
+your mithril chain mail shirt.* Fighting bare-handed or with a spell risks nothing.
+
 ### Items of other materials
 
 Most items can be found made of another material than their usual one: *a bronze long sword*,
@@ -218,7 +235,11 @@ relative among the materials an item may be made of (its usual one too), and a m
 in a fight than the item's usual one but dearer (gold, silver, aluminium on a sword; ivory on a
 dagger) is found at most at weight 10, very rare, whatever its own weight says; rings and
 amulets are worth only, so that never applies to them. Chromium, nicrosil, dragonbone, and
-dragonscale appear only deep. Items placed by hand in the world's made places are what they are
+dragonscale appear only deep, mithril only from depth 20 and adamantium from depth 30 (on
+creatures, from levels 30 and 40). Mithril is half the weight of steel and quicker in the hand
+(+1 to hit); adamantium is a little heavier, bites deeper (+1 damage), and armour of it keeps
+130% of its Protection. Neither is a precious metal, and acid runs off both. An [anvil](special-rooms.md#forges) works
+them as it does steel. Items placed by hand in the world's made places are what they are
 placed as.
 
 {{#include generated/material-finds.md}}

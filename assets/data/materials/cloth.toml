@@ -3,6 +3,7 @@
 id = "cloth"
 name = "cloth"
 group = "cloth"
+corrodes = true
 color = "#c8c0a8"
 weight = 25
 protection = 15

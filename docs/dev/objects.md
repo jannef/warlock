@@ -146,6 +146,15 @@ names and colours, the description, placements and refusals, combat, saves and r
 weights and the cap, loot determinism, the built-in tables, a property test over thousands of
 loot items and drops across seeds and depths, and the depth shift).
 
+**Corrosion** (#1131, the dread design §5.8): `MaterialDef::corrodes()` (`Corrosion::{No, Half,
+Yes}`) from the file's `corrodes` (true, false, or `"half"`; any other word refused at load),
+else `Corrosion::of_group` (metal and hide yes, the rest no). The review's values are pinned by
+`world/corrode_tests.rs::every_material_is_reviewed_for_acid`, which fails for a new material
+until it is listed. Mithril and adamantium (`data/materials/`) are metals that do not corrode,
+very rare from item level 20 and 30 (gear from creature level 30 and 40); the wiki's materials
+table has the column. The rules that read it are `world/corrode.rs`
+(`docs/dev/creatures.md`'s gimmicks; the spec's "Creature gimmicks").
+
 **Gems** (spec §7 "Gems", #191): a gem is a material with a `gem` table (`content/gem.rs`,
 `GemDef`: `color`, `value` in gold for the plain size and cut, `rarity`, `plural`; a gem is
 precious, checked), one file each in `data/materials/` (diamond, ruby, emerald, sapphire, topaz,

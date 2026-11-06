@@ -1,6 +1,7 @@
 # The fey roster (#452).
 # A nymph: a spirit of a forest pool or a spring, so beautiful that those she touches
-# stand spellbound. Most keep to the Seelie court.
+# stand spellbound, and what they carry is hers if she likes it (`steals`, #1130). Most keep to
+# the Seelie court.
 [[creature]]
 id = "nymph"
 level = 22
@@ -27,7 +28,9 @@ weight = 50000
 stats = { strength = 17, dexterity = 16, toughness = 21, intelligence = 23, willpower = 23, presence = 25 }
 base_hp = 44
 skills = { concentration = 76, spellcraft = 81 }
+steals = { what = "any", chance = 30, cooldown = 60 }
 natural = { defence = 1, protection = 0, name = "fey grace" }
+cry = { kind = "giggle", loudness = 40, every = 60 }
 [creature.attack]
 damage = "3d6"
 damage_type = "bludgeoning"

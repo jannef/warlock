@@ -3,6 +3,7 @@
 id = "electrum"
 name = "electrum"
 group = "metal"
+corrodes = false
 color = "#e6d690"
 weight = 191
 to_hit = -1

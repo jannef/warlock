@@ -27,6 +27,14 @@ resist = { fire = 100, poison = 100, cold = 50 }
 loot = 50
 corpse = false
 blood = "#4a1010"
+innate = ["fire_cloaked"]
+[creature.aura]
+status = "frightened"
+severity = 2
+radius = 3
+check = "willpower"
+difficulty = 22
+touch = "Terror rolls off {the}."
 [creature.attack]
 damage = "5d10"
 damage_type = "piercing"

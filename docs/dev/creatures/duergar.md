@@ -35,8 +35,8 @@ The slinger 8 (a sling and stones, a hand axe half the time), the crossbowman 15
 bolts, studded leather), the veteran 17 (battle axe, scale mail, helm, shield), the priest 19 (a
 caster, mace and mail, an amulet sometimes magic), the hulk 22 (a duergar swollen to twice its
 height: a maul, a grey hide of Defence 1 and Protection 2, slow), the spider rider 25 (quick,
-speed 1300; its spider's bite poisons), the mindbreaker 29 (a caster; its mind-lash, force damage,
-frightens and transfixes), the thane 34 (Old English *þegn*: great axe, banded mail, great helm,
+speed 1300; its spider's bite poisons), the mindbreaker 29 (a caster; its mind-lash, force damage, and
+a stare that frightens and transfixes: its gaze, #1125, range 4, 30 %), the thane 34 (Old English *þegn*: great axe, banded mail, great helm,
 gold), and the duergar king 40 (very rare: war hammer, plate, great helm, large shield, gold).
 
 ## Populations

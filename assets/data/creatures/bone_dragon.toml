@@ -25,6 +25,7 @@ natural = { defence = 4, protection = 8, name = "bones" }
 resist = { piercing = 50, bludgeoning = -50, poison = 100 }
 corpse = false
 blood = "none"
+cry = { kind = "rattle", loudness = 60, every = 90 }
 [creature.attack]
 damage = "4d10"
 damage_type = "slashing"

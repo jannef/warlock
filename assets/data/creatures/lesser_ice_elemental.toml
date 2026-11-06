@@ -30,3 +30,13 @@ name = "fist"
 verb = "freezes"
 to_hit = 2
 on_hit = [{ status = "sluggish", chance = 25, severity = 1 }]
+# Death throes (the dread design §5.3): it bursts where it dies.
+[creature.burst]
+damage = "3d6"
+damage_type = "cold"
+radius = 1
+when = "dies"
+effect = "frost_burst"
+noun = "frost"
+verb = "shatters in a burst of frost"
+rider = [{ status = "sluggish", severity = 1, chance = 100 }]

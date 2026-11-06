@@ -1,6 +1,9 @@
 //! The troll tribe (#456): every living troll (a type tagged `troll` outside the undead faction,
 //! whose rotting troll keeps to the undead roster's numbers) keeps to the tribe's formulas: the
 //! undead roster's (#383) on the troll's own base, Toughness 4 over it (a troll heals by it).
+//! A regenerating type (`regen` above 100) is a brute (the dread design §5.9's rule, the owner's:
+//! never a regenerating sack of potatoes), and every brute troll regenerates; the rotting troll
+//! does not.
 
 use super::Content;
 use crate::stats::Stat;
@@ -52,9 +55,10 @@ impl Role {
 
 /// Every living troll and its role (#456's table).
 const ROLES: &[(&str, Role)] = &[
-    // Kin before the tribe: the fen's (faction `marsh`) and the first of the tribe.
-    ("marsh_troll", Role::Standard),
-    ("troll", Role::Standard),
+    // Kin before the tribe: the fen's (faction `marsh`) and the first of the tribe, both brutes
+    // that regenerate (the dread design §5.9: the marsh troll's `2d8`).
+    ("marsh_troll", Role::Brute),
+    ("troll", Role::Brute),
     // The tribe (#456).
     ("hill_troll", Role::Brute),
     ("forest_troll", Role::Quick),
@@ -63,7 +67,7 @@ const ROLES: &[(&str, Role)] = &[
     ("stone_troll", Role::Standard),
     ("two_headed_troll", Role::Brute),
     ("fire_troll", Role::Standard),
-    ("troll_chieftain", Role::Standard),
+    ("troll_chieftain", Role::Brute),
     ("elder_troll", Role::Brute),
 ];
 
@@ -139,6 +143,13 @@ fn the_trolls_keep_to_the_tribe() {
             within(average, want),
             "{id}: dice average {average}, the formula {want}"
         );
+        // The brutes regenerate, and only they (§5.9).
+        let brute = matches!(role, Role::Brute);
+        assert_eq!(
+            def.regen > 100,
+            brute,
+            "{id}: a troll regenerates if and only if it is a brute"
+        );
         // Fire stops a troll, all but the fire troll's kind.
         let fire = content.damage_type_id("fire").expect("fire");
         let resists = def.resist.iter().find(|(t, _)| *t == fire).map(|r| r.1);
@@ -167,4 +178,30 @@ fn the_formulas_give_the_plans_numbers() {
     assert_eq!(dice_average(15.0, Role::Brute), 13.5);
     assert_eq!(max_hp(42.0, Role::Brute).round(), 206.0);
     assert_eq!(dice_average(42.0, Role::Brute), 19.5);
+}
+
+/// The rule (the dread design §5.9, the owner's: "regenerating sack of potatoes is just free
+/// weapon marks!"): a type that regenerates is a brute of its level, a troll of [`ROLES`]'s
+/// brutes, or carries a dread gimmick (`dread = true`). The rotting troll, a shambler, does not.
+#[test]
+fn only_a_brute_regenerates() {
+    let content = Content::builtin().expect("content");
+    for def in content.creature_defs() {
+        if def.regen <= 100 {
+            continue;
+        }
+        let id = def.id.as_str();
+        let brute = ROLES
+            .iter()
+            .any(|&(r, role)| r == id && matches!(role, Role::Brute));
+        assert!(
+            brute || def.dread,
+            "{id}: regenerates ({}) but is neither a brute nor dread (the dread design §5.9)",
+            def.regen
+        );
+    }
+    let rotting = content
+        .creature_id("rotting_troll")
+        .expect("the rotting troll");
+    assert_eq!(content.creature(rotting).regen, 100, "its rot is its trait");
 }

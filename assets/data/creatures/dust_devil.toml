@@ -8,7 +8,7 @@ rarity = "uncommon"
 name = "dust devil"
 glyph = "e"
 fg = "#c8b890"
-speed = 1450
+speed = 1650
 faction = "elemental"
 tags = ["elemental", "air"]
 alignment = "neutral"
@@ -24,8 +24,12 @@ natural = { defence = 2, protection = 0, name = "rushing wind" }
 resist = { piercing = 50, electricity = 50, poison = 100 }
 corpse = false
 blood = "none"
-[creature.attack]
-damage = "1d4"
+# A vortex (the dread design §5.3): beside its target it bursts instead of attacking, and is
+# gone; killed from afar it goes out quietly.
+[creature.burst]
+damage = "2d4"
 damage_type = "slashing"
-name = "grit"
-verb = "scours"
+radius = 1
+when = "touches"
+effect = "shatter"
+noun = "sand"

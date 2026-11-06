@@ -1,6 +1,6 @@
 # The fey roster (#452).
-# A pixie: a tiny winged trickster of powerful glamours. Its illusions hold those who look
-# at it still (its touch transfixes); its spells are announced until creature magic is designed. It
+# A pixie: a tiny winged trickster of powerful glamours. Its dust sends those it touches to
+# sleep, and its quick fingers lift what is small from a pack as it fights (`steals`, #1130). It
 # flies, without a sound.
 [[creature]]
 id = "pixie"
@@ -27,10 +27,12 @@ size = "small"
 stats = { strength = 9, dexterity = 15, toughness = 10, intelligence = 12, willpower = 12, presence = 14 }
 base_hp = 5
 skills = { concentration = 22, spellcraft = 27 }
+cry = { kind = "giggle", loudness = 40, every = 60 }
+steals = { what = "small", chance = 30, cooldown = 60 }
 [creature.attack]
 damage = "1d6"
 damage_type = "piercing"
 name = "touch"
 verb = "touches"
 to_hit = 1
-on_hit = [{ status = "transfixed", chance = 15, severity = 1 }]
+on_hit = [{ status = "drowsy", chance = 15, severity = 1 }]

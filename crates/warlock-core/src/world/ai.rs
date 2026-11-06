@@ -8,7 +8,8 @@
 //!    slip past it (`slip.rs::looks_at`), unseen by its darkvision.
 //! 2. **Fight**: a melee creature attacks a target next to it, else steps along a shortest path
 //!    toward it; one that throws (a giant's boulders, `hurl.rs`) throws on the way whenever the
-//!    target is in range with a clear line of fire. A ranged creature shoots when the target is
+//!    target is in range with a clear line of fire; one that gazes (`gaze.rs`) looks it in the
+//!    eye first whenever its gaze is ready and the target within its range. A ranged creature shoots when the target is
 //!    within its range with a clear line of fire (no opaque cell and nobody in between), else
 //!    steps toward the nearest cell that gives it one (failing that, toward the target). A
 //!    caster casts the first spell of its list that goes from where it stands
@@ -18,6 +19,7 @@
 //!    and the target stands in the cone's reach with a clear line (`breath.rs`), and fights in
 //!    melee otherwise. Leaving its routine, it remembers where it was (its post).
 //!    An unharmed lurker waits where it stands instead of stepping toward it (`lurk.rs`).
+//!    A blinker whose way to it is blocked blinks to its side (`blink.rs`).
 //! 3. **Search**: with no hostile in sight, it goes to where it last saw one.
 //! 4. **Listen**: failing that, to where it last heard a noise whose source it could not see
 //!    ([`crate::noise`]; what it heard since it last acted, the newest first). Only creatures
@@ -76,6 +78,10 @@ pub(super) enum Plan {
     Summon,
     /// Breathe its element at the cell a hostile stands on (`breath.rs`).
     Breathe(Pos),
+    /// Look a hostile in the eye (`gaze.rs`).
+    Gaze(ActorId),
+    /// Blink to the side of the hostile on this cell, its path there blocked (`blink.rs`).
+    Blink(Pos),
     /// Cast a spell of its list on someone (`creature_cast.rs`).
     Cast {
         spell: SpellId,
@@ -142,6 +148,8 @@ impl World {
         let heard = (self.state.actors.get_mut(&id))
             .map(|a| std::mem::take(&mut a.heard))
             .unwrap_or_default();
+        // Its innate statuses, then its aura (`aura.rs`).
+        self.aura_turn(id, events);
         // The self-buff step (`unseen.rs`): it fades from sight when it may, then goes on.
         self.fades(id, events);
         // Frightened (Hound's bay, `sign_picks.rs`), it runs; held fast (Drowning grip,
@@ -158,6 +166,11 @@ impl World {
                 target,
                 kind: AttackKind::Thrown,
             } => self.creature_hurls(id, target, events),
+            // A vortex bursts where it would strike (`creature_burst.rs`).
+            Plan::Attack {
+                kind: AttackKind::Melee,
+                ..
+            } if self.bursts_on_touch(id) => self.creature_bursts(id, events),
             Plan::Attack { target, kind } => {
                 let skills = self.skills_of(id, kind, None);
                 let with = self.state.actors[&id].blow_item(&self.content);
@@ -168,13 +181,16 @@ impl World {
             }
             Plan::Summon => self.creature_summons(id, events),
             Plan::Breathe(at) => self.creature_breathes(id, at, events),
+            Plan::Gaze(target) => self.creature_gazes(id, target, events),
+            Plan::Blink(at) => self.creature_blinks(id, at, events),
             Plan::Cast { spell, on } => self.creature_casts(id, (spell, on), events),
             Plan::Step(dir) => self.step_or_wait(id, dir, events).1,
             Plan::Patrol => self.patrol(id, events),
             Plan::Wait => self.price_of(id, ActionKind::Wait),
         };
-        // Going about its routine, it may mutter to itself (`talk.rs`).
+        // Going about its routine, it may mutter to itself (`talk.rs`), or cry (`aura.rs`).
         self.mutter(id);
+        self.cry(id, plan);
         if slow {
             price.saturating_mul(i64::from(super::stride::STRIDE))
         } else {
@@ -341,6 +357,10 @@ impl World {
         if self.summons_at(id, at) {
             return Plan::Summon;
         }
+        // A gazer (`gaze.rs`) looks it in the eye whenever it may.
+        if self.gazes_at(id, target, at) {
+            return Plan::Gaze(target);
+        }
         // A creature that throws (`hurl.rs`) throws whenever it can from where it stands.
         if self.hurls_at(id, target, at) {
             return attack(AttackKind::Thrown);
@@ -349,12 +369,18 @@ impl World {
         if self.breathes_at(id, target, at) {
             return Plan::Breathe(at);
         }
+        // A thief beside the player with its theft ready (`snatch.rs`) strikes to steal.
+        if self.snatches_at(id, target) {
+            return attack(AttackKind::Melee);
+        }
         // A caster (`creature_cast.rs`) casts whatever of its list goes from where it stands.
         if let Some((spell, on)) = self.creature_spell(id, target, at) {
             return Plan::Cast { spell, on };
         }
         let close_in = || match self.route_to_shore(id, at, 1) {
             Route::Step(dir) => Plan::Step(dir),
+            // A blinker (`blink.rs`) blinks past what blocks its way.
+            Route::Wait | Route::Unreachable if self.blinks_at(id, at) => Plan::Blink(at),
             Route::There | Route::Wait | Route::Unreachable => Plan::Wait,
         };
         let melee = || {

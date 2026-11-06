@@ -16,9 +16,32 @@ tags, in the delf's `fire` faction.
 | Fire | standard | ember mote 2, lesser fire elemental 9, cinder elemental 17, fire elemental 27, greater 38, elder 50, balefire 64 | immune to fire, cold hurts it more; carries `ember_full`, `lava`, or `brazier` light |
 | Earth | brute | stone mote 1, lesser earth elemental 6, earth elemental 13, greater 24, elder 40, hoarstone 60 | slow, protection, resists piercing and slashing, immune to electricity; `staggered` blows, `held` from the elder; incorporeal from the earth elemental up (`wall_defence = 1 + level / 20`) |
 | Air | quick | dust devil 3, lesser air elemental 10, air elemental 19, greater 31, elder 45, welkin wind 58 | very fast, hard to hit, resists piercing and electricity; `staggered` blows |
-| Water | standard | water mote 4, lesser water elemental 7, water elemental 14, greater 26, elder 42, brimwolf 55 | walks on land; resists fire and piercing, electricity hurts it more; `sluggish` blows, `held` from the greater up |
+| Water | standard | water mote 4, lesser water elemental 7, water elemental 14, greater 26, elder 42, brimwolf 55 | walks on land; resists fire and piercing, electricity hurts it more; `sluggish` blows, `engulfed` (drowned, docs/dev/status-effects.md) from the greater up |
 | Ice | brute | frost mote 5, lesser ice elemental 11, ice elemental 21, greater 33, elder 48, rimethurse 66 | slow, a cold blow that leaves one `sluggish`, immune to cold, fire hurts it more |
 | Lightning | quick | spark mote 8, lesser lightning elemental 15, lightning elemental 23, greater 36, elder 52, thunderhead 70 | fast, a shock that `staggered`, immune to electricity; the `storm` light (`data/lights.toml`, added for it; the spark mote only a glow) |
+
+**Bursts** (the dread design §5.3, #1127; `world/creature_burst.rs`): the six motes are
+**vortices** (`[creature.burst]` with `when = "touches"`, radius 1, no `attack`, speed +200):
+stone mote `2d4` bludgeoning, ember mote `2d4` fire, dust devil `2d4` slashing, water mote `2d4`
+bludgeoning, frost mote `2d6` cold, spark mote `2d6` electricity. Every other rung but the earth
+line's has **death throes** (`when = "dies"`), `(2 + L/8)d6` (half the doubled damage spells'
+`(4 + L/4)d6` of its level), by line and rung (lesser, with the cinder elemental on the fire
+line's; plain; greater; elder; eldest):
+
+| Line | Type | Radius by rung | Rider | Also |
+|---|---|---|---|---|
+| fire | fire, effect `fireball` | 1 / 2 / 2 / 3 / 3 | 50 % `burning` from the plain rung | — |
+| lightning | electricity, `shatter` | 1 / 2 / 2 / 3 / 3 | 50 % `staggered` | — |
+| ice | cold, `frost_burst` | 1 / 2 / 2 / 3 / 3 | `sluggish` | — |
+| air | bludgeoning, `shatter` | 1 / 1 / 2 / 2 / 3 | 50 % `staggered` | `gust`: piles blown a cell outward |
+| water | bludgeoning, `shatter` | 1 / 1 / 2 / 2 / 3 | — | `douses`: Burning and fires put out |
+
+The fire line's blows also set alight (`on_hit` 25 % `burning`). The **earth line** does not
+burst: it throws stones (`[creature.throw]`, the `boulder` object named "stone", range
+5 + L/10, the fist's dice a size smaller, `cost = 1500`, bludgeoning, 15 % `staggered`), and one
+inside a wall comes out before it throws (`hurl.rs`). `content/elemental_roster_tests.rs`'s
+`RUNGS` table pins each line's burst and the earth line's throw, and every elemental is on a
+rung or a vortex.
 
 The greater, elder, and eldest rungs are size medium with great weights (no larger size yet) and
 drop loot now and then. Riders are existing statuses only.
@@ -37,11 +60,14 @@ devil (the shallow galleries' filler, as the bats are), the spark mote, the less
 and lightning elementals, and the water elemental. The air elemental (19) and those of level 21
 and up (the ice elemental and every greater and elder one) ship in none: no danger window reaches
 them (Fyrdelf's runs 5 to 16, #534). Deferred (#453 "Follow-ups"): large size,
-water-bound behaviour, knockback, whirlwind, engulf, burning, breath, elements at war, gem drops.
+water-bound behaviour, knockback, whirlwind, engulf, breath, elements at war, gem drops.
+
+Presence (#1128, `world/aura.rs`): the fire salamander is made with `fire_cloaked` and keeps it (innate: whoever strikes it burns; never shown in the look line).
 
 The invisible stalker (#1132, docs/design/monster-dread.md §5.11): the air line's kin of level 22
 (uncommon, dread), `invisible = true` and `hunts = true` (docs/dev/creatures.md "The unseen"):
 never seen, it comes to the player wherever they are on its level; a quick role (1500, `3d8`
 slashing), no corpse, no blood, and, as every elemental now, no heartbeat for Sense the quick. No
 population names the air elementals of its depth yet, so it comes as a stray. It keeps the roster's
-formulas (`elemental_roster_tests`).
+formulas (`elemental_roster_tests`). It bursts where it dies as the air elemental does (`4d6`, radius 1, a
+gust; #1127's death throes, `elemental_roster_tests::KIN`).

@@ -12,10 +12,14 @@ mod anim;
 pub mod animated;
 #[cfg(test)]
 mod animated_tests;
+mod aura;
+#[cfg(test)]
+mod aura_roster_tests;
 mod background;
 #[cfg(test)]
 mod beast_roster_tests;
 mod breath;
+mod burst;
 mod calendar;
 mod calling;
 mod campaign;
@@ -64,6 +68,7 @@ mod flow;
 mod forage;
 #[cfg(test)]
 mod forge_tests;
+mod gaze;
 mod gear;
 mod gem;
 #[cfg(test)]
@@ -147,6 +152,7 @@ mod spell_def;
 mod spell_ladder;
 mod spell_mod;
 mod spell_type;
+mod split;
 mod stance;
 mod stat_training;
 mod status;
@@ -161,6 +167,7 @@ mod talent;
 mod talent_alike;
 mod temper;
 mod terrain;
+mod theft;
 mod throw;
 mod trap;
 #[cfg(test)]
@@ -189,11 +196,13 @@ pub use alignment::{AlignmentRules, BandDef, ByAlignment, Shifts};
 pub use ally::AllyRules;
 pub use anim::GlyphAnim;
 pub use animated::{Animated, AnimatedDef, Body, ID_PREFIX, Line, Numbers, Ramp, SlotLine};
+pub use aura::{Aura, CRY_TURN, Cry};
 pub use background::{
     AgeRange, Background, Chapter, ChapterWhen, Effect as StoryEffect, Line as StoryLine, Marks,
     Points, Tier as StoryTier, Tiers, When,
 };
 pub use breath::Breath;
+pub use burst::{BurstWhen, CreatureBurst, RADII as CREATURE_BURST_RADII};
 pub use calendar::Calendar;
 pub use calling::{CallingDef, MAX_MESSAGE as MAX_CALLING_MESSAGE};
 pub use campaign::{CAMPAIGNS, CampaignDef, CampaignKind};
@@ -206,9 +215,9 @@ pub use companion::{
     CHAPTER as COMPANION_CHAPTER, CompanionRules, Growth as CompanionGrowth, TameRules,
 };
 pub use creature::{
-    Budge, Combat, CorpseGifts, CreatureDef, CreatureId, DEFAULT_SIGHT, Hide, Incorporeal,
-    MAX_TAG_WIDEN, MAX_TRAIN, MAX_WIDEN, NORMAL_SPEED, NaturalAttack, OnEat, SPEEDS, SkillGift,
-    is_proper, the, the_start,
+    Budge, Combat, CorpseGifts, Corrodes, CorrodesWhat, CreatureDef, CreatureId, DEFAULT_SIGHT,
+    Hide, Incorporeal, MAX_TAG_WIDEN, MAX_TRAIN, MAX_WIDEN, NORMAL_SPEED, NaturalAttack, OnEat,
+    SPEEDS, SkillGift, is_proper, the, the_start,
 };
 pub use creature_rarity::{COMMON, CreatureRarity, FACTOR};
 pub use damage_type::{DamageTypeDef, DamageTypeId, MAX_DAMAGE_TYPES};
@@ -240,6 +249,7 @@ pub use feint::FeintRules;
 pub use fletch::{FletchMakes, FletchRules};
 pub use flow::{FLOW_SPEEDS, Flow};
 pub use forage::{ForageGround, ForageRules};
+pub use gaze::Gaze;
 pub use gear::{Gear, GearLine, RACIAL_CHANCE};
 pub use gem::{
     Cut, CutId, Cutting, GemDef, GemSize, GemSizeId, Gems, MAX_GEM_VALUE, MAX_GEM_WEIGHT,
@@ -263,7 +273,7 @@ pub use level::{
     parse_route,
 };
 pub use light::{Dips, Drift, HueDrift, LightId, LightPreset, MAX_LIGHT_RADIUS, Stability};
-pub use material::{ANY, Found, MAX_MATERIAL_VALUE, MaterialDef, MaterialId, VERY_RARE};
+pub use material::{ANY, Corrosion, Found, MAX_MATERIAL_VALUE, MaterialDef, MaterialId, VERY_RARE};
 pub use monster_pool::{MonsterPool, VaultMonsters};
 pub use names::{NameLists, Names};
 pub use object::{
@@ -331,6 +341,7 @@ pub use spell_ladder::{
 };
 pub use spell_mod::{SpellMod, SpellModSpec, SpellMods, merge_rider};
 pub use spell_type::{SpellType, TypeBite, TypeRider};
+pub use split::{CORPSE_SHARE, DiesInto, HALF_SHARE, Splits};
 pub use stance::{CombatStance, StanceDef, Stances, percent_of};
 pub use stat_training::{
     DeedRule, HAUL_GRAMS, ODDS_SCALE, StatDeed, StatRule, StatTraining, StatUse,
@@ -353,6 +364,7 @@ pub use temper::TemperRules;
 pub use terrain::{
     Breakable, Freeze, FreezeSpec, MAX_HARDNESS, MAX_HEIGHT, StairsDir, TerrainDef, TerrainId,
 };
+pub use theft::{Blinks, SMALL as SMALL_LOOT, Steals, Takes};
 pub use throw::{THROW_RANGES, Throw};
 pub use trap::{MAX_CHARGES, Trap, TrapAvoid, TrapDef, TrapEffect, TrapId, TrapNoise};
 pub use unique::{Power, UNIQUE, UniqueDef, Uniques};
@@ -1173,6 +1185,7 @@ impl Content {
         content.load_gear()?;
         content.load_throws()?;
         content.load_summons()?;
+        content.load_splits()?;
         // Summon spells' pools, once every creature type is known.
         spell_def::resolve_summons(&mut content)?;
         spell_def::check_only_tags(&content).map_err(|m| ContentError::new("data/spells", m))?;
@@ -1194,6 +1207,7 @@ impl Content {
         talent::check_heirlooms(&content).map_err(|m| ContentError::new("data/talents", m))?;
         spell_def::check_effects(&content).map_err(|m| ContentError::new("data/spells", m))?;
         breath::check_effects(&content)?;
+        burst::check_effects(&content)?;
         let path = "data/traps.toml";
         if let Some(text) = files.get_optional(path) {
             let (traps, ids, avoid) = trap::parse(path, text, &content)?;
@@ -1822,6 +1836,22 @@ impl Content {
                 .map(|b| b.resolve(self))
                 .transpose()
                 .map_err(|m| err(format!("creature `{}`: {m}", spec.id)))?;
+            let gaze = (spec.gaze.as_ref())
+                .map(|g| g.resolve(self, status, |id| self.disease_id(id)))
+                .transpose()
+                .map_err(|m| err(format!("creature `{}`: {m}", spec.id)))?;
+            let burst = (spec.burst.as_ref())
+                .map(|b| b.resolve(self))
+                .transpose()
+                .map_err(|m| err(format!("creature `{}`: {m}", spec.id)))?;
+            let steals = (spec.steals.as_ref())
+                .map(|t| t.resolve(self))
+                .transpose()
+                .map_err(|m| err(format!("creature `{}`: {m}", spec.id)))?;
+            let blinks = (spec.blinks.as_ref())
+                .map(|b| b.resolve(self))
+                .transpose()
+                .map_err(|m| err(format!("creature `{}`: {m}", spec.id)))?;
             let invisible = (spec.invisible.map(|i| i.resolve(self)))
                 .transpose()
                 .map_err(|m| err(format!("creature `{}`: {m}", spec.id)))?
@@ -1917,6 +1947,22 @@ impl Content {
                     )));
                 }
             }
+            if spec.regen > creature::MAX_REGEN {
+                return Err(err(format!(
+                    "creature `{}`: `regen` is 0 to {} percent, not {}",
+                    spec.id,
+                    creature::MAX_REGEN,
+                    spec.regen
+                )));
+            }
+            if let Some(acid) = spec.corrodes
+                && !(1..=100).contains(&acid.chance)
+            {
+                return Err(err(format!(
+                    "creature `{}`: `corrodes`' `chance` is 1 to 100 percent, not {}",
+                    spec.id, acid.chance
+                )));
+            }
             if let Some(animated) = &mut spec.animated {
                 animated.family = CreatureId(id.0 - u16::from(animated.member));
             }
@@ -1933,7 +1979,12 @@ impl Content {
                 attack,
                 more_attacks,
                 breath,
+                gaze,
+                burst,
                 throw,
+                presence: aura::resolve(self, &spec).map_err(err)?,
+                steals,
+                blinks,
                 invisible,
                 weapon_skills,
                 resist,
@@ -4531,6 +4582,14 @@ fn check_combat(spec: &creature::CreatureSpec) -> Result<(), String> {
             ));
         }
         _ => {}
+    }
+    // A vortex's burst is its whole offence (`world/creature_burst.rs`): no attack beside it.
+    if (spec.burst.as_ref()).is_some_and(|b| b.when == crate::content::BurstWhen::Touches)
+        && (spec.attack.is_some() || spec.combat != Combat::Melee)
+    {
+        return Err(format!(
+            "creature `{id}`: a burst on touch is its offence: no attack, and `combat` melee"
+        ));
     }
     match (spec.combat, spec.range) {
         (Combat::Melee | Combat::Dragon, None) => Ok(()),
