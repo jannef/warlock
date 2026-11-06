@@ -5,7 +5,8 @@
 id = "basilisk"
 level = 16
 xp = 90
-rarity = "rare"
+rarity = "very_rare"
+dread = true
 name = "basilisk"
 glyph = "R"
 fg = "#7a9a3a"

@@ -6,6 +6,7 @@ id = "gibbering_shade"
 level = 18
 xp = 100
 rarity = "rare"
+dread = true
 name = "gibbering shade"
 glyph = "G"
 fg = "#a090c0"

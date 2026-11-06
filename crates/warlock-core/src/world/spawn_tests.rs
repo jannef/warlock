@@ -613,3 +613,93 @@ fn a_spawn_rolls_its_gear_from_its_own_stream() {
     }
     assert!(armed > 0, "no spawn carried anything");
 }
+
+/// A dread shade of the haunt's danger (docs/design/monster-dread.md §8).
+const SHADE: &str = r##"[[creature]]
+id = "zz_shade"
+name = "test shade"
+glyph = "G"
+fg = "#404040"
+faction = "undead"
+level = 3
+xp = 25
+dread = true
+stray = false
+weight = 30000
+"##;
+
+/// The haunt with the shade among its folk and `odds` (its `dread_one_in`, if any), and the
+/// creature types that came of `n` forced attempts with seed `seed`.
+fn dread_spawns(odds: &str, seed: u64, n: usize) -> Vec<String> {
+    let haunt = HAUNT.replace(
+        "population = [\"kobold\", \"kobold_archer\", \"kobold_shaman\", \"chief\"]",
+        &format!("population = [\"kobold\", \"kobold_archer\", \"zz_shade\"]\n{odds}"),
+    );
+    let mut files = files_with(&haunt);
+    files.insert("data/creatures/zz_shade.toml", SHADE);
+    let content = Arc::new(Content::load(&files).expect("content"));
+    let mut w = World::new(content, "haunt", Some(seed)).expect("world");
+    let came: Vec<ActorId> = (0..n).filter_map(|_| w.attempt(true)).collect();
+    (came.iter())
+        .map(|id| w.content.creature(w.state.actors[id].creature).id.clone())
+        .collect()
+}
+
+#[test]
+fn the_spawner_rolls_for_dread_at_the_levels_own_odds() {
+    // Every draw dread: only the shade comes.
+    let all = dread_spawns("dread_one_in = 1", 1, 12);
+    assert!(
+        !all.is_empty() && all.iter().all(|c| c == "zz_shade"),
+        "{all:?}"
+    );
+    // At the default, one draw in a hundred: the kobolds nearly always.
+    let usual = dread_spawns("", 1, 30);
+    let shades = usual.iter().filter(|c| *c == "zz_shade").count();
+    assert!(shades <= 3 && usual.len() > 20, "{usual:?}");
+    // The same seed brings the same ones.
+    assert_eq!(
+        dread_spawns("dread_one_in = 3", 2, 12),
+        dread_spawns("dread_one_in = 3", 2, 12)
+    );
+}
+
+#[test]
+fn draw_odds_take_the_most_specific_dread_one_in() {
+    let content = Content::builtin().expect("content");
+    let at = |id: &str| content.draw_odds_at(id).expect(id).dread_one_in;
+    // The default, a branch's own, its depths' own (data/dungeons/*.toml).
+    assert_eq!(at("fyrdelf:1"), 100);
+    assert_eq!(
+        (
+            at("fyrdelf:5"),
+            at("fyrdelf:9"),
+            at("fyrdelf:11"),
+            at("fyrdelf:12")
+        ),
+        (75, 60, 50, 40)
+    );
+    assert_eq!((at("utgang:1"), at("utgang:3")), (50, 50));
+    assert_eq!(
+        (
+            at("fennmynster:5"),
+            at("fennmynster:6"),
+            at("fennmynster:8")
+        ),
+        (100, 75, 50)
+    );
+    // The endless branch's curve at the floor's true depth, past the roster's top too.
+    assert_eq!(
+        [
+            "grundleas:1",
+            "grundleas:30",
+            "grundleas:70",
+            "grundleas:80",
+            "grundleas:100",
+            "grundleas:400"
+        ]
+        .map(at),
+        [100, 80, 40, 20, 5, 5]
+    );
+    assert!(content.draw_odds_at("ceaptun").is_none() || at("ceaptun") >= 1);
+}

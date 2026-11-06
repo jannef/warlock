@@ -219,6 +219,10 @@ pub(super) struct CreatureSpec {
     /// How often a population or a spawn draws it (`data/creature_rarities.toml`, spec §7
     /// "Danger levels"); none: common.
     pub rarity: Option<String>,
+    /// Whether it is dread (docs/design/monster-dread.md §8): a random draw brings it only in
+    /// the one draw in `dread_one_in` made among the dread types; default false.
+    #[serde(default)]
+    pub dread: bool,
     /// Its trained skills by skill id, with their values (spec §8 "Skills"); the rest untrained.
     #[serde(default)]
     pub skills: BTreeMap<String, u16>,
@@ -739,6 +743,7 @@ impl CreatureSpec {
             unique: self.unique,
             stray: self.stray,
             rarity: r.rarity,
+            dread: self.dread,
             loot: self.loot,
             attack: r.attack,
             more_attacks: r.more_attacks,
@@ -895,6 +900,10 @@ pub struct CreatureDef {
     /// Gameplay: how often a population or a spawn draws it, an index into
     /// [`super::Content::creature_rarities`] (spec §7 "Danger levels"). Never shown.
     pub rarity: usize,
+    /// Gameplay: whether it is dread (docs/design/monster-dread.md §8): a population or a
+    /// spawn draws it only in the one draw in `dread_one_in` made among the dread types
+    /// ([`super::danger::draw`]). Never shown in the game; the wiki tells it.
+    pub dread: bool,
     /// Gameplay: the chance in percent that it drops a magic or rare item where it dies.
     pub loot: u8,
     /// Gameplay: its natural attack, used when it wields no weapon; `None`: bare hands (1d3).

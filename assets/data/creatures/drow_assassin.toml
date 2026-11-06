@@ -6,6 +6,7 @@ id = "drow_assassin"
 level = 32
 xp = 170
 rarity = "rare"
+dread = true
 loot = 40
 name = "drow assassin"
 glyph = "e"

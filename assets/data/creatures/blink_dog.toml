@@ -6,6 +6,7 @@ id = "blink_dog"
 level = 14
 xp = 80
 rarity = "uncommon"
+dread = true
 name = "blink dog"
 glyph = "C"
 fg = "#d8c060"

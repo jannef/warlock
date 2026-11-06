@@ -41,6 +41,9 @@ population = [
     "lesser_lightning_elemental", "lemure", "imp", "goblin_wizard", "meenlock",
     "draugr", "barghest", "hand_of_glory", "vampire_spawn", "gallows_dead",
 ]
+# As deep and as dangerous as Fyrdelf's lowest floors, so the dread come as often as there
+# (docs/design/monster-dread.md §8): one draw in 50 (the default is one in 100).
+dread_one_in = 50
 
 # Warmer with every floor down, toward the drake's 24 °C.
 [[dungeon.levels]]

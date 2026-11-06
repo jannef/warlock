@@ -66,7 +66,9 @@ fn spawn_text(content: &Content, s: &Spawning) -> String {
         Some(cap) => format!("up to {cap} hostile"),
         None => "up to its population".into(),
     };
-    let odds = if Some(s.odds) == content.draw_odds() {
+    // The dread draws have their own table (`dread_draws`).
+    let usual = content.draw_odds().map(|o| o.without_dread());
+    let odds = if Some(s.odds.without_dread()) == usual {
         "the usual strays and deeper draws".to_string()
     } else {
         let o = s.odds;
@@ -317,12 +319,18 @@ pub(super) fn draw_odds(content: &Content) -> String {
         out_of_depth,
         deeper,
         deeper_cap,
+        dread_one_in,
     }) = content.draw_odds()
     else {
         return "(no defaults)\n".into();
     };
     let mut out = String::from("| A draw | Chance |\n|---|---:|\n");
     let _ = writeln!(out, "| a stray, from the generic list | {stray}% |");
+    let _ = writeln!(
+        out,
+        "| [dread](#dread), among the dread kinds alone | 1 in {dread_one_in} ({}%) |",
+        percent(100.0 / f64::from(dread_one_in.max(1)))
+    );
     let _ = writeln!(out, "| out of depth, all told | {out_of_depth}% |");
     let (ood, more) = (f64::from(out_of_depth) / 100.0, f64::from(deeper) / 100.0);
     let shown = deeper_cap.min(3);
@@ -348,6 +356,77 @@ pub(super) fn draw_odds(content: &Content) -> String {
             deeper_cap + 1,
             percent(rest * 100.0)
         );
+    }
+    out
+}
+
+/// One in `n` in words with its percent: `1 in 100 (1%)`.
+fn one_in(n: u16) -> String {
+    format!("1 in {n} ({}%)", percent(100.0 / f64::from(n.max(1))))
+}
+
+/// How often a draw is dread, place by place (docs/design/monster-dread.md §8): every branch with
+/// a danger by id, its floors grouped where the chance is the same (an endless branch's curve by
+/// its steps, then floors past the last until the least), then every hand-made level with a
+/// danger by id.
+pub(super) fn dread_draws(content: &Content) -> String {
+    let mut out = String::from("| Place | Floors | A draw is dread |\n|---|---|---|\n");
+    let mut branches: Vec<_> = content.dungeons().collect();
+    branches.sort_by(|a, b| a.id.cmp(&b.id));
+    for d in branches {
+        let Some(s) = &d.spawning else { continue };
+        let at = |depth: u32| d.dread_one_in(depth).unwrap_or(s.odds.dread_one_in);
+        let name = &d.name;
+        if let Some(curve) = &d.dread {
+            let first = curve.steps.first().map_or(1, |&(from, _)| from);
+            if first > 1 {
+                let _ = writeln!(out, "| {name} | 1 to {} | {} |", first - 1, one_in(at(1)));
+            }
+            for pair in curve.steps.windows(2) {
+                let ((from, n), (next, _)) = (pair[0], pair[1]);
+                let _ = writeln!(out, "| {name} | {from} to {} | {} |", next - 1, one_in(n));
+            }
+            let Some(&(last, _)) = curve.steps.last() else {
+                continue;
+            };
+            let Some(halves) = curve.halves else {
+                let _ = writeln!(out, "| {name} | {last} on | {} |", one_in(at(last)));
+                continue;
+            };
+            // Past the last step, a floor every half a halving until the least is reached.
+            let step = (halves / 2).max(1);
+            let mut depth = last;
+            loop {
+                let n = at(depth);
+                if n <= curve.least {
+                    let _ = writeln!(out, "| {name} | {depth} on | {} |", one_in(n));
+                    break;
+                }
+                let _ = writeln!(out, "| {name} | {depth} | {} |", one_in(n));
+                depth += step;
+            }
+            continue;
+        }
+        let mut from = 1;
+        for depth in 1..=d.depth {
+            let n = at(depth);
+            if depth < d.depth && at(depth + 1) == n {
+                continue;
+            }
+            let floors = match (from, depth) {
+                (a, b) if a == b => a.to_string(),
+                (a, b) => format!("{a} to {b}"),
+            };
+            let _ = writeln!(out, "| {name} | {floors} | {} |", one_in(n));
+            from = depth + 1;
+        }
+    }
+    let mut levels: Vec<_> = (content.levels())
+        .filter_map(|l| Some((l, &l.spawning.as_ref()?.1)))
+        .collect();
+    levels.sort_by(|(a, _), (b, _)| a.id.cmp(&b.id));
+    for (l, s) in levels {
+        let _ = writeln!(out, "| {} | — | {} |", l.name, one_in(s.odds.dread_one_in));
     }
     out
 }

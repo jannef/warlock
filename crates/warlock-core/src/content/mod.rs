@@ -37,6 +37,9 @@ mod demon_roster_tests;
 mod devil_roster_tests;
 mod dialogue;
 mod disease;
+pub mod dread;
+#[cfg(test)]
+mod dread_roster_tests;
 #[cfg(test)]
 mod drow_roster_tests;
 #[cfg(test)]
@@ -2749,7 +2752,7 @@ impl Content {
                 let kinds = s.population.iter().chain(&s.generic).copied();
                 let kinds: Vec<CreatureId> = kinds.collect();
                 let top = (self.candidates(&kinds, &none).iter())
-                    .map(|(_, (_, to), _)| *to)
+                    .map(|(_, (_, to), ..)| *to)
                     .max()?;
                 Some(d.plan(1)?.danger?.deepest_at(top))
             })
@@ -3598,8 +3601,8 @@ impl Content {
     }
 
     /// The candidates of a draw ([`danger::draw`]) among `kinds`: each type with its levels (a
-    /// family's range, `animated_blade`'s 5 to 20; else its own level) and its rarity's factor,
-    /// those `met` (uniques the run has had, by id) left out.
+    /// family's range, `animated_blade`'s 5 to 20; else its own level), its rarity's factor, and
+    /// its `dread` flag, those `met` (uniques the run has had, by id) left out.
     pub fn candidates(
         &self,
         kinds: &[CreatureId],
@@ -3612,8 +3615,8 @@ impl Content {
                 let factor = self.creature_rarity(def.rarity).factor;
                 match self.family_levels(c) {
                     // A member names its whole family.
-                    Some(levels) => (self.family(c), levels, factor),
-                    None => (c, (def.level, def.level), factor),
+                    Some(levels) => (self.family(c), levels, factor, def.dread),
+                    None => (c, (def.level, def.level), factor, def.dread),
                 }
             })
             .collect()
@@ -3740,6 +3743,22 @@ impl Content {
         // branch"): nothing above a danger is drawn, and nothing far below it.
         let depth = (branch.endless).map_or(depth, |e| depth.min(e.roster_depth));
         Some((rule, depth, branch.spawning.as_ref()?))
+    }
+
+    /// The odds a random draw on level `id` is made by ([`danger::draw`]): its spawning rules'
+    /// with the most specific `dread_one_in` (docs/design/monster-dread.md §8): a branch depth's
+    /// own (its `[[dungeon.levels]]` entry, or an endless branch's curve at the floor's true
+    /// depth) over the branch's over `[defaults]`'s; a hand-made level's file gives its own.
+    /// Read at each draw, never stored. `None` where [`Content::spawning`] is.
+    pub fn draw_odds_at(&self, id: &str) -> Option<danger::Odds> {
+        let (_, _, spawning) = self.spawning(id)?;
+        let mut odds = spawning.odds;
+        if let Some((branch, depth)) = self.branch_level(id)
+            && let Some(one_in) = branch.dread_one_in(depth)
+        {
+            odds.dread_one_in = one_in;
+        }
+        Some(odds)
     }
 
     /// The danger floor `id` stands at for a player of `player_level`: what [`Content::spawning`]
@@ -5217,6 +5236,7 @@ mod tests {
             out_of_depth: 100,
             deeper: 100,
             deeper_cap: danger::MAX_DEEPER_CAP,
+            dread_one_in: 0,
         };
         let mut rng = crate::rng::Rng::stream(1, "test");
         for _ in 0..50 {

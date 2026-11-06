@@ -4,7 +4,7 @@
 id = "spark_mote"
 level = 8
 xp = 50
-rarity = "common"
+rarity = "uncommon"
 name = "spark mote"
 glyph = "e"
 fg = "#f0f070"

@@ -110,10 +110,13 @@ fn the_bosss_death_opens_the_stairs_where_the_lair_hides_them() {
     jump(&mut w, 10);
     let at = *w.state.current().hidden.keys().next().expect("hidden");
     // The player stands beside the way down and sees it.
+    // Only the boss is left on the floor: nothing else gets in the way of the stairs.
     let player = w.state.player;
+    let keep = bosses(&w, "gnaegan");
+    let here = w.state.current_level.clone();
     w.state
         .actors
-        .retain(|id, a| *id == player || a.pos != at.step(Dir::W));
+        .retain(|id, a| *id == player || keep.contains(id) || a.level != here);
     w.state.actors.get_mut(&player).expect("player").pos = at.step(Dir::W);
     // Her lantern lit, to see by.
     w.apply(&Action::UseTool);

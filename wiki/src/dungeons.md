@@ -44,6 +44,25 @@ Each draw is a stray or not and out of depth or not by its own chance; as a shar
 
 {{#include generated/draw-odds.md}}
 
+### Dread
+
+Some kinds are **dread**: the monsters to fear, each with something of its own that a plain
+fight does not prepare you for (the basilisk, the shadows, the vampires, the banshee, the nymph;
+the [creature tables](creatures.md) mark them "dread"). Before anything else, one draw in a
+hundred (unless a place says otherwise) is a **dread draw**: it is made among the dread kinds
+alone, the place's own and the [strays](#who-lives-there-and-how-many) alike, each by its level
+and its [rarity](#who-lives-there-and-how-many) as above, so a common dread kind comes far more
+often than a very rare one. Every other draw is made among the kinds that are not dread. If a
+dread draw finds no dread kind strong enough to be chosen there, it is made the ordinary way
+instead. There is no limit: a floor of forty creatures has about one chance in three of holding
+one, before the ones that come later. Creatures placed by hand, a [vault](#a-floor-starts-full)'s
+own folk, and the first kind a [teeming den](special-rooms.md#teeming-dens) is drawn around are never dread draws.
+
+The deeper and the more dangerous a place, the oftener a draw is dread; in Grundlēas, past the
+floor where the draws stop rising, the dread keep coming oftener floor by floor:
+
+{{#include generated/dread-draws.md}}
+
 A creature marked "once a run" comes at most once in your life, however many floors it could
 come to.
 
