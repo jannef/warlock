@@ -4,7 +4,7 @@
 id = "dust_devil"
 level = 3
 xp = 25
-rarity = "common"
+rarity = "uncommon"
 name = "dust devil"
 glyph = "e"
 fg = "#c8b890"

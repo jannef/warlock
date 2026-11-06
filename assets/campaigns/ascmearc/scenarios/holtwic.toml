@@ -1,0 +1,10 @@
+# A developer's start in Holtwīc, the village at the end of the north road (#1140): on the lane
+# where the road comes in, on the start's November morning.
+# Listed on New run in developer builds only (a release lists the campaign's start).
+name = "Holtwīc"
+description = "The village at the end of the north road, on the edge of the holly wood: the cottars, and Gammer Wynflæd, the wise-woman."
+start_level = "holtwic"
+seed = 3
+character = { race = "human", gender = "female", class = "warrior", name = "Ælfwynn" }
+wield = ["lantern"]
+start_time = "08:00"

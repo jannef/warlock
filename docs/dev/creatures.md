@@ -215,7 +215,7 @@ Rarity (#373): `content/creature_rarity.rs` parses `data/creature_rarities.toml`
 order, each a `factor` in percent of a common type's weight, 1 to 1000; `common` required, the
 only tier without the file); `CreatureDef::rarity` is an index into `Content::creature_rarities`
 (a type's `rarity`, default `common`; an unknown tier is a load error). A draw's candidates are
-`danger::Candidate`s `(type, level, factor)`, built by `Content::candidates` (the run's met
+`danger::Candidate`s `(type, levels, factor, dread)`, built by `Content::candidates` (the run's met
 uniques left out) for `World::draw_spawn` and `mapgen::population::populate`, and
 `danger::weight(level, factor, danger)` is `level_weight × factor`.
 Strays and exploding out-of-depth draws (#375): `danger::draw(rng, own, generic, danger, odds)`
@@ -245,6 +245,26 @@ population is met as a stray, and people, keepers, hand-placed guardians, and qu
 `world::spawn_tests::strays_come_from_every_hostile_type_but_those_kept_out`; `populate` builds the generic candidates once a floor, the own ones per creature (a
 unique leaves them). Hand-placed creatures (level legends, vaults,
 scenario people, shopkeepers) are never drawn, whatever their tier.
+Dread (docs/design/monster-dread.md §8, #1124): `CreatureDef::dread` (`dread = true`, default
+false) marks the types to dread, flagged for every type §6 sorts as dread (the gimmicks come in
+later slices); a rarity tier is still the type's own. `danger::draw` rolls first, when
+`Odds::dread_one_in` is above 0, one `below(dread_one_in)`: 0 makes the draw among the dread
+candidates alone (`danger::Among::Dread(true)`, a filter inside `pick`, no allocation), anything
+else among the rest; the same stray and out-of-depth draw is then made, and if it finds nothing,
+again among the other side. `Odds::without_dread` (`dread_one_in` 0, never in data) rolls nothing
+and reads no flag: a vault's monster pool (`mapgen/population.rs`). A den's warren or tribe starts
+from a non-dread type drawn without the roll (`mapgen/den.rs::Theme::roll`). The odds of a draw on
+a level are `Content::draw_odds_at(id)`: its spawning rules' odds with a branch depth's own
+`dread_one_in` (`DungeonDef::dread_one_in`: an endless branch's `content/dread.rs::DreadCurve` at
+the floor's true depth, else its `[[dungeon.levels]]` entry's `LevelPlan::dread_one_in`); the
+spawner, the population (`mapgen::generate_for` patches the `Spawning` it hands `populate` and
+`den::fill`), hoards' guardians, and outcomes' summons read it; an encounter's draw takes its
+branch's odds. Tests: `content::danger::tests` (the roll, the fallbacks, determinism),
+`content::dungeon::tests::a_depths_dread_one_in_wins_over_the_branchs_over_the_defaults`,
+`an_endless_branch_reads_its_dread_curve_at_the_true_depth`, `content::dread::tests`,
+`content::dread_roster_tests` (the sort's flags and tiers, no unique dread), and
+`world::spawn_tests::the_spawner_rolls_for_dread_at_the_levels_own_odds`,
+`draw_odds_take_the_most_specific_dread_one_in`.
 Where the rosters are met (#531): the showcase's Depths has no danger (its patrol of rats, bats,
 and kobolds only; there is no general candidate pool). In the Ascmearc a type of level 17 or less
 (level 11 or less in Fennmynster, whose danger runs 3 to 10) is placed in a population where it

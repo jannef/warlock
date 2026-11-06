@@ -6,6 +6,7 @@ id = "pit_fiend"
 level = 66
 xp = 340
 rarity = "very_rare"
+dread = true
 name = "pit fiend"
 glyph = "U"
 fg = "#e02a2a"

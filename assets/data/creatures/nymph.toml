@@ -6,6 +6,7 @@ id = "nymph"
 level = 22
 xp = 120
 rarity = "rare"
+dread = true
 loot = 30
 name = "nymph"
 glyph = "n"

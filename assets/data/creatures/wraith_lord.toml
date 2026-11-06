@@ -7,6 +7,7 @@ id = "wraith_lord"
 level = 41
 xp = 215
 rarity = "rare"
+dread = true
 name = "wraith lord"
 glyph = "W"
 fg = "#9a7ab0"

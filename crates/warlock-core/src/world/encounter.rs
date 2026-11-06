@@ -665,8 +665,8 @@ impl World {
         let player = content.creature_id("player");
         let fit = |list: Vec<crate::content::danger::Candidate>| -> Vec<_> {
             (list.into_iter())
-                .filter(|&(c, _, _)| !content.creature(c).unique)
-                .filter(|&(c, _, _)| {
+                .filter(|&(c, ..)| !content.creature(c).unique)
+                .filter(|&(c, ..)| {
                     player.is_some_and(|p| content.stance(c, p) == crate::content::Stance::Hostile)
                 })
                 .collect()

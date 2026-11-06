@@ -294,8 +294,13 @@ impl ObjectScreen {
                 .filter(|&i| warlock_core::world::undeciphered(content, &view.lore(), &pack[i]))
                 .map(Item::Pack)
                 .collect(),
+            // Beside an escort, anything it could put on (`world/escort.rs`).
             ObjectList::Give => (0..pack.len())
-                .filter(|&i| warlock_core::world::fits_neck(content, &pack[i]))
+                .filter(|&i| {
+                    warlock_core::world::fits_neck(content, &pack[i])
+                        || (view.escort_beside()
+                            && warlock_core::world::fits_escort(content, &pack[i]))
+                })
                 .map(Item::Pack)
                 .collect(),
         };

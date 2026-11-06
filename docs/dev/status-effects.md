@@ -160,7 +160,7 @@ the next. Tests: `world/escape_tests.rs`. A creature's `on_hit` names a
 hold as `{ status = "held", chance = 10, difficulty = 15 }` (no `severity`; `difficulty` 1 to 40,
 optional; `OnHitSpec::resolve` gives `Affliction::Hold`, and `difficulty` on a non-hold status is
 refused). Draws: the turns' dice as a hold begins or is renewed, two for a struggle. Tests:
-`world/hold_tests.rs`, the parse tests in `content/status.rs`, `world/lucky_tests.rs`. A status that `flees` (Frightened, Hound's bay's, #270) makes a creature step
+`world/hold_tests.rs`, the parse tests in `content/status.rs`, `world/lucky_tests.rs`. A status that `flees` (Frightened, Hound's bay's, #270; Frightened also costs `to_hit` 3, fear's teeth, #1124, the player too) makes a creature step
 away from its `by` instead while a step takes it farther (`World::frightened`,
 `world/sign_picks.rs`, before `held_back`). A status that blocks `cast` also refuses spending
 mana (`World::spend_mana`) and greys out a class active that costs mana (`Ability::unavailable`).

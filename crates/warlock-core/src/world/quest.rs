@@ -56,6 +56,8 @@ pub enum Stage {
     Active,
     /// Done (a repeatable one may be offered again).
     Done,
+    /// Failed for good: an escort died on the way (`escort.rs`). Never offered again.
+    Failed,
 }
 
 /// How far a quest has got (saved).
@@ -252,6 +254,8 @@ pub(crate) fn progress(
         Goal::Bring { object, count, .. } => (carried(object), count),
         Goal::Reach { .. } => (u32::from(record.is_some_and(|r| r.reached)), 1),
         Goal::Deliver { object, .. } => (carried(object), 1),
+        // Done by the arrival alone (`escort.rs`): never ready to hand in.
+        Goal::Escort { .. } => (0, 1),
     };
     (have.min(need), need)
 }
@@ -262,8 +266,10 @@ pub struct QuestView {
     pub id: String,
     pub name: String,
     pub kind: QuestKind,
-    /// Taken up and not yet done; else done.
+    /// Taken up and not yet done; else done, or failed.
     pub active: bool,
+    /// Failed for good (an escort died).
+    pub failed: bool,
     /// How many times the player has completed it.
     pub completed: u32,
     /// Who gave it: "the old hermit".
@@ -287,8 +293,12 @@ impl PerceptionView<'_> {
         let view = |def: &QuestDef, record: &QuestRecord| {
             let def = &*self.quests.given(content, def);
             let active = record.stage == Stage::Active;
+            let failed = record.stage == Stage::Failed;
             let status = if active {
-                status(content, self.quests, &self.player.inventory, def)
+                let escorted = self.escorting(&def.id);
+                status(content, self.quests, &self.player.inventory, def, escorted)
+            } else if failed {
+                failed_status(content, def)
             } else if record.completed > 1 {
                 format!("Done ({} times).", record.completed)
             } else {
@@ -299,6 +309,7 @@ impl PerceptionView<'_> {
                 name: def.name.clone(),
                 kind: def.kind(),
                 active,
+                failed,
                 completed: record.completed,
                 giver: speaker_called(content, def.giver),
                 offer: def.texts.offer.clone(),
@@ -313,6 +324,7 @@ impl PerceptionView<'_> {
                 let shown = match record.stage {
                     Stage::Active => active,
                     Stage::Done => !active && record.completed > 0,
+                    Stage::Failed => !active,
                 };
                 shown.then(|| view(def, record))
             })
@@ -405,6 +417,11 @@ pub fn asks(content: &Content, def: &QuestDef) -> String {
             "Deliver {} to {}.",
             content.object(*object).describe(1),
             speaker_called(content, *to)
+        ),
+        Goal::Escort { escort, level, .. } => format!(
+            "Bring {} safely to {}.",
+            speaker_called(content, *escort),
+            in_sentence(&content.place_name(level))
         ),
     }
 }
@@ -503,19 +520,45 @@ pub fn wants(content: &Content, def: &QuestDef) -> String {
     format!("{giver} wants you to {asks}")
 }
 
-/// Where active quest `def` stands, as the log says it.
-fn status(content: &Content, quests: &Quests, inventory: &[Stack], def: &QuestDef) -> String {
+/// Where active quest `def` stands, as the log says it; `escorted`: its escort follows the
+/// player.
+fn status(
+    content: &Content,
+    quests: &Quests,
+    inventory: &[Stack],
+    def: &QuestDef,
+    escorted: bool,
+) -> String {
     let (have, need) = progress(content, quests, inventory, def);
     if have >= need {
         return format!("{}.", capitalized(&next_step(content, def)));
     }
     match def.goal {
+        Goal::Escort { escort, .. } => {
+            let who = capitalized(&speaker_called(content, escort));
+            if escorted {
+                format!("{who} follows you.")
+            } else {
+                format!("{who} is not with you.")
+            }
+        }
         Goal::Kill { .. } => format!("{have} / {need} killed."),
         Goal::Bring { .. } => format!("You carry {have} / {need}."),
         Goal::Reach { .. } => "Not reached yet.".into(),
         Goal::Deliver { object, .. } => {
             format!("You no longer carry the {}.", content.object(object).name)
         }
+    }
+}
+
+/// What failed quest `def`'s log says: "Failed: Eadgyth is dead.".
+fn failed_status(content: &Content, def: &QuestDef) -> String {
+    match def.goal {
+        Goal::Escort { escort, .. } => format!(
+            "Failed: {} is dead.",
+            capitalized(&speaker_called(content, escort))
+        ),
+        _ => "Failed.".into(),
     }
 }
 
@@ -548,7 +591,7 @@ fn progress_news(content: &Content, def: &QuestDef, (have, need): (u32, u32)) ->
             "Quest updated: you have reached {}.",
             in_sentence(&content.place_name(level))
         ),
-        Goal::Deliver { .. } => "Quest updated:".into(),
+        Goal::Deliver { .. } | Goal::Escort { .. } => "Quest updated:".into(),
     };
     if done {
         text.push(' ');
@@ -731,6 +774,17 @@ impl World {
     /// Creature `id` takes quest `q` in: what it asks for leaves the pack, they say their thanks,
     /// and the reward follows.
     fn complete(&mut self, id: ActorId, q: QuestId, topic: &str, events: &mut Vec<Event>) {
+        self.complete_saying(id, q, Some((topic, events)));
+    }
+
+    /// [`World::complete`]; with no `asked` the thanks are said without a conversation (an
+    /// escort's, on arrival: `escort.rs`).
+    pub(super) fn complete_saying(
+        &mut self,
+        id: ActorId,
+        q: QuestId,
+        asked: Option<(&str, &mut Vec<Event>)>,
+    ) {
         let content = self.content.clone();
         let given = self
             .state
@@ -750,7 +804,15 @@ impl World {
             record.completed += 1;
             record.counted = 0;
         }
-        self.answer(id, def.texts.done.clone(), Some(topic.into()), events);
+        match asked {
+            Some((topic, events)) => {
+                self.answer(id, def.texts.done.clone(), Some(topic.into()), events);
+            }
+            None => {
+                let who = capitalized(&self.called(&self.state.actors[&id]));
+                self.say(format!("{who} says: \"{}\"", def.texts.done));
+            }
+        }
         self.reveal_at(id, def, RevealWhen::Done);
         self.say(format!("Quest complete: {}.", def.name));
         self.train_stat(StatUse::Quest);

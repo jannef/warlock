@@ -27,6 +27,13 @@ the Gæsthūs, the inn, where Godgifu has news of the march, and the Gildhalle o
 area, walk off its edge to return to its cell on the [overworld](overworld.md), or press `<` when no enemy is
 about ([Leaving an area](overworld.md#leaving-an-area)).
 
+At the end of the north road, some three hours' walk from the town on the edge of the holly wood, is
+**Holtwīc**, a farming village: cottages round a green and a well, barley fields behind their
+hedges, and cottars who will pass the time of day. It is safe, and has no [shop](shops.md).
+Its wise-woman, **Gammer Wynflæd**, keeps a cottage apart under the first trees; she knows the
+village, the wood, and the fair folk, and will [talk](npcs.md) of them. Like the town, Holtwīc
+has no [stairs](terrain.md#stairs): walk off its edge to leave.
+
 A little cave, **[Lytelscræf](dungeons.md#the-dungeons)**, opens two cells from the pass where you come in: three
 short floors of rats, bats, and kobolds, the easiest dungeon there is, with a chest at the bottom.
 Three dungeons lie nearest the town, deeper and more dangerous one after another (see
@@ -38,7 +45,9 @@ looks like (see [Hidden locations](overworld.md#hidden-locations)). So are the [
 the criminals the [Weyfarers' Gilde](guild.md#the-wanted) wants dead: Wyrtholm in the fen,
 Wulfeshol in Deorcholt, Bānfeld on the downs, and Brocenburg in the holly wood; you are shown
 only one of them. Under the volcano, **[Ūtgang](dungeons.md#ūtgang)**, a way up from the bottom of
-Fyrdelf, is hidden too, and no one tells of it: you find its mouth by climbing out of it. The map below shows them all anyway. Places that lead "nowhere yet" are still being built: for now `>` there says so.
+Fyrdelf, is hidden too, and no one tells of it: you find its mouth by climbing out of it.
+Somewhere in the holly wood near Holtwīc, a fairy mound hides **[Ælfhām](dungeons.md#ælfhām)**, the
+hall of the dark court of the fey. The map below shows them all anyway. Places that lead "nowhere yet" are still being built: for now `>` there says so.
 
 ## The places
 
@@ -75,6 +84,8 @@ have names of the same kind. Creatures keep their plain English names.
 | Fyrdelf | *fȳr* "fire" + *gedelf* "digging, mine" | the fire diggings | the third dungeon |
 | Fyrbeorg | *fȳr* + *beorg* | the fire mountain | the volcano |
 | Ūtgang | *ūtgang* "going out, exit" | the way out | the way up from the drake's deep |
+| Holtwīc | *holt* "wood" + *wīc* "dwelling" | the dwelling at the wood | the village at the north road's end |
+| Ælfhām | *ælf* "elf" + *hām* "home" | the elves' home | the fey hall under the mound |
 | Wyrtholm | *wyrt* "herb, root" + *holm* "islet" | the herb islet | Mother Sallow's lair |
 | Wulfeshol | *wulfes* "wolf's" + *hol* "hole, den" | the wolf's hole | Black Wystan's lair |
 | Bānfeld | *bān* "bone" + *feld* "field" | the bone field | Brother Osrick's lair |
@@ -91,6 +102,7 @@ have names of the same kind. Creatures keep their plain English names.
 | Hild | *hild* "battle" | | the sister of the Mynster |
 | Wulfrun | *wulf* "wolf" + *rūn* "secret, counsel" | | the mine-factor |
 | Godgifu | *god* + *gifu* "gift" | | the innkeeper |
+| Wynflæd | *wynn* "joy" + *flǣd* "beauty" | | the wise-woman of Holtwīc |
 
 The guild is younger than the town, so its names are Middle English, not Old; its master, Wat
 One-Eye, is a commoner, called by a short name and a byname. The guild's [ranks](guild.md#ranks) (Tin to Gold)

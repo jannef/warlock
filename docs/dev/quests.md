@@ -89,6 +89,25 @@ Tests: `content/tag.rs` (the word rule, the built-in members, the undead check),
 `world/tag_tests.rs` (levels summed, a bled-out one counts, a trap's or another's kill does not,
 the override, `what`, load checks of tag targets and of creature tags); the wiki table is
 `creatures::creature_tags` (`creature-tags.md`).
+**Escort quests** (#1139, `world/escort.rs`): `Goal::Escort { escort, level, joins }`
+(`type = "escort"`, `target` a level as `reach` names one, `escort` a speaker that must be
+`Speaker::Npc` and not the giver, `joins` a reply; never rolled or repeatable; `escort` and
+`joins` refused on other kinds). `QuestDef::escort()`; `speakers()` includes it (the campaign
+check). Hooks, one line each: `talk.rs::chat` → `World::escort_joins` (an active escort quest
+whose escort is the dialogue, the actor no one's ally, `allies.toml` present: the `joins` line
+through `answer` instead of the greeting, then the ally, `docs/dev/allies.md` "Escorts");
+`travel.rs::travel` → `World::escorts_home` after `follow_along` (the escort, an acting ally of
+the player's with `AllySource::Escort { quest }`, on the target level: released, then
+`World::complete_saying(escort, q, None)`, `complete` without a conversation: the `done` line is
+said as a message, the reward as a hand-in's); `fight.rs::creature_dies` → `World::escort_dies`
+(the dead actor's dialogue is an active escort quest's escort, joined or not: `Stage::Failed`,
+"Quest failed: NAME."). `progress` is always (0, 1) for an escort quest, so it is never ready
+to hand in and its giver keeps the reminder. `Stage::Failed` (saved; never offered again,
+`available`); `QuestView::failed`, the log lists it as "Eadgyth (failed)" (`ui/quest_screen.rs`), its status "Failed: Eadgyth is dead.", among the
+finished ones, the `quests` dump's `(failed, ...)` with the status, JSON `failed`. The active
+status reads `PerceptionView::escorting(quest)` from the snapshot's allies: "Eadgyth follows
+you." / "Eadgyth is not with you.". Tests: `world/escort_tests.rs` (a fixture hamlet and cave on
+the built-in content).
 **Guilds** and their ranks, derived from these records and named as a quest is given or done,
 are `docs/dev/guild.md`.
 Presentation reads `PerceptionView::quests()` (`QuestView` strings, shared by the log and the

@@ -650,8 +650,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     where they place the sound (`You hear a voice to the north: "…"`, or, faint, `You faintly
     hear a voice to the north.`, without the words). Mutters are logged without stopping a rest.
 - **Quests** (`warlock-core/src/content/quest.rs`, the data; `world/quest.rs`, the rules; M28,
-  #148): simple, ADOM-like errands people give through their dialogue topics. No escorts, timers,
-  or branching outcomes.
+  #148): simple, ADOM-like errands people give through their dialogue topics. No timers or
+  branching outcomes; escorts are the one quest that walks with the player (below).
   - **Topics** (first among a speaker's, in file order): a quest a giver may offer (what it
     requires done; new to the player, or done and `repeatable`; a rolled one while its pool holds
     something) is a topic named after it, `quest-ID` (replay text `ask:E:quest-rats`). **Asking
@@ -687,6 +687,22 @@ developer notes (CLAUDE.md, `docs/dev/`).
     the object. *Reach* is met once the player has been on the level, before taking the quest
     up too. *Deliver* is met while the player carries the item: dropping it (or losing it) blocks
     the quest until they pick it up again (it cannot be handed in without it).
+  - **Escort quests** (`world/escort.rs`, #1139): `type = "escort"`, `target` a level, `escort`
+    a unique character (an npc with a dialogue), `joins` their line. Chatted with while the quest
+    is active, the escort says `joins` instead of a greeting and becomes the player's ally
+    (`AllySource::Escort`: on the player's side, following, across levels and in the retinue as
+    any ally) in the **coward** stance. It is no fighter: it strikes only at a hostile beside
+    it, and Set on passes it by ("Eadgyth will not go looking for a fight."); Come to heel and
+    Hold here reach it. The Give ability hands it anything that fits one of its slots (a free
+    one first, else the first it fits; both hands for a two-handed thing): it puts it on at once
+    ("Eadgyth wields the long sword.") and what the slot held falls on its cell ("Eadgyth drops
+    the club."); what fits no slot is refused with no time. When the escort stands on the target
+    level with the player (checked as they arrive, or as it joins there), the quest is done: the
+    escort says `done`, the reward is paid as a hand-in's, and it is no one's ally (its own
+    faction, the neutral stance, its post where it stands). Its death, joined or not, fails the
+    quest ("Quest failed: Eadgyth."): the log keeps it among the finished ones, "Failed: Eadgyth
+    is dead.", and it is never offered again; nothing else is locked. The log's status while
+    active: "Eadgyth follows you." or "Eadgyth is not with you."
   - **Creature tags** (`content/tag.rs`, #421, #441): a creature type carries plain singular
     words, chosen by hand as a card game gives creatures types (`tags = ["goblin", "archer"]`);
     there is one flat pool and no registry: a tag exists because a creature carries it. A kill
@@ -749,7 +765,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     shamans.", then the progress line, then "Return to …".
   - **No abandoning, no cap** (the owner's decision): a quest given stays in the log until it
     is done, and the player may have any number of them at once.
-  - **State**: per quest the player has heard of, its stage (active or done; an `offered`
+  - **State**: per quest the player has heard of, its stage (active, done, or failed; an `offered`
     record of an older save, an offer never answered, loads as active), how many times it was
     completed, the kills counted before a rolled quest or a repeat, whether a reach quest's level
     was reached, and a rolled quest's roll; the kill tally; and the unique types slain. Saved and

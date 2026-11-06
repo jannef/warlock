@@ -4,7 +4,7 @@
 id = "water_mote"
 level = 4
 xp = 30
-rarity = "common"
+rarity = "uncommon"
 name = "water mote"
 glyph = "e"
 fg = "#4a8ad0"

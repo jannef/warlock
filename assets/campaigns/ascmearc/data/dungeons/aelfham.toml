@@ -1,0 +1,42 @@
+# Ælfhām, "the elves' home" (#1140; the fields: data/dungeons.toml): the hall of the Unseelie
+# court under a fairy mound in Holegnwudu, seven cells north-east of Holtwīc. Not the earth under
+# the hill but the fey's own country behind it: twisting caves with no sun and no moon, lit by a
+# dim violet light that comes from nowhere. Its way in on the overworld is hidden until Holtwīc's
+# wise-woman tells of it (her quest, #1141). Three floors, the moss bower at the bottom, where
+# the villager the fair folk took is kept.
+
+[[dungeon]]
+id = "aelfham"
+name = "Ælfhām"
+arrival = "The mound's dark gives onto a dim, violet place. Somewhere far off, pipes are playing."
+generator = "caves"
+depth = 3
+size = [70, 30]
+# Fey tricks, not soldiers' traps.
+traps = ["pit", "alarm"]
+traps_per_level = [1, 2]
+loot = [1, 3]
+temperature = 4
+# Light from nowhere: just over normal eyes' threshold (data/vision.toml), so a cave is seen dimly
+# as far as the eye reaches, a little violet.
+ambient = [44, 38, 80, 0]
+# Danger 4 on the first floor to 6 on the third (spec §7 "Danger levels"): between the land
+# round Cēaptūn and the first dungeons' depths. The fey of the dark court and its hangers-on, the
+# sprites and pixies from the first floor, quicklings at the bottom; the boggle, the darkling, and
+# the redcap come only out of depth. The fey of both courts
+# that come even (the sprite, the pixie, the boggle, the darkling) may join the Seelie court as
+# they are made (docs/dev/creatures/fey.md, "Courts"): strays of the bright court, neutral to the
+# player and at war with their hosts.
+danger = { base = 4, per_depth = 1 }
+population = ["sprite", "pixie", "quickling", "boggle", "darkling", "redcap"]
+# Only fey: nothing from outside finds the way in.
+stray = 0
+population_count = { per_1000 = 15, least = 8, most = 16 }
+# No one trades under the hill (spec §7 "Shops"), and its rooms are its own.
+shops = { chance = 0 }
+room_effects = { chance = 0 }
+
+# The bottom: the moss bower, where the taken are kept.
+[[dungeon.levels]]
+from = 3
+vaults = ["moss_bower"]

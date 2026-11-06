@@ -781,7 +781,8 @@ impl Ability {
             }
             Ability::Give => {
                 "Fasten something for the neck about that of a beast you keep, beside you: its \
-                 magic works on the beast, and what it wore before falls to the floor."
+                 magic works on the beast, and what it wore before falls to the floor. Someone \
+                 you escort takes any arms or armour and puts them on."
             }
         }
     }

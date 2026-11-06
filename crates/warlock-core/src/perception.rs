@@ -539,8 +539,12 @@ pub(crate) struct Perception {
     /// What the player may treat on their allies beside them (`world/heal.rs`): they know their
     /// own allies' hurts.
     ally_ailments: Vec<crate::heal::OwnAilment>,
-    /// The ways to the player's kept beasts beside them (`world/heal.rs`), in direction order.
+    /// The ways to the player's kept beasts and escorts beside them (`world/heal.rs`,
+    /// `world/escort.rs`), in direction order: those who take what the player gives.
     kept_beside: Vec<crate::geom::Dir>,
+    /// An escort of the player's stands beside them (`world/escort.rs`): the Give list holds
+    /// anything one could put on.
+    escort_beside: bool,
 }
 
 /// The second viewpoint of Hunter's bond and Familiar's sight (the module docs): the kept beast
@@ -1100,9 +1104,11 @@ impl Perception {
             allies: allies_of(state, content),
             ally_ailments: crate::heal::of_allies(&crate::world::allies_beside(state), content),
             kept_beside: (crate::world::allies_beside(state).into_iter())
-                .filter(|(_, a)| a.kept().is_some())
+                .filter(|(_, a)| a.kept().is_some() || a.escorting().is_some())
                 .map(|(d, _)| d)
                 .collect(),
+            escort_beside: (crate::world::allies_beside(state).into_iter())
+                .any(|(_, a)| a.escorting().is_some()),
         }
     }
 
@@ -1811,9 +1817,10 @@ impl<'a> PerceptionView<'a> {
     /// what they can do and what they hold.
     pub fn abilities(&self) -> Vec<OwnAbility> {
         let here = Ability::here(self.level, self.content, self.player.pos);
+        let escorts = (self.snapshot.allies.iter()).any(|a| a.source.is_escort());
         let orders = Ability::orders(
             !self.snapshot.allies.is_empty(),
-            self.kept().next().is_some(),
+            self.kept().next().is_some() || escorts,
         );
         let allies_here = self.snapshot.allies.iter().any(|a| a.here);
         let companion_here = (self.snapshot.allies.iter())
@@ -2409,10 +2416,26 @@ impl<'a> PerceptionView<'a> {
         (self.snapshot.allies.iter()).filter_map(|a| a.source.data().map(|d| (a, d)))
     }
 
-    /// The ways to the player's kept beasts beside them, in direction order: with two or more,
-    /// tending one or giving one a collar asks which way (spec §8 "Allies"; the owner, #907 Q4).
+    /// The ways to the player's kept beasts and escorts beside them, in direction order: with
+    /// two or more, tending one or giving one something asks which way (spec §8 "Allies"; the
+    /// owner, #907 Q4).
     pub fn kept_beside(&self) -> &[crate::geom::Dir] {
         &self.snapshot.kept_beside
+    }
+
+    /// Whether an escort of the player's stands beside them (`world/escort.rs`): the Give list
+    /// holds anything it could put on.
+    pub fn escort_beside(&self) -> bool {
+        self.snapshot.escort_beside
+    }
+
+    /// Whether the escort of quest `quest` is with the player, on their level or in their
+    /// retinue (`world/escort.rs`): the quest log's status.
+    pub fn escorting(&self, quest: &str) -> bool {
+        (self.snapshot.allies.iter()).any(|a| {
+            (a.here || a.retinue)
+                && matches!(&a.source, crate::world::AllySource::Escort { quest: q, .. } if q == quest)
+        })
     }
 
     /// How many allies are with the player: on their level or in their retinue.

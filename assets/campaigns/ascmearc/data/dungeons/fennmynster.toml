@@ -51,7 +51,15 @@ room_effects = { chance = 25, per_level = 2, favoured = { flooded = 35, cursed =
 # No one trades in the drowned minster (spec §7 "Shops").
 shops = { chance = 0 }
 
+# The lower cellars (docs/design/monster-dread.md §8): the dread come oftener the deeper the
+# water stands, one draw in 75 here, one in 50 at the bottom (the default is one in 100).
+[[dungeon.levels]]
+from = 6
+to = 7
+dread_one_in = 75
+
 # The bottom: the sunken crypt, where the minster kept what the water keeps now.
 [[dungeon.levels]]
 from = 8
 vaults = ["sunken_crypt"]
+dread_one_in = 50

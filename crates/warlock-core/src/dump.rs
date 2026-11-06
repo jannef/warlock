@@ -1444,7 +1444,11 @@ fn abilities_json(view: &PerceptionView<'_>) -> Value {
 fn quest_rows(view: &PerceptionView<'_>) -> Vec<String> {
     (view.quests().iter())
         .map(|q| {
-            let stage = if q.active { "active" } else { "done" };
+            let stage = match (q.active, q.failed) {
+                (true, _) => "active",
+                (false, true) => "failed",
+                (false, false) => "done",
+            };
             let status = if q.active {
                 format!(" {}", q.status)
             } else {
@@ -2316,6 +2320,7 @@ fn quests_json(view: &PerceptionView<'_>) -> Value {
                 "name": q.name,
                 "kind": q.kind.id(),
                 "active": q.active,
+                "failed": q.failed,
                 "completed": q.completed,
                 "giver": q.giver,
                 "objective": q.objective,
