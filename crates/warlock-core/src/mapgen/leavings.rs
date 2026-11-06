@@ -55,9 +55,9 @@ pub(super) fn lay(
             let (lo, hi) = leaving.count();
             let count = rng.range(lo, hi);
             let mut cells = near(template, spawn.pos);
-            // A vault's own lay theirs inside it; others keep off what vaults stamped.
-            let inside = stamped.get(spawn.pos).copied().unwrap_or(false);
-            cells.retain(|p| inside || !stamped.get(*p).copied().unwrap_or(false));
+            // A vault's map stays as it was drawn: only an object goes on what it stamped.
+            let on_vault = |p: &Pos| stamped.get(*p).copied().unwrap_or(false);
+            cells.retain(|p| matches!(laid, Laid::Object(_)) || !on_vault(p));
             for _ in 0..count {
                 cells.retain(|&p| fits(template, content, pal, &claimed, leaving, p));
                 if cells.is_empty() {

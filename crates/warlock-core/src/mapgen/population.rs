@@ -151,7 +151,13 @@ pub(super) fn populate(
         placed.push(spawn_of(creature, pos, route));
     }
     // Then what the placed leave about them (`leavings.rs`), from the same stream.
-    super::leavings::lay(template, content, &mut rng, (pal, spawning, stamped), &placed);
+    super::leavings::lay(
+        template,
+        content,
+        &mut rng,
+        (pal, spawning, stamped),
+        &placed,
+    );
     template.creatures.extend(placed);
     template.outside_cap = outside;
 }
