@@ -37,7 +37,8 @@ hostile type of the campaign, populations or none, unless the branch's `stray_po
 `"populations"`), and, from the same stream after its draws, the **leavings** about every creature
 it and the vaults' pools placed whose type has `leavings` (`mapgen/leavings.rs`: each kind's
 count, `Leaving::count`, on plain floor within 4 cells that nothing claims, no creature, walk,
-object, trap, light, lock, chest, shop, or kept-clear room; a statue only with open ground all
+object, trap, light, lock, chest, shop, or kept-clear room, and off what vaults stamped but
+for torn cloth, so a vault's map stays as drawn; a statue only with open ground all
 eight ways round, `LevelTemplate::statues` holding a nobody of the branch's population, not
 unique or dread, holding nothing; webs and acid pits change the terrain, torn cloth joins the
 pile), then what its vaults' empty chests hold (`chest::fill_vaults`, stream
