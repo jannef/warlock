@@ -202,7 +202,8 @@ pub use companion::{
     CHAPTER as COMPANION_CHAPTER, CompanionRules, Growth as CompanionGrowth, TameRules,
 };
 pub use creature::{
-    Budge, Combat, CorpseGifts, CreatureDef, CreatureId, DEFAULT_SIGHT, Hide, Incorporeal,
+    Budge, Combat, CorpseGifts, Corrodes, CorrodesWhat, CreatureDef, CreatureId, DEFAULT_SIGHT,
+    Hide, Incorporeal,
     MAX_TAG_WIDEN, MAX_TRAIN, MAX_WIDEN, NORMAL_SPEED, NaturalAttack, OnEat, SPEEDS, SkillGift,
     is_proper, the, the_start,
 };
@@ -259,7 +260,9 @@ pub use level::{
     parse_route,
 };
 pub use light::{Dips, Drift, HueDrift, LightId, LightPreset, MAX_LIGHT_RADIUS, Stability};
-pub use material::{ANY, Found, MAX_MATERIAL_VALUE, MaterialDef, MaterialId, VERY_RARE};
+pub use material::{
+    ANY, Corrosion, Found, MAX_MATERIAL_VALUE, MaterialDef, MaterialId, VERY_RARE,
+};
 pub use monster_pool::{MonsterPool, VaultMonsters};
 pub use names::{NameLists, Names};
 pub use object::{
@@ -1907,6 +1910,22 @@ impl Content {
                         creature::NOSES.end()
                     )));
                 }
+            }
+            if spec.regen > creature::MAX_REGEN {
+                return Err(err(format!(
+                    "creature `{}`: `regen` is 0 to {} percent, not {}",
+                    spec.id,
+                    creature::MAX_REGEN,
+                    spec.regen
+                )));
+            }
+            if let Some(acid) = spec.corrodes
+                && !(1..=100).contains(&acid.chance)
+            {
+                return Err(err(format!(
+                    "creature `{}`: `corrodes`' `chance` is 1 to 100 percent, not {}",
+                    spec.id, acid.chance
+                )));
             }
             if let Some(animated) = &mut spec.animated {
                 animated.family = CreatureId(id.0 - u16::from(animated.member));

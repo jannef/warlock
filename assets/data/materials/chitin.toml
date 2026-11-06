@@ -2,6 +2,7 @@
 id = "chitin"
 name = "chitin"
 group = "bone"
+corrodes = "half"
 color = "#4b5a3a"
 weight = 45
 to_hit = 0

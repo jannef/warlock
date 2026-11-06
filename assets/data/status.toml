@@ -144,6 +144,8 @@ tick = 10
 damage = 1
 damage_type = "fire"
 eases = 30
+# Fire stops every regeneration while it burns, a troll's too (the dread design §5.9).
+regen = 0
 light = "ember"
 quenched = true
 start = "You are burning!"
@@ -161,6 +163,8 @@ tick = 6
 damage = 1
 damage_type = "acid"
 eases = 12
+# Acid stops every regeneration while it eats, a troll's too (the dread design §5.9).
+regen = 0
 start = "The acid keeps eating."
 end = "The acid is spent."
 dies = "is eaten away"

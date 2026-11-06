@@ -86,6 +86,46 @@ pub struct MaterialDef {
     /// How often a creature's gear is of it, by the creature's level ([`Found`]); none: never.
     #[serde(default)]
     pub gear: Option<Found>,
+    /// Whether acid eats it (spec §7 "Materials"; a creature's `corrodes`, `world/corrode.rs`):
+    /// `true`, `false`, or `"half"` (at half the chance: bone, horn, ivory, chitin). None: its
+    /// group's ([`Corrosion::of_group`]).
+    #[serde(default)]
+    pub(super) corrodes: Option<CorrodesSpec>,
+}
+
+/// How acid takes a material: not at all, at half the chance, or at the full chance.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Corrosion {
+    No,
+    Half,
+    Yes,
+}
+
+impl Corrosion {
+    /// A material's without a `corrodes` of its own: the metals and hides corrode, nothing else.
+    pub fn of_group(group: Option<&str>) -> Self {
+        match group {
+            Some("metal" | "hide") => Corrosion::Yes,
+            _ => Corrosion::No,
+        }
+    }
+
+    /// Its word, as the wiki writes it.
+    pub const fn word(self) -> &'static str {
+        match self {
+            Corrosion::No => "no",
+            Corrosion::Half => "half",
+            Corrosion::Yes => "yes",
+        }
+    }
+}
+
+/// A material's `corrodes` as written: a bool, or `"half"`.
+#[derive(Clone, Debug, Deserialize)]
+#[serde(untagged)]
+pub(super) enum CorrodesSpec {
+    Flag(bool),
+    Word(String),
 }
 
 /// How often something is made of a material, among the materials its item may be made of: a
@@ -139,6 +179,16 @@ impl Found {
 }
 
 impl MaterialDef {
+    /// Whether acid eats it: its own `corrodes`, else its group's.
+    pub fn corrodes(&self) -> Corrosion {
+        match &self.corrodes {
+            Some(CorrodesSpec::Flag(true)) => Corrosion::Yes,
+            Some(CorrodesSpec::Flag(false)) => Corrosion::No,
+            Some(CorrodesSpec::Word(w)) if w == "half" => Corrosion::Half,
+            _ => Corrosion::of_group(self.group.as_deref()),
+        }
+    }
+
     /// Its weapon modifiers, to hit and to damage, if it can be a weapon's working part (one of
     /// them given: the other is 0).
     pub fn weapon(&self) -> Option<(i32, i32)> {
@@ -200,6 +250,14 @@ impl MaterialDef {
                     ));
                 }
             }
+        }
+        if let Some(CorrodesSpec::Word(word)) = &self.corrodes
+            && word != "half"
+        {
+            return Err(format!(
+                "material `{}`: `corrodes` is true, false, or \"half\", not \"{word}\"",
+                self.id
+            ));
         }
         if let Some(gem) = &self.gem {
             if !self.precious {

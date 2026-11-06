@@ -3,8 +3,10 @@
 //!
 //! An item is improved up to three times, each time in an [`Aspect`] its base item has, and the
 //! same one may come twice: **Fine**, **Marvellous**, **Masterwork**. A failure leaves it
-//! **damaged**, which takes all its improvements and changes nothing else: it fights and protects
-//! as its base does. A damaged item is repaired or destroyed. Every attempt counts for the item's
+//! **damaged**, which takes all its improvements and makes it a point worse until it is mended:
+//! its Protection if it gives some, else its Defence, else its damage ([`super::Mods::local`]).
+//! Acid damages an item the same way (`world/corrode.rs`). A damaged item is repaired or
+//! destroyed. Every attempt counts for the item's
 //! whole life and is never shown in the game. Affixes are another matter ([`super::Magic`]): the
 //! work never touches them.
 //!

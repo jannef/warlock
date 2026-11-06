@@ -3,6 +3,7 @@
 id = "ivory"
 name = "ivory"
 group = "bone"
+corrodes = "half"
 color = "#fff8e7"
 weight = 65
 to_hit = -1

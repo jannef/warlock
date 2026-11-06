@@ -717,6 +717,9 @@ fn the_built_in_materials_are_the_issues_tables() {
         ("chromium", 92, 0, 1, 110, 900),
         ("nicrosil", 108, 0, 1, 110, 1000),
         ("silver", 134, -1, -1, 50, 1500),
+        // The dread design §5.8's two (#1131): light and quick, heavy and hard.
+        ("mithril", 50, 1, 0, 100, 2000),
+        ("adamantium", 120, 0, 1, 130, 3000),
     ];
     for (id, weight, hit, damage, protection, value) in metals {
         let def = m(id);
@@ -752,7 +755,14 @@ fn the_built_in_materials_are_the_issues_tables() {
             assert!(found.weight <= VERY_RARE && found.deeper <= 0, "{}", def.id);
         }
     }
-    for deep in ["chromium", "nicrosil", "dragonbone", "dragonscale"] {
+    for deep in [
+        "chromium",
+        "nicrosil",
+        "mithril",
+        "adamantium",
+        "dragonbone",
+        "dragonscale",
+    ] {
         let found = m(deep).rarity.expect("found");
         assert!(found.weight <= VERY_RARE && found.level > 1, "{deep}");
     }

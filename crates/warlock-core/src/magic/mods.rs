@@ -220,6 +220,18 @@ impl Mods {
             _ => Effect::Armour,
         };
         self.values[defence.index()] += worked.count(Aspect::Defence);
+        // Damaged (a failed attempt, or acid: `world/corrode.rs`), it is a point worse until
+        // mended: its Protection if it gives some, else its Defence, else its damage.
+        if worked.damaged {
+            let worse = if def.protection != 0 {
+                Effect::Protection
+            } else if Aspect::Defence.of(def) {
+                defence
+            } else {
+                Effect::Damage
+            };
+            self.values[worse.index()] -= 1;
+        }
     }
 
     /// What `stack`'s affixes do to whoever wears or wields it (its global effects alone: what

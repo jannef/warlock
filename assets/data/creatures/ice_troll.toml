@@ -20,6 +20,7 @@ hearing = 10
 weight = 400000
 stats = { strength = 28, dexterity = 12, toughness = 31, intelligence = 9, willpower = 15, presence = 6 }
 base_hp = 96
+regen = 400
 natural = { defence = 1, protection = 2, name = "frosted hide" }
 resist = { cold = 75, fire = -50 }
 on_eat = { message = "Cold as the ice it came from.", vomit = 50 }

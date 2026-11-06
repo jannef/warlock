@@ -961,6 +961,8 @@ impl World {
         // A familiar's touch is its master's hex (`familiar.rs`), on a hit that leaves it alive.
         if blow.is_some_and(|b| b.strike.is_hit()) {
             self.familiar_touch(attacker, target, kind, events);
+            // Acid on gear, either way round (`corrode.rs`).
+            self.corrode((attacker, target), (kind, with));
         }
         // Drowning grip (spec §8 "Birth sign"): a hit holds, a miss or another target lets go.
         self.grip(attacker, target, kind, blow.as_ref(), events);

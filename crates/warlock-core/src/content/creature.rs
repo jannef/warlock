@@ -68,6 +68,34 @@ fn full_percent() -> u32 {
     100
 }
 
+fn full_regen() -> u16 {
+    100
+}
+
+/// The most a creature's `regen` may be, in percent of the normal pace.
+pub const MAX_REGEN: u16 = 1000;
+
+/// A creature's acid (`corrodes = { chance = 25, what = "armour" }`; spec §8 "Creature
+/// gimmicks", `world/corrode.rs`): the chance in percent (1 to 100) that a blow eats at gear,
+/// and whose.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct Corrodes {
+    pub chance: u8,
+    pub what: CorrodesWhat,
+}
+
+/// Whose gear a creature's acid eats.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum CorrodesWhat {
+    /// A hit of its that lands eats at a piece the target wears (its filth, the hezrou's).
+    Armour,
+    /// A blow that strikes it eats at the weapon that struck (its acid blood, the ember
+    /// beetle's).
+    Weapon,
+}
+
 fn first_level() -> u8 {
     1
 }
@@ -195,6 +223,10 @@ pub(super) struct CreatureSpec {
     /// Hit points beyond its Toughness (spec §8 "Combat").
     #[serde(default)]
     pub base_hp: u16,
+    /// How fast its wounds close, in percent of the normal pace (a status's `regen`; spec §8
+    /// "Healing"): 400 for a troll's; default 100. Burning and Corroded stop it.
+    #[serde(default = "full_regen")]
+    pub regen: u16,
     /// Mana beyond its mental stats' modifiers (spec §8 "Mana"); casters, later.
     #[serde(default)]
     pub mana: u16,
@@ -249,6 +281,8 @@ pub(super) struct CreatureSpec {
     /// = 50 }`; 100 is immune, negative a vulnerability. Never its number; Knowledge tells it in words (#1030).
     #[serde(default)]
     pub resist: BTreeMap<String, i32>,
+    /// Its acid (spec §8 "Creature gimmicks"; `world/corrode.rs`): what of a foe's gear it eats.
+    pub corrodes: Option<Corrodes>,
     /// Whether it leaves a corpse when it dies (spec §8 "Hunger"; with `data/hunger.toml`).
     #[serde(default = "yes")]
     pub corpse: bool,
@@ -732,6 +766,7 @@ impl CreatureSpec {
             stats: r.stats,
             skills: r.skills,
             base_hp: i32::from(self.base_hp),
+            regen: self.regen,
             base_mana: i32::from(self.mana),
             level: self.level,
             xp: self.xp,
@@ -750,6 +785,7 @@ impl CreatureSpec {
             incorporeal: self.incorporeal,
             vitals: self.vitals,
             resist: r.resist,
+            corrodes: self.corrodes,
             corpse: self.corpse,
             on_eat: self.on_eat,
             blood: r.blood,
@@ -875,6 +911,9 @@ pub struct CreatureDef {
     /// Gameplay: hit points beyond its Toughness (spec §8 "Combat"); the player's come from the
     /// scenario instead.
     pub base_hp: i32,
+    /// Gameplay: how fast its wounds close, in percent of the normal pace (100; a troll's 400),
+    /// read with its statuses' paces ([`crate::status::Effects::regen`]).
+    pub regen: u16,
     /// Gameplay: mana beyond its mental stats' modifiers (spec §8 "Mana"); the player's come
     /// from their race and class (the scenario's without a character). Never shown.
     pub base_mana: i32,
@@ -931,6 +970,8 @@ pub struct CreatureDef {
     /// immune, negative a vulnerability. The player learns it by play, or in words by Knowledge
     /// (`world/knowledge.rs`).
     pub resist: Vec<(DamageTypeId, i32)>,
+    /// Gameplay: its acid, eating at a foe's gear (`world/corrode.rs`).
+    pub corrodes: Option<Corrodes>,
     /// Gameplay: whether it leaves a corpse when it dies (spec §8 "Hunger"; only with
     /// `data/hunger.toml`, which says how corpses rot and feed).
     pub corpse: bool,

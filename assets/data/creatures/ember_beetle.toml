@@ -23,6 +23,7 @@ stats = { strength = 15, dexterity = 10, toughness = 14, intelligence = 1, willp
 base_hp = 14
 natural = { defence = 2, protection = 3, name = "shell" }
 resist = { fire = 50 }
+corrodes = { chance = 25, what = "weapon" }
 on_eat = { message = "It is still warm inside, and tastes of ash.", vomit = 20, satiation = 200 }
 blood = "#c8501a"
 [creature.attack]
