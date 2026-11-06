@@ -48,14 +48,16 @@ difference in a fight. The tables below are the rules, exactly.
 ## Marks and ranks
 
 You earn marks for every attack, more for a hit. How much you learn depends on whom you fight:
-an opponent whose [level](experience.md#levels) is above your rank teaches you more, one below it
-less, and at last nothing at all: past rank 5 a [giant rat](creatures.md#creature-rat) (level 1) teaches you nothing more,
+an opponent whose [level](experience.md#levels) is below your rank teaches you less, and at last
+nothing at all, while one at your rank or above teaches you the full marks, never more: past rank 5 a [giant rat](creatures.md#creature-rat) (level 1) teaches you nothing more,
 and to become a master you need masterful foes.
 
 {{#include generated/weapon-marks.md}}
 
-The marks you earn past what a rank needs count toward the next one. Missile weapons need fewer
-marks than weapons up close. You start every skill with no marks.
+The marks you earn past what a rank needs count toward the next one. The first ranks come within
+a few levels, but from rank 7 on each rank asks for far more: the last ranks take most of a
+career. Missile weapons need fewer marks than weapons up close, and the schools of magic and the
+caster styles, trained by casting, follow a gentler curve of their own. You start every skill with no marks.
 
 ## Related skills
 

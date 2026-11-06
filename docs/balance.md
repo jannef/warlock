@@ -16,8 +16,10 @@ abilities, with the casters' school ranks trained by their casting ("School pace
 set by level. The sections after them ("Against the design's predictions" and "Tuning notes")
 were written against #569's run, and their figures are that run's, except the spell paragraph,
 which is #754's. Every table the probe prints was rerun for one rank per talent (#962, #963, #964,
-#965; `docs/design/talent-ranks.md`), so prose under a table that quotes a figure from an earlier
-PR's run may be a little off its cells.
+#965; `docs/design/talent-ranks.md`), and again for the slower weapon marks (#1095: the scale
+capped at 100 %, steeper curves, and weapon ranks trained by the fights instead of set by level,
+"Weapon pace"), so prose under a table that quotes a figure from an earlier PR's run may be a
+little off its cells.
 
 ## How to run it
 
@@ -51,10 +53,14 @@ docs), `balance_probe/training.rs` (the trained careers' days), `balance_probe/r
   restoration), six seeds each, and a witch (dagger; necromancy) measured for the spell tables
   alone. Each is made by `World::start_run` with the kit and levelled one level at a time with
   `xp:` and `levelup:auto`, which takes the first talent it may, not one chosen for a build.
-  Weapon skill ranks are set by level, because ranks come from use: rank 2 at level 1, 4 at 5, 6
-  at 10, 7 at 15, 8 at 20, 9 at 30, and 10 from 40. The wizard's staff and the witch's dagger
-  are two ranks lower. A school and a caster style are not set by level: they are trained by
-  casting ("School pace").
+  Weapon skill ranks come from use (#1095, "Weapon pace"): a trained career's fights train the
+  main hand's weapon skill and style blow by blow through `World::practise` (the real `[marks]`,
+  curves, and talents), and an untrained career takes its trained twin's ranks. The skills no
+  fight trains (a shield, the berserker's great blades, the wizard's staff and the witch's dagger,
+  which fight with spells) are set by level at the trained warrior's measured pace: rank 2 at
+  level 1, 4 at 5, 5 at 7, 6 at 10, 7 at 15, 8 at 23, 9 at 32, and 10 from 42; the wizard's staff
+  and the witch's dagger two ranks lower. A school and a caster style are not set by level: they
+  are trained by casting ("School pace").
 - **Trained stats** (#727; "Stat training" below has the method and the results): before each
   level come its game days, and each day its share of the level's kills is fought blow by blow
   through the game's training hooks, then the day's other uses, then the daily check at 06:00
@@ -112,39 +118,39 @@ Each cell: to-hit / damage a hit / Dv / Pv, the seeds' mean; trained stats.
 | L | Warrior plain | Warrior magic | Thief plain | Thief magic | Wizard plain | Priest plain | Priest magic |
 |---|---|---|---|---|---|---|---|
 | 1 | +3/8.2/16/3 | +3/8.2/16/3 | +1/3.0/13/1 | +1/3.0/13/1 | +0/3.0/12/0 | +1/5.8/12/0 | +1/5.8/12/0 |
-| 5 | +4/9.2/18/4 | +5/10.9/20/4 | +3/4.2/15/1 | +3/5.2/17/2 | +0/3.0/13/0 | +2/7.0/15/2 | +3/7.9/18/2 |
-| 10 | +6/11.5/22/5 | +8/12.9/25/6 | +6/7.8/20/1 | +7/9.2/21/2 | +2/4.0/15/0 | +6/10.3/17/4 | +8/12.2/20/5 |
-| 15 | +8/13.2/25/9 | +13/16.8/28/10 | +9/9.0/21/2 | +11/11.5/24/4 | +2/4.0/16/1 | +8/12.5/21/5 | +11/17.2/26/5 |
-| 20 | +10/15.2/28/10 | +15/21.6/33/12 | +11/10.8/23/2 | +14/11.9/26/4 | +2/5.0/17/1 | +10/14.0/22/7 | +12/16.4/28/8 |
-| 30 | +12/17.5/33/12 | +21/24.2/42/18 | +14/12.8/23/2 | +19/20.0/30/8 | +3/6.3/19/1 | +11/16.3/25/8 | +19/22.1/32/15 |
-| 40 | +15/21.5/36/12 | +23/28.3/45/16 | +15/14.8/25/2 | +23/19.2/33/5 | +4/7.3/20/1 | +13/20.2/27/8 | +23/27.4/36/12 |
-| 50 | +16/22.5/36/12 | +20/28.4/46/17 | +16/16.3/25/2 | +22/23.2/31/7 | +4/7.5/22/1 | +14/21.2/27/8 | +20/29.2/34/13 |
-| 60 | +16/22.8/36/12 | +22/29.2/45/15 | +16/17.0/25/2 | +24/22.4/32/7 | +4/7.5/22/1 | +14/22.0/28/8 | +21/26.7/37/13 |
+| 5 | +4/9.0/17/4 | +5/10.8/20/4 | +3/4.2/15/1 | +4/5.2/18/2 | +0/3.0/13/0 | +2/7.0/15/2 | +3/7.9/18/2 |
+| 10 | +6/11.5/22/5 | +8/12.9/25/6 | +6/7.7/20/1 | +8/9.0/22/2 | +2/4.0/15/0 | +6/10.3/17/4 | +8/12.2/20/5 |
+| 15 | +7/12.3/23/9 | +12/16.0/26/10 | +10/8.8/22/2 | +12/11.3/25/4 | +2/4.0/16/1 | +8/12.2/21/5 | +10/16.8/26/5 |
+| 20 | +9/14.2/25/10 | +14/20.4/30/12 | +12/10.7/24/2 | +14/11.8/28/4 | +2/4.0/16/1 | +8/13.0/20/7 | +11/15.4/26/8 |
+| 30 | +12/16.5/30/12 | +20/23.4/39/18 | +15/12.5/25/2 | +20/19.7/31/8 | +3/5.5/19/1 | +11/15.5/23/8 | +19/21.2/30/15 |
+| 40 | +14/19.5/33/12 | +22/26.3/42/16 | +17/14.7/26/2 | +24/18.8/34/5 | +4/7.3/20/1 | +12/18.8/25/8 | +22/25.9/34/12 |
+| 50 | +15/22.2/36/12 | +20/28.2/46/17 | +17/16.2/26/2 | +23/23.0/33/7 | +4/7.5/22/1 | +14/21.2/27/8 | +20/29.4/34/13 |
+| 60 | +16/23.0/36/12 | +22/29.5/45/15 | +18/16.7/26/2 | +25/22.1/34/7 | +5/7.8/22/1 | +14/22.0/28/8 | +21/26.7/37/13 |
 
 Stats, hit points, and mana (plain gear; trained → untrained). Scores St/Dx/To/In/Wi/Pr, the seeds' mean. Spellcraft (learning): the trained Spellcraft and the learning it gives; the auto-rolls spend every level-up roll on the first trained skill (Concentration for both), so it stays where it starts.
 
 | L | Warrior | Thief | Wizard | Priest | HP W/T/Wz/P | MP Wz/P | Spellcraft (learning) Wz/P | Blows a round W/T |
 |---|---|---|---|---|---|---|---|---|
 | 1 | 15/11/12/10/12/10 | 11/12/10/11/10/10 | 10/10/10/14/12/10 | 11/9/11/11/15/11 | 23→23 / 19→19 / 13→13 / 18→18 | 16/13 | 20 (4)/22 (2) | 0.99/0.99 |
-| 5 | 15/11/12/10/12/10 | 12/13/11/12/10/10 | 10/10/10/15/14/10 | 11/9/12/12/15/11 | 38→37 / 28→26 / 18→17 / 27→26 | 52/39 | 20 (4)/22 (2) | 0.88/0.99 |
-| 10 | 18/12/14/12/12/10 | 17/16/15/13/10/10 | 10/12/12/17/18/10 | 16/10/14/12/17/11 | 62→55 / 49→37 / 27→22 / 48→38 | 102/77 | 20 (4)/22 (2) | 0.89/1.04 |
-| 15 | 19/15/16/12/12/10 | 19/18/18/14/11/10 | 10/12/16/18/20/10 | 18/12/17/13/18/11 | 90→73 / 77→47 / 43→28 / 74→48 | 157/118 | 20 (4)/22 (2) | 0.91/1.10 |
-| 20 | 21/17/17/13/13/11 | 21/19/19/14/12/11 | 10/14/19/19/21/10 | 20/13/18/14/19/12 | 124→92 / 108→58 / 64→33 / 106→58 | 212/161 | 20 (4)/22 (2) | 0.92/1.17 |
-| 30 | 23/19/19/15/14/11 | 23/21/20/16/13/12 | 10/16/20/21/23/11 | 22/17/20/16/21/12 | 194→128 / 176→79 / 113→43 / 173→79 | 338/252 | 20 (4)/22 (2) | 0.94/1.25 |
-| 40 | 26/21/20/16/16/12 | 24/23/22/17/15/12 | 11/18/21/22/24/12 | 24/18/22/16/22/13 | 270→164 / 252→100 / 167→53 / 251→101 | 469/345 | 20 (4)/22 (2) | 0.95/1.49 |
-| 50 | 27/22/20/17/17/13 | 26/24/23/18/16/13 | 11/19/22/23/26/13 | 26/20/23/17/22/14 | 347→200 / 333→120 / 227→63 / 333→122 | 604/444 | 20 (4)/22 (2) | 0.95/1.49 |
-| 60 | 28/23/21/18/18/14 | 28/24/24/18/18/14 | 12/20/23/24/27/14 | 27/20/25/18/23/15 | 351→203 / 337→122 / 231→64 / 337→124 | 746/546 | 20 (4)/22 (2) | 0.95/1.49 |
+| 5 | 15/11/12/10/12/10 | 11/13/11/12/10/10 | 10/10/10/15/14/10 | 11/9/12/12/15/11 | 37→37 / 27→26 / 18→17 / 27→26 | 52/39 | 20 (4)/22 (2) | 0.88/0.96 |
+| 10 | 18/12/14/12/12/10 | 16/16/14/13/10/10 | 10/12/13/17/18/10 | 16/10/14/12/16/11 | 60→55 / 45→37 / 28→22 / 48→38 | 102/76 | 20 (4)/22 (2) | 0.89/1.04 |
+| 15 | 19/16/16/12/12/10 | 19/18/16/14/11/10 | 10/13/17/18/20/10 | 18/11/18/13/18/11 | 88→73 / 71→47 / 44→28 / 76→48 | 157/117 | 20 (4)/22 (2) | 0.91/1.10 |
+| 20 | 20/17/17/13/13/11 | 20/20/18/14/12/11 | 10/14/19/19/21/10 | 20/13/18/14/19/11 | 122→92 / 101→58 / 66→33 / 108→58 | 213/159 | 20 (4)/22 (2) | 0.92/1.17 |
+| 30 | 23/19/19/14/14/11 | 22/22/20/16/13/11 | 10/17/20/21/23/11 | 22/16/20/16/20/12 | 193→128 / 168→79 / 116→43 / 176→79 | 342/249 | 20 (4)/22 (2) | 0.94/1.25 |
+| 40 | 25/21/20/16/16/12 | 24/23/21/17/15/12 | 11/18/22/22/24/12 | 25/18/22/16/22/13 | 269→164 / 242→100 / 171→53 / 254→101 | 474/342 | 20 (4)/22 (2) | 0.95/1.49 |
+| 50 | 27/22/21/17/17/13 | 26/24/22/18/16/13 | 11/19/22/23/26/13 | 26/19/23/17/22/14 | 348→200 / 320→120 / 232→63 / 336→122 | 610/441 | 20 (4)/22 (2) | 0.95/1.49 |
+| 60 | 29/23/21/18/18/14 | 27/25/24/18/17/14 | 12/20/24/24/27/14 | 27/20/25/18/23/15 | 351→203 / 324→122 / 236→64 / 340→124 | 754/542 | 20 (4)/22 (2) | 0.95/1.49 |
 
 The Defence of the warrior and the thief in plain gear by category (trained → untrained), the seeds' mean.
 
 | Class | L | Dexterity | Armour | Shield | Parry | Natural | Dodge | Deflection | Wall | total |
 |---|---|---|---|---|---|---|---|---|---|---|
 | warrior | 10 | 1→0 | 2→2 | 6→6 | 2→2 | 0→0 | 1→1 | 0→0 | 0→0 | 22→21 |
-| warrior | 30 | 2→0 | 1→1 | 14→14 | 5→5 | 0→0 | 1→1 | 0→0 | 0→0 | 33→31 |
+| warrior | 30 | 2→0 | 1→1 | 12→12 | 4→4 | 0→0 | 1→1 | 0→0 | 0→0 | 30→28 |
 | warrior | 60 | 2→0 | 1→1 | 16→16 | 6→6 | 0→0 | 2→1 | 0→0 | 0→0 | 36→34 |
-| thief | 10 | 3→1 | 2→2 | 0→0 | 3→3 | 0→0 | 2→2 | 0→0 | 0→0 | 20→17 |
-| thief | 30 | 5→1 | 2→2 | 0→0 | 4→4 | 0→0 | 2→2 | 0→0 | 0→0 | 23→19 |
-| thief | 60 | 5→1 | 2→2 | 0→0 | 6→6 | 0→0 | 2→2 | 0→0 | 0→0 | 25→21 |
+| thief | 10 | 3→1 | 2→2 | 0→0 | 4→3 | 0→0 | 2→2 | 0→0 | 0→0 | 20→17 |
+| thief | 30 | 5→1 | 2→2 | 0→0 | 6→4 | 0→0 | 2→2 | 0→0 | 0→0 | 25→19 |
+| thief | 60 | 5→1 | 2→2 | 0→0 | 8→6 | 0→0 | 2→2 | 0→0 | 0→0 | 26→21 |
 
 ## Monsters
 
@@ -170,28 +176,28 @@ Each cell: P(player hits) / P(monster hits) % · damage a round player : monster
 | L | Warrior kit | Warrior plain | Warrior magic | Thief plain | Thief magic | Wizard plain (melee) | Priest plain | Priest magic |
 |---|---|---|---|---|---|---|---|---|
 | 1 | 81/35 · 7.4:0.1 · 1.6 / 285 | 81/35 · 7.3:0.1 · 1.6 / 341 | 81/35 · 7.4:0.1 · 1.6 / 314 | 66/55 · 2.7:0.6 · 5.4 / 33 | 66/55 · 2.7:0.6 · 5.4 / 32 | 65/62 · 2.1:1.1 · 5.8 / 13 | 71/59 · 4.4:1.0 · 2.8 / 20 | 71/59 · 4.4:1.1 · 2.8 / 19 |
-| 5 | 86/34 · 8.4:0.9 · 2.8 / 49 | 86/27 · 7.3:0.6 · 3.3 / 80 | 89/15 · 9.3:0.3 · 2.6 / 198 | 78/46 · 4.1:1.7 · 6.6 / 17 | 80/33 · 5.1:1.2 · 5.2 / 48 | 65/60 · 1.9:2.6 · 14 / 7.0 | 78/43 · 4.3:1.4 · 5.2 / 20 | 82/29 · 5.4:0.8 · 4.1 / 46 |
-| 10 | 92/21 · 11.6:1.1 · 3.7 / 60 | 92/16 · 10.1:0.7 · 4.2 / 101 | 94/7 · 11.6:0.3 · 3.8 / >999 | 88/28 · 11.4:2.0 · 4.7 / 29 | 93/20 · 14.1:1.3 · 4.1 / 73 | 66/59 · 2.6:4.5 · 18 / 6.2 | 89/44 · 8.2:2.3 · 5.2 / 22 | 95/27 · 10.9:1.3 · 4.0 / 82 |
-| 15 | 94/9 · 13.6:0.6 · 4.5 / 243 | 94/9 · 12.0:0.4 · 5.3 / 303 | 99/4 · 17.5:0.1 · 3.9 / >999 | 96/29 · 14.5:3.0 · 5.5 / 30 | 98/14 · 19.7:1.1 · 4.6 / 113 | 62/66 · 2.0:7.6 · 30 / 5.8 | 94/27 · 10.4:2.3 · 6.5 / 44 | 98/12 · 16.2:0.9 · 4.3 / >999 |
-| 20 | 98/2 · 17.1:0.3 · 4.9 / >999 | 98/5 · 14.9:0.2 · 5.5 / >999 | 99/1 · 24.7:0.0 · 3.5 / >999 | 99/28 · 20.0:3.0 · 5.3 / 46 | 99/11 · 23.5:1.2 · 4.4 / 502 | 67/66 · 2.5:8.0 · 33 / 8.1 | 97/30 · 11.5:2.5 · 6.9 / 54 | 99/9 · 15.9:0.5 · 5.0 / >999 |
-| 30 | 98/1 · 20.8:0.2 · 6.8 / >999 | 98/1 · 18.3:0.2 · 7.9 / >999 | 99/1 · 29.7:0.1 · 5.0 / >999 | 99/40 · 25.2:8.9 · 6.5 / 22 | 99/7 · 44.0:1.0 · 3.4 / 449 | 56/68 · 2.0:15.4 · 52 / 7.4 | 95/30 · 12.3:5.6 · 11 / 33 | 99/5 · 24.0:0.6 · 6.2 / >999 |
-| 40 | 98/1 · 26.6:0.2 · 6.8 / >999 | 98/1 · 23.0:0.1 · 7.8 / >999 | 99/1 · 40.2:0.1 · 4.7 / >999 | 99/47 · 33.8:10.1 · 6.0 / 28 | 99/8 · 55.3:1.4 · 3.7 / >999 | 50/77 · 2.7:15.5 · 65 / 11 | 95/34 · 16.2:6.4 · 11 / 42 | 99/1 · 29.3:0.1 · 5.6 / >999 |
-| 50 | 99/2 · 27.5:0.3 · 8.7 / >999 | 99/5 · 24.0:1.0 · 9.9 / 799 | 99/1 · 35.1:0.1 · 6.9 / >999 | 99/68 · 35.4:19.2 · 7.2 / 19 | 99/29 · 50.7:7.4 · 4.8 / 528 | 42/86 · 1.7:22.5 · 158 / 10 | 95/56 · 16.8:15.4 · 13 / 22 | 99/14 · 32.0:3.1 · 7.1 / >999 |
-| 60 | 93/3 · 19.0:1.1 · 10 / >999 | 93/13 · 16.7:3.4 · 12 / 151 | 99/1 · 26.9:0.2 · 7.0 / >999 | 94/84 · 27.5:22.5 · 9.7 / 15 | 99/38 · 39.7:9.9 · 6.0 / 84 | 28/95 · 1.2:27.7 · 451 / 8.6 | 89/71 · 15.0:16.0 · 16 / 21 | 98/14 · 24.2:4.0 · 9.7 / >999 |
+| 5 | 87/36 · 8.4:0.9 · 2.8 / 47 | 87/29 · 7.2:0.6 · 3.3 / 77 | 89/17 · 9.2:0.3 · 2.6 / 213 | 79/44 · 4.1:1.7 · 6.9 / 17 | 81/31 · 5.0:1.0 · 5.2 / 56 | 65/60 · 1.9:2.7 · 14 / 6.8 | 78/43 · 4.4:1.4 · 5.2 / 20 | 82/29 · 5.4:0.9 · 4.1 / 45 |
+| 10 | 92/20 · 11.7:1.2 · 3.7 / 62 | 92/15 · 10.2:0.7 · 4.2 / 118 | 94/7 · 11.6:0.3 · 3.8 / >999 | 90/24 · 11.4:1.7 · 4.8 / 38 | 93/17 · 14.1:1.1 · 4.1 / 106 | 66/58 · 2.6:4.4 · 18 / 6.5 | 89/44 · 8.0:2.4 · 5.4 / 22 | 95/27 · 10.6:1.3 · 4.1 / 83 |
+| 15 | 92/14 · 12.2:1.1 · 5.2 / 94 | 92/16 · 10.8:0.8 · 5.9 / 128 | 99/8 · 16.1:0.4 · 4.3 / >999 | 97/23 · 14.1:2.3 · 5.5 / 48 | 98/9 · 19.2:0.7 · 4.5 / 174 | 62/66 · 2.0:7.8 · 30 / 5.8 | 93/31 · 10.1:2.5 · 6.9 / 42 | 97/14 · 15.8:1.1 · 4.5 / >999 |
+| 20 | 97/10 · 15.4:1.0 · 5.6 / 208 | 97/16 · 13.3:1.1 · 6.3 / 205 | 99/2 · 22.4:0.1 · 3.8 / >999 | 99/23 · 19.7:2.6 · 5.4 / 97 | 99/9 · 23.3:0.8 · 4.5 / 598 | 61/70 · 1.6:8.8 · 49 / 7.6 | 95/45 · 10.3:3.7 · 8.2 / 33 | 98/16 · 14.3:1.0 · 5.6 / 846 |
+| 30 | 97/3 · 18.3:0.6 · 7.7 / 698 | 97/6 · 15.8:0.9 · 8.8 / 319 | 99/1 · 27.3:0.1 · 5.5 / >999 | 99/32 · 24.8:7.3 · 6.6 / 35 | 99/5 · 43.2:0.8 · 3.5 / >999 | 57/71 · 1.7:16.1 · 64 / 7.2 | 96/45 · 11.8:8.0 · 12 / 23 | 99/8 · 22.9:1.1 · 6.5 / >999 |
+| 40 | 97/1 · 23.1:0.3 · 7.6 / >999 | 97/5 · 20.1:1.1 · 8.8 / 432 | 99/1 · 37.0:0.1 · 5.1 / >999 | 99/39 · 33.4:8.5 · 6.0 / 48 | 99/6 · 54.3:1.3 · 3.8 / >999 | 42/77 · 1.9:15.6 · 78 / 11 | 93/47 · 14.8:8.6 · 12 / 31 | 99/3 · 27.4:0.4 · 6.0 / >999 |
+| 50 | 98/2 · 27.1:0.2 · 8.8 / >999 | 98/5 · 23.3:1.0 · 10 / 749 | 99/1 · 34.8:0.1 · 6.9 / >999 | 99/57 · 34.9:16.1 · 7.3 / 25 | 99/27 · 50.6:7.2 · 4.8 / >999 | 42/86 · 1.6:23.0 · 160 / 10 | 95/56 · 16.7:14.9 · 14 / 23 | 99/14 · 32.1:3.0 · 7.0 / >999 |
+| 60 | 93/3 · 19.3:1.0 · 9.9 / 829 | 93/13 · 17.0:3.3 · 11 / 162 | 99/1 · 28.7:0.2 · 6.7 / >999 | 96/74 · 27.0:19.9 · 9.6 / 17 | 99/31 · 38.5:8.2 · 6.2 / 277 | 29/95 · 1.4:27.3 · 459 / 8.7 | 89/71 · 14.9:15.6 · 16 / 22 | 98/14 · 24.2:3.5 · 9.8 / >999 |
 
 Out of depth (+3: the monsters one to five levels above), and untrained stats, for the warrior in plain gear.
 
 | L | Warrior plain +3 | Warrior magic +3 | Warrior plain, untrained | Warrior magic, untrained |
 |---|---|---|---|---|
-| 1 | 81/42 · 7.1:0.8 · 2.8 / 33 | 81/42 · 7.2:0.7 · 2.9 / 35 | 81/35 · 7.4:0.1 · 1.7 / 352 | 81/35 · 7.4:0.1 · 1.6 / 315 |
-| 5 | 86/34 · 7.3:1.4 · 4.9 / 30 | 88/20 · 9.2:0.8 · 3.9 / 70 | 86/27 · 7.4:0.5 · 3.3 / 82 | 89/15 · 9.2:0.3 · 2.7 / 192 |
-| 10 | 92/24 · 9.7:1.6 · 6.0 / 46 | 94/12 · 11.0:0.8 · 5.3 / 734 | 87/19 · 8.7:0.8 · 5.2 / 78 | 90/9 · 10.1:0.4 · 4.4 / >999 |
-| 15 | 94/11 · 11.8:0.7 · 6.1 / 166 | 99/5 · 17.4:0.3 · 4.3 / >999 | 88/13 · 9.0:0.6 · 7.3 / 204 | 98/6 · 14.9:0.3 · 4.7 / >999 |
-| 20 | 96/8 · 14.8:0.6 · 7.5 / 291 | 99/1 · 23.9:0.1 · 4.7 / >999 | 91/7 · 10.1:0.4 · 9.0 / 523 | 98/1 · 21.5:0.0 · 4.2 / >999 |
-| 30 | 98/3 · 16.8:0.3 · 8.8 / >999 | 99/1 · 28.7:0.1 · 5.6 / >999 | 87/4 · 10.6:0.6 · 13 / 521 | 99/1 · 23.5:0.1 · 6.5 / >999 |
-| 40 | 99/2 · 22.7:0.3 · 8.5 / >999 | 99/1 · 39.9:0.1 · 5.1 / >999 | 81/3 · 12.9:0.7 · 13 / 618 | 97/1 · 28.4:0.1 · 6.4 / >999 |
-| 50 | 97/5 · 21.2:1.3 · 10 / 628 | 99/1 · 32.9:0.1 · 7.2 / >999 | 76/12 · 10.7:2.4 · 22 / 124 | 92/1 · 23.5:0.1 · 10 / >999 |
-| 60 | 92/20 · 17.1:5.9 · 14 / 66 | 98/1 · 25.0:0.2 · 9.5 / >999 | 63/27 · 6.8:6.1 · 42 / 42 | 88/1 · 16.0:0.2 · 15 / >999 |
+| 1 | 81/42 · 7.2:0.8 · 2.8 / 34 | 81/42 · 7.2:0.8 · 2.8 / 33 | 81/35 · 7.4:0.1 · 1.6 / 298 | 81/35 · 7.3:0.1 · 1.7 / 332 |
+| 5 | 87/36 · 7.0:1.5 · 4.7 / 27 | 89/22 · 9.0:0.9 · 3.9 / 61 | 86/29 · 7.1:0.6 · 3.4 / 78 | 89/17 · 8.9:0.3 · 2.7 / 216 |
+| 10 | 92/23 · 9.7:1.6 · 5.9 / 49 | 94/12 · 11.0:0.7 · 5.2 / 707 | 86/19 · 8.4:0.9 · 5.4 / 76 | 89/9 · 9.8:0.4 · 4.4 / >999 |
+| 15 | 92/19 · 10.4:1.3 · 7.0 / 81 | 99/10 · 15.5:0.7 · 4.8 / >999 | 84/20 · 7.9:1.1 · 8.7 / 82 | 97/10 · 13.3:0.5 · 5.3 / >999 |
+| 20 | 94/21 · 13.1:1.9 · 8.3 / 70 | 98/4 · 22.0:0.2 · 5.1 / >999 | 87/20 · 8.6:1.2 · 11 / 118 | 97/3 · 18.9:0.1 · 4.8 / >999 |
+| 30 | 97/11 · 14.7:1.5 · 9.7 / 163 | 99/1 · 26.3:0.1 · 6.0 / >999 | 83/13 · 9.0:1.9 · 15 / 87 | 98/1 · 21.4:0.1 · 7.1 / >999 |
+| 40 | 97/8 · 19.7:1.3 · 9.6 / 347 | 99/1 · 37.1:0.1 · 5.6 / >999 | 77/9 · 10.3:1.8 · 16 / 112 | 96/1 · 26.0:0.1 · 7.2 / >999 |
+| 50 | 96/5 · 20.7:1.2 · 10 / >999 | 99/1 · 31.6:0.1 · 7.1 / >999 | 76/12 · 11.0:2.5 · 22 / 137 | 92/1 · 23.3:0.1 · 10 / >999 |
+| 60 | 93/20 · 17.2:6.3 · 14 / 58 | 98/1 · 26.3:0.2 · 8.9 / >999 | 63/27 · 6.9:5.9 · 42 / 41 | 88/1 · 16.1:0.2 · 14 / >999 |
 
 ## Protection by body
 
@@ -199,13 +205,13 @@ Rounds for the plain warrior (trained) to kill the monsters of their level: as s
 
 | L | as shipped | none (0) | hide | bony | armoured |
 |---|---|---|---|---|---|
-| 10 | 4.3 | 3.9 | 3.8 | 4.2 | 4.8 |
-| 15 | 5.3 | 4.4 | 4.5 | 4.9 | 6.0 |
-| 20 | 5.6 | 4.7 | 4.9 | 5.4 | 6.0 |
-| 30 | 7.9 | 5.9 | 6.3 | 7.0 | 8.0 |
-| 40 | 7.9 | 5.6 | 6.2 | 6.5 | 7.6 |
-| 50 | 10 | 8.1 | 9.0 | 10 | 12 |
-| 60 | 12 | 6.9 | 7.8 | 8.7 | 11 |
+| 10 | 4.2 | 3.8 | 3.8 | 4.2 | 4.9 |
+| 15 | 6.0 | 5.2 | 5.1 | 5.7 | 7.0 |
+| 20 | 6.2 | 5.1 | 5.3 | 5.9 | 6.7 |
+| 30 | 8.7 | 6.7 | 7.2 | 8.1 | 9.5 |
+| 40 | 8.7 | 6.1 | 6.9 | 7.6 | 8.7 |
+| 50 | 10 | 8.2 | 9.2 | 10 | 12 |
+| 60 | 12 | 6.9 | 7.7 | 8.4 | 9.9 |
 
 ## Spells
 
@@ -215,147 +221,147 @@ Each spell that rolls (harm or healing) of the schools the trained caster knows 
 
 | Spell (level, res) | L | rung | school rank | roll | hexed | mana / pool |
 |---|---|---|---|---|---|---|
-| Burning hands (1, area) | 10 | 1–2 | 5 (Sniper 5) | 2d5 1s again, 7.1 (rank 0: 2d4, 4.8) | – | 2 (3) / 102 |
-| Burning hands (1, area) | 20 | 2 | 7 (Sniper 7) | 3d5 1s again, 10.3 (rank 0: 2d4, 5.0) | – | 2 (3) / 212 |
-| Burning hands (1, area) | 30 | 2–3 | 8 (Sniper 8–9) | 3d5 1s and 2s again, 11.7 (rank 0: 2d4, 5.3) | – | 2 (3) / 338 |
-| Burning hands (1, area) | 60 | 3 | 10 (Sniper 10) | 4d6+2 1s and 2s again, 18.7 (rank 0: 2d4+2, 7.0) | – | 1 (3) / 746 |
-| Grave breath (1, area) | 10 | 2 | 0 (Sniper 5) | 2d4, 5.0 (rank 0: 2d4, 5.0) | – | 3 (3) / 102 |
-| Grave breath (1, area) | 20 | 2–3 | 0 (Sniper 7) | 2d4+2, 5.7 (rank 0: 2d4+2, 5.7) | – | 3 (3) / 212 |
-| Grave breath (1, area) | 30 | 2–3 | 0 (Sniper 8–9) | 2d4+2, 6.3 (rank 0: 2d4+2, 6.3) | – | 3 (3) / 338 |
-| Grave breath (1, area) | 60 | 3 | 0 (Sniper 10) | 2d4+2, 7.0 (rank 0: 2d4+2, 7.0) | – | 1 (3) / 746 |
-| Ray of frost (1, attack) | 10 | 0–1 | 5 (Sniper 5) | 1d9 1s again, 6.0 (rank 0: 1d8, 4.3) | – | 1 (1) / 102 |
-| Ray of frost (1, attack) | 20 | 1 | 7 (Sniper 7) | 2d9 1s again, 11.0 (rank 0: 1d8, 4.5) | – | 1 (1) / 212 |
-| Ray of frost (1, attack) | 30 | 1 | 8 (Sniper 8–9) | 2d9 1s and 2s again, 12.5 (rank 0: 1d8, 4.5) | – | 1 (1) / 338 |
-| Ray of frost (1, attack) | 60 | 1 | 10 (Sniper 10) | 3d10 1s and 2s again, 18.9 (rank 0: 1d8, 4.5) | – | 1 (1) / 746 |
-| Spark (1, auto) | 10 | 0–1 | 5 (Sniper 5) | 1d7 1s again, 4.8 (rank 0: 1d6, 3.3) | – | 1 (1) / 102 |
-| Spark (1, auto) | 20 | 1 | 7 (Sniper 7) | 2d7 1s again, 9.0 (rank 0: 1d6, 3.5) | – | 1 (1) / 212 |
-| Spark (1, auto) | 30 | 1 | 8 (Sniper 8–9) | 2d7 1s and 2s again, 10.2 (rank 0: 1d6, 3.5) | – | 1 (1) / 338 |
-| Spark (1, auto) | 60 | 1 | 10 (Sniper 10) | 3d8 1s and 2s again, 15.8 (rank 0: 1d6, 3.5) | – | 1 (1) / 746 |
-| Magic missile (3, auto) | 10 | 1–2 | 5 (Sniper 5) | 3d5 1s again, 10.2 (rank 0: 3d4, 7.1) | – | 2 (3) / 102 |
-| Magic missile (3, auto) | 20 | 2 | 7 (Sniper 7) | 4d5 1s again, 13.7 (rank 0: 3d4, 7.5) | – | 2 (3) / 212 |
-| Magic missile (3, auto) | 30 | 2–3 | 8 (Sniper 8–9) | 4d5 1s and 2s again, 15.2 (rank 0: 3d4, 7.7) | – | 2 (3) / 338 |
-| Magic missile (3, auto) | 60 | 3 | 10 (Sniper 10) | 5d6+1 1s and 2s again, 21.8 (rank 0: 3d4+1, 8.5) | – | 1 (3) / 746 |
-| Cause wounds (4, touch) | 10 | 1–2 | 0 (Toucher 1) | 2d8, 7.7 (rank 0: 2d8, 7.7) | – | 3 (3) / 102 |
-| Cause wounds (4, touch) | 20 | 2 | 0 (Toucher 3) | 2d8, 9.0 (rank 0: 2d8, 9.0) | – | 3 (3) / 212 |
-| Cause wounds (4, touch) | 30 | 2 | 0 (Toucher 4–5) | 2d8+1, 10.0 (rank 0: 2d8, 9.0) | – | 3 (3) / 338 |
-| Cause wounds (4, touch) | 60 | 3 | 0 (Toucher 6) | 2d8+3, 12.0 (rank 0: 2d8+2, 11.0) | – | 1 (3) / 746 |
-| Acid arrow (5, attack) | 10 | 1–2 | 5 (Sniper 5) | 3d7 1s again, 13.3 (rank 0: 3d6, 9.9) | – | 4 (5) / 102 |
-| Acid arrow (5, attack) | 20 | 2 | 7 (Sniper 7) | 4d7 1s again, 17.9 (rank 0: 3d6, 10.5) | – | 4 (5) / 212 |
-| Acid arrow (5, attack) | 30 | 2 | 8 (Sniper 8–9) | 4d7 1s and 2s again, 19.6 (rank 0: 3d6, 10.5) | – | 4 (5) / 338 |
-| Acid arrow (5, attack) | 60 | 3 | 10 (Sniper 10) | 5d8+2 1s and 2s again, 28.2 (rank 0: 3d6+2, 12.5) | – | 1 (5) / 746 |
+| Burning hands (1, area) | 10 | 1–2 | 4 (Sniper 4–5) | 2d4 1s again, 5.5 (rank 0: 2d4, 4.8) | – | 2 (3) / 102 |
+| Burning hands (1, area) | 20 | 2 | 6 (Sniper 6) | 3d5 1s again, 10.2 (rank 0: 2d4, 5.0) | – | 2 (3) / 213 |
+| Burning hands (1, area) | 30 | 2–3 | 7 (Sniper 7–8) | 3d5 1s again, 10.6 (rank 0: 2d4, 5.3) | – | 2 (3) / 342 |
+| Burning hands (1, area) | 60 | 3 | 9 (Sniper 9–10) | 4d6+2 1s and 2s again, 18.7 (rank 0: 2d4+2, 7.0) | – | 1 (3) / 754 |
+| Grave breath (1, area) | 10 | 2 | 0 (Sniper 4–5) | 2d4, 5.0 (rank 0: 2d4, 5.0) | – | 3 (3) / 102 |
+| Grave breath (1, area) | 20 | 2–3 | 0 (Sniper 6) | 2d4+2, 6.0 (rank 0: 2d4+2, 6.0) | – | 3 (3) / 213 |
+| Grave breath (1, area) | 30 | 3 | 0 (Sniper 7–8) | 2d4+2, 7.0 (rank 0: 2d4+2, 7.0) | – | 3 (3) / 342 |
+| Grave breath (1, area) | 60 | 3 | 0 (Sniper 9–10) | 2d4+2, 7.0 (rank 0: 2d4+2, 7.0) | – | 1 (3) / 754 |
+| Ray of frost (1, attack) | 10 | 0–1 | 4 (Sniper 4–5) | 1d8 1s again, 4.9 (rank 0: 1d8, 4.3) | – | 1 (1) / 102 |
+| Ray of frost (1, attack) | 20 | 1 | 6 (Sniper 6) | 2d9 1s again, 10.9 (rank 0: 1d8, 4.5) | – | 1 (1) / 213 |
+| Ray of frost (1, attack) | 30 | 1 | 7 (Sniper 7–8) | 2d9 1s again, 11.0 (rank 0: 1d8, 4.5) | – | 1 (1) / 342 |
+| Ray of frost (1, attack) | 60 | 1 | 9 (Sniper 9–10) | 3d10 1s and 2s again, 18.9 (rank 0: 1d8, 4.5) | – | 1 (1) / 754 |
+| Spark (1, auto) | 10 | 0–1 | 4 (Sniper 4–5) | 1d6 1s again, 3.8 (rank 0: 1d6, 3.3) | – | 1 (1) / 102 |
+| Spark (1, auto) | 20 | 1 | 6 (Sniper 6) | 2d7 1s again, 8.9 (rank 0: 1d6, 3.5) | – | 1 (1) / 213 |
+| Spark (1, auto) | 30 | 1 | 7 (Sniper 7–8) | 2d7 1s again, 9.0 (rank 0: 1d6, 3.5) | – | 1 (1) / 342 |
+| Spark (1, auto) | 60 | 1 | 9 (Sniper 9–10) | 3d8 1s and 2s again, 15.8 (rank 0: 1d6, 3.5) | – | 1 (1) / 754 |
+| Magic missile (3, auto) | 10 | 1–2 | 4 (Sniper 4–5) | 3d4 1s again, 8.3 (rank 0: 3d4, 7.1) | – | 2 (3) / 102 |
+| Magic missile (3, auto) | 20 | 2 | 6 (Sniper 6) | 4d5 1s again, 13.6 (rank 0: 3d4, 7.5) | – | 2 (3) / 213 |
+| Magic missile (3, auto) | 30 | 2–3 | 7 (Sniper 7–8) | 4d5 1s again, 13.9 (rank 0: 3d4, 7.7) | – | 2 (3) / 342 |
+| Magic missile (3, auto) | 60 | 3 | 9 (Sniper 9–10) | 5d6+1 1s and 2s again, 21.8 (rank 0: 3d4+1, 8.5) | – | 1 (3) / 754 |
+| Cause wounds (4, touch) | 10 | 1–2 | 0 (Toucher 0–1) | 2d8, 7.7 (rank 0: 2d8, 7.7) | – | 3 (3) / 102 |
+| Cause wounds (4, touch) | 20 | 2 | 0 (Toucher 2) | 2d8, 9.0 (rank 0: 2d8, 9.0) | – | 3 (3) / 213 |
+| Cause wounds (4, touch) | 30 | 2–3 | 0 (Toucher 3–4) | 2d8+2, 9.5 (rank 0: 2d8+2, 9.3) | – | 3 (3) / 342 |
+| Cause wounds (4, touch) | 60 | 3 | 0 (Toucher 5–6) | 2d8+3, 12.0 (rank 0: 2d8+2, 11.0) | – | 1 (3) / 754 |
+| Acid arrow (5, attack) | 10 | 1–2 | 4 (Sniper 4–5) | 3d6 1s again, 11.3 (rank 0: 3d6, 9.9) | – | 4 (5) / 102 |
+| Acid arrow (5, attack) | 20 | 2 | 6 (Sniper 6) | 4d7 1s again, 17.7 (rank 0: 3d6, 10.5) | – | 4 (5) / 213 |
+| Acid arrow (5, attack) | 30 | 2 | 7 (Sniper 7–8) | 4d7 1s again, 17.9 (rank 0: 3d6, 10.5) | – | 4 (5) / 342 |
+| Acid arrow (5, attack) | 60 | 3 | 9 (Sniper 9–10) | 5d8+2 1s and 2s again, 28.2 (rank 0: 3d6+2, 12.5) | – | 1 (5) / 754 |
 | Call of the wild (5, auto) | 10 | 0 | 0 | +1, 1.0 (rank 0: +1, 1.0) | – | 5 (5) / 102 |
-| Call of the wild (5, auto) | 20 | 0 | 0 | +1, 1.0 (rank 0: +1, 1.0) | – | 5 (5) / 212 |
-| Call of the wild (5, auto) | 30 | 0 | 0 | +1, 1.0 (rank 0: +1, 1.0) | – | 5 (5) / 338 |
-| Call of the wild (5, auto) | 60 | 0 | 0 | +1, 1.0 (rank 0: +1, 1.0) | – | 2 (5) / 746 |
-| Arcane bolt (6, area) | 10 | 1 | 5 (Sniper 5) | 3d7 1s again, 14.0 (rank 0: 3d6, 10.5) | – | 10 (11) / 102 |
-| Arcane bolt (6, area) | 20 | 1–2 | 7 (Sniper 7) | 4d7+2 1s again, 19.6 (rank 0: 3d6+2, 12.2) | – | 9 (11) / 212 |
-| Arcane bolt (6, area) | 30 | 2 | 8 (Sniper 8–9) | 4d7+2 1s and 2s again, 21.6 (rank 0: 3d6+2, 12.5) | – | 9 (11) / 338 |
-| Arcane bolt (6, area) | 60 | 3 | 10 (Sniper 10) | 5d8+4 1s and 2s again, 30.2 (rank 0: 3d6+4, 14.5) | – | 2 (11) / 746 |
-| Frost (6, area) | 10 | 1 | 5 (Sniper 5) | 3d7 1s again, 14.0 (rank 0: 3d6, 10.5) | – | 13 (14) / 102 |
-| Frost (6, area) | 20 | 1–2 | 7 (Sniper 7) | 4d7+2 1s again, 19.6 (rank 0: 3d6+2, 12.2) | – | 12 (14) / 212 |
-| Frost (6, area) | 30 | 2 | 8 (Sniper 8–9) | 4d7+2 1s and 2s again, 21.6 (rank 0: 3d6+2, 12.5) | – | 12 (14) / 338 |
-| Frost (6, area) | 60 | 3 | 10 (Sniper 10) | 5d8+4 1s and 2s again, 30.2 (rank 0: 3d6+4, 14.5) | – | 2 (14) / 746 |
-| Blight (7, area) | 10 | 1 | 0 (Sniper 5) | 3d6, 10.5 (rank 0: 3d6, 10.5) | – | 17 (17) / 102 |
-| Blight (7, area) | 20 | 1–2 | 0 (Sniper 7) | 3d6+3, 11.5 (rank 0: 3d6+3, 11.5) | – | 17 (17) / 212 |
-| Blight (7, area) | 30 | 1–2 | 0 (Sniper 8–9) | 3d6+3, 12.5 (rank 0: 3d6+3, 12.5) | – | 17 (17) / 338 |
-| Blight (7, area) | 60 | 2 | 0 (Sniper 10) | 3d6+3, 13.5 (rank 0: 3d6+3, 13.5) | – | 5 (17) / 746 |
-| Scorching ray (7, attack) | 10 | 1–2 | 5 (Sniper 5) | 3d7 1s again, 13.3 (rank 0: 3d6, 9.9) | – | 6 (7) / 102 |
-| Scorching ray (7, attack) | 20 | 2–3 | 7 (Sniper 7) | 5d7 1s again, 21.6 (rank 0: 4d6, 13.4) | – | 6 (7) / 212 |
-| Scorching ray (7, attack) | 30 | 3 | 8 (Sniper 8–9) | 5d7 1s and 2s again, 24.4 (rank 0: 4d6, 14.0) | – | 6 (7) / 338 |
-| Scorching ray (7, attack) | 60 | 4 | 10 (Sniper 10) | 5d8+1d12 1s and 2s again, 33.6 (rank 0: 3d6+1d10, 16.0) | – | 1 (7) / 746 |
-| Thunderclap (7, area) | 10 | 0 | 5 | 1d7 1s again, 5.2 (rank 0: 1d6, 3.5) | – | 12 (13) / 102 |
-| Thunderclap (7, area) | 20 | 0 | 7 | 2d7 1s again, 9.0 (rank 0: 1d6, 3.5) | – | 11 (13) / 212 |
-| Thunderclap (7, area) | 30 | 0–1 | 8 | 2d7 1s and 2s again, 11.0 (rank 0: 1d6, 4.1) | – | 11 (13) / 338 |
-| Thunderclap (7, area) | 60 | 2 | 10 | 4d8+2 1s and 2s again, 23.0 (rank 0: 2d6+2, 9.0) | – | 2 (13) / 746 |
-| Flay (8, auto) | 10 | 1 | 0 (Sniper 5) | 1d6, 3.5 (rank 0: 1d6, 3.5) | – | 8 (8) / 102 |
-| Flay (8, auto) | 20 | 1–2 | 0 (Sniper 7) | 1d8, 3.8 (rank 0: 1d8, 3.8) | – | 8 (8) / 212 |
-| Flay (8, auto) | 30 | 1–2 | 0 (Sniper 8–9) | 1d8, 4.2 (rank 0: 1d8, 4.2) | – | 8 (8) / 338 |
-| Flay (8, auto) | 60 | 2 | 0 (Sniper 10) | 1d8, 4.5 (rank 0: 1d8, 4.5) | – | 2 (8) / 746 |
-| Shatter (8, area) | 10 | 1 | 5 (Sniper 5) | 3d7 1s again, 14.0 (rank 0: 3d6, 10.5) | – | 13 (14) / 102 |
-| Shatter (8, area) | 20 | 1–2 | 7 (Sniper 7) | 4d7+2 1s again, 19.6 (rank 0: 3d6+2, 12.2) | – | 12 (14) / 212 |
-| Shatter (8, area) | 30 | 2 | 8 (Sniper 8–9) | 4d7+2 1s and 2s again, 21.6 (rank 0: 3d6+2, 12.5) | – | 12 (14) / 338 |
-| Shatter (8, area) | 60 | 3 | 10 (Sniper 10) | 5d8+4 1s and 2s again, 30.2 (rank 0: 3d6+4, 14.5) | – | 2 (14) / 746 |
-| Rime (9, area) | 10 | 2 | 5 (Sniper 5) | 4d7 1s again, 18.5 (rank 0: 4d6, 14.0) | – | 13 (14) / 102 |
-| Rime (9, area) | 20 | 2–3 | 7 (Sniper 7) | 5d7+2 1s again, 23.0 (rank 0: 4d6+2, 14.7) | – | 12 (14) / 212 |
-| Rime (9, area) | 30 | 2–3 | 8 (Sniper 8–9) | 5d7+2 1s and 2s again, 25.7 (rank 0: 4d6+2, 15.3) | – | 12 (14) / 338 |
-| Rime (9, area) | 60 | 3 | 10 (Sniper 10) | 6d8+2 1s and 2s again, 33.5 (rank 0: 4d6+2, 16.0) | – | 2 (14) / 746 |
-| Leech (10, attack) | 10 | 2 | 0 (Sniper 5) | 4d6, 14.0 (rank 0: 4d6, 14.0) | – | 10 (10) / 102 |
-| Leech (10, attack) | 20 | 2 | 0 (Sniper 7) | 4d6, 14.0 (rank 0: 4d6, 14.0) | – | 10 (10) / 212 |
-| Leech (10, attack) | 30 | 2 | 0 (Sniper 8–9) | 4d6, 14.0 (rank 0: 4d6, 14.0) | – | 10 (10) / 338 |
-| Leech (10, attack) | 60 | 3 | 0 (Sniper 10) | 4d6+2, 16.0 (rank 0: 4d6+2, 16.0) | – | 3 (10) / 746 |
-| Call lightning (11, area) | 10 | 2–3 | 5 (Sniper 5) | 5d7 1s again, 19.9 (rank 0: 5d6, 15.2) | – | 19 (20) / 102 |
-| Call lightning (11, area) | 20 | 3 | 7 (Sniper 7) | 6d7 1s again, 26.9 (rank 0: 5d6, 17.5) | – | 18 (20) / 212 |
-| Call lightning (11, area) | 30 | 3 | 8 (Sniper 8–9) | 6d7 1s and 2s again, 29.1 (rank 0: 5d6, 17.5) | – | 18 (20) / 338 |
-| Call lightning (11, area) | 60 | 4 | 10 (Sniper 10) | 7d8+2 1s and 2s again, 38.8 (rank 0: 5d6+2, 19.5) | – | 4 (20) / 746 |
-| Fireball (11, area) | 10 | 1–2 | 5 (Sniper 5) | 4d7 1s again, 17.7 (rank 0: 4d6, 13.4) | – | 24 (26) / 102 |
-| Fireball (11, area) | 20 | 2–3 | 7 (Sniper 7) | 6d7 1s again, 26.1 (rank 0: 5d6, 16.9) | – | 23 (26) / 212 |
-| Fireball (11, area) | 30 | 3 | 8 (Sniper 8–9) | 6d7 1s and 2s again, 29.1 (rank 0: 5d6, 17.5) | – | 23 (26) / 338 |
-| Fireball (11, area) | 60 | 4 | 10 (Sniper 10) | 7d8+2 1s and 2s again, 38.8 (rank 0: 5d6+2, 19.5) | – | 5 (26) / 746 |
-| Lightning bolt (11, area) | 10 | 1–2 | 5 (Sniper 5) | 4d7 1s again, 17.7 (rank 0: 4d6, 13.4) | – | 19 (20) / 102 |
-| Lightning bolt (11, area) | 20 | 2–3 | 7 (Sniper 7) | 6d7 1s again, 26.1 (rank 0: 5d6, 16.9) | – | 18 (20) / 212 |
-| Lightning bolt (11, area) | 30 | 3 | 8 (Sniper 8–9) | 6d7 1s and 2s again, 29.1 (rank 0: 5d6, 17.5) | – | 18 (20) / 338 |
-| Lightning bolt (11, area) | 60 | 4 | 10 (Sniper 10) | 7d8+2 1s and 2s again, 38.8 (rank 0: 5d6+2, 19.5) | – | 4 (20) / 746 |
-| Flame (12, area) | 10 | 0–1 | 5 (Sniper 5) | 4d7 1s again, 17.7 (rank 0: 4d6, 13.4) | – | 27 (29) / 102 |
-| Flame (12, area) | 20 | 1–2 | 7 (Sniper 7) | 6d7 1s again, 26.1 (rank 0: 5d6, 16.9) | – | 26 (29) / 212 |
-| Flame (12, area) | 30 | 2 | 8 (Sniper 8–9) | 6d7 1s and 2s again, 29.1 (rank 0: 5d6, 17.5) | – | 26 (29) / 338 |
-| Flame (12, area) | 60 | 3 | 10 (Sniper 10) | 7d8+2 1s and 2s again, 38.8 (rank 0: 5d6+2, 19.5) | – | 6 (29) / 746 |
-| Reek (13, area) | 10 | 1 | 0 (Sniper 5) | 2d4, 5.0 (rank 0: 2d4, 5.0) | – | 31 (31) / 102 |
-| Reek (13, area) | 20 | 1–2 | 0 (Sniper 7) | 2d4+2, 5.7 (rank 0: 2d4+2, 5.7) | – | 31 (31) / 212 |
-| Reek (13, area) | 30 | 1–2 | 0 (Sniper 8–9) | 2d4+2, 6.3 (rank 0: 2d4+2, 6.3) | – | 31 (31) / 338 |
-| Reek (13, area) | 60 | 2 | 0 (Sniper 10) | 2d4+2, 7.0 (rank 0: 2d4+2, 7.0) | – | 10 (31) / 746 |
-| Grave spear (14, area) | 10 | 2–3 | 0 (Sniper 5) | 5d6, 15.2 (rank 0: 5d6, 15.2) | – | 25 (25) / 102 |
-| Grave spear (14, area) | 20 | 3 | 0 (Sniper 7) | 5d6, 17.5 (rank 0: 5d6, 17.5) | – | 25 (25) / 212 |
-| Grave spear (14, area) | 30 | 3 | 0 (Sniper 8–9) | 5d6, 17.5 (rank 0: 5d6, 17.5) | – | 25 (25) / 338 |
-| Grave spear (14, area) | 60 | 4 | 0 (Sniper 10) | 5d6+2, 19.5 (rank 0: 5d6+2, 19.5) | – | 8 (25) / 746 |
-| Rebuke (14, area) | 10 | 2–3 | 0 (Sniper 5) | 5d6, 15.2 (rank 0: 5d6, 15.2) | – | 34 (34) / 102 |
-| Rebuke (14, area) | 20 | 3 | 0 (Sniper 7) | 5d6, 17.5 (rank 0: 5d6, 17.5) | – | 34 (34) / 212 |
-| Rebuke (14, area) | 30 | 3 | 0 (Sniper 8–9) | 5d6, 17.5 (rank 0: 5d6, 17.5) | – | 34 (34) / 338 |
-| Rebuke (14, area) | 60 | 4 | 0 (Sniper 10) | 5d6+2, 19.5 (rank 0: 5d6+2, 19.5) | – | 10 (34) / 746 |
-| Balefire (16, area) | 10 | 1–2 | 5 (Sniper 5) | 4d7 1s again, 17.7 (rank 0: 4d6, 13.4) | – | 27 (29) / 102 |
-| Balefire (16, area) | 20 | 2 | 7 (Sniper 7) | 5d7 1s again, 22.4 (rank 0: 4d6, 14.0) | – | 26 (29) / 212 |
-| Balefire (16, area) | 30 | 2 | 8 (Sniper 8–9) | 5d7 1s and 2s again, 24.4 (rank 0: 4d6, 14.0) | – | 26 (29) / 338 |
-| Balefire (16, area) | 60 | 3 | 10 (Sniper 10) | 6d8+2 1s and 2s again, 33.5 (rank 0: 4d6+2, 16.0) | – | 6 (29) / 746 |
+| Call of the wild (5, auto) | 20 | 0 | 0 | +1, 1.0 (rank 0: +1, 1.0) | – | 5 (5) / 213 |
+| Call of the wild (5, auto) | 30 | 0 | 0 | +1, 1.0 (rank 0: +1, 1.0) | – | 5 (5) / 342 |
+| Call of the wild (5, auto) | 60 | 0 | 0 | +1, 1.0 (rank 0: +1, 1.0) | – | 2 (5) / 754 |
+| Arcane bolt (6, area) | 10 | 1 | 4 (Sniper 4–5) | 3d6 1s again, 12.0 (rank 0: 3d6, 10.5) | – | 10 (11) / 102 |
+| Arcane bolt (6, area) | 20 | 2 | 6 (Sniper 6) | 4d7+2 1s again, 19.7 (rank 0: 3d6+2, 12.5) | – | 10 (11) / 213 |
+| Arcane bolt (6, area) | 30 | 2 | 7 (Sniper 7–8) | 4d7+2 1s again, 19.9 (rank 0: 3d6+2, 12.5) | – | 9 (11) / 342 |
+| Arcane bolt (6, area) | 60 | 3 | 9 (Sniper 9–10) | 5d8+4 1s and 2s again, 30.2 (rank 0: 3d6+4, 14.5) | – | 2 (11) / 754 |
+| Frost (6, area) | 10 | 1 | 4 (Sniper 4–5) | 3d6 1s again, 12.0 (rank 0: 3d6, 10.5) | – | 13 (14) / 102 |
+| Frost (6, area) | 20 | 2 | 6 (Sniper 6) | 4d7+2 1s again, 19.7 (rank 0: 3d6+2, 12.5) | – | 13 (14) / 213 |
+| Frost (6, area) | 30 | 2 | 7 (Sniper 7–8) | 4d7+2 1s again, 19.9 (rank 0: 3d6+2, 12.5) | – | 12 (14) / 342 |
+| Frost (6, area) | 60 | 3 | 9 (Sniper 9–10) | 5d8+4 1s and 2s again, 30.2 (rank 0: 3d6+4, 14.5) | – | 2 (14) / 754 |
+| Blight (7, area) | 10 | 1 | 0 (Sniper 4–5) | 3d6, 10.5 (rank 0: 3d6, 10.5) | – | 17 (17) / 102 |
+| Blight (7, area) | 20 | 1–2 | 0 (Sniper 6) | 3d6+3, 12.0 (rank 0: 3d6+3, 12.0) | – | 17 (17) / 213 |
+| Blight (7, area) | 30 | 2 | 0 (Sniper 7–8) | 3d6+3, 13.5 (rank 0: 3d6+3, 13.5) | – | 17 (17) / 342 |
+| Blight (7, area) | 60 | 2 | 0 (Sniper 9–10) | 3d6+3, 13.5 (rank 0: 3d6+3, 13.5) | – | 5 (17) / 754 |
+| Scorching ray (7, attack) | 10 | 1–2 | 4 (Sniper 4–5) | 3d6 1s again, 11.3 (rank 0: 3d6, 9.9) | – | 6 (7) / 102 |
+| Scorching ray (7, attack) | 20 | 3 | 6 (Sniper 6) | 5d7 1s again, 22.1 (rank 0: 4d6, 14.0) | – | 6 (7) / 213 |
+| Scorching ray (7, attack) | 30 | 3 | 7 (Sniper 7–8) | 5d7 1s again, 22.4 (rank 0: 4d6, 14.0) | – | 6 (7) / 342 |
+| Scorching ray (7, attack) | 60 | 4 | 9 (Sniper 9–10) | 5d8+1d12 1s and 2s again, 33.6 (rank 0: 3d6+1d10, 16.0) | – | 1 (7) / 754 |
+| Thunderclap (7, area) | 10 | 0 | 4 | 1d6 1s again, 4.0 (rank 0: 1d6, 3.5) | – | 12 (13) / 102 |
+| Thunderclap (7, area) | 20 | 0 | 6 | 2d7 1s again, 8.9 (rank 0: 1d6, 3.5) | – | 12 (13) / 213 |
+| Thunderclap (7, area) | 30 | 0 | 7 | 2d7 1s again, 9.0 (rank 0: 1d6, 3.5) | – | 11 (13) / 342 |
+| Thunderclap (7, area) | 60 | 2 | 9 | 4d8+2 1s and 2s again, 23.0 (rank 0: 2d6+2, 9.0) | – | 2 (13) / 754 |
+| Flay (8, auto) | 10 | 1 | 0 (Sniper 4–5) | 1d6, 3.5 (rank 0: 1d6, 3.5) | – | 8 (8) / 102 |
+| Flay (8, auto) | 20 | 1–2 | 0 (Sniper 6) | 1d8, 4.0 (rank 0: 1d8, 4.0) | – | 8 (8) / 213 |
+| Flay (8, auto) | 30 | 2 | 0 (Sniper 7–8) | 1d8, 4.5 (rank 0: 1d8, 4.5) | – | 8 (8) / 342 |
+| Flay (8, auto) | 60 | 2 | 0 (Sniper 9–10) | 1d8, 4.5 (rank 0: 1d8, 4.5) | – | 2 (8) / 754 |
+| Shatter (8, area) | 10 | 1 | 4 (Sniper 4–5) | 3d6 1s again, 12.0 (rank 0: 3d6, 10.5) | – | 13 (14) / 102 |
+| Shatter (8, area) | 20 | 2 | 6 (Sniper 6) | 4d7+2 1s again, 19.7 (rank 0: 3d6+2, 12.5) | – | 13 (14) / 213 |
+| Shatter (8, area) | 30 | 2 | 7 (Sniper 7–8) | 4d7+2 1s again, 19.9 (rank 0: 3d6+2, 12.5) | – | 12 (14) / 342 |
+| Shatter (8, area) | 60 | 3 | 9 (Sniper 9–10) | 5d8+4 1s and 2s again, 30.2 (rank 0: 3d6+4, 14.5) | – | 2 (14) / 754 |
+| Rime (9, area) | 10 | 2 | 4 (Sniper 4–5) | 4d6 1s again, 16.0 (rank 0: 4d6, 14.0) | – | 13 (14) / 102 |
+| Rime (9, area) | 20 | 2–3 | 6 (Sniper 6) | 5d7+2 1s again, 23.1 (rank 0: 4d6+2, 15.0) | – | 13 (14) / 213 |
+| Rime (9, area) | 30 | 3 | 7 (Sniper 7–8) | 5d7+2 1s again, 24.4 (rank 0: 4d6+2, 16.0) | – | 12 (14) / 342 |
+| Rime (9, area) | 60 | 3 | 9 (Sniper 9–10) | 6d8+2 1s and 2s again, 33.5 (rank 0: 4d6+2, 16.0) | – | 2 (14) / 754 |
+| Leech (10, attack) | 10 | 2 | 0 (Sniper 4–5) | 4d6, 14.0 (rank 0: 4d6, 14.0) | – | 10 (10) / 102 |
+| Leech (10, attack) | 20 | 2 | 0 (Sniper 6) | 4d6, 14.0 (rank 0: 4d6, 14.0) | – | 10 (10) / 213 |
+| Leech (10, attack) | 30 | 2–3 | 0 (Sniper 7–8) | 4d6+2, 14.3 (rank 0: 4d6+2, 14.3) | – | 10 (10) / 342 |
+| Leech (10, attack) | 60 | 3 | 0 (Sniper 9–10) | 4d6+2, 16.0 (rank 0: 4d6+2, 16.0) | – | 3 (10) / 754 |
+| Call lightning (11, area) | 10 | 2–3 | 4 (Sniper 4–5) | 5d6 1s again, 17.3 (rank 0: 5d6, 15.2) | – | 19 (20) / 102 |
+| Call lightning (11, area) | 20 | 3 | 6 (Sniper 6) | 6d7 1s again, 26.6 (rank 0: 5d6, 17.5) | – | 19 (20) / 213 |
+| Call lightning (11, area) | 30 | 3–4 | 7 (Sniper 7–8) | 6d7+2 1s again, 27.2 (rank 0: 5d6+2, 17.8) | – | 18 (20) / 342 |
+| Call lightning (11, area) | 60 | 4 | 9 (Sniper 9–10) | 7d8+2 1s and 2s again, 38.8 (rank 0: 5d6+2, 19.5) | – | 4 (20) / 754 |
+| Fireball (11, area) | 10 | 1–2 | 4 (Sniper 4–5) | 4d6 1s again, 15.3 (rank 0: 4d6, 13.4) | – | 24 (26) / 102 |
+| Fireball (11, area) | 20 | 3 | 6 (Sniper 6) | 6d7 1s again, 26.6 (rank 0: 5d6, 17.5) | – | 24 (26) / 213 |
+| Fireball (11, area) | 30 | 3 | 7 (Sniper 7–8) | 6d7 1s again, 26.9 (rank 0: 5d6, 17.5) | – | 23 (26) / 342 |
+| Fireball (11, area) | 60 | 4 | 9 (Sniper 9–10) | 7d8+2 1s and 2s again, 38.8 (rank 0: 5d6+2, 19.5) | – | 5 (26) / 754 |
+| Lightning bolt (11, area) | 10 | 1–2 | 4 (Sniper 4–5) | 4d6 1s again, 15.3 (rank 0: 4d6, 13.4) | – | 19 (20) / 102 |
+| Lightning bolt (11, area) | 20 | 3 | 6 (Sniper 6) | 6d7 1s again, 26.6 (rank 0: 5d6, 17.5) | – | 19 (20) / 213 |
+| Lightning bolt (11, area) | 30 | 3 | 7 (Sniper 7–8) | 6d7 1s again, 26.9 (rank 0: 5d6, 17.5) | – | 18 (20) / 342 |
+| Lightning bolt (11, area) | 60 | 4 | 9 (Sniper 9–10) | 7d8+2 1s and 2s again, 38.8 (rank 0: 5d6+2, 19.5) | – | 4 (20) / 754 |
+| Flame (12, area) | 10 | 0–1 | 4 (Sniper 4–5) | 4d6 1s again, 15.3 (rank 0: 4d6, 13.4) | – | 27 (29) / 102 |
+| Flame (12, area) | 20 | 2 | 6 (Sniper 6) | 6d7 1s again, 26.6 (rank 0: 5d6, 17.5) | – | 27 (29) / 213 |
+| Flame (12, area) | 30 | 2 | 7 (Sniper 7–8) | 6d7 1s again, 26.9 (rank 0: 5d6, 17.5) | – | 26 (29) / 342 |
+| Flame (12, area) | 60 | 3 | 9 (Sniper 9–10) | 7d8+2 1s and 2s again, 38.8 (rank 0: 5d6+2, 19.5) | – | 6 (29) / 754 |
+| Reek (13, area) | 10 | 1 | 0 (Sniper 4–5) | 2d4, 5.0 (rank 0: 2d4, 5.0) | – | 31 (31) / 102 |
+| Reek (13, area) | 20 | 1–2 | 0 (Sniper 6) | 2d4+2, 6.0 (rank 0: 2d4+2, 6.0) | – | 31 (31) / 213 |
+| Reek (13, area) | 30 | 2 | 0 (Sniper 7–8) | 2d4+2, 7.0 (rank 0: 2d4+2, 7.0) | – | 31 (31) / 342 |
+| Reek (13, area) | 60 | 2 | 0 (Sniper 9–10) | 2d4+2, 7.0 (rank 0: 2d4+2, 7.0) | – | 10 (31) / 754 |
+| Grave spear (14, area) | 10 | 2–3 | 0 (Sniper 4–5) | 5d6, 15.2 (rank 0: 5d6, 15.2) | – | 25 (25) / 102 |
+| Grave spear (14, area) | 20 | 3 | 0 (Sniper 6) | 5d6, 17.5 (rank 0: 5d6, 17.5) | – | 25 (25) / 213 |
+| Grave spear (14, area) | 30 | 3–4 | 0 (Sniper 7–8) | 5d6+2, 17.8 (rank 0: 5d6+2, 17.8) | – | 25 (25) / 342 |
+| Grave spear (14, area) | 60 | 4 | 0 (Sniper 9–10) | 5d6+2, 19.5 (rank 0: 5d6+2, 19.5) | – | 8 (25) / 754 |
+| Rebuke (14, area) | 10 | 2–3 | 0 (Sniper 4–5) | 5d6, 15.2 (rank 0: 5d6, 15.2) | – | 34 (34) / 102 |
+| Rebuke (14, area) | 20 | 3 | 0 (Sniper 6) | 5d6, 17.5 (rank 0: 5d6, 17.5) | – | 34 (34) / 213 |
+| Rebuke (14, area) | 30 | 3–4 | 0 (Sniper 7–8) | 5d6+2, 17.8 (rank 0: 5d6+2, 17.8) | – | 34 (34) / 342 |
+| Rebuke (14, area) | 60 | 4 | 0 (Sniper 9–10) | 5d6+2, 19.5 (rank 0: 5d6+2, 19.5) | – | 10 (34) / 754 |
+| Balefire (16, area) | 10 | 1–2 | 4 (Sniper 4–5) | 4d6 1s again, 15.3 (rank 0: 4d6, 13.4) | – | 27 (29) / 102 |
+| Balefire (16, area) | 20 | 2 | 6 (Sniper 6) | 5d7 1s again, 22.1 (rank 0: 4d6, 14.0) | – | 27 (29) / 213 |
+| Balefire (16, area) | 30 | 2 | 7 (Sniper 7–8) | 5d7 1s again, 22.4 (rank 0: 4d6, 14.0) | – | 26 (29) / 342 |
+| Balefire (16, area) | 60 | 3 | 9 (Sniper 9–10) | 6d8+2 1s and 2s again, 33.5 (rank 0: 4d6+2, 16.0) | – | 6 (29) / 754 |
 | Call of the forest (20, auto) | 10 | 0 | 0 | +1, 1.0 (rank 0: +1, 1.0) | – | 20 (20) / 102 |
-| Call of the forest (20, auto) | 20 | 0 | 0 | +1, 1.0 (rank 0: +1, 1.0) | – | 20 (20) / 212 |
-| Call of the forest (20, auto) | 30 | 0 | 0 | +1, 1.0 (rank 0: +1, 1.0) | – | 20 (20) / 338 |
-| Call of the forest (20, auto) | 60 | 0 | 0 | +1, 1.0 (rank 0: +1, 1.0) | – | 6 (20) / 746 |
-| Chain lightning (20, auto) | 10 | 1–2 | 5 (Sniper 5) | 5d7 1s again, 22.1 (rank 0: 5d6, 16.9) | – | 19 (20) / 102 |
-| Chain lightning (20, auto) | 20 | 2–3 | 7 (Sniper 7) | 7d7 1s again, 30.6 (rank 0: 6d6, 20.4) | – | 18 (20) / 212 |
-| Chain lightning (20, auto) | 30 | 3 | 8 (Sniper 8–9) | 7d7 1s and 2s again, 33.8 (rank 0: 6d6, 21.0) | – | 18 (20) / 338 |
-| Chain lightning (20, auto) | 60 | 4 | 10 (Sniper 10) | 8d8+3 1s and 2s again, 45.0 (rank 0: 6d6+3, 24.0) | – | 4 (20) / 746 |
-| Sunfire (30, area) | 10 | 0–1 | 5 (Sniper 5) | 6d7 1s again, 26.6 (rank 0: 6d6, 20.4) | – | 85 (90) / 102 |
-| Sunfire (30, area) | 20 | 1–2 | 7 (Sniper 7) | 8d7 1s again, 35.1 (rank 0: 7d6, 23.9) | – | 81 (90) / 212 |
-| Sunfire (30, area) | 30 | 2–3 | 8 (Sniper 8–9) | 8d7 1s and 2s again, 39.3 (rank 0: 7d6, 25.1) | – | 81 (90) / 338 |
-| Sunfire (30, area) | 60 | 4 | 10 (Sniper 10) | 10d8+4 1s and 2s again, 56.5 (rank 0: 8d6+4, 32.0) | – | 18 (90) / 746 |
+| Call of the forest (20, auto) | 20 | 0 | 0 | +1, 1.0 (rank 0: +1, 1.0) | – | 20 (20) / 213 |
+| Call of the forest (20, auto) | 30 | 0 | 0 | +1, 1.0 (rank 0: +1, 1.0) | – | 20 (20) / 342 |
+| Call of the forest (20, auto) | 60 | 0 | 0 | +1, 1.0 (rank 0: +1, 1.0) | – | 6 (20) / 754 |
+| Chain lightning (20, auto) | 10 | 1–2 | 4 (Sniper 4–5) | 5d6 1s again, 19.3 (rank 0: 5d6, 16.9) | – | 19 (20) / 102 |
+| Chain lightning (20, auto) | 20 | 3 | 6 (Sniper 6) | 7d7 1s again, 31.0 (rank 0: 6d6, 21.0) | – | 19 (20) / 213 |
+| Chain lightning (20, auto) | 30 | 3 | 7 (Sniper 7–8) | 7d7 1s again, 31.3 (rank 0: 6d6, 21.0) | – | 18 (20) / 342 |
+| Chain lightning (20, auto) | 60 | 4 | 9 (Sniper 9–10) | 8d8+3 1s and 2s again, 45.0 (rank 0: 6d6+3, 24.0) | – | 4 (20) / 754 |
+| Sunfire (30, area) | 10 | 0–1 | 4 (Sniper 4–5) | 6d6 1s again, 23.3 (rank 0: 6d6, 20.4) | – | 85 (90) / 102 |
+| Sunfire (30, area) | 20 | 2 | 6 (Sniper 6) | 8d7 1s again, 35.4 (rank 0: 7d6, 24.5) | – | 85 (90) / 213 |
+| Sunfire (30, area) | 30 | 2–3 | 7 (Sniper 7–8) | 8d7 1s again, 36.5 (rank 0: 7d6, 25.1) | – | 81 (90) / 342 |
+| Sunfire (30, area) | 60 | 4 | 9 (Sniper 9–10) | 10d8+4 1s and 2s again, 56.5 (rank 0: 8d6+4, 32.0) | – | 18 (90) / 754 |
 | Call the elements (35, auto) | 10 | 0 | 0 | +1, 1.0 (rank 0: +1, 1.0) | – | 35 (35) / 102 |
-| Call the elements (35, auto) | 20 | 0 | 0 | +1, 1.0 (rank 0: +1, 1.0) | – | 35 (35) / 212 |
-| Call the elements (35, auto) | 30 | 0 | 0 | +1, 1.0 (rank 0: +1, 1.0) | – | 35 (35) / 338 |
-| Call the elements (35, auto) | 60 | 0 | 0 | +1, 1.0 (rank 0: +1, 1.0) | – | 11 (35) / 746 |
+| Call the elements (35, auto) | 20 | 0 | 0 | +1, 1.0 (rank 0: +1, 1.0) | – | 35 (35) / 213 |
+| Call the elements (35, auto) | 30 | 0 | 0 | +1, 1.0 (rank 0: +1, 1.0) | – | 35 (35) / 342 |
+| Call the elements (35, auto) | 60 | 0 | 0 | +1, 1.0 (rank 0: +1, 1.0) | – | 11 (35) / 754 |
 
 **Priest**
 
 | Spell (level, res) | L | rung | school rank | roll | hexed | mana / pool |
 |---|---|---|---|---|---|---|
-| Mend (1, touch) | 10 | 0–1 | 7 (Battle caster 4–5) | 2d5+2 1s again, 8.6 (rank 0: 1d4, 2.4) | – | 1 (1) / 77 |
-| Mend (1, touch) | 20 | 1 | 8–9 (Battle caster 8–9) | 2d6+2 1s and 2s again, 10.1 (rank 0: 1d4, 2.5) | – | 1 (1) / 161 |
-| Mend (1, touch) | 30 | 1–2 | 9 (Battle caster 8–9) | 2d6+2 1s and 2s again, 10.7 (rank 0: 1d4, 2.7) | – | 1 (1) / 252 |
-| Mend (1, touch) | 60 | 1–2 | 10 (Battle caster 10) | 2d8+3 1s and 2s again, 13.1 (rank 0: 1d6, 3.3) | – | 1 (1) / 546 |
-| Cure wounds (3, touch) | 10 | 0–1 | 7 (Battle caster 4–5) | 4d7+2 1s again, 19.0 (rank 0: 3d6, 9.9) | – | 1 (2) / 77 |
-| Cure wounds (3, touch) | 20 | 1 | 8–9 (Battle caster 8–9) | 4d8+2 1s and 2s again, 22.6 (rank 0: 3d6, 10.5) | – | 2 (2) / 161 |
-| Cure wounds (3, touch) | 30 | 1–2 | 9 (Battle caster 8–9) | 4d8+2 1s and 2s again, 23.5 (rank 0: 3d6, 11.0) | – | 2 (2) / 252 |
-| Cure wounds (3, touch) | 60 | 1–2 | 10 (Battle caster 10) | 4d8+6 1s and 2s again, 26.5 (rank 0: 3d6+3, 13.0) | – | 2 (2) / 546 |
-| Benison (12, area) | 10 | 0–1 | 7 (Battle caster 4–5) | 4d7+2 1s again, 19.0 (rank 0: 3d6, 9.9) | – | 20 (22) / 77 |
-| Benison (12, area) | 20 | 1 | 8–9 (Battle caster 8–9) | 4d8+2 1s and 2s again, 22.6 (rank 0: 3d6, 10.5) | – | 24 (22) / 161 |
-| Benison (12, area) | 30 | 1–2 | 9 (Battle caster 8–9) | 4d8+2 1s and 2s again, 23.5 (rank 0: 3d6, 11.0) | – | 25 (22) / 252 |
-| Benison (12, area) | 60 | 1–2 | 10 (Battle caster 10) | 4d8+6 1s and 2s again, 26.5 (rank 0: 3d6+3, 13.0) | – | 22 (22) / 546 |
-| Rebuke (14, area) | 10 | 1–3 | 0 (Battle caster 4–5) | 4d6, 14.0 (rank 0: 4d6, 14.0) | – | 36 (34) / 77 |
-| Rebuke (14, area) | 20 | 2–3 | 0 (Battle caster 8–9) | 5d6, 16.9 (rank 0: 5d6, 16.9) | – | 42 (34) / 161 |
-| Rebuke (14, area) | 30 | 3 | 0 (Battle caster 8–9) | 5d6, 17.5 (rank 0: 5d6, 17.5) | – | 44 (34) / 252 |
-| Rebuke (14, area) | 60 | 3–4 | 0 (Battle caster 10) | 5d6, 17.8 (rank 0: 5d6, 17.8) | – | 42 (34) / 546 |
-| Orison (prayer) | 10 | – | – | no roll: answers 1 of 2 (wounds, hunger) | – | 0 (0) / 77 |
-| Prayer (prayer) | 20 | – | – | no roll: answers 1 of 5 (disease, poison, wounds, release, hunger) | – | 0 (0) / 161 |
-| Litany (prayer) | 30 | – | – | no roll: answers 1 of 6 (disease, poison, wounds, release, hunger, restoration) | – | 0 (0) / 252 |
-| Miracle (prayer) | 60 | – | – | no roll: answers all of 7 (disease, poison, wounds, release, mana, hunger, restoration) | – | 0 (0) / 546 |
+| Mend (1, touch) | 10 | 0–1 | 7 (Battle caster 4) | 2d5+2 1s again, 8.5 (rank 0: 1d4, 2.3) | – | 1 (1) / 76 |
+| Mend (1, touch) | 20 | 1 | 8–9 (Battle caster 7–8) | 2d5+2 1s and 2s again, 9.4 (rank 0: 1d4, 2.5) | – | 1 (1) / 159 |
+| Mend (1, touch) | 30 | 1–2 | 8–9 (Battle caster 7–8) | 2d5+2 1s and 2s again, 9.9 (rank 0: 1d4, 2.7) | – | 1 (1) / 249 |
+| Mend (1, touch) | 60 | 1–2 | 10 (Battle caster 10) | 2d8+3 1s and 2s again, 13.1 (rank 0: 1d6, 3.3) | – | 1 (1) / 542 |
+| Cure wounds (3, touch) | 10 | 0–1 | 7 (Battle caster 4) | 4d7+2 1s again, 18.2 (rank 0: 3d6, 9.3) | – | 1 (2) / 76 |
+| Cure wounds (3, touch) | 20 | 1 | 8–9 (Battle caster 7–8) | 4d7+2 1s and 2s again, 21.2 (rank 0: 3d6, 10.5) | – | 2 (2) / 159 |
+| Cure wounds (3, touch) | 30 | 1–2 | 8–9 (Battle caster 7–8) | 4d7+2 1s and 2s again, 22.1 (rank 0: 3d6, 11.0) | – | 2 (2) / 249 |
+| Cure wounds (3, touch) | 60 | 1–2 | 10 (Battle caster 10) | 4d8+6 1s and 2s again, 26.5 (rank 0: 3d6+3, 13.0) | – | 2 (2) / 542 |
+| Benison (12, area) | 10 | 0–1 | 7 (Battle caster 4) | 4d7+2 1s again, 18.2 (rank 0: 3d6, 9.3) | – | 20 (22) / 76 |
+| Benison (12, area) | 20 | 1 | 8–9 (Battle caster 7–8) | 4d7+2 1s and 2s again, 21.2 (rank 0: 3d6, 10.5) | – | 24 (22) / 159 |
+| Benison (12, area) | 30 | 1–2 | 8–9 (Battle caster 7–8) | 4d7+2 1s and 2s again, 22.1 (rank 0: 3d6, 11.0) | – | 25 (22) / 249 |
+| Benison (12, area) | 60 | 1–2 | 10 (Battle caster 10) | 4d8+6 1s and 2s again, 26.5 (rank 0: 3d6+3, 13.0) | – | 22 (22) / 542 |
+| Rebuke (14, area) | 10 | 1–3 | 0 (Battle caster 4) | 4d6, 13.4 (rank 0: 4d6, 13.4) | – | 36 (34) / 76 |
+| Rebuke (14, area) | 20 | 2–3 | 0 (Battle caster 7–8) | 5d6, 16.3 (rank 0: 5d6, 16.3) | – | 42 (34) / 159 |
+| Rebuke (14, area) | 30 | 3 | 0 (Battle caster 7–8) | 5d6, 17.5 (rank 0: 5d6, 17.5) | – | 44 (34) / 249 |
+| Rebuke (14, area) | 60 | 3–4 | 0 (Battle caster 10) | 5d6, 17.8 (rank 0: 5d6, 17.8) | – | 42 (34) / 542 |
+| Orison (prayer) | 10 | – | – | no roll: answers 1 of 2 (wounds, hunger) | – | 0 (0) / 76 |
+| Prayer (prayer) | 20 | – | – | no roll: answers 1 of 5 (disease, poison, wounds, release, hunger) | – | 0 (0) / 159 |
+| Litany (prayer) | 30 | – | – | no roll: answers 1 of 6 (disease, poison, wounds, release, hunger, restoration) | – | 0 (0) / 249 |
+| Miracle (prayer) | 60 | – | – | no roll: answers all of 7 (disease, poison, wounds, release, mana, hunger, restoration) | – | 0 (0) / 542 |
 
 The three tables are #905's run (Malison's hexed column: a damage spell's mean on a target under one hex, from the witch's level 18), on `main` after W1 (#908) and Z1 (#909).
 
@@ -363,47 +369,46 @@ The three tables are #905's run (Malison's hexed column: a damage spell's mean o
 
 | Spell (level, res) | L | rung | school rank | roll | hexed | mana / pool |
 |---|---|---|---|---|---|---|
-| Grave breath (1, area) | 10 | 2 | 5 (Sniper 4–5) | 2d4+2 1s again, 7.8 (rank 0: 2d4, 5.0) | – | 2 (3) / 90 |
-| Grave breath (1, area) | 20 | 2–3 | 7 (Sniper 7) | 2d4+2 1s again, 8.8 (rank 0: 2d4, 6.0) | 11.8 | 2 (3) / 195 |
-| Grave breath (1, area) | 30 | 3 | 8 (Sniper 8–9) | 3d4+5 1s and 2s again, 14.0 (rank 0: 2d4+2, 7.0) | 17.0 | 2 (3) / 314 |
-| Grave breath (1, area) | 60 | 3 | 10 (Sniper 10) | 3d4+6 1s and 2s again, 15.0 (rank 0: 2d4+2, 7.0) | 18.0 | 2 (3) / 711 |
-| Cause wounds (4, touch) | 10 | 1–2 | 5 (Toucher 3–5) | 2d8+3 1s again, 12.0 (rank 0: 2d8, 8.3) | – | 2 (3) / 90 |
-| Cause wounds (4, touch) | 20 | 2 | 7 (Toucher 3–5) | 2d8+3 1s again, 12.7 (rank 0: 2d8, 9.0) | 15.7 | 2 (3) / 195 |
-| Cause wounds (4, touch) | 30 | 2–3 | 8 (Toucher 4–5) | 3d8+4 1s and 2s again, 20.4 (rank 0: 2d8, 9.7) | 23.4 | 2 (3) / 314 |
-| Cause wounds (4, touch) | 60 | 3 | 10 (Toucher 6) | 3d8+7 1s and 2s again, 22.8 (rank 0: 2d8+2, 11.0) | 25.8 | 2 (3) / 711 |
+| Grave breath (1, area) | 10 | 2 | 4–5 (Sniper 3–4) | 2d4+2 1s again, 7.6 (rank 0: 2d4, 5.0) | – | 2 (3) / 90 |
+| Grave breath (1, area) | 20 | 2–3 | 6 (Sniper 6) | 2d4+4 1s again, 9.1 (rank 0: 2d4+2, 6.3) | 12.1 | 2 (3) / 196 |
+| Grave breath (1, area) | 30 | 3 | 7 (Sniper 7) | 2d4+4 1s again, 9.8 (rank 0: 2d4+2, 7.0) | 12.8 | 2 (3) / 315 |
+| Grave breath (1, area) | 60 | 3 | 10 (Sniper 10) | 3d4+6 1s and 2s again, 15.0 (rank 0: 2d4+2, 7.0) | 18.0 | 2 (3) / 715 |
+| Cause wounds (4, touch) | 10 | 1–2 | 4–5 (Toucher 3–4) | 2d8+3 1s again, 11.7 (rank 0: 2d8, 8.3) | – | 2 (3) / 90 |
+| Cause wounds (4, touch) | 20 | 2 | 6 (Toucher 3–4) | 2d8+3 1s again, 12.5 (rank 0: 2d8, 9.0) | 15.5 | 2 (3) / 196 |
+| Cause wounds (4, touch) | 30 | 2–3 | 7 (Toucher 3–4) | 2d8+3 1s again, 13.2 (rank 0: 2d8, 9.7) | 16.2 | 2 (3) / 315 |
+| Cause wounds (4, touch) | 60 | 3 | 10 (Toucher 6) | 3d8+7 1s and 2s again, 22.8 (rank 0: 2d8+2, 11.0) | 25.8 | 2 (3) / 715 |
 | Call of the wild (5, auto) | 10 | 0 | 0 | +1, 1.0 (rank 0: +1, 1.0) | – | 5 (5) / 90 |
-| Call of the wild (5, auto) | 20 | 0 | 0 | +1, 1.0 (rank 0: +1, 1.0) | – | 5 (5) / 195 |
-| Call of the wild (5, auto) | 30 | 0 | 0 | +1, 1.0 (rank 0: +1, 1.0) | – | 5 (5) / 314 |
-| Call of the wild (5, auto) | 60 | 0 | 0 | +1, 1.0 (rank 0: +1, 1.0) | – | 4 (5) / 711 |
-| Blight (7, area) | 10 | 1 | 5 (Sniper 4–5) | 3d6+2 1s again, 13.8 (rank 0: 3d6, 10.5) | – | 16 (17) / 90 |
-| Blight (7, area) | 20 | 1–2 | 7 (Sniper 7) | 3d6+2 1s again, 15.2 (rank 0: 3d6, 12.0) | 18.2 | 15 (17) / 195 |
-| Blight (7, area) | 30 | 2 | 8 (Sniper 8–9) | 4d6+6 1s and 2s again, 22.7 (rank 0: 3d6+3, 13.5) | 25.7 | 15 (17) / 314 |
-| Blight (7, area) | 60 | 2 | 10 (Sniper 10) | 4d6+7 1s and 2s again, 23.7 (rank 0: 3d6+3, 13.5) | 26.7 | 11 (17) / 711 |
-| Flay (8, auto) | 10 | 1 | 5 (Sniper 4–5) | 1d6+2 1s again, 5.9 (rank 0: 1d6, 3.5) | – | 7 (8) / 90 |
-| Flay (8, auto) | 20 | 1–2 | 7 (Sniper 7) | 1d6+2 1s again, 6.4 (rank 0: 1d6, 4.0) | 9.4 | 7 (8) / 195 |
-| Flay (8, auto) | 30 | 2 | 8 (Sniper 8–9) | 2d8+3 1s and 2s again, 13.5 (rank 0: 1d8, 4.5) | 16.5 | 7 (8) / 314 |
-| Flay (8, auto) | 60 | 2 | 10 (Sniper 10) | 2d8+4 1s and 2s again, 14.5 (rank 0: 1d8, 4.5) | 17.5 | 5 (8) / 711 |
-| Leech (10, attack) | 10 | 2 | 5 (Sniper 4–5) | 4d6+2 1s again, 17.7 (rank 0: 4d6, 14.0) | – | 9 (10) / 90 |
-| Leech (10, attack) | 20 | 2 | 7 (Sniper 7) | 4d6+2 1s again, 17.7 (rank 0: 4d6, 14.0) | 20.7 | 9 (10) / 195 |
-| Leech (10, attack) | 30 | 2–3 | 8 (Sniper 8–9) | 5d6+3 1s and 2s again, 24.5 (rank 0: 4d6, 14.7) | 27.5 | 9 (10) / 314 |
-| Leech (10, attack) | 60 | 3 | 10 (Sniper 10) | 5d6+6 1s and 2s again, 26.8 (rank 0: 4d6+2, 16.0) | 29.8 | 6 (10) / 711 |
-| Reek (13, area) | 10 | 1 | 5 (Sniper 4–5) | 2d4+2 1s again, 7.8 (rank 0: 2d4, 5.0) | – | 29 (31) / 90 |
-| Reek (13, area) | 20 | 1–2 | 7 (Sniper 7) | 2d4+2 1s again, 8.8 (rank 0: 2d4, 6.0) | 11.8 | 27 (31) / 195 |
-| Reek (13, area) | 30 | 2 | 8 (Sniper 8–9) | 3d4+5 1s and 2s again, 14.0 (rank 0: 2d4+2, 7.0) | 17.0 | 27 (31) / 314 |
-| Reek (13, area) | 60 | 2 | 10 (Sniper 10) | 3d4+6 1s and 2s again, 15.0 (rank 0: 2d4+2, 7.0) | 18.0 | 21 (31) / 711 |
-| Grave spear (14, area) | 10 | 2–3 | 5 (Sniper 4–5) | 5d6+2 1s again, 20.3 (rank 0: 5d6, 16.3) | – | 23 (25) / 90 |
-| Grave spear (14, area) | 20 | 3 | 7 (Sniper 7) | 5d6+2 1s again, 21.6 (rank 0: 5d6, 17.5) | 24.6 | 22 (25) / 195 |
-| Grave spear (14, area) | 30 | 3–4 | 8 (Sniper 8–9) | 6d6+3 1s and 2s again, 28.7 (rank 0: 5d6, 18.2) | 31.7 | 22 (25) / 314 |
-| Grave spear (14, area) | 60 | 4 | 10 (Sniper 10) | 6d6+6 1s and 2s again, 31.0 (rank 0: 5d6+2, 19.5) | 34.0 | 17 (25) / 711 |
+| Call of the wild (5, auto) | 20 | 0 | 0 | +1, 1.0 (rank 0: +1, 1.0) | – | 5 (5) / 196 |
+| Call of the wild (5, auto) | 30 | 0 | 0 | +1, 1.0 (rank 0: +1, 1.0) | – | 5 (5) / 315 |
+| Call of the wild (5, auto) | 60 | 0 | 0 | +1, 1.0 (rank 0: +1, 1.0) | – | 4 (5) / 715 |
+| Blight (7, area) | 10 | 1 | 4–5 (Sniper 3–4) | 3d6+2 1s again, 13.6 (rank 0: 3d6, 10.5) | – | 16 (17) / 90 |
+| Blight (7, area) | 20 | 1–2 | 6 (Sniper 6) | 3d6+5 1s again, 15.8 (rank 0: 3d6+3, 12.5) | 18.8 | 16 (17) / 196 |
+| Blight (7, area) | 30 | 2 | 7 (Sniper 7) | 3d6+5 1s again, 16.8 (rank 0: 3d6+3, 13.5) | 19.8 | 15 (17) / 315 |
+| Blight (7, area) | 60 | 2 | 10 (Sniper 10) | 4d6+7 1s and 2s again, 23.7 (rank 0: 3d6+3, 13.5) | 26.7 | 11 (17) / 715 |
+| Flay (8, auto) | 10 | 1 | 4–5 (Sniper 3–4) | 1d6+2 1s again, 5.7 (rank 0: 1d6, 3.5) | – | 7 (8) / 90 |
+| Flay (8, auto) | 20 | 1–2 | 6 (Sniper 6) | 1d8+2 1s again, 6.6 (rank 0: 1d8, 4.2) | 9.6 | 7 (8) / 196 |
+| Flay (8, auto) | 30 | 2 | 7 (Sniper 7) | 1d8+2 1s again, 6.9 (rank 0: 1d8, 4.5) | 9.9 | 7 (8) / 315 |
+| Flay (8, auto) | 60 | 2 | 10 (Sniper 10) | 2d8+4 1s and 2s again, 14.5 (rank 0: 1d8, 4.5) | 17.5 | 5 (8) / 715 |
+| Leech (10, attack) | 10 | 2 | 4–5 (Sniper 3–4) | 4d6+2 1s again, 17.5 (rank 0: 4d6, 14.0) | – | 9 (10) / 90 |
+| Leech (10, attack) | 20 | 2 | 6 (Sniper 6) | 4d6+2 1s again, 17.7 (rank 0: 4d6, 14.0) | 20.7 | 9 (10) / 196 |
+| Leech (10, attack) | 30 | 2–3 | 7 (Sniper 7) | 4d6+2 1s again, 18.3 (rank 0: 4d6, 14.7) | 21.3 | 9 (10) / 315 |
+| Leech (10, attack) | 60 | 3 | 10 (Sniper 10) | 5d6+6 1s and 2s again, 26.8 (rank 0: 4d6+2, 16.0) | 29.8 | 6 (10) / 715 |
+| Reek (13, area) | 10 | 1 | 4–5 (Sniper 3–4) | 2d4+2 1s again, 7.6 (rank 0: 2d4, 5.0) | – | 29 (31) / 90 |
+| Reek (13, area) | 20 | 1–2 | 6 (Sniper 6) | 2d4+4 1s again, 9.1 (rank 0: 2d4+2, 6.3) | 12.1 | 29 (31) / 196 |
+| Reek (13, area) | 30 | 2 | 7 (Sniper 7) | 2d4+4 1s again, 9.8 (rank 0: 2d4+2, 7.0) | 12.8 | 27 (31) / 315 |
+| Reek (13, area) | 60 | 2 | 10 (Sniper 10) | 3d4+6 1s and 2s again, 15.0 (rank 0: 2d4+2, 7.0) | 18.0 | 21 (31) / 715 |
+| Grave spear (14, area) | 10 | 2–3 | 4–5 (Sniper 3–4) | 5d6+2 1s again, 20.1 (rank 0: 5d6, 16.3) | – | 23 (25) / 90 |
+| Grave spear (14, area) | 20 | 3 | 6 (Sniper 6) | 5d6+2 1s again, 21.6 (rank 0: 5d6, 17.5) | 24.6 | 23 (25) / 196 |
+| Grave spear (14, area) | 30 | 3–4 | 7 (Sniper 7) | 5d6+2 1s again, 22.2 (rank 0: 5d6, 18.2) | 25.2 | 22 (25) / 315 |
+| Grave spear (14, area) | 60 | 4 | 10 (Sniper 10) | 6d6+6 1s and 2s again, 31.0 (rank 0: 5d6+2, 19.5) | 34.0 | 17 (25) / 715 |
 | Call of the forest (20, auto) | 10 | 0 | 0 | +1, 1.0 (rank 0: +1, 1.0) | – | 20 (20) / 90 |
-| Call of the forest (20, auto) | 20 | 0 | 0 | +1, 1.0 (rank 0: +1, 1.0) | – | 20 (20) / 195 |
-| Call of the forest (20, auto) | 30 | 0 | 0 | +1, 1.0 (rank 0: +1, 1.0) | – | 20 (20) / 314 |
-| Call of the forest (20, auto) | 60 | 0 | 0 | +1, 1.0 (rank 0: +1, 1.0) | – | 16 (20) / 711 |
+| Call of the forest (20, auto) | 20 | 0 | 0 | +1, 1.0 (rank 0: +1, 1.0) | – | 20 (20) / 196 |
+| Call of the forest (20, auto) | 30 | 0 | 0 | +1, 1.0 (rank 0: +1, 1.0) | – | 20 (20) / 315 |
+| Call of the forest (20, auto) | 60 | 0 | 0 | +1, 1.0 (rank 0: +1, 1.0) | – | 16 (20) / 715 |
 | Call the elements (35, auto) | 10 | 0 | 0 | +1, 1.0 (rank 0: +1, 1.0) | – | 35 (35) / 90 |
-| Call the elements (35, auto) | 20 | 0 | 0 | +1, 1.0 (rank 0: +1, 1.0) | – | 35 (35) / 195 |
-| Call the elements (35, auto) | 30 | 0 | 0 | +1, 1.0 (rank 0: +1, 1.0) | – | 35 (35) / 314 |
-| Call the elements (35, auto) | 60 | 0 | 0 | +1, 1.0 (rank 0: +1, 1.0) | – | 28 (35) / 711 |
-
+| Call the elements (35, auto) | 20 | 0 | 0 | +1, 1.0 (rank 0: +1, 1.0) | – | 35 (35) / 196 |
+| Call the elements (35, auto) | 30 | 0 | 0 | +1, 1.0 (rank 0: +1, 1.0) | – | 35 (35) / 315 |
+| Call the elements (35, auto) | 60 | 0 | 0 | +1, 1.0 (rank 0: +1, 1.0) | – | 28 (35) / 715 |
 
 ## School pace
 
@@ -417,13 +422,13 @@ The level 1 row has no level before it and practises nothing: it says what a sta
 |---|---|---|---|---|---|
 | 1 | Burning hands (3) | 5.8 / 0.0 | 2 | Sniper 1 | 16 / 1 = 16.5 |
 | 5 | Scorching ray (7) | 6.0 / 132.3 | 3 | Sniper 3 | 52 / 5 = 10.4 |
-| 10 | Rime (13) | 6.0 / 170.6 | 5 | Sniper 5 | 102 / 10 = 10.2 |
-| 15 | Chain lightning (19) | 7.2 / 245.2 | 6 | Sniper 6 | 157 / 15 = 10.5 |
-| 20 | Chain lightning (18) | 10.5 / 215.5 | 7 | Sniper 7 | 212 / 20 = 10.6 |
-| 30 | Chain lightning (18) | 17.2 / 334.8 | 8 | Sniper 8–9 | 338 / 30 = 11.3 |
-| 40 | Sunfire (72) | 6.2 / 248.6 | 9 | Sniper 9 | 469 / 40 = 11.7 |
-| 50 | Sunfire (54) | 10.8 / 333.5 | 9 | Sniper 9–10 | 604 / 50 = 12.1 |
-| 60 | Sunfire (54) | 13.3 / 388.6 | 10 | Sniper 10 | 746 / 60 = 12.4 |
+| 10 | Rime (13) | 6.0 / 188.5 | 4 | Sniper 4–5 | 102 / 10 = 10.2 |
+| 15 | Chain lightning (19) | 7.2 / 278.2 | 5 | Sniper 5 | 157 / 15 = 10.5 |
+| 20 | Chain lightning (19) | 10.3 / 212.9 | 6 | Sniper 6 | 213 / 20 = 10.7 |
+| 30 | Chain lightning (18) | 17.3 / 355.7 | 7 | Sniper 7–8 | 342 / 30 = 11.4 |
+| 40 | Sunfire (72) | 6.2 / 270.3 | 8 | Sniper 8 | 474 / 40 = 11.8 |
+| 50 | Sunfire (58) | 10.0 / 354.0 | 8 | Sniper 8–9 | 610 / 50 = 12.2 |
+| 60 | Sunfire (54) | 13.5 / 388.6 | 9 | Sniper 9–10 | 754 / 60 = 12.6 |
 
 **Priest** (restoration)
 
@@ -431,27 +436,135 @@ The level 1 row has no level before it and practises nothing: it says what a sta
 |---|---|---|---|---|---|
 | 1 | Mend (1) | 13.0 / 0.0 | 1 | Toucher 1 | 13 / 1 = 13.0 |
 | 5 | Cure wounds (2) | 16.0 / 42.0 | 3–4 | Toucher 3–4 | 39 / 5 = 7.9 |
-| 10 | Cure wounds (1) | 68.0 / 73.0 | 7 | Toucher 7–8 | 77 / 10 = 7.7 |
-| 15 | Benison (20) | 20.0 / 98.5 | 8–9 | Battle caster 8 | 118 / 15 = 7.9 |
-| 20 | Benison (21) | 7.0 / 74.3 | 8–9 | Battle caster 8–9 | 161 / 20 = 8.0 |
-| 30 | Benison (24) | 9.8 / 88.0 | 9 | Battle caster 8–9 | 252 / 30 = 8.4 |
-| 40 | Benison (24) | 13.7 / 75.0 | 9–10 | Battle caster 9–10 | 345 / 40 = 8.6 |
-| 50 | Benison (22) | 19.3 / 83.2 | 10 | Battle caster 10 | 444 / 50 = 8.9 |
-| 60 | Benison (22) | 24.0 / 91.2 | 10 | Battle caster 10 | 546 / 60 = 9.1 |
+| 10 | Cure wounds (1) | 68.0 / 73.0 | 7 | Toucher 7 | 76 / 10 = 7.7 |
+| 15 | Benison (20) | 20.3 / 98.5 | 8 | Battle caster 6–8 | 117 / 15 = 7.8 |
+| 20 | Benison (21) | 6.7 / 74.3 | 8–9 | Battle caster 7–8 | 159 / 20 = 7.9 |
+| 30 | Benison (24) | 9.3 / 88.0 | 8–9 | Battle caster 7–8 | 249 / 30 = 8.3 |
+| 40 | Benison (25) | 13.0 / 75.0 | 9 | Battle caster 8–9 | 342 / 40 = 8.6 |
+| 50 | Benison (24) | 18.0 / 83.2 | 9–10 | Battle caster 9–10 | 441 / 50 = 8.8 |
+| 60 | Benison (22) | 23.7 / 91.2 | 10 | Battle caster 10 | 542 / 60 = 9.0 |
 
 **Witch** (necromancy)
 
 | L | pace spell (mana) | casts a day: pool / fights | school rank | style rank | pool / level-L casts |
 |---|---|---|---|---|---|
 | 1 | Grave breath (3) | 4.0 / 0.0 | 1 | Sniper 0 | 14 / 1 = 13.7 |
-| 5 | Cause wounds (3) | 11.8 / 127.5 | 3 | Toucher 3–4 | 44 / 5 = 8.7 |
-| 10 | Leech (9) | 8.5 / 204.9 | 5 | Sniper 4–5 | 90 / 10 = 8.9 |
-| 15 | Grave spear (23) | 6.3 / 314.1 | 6 | Sniper 6 | 141 / 15 = 9.4 |
-| 20 | Grave spear (22) | 7.8 / 289.3 | 7 | Sniper 7 | 195 / 20 = 9.8 |
-| 30 | Grave spear (22) | 13.2 / 389.4 | 8 | Sniper 8–9 | 314 / 30 = 10.5 |
-| 40 | Grave spear (22) | 20.3 / 409.0 | 9 | Sniper 9–10 | 439 / 40 = 11.0 |
-| 50 | Grave spear (17) | 32.2 / 568.8 | 10 | Sniper 10 | 570 / 50 = 11.4 |
-| 60 | Grave spear (17) | 40.7 / 672.5 | 10 | Sniper 10 | 711 / 60 = 11.9 |
+| 5 | Cause wounds (3) | 11.8 / 140.2 | 3 | Toucher 3 | 44 / 5 = 8.7 |
+| 10 | Leech (9) | 8.5 / 223.2 | 4–5 | Sniper 3–4 | 90 / 10 = 9.0 |
+| 15 | Grave spear (23) | 6.8 / 314.4 | 5–6 | Sniper 5 | 141 / 15 = 9.4 |
+| 20 | Grave spear (23) | 8.2 / 289.5 | 6 | Sniper 6 | 196 / 20 = 9.8 |
+| 30 | Grave spear (22) | 13.7 / 486.8 | 7 | Sniper 7 | 315 / 30 = 10.5 |
+| 40 | Grave spear (22) | 20.3 / 404.1 | 8–9 | Sniper 8–9 | 440 / 40 = 11.0 |
+| 50 | Grave spear (18) | 30.8 / 583.6 | 9–10 | Sniper 9–10 | 573 / 50 = 11.5 |
+| 60 | Grave spear (17) | 40.7 / 672.4 | 10 | Sniper 10 | 715 / 60 = 11.9 |
+
+## Weapon pace
+
+The trained fighters' weapon skill and fighting style as their blows trained them (#1095; `balance_probe/training.rs`): every blow of the stat training's fights, each level's kills against the monsters within two levels of theirs, earns its marks through `World::practise` (the real `[marks]`, curves, and talents), the main hand's skill and style for both hands. Each cell: the level at which the skill first stood at the rank (the range over the seeds that fought with it; `>60` where a seed had not reached it by level 60). The untrained careers take these ranks from their trained twin; the skills the fights do not train (a shield, a second weapon skill) are set by level (`rank`, the warrior's pace).
+
+**Warrior**
+
+| rank | Long blades | Sword and Board |
+|---|---|---|
+| 1 | 2 | 2 |
+| 2 | 2 | 2 |
+| 3 | 3–4 | 3–4 |
+| 4 | 5–6 | 5–6 |
+| 5 | 7–8 | 7–8 |
+| 6 | 9–11 | 10–11 |
+| 7 | 14–17 | 15–17 |
+| 8 | 21–26 | 23–26 |
+| 9 | 29–36 | 32–36 |
+| 10 | 37–47 | 42–47 |
+
+**Thief**
+
+| rank | Daggers and knives | Duelist (3 of 6 seeds) | Twin Blades (3 of 6 seeds) |
+|---|---|---|---|
+| 1 | 2 | 2 | 2 |
+| 2 | 2 | 2 | 2 |
+| 3 | 2–3 | 3 | 2–3 |
+| 4 | 3–5 | 4–5 | 3–4 |
+| 5 | 6 | 6 | 6 |
+| 6 | 7–8 | 8 | 7–8 |
+| 7 | 12–13 | 12–13 | 12–13 |
+| 8 | 18–20 | 18–20 | 19–20 |
+| 9 | 25–29 | 25–29 | 27–28 |
+| 10 | 32–37 | 32–37 | 35–36 |
+
+**Priest**
+
+| rank | Maces and clubs | Sword and Board |
+|---|---|---|
+| 1 | 2 | 2 |
+| 2 | 2 | 2 |
+| 3 | 3 | 3 |
+| 4 | 5 | 5 |
+| 5 | 7 | 7 |
+| 6 | 9–10 | 9–10 |
+| 7 | 14–16 | 14–16 |
+| 8 | 22–24 | 22–24 |
+| 9 | 31–34 | 31–34 |
+| 10 | 40–44 | 40–44 |
+
+**Berserker**
+
+| rank | Axes | Great Weapon |
+|---|---|---|
+| 1 | 2 | 2 |
+| 2 | 2 | 2 |
+| 3 | 3–4 | 3–4 |
+| 4 | 5–6 | 5–6 |
+| 5 | 8–9 | 8–9 |
+| 6 | 11–12 | 11–12 |
+| 7 | 17–19 | 17–19 |
+| 8 | 27–29 | 27–29 |
+| 9 | 39–44 | 39–44 |
+| 10 | 52–57 | 52–57 |
+
+**Ascetic**
+
+| rank | Long blades (1 of 6 seeds) | Staves (3 of 6 seeds) | Unarmed (2 of 6 seeds) | Duelist (1 of 6 seeds) | Brawler (2 of 6 seeds) | Staff Fighter (3 of 6 seeds) |
+|---|---|---|---|---|---|---|
+| 1 | 2 | 2 | 2 | 2 | 2 | 2 |
+| 2 | 2 | 2 | 2 | 2 | 2 | 2 |
+| 3 | 4 | 3 | 3 | 4 | 3 | 3 |
+| 4 | 6 | 5 | 5 | 6 | 5 | 5 |
+| 5 | 8 | 7 | 7 | 8 | 7 | 7 |
+| 6 | 11 | 9–10 | 10 | 11 | 10 | 9–10 |
+| 7 | 17 | 14–15 | 16–17 | 17 | 16–17 | 14–15 |
+| 8 | 26 | 22–23 | 24–26 | 26 | 24–26 | 22–23 |
+| 9 | 37 | 30–31 | 34–38 | 37 | 34–38 | 30–31 |
+| 10 | 47 | 40–41 | 45–50 | 47 | 45–50 | 40–41 |
+
+**Paladin**
+
+| rank | Long blades | Sword and Board |
+|---|---|---|
+| 1 | 2 | 2 |
+| 2 | 2 | 2 |
+| 3 | 3–4 | 3–4 |
+| 4 | 5–6 | 5–6 |
+| 5 | 7–8 | 7–8 |
+| 6 | 10 | 10 |
+| 7 | 15–17 | 15–17 |
+| 8 | 24–25 | 24–25 |
+| 9 | 33–36 | 33–36 |
+| 10 | 43–47 | 43–47 |
+
+**Reading it** (#1095). The warrior, the priest, and the paladin land on the issue's aim: rank 6
+about level 10, rank 8 about 21 to 26, rank 10 about 37 to 47. With the cap at 100 % but the
+old exponential curves (15, 30, … 7680) the same warrior stood at rank 6 by level 6 and rank 10
+by 13 to 15 (measured on the way); with marks up to 200 % before #1095, sooner still (the
+issue's level-13 warrior at rank 9). A fighter with two blows a round
+trains faster (the thief's daggers, both hands, rank 10 by 32 to 37), one with slow, heavy blows
+slower (the berserker's great axe, rank 10 by 52 to 57). The warrior's Weapon drill (+25 % marks
+in melee skills) is in these numbers: each rank takes a fifth fewer blows, worth more levels now
+that the last ranks take a career, so it still earns its place. Practised technique asks for rank 7,
+now about level 15 instead of 7. The schools and caster styles keep a gentler curve of their own
+(`school`, flatter than doubling from rank 8): with the 100 % cap the wizard's evocation is
+rank 4 at level 10, 6 at 20, 8 at 40, and 9 at 60 (Sniper 9 to 10; "School pace"), where before
+#1095 it was 5, 7, 9, and 10.
 
 ## Sneak attacks
 
@@ -460,14 +573,14 @@ The thief's main-hand blow on the monsters of their level (trained stats), aware
 | L | Sneak attack | dice | with vitals | Thief plain | Thief magic |
 |---|---|---|---|---|---|
 | 1 | 15 | 1d6 | 78% | 72/78 · 2.4:5.8 · ×2.4 | 72/78 · 2.4:5.8 · ×2.4 |
-| 5 | 29 | 2d6 | 59% | 78/88 · 3.6:10.1 · ×2.8 | 80/89 · 4.6:11.3 · ×2.5 |
-| 10 | 47 | 2d6 | 72% | 92/97 · 8.0:15.4 · ×1.9 | 95/98 · 9.8:17.1 · ×1.7 |
-| 15 | 64 | 3d6 | 63% | 99/99 · 10.0:20.7 · ×2.1 | 99/99 · 12.6:23.0 · ×1.8 |
-| 20 | 82 | 4d6 | 66% | 99/99 · 12.0:26.1 · ×2.2 | 99/99 · 14.2:28.1 · ×2.0 |
-| 30 | 117 | 5d6 | 62% | 99/99 · 13.9:31.4 · ×2.3 | 99/99 · 23.5:41.0 · ×1.7 |
-| 40 | 152 | 8d6 | 59% | 99/99 · 16.3:44.1 · ×2.7 | 99/99 · 22.9:50.7 · ×2.2 |
-| 50 | 187 | 8d6 | 52% | 99/99 · 16.8:44.6 · ×2.6 | 99/99 · 27.1:54.6 · ×2.0 |
-| 60 | 222 | 9d6 | 47% | 97/99 · 16.9:50.8 · ×3.0 | 99/99 · 24.9:59.4 · ×2.4 |
+| 5 | 29 | 2d6 | 59% | 79/88 · 3.7:10.2 · ×2.8 | 81/89 · 4.6:11.4 · ×2.4 |
+| 10 | 47 | 2d6 | 72% | 93/97 · 8.1:15.3 · ×1.9 | 95/98 · 9.8:17.0 · ×1.7 |
+| 15 | 64 | 3d6 | 63% | 99/99 · 9.8:20.5 · ×2.1 | 99/99 · 12.4:22.9 · ×1.8 |
+| 20 | 82 | 4d6 | 66% | 99/99 · 11.8:25.8 · ×2.2 | 99/99 · 14.0:27.8 · ×2.0 |
+| 30 | 117 | 5d6 | 62% | 99/99 · 13.5:30.9 · ×2.3 | 99/99 · 23.2:40.5 · ×1.7 |
+| 40 | 152 | 8d6 | 59% | 99/99 · 15.8:43.7 · ×2.8 | 99/99 · 22.7:50.2 · ×2.2 |
+| 50 | 187 | 8d6 | 52% | 99/99 · 16.5:44.3 · ×2.7 | 99/99 · 26.8:54.4 · ×2.0 |
+| 60 | 222 | 9d6 | 47% | 98/99 · 16.3:50.2 · ×3.1 | 99/99 · 24.6:59.3 · ×2.4 |
 
 ## Rage
 
@@ -475,15 +588,15 @@ The berserker in plain gear (a great axe; from level 5 the warrior's armour: cha
 
 | L | rage | Calm | Raging | one foe: struck + crit + kill − decay = net | one foe that does not die: net · rounds the rage lasts | three foes: net |
 |---|---|---|---|---|---|---|
-| 1 | 12/20 | 83/71 · 8.3:0.8 · 1.5 / 33 | 94/96 · 13.7:1.0 · 0.9 / 27 | 0.99 + 0.07 + 3.48 − 1.00 = +3.54 | +0.06 · grows | +5.51 |
-| 5 | 12/20 | 87/64 · 9.2:1.0 · 2.6 / 50 | 97/94 · 14.1:1.5 · 1.6 / 35 | 0.95 + 0.06 + 1.87 − 1.00 = +1.88 | +0.00 · grows | +3.77 |
-| 10 | 12/20 | 87/70 · 13.2:2.8 · 3.4 / 31 | 97/95 · 18.4:2.7 · 2.3 / 31 | 0.96 + 0.07 + 1.28 − 1.00 = +1.31 | +0.02 · grows | +3.22 |
-| 15 | 12/20 | 90/84 · 16.2:4.7 · 4.0 / 25 | 98/99 · 21.5:4.3 · 2.9 / 29 | 0.99 + 0.07 + 1.07 − 1.00 = +1.13 | +0.06 · grows | +3.11 |
-| 20 | 12/20 | 96/89 · 25.3:6.0 · 3.5 / 27 | 99/99 · 32.7:6.1 · 2.5 / 27 | 0.99 + 0.13 + 1.23 − 1.00 = +1.35 | +0.12 · grows | +3.33 |
-| 30 | 12/20 | 93/96 · 29.1:15.1 · 4.6 / 16 | 98/99 · 36.9:13.8 · 3.9 / 18 | 0.99 + 0.14 + 0.79 − 0.94 = +0.98 | +0.19 · grows | +2.97 |
-| 40 | 18/20 | 97/99 · 49.2:14.7 · 3.7 / 25 | 99/99 · 77.3:14.3 · 2.5 / 25 | 1.05 + 0.29 + 3.34 − 0.67 = +4.02 | +0.67 · grows | +6.12 |
-| 50 | 18/30 | 96/99 · 54.3:22.2 · 4.4 / 22 | 99/99 · 95.4:20.7 · 2.5 / 24 | 1.04 + 0.32 + 3.15 − 0.67 = +3.85 | +0.70 · grows | +5.94 |
-| 60 | 18/30 | 90/99 · 39.0:24.1 · 5.8 / 27 | 98/99 · 63.4:23.0 · 3.2 / 28 | 1.14 + 0.00 + 2.54 − 0.67 = +3.02 | +0.47 · grows | +5.30 |
+| 1 | 12/20 | 83/71 · 8.3:0.8 · 1.4 / 34 | 94/96 · 13.7:1.1 · 0.9 / 26 | 0.99 + 0.07 + 3.49 − 1.00 = +3.55 | +0.06 · grows | +5.53 |
+| 5 | 12/20 | 83/64 · 8.5:1.0 · 3.0 / 50 | 95/94 · 13.3:1.5 · 1.8 / 34 | 0.94 + 0.06 + 1.75 − 1.00 = +1.75 | -0.00 · >999 | +3.64 |
+| 10 | 12/20 | 88/69 · 11.6:2.8 · 3.7 / 30 | 97/95 · 16.9:2.6 · 2.5 / 32 | 0.96 + 0.07 + 1.21 − 1.00 = +1.24 | +0.02 · grows | +3.15 |
+| 15 | 12/20 | 88/84 · 13.7:4.5 · 4.7 / 27 | 97/99 · 18.6:4.4 · 3.4 / 28 | 0.99 + 0.06 + 0.91 − 1.00 = +0.97 | +0.05 · grows | +2.94 |
+| 20 | 12/20 | 93/89 · 17.2:6.0 · 5.1 / 27 | 99/99 · 23.3:6.1 · 3.4 / 27 | 0.99 + 0.08 + 0.89 − 1.00 = +0.96 | +0.08 · grows | +2.95 |
+| 30 | 12/20 | 92/96 · 24.9:15.2 · 5.6 / 16 | 98/99 · 32.8:14.0 · 4.4 / 18 | 0.99 + 0.14 + 0.68 − 0.94 = +0.87 | +0.18 · grows | +2.85 |
+| 40 | 18/20 | 94/99 · 30.2:14.8 · 5.6 / 25 | 99/99 · 52.3:14.2 · 3.6 / 26 | 1.05 + 0.19 + 2.30 − 0.67 = +2.87 | +0.58 · grows | +4.98 |
+| 50 | 18/30 | 94/99 · 39.1:22.1 · 6.0 / 22 | 99/99 · 70.2:20.8 · 3.4 / 24 | 1.04 + 0.20 + 2.36 − 0.67 = +2.94 | +0.57 · grows | +5.02 |
+| 60 | 18/30 | 90/99 · 40.4:24.0 · 5.5 / 27 | 98/99 · 63.2:23.0 · 3.1 / 28 | 1.14 + 0.00 + 2.56 − 0.67 = +3.03 | +0.47 · grows | +5.31 |
 
 This section is #842's run (the rage pool's builds); the sections above are still #754's. Against
 the same table before #842 (the pool fed by nothing but Blood frenzy's kills from 40): one foe's
@@ -517,15 +630,15 @@ The ascetic bare-handed (a brawler; from level 5 leather gloves, boots, and a wo
 
 | L | ki | back a round | One blow | Flurry | spent − back = net · rounds from full |
 |---|---|---|---|---|---|
-| 1 | 5.3 | 0.33 | 80/63 · 5.5:1.1 · 2.1 / 19 | 80/63 · 10.2:1.1 · 1.1 / 19 | 0.99 − 0.33 = 0.66 · 8.1 |
-| 5 | 5.3 | 0.33 | 89/70 · 7.7:3.2 · 2.9 / 9.8 | 89/70 · 14.7:3.2 · 1.5 / 9.8 | 1.00 − 0.33 = 0.67 · 8.0 |
-| 10 | 6.3 | 0.33 | 95/75 · 14.7:5.9 · 2.9 / 9.2 | 95/75 · 28.4:5.9 · 1.5 / 9.4 | 1.13 − 0.33 = 0.80 · 8.0 |
-| 15 | 7.5 | 0.33 | 99/76 · 20.6:8.8 · 3.1 / 9.5 | 99/76 · 40.9:8.7 · 1.6 / 9.7 | 1.21 − 0.33 = 0.88 · 8.5 |
-| 20 | 8.8 | 0.33 | 99/78 · 25.3:9.9 · 3.2 / 12 | 99/78 · 50.1:10.1 · 1.6 / 12 | 1.30 − 0.33 = 0.96 · 9.2 |
-| 30 | 11.3 | 0.33 | 99/86 · 34.5:19.5 · 4.1 / 9.6 | 99/86 · 68.9:19.5 · 2.1 / 9.6 | 1.41 − 0.33 = 1.07 · 11 |
-| 40 | 13.2 | 0.33 | 99/87 · 46.4:16.9 · 3.7 / 16 | 99/87 · 92.9:17.0 · 1.9 / 16 | 1.53 − 0.33 = 1.20 · 11 |
-| 50 | 15.7 | 0.33 | 99/92 · 46.5:28.0 · 4.7 / 13 | 99/92 · 92.8:27.4 · 2.4 / 13 | 1.54 − 0.33 = 1.20 · 13 |
-| 60 | 20.0 | 0.83 | 99/96 · 54.2:28.3 · 4.9 / 13 | 99/96 · 105.1:28.0 · 2.5 / 13 | 1.55 − 0.83 = 0.71 · 28 |
+| 1 | 5.3 | 0.33 | 80/63 · 5.5:1.1 · 2.1 / 20 | 80/63 · 10.2:1.1 · 1.2 / 19 | 0.99 − 0.33 = 0.66 · 8.1 |
+| 5 | 5.3 | 0.33 | 90/70 · 7.9:3.1 · 2.7 / 10 | 90/70 · 15.1:3.1 · 1.4 / 10 | 1.00 − 0.33 = 0.67 · 8.0 |
+| 10 | 6.3 | 0.33 | 96/71 · 15.3:5.7 · 2.8 / 9.2 | 96/71 · 29.7:5.6 · 1.4 / 9.3 | 1.13 − 0.33 = 0.80 · 8.0 |
+| 15 | 7.8 | 0.33 | 98/74 · 19.8:8.7 · 3.3 / 9.0 | 98/74 · 38.5:8.6 · 1.7 / 9.2 | 1.19 − 0.33 = 0.86 · 9.2 |
+| 20 | 8.8 | 0.33 | 99/80 · 21.0:10.3 · 3.7 / 11 | 99/80 · 41.2:10.3 · 1.9 / 11 | 1.22 − 0.33 = 0.89 · 9.9 |
+| 30 | 11.7 | 0.33 | 99/86 · 26.3:19.2 · 5.2 / 8.9 | 99/86 · 51.6:19.7 · 2.7 / 8.7 | 1.32 − 0.33 = 0.99 · 12 |
+| 40 | 13.3 | 0.33 | 99/86 · 37.1:16.7 · 4.7 / 14 | 99/86 · 74.1:16.5 · 2.4 / 15 | 1.43 − 0.33 = 1.10 · 12 |
+| 50 | 15.8 | 0.33 | 99/91 · 45.8:27.7 · 4.8 / 12 | 99/91 · 91.7:27.2 · 2.4 / 12 | 1.54 − 0.33 = 1.20 · 13 |
+| 60 | 19.3 | 0.78 | 99/96 · 52.8:28.4 · 5.0 / 12 | 99/96 · 106.1:28.6 · 2.5 / 11 | 1.55 − 0.78 = 0.77 · 25 |
 
 This section is #846's run (the ki tricks design's S2: the pool from level 1 by Martial arts,
 its maximum `4 + the Willpower modifier + level / 6`, at least 3, and Perfect self's pace); the
@@ -558,15 +671,15 @@ The paladin in plain gear (a long sword; from level 5 a shield and the warrior's
 
 | L | zeal | back a round | Blow | Smite | Smite on the unholy | Banishing on the unholy | built a round · rounds a smite | with Zealot |
 |---|---|---|---|---|---|---|---|---|
-| 1 | 10.8 | 0.10 | 78/41 · 6.8:0.1 · 1.8 / 680 | 83/41 · 10.3:0.1 · 1.2 / 696 | 87/34 · 13.2:0.6 · 1.2 / 34 | - | 1.29 · 2.3 | 1.70 · 1.8 |
-| 5 | 10.8 | 0.10 | 84/34 · 6.8:0.6 · 3.6 / 54 | 87/34 · 9.8:0.6 · 2.5 / 55 | 91/36 · 12.8:0.7 · 2.2 / 49 | - | 1.16 · 2.6 | 1.49 · 2.0 |
-| 10 | 11.8 | 0.10 | 91/28 · 9.8:1.3 · 4.4 / 48 | 94/28 · 13.2:1.3 · 3.3 / 47 | 93/17 · 16.4:1.2 · 3.1 / 53 | - | 1.16 · 2.6 | 1.44 · 2.1 |
-| 15 | 11.8 | 0.10 | 94/14 · 11.5:0.7 · 5.3 / 163 | 96/14 · 15.0:0.7 · 4.1 / 166 | 96/8 · 19.7:0.6 · 3.1 / 158 | - | 1.06 · 2.8 | 1.19 · 2.5 |
-| 20 | 12.8 | 0.10 | 98/8 · 13.7:0.4 · 6.2 / 552 | 99/8 · 20.8:0.4 · 3.9 / 562 | 99/8 · 24.1:0.6 · 3.3 / 264 | - | 1.03 · 2.9 | 1.11 · 2.7 |
-| 30 | 14.5 | 0.10 | 98/6 · 16.1:0.9 · 8.9 / 343 | 99/6 · 27.3:1.0 · 5.4 / 304 | 99/5 · 31.3:0.9 · 3.2 / 304 | - | 1.01 · 3.0 | 1.07 · 2.8 |
-| 40 | 15.8 | 0.10 | 98/5 · 19.7:0.9 · 9.2 / 582 | 99/5 · 34.9:1.0 · 5.3 / 581 | 98/5 · 40.9:0.9 · 3.3 / 481 | - | 1.01 · 3.0 | 1.05 · 2.8 |
-| 50 | 17.2 | 0.10 | 98/7 · 19.1:1.5 · 11 / 318 | 99/7 · 38.2:1.6 · 5.9 / 268 | 99/20 · 44.8:4.9 · 5.4 / 79 | 99/20 · 66.5:4.7 · 3.6 / 75 | 1.04 · 2.9 | 1.11 · 2.7 |
-| 60 | 18.8 | 0.10 | 93/12 · 18.2:3.6 · 13 / 189 | 98/12 · 37.8:3.8 · 6.2 / 194 | 97/12 · 44.9:4.3 · 3.9 / 92 | 97/12 · 70.6:4.4 · 2.5 / 82 | 1.05 · 2.9 | 1.17 · 2.6 |
+| 1 | 10.8 | 0.10 | 78/41 · 6.9:0.1 · 1.9 / 745 | 83/41 · 10.3:0.1 · 1.2 / 607 | 87/34 · 13.1:0.6 · 1.2 / 36 | - | 1.29 · 2.3 | 1.70 · 1.8 |
+| 5 | 10.8 | 0.10 | 84/35 · 6.5:0.7 · 3.7 / 54 | 87/35 · 9.7:0.7 · 2.5 / 55 | 91/38 · 12.8:0.7 · 2.2 / 45 | - | 1.17 · 2.6 | 1.52 · 2.0 |
+| 10 | 11.8 | 0.10 | 92/27 · 10.0:1.2 · 4.3 / 49 | 94/27 · 13.4:1.2 · 3.2 / 49 | 94/16 · 17.1:1.1 · 3.2 / 52 | - | 1.16 · 2.6 | 1.42 · 2.1 |
+| 15 | 11.8 | 0.10 | 92/22 · 10.3:1.2 · 6.1 / 83 | 95/22 · 13.5:1.1 · 4.7 / 81 | 93/15 · 17.9:1.0 · 3.3 / 86 | - | 1.12 · 2.7 | 1.34 · 2.2 |
+| 20 | 13.2 | 0.10 | 97/20 · 12.5:1.2 · 6.8 / 136 | 99/20 · 19.6:1.2 · 4.2 / 135 | 99/20 · 22.2:1.5 · 3.5 / 82 | - | 1.14 · 2.6 | 1.33 · 2.2 |
+| 30 | 14.3 | 0.10 | 97/17 · 14.0:2.7 · 9.8 / 72 | 98/17 · 24.8:2.8 · 5.8 / 74 | 98/16 · 28.5:2.9 · 3.5 / 77 | - | 1.12 · 2.7 | 1.29 · 2.3 |
+| 40 | 15.8 | 0.10 | 97/15 · 18.2:2.9 · 10 / 105 | 99/15 · 32.6:2.8 · 5.7 / 107 | 96/15 · 37.4:3.7 · 3.5 / 82 | - | 1.10 · 2.7 | 1.25 · 2.4 |
+| 50 | 17.2 | 0.10 | 98/7 · 19.7:1.4 · 11 / 369 | 99/7 · 38.6:1.4 · 6.0 / 288 | 99/20 · 44.9:4.9 · 5.3 / 75 | 99/20 · 67.7:4.7 · 3.6 / 82 | 1.04 · 2.9 | 1.11 · 2.7 |
+| 60 | 18.8 | 0.10 | 93/12 · 18.3:3.5 · 12 / 188 | 98/12 · 37.6:3.3 · 6.1 / 241 | 97/12 · 47.5:4.3 · 3.7 / 87 | 97/12 · 70.9:4.5 · 2.5 / 94 | 1.05 · 2.9 | 1.17 · 2.6 |
 
 What the table shows; none of it is tuned, tuning is the owner's call (Zealot, Smite's dice, and
 every cost are data):
@@ -603,15 +716,15 @@ The ranger (#923) and their starting beast, in the starting kit (the short sword
 
 | L | beasts | its hp | Ranger | Companion | Together: rounds to kill | alone over together |
 |---|---|---|---|---|---|---|
-| 1 | hound, boar | 17 | 73/54 · 4.5:0.6 · 2.8 / 37 | 71/71 · 4.3:1.5 · 3.7 / 11 | 1.6 | x1.8 |
-| 5 | hound, boar | 24 | 79/62 · 4.5:2.3 · 5.3 / 14 | 73/77 · 4.0:3.7 · 7.9 / 6.4 | 3.2 | x1.7 |
-| 10 | hound, boar | 35 | 79/67 · 6.0:4.9 · 7.7 / 8.9 | 83/78 · 6.9:6.4 · 7.8 / 5.5 | 3.9 | x2.0 |
-| 15 | hound, boar | 46 | 81/69 · 7.2:7.5 · 8.9 / 7.4 | 84/79 · 10.5:9.6 · 7.0 / 4.8 | 3.9 | x2.3 |
-| 20 | hound, boar | 57 | 85/74 · 7.3:9.0 · 11 / 7.8 | 92/78 · 12.7:9.9 · 7.4 / 5.9 | 4.5 | x2.5 |
-| 30 | hound, boar | 79 | 80/84 · 7.8:18.8 · 15 / 5.0 | 96/80 · 19.5:17.8 · 7.2 / 4.5 | 4.9 | x3.1 |
-| 40 | hound, boar | 101 | 73/92 · 9.8:17.1 · 17 / 7.3 | 98/79 · 27.3:15.1 · 6.7 / 6.7 | 4.8 | x3.5 |
-| 50 | hound, boar | 124 | 66/97 · 7.6:29.6 · 32 / 4.9 | 99/79 · 34.2:22.8 · 6.6 / 5.4 | 5.5 | x5.9 |
-| 60 | hound, boar | 145 | 51/99 · 3.8:29.4 · 100 / 4.9 | 99/84 · 34.5:19.9 · 7.0 / 7.4 | 6.5 | x15.4 |
+| 1 | hound, boar | 17 | 73/54 · 4.4:0.6 · 2.8 / 37 | 71/71 · 4.4:1.5 · 3.6 / 11 | 1.6 | x1.8 |
+| 5 | hound, boar | 24 | 79/62 · 4.5:2.3 · 5.2 / 13 | 73/77 · 4.0:3.8 · 7.8 / 6.3 | 3.1 | x1.7 |
+| 10 | hound, boar | 35 | 79/67 · 6.0:4.9 · 7.8 / 9.0 | 83/78 · 6.8:6.3 · 7.7 / 5.6 | 3.9 | x2.0 |
+| 15 | hound, boar | 46 | 81/69 · 7.1:7.3 · 8.9 / 7.7 | 84/79 · 10.6:9.7 · 7.0 / 4.8 | 3.9 | x2.3 |
+| 20 | hound, boar | 57 | 80/80 · 6.1:10.1 · 13 / 6.8 | 92/78 · 12.9:9.8 · 7.4 / 5.9 | 4.7 | x2.8 |
+| 30 | hound, boar | 79 | 75/84 · 5.5:18.8 · 20 / 5.0 | 96/80 · 19.7:17.6 · 7.3 / 4.5 | 5.3 | x3.7 |
+| 40 | hound, boar | 101 | 66/95 · 6.8:18.3 · 24 / 6.8 | 98/79 · 27.1:14.9 · 6.7 / 6.8 | 5.2 | x4.5 |
+| 50 | hound, boar | 124 | 66/97 · 7.3:29.6 · 33 / 4.9 | 99/79 · 34.2:23.0 · 6.7 / 5.4 | 5.6 | x6.0 |
+| 60 | hound, boar | 145 | 51/99 · 3.9:29.6 · 93 / 5.0 | 99/84 · 34.4:19.7 · 7.0 / 7.4 | 6.5 | x14.2 |
 
 What it says (2026-11-03, C8): the hound (grade the ranger's level) out-damages the melee ranger from level 5 on and by level 60 deals about nine times the short sword's damage a round (34.8 against 3.8; the ranger's real weapon is the bow, which this probe does not measure, so read the ranger column as a floor). It hits 71 to 99 % of the time against monsters of the ranger's level and kills one in about seven rounds at every level, and it lasts about five to six rounds against them, the same as the ranger does. The two together kill 1.6 to 6.3 rounds; the companion is the larger half of the pair from level 5. `grade_percent = 100` (the design's Q1) stands (the beast's level is the ranger's); whether a hound that out-damages its melee master nine to one at level 60 is too much is the owner's call (a tamed wolf is not measured here: it is the same growth from a higher base, and the probe's seeds draw only the hound and the boar).
 
@@ -621,20 +734,20 @@ The druid's calls (#839), cast by a human druid (untrained stats, every score as
 
 | Call | L | comes | minutes | mana / pool | the called against the druid's level |
 |---|---|---|---|---|---|
-| Call of the wild (5) | 6 | 1 wolf | 5 | 5 / 43 (9 casts) | wolf 4: 69/69 · 3.1:3.9 · 7.6 / 4.1 |
-| Call of the wild (5) | 25 | 1 wolf | 5 | 5 / 161 (32 casts) | wolf 4: 54/96 · 1.9:19.0 · 49 / 0.8 |
-| Call of the forest (20) | 25 | 1 bear | 5 | 20 / 161 (8 casts) | bear 12: 81/98 · 8.3:19.3 · 12 / 3.1 |
-| Call of the wild (5) | 32 | 2 wolves | 7 | 5 / 204 (41 casts) | wolf 4: 38/99 · 1.1:25.6 · 105 / 0.6 |
-| Call of the forest (20) | 32 | 2 bears | 7 | 20 / 204 (10 casts) | bear 12: 69/99 · 6.6:25.9 · 18 / 2.3 |
-| Call of the wild (5) | 40 | 2 wolves | 7 | 5 / 253 (51 casts) | wolf 4: 31/99 · 0.8:24.0 · 201 / 0.7 |
-| Call of the forest (20) | 40 | 2 bears | 7 | 20 / 253 (13 casts) | bear 12: 62/99 · 5.5:23.9 · 29 / 2.5 |
-| Call the elements (35) | 40 | 1 greater air elemental, 1 greater fire elemental | 7 | 35 / 253 (7 casts) | greater earth elemental 24: 90/99 · 14.2:16.9 · 11 / 7.3; greater water elemental 26: 75/99 · 11.9:20.5 · 13 / 4.2; greater air elemental 31: 85/75 · 29.0:13.8 · 5.6 / 6.7; greater fire elemental 38: 93/93 · 24.9:18.6 · 7.0 / 6.6 |
-| Call of the wild (5) | 50 | 2 wolves | 7 | 5 / 314 (63 casts) | wolf 4: 19/99 · 0.2:32.3 · 797 / 0.5 |
-| Call of the forest (20) | 50 | 2 bears | 7 | 20 / 314 (16 casts) | bear 12: 46/99 · 3.8:33.1 · 57 / 1.8 |
-| Call the elements (35) | 50 | 1 greater air elemental, 1 greater fire elemental | 7 | 35 / 314 (9 casts) | greater earth elemental 24: 81/99 · 13.0:20.7 · 16 / 5.9; greater water elemental 26: 62/99 · 9.5:26.1 · 21 / 3.3; greater air elemental 31: 75/90 · 23.9:20.8 · 8.5 / 4.5; greater fire elemental 38: 85/99 · 24.0:27.7 · 8.8 / 4.4 |
-| Call of the wild (5) | 60 | 2 wolves | lasting | 5 / 374 (75 casts) | wolf 4: 10/99 · 0.0:36.1 · >999 / 0.4 |
-| Call of the forest (20) | 60 | 2 bears | lasting | 20 / 374 (19 casts) | bear 12: 31/99 · 1.9:36.4 · 107 / 1.6 |
-| Call the elements (35) | 60 | 1 greater air elemental, 1 greater fire elemental | lasting | 35 / 374 (11 casts) | greater earth elemental 24: 69/99 · 10.0:25.0 · 22 / 4.9; greater water elemental 26: 46/99 · 5.6:29.7 · 38 / 2.9; greater air elemental 31: 62/98 · 17.2:25.3 · 12 / 3.7; greater fire elemental 38: 75/99 · 19.3:29.1 · 11 / 4.2 |
+| Call of the wild (5) | 6 | 1 wolf | 5 | 5 / 43 (9 casts) | wolf 4: 69/69 · 3.0:3.9 · 7.8 / 4.1 |
+| Call of the wild (5) | 25 | 1 wolf | 5 | 5 / 161 (32 casts) | wolf 4: 54/96 · 1.9:18.9 · 54 / 0.8 |
+| Call of the forest (20) | 25 | 1 bear | 5 | 20 / 161 (8 casts) | bear 12: 81/98 · 8.3:19.5 · 12 / 3.1 |
+| Call of the wild (5) | 32 | 2 wolves | 7 | 5 / 204 (41 casts) | wolf 4: 38/99 · 1.2:25.2 · 109 / 0.6 |
+| Call of the forest (20) | 32 | 2 bears | 7 | 20 / 204 (10 casts) | bear 12: 69/99 · 6.8:25.3 · 19 / 2.4 |
+| Call of the wild (5) | 40 | 2 wolves | 7 | 5 / 253 (51 casts) | wolf 4: 31/99 · 0.7:23.4 · 198 / 0.7 |
+| Call of the forest (20) | 40 | 2 bears | 7 | 20 / 253 (13 casts) | bear 12: 62/99 · 4.9:25.2 · 28 / 2.4 |
+| Call the elements (35) | 40 | 1 greater air elemental, 1 greater fire elemental | 7 | 35 / 253 (7 casts) | greater earth elemental 24: 90/99 · 14.4:16.9 · 11 / 7.3; greater water elemental 26: 75/99 · 12.1:20.1 · 13 / 4.3; greater air elemental 31: 85/75 · 29.5:14.0 · 5.4 / 6.7; greater fire elemental 38: 93/93 · 24.3:18.5 · 7.0 / 6.6 |
+| Call of the wild (5) | 50 | 2 wolves | 7 | 5 / 314 (63 casts) | wolf 4: 19/99 · 0.2:33.0 · 700 / 0.5 |
+| Call of the forest (20) | 50 | 2 bears | 7 | 20 / 314 (16 casts) | bear 12: 46/99 · 3.5:32.9 · 58 / 1.8 |
+| Call the elements (35) | 50 | 1 greater air elemental, 1 greater fire elemental | 7 | 35 / 314 (9 casts) | greater earth elemental 24: 81/99 · 12.9:20.6 · 16 / 6.0; greater water elemental 26: 62/99 · 9.3:26.3 · 23 / 3.3; greater air elemental 31: 75/90 · 25.1:20.3 · 8.7 / 4.6; greater fire elemental 38: 85/99 · 24.3:27.8 · 8.9 / 4.4 |
+| Call of the wild (5) | 60 | 2 wolves | lasting | 5 / 374 (75 casts) | wolf 4: 10/99 · 0.1:37.6 · >999 / 0.4 |
+| Call of the forest (20) | 60 | 2 bears | lasting | 20 / 374 (19 casts) | bear 12: 31/99 · 1.9:37.2 · 113 / 1.6 |
+| Call the elements (35) | 60 | 1 greater air elemental, 1 greater fire elemental | lasting | 35 / 374 (11 casts) | greater earth elemental 24: 69/99 · 9.7:25.7 · 22 / 4.8; greater water elemental 26: 46/99 · 6.6:29.8 · 31 / 2.9; greater air elemental 31: 62/98 · 17.2:24.9 · 12 / 3.7; greater fire elemental 38: 75/99 · 20.1:29.1 · 11 / 4.2 |
 
 ## Familiar
 
@@ -699,7 +812,6 @@ familiar's hit rate catches up as it grows (+1 to hit per 4 levels of grade): 62
 a geared monster is a little harder; and the table says nothing of the familiar reaching its
 target, only that it is beside it.
 
-
 ## Stat training
 
 The stat training design (`docs/design/stat-training.md`, slices T1 to T6, #722 to #727) set
@@ -754,68 +866,68 @@ Scores of the trained careers (plain gear; the seeds' mean), start/potential at 
 
 | Class | Stat | Start/potential | L10 | L20 | L30 | L40 | L60 | Gain | Past potential |
 |---|---|---|---|---|---|---|---|---|---|
-| warrior | St | 14.8/16.7 | 17.5 | 20.8 | 23.3 | 25.7 | 28.3 | +13.5 | 11.7 |
-|  | Dx | 10.8/16.3 | 12.0 | 17.2 | 19.2 | 20.7 | 23.2 | +12.3 | 6.8 |
-|  | To | 11.7/16.0 | 14.0 | 17.3 | 18.7 | 19.5 | 21.0 | +9.3 | 5.0 |
-|  | In | 9.8/17.0 | 11.8 | 13.3 | 15.2 | 15.8 | 17.5 | +7.7 | 0.5 |
-|  | Wi | 11.7/17.7 | 11.8 | 12.8 | 14.0 | 15.5 | 18.2 | +6.5 | 0.5 |
-|  | Pr | 10.0/16.2 | 10.0 | 10.8 | 11.0 | 12.0 | 14.0 | +4.0 | 0.0 |
-| | all six | | | | | | | **+53.3** | |
-| thief | St | 11.0/16.8 | 17.0 | 20.7 | 22.8 | 24.5 | 27.5 | +16.5 | 10.7 |
-|  | Dx | 12.5/16.5 | 16.0 | 19.3 | 21.3 | 22.7 | 24.3 | +11.8 | 7.8 |
-|  | To | 10.5/16.8 | 15.2 | 18.7 | 20.3 | 21.8 | 24.2 | +13.7 | 7.3 |
-|  | In | 11.3/17.2 | 13.0 | 14.2 | 15.8 | 17.2 | 18.3 | +7.0 | 1.2 |
-|  | Wi | 10.3/17.3 | 10.3 | 11.8 | 13.2 | 14.7 | 17.5 | +7.2 | 0.3 |
-|  | Pr | 9.8/16.3 | 9.8 | 10.8 | 11.5 | 12.5 | 14.0 | +4.2 | 0.0 |
-| | all six | | | | | | | **+60.3** | |
-| wizard | St | 10.0/16.7 | 10.0 | 10.0 | 10.3 | 11.0 | 12.0 | +2.0 | 0.0 |
-|  | Dx | 10.0/16.3 | 11.5 | 13.8 | 16.3 | 18.3 | 19.5 | +9.5 | 3.2 |
-|  | To | 9.5/17.3 | 12.5 | 18.7 | 20.5 | 21.2 | 23.3 | +13.8 | 6.0 |
-|  | In | 14.5/16.8 | 16.7 | 19.2 | 21.0 | 22.2 | 23.8 | +9.3 | 7.0 |
-|  | Wi | 12.5/17.7 | 17.7 | 20.8 | 22.7 | 24.3 | 26.7 | +14.2 | 9.0 |
-|  | Pr | 9.5/16.0 | 9.5 | 10.3 | 10.8 | 11.8 | 13.7 | +4.2 | 0.0 |
-| | all six | | | | | | | **+53.0** | |
-| priest | St | 10.8/16.3 | 15.8 | 19.5 | 22.3 | 24.3 | 27.2 | +16.3 | 10.8 |
-|  | Dx | 8.7/16.3 | 9.8 | 13.3 | 16.7 | 18.3 | 20.2 | +11.5 | 3.8 |
-|  | To | 10.7/16.7 | 14.3 | 18.5 | 20.2 | 22.0 | 24.7 | +14.0 | 8.0 |
-|  | In | 11.3/16.7 | 12.5 | 13.8 | 15.5 | 16.3 | 17.7 | +6.3 | 1.0 |
-|  | Wi | 15.3/18.0 | 16.8 | 19.2 | 20.8 | 21.5 | 23.0 | +7.7 | 5.0 |
-|  | Pr | 10.8/16.3 | 10.8 | 11.7 | 12.3 | 13.3 | 14.7 | +3.8 | 0.0 |
-| | all six | | | | | | | **+59.7** | |
+| warrior | St | 14.8/16.7 | 17.7 | 20.5 | 23.2 | 25.2 | 28.7 | +13.8 | 12.0 |
+|  | Dx | 10.8/16.3 | 12.3 | 17.3 | 19.3 | 20.8 | 23.2 | +12.3 | 6.8 |
+|  | To | 11.7/16.0 | 13.7 | 17.2 | 18.8 | 19.8 | 21.3 | +9.7 | 5.3 |
+|  | In | 9.8/17.0 | 11.5 | 13.2 | 14.5 | 15.8 | 17.5 | +7.7 | 0.5 |
+|  | Wi | 11.7/17.7 | 11.8 | 12.7 | 14.3 | 15.8 | 18.2 | +6.5 | 0.5 |
+|  | Pr | 10.0/16.2 | 10.0 | 10.7 | 11.3 | 12.2 | 14.0 | +4.0 | 0.0 |
+| | all six | | | | | | | **+54.0** | |
+| thief | St | 11.0/16.8 | 16.5 | 20.3 | 22.3 | 24.2 | 27.0 | +16.0 | 10.2 |
+|  | Dx | 12.5/16.5 | 16.3 | 19.8 | 21.7 | 22.8 | 24.7 | +12.2 | 8.2 |
+|  | To | 10.5/16.8 | 13.7 | 18.3 | 19.8 | 21.2 | 23.5 | +13.0 | 6.7 |
+|  | In | 11.3/17.2 | 12.7 | 14.3 | 15.8 | 17.2 | 18.2 | +6.8 | 1.0 |
+|  | Wi | 10.3/17.3 | 10.3 | 11.5 | 13.0 | 14.7 | 17.3 | +7.0 | 0.2 |
+|  | Pr | 9.8/16.3 | 9.8 | 10.8 | 11.2 | 12.2 | 13.8 | +4.0 | 0.0 |
+| | all six | | | | | | | **+59.0** | |
+| wizard | St | 10.0/16.7 | 10.0 | 10.0 | 10.5 | 11.0 | 12.2 | +2.2 | 0.0 |
+|  | Dx | 10.0/16.3 | 11.5 | 14.0 | 16.8 | 18.3 | 19.7 | +9.7 | 3.3 |
+|  | To | 9.5/17.3 | 13.0 | 18.8 | 20.3 | 21.7 | 23.5 | +14.0 | 6.2 |
+|  | In | 14.5/16.8 | 16.7 | 19.3 | 20.7 | 22.2 | 23.8 | +9.3 | 7.0 |
+|  | Wi | 12.5/17.7 | 17.7 | 21.2 | 23.2 | 24.5 | 26.7 | +14.2 | 9.0 |
+|  | Pr | 9.5/16.0 | 9.5 | 10.3 | 11.2 | 12.0 | 13.8 | +4.3 | 0.0 |
+| | all six | | | | | | | **+53.7** | |
+| priest | St | 10.8/16.3 | 15.8 | 19.5 | 22.5 | 24.7 | 27.2 | +16.3 | 10.8 |
+|  | Dx | 8.7/16.3 | 9.5 | 13.3 | 16.3 | 18.3 | 20.0 | +11.3 | 3.7 |
+|  | To | 10.7/16.7 | 14.2 | 18.5 | 20.3 | 21.8 | 24.7 | +14.0 | 8.0 |
+|  | In | 11.3/16.7 | 12.5 | 14.0 | 15.5 | 16.3 | 17.7 | +6.3 | 1.0 |
+|  | Wi | 15.3/18.0 | 16.5 | 19.2 | 20.5 | 21.5 | 22.8 | +7.5 | 4.8 |
+|  | Pr | 10.8/16.3 | 10.8 | 11.0 | 12.0 | 13.0 | 15.2 | +4.3 | 0.0 |
+| | all six | | | | | | | **+59.8** | |
 
 Marks a day the hooks gave in each stat over the level before (St/Dx/To/In/Wi/Pr, the seeds' mean), and the game day reached.
 
 | L | Day | Warrior | Thief | Wizard | Priest |
 |---|---|---|---|---|---|
-| 5 | 4 | 21/9/19/20/3/3 | 62/42/64/20/3/3 | 0/24/36/46/72/3 | 32/8/46/21/18/3 |
-| 10 | 14 | 77/18/30/5/3/1 | 97/75/63/5/3/1 | 1/9/34/16/86/2 | 81/14/55/4/22/1 |
-| 15 | 24 | 133/44/39/6/3/2 | 154/114/53/6/3/2 | 0/9/45/57/120/2 | 128/18/72/5/33/2 |
-| 20 | 39 | 216/36/27/4/3/1 | 147/108/47/4/3/1 | 0/10/40/48/111/1 | 132/24/46/4/25/1 |
-| 30 | 69 | 340/69/28/3/3/1 | 219/137/68/3/3/1 | 0/16/49/72/169/1 | 250/24/96/3/31/1 |
-| 40 | 109 | 324/58/27/2/3/1 | 215/90/81/2/3/1 | 1/12/37/53/127/1 | 326/19/97/2/26/1 |
-| 50 | 149 | 409/72/32/2/3/1 | 268/80/96/1/3/1 | 0/13/49/67/173/1 | 230/18/123/2/28/1 |
-| 60 | 189 | 452/104/62/1/3/1 | 341/82/165/2/3/1 | 0/14/68/78/201/1 | 270/24/232/1/31/1 |
+| 5 | 4 | 23/8/17/21/4/2 | 44/35/40/21/3/3 | 0/24/36/46/72/3 | 31/8/45/20/16/3 |
+| 10 | 14 | 75/24/26/5/3/1 | 90/70/39/6/3/2 | 0/11/35/16/96/1 | 73/13/56/5/24/1 |
+| 15 | 24 | 134/49/39/6/3/2 | 163/115/41/6/3/2 | 1/11/53/63/137/2 | 123/18/71/6/32/2 |
+| 20 | 39 | 222/35/27/3/3/1 | 144/110/37/3/3/1 | 0/10/37/46/111/1 | 134/21/45/4/25/1 |
+| 30 | 69 | 326/70/31/3/3/1 | 206/135/47/3/3/1 | 0/16/52/76/182/1 | 197/25/108/3/28/1 |
+| 40 | 109 | 316/62/31/2/3/1 | 209/99/46/2/3/1 | 0/11/43/54/140/1 | 281/17/108/2/26/2 |
+| 50 | 149 | 409/76/36/2/3/1 | 268/101/82/2/3/1 | 1/14/53/73/179/1 | 216/17/134/2/29/1 |
+| 60 | 189 | 354/104/61/2/3/1 | 348/111/143/2/3/1 | 1/12/67/81/198/1 | 267/22/230/2/32/1 |
 
 The game day of each stat's first rise (the seeds' mean of those that rose by level 60; how many of the six in brackets when not all).
 
 | Class | St | Dx | To | In | Wi | Pr |
 |---|---|---|---|---|---|---|
-| warrior | 7 | 11 | 6 | 6 | 25 | 36 |
-| thief | 4 | 4 | 4 | 6 | 19 | 30 |
-| wizard | 73 | 6 | 4 | 4 | 3 | 36 |
-| priest | 5 | 10 | 4 | 6 | 9 | 36 |
+| warrior | 7 | 9 | 7 | 5 | 24 | 37 |
+| thief | 5 | 5 | 6 | 6 | 20 | 31 |
+| wizard | 75 | 6 | 4 | 5 | 3 | 36 |
+| priest | 5 | 12 | 5 | 8 | 9 | 42 |
 
 The knobs (design §6.2): mean gain by level 60 with other `price_per_point` and `ramp_divisor` values (St/Dx/To/In/Wi/Pr · all six), the data's in bold.
 
 | Price | Ramp ÷ | Warrior | Thief | Wizard | Priest |
 |---|---|---|---|---|---|
-| **20 + 10s** | **2** | +13.5/+12.3/+9.3/+7.7/+6.5/+4.0 · +53 | +16.5/+11.8/+13.7/+7.0/+7.2/+4.2 · +60 | +2.0/+9.5/+13.8/+9.3/+14.2/+4.2 · +53 | +16.3/+11.5/+14.0/+6.3/+7.7/+3.8 · +60 |
-| 20 + 10s | 3 | +14.8/+13.0/+10.2/+7.8/+6.3/+4.0 · +56 | +17.5/+12.7/+14.2/+7.2/+7.2/+4.2 · +63 | +1.8/+10.3/+14.2/+10.2/+15.5/+4.3 · +56 | +17.2/+11.8/+15.0/+6.5/+8.5/+4.0 · +63 |
-| 20 + 10s | 4 | +15.3/+13.2/+10.7/+7.8/+6.5/+4.2 · +58 | +18.7/+13.7/+15.0/+7.3/+7.0/+4.5 · +66 | +2.2/+10.3/+14.7/+10.7/+16.8/+4.0 · +59 | +18.2/+12.5/+15.3/+6.7/+9.2/+3.8 · +66 |
-| 20 + 10s | 6 | +17.2/+14.7/+11.3/+8.0/+6.5/+4.0 · +62 | +20.0/+14.5/+15.8/+7.3/+7.8/+4.2 · +70 | +1.8/+11.3/+16.0/+12.0/+18.0/+4.3 · +64 | +19.5/+12.7/+16.3/+7.2/+9.5/+4.0 · +69 |
-| 20 + 15s | 2 | +12.3/+11.5/+8.7/+6.7/+5.2/+3.0 · +47 | +15.2/+10.8/+12.5/+6.0/+5.7/+3.2 · +53 | +1.2/+8.8/+12.8/+8.5/+13.3/+3.3 · +48 | +15.5/+10.7/+12.5/+5.7/+7.0/+3.0 · +54 |
-| 20 + 15s | 4 | +14.5/+12.8/+9.8/+6.7/+5.3/+3.0 · +52 | +17.2/+12.3/+14.0/+6.2/+5.5/+3.2 · +58 | +1.3/+9.7/+14.0/+9.7/+15.0/+3.3 · +53 | +17.2/+11.3/+14.3/+6.0/+7.8/+2.7 · +59 |
-| 20 + 20s | 4 | +13.7/+12.0/+9.3/+5.2/+4.7/+2.3 · +47 | +16.3/+11.5/+13.5/+5.5/+4.8/+2.5 · +54 | +1.2/+8.5/+13.5/+9.0/+14.0/+2.3 · +48 | +16.5/+10.7/+13.5/+5.3/+8.0/+2.8 · +57 |
+| **20 + 10s** | **2** | +13.8/+12.3/+9.7/+7.7/+6.5/+4.0 · +54 | +16.0/+12.2/+13.0/+6.8/+7.0/+4.0 · +59 | +2.2/+9.7/+14.0/+9.3/+14.2/+4.3 · +54 | +16.3/+11.3/+14.0/+6.3/+7.5/+4.3 · +60 |
+| 20 + 10s | 3 | +14.7/+13.3/+10.3/+7.7/+6.5/+4.0 · +56 | +17.7/+13.2/+13.8/+7.0/+7.5/+4.5 · +64 | +2.0/+10.2/+14.5/+10.2/+15.5/+4.0 · +56 | +17.3/+11.7/+15.2/+6.7/+8.2/+4.2 · +63 |
+| 20 + 10s | 4 | +15.7/+13.8/+11.0/+8.0/+6.7/+4.2 · +59 | +18.5/+14.0/+14.5/+7.3/+7.2/+4.5 · +66 | +1.7/+10.7/+15.2/+11.0/+17.0/+4.2 · +60 | +18.5/+12.3/+15.8/+6.5/+8.8/+4.2 · +66 |
+| 20 + 10s | 6 | +16.8/+14.3/+12.2/+8.2/+6.5/+4.0 · +62 | +19.8/+15.3/+15.5/+7.2/+7.2/+4.2 · +69 | +2.0/+11.5/+16.0/+12.0/+18.0/+4.0 · +64 | +19.3/+12.5/+17.2/+6.8/+9.7/+4.0 · +70 |
+| 20 + 15s | 2 | +12.5/+11.5/+9.0/+6.7/+5.5/+3.2 · +48 | +15.0/+10.8/+12.2/+5.8/+5.5/+3.2 · +52 | +1.7/+8.8/+13.3/+8.3/+13.2/+2.8 · +48 | +15.7/+10.5/+13.0/+5.5/+6.8/+3.0 · +55 |
+| 20 + 15s | 4 | +14.5/+12.5/+10.3/+6.5/+5.3/+3.2 · +52 | +16.8/+13.0/+13.5/+6.0/+5.7/+3.2 · +58 | +1.2/+9.7/+14.3/+10.0/+15.2/+3.5 · +54 | +17.2/+11.0/+14.3/+5.7/+8.0/+2.8 · +59 |
+| 20 + 20s | 4 | +13.7/+12.2/+9.2/+5.5/+4.5/+2.2 · +47 | +16.3/+12.0/+13.0/+5.7/+4.8/+2.7 · +54 | +1.0/+8.7/+13.8/+9.2/+14.5/+2.3 · +50 | +16.3/+10.3/+13.8/+5.3/+7.2/+2.5 · +56 |
 
 **Before and after, by class.** Gain of all six stats by level 60 (the main stat's score at 60
 in brackets). *Before*: the probe as it was until T6, two days of fixed marks a level (the

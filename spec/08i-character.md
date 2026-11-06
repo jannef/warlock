@@ -1539,14 +1539,20 @@ developer notes (CLAUDE.md, `docs/dev/`).
     skill, a hit `hit` more (2); a blow the player's shield blocks (a miss credited to the
     Shield category, "Combat" above) earns `attempt + hit` in shield blocking. The marks scale
     by `100 + per_level × (the opponent's level − the rank)` percent (20 a level), kept within 0
-    and `most` (200), rounded to the nearest mark (halves up): more against stronger
-    opponents, fewer as the rank rises. The opponent's level is its creature type's `level`
+    and 100, rounded to the nearest mark (halves up): fewer against weaker opponents and as the
+    rank rises, never more than the full marks against stronger ones (#1095: monster levels run
+    to 70, ranks to 10, so a cap above 100 % paid nearly double from the middle levels on). The opponent's level is its creature type's `level`
     (§8 "Experience"; the one attacked, or for a block the attacker): a level-1 giant rat
     teaches nothing past rank 5, a level-4 kobold shaman nothing past rank 8.
     A missile that reaches no one earns nothing; nothing rolls for marks. A spell earns marks
     in its school, whatever it does ("Schools of magic" below).
-  - **Curve**: the marks to go from a rank to the next grow exponentially, by the skill's
-    `curve`: melee 15, 30, 60, … 7680 (rank 10 at 15 345 in all), missile 10, 20, … 5120. Marks
+  - **Curve**: the marks to go from a rank to the next, by the skill's `curve` (#1095): melee
+    15, 45, 190, 500, 1750, 4000, 17 500, 38 000, 68 000, 88 000 (rank 10 at 218 000 in all),
+    steep from rank 7 so that ranks 7 to 10 take most of a career (a fighter of the monsters of
+    their level: rank 6 about level 10, 8 about 25, 10 about 45; docs/balance.md "Weapon pace");
+    missile two thirds of it, 10, 30, … 58 700; the schools of magic and the caster styles,
+    trained by far fewer casts than blows, `school`: 10, 20, 40, … 640 doubling, then 1200,
+    2000, 3000 (docs/balance.md "School pace"). Marks
     past the need count toward the next rank (one rank at a time); rank 10 earns no more.
   - **Defaults** (The Riddle of Steel): a symmetric table of penalties between related skills
     (§7; long blades 8 gives short blades 6). When skill A gains a rank, every skill B with
@@ -1593,7 +1599,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     `Actor::school_benefit`, `World::practise_cast` in `world/cast.rs`;
     docs/dev/magic-skills.md): the seven schools (evocation, necromancy, abjuration,
     restoration, transmutation, enchantment, divination) are rows of role `school`, one each,
-    weapon skills in everything but what a rank gives (ranks, the missile curve, `[marks]`, the
+    weapon skills in everything but what a rank gives (ranks, the school curve, `[marks]`, the
     defaults, `rank:evocation:5`). A spell whose school has no row is refused at load. A rank
     lifts every spell of its school through the spell hooks (§8 "Spells": "Hooks"): `reroll`,
     `sides`, `dice`, `bonus`, `cells`, `degrees` into `SpellMods` (`Actor::spell_mods`, beside
