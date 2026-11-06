@@ -245,7 +245,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   (`SoundKind::Explosion`, 150). Who: the six motes (vortices, `2d4` to `2d6`, radius 1), every
   elemental line but earth (death throes of `(2 + L/8)d6`, half the doubled damage spells'
   `(4 + L/4)d6` of their level; radius and rider by rung, `docs/dev/creatures/elementals.md`), the
-  burning skull, the magma crawler, and the balor. The earth line throws stones instead
+  burning skull, the magma crawler, the animated lantern, and the balor. The earth line throws stones instead
   (`[creature.throw]`).
 - **Corroding gear** (`warlock-core/src/world/corrode.rs`; #1131, the dread design §5.8): a type's
   `corrodes = { chance, what }` (chance 1 to 100). `what = "armour"`: its melee hit that lands
@@ -531,7 +531,14 @@ developer notes (CLAUDE.md, `docs/dev/`).
   `[drops] pieces`, nothing of paper; its magic lost), with a line if the player sees it ("The
   silver candlestick breaks apart.", after the death line). Nothing can be
   stolen from one ("It is all of a piece.", no time). No talents of their own (Salvager,
-  Unbinder, and Appraiser's eye were cut in #774).
+  Unbinder, and Appraiser's eye were cut in #774). Three household bodies have a trick of
+  their own (#1136, the dread design §13): the rug of smothering's blow may **engulf**
+  (`{ status = "engulfed", chance = 15, difficulty = 12, damage = 1 }`: its grip 12, and a
+  tick 1 hit point while it holds instead of the status's 2), the bellows' gust may
+  **stagger** (20 %), and the animated lantern has **death throes** (a body's `burst`, as a
+  creature's `[creature.burst]`: `1d6` fire, radius 1, "bursts in a spray of burning oil").
+  The blades are **graded** (the tier's `grade_words`, "notched" and "keen"); no other
+  animated type is.
   **Blades** (#485) are a **family**: a tier with `levels` and no bodies generates one type
   per level, `animated_blade_5` … `animated_blade_20`, all named "animated blade", numbered in a
   row after the household types; the family's id `animated_blade` names its first member. Its
@@ -637,8 +644,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
   **greater** (+25 % maximum hit points, +1 to hit and +2 damage on its melee blows, 10 % less
   speed) and one in six **lesser** (the reverse: −25 %, −1, −2, 10 % more speed); the rest are
   neither. `Actor::grade` (−1, 0, +1) is saved and hashed, left out at 0. None for a type with
-  `grades = false` (the people: the peaceful and merchants factions), a unique, a mimic, a
-  generated type (the animated objects), or a unique character (a spawn with an `npc`); a kept
+  `grades = false` (the people: the peaceful and merchants factions), a unique, a mimic, an
+  animated type whose tier names no `grade_words` (all but the blades, "a notched animated
+  blade", "a keen" one), or a unique character (a spawn with an `npc`); a kept
   beast (a companion or a familiar) reads as ungraded, its growth standing in. A kill pays its
   kind's experience. The player sees it in look mode as a word before the name, the type's
   `grade_words` (the kobolds' "a scrawny kobold", "a big kobold"), else its tags' (the undead

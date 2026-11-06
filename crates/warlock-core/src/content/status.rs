@@ -240,10 +240,13 @@ pub enum Affliction {
         check: Option<(Stat, i32)>,
     },
     /// A hold (a status with a [`Hold`]): the attacker holds the target, with a grip of
-    /// `difficulty` (`None`: the status's own).
+    /// `difficulty` (`None`: the status's own), and each of the hold's ticks costs `damage`
+    /// hit points while this attacker holds (`None`: the status's own `damage`; the rug of
+    /// smothering's engulfing, 1).
     Hold {
         status: StatusId,
         difficulty: Option<i32>,
+        damage: Option<u16>,
     },
     /// Exposure to a disease: the target resists it with a check, or catches it.
     Disease(DiseaseId),
@@ -281,6 +284,8 @@ pub(super) struct OnHitSpec {
     pub points: Option<u8>,
     pub check: Option<Stat>,
     pub difficulty: Option<i32>,
+    /// A hold's harm a tick while this attacker holds, instead of its status's `damage`.
+    pub damage: Option<u16>,
 }
 
 impl OnHitSpec {
@@ -300,6 +305,9 @@ impl OnHitSpec {
             ));
         }
         if let Some(drain) = &self.drain {
+            if self.damage.is_some() {
+                return Err(format!("on_hit `{name}`: `damage` belongs to a hold"));
+            }
             return Ok(OnHit {
                 what: Affliction::Drain(self.drain(drain)?),
                 chance: self.chance,
@@ -321,10 +329,14 @@ impl OnHitSpec {
             if self.difficulty.is_some_and(|d| !(1..=40).contains(&d)) {
                 return Err(format!("on_hit `{name}`: difficulty must be 1 to 40"));
             }
+            if self.damage.is_some_and(|d| !(1..=20).contains(&d)) {
+                return Err(format!("on_hit `{name}`: damage must be 1 to 20"));
+            }
             return Ok(OnHit {
                 what: Affliction::Hold {
                     status: found,
                     difficulty: self.difficulty,
+                    damage: self.damage,
                 },
                 chance: self.chance,
             });
@@ -337,6 +349,9 @@ impl OnHitSpec {
                 "on_hit `{name}`: `check` and `difficulty` go together, on a `drain` or a \
                  status (a hold takes `difficulty` alone)"
             ));
+        }
+        if self.damage.is_some() {
+            return Err(format!("on_hit `{name}`: `damage` belongs to a hold"));
         }
         if self.difficulty.is_some_and(|d| !(1..=40).contains(&d)) {
             return Err(format!("on_hit `{name}`: difficulty must be 1 to 40"));
@@ -1450,6 +1465,7 @@ mod tests {
             Ok(Affliction::Hold {
                 status: StatusId(2),
                 difficulty: Some(15),
+                damage: None,
             })
         );
         assert_eq!(
@@ -1457,6 +1473,20 @@ mod tests {
             Ok(Affliction::Hold {
                 status: StatusId(2),
                 difficulty: None,
+                damage: None,
+            })
+        );
+        // A hold's own harm a tick (the rug of smothering's engulfing).
+        let gentle = OnHitSpec {
+            damage: Some(1),
+            ..hold(None, None)
+        };
+        assert_eq!(
+            gentle.resolve(known, disease).map(|o| o.what),
+            Ok(Affliction::Hold {
+                status: StatusId(2),
+                difficulty: None,
+                damage: Some(1),
             })
         );
         let gripping_poison = OnHitSpec {
@@ -1464,10 +1494,21 @@ mod tests {
             severity: Some(1),
             ..hold(Some(15), None)
         };
+        let harmful_poison = OnHitSpec {
+            difficulty: None,
+            damage: Some(1),
+            ..gripping_poison.clone()
+        };
+        let crushing = OnHitSpec {
+            damage: Some(21),
+            ..hold(None, None)
+        };
         for (bad, why) in [
             (hold(None, Some(1)), "a hold has no `severity`"),
             (hold(Some(41), None), "difficulty must be 1 to 40"),
             (gripping_poison, "`check` and `difficulty` go together"),
+            (harmful_poison, "`damage` belongs to a hold"),
+            (crushing, "damage must be 1 to 20"),
         ] {
             let e = bad.resolve(known, disease).unwrap_err();
             assert!(e.contains(why), "{why}: {e}");

@@ -1,4 +1,5 @@
-# A lantern that carries a dim light: it is seen coming. A hanging one, not a lamp to carry.
+# A lantern that carries a dim light: it is seen coming. A hanging one, not a lamp to carry. Its
+# oil bursts when it dies (death throes, the dread design §13): step back from a dying one.
 [[body]]
 id = "lantern"
 object = "hanging_lantern"
@@ -8,3 +9,4 @@ rarity = "uncommon"
 speed = 1000
 attack = { damage_type = "fire", name = "flame", verb = "sears" }
 light = "lantern_hooded"
+burst = { damage = "1d6", damage_type = "fire", radius = 1, when = "dies", effect = "blaze", noun = "burning oil", verb = "bursts in a spray of burning oil" }

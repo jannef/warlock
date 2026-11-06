@@ -365,8 +365,9 @@ pub(super) struct CreatureSpec {
     /// door (1 to 20; only on a `tameable` type; a companion's reads it).
     pub nose: Option<i32>,
     /// Whether one of it may come greater or lesser than its kind (spec §8 "Grades";
-    /// [`crate::grade`]); `grades = false` for a type that has none. Never a unique,
-    /// a mimic, or a generated type, whatever the file says.
+    /// [`crate::grade`]); `grades = false` for a type that has none. Never a unique or a
+    /// mimic, whatever the file says; an animated type only where its tier names grade words
+    /// (`content/animated.rs`: the blades).
     #[serde(default = "yes")]
     pub grades: bool,
     /// The words for its lesser and its greater grade, in that order (`["scrawny", "big"]`);
@@ -881,7 +882,7 @@ impl CreatureSpec {
             depart: self.depart,
             tameable: self.tameable,
             nose: self.nose,
-            grades: self.grades && !self.unique && self.animated.is_none() && self.mimic.is_none(),
+            grades: self.grades && !self.unique && self.mimic.is_none(),
             grade_words,
             animated: self.animated,
             mimic: self.mimic,
@@ -1134,8 +1135,9 @@ pub struct CreatureDef {
     /// starting beast is drawn from the `tameable` types; `world/companion.rs`).
     pub tameable: bool,
     /// Gameplay: whether one of it may be made greater or lesser than its kind (spec §8
-    /// "Grades"; [`crate::grade`]): false for a unique, a mimic, a generated type,
-    /// or one whose file says `grades = false` (the people).
+    /// "Grades"; [`crate::grade`]): false for a unique, a mimic, an animated type whose tier
+    /// names no grade words (all but the blades), or one whose file says `grades = false` (the
+    /// people).
     pub grades: bool,
     /// Presentation-only: the words of its lesser and greater grade in look mode ("scrawny",
     /// "big"): its file's, else its tags' default, else "small" and "big".

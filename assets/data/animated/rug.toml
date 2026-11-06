@@ -1,4 +1,6 @@
-# The rug of smothering, the household tier's one trick: it may hold what it wraps.
+# The rug of smothering, the household tier's one trick: it closes over what it wraps (engulfed,
+# the dread design §13: the first engulfer the player meets, in Fennmynster), at a gentler grip
+# and harm than the charnel heap's: 1 a tick, not the status's 2.
 [[body]]
 id = "rug"
 object = "rug"
@@ -6,6 +8,6 @@ level = 7
 rarity = "rare"
 speed = 1000
 attack = { damage_type = "bludgeoning", name = "folds", verb = "wraps" }
-on_hit = [{ status = "held", chance = 10 }]
+on_hit = [{ status = "engulfed", chance = 15, difficulty = 12, damage = 1 }]
 moves = "rippling"
 dies = "falls in a heap"

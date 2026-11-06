@@ -477,6 +477,8 @@ impl World {
             let stat_check = self.until_stat_check(id, now);
             // Hallowed ground fading: the paces change then (`sanctuary.rs`).
             let unhallowed = self.until_unhallowed(id, now);
+            // A hold's harm where its holder's attack names its own (`hold.rs`).
+            let harms = self.hold_harms(id);
             let Some(actor) = self.state.actors.get_mut(&id) else {
                 return;
             };
@@ -574,7 +576,9 @@ impl World {
                 let every = eases(e);
                 let (ticks, eased) = e.advance_every(def, every, step);
                 if ticks > 0 && !numb.contains(&e.status) {
-                    let cost = u64::from(def.damage) * ticks;
+                    let damage = (harms.iter().find(|(s, _)| *s == e.status))
+                        .map_or(def.damage, |&(_, d)| d);
+                    let cost = u64::from(damage) * ticks;
                     moment.damage += i32::try_from(cost).unwrap_or(i32::MAX);
                     let drain = u64::from(def.mana_damage) * ticks;
                     let drain = i32::try_from(drain).unwrap_or(i32::MAX);

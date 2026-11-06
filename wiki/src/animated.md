@@ -1,7 +1,7 @@
 # Animated objects
 
 Things a will set moving and left behind: a candlestick that rocks after you, a teapot that
-scalds, a broom that scuttles, a rug that wraps around your legs. They set on the living who
+scalds, a broom that scuttles, a rug that closes over you. They set on the living who
 come near and leave everything else alone. The household ones are almost harmless, and worth
 killing for what they are made of: a silver candlestick is a prize at any level. Deeper, a
 sword, an axe, or a staff dances alone: an **[animated blade](creatures.md#creature-animated-blade-5)**, quick and fragile, and its weapon
@@ -59,6 +59,19 @@ can still be [frightened](status-effects.md#status-frightened) (rarely: their wi
 What they are made of decides what hurts them most: wood and cloth [burn](damage-types.md#damage-fire), metal takes [lightning](damage-types.md#damage-electricity)
 badly, and glass, stone, and bone shatter under heavy blows. Nothing can be [stolen](abilities.md#ability-steal) from them:
 what they carry is what they are.
+
+A few have a trick of their own. The [animated rug](creatures.md#creature-animated-rug), the
+rug of smothering, now and then closes over what it wraps: you are
+[engulfed](status-effects.md#status-engulfed) until you struggle free or it dies, and it costs
+you 1 [hit point](combat.md#hit-points) a tick, where a
+[charnel heap](creatures.md#creature-charnel-heap)'s costs 2. The
+[bellows'](creatures.md#creature-animated-bellows) gust may leave you
+[staggered](status-effects.md#status-staggered). The
+[animated lantern](creatures.md#creature-animated-lantern)'s oil bursts as it dies, burning
+everyone beside it ([death throes](creature-numbers.md#bursts): step back from a dying one). And
+blades, like most creatures, come in [grades](creatures.md#grades): one in six is **notched**,
+weaker than its kind, and one in six **keen**, stronger; look mode says which. No other
+animated thing is graded.
 
 ## What their magic does for them
 

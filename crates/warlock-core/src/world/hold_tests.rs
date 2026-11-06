@@ -141,14 +141,16 @@ fn a_bite_holds_with_its_grip_for_a_few_turns_tied_to_the_biter() {
         claw("zz_grabber"),
         Affliction::Hold {
             status,
-            difficulty: Some(40)
+            difficulty: Some(40),
+            damage: None
         }
     );
     assert_eq!(
         claw("zz_clutcher"),
         Affliction::Hold {
             status,
-            difficulty: None
+            difficulty: None,
+            damage: None
         }
     );
     // A hold's degrees are the turns it lasts, drawn.

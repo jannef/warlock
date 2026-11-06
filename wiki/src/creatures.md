@@ -234,7 +234,8 @@ mode](controls.md#look-mode) tells you which, with a word before its name: "a bi
 [kobold](creatures.md#creature-kobold)", "a scrawny kobold", "an ancient zombie"; messages call
 it by its kind alone. Killing one is worth what its kind is worth in
 [experience](experience.md), whatever its grade. Unique creatures, the peaceful and trading folk,
-[animated objects](animated.md), and [mimics](mimics.md) are never graded, and neither is
+[animated objects](animated.md) but the blades ("a notched animated blade", "a keen" one), and
+[mimics](mimics.md) are never graded, and neither is
 your own [companion](allies.md#companions) or [familiar](allies.md#familiars): they [grow](allies.md#growth) with you instead.
 
 {{#include generated/creature-grades.md}}
