@@ -237,6 +237,12 @@ ranks of weapon skills and fighting styles teach them (see
 - **[Opportunist](talents.md#talent-opportunist)**: a [hostile](creatures.md#factions) creature that steps away from beside you is struck as it turns to
   go; it may not live to take the step. A creature that fights this way strikes you the same
   way when you step away from it.
+- **[Gatekeeper](talents.md#talent-gatekeeper)**: the Barghest's gift (see [The horoscope](horoscope.md#what-a-sign-does)). A [hostile](creatures.md#factions) creature that steps up
+  beside you from out of your reach may take a blow as it comes, after its step. It is a chance
+  that rides on your [stance](#stances): one time in 4 when neutral, twice that when aggressive, half
+  when defensive, a quarter as a coward, and every time in a frenzy (the *Gatekeeper's blow*
+  column of the stances table). [Brace](weapon-skills.md#weapon-ability-brace), a rank's blow of the same kind, strikes every time, and so
+  does a [thief](classes.md#thief) who [lurks](abilities.md#ability-lurk).
 
 A free blow is a blow like any other: it can miss, wound, and kill, and it trains your [weapon
 skill](weapon-skills.md). It never brings another free blow, except a cleave after a cleave.

@@ -436,8 +436,40 @@ pub(super) fn to_hit(content: &Content) -> String {
     out
 }
 
+/// The Gatekeeper gift's chance of a blow in a stance whose `gatekeeper` percent is `percent`:
+/// "1 in 4", "always" (the talent's `one_in` scaled, at most always); "-" without the talent.
+fn gatekeeper_chance(content: &Content, percent: u32) -> String {
+    use warlock_core::content::{FreeBlowTrigger, TalentEffect};
+    let book = content.talents();
+    let one_in = (book.id("gatekeeper").map(|t| book.get(t).effects.iter()))
+        .into_iter()
+        .flatten()
+        .find_map(|e| match e {
+            TalentEffect::FreeBlow {
+                trigger: FreeBlowTrigger::Gatekeeper,
+                one_in,
+            } => *one_in,
+            _ => None,
+        });
+    let Some(one_in) = one_in else {
+        return "-".into();
+    };
+    let of = one_in * 100;
+    if percent >= of {
+        return "always".into();
+    }
+    let gcd = |mut a: u32, mut b: u32| {
+        while b != 0 {
+            (a, b) = (b, a % b);
+        }
+        a
+    };
+    let g = gcd(percent, of);
+    format!("{} in {}", percent / g, of / g)
+}
+
 /// The combat stances: what each does to the player's attacks, Defence, and speed (percent for
-/// costs and noise; "-" for no change).
+/// costs and noise; "-" for no change), and the Gatekeeper gift's chance in each.
 pub(super) fn stances(content: &Content) -> String {
     let bonus = |n: i32| match n {
         0 => "-".to_string(),
@@ -453,13 +485,13 @@ pub(super) fn stances(content: &Content) -> String {
     };
     let mut out = String::from(
         "| Stance | To hit | Damage | Dodge | Parry | Attacks cost | Fleeing steps cost | \
-         Fleeing steps' noise | Weapon marks count |\n\
-         |---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|\n",
+         Fleeing steps' noise | Weapon marks count | Gatekeeper's blow |\n\
+         |---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|\n",
     );
     for s in content.stances().all() {
         let _ = writeln!(
             out,
-            "| {} | {} | {} | {} | {} | {} | {} | {} | {} |",
+            "| {} | {} | {} | {} | {} | {} | {} | {} | {} | {} |",
             anchored(Term::Stance, &s.name, &s.name),
             bonus(s.to_hit),
             bonus(s.damage),
@@ -469,6 +501,7 @@ pub(super) fn stances(content: &Content) -> String {
             percent(s.flee_cost),
             percent(s.flee_noise),
             percent(s.weapon_mark),
+            gatekeeper_chance(content, s.gatekeeper),
         );
     }
     out
