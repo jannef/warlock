@@ -11,7 +11,7 @@ resolution = "area"
 damage_type = "poison"
 range = 8
 radius = 2
-damage = "2d6"
+damage = "4d6"
 effect = { status = "poisoned", severity = 1 }
 
 [spell.cast]
@@ -22,5 +22,5 @@ message = "A sickly cloud bursts from your hands!"
 noise = { sound = "explosion", loudness = 60 }
 
 [spell.grows]
-damage = "willpower 16 3d6, 22 3d6+3"
+damage = "willpower 16 6d6, 22 6d6+3"
 range = "willpower 14 9, 18 10"

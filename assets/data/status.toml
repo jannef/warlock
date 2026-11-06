@@ -310,6 +310,16 @@ max = 100
 stacking = "refresh"
 eases = 6
 
+# A dragon's breath spent (spec §8 "Creature behavior": "Dragons", the creatures'
+# `[creature.breath]`): a degree for every six seconds of its `cooldown`; while it lasts the
+# dragon fights with claws and bite. Creatures only: no one sees it on them.
+[[status]]
+id = "breath"
+name = "Breath spent"
+max = 100
+stacking = "refresh"
+eases = 6
+
 # Blaze's cooldown (the Fire-born's gift, spec §8 "Birth sign"): twelve hours before the fire in
 # them kindles again. Nothing else; time is the penalty.
 [[status]]

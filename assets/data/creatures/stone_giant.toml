@@ -28,7 +28,7 @@ damage = "3d10"
 damage_type = "bludgeoning"
 name = "stone club"
 verb = "clubs"
-to_hit = 2
+to_hit = 6
 [creature.throw]
 object = "boulder"
 damage = "4d6"

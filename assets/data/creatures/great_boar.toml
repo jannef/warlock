@@ -29,3 +29,4 @@ damage = "2d6"
 damage_type = "piercing"
 name = "tusks"
 verb = "gores"
+to_hit = 1

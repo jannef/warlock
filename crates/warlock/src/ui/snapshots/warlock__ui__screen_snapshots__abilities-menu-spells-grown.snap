@@ -2,33 +2,33 @@
 source: crates/warlock/src/ui/screen_snapshots.rs
 expression: "render(case, content.clone())"
 ---
- You learn┌─ Abilities ─────────────────────────────────────────────────────────────────┐
- Your thou│                                                                             │
-          │ Class                                                                       │
-          │   a  Knock             in a direction                                       │
-          │   b  Scribe            a scroll of a spell you know                         │
-          │ Spells                                                                      │
-          │   c  Burning hands     2d4+2 fire, burns one in four, 2 mana, aimed         │
-          │   d  Ray of frost      1d8 cold, numbs, 1 mana, aimed                       │
-          │ > e  Magic missile     3d4+1 force, shoves on a big hit, 2 mana, aimed      │
-          │   f  Arcane bolt       3d6+4 force, shoves on a big hit, 7 mana, aimed      │
-          │   g  Blink             4 mana                                               │
-          │   h  Shatter           3d6+4 force, shoves on a big hit, 10 mana, aimed     │
-          │   i  Chain lightning   6d6+3 electricity, may arc, conducts, 14 mana, aimed │
-          │ Skills                                                                      │
-          │   j  Decipher          no unknown scroll                                    │
-          │   k  Heal              nothing to treat                                     │
-          │   l  Knowledge         not usable yet                                       │
-          │   m  Listen at a door  in a direction                                       │
-          │   n  Fletch            you have no knife                                    │
-          │   o  Whittle           you have no knife                                    │
-          │ Weapon skills                                                               │
-          │   p  Shield bash       you hold no shield                                   │
-          │                                                                             │
-          │ A dart of force toward a place you aim at: it never misses the first        │
-          │ creature in its way. Range 8.                                               │
-          │                                                                             │
-          │                                                                             │
-          │ a-p or Enter use   Esc close                                                │
-          └─────────────────────────────────────────────────────────────────────────────┘
+ You learn┌─ Abilities ──────────────────────────────────────────────────────────────────┐
+ Your thou│                                                                              │
+          │ Class                                                                        │
+          │   a  Knock             in a direction                                        │
+          │   b  Scribe            a scroll of a spell you know                          │
+          │ Spells                                                                       │
+          │   c  Burning hands     4d4+2 fire, burns one in four, 2 mana, aimed          │
+          │   d  Ray of frost      2d8 cold, numbs, 1 mana, aimed                        │
+          │ > e  Magic missile     6d4+1 force, shoves on a big hit, 2 mana, aimed       │
+          │   f  Arcane bolt       6d6+4 force, shoves on a big hit, 7 mana, aimed       │
+          │   g  Blink             4 mana                                                │
+          │   h  Shatter           6d6+4 force, shoves on a big hit, 10 mana, aimed      │
+          │   i  Chain lightning   12d6+3 electricity, may arc, conducts, 14 mana, aimed │
+          │ Skills                                                                       │
+          │   j  Decipher          no unknown scroll                                     │
+          │   k  Heal              nothing to treat                                      │
+          │   l  Knowledge         not usable yet                                        │
+          │   m  Listen at a door  in a direction                                        │
+          │   n  Fletch            you have no knife                                     │
+          │   o  Whittle           you have no knife                                     │
+          │ Weapon skills                                                                │
+          │   p  Shield bash       you hold no shield                                    │
+          │                                                                              │
+          │ A dart of force toward a place you aim at: it never misses the first         │
+          │ creature in its way. Range 8.                                                │
+          │                                                                              │
+          │                                                                              │
+          │ a-p or Enter use   Esc close                                                 │
+          └──────────────────────────────────────────────────────────────────────────────┘
  The Hub  ·  HP 43/43  ·  MP 306/308  ·  Keen  ·  Lv 32  ·  08:00  ·  11 Darkening       ? controls

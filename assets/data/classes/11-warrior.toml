@@ -10,7 +10,7 @@ skills = { athletics = "2d6+10", balance = "2d4+4", initiative = "2d4+4", intimi
 known_for = ["athletics"]
 optional_skills = { heal = { chance = 15, dice = "2d4" }, metalcraft = { chance = 15, dice = "2d4" }, survival = { chance = 30, dice = "2d4" } }
 rolls = 2
-weapon_skills = { long_blades = 2, shield_block = "1d2" }
+weapon_skills = { long_blades = 2 }
 styles = { sword_and_board = 1 }
 # Sword and shield, a jerkin of hardened leather and an iron helm, rations, and a soldier's pay.
 kit = [

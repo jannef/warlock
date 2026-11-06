@@ -50,7 +50,8 @@ Game flags (`cargo run -p warlock -- --help`):
   trap hall, `summoners` in the summoning hall's south hall (three summoners behind doors), `chests`
   in the chest hall (every kind of chest, a mimic, and both treasure rooms), `cealdhlaw` on the first floor of Cealdhlāw, the Ascmearc's first dungeon, `fennmynster` on
   the first floor of Fennmynster, the drowned minster's cellars, `fyrdelf` on the first floor of Fyrdelf,
-  its deepest, `grundleas` on the first floor of Grundlēas, the endless branch that forgets each floor left, `shrine` before three forgotten altars, good, neutral, and evil, to pray at, `forge`
+  its deepest, `grundleas` on the first floor of Grundlēas, the endless branch that forgets each floor left, `drake`
+  in a lava hall eleven cells from the fire drake, a dragon (a level-1 warrior: give levels with `xp:` and `levelup:auto`), `shrine` before three forgotten altars, good, neutral, and evil, to pray at, `forge`
   beside a forge's anvil with arms and armour to temper, `spring` below a cave room with a healing
   spring to drink at, `circles` in a hall of peaceful kobolds already buffed and hexed, knowing
   every buff and hex spell with 300 mana, for the spell circles), `--seed S`
@@ -220,7 +221,7 @@ around level cell (X, Y), in its line of sight; no time); `zone:KIND@X,Y,R` is t
 `memory` (seen terrain, remembered objects, and known traps), `light` (perceived brightness of
 visible cells as a digit, `0` dark to `9` fully lit), `sound` (heard sounds at their rough places
 over the view: `f` footsteps, `o`/`c` a door opening/closing, `x` fighting, `b` a bowstring, `m`
-chanting, `k` banging (a door kicked), `d` digging, `v` a voice, `h` a howl, `q` a heartbeat, `a` an alarm bell, `e` an
+chanting, `k` banging (a door kicked), `d` digging, `v` a voice, `h` a howl, `r` a roar (a dragon's breath), `q` a heartbeat, `a` an alarm bell, `e` an
 explosion, `t` a thunderclap, upper case when loud), `blood` (blood the
 player sees or remembers as a digit over the view, `1` a few drops to `9` soaked), `inventory`
 (what the player

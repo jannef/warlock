@@ -32,4 +32,4 @@ damage = "3d8"
 damage_type = "fire"
 name = "hooves"
 verb = "tramples"
-to_hit = 2
+to_hit = 5

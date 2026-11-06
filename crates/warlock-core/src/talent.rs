@@ -408,6 +408,9 @@ pub struct TalentMods {
     pub distrusted: bool,
     /// The free blows its talents switch on.
     pub free_blows: FreeBlows,
+    /// The gatekeeper's blow by chance, one in this many (Gatekeeper; the stance scales it,
+    /// `free_blow.rs::gatekeeper_odds`): the likeliest of its talents'.
+    pub gatekeeper_one_in: Option<u32>,
     /// What attacks with some weapon skills gain ([`TalentMods::weapon_benefit`]).
     pub weapon: Vec<WeaponBonus>,
     /// Cells farther the readied missile weapon shoots.
@@ -1498,7 +1501,7 @@ impl TalentMods {
                 }
             }
             TalentEffect::Distrusted => self.distrusted = true,
-            TalentEffect::FreeBlow { trigger } => {
+            TalentEffect::FreeBlow { trigger, one_in } => {
                 use crate::content::FreeBlowTrigger as T;
                 match trigger {
                     // Two cleaves together (Cleaving strike and Cleave) cleave on and on.
@@ -1508,7 +1511,13 @@ impl TalentMods {
                     T::Riposte => self.free_blows.riposte = true,
                     T::Opportunist => self.free_blows.opportunist = true,
                     T::Flurry => self.free_blows.flurry = true,
-                    T::Gatekeeper => self.free_blows.gatekeeper = true,
+                    T::Gatekeeper => match one_in {
+                        Some(n) => {
+                            let least = self.gatekeeper_one_in.map_or(n, |m| m.min(n));
+                            self.gatekeeper_one_in = Some(least);
+                        }
+                        None => self.free_blows.gatekeeper = true,
+                    },
                 }
             }
             TalentEffect::Weapon {
@@ -2607,6 +2616,7 @@ mod tests {
                 TalentEffect::Notice { value: 2 },
                 TalentEffect::FreeBlow {
                     trigger: crate::content::FreeBlowTrigger::Riposte,
+                    one_in: None,
                 },
             ],
         );

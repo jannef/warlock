@@ -23,4 +23,4 @@ natural = { defence = 1, protection = 1, name = "hide" }
 resist = { fire = 50, cold = 25, electricity = 25, poison = 100 }
 corpse = false
 blood = "#3a1a10"
-attack = { damage = "3d10", damage_type = "slashing", name = "claws", verb = "rakes", to_hit = 2 }
+attack = { damage = "3d10", damage_type = "slashing", name = "claws", verb = "rakes", to_hit = 6 }

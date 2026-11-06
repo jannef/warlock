@@ -34,7 +34,7 @@ Every spell has a **[level](#spell-levels)**, 0 to 70: what it costs in [mana](m
 be to take it from a scroll for certain. Every spell has a **base**, what it does for anyone who
 casts it, and may have **ladders**: for its damage (or healing), its reach, and how long its
 effect lasts. A ladder names one [stat](stats.md) and lists scores with what the spell does at each:
-*[Fireball](#spell-fireball): 2d6 fire; Intelligence 13: 3d6, 16: 4d6, 19: 5d6, 25: 5d6+2*. When your score
+*[Fireball](#spell-fireball): 4d6 fire; Intelligence 13: 6d6, 16: 8d6, 19: 10d6, 25: 10d6+2*. When your score
 reaches a number, you cast that rung. **The last rung is as far as your stats take it.** Your
 [talents](talents.md) and [magic items](magic-items.md) may add to that in their own ways, each said in its own row: a rung
 up, a die more, bigger dice, a bonus, a die rolled again (see [How a spell grows](#how-a-spell-grows)). A
@@ -285,7 +285,7 @@ Your [talents](talents.md) and [magic items](magic-items.md) may add to that, ea
 
 They apply in that order: the rung, then the dice, then the roll (with its rerolls), then the
 harm, then the riders. A [critical](combat.md#criticals) rolls the dice twice, as a blow's does. A **[spell scroll](scrolls.md#spell-scrolls)**
-you read casts at the rung the scroll's row says (the [scroll of fireball](scrolls.md#scroll-of-fireball)'s is 1: 3d6), a rung higher
+you read casts at the rung the scroll's row says (the [scroll of fireball](scrolls.md#scroll-of-fireball)'s is 1: 6d6), a rung higher
 with *[Scroll adept](talents.md#talent-scroll-adept)*, whatever your stats; a **[wand](#wands)** at a rung of its own, a rung higher with
 *[Wand mastery](talents.md#talent-wand-mastery)* and higher again by *of Wands*. Your other talents and items work on them as on
 your own casts, and their reach and degrees are yours. Most of these talents are Spellcraft's,
@@ -372,7 +372,7 @@ its **charges** stay unknown until you [identify](magic-items.md#unidentified-it
 
 *[Wand mastery](talents.md#talent-wand-mastery)* (Weaponcraft) takes every wand you use a rung up, and [magic items](magic-items.md#suffixes)
 *of Wands* their rungs with it, never past the ladder's last rung. Once you know a wand, its
-description and the aiming line say what it does in your hands ("Holds Fireball: 4d6 fire,
+description and the aiming line say what it does in your hands ("Holds Fireball: 8d6 fire,
 radius 2"), your talents and items counted.
 
 {{#include generated/wands.md}}

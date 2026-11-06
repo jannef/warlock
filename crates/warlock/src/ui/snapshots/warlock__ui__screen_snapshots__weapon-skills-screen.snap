@@ -9,19 +9,19 @@ expression: "render(case, content.clone())"
 ┌─ Weapon skills ──────────────────────────────────────────────────────────────────────────────────┐
 │                                                                                                  │
 │ Melee                                       Shields                                              │
-│   Daggers and knives       2  ──────────      Shield blocking          0  ──────────             │
-│   Short blades             0  ──────────      Shield bashing           0  ──────────             │
-│   Long blades              0  ──────────                                                         │
-│   Great blades             0  ──────────    Fighting styles                 • in use             │
-│   Axes                     0  ──────────      Duelist                  0  ──────────             │
-│   Maces and clubs          0  ──────────      Twin Blades              1  ──────────             │
-│   Spears                   0  ──────────      Great Weapon             0  ──────────             │
-│   Polearms                 0  ──────────      Sword and Board          0  ──────────             │
-│   Staves                   0  ──────────    • Marksman                 0  ━━━━━━────             │
-│   Unarmed                  0  ──────────      Skirmisher               0  ──────────             │
-│                                             • Brawler                  0  ──────────             │
-│ Missile and thrown                            Staff Fighter            0  ──────────             │
-│   Bows                     0  ━━━━━━────                                                         │
+│   Daggers and knives       2  ──────────      Shield bashing           0  ──────────             │
+│   Short blades             0  ──────────                                                         │
+│   Long blades              0  ──────────    Fighting styles                 • in use             │
+│   Great blades             0  ──────────      Duelist                  0  ──────────             │
+│   Axes                     0  ──────────      Twin Blades              1  ──────────             │
+│   Maces and clubs          0  ──────────      Great Weapon             0  ──────────             │
+│   Spears                   0  ──────────      Sword and Board          0  ──────────             │
+│   Polearms                 0  ──────────    • Marksman                 0  ━━━━━━━━──             │
+│   Staves                   0  ──────────      Skirmisher               0  ──────────             │
+│   Unarmed                  0  ──────────    • Brawler                  0  ──────────             │
+│                                               Staff Fighter            0  ──────────             │
+│ Missile and thrown                                                                               │
+│   Bows                     0  ━━━━━━━━──                                                         │
 │   Crossbows                0  ──────────                                                         │
 │   Slings                   1  ──────────                                                         │
 │   Thrown weapons           1  ──────────                                                         │

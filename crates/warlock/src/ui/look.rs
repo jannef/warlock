@@ -451,8 +451,16 @@ mod tests {
         let mut w = World::start_run(content, "showcase", None, Some(&spec), None, true)
             .expect("a ranger's run");
         // To the darkness chamber's amulet and out to the hound, in the light of the lantern.
-        let walk = "move:N*3 open:N move:N*2 move:E*30 open:N move:N*3 move:W*6 move:N*5 move:E*6 move:S*2 move:W*2 pickup move:E*2 move:N*2 wait*2 move:W use_tool give:k";
+        let walk = "move:N*3 open:N move:N*2 move:E*30 open:N move:N*3 move:W*6 move:N*5 move:E*6 move:S*2 move:W*2 pickup move:E*2 move:N*2 wait*2 move:W use_tool";
         for action in warlock_core::action::parse_actions(walk).expect("actions") {
+            w.apply(&action);
+        }
+        // The amulet picked up, wherever the kit left room for it (a ranger's random scrolls).
+        let amulet = (w.perception().inventory().iter())
+            .position(|s| w.content().object(s.object).id == "bone_amulet")
+            .expect("the amulet");
+        let give = format!("give:{amulet}");
+        for action in warlock_core::action::parse_actions(&give).expect("actions") {
             w.apply(&action);
         }
         let view = w.perception();

@@ -445,6 +445,7 @@ mod tests {
             strike: None,
             with: None,
             damage: None,
+            natural: None,
         };
         let events = [
             attack(3, AttackKind::Melee, (4, 4), (5, 3)),

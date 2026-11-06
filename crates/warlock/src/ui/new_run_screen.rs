@@ -177,13 +177,24 @@ impl NewRunScreen {
         };
         // The seed field and its hint take three rows, with the gap above them.
         let h = 11 + 3 * i32::from(field.is_some()) + self.rows.len() as i32;
+        // A list taller than the console scrolls, keeping the selected scenario in view: the
+        // frame, the gaps, the description, the seed field, and the footer take the rest.
+        let described = (self.scenarios.get(self.selected))
+            .map_or(0, |info| wrap(&info.description, 60 - 4 - 2).len() as i32);
+        let fixed = 5 + described + 3 * i32::from(field.is_some());
+        let room = usize::try_from(console.rows() as i32 - fixed).map_or(1, |r| r.max(1));
+        let at = (self.rows.iter())
+            .position(|r| matches!(r, Row::Scenario(i) if *i == self.selected))
+            .unwrap_or(0);
+        let first = (at + 1).saturating_sub(room);
+        let shown = self.rows.len().min(room);
         let panel = Panel::new(console, " New run ", 60, h);
         let x = panel.inner_x();
         let mut y = panel.y + 2;
         if self.scenarios.is_empty() {
             console.print(x, y, "No scenarios are installed.", TEXT);
         }
-        for row in &self.rows {
+        for row in self.rows.iter().skip(first).take(shown) {
             match row {
                 Row::Heading(name) => {
                     console.print(x, y, name, TEXT_DIM);
@@ -362,6 +373,18 @@ mod tests {
         }
         let seed = warlock_core::rng::parse_seed("jolly").expect("a seed");
         assert_eq!(s.pick().map(|p| p.seed), Some(seed));
+    }
+
+    #[test]
+    fn a_list_taller_than_the_console_scrolls_to_the_selected_scenario() {
+        let mut s = screen();
+        s.selected = s.scenarios.len() - 1;
+        let last = s.scenarios[s.selected].name.clone();
+        let first = s.scenarios[0].name.clone();
+        let text = drawn(&s);
+        assert!(text.contains(&format!("> {last}")), "{text}");
+        assert!(text.contains("Type a number or a word"), "{text}");
+        assert!(!text.contains(&format!("> {first}")), "{text}");
     }
 
     #[test]

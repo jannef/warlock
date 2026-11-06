@@ -3,7 +3,7 @@
 The more you fight with a kind of weapon, the better you get with it, as in ADOM. Every kind of
 weapon is a **weapon skill** with a **rank** from 0 (untrained) to 10. Each attack you make
 earns **marks** in the skill it uses, and when you have enough marks you gain a rank: "You feel
-more skilled with long blades." Shields are skills too: one for [blocking](weapon-skills.md#weapon-skill-shield-block) with a [shield](objects.md#class-shields), one for
+more skilled with long blades." A [shield](objects.md#class-shields) has a skill too, for
 [bashing](weapon-skills.md#weapon-skill-shield-bash) with it.
 
 Skill with one weapon carries over to related ones, as in the tabletop game *The Riddle of
@@ -18,9 +18,9 @@ Every weapon belongs to one skill (see the weapon tables in [Combat](combat.md#d
 thrown is not a dagger held. **[Unarmed](weapon-skills.md#weapon-skill-unarmed)** is fighting with your bare hands, and every [kick](doors.md#kicking) at a
 creature, whatever you wield (see [Doors](doors.md)).
 
-**[Shield blocking](weapon-skills.md#weapon-skill-shield-block)** trains when your [shield](objects.md#class-shields) stops a blow: when the message says "You block the
-kobold's spear with your shield." It adds to the Shield part of your [Defence](combat.md#defence)
-while you hold a shield. **[Shield bashing](weapon-skills.md#weapon-skill-shield-bash)** is an attack of its own: it bashes whoever stands
+No skill trains when your [shield](objects.md#class-shields) stops a blow: the shield's own Shield part of your
+[Defence](combat.md#defence) grows only with the shield styles, [Sword and Board](fighting-styles.md#style-sword-and-board) and
+[Two Shields](fighting-styles.md#style-two-shields). **[Shield bashing](weapon-skills.md#weapon-skill-shield-bash)** is an attack of its own: it bashes whoever stands
 in a direction with the shield you hold, for the shield's own [damage](combat.md#damage) (and your [Strength](stats.md#stat-strength), as
 every blow), in the time of a blow. You need a shield to bash with, and you bash only what is
 [hostile](creatures.md#factions) to you. A shield bash is an *ability*: choose it from the abilities menu (`a`, see
@@ -111,7 +111,7 @@ nobody to strike or nothing to shoot, costs nothing):
 
 The menu greys an active out while you are short of stamina ("you are short of breath") or while
 what you hold is not for it ("your hands are not so held": [Lunge](weapon-skills.md#weapon-ability-lunge) needs a spear or a staff in
-hand, [Shield wall](weapon-skills.md#weapon-ability-shield-wall) a shield, a style's actives its grip). Each active is its own action: three in
+hand, a style's actives its grip: [Shield wall](fighting-styles.md#style-ability-shield-wall) a shield and a weapon, or two shields). Each active is its own action: three in
 three turns cost the three together, and the empty pool is the price; with a pool of 12 that
 comes back a point every 12 seconds, a 5-point active comes at best once every ten turns. A
 character without stamina is given it, full, by the first rank that teaches an active ("You
@@ -124,7 +124,7 @@ learn to pace your breath."). Creatures use no actives.
   once.
 - **[Sunder](weapon-skills.md#weapon-ability-sunder)** and **[Gap shot](fighting-styles.md#style-ability-gap-shot)** ignore all [Protection](combat.md#protection); against a foe with none they cost the same
   and do nothing more (the game never tells you a foe's Protection).
-- **[Shield wall](weapon-skills.md#weapon-ability-shield-wall)** leaves you [Walled](status-effects.md#status-walled) for 5 turns: your Shield +3 on top of the shield's own, and
+- **[Shield wall](fighting-styles.md#style-ability-shield-wall)** ([Sword and Board](fighting-styles.md#style-sword-and-board) or [Two Shields](fighting-styles.md#style-two-shields)) leaves you [Walled](status-effects.md#status-walled) for 5 turns: your Shield +3 on top of the shield's own, and
   every attack you make takes a quarter longer. Walled and [Hasted](status-effects.md#status-hasted) multiply.
 
 {{#include generated/weapon-abilities.md}}

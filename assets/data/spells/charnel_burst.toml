@@ -13,7 +13,7 @@ resolution = "area"
 damage_type = "necrotic"
 range = 8
 radius = 1
-damage = "2d6"
+damage = "4d6"
 effect = { corpse = "consumed" }
 
 [spell.cast]
@@ -23,5 +23,5 @@ verb = "tears"
 noise = { sound = "explosion", loudness = 60 }
 
 [spell.grows]
-damage = "willpower 13 3d6, 16 4d6, 19 5d6, 25 5d6+2"
+damage = "willpower 13 6d6, 16 8d6, 19 10d6, 25 10d6+2"
 range = "willpower 14 9, 18 10"

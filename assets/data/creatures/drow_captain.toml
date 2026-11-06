@@ -29,7 +29,7 @@ damage = "3d10"
 damage_type = "slashing"
 name = "envenomed long sword"
 verb = "cuts"
-to_hit = 3
+to_hit = 9
 on_hit = [{ status = "poisoned", chance = 25, severity = 3 }, { status = "frightened", chance = 10, severity = 1 }]
 # Its gear (spec §8 "Creature gear"): armour and coins, never a weapon (its venom rides on
 # its natural attack, which a wielded weapon would replace).

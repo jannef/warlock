@@ -31,5 +31,5 @@ damage = "4d10"
 damage_type = "piercing"
 name = "bite"
 verb = "bites"
-to_hit = 6
+to_hit = 16
 on_hit = [{ drain = "intelligence", points = 2, chance = 10, difficulty = 24 }]

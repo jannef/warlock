@@ -31,7 +31,7 @@ damage = "4d8"
 damage_type = "cold"
 name = "touch"
 verb = "touches"
-to_hit = 6
+to_hit = 15
 on_hit = [
     { drain = "strength", points = 2, chance = 15, difficulty = 24 },
     { status = "frightened", chance = 25, severity = 3 },

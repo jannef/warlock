@@ -9,7 +9,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
   random stream.
   - **Hitting**: an attack hits when 2d12 (its *natural* roll, 2 to 24, average 13) plus its
     to-hit is at least the target's **Defence** ("Dv"). A natural 2 always misses (and is a plain
-    miss), a natural 24 always hits. To-hit is the attack's own (`to_hit`, default 0) plus, in
+    miss), a natural 22, 23, or 24 always hits (6 of the 144 rolls, about 4.2 %: however high a
+    Defence climbs, about one blow in 24 lands; a check's sure success stays a natural 24 alone,
+    §8 "Checks"). To-hit is the attack's own (`to_hit`, default 0) plus, in
     melee, the attacker's Strength modifier (with a `finesse` weapon, §7, the Dexterity modifier
     instead, even when it is the lower), and for a shot the Dexterity modifier. At +0 against
     Defence 10 an attack hits 75 % of the time; each point is worth about 7–8 points of chance
@@ -17,7 +19,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
   - **Criticals** (3.5's threat range and confirmation): a hit whose natural roll is at least
     the attack's `threat` (default 22, "22–24", 3.5's natural 20 by probability; 20 for 3.5's
     19–20, 19 for 18–20) threatens; a second roll with the same to-hit against the same Defence
-    confirms it (by the same rule: 2 never, 24 always), and then the damage is rolled `crit`
+    confirms it (by the same rule: 2 never, 22 or better always, so every default threat is a
+    sure hit and confirms at least 6 times in 144), and then the damage is rolled `crit`
     times (default 2), modifiers each time. At +0 against Defence 10 a default weapon confirms
     on 3.1 % of attacks, a 19–24 one on 10.9 %.
   - **Damage**: the attack's dice (their fixed part included) plus its bonus, at least 1 a hit.
@@ -31,7 +34,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     weapon's own attack, Dexterity to hit and Strength to damage.
   - **Weapon skills** ("Weapon skills" below): the rank in the skill an attack draws on adds to
     its to-hit and damage and widens its threat range; the wielded weapon's skill adds to its
-    Parry and shield blocking to a held shield's Shield; a high rank makes an attack cheaper.
+    Parry; a high rank makes an attack cheaper.
     The fighting style the attack is fought in adds its own ("Fighting styles" below).
   - **Defence** = 10 + one bonus per category: **Dexterity** (the Dexterity modifier, capped
     by the lowest `max_dex` of what the actor wears and by its burden, +3 Burdened, +1 Strained,
@@ -291,11 +294,13 @@ developer notes (CLAUDE.md, `docs/dev/`).
   `flee_cost` and `flee_noise` (percent of the price and the loudness of a step that **flees**:
   the actor has a hostile next to it and the step ends out of that creature's reach,
   `World::flees`), and `weapon_mark` (percent: the multiplier for weapon skill marks, the hook
-  for #134; nothing counts marks yet). Bonuses are -20 to 20, percentages 10 to 1000. Shipped
+  for #134; nothing counts marks yet), and `gatekeeper` (percent: scales the Gatekeeper gift's
+  chance of a blow, capped at always, §8 "Free blows"). Bonuses are -20 to 20, percentages 10 to 1000. Shipped
   numbers (first guesses, tuned by playtesting; none is ever shown, only the stance's name):
   aggressive +1 to hit, +2 damage, -3 Dodge, marks ×1.25; defensive -2 to hit, -1 damage, +2
   Dodge, +1 Parry; coward -4 to hit, -3 damage, +4 Dodge, attacks ×1.25, fleeing steps ×0.85
-  and half as loud; frenzy +2 to hit, +4 damage, -6 Dodge, fleeing steps ×1.5, marks ×1.25.
+  and half as loud; frenzy +2 to hit, +4 damage, -6 Dodge, fleeing steps ×1.5, marks ×1.25;
+  the Gatekeeper's chance ×2 aggressive, ×½ defensive, ×¼ coward, ×4 (always) frenzy.
   **Frenzy** (`world/frenzy.rs`) is never chosen: `World::set_stance` refuses it ("Only
   rage brings the frenzy.", `Spent::Nothing`), and refuses every stance while the player rages
   ("Your rage holds you in the frenzy."), so `stance:frenzy` and `+`/`-` (which
@@ -348,6 +353,13 @@ developer notes (CLAUDE.md, `docs/dev/`).
     up beside the actor from a cell out of its reach is struck as it comes, after its step
     (`World::step_up`, from `creature_steps`); each gatekeeper it was not beside strikes, in
     actor order. Like the opportunist's, an attack of its own: it makes the fight's noise.
+    The Barghest's gift strikes **by chance** (#1094): one in its effect's `one_in` (4), the
+    chance scaled by the stance's `gatekeeper` percent (`data/stances.toml`: aggressive 200,
+    defensive 50, coward 25, frenzy 400) and capped at always: 1/2, 1/4, 1/8, 1/16, and 1/1 in
+    a frenzy (`World::gatekeeper_odds`). One draw per approach, from a stream of its own derived
+    on demand (`gatekeeper/<keeper>/<mover>/<second>`), never the gameplay stream; drawn only
+    once the blow would be struck. The other gatekeepers' blows (`FreeBlows::gatekeeper`: a class
+    switch, Brace, a lurk) strike every time.
   - **Startled blow** (Hair trigger's `startled_blow`, a talent switch, not in `FreeBlows`;
     #687): an attack that finds the actor unaware, made by a hostile beside it, whose initiative
     check the actor makes (`World::startle`, §8 "Surprise and sneak attacks"), is answered at

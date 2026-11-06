@@ -11,7 +11,7 @@ shape = "bolt"
 resolution = "attack"
 damage_type = "acid"
 range = 8
-damage = "1d6"
+damage = "2d6"
 
 [spell.cast]
 effect = "acid_arrow"
@@ -19,5 +19,5 @@ noun = "acid arrow"
 noise = { sound = "chanting", loudness = 30 }
 
 [spell.grows]
-damage = "intelligence 13 2d6, 16 3d6, 25 3d6+2"
+damage = "intelligence 13 4d6, 16 6d6, 25 6d6+2"
 range = "willpower 14 9, 18 10"

@@ -30,7 +30,7 @@ damage = "3d12"
 damage_type = "bludgeoning"
 name = "slam"
 verb = "slams"
-to_hit = 4
+to_hit = 11
 on_hit = [
     { drain = "toughness", points = 2, chance = 10, check = "toughness", difficulty = 21 },
     { status = "frightened", chance = 15, severity = 1 },

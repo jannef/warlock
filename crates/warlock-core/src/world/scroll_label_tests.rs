@@ -116,7 +116,7 @@ fn unknown_scrolls_show_by_their_labels_and_colour() {
 
 #[test]
 fn reading_a_scroll_identifies_its_type_for_good() {
-    let mut w = world(1);
+    let mut w = world(3);
     let fire = label(&w, "scroll_of_fireball");
     run(&mut w, "read:a:8,1");
     let said = texts(&w);

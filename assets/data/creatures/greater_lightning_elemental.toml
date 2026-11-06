@@ -29,7 +29,7 @@ blood = "none"
 [creature.attack]
 damage = "3d10"
 damage_type = "electricity"
-to_hit = 3
+to_hit = 9
 name = "touch"
 verb = "shocks"
 on_hit = [{ status = "staggered", chance = 20, severity = 1 }]

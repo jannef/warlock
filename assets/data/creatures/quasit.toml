@@ -29,6 +29,7 @@ damage = "2d6"
 damage_type = "slashing"
 name = "claws"
 verb = "claws"
+to_hit = 3
 on_hit = [
     { status = "poisoned", chance = 20, severity = 3 },
     { status = "weakened", chance = 10, severity = 1 },

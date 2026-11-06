@@ -161,10 +161,10 @@ mod tests {
             assert_eq!(words.text, format!("{} {what}", words.roll), "{}", def.id);
         }
         let text = |id: &str| view.own_spell_roll(sp(id)).map(|r| r.text);
-        // Fireball at Intelligence 19: rung 3 by stats (5d6), Empower a rung more (5d6+2).
+        // Fireball at Intelligence 19: rung 3 by stats (10d6), Empower a rung more (10d6+2).
         assert_eq!(
             text("fireball").as_deref(),
-            Some("5d6+2 fire, burns one in four")
+            Some("10d6+2 fire, burns one in four")
         );
         assert_eq!(text("cure_wounds").as_deref(), Some("3d6 healed"));
         assert_eq!(text("haste"), None, "a buff rolls nothing");
@@ -184,7 +184,7 @@ mod tests {
         let spells = value["spells"].as_array().expect("spells");
         let of = |id: &str| (spells.iter()).find(|s| s["id"] == id).expect(id);
         let fireball = of("fireball");
-        assert_eq!(fireball["roll"], "5d6+2 fire, burns one in four");
+        assert_eq!(fireball["roll"], "10d6+2 fire, burns one in four");
         assert_eq!(fireball["damage_type"], "fire");
         assert_eq!(fireball["reach"]["radius"], 2);
         assert!(fireball["reach"]["range"].is_number());

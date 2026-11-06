@@ -36,7 +36,7 @@ damage = "3d12"
 damage_type = "slashing"
 name = "claws"
 verb = "claws"
-to_hit = 5
+to_hit = 13
 on_hit = [
     { status = "transfixed", chance = 15, severity = 2 },
     { status = "frightened", chance = 10, severity = 1 },

@@ -5,8 +5,8 @@ use super::text::{article, capital};
 use std::fmt::Write as _;
 use warlock_core::content::Content;
 use warlock_core::noise::{
-    self, DIAGONAL_LOSS, DIG_NOISE, KICK_NOISE, MAX_REACH, MELEE_NOISE, SHOT_NOISE, SONG_NOISE,
-    SPELL_NOISE, STEP_LOSS, SoundKind, THROW_NOISE, VOICE_NOISE,
+    self, DIAGONAL_LOSS, DIG_NOISE, KICK_NOISE, MAX_REACH, MELEE_NOISE, ROAR_NOISE, SHOT_NOISE,
+    SONG_NOISE, SPELL_NOISE, STEP_LOSS, SoundKind, THROW_NOISE, VOICE_NOISE,
 };
 
 /// How far a noise of `loudness` carries to a listener whose threshold is `hearing`, in open
@@ -63,6 +63,7 @@ pub(super) fn noises(content: &Content) -> String {
         ("A shot".into(), SoundKind::Bowstring, SHOT_NOISE),
         ("A throw".into(), SoundKind::Fighting, THROW_NOISE),
         ("A spell".into(), SoundKind::Chanting, SPELL_NOISE),
+        ("A dragon's breath".into(), SoundKind::Roar, ROAR_NOISE),
         ("A turn of digging".into(), SoundKind::Digging, DIG_NOISE),
         ("Muttering".into(), SoundKind::Voice, VOICE_NOISE),
         (

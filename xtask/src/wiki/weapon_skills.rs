@@ -25,7 +25,6 @@ fn trained_by(role: Role) -> &'static str {
         Role::Launcher => "shots with its weapons",
         Role::Thrown => "every throw",
         Role::Unarmed => "blows with bare hands",
-        Role::ShieldBlock => "blows your shield blocks",
         Role::ShieldBash => "bashing with a shield",
         Role::School => "every spell of its school you cast with your own mana",
         Role::Style => "every attack in its configuration",
@@ -39,13 +38,12 @@ fn weapons(table: &WeaponSkillTable) -> impl Iterator<Item = (WeaponSkillId, &We
         .filter(|(_, s)| !s.is_style() && s.role != Role::School)
 }
 
-/// The objects that draw on skill `id`: the weapons that name it, or for the shield skills the
+/// The objects that draw on skill `id`: the weapons that name it, or for shield bashing the
 /// shields.
 fn weapons_of(content: &Content, id: WeaponSkillId, role: Role) -> String {
     let names: Vec<String> = (order::objects(content).into_iter())
         .map(|(_, o)| o)
         .filter(|o| match role {
-            Role::ShieldBlock => o.shield > 0,
             Role::ShieldBash => o.bash.is_some(),
             _ => o.skill == Some(id),
         })

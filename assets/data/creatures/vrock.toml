@@ -30,5 +30,5 @@ damage = "3d10"
 damage_type = "slashing"
 name = "talons"
 verb = "rakes"
-to_hit = 3
+to_hit = 8
 on_hit = [{ status = "frightened", chance = 25, severity = 2 }]

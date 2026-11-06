@@ -9,7 +9,8 @@ terrain `step_noise` percent × the burden's `footsteps()` percent for `Act::Ste
 `toggle_noise` for `Act::OpenDoor`/`CloseDoor`, `VOICE_NOISE` for `Act::Mutter` and for
 `Act::ThrowVoice(at)`, which is made on that cell, not the actor's, `HOWL_NOISE` for `Act::Howl`
 (Hound's bay, #270: `SoundKind::Howl`, "a howl", `h` in the sound layer; `noise::hearers` tells
-the howler who hears it; `SoundKind::Heartbeat`, "a heartbeat", `q`, is no noise: Sense the quick's
+the howler who hears it), `ROAR_NOISE` for `Act::Roar` (a dragon's breath, #1099:
+`SoundKind::Roar`, "a roar", `r`; `SoundKind::Heartbeat`, "a heartbeat", `q`, is no noise: Sense the quick's
 `senses` status pushes it straight onto the player's heard list at their own threshold,
 `world/spell_rule.rs::heartbeats`, docs/dev/spells.md "Small rules", and `Exact::All` never places
 it exactly), `SONG_NOISE` (80) for `Act::Sing` (a song, `world/song.rs`, #870: a

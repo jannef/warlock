@@ -59,8 +59,8 @@ const MAX_SPELL_MANA: i32 = 50;
 pub struct WeaponSkillId(pub u8);
 
 /// What uses a skill: a weapon that names it (`melee`, `launcher`, `thrown`), an attack or a
-/// defence that implies it (`unarmed`, `thrown`, `shield_block`, `shield_bash`; at most one
-/// skill each), or a way of fighting (`style`).
+/// a defence that implies it (`unarmed`, `thrown`, `shield_bash`; at most one skill each), or a
+/// way of fighting (`style`).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum Role {
@@ -73,9 +73,6 @@ pub enum Role {
     Thrown,
     /// Bare hands and natural attacks.
     Unarmed,
-    /// Defending with a held shield: a blow the shield blocked trains it (spec §8 "Combat": a
-    /// miss credited to the Shield category), and it adds to the Shield category.
-    ShieldBlock,
     /// Bashing with a held shield (the bash attack).
     ShieldBash,
     /// A school of magic (spec §8 "Weapon skills": "Schools of magic"): every spell of its
@@ -88,25 +85,23 @@ pub enum Role {
 }
 
 impl Role {
-    pub const ALL: [Role; 8] = [
+    pub const ALL: [Role; 7] = [
         Role::Melee,
         Role::Launcher,
         Role::Thrown,
         Role::Unarmed,
-        Role::ShieldBlock,
         Role::ShieldBash,
         Role::School,
         Role::Style,
     ];
 
-    /// Its id in the data file: `shield_block`.
+    /// Its id in the data file: `shield_bash`.
     pub const fn id(self) -> &'static str {
         match self {
             Role::Melee => "melee",
             Role::Launcher => "launcher",
             Role::Thrown => "thrown",
             Role::Unarmed => "unarmed",
-            Role::ShieldBlock => "shield_block",
             Role::ShieldBash => "shield_bash",
             Role::School => "school",
             Role::Style => "style",
@@ -135,18 +130,13 @@ impl Role {
         )
     }
 
-    /// Whether it is used to attack (to-hit, damage, threat, crit, and speed apply).
-    pub const fn attacks(self) -> bool {
-        !matches!(self, Role::ShieldBlock)
-    }
-
     /// The section of the weapon skills screen it is listed in; `None` for a school of magic,
     /// which is magic's, not the weapons'.
     pub const fn section(self) -> Option<Section> {
         match self {
             Role::Melee | Role::Unarmed => Some(Section::Melee),
             Role::Launcher | Role::Thrown => Some(Section::Missile),
-            Role::ShieldBlock | Role::ShieldBash => Some(Section::Shields),
+            Role::ShieldBash => Some(Section::Shields),
             Role::Style => Some(Section::Styles),
             Role::School => None,
         }
@@ -696,11 +686,9 @@ impl SkillSpec {
         // Where one casts from never quickens a cast (a caster grip); a school's practice may.
         let casts = grip.is_some_and(Grip::casts);
         let unused = [
-            ("to_hit", &self.to_hit, role.attacks()),
-            ("damage", &self.damage, role.attacks() && !school),
-            ("threat", &self.threat, role.attacks()),
-            ("crit", &self.crit, role.attacks() && !school),
-            ("speed", &self.speed, role.attacks() && !casts),
+            ("damage", &self.damage, !school),
+            ("crit", &self.crit, !school),
+            ("speed", &self.speed, !casts),
             (
                 "parry",
                 &self.parry,
@@ -709,7 +697,7 @@ impl SkillSpec {
             (
                 "shield",
                 &self.shield,
-                role == Role::ShieldBlock || is(Grip::WeaponAndShield) || is(Grip::TwoShields),
+                is(Grip::WeaponAndShield) || is(Grip::TwoShields),
             ),
             (
                 "reload",
@@ -1126,7 +1114,7 @@ impl WeaponSkillTable {
     }
 
     /// Starting ranks as a race, a class, or a creature gives them (`{ long_blades = 2,
-    /// shield_block = "1d2" }`), in skill order: every skill known and of the kind `ranked`
+    /// shield_bash = "1d2" }`), in skill order: every skill known and of the kind `ranked`
     /// allows, every result a roll can have within 0 to [`MAX_RANK`].
     pub(super) fn starting_ranks(
         &self,
@@ -1186,8 +1174,8 @@ mod tests {
     fn the_builtin_table_loads() {
         let text = include_str!("../../../../assets/data/weapon_skills.toml");
         let table = parse(text).expect("valid");
-        // Sixteen weapon skills, the seven schools of magic, and twelve fighting styles.
-        assert_eq!(table.skills().len(), 35);
+        // Fifteen weapon skills, the seven schools of magic, and twelve fighting styles.
+        assert_eq!(table.skills().len(), 34);
         assert_eq!(table.styles().count(), 12);
         let id = |name: &str| table.id(name).expect(name);
         // The owner's example: long blades 8 → short blades 6.
@@ -1253,7 +1241,7 @@ mod tests {
     }
 
     /// Rank 10 of every weapon skill holds its family's values (docs/design/combat-progression.md
-    /// §3: light blades, precise, heavy, middling, launchers and thrown, shield blocking), every
+    /// §3: light blades, precise, heavy, middling, launchers and thrown), every
     /// style's §5's, and every benefit of every skill never falls as the rank rises.
     #[test]
     fn rank_ten_holds_the_family_tables() {
@@ -1261,7 +1249,7 @@ mod tests {
         let table = parse(text).expect("valid");
         // (id, to_hit, damage, threat, speed, parry, shield, reload)
         #[rustfmt::skip]
-        let skills: [(&str, i32, i32, u8, u8, i32, i32, u8); 16] = [
+        let skills: [(&str, i32, i32, u8, u8, i32, i32, u8); 15] = [
             // Light blades
             ("daggers", 7, 5, 3, 30, 4, 0, 0),
             ("short_blades", 7, 5, 3, 25, 5, 0, 0),
@@ -1282,8 +1270,6 @@ mod tests {
             ("crossbows", 6, 5, 1, 0, 0, 0, 60),
             ("slings", 7, 5, 1, 25, 0, 0, 0),
             ("thrown", 7, 5, 2, 30, 0, 0, 0),
-            // Shield blocking
-            ("shield_block", 0, 0, 0, 0, 0, 6, 0),
         ];
         for (name, to_hit, damage, threat, speed, parry, shield, reload) in skills {
             let id = table.id(name).expect(name);
@@ -1688,13 +1674,6 @@ mod tests {
                     skill("a", "melee", &format!("shield = {eleven}"))
                 ),
                 "`shield` does nothing for a skill of role `melee`",
-            ),
-            (
-                format!(
-                    "{MARKS}{}",
-                    skill("a", "shield_block", &format!("to_hit = {eleven}"))
-                ),
-                "`to_hit` does nothing",
             ),
             (
                 format!(

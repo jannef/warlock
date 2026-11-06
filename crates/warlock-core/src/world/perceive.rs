@@ -228,6 +228,7 @@ impl World {
                 strike,
                 with,
                 damage,
+                natural,
             } => {
                 let sees_attacker = attacker == player || perception.sees_actors_at(from);
                 let sees_target = target == player || perception.sees_actors_at(to);
@@ -248,7 +249,13 @@ impl World {
                             hurl::throw_messages(&content, throw, (a, t), strike, damage, guard);
                         reports.extend(said.into_iter().map(|text| (text, true)));
                     } else {
-                        let words = Words::of(me, kind, with, damage, &content);
+                        // A natural attack after the first is said by its own words (`claws`).
+                        let def = content.creature(me.creature);
+                        let words =
+                            match natural.and_then(|i| def.natural_attacks().nth(usize::from(i))) {
+                                Some(attack) => Words::new(&attack.name, &attack.verb),
+                                None => Words::of(me, kind, with, damage, &content),
+                            };
                         let said = attack_message(a, t, &words, kind, strike, guard);
                         reports.extend(said.map(|text| (text, true)));
                     }

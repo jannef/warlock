@@ -464,7 +464,7 @@ const CASES: &[Case] = &[
         name: "abilities-menu-weapon-actives",
         character: Some("human,male,warrior"),
         kit: true,
-        actions: "rank:long_blades:9 rank:shield_block:9 rank:sword_and_board:7 rank:spears:9",
+        actions: "rank:long_blades:9 rank:sword_and_board:9 rank:spears:9",
         screen: Some("abilities"),
         ..BASE
     },
@@ -473,7 +473,7 @@ const CASES: &[Case] = &[
         name: "abilities-menu-weapon-actives-short",
         character: Some("human,male,warrior"),
         kit: true,
-        actions: "rank:long_blades:9 rank:shield_block:9 rank:sword_and_board:7 rank:spears:9 \
+        actions: "rank:long_blades:9 rank:sword_and_board:9 rank:spears:9 \
                   use:shield_wall use:shield_wall",
         screen: Some("abilities"),
         ..BASE
@@ -1221,10 +1221,11 @@ const CASES: &[Case] = &[
         keys: Some("L a"),
         ..BASE
     },
+    // A paladin: trained in Spellcraft, and no caster's random scrolls (#1104) to study.
     Case {
         name: "scroll-study-none",
         scenario: "traps",
-        character: Some("human,female,bard"),
+        character: Some("human,male,paladin"),
         actions: "move:E pickup",
         keys: Some("L"),
         ..BASE

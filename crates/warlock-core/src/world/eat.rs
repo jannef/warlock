@@ -25,7 +25,9 @@
 //! creature's size and does what its creature's `on_eat` says, in this order, each draw from the
 //! gameplay stream: its message, a chance to vomit, then per stat its training marks (sure, into
 //! the pile; "Something of its strength passes into you." for 30 or more) and a chance to widen
-//! the potential by 1 ("You feel you could grow stronger yet."), healing, harm, and extra
+//! the potential by 1 ("You feel you could grow stronger yet."), the skills it teaches (an
+//! untrained one learned, a trained one raised up to the corpse's cap; a caster's corpse,
+//! Decipher script), healing, harm, and extra
 //! nutrition; a rotten one has lost all of that. A corpse never raises a score itself: the
 //! marks wait for the checks (`world/stat_training.rs`). The player learns what a corpse does
 //! only by eating it.
@@ -246,6 +248,7 @@ impl World {
             return;
         }
         self.corpse_gifts(&on_eat);
+        self.corpse_skills(&on_eat);
         if let Some(heal) = on_eat.heal {
             let points = heal.roll(&mut self.state.rng);
             let max = self.state.player().max_hp(&self.content);
@@ -293,6 +296,35 @@ impl World {
                     stat.comparative()
                 ));
             }
+        }
+    }
+
+    /// A fresh corpse's skills, in skill id order (`SkillGift::apply`): an untrained skill
+    /// learned at its `gives` ("learn" news, `[corpses.skills]`), a trained one raised by it up to
+    /// its `up_to` ("rise" news), nothing (and nothing said) once there. No draw.
+    fn corpse_skills(&mut self, on_eat: &crate::content::OnEat) {
+        let content = self.content.clone();
+        let Some(news) = (content.hunger())
+            .and_then(|h| h.corpses.as_ref())
+            .map(|c| &c.skills)
+        else {
+            return;
+        };
+        for (name, gift) in &on_eat.skills {
+            let (Some(id), Some(words)) = (content.skill_id(name), news.get(name)) else {
+                continue;
+            };
+            let before = self.state.player().skills.value(id);
+            let Some(after) = gift.apply(before) else {
+                continue;
+            };
+            let by = i32::from(after) - i32::from(before.unwrap_or(0));
+            self.player_mut().skills.add(id, by);
+            self.say(if before.is_none() {
+                words.learn.clone()
+            } else {
+                words.rise.clone()
+            });
         }
     }
 

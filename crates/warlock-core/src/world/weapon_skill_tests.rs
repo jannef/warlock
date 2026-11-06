@@ -1,6 +1,6 @@
 //! Weapon skills in the world (spec §8 "Weapon skills"): attacks earn marks (more for a hit,
 //! fewer as the rank rises), a rank gained raises the skills it defaults to and is said, a
-//! shield's blocks train shield blocking, a shield bash is a blow of its own, ranks change
+//! shield bash is a blow of its own, ranks change
 //! to-hit, damage, threat, Defence, and cost, starting ranks come from race and class, and all of
 //! it is saved and replayed.
 
@@ -10,7 +10,7 @@ use super::*;
 use crate::action::{AttackKind, parse_actions};
 use crate::character::CharacterSpec;
 use crate::combat::{Category, Strike};
-use crate::content::{ContentFiles, Role, WeaponSkillId};
+use crate::content::{ContentFiles, WeaponSkillId};
 use crate::equipment;
 use crate::replay::Replay;
 use crate::weapon_skills::{Training, WeaponSkills};
@@ -417,58 +417,6 @@ fn a_rank_gained_raises_its_defaults_and_is_said() {
 }
 
 #[test]
-fn blocks_by_the_shield_train_shield_blocking() {
-    let mut w = world_on("#####\n#.@r#\n#####\n");
-    arm(&mut w, &["buckler"]);
-    let table = w.content().weapon_skills().clone();
-    let rules = *table.marks().expect("marks");
-    let block = table.of_role(Role::ShieldBlock).expect("shield blocking");
-    let mut expected = WeaponSkills::default();
-    let (mut blocks, mut others) = (0, 0);
-    for _ in 0..150 {
-        let outcome = w.apply(&Action::Wait);
-        for e in &outcome.events {
-            if let Event::Attacked {
-                target,
-                strike: Some(strike),
-                ..
-            } = e
-                && *target == w.player_id()
-            {
-                if *strike
-                    == (Strike::Missed {
-                        by: Some(Category::Shield),
-                    })
-                {
-                    blocks += 1;
-                    let marks = rules.earned(true, UNLEVELLED, expected.rank(block));
-                    expected.train(&table, block, marks);
-                } else {
-                    others += 1;
-                }
-            }
-        }
-    }
-    assert!(
-        blocks >= 5 && others > 0,
-        "{blocks} blocks, {others} others"
-    );
-    assert_eq!(
-        w.state.player().weapon_skills.get(block),
-        expected.get(block)
-    );
-    assert!(expected.rank(block) >= 1);
-    assert!((messages(&w).iter()).any(|m| m == "You feel more skilled at blocking with a shield."),);
-    // Only blocks train it: nothing else rose.
-    assert_eq!(
-        (w.state.player().weapon_skills.trained())
-            .filter(|(id, _)| *id != block)
-            .count(),
-        expected.trained().filter(|(id, _)| *id != block).count()
-    );
-}
-
-#[test]
 fn a_shield_bash_is_a_blow_with_the_shield_that_trains_shield_bashing() {
     let mut w = world_on(YARD);
     // Without a shield, nothing to bash with: refused, no time; the abilities menu lists it,
@@ -586,8 +534,8 @@ fn ranks_change_to_hit_damage_threat_defence_and_cost() {
         "the dice are the weapon's"
     );
     assert_eq!(w.perception().own_defence(), defence + 4);
-    // Shield blocking 2 adds 1 to the buckler's Shield bonus.
-    set(&mut w, "shield_block", 2, 0);
+    // Sword and Board 2 adds 1 to the buckler's Shield bonus.
+    set(&mut w, "sword_and_board", 2, 0);
     assert_eq!(w.perception().own_defence(), defence + 5);
     let dv = w.defence_of(w.player_id());
     assert_eq!(
@@ -749,11 +697,10 @@ fn ranks_of(character: &str, seed: u64) -> WeaponSkills {
 fn starting_ranks_come_from_race_and_class_and_never_move_the_stats() {
     let table = BUILTIN.weapon_skills();
     let id = |name| table.id(name).expect(name);
-    // A human warrior: long blades 2 and shield blocking 1 or 2, the same for the same seed.
+    // A human warrior: long blades 2, the same for the same seed.
     let warrior = ranks_of("human,male,warrior", 7);
     assert_eq!(warrior, ranks_of("human,male,warrior", 7));
     assert_eq!(warrior.rank(id("long_blades")), 2);
-    assert!((1..=2).contains(&warrior.rank(id("shield_block"))));
     // An elf ranger: bows 1 + 2, long blades 1 from the race, short blades 1 from the class
     // (long blades 1 − 2 adds nothing); defaults from bows 3: crossbows −4, nothing.
     let ranger = ranks_of("elf,female,ranger", 3);

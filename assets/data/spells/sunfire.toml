@@ -12,7 +12,7 @@ resolution = "area"
 damage_type = "fire"
 range = 10
 radius = 3
-damage = "5d6"
+damage = "10d6"
 
 [spell.cast]
 effect = "fireball"
@@ -22,5 +22,5 @@ message = "The sun itself bursts from your hands!"
 noise = { sound = "explosion", loudness = 200 }
 
 [spell.grows]
-damage = "intelligence 16 6d6, 19 7d6, 22 8d6, 25 8d6+4"
+damage = "intelligence 16 12d6, 19 14d6, 22 16d6, 25 16d6+4"
 range = "willpower 14 11, 18 12"

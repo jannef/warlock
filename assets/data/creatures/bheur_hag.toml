@@ -29,12 +29,12 @@ base_hp = 84
 skills = { concentration = 136, spellcraft = 141 }
 natural = { defence = 3, protection = 2, name = "frost-hard skin" }
 resist = { cold = 100, fire = -25 }
-on_eat = { message = "Cold as a grave in winter.", vomit = 60, harm = "1d4" }
+on_eat = { message = "Cold as a grave in winter.", vomit = 60, harm = "1d4", skills = { decipher_script = { gives = 12, up_to = 95 } } }
 blood = "#4a5a6a"
 [creature.attack]
 damage = "3d10"
 damage_type = "cold"
 name = "icy staff"
 verb = "strikes"
-to_hit = 4
+to_hit = 10
 on_hit = [{ status = "sluggish", chance = 20, severity = 1 }]

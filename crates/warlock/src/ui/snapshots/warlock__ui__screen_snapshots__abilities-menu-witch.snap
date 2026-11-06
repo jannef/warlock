@@ -11,9 +11,9 @@ expression: "render(case, content.clone())"
              │   c  Call familiar      your familiar lives                            │
              │ Spells                                                                 │
              │   d  Evil eye           1 mana, aimed                                  │
-             │   e  Grave breath       1d6 necrotic, bites the wounded, 3 mana, aimed │
+             │   e  Grave breath       2d6 necrotic, bites the wounded, 3 mana, aimed │
              │   f  Hex of weakness    3 mana, aimed                                  │
-             │   g  Flay               1d4 necrotic, bites the wounded, 8 mana, aimed │
+             │   g  Flay               2d4 necrotic, bites the wounded, 8 mana, aimed │
              │ Skills                                                                 │
              │   h  Heal               nothing to treat                               │
              │   i  Intimidate         at a place you see                             │

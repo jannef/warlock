@@ -29,14 +29,14 @@ base_hp = 66
 skills = { concentration = 109, spellcraft = 114 }
 natural = { defence = 2, protection = 1, name = "hide" }
 resist = { fire = 50, cold = 50 }
-on_eat = { message = "Bitter as a bad dream.", vomit = 70, harm = "1d4" }
+on_eat = { message = "Bitter as a bad dream.", vomit = 70, harm = "1d4", skills = { decipher_script = { gives = 10, up_to = 75 } } }
 blood = "#3a2a4a"
 [creature.attack]
 damage = "4d6"
 damage_type = "slashing"
 name = "claws"
 verb = "claws"
-to_hit = 3
+to_hit = 8
 on_hit = [
     { status = "held", chance = 15, difficulty = 18 },
     { status = "frightened", chance = 10, severity = 2 },

@@ -10,7 +10,7 @@ shape = "ray"
 resolution = "attack"
 damage_type = "necrotic"
 range = 6
-damage = "2d6"
+damage = "4d6"
 effect = { leech = 50 }
 
 [spell.cast]
@@ -20,5 +20,5 @@ verb = "drains"
 noise = { sound = "chanting", loudness = 20 }
 
 [spell.grows]
-damage = "willpower 13 3d6, 16 4d6, 25 4d6+2"
+damage = "willpower 13 6d6, 16 8d6, 25 8d6+2"
 range = "willpower 14 7, 18 8"

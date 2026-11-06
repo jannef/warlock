@@ -87,6 +87,11 @@
 #                 own stream, so no other roll moves). Food is as fresh as the run is new. Nobody
 #                 starts Strained; an ordinary character starts Unburdened, but for the
 #                 aristocrat's and the merchant's wealth and a small warrior's or paladin's armour.
+#                 Every scroll and potion of the kit is known by type from the start.
+#   random_scrolls  `{ count = "1d3", below_level = 10 }`: that many spell scrolls more, rolled
+#                 when the character is made, each the scroll of a spell of a spell level below
+#                 `below_level`, drawn uniformly among them (duplicates stack); carried, after
+#                 every kit line (the casters'; default none)
 #   abilities     the level table (spec §8 "Class abilities"): `{ level = 6, talent = "fencing" }`
 #                 rows, lowest level first, each a talent the class gives at that level (a talent
 #                 of the `class` tree, ../talents/, or an ordinary one it hands out: the

@@ -13,7 +13,7 @@ shape = "cone"
 resolution = "area"
 damage_type = "fire"
 length = 3
-damage = "1d4"
+damage = "2d4"
 
 [spell.cast]
 effect = "blaze"
@@ -22,4 +22,4 @@ message = "Flames fan out from your hands!"
 noise = { sound = "explosion", loudness = 40 }
 
 [spell.grows]
-damage = "intelligence 13 1d6, 16 2d4, 22 2d4+2"
+damage = "intelligence 13 2d6, 16 4d4, 22 4d4+2"

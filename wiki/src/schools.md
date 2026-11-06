@@ -43,7 +43,7 @@ faint bar of your marks toward the next (schools you have trained stand out, the
 dimmer); the [caster styles](#caster-styles), a `•` on Battle caster while your armour hinders
 casting ("• the style you cast in now"), shown to anyone who knows a spell or has trained a caster
 style; and every spell you know, by level then name, with the roll it makes now and its mana, as
-the [abilities menu](abilities.md) says them ("Magic missile   2d4 force, 3 mana, aimed"). It is
+the [abilities menu](abilities.md) says them ("Magic missile   4d4 force, 3 mana, aimed"). It is
 read only: spells are cast from the abilities menu. It takes no time. A character who knows no
 spells reads "You know no spells." under the schools.
 
@@ -74,8 +74,8 @@ What each rank brings, in a sentence:
 - **Evocation**: 1 a surer aim; 2 a surer aim still; 3 a die that shows 1 is rolled again; 4 a
   wider critical range, a twentieth off the mana; 5 every die a size bigger (a d6 a d7); 6 a die
   more; 7 a tenth off the mana; 8 a die showing 1 or 2 is rolled again; 9 a second die more; 10
-  every die two sizes bigger. A [Fireball](magic.md#spell-fireball) at the top rung (5d6, 17.5
-  on average) rolls 7d8 rerolling 1s and 2s at rank 10: 36.8.
+  every die two sizes bigger. A [Fireball](magic.md#spell-fireball) at the top rung (10d6, 35
+  on average) rolls 12d8 rerolling 1s and 2s at rank 10: 63.0.
 - **Necromancy**: 1 a surer aim; 2 a point more on every roll; 3 1s rolled again, hexes a degree
   longer; 4 a wider critical range, a twentieth off the mana; 5 two points more; 6 hexes two
   degrees longer; 7 a tenth off; 8 a die more, 1s and 2s rolled again, three points more; 9

@@ -12,10 +12,10 @@ use warlock_core::geom::Pos;
 
 /// The natural rolls of a threat range: `22–24`, or `24` alone.
 pub(super) fn threat_range(threat: u8) -> String {
-    if i32::from(threat) >= combat::SURE_HIT {
-        combat::SURE_HIT.to_string()
+    if i32::from(threat) >= combat::HIGHEST {
+        combat::HIGHEST.to_string()
     } else {
-        format!("{threat}–{}", combat::SURE_HIT)
+        format!("{threat}–{}", combat::HIGHEST)
     }
 }
 
@@ -362,9 +362,10 @@ pub(super) fn protection(_content: &Content) -> String {
 /// by kind of attack, from the rules' constants and the content.
 pub(super) fn to_hit(content: &Content) -> String {
     let mut out = format!(
-        "An attack rolls 2d{die} (its *natural roll*, {fumble} to {sure}) and adds its to-hit; it \
-         hits when the sum is at least the target's Defence ({base} plus its bonuses). A natural \
-         {fumble} always misses, a natural {sure} always hits. A natural roll in the attack's \
+        "An attack rolls 2d{die} (its *natural roll*, {fumble} to {highest}) and adds its to-hit; \
+         it hits when the sum is at least the target's Defence ({base} plus its bonuses). A \
+         natural {fumble} always misses, a natural {sure} or better always hits ({sure_ways} of \
+         the 144 rolls), however high the Defence. A natural roll in the attack's \
          threat range ({range} unless the weapon says otherwise) threatens a critical: a second \
          2d{die} plus the same to-hit against the same Defence confirms it, and the damage is \
          then rolled ×{crit} (unless the weapon says otherwise) and added up. Ranks and magic \
@@ -372,7 +373,9 @@ pub(super) fn to_hit(content: &Content) -> String {
          ×{most}. A hit does at least 1 damage before Protection.\n\n",
         die = combat::DIE,
         fumble = combat::FUMBLE,
+        highest = combat::HIGHEST,
         sure = combat::SURE_HIT,
+        sure_ways = combat::hit_ways(0, 1000),
         base = combat::BASE_DEFENCE,
         range = threat_range(combat::DEFAULT_THREAT),
         crit = combat::DEFAULT_CRIT,
@@ -436,8 +439,40 @@ pub(super) fn to_hit(content: &Content) -> String {
     out
 }
 
+/// The Gatekeeper gift's chance of a blow in a stance whose `gatekeeper` percent is `percent`:
+/// "1 in 4", "always" (the talent's `one_in` scaled, at most always); "-" without the talent.
+fn gatekeeper_chance(content: &Content, percent: u32) -> String {
+    use warlock_core::content::{FreeBlowTrigger, TalentEffect};
+    let book = content.talents();
+    let one_in = (book.id("gatekeeper").map(|t| book.get(t).effects.iter()))
+        .into_iter()
+        .flatten()
+        .find_map(|e| match e {
+            TalentEffect::FreeBlow {
+                trigger: FreeBlowTrigger::Gatekeeper,
+                one_in,
+            } => *one_in,
+            _ => None,
+        });
+    let Some(one_in) = one_in else {
+        return "-".into();
+    };
+    let of = one_in * 100;
+    if percent >= of {
+        return "always".into();
+    }
+    let gcd = |mut a: u32, mut b: u32| {
+        while b != 0 {
+            (a, b) = (b, a % b);
+        }
+        a
+    };
+    let g = gcd(percent, of);
+    format!("{} in {}", percent / g, of / g)
+}
+
 /// The combat stances: what each does to the player's attacks, Defence, and speed (percent for
-/// costs and noise; "-" for no change).
+/// costs and noise; "-" for no change), and the Gatekeeper gift's chance in each.
 pub(super) fn stances(content: &Content) -> String {
     let bonus = |n: i32| match n {
         0 => "-".to_string(),
@@ -453,13 +488,13 @@ pub(super) fn stances(content: &Content) -> String {
     };
     let mut out = String::from(
         "| Stance | To hit | Damage | Dodge | Parry | Attacks cost | Fleeing steps cost | \
-         Fleeing steps' noise | Weapon marks count |\n\
-         |---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|\n",
+         Fleeing steps' noise | Weapon marks count | Gatekeeper's blow |\n\
+         |---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|\n",
     );
     for s in content.stances().all() {
         let _ = writeln!(
             out,
-            "| {} | {} | {} | {} | {} | {} | {} | {} | {} |",
+            "| {} | {} | {} | {} | {} | {} | {} | {} | {} | {} |",
             anchored(Term::Stance, &s.name, &s.name),
             bonus(s.to_hit),
             bonus(s.damage),
@@ -469,6 +504,7 @@ pub(super) fn stances(content: &Content) -> String {
             percent(s.flee_cost),
             percent(s.flee_noise),
             percent(s.weapon_mark),
+            gatekeeper_chance(content, s.gatekeeper),
         );
     }
     out
@@ -477,7 +513,7 @@ pub(super) fn stances(content: &Content) -> String {
 /// How often an attack hits by what its roll needs (Defence minus to-hit): the 2d12 bell.
 pub(super) fn hit_chances(_content: &Content) -> String {
     let mut out = String::from("| The roll needs | Hits |\n|:---:|:---:|\n");
-    for needed in [4, 6, 8, 10, 11, 12, 13, 14, 15, 16, 18, 20, 22, 24] {
+    for needed in [4, 6, 8, 10, 11, 12, 13, 14, 15, 16, 18, 20, 21, 22, 24] {
         let _ = writeln!(
             out,
             "| {needed} | {} |",
@@ -495,9 +531,9 @@ pub(super) fn threats(_content: &Content) -> String {
          |:---:|:---:|:---:|:---:|\n",
     );
     for (threat, dnd) in [(22, "20"), (20, "19–20"), (19, "18–20")] {
-        let threatens: u32 = (threat..=combat::SURE_HIT).map(combat::ways).sum();
+        let threatens: u32 = (threat..=combat::HIGHEST).map(combat::ways).sum();
         let hit = combat::hit_ways(0, combat::BASE_DEFENCE);
-        let confirmed: u32 = (threat..=combat::SURE_HIT)
+        let confirmed: u32 = (threat..=combat::HIGHEST)
             .filter(|&n| combat::hits(n, 0, combat::BASE_DEFENCE))
             .map(combat::ways)
             .sum::<u32>()

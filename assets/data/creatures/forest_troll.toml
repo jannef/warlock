@@ -30,6 +30,7 @@ damage = "3d6"
 damage_type = "slashing"
 name = "claws"
 verb = "rakes"
+to_hit = 4
 on_hit = [{ status = "bleeding", chance = 20, severity = 1 }]
 # Its gear (spec §8 "Creature gear"): a spear half the time.
 [[creature.gear]]

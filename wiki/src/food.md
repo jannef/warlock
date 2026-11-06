@@ -68,7 +68,11 @@ stat can grow ([potential](stats.md#potentials)). A corpse never raises a stat a
 wait for the next check. Many marks make themselves felt ("Something of its strength passes into
 you."), a few are quiet; a widened potential says "You feel you could grow stronger yet." What a
 corpse gives comes from what the creature is (a giant, a troll, a caster, ...) and, for some, of
-its own. In the game you find out by eating it; here it is, in the order it happens, each chance
-rolled on its own. A rotten corpse has lost all of that.
+its own. The corpses of literate casters, the tribes' mages, shamans, priests, and hags, teach
+[Decipher script](skills.md#skill-decipher-script): the first one teaches the skill to one who
+lacks it ("Strange letters swim before your eyes, and settle into sense."), and each one after
+adds to it ("The letters come clearer."), but never past a value set by the creature, deeper
+casters' higher; past it, nothing. In the game you find out by eating it; here it is, in the
+order it happens, each chance rolled on its own. A rotten corpse has lost all of that.
 
 {{#include generated/corpse-effects.md}}

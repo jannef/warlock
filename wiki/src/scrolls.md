@@ -51,7 +51,7 @@ You learn what a kind of scroll is, for good, in one of four ways:
   the abilities menu: it tells the scroll for what it is, as the scroll of identify would.
 - **An appraisal**: Factor Wulfrun in Cēaptūn identifies everything you carry for 100 [gold](shops.md#money) per
   [unidentified](magic-items.md#unidentified-items) [stack](objects.md#piles) (see [Services](npcs.md#services)).
-- **Your [starting kit](starting-kit.md)**: you know the scrolls you start with.
+- **Your [starting kit](starting-kit.md)**: you know the scrolls you start with, a caster's random ones too.
 
 Knowing what a scroll is does not teach you its spell: a scroll you know by name is still only a
 scroll, but once you know it you may study it to learn its spell for good (see
@@ -71,8 +71,8 @@ the creature beside you to heal, or at yourself. Scrolls of lower [spell levels]
 more often: cantrips from the first floors, spells of level 11 and 12 from [item level](magic-items.md#base-items) 6 (the table
 above), and [general stores](shops.md) lay out low levels more often than high ones.
 
-The scrolls of [fireball](magic.md#spell-fireball) (a rung up: 3d6), [lightning](magic.md#spell-lightning-bolt) (two rungs up: 4d6), and
-[frost](magic.md#spell-frost) (its base: 2d6) cast their spells as any spell scroll does, reaching as far as you cast the
+The scrolls of [fireball](magic.md#spell-fireball) (a rung up: 6d6), [lightning](magic.md#spell-lightning-bolt) (two rungs up: 8d6), and
+[frost](magic.md#spell-frost) (its base: 4d6) cast their spells as any spell scroll does, reaching as far as you cast the
 spell. An aimed scroll is aimed: after choosing the scroll a cursor appears on the map, as for a [shot](ranged.md#shooting-and-throwing) (see
 [Controls](controls.md#aiming)): it starts on your last target if it is still there, else on the
 nearest [hostile](creatures.md#factions) [creature](creatures.md) you see, else on you; `Tab` moves it from creature to creature, the

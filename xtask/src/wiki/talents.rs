@@ -966,7 +966,14 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
                 (content.skill_id(&skill)).map_or(skill.clone(), |s| content.skill(s).name.clone());
             format!("{name} counts {}", signed(value))
         }
-        TalentEffect::FreeBlow { trigger } => {
+        TalentEffect::FreeBlow {
+            trigger: warlock_core::content::FreeBlowTrigger::Gatekeeper,
+            one_in: Some(n),
+        } => format!(
+            "free blow: a hostile that steps up beside you takes one, one time in {n} in the \
+             neutral stance, more often the bolder your stance (the stances table)"
+        ),
+        TalentEffect::FreeBlow { trigger, .. } => {
             use warlock_core::content::FreeBlowTrigger as T;
             match trigger {
                 T::Cleave => {
@@ -1002,6 +1009,7 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
             crit,
             at_rank,
         } => {
+            let any_style = skill.is_none() && role == Some(Role::Style);
             let with = match (role, skill) {
                 (_, Some(id)) => (content.weapon_skills().id(&id)).map_or(id.clone(), |w| {
                     content.weapon_skills().skill(w).name.clone()
@@ -1011,7 +1019,6 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
                 (Some(Role::Launcher), _) => "every missile weapon skill".to_string(),
                 (Some(Role::Thrown), _) => "throws".to_string(),
                 (Some(Role::Unarmed), _) => "unarmed fighting".to_string(),
-                (Some(Role::ShieldBlock), _) => "shield blocking".to_string(),
                 (Some(Role::ShieldBash), _) => "shield bashing".to_string(),
                 (Some(Role::School), _) => "every school of magic".to_string(),
                 (Some(Role::Style), _) => "every fighting style".to_string(),
@@ -1021,6 +1028,11 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
                 if value != 0 {
                     gains.push(format!("{what} {}", signed(value)));
                 }
+            }
+            // A style's Shield counts only in the shield styles' grips.
+            if shield != 0 && any_style {
+                let last = gains.last_mut().expect("the Shield gain");
+                last.push_str(" (a shield held with a weapon, or two shields)");
             }
             if threat > 0 {
                 gains.push(format!("threat range +{threat}"));

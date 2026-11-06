@@ -54,6 +54,11 @@ cast path shares.
 - **Base rolls** (`spell_def::base_roll`, for `damage` and a heal's `[spell.effect] heal`): a
   `Roll` (`dice/roll.rs`, S0) that can do something (`min` ≥ 0, `max` ≥ 1). The old table form
   is refused naming the string form. Nothing bounds what they roll (decision 16).
+  **Every damage spell's dice are doubled** (#1101, the owner, 2026-11-06: casters were far too
+  weak): `1d4` is `2d4`, `4d6` is `8d6`, in the base and in every `[spell.grows]` rung, flat
+  bonuses unchanged; heals and summons were left alone. Numbers quoted below and in older
+  sections are from before it. Scrolls and wands read the same rows and doubled with them;
+  traps carry their own `damage` (the `spell` there is only the effect shown) and did not.
 - **Ladders** (`content/spell_ladder.rs`: `Ladder { stat, rungs: Vec<(u8, RungValue)> }`,
   `RungValue::{Roll, Cells, Degrees}`, `Ladder::parse(text, Unit)`, `rung_at(score)` (how many
   rungs are at or below the score), `value(rung)` (`None` at 0, the base), `words()` (the wiki's

@@ -31,8 +31,9 @@
 #                as the player, under the same light
 #   sight        how far it sees, in cells (default 10, at most 40)
 #   combat       "melee" (default: closes in and attacks from next to its target), "ranged"
-#                (shoots with the missile weapon it has ready), or "caster" (casts spells, which
-#                are announced only: nothing is damaged until magic is designed)
+#                (shoots with the missile weapon it has ready), "caster" (casts spells, which
+#                are announced only: nothing is damaged until magic is designed), or "dragon"
+#                (breathes its [creature.breath] whenever it is ready, else fights as melee)
 #   range        how far a ranged or caster creature reaches, in cells (2 up to its sight; it
 #                needs a clear line of fire)
 #   opens_doors  whether it opens closed doors in its way (default false)
@@ -78,7 +79,7 @@
 #            (every troll: the tribe, the marsh troll, and the rotting troll), construct (things
 #            made, not born: the mud golem and every animated object), summoner (every type with
 #            a summoning, #520: the goblin wizard, the necromancer, the dark wizard; each of some
-#            other tribe too)
+#            other tribe too), dragon (every combat = "dragon" type, #1099: the fire drake)
 # A creature may carry several: the kobold shaman is ["kobold", "caster"].
 #
 # Alignment (spec §8 "Alignment"; never shown to the player): alignment, where it stands between
@@ -134,7 +135,20 @@
 #             on_hit lists the status effects (status.toml) and diseases (diseases.toml) a hit
 #             with it may cause, if the target lives: [{ status = "poisoned", chance = 10,
 #             severity = 2 }] (chance in percent, 1 to 100; severity in degrees, up to the
-#             status's max), { disease = "filth_fever", chance = 10 } (then a check to resist it)
+#             status's max), { disease = "filth_fever", chance = 10 } (then a check to resist it).
+#             Several natural attacks, each struck in turn in one melee attack and rolled on its
+#             own (a dragon's two claws and a bite): [[creature.attack]] tables, one per attack
+#             (#1099); a wielded weapon's blow stands in for the first, and the rest are not struck
+#   breath    a dragon's breath (spec §8 "Creature behavior": "Dragons"; enemy-only; the type
+#             needs combat = "dragon", and a dragon needs it): [creature.breath] with damage
+#             (dice, rolled once for everyone in the cone), damage_type (its element: one type),
+#             length (the cone's, in cells, 2 to 12; a quarter turn wide, as Burning hands'),
+#             cooldown (seconds before the next, 6 to 600: the `breath` status of status.toml, a
+#             degree per 6 s), effect (a burst effect of effects.toml drawn over the cone), and
+#             optionally noun (what strikes, in the messages: "fire"; default "breath") and verb
+#             (what it does: "breathes fire"; default "breathes"). It breathes at a hostile it
+#             sees in the cone with a clear line whenever the status is off, with no roll to hit:
+#             Evasion halves it and resistances take their share
 #   natural   its natural armour: { defence = 1, protection = 3, name = "shell" }: defence in
 #             the Natural category of Defence, protection the damage it soaks off every hit
 #             (adding up with what it wears; each 0 to 20, not both 0); "Your sword glances off
@@ -204,7 +218,10 @@
 #             (said once eaten), vomit = 25 (percent chance it comes back up and feeds nothing),
 #             train = { toughness = 30 } (sure stat training marks per stat, 0 to 200),
 #             widen = { toughness = 5 } (percent chance per stat that the hidden potential rises
-#             by 1, 0 to 20: rare), heal = "1d4" (hit points), harm = "1d2" (degrees of
+#             by 1, 0 to 20: rare), skills = { decipher_script = { gives = 5, up_to = 30 } }
+#             (an untrained eater learns the skill at `gives`, a trained one's rises by `gives`,
+#             never past `up_to`; only skills with words in hunger.toml's `[corpses.skills]`:
+#             literate casters teach Decipher script), heal = "1d4" (hit points), harm = "1d2" (degrees of
 #             sickness: hunger.toml's `sickness`, poison), satiation = 500 (nutrition beyond its
 #             size's; less if negative) }. `train` and `widen` lay over its tags' defaults
 #             (hunger.toml's `[corpses.by_tag]`) per stat; 0 switches a tag's gift off. A

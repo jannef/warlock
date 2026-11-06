@@ -102,9 +102,8 @@ outdoor areas [generated from it](overworld.md#local-areas), the market town of 
 - **[Blood](combat.md#blood)** — big hits and kills stain the floor and the walls beside the victim, by its size and
   how the blow landed; subtle for one kill, a slaughterhouse where many fell (a [setting](settings.md) hides it).
 - **[Weapon skills](weapon-skills.md)** — ADOM-style: every blow, shot, and throw earns marks in its weapon's skill
-  (daggers, long blades, axes, bows, …, sixteen in all, shield blocking and shield bashing among
-  them), and [ranks](weapon-skills.md#marks-and-ranks) 0 to 10 come slower and slower; each rank makes you hit, hurt, parry, or
-  block a little better ("You feel more skilled with long blades."). Skill carries over to
+  (daggers, long blades, axes, bows, …, fifteen in all, shield bashing among them), and [ranks](weapon-skills.md#marks-and-ranks) 0 to 10 come slower and slower; each rank makes you hit, hurt, or parry
+  a little better ("You feel more skilled with long blades."). Skill carries over to
   [related weapons](weapon-skills.md#related-skills), as in *The Riddle of Steel*: long blades 8 makes short blades 6. Your race and
   class start you off, a [weapon skills screen](controls.md#info-pages) shows your ranks, and a shield can [bash](abilities.md#ability-shield-bash) too.
 - **[Fighting styles](fighting-styles.md)** — after AD&D's *Complete Fighter's Handbook*, how you hold your weapons is a

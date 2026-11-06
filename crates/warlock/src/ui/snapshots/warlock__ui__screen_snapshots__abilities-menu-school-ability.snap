@@ -10,8 +10,8 @@ expression: "render(case, content.clone())"
            │ Birth sign                                                                │
            │ > a  Transfixing stare         at a place you see                         │
            │ Spells                                                                    │
-           │   b  Burning hands             3d8 fire, burns one in four, 2 mana, aimed │
-           │   c  Ray of frost              3d8 cold, numbs, 1 mana, aimed             │
+           │   b  Burning hands             4d8 fire, burns one in four, 2 mana, aimed │
+           │   c  Ray of frost              4d8 cold, numbs, 1 mana, aimed             │
            │ Skills                                                                    │
            │   d  Decipher                  no unknown scroll                          │
            │   e  Knowledge                 not usable yet                             │

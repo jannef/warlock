@@ -384,6 +384,7 @@ pub fn sound_char(sound: &PerceivedSound) -> char {
         SoundKind::Digging => 'd',
         SoundKind::Voice => 'v',
         SoundKind::Howl => 'h',
+        SoundKind::Roar => 'r',
         SoundKind::Heartbeat => 'q',
         SoundKind::Bell => 'a',
         SoundKind::Explosion => 'e',
@@ -2542,10 +2543,10 @@ mod tests {
         // Duelist 1. With nothing in their hands they fight as a brawler.
         let mut world = showcase();
         let rows = layer_rows(&world, Layer::WeaponSkills);
-        assert_eq!(rows.len(), 27);
+        assert_eq!(rows.len(), 26);
         assert_eq!(rows[0], "Daggers and knives 2 (0%)");
-        assert_eq!(rows[16], "Duelist 1 (0%)");
-        assert_eq!(rows[22], "Brawler 0 (0%), in use");
+        assert_eq!(rows[15], "Duelist 1 (0%)");
+        assert_eq!(rows[21], "Brawler 0 (0%), in use");
         assert!(
             rows.contains(&"Thrown weapons 1 (0%)".to_string()),
             "{rows:#?}"

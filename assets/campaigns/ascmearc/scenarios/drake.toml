@@ -1,0 +1,8 @@
+# A dev scenario of the Ascmearc (spec §8 "Creature behavior": "Dragons", #1099): straight into a
+# hall with the fire drake, to see a dragon breathe and fight. A new character here is level 1
+# and burns at the first breath: give them levels with the dev `xp:` and `levelup:auto` first.
+name = "Drake"
+description = "The fire drake in a hall of lava, eleven cells away: it breathes fire whenever it can, and fights with claws and bite between."
+start_level = "drakes_lair"
+seed = 1
+character = { race = "human", gender = "male", class = "warrior", name = "Wulfric" }

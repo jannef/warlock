@@ -29,7 +29,7 @@ damage = "3d12"
 damage_type = ["bludgeoning", "piercing"]
 name = "morning star"
 verb = "smashes"
-to_hit = 4
+to_hit = 10
 [creature.throw]
 object = "boulder"
 damage = "4d8"

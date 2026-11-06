@@ -29,6 +29,6 @@ blood = "none"
 [creature.attack]
 damage = "4d8"
 damage_type = "fire"
-to_hit = 3
+to_hit = 9
 name = "touch"
 verb = "burns"
