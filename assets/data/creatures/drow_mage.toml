@@ -25,7 +25,7 @@ stats = { strength = 17, dexterity = 18, toughness = 20, intelligence = 23, will
 base_hp = 44
 skills = { concentration = 74, spellcraft = 79 }
 resist = { poison = 25 }
-on_eat = { message = "Lean and bitter, with an aftertaste of old poisons.", vomit = 40 }
+on_eat = { message = "Lean and bitter, with an aftertaste of old poisons.", vomit = 40, skills = { decipher_script = { gives = 7, up_to = 55 } } }
 [creature.attack]
 damage = "3d6"
 damage_type = "piercing"
