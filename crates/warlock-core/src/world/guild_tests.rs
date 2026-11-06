@@ -110,6 +110,17 @@ fn wats_topics_give_the_chain_one_link_at_a_time() {
         "guild_wanted",
     ];
     done(&mut w, &chain);
+    assert_eq!(topics(&w), ["quest-guild_deep", "guild", "board"]);
+    done(
+        &mut w,
+        &[
+            "guild_quarry",
+            "guild_score",
+            "guild_scroll",
+            "guild_wanted",
+            "guild_deep",
+        ],
+    );
     assert_eq!(topics(&w), ["guild", "board"]);
     // No gate but the chain's own: a Wicked character at level 1 is given every link.
     let mut w = town();
@@ -296,5 +307,38 @@ ranks = [{ title = "Tin", material = "tin" }]
         with_guild(nobody)
             .expect_err("no master")
             .contains("`master`")
+    );
+}
+
+#[test]
+fn reaching_grundleas_eleven_makes_the_player_a_steel() {
+    let mut w = town();
+    let chain = [
+        "guild_quarry",
+        "guild_score",
+        "guild_scroll",
+        "guild_wanted",
+    ];
+    done(&mut w, &chain);
+    assert_eq!(rank(&w).as_deref(), Some("Iron"));
+    beside_wat(&mut w);
+    act(&mut w, "ask:S:quest-guild_deep");
+    assert!(promotions(&w).is_empty(), "already Iron");
+    // Floor 10 does not count, floor 11 does; the endless branch keeps no floor, the reach stays.
+    w.reach("grundleas:10");
+    act(&mut w, "ask:S:quest-guild_deep");
+    assert!(!said(&w).contains(&"Quest complete: Eleven floors down.".to_string()));
+    w.reach("grundleas:11");
+    w.state.levels.remove("grundleas:11");
+    act(&mut w, "ask:S:quest-guild_deep");
+    assert!(
+        said(&w).contains(&"Quest complete: Eleven floors down.".to_string()),
+        "{:?}",
+        said(&w)
+    );
+    assert_eq!(rank(&w).as_deref(), Some("Steel"));
+    assert_eq!(
+        promotions(&w),
+        ["Wat One-Eye names you a Steel of the Weyfarers' Gilde."]
     );
 }

@@ -92,3 +92,21 @@ reveals = { location = "brocenburg", when = "given" }
 where = "Brocenburg, the old fort, stands in Holegnwudu, east of the deep wood."
 offer = "Sergeant 'Errick. Done 'is captain at the fort an' legged it, an' now 'e sells 'is axe to goblins out at Brocenburg in the Holegnwudu. Fort wants 'im back. In a box'll do."
 done = "The Sergeant, boxed! Fort pays for the box, the Gilde pays for the job, an' you're Iron now."
+
+# Link 5 (#1119): eleven floors down the endless branch, past the tenth floor's boss. Reaching
+# the floor once is enough (Grundlēas forgets each floor left, the reach is kept). Done, it
+# makes the player a Steel of the Gilde.
+[[quest]]
+id = "guild_deep"
+name = "Eleven floors down"
+giver = "wat"
+requires = "guild_wanted"
+type = "reach"
+target = "grundleas:11"
+reward = { gold = 600, xp = 900 }
+alignment = 5
+offer = "There's a stair in the grass south o' the Beorhtburna road, Grundlēas, an' it don't go nowhere twice. The Gilde wants one o' ours stood on the eleventh floor down, past the tenth, mind, an' whatever keeps it. Come back an' tell me what the air's like."
+accept = "Eleven floors. Count the steps, an' don't trust the ones behind you."
+reminder = "Grundlēas, south o' the Beorhtburna road. The eleventh floor down, past the tenth."
+done = "Eleven down an' back up with yer 'ead on! Steel, that is. The Gilde don't say it twice."
+where = "Grundlēas lies in the grass south of the Beorhtburna road."

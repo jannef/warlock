@@ -70,11 +70,11 @@ every new run starts in it.
     (bring a scroll drawn from those loot can hold; 200 gold, 150 XP), "Wanted" (kill one of
     four wanted criminals, drawn from the quest's four variants, each revealing its own lair as
     it is given: the other three stay hidden for the run; a named monster, met by its death at
-    any hand; 500 gold, 800 XP, alignment 10). Being given the first makes the player a **Tin**
-    of the Gilde, the second done a **Pewter**, the fourth done an **Iron**; the ranks are
+    any hand; 500 gold, 800 XP, alignment 10), "Eleven floors down" (#1119: reach the eleventh floor of Grundlēas, past the tenth's boss; 600 gold, 900 XP, alignment 5). Being given the first makes the player a **Tin**
+    of the Gilde, the second done a **Pewter**, the fourth done an **Iron**, the fifth done a **Steel**; the ranks are
     seven, titles named by metals of the game's materials ordered by their value (Tin, Pewter,
     Iron, Steel, Duralumin, Electrum, Gold; `campaigns/ascmearc/data/guilds/weyfarers.toml`),
-    the later ones reserved for the chain's later links.
+    the last three reserved for the chain's later links.
   - **The four lairs** (#426; the guild design §8): four hidden branches of four floors each,
     danger 6 to 9, on reserved sites of the overworld, each with its criminal's pinned vault on
     the fourth floor and no shops: **Wyrtholm** ("herb islet", Mother Sallow; caves 100×40 under

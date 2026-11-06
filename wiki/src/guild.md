@@ -29,6 +29,9 @@ and stands until it is done. Kills count only from the giving on.
    the job; the other three lairs stay hidden for the rest of your life. A named monster: only
    their death counts, however it came and whoever dealt it. 500 [gold](shops.md#money), 800 [experience](experience.md). [Good.](alignment.md)
 
+5. **Eleven floors down**: reach the eleventh floor of [Grundlēas](dungeons.md#grundlēas), the endless stair in the grass south of the
+   Beorhtburna road, past the tenth floor and whatever keeps it. Reaching it once is enough. 600 [gold](shops.md#money), 900 [experience](experience.md). [A little good](alignment.md).
+
 The chain goes on: more jobs are to come.
 
 ## The wanted
@@ -53,7 +56,7 @@ Their numbers are in [Creatures](creatures.md).
 ## Ranks
 
 Being given the first job makes you a member: a **Tin** of the Gilde. Finishing a score and five makes
-you a **Pewter**, and bringing down your wanted criminal an **Iron**. Wat names you each time ("Wat One-Eye names you a Pewter of the Weyfarers'
+you a **Pewter**, bringing down your wanted criminal an **Iron**, and standing on the eleventh floor of Grundlēas a **Steel**. Wat names you each time ("Wat One-Eye names you a Pewter of the Weyfarers'
 Gilde."), and the character screen ([Your character](character.md)) shows the rank in the colour of its metal. A
 rank is a title: the town calls you by it, and nothing else changes. There are seven, each
 named after a metal and each a dearer metal than the last; the later ones wait for the jobs to

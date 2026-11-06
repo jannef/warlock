@@ -36,14 +36,14 @@ dump's `guilds` (`id`, `name`, `rank`; left out before joining one).
 
 The Ascmearc's guild: `campaigns/ascmearc/data/guilds/weyfarers.toml` (seven ranks named by
 allomantic metals of `data/materials/`, ordered by value: Tin, given `guild_quarry`; Pewter, done
-`guild_score`; Iron, done `guild_wanted`; Steel, Duralumin, Electrum, Gold reserved), its
+`guild_score`; Iron, done `guild_wanted`; Steel, done `guild_deep`; Duralumin, Electrum, Gold reserved), its
 master Wat One-Eye (`data/creatures/guildmaster.toml`, neutral, so he scorns no one; npc `wat` in
 `data/dialogue/ceaptun.toml`, Cockney, topics `guild` and `board` after the one quest topic), and
 his chain `data/quests/wat.toml`: `guild_quarry` (a creature pick of the three branches),
 `guild_score` (a tag pick of seven group tags, count 25), `guild_scroll` (a pick of the
 scrolls loot holds, a bring), `guild_wanted` (four `[[quest.variant]]`s, one per criminal, each
 with its own `reveals` of its lair, `when = "given"`, and its own offer, where, and done; the
-reminder is the quest's, `{Target}` filled). The Gildhalle is in `levels/ceaptun.toml`
+reminder is the quest's, `{Target}` filled), `guild_deep` (#1119, a `reach` of `grundleas:11`: the endless branch forgets its floors, but the arrival marks the quest, which stays; a floor reached before Wat gives the job does not count). The Gildhalle is in `levels/ceaptun.toml`
 (`docs/dev/campaign.md`).
 
 The lairs (#426): `data/dungeons/{wyrtholm,wulfeshol,banfeld,brocenburg}.toml`, four floors at
