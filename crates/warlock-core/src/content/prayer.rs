@@ -306,7 +306,7 @@ mod tests {
         assert_eq!(rules.face(Some(Band::Callous)), Face::Dark);
         assert_eq!(rules.face(Some(Band::Wicked)), Face::Dark);
         assert_eq!(rules.face(None), Face::Holy);
-        assert_eq!(rules.release.len(), 9);
+        assert_eq!(rules.release.len(), 12);
     }
 
     fn load(edit: impl Fn(&str) -> String) -> Result<Content, ContentError> {

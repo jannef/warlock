@@ -279,8 +279,11 @@ fn step_of_the_wind_replays() {
 const STILL: ClassActive = ClassActive::Stillness;
 
 /// The statuses Stillness ends, in its data's order.
-const STILLED: [&str; 9] = [
+const STILLED: [&str; 12] = [
     "held",
+    "engulfed",
+    "swallowed",
+    "latched",
     "pinned",
     "staggered",
     "stunned",

@@ -11,7 +11,7 @@ and ultroloth 58 (standard). Mercenary fiends of the lower planes: immune to aci
 resisting fire, cold, and lightning 50, no corpse. `content/yugoloth_roster_tests.rs` holds every
 `yugoloth` type to its level and role in `ROSTER`, the XP guideline, ±35 % of the max HP and dice
 formulas, and the two tags (faction and `yugoloth` tag go together). Their riders map onto what
-exists: the canoloth's barbed tongue holds (20 % at 18) and bleeds, the nycaloth's claws bleed,
+exists: the canoloth's barbed tongue latches (`latched`, 20 % at 18) and bleeds, the nycaloth's claws bleed,
 the arcanaloth's poison, the ultroloth's blows carry its gaze (transfixed, frightened). They ship
 in no population (no danger window reaches level 22 yet), so they come only as strays drawn far
 out of depth (docs/dev/creatures.md).

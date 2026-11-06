@@ -1,7 +1,9 @@
 # The undead roster (#383, batch 5). A corpse become a living nest, its flesh heaving with green
 # worms that answer to it: a caster (its spells announced until magic is designed) whose touch
 # sends them burrowing into the living. Caught, burrowing worms are quick and may kill; a temple's
-# cure, or a root that cures disease, ends them. Not yet in any dungeon's population.
+# cure, or a root that cures disease, ends them. It sheds grave worms while it fights, six at most
+# (a summoning at no cost), and more crawl out of it when it dies (`dies_into`). Not yet in any
+# dungeon's population.
 [[creature]]
 id = "wormlord"
 level = 47
@@ -13,7 +15,7 @@ glyph = "z"
 fg = "#70c040"
 speed = 1100
 faction = "undead"
-tags = ["undead", "caster"]
+tags = ["undead", "caster", "summoner"]
 alignment = "evil"
 vision = "darkvision"
 sight = 10
@@ -30,8 +32,16 @@ base_hp = 94
 skills = { concentration = 151, spellcraft = 156 }
 natural = { defence = 3, protection = 4, name = "dead flesh" }
 resist = { poison = 100 }
+dies_into = { creatures = ["grave_worm"], count = "3d6", spread = 2 }
 on_eat = { message = "It is all moving inside.", vomit = 90, harm = "1d6", train = { intelligence = 0, willpower = 0 } }
 blood = "#3a4020"
+[creature.summon]
+creatures = ["grave_worm"]
+count = "1d2"
+cooldown = 30
+most = 6
+spread = 1
+verb = "sheds"
 [creature.attack]
 damage = "4d8"
 damage_type = "piercing"

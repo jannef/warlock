@@ -96,7 +96,17 @@ All fifteen ship in no population (strays only). Each is one file in `assets/dat
 | 70 | demilich | the roster's only `unique`, caster (range 12), drains Intelligence 3, physical 50 |
 
 Drains are 2 points (3 for the two apexes) at difficulty 12 + level ÷ 5; wall Defence is 8 for the
-three spirits. The nightworm's hold is 15 % at 24. Plurals: `huntsman`, `demilich`.
+three spirits. The nightworm swallows (`swallowed`, docs/dev/status-effects.md) at 15 % and 24. Plurals: `huntsman`, `demilich`.
 `ROSTER_TOP` in `undead_roster_tests.rs` is 70, the top of both batches.
 
 Spells (#1102, docs/dev/creatures.md "Casters"; in the order each prefers them): the barrow wight `hex_of_weakness`, `grave_breath` (mana 6); the ash wraith `scorching_ray`, `grave_breath` (mana 24); the mummy priest `fear`, `cause_wounds`, `blight` (mana 60); the lich `haste`, `chain_lightning`, `fireball`, `grave_spear` (mana 120); the mummy lord `fear`, `blight`, `grave_spear` (mana 80); the barrow king `fear`, `grave_spear`, `rime` (mana 110); the wormlord `fear`, `leech`, `blight` (mana 90); the ghost lord `fear`, `slumber`, `grave_spear` (mana 120); the archlich `haste`, `silence`, `sunfire`, `chain_lightning`, `grave_spear` (mana 300); the mummy king `fear`, `flame`, `grave_spear` (mana 130); the deathless king `haste`, `fear`, `sunfire`, `grave_spear`, `chain_lightning` (mana 300); the demilich `silence`, `sunfire`, `chain_lightning`, `leech`, `grave_spear` (mana 350).
+
+## Dread gimmicks (docs/design/monster-dread.md §6)
+
+D5 (#1129): the **charnel heap** (22) splits under slashing and piercing (`splits = { on =
+["slashing", "piercing"], least = 8 }`) and engulfs (`engulfed` at 15 %, grip 18; filth fever
+kept; slow); the **wormhost** (26) dies into grave worms (`dies_into`, `2d4` within 1; its
+burrowing worms kept); the **wormlord** (47) dies into `3d6` within 2 and breeds them as it
+fights (`[creature.summon]` of grave worms, `1d2` every 30 s, `most = 6`, no mana, verb "sheds";
+tagged `summoner`); the **nightworm** (63) swallows (`swallowed`) in place of its hold. All four
+are dread at their tiers (D0). Tests: `world/split_tests.rs`.

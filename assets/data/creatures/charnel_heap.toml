@@ -1,6 +1,7 @@
 # The undead roster (#383, batch 3). The dead of a charnel pit grown together into one heaving
-# mound of limbs and rot: slow, enormously hard to put down, and its blows carry filth fever. Not
-# yet in any dungeon's population.
+# mound of limbs and rot: slow, enormously hard to put down, and its blows carry filth fever. A
+# blade cuts it in two, and both halves crawl (`splits`: blunt blows and fire do not); it closes
+# over whom it slams (engulfed). Not yet in any dungeon's population.
 [[creature]]
 id = "charnel_heap"
 level = 22
@@ -23,6 +24,7 @@ stats = { strength = 25, dexterity = 14, toughness = 26, intelligence = 2, willp
 base_hp = 88
 natural = { defence = 1, protection = 1, name = "dead flesh" }
 resist = { poison = 100 }
+splits = { on = ["slashing", "piercing"], least = 8 }
 on_eat = { message = "Many dead, and all of them rotten.", vomit = 90, harm = "1d6" }
 blood = "#3a3420"
 [creature.attack]
@@ -31,4 +33,7 @@ damage_type = "bludgeoning"
 name = "slam"
 verb = "slams"
 to_hit = 5
-on_hit = [{ disease = "filth_fever", chance = 15 }]
+on_hit = [
+    { disease = "filth_fever", chance = 15 },
+    { status = "engulfed", chance = 15, difficulty = 18 },
+]

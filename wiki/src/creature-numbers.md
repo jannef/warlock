@@ -62,12 +62,33 @@ on free cells around it that it can see, nearest first. How many come is rolled 
 are real creatures of the summoner's side that fight, carry gear, drop it where they die, and give
 their full experience when you kill them. Killing the summoner does not send them away.
 
-Each summoning costs the summoner [mana](mana.md#how-much) and a while before it can summon again; it never has more
-of its summoned alive at once than the last column says. Its mana comes back as anyone's does
+Each summoning costs the summoner [mana](mana.md#how-much) (a few, the breeders, pay none) and a while before it can summon again; it never has more
+of its summoned alive at once than the last column says. A breeder calls forth its own brood
+while it fights, the [wormlord](creatures.md#creature-wormlord) its grave worms: kill it first,
+or the fight gets worse the longer it lasts. Its mana comes back as anyone's does
 (see [Mana](mana.md)), so a summoner that has spent itself summons again only much later. A
 summoner that cannot cast ([silenced](status-effects.md#status-silenced)) cannot summon. You cannot summon.
 
 {{#include generated/creature-summons.md}}
+
+### Splitting and dying into
+
+A blow of a kind a creature **splits** under (the [charnel heap](creatures.md#creature-charnel-heap)'s: a blade's
+[slashing](damage-types.md#damage-slashing) and [piercing](damage-types.md#damage-piercing)) that leaves it alive
+with at least twice the hit points in the third column cuts it in two: it keeps the greater
+half of what it has left, and a second one of it, with the other half and nothing it carried,
+stands on the nearest free cell beside it, of its side and hunting what it hunted. With no free
+cell beside it, it does not split. Blunt blows, fire, acid, and every other kind leave it whole,
+and below twice that floor it dies like anything. A half you kill gives a **quarter** of the
+creature's experience (an ally's kill a quarter of the ally's share), and no
+[quest](quests.md) counts it.
+
+A creature that **dies into** something lets it out of its corpse as it dies: so many of what
+the table says, each drawn at random, on free cells it could see within that many cells, of the
+dead one's side. Each gives a **tenth** of its experience when killed, and no quest counts them
+either. Look mode tells such a creature by its *writhing*.
+
+{{#include generated/creature-splits.md}}
 
 ### Breath
 

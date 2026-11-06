@@ -16,7 +16,7 @@ tags, in the delf's `fire` faction.
 | Fire | standard | ember mote 2, lesser fire elemental 9, cinder elemental 17, fire elemental 27, greater 38, elder 50, balefire 64 | immune to fire, cold hurts it more; carries `ember_full`, `lava`, or `brazier` light |
 | Earth | brute | stone mote 1, lesser earth elemental 6, earth elemental 13, greater 24, elder 40, hoarstone 60 | slow, protection, resists piercing and slashing, immune to electricity; `staggered` blows, `held` from the elder; incorporeal from the earth elemental up (`wall_defence = 1 + level / 20`) |
 | Air | quick | dust devil 3, lesser air elemental 10, air elemental 19, greater 31, elder 45, welkin wind 58 | very fast, hard to hit, resists piercing and electricity; `staggered` blows |
-| Water | standard | water mote 4, lesser water elemental 7, water elemental 14, greater 26, elder 42, brimwolf 55 | walks on land; resists fire and piercing, electricity hurts it more; `sluggish` blows, `held` from the greater up |
+| Water | standard | water mote 4, lesser water elemental 7, water elemental 14, greater 26, elder 42, brimwolf 55 | walks on land; resists fire and piercing, electricity hurts it more; `sluggish` blows, `engulfed` (drowned, docs/dev/status-effects.md) from the greater up |
 | Ice | brute | frost mote 5, lesser ice elemental 11, ice elemental 21, greater 33, elder 48, rimethurse 66 | slow, a cold blow that leaves one `sluggish`, immune to cold, fire hurts it more |
 | Lightning | quick | spark mote 8, lesser lightning elemental 15, lightning elemental 23, greater 36, elder 52, thunderhead 70 | fast, a shock that `staggered`, immune to electricity; the `storm` light (`data/lights.toml`, added for it; the spark mote only a glow) |
 
