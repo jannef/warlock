@@ -14,11 +14,11 @@ use super::{Build, Gear, Monster, Side, dress, schools, side_of};
 use crate::action::AttackKind;
 use crate::burden::Burden;
 use crate::combat::{self, Category, Profile, Strike, Target};
-use crate::content::{CreatureId, Resolution, StatUse};
+use crate::content::{CreatureId, RANKS, Resolution, StatUse, WeaponSkillId};
 use crate::rng::Rng;
 use crate::stats::Stat;
 use crate::world::{ActorId, World};
-use std::collections::BTreeSet;
+use std::collections::{BTreeMap, BTreeSet};
 
 /// The game days level `level` takes to reach (the design's §3.1: one for levels 2 to 5, two to
 /// 15, three to 30, four beyond: 189 days to level 60).
@@ -106,9 +106,24 @@ pub(super) struct Log {
     pub fought_casts: u32,
     /// The creature types killed (the `discovered` use's first kills).
     killed: BTreeSet<CreatureId>,
+    /// The weapon skills and styles the fights trained by use (#1095): not set by level.
+    pub practised: BTreeSet<WeaponSkillId>,
+    /// The level at which each of those first stood at each rank (`[0]` unused).
+    pub reached: BTreeMap<WeaponSkillId, [Option<u8>; RANKS]>,
 }
 
 impl Log {
+    /// Notes the ranks `w`'s player stands at in the practised skills at `level`.
+    pub fn note_ranks(&mut self, w: &World, level: u8) {
+        for &id in &self.practised {
+            let rank = w.state.player().weapon_skills.rank(id);
+            let reached = self.reached.entry(id).or_default();
+            for at in &mut reached[1..=usize::from(rank)] {
+                at.get_or_insert(level);
+            }
+        }
+    }
+
     /// Notes the rises between `before` and `w`'s scores now.
     pub fn rises(&mut self, w: &World, before: [u8; 6]) {
         let now = scores(w);
@@ -174,6 +189,15 @@ pub(super) fn live_level(
         .then(|| schools::pace_spell(&dressed, build))
         .flatten();
     let foes = foes(monsters, level);
+    // The weapon skill and the style its blows train (#1095): the main hand's, for both hands.
+    let practised: Vec<WeaponSkillId> = if spell.is_none() {
+        let a = dressed.state.player();
+        let with = a.weapon_item(&content).map(|i| a.inventory[i].object);
+        (a.attack_skills(&content, AttackKind::Melee, with).trained()).collect()
+    } else {
+        Vec::new()
+    };
+    log.practised.extend(practised.iter().copied());
     let kills = content.experience().kills_for(level + 1);
     let days = days(level + 1);
     let mut rng = Rng::stream(seed * 1000 + u64::from(level), "stat training");
@@ -192,7 +216,8 @@ pub(super) fn live_level(
             };
             let them = &m.geared[(fought as usize + seed as usize) % m.geared.len()];
             fought += 1;
-            let took = fight(w, &me, them, spell.as_ref(), build, &mut rng, foe);
+            let blows = (&practised[..], u32::from(m.level));
+            let took = fight(w, (&me, them), spell.as_ref(), blows, build, &mut rng, foe);
             rounds += took;
             if spell.is_some() {
                 log.fought_casts += took;
@@ -251,12 +276,14 @@ fn cast(w: &mut World, spell: Option<&super::Cast>) {
 }
 
 /// One fight to the kill (or [`MAX_ROUNDS`]): the player's blows, or casts of `spell`, and the
-/// monster's, each through the training hooks. Returns the rounds.
+/// monster's, each through the training hooks; each of the player's blows also earns marks in
+/// the weapon skills `practised` against the monster's level through `World::practise`.
+/// Returns the rounds.
 fn fight(
     w: &mut World,
-    me: &Side,
-    them: &Side,
+    (me, them): (&Side, &Side),
     spell: Option<&super::Cast>,
+    (practised, foe_level): (&[WeaponSkillId], u32),
     build: &Build,
     rng: &mut Rng,
     foe: ActorId,
@@ -289,6 +316,9 @@ fn fight(
                 for p in std::iter::once(&me.blow).chain(&me.off) {
                     let blow = combat::strike(p, &them.target, rng);
                     w.train_fight((player, foe), AttackKind::Melee, &blow);
+                    for &skill in practised {
+                        w.practise(skill, blow.strike.is_hit(), foe_level);
+                    }
                     if first && build.class == "thief" && blow.strike.is_hit() {
                         w.train_stat(StatUse::SneakAttack);
                     }
