@@ -61,6 +61,13 @@ impl Rng {
         Self::stream(run_seed, "levels")
     }
 
+    /// The ruin stream of a run (spec §8 "Spells": "Ruin"): which items lying in an area spell
+    /// are lost, apart from the gameplay stream so a pile in a Fireball moves no fight's roll.
+    /// The world state keeps it from the first draw on.
+    pub fn ruin(run_seed: u64) -> Self {
+        Self::stream(run_seed, "ruin")
+    }
+
     /// The map-generation stream for `level`; `attempt` > 0 derives the stream for a retry after
     /// a generated map failed validation.
     pub fn map(run_seed: u64, level: &str, attempt: u32) -> Self {

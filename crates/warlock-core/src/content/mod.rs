@@ -126,6 +126,7 @@ mod room_treasury;
 mod room_treasury_tests;
 #[cfg(test)]
 mod room_warp_tests;
+mod ruin;
 mod scenario;
 mod scroll;
 mod scroll_label;
@@ -296,6 +297,7 @@ pub use room_lore::RoomLoot;
 pub use room_shrine::{Regard, Shrine};
 pub(crate) use room_treasury::breach_fault;
 pub use room_treasury::{Heaps, MAX_COINS_EACH, MAX_TREASURE, Sealed, SecretDoors, Treasury};
+pub use ruin::{RuinOf, RuinRow, RuinRules};
 pub use scenario::ScenarioDef;
 pub use scroll::{Cleansing, Reading, SpellScroll};
 pub use scroll_label::ScrollLabelDef;
@@ -694,6 +696,9 @@ pub struct Content {
     /// The numbers of intimidating (`data/intimidate.toml`, spec §8 "Skills": Intimidate); none
     /// without the file, when nobody intimidates.
     intimidate: Option<IntimidateRules>,
+    /// What area spells do to the items lying in them (`data/ruin.toml`, spec §8 "Spells":
+    /// "Ruin"); empty without the file, when nothing is ruined.
+    ruin: RuinRules,
     /// The numbers of swimming in deep water (`data/swim.toml`, spec §8 "Skills": Swim); none
     /// without the file, when nobody swims.
     swim: Option<SwimRules>,
@@ -867,6 +872,7 @@ impl Content {
             forage: None,
             feint: None,
             intimidate: None,
+            ruin: RuinRules::default(),
             decipher: None,
             swim: None,
             ranged: RangedRules::default(),
@@ -1234,6 +1240,10 @@ impl Content {
         let path = "data/intimidate.toml";
         if let Some(text) = files.get_optional(path) {
             content.intimidate = Some(IntimidateRules::parse(path, text, &content)?);
+        }
+        let path = "data/ruin.toml";
+        if let Some(text) = files.get_optional(path) {
+            content.ruin = RuinRules::parse(path, text, &content)?;
         }
         let path = "data/swim.toml";
         if let Some(text) = files.get_optional(path) {
@@ -3343,6 +3353,12 @@ impl Content {
     /// without the file, when nobody intimidates.
     pub fn intimidate(&self) -> Option<&IntimidateRules> {
         self.intimidate.as_ref()
+    }
+
+    /// What area spells do to the items lying in them (spec §8 "Spells": "Ruin";
+    /// `data/ruin.toml`); no rows without the file.
+    pub fn ruin(&self) -> &RuinRules {
+        &self.ruin
     }
 
     /// The numbers of swimming in deep water (spec §8 "Skills": Swim; `data/swim.toml`); `None`
