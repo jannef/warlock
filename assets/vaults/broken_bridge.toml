@@ -1,0 +1,23 @@
+# Vault: a bridge over a dark river with half its planks gone, a crooked way across between the
+# holes, and the floor's own on the far bank. The decision: cross single file under their eyes,
+# fight on the planks where a shove means a pit, or swim.
+# The six pits are known: the danger is not finding them but fighting beside them. The river is
+# deep water, so a trained swimmer has a way round the bridge; nothing lies only beyond it.
+name = "The Broken Bridge"
+map = '''
+################
+#....DDDDDDg.m.#
+#....^=^=^=.g..#
++....=^=^=^..g$#
+#....DDDDDD.g..#
+################
+'''
+
+[legend]
+"D" = "deep_water"
+"=" = "plank_floor"
+"^" = { terrain = "plank_floor", trap = "pit", known = true }
+# Three of the four places on the far bank are kept.
+"g" = { terrain = "floor", monsters = { pool = "level", count = 3 } }
+"m" = { terrain = "floor", loot = "magic" }
+"$" = { terrain = "floor", loot = "any" }

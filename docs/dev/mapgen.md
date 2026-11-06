@@ -126,10 +126,15 @@ direction of its own (a stair's `<`/`>` means up or down, a door or wall none). 
 row order too. Tests: `content/vault_turn_tests.rs` (a quarter turn against the same vault drawn by
 hand; every turn of every vault passes `Vault::new` again), `mapgen/vault_turn_tests.rs` (Flooded
 cell and Guard post on real floors, pinned vaults, the draw), `ruins_are_outdoor_vaults_stamped_some_way_round`,
-and `mapgen/vault_stamp_tests.rs` (#1072): every shared dungeon vault stamps at least once in 100
+and `mapgen/vault_stamp_tests.rs` (#1072): every shared dungeon vault stamps at least once in 300
 seeds of a rooms branch (Bānfeld) and a cave branch (Wulfeshol), some way round, with its
 entrances reached from the up stairs (secret doors count as passable), its known traps known
-(a chest's too: the Spiteful Coffer's fireball), and the Sealed Barrow's lead key inside it. A
+(a chest's too: the Spiteful Coffer's fireball), its named places with it (the Four Fonts'
+doors), the Sealed Barrow's lead key inside it, the Counting-house's tripwire under its coin,
+and the Well-house's coin in its wadeable water (#1078). A vault with a `danger` must suit some
+floor of both branches (both start at danger 6): one kept to dangers they never reach fails
+here. The Depths have no danger, so `vaults_are_stamped_whole_some_way_round_...` expects a
+vault with a `from` never there. A
 new shared vault joins the test by being in `assets/vaults/`. Test fixtures at peace
 (`world/fixture_factions.rs::make_peace`) leave the shared vaults out: a tag pool holds only
 types hostile to the player.

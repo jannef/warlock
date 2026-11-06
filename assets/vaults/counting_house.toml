@@ -1,0 +1,23 @@
+# Vault: coin in six piles on the counting-room floor, a tripwire under one, and the clerks'
+# barracks through a doorway. The decision: search the floor before the coin, or take it quick
+# and have the bell bring the floor.
+# The Bell and the Barracks' small cousin. The barracks is a dead end off a vault with one
+# entrance, so its crowd keeps to it until something calls it. One of the six piles is a signet
+# among the coin (rule 2's `magic`); the tripwire is hidden, so Search is the price of safety.
+name = "The Counting-house"
+map = '''
+###############
+#c.c.c#.$...$.#
+#.c.c.#.......#
+#c...c'..$.t..+
+#.....#.......#
+#.c...#.$...j.#
+###############
+'''
+
+[legend]
+# Five of the eight bunks are taken.
+"c" = { terrain = "floor", monsters = { pool = "level", count = 5 } }
+"$" = { terrain = "floor", loot = { pool = "coins" } }
+"t" = { terrain = "floor", loot = { pool = "coins" }, trap = "alarm" }
+"j" = { terrain = "floor", loot = { pool = "jewellery", grade = "magic" } }

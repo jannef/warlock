@@ -1,0 +1,23 @@
+# Vault: a gallows across the yard, the hanged in a row beneath it, and two of them standing. The
+# decision: where to cross the row, when the crossing is the fight.
+# The beam's posts close the row's ends, so the only way to what lies beyond is over the bones,
+# among the dead that walk. The sketch's two coins are the hangman's purse and a hanged man's ring
+# (rule 2's `magic`).
+name = "The Gallows-yard"
+map = '''
+#############
+#...$...m...#
+#...........#
+#TbububububT#
+#...........#
+#...........#
+######+######
+'''
+
+[legend]
+"T" = "timber_wall"
+"b" = { terrain = "floor", objects = ["bones"] }
+# Two of the four are not dead enough.
+"u" = { terrain = "floor", monsters = { pool = "undead", count = 2 } }
+"$" = { terrain = "floor", loot = { pool = "money" } }
+"m" = { terrain = "floor", loot = { pool = "jewellery", grade = "magic" } }

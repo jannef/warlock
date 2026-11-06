@@ -756,7 +756,7 @@ fn vaults_are_stamped_whole_some_way_round_with_their_lights_and_creatures() {
         .filter(|v| v.campaign.is_none())
         .collect();
     let mut seen = vec![0; vaults.len()];
-    for seed in 0..30 {
+    for seed in 0..60 {
         for depth in 1..=8 {
             let level = level(seed, depth);
             for (i, vault) in vaults.iter().enumerate() {
@@ -804,6 +804,9 @@ fn vaults_are_stamped_whole_some_way_round_with_their_lights_and_creatures() {
             assert_eq!(*count, 0, "vault `{}` stamped where not named", vault.id());
         } else if vault.is_outdoor() {
             assert_eq!(*count, 0, "outdoor vault `{}` in a dungeon", vault.id());
+        } else if !vault.suits(0) {
+            // Kept to dangerous floors (the Well-house ...): the Depths have no danger.
+            assert_eq!(*count, 0, "vault `{}` stamped below its danger", vault.id());
         } else {
             assert!(*count > 0, "vault `{}` never placed", vault.id());
         }
@@ -924,8 +927,9 @@ fn random_vaults_are_spaced_by_phase() {
             assert!(floor.iter().all(|v| !seen.contains(v)), "seed {seed}");
             seen.extend(floor);
         }
+        // Those the deal keeps at danger 0: none kept to deeper floors (the Well-house ...).
         let all = (CONTENT.vaults().iter())
-            .filter(|v| v.stamps_on(def, 1) && !v.pinned)
+            .filter(|v| v.stamps_on(def, 1) && !v.pinned && v.suits(0))
             .count();
         assert_eq!(seen.len(), all);
         assert_eq!(ids(1), ids(5));

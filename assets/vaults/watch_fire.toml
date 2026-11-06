@@ -1,0 +1,23 @@
+# Vault: a fire burning in a crossroads chamber with a door on every side and the floor's own
+# keeping it. The decision: the way through the light, past the watch, or the long way round.
+# A route by design (rule 4): four doors, and the generator may make it the floor's way. The
+# brazier lights the whole chamber, so whoever crosses it is seen by those at the fire.
+name = "The Watch-fire"
+map = '''
+####+####
+#$......#
+#.......#
+#...g...#
++..gBg..+
+#...g...#
+#.......#
+#......m#
+####+####
+'''
+
+[legend]
+"B" = "brazier"
+# Three of the four places at the fire are kept.
+"g" = { terrain = "floor", monsters = { pool = "level", count = 3 } }
+"$" = { terrain = "floor", loot = "any" }
+"m" = { terrain = "floor", loot = "magic" }

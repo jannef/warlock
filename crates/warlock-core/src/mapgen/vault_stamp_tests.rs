@@ -10,7 +10,9 @@ static CONTENT: LazyLock<Content> = LazyLock::new(|| Content::builtin().expect("
 
 /// A rooms branch and a cave branch of the first campaign (both in a release build too).
 const BRANCHES: [&str; 2] = ["banfeld", "wulfeshol"];
-const SEEDS: u64 = 100;
+/// Enough that each of the vaults, some kept to a few dangers (the Tithe-barn's floors go no
+/// deeper than 6, the first of Bānfeld's four), comes up on each branch.
+const SEEDS: u64 = 300;
 
 #[test]
 fn every_shared_dungeon_vault_stamps_on_rooms_and_caves_floors() {
@@ -20,6 +22,8 @@ fn every_shared_dungeon_vault_stamps_on_rooms_and_caves_floors() {
     assert!(shared.len() >= 11, "{}", shared.len());
     let fireball = CONTENT.trap_id("fireball").expect("the trap");
     let lead_key = CONTENT.object_id("lead_key").expect("the key");
+    let alarm = CONTENT.trap_id("alarm").expect("the trap");
+    let water = CONTENT.terrain_id("water").expect("the terrain");
     for branch in BRANCHES {
         let def = CONTENT.dungeon(branch).expect("the branch");
         let mut seen: BTreeMap<&str, usize> = BTreeMap::new();
@@ -36,7 +40,7 @@ fn every_shared_dungeon_vault_stamps_on_rooms_and_caves_floors() {
                     }
                     *seen.entry(vault.id()).or_default() += found.len();
                     let reach = reached(&level);
-                    for (at, turn) in found {
+                    for &(at, turn) in &found {
                         let turned = vault.turned(turn);
                         let shift = |p: Pos| Pos::new(at.x + p.x, at.y + p.y);
                         for (door, _) in &turned.entrances {
@@ -56,6 +60,37 @@ fn every_shared_dungeon_vault_stamps_on_rooms_and_caves_floors() {
                                 assert!(level.chests.contains_key(&shift(*p)), "on the chest");
                             }
                         }
+                        // A vault whose terrain is the same another way round (the
+                        // Counting-house mirrored) is found that way too, its finds and traps
+                        // elsewhere: these hold for some way round at this corner.
+                        let id = vault.id();
+                        // Named places come with the vault (the Four Fonts' doors say their
+                        // elements).
+                        let places = |v: &Vault| {
+                            (v.template.places.iter())
+                                .all(|(p, place)| level.places.get(&shift(*p)) == Some(place))
+                        };
+                        // The Counting-house's tripwire lies under a pile of its coin.
+                        let tripwire = |v: &Vault| {
+                            id != "counting_house"
+                                || v.template.traps.keys().all(|p| {
+                                    level.traps.get(&shift(*p)).map(|t| t.kind) == Some(alarm)
+                                        && level.objects.contains_key(&shift(*p))
+                                })
+                        };
+                        // The Well-house's coin lies in its water, wadeable, not deep.
+                        let wet = |v: &Vault| {
+                            id != "well_house"
+                                || v.template.loot.iter().all(|(p, _)| {
+                                    level.terrain.get(shift(*p)) == Some(&water)
+                                        && level.objects.contains_key(&shift(*p))
+                                })
+                        };
+                        let holds = (found.iter())
+                            .filter(|(a, _)| *a == at)
+                            .map(|(_, t)| vault.turned(*t))
+                            .any(|v| places(&v) && tripwire(&v) && wet(&v));
+                        assert!(holds, "{id} {level_id} seed {seed}");
                         // The Sealed Barrow's key lies before its door.
                         if vault.id() == "sealed_barrow" {
                             let (_, lock) = (turned.template.locks.iter())
