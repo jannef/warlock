@@ -93,10 +93,10 @@ mod animated;
 mod appraise;
 mod ascetic;
 mod attacks;
-mod avert;
 mod aura;
 #[cfg(test)]
 mod aura_tests;
+mod avert;
 mod background;
 mod beast_friend;
 mod bleed;

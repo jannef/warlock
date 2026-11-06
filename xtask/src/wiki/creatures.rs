@@ -12,8 +12,8 @@ use warlock_core::burden::{self, Burden};
 use warlock_core::combat::Category;
 use warlock_core::content::{
     ActionKind, Affliction, BASE_TURN, Benefit, BurstWhen, Combat, Content, CorrodesWhat,
-    CreatureDef, CreatureId, FactionId, NORMAL_COST, NaturalAttack, OnHit, Stance, Takes,
-    article, price, spoken,
+    CreatureDef, CreatureId, FactionId, NORMAL_COST, NaturalAttack, OnHit, Stance, Takes, article,
+    price, spoken,
 };
 use warlock_core::geom::Pos;
 use warlock_core::object::format_weight;
