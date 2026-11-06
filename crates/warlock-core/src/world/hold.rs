@@ -31,16 +31,21 @@
 //!   at its plain price; failed, slowed, no worse. Every check marks [`Use::Escape`] (the
 //!   training stream) and `StatUse::Struggled`.
 //!
+//! - **Harm**: a hold that ticks costs its status's `damage` a tick, or the holder's attack's
+//!   own `damage` (its `on_hit` entry) while that holder holds ([`World::hold_harms`], read by
+//!   the status pass: the rug of smothering's engulfing costs 1, the charnel heap's 2).
+//!
 //! Drowning grip (`lucky.rs`) is a hold too: the player's hit holds a creature, and a miss,
 //! another target, or a step lets go, as before; the rules here end it too.
 
 use super::{ActorId, Spent, World};
 use crate::action::{Action, Event};
 use crate::check::check;
-use crate::content::{ActionKind, Affliction, StatusId};
+use crate::content::{ActionKind, Affliction, Content, StatusId};
 use crate::skills::{Effect as SkillEffect, Use};
 use crate::stats::Stat;
 use crate::status::Effect;
+use crate::world::Actor;
 
 impl World {
     /// The degrees a dose of hold `status` lasts: its `turns` drawn (within 1 and its `max`),
@@ -133,16 +138,8 @@ impl World {
         let effect = *me.effects.get(status)?;
         let holder = effect.by.and_then(|by| self.state.actors.get(&by));
         let difficulty = holder
-            .and_then(|h| content.creature(h.creature).attack.as_ref())
-            .and_then(|a| {
-                a.on_hit.iter().find_map(|o| match o.what {
-                    Affliction::Hold {
-                        status: s,
-                        difficulty,
-                    } if s == status => difficulty,
-                    _ => None,
-                })
-            })
+            .and_then(|h| grip(&content, h, status))
+            .and_then(|(difficulty, _)| difficulty)
             .unwrap_or(hold.difficulty);
         let name = holder
             .filter(|h| self.perception.sees_actors_at(h.pos))
@@ -207,6 +204,24 @@ impl World {
             .saturating_add(me.skill_effect(content, SkillEffect::Escape))
     }
 
+    /// The harm a tick of each hold on actor `id` costs where its holder's attack names its own
+    /// (`on_hit`'s `damage`): `(status, damage)`, in the order of its effects. A hold not listed
+    /// costs its status's `damage`.
+    pub(super) fn hold_harms(&self, id: ActorId) -> Vec<(StatusId, u16)> {
+        let Some(me) = self.state.actors.get(&id) else {
+            return Vec::new();
+        };
+        let content = &self.content;
+        (me.effects.iter())
+            .filter(|e| content.status(e.status).hold.is_some())
+            .filter_map(|e| {
+                let holder = self.state.actors.get(&e.by?)?;
+                let (_, damage) = grip(content, holder, e.status)?;
+                Some((e.status, damage?))
+            })
+            .collect()
+    }
+
     /// The marks of a check against bonds: the stats', and Escape artist's.
     fn struggled(&mut self) {
         self.train_stat(crate::content::StatUse::Struggled);
@@ -214,4 +229,18 @@ impl World {
             self.train(Use::Escape);
         }
     }
+}
+
+/// The hold of `status` that `holder`'s attack lays (its `on_hit` entry), if any: its grip's
+/// difficulty and its harm a tick, each `None` where the status's own stands.
+fn grip(content: &Content, holder: &Actor, status: StatusId) -> Option<(Option<i32>, Option<u16>)> {
+    let attack = content.creature(holder.creature).attack.as_ref()?;
+    attack.on_hit.iter().find_map(|o| match o.what {
+        Affliction::Hold {
+            status: s,
+            difficulty,
+            damage,
+        } if s == status => Some((difficulty, damage)),
+        _ => None,
+    })
 }

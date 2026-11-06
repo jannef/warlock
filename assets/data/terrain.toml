@@ -9,7 +9,9 @@
 # terrain with a chance of the kicker's Strength score in its sturdiness, 1 to 100; both or
 # neither), chest ("shut", "open", or "smashed": a chest's terrain, spec §8 "Chests", one terrain
 # each; a shut one is not walkable, open and smashed ones are; its band, chests.toml, names and
-# colours it), stairs ("up"/"down"),
+# colours it), statue (true: the statue a stoned creature leaves, spec §8 "Statues", at
+# most one terrain: not walkable but transparent, breaking with `hardness`, and with a `sturdiness`
+# of 100 to 250 a kick breaks it against, as a door's), stairs ("up"/"down"),
 # light (a preset in lights.toml the terrain emits), bounce (gameplay, spec §5: the tint of the
 # light the surface bounces, "#rrggbb", default white = neutral), height (gameplay, spec §5
 # "Sunlight": how many cells tall it stands for sun shadows, 0 to 4; default 1 if opaque, else 0),
@@ -452,6 +454,25 @@ glyph = "Ω"
 fg = "#b8b0a0"
 bg = "#0d0d10"
 
+# What a creature turned to stone leaves (spec §8 "Statues"; a status's `statue`, Stiffening's):
+# a fixture of the cell, as a chest is. The statue on the cell (`LevelState::statues`) names what
+# it was ("a statue of a dwarf, mouth open") and holds what it carried. Dug through (a quarter
+# hour with a pick-axe: harder than a wall, softer than granite, and no fireball breaks it) or
+# kicked apart (`statue`: a chance of the kicker's Strength in its `sturdiness`, so most kicks
+# only bruise), it falls to rubble and what it held.
+[[terrain]]
+id = "petrified"
+name = "statue"
+stone = true
+statue = true
+walkable = false
+glyph = "Ω"
+fg = "#8a8a84"
+bg = "#0d0d10"
+hardness = 1500
+becomes = "rubble"
+sturdiness = 200
+
 # Chests (spec §8 "Chests"; chests.toml): a fixture of the cell, as a door is. The chest on the
 # cell (`LevelState::chests`) has a level, whose band names it and colours it (its `fg` wins over
 # these); what it holds spills into the pile on the cell once it opens. Shut, it is in the way;
@@ -661,6 +682,28 @@ area = [0.5, 0.5]
 sway = 0.3
 scale = 0.5
 fade = 0.4
+
+# Leavings (docs/design/monster-dread.md §9, `content/leaving.rs`): what a creature leaves about
+# it, laid by the generator near where one is placed. Old webs, that catch no one, and floor
+# eaten into pits by acid.
+[[terrain]]
+id = "web"
+name = "old web"
+description = "Grey strands, thick as rope in places, hang from wall to floor."
+stone = true
+glyph = "\""
+fg = "#a8a8a0"
+bg = "#0d0d10"
+step_noise = 80
+
+[[terrain]]
+id = "acid_pit"
+name = "acid-pitted floor"
+description = "The stone is eaten into little pits, and smells sour."
+stone = true
+glyph = "."
+fg = "#8fb43a"
+bg = "#0d100a"
 
 # A collapsed floor's (spec §7 "Special rooms"): stone split and sagging over the level below.
 # A step onto it may give way under the player.

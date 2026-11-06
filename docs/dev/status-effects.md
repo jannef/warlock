@@ -59,7 +59,12 @@ drains: `docs/dev/mana.md`), or change in the player's hunger (`docs/dev/hunger.
 splitting time never
 changes the result, the ticks' damage and then starving's through `hurt` (`Harm::Status`,
 `Harm::Starving`: whichever takes the last hit point kills), deaths at their exact moment
-(`dies(.., Some(status), when)`), the blood
+(`dies(.., Some(status), when)`); a status that `kills_at_max` (Stiffening, #1126) kills in
+`afflict_one`'s degree step instead (`killed_at_max`: the status removed, then `hurt` for the
+hit points left with `Harm::Status`, by the last degree's giver), and its `stages` (a line a
+degree, the first its `start`, loaded so) are said by `afflict_one` on `Added::Worse`; a rider
+with `check` (`Affliction::Status`'s, the basilisk's Toughness against 15) is resisted by
+`World::resists` (`drain.rs`, the drain's check shared); the blood
 drip hook `drip_blood` (#127's stains go there). The player's statuses beginning and ending are
 `Event::Status` (said by `perceive_events`: begin = `say`, stops a rest; end = `note`, does not;
 the rest loop keeps them from the turns it does not perceive). Presentation reads
@@ -141,7 +146,9 @@ no code: `engulfed` (a hold with `tick = 6`, `damage = 2`, blocking `step`, `sho
 `read`; the charnel heap, the greater and elder water elementals, the brimwolf), `swallowed`
 (the same at `damage = 4`; the nightworm), and `latched` (`tick = 12`, `damage = 1`, blocking
 `step` only; the giant leech, the canoloth's tongue); the hold's grip is the rider's
-`difficulty`, else 14, its turns `2d4`. A tick at n degrees comes n times as often, so the harm
+`difficulty`, else 14, its turns `2d4`; its harm a tick the rider's `damage` while that holder
+holds (`World::hold_harms`, read by the status pass; the rug of smothering's 1), else the
+status's `damage`. A tick at n degrees comes n times as often, so the harm
 is heaviest as the hold begins and eases with it. A blow and a spell still go from inside.
 `world/split_tests.rs` checks the data, the tick, and the holder's death letting go. **Holds** (#431, `world/hold.rs`): a status with `hold` (`content::Hold`:
 `check`, `difficulty`, `turns`; parse checks `eases`, `stacking = "highest"`, `blocks` step, and

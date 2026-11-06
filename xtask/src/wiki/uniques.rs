@@ -86,7 +86,10 @@ fn power_text(content: &Content, u: &UniqueDef) -> String {
     match &u.power {
         None => "-".into(),
         Some(Power::Inflict(hit)) => {
-            let Affliction::Status { status, severity } = hit.what else {
+            let Affliction::Status {
+                status, severity, ..
+            } = hit.what
+            else {
                 return "-".into();
             };
             let name = &content.status(status).name;

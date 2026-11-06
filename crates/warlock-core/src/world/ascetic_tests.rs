@@ -279,7 +279,7 @@ fn step_of_the_wind_replays() {
 const STILL: ClassActive = ClassActive::Stillness;
 
 /// The statuses Stillness ends, in its data's order.
-const STILLED: [&str; 12] = [
+const STILLED: [&str; 13] = [
     "held",
     "engulfed",
     "swallowed",
@@ -292,6 +292,7 @@ const STILLED: [&str; 12] = [
     "frightened",
     "drowsy",
     "webbed",
+    "stiffening",
 ];
 
 /// Everything said since `from` messages were in the log.

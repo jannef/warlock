@@ -9,6 +9,7 @@ xp = 185
 rarity = "rare"
 dread = true
 name = "nosferatu"
+first_sight = "A nosferatu. Its eyes would hold you, and its teeth too."
 plural = "nosferatu"
 glyph = "V"
 fg = "#a0a890"

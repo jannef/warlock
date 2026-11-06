@@ -232,13 +232,21 @@ pub struct OnHit {
 /// What an `on_hit` entry causes.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Affliction {
-    /// So many degrees of a status.
-    Status { status: StatusId, severity: u16 },
+    /// So many degrees of a status, unless the target makes a check of `check`'s stat against
+    /// its difficulty (`None`: no check; a basilisk's stiffening, Toughness against 15).
+    Status {
+        status: StatusId,
+        severity: u16,
+        check: Option<(Stat, i32)>,
+    },
     /// A hold (a status with a [`Hold`]): the attacker holds the target, with a grip of
-    /// `difficulty` (`None`: the status's own).
+    /// `difficulty` (`None`: the status's own), and each of the hold's ticks costs `damage`
+    /// hit points while this attacker holds (`None`: the status's own `damage`; the rug of
+    /// smothering's engulfing, 1).
     Hold {
         status: StatusId,
         difficulty: Option<i32>,
+        damage: Option<u16>,
     },
     /// Exposure to a disease: the target resists it with a check, or catches it.
     Disease(DiseaseId),
@@ -276,6 +284,8 @@ pub(super) struct OnHitSpec {
     pub points: Option<u8>,
     pub check: Option<Stat>,
     pub difficulty: Option<i32>,
+    /// A hold's harm a tick while this attacker holds, instead of its status's `damage`.
+    pub damage: Option<u16>,
 }
 
 impl OnHitSpec {
@@ -295,41 +305,58 @@ impl OnHitSpec {
             ));
         }
         if let Some(drain) = &self.drain {
+            if self.damage.is_some() {
+                return Err(format!("on_hit `{name}`: `damage` belongs to a hold"));
+            }
             return Ok(OnHit {
                 what: Affliction::Drain(self.drain(drain)?),
                 chance: self.chance,
             });
         }
-        if self.points.is_some() || self.check.is_some() {
-            return Err(format!(
-                "on_hit `{name}`: `points` and `check` belong to a `drain`"
-            ));
+        if self.points.is_some() {
+            return Err(format!("on_hit `{name}`: `points` belong to a `drain`"));
         }
         let hold = (self.status.as_deref())
             .and_then(&status)
             .filter(|&(_, _, hold)| hold);
         if let Some((found, _, _)) = hold {
-            if self.disease.is_some() || self.severity.is_some() {
+            if self.disease.is_some() || self.severity.is_some() || self.check.is_some() {
                 return Err(format!(
-                    "on_hit `{name}`: a hold has no `severity` (its turns are drawn) and no `disease`"
+                    "on_hit `{name}`: a hold has no `severity` (its turns are drawn), no \
+                     `disease`, and no `check`"
                 ));
             }
             if self.difficulty.is_some_and(|d| !(1..=40).contains(&d)) {
                 return Err(format!("on_hit `{name}`: difficulty must be 1 to 40"));
             }
+            if self.damage.is_some_and(|d| !(1..=20).contains(&d)) {
+                return Err(format!("on_hit `{name}`: damage must be 1 to 20"));
+            }
             return Ok(OnHit {
                 what: Affliction::Hold {
                     status: found,
                     difficulty: self.difficulty,
+                    damage: self.damage,
                 },
                 chance: self.chance,
             });
         }
-        if self.difficulty.is_some() {
+        // A status may be resisted with a check (a basilisk's stiffening): both or neither.
+        if self.check.is_some() != self.difficulty.is_some()
+            || (self.check.is_some() && self.status.is_none())
+        {
             return Err(format!(
-                "on_hit `{name}`: `difficulty` belongs to a `drain` or a hold"
+                "on_hit `{name}`: `check` and `difficulty` go together, on a `drain` or a \
+                 status (a hold takes `difficulty` alone)"
             ));
         }
+        if self.damage.is_some() {
+            return Err(format!("on_hit `{name}`: `damage` belongs to a hold"));
+        }
+        if self.difficulty.is_some_and(|d| !(1..=40).contains(&d)) {
+            return Err(format!("on_hit `{name}`: difficulty must be 1 to 40"));
+        }
+        let check = self.check.zip(self.difficulty);
         let what = match (&self.status, &self.disease, self.severity) {
             (Some(id), None, Some(severity)) => {
                 let (found, max, _) =
@@ -342,6 +369,7 @@ impl OnHitSpec {
                 Affliction::Status {
                     status: found,
                     severity,
+                    check,
                 }
             }
             (Some(id), None, None) => {
@@ -501,6 +529,12 @@ struct StatusSpec {
     end: Option<String>,
     dies: Option<String>,
     death: Option<String>,
+    #[serde(default)]
+    stages: Vec<String>,
+    #[serde(default)]
+    kills_at_max: bool,
+    #[serde(default)]
+    statue: bool,
     hold: Option<Hold>,
     escape: Option<i32>,
     treat: Option<Treat>,
@@ -635,6 +669,16 @@ pub struct StatusDef {
     pub dies: Option<String>,
     /// The death screen's line when it kills the player: "Bled to death".
     pub death: Option<String>,
+    /// What the player is told as each degree is reached (Stiffening's "Your skin greys and
+    /// hardens."): the line for degree `n` is `stages[n - 1]`, the first its `start`. Empty: only
+    /// `start` is said.
+    pub stages: Vec<String>,
+    /// Its bearer dies as it reaches its `max` (Stiffening, to stone; `World::afflict`'s degree
+    /// step): of it, by whoever gave the last degree.
+    pub kills_at_max: bool,
+    /// A creature it kills leaves no corpse but a statue holding what it carried (Stiffening's;
+    /// `world/statue.rs`). Only with `kills_at_max`.
+    pub statue: bool,
     /// What makes it a hold (Held), if it is one.
     pub hold: Option<Hold>,
     /// Bonds a trained Escape artist may slip (`escape` in data): the difficulty of the check
@@ -941,6 +985,33 @@ fn resolve(
         resist.push((id, percent));
     }
     resist.sort_by_key(|&(id, _)| id);
+    // Stages: a line per degree, the first the start; one that kills at its max has none for it.
+    let lived = spec.max - u16::from(spec.kills_at_max);
+    if !spec.stages.is_empty() {
+        if spec.start.is_some() {
+            return Err(
+                "stages: the first stage is the `start` line; give one or the other".into(),
+            );
+        }
+        if spec.stages.len() > usize::from(lived) || spec.stages.iter().any(|s| s.trim().is_empty())
+        {
+            return Err(format!(
+                "stages: at most {lived} lines (one a degree it is lived through), none empty"
+            ));
+        }
+    }
+    if spec.kills_at_max && (spec.max < 2 || spec.stacking != Stacking::Add || spec.dies.is_none())
+    {
+        return Err(
+            "kills_at_max: a status that adds up (`stacking = \"add\"`) to a `max` of 2 or more, \
+             with a `dies` line"
+                .into(),
+        );
+    }
+    if spec.statue && !spec.kills_at_max {
+        return Err("statue: only a status that `kills_at_max` leaves a statue".into());
+    }
+    let start = spec.start.or_else(|| spec.stages.first().cloned());
     Ok(StatusDef {
         id: spec.id,
         name: spec.name,
@@ -970,10 +1041,13 @@ fn resolve(
         wound,
         damage_type,
         cured_by: spec.cured_by,
-        start: spec.start,
+        start,
         end: spec.end,
         dies: spec.dies,
         death: spec.death,
+        stages: spec.stages,
+        kills_at_max: spec.kills_at_max,
+        statue: spec.statue,
         hold: spec.hold,
         escape: spec.escape,
         treat: spec.treat,
@@ -1327,7 +1401,8 @@ mod tests {
             Ok(OnHit {
                 what: Affliction::Status {
                     status: StatusId(1),
-                    severity: 2
+                    severity: 2,
+                    check: None,
                 },
                 chance: 10,
             })
@@ -1390,6 +1465,7 @@ mod tests {
             Ok(Affliction::Hold {
                 status: StatusId(2),
                 difficulty: Some(15),
+                damage: None,
             })
         );
         assert_eq!(
@@ -1397,6 +1473,20 @@ mod tests {
             Ok(Affliction::Hold {
                 status: StatusId(2),
                 difficulty: None,
+                damage: None,
+            })
+        );
+        // A hold's own harm a tick (the rug of smothering's engulfing).
+        let gentle = OnHitSpec {
+            damage: Some(1),
+            ..hold(None, None)
+        };
+        assert_eq!(
+            gentle.resolve(known, disease).map(|o| o.what),
+            Ok(Affliction::Hold {
+                status: StatusId(2),
+                difficulty: None,
+                damage: Some(1),
             })
         );
         let gripping_poison = OnHitSpec {
@@ -1404,10 +1494,21 @@ mod tests {
             severity: Some(1),
             ..hold(Some(15), None)
         };
+        let harmful_poison = OnHitSpec {
+            difficulty: None,
+            damage: Some(1),
+            ..gripping_poison.clone()
+        };
+        let crushing = OnHitSpec {
+            damage: Some(21),
+            ..hold(None, None)
+        };
         for (bad, why) in [
             (hold(None, Some(1)), "a hold has no `severity`"),
             (hold(Some(41), None), "difficulty must be 1 to 40"),
-            (gripping_poison, "belongs to a `drain` or a hold"),
+            (gripping_poison, "`check` and `difficulty` go together"),
+            (harmful_poison, "`damage` belongs to a hold"),
+            (crushing, "damage must be 1 to 20"),
         ] {
             let e = bad.resolve(known, disease).unwrap_err();
             assert!(e.contains(why), "{why}: {e}");

@@ -1,10 +1,11 @@
-# A pair of bellows that wheezes after the living.
+# A pair of bellows that wheezes after the living: its gust may stagger (the dread design §13).
 [[body]]
 id = "bellows"
 object = "bellows"
 level = 5
 rarity = "uncommon"
 speed = 1000
-attack = { damage_type = "bludgeoning", name = "boards", verb = "buffets" }
+attack = { damage_type = "bludgeoning", name = "gust", verb = "buffets" }
+on_hit = [{ status = "staggered", chance = 20, severity = 1 }]
 name = "animated bellows"
 plural = "animated bellows"

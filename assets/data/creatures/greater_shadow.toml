@@ -11,6 +11,7 @@ rarity = "rare"
 dread = true
 shadowy = true
 name = "greater shadow"
+first_sight = "A greater shadow. Its touch drinks the strength from you."
 glyph = "G"
 fg = "#4a4a60"
 speed = 1400

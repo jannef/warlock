@@ -31,6 +31,7 @@ use crate::content::{
     Content, CreatureId, CreatureSpawn, LevelTemplate, MonsterPool, VaultMonsters,
 };
 use crate::geom::{Dir, Pos};
+use crate::grid::Grid;
 use crate::object::add_to_pile;
 use crate::rng::Rng;
 use std::collections::BTreeSet;
@@ -40,13 +41,13 @@ pub const AWAY: i32 = 8;
 
 /// Lays the initial population of generated level `template` down: `danger` its danger,
 /// `spawning` its branch's rules, `visit` whom it is made for (the uniques they have met), and
-/// `monsters` the monster pools its vaults stamped.
+/// `monsters` the monster pools its vaults stamped, `stamped` the cells its vaults stamped.
 pub(super) fn populate(
     template: &mut LevelTemplate,
     content: &Content,
     seed: u64,
     (pal, danger, spawning): (Palette, u8, &Spawning),
-    (visit, monsters): (&Visit, &[VaultMonsters]),
+    (visit, monsters, stamped): (&Visit, &[VaultMonsters], &Grid<bool>),
 ) {
     if danger == 0 {
         return;
@@ -149,6 +150,14 @@ pub(super) fn populate(
         met_one(content, creature, &mut met);
         placed.push(spawn_of(creature, pos, route));
     }
+    // Then what the placed leave about them (`leavings.rs`), from the same stream.
+    super::leavings::lay(
+        template,
+        content,
+        &mut rng,
+        (pal, spawning, stamped),
+        &placed,
+    );
     template.creatures.extend(placed);
     template.outside_cap = outside;
 }

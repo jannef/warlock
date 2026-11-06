@@ -10,6 +10,7 @@ xp = 45
 rarity = "very_rare"
 dread = true
 name = "will-o'-wisp"
+first_sight = "A will-o'-wisp. Do not follow the light."
 plural = "will-o'-wisps"
 glyph = "y"
 fg = "#c8f0e0"

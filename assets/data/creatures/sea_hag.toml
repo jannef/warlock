@@ -11,6 +11,7 @@ rarity = "rare"
 dread = true
 loot = 40
 name = "sea hag"
+first_sight = "A sea hag. So foul to look on that the heart falters."
 glyph = "h"
 fg = "#5a8a8a"
 speed = 700

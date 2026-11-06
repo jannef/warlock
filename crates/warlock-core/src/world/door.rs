@@ -142,6 +142,7 @@ impl World {
         match def {
             Some(def) if def.is_closed_door() => self.kick_door(at, events),
             Some(def) if def.is_shut_chest() => self.kick_chest(at, events),
+            Some(def) if def.statue.is_some() => self.kick_statue(at, events),
             Some(def) if !def.walkable => {
                 let name = def.name.clone();
                 self.say(format!("Kicking the {name} would only hurt your foot."));

@@ -11,6 +11,7 @@ rarity = "rare"
 dread = true
 loot = 75
 name = "lich"
+first_sight = "A lich. A wizard who would not die, and has not."
 glyph = "L"
 fg = "#a0e0c0"
 speed = 700

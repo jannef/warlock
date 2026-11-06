@@ -9,6 +9,7 @@ rarity = "uncommon"
 dread = true
 shadowy = true
 name = "darkling"
+first_sight = "A darkling, half a shadow. Keep to the light."
 glyph = "f"
 fg = "#5a5a6a"
 speed = 1400

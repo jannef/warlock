@@ -83,6 +83,12 @@ pub struct LevelState {
     /// smashed, its level (its band follows) and, while shut, what it holds. Ground truth.
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty", with = "by_pos")]
     pub(crate) chests: BTreeMap<Pos, Chest>,
+    /// Statues of the stoned, by position (spec §8 "Statues"; `world/statue.rs`): on every cell
+    /// of the statue terrain a stoned creature left, what it was and what it held. Gone (what it
+    /// held spilt) once the statue breaks. Ground truth but for what it was, which the player
+    /// sees.
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty", with = "by_pos")]
+    pub(crate) statues: BTreeMap<Pos, super::statue::Statue>,
     /// Secret doors not yet found, by position (spec §8 "Searching"): the cell's terrain is the
     /// wall each looks like; found, it becomes its door and is gone from here. Ground truth.
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty", with = "by_pos")]
@@ -193,6 +199,7 @@ impl LevelState {
             locks: template.locks.clone(),
             wedged: BTreeMap::new(),
             chests: template.chests.clone(),
+            statues: template.statues.clone(),
             secrets: template.secrets.clone(),
             hidden: template.hidden.clone(),
             // A hand-made level's places are read from its template in `Content`.
@@ -293,6 +300,13 @@ impl LevelState {
     /// through [`crate::World::ground_truth`] outside the rules, **for developer tools only**.
     pub fn chests(&self) -> &BTreeMap<Pos, Chest> {
         &self.chests
+    }
+
+    /// The statues of the stoned on the level, by position (ground truth: what each holds). Only
+    /// reachable through [`crate::World::ground_truth`] outside the rules, **for developer tools
+    /// only**.
+    pub fn statues(&self) -> &BTreeMap<Pos, super::Statue> {
+        &self.statues
     }
 
     /// The secret door at `p`, if one is there and not yet found (ground truth: it looks like
@@ -447,7 +461,8 @@ impl LevelState {
         let lights = content.light_presets().len();
         let traps = content.trap_defs().len();
         let known = |t: &TerrainId| usize::from(t.0) < terrain;
-        let held = self.chests.values().map(|c| &c.holds);
+        let statues = self.statues.values().map(|s| &s.holds);
+        let held = self.chests.values().map(|c| &c.holds).chain(statues);
         let piles = (self.objects.values().chain(self.object_memory.values())).chain(held);
         let mut trap_kinds =
             (self.traps.values().map(|t| t.kind)).chain(self.trap_memory.values().copied());
@@ -469,6 +484,8 @@ impl LevelState {
                     && z.light.is_none_or(|l| usize::from(l.0) < lights)
             })
             && (self.chests.keys()).all(|p| self.terrain.in_bounds(*p))
+            && (self.statues.iter())
+                .all(|(p, s)| self.terrain.in_bounds(*p) && s.is_valid_for(content))
     }
 }
 

@@ -12,7 +12,8 @@
 #   rarity   its type's rarity (data/creature_rarities.toml); default common
 #   speed    its pace (default 1000)
 #   attack   { damage_type, name, verb }: its blow, dice by the tier's formula
-#   on_hit   as a creature's attack's (the rug's `held`); default none
+#   on_hit   as a creature's attack's (the rug's `engulfed`, the bellows' `staggered`); default
+#            none
 #   name     its type's name instead of "animated " and the object's ("clatter of cutlery");
 #            `plural` with it, else by data/plurals.toml
 #   count    [least, most]: a stackable object's count as its body (cutlery, 3 to 6); default 1
@@ -20,3 +21,4 @@
 #   dies     its death line's verb ("topples and lies still"); default by its object's material
 #            group (data/animated.toml)
 #   light    a light preset it carries (data/lights.toml); default none
+#   burst    as a creature's `[creature.burst]` (the lantern's death throes); default none

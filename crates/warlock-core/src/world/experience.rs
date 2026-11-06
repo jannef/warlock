@@ -49,6 +49,10 @@ pub struct Progress {
     /// "Danger levels"; `world/spawn.rs`).
     #[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
     pub(crate) uniques: BTreeSet<String>,
+    /// The creature types (by id) with a first-sight line the player has seen, whose line was
+    /// said (`world/first_sight.rs`).
+    #[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
+    pub(crate) sighted: BTreeSet<String>,
     /// The strain of the priest's prayers (`world/orison.rs`), once they have prayed.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub(crate) prayer: Option<super::orison::Strain>,
@@ -62,6 +66,7 @@ impl Progress {
             && self.empathy_broken.is_empty()
             && self.once.is_empty()
             && self.uniques.is_empty()
+            && self.sighted.is_empty()
             && self.prayer.is_none()
     }
 

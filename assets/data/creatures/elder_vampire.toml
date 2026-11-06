@@ -10,6 +10,7 @@ rarity = "very_rare"
 dread = true
 loot = 100
 name = "elder vampire"
+first_sight = "An elder vampire. It has fed for centuries and is not sated."
 glyph = "V"
 fg = "#d03070"
 speed = 1500

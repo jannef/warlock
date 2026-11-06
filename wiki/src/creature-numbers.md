@@ -108,6 +108,15 @@ gazer: no choice, and nothing to switch. Averted, you fight half-blind: −4 to
 [free blows](combat.md#free-blows). Its gaze still finds a glance you cannot help, at the chance
 in that column. Darkness, a wall, or a door between you ends the averting as it ends the gaze.
 
+The [basilisk](creatures.md#creature-basilisk)'s is the one forced gaze, and the deadliest: a glance
+it catches gives a degree of [Stiffening](status-effects.md#status-stiffening) unless you make a
+[Toughness](stats.md#stat-toughness) check against 15. Each degree is told (your limbs stiffen, your
+skin greys, you can barely move), and the fourth turns you to stone: death. A degree eases in two
+minutes, so a basilisk glimpsed and walked away from (it is slow) is a fright; the scroll of
+restoration, a temple's cure, or Still mind's Stillness ends it, and the Heal skill eases it a degree
+a try. A creature it stones leaves no corpse but a **statue** holding what it carried (see
+[Doors](doors.md) for kicking one apart, [Digging](digging.md) for digging through it).
+
 {{#include generated/creature-gazes.md}}
 ### Splitting and dying into
 
@@ -154,7 +163,8 @@ Some creatures go off in a burst of their element. The motes are **vortices**: a
 bursts instead, and is gone. Killed before it gets there, it goes out quietly, so shoot or throw
 at one as it comes, or close a door on it (a mote opens none). The elementals but the earth line,
 the [burning skull](creatures.md#creature-burning-skull), the
-[magma crawler](creatures.md#creature-magma-crawler), and the [balor](creatures.md#creature-balor)
+[magma crawler](creatures.md#creature-magma-crawler), the
+[animated lantern](creatures.md#creature-animated-lantern) (its oil), and the [balor](creatures.md#creature-balor)
 have **death throes**: they burst where they die, however they die, so an elemental is best killed
 from a cell or more away. The earth elementals do not burst; they hurl stones at what is not
 beside them, as the giants do (the throws above), and pound what is.
@@ -219,6 +229,19 @@ something's; walking into one strikes at it at −4 to hit. One that hunts by sc
 wherever you are on its level.
 
 {{#include generated/creature-unseen.md}}
+
+### Warning signs
+
+Some creatures leave signs about them where they are found: a floor's
+[basilisk](creatures.md#creature-basilisk) stands among statues of what it stoned (nobodies of
+the floor's own kind, holding nothing, dug and kicked as any statue), spiders among old webs
+(which catch no one), and acid-hided things on floor eaten into pits, and torn cloth lies where
+a light-fingered thing has been. They are laid within four cells of each creature a floor is
+peopled with or a vault holds (a statue only where open ground is all about it), from one to a
+few of each kind. The more dreadful creatures are named once, the first time in a life you see
+one, with the line below; the life remembers which.
+
+{{#include generated/creature-signs.md}}
 
 ### Spells
 

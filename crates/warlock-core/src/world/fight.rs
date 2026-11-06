@@ -1215,7 +1215,9 @@ impl World {
             self.hex_tithe(id);
             // What crawls out of its corpse (`split.rs`).
             let crawled = self.dies_into(id);
-            let lines = self.creature_dies(id, credited);
+            // Turned to stone, it leaves a statue (`statue.rs`).
+            let stoned = of.is_some_and(|s| self.content.status(s).statue);
+            let lines = self.creature_dies(id, credited, stoned);
             self.news
                 .splice(earned..earned, lines.into_iter().chain(crawled));
             // Death throes go off where it died (`creature_burst.rs`), after what crawled out.
@@ -1225,9 +1227,10 @@ impl World {
 
     /// Creature `id` dies: it leaves the world, and what it carried (worn and wielded things
     /// too) falls on its cell, on top of what lies there, in the order it carried them, and its
-    /// corpse on top of that (spec §8 "Hunger"). `by_player`: the player killed it. Returns the lines for an animated thing's components that
+    /// corpse on top of that (spec §8 "Hunger"); `stoned`, it is a statue instead (`statue.rs`).
+    /// `by_player`: the player killed it. Returns the lines for an animated thing's components that
     /// broke as they fell, if the player saw it ([`World::break_lines`]).
-    fn creature_dies(&mut self, id: ActorId, by_player: bool) -> Vec<String> {
+    fn creature_dies(&mut self, id: ActorId, by_player: bool, stoned: bool) -> Vec<String> {
         let Some(actor) = self.state.actors.remove(&id) else {
             return Vec::new();
         };
@@ -1255,6 +1258,10 @@ impl World {
         // An incorporeal creature dies inside a wall: what it carried falls out of it.
         let mut actor = actor;
         actor.pos = self.landing(&actor.level, actor.pos);
+        // Stoned, it is a statue holding what it carried, and leaves no corpse (`statue.rs`).
+        if stoned {
+            self.lay_statue(&actor, &mut dropped);
+        }
         if !dropped.is_empty()
             && let Some(level) = self.state.levels.get_mut(&actor.level)
         {
@@ -1262,9 +1269,11 @@ impl World {
             object::add_to_pile(&mut pile, &dropped, &self.content);
             level.set_pile(actor.pos, pile);
         }
-        self.leave_corpse(&actor);
-        // In a cursed room the dead rise (spec §7 "Special rooms"; `curse.rs`).
-        lines.extend(self.curse_corpse(&actor, by_player));
+        if !stoned {
+            self.leave_corpse(&actor);
+            // In a cursed room the dead rise (spec §7 "Special rooms"; `curse.rs`).
+            lines.extend(self.curse_corpse(&actor, by_player));
+        }
         // A dead shopkeeper's goods are free to take (spec §7 "Shops").
         self.keeper_died(id, &actor.level);
         // A dead escort fails its quest (`escort.rs`).

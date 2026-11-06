@@ -10,6 +10,7 @@ rarity = "rare"
 dread = true
 loot = 50
 name = "vampire"
+first_sight = "A vampire. Mind its bite, and mind its eyes."
 glyph = "V"
 fg = "#a01060"
 speed = 1400

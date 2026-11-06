@@ -8,6 +8,7 @@ level = 9
 xp = 55
 rarity = "uncommon"
 name = "imp"
+leavings = ["torn_cloth"]
 glyph = "i"
 fg = "#d04020"
 speed = 1150

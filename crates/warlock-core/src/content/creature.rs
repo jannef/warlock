@@ -271,6 +271,13 @@ pub(super) struct CreatureSpec {
     /// the one draw in `dread_one_in` made among the dread types; default false.
     #[serde(default)]
     pub dread: bool,
+    /// What it leaves about it (docs/design/monster-dread.md §9; `content/leaving.rs`): the
+    /// dressings the generator lays near it, `["statue"]`; default none.
+    #[serde(default)]
+    pub leavings: Vec<super::Leaving>,
+    /// The line said the first time in a run one is seen (docs/design/monster-dread.md §9): a
+    /// dread type's, "A basilisk. Do not meet its eyes."; default none.
+    pub first_sight: Option<String>,
     /// Its trained skills by skill id, with their values (spec §8 "Skills"); the rest untrained.
     #[serde(default)]
     pub skills: BTreeMap<String, u16>,
@@ -349,8 +356,9 @@ pub(super) struct CreatureSpec {
     /// door (1 to 20; only on a `tameable` type; a companion's reads it).
     pub nose: Option<i32>,
     /// Whether one of it may come greater or lesser than its kind (spec §8 "Grades";
-    /// [`crate::grade`]); `grades = false` for a type that has none. Never a unique,
-    /// a mimic, or a generated type, whatever the file says.
+    /// [`crate::grade`]); `grades = false` for a type that has none. Never a unique or a
+    /// mimic, whatever the file says; an animated type only where its tier names grade words
+    /// (`content/animated.rs`: the blades).
     #[serde(default = "yes")]
     pub grades: bool,
     /// The words for its lesser and its greater grade, in that order (`["scrawny", "big"]`);
@@ -833,6 +841,8 @@ impl CreatureSpec {
             stray: self.stray,
             rarity: r.rarity,
             dread: self.dread,
+            leavings: self.leavings,
+            first_sight: self.first_sight,
             loot: self.loot,
             attack: r.attack,
             more_attacks: r.more_attacks,
@@ -863,7 +873,7 @@ impl CreatureSpec {
             depart: self.depart,
             tameable: self.tameable,
             nose: self.nose,
-            grades: self.grades && !self.unique && self.animated.is_none() && self.mimic.is_none(),
+            grades: self.grades && !self.unique && self.mimic.is_none(),
             grade_words,
             animated: self.animated,
             mimic: self.mimic,
@@ -1020,6 +1030,12 @@ pub struct CreatureDef {
     /// spawn draws it only in the one draw in `dread_one_in` made among the dread types
     /// ([`super::danger::draw`]). Never shown in the game; the wiki tells it.
     pub dread: bool,
+    /// Gameplay: what it leaves about it (`content/leaving.rs`, `mapgen/leavings.rs`): the
+    /// dressings the generator lays near one it places. The player sees them, not what they mean.
+    pub leavings: Vec<super::Leaving>,
+    /// Presentation: the line said the first time in a run the player sees one
+    /// (`world/first_sight.rs`); `None`: none.
+    pub first_sight: Option<String>,
     /// Gameplay: the chance in percent that it drops a magic or rare item where it dies.
     pub loot: u8,
     /// Gameplay: its natural attack, used when it wields no weapon; `None`: bare hands (1d3).
@@ -1110,8 +1126,9 @@ pub struct CreatureDef {
     /// starting beast is drawn from the `tameable` types; `world/companion.rs`).
     pub tameable: bool,
     /// Gameplay: whether one of it may be made greater or lesser than its kind (spec §8
-    /// "Grades"; [`crate::grade`]): false for a unique, a mimic, a generated type,
-    /// or one whose file says `grades = false` (the people).
+    /// "Grades"; [`crate::grade`]): false for a unique, a mimic, an animated type whose tier
+    /// names no grade words (all but the blades), or one whose file says `grades = false` (the
+    /// people).
     pub grades: bool,
     /// Presentation-only: the words of its lesser and greater grade in look mode ("scrawny",
     /// "big"): its file's, else its tags' default, else "small" and "big".

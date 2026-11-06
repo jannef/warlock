@@ -142,6 +142,14 @@ impl World {
         if def.per_action && self.acting == Some(id) {
             self.fresh.push((id, status));
         }
+        // The degree step: a status that kills at its max does (Stiffening, to stone), and one
+        // with stages tells the player each degree past the first they live to reach.
+        let now = actor.effects.get(status).map_or(0, |e| e.severity);
+        let kills = def.kills_at_max && now >= def.max && added != Added::Same;
+        let stage = (usize::from(now).checked_sub(1))
+            .and_then(|i| def.stages.get(i))
+            .filter(|_| added == Added::Worse && id == self.state.player && !kills)
+            .cloned();
         if added == Added::Began && id == self.state.player {
             events.push(Event::Status {
                 actor: id,
@@ -151,6 +159,34 @@ impl World {
         }
         // Rage brings the frenzy (`frenzy.rs`).
         self.settle_stance(id);
+        if kills {
+            self.killed_at_max(id, status, events);
+        } else if let Some(line) = stage {
+            self.say(line);
+        }
+    }
+
+    /// Actor `id` reached the max of `status`, one that kills there (`kills_at_max`): the status
+    /// goes (so nothing lingers on one who rises from the ashes), and it dies of it, by whoever
+    /// gave the last degree, as a tick's death is.
+    fn killed_at_max(&mut self, id: ActorId, status: StatusId, events: &mut Vec<Event>) {
+        let Some(actor) = self.state.actors.get_mut(&id) else {
+            return;
+        };
+        let by = actor.effects.get(status).and_then(|e| e.by);
+        actor.effects.remove(status);
+        let hp = actor.hp.max(1);
+        let when = self.state.time;
+        self.hurt(
+            id,
+            hp,
+            super::fight::Harm::Status {
+                of: Some(status),
+                by,
+                when,
+            },
+            events,
+        );
     }
 
     /// Cures actor `id` with `cure`, a means named in the statuses' and diseases' `cured_by`
@@ -229,8 +265,18 @@ impl World {
             return;
         }
         match hit.what {
-            Affliction::Status { status, severity } => {
-                self.afflict(target, status, severity, Some(attacker), events);
+            Affliction::Status {
+                status,
+                severity,
+                check,
+            } => {
+                // A status with a check is resisted as a drain is (`drain.rs`).
+                let resisted = check.is_some_and(|(stat, difficulty)| {
+                    self.resists(target, Some(attacker), stat, difficulty, 0)
+                });
+                if !resisted {
+                    self.afflict(target, status, severity, Some(attacker), events);
+                }
             }
             Affliction::Hold { status, .. } => {
                 self.afflict(target, status, 1, Some(attacker), events);
@@ -431,6 +477,8 @@ impl World {
             let stat_check = self.until_stat_check(id, now);
             // Hallowed ground fading: the paces change then (`sanctuary.rs`).
             let unhallowed = self.until_unhallowed(id, now);
+            // A hold's harm where its holder's attack names its own (`hold.rs`).
+            let harms = self.hold_harms(id);
             let Some(actor) = self.state.actors.get_mut(&id) else {
                 return;
             };
@@ -528,7 +576,9 @@ impl World {
                 let every = eases(e);
                 let (ticks, eased) = e.advance_every(def, every, step);
                 if ticks > 0 && !numb.contains(&e.status) {
-                    let cost = u64::from(def.damage) * ticks;
+                    let damage = (harms.iter().find(|(s, _)| *s == e.status))
+                        .map_or(def.damage, |&(_, d)| d);
+                    let cost = u64::from(damage) * ticks;
                     moment.damage += i32::try_from(cost).unwrap_or(i32::MAX);
                     let drain = u64::from(def.mana_damage) * ticks;
                     let drain = i32::try_from(drain).unwrap_or(i32::MAX);

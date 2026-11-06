@@ -269,6 +269,8 @@ pub fn layer_rows(world: &World, layer: Layer) -> Vec<String> {
             encounter_header(world),
             truth_rows(world),
             chest_rows(world),
+            statue_rows(world),
+            leaving_rows(world),
             hallow_rows(world),
             zone_rows(world),
         ]
@@ -545,6 +547,53 @@ fn chest_rows(world: &World) -> Vec<String> {
                 chest.level
             )
         })
+        .collect()
+}
+
+/// A line per statue of the stoned on the level (ground truth): what it was and how much it
+/// holds, `statue (basilisk) at (12, 5): holds 2 stacks`.
+fn statue_rows(world: &World) -> Vec<String> {
+    let content = world.content();
+    let (level, _) = world.ground_truth();
+    (level.statues().iter())
+        .map(|(&p, statue)| {
+            let holds = match statue.holds.len() {
+                0 => "empty".to_string(),
+                1 => "holds 1 stack".to_string(),
+                n => format!("holds {n} stacks"),
+            };
+            format!(
+                "statue ({}) at {p}: {holds}",
+                content.creature(statue.of).id
+            )
+        })
+        .collect()
+}
+
+/// A line per kind of leaving on the level (ground truth, `content/leaving.rs`) with its cells,
+/// `leavings web: (12, 5), (13, 5)`: the statues, webs, and acid-pitted floor by terrain, torn
+/// cloth by the piles that hold it.
+fn leaving_rows(world: &World) -> Vec<String> {
+    use crate::content::Leaving;
+    let content = world.content();
+    let (level, _) = world.ground_truth();
+    let mut by: std::collections::BTreeMap<Leaving, Vec<String>> = Default::default();
+    for y in 0..level.height() {
+        for x in 0..level.width() {
+            let p = Pos::new(x, y);
+            let terrain = level.terrain_at(p).and_then(|t| content.leaving_terrain(t));
+            if let Some(leaving) = terrain {
+                by.entry(leaving).or_default().push(p.to_string());
+            }
+            if (level.objects_at(p).iter()).any(|s| content.is_leaving_object(s.object)) {
+                by.entry(Leaving::TornCloth)
+                    .or_default()
+                    .push(p.to_string());
+            }
+        }
+    }
+    (by.into_iter())
+        .map(|(leaving, cells)| format!("leavings {}: {}", leaving.id(), cells.join(", ")))
         .collect()
 }
 
@@ -2103,6 +2152,10 @@ pub fn json(world: &World, layers: &[Layer], include_state: bool) -> Value {
             json!({ "pos": p, "band": band, "state": look.state.id(), "locked": look.locked })
         })
         .collect();
+    // The leavings the player sees or remembers (`content/leaving.rs`).
+    let leavings: Vec<Value> = (view.known_leavings().into_iter())
+        .map(|(p, leaving)| json!({ "pos": p, "kind": leaving.id() }))
+        .collect();
     let layer_map: serde_json::Map<String, Value> = layers
         .iter()
         .map(|&l| (l.name().to_string(), json!(layer_rows(world, l))))
@@ -2256,6 +2309,7 @@ pub fn json(world: &World, layers: &[Layer], include_state: bool) -> Value {
         unreachable!("an object literal")
     };
     out.as_object_mut().expect("an object").extend(rest);
+    out["leavings"] = json!(leavings);
     // The guilds they belong to and their ranks (left out before joining one).
     let guilds = view.own_guilds();
     if !guilds.is_empty() {

@@ -1604,6 +1604,39 @@ impl<'a> PerceptionView<'a> {
         })
     }
 
+    /// What the statue at `p` was, as the player sees or remembers it (spec §8 "Statues"): the
+    /// creature type a stoned statue shows (its shape is plain to see), never what it holds.
+    /// `None` where they know no statue of the stoned.
+    pub fn statue_at(&self, p: Pos) -> Option<crate::content::CreatureId> {
+        let terrain = match self.cell(p) {
+            CellView::Visible(t) | CellView::Remembered(t) => t,
+            CellView::Unknown => return None,
+        };
+        self.content.terrain(terrain).statue?;
+        self.level.statues.get(&p).map(|s| s.of)
+    }
+
+    /// The leavings the player sees or remembers on this level (`content/leaving.rs`), in row
+    /// order: statues, webs, and acid-pitted floor by the terrain they know, torn cloth by the
+    /// pile they know. What each means is never told.
+    pub fn known_leavings(&self) -> Vec<(Pos, crate::content::Leaving)> {
+        let mut known = Vec::new();
+        for y in 0..self.height() {
+            for x in 0..self.width() {
+                let p = Pos::new(x, y);
+                if let CellView::Visible(t) | CellView::Remembered(t) = self.cell(p)
+                    && let Some(leaving) = self.content.leaving_terrain(t)
+                {
+                    known.push((p, leaving));
+                }
+                if (self.objects(p).iter()).any(|s| self.content.is_leaving_object(s.object)) {
+                    known.push((p, crate::content::Leaving::TornCloth));
+                }
+            }
+        }
+        known
+    }
+
     /// The chests the player sees or remembers on this level ([`PerceptionView::chest_at`]), by
     /// position.
     pub fn known_chests(&self) -> Vec<(Pos, ChestLook)> {

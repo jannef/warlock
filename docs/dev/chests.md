@@ -11,6 +11,13 @@ treasure rooms (C6, #618) lay their chests with `mapgen/chest.rs::lay` from thei
 `known_chests`), and touching what the player takes for a chest (`open_door`, the bump, `kick`,
 `pick_lock`, Knock) finds it out first.
 
+Statues of the stoned (#1126, `world/statue.rs`) are the other cell fixture laid this way: the
+`petrified` terrain (`statue` with its kick sturdiness) plus a `Statue { of, holds }` in
+`LevelState::statues` (saved, hashed, `skip_serializing_if` empty), what it was and what it holds;
+`PerceptionView::statue_at` gives only what it was, `truth` lists them (`statue (kobold) at (3,
+1): holds 2 stacks`). They break as walls do (digging, blasts, kicks), and `set_terrain` spills
+what they held (`statue_gone`).
+
 ## Modules
 
 | Module | What |

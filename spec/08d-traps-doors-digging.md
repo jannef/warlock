@@ -235,6 +235,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
       its time too. Rolled, heard, and
       shown like any blow and said as a kick: "You kick the giant rat.", "You miss the giant
       rat.", "The giant rat dodges your kick."
+    - **A statue of the stoned** (§8 "Statues" below) breaks with a chance of the same force in
+      its sturdiness (200: well above a door's, so most kicks only bruise), and every kick
+      trains as a door's does (Athletics, and Strength through it).
     - **Anything else** is refused and takes no time: "You kick at empty space." where one could
       walk (an open or broken door too), else "Kicking the stone wall would only hurt your
       foot."
@@ -250,6 +253,24 @@ developer notes (CLAUDE.md, `docs/dev/`).
     its brass key carried by the kobold on guard, a skeleton key inside); a dungeon branch with a
     `key` gets a few locked rooms on its rooms levels, its key always within reach (§7
     "Generators", validated). The showcase's locked door is harmless.
+- **Statues** (`warlock-core/src/world/statue.rs`; #1126, the dread design §5.2): a creature killed by
+  a status with `statue` (Stiffening, the basilisk's gaze) leaves no corpse but a statue, a
+  **fixture of a cell** as a chest is: the terrain with `statue` (`petrified`, "statue": solid,
+  seen past, stone) and a `Statue` on the cell in `LevelState::statues`, the creature type it was
+  and what it held: what the creature carried (worn and wielded too), then the pile it stood on.
+  It is laid only on plain open ground of the current level (no door, stairs, chest, light, ice
+  or freezing water, trap, lock, or fire there); elsewhere what it carried falls as usual, and
+  still no corpse. It is **dug** through as a wall is (hardness 1500: between a stone wall's and
+  granite's; no fireball breaks it), and **kicked** (above); broken, by whatever changes its
+  terrain (`set_terrain`), it falls to rubble and what it held spills there. Look mode names
+  it by what it was, never what it holds: "a statue of a kobold, mouth open". The player
+  turned to stone dies ("Turned to stone"); no statue of them is laid, the run ends.
+  - **Leavings** (#1133, the dread design §9): a type's `leavings` are laid by the generator
+    within a few cells of each one a population or a vault places: statues of the floor's own
+    nobodies, holding nothing (the basilisk's), old webs that catch no one (`web`), acid-pitted
+    floor (`acid_pit`, a floor in sick green), and torn cloth (an object worth nothing). Look
+    mode names them for what they are. A dread type's `first_sight` line is said once a run,
+    the first time one is in sight, after the turn's other lines (`Progress::sighted`, saved).
 - **Chests** (`warlock-core/src/chest.rs`, the rules; `world/chest.rs`, applying them; data
   `data/chests.toml` §7 "Chests"; docs/design/chests-and-treasure.md, slices C1 to C3): a chest is a
   **fixture of a cell**, as a door is, never a carried object.

@@ -151,6 +151,7 @@ mod familiar;
 mod feature;
 mod feint;
 mod fight;
+mod first_sight;
 mod flavour;
 mod fletch;
 mod focus;
@@ -251,6 +252,7 @@ mod stair_followers;
 mod stars;
 mod stat_deeds;
 mod stat_training;
+mod statue;
 mod status;
 mod steal;
 mod stride;
@@ -333,6 +335,7 @@ pub use spell_rung::CastBy;
 pub use spell_words::{SpellRoll, reach_words, reroll_words, roll_words};
 pub use spirit_weapon::{gift as spirit_gift, pierces_all, shapes as weapon_shapes};
 pub(crate) use stars::{RISEN, RISEN_TWICE};
+pub use statue::Statue;
 pub(crate) use swim::shore_refusal;
 pub use talent::Due;
 pub use talk::{Conversation, Talk, TopicView};
@@ -1610,6 +1613,8 @@ mod ambush_tests;
 #[cfg(test)]
 mod animated_blade_tests;
 #[cfg(test)]
+mod animated_dread_tests;
+#[cfg(test)]
 mod animated_panoply_tests;
 #[cfg(test)]
 mod animated_tests;
@@ -1749,6 +1754,8 @@ mod feature_tests;
 mod feint_tests;
 #[cfg(test)]
 mod fight_tests;
+#[cfg(test)]
+mod first_sight_tests;
 #[cfg(test)]
 mod fixture_factions;
 #[cfg(test)]
@@ -1993,6 +2000,8 @@ mod stat_paths_tests;
 mod stat_training_tests;
 #[cfg(test)]
 mod stats_tests;
+#[cfg(test)]
+mod statue_tests;
 #[cfg(test)]
 mod status_tests;
 #[cfg(test)]

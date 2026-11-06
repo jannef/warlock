@@ -98,6 +98,8 @@ impl World {
         // What kills earned the player meanwhile (a creature their wound bled to death), and a
         // weapon skill a blocked blow raised (`fight.rs`).
         self.say_news();
+        // A dread thing seen for the first time (`first_sight.rs`).
+        self.first_sight();
     }
 
     /// Keeps the events the player perceived (dropping the rest) and returns the messages for

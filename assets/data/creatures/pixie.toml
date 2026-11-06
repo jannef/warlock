@@ -10,6 +10,7 @@ rarity = "very_rare"
 dread = true
 loot = 15
 name = "pixie"
+first_sight = "A pixie. When it laughs, your pack is lighter."
 glyph = "f"
 fg = "#c890f0"
 speed = 1400

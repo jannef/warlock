@@ -1,6 +1,6 @@
 # The delf wave (Fyrdelf, docs/design/campaign.md §10.1). A heavy, many-legged lizard of the hot
 # deep, scaled like a lord's mail: its bite numbs the limbs, so that everything takes longer
-# (Sluggish).
+# (Sluggish); its gaze turns flesh to stone (Stiffening).
 [[creature]]
 id = "basilisk"
 level = 16
@@ -8,6 +8,8 @@ xp = 90
 rarity = "very_rare"
 dread = true
 name = "basilisk"
+leavings = ["statue"]
+first_sight = "A basilisk. Do not meet its eyes."
 glyph = "R"
 fg = "#7a9a3a"
 speed = 600
@@ -31,3 +33,14 @@ name = "bite"
 verb = "bites"
 to_hit = 4
 on_hit = [{ status = "sluggish", chance = 30, severity = 1 }]
+# Its gaze turns flesh to stone (the dread design §5.2): whoever sees it averts their eyes by
+# reflex (`averted`: Averted, a fight at -4), and it still finds a glance one time in four;
+# caught, a Toughness check against 12 + level / 5, or a degree of Stiffening. Four degrees are
+# stone, and what it stoned stands about as statues.
+[creature.gaze]
+range = 6
+averted = true
+glance = 25
+riders = [
+    { status = "stiffening", chance = 100, severity = 1, check = "toughness", difficulty = 15 },
+]

@@ -28,6 +28,37 @@ use crate::content::Drain;
 use crate::stats::{DRAIN_FLOOR, Stat};
 
 impl World {
+    /// Whether actor `target` resists what `by` (if anyone) put on it with a check of `stat`
+    /// against `difficulty`: its effective modifier, what its talents add to every check of the
+    /// stat (Iron will), `extra` (a drain's `drain_checks`), and Knowledge against a creature
+    /// (`knowledge.rs`). Made, it trains the stat as a disease resisted does. A drain's check,
+    /// and a status rider's with a `check` (a basilisk's stiffening, `status.rs`). Two draws.
+    pub(super) fn resists(
+        &mut self,
+        target: ActorId,
+        by: Option<ActorId>,
+        stat: Stat,
+        difficulty: i32,
+        extra: i32,
+    ) -> bool {
+        let content = self.content.clone();
+        let Some(actor) = self.state.actors.get(&target) else {
+            return false;
+        };
+        let modifier = (actor.effective_stats(&content).modifier(stat))
+            .saturating_add(actor.talent_mods(&content).check(stat))
+            .saturating_add(extra)
+            .saturating_add(self.resisting(target, by));
+        let made = check(&mut self.state.rng, modifier, difficulty);
+        if made {
+            self.train_resisting(target, stat);
+            if target == self.state.player {
+                self.train_stat(crate::content::StatUse::HeldOut);
+            }
+        }
+        made
+    }
+
     /// Actor `target` was hit by a drain of `by`'s (a creature's touch; `None`: no creature's,
     /// a scroll's backlash) (module docs).
     pub(super) fn drain(
@@ -48,17 +79,8 @@ impl World {
                 Stat::ALL[i]
             }
         };
-        let talents = actor.talent_mods(&content);
-        let modifier = (actor.effective_stats(&content).modifier(drain.check))
-            .saturating_add(talents.check(drain.check))
-            .saturating_add(talents.drain_checks);
-        // Know your enemy (Knowledge, `knowledge.rs`).
-        let modifier = modifier.saturating_add(self.resisting(target, by));
-        if check(&mut self.state.rng, modifier, drain.difficulty) {
-            self.train_resisting(target, drain.check);
-            if target == self.state.player {
-                self.train_stat(crate::content::StatUse::HeldOut);
-            }
+        let extra = actor.talent_mods(&content).drain_checks;
+        if self.resists(target, by, drain.check, drain.difficulty, extra) {
             events.push(Event::Drained {
                 actor: target,
                 stat: None,

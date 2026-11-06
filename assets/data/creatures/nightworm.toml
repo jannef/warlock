@@ -9,6 +9,7 @@ xp = 325
 rarity = "very_rare"
 dread = true
 name = "nightworm"
+first_sight = "A nightworm. The deep has sent up its worst."
 glyph = "w"
 fg = "#383c50"
 speed = 700

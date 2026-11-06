@@ -11,6 +11,7 @@ xp = 145
 rarity = "rare"
 dread = true
 name = "incubus"
+first_sight = "An incubus. A fair face and fair words; guard your purse."
 glyph = "n"
 fg = "#9a50c0"
 speed = 1400

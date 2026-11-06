@@ -9,6 +9,7 @@ xp = 255
 rarity = "rare"
 dread = true
 name = "night mare"
+first_sight = "A night mare. Do not look at it; it will look back."
 glyph = "G"
 fg = "#585078"
 speed = 1400

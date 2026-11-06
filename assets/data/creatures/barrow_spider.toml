@@ -6,6 +6,7 @@ level = 2
 xp = 20
 rarity = "common"
 name = "barrow spider"
+leavings = ["web"]
 glyph = "s"
 fg = "#8a8a9a"
 speed = 1250

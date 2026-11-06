@@ -105,6 +105,12 @@ fn attacks_causing(content: &Content, what: impl Fn(&Affliction) -> Option<Strin
                 }
             }
         }
+        // A gaze's riders, at sight (spec §8 "Creature behavior": "Gazes").
+        for o in c.gaze.iter().flat_map(|g| &g.riders) {
+            if let Some(detail) = what(&o.what) {
+                found.push(format!("the {}'s gaze ({}%{detail})", c.name, o.chance));
+            }
+        }
     }
     found
 }
@@ -117,13 +123,19 @@ fn causes(content: &Content, status: usize, def: &StatusDef) -> String {
         Affliction::Status {
             status: s,
             severity,
+            check,
         } if usize::from(s.0) == status => {
             let degrees = if severity == 1 { "degree" } else { "degrees" };
-            Some(format!(", {severity} {degrees}"))
+            let resisted = match check {
+                Some((stat, d)) => format!(", unless a {} check against {d} is made", stat.name()),
+                None => String::new(),
+            };
+            Some(format!(", {severity} {degrees}{resisted}"))
         }
         Affliction::Hold {
             status: s,
             difficulty,
+            ..
         } if usize::from(s.0) == status => {
             let grip = difficulty.or(def.hold.map(|h| h.difficulty)).unwrap_or(0);
             Some(format!(", grip {grip}"))
@@ -379,6 +391,23 @@ fn also(content: &Content, def: &StatusDef) -> String {
             "you see with {} eyes where they are better than yours",
             eyes.name
         ));
+    }
+    if def.kills_at_max {
+        let remains = if def.statue {
+            ", and a creature it kills leaves no corpse but a statue holding what it carried"
+        } else {
+            ""
+        };
+        parts.push(format!(
+            "at its {}th degree its bearer dies of it{remains}",
+            def.max
+        ));
+    }
+    if def.stages.len() > 1 {
+        let lines: Vec<String> = (def.stages.iter().enumerate())
+            .map(|(i, line)| format!("{}: \"{line}\"", i + 1))
+            .collect();
+        parts.push(format!("you are told each degree ({})", lines.join(", ")));
     }
     if !def.resist.is_empty() {
         let kinds: Vec<String> = (def.resist.iter())

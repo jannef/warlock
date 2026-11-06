@@ -9,6 +9,7 @@ xp = 205
 rarity = "rare"
 dread = true
 name = "white lady"
+first_sight = "A white lady. To see her is an omen; to meet her eyes, worse."
 glyph = "G"
 fg = "#f4f0e4"
 speed = 1400

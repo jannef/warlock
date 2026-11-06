@@ -11,6 +11,7 @@ xp = 245
 rarity = "rare"
 dread = true
 name = "wormlord"
+first_sight = "A wormlord. The worms are his, and they are hungry."
 glyph = "z"
 fg = "#70c040"
 speed = 700

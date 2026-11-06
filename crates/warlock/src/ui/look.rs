@@ -4,7 +4,9 @@
 use crate::render::console::{Cell, Console};
 use warlock_core::Pos;
 use warlock_core::color::Rgb;
-use warlock_core::content::{ActionKind, Content, ServiceKind, Stance, ZoneKind, and_list};
+use warlock_core::content::{
+    ActionKind, Content, ServiceKind, Stance, ZoneKind, and_list, is_proper,
+};
 use warlock_core::damage::ResistanceWord;
 use warlock_core::magic::Numbers;
 use warlock_core::object::{Stack, phrase, phrase_with};
@@ -111,6 +113,18 @@ fn describe_cell(view: &PerceptionView<'_>, p: Pos, blood: bool) -> String {
                 with_article(trap)
             ),
             (Some(chest), None) => chest.name(content.chests(), &def.name),
+            // A statue of the stoned goes by what it was: "a statue of a dwarf, mouth open".
+            (None, _) if view.statue_at(p).is_some() => {
+                let of = view.statue_at(p).map(|c| &content.creature(c).name);
+                let of = of.map_or_else(String::new, |name| {
+                    if is_proper(name) {
+                        name.clone()
+                    } else {
+                        with_article(name)
+                    }
+                });
+                format!("{} of {of}, mouth open", def.name)
+            }
             // A wall the player found sounds hollow (a sealed room's breach): "a hollow stone
             // wall".
             (None, _) if view.hollow(p) => format!("hollow {}", def.name),
@@ -514,6 +528,30 @@ mod tests {
             describe(&w.perception(), pass, true),
             "A mountain pass, Beorggeat. The way you came; snow has closed it behind you."
         );
+    }
+
+    #[test]
+    fn leavings_are_named_for_what_they_are() {
+        // Webs, acid-pitted floor, and torn cloth (`content/leaving.rs`), never what left them.
+        let mut files = warlock_core::content::ContentFiles::builtin();
+        files.insert(
+            "levels/leavings.toml",
+            "name = \"Leavings\"\nambient = [255, 255, 255, 0]\nmap = '''\n#######\n#@wac.#\n\
+             #######\n'''\n[legend]\n\"@\" = { terrain = \"floor\", spawn = \"player\" }\n\
+             \"w\" = { terrain = \"web\" }\n\"a\" = { terrain = \"acid_pit\" }\n\
+             \"c\" = { terrain = \"floor\", objects = [\"torn_cloth\"] }\n",
+        );
+        files.insert(
+            "scenarios/leavings.toml",
+            "name = \"Leavings\"\nstart_level = \"leavings\"\n",
+        );
+        let content = Arc::new(Content::load(&files).expect("content"));
+        let w = World::new(content, "leavings", None).expect("world");
+        let view = w.perception();
+        let at = |x| describe(&view, Pos::new(x, 1), false);
+        assert!(at(2).starts_with("An old web."), "{}", at(2));
+        assert!(at(3).starts_with("An acid-pitted floor."), "{}", at(3));
+        assert!(at(4).contains("scrap of torn cloth"), "{}", at(4));
     }
 
     #[test]

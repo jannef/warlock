@@ -9,6 +9,7 @@ rarity = "very_rare"
 dread = true
 loot = 70
 name = "ultroloth"
+first_sight = "An ultroloth. Do not look into its eyes."
 glyph = "&"
 fg = "#a8a8c0"
 speed = 1400

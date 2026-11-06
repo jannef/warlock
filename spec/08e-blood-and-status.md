@@ -129,7 +129,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
       the hold's own `difficulty` (13). Made, "You break free of the ghast." and the step goes
       ahead; failed, "You struggle, but the ghast holds you fast." and the turn is spent (a
       step's price). Creatures never struggle. A hold no one caused (`afflict:held`) ends only by
-      its turns or a struggle. Drowning grip's Held is the same status. A trained **Escape
+      its turns or a struggle. A hold that ticks costs, a tick, the holder's `on_hit` entry's
+      `damage` while it holds (1 to 20; the rug of smothering's engulfing, 1), else the status's
+      own `damage`. Drowning grip's Held is the same status. A trained **Escape
       artist** (no action, no ability row, no key: the check is part of the attempt, #1015) takes
       the better of Strength and Dexterity, each with what talents add to its checks, plus the
       skill's `escape` (+8 at 100, +12 at 200, at most 20) in this check, and the same, without
@@ -160,6 +162,15 @@ developer notes (CLAUDE.md, `docs/dev/`).
     (`Event::Died`'s `of`; the player's death records it, `Death::of`). A creature that dies of
     a status counts as killed by whoever caused it (`Effect::by`): experience (#133) credits the
     player for creatures bleeding to death from wounds they dealt.
+    A status that `kills_at_max` kills as it reaches its max instead (`World::afflict`'s degree
+    step, one hook: the status goes, then the bearer dies of it by whoever gave the last degree,
+    as a tick's death is). **Stiffening** (#1126, a basilisk's gaze) is one: four degrees
+    adding up, two minutes a degree to ease, half again as slow and Dexterity −4 from the second;
+    its `stages` tell each degree lived to ("Your limbs stiffen.", "Your skin greys and
+    hardens.", "You can barely move."), and at the fourth the bearer is stone: "Turned to stone"
+    on the death screen, "The kobold turns to stone." for a creature, which leaves a statue
+    (`statue`, §8 "Statues"). The scroll of restoration (`restoration`) and a temple's cure
+    (`prayer`) end it, the Heal skill eases it a degree a try, Still mind's Stillness ends it.
   - **Cures**: `World::cure(actor, means)` ends every status that lists the means in its
     `cured_by` (a `bandage` stops the bleeding). The Heal skill treats a status with a `treat`
     table instead (#549, §8 "Treating oneself"): bleeding stops on a made check and may be

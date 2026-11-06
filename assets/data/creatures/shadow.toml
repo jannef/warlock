@@ -10,6 +10,7 @@ rarity = "rare"
 dread = true
 shadowy = true
 name = "shadow"
+first_sight = "A shadow. It drinks the strength from you, and the dark hides it."
 glyph = "G"
 fg = "#70708a"
 speed = 1400

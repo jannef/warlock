@@ -10,6 +10,7 @@ xp = 250
 rarity = "rare"
 dread = true
 name = "washer at the ford"
+first_sight = "The washer at the ford. The clothes she washes are your own."
 plural = "washers at the ford"
 glyph = "G"
 fg = "#7aa0b0"

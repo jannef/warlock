@@ -111,3 +111,41 @@ fn no_unique_is_dread() {
         );
     }
 }
+
+#[test]
+fn every_dread_type_has_a_first_sight_line_and_nothing_else_does() {
+    // §9 channel 4: every dread type gets one; the traits do not.
+    let content = Content::builtin().expect("content");
+    for def in content.creature_defs() {
+        assert_eq!(
+            def.first_sight.is_some(),
+            def.dread,
+            "{}: a first-sight line exactly when dread",
+            def.id
+        );
+    }
+}
+
+#[test]
+fn leavings_sit_on_the_types_they_suit() {
+    use super::Leaving;
+    let content = Content::builtin().expect("content");
+    let leaves = |id: &str| {
+        let def = content.creature(content.creature_id(id).expect(id));
+        def.leavings.clone()
+    };
+    assert_eq!(leaves("basilisk"), [Leaving::Statue]);
+    assert_eq!(leaves("barrow_spider"), [Leaving::Web]);
+    assert_eq!(leaves("hezrou"), [Leaving::AcidPit]);
+    assert_eq!(leaves("ember_beetle"), [Leaving::AcidPit]);
+    assert_eq!(leaves("imp"), [Leaving::TornCloth]);
+    assert_eq!(leaves("nymph"), [Leaving::TornCloth]);
+    for leaving in [
+        Leaving::Statue,
+        Leaving::Web,
+        Leaving::AcidPit,
+        Leaving::TornCloth,
+    ] {
+        assert!(content.leaving(leaving).is_some(), "{leaving:?} is laid");
+    }
+}

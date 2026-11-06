@@ -801,6 +801,8 @@ pub enum Breach {
     Dug,
     /// Blasted open by an explosion.
     Blast,
+    /// Kicked apart (a statue, spec §8 "Statues").
+    Kicked,
 }
 
 /// How a missile's flight ended, on the last cell of its path.
