@@ -216,7 +216,11 @@ developer notes (CLAUDE.md, `docs/dev/`).
   (a Willpower drain), the white lady, the night mare, and the ghost lord (transfixed; the touch
   keeps its drain), the hand of glory (transfixed, 3 cells), the ultroloth and the rakshasa
   (transfixed and frightened), the succubus and the incubus (transfixed; the kiss keeps its
-  drain), and the duergar mindbreaker (frightened and transfixed). None is `averted` yet.
+  drain), the duergar mindbreaker (frightened and transfixed), and the basilisk, the one gaze
+  `averted` (6 cells, `glance` 25: a degree of Stiffening unless a Toughness check against 15 is
+  made; #1126). A status rider may carry a check as a drain does (`check` and `difficulty`): the
+  target resists it with its effective modifier, what its talents add to that stat's checks
+  (Iron will, Stubborn), and Knowledge, as a drain's check (`World::resists`).
 - **Bursts** (`warlock-core/src/world/creature_burst.rs`, the rules; `content/burst.rs`, the
   data; the dread design §5.3, #1127): a type's `[creature.burst]`: `damage` (dice),
   `damage_type`, `radius` (0 to 3), `when`, `effect` (a burst effect), optionally `noun` (what

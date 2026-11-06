@@ -87,6 +87,9 @@ Press `k` and a direction to kick. A kick takes a normal action (6 seconds).
   skill (see [Weapon skills](weapon-skills.md)). "You kick the giant rat." Kicking a creature
   that is not [hostile](creatures.md#factions) attacks it all the same. Like every attack, it takes longer in a cowardly
   [stance](combat.md#stances) and less time with magic that quickens your attacks.
+- **A statue** of something turned to stone can be kicked too, but it is far sturdier than a door
+  (the table's last row): most kicks only thud against the stone, though each trains you as a
+  door's does, [Strength](stats.md#stat-strength) with it. Broken, it falls to rubble and what it held.
 - **Anything else** takes no time: `You kick at empty space.` where you could walk (an open or
   broken door too), and kicking a wall would only hurt your foot.
 

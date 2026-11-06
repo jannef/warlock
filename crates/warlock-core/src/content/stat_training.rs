@@ -54,7 +54,7 @@ pub enum StatUse {
     Block,
     /// A turn of digging.
     Dig,
-    /// A kick at a closed door or a chest (Athletics' use).
+    /// A kick at a closed door, a chest, or a statue (Athletics' use).
     Kick,
     /// An attempt at an anvil done to its end, whatever came of it (Metalcraft's use).
     Forged,
@@ -208,7 +208,7 @@ impl StatUse {
             StatUse::Critical => "a critical of yours up close",
             StatUse::Block => "a blow on you that your shield blocked",
             StatUse::Dig => "a turn of digging",
-            StatUse::Kick => "kicking at a closed door or a chest",
+            StatUse::Kick => "kicking at a closed door, a chest, or a statue",
             StatUse::Forged => {
                 "an attempt on metal arms or armour at an anvil, whatever comes of it"
             }

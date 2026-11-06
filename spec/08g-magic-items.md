@@ -328,8 +328,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
     no time, with a target), every point of the reader's stat damage mends and every point
     drains took comes back (§8 "Stats": "Drain"), as a temple's mending does (`StatDamage::mend_all`,
     `World::restore_drained`), a disease showing or not; each stat that comes back is said ("You
-    feel your strength return."). With neither to mend it is refused, takes no time, and keeps
-    the scroll ("There is nothing to restore."). It teaches nothing, so study refuses it
+    feel your strength return."). It also ends Stiffening (every status `cured_by`
+    `restoration`, its end line said: "Your limbs move freely again."). With none of these to
+    mend or end it is refused, takes no time, and keeps the scroll ("There is nothing to restore."). It teaches nothing, so study refuses it
     ("There is no spell in a scroll of restoration to learn."). Rare and dear: item level 8, frequency 10, 300 gold.
   - **Blank scrolls** (`blank_scroll`; #906, the witch and wizard design §6.1): paper with
     nothing on it (the scrolls class, no `read`: never labelled, known on sight). Read, it is

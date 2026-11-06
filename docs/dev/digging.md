@@ -28,5 +28,8 @@ app bursts the new terrain's `toggle` particles (rubble's dust) on `WallBroken`,
 Creatures do not dig. Times are in the wiki's generated `digging.md` tables.
 A blast also blows apart a shut chest whose band's hardness is below it (`World::blast`;
 `docs/dev/chests.md`); digging at a chest is refused, a chest having no `hardness` as terrain.
+A statue of the stoned (`petrified`, #1126, `world/statue.rs`) is a breaking wall of hardness 1500
+(a quarter hour with a pick-axe; no fireball's blast of 1000 breaks it); whatever changes its
+terrain, `set_terrain` calls `World::statue_gone`, which spills what it held onto the rubble.
 A greater treasure room (#618) is reached only by breaking a wall: its breach, a found one a
 hollow wall that `set_terrain` forgets once broken (`docs/dev/special-rooms.md`).

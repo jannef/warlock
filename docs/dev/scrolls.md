@@ -97,10 +97,11 @@ is `None`, `scroll()` (the `SpellScroll`) is `None`, `range()` and `on_item()` a
 only, so the read list reads it at once, study refuses it ("There is no spell in ... to
 learn."), a mishap never backfires it, and the aiming mode never sees it. `World::read` sends it
 to `World::read_cleanse` (`world/restore.rs`): refused, no time, with a target or with nothing to
-mend (no stat damage while `mends`, no drained point while `restores`: "There is nothing to
-restore."); otherwise `deciphers(None, 0)` (above), `use_up` (Scroll savant's keep, the Read stat training), `say_read`, then
+mend (no stat damage while `mends`, no drained point while `restores`, and no status
+`cured_by` `restore::RESTORATION`, Stiffening: "There is nothing to restore."); otherwise `deciphers(None, 0)` (above), `use_up` (Scroll savant's keep, the Read stat training), `say_read`, then
 `StatDamage::mend_all` and `World::restore_drained` (the temple's `World::mend`, split by the two
-switches), and "You feel your strength return." for each stat that came back. No disease check
+switches), `World::cure(player, RESTORATION)` (Stiffening ends, its end line said; #1126), and "You
+feel your strength return." for each stat that came back. No disease check
 (the temple's "Be cured first." is not a rule here), no stream drawn but the check's and Scroll savant's, nothing
 new saved. Adding it moved every label drawn after the scrolls (wands', rods', potions': the
 `identification` stream draws types in id order), hence the screen snapshots' new potion and

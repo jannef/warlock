@@ -1604,6 +1604,18 @@ impl<'a> PerceptionView<'a> {
         })
     }
 
+    /// What the statue at `p` was, as the player sees or remembers it (spec §8 "Statues"): the
+    /// creature type a stoned statue shows (its shape is plain to see), never what it holds.
+    /// `None` where they know no statue of the stoned.
+    pub fn statue_at(&self, p: Pos) -> Option<crate::content::CreatureId> {
+        let terrain = match self.cell(p) {
+            CellView::Visible(t) | CellView::Remembered(t) => t,
+            CellView::Unknown => return None,
+        };
+        self.content.terrain(terrain).statue?;
+        self.level.statues.get(&p).map(|s| s.of)
+    }
+
     /// The chests the player sees or remembers on this level ([`PerceptionView::chest_at`]), by
     /// position.
     pub fn known_chests(&self) -> Vec<(Pos, ChestLook)> {

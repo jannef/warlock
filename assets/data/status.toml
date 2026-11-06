@@ -65,6 +65,13 @@
 #   start, end what the player is told as it begins and ends ("end" lets a rest go on)
 #   dies       what a creature you see does when it kills it ("The giant rat bleeds to death.")
 #   death      the death screen's line when it kills you
+#   stages     what the player is told as each degree is reached, a line a degree from the first:
+#              ["Your limbs stiffen.", ...]; the first is its start line (give `start` or
+#              `stages`), and one that kills at its max has none for that degree
+#   kills_at_max  true: its bearer dies of it as it reaches its max (needs stacking "add", a max
+#              of 2 or more, and `dies`): Stiffening, to stone
+#   statue     true (with kills_at_max): a creature it kills leaves no corpse but a statue (the
+#              terrain with `statue` in terrain.toml), holding what it carried
 #   hides      true: a creature suffering it hides as a shut chest (a mimic's Disguised): it takes
 #              no turn, has seen no one, no creature sets on it, and perception shows the chest in
 #              its place, never it; only being found out ends it (spec §8 "Mimics")
@@ -196,6 +203,30 @@ start = "You feel sick."
 end = "The poison wears off."
 dies = "succumbs to poison"
 death = "Died of poison"
+
+# Stiffening (a basilisk's gaze, spec §8 "Creature behavior": "Gazes"; the dread design §5.2):
+# the flesh turning to stone. Three warnings, a degree each, then at the fourth the bearer is
+# stone: dead, and a creature a statue holding what it carried (terrain.toml `statue`). Two
+# minutes a degree to ease, so a basilisk looked at twice and fled from is a fright. Ended at
+# once by the scroll of restoration (`restoration`) and a temple's cure (`prayer`), eased a degree a try
+# by the Heal skill, and ended by Still mind's Stillness.
+[[status]]
+id = "stiffening"
+name = "Stiffening"
+seen = "stiffening"
+max = 4
+stacking = "add"
+eases = 120
+cost = 150
+penalty = { from = 2, dexterity = -4 }
+cured_by = ["restoration", "prayer"]
+treat = { difficulty = 10, per_degree = 3, made = "You work some of the stiffness out.", failed = "The flesh stays hard as stone." }
+stages = ["Your limbs stiffen.", "Your skin greys and hardens.", "You can barely move."]
+end = "Your limbs move freely again."
+kills_at_max = true
+statue = true
+dies = "turns to stone"
+death = "Turned to stone"
 
 # What every disease shows as (diseases.toml): one status for them all, while at least one of
 # them shows (its incubation over). Diseases give it and take it away, so it has no timers or

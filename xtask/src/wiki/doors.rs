@@ -11,10 +11,10 @@ use warlock_core::door;
 /// The Strength scores the door table shows, and the last column's "and up".
 const KICK_STRENGTHS: [u8; 8] = [3, 6, 9, 10, 12, 15, 18, 20];
 
-/// How often a kick breaks each door that can break, by the kicker's Strength score
-/// (spec §8 "Doors").
+/// How often a kick breaks each door that can break, and a statue, by the kicker's Strength
+/// score (spec §8 "Doors", "Statues").
 pub(super) fn doors(content: &Content) -> String {
-    let mut out = String::from("| Door | Sturdiness |");
+    let mut out = String::from("| Door or fixture | Sturdiness |");
     let mut rule = String::from("|---|:---:|");
     for st in KICK_STRENGTHS {
         let _ = write!(out, " Strength {st} |");
@@ -22,7 +22,8 @@ pub(super) fn doors(content: &Content) -> String {
     }
     let _ = writeln!(out, "\n{rule}");
     for t in content.terrain_defs() {
-        let Some((_, sturdiness)) = t.kicked_in else {
+        // A door kicked in, or a statue kicked apart (spec §8 "Statues").
+        let Some(sturdiness) = t.kicked_in.map(|(_, s)| s).or(t.statue) else {
             continue;
         };
         let _ = write!(out, "| {} | {sturdiness} |", capital(&t.name));
