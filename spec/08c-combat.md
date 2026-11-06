@@ -291,11 +291,13 @@ developer notes (CLAUDE.md, `docs/dev/`).
   `flee_cost` and `flee_noise` (percent of the price and the loudness of a step that **flees**:
   the actor has a hostile next to it and the step ends out of that creature's reach,
   `World::flees`), and `weapon_mark` (percent: the multiplier for weapon skill marks, the hook
-  for #134; nothing counts marks yet). Bonuses are -20 to 20, percentages 10 to 1000. Shipped
+  for #134; nothing counts marks yet), and `gatekeeper` (percent: scales the Gatekeeper gift's
+  chance of a blow, capped at always, §8 "Free blows"). Bonuses are -20 to 20, percentages 10 to 1000. Shipped
   numbers (first guesses, tuned by playtesting; none is ever shown, only the stance's name):
   aggressive +1 to hit, +2 damage, -3 Dodge, marks ×1.25; defensive -2 to hit, -1 damage, +2
   Dodge, +1 Parry; coward -4 to hit, -3 damage, +4 Dodge, attacks ×1.25, fleeing steps ×0.85
-  and half as loud; frenzy +2 to hit, +4 damage, -6 Dodge, fleeing steps ×1.5, marks ×1.25.
+  and half as loud; frenzy +2 to hit, +4 damage, -6 Dodge, fleeing steps ×1.5, marks ×1.25;
+  the Gatekeeper's chance ×2 aggressive, ×½ defensive, ×¼ coward, ×4 (always) frenzy.
   **Frenzy** (`world/frenzy.rs`) is never chosen: `World::set_stance` refuses it ("Only
   rage brings the frenzy.", `Spent::Nothing`), and refuses every stance while the player rages
   ("Your rage holds you in the frenzy."), so `stance:frenzy` and `+`/`-` (which
@@ -348,6 +350,13 @@ developer notes (CLAUDE.md, `docs/dev/`).
     up beside the actor from a cell out of its reach is struck as it comes, after its step
     (`World::step_up`, from `creature_steps`); each gatekeeper it was not beside strikes, in
     actor order. Like the opportunist's, an attack of its own: it makes the fight's noise.
+    The Barghest's gift strikes **by chance** (#1094): one in its effect's `one_in` (4), the
+    chance scaled by the stance's `gatekeeper` percent (`data/stances.toml`: aggressive 200,
+    defensive 50, coward 25, frenzy 400) and capped at always: 1/2, 1/4, 1/8, 1/16, and 1/1 in
+    a frenzy (`World::gatekeeper_odds`). One draw per approach, from a stream of its own derived
+    on demand (`gatekeeper/<keeper>/<mover>/<second>`), never the gameplay stream; drawn only
+    once the blow would be struck. The other gatekeepers' blows (`FreeBlows::gatekeeper`: a class
+    switch, Brace, a lurk) strike every time.
   - **Startled blow** (Hair trigger's `startled_blow`, a talent switch, not in `FreeBlows`;
     #687): an attack that finds the actor unaware, made by a hostile beside it, whose initiative
     check the actor makes (`World::startle`, §8 "Surprise and sneak attacks"), is answered at

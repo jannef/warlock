@@ -162,7 +162,12 @@ ascetic's Patient defence, `world/ascetic.rs`, #849, and is raised only by `Worl
 `World::after_melee`: the player's attacks call `after_attack`, never dodged), `Cleaved` (great
 cleave's next), `Leaves` (`World::opportunist`), `Approaches` (`World::gatekeeper`, #267: a
 hostile that steps up beside a gatekeeper, from `World::step_up(id, from)` at the end of
-`ai.rs::creature_steps`, after the trap; each gatekeeper it was not beside before strikes).
+`ai.rs::creature_steps`, after the trap; each gatekeeper it was not beside before strikes;
+`World::gatekeeper_odds` decides who is one and how often: `FreeBlows::gatekeeper` (a class
+switch, Brace, a lurk) every time, the Gatekeeper gift's `TalentMods::gatekeeper_one_in` scaled by
+`StanceDef::gatekeeper` percent, capped at always, #1094; `gatekeeper_draw` draws once the blow
+would be struck, from the stream `gatekeeper/<keeper>/<mover>/<second>` derived on demand, so no
+other stream moves).
 Callers: `World::attack` (creatures) and
 `player_attacks` run the first and second blows, then `World::after_attack(attacker, target,
 parried)`, which strikes the cleave or riposte and follows cleaves while `Cleaved` gives more;

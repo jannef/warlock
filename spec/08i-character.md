@@ -130,7 +130,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     carried nothing, a plunge never hurts, climbing out onto ice −50 %, and cold resistance 25 %, #271), Ungainly ashore (flaw:
     overworld journeys +10 %), Hound's nose (bleeding creatures seen within 6 cells however dark;
     the eat list says whether food smells fresh, turning, or rotten: a word, never its age),
-    Gatekeeper (a free blow at a hostile stepping up beside them, §8 "Free blows").
+    Gatekeeper (sometimes a free blow at a hostile stepping up beside them, the likelier the
+    bolder their stance: 1/4 neutral, §8 "Free blows").
   - **Rise from the ashes** (the Phoenix's): **once in a life**, a hit, a trap, or a status that
     would bring the player to 0 hit points does not kill them (starving and choking still do):
     "You burst into flame and rise from your ashes!"; they are **Ashen** for a day (every score
