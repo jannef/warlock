@@ -27,7 +27,7 @@ blood = "none"
 [creature.attack]
 damage = "3d12"
 damage_type = "bludgeoning"
-to_hit = 4
+to_hit = 11
 name = "buffet"
 verb = "buffets"
 on_hit = [{ status = "staggered", chance = 20, severity = 1 }]

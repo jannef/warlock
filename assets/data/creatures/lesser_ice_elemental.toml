@@ -28,4 +28,5 @@ damage = "3d6"
 damage_type = "cold"
 name = "fist"
 verb = "freezes"
+to_hit = 2
 on_hit = [{ status = "sluggish", chance = 25, severity = 1 }]

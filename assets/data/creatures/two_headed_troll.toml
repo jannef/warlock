@@ -29,5 +29,5 @@ damage = "3d10"
 damage_type = "piercing"
 name = "bites"
 verb = "bites"
-to_hit = 3
+to_hit = 7
 on_hit = [{ status = "bleeding", chance = 20, severity = 1 }]

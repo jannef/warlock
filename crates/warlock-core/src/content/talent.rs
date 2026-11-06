@@ -553,13 +553,8 @@ pub enum TalentEffect {
     },
     /// No one makes way for it (Trusted by none), whatever else would have them.
     Distrusted,
-    /// A free blow the actor is given (spec §8 "Free blows"); `one_in` (the gatekeeper's only)
-    /// makes it a chance: one in that many, scaled by the stance's `gatekeeper` percent.
-    FreeBlow {
-        trigger: FreeBlowTrigger,
-        #[serde(default)]
-        one_in: Option<u32>,
-    },
+    /// A free blow the actor is given (spec §8 "Free blows").
+    FreeBlow { trigger: FreeBlowTrigger },
     /// What attacks with some weapon skills gain, as their ranks give it
     /// ([`super::Benefit`]): the weapon skill or style `skill` names, else the chosen one's (no
     /// `role`; the talent takes a choice), else every skill of `role`'s. `ranks`: its benefits read that many ranks higher
@@ -2441,13 +2436,6 @@ impl TalentEffect {
                 }
                 Ok(())
             }
-            TalentEffect::FreeBlow { trigger, one_in } => match one_in {
-                Some(_) if *trigger != FreeBlowTrigger::Gatekeeper => {
-                    Err("`free_blow`: only the gatekeeper's takes `one_in`".into())
-                }
-                Some(n) if !(1..=100).contains(n) => Err("`free_blow`: one_in is 1 to 100".into()),
-                _ => Ok(()),
-            },
             TalentEffect::SilentDoors
             | TalentEffect::NoExertion
             | TalentEffect::RerollFumble
@@ -2458,6 +2446,7 @@ impl TalentEffect {
             | TalentEffect::WadesFree
             | TalentEffect::Swimmer
             | TalentEffect::StoneSense
+            | TalentEffect::FreeBlow { .. }
             | TalentEffect::IronStomach
             | TalentEffect::Clotting
             | TalentEffect::SureStep

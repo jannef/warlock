@@ -36,7 +36,7 @@ damage = "4d12"
 damage_type = "fire"
 name = "flaming whip"
 verb = "lashes"
-to_hit = 6
+to_hit = 15
 on_hit = [{ status = "held", chance = 15, difficulty = 24 }]
 # Its gear (spec §8 "Creature gear"): the great sword it never puts down.
 [[creature.gear]]

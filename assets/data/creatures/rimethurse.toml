@@ -26,7 +26,7 @@ blood = "none"
 [creature.attack]
 damage = "5d10"
 damage_type = "cold"
-to_hit = 6
+to_hit = 16
 name = "fist"
 verb = "freezes"
 on_hit = [{ status = "sluggish", chance = 25, severity = 1 }]

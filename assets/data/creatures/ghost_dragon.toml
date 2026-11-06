@@ -30,7 +30,7 @@ damage = "4d12"
 damage_type = "cold"
 name = "bite"
 verb = "bites"
-to_hit = 6
+to_hit = 17
 on_hit = [
     { drain = "toughness", points = 2, chance = 15, check = "toughness", difficulty = 25 },
     { status = "frightened", chance = 30, severity = 3 },

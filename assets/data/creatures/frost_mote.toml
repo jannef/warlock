@@ -29,4 +29,5 @@ damage = "1d6"
 damage_type = "cold"
 name = "touch"
 verb = "numbs"
+to_hit = 1
 on_hit = [{ status = "sluggish", chance = 25, severity = 1 }]

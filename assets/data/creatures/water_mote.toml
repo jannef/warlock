@@ -28,4 +28,5 @@ damage = "1d6"
 damage_type = "bludgeoning"
 name = "slap"
 verb = "slaps"
+to_hit = 1
 on_hit = [{ status = "sluggish", chance = 20, severity = 1 }]

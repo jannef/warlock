@@ -32,3 +32,4 @@ damage = "2d8"
 damage_type = "fire"
 name = "touch"
 verb = "sears"
+to_hit = 3

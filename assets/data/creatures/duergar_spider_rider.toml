@@ -23,7 +23,7 @@ hearing = 14
 weight = 180000
 stats = { strength = 22, dexterity = 21, toughness = 21, intelligence = 14, willpower = 19, presence = 12 }
 base_hp = 56
-attack = { damage = "4d6", damage_type = "piercing", name = "spider's bite", verb = "bites", to_hit = 2, on_hit = [{ status = "poisoned", chance = 25, severity = 2 }] }
+attack = { damage = "4d6", damage_type = "piercing", name = "spider's bite", verb = "bites", to_hit = 6, on_hit = [{ status = "poisoned", chance = 25, severity = 2 }] }
 resist = { poison = 25, cold = 10 }
 on_eat = { message = "Tough and sour, and it tastes of the spider.", vomit = 40 }
 [[creature.gear]]

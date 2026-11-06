@@ -371,7 +371,7 @@ fn hounds_nose_smells_blood_and_rot() {
     let content = w.content().clone();
     let bleeding = content.status_id("bleeding").expect("bleeding");
     assert_eq!(mods(&w).scent, [(bleeding, 6)]);
-    assert_eq!(mods(&w).gatekeeper_one_in, Some(4));
+    assert!(mods(&w).free_blows.gatekeeper);
     let bread = content.object_id("bread").expect("bread");
     let now = w.state.time;
     let made = |days: u64| {
@@ -390,56 +390,6 @@ fn hounds_nose_smells_blood_and_rot() {
     let dagger = Stack::one(content.object_id("dagger").expect("dagger"));
     assert_eq!(view.smell(&dagger), None);
     assert_eq!(unborn().perception().smell(&made(6)), None);
-}
-
-/// How many of `approaches` steps of a hostile up beside a Barghest-born player in `stance`
-/// draw the Gatekeeper's blow, each a second apart (an approach of its own).
-fn gatekeeper_blows(stance: crate::content::CombatStance, approaches: u32) -> u32 {
-    let mut w = born_in(BUILTIN.clone(), "arena", Some(("barghest", "fire")));
-    let player = w.state.player;
-    w.player_mut().stance = stance;
-    let here = w.state.player().pos;
-    let level = w.state.player().level.clone();
-    let foe = (w.state.actors.values())
-        .filter(|a| a.id != player && a.level == level)
-        .find(|a| w.stance(a.id, player) == crate::content::Stance::Hostile)
-        .map(|a| a.id)
-        .expect("a hostile on the player's level");
-    let mut struck = 0;
-    for _ in 0..approaches {
-        w.state.time += Duration::seconds(1);
-        let from = Pos::new(here.x + 3, here.y);
-        let me = w.state.actors.get_mut(&foe).expect("the foe");
-        (me.pos, me.hp) = (Pos::new(here.x + 1, here.y), 10_000);
-        // The arena's corner is dark: the blow at something unseen is told, not shown.
-        w.news.clear();
-        w.step_up(foe, from, &mut Vec::new());
-        struck += u32::from(w.news.iter().any(|m| m.starts_with("You ")));
-    }
-    struck
-}
-
-#[test]
-fn the_gatekeeper_strikes_by_chance_the_bolder_the_stance_the_likelier() {
-    use crate::content::CombatStance as S;
-    const N: u32 = 1600;
-    // The frenzy always strikes.
-    assert_eq!(gatekeeper_blows(S::Frenzy, 200), 200);
-    for (stance, of) in [
-        (S::Aggressive, 2),
-        (S::Neutral, 4),
-        (S::Defensive, 8),
-        (S::Coward, 16),
-    ] {
-        let (n, p) = (f64::from(N), 1.0 / f64::from(of));
-        let want = n * p;
-        let spread = 4.0 * (n * p * (1.0 - p)).sqrt();
-        let got = f64::from(gatekeeper_blows(stance, N));
-        assert!(
-            (got - want).abs() <= spread,
-            "{stance}: {got} of {N}, want about {want}"
-        );
-    }
 }
 
 #[test]
@@ -461,8 +411,7 @@ fn the_rules_of_the_new_gifts_are_in_their_talents() {
     assert!(matches!(
         effects("gatekeeper").as_slice(),
         [TalentEffect::FreeBlow {
-            trigger: crate::content::FreeBlowTrigger::Gatekeeper,
-            one_in: Some(4),
+            trigger: crate::content::FreeBlowTrigger::Gatekeeper
         }]
     ));
 }

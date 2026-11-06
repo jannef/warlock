@@ -151,7 +151,7 @@ fn the_drow_keep_to_the_roster() {
         let want = dice_average(level, role);
         let got = average(attack.attack.damage);
         assert!(within(got, want), "{id}: dice {got}, the formula {want}");
-        let to_hit = if def.level >= 20 { def.level / 10 } else { 0 };
+        let to_hit = def.level / 4;
         assert_eq!(attack.attack.to_hit, i32::from(to_hit), "{id}: to-hit");
         let venom = |on_hit: &[super::OnHit]| {
             (on_hit.iter())

@@ -29,4 +29,5 @@ damage = "1d6"
 damage_type = "piercing"
 name = "touch"
 verb = "touches"
+to_hit = 1
 on_hit = [{ status = "transfixed", chance = 15, severity = 1 }]

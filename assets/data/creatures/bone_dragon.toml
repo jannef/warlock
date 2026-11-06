@@ -30,4 +30,4 @@ damage = "4d10"
 damage_type = "slashing"
 name = "claws"
 verb = "claws"
-to_hit = 5
+to_hit = 12

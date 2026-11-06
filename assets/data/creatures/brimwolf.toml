@@ -29,7 +29,7 @@ blood = "none"
 [creature.attack]
 damage = "4d10"
 damage_type = "bludgeoning"
-to_hit = 5
+to_hit = 13
 name = "wave"
 verb = "slams"
 on_hit = [

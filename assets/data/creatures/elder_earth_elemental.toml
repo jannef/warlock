@@ -28,7 +28,7 @@ blood = "none"
 [creature.attack]
 damage = "3d12"
 damage_type = "bludgeoning"
-to_hit = 4
+to_hit = 10
 name = "fist"
 verb = "pounds"
 on_hit = [

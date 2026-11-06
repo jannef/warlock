@@ -30,5 +30,5 @@ damage = "3d10"
 damage_type = "piercing"
 name = "sting"
 verb = "stings"
-to_hit = 3
+to_hit = 8
 on_hit = [{ status = "poisoned", chance = 25, severity = 3 }]

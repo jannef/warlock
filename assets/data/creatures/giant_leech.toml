@@ -27,4 +27,5 @@ damage = "1d4"
 damage_type = "piercing"
 name = "sucker"
 verb = "latches onto"
+to_hit = 1
 on_hit = [{ status = "bleeding", chance = 40, severity = 1 }]

@@ -24,7 +24,7 @@ stats = { strength = 21, dexterity = 11, toughness = 22, intelligence = 15, will
 base_hp = 48
 # A murderer's craft: it strikes the unwary.
 skills = { sneak_attack = 40, initiative = 40 }
-attack = { damage = "3d6", damage_type = "bludgeoning", name = "stamp", verb = "stamps on" }
+attack = { damage = "3d6", damage_type = "bludgeoning", name = "stamp", verb = "stamps on", to_hit = 3 }
 # Its gear (spec §8 "Creature gear"): the iron-shod boots it is named for.
 [[creature.gear]]
 chance = 90

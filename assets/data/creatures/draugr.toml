@@ -22,7 +22,7 @@ hearing = 10
 weight = 120000
 stats = { strength = 21, dexterity = 11, toughness = 22, intelligence = 15, willpower = 20, presence = 15 }
 base_hp = 48
-attack = { damage = "3d6", damage_type = "bludgeoning", name = "slam", verb = "slams" }
+attack = { damage = "3d6", damage_type = "bludgeoning", name = "slam", verb = "slams", to_hit = 3 }
 resist = { cold = 50, poison = 100 }
 weapon_skills = { axes = 2 }
 on_eat = { message = "Grave-cold meat, long gone bad.", vomit = 80, harm = "1d4" }

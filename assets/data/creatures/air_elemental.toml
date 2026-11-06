@@ -28,4 +28,5 @@ damage = "3d8"
 damage_type = "bludgeoning"
 name = "buffet"
 verb = "buffets"
+to_hit = 4
 on_hit = [{ status = "staggered", chance = 20, severity = 1 }]

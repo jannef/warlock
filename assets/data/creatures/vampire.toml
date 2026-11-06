@@ -32,7 +32,7 @@ damage = "3d8"
 damage_type = "piercing"
 name = "bite"
 verb = "bites"
-to_hit = 2
+to_hit = 6
 on_hit = [
     { drain = "toughness", points = 1, chance = 15, check = "toughness", difficulty = 17 },
     { status = "transfixed", chance = 10, severity = 1 },

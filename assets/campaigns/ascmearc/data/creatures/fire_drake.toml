@@ -40,4 +40,5 @@ damage = "3d8"
 damage_type = "piercing"
 name = "jaws"
 verb = "bites"
+to_hit = 4
 threat = 19

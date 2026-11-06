@@ -31,7 +31,7 @@ damage = "3d10"
 damage_type = "slashing"
 name = "long sword"
 verb = "cuts"
-to_hit = 3
+to_hit = 8
 on_hit = [{ status = "poisoned", chance = 20, severity = 3 }]
 [creature.throw]
 object = "bolt"

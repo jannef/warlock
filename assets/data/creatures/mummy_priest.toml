@@ -34,5 +34,5 @@ damage = "3d6"
 damage_type = "cold"
 name = "touch"
 verb = "touches"
-to_hit = 2
+to_hit = 5
 on_hit = [{ disease = "mummy_rot", chance = 15 }]

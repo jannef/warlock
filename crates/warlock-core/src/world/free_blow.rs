@@ -27,16 +27,13 @@
 //!
 //! Who gets which is switched per actor ([`FreeBlows`], read through
 //! [`World::free_blows_of`]): talents and class abilities switch them on. A trigger that does not
-//! fire draws nothing from the gameplay stream, so fights without free blows are unchanged. The
-//! Gatekeeper gift's blow is struck by chance, by the stance ([`World::gatekeeper_odds`]), drawn
-//! from a stream of the approach's own, never the gameplay stream.
+//! fire draws nothing from the gameplay stream, so fights without free blows are unchanged.
 
 use super::{Actor, ActorId, World};
 use crate::action::{AttackKind, Event};
 use crate::combat::{Blow, Category, Profile, Strike};
 use crate::content::{ObjectId, Stance};
 use crate::geom::{Dir, Pos};
-use crate::rng::Rng;
 use serde::{Deserialize, Serialize};
 
 /// The free blows an actor is given (spec §8 "Free blows"): the switches talents and class
@@ -291,14 +288,12 @@ impl World {
         let keepers: Vec<ActorId> = (self.state.actors.values())
             .filter(|other| other.id != id && other.level == me.level)
             .filter(|other| other.pos.chebyshev(me.pos) == 1 && other.pos.chebyshev(from) > 1)
-            .filter(|other| self.gatekeeper_odds(other).is_some())
+            .filter(|other| self.free_blows_of(other).gatekeeper)
             .filter(|other| self.stance(id, other.id) == Stance::Hostile)
             .map(|other| other.id)
             .collect();
         for keeper in keepers {
-            if let Some(blow) = self.second_blow(keeper, id, Cue::Approaches, events)
-                && self.gatekeeper_draw(keeper, id)
-            {
+            if let Some(blow) = self.second_blow(keeper, id, Cue::Approaches, events) {
                 self.lie_in_wait(keeper, id);
                 let struck = self.strike_free(blow, events);
                 self.technique.lurk = None;
@@ -325,50 +320,13 @@ impl World {
         if let Some((to_hit, _)) = self.brace_of(striker) {
             profile.to_hit += to_hit;
         }
-        self.gatekeeper_odds(me).is_some().then_some(FreeBlow {
+        self.free_blows_of(me).gatekeeper.then_some(FreeBlow {
             by: striker,
             at: mover,
             kind: Free::Gatekeeper,
             with: None,
             profile,
         })
-    }
-
-    /// The odds of actor `actor`'s gatekeeper's blow at a hostile stepping up beside it, as
-    /// (in, of); `None` without one. Every time, `(1, 1)`, for the switch (a class ability, a
-    /// weapon ability's Brace, lurking); by the Gatekeeper gift's chance otherwise, one in its
-    /// `one_in` scaled by the stance's `gatekeeper` percent, at most always. Flat-footed, none.
-    pub(super) fn gatekeeper_odds(&self, actor: &Actor) -> Option<(u32, u32)> {
-        if self.free_blows_of(actor).gatekeeper {
-            return Some((1, 1));
-        }
-        let one_in = actor.talent_mods(&self.content).gatekeeper_one_in?;
-        if self.off_guard(actor.id) {
-            return None;
-        }
-        let of = one_in.saturating_mul(100);
-        let percent = self.content.stance_def(actor.stance).gatekeeper;
-        Some((percent.min(of), of))
-    }
-
-    /// Whether actor `keeper`'s gatekeeper's blow at `mover`, which has just stepped up beside
-    /// it, is struck: always at odds of always, else one draw from the approach's own stream
-    /// (`gatekeeper/<keeper>/<mover>/<second>`, derived on demand: no other stream moves).
-    fn gatekeeper_draw(&self, keeper: ActorId, mover: ActorId) -> bool {
-        let odds = (self.state.actors.get(&keeper)).and_then(|a| self.gatekeeper_odds(a));
-        let Some((odds, of)) = odds else {
-            return false;
-        };
-        if odds >= of {
-            return true;
-        }
-        let label = format!(
-            "gatekeeper/{}/{}/{}",
-            keeper.0,
-            mover.0,
-            self.state.time.seconds()
-        );
-        Rng::stream(self.state.seed, &label).below(of) < odds
     }
 
     /// Whether `me` stepping to `to` takes it out of the reach of `other`, a hostile beside it

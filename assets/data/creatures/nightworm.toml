@@ -30,7 +30,7 @@ damage = "5d10"
 damage_type = "piercing"
 name = "bite"
 verb = "bites"
-to_hit = 6
+to_hit = 15
 on_hit = [
     { drain = "toughness", points = 2, chance = 15, check = "toughness", difficulty = 24 },
     { status = "held", chance = 15, difficulty = 24 },
