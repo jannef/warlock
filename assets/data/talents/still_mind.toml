@@ -21,6 +21,7 @@ effects = [
         "frightened",
         "drowsy",
         "webbed",
+        "stiffening",
     ] },
 ]
 resource = { id = "ki", cost = 2 }

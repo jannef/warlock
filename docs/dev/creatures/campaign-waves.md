@@ -22,7 +22,10 @@ which the ash wraith is) and `fire` (the burning things; hostile to the player o
 `great_club` object exists, so the ogre's racial weapon is the maul; the pick-axe is a tool
 (`racial_weapon` must have damage), so the duergar miner carries it as a Tool-slot gear line and
 has the hand axe, the duergar's racial weapon, as a second, rarer line. The basilisk's slowing
-bite is the existing `sluggish` status.
+bite is the existing `sluggish` status; its gaze (#1126, dread D2) is the one `averted` gaze:
+range 6, `glance` 25, a degree of Stiffening unless a Toughness check against 15 (12 + 16 ÷ 5) is
+made; four degrees are stone, and a creature it stones becomes a statue (`world/statue.rs`). Its
+speed stays 900 (the dread design §7.2's 600 or 700 for slow dread is D10's).
 Fyrdelf (#339) is where the wave lives: its branch's `population` (with the bats, kobolds, and
 giant centipedes the shallow floors draw on), leaving out the drake, which only the drake's
 hoard places (a vault its twelfth level names, so a run meets it once, there). Its stores are

@@ -93,6 +93,15 @@ gazer: no choice, and nothing to switch. Averted, you fight half-blind: −4 to
 [free blows](combat.md#free-blows). Its gaze still finds a glance you cannot help, at the chance
 in that column. Darkness, a wall, or a door between you ends the averting as it ends the gaze.
 
+The [basilisk](creatures.md#creature-basilisk)'s is the one forced gaze, and the deadliest: a glance
+it catches gives a degree of [Stiffening](status-effects.md#status-stiffening) unless you make a
+[Toughness](stats.md#stat-toughness) check against 15. Each degree is told (your limbs stiffen, your
+skin greys, you can barely move), and the fourth turns you to stone: death. A degree eases in two
+minutes, so a basilisk glimpsed and walked away from (it is slow) is a fright; the scroll of
+restoration, a temple's cure, or Still mind's Stillness ends it, and the Heal skill eases it a degree
+a try. A creature it stones leaves no corpse but a **statue** holding what it carried (see
+[Doors](doors.md) for kicking one apart, [Digging](digging.md) for digging through it).
+
 {{#include generated/creature-gazes.md}}
 ### Splitting and dying into
 
