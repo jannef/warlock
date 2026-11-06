@@ -387,7 +387,7 @@ pub(super) fn creature_defences(content: &Content) -> String {
             resists.push("never [bleeds](status-effects.md#bleeding)".into());
         }
         // Acid blood (`world/corrode.rs`): what strikes it may come away damaged.
-        if let Some(acid) = c.corrodes.filter(|a| a.what == CorrodesWhat::Weapon) {
+        if let Some(acid) = c.corrodes.filter(|a| a.what.eats(CorrodesWhat::Weapon)) {
             resists.push(format!(
                 "{}% to [damage](objects.md#corrosion) the weapon that strikes it",
                 acid.chance
@@ -520,7 +520,7 @@ pub(super) fn creature_attacks(content: &Content) -> String {
             };
             let mut caused = natural.map_or_else(Vec::new, |a| on_hit(content, a));
             // Its filth (`world/corrode.rs`): a worn piece damaged.
-            if let Some(acid) = c.corrodes.filter(|a| a.what == CorrodesWhat::Armour) {
+            if let Some(acid) = c.corrodes.filter(|a| a.what.eats(CorrodesWhat::Armour)) {
                 caused.push(format!(
                     "{}% [damages](objects.md#corrosion) a piece worn",
                     acid.chance
@@ -682,19 +682,23 @@ pub(super) fn creature_splits(content: &Content) -> String {
 }
 
 /// What each dragon (spec §8 "Creature behavior": "Dragons") breathes: its element, the damage
-/// rolled once for everyone in the cone, how long the cone is, and how long before it breathes
-/// again.
+/// rolled once for everyone in the cone, how long the cone is, what else it causes on those it
+/// harmed (the gorgon's stiffening), and how long before it breathes again.
 pub(super) fn creature_breaths(content: &Content) -> String {
     let mut out = String::from(
-        "| Creature | Breathes | Damage | Cone | Again after |\n|---|---|---|---:|---:|\n",
+        "| Creature | Breathes | Damage | Cone | Then | Again after |\n|---|---|---|---:|---|---:|\n",
     );
     for (_, c) in listed(content) {
         let Some(breath) = &c.breath else {
             continue;
         };
+        let then = match riders(content, &breath.riders) {
+            r if r.is_empty() => "—".to_string(),
+            r => r.join(", "),
+        };
         let _ = writeln!(
             out,
-            "| {} | {} | {} {} | {} cells | {} s |",
+            "| {} | {} | {} {} | {} cells | {then} | {} s |",
             link(Term::Creature, &c.id, &capital(&c.name)),
             breath.noun,
             damage_text(breath.damage.into(), 0),

@@ -99,6 +99,15 @@ pub enum CorrodesWhat {
     /// A blow that strikes it eats at the weapon that struck (its acid blood, the ember
     /// beetle's).
     Weapon,
+    /// Both ways, each at the chance (the rust monster's feelers, #1138).
+    Both,
+}
+
+impl CorrodesWhat {
+    /// Whether acid of this kind eats at gear of kind `what` (`Armour` or `Weapon`).
+    pub fn eats(self, what: CorrodesWhat) -> bool {
+        self == what || self == CorrodesWhat::Both
+    }
 }
 
 fn first_level() -> u8 {

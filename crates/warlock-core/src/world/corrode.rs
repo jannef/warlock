@@ -10,6 +10,7 @@
 //! - **`weapon`** (the ember beetle's acid blood): a melee hit of the player's that strikes it
 //!   rolls the chance on what struck (the weapon in hand, or the shield that bashed): "Your long
 //!   sword comes away pitted."
+//! - **`both`** (the rust monster's feelers, #1138): each of the two, at the chance.
 //! - The chance is halved for a player who resists acid at all, and a material that corrodes at
 //!   `"half"` (bone, horn, ivory, chitin) takes a second roll at 50. Nothing is damaged twice and
 //!   nothing is destroyed. A spirit weapon and a stack of several are left be.
@@ -58,7 +59,7 @@ impl World {
         };
         let acid =
             (self.actor_or_fallen(bearer)).and_then(|a| self.content.creature(a.creature).corrodes);
-        let Some(acid) = acid.filter(|a| a.what == what) else {
+        let Some(acid) = acid.filter(|a| a.what.eats(what)) else {
             return;
         };
         let resistance = (self.content.damage_type_id("acid"))
@@ -109,7 +110,7 @@ impl World {
         worked.damage();
         stack.set_worked(worked);
         self.say(match what {
-            CorrodesWhat::Armour => format!("The acid eats at your {name}."),
+            CorrodesWhat::Armour | CorrodesWhat::Both => format!("The acid eats at your {name}."),
             CorrodesWhat::Weapon => format!("Your {name} comes away pitted."),
         });
     }
@@ -121,7 +122,8 @@ impl World {
         let content = &self.content;
         let me = self.state.player();
         let mut items: Vec<usize> = match what {
-            CorrodesWhat::Armour => {
+            // `what` is the side struck, never `Both` (that is the creature's, `corrode`).
+            CorrodesWhat::Armour | CorrodesWhat::Both => {
                 let mut worn: Vec<usize> = Vec::new();
                 for (_, item) in me.equipment.items() {
                     let kind = (me.inventory.get(item)).and_then(|s| content.object(s.object).kind);
