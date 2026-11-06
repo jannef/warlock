@@ -21,3 +21,5 @@ shapes, flight, charm, summoning, and dream-walking are #450's follow-ups.
 
 Fixtures that write their own factions file list `fiends` (`equip_tests`, `magic_tests`,
 `object_tests`, `read_tests`).
+
+Spells (#1102, docs/dev/creatures.md "Casters"; in the order each prefers them): the night hag `slumber`, `leech`, `blight` (mana 70); the rakshasa `glamour`, `mesmerise`, `flame`, `lightning_bolt` (mana 130).

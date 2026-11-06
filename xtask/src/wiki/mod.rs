@@ -181,6 +181,7 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("creature-throws.md", creatures::creature_throws),
         ("creature-summons.md", creatures::creature_summons),
         ("creature-breaths.md", creatures::creature_breaths),
+        ("creature-spells.md", creatures::creature_spells),
         ("creature-surprise.md", creatures::creature_surprise),
         ("creature-senses.md", creatures::creature_senses),
         ("animated-tiers.md", animated::animated_tiers),
@@ -617,7 +618,10 @@ mod tests {
         );
         has("creature-stats.md", "| Deer | 1 | 2 |");
         // Rarity (#373): each type's tier, and the tiers' factors.
-        has("creature-stats.md", "| Kobold shaman | 4 | 40 | Rare |");
+        has(
+            "creature-stats.md",
+            "| Kobold shaman | 4 | 40 | Very rare |",
+        );
         row_has(
             text("creature-rarities.md"),
             "| Very rare | 10% | ",

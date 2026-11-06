@@ -49,3 +49,5 @@ everything above are in no population yet: met only as strays
 
 Follow-ups: enlarging and invisibility as abilities used in a fight, creature spells for the
 priest and the mindbreaker, a mount as a creature of its own.
+
+Spells (#1102, docs/dev/creatures.md "Casters"; in the order each prefers them): the duergar priest `cure_wounds`, `blessing`, `flay`, `cause_wounds` (mana 40); the duergar mindbreaker `fear`, `bind`, `flay` (mana 60).

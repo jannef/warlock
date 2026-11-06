@@ -8,10 +8,13 @@
 //!    slip past it (`slip.rs::looks_at`), unseen by its darkvision.
 //! 2. **Fight**: a melee creature attacks a target next to it, else steps along a shortest path
 //!    toward it; one that throws (a giant's boulders, `hurl.rs`) throws on the way whenever the
-//!    target is in range with a clear line of fire. A ranged creature or caster shoots or casts
-//!    when the target is within its range with a clear line of fire (no opaque cell and nobody
-//!    in between), else steps toward the nearest cell that gives it one (failing that, toward
-//!    the target). A dragon breathes its element at the target whenever its breath is ready
+//!    target is in range with a clear line of fire. A ranged creature shoots when the target is
+//!    within its range with a clear line of fire (no opaque cell and nobody in between), else
+//!    steps toward the nearest cell that gives it one (failing that, toward the target). A
+//!    caster casts the first spell of its list that goes from where it stands
+//!    (`creature_cast.rs`), else closes to where one would the same way; one that can cast
+//!    nothing at the target (out of mana, Silenced) shoots if it can, else fights in melee. A
+//!    dragon breathes its element at the target whenever its breath is ready
 //!    and the target stands in the cone's reach with a clear line (`breath.rs`), and fights in
 //!    melee otherwise. Leaving its routine, it remembers where it was (its post).
 //!    An unharmed lurker waits where it stands instead of stepping toward it (`lurk.rs`).
@@ -33,7 +36,7 @@
 //! it, and it waits when the only way leads in. Melee attacks and shots are real (`fight.rs`,
 //! `shoot.rs`: rolled against Defence, they hurt and kill; a shot spends an arrow, which flies
 //! and comes down to lie where it fell); a ranged creature with nothing left to shoot fights in
-//! melee. Spells stay intents until magic is designed. Each is an [`Event::Attacked`], a noise, and, if the player perceives it, a
+//! melee. A caster's spells are cast (`creature_cast.rs`). Each is an [`Event::Attacked`], a noise, and, if the player perceives it, a
 //! message. Steps and opened doors make noise too. Creatures neither flee nor change how they
 //! fight when hurt; a frightened one (a status that `flees`: Hound's bay) runs from who frightened
 //! it (`sign_picks.rs`).
@@ -42,7 +45,7 @@ use super::path::{Cost, Search};
 use super::stride::Coarse;
 use super::{Actor, ActorId, Mind, World, WorldState, beast_friend};
 use crate::action::{AttackKind, Event};
-use crate::content::{ActionKind, Combat, Content, Stance};
+use crate::content::{ActionKind, Combat, Content, SpellId, Stance};
 use crate::fov::radius2;
 use crate::geom::{Dir, Pos};
 use crate::noise::Heard;
@@ -73,6 +76,11 @@ pub(super) enum Plan {
     Summon,
     /// Breathe its element at the cell a hostile stands on (`breath.rs`).
     Breathe(Pos),
+    /// Cast a spell of its list on someone (`creature_cast.rs`).
+    Cast {
+        spell: SpellId,
+        on: ActorId,
+    },
     Step(Dir),
     Patrol,
     Wait,
@@ -158,6 +166,7 @@ impl World {
             }
             Plan::Summon => self.creature_summons(id, events),
             Plan::Breathe(at) => self.creature_breathes(id, at, events),
+            Plan::Cast { spell, on } => self.creature_casts(id, (spell, on), events),
             Plan::Step(dir) => self.step_or_wait(id, dir, events).1,
             Plan::Patrol => self.patrol(id, events),
             Plan::Wait => self.price_of(id, ActionKind::Wait),
@@ -336,24 +345,42 @@ impl World {
         if self.breathes_at(id, target, at) {
             return Plan::Breathe(at);
         }
+        // A caster (`creature_cast.rs`) casts whatever of its list goes from where it stands.
+        if let Some((spell, on)) = self.creature_spell(id, target, at) {
+            return Plan::Cast { spell, on };
+        }
         let close_in = || match self.route_to_shore(id, at, 1) {
             Route::Step(dir) => Plan::Step(dir),
             Route::There | Route::Wait | Route::Unreachable => Plan::Wait,
         };
+        let melee = || {
+            if me.pos.chebyshev(at) <= 1 {
+                attack(AttackKind::Melee)
+            } else {
+                close_in()
+            }
+        };
         let shoots = (me.launcher(&self.content))
             .filter(|_| me.ammunition_item(&self.content).is_some())
             .and_then(|(launcher, _)| self.content.object(launcher).range);
-        // A caster whose casting is blocked (Silenced, in a silent vault) fights in melee.
-        let casts = (me.effects.blocking(&self.content, ActionKind::Cast)).is_none();
-        let (kind, range) = match (def.combat, shoots) {
-            (Combat::Ranged, Some(reach)) => (AttackKind::Ranged, def.range.min(reach)),
-            (Combat::Caster, _) if casts => (AttackKind::Spell, def.range),
-            _ if me.pos.chebyshev(at) <= 1 => return attack(AttackKind::Melee),
-            _ => return close_in(),
+        // A caster closes to where its spells reach; one that can cast nothing at the target
+        // (out of mana, Silenced, in a silent vault) shoots if it can, else fights in melee.
+        let spells = (def.combat == Combat::Caster)
+            .then(|| self.spell_reach_at(id, target))
+            .flatten();
+        let (kind, range) = match (spells, def.combat, shoots) {
+            (Some(reach), _, _) => (AttackKind::Spell, reach),
+            (None, Combat::Ranged | Combat::Caster, Some(reach)) => {
+                (AttackKind::Ranged, def.range.min(reach))
+            }
+            _ => return melee(),
         };
         let reach2 = radius2(range);
         let can_hit = |q: Pos| q.dist2(at) <= reach2 && self.clear_shot(q, at, id, target);
         match self.route(id, at, range, can_hit) {
+            // In reach, yet no spell of its list goes from here (a friend in the way of its
+            // area): it fights rather than stand idle.
+            Route::There if kind == AttackKind::Spell => melee(),
             Route::There => attack(kind),
             Route::Step(dir) => Plan::Step(dir),
             Route::Wait => Plan::Wait,

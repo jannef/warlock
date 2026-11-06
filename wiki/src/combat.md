@@ -9,8 +9,8 @@ by [bashing](abilities.md#ability-shield-bash) it with your [shield](objects.md#
 [Ranged combat](ranged.md). Each attack trains the [weapon skill](weapon-skills.md) it uses and
 the [fighting style](fighting-styles.md) you fight in, and your [ranks](weapon-skills.md#marks-and-ranks) in them help you hit, hurt,
 and defend. With a [weapon in each hand](fighting-styles.md#two-weapons), an attack up close is a blow with each.
-Creatures fight each other and you by the same rules (see [Creatures](creatures.md)). [Spells](magic.md#the-spells) are
-the exception: casters only announce them for now, and nothing is hurt by a spell.
+Creatures fight each other and you by the same rules (see [Creatures](creatures.md)), and casters
+cast the same [spells](magic.md#the-spells) you do (see [Spells](creature-numbers.md#spells)).
 
 ## Hitting
 

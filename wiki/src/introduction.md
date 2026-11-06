@@ -9,7 +9,7 @@ for players. It describes the game as it is today, which is an early build. You 
 explore, [travel the overworld](overworld.md#travel), watch the [days](time.md#days), the [moon](sun.md#moonlight), and the [weather](weather.md#how-the-weather-changes) change, [hear](hearing.md) what you
 cannot see, [talk to the people](npcs.md#chatting) you meet, and pick up, carry, [wear](equipment.md#what-fits-where), and [wield](equipment.md#what-fits-where) [objects](objects.md). [Creatures](creatures.md) go about their business,
 notice you, and fight each other and you: blows and arrows are rolled against your [Defence](combat.md#defence), hurt,
-and kill, and [death](combat.md#death) is final (a creature's [spells](magic.md) are only announced so far; yours are cast
+and kill, and [death](combat.md#death) is final (spells too, a caster's as yours, cast
 for [mana](mana.md#how-much), see [Magic](magic.md)). Your [stats](stats.md), your weapon, and your [armour](equipment.md#what-fits-where) decide how well you
 fight.
 

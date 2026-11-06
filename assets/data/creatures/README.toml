@@ -31,11 +31,19 @@
 #                as the player, under the same light
 #   sight        how far it sees, in cells (default 10, at most 40)
 #   combat       "melee" (default: closes in and attacks from next to its target), "ranged"
-#                (shoots with the missile weapon it has ready), "caster" (casts spells, which
-#                are announced only: nothing is damaged until magic is designed), or "dragon"
+#                (shoots with the missile weapon it has ready), "caster" (casts the spells of
+#                its `spells` list while it has the mana, else fights as melee), or "dragon"
 #                (breathes its [creature.breath] whenever it is ready, else fights as melee)
 #   range        how far a ranged or caster creature reaches, in cells (2 up to its sight; it
-#                needs a clear line of fire)
+#                needs a clear line of fire); a caster casts no farther than its spells reach
+#   spells       a caster's spells, and only a caster's: ids in data/spells/, in the order it
+#                prefers them (spec §8 "Creature behavior": "Casters"); harm, hexes that lay a
+#                plain status, heals by touch, and buffs (no zones, corpses, open sky, pushes,
+#                charms, summons, cleansings, or utilities). Each cast spends the spell's cost
+#                from its `mana`. Up to level 10 only level-1 harm and level 3 or lower hexes,
+#                heals, and buffs, and rarity "very_rare"
+#   mana         mana beyond its mental stats' modifiers (default 0): a caster's and a
+#                summoner's pool, spent by each spell or summoning and back at the usual pace
 #   opens_doors  whether it opens closed doors in its way (default false)
 #   lurks        whether it lurks (default false; spec §8 "Creature behavior"): a hostile it
 #                sees, it waits for where it stands (shooting from there if it can) until the

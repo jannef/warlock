@@ -51,7 +51,7 @@ riders, range; `summary`/`damage_text` are the one text form, for the character 
 whose unidentified stacks have no magic (`Stack::as_known`), so they cannot drift from the
 rules and unknown affixes stay hidden; situational changes made after the profile (ambush,
 glare, class abilities' blows, free blows' flurry) are not part of it. Tests:
-`world/attacks_tests.rs`. Spells stay intents (`strike: None`). Tests: `combat.rs` (exhaustive 2d12
+`world/attacks_tests.rs`. A creature's spells are real casts (`world/creature_cast.rs`); an intent (`strike: None`) is left only for an attack with no profile. Tests: `combat.rs` (exhaustive 2d12
 enumeration for hit chances, criticals, miss attribution), `world/fight_tests.rs`.
 Surprise (`docs/dev/surprise.md`): `resolve` asks `World::unaware` of every attack, `startle`s an
 unaware target before the strike's draws, and rolls against `World::flat_footed` (Dexterity and

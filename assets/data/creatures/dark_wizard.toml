@@ -17,13 +17,14 @@ alignment = "evil"
 race = "human"
 combat = "caster"
 range = 7
+spells = ["haste", "fireball", "lightning_bolt", "magic_missile"]
 opens_doors = true
 footsteps = 80
 hearing = 14
 weight = 70000
 stats = { strength = 18, dexterity = 16, toughness = 22, intelligence = 18, willpower = 21, presence = 14 }
 base_hp = 48
-mana = 36
+mana = 110
 skills = { concentration = 88, spellcraft = 98 }
 # Its corpse teaches something of its letters.
 on_eat = { skills = { decipher_script = { gives = 8, up_to = 60 } } }

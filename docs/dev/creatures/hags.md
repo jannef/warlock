@@ -14,3 +14,5 @@ rider exists); `world/mana_tests.rs` drops the green and bheur hags with its own
 Illusions, death gazes, blizzards, shapeshifting, covens, and water-dwelling (the sea hag walks
 the land only, #196) are follow-ups. They ship in no population (checked again in #531): only Fyrdelf's window (5–16)
 reaches the green hag's level, and a volcano is no place for her. They come only as strays (docs/dev/creatures.md).
+
+Spells (#1102, docs/dev/creatures.md "Casters"; in the order each prefers them): the green hag `curse_of_sloth`, `mesmerise`, `blight` (mana 45); the bheur hag `curse_of_sloth`, `rime`, `frost` (mana 70).

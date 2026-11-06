@@ -49,3 +49,5 @@ before it is seen, and is nearly never caught off guard), the darkling 30 (2d6) 
 redcap 40 (2d6) and 40, the meenlock 30 (2d6) and 30. The meenlock **lurks** (`lurks = true`,
 `world/lurk.rs`): a hostile it sees, it waits for where it stands until it comes beside it or
 the meenlock is hurt. `bestiary_tests::the_sneak_attackers_carry_their_craft_and_two_lurk` checks the numbers.
+
+Spells (#1102, docs/dev/creatures.md "Casters"; in the order each prefers them): the pixie `evil_eye`, `spark` (mana 1); the dryad `barkskin`, `bind`, `acid_arrow` (mana 30); the nymph `mesmerise`, `magic_missile` (mana 25).

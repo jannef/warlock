@@ -78,8 +78,9 @@ behind them.
 
 Blows and shots are rolled, hit or miss, hurt, and kill, by the rules of [Combat](combat.md):
 "The kobold hits you.", "The giant rat bites the kobold hard!", "You block the kobold's spear
-with your shield.", "The kobold archer shoots the giant rat.", "The giant rat dies." Spells are
-only announced: "The kobold shaman casts a spell at you." You only hear of attacks you perceive:
+with your shield.", "The kobold archer shoots the giant rat.", "The giant rat dies." Casters
+cast real [spells](magic.md) (see [Spells](creature-numbers.md#spells)): "The kobold shaman casts
+spark at you!", "The spark shocks you." You only hear of attacks you perceive:
 ones where you see the attacker or the target, or are the target. An end you cannot see is
 "something": "Something hits you.", "The kobold archer misses something." Attacks are [noisy](hearing.md#how-loud), so
 you may also hear fighting, a bowstring, or chanting out of sight.

@@ -27,6 +27,7 @@ mod creature;
 #[cfg(test)]
 mod creature_body_tests;
 mod creature_rarity;
+mod creature_spells;
 mod damage_type;
 pub mod danger;
 mod decipher;
@@ -1925,6 +1926,7 @@ impl Content {
                 weapon_skills,
                 resist,
                 immune,
+                spells: creature_spells::resolve(self, &spec).map_err(err)?,
                 faction: self.creature_faction(&spec).map_err(err)?,
                 factions: self.creature_factions(&spec).map_err(err)?,
                 vision: self.vision_index(&spec.vision).ok_or_else(|| {

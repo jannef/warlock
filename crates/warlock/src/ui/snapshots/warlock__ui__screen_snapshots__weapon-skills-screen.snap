@@ -2,8 +2,8 @@
 source: crates/warlock/src/ui/screen_snapshots.rs
 expression: "render(case, content.clone())"
 ---
- You shoot an arrow. You have no arrows left. The giant rat bites the kobold archer. The giant rat
- misses the kobold archer. The kobold archer shoots the giant rat. The giant rat bites the --more--
+ You shoot an arrow. You have no arrows left. The kobold shaman misses the giant rat. The giant rat
+ bites the kobold shaman. The giant rat bites the kobold shaman hard!
 
 
 ┌─ Weapon skills ──────────────────────────────────────────────────────────────────────────────────┐
@@ -16,12 +16,12 @@ expression: "render(case, content.clone())"
 │   Axes                     0  ──────────      Twin Blades              1  ──────────             │
 │   Maces and clubs          0  ──────────      Great Weapon             0  ──────────             │
 │   Spears                   0  ──────────      Sword and Board          0  ──────────             │
-│   Polearms                 0  ──────────    • Marksman                 0  ━━━━━━────             │
+│   Polearms                 0  ──────────    • Marksman                 0  ━━━━──────             │
 │   Staves                   0  ──────────      Skirmisher               0  ──────────             │
 │   Unarmed                  0  ──────────    • Brawler                  0  ──────────             │
 │                                               Staff Fighter            0  ──────────             │
 │ Missile and thrown                                                                               │
-│   Bows                     0  ━━━━━━────                                                         │
+│   Bows                     0  ━━━━──────                                                         │
 │   Crossbows                0  ──────────                                                         │
 │   Slings                   1  ──────────                                                         │
 │   Thrown weapons           1  ──────────                                                         │
@@ -31,4 +31,4 @@ expression: "render(case, content.clone())"
 
 
 
- The Arena  ·  HP 17/17  ·  MP 2/2  ·  Openings 1/5  ·  Sta 10/10  ·  Lv 1  ·  08:01     ? controls
+ The Arena  ·  HP 17/17  ·  MP 2/2  ·  Openings 0/5  ·  Sta 10/10  ·  Lv 1  ·  08:01     ? controls

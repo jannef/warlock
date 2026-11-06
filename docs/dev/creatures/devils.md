@@ -19,7 +19,7 @@ devil, bone devil, pit fiend), bleeding (barbed and horned devils), held (the ch
 all, cold 50 from the bearded devil up (the ice devil 100), poison 100 for the bone devil and the
 pit fiend; no corpses. Gear: the bearded devil's glaive, the erinyes' long sword and chain mail,
 loot on the erinyes and the pit fiend. Glyphs `u` (lemure), `i` (imp), `U` (the rest, each in its
-own colour). The imp fights in melee (`combat = "caster"` only announces spells today).
+own colour). The imp fights in melee.
 
 Tests that list the factions by hand (equip, magic, object, read) carry `devil`; the mana tests'
 fixture, which replaces the statuses, drops the three devils whose riders it does not define.

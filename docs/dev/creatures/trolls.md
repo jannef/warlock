@@ -35,3 +35,5 @@ stagger). The marsh troll stays a marsh thing and the rotting troll undead; both
 The two-headed troll is the first type with an `attack_cost` (700; `world/cost_tests.rs` names
 it). Only the hill troll joined a population (Fyrdelf, beside the troll). Follow-ups: fire or
 acid stopping a troll's healing, the stone troll and sunlight, a `large` size.
+
+Spells (#1102, docs/dev/creatures.md "Casters"; in the order each prefers them): the troll shaman `cure_wounds`, `rime`, `lightning_bolt` (mana 60).
