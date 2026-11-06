@@ -375,6 +375,7 @@ mod tests {
                 "fennmynster",
                 "fyrdelf",
                 "grundleas",
+                "utgang",
             ]
             .contains(&scenario.id.as_str())
             {

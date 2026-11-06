@@ -1746,6 +1746,7 @@ mod tests {
         for row in [
             "| Beorggeat | (12, 28) | Grægweall | Mountain pass | — | — |",
             "| Fennmynster | (70, 48) | Micelfenn | Dungeon entrance | Fennmynster 1 | until a quest reveals it |",
+            "| Ūtgang | (103, 17) | Ascdūn | Cave mouth | Ūtgang 1 | until you climb out of it |",
         ] {
             assert!(places.contains(row), "{row}\n{places}");
         }

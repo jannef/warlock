@@ -17,8 +17,9 @@ pub(super) fn locations(content: &Content) -> String {
         let Some(map) = content.overworld_of(&campaign.id) else {
             continue;
         };
-        // Name -> (cell, terrain, leads to, hidden); a landmark of several cells by its first.
-        let mut rows: BTreeMap<String, (Pos, String, String, bool)> = BTreeMap::new();
+        // Name -> (cell, terrain, leads to, hidden until); a landmark of several cells by its
+        // first.
+        let mut rows: BTreeMap<String, (Pos, String, String, &str)> = BTreeMap::new();
         let leads = |to: Option<&str>| match to {
             Some(to) => content
                 .level_display_name(to)
@@ -32,12 +33,21 @@ pub(super) fn locations(content: &Content) -> String {
                 None => "—".to_string(),
             };
             let terrain = content.terrain(map.terrain[*pos]).name.clone();
-            (rows.entry(place.name.clone())).or_insert((*pos, terrain, to, false));
+            (rows.entry(place.name.clone())).or_insert((*pos, terrain, to, "—"));
         }
         for (pos, hidden) in &map.hidden {
             let terrain = content.terrain(hidden.terrain).name.clone();
             let to = leads(hidden.to.as_deref());
-            rows.insert(hidden.name.clone(), (*pos, terrain, to, true));
+            // A way up's mouth is found by climbing out of it (spec §7 "Ways up").
+            let way_up = (hidden.to.as_deref())
+                .and_then(|to| content.branch_level(to))
+                .is_some_and(|(def, depth)| depth == 1 && def.below.is_some());
+            let until = if way_up {
+                "until you climb out of it"
+            } else {
+                "until a quest reveals it"
+            };
+            rows.insert(hidden.name.clone(), (*pos, terrain, to, until));
         }
         if rows.is_empty() {
             continue;
@@ -55,11 +65,6 @@ pub(super) fn locations(content: &Content) -> String {
         );
         for (name, (cell, terrain, to, hidden)) in rows {
             let region = map.region_at(cell).unwrap_or("—");
-            let hidden = if hidden {
-                "until a quest reveals it"
-            } else {
-                "—"
-            };
             let _ = writeln!(
                 out,
                 "| {name} | {cell} | {region} | {} | {to} | {hidden} |",

@@ -77,7 +77,8 @@ template), and every perception-built dump show it with no filter; only `world/r
 dev views (`dump.rs::truth_rows`, the F2 overlay in `ui/dev.rs`) read `hidden`.
 `World::reveal_location(id)` (the one reveal, called by `world/quest.rs` at a quest's
 `reveals.when` (`given` or `done`; a rolled quest's variant reveals its own, #422), by the dev
-`quest_roll` choosing a variant, and by the dev action `reveal:ID`) records the id in
+`quest_roll` choosing a variant, by the dev action `reveal:ID`, and by
+`World::reveal_way_out`, the climb-out trigger below) records the id in
 `WorldState::revealed` (which also opens the branch behind it to rolled quests' picks,
 `World::branch_open`); if the
 overworld is instantiated, `reveal_on` takes the entry out of `hidden`, sets the terrain and the
@@ -90,6 +91,18 @@ overworld's ways in that the player sees or remembers. Tests: `world/reveal_test
 hiding a barrow in the Wildlands, revealed by the hermit's `depths` quest; the built-in Wildlands
 hide nothing).
 A hidden location's `to` may be left out: it leads nowhere yet, like stairs without one.
+Climbing out reveals (#1117, spec §7 "Ways up"): `take_stairs` (`world/travel.rs`, one line
+before `travel`) asks `World::reveal_way_out(from, to)`: when `to` is the campaign's overworld and
+one of its hidden locations, still hidden, has `to == from` (the level being left), it is revealed
+first, so `travel` lands the player on its fresh `StairsLink` (the one leading back to `from`),
+and "You mark … on your map." follows the climb-out line. Any other arrival reveals nothing. Only
+a way up's first floor climbs out to a hidden location (its `<` is `Content::way_into`, which
+reads hidden locations' `to` too): a hidden branch's own first floor, entered from the overworld,
+can be left only through its revealed way in, and one started on by a scenario leads nowhere.
+The Ascmearc's Ūtgang (`0`, (103, 17), hills → `cave_mouth`, `to = "utgang:1"`) is revealed only
+so. Tests: `world/way_out_tests.rs` (the `utgang` scenario climbs out, the `locations` layer
+before and after, back down and up again with no second mark, a replay; out of Fyrdelf and
+Grundlēas nothing is revealed).
 
 Named places (#332): a legend's `name` (and `note`, a sentence for look mode) on any cell of a
 hand-made level goes into `LevelTemplate::places` (`content/level.rs::parse_place`; refused
@@ -106,7 +119,7 @@ start (`mountain_pass`: no stairs, no local area, mountains on three sides, so t
 the only way on); `T` Cēaptūn (`town`) leads into the town's level `ceaptun` (#336, `docs/dev/campaign.md`
 "Cēaptūn"), `1` Cealdhlāw (`barrow`) leads to `cealdhlaw:1` (#337, `docs/dev/mapgen.md`), and
 `8` Lytelscræf (`cave_mouth`, at (14, 27), two cells from the pass and in its first sight; the
-one location closer than six cells to another, on purpose) leads to `lytelscraef:1` (#792); `2` Fennmynster and `3` Fyrdelf are hidden. The rivers are two
+one location closer than six cells to another, on purpose) leads to `lytelscraef:1` (#792); `2` Fennmynster and `3` Fyrdelf are hidden, and so is `0` Ūtgang (#1117, above). The rivers are two
 cells wide (watertight to diagonal steps), crossed only at the bridge `b` and the ford `%`.
 Regions are rectangles in first-match order (the forests' hearts first). Its scenario `ascmearc`
 starts on the pass and says its `arrival` line. Tests: `world/ascmearc_tests.rs` (regions, the

@@ -40,8 +40,10 @@ every new run starts in it.
   dungeon of three easy floors two cells from the pass, in sight from the start, #792), and three
   dungeon branches of rising danger: **Cealdhlāw** (the cold barrow, visible from the start, in the downs east of the
   town), **Fennmynster** (the fen minster, hidden in Micelfenn), and **Fyrdelf** (the fire
-  diggings, hidden in Ascdūn, §7 "Fyrdelf"). A hidden one is its plain terrain until a quest
-  reveals it (§7 "Hidden locations"). The rest of the design's forty sites are reserved: plain
+  diggings, hidden in Ascdūn, §7 "Fyrdelf"), with **Ūtgang** (the way out, three floors from
+  Fyrdelf's bottom up to a hidden cave on the volcano's foot, found by climbing out of it, §7
+  "Ūtgang"). A hidden one is its plain terrain until a quest reveals it (§7 "Hidden locations"),
+  or, for Ūtgang, until the player comes out of it. The rest of the design's forty sites are reserved: plain
   cells today, spaced so a later level drops in without moving anything.
 - **Quests** (#340, design §6.2; `campaigns/ascmearc/data/quests/`): three people in Cēaptūn
   give a chain each (three quests, Wulfrun's two), every quest offered once the one before it

@@ -1,0 +1,9 @@
+# A dev scenario of the Ascmearc (spec §7 "Ways up"): straight onto the top floor of Ūtgang, the
+# way up from the drake's deep at the bottom of Fyrdelf. As a way up's first floor always does,
+# its `<` climbs out to the overworld, onto the slopes of Fyrbeorg, and finds the hidden way in.
+name = "Ūtgang"
+description = "Straight into Ūtgang, the way out: three floors from the fire drake's deep up to the volcano's flank."
+start_level = "utgang:1"
+seed = 1
+character = { race = "human", gender = "female", class = "thief", name = "Eadgyth" }
+wield = ["lantern"]

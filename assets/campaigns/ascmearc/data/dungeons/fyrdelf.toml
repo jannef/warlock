@@ -109,7 +109,8 @@ size = [120, 60]
 temperature = 20
 vaults = ["hunters_statue"]
 
-# The bottom: the fire drake on its hoard.
+# The bottom: the fire drake on its hoard. Ūtgang's `below` names this floor, so it also has
+# stairs up into Ūtgang's bottom, near the hoard (data/dungeons/utgang.toml).
 [[dungeon.levels]]
 from = 12
 generator = "caves"
