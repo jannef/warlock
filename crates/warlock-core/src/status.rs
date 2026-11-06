@@ -525,7 +525,10 @@ mod tests {
         effects.add(bleed, &bleeding, 1, None);
         let order: Vec<StatusId> = effects.iter().map(|e| e.status).collect();
         assert_eq!(order, [bleed, poison], "the most important first");
-        assert_eq!(effects.regen(&content, 100), bleeding.regen.min(poisoned.regen));
+        assert_eq!(
+            effects.regen(&content, 100),
+            bleeding.regen.min(poisoned.regen)
+        );
         assert_eq!(Effects::default().regen(&content, 100), 100);
         // Poison does nothing to stats until it is strong.
         assert_eq!(effects.penalty(&content), None);

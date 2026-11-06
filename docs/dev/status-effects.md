@@ -45,8 +45,9 @@ skill's bandage, #132), `World::after_blow` (wounds by `combat::big_hit` and cri
 kinds the status's `wound.from` names, `Wound::caused_by(blow.kind)`: bleeding from slashing
 and piercing; then `on_hit`
 with one gameplay draw per chance below 100), `World::healing_rate` (the slowest of the statuses'
-and the showing diseases' `regen` while one is below 100, else the fastest, `Effects::regen`:
-Renewal's `renewing` 400, × resting for the player while `World::resting`, none for a Starving player, × a
+and the showing diseases' `regen` while one is below 100, else the fastest, `Effects::regen`,
+which counts the creature type's own `regen` (a troll's 400, #1131) among the statuses' paces, so
+Burning's and Corroded's `regen = 0` stop it: Renewal's `renewing` 400, × resting for the player while `World::resting`, none for a Starving player, × a
 special room's `regen`, × (100 + the regeneration affixes of what the actor wears and wields) %),
 and `World::pass_time` → `live`, called by `run_turn` for every scheduled actor as the clock
 moves (a creature with nothing to live through, `untouched_by`: whole, no statuses, diseases,

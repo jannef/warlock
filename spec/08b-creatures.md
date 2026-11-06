@@ -156,6 +156,27 @@ developer notes (CLAUDE.md, `docs/dev/`).
   (`World::spell_type_lands`: fire's burning, one in four). Its blows and kills are the
   dragon's. The action costs a `cast`. Words: "The fire drake breathes fire!" when the player
   sees it, then each blow seen as a spell's ("The fire burns you."); unseen, the roar is heard.
+- **Corroding gear** (`warlock-core/src/world/corrode.rs`; #1131, the dread design §5.8): a type's
+  `corrodes = { chance, what }` (chance 1 to 100). `what = "armour"`: its melee hit that lands
+  on the player rolls the chance; made, one piece the player wears (armour or a shield) whose
+  main part's material corrodes and is not damaged yet is drawn and damaged (`Worked::damage`,
+  the anvil's state: improvements gone, a point worse until mended): "The acid eats at your
+  chain mail shirt." `what = "weapon"`: the player's melee hit on it rolls on what struck (the
+  main hand's weapon, the off hand's, or the bashing shield): "Your long sword comes away
+  pitted." Any acid resistance halves the chance; a `"half"` material takes a second roll at
+  50; nothing is damaged twice or destroyed; a spirit weapon and a stack of several are left be.
+  Made with nothing that corrodes: the first time in a life, "The acid runs off your mithril
+  chain mail shirt." (`Progress::once`). Draws: one for the chance, then one for the piece and
+  one for `"half"`. The materials' `corrodes` (true, false, `"half"`; default by group: metal and
+  hide) is spec §7's. The ember beetle (weapon, 25), the hezrou (armour, 25), the dretch (armour,
+  10).
+- **Regeneration** (`world/regen.rs`; #1131, the dread design §5.9): a type's `regen` (percent of
+  the normal healing pace, 0 to 1000, default 100) counts among its statuses' paces in
+  `Effects::regen`, so a status that slows healing slows it (Burning and Corroded have `regen =
+  0`: fire and acid stop every healing, the player's too). The player who sees a creature with
+  `regen` above 100 get a tenth of its hit points back in one passing of time is told "The
+  troll's wounds close.". Only a brute of its level or a dread type regenerates (the roster
+  test): every troll brute at 400; never the rotting troll.
 - **Casters** (`warlock-core/src/world/creature_cast.rs`, the rules;
   `content/creature_spells.rs`, the data; #1102): a `combat = "caster"` type has a `spells`
   list (ids in `data/spells/`, in the order it prefers them; only a caster has one), and only

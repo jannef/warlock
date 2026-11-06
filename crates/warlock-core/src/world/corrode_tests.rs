@@ -12,8 +12,24 @@ use crate::object::Stack;
 
 /// What the review (the dread design §5.8's table) says of every material.
 const CORRODES: &[&str] = &[
-    "iron", "steel", "copper", "bronze", "brass", "tin", "zinc", "lead", "pewter", "cadmium",
-    "aluminium", "duralumin", "bendalloy", "leather", "hardened_leather", "fur", "cloth", "wool",
+    "iron",
+    "steel",
+    "copper",
+    "bronze",
+    "brass",
+    "tin",
+    "zinc",
+    "lead",
+    "pewter",
+    "cadmium",
+    "aluminium",
+    "duralumin",
+    "bendalloy",
+    "leather",
+    "hardened_leather",
+    "fur",
+    "cloth",
+    "wool",
     "silk",
 ];
 const HALF: &[&str] = &["bone", "horn", "ivory", "chitin"];
@@ -32,14 +48,26 @@ fn every_material_is_reviewed_for_acid() {
         };
         assert_eq!(def.corrodes(), want, "{id}");
     }
-    for id in ["gold", "silver", "electrum", "chromium", "nicrosil", "mithril", "adamantium"] {
+    for id in [
+        "gold",
+        "silver",
+        "electrum",
+        "chromium",
+        "nicrosil",
+        "mithril",
+        "adamantium",
+    ] {
         let def = content.material(content.material_id(id).expect(id));
         assert_eq!(def.corrodes(), Corrosion::No, "{id}: a metal acid runs off");
     }
     // The two new metals: metal, and no more precious than bronze.
     for id in ["mithril", "adamantium"] {
         let def = content.material(content.material_id(id).expect(id));
-        assert_eq!((def.group.as_deref(), def.precious), (Some("metal"), false), "{id}");
+        assert_eq!(
+            (def.group.as_deref(), def.precious),
+            (Some("metal"), false),
+            "{id}"
+        );
     }
 }
 
@@ -51,7 +79,10 @@ fn a_bad_corrodes_word_is_refused_at_load() {
         .find(|(p, _)| *p == path)
         .map(|(_, t)| t.to_string())
         .expect("tin");
-    let text = text.replace("group = \"metal\"", "group = \"metal\"\ncorrodes = \"some\"");
+    let text = text.replace(
+        "group = \"metal\"",
+        "group = \"metal\"\ncorrodes = \"some\"",
+    );
     files.insert(path, &text);
     let err = Content::load(&files).expect_err("refused");
     assert!(err.to_string().contains("`corrodes`"), "{err}");
@@ -59,7 +90,10 @@ fn a_bad_corrodes_word_is_refused_at_load() {
 
 #[test]
 fn acid_resistance_halves_the_chance() {
-    assert_eq!((chance(25, 0), chance(25, 25), chance(25, -50)), (25, 12, 25));
+    assert_eq!(
+        (chance(25, 0), chance(25, 25), chance(25, -50)),
+        (25, 12, 25)
+    );
 }
 
 /// The player in nothing but `pieces` (object id, slot id, material: none for its own), every
@@ -97,7 +131,9 @@ fn hits(w: &mut World, (attacker, target): (ActorId, ActorId), n: usize) {
 }
 
 fn count(w: &World, line: &str) -> usize {
-    (w.messages().iter()).filter(|m| m.display() == line).count()
+    (w.messages().iter())
+        .filter(|m| m.display() == line)
+        .count()
 }
 
 #[test]
@@ -115,7 +151,11 @@ fn the_hezrou_eats_at_worn_mail_once_and_never_again() {
     assert_eq!(last(&w), "The acid eats at your chain mail shirt.");
     let after = w.state.player().inventory[mail].worked().cloned();
     hits(&mut w, (hezrou, player), 200);
-    assert_eq!(w.state.player().inventory[mail].worked().cloned(), after, "never twice");
+    assert_eq!(
+        w.state.player().inventory[mail].worked().cloned(),
+        after,
+        "never twice"
+    );
     assert_eq!(count(&w, "The acid eats at your chain mail shirt."), 1);
     // Its armour acid eats nothing of the player's when they strike it.
     let sword = dressed(&mut w, &[("long_sword", "main_hand", None)])[0];
@@ -129,13 +169,19 @@ fn the_draw_takes_only_what_corrodes() {
     let player = w.state.player;
     let at = dressed(
         &mut w,
-        &[("chain_mail", "body", Some("mithril")), ("iron_helm", "head", None)],
+        &[
+            ("chain_mail", "body", Some("mithril")),
+            ("iron_helm", "head", None),
+        ],
     );
     let hezrou = beside(&mut w, "hezrou", 500);
     hits(&mut w, (hezrou, player), 300);
     assert!(!damaged(&w, at[0]), "mithril is never eaten");
     assert!(damaged(&w, at[1]), "the helm is");
-    assert_eq!(count(&w, "The acid runs off your mithril chain mail shirt."), 0);
+    assert_eq!(
+        count(&w, "The acid runs off your mithril chain mail shirt."),
+        0
+    );
 }
 
 #[test]
@@ -146,7 +192,10 @@ fn acid_runs_off_mithril_and_says_so_once_in_a_life() {
     let hezrou = beside(&mut w, "hezrou", 500);
     hits(&mut w, (hezrou, player), 300);
     assert!(!damaged(&w, mail));
-    assert_eq!(count(&w, "The acid runs off your mithril chain mail shirt."), 1);
+    assert_eq!(
+        count(&w, "The acid runs off your mithril chain mail shirt."),
+        1
+    );
     assert!(w.state.progress.happened(RUNS_OFF));
     // Nothing worn at all: nothing to say.
     let mut w = world("warrior");
@@ -191,7 +240,14 @@ fn a_hit_that_lands_corrodes_through_the_blow() {
     let profile = w.state.actors[&hezrou].melee(w.content());
     for _ in 0..200 {
         let mut events = Vec::new();
-        w.resolve(hezrou, player, kind, Some(profile.clone()), false, &mut events);
+        w.resolve(
+            hezrou,
+            player,
+            kind,
+            Some(profile.clone()),
+            false,
+            &mut events,
+        );
         if damaged(&w, mail) {
             return;
         }

@@ -206,9 +206,8 @@ pub use companion::{
 };
 pub use creature::{
     Budge, Combat, CorpseGifts, Corrodes, CorrodesWhat, CreatureDef, CreatureId, DEFAULT_SIGHT,
-    Hide, Incorporeal,
-    MAX_TAG_WIDEN, MAX_TRAIN, MAX_WIDEN, NORMAL_SPEED, NaturalAttack, OnEat, SPEEDS, SkillGift,
-    is_proper, the, the_start,
+    Hide, Incorporeal, MAX_TAG_WIDEN, MAX_TRAIN, MAX_WIDEN, NORMAL_SPEED, NaturalAttack, OnEat,
+    SPEEDS, SkillGift, is_proper, the, the_start,
 };
 pub use creature_rarity::{COMMON, CreatureRarity, FACTOR};
 pub use damage_type::{DamageTypeDef, DamageTypeId, MAX_DAMAGE_TYPES};
@@ -263,9 +262,7 @@ pub use level::{
     parse_route,
 };
 pub use light::{Dips, Drift, HueDrift, LightId, LightPreset, MAX_LIGHT_RADIUS, Stability};
-pub use material::{
-    ANY, Corrosion, Found, MAX_MATERIAL_VALUE, MaterialDef, MaterialId, VERY_RARE,
-};
+pub use material::{ANY, Corrosion, Found, MAX_MATERIAL_VALUE, MaterialDef, MaterialId, VERY_RARE};
 pub use monster_pool::{MonsterPool, VaultMonsters};
 pub use names::{NameLists, Names};
 pub use object::{

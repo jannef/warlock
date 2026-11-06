@@ -182,8 +182,7 @@ fn the_formulas_give_the_plans_numbers() {
 
 /// The rule (the dread design §5.9, the owner's: "regenerating sack of potatoes is just free
 /// weapon marks!"): a type that regenerates is a brute of its level, a troll of [`ROLES`]'s
-/// brutes. (A dread type may regenerate too, once types carry the flag.) The rotting troll, a
-/// shambler, does not.
+/// brutes, or carries a dread gimmick (`dread = true`). The rotting troll, a shambler, does not.
 #[test]
 fn only_a_brute_regenerates() {
     let content = Content::builtin().expect("content");
@@ -196,11 +195,13 @@ fn only_a_brute_regenerates() {
             .iter()
             .any(|&(r, role)| r == id && matches!(role, Role::Brute));
         assert!(
-            brute,
-            "{id}: regenerates ({}) but is no brute (the dread design §5.9)",
+            brute || def.dread,
+            "{id}: regenerates ({}) but is neither a brute nor dread (the dread design §5.9)",
             def.regen
         );
     }
-    let rotting = content.creature_id("rotting_troll").expect("the rotting troll");
+    let rotting = content
+        .creature_id("rotting_troll")
+        .expect("the rotting troll");
     assert_eq!(content.creature(rotting).regen, 100, "its rot is its trait");
 }

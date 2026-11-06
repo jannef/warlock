@@ -355,8 +355,9 @@ come twice. The item's name says how far it has come, whatever you know of its m
 
 {{#include generated/temper-grades.md}}
 
-A damaged item has no other fault: it fights and protects as a plain one does, so stopping there
-is a real choice. The anvil neither adds nor takes [affixes](magic-items.md); they stay through improvement, damage,
+A damaged item is a point worse than a plain one until it is mended: its [Protection](combat.md#protection)
+if it gives some, else its [Defence](combat.md#defence), else its [damage](combat.md#damage), so stopping there is a real choice.
+[Acid](objects.md#corrosion) damages an item the same way. The anvil neither adds nor takes [affixes](magic-items.md); they stay through improvement, damage,
 and repair. Whatever survives is [identified](magic-items.md#unidentified-items). A worked item is like no other and never stacks;
 of a stack, one is worked at a time. The anvil never wears out.
 

@@ -1,6 +1,6 @@
 # The fen wave (Fennmynster, docs/design/campaign.md §10.1). A troll of the fen, green with
-# weed: huge, hard to put down, and its wounds close quickly (by its great Toughness, as every
-# creature's do).
+# weed: huge, hard to put down, heavy-handed, and its wounds close four times as fast as any
+# other creature's until fire or acid stops them (`regen`; a brute's dice, the dread design §5.9).
 [[creature]]
 id = "marsh_troll"
 level = 9

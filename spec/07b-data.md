@@ -347,7 +347,11 @@ developer notes (CLAUDE.md, `docs/dev/`).
   neither: it cannot be one), `protection` (percent of an armour's Protection kept, 0 to 500;
   none: it cannot be armour), `value` (above), `rarity` and `gear` (how often loot, by item
   level, and creatures' gear, by creature level, make an item of it: `{ weight, deeper, level }`,
-  the weight at level 1, `deeper` per level past the first, never below 0, none below `level`).
+  the weight at level 1, `deeper` per level past the first, never below 0, none below `level`),
+  `corrodes` (whether acid eats it, #1131: true, false, or `"half"`; default true for metal and
+  hide, false for the rest; not: gold, silver, electrum, chromium, nicrosil, mithril, adamantium,
+  dragonscale, dragonbone, wood, stone, glass, amber, gems, flesh, plant; half: bone, horn, ivory,
+  chitin; yes besides the metals and hides: cloth, wool, silk, lead).
   The seventeen metals (#193; no lerasium, atium, or malatium), weight / to hit / damage / armour
   / value: steel 100 / 0 / 0 / 100% / ×1, iron 100 / −1 / 0 / 90% / ×0.6, tin 93 / 0 / −2 / 40%
   / ×0.4, pewter 93 / 0 / −2 / 40% / ×0.5, bronze 112 / 0 / −1 / 80% / ×0.8, copper 114 / 0 / −1
@@ -355,7 +359,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
   +1 / 50% / ×20, electrum 191 / −1 / 0 / 60% / ×12, cadmium 110 / 0 / −2 / 50% / ×4, bendalloy
   118 / 0 / −1 / 70% / ×6, aluminium 34 / +1 / −2 / 70% / ×8, duralumin 36 / +1 / −1 / 90% /
   ×10, chromium 92 / 0 / +1 / 110% / ×9, nicrosil 108 / 0 / +1 / 110% / ×10, silver 134 / −1 /
-  −1 / 50% / ×15; the organic ones (#194): wood 40 / −1 / −2 / 30% / ×0.2, hardwood 50 / 0 / −1 /
+  −1 / 50% / ×15, and the dread design's two (#1131) mithril 50 / +1 / 0 / 100% / ×20 (very rare
+  from item level 20, gear from 30) and adamantium 120 / 0 / +1 / 130% / ×30 (from 30, gear from
+  40); the organic ones (#194): wood 40 / −1 / −2 / 30% / ×0.2, hardwood 50 / 0 / −1 /
   40% / ×0.4, ironwood 70 / 0 / 0 / 60% / ×3, bone 60 / 0 / −1 / 50% / ×0.3, horn 50 / 0 / −1 /
   45% / ×0.5, ivory 65 / −1 / −1 / 40% / ×5, chitin 45 / 0 / −1 / 60% / ×0.6, dragonbone 55 / +1
   / +1 / 110% / ×25 (bone group), flint 80 / 0 / −1 / − / ×0.1, obsidian 75 / 0 / 0 / − / ×0.3

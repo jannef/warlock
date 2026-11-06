@@ -468,7 +468,10 @@ fn a_damaged_item_is_a_point_worse_than_its_base_until_mended() {
     give(&mut w, "chain_mail");
     set_worked(&mut w, Vec::new(), 1, true);
     let mods = Mods::local(first(&w), &c);
-    assert_eq!((mods.get(Effect::Protection), mods.get(Effect::Armour)), (-1, 0));
+    assert_eq!(
+        (mods.get(Effect::Protection), mods.get(Effect::Armour)),
+        (-1, 0)
+    );
 }
 
 #[test]

@@ -23,7 +23,7 @@
 
 use super::{ActorId, World};
 use crate::action::AttackKind;
-use crate::content::{Corrosion, CorrodesWhat, ObjectId};
+use crate::content::{CorrodesWhat, Corrosion, ObjectId};
 use crate::magic::Worked;
 
 /// The chance in percent that acid of `chance` eats at the gear of one who resists acid by
@@ -56,7 +56,8 @@ impl World {
         } else {
             return;
         };
-        let acid = (self.actor_or_fallen(bearer)).and_then(|a| self.content.creature(a.creature).corrodes);
+        let acid =
+            (self.actor_or_fallen(bearer)).and_then(|a| self.content.creature(a.creature).corrodes);
         let Some(acid) = acid.filter(|a| a.what == what) else {
             return;
         };
@@ -69,7 +70,10 @@ impl World {
         let content = self.content.clone();
         let me = self.state.player();
         let corrodes = |item: usize| {
-            let main = me.inventory[item].parts(&content).first().map(|p| p.material);
+            let main = me.inventory[item]
+                .parts(&content)
+                .first()
+                .map(|p| p.material);
             main.map_or(Corrosion::No, |m| content.material(m).corrodes())
         };
         let damaged = |item: usize| me.inventory[item].worked().is_some_and(|w| w.damaged);
@@ -77,7 +81,9 @@ impl World {
             .map(|&item| (item, corrodes(item)))
             .filter(|&(_, c)| c != Corrosion::No)
             .collect();
-        let shown = exposed.first().map(|&item| me.inventory[item].names(&content).0);
+        let shown = exposed
+            .first()
+            .map(|&item| me.inventory[item].names(&content).0);
         let fresh: Vec<(usize, Corrosion)> = (eaten.iter().copied())
             .filter(|&(item, _)| !damaged(item))
             .collect();
@@ -119,9 +125,8 @@ impl World {
                 let mut worn: Vec<usize> = Vec::new();
                 for (_, item) in me.equipment.items() {
                     let kind = (me.inventory.get(item)).and_then(|s| content.object(s.object).kind);
-                    let protects = kind.is_some_and(|k| {
-                        k.is_armour() || k == crate::content::ItemKind::Shield
-                    });
+                    let protects = kind
+                        .is_some_and(|k| k.is_armour() || k == crate::content::ItemKind::Shield);
                     if protects && !worn.contains(&item) {
                         worn.push(item);
                     }
@@ -138,8 +143,7 @@ impl World {
                 None => me.weapon_item(content).into_iter().collect(),
                 Some(object) => (me.in_hands(content).into_iter())
                     .map(|(item, _)| item)
-                    .filter(|&item| me.inventory[item].object == object)
-                    .last()
+                    .rfind(|&item| me.inventory[item].object == object)
                     .into_iter()
                     .collect(),
             },

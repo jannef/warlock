@@ -11,8 +11,8 @@ use warlock_core::action::AttackKind;
 use warlock_core::burden::{self, Burden};
 use warlock_core::combat::Category;
 use warlock_core::content::{
-    ActionKind, Affliction, BASE_TURN, Benefit, Combat, Content, CreatureDef, CreatureId,
-    FactionId, NORMAL_COST, NaturalAttack, Stance, article, price, spoken,
+    ActionKind, Affliction, BASE_TURN, Benefit, Combat, Content, CorrodesWhat, CreatureDef,
+    CreatureId, FactionId, NORMAL_COST, NaturalAttack, Stance, article, price, spoken,
 };
 use warlock_core::geom::Pos;
 use warlock_core::object::format_weight;
@@ -380,11 +380,22 @@ pub(super) fn creature_defences(content: &Content) -> String {
         if c.blood.is_none() {
             resists.push("never [bleeds](status-effects.md#bleeding)".into());
         }
+        // Acid blood (`world/corrode.rs`): what strikes it may come away damaged.
+        if let Some(acid) = c.corrodes.filter(|a| a.what == CorrodesWhat::Weapon) {
+            resists.push(format!(
+                "{}% to [damage](objects.md#corrosion) the weapon that strikes it",
+                acid.chance
+            ));
+        }
+        // Regeneration (`world/regen.rs`): its own healing pace, stopped by fire and acid.
+        let hp = match c.regen {
+            100 => actor.max_hp(content).to_string(),
+            pace => format!("{}, heals {} as fast", actor.max_hp(content), times(pace)),
+        };
         let _ = writeln!(
             out,
-            "| {} | {} | {defence} | {protection} | {} |",
+            "| {} | {hp} | {defence} | {protection} | {} |",
             link(Term::Creature, &c.id, &capital(&c.name)),
-            actor.max_hp(content),
             dash(&resists)
         );
     }
@@ -473,7 +484,14 @@ pub(super) fn creature_attacks(content: &Content) -> String {
                 ),
                 Some(_) => (format!("then {attack}"), "with the first".to_string()),
             };
-            let caused = natural.map_or_else(Vec::new, |a| on_hit(content, a));
+            let mut caused = natural.map_or_else(Vec::new, |a| on_hit(content, a));
+            // Its filth (`world/corrode.rs`): a worn piece damaged.
+            if let Some(acid) = c.corrodes.filter(|a| a.what == CorrodesWhat::Armour) {
+                caused.push(format!(
+                    "{}% [damages](objects.md#corrosion) a piece worn",
+                    acid.chance
+                ));
+            }
             let _ = writeln!(
                 out,
                 "| {} | {fight} | {attack} | {} | {} | {} ×{} | {takes} | {} |",
@@ -738,6 +756,15 @@ pub(super) fn creature_surprise(content: &Content) -> String {
         );
     }
     out
+}
+
+/// A pace in percent of the normal as a factor: "four times" for 400, else "×1.5".
+fn times(percent: u16) -> String {
+    match percent {
+        200 => "twice".into(),
+        p if p % 100 == 0 => format!("{} times", p / 100),
+        p => format!("×{}.{:02}", p / 100, p % 100),
+    }
 }
 
 #[cfg(test)]
