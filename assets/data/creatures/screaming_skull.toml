@@ -25,6 +25,18 @@ natural = { defence = 2, protection = 6, name = "bone" }
 resist = { poison = 100 }
 corpse = false
 blood = "none"
+cry = { kind = "scream", loudness = 120, every = 60 }
+[creature.aura]
+status = "frightened"
+severity = 2
+radius = 4
+check = "willpower"
+difficulty = 17
+every = 24
+heard = true
+loudness = 120
+touch = "{the} screams, and your blood runs cold."
+unseen = "A scream rings through the walls, and your blood runs cold."
 [creature.attack]
 damage = "4d6"
 damage_type = "piercing"

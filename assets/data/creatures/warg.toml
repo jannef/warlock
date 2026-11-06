@@ -22,6 +22,7 @@ base_hp = 16
 tameable = true
 nose = 6
 on_eat = { message = "Tough, gamy wolf meat.", vomit = 10 }
+cry = { kind = "howl", loudness = 120, every = 180 }
 [creature.attack]
 damage = "1d10"
 damage_type = "piercing"

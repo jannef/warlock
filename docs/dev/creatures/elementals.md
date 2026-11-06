@@ -61,3 +61,5 @@ and lightning elementals, and the water elemental. The air elemental (19) and th
 and up (the ice elemental and every greater and elder one) ship in none: no danger window reaches
 them (Fyrdelf's runs 5 to 16, #534). Deferred (#453 "Follow-ups"): large size,
 water-bound behaviour, knockback, whirlwind, engulf, breath, elements at war, gem drops.
+
+Presence (#1128, `world/aura.rs`): the fire salamander is made with `fire_cloaked` and keeps it (innate: whoever strikes it burns; never shown in the look line).

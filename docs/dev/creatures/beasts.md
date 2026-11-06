@@ -47,3 +47,5 @@ roams the forest local areas, the lynx the dense forest's, the badger the hills'
 in the woods, `deep_lynx` at twilight in the deep woods, `vale_badger` on the vales' hills.
 Follow-up: a wolf-pack row in the Ascmearc's woods encounters as wildlife ("Hunt them" / "Let
 them be").
+
+Cries (#1128, `world/aura.rs`): the crocodile and the basilisk hiss now and then (loudness 40).

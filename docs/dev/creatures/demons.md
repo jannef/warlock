@@ -32,5 +32,6 @@ fire (the balor is immune), and from level 24 resist cold and electricity a litt
 ichor for blood.
 
 The balor bursts when it dies (the dread design §5.3, #1127: `[creature.burst]` `when =
-"dies"`, `8d12` fire, radius 2, 50 % `burning`; `world/creature_burst.rs`). Its innate Fire
-cloak waits for innate statuses (D4, #1128).
+"dies"`, `8d12` fire, radius 2, 50 % `burning`; `world/creature_burst.rs`), and is made with its Fire cloak
+(innate, #1128, below).
+Presence (#1128, `world/aura.rs`): the hezrou's stench (`poisoned`, radius 2, Toughness 16, every 30 s); the chasme's drone (`drowsy`, heard, radius 3, loudness 50, Willpower 16, every 18 s, a buzzing cry); fear auras on the vrock (radius 2, 17, a scream cry for its screech) and the nalfeshnee (radius 3, 19); the balor innate `fire_cloaked` (its burst is D3's). `content::aura_roster_tests` lists every row.

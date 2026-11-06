@@ -140,6 +140,20 @@ developer notes (CLAUDE.md, `docs/dev/`).
   goblins and a warg!", "something" when they see none of it); an unseen summoner's creatures
   only as they appear in sight ("A skeleton appears!"); nothing seen, nothing said. Sight is the
   last turn's perception, so a summoning in the turn a door opens may go unseen.
+- **Auras, innate statuses, and cries** (`warlock-core/src/world/aura.rs`, the rules;
+  `content/aura.rs`, the data; #1128, design `docs/design/monster-dread.md` §5.4, §9). A type's
+  `[creature.aura]` (`status`, `severity`, `radius` 1 to 6, optional `check` and `difficulty`,
+  `every` 6 to 600 s (default 12), `heard` with `loudness`, `damage_type`, `touch`, `unseen`):
+  as its turn starts, unless its cooldown status `aura` is on, every hostile within the radius
+  that it reaches (line of sight, or for a heard aura the hearing rules for a voice that loud
+  where it stands) makes the check or takes the status, caused by it, the damage type's
+  resistance taking its share; anyone reached starts the cooldown, `ceil(every / 6)` degrees.
+  The player taking it anew hears its `touch` first ("A chill comes off the wraith."), its
+  `unseen` line when they do not see the bearer. No time, no noise. An ally of the player's has
+  none. `innate` statuses: an actor is made with them and they come back as each of its turns
+  starts; the look line never shows them. A `cry = { kind, loudness, every }`: after a turn
+  that was not a fight, a chance of 6 in `every` (one gameplay draw on its turn) of
+  `Act::Cry(kind)`, a noise heard by the hearing rules ("You hear a hiss.", the sound layer).
 - **Dragons** (`warlock-core/src/world/breath.rs`, the rules; `content/breath.rs`, the data;
   #1099): an enemy-only creature ability. A `combat = "dragon"` type has a `[creature.breath]`
   (and only a dragon has one): `damage` (dice), `damage_type` (its element, one type),

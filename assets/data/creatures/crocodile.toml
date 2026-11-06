@@ -20,6 +20,7 @@ stats = { strength = 18, dexterity = 9, toughness = 16, intelligence = 2, willpo
 base_hp = 12
 natural = { defence = 2, protection = 1, name = "scales" }
 on_eat = { message = "Tough, but there is a lot of it.", satiation = 1000 }
+cry = { kind = "hiss", loudness = 40, every = 90 }
 [creature.attack]
 damage = "2d6"
 damage_type = "piercing"

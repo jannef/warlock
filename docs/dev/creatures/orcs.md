@@ -38,3 +38,5 @@ none. Riders on `on_hit` fire only on natural attacks, so the armed orcs have
 none; the wargs' bites carry `bleeding` (the mana tests' status fixture lists it for them).
 
 Spells (#1102, docs/dev/creatures.md "Casters"; in the order each prefers them): the orc shaman `mend`, `burning_hands`, `spark` (mana 7); the orc high shaman `cure_wounds`, `blessing`, `fireball` (mana 90).
+
+Cries (#1128, `world/aura.rs`): the warg and the dire warg howl now and then (loudness 120, every 180 s): a pack heard before it is seen.

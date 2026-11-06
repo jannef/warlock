@@ -32,6 +32,7 @@ resist = { fire = 100, cold = 25, electricity = 25, poison = 100 }
 weapon_skills = { great_blades = 8 }
 corpse = false
 blood = "#4a1a0a"
+innate = ["fire_cloaked"]
 [creature.attack]
 damage = "4d12"
 damage_type = "fire"

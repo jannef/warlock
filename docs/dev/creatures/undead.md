@@ -110,7 +110,8 @@ a `[creature.gaze]` (the spawn range 4 at 25 %, the vampire 5 at 30, the nosfera
 lord 5 at 40, the elder and the eldest 6 at 45 and 50; the bite keeps its Toughness drain), as
 did the spectre's Willpower drain (range 4, 40 %), the white lady's, the night mare's, and the
 ghost lord's transfixion (range 5, 35 %; their touch keeps its drain), and the hand of glory's
-candle (range 3, 30 %). The washer at the ford's fear stays on her touch until #1128's aura.
+candle (range 3, 30 %). The washer at the ford keeps her fear on her touch, beside #1128's fear aura.
 `world/bestiary_tests.rs` reads the spectre's drain on its gaze.
 The burning skull bursts when it dies (the dread design §5.3, #1127: `[creature.burst]`
 `when = "dies"`, `2d6` fire, radius 1; `world/creature_burst.rs`).
+Presence (#1128, `world/aura.rs`; design `docs/design/monster-dread.md` §5.4, §9): cold auras (`sluggish`, radius 2, Toughness, `damage_type = "cold"`) on the wraith, dread wraith, and wraith lord (1 to 3 degrees, difficulty 13, 16, 18); fear auras (`frightened` 2, radius 3, Willpower) on the washer at the ford (19), the deathshade (21), the archlich (20), and the demilich (22); the gibbering shade's silence (radius 3, no check, every 6 s); heard fear auras on the banshee (radius 6, loudness 100, 15, every 24 s, with a wail cry) and the screaming skull (radius 4, loudness 120, 17, with a scream cry). Cries: howls on the barghest, bodach, black shuck, church grim, and hound of the hunt (150, every 120 s); banging on the knocker and the poltergeist; a rattle on the charnel heap and the bone dragon. `content::aura_roster_tests` lists every row.

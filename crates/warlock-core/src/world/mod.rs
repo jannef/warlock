@@ -94,6 +94,9 @@ mod appraise;
 mod ascetic;
 mod attacks;
 mod avert;
+mod aura;
+#[cfg(test)]
+mod aura_tests;
 mod background;
 mod beast_friend;
 mod bleed;

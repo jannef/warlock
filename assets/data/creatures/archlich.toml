@@ -34,6 +34,13 @@ natural = { defence = 4, protection = 9, name = "dry bones" }
 resist = { poison = 100 }
 corpse = false
 blood = "none"
+[creature.aura]
+status = "frightened"
+severity = 2
+radius = 3
+check = "willpower"
+difficulty = 20
+touch = "A terrible will bears down from {the}."
 [creature.attack]
 damage = "4d8"
 damage_type = "cold"

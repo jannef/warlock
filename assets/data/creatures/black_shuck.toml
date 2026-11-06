@@ -25,6 +25,7 @@ natural = { defence = 2, protection = 2, name = "dead flesh" }
 resist = { poison = 100 }
 on_eat = { message = "Black meat, and it reeks of the grave.", vomit = 80, harm = "1d4" }
 blood = "#201820"
+cry = { kind = "howl", loudness = 150, every = 120 }
 [creature.attack]
 damage = "3d10"
 damage_type = "piercing"

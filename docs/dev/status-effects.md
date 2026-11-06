@@ -6,7 +6,9 @@ rules it implements are in spec/08e-blood-and-status.md. Keep it current with th
 **Three fields of buffs** (#1002, `world/buff_field_tests.rs`; the spell types design §7 entries
 24 to 26). `retaliates = { damage, damage_type }` (Fire cloak's `fire_cloaked`): `World::retaliate`
 (`world/gifts.rs`), one clause at the head of `barbed`, so a melee blow that took hit points; it
-goes through `spell_strikes` and `say_spell`, words by the damage type ("The fire burns the
+goes through `spell_strikes` and `say_spell`, words by the damage type, or for a physical type
+by the status's name (an innate `barbed_hide`: "The barbed hide stabs you."; #1128: a creature
+type's `innate` statuses, `world/aura.rs`, put back each turn and left out of the look line) ("The fire burns the
 kobold."), then `spell_type_lands` on a striker harmed; a kill pays the wearer, unlike the barbs.
 A draw for the dice, and one for the rule's chance; none without such a status. `blows = { damage,
 damage_type }` (Brand's `branded_blade`): `Effects::blows`, docs/dev/equipment.md. `wades_free`
