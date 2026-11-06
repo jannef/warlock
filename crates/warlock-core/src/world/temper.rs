@@ -23,14 +23,23 @@
 //!   is identified, and says what it is now ("This is ...!"). Metalcraft may earn a mark
 //!   ([`Use::Temper`]), whatever came of it. The anvil is never spent.
 //!
+//! **Whittle** (`docs/design/skill-uses.md` W3; [`Action::Whittle`]) is the same work on wood, with
+//! a knife, anywhere: [`Craft::Whittle`] against [`Craft::Temper`], on the same rules, numbers
+//! (`data/temper.toml`), and item state, so one item has one state. The item's main part is of a
+//! wood (`group = "wood"`: bows, staves, clubs); the check is Dexterity's, with Woodcraft
+//! ([`Effect::Whittle`]); the mark is [`Use::Whittle`]; a knife must be carried at the start and
+//! at the end. Its list shows what [`workable_wood`] accepts.
+//!
 //! [`Action::Temper`]: crate::action::Action::Temper
+//! [`Action::Whittle`]: crate::action::Action::Whittle
 //! [`TemperRules::against`]: crate::content::TemperRules::against
 //! [`Aspect`]: crate::magic::Aspect
 
 use super::loot::Identified;
 use super::outcome::remove_stacks;
 use super::rest::Ended;
-use super::{Spent, World};
+use super::{Actor, Spent, World};
+use crate::ability::Unavailable;
 use crate::action::Event;
 use crate::combat;
 use crate::content::{ActionKind, Content, ItemKind, Offer};
@@ -42,8 +51,82 @@ use crate::skills::{Effect, Use};
 use crate::stats::Stat;
 use crate::time::Duration;
 
-/// The material group an anvil works.
-const METAL: &str = "metal";
+/// What an attempt is made with: a hammer at an anvil on metal, or a knife on wood.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(super) enum Craft {
+    /// At an anvil: metal, by Strength and Metalcraft.
+    Temper,
+    /// With a knife, anywhere: wood, by Dexterity and Woodcraft.
+    Whittle,
+}
+
+impl Craft {
+    /// The material group it works.
+    const fn group(self) -> &'static str {
+        match self {
+            Craft::Temper => "metal",
+            Craft::Whittle => "wood",
+        }
+    }
+
+    /// The stat its check is made by.
+    const fn stat(self) -> Stat {
+        match self {
+            Craft::Temper => Stat::Strength,
+            Craft::Whittle => Stat::Dexterity,
+        }
+    }
+
+    /// What the skill adds to the check.
+    const fn effect(self) -> Effect {
+        match self {
+            Craft::Temper => Effect::Temper,
+            Craft::Whittle => Effect::Whittle,
+        }
+    }
+
+    /// What earns a mark.
+    const fn used(self) -> Use {
+        match self {
+            Craft::Temper => Use::Temper,
+            Craft::Whittle => Use::Whittle,
+        }
+    }
+
+    /// What its turns are priced as.
+    const fn kind(self) -> ActionKind {
+        match self {
+            Craft::Temper => ActionKind::Temper,
+            Craft::Whittle => ActionKind::Whittle,
+        }
+    }
+
+    /// The tool, as the messages call it.
+    const fn tool(self) -> &'static str {
+        match self {
+            Craft::Temper => "hammer",
+            Craft::Whittle => "knife",
+        }
+    }
+
+    /// What the item does when the work goes well, badly, mends it, and ends it.
+    const fn lines(self) -> [&'static str; 4] {
+        match self {
+            Craft::Temper => [
+                "The metal rings true.",
+                "The metal cracks under the hammer.",
+                "You hammer the damage out.",
+                "It shatters under the hammer!",
+            ],
+            Craft::Whittle => [
+                "The wood takes the knife well.",
+                "The knife slips and splits the wood.",
+                "You pare the damage away.",
+                "It splinters under the knife!",
+            ],
+        }
+    }
+}
 
 /// Whether `stack` is of a kind an anvil works at all: a weapon, a missile weapon, armour, or a
 /// shield (not ammunition, rings, or amulets).
@@ -53,24 +136,43 @@ fn arms(content: &Content, stack: &Stack) -> bool {
     })
 }
 
-/// Whether `stack` is of metal, by its main part, and of this world: a spirit weapon is not.
-fn metal(content: &Content, stack: &Stack) -> bool {
+/// Whether `stack` is of the craft's material, by its main part, and of this world: a spirit
+/// weapon is not.
+fn of_material(content: &Content, stack: &Stack, craft: Craft) -> bool {
     !stack.is_spirit()
         && (stack.parts(content).first())
-            .is_some_and(|p| content.material(p.material).group.as_deref() == Some(METAL))
+            .is_some_and(|p| content.material(p.material).group.as_deref() == Some(craft.group()))
+}
+
+/// Whether `stack` may be worked by `craft` at all: arms or armour, of its material, with
+/// something an improvement could better.
+fn craftable(content: &Content, stack: &Stack, craft: Craft) -> bool {
+    arms(content, stack)
+        && of_material(content, stack, craft)
+        && !aspects(content.object(stack.object)).is_empty()
 }
 
 /// Whether `stack` may be worked at an anvil at all: arms or armour, of metal, with something
 /// an improvement could better.
 pub fn temperable(content: &Content, stack: &Stack) -> bool {
-    arms(content, stack)
-        && metal(content, stack)
-        && !aspects(content.object(stack.object)).is_empty()
+    craftable(content, stack, Craft::Temper)
 }
 
 /// Whether an anvil accepts `stack` now: [`temperable`], and not at its last improvement.
 pub fn workable(content: &Content, stack: &Stack) -> bool {
     temperable(content, stack) && !finished(content, stack)
+}
+
+/// Whether a knife accepts `stack` now: arms of wood with something to better, and not at its
+/// last improvement.
+pub fn workable_wood(content: &Content, stack: &Stack) -> bool {
+    craftable(content, stack, Craft::Whittle) && !finished(content, stack)
+}
+
+/// What `actor` lacks to whittle: a knife carried.
+pub(crate) fn whittle_lack(actor: &Actor, content: &Content) -> Option<Unavailable> {
+    let knife = (actor.inventory.iter()).any(|stack| content.is_knife(stack.object));
+    (!knife).then_some(Unavailable::NoKnife)
 }
 
 /// Whether `stack` has all the improvements it can take.
@@ -84,10 +186,10 @@ pub(super) fn check_made(natural: i32, modifier: i32, against: i32) -> bool {
     natural == combat::SURE_HIT || (natural != combat::FUMBLE && natural + modifier >= against)
 }
 
-/// An attempt under way: the anvil's cell, the stack worked, and how long it takes.
+/// An attempt under way: what it is made with, the stack worked, and how long it takes.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub(super) struct Tempering {
-    anvil: Pos,
+    craft: Craft,
     item: usize,
     seconds: u32,
 }
@@ -108,10 +210,10 @@ impl World {
     /// The player begins to work the stack at `item` at the anvil beside them; refused, taking no
     /// time, with none, with a stack that cannot be worked, or with one that can be no finer.
     pub(super) fn start_temper(&mut self, item: usize) -> Spent {
-        let Some(anvil) = self.anvil_beside() else {
+        if self.anvil_beside().is_none() {
             self.say("There is no anvil here.");
             return Spent::Nothing;
-        };
+        }
         let Some(stack) = self.state.player().inventory.get(item) else {
             self.say("You carry no such thing.");
             return Spent::Nothing;
@@ -131,7 +233,35 @@ impl World {
         let name = self.lore().title(stack);
         self.say(format!("You set to work on the {name} at the anvil."));
         Spent::Temper(Tempering {
-            anvil,
+            craft: Craft::Temper,
+            item,
+            seconds: self.content.temper().seconds,
+        })
+    }
+
+    /// The player begins to whittle the stack at `item`; refused, taking no time, without a knife
+    /// carried, with a stack that is not a wooden weapon, or with one that can be no finer.
+    pub(super) fn start_whittle(&mut self, item: usize) -> Spent {
+        if whittle_lack(self.state.player(), &self.content).is_some() {
+            self.say("You have no knife.");
+            return Spent::Nothing;
+        }
+        let Some(stack) = self.state.player().inventory.get(item) else {
+            self.say("You carry no such thing.");
+            return Spent::Nothing;
+        };
+        if !craftable(&self.content, stack, Craft::Whittle) {
+            self.say("Only a weapon of wood can be whittled.");
+            return Spent::Nothing;
+        }
+        if finished(&self.content, stack) {
+            self.say("It can be made no finer.");
+            return Spent::Nothing;
+        }
+        let name = self.lore().title(stack);
+        self.say(format!("You set to whittling the {name} with your knife."));
+        Spent::Temper(Tempering {
+            craft: Craft::Whittle,
             item,
             seconds: self.content.temper().seconds,
         })
@@ -141,7 +271,7 @@ impl World {
     /// last turn cut short to end exactly when its time is up.
     pub(super) fn temper(&mut self, work: Tempering, events: &mut Vec<Event>) {
         let until = self.state.time + Duration::seconds(u64::from(work.seconds));
-        let turn = self.price_of(self.state.player, ActionKind::Temper);
+        let turn = self.price_of(self.state.player, work.craft.kind());
         let ended = self.keep_at(
             events,
             |w| w.state.time < until,
@@ -152,12 +282,15 @@ impl World {
             _ if self.state.time >= until => self.tempered(work),
             Ended::Came(id) => {
                 let text = format!(
-                    "{} comes into view; you put down the hammer.",
-                    self.creature_called(id)
+                    "{} comes into view; you put down the {}.",
+                    self.creature_called(id),
+                    work.craft.tool()
                 );
                 self.say(text);
             }
-            Ended::Said | Ended::Done => self.say("You put down the hammer."),
+            Ended::Said | Ended::Done => {
+                self.say(format!("You put down the {}.", work.craft.tool()));
+            }
         }
     }
 
@@ -166,21 +299,28 @@ impl World {
     fn tempered(&mut self, work: Tempering) {
         let content = self.content.clone();
         let pack = &self.state.player().inventory;
-        let Some(stack) = pack.get(work.item).filter(|s| workable(&content, s)) else {
+        let craft = work.craft;
+        let ok = |s: &Stack| craftable(&content, s, craft) && !finished(&content, s);
+        let Some(stack) = pack.get(work.item).filter(|s| ok(s)) else {
             self.say("You have nothing left to work on.");
             return;
         };
+        // The knife may have been taken while the time passed.
+        if craft == Craft::Whittle && whittle_lack(self.state.player(), &content).is_some() {
+            self.say("You have nothing left to work with.");
+            return;
+        }
         let mut worked = stack.worked().cloned().unwrap_or_default();
         let me = self.state.player();
-        let modifier = me.effective_stats(&content).modifier(Stat::Strength)
-            + me.skill_effect(&content, Effect::Temper)
-            + me.talent_mods(&content).check(Stat::Strength);
+        let modifier = me.effective_stats(&content).modifier(craft.stat())
+            + me.skill_effect(&content, craft.effect())
+            + me.talent_mods(&content).check(craft.stat());
         let natural = combat::roll_natural(&mut self.state.rng);
         let against = content.temper().against(worked.attempts);
         let made = check_made(natural, modifier, against);
         worked.attempted();
         let at = self.set_apart(work.item);
-        if self.work_out(at, worked, made) {
+        if self.work_out(craft, at, worked, made) {
             match self.identify(at) {
                 // Learning what it is said its name; else its name is what is new.
                 Identified::Now(_) | Identified::NoSuchItem => {}
@@ -191,32 +331,33 @@ impl World {
                 }
             }
         }
-        if self.trains(Use::Temper) {
-            self.train(Use::Temper);
+        if self.trains(craft.used()) {
+            self.train(craft.used());
         }
     }
 
-    /// What came of an attempt `made` or failed on the stack at `at`, one item, with `worked`
-    /// its state so far (the attempt counted): whether it survived.
-    fn work_out(&mut self, at: usize, mut worked: Worked, made: bool) -> bool {
+    /// What came of an attempt `made` or failed by `craft` on the stack at `at`, one item, with
+    /// `worked` its state so far (the attempt counted): whether it survived.
+    fn work_out(&mut self, craft: Craft, at: usize, mut worked: Worked, made: bool) -> bool {
+        let [good, bad, mended, ended] = craft.lines();
         let line = match (worked.damaged, made) {
             (false, true) => {
                 let object = self.state.player().inventory[at].object;
                 let among = aspects(self.content.object(object));
                 let i = self.state.rng.index(among.len());
                 worked.improve(among[i]);
-                "The metal rings true."
+                good
             }
             (false, false) => {
                 worked.damage();
-                "The metal cracks under the hammer."
+                bad
             }
             (true, true) => {
                 worked.repair();
-                "You hammer the damage out."
+                mended
             }
             (true, false) => {
-                self.say("It shatters under the hammer!");
+                self.say(ended);
                 remove_stacks(self.player_mut(), &[at]);
                 self.keep_hp_within_max(self.state.player);
                 return false;

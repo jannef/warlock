@@ -82,6 +82,9 @@ pub(super) fn action_costs(content: &Content) -> String {
             ActionKind::Temper => {
                 "A turn of tempering an item at a forge's anvil (tempering takes ten minutes)"
             }
+            ActionKind::Whittle => {
+                "A turn of whittling a wooden item with a knife (whittling takes ten minutes)"
+            }
             ActionKind::Disarm => "Trying to disarm a trap (whatever comes of it)",
             ActionKind::Heal => "Treating yourself with the Heal skill (whatever comes of it)",
             ActionKind::Chat => "Chatting with someone (asking about a topic takes no time)",

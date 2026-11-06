@@ -2,33 +2,33 @@
 source: crates/warlock/src/ui/screen_snapshots.rs
 expression: "render(case, content.clone())"
 ---
+ Welcome to Showcase. Press ? for controls.
  Two dire wargs come to your side.
- Your dire wargs come to heel.
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+                    ┌─ Abilities ──────────────────────────────────────────────┐
+                    │                                                          │
+                    │ Birth sign                                               │
+                    │   a  Transfixing stare  at a place you see               │
+                    │ Skills                                                   │
+                    │   b  Disarm a trap      in a direction                   │
+                    │   c  Listen at a door   in a direction                   │
+                    │   d  Pick lock          in a direction                   │
+                    │   e  Steal              in a direction                   │
+                    │   f  Fletch             you have no knife                │
+                    │   g  Whittle            you have no knife                │
+                    │ Weapon skills                                            │
+                    │ > h  Shield bash        you hold no shield               │
+                    │ Allies                                                   │
+                    │   i  Come to heel                                        │
+                    │   j  Hold here                                           │
+                    │   k  Set on             at a place you see               │
+                    │                                                          │
+                    │ Shield bash: you hold no shield.                         │
+                    │                                                          │
+                    │                                                          │
+                    │                                                          │
+                    │ a-k or Enter use   Esc close                             │
+                    └──────────────────────────────────────────────────────────┘
 
 
  The Hub  ·  HP 18/18  ·  MP 2/2  ·  Openings 0/5  ·  Sta 10/10  ·  Lv 1  ·  08:00       ? controls

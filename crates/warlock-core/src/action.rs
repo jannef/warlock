@@ -250,6 +250,14 @@ pub enum Action {
     Temper {
         item: usize,
     },
+    /// Whittle the carried stack at this position with a knife, anywhere (the Whittle ability,
+    /// Woodcraft's second use): `temper.toml`'s rules for a weapon of wood, ten minutes of turns
+    /// of the `whittle` action, then a Dexterity check plus Woodcraft (`world/temper.rs`).
+    /// Refused (no time) without a knife carried, a stack with all its improvements, or one that
+    /// is not a wooden weapon.
+    Whittle {
+        item: usize,
+    },
     /// Give the carried stack at this position (one of it) to the player's companion beside them,
     /// for its neck (spec §8 "Allies"; the Give ability, the abilities menu's Allies group;
     /// `world/collar.rs`): priced as a `wear`, and what it wore falls on its cell. `ally` is the
@@ -945,6 +953,7 @@ impl fmt::Display for Action {
             Action::Fletch => f.write_str("fletch"),
             Action::Decipher { item } => write!(f, "decipher:{}", position_text(*item)),
             Action::Temper { item } => write!(f, "temper:{}", position_text(*item)),
+            Action::Whittle { item } => write!(f, "whittle:{}", position_text(*item)),
             Action::Give { item, ally } => {
                 write!(f, "give:{}", position_text(*item))?;
                 match ally {
@@ -1122,6 +1131,11 @@ impl FromStr for Action {
                 let usage = || "`temper` needs a letter, e.g. `temper:b`".to_string();
                 let item = arg.and_then(parse_position).ok_or_else(usage)?;
                 Ok(Action::Temper { item })
+            }
+            "whittle" => {
+                let usage = || "`whittle` needs a letter, e.g. `whittle:b`".to_string();
+                let item = arg.and_then(parse_position).ok_or_else(usage)?;
+                Ok(Action::Whittle { item })
             }
             "give" => {
                 let usage = || "`give:LETTER[:DIR]` names a stack, e.g. `give:b`".to_string();
@@ -1807,6 +1821,7 @@ mod tests {
             Action::Decipher { item: 1 },
             Action::Temper { item: 0 },
             Action::Temper { item: 27 },
+            Action::Whittle { item: 3 },
             Action::Give {
                 item: 1,
                 ally: None,

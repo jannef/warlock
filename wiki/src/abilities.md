@@ -96,6 +96,7 @@ own: [Weapon skills](weapon-skills.md#what-a-rank-teaches) and
   spend ten minutes cutting arrows or bolts for the bow or crossbow you have [ready](ranged.md#getting-ready). Greyed out
   "you have no knife" without one, in your pack or anywhere on you, and "you have no bow or crossbow
   ready" (see [Fletching](skills.md#fletching)).
+- **Whittle**: everyone has it, beside Fletch in [Woodcraft](skills.md#skill-woodcraft)'s place among the Skills. It asks which wooden weapon you carry to improve, and takes ten minutes. Greyed out "you have no knife" without one (see [Whittling](skills.md#whittling)).
 - **Wedge a door**: anyone trained in [Woodcraft](skills.md#skill-woodcraft) has it, in the skill's place among the Skills.
   Choose a direction: a turn spent wedging the closed door that way shut, so that creatures must kick it in
   (see [Wedging a door](doors.md#wedging-a-door)).

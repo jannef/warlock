@@ -383,6 +383,10 @@ time is the price.
 
 A [ranger](classes.md#ranger)'s [Fletcher](talents.md#talent-fletcher) makes this far quicker and surer, and rangers start with a knife.
 
+## Whittling
+
+With a knife carried, anyone can improve a wooden weapon the way an [anvil](special-rooms.md#forges) improves a metal one: **[Whittle](abilities.md#ability-whittle)** is in everyone's [abilities menu](abilities.md), beside [Fletch](abilities.md#ability-fletch) in [Woodcraft](skills.md#skill-woodcraft)'s place. Choose a weapon, a missile weapon, or a shield whose main part is a wood (bows, crossbows, staves, clubs). Greyed out "you have no knife" without one. An attempt is ten minutes; something coming into view stops it, and then the item is untouched and the attempt does not count. The rules are those of [tempering](special-rooms.md#forges), item for item: a made attempt gives one improvement (Fine, Marvellous, Masterwork) in something the item has, a failed one damages it and takes them all, a damaged item is mended or destroyed, and every attempt is harder than the last, for the item's whole life, so one item has one state however it was worked. The check is 2d12 plus your [Dexterity](stats.md) modifier, what Woodcraft gives, and what talents add to Dexterity checks, against 13 plus 2 for every attempt ever made on the item; the odds are those of the [forge table](special-rooms.md#forges). Woodcraft's second benefit is +8 at 100 and +12 at 200. Your Woodcraft earns a training mark for every finished attempt, if you are trained in it.
+
 {{#include generated/fletching.md}}
 
 ## Foraging

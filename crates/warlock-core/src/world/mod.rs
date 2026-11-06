@@ -316,7 +316,8 @@ pub(crate) use swim::shore_refusal;
 pub use talent::Due;
 pub use talk::{Conversation, Talk, TopicView};
 pub(crate) use talk_past::offered as encounter_choices;
-pub use temper::{temperable, workable};
+pub(crate) use temper::whittle_lack;
+pub use temper::{temperable, workable, workable_wood};
 use travel::{enter_room, instantiate_level, level_template};
 pub use voice::VOICE_RANGE;
 pub use zone::Zone;
@@ -1472,6 +1473,7 @@ impl World {
             Action::Fletch => return self.start_fletch(),
             Action::Decipher { item } => return self.start_decipher(*item),
             Action::Temper { item } => return self.start_temper(*item),
+            Action::Whittle { item } => return self.start_whittle(*item),
             Action::Give { item, ally } => return self.give_collar(*item, *ally),
             Action::UseTalent(TalentActive::SecondWind) => return self.second_wind(events),
             Action::UseTalent(TalentActive::BloodMagic) => return self.blood_magic(),
@@ -2012,6 +2014,8 @@ mod weather_tests;
 
 #[cfg(test)]
 mod wedge_tests;
+#[cfg(test)]
+mod whittle_tests;
 #[cfg(test)]
 mod witch_tests;
 #[cfg(test)]

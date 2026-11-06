@@ -18,13 +18,13 @@ expression: "render(case, content.clone())"
                     │   h  Listen at a door   in a direction                   │
                     │   i  Forage             not usable here                  │
                     │   j  Fletch                                              │
-                    │   k  Wedge a door       in a direction                   │
+                    │   k  Whittle            on something you carry           │
+                    │   l  Wedge a door       in a direction                   │
                     │ Weapon skills                                            │
-                    │   l  Shield bash        you hold no shield               │
+                    │   m  Shield bash        you hold no shield               │
                     │ Allies                                                   │
-                    │   m  Come to heel                                        │
-                    │   n  Hold here                                           │
-                    │   o  Set on             at a place you see               │
+                    │   n  Come to heel                                        │
+                    │   o  Hold here                                           │
                     │                                                          │
                     │ The basilisk's stare: a foe nearby that sees you slows   │
                     │ to a crawl a moment; your eyes then rest two hours.      │

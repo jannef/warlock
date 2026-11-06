@@ -78,6 +78,8 @@ pub enum ObjectList {
     Identify(IdentifyBy),
     /// The weapons and armour in the pack: choose one to temper at the anvil beside the player.
     Temper,
+    /// The wooden weapons in the pack: choose one to whittle with a knife (the Whittle ability).
+    Whittle,
     /// The scrolls in the pack of a type not yet identified: choose one to make out, unread
     /// (the Decipher ability; `world/decipher.rs`).
     Decipher,
@@ -108,6 +110,7 @@ impl ObjectList {
             ObjectList::Study => " Study ",
             ObjectList::Identify(_) => " Identify ",
             ObjectList::Temper => " Temper ",
+            ObjectList::Whittle => " Whittle ",
             ObjectList::Decipher => " Decipher ",
             ObjectList::Give => " Give ",
         }
@@ -123,6 +126,7 @@ impl ObjectList {
             ObjectList::Study => "You carry no scroll whose spell you could learn.",
             ObjectList::Identify(_) => "You carry nothing unidentified.",
             ObjectList::Temper => "You carry no metal arms or armour to work.",
+            ObjectList::Whittle => "You carry no wooden weapon to whittle.",
             ObjectList::Decipher => "You carry no scroll you have not made out.",
             ObjectList::Give => "You carry nothing for a beast's neck.",
         }
@@ -142,6 +146,7 @@ impl ObjectList {
             // Pv 3) (being worn)`).
             | ObjectList::Identify(_)
             | ObjectList::Temper
+            | ObjectList::Whittle
             | ObjectList::Decipher
             | ObjectList::Give => 78,
             // Room for the spell each teaches and the chance.
@@ -159,6 +164,7 @@ impl ObjectList {
                 | ObjectList::Study
                 | ObjectList::Identify(_)
                 | ObjectList::Temper
+                | ObjectList::Whittle
                 | ObjectList::Decipher
                 | ObjectList::Give
         )
@@ -278,6 +284,10 @@ impl ObjectScreen {
                 .collect(),
             ObjectList::Temper => (0..pack.len())
                 .filter(|&i| warlock_core::world::workable(content, &pack[i]))
+                .map(Item::Pack)
+                .collect(),
+            ObjectList::Whittle => (0..pack.len())
+                .filter(|&i| warlock_core::world::workable_wood(content, &pack[i]))
                 .map(Item::Pack)
                 .collect(),
             ObjectList::Decipher => (0..pack.len())
@@ -443,6 +453,9 @@ impl ObjectScreen {
             (ObjectList::Temper, item) => ScreenAction::Act(Action::Temper {
                 item: item.position(),
             }),
+            (ObjectList::Whittle, item) => ScreenAction::Act(Action::Whittle {
+                item: item.position(),
+            }),
             (ObjectList::Decipher, item) => ScreenAction::Act(Action::Decipher {
                 item: item.position(),
             }),
@@ -548,6 +561,7 @@ impl ObjectScreen {
                     | ObjectList::Study
                     | ObjectList::Identify(_)
                     | ObjectList::Temper
+                    | ObjectList::Whittle
                     | ObjectList::Decipher
                     | ObjectList::Give => Action::Drop(chosen),
                 });
@@ -733,6 +747,7 @@ impl ObjectScreen {
             ObjectList::Study => format!("{}   {page}Esc cancel", either("study")),
             ObjectList::Identify(_) => format!("{}   {page}Esc cancel", either("identify")),
             ObjectList::Temper => format!("{}   {page}Esc cancel", either("temper")),
+            ObjectList::Whittle => format!("{}   {page}Esc cancel", either("whittle")),
             ObjectList::Decipher => format!("{}   {page}Esc cancel", either("decipher")),
             ObjectList::Give => format!("{}   {page}Esc cancel", either("give")),
             ObjectList::PickUp | ObjectList::Drop => {

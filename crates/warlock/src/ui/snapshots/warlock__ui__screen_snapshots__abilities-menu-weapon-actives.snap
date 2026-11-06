@@ -10,25 +10,25 @@ expression: "render(case, content.clone())"
        │   b  Heal                                   nothing to treat                      │
        │   c  Intimidate                             at a place you see                    │
        │   d  Fletch                                 you have no knife                     │
+       │   e  Whittle                                you have no knife                     │
        │ Weapon skills                                                                     │
-       │   e  Shield bash                            in a direction                        │
-       │   f  Daggers and knives: Deep cut           fires by itself                       │
-       │   g  Daggers and knives: Knife in the dark  fires by itself                       │
-       │   h  Long blades: Vital strike              4 stamina, in a direction             │
-       │   i  Spears: Brace                          fires by itself                       │
-       │   j  Spears: Lunge                          3 stamina: your hands are not so held │
-       │   k  Polearms: Crushing blow                fires by itself                       │
-       │   l  Thrown weapons: Point-blank            fires by itself                       │
-       │   m  Shield blocking: Shield wall           5 stamina                             │
-       │   n  Shield bashing: Stunning bash          fires by itself                       │
-       │   o  Duelist: Riposte                       fires by itself                       │
-       │   p  Sword and Board: Staggering block      fires by itself                       │
-       │   q  Sword and Board: Shield rush           4 stamina, in a direction             │
+       │   f  Shield bash                            in a direction                        │
+       │   g  Daggers and knives: Deep cut           fires by itself                       │
+       │   h  Daggers and knives: Knife in the dark  fires by itself                       │
+       │   i  Long blades: Vital strike              4 stamina, in a direction             │
+       │   j  Spears: Brace                          fires by itself                       │
+       │   k  Spears: Lunge                          3 stamina: your hands are not so held │
+       │   l  Polearms: Crushing blow                fires by itself                       │
+       │   m  Thrown weapons: Point-blank            fires by itself                       │
+       │   n  Shield blocking: Shield wall           5 stamina                             │
+       │   o  Shield bashing: Stunning bash          fires by itself                       │
+       │   p  Duelist: Riposte                       fires by itself                       │
+       │   q  Sword and Board: Staggering block      fires by itself                       │
+       │   r  Sword and Board: Shield rush           4 stamina, in a direction             │
        │                                                                                   │
        │ The basilisk's stare: a foe nearby that sees you slows to a crawl a moment; your  │
        │ eyes then rest two hours.                                                         │
        │                                                                                   │
        │                                                                                   │
-       │ a-q or Enter use   Esc close                                                      │
-       └───────────────────────────────────────────────────────────────────────────────────┘
- The Hub  ·  HP 25/25  ·  MP 3/3  ·  Sta 10/10  ·  Lv 1  ·  08:00  ·  11 Darkening       ? controls
+       │ a-r or Enter use   Esc close                                                      │
+ The Hu└───────────────────────────────────────────────────────────────────────────────────┘ontrols

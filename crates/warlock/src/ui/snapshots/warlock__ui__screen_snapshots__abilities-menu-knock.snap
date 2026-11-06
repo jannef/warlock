@@ -4,7 +4,6 @@ expression: "render(case, content.clone())"
 ---
  You gain Knock.
  Your appraise improves. (×12) You learn Deep lungs.
-
              ┌─ Abilities ───────────────────────────────────────────────────────────┐
              │                                                                       │
              │ Birth sign                                                            │
@@ -20,14 +19,15 @@ expression: "render(case, content.clone())"
              │   g  Knowledge          not usable yet                                │
              │   h  Pick lock          in a direction                                │
              │   i  Fletch             you have no knife                             │
+             │   j  Whittle            you have no knife                             │
              │ Weapon skills                                                         │
-             │   j  Shield bash        you hold no shield                            │
+             │   k  Shield bash        you hold no shield                            │
              │                                                                       │
              │ The basilisk's stare: a foe nearby that sees you slows to a crawl a   │
              │ moment; your eyes then rest two hours.                                │
              │                                                                       │
              │                                                                       │
-             │ a-j or Enter use   Esc close                                          │
+             │ a-k or Enter use   Esc close                                          │
              └───────────────────────────────────────────────────────────────────────┘
 
 

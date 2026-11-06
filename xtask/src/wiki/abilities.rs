@@ -78,6 +78,9 @@ pub(super) fn abilities(content: &Content) -> String {
             Ability::Pray => {
                 "everyone beside a forgotten altar not yet spent (a prayer takes a minute)".into()
             }
+            Ability::Whittle => {
+                "everyone (usable with a knife carried; whittling takes ten minutes)".into()
+            }
             Ability::Temper => {
                 "everyone beside a forge's anvil (tempering takes ten minutes)".into()
             }
@@ -155,6 +158,10 @@ pub(super) fn abilities(content: &Content) -> String {
             // A long action too: the forage's time.
             Some(_) if a == Ability::Decipher => {
                 let minutes = content.decipher().map_or(0, |r| r.seconds / 60);
+                (aim(a.aim(content)), format!("{minutes} minutes (a try)"))
+            }
+            Some(_) if a == Ability::Whittle => {
+                let minutes = content.temper().seconds / 60;
                 (aim(a.aim(content)), format!("{minutes} minutes (a try)"))
             }
             Some(_) if a == Ability::Forage => {

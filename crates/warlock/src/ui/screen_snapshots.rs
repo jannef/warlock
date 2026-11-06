@@ -659,6 +659,14 @@ const CASES: &[Case] = &[
         screen: Some("abilities"),
         ..BASE
     },
+    // A ranger's Whittle list (#1028): the wooden weapons carried (the bow), not the knife.
+    Case {
+        name: "whittle-list",
+        character: Some("human,male,ranger"),
+        run: true,
+        screen: Some("whittle"),
+        ..BASE
+    },
     // A warrior carries no knife: Fletch greyed out, with the reason.
     Case {
         name: "abilities-menu-fletch-no-knife",

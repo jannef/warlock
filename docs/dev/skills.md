@@ -165,6 +165,8 @@ line read the trained value, `Skills::value_of_effect`, so no item or talent bon
 Marks: `Use::Fletch` for every batch that ran its time, whatever it made. Fletcher's numbers are
 its effect's (`talents/fletcher.toml`).
 
+**Whittling** (#1028, design W3): `Action::Whittle { item }` (replay text `whittle:LETTER`, cost `whittle` a turn, `ActionKind::Whittle`) is Temper's twin for wood: `world/temper.rs` keeps both, a `Craft` (`Temper` or `Whittle`) in `Tempering` choosing the material group (`metal` or `wood`), the stat and effect (Strength and `Effect::Temper`, or Dexterity and `Effect::Whittle`), the mark (`Use::Temper`, `Use::Whittle`), the turn price, and the message lines. Both share `data/temper.toml` and `magic/worked.rs`, so one item has one state. `Ability::Whittle` stands beside Fletch in `Ability::every` (the skills iterator adds it after Fletch), is had by everyone, asks for an item (`ObjectList::Whittle`, `ScreenName::Whittle`, the list `world::workable_wood`), and is unavailable without a knife (`world::whittle_lack`, `Unavailable::NoKnife`). Tests: `world/whittle_tests.rs`.
+
 **Balance** (spec §8 "Skills", #1029, `docs/design/skill-uses.md` §6.13): besides `burden`,
 `Effect::Footing` is read in `World::step_price` (`world/schedule.rs`) in the `else` of the wading
 branch, on a step `World::rough_step` (`world/footing.rs`) calls rough: off the overworld,

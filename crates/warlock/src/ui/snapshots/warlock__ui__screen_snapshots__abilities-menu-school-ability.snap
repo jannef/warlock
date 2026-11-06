@@ -5,7 +5,6 @@ expression: "render(case, content.clone())"
  You feel more skilled at evocation. You have learned Thunderstruck. You feel more skilled at
  transmutation.
 
-
            ┌─ Abilities ───────────────────────────────────────────────────────────────┐
            │                                                                           │
            │ Birth sign                                                                │
@@ -18,15 +17,16 @@ expression: "render(case, content.clone())"
            │   e  Knowledge                 not usable yet                             │
            │   f  Pick lock                 in a direction                             │
            │   g  Fletch                    you have no knife                          │
+           │   h  Whittle                   you have no knife                          │
            │ Weapon skills                                                             │
-           │   h  Shield bash               you hold no shield                         │
-           │   i  Evocation: Thunderstruck  fires by itself                            │
+           │   i  Shield bash               you hold no shield                         │
+           │   j  Evocation: Thunderstruck  fires by itself                            │
            │                                                                           │
            │ The basilisk's stare: a foe nearby that sees you slows to a crawl a       │
            │ moment; your eyes then rest two hours.                                    │
            │                                                                           │
            │                                                                           │
-           │ a-i or Enter use   Esc close                                              │
+           │ a-j or Enter use   Esc close                                              │
            └───────────────────────────────────────────────────────────────────────────┘
 
 
