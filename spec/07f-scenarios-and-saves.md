@@ -29,6 +29,14 @@ developer notes (CLAUDE.md, `docs/dev/`).
   (`name = "Tamsin"`, up to 20 characters): the name a run of the scenario told none gives its own
   character (§8 "Character creation"); every built-in scenario names its own (Tamsin, Pip, Rowena,
   Aldric and Roderick, Maren, Osric, Garrick, Bram).
+- **The graveyard** (#1137): `graveyard.toml` beside `settings.toml` (the web build's
+  `localStorage` key `warlock/graveyard.toml`), one `[[fallen]]` per character who has died
+  (`name`, `race`, `gender`, `class`, `prestige`, `level`, `cause`, `killer`, `place`, `turn`,
+  `age`, `when`, `version`), appended at death and never rewritten. **It is the one file not
+  pinned to the version**: unknown fields are ignored, missing ones default, an unreadable entry is
+  skipped, no field is renamed or re-meant. The Characters screen counts the dead ("Twelve
+  characters have died."), the death screen says "Remembered in the graveyard.", and a run's
+  statues are named from the petrified (§8 "Statues"). `--paths` names it.
 - **Saves**: suspend-only. One save per character, written as a run starts, on quit, and by
   periodic autosave; loading continues the run. Dev builds add named snapshots. Format: an envelope (magic, game
   version) around a JSON payload, gzip-compressed with a pure-Rust backend, written

@@ -106,6 +106,24 @@ and opens the death screen; `SaveStore::save_run` never writes a dead run (it de
 autosave, quitting, and closing the window cannot bring it back, and the web build parks no state
 for the page being hidden.
 
+**The graveyard** (#1137, `crates/warlock/src/graveyard.rs`, design `monster-dread.md` §9.5):
+`on_death` also appends the character to `graveyard.toml` beside `settings.toml` (the config
+folder; portable mode's `warlock-data/config`; the web's `localStorage` key
+`warlock/graveyard.toml`), one `[[fallen]]` table each (`name`, `race`, `gender`, `class`,
+`prestige`, `level`, `cause` (`stone`, a status id, `starved`, a trap's id, a creature's id, ...),
+`killer`, `place`, `turn`, `age`, `when`, `version`), through `Backend::append`: the file is
+never rewritten, and the death screen says "Remembered in the graveyard." when the entry went in.
+Captures and replays keep none unless `--config-dir` names one. **This file is the one
+deliberate exception to version pinning** (the owner's word): its reader (`graveyard::parse`)
+ignores unknown fields, defaults missing ones, and skips an entry it cannot read; a field is
+never renamed or re-meant; no format number, no migration. `a_fixture_written_by_0_11_reads`
+pins it. The core never reads it: as a run begins (`Game::start`, New run) the app gives the run
+the petrified entries, most recent first (`World::set_graveyard`), kept in
+`WorldState::graveyard` so a resumed run sees the list it began with; statues are named from it
+(`docs/dev/mapgen.md`). Both the list and `Statue::name` are left out of the state hash
+(`world/hash.rs::unhashed_vec`/`unhashed_option`, skipped while `WorldState::hash` serializes),
+so a replay verifies under any graveyard; saves keep them.
+
 **File locations** (`crates/warlock/src/paths.rs`, the one place that decides; never call
 `ProjectDirs` elsewhere): `paths::init(&args, check_only)` runs first in `main`, before logging,
 and `paths::locations()` is what stores, logging, and the Files screen ask (it carries each

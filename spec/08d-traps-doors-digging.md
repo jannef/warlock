@@ -264,7 +264,16 @@ developer notes (CLAUDE.md, `docs/dev/`).
   granite's; no fireball breaks it), and **kicked** (above); broken, by whatever changes its
   terrain (`set_terrain`), it falls to rubble and what it held spills there. Look mode names
   it by what it was, never what it holds: "a statue of a kobold, mouth open". The player
-  turned to stone dies ("Turned to stone"); no statue of them is laid, the run ends.
+  turned to stone dies ("Turned to stone"); no statue of them is laid, the run ends, and the
+  graveyard (§7 "Saves") records them with `cause = "stone"`.
+  - **Named statues** (#1137, the dread design §9.5): a generated level's statues are named,
+    as it is made, from the run's petrified dead (the graveyard's `cause = "stone"` entries,
+    which the app gives the run as it begins and the run keeps): one name a statue, the most
+    recent first, never twice on a floor, which statue gets which drawn from the level's stream
+    `statue-names/<level id>`. Look mode then says "a statue of Brakka the dwarf, mouth open";
+    the `truth` dump `statue (kobold, Brakka the dwarf) at (12, 5): empty`. The name is
+    decoration: no rule reads it, and it and the run's list are out of the state hash, so a
+    replay verifies under any graveyard (`warlock-cli --fallen NAME:RACE,...` gives a run one).
   - **Leavings** (#1133, the dread design §9): a type's `leavings` are laid by the generator
     within a few cells of each one a population or a vault places: statues of the floor's own
     nobodies, holding nothing (the basilisk's), old webs that catch no one (`web`), acid-pitted

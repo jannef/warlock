@@ -1,4 +1,5 @@
-//! Settings > Files: where the settings, saves, snapshots, and logs are for this launch, why
+//! Settings > Files: where the settings, the graveyard, saves, snapshots, and logs are for this
+//! launch, why
 //! (portable or the platform's folders), and an Open folder action for each (spec §7). The
 //! same facts as `warlock --paths`, from `paths.rs`.
 
@@ -191,6 +192,8 @@ mod tests {
     #[test]
     fn enter_opens_the_selected_folder_and_back_closes() {
         let mut screen = FilesScreen::with_opener(&locations(), record);
+        // Past the settings and the graveyard (the config folder) to the saves.
+        press(&mut screen, Nav::Down);
         press(&mut screen, Nav::Down);
         assert_eq!(press(&mut screen, Nav::Enter), ScreenAction::Stay);
         assert_eq!(

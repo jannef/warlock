@@ -1,0 +1,34 @@
+---
+source: crates/warlock/src/ui/screen_snapshots.rs
+expression: "render(case, content.clone())"
+---
+ Something shoots you.
+ You die...
+
+
+
+
+                        ┌──────────────────────────────────────────────────┐
+                        │                                                  │
+                        │                 Y O U   D I E D                  │
+                        │                 ═══════════════                  │
+                        │                                                  │
+                        │                  Here lies Pip,                  │
+                        │                     a thief,                     │
+                        │       killed by something you did not see,       │
+                        │                  in The Arena,                   │
+                        │      on 11 Darkening, Year 1444, at 08:01,       │
+                        │                 after 18 turns.                  │
+                        │             You had reached level 1.             │
+                        │                                                  │
+                        │       Your run is over; its save is gone.        │
+                        │           Remembered in the graveyard.           │
+                        │                                                  │
+                        │ Enter or Esc  main menu                          │
+                        └──────────────────────────────────────────────────┘
+
+
+
+
+
+ The Arena  ·  HP 0/17  ·  MP 1/1  ·  Openings 0/5  ·  Sta 10/10  ·  Lv 1  ·  08:01      ? controls

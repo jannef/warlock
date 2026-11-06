@@ -41,6 +41,10 @@ pub struct Statue {
     /// What it held, top first: what the creature carried, then the pile it stood on.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub holds: Vec<Stack>,
+    /// The past character it is of, a name from the graveyard (`world/graveyard.rs`):
+    /// decoration, read by no rule and left out of the state hash.
+    #[serde(default, skip_serializing_if = "super::hash::unhashed_option")]
+    pub name: Option<super::Fallen>,
 }
 
 impl Statue {
@@ -72,6 +76,7 @@ impl World {
         let statue = Statue {
             of: actor.creature,
             holds,
+            name: None,
         };
         self.state.current_mut().statues.insert(p, statue);
         true

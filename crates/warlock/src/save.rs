@@ -15,7 +15,7 @@
 
 mod characters;
 
-pub use characters::{SavedCharacter, Summary, played_text};
+pub use characters::{SavedCharacter, Summary, now, played_text};
 
 use crate::cli::Args;
 use crate::game::{Game, SimSet};

@@ -3,7 +3,7 @@
 Developer notes for working on this part of Warlock (moved from CLAUDE.md, #185); the
 rules it implements are in spec/06-input-and-ui.md. Keep it current with the code, as CLAUDE.md says.
 
-Settings (`crates/warlock/src/settings/`): `settings.toml` in the config dir, schema in the `settings/mod.rs` module docs. Changes
+Settings (`crates/warlock/src/settings/`): `settings.toml` in the config dir, schema in the `settings/mod.rs` module docs (the config dir also keeps `graveyard.toml`, the dead, append-only and unpinned: `docs/dev/saves.md` "The graveyard"). Changes
 apply live and are written at once; a bad file means defaults plus a warning, per value. The
 temperature unit (`temperature = "celsius"`/`"fahrenheit"`, `settings::TemperatureUnit`) is
 applied only where the status bar shows the temperature (`TemperatureUnit::show`). Effects:

@@ -173,6 +173,8 @@ impl Game {
                 let mut world =
                     World::start_run(content, scenario, args.seed, character, name, kit)
                         .map_err(|e| format!("cannot start scenario `{scenario}`: {e}"))?;
+                // The petrified dead name its statues (`graveyard.rs`).
+                world.set_graveyard(crate::graveyard::GraveyardStore::from_args(args).petrified());
                 if let Some(message) = failure {
                     world.notice(message);
                 }

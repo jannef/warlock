@@ -40,7 +40,10 @@ count, `Leaving::count`, on plain floor within 4 cells that nothing claims, no c
 object, trap, light, lock, chest, shop, or kept-clear room, and off what vaults stamped but
 for torn cloth, so a vault's map stays as drawn; a statue only with open ground all
 eight ways round, `LevelTemplate::statues` holding a nobody of the branch's population, not
-unique or dread, holding nothing; webs and acid pits change the terrain, torn cloth joins the
+unique or dread, holding nothing (named, as the level is made, from the run's petrified dead in
+the graveyard: `world/graveyard.rs::name_statues`, one name a statue, the most recent first,
+never twice on a floor, which statue drawn from stream `statue-names/<level id>`; decoration,
+out of the state hash, `docs/dev/saves.md` "The graveyard"); webs and acid pits change the terrain, torn cloth joins the
 pile), then what its vaults' empty chests hold (`chest::fill_vaults`, stream
 `vault_chests/<level id>`), then the floor's chests (`mapgen/chest.rs`, stream `chests/<level id>`, one
 floor in five by default; `docs/dev/chests.md`), then its treasure rooms' chests, gold, and

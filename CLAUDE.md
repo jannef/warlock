@@ -110,7 +110,7 @@ Headless dev loop (`warlock-cli`, no window; `--content-dir` works here too):
 
 | Task | Command |
 |---|---|
-| ASCII dump after actions | `cargo run -p warlock-cli -- dump --scenario showcase --actions "move:N move:N" --layers view,fov,memory` (`--character dwarf,female,warrior` starts as that character and `--name Brakka` names them, `--talents healthy,lean` picks their creation talents, here and in `replay --create`) |
+| ASCII dump after actions | `cargo run -p warlock-cli -- dump --scenario showcase --actions "move:N move:N" --layers view,fov,memory` (`--character dwarf,female,warrior` starts as that character and `--name Brakka` names them, `--talents healthy,lean` picks their creation talents, `--fallen Brakka:dwarf,Tamsin:elf` gives the run the graveyard's petrified dead to name statues from (out of the state hash; docs/dev/saves.md "The graveyard"), here and in `replay --create`) |
 | Dump a replay's end state | `... dump --replay runs/x.json [--actions "wait"] --format ascii\|json [--state]` |
 | Create a replay | `... replay --create --scenario showcase --actions "move:N wait" -o runs/x.json` |
 | Verify a replay | `... replay --verify runs/x.json` (exit 1 and first diverging step on mismatch) |

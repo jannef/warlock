@@ -1,0 +1,358 @@
+//! The graveyard (spec §7 "The graveyard"; #1137, design `docs/design/monster-dread.md` §9.5):
+//! `graveyard.toml` beside `settings.toml` in the config folder (portable mode's `warlock-data`
+//! too; the web build's `localStorage` key `warlock/graveyard.toml`), one `[[fallen]]` table a
+//! character who has died.
+//!
+//! - **Written** once a death, in `ui::screens::on_death` where the character's save is deleted
+//!   ([`GraveyardStore::remember`]): an entry **appended**, the file never rewritten. Never by
+//!   the core, never read into the rules.
+//! - **Its format outlives every version** (the owner's word: the one deliberate exception to
+//!   the saves' pinning, `docs/dev/saves.md`): a reader ignores the fields it does not know and
+//!   defaults those it misses, and an entry it cannot read is skipped, not the file; a field once
+//!   written is never renamed or given another meaning. No format number, no migration. The
+//!   test `a_fixture_written_by_0_11_reads` pins it.
+//! - **Read** for the Characters screen's count ([`GraveyardStore::count`]) and, as a run begins,
+//!   for the run's petrified dead ([`GraveyardStore::petrified`], `cause = "stone"`, the most
+//!   recent first), which the core keeps with the run and names statues from
+//!   (`warlock_core::world::Fallen`).
+
+use crate::cli::Args;
+use crate::storage::Backend;
+use bevy::prelude::*;
+use serde::{Deserialize, Serialize};
+use warlock_core::World;
+
+/// The file's name, beside `settings.toml`.
+pub const FILE_NAME: &str = "graveyard.toml";
+
+/// The `cause` of a character turned to stone.
+pub const STONE: &str = "stone";
+
+/// One character who has died. Every field defaults, so an entry another version wrote, with
+/// fields this one lacks or misses, reads (module docs). Never rename a field or change what it
+/// means; add new ones with a default.
+#[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(default)]
+pub struct Fallen {
+    /// The character's name.
+    pub name: String,
+    /// The race, by id (`dwarf`).
+    pub race: String,
+    /// The gender, by id (`female`).
+    pub gender: String,
+    /// The class, by id (`warrior`).
+    pub class: String,
+    /// The prestige class they were called into, by id; empty for none.
+    #[serde(skip_serializing_if = "String::is_empty")]
+    pub prestige: String,
+    /// The experience level reached.
+    pub level: u32,
+    /// What killed them, the death line's id: `stone` (turned to stone), a status's id
+    /// (`bleeding`), `starved`, `fell`, `choked`, `altar`, `own_spell`, a trap's id, a scroll's
+    /// object id, a creature's id (`kobold`), or `unseen`.
+    pub cause: String,
+    /// The creature that killed them, in words (`kobold`); empty for none.
+    #[serde(skip_serializing_if = "String::is_empty")]
+    pub killer: String,
+    /// Where: the level's name, then the campaign's (`Fyrdelf 3, The Ascmearc`).
+    pub place: String,
+    /// The turn they died in.
+    pub turn: u64,
+    /// Their age in years.
+    pub age: u32,
+    /// When, in wall-clock seconds since 1970 (UTC).
+    pub when: u64,
+    /// The game version that wrote the entry, for curiosity only.
+    pub version: String,
+}
+
+impl Fallen {
+    /// The entry for the run in `world`, which has ended in death, at wall-clock `when`; `None`
+    /// for a run still going or one without a character.
+    pub fn of_death(world: &World, when: u64) -> Option<Self> {
+        let death = world.death()?;
+        let character = world.character()?;
+        let content = world.content();
+        let (cause, killer) = match (death.of, death.cause, death.by) {
+            (Some(status), _, _) => {
+                let def = content.status(status);
+                let id = if def.statue { STONE } else { def.id.as_str() };
+                (id.to_string(), String::new())
+            }
+            (None, Some(cause), _) => (cause_id(world, cause), String::new()),
+            (None, None, Some(creature)) => {
+                let def = content.creature(creature);
+                (def.id.clone(), def.name.clone())
+            }
+            (None, None, None) => ("unseen".to_string(), String::new()),
+        };
+        let campaign = (content.campaign(world.campaign())).map(|c| c.name.clone());
+        let place = match campaign {
+            Some(campaign) => format!("{}, {campaign}", death.place),
+            None => death.place.clone(),
+        };
+        Some(Self {
+            name: character.name.clone(),
+            race: character.spec.race.clone(),
+            gender: character.spec.gender.id().to_string(),
+            class: character.spec.class.clone(),
+            prestige: character.prestige.clone().unwrap_or_default(),
+            level: u32::from(world.perception().own_experience().level),
+            cause,
+            killer,
+            place,
+            turn: death.turn,
+            age: character.age_on(death.time),
+            when,
+            version: warlock_core::GAME_VERSION.to_string(),
+        })
+    }
+
+    /// Whether they were turned to stone.
+    pub fn petrified(&self) -> bool {
+        self.cause == STONE
+    }
+
+    /// The entry as the file's text: one `[[fallen]]` table.
+    pub fn to_text(&self) -> String {
+        #[derive(Serialize)]
+        struct One<'a> {
+            fallen: [&'a Fallen; 1],
+        }
+        // Plain strings and numbers: serializing cannot fail.
+        toml::to_string(&One { fallen: [self] }).unwrap_or_default()
+    }
+}
+
+/// A non-creature, non-status death's id (the `cause` field).
+fn cause_id(world: &World, cause: warlock_core::world::Cause) -> String {
+    use warlock_core::world::Cause;
+    let content = world.content();
+    match cause {
+        Cause::Starvation => "starved".into(),
+        Cause::Fall => "fell".into(),
+        Cause::Choked(_) => "choked".into(),
+        Cause::Trap(t) => content.trap(t).id.clone(),
+        Cause::Scroll(o) => content.object(o).id.clone(),
+        Cause::Spell(_) => "own_spell".into(),
+        Cause::Altar => "altar".into(),
+    }
+}
+
+/// Reads the file's text: every entry it can, in the order written (the oldest first). An
+/// entry that cannot be read is skipped; text that is no TOML at all reads as none.
+pub fn parse(text: &str) -> Vec<Fallen> {
+    let Ok(table) = text.parse::<toml::Table>() else {
+        return Vec::new();
+    };
+    let Some(toml::Value::Array(entries)) = table.get("fallen") else {
+        return Vec::new();
+    };
+    (entries.iter())
+        .filter_map(|entry| entry.clone().try_into::<Fallen>().ok())
+        .collect()
+}
+
+/// Where the graveyard lives; `None` keeps none (captures and replays, no config folder).
+#[derive(Resource, Debug, Clone, Default)]
+pub struct GraveyardStore {
+    backend: Option<Backend>,
+}
+
+impl GraveyardStore {
+    /// The store for this run's command line: beside the settings (`settings::SettingsStore`).
+    /// Captures and replays are dev tools, which never write the player's graveyard and read it
+    /// only from `--config-dir`.
+    pub fn from_args(args: &Args) -> Self {
+        let dev_tool = args.capture.is_some() || args.replay.is_some();
+        let backend = match &args.config_dir {
+            Some(dir) => Some(Backend::Dir(dir.clone())),
+            None if dev_tool => None,
+            None => default_backend(),
+        };
+        Self { backend }
+    }
+
+    #[cfg(test)]
+    pub fn at(dir: std::path::PathBuf) -> Self {
+        Self {
+            backend: Some(Backend::Dir(dir)),
+        }
+    }
+
+    /// Every entry, the oldest first; none where there is no graveyard or it cannot be read.
+    pub fn read(&self) -> Vec<Fallen> {
+        let Some(backend) = &self.backend else {
+            return Vec::new();
+        };
+        match backend.read(FILE_NAME) {
+            Ok(bytes) => parse(&String::from_utf8_lossy(&bytes)),
+            Err(e) if e.kind() == std::io::ErrorKind::NotFound => Vec::new(),
+            Err(e) => {
+                warn!("cannot read {}: {e}", backend.describe(FILE_NAME));
+                Vec::new()
+            }
+        }
+    }
+
+    /// How many characters have died.
+    pub fn count(&self) -> usize {
+        self.read().len()
+    }
+
+    /// The petrified among the dead, the most recent first, as the core names statues from
+    /// them (`World::set_graveyard`).
+    pub fn petrified(&self) -> Vec<warlock_core::world::Fallen> {
+        let mut all = self.read();
+        all.retain(Fallen::petrified);
+        // The file is in the order written; an entry's own time breaks no tie it makes.
+        all.reverse();
+        all.sort_by_key(|f| std::cmp::Reverse(f.when));
+        (all.into_iter())
+            .map(|f| warlock_core::world::Fallen {
+                name: f.name,
+                race: f.race,
+            })
+            .collect()
+    }
+
+    /// Appends `fallen` to the file (module docs). `Ok(false)` where there is no graveyard.
+    pub fn remember(&self, fallen: &Fallen) -> Result<bool, String> {
+        let Some(backend) = &self.backend else {
+            return Ok(false);
+        };
+        // Each entry starts on a line of its own, after a blank one.
+        let text = format!("\n{}", fallen.to_text());
+        backend
+            .append(FILE_NAME, text.as_bytes())
+            .map(|()| true)
+            .map_err(|e| format!("cannot write {}: {e}", backend.describe(FILE_NAME)))
+    }
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+fn default_backend() -> Option<Backend> {
+    crate::paths::locations()
+        .config
+        .dir
+        .clone()
+        .map(Backend::Dir)
+}
+
+/// Browser storage; without it (some privacy modes) no graveyard is kept.
+#[cfg(target_arch = "wasm32")]
+fn default_backend() -> Option<Backend> {
+    crate::storage::web::available().then_some(Backend::Browser)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::sync::Arc;
+    use warlock_core::Action;
+    use warlock_core::content::Content;
+
+    /// An entry as version 0.11 wrote it (#1137), with a field from a later version and one of
+    /// its own missing: it must read under every version after.
+    const FIXTURE_0_11: &str = r#"
+[[fallen]]
+name = "Brakka"
+race = "dwarf"
+gender = "female"
+class = "warrior"
+level = 7
+cause = "stone"
+place = "Fyrdelf 3, The Ascmearc"
+turn = 4120
+age = 31
+when = 1793318400
+version = "0.11.0"
+
+[[fallen]]
+name = "Tamsin"
+race = "elf"
+gender = "female"
+class = "bard"
+prestige = "hunter"
+level = 31
+cause = "kobold"
+killer = "kobold"
+place = "the Hub, The Showcase"
+turn = 99
+age = 140
+when = 1793404800
+version = "0.11.0"
+epitaph = "a field a later version added"
+
+[[fallen]]
+name = "Wynn"
+cause = "starved"
+
+[[fallen]]
+name = 12
+"#;
+
+    #[test]
+    fn a_fixture_written_by_0_11_reads() {
+        let all = parse(FIXTURE_0_11);
+        // The broken fourth entry is skipped, not the file.
+        let names: Vec<&str> = all.iter().map(|f| f.name.as_str()).collect();
+        assert_eq!(names, ["Brakka", "Tamsin", "Wynn"]);
+        assert_eq!(all[0].level, 7);
+        assert!(all[0].petrified());
+        assert_eq!(all[1].prestige, "hunter");
+        assert_eq!(all[1].killer, "kobold");
+        // Missing fields default.
+        assert_eq!(
+            (all[2].level, all[2].when, all[2].race.as_str()),
+            (0, 0, "")
+        );
+        assert!(parse("this is [not toml").is_empty());
+    }
+
+    #[test]
+    fn deaths_are_appended_and_the_petrified_come_most_recent_first() {
+        let dir = std::env::temp_dir().join(format!("warlock-graveyard-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&dir);
+        let store = GraveyardStore::at(dir.clone());
+        assert_eq!(store.count(), 0);
+        std::fs::create_dir_all(&dir).expect("dir");
+        std::fs::write(dir.join(FILE_NAME), FIXTURE_0_11).expect("fixture");
+        let stone = |name: &str, when| Fallen {
+            name: name.into(),
+            race: "human".into(),
+            cause: STONE.into(),
+            when,
+            ..Fallen::default()
+        };
+        assert_eq!(store.remember(&stone("Osric", 1_800_000_000)), Ok(true));
+        assert_eq!(store.remember(&stone("Eadgyth", 1_700_000_000)), Ok(true));
+        // Append-only: what was there is there still, byte for byte.
+        let text = std::fs::read_to_string(dir.join(FILE_NAME)).expect("read");
+        assert!(text.starts_with(FIXTURE_0_11), "{text}");
+        assert_eq!(store.count(), 5);
+        let petrified: Vec<String> = (store.petrified().iter()).map(|f| f.name.clone()).collect();
+        assert_eq!(petrified, ["Osric", "Brakka", "Eadgyth"]);
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn a_death_is_written_with_its_cause() {
+        let content = Arc::new(Content::builtin().expect("content"));
+        let spec = "dwarf,female,warrior".parse().expect("spec");
+        let mut w = World::start_run(content, "showcase", None, Some(&spec), Some("Brakka"), true)
+            .expect("world");
+        assert!(Fallen::of_death(&w, 0).is_none(), "not dead yet");
+        for _ in 0..4 {
+            w.apply(&Action::Afflict("stiffening".into()));
+        }
+        let fallen = Fallen::of_death(&w, 1_793_318_400).expect("dead");
+        assert_eq!(fallen.name, "Brakka");
+        assert_eq!(
+            (fallen.race.as_str(), fallen.class.as_str()),
+            ("dwarf", "warrior")
+        );
+        assert_eq!(fallen.cause, STONE, "{fallen:?}");
+        assert_eq!(parse(&fallen.to_text()), [fallen]);
+    }
+}

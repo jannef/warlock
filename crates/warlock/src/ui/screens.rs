@@ -58,6 +58,7 @@ use super::target::AimKind;
 use super::weapon_skills_screen::WeaponSkillsScreen;
 use crate::cli::Args;
 use crate::game::{Game, GameContent, PlayerAction};
+use crate::graveyard::{self, GraveyardStore};
 use crate::input::{Bindings, InputMode, dev_keys};
 use crate::render::console::Console;
 use crate::render::grid::MapGrid;
@@ -301,6 +302,9 @@ struct Launch {
     /// The saved characters, the one played last first (the main menu offers Continue and
     /// Characters with any); only read for the screens that show them.
     characters: Vec<SavedCharacter>,
+    /// How many characters have died (the graveyard's entries, `graveyard.rs`); only read for
+    /// the Characters screen.
+    died: usize,
     /// A developer build or `--dev`: the developer keys work (the controls and the help list
     /// them), and New run has a seed field.
     dev: bool,
@@ -395,7 +399,8 @@ impl Screen {
             }
             ScreenName::Characters => {
                 let campaigns = content.campaigns().len() > 1;
-                Screen::Characters(CharactersScreen::new(launch.characters.clone(), campaigns))
+                let characters = launch.characters.clone();
+                Screen::Characters(CharactersScreen::new(characters, campaigns).died(launch.died))
             }
             ScreenName::Pause => Screen::Menu(MainMenu::pause()),
             // A release build's new run gets a seed no one chooses; a developer may type one.
@@ -869,6 +874,7 @@ pub struct Screens<'w> {
     content: Res<'w, GameContent>,
     store: Res<'w, SaveStore>,
     settings: Res<'w, SettingsStore>,
+    graveyard: Res<'w, GraveyardStore>,
     args: Res<'w, Args>,
     /// The run, for screens that show what the player perceives (the inventory, a pile, the
     /// character screen).
@@ -904,8 +910,13 @@ impl Screens<'_> {
             ScreenName::Main | ScreenName::Characters => self.store.characters(),
             _ => Vec::new(),
         };
+        let died = match name {
+            ScreenName::Characters => self.graveyard.count(),
+            _ => 0,
+        };
         let launch = Launch {
             characters,
+            died,
             dev: dev_keys(&self.args),
             keymap: self.settings.keymap(),
         };
@@ -1054,8 +1065,8 @@ fn leave_run(commands: &mut Commands, grid: &mut MapGrid, mode: &mut InputMode) 
 }
 
 /// When the run has ended in death: that character's save is deleted (permadeath), and no other
-/// character's, and the death screen opens over the run as it ended, in place of whatever screen
-/// was open. Once.
+/// character's, the character goes into the graveyard (`graveyard.rs`), and the death screen
+/// opens over the run as it ended, in place of whatever screen was open, saying so. Once.
 pub(super) fn on_death(game: Res<Game>, mut screens: Screens) {
     if !game.is_changed() || game.world.death().is_none() || screens.stack.shows_death() {
         return;
@@ -1063,8 +1074,19 @@ pub(super) fn on_death(game: Res<Game>, mut screens: Screens) {
     if let Err(e) = screens.store.delete_character(&game.save_id) {
         warn!("{e}");
     }
+    let when = crate::save::now();
+    let remembered = match graveyard::Fallen::of_death(&game.world, when) {
+        Some(fallen) => screens.graveyard.remember(&fallen).unwrap_or_else(|e| {
+            warn!("{e}");
+            false
+        }),
+        None => false,
+    };
     screens.stack.clear();
     screens.open(ScreenName::Death);
+    if let Some(Screen::Death(death)) = screens.stack.screens.last_mut() {
+        death.remembered = remembered;
+    }
 }
 
 /// When a level's choices are due (a level just came, or a run was resumed with them due): the
@@ -1137,7 +1159,9 @@ pub(super) fn apply_choice(
                 let content = screens.content.0.clone();
                 let (character, name) = (character.as_ref(), name.as_deref());
                 match Game::new_run(content, &screens.store, scenario, *seed, character, name) {
-                    Ok(game) => {
+                    Ok(mut game) => {
+                        // The petrified dead name its statues (`graveyard.rs`).
+                        game.world.set_graveyard(screens.graveyard.petrified());
                         commands.insert_resource(game);
                         screens.stack.clear();
                     }
@@ -1218,6 +1242,7 @@ mod tests {
             };
             let launch = Launch {
                 characters: has_save.then_some(saved).into_iter().collect(),
+                died: 0,
                 dev: true,
                 keymap: KeymapFile::Nowhere,
             };
@@ -1424,6 +1449,7 @@ mod tests {
             .init_resource::<ScreenStack>()
             .init_resource::<Settings>()
             .init_resource::<crate::settings::SettingsStore>()
+            .init_resource::<crate::graveyard::GraveyardStore>()
             .init_resource::<Bindings>()
             .init_resource::<InputMode>()
             .init_resource::<crate::ui::LastTarget>()
@@ -2384,6 +2410,7 @@ mod tests {
             .init_resource::<ScreenStack>()
             .init_resource::<Settings>()
             .init_resource::<crate::settings::SettingsStore>()
+            .init_resource::<crate::graveyard::GraveyardStore>()
             .init_resource::<Bindings>()
             .init_resource::<InputMode>()
             .init_resource::<crate::ui::LastTarget>()

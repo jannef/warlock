@@ -72,8 +72,8 @@ pub(super) fn lay(
                             else {
                                 break;
                             };
-                            let holds = Vec::new();
-                            template.statues.insert(p, Statue { of, holds });
+                            let (holds, name) = (Vec::new(), None);
+                            template.statues.insert(p, Statue { of, holds, name });
                         }
                         template.terrain[p] = t;
                     }

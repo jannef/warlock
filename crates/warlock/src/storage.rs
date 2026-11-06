@@ -42,6 +42,36 @@ impl Backend {
         }
     }
 
+    /// Adds `bytes` to the end of a file, making it if it is missing; what it held is never
+    /// rewritten (the graveyard, `graveyard.rs`). Natively an append; in the browser the value
+    /// is read and set again with the bytes after it (one `setItem`).
+    pub fn append(&self, name: &str, bytes: &[u8]) -> io::Result<()> {
+        match self {
+            Self::Dir(dir) => {
+                let path = dir.join(name);
+                if let Some(parent) = path.parent() {
+                    std::fs::create_dir_all(parent)?;
+                }
+                let mut file = std::fs::OpenOptions::new()
+                    .create(true)
+                    .append(true)
+                    .open(path)?;
+                file.write_all(bytes)?;
+                file.sync_all()
+            }
+            #[cfg(target_arch = "wasm32")]
+            Self::Browser => {
+                let mut all = match self.read(name) {
+                    Ok(old) => old,
+                    Err(e) if e.kind() == io::ErrorKind::NotFound => Vec::new(),
+                    Err(e) => return Err(e),
+                };
+                all.extend_from_slice(bytes);
+                web::set(name, &encode_base64(&all))
+            }
+        }
+    }
+
     /// Moves a file, replacing the target. Never loses the source if the target cannot be written.
     pub fn rename(&self, from: &str, to: &str) -> io::Result<()> {
         match self {

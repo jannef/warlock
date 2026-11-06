@@ -629,6 +629,7 @@ pub(super) fn instantiate_level(
     }
     state.levels.insert(id.to_string(), level);
     state.endless.made(content, id);
+    super::graveyard::name_statues(state, content, id);
     // The hidden locations revealed before the overworld was made (spec §7 "Hidden locations").
     super::reveal::apply_revealed(state, id);
     // Under the open sky its water has frozen and thawed with the weather of the last weeks.

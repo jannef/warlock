@@ -1616,6 +1616,15 @@ impl<'a> PerceptionView<'a> {
         self.level.statues.get(&p).map(|s| s.of)
     }
 
+    /// Whom the statue at `p` is of, where it bears a past character's name from the graveyard
+    /// (`world/graveyard.rs`): "Brakka the dwarf". `None` where they know no statue there, or
+    /// it bears no name.
+    pub fn statue_name(&self, p: Pos) -> Option<String> {
+        self.statue_at(p)?;
+        let statue = self.level.statues.get(&p)?;
+        statue.name.as_ref().map(|f| f.words(self.content))
+    }
+
     /// The leavings the player sees or remembers on this level (`content/leaving.rs`), in row
     /// order: statues, webs, and acid-pitted floor by the terrain they know, torn cloth by the
     /// pile they know. What each means is never told.

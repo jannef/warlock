@@ -163,6 +163,9 @@ pub(crate) mod freshness;
 mod gaze;
 mod gifts;
 mod glare;
+mod graveyard;
+#[cfg(test)]
+mod graveyard_tests;
 mod guild;
 mod hash;
 mod haunt;
@@ -313,6 +316,7 @@ pub(crate) use fletch::fletch_lack;
 pub(crate) use forage::forage_ground;
 pub use free_blow::FreeBlows;
 pub use gifts::{STARE_RANGE, Streak};
+pub use graveyard::Fallen;
 pub use guild::GuildRank;
 pub(crate) use hash::fnv1a;
 pub(crate) use heal::allies_beside;
@@ -498,6 +502,10 @@ pub struct WorldState {
     /// they show by their names, the rest by their labels.
     #[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
     pub(crate) known_scrolls: BTreeSet<ObjectId>,
+    /// The petrified dead of past runs, the most recent first, as the app gave them when the run
+    /// began (`world/graveyard.rs`): statues' names, decoration out of the state hash.
+    #[serde(default, skip_serializing_if = "hash::unhashed_vec")]
+    pub(crate) graveyard: Vec<Fallen>,
 }
 
 fn is_zero(n: &u32) -> bool {
@@ -918,6 +926,7 @@ impl World {
             quests: Quests::default(),
             revealed: BTreeSet::new(),
             known_scrolls,
+            graveyard: Vec::new(),
         };
         let mut player = Actor {
             id: ActorId(0),
