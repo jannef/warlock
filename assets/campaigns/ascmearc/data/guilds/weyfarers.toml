@@ -14,9 +14,9 @@ name = "the Weyfarers' Gilde"
 master = "wat"
 ranks = [
     { title = "Tin", material = "tin", given = "guild_quarry" },
-    { title = "Pewter", material = "pewter", done = "guild_hundred" },
+    { title = "Pewter", material = "pewter", done = "guild_score" },
     { title = "Iron", material = "iron", done = "guild_wanted" },
-    { title = "Steel", material = "steel" },
+    { title = "Steel", material = "steel", done = "guild_deep" },
     { title = "Duralumin", material = "duralumin" },
     { title = "Electrum", material = "electrum" },
     { title = "Gold", material = "gold" },

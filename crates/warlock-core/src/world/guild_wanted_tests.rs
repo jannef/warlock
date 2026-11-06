@@ -46,7 +46,7 @@ const WANTED: [(&str, &str, &str, &str, Pos); 4] = [
     ),
 ];
 /// The links before it.
-const CHAIN: [&str; 3] = ["guild_quarry", "guild_hundred", "guild_scroll"];
+const CHAIN: [&str; 3] = ["guild_quarry", "guild_score", "guild_scroll"];
 
 /// Built-in content with nobody hungering (the lairs are days away).
 static CONTENT: LazyLock<Arc<Content>> = LazyLock::new(|| {

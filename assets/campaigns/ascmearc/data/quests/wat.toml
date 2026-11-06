@@ -19,26 +19,26 @@ done = "That's the one. 'Ere's the Gilde's coin, fair earned."
 where = "{Targets} are known in {branch}."
 
 [[quest]]
-id = "guild_hundred"
-name = "The hundred"
+id = "guild_score"
+name = "A score and five"
 giver = "wat"
 requires = "guild_quarry"
 type = "kill"
-count = 100
+count = 25
 pick = { tags = ["kobold", "goblin", "undead", "vermin", "marsh-thing", "duergar", "fire-thing"] }
 reward = { gold = 250, xp = 500, items = ["potion_of_healing*2"] }
 alignment = 5
-offer = "An 'undred {targets} for the Gilde. Every sort of 'em counts, an' I'll write you down which. Anywhere you like, so long as it's your 'and does it. Counts from today."
+offer = "A score an' five {targets} for the Gilde. Every sort of 'em counts, an' I'll write you down which. Anywhere you like, so long as it's your 'and does it. Counts from today."
 accept = "Count 'em careful. I will."
-reminder = "An 'undred {targets}, all told. {Where}"
-done = "An 'undred! I 'ad me doubts, I don't mind sayin'. Pewter suits you. Potions an' all."
+reminder = "A score an' five {targets}, all told. {Where}"
+done = "A score an' five! I 'ad me doubts, I don't mind sayin'. Pewter suits you. Potions an' all."
 where = "{Targets} are known in {branch}."
 
 [[quest]]
 id = "guild_scroll"
 name = "A scroll for the Gilde"
 giver = "wat"
-requires = "guild_hundred"
+requires = "guild_score"
 type = "bring"
 pick = { objects = { class = "scrolls", loot = true } }
 reward = { gold = 200, xp = 150 }
@@ -92,3 +92,21 @@ reveals = { location = "brocenburg", when = "given" }
 where = "Brocenburg, the old fort, stands in Holegnwudu, east of the deep wood."
 offer = "Sergeant 'Errick. Done 'is captain at the fort an' legged it, an' now 'e sells 'is axe to goblins out at Brocenburg in the Holegnwudu. Fort wants 'im back. In a box'll do."
 done = "The Sergeant, boxed! Fort pays for the box, the Gilde pays for the job, an' you're Iron now."
+
+# Link 5 (#1119): eleven floors down the endless branch, past the tenth floor's boss. Reaching
+# the floor once is enough (Grundlēas forgets each floor left, the reach is kept). Done, it
+# makes the player a Steel of the Gilde.
+[[quest]]
+id = "guild_deep"
+name = "Eleven floors down"
+giver = "wat"
+requires = "guild_wanted"
+type = "reach"
+target = "grundleas:11"
+reward = { gold = 600, xp = 900 }
+alignment = 5
+offer = "There's a stair in the grass south o' the Beorhtburna road, Grundlēas, an' it don't go nowhere twice. The Gilde wants one o' ours stood on the eleventh floor down, past the tenth, mind, an' whatever keeps it. Come back an' tell me what the air's like."
+accept = "Eleven floors. Count the steps, an' don't trust the ones behind you."
+reminder = "Grundlēas, south o' the Beorhtburna road. The eleventh floor down, past the tenth."
+done = "Eleven down an' back up with yer 'ead on! Steel, that is. The Gilde don't say it twice."
+where = "Grundlēas lies in the grass south of the Beorhtburna road."

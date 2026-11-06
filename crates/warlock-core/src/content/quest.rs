@@ -620,11 +620,8 @@ fn resolve(
             if !content.has_level(campaign, &target) {
                 return Err(format!("unknown level `{target}`"));
             }
-            if content.is_endless_floor(&target) {
-                return Err(format!(
-                    "`{target}` is an endless branch's: no floor there stays"
-                ));
-            }
+            // An endless branch's floor may be a target (#1119): it is forgotten on leaving, but
+            // the arrival (`World::reach`) marks the quest, which is kept.
             if spec.repeatable {
                 return Err(
                     "a reach quest is not repeatable: a place once reached stays so".into(),
