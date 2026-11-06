@@ -117,7 +117,10 @@ fn gammer_wynflaed_talks_of_the_village_the_wood_and_the_fair_folk() {
         .id;
     assert_eq!(w.state.actors[&id].npc.as_deref(), Some("wynflaed"));
     let topics: Vec<String> = (w.topics(id).into_iter()).map(|t| t.id).collect();
-    assert_eq!(topics, ["holtwic", "wood", "fair_folk"]);
+    assert_eq!(
+        topics,
+        ["quest-taken_under_the_hill", "holtwic", "wood", "fair_folk"]
+    );
     put_player(&mut w, WYNFLAED.step(Dir::W));
     act(&mut w, "chat:E");
     assert!(
@@ -126,14 +129,15 @@ fn gammer_wynflaed_talks_of_the_village_the_wood_and_the_fair_folk() {
             .unwrap()
             .starts_with("Gammer Wynflæd says: \"")
     );
-    for topic in &topics {
+    // Her quest is `wynflaed_quest_tests.rs`'s.
+    for topic in &topics[1..] {
         let before = said(&w).len();
         act(&mut w, &format!("ask:E:{topic}"));
         assert!(said(&w)[before].starts_with("Gammer Wynflæd says: \""));
     }
     assert!(
         w.state.revealed.is_empty(),
-        "her quest reveals the mound (#1141), not her talk"
+        "her quest reveals the mound, not her talk"
     );
 }
 

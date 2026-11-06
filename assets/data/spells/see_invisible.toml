@@ -1,0 +1,12 @@
+# See invisible (docs/design/monster-dread.md §5.11, D8): Seeing, five minutes in which the
+# invisible and the shadowy are plain to the caster's eyes (a status that `sees_unseen`).
+[[spell]]
+id = "see_invisible"
+name = "See invisible"
+description = "For a while your eyes find what hides from them: the invisible, and shadows in the dark."
+level = 7
+school = "divination"
+kind = "buff"
+shape = "self"
+resolution = "auto"
+effect = { status = "seeing" }

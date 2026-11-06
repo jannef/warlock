@@ -1,6 +1,8 @@
 # The fen wave (Fennmynster, docs/design/campaign.md §10.1). A pale light that drifts over the
 # fen and leads travellers astray: it glows, makes no sound, is hard to hit, and casts (its
-# spells announced until magic is designed). Nothing of it remains when it goes out.
+# spells announced until magic is designed). Its touch sets your power ebbing, and it winks out,
+# its light with it, to come again unseen (docs/dev/creatures.md "The unseen"). Nothing of it
+# remains when it goes out.
 [[creature]]
 id = "will_o_wisp"
 level = 7
@@ -29,7 +31,10 @@ stats = { strength = 3, dexterity = 20, toughness = 8, intelligence = 12, willpo
 base_hp = 10
 skills = { concentration = 25, spellcraft = 30 }
 natural = { defence = 6, protection = 0, name = "flickering form" }
-attack = { damage = "1d6", damage_type = "electricity", name = "spark", verb = "shocks", to_hit = 1 }
+attack = { damage = "1d6", damage_type = "electricity", name = "spark", verb = "shocks", to_hit = 1, on_hit = [{ status = "ebbing", chance = 30, severity = 1 }] }
 resist = { electricity = 100, poison = 100 }
 corpse = false
 blood = "none"
+# It fades from sight on a cooldown (docs/dev/creatures.md "The unseen").
+[creature.invisible]
+cooldown = 300

@@ -1661,6 +1661,12 @@ fn actor_rows(world: &World) -> Vec<String> {
                 Some(word) => format!("{court}; grade {word}"),
                 None => court,
             };
+            // Unseen (`world/unseen.rs`): `; invisible`, by its type or a status now; `; shadowy`.
+            let court = match (a.invisible(content), def.shadowy) {
+                (true, _) => format!("{court}; invisible"),
+                (false, true) => format!("{court}; shadowy"),
+                (false, false) => court,
+            };
             // Who summoned it (spec §8 "Summoning"), and so whose side it took.
             let court = match a.summoner {
                 Some(by) => format!("{court}; summoned by {by}"),

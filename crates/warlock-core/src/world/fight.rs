@@ -848,6 +848,8 @@ impl World {
             self.reveal_mimic(target, super::mimic::Reveal::Struck, events);
         }
         let profile = profile.map(|p| self.sneak_threat(attacker, unseen, p));
+        // A blow at the unseen (`unseen.rs`).
+        let profile = profile.map(|p| self.at_the_unseen(attacker, target, p));
         let close = kind == AttackKind::Ranged && from.chebyshev(to) <= 1;
         let struck = self.target_shot(target, missile, close);
         let struck = self.vitals(target, struck);
@@ -870,6 +872,7 @@ impl World {
         if blow.is_some_and(|b| b.strike.is_hit()) {
             self.savage_spent(attacker, events);
         }
+        self.glimpse(attacker, target, blow.is_some_and(|b| b.strike.is_hit()));
         // Diamond soul's catch (`ascetic.rs`): a missile's hit undone for a point of ki.
         let blow = self.caught_shot(target, (missile, with), blow, events);
         let blow = self.plain_miss_dodged(attacker, target, blow);

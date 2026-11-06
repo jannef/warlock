@@ -3,7 +3,7 @@ source: crates/warlock/src/ui/screen_snapshots.rs
 expression: "render(case, content.clone())"
 ---
  There are several objects here. (×2)
- You pick up an oak wand and a crooked wand.
+ You pick up a rowan wand and a brass wand.
 
 
 
@@ -12,9 +12,9 @@ expression: "render(case, content.clone())"
 
                   ┌─ Item ───────────────────────────────────────────────────────┐
                   │                                                              │
-                  │ - Oak wand                                                   │
+                  │ - Rowan wand                                                 │
                   │                                                              │
-                  │ Oak wand · wood · 200 g                                      │
+                  │ Rowan wand · wood · 200 g                                    │
                   │                                                              │
                   │ Readied: missile weapon                                      │
                   │                                                              │

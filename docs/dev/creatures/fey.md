@@ -59,3 +59,6 @@ Theft and the blink (docs/design/monster-dread.md §5.6, #1130; the mechanism is
 minute at most (`chance = 30`, `cooldown = 60`); the blink dog `blinks = { range = 6, cooldown =
 30 }`. The test world's `thieves` scenario (`levels/thieves_hall.toml`) has all three.
 `world/theft_tests.rs` checks the rows.
+
+The darkling (#1132, docs/dev/creatures.md "The unseen"): `shadowy = true`, unseen in the
+dim but beside the player, its sneak attack kept.

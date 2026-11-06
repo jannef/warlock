@@ -36,3 +36,6 @@ magic = 20
 [[creature.gear]]
 chance = 80
 one_of = ["gold_coin*5", "gold_coin*12"]
+# It fades from sight on a cooldown (docs/dev/creatures.md "The unseen").
+[creature.invisible]
+cooldown = 300

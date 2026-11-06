@@ -144,6 +144,7 @@ mod encounter_area;
 mod endless;
 mod equip;
 mod escort;
+mod escort_waits;
 mod experience;
 mod eyes;
 mod familiar;
@@ -269,6 +270,7 @@ mod trap;
 mod travel;
 mod treasury;
 mod two_shields;
+mod unseen;
 mod voice;
 mod volley;
 mod war_cry;
@@ -340,6 +342,7 @@ pub(crate) use talk_past::offered as encounter_choices;
 pub(crate) use temper::whittle_lack;
 pub use temper::{temperable, workable, workable_wood};
 use travel::{enter_room, instantiate_level, level_template};
+pub(crate) use unseen::{Concealed, DRAUGHT, unseen_by_player};
 pub use voice::VOICE_RANGE;
 pub use zone::Zone;
 
@@ -2047,6 +2050,8 @@ mod two_shield_tests;
 #[cfg(test)]
 mod unique_tests;
 #[cfg(test)]
+mod unseen_tests;
+#[cfg(test)]
 mod unstable_room_tests;
 #[cfg(test)]
 mod variant_tests;
@@ -2079,6 +2084,8 @@ mod witch_tests;
 mod words_tests;
 #[cfg(test)]
 mod wriggle_tests;
+#[cfg(test)]
+mod wynflaed_quest_tests;
 #[cfg(test)]
 mod zap_tests;
 #[cfg(test)]

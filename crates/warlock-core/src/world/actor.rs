@@ -84,6 +84,10 @@ pub struct Mind {
     /// [`Mind::is_calm`] ignores it.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub missed: Option<u64>,
+    /// The turn a blow of the player's found it while it was unseen (`world/unseen.rs`): the
+    /// player sees it for that turn. Not part of its routine: [`Mind::is_calm`] ignores it.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub glimpsed: Option<u64>,
 }
 
 impl Mind {

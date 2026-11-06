@@ -362,6 +362,7 @@ fn the_spells_are_abilities_by_level() {
             "Blight",
             "Brand",
             "Scorching ray",
+            "See invisible",
             "Thunderclap",
             "Web",
             // Level 8.

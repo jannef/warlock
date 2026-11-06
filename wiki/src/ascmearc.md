@@ -31,7 +31,9 @@ At the end of the north road, some three hours' walk from the town on the edge o
 **Holtwīc**, a farming village: cottages round a green and a well, barley fields behind their
 hedges, and cottars who will pass the time of day. It is safe, and has no [shop](shops.md).
 Its wise-woman, **Gammer Wynflæd**, keeps a cottage apart under the first trees; she knows the
-village, the wood, and the fair folk, and will [talk](npcs.md) of them. Like the town, Holtwīc
+village, the wood, and the fair folk, and will [talk](npcs.md) of them. A girl of the village,
+Ælfrun, has gone missing in the wood, and the wise-woman will ask you to bring her home: the
+first [escort](quests.md#kinds-of-quests) of the march. Like the town, Holtwīc
 has no [stairs](terrain.md#stairs): walk off its edge to leave.
 
 A little cave, **[Lytelscræf](dungeons.md#the-dungeons)**, opens two cells from the pass where you come in: three
@@ -103,6 +105,7 @@ have names of the same kind. Creatures keep their plain English names.
 | Wulfrun | *wulf* "wolf" + *rūn* "secret, counsel" | | the mine-factor |
 | Godgifu | *god* + *gifu* "gift" | | the innkeeper |
 | Wynflæd | *wynn* "joy" + *flǣd* "beauty" | | the wise-woman of Holtwīc |
+| Ælfrun | *ælf* "elf" + *rūn* "secret, counsel" | | the girl the fair folk took |
 
 The guild is younger than the town, so its names are Middle English, not Old; its master, Wat
 One-Eye, is a commoner, called by a short name and a byname. The guild's [ranks](guild.md#ranks) (Tin to Gold)

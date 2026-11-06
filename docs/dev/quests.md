@@ -98,8 +98,10 @@ whose escort is the dialogue, the actor no one's ally, `allies.toml` present: th
 through `answer` instead of the greeting, then the ally, `docs/dev/allies.md` "Escorts");
 `travel.rs::travel` → `World::escorts_home` after `follow_along` (the escort, an acting ally of
 the player's with `AllySource::Escort { quest }`, on the target level: released, then
-`World::complete_saying(escort, q, None)`, `complete` without a conversation: the `done` line is
-said as a message, the reward as a hand-in's); `fight.rs::creature_dies` → `World::escort_dies`
+the escort's `thanks` (optional) said as a message, then `World::complete_saying(speaker, q,
+None)`, `complete` without a conversation, the speaker the giver if an actor speaking the
+giver's dialogue stands on that level, else the escort: the `done` line said as a message, the
+reward as a hand-in's); `fight.rs::creature_dies` → `World::escort_dies`
 (the dead actor's dialogue is an active escort quest's escort, joined or not: `Stage::Failed`,
 "Quest failed: NAME."). `progress` is always (0, 1) for an escort quest, so it is never ready
 to hand in and its giver keeps the reminder. `Stage::Failed` (saved; never offered again,
@@ -108,6 +110,20 @@ finished ones, the `quests` dump's `(failed, ...)` with the status, JSON `failed
 status reads `PerceptionView::escorting(quest)` from the snapshot's allies: "Eadgyth follows
 you." / "Eadgyth is not with you.". Tests: `world/escort_tests.rs` (a fixture hamlet and cave on
 the built-in content).
+**A quest's escort** (`world/escort_waits.rs`, #1141): `waits = { creature, level, at }`
+(`content::Waits` in `Goal::Escort`; checked at load: a creature type, a level of the campaign,
+and exactly one place named `at` on it, a hand-made level's `places` or those of the vaults
+`DungeonDef::vaults(depth)` pins on a branch level) makes the escort for a level that cannot
+name a unique character (a vault holds no npc). `place_waiting(state, content, level)` runs at
+the end of `travel.rs::instantiate_level` and in `quest.rs::give` when the level exists already:
+each active escort quest with a `waits` on it whose npc no actor of the run is yet gets a
+`make_creature` of `creature` with `npc` the escort's, on the place's cell or the nearest free
+walkable one (ring search, row order). No record is kept: the actor existing is the guard (dead,
+the quest has failed; home, it is done). The example, the Ascmearc's first escort:
+`campaigns/ascmearc/data/quests/wynflaed.toml`, Gammer Wynflæd of Holtwīc sends the player for
+Ælfrun (a `cottar`, dialogue in `data/dialogue/holtwic.toml`), `waits` on Ælfhām's moss bed
+(`aelfham:3`, the pinned `moss_bower` vault), `reveals` the mound as given, done home in
+Holtwīc with her thanks and the wise-woman's `done`. Tests: `world/wynflaed_quest_tests.rs`.
 **Guilds** and their ranks, derived from these records and named as a quest is given or done,
 are `docs/dev/guild.md`.
 Presentation reads `PerceptionView::quests()` (`QuestView` strings, shared by the log and the

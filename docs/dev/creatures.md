@@ -63,6 +63,35 @@ kept beast. Perception copies it to `SeenActor::grade`; look mode puts the word 
 the `actors` dump says `; grade WORD`, the JSON `grade`. The tests are `grade_tests.rs` (the
 draw's odds and determinism, the reads, the roster of the ungraded, saves and hash, the dumps).
 
+The unseen (#1132; `docs/design/monster-dread.md` §5.10, §5.11) live in `world/unseen.rs`, whose
+module docs are the rules, and `content/unseen.rs` (the data). Per type: `shadowy` (unseen on a
+cell dim to the player's eyes, `VisionProfile::dim`: under twice its threshold, darkvision or
+not, unless beside them), `invisible` (`invisible = true`, innate: the invisible stalker; or
+`[creature.invisible] cooldown = 300`, resolved to `Invisible::Fades` with the `invisible` status
+and the `invisibility` cooldown, a degree per 6 s as a breath's), and `hunts` (with no hostile in
+sight it goes to the player's cell as to a noise: `World::hunted`, one line in `ai.rs::decide`).
+The status flags are `unseen` (Invisible: `Effects::unseen`, read by `Actor::invisible`, and by
+`light/cache.rs` so a creature's own light goes out with it) and `sees_unseen` (Seeing: See
+invisible's and the potion of seeing's). **Perception**: `Perception::compute` asks
+`world::unseen_by_player` once its light is final, with the dim test and Blood scent's finds; the
+answer (`Concealed`, by id and cell) is left out of the actors, `sees_actors_at` is false on
+their cells, and `hides` (and the sound pass) counts their cells as hidden, so what they make is
+heard there (the `x` of an unseen blow at its cell, footsteps, a heartbeat to Quick-sensed). What
+shows them: Seeing, Blood scent, the player's companion's `nose` (`smelt_within`), and
+`Mind::glimpsed`, the turn a blow of the player's found one (shown that turn and the one its
+perception computes after). `perceive.rs` says "You feel a cold draught." as an unseen shadowy
+creature first comes within 2 (`Perception::draught`), and names no unseen attacker
+(`conceals`). **The self-buff step**: `World::fades` is one line in `ai.rs::creature_turn`,
+before `decide`: a fading type that holds neither status and is not blocked from casting gives
+itself both, free of time and mana, heard as chanting and said where seen ("The duergar warrior
+fades from sight."), and then takes its turn as ever; `World::unveiled` (from `buff.rs::ended`)
+says "You can see the duergar warrior again." where the player sees the cell. **Striking**:
+`World::at_the_unseen` (one line in `fight.rs::resolve`) puts `UNSEEN_TO_HIT` (−4) on the
+player's blow at a concealed creature, `World::glimpse` marks a hit, and `travel.rs::strike_at`
+says "You strike at something." first. Creature sight is unchanged (creatures see the unseen;
+the player's own Invisible, from the dev `afflict:invisible`, hides them from no one yet). The
+tests are `unseen_tests.rs`.
+
 Factions and creature behavior (spec §7 "Factions", §5 "Creature sight", §8 "Creature behavior"):
 `data/factions.toml` (`content/faction.rs`: `Factions`, symmetric hostility, `Stance`; optional,
 without it everyone is neutral, but then no creature may name a faction; monsters fight only the

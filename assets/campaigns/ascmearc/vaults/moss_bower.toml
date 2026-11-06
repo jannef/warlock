@@ -4,10 +4,10 @@
 # kind's leaning (`faction`). Ælfhām names it for its third floor (`vaults` in its
 # `[[dungeon.levels]]`), so it is stamped there for certain and nowhere else.
 #
-# The moss bed (`M`) is a named place, "the moss bed": the villager the fair folk took stands
-# there once the wise-woman's quest asks for them (#1141; a vault cannot place a unique npc, so the
-# quest places them on this place's cell). Until then it is empty, and its note is said when the
-# player comes beside it.
+# The moss bed (`M`) is a named place, "the moss bed": Ælfrun, the girl the fair folk took,
+# stands there once the wise-woman's quest asks for her (#1141; a vault cannot place a unique
+# npc, so the quest places her on this place's cell: its `waits`, data/quests/wynflaed.toml).
+# Until then it is empty, and its note is said when the player comes beside it.
 name = "Moss bower"
 dungeons = ["aelfham"]
 map = '''

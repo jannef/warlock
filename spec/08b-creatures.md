@@ -641,6 +641,27 @@ developer notes (CLAUDE.md, `docs/dev/`).
   "withered", "ancient"), else "small" and "big"; messages name the type alone. The `actors`
   dump says `; grade big`, the JSON a seen actor's `grade` (the word). No talent (a creature
   gimmick).
+- **The unseen** (`warlock-core/src/world/unseen.rs`; #1132, `docs/design/monster-dread.md`
+  §5.10, §5.11): a **shadowy** type (`shadowy = true`: the shadow, the greater shadow, the
+  deathshade, the darkling, the sluagh) on a cell **dim** to the player's eyes (perceived light
+  under twice their profile's threshold, darkvision or not) is not in the player's perception
+  unless it stands beside them; "You feel a cold draught." as one they do not see comes within
+  2. An **invisible** one is not in it whatever the light: by its type (`invisible = true`: the
+  **invisible stalker**, an air thing of level 22 that hunts the player by scent wherever they
+  are on its level, `hunts = true`, and never idles), or by the **Invisible** status (two
+  minutes, one degree, which nobody sees on anyone), which a type with `[creature.invisible]`
+  (`cooldown = 300`: every duergar but the skeleton, the imp, the quasit, the will-o'-wisp) gives
+  itself in the **self-buff step**: at the start of its turn, whenever it holds neither that
+  nor the cooldown status (`invisibility`) and is not Silenced, free of time and mana, heard as
+  chanting, "The duergar warrior fades from sight." where seen; then it goes on with its turn
+  (patrolling, approaching, fighting). While invisible a creature sheds no light of its own (the
+  wisp winks out). What shows them after all: **Seeing** (`seeing`, five minutes, the spell
+  *See invisible* and the potion of seeing), Blood scent, the player's companion's nose, and a
+  blow of the player's that hit (for that turn); their noises are heard where they are (the
+  `sound` layer's `x` where an unseen blow came from, their footsteps, a heartbeat to
+  Quick-sensed if they have one: elementals have none). Their blows are "something"'s; a move
+  into an unseen creature's cell strikes at it at −4 ("You strike at something."). Creature
+  sight is unchanged. No talent (a creature gimmick).
 - **Creature gear** (`warlock-core/src/gear.rs`, the rolls; `content/gear.rs`, the data; #328,
   campaign design §10.3): a creature type may have a `racial_weapon` (a weapon it must have a
   rank in: the affinity is the rank, which combat applies) and `[[creature.gear]]` lines
@@ -827,11 +848,17 @@ developer notes (CLAUDE.md, `docs/dev/`).
     ("Eadgyth wields the long sword.") and what the slot held falls on its cell ("Eadgyth drops
     the club."); what fits no slot is refused with no time. When the escort stands on the target
     level with the player (checked as they arrive, or as it joins there), the quest is done: the
-    escort says `done`, the reward is paid as a hand-in's, and it is no one's ally (its own
+    escort says `thanks` (optional), the giver, if on that level (else the escort), says `done`,
+    the reward is paid as a hand-in's, and it is no one's ally (its own
     faction, the neutral stance, its post where it stands). Its death, joined or not, fails the
     quest ("Quest failed: Eadgyth."): the log keeps it among the finished ones, "Failed: Eadgyth
     is dead.", and it is never offered again; nothing else is locked. The log's status while
-    active: "Eadgyth follows you." or "Eadgyth is not with you."
+    active: "Eadgyth follows you." or "Eadgyth is not with you." An escort no level can place
+    (a generated floor: a vault holds no npc) is placed by the quest, `waits = { creature,
+    level, at }` (`world/escort_waits.rs`, #1141): a creature of that type, the escort, on the
+    named place `at` of that level (or the nearest free cell), as the quest is given or as the
+    level is first made after; once only. The Ascmearc's first: Gammer Wynflæd's "Taken under
+    the hill", Ælfrun on the moss bed at the bottom of Ælfhām, home to Holtwīc.
   - **Creature tags** (`content/tag.rs`, #421, #441): a creature type carries plain singular
     words, chosen by hand as a card game gives creatures types (`tags = ["goblin", "archer"]`);
     there is one flat pool and no registry: a tag exists because a creature carries it. A kill

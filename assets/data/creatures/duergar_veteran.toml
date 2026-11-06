@@ -36,3 +36,6 @@ magic = 5
 [[creature.gear]]
 chance = 60
 one_of = ["small_shield"]
+# It fades from sight on a cooldown (docs/dev/creatures.md "The unseen").
+[creature.invisible]
+cooldown = 300
