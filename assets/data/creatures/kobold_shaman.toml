@@ -4,7 +4,7 @@
 id = "kobold_shaman"
 level = 4
 xp = 40
-rarity = "rare"
+rarity = "very_rare"
 loot = 50
 name = "kobold shaman"
 glyph = "k"
@@ -16,6 +16,8 @@ alignment = "evil"
 vision = "darkvision"
 combat = "caster"
 range = 5
+spells = ["mend", "spark"]
+mana = 2
 opens_doors = true
 footsteps = 60
 hearing = 10

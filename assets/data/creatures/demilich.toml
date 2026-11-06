@@ -21,6 +21,8 @@ vision = "darkvision"
 sight = 16
 combat = "caster"
 range = 12
+spells = ["silence", "sunfire", "chain_lightning", "leech", "grave_spear"]
+mana = 350
 hearing = 15
 weight = 2000
 stats = { strength = 36, dexterity = 28, toughness = 40, intelligence = 40, willpower = 40, presence = 40 }

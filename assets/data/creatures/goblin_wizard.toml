@@ -6,7 +6,7 @@
 id = "goblin_wizard"
 level = 8
 xp = 50
-rarity = "rare"
+rarity = "very_rare"
 loot = 40
 name = "goblin wizard"
 glyph = "g"
@@ -17,6 +17,7 @@ alignment = "evil"
 vision = "darkvision"
 combat = "caster"
 range = 6
+spells = ["burning_hands", "spark"]
 opens_doors = true
 footsteps = 100
 hearing = 12
@@ -24,7 +25,7 @@ weight = 30000
 size = "small"
 stats = { strength = 11, dexterity = 12, toughness = 15, intelligence = 15, willpower = 16, presence = 10 }
 base_hp = 16
-mana = 22
+mana = 28
 skills = { concentration = 30, spellcraft = 34 }
 on_eat = { message = "This goblin meat is rank, and tingles on the tongue.", vomit = 40, skills = { decipher_script = { gives = 4, up_to = 25 } } }
 weapon_skills = { staves = 1 }

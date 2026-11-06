@@ -9,7 +9,7 @@ crocodile at (11, 17) route N N N S N S S S
 giant_centipede at (91, 8) route E E E E W E W W W W
 marsh_troll at (49, 31) route S E E E E S N N W E S S N W W W W N
 boggle at (30, 37) route N W N N N S S S E S
-orc_archer at (40, 29) route W W W W W W E W E E E E E E carrying a hardwood short bow (readied), 20 flint arrows (quivered), a tin scimitar (wielded)
+ogre_zombie at (40, 29) route W W W W W W E W E E E E E E
 mud_golem at (75, 2) route E E S N E E E S S W E N N W W W S N W W
 marsh_troll at (14, 20) route S E E E E E E W W W W W W N
 mud_golem at (69, 17) route N N E S W W E E W E W W E E N W S S
@@ -17,26 +17,26 @@ will_o_wisp at (54, 19) route S W W W W W N E N W E S W S E E E E E N
 crocodile at (32, 12) route E E E E E W W W W W
 marsh_troll at (18, 5) route E E E E E E E N N S N S S W W W W W W W
 mud_golem at (20, 9) route W W W N N E E W W S S E E E
-footpad at (77, 6) route E E E E E S N W W W W W carrying a bronze short sword (wielded), a hardened leather jerkin (being worn)
+footpad at (77, 6) route E E E E E S N W W W W W carrying an aluminium short sword (wielded)
 marsh_troll at (83, 14) route W W W W W N N N N N S S S S S E E E E E
 mud_golem at (13, 12) route N S S N N S S N N S
 marsh_troll at (53, 17) route W W N N N W W W W E E E E S S S E E
 giant_centipede at (49, 20) route S S S N N S S N N N
 marsh_troll at (31, 9) route N N N N W W W W E E E E S S S S
-footpad at (54, 21) route N N N N N N S S S S N N N N S S S S S S carrying an iron short sword (wielded)
+footpad at (54, 21) route N N N N N N S S S S N N N N S S S S S S carrying a copper short sword (wielded), a leather jerkin (being worn)
 giant_frog at (66, 3) route E S S S N N N W
 mud_golem at (91, 3) route S S S S S S S N N N N N N N
 imp at (87, 34) route E E E W W W W W W E E E E E E W W W
 marsh_troll at (54, 22) route W N N N S S S E
 mud_golem at (53, 35) route S W W W E E E N
 mud_golem at (49, 36) route N N N N N S S S S S
-footpad at (42, 20) route N N N N N N N N W W E E S S S S S S S S carrying a bronze short sword (wielded)
-footpad at (55, 9) route E E S E W W E E W N W W carrying a leather jerkin (being worn)
+footpad at (42, 20) route N N N N N N N N W W E E S S S S S S S S carrying a bronze short sword (wielded), a hardened leather jerkin (being worn)
+footpad at (55, 9) route E E S E W W E E W N W W carrying an iron short sword (wielded)
 mud_golem at (53, 34) route S S W W W W W N E W S E E E E E N N
 giant_centipede at (40, 13) route W W W W W W E E E E E E
-will_o_wisp at (75, 24) route E E E E E W W W W W
+mud_golem at (75, 24) route E E E E E W W W W W
 quickling at (88, 34) route N N N N N N N N S S S S S S S S
-footpad at (9, 32) route N N N N S S S S carrying a copper short sword (wielded)
+footpad at (9, 32) route N N N N S S S S carrying a bronze short sword (wielded)
 will_o_wisp at (53, 8) route E E E S S N N S N S S N N W W W
 giant_leech at (10, 7) route N N S S S N N N S S
 marsh_troll at (78, 8) route W W N W W S S E E W W N N E E S E E
@@ -53,35 +53,35 @@ giant_leech at (49, 23) route E E E E E E E W W W E E E W W W W W W W
 will_o_wisp at (5, 14) route E E E S N W W W
 mud_golem at (53, 31) route N N E E E W W W S S
 mud_golem at (77, 15) route N N N E E E E W W W W S S S
-footpad at (66, 4) route N E S S S N N N W S carrying a bronze short sword (wielded), a hardened leather jerkin (being worn)
+footpad at (66, 4) route N E S S S N N N W S carrying a leather jerkin (being worn)
 marsh_troll at (39, 28) route S S S N S N N N
 mud_golem at (35, 32) route S W W W W S S N N E E E E N
 giant_frog at (31, 34) route W W W W W W W W W E E E E E E E E E
 marsh_troll at (51, 33) route N N W W N E E N S W W S E E S S
-giant_leech at (8, 26) route N S S S S S W W W W E E E E N N N N N S
-giant_leech at (12, 22) route E E E E N S W W W W
-duergar_slinger at (45, 6) route S S E E E E W W W W N N carrying a sling (readied), 20 sling stones (quivered), a flint hand axe (wielded), a fur cap (being worn)
+giant_frog at (8, 26) route N S S S S S W W W W E E E E N N N N N S
+giant_frog at (12, 22) route E E E E N S W W W W
+duergar_miner at (45, 6) route S S E E E E W W W W N N carrying a copper pick-axe (in use)
 marsh_troll at (48, 24) route E E E E E W W W E E E W W W W W
 giant_leech at (62, 10) route E E E E E E E E W W W W W W W W
 mud_golem at (4, 27) route S S S S S S S N N N N N N N
 giant_leech at (57, 9) route S S S W N N S S E N N N
-sprite at (84, 12) route W W W W W E E W W E E E E E carrying a hardwood short bow (readied), 8 arrows (quivered)
+spark_mote at (84, 12) route W W W W W E E W W E E E E E
 will_o_wisp at (63, 35) route S W W N S W E N S E E N
 mud_golem at (11, 27) route W W W W W W W S S N N E E E E E E E
 mud_golem at (15, 18) route N N N N N N W W W E E E S S S S S S
-marsh_troll at (89, 11) route S W W W W E E E E N
+giant_leech at (89, 11) route S W W W W E E E E N
 giant_leech at (90, 4) route S W N N E E W W S S E N
 giant_centipede at (49, 24) route E E E E E E E E W W W W W W W W
-mud_golem at (7, 36) route E E E S W W N S E E N W W W
+marsh_troll at (7, 36) route E E E S W W N S E E N W W W
 mud_golem at (57, 2) route E E E S S S N N S S N N N W W W
 giant_centipede at (50, 32) route E E S S S S S W E N N N N N W W
-footpad at (15, 23) route S S S S S N N N N N carrying a tin short sword (wielded), a leather jerkin (being worn)
+footpad at (15, 23) route S S S S S N N N N N carrying an iron short sword (wielded), a hardened leather jerkin (being worn)
 giant_leech at (18, 12) route S S S S S N N N N N
 mud_golem at (29, 3) route E W W W W E E E E W
 poltergeist at (36, 12) route S W W W E E E N
 marsh_troll at (56, 12) route N N N E S S S S N E W S N N N N W S S S
 mud_golem at (7, 8) route N N N N N E S S S N N N W S S S S S
-footpad at (41, 32) route W W E E E E E E W W W W W W E E carrying an iron short sword (wielded), a leather jerkin (being worn)
+footpad at (41, 32) route W W E E E E E E W W W W W W E E carrying an iron short sword (wielded), a hardened leather jerkin (being worn)
 marsh_troll at (50, 34) route E E E W W N S E E W W W
 pit trap at (9, 15)
 pit trap at (50, 9)
@@ -99,8 +99,8 @@ special room black at (38, 28)-(46, 37)
   ##...X...##   #....##     ##......................#y...#####     ###........T............c....##
    #........##  #...X# ######..T...............#..^....@.w...#######..........................###
    ##........####...####"...................#####......T......w..............................##
-    ##........##...## #."......y......*.....#  ##..................w.....................T..#######
-    ##.......X....w#  ##........R...G.......####.......#T...............##..........f......####...#
+    ##........##...## #."......y......*.....#  ##..................w.....................w..#######
+    ##.......X....w#  ##........R...G.......####.......#T...............##..........e......####...#
    ##..............#   ##...............c.............###..............####............#######....#
    #.y.............#    ##........##..................####.............#  #........T"..#   ##.....#
    #.....^.........# ####.........###..................# ##............#  #..X......"..#####......#
@@ -110,21 +110,21 @@ special room black at (38, 28)-(46, 37)
    ##....#####........................................y##     ##....##     ######.................#
   ##.....###..T.............##..........c.@......c......##     ##...##    ##..##.................##
   #R.....##................####..............###......@..#      ##...##  ##.....................##
-  #.....###.w..............#  ##............## ##.....T..#       #....####.............."......##
+  #.....###.R..............#  ##............## ##.....T..#       #....####.............."......##
   #.....# ##...@...........#   ###.........##  ##w.......##      ##............................##
-  #.....####...............#     ##.....####   #Tc........#####   ####.....y....................##
+  #.....####...............#     ##.....####   #Tc........#####   ####.....X....................##
   #......##..........##....#     ##.e..##      #....###.......##     ##...........###..""<.......#
-  #.....w...........####...#    ##.....##      ##..## ##.......##     #.......##### ##...**......#
+  #.....R...........####...#    ##.....##      ##..## ##.......##     #.......##### ##...**......#
   ##X......X........# ##..##   ##.......#       ####   ##.......#     ##....###     ##..........##
    #............⊟..####..##  ###.......T##       ########.......#      ##..##      ##..^....!...#
-   #..............## #..##  ##.........bo##     ##.............##       #..#      ##............#
+   #..............## #..##  ##.........bZ##     ##.............##       #..#      ##............#
    #...........####  #### ###..........bbb####  #.....##########       ##..#     ##............##
   ##..........#####      ##.........X..bbbbbb## #T...X##################...##   ##..........####
   #.....*@.....#..##     #.........X...bb@bbbb# #.c...##"!"..%⊟%.."!"##.....#####..........##
  ##................# #####..........####bbbbbb# #..T..##.............##....................#
 ##.................###.........R...##  ##bbbbb###.T..X##....(.@.(....+.................if..#
 #.................###..............#    #bbbbb##.....X##.......y.....##..............~~~~~##
-#......X.........###........*......#    ##bbb###.X....##"!"..%.%.."!"##.X.......###...~~~##
+#......T.........###........*......#    ##bbb###.X....##"!"..%.%.."!"##.X.......###...~~~##
 ##...###.......### #.....#####f...##     ##### #.....##################.[*.....## ########
  ##### #########   ##...##   ######            ##...##                ##......##
                     #####                       #####                  ########
