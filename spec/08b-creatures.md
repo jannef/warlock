@@ -156,6 +156,26 @@ developer notes (CLAUDE.md, `docs/dev/`).
   (`World::spell_type_lands`: fire's burning, one in four). Its blows and kills are the
   dragon's. The action costs a `cast`. Words: "The fire drake breathes fire!" when the player
   sees it, then each blow seen as a spell's ("The fire burns you."); unseen, the roar is heard.
+- **Theft** (`warlock-core/src/world/snatch.rs`, the rules; `content/theft.rs`, the data;
+  docs/design/monster-dread.md §5.6, #1130): an enemy-only creature ability. `steals = { what,
+  chance, cooldown }` on a type with hands (`what` = `small`, coins, gems, potions, rings, and
+  scrolls, or `any`; `chance` 1 to 100; `cooldown` 6 to 600 s): when one of its melee blows hits
+  the player and leaves them alive while its cooldown status `theft` is off, the chance is drawn;
+  made, it takes one whole stack of what the player carries and neither wears nor wields, of the
+  classes `what` allows, picked uniformly, into its own pack, and takes `ceil(cooldown / eases)`
+  degrees of `theft`. Beside the player with its theft ready, a thief strikes in melee rather than
+  cast (`World::snatches_at`). With nothing it may take, nothing happens. It never robs a creature, and it
+  neither flees nor blinks away: it fights on, and what it took falls where it dies. Words:
+  "The pixie snatches 40 gold coins from you!" ("Something" when unseen). The pixie, the imp,
+  the succubus, and the incubus take what is small, the nymph anything.
+- **The blink** (`warlock-core/src/world/blink.rs`; `content/theft.rs`; #1130): `blinks =
+  { range, cooldown }` (2 to 12 cells, 6 to 600 s), the blink dog's alone. In step 2, a melee
+  fighter whose way to its target is blocked (its path held by someone, or none: a door it
+  cannot open, a gap no paw crosses) while its cooldown status `blink` is off moves at once to a
+  free cell beside the target, within `range` of it and in its own line of sight, where a
+  teleport could land (no trap, no ice), drawn among those cells; it takes `ceil(cooldown /
+  eases)` degrees of `blink`, and the blink costs a step. It never blinks away. Words: "The
+  blink dog is suddenly beside you." where the player sees it land; unseen, nothing.
 - **Casters** (`warlock-core/src/world/creature_cast.rs`, the rules;
   `content/creature_spells.rs`, the data; #1102): a `combat = "caster"` type has a `spells`
   list (ids in `data/spells/`, in the order it prefers them; only a caster has one), and only

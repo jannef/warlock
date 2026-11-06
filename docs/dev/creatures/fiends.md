@@ -23,3 +23,7 @@ Fixtures that write their own factions file list `fiends` (`equip_tests`, `magic
 `object_tests`, `read_tests`).
 
 Spells (#1102, docs/dev/creatures.md "Casters"; in the order each prefers them): the night hag `slumber`, `leech`, `blight` (mana 70); the rakshasa `glamour`, `mesmerise`, `flame`, `lightning_bolt` (mana 130).
+
+Theft (docs/design/monster-dread.md §5.6, #1130; `docs/dev/creatures.md` "Theft and the
+blink"): the succubus and the incubus `steals = { what = "small", chance = 30, cooldown = 60 }`
+(a seduction is a theft; it stays, as a seducer does), the shared numbers kept.

@@ -27,3 +27,7 @@ fixture, which replaces the statuses, drops the three devils whose riders it doe
 Waiting for mechanics (#448's follow-ups): several attacks a turn, flight, the imp's shapes and
 invisibility, creature spells, animated chains, thorns, summoning, auras, infernal wounds, a
 `large` size, a place in a population.
+
+Theft (docs/design/monster-dread.md §5.6, #1130; `docs/dev/creatures.md` "Theft and the
+blink"): the imp `steals = { what = "small", chance = 30, cooldown = 60 }`, a coin purse at a
+time; its poison kept, its invisibility D8's. It is not dread (a trait, design §6).

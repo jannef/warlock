@@ -12,7 +12,7 @@ use warlock_core::burden::{self, Burden};
 use warlock_core::combat::Category;
 use warlock_core::content::{
     ActionKind, Affliction, BASE_TURN, Benefit, Combat, Content, CreatureDef, CreatureId,
-    FactionId, NORMAL_COST, NaturalAttack, Stance, article, price, spoken,
+    FactionId, NORMAL_COST, NaturalAttack, Stance, Takes, article, price, spoken,
 };
 use warlock_core::geom::Pos;
 use warlock_core::object::format_weight;
@@ -600,6 +600,49 @@ pub(super) fn creature_breaths(content: &Content) -> String {
             damage_link(content, breath.kind),
             breath.length,
             breath.cooldown
+        );
+    }
+    out
+}
+
+/// Each thief's theft (docs/design/monster-dread.md §5.6): what it takes, its chance on a hit,
+/// and how long before it steals again.
+pub(super) fn creature_thieves(content: &Content) -> String {
+    let mut out =
+        String::from("| Creature | Takes | Chance on a hit | Again after |\n|---|---|---:|---:|\n");
+    for (_, c) in listed(content) {
+        let Some(steals) = &c.steals else {
+            continue;
+        };
+        let takes = match steals.what {
+            Takes::Small => "coins, gems, potions, rings, scrolls",
+            Takes::Any => "anything",
+        };
+        let _ = writeln!(
+            out,
+            "| {} | {takes} | {}% | {} s |",
+            link(Term::Creature, &c.id, &capital(&c.name)),
+            steals.chance,
+            steals.cooldown
+        );
+    }
+    out
+}
+
+/// Each blinker's blink (docs/design/monster-dread.md §5.6): how far, and how long before it
+/// blinks again.
+pub(super) fn creature_blinks(content: &Content) -> String {
+    let mut out = String::from("| Creature | Reach | Again after |\n|---|---:|---:|\n");
+    for (_, c) in listed(content) {
+        let Some(blinks) = &c.blinks else {
+            continue;
+        };
+        let _ = writeln!(
+            out,
+            "| {} | {} cells | {} s |",
+            link(Term::Creature, &c.id, &capital(&c.name)),
+            blinks.range,
+            blinks.cooldown
         );
     }
     out

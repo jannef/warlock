@@ -109,6 +109,28 @@ the players of its level (docs/balance.md "Dragons"). **Tests**: `world/breath_t
 Adding a dragon: `combat = "dragon"`, a `[creature.breath]` of its element with a burst effect
 of that element in `data/effects.toml`, `[[creature.attack]]`s, and the tag `dragon`.
 
+Theft and the blink (docs/design/monster-dread.md §5.6, #1130). **Data**: `steals = { what,
+chance, cooldown }` and `blinks = { range, cooldown }` on a type (`content/theft.rs`:
+`StealsSpec` and `BlinksSpec`, resolved in the creature loop into `CreatureDef::steals:
+Option<Steals>` and `CreatureDef::blinks: Option<Blinks>` with their cooldown statuses' degrees,
+`theft` and `blink` in `data/status.toml`, a degree per 6 s; `what` is `small`, the classes of
+`theft::SMALL`, or `any`). **Rules**: `world/snatch.rs` (`World::snatches_at`, a guard in `ai.rs::fight` before a cast: a thief
+beside the player, its cooldown off, strikes in melee; `World::snatch`, one line in `fight.rs`
+after `barbed`, so a thief cut down by barbs takes nothing): a melee hit on the
+player that leaves them alive, the cooldown off, one `chance` draw, then one stack of the loose
+ones its `what` allows, `index(n)` with two or more (the Steal ability's pick); the stack into
+the thief's pack, the cooldown on it; it fights on, and its pack falls where it dies
+(`fight.rs::dies`). With nothing to take, no cooldown. `world/blink.rs` (`World::blinks_at`, a
+guard in `ai.rs::fight`'s `close_in` on `Route::Wait | Route::Unreachable`, `Plan::Blink(at)`;
+`World::creature_blinks`): a cell beside the target within `range` of the blinker and in its
+line of sight that the teleport trap would land on (`trap.rs::may_land`), not shunned, drawn
+with `index(n)` in row order; `teleport_to`, the cooldown, a step's price. The two draws come
+after the AI decided, on the gameplay stream. **Words**: "The pixie snatches 40 gold coins
+from you!" ("Something" unseen); "The blink dog is suddenly beside you." where the player sees
+it land, nothing unseen. **Wiki**: `creature_thieves` and `creature_blinks`
+(`creature-thieves.md`, `creature-blinks.md`, "Thieves" and "Blinkers" in
+`creature-numbers.md`). **Tests**: `world/theft_tests.rs`. No talent (design §11).
+
 Casters (spec §8 "Creature behavior": "Casters", #1102). **Data**: `spells = [...]` on a
 `combat = "caster"` type (`CreatureSpec::spells`, resolved in the creature loop by
 `content/creature_spells.rs::resolve` into `CreatureDef::spells: Vec<SpellId>`, in preference
