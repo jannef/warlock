@@ -2,7 +2,9 @@
 //! regeneration. These are the pure rules; `world/fight.rs` applies them to actors.
 //!
 //! - **Hitting**: an attack hits when 2d12 (its *natural* roll, 2 to 24) plus its to-hit is at
-//!   least the target's Defence ([`hits`]). A natural 2 always misses, a natural 24 always hits.
+//!   least the target's Defence ([`hits`]). A natural 2 always misses, a natural 22 or better
+//!   ([`SURE_HIT`]: 6 of the 144 rolls) always hits, so about one blow in 24 lands however high
+//!   a Defence climbs.
 //! - **Defence** ("Dv") is [`BASE_DEFENCE`] (10) plus a bonus in each [`Category`]: within a
 //!   category only the highest bonus counts, except Dodge, whose bonuses add up ([`Defence`]).
 //! - **Why an attack missed**: a roll plus to-hit below 10 would have missed an unarmoured,
@@ -46,8 +48,10 @@ pub const BASE_DEFENCE: i32 = 10;
 pub const DIE: i32 = 12;
 /// The natural roll that always misses (1 + 1)...
 pub const FUMBLE: i32 = 2;
-/// ...and the one that always hits (12 + 12).
-pub const SURE_HIT: i32 = 2 * DIE;
+/// ...the lowest natural roll that always hits (22, 23, and 24: 6 of the 144 rolls)...
+pub const SURE_HIT: i32 = 22;
+/// ...and the highest natural roll (12 + 12).
+pub const HIGHEST: i32 = 2 * DIE;
 /// The lowest natural roll that threatens a critical unless the attack says otherwise: 22 to
 /// 24, 3.5's natural 20 by probability.
 pub const DEFAULT_THREAT: u8 = 22;
@@ -74,7 +78,7 @@ pub fn roll_natural(rng: &mut Rng) -> i32 {
 
 /// How many of the 144 ways two twelve-sided dice can fall give the natural roll `natural`.
 pub const fn ways(natural: i32) -> u32 {
-    if natural < 2 || natural > SURE_HIT {
+    if natural < 2 || natural > HIGHEST {
         0
     } else if natural <= DIE + 1 {
         (natural - 1) as u32
@@ -83,19 +87,21 @@ pub const fn ways(natural: i32) -> u32 {
     }
 }
 
-/// Whether an attack roll hits: never on a natural 2, always on a natural 24, else when the
-/// natural roll plus the to-hit is at least the Defence.
+/// Whether an attack roll hits: never on a natural 2, always on a natural 22 or better
+/// ([`SURE_HIT`]), else when the natural roll plus the to-hit is at least the Defence.
 pub const fn hits(natural: i32, to_hit: i32, defence: i32) -> bool {
-    match natural {
-        FUMBLE => false,
-        SURE_HIT => true,
-        _ => natural + to_hit >= defence,
+    if natural == FUMBLE {
+        false
+    } else if natural >= SURE_HIT {
+        true
+    } else {
+        natural + to_hit >= defence
     }
 }
 
 /// How many of the 144 natural rolls hit `defence` with `to_hit`.
 pub fn hit_ways(to_hit: i32, defence: i32) -> u32 {
-    (FUMBLE..=SURE_HIT)
+    (FUMBLE..=HIGHEST)
         .filter(|&n| hits(n, to_hit, defence))
         .map(ways)
         .sum()
@@ -786,7 +792,8 @@ mod tests {
             (18, 19.0),
             (20, 10.0),
             (22, 4.0),
-            (24, 0.7),
+            (24, 4.2),
+            (40, 4.2),
         ] {
             let p = percent(needed);
             assert!((p - expected).abs() <= 0.5, "{needed}: {p}");
@@ -798,13 +805,18 @@ mod tests {
     }
 
     #[test]
-    fn a_natural_2_always_misses_and_a_natural_24_always_hits() {
+    fn a_natural_2_always_misses_and_a_natural_22_or_better_always_hits() {
         assert!(!hits(2, 100, 10));
-        assert!(hits(24, -100, 60));
+        for natural in SURE_HIT..=HIGHEST {
+            assert!(hits(natural, -100, 60), "{natural}");
+        }
+        assert!(!hits(21, 0, 60), "21 hits only when it reaches the Defence");
+        assert!(hits(21, 0, 21));
         assert!(hits(3, 7, 10) && !hits(3, 6, 10));
-        // However good or bad the odds, one roll in 144 hits and one misses.
+        // However good or bad the odds, one roll in 144 misses and six hit (22, 23, 24).
         assert_eq!(hit_ways(1000, 10), 143);
-        assert_eq!(hit_ways(-1000, 10), 1);
+        assert_eq!(hit_ways(-1000, 10), 6);
+        assert_eq!(hit_ways(-1000, 1000), 6);
     }
 
     #[test]
@@ -885,14 +897,18 @@ mod tests {
     #[test]
     fn criticals_threaten_and_confirm() {
         let confirmed = |threat: i32| -> f64 {
-            let threats: u32 = (threat..=24).filter(|&n| hits(n, 0, 10)).map(ways).sum();
+            let threats: u32 = (threat..=HIGHEST)
+                .filter(|&n| hits(n, 0, 10))
+                .map(ways)
+                .sum();
             f64::from(threats * hit_ways(0, 10)) / (144.0 * 144.0) * 100.0
         };
         assert!((confirmed(22) - 3.125).abs() < 0.01);
         assert!((confirmed(19) - 10.94).abs() < 0.01);
         assert!((confirmed(20) - 7.81).abs() < 0.01);
         // A roll in the threat range that misses (a high Defence) threatens nothing; against
-        // Defence 40 only a natural 24 hits, and it confirms only on another 24.
+        // Defence 40 only a natural 22 or better hits (6 in 144), and it confirms only on
+        // another.
         let mut rng = Rng::stream(2, "combat-test");
         let hard = Defence::from_bonuses([(Category::Armour, 30)]);
         let (mut hit, mut missed) = (0, 0);
@@ -902,7 +918,10 @@ mod tests {
                 Strike::Missed { .. } => missed += 1,
             }
         }
-        assert!(hit < 40 && missed > 1960, "{hit} hits");
+        assert!(
+            (40..140).contains(&hit) && hit + missed == 2000,
+            "{hit} hits"
+        );
     }
 
     #[test]
@@ -1050,7 +1069,7 @@ mod tests {
         let mut rng = Rng::stream(7, "combat-test");
         let hard = Defence::from_bonuses([(Category::Armour, 20)]);
         for _ in 0..200 {
-            // Far out of reach, everything but a natural 24 is a plain miss: two draws.
+            // Far out of reach, everything but a natural 22 or better is a plain miss: two draws.
             let mut expected = rng.clone();
             let natural = roll_natural(&mut expected);
             let blow = strike(&profile(-20, "1d4", 22, 2), &Target::bare(dv), &mut rng);
@@ -1291,13 +1310,13 @@ mod tests {
         let mut rng = Rng::stream(12, "combat-test");
         let plain = typed_target(0, &[], &[]);
         for _ in 0..200 {
-            // The attack roll, (on a natural 24 the confirmation,) then for each roll of the
+            // The attack roll, (on a natural 24, its threat, the confirmation,) then for each roll of the
             // damage (a fixed 2, no draw) the fire die, nothing else.
             let mut expected = rng.clone();
             let natural = roll_natural(&mut expected);
             let blow = strike(&arrow, &plain, &mut rng);
             if natural != FUMBLE {
-                let critical = natural == SURE_HIT && roll_natural(&mut expected) != FUMBLE;
+                let critical = natural == HIGHEST && roll_natural(&mut expected) != FUMBLE;
                 let times = if critical { 2 } else { 1 };
                 let fire: i32 = (0..times).map(|_| Dice::of(1, 4).roll(&mut expected)).sum();
                 assert_eq!(rng, expected, "the rider is the last draw");

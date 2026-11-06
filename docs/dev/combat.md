@@ -4,7 +4,9 @@ Developer notes for working on this part of Warlock (moved from CLAUDE.md, #185)
 rules it implements are in spec/08c-combat.md. Keep it current with the code, as CLAUDE.md says.
 
 Combat (spec §8 "Combat"; M16, #116): the pure rules are `warlock-core/src/combat.rs` (2d12
-`roll_natural`, `hits`, `hit_ways`, `ways`; `Category` (Dexterity, Armour, Shield, Parry,
+`roll_natural`, `hits`, `hit_ways`, `ways`; `FUMBLE` (2) always misses and every natural from
+`SURE_HIT` (22) to `HIGHEST` (24) always hits, #1096; checks keep a natural 24 alone as their sure
+success, `check::makes`, which temper's check shares; `Category` (Dexterity, Armour, Shield, Parry,
 Natural, Dodge, Deflection, Wall: one entry each in its `categories!` list; Wall is an
 incorporeal creature's inside solid terrain, added by `World::defence_of`, `docs/dev/creatures.md`) and `Defence` (highest per
 category, Dodge stacks; `why_missed` weighs a miss by the positive bonuses); `Attack` (what data

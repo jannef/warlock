@@ -183,7 +183,7 @@ fn finished(content: &Content, stack: &Stack) -> bool {
 /// Whether a check of natural roll `natural` plus `modifier` reaches `against`: a natural 2
 /// always fails, a natural 24 always succeeds.
 pub(super) fn check_made(natural: i32, modifier: i32, against: i32) -> bool {
-    natural == combat::SURE_HIT || (natural != combat::FUMBLE && natural + modifier >= against)
+    crate::check::makes(natural, modifier, against)
 }
 
 /// An attempt under way: what it is made with, the stack worked, and how long it takes.
