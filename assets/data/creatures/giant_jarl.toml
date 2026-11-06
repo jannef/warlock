@@ -28,7 +28,7 @@ damage = "4d10"
 damage_type = "slashing"
 name = "great axe"
 verb = "cleaves"
-to_hit = 5
+to_hit = 12
 [creature.throw]
 object = "boulder"
 damage = "3d12"

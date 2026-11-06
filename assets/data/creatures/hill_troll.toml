@@ -30,6 +30,7 @@ damage = "3d8"
 damage_type = "slashing"
 name = "claws"
 verb = "rakes"
+to_hit = 3
 on_hit = [{ status = "staggered", chance = 15, severity = 1 }]
 # Its gear (spec §8 "Creature gear"): a maul half the time, taken from someone who needed it.
 [[creature.gear]]

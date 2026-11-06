@@ -26,7 +26,7 @@ weight = 20000
 stats = { strength = 14, dexterity = 15, toughness = 16, intelligence = 16, willpower = 20, presence = 16 }
 base_hp = 34
 skills = { concentration = 45, spellcraft = 50 }
-attack = { damage = "2d6", damage_type = "cold", name = "touch", verb = "touches" }
+attack = { damage = "2d6", damage_type = "cold", name = "touch", verb = "touches", to_hit = 3 }
 resist = { cold = 50, poison = 100 }
 corpse = false
 blood = "none"

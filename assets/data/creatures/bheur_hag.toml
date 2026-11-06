@@ -36,5 +36,5 @@ damage = "3d10"
 damage_type = "cold"
 name = "icy staff"
 verb = "strikes"
-to_hit = 4
+to_hit = 10
 on_hit = [{ status = "sluggish", chance = 20, severity = 1 }]

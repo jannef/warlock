@@ -28,6 +28,7 @@ damage = "2d6"
 damage_type = "slashing"
 name = "claws"
 verb = "claws"
+to_hit = 2
 on_hit = [
     { status = "held", chance = 10, difficulty = 15 },
     { disease = "marsh_ague", chance = 10 },

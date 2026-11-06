@@ -32,4 +32,5 @@ damage = "2d8"
 damage_type = "cold"
 name = "touch"
 verb = "touches"
+to_hit = 4
 on_hit = [{ status = "transfixed", chance = 20, severity = 1 }]

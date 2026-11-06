@@ -28,4 +28,4 @@ natural = { defence = 3, protection = 6, name = "scales" }
 resist = { fire = 50, cold = 25, electricity = 25, poison = 100 }
 corpse = false
 blood = "#1a3a2a"
-attack = { damage = "3d10", damage_type = "slashing", name = "blades", verb = "slashes", to_hit = 4 }
+attack = { damage = "3d10", damage_type = "slashing", name = "blades", verb = "slashes", to_hit = 10 }

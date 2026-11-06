@@ -31,7 +31,7 @@ damage = "4d8"
 damage_type = "slashing"
 name = "claws"
 verb = "claws"
-to_hit = 3
+to_hit = 9
 on_hit = [{ status = "bleeding", chance = 25, severity = 2 }]
 # Its gear (spec §8 "Creature gear"): the enormous axe it is never without.
 [[creature.gear]]

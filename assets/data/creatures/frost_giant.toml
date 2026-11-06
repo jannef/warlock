@@ -29,7 +29,7 @@ damage = "3d10"
 damage_type = "slashing"
 name = "great axe"
 verb = "cleaves"
-to_hit = 2
+to_hit = 7
 [creature.throw]
 object = "boulder"
 name = "block of ice"

@@ -35,5 +35,5 @@ damage = "3d12"
 damage_type = "cold"
 name = "touch"
 verb = "touches"
-to_hit = 7
+to_hit = 17
 on_hit = [{ drain = "intelligence", points = 3, chance = 15, difficulty = 26 }]

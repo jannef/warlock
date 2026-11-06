@@ -35,7 +35,7 @@ damage = "4d8"
 damage_type = "slashing"
 name = "scourge"
 verb = "lashes"
-to_hit = 5
+to_hit = 12
 on_hit = [{ status = "poisoned", chance = 35, severity = 5 }, { status = "weakened", chance = 20, severity = 2 }]
 # Its gear (spec §8 "Creature gear"): armour and coins, never a weapon (its venom rides on
 # its natural attack, which a wielded weapon would replace).

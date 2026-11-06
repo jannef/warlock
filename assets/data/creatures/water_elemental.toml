@@ -26,4 +26,5 @@ damage = "2d8"
 damage_type = "bludgeoning"
 name = "wave"
 verb = "slams"
+to_hit = 3
 on_hit = [{ status = "sluggish", chance = 20, severity = 1 }]

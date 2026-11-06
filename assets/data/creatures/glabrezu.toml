@@ -30,5 +30,5 @@ damage = "4d10"
 damage_type = "bludgeoning"
 name = "pincers"
 verb = "crushes"
-to_hit = 4
+to_hit = 11
 on_hit = [{ status = "held", chance = 20, difficulty = 20 }]

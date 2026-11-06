@@ -31,3 +31,4 @@ damage = "2d6"
 damage_type = "slashing"
 name = "claws"
 verb = "claws"
+to_hit = 3

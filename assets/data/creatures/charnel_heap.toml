@@ -29,5 +29,5 @@ damage = "4d6"
 damage_type = "bludgeoning"
 name = "slam"
 verb = "slams"
-to_hit = 2
+to_hit = 5
 on_hit = [{ disease = "filth_fever", chance = 15 }]

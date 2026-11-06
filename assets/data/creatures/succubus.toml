@@ -32,5 +32,5 @@ damage = "3d8"
 damage_type = "necrotic"
 name = "kiss"
 verb = "kisses"
-to_hit = 2
+to_hit = 6
 on_hit = [{ drain = "toughness", points = 1, chance = 15, check = "toughness", difficulty = 17 }]
