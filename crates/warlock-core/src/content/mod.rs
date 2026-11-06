@@ -5469,7 +5469,7 @@ mod tests {
         assert_eq!(
             ids,
             [
-"burnt_steading",
+                "burnt_steading",
                 "catacomb",
                 "drowned_mill",
                 "fairy_ring",
