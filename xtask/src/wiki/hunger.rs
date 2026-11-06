@@ -279,6 +279,15 @@ pub(super) fn corpse_effects(content: &Content) -> String {
                 does.push(format!("{chance}% {} potential +1", stat.name()));
             }
         }
+        for (skill, gift) in &eat.skills {
+            let name = (content.skill_id(skill))
+                .map_or(skill.as_str(), |id| content.skill(id).name.as_str());
+            does.push(format!(
+                "{name} {} (learned at it), up to {}",
+                signed(i32::from(gift.gives)),
+                gift.up_to
+            ));
+        }
         if let Some(heal) = eat.heal {
             does.push(format!("heals {heal} hit points"));
         }

@@ -104,6 +104,17 @@ struct CorpseSpec {
     size: BTreeMap<String, Food>,
     #[serde(default)]
     by_tag: BTreeMap<String, CorpseGifts>,
+    #[serde(default)]
+    skills: BTreeMap<String, SkillNews>,
+}
+
+/// What the eater is told when a corpse teaches a skill (`[corpses.skills]`): `learn` the first
+/// time (they were untrained), `rise` when it adds to it.
+#[derive(Clone, Debug, PartialEq, Eq, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct SkillNews {
+    pub learn: String,
+    pub rise: String,
 }
 
 /// What eating rotten food does (spec §8 "Hunger"), whatever the food: the chance in percent that
@@ -199,6 +210,9 @@ pub struct Corpses {
     /// What a corpse gives the stats by default, by creature tag (`[corpses.by_tag]`): laid
     /// under each creature's `on_eat` at load (`OnEat::resolve`).
     pub by_tag: BTreeMap<String, CorpseGifts>,
+    /// The words of the skills a corpse may teach, by skill id (`[corpses.skills]`): a
+    /// creature's `on_eat` `skills` may name only these.
+    pub skills: BTreeMap<String, SkillNews>,
 }
 
 impl Corpses {
@@ -418,6 +432,12 @@ impl Corpses {
         for (tag, gifts) in &spec.by_tag {
             gifts.check().map_err(|m| format!("by_tag {tag}: {m}"))?;
         }
+        if let Some(id) = (spec.skills.iter())
+            .find(|(_, n)| n.learn.trim().is_empty() || n.rise.trim().is_empty())
+            .map(|(id, _)| id)
+        {
+            return Err(format!("skills {id}: `learn` and `rise` must not be empty"));
+        }
         let sizes = by_size
             .into_iter()
             .collect::<Option<Vec<Food>>>()
@@ -426,6 +446,7 @@ impl Corpses {
             material: spec.material,
             sizes,
             by_tag: spec.by_tag,
+            skills: spec.skills,
         })
     }
 }

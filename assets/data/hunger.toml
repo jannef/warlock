@@ -112,3 +112,11 @@ orc = { train = { toughness = 8 } }
 troll = { train = { toughness = 60 }, widen = { toughness = 5 } }
 vermin = { train = { toughness = 4 } }
 yugoloth = { train = { willpower = 20 } }
+
+# The skills a fresh corpse may teach (a creature's `on_eat` `skills = { decipher_script = {
+# gives = 5, up_to = 30 } }`: an eater untrained in the skill learns it at `gives`, a trained one's
+# rises by `gives` but never past `up_to` from corpses), with what the eater is told: `learn` the
+# first time, `rise` when it adds to it; nothing once it is at `up_to`. A creature may name only
+# the skills here. Literate casters' corpses teach Decipher script (#1103).
+[corpses.skills]
+decipher_script = { learn = "Strange letters swim before your eyes, and settle into sense.", rise = "The letters come clearer." }

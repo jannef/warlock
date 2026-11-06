@@ -249,3 +249,121 @@ fn a_corpse_may_widen_the_potential_and_gourmand_doubles_its_gifts() {
     let more = w.state.player().stats.potential(Stat::Toughness) - potential;
     assert!(usize::from(more) > widened, "{more} against {widened}");
 }
+
+/// The player's Decipher script, `None` while untrained.
+fn decipher(w: &World) -> Option<u16> {
+    let id = w.content().skill_id("decipher_script").expect("the skill");
+    w.state.player().skills.value(id)
+}
+
+/// Sets the player's Decipher script (`None`: untrained), their other skills as they were.
+fn set_decipher(w: &mut World, value: Option<u16>) {
+    let id = w.content().skill_id("decipher_script").expect("the skill");
+    let mut skills = crate::skills::Skills::default();
+    for (other, trained) in w.state.player().skills.iter().filter(|(s, _)| *s != id) {
+        skills.add(other, i32::from(trained.value));
+    }
+    if let Some(v) = value {
+        skills.add(id, i32::from(v));
+    }
+    w.player_mut().skills = skills;
+}
+
+const LEARN: &str = "Strange letters swim before your eyes, and settle into sense.";
+const RISE: &str = "The letters come clearer.";
+
+#[test]
+fn a_casters_corpse_teaches_decipher_script_up_to_its_cap() {
+    let content = content_with(&[]);
+    // The necromancer's: 6, up to 45.
+    let gift = |id: &str| {
+        let creature = content.creature(content.creature_id(id).expect(id));
+        (creature.on_eat.as_ref()).and_then(|e| e.skills.get("decipher_script").copied())
+    };
+    let necromancer = gift("necromancer").expect("a caster's gift");
+    assert_eq!((necromancer.gives, necromancer.up_to), (6, 45));
+    // Beasts and the undead teach nothing.
+    assert_eq!(gift("beetle"), None);
+    assert_eq!(gift("mummy_priest"), None);
+    // Untrained: learned at its `gives`.
+    let mut w = pantry(&content);
+    set_decipher(&mut w, None);
+    eat(&mut w, "necromancer", 0);
+    assert_eq!(decipher(&w), Some(6));
+    assert!(said(&w, LEARN));
+    assert!(!said(&w, RISE));
+    // Trained: it rises by it.
+    let mut w = pantry(&content);
+    set_decipher(&mut w, Some(10));
+    eat(&mut w, "necromancer", 0);
+    assert_eq!(decipher(&w), Some(16));
+    assert!(said(&w, RISE) && !said(&w, LEARN));
+    // Never past the cap, and nothing at it.
+    let mut w = pantry(&content);
+    set_decipher(&mut w, Some(42));
+    eat(&mut w, "necromancer", 0);
+    assert_eq!(decipher(&w), Some(45));
+    let mut w = pantry(&content);
+    set_decipher(&mut w, Some(45));
+    eat(&mut w, "necromancer", 0);
+    assert_eq!(decipher(&w), Some(45));
+    assert!(!said(&w, RISE) && !said(&w, LEARN));
+    // Above the cap (from other sources): nothing taken.
+    let mut w = pantry(&content);
+    set_decipher(&mut w, Some(80));
+    eat(&mut w, "necromancer", 0);
+    assert_eq!(decipher(&w), Some(80));
+}
+
+#[test]
+fn a_rotten_casters_corpse_teaches_nothing() {
+    let content = content_with(&[]);
+    let mut w = pantry(&content);
+    set_decipher(&mut w, None);
+    // Ten hours dead, past its eight.
+    eat(&mut w, "necromancer", 10 * 3600);
+    assert!(said(&w, "Ugh! The necromancer corpse was rotten."));
+    assert_eq!(decipher(&w), None);
+    assert!(!said(&w, LEARN));
+}
+
+#[test]
+fn skill_gifts_out_of_range_or_without_words_are_refused() {
+    let necromancer = "on_eat = { skills = { decipher_script = { gives = 6, up_to = 45 } } }";
+    let refused = |files: ContentFiles| Content::load(&files).expect_err("refused").to_string();
+    let edited = |to: &str| {
+        let mut files = ContentFiles::builtin();
+        let mut found = false;
+        files.edit_table("creatures", |t| {
+            found |= t.contains(necromancer);
+            t.replace(necromancer, to)
+        });
+        assert!(found);
+        files
+    };
+    for (to, says) in [
+        (
+            "on_eat = { skills = { decipher_script = { gives = 50, up_to = 45 } } }",
+            "`gives` is 1 to `up_to`",
+        ),
+        (
+            "on_eat = { skills = { decipher_script = { gives = 0, up_to = 45 } } }",
+            "`gives` is 1 to `up_to`",
+        ),
+        (
+            "on_eat = { skills = { stealth = { gives = 6, up_to = 45 } } }",
+            "`stealth` has no words in [corpses.skills]",
+        ),
+    ] {
+        let e = refused(edited(to));
+        assert!(e.contains(says), "{to}: {e}");
+    }
+    let mut files = ContentFiles::builtin();
+    let text = include_str!("../../../../assets/data/hunger.toml");
+    files.insert(
+        "data/hunger.toml",
+        &text.replace("\ndecipher_script = {", "\ndecypher_script = {"),
+    );
+    let e = refused(files);
+    assert!(e.contains("unknown skill `decypher_script`"), "{e}");
+}

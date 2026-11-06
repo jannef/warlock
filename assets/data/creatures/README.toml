@@ -204,7 +204,10 @@
 #             (said once eaten), vomit = 25 (percent chance it comes back up and feeds nothing),
 #             train = { toughness = 30 } (sure stat training marks per stat, 0 to 200),
 #             widen = { toughness = 5 } (percent chance per stat that the hidden potential rises
-#             by 1, 0 to 20: rare), heal = "1d4" (hit points), harm = "1d2" (degrees of
+#             by 1, 0 to 20: rare), skills = { decipher_script = { gives = 5, up_to = 30 } }
+#             (an untrained eater learns the skill at `gives`, a trained one's rises by `gives`,
+#             never past `up_to`; only skills with words in hunger.toml's `[corpses.skills]`:
+#             literate casters teach Decipher script), heal = "1d4" (hit points), harm = "1d2" (degrees of
 #             sickness: hunger.toml's `sickness`, poison), satiation = 500 (nutrition beyond its
 #             size's; less if negative) }. `train` and `widen` lay over its tags' defaults
 #             (hunger.toml's `[corpses.by_tag]`) per stat; 0 switches a tag's gift off. A

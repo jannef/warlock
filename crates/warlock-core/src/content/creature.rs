@@ -288,7 +288,9 @@ pub(super) struct CreatureSpec {
 /// player tries; a rotten corpse does none of it. Once content has loaded, `train` and `widen`
 /// are the resolved gifts (`Content::load_hunger`): per stat the largest its tags give
 /// (`[corpses.by_tag]`, `data/hunger.toml`), then its own over them (0 switches a tag's gift
-/// off), zeros left out.
+/// off), zeros left out. `skills` teaches skills (`skills = { decipher_script = { gives = 5,
+/// up_to = 30 } }`, [`SkillGift`]); its skill ids are checked when content loads
+/// (`Content::resolve_corpse_gifts`).
 #[derive(Clone, Debug, Default, PartialEq, Eq, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct OnEat {
@@ -314,6 +316,32 @@ pub struct OnEat {
     /// The chance in percent that it comes back up: the eater vomits, and it feeds nothing.
     #[serde(default)]
     pub vomit: u8,
+    /// What it teaches, per skill id in `data/skills.toml` (a caster's corpse, Decipher script).
+    #[serde(default)]
+    pub skills: BTreeMap<String, SkillGift>,
+}
+
+/// What a corpse teaches of one skill: an eater untrained in it learns it at `gives`; a
+/// trained one's value rises by `gives`, never past `up_to` from this source (nothing once
+/// there).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct SkillGift {
+    /// The points it gives, 1 to `up_to`.
+    pub gives: u16,
+    /// The value it raises a skill to at most, up to [`crate::skills::MAX_VALUE`].
+    pub up_to: u16,
+}
+
+impl SkillGift {
+    /// A skill of `value` (`None`: untrained) after the gift; `None` when it gives nothing.
+    pub fn apply(self, value: Option<u16>) -> Option<u16> {
+        match value {
+            None => Some(self.gives.min(self.up_to)),
+            Some(v) if v >= self.up_to => None,
+            Some(v) => Some(v.saturating_add(self.gives).min(self.up_to)),
+        }
+    }
 }
 
 /// The most marks a corpse's `train` gives a stat.
@@ -360,6 +388,14 @@ impl OnEat {
         let max = super::hunger::MAX_NUTRITION;
         if self.satiation.abs() > max {
             return Err(format!("on_eat: `satiation` must be within ±{max}"));
+        }
+        let most = crate::skills::MAX_VALUE;
+        if let Some((id, _)) =
+            (self.skills.iter()).find(|(_, g)| g.gives == 0 || g.gives > g.up_to || g.up_to > most)
+        {
+            return Err(format!(
+                "on_eat: skills {id}: `gives` is 1 to `up_to`, and `up_to` at most {most}"
+            ));
         }
         Ok(())
     }

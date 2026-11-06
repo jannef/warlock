@@ -123,7 +123,15 @@ developer notes (CLAUDE.md, `docs/dev/`).
     strength, nimbleness, hardiness, cunning, resolve, bearing; fewer are quiet, as marks are),
     then a draw with its `widen` chance to raise the potential by 1, never past 40 ("You feel
     you could grow stronger yet." when it rose); a corpse never raises a score itself, the marks
-    wait for the checks (§8 "Stats"); `heal` ("You feel better." when it healed any); `harm` (degrees of sickness, as
+    wait for the checks (§8 "Stats"); per skill in id order its `skills` gift (#1103,
+    `{ gives, up_to }`, no draw): an eater untrained in the skill learns it at `gives` (the
+    skill's `learn` words in `[corpses.skills]`, Decipher script's "Strange letters swim before
+    your eyes, and settle into sense."), a trained one's value rises by `gives` but never past
+    `up_to` ("The letters come clearer."), and at or above `up_to` nothing, said or done; only
+    skills with words in `[corpses.skills]` may be named (only Decipher script now, from the
+    corpses of literate humanoid casters: the tribes' mages, shamans, priests, and hags, never
+    beasts, spirits, fey, or the undead; `gives` about 2 + level ÷ 4, `up_to` about
+    10 + 2 × level, rounded to 5); `heal` ("You feel better." when it healed any); `harm` (degrees of sickness, as
     rotten food's); then it feeds its size's nutrition plus `satiation` (at least 0), overeating as food
     does. `train` (0 to 200 marks a stat) and `widen` (0 to 20 %) default by the creature's
     tags (`[corpses.by_tag]` in `data/hunger.toml`; 1 to 200 marks and 1 to 5 % there): per stat
