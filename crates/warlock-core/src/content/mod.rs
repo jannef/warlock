@@ -2884,6 +2884,24 @@ impl Content {
                 }
             }
         }
+        // A way up (spec §7 "Ways up"): `below` names a level of another, bounded branch of the
+        // same campaign.
+        for def in self.dungeons.values() {
+            let Some(below) = &def.below else { continue };
+            let fits = self.branch_level(below).is_some_and(|(other, _)| {
+                other.id != def.id && other.endless.is_none() && other.campaign == def.campaign
+            });
+            if !fits {
+                return Err(ContentError::new(
+                    "data/dungeons/",
+                    format!(
+                        "dungeon `{}`: `below = \"{below}\"` is no level of another bounded \
+                         branch of its campaign",
+                        def.id
+                    ),
+                ));
+            }
+        }
         for scenario in self.scenarios.values() {
             let file = format!("scenarios/{}.toml", scenario.id);
             let campaign = scenario.campaign.as_deref().unwrap_or_default();
@@ -3736,12 +3754,25 @@ impl Content {
             .is_some_and(|(def, _)| def.endless.is_some())
     }
 
-    /// The hand-made level whose stairs lead to level `id`, if one does: where an endless
-    /// branch's first floor climbs out to, however it was reached.
+    /// The hand-made level whose stairs (or hidden location) lead to level `id`, if one does:
+    /// where an endless branch's or a way up's first floor climbs out to, however it was reached.
     pub fn way_into(&self, id: &str) -> Option<&str> {
+        let leads = |to: &Option<String>| to.as_deref() == Some(id);
         (self.levels.iter())
-            .find(|(_, l)| l.stairs.iter().any(|s| s.to.as_deref() == Some(id)))
+            .find(|(_, l)| {
+                l.stairs.iter().any(|s| leads(&s.to)) || l.hidden.values().any(|h| leads(&h.to))
+            })
             .map(|(from, _)| from.as_str())
+    }
+
+    /// The levels whose stairs down lead to level `id` from below its own branch (spec §7 "Ways
+    /// up"): the deepest level of each branch whose `below` is `id`, in id order. Level `id` gets
+    /// a staircase up to each (`mapgen/way_up.rs`).
+    pub fn ways_up_from(&self, id: &str) -> Vec<String> {
+        (self.dungeons.values())
+            .filter(|d| d.below.as_deref() == Some(id))
+            .map(|d| d.level_id(d.depth))
+            .collect()
     }
 
     pub fn dungeon(&self, id: &str) -> Option<&DungeonDef> {

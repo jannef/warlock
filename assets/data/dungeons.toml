@@ -12,6 +12,10 @@
 #   arrival    a line said each time the player arrives on the first level by stairs (optional)
 #   generator  "rooms" (rooms and corridors, ADOM-like) or "caves" (cellular automata)
 #   depth      number of levels
+#   below      a level of another bounded branch of the same campaign (`below = "fyrdelf:12"`):
+#              the branch is a way up (spec §7 "Ways up"); its deepest level's `>` leads there,
+#              that level gets a `<` back up near a vault it names, and its first level's `<`
+#              climbs out to its way in, however it was entered (default none)
 #   size       [width, height]
 #   creatures  creature ids generators may place on patrol (default none)
 #   traps      trap ids (data/traps.toml) generators hide on each level, all hidden, never on or
