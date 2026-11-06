@@ -110,6 +110,7 @@ above.
 | Chest, locked and trapped chests | `chests.md`, `chests.md#locked-chests`, `chests.md#trapped-chests` |
 | Dungeon, danger level, population | `dungeons.md`, `dungeons.md#who-lives-there-and-how-many` |
 | Out of depth, strays | `dungeons.md#who-lives-there-and-how-many` |
+| Dread, a dread draw | `dungeons.md#dread` |
 | Lairs of the wanted | `dungeons.md#the-lairs-of-the-wanted` |
 | Grundlēas, floors forgotten | `dungeons.md#grundlēas` |
 | Special room | `special-rooms.md` (a room: its row) |

@@ -53,8 +53,8 @@ mod way_up;
 use crate::chest::Chest;
 use crate::content::{
     Content, CreatureId, CreatureSpawn, DungeonDef, Flow, Generator, LevelKind, LevelTemplate,
-    LightId, ObjectId, Place, RoomEffectId, RoomOdds, Secret, ShopOdds, ShopPlan, SpecialRoom,
-    StairsDir, StairsLink, TerrainId, Trap, Vault, VaultMonsters, secret_look,
+    LightId, ObjectId, Place, RoomEffectId, RoomOdds, Secret, ShopOdds, ShopPlan, Spawning,
+    SpecialRoom, StairsDir, StairsLink, TerrainId, Trap, Vault, VaultMonsters, secret_look,
 };
 use crate::door::Lock;
 use crate::geom::{Dir, Pos};
@@ -639,6 +639,12 @@ pub fn generate_for(
             let monsters = std::mem::take(&mut template.monsters);
             if let Some((rule, depth, spawning)) = content.spawning(id) {
                 let danger = rule.at(depth, visit.player_level);
+                // The odds of this floor's own draws: its depth's `dread_one_in`.
+                let odds = (content.draw_odds_at(id)).unwrap_or(spawning.odds);
+                let spawning = &Spawning {
+                    odds,
+                    ..spawning.clone()
+                };
                 population::populate(
                     &mut template,
                     content,

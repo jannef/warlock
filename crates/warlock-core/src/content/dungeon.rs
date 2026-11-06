@@ -42,6 +42,7 @@
 //! out_of_depth = 5             # data/dungeons.toml's `[defaults]`
 //! deeper = 5
 //! deeper_cap = 10
+//! dread_one_in = 100            # one draw in this many among the dread types
 //! spawn = { every = "15m", chance = 60 }
 //!
 //! [[dungeon.levels]]            # optional per-depth overrides, first match wins
@@ -52,10 +53,13 @@
 //! temperature = 7               # default: the branch's temperature
 //! danger = { base = 9, per_depth = 2 }   # default: the branch's (which it needs)
 //! room_effects = { chance = 40 } # default: the branch's (below), field by field
+//! dread_one_in = 50             # default: the branch's (which needs a `danger`)
 //!
 //! [dungeon.endless]             # instead of `depth`: floors without end (`generator` is "rooms")
 //! caves = 15                    # percent of floors that are caves, the rest rooms
 //! caves_size = [100, 40]        # the caves' size; the rooms' is the branch's `size`
+//! dread = { steps = [[70, 40]], halves = 10, least = 5 }   # `dread_one_in` by depth
+//!                               # (`super::dread`), as `[[dungeon.levels]]` give it elsewhere
 //!
 //! [[dungeon.endless.boss]]      # optional, one per layer: a layer boss and its lair
 //! depth = 10                    # the floor (each depth once)
@@ -83,9 +87,11 @@
 use super::ContentError;
 use super::creature::CreatureId;
 use super::danger::{
-    CountSpec, DangerRule, DangerSpec, Odds, OddsSpec, SpawnSpec, Spawning, SpawningSpec, StrayPool,
+    CountSpec, DangerRule, DangerSpec, Odds, OddsSpec, SpawnSpec, Spawning, SpawningSpec,
+    StrayPool, check_dread,
 };
 use super::dialogue::{MAX_REPLY, check_lines};
+use super::dread::{DreadCurve, DreadCurveSpec};
 use super::object::ObjectId;
 use super::room_effect::{RoomEffectId, RoomEffects};
 use super::shop::{ShopId, Shops};
@@ -177,6 +183,7 @@ struct DungeonSpec {
     out_of_depth: Option<u8>,
     deeper: Option<u8>,
     deeper_cap: Option<u8>,
+    dread_one_in: Option<u16>,
     spawn: Option<SpawnSpec>,
     room_effects: Option<RoomOddsSpec>,
     shops: Option<ShopOddsSpec>,
@@ -192,6 +199,8 @@ struct EndlessSpec {
     caves_size: [i32; 2],
     #[serde(default)]
     boss: Vec<BossSpec>,
+    /// `dread_one_in` by depth (`super::dread`).
+    dread: Option<DreadCurveSpec>,
 }
 
 /// One `[[dungeon.endless.boss]]` row.
@@ -523,6 +532,8 @@ struct LevelsSpec {
     size: Option<[i32; 2]>,
     temperature: Option<i8>,
     danger: Option<DangerSpec>,
+    /// One draw in this many among the dread types on these levels; default the branch's.
+    dread_one_in: Option<u16>,
     room_effects: Option<RoomOddsSpec>,
     shops: Option<ShopOddsSpec>,
     /// Vaults (by id) stamped on each of these levels, and nowhere else.
@@ -540,6 +551,8 @@ pub struct LevelPlan {
     pub temperature: Option<Temperature>,
     /// How dangerous it is (spec §7 "Danger levels"); `None`: danger 0, nothing comes.
     pub danger: Option<DangerRule>,
+    /// Its own `dread_one_in` (a `[[dungeon.levels]]` entry's); `None`: the branch's.
+    pub dread_one_in: Option<u16>,
 }
 
 /// A validated dungeon branch.
@@ -559,6 +572,8 @@ pub struct DungeonDef {
     pub endless: Option<Endless>,
     /// An endless branch's layer bosses, by depth (none for any other branch).
     pub bosses: Vec<LayerBoss>,
+    /// An endless branch's `dread_one_in` by depth (`[dungeon.endless.dread]`), if it gives one.
+    pub dread: Option<DreadCurve>,
     pub ambient: Light,
     /// Creatures generators may place on patrol.
     pub creatures: Vec<CreatureId>,
@@ -625,6 +640,15 @@ impl DungeonDef {
             return self.below.clone();
         }
         Some(self.level_id(depth + 1))
+    }
+
+    /// Level `depth`'s own `dread_one_in` (1-based): an endless branch's curve there, else its
+    /// `[[dungeon.levels]]` entry's; `None`: the branch's (docs/design/monster-dread.md §8).
+    pub fn dread_one_in(&self, depth: u32) -> Option<u16> {
+        match &self.dread {
+            Some(curve) => curve.at(depth),
+            None => self.plan(depth)?.dread_one_in,
+        }
     }
 
     /// The special-room odds of level `depth` (1-based), if the branch has that level.
@@ -743,7 +767,7 @@ impl DungeonFile {
     ) -> Result<Vec<DungeonDef>, ContentError> {
         let err = |m: String| ContentError::new(file, m);
         let mut defs: Vec<DungeonDef> = Vec::new();
-        for spec in self.dungeon {
+        for mut spec in self.dungeon {
             let id = spec.id;
             if id.is_empty() || id.contains(':') || id.chars().any(char::is_whitespace) {
                 return Err(err(format!(
@@ -815,6 +839,7 @@ impl DungeonFile {
                     out_of_depth: spec.out_of_depth,
                     deeper: spec.deeper,
                     deeper_cap: spec.deeper_cap,
+                    dread_one_in: spec.dread_one_in,
                 },
                 stray_pool: spec.stray_pool,
                 spawn: spec.spawn,
@@ -855,6 +880,13 @@ impl DungeonFile {
                     ),
                     None => branch_danger,
                 };
+                let dread_one_in = over.and_then(|l| l.dread_one_in);
+                if dread_one_in.is_some() && branch_danger.is_none() {
+                    return Err(err(format!(
+                        "dungeon `{id}`: a level's `dread_one_in` needs the branch's `danger`"
+                    )));
+                }
+                check_dread(dread_one_in).map_err(|m| err(format!("dungeon `{id}`: {m}")))?;
                 check_size(generator, [width, height])?;
                 if let Some(c) = temperature.filter(|c| !LEVEL_TEMPERATURES.contains(c)) {
                     return Err(err(format!(
@@ -869,6 +901,7 @@ impl DungeonFile {
                     height,
                     temperature: temperature.map(|c| Temperature::degrees(c.into())),
                     danger,
+                    dread_one_in,
                 });
                 vaults.push(over.map(|l| l.vaults.clone()).unwrap_or_default());
                 let room_spec = RoomOddsSpec::layer(
@@ -965,12 +998,18 @@ impl DungeonFile {
                     .map_err(|m| err(format!("dungeon `{id}`: `arrival`: {m}")))?;
             }
             let bosses = resolve_bosses(&id, spec.endless.as_ref(), &creature_id).map_err(err)?;
+            let dread = (spec.endless.as_mut())
+                .and_then(|e| e.dread.take())
+                .map(DreadCurveSpec::resolve)
+                .transpose()
+                .map_err(|m| err(format!("dungeon `{id}`: {m}")))?;
             defs.push(DungeonDef {
                 name: spec.name.unwrap_or_else(|| id.clone()),
                 arrival: spec.arrival,
                 id,
                 depth: depth_of,
                 bosses,
+                dread,
                 below: spec.below,
                 endless: spec.endless.map(|e| Endless {
                     caves: e.caves,
@@ -1018,6 +1057,7 @@ mod tests {
                 out_of_depth: 5,
                 deeper: 5,
                 deeper_cap: 10,
+                dread_one_in: 100,
             }),
         )
     }
@@ -1209,6 +1249,7 @@ mod tests {
                 height: 60,
                 temperature: None,
                 danger: None,
+                dread_one_in: None,
             })
         );
         assert_eq!(d.plan(4).map(|p| p.width), Some(80));
@@ -1237,6 +1278,55 @@ mod tests {
         );
         let hot = format!("{plain}temperature = 41\n");
         assert!(resolve(&hot).unwrap_err().message.contains("temperature"));
+    }
+
+    #[test]
+    fn a_depths_dread_one_in_wins_over_the_branchs_over_the_defaults() {
+        let base = "[[dungeon]]\nid = \"d\"\ngenerator = \"rooms\"\ndepth = 3\nsize = [80, 21]\n\
+                    creatures = [\"rat\"]\ndanger = 2\n";
+        let odds = |text: &str| {
+            let defs = resolve(&format!("{base}{text}")).unwrap();
+            let branch = defs[0].spawning.as_ref().unwrap().odds.dread_one_in;
+            [1, 2, 3].map(|depth| defs[0].dread_one_in(depth).unwrap_or(branch))
+        };
+        assert_eq!(odds(""), [100, 100, 100], "the defaults'");
+        assert_eq!(odds("dread_one_in = 60\n"), [60, 60, 60], "the branch's");
+        assert_eq!(
+            odds("dread_one_in = 60\n[[dungeon.levels]]\nfrom = 2\nto = 3\ndread_one_in = 20\n"),
+            [60, 20, 20],
+            "the depths' own"
+        );
+        assert_eq!(
+            odds("[[dungeon.levels]]\nfrom = 3\ndread_one_in = 20\n"),
+            [100, 100, 20]
+        );
+        let refused = |text: &str| resolve(&format!("{base}{text}")).is_err();
+        assert!(refused("dread_one_in = 0\n"));
+        assert!(refused("[[dungeon.levels]]\nfrom = 3\ndread_one_in = 0\n"));
+        let no_danger = "[[dungeon]]\nid = \"d\"\ngenerator = \"rooms\"\ndepth = 3\n\
+                         size = [80, 21]\n[[dungeon.levels]]\nfrom = 3\ndread_one_in = 20\n";
+        assert!(
+            resolve(no_danger).is_err(),
+            "a depth's needs the branch's danger"
+        );
+    }
+
+    #[test]
+    fn an_endless_branch_reads_its_dread_curve_at_the_true_depth() {
+        let text = "[[dungeon]]\nid = \"g\"\ngenerator = \"rooms\"\nsize = [80, 21]\n\
+                    creatures = [\"rat\"]\ndanger = 1\n\
+                    [dungeon.endless]\ncaves = 0\ncaves_size = [100, 40]\n\
+                    dread = { steps = [[30, 80], [70, 40]], halves = 10, least = 5 }\n";
+        let defs = resolve(text).unwrap();
+        let at = |depth| defs[0].dread_one_in(depth);
+        assert_eq!(at(1), None, "above the first step: the branch's");
+        assert_eq!((at(30), at(69)), (Some(80), Some(80)));
+        assert_eq!(
+            (at(70), at(80), at(90), at(100), at(500)),
+            (Some(40), Some(20), Some(10), Some(5), Some(5))
+        );
+        let bad = text.replace("least = 5", "least = 0");
+        assert!(resolve(&bad).is_err());
     }
 
     #[test]

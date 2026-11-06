@@ -11,6 +11,7 @@
 //! out_of_depth = 5                      # percent of draws made 1 deeper, then perhaps more
 //! deeper = 5                            # percent, again and again, of 1 deeper still
 //! deeper_cap = 10                       # the most dangers past the first one deeper
+//! dread_one_in = 100                    # one draw in this many is among the dread types
 //! spawn = { every = "2m", chance = 60, cap = 40 }
 //! ```
 //!
@@ -18,7 +19,7 @@
 //! player-scaled area, the player's level. A level without these fields has danger 0 and nothing
 //! comes there. The rules that use it are `world/spawn.rs`.
 //!
-//! The four odds of a draw ([`Odds`]) default to `data/dungeons.toml`'s `[defaults]` table
+//! The five odds of a draw ([`Odds`]) default to `data/dungeons.toml`'s `[defaults]` table
 //! (required once any area has a danger); a branch or a level may give each of its own. The
 //! generic creature list strays come from is [`Spawning::generic`], filled once everything is
 //! loaded (`Content::fill_generic`): by default every type of the campaign that may stray
@@ -44,6 +45,9 @@ pub const POPULATION: Count = Count::PerCells {
 };
 /// The most dangers an out-of-depth draw may go past its first one deeper (`deeper_cap`).
 pub const MAX_DEEPER_CAP: u8 = 50;
+/// One draw in this many is made among the dread types unless `[defaults]` says otherwise
+/// (`dread_one_in`; owner, 2026-11-06: "let's increase the default to 1-in-100").
+pub const DREAD_ONE_IN: u16 = 100;
 /// The default time between two attempts to bring a creature.
 pub const EVERY: Duration = Duration::minutes(2);
 /// The default chance in percent that an attempt brings one.
@@ -136,8 +140,9 @@ impl Count {
     }
 }
 
-/// The odds of a draw's two departures from an area's own folk at its danger (spec §7 "Danger
-/// levels"): `data/dungeons.toml`'s `[defaults]`, each overridable by a branch or a level.
+/// The odds of a draw's departures from an area's own folk at its danger (spec §7 "Danger
+/// levels"): `data/dungeons.toml`'s `[defaults]`, each overridable by a branch or a level (and
+/// `dread_one_in` by a branch's depths, `[[dungeon.levels]]`).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Odds {
@@ -149,6 +154,15 @@ pub struct Odds {
     pub deeper: u8,
     /// The most dangers an out-of-depth draw goes past its first one deeper.
     pub deeper_cap: u8,
+    /// One draw in this many is made among the dread types ([`draw`]); the rest among the
+    /// others. 0 (never in data, which gives 1 or more): no roll, the flag ignored (a vault's
+    /// monster pool, which places what it places).
+    #[serde(default = "dread_one_in")]
+    pub dread_one_in: u16,
+}
+
+fn dread_one_in() -> u16 {
+    DREAD_ONE_IN
 }
 
 impl Odds {
@@ -166,7 +180,23 @@ impl Odds {
         if self.deeper_cap > MAX_DEEPER_CAP {
             return Err(format!("`deeper_cap` is at most {MAX_DEEPER_CAP}"));
         }
-        Ok(())
+        check_dread(Some(self.dread_one_in))
+    }
+
+    /// These odds with no dread roll: every type drawn by its weight alone, flag or not.
+    pub fn without_dread(self) -> Self {
+        Self {
+            dread_one_in: 0,
+            ..self
+        }
+    }
+}
+
+/// `dread_one_in` as written: 1 (every draw) or more.
+pub(super) fn check_dread(one_in: Option<u16>) -> Result<(), String> {
+    match one_in {
+        Some(0) => Err("`dread_one_in` is 1 or more (one draw in that many)".into()),
+        _ => Ok(()),
     }
 }
 
@@ -237,10 +267,11 @@ pub fn weight(level: u8, factor: u16, danger: u8) -> u32 {
     level_weight(level, danger) * u32::from(factor)
 }
 
-/// A type that may be drawn: its id, its levels, and its rarity's factor. An ordinary type's
-/// levels are its own level twice; a family's (spec §8 "Animated objects": `animated_blade`)
-/// are its range, its id its first member's, the others numbered after it in a row.
-pub type Candidate = (CreatureId, (u8, u8), u16);
+/// A type that may be drawn: its id, its levels, its rarity's factor, and whether it is dread
+/// (`dread = true`). An ordinary type's levels are its own level twice; a family's (spec §8
+/// "Animated objects": `animated_blade`) are its range, its id its first member's, the others
+/// numbered after it in a row.
+pub type Candidate = (CreatureId, (u8, u8), u16, bool);
 
 /// The level candidate levels `(from, to)` stand at in a draw at `danger`: the danger, kept
 /// within them.
@@ -249,20 +280,45 @@ fn level_at((from, to): (u8, u8), danger: u8) -> u8 {
 }
 
 /// The type a candidate drawn at `danger` gives: a family's member of the level it stands at.
-pub fn member((c, levels, _): Candidate, danger: u8) -> CreatureId {
+pub fn member((c, levels, _, _): Candidate, danger: u8) -> CreatureId {
     CreatureId(c.0 + u16::from(level_at(levels, danger) - levels.0))
 }
 
 /// Whether `candidate` weighs anything in a draw at `danger` (out-of-depth draws aside).
-pub fn weighs((_, levels, factor): Candidate, danger: u8) -> bool {
+pub fn weighs((_, levels, factor, _): Candidate, danger: u8) -> bool {
     weight(level_at(levels, danger), factor, danger) > 0
 }
 
-/// Picks a type among `candidates` at `danger` by [`weight`] (a family's at the level it stands
-/// at there, [`member`] its pick), uniform among types of one weight (one `below(total)` of
-/// `rng`); `None` if none weighs anything there.
-fn pick(rng: &mut crate::rng::Rng, candidates: &[Candidate], danger: u8) -> Option<CreatureId> {
-    let weigh = |&(_, l, f): &Candidate| weight(level_at(l, danger), f, danger);
+/// Which candidates a draw may pick: all of them (no dread roll), or only the dread types, or
+/// only the others.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum Among {
+    All,
+    Dread(bool),
+}
+
+impl Among {
+    fn admits(self, &(_, _, _, dread): &Candidate) -> bool {
+        match self {
+            Among::All => true,
+            Among::Dread(want) => dread == want,
+        }
+    }
+}
+
+/// Picks a type among `candidates` that `among` admits at `danger` by [`weight`] (a family's at
+/// the level it stands at there, [`member`] its pick), uniform among types of one weight (one
+/// `below(total)` of `rng`); `None` if none weighs anything there.
+fn pick(
+    rng: &mut crate::rng::Rng,
+    candidates: &[Candidate],
+    danger: u8,
+    among: Among,
+) -> Option<CreatureId> {
+    let weigh = |c: &Candidate| match among.admits(c) {
+        true => weight(level_at(c.1, danger), c.2, danger),
+        false => 0,
+    };
     let total: u32 = candidates.iter().map(weigh).sum();
     if total == 0 {
         return None;
@@ -297,9 +353,16 @@ fn deeper(rng: &mut crate::rng::Rng, danger: u8, odds: &Odds) -> u8 {
 /// [`weight`]. With `odds.out_of_depth` % the draw is made deeper ([`deeper`]); where the own
 /// folk weigh nothing at that depth (all too weak for it), the generic list is drawn there
 /// instead. A draw that finds nothing that deep is made at the danger itself, and a stray that
-/// finds nothing there comes from the own folk. The rolls, in order: stray, out of depth, each
-/// step deeper, then one `below` per pick that finds something. `None` at danger 0 or if nothing
-/// may be drawn.
+/// finds nothing there comes from the own folk.
+///
+/// First of all, one draw in `odds.dread_one_in` is a dread draw (docs/design/monster-dread.md
+/// §8): it is made among the dread types alone (`dread = true`), each at its own weight, and
+/// any other draw among the other types alone. Where the side rolled finds nothing (no dread type
+/// weighs anything here, or only dread types do), the same draw is made among the other side.
+/// `dread_one_in` 0 rolls nothing and draws among every type.
+///
+/// The rolls, in order: dread (unless 0), stray, out of depth, each step deeper, then one
+/// `below` per pick that finds something. `None` at danger 0 or if nothing may be drawn.
 pub fn draw(
     rng: &mut crate::rng::Rng,
     own: &[Candidate],
@@ -310,15 +373,25 @@ pub fn draw(
     if danger == 0 {
         return None;
     }
+    let dread = (odds.dread_one_in > 0).then(|| rng.below(odds.dread_one_in.into()) == 0);
     let stray = rng.chance(odds.stray.into());
     let at = (rng.chance(odds.out_of_depth.into())).then(|| deeper(rng, danger, odds));
     let first = if stray { generic } else { own };
-    if let Some(at) = at
-        && let Some(found) = pick(rng, first, at).or_else(|| pick(rng, generic, at))
-    {
-        return Some(found);
+    let draw_among = |rng: &mut crate::rng::Rng, among: Among| {
+        if let Some(at) = at
+            && let Some(found) =
+                pick(rng, first, at, among).or_else(|| pick(rng, generic, at, among))
+        {
+            return Some(found);
+        }
+        pick(rng, first, danger, among).or_else(|| pick(rng, own, danger, among))
+    };
+    match dread {
+        None => draw_among(rng, Among::All),
+        Some(dread) => {
+            draw_among(rng, Among::Dread(dread)).or_else(|| draw_among(rng, Among::Dread(!dread)))
+        }
     }
-    pick(rng, first, danger).or_else(|| pick(rng, own, danger))
 }
 
 /// `danger = 4` or `danger = { base = 4, per_depth = 1, player = { ... } }`.
@@ -382,6 +455,7 @@ pub(super) struct OddsSpec {
     pub(super) out_of_depth: Option<u8>,
     pub(super) deeper: Option<u8>,
     pub(super) deeper_cap: Option<u8>,
+    pub(super) dread_one_in: Option<u16>,
 }
 
 impl OddsSpec {
@@ -390,6 +464,7 @@ impl OddsSpec {
             || self.out_of_depth.is_some()
             || self.deeper.is_some()
             || self.deeper_cap.is_some()
+            || self.dread_one_in.is_some()
     }
 
     /// The odds: each given field, else `defaults`'.
@@ -399,6 +474,7 @@ impl OddsSpec {
             out_of_depth: self.out_of_depth.unwrap_or(defaults.out_of_depth),
             deeper: self.deeper.unwrap_or(defaults.deeper),
             deeper_cap: self.deeper_cap.unwrap_or(defaults.deeper_cap),
+            dread_one_in: self.dread_one_in.unwrap_or(defaults.dread_one_in),
         };
         odds.check()?;
         Ok(odds)
@@ -483,7 +559,7 @@ impl SpawningSpec {
             if given {
                 return Err(
                     "`population`, `population_count`, `stray`, `stray_pool`, `out_of_depth`, \
-                            `deeper`, `deeper_cap`, and `spawn` need a `danger`"
+                            `deeper`, `deeper_cap`, `dread_one_in`, and `spawn` need a `danger`"
                         .into(),
                 );
             }
@@ -584,6 +660,7 @@ mod tests {
         out_of_depth: 5,
         deeper: 5,
         deeper_cap: 10,
+        dread_one_in: DREAD_ONE_IN,
     };
 
     /// Every draw two deeper.
@@ -592,6 +669,7 @@ mod tests {
         out_of_depth: 100,
         deeper: 100,
         deeper_cap: 1,
+        dread_one_in: 0,
     };
 
     /// No strays and no out-of-depth draws.
@@ -600,6 +678,7 @@ mod tests {
         out_of_depth: 0,
         deeper: 0,
         deeper_cap: 0,
+        dread_one_in: 0,
     };
 
     fn rule(text: &str) -> Result<Option<(DangerRule, Spawning)>, String> {
@@ -725,7 +804,7 @@ mod tests {
     #[test]
     fn draws_stay_within_reach_of_the_danger() {
         let kinds: Vec<Candidate> = (1..=40)
-            .map(|l| (CreatureId(l.into()), (l, l), 100))
+            .map(|l| (CreatureId(l.into()), (l, l), 100, false))
             .collect();
         let mut rng = Rng::stream(7, "test");
         let mut deeper = 0;
@@ -741,7 +820,13 @@ mod tests {
         assert!((20..=80).contains(&deeper), "{deeper}");
         // Nothing within reach: nothing drawn; nothing at danger 0.
         assert_eq!(
-            draw(&mut rng, &[(CreatureId(0), (30, 30), 100)], &[], 3, &PLAIN),
+            draw(
+                &mut rng,
+                &[(CreatureId(0), (30, 30), 100, false)],
+                &[],
+                3,
+                &PLAIN
+            ),
             None
         );
         assert_eq!(draw(&mut rng, &kinds, &kinds, 0, &ODDS), None);
@@ -751,8 +836,8 @@ mod tests {
     fn about_one_draw_in_twenty_is_a_stray() {
         // The own folk and the generic list share nothing here, so every stray shows.
         let (own, generic) = (
-            [(CreatureId(1), (5, 5), 100)],
-            [(CreatureId(2), (5, 5), 100)],
+            [(CreatureId(1), (5, 5), 100, false)],
+            [(CreatureId(2), (5, 5), 100, false)],
         );
         let odds = Odds {
             out_of_depth: 0,
@@ -770,7 +855,7 @@ mod tests {
             (0..2000).all(|_| draw(&mut rng, &own, &generic, 5, &PLAIN) == Some(CreatureId(1)))
         );
         // A stray that finds nothing of the danger comes from the own folk.
-        let far = [(CreatureId(2), (30, 30), 100)];
+        let far = [(CreatureId(2), (30, 30), 100, false)];
         let always = Odds { stray: 100, ..odds };
         assert_eq!(draw(&mut rng, &own, &far, 5, &always), Some(CreatureId(1)));
     }
@@ -799,10 +884,10 @@ mod tests {
 
     #[test]
     fn a_population_too_weak_for_the_depth_falls_back_to_the_generic_list() {
-        let own = [(CreatureId(1), (5, 5), 100)];
+        let own = [(CreatureId(1), (5, 5), 100, false)];
         let generic = [
-            (CreatureId(2), (14, 14), 100),
-            (CreatureId(3), (30, 30), 100),
+            (CreatureId(2), (14, 14), 100, false),
+            (CreatureId(3), (30, 30), 100, false),
         ];
         let mut rng = Rng::stream(4, "test");
         // One deeper: the own type of level 5 still weighs at 6, so it is drawn.
@@ -811,6 +896,7 @@ mod tests {
             out_of_depth: 100,
             deeper: 0,
             deeper_cap: 0,
+            dread_one_in: 0,
         };
         assert!((0..500).all(|_| draw(&mut rng, &own, &generic, 5, &one) == Some(CreatureId(1))));
         // Nine deeper, at 14: level 5 is too weak to weigh, so the generic list is drawn.
@@ -821,7 +907,7 @@ mod tests {
         };
         assert!((0..500).all(|_| draw(&mut rng, &own, &generic, 5, &nine) == Some(CreatureId(2))));
         // Nothing anywhere that deep: the draw is made at the danger.
-        let bare = [(CreatureId(3), (30, 30), 100)];
+        let bare = [(CreatureId(3), (30, 30), 100, false)];
         assert_eq!(draw(&mut rng, &own, &bare, 5, &nine), Some(CreatureId(1)));
     }
 
@@ -830,10 +916,10 @@ mod tests {
         // Seeded statistics with the shipped odds: the own folk at the danger, a generic list
         // of other kinds at every level.
         let own: Vec<Candidate> = (3..=6)
-            .map(|l| (CreatureId(l.into()), (l, l), 100))
+            .map(|l| (CreatureId(l.into()), (l, l), 100, false))
             .collect();
         let generic: Vec<Candidate> = (1..=30)
-            .map(|l| (CreatureId(100 + u16::from(l)), (l, l), 100))
+            .map(|l| (CreatureId(100 + u16::from(l)), (l, l), 100, false))
             .collect();
         let mut rng = Rng::stream(21, "test");
         let (mut strays, mut deep) = (0, 0);
@@ -854,8 +940,8 @@ mod tests {
     /// gives that member, out of depth too.
     #[test]
     fn a_family_weighs_and_gives_its_member_at_the_danger() {
-        let blades: Candidate = (CreatureId(10), (5, 20), 100);
-        let kobold: Candidate = (CreatureId(1), (15, 15), 100);
+        let blades: Candidate = (CreatureId(10), (5, 20), 100, false);
+        let kobold: Candidate = (CreatureId(1), (15, 15), 100, false);
         let mut rng = Rng::stream(3, "test");
         // At 15 it weighs as a level-15 type: as much as the kobold, and it is the 15th blade.
         let mut blades_at_15 = 0;
@@ -901,7 +987,10 @@ mod tests {
     #[test]
     fn a_rare_type_is_drawn_far_less_often() {
         // Two types of one level: a common one and a rare one (a quarter of the weight).
-        let kinds = [(CreatureId(1), (4, 4), 100), (CreatureId(2), (4, 4), 25)];
+        let kinds = [
+            (CreatureId(1), (4, 4), 100, false),
+            (CreatureId(2), (4, 4), 25, false),
+        ];
         let mut rng = Rng::stream(11, "test");
         let mut rare = 0;
         for _ in 0..4000 {
@@ -920,9 +1009,9 @@ mod tests {
     fn out_of_depth_draws_weigh_rarity_too() {
         // Nothing at the danger but a common type; deeper, a common and a very rare one.
         let kinds = [
-            (CreatureId(1), (3, 3), 100),
-            (CreatureId(2), (5, 5), 100),
-            (CreatureId(3), (5, 5), 10),
+            (CreatureId(1), (3, 3), 100, false),
+            (CreatureId(2), (5, 5), 100, false),
+            (CreatureId(3), (5, 5), 10, false),
         ];
         let mut rng = Rng::stream(5, "test");
         let (mut deep, mut very_rare) = (0, 0);
@@ -936,5 +1025,123 @@ mod tests {
         assert!(deep > 2400, "{deep}");
         assert!(very_rare * 6 < deep, "{very_rare} of {deep}");
         assert!(very_rare > 0);
+    }
+
+    /// Two plain types and two dread ones, all at the danger: the dread at rarity 100 and 10.
+    fn with_dread() -> [Candidate; 4] {
+        [
+            (CreatureId(1), (5, 5), 100, false),
+            (CreatureId(2), (5, 5), 100, false),
+            (CreatureId(3), (5, 5), 100, true),
+            (CreatureId(4), (5, 5), 10, true),
+        ]
+    }
+
+    #[test]
+    fn one_draw_in_dread_one_in_is_among_the_dread_types_alone() {
+        let own = with_dread();
+        let odds = Odds {
+            dread_one_in: 10,
+            ..PLAIN
+        };
+        let mut rng = Rng::stream(5, "test");
+        let mut counts = [0u32; 5];
+        for _ in 0..20_000 {
+            let c = draw(&mut rng, &own, &own, 5, &odds).expect("a draw");
+            counts[usize::from(c.0)] += 1;
+        }
+        let dread = counts[3] + counts[4];
+        // One in ten is 2000; the seeded count is fixed, the bounds allow for chance.
+        assert!((1800..=2200).contains(&dread), "{counts:?}");
+        // Among the dread, each by its own rarity: 100 to 10.
+        assert!(counts[3] > counts[4] * 6 && counts[4] > 0, "{counts:?}");
+        // Among the rest, the plain types alike.
+        assert!(counts[1].abs_diff(counts[2]) < 800, "{counts:?}");
+    }
+
+    #[test]
+    fn a_dread_hit_with_no_dread_type_draws_the_ordinary_way_and_back() {
+        let plain = [(CreatureId(1), (5, 5), 100, false)];
+        let dread = [(CreatureId(3), (5, 5), 100, true)];
+        // Every draw dread, none there: the plain type.
+        let always = Odds {
+            dread_one_in: 1,
+            ..PLAIN
+        };
+        let mut rng = Rng::stream(6, "test");
+        assert!(
+            (0..200).all(|_| draw(&mut rng, &plain, &plain, 5, &always) == Some(CreatureId(1)))
+        );
+        // A dread type too deep for the danger weighs nothing: the plain type again.
+        let deep = [plain[0], (CreatureId(3), (30, 30), 100, true)];
+        assert!((0..200).all(|_| draw(&mut rng, &deep, &deep, 5, &always) == Some(CreatureId(1))));
+        // No dread roll hits, only dread types: they come all the same.
+        let never = Odds {
+            dread_one_in: u16::MAX,
+            ..PLAIN
+        };
+        assert!((0..200).all(|_| draw(&mut rng, &dread, &dread, 5, &never) == Some(CreatureId(3))));
+    }
+
+    #[test]
+    fn a_dread_draw_takes_a_stray_from_the_generic_list() {
+        // The own folk have no dread type; the generic list has: a stray brings it.
+        let own = [(CreatureId(1), (5, 5), 100, false)];
+        let generic = [own[0], (CreatureId(3), (5, 5), 100, true)];
+        let odds = Odds {
+            stray: 100,
+            dread_one_in: 1,
+            ..PLAIN
+        };
+        let mut rng = Rng::stream(7, "test");
+        assert!((0..200).all(|_| draw(&mut rng, &own, &generic, 5, &odds) == Some(CreatureId(3))));
+    }
+
+    #[test]
+    fn with_no_dread_roll_the_flag_is_not_read() {
+        let own = with_dread();
+        let none = PLAIN.without_dread();
+        let mut rng = Rng::stream(8, "test");
+        let mut counts = [0u32; 5];
+        for _ in 0..20_000 {
+            counts[usize::from(draw(&mut rng, &own, &own, 5, &none).expect("a draw").0)] += 1;
+        }
+        // Weights 100, 100, 100, 10 of 310: the dread types 110 of them, over a third.
+        let dread = counts[3] + counts[4];
+        assert!((6500..=7700).contains(&dread), "{counts:?}");
+    }
+
+    #[test]
+    fn the_dread_roll_is_the_same_with_the_same_stream() {
+        let own = with_dread();
+        let odds = Odds {
+            dread_one_in: 3,
+            ..ODDS
+        };
+        let run = |seed| {
+            let mut rng = Rng::stream(seed, "test");
+            (0..500)
+                .map(|_| draw(&mut rng, &own, &own, 5, &odds))
+                .collect::<Vec<_>>()
+        };
+        assert_eq!(run(9), run(9));
+        assert_ne!(run(9), run(10));
+    }
+
+    #[test]
+    fn dread_one_in_is_one_or_more() {
+        assert!(rule("danger = 2\npopulation = [\"rat\"]\ndread_one_in = 0\n").is_err());
+        let (_, s) = rule("danger = 2\npopulation = [\"rat\"]\ndread_one_in = 7\n")
+            .unwrap()
+            .unwrap();
+        assert_eq!(s.odds.dread_one_in, 7);
+        let (_, s) = rule("danger = 2\npopulation = [\"rat\"]\n")
+            .unwrap()
+            .unwrap();
+        assert_eq!(s.odds.dread_one_in, DREAD_ONE_IN, "the default's");
+        assert!(rule("dread_one_in = 7\n").is_err(), "needs a danger");
+        let bad = "[defaults]\nstray = 5\nout_of_depth = 5\ndeeper = 5\ndeeper_cap = 5\n\
+                   dread_one_in = 0\n";
+        assert!(DefaultsFile::parse(bad).is_err());
     }
 }
