@@ -176,6 +176,7 @@ impl World {
             }
         }
         self.end_resources_of(id, ended, events);
+        self.unveiled(id, ended);
         self.keep_hp_within_max(id);
         // Rage's end leaves the frenzy for the aggressive stance (`frenzy.rs`).
         self.settle_stance(id);

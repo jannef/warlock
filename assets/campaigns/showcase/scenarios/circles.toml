@@ -13,5 +13,5 @@ hp = 30
 mana = 300
 # Every buff and hex spell (assets/data/spells/, kind = "buff" or "hex"), known from the start
 # (spec §4.8 "Spell circles", docs/design/buff-circles.md §13).
-spells = ["light", "haste", "barkskin", "blessing", "brand", "fire_cloak", "water_walking", "nightsight", "glamour", "renewal", "evil_eye", "hex_of_weakness", "curse_of_sloth", "sleep", "web", "bramble", "sense_the_quick", "bind", "fear", "silence", "mesmerise", "slumber"]
+spells = ["light", "haste", "barkskin", "blessing", "brand", "fire_cloak", "water_walking", "nightsight", "glamour", "renewal", "evil_eye", "hex_of_weakness", "curse_of_sloth", "sleep", "web", "bramble", "sense_the_quick", "see_invisible", "bind", "fear", "silence", "mesmerise", "slumber"]
 wield = ["lantern"]

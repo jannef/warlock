@@ -156,7 +156,10 @@ nose, `World::scented` remembers it in `CompanionData::scent` and says "Snel gro
 once per thing scented, when the player sees the beast and not what it smells (a summon with a
 nose, the dev `ally:hound`, hunts in silence: it has no memory for the growl). A door it cannot
 open keeps it from what it smells: it waits for the ranger to open it. Nothing here draws from
-any stream.
+any stream. The same nose shows the player the unseen (`world/unseen.rs::unseen_by_player`, by
+`smelt_within`): an invisible or shadowy creature within the companion's `nose` is in the
+player's perception, wherever the companion stands on the level (not in the retinue), with or
+without Hunter's bond.
 
 ## The words
 

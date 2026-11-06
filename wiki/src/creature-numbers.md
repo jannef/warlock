@@ -186,6 +186,25 @@ a closed door between you is still a door.
 
 {{#include generated/creature-blinks.md}}
 
+### The unseen
+
+Some creatures you do not see though you see where they stand. A **shadowy** one, on a cell
+whose light is under twice what your [eyes](vision.md) need to see at all, is not there to you
+however good your darkvision, until it stands beside you; you feel a cold draught as one you do
+not see comes within two cells. An **invisible** one is not there to you in any light and at any
+distance: the invisible stalker always, and the rest while they are
+[Invisible](status-effects.md#status-invisible), which they give themselves at the start of their
+turn whenever the time below has passed since the last, at no cost, and then go on with their
+turn. While invisible a creature sheds no light of its own. What shows them after all:
+[Seeing](status-effects.md#status-seeing) (the spell [See invisible](magic.md#spell-see-invisible)
+and the potion of seeing), [Blood scent](talents.md#talent-blood-scent) on one it scents, your
+companion's [nose](allies.md#companions), and a blow of yours that hits, for that turn. You hear them as
+you hear anyone: their steps, and the fighting where an unseen blow came from. Their blows are
+something's; walking into one strikes at it at −4 to hit. One that hunts by scent comes to you
+wherever you are on its level.
+
+{{#include generated/creature-unseen.md}}
+
 ### Spells
 
 Casters cast real [spells](magic.md), the very ones you may learn, rolled at their own

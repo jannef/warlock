@@ -53,3 +53,7 @@ riders = [
     { status = "frightened", chance = 100, severity = 1 },
     { status = "transfixed", chance = 100, severity = 1 },
 ]
+
+# It fades from sight on a cooldown (docs/dev/creatures.md "The unseen").
+[creature.invisible]
+cooldown = 300

@@ -16,8 +16,10 @@
 //!   speaker `to` and handed in there.
 //! - `escort`: `target` a level id, `escort` a unique character (an npc id with a dialogue):
 //!   chatted with while the quest is active, they fall in behind the player saying `joins`
-//!   (`world/escort.rs`); the quest is done, `done` said by them, when they stand on the
-//!   target level with the player. Their death fails it.
+//!   (`world/escort.rs`); the quest is done when they stand on the target level with the
+//!   player: they say `thanks` (optional), and the giver, if on that level, else the escort,
+//!   says `done` and pays. `waits` places the escort as the quest is given
+//!   (`world/escort_waits.rs`). Their death fails it.
 //!
 //! Asking the giver about a quest **gives** it (there is no accepting or declining, #422): the
 //! giver says `offer`, then `accept` (optional) in the same reply, and it is active at once.
@@ -112,6 +114,8 @@ struct QuestSpec {
     what: Option<String>,
     escort: Option<String>,
     joins: Option<String>,
+    thanks: Option<String>,
+    waits: Option<WaitsSpec>,
     #[serde(default)]
     reward: RewardSpec,
     offer: Option<String>,
@@ -146,6 +150,26 @@ impl Requires {
             Requires::Many(ids) => ids,
         }
     }
+}
+
+/// An escort quest's `waits = { creature = "cottar", level = "aelfham:3", at = "the moss bed" }`.
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct WaitsSpec {
+    creature: String,
+    level: String,
+    at: String,
+}
+
+/// Where an escort quest places its escort as it is given (`world/escort.rs`, [`Waits`]): a
+/// creature of type `creature` that is the escort, on the named place `at` of level `level`.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct Waits {
+    pub creature: CreatureId,
+    pub level: String,
+    /// A named place of the level (a legend's `name`: a hand-made level's, or a vault's the
+    /// level stamps for certain).
+    pub at: String,
 }
 
 /// A quest's `reveals = { location = "ID", when = "given" }`.
@@ -255,6 +279,11 @@ pub enum Goal {
         escort: DialogueId,
         level: String,
         joins: String,
+        /// What the escort says as they come home, before whoever thanks the player says
+        /// `done` (`world/escort.rs`).
+        thanks: Option<String>,
+        /// Where the quest places the escort as it is given; `None`: a level places them.
+        waits: Option<Waits>,
     },
 }
 
@@ -583,6 +612,8 @@ fn resolve(
     if kind != QuestKind::Escort {
         unused("escort", spec.escort.is_some())?;
         unused("joins", spec.joins.is_some())?;
+        unused("thanks", spec.thanks.is_some())?;
+        unused("waits", spec.waits.is_some())?;
     }
     let goal = match kind {
         QuestKind::Kill => {
@@ -707,10 +738,16 @@ fn resolve(
             }
             let joins = spec.joins.clone().ok_or("an escort quest needs `joins`")?;
             check_lines([&joins], MAX_REPLY)?;
+            check_lines(spec.thanks.iter(), MAX_REPLY)?;
+            let waits = (spec.waits.as_ref())
+                .map(|w| waits(content, campaign, w))
+                .transpose()?;
             Goal::Escort {
                 escort,
                 level: target,
                 joins,
+                thanks: spec.thanks.clone(),
+                waits,
             }
         }
     };
@@ -793,6 +830,40 @@ fn resolve(
         reveals,
         where_: spec.where_,
         roll,
+    })
+}
+
+/// An escort quest's `waits`, checked: a known creature type, a level of the campaign, and a
+/// place of that name on it (a hand-made level's, or a vault's its branch level stamps for
+/// certain), exactly one.
+fn waits(content: &Content, campaign: &str, w: &WaitsSpec) -> Result<Waits, String> {
+    let creature = (content.creature_id(&w.creature))
+        .filter(|_| w.creature != "player")
+        .ok_or_else(|| format!("`waits`: unknown creature `{}`", w.creature))?;
+    if !content.has_level(campaign, &w.level) {
+        return Err(format!("`waits`: unknown level `{}`", w.level));
+    }
+    let named = |places: &std::collections::BTreeMap<crate::geom::Pos, super::Place>| {
+        places.values().filter(|p| p.name == w.at).count()
+    };
+    let found = match (content.level(&w.level), content.branch_level(&w.level)) {
+        (Some(level), _) => named(&level.places),
+        (None, Some((dungeon, depth))) => (dungeon.vaults(depth).iter())
+            .filter_map(|id| content.vaults().iter().find(|v| v.id() == id))
+            .map(|v| named(&v.template.places))
+            .sum(),
+        (None, None) => 0,
+    };
+    if found != 1 {
+        return Err(format!(
+            "`waits`: level `{}` has {found} places named `{}`, not one",
+            w.level, w.at
+        ));
+    }
+    Ok(Waits {
+        creature,
+        level: w.level.clone(),
+        at: w.at.clone(),
     })
 }
 

@@ -42,3 +42,7 @@ The dread design's D7 (#1131): the ember beetle's acid blood pits a weapon that 
 (`corrodes = { chance = 25, what = "weapon" }`, `world/corrode.rs`) and spatters whoever strikes it in melee (`innate = ["acid_blood"]`, a
 status that `retaliates` acid `1d3`, #1128's innate statuses), and the marsh troll is a brute that regenerates (`regen = 400`,
 `2d8`, `base_hp` 36; `docs/dev/creatures/trolls.md`).
+
+The will-o'-wisp (#1132, docs/dev/creatures.md "The unseen"): `[creature.invisible] cooldown =
+300`, it winks out with its light (an invisible creature sheds none of its own) and comes again
+unseen; its spark sets the struck one's mana ebbing (`ebbing`, 30 % of hits).

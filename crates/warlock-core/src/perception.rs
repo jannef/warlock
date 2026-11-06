@@ -30,6 +30,12 @@
 //! [`LightBlind`](crate::content::LightBlind): drow) whose own cell is lit at least to its
 //! `glare` is dazzled: they see nothing farther than its `sight`.
 //!
+//! **The unseen** (`world/unseen.rs`): a shadowy creature on a cell dim to the player's eyes
+//! (not beside them) and an invisible one anywhere are left out of the actors, and their cells
+//! show no one ([`Perception::sees_actors_at`]), unless Seeing, Blood scent, the companion's nose,
+//! or a blow that just found it shows them; their cells count as hidden to the player's hearing,
+//! so what they make is heard there.
+//!
 //! **Hunter's bond** (spec §8 "Allies"; `TalentMods::shared_sight`): with the player's companion
 //! on their level, a **second viewpoint** ([`BondView`]): the cells the companion sees by its own
 //! line of sight and eyes ([`crate::sight::sees_by`], creature sight's rule) are seen, with wall
@@ -538,6 +544,12 @@ pub(crate) struct Perception {
     /// The disguised mimics of the level (`world/mimic.rs`), by position: each is a shut chest to
     /// the player, never an actor, but those Chest-wise sees through.
     disguises: Vec<Disguise>,
+    /// Those on the level the player does not see for being unseen (`world/unseen.rs`), in
+    /// actor id order.
+    concealed: Vec<crate::world::Concealed>,
+    /// An unseen shadowy creature is within [`crate::world::DRAUGHT`] of the player: they feel
+    /// its cold.
+    draught: bool,
     /// The zones on the cells the player sees (`world/zone.rs`), by position.
     zones: BTreeMap<Pos, ZoneKind>,
     /// The player's allies, wherever they are (`world/ally.rs`), in actor id order: the player
@@ -798,6 +810,7 @@ impl Perception {
         }
         // Blood scent (spec §8 "Talents"): creatures suffering a status, in line of sight within
         // its radius, however dark their cells.
+        let mut scented = Vec::new();
         if !overworld && !talents.scent.is_empty() {
             // A full moon lengthens a gift's (Hound's nose; spec §8 "Birth sign").
             let moon = if talents.gift_reach.scent.is_empty() {
@@ -823,6 +836,7 @@ impl Perception {
                     })
                 });
             for a in smelt {
+                scented.push(a.id);
                 if sight[a.pos] == Sight::Hidden {
                     sight[a.pos] = Sight::Seen;
                     visible_cells.push(a.pos);
@@ -946,6 +960,14 @@ impl Perception {
             })
             .collect();
 
+        // The unseen (`world/unseen.rs`): the shadowy on cells dim to the player's eyes, and the
+        // invisible.
+        let dim = |p: Pos| !overworld && light.get(p).is_some_and(|l| eye.dim(*l));
+        let concealed = world::unseen_by_player(state, content, &dim, &scented);
+        let draught =
+            (concealed.iter()).any(|c| c.shadowy && c.pos.chebyshev(viewer) <= world::DRAUGHT);
+        let unseen = |a: &Actor| concealed.iter().any(|c| c.id == a.id);
+
         // A disguised mimic is a shut chest (`world/mimic.rs`), but to Chest-wise within its
         // reach where the player sees it.
         let reach = talents.sees_mimics;
@@ -977,7 +999,7 @@ impl Perception {
             .filter(|a| a.level == level.id && sight.get(a.pos) == Some(&Sight::Seen))
             // The retinue is with the player, not on the map (`world/ally.rs`).
             .filter(|a| !a.in_retinue())
-            .filter(|a| !hidden(a))
+            .filter(|a| !hidden(a) && !unseen(a))
             .collect();
         // Averted eyes (`world/avert.rs`): a hostile whose gaze is marked `averted`, seen.
         let looker = state.player().faction(content);
@@ -1080,7 +1102,11 @@ impl Perception {
         let player = state.player();
         let sounds = match player.hearing(content) {
             Some(threshold) => {
-                let hidden = |p: Pos| sight.get(p) == Some(&Sight::Hidden) && p != viewer;
+                let hidden = |p: Pos| {
+                    p != viewer
+                        && (sight.get(p) == Some(&Sight::Hidden)
+                            || concealed.iter().any(|c| c.pos == p))
+                };
                 // Watchful (spec §8 "Birth sign"): footsteps placed exactly; the ranger's
                 // Tracker: every sound.
                 let exact = match (talents.exact_sounds, talents.exact_footsteps) {
@@ -1116,6 +1142,8 @@ impl Perception {
             dazzled: dazzled.is_some(),
             averted,
             disguises,
+            concealed,
+            draught,
             zones,
             allies: allies_of(state, content),
             ally_ailments: crate::heal::of_allies(&crate::world::allies_beside(state), content),
@@ -1171,9 +1199,26 @@ impl Perception {
     }
 
     /// Whether the player does not see `p`, a cell of the level that is not their own: where
-    /// they may place a sound they hear ([`noise::rough_place`]).
+    /// they may place a sound they hear ([`noise::rough_place`]). The cell of one unseen
+    /// (`world/unseen.rs`) is such a cell.
     pub(crate) fn hides(&self, p: Pos) -> bool {
-        self.sight.get(p) == Some(&Sight::Hidden) && p != self.viewer
+        p != self.viewer
+            && (self.sight.get(p) == Some(&Sight::Hidden) || self.concealed_at(p).is_some())
+    }
+
+    /// The one the player does not see for being unseen at `p`, if any.
+    fn concealed_at(&self, p: Pos) -> Option<&crate::world::Concealed> {
+        self.concealed.iter().find(|c| c.pos == p)
+    }
+
+    /// Whether actor `id` is one the player does not see for being unseen (`world/unseen.rs`).
+    pub(crate) fn conceals(&self, id: ActorId) -> bool {
+        self.concealed.iter().any(|c| c.id == id)
+    }
+
+    /// Whether an unseen shadowy creature is near enough for the player to feel its draught.
+    pub(crate) fn draught(&self) -> bool {
+        self.draught
     }
 
     /// Whether actor `id` is among those the player sees (a disguised mimic is not, unless
@@ -1185,7 +1230,9 @@ impl Perception {
     /// Whether creatures at `p` can be seen: only in line of sight, never on completed walls.
     /// A disguised mimic's cell shows a chest, and no one in it.
     pub(crate) fn sees_actors_at(&self, p: Pos) -> bool {
-        self.sight.get(p) == Some(&Sight::Seen) && self.disguise_at(p).is_none()
+        self.sight.get(p) == Some(&Sight::Seen)
+            && self.disguise_at(p).is_none()
+            && self.concealed_at(p).is_none()
     }
 
     /// Whether the player sees the blood at `p` (module docs).

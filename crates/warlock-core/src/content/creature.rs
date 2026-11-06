@@ -207,6 +207,17 @@ pub(super) struct CreatureSpec {
     /// Whether it lurks: waits where it stands for a hostile it sees to come beside it.
     #[serde(default)]
     pub lurks: bool,
+    /// Whether it hunts the player by scent: with no hostile in sight, it goes to where the
+    /// player is (the invisible stalker; docs/dev/creatures.md "The unseen").
+    #[serde(default)]
+    pub hunts: bool,
+    /// Whether it is shadowy: unseen by the player on a dim cell (docs/dev/creatures.md "The
+    /// unseen").
+    #[serde(default)]
+    pub shadowy: bool,
+    /// Whether it is invisible: `invisible = true`, never seen, or `[creature.invisible]`, it
+    /// fades on a cooldown (docs/dev/creatures.md "The unseen").
+    pub invisible: Option<super::unseen::InvisibleSpec>,
     /// Whether it lets the player swap places with it.
     #[serde(default)]
     pub budge: Budge,
@@ -770,6 +781,7 @@ pub(super) struct Resolved {
     pub presence: super::aura::Presence,
     pub steals: Option<Steals>,
     pub blinks: Option<Blinks>,
+    pub invisible: Option<super::Invisible>,
     pub weapon_skills: WeaponSkills,
     pub resist: Vec<(DamageTypeId, i32)>,
     pub immune: Vec<StatusId>,
@@ -801,6 +813,9 @@ impl CreatureSpec {
             spells: r.spells,
             opens_doors: self.opens_doors,
             lurks: self.lurks,
+            hunts: self.hunts,
+            shadowy: self.shadowy,
+            invisible: r.invisible,
             budge: self.budge,
             attack_cost: self.attack_cost,
             light: r.light,
@@ -941,6 +956,17 @@ pub struct CreatureDef {
     /// Whether it lurks (spec §8 "Creature behavior"; `ai.rs::fight`): a hostile it sees, it
     /// waits for where it stands until the hostile is beside it or it has been harmed. Rules only.
     pub lurks: bool,
+    /// Gameplay: whether it hunts the player by scent: with no hostile in sight it goes to the
+    /// player's cell, wherever they are on its level, and never idles (`world/unseen.rs`).
+    /// Rules only.
+    pub hunts: bool,
+    /// Gameplay: whether it is shadowy (docs/dev/creatures.md "The unseen"): on a cell dim to
+    /// the player's eyes it is not in their perception, unless beside them. Rules only (the wiki
+    /// states it).
+    pub shadowy: bool,
+    /// Gameplay: whether it is invisible, innately or by a fading on a cooldown
+    /// (docs/dev/creatures.md "The unseen"). Rules only (the wiki states it).
+    pub invisible: Option<super::Invisible>,
     /// Gameplay: whether the player may swap places with it when it is not hostile (spec §8
     /// "Displacement").
     pub budge: Budge,

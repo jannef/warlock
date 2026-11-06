@@ -917,11 +917,16 @@ the shape too and refuses each field off its kind and shape).
 - **`senses = { reach, kind }`** on a status (Quick-sensed, Sense the quick's buff; `reach` 1 to 20):
   `World::heartbeats` at the end of `run_turn` pushes a `Heard` of `kind` at the player's own
   hearing threshold (so faint: up to 2 cells off) for every creature on the level within `reach`
-  that is not undead, a construct (by tag), or an animated thing. Perception's `noise::perceive`
+  that is not undead, a construct, an elemental (by tag), or an animated thing. Perception's `noise::perceive`
   leaves out the ones the player sees and places the rest roughly; `Exact::All` (Tracker) never
   places a heartbeat exactly. The deaf feel nothing. `SoundKind::Heartbeat`, "a heartbeat", `q` in
   the sound layer. The circled status (`data/circles.toml`, divination) sheds its circle's light,
   as every circled buff does.
+- **See invisible** (divination, level 7, a buff on `self`): Seeing (`seeing`, five minutes),
+  a status that `sees_unseen`: while it lasts `world::unseen_by_player` hides no one, the
+  invisible and the shadowy in the dim alike (docs/dev/creatures.md "The unseen"). The potion of
+  seeing gives the same status (a `vision` drink whose status `sees_unseen`). Circled
+  (divination).
 - **Shatter**: data only on force's rules, with the `shatter` burst effect (`data/effects.toml`:
   white and brief); Thunderclap's look too.
 - **The class test** (`spell_list_tests.rs`): a full caster's book is three to twelve spells (Q13),

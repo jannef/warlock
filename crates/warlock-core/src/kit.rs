@@ -290,10 +290,12 @@ mod tests {
                 .filter(|o| spells.contains(o))
                 .map(str::to_string)
                 .collect();
-            assert_eq!(found.len(), 1, "{found:?}");
-            found[0].clone()
+            // The kit's pick, and now and then the same spell's scroll among the random low
+            // ones (frost is below level 10).
+            assert!((1..=2).contains(&found.len()), "{found:?}");
+            found
         };
-        let picked: std::collections::BTreeSet<String> = (0..40).map(scroll).collect();
+        let picked: std::collections::BTreeSet<String> = (0..40).flat_map(scroll).collect();
         assert_eq!(picked.len(), 3, "{picked:?}");
         for seed in 0..10 {
             assert_eq!(scroll(seed), scroll(seed));

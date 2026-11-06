@@ -34,3 +34,6 @@ magic = 15
 [[creature.gear]]
 chance = 80
 one_of = ["chain_mail"]
+# It fades from sight on a cooldown (docs/dev/creatures.md "The unseen").
+[creature.invisible]
+cooldown = 300

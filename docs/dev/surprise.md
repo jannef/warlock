@@ -143,6 +143,11 @@ so after a trap's line and before a creature's attack line); made: "You keep you
 you." (`say` for an attack, before its line; `news` for a trap, after its line). Look mode shows
 "surprised" (`seen`); the status bar shows Surprised.
 
+An unseen creature (`world/unseen.rs`: invisible, or shadowy in the dim) is never in the
+player's perception, so `Mind::noticed` is never set for it: its blow finds the player unaware
+as any unnoticed creature's does. A blow the player lands on one shows it for the turn
+(`Mind::glimpsed`), and it is noticed then.
+
 ## Invariants
 
 - One definition of unaware, one place anyone is surprised, one place the dear action is priced.

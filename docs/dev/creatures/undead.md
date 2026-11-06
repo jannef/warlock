@@ -124,3 +124,7 @@ burrowing worms kept); the **wormlord** (47) dies into `3d6` within 2 and breeds
 fights (`[creature.summon]` of grave worms, `1d2` every 30 s, `most = 6`, no mana, verb "sheds";
 tagged `summoner`); the **nightworm** (63) swallows (`swallowed`) in place of its hold. All four
 are dread at their tiers (D0). Tests: `world/split_tests.rs`.
+
+The shadowy (#1132, docs/dev/creatures.md "The unseen"): the shadow, the greater shadow,
+the deathshade, and the sluagh have `shadowy = true`: on a cell dim to the player's eyes they are
+unseen unless beside them, and a cold draught tells of one within 2. Their drains are kept.
