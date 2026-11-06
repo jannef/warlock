@@ -8,6 +8,7 @@ xp = 150
 rarity = "uncommon"
 dread = true
 name = "chasme"
+first_sight = "A chasme. Its droning would lull you to sleep."
 glyph = "u"
 fg = "#606a80"
 speed = 1350

@@ -9,6 +9,7 @@ rarity = "rare"
 dread = true
 loot = 40
 name = "drow assassin"
+first_sight = "A drow assassin. You see it now; you may not see it again."
 glyph = "e"
 fg = "#9a3a5a"
 speed = 1350

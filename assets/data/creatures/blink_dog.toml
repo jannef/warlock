@@ -9,6 +9,7 @@ xp = 80
 rarity = "uncommon"
 dread = true
 name = "blink dog"
+first_sight = "A blink dog. It will not stay where you left it."
 glyph = "C"
 fg = "#d8c060"
 speed = 1250

@@ -10,6 +10,7 @@ xp = 275
 rarity = "rare"
 dread = true
 name = "ghost lord"
+first_sight = "A ghost lord. Blades pass through it as through smoke."
 glyph = "G"
 fg = "#f0e8f8"
 speed = 1150

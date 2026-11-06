@@ -11,6 +11,7 @@ dread = true
 invisible = true
 hunts = true
 name = "invisible stalker"
+first_sight = "An invisible stalker, seen for once. It will not stay seen."
 glyph = "E"
 fg = "#e0e8f0"
 speed = 1500

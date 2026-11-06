@@ -9,6 +9,7 @@ xp = 320
 rarity = "very_rare"
 dread = true
 name = "balor"
+first_sight = "A balor, wreathed in flame. Few who see one live to say so."
 glyph = "U"
 fg = "#ffb030"
 speed = 1100

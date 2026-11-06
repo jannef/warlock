@@ -8,6 +8,7 @@ xp = 90
 rarity = "rare"
 dread = true
 name = "vampire spawn"
+first_sight = "Vampire spawn. Its master cannot be far."
 plural = "vampire spawn"
 glyph = "V"
 fg = "#b03040"

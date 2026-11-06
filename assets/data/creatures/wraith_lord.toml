@@ -9,6 +9,7 @@ xp = 215
 rarity = "rare"
 dread = true
 name = "wraith lord"
+first_sight = "A wraith lord. The grave's cold walks at its side."
 glyph = "W"
 fg = "#9a7ab0"
 speed = 1250

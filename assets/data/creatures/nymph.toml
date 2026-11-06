@@ -10,6 +10,8 @@ rarity = "rare"
 dread = true
 loot = 30
 name = "nymph"
+leavings = ["torn_cloth"]
+first_sight = "A nymph. Lovely, and light-fingered; mind your pack."
 glyph = "n"
 fg = "#80c0e0"
 factions = { seelie = 90, unseelie = 10 }

@@ -10,6 +10,7 @@ rarity = "rare"
 dread = true
 loot = 75
 name = "vampire lord"
+first_sight = "A vampire lord. Blood is all it wants, and it wants yours."
 glyph = "V"
 fg = "#502060"
 speed = 1400

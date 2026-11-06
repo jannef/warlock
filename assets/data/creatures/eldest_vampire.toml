@@ -10,6 +10,7 @@ rarity = "very_rare"
 dread = true
 loot = 100
 name = "eldest vampire"
+first_sight = "The eldest of the vampires. Older than the hills, and hungrier."
 glyph = "V"
 fg = "#800030"
 speed = 1550
