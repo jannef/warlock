@@ -306,8 +306,7 @@ pub enum Unavailable {
     /// A triggered weapon ability: it fires by itself, never chosen.
     FiresByItself,
     /// An active weapon ability while the actor does not hold what it is for: a weapon of its
-    /// skill, the grip of its style, a shield for shield blocking's ("your hands are not so
-    /// held").
+    /// skill, the grip of its style ("your hands are not so held").
     NotSoHeld,
     /// An order with no ally of the player's on the level to hear it (spec §8 "Allies").
     NoAllies,

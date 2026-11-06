@@ -173,7 +173,7 @@ fn role_talents_add_to_every_skill_of_their_role() {
         before(&w, "bows"),
         before(&w, "crossbows"),
         before(&w, "thrown"),
-        before(&w, "shield_block"),
+        before(&w, "sword_and_board"),
         before(&w, "twin_blades"),
     );
     for talent in [
@@ -190,7 +190,7 @@ fn role_talents_add_to_every_skill_of_their_role() {
     assert_eq!(benefit(&w, "crossbows").reload, crossbows.reload + 25);
     assert_eq!(benefit(&w, "thrown").damage, thrown.damage + 1);
     assert_eq!(benefit(&w, "thrown").speed, thrown.speed + 10);
-    assert_eq!(benefit(&w, "shield_block").shield, block.shield + 1);
+    assert_eq!(benefit(&w, "sword_and_board").shield, block.shield + 1);
     assert_eq!(benefit(&w, "twin_blades").ease_main, twin.ease_main + 2);
     assert_eq!(benefit(&w, "twin_blades").ease_off, twin.ease_off + 2);
     let long_blades = w
@@ -206,9 +206,9 @@ fn role_talents_add_to_every_skill_of_their_role() {
     let base = table.benefit(skill(&w, "sword_and_board"), 3).bash;
     assert!(base > 0);
     assert_eq!(benefit(&w, "sword_and_board").bash, base + 10);
-    // And the shield turns more blows: Shield +1 in Defence while one is held.
+    // And the shield turns more blows: Shield +1 in Defence while one is held with a weapon.
     let without = defence(&w).bonus(Category::Shield);
-    arm(&mut w, &["small_shield"]);
+    arm(&mut w, &["long_sword", "small_shield"]);
     let shield = defence(&w).bonus(Category::Shield);
     w.player_mut().talents = Default::default();
     assert_eq!(defence(&w).bonus(Category::Shield), shield - 1);

@@ -2,7 +2,7 @@
 id = "shield_wall"
 name = "Shield wall"
 description = "Set your shield and stand behind it for a few moments: harder to strike, slower to strike back."
-skills = ["shield_block"]
+skills = ["sword_and_board", "two_shields"]
 rank = 9
 kind = "active"
 aim = "nothing"

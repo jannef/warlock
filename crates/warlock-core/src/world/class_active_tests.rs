@@ -240,7 +240,7 @@ fn weapon_drill_shield_wall_armour_drill_and_iron_stance() {
     let book = content.talents();
     let line = book.get(book.id("shield_line").expect("shield line"));
     let line = crate::talent::TalentMods::of(&content, line.effects.iter().cloned());
-    let (benefit, _) = line.weapon_benefit("", crate::content::Role::ShieldBlock, 0);
+    let (benefit, _) = line.weapon_benefit("", crate::content::Role::Style, 0);
     assert_eq!(benefit.shield, 1, "Shield line");
     let protection = w.state.player().protection(&content, None).against(None);
     reach(&mut w, 25);

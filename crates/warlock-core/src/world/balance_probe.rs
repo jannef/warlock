@@ -147,11 +147,7 @@ struct Build {
 const BUILDS: [Build; 8] = [
     Build {
         class: "warrior",
-        skills: &[
-            ("long_blades", 0),
-            ("sword_and_board", 0),
-            ("shield_block", 0),
-        ],
+        skills: &[("long_blades", 0), ("sword_and_board", 0)],
         extras: &[(StatUse::Exerted, 5.0)],
         casts_a_kill: false,
         school: None,
@@ -184,7 +180,7 @@ const BUILDS: [Build; 8] = [
     },
     Build {
         class: "priest",
-        skills: &[("maces", 0), ("sword_and_board", 0), ("shield_block", 0)],
+        skills: &[("maces", 0), ("sword_and_board", 0)],
         extras: &[(StatUse::Prayed, 0.2), (StatUse::Exerted, 2.0)],
         casts_a_kill: true,
         school: Some("restoration"),
@@ -223,11 +219,7 @@ const BUILDS: [Build; 8] = [
     // Measured for the zeal table alone (#910).
     Build {
         class: "paladin",
-        skills: &[
-            ("long_blades", 0),
-            ("sword_and_board", 0),
-            ("shield_block", 0),
-        ],
+        skills: &[("long_blades", 0), ("sword_and_board", 0)],
         extras: &[(StatUse::Exerted, 4.0)],
         casts_a_kill: false,
         school: None,

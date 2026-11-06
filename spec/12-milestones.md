@@ -90,7 +90,7 @@ Each milestone ships a playable build.
   level and XP on the status bar, the character screen, and the death screen (#133).
 - **M22 Weapon skills, styles, stances** — weapon skills (#134): ADOM-like marks and ranks 0 to
   10 in sixteen categories with per-category passive benefits, The Riddle of Steel's defaults
-  between related categories, shield blocking and a shield bash, starting ranks from race and
+  between related categories, shield blocking (removed in #1093) and a shield bash, starting ranks from race and
   class, and a weapon skills screen (`W`); fighting styles (#135): eight styles with the same
   ranks, marks, and per-rank benefits, trained in their configuration, starting ranks from
   class, light weapons in the off hand and two blows an attack with two weapons, a shield bash
