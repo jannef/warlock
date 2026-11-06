@@ -1,0 +1,15 @@
+# The cottars of Holtwīc (#1140), the village at the end of the north road: smallholders who
+# farm the fields at the edge of the holly wood. Peaceful; they talk, and mutter to themselves now
+# and then (campaigns/ascmearc/data/dialogue/holtwic.toml).
+[[creature]]
+id = "cottar"
+name = "cottar"
+glyph = "@"
+fg = "#a08a5c"
+faction = "peaceful"
+alignment = "good"
+race = "human"
+footsteps = 50
+hearing = 10
+weight = 70000
+stats = { strength = 12, toughness = 12 }

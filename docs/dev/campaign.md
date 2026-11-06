@@ -196,6 +196,35 @@ three branches' first levels say their `arrival` lines (`DungeonDef::arrival`, r
 replay), `mapgen/cealdhlaw_tests.rs` (the chamber and its chalice on floor 2 for certain),
 `mapgen/fennmynster_tests.rs` (the reliquary on the crypt's altar).
 
+## Holtwīc, the village at the north road's end (#1140)
+
+`campaigns/ascmearc/levels/holtwic.toml` (72×26, `kind = "outdoor"`, `item_level = 1`, no
+danger, no shop), entered from the overworld's `V` (18, 17), the cell north of the north road's
+last road cell (18, 18), arriving on the lane from the south (its `@`, (30, 24)), and, with no
+stairs, left by its edge back to that cell like Cēaptūn. Cottages round a green with a well,
+hedged fields, the wood (trees, pines, forest floor) on the east; a named place, the hoar-stone
+(54, 4). The people are campaign creature types `cottar` (five, on `route`s) and `wise_woman`
+(`data/creatures/{cottar,wise_woman}.toml`); their words are `data/dialogue/holtwic.toml`: the
+`cottar` type's one-liners and mutters, and the npc `wynflaed` (Gammer Wynflæd, at (54, 13) in
+her cottage at the wood's edge: topics `holtwic`, `wood`, `fair_folk`; no service, no quest, no
+`route`, no reveal). The dev scenario `holtwic` starts on the lane (seed 3, a warrior).
+
+**Ælfhām** (`aelfham`, `data/dungeons/aelfham.toml`, `docs/dev/mapgen.md`): the Unseelie court's
+hall, three cave floors at danger 4 to 6, fey only, its way in the hidden `E` at (25, 13) (forest →
+`barrow`, `to = "aelfham:1"`), seven cells from the village. Its third floor stamps the pinned
+vault `moss_bower` (`campaigns/ascmearc/vaults/moss_bower.toml`), whose named place **"the moss
+bed"** (the vault's `M`, `LevelTemplate::places` of `aelfham:3` once generated) is where the
+missing villager stands: a vault cannot place a unique npc (`Vault::new`), so the quest (#1141)
+places them there. Nothing reveals the mound yet but the dev `reveal:aelfham`. Its dev scenario
+is `aelfham`.
+
+For the quest (#1141): giver npc `wynflaed` (level `holtwic`, (54, 13)), hidden location id
+`aelfham` (a quest's `reveals`), the bottom level `aelfham:3`, the place name `the moss bed`.
+Tests: `world/holtwic_tests.rs` (the way in from Cēaptūn by road and out by the edge, everyone at
+peace, the wise-woman's name and topics with no reveal, the hidden mound until `reveal:aelfham`
+and the way down, the three floors and the moss bed on the third, the view snapshot
+`holtwic_start`, a replay).
+
 ## The wiki (`xtask/src/wiki/order.rs::campaigns`)
 
 The wiki describes the campaigns of kind `campaign` (while there is none, every campaign): the

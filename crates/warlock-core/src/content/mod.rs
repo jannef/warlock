@@ -5648,6 +5648,7 @@ mod tests {
                 "hrimwyrms_bed",
                 "hunters_statue",
                 "kobolds_cache",
+                "moss_bower",
                 "robbers_hoard",
                 "still_room",
                 "sunken_crypt",

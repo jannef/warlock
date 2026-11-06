@@ -221,6 +221,25 @@ drake. Its floors are as dangerous as the deep workings just above Fyrdelf's bot
 tables above), warmer the deeper they go (14 °C, then 18 °C, and 22 °C at the bottom), with
 Fyrdelf's traps and locks, the deep workings' folk, and no shops.
 
+### Ælfhām
+
+**Ælfhām**, the elves' home, is the hall of the Unseelie court, the dark one of the
+[fey courts](creatures.md#factions), behind a fairy mound in the holly wood near Holtwīc. Its way in
+is [hidden](overworld.md#hidden-locations): the mound looks like any other stretch of the wood. Behind it is not
+the inside of a hill but the fey's own country: three floors of twisting caves at 4 °C, with no
+sun or moon, under a dim violet [light](light.md#what-light-is) that comes from nowhere: everywhere just bright enough to see by, dimly.
+Its [danger](#who-lives-there-and-how-many) runs from 4 to 6, and only fey live there:
+[sprites](creatures.md#creature-sprite) and [pixies](creatures.md#creature-pixie), [quicklings](creatures.md#creature-quickling)
+on the last floor, and [boggles](creatures.md#creature-boggle), [darklings](creatures.md#creature-darkling), and
+[redcaps](creatures.md#creature-redcap) [out of depth](#who-lives-there-and-how-many). No
+[stray](#who-lives-there-and-how-many) finds the way in, but a fey that came of the bright court
+now and then wanders the halls, leaves you alone, and fights its hosts. It is thinly peopled, its
+[traps](traps.md) are [pits](traps.md#trap-pit) and [alarms](traps.md#trap-alarm), and it has no
+[shops](shops.md) and no [special rooms](special-rooms.md). On its third floor, always, is the
+**moss bower**: a ring of [glowing fungus](terrain.md#terrain-fungus) with a bed of moss in its middle, kept by a
+[quickling](creatures.md#creature-quickling) and a [boggle](creatures.md#creature-boggle) of the dark court. On the first floor,
+somewhere far off, pipes are playing.
+
 ### The lairs of the wanted
 
 Four more dungeons, each four floors deep, of danger 6 on the first floor and 9 on the fourth, are

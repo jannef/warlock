@@ -352,3 +352,17 @@ developer notes (CLAUDE.md, `docs/dev/`).
   foot (103, 17), is a hidden location revealed only by climbing out of it, never by a quest. Its
   `arrival`: "Warm air breathes up the shaft from far below." The `utgang` dev scenario starts on
   level 1.
+- **Ælfhām** (#1140; `campaigns/ascmearc/data/dungeons/aelfham.toml`): "the elves' home", the
+  Unseelie court's hall behind a fairy mound in Holegnwudu, its way in a hidden location of the
+  overworld (25, 13), seven cells north-east of Holtwīc, leading to `aelfham:1` and revealed by
+  the village wise-woman's quest (#1141). Three floors of caves, 70×30, at 4 °C, under a dim
+  violet ambient light (`[44, 38, 80, 0]`, just over normal eyes' threshold). Danger 4 to 6, between the land round Cēaptūn and the
+  first dungeons' depths; only fey (`stray = 0`): the sprite, pixie, quickling, boggle, darkling,
+  and redcap, the last three only out of depth (a fey of both courts may still join the Seelie and
+  stand neutral; §8 "Courts"). A thin population (15 a thousand cells, 8 to 16); pit and alarm
+  traps, one or two a floor; 1 to 3 items of loot; no shops or special rooms. Its vault: the
+  **moss bower** on level 3 alone, a ring of glowing fungus with two keepers forced into the
+  Unseelie court (`faction = "unseelie"`) and in its middle the named place "the moss bed", where
+  the quest places the villager the fair folk took (empty until then). Its `arrival`: "The mound's
+  dark gives onto a dim, violet place. Somewhere far off, pipes are playing." The `aelfham` dev
+  scenario starts on level 1.
