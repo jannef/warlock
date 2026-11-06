@@ -1,0 +1,24 @@
+# Vault: a summoner at the altar and the congregation about it. The decision: the summoner
+# first through the crowd, or the crowd while the room fills.
+# A summoner keeps summoning while it stands, so the order of the killing is the room. The rite's
+# scrolls and wands lie on the altar beside it.
+name = "The Conventicle"
+danger = { from = 8 }
+map = '''
+###########
+#c...c...c#
+#.........#
+#..r.r.r..#
+#c.r$S$r.c#
+#..r.r.r..#
+#.........#
+#c...c...c#
+#####+#####
+'''
+
+[legend]
+"r" = "uv_rune"
+# One summoner on its one cell: the rite always has its priest.
+"S" = { terrain = "altar", monsters = { pool = "summoner" } }
+"$" = { terrain = "altar", loot = { pool = ["scrolls", "wands"] } }
+"c" = { terrain = "floor", monsters = { pool = "cultist", count = 5 } }

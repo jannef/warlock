@@ -3,62 +3,61 @@ source: crates/warlock-core/src/mapgen/cealdhlaw_tests.rs
 expression: "describe_in(&CONTENT, &level(1, 1))"
 ---
 Cealdhlāw 1 (cealdhlaw:1) 80x21
-stairs Up at (48, 14) -> ascmearc
-stairs Down at (29, 4) -> cealdhlaw:2
-shopkeeper at (21, 8) route  carrying a spear (wielded), a small shield (in off hand), a chain mail shirt (being worn), an iron helm (being worn), 300 gold coins
-skeletal_rat at (38, 7) route S S S S W W E E N N N N
-skeletal_rat at (36, 5) route E E N N S S W E W E W E W E N N S S W W
-crawling_hand at (38, 3) route S W W N S E E N
-skeletal_rat at (36, 7) route E E S S S S W N W E S E N N N N W W
-crawling_hand at (38, 11) route W W N N N N N E W S S S S S E E
-crawling_hand at (36, 11) route E W N N S S E W
-rat at (70, 8) route N E W W W S S S S E W N N N N E E E W S
-beetle at (66, 9) route N S S S N S N N N S
-grave_worm at (63, 11) route E W W W W E E E E W E W W W W E E E E W
-crawling_hand at (72, 9) route N N E S S S S N N N N W S S
-goblin at (61, 2) route W W E W E E S W W W E E E N W W E W E E carrying a club (wielded)
-skeletal_rat at (69, 10) route N N N E E E E S S S N N N W W W W S S S
-crawling_hand at (58, 3) route E E E S S S S N N N N W W W
-rat at (60, 4) route E S S S N N N W
-skeletal_rat at (64, 11) route W W W W N S N S E E E E
-grave_worm at (56, 6) route W W E E W W E E W W E E
-crawling_hand at (47, 6) route N E E E E E S N W W W W W S
-crawling_hand at (71, 10) route W N N E E W W S S E
-rat at (40, 6) route S N N N N S S S S N N N N S S S S N
-crawling_hand at (67, 11) route E E E E E E W W E E W W W W W W
-bat at (68, 12) route E E N N N N N E E W W S S S S S W W
-crawling_hand at (58, 5) route S S S N N E W S S N N N
-rat at (37, 5) route E W W N N E E W W S S E E W
-bat at (37, 9) route S S W N N N N S S S S E N N
-crawling_hand at (51, 5) route S S W W W W E E E E N N
-grave_worm at (68, 9) route N N E E W W S S
-rat at (72, 12) route W W W W W W N S E E E E E E
-skeletal_rat at (37, 8) route E N S S N N S W
-bat at (37, 10) route S W E E W W N S E E W W E N
-grave_worm at (72, 8) route E S W N N E S S N N W S S E N W
-grave_worm at (63, 7) route E S N S N S N S N W
-pit trap at (31, 1)
-arrow trap at (38, 6)
-pit trap at (60, 6)
-pit trap at (71, 9)
-1 placed lights
-shop fletcher kept by Wulfgar at (7, 8)-(21, 10), post (21, 8)
-                             ###############
-                             #.^...*.......#             ######
-                             #.###########.#             #¡..g#
-                           ###.##  #..z#.#.#             #z...#
-                           #.>.¡#  #.".#.#.###########   #..r.#
-                           #....#  #rr.#.#.##¡.....z.#####z...#
-                           #....#  #..^#r#..+..z.....+..w+..^.#############
-      ######################....#  #r[r&.+)##.......¡#####....'w.#¡.......#
-      #...}}.......}.@#....S....#  #.r.#(########+####   #...¡##.+....r.w.#
-      #......}*}........####¡...#  #.b.#.#      #.#      ###+#####a.w..^z.#
-      #.........../...###  ######  #.b.#.#      #.#        #.#####...r.z..#
-      #################            #z.z#.#      #.#        #...wr+.z......#
-                                   #######      #.#     ####+#####..b...r¡#
-                                               ##+###   #.....#  ##########
-                                               #<..¡#####.....#
-                                               #....S...+.....#
-                                               #....#####....¡#
-                                               #....#   #######
-                                               ######
+stairs Up at (30, 5) -> ascmearc
+stairs Down at (53, 16) -> cealdhlaw:2
+skeletal_rat at (62, 11) route W E W E W E W E W E W E
+skeletal_rat at (68, 7) route W E W E W E W E W E W E W E W E W E W E
+bat at (65, 7) route W E W E W E W E
+grave_worm at (74, 7) route W E W E W E W E W E W E W E W E W E
+crawling_hand at (74, 11) route W E W E W E W E W E W E W E W E
+grave_worm at (71, 11) route W E W E W E W E
+rat at (12, 14) route E E W W W S S S S E W N N N N E E E W W
+beetle at (28, 14) route N S S N N S S N N S
+grave_worm at (30, 15) route E N N E E E S S W E W E N N W W W S S W
+crawling_hand at (35, 14) route S W W W W E E W W E E E E N
+goblin at (19, 3) route W W W W E E E W W W E E E W W W E E E E carrying a club (wielded)
+skeletal_rat at (9, 15) route N E E E E E S S S S N N N N W W W W W S
+crawling_hand at (8, 4) route E W W N E E S N W W S E E W
+rat at (38, 4) route S S S S N N N N
+skeletal_rat at (32, 15) route E E E W W W E E E W W W
+grave_worm at (8, 9) route N N N S S S N N N S S S
+crawling_hand at (22, 7) route N N N N E E S N W W S S S S
+crawling_hand at (13, 15) route W N E E S N W W S E
+rat at (8, 7) route S N N S S S S S S N N N N N N S S N
+crawling_hand at (7, 16) route E E E E E E E E W W W W W W W W
+bat at (18, 16) route E S N N N S S S S N N N N S S S N W
+crawling_hand at (20, 6) route S W W W W E W E E E E N
+rat at (17, 5) route E E E E E E E W W W W W W W
+bat at (18, 18) route W W W W W W W E E E E E E E
+crawling_hand at (18, 6) route S W W N N W E S S E E N
+grave_worm at (16, 18) route N N N N S S S S
+rat at (13, 17) route E E E E E E S N W W W W W W
+skeletal_rat at (31, 13) route E E E S N W W W
+bat at (43, 14) route W W E E E E E W W W W W E E
+grave_worm at (27, 14) route E E W W N E E E W W W S E E W W
+grave_worm at (8, 10) route S S N N N S S S N N
+pit trap at (7, 2)
+pit trap at (15, 14)
+arrow trap at (32, 6)
+pit trap at (36, 7)
+0 placed lights
+
+     ######
+     #.^..### ##################
+     #....'.###....g..........¡#   ######
+     #¡.z.#...+................#   #..r¡#
+     ###S######..r............<#####....#
+       #.#    #...z.z..........+^..'....#                  #################
+       #r#    #¡[.....z........#####^...#                  ##[.#}b#?r#*.#[w#
+       #.#    ##############+###   #....#           #########+##+##+##+##+###
+       #w#                 #.#     ##+###           #......+.......".......+#
+       #w#                 #.#      #.#             #.#######+##+##+##+##+###
+       #.#                 #.#      #.#        ######'##   ##[r#).#*.#"w#[z#
+       #.#                ##'########.#        #.......#   #################
+      ##&############     #....r...¡#.##########.......#
+      #.....r..^....#     #wa......zS......b...........#
+      #..r...z......#     #¡..w.r)..############.......#
+      #z..........b.#     ###########          #.....>.#
+      #......r......#                          #########
+      #.........w.b.#
+      ###############

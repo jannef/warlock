@@ -1,0 +1,20 @@
+# Vault: five dead with their gear where they fell, and what killed them still there. The
+# decision: four finds for what is in the room.
+# The scene says what the room is before the player steps in: it is read, not rolled. A dead end
+# with one door, and the fight is the whole of it.
+name = "Dead Men's Gear"
+map = '''
+#########
+#b.b...b#
+#..w.a..#
+#.g.g.g.#
+#..a.w..#
+#b.b...b#
+####+####
+'''
+
+[legend]
+"b" = { terrain = "floor", objects = ["bones"] }
+"w" = { terrain = "floor", loot = { pool = "weapons" } }
+"a" = { terrain = "floor", loot = { pool = "armour" } }
+"g" = { terrain = "floor", monsters = { pool = "level", count = 2 } }

@@ -1,0 +1,20 @@
+# Vault: dry stones across a shallow mere, marsh-things in the water. The decision: wade past
+# them, slow and loud, or shoot from the door.
+# The walk of dry stones breaks in three short wades, each beside what stands in the water.
+# Wading is slow and heard; the finds lie on the dry ground past the last wade.
+name = "The Mere"
+danger = { from = 4 }
+map = '''
+###############
+#~~~~~~~~~~~~~#
+#~~m~~~m~~~m~$#
++..~~..~~..~.$#
+#~~m~~~m~~~m~$#
+#~~~~~~~~~~~~~#
+###############
+'''
+
+[legend]
+"~" = "shallow_water"
+"m" = { terrain = "shallow_water", monsters = { pool = "marsh-thing", count = 3 } }
+"$" = { terrain = "floor", loot = "any" }
