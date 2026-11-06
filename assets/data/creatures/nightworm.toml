@@ -11,7 +11,7 @@ dread = true
 name = "nightworm"
 glyph = "w"
 fg = "#383c50"
-speed = 1100
+speed = 700
 faction = "undead"
 tags = ["undead"]
 alignment = "evil"
@@ -21,7 +21,7 @@ footsteps = 200
 hearing = 10
 weight = 900000
 stats = { strength = 40, dexterity = 24, toughness = 40, intelligence = 38, willpower = 35, presence = 35 }
-base_hp = 252
+base_hp = 424
 natural = { defence = 5, protection = 6, name = "dead flesh" }
 resist = { poison = 100 }
 on_eat = { message = "A mile of cold, black meat.", vomit = 90, harm = "1d6" }
@@ -31,7 +31,9 @@ damage = "5d10"
 damage_type = "piercing"
 name = "bite"
 verb = "bites"
-to_hit = 15
+to_hit = 8
+threat = 24
+crit = 3
 on_hit = [
     { drain = "toughness", points = 2, chance = 15, check = "toughness", difficulty = 24 },
     { status = "swallowed", chance = 15, difficulty = 24 },

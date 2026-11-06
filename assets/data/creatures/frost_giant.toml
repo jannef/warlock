@@ -19,7 +19,7 @@ footsteps = 200
 hearing = 10
 weight = 750000
 stats = { strength = 27, dexterity = 15, toughness = 28, intelligence = 12, willpower = 14, presence = 12 }
-base_hp = 112
+base_hp = 182
 natural = { defence = 1, protection = 2, name = "hide" }
 weapon_skills = { thrown = 1 }
 resist = { cold = 75, fire = -50 }
@@ -29,7 +29,9 @@ damage = "3d10"
 damage_type = "slashing"
 name = "great axe"
 verb = "cleaves"
-to_hit = 7
+to_hit = 4
+threat = 24
+crit = 3
 [creature.throw]
 object = "boulder"
 name = "block of ice"

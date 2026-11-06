@@ -19,7 +19,7 @@ footsteps = 160
 hearing = 10
 weight = 400000
 stats = { strength = 28, dexterity = 12, toughness = 31, intelligence = 9, willpower = 15, presence = 6 }
-base_hp = 96
+base_hp = 157
 regen = 400
 natural = { defence = 1, protection = 2, name = "frosted hide" }
 resist = { cold = 75, fire = -50 }
@@ -30,5 +30,7 @@ damage = "3d10"
 damage_type = "slashing"
 name = "claws"
 verb = "rakes"
-to_hit = 6
+to_hit = 3
+threat = 24
+crit = 3
 on_hit = [{ status = "sluggish", chance = 20, severity = 1 }]

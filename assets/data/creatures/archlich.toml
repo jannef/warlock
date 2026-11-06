@@ -13,7 +13,7 @@ loot = 100
 name = "archlich"
 glyph = "L"
 fg = "#40c0f0"
-speed = 1150
+speed = 700
 faction = "undead"
 tags = ["undead", "caster"]
 alignment = "evil"
@@ -28,7 +28,7 @@ footsteps = 30
 hearing = 15
 weight = 30000
 stats = { strength = 30, dexterity = 24, toughness = 34, intelligence = 36, willpower = 39, presence = 36 }
-base_hp = 108
+base_hp = 67
 skills = { concentration = 172, spellcraft = 177 }
 natural = { defence = 4, protection = 9, name = "dry bones" }
 resist = { poison = 100 }
@@ -46,7 +46,7 @@ damage = "4d8"
 damage_type = "cold"
 name = "touch"
 verb = "touches"
-to_hit = 13
+to_hit = 7
 on_hit = [
     { status = "held", chance = 20, difficulty = 22 },
     { drain = "intelligence", points = 2, chance = 10, difficulty = 22 },

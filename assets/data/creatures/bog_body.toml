@@ -10,7 +10,7 @@ name = "bog body"
 plural = "bog bodies"
 glyph = "z"
 fg = "#8a6a40"
-speed = 650
+speed = 800
 faction = "undead"
 tags = ["undead"]
 alignment = "evil"
@@ -29,5 +29,5 @@ damage = "2d6"
 damage_type = "bludgeoning"
 name = "fist"
 verb = "pummels"
-to_hit = 2
+to_hit = 1
 on_hit = [{ disease = "marsh_ague", chance = 15 }]

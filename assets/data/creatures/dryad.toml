@@ -25,7 +25,7 @@ footsteps = 20
 hearing = 18
 weight = 50000
 stats = { strength = 16, dexterity = 15, toughness = 20, intelligence = 22, willpower = 22, presence = 24 }
-base_hp = 38
+base_hp = 24
 skills = { concentration = 67, spellcraft = 72 }
 blood = "#6a8a2a"
 [creature.attack]
@@ -33,5 +33,5 @@ damage = "3d6"
 damage_type = "bludgeoning"
 name = "lash"
 verb = "lashes"
-to_hit = 4
+to_hit = 2
 on_hit = [{ status = "transfixed", chance = 20, severity = 1 }]

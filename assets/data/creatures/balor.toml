@@ -11,7 +11,7 @@ dread = true
 name = "balor"
 glyph = "U"
 fg = "#ffb030"
-speed = 1100
+speed = 1400
 attack_cost = 700
 light = "torch"
 glow = 0.5
@@ -25,7 +25,7 @@ footsteps = 90
 hearing = 16
 weight = 2000000
 stats = { strength = 40, dexterity = 23, toughness = 40, intelligence = 34, willpower = 37, presence = 34 }
-base_hp = 248
+base_hp = 417
 loot = 100
 natural = { defence = 5, protection = 10, name = "hide" }
 resist = { fire = 100, cold = 25, electricity = 25, poison = 100 }

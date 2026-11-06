@@ -21,7 +21,7 @@ footsteps = 170
 hearing = 12
 weight = 1000000
 stats = { strength = 40, dexterity = 24, toughness = 40, intelligence = 38, willpower = 36, presence = 36 }
-base_hp = 256
+base_hp = 413
 natural = { defence = 5, protection = 10, name = "dry bones" }
 resist = { cold = 75, poison = 100 }
 corpse = false
@@ -31,5 +31,7 @@ damage = "4d10"
 damage_type = "piercing"
 name = "bite"
 verb = "bites"
-to_hit = 16
+to_hit = 8
+threat = 24
+crit = 3
 on_hit = [{ drain = "intelligence", points = 2, chance = 10, difficulty = 24 }]

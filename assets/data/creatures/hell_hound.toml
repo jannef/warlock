@@ -19,7 +19,7 @@ footsteps = 40
 hearing = 20
 weight = 70000
 stats = { strength = 16, dexterity = 18, toughness = 16, intelligence = 6, willpower = 21, presence = 15 }
-base_hp = 29
+base_hp = 16
 resist = { fire = 100, cold = -50 }
 on_eat = { message = "It smoulders all the way down.", vomit = 60, harm = "1d3" }
 blood = "#8a2a10"
@@ -28,4 +28,5 @@ damage = "2d8"
 damage_type = "fire"
 name = "bite"
 verb = "bites"
-to_hit = 3
+to_hit = 4
+threat = 19

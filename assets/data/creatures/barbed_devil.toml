@@ -9,6 +9,7 @@ dread = true
 name = "barbed devil"
 glyph = "U"
 fg = "#c03030"
+speed = 1400
 faction = "devil"
 tags = ["devil", "fiend"]
 alignment = "evil"

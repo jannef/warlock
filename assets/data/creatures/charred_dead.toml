@@ -10,7 +10,7 @@ name = "charred dead"
 plural = "charred dead"
 glyph = "z"
 fg = "#6a5a50"
-speed = 650
+speed = 800
 faction = "undead"
 tags = ["undead", "fire-thing"]
 alignment = "evil"
@@ -21,7 +21,7 @@ hearing = 8
 weight = 45000
 stats = { strength = 19, dexterity = 6, toughness = 23, intelligence = 2, willpower = 21, presence = 2 }
 base_hp = 52
-attack = { damage = "2d8", damage_type = "bludgeoning", name = "fist", verb = "pummels", to_hit = 3 }
+attack = { damage = "2d8", damage_type = "bludgeoning", name = "fist", verb = "pummels", to_hit = 2 }
 resist = { fire = 50, cold = -25, poison = 100 }
 on_eat = { message = "Charcoal and rot.", vomit = 80, harm = "1d4" }
 blood = "#2a2018"

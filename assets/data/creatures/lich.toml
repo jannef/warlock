@@ -13,7 +13,7 @@ loot = 75
 name = "lich"
 glyph = "L"
 fg = "#a0e0c0"
-speed = 1050
+speed = 700
 faction = "undead"
 tags = ["undead", "caster"]
 alignment = "evil"
@@ -28,7 +28,7 @@ footsteps = 30
 hearing = 15
 weight = 30000
 stats = { strength = 20, dexterity = 18, toughness = 24, intelligence = 26, willpower = 30, presence = 26 }
-base_hp = 60
+base_hp = 38
 skills = { concentration = 100, spellcraft = 105 }
 natural = { defence = 2, protection = 5, name = "dry bones" }
 resist = { poison = 100 }
@@ -39,7 +39,7 @@ damage = "3d8"
 damage_type = "cold"
 name = "touch"
 verb = "touches"
-to_hit = 7
+to_hit = 4
 on_hit = [
     { status = "held", chance = 15, difficulty = 18 },
     { drain = "intelligence", points = 1, chance = 10, difficulty = 18 },

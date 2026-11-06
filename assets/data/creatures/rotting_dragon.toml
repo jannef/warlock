@@ -19,7 +19,7 @@ footsteps = 140
 hearing = 10
 weight = 2500000
 stats = { strength = 37, dexterity = 21, toughness = 38, intelligence = 2, willpower = 34, presence = 2 }
-base_hp = 208
+base_hp = 334
 natural = { defence = 4, protection = 5, name = "rotting scales" }
 resist = { poison = 100 }
 on_eat = { message = "Dragon, and rotten through.", vomit = 90, harm = "1d6" }
@@ -29,7 +29,9 @@ damage = "5d10"
 damage_type = "piercing"
 name = "bite"
 verb = "bites"
-to_hit = 13
+to_hit = 7
+threat = 24
+crit = 3
 on_hit = [
     { disease = "grave_rot", chance = 25 },
 ]

@@ -11,7 +11,7 @@ shadowy = true
 name = "darkling"
 glyph = "f"
 fg = "#5a5a6a"
-speed = 1150
+speed = 1400
 factions = { seelie = 50, unseelie = 50 }
 tags = ["fey"]
 vision = "darkvision"

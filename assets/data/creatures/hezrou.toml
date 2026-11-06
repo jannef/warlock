@@ -10,7 +10,7 @@ dread = true
 name = "hezrou"
 glyph = "U"
 fg = "#7a8a4a"
-speed = 950
+speed = 700
 faction = "demon"
 tags = ["demon", "fiend"]
 alignment = "evil"
@@ -21,7 +21,7 @@ footsteps = 70
 hearing = 14
 weight = 400000
 stats = { strength = 28, dexterity = 15, toughness = 29, intelligence = 22, willpower = 26, presence = 22 }
-base_hp = 120
+base_hp = 204
 natural = { defence = 2, protection = 2, name = "warty hide" }
 resist = { fire = 50, cold = 25, electricity = 25, poison = 100 }
 corrodes = { chance = 25, what = "armour" }
@@ -40,5 +40,7 @@ damage = "4d8"
 damage_type = "slashing"
 name = "claws"
 verb = "claws"
-to_hit = 7
+to_hit = 4
+threat = 24
+crit = 3
 on_hit = [{ status = "poisoned", chance = 30, severity = 4 }]

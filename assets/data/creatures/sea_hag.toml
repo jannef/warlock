@@ -13,6 +13,7 @@ loot = 40
 name = "sea hag"
 glyph = "h"
 fg = "#5a8a8a"
+speed = 700
 faction = "hags"
 tags = ["hag"]
 alignment = "evil"

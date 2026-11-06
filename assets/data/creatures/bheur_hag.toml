@@ -27,7 +27,7 @@ footsteps = 30
 hearing = 18
 weight = 60000
 stats = { strength = 25, dexterity = 20, toughness = 29, intelligence = 31, willpower = 35, presence = 31 }
-base_hp = 84
+base_hp = 52
 skills = { concentration = 136, spellcraft = 141 }
 natural = { defence = 3, protection = 2, name = "frost-hard skin" }
 resist = { cold = 100, fire = -25 }
@@ -46,5 +46,5 @@ damage = "3d10"
 damage_type = "cold"
 name = "icy staff"
 verb = "strikes"
-to_hit = 10
+to_hit = 5
 on_hit = [{ status = "sluggish", chance = 20, severity = 1 }]

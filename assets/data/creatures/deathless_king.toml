@@ -26,7 +26,7 @@ footsteps = 30
 hearing = 15
 weight = 30000
 stats = { strength = 34, dexterity = 26, toughness = 38, intelligence = 40, willpower = 40, presence = 40 }
-base_hp = 132
+base_hp = 83
 skills = { concentration = 208, spellcraft = 213 }
 natural = { defence = 5, protection = 0, name = "dry bones" }
 resist = { poison = 100 }

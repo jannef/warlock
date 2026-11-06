@@ -8,7 +8,7 @@ rarity = "common"
 name = "lesser lightning elemental"
 glyph = "E"
 fg = "#e8e050"
-speed = 1400
+speed = 1250
 light = "storm"
 glow = 0.45
 faction = "elemental"
@@ -20,7 +20,7 @@ footsteps = 20
 hearing = 10
 weight = 5000
 stats = { strength = 17, dexterity = 19, toughness = 17, intelligence = 2, willpower = 21, presence = 2 }
-base_hp = 34
+base_hp = 19
 natural = { defence = 2, protection = 0, name = "crackling form" }
 resist = { electricity = 100, piercing = 25, poison = 100 }
 corpse = false
@@ -30,7 +30,8 @@ damage = "3d6"
 damage_type = "electricity"
 name = "touch"
 verb = "shocks"
-to_hit = 3
+to_hit = 4
+threat = 19
 on_hit = [{ status = "staggered", chance = 20, severity = 1 }]
 # Death throes (the dread design §5.3): it bursts where it dies.
 [creature.burst]

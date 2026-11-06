@@ -10,7 +10,7 @@ rarity = "uncommon"
 name = "canoloth"
 glyph = "&"
 fg = "#a0603a"
-speed = 1350
+speed = 1250
 tags = ["yugoloth", "fiend"]
 faction = "yugoloth"
 alignment = "evil"
@@ -20,7 +20,7 @@ footsteps = 50
 hearing = 25
 weight = 120000
 stats = { strength = 23, dexterity = 22, toughness = 23, intelligence = 6, willpower = 26, presence = 12 }
-base_hp = 65
+base_hp = 36
 natural = { defence = 1, protection = 2, name = "hide" }
 resist = { acid = 100, poison = 100, fire = 50, cold = 50, electricity = 50 }
 corpse = false
@@ -30,7 +30,8 @@ damage = "4d6"
 damage_type = "piercing"
 name = "barbed tongue"
 verb = "lashes"
-to_hit = 7
+to_hit = 10
+threat = 19
 on_hit = [
     { status = "latched", chance = 20, difficulty = 18 },
     { status = "bleeding", chance = 20, severity = 1 },

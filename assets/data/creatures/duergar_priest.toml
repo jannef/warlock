@@ -25,7 +25,7 @@ footsteps = 100
 hearing = 12
 weight = 70000
 stats = { strength = 17, dexterity = 15, toughness = 20, intelligence = 17, willpower = 22, presence = 11 }
-base_hp = 38
+base_hp = 24
 skills = { concentration = 67, spellcraft = 72 }
 resist = { poison = 25, cold = 10 }
 on_eat = { message = "Tough and sour, and bitter as old incense.", vomit = 25, train = { willpower = 18 }, skills = { decipher_script = { gives = 6, up_to = 50 } } }

@@ -27,7 +27,7 @@ footsteps = 40
 hearing = 15
 weight = 55000
 stats = { strength = 25, dexterity = 20, toughness = 29, intelligence = 31, willpower = 35, presence = 31 }
-base_hp = 84
+base_hp = 52
 skills = { concentration = 136, spellcraft = 141 }
 natural = { defence = 3, protection = 4, name = "dead flesh" }
 resist = { poison = 100 }

@@ -20,7 +20,7 @@ footsteps = 190
 hearing = 12
 weight = 700000
 stats = { strength = 35, dexterity = 16, toughness = 38, intelligence = 11, willpower = 18, presence = 8 }
-base_hp = 168
+base_hp = 272
 regen = 400
 natural = { defence = 3, protection = 4, name = "ancient hide" }
 resist = { fire = -50 }
@@ -31,7 +31,9 @@ damage = "3d12"
 damage_type = "slashing"
 name = "claws"
 verb = "rakes"
-to_hit = 10
+to_hit = 5
+threat = 24
+crit = 3
 on_hit = [
     { status = "bleeding", chance = 20, severity = 2 },
     { status = "staggered", chance = 15, severity = 1 },

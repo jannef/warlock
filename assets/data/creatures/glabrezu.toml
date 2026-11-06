@@ -19,7 +19,7 @@ footsteps = 80
 hearing = 16
 weight = 1000000
 stats = { strength = 33, dexterity = 19, toughness = 34, intelligence = 27, willpower = 31, presence = 27 }
-base_hp = 176
+base_hp = 284
 loot = 50
 natural = { defence = 3, protection = 7, name = "carapace" }
 resist = { fire = 50, cold = 25, electricity = 25, poison = 100 }
@@ -30,5 +30,7 @@ damage = "4d10"
 damage_type = "bludgeoning"
 name = "pincers"
 verb = "crushes"
-to_hit = 11
+to_hit = 6
+threat = 24
+crit = 3
 on_hit = [{ status = "held", chance = 20, difficulty = 20 }]

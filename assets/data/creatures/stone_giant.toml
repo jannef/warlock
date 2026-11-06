@@ -19,7 +19,7 @@ footsteps = 180
 hearing = 10
 weight = 600000
 stats = { strength = 26, dexterity = 16, toughness = 27, intelligence = 12, willpower = 13, presence = 9 }
-base_hp = 96
+base_hp = 156
 natural = { defence = 1, protection = 7, name = "stony hide" }
 weapon_skills = { thrown = 3 }
 on_eat = { message = "It is like chewing gravel.", vomit = 30 }
@@ -28,7 +28,9 @@ damage = "3d10"
 damage_type = "bludgeoning"
 name = "stone club"
 verb = "clubs"
-to_hit = 6
+to_hit = 3
+threat = 24
+crit = 3
 [creature.throw]
 object = "boulder"
 damage = "4d6"

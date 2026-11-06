@@ -19,7 +19,7 @@ footsteps = 160
 hearing = 12
 weight = 130000
 stats = { strength = 28, dexterity = 15, toughness = 28, intelligence = 11, willpower = 17, presence = 16 }
-base_hp = 112
+base_hp = 182
 on_eat = { message = "This orc meat is rank!", vomit = 30, train = { strength = 18 } }
 weapon_skills = { axes = 5, sword_and_board = 3 }
 racial_weapon = "battle_axe"

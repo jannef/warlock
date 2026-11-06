@@ -9,7 +9,7 @@ rarity = "rare"
 name = "ghoul king"
 glyph = "z"
 fg = "#d08a40"
-speed = 1400
+speed = 1250
 faction = "undead"
 tags = ["undead"]
 alignment = "evil"
@@ -20,7 +20,7 @@ footsteps = 40
 hearing = 16
 weight = 65000
 stats = { strength = 29, dexterity = 26, toughness = 29, intelligence = 28, willpower = 31, presence = 28 }
-base_hp = 99
+base_hp = 55
 natural = { defence = 3, protection = 4, name = "dead flesh" }
 resist = { poison = 100 }
 on_eat = { message = "Carrion fed on carrion fed on carrion.", vomit = 90, harm = "1d6" }
@@ -30,7 +30,8 @@ damage = "4d8"
 damage_type = "slashing"
 name = "claws"
 verb = "claws"
-to_hit = 11
+to_hit = 16
+threat = 19
 on_hit = [
     { status = "held", chance = 20, difficulty = 20 },
     { disease = "grave_rot", chance = 20 },

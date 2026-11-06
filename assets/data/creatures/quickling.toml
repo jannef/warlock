@@ -9,7 +9,7 @@ rarity = "uncommon"
 name = "quickling"
 glyph = "f"
 fg = "#c8d0e0"
-speed = 2000
+speed = 1250
 factions = { seelie = 25, unseelie = 75 }
 tags = ["fey"]
 alignment = "evil"
@@ -20,7 +20,7 @@ hearing = 16
 weight = 3000
 size = "small"
 stats = { strength = 13, dexterity = 16, toughness = 13, intelligence = 12, willpower = 12, presence = 14 }
-base_hp = 14
+base_hp = 8
 # Cutting before it is seen: it strikes the unwary, and is nearly never caught off guard.
 skills = { sneak_attack = 40, initiative = 150 }
-attack = { damage = "1d10", damage_type = "slashing", name = "knife", verb = "cuts", to_hit = 1 }
+attack = { damage = "1d10", damage_type = "slashing", name = "knife", verb = "cuts", to_hit = 1, threat = 19 }

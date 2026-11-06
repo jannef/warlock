@@ -13,7 +13,7 @@ loot = 60
 name = "rakshasa"
 glyph = "f"
 fg = "#e0a040"
-speed = 1150
+speed = 1400
 faction = "fiends"
 tags = ["fiend", "caster"]
 alignment = "evil"
@@ -28,7 +28,7 @@ footsteps = 30
 hearing = 18
 weight = 80000
 stats = { strength = 29, dexterity = 23, toughness = 33, intelligence = 35, willpower = 38, presence = 35 }
-base_hp = 104
+base_hp = 65
 skills = { concentration = 166, spellcraft = 171 }
 natural = { defence = 4, protection = 5, name = "hide" }
 resist = { piercing = 50 }
@@ -39,7 +39,7 @@ damage = "3d12"
 damage_type = "slashing"
 name = "claws"
 verb = "claws"
-to_hit = 13
+to_hit = 7
 [creature.gaze]
 range = 5
 chance = 35

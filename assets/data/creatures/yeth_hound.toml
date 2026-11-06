@@ -9,7 +9,7 @@ rarity = "rare"
 name = "yeth hound"
 glyph = "C"
 fg = "#6a3a7a"
-speed = 1350
+speed = 1250
 factions = { seelie = 25, unseelie = 75 }
 tags = ["fey"]
 alignment = "evil"
@@ -18,7 +18,7 @@ sight = 12
 hearing = 22
 weight = 45000
 stats = { strength = 23, dexterity = 23, toughness = 23, intelligence = 22, willpower = 22, presence = 24 }
-base_hp = 70
+base_hp = 39
 natural = { defence = 2, protection = 2, name = "dark hide" }
 cry = { kind = "howl", loudness = 150, every = 120 }
 [creature.aura]
@@ -33,5 +33,6 @@ damage = "3d10"
 damage_type = "piercing"
 name = "bite"
 verb = "bites"
-to_hit = 7
+to_hit = 10
+threat = 19
 on_hit = [{ status = "frightened", chance = 25, severity = 2 }]

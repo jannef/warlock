@@ -20,7 +20,7 @@ footsteps = 130
 hearing = 10
 weight = 250000
 stats = { strength = 36, dexterity = 21, toughness = 37, intelligence = 30, willpower = 34, presence = 30 }
-base_hp = 204
+base_hp = 328
 natural = { defence = 4, protection = 5, name = "dead flesh" }
 resist = { cold = 50, poison = 100 }
 on_eat = { message = "Waterlogged, and older than the town.", vomit = 90, harm = "1d6" }
@@ -30,7 +30,9 @@ damage = "4d10"
 damage_type = "bludgeoning"
 name = "slam"
 verb = "slams"
-to_hit = 12
+to_hit = 6
+threat = 24
+crit = 3
 on_hit = [
     { disease = "marsh_ague", chance = 25 },
 ]

@@ -25,7 +25,7 @@ footsteps = 20
 hearing = 18
 weight = 60000
 stats = { strength = 15, dexterity = 14, toughness = 19, intelligence = 21, willpower = 26, presence = 21 }
-base_hp = 36
+base_hp = 23
 skills = { concentration = 64, spellcraft = 69 }
 resist = { poison = 25 }
 on_eat = { message = "Bitter as swamp weed.", vomit = 60, harm = "1d4", train = { intelligence = 30 }, skills = { decipher_script = { gives = 6, up_to = 45 } } }
@@ -35,7 +35,7 @@ damage = "2d8"
 damage_type = "slashing"
 name = "claws"
 verb = "claws"
-to_hit = 4
+to_hit = 2
 on_hit = [
     { status = "transfixed", chance = 10, severity = 2 },
     { status = "ill_wished", chance = 15, severity = 1 },

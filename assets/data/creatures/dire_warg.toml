@@ -8,7 +8,7 @@ rarity = "uncommon"
 name = "dire warg"
 glyph = "C"
 fg = "#a09080"
-speed = 1300
+speed = 1250
 faction = "orcs"
 alignment = "evil"
 vision = "low_light"
@@ -17,7 +17,7 @@ footsteps = 70
 hearing = 18
 weight = 150000
 stats = { strength = 21, dexterity = 20, toughness = 20, intelligence = 4, willpower = 16, presence = 4 }
-base_hp = 50
+base_hp = 28
 natural = { defence = 1, protection = 1, name = "thick hide" }
 # Tameable too, for one who stalks a chieftain's kennels (spec §8 "Allies").
 tameable = true
@@ -29,5 +29,6 @@ damage = "3d8"
 damage_type = "piercing"
 name = "bite"
 verb = "bites"
-to_hit = 5
+to_hit = 7
+threat = 19
 on_hit = [{ status = "bleeding", chance = 15, severity = 1 }]

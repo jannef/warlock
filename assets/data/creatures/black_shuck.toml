@@ -10,7 +10,7 @@ rarity = "uncommon"
 name = "black shuck"
 glyph = "C"
 fg = "#383848"
-speed = 1350
+speed = 1250
 faction = "undead"
 tags = ["undead"]
 alignment = "evil"
@@ -20,7 +20,7 @@ footsteps = 50
 hearing = 20
 weight = 80000
 stats = { strength = 24, dexterity = 23, toughness = 24, intelligence = 23, willpower = 28, presence = 23 }
-base_hp = 74
+base_hp = 41
 natural = { defence = 2, protection = 2, name = "dead flesh" }
 resist = { poison = 100 }
 on_eat = { message = "Black meat, and it reeks of the grave.", vomit = 80, harm = "1d4" }
@@ -31,5 +31,6 @@ damage = "3d10"
 damage_type = "piercing"
 name = "bite"
 verb = "bites"
-to_hit = 8
+to_hit = 12
+threat = 19
 on_hit = [{ status = "frightened", chance = 25, severity = 2 }]

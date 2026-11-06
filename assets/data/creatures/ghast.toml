@@ -20,7 +20,7 @@ footsteps = 40
 hearing = 15
 weight = 50000
 stats = { strength = 14, dexterity = 17, toughness = 14, intelligence = 13, willpower = 18, presence = 13 }
-base_hp = 16
+base_hp = 9
 resist = { poison = 100 }
 on_eat = { message = "Carrion upon carrion.", vomit = 80, harm = "1d4" }
 blood = "#3a2a3a"
@@ -30,6 +30,7 @@ damage_type = "slashing"
 name = "claws"
 verb = "claws"
 to_hit = 1
+threat = 19
 on_hit = [
     { status = "held", chance = 10, difficulty = 15 },
     { disease = "filth_fever", chance = 10 },

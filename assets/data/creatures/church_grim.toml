@@ -10,7 +10,7 @@ rarity = "uncommon"
 name = "church grim"
 glyph = "C"
 fg = "#9a9080"
-speed = 1400
+speed = 1250
 faction = "undead"
 tags = ["undead"]
 alignment = "evil"
@@ -20,7 +20,7 @@ footsteps = 50
 hearing = 20
 weight = 75000
 stats = { strength = 26, dexterity = 25, toughness = 26, intelligence = 25, willpower = 29, presence = 25 }
-base_hp = 86
+base_hp = 48
 natural = { defence = 2, protection = 3, name = "dead flesh" }
 resist = { cold = 50, poison = 100 }
 on_eat = { message = "Grave-cold meat, and grey.", vomit = 80, harm = "1d4" }
@@ -31,5 +31,6 @@ damage = "4d8"
 damage_type = "piercing"
 name = "bite"
 verb = "bites"
-to_hit = 9
+to_hit = 13
+threat = 19
 on_hit = [{ status = "frightened", chance = 20, severity = 2 }]

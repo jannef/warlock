@@ -11,6 +11,7 @@ dread = true
 name = "wormhost"
 glyph = "z"
 fg = "#a8b050"
+speed = 700
 faction = "undead"
 tags = ["undead"]
 alignment = "evil"

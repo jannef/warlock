@@ -11,7 +11,7 @@ name = "vampire spawn"
 plural = "vampire spawn"
 glyph = "V"
 fg = "#b03040"
-speed = 1300
+speed = 1400
 faction = "undead"
 tags = ["undead"]
 alignment = "evil"
@@ -22,7 +22,7 @@ footsteps = 30
 hearing = 18
 weight = 60000
 stats = { strength = 17, dexterity = 19, toughness = 17, intelligence = 16, willpower = 22, presence = 16 }
-base_hp = 36
+base_hp = 20
 resist = { fire = -25, poison = 100 }
 on_eat = { message = "Cold, and full of someone else's blood.", vomit = 80, harm = "1d4" }
 blood = "#4a0a14"
@@ -31,7 +31,8 @@ damage = "2d8"
 damage_type = "piercing"
 name = "bite"
 verb = "bites"
-to_hit = 4
+to_hit = 6
+threat = 19
 on_hit = [{ drain = "toughness", points = 1, chance = 10, check = "toughness", difficulty = 15 }]
 [creature.gaze]
 range = 4

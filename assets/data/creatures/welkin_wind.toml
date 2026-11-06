@@ -9,7 +9,7 @@ loot = 20
 name = "welkin wind"
 glyph = "E"
 fg = "#ffffff"
-speed = 2000
+speed = 1250
 faction = "elemental"
 tags = ["elemental", "air"]
 alignment = "neutral"
@@ -19,7 +19,7 @@ footsteps = 50
 hearing = 10
 weight = 400000
 stats = { strength = 34, dexterity = 30, toughness = 34, intelligence = 33, willpower = 36, presence = 33 }
-base_hp = 131
+base_hp = 73
 natural = { defence = 7, protection = 0, name = "rushing wind" }
 resist = { piercing = 50, electricity = 50, poison = 100 }
 corpse = false
@@ -27,9 +27,10 @@ blood = "none"
 [creature.attack]
 damage = "4d10"
 damage_type = "bludgeoning"
-to_hit = 14
+to_hit = 20
 name = "buffet"
 verb = "buffets"
+threat = 19
 on_hit = [{ status = "staggered", chance = 20, severity = 1 }]
 # Death throes (the dread design §5.3): it bursts where it dies.
 [creature.burst]
