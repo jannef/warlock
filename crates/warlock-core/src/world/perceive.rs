@@ -60,7 +60,12 @@ impl World {
         let before = self.perception.weather();
         let then = std::mem::replace(&mut self.perceived_at, now);
         let dazzled = self.perception.dazzled();
+        let draught = self.perception.draught();
         *self.perception = Perception::compute(&self.state, &self.content, &mut self.lights);
+        // An unseen shadow come near (`unseen.rs`).
+        if !draught && self.perception.draught() {
+            self.say(super::unseen::DRAUGHT_LINE);
+        }
         self.mark_noticed();
         self.glare_news(dazzled);
         self.learn_traps(events);
@@ -196,8 +201,11 @@ impl World {
         }
         let mut sprung_seen = sprung_seen.into_iter();
         events.retain(|e| match *e {
+            // One unseen (`unseen.rs`) moves unseen wherever it went from.
             Event::ActorMoved { actor, from, to } => {
-                actor == player || perception.sees_actors_at(from) || perception.sees_actors_at(to)
+                actor == player
+                    || (!perception.conceals(actor)
+                        && (perception.sees_actors_at(from) || perception.sees_actors_at(to)))
             }
             Event::DoorOpened { pos }
             | Event::DoorClosed { pos }
@@ -230,7 +238,8 @@ impl World {
                 damage,
                 natural,
             } => {
-                let sees_attacker = attacker == player || perception.sees_actors_at(from);
+                let sees_attacker = attacker == player
+                    || (perception.sees_actors_at(from) && !perception.conceals(attacker));
                 let sees_target = target == player || perception.sees_actors_at(to);
                 let creature = (self.actor_or_fallen(attacker)).map(|a| a.creature);
                 let by = creature.filter(|_| sees_attacker);

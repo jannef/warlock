@@ -48,3 +48,6 @@ area = [0.15, 0.15]
 scale = 0.5
 fade = 0.6
 glow = 0.5
+# It fades from sight on a cooldown (docs/dev/creatures.md "The unseen").
+[creature.invisible]
+cooldown = 300

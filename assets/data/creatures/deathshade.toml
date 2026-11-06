@@ -9,6 +9,7 @@ level = 60
 xp = 310
 rarity = "very_rare"
 dread = true
+shadowy = true
 name = "deathshade"
 glyph = "G"
 fg = "#1c1c34"

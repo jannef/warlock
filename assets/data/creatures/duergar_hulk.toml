@@ -27,3 +27,6 @@ resist = { poison = 25, cold = 10 }
 on_eat = { message = "Tough and sour, and far too much of it.", vomit = 30, train = { strength = 18 } }
 weapon_skills = { maces = 4 }
 racial_weapon = "maul"
+# It fades from sight on a cooldown (docs/dev/creatures.md "The unseen").
+[creature.invisible]
+cooldown = 300

@@ -32,7 +32,7 @@ use crate::weather::{Override, Weather};
 use std::collections::BTreeSet;
 
 /// The tags of what has no heartbeat, beside the animated things (Sense the quick).
-const LIFELESS: [&str; 2] = ["undead", "construct"];
+const LIFELESS: [&str; 3] = ["undead", "construct", "elemental"];
 
 impl World {
     /// `by`'s single-target spell `def` took `harm` hit points: its `leech` share, rounded down,

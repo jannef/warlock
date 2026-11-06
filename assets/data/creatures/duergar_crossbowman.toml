@@ -38,3 +38,6 @@ one_of = ["hand_axe"]
 chance = 60
 one_of = ["studded_leather"]
 magic = 5
+# It fades from sight on a cooldown (docs/dev/creatures.md "The unseen").
+[creature.invisible]
+cooldown = 300

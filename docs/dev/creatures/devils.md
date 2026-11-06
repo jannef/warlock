@@ -27,3 +27,6 @@ fixture, which replaces the statuses, drops the three devils whose riders it doe
 Waiting for mechanics (#448's follow-ups): several attacks a turn, flight, the imp's shapes and
 invisibility, creature spells, animated chains, thorns, summoning, auras, infernal wounds, a
 `large` size, a place in a population.
+
+The imp (#1132, docs/dev/creatures.md "The unseen"): `[creature.invisible] cooldown = 300`,
+it fades from sight every five minutes and stays in the room; its poison kept.

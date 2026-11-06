@@ -1,0 +1,37 @@
+# The monster dread design's one new type (docs/design/monster-dread.md §5.11, D8): a thing of
+# air bound to hunt, never seen (docs/dev/creatures.md "The unseen"). It finds its prey by scent
+# wherever it is on the level and never idles; its wind is heard as it comes, and it leaves no
+# blood, no corpse, and no heartbeat to feel. The air elementals' kin, a stray where they are.
+[[creature]]
+id = "invisible_stalker"
+level = 22
+xp = 120
+rarity = "uncommon"
+dread = true
+invisible = true
+hunts = true
+name = "invisible stalker"
+glyph = "E"
+fg = "#e0e8f0"
+speed = 1500
+faction = "elemental"
+tags = ["elemental", "air"]
+alignment = "neutral"
+vision = "darkvision"
+sight = 10
+opens_doors = true
+footsteps = 40
+hearing = 12
+weight = 50000
+stats = { strength = 20, dexterity = 21, toughness = 20, intelligence = 12, willpower = 22, presence = 4 }
+base_hp = 49
+natural = { defence = 4, protection = 0, name = "rushing wind" }
+resist = { piercing = 50, electricity = 50, poison = 100 }
+corpse = false
+blood = "none"
+[creature.attack]
+damage = "3d8"
+damage_type = "slashing"
+name = "cutting wind"
+verb = "cuts"
+to_hit = 5

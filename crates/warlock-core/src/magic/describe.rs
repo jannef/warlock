@@ -224,8 +224,10 @@ fn potion_lines(stack: &Stack, lore: Lore<'_>) -> Vec<Line> {
             format!("Makes you {much}{raised} for a while")
         }
         Draught::Vision { status } => {
-            let eyes = (content.status(*status).vision).map(|i| &content.vision_profiles()[i]);
+            let def = content.status(*status);
+            let eyes = (def.vision).map(|i| &content.vision_profiles()[i]);
             match eyes {
+                None if def.sees_unseen => "Shows you what hides from the eye for a while",
                 Some(e) if e.sees_uv => "Opens the eyes to light beyond violet for a while",
                 Some(e) if e.darkvision > 0 => "Lets you see in the dark for a while",
                 _ => "Sharpens the eyes in the dark for a while",

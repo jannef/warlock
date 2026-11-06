@@ -142,6 +142,8 @@ impl World {
         let heard = (self.state.actors.get_mut(&id))
             .map(|a| std::mem::take(&mut a.heard))
             .unwrap_or_default();
+        // The self-buff step (`unseen.rs`): it fades from sight when it may, then goes on.
+        self.fades(id, events);
         // Frightened (Hound's bay, `sign_picks.rs`), it runs; held fast (Drowning grip,
         // `lucky.rs`), it fights back instead of stepping.
         let plan = self.decide(id, &heard);
@@ -219,7 +221,9 @@ impl World {
                 self.lurker_waits(id, self.fight(id, target, at))
             }
             None => {
-                if let Some(at) = self.noise_to_look_into(id, heard) {
+                // One that hunts goes to the player as to a noise (`unseen.rs`).
+                let at = self.noise_to_look_into(id, heard);
+                if let Some(at) = at.or_else(|| self.hunted(id)) {
                     mind.noise = Some(at);
                     mind.post.get_or_insert(pos);
                 }

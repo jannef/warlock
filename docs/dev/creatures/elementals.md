@@ -38,3 +38,10 @@ and lightning elementals, and the water elemental. The air elemental (19) and th
 and up (the ice elemental and every greater and elder one) ship in none: no danger window reaches
 them (Fyrdelf's runs 5 to 16, #534). Deferred (#453 "Follow-ups"): large size,
 water-bound behaviour, knockback, whirlwind, engulf, burning, breath, elements at war, gem drops.
+
+The invisible stalker (#1132, docs/design/monster-dread.md §5.11): the air line's kin of level 22
+(uncommon, dread), `invisible = true` and `hunts = true` (docs/dev/creatures.md "The unseen"):
+never seen, it comes to the player wherever they are on its level; a quick role (1500, `3d8`
+slashing), no corpse, no blood, and, as every elemental now, no heartbeat for Sense the quick. No
+population names the air elementals of its depth yet, so it comes as a stray. It keeps the roster's
+formulas (`elemental_roster_tests`).
