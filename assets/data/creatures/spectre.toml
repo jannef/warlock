@@ -1,5 +1,5 @@
 # The undead roster (#383, batch 2). A pale shape of the dead that hates the living: it drifts
-# through walls and doors, and its cold touch drains the will, for good unless the mind holds
+# through walls and doors, and its cold gaze drains the will, for good unless the mind holds
 # firm (a temple's mending gives it back). Blades and clubs pass half through it.
 [[creature]]
 id = "spectre"
@@ -30,4 +30,9 @@ damage_type = "cold"
 name = "touch"
 verb = "touches"
 to_hit = 3
-on_hit = [{ drain = "willpower", points = 1, chance = 10, check = "willpower", difficulty = 14 }]
+[creature.gaze]
+range = 4
+chance = 40
+riders = [
+    { drain = "willpower", points = 1, chance = 100, check = "willpower", difficulty = 14 },
+]

@@ -755,7 +755,8 @@ fn status_segments(world: &World, clock: Clock, unit: TemperatureUnit) -> Vec<Se
     // then each alternative resource the player holds (`Rage 7`, `Focus 7/10`; spec §8
     // "Resources"), giving way before mana: they outlast the time, and so do the status effects the player suffers (by name, the most
     // important first: the last gives way first), Dazzled (strong light on light-blind eyes,
-    // spec §8 "Character creation"), hunger (shown unless the player is Not hungry), and the burden (shown
+    // spec §8 "Character creation"), Averted (eyes kept from a gaze, spec §8 "Creature
+    // behavior"), hunger (shown unless the player is Not hungry), and the burden (shown
     // when there is one), which slows everything the player does; hunger outlasts the burden, and
     // from Hungry down it outlasts everything, the level's name too (spec §8 "Hunger"). The
     // character level (`Lv 3`) comes after them and goes before them, but after the time. The
@@ -795,6 +796,7 @@ fn status_segments(world: &World, clock: Clock, unit: TemperatureUnit) -> Vec<Se
     ];
     let rest = [
         (view.dazzled()).then(|| Segment::new(1, "Dazzled")),
+        (view.averted()).then(|| Segment::new(1, "Averted")),
         hunger.map(|h| Segment::new(u8::from(hunger_tint(h).is_none()), h.name())),
         (burden != Burden::Unburdened).then(|| Segment::new(1, burden.name())),
         Some(Segment::new(

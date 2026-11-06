@@ -1,6 +1,6 @@
 # The leftover fiends (#450). A tiger-headed fiend in fine clothes, its hands turned backward,
 # that lives among men by deceit: a caster (its spells announced until creature magic is
-# designed) whose gaze transfixes and whose claws terrify. Arrows and spears turn half aside on
+# designed) whose gaze transfixes and terrifies (#1125). Arrows and spears turn half aside on
 # it. It hoards what it took by its lies. Its shapes and its illusions wait for mechanics of
 # their own.
 [[creature]]
@@ -39,7 +39,10 @@ damage_type = "slashing"
 name = "claws"
 verb = "claws"
 to_hit = 13
-on_hit = [
-    { status = "transfixed", chance = 15, severity = 2 },
-    { status = "frightened", chance = 10, severity = 1 },
+[creature.gaze]
+range = 5
+chance = 35
+riders = [
+    { status = "transfixed", chance = 100, severity = 2 },
+    { status = "frightened", chance = 100, severity = 1 },
 ]

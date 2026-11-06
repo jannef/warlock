@@ -663,7 +663,7 @@ impl World {
 
     /// The Defence of actor `id`, its burden capping its Dexterity (spec §8 "Burden"), and the
     /// wall around an incorporeal creature inside one adding its Wall bonus
-    /// (`incorporeal.rs`).
+    /// (`incorporeal.rs`), and averted eyes halving the player's Dodge (`avert.rs`).
     pub(crate) fn defence_of(&self, id: ActorId) -> combat::Defence {
         let actor = &self.state.actors[&id];
         let defence = actor.defence(
@@ -671,7 +671,7 @@ impl World {
             self.state.load(&self.content, actor).penalty(),
             self.state.race_of(&self.content, actor),
         );
-        self.wall_defence(id, defence)
+        self.averted_defence(id, self.wall_defence(id, defence))
     }
 
     /// The Protection of actor `id` (spec §8 "Combat"): what it wears and its hide soak off
@@ -813,6 +813,8 @@ impl World {
             return None;
         };
         let profile = profile.map(|p| self.glared(attacker, p));
+        // Averted eyes (`avert.rs`): a fight half-blind.
+        let profile = profile.map(|p| self.averted_blow(attacker, p));
         // Relentless (spec §8 "Birth sign"): a streak of blows at one creature.
         let profile = profile.map(|p| self.relentless(attacker, target, kind, p));
         // Favoured prey and a sneak attack (spec §8 "Class abilities").

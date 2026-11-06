@@ -93,6 +93,7 @@ mod animated;
 mod appraise;
 mod ascetic;
 mod attacks;
+mod avert;
 mod background;
 mod beast_friend;
 mod bleed;
@@ -150,6 +151,7 @@ mod forage;
 mod free_blow;
 mod frenzy;
 pub(crate) mod freshness;
+mod gaze;
 mod gifts;
 mod glare;
 mod guild;
@@ -1743,6 +1745,8 @@ mod free_blow_tests;
 mod frenzy_tests;
 #[cfg(test)]
 mod freshness_tests;
+#[cfg(test)]
+mod gaze_tests;
 #[cfg(test)]
 mod gear_tests;
 #[cfg(test)]

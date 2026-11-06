@@ -60,9 +60,11 @@ impl World {
         let before = self.perception.weather();
         let then = std::mem::replace(&mut self.perceived_at, now);
         let dazzled = self.perception.dazzled();
+        let averted = self.perception.averted();
         *self.perception = Perception::compute(&self.state, &self.content, &mut self.lights);
         self.mark_noticed();
         self.glare_news(dazzled);
+        self.avert_news(averted);
         self.learn_traps(events);
         self.chest_wise_look();
         let current = self.state.current_level.clone();

@@ -1,6 +1,6 @@
 # The undead roster (#383, batch 2). One a vampire fed on and left to rise: quick and hungry, it
-# opens doors, its bite drinks the life out of the living, for good unless the body holds on (a
-# temple's mending gives it back), and fire is its bane.
+# opens doors, its gaze holds the living still, its bite drinks the life out of the living, for
+# good unless the body holds on (a temple's mending gives it back), and fire is its bane.
 [[creature]]
 id = "vampire_spawn"
 level = 16
@@ -32,3 +32,9 @@ name = "bite"
 verb = "bites"
 to_hit = 4
 on_hit = [{ drain = "toughness", points = 1, chance = 10, check = "toughness", difficulty = 15 }]
+[creature.gaze]
+range = 4
+chance = 25
+riders = [
+    { status = "transfixed", chance = 100, severity = 1 },
+]

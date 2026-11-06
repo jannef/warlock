@@ -7,6 +7,7 @@ use super::breath::{Breath, BreathSpec};
 use super::damage_type::TypeNames;
 use super::disease::DiseaseId;
 use super::faction::FactionId;
+use super::gaze::{Gaze, GazeSpec};
 use super::gear::{Gear, GearLineSpec, GearSpec};
 use super::light::LightId;
 use super::object::MAX_BONUS;
@@ -231,6 +232,8 @@ pub(super) struct CreatureSpec {
     pub attack: Option<NaturalAttacks>,
     /// Its breath (spec §8 "Creature behavior": "Dragons"): a `combat = "dragon"` type's.
     pub breath: Option<BreathSpec>,
+    /// Its gaze (spec §8 "Creature behavior": "Gazes"): a rider at sight, not at touch.
+    pub gaze: Option<GazeSpec>,
     /// Its throw (spec §8 "Ranged combat": "Creatures' throws"): a giant's boulders.
     pub throw: Option<ThrowSpec>,
     /// Its summoning (spec §8 "Summoning"): the creatures it calls forth.
@@ -693,6 +696,7 @@ pub(super) struct Resolved {
     pub attack: Option<NaturalAttack>,
     pub more_attacks: Vec<NaturalAttack>,
     pub breath: Option<Breath>,
+    pub gaze: Option<Gaze>,
     pub throw: Option<Throw>,
     pub weapon_skills: WeaponSkills,
     pub resist: Vec<(DamageTypeId, i32)>,
@@ -743,6 +747,7 @@ impl CreatureSpec {
             attack: r.attack,
             more_attacks: r.more_attacks,
             breath: r.breath,
+            gaze: r.gaze,
             throw: r.throw,
             summon: None,
             summon_spec: self.summon,
@@ -908,6 +913,10 @@ pub struct CreatureDef {
     /// type's: the cone of its element it breathes when the cooldown is off. Rules only (the
     /// wiki states it).
     pub breath: Option<Breath>,
+    /// Gameplay: its gaze (spec §8 "Creature behavior": "Gazes"): the riders a look gives a
+    /// hostile within its range that sees it, when the cooldown is off (`world/gaze.rs`).
+    /// Rules only (the wiki states it).
+    pub gaze: Option<Gaze>,
     /// Gameplay: its throw, a natural ranged attack with no ammunition (spec §8 "Ranged combat":
     /// "Creatures' throws"); `None`: it throws nothing. Rules only (the wiki states it).
     pub throw: Option<Throw>,
