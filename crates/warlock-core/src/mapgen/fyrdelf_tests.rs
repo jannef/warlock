@@ -36,10 +36,18 @@ fn creature_ids(level: &LevelTemplate) -> Vec<&str> {
         .collect()
 }
 
-/// Whether `level` holds the foreman's cabin: its plank floor, which no generator lays.
+/// Whether `level` holds the foreman's cabin: its plank floor beside its plank wall, which no
+/// generator lays and no shared vault has (the Broken Bridge's planks lie by no timber wall, the
+/// Gallows-yard's timber stands on no planks).
 fn has_cabin(level: &LevelTemplate) -> bool {
     let planks = CONTENT.terrain_id("plank_floor").expect("plank floor");
-    level.terrain.iter().any(|(_, t)| *t == planks)
+    let timber = CONTENT.terrain_id("timber_wall").expect("timber wall");
+    (level.terrain.iter()).any(|(p, t)| {
+        *t == planks
+            && Dir::ALL
+                .iter()
+                .any(|d| level.terrain.get(p.step(*d)) == Some(&timber))
+    })
 }
 
 /// Whether `level` holds the drake's hoard: the drake, which comes from nowhere else.

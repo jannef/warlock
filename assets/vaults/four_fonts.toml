@@ -1,0 +1,40 @@
+# Vault: four shut alcoves off a passage, each with a font of one element and that element's own
+# before it, each door marked by what is behind it. The decision: which element to face, for
+# which find, and how many.
+# Each door says its element to whoever looks at it; behind each is one of a pair of places, so
+# where the elemental waits moves. Elementals open no doors. Water elementals come from danger 4,
+# the last of the four, so the fonts keep to it and deeper: shallower, an alcove would stand
+# empty and its find be free. The finds follow the element: arms by fire (the one `magic`),
+# armour by earth, jewellery by water, what the wind carries by air.
+name = "The Four Fonts"
+danger = { from = 4 }
+map = '''
+###############
+#1B1#######2U2#
+#.x.#######.j.#
+##F#########W##
++.............#
+##E#########A##
+#.y.#######.z.#
+#3O3#######4C4#
+###############
+'''
+
+[legend]
+"B" = "brazier"
+"U" = "fountain"
+"O" = "boulder"
+"C" = { terrain = "crystal", light = "crystal_blue" }
+"F" = { terrain = "door_closed", name = "a scorched door", note = "Heat comes through it." }
+"W" = { terrain = "door_closed", name = "a sweating door", note = "Water beads on it and runs." }
+"E" = { terrain = "door_closed", name = "a door in a stone frame", note = "Grit sifts from under it." }
+"A" = { terrain = "door_closed", name = "a whistling door", note = "Wind sings through its cracks." }
+# One of each pair of places holds the element's own.
+"1" = { terrain = "floor", monsters = { pool = "fire", count = 1 } }
+"2" = { terrain = "floor", monsters = { pool = "water", count = 1 } }
+"3" = { terrain = "floor", monsters = { pool = "earth", count = 1 } }
+"4" = { terrain = "floor", monsters = { pool = "air", count = 1 } }
+"x" = { terrain = "floor", loot = { pool = "weapons", grade = "magic" } }
+"y" = { terrain = "floor", loot = { pool = "armour" } }
+"j" = { terrain = "floor", loot = { pool = "jewellery" } }
+"z" = { terrain = "floor", loot = { pool = ["wands", "scrolls", "potions"] } }

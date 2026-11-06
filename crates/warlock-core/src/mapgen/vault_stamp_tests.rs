@@ -18,7 +18,7 @@ static CONTENT: LazyLock<Content> = LazyLock::new(|| Content::builtin().expect("
 /// dangers 6 to 9.
 const BRANCHES: [&str; 2] = ["banfeld", "wulfeshol"];
 const DANGERS: RangeInclusive<u8> = 6..=9;
-const SEEDS: u64 = 300;
+const SEEDS: u64 = 600;
 /// Deeper floors for a vault whose `danger` keeps it off some of [`BRANCHES`]': the endless
 /// branch's rooms floors (its danger is its depth) and Fyrdelf's caves, each of dangers 9 to 16.
 const DEEP: [(&str, RangeInclusive<u32>); 2] = [("grundleas", 9..=16), ("fyrdelf", 5..=12)];
@@ -31,16 +31,18 @@ fn every_shared_dungeon_vault_stamps_on_rooms_and_caves_floors() {
         .filter(|v| !v.is_outdoor() && v.campaign.is_none())
         .collect();
     assert!(shared.len() >= 25, "{}", shared.len());
-    let deep: Vec<&Vault> = (shared.iter().copied())
-        .filter(|v| !DANGERS.clone().all(|d| v.suits(d)))
-        .collect();
-    for vault in &deep {
+    // Some floor of the test suits every vault: a shallow one (the Tithe-barn, to danger 6)
+    // [`BRANCHES`]' first floors, a deep one the deeper floors.
+    for vault in &shared {
         assert!(
-            (9..=16).any(|d| vault.suits(d)),
+            DANGERS.clone().chain(9..=16).any(|d| vault.suits(d)),
             "{}: no floor of the test suits it",
             vault.id()
         );
     }
+    let deep: Vec<&Vault> = (shared.iter().copied())
+        .filter(|v| !DANGERS.clone().all(|d| v.suits(d)) && (9..=16).any(|d| v.suits(d)))
+        .collect();
     let mut routes: BTreeMap<&str, BTreeSet<Vec<Dir>>> = BTreeMap::new();
     let floors = (BRANCHES.iter()).map(|b| {
         (
@@ -162,8 +164,9 @@ fn check_doors_and_traps(
 }
 
 /// The finds a vault names lie where it puts them, stamped `turn` round at `at`: the Reliquary's
-/// rune a lightning bolt with its find on it, the Delving's pick-axe at its way in, and the
-/// Sealed Barrow's lead key inside it (that it opens the door: [`check_pools`]).
+/// rune a lightning bolt with its find on it, the Delving's pick-axe at its way in, the Sealed
+/// Barrow's lead key inside it (that it opens the door: [`check_pools`]), the Counting-house's
+/// tripwire under its coin, and the Well-house's finds in its water; and its named places with it.
 fn check_finds(level: &LevelTemplate, vault: &Vault, at: Pos, turn: Turn) -> Result<(), String> {
     let turned = vault.turned(turn);
     let shift = |p: Pos| Pos::new(at.x + p.x, at.y + p.y);
@@ -192,7 +195,37 @@ fn check_finds(level: &LevelTemplate, vault: &Vault, at: Pos, turn: Turn) -> Res
         "sealed_barrow" if !lies_inside(CONTENT.object_id("lead_key").expect("the key")) => {
             return Err("no lead key".into());
         }
+        // The Counting-house's tripwire lies under a pile of its coin.
+        "counting_house" => {
+            let alarm = CONTENT.trap_id("alarm").expect("the trap");
+            for p in turned.template.traps.keys() {
+                if level.traps.get(&shift(*p)).map(|t| t.kind) != Some(alarm) {
+                    return Err(format!("{}: no tripwire", shift(*p)));
+                }
+                if !level.objects.contains_key(&shift(*p)) {
+                    return Err(format!("{}: no coin on the tripwire", shift(*p)));
+                }
+            }
+        }
+        // The Well-house's finds lie in its water, wadeable, not deep.
+        "well_house" => {
+            let water = CONTENT.terrain_id("water").expect("the terrain");
+            for (p, _) in &turned.template.loot {
+                if level.terrain.get(shift(*p)) != Some(&water) {
+                    return Err(format!("{}: a find out of the water", shift(*p)));
+                }
+                if !level.objects.contains_key(&shift(*p)) {
+                    return Err(format!("{}: no find in the water", shift(*p)));
+                }
+            }
+        }
         _ => {}
+    }
+    // Named places come with the vault (the Four Fonts' doors say their elements).
+    for (p, place) in &turned.template.places {
+        if level.places.get(&shift(*p)) != Some(place) {
+            return Err(format!("{}: not the place {place:?}", shift(*p)));
+        }
     }
     Ok(())
 }

@@ -528,12 +528,15 @@ fn a_generated_floor_is_laid_down_full_and_nothing_else_moves() {
             assert!(def.level <= deepest, "seed {seed}: {}", def.id);
             let kinds = [&spawning.population, &spawning.generic];
             assert!(kinds.iter().any(|k| k.contains(&spawn.creature)));
-            assert_eq!(with.terrain.get(spawn.pos), Some(&floor), "seed {seed}");
-            assert!(
-                (with.stairs.iter()).all(|s| s.pos.chebyshev(spawn.pos) >= 8),
-                "seed {seed}: {} by the stairs",
-                spawn.pos
-            );
+            // A vault's crowd stands where its map says, by the stairs or in water as may be.
+            if !with.outside_cap.contains(&spawn.pos) {
+                assert_eq!(with.terrain.get(spawn.pos), Some(&floor), "seed {seed}");
+                assert!(
+                    (with.stairs.iter()).all(|s| s.pos.chebyshev(spawn.pos) >= 8),
+                    "seed {seed}: {} by the stairs",
+                    spawn.pos
+                );
+            }
             assert!(cells.insert(spawn.pos), "seed {seed}: two on {}", spawn.pos);
             // Its route loops and never steps on a trap.
             let mut p = spawn.pos;

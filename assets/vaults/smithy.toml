@@ -1,0 +1,26 @@
+# Vault: a cold forge with its smiths at the anvil and two pieces of their best work at the rack
+# and the bench. The decision: fight them for it among the anvil and benches, which break their
+# line and the player's alike.
+# The anvil, rack, and bench are decoration (rule 13: nothing to temper on). Kobolds shallow,
+# duergar deep: danger 2, the kobolds' first, to 40, past which the smiths are no match for the
+# floor. Borrows: the dwarf-forge of every hall-under-the-mountain tale.
+name = "The Smithy"
+danger = { from = 2, to = 40 }
+map = '''
+###########
+#RRR...WW.#
+#w.......a#
+#..s.A.s..#
+#.s.....s.#
+#.........#
+#####+#####
+'''
+
+[legend]
+"R" = "weapon_rack"
+"W" = "workbench"
+"A" = "anvil"
+# Three of the four places at the work are taken.
+"s" = { terrain = "floor", monsters = { pool = ["kobold", "duergar"], count = 3 } }
+"w" = { terrain = "floor", loot = { pool = "weapons", grade = "magic" } }
+"a" = { terrain = "floor", loot = { pool = "armour", grade = "magic" } }

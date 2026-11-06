@@ -104,7 +104,7 @@ fn flooded_cell_and_guard_post_come_turned_and_their_doors_lead_out() {
 #[test]
 fn a_stamped_guard_post_keeps_its_patrol_and_its_key() {
     let mut first_steps = BTreeSet::new();
-    for seed in 1..=120 {
+    for seed in 1..=400 {
         for depth in 1..=4 {
             let id = format!("depths:{depth}");
             let Ok(level) = generate(&CONTENT, ("showcase", seed), &id, None) else {

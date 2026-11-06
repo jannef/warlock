@@ -1,0 +1,25 @@
+# Vault: the harvest heaped in a barn behind a shut door, vermin in it, a sack of coin under the
+# grain. The decision: many cheap fights in a doorway for a winter's food and one purse.
+# Vermin open no door, so the barn keeps them until it is opened, and then they come at the
+# opener one doorway at a time. Deliberately cheap (rule 2 broken downward, as the Flooded cell
+# is): the crowd is the floor's weakest kind, and the bread and turnips are the find most worth
+# having on a shallow floor. Shallow only: past danger 6 vermin are no cost and the food no prize.
+name = "The Tithe-barn"
+danger = { to = 6 }
+map = '''
+#############
+#tbv.v.v.bt$#
+#.v.......vt#
++...........#
+#.v.......vb#
+#tbv.v.v.bt.#
+#############
+'''
+
+[legend]
+# Six of the ten cells hold vermin.
+"v" = { terrain = "floor", monsters = { pool = "vermin", count = 6 } }
+"t" = { terrain = "floor", objects = ["turnip*2"] }
+"b" = { terrain = "floor", objects = ["bread"] }
+# The sack of coin, in the heaps away from the door.
+"$" = { terrain = "floor", loot = { pool = "money" } }

@@ -1,0 +1,27 @@
+# Vault: a stair going down into a flooded hall where the drowned stand, and a dry ledge across it.
+# The decision: wade to them, slowed in their water, or hold the dry steps and make them come.
+# The steps are dry, the hall below them shallow, then deep enough to wade; the crowd stands
+# across the water from the door (rule 3). Marsh-things come no shallower than danger 4, the
+# drowned at 5, so the stair keeps to danger 4 and deeper.
+name = "The Drowned Stair"
+danger = { from = 4 }
+map = '''
+#############
+#..$..m..o..#
+#~~u~~~~u~~~#
+#~u~~~u~~~u~#
+#,,,,u,,,,,,#
+#,,u,,,,,u,,#
+#===========#
+#===========#
+######+######
+'''
+
+[legend]
+"=" = "flagstones"
+"," = "shallow_water"
+# Five of the eight stand in the water.
+"u" = { terrain = "water", monsters = { pool = ["undead", "marsh-thing"], count = 5 } }
+"$" = { terrain = "floor", loot = { pool = ["money", "jewellery"] } }
+"m" = { terrain = "floor", loot = "magic" }
+"o" = { terrain = "floor", loot = "any" }

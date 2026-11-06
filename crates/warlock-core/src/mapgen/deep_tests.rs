@@ -4,8 +4,13 @@ use super::*;
 use crate::content::ContentFiles;
 use std::sync::LazyLock;
 
-static CONTENT: LazyLock<Content> =
-    LazyLock::new(|| Content::load(&ContentFiles::builtin()).expect("builtin content"));
+/// The built-in content without the one vault whose river is deep water of its own (the Broken
+/// Bridge's): these tests count the generators' pools.
+static CONTENT: LazyLock<Content> = LazyLock::new(|| {
+    let mut files = ContentFiles::builtin();
+    files.remove("vaults/broken_bridge.toml");
+    Content::load(&files).expect("builtin content")
+});
 
 fn caves_levels() -> Vec<(String, String)> {
     (CONTENT.dungeons())

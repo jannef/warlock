@@ -1,0 +1,24 @@
+# Vault: coins on the bottom of a well-pool and water-things in it. The decision: every coin is two
+# slow, loud steps of wading among them.
+# The pool is wadeable `water` (twice the time, and loud), not deep water, where nothing may lie:
+# each find is a walk into the water-things' own ground, and the walkway round it is dry. Water
+# elementals come no shallower than danger 4, so the house keeps to danger 4 and deeper. Of the
+# sketch's four coins one is a ring someone dropped in for luck (rule 2's `magic`).
+name = "The Well-house"
+danger = { from = 4 }
+map = '''
+###########
+#.........#
+#.~~~~~~~.#
++.~w~$~w~.#
+#.~$~j~$~.#
+#.~w~~~w~.#
+#.........#
+###########
+'''
+
+[legend]
+# Two of the four cells hold one of the water's own.
+"w" = { terrain = "water", monsters = { pool = "water", count = 2 } }
+"$" = { terrain = "water", loot = { pool = "money" } }
+"j" = { terrain = "water", loot = { pool = "jewellery", grade = "magic" } }

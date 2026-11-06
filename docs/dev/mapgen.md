@@ -130,10 +130,14 @@ and `mapgen/vault_stamp_tests.rs` (#1072): every shared dungeon vault stamps at 
 seeds of a rooms branch (Bānfeld) and a cave branch (Wulfeshol), some way round, only on a floor
 whose danger its `danger` holds (both branches run 6 to 9, so a vault of danger 8 and deeper
 meets only their bottom floors); a vault whose `danger` leaves out any of 6 to 9 is also looked
-for, in 100 seeds, on Grundlēas's rooms floors and Fyrdelf's caves of dangers 9 to 16 (#1077).
+for, in 100 seeds, on Grundlēas's rooms floors and Fyrdelf's caves of dangers 9 to 16 (#1077), if
+any of those suits it (one kept shallow, the Tithe-barn to danger 6, meets only the branches'
+first floors; every shared vault must suit some floor of the test).
 Each stamp has its entrances reached from the up stairs (secret doors count as passable), its
 known traps known (a chest's too: the Spiteful Coffer's fireball), the Reliquary's lightning rune
-with its find on it, the Delving's pick-axe, every draw of a pool with the pool's `status` and
+with its find on it, the Delving's pick-axe, the Counting-house's tripwire under its coin, the
+Well-house's finds in its wadeable water (#1078), its named places with it (the Four Fonts'
+doors), every draw of a pool with the pool's `status` and
 `route` (the route walkable and looping), every locked door with a key that opens it lying or
 carried inside the vault, reached from an entrance without passing a lock (the Sealed Barrow's
 lead key, One of Them Has It's copper key on one of the crowd, the Guard post's brass key), and

@@ -1,0 +1,24 @@
+# Vault: a winding tunnel one cell wide with vermin all along it and what they dragged in at its
+# end. The decision: meet the swarm in the tunnel, one at a time, or not at all.
+# A swarm met in the open surrounds; met here it comes single file, which is the only way a swarm
+# is ever fair. A dead end with one entrance, so the crowd stays in it. Deliberately cheap (rule 2
+# broken downward: no rare): vermin are the cheapest fight on a floor, and the nest pays as they
+# do. Shallow only: past danger 8 vermin are no cost.
+name = "The Rat-run"
+danger = { to = 8 }
+map = '''
+#################
++.v.v.v.v.v.v...#
+###############.#
+#..v.v.v.v.v.v..#
+#.###############
+#.....$..b..$.m.#
+#################
+'''
+
+[legend]
+# Eight of the twelve cells hold vermin.
+"v" = { terrain = "floor", monsters = { pool = "vermin", count = 8 } }
+"b" = { terrain = "rubble", objects = ["bones"] }
+"$" = { terrain = "rubble", loot = "any" }
+"m" = { terrain = "rubble", loot = { pool = ["weapons", "armour", "jewellery"], grade = "magic" } }

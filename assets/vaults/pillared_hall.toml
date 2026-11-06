@@ -1,0 +1,24 @@
+# Vault: a hall of pillars with archers among them and their spare shafts at the back. The
+# decision: an archers' fight where no line of sight is long, so the player's missiles and theirs
+# are even; or a rush from pillar to pillar.
+# One shut door holds the crowd (rule 3). Archers come from danger 3 (goblins and kobolds), so the
+# hall keeps to it and deeper. Of the three finds one is a launcher (rule 2's `magic`).
+name = "The Pillared Hall"
+danger = { from = 3 }
+map = '''
+###############
+#$..a..m...a.$#
+#.#.#.#.#.#.#.#
+#...a.....a...#
+#.#.#.#.#.#.#.#
+#.....a.a.....#
+#.#.#.#.#.#.#.#
+#.............#
+#######+#######
+'''
+
+[legend]
+# Four of the six stand among the pillars.
+"a" = { terrain = "floor", monsters = { pool = "archer", count = 4 } }
+"$" = { terrain = "floor", loot = { pool = "missiles" } }
+"m" = { terrain = "floor", loot = { pool = "missile_weapons", grade = "magic" } }

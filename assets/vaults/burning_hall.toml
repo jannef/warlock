@@ -1,0 +1,23 @@
+# Vault: a hall cut by lava into islands, joined by necks one cell wide, fire-things on the islands
+# and the find on the last. The decision: three bottlenecks in a row, each held from the far side.
+# Every neck is a fight in a doorway with lava either hand; the necks do not line up, so nothing
+# is shot down the hall's length. Fire elementals come from danger 2, so the hall keeps to it and
+# deeper.
+name = "The Burning Hall"
+danger = { from = 2 }
+map = '''
+################
+#.......L...L..#
+#...L.f.L.f.L..#
++...L.$.L....fr#
+#...L.f.L.f.L..#
+#...L.......L..#
+################
+'''
+
+[legend]
+"L" = "lava"
+# Three of the five island cells hold one of the fire's own.
+"f" = { terrain = "floor", monsters = { pool = ["fire-thing", "fire"], count = 3 } }
+"$" = { terrain = "floor", loot = "magic" }
+"r" = { terrain = "floor", loot = { pool = "weapons", grade = "rare" } }
