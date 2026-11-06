@@ -8,6 +8,7 @@ id = "lich"
 level = 30
 xp = 160
 rarity = "rare"
+dread = true
 loot = 75
 name = "lich"
 glyph = "L"

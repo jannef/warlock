@@ -7,6 +7,7 @@ id = "pixie"
 level = 4
 xp = 30
 rarity = "very_rare"
+dread = true
 loot = 15
 name = "pixie"
 glyph = "f"

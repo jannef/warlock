@@ -5,7 +5,8 @@
 id = "vampire_spawn"
 level = 16
 xp = 90
-rarity = "uncommon"
+rarity = "rare"
+dread = true
 name = "vampire spawn"
 plural = "vampire spawn"
 glyph = "V"

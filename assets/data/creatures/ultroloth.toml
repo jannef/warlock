@@ -7,6 +7,7 @@ id = "ultroloth"
 level = 58
 xp = 300
 rarity = "very_rare"
+dread = true
 loot = 70
 name = "ultroloth"
 glyph = "&"

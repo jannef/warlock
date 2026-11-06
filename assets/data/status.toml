@@ -856,7 +856,8 @@ start = "A ward settles about you."
 end = "Your ward fades."
 
 # Hound's bay's (a Barghest's birth sign pick): a creature that heard the howl and is of a lower
-# level runs from the howler, a degree for each turn, a turn's time apiece.
+# level runs from the howler, a degree for each turn, a turn's time apiece. Fear's teeth
+# (docs/design/monster-dread.md §5.4): shaking hands, -3 to hit while it lasts, nothing more.
 [[status]]
 id = "frightened"
 name = "Frightened"
@@ -865,6 +866,7 @@ max = 3
 stacking = "refresh"
 eases = 6
 flees = true
+combat = { to_hit = -3 }
 start = "You are frightened."
 end = "You master your fear."
 

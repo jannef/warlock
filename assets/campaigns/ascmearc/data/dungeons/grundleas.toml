@@ -31,6 +31,11 @@ shops = { chance = 0 }
 [dungeon.endless]
 caves = 15
 caves_size = [100, 40]
+# The dread come oftener the deeper it goes (docs/design/monster-dread.md §8; the owner: "Below
+# 70, keep drastically increasing dread monster chance deeper you go"): one draw in 100 above
+# floor 30 (the default), 80 from 30, 60 from 50, 40 from 70, the roster's top; past it, halved
+# every ten floors (30 at 75, 20 at 80, 10 at 90) down to one draw in 5 from floor 100 on.
+dread = { steps = [[30, 80], [50, 60], [70, 40]], halves = 10, least = 5 }
 
 # The layer bosses (#1118; spec §7 "The endless branch", `world/layer_boss.rs`): every tenth
 # floor is kept by a unique boss of its own in its lair, a vault, and the floor's only way down is

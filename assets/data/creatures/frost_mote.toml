@@ -4,7 +4,7 @@
 id = "frost_mote"
 level = 5
 xp = 35
-rarity = "common"
+rarity = "uncommon"
 name = "frost mote"
 glyph = "e"
 fg = "#c0f0ff"
