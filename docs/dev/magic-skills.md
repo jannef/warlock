@@ -15,7 +15,7 @@ CLAUDE.md says.
   two rows, an unknown school (serde), and `role = "spell"` (Spell attacks, retired, with a
   message naming `school`; `SkillSpec::role` is read as text for it, `Role::from_id`).
   `Content::load` refuses a spell whose school has no row (once there are weapon skills at all).
-- A school row is a weapon skill in everything else: the missile curve, `[marks]`,
+- A school row is a weapon skill in everything else: its own `school` curve (#1095), `[marks]`,
   `Training { rank, marks }` on `Actor::weapon_skills` (saved by index), `train`, `raise`,
   `progress`, `ranks_news` ("You feel more skilled at evocation."), the dev `rank:evocation:5`.
   Defaults: evocation ↔ transmutation, necromancy ↔ restoration, abjuration ↔ enchantment, 4

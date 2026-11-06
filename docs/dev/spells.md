@@ -624,7 +624,7 @@ cast path shares.
      single-target spell of the caster's own level (base mana = the level, the ranks' mana
      off), 10 to 13 for the wizard from level 5 to 60, 8 to 9 the priest, 8.5 to 12 the witch.
      Measured pace (the wizard): evocation 5 at level 10, 7 at 20, 8 at 30, 10 from 50, §8.4's
-     estimate; the schools stay on the missile curve (no row tuned). No casts-to-kill column.
+     estimate; the schools stayed on the missile curve (no row tuned; their own `school` curve since #1095). No casts-to-kill column.
   6. **Tests**: since S1 `the_shipped_cost_table_reads_as_the_design_has_it` and
      `the_shipped_table_makes_areas_dearer_and_touches_cheaper` (the cap check at load and the
      tier table's went with the table, and nothing replaces them: decision 16).
