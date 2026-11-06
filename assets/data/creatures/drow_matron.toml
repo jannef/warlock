@@ -29,7 +29,7 @@ base_hp = 100
 mana = 60
 skills = { concentration = 130, spellcraft = 135 }
 resist = { poison = 50 }
-on_eat = { message = "Lean and bitter, with an aftertaste of old poisons.", vomit = 40 }
+on_eat = { message = "Lean and bitter, with an aftertaste of old poisons.", vomit = 40, skills = { decipher_script = { gives = 14, up_to = 110 } } }
 [creature.attack]
 damage = "4d8"
 damage_type = "slashing"

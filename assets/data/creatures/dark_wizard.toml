@@ -25,6 +25,8 @@ stats = { strength = 18, dexterity = 16, toughness = 22, intelligence = 18, will
 base_hp = 48
 mana = 36
 skills = { concentration = 88, spellcraft = 98 }
+# Its corpse teaches something of its letters.
+on_eat = { skills = { decipher_script = { gives = 8, up_to = 60 } } }
 weapon_skills = { staves = 3 }
 racial_weapon = "quarterstaff"
 [[creature.gear]]

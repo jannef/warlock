@@ -79,7 +79,13 @@ last turn) → `finish` (take one, with its age; then rotten food of any kind (`
 display order the `train` marks added to `Actor::stat_marks` (sure, no draw; "Something of its
 strength passes into you." at `LOUD_MARKS`, 30, or more) and a gameplay draw per `widen` stat
 for `Stats::widen(stat, 1)` ("You feel you could grow stronger yet." when it rose), both scaled
-by `corpse_stats_percent`; then heal, harm, feed; tests in `world/eat_tests.rs`) / plain food,
+by `corpse_stats_percent`; then `corpse_skills`: per `on_eat.skills` entry (`SkillGift
+{ gives, up_to }`, `SkillGift::apply`, no draw, not scaled by talents) an untrained skill is
+learned at `gives` and a trained one rises by it up to `up_to`, through `Skills::add`, told
+in `[corpses.skills]`'s `learn`/`rise` words (`SkillNews`), nothing past the cap; the loader
+(`OnEat::check`: `gives` 1 to `up_to`, `up_to` at most `MAX_VALUE`; `resolve_corpse_gifts`:
+`[corpses.skills]` names known skills, a creature only skills with words there) checks it;
+then heal, harm, feed; tests in `world/eat_tests.rs`) / plain food,
 `feed` with overeating, `vomit`, hunger and burden news). Saved and hashed (`Actor::satiation`,
 `Stack::died`, `Death::cause`).
 `creature_dies` calls `leave_corpse` (corpse on top); `perceive` calls `rot_away` (the current

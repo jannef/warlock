@@ -200,8 +200,8 @@ pub use companion::{
 };
 pub use creature::{
     Budge, Combat, CorpseGifts, CreatureDef, CreatureId, DEFAULT_SIGHT, Hide, Incorporeal,
-    MAX_TAG_WIDEN, MAX_TRAIN, MAX_WIDEN, NORMAL_SPEED, NaturalAttack, OnEat, SPEEDS, is_proper,
-    the, the_start,
+    MAX_TAG_WIDEN, MAX_TRAIN, MAX_WIDEN, NORMAL_SPEED, NaturalAttack, OnEat, SPEEDS, SkillGift,
+    is_proper, the, the_start,
 };
 pub use creature_rarity::{COMMON, CreatureRarity, FACTOR};
 pub use damage_type::{DamageTypeDef, DamageTypeId, MAX_DAMAGE_TYPES};
@@ -2545,6 +2545,25 @@ impl Content {
                 .resolve(&tags)
                 .map_err(|m| format!("creature `{}`: {m}", creature.id))?;
             creature.on_eat = (!on_eat.is_empty()).then_some(on_eat);
+        }
+        // What a corpse teaches is a skill with its words in `[corpses.skills]` (without
+        // `data/skills.toml` there are no skills, and corpses teach nothing).
+        if self.skills().is_empty() {
+            return Ok(());
+        }
+        if let Some(id) = (corpses.skills.keys()).find(|id| self.skill_id(id).is_none()) {
+            return Err(format!("corpses: skills: unknown skill `{id}`"));
+        }
+        for creature in &self.creatures {
+            let Some(on_eat) = &creature.on_eat else {
+                continue;
+            };
+            if let Some(id) = (on_eat.skills.keys()).find(|id| !corpses.skills.contains_key(*id)) {
+                return Err(format!(
+                    "creature `{}`: on_eat: skills: `{id}` has no words in [corpses.skills]",
+                    creature.id
+                ));
+            }
         }
         Ok(())
     }

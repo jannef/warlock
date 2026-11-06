@@ -25,6 +25,8 @@ stats = { strength = 15, dexterity = 14, toughness = 19, intelligence = 17, will
 base_hp = 36
 mana = 30
 skills = { concentration = 66, spellcraft = 73 }
+# Its corpse teaches something of its letters.
+on_eat = { skills = { decipher_script = { gives = 6, up_to = 45 } } }
 weapon_skills = { daggers = 2 }
 racial_weapon = "dagger"
 # The racial weapon's line written out, for its magic.
