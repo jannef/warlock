@@ -68,16 +68,17 @@ fn a_unique_character_and_a_type_without_grades_are_never_graded() {
 }
 
 #[test]
-fn uniques_people_mimics_and_generated_types_have_no_grades() {
+fn uniques_people_mimics_and_animated_things_but_the_blades_have_no_grades() {
     let factions = CONTENT.factions();
     let people = ["peaceful", "merchants"].map(|f| factions.id(f).expect(f));
     let mut ungraded = Vec::new();
     for (i, def) in CONTENT.creature_defs().iter().enumerate() {
         let id = CreatureId(u16::try_from(i).expect("few types"));
         let person = def.faction.is_some_and(|f| people.contains(&f));
+        let blade = def.id.starts_with("animated_blade_");
         let none = def.unique
             || def.mimic.is_some()
-            || def.animated.is_some()
+            || (def.animated.is_some() && !blade)
             || CONTENT.animated_body(id).is_some()
             || person;
         if none {
@@ -101,8 +102,14 @@ fn uniques_people_mimics_and_generated_types_have_no_grades() {
             .iter()
             .any(|d| d.animated.is_some() && !d.grades)
     );
-    // The rest have them: a kobold, a rat, a zombie.
-    for id in ["kobold", "rat", "zombie"] {
+    // The rest have them: a kobold, a rat, a zombie, and every blade (the dread design §13).
+    for id in [
+        "kobold",
+        "rat",
+        "zombie",
+        "animated_blade_5",
+        "animated_blade_20",
+    ] {
         let def = CONTENT.creature(CONTENT.creature_id(id).expect(id));
         assert!(def.grades, "{id}");
     }
@@ -117,6 +124,10 @@ fn the_words_are_the_types_else_its_tags_else_small_and_big() {
     assert_eq!(words("kobold"), (Some("scrawny"), None, Some("big")));
     assert_eq!(words("zombie"), (Some("withered"), None, Some("ancient")));
     assert_eq!(words("rat"), (Some("small"), None, Some("big")));
+    // The blades' are their family's own.
+    let blade = (Some("notched"), None, Some("keen"));
+    assert_eq!(words("animated_blade_5"), blade);
+    assert_eq!(words("animated_blade_20"), blade);
 }
 
 #[test]
