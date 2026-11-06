@@ -9,7 +9,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
   random stream.
   - **Hitting**: an attack hits when 2d12 (its *natural* roll, 2 to 24, average 13) plus its
     to-hit is at least the target's **Defence** ("Dv"). A natural 2 always misses (and is a plain
-    miss), a natural 24 always hits. To-hit is the attack's own (`to_hit`, default 0) plus, in
+    miss), a natural 22, 23, or 24 always hits (6 of the 144 rolls, about 4.2 %: however high a
+    Defence climbs, about one blow in 24 lands; a check's sure success stays a natural 24 alone,
+    §8 "Checks"). To-hit is the attack's own (`to_hit`, default 0) plus, in
     melee, the attacker's Strength modifier (with a `finesse` weapon, §7, the Dexterity modifier
     instead, even when it is the lower), and for a shot the Dexterity modifier. At +0 against
     Defence 10 an attack hits 75 % of the time; each point is worth about 7–8 points of chance
@@ -17,7 +19,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
   - **Criticals** (3.5's threat range and confirmation): a hit whose natural roll is at least
     the attack's `threat` (default 22, "22–24", 3.5's natural 20 by probability; 20 for 3.5's
     19–20, 19 for 18–20) threatens; a second roll with the same to-hit against the same Defence
-    confirms it (by the same rule: 2 never, 24 always), and then the damage is rolled `crit`
+    confirms it (by the same rule: 2 never, 22 or better always, so every default threat is a
+    sure hit and confirms at least 6 times in 144), and then the damage is rolled `crit`
     times (default 2), modifiers each time. At +0 against Defence 10 a default weapon confirms
     on 3.1 % of attacks, a 19–24 one on 10.9 %.
   - **Damage**: the attack's dice (their fixed part included) plus its bonus, at least 1 a hit.

@@ -21,7 +21,9 @@ that roll, plus the attacker's bonus to hit, reaches the target's **[Defence](co
   [finesse weapon](#finesse-weapons) up close, Dexterity helps you hit and Strength does not, even if your Strength is the better. Some
   weapons are easier to hit with than others, and your [rank](weapon-skills.md#marks-and-ranks) in the weapon's
   [skill](weapon-skills.md) helps the more you have trained.
-- **Two ones always miss, two twelves always hit**, whatever the odds.
+- **Two ones always miss, and a roll of 22 or better always hits** (22, 23, or 24: 6 of the 144
+  ways the dice fall, about one blow in 24), whatever the odds: however high a
+  [Defence](combat.md#defence) climbs, some blows still land.
 - Because the sum of two dice gathers around the middle, each point of bonus or Defence matters
   most when the odds are close, and little when they are long either way:
 
