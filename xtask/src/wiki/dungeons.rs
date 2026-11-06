@@ -168,6 +168,29 @@ pub(super) fn endless_branches(content: &Content) -> String {
     out
 }
 
+/// The layer bosses of the branches without end: by branch id, then depth, the keeper of each
+/// layer (linked to its creature row), its level, and its lair's name.
+pub(super) fn layer_bosses(content: &Content) -> String {
+    let mut out =
+        String::from("| Place | Floor | Keeper | Level | Lair |\n|---|:---:|---|:---:|---|\n");
+    let mut branches: Vec<_> = content.dungeons().collect();
+    branches.sort_by(|a, b| a.id.cmp(&b.id));
+    for d in branches {
+        for boss in &d.bosses {
+            let creature = content.creature(boss.creature);
+            let lair = (content.vaults().iter())
+                .find(|v| v.id() == boss.vault)
+                .map_or(boss.vault.as_str(), |v| v.template.name.as_str());
+            let _ = writeln!(
+                out,
+                "| {} | {} | [{}](creatures.md#creature-{}) | {} | {lair} |",
+                d.name, boss.depth, creature.name, creature.id, creature.level
+            );
+        }
+    }
+    out
+}
+
 /// Every floor of every branch with a danger: its generator, size, danger, and the weight of
 /// each type that lives there at that danger. Branches by id, floors by depth.
 pub(super) fn dungeon_floors(content: &Content) -> String {

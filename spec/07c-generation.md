@@ -38,12 +38,27 @@ developer notes (CLAUDE.md, `docs/dev/`).
   floor's generator is drawn as it is made (`caves` percent caves, of `caves_size`; the rest rooms
   of the branch's `size`). The floor's seed is a stream of the run seed (`endless/<n>`) named by a
   saved count of floors made, so replays make the same floors and two visits to a depth differ. It
-  has no `[[dungeon.levels]]`, so no pinned vault, and no quest may name its levels. Its allies
+  has no `[[dungeon.levels]]`, so no pinned vault but its layer bosses' lairs, and no quest may name its levels. Its allies
   cross as ever, and a companion or familiar always does; any other ally left behind is gone and the
   player is told. A unique creature on a discarded floor may come again. Only a floor deeper than
-  any reached in the run pays the first arrival's experience. The Ascmearc's is **Grundlēas**
+  any reached in the run pays the first arrival's experience. **Layer bosses** (#1118;
+  `world/layer_boss.rs`): a branch's `[[dungeon.endless.boss]]` rows (`depth`, `creature`, `vault`)
+  give a depth a unique boss of its own and its lair, a vault that places the boss and marks one
+  `>`. A floor of that depth is made with the lair for certain and no other way down: the lair's
+  `>` is plain floor, hidden (ground truth only), until the boss dies, at any hand, on that floor;
+  then the stairs open there, and a player who sees them is told "With <name> dead, stairs open in
+  the floor." (one who does not hears stone grinding somewhere). The `<` is as on any floor. Until
+  the boss is slain, every floor made at that depth makes it and its lair again (the floor left is
+  forgotten, and the boss with it); it never follows the player on the stairs. Once slain (the
+  slain list kept for named monsters), a floor of that depth is ordinary. A depth with no row is
+  ordinary too. The Ascmearc's is **Grundlēas**
   (`grundleas`), rooms 85 % and caves 15 %, its way in on the grass south of the Beorhtburna road, 40
-  cells from Beorggeat; no location reveal is needed.
+  cells from Beorggeat; no location reveal is needed. Its layer bosses, one every tenth floor: 10
+  Gnægan the Rat King (a summoner of giant rats, many filthy bites) in his midden, 20 Āttorcoppe
+  the Spinner (a lurker whose bite poisons and webs, and calls her brood) in the dark web-hall, 30
+  Hrīmwyrm the White (a frost dragon's breath) in the wyrm's bed, 40 Wēalāf the Unburied (calls up
+  the dead, a strength-draining blade) in the unburied hall with his court, 50 Grundwyrgen the
+  Mere-Wife (a brute whose claws seize and hold) by the black mere; 60 and 70 are to come (#1122).
   The Ascmearc's first branch is **Cealdhlāw** (`cealdhlaw`, #337; the campaign design §7), the
   cold barrow under Hlāwdūn, its way in on the overworld from the start: six floors, the barrow's
   passages (rooms, 80×21) on 1–2 and the hill's hollows (caves, 100×40) on 3–6, danger 1 to 6

@@ -50,7 +50,7 @@ Game flags (`cargo run -p warlock -- --help`):
   trap hall, `summoners` in the summoning hall's south hall (three summoners behind doors), `chests`
   in the chest hall (every kind of chest, a mimic, and both treasure rooms), `cealdhlaw` on the first floor of Cealdhlāw, the Ascmearc's first dungeon, `fennmynster` on
   the first floor of Fennmynster, the drowned minster's cellars, `fyrdelf` on the first floor of Fyrdelf,
-  its deepest, `grundleas` on the first floor of Grundlēas, the endless branch that forgets each floor left, `drake`
+  its deepest, `grundleas` on the first floor of Grundlēas, the endless branch that forgets each floor left, `rat_king` on its tenth floor, kept by its first layer boss, Gnægan the Rat King, whose death opens the way down (a level-1 warrior: give levels with `xp:` and `levelup:auto`), `drake`
   in a lava hall eleven cells from the fire drake, a dragon (a level-1 warrior: give levels with `xp:` and `levelup:auto`), `shrine` before three forgotten altars, good, neutral, and evil, to pray at, `forge`
   beside a forge's anvil with arms and armour to temper, `spring` below a cave room with a healing
   spring to drink at, `circles` in a hall of peaceful kobolds already buffed and hexed, knowing
@@ -112,7 +112,7 @@ Headless dev loop (`warlock-cli`, no window; `--content-dir` works here too):
 | Dump a replay's end state | `... dump --replay runs/x.json [--actions "wait"] --format ascii\|json [--state]` |
 | Create a replay | `... replay --create --scenario showcase --actions "move:N wait" -o runs/x.json` |
 | Verify a replay | `... replay --verify runs/x.json` (exit 1 and first diverging step on mismatch) |
-| Preview a generated level | `... gen --level depths:3 --seed warlock` (ground truth; `*` = light placed on floor, `&` = locked door, `S` = secret door; `^` = a trap, hidden ones too; `⊟` = a chest, locked or trapped or not; a special room's floor by its effect's letter; also local areas of a campaign's overworld, `--level local:49,23`, `--campaign showcase` the default) |
+| Preview a generated level | `... gen --level depths:3 --seed warlock` (ground truth; `*` = light placed on floor, `&` = locked door, `S` = secret door; `^` = a trap, hidden ones too; a layer boss's lair prints its `hidden stairs` line; `⊟` = a chest, locked or trapped or not; a special room's floor by its effect's letter; also local areas of a campaign's overworld, `--level local:49,23`, `--campaign showcase` the default) |
 
 Dump layers beyond the map ones: `inventory`, `equipment`, `stats`, `skills` (the player's
 trained skills, `Stealth 17`), `schools` (the schools of magic, every one, then the caster
