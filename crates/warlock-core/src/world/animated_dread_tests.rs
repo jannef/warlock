@@ -131,6 +131,7 @@ fn the_bellows_gust_staggers() {
         vec![Affliction::Status {
             status: status("staggered"),
             severity: 1,
+            check: None,
         }]
     );
 }
