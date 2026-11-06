@@ -6,6 +6,8 @@ name = "mine factor"
 glyph = "@"
 fg = "#c8a040"
 faction = "peaceful"
+# One of the people: never greater or lesser than their kind.
+grades = false
 alignment = "neutral"
 race = "human"
 footsteps = 50

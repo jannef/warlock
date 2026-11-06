@@ -123,6 +123,7 @@ pub(super) fn beside(world: &mut World, creature: &str, hp: i32) -> ActorId {
         patrol: None,
         npc: None,
         faction_override: None,
+        grade: 0,
         summoner: None,
         ally: None,
         risen: None,

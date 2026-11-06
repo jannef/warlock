@@ -927,6 +927,7 @@ impl World {
             drained: Default::default(),
             weapon_skills,
             faction_override: None,
+            grade: 0,
             summoner: None,
             ally: None,
             risen: None,

@@ -86,6 +86,7 @@ name = "wildlife"
 // The dummy takes a lot and never fights; the porter goes its rounds and opens doors.
 const CREATURES: &str = r##"
 [[creature]]
+grades = false
 id = "player"
 name = "you"
 glyph = "@"
@@ -93,6 +94,7 @@ fg = "#ffffff"
 weight = 70000
 
 [[creature]]
+grades = false
 id = "dummy"
 name = "training dummy"
 glyph = "D"
@@ -102,6 +104,7 @@ faction = "wildlife"
 base_hp = 1000
 
 [[creature]]
+grades = false
 id = "porter"
 name = "porter"
 glyph = "p"
@@ -112,6 +115,7 @@ base_hp = 1000
 opens_doors = true
 
 [[creature]]
+grades = false
 id = "moth"
 name = "moth man"
 glyph = "m"
@@ -531,6 +535,10 @@ fn searching_finds_a_doors_trap() {
 fn the_trap_halls_closets_have_trapped_doors() {
     let content = Arc::new(Content::builtin().expect("builtin content"));
     let mut w = World::new(content, "traps", None).expect("the trap hall");
+    // The kobold's rounds are timed at its kind's own pace (`grade.rs` would change it).
+    for actor in w.state.actors.values_mut() {
+        actor.grade = 0;
+    }
     let player = w.state.player;
     let (west, east) = (Pos::new(2, 4), Pos::new(9, 4));
     let trap = |w: &World, id: &str| w.content().trap_id(id).expect("trap");

@@ -251,6 +251,7 @@ above.
 | Peaceful folk, the fey courts | `creatures.md#factions` |
 | Incorporeal | `creatures.md#incorporeal-creatures` |
 | Elementals | `creatures.md#elementals` |
+| Grades: a greater or lesser creature (big, scrawny, ancient, withered) | `creatures.md#grades` |
 | A creature's numbers (stats, hit points, attacks) | `creature-numbers.md` |
 | A creature's craft for surprise (its sneak attack, initiative, spot) | `creature-numbers.md#surprise` |
 | Animated object | `animated.md` |

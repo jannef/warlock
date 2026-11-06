@@ -88,6 +88,7 @@ name = "normal creature"
 glyph = "n"
 fg = "#806040"
 weight = 1000
+grades = false
 
 [[creature]]
 id = "quick"
@@ -95,6 +96,7 @@ name = "quick creature"
 glyph = "q"
 fg = "#806040"
 weight = 1000
+grades = false
 speed = 1500
 
 [[creature]]
@@ -103,6 +105,7 @@ name = "fast creature"
 glyph = "f"
 fg = "#806040"
 weight = 1000
+grades = false
 speed = 2000
 
 [[creature]]
@@ -111,6 +114,7 @@ name = "slow creature"
 glyph = "s"
 fg = "#806040"
 weight = 1000
+grades = false
 speed = 900
 "##;
 

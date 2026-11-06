@@ -107,6 +107,14 @@
 # Uniques (spec §7 "Danger levels"): unique = true (default false) for a type a population draws
 # at most once in a run (a boss); a level legend may still place it by hand.
 #
+# Grades (spec §8 "Grades"; crates/warlock-core/src/grade.rs): one creature in six
+# comes greater than its kind (+25 % maximum hit points, +1 to hit and +2 damage in melee, 10 %
+# slower) and one in six lesser (the reverse), drawn as it is made; its kill pays its kind's
+# experience. grades = false (default true) for a type that has none (the people); a unique, a
+# mimic, a generated type, and a unique character placed with an `npc` never have one.
+# grade_words = ["scrawny", "big"] (optional) are the words look mode gives the lesser and the
+# greater ("a big kobold"); none: the tags' (undead: "withered", "ancient"), else "small", "big".
+#
 # Strays (spec §7 "Danger levels"): every type hostile to the player that is no unique and no
 # animated object may come to any branch of its campaign (a shared type to every campaign's) as a
 # stray, its population or not, the out-of-depth draws bringing the deep ones now and then; a

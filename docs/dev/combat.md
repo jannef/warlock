@@ -39,7 +39,11 @@ creatures `base_hp`, `attack` (`NaturalAttack`), `natural` (`Hide`; a race's `na
 player's instead, `Actor::hide(content, race)`, and a race's `resist` adds to the creature
 type's, `docs/dev/character-creation.md`); races and classes `hp`; a
 scenario without a character `hp`. Hit points live on `Actor` (`hp`, `hp_base`, `regen`;
-`max_hp(content)`, `health(content)`: the effective Toughness), saved and hashed. Presentation reads only
+`max_hp(content)`, `health(content)`: the effective Toughness), saved and hashed. A creature's
+grade (`grade.rs`, spec §8 "Grades") is read in the rules' own places only: `Actor::max_hp` and
+`lasting_max_hp` (`grade::hp`, ±25 %), `Actor::melee_with` after a companion's growth
+(`grade::sharpen`, ±1 to hit, ±2 damage, melee only), and `Actor::speed` (`grade::speed_percent`,
+∓10 %), all through `Actor::graded` (0 for a kept beast). Presentation reads only
 `PerceptionView::own_hp`, `own_defence` (the total: its Dexterity part would give a modifier
 away), `SeenActor::health`, and `death`: **never a creature's hit points, a to-hit, a roll, or a
 modifier**, with one exception the owner asked for (spec §6 "Character"): the player's own

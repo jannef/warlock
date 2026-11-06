@@ -627,6 +627,59 @@ pub(super) fn creature_spells(content: &Content) -> String {
     out
 }
 
+/// Grades (spec §8 "Grades"): how often a creature comes greater or lesser than its kind, and
+/// what that changes, from `warlock_core::grade`'s own numbers.
+pub(super) fn creature_grades(_: &Content) -> String {
+    use warlock_core::grade::{DAMAGE, HP_PERCENT, ONE_IN, SPEED_PERCENT, TO_HIT};
+    let mut out = String::from(
+        "| Grade | Chance | Maximum hit points | To hit | Damage | Speed |\n\
+         |---|:---:|:---:|:---:|:---:|:---:|\n",
+    );
+    let percent = |n: i32| format!("{}%", signed(n));
+    for (name, g) in [("Greater", 1), ("Lesser", -1)] {
+        let _ = writeln!(
+            out,
+            "| {name} | 1 in {ONE_IN} | {} | {} | {} | {} |",
+            percent(HP_PERCENT * g),
+            signed(TO_HIT * g),
+            signed(DAMAGE * g),
+            percent(SPEED_PERCENT * g),
+        );
+    }
+    out
+}
+
+/// The words look mode gives a lesser and a greater creature, each pair with the kinds that use
+/// it, and the kinds that are never graded (spec §8 "Grades").
+pub(super) fn creature_grade_words(content: &Content) -> String {
+    let mut pairs: Vec<(&[String; 2], Vec<String>)> = Vec::new();
+    let mut none = Vec::new();
+    for (_, c) in listed(content) {
+        let name = link(Term::Creature, &c.id, &c.name);
+        if !c.grades {
+            none.push(name);
+            continue;
+        }
+        match pairs.iter_mut().find(|(w, _)| *w == &c.grade_words) {
+            Some((_, names)) => names.push(name),
+            None => pairs.push((&c.grade_words, vec![name])),
+        }
+    }
+    pairs.sort_by(|a, b| a.0.cmp(b.0));
+    let mut out = String::from("| Lesser | Greater | Creatures |\n|---|---|---|\n");
+    for (words, names) in pairs {
+        let _ = writeln!(
+            out,
+            "| {} | {} | {} |",
+            words[0],
+            words[1],
+            names.join(", ")
+        );
+    }
+    let _ = writeln!(out, "| - | - | never graded: {} |", none.join(", "));
+    out
+}
+
 /// Each creature's speed and how long a normal action takes it, how far and with which eyes it
 /// sees, how faint a sound it hears (its listen skill included), how loud its steps are, its
 /// nose as a companion (spec §8 "Allies") and whether it may be tamed, what it weighs, its size,

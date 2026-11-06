@@ -202,8 +202,9 @@ fn replays_through_generated_levels_verify() {
 #[test]
 fn saves_round_trip_on_generated_levels_and_continue_identically() {
     // The walk never fights: a seed where a kobold and a rat trap the walker in a corridor
-    // (seed 5, once vaults turned) would leave it dead short of the stairs.
-    let mut a = depths(9);
+    // (seed 5, once vaults turned; seed 9, once creatures came graded) would leave it dead short
+    // of the stairs.
+    let mut a = depths(10);
     let mut log = Vec::new();
     take(&mut a, StairsDir::Down, &mut log);
     let mut b = crate::save::decode(&crate::save::encode(&a), CONTENT.clone()).expect("decodes");

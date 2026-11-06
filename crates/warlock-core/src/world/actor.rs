@@ -220,6 +220,10 @@ pub struct Actor {
     /// peaceful creatures in the showcase). Read the one that counts with [`Actor::faction`].
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub faction_override: Option<FactionId>,
+    /// Its grade (spec §8 "Grades"; [`crate::grade`]): −1 lesser, +1 greater, 0
+    /// neither, drawn as it is made. Read through [`Actor::graded`]. Left out of saves at 0.
+    #[serde(default, skip_serializing_if = "is_ungraded")]
+    pub grade: i8,
     /// The creature that summoned it (spec §8 "Summoning", `world/summon.rs`), if one did: it
     /// counts toward that summoner's live summons. Left out of saves while `None`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -287,6 +291,10 @@ pub struct Actor {
     /// never followed.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub home: Option<String>,
+}
+
+fn is_ungraded(n: &i8) -> bool {
+    *n == 0
 }
 
 fn is_zero(n: &u32) -> bool {
@@ -405,7 +413,7 @@ impl Actor {
         let percent = match self.skill_effect(content, Effect::Speed) {
             0 => talents,
             skills => (talents + skills).min(MAX_SPEED.max(talents)),
-        };
+        } + crate::grade::speed_percent(self.graded());
         if percent == 0 {
             return base;
         }
@@ -523,13 +531,14 @@ impl Actor {
         let toughness = self.stats_with(content, &mods).score(Stat::Toughness);
         // A companion's grade above its type (spec §8 "Allies"; `companion.rs`).
         let grown = self.growth_hp(content);
-        self.frail(
+        let max = self.frail(
             content,
             combat::max_hp(
                 toughness,
                 self.hp_base + mods.get(ItemEffect::MaxHp) + grown,
             ),
-        )
+        );
+        crate::grade::hp(max, self.graded())
     }
 
     /// Maximum hit points `max` as its talents scale them (spec §8 "Birth sign": Frail), never
@@ -553,10 +562,11 @@ impl Actor {
     pub fn lasting_max_hp(&self, content: &Content) -> i32 {
         let mods = self.mods(content);
         let toughness = self.raised_with(&mods).score(Stat::Toughness);
-        self.frail(
+        let max = self.frail(
             content,
             combat::max_hp(toughness, self.hp_base + mods.get(ItemEffect::MaxHp)),
-        )
+        );
+        crate::grade::hp(max, self.graded())
     }
 
     /// Whether it has all its hit points ([`Actor::max_hp`]) and mana ([`Actor::max_mana`]),
@@ -1310,6 +1320,8 @@ impl Actor {
         }
         // A companion's grade sharpens its blow (spec §8 "Allies"; `companion.rs`).
         profile = self.grown(content, profile);
+        // A greater or lesser one's blow (`grade.rs`).
+        profile = crate::grade::sharpen(profile, self.graded());
         if self.off_hand(content).is_some() {
             let main = content.weapon_skills().two_weapons().main;
             profile.to_hit += TwoWeapons::eased(main, benefit.ease_main);

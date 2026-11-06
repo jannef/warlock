@@ -192,6 +192,13 @@ impl Rng {
         Self::stream(run_seed, &format!("court/{key}"))
     }
 
+    /// The grade stream of actor `key` (spec §8 "Grades"; [`crate::grade`]): the
+    /// one draw that makes a creature greater or lesser as it is made, apart from every other
+    /// stream, so nothing else moves with it.
+    pub fn grade(run_seed: u64, key: &str) -> Self {
+        Self::stream(run_seed, &format!("grade/{key}"))
+    }
+
     pub fn next_u32(&mut self) -> u32 {
         self.0.next_u32()
     }

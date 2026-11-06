@@ -132,6 +132,7 @@ pub(super) fn kobold_at(world: &mut World, (dx, dy): (i32, i32), hp: i32) -> Act
         ally: None,
         risen: None,
         alignment_override: None,
+        grade: 0,
         inventory: Vec::new(),
         equipment: Default::default(),
         stats: def.stats,

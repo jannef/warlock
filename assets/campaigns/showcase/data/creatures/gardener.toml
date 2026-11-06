@@ -5,6 +5,8 @@ name = "gardener"
 glyph = "@"
 fg = "#9cc46a"
 faction = "peaceful"
+# One of the people: never greater or lesser than their kind.
+grades = false
 alignment = "good"
 race = "human"
 footsteps = 50

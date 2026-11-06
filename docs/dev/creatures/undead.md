@@ -2,6 +2,10 @@
 
 General conventions: `docs/dev/creatures.md`.
 
+Grades (spec §8 "Grades", #1135): an undead type naming no `grade_words` of its own is "withered"
+when lesser and "ancient" when greater, by its `undead` tag (`grade::TAG_WORDS`); its uniques
+(the layer bosses, the named dead) have none.
+
 The undead roster (#383; batch 1 #384, levels 1–10; batch 2 #385, 11–20; batch 3 #386, 21–30; batch 4 #387, 31–40; batch 5 #388, 41–55): shared types, one file each in
 `assets/data/creatures/`, on the conventions noted in that directory's `README.toml`. Each batch
 adds its types to `content/undead_roster_tests.rs` (`ROLES`, the type's role) and raises
