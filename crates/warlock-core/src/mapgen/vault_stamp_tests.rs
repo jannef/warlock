@@ -18,7 +18,7 @@ static CONTENT: LazyLock<Content> = LazyLock::new(|| Content::builtin().expect("
 /// dangers 6 to 9.
 const BRANCHES: [&str; 2] = ["banfeld", "wulfeshol"];
 const DANGERS: RangeInclusive<u8> = 6..=9;
-const SEEDS: u64 = 300;
+const SEEDS: u64 = 600;
 /// Deeper floors for a vault whose `danger` keeps it off some of [`BRANCHES`]': the endless
 /// branch's rooms floors (its danger is its depth) and Fyrdelf's caves, each of dangers 9 to 16.
 const DEEP: [(&str, RangeInclusive<u32>); 2] = [("grundleas", 9..=16), ("fyrdelf", 5..=12)];

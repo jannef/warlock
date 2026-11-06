@@ -25,7 +25,7 @@ fn shrines_are_good_or_evil_one_to_one_with_their_sides_lights() {
     let effect = content.room_effects().id("shrine").expect("shrine");
     let def = content.room_effect(effect);
     let (mut good, mut evil) = (0u32, 0u32);
-    for seed in 0..120 {
+    for seed in 0..240 {
         let level = generate(&content, ("showcase", seed), "depths:2", None).expect("level");
         for room in level.rooms.iter().filter(|r| r.effect == effect) {
             let at: Vec<Pos> = (room.cells().into_iter())
