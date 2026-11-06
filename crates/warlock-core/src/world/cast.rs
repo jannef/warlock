@@ -365,6 +365,7 @@ impl World {
                 cast.read.set(Some((scroll.object, kept)));
             }
             Pay::Wand(item, _) => self.use_charge(item),
+            Pay::Creature => {}
         }
         true
     }
@@ -839,7 +840,8 @@ impl World {
                 let aim = (here, at, range);
                 let by = (def, own.then_some(cast.skills));
                 let rolled;
-                (turned, rolled) = self.cast_single(aim, (&effect, roll, reroll), by, &mut made);
+                let shot = (&effect[..], roll, reroll);
+                (turned, rolled) = self.cast_single(player, aim, shot, by, &mut made);
                 rolled
             }
             Shape::Myself => 0,
@@ -937,8 +939,9 @@ impl World {
     /// nothing. An attack roll missed by the target's Shield may be turned back (Spell
     /// reflection, `reflect.rs`): what to cast back, if so, and the harm it rolled (0: it rolled
     /// none).
-    fn cast_single<'s>(
+    pub(super) fn cast_single<'s>(
         &mut self,
+        caster: ActorId,
         (here, at, reach): (Pos, Pos, i32),
         (effect, roll, reroll): (&'s str, Roll, u32),
         (def, own): (&'s SpellData, Option<AttackSkills>),
@@ -974,10 +977,10 @@ impl World {
             self.spell_type_cell(def.damage_type, cell, made);
             return (None, 0);
         };
-        let player = self.state.player;
-        let me = self.state.player();
+        let me = &self.state.actors[&caster];
+        // A creature aims as its blows do: its level's quarter on top (`creature_cast.rs`).
         let to_hit = if own.is_some() {
-            me.spell_to_hit(&self.content, def)
+            me.spell_to_hit(&self.content, def) + self.creature_aim(caster)
         } else {
             me.item_spell_to_hit(&self.content)
         };
@@ -1000,7 +1003,7 @@ impl World {
             skills,
         };
         let source = (here, def.shape != Shape::Touch);
-        let (strike, rolled) = self.spell_attack(player, target, source, shot, made);
+        let (strike, rolled) = self.spell_attack(caster, target, source, shot, made);
         self.spell_type_cell(def.damage_type, last, made);
         if strike
             != (Strike::Missed {
@@ -1009,7 +1012,7 @@ impl World {
         {
             return (None, rolled);
         }
-        let turned = self.spell_blocked((target, player), (&path, here), shot, made);
+        let turned = self.spell_blocked((target, caster), (&path, here), shot, made);
         (turned, rolled)
     }
 
@@ -1117,6 +1120,8 @@ enum Pay {
     Scroll(usize, u8),
     /// A charge of the wand in this inventory stack, which casts at these rungs.
     Wand(usize, u8),
+    /// A creature's own spell (`creature_cast.rs`): its mana spent before the cast.
+    Creature,
 }
 
 /// One cast's settled facts, handed to each kind's code.
@@ -1134,7 +1139,7 @@ pub(super) struct Cast<'c> {
     /// The roll hook: a die showing this or less is drawn once more.
     pub(super) reroll: u32,
     /// The rider hook: statuses laid on everyone its harm reaches.
-    riders: Vec<(StatusId, u16)>,
+    pub(super) riders: Vec<(StatusId, u16)>,
     /// A buff's or a hex's degrees, a summon's minutes ([`Actor::spell_degrees`]).
     pub(super) degrees: Option<u16>,
     /// A scroll read, once paid: its object, and whether Scroll savant kept it.
@@ -1153,6 +1158,18 @@ struct Outcome {
 }
 
 impl<'c> Cast<'c> {
+    /// Creature `caster`'s own cast of `spell` (`creature_cast.rs`), aimed from `aim`: its
+    /// reach, roll, and degrees at its own stats, as the player's own cast is at theirs; paid
+    /// by the creature before it goes off.
+    pub(super) fn by_creature(
+        caster: &Actor,
+        content: &Content,
+        spell: (SpellId, &'c SpellData),
+        aim: SpellAim,
+    ) -> Self {
+        Self::settle(caster, content, spell, Pay::Creature, aim)
+    }
+
     /// `caster`'s cast of `def`, paid by `pay`, from `aim`: its hooks summed once with the
     /// caster style's ([`Actor::spell_mods_from`]), the roll at the rung of who casts it (its
     /// own, a scroll's, a wand's), the reach and the degrees the caster's own.
@@ -1165,7 +1182,7 @@ impl<'c> Cast<'c> {
     ) -> Self {
         let mods = caster.spell_mods_from(content, def, aim);
         let by = match pay {
-            Pay::Mana(_) => CastBy::Own,
+            Pay::Mana(_) | Pay::Creature => CastBy::Own,
             Pay::Scroll(_, rungs) => CastBy::Scroll(rungs),
             Pay::Wand(_, rungs) => CastBy::Wand(rungs),
         };

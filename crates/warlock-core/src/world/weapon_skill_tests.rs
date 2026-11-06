@@ -47,7 +47,8 @@ id = "wildlife"
 name = "wildlife"
 "##;
 
-// The dummy stands and casts (spells hurt no one): something to hit for as long as it takes.
+// The dummy fights back with its bare hands (the player has hit points to spare): something to
+// hit for as long as it takes.
 // The rat bites, weakly. The deer is nobody's enemy.
 const CREATURES: &str = r##"
 [[creature]]
@@ -64,8 +65,6 @@ glyph = "d"
 fg = "#806040"
 weight = 4000
 faction = "vermin"
-combat = "caster"
-range = 2
 base_hp = 1000
 
 [[creature]]
@@ -75,8 +74,6 @@ glyph = "g"
 fg = "#808080"
 weight = 400000
 faction = "vermin"
-combat = "caster"
-range = 2
 base_hp = 1000
 level = 6
 
@@ -356,7 +353,7 @@ fn blows_earn_marks_more_for_a_hit_and_fewer_as_the_rank_rises() {
     w.apply(&Action::Move(Dir::E));
     w.apply(&Action::Move(Dir::E));
     assert_eq!(training(&w, "long_blades"), Training { rank: 6, marks: 0 });
-    // The dummy casts at the player, and creatures do not train.
+    // The dummy fights the player, and creatures do not train.
     let dummy = &w.state.actors[&ActorId(1)];
     assert!(dummy.weapon_skills.is_empty());
 }
@@ -473,8 +470,9 @@ fn a_shield_bash_is_a_blow_with_the_shield_that_trains_shield_bashing() {
     );
     let bash = skill(&w, "shield_bash");
     let (mut hit, mut missed) = (false, false);
-    for _ in 0..12 {
+    for _ in 0..24 {
         let before = training(&w, "shield_bash");
+        let seen = messages(&w).len();
         let outcome = w.apply(&Action::Bash(Dir::E));
         assert!(outcome.took_turn);
         assert_eq!(outcome.elapsed, Duration::seconds(6));
@@ -488,10 +486,10 @@ fn a_shield_bash_is_a_blow_with_the_shield_that_trains_shield_bashing() {
         assert_eq!((kind, with), (AttackKind::Melee, Some(buckler)));
         let strike = strike.expect("rolled");
         let said = messages(&w);
-        let text = said
+        // The bash is said first, before the dummy answers.
+        let text = said[seen..]
             .iter()
-            .rev()
-            .find(|m| m.contains("dummy") && !m.contains("spell"))
+            .find(|m| m.contains("dummy"))
             .expect("said");
         match strike {
             Strike::Hit { critical: false } => {

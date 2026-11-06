@@ -129,17 +129,6 @@ combat = "ranged"
 range = 5
 
 [[creature]]
-id = "shaman"
-name = "kobold shaman"
-glyph = "k"
-fg = "#a040a0"
-weight = 1000
-base_hp = 500
-faction = "kobolds"
-combat = "caster"
-range = 4
-
-[[creature]]
 id = "deer"
 name = "deer"
 glyph = "d"
@@ -165,7 +154,6 @@ const LEGEND: &str = r##"
 "K" = { terrain = "floor", creature = "kobold", faction = "peaceful", route = "E2 W2" }
 "a" = { terrain = "floor", creature = "archer", carry = ["bow", "arrow*20"], wield = ["bow", "arrow"] }
 "u" = { terrain = "floor", creature = "archer" }
-"s" = { terrain = "floor", creature = "shaman" }
 "d" = { terrain = "floor", creature = "deer" }
 "##;
 
@@ -212,8 +200,6 @@ const LEVELS: &[(&str, &str)] = &[
     ),
     // An archer eight cells from the player: out of range.
     ("far_shot", "############\n#a.......@.#\n############\n"),
-    // A shaman (range 4) six cells from the player.
-    ("caster", "##########\n#s.....@.#\n##########\n"),
     // A kobold fighting a rat behind a wall; the player cannot see them.
     (
         "hidden_fight",
@@ -618,18 +604,6 @@ fn ranged_creatures_with_nothing_to_shoot_fight_in_melee() {
         seen.iter()
             .all(|a| *a == (archer, PLAYER, AttackKind::Melee))
     );
-}
-
-#[test]
-fn casters_cast_from_within_their_range() {
-    let mut w = world("caster");
-    let shaman = ActorId(1);
-    // Six cells away with a range of 4: two steps closer, then spells.
-    run(&mut w, "wait*2");
-    assert_eq!(pos(&w, shaman), Pos::new(3, 1));
-    let out = w.apply(&Action::Wait);
-    assert_eq!(attacks(&out), [(shaman, PLAYER, AttackKind::Spell)]);
-    assert_eq!(last_message(&w), "The kobold shaman casts a spell at you.");
 }
 
 #[test]
@@ -1103,7 +1077,7 @@ fn the_arena_fights_the_same_way_every_time() {
         "bites the kobold",
         "stabs the giant rat",
         "kobold archer",
-        "casts a spell at the",
+        "casts ",
         "dies.",
     ] {
         assert!(shown.iter().any(|m| m.contains(what)), "{what}: {shown:?}");

@@ -63,10 +63,15 @@
 //!   blow it reaches from level 40 (`Side::wrath`, as `World::holy_wrathed` rolls it, #914), the
 //!   pool's maximum, and what a round builds against a smite's cost, with Zealot too.
 //!
+//! - **Casters** (#1102, `casters.rs`): each caster type's first damage spell as it casts it
+//!   (`Actor::spell_roll` at its stats), what its pool pays for, and its damage a round against
+//!   the trained players of its level.
+//!
 //! Not modelled: triggered and active weapon abilities, stances (but the rage table's), talents chosen for a build
 //! (`levelup:auto` takes the first it may), the initiative check's Surprised after the first
 //! blow, potions, and resistances against spells.
 
+mod casters;
 mod dragon;
 mod familiar;
 mod ranger;
@@ -496,6 +501,9 @@ struct Monster {
     unholy: bool,
     bare: Side,
     geared: Vec<Side>,
+    /// A caster's spells as it casts them, bare, and its full pool (`casters.rs`).
+    spells: Vec<casters::Spell>,
+    mana: i32,
 }
 
 /// Every creature type with a level, made in one world.
@@ -512,6 +520,7 @@ fn monsters(content: &Arc<Content>) -> Vec<Monster> {
         }
         let il = def.level.clamp(1, 99);
         let mut sides = Vec::new();
+        let mut spells = (Vec::new(), 0);
         for seed in 0..=SEEDS {
             let (carry, equipment) = if seed == 0 {
                 (Vec::new(), Default::default())
@@ -534,6 +543,9 @@ fn monsters(content: &Arc<Content>) -> Vec<Monster> {
             };
             let id = super::travel::make_creature(&mut w.state, content, &level, &spawn);
             sides.push(side_of(&w, id));
+            if seed == 0 {
+                spells = casters::spells_of(&w, id);
+            }
             w.state.actors.remove(&id);
         }
         let bare = sides.remove(0);
@@ -543,6 +555,8 @@ fn monsters(content: &Arc<Content>) -> Vec<Monster> {
             unholy: content.unholy(cid),
             bare,
             geared: sides,
+            spells: spells.0,
+            mana: spells.1,
         });
     }
     out
@@ -1204,6 +1218,7 @@ fn balance_probe() {
     tables::fights(&p, &mut rng, &mut out);
     tables::depth(&p, &mut rng, &mut out);
     dragon::dragons(&p, &mut Rng::stream(1099, "dragons"), &mut out);
+    casters::casters(&p, &mut Rng::stream(1102, "casters"), &mut out);
     tables::bodies(&p, &mut rng, &mut out);
     tables::spells(&p, &mut out);
     tables::school_pace(&p, &mut out);

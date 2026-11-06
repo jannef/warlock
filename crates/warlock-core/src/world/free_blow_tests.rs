@@ -41,7 +41,7 @@ name = "folk"
 "##;
 
 // Rats die of any hit; the kobold stands for as long as it takes; the duellist parries; the
-// caster never fights in melee; the gardener is no one's enemy.
+// stand-in never acts of its own (`hold`); the gardener is no one's enemy.
 const CREATURES: &str = r##"
 [[creature]]
 id = "player"
@@ -69,15 +69,13 @@ faction = "vermin"
 base_hp = 1000
 
 [[creature]]
-id = "caster"
-name = "caster"
+id = "stand_in"
+name = "stand-in"
 glyph = "c"
 fg = "#c08040"
 weight = 25000
 faction = "vermin"
 base_hp = 1000
-combat = "caster"
-range = 2
 
 [[creature]]
 id = "gardener"
@@ -144,7 +142,7 @@ const LEGEND: &str = r##"
 "r" = { terrain = "floor", creature = "rat" }
 "k" = { terrain = "floor", creature = "kobold" }
 "K" = { terrain = "floor", creature = "kobold", carry = ["foil"], wield = ["foil"] }
-"c" = { terrain = "floor", creature = "caster", carry = ["foil"], wield = ["foil"] }
+"c" = { terrain = "floor", creature = "stand_in", carry = ["foil"], wield = ["foil"] }
 "g" = { terrain = "floor", creature = "gardener" }
 "p" = { terrain = "floor", creature = "kobold", route = "E1 W1" }
 "##;
@@ -217,6 +215,12 @@ fn switch(w: &mut World, id: ActorId, set: impl FnOnce(&mut FreeBlows)) {
 fn at(w: &World, x: i32, y: i32) -> ActorId {
     let level = &w.state.current().id;
     w.state.actor_at(level, Pos::new(x, y)).expect("someone").id
+}
+
+/// Holds actor `id` still: its energy so far below 0 that it never acts of its own in a test
+/// (a free blow still answers for it).
+fn hold(w: &mut World, id: ActorId) {
+    w.state.actors.get_mut(&id).expect("there").energy = i64::MIN / 4;
 }
 
 /// The melee blows in `outcome`: who struck whom, in order.
@@ -389,12 +393,13 @@ fn creatures_riposte_and_ripostes_are_never_answered() {
     arm(&mut w, "foil");
     let player = w.player_id();
     let duellist = at(&w, 3, 1);
+    hold(&mut w, duellist);
     switch(&mut w, player, |f| f.riposte = true);
     switch(&mut w, duellist, |f| f.riposte = true);
     let mut answered = 0;
     for _ in 0..40 {
         let outcome = w.apply(&Action::Move(Dir::E));
-        // The caster never strikes in melee of its own: a riposte at most, never one back.
+        // The stand-in never strikes of its own: a riposte at most, never one back.
         match blows(&outcome).as_slice() {
             [(p, d)] => assert_eq!((*p, *d), (player, duellist)),
             [(p, d), (d2, p2)] => {
@@ -557,13 +562,15 @@ fn a_creature_walking_away_in_the_dark_takes_the_opportunists_blow() {
 
 #[test]
 fn switches_draw_nothing_until_their_triggers_fire_and_are_saved_only_when_on() {
-    // The caster never fights in melee and never dies, and the player only attacks it: no
+    // The stand-in never acts of its own and never dies, and the player only attacks it: no
     // trigger can fire.
     let map = "#####\n#.@c#\n#####\n";
     let run = |on: bool| {
         let mut w = world(map);
         arm(&mut w, "axe");
         let player = w.player_id();
+        let stand_in = at(&w, 3, 1);
+        hold(&mut w, stand_in);
         if on {
             switch(&mut w, player, |f| {
                 *f = FreeBlows {

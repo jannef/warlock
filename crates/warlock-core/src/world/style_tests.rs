@@ -41,7 +41,8 @@ name = "vermin"
 hostile = ["player"]
 "##;
 
-// The dummy stands and casts (spells hurt no one): something to hit for as long as it takes.
+// The dummy fights back with its bare hands (the player has hit points to spare): something to
+// hit for as long as it takes.
 // The duellist kobold fights with a blade in each hand.
 const CREATURES: &str = r##"
 [[creature]]
@@ -58,8 +59,6 @@ glyph = "d"
 fg = "#806040"
 weight = 4000
 faction = "vermin"
-combat = "caster"
-range = 2
 base_hp = 1000
 
 [[creature]]

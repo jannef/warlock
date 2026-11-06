@@ -181,8 +181,8 @@ fn the_drow_keep_to_the_roster() {
         assert_eq!(def.summon.is_some(), tagged("priest"), "{id}: summoning");
         assert_eq!(
             def.base_mana > 0,
-            tagged("priest"),
-            "{id}: only priestesses have mana"
+            tagged("caster"),
+            "{id}: only casters have mana (summons and spells)"
         );
         if let Some(summon) = &def.summon {
             let demons: Vec<_> = summon.pool.iter().map(|&p| content.creature(p)).collect();
