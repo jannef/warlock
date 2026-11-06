@@ -83,16 +83,24 @@ fn only_the_weakest_folk_live_there_and_none_stray_in() {
     for seed in 1..=6 {
         for depth in 1..=3 {
             let floor = level(seed, depth);
-            let count = floor.creatures.len();
+            // A shared vault's crowd (the Catacomb's dead ...) is drawn at the floor's danger
+            // from its own pool, outside the cap: of the cave's weakest, but not its folk.
+            let (crowd, folk): (Vec<_>, Vec<_>) =
+                (floor.creatures.iter()).partition(|c| floor.outside_cap.contains(&c.pos));
+            let count = folk.len();
             // The population's 8 to 16, and the cache's two keepers on the bottom floor.
             let most = if depth == 3 { 18 } else { 16 };
             assert!(
                 (8..=most).contains(&count),
                 "seed {seed} depth {depth}: {count}"
             );
-            for c in &floor.creatures {
+            for c in &folk {
                 let id = CONTENT.creature(c.creature).id.as_str();
                 assert!(FOLK.contains(&id), "seed {seed} depth {depth}: {id}");
+            }
+            for c in &crowd {
+                let def = CONTENT.creature(c.creature);
+                assert!(def.level <= 3, "seed {seed} depth {depth}: {}", def.id);
             }
         }
     }

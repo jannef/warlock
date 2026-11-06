@@ -1,0 +1,8 @@
+# Lead, for the Sealed Barrow's key (objects/lead_key.toml). No group, rarity, or gear: no loot and
+# no creature's gear is made of it, and no construction list names it.
+[[material]]
+id = "lead"
+name = "lead"
+color = "#7c8088"
+weight = 144
+value = 20

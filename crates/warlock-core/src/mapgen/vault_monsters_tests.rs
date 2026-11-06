@@ -32,18 +32,28 @@ fn content_of(vault: &str, danger: u8) -> Result<Content, String> {
 /// at random, turned.
 fn content_in(vault: &str, danger: u8, levels: &str) -> Result<Content, String> {
     let mut files = ContentFiles::builtin();
+    // The shared vaults have pools of their own (the guard post, the Kennels ...): here only the
+    // crowd's are drawn. Two without keep it company, so that the phase a floor offers (one vault
+    // in four, `spaced_vaults`) may hold the crowd.
+    files.remove("vaults/");
+    let quiet = [
+        (
+            "flooded_cell",
+            include_str!("../../../../assets/vaults/flooded_cell.toml"),
+        ),
+        (
+            "shrine",
+            include_str!("../../../../assets/vaults/shrine.toml"),
+        ),
+    ];
+    for (id, text) in quiet {
+        files.insert(&format!("vaults/{id}.toml"), text);
+    }
     files.insert("vaults/crowd.toml", vault);
-    // The guard post has a pool of its own: here it stamps elsewhere.
-    files.insert(
-        "vaults/guard_post.toml",
-        "name = \"Elsewhere\"\ndungeons = [\"elsewhere\"]\nmap = '''\n##+##\n#...#\n#####\n'''\n",
-    );
     let branch = format!(
         "\n[[dungeon]]\nid = \"crowded\"\nname = \"Crowded\"\ngenerator = \"rooms\"\ndepth = 1\n\
          size = [80, 40]\ndanger = {danger}\npopulation = [\"kobold\", \"rat\"]\n\
-         population_count = 25\nspawn = {{ every = \"1m\", chance = 100 }}\n{levels}\
-         [[dungeon]]\nid = \"elsewhere\"\nname = \"Elsewhere\"\ngenerator = \"rooms\"\ndepth = 1\n\
-         size = [80, 21]\n"
+         population_count = 25\nspawn = {{ every = \"1m\", chance = 100 }}\n{levels}"
     );
     let dungeons = format!(
         "{}{branch}",

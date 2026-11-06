@@ -16,7 +16,7 @@ fn shared(id: &str) -> &'static Vault {
 }
 
 /// Every way `vault` lies stamped on `level`, by the top-left corner.
-fn stamps(level: &LevelTemplate, vault: &Vault) -> Vec<(Pos, Turn)> {
+pub(super) fn stamps(level: &LevelTemplate, vault: &Vault) -> Vec<(Pos, Turn)> {
     let (lw, lh) = (level.terrain.width(), level.terrain.height());
     let mut found = Vec::new();
     for turn in Turn::ALL {
@@ -38,17 +38,18 @@ fn stamps(level: &LevelTemplate, vault: &Vault) -> Vec<(Pos, Turn)> {
 }
 
 /// The cells reachable from the up stairs, doors and water and all (no locked door stops this:
-/// a kick opens one).
-fn reached(level: &LevelTemplate) -> BTreeSet<Pos> {
+/// a kick opens one; nor a secret door: a search finds one).
+pub(super) fn reached(level: &LevelTemplate) -> BTreeSet<Pos> {
     let up = (level.stairs.iter())
         .find(|s| s.dir == StairsDir::Up)
         .expect("stairs up")
         .pos;
     let passable = |p: Pos| {
-        level.terrain.get(p).is_some_and(|t| {
-            let def = CONTENT.terrain(*t);
-            def.walkable || def.is_closed_door() || def.is_open_door()
-        })
+        level.secrets.contains_key(&p)
+            || level.terrain.get(p).is_some_and(|t| {
+                let def = CONTENT.terrain(*t);
+                def.walkable || def.is_closed_door() || def.is_open_door()
+            })
     };
     let mut seen = BTreeSet::from([up]);
     let mut queue = VecDeque::from([up]);
@@ -73,7 +74,7 @@ fn flooded_cell_and_guard_post_come_turned_and_their_doors_lead_out() {
         let mut sizes = BTreeSet::new();
         let mut ways = Vec::new();
         for (campaign, branch) in floors {
-            for seed in 1..=24 {
+            for seed in 1..=60 {
                 for depth in 1..=4 {
                     let level_id = format!("{branch}:{depth}");
                     let Ok(level) = generate(&CONTENT, (campaign, seed), &level_id, None) else {

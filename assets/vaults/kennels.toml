@@ -1,0 +1,23 @@
+# Vault: ten pens off a passage, every door shut. Six hold one of the floor's own, every one a
+# find. The decision: which doors, and when to stop.
+# Nothing shows through a shut door and nothing in a pen opens one, so each door is a draw from
+# the floor's population with a prize behind it, met one at a time in a doorway. Two entrances,
+# at the passage's ends: it is a route by design, a way through for those who want none of it.
+# Borrows: the cages of Brogue's captive-monster vaults, without the captives.
+name = "The Kennels"
+map = '''
+#################
+#g$#g$#g$#g$#g$##
+##+##+##+##+##+##
++...............+
+##+##+##+##+##+##
+#gm#g$#g$#g$#gr##
+#################
+'''
+
+[legend]
+# Six of the ten pens hold one of the floor's own (two thirds at most, so the empty pens move).
+"g" = { terrain = "floor", monsters = { pool = "level", count = 6 } }
+"$" = { terrain = "floor", loot = "any" }
+"m" = { terrain = "floor", loot = "magic" }
+"r" = { terrain = "floor", loot = "rare" }

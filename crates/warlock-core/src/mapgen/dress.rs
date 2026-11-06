@@ -16,11 +16,27 @@ use crate::rng::Rng;
 
 /// Stands `dressing` along the walls of `room` (made already).
 pub(super) fn dress(canvas: &mut Canvas, rng: &mut Rng, room: &SpecialRoom, dressing: Dressing) {
-    let content = canvas.content;
-    let cells = room.cells();
-    let mut walkable: Vec<Pos> = (cells.iter().copied())
+    let mut walkable: Vec<Pos> = (room.cells().into_iter())
         .filter(|&p| canvas.is_walkable(p))
         .collect();
+    let mut free = spots(canvas, room);
+    let mut left = dressing.pieces(walkable.len());
+    while left > 0 && !free.is_empty() {
+        let at = free.swap_remove(rng.index(free.len()));
+        if !super::special::joined(&walkable, at) {
+            continue;
+        }
+        canvas.set(at, dressing.terrain);
+        walkable.retain(|&p| p != at);
+        left -= 1;
+    }
+}
+
+/// The cells of `room` a piece may stand on, before the joining check. None: the room cannot be
+/// dressed (a cave chamber in the open, no wall beside any of its floor), and `special::make`
+/// leaves such a room plain rather than make a bare armoury.
+pub(super) fn spots(canvas: &Canvas, room: &SpecialRoom) -> Vec<Pos> {
+    let content = canvas.content;
     let walked: Vec<Pos> = (canvas.creatures.iter())
         .flat_map(|c| {
             let mut p = c.pos;
@@ -40,20 +56,10 @@ pub(super) fn dress(canvas: &mut Canvas, rng: &mut Rng, room: &SpecialRoom, dres
     let wall = |q: Pos| !canvas.is_walkable(q);
     // A way out of the room (a cave chamber's floor runs on past its edge).
     let out = |q: Pos| canvas.is_walkable(q) && !room.contains(q);
-    let mut free: Vec<Pos> = (cells.iter().copied())
+    (room.cells().into_iter())
         .filter(|&p| canvas.is_free_floor(p) && !walked.contains(&p))
         .filter(|p| !canvas.traps.contains_key(p) && !canvas.objects.contains_key(p))
         .filter(|&p| around(p, &super::CARDINALS, &wall))
         .filter(|&p| !around(p, &Dir::ALL, &door) && !around(p, &Dir::ALL, &out))
-        .collect();
-    let mut left = dressing.pieces(walkable.len());
-    while left > 0 && !free.is_empty() {
-        let at = free.swap_remove(rng.index(free.len()));
-        if !super::special::joined(&walkable, at) {
-            continue;
-        }
-        canvas.set(at, dressing.terrain);
-        walkable.retain(|&p| p != at);
-        left -= 1;
-    }
+        .collect()
 }

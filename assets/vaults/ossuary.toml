@@ -1,0 +1,21 @@
+# Vault: bones on a dusty floor, the dead standing among them, grave goods along the wall across
+# from the door. The decision: creep past the still dead, or wake them.
+# Dust deadens steps (`dusty_floor`), so the room favours whoever is quiet.
+name = "The Ossuary"
+map = '''
+#############
+#b.s.b.s.b.o#
+#.s.b.s.b.s.#
++b.s.b.s.b.$#
+#.s.b.s.b.s.#
+#b.s.b.s.b.r#
+#############
+'''
+
+[legend]
+"." = "dusty_floor"
+"b" = { terrain = "dusty_floor", objects = ["bones"] }
+"s" = { terrain = "dusty_floor", monsters = { pool = "skeleton", count = 6 } }
+"$" = { terrain = "dusty_floor", loot = { pool = "jewellery", grade = "magic" } }
+"o" = { terrain = "dusty_floor", loot = "any" }
+"r" = { terrain = "dusty_floor", loot = "rare" }

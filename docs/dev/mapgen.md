@@ -125,7 +125,14 @@ position or direction must be decided on there. It maps terrain, `creatures` (`p
 direction of its own (a stair's `<`/`>` means up or down, a door or wall none). Entrances keep their
 row order too. Tests: `content/vault_turn_tests.rs` (a quarter turn against the same vault drawn by
 hand; every turn of every vault passes `Vault::new` again), `mapgen/vault_turn_tests.rs` (Flooded
-cell and Guard post on real floors, pinned vaults, the draw), `ruins_are_outdoor_vaults_stamped_some_way_round`.
+cell and Guard post on real floors, pinned vaults, the draw), `ruins_are_outdoor_vaults_stamped_some_way_round`,
+and `mapgen/vault_stamp_tests.rs` (#1072): every shared dungeon vault stamps at least once in 100
+seeds of a rooms branch (Bānfeld) and a cave branch (Wulfeshol), some way round, with its
+entrances reached from the up stairs (secret doors count as passable), its known traps known
+(a chest's too: the Spiteful Coffer's fireball), and the Sealed Barrow's lead key inside it. A
+new shared vault joins the test by being in `assets/vaults/`. Test fixtures at peace
+(`world/fixture_factions.rs::make_peace`) leave the shared vaults out: a tag pool holds only
+types hostile to the player.
 
 How often, and how rarely the same one (#960): rooms floors roll `VAULT_CHANCE` 20 %
 (`rooms.rs`); cave floors 40 % for one (`caves.rs`), then 15 % for a second. Before it was 50 %

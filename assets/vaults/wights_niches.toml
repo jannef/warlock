@@ -1,0 +1,17 @@
+# Vault: six niches with grave goods, three of them with a wight standing before its own. The
+# decision: take the free three and go, or fight for the rest.
+# Everything is in plain sight from the passage before anything is decided: the Kennels turned
+# inside out. One entrance, so the passage is a dead end.
+name = "The Wights' Niches"
+map = '''
+#############
+#$#$#m#$#$#$#
+#u#u#u#u#u#u#
++...........#
+#############
+'''
+
+[legend]
+"$" = { terrain = "floor", loot = { pool = ["jewellery", "money"] } }
+"m" = { terrain = "floor", loot = { pool = "jewellery", grade = "magic" } }
+"u" = { terrain = "floor", monsters = { pool = "undead", count = 3 } }
