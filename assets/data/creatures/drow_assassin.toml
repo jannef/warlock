@@ -12,7 +12,7 @@ name = "drow assassin"
 first_sight = "A drow assassin. You see it now; you may not see it again."
 glyph = "e"
 fg = "#9a3a5a"
-speed = 1350
+speed = 1400
 faction = "drow"
 tags = ["drow"]
 alignment = "evil"
@@ -23,7 +23,7 @@ footsteps = 30
 hearing = 16
 weight = 55000
 stats = { strength = 24, dexterity = 25, toughness = 23, intelligence = 23, willpower = 23, presence = 23 }
-base_hp = 72
+base_hp = 40
 # The knife in the dark: it strikes the unwary hard, is rarely caught off guard, and its
 # eye finds those who would slip past it in the dark.
 skills = { sneak_attack = 160, initiative = 100, spot = 40 }
@@ -34,9 +34,8 @@ damage = "3d10"
 damage_type = "piercing"
 name = "envenomed dagger"
 verb = "stabs"
-to_hit = 8
+to_hit = 12
 threat = 19
-crit = 3
 on_hit = [{ status = "poisoned", chance = 40, severity = 4 }, { status = "weakened", chance = 15, severity = 1 }]
 # Its gear (spec §8 "Creature gear"): armour and coins, never a weapon (its venom rides on
 # its natural attack, which a wielded weapon would replace).

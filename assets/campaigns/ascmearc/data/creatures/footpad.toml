@@ -13,6 +13,7 @@ loot = 25
 name = "footpad"
 glyph = "@"
 fg = "#8a7a5a"
+speed = 1050
 faction = "outlaws"
 tags = ["outlaw"]
 alignment = "evil"

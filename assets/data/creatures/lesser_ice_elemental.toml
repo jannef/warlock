@@ -18,7 +18,7 @@ footsteps = 60
 hearing = 10
 weight = 200000
 stats = { strength = 20, dexterity = 11, toughness = 21, intelligence = 2, willpower = 20, presence = 2 }
-base_hp = 44
+base_hp = 74
 natural = { protection = 3, name = "ice" }
 resist = { piercing = 25, cold = 100, fire = -50, poison = 100 }
 corpse = false
@@ -28,7 +28,9 @@ damage = "3d6"
 damage_type = "cold"
 name = "fist"
 verb = "freezes"
-to_hit = 2
+to_hit = 1
+threat = 24
+crit = 3
 on_hit = [{ status = "sluggish", chance = 25, severity = 1 }]
 # Death throes (the dread design §5.3): it bursts where it dies.
 [creature.burst]

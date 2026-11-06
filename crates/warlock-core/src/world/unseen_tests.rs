@@ -226,6 +226,9 @@ fn a_blow_at_the_unseen_is_at_minus_four_and_a_hit_shows_it_for_the_turn() {
     assert_eq!(at.to_hit, profile.to_hit + unseen::UNSEEN_TO_HIT);
     // Its blows are something's; striking back is at something, until one finds it.
     for _ in 0..60 {
+        // The player outlasts a quick striker's blows (the variance pass, #1134) however long
+        // the search takes.
+        w.state.actors.get_mut(&player).expect("the player").hp = 1000;
         let from = w.messages().len();
         run(&mut w, "move:E");
         let now: Vec<String> = (w.messages().iter().skip(from))

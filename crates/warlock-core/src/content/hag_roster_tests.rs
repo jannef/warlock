@@ -2,6 +2,7 @@
 //! (#383 "Conventions", the same numbers as `undead_roster_tests`), and every hag carries the
 //! `hag` tag, the bog hag (of the `marsh`) too.
 
+use super::variance_roster_tests::{self, Shape};
 use super::{Affliction, Content};
 use crate::stats::Stat;
 
@@ -28,9 +29,18 @@ impl Role {
     /// The factor on `base_hp`.
     fn hp(self) -> f64 {
         match self {
-            Role::Brute => 1.6,
+            Role::Brute => 2.0,
             Role::Standard => 1.0,
-            Role::Caster => 0.8,
+            Role::Caster => 0.5,
+        }
+    }
+
+    /// What the role does to the to-hit and the blow (the variance pass, #1134).
+    fn shape(self) -> Shape {
+        match self {
+            Role::Standard => Shape::Standard,
+            Role::Brute => Shape::Brute,
+            Role::Caster => Shape::Caster,
         }
     }
 
@@ -103,6 +113,7 @@ fn the_hags_keep_to_the_formulas() {
         let hp = f64::from(def.stats.score(Stat::Toughness)) + f64::from(def.base_hp);
         let want = max_hp(level, role);
         assert!(within(hp, want), "{id}: max HP {hp}, the formula {want:.1}");
+        variance_roster_tests::check(&content, def, role.shape());
         let attack = (def.attack.as_ref()).unwrap_or_else(|| panic!("{id}: no attack"));
         let damage = attack.attack.damage;
         let average = f64::from(damage.min() + damage.max()) / 2.0;
@@ -139,13 +150,15 @@ fn every_hag_carries_the_hag_tag() {
 #[test]
 fn the_formulas_give_the_issues_numbers() {
     // #451's table: the green hag's 55 and 2d8, the sea hag's 87 and 3d8 (4d6 a step down for
-    // her drain), the annis hag's 167 and 4d8, the bheur hag's 113 and 3d10.
-    assert_eq!(max_hp(18.0, Role::Caster).round(), 55.0);
+    // her drain), the annis hag's 167 and 4d8, the bheur hag's 113 and 3d10; since the variance
+    // pass (#1134: a caster's 0.5, a brute's 2.0) the green hag's 42, the annis's 201, the
+    // bheur's 81.
+    assert_eq!(max_hp(18.0, Role::Caster).round(), 42.0);
     assert_eq!(dice_average(18.0, Role::Caster, false), 9.0);
     assert_eq!(max_hp(26.0, Role::Standard).round(), 87.0);
     assert_eq!(dice_average(26.0, Role::Standard, true), 13.5);
-    assert_eq!(max_hp(34.0, Role::Brute).round(), 167.0);
+    assert_eq!(max_hp(34.0, Role::Brute).round(), 201.0);
     assert_eq!(dice_average(34.0, Role::Brute, false), 18.0);
-    assert_eq!(max_hp(42.0, Role::Caster).round(), 113.0);
+    assert_eq!(max_hp(42.0, Role::Caster).round(), 81.0);
     assert_eq!(dice_average(42.0, Role::Caster, false), 16.5);
 }

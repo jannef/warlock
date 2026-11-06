@@ -13,6 +13,7 @@ loot = 25
 name = "cultist"
 glyph = "@"
 fg = "#a05a7a"
+speed = 1050
 faction = "cult"
 tags = ["cultist"]
 alignment = "evil"

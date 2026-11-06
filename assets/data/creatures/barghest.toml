@@ -19,7 +19,7 @@ footsteps = 50
 hearing = 18
 weight = 60000
 stats = { strength = 16, dexterity = 18, toughness = 16, intelligence = 15, willpower = 21, presence = 15 }
-base_hp = 29
+base_hp = 16
 resist = { poison = 100 }
 on_eat = { message = "It was rotten long before it died.", vomit = 80, harm = "1d4" }
 blood = "#2a2228"
@@ -29,5 +29,6 @@ damage = "2d8"
 damage_type = "piercing"
 name = "bite"
 verb = "bites"
-to_hit = 3
+to_hit = 4
+threat = 19
 on_hit = [{ status = "frightened", chance = 15, severity = 1 }]

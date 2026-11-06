@@ -24,7 +24,7 @@ hearing = 12
 weight = 30000
 size = "small"
 stats = { strength = 11, dexterity = 12, toughness = 15, intelligence = 15, willpower = 16, presence = 10 }
-base_hp = 16
+base_hp = 10
 mana = 28
 skills = { concentration = 30, spellcraft = 34 }
 on_eat = { message = "This goblin meat is rank, and tingles on the tongue.", vomit = 40, skills = { decipher_script = { gives = 4, up_to = 25 } } }

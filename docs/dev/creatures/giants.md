@@ -31,3 +31,7 @@ large size is a follow-up). The `boulder` object (miscellaneous, no kind) is wha
 never loot, never in a shop, never placed.
 
 Spells (#1102, docs/dev/creatures.md "Casters"; in the order each prefers them): the ogre mage `rime`, `frost`, `magic_missile` (mana 45); the giant shaman `cure_wounds`, `rime`, `lightning_bolt` (mana 80).
+
+## Variance
+
+The variance pass (#1134, `docs/dev/creatures.md` "Variance by role") sets the roles' to-hit (striker `L/4 + L/8`, brute and caster `L/4 − L/8`, the armed `L/4`), threat and crit (striker 19, brute 24 at ×3), and hit-point factors (quick and caster 0.5, brute 2.0). **Speed**: the ogres lumber at 800 and 850, the giants stride at 950 to 1050.

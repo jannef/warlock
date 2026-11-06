@@ -29,3 +29,7 @@ Spells (#1102, docs/dev/creatures.md "Casters"; in the order each prefers them):
 Theft (docs/design/monster-dread.md §5.6, #1130; `docs/dev/creatures.md` "Theft and the
 blink"): the succubus and the incubus `steals = { what = "small", chance = 30, cooldown = 60 }`
 (a seduction is a theft; it stays, as a seducer does), the shared numbers kept.
+
+## Variance
+
+The variance pass (#1134, `docs/dev/creatures.md` "Variance by role") sets the roles' to-hit (striker `L/4 + L/8`, brute and caster `L/4 − L/8`, the armed `L/4`), threat and crit (striker 19, brute 24 at ×3), and hit-point factors (quick and caster 0.5, brute 2.0). **Speed**: the night's riders at 1050 to 1250 (the hell hound and the nightmare at the top); the dread tempters (the succubus, the incubus, the rakshasa) at 1400.

@@ -3,6 +3,7 @@
 //! and `fiend` tags, and the roster's five are all there.
 
 use super::Content;
+use super::variance_roster_tests::{self, Shape};
 use crate::stats::Stat;
 
 /// How far a type's max HP and dice average may lie from the formulas, in percent.
@@ -30,10 +31,20 @@ impl Role {
     /// The factor on `base_hp`.
     fn hp(self) -> f64 {
         match self {
-            Role::Brute => 1.6,
+            Role::Brute => 2.0,
             Role::Standard => 1.0,
-            Role::Quick => 0.9,
-            Role::Caster => 0.8,
+            Role::Quick => 0.5,
+            Role::Caster => 0.5,
+        }
+    }
+
+    /// What the role does to the to-hit and the blow (the variance pass, #1134).
+    fn shape(self) -> Shape {
+        match self {
+            Role::Brute => Shape::Brute,
+            Role::Standard => Shape::Standard,
+            Role::Quick => Shape::Striker,
+            Role::Caster => Shape::Caster,
         }
     }
 
@@ -128,6 +139,7 @@ fn the_yugoloths_keep_to_the_roster() {
         let hp = f64::from(def.stats.score(Stat::Toughness)) + f64::from(def.base_hp);
         let want = max_hp(level, role);
         assert!(within(hp, want), "{id}: max HP {hp}, the formula {want:.1}");
+        variance_roster_tests::check(&content, def, role.shape());
         let attack = (def.attack.as_ref()).unwrap_or_else(|| panic!("{id}: no attack"));
         let damage = attack.attack.damage;
         let average = f64::from(damage.min() + damage.max()) / 2.0;
@@ -147,11 +159,12 @@ fn the_yugoloths_keep_to_the_roster() {
 
 #[test]
 fn the_formulas_give_the_tables_numbers() {
-    // #446's table: the mezzoloth's 76 hit points and 3d8, the nycaloth's 175 and 4d8 (a brute's
+    // #446's table: the mezzoloth's 76 hit points and 3d8, the nycaloth's 4d8 (its 175 is 211 since
+    // the variance pass, #1134: a brute's 2.0; a brute's
     // step above 3d10), the arcanaloth's 4d8 (a caster's step below 3d12).
     assert_eq!(max_hp(22.0, Role::Standard).round(), 76.0);
     assert_eq!(dice_average(22.0, Role::Standard), 13.5);
-    assert_eq!(max_hp(36.0, Role::Brute).round(), 175.0);
+    assert_eq!(max_hp(36.0, Role::Brute).round(), 211.0);
     assert_eq!(dice_average(36.0, Role::Brute), 18.0);
     assert_eq!(dice_average(46.0, Role::Caster), 18.0);
 }

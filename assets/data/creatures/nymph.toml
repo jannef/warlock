@@ -14,6 +14,7 @@ leavings = ["torn_cloth"]
 first_sight = "A nymph. Lovely, and light-fingered; mind your pack."
 glyph = "n"
 fg = "#80c0e0"
+speed = 1400
 factions = { seelie = 90, unseelie = 10 }
 tags = ["fey", "caster"]
 alignment = "good"
@@ -28,7 +29,7 @@ footsteps = 15
 hearing = 18
 weight = 50000
 stats = { strength = 17, dexterity = 16, toughness = 21, intelligence = 23, willpower = 23, presence = 25 }
-base_hp = 44
+base_hp = 27
 skills = { concentration = 76, spellcraft = 81 }
 steals = { what = "any", chance = 30, cooldown = 60 }
 natural = { defence = 1, protection = 0, name = "fey grace" }
@@ -38,5 +39,5 @@ damage = "3d6"
 damage_type = "bludgeoning"
 name = "touch"
 verb = "touches"
-to_hit = 5
+to_hit = 3
 on_hit = [{ status = "transfixed", chance = 25, severity = 2 }]

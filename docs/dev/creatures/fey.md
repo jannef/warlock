@@ -23,7 +23,7 @@ Fixtures that write their own factions file list `seelie` and `unseelie`.
 **The roster.** Thirteen shared types, one file each in `assets/data/creatures/`, tagged `fey`,
 each of the Seelie or the Unseelie court by its weights (the creatures README's notes): sprite 2
 (small, a short bow, a poisoned stab), pixie 4 (small caster, a touch that sends to sleep, `drowsy`, and steals what is small), quickling
-6 (speed 2000), boggle 7 (small, hard to hit, opens doors), darkling 9 (small, darkvision), satyr
+6 (speed 1250, the bulk's top), boggle 7 (small, hard to hit, opens doors), darkling 9 (small, darkvision), satyr
 10, redcap 12 (small, quick, a heavy stamp), blink dog 14 (blinks to reach you), meenlock 16 (claws that frighten and
 may hold), dryad 19 and nymph 22 (casters whose touch transfixes; the nymph steals anything), korred 25 (small, very tough,
 fists that may hold), yeth hound 31 (quick, a bite that frightens). Lean Unseelie: redcap and
@@ -62,3 +62,7 @@ minute at most (`chance = 30`, `cooldown = 60`); the blink dog `blinks = { range
 
 The darkling (#1132, docs/dev/creatures.md "The unseen"): `shadowy = true`, unseen in the
 dim but beside the player, its sneak attack kept.
+
+## Variance
+
+The variance pass (#1134, `docs/dev/creatures.md` "Variance by role") sets the roles' to-hit (striker `L/4 + L/8`, brute and caster `L/4 − L/8`, the armed `L/4`), threat and crit (striker 19, brute 24 at ×3), and hit-point factors (quick and caster 0.5, brute 2.0). **Speed**: the fey are quick, 1000 to 1250 (the yeth hound at the top of the bulk); the quickling stays at 2000 (design §6, its sneak attack the claw bug of this game); the dread fey at 1400 (the pixie, the darkling, the nymph, the blink dog).

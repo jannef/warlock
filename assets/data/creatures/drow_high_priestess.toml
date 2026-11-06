@@ -24,7 +24,7 @@ footsteps = 70
 hearing = 14
 weight = 56000
 stats = { strength = 26, dexterity = 23, toughness = 29, intelligence = 32, willpower = 32, presence = 32 }
-base_hp = 88
+base_hp = 55
 mana = 100
 skills = { concentration = 118, spellcraft = 123 }
 resist = { poison = 50 }
@@ -34,7 +34,7 @@ damage = "4d8"
 damage_type = "slashing"
 name = "scourge"
 verb = "lashes"
-to_hit = 11
+to_hit = 6
 on_hit = [{ status = "poisoned", chance = 30, severity = 4 }, { status = "weakened", chance = 15, severity = 2 }]
 # Its gear (spec §8 "Creature gear"): armour and coins, never a weapon (its venom rides on
 # its natural attack, which a wielded weapon would replace).

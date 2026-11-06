@@ -2,6 +2,7 @@
 //! #383, by level and role) and draws its court, Seelie or Unseelie, by the plan's weights.
 
 use super::Content;
+use super::variance_roster_tests::{self, Shape};
 use crate::stats::Stat;
 
 /// How far a type's max HP and dice average may lie from the formulas, in percent.
@@ -31,11 +32,21 @@ impl Role {
     /// The factor on `base_hp`.
     fn hp(self) -> f64 {
         match self {
-            Role::Brute => 1.6,
+            Role::Brute => 2.0,
             Role::Standard => 1.0,
-            Role::Quick => 0.9,
-            Role::Caster => 0.8,
+            Role::Quick => 0.5,
+            Role::Caster => 0.5,
             Role::Small => 0.5,
+        }
+    }
+
+    /// What the role does to the to-hit and the blow (the variance pass, #1134).
+    fn shape(self) -> Shape {
+        match self {
+            Role::Brute => Shape::Brute,
+            Role::Standard | Role::Small => Shape::Standard,
+            Role::Quick => Shape::Striker,
+            Role::Caster => Shape::Caster,
         }
     }
 
@@ -130,6 +141,7 @@ fn the_fey_keep_to_the_roster() {
         let hp = f64::from(def.stats.score(Stat::Toughness)) + f64::from(def.base_hp);
         let want = max_hp(level, role);
         assert!(within(hp, want), "{id}: max HP {hp}, the formula {want:.1}");
+        variance_roster_tests::check(&content, def, role.shape());
         let damage = (def.attack.as_ref())
             .unwrap_or_else(|| panic!("{id}: no attack"))
             .attack

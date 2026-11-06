@@ -19,7 +19,7 @@ footsteps = 140
 hearing = 10
 weight = 3000000
 stats = { strength = 32, dexterity = 18, toughness = 33, intelligence = 26, willpower = 30, presence = 26 }
-base_hp = 160
+base_hp = 258
 natural = { defence = 3, protection = 11, name = "stone body" }
 incorporeal = { wall_defence = 3 }
 resist = { slashing = 25, piercing = 50, electricity = 100, poison = 100 }
@@ -28,9 +28,11 @@ blood = "none"
 [creature.attack]
 damage = "3d12"
 damage_type = "bludgeoning"
-to_hit = 10
+to_hit = 5
 name = "fist"
 verb = "pounds"
+threat = 24
+crit = 3
 on_hit = [
     { status = "staggered", chance = 15, severity = 1 },
     { status = "held", chance = 10, difficulty = 20 },

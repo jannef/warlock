@@ -25,7 +25,7 @@ footsteps = 60
 hearing = 12
 weight = 40000
 stats = { strength = 16, dexterity = 15, toughness = 20, intelligence = 22, willpower = 27, presence = 22 }
-base_hp = 40
+base_hp = 25
 skills = { concentration = 70, spellcraft = 75 }
 natural = { defence = 1, protection = 1, name = "wrappings" }
 resist = { fire = -50, poison = 100 }
@@ -36,5 +36,5 @@ damage = "3d6"
 damage_type = "cold"
 name = "touch"
 verb = "touches"
-to_hit = 5
+to_hit = 3
 on_hit = [{ disease = "mummy_rot", chance = 15 }]

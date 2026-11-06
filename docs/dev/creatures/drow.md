@@ -22,10 +22,9 @@ bright elemental colours), each drow a violet, indigo, steel, teal, or rose of i
 scaling on the drow's own base: xp `5L + 10`; St `11 + 0.4L`, Dx `12 + 0.25L`, To `11 + 0.4L`,
 In, Wp, and Pr `10 + 0.4L` (casters +4 each), within 1, capped at 40; by role (standard ±0,
 archer Dx +3, quick Dx +5 To −1, caster St −3, officer St +2 To +2) and `base_hp = 2.5L × role`
-(standard 1.0, archer and quick 0.9, caster 0.8, officer 1.1), max HP within ±35 %; dice the
+(standard 1.0, archer 0.9, quick and caster 0.5, officer 1.1; #1134), max HP within ±35 %; dice the
 ladder's nearest to `2 + 0.55L` (then `13 + 0.25(L − 20)`), casters one step lower, within
-±35 %; `to_hit = L / 4` (#1097). Speeds are #383's (quick `1200 + 5L`, else 1000 then +4 a
-level past 20).
+±35 %; `to_hit` by role (#1134, below). Speeds: "Variance" below.
 
 ## Poisoned weapons
 
@@ -88,3 +87,7 @@ weapons, creature light sensitivity (the race's `light_blind`), damaging creatur
 mounts, and a drow place to give them a population.
 
 Spells (#1102, docs/dev/creatures.md "Casters"; in the order each prefers them): the drow mage `web`, `lightning_bolt`, `magic_missile` (mana 70); the drow priestess `cure_wounds`, `silence`, `leech` (mana 75); the drow archmage `haste`, `web`, `chain_lightning`, `fireball` (mana 130); the drow high priestess `cure_wounds`, `silence`, `web`, `leech` (mana 100); the drow matron `cure_wounds`, `silence`, `web`, `chain_lightning`, `leech` (mana 130).
+
+## Variance
+
+The variance pass (#1134, `docs/dev/creatures.md` "Variance by role") sets the roles' to-hit (striker `L/4 + L/8`, brute and caster `L/4 − L/8`, the armed `L/4`), threat and crit (striker 19, brute 24 at ×3), and hit-point factors (quick and caster 0.5, brute 2.0). **Speed**: the rank-and-file at 1000 to 1050, the officers and casters at 1100, the stalker and the blademaster at 1250; the assassin, dread, at 1400.

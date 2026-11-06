@@ -19,7 +19,7 @@ footsteps = 90
 hearing = 10
 weight = 300000
 stats = { strength = 35, dexterity = 20, toughness = 36, intelligence = 29, willpower = 33, presence = 29 }
-base_hp = 192
+base_hp = 309
 natural = { defence = 3, protection = 4, name = "hide" }
 resist = { fire = 100, poison = 50, cold = 50 }
 corpse = false
@@ -29,5 +29,7 @@ damage = "4d10"
 damage_type = "piercing"
 name = "fork"
 verb = "gores"
-to_hit = 12
+to_hit = 6
+threat = 24
+crit = 3
 on_hit = [{ status = "bleeding", chance = 20, severity = 2 }]

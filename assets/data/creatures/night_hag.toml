@@ -27,7 +27,7 @@ footsteps = 30
 hearing = 15
 weight = 60000
 stats = { strength = 21, dexterity = 18, toughness = 25, intelligence = 27, willpower = 32, presence = 27 }
-base_hp = 66
+base_hp = 41
 skills = { concentration = 109, spellcraft = 114 }
 natural = { defence = 2, protection = 1, name = "hide" }
 resist = { fire = 50, cold = 50 }
@@ -38,7 +38,7 @@ damage = "4d6"
 damage_type = "slashing"
 name = "claws"
 verb = "claws"
-to_hit = 8
+to_hit = 4
 on_hit = [
     { status = "held", chance = 15, difficulty = 18 },
     { status = "frightened", chance = 10, severity = 2 },

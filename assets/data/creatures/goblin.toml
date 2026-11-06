@@ -10,6 +10,7 @@ loot = 20
 name = "goblin"
 glyph = "g"
 fg = "#8aa04a"
+speed = 1050
 faction = "goblins"
 tags = ["goblin"]
 alignment = "evil"

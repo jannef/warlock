@@ -40,3 +40,7 @@ none; the wargs' bites carry `bleeding` (the mana tests' status fixture lists it
 Spells (#1102, docs/dev/creatures.md "Casters"; in the order each prefers them): the orc shaman `mend`, `burning_hands`, `spark` (mana 7); the orc high shaman `cure_wounds`, `blessing`, `fireball` (mana 90).
 
 Cries (#1128, `world/aura.rs`): the warg and the dire warg howl now and then (loudness 120, every 180 s): a pack heard before it is seen.
+
+## Variance
+
+The variance pass (#1134, `docs/dev/creatures.md` "Variance by role") sets the roles' to-hit (striker `L/4 + L/8`, brute and caster `L/4 − L/8`, the armed `L/4`), threat and crit (striker 19, brute 24 at ×3), and hit-point factors (quick and caster 0.5, brute 2.0). **Speed**: the orcs press on at 1000 (the rank-and-file within 950 to 1050), the raider at 1100, the berserker at 1200, the wargs lope at 1250.

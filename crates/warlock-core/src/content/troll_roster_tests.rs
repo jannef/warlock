@@ -6,6 +6,7 @@
 //! does not.
 
 use super::Content;
+use super::variance_roster_tests::{self, Shape};
 use crate::stats::Stat;
 
 /// How far a type's max HP and dice average may lie from the formulas, in percent.
@@ -36,10 +37,20 @@ impl Role {
     /// The factor on `base_hp`.
     fn hp(self) -> f64 {
         match self {
-            Role::Brute => 1.6,
+            Role::Brute => 2.0,
             Role::Standard => 1.0,
-            Role::Quick => 0.9,
-            Role::Caster => 0.8,
+            Role::Quick => 0.5,
+            Role::Caster => 0.5,
+        }
+    }
+
+    /// What the role does to the to-hit and the blow (the variance pass, #1134).
+    fn shape(self) -> Shape {
+        match self {
+            Role::Brute => Shape::Brute,
+            Role::Standard => Shape::Standard,
+            Role::Quick => Shape::Striker,
+            Role::Caster => Shape::Caster,
         }
     }
 
@@ -132,6 +143,7 @@ fn the_trolls_keep_to_the_tribe() {
         let hp = f64::from(def.stats.score(Stat::Toughness)) + f64::from(def.base_hp);
         let want = max_hp(level, role);
         assert!(within(hp, want), "{id}: max HP {hp}, the formula {want:.1}");
+        variance_roster_tests::check(&content, def, role.shape());
         let attack = def.attack.as_ref();
         let damage = attack
             .unwrap_or_else(|| panic!("{id}: no attack"))
@@ -173,10 +185,11 @@ fn the_trolls_keep_to_the_tribe() {
 
 #[test]
 fn the_formulas_give_the_plans_numbers() {
-    // #456's table: the hill troll's 87 hit points and 3d8, the elder troll's 206 and 3d12.
-    assert_eq!(max_hp(15.0, Role::Brute).round(), 87.0);
+    // #456's table: the hill troll's 3d8, the elder troll's 3d12; their 87 and 206 hit points
+    // are 102 and 248 since the variance pass (#1134: a brute's 2.0).
+    assert_eq!(max_hp(15.0, Role::Brute).round(), 102.0);
     assert_eq!(dice_average(15.0, Role::Brute), 13.5);
-    assert_eq!(max_hp(42.0, Role::Brute).round(), 206.0);
+    assert_eq!(max_hp(42.0, Role::Brute).round(), 248.0);
     assert_eq!(dice_average(42.0, Role::Brute), 19.5);
 }
 

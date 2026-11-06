@@ -23,7 +23,7 @@ footsteps = 80
 hearing = 14
 weight = 70000
 stats = { strength = 18, dexterity = 16, toughness = 22, intelligence = 18, willpower = 21, presence = 14 }
-base_hp = 48
+base_hp = 30
 mana = 110
 skills = { concentration = 88, spellcraft = 98 }
 # Its corpse teaches something of its letters.

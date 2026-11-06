@@ -8,7 +8,7 @@ xp = 100
 name = "forest troll"
 glyph = "T"
 fg = "#6a9a3a"
-speed = 1300
+speed = 1250
 faction = "troll"
 tags = ["troll"]
 alignment = "evil"
@@ -19,7 +19,7 @@ footsteps = 100
 hearing = 12
 weight = 200000
 stats = { strength = 20, dexterity = 17, toughness = 22, intelligence = 8, willpower = 14, presence = 6 }
-base_hp = 40
+base_hp = 21
 natural = { defence = 1, protection = 2, name = "hide" }
 weapon_skills = { spears = 2 }
 resist = { fire = -50 }

@@ -272,7 +272,7 @@ fn the_basilisk_gazes_stiffening_resisted_by_toughness() {
     let gaze = basilisk.gaze.as_ref().expect("a gaze");
     assert!(basilisk.dread && gaze.averted);
     assert_eq!((gaze.range, gaze.glance), (6, 25));
-    assert_eq!(basilisk.speed, 900, "slow: walking away works");
+    assert_eq!(basilisk.speed, 600, "slow: walking away works");
     let stone = gaze.riders.iter().find_map(|r| match r.what {
         crate::content::Affliction::Status {
             status,

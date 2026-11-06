@@ -9,7 +9,7 @@ loot = 5
 name = "greater lightning elemental"
 glyph = "E"
 fg = "#c0a0ff"
-speed = 1500
+speed = 1250
 light = "storm"
 glow = 0.45
 faction = "elemental"
@@ -21,7 +21,7 @@ footsteps = 20
 hearing = 10
 weight = 20000
 stats = { strength = 25, dexterity = 24, toughness = 25, intelligence = 24, willpower = 29, presence = 24 }
-base_hp = 81
+base_hp = 45
 natural = { defence = 4, protection = 0, name = "crackling form" }
 resist = { electricity = 100, piercing = 25, poison = 100 }
 corpse = false
@@ -29,9 +29,10 @@ blood = "none"
 [creature.attack]
 damage = "3d10"
 damage_type = "electricity"
-to_hit = 9
+to_hit = 13
 name = "touch"
 verb = "shocks"
+threat = 19
 on_hit = [{ status = "staggered", chance = 20, severity = 1 }]
 # Death throes (the dread design §5.3): it bursts where it dies.
 [creature.burst]

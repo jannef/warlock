@@ -20,7 +20,7 @@ footsteps = 130
 hearing = 12
 weight = 200000
 stats = { strength = 34, dexterity = 20, toughness = 35, intelligence = 28, willpower = 32, presence = 28 }
-base_hp = 184
+base_hp = 297
 natural = { defence = 3, protection = 4, name = "dead flesh" }
 resist = { poison = 100 }
 on_eat = { message = "Grave-cold meat, and bitter as night.", vomit = 80, harm = "1d4" }
@@ -30,7 +30,9 @@ damage = "3d12"
 damage_type = "bludgeoning"
 name = "slam"
 verb = "slams"
-to_hit = 11
+to_hit = 6
+threat = 24
+crit = 3
 on_hit = [
     { drain = "toughness", points = 2, chance = 10, check = "toughness", difficulty = 21 },
     { status = "frightened", chance = 15, severity = 1 },

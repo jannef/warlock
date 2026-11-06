@@ -10,6 +10,7 @@ name = "barbed devil"
 first_sight = "A barbed devil, all hooks and spines. Every blow at it costs blood."
 glyph = "U"
 fg = "#c03030"
+speed = 1400
 faction = "devil"
 tags = ["devil", "fiend"]
 alignment = "evil"

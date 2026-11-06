@@ -26,9 +26,9 @@ footsteps = 90
 hearing = 12
 weight = 65000
 stats = { strength = 21, dexterity = 17, toughness = 24, intelligence = 19, willpower = 25, presence = 13 }
-base_hp = 58
+base_hp = 36
 skills = { concentration = 97, spellcraft = 102 }
-attack = { damage = "3d8", damage_type = "force", name = "mind-lash", verb = "lashes", to_hit = 7 }
+attack = { damage = "3d8", damage_type = "force", name = "mind-lash", verb = "lashes", to_hit = 4 }
 resist = { poison = 25, cold = 10 }
 on_eat = { message = "Tough and sour, and your head aches.", vomit = 25, train = { willpower = 18 }, skills = { decipher_script = { gives = 9, up_to = 70 } } }
 [[creature.gear]]

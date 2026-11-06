@@ -9,7 +9,7 @@ loot = 20
 name = "thunderhead"
 glyph = "E"
 fg = "#a080e0"
-speed = 1700
+speed = 1250
 light = "storm"
 glow = 0.45
 faction = "elemental"
@@ -21,7 +21,7 @@ footsteps = 20
 hearing = 10
 weight = 80000
 stats = { strength = 39, dexterity = 33, toughness = 39, intelligence = 38, willpower = 40, presence = 38 }
-base_hp = 158
+base_hp = 88
 natural = { defence = 8, protection = 0, name = "crackling form" }
 resist = { electricity = 100, piercing = 25, poison = 100 }
 corpse = false
@@ -29,9 +29,10 @@ blood = "none"
 [creature.attack]
 damage = "4d12"
 damage_type = "electricity"
-to_hit = 17
+to_hit = 20
 name = "touch"
 verb = "shocks"
+threat = 19
 on_hit = [{ status = "staggered", chance = 20, severity = 1 }]
 # Death throes (the dread design §5.3): it bursts where it dies.
 [creature.burst]

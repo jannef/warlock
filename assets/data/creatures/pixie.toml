@@ -13,7 +13,7 @@ name = "pixie"
 first_sight = "A pixie. When it laughs, your pack is lighter."
 glyph = "f"
 fg = "#c890f0"
-speed = 1100
+speed = 1400
 factions = { seelie = 50, unseelie = 50 }
 tags = ["fey", "caster"]
 vision = "low_light"

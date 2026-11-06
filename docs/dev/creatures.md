@@ -444,6 +444,33 @@ generated floor (rolled by `gear::arm` after it) and a spawn in play (rolled by
 `make_creature`). What falls is unidentified (Scavenger, which told it, was cut by #816). Tests: `world/gear_tests.rs`; the mapgen
 snapshots print each spawn's gear.
 
+## Variance by role
+
+The variance pass (#1134, `docs/design/monster-dread.md` §7.2) spreads a level's monsters by
+role on #1097's `to_hit = L/4`; every roster test maps its roles onto a
+`content/variance_roster_tests.rs::Shape` and calls its `check`:
+- **to-hit** of the natural attack: a striker (quick, assassin) `L/4 + L/8` (at most the data's
+  20), a brute, shambler, or caster `L/4 − L/8`, everyone else `L/4`, each part rounded down. An
+  armed type (`variance_roster_tests::armed`: a wielded weapon in its gear, the racial weapon
+  too) keeps `L/4`: its spread is the gear's and the weapon skill's.
+- **threat and crit** of the natural attack: a striker `threat = 19` (crit ×2), a brute
+  `threat = 24`, `crit = 3`, everyone else the defaults (22, ×2). The mean of the dice is the
+  rosters' as before.
+- **hit points**: the role factor on `base_hp = 2.5 × L × factor` runs **0.5** (quick, small,
+  caster) to **2.0** (brute; the giants and ogres too), the shambler 1.5, the spirit 0.6, the
+  standard 1.0 (archer 0.9, officer 1.1), ±35 % kept; the brutes stand in its top part (every one at 1.25 to 1.35 of its formula, the
+  dread brutes at the top, so the probe's slowest tenth reaches twice the median). The
+  mimics' `hp_factor` is the brute's.
+- **speed** (`the_speed_rule_holds_tribe_by_tribe`, every faction but the beasts, the people, the
+  player, and the layer keepers; uniques and the generated families left out): the bulk between
+  800 and 1250 by the tribe's temperament (each tribe file names it), the dread at 600 or 700
+  (the slow and awful) or 1400 and up (the quick dread), no tribe with every type at 1000, and a
+  people's rank-and-file (the orcs', hobgoblins', drow's, and duergar's standards and archers,
+  `variance_roster_tests::rank_and_file`) at 950 to 1050.
+
+The probe's "Spread" table (`balance_probe/spread.rs`, `docs/balance.md`) measures what it does:
+rounds to kill and to die over a level's monsters as a distribution.
+
 ## Creature waves
 
 The campaign's creature waves (docs/design/campaign.md §10.1; #333 the barrow wave, #334 the fen

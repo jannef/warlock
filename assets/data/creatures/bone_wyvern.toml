@@ -19,9 +19,9 @@ footsteps = 60
 hearing = 10
 weight = 150000
 stats = { strength = 23, dexterity = 12, toughness = 24, intelligence = 2, willpower = 22, presence = 2 }
-base_hp = 72
+base_hp = 119
 natural = { protection = 3, name = "bones" }
-attack = { damage = "3d8", damage_type = "piercing", name = "sting", verb = "stings", to_hit = 4 }
+attack = { damage = "3d8", damage_type = "piercing", name = "sting", verb = "stings", to_hit = 2, threat = 24, crit = 3 }
 resist = { piercing = 50, bludgeoning = -50, poison = 100 }
 corpse = false
 blood = "none"

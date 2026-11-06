@@ -10,7 +10,7 @@ loot = 20
 name = "drow stalker"
 glyph = "e"
 fg = "#5a4a80"
-speed = 1300
+speed = 1250
 faction = "drow"
 tags = ["drow"]
 alignment = "evil"
@@ -21,7 +21,7 @@ footsteps = 30
 hearing = 16
 weight = 55000
 stats = { strength = 19, dexterity = 22, toughness = 18, intelligence = 18, willpower = 18, presence = 18 }
-base_hp = 43
+base_hp = 24
 # A scout's craft: it opens the throat of the unwary, and its sharp eye finds those who
 # would slip past it in the dark.
 skills = { sneak_attack = 75, initiative = 60, spot = 50 }
@@ -32,8 +32,8 @@ damage = "3d8"
 damage_type = "piercing"
 name = "envenomed dagger"
 verb = "stabs"
-to_hit = 4
-threat = 20
+to_hit = 6
+threat = 19
 on_hit = [{ status = "poisoned", chance = 30, severity = 3 }]
 # Its gear (spec §8 "Creature gear"): armour and coins, never a weapon (its venom rides on
 # its natural attack, which a wielded weapon would replace).

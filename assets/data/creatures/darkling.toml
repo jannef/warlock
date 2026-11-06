@@ -12,7 +12,7 @@ name = "darkling"
 first_sight = "A darkling, half a shadow. Keep to the light."
 glyph = "f"
 fg = "#5a5a6a"
-speed = 1150
+speed = 1400
 factions = { seelie = 50, unseelie = 50 }
 tags = ["fey"]
 vision = "darkvision"

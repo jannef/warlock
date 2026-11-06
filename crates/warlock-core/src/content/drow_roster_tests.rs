@@ -2,6 +2,7 @@
 //! roster's (#383) level scaling on the drow's own base (quick, frail, keen-minded), and fights
 //! with a venomed natural attack, never a wielded weapon (riders ride only on natural attacks).
 
+use super::variance_roster_tests::{self, Shape};
 use super::{Affliction, Combat, Content};
 use crate::alignment::Alignment;
 use crate::stats::Stat;
@@ -38,9 +39,19 @@ impl Role {
     fn hp(self) -> f64 {
         match self {
             Role::Standard => 1.0,
-            Role::Archer | Role::Quick => 0.9,
-            Role::Caster => 0.8,
+            Role::Archer => 0.9,
+            Role::Quick => 0.5,
+            Role::Caster => 0.5,
             Role::Officer => 1.1,
+        }
+    }
+
+    /// What the role does to the to-hit and the blow (the variance pass, #1134).
+    fn shape(self) -> Shape {
+        match self {
+            Role::Standard | Role::Archer | Role::Officer => Shape::Standard,
+            Role::Quick => Shape::Striker,
+            Role::Caster => Shape::Caster,
         }
     }
 
@@ -146,13 +157,16 @@ fn the_drow_keep_to_the_roster() {
         let hp = f64::from(def.stats.score(Stat::Toughness)) + f64::from(def.base_hp);
         let want = max_hp(level, role);
         assert!(within(hp, want), "{id}: max HP {hp}, the formula {want:.1}");
-        // A venomed natural attack at the level's dice and to-hit, and never a weapon in gear.
+        variance_roster_tests::check(&content, def, role.shape());
+        if matches!(role, Role::Standard | Role::Archer) {
+            variance_roster_tests::rank_and_file(def);
+        }
+        // A venomed natural attack at the level's dice (its to-hit: the
+        // role's, checked above), and never a weapon in gear.
         let attack = (def.attack.as_ref()).unwrap_or_else(|| panic!("{id}: no attack"));
         let want = dice_average(level, role);
         let got = average(attack.attack.damage);
         assert!(within(got, want), "{id}: dice {got}, the formula {want}");
-        let to_hit = def.level / 4;
-        assert_eq!(attack.attack.to_hit, i32::from(to_hit), "{id}: to-hit");
         let venom = |on_hit: &[super::OnHit]| {
             (on_hit.iter())
                 .any(|h| matches!(h.what, Affliction::Status { status, .. } if status == poisoned))
@@ -211,10 +225,11 @@ fn the_drow_keep_to_the_roster() {
 
 #[test]
 fn the_formulas_give_the_plans_numbers() {
-    // #519's table: the warrior's 52 hit points and 2d8, the matron's 131 and 4d8.
+    // #519's table: the warrior's 52 hit points and 2d8, the matron's 4d8; her 131 is 94 since
+    // the variance pass (#1134: a caster's 0.5).
     assert_eq!(max_hp(14.0, Role::Standard).round(), 52.0);
     assert_eq!(dice_average(14.0, Role::Standard), 9.0);
-    assert_eq!(max_hp(50.0, Role::Caster).round(), 131.0);
+    assert_eq!(max_hp(50.0, Role::Caster).round(), 94.0);
     assert_eq!(dice_average(50.0, Role::Caster), 18.0);
 }
 

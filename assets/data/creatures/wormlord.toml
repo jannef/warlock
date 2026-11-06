@@ -14,7 +14,7 @@ name = "wormlord"
 first_sight = "A wormlord. The worms are his, and they are hungry."
 glyph = "z"
 fg = "#70c040"
-speed = 1100
+speed = 700
 faction = "undead"
 tags = ["undead", "caster", "summoner"]
 alignment = "evil"
@@ -29,7 +29,7 @@ footsteps = 70
 hearing = 10
 weight = 72000
 stats = { strength = 27, dexterity = 22, toughness = 31, intelligence = 33, willpower = 36, presence = 33 }
-base_hp = 94
+base_hp = 59
 skills = { concentration = 151, spellcraft = 156 }
 natural = { defence = 3, protection = 4, name = "dead flesh" }
 resist = { poison = 100 }
@@ -48,7 +48,7 @@ damage = "4d8"
 damage_type = "piercing"
 name = "touch"
 verb = "touches"
-to_hit = 11
+to_hit = 6
 on_hit = [
     { disease = "burrowing_worms", chance = 35 },
 ]

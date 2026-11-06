@@ -10,7 +10,7 @@
 #   id          the family's id: what kill quests (`target = "mimic"`) and first kills name
 #   levels      the levels of its members, least and most (one type a level)
 #   stats       what it adds to the base stats (a brute: Toughness +5)
-#   hp_factor   the factor on base_hp (2.5 × L × it; a brute's 1.6)
+#   hp_factor   the factor on base_hp (2.5 × L × it; a brute's 2.0)
 #   dice_steps  steps along the dice ladder from the curve's nearest (a brute's 1)
 #   hide        its natural armour's name, given from the level the body rule's hide brings
 #               Protection: (L − 10) ÷ 8, rounded down
@@ -32,7 +32,7 @@
 id = "mimic"
 levels = [1, 60]
 stats = { toughness = 5 }
-hp_factor = 1.6
+hp_factor = 2.0
 dice_steps = 1
 hide = "woody hide"
 

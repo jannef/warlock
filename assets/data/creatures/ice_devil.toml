@@ -19,7 +19,7 @@ footsteps = 90
 hearing = 10
 weight = 350000
 stats = { strength = 38, dexterity = 22, toughness = 39, intelligence = 32, willpower = 35, presence = 32 }
-base_hp = 220
+base_hp = 354
 natural = { defence = 4, protection = 9, name = "chitin" }
 resist = { fire = 100, poison = 50, cold = 100 }
 corpse = false
@@ -38,5 +38,7 @@ damage = "4d12"
 damage_type = "cold"
 name = "frost claws"
 verb = "rends"
-to_hit = 13
+to_hit = 7
+threat = 24
+crit = 3
 on_hit = [{ status = "sluggish", chance = 20, severity = 1 }]

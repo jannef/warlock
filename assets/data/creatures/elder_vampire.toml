@@ -24,7 +24,7 @@ footsteps = 20
 hearing = 20
 weight = 70000
 stats = { strength = 34, dexterity = 29, toughness = 34, intelligence = 36, willpower = 33, presence = 33 }
-base_hp = 130
+base_hp = 72
 natural = { defence = 4, protection = 6, name = "dead flesh" }
 resist = { fire = -25, poison = 100 }
 on_eat = { message = "Cold, and full of centuries of other folk's blood.", vomit = 80, harm = "1d4" }
@@ -34,7 +34,8 @@ damage = "3d12"
 damage_type = "piercing"
 name = "bite"
 verb = "bites"
-to_hit = 14
+to_hit = 20
+threat = 19
 on_hit = [{ drain = "toughness", points = 2, chance = 15, check = "toughness", difficulty = 23 }]
 [creature.gaze]
 range = 6

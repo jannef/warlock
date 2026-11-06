@@ -8,7 +8,7 @@ rarity = "uncommon"
 name = "air elemental"
 glyph = "E"
 fg = "#c8e0f0"
-speed = 1600
+speed = 1250
 faction = "elemental"
 tags = ["elemental", "air"]
 alignment = "neutral"
@@ -18,7 +18,7 @@ footsteps = 50
 hearing = 10
 weight = 50000
 stats = { strength = 19, dexterity = 20, toughness = 19, intelligence = 2, willpower = 23, presence = 2 }
-base_hp = 43
+base_hp = 24
 natural = { defence = 3, protection = 0, name = "rushing wind" }
 resist = { piercing = 50, electricity = 50, poison = 100 }
 corpse = false
@@ -28,7 +28,8 @@ damage = "3d8"
 damage_type = "bludgeoning"
 name = "buffet"
 verb = "buffets"
-to_hit = 4
+to_hit = 6
+threat = 19
 on_hit = [{ status = "staggered", chance = 20, severity = 1 }]
 # Death throes (the dread design §5.3): it bursts where it dies.
 [creature.burst]

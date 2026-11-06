@@ -13,7 +13,7 @@ name = "ghost lord"
 first_sight = "A ghost lord. Blades pass through it as through smoke."
 glyph = "G"
 fg = "#f0e8f8"
-speed = 1150
+speed = 1400
 faction = "undead"
 tags = ["undead", "spirit", "caster"]
 alignment = "evil"
@@ -26,7 +26,7 @@ mana = 120
 hearing = 15
 weight = 100
 stats = { strength = 29, dexterity = 23, toughness = 33, intelligence = 35, willpower = 39, presence = 35 }
-base_hp = 106
+base_hp = 66
 skills = { concentration = 169, spellcraft = 174 }
 natural = { defence = 7, protection = 0, name = "insubstantial form" }
 incorporeal = { wall_defence = 7 }
@@ -38,7 +38,7 @@ damage = "4d8"
 damage_type = "cold"
 name = "touch"
 verb = "touches"
-to_hit = 13
+to_hit = 7
 on_hit = [{ drain = "willpower", points = 2, chance = 10, difficulty = 22 }]
 [creature.gaze]
 range = 5

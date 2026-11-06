@@ -1,6 +1,7 @@
 //! The undead roster (#383): every `faction = "undead"` type keeps to the plan's formulas. Each
 //! batch of the roster adds its types to [`ROLES`] and raises [`ROSTER_TOP`].
 
+use super::variance_roster_tests::{self, Shape};
 use super::{Affliction, Content};
 use crate::stats::Stat;
 
@@ -42,12 +43,23 @@ impl Role {
     fn hp(self) -> f64 {
         match self {
             Role::Shambler => 1.5,
-            Role::Brute => 1.6,
+            Role::Brute => 2.0,
             Role::Standard => 1.0,
-            Role::Quick => 0.9,
+            Role::Quick => 0.5,
             Role::Spirit => 0.6,
-            Role::Caster => 0.8,
+            Role::Caster => 0.5,
             Role::Small => 0.5,
+        }
+    }
+
+    /// What the role does to the to-hit and the blow (the variance pass, #1134).
+    pub(super) fn shape(self) -> Shape {
+        match self {
+            Role::Shambler => Shape::Shambler,
+            Role::Brute => Shape::Brute,
+            Role::Standard | Role::Spirit | Role::Small => Shape::Standard,
+            Role::Quick => Shape::Striker,
+            Role::Caster => Shape::Caster,
         }
     }
 
@@ -237,6 +249,7 @@ fn the_undead_keep_to_the_roster() {
         let hp = f64::from(def.stats.score(Stat::Toughness)) + f64::from(def.base_hp);
         let want = max_hp(level, role);
         assert!(within(hp, want), "{id}: max HP {hp}, the formula {want:.1}");
+        variance_roster_tests::check(&content, def, role.shape());
         let attack = def
             .attack
             .as_ref()
@@ -268,10 +281,10 @@ fn the_undead_keep_to_the_roster() {
 #[test]
 fn the_formulas_give_the_plans_numbers() {
     // #383's table: the crawling hand's 9 hit points (8 + 1, rounded down part by part) and 1d3,
-    // the ogre zombie's 57 and 2d8, the shadow's 1d8 (a spirit's step and the drain's below 2d6).
+    // the ogre zombie's 2d8 (its 57 is 66 since the variance pass, #1134: a brute's 2.0), the shadow's 1d8 (a spirit's step and the drain's below 2d6).
     assert!((max_hp(1.0, Role::Small) - 9.65).abs() < 1e-9);
     assert_eq!(dice_average(1.0, Role::Small, false), 2.0);
-    assert_eq!(max_hp(9.0, Role::Brute).round(), 57.0);
+    assert_eq!(max_hp(9.0, Role::Brute).round(), 66.0);
     assert_eq!(dice_average(9.0, Role::Brute, false), 9.0);
     assert_eq!(dice_average(8.0, Role::Spirit, true), 4.5);
     // Past level 20 the target flattens: a level 62 brute's 23.5 is 4d10, one step up 4d12 (the

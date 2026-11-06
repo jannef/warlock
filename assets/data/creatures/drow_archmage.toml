@@ -25,7 +25,7 @@ footsteps = 60
 hearing = 14
 weight = 55000
 stats = { strength = 24, dexterity = 22, toughness = 27, intelligence = 30, willpower = 30, presence = 30 }
-base_hp = 80
+base_hp = 50
 skills = { concentration = 110, spellcraft = 115 }
 resist = { poison = 25 }
 on_eat = { message = "Lean and bitter, with an aftertaste of old poisons.", vomit = 40, skills = { decipher_script = { gives = 12, up_to = 90 } } }
@@ -34,7 +34,7 @@ damage = "3d10"
 damage_type = "piercing"
 name = "poisoned dagger"
 verb = "stabs"
-to_hit = 10
+to_hit = 5
 on_hit = [{ status = "poisoned", chance = 20, severity = 3 }]
 # Its gear (spec §8 "Creature gear"): armour and coins, never a weapon (its venom rides on
 # its natural attack, which a wielded weapon would replace).

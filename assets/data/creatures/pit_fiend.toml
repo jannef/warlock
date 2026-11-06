@@ -11,7 +11,7 @@ name = "pit fiend"
 first_sight = "A pit fiend. A lord of the pit, and it has seen you."
 glyph = "U"
 fg = "#e02a2a"
-speed = 1100
+speed = 1400
 faction = "devil"
 tags = ["devil", "fiend"]
 alignment = "evil"
@@ -22,7 +22,7 @@ footsteps = 100
 hearing = 8
 weight = 400000
 stats = { strength = 40, dexterity = 24, toughness = 40, intelligence = 36, willpower = 39, presence = 36 }
-base_hp = 264
+base_hp = 445
 natural = { defence = 5, protection = 10, name = "scales" }
 resist = { fire = 100, poison = 100, cold = 50 }
 loot = 50
@@ -41,5 +41,7 @@ damage = "5d10"
 damage_type = "piercing"
 name = "bite"
 verb = "bites"
-to_hit = 16
+to_hit = 8
+threat = 24
+crit = 3
 on_hit = [{ status = "poisoned", chance = 30, severity = 4 }]

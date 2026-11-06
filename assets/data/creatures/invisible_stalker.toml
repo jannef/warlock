@@ -25,7 +25,7 @@ footsteps = 40
 hearing = 12
 weight = 50000
 stats = { strength = 20, dexterity = 21, toughness = 20, intelligence = 12, willpower = 22, presence = 4 }
-base_hp = 49
+base_hp = 27
 natural = { defence = 4, protection = 0, name = "rushing wind" }
 resist = { piercing = 50, electricity = 50, poison = 100 }
 corpse = false
@@ -35,7 +35,8 @@ damage = "3d8"
 damage_type = "slashing"
 name = "cutting wind"
 verb = "cuts"
-to_hit = 5
+to_hit = 7
+threat = 19
 # Death throes (the dread design §5.3), the air line's: it bursts where it dies.
 [creature.burst]
 damage = "4d6"
