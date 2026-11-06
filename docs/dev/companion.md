@@ -179,6 +179,8 @@ without one. Details in `docs/dev/background.md`.
 
 ## The collar (C3, #918)
 
+(An escort, `docs/dev/allies.md` "Escorts", takes Give too: anything that fits one of its slots.)
+
 `world/collar.rs`, `Action::Give { item, ally }`, `give:LETTER[:DIR]`, `Ability::Give`
 (`Source::Ally`, `Aim::Item`; the last row of the Allies group, listed while the player keeps a
 beast, a companion or a familiar, `Ability::orders(any, kept)`; unavailable `NotBeside`, from the

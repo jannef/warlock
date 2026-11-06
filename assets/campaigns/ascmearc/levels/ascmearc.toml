@@ -9,7 +9,9 @@
 # crossroads, then on east over Hlāwdūn, the barrow downs, past Cealdhlāw (1, the cold barrow), to
 # the ford (%) over Blæcwæter and the village beyond (Fordwīc's site, the road's end at 94, 28).
 # South, the road crosses Beorhtburna by the bridge (b) and follows its south bank to Fennhām's
-# site (the road's end at 62, 43); north, it runs to the edge of Holegnwudu.
+# site (the road's end at 62, 43); north, it runs to Holtwīc (V, #1140), the village at its end
+# on the edge of Holegnwudu. In the wood seven cells north-east of the village, hidden until the
+# village's wise-woman tells of it, is the fairy mound over Ælfhām (E), the Unseelie court's hall.
 #
 # Rivers (arrows, the way they flow), two cells wide so only a bridge or the ford crosses them:
 # Blæcwæter from the foot of Rēcbeorgas south through Micelfenn into Grægsæ (w), and Beorhtburna
@@ -49,11 +51,11 @@ MMMMMMMMMMMMMMMMMMM...ffffffffffFFFFFFFFFFFFFFFFFFFFFFFFFFFfffffffff.f........MM
 MMMMMMMMMMMMMMMMM....ffffffffffFFFFFFFFFFFFFFFFFFFFFFFFFFFFFffffffffff..........MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM
 MMMMMMMMMMMM.MMMMM..ffffffffffFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFffFffffffff.........MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM
 MMMMMMMMMMM..M......ffffffffFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFfffff7fff...........M.MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM
-MMMMMMMMMMM.........ffffffffFFfFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFffffffffff...........M..MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM
+MMMMMMMMMMM.........fffffEffFFfFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFffffffffff...........M..MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM
 MMMMMMMMMM........fffffffffffFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFfffffffffff............MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM
 MMMMMMMMMM........ffffffffffffFFFFFFFFFFFFFFFFFFFFFFFFFFFFFfffffffffff.f.............M.MMMMMM↓↓MMMMM^^MMMMMM.MMMMMMMMMMM
 MMMMMMMMMM..........ffffffffffffFFFFFFFFFFFFFFFFFFFFFFFFFFffffffffffff.................hhhMMM↙↙MMMMM^^MMMMMMM.......MMM.
-MMMMMMMMMM..........ffffffffffffFFFFFFFFFFFFFFFFFFFFFFFfFfffffffffffff................hhhhMM↓↓hhhhhhhhh0..hM............
+MMMMMMMMMM........V.ffffffffffffFFFFFFFFFFFFFFFFFFFFFFFfFfffffffffffff................hhhhMM↓↓hhhhhhhhh0..hM............
 MMMMMMMMMM........=...ffffffffffffffFFFFFFFFFFFFFFFFFFffffffffffffffff......hh.hh.h...hhhhhh↓↓hhhhhhh...................
 MMMMMMMMMM........=...ffffffffffffffFfFFFFFFFFFFFFfFFffffffffffffffff"...h..hhhhhhhhhhhhhhhh↙↙hhhhhhhh..................
 MMMMMMMMMM........=....fffffffffffhfffFfffffffffffFfffFffffffffffffff"...h.hhhhhhhhhhhhhhhh↓↓hhhhhhhhh.hhh..............
@@ -119,6 +121,8 @@ MMMMMMMMMMMMMMMMMMM.ff..................................."......................
 "^" = { terrain = "volcano", name = "Fyrbeorg" }
 "P" = { terrain = "mountain_pass", spawn = "player", name = "Beorggeat", note = "The way you came; snow has closed it behind you." }
 "T" = { terrain = "town", name = "Cēaptūn", to = "ceaptun" }
+# The village at the north road's end, on the edge of the holly wood (#1140).
+"V" = { terrain = "town", name = "Holtwīc", to = "holtwic" }
 "1" = { terrain = "barrow", name = "Cealdhlāw", to = "cealdhlaw:1" }
 # The little cave in the foot of the wall, two cells from the pass: the first and easiest dungeon.
 "8" = { terrain = "cave_mouth", name = "Lytelscræf", to = "lytelscraef:1" }
@@ -126,6 +130,9 @@ MMMMMMMMMMMMMMMMMMM.ff..................................."......................
 "9" = { terrain = "dungeon_entrance", name = "Grundlēas", to = "grundleas:1", note = "Steps cut in bare rock, going down. Worn letters on the lintel: no stair goes twice to one place." }
 "2" = { terrain = "swamp", hidden = { id = "fennmynster", terrain = "dungeon_entrance", to = "fennmynster:1", name = "Fennmynster" } }
 "3" = { terrain = "hills", hidden = { id = "fyrdelf", terrain = "mine", to = "fyrdelf:1", name = "Fyrdelf" } }
+# The fairy mound in the holly wood over Ælfhām, the Unseelie court's hall (#1140): hidden until
+# Holtwīc's wise-woman tells of it (her quest, #1141).
+"E" = { terrain = "forest", hidden = { id = "aelfham", terrain = "barrow", to = "aelfham:1", name = "Ælfhām" } }
 # The way out from the drake's deep (#1117), on the volcano's south foot: hidden until the player
 # first climbs out of it (spec §7 "Ways up"), never by a quest.
 "0" = { terrain = "hills", hidden = { id = "utgang", terrain = "cave_mouth", to = "utgang:1", name = "Ūtgang" } }

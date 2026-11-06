@@ -111,7 +111,8 @@ pub(super) fn populate(
             }
             let own = content.candidates(own, &met);
             let generic = content.candidates(generic, &met);
-            let odds = &spawning.odds;
+            // A vault places what it places: no dread roll.
+            let odds = &spawning.odds.without_dread();
             let Some(creature) = danger::draw(&mut vault_rng, &own, &generic, danger, odds) else {
                 break;
             };

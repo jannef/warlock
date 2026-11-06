@@ -7,31 +7,31 @@ stairs Up at (26, 16) -> banfeld:3
 osrick at (23, 8) route  carrying a chromium mace (wielded), a bone amulet (rare) (being worn)
 zombie at (26, 8) route 
 zombie at (30, 8) route 
-ghost at (35, 16) route E E W W E E W W E E W W E E W W E E W W
-drowned at (58, 8) route E E E E W W W W E E E E W W W W
-grave_worm at (34, 8) route W S S W E N N E
-ghost at (42, 5) route S S N N N N S S S S N N
-grave_worm at (24, 7) route E E E E E W W E E W W W W W
-barrow_spider at (49, 7) route W W S W N N N S S W E N N S S S E N E E
-ghost at (17, 17) route E W E E W W W W E E W W E E E E W W E W
-skeleton at (57, 13) route E E E S N W W W carrying a tin spear (wielded)
-drowned at (12, 17) route E W W E E E E E E W W W W W W E E W
-zombie at (64, 8) route E E E E W W E W E E W W W W
-zombie at (45, 6) route N N E N E W S W S S
-zombie at (22, 7) route N E E E W W W S
-barrow_ghoul at (73, 4) route W W N N E E S S N N W W S S E E
-zombie at (46, 14) route E W E W E W E W E W E W E W E W E W
-ghost at (22, 6) route E E E E W W W W
-duergar_miner at (41, 17) route W W N N N S S S E E
-zombie at (5, 7) route E E S W N N N N N E W S S S S S E N W W
-ghost at (36, 9) route N S S S S S N N N N N S
-ghost at (55, 14) route W W E E W E W W E E
-ghost at (7, 8) route W N N N N S S S S N S N N N N S S S S E
-ghost at (46, 6) route N N N S S S S S W W E E N N N N N S S S
-skeleton at (51, 8) route N S N S N S N S
-skeleton at (40, 15) route S S S E W N N N carrying a bone spear (wielded)
-ghost at (9, 15) route W W N E E E E W W W W S E E
-skeleton at (11, 15) route W W W W N E W S E E E E
+zombie at (13, 17) route E W W E E W W E E W
+skeleton at (49, 8) route N N N N S S S S carrying a tin spear (wielded)
+barrow_ghoul at (70, 3) route S S S S S N N N N N
+zombie at (34, 8) route S S W W E E N N
+grave_worm at (58, 14) route E E S S W W W N N E W S S E E E N N W W
+skeleton at (70, 4) route S S E E E S S W W N S E E N N W W W N N
+barrow_ghoul at (12, 14) route N S S W W W E E E N N S
+ghost at (46, 5) route E E E S S E W N N W W W
+grave_worm at (42, 5) route E E E E E E W W W W W W
+ghost at (7, 5) route S S S W N N N N S S S S E N N N
+barrow_spider at (59, 10) route S S S E S S S N S N N N W N N N
+drowned at (52, 8) route E E E E W W W W
+corpse_candle at (39, 15) route N E E E E W W W W S
+grave_worm at (71, 4) route N N E E W W S S
+skeleton at (11, 14) route E S W N N E W S S E N W
+ghost at (25, 8) route N E E E E W W W W S
+ghost at (47, 5) route E E S S S W W W W W E E E E E N N N W W
+ghost at (34, 10) route W W W W W E E E E E
+drowned at (41, 15) route E S S S N N N W
+skeleton at (45, 6) route E W E W W W W N N S S E E E E W E W
+skeleton at (30, 7) route N E E E E S S S N N N W W W W S
+skeleton at (49, 14) route S N N E W S S N carrying a bone spear (wielded)
+zombie at (59, 14) route N N N N E W W E E W S S S S
+zombie at (50, 13) route E S S W E N N W
+zombie at (36, 9) route N S S S S S N N N N N S
 arrow trap at (20, 17)
 spear trap at (28, 17)
 pit trap at (30, 15)
@@ -40,20 +40,20 @@ special room hushed at (41, 2)-(50, 9)
 
                                                                      ######
     #####                                ##########                  #....#
-    #...#                                #hhhhhhh¡#                  #....#
-    #...#                                #hhhhhhhh#                  #...z#
-    #...#            ###############     #Ghhhhhhh#                  #....#
-    #...###          #G"%"%"%"%"%"%#     #hhhzGhhh###              ###....#
-    #z..&.#          #z.w..........###   #hhhhhhhsh.################.&....#
-    #¡.G#.#          #%@..z...z...w+.#   #¡hhhhhhh#z......z.....z....#....#
-    #####.#          #.............#G#   ######'###########+###############
-        #.#          #%"%"%"%"%"%"%#.#        #.#       #....#
+    #...#                                #hhhhhhh¡#                  #z...#
+    #...#                                #hhhhhhhh#                  #zw..#
+    #..G#            ###############     #whhhGGhh#                  #....#
+    #...###          #%"%"%"%"%"%"%#     #hhhzhhhh###              ###....#
+    #...&.#          #}.......z....###   #hhhhhhhhh.################.&....#
+    #¡..#.#          #%@.Gz...z...z+.#   #¡hhhhhhz#.z................#....#
+    #####.#          #.............#z#   ######'###########+###############
+        #.#          #%"%"%"%"%"%"G#.#        #.#       #..s.#
         #.#          ###############.##########.#       #....#
       ###+####                     #...........*#####   #....#
-      #¡.....#                     #.##########.#...#####z...#
-      #......#           ###########.##.(.!..#z.+...+..GS....#
-      #..G.z.#           #....^..¡##.##.z....S.##...#####....#
-      #####+##############<.......'G..+......########   #....#
-          #.z....G..^....+..^.....#####..h...#          ######
+      #¡.....#                     #.##########.#.z.#####....#
+      #....zz#           ###########.##.(.!..#..+z..+...S.wz.#
+      #......#           #....^..¡##.##y.z...S.##...#####....#
+      #####+##############<.......'...+......########   #....#
+          #..z......^....+..^.....#####......#          ######
           ################¡.......#   #......#
                          ##########   ########

@@ -14,6 +14,10 @@
 //! - `reach`: `target` a level id (`depths:3` for a level of a branch): the player gets there.
 //! - `deliver`: `target` an object type the giver hands over on accepting; carried to the
 //!   speaker `to` and handed in there.
+//! - `escort`: `target` a level id, `escort` a unique character (an npc id with a dialogue):
+//!   chatted with while the quest is active, they fall in behind the player saying `joins`
+//!   (`world/escort.rs`); the quest is done, `done` said by them, when they stand on the
+//!   target level with the player. Their death fails it.
 //!
 //! Asking the giver about a quest **gives** it (there is no accepting or declining, #422): the
 //! giver says `offer`, then `accept` (optional) in the same reply, and it is active at once.
@@ -67,6 +71,7 @@ pub enum QuestKind {
     Bring,
     Reach,
     Deliver,
+    Escort,
 }
 
 impl QuestKind {
@@ -77,6 +82,7 @@ impl QuestKind {
             QuestKind::Bring => "bring",
             QuestKind::Reach => "reach",
             QuestKind::Deliver => "deliver",
+            QuestKind::Escort => "escort",
         }
     }
 }
@@ -104,6 +110,8 @@ struct QuestSpec {
     level: Option<String>,
     to: Option<String>,
     what: Option<String>,
+    escort: Option<String>,
+    joins: Option<String>,
     #[serde(default)]
     reward: RewardSpec,
     offer: Option<String>,
@@ -241,6 +249,13 @@ pub enum Goal {
     Reach { level: String },
     /// Carry the object the giver hands over to `to`.
     Deliver { object: ObjectId, to: DialogueId },
+    /// Bring `escort`, a unique character, to `level` (`world/escort.rs`): chatted with while
+    /// the quest is active, they say `joins` and follow the player.
+    Escort {
+        escort: DialogueId,
+        level: String,
+        joins: String,
+    },
 }
 
 /// What completing a quest gives.
@@ -319,6 +334,7 @@ impl QuestDef {
             Goal::Bring { .. } => QuestKind::Bring,
             Goal::Reach { .. } => QuestKind::Reach,
             Goal::Deliver { .. } => QuestKind::Deliver,
+            Goal::Escort { .. } => QuestKind::Escort,
         }
     }
 
@@ -355,11 +371,11 @@ impl QuestDef {
         }
     }
 
-    /// The levels or branches it names: a kill's `level`, a reach's target.
+    /// The levels or branches it names: a kill's `level`, a reach's or an escort's target.
     pub fn places(&self) -> impl Iterator<Item = &str> {
         let place = match &self.goal {
             Goal::Kill { level, .. } => level.as_deref(),
-            Goal::Reach { level } => Some(level.as_str()),
+            Goal::Reach { level } | Goal::Escort { level, .. } => Some(level.as_str()),
             _ => None,
         };
         place.into_iter()
@@ -391,9 +407,19 @@ impl QuestDef {
         super::and_list(&plurals)
     }
 
-    /// Everyone it names: the giver, and whoever it is handed in to.
+    /// Everyone it names: the giver, whoever it is handed in to, and an escort.
     pub fn speakers(&self) -> impl Iterator<Item = DialogueId> {
-        [self.giver, self.turn_in()].into_iter()
+        [self.giver, self.turn_in()]
+            .into_iter()
+            .chain(self.escort())
+    }
+
+    /// The unique character an escort quest brings home (`world/escort.rs`).
+    pub fn escort(&self) -> Option<DialogueId> {
+        match self.goal {
+            Goal::Escort { escort, .. } => Some(escort),
+            _ => None,
+        }
     }
 }
 
@@ -554,6 +580,10 @@ fn resolve(
         .ok_or("`pick`: the pool is empty")?,
     };
     let texts = texts(&spec, roll.as_ref())?;
+    if kind != QuestKind::Escort {
+        unused("escort", spec.escort.is_some())?;
+        unused("joins", spec.joins.is_some())?;
+    }
     let goal = match kind {
         QuestKind::Kill => {
             unused("to", spec.to.is_some())?;
@@ -643,6 +673,44 @@ fn resolve(
             Goal::Deliver {
                 object: object(&target)?,
                 to,
+            }
+        }
+        QuestKind::Escort => {
+            unused("what", spec.what.is_some())?;
+            unused("level", spec.level.is_some())?;
+            unused("to", spec.to.is_some())?;
+            unused("count", spec.count.is_some())?;
+            if roll.is_some() {
+                return Err("an escort quest is not rolled".into());
+            }
+            if !content.has_level(campaign, &target) {
+                return Err(format!("unknown level `{target}`"));
+            }
+            // The one they are: a unique character, met once.
+            if spec.repeatable {
+                return Err(
+                    "an escort quest is not repeatable: its escort is one of a kind".into(),
+                );
+            }
+            let name = spec
+                .escort
+                .as_deref()
+                .ok_or("an escort quest needs `escort`")?;
+            let escort = speaker(name)?;
+            if !matches!(content.dialogue(escort).speaker, Speaker::Npc(_)) {
+                return Err(format!(
+                    "`escort`: `{name}` is no unique character (an npc id)"
+                ));
+            }
+            if escort == giver {
+                return Err("the escort is someone other than the giver".into());
+            }
+            let joins = spec.joins.clone().ok_or("an escort quest needs `joins`")?;
+            check_lines([&joins], MAX_REPLY)?;
+            Goal::Escort {
+                escort,
+                level: target,
+                joins,
             }
         }
     };

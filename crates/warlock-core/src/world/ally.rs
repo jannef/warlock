@@ -106,6 +106,13 @@ pub enum AllySource {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         faction: Option<FactionId>,
     },
+    /// Escorted home for a quest (#1139; `escort.rs`): the quest's id, and the
+    /// `faction_override` it had, put back when it is home.
+    Escort {
+        quest: String,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        faction: Option<FactionId>,
+    },
 }
 
 impl AllySource {
@@ -116,7 +123,13 @@ impl AllySource {
             AllySource::Companion(_) => "companion",
             AllySource::Familiar(_) => "familiar",
             AllySource::Charmed { .. } => "charmed",
+            AllySource::Escort { .. } => "escort",
         }
+    }
+
+    /// An escort's (`escort.rs`): it fights only what is beside it and is set on nothing.
+    pub const fn is_escort(&self) -> bool {
+        matches!(self, AllySource::Escort { .. })
     }
 
     /// A beast kept for good (a companion, a familiar): it is named, grows, always comes along,
@@ -129,14 +142,18 @@ impl AllySource {
     pub const fn data(&self) -> Option<&CompanionData> {
         match self {
             AllySource::Companion(data) | AllySource::Familiar(data) => Some(data),
-            AllySource::Summoned { .. } | AllySource::Charmed { .. } => None,
+            AllySource::Summoned { .. }
+            | AllySource::Charmed { .. }
+            | AllySource::Escort { .. } => None,
         }
     }
 
     pub(super) const fn data_mut(&mut self) -> Option<&mut CompanionData> {
         match self {
             AllySource::Companion(data) | AllySource::Familiar(data) => Some(data),
-            AllySource::Summoned { .. } | AllySource::Charmed { .. } => None,
+            AllySource::Summoned { .. }
+            | AllySource::Charmed { .. }
+            | AllySource::Escort { .. } => None,
         }
     }
 }
@@ -373,7 +390,12 @@ impl World {
             }
         };
         let leashed = order == Order::Follow && pos.chebyshev(home) > rules.leash;
+        let escort = (self.state.actors.get(&id))
+            .and_then(|a| a.ally.as_ref())
+            .is_some_and(|a| a.source.is_escort());
         let target = match order {
+            // An escort is no fighter (`escort.rs`): it strikes only at what stands beside it.
+            _ if escort => self.quarry(id, &near(pos, 1)),
             // 4. On the leash: drawn too far from its master, it breaks off and heels.
             Order::Follow if leashed => None,
             Order::Follow => self.quarry(id, &hostile),
@@ -448,10 +470,19 @@ impl World {
     /// ally on the level, and Set on at a cell the player does not see.
     pub(super) fn order(&mut self, command: Command, events: &mut Vec<Event>) -> Spent {
         let player = self.state.player;
-        let allies = self.allies_here(player);
+        let mut allies = self.allies_here(player);
         if allies.is_empty() {
             self.say("You have no one to call.");
             return Spent::Nothing;
+        }
+        // An escort is set on nothing (`escort.rs`): it says so, and the rest go.
+        if let Command::SetOn(_) = command
+            && let Some(line) = self.escorts_refuse(&mut allies)
+        {
+            self.say(line);
+            if allies.is_empty() {
+                return Spent::Nothing;
+            }
         }
         if let Command::SetOn(at) = command
             && !self.perception.is_visible(at)
@@ -507,6 +538,11 @@ impl World {
             };
             if let Some(data) = a.kept() {
                 names.push(data.name.clone());
+                continue;
+            }
+            // An escort by what the player calls them ("Eadgyth", "the lost villager").
+            if a.ally.as_ref().is_some_and(|x| x.source.is_escort()) {
+                names.push(self.called(a));
                 continue;
             }
             match kinds.iter_mut().find(|(c, _)| *c == a.creature) {

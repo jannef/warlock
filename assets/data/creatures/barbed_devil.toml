@@ -5,6 +5,7 @@
 id = "barbed_devil"
 level = 26
 xp = 140
+dread = true
 name = "barbed devil"
 glyph = "U"
 fg = "#c03030"

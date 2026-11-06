@@ -133,7 +133,10 @@ Wyrtholm (88, 46, swamp → `cave_mouth`), Wulfeshol (18, 49, dense forest → `
 Bānfeld (42, 31, hills → `barrow`), Brocenburg (66, 12, forest → `dungeon_entrance`), each at
 least six cells from every other location and with no road beside it (`ascmearc_tests`); each
 is revealed by its own variant of `guild_wanted` (`mapgen/lairs_tests.rs` walks to each and goes
-down once `reveal:ID` marks it).
+down once `reveal:ID` marks it). `V` Holtwīc (`town`, (18, 17), #1140) is the village at the north
+road's end, leading into `holtwic` (`docs/dev/campaign.md` "Holtwīc"); `E` Ælfhām (25, 13, forest →
+`barrow`, `to = "aelfham:1"`) is the hidden fairy mound seven cells north-east of it, for the
+wise-woman's quest to reveal (#1141; `world/holtwic_tests.rs`).
 
 Rumoured ways (spec §8 "Dialogue"; `docs/dev/npcs.md`): a dialogue topic's `route` marks the
 overworld's memory as day sight along it would (`world/rumour.rs`), reading only the terrain

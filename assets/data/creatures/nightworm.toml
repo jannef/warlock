@@ -7,6 +7,7 @@ id = "nightworm"
 level = 63
 xp = 325
 rarity = "very_rare"
+dread = true
 name = "nightworm"
 glyph = "w"
 fg = "#383c50"

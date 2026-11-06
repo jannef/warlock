@@ -1247,6 +1247,8 @@ impl World {
         lines.extend(self.curse_corpse(&actor, by_player));
         // A dead shopkeeper's goods are free to take (spec §7 "Shops").
         self.keeper_died(id, &actor.level);
+        // A dead escort fails its quest (`escort.rs`).
+        lines.extend(self.escort_dies(&actor));
         self.fallen.push(actor);
         lines
     }

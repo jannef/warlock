@@ -557,23 +557,24 @@ impl World {
             .content
             .candidates(&spawning.population, &once)
             .into_iter())
-        .filter(|&(c, _, _)| hostile(&self.content, c))
+        .filter(|&(c, ..)| hostile(&self.content, c))
         .collect();
         let generic: Vec<_> = (self
             .content
             .candidates(&spawning.generic, &once)
             .into_iter())
-        .filter(|&(c, _, _)| hostile(&self.content, c))
+        .filter(|&(c, ..)| hostile(&self.content, c))
         .collect();
+        let odds = (self.content.draw_odds_at(&id)).unwrap_or(spawning.odds);
         let count = summon.count.roll(&mut self.state.rng).max(1);
         for _ in 0..count {
             let rng = &mut self.state.rng;
-            let drawn = danger::draw(rng, &own, &generic, danger, &spawning.odds);
+            let drawn = danger::draw(rng, &own, &generic, danger, &odds);
             // Too deep for the branch's population: its deepest type.
             let creature = drawn.or_else(|| {
                 (own.iter().chain(&generic))
-                    .max_by_key(|&&(c, level, _)| (level, std::cmp::Reverse(c)))
-                    .map(|&(c, _, _)| c)
+                    .max_by_key(|&&(c, level, ..)| (level, std::cmp::Reverse(c)))
+                    .map(|&(c, ..)| c)
             });
             let Some(creature) = creature else {
                 return;

@@ -53,18 +53,20 @@ impl Actor {
     pub fn companion(&self) -> Option<&CompanionData> {
         match &self.ally.as_ref()?.source {
             AllySource::Companion(data) => Some(data),
-            AllySource::Summoned { .. } | AllySource::Familiar(_) | AllySource::Charmed { .. } => {
-                None
-            }
+            AllySource::Summoned { .. }
+            | AllySource::Familiar(_)
+            | AllySource::Charmed { .. }
+            | AllySource::Escort { .. } => None,
         }
     }
 
     pub(super) fn companion_mut(&mut self) -> Option<&mut CompanionData> {
         match &mut self.ally.as_mut()?.source {
             AllySource::Companion(data) => Some(data),
-            AllySource::Summoned { .. } | AllySource::Familiar(_) | AllySource::Charmed { .. } => {
-                None
-            }
+            AllySource::Summoned { .. }
+            | AllySource::Familiar(_)
+            | AllySource::Charmed { .. }
+            | AllySource::Escort { .. } => None,
         }
     }
 
@@ -132,6 +134,9 @@ impl World {
 
     /// Ally `id` as the subject of a sentence: its name ("Snel"), else "Your wolf".
     pub(super) fn ally_subject(&self, id: ActorId) -> String {
+        if let Some(escort) = (self.state.actors.get(&id)).filter(|a| a.escorting().is_some()) {
+            return super::talk::capitalized(&self.called(escort));
+        }
         match self.companion_words(id) {
             Some((name, _)) => name,
             None => format!(

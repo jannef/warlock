@@ -1,0 +1,75 @@
+# Holtwīc, "the dwelling at the wood" (#1140): the farming village at the end of the road that
+# runs north from Cēaptūn, on the edge of Holegnwudu, the holly wood. A hand-made outdoor level
+# (sky, sun, weather; the well freezes in a hard winter), entered from its cell on the Ascmearc's
+# overworld (V, at 18, 17), arriving on the lane from the south (@) where the road comes in. It has
+# no stairs: like any outdoor area it is left by walking off its edge (or with `<` when no enemy
+# is about), back to its overworld cell (spec §7 "Leaving an outdoor area"). Everyone here is
+# peaceful, and nothing comes: no danger, no shop.
+#
+# The green in the middle, with the well; six cottages round it; the fields to the north and
+# west behind their hedges (barley standing, a field of stubble). The cottars (1-5, the `cottar`
+# type) go about the green, the lanes, and the fields. East, the wood comes right up to the
+# village: at its edge, apart from the rest, is the cottage of the village's wise-woman, Gammer
+# Wynflæd (H), a hearth fire and a lamp inside and her herb garden at the door, and north of it an
+# old hoar-stone with rowan hung on it. The fairy mound she knows of lies seven cells north-east
+# on the overworld, hidden (`ascmearc.toml`, E).
+name = "Holtwīc"
+kind = "outdoor"
+arrival = "Holtwīc: thatch, woodsmoke, and the holly wood dark beyond the last field."
+item_level = 1
+map = '''
+...........................................................TFTFFTTPTFTFF
+..""""""""""""""""b.dddddddddddddddb."""""""""""".............FTFTTTTFTF
+..""""""""""""""""b.dddddddddddddddb."""""""""""".........TTTFPTFPTFFTFP
+..""""""""""""""""b.dddddd5ddddddddb.""""""""""""...........TPFTPTFFFFTF
+..""""""""""""""""b.dddddddddddddddb."""""""""""".....O......TTTFTFTFFPF
+..""""""""""""""""b.dddddddddddddddb.""""""""""""........T.TTTFTTTFTPPFF
+.bb.bbbbb.bbbbbbbb.bb.bbbbbb,bbbbbbbbb..b.bbbbbbbb............FFTTTTPFTT
+........4...........WWWWWW..,....WWWWWWW.....................TFFFFPFFFFT
+....................WppppW..,....WpppppW..................T.TTTTTTTTTTTF
+....................WWW'WW..,....WWW'WWW...........WWWWWWW....FPTPFPTTFF
+.............WWWWWW.............................**.WplppBW.TTFPTPTPFFFTT
+.............WppppW...*..............*...........*.WpppppW.PFFFFTTPFTPFF
+.............Wpppp'...........~..........,3,,,,,,,,'pppppWT.TFFTFTTPTPFF
+.............WppppW..1...........................*.WppHppWTFFFFPTFTFFTPF
+.............WWWWWW.....*.............*.........**.WpppppWTFFTFFFTPTTFFP
+...................................................WWWWWWW.TTTTFTPTFTPFF
+...................,,,,,,,,,,,,,,2,,,,,,,,..................TTPFFFFTTFTT
+..""""""""""".b...............,............WW'WWW.............FTTTTPTFTT
+..""""""""""".b.....WWW'WWW...,...WWW'WWW..WppppW...........T.PFPTPFFFFT
+..""""""""""".b.....WpppppW...,...WpppppW..WppppW.........TT.TTTFFFTFFTF
+..""""""""""".b.....WpppppW...,...WpppppW..WWWWWW.........T..PFFTPPTTTFT
+..""""""""""".b.....WWWWWWW...,...WWWWWWW.....................PTFTFTFTTF
+..""""""""""".................,..........................T.FFTTFFFTTFPTF
+..............b...............,.........................T.TFPTFFTTPTTTTT
+..............................@............................TPFTFFTTPFPTP
+..............................,..............................FTTTTFFTFFF
+'''
+
+[legend]
+"." = "grass"
+"," = "dirt_road"
+'"' = "tall_grass"
+"d" = "dry_grass"
+"b" = "bush"
+"T" = "tree"
+"P" = "pine"
+"F" = "forest_floor"
+"*" = "flowers"
+"~" = "water"
+"W" = "timber_wall"
+"p" = "plank_floor"
+"'" = "door_open"
+"l" = { terrain = "plank_floor", light = "lamp" }
+"B" = "brazier"
+"@" = { terrain = "dirt_road", spawn = "player" }
+# The hoar-stone at the wood's edge (a named place: look mode reads it).
+"O" = { terrain = "standing_stone", name = "the hoar-stone", note = "An old grey stone where the fields end and the wood begins. A sprig of rowan is tied to it with red thread, and the rowan is fresh." }
+# The cottars on their rounds.
+"1" = { terrain = "grass", creature = "cottar", route = "E8 W8" }
+"2" = { terrain = "dirt_road", creature = "cottar", route = "W12 E12" }
+"3" = { terrain = "dirt_road", creature = "cottar", route = "E7 W7" }
+"4" = { terrain = "grass", creature = "cottar", route = "E10 W10" }
+"5" = { terrain = "dry_grass", creature = "cottar", route = "E6 W6" }
+# The village's wise-woman (campaigns/ascmearc/data/dialogue/holtwic.toml).
+"H" = { terrain = "plank_floor", creature = "wise_woman", npc = "wynflaed" }
