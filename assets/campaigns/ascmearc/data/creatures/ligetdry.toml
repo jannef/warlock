@@ -1,0 +1,49 @@
+# Campaign-owned (docs/design/campaign.md §3.6): the Ascmearc's own type, which only its files
+# may name.
+#
+# The sixth layer boss of Grundlēas (#1122; spec §7 "The endless branch"): Līgetdrȳ (Old English
+# līget, lightning, and drȳ, a sorcerer), the Storm-Wright, who went down after the thunder that
+# rolls under the hills and found it on the sixtieth floor. Once a run (`unique`), in no
+# population: only his hall of standing stones places him. A caster (#1102, spec §8 "Creature
+# behavior": "Casters"): his fight is the storm at range. He hastens himself, silences whoever
+# comes, and throws lightning that leaps from one foe to the next; his body is a scholar's and
+# his staff little, so the fight is crossing the hall from stone to stone to reach him.
+[[creature]]
+id = "ligetdry"
+level = 61
+xp = 315
+xp_percent = 200
+rarity = "very_rare"
+loot = 100
+unique = true
+name = "Līgetdrȳ the Storm-Wright"
+glyph = "@"
+fg = "#9ad0ff"
+speed = 1100
+faction = "layer_keepers"
+tags = ["caster"]
+alignment = "evil"
+vision = "darkvision"
+sight = 14
+combat = "caster"
+range = 10
+spells = ["haste", "silence", "chain_lightning", "lightning_bolt"]
+mana = 420
+opens_doors = true
+glow = 0.2
+footsteps = 40
+hearing = 14
+weight = 70000
+stats = { strength = 18, dexterity = 26, toughness = 30, intelligence = 40, willpower = 38, presence = 32 }
+base_hp = 200
+skills = { concentration = 190, spellcraft = 195, spot = 60 }
+natural = { defence = 5, protection = 6, name = "skin" }
+resist = { electricity = 100 }
+on_eat = { message = "Your hair stands on end, and your teeth ache.", vomit = 40 }
+[creature.attack]
+damage = "3d8"
+damage_type = "bludgeoning"
+name = "staff"
+verb = "strikes"
+to_hit = 8
+on_hit = [{ status = "stunned", chance = 15, severity = 1 }]

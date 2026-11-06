@@ -1,0 +1,28 @@
+# Vault of the Ascmearc: the hall of standing stones, the lair of Līgetdrȳ the Storm-Wright,
+# Grundlēas's sixth layer boss (#1122; spec §7 "The endless branch"). A long hall where
+# storm-light flickers in the crystals of its corners, set with standing stones in staggered rows,
+# and the Storm-Wright at its far end before the way down. The stones are the fight: each breaks
+# his line, so whoever comes crosses from one to the next under his lightning. Grundlēas's boss
+# row for its sixtieth floor names it, so it is stamped there, for certain, until he is slain, and
+# nowhere else. Its `>` is the floor's only way down: laid as plain floor, it opens when he dies
+# (`world/layer_boss.rs`).
+name = "The hall of standing stones"
+dungeons = ["grundleas"]
+map = '''
+#########################
+#C.......I.......I.....C#
+#...I.......I.......$>..#
++.......I.......I...L...#
+#...I.......I.......$o..#
+#C.......I.......I.....C#
+#########################
+'''
+
+[legend]
+"C" = { terrain = "crystal", light = "storm" }
+"I" = "standing_stone"
+# The Storm-Wright at the end of his hall: he wakes to what he sees or hears.
+"L" = { terrain = "floor", creature = "ligetdry" }
+"$" = { terrain = "floor", objects = ["gold_coin*250"] }
+# His books and wands, rolled when the level is made.
+"o" = { terrain = "floor", loot = "rare" }

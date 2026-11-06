@@ -1,0 +1,80 @@
+# Campaign-owned (docs/design/campaign.md §3.6): the Ascmearc's own type, which only its files
+# may name.
+#
+# The tenth layer boss of Grundlēas (#1122; spec §7 "The endless branch"): Nīðdraca (Old English
+# nīþ, malice, and draca, a dragon: Beowulf's word for the wyrm that killed him), the Hate-Wyrm,
+# the oldest thing under the hills, coiled in fire on the hundredth floor. Once a run (`unique`),
+# in no population: only its burning hoard places it. Its fight is all of it at once: a dragon
+# (#1099) that breathes a long cone of fire whenever its breath is ready, calls the demons of the
+# deep to it, and between breaths rends with claws that set alight and a bite. Fire cannot hurt
+# it; cold finds it softer.
+[[creature]]
+id = "nithdraca"
+level = 100
+xp = 510
+xp_percent = 200
+rarity = "very_rare"
+loot = 100
+unique = true
+name = "Nīðdraca the Hate-Wyrm"
+glyph = "D"
+fg = "#e04a20"
+speed = 1100
+faction = "layer_keepers"
+tags = ["dragon", "summoner"]
+alignment = "evil"
+vision = "darkvision"
+sight = 16
+combat = "dragon"
+glow = 0.35
+footsteps = 220
+hearing = 16
+weight = 6000000
+stats = { strength = 40, dexterity = 22, toughness = 40, intelligence = 30, willpower = 38, presence = 36 }
+base_hp = 640
+mana = 200
+skills = { initiative = 150, spot = 100 }
+natural = { defence = 5, protection = 16, name = "scales" }
+resist = { fire = 100, poison = 50, cold = -25 }
+on_eat = { message = "The wyrm's flesh is hot as a forge, and you feel it in your bones for days.", vomit = 20, train = { strength = 200, toughness = 200 } }
+blood = "#d06020"
+# Its breath: about a quarter of a level-60 fighter's hit points to everyone in a cone twelve
+# cells long; then five actions of claws and bite before the next.
+[creature.breath]
+damage = "22d8"
+damage_type = "fire"
+length = 12
+cooldown = 30
+effect = "dragon_fire"
+noun = "fire"
+verb = "breathes fire"
+[[creature.attack]]
+damage = "5d10"
+damage_type = "slashing"
+name = "claw"
+verb = "claws"
+to_hit = 16
+on_hit = [{ status = "burning", chance = 25, severity = 2 }]
+[[creature.attack]]
+damage = "5d10"
+damage_type = "slashing"
+name = "claw"
+verb = "claws"
+to_hit = 16
+on_hit = [{ status = "burning", chance = 25, severity = 2 }]
+[[creature.attack]]
+damage = "8d10"
+damage_type = "piercing"
+name = "bite"
+verb = "bites"
+to_hit = 18
+threat = 19
+# The deep's demons: one or two of levels 40 to 70 every minute, four at most at once.
+[creature.summon]
+tag = "demon"
+levels = [40, 70]
+count = "1d2"
+cooldown = 60
+mana = 50
+most = 4
+verb = "calls up out of the deep"

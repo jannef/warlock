@@ -1,0 +1,54 @@
+# Campaign-owned (docs/design/campaign.md §3.6): the Ascmearc's own type, which only its files
+# may name.
+#
+# The seventh layer boss of Grundlēas (#1122; spec §7 "The endless branch"): Stānēoten (Old
+# English stān, stone, and eoten, a giant), the Hurler, the last of the giants who built the old
+# halls under the hills, who keeps the seventieth floor from the end of a long gallery. Once a run
+# (`unique`), in no population: only his gallery places him. His fight is the approach: he hurls
+# a boulder every action while he has a clear line to whoever comes, hard enough to stagger them,
+# so the gallery's fallen stones are the only cover on the way to him; and his maul, once he is
+# reached, stuns.
+[[creature]]
+id = "staneoten"
+level = 71
+xp = 365
+xp_percent = 200
+rarity = "very_rare"
+loot = 100
+unique = true
+name = "Stānēoten the Hurler"
+glyph = "H"
+fg = "#c8b48a"
+faction = "layer_keepers"
+tags = ["giant"]
+alignment = "evil"
+vision = "darkvision"
+sight = 16
+opens_doors = true
+footsteps = 200
+hearing = 12
+weight = 1200000
+stats = { strength = 40, dexterity = 20, toughness = 40, intelligence = 12, willpower = 28, presence = 18 }
+base_hp = 420
+weapon_skills = { thrown = 6 }
+natural = { defence = 2, protection = 7, name = "hide" }
+resist = { cold = 25, electricity = 25 }
+on_eat = { message = "Like chewing the hill itself; it sits in you like a stone.", vomit = 30, train = { strength = 200 } }
+blood = "#7a3a1a"
+[creature.attack]
+damage = "6d10"
+damage_type = "bludgeoning"
+name = "maul"
+verb = "mauls"
+to_hit = 12
+on_hit = [{ status = "stunned", chance = 25, severity = 1 }]
+# His boulders: about a tenth of a level-60 fighter's hit points each, every action he has a line.
+[creature.throw]
+object = "boulder"
+damage = "7d10"
+damage_type = "bludgeoning"
+range = 16
+cost = 1000
+verb = "hurls"
+to_hit = 8
+on_hit = [{ status = "staggered", chance = 35, severity = 1 }]

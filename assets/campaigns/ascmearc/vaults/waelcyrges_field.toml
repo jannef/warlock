@@ -1,0 +1,27 @@
+# Vault of the Ascmearc: the field of the slain, the lair of Wælcyrge the Chooser, Grundlēas's
+# ninth layer boss (#1122; spec §7 "The endless branch"). A wide hall strewn with the bones of a
+# battle no song remembers, open from wall to wall, and the Chooser walking it near the way down,
+# with the war-gear of the fallen heaped about her. No cover and nowhere to hide: she is faster
+# than anyone who comes. Grundlēas's boss row for its ninetieth floor names it, so it is stamped
+# there, for certain, until she is slain, and nowhere else. Its `>` is the floor's only way down:
+# laid as plain floor, it opens when she dies (`world/layer_boss.rs`).
+name = "The field of the slain"
+dungeons = ["grundleas"]
+map = '''
+#########################
+#b..b...b....b...b..b...#
+#...b....b.......b...$>.#
++.b....b....b.......A...#
+#....b....b....b.....r..#
+#b..b...b.....b...b..o..#
+#########################
+'''
+
+[legend]
+"b" = { terrain = "floor", objects = ["bones"] }
+# The Chooser among the slain: she wakes to what she sees or hears.
+"A" = { terrain = "floor", creature = "waelcyrge" }
+"$" = { terrain = "floor", objects = ["gold_coin*300"] }
+# The war-gear of the fallen, rolled when the level is made.
+"r" = { terrain = "floor", loot = "rare" }
+"o" = { terrain = "floor", loot = "magic" }

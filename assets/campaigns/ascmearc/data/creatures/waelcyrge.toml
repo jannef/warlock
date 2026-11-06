@@ -1,0 +1,52 @@
+# Campaign-owned (docs/design/campaign.md §3.6): the Ascmearc's own type, which only its files
+# may name.
+#
+# The ninth layer boss of Grundlēas (#1122; spec §7 "The endless branch"): Wælcyrge (Old English,
+# "chooser of the slain"), who walks the field of the ninetieth floor among the dead of a battle
+# no song remembers, and chooses who will join them. Once a run (`unique`), in no population:
+# only her field places her. Her fight is speed: she acts nearly twice to anyone's once, so there
+# is no running from her and no waiting her out; her spear strikes twice, and every wound it
+# leaves bleeds.
+[[creature]]
+id = "waelcyrge"
+level = 91
+xp = 465
+xp_percent = 200
+rarity = "very_rare"
+loot = 100
+unique = true
+name = "Wælcyrge the Chooser"
+glyph = "A"
+fg = "#e8d8a0"
+speed = 1900
+faction = "layer_keepers"
+alignment = "evil"
+vision = "darkvision"
+sight = 16
+opens_doors = true
+footsteps = 30
+hearing = 16
+weight = 80000
+stats = { strength = 34, dexterity = 40, toughness = 34, intelligence = 22, willpower = 34, presence = 38 }
+base_hp = 300
+skills = { initiative = 160, spot = 90 }
+natural = { defence = 9, protection = 10, name = "feathers" }
+resist = { cold = 25, electricity = 25, necrotic = 50 }
+on_eat = { message = "Lean and bitter, the meat of a carrion bird.", vomit = 50, train = { dexterity = 200 } }
+blood = "#8a1a2a"
+# Her spear twice in one attack: a thrust, and the stroke back.
+[[creature.attack]]
+damage = "4d10"
+damage_type = "piercing"
+name = "spear"
+verb = "runs through"
+to_hit = 16
+threat = 19
+on_hit = [{ status = "bleeding", chance = 50, severity = 3 }]
+[[creature.attack]]
+damage = "3d10"
+damage_type = "slashing"
+name = "spear"
+verb = "slashes"
+to_hit = 14
+on_hit = [{ status = "bleeding", chance = 35, severity = 2 }]

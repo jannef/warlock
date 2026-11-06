@@ -5648,10 +5648,15 @@ mod tests {
                 "hrimwyrms_bed",
                 "hunters_statue",
                 "kobolds_cache",
+                "ligetdrys_stones",
+                "nihtscinnas_warren",
+                "nithdracas_hoard",
                 "robbers_hoard",
+                "staneotens_gallery",
                 "still_room",
                 "sunken_crypt",
                 "unhallowed_chapel",
+                "waelcyrges_field",
                 "wealafs_hall"
             ]
         );

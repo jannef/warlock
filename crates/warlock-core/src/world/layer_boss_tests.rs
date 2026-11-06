@@ -247,7 +247,7 @@ fn the_boss_keeps_to_its_lair_on_the_stairs() {
 
 #[test]
 fn other_floors_are_as_they_were() {
-    for depth in [9, 11, 19, 60] {
+    for depth in [9, 11, 19, 59, 101] {
         let level =
             mapgen::generate(&CONTENT, ("ascmearc", 7), &floor(depth), None).expect("floor");
         assert!(level.hidden.is_empty(), "{depth}");
@@ -261,7 +261,7 @@ fn other_floors_are_as_they_were() {
 #[test]
 fn every_boss_depth_makes_its_lair_on_rooms_and_caves() {
     let (def, _) = CONTENT.branch_level(&floor(1)).expect("grundleas");
-    assert!(def.bosses.len() >= 5);
+    assert!(def.bosses.len() >= 10);
     for boss in &def.bosses {
         let id = &CONTENT.creature(boss.creature).id;
         for seed in 0..12 {
@@ -285,7 +285,7 @@ fn every_boss_depth_makes_its_lair_on_rooms_and_caves() {
 fn every_boss_is_unique_and_every_lair_hides_stairs_and_places_it() {
     let (def, _) = CONTENT.branch_level(&floor(1)).expect("grundleas");
     let depths: Vec<u32> = def.bosses.iter().map(|b| b.depth).collect();
-    assert_eq!(depths, [10, 20, 30, 40, 50]);
+    assert_eq!(depths, [10, 20, 30, 40, 50, 60, 70, 80, 90, 100]);
     for boss in &def.bosses {
         let creature = CONTENT.creature(boss.creature);
         assert!(creature.unique, "{}", creature.id);
