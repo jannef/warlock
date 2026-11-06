@@ -20,6 +20,7 @@ use warlock_core::dump;
 use warlock_core::mapgen;
 use warlock_core::replay::Replay;
 use warlock_core::rng::parse_seed;
+use warlock_core::world::Fallen;
 use warlock_core::{Action, World};
 
 #[derive(Debug, Parser)]
@@ -68,6 +69,11 @@ struct RunArgs {
     /// starts the run with the character's kit (ignored when `--replay` is given).
     #[arg(long)]
     talents: Option<String>,
+    /// The petrified dead of past runs, as the game's graveyard file gives a run them, the most
+    /// recent first: NAME:RACE separated by commas (`Brakka:dwarf,Tamsin:elf`). Statues are
+    /// named from them; the names are out of the state hash.
+    #[arg(long)]
+    fallen: Option<String>,
     /// Actions as text, e.g. "move:E move:SE wait open:E close:W kick:N descend ascend pickup:ab
     /// drop:a bash:E chat:E ask:E:rooms".
     #[arg(long)]
@@ -201,7 +207,7 @@ fn start(content: Arc<Content>, args: &RunArgs) -> Result<World, String> {
         ),
         None => args.character.clone(),
     };
-    World::start_run(
+    let mut world = World::start_run(
         content,
         &args.scenario,
         args.seed,
@@ -209,7 +215,23 @@ fn start(content: Arc<Content>, args: &RunArgs) -> Result<World, String> {
         args.name.as_deref(),
         kit,
     )
-    .map_err(|e| format!("cannot start scenario `{}`: {e}", args.scenario))
+    .map_err(|e| format!("cannot start scenario `{}`: {e}", args.scenario))?;
+    world.set_graveyard(fallen(args));
+    Ok(world)
+}
+
+/// `--fallen`'s petrified dead, the most recent first: `Brakka:dwarf` each.
+fn fallen(args: &RunArgs) -> Vec<Fallen> {
+    let text = args.fallen.as_deref().unwrap_or("");
+    (text.split(',').map(str::trim).filter(|s| !s.is_empty()))
+        .map(|entry| {
+            let (name, race) = entry.split_once(':').unwrap_or((entry, ""));
+            Fallen {
+                name: name.trim().to_string(),
+                race: race.trim().to_string(),
+            }
+        })
+        .collect()
 }
 
 fn dump_command(content: Arc<Content>, args: DumpArgs) -> Result<(), String> {
@@ -219,6 +241,9 @@ fn dump_command(content: Arc<Content>, args: DumpArgs) -> Result<(), String> {
         Some(path) => read_replay(path)?.run(content).map_err(|e| e.to_string())?,
         None => start(content, &args.run)?,
     };
+    if args.replay.is_some() {
+        world.set_graveyard(fallen(&args.run));
+    }
     for action in &actions {
         world.apply(action);
     }

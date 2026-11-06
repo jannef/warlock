@@ -35,6 +35,9 @@ pub struct CharactersScreen {
     /// More than one campaign is installed (a developer build, with the test world): the place
     /// is named with its campaign.
     campaigns: bool,
+    /// How many characters have died (the graveyard, `graveyard.rs`): "Twelve characters have
+    /// died." under the list, none while none has.
+    died: usize,
 }
 
 impl CharactersScreen {
@@ -44,6 +47,47 @@ impl CharactersScreen {
             characters,
             selected: 0,
             campaigns,
+            died: 0,
+        }
+    }
+
+    /// The screen, saying that `died` characters have died.
+    pub fn died(self, died: usize) -> Self {
+        Self { died, ..self }
+    }
+
+    /// "Twelve characters have died.", "One character has died."; `None` while none has.
+    fn died_line(&self) -> Option<String> {
+        const WORDS: [&str; 21] = [
+            "No",
+            "One",
+            "Two",
+            "Three",
+            "Four",
+            "Five",
+            "Six",
+            "Seven",
+            "Eight",
+            "Nine",
+            "Ten",
+            "Eleven",
+            "Twelve",
+            "Thirteen",
+            "Fourteen",
+            "Fifteen",
+            "Sixteen",
+            "Seventeen",
+            "Eighteen",
+            "Nineteen",
+            "Twenty",
+        ];
+        let count = WORDS
+            .get(self.died)
+            .map_or_else(|| self.died.to_string(), |w| (*w).to_string());
+        match self.died {
+            0 => None,
+            1 => Some("One character has died.".into()),
+            _ => Some(format!("{count} characters have died.")),
         }
     }
 
@@ -108,11 +152,14 @@ impl CharactersScreen {
     }
 
     pub fn draw(&self, console: &mut Console, clock: Clock, bindings: &Bindings) {
-        // Rows: margin, the list, a gap, where and when, a gap, the footer, the frame.
+        // Rows: margin, the list, a gap, where and when, a gap, the dead and a gap if any have
+        // died, the footer, the frame.
         let rows = self.characters.len().max(1) as i32;
-        let panel = Panel::new(console, " Characters ", WIDTH, rows + 9);
+        let died = self.died_line();
+        let below = if died.is_some() { 11 } else { 9 };
+        let panel = Panel::new(console, " Characters ", WIDTH, rows + below);
         let x = panel.inner_x();
-        let visible = (panel.h - 9).clamp(1, rows);
+        let visible = (panel.h - below).clamp(1, rows);
         let first = (self.selected as i32 - visible + 1).clamp(0, rows - visible);
         if self.characters.is_empty() {
             console.print(x + 2, panel.y + 2, "No saved characters.", TEXT_DIM);
@@ -169,10 +216,16 @@ impl CharactersScreen {
             Some(_) => vec!["Nothing is known of this save until it is played.".into()],
             None => Vec::new(),
         };
+        let bottom = panel.y + panel.h - (below - 7);
         for (y, line) in (panel.y + 3 + visible..).zip(details) {
-            if y < panel.y + panel.h - 2 {
+            if y < bottom {
                 console.print(x + 2, y, &line, TEXT_DIM);
             }
+        }
+        if let Some(line) = died
+            && bottom < panel.y + panel.h - 2
+        {
+            console.print(x + 2, bottom, &line, TEXT_DIM);
         }
         let keys = Hints::of(bindings);
         let footer = format!(

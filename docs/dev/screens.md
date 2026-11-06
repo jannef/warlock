@@ -237,7 +237,11 @@ to open, read keys for, or draw one:
   field shows, dimmed, the name it gives), `ui/characters_screen.rs` (`CharactersScreen`: the saved
   characters, the one played last first; Enter is `MenuChoice::Resume(id)`, the Erase key asks the
   dialog whose Delete is `MenuChoice::DeleteCharacter(id)`, after which the main menu and the list
-  open afresh; `--screen characters`, with `--capture` over a read-only `--save-dir`),
+  open afresh; `--screen characters`, with `--capture` over a read-only `--save-dir`; under the
+  details the graveyard's count, "Twelve characters have died.", while any has (`Launch::died`,
+  read as the screen opens; `CharactersScreen::died`); the death screen's "Remembered in the
+  graveyard." is `DeathScreen::remembered`, set by `on_death` once the entry is written,
+  `docs/dev/saves.md` "The graveyard"),
   `ui/quest_screen.rs`
   (the quest log from `PerceptionView::quests`: active then done, the selected one's objective,
   status, and the giver's offer; read-only), `ui/messages_screen.rs` (`MessagesScreen`,

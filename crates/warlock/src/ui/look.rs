@@ -113,7 +113,8 @@ fn describe_cell(view: &PerceptionView<'_>, p: Pos, blood: bool) -> String {
                 with_article(trap)
             ),
             (Some(chest), None) => chest.name(content.chests(), &def.name),
-            // A statue of the stoned goes by what it was: "a statue of a dwarf, mouth open".
+            // A statue of the stoned goes by what it was: "a statue of a dwarf, mouth open", or
+            // by the past character the graveyard names it for: "a statue of Brakka the dwarf".
             (None, _) if view.statue_at(p).is_some() => {
                 let of = view.statue_at(p).map(|c| &content.creature(c).name);
                 let of = of.map_or_else(String::new, |name| {
@@ -123,6 +124,7 @@ fn describe_cell(view: &PerceptionView<'_>, p: Pos, blood: bool) -> String {
                         with_article(name)
                     }
                 });
+                let of = view.statue_name(p).unwrap_or(of);
                 format!("{} of {of}, mouth open", def.name)
             }
             // A wall the player found sounds hollow (a sealed room's breach): "a hollow stone

@@ -229,7 +229,10 @@ the floor's own kind, holding nothing, dug and kicked as any statue), spiders am
 (which catch no one), and acid-hided things on floor eaten into pits, and torn cloth lies where
 a light-fingered thing has been. They are laid within four cells of each creature a floor is
 peopled with or a vault holds (a statue only where open ground is all about it), from one to a
-few of each kind. The more dreadful creatures are named once, the first time in a life you see
+few of each kind. A basilisk's statues may bear the names of your own past characters who were
+[turned to stone](status-effects.md#status-stiffening), "a statue of Brakka the dwarf": every character who dies goes into the
+graveyard, a file kept beside the settings that no new version of the game invalidates, and its
+petrified are named on statues, the most recent first, never twice on a floor. The more dreadful creatures are named once, the first time in a life you see
 one, with the line below; the life remembers which.
 
 {{#include generated/creature-signs.md}}

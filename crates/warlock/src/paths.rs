@@ -221,7 +221,7 @@ impl Locations {
         self.data.dir.as_ref().map(|d| d.join(SNAPSHOTS_DIR))
     }
 
-    /// The entries to show, in order: settings, saves, snapshots, logs.
+    /// The entries to show, in order: settings, the graveyard, saves, snapshots, logs.
     pub fn entries(&self) -> Vec<Entry> {
         let entry = |label, what, dir: Option<PathBuf>, reason: &Reason| Entry {
             label,
@@ -233,6 +233,12 @@ impl Locations {
             entry(
                 "Settings",
                 "settings.toml, with the key bindings",
+                self.config.dir.clone(),
+                &self.config.reason,
+            ),
+            entry(
+                "Graveyard",
+                "graveyard.toml, every character who has died",
                 self.config.dir.clone(),
                 &self.config.reason,
             ),

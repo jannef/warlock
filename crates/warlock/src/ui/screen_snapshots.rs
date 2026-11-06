@@ -38,6 +38,9 @@ pub(super) struct Case {
     pub(super) keys: Option<&'static str>,
     /// `--save-dir`, relative to the workspace root.
     pub(super) save_dir: Option<&'static str>,
+    /// The graveyard file's text (`graveyard.rs`), kept in a folder of the case's own; none
+    /// keeps no graveyard, as a capture does.
+    pub(super) graveyard: Option<&'static str>,
     /// The UI console's size (columns, rows).
     pub(super) size: (u32, u32),
 }
@@ -53,6 +56,7 @@ pub(super) const BASE: Case = Case {
     screen: None,
     keys: None,
     save_dir: None,
+    graveyard: None,
     size: (100, 30),
 };
 
@@ -77,6 +81,38 @@ macro_rules! shop {
     };
 }
 
+/// A graveyard of twelve, two of them turned to stone.
+const GRAVEYARD: &str = r#"
+[[fallen]]
+name = "Brakka"
+race = "dwarf"
+cause = "stone"
+[[fallen]]
+name = "Tamsin"
+cause = "kobold"
+[[fallen]]
+name = "Wynn"
+[[fallen]]
+name = "Osric"
+cause = "stone"
+[[fallen]]
+name = "Eadgyth"
+[[fallen]]
+name = "Leofric"
+[[fallen]]
+name = "Hild"
+[[fallen]]
+name = "Cyneric"
+[[fallen]]
+name = "Aelfgifu"
+[[fallen]]
+name = "Wulfstan"
+[[fallen]]
+name = "Godgifu"
+[[fallen]]
+name = "Sigeberht"
+"#;
+
 const CASES: &[Case] = &[
     // Menus and settings.
     Case {
@@ -94,6 +130,14 @@ const CASES: &[Case] = &[
         name: "characters-screen",
         screen: Some("characters"),
         save_dir: Some("tests/golden/saved-characters"),
+        ..BASE
+    },
+    // The count of the dead under the list (the graveyard, #1137).
+    Case {
+        name: "characters-screen-graveyard",
+        screen: Some("characters"),
+        save_dir: Some("tests/golden/saved-characters"),
+        graveyard: Some(GRAVEYARD),
         ..BASE
     },
     // Every scenario under its campaign's name (a developer build), the start first.
@@ -1380,6 +1424,15 @@ const CASES: &[Case] = &[
         actions: "use_tool wait*20",
         ..BASE
     },
+    // The death remembered in the graveyard (#1137).
+    Case {
+        name: "death-screen-graveyard",
+        scenario: "arena",
+        seed: Some(4),
+        actions: "use_tool wait*20",
+        graveyard: Some(GRAVEYARD),
+        ..BASE
+    },
     Case {
         name: "death-screen-lucky",
         scenario: "arena",
@@ -1891,6 +1944,7 @@ pub(super) fn start(case: &Case, content: Arc<Content>) -> App {
         .init_resource::<ScreenStack>()
         .init_resource::<Settings>()
         .init_resource::<crate::settings::SettingsStore>()
+        .insert_resource(graveyard(case))
         .init_resource::<Bindings>()
         .init_resource::<InputMode>()
         .init_resource::<LastTarget>()
@@ -1925,6 +1979,22 @@ pub(super) fn start(case: &Case, content: Arc<Content>) -> App {
     }
     app.update();
     app
+}
+
+/// The graveyard of `case`: its text in a fresh folder of its own (deaths append to it there).
+fn graveyard(case: &Case) -> crate::graveyard::GraveyardStore {
+    let Some(text) = case.graveyard else {
+        return crate::graveyard::GraveyardStore::default();
+    };
+    let dir = std::env::temp_dir().join(format!(
+        "warlock-snapshot-graveyard-{}-{}",
+        std::process::id(),
+        case.name
+    ));
+    let _ = std::fs::remove_dir_all(&dir);
+    std::fs::create_dir_all(&dir).expect("the graveyard's folder");
+    std::fs::write(dir.join(crate::graveyard::FILE_NAME), text).expect("the graveyard");
+    crate::graveyard::GraveyardStore::at(dir)
 }
 
 /// Presses `keys` (as `--keys` writes them) in one frame, then lets the run and the screens

@@ -562,8 +562,12 @@ fn statue_rows(world: &World) -> Vec<String> {
                 1 => "holds 1 stack".to_string(),
                 n => format!("holds {n} stacks"),
             };
+            // A name from the graveyard (`world/graveyard.rs`): `statue (kobold, Brakka the
+            // dwarf) at (12, 5): empty`.
+            let name = (statue.name.as_ref())
+                .map_or_else(String::new, |f| format!(", {}", f.words(content)));
             format!(
-                "statue ({}) at {p}: {holds}",
+                "statue ({}{name}) at {p}: {holds}",
                 content.creature(statue.of).id
             )
         })

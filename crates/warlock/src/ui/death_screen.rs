@@ -22,6 +22,9 @@ pub struct DeathScreen {
     lines: Vec<String>,
     /// The date and time of death (the clock setting decides how the time is written).
     when: Option<(String, GameTime)>,
+    /// The character went into the graveyard (`graveyard.rs`, written by `screens::on_death`):
+    /// "Remembered in the graveyard."
+    pub remembered: bool,
 }
 
 impl DeathScreen {
@@ -32,6 +35,7 @@ impl DeathScreen {
             return Self {
                 lines: vec!["Nothing has died.".into()],
                 when: None,
+                remembered: false,
             };
         };
         let content = view.content();
@@ -79,6 +83,7 @@ impl DeathScreen {
         Self {
             lines,
             when: Some((calendar.full_date(death.time), death.time)),
+            remembered: false,
         }
     }
 
@@ -100,8 +105,8 @@ impl DeathScreen {
         });
         let text: Vec<String> = lines.flat_map(|l| wrap(&l, 44)).collect();
         // Rows: margin, the title and its rule, a gap, the epitaph, a gap, the save's fate, a
-        // gap, the footer, frame.
-        let h = 10 + text.len() as i32;
+        // gap, the footer, frame; the graveyard's line under the save's fate if it remembers them.
+        let h = 10 + text.len() as i32 + i32::from(self.remembered);
         let panel = Panel::new(console, "", w, h);
         let cx = |text: &str| panel.x + (panel.w - text.chars().count() as i32) / 2;
         let title = "Y O U   D I E D";
@@ -127,6 +132,10 @@ impl DeathScreen {
         let gone = "Your run is over; its save is gone.";
         if fits(y) {
             console.print(cx(gone), y, gone, TEXT_DIM);
+        }
+        let remembered = "Remembered in the graveyard.";
+        if self.remembered && fits(y + 1) {
+            console.print(cx(remembered), y + 1, remembered, TEXT_DIM);
         }
         let footer = format!("{} or Esc  main menu", Hints::of(bindings).confirm);
         panel.footer(console, &footer);

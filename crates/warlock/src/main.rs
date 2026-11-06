@@ -3,6 +3,7 @@
 mod capture;
 mod cli;
 mod game;
+mod graveyard;
 mod input;
 mod logging;
 #[cfg(not(target_arch = "wasm32"))]
@@ -142,8 +143,10 @@ fn main() -> AppExit {
             viewport::WindowViewportPlugin,
         ));
     }
+    let graveyard = graveyard::GraveyardStore::from_args(&args);
     app.insert_resource(args)
         .insert_resource(game::GameContent(content))
+        .insert_resource(graveyard)
         .insert_resource(settings)
         .insert_resource(settings_store)
         .insert_resource(bindings);
