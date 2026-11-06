@@ -6,7 +6,7 @@ spec/08e-blood-and-status.md ("Mana"). Keep it current with the code, as CLAUDE.
 Mana (spec §8 "Mana", #223) is a second pool beside hit points, built the same way, for magic to
 spend (the progression design, #220, gives classes mana values, per-level gains, and talents that
 cost or raise it, #242). Spells (`world/cast.rs`, docs/dev/spells.md), rods, a song paid in mana
-(the Lullaby's, `world/song.rs`, #873), and creatures' summons spend it, all through `World::spend_mana`. **Every new system says in its
+(the Lullaby's, `world/song.rs`, #873), and creatures' summons and spells spend it, all through `World::spend_mana`. **Every new system says in its
 issue how it interacts with mana**, and hooks in at the one place below.
 
 - **Pure rules**: `warlock-core/src/mana.rs`: `max_mana(stats, base)` (base plus the mental
@@ -94,7 +94,8 @@ issue how it interacts with mana**, and hooks in at the one place below.
   each on `Mods::worn`), so a goblin wizard's Mystic bone amulet or an animated panoply's rings
   give it a larger pool, filled as it is made (`travel::make_creature` sets `mana` after its
   gear), and a faster pace; a summoner spends from that pool (`World::summons_at`,
-  `spend_mana`). Creature gear never changes after it is made (stealing takes no worn
+  `spend_mana`), and so does a caster's every spell (`world/creature_cast.rs`, #1102: its type's
+  `mana` sized for a handful of its main spell; out of it, it fights). Creature gear never changes after it is made (stealing takes no worn
   thing), so no creature's mana needs `keep_mana_within_max`.
 - **A hex's tithe** (Malison, #905): `World::hex_tithe(slain)` (`world/malison.rs`), from
   `World::dies` for any creature's death (every cause, anyone's hand, no range), before the

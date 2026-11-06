@@ -4,6 +4,7 @@ A **spell** is cast from the [abilities menu](abilities.md#the-abilities-menu) (
 [mana](mana.md). You know a spell for good once your class gives it or once you have learned it
 from a scroll (below). Every spell is measured by the same rules below: its [spell level](#spell-levels), its
 [shape](#shapes), and how it finds its target; your [learning](#learning) is what you can learn.
+Creatures that cast use the same spells by the same rules (see [Spells](creature-numbers.md#spells)).
 
 ## What your class gives
 

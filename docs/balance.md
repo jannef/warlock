@@ -193,6 +193,101 @@ Out of depth (+3: the monsters one to five levels above), and untrained stats, f
 | 50 | 97/5 · 21.2:1.3 · 10 / 628 | 99/1 · 32.9:0.1 · 7.2 / >999 | 76/12 · 10.7:2.4 · 22 / 124 | 92/1 · 23.5:0.1 · 10 / >999 |
 | 60 | 92/20 · 17.1:5.9 · 14 / 66 | 98/1 · 25.0:0.2 · 9.5 / >999 | 63/27 · 6.8:6.1 · 42 / 42 | 88/1 · 16.0:0.2 · 15 / >999 |
 
+## Casters
+
+Each caster (#1102) against the trained players of the first probe level from its own, in plain gear (the seeds' mean). **Spell** its first damage spell and its roll at its stats; **casts** how many of it its full pool pays for; **a cast** its mean damage (an `attack` spell's times its hit chance); **a round** that times its casts a round, against **melee** its blows a round once the mana is spent; **die** the player's rounds until they fall, the spells first, then its melee.
+
+| Caster | L | Spell (roll) | casts | Player | HP | a cast | a round | melee | die |
+|---|---|---|---|---|---|---|---|---|---|
+| arcanaloth | 46 | chain lightning (12d6+3) | 8 | warrior 50 | 369 | 45.0 | 49.5 | 14.4 | 8.3 |
+| arcanaloth | 46 | chain lightning (12d6+3) | 8 | wizard 50 | 203 | 45.0 | 49.5 | 28.9 | 4.1 |
+| archlich | 54 | sunfire (16d6+4) | 3 | warrior 60 | 373 | 60.0 | 69.0 | 26.7 | 9.8 |
+| archlich | 54 | sunfire (16d6+4) | 3 | wizard 60 | 206 | 60.0 | 69.0 | 26.2 | 3.7 |
+| ash wraith | 15 | scorching ray (6d6) | 5 | warrior 15 | 93 | 10.0 | 11.0 | 2.4 | 24 |
+| ash wraith | 15 | scorching ray (6d6) | 5 | wizard 15 | 35 | 18.2 | 20.1 | 5.8 | 1.8 |
+| barrow king | 42 | grave spear (10d6+2) | 5 | warrior 50 | 369 | 37.0 | 40.7 | 12.5 | 19 |
+| barrow king | 42 | grave spear (10d6+2) | 5 | wizard 50 | 203 | 37.0 | 40.7 | 18.9 | 5.6 |
+| bheur hag | 42 | rime (8d6+2) | 7 | warrior 50 | 369 | 30.0 | 33.0 | 14.0 | 18 |
+| bheur hag | 42 | rime (8d6+2) | 7 | wizard 50 | 203 | 30.0 | 33.0 | 21.2 | 6.2 |
+| dark wizard | 24 | fireball (8d6) | 4 | warrior 30 | 201 | 28.0 | 28.0 | 0.0 | >999 |
+| dark wizard | 24 | fireball (8d6) | 4 | wizard 30 | 97 | 28.0 | 28.0 | 2.3 | 3.5 |
+| drow archmage | 40 | chain lightning (12d6+3) | 8 | warrior 40 | 282 | 45.0 | 49.5 | 9.6 | 5.7 |
+| drow archmage | 40 | chain lightning (12d6+3) | 8 | wizard 40 | 150 | 45.0 | 49.5 | 25.5 | 3.0 |
+| drow high priestess | 44 | leech (8d6+2) | 13 | warrior 50 | 369 | 27.2 | 29.9 | 14.0 | 13 |
+| drow high priestess | 44 | leech (8d6+2) | 13 | wizard 50 | 203 | 29.8 | 32.8 | 29.3 | 6.2 |
+| drow mage | 22 | lightning bolt (10d6) | 4 | warrior 30 | 201 | 35.0 | 35.0 | 0.6 | 121 |
+| drow mage | 22 | lightning bolt (10d6) | 4 | wizard 30 | 97 | 35.0 | 35.0 | 9.2 | 2.8 |
+| drow matron | 50 | chain lightning (12d6+3) | 8 | warrior 50 | 369 | 45.0 | 49.5 | 17.2 | 8.0 |
+| drow matron | 50 | chain lightning (12d6+3) | 8 | wizard 50 | 203 | 45.0 | 49.5 | 30.3 | 4.1 |
+| drow priestess | 24 | leech (8d6) | 9 | warrior 30 | 201 | 15.8 | 15.8 | 2.2 | 39 |
+| drow priestess | 24 | leech (8d6) | 9 | wizard 30 | 97 | 27.3 | 27.3 | 14.1 | 3.6 |
+| dryad | 19 | acid arrow (6d6) | 10 | warrior 20 | 127 | 10.0 | 10.0 | 1.7 | 30 |
+| dryad | 19 | acid arrow (6d6) | 10 | wizard 20 | 52 | 18.9 | 18.9 | 10.5 | 2.8 |
+| duergar mindbreaker | 29 | flay (2d8) | 9 | warrior 30 | 201 | 9.0 | 9.0 | 6.3 | 28 |
+| duergar mindbreaker | 29 | flay (2d8) | 9 | wizard 30 | 97 | 9.0 | 9.0 | 17.1 | 9.9 |
+| duergar priest | 19 | flay (2d8) | 6 | warrior 20 | 127 | 9.0 | 9.0 | 0.0 | >999 |
+| duergar priest | 19 | flay (2d8) | 6 | wizard 20 | 52 | 9.0 | 9.0 | 2.2 | 6.9 |
+| ghost lord | 53 | grave spear (10d6+2) | 6 | warrior 60 | 373 | 37.0 | 42.6 | 24.7 | 11 |
+| ghost lord | 53 | grave spear (10d6+2) | 6 | wizard 60 | 206 | 37.0 | 42.6 | 25.7 | 4.9 |
+| giant shaman | 36 | rime (8d6) | 7 | warrior 40 | 282 | 28.0 | 28.0 | 7.8 | 18 |
+| giant shaman | 36 | rime (8d6) | 7 | wizard 40 | 150 | 28.0 | 28.0 | 22.0 | 5.3 |
+| goblin wizard | 8 | burning hands (2d6) | 11 | warrior 10 | 62 | 7.0 | 7.0 | 0.0 | 8.8 |
+| goblin wizard | 8 | burning hands (2d6) | 11 | wizard 10 | 25 | 7.0 | 7.0 | 0.6 | 3.6 |
+| green hag | 18 | blight (6d6+3) | 3 | warrior 20 | 127 | 24.0 | 24.0 | 0.9 | 84 |
+| green hag | 18 | blight (6d6+3) | 3 | wizard 20 | 52 | 24.0 | 24.0 | 7.7 | 2.2 |
+| hobgoblin warcaster | 14 | frost (6d6) | 3 | warrior 15 | 93 | 21.0 | 21.0 | 0.0 | >999 |
+| hobgoblin warcaster | 14 | frost (6d6) | 3 | wizard 15 | 35 | 21.0 | 21.0 | 1.8 | 1.7 |
+| kobold shaman | 4 | spark (2d4) | 5 | warrior 5 | 37 | 5.0 | 4.0 | 0.0 | >999 |
+| kobold shaman | 4 | spark (2d4) | 5 | wizard 5 | 18 | 5.0 | 4.0 | 0.2 | 4.4 |
+| lich | 30 | chain lightning (12d6+3) | 7 | warrior 30 | 201 | 45.0 | 47.2 | 6.2 | 4.3 |
+| lich | 30 | chain lightning (12d6+3) | 7 | wizard 30 | 97 | 45.0 | 47.2 | 14.6 | 2.1 |
+| mummy king | 56 | flame (10d6+2) | 6 | warrior 60 | 373 | 37.0 | 42.6 | 22.4 | 12 |
+| mummy king | 56 | flame (10d6+2) | 6 | wizard 60 | 206 | 37.0 | 42.6 | 34.7 | 4.9 |
+| mummy lord | 36 | blight (6d6+3) | 6 | warrior 40 | 282 | 24.0 | 25.2 | 4.8 | 35 |
+| mummy lord | 36 | blight (6d6+3) | 6 | wizard 40 | 150 | 24.0 | 25.2 | 20.2 | 6.0 |
+| mummy priest | 20 | cause wounds (4d8+2) | 27 | warrior 20 | 127 | 11.0 | 11.0 | 4.2 | 12 |
+| mummy priest | 20 | cause wounds (4d8+2) | 27 | wizard 20 | 52 | 18.7 | 18.7 | 9.2 | 2.8 |
+| necromancer | 18 | leech (8d6) | 7 | warrior 20 | 127 | 13.3 | 13.3 | 0.0 | >999 |
+| necromancer | 18 | leech (8d6) | 7 | wizard 20 | 52 | 25.2 | 25.2 | 1.5 | 2.1 |
+| night hag | 33 | leech (8d6+2) | 10 | warrior 40 | 282 | 19.2 | 20.1 | 3.2 | 40 |
+| night hag | 33 | leech (8d6+2) | 10 | wizard 40 | 150 | 29.5 | 31.0 | 17.7 | 4.8 |
+| nymph | 22 | magic missile (6d4+1) | 15 | warrior 30 | 201 | 16.0 | 16.0 | 0.6 | 13 |
+| nymph | 22 | magic missile (6d4+1) | 15 | wizard 30 | 97 | 16.0 | 16.0 | 9.4 | 6.1 |
+| ogre mage | 18 | rime (8d6) | 4 | warrior 20 | 127 | 28.0 | 28.0 | 2.8 | 9.7 |
+| ogre mage | 18 | rime (8d6) | 4 | wizard 20 | 52 | 28.0 | 28.0 | 12.5 | 1.9 |
+| orc high shaman | 24 | fireball (8d6) | 3 | warrior 30 | 201 | 28.0 | 28.0 | 0.0 | >999 |
+| orc high shaman | 24 | fireball (8d6) | 3 | wizard 30 | 97 | 28.0 | 28.0 | 2.3 | 10.0 |
+| orc shaman | 10 | burning hands (2d6) | 4 | warrior 10 | 62 | 7.0 | 7.0 | 0.0 | >999 |
+| orc shaman | 10 | burning hands (2d6) | 4 | wizard 10 | 25 | 7.0 | 7.0 | 1.1 | 3.6 |
+| pixie | 4 | spark (2d4) | 5 | warrior 5 | 37 | 5.0 | 5.5 | 0.2 | 66 |
+| pixie | 4 | spark (2d4) | 5 | wizard 5 | 18 | 5.0 | 5.5 | 1.5 | 3.2 |
+| rakshasa | 52 | flame (10d6+2) | 6 | warrior 60 | 373 | 37.0 | 42.6 | 19.8 | 13 |
+| rakshasa | 52 | flame (10d6+2) | 6 | wizard 60 | 206 | 37.0 | 42.6 | 33.3 | 4.9 |
+| troll shaman | 21 | rime (8d6) | 5 | warrior 30 | 201 | 28.0 | 28.0 | 1.0 | 66 |
+| troll shaman | 21 | rime (8d6) | 5 | wizard 30 | 97 | 28.0 | 28.0 | 11.1 | 3.5 |
+| will-o'-wisp | 7 | spark (2d4) | 8 | warrior 10 | 62 | 5.0 | 5.0 | 0.1 | 497 |
+| will-o'-wisp | 7 | spark (2d4) | 8 | wizard 10 | 25 | 5.0 | 5.0 | 0.2 | 5.0 |
+| wormlord | 47 | leech (8d6+2) | 13 | warrior 50 | 369 | 27.2 | 29.9 | 14.3 | 13 |
+| wormlord | 47 | leech (8d6+2) | 13 | wizard 50 | 203 | 29.8 | 32.8 | 29.2 | 6.2 |
+| barrow wight | 6 | grave breath (4d4) | 5 | warrior 10 | 62 | 10.0 | 10.0 | 1.0 | 18 |
+| barrow wight | 6 | grave breath (4d4) | 5 | wizard 10 | 25 | 10.0 | 10.0 | 2.0 | 2.5 |
+| bog hag | 11 | acid arrow (6d6) | 6 | warrior 15 | 93 | 6.9 | 6.9 | 0.2 | 263 |
+| bog hag | 11 | acid arrow (6d6) | 6 | wizard 15 | 35 | 16.2 | 16.2 | 4.0 | 2.2 |
+| cult priest | 9 | grave breath (4d4) | 6 | warrior 10 | 62 | 10.0 | 10.0 | 0.0 | 322 |
+| cult priest | 9 | grave breath (4d4) | 6 | wizard 10 | 25 | 10.0 | 10.0 | 0.7 | 2.5 |
+
+Read (#1102, first lists): the spells are the casters' real threat now. Up to level 10 a caster
+spends a handful of sparks, flames, or grave breaths (5 to 10 a cast) and then fights with its
+fists, which plate shrugs off; a trained warrior outlasts most of them (the goblin wizard's
+eleven burning hands and the barrow wight's breath excepted), a wizard of its level falls in two
+and a half to five rounds if they stand there. From level 18 one area spell (rime, fireball,
+lightning bolt: 28 to 35) takes a third to a half of a wizard's hit points, and the deep
+casters' chain lightning, grave spear, flame, and sunfire (37 to 60 a cast, 3 to 8 casts) kill
+a plain-geared wizard of their level in two to five rounds and a warrior in four to twenty.
+Silence, resistances, and closing in (a caster holds back an area that would catch a friend)
+are the counters. Attack spells (acid arrow, leech, cause wounds, scorching ray) land on a
+plate-clad warrior about half as often as on a wizard.
+
 ## Protection by body
 
 Rounds for the plain warrior (trained) to kill the monsters of their level: as shipped, then with every monster's Protection set to §8.2's body line at its level.

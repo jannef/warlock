@@ -595,6 +595,38 @@ pub(super) fn creature_breaths(content: &Content) -> String {
     out
 }
 
+/// What each caster (spec §8 "Creature behavior": "Casters") casts, in the order it prefers
+/// them, with what each costs it, and its pool of mana; how rare it is beside it.
+pub(super) fn creature_spells(content: &Content) -> String {
+    let mut out = String::from(
+        "| Creature | Level | Rarity | Mana | Spells (mana each), first preferred |\n|---|---:|---|---:|---|\n",
+    );
+    for (id, c) in listed(content) {
+        if c.spells.is_empty() {
+            continue;
+        }
+        let mut actor = bare(content, id);
+        actor.mana_base = c.base_mana;
+        let spells: Vec<String> = (c.spells.iter())
+            .map(|&s| {
+                let spell = content.spell(s);
+                let cost = actor.spell_cost(content, spell);
+                format!("{} ({cost})", link(Term::Spell, &spell.id, &spell.name))
+            })
+            .collect();
+        let _ = writeln!(
+            out,
+            "| {} | {} | {} | {} | {} |",
+            link(Term::Creature, &c.id, &capital(&c.name)),
+            c.level,
+            content.creature_rarity(c.rarity).name,
+            actor.max_mana(content),
+            spells.join(", ")
+        );
+    }
+    out
+}
+
 /// Each creature's speed and how long a normal action takes it, how far and with which eyes it
 /// sees, how faint a sound it hears (its listen skill included), how loud its steps are, its
 /// nose as a companion (spec §8 "Allies") and whether it may be tamed, what it weighs, its size,

@@ -121,8 +121,8 @@ armour's percent) is read by `Actor::armour_spell_cost` whatever is cast. No `sp
 caster grips (the loader refuses it: where one casts from never quickens a cast; a school's
 `speed` may). `Benefit` fields of theirs: `far_to_hit`, `far_threat`, `cells` (Sniper's
 reach), `bonus` (Toucher's roll), `armour` (checked per grip like the others; `cells` and
-`bonus` join the cast's hooks after the school's, `Actor::spell_mods_from`). Creatures cast no spell that rolls to hit (their spells are intents), so no
-creature data gives ranks in them yet. Classes: wizard and druid Sniper 1, witch and priest
+`bonus` join the cast's hooks after the school's, `Actor::spell_mods_from`). Creatures' spells (`world/creature_cast.rs`) practise nothing and read no caster style, so no
+creature data gives ranks in them. Classes: wizard and druid Sniper 1, witch and priest
 Toucher 1, paladin Battle caster 1 (their schools: docs/dev/magic-skills.md). Talents: none new;
 Stylist (a chosen style) may choose a caster style, raising it a rank. Tests:
 `content/weapon_skill.rs` (`the_caster_ladder_loads_and_is_checked`),

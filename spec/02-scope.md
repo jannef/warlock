@@ -29,8 +29,9 @@ Build the engine and framework, not the game. Everything built is production qua
   crossbow, a sling, and throwing weapons, ammunition spent and picked up again, ADOM-like
   targeting, missiles flying on screen, and flaming arrows that light the dark where they land
   (§8 "Ranged combat"). Blood (M17): big hits and kills stain floors and walls by the victim's
-  size and how the blow landed, subtly, adding up where many die (§8 "Blood"). Spells stay
-  announced only
+  size and how the blow landed, subtly, adding up where many die (§8 "Blood"). Creatures' spells
+  stayed announced only until casters cast through the player's spell code (§8 "Creature
+  behavior": "Casters")
 - Status effects and passive healing (M24): a data-driven framework of effects on actors that
   tick and wear off in game time, stack, can be cured, lower stats, slow healing, and can kill;
   bleeding from big hits and confirmed criticals, poison from a giant rat's bite; hit points come

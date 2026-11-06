@@ -679,7 +679,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
   hits you but does no harm."), a hit resisted to nothing (§8 "Damage types": "The fireball
   does the salamander no harm.", "Your torch does the salamander no harm."; else "... but does
   no harm."), a shot ("The kobold archer shoots the giant rat."), and a death ("The giant rat dies.", "You
-  die..."). Spells are announced ("The kobold shaman casts a spell at you."). An end the player
+  die..."). A caster's spell is said as it is cast ("The kobold shaman casts spark at you!") and its blows
+  as the player's spells' ("The spark shocks you."). An end the player
   does not see is
   "something" ("Something hits you.", "The kobold misses something."), and a miss is then just
   a miss. A creature's attack is reported when the turn is perceived, the player's own as it is
