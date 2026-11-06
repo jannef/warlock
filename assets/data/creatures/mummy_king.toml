@@ -35,5 +35,5 @@ damage = "3d12"
 damage_type = "bludgeoning"
 name = "fist"
 verb = "pummels"
-to_hit = 5
+to_hit = 14
 on_hit = [{ disease = "mummy_rot", chance = 35 }]

@@ -48,6 +48,9 @@ for the nearest one:
   nothing solid, and nobody, in between. If they have one, they attack from where they are;
   otherwise they move to the nearest place that gives them one. An archer spends an [arrow](ammunition.md) a
   shot, and with none left (or no bow) it comes to fight up close ([Ranged combat](ranged.md)).
+- **Dragons** breathe their element over a long cone whenever their breath is ready and you
+  stand within its reach with a clear line, and between breaths come at you to fight up close
+  with claws and bite (see [Creatures in numbers](creature-numbers.md#breath)).
 - A few creatures **lurk**: the [meenlock](creatures.md#creature-meenlock) and the
   [barrow spider](creatures.md#creature-barrow-spider). One that sees its target does not come at
   it: it waits where it stands, well aware of it, and attacks once the target comes beside it (or

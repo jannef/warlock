@@ -30,7 +30,7 @@ damage = "4d6"
 damage_type = "piercing"
 name = "barbed tongue"
 verb = "lashes"
-to_hit = 2
+to_hit = 7
 on_hit = [
     { status = "held", chance = 20, difficulty = 18 },
     { status = "bleeding", chance = 20, severity = 1 },

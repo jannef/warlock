@@ -31,7 +31,7 @@ damage = "3d12"
 damage_type = "slashing"
 name = "scythe"
 verb = "reaps"
-to_hit = 6
+to_hit = 16
 on_hit = [
     { drain = "toughness", points = 2, chance = 15, check = "toughness", difficulty = 25 },
     { status = "frightened", chance = 30, severity = 3 },

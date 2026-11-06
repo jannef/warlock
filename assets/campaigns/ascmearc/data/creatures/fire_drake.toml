@@ -3,8 +3,9 @@
 #
 # The delf wave (Fyrdelf, §10.1): the fire drake that sleeps on its hoard at the bottom of the
 # delf, the last of the volcano's wyrms and the target of the delf's last quest. Once a run
-# (`unique`). Its breath is a spell, announced until magic is designed; its jaws are real
-# enough. Fire cannot hurt it, its scales turn most blades, and it lights its lair. It carries
+# (`unique`). A dragon (#1099, spec §8 "Creature behavior": "Dragons"): it breathes a long, wide
+# cone of fire whenever its breath is ready, and between breaths fights with two claws and a
+# bite. Fire cannot hurt it, its scales turn most blades, and it lights its lair. It carries
 # nothing: its hoard is the vault's.
 [[creature]]
 id = "fire_drake"
@@ -17,12 +18,11 @@ name = "fire drake"
 glyph = "D"
 fg = "#e0402a"
 faction = "fire"
-tags = ["fire-thing", "caster"]
+tags = ["fire-thing", "dragon"]
 alignment = "evil"
 vision = "darkvision"
 sight = 14
-combat = "caster"
-range = 6
+combat = "dragon"
 light = "lava"
 glow = 0.35
 footsteps = 160
@@ -30,14 +30,36 @@ hearing = 15
 weight = 2000000
 stats = { strength = 26, dexterity = 12, toughness = 26, intelligence = 16, willpower = 20, presence = 20 }
 base_hp = 90
-skills = { concentration = 50, spellcraft = 50 }
 natural = { defence = 3, protection = 3, name = "scales" }
 resist = { fire = 100, cold = -25 }
 on_eat = { message = "The drake's flesh burns going down, and leaves you stronger.", vomit = 20, train = { strength = 150, toughness = 150 } }
 blood = "#a0200a"
-[creature.attack]
+# Its breath (docs/balance.md "Dragons"): about a third of a level-19 fighter's hit points, more
+# than half a wizard's, to everyone in a cone nine cells long; then six actions of claws and
+# bite before the next.
+[creature.breath]
+damage = "10d8"
+damage_type = "fire"
+length = 9
+cooldown = 36
+effect = "dragon_fire"
+noun = "fire"
+verb = "breathes fire"
+# Two claws and a bite, each struck in turn in one attack.
+[[creature.attack]]
+damage = "2d6"
+damage_type = "slashing"
+name = "claw"
+verb = "claws"
+[[creature.attack]]
+damage = "2d6"
+damage_type = "slashing"
+name = "claw"
+verb = "claws"
+[[creature.attack]]
 damage = "3d8"
 damage_type = "piercing"
-name = "jaws"
+name = "bite"
 verb = "bites"
+to_hit = 4
 threat = 19

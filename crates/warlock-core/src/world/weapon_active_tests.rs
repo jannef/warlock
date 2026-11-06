@@ -428,7 +428,7 @@ fn shield_wall_costs_a_wait_and_walls() {
     let mut w = world("#####\n#@p.#\n#####\n");
     give(&mut w, "wt_knife");
     give(&mut w, "wt_shield");
-    ranks(&mut w, &[("long_blades", 1), ("shield_block", 9)]);
+    ranks(&mut w, &[("long_blades", 1), ("sword_and_board", 9)]);
     let player = w.player_id();
     let before = w.defence_of(player).bonus(Category::Shield);
     let attack = blow_price(&w);
@@ -452,7 +452,7 @@ fn shield_wall_costs_a_wait_and_walls() {
     // Without a shield it is not so held.
     let mut w = world("#####\n#@p.#\n#####\n");
     give(&mut w, "wt_knife");
-    ranks(&mut w, &[("long_blades", 1), ("shield_block", 9)]);
+    ranks(&mut w, &[("long_blades", 1), ("sword_and_board", 9)]);
     let outcome = use_(&mut w, "use:shield_wall");
     assert!(!outcome.took_turn);
     assert!(

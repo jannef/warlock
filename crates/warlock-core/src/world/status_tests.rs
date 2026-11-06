@@ -416,7 +416,10 @@ fn bites_poison_by_their_chance_drawing_only_below_a_sure_thing() {
         biter,
         player,
         AttackKind::Melee,
-        (&blow, &[]),
+        (
+            &blow,
+            &w.state.actors[&biter].melee(&w.content).on_hit.clone(),
+        ),
         &mut Vec::new(),
     );
     assert_eq!(w.state.rng, rng, "nothing drawn at 100 %");
@@ -447,7 +450,10 @@ fn bites_poison_by_their_chance_drawing_only_below_a_sure_thing() {
                     ActorId(1),
                     player,
                     AttackKind::Melee,
-                    (&blow, &[]),
+                    (
+                        &blow,
+                        &w.state.actors[&ActorId(1)].melee(&w.content).on_hit.clone(),
+                    ),
                     &mut Vec::new(),
                 );
                 assert_eq!(w.state.rng, expected, "one draw");

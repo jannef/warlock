@@ -32,7 +32,7 @@ damage = "4d8"
 damage_type = "slashing"
 name = "claws"
 verb = "rakes"
-to_hit = 3
+to_hit = 9
 on_hit = [{ status = "frightened", chance = 15, severity = 1 }]
 # Its gear (spec §8 "Creature gear"): a great axe, mail, and a helm, the best of them magic.
 [[creature.gear]]

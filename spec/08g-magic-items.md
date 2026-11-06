@@ -283,7 +283,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     of it is read ("You read the scroll labelled ZUNBAR." then "It is a scroll of fireball."),
     when the scroll of identify is read on a stack of it ("This is 2 scrolls of lightning!"), the
     scroll of identify's own type by its first read, when it is in the character's starting kit
-    (a chosen character knows their kit's scrolls), or by the dev `identify` (and F8). Reading an
+    (a chosen character of any class knows their kit's scrolls, a caster's random ones too), or by the dev `identify` (and F8). Reading an
     unknown scroll works as reading a known one does (a gamble: what it does is not known until
     it is done); a label changes no outcome, only names. A scroll that cannot be read (a
     sealed letter) has no label and is known on sight. **Identified is not learned**: a spell

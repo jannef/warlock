@@ -29,7 +29,7 @@ weight = 55000
 stats = { strength = 14, dexterity = 12, toughness = 16, intelligence = 17, willpower = 20, presence = 16 }
 base_hp = 26
 skills = { concentration = 50, spellcraft = 60 }
-attack = { damage = "1d8", damage_type = "slashing", name = "claws", verb = "claws" }
+attack = { damage = "1d8", damage_type = "slashing", name = "claws", verb = "claws", to_hit = 2 }
 resist = { poison = 50, cold = 25 }
 weapon_skills = { staves = 2 }
 on_eat = { message = "Bitter as the fen.", vomit = 60, harm = "1d4", skills = { decipher_script = { gives = 5, up_to = 30 } } }

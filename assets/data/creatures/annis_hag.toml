@@ -29,5 +29,5 @@ damage = "4d8"
 damage_type = "slashing"
 name = "iron claws"
 verb = "rakes"
-to_hit = 3
+to_hit = 8
 on_hit = [{ status = "held", chance = 20, difficulty = 18 }]

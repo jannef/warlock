@@ -30,5 +30,5 @@ damage = "5d12"
 damage_type = "bludgeoning"
 name = "slam"
 verb = "slams"
-to_hit = 6
+to_hit = 16
 on_hit = [{ disease = "grave_rot", chance = 25 }]

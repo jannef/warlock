@@ -195,7 +195,7 @@ impl WeaponSkills {
 }
 
 /// Starting ranks as data gives them: a fixed number or dice per skill (`{ long_blades = 2,
-/// shield_block = "1d2" }`), every result within 0 to [`MAX_RANK`].
+/// shield_bash = "1d2" }`), every result within 0 to [`MAX_RANK`].
 pub type RankDice = Vec<(WeaponSkillId, Dice)>;
 
 /// Rolls starting ranks from `rng`, in the order given (fixed numbers draw nothing); the same

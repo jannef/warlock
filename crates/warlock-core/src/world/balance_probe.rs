@@ -67,6 +67,7 @@
 //! (`levelup:auto` takes the first it may), the initiative check's Surprised after the first
 //! blow, potions, and resistances against spells.
 
+mod dragon;
 mod familiar;
 mod ranger;
 mod schools;
@@ -147,11 +148,7 @@ struct Build {
 const BUILDS: [Build; 8] = [
     Build {
         class: "warrior",
-        skills: &[
-            ("long_blades", 0),
-            ("sword_and_board", 0),
-            ("shield_block", 0),
-        ],
+        skills: &[("long_blades", 0), ("sword_and_board", 0)],
         extras: &[(StatUse::Exerted, 5.0)],
         casts_a_kill: false,
         school: None,
@@ -184,7 +181,7 @@ const BUILDS: [Build; 8] = [
     },
     Build {
         class: "priest",
-        skills: &[("maces", 0), ("sword_and_board", 0), ("shield_block", 0)],
+        skills: &[("maces", 0), ("sword_and_board", 0)],
         extras: &[(StatUse::Prayed, 0.2), (StatUse::Exerted, 2.0)],
         casts_a_kill: true,
         school: Some("restoration"),
@@ -223,11 +220,7 @@ const BUILDS: [Build; 8] = [
     // Measured for the zeal table alone (#910).
     Build {
         class: "paladin",
-        skills: &[
-            ("long_blades", 0),
-            ("sword_and_board", 0),
-            ("shield_block", 0),
-        ],
+        skills: &[("long_blades", 0), ("sword_and_board", 0)],
         extras: &[(StatUse::Exerted, 4.0)],
         casts_a_kill: false,
         school: None,
@@ -411,6 +404,18 @@ fn strike_mean(p: &Profile, t: &Target, rng: &mut Rng) -> f64 {
     total as f64 / f64::from(STRIKES)
 }
 
+/// The mean damage of one melee attack of `side` against `t`: its blow and each of its natural
+/// attacks after the first, misses included.
+fn melee_mean(side: &Side, t: &Target, rng: &mut Rng) -> f64 {
+    let first = strike_mean(&side.blow, t, rng);
+    first
+        + side
+            .more
+            .iter()
+            .map(|p| strike_mean(p, t, rng))
+            .sum::<f64>()
+}
+
 /// [`strike_mean`] with `wrath`, Holy wrath's die, on every hit as `World::holy_wrathed` adds
 /// it: of the blow's kind, resisted, never soaked, rolled once whatever a critical does.
 fn wrathed_mean(p: &Profile, wrath: Option<Dice>, t: &Target, rng: &mut Rng) -> f64 {
@@ -441,6 +446,9 @@ fn hit_pct(to_hit: i32, defence: &Defence) -> f64 {
 struct Side {
     blow: Profile,
     off: Option<Profile>,
+    /// Its natural attacks after the first, each struck in the same attack (a dragon's claws
+    /// and bite; `Actor::more_natural_blows`).
+    more: Vec<Profile>,
     target: Target,
     /// Its side caught unawares: flat-footed, nothing of its Dexterity or Dodge.
     flat: Target,
@@ -468,6 +476,9 @@ fn side_of(w: &World, id: ActorId) -> Side {
     Side {
         blow: a.melee(content),
         off: a.off_hand_blow(content).map(|(_, p)| p),
+        more: (a.more_natural_blows(content).into_iter())
+            .map(|(_, p)| p)
+            .collect(),
         flat: w.flat_footed(id, true, target.clone()),
         target,
         missile: w.target_against(id, true).defence,
@@ -1077,7 +1088,7 @@ fn fight_sides(
                 dealt += wrathed_mean(off, wrath, &target, rng);
             }
             let dealt = dealt * me.blows;
-            let taken = strike_mean(&them.blow, &me.target, rng) * them.blows;
+            let taken = melee_mean(them, &me.target, rng) * them.blows;
             per.push((
                 hit_pct(me.blow.to_hit, &target.defence),
                 hit_pct(them.blow.to_hit, &me.target.defence),
@@ -1192,6 +1203,7 @@ fn balance_probe() {
     tables::monsters(&p, &mut out);
     tables::fights(&p, &mut rng, &mut out);
     tables::depth(&p, &mut rng, &mut out);
+    dragon::dragons(&p, &mut Rng::stream(1099, "dragons"), &mut out);
     tables::bodies(&p, &mut rng, &mut out);
     tables::spells(&p, &mut out);
     tables::school_pace(&p, &mut out);

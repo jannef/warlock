@@ -32,7 +32,7 @@ damage = "3d10"
 damage_type = "piercing"
 name = "envenomed dagger"
 verb = "stabs"
-to_hit = 3
+to_hit = 8
 threat = 19
 crit = 3
 on_hit = [{ status = "poisoned", chance = 40, severity = 4 }, { status = "weakened", chance = 15, severity = 1 }]

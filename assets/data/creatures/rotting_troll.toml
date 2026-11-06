@@ -28,4 +28,5 @@ damage = "3d8"
 damage_type = "slashing"
 name = "claws"
 verb = "claws"
+to_hit = 4
 on_hit = [{ disease = "grave_rot", chance = 15 }]

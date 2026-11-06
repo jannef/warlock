@@ -35,7 +35,7 @@ damage = "3d12"
 damage_type = "cold"
 name = "touch"
 verb = "touches"
-to_hit = 6
+to_hit = 16
 on_hit = [{ drain = "willpower", points = 2, chance = 15, difficulty = 25 }]
 # Its gear (spec §8 "Creature gear"): the regalia he was crowned in.
 [[creature.gear]]

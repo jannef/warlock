@@ -18,6 +18,10 @@
 //!   `magic`: magic or rare, `rare`), unidentified like any other;
 //! - `prefer_trained`: among the alternatives, one of a weapon skill the character trains, if
 //!   any (a background story's heirloom, `data/background/`).
+//!
+//! A class may add `random_scrolls = { count = "1d3", below_level = 10 }`: that many spell
+//! scrolls more, each drawn uniformly among the scrolls of the spells below that spell level
+//! ([`RandomScrolls`]).
 
 use super::{Content, WeaponSkillId, object};
 use crate::character::Gender;
@@ -196,6 +200,54 @@ impl Kit {
     pub fn items(&self) -> &[KitItem] {
         &self.0
     }
+}
+
+/// A class's `random_scrolls` as written.
+#[derive(Clone, Debug, PartialEq, Eq, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct RandomScrollsSpec {
+    /// How many, rolled when the character is made.
+    count: crate::dice::Dice,
+    /// Only scrolls of spells of a spell level below this one.
+    below_level: u8,
+}
+
+/// Random spell scrolls a class's kit adds (the casters'): `count` of them, each one of
+/// `scrolls`, drawn uniformly.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct RandomScrolls {
+    pub count: crate::dice::Dice,
+    /// The scroll objects that may come, one per spell below the level, in spell order.
+    pub scrolls: Vec<super::ObjectId>,
+}
+
+/// Resolves a class's `random_scrolls` against `content`: the scroll of each spell of a spell
+/// level below `below_level` ([`Content::scroll_of`]), in spell order.
+pub(super) fn resolve_scrolls(
+    spec: &RandomScrollsSpec,
+    content: &Content,
+) -> Result<RandomScrolls, String> {
+    if spec.count.min() < 0 {
+        return Err(format!(
+            "`random_scrolls`: count `{}` may come out below 0",
+            spec.count
+        ));
+    }
+    let scrolls: Vec<super::ObjectId> = (0..content.spells().len())
+        .map(|i| super::SpellId(u16::try_from(i).expect("spell ids fit")))
+        .filter(|&spell| content.spell(spell).level < spec.below_level)
+        .filter_map(|spell| content.scroll_of(spell))
+        .collect();
+    if scrolls.is_empty() {
+        return Err(format!(
+            "`random_scrolls`: no spell scroll of a spell below level {}",
+            spec.below_level
+        ));
+    }
+    Ok(RandomScrolls {
+        count: spec.count,
+        scrolls,
+    })
 }
 
 /// Resolves the lines `specs` against `content` (its objects and weapon skills). `trainable` is

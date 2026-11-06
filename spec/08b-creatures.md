@@ -22,7 +22,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
      as a `melee` one. A creature with a throw (§8 "Ranged combat": "Creatures' throws", the
      giants' boulders) that is not next to its target throws first whenever the target is within
      the throw's range with a clear line of fire. A summoner ("Summoning" below) summons before
-     all of this whenever it may. A **lurker** (a type with `lurks = true`: the meenlock, the
+     all of this whenever it may. A `dragon` ("Dragons" below) breathes whenever its breath is
+     ready and the target stands in its cone with a clear line, and else fights as a `melee`
+     one. A **lurker** (a type with `lurks = true`: the meenlock, the
      barrow spider; `world/lurk.rs`) never steps toward the target it sees: it waits where it
      stands, aware of it, attacking once the target is beside it (or shooting or casting when it
      can from where it stands), until it has been harmed (hit points below its maximum), when it
@@ -135,6 +137,32 @@ developer notes (CLAUDE.md, `docs/dev/`).
   goblins and a warg!", "something" when they see none of it); an unseen summoner's creatures
   only as they appear in sight ("A skeleton appears!"); nothing seen, nothing said. Sight is the
   last turn's perception, so a summoning in the turn a door opens may go unseen.
+- **Dragons** (`warlock-core/src/world/breath.rs`, the rules; `content/breath.rs`, the data;
+  #1099): an enemy-only creature ability. A `combat = "dragon"` type has a `[creature.breath]`
+  (and only a dragon has one): `damage` (dice), `damage_type` (its element, one type),
+  `length` (the cone's, 2 to 12 cells), `cooldown` (6 to 600 s), `effect` (a burst effect drawn
+  over the cone), and optionally `noun` ("fire"; default "breath") and `verb` ("breathes fire";
+  default "breathes"). In step 2, after a summoning and a throw, a dragon breathes when its
+  cooldown status `breath` is off and its target stands in the cone it would breathe at it (the
+  spells' shared cone, `spell::cone_cells`: within `length`, a quarter turn wide, in line of
+  sight) with a clear line of fire (as a shot's); deciding draws nothing. Otherwise it fights as
+  a `melee` creature, so it never stands off. Breathing, it takes `ceil(cooldown / eases)`
+  degrees of `breath`, roars (`noise::Act::Roar`, heard as far as a howl), and the cone strikes
+  through `World::cast_cone`, the one place a cone strikes (Burning hands too): one roll for
+  everyone in it in ascending actor id order, no roll to hit, Evasion halving it, resistances
+  taking their share; then its damage type's spell type falls on those it harmed
+  (`World::spell_type_lands`: fire's burning, one in four). Its blows and kills are the
+  dragon's. The action costs a `cast`. Words: "The fire drake breathes fire!" when the player
+  sees it, then each blow seen as a spell's ("The fire burns you."); unseen, the roar is heard.
+- **Several natural attacks** (`warlock-core/src/world/natural.rs`; #1099): a creature type may
+  list its natural attacks (`[[creature.attack]]`, a dragon's two claws and a bite) instead of
+  one. Wielding no weapon, its melee attack strikes the first as its blow and then each of the
+  rest in turn, every one rolled on its own against the target's Defence (`World::attack_with`,
+  noise and all) until the target or the attacker is gone; together one attack's price. Each
+  blow's `Event::Attacked` names the natural attack after the first (`natural`, its index), so
+  it is said in its own words ("The fire drake claws you."). A natural attack's `on_hit` rides
+  on its own blow's profile (`Actor::melee`, `Actor::more_natural_blows`). Wielding a weapon,
+  the weapon's blow stands in for the first and the rest are not struck.
 - **Allies** (`warlock-core/src/world/ally.rs`, the rules; `content/ally.rs` and
   `data/allies.toml`, the numbers; #836, design `docs/design/druid-and-summons.md` §4 and §14):
   creatures on the player's side, a summon (the druid's calls, #839) or a companion (the

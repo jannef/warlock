@@ -26,3 +26,4 @@ damage = "1d6"
 damage_type = "bludgeoning"
 name = "bite"
 verb = "bites"
+to_hit = 1

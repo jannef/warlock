@@ -25,7 +25,7 @@ weight = 65000
 stats = { strength = 21, dexterity = 17, toughness = 24, intelligence = 19, willpower = 25, presence = 13 }
 base_hp = 58
 skills = { concentration = 97, spellcraft = 102 }
-attack = { damage = "3d8", damage_type = "force", name = "mind-lash", verb = "lashes", to_hit = 2, on_hit = [
+attack = { damage = "3d8", damage_type = "force", name = "mind-lash", verb = "lashes", to_hit = 7, on_hit = [
     { status = "frightened", chance = 15, severity = 1 },
     { status = "transfixed", chance = 15, severity = 1 },
 ] }

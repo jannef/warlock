@@ -136,8 +136,8 @@ its `energy.action`, not `cast`: Raging blocks spells, not actives). `Ability::a
 
 **Who may use one**: `Ability::Weapon`'s arm of `unavailable` (`ability.rs::weapon_unavailable`):
 triggered, `FiresByItself`; not `Actor::holds_for` (the abilities a blow's, or for a shot the
-missile weapon's, `attack_skills` teach, as `abilities_through` reads them; one shield blocking
-teaches while a shield is in a hand and the rank holds), `NotSoHeld`; its cooldown, `While`;
+missile weapon's, `attack_skills` teach, as `abilities_through` reads them: Shield wall is Sword and Board's
+and Two Shields', so it asks for a shield in hand through the style's grip), `NotSoHeld`; its cooldown, `While`;
 short of `Actor::weapon_stamina` (its stamina less `TalentMods::weapon_stamina`, Drillmaster,
 and `ability_stamina`, Armour-breaker's Sunder and Gap shot, and the worn `active_stamina` for
 stamina, of Ease's, global: whatever piece holds it, B1 #630; at least 1; the early return is

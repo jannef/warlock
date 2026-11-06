@@ -30,7 +30,7 @@ damage = "3d12"
 damage_type = "slashing"
 name = "claws"
 verb = "rakes"
-to_hit = 4
+to_hit = 10
 on_hit = [
     { status = "bleeding", chance = 20, severity = 2 },
     { status = "staggered", chance = 15, severity = 1 },

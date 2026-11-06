@@ -99,6 +99,8 @@ pub enum SoundKind {
     Voice,
     /// A howl: a Barghest's Hound's bay (spec §8 "Birth sign").
     Howl,
+    /// A roar: a dragon's breath (spec §8 "Creature behavior": "Dragons").
+    Roar,
     /// A heartbeat: Sense the quick's, a living creature near (spec §8 "Spells"). No noise anyone
     /// makes: only the player hears one, and never its exact place.
     Heartbeat,
@@ -124,6 +126,7 @@ impl SoundKind {
             SoundKind::Digging => "digging",
             SoundKind::Voice => "voice",
             SoundKind::Howl => "howl",
+            SoundKind::Roar => "roar",
             SoundKind::Heartbeat => "heartbeat",
             SoundKind::Bell => "bell",
             SoundKind::Explosion => "explosion",
@@ -144,6 +147,7 @@ impl SoundKind {
             SoundKind::Digging => "digging",
             SoundKind::Voice => "a voice",
             SoundKind::Howl => "a howl",
+            SoundKind::Roar => "a roar",
             SoundKind::Heartbeat => "a heartbeat",
             SoundKind::Bell => "a bell ring",
             SoundKind::Explosion => "an explosion",
@@ -168,6 +172,9 @@ pub const VOICE_NOISE: u16 = 50;
 /// How loud a howl is where the howler stands (spec §8 "Birth sign": Hound's bay): it carries
 /// well beyond a fight's noise.
 pub const HOWL_NOISE: u16 = 150;
+/// How loud a dragon's breath is where the dragon stands (spec §8 "Creature behavior":
+/// "Dragons"): a roar, heard as far as a howl.
+pub const ROAR_NOISE: u16 = 150;
 /// How loud a song is where the singer stands (spec §8 "Class abilities", the bard's songs):
 /// farther than a voice, well short of a howl.
 pub const SONG_NOISE: u16 = 80;
@@ -196,6 +203,8 @@ pub enum Act {
     ThrowVoice(Pos),
     /// Howls, where it stands (Hound's bay).
     Howl,
+    /// Roars, where it stands: a dragon's breath (`world/breath.rs`).
+    Roar,
     /// Sings a song, where it stands (the bard's songs, `world/song.rs`): a voice.
     Sing,
     /// Calls an order to its allies, where it stands (spec §8 "Allies"): a voice, as loud as
@@ -376,6 +385,7 @@ pub fn plain_noise(
         }
         Act::ThrowVoice(at) => (SoundKind::Voice, at, u32::from(VOICE_NOISE)),
         Act::Howl => (SoundKind::Howl, actor.pos, u32::from(HOWL_NOISE)),
+        Act::Roar => (SoundKind::Roar, actor.pos, u32::from(ROAR_NOISE)),
         Act::Sing => (SoundKind::Voice, actor.pos, u32::from(SONG_NOISE)),
         Act::Order => {
             let loudness = content.allies().map_or(VOICE_NOISE, |r| r.order_noise);

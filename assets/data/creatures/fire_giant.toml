@@ -29,7 +29,7 @@ damage = "4d8"
 damage_type = "slashing"
 name = "great sword"
 verb = "slashes"
-to_hit = 3
+to_hit = 8
 [creature.throw]
 object = "boulder"
 name = "burning boulder"

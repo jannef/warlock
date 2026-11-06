@@ -118,7 +118,12 @@ alternative with `object::parse_stacks` and `equipment::free_slot`); `RaceDef::k
 `kit::roll(content, character, trained, seed)` → `Pack { items, equipment }` from the stream
 `character/kit/<spec>`, the kits in `kits_of` order (class, race, animal, element), a line
 drawing only if `KitItem::applies` (one `rng.index` among alternatives, then
-`magic::loot::make` at `kit::ITEM_LEVEL` for a `magic` line); `Pack::put` joins stackables,
+`magic::loot::make` at `kit::ITEM_LEVEL` for a `magic` line), then last the class's random spell
+scrolls (#1104: `ClassDef::random_scrolls`, `random_scrolls = { count = "1d3", below_level = 10 }`
+in the class file, resolved by `content/kit.rs::resolve_scrolls` into `RandomScrolls { count,
+scrolls }`, the scroll of each spell below the level, `Content::scroll_of`, in spell order: the
+count rolled, then one `rng.index` per scroll, each carried; the wizard and witch 1d3, the priest,
+druid, and ranger 1d2, the bard 1d4, none else); `Pack::put` joins stackables,
 `Pack::equip` uses `equipment::free_slot`. `CharacterSpec::start` returns it as `Start::kit`
 (`weapon_skills` now also returns the class-trained set: its fixed ranks and the picked
 choice sets). **Who gets it**: `World::start_run(content, scenario, seed, character, name,
@@ -135,7 +140,8 @@ the halfling's apples gave way to it, so the weakest halfling paladin stays Unbu
 `Replay::new` copies it into the replay. `kit::starting_pack(content, scenario, kit)` is the one
 place the starting pack is put together (the kit, if any, else the scenario's `wield`, then `carry` on top): used by
 `World::start_run` and the summary (`ui/chargen_screen.rs::kit_words`, names from
-`Pack::names`). A scenario's `spells` (`ScenarioDef::spells`, `spells = ["haste"]`, resolved by
+`Pack::names`). Every scroll and potion of the kit is known by type from the start (`World::begin`
+puts them in `WorldState::known_scrolls`; docs/dev/scrolls.md). A scenario's `spells` (`ScenarioDef::spells`, `spells = ["haste"]`, resolved by
 the loader, an unknown id refused) go into `Actor::spells` in `World::begin`, for its own
 character and a chosen one alike, on top of the class's: known from the start as a studied spell
 is (saved and hashed as `Actor::spells` always is). Only the test world's `circles` uses it, and
@@ -144,7 +150,8 @@ it is the one built-in scenario with no `character` (it gives the eyes, stats, h
 heirloom; #697) come on top as they are taken, after the pack (`world/heirloom.rs`,
 docs/dev/progression.md "Creation picks"): the summary's kit list does not name them. `rot::made_at` dates the food as before. Tests: `content/kit.rs` (parsing,
 refusals), `kit.rs` (Twin Blades and Duelist, the berserker's pick, deterministic choices, no
-other roll moves, every worn or wielded item finds its slot unless an earlier line took it (a
+other roll moves, the casters' random scrolls within their dice and below level 10, every
+starting scroll and potion known and named in the `inventory` dump, every worn or wielded item finds its slot unless an earlier line took it (a
 race's bow or gauntlets after the class's own: an elven ranger, a dwarven paladin), nobody
 Strained at the worst case (`least_score`) and an ordinary character (`ordinary_score`, dice at
 their mean, no sign) Unburdened but for the aristocrat's and merchant's wealth and a small

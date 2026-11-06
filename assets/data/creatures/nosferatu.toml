@@ -32,7 +32,7 @@ damage = "4d6"
 damage_type = "piercing"
 name = "bite"
 verb = "bites"
-to_hit = 3
+to_hit = 8
 on_hit = [
     { drain = "toughness", points = 1, chance = 15, check = "toughness", difficulty = 19 },
     { disease = "filth_fever", chance = 15 },

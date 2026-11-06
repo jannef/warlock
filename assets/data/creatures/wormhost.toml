@@ -29,5 +29,5 @@ damage = "3d8"
 damage_type = "bludgeoning"
 name = "fist"
 verb = "pummels"
-to_hit = 2
+to_hit = 6
 on_hit = [{ disease = "burrowing_worms", chance = 25 }]

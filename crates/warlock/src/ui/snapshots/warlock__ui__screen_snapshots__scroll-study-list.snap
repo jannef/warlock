@@ -17,12 +17,12 @@ expression: "render(case, content.clone())"
           │ > a - ? a scroll of light (Light: certain)                             50 g  │
           │   b - ? 4 scrolls of identify (Identify: easy)                        200 g  │
           │   c - ? 3 scrolls of frost (Frost: easy)                              150 g  │
-          │   d - ? 2 scrolls of fireball (Fireball: a struggle)                  100 g  │
-          │   e - ? 2 scrolls of lightning (Lightning bolt: a struggle)           100 g  │
+          │   d - ? a scroll of sleep (Sleep: easy)                                50 g  │
+          │   e - ? 2 scrolls of fireball (Fireball: a struggle)                  100 g  │
+          │   f - ? 2 scrolls of lightning (Lightning bolt: a struggle)           100 g  │
           │                                                                              │
-          │ a-e or Enter study   Esc cancel                                              │
+          │ a-f or Enter study   Esc cancel                                              │
           └──────────────────────────────────────────────────────────────────────────────┘
-
 
 
 

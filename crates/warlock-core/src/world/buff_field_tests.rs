@@ -304,7 +304,7 @@ fn ranger() -> World {
         true,
     )
     .expect("world");
-    for action in parse_actions("move:SW*2 pickup equip:off_hand:l").expect("actions") {
+    for action in parse_actions("move:SW*2 pickup equip:off_hand:n").expect("actions") {
         w.apply(&action);
     }
     w

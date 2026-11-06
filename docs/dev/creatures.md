@@ -46,7 +46,7 @@ without it everyone is neutral, but then no creature may name a faction; monster
 player but for the two story feuds, Seelie and wrathful fey against the Unseelie and demons
 against devils, #612, the tribes' old feuds kept as comments; a level that wants a brawl gives
 one side a faction of its own by a legend override, as the arena's rats are `arena_rats`) and per creature type
-`faction`, `vision`, `sight`, `combat` (`melee`/`ranged`/`caster`), `range`, `opens_doors`, `lurks`
+`faction`, `vision`, `sight`, `combat` (`melee`/`ranged`/`caster`/`dragon`), `range`, `opens_doors`, `lurks`
 (unharmed, it waits where it stands for a hostile it sees to come beside it; `world/lurk.rs`, one
 branch on `ai.rs::fight`'s plan; the meenlock and the barrow spider),
 `alignment` and `race` (`docs/dev/alignment.md`; read a creature's with `Actor::nature`, never the
@@ -79,6 +79,34 @@ messages built in `World::perceive_events` (unseen ends are "something"). The ap
 (`ui/effects.rs`, `particles` switch); `Event::Died` has no effect of its own. No creature
 behavior may use randomness (combat rolls are the rules', from the gameplay stream); tie-breaks
 are by distance, direction order, and actor id.
+
+Dragons and several natural attacks (spec §8 "Creature behavior": "Dragons", "Several natural
+attacks", #1099). **Data**: `Combat::Dragon` (`combat = "dragon"`) and `[creature.breath]`
+(`content/breath.rs`: `BreathSpec` resolved in the creature loop by `BreathSpec::resolve` into
+`CreatureDef::breath: Option<Breath>`, the damage type and the `breath` status's degrees,
+`ceil(cooldown / eases)`; refused out of bounds, with an unknown type, or without the status;
+`check_combat` refuses a dragon without a breath and a breath on any other type;
+`breath::check_effects` runs once effects are loaded: a burst effect). Natural attacks are one
+table or a list (`creature::NaturalAttacks`, its own `Deserialize`: a table or an array of
+tables, so parse errors stay the field's): `CreatureDef::attack` is the first,
+`CreatureDef::more_attacks` the rest, `CreatureDef::natural_attacks()` all in order. **Rules**:
+`world/breath.rs` (`World::breathes_at`, one branch in `ai.rs::fight` after the summoning and
+the throw, `Plan::Breathe(at)`; `World::creature_breathes`: the status, `noise::Act::Roar`, the
+words, `World::cast_cone` in `spell.rs` (the one place a cone strikes, shared with Burning
+hands; reuse it for any creature's cone), `say_spell`, `spell_type_lands`); the cooldown is a
+status in the actor's `effects`, saved as every status is. `world/natural.rs`
+(`World::more_natural_blows`, one line in `fight.rs::attack` after the second blow:
+`Actor::more_natural_blows` gives each later attack's profile, built by `Actor::melee_with`;
+each is `World::attack_with`, and its `Event::Attacked` gets `natural: Some(index)`, which
+`perceive.rs` says with that attack's words). A natural attack's `on_hit` now rides on its
+blow's profile (`Actor::melee_with` sets `Profile::on_hit` first, before the affixes'), so
+`status.rs::on_hit_of` reads only throws. **Wiki**: `creature_attacks` lists a row per natural
+attack, `creature_breaths` (`creature-breaths.md`, "Breath" in `creature-numbers.md`); the
+roar in the hearing table. **Probe**: the monsters' sides sum every natural attack's damage
+(`balance_probe.rs::Side::more`), and `balance_probe/dragon.rs` measures the fire drake against
+the players of its level (docs/balance.md "Dragons"). **Tests**: `world/breath_tests.rs`.
+Adding a dragon: `combat = "dragon"`, a `[creature.breath]` of its element with a burst effect
+of that element in `data/effects.toml`, `[[creature.attack]]`s, and the tag `dragon`.
 
 Natural Protection by body and level (spec §8 "Natural Protection by body and level", #563,
 `docs/design/combat-progression.md` §8): data only. Every type's `natural.protection` is the

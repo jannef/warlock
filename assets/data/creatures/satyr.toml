@@ -18,7 +18,7 @@ hearing = 16
 weight = 60000
 stats = { strength = 15, dexterity = 12, toughness = 16, intelligence = 14, willpower = 14, presence = 16 }
 base_hp = 25
-attack = { damage = "2d6", damage_type = "bludgeoning", name = "butt", verb = "butts" }
+attack = { damage = "2d6", damage_type = "bludgeoning", name = "butt", verb = "butts", to_hit = 2 }
 on_eat = { message = "It tastes of goat and wine.", vomit = 20 }
 # Its gear (spec §8 "Creature gear"): its music.
 [[creature.gear]]

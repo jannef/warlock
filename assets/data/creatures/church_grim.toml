@@ -30,5 +30,5 @@ damage = "4d8"
 damage_type = "piercing"
 name = "bite"
 verb = "bites"
-to_hit = 3
+to_hit = 9
 on_hit = [{ status = "frightened", chance = 20, severity = 2 }]

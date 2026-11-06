@@ -12,8 +12,9 @@
 //! does not see is replaced by where the effect comes into view (a burst's center, the first cell
 //! of a bolt's path seen); an event with no cell seen is dropped.
 //!
-//! **Casting** ([`World::cast_burst`], [`World::cast_bolt`]): the one place a burst or a bolt
-//! does what it does, for traps (spec §8 "Traps") and scrolls (spec §8 "Scrolls") alike: the
+//! **Casting** ([`World::cast_burst`], [`World::cast_bolt`], [`World::cast_cone`]): the one
+//! place a burst, a bolt, or a cone does what it does, for traps (spec §8 "Traps"), scrolls
+//! (spec §8 "Scrolls"), spells, and a dragon's breath alike: the
 //! effect's event, one roll of its damage for everyone it reaches (in ascending actor id order),
 //! then a burst's blast against walls and its heat or frost (its own, else its spell type's,
 //! `spell_type.rs`, for an actor's). Only who cast it differs
@@ -24,8 +25,9 @@ use super::fight::Harm;
 use super::{Actor, ActorId, Spent, World};
 use crate::action::{AttackKind, Event, SpellShape};
 use crate::combat::{Blow, Strike};
-use crate::content::{Bolt, Burst, BurstIce, EffectShape, TrapId, TrapNoise};
+use crate::content::{Bolt, Burst, BurstIce, DamageTypeId, EffectShape, TrapId, TrapNoise};
 use crate::damage::Damage;
+use crate::dice::Roll;
 use crate::fov::radius2;
 use crate::geom::Pos;
 use crate::ice::Shock;
@@ -352,6 +354,47 @@ impl World {
         roll
     }
 
+    /// A cone cast by `caster` from `here` toward `at`, `length` cells long ([`cone_cells`]):
+    /// its `effect` ([`Event::Spell`], drawn as a burst around `here` over the cone's cells;
+    /// none for an empty id), then one roll of `roll` (with `reroll`) for everyone in it, in
+    /// ascending actor id order, doing damage of `kind` as an area's: no roll to hit, Evasion
+    /// halving it, resistances taking their share ([`World::spell_hurts`]). The one place a
+    /// cone strikes: Burning hands (`cast.rs`) and a dragon's breath (`breath.rs`). What it
+    /// rolled.
+    pub(super) fn cast_cone(
+        &mut self,
+        caster: Caster,
+        (here, at, length): (Pos, Pos, i32),
+        (effect, roll, reroll, kind): (&str, Roll, u32, Option<DamageTypeId>),
+        events: &mut Vec<Event>,
+    ) -> i32 {
+        let level = self.state.current();
+        let opaque = |p: Pos| level.is_opaque(&self.content, p);
+        let cells = cone_cells(here, at, length, opaque);
+        if !effect.is_empty() {
+            events.push(Event::Spell {
+                effect: effect.to_string(),
+                origin: here,
+                shape: SpellShape::Burst {
+                    center: here,
+                    radius: length,
+                },
+                cells: cells.clone(),
+            });
+        }
+        let roll = roll.roll(&mut self.state.rng, reroll);
+        let level = self.state.current_level.clone();
+        let caught: Vec<ActorId> = (self.state.actors.values())
+            .filter(|a| a.level == level && cells.contains(&a.pos))
+            .map(|a| a.id)
+            .collect();
+        for id in caught {
+            let damage = Damage::new(roll, kind);
+            self.spell_hurts(caster, id, (here, false), damage, events);
+        }
+        roll
+    }
+
     /// What of a burst's or a bolt's `damage` reaches actor `id`: with Evasion (spec §8
     /// "Talents") its share, rounded down (a spell that does nothing more is resisted).
     pub(super) fn evaded(&self, id: ActorId, damage: Damage) -> Damage {
@@ -447,6 +490,7 @@ impl World {
             strike: Some(blow.strike),
             with: None,
             damage: damage.kind,
+            natural: None,
         });
         if by == self.state.player && target != by {
             self.provoke(target);

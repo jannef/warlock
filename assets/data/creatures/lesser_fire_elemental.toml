@@ -28,3 +28,4 @@ damage = "2d6"
 damage_type = "fire"
 name = "touch"
 verb = "burns"
+to_hit = 2

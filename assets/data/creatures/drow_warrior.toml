@@ -28,6 +28,7 @@ damage = "2d8"
 damage_type = "slashing"
 name = "envenomed short sword"
 verb = "cuts"
+to_hit = 3
 on_hit = [{ status = "poisoned", chance = 20, severity = 2 }]
 # Its gear (spec §8 "Creature gear"): armour and coins, never a weapon (its venom rides on
 # its natural attack, which a wielded weapon would replace).

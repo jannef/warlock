@@ -8,14 +8,17 @@
 //! draw to pick among its alternatives when it has several, then, for a `magic` line, the loot
 //! draws that make it ([`loot::make`] at item level [`ITEM_LEVEL`]). Each item goes into the pack
 //! (a stackable one joins a stack of the same), and a `wield` or `wear` line's item into the first
-//! free slot it fits; one that finds none stays in the pack.
+//! free slot it fits; one that finds none stays in the pack. Last come the class's random spell
+//! scrolls, if it has any (`random_scrolls`, the casters'): its count rolled, then one draw per
+//! scroll among the spells below its level, each carried.
 //!
 //! Who starts with it: a run whose character the player chose (New run's character creation,
 //! `--character` or `--name` in the game and `warlock-cli`, a replay that says so) starts with the
 //! kit and the scenario's `carry` on top; a run on the scenario's own character that nobody chose
 //! (`--scenario` alone, tests, golden walks) with the scenario's `carry` alone
 //! ([`starting_pack`], [`crate::world::World::start_run`]). Food learns when it was made when the
-//! run starts (`rot::made_at`), and magic items are unidentified like any loot.
+//! run starts (`rot::made_at`), magic items are unidentified like any loot, and the kit's scrolls
+//! and potions are known by type from the start (`World::begin`).
 
 use crate::character::Character;
 use crate::content::{Content, Keep, Kit, ScenarioDef, WeaponSkillId};
@@ -125,6 +128,16 @@ pub fn roll(
                     pack.equip(at, content);
                 }
             }
+        }
+    }
+    // The class's random spell scrolls, last, so no line's draw moves.
+    if let Some(random) = content
+        .class(&spec.class)
+        .and_then(|c| c.random_scrolls.as_ref())
+    {
+        for _ in 0..random.count.roll(&mut rng) {
+            let scroll = random.scrolls[rng.index(random.scrolls.len())];
+            pack.put(Stack::new(scroll, 1), content);
         }
     }
     pack
@@ -290,13 +303,17 @@ mod tests {
         }
     }
 
-    /// `text` without its `kit` lines (one line or a block up to its closing `]`).
+    /// `text` without its `kit` lines (one line or a block up to its closing `]`) and its
+    /// `random_scrolls`.
     fn without_kits(text: &str) -> String {
         let mut out = String::new();
         let mut in_kit = false;
         for line in text.lines() {
             if in_kit {
                 in_kit = line != "]";
+                continue;
+            }
+            if line.starts_with("random_scrolls = ") {
                 continue;
             }
             if line.starts_with("kit = [") {
@@ -445,6 +462,17 @@ mod tests {
             .unwrap_or(0)
     }
 
+    /// The most a class's random spell scrolls could weigh: its most of the heaviest.
+    fn random_scrolls(class: &ClassDef) -> u64 {
+        class.random_scrolls.as_ref().map_or(0, |r| {
+            let heaviest = (r.scrolls.iter())
+                .map(|&o| Stack::one(o).weight(&CONTENT))
+                .max()
+                .unwrap_or(0);
+            heaviest * u64::try_from(r.count.max()).expect("a count")
+        })
+    }
+
     /// The most the heritage talents (#697) could add for `race` carrying `gold` coins: Family
     /// wealth's gold and most gems, and Father's sword's heirloom.
     fn heritage(race: &str, gold: u64) -> u64 {
@@ -544,7 +572,8 @@ mod tests {
                         let kit: u64 = (lines(&CONTENT, &s).into_iter())
                             .filter(|l| l.applies(gender, &trained))
                             .map(heaviest)
-                            .sum();
+                            .sum::<u64>()
+                            + random_scrolls(class);
                         // The heritage talents' gold, gems, and heirloom on top, and the
                         // heaviest line of a background story (but for the jokes: their
                         // wealth and a weapon by fate may strain the weakest of them).
@@ -596,6 +625,110 @@ mod tests {
         }
         // The rapier only perhaps.
         assert!(rapiers[0] > 0 && rapiers[1] > 0, "{rapiers:?}");
+    }
+
+    /// How many scrolls the kit lines of `s` give (each line's first alternative: the wizard's
+    /// attack scroll is one whichever it is).
+    fn fixed_scrolls(s: &Start) -> u32 {
+        (lines(&CONTENT, s).into_iter())
+            .flat_map(|l| &l.one_of[0])
+            .filter(|st| CONTENT.object(st.object).read.is_some())
+            .map(|st| st.count)
+            .sum()
+    }
+
+    #[test]
+    fn casters_start_with_random_low_spell_scrolls_within_their_dice() {
+        // The owner's table (#1104): every other class gets none.
+        let dice = |class: &str| match class {
+            "wizard" | "witch" => (1, 3),
+            "priest" | "druid" | "ranger" => (1, 2),
+            "bard" => (1, 4),
+            _ => (0, 0),
+        };
+        for class in CONTENT.classes() {
+            let (least, most) = dice(&class.id);
+            let mut seen = std::collections::BTreeSet::new();
+            for seed in 0..120 {
+                let s = start(&CONTENT, &format!("human,female,{}", class.id), seed);
+                let scrolls: u32 = (s.kit.items.iter())
+                    .filter(|st| CONTENT.object(st.object).read.is_some())
+                    .map(|st| st.count)
+                    .sum();
+                let extra = scrolls - fixed_scrolls(&s);
+                assert!((least..=most).contains(&extra), "{}: {extra}", class.id);
+                seen.insert(extra);
+                // What a kit line does not name is a spell scroll below spell level 10.
+                let named = |o| {
+                    lines(&CONTENT, &s)
+                        .iter()
+                        .any(|l| l.one_of.iter().flatten().any(|st| st.object == o))
+                };
+                for stack in &s.kit.items {
+                    let Some(crate::content::Reading::Cast(cast)) =
+                        &CONTENT.object(stack.object).read
+                    else {
+                        continue;
+                    };
+                    if !named(stack.object) {
+                        assert!(CONTENT.spell(cast.spell).level < 10, "{}", class.id);
+                    }
+                }
+            }
+            assert_eq!(seen, (least..=most).collect(), "{}", class.id);
+        }
+        // The pool: the scroll of each spell below level 10, once.
+        let pool = &(CONTENT.class("wizard").expect("wizard").random_scrolls)
+            .as_ref()
+            .expect("the wizard's")
+            .scrolls;
+        let below = (CONTENT.spells().iter()).filter(|s| s.level < 10).count();
+        assert_eq!(pool.len(), below);
+        assert!(pool.contains(&id("scroll_of_light")) && !pool.contains(&id("scroll_of_fireball")));
+        for class in ["paladin", "warrior"] {
+            assert!(CONTENT.class(class).expect(class).random_scrolls.is_none());
+        }
+    }
+
+    #[test]
+    fn every_starting_scroll_and_potion_is_known() {
+        // Every class, a few runs each: whatever is read or drunk in the starting pack (the
+        // kit's lines, the random scrolls, a story's things) is known by type and named so.
+        for class in CONTENT.classes() {
+            for seed in 0..4 {
+                let spec: CharacterSpec = (format!("elf,male,{}", class.id)).parse().expect("spec");
+                let world = World::start_run(
+                    CONTENT.clone(),
+                    "world",
+                    Some(seed),
+                    Some(&spec),
+                    None,
+                    true,
+                )
+                .expect("world");
+                let dump = crate::dump::ascii(&world, &[crate::dump::Layer::Inventory]);
+                for stack in &world.state().player().inventory {
+                    let def = CONTENT.object(stack.object);
+                    if def.read.is_none() && def.drink.is_none() {
+                        continue;
+                    }
+                    assert!(
+                        world.state().known_scrolls.contains(&stack.object),
+                        "{}: {}",
+                        class.id,
+                        def.id
+                    );
+                    // By its true name ("2 scrolls of shatter": what follows "of").
+                    let kind = def.name.rsplit(" of ").next().expect("a name");
+                    assert!(
+                        dump.contains(&format!(" of {kind}")),
+                        "{}: {} in\n{dump}",
+                        class.id,
+                        def.name
+                    );
+                }
+            }
+        }
     }
 
     #[test]

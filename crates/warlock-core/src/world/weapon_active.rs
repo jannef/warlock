@@ -6,7 +6,7 @@
 //!
 //! **Refusals first, then the costs.** An active is refused, taking no time and spending
 //! nothing, without the ability, for a triggered one, while what the player holds is not for it
-//! ([`Actor::holds_for`]: a weapon of its skill, its style's grip, a shield for shield blocking's),
+//! ([`Actor::holds_for`]: a weapon of its skill, its style's grip),
 //! short of stamina, while a status blocks the action it is, without the aim it asks, and by its
 //! own refusals (nobody hostile there, no room to lunge, nothing to shoot). Then it pays both its
 //! costs ([`World::pay_active`]): its stamina through `World::spend_resource` (less Drillmaster's
@@ -70,7 +70,7 @@ pub(super) enum Aimed {
 impl Actor {
     /// Whether what it holds now is for weapon active `id` (spec §8 "Weapon skills"): the
     /// abilities its attack of that kind brings (a blow's weapon skill and style, a shot's) teach
-    /// it, or, for one shield blocking teaches, it holds a shield and its rank teaches it.
+    /// it.
     pub(crate) fn holds_for(&self, content: &Content, id: WeaponAbilityId) -> bool {
         let ability = content.weapon_ability(id);
         let Some(active) = ability.active else {
@@ -81,25 +81,7 @@ impl Actor {
             _ => AttackKind::Melee,
         };
         let skills = self.attack_skills(content, kind, None);
-        if self.abilities_through(content, skills).contains(&id) {
-            return true;
-        }
-        let block = content
-            .weapon_skills()
-            .of_role(crate::content::Role::ShieldBlock);
-        block.is_some_and(|block| {
-            ability.skills.contains(&block)
-                && self.holds_shield(content)
-                && self.ability_rank(content, block) >= ability.rank
-        })
-    }
-
-    /// Whether it holds a shield in a hand.
-    fn holds_shield(&self, content: &Content) -> bool {
-        (self.equipment.items().into_iter())
-            .filter(|&(slot, _)| content.slot(slot).hand)
-            .filter_map(|(_, item)| self.inventory.get(item))
-            .any(|s| content.object(s.object).shield > 0)
+        self.abilities_through(content, skills).contains(&id)
     }
 
     /// The stamina weapon active `id` costs it: its own, less its talents' discounts

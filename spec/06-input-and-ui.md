@@ -468,8 +468,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     no default key.
 - **Weapon skills** (`W`; M22, §8 "Weapon skills", "Fighting styles"), ADOM-like: the player's
   weapon skills and fighting styles in four sections in data order — Melee (the `melee` and
-  `unarmed` skills), Missile and thrown (`launcher`, `thrown`), Shields (`shield_block`,
-  `shield_bash`), Fighting styles (`style`, but the caster styles) — each with its name, its rank (0 to 10; untrained
+  `unarmed` skills), Missile and thrown (`launcher`, `thrown`), Shields (`shield_bash`), Fighting styles (`style`, but the caster styles) — each with its name, its rank (0 to 10; untrained
   skills dimmer, so what the player knows stands out), and a faint bar of ten cells (`━` earned,
   `─` still to earn, muted colors) of their marks toward the next rank (none at rank 10). The
   styles the player fights in now (`PerceptionView::own_styles_in_use`: their hands', their

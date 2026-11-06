@@ -27,4 +27,5 @@ damage = "2d8"
 damage_type = "piercing"
 name = "bite"
 verb = "bites"
+to_hit = 4
 on_hit = [{ status = "sluggish", chance = 30, severity = 1 }]

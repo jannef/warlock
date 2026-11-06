@@ -29,4 +29,5 @@ damage = "1d10"
 damage_type = "cold"
 name = "touch"
 verb = "touches"
+to_hit = 3
 on_hit = [{ drain = "willpower", points = 1, chance = 10, check = "willpower", difficulty = 14 }]

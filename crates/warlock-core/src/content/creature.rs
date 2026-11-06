@@ -3,6 +3,7 @@
 use super::DamageTypeId;
 use super::anim::GlyphAnim;
 use super::animated::AnimatedDef;
+use super::breath::{Breath, BreathSpec};
 use super::damage_type::TypeNames;
 use super::disease::DiseaseId;
 use super::faction::FactionId;
@@ -88,7 +89,8 @@ fn yes() -> bool {
 pub struct CreatureId(pub u16);
 
 /// How a creature fights (spec §8 "Creature behavior"): up close, shooting with the missile
-/// weapon it has ready, or casting (spells are intents only: nothing is damaged).
+/// weapon it has ready, casting (spells are intents only: nothing is damaged), or breathing
+/// its element when its breath is ready and fighting up close while it is not.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
 pub enum Combat {
@@ -99,6 +101,9 @@ pub enum Combat {
     Ranged,
     /// Casts spells from up to its `range` away, with a clear line of fire.
     Caster,
+    /// Breathes its `[creature.breath]` at a hostile within the cone's reach whenever it is
+    /// ready (`world/breath.rs`), else closes in and attacks from an adjacent cell.
+    Dragon,
 }
 
 /// Whether the player may swap places with a creature of a type that is not hostile to them
@@ -216,8 +221,11 @@ pub(super) struct CreatureSpec {
     /// items"); default 0.
     #[serde(default)]
     pub loot: u8,
-    /// Its natural attack, used when it wields no weapon.
-    pub attack: Option<NaturalAttackSpec>,
+    /// Its natural attack, used when it wields no weapon: one (`[creature.attack]`), or several
+    /// each struck in turn (`[[creature.attack]]`, a dragon's claws and bite).
+    pub attack: Option<NaturalAttacks>,
+    /// Its breath (spec §8 "Creature behavior": "Dragons"): a `combat = "dragon"` type's.
+    pub breath: Option<BreathSpec>,
     /// Its throw (spec §8 "Ranged combat": "Creatures' throws"): a giant's boulders.
     pub throw: Option<ThrowSpec>,
     /// Its summoning (spec §8 "Summoning"): the creatures it calls forth.
@@ -502,6 +510,38 @@ pub(super) struct NaturalAttackSpec {
     pub on_hit: Vec<OnHitSpec>,
 }
 
+/// A creature type's natural attacks as written: one table (`[creature.attack]`, `attack = {
+/// ... }`) or a list of them (`[[creature.attack]]`), each struck in turn.
+#[derive(Clone, Debug)]
+pub(super) struct NaturalAttacks(pub Vec<NaturalAttackSpec>);
+
+impl<'de> Deserialize<'de> for NaturalAttacks {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        use serde::de::value::{MapAccessDeserializer, SeqAccessDeserializer};
+        struct OneOrMany;
+        impl<'de> serde::de::Visitor<'de> for OneOrMany {
+            type Value = NaturalAttacks;
+            fn expecting(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+                f.write_str("a natural attack, or a list of them")
+            }
+            fn visit_map<A>(self, map: A) -> Result<Self::Value, A::Error>
+            where
+                A: serde::de::MapAccess<'de>,
+            {
+                let one = NaturalAttackSpec::deserialize(MapAccessDeserializer::new(map))?;
+                Ok(NaturalAttacks(vec![one]))
+            }
+            fn visit_seq<A>(self, seq: A) -> Result<Self::Value, A::Error>
+            where
+                A: serde::de::SeqAccess<'de>,
+            {
+                Vec::deserialize(SeqAccessDeserializer::new(seq)).map(NaturalAttacks)
+            }
+        }
+        deserializer.deserialize_any(OneOrMany)
+    }
+}
+
 /// A creature's natural attack (spec §8 "Combat"): what it does, and the words for it.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct NaturalAttack {
@@ -646,6 +686,8 @@ pub(super) struct Resolved {
     pub stats: Stats,
     pub skills: Skills,
     pub attack: Option<NaturalAttack>,
+    pub more_attacks: Vec<NaturalAttack>,
+    pub breath: Option<Breath>,
     pub throw: Option<Throw>,
     pub weapon_skills: WeaponSkills,
     pub resist: Vec<(DamageTypeId, i32)>,
@@ -692,6 +734,8 @@ impl CreatureSpec {
             rarity: r.rarity,
             loot: self.loot,
             attack: r.attack,
+            more_attacks: r.more_attacks,
+            breath: r.breath,
             throw: r.throw,
             summon: None,
             summon_spec: self.summon,
@@ -724,6 +768,12 @@ impl CreatureSpec {
 }
 
 impl CreatureDef {
+    /// Its natural attacks in the order it strikes them: the first ([`CreatureDef::attack`]),
+    /// then the rest.
+    pub fn natural_attacks(&self) -> impl Iterator<Item = &NaturalAttack> {
+        self.attack.iter().chain(&self.more_attacks)
+    }
+
     /// The verb of its death line: its type's `dies`, else "dies".
     pub fn death_verb(&self) -> &str {
         self.dies.as_deref().unwrap_or("dies")
@@ -837,7 +887,16 @@ pub struct CreatureDef {
     /// Gameplay: the chance in percent that it drops a magic or rare item where it dies.
     pub loot: u8,
     /// Gameplay: its natural attack, used when it wields no weapon; `None`: bare hands (1d3).
+    /// With several (`[[creature.attack]]`), the first of them.
     pub attack: Option<NaturalAttack>,
+    /// Gameplay: its natural attacks after the first, each struck in turn after it in the same
+    /// melee attack while it wields no weapon (a dragon's claws and bite;
+    /// [`CreatureDef::natural_attacks`] is them all). Rules only (the wiki states them).
+    pub more_attacks: Vec<NaturalAttack>,
+    /// Gameplay: its breath (spec §8 "Creature behavior": "Dragons"), a `combat = "dragon"`
+    /// type's: the cone of its element it breathes when the cooldown is off. Rules only (the
+    /// wiki states it).
+    pub breath: Option<Breath>,
     /// Gameplay: its throw, a natural ranged attack with no ammunition (spec §8 "Ranged combat":
     /// "Creatures' throws"); `None`: it throws nothing. Rules only (the wiki states it).
     pub throw: Option<Throw>,
