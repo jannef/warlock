@@ -228,6 +228,11 @@ pub struct Actor {
     /// counts toward that summoner's live summons. Left out of saves while `None`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub summoner: Option<ActorId>,
+    /// What it was made of, a half cut off one of its type or what crawled out of a corpse
+    /// (docs/design/monster-dread.md §5.5, `world/split.rs`): its kill pays less and counts for
+    /// no quest. Left out of saves while `None`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub split_from: Option<super::split::Split>,
     /// Whose ally it is, and what it was told (spec §8 "Allies", `world/ally.rs`): a summon or a
     /// companion on the player's side. `None` for every other actor, and left out of saves
     /// then, so runs without allies save and hash as before.

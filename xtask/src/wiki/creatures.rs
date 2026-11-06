@@ -622,6 +622,55 @@ pub(super) fn creature_summons(content: &Content) -> String {
     out
 }
 
+/// What cuts each creature in two, and what crawls out of it when it dies
+/// (docs/design/monster-dread.md §5.5): the kinds of damage that split it and the fewest hit
+/// points a half keeps, then what its corpse lets out, how many, and how far from it.
+pub(super) fn creature_splits(content: &Content) -> String {
+    let mut out = String::from(
+        "| Creature | Splits under | A half keeps at least | Dies into | How many | Within |\n\
+         |---|---|---:|---|:---:|---:|\n",
+    );
+    for (_, c) in listed(content) {
+        if c.splits.is_none() && c.dies_into.is_none() {
+            continue;
+        }
+        let (on, least) = match &c.splits {
+            Some(s) => (
+                (s.on.iter())
+                    .map(|&k| damage_link(content, k))
+                    .collect::<Vec<_>>()
+                    .join(", "),
+                format!("{} hit points", s.least),
+            ),
+            None => ("—".into(), "—".into()),
+        };
+        let (into, count, spread) = match &c.dies_into {
+            Some(d) => {
+                let mut names: Vec<String> = (d.pool.iter())
+                    .map(|&p| {
+                        let other = content.creature(p);
+                        link(Term::Creature, &other.id, &other.plural)
+                    })
+                    .collect();
+                names.sort();
+                names.dedup();
+                (
+                    names.join(", "),
+                    d.count.to_string(),
+                    format!("{} cell{}", d.spread, if d.spread == 1 { "" } else { "s" }),
+                )
+            }
+            None => ("—".into(), "—".into(), "—".into()),
+        };
+        let _ = writeln!(
+            out,
+            "| {} | {on} | {least} | {into} | {count} | {spread} |",
+            link(Term::Creature, &c.id, &capital(&c.name)),
+        );
+    }
+    out
+}
+
 /// What each dragon (spec §8 "Creature behavior": "Dragons") breathes: its element, the damage
 /// rolled once for everyone in the cone, how long the cone is, and how long before it breathes
 /// again.

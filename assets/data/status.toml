@@ -943,6 +943,62 @@ hold = { check = "strength", difficulty = 13, turns = "3d4" }
 start = "You are held fast."
 end = "You are free to move."
 
+# Engulfing (docs/design/monster-dread.md §5.7, G7): a hold with a tick. The charnel heap's mass,
+# a greater water elemental's drowning wave closes over its victim: no step, no shot, no throw,
+# no reading, and every tick inside costs hit points (a tick every 6 s a degree, so the more
+# turns the hold has left the faster it hurts). A blow and a spell still go: hack your way out,
+# or break free with the struggle (the hold's rules, world/hold.rs). Size makes no difference.
+[[status]]
+id = "engulfed"
+name = "Engulfed"
+seen = "engulfed"
+max = 12
+stacking = "highest"
+eases = 6
+tick = 6
+damage = 2
+blocks = ["step", "shoot", "throw", "read"]
+hold = { check = "strength", difficulty = 14, turns = "2d4" }
+start = "It closes over you."
+end = "You tear yourself free."
+dies = "is crushed to death"
+death = "Smothered"
+
+# Swallowed: engulfing's worst, the nightworm's (§6), twice the harm of a tick.
+[[status]]
+id = "swallowed"
+name = "Swallowed"
+seen = "swallowed"
+max = 12
+stacking = "highest"
+eases = 6
+tick = 6
+damage = 4
+blocks = ["step", "shoot", "throw", "read"]
+hold = { check = "strength", difficulty = 14, turns = "2d4" }
+start = "It swallows you whole."
+end = "You cut your way out."
+dies = "is digested"
+death = "Swallowed whole"
+
+# Latched: engulfing's weaker cousin (§5.7), a mouth fastened on: the giant leech's sucker, the
+# canoloth's tongue. A point of harm a tick, half as often; it blocks only the step.
+[[status]]
+id = "latched"
+name = "Latched"
+seen = "latched"
+max = 12
+stacking = "highest"
+eases = 6
+tick = 12
+damage = 1
+blocks = ["step"]
+hold = { check = "strength", difficulty = 14, turns = "2d4" }
+start = "Something latches onto you."
+end = "You tear it off."
+dies = "is drained dry"
+death = "Drained dry"
+
 # The weapon abilities' (the combat progression design §6): Pinned, a missile through the foot
 # (Pinning shot) or the legs taken by a staff (Trip): no step for an action a degree, a new pin
 # keeping the longer, never adding (at most 3 from any one); no grip, so only a trained Escape artist struggles.

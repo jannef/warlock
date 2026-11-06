@@ -243,6 +243,7 @@ mod spell_rung;
 mod spell_type;
 mod spell_words;
 mod spirit_weapon;
+mod split;
 mod stair_followers;
 mod stars;
 mod stat_deeds;
@@ -939,6 +940,7 @@ impl World {
             faction_override: None,
             grade: 0,
             summoner: None,
+            split_from: None,
             ally: None,
             risen: None,
             alignment: content.alignment().map(|_| alignment),
@@ -1966,6 +1968,8 @@ mod spell_type_force_tests;
 mod spell_type_tests;
 #[cfg(test)]
 mod spirit_weapon_tests;
+#[cfg(test)]
+mod split_tests;
 #[cfg(test)]
 mod spring_tests;
 #[cfg(test)]

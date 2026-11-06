@@ -695,6 +695,7 @@ pub(super) fn make_creature(
             .or_else(|| super::court::join(content, state.seed, actor_id, spawn.creature)),
         grade: crate::grade::draw(content, state.seed, actor_id, spawn),
         summoner: None,
+        split_from: None,
         ally: None,
         risen: None,
         alignment: None,

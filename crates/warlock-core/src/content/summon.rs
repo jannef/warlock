@@ -3,7 +3,9 @@
 //!
 //! The pool is a list of creature ids (`creatures`), each as likely, or every type carrying a
 //! tag within a level window (`tag`, `levels`), uniques and the summoner itself left out, in
-//! creature order. It resolves once every creature type is known ([`resolve`]): a shared summoner
+//! creature order. A list may name the summoner's own type: a breeder
+//! (docs/design/monster-dread.md §5.5 G5c), whose `most` is the cap. `mana` may be left out,
+//! for a summoning that costs none (its cooldown is limit enough). It resolves once every creature type is known ([`resolve`]): a shared summoner
 //! may call only shared types, a campaign's its own and shared ones. The cooldown is a status
 //! (the house rule for ability limits, `ability.rs`): [`STATUS`], given `ceil(cooldown / eases)`
 //! degrees.
@@ -21,7 +23,7 @@ pub const STATUS: &str = "summoning";
 pub const MAX_COUNT: i32 = 12;
 /// A summoning's cooldown, in seconds.
 pub const COOLDOWNS: RangeInclusive<u32> = 6..=600;
-/// What a summoning may cost in mana.
+/// What a summoning may cost in mana, when it names a cost (left out: none).
 pub const MANA: RangeInclusive<i32> = 1..=1000;
 /// How far away a summoner may see the hostile it summons at, in cells.
 pub const RANGES: RangeInclusive<i32> = 1..=20;
@@ -40,7 +42,7 @@ pub(super) struct SummonSpec {
     pub levels: Option<[u8; 2]>,
     pub count: Dice,
     pub cooldown: u32,
-    pub mana: i32,
+    pub mana: Option<i32>,
     pub range: Option<i32>,
     pub spread: Option<i32>,
     pub most: Option<u8>,
@@ -59,7 +61,7 @@ pub struct Summon {
     /// The cooldown status, and the degrees of it a summoning gives.
     pub status: StatusId,
     pub degrees: u16,
-    /// What a summoning costs in mana.
+    /// What a summoning costs in mana (0: none, and the summoner needs none).
     pub mana: i32,
     /// It summons only at a hostile it sees within this many cells.
     pub range: i32,
@@ -111,7 +113,9 @@ impl SummonSpec {
                 COOLDOWNS.end()
             ));
         }
-        within("mana", self.mana, MANA)?;
+        if let Some(mana) = self.mana {
+            within("mana", mana, MANA)?;
+        }
         if let Some(range) = self.range {
             within("range", range, RANGES)?;
         }
@@ -169,7 +173,8 @@ pub(super) fn resolve(
                         other.campaign.as_deref().unwrap_or_default()
                     ));
                 }
-                if c == me || content.creature(c).id == "player" {
+                // Its own type is a breeder's (G5c); never the player.
+                if content.creature(c).id == "player" {
                     return Err(format!("summon: `{name}` cannot be summoned"));
                 }
                 Ok(c)
@@ -179,7 +184,8 @@ pub(super) fn resolve(
     if pool.is_empty() {
         return Err("summon: no creature fits the pool".into());
     }
-    if def.base_mana <= 0 {
+    let mana = spec.mana.unwrap_or(0);
+    if mana > 0 && def.base_mana <= 0 {
         return Err("summon: a summoner needs `mana`".into());
     }
     let status = (content.status_id(STATUS))
@@ -203,7 +209,7 @@ pub(super) fn resolve(
         cooldown: spec.cooldown,
         status,
         degrees,
-        mana: spec.mana,
+        mana,
         range: spec.range.unwrap_or(8),
         spread: spec.spread.unwrap_or(2),
         most: spec.most.unwrap_or(6),

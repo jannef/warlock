@@ -41,7 +41,11 @@ scaling and the first-kill bonus from it (`Experience::kill_xp` and `first_kill_
 the UI reads `PerceptionView::own_experience()`. Other kills (traps, creatures) give nothing, with
 one exception: a kill by an ally of the player's pays the player through `earn_kill_at` at
 `World::ally_share()` (their class's `ally_share`, else the allies' `ally_percent`;
-`docs/dev/allies.md`; `fight.rs::dies`), as the owner decided. Otherwise:
+`docs/dev/allies.md`; `fight.rs::dies`), as the owner decided. A creature made of another
+(`Actor::split_from`, `world/split.rs::offspring_share`; docs/design/monster-dread.md §5.5) pays
+less, after any ally's share: a half cut off a splitting creature `content::HALF_SHARE` (25 %),
+one that crawled out of a corpse `CORPSE_SHARE` (10 %); the first-kill bonus is scaled with it,
+and neither counts toward a quest's kills (`tally_kill` is skipped). Otherwise:
 keep it that way by awarding only where the attacker is the player. `Progress` is where the
 progression state of the design's later items (talents, due choices) goes.
 

@@ -220,10 +220,11 @@
 #             [creature.summon] with its pool, either creatures (ids, each as likely; one named twice is twice as
 #             likely: ["goblin", "goblin", "warg"]) or tag and levels (every type carrying the tag
 #             with a level within [lowest, highest], uniques and itself left out; a shared type
-#             calls shared types only, a campaign's its own too), count (dice: how many at once,
+#             calls shared types only, a campaign's its own too; a list may name the type itself,
+#             a breeder), count (dice: how many at once,
 #             1 to 12: "1d3"), cooldown (seconds before the next, 6 to 600: the `summoning` status
-#             of status.toml, a degree per 6 s), mana (what one costs, 1 to 1000; the type needs
-#             mana), and optionally range (it summons at a hostile it sees within this many cells,
+#             of status.toml, a degree per 6 s), mana (what one costs, 1 to 1000; the type then
+#             needs mana; left out, it costs none), and optionally range (it summons at a hostile it sees within this many cells,
 #             1 to 20; default 8), spread (how far from it they appear, 1 to 5; default 2), most
 #             (how many of its summoned may live at once, 1 to 20; default 6), and verb (the
 #             message's: "calls forth"; default "summons"). It summons before anything else it
@@ -247,6 +248,14 @@
 #             { kind = "hiss", loudness = 40, every = 60 }: kind banging, voice, howl, buzzing,
 #             giggle, hiss, rattle, scream, or wail; loudness 1 to 300; every the seconds between
 #             cries on average, 6 to 3600 (a chance of 6 in every on a turn it does not fight)
+#   splits    a blow of a listed damage type that leaves it alive with at least twice `least`
+#             hit points cuts it in two (docs/design/monster-dread.md §5.5): { on = ["slashing",
+#             "piercing"], least = 8 } (least 1 to 500). It keeps the greater half; the other,
+#             no gear, stands beside it; a half's kill pays a quarter and counts for no quest
+#   dies_into what crawls out of its corpse as it dies: { creatures = ["grave_worm"], count =
+#             "2d4", spread = 1 } (ids, each as likely, never the player, a unique, or itself;
+#             count 1 to 20; spread 1 to 5 cells, default 1), of its faction, each paying a tenth
+#             and counting for no quest; look mode calls it "writhing"
 #   resist    what it resists, in percent per damage type (spec §8 "Damage types"):
 #             { acid = 50 }; -100 (it takes double) to 100 (immune: nothing of the kind hurts
 #             it, whatever it wears). What it wears adds up with this, capped at 75 short of

@@ -136,7 +136,14 @@ through `World::rider`, the one place an `on_hit` entry is drawn and applied (a 
 Averted (`world/avert.rs`) is no status: it is derived from the perception. Creature AI reads `blocks`
 for steps only: a creature a status of its blocks `step` (Held, Drowning grip's, #269) never
 steps or opens a door (`creature_steps`) and attacks its holder instead (`World::held_back`,
-`world/lucky.rs`). **Holds** (#431, `world/hold.rs`): a status with `hold` (`content::Hold`:
+`world/lucky.rs`). **Engulfing** (docs/design/monster-dread.md §5.7, #1129) is data on holds,
+no code: `engulfed` (a hold with `tick = 6`, `damage = 2`, blocking `step`, `shoot`, `throw`,
+`read`; the charnel heap, the greater and elder water elementals, the brimwolf), `swallowed`
+(the same at `damage = 4`; the nightworm), and `latched` (`tick = 12`, `damage = 1`, blocking
+`step` only; the giant leech, the canoloth's tongue); the hold's grip is the rider's
+`difficulty`, else 14, its turns `2d4`. A tick at n degrees comes n times as often, so the harm
+is heaviest as the hold begins and eases with it. A blow and a spell still go from inside.
+`world/split_tests.rs` checks the data, the tick, and the holder's death letting go. **Holds** (#431, `world/hold.rs`): a status with `hold` (`content::Hold`:
 `check`, `difficulty`, `turns`; parse checks `eases`, `stacking = "highest"`, `blocks` step, and
 `turns` within 1..=`max`) is held by its effect's `by`. `World::afflict` draws a hold's degrees
 from `turns` (`World::hold_turns`; the passed severity is ignored, so Drowning grip's

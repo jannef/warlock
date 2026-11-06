@@ -237,7 +237,16 @@ fn describe_cell(view: &PerceptionView<'_>, p: Pos, blood: bool) -> String {
                 } else {
                     effects
                 };
-                let gear = format!("{}{}", made_of(content, actor).1, gear(view, actor.id));
+                // What lives in it shows (docs/design/monster-dread.md §5.5): "writhing".
+                let writhing = match content.creature(actor.creature).dies_into {
+                    Some(_) => ", writhing",
+                    None => "",
+                };
+                let gear = format!(
+                    "{writhing}{}{}",
+                    made_of(content, actor).1,
+                    gear(view, actor.id)
+                );
                 // A unique character the player knows by name: "Sister Hild (unhurt), who
                 // cures and mends for gold, on plank floor."; or a named monster by its type's
                 // proper name: "Black Wystan (hostile, unhurt), ...".
@@ -1105,6 +1114,40 @@ map = '''
         assert_eq!(
             describe(&view, Pos::new(4, 1), true),
             "An animated rug of wool (hostile, unhurt), rippling, on stone floor."
+        );
+    }
+
+    #[test]
+    fn what_lives_in_a_wormhost_shows_writhing() {
+        let hall = r##"
+name = "Hall"
+ambient = [255, 255, 255, 0]
+map = '''
+#######
+#.w@h.#
+#######
+'''
+[legend]
+"@" = { terrain = "floor", spawn = "player" }
+"w" = { terrain = "floor", creature = "wormhost" }
+"h" = { terrain = "floor", creature = "charnel_heap" }
+"##;
+        let mut files = warlock_core::content::ContentFiles::builtin();
+        files.insert("levels/hall.toml", hall);
+        files.insert(
+            "scenarios/hall.toml",
+            "name = \"Hall\"\nstart_level = \"hall\"\n",
+        );
+        let content = Arc::new(Content::load(&files).expect("content"));
+        let w = World::new(content, "hall", None).expect("hall");
+        let view = w.perception();
+        assert_eq!(
+            describe(&view, Pos::new(2, 1), true),
+            "A wormhost (hostile, unhurt), writhing, on stone floor."
+        );
+        assert_eq!(
+            describe(&view, Pos::new(4, 1), true),
+            "A charnel heap (hostile, unhurt), on stone floor."
         );
     }
 

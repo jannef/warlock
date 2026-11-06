@@ -152,6 +152,7 @@ mod spell_def;
 mod spell_ladder;
 mod spell_mod;
 mod spell_type;
+mod split;
 mod stance;
 mod stat_training;
 mod status;
@@ -338,6 +339,7 @@ pub use spell_ladder::{
 };
 pub use spell_mod::{SpellMod, SpellModSpec, SpellMods, merge_rider};
 pub use spell_type::{SpellType, TypeBite, TypeRider};
+pub use split::{CORPSE_SHARE, DiesInto, HALF_SHARE, Splits};
 pub use stance::{CombatStance, StanceDef, Stances, percent_of};
 pub use stat_training::{
     DeedRule, HAUL_GRAMS, ODDS_SCALE, StatDeed, StatRule, StatTraining, StatUse,
@@ -1179,6 +1181,7 @@ impl Content {
         content.load_gear()?;
         content.load_throws()?;
         content.load_summons()?;
+        content.load_splits()?;
         // Summon spells' pools, once every creature type is known.
         spell_def::resolve_summons(&mut content)?;
         spell_def::check_only_tags(&content).map_err(|m| ContentError::new("data/spells", m))?;
