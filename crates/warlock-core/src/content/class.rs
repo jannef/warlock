@@ -16,7 +16,7 @@
 //! The classes are offered in path order: the files are named `NN-id.toml`, so the number keeps
 //! the order (adventurers first, then everyday folk) and a new class picks its place.
 
-use super::kit::{Kit, KitLineSpec};
+use super::kit::{Kit, KitLineSpec, RandomScrolls, RandomScrollsSpec};
 use super::skill::{OptionalSkill, OptionalSpec};
 use super::weapon_skill::Ranked;
 use super::{
@@ -90,6 +90,7 @@ struct ClassSpec {
     style_choice: Vec<BTreeMap<String, Dice>>,
     #[serde(default)]
     kit: Vec<KitLineSpec>,
+    random_scrolls: Option<RandomScrollsSpec>,
     #[serde(default)]
     abilities: Vec<AbilitySpec>,
     bonus_talents: Option<BonusSpec>,
@@ -281,6 +282,11 @@ pub struct ClassDef {
     /// What the class starts with (spec §8 "Character creation"): first in a new character's
     /// pack; filled in by the loader once objects are known.
     pub kit: Kit,
+    /// Its `random_scrolls` as written; resolved by the loader into `random_scrolls`.
+    pub(super) random_scrolls_spec: Option<RandomScrollsSpec>,
+    /// The spell scrolls its kit adds at random (the casters'), after every kit's lines;
+    /// filled in by the loader once objects and spells are known.
+    pub random_scrolls: Option<RandomScrolls>,
     /// Its class abilities (spec §8 "Class abilities"): at each level, the talent it gives, by
     /// id, ascending by level.
     pub abilities: Vec<(u8, String)>,
@@ -461,6 +467,8 @@ impl ClassDef {
             style_choice,
             kit_spec: spec.kit,
             kit: Kit::default(),
+            random_scrolls_spec: spec.random_scrolls,
+            random_scrolls: None,
             abilities,
             bonus_talents,
             max_level: spec.max_level.unwrap_or(0),
