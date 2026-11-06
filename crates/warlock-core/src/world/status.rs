@@ -266,20 +266,18 @@ impl World {
         }
     }
 
-    /// What a hit by `attacker` with an attack of `kind` may cause besides its damage: its
-    /// natural attack's `on_hit` when it fights with it (a blow with no weapon in hand). A unique
-    /// weapon's Inflict power comes with the attack's profile instead ([`World::after_blow`]).
+    /// What a hit by `attacker` with an attack of `kind` may cause besides its damage: a
+    /// creature's throw's `on_hit`. A natural attack's comes with its melee profile
+    /// ([`super::Actor::melee`], each of several its own), as a unique weapon's Inflict power
+    /// does ([`World::after_blow`]).
     fn on_hit_of(&self, attacker: ActorId, kind: AttackKind) -> Vec<OnHit> {
         let Some(me) = self.actor_or_fallen(attacker) else {
             return Vec::new();
         };
         let def = self.content.creature(me.creature);
-        match (kind, def.attack.as_ref()) {
-            (AttackKind::Melee, Some(natural)) if me.weapon(&self.content).is_none() => {
-                natural.on_hit.clone()
-            }
+        match kind {
             // A creature's throw (`hurl.rs`); the player's throws are their objects'.
-            (AttackKind::Thrown, _) if attacker != self.state.player => (def.throw.as_ref())
+            AttackKind::Thrown if attacker != self.state.player => (def.throw.as_ref())
                 .map(|t| t.attack.on_hit.clone())
                 .unwrap_or_default(),
             _ => Vec::new(),

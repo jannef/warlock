@@ -69,6 +69,25 @@ summoner that cannot cast ([silenced](status-effects.md#status-silenced)) cannot
 
 {{#include generated/creature-summons.md}}
 
+### Breath
+
+Dragons breathe their element: the [fire drake](creatures.md#creature-fire-drake) a long fan of
+[fire](damage-types.md#damage-fire). A dragon that sees you within its cone's length, with
+nothing solid and nobody between you, breathes whenever its breath is ready, before it does
+anything else; the [cone](magic.md#shapes) fans out a quarter turn wide from the dragon toward
+you, as [Burning hands](magic.md#spell-burning-hands) does, but far longer. Everyone in it is
+struck by one roll of its damage, with no roll [to hit](combat.md#hitting):
+[Evasion](talents.md#talent-evasion) halves it and
+[resistance](damage-types.md#armour-and-resistance) takes its share, so the dragon's own kind,
+immune to its element, takes nothing. Its element does to those it harms what any
+[spell of it](magic.md#spell-types) does: fire sets one in four
+[burning](status-effects.md#status-burning). Then the dragon cannot
+breathe again for the time below, and fights up close with its claws and bite, each struck in
+turn and rolled on its own (the table above, one row each). Unseen, a dragon's breath is heard
+as a roar.
+
+{{#include generated/creature-breaths.md}}
+
 ## Surprise
 
 The creatures with a craft for [surprise](status-effects.md#status-surprised). Their

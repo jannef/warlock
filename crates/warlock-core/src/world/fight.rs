@@ -558,6 +558,9 @@ impl World {
                 hit |= struck.is_some_and(|b| b.strike.is_hit());
                 self.both_hands(attacker, target, (blow, struck), with, events);
             }
+            // Its natural attacks after the first: a dragon's claws and bite (`natural.rs`).
+            let more = self.more_natural_blows(attacker, target, events);
+            (parried, dodged, hit) = (parried | more.0, dodged | more.1, hit | more.2);
             // A blow dodged is answered by a Poised target (`ascetic.rs`), one that hit the
             // player by their Retribution (`smite.rs`).
             self.after_melee(attacker, target, (parried, dodged, hit), events);
@@ -876,6 +879,7 @@ impl World {
             strike: blow.map(|b| b.strike),
             with,
             damage: blow.and_then(|b| b.kind),
+            natural: None,
         });
         if noisy {
             self.make_noise(attacker, Act::Attack(kind));

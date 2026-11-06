@@ -579,7 +579,10 @@ fn bites_expose_their_target_who_resists_with_a_check() {
             biter,
             player,
             AttackKind::Melee,
-            (&blow, &[]),
+            (
+                &blow,
+                &w.state.actors[&biter].melee(&w.content).on_hit.clone(),
+            ),
             &mut Vec::new(),
         );
         assert_eq!(
@@ -602,7 +605,10 @@ fn bites_expose_their_target_who_resists_with_a_check() {
                 biter,
                 player,
                 AttackKind::Melee,
-                (&blow, &[]),
+                (
+                    &blow,
+                    &w.state.actors[&biter].melee(&w.content).on_hit.clone(),
+                ),
                 &mut Vec::new(),
             );
             assert_eq!(w.state.rng, rng);

@@ -193,6 +193,28 @@ Out of depth (+3: the monsters one to five levels above), and untrained stats, f
 | 50 | 96/34 · 20.6:7.7 · 10 / 56 | 99/2 · 32.4:0.3 · 7.3 / >999 | 76/48 · 10.7:11.5 · 23 / 18 | 92/3 · 23.5:0.6 · 11 / >999 |
 | 60 | 92/63 · 17.0:21.1 · 14 / 18 | 98/10 · 25.8:2.3 · 9.3 / 438 | 63/69 · 6.8:13.1 · 42 / 16 | 88/10 · 16.4:2.4 · 14 / 548 |
 
+## Dragons
+
+Each dragon (#1099) against the players of the probe's levels around its own, in plain gear, trained → untrained (the seeds' mean). **HP** the player's; **breath** its mean after the player's resistance, and that over their hit points; **melee** the claws and bite of one action, misses included; **a round** the dragon's damage an action over a cooldown's cycle (one breath, then a melee action for each degree of its cooldown); **die** the dragon's actions until the player falls, breathing first; **kill** the player's rounds to kill it.
+
+| Dragon | L | Class | HP | breath (of HP) | melee | a round | die | kill |
+|---|---|---|---|---|---|---|---|---|
+| fire drake | 15 | warrior | 90→73 | 43 (48%→59%) | 9.3→11.1 | 14.1→15.7 | 5.9→3.8 | 11→15 |
+| fire drake | 15 | thief | 77→47 | 43 (56%→92%) | 28.7→40.1 | 30.8→40.5 | 2.2→1.1 | 10→35 |
+| fire drake | 15 | wizard | 43→28 | 43 (101%→157%) | 46.5→49.3 | 46.0→48.4 | 1.0→0.6 | 112→129 |
+| fire drake | 15 | priest | 74→48 | 43 (59%→91%) | 23.0→28.1 | 25.9→30.2 | 2.4→1.2 | 14→30 |
+| fire drake | 20 | warrior | 124→92 | 43 (35%→47%) | 3.5→4.9 | 9.2→10.3 | 12→7.9 | 8.2→13 |
+| fire drake | 20 | thief | 109→58 | 43 (40%→74%) | 21.0→35.0 | 24.2→36.1 | 4.5→1.4 | 6.9→20 |
+| fire drake | 20 | wizard | 64→33 | 43 (67%→132%) | 43.3→48.2 | 43.3→47.5 | 1.5→0.8 | 66→73 |
+| fire drake | 20 | priest | 106→58 | 43 (41%→74%) | 15.5→21.7 | 19.5→24.7 | 5.1→1.8 | 11→25 |
+
+The fire drake's breath (10d8 fire, a nine-cell cone, every 36 s) was sized to the issue's
+"a third to a half of the player's hit points at its level": a trained warrior of level 20 takes
+35 % (47 % untrained), and a wizard of its level dies to two breaths, to one untrained. A
+warrior with a shield outlasts it and kills it in about eight rounds. Everyone else needs fire
+resistance, Evasion, or a way to keep out of the cone: a dragon met at the wrong moment is
+deadly, as #1099 asks. Burning (one in four, from fire's spell type) is not counted here.
+
 ## Protection by body
 
 Rounds for the plain warrior (trained) to kill the monsters of their level: as shipped, then with every monster's Protection set to §8.2's body line at its level.

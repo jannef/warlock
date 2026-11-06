@@ -98,6 +98,7 @@ mod beast_friend;
 mod bleed;
 mod bond;
 mod boons;
+mod breath;
 mod buff;
 mod calling;
 mod carry;
@@ -179,6 +180,7 @@ mod mana;
 mod merchants_eye;
 mod mimic;
 pub(crate) mod mirrors;
+mod natural;
 mod openings;
 mod orison;
 mod outcome;
@@ -1608,6 +1610,8 @@ mod body_talent_tests;
 mod bond_tests;
 #[cfg(test)]
 mod branch_tests;
+#[cfg(test)]
+mod breath_tests;
 #[cfg(test)]
 mod buff_field_tests;
 #[cfg(test)]

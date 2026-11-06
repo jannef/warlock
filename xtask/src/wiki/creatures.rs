@@ -67,6 +67,7 @@ fn creature_table(content: &Content, campaign: Option<&str>) -> String {
             Combat::Melee => "up close",
             Combat::Ranged => "shoots from afar",
             Combat::Caster => "casts spells from afar",
+            Combat::Dragon => "breathes, and up close",
         }
         .to_string();
         if let (true, Some(cost)) = (fights(content, c), c.attack_cost) {
@@ -426,6 +427,7 @@ pub(super) fn creature_attacks(content: &Content) -> String {
             Combat::Melee => "up close".to_string(),
             Combat::Ranged => format!("shoots, up to {} cells", c.range),
             Combat::Caster => format!("casts spells, up to {} cells", c.range),
+            Combat::Dragon => "breathes, and up close".to_string(),
         };
         let actor = bare(content, id);
         // A family that wields what it is made of (animated blades): its weapon's blow.
@@ -439,31 +441,40 @@ pub(super) fn creature_attacks(content: &Content) -> String {
             );
             continue;
         }
-        let profile = actor.melee(content);
-        let kinds: Vec<String> = (profile.kinds.iter())
-            .map(|k| content.damage_type(k).name.clone())
-            .collect();
-        let damage = format!(
-            "{} {}",
-            damage_text(profile.damage, profile.bonus),
-            kinds.join(" or ")
-        );
-        let attack = c.attack.as_ref().map_or("fists", |a| a.name.as_str());
-        let caused = c
-            .attack
-            .as_ref()
-            .map_or_else(Vec::new, |a| on_hit(content, a));
-        let _ = writeln!(
-            out,
-            "| {} | {fight} | {attack} | {} | {} | {} ×{} | {} | {} |",
-            link(Term::Creature, &c.id, &capital(&c.name)),
-            damage.trim_end(),
-            signed(profile.to_hit),
-            threat_range(profile.threat),
-            profile.crit,
-            at_speed(blow_price(content, &actor), c.speed),
-            dash(&caused)
-        );
+        // Its natural attacks in the order it strikes them (a dragon's two claws and a bite):
+        // the first takes the blow's time, the rest follow it in the same attack.
+        let mut blows = vec![(None, actor.melee(content))];
+        blows.extend((actor.more_natural_blows(content).into_iter()).map(|(i, p)| (Some(i), p)));
+        for (index, profile) in blows {
+            let natural = c.natural_attacks().nth(index.map_or(0, usize::from));
+            let kinds: Vec<String> = (profile.kinds.iter())
+                .map(|k| content.damage_type(k).name.clone())
+                .collect();
+            let damage = format!(
+                "{} {}",
+                damage_text(profile.damage, profile.bonus),
+                kinds.join(" or ")
+            );
+            let attack = natural.map_or("fists", |a| a.name.as_str());
+            let (attack, takes) = match index {
+                None => (
+                    attack.to_string(),
+                    at_speed(blow_price(content, &actor), c.speed),
+                ),
+                Some(_) => (format!("then {attack}"), "with the first".to_string()),
+            };
+            let caused = natural.map_or_else(Vec::new, |a| on_hit(content, a));
+            let _ = writeln!(
+                out,
+                "| {} | {fight} | {attack} | {} | {} | {} ×{} | {takes} | {} |",
+                link(Term::Creature, &c.id, &capital(&c.name)),
+                damage.trim_end(),
+                signed(profile.to_hit),
+                threat_range(profile.threat),
+                profile.crit,
+                dash(&caused)
+            );
+        }
     }
     out
 }
@@ -554,6 +565,31 @@ pub(super) fn creature_summons(content: &Content) -> String {
             summon.range,
             summon.spread,
             summon.most
+        );
+    }
+    out
+}
+
+/// What each dragon (spec §8 "Creature behavior": "Dragons") breathes: its element, the damage
+/// rolled once for everyone in the cone, how long the cone is, and how long before it breathes
+/// again.
+pub(super) fn creature_breaths(content: &Content) -> String {
+    let mut out = String::from(
+        "| Creature | Breathes | Damage | Cone | Again after |\n|---|---|---|---:|---:|\n",
+    );
+    for (_, c) in listed(content) {
+        let Some(breath) = &c.breath else {
+            continue;
+        };
+        let _ = writeln!(
+            out,
+            "| {} | {} | {} {} | {} cells | {} s |",
+            link(Term::Creature, &c.id, &capital(&c.name)),
+            breath.noun,
+            damage_text(breath.damage.into(), 0),
+            damage_link(content, breath.kind),
+            breath.length,
+            breath.cooldown
         );
     }
     out
