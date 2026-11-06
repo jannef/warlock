@@ -58,7 +58,14 @@ developer notes (CLAUDE.md, `docs/dev/`).
   the Spinner (a lurker whose bite poisons and webs, and calls her brood) in the dark web-hall, 30
   Hrīmwyrm the White (a frost dragon's breath) in the wyrm's bed, 40 Wēalāf the Unburied (calls up
   the dead, a strength-draining blade) in the unburied hall with his court, 50 Grundwyrgen the
-  Mere-Wife (a brute whose claws seize and hold) by the black mere; 60 and 70 are to come (#1122).
+  Mere-Wife (a brute whose claws seize and hold) by the black mere, 60 Līgetdrȳ the Storm-Wright
+  (a caster: haste, silence, leaping lightning) in the hall of standing stones, 70 Stānēoten the
+  Hurler (boulders every action he has a line, a stunning maul) at the end of the giant's
+  gallery, 80 Nihtscinna the Hollow (a spirit that walks through and waits in the walls of its
+  warren; a touch that drains the will and frightens), 90 Wælcyrge the Chooser (nearly twice as
+  fast as anyone, a spear whose wounds bleed) on the field of the slain, and 100 Nīðdraca the
+  Hate-Wyrm (a fire dragon's breath, demons called up, claws that set alight) on the burning
+  hoard (#1122). Past 100 a tenth floor is ordinary.
   **Ways up** (`below = "fyrdelf:12"`, #1117; `mapgen/way_up.rs`, `world/reveal.rs`): a bounded
   branch whose `below` names a level of another bounded branch of its campaign is a way between
   that level and the overworld. Its deepest level's `>` leads to that level, which gains a `<` back

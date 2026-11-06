@@ -1,0 +1,48 @@
+# Campaign-owned (docs/design/campaign.md §3.6): the Ascmearc's own type, which only its files
+# may name.
+#
+# The eighth layer boss of Grundlēas (#1122; spec §7 "The endless branch"): Nihtscinna (Old
+# English niht, night, and scinna, a spectre), the Hollow, a shade of the dark between the
+# layers, that keeps the eightieth floor in a warren of narrow walls. Once a run (`unique`), in no
+# population: only its warren places it. Its fight is the stone: it walks through the walls of
+# its warren, waits there, comes out of the rock beside whoever passes, and is harder to strike
+# while it stands in it; blades pass half through it; its touch empties the will and fills the
+# heart with dread.
+[[creature]]
+id = "nihtscinna"
+level = 81
+xp = 415
+xp_percent = 200
+rarity = "very_rare"
+loot = 100
+unique = true
+name = "Nihtscinna the Hollow"
+glyph = "G"
+fg = "#7a6ac8"
+speed = 1400
+faction = "layer_keepers"
+tags = ["spirit"]
+alignment = "evil"
+vision = "darkvision"
+sight = 14
+lurks = true
+hearing = 16
+weight = 100
+stats = { strength = 34, dexterity = 32, toughness = 36, intelligence = 30, willpower = 40, presence = 38 }
+base_hp = 260
+skills = { initiative = 120, spot = 90 }
+natural = { defence = 9, protection = 0, name = "insubstantial form" }
+incorporeal = { wall_defence = 10 }
+resist = { slashing = 50, piercing = 50, bludgeoning = 50, cold = 50, necrotic = 100, poison = 100 }
+corpse = false
+blood = "none"
+[creature.attack]
+damage = "6d8"
+damage_type = "necrotic"
+name = "touch"
+verb = "touches"
+to_hit = 16
+on_hit = [
+    { drain = "willpower", points = 2, chance = 20, difficulty = 28 },
+    { status = "frightened", chance = 30, severity = 3 },
+]

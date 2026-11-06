@@ -61,3 +61,28 @@ vault = "wealafs_hall"
 depth = 50
 creature = "grundwyrgen"
 vault = "grundwyrgens_mere"
+
+[[dungeon.endless.boss]]
+depth = 60
+creature = "ligetdry"
+vault = "ligetdrys_stones"
+
+[[dungeon.endless.boss]]
+depth = 70
+creature = "staneoten"
+vault = "staneotens_gallery"
+
+[[dungeon.endless.boss]]
+depth = 80
+creature = "nihtscinna"
+vault = "nihtscinnas_warren"
+
+[[dungeon.endless.boss]]
+depth = 90
+creature = "waelcyrge"
+vault = "waelcyrges_field"
+
+[[dungeon.endless.boss]]
+depth = 100
+creature = "nithdraca"
+vault = "nithdracas_hoard"
