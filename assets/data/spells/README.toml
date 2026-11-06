@@ -63,6 +63,12 @@
 #                 berserk_message = "..." }`: the corpse's own type stands at `hit_points` (1 to
 #                 100) percent of its hit points, `most` and `minutes` as a summon's; `berserk`
 #                 (0 to 100) percent rise in `berserk_faction` instead, saying `berserk_message`
+#     charm       a `hex` ray's or bolt's, with no `status`: `{ minutes = 5, mindless = ["undead"],
+#                 message = "takes you for a friend", ends = "shakes off the charm" }`: the
+#                 creature it falls on is the caster's ally for `minutes` (1 to 600; its
+#                 `degrees` ladder grows it), then itself again where it stands; refused on a
+#                 unique, an animated thing, and a creature with a `mindless` tag; `message` and
+#                 `ends` follow its name as it takes and as it ends
 #     mana        a `heal` spell's mana back to the caster: a roll (at most 500)
 #     arcs        a `damage` ray's, bolt's, touch's, or line's, of a type that arcs (`[types]` in
 #                 ../spells.toml), 1 to 12: that many jumps are taken without a draw, every jump of
@@ -88,8 +94,8 @@
 #     damage      a `damage` spell's roll        heal      a `heal` spell's roll
 #     range       a ray's, bolt's, or burst's    length    a cone's or a line's
 #     radius      a burst's                      degrees   a buff's, a hex's, or a damage spell's
-#     count       a `summon`'s count (a roll,              status's degrees, or a summon's
-#                 each rung bringing 1 to 12); a spell     minutes (to 600)
+#     count       a `summon`'s count (a roll,              status's degrees, or a summon's or
+#                 each rung bringing 1 to 12); a spell     a charm's minutes (to 600)
 #                 with `arcs`, its jumps (whole, 1 to 12)
 #                 A ladder is one string: the stat's id, then rungs separated by commas, each
 #                 `AT VALUE` with one space: `"intelligence 13 3d6, 16 4d6, 19 5d6, 25 5d6+2"`.

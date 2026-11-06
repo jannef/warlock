@@ -174,6 +174,17 @@ developer notes (CLAUDE.md, `docs/dev/`).
   the faction `berserk`, `hostile_to_all` (hostile to every faction and to itself), by the plain
   AI, no ally, under no orders, counted toward neither `most` nor the cap nor a level's population,
   on the same clock (`Actor::risen`). Its kill pays as any of its type.
+  **The charmed** (`world/charm.rs`; #1003): Beguile, a hex with `[spell.effect] charm`, makes a
+  hostile creature the player sees within its range their ally (`AllySource::Charmed { spell,
+  faction }`, `faction` the `faction_override` it had) for its degrees in minutes, following and
+  under orders, on the player's faction: its own band turns on it, and its kills pay as an ally's.
+  No check and no level limit. Refused, costing nothing, on a `unique` type or an `npc`, an
+  animated thing, a creature with one of the charm's `mindless` tags (undead, construct, vermin)
+  or risen berserk, one already an ally, and at `[allies] most`. When its time is up it is itself
+  again where it stands (its `faction_override` put back, no ally; "The ogre shakes off the
+  charm."), and the charm ends at once when the player leaves its level: it never comes along nor
+  joins the retinue (the owner's Q12), and it was an ally when hostile stair followers were
+  chosen, so it never follows either. It keeps its gear and, slain, leaves its corpse and pack.
 
   **Summons** (`world/summon_spell.rs`; #837): a spell of `kind = "summon"`, cast on oneself,
   calls `count` creatures of its pool (`[spell.effect] summon`; the count a roll, grown by its

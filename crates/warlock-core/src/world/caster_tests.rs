@@ -222,6 +222,7 @@ fn every_caster_has_its_table_by_level_sixty() {
                 "Curse of sloth",
                 "Fear",
                 "Blight",
+                "Beguile",
                 "Cauldron",
                 "Hag's bargain",
             ],
@@ -398,6 +399,7 @@ fn the_spells_are_abilities_by_level() {
             "Slumber",
             // Level 16.
             "Balefire",
+            "Beguile",
             // Level 20.
             "Call of the forest",
             "Chain lightning",

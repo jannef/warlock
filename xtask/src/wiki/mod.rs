@@ -335,6 +335,7 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("ally-rules.md", allies::rules),
         ("summon-spells.md", allies::summon_spells),
         ("rise-spells.md", allies::rise_spells),
+        ("charm-spells.md", allies::charm_spells),
         ("companion-starts.md", companions::starts),
         ("companion-growth.md", companions::growth),
         ("companion-rules.md", companions::rules),

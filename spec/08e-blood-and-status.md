@@ -329,6 +329,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
     and no mana, with none. **Charnel burst** goes off where it lies; **Grave feast**, a touch,
     heals and gives mana (`mana` on a heal), each held to its maximum; **Rouse the dead** raises
     its own creature type (§8 "Allies": "The risen").
+  - **Beguile** (#1003; the spell types design §7 entry 34): a level-18 enchantment hex, a ray of
+    range 6, with `[spell.effect] charm` in place of a status: the hostile creature it falls on
+    is the caster's ally for its degrees in minutes, then itself again (§8 "Allies": "The
+    charmed"). The witch's at level 44, and a scroll.
   - **The first list** (#397, design §7; names left for the world-language review, #378):
     by spell level (the spell scaling design §5.8): 0 Evil eye, Light (#589: the scroll of
     light's; Lit, its status, sheds a light about the caster, `light` on a status); 1 Burning
