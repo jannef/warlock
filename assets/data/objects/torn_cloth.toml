@@ -1,0 +1,13 @@
+# A leaving (docs/design/monster-dread.md §9, `content/leaving.rs`): what is left of someone's
+# clothes where an imp or a nymph has been at them. Junk, worth nothing.
+[[object]]
+id = "torn_cloth"
+name = "scrap of torn cloth"
+plural = "scraps of torn cloth"
+glyph = "~"
+fg = "#8a7a6a"
+class = "miscellaneous"
+materials = ["cloth"]
+weight = 50
+value = 0
+stackable = true

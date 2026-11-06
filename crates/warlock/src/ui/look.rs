@@ -531,6 +531,30 @@ mod tests {
     }
 
     #[test]
+    fn leavings_are_named_for_what_they_are() {
+        // Webs, acid-pitted floor, and torn cloth (`content/leaving.rs`), never what left them.
+        let mut files = warlock_core::content::ContentFiles::builtin();
+        files.insert(
+            "levels/leavings.toml",
+            "name = \"Leavings\"\nambient = [255, 255, 255, 0]\nmap = '''\n#######\n#@wac.#\n\
+             #######\n'''\n[legend]\n\"@\" = { terrain = \"floor\", spawn = \"player\" }\n\
+             \"w\" = { terrain = \"web\" }\n\"a\" = { terrain = \"acid_pit\" }\n\
+             \"c\" = { terrain = \"floor\", objects = [\"torn_cloth\"] }\n",
+        );
+        files.insert(
+            "scenarios/leavings.toml",
+            "name = \"Leavings\"\nstart_level = \"leavings\"\n",
+        );
+        let content = Arc::new(Content::load(&files).expect("content"));
+        let w = World::new(content, "leavings", None).expect("world");
+        let view = w.perception();
+        let at = |x| describe(&view, Pos::new(x, 1), false);
+        assert!(at(2).starts_with("An old web."), "{}", at(2));
+        assert!(at(3).starts_with("An acid-pitted floor."), "{}", at(3));
+        assert!(at(4).contains("scrap of torn cloth"), "{}", at(4));
+    }
+
+    #[test]
     fn a_forgotten_altar_says_what_it_is_and_a_spent_one_too() {
         let content = Arc::new(Content::builtin().expect("content"));
         let mut w = World::new(content, "shrine", None).expect("the shrine");

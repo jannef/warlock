@@ -683,6 +683,28 @@ sway = 0.3
 scale = 0.5
 fade = 0.4
 
+# Leavings (docs/design/monster-dread.md §9, `content/leaving.rs`): what a creature leaves about
+# it, laid by the generator near where one is placed. Old webs, that catch no one, and floor
+# eaten into pits by acid.
+[[terrain]]
+id = "web"
+name = "old web"
+description = "Grey strands, thick as rope in places, hang from wall to floor."
+stone = true
+glyph = "\""
+fg = "#a8a8a0"
+bg = "#0d0d10"
+step_noise = 80
+
+[[terrain]]
+id = "acid_pit"
+name = "acid-pitted floor"
+description = "The stone is eaten into little pits, and smells sour."
+stone = true
+glyph = "."
+fg = "#8fb43a"
+bg = "#0d100a"
+
 # A collapsed floor's (spec §7 "Special rooms"): stone split and sagging over the level below.
 # A step onto it may give way under the player.
 [[terrain]]

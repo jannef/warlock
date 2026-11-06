@@ -11,6 +11,7 @@ xp = 145
 rarity = "rare"
 dread = true
 name = "succubus"
+first_sight = "A succubus. Her kiss takes more than it gives."
 glyph = "n"
 fg = "#d070a0"
 speed = 1050

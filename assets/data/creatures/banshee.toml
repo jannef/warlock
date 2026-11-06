@@ -9,6 +9,7 @@ xp = 125
 rarity = "rare"
 dread = true
 name = "banshee"
+first_sight = "A banshee. Her wail is a death-knell; do not stay to hear it out."
 glyph = "G"
 fg = "#c8e8d8"
 speed = 1200

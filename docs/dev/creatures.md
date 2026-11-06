@@ -160,6 +160,21 @@ the players of its level (docs/balance.md "Dragons"). **Tests**: `world/breath_t
 Adding a dragon: `combat = "dragon"`, a `[creature.breath]` of its element with a burst effect
 of that element in `data/effects.toml`, `[[creature.attack]]`s, and the tag `dragon`.
 
+Warning signs (#1133, design `docs/design/monster-dread.md` §9 channels 3 and 4). **Data**:
+`leavings = ["statue", "web", "acid_pit", "torn_cloth"]` (`content/leaving.rs`: `Leaving`, each
+laid as a fixed terrain or object, `Content::leaving`; the loader refuses a kind the content
+lacks) and `first_sight = "A basilisk. Do not meet its eyes."` on a type. **Rules**: the
+generator lays leavings (`mapgen/leavings.rs`, docs/dev/mapgen.md); `world/first_sight.rs`
+(`World::first_sight`, the last line of `perceive.rs::perceive`) says a type's line once a run
+when one is first among the perception's actors, remembering the type's id in
+`Progress::sighted` (saved). **Content**: every dread type has a `first_sight` and nothing else
+does (`dread_roster_tests.rs`); statues on the basilisk, webs on the barrow and large spiders,
+acid pits on the hezrou and ember beetle, torn cloth on the imp and nymph. **Dumps**: `truth`
+`leavings web: (12, 5), ...` a line per kind; JSON `leavings` (`pos`, `kind`) the ones the player
+sees or remembers (`PerceptionView::known_leavings`). **Wiki**: `creature_signs`
+(`creature-signs.md`, "Warning signs" in `creature-numbers.md`). **Tests**:
+`mapgen/leavings_tests.rs`, `world/first_sight_tests.rs`, `ui/look.rs`.
+
 Gazes and averted eyes (spec §8 "Creature behavior": "Gazes", #1125, design
 `docs/design/monster-dread.md` §5.1). **Data**: `[creature.gaze]` (`content/gaze.rs`:
 `GazeSpec` resolved in the creature loop into `CreatureDef::gaze: Option<Gaze>`; `range` 1 to 8,

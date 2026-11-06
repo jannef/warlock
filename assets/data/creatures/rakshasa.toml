@@ -11,6 +11,7 @@ rarity = "very_rare"
 dread = true
 loot = 60
 name = "rakshasa"
+first_sight = "A rakshasa. Its face is not its own; do not meet its eyes."
 glyph = "f"
 fg = "#e0a040"
 speed = 1150

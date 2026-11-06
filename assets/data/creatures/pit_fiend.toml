@@ -8,6 +8,7 @@ xp = 340
 rarity = "very_rare"
 dread = true
 name = "pit fiend"
+first_sight = "A pit fiend. A lord of the pit, and it has seen you."
 glyph = "U"
 fg = "#e02a2a"
 speed = 1100

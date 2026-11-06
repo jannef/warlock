@@ -187,6 +187,7 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("creature-thieves.md", creatures::creature_thieves),
         ("creature-blinks.md", creatures::creature_blinks),
         ("creature-unseen.md", creatures::creature_unseen),
+        ("creature-signs.md", creatures::creature_signs),
         ("creature-spells.md", creatures::creature_spells),
         ("creature-auras.md", creatures::creature_auras),
         ("creature-surprise.md", creatures::creature_surprise),

@@ -11,6 +11,7 @@ rarity = "very_rare"
 dread = true
 shadowy = true
 name = "deathshade"
+first_sight = "A deathshade. The dark itself is hunting you."
 glyph = "G"
 fg = "#1c1c34"
 speed = 1350

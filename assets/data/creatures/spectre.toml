@@ -8,6 +8,7 @@ xp = 80
 rarity = "rare"
 dread = true
 name = "spectre"
+first_sight = "A spectre. Its cold hand takes what the years cannot give back."
 glyph = "G"
 fg = "#90a8d0"
 speed = 1150

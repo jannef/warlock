@@ -9,6 +9,7 @@ xp = 140
 rarity = "uncommon"
 dread = true
 name = "wormhost"
+first_sight = "A wormhost. Kill it, and the worms come out."
 glyph = "z"
 fg = "#a8b050"
 faction = "undead"

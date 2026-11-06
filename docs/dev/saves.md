@@ -25,7 +25,9 @@ then one whose fingerprint differs (`ContentMismatch`), then one that does not r
 Nothing carries a save across versions: no format number, no id maps, no lenient reads. A state
 naming something the content does not have (a talent, a story line, an affix value outside its
 tier, ...) is refused by `World::from_state`'s checks, never dropped or mapped.
-`#[serde(default)]` on new fields stays (harmless, and it keeps replays readable). Between two
+`#[serde(default)]` on new fields stays (harmless, and it keeps replays readable). What a run remembers once and for all lives in `Progress` and is saved with it: the first kills
+that paid, the uniques met, and the creature types whose first-sight line was said
+(`Progress::sighted`, `world/first_sight.rs`). Between two
 releases every development build shares the version, so there the content fingerprint and the
 decoder are what refuse a save a build cannot read (a renamed `.sav.bad`, as below); saves are
 not promised across development builds.

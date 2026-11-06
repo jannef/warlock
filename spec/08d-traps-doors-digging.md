@@ -265,6 +265,12 @@ developer notes (CLAUDE.md, `docs/dev/`).
   terrain (`set_terrain`), it falls to rubble and what it held spills there. Look mode names
   it by what it was, never what it holds: "a statue of a kobold, mouth open". The player
   turned to stone dies ("Turned to stone"); no statue of them is laid, the run ends.
+  - **Leavings** (#1133, the dread design §9): a type's `leavings` are laid by the generator
+    within a few cells of each one a population or a vault places: statues of the floor's own
+    nobodies, holding nothing (the basilisk's), old webs that catch no one (`web`), acid-pitted
+    floor (`acid_pit`, a floor in sick green), and torn cloth (an object worth nothing). Look
+    mode names them for what they are. A dread type's `first_sight` line is said once a run,
+    the first time one is in sight, after the turn's other lines (`Progress::sighted`, saved).
 - **Chests** (`warlock-core/src/chest.rs`, the rules; `world/chest.rs`, applying them; data
   `data/chests.toml` §7 "Chests"; docs/design/chests-and-treasure.md, slices C1 to C3): a chest is a
   **fixture of a cell**, as a door is, never a carried object.

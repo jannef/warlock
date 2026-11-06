@@ -8,6 +8,7 @@ xp = 100
 rarity = "rare"
 dread = true
 name = "gibbering shade"
+first_sight = "A gibbering shade. Its babble drowns out every word of power."
 glyph = "G"
 fg = "#a090c0"
 speed = 1150

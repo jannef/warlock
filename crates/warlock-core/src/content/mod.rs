@@ -85,6 +85,7 @@ mod item_class;
 mod kit;
 mod layer_boss;
 mod learning;
+pub mod leaving;
 mod level;
 mod light;
 mod material;
@@ -267,6 +268,7 @@ pub(crate) use item_class::BUILTIN as BUILTIN_ITEM_CLASSES;
 pub use item_class::{ItemClassDef, ItemClassId, MAX_ITEM_CLASSES};
 pub use kit::{Keep, Kit, KitItem, RandomScrolls};
 pub use learning::{Band, Mishap, MishapEffect, StudyRules, drawn_among};
+pub use leaving::{Laid, Leaving};
 pub(crate) use level::validate_route;
 pub use level::{
     CreatureSpawn, EdgeExit, HiddenLocation, LevelKind, LevelTemplate, Place, Region, StairsLink,
@@ -1745,6 +1747,23 @@ impl Content {
             if spec.anim.as_ref().is_some_and(GlyphAnim::is_flow) {
                 return Err(err(format!(
                     "creature `{}`: only terrain can have a `flow` animation",
+                    spec.id
+                )));
+            }
+            if let Some(missing) = spec.leavings.iter().find(|l| self.leaving(**l).is_none()) {
+                return Err(err(format!(
+                    "creature `{}`: leaving `{}` needs its terrain or object",
+                    spec.id,
+                    missing.id()
+                )));
+            }
+            if spec
+                .first_sight
+                .as_deref()
+                .is_some_and(|l| l.trim().is_empty())
+            {
+                return Err(err(format!(
+                    "creature `{}`: `first_sight` must not be empty",
                     spec.id
                 )));
             }

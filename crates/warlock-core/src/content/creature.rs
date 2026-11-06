@@ -271,6 +271,13 @@ pub(super) struct CreatureSpec {
     /// the one draw in `dread_one_in` made among the dread types; default false.
     #[serde(default)]
     pub dread: bool,
+    /// What it leaves about it (docs/design/monster-dread.md §9; `content/leaving.rs`): the
+    /// dressings the generator lays near it, `["statue"]`; default none.
+    #[serde(default)]
+    pub leavings: Vec<super::Leaving>,
+    /// The line said the first time in a run one is seen (docs/design/monster-dread.md §9): a
+    /// dread type's, "A basilisk. Do not meet its eyes."; default none.
+    pub first_sight: Option<String>,
     /// Its trained skills by skill id, with their values (spec §8 "Skills"); the rest untrained.
     #[serde(default)]
     pub skills: BTreeMap<String, u16>,
@@ -833,6 +840,8 @@ impl CreatureSpec {
             stray: self.stray,
             rarity: r.rarity,
             dread: self.dread,
+            leavings: self.leavings,
+            first_sight: self.first_sight,
             loot: self.loot,
             attack: r.attack,
             more_attacks: r.more_attacks,
@@ -1020,6 +1029,12 @@ pub struct CreatureDef {
     /// spawn draws it only in the one draw in `dread_one_in` made among the dread types
     /// ([`super::danger::draw`]). Never shown in the game; the wiki tells it.
     pub dread: bool,
+    /// Gameplay: what it leaves about it (`content/leaving.rs`, `mapgen/leavings.rs`): the
+    /// dressings the generator lays near one it places. The player sees them, not what they mean.
+    pub leavings: Vec<super::Leaving>,
+    /// Presentation: the line said the first time in a run the player sees one
+    /// (`world/first_sight.rs`); `None`: none.
+    pub first_sight: Option<String>,
     /// Gameplay: the chance in percent that it drops a magic or rare item where it dies.
     pub loot: u8,
     /// Gameplay: its natural attack, used when it wields no weapon; `None`: bare hands (1d3).

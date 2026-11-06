@@ -9,6 +9,7 @@ xp = 120
 rarity = "uncommon"
 dread = true
 name = "charnel heap"
+first_sight = "A charnel heap. Cut it, and there is more of it."
 glyph = "Z"
 fg = "#7a7048"
 speed = 800

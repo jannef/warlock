@@ -11,6 +11,7 @@ rarity = "very_rare"
 dread = true
 loot = 100
 name = "archlich"
+first_sight = "An archlich. Death gave up on this one long ago."
 glyph = "L"
 fg = "#40c0f0"
 speed = 1150
