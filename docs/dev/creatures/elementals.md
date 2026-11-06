@@ -69,4 +69,5 @@ The invisible stalker (#1132, docs/design/monster-dread.md §5.11): the air line
 never seen, it comes to the player wherever they are on its level; a quick role (1500, `3d8`
 slashing), no corpse, no blood, and, as every elemental now, no heartbeat for Sense the quick. No
 population names the air elementals of its depth yet, so it comes as a stray. It keeps the roster's
-formulas (`elemental_roster_tests`).
+formulas (`elemental_roster_tests`). It bursts where it dies as the air elemental does (`4d6`, radius 1, a
+gust; #1127's death throes, `elemental_roster_tests::KIN`).
