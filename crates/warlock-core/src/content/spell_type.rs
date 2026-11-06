@@ -76,8 +76,8 @@ pub(super) fn rider(r: &RiderSpec, content: &Content) -> Result<TypeRider, Strin
     if !CHANCES.contains(&r.chance) {
         return Err("rider: `chance` is 1 to 100 percent".into());
     }
-    let id = (content.status_id(&r.status))
-        .ok_or_else(|| format!("unknown status `{}`", r.status))?;
+    let id =
+        (content.status_id(&r.status)).ok_or_else(|| format!("unknown status `{}`", r.status))?;
     if !(1..=content.status(id).max).contains(&r.severity) {
         return Err(format!(
             "rider: `{}` has no severity {}",

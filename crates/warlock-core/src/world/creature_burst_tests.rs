@@ -30,11 +30,20 @@ const LEGEND: &str = r##"
 /// The maps, by scenario: each a lit hall.
 const MAPS: &[(&str, &str)] = &[
     ("vortex", "#########\n#@.e....#\n#.......#\n#########\n"),
-    ("throes", "#########\n#.......#\n#@FsfH..#\n#.F.H...#\n#########\n"),
+    (
+        "throes",
+        "#########\n#.......#\n#@FsfH..#\n#.F.H...#\n#########\n",
+    ),
     ("ally", "#######\n#######\n#@.F..#\n#######\n#######\n"),
     ("wave", "#######\n#.....#\n#@W...#\n#.....#\n#######\n"),
-    ("gust", "#########\n#.......#\n#@.Ap...#\n#.......#\n#########\n"),
-    ("stones", "###########\n#@.....E..#\n#.........#\n###########\n"),
+    (
+        "gust",
+        "#########\n#.......#\n#@.Ap...#\n#.......#\n#########\n",
+    ),
+    (
+        "stones",
+        "###########\n#@.....E..#\n#.........#\n###########\n",
+    ),
 ];
 
 static CONTENT: LazyLock<Arc<Content>> = LazyLock::new(|| {
@@ -176,7 +185,10 @@ fn death_throes_strike_the_radius_in_full_but_its_own_kind() {
     let blows = struck(&events, dying);
     let player = w.state.player;
     let on = |id: ActorId| blows.iter().find(|&&(t, _)| t == id).map(|&(_, s)| s);
-    assert!(on(player).is_some_and(hit), "the player beside it: {blows:?}");
+    assert!(
+        on(player).is_some_and(hit),
+        "the player beside it: {blows:?}"
+    );
     assert_eq!(on(twin), None, "its own kind is spared");
     assert_eq!(
         on(lesser),
@@ -202,7 +214,14 @@ fn death_throes_ruin_what_lies_on_the_floor() {
     let dying = first_of(&w, "fire_elemental");
     let at = w.state.actors[&dying].pos;
     let pile = Pos::new(at.x + 1, at.y);
-    let count = |w: &World| -> u32 { w.state.current().objects_at(pile).iter().map(|s| s.count).sum() };
+    let count = |w: &World| -> u32 {
+        w.state
+            .current()
+            .objects_at(pile)
+            .iter()
+            .map(|s| s.count)
+            .sum()
+    };
     assert_eq!(count(&w), 40);
     kill(&mut w, dying);
     assert!(count(&w) < 40, "some of the scrolls burnt");
@@ -231,7 +250,10 @@ fn a_waves_death_throes_douse_the_burning() {
     assert!(w.state.player().effects.has(burning));
     let dying = first_of(&w, "water_elemental");
     let events = kill(&mut w, dying);
-    assert!(!w.state.player().effects.has(burning), "the wave put it out");
+    assert!(
+        !w.state.player().effects.has(burning),
+        "the wave put it out"
+    );
     assert!(struck(&events, dying).iter().any(|&(t, _)| t == player));
 }
 
@@ -259,9 +281,7 @@ fn the_earth_line_hurls_stones_from_afar_and_pounds_up_close() {
     let kinds = |events: &[Event]| -> Vec<AttackKind> {
         (events.iter())
             .filter_map(|e| match *e {
-                Event::Attacked {
-                    attacker, kind, ..
-                } if attacker == earth => Some(kind),
+                Event::Attacked { attacker, kind, .. } if attacker == earth => Some(kind),
                 _ => None,
             })
             .collect()
@@ -317,4 +337,25 @@ fn a_burst_on_touch_is_a_creatures_whole_offence() {
     files.insert(path, &text);
     let error = Content::load(&files).expect_err("an attack beside a burst on touch");
     assert!(error.to_string().contains("burst on touch"), "{error}");
+}
+
+#[test]
+fn the_burning_skull_the_magma_crawler_and_the_balor_burst_when_they_die() {
+    let content = &*CONTENT;
+    let fire = content.damage_type_id("fire").expect("fire");
+    for (id, (min, max), radius) in [
+        ("burning_skull", (2, 12), 1),
+        ("magma_crawler", (2, 16), 1),
+        ("balor", (8, 96), 2),
+    ] {
+        let def = content.creature(content.creature_id(id).expect(id));
+        let burst = def
+            .burst
+            .as_ref()
+            .unwrap_or_else(|| panic!("{id}: a burst"));
+        assert_eq!(burst.when, crate::content::BurstWhen::Dies, "{id}");
+        assert_eq!(burst.kind, fire, "{id}");
+        assert_eq!((burst.damage.min(), burst.damage.max()), (min, max), "{id}");
+        assert_eq!(burst.radius, radius, "{id}");
+    }
 }

@@ -20,6 +20,29 @@ tags, in the delf's `fire` faction.
 | Ice | brute | frost mote 5, lesser ice elemental 11, ice elemental 21, greater 33, elder 48, rimethurse 66 | slow, a cold blow that leaves one `sluggish`, immune to cold, fire hurts it more |
 | Lightning | quick | spark mote 8, lesser lightning elemental 15, lightning elemental 23, greater 36, elder 52, thunderhead 70 | fast, a shock that `staggered`, immune to electricity; the `storm` light (`data/lights.toml`, added for it; the spark mote only a glow) |
 
+**Bursts** (the dread design §5.3, #1127; `world/creature_burst.rs`): the six motes are
+**vortices** (`[creature.burst]` with `when = "touches"`, radius 1, no `attack`, speed +200):
+stone mote `2d4` bludgeoning, ember mote `2d4` fire, dust devil `2d4` slashing, water mote `2d4`
+bludgeoning, frost mote `2d6` cold, spark mote `2d6` electricity. Every other rung but the earth
+line's has **death throes** (`when = "dies"`), `(2 + L/8)d6` (half the doubled damage spells'
+`(4 + L/4)d6` of its level), by line and rung (lesser, with the cinder elemental on the fire
+line's; plain; greater; elder; eldest):
+
+| Line | Type | Radius by rung | Rider | Also |
+|---|---|---|---|---|
+| fire | fire, effect `fireball` | 1 / 2 / 2 / 3 / 3 | 50 % `burning` from the plain rung | — |
+| lightning | electricity, `shatter` | 1 / 2 / 2 / 3 / 3 | 50 % `staggered` | — |
+| ice | cold, `frost_burst` | 1 / 2 / 2 / 3 / 3 | `sluggish` | — |
+| air | bludgeoning, `shatter` | 1 / 1 / 2 / 2 / 3 | 50 % `staggered` | `gust`: piles blown a cell outward |
+| water | bludgeoning, `shatter` | 1 / 1 / 2 / 2 / 3 | — | `douses`: Burning and fires put out |
+
+The fire line's blows also set alight (`on_hit` 25 % `burning`). The **earth line** does not
+burst: it throws stones (`[creature.throw]`, the `boulder` object named "stone", range
+5 + L/10, the fist's dice a size smaller, `cost = 1500`, bludgeoning, 15 % `staggered`), and one
+inside a wall comes out before it throws (`hurl.rs`). `content/elemental_roster_tests.rs`'s
+`RUNGS` table pins each line's burst and the earth line's throw, and every elemental is on a
+rung or a vortex.
+
 The greater, elder, and eldest rungs are size medium with great weights (no larger size yet) and
 drop loot now and then. Riders are existing statuses only.
 
@@ -37,4 +60,4 @@ devil (the shallow galleries' filler, as the bats are), the spark mote, the less
 and lightning elementals, and the water elemental. The air elemental (19) and those of level 21
 and up (the ice elemental and every greater and elder one) ship in none: no danger window reaches
 them (Fyrdelf's runs 5 to 16, #534). Deferred (#453 "Follow-ups"): large size,
-water-bound behaviour, knockback, whirlwind, engulf, burning, breath, elements at war, gem drops.
+water-bound behaviour, knockback, whirlwind, engulf, breath, elements at war, gem drops.

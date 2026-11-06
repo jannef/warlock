@@ -1153,8 +1153,8 @@ impl World {
         when: GameTime,
         events: &mut Vec<Event>,
     ) {
-        let Some((at, creature, level)) = (self.state.actors.get(&id))
-            .map(|a| (a.pos, a.creature, a.level.clone()))
+        let Some((at, creature, level)) =
+            (self.state.actors.get(&id)).map(|a| (a.pos, a.creature, a.level.clone()))
         else {
             return;
         };

@@ -297,7 +297,10 @@ fn throes(line: &str) -> Option<Throes> {
 /// and the stone staggers.
 fn check_stones(content: &Content, id: &str, def: &super::CreatureDef) {
     assert!(def.burst.is_none(), "{id}: stone does not burst");
-    let throw = def.throw.as_ref().unwrap_or_else(|| panic!("{id}: a throw"));
+    let throw = def
+        .throw
+        .as_ref()
+        .unwrap_or_else(|| panic!("{id}: a throw"));
     let level = i32::from(def.level);
     assert_eq!(throw.range, 5 + level / 10, "{id}: range 5 + L/10");
     assert_eq!(throw.cost, Some(1500), "{id}: a throw's cost");
@@ -334,8 +337,15 @@ fn every_line_but_earth_has_death_throes_and_earth_throws_stones() {
                 let burst = (def.burst.as_ref()).unwrap_or_else(|| panic!("{id}: death throes"));
                 assert_eq!(burst.when, BurstWhen::Dies, "{id}");
                 let kind = want.kind;
-                assert_eq!(Some(burst.kind), content.damage_type_id(kind), "{id}: {kind}");
-                assert_eq!(burst.radius, want.radii[rung], "{id}: the radius of rung {rung}");
+                assert_eq!(
+                    Some(burst.kind),
+                    content.damage_type_id(kind),
+                    "{id}: {kind}"
+                );
+                assert_eq!(
+                    burst.radius, want.radii[rung],
+                    "{id}: the radius of rung {rung}"
+                );
                 // Half the doubled damage spells' dice of its level, (4 + L/4)d6: (2 + L/8)d6.
                 let dice = 2 + i32::from(def.level) / 8;
                 assert_eq!(

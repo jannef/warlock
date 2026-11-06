@@ -42,10 +42,12 @@ Tests: `world/shot_range_tests.rs` (with the same draws, a shot at a band strike
 distance with the penalty added to its to-hit), `content/ranged.rs`.
 
 Creatures' throws (spec §8 "Ranged combat": "Creatures' throws", #457) live in
-`warlock-core/src/world/hurl.rs`: a creature type's `[creature.throw]` (`content/throw.rs`:
+`warlock-core/src/world/hurl.rs` (the earth elementals' stones too, the dread design §5.3): a
+creature type's `[creature.throw]` (`content/throw.rs`:
 `ThrowSpec` resolved like a natural attack, its `object` once objects are known,
 `Content::load_throws`; `Throw` on `CreatureDef::throw`). `World::hurls_at` is the AI's check (not
-next to the target, in range, `clear_shot`), `World::creature_hurls` prices the throw
+next to the target, not inside an opaque cell (an incorporeal thrower comes out of the wall
+first), in range, `clear_shot`), `World::creature_hurls` prices the throw
 (`attack_price` of `throw`, which `Content::action_cost` gives the throw's `cost`), makes the
 noise, and flies a `shoot::Flight` with `lands: None` and `breaks: 0` through `World::fly`, the
 flight `loose` uses (so no gameplay draw beyond the attacks' and nothing comes down).

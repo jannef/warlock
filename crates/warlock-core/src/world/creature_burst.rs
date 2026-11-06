@@ -59,8 +59,7 @@ impl World {
         let kind = AttackKind::Melee;
         let skills = self.skills_of(id, kind, None);
         let price = self.attack_price(id, kind.action(), None, skills);
-        let Some((here, creature)) = self.state.actors.get(&id).map(|a| (a.pos, a.creature))
-        else {
+        let Some((here, creature)) = self.state.actors.get(&id).map(|a| (a.pos, a.creature)) else {
             return price;
         };
         self.go_off(id, here, creature, events);
@@ -98,13 +97,7 @@ impl World {
     }
 
     /// The burst of creature `id`'s type `creature` goes off around `here` (module docs).
-    fn go_off(
-        &mut self,
-        id: ActorId,
-        here: Pos,
-        creature: CreatureId,
-        events: &mut Vec<Event>,
-    ) {
+    fn go_off(&mut self, id: ActorId, here: Pos, creature: CreatureId, events: &mut Vec<Event>) {
         let content = self.content.clone();
         let def = content.creature(creature);
         let Some(burst) = def.burst.as_ref() else {

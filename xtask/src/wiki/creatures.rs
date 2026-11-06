@@ -11,8 +11,8 @@ use warlock_core::action::AttackKind;
 use warlock_core::burden::{self, Burden};
 use warlock_core::combat::Category;
 use warlock_core::content::{
-    ActionKind, Affliction, BASE_TURN, Benefit, BurstWhen, Combat, Content, CreatureDef, CreatureId,
-    FactionId, NORMAL_COST, NaturalAttack, Stance, article, price, spoken,
+    ActionKind, Affliction, BASE_TURN, Benefit, BurstWhen, Combat, Content, CreatureDef,
+    CreatureId, FactionId, NORMAL_COST, NaturalAttack, Stance, article, price, spoken,
 };
 use warlock_core::geom::Pos;
 use warlock_core::object::format_weight;
@@ -446,7 +446,10 @@ pub(super) fn creature_attacks(content: &Content) -> String {
         };
         let actor = bare(content, id);
         // A vortex has no blow: its burst (the bursts' table).
-        if c.burst.as_ref().is_some_and(|b| b.when == BurstWhen::Touches) {
+        if c.burst
+            .as_ref()
+            .is_some_and(|b| b.when == BurstWhen::Touches)
+        {
             let _ = writeln!(
                 out,
                 "| {} | {fight} | its burst | the bursts' table | - | - | {} | - |",

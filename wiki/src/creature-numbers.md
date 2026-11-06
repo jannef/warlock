@@ -88,6 +88,35 @@ as a roar.
 
 {{#include generated/creature-breaths.md}}
 
+### Bursts
+
+Some creatures go off in a burst of their element. The motes are **vortices**: a
+[vortex](creatures.md#creature-ember-mote) has no blow at all, and once it is beside its target it
+bursts instead, and is gone. Killed before it gets there, it goes out quietly, so shoot or throw
+at one as it comes, or close a door on it (a mote opens none). The elementals but the earth line,
+the [burning skull](creatures.md#creature-burning-skull), the
+[magma crawler](creatures.md#creature-magma-crawler), and the [balor](creatures.md#creature-balor)
+have **death throes**: they burst where they die, however they die, so an elemental is best killed
+from a cell or more away. The earth elementals do not burst; they hurl stones at what is not
+beside them, as the giants do (the throws above), and pound what is.
+
+A burst is centred on the creature's own cell and reaches everyone within its radius in its
+line, but creatures of its own kind: one roll of its damage strikes each of them in full, with no
+roll [to hit](combat.md#hitting) and no halving at the edge;
+[Evasion](talents.md#talent-evasion) halves it and
+[resistance](damage-types.md#armour-and-resistance) takes its share. It strikes your
+[allies](allies.md) and other creatures as readily as you. It does to the floor what an area
+[spell](magic.md#what-lies-in-its-way) of its element does, so the scrolls under a dying fire elemental may burn,
+and its element does to the cells what such a spell's burst does (fire left burning, water
+frozen). The spell types' riders do not come with it; its own do, by the chance below, on those it
+harmed. A water elemental's wave puts out the [burning](status-effects.md#status-burning) of
+everyone it reaches and the fires there; an air elemental's gust blows what lies loose on its
+cells a cell farther out. The dice of a death throe are half of what a damage spell of the
+creature's level rolls, (2 + level ÷ 8)d6, rounded down. Unseen, a burst is heard as an
+explosion.
+
+{{#include generated/creature-bursts.md}}
+
 ### Spells
 
 Casters cast real [spells](magic.md), the very ones you may learn, rolled at their own

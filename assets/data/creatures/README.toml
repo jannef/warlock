@@ -157,7 +157,17 @@
 #             (what it does: "breathes fire"; default "breathes"). It breathes at a hostile it
 #             sees in the cone with a clear line whenever the status is off, with no roll to hit:
 #             Evasion halves it and resistances take their share
-#   natural   its natural armour: { defence = 1, protection = 3, name = "shell" }: defence in
+#   burst     a burst of its element (the dread design §5.3; world/creature_burst.rs):
+#             [creature.burst] with damage (dice, rolled once for everyone it reaches, each in
+#             full), damage_type, radius (0 to 3, around its own cell), when ("touches": a vortex,
+#             which bursts beside its target instead of attacking and dies of it, and needs no
+#             attack and combat melee; "dies": death throes, where it dies), effect (a burst
+#             effect of effects.toml), and optionally noun (what strikes: "flame"; default
+#             "burst"), verb ("comes apart in flame"; default "bursts", or "comes apart" for
+#             death throes), rider ([{ status, severity, chance }], laid on those it harmed),
+#             douses (a wave: Burning and fires put out), gust (piles blown a cell outward). Its
+#             own type is spared
+#   natural  its natural armour: { defence = 1, protection = 3, name = "shell" }: defence in
 #             the Natural category of Defence, protection the damage it soaks off every hit
 #             (adding up with what it wears; each 0 to 20, not both 0); "Your sword glances off
 #             the cave beetle's shell." Its protection follows the body its name names, by
