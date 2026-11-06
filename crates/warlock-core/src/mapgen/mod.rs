@@ -652,7 +652,7 @@ pub fn generate_for(
                     content,
                     seed,
                     (pal, danger, spawning),
-                    (visit, &monsters),
+                    (visit, &monsters, &canvas.stamped),
                 );
                 den::fill(&mut template, content, seed, (pal, danger, spawning), visit);
                 hoard::fill(&mut template, content, seed, (pal, danger), visit);

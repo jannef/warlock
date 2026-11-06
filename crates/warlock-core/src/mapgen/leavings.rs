@@ -13,6 +13,7 @@
 use super::Palette;
 use crate::content::{Content, CreatureId, CreatureSpawn, Laid, Leaving, LevelTemplate, Spawning};
 use crate::geom::{Dir, Pos};
+use crate::grid::Grid;
 use crate::object::{Stack, add_to_pile};
 use crate::rng::Rng;
 use crate::world::Statue;
@@ -26,7 +27,7 @@ pub(super) fn lay(
     template: &mut LevelTemplate,
     content: &Content,
     rng: &mut Rng,
-    (pal, spawning): (Palette, &Spawning),
+    (pal, spawning, stamped): (Palette, &Spawning, &Grid<bool>),
     placed: &[CreatureSpawn],
 ) {
     if placed
@@ -54,6 +55,9 @@ pub(super) fn lay(
             let (lo, hi) = leaving.count();
             let count = rng.range(lo, hi);
             let mut cells = near(template, spawn.pos);
+            // A vault's own lay theirs inside it; others keep off what vaults stamped.
+            let inside = stamped.get(spawn.pos).copied().unwrap_or(false);
+            cells.retain(|p| inside || !stamped.get(*p).copied().unwrap_or(false));
             for _ in 0..count {
                 cells.retain(|&p| fits(template, content, pal, &claimed, leaving, p));
                 if cells.is_empty() {
