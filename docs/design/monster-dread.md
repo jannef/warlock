@@ -65,7 +65,7 @@ teach Decipher script: nothing here).
 | **Fear gets teeth** | Frightened does nothing to the player today (only a creature `flees`). Proposed: the player's blows at **−3 to hit** while Frightened (`combat` on the status, data). Fear auras and howls then mean something; Iron will, Divine grace, Unbowed, the Ward power, and Still mind's Stillness already answer it. §5.4 |
 | **Variance** (§7) | on #1097's L/4: to-hit spread **±L/8 by role** (the quick +, the brute −), hit points **0.5× to 2.0×** the standard's (today 0.6 to 1.6), damage spread by **threat and crit** (the strikers threaten from 19, the brutes ×3) rather than by mean, speed **bimodal** (bulk between 800 and 1250, no tribe all at 1000; dread at 600 or at 1400 and up). A measurable target: on a floor the fastest tenth of its draws kill the probe's warrior in half the median rounds and the toughest tenth take twice; the probe gains the row. |
 | **Grades** (§7.4; decided: ship) | one in six spawns is **greater** (+25 % hit points, +1 to hit, +2 damage, a slower step) and one in six **lesser** (the reverse), a word in the look line ("a big kobold", "a scrawny kobold"), one `grade` field on the actor. Cheap, and the one change that makes two kobolds two fights. Its own slice. |
-| **Rarity** (§8) | **no cap** (the owner): a `dread = true` flag on the type, and one roll at **every random monster draw**, level population and spawner alike: **one in `dread_one_in`** (default **200**, `dungeons.toml`'s `[defaults]`; a branch or a single level may set its own, which overrides it for monsters drawn there). On a hit the draw is among the dread types, **each at its own rarity**; otherwise among the rest; with no dread type eligible, the ordinary draw. No floor-level state; vaults and legends place what they place. Dread is not one rarity: the barbed devil is common, the basilisk very rare (the ghouls' hold stays a common trait of every floor, not dread). |
+| **Rarity** (§8) | **no cap** (the owner): a `dread = true` flag on the type, and one roll at **every random monster draw**, level population and spawner alike: **one in `dread_one_in`** (default **100**, `dungeons.toml`'s `[defaults]`; a branch or a single level may set its own, which overrides it for monsters drawn there). On a hit the draw is among the dread types, **each at its own rarity**; otherwise among the rest; with no dread type eligible, the ordinary draw. No floor-level state; vaults and legends place what they place. Dread is not one rarity: the barbed devil is common, the basilisk very rare (the ghouls' hold stays a common trait of every floor, not dread). |
 | **Warning signs** (§9) | four channels, all cheap: a type's **cry** (an idle sound now and then: a hiss, a wail, a giggle, a rattle, heard through doors by the hearing rules), its **light** (the motes, the hand of glory), its **leavings** laid by the generator in its vault or room (statues by a basilisk, webs by a spider, acid-pitted floor, torn cloth), and a **first-sight line** said once per run per type ("A basilisk. Do not meet its eyes.") that also goes into the message history and the wiki. And a fifth, the owner's (§9.5): the **graveyard file**, a list of every character who has died that survives every version, so a basilisk's statues can be **the player's own petrified dead by name**. |
 | **Talents** | **none new** (decided): a creature gimmick extends the creatures system (CLAUDE.md's talent rule); the counters are existing talents, resistances, items, and play. §11 |
 | **Slices** (§12) | D0 fear's teeth, the `dread` flag, the draw's roll, and the sort's rarity pass (data, first); D1 the gaze and the forced Averted eyes; D2 stiffening, the basilisk, and the statue; D3 the burst for every elemental line and the earth line's stones; D4 auras and cries; D5 splitting and dying into; D6 engulf, theft on a cooldown, and the blink to reach; D7 corroding gear with the materials' `corrodes` and the two new metals, and regeneration; D8 the shadowy and invisibility; D9 leavings and first-sight lines; D10 the variance pass and the probe's row; D11 grades; D12 the animated objects (decided: the rug, the bellows, the lantern, the blades); D13 the graveyard file and the named statues; D14 the second-wave types issue. |
@@ -727,7 +727,7 @@ whatever". The first draft's `dread` tier and its `most_alive` cap are gone; thi
 tables show it) says what the type is; its **rarity tier stays its own**. Every time a random
 monster is drawn (a level's population draw and the spawner's later draws alike), one roll
 against **`dread_one_in`** (`data/dungeons.toml`'s `[defaults]`, beside `stray` and `out_of_depth`;
-**default 200**; a branch, or a single level (a generated depth's entry or a hand-made level's file), may set its own `dread_one_in`, and the most specific one wins: the level's over the branch's over the default; it is a property of the level's data read at each draw, not state rolled when the level is made). On a hit the draw is
+**default 100**; a branch, or a single level (a generated depth's entry or a hand-made level's file), may set its own `dread_one_in`, and the most specific one wins: the level's over the branch's over the default; it is a property of the level's data read at each draw, not state rolled when the level is made). On a hit the draw is
 made among the `dread = true` types, each at its own level weight and rarity factor (ghouls
 common, the basilisk very rare); otherwise among the non-dread types. If no dread type is
 eligible, the draw falls back to the ordinary one. There is no floor-level state. **The vault
@@ -736,9 +736,9 @@ untouched, and mimics are placed by the chest rule.
 
 ### 8.2 The odds, roughly
 
-A floor draws about 40 creatures at the Fyrdelf scale (`population_count`: 25 to 80). At 1 in 200
-a draw, the chance of at least one dread draw on the floor is 1 - (199/200)^40, about 18 %: roughly
-**one floor in five or six** has a dread creature, before the spawner's later draws, and a hit
+A floor draws about 40 creatures at the Fyrdelf scale (`population_count`: 25 to 80). At 1 in 100
+a draw, the chance of at least one dread draw on the floor is 1 - (99/100)^40, about 33 %: roughly
+**one floor in three** has a dread creature, before the spawner's later draws, and a hit
 may come up empty if only a rare type is eligible. Which dread type comes is its own rarity's
 weight among the dread types near the danger.
 
@@ -887,7 +887,7 @@ tests, the dumps, a replay created and verified, the wiki tables, the tribe file
 
 | Slice | What | Size |
 |---|---|---|
-| **D0** | Fear's teeth (`combat` on `frightened`, data; the probe's thief column checked); the `dread` flag and `dread_one_in` (in `[defaults]`, per branch, and per level, the most specific winning; the roll in the monster draw, `candidates`, for the population and the spawner alike); the sort's tier moves (§8.3), data; the roster tests' rarity and dread rows | small; first |
+| **D0** | Fear's teeth (`combat` on `frightened`, data; the probe's thief column checked); the `dread` flag and `dread_one_in` (in `[defaults]`, per branch, and per level, the most specific winning; the roll in the monster draw, `candidates`, for the population and the spawner alike); the sort's tier moves (§8.3), data; the existing dungeons' deeper and more dangerous levels given a lower `dread_one_in` of their own (the owner: "sprinkle dread chance"), listed in the PR; the roster tests' rarity and dread rows | small; first |
 | **D1** | The gaze (`[creature.gaze]`, the hook in the AI's fight step before throws, the cooldown status, the "you see it" read from the snapshot for the player and `sight::sees` for creatures, the unseen-stare line); the forced Averted condition (`averted` and `glance` on the gaze, `world/avert.rs`'s derived read, the status bar, the dumps); the vampires', hags', spirits', and ultroloth's riders moved onto the gaze | medium |
 | **D2** | Stiffening (the status with `kills_at_max`, `stages`, `treat`; the scroll of restoration's line; the death line); the statue fixture (a cell fixture as a chest is; digging breaks it; kicking it, hard, with the marks); the basilisk's gaze with `averted` | medium |
 | **D3** | The burst (`[creature.burst]`, `touches` and `dies`, through the area code with #1100's floor ruin; the vortex AI arm); the six motes as vortices (data, speed, tier); every elemental line's death throes by §5.3's table and the earth line's stones (data: `[creature.throw]`); the burning skull, magma crawler, and balor's death throes | medium |
@@ -995,9 +995,10 @@ default the slices take unless the owner says otherwise:
    stone comes only to the one who does not see it coming, e.g. in the dark)? *Default: a
    quarter; the owner answered "death" for stiffening's end, and a gaze that never lands while
    you look away is no death.*
-2. **The roll's default** (§8.1): `dread_one_in = 200`, about one floor in five or six; per
-   branch or per level values (Grundlēas lower, the Ascmearc's first floors higher?). *Default: 200 for all;
-   the numbers are data and the first dread PRs will say how it plays.*
+2. **The per-level values** (§8.1): the default is decided (100, §17); the deeper and more
+   dangerous levels of the existing dungeons get a lower `dread_one_in` of their own (decided),
+   the numbers the D0 PR's first guess. *Default: about 1 in 50 on a dungeon's deepest third, 1 in
+   25 on its last floor and on Grundlēas; the numbers are data and the first dread PRs will say how it plays.*
 3. **The invisible stalker's place** (§5.11): level 22, uncommon, among the air elementals'
    populations and a stray; one new type only. *Default: as written.*
 4. **The graveyard's reach** (§9.5): write every death, and name statues from the petrified
@@ -1031,3 +1032,4 @@ the owner took the default. The sections changed are those this revision rewrote
 | D11 | Q10 the second-wave types | **"sure, create that issue too"**: an issue filed when D1 to D9 have landed (D14) | §12 |
 | D-next | Q5 again: the dread floor (owner, 2026-11-06, round 3) | **"lets leave level generation out of this one. Just roll the 1-in-x every time generating a random monster. 1-in-200 or whatever"**: the dread floor is gone (no `Level::dread`, no roll in `populate`, no `truth` header); `dread_one_in` (default 200) is rolled at every random monster draw, the population's and the spawner's; a hit draws among the dread types at their own rarity | §1, §3, §6, §8, §10, §12, §14, §16 |
 | D-next+1 | the level's own chance (owner, 2026-11-06, round 3) | **"A level can still have associated dread chance, that overrides the general 1-in-200 rate when generating monsters on that level"**: `dread_one_in` may be set on a branch or on a single level; the most specific wins (level over branch over `[defaults]`), read at each monster draw on that level | §1, §8, §10, §12 |
+| D-next+2 | the default and the sprinkling (owner, 2026-11-06, round 3) | **"let's increase the default to 1-in-100. And when implementing, sprinkle dread chance to deeper and more dangerous levels of existing dungeons"**: `dread_one_in = 100` in `[defaults]` (about one floor in three); D0 gives the existing dungeons' deeper and more dangerous levels a lower value of their own | §1, §8, §12, §16 |
