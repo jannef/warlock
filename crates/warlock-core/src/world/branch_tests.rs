@@ -121,7 +121,7 @@ fn the_vast_level_leads_into_the_depths_and_back() {
 
 #[test]
 fn branch_levels_link_up_and_down_and_persist() {
-    let mut world = depths(7);
+    let mut world = depths(8);
     let mut log = Vec::new();
     let top = stairs(&world, StairsDir::Up).clone();
     assert_eq!(
@@ -203,7 +203,7 @@ fn replays_through_generated_levels_verify() {
 fn saves_round_trip_on_generated_levels_and_continue_identically() {
     // The walk never fights: a seed where a kobold and a rat trap the walker in a corridor
     // (seed 5, once vaults turned) would leave it dead short of the stairs.
-    let mut a = depths(7);
+    let mut a = depths(9);
     let mut log = Vec::new();
     take(&mut a, StairsDir::Down, &mut log);
     let mut b = crate::save::decode(&crate::save::encode(&a), CONTENT.clone()).expect("decodes");

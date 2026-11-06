@@ -1,0 +1,29 @@
+# Vault: a mead-hall after the feast, most asleep at the board and a few still nodding. The
+# decision: cross the hall to the buttery past the ones half awake, or put them down quietly
+# before they rouse the rest.
+# The drowsy are awake but slow, and sober as the turns go by; the sleepers wake to noise. The
+# hall is a route by design, a door at each end; the buttery opens only off the hall. The embers
+# of the fire are its one light. Eight in all: four finds, one magic, one rare.
+# Borrows: the Mead-hall (docs/design/generic-vaults.md C1), the night after.
+name = "The Drunken Hall"
+danger = { from = 2 }
+map = '''
+#################
+#.a.a.a.*.a.a.a.#
++...............+
+#.a.d.a.d.a.d.a.#
+########+########
+#$.m..f...f..r.$#
+#################
+'''
+
+[legend]
+# Six of ten asleep, two of three nodding.
+"a" = { terrain = "floor", monsters = { pool = ["goblin", "orc"], count = 6 }, status = ["asleep"] }
+"d" = { terrain = "floor", monsters = { pool = ["goblin", "orc"], count = 2 }, status = ["drowsy*3"] }
+"*" = { terrain = "floor", light = "ember" }
+# The feast's leavings: food is no loot class, so it is placed.
+"f" = { terrain = "floor", objects = ["bread", "dried_meat*2"] }
+"$" = { terrain = "floor", loot = "any" }
+"m" = { terrain = "floor", loot = "magic" }
+"r" = { terrain = "floor", loot = "rare" }

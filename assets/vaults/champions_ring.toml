@@ -1,0 +1,25 @@
+# Vault: one great foe in a ring of standing stones, two finds beside it. The decision: single
+# combat in the open, or stone to stone with missiles.
+# The stones break lines of sight, and the braziers light the ring. The foe deepens with the
+# floor: an orc, then an ogre, a troll, a giant. A floor's danger in one body is a harder thing
+# than the same in eight.
+name = "The Champion's Ring"
+danger = { from = 3 }
+map = '''
+###########
+#B...O...B#
+#..O...O..#
+#....$....#
+#O...T...O#
+#....$....#
+#..O...O..#
+#B..O.O..B#
+#####+#####
+'''
+
+[legend]
+"O" = "standing_stone"
+"B" = "brazier"
+# One champion on its one cell: the ring always has its foe.
+"T" = { terrain = "floor", monsters = { pool = ["orc", "ogre", "troll", "giant"] } }
+"$" = { terrain = "floor", loot = { pool = ["weapons", "armour"], grade = "rare" } }

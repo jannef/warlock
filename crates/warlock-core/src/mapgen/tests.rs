@@ -102,9 +102,9 @@ fn special_room_snapshots() {
     let flooded = level(33, 2);
     assert_eq!(flooded.rooms.len(), 1);
     insta::assert_snapshot!("rooms_seed_33_depth_2_flooded", describe(&flooded));
-    let shadowed = level(42, 4);
+    let shadowed = level(5, 4);
     assert_eq!(shadowed.rooms.len(), 1);
-    insta::assert_snapshot!("caves_seed_42_depth_4_shadowed", describe(&shadowed));
+    insta::assert_snapshot!("caves_seed_5_depth_4_shadowed", describe(&shadowed));
     // Without the marks, the flooded room shows its water.
     let map = ascii(&flooded, &CONTENT);
     let water = CONTENT
@@ -762,7 +762,17 @@ fn vaults_are_stamped_whole_some_way_round_with_their_lights_and_creatures() {
             for (i, vault) in vaults.iter().enumerate() {
                 for turn in crate::content::Turn::ALL {
                     let turned = vault.turned(turn);
-                    for at in stamped_at(&level, &turned) {
+                    // Its piles too: a plain room in a plain shape (the Wyrm's Bed) is told from
+                    // an ordinary room by its bones.
+                    let piles_hold = |at: &Pos| {
+                        (turned.template.objects.iter()).all(|(p, pile)| {
+                            let here = level.objects.get(&Pos::new(at.x + p.x, at.y + p.y));
+                            here.is_some_and(|h| {
+                                pile.iter().all(|s| h.iter().any(|t| t.object == s.object))
+                            })
+                        })
+                    };
+                    for at in stamped_at(&level, &turned).into_iter().filter(piles_hold) {
                         seen[i] += 1;
                         let shift = |p: Pos| Pos::new(at.x + p.x, at.y + p.y);
                         for (p, light) in &turned.template.lights {
@@ -798,15 +808,17 @@ fn vaults_are_stamped_whole_some_way_round_with_their_lights_and_creatures() {
         }
     }
     // Dungeons get every dungeon vault and never the ruins meant for the overworld's local areas,
-    // nor the vaults a branch level names (stamped only there).
+    // nor the vaults a branch level names (stamped only there), nor one whose `danger` the Depths'
+    // (none: 0) is outside of.
     for (vault, count) in vaults.iter().zip(&seen) {
         if vault.pinned {
             assert_eq!(*count, 0, "vault `{}` stamped where not named", vault.id());
         } else if vault.is_outdoor() {
             assert_eq!(*count, 0, "outdoor vault `{}` in a dungeon", vault.id());
         } else if !vault.suits(0) {
-            // Kept to dangerous floors (the Well-house ...): the Depths have no danger.
-            assert_eq!(*count, 0, "vault `{}` stamped below its danger", vault.id());
+            // The depths have no danger, and a deep vault keeps to its own (#1073); the vault
+            // stamp test finds it on floors it suits (`vault_stamp_tests.rs`).
+            assert_eq!(*count, 0, "vault `{}` above its danger", vault.id());
         } else {
             assert!(*count > 0, "vault `{}` never placed", vault.id());
         }
@@ -927,7 +939,7 @@ fn random_vaults_are_spaced_by_phase() {
             assert!(floor.iter().all(|v| !seen.contains(v)), "seed {seed}");
             seen.extend(floor);
         }
-        // Those the deal keeps at danger 0: none kept to deeper floors (the Well-house ...).
+        // Of those the deal makes, the ones the Depths' danger (none: 0) suits.
         let all = (CONTENT.vaults().iter())
             .filter(|v| v.stamps_on(def, 1) && !v.pinned && v.suits(0))
             .count();

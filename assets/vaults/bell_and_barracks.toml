@@ -1,0 +1,20 @@
+# Vault: a rare find ringed by tripwires, and the barracks through an open doorway. The
+# decision: search and disarm, or ring the bell and run.
+# The tripwires are hidden: Spot finds them and Disable device clears them, in time. The barracks
+# has no door to hold it, and is seen through its doorway before anything is decided. One
+# entrance, into the strong-room. A branch's own hidden traps may land in the barracks too.
+name = "The Bell and the Barracks"
+map = '''
+###############
+#g.g.g.g.#....#
+#.g.g.g.g#.^..#
+#g.g.g.g.'^r^.+
+#.g.g.g.g#.^..#
+#g.g.g.g.#....#
+###############
+'''
+
+[legend]
+"g" = { terrain = "floor", monsters = { pool = "level", count = 8 } }
+"^" = { terrain = "floor", trap = "alarm" }
+"r" = { terrain = "floor", loot = "rare" }

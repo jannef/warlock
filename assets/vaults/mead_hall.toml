@@ -1,0 +1,24 @@
+# Vault: a tribe at the board in a long hall, and the buttery behind it with a door of its own.
+# The decision: the buttery quietly from outside, or the hall.
+# The hall is a wall away from the buttery and hears a kicked door or a fight; eight pour out of
+# its two doors. It is a route by design, so the crowd may stand between the player and the
+# stairs. The feast is placed, not rolled: food is no loot class.
+# Borrows: the shape of NetHack's barracks and throne rooms.
+name = "The Mead-hall"
+danger = { from = 2 }
+map = '''
+#################
+#.g.g.g.g.g.g...#
++.g.g.g.g.g.g.*.+
+#.g.g.g.g.g.g...#
+########+########
+#f.p..f.m.f..p.f#
+########+########
+'''
+
+[legend]
+"g" = { terrain = "floor", monsters = { pool = ["goblin", "hobgoblin", "orc"], count = 8 } }
+"*" = { terrain = "floor", light = "lamp" }
+"f" = { terrain = "floor", objects = ["bread", "dried_meat*2"] }
+"p" = { terrain = "floor", loot = { pool = "potions" } }
+"m" = { terrain = "floor", loot = "magic" }

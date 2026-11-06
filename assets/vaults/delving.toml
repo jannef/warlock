@@ -1,0 +1,23 @@
+# Vault: a warren of packed earth with the glitter at the ends of its tunnels and its diggers
+# in them. The decision: walk the tunnels, or dig straight through, loud.
+# Packed earth is a minute's digging a cell, and digging is heard; a pick-axe lies at the way in.
+# The diggers are kobolds on the upper floors and duergar below, and the warren keeps to the
+# floors where one or the other lives.
+name = "The Delving"
+danger = { from = 2, to = 40 }
+map = '''
+#############
+#$.k.k.k.k.$#
+#.EEEE.EEEE.#
+#.E$.k.k.$E.#
+#.EEEEEEEEE.#
+#.....P.....#
+######+######
+'''
+
+[legend]
+"E" = "packed_earth"
+# Four diggers on six cells, so where they work moves.
+"k" = { terrain = "floor", monsters = { pool = ["kobold", "duergar"], count = 4 } }
+"$" = { terrain = "floor", loot = { pool = ["gems", "money"] } }
+"P" = { terrain = "floor", objects = ["pick_axe"] }
