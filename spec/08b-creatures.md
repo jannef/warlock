@@ -172,14 +172,16 @@ developer notes (CLAUDE.md, `docs/dev/`).
   first split of a type the player sees in a run, "The charnel heap comes apart, and both
   halves crawl." (`Progress::once` `split:<type>`), later "The charnel heap splits in two.";
   "3 grave worms crawl out of the wormhost!" with the death, for what the player sees; look
-  mode adds ", writhing" after a `dies_into` type's parentheses. Bearers: the charnel heap
-  (splits), the wormhost and wormlord (die into grave worms; the wormlord breeds them too).
+  mode adds ", writhing" after a `dies_into` type's parentheses. Bearers: the charnel heap and
+  the black pudding (split), the wormhost and wormlord (die into grave worms; the wormlord breeds
+  them too), the hydra (dies into its heads, `hydra_head`, met only so).
 - **Dragons** (`warlock-core/src/world/breath.rs`, the rules; `content/breath.rs`, the data;
   #1099): an enemy-only creature ability. A `combat = "dragon"` type has a `[creature.breath]`
   (and only a dragon has one): `damage` (dice), `damage_type` (its element, one type),
   `length` (the cone's, 2 to 12 cells), `cooldown` (6 to 600 s), `effect` (a burst effect drawn
-  over the cone), and optionally `noun` ("fire"; default "breath") and `verb` ("breathes fire";
-  default "breathes"). In step 2, after a summoning and a throw, a dragon breathes when its
+  over the cone), and optionally `noun` ("fire"; default "breath"), `verb` ("breathes fire";
+  default "breathes"), and `riders` (statuses with a severity and drains with their check, as a
+  gaze's: never a disease or a hold; #1138). In step 2, after a summoning and a throw, a dragon breathes when its
   cooldown status `breath` is off and its target stands in the cone it would breathe at it (the
   spells' shared cone, `spell::cone_cells`: within `length`, a quarter turn wide, in line of
   sight) with a clear line of fire (as a shot's); deciding draws nothing. Otherwise it fights as
@@ -188,7 +190,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
   through `World::cast_cone`, the one place a cone strikes (Burning hands too): one roll for
   everyone in it in ascending actor id order, no roll to hit, Evasion halving it, resistances
   taking their share; then its damage type's spell type falls on those it harmed
-  (`World::spell_type_lands`: fire's burning, one in four). Its blows and kills are the
+  (`World::spell_type_lands`: fire's burning, one in four), and each of its `riders` by its own
+  chance on each of them still alive, as a blow's (`World::rider`; the gorgon's grey vapour, a
+  degree of Stiffening unless a Toughness check against 17 is made). Its blows and kills are the
   dragon's. The action costs a `cast`. Words: "The fire drake breathes fire!" when the player
   sees it, then each blow seen as a spell's ("The fire burns you."); unseen, the roar is heard.
 - **Gazes** (`warlock-core/src/world/gaze.rs`, the rules; `content/gaze.rs`, the data; #1125):
@@ -250,14 +254,14 @@ developer notes (CLAUDE.md, `docs/dev/`).
   the anvil's state: improvements gone, a point worse until mended): "The acid eats at your
   chain mail shirt." `what = "weapon"`: the player's melee hit on it rolls on what struck (the
   main hand's weapon, the off hand's, or the bashing shield): "Your long sword comes away
-  pitted." Any acid resistance halves the chance; a `"half"` material takes a second roll at
+  pitted." `what = "both"`: each of the two at the chance (#1138). Any acid resistance halves the chance; a `"half"` material takes a second roll at
   50; nothing is damaged twice or destroyed; a spirit weapon and a stack of several are left be.
   Made with nothing that corrodes: the first time in a life, "The acid runs off your mithril
   chain mail shirt." (`Progress::once`). Draws: one for the chance, then one for the piece and
   one for `"half"`. The materials' `corrodes` (true, false, `"half"`; default by group: metal and
   hide) is spec §7's. The ember beetle (weapon, 25; its acid blood, the innate `acid_blood`,
   also strikes back at a melee blow for `1d3` acid), the hezrou (armour, 25), the dretch (armour,
-  10).
+  10), the rust monster (both, 50), and the black pudding (both, 25).
 - **Regeneration** (`world/regen.rs`; #1131, the dread design §5.9): a type's `regen` (percent of
   the normal healing pace, 0 to 1000, default 100) counts among its statuses' paces in
   `Effects::regen`, so a status that slows healing slows it (Burning and Corroded have `regen =

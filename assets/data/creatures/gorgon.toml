@@ -1,0 +1,49 @@
+# The second wave (#1138, the dread design §15 and §12 D14). A bull of black iron scales whose
+# breath is a grey vapour: what it harms stiffens unless it makes the Toughness check (a breath's
+# riders, as a dragon breathes: `combat = "dragon"`), and between breaths it gores. Four degrees
+# are stone, so a gorgon met twice in a room is a statue; doors and distance are the answer.
+[[creature]]
+id = "gorgon"
+level = 28
+xp = 150
+rarity = "very_rare"
+dread = true
+name = "gorgon"
+leavings = ["statue"]
+first_sight = "A gorgon. Hold your breath, and get out of its way."
+glyph = "q"
+fg = "#6a7078"
+speed = 1000
+faction = "vermin"
+alignment = "neutral"
+vision = "darkvision"
+sight = 10
+combat = "dragon"
+footsteps = 150
+hearing = 12
+weight = 1000000
+stats = { strength = 30, dexterity = 10, toughness = 28, intelligence = 3, willpower = 18, presence = 10 }
+base_hp = 112
+natural = { defence = 3, protection = 4, name = "scales" }
+resist = { fire = 25, poison = 100 }
+on_eat = { message = "Gritty, like meat rolled in sand.", vomit = 40 }
+blood = "#4a4a50"
+# Its breath: a little poison, and stiffening for everyone it harms unless they make a Toughness
+# check against 12 + level / 5. A minute before the next.
+[creature.breath]
+damage = "4d6"
+damage_type = "poison"
+length = 5
+cooldown = 60
+effect = "petrifying_breath"
+noun = "vapour"
+verb = "breathes a grey vapour"
+riders = [
+    { status = "stiffening", chance = 100, severity = 1, check = "toughness", difficulty = 17 },
+]
+[creature.attack]
+damage = "3d10"
+damage_type = "piercing"
+name = "horns"
+verb = "gores"
+to_hit = 7

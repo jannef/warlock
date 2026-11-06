@@ -1,0 +1,62 @@
+# The second wave (#1138, the dread design §15 and §12 D14). A great marsh serpent with five
+# heads on long necks, each of which bites on its own (five natural attacks), whose wounds close
+# as you watch (`regen`, a brute's: fire or acid stops it). Killed, its heads go on living a
+# while and crawl out of the carcass to bite (`dies_into`: hydra heads).
+[[creature]]
+id = "hydra"
+level = 24
+xp = 130
+rarity = "rare"
+dread = true
+name = "hydra"
+first_sight = "A hydra. Every head bites, and killing it is not the end of them."
+glyph = "H"
+fg = "#4a8a5a"
+speed = 1000
+faction = "marsh"
+alignment = "neutral"
+vision = "low_light"
+sight = 10
+footsteps = 120
+hearing = 14
+weight = 800000
+stats = { strength = 26, dexterity = 14, toughness = 27, intelligence = 3, willpower = 16, presence = 8 }
+base_hp = 96
+regen = 400
+natural = { defence = 2, protection = 4, name = "scales" }
+resist = { fire = -25, poison = 50 }
+dies_into = { creatures = ["hydra_head"], count = "1d4", spread = 1 }
+on_eat = { message = "Tough and bitter, and it twitches.", vomit = 40 }
+blood = "#4a6a2a"
+cry = { kind = "hiss", loudness = 50, every = 60 }
+# Five heads, each struck in turn in one attack and rolled on its own.
+[[creature.attack]]
+damage = "1d6"
+damage_type = "piercing"
+name = "bite"
+verb = "bites"
+to_hit = 6
+[[creature.attack]]
+damage = "1d6"
+damage_type = "piercing"
+name = "bite"
+verb = "bites"
+to_hit = 6
+[[creature.attack]]
+damage = "1d6"
+damage_type = "piercing"
+name = "bite"
+verb = "bites"
+to_hit = 6
+[[creature.attack]]
+damage = "1d6"
+damage_type = "piercing"
+name = "bite"
+verb = "bites"
+to_hit = 6
+[[creature.attack]]
+damage = "1d6"
+damage_type = "piercing"
+name = "bite"
+verb = "bites"
+to_hit = 6

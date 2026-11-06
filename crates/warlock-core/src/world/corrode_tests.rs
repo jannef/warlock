@@ -297,3 +297,23 @@ fn the_player_sees_the_trolls_wounds_close() {
     assert_eq!(w.regenerating_hp(kobold), None);
     assert_eq!(w.regenerating_hp(w.state.player), None);
 }
+
+#[test]
+fn the_rust_monster_eats_both_ways() {
+    // #1138: `what = "both"`, the worn mail by its hits and the sword that strikes it.
+    let mut w = world("warrior");
+    let player = w.state.player;
+    let at = dressed(
+        &mut w,
+        &[
+            ("chain_mail", "body", None),
+            ("long_sword", "main_hand", None),
+        ],
+    );
+    let rust = beside(&mut w, "rust_monster", 500);
+    hits(&mut w, (rust, player), 100);
+    assert!(damaged(&w, at[0]), "the mail rusts under its feelers");
+    assert!(!damaged(&w, at[1]), "its hits eat no wielded sword");
+    hits(&mut w, (player, rust), 100);
+    assert!(damaged(&w, at[1]), "the sword that strikes it rusts");
+}

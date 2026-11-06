@@ -66,6 +66,8 @@ const CRIES: &[(&str, SoundKind)] = &[
     ("bone_dragon", SoundKind::Rattle),
     ("basilisk", SoundKind::Hiss),
     ("crocodile", SoundKind::Hiss),
+    ("cockatrice", SoundKind::Hiss),
+    ("hydra", SoundKind::Hiss),
     ("pixie", SoundKind::Giggle),
     ("nymph", SoundKind::Giggle),
     ("yeth_hound", SoundKind::Howl),

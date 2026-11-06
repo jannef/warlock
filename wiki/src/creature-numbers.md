@@ -99,13 +99,15 @@ it catches gives a degree of [Stiffening](status-effects.md#status-stiffening) u
 skin greys, you can barely move), and the fourth turns you to stone: death. A degree eases in two
 minutes, so a basilisk glimpsed and walked away from (it is slow) is a fright; the scroll of
 restoration, a temple's cure, or Still mind's Stillness ends it, and the Heal skill eases it a degree
-a try. A creature it stones leaves no corpse but a **statue** holding what it carried (see
+a try. The [cockatrice](creatures.md#creature-cockatrice)'s peck gives the same Stiffening by touch
+(a Toughness check against 13, one peck in four), and the [gorgon](creatures.md#creature-gorgon)'s
+breath to everyone it harms (see Breath below). A creature it stones leaves no corpse but a **statue** holding what it carried (see
 [Doors](doors.md) for kicking one apart, [Digging](digging.md) for digging through it).
 
 {{#include generated/creature-gazes.md}}
 ### Splitting and dying into
 
-A blow of a kind a creature **splits** under (the [charnel heap](creatures.md#creature-charnel-heap)'s: a blade's
+A blow of a kind a creature **splits** under (the [charnel heap](creatures.md#creature-charnel-heap)'s and the [black pudding](creatures.md#creature-black-pudding)'s: a blade's
 [slashing](damage-types.md#damage-slashing) and [piercing](damage-types.md#damage-piercing)) that leaves it alive
 with at least twice the hit points in the third column cuts it in two: it keeps the greater
 half of what it has left, and a second one of it, with the other half and nothing it carried,
@@ -118,7 +120,8 @@ creature's experience (an ally's kill a quarter of the ally's share), and no
 A creature that **dies into** something lets it out of its corpse as it dies: so many of what
 the table says, each drawn at random, on free cells it could see within that many cells, of the
 dead one's side. Each gives a **tenth** of its experience when killed, and no quest counts them
-either. Look mode tells such a creature by its *writhing*.
+either. Look mode tells such a creature by its *writhing*. A
+[hydra](creatures.md#creature-hydra)'s heads crawl out of it so, and go on biting.
 
 {{#include generated/creature-splits.md}}
 
@@ -134,7 +137,10 @@ struck by one roll of its damage, with no roll [to hit](combat.md#hitting):
 [resistance](damage-types.md#armour-and-resistance) takes its share, so the dragon's own kind,
 immune to its element, takes nothing. Its element does to those it harms what any
 [spell of it](magic.md#spell-types) does: fire sets one in four
-[burning](status-effects.md#status-burning). Then the dragon cannot
+[burning](status-effects.md#status-burning). A breath may carry more, as a blow's riders do:
+the [gorgon](creatures.md#creature-gorgon)'s grey vapour leaves those it harms
+[stiffening](status-effects.md#status-stiffening) unless they make the Toughness check (the
+*Then* column). Then the dragon cannot
 breathe again for the time below, and fights up close with its claws and bite, each struck in
 turn and rolled on its own (the table above, one row each). Unseen, a dragon's breath is heard
 as a roar.
