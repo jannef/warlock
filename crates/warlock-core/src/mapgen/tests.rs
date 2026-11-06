@@ -762,7 +762,17 @@ fn vaults_are_stamped_whole_some_way_round_with_their_lights_and_creatures() {
             for (i, vault) in vaults.iter().enumerate() {
                 for turn in crate::content::Turn::ALL {
                     let turned = vault.turned(turn);
-                    for at in stamped_at(&level, &turned) {
+                    // Its piles too: a plain room in a plain shape (the Wyrm's Bed) is told from
+                    // an ordinary room by its bones.
+                    let piles_hold = |at: &Pos| {
+                        (turned.template.objects.iter()).all(|(p, pile)| {
+                            let here = level.objects.get(&Pos::new(at.x + p.x, at.y + p.y));
+                            here.is_some_and(|h| {
+                                pile.iter().all(|s| h.iter().any(|t| t.object == s.object))
+                            })
+                        })
+                    };
+                    for at in stamped_at(&level, &turned).into_iter().filter(piles_hold) {
                         seen[i] += 1;
                         let shift = |p: Pos| Pos::new(at.x + p.x, at.y + p.y);
                         for (p, light) in &turned.template.lights {

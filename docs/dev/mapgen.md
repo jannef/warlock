@@ -135,9 +135,9 @@ draw of a pool with the pool's `status` and `route` (the route walkable and loop
 locked door with a key that opens it lying or carried inside the vault, reached from an entrance
 without passing a lock (the Sealed Barrow's lead key, One of Them Has It's copper key on one of
 the crowd, the Guard post's brass key), every pool's `carry` opening a lock of its vault, and a
-vault with patrols seen walking them more than one way (they turn with it). The terrain alone
-finds a stamp, so a vault that is a plain room in a plain shape gives itself a terrain of its own
-(the Wyrm's Bed's cracked floor), or an ordinary room passes for it. A new shared vault joins the
+vault with patrols seen walking them more than one way (they turn with it). A stamp is found by
+the vault's terrain and its placed piles (`piles_hold`: the Wyrm's Bed, a plain room in a plain
+shape, is told from an ordinary room by its bones). A new shared vault joins the
 test by being in `assets/vaults/`. Test fixtures at peace
 (`world/fixture_factions.rs::make_peace`) leave the shared vaults out: a tag pool holds only
 types hostile to the player.

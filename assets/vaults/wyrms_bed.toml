@@ -15,9 +15,8 @@ map = '''
 '''
 
 [legend]
-# The bed: floor cracked under its weight, a little louder underfoot. One of two cells, so the
-# sleeper moves (two thirds at most).
-"g" = { terrain = "cracked_floor", monsters = { pool = ["ogre", "troll", "giant"], count = 1 }, status = ["asleep"] }
-"$" = { terrain = "cracked_floor", loot = { pool = "money" } }
+# One of two cells, so the sleeper moves (two thirds at most).
+"g" = { terrain = "floor", monsters = { pool = ["ogre", "troll", "giant"], count = 1 }, status = ["asleep"] }
+"$" = { terrain = "floor", loot = { pool = "money" } }
 "m" = { terrain = "floor", loot = { pool = "jewellery", grade = "magic" } }
 "b" = { terrain = "floor", objects = ["bones"] }

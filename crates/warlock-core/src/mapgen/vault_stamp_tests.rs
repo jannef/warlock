@@ -51,7 +51,9 @@ fn every_shared_dungeon_vault_stamps_on_rooms_and_caves_floors() {
                 };
                 let reach = reached(&level);
                 for vault in vaults.iter() {
-                    let found = stamps(&level, vault);
+                    let found: Vec<(Pos, Turn)> = (stamps(&level, vault).into_iter())
+                        .filter(|(at, turn)| piles_hold(&level, vault, *at, *turn))
+                        .collect();
                     if found.is_empty() {
                         continue;
                     }
@@ -93,6 +95,17 @@ fn every_shared_dungeon_vault_stamps_on_rooms_and_caves_floors() {
             assert!(ways > 1, "{}: its patrols walked {ways} way(s)", vault.id());
         }
     }
+}
+
+/// Whether the vault's placed piles lie where it puts them, stamped `turn` round at `at`: with
+/// its terrain, what tells a vault that is a plain room in a plain shape (the Wyrm's Bed) from an
+/// ordinary room of the floor.
+fn piles_hold(level: &LevelTemplate, vault: &Vault, at: Pos, turn: Turn) -> bool {
+    let turned = vault.turned(turn);
+    (turned.template.objects.iter()).all(|(p, pile)| {
+        let here = level.objects.get(&Pos::new(at.x + p.x, at.y + p.y));
+        here.is_some_and(|h| pile.iter().all(|s| h.iter().any(|t| t.object == s.object)))
+    })
 }
 
 /// The vault's entrances lead out to the stairs, and its known traps are known.
