@@ -3,8 +3,9 @@
 //!
 //! **When**: a creature with a throw that is not next to its target throws whenever the target
 //! is within the throw's range with a clear line of fire (no opaque cell and nobody in between,
-//! as an archer's); otherwise it closes in, and next to its target it fights in melee. Nothing
-//! is drawn at random to decide it.
+//! as an archer's) and it stands in the open (an incorporeal thrower inside a wall comes out of
+//! it first); otherwise it closes in, and next to its target it fights in melee. Nothing is
+//! drawn at random to decide it.
 //!
 //! **What**: a thrown attack ([`crate::world::Actor::hurled`]: Dexterity to hit, Strength to
 //! damage), flying as any missile ([`World::fly`]) as the throw's object, which never lands: the
@@ -33,7 +34,9 @@ impl World {
         let Some(throw) = self.content.creature(me.creature).throw.as_ref() else {
             return false;
         };
+        // One inside solid rock (an earth elemental) comes out of it before it throws.
         me.pos.chebyshev(at) > 1
+            && !self.state.current().is_opaque(&self.content, me.pos)
             && me.pos.dist2(at) <= radius2(throw.range)
             && self.clear_shot(me.pos, at, id, target)
     }

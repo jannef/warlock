@@ -4,6 +4,7 @@ use super::DamageTypeId;
 use super::anim::GlyphAnim;
 use super::animated::AnimatedDef;
 use super::breath::{Breath, BreathSpec};
+use super::burst::{BurstSpec, CreatureBurst};
 use super::damage_type::TypeNames;
 use super::disease::DiseaseId;
 use super::faction::FactionId;
@@ -231,6 +232,8 @@ pub(super) struct CreatureSpec {
     pub attack: Option<NaturalAttacks>,
     /// Its breath (spec §8 "Creature behavior": "Dragons"): a `combat = "dragon"` type's.
     pub breath: Option<BreathSpec>,
+    /// Its burst (the dread design §5.3): a vortex's on touch, an elemental's death throes.
+    pub burst: Option<BurstSpec>,
     /// Its throw (spec §8 "Ranged combat": "Creatures' throws"): a giant's boulders.
     pub throw: Option<ThrowSpec>,
     /// Its summoning (spec §8 "Summoning"): the creatures it calls forth.
@@ -693,6 +696,7 @@ pub(super) struct Resolved {
     pub attack: Option<NaturalAttack>,
     pub more_attacks: Vec<NaturalAttack>,
     pub breath: Option<Breath>,
+    pub burst: Option<CreatureBurst>,
     pub throw: Option<Throw>,
     pub weapon_skills: WeaponSkills,
     pub resist: Vec<(DamageTypeId, i32)>,
@@ -743,6 +747,7 @@ impl CreatureSpec {
             attack: r.attack,
             more_attacks: r.more_attacks,
             breath: r.breath,
+            burst: r.burst,
             throw: r.throw,
             summon: None,
             summon_spec: self.summon,
@@ -908,6 +913,10 @@ pub struct CreatureDef {
     /// type's: the cone of its element it breathes when the cooldown is off. Rules only (the
     /// wiki states it).
     pub breath: Option<Breath>,
+    /// Gameplay: its burst (the dread design §5.3, `world/creature_burst.rs`): the burst of its
+    /// element it goes off in beside its target instead of attacking (a vortex), or where it
+    /// dies (death throes). Rules only (the wiki states it).
+    pub burst: Option<CreatureBurst>,
     /// Gameplay: its throw, a natural ranged attack with no ammunition (spec §8 "Ranged combat":
     /// "Creatures' throws"); `None`: it throws nothing. Rules only (the wiki states it).
     pub throw: Option<Throw>,

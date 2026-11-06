@@ -156,6 +156,11 @@ impl World {
                 target,
                 kind: AttackKind::Thrown,
             } => self.creature_hurls(id, target, events),
+            // A vortex bursts where it would strike (`creature_burst.rs`).
+            Plan::Attack {
+                kind: AttackKind::Melee,
+                ..
+            } if self.bursts_on_touch(id) => self.creature_bursts(id, events),
             Plan::Attack { target, kind } => {
                 let skills = self.skills_of(id, kind, None);
                 let with = self.state.actors[&id].blow_item(&self.content);

@@ -11,7 +11,7 @@ use warlock_core::action::AttackKind;
 use warlock_core::burden::{self, Burden};
 use warlock_core::combat::Category;
 use warlock_core::content::{
-    ActionKind, Affliction, BASE_TURN, Benefit, Combat, Content, CreatureDef, CreatureId,
+    ActionKind, Affliction, BASE_TURN, Benefit, BurstWhen, Combat, Content, CreatureDef, CreatureId,
     FactionId, NORMAL_COST, NaturalAttack, Stance, article, price, spoken,
 };
 use warlock_core::geom::Pos;
@@ -62,8 +62,10 @@ fn creature_table(content: &Content, campaign: Option<&str>) -> String {
                 (faction, stance.to_string())
             }
         };
+        let vortex = (c.burst.as_ref()).is_some_and(|b| b.when == BurstWhen::Touches);
         let mut attacks = match c.combat {
             _ if !fights(content, c) => "never",
+            _ if vortex => "bursts beside you",
             Combat::Melee => "up close",
             Combat::Ranged => "shoots from afar",
             Combat::Caster => "casts spells from afar",
@@ -76,6 +78,9 @@ fn creature_table(content: &Content, campaign: Option<&str>) -> String {
         if let (true, Some(throw)) = (fights(content, c), &c.throw) {
             let noun = &throw.attack.name;
             let _ = write!(attacks, ", throws {} {noun} from afar", article(noun));
+        }
+        if (c.burst.as_ref()).is_some_and(|b| b.when == BurstWhen::Dies) {
+            attacks.push_str(", bursts when it dies");
         }
         // The chance it drops a magic or rare item where it dies.
         let drops = match c.loot {
@@ -430,6 +435,16 @@ pub(super) fn creature_attacks(content: &Content) -> String {
             Combat::Dragon => "breathes, and up close".to_string(),
         };
         let actor = bare(content, id);
+        // A vortex has no blow: its burst (the bursts' table).
+        if c.burst.as_ref().is_some_and(|b| b.when == BurstWhen::Touches) {
+            let _ = writeln!(
+                out,
+                "| {} | {fight} | its burst | the bursts' table | - | - | {} | - |",
+                link(Term::Creature, &c.id, &capital(&c.name)),
+                at_speed(blow_price(content, &actor), c.speed),
+            );
+            continue;
+        }
         // A family that wields what it is made of (animated blades): its weapon's blow.
         if c.attack.is_none() && content.family_levels(id).is_some() {
             let _ = writeln!(
@@ -590,6 +605,53 @@ pub(super) fn creature_breaths(content: &Content) -> String {
             damage_link(content, breath.kind),
             breath.length,
             breath.cooldown
+        );
+    }
+    out
+}
+
+/// What each creature that bursts (the dread design §5.3) bursts in: when (beside its target
+/// instead of a blow, or where it dies), the damage rolled once for everyone around it, how far
+/// it reaches, and what else it does to those it harms and the cells it reaches.
+pub(super) fn creature_bursts(content: &Content) -> String {
+    let mut out = String::from(
+        "| Creature | Bursts | Damage | Radius | On those harmed | Also |\n\
+         |---|---|---|---:|---|---|\n",
+    );
+    for (_, c) in listed(content) {
+        let Some(burst) = &c.burst else {
+            continue;
+        };
+        let when = match burst.when {
+            BurstWhen::Touches => "beside its target, and is gone",
+            BurstWhen::Dies => "where it dies",
+        };
+        let riders: Vec<String> = (burst.riders.iter())
+            .map(|r| {
+                let status = content.status(r.status);
+                format!(
+                    "{}% {}",
+                    r.chance,
+                    link(Term::Status, &status.id, &status.name.to_lowercase())
+                )
+            })
+            .collect();
+        let mut also = Vec::new();
+        if burst.douses {
+            also.push("puts out the burning and the fires");
+        }
+        if burst.gust {
+            also.push("blows what lies loose a cell outward");
+        }
+        let _ = writeln!(
+            out,
+            "| {} | {when} | {} {} | {} | {} | {} |",
+            link(Term::Creature, &c.id, &capital(&c.name)),
+            damage_text(burst.damage.into(), 0),
+            damage_link(content, burst.kind),
+            burst.radius,
+            dash(&riders),
+            dash(&also.iter().map(|s| s.to_string()).collect::<Vec<_>>())
         );
     }
     out

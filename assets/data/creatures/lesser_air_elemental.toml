@@ -30,3 +30,14 @@ name = "buffet"
 verb = "buffets"
 to_hit = 2
 on_hit = [{ status = "staggered", chance = 20, severity = 1 }]
+# Death throes (the dread design §5.3): it bursts where it dies.
+[creature.burst]
+damage = "3d6"
+damage_type = "bludgeoning"
+radius = 1
+when = "dies"
+effect = "shatter"
+noun = "gust"
+verb = "comes apart in a howling gust"
+rider = [{ status = "staggered", severity = 1, chance = 50 }]
+gust = true

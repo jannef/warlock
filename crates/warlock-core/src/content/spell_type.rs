@@ -59,13 +59,36 @@ struct BiteSpec {
     percent: u16,
 }
 
-#[derive(Deserialize)]
+/// A rider as written: `{ status, severity, chance }` (chance in percent, default 100); a
+/// creature's burst writes its riders the same way (`burst.rs`).
+#[derive(Clone, Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
-struct RiderSpec {
+pub(super) struct RiderSpec {
     status: String,
     severity: u16,
     #[serde(default = "certain")]
     chance: u8,
+}
+
+/// Resolves and checks a rider: its status known, its chance 1 to 100, its severity within
+/// the status's.
+pub(super) fn rider(r: &RiderSpec, content: &Content) -> Result<TypeRider, String> {
+    if !CHANCES.contains(&r.chance) {
+        return Err("rider: `chance` is 1 to 100 percent".into());
+    }
+    let id = (content.status_id(&r.status))
+        .ok_or_else(|| format!("unknown status `{}`", r.status))?;
+    if !(1..=content.status(id).max).contains(&r.severity) {
+        return Err(format!(
+            "rider: `{}` has no severity {}",
+            r.status, r.severity
+        ));
+    }
+    Ok(TypeRider {
+        status: id,
+        severity: r.severity,
+        chance: r.chance,
+    })
 }
 
 fn certain() -> u8 {
@@ -174,26 +197,9 @@ fn resolve(spec: TypeSpec, content: &Content) -> Result<SpellType, String> {
     if spec.words.as_ref().is_some_and(|w| w.trim().is_empty()) {
         return Err("`words` must not be empty".into());
     }
-    let rider = match spec.rider {
-        Some(r) => {
-            if !CHANCES.contains(&r.chance) {
-                return Err("rider: `chance` is 1 to 100 percent".into());
-            }
-            let id = status(&r.status)?;
-            if !(1..=content.status(id).max).contains(&r.severity) {
-                return Err(format!(
-                    "rider: `{}` has no severity {}",
-                    r.status, r.severity
-                ));
-            }
-            Some(TypeRider {
-                status: id,
-                severity: r.severity,
-                chance: r.chance,
-            })
-        }
-        None => None,
-    };
+    let rider = (spec.rider.as_ref())
+        .map(|r| rider(r, content))
+        .transpose()?;
     let ends = (spec.ends.iter())
         .map(|name| status(name))
         .collect::<Result<_, _>>()?;

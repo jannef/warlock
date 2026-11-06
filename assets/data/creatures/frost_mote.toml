@@ -8,7 +8,7 @@ rarity = "common"
 name = "frost mote"
 glyph = "e"
 fg = "#c0f0ff"
-speed = 900
+speed = 1100
 faction = "elemental"
 tags = ["elemental", "ice"]
 alignment = "neutral"
@@ -24,10 +24,12 @@ natural = { protection = 2, name = "ice" }
 resist = { piercing = 25, cold = 100, fire = -50, poison = 100 }
 corpse = false
 blood = "none"
-[creature.attack]
-damage = "1d6"
+# A vortex (the dread design §5.3): beside its target it bursts instead of attacking, and is
+# gone; killed from afar it goes out quietly.
+[creature.burst]
+damage = "2d6"
 damage_type = "cold"
-name = "touch"
-verb = "numbs"
-to_hit = 1
-on_hit = [{ status = "sluggish", chance = 25, severity = 1 }]
+radius = 1
+when = "touches"
+effect = "frost_burst"
+noun = "frost"

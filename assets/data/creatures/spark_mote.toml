@@ -8,7 +8,7 @@ rarity = "common"
 name = "spark mote"
 glyph = "e"
 fg = "#f0f070"
-speed = 1350
+speed = 1550
 glow = 0.3
 faction = "elemental"
 tags = ["elemental", "lightning"]
@@ -25,10 +25,12 @@ natural = { defence = 1, protection = 0, name = "crackling form" }
 resist = { electricity = 100, piercing = 25, poison = 100 }
 corpse = false
 blood = "none"
-[creature.attack]
-damage = "1d10"
+# A vortex (the dread design §5.3): beside its target it bursts instead of attacking, and is
+# gone; killed from afar it goes out quietly.
+[creature.burst]
+damage = "2d6"
 damage_type = "electricity"
-name = "spark"
-verb = "jolts"
-to_hit = 2
-on_hit = [{ status = "staggered", chance = 20, severity = 1 }]
+radius = 1
+when = "touches"
+effect = "shatter"
+noun = "spark"

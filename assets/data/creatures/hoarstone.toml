@@ -36,3 +36,13 @@ on_hit = [
     { status = "staggered", chance = 15, severity = 1 },
     { status = "held", chance = 10, difficulty = 24 },
 ]
+# It hurls stones at what is not beside it, and pounds what is (the dread design §5.3).
+[creature.throw]
+object = "boulder"
+name = "stone"
+damage = "4d10"
+damage_type = "bludgeoning"
+range = 11
+cost = 1500
+verb = "hurls"
+on_hit = [{ status = "staggered", chance = 15, severity = 1 }]

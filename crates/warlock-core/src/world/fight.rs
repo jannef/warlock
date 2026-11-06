@@ -1153,7 +1153,9 @@ impl World {
         when: GameTime,
         events: &mut Vec<Event>,
     ) {
-        let Some((at, creature)) = self.state.actors.get(&id).map(|a| (a.pos, a.creature)) else {
+        let Some((at, creature, level)) = (self.state.actors.get(&id))
+            .map(|a| (a.pos, a.creature, a.level.clone()))
+        else {
             return;
         };
         events.push(Event::Died { actor: id, at, of });
@@ -1198,6 +1200,8 @@ impl World {
             self.hex_tithe(id);
             let lines = self.creature_dies(id, credited);
             self.news.splice(earned..earned, lines);
+            // Death throes go off where it died (`creature_burst.rs`).
+            self.death_throes(id, (at, &level), creature, events);
         }
     }
 
