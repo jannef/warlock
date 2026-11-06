@@ -1,0 +1,30 @@
+# Vault of the Ascmearc (#1140): the moss bower at the bottom of Ælfhām, the Unseelie court's
+# hall. A round chamber ringed with glowing fungus, a fairy ring, and in its middle a bed of moss
+# where the court keeps those it takes. Two of the court keep it, of the dark court whatever their
+# kind's leaning (`faction`). Ælfhām names it for its third floor (`vaults` in its
+# `[[dungeon.levels]]`), so it is stamped there for certain and nowhere else.
+#
+# The moss bed (`M`) is a named place, "the moss bed": the villager the fair folk took stands
+# there once the wise-woman's quest asks for them (#1141; a vault cannot place a unique npc, so the
+# quest places them on this place's cell). Until then it is empty, and its note is said when the
+# player comes beside it.
+name = "Moss bower"
+dungeons = ["aelfham"]
+map = '''
+###########
+#,..,.,..,#
+#..,,.,,..#
+#.,.....,.#
++.,..M..,.#
+#.,.....,.#
+#..,,.,,..#
+#,.q,.,d.,#
+###########
+'''
+
+[legend]
+"," = "fungus"
+"M" = { terrain = "grass", name = "the moss bed", note = "Moss, deep and soft and pressed flat in the shape of someone lying curled, as if they had slept here a long while." }
+# The bower's keepers, of the dark court: they wake to what they see or hear.
+"q" = { terrain = "floor", creature = "quickling", faction = "unseelie" }
+"d" = { terrain = "floor", creature = "boggle", faction = "unseelie" }

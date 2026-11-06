@@ -8,6 +8,7 @@ id = "greater_shadow"
 level = 31
 xp = 165
 rarity = "rare"
+dread = true
 name = "greater shadow"
 glyph = "G"
 fg = "#4a4a60"

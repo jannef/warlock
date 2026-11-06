@@ -308,12 +308,22 @@ pub(super) fn creature_stats(content: &Content) -> String {
             link(Term::Creature, &c.id, &capital(&c.name)),
             c.level,
             xp_cell(c),
-            content.creature_rarity(c.rarity).name,
+            rarity_cell(content, c),
             dash(&skills),
             dash(&weapon_skills)
         );
     }
     out
+}
+
+/// A creature's rarity for a table cell, and whether it is dread (docs/design/monster-dread.md
+/// §8): `Rare, [dread](dungeons.md#dread)`.
+fn rarity_cell(content: &Content, c: &CreatureDef) -> String {
+    let rarity = &content.creature_rarity(c.rarity).name;
+    match c.dread {
+        true => format!("{rarity}, [dread](dungeons.md#dread)"),
+        false => rarity.clone(),
+    }
 }
 
 /// A creature's XP for a table cell: what a kill pays at its own level, and for one with a

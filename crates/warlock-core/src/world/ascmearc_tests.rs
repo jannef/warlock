@@ -16,6 +16,10 @@ const LEVEL: &str = include_str!("../../../../assets/campaigns/ascmearc/levels/a
 const PASS: Pos = Pos::new(12, 28);
 const TOWN: Pos = Pos::new(18, 28);
 const BARROW: Pos = Pos::new(34, 25);
+/// Holtwīc, the village at the north road's end (#1140).
+const VILLAGE: Pos = Pos::new(18, 17);
+/// Ælfhām's fairy mound, hidden in the wood beside the village (#1140; `holtwic_tests`).
+const MOUND: Pos = Pos::new(25, 13);
 /// Lytelscræf, the starter cave (#792): two cells from the pass, in sight of the start.
 const CAVE: Pos = Pos::new(14, 27);
 /// Grundlēas, the endless branch (#1010): open to anyone, far from the pass.
@@ -224,7 +228,8 @@ fn the_locations_are_named_and_six_cells_apart() {
             (CAVE, ("cave_mouth", "Lytelscræf")),
             (BARROW, ("barrow", "Cealdhlāw")),
             (GROUNDLESS, ("dungeon_entrance", "Grundlēas")),
-            (TOWN, ("town", "Cēaptūn"))
+            (TOWN, ("town", "Cēaptūn")),
+            (VILLAGE, ("town", "Holtwīc"))
         ])
     );
     assert_eq!(GROUNDLESS.chebyshev(PASS), 40, "not near the start");
@@ -244,7 +249,7 @@ fn the_locations_are_named_and_six_cells_apart() {
         (CONTENT.terrain(fyr.terrain).id.as_str(), fyr.name.as_str()),
         ("mine", "Fyrdelf")
     );
-    let mut all = vec![PASS, TOWN, BARROW, FENNMYNSTER, FYRDELF];
+    let mut all = vec![PASS, TOWN, BARROW, FENNMYNSTER, FYRDELF, VILLAGE, MOUND];
     for (id, at) in LAIRS {
         let (pos, _) = CONTENT.hidden_location("ascmearc", id).expect(id);
         assert_eq!(pos, at, "{id}");
@@ -325,6 +330,7 @@ fn nothing_of_the_hidden_dungeons_reaches_perception_or_the_dumps() {
         "ulfeshol",
         "nfeld",
         "rocenburg",
+        "lfhām",
     ] {
         assert!(!json.contains(leak), "{leak} in the JSON dump");
         assert!(!text.contains(leak), "{leak} in the locations");

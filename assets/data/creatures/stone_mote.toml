@@ -4,7 +4,7 @@
 id = "stone_mote"
 level = 1
 xp = 15
-rarity = "common"
+rarity = "uncommon"
 name = "stone mote"
 glyph = "e"
 fg = "#9a8a70"

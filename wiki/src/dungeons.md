@@ -44,6 +44,25 @@ Each draw is a stray or not and out of depth or not by its own chance; as a shar
 
 {{#include generated/draw-odds.md}}
 
+### Dread
+
+Some kinds are **dread**: the monsters to fear, each with something of its own that a plain
+fight does not prepare you for (the basilisk, the shadows, the vampires, the banshee, the nymph;
+the [creature tables](creatures.md) mark them "dread"). Before anything else, one draw in a
+hundred (unless a place says otherwise) is a **dread draw**: it is made among the dread kinds
+alone, the place's own and the [strays](#who-lives-there-and-how-many) alike, each by its level
+and its [rarity](#who-lives-there-and-how-many) as above, so a common dread kind comes far more
+often than a very rare one. Every other draw is made among the kinds that are not dread. If a
+dread draw finds no dread kind strong enough to be chosen there, it is made the ordinary way
+instead. There is no limit: a floor of forty creatures has about one chance in three of holding
+one, before the ones that come later. Creatures placed by hand, a [vault](#a-floor-starts-full)'s
+own folk, and the first kind a [teeming den](special-rooms.md#teeming-dens) is drawn around are never dread draws.
+
+The deeper and the more dangerous a place, the oftener a draw is dread; in Grundlēas, past the
+floor where the draws stop rising, the dread keep coming oftener floor by floor:
+
+{{#include generated/dread-draws.md}}
+
 A creature marked "once a run" comes at most once in your life, however many floors it could
 come to.
 
@@ -220,6 +239,25 @@ you find it by climbing out, and from then on it is on your map, a quick way bac
 drake. Its floors are as dangerous as the deep workings just above Fyrdelf's bottom (see the
 tables above), warmer the deeper they go (14 °C, then 18 °C, and 22 °C at the bottom), with
 Fyrdelf's traps and locks, the deep workings' folk, and no shops.
+
+### Ælfhām
+
+**Ælfhām**, the elves' home, is the hall of the Unseelie court, the dark one of the
+[fey courts](creatures.md#factions), behind a fairy mound in the holly wood near Holtwīc. Its way in
+is [hidden](overworld.md#hidden-locations): the mound looks like any other stretch of the wood. Behind it is not
+the inside of a hill but the fey's own country: three floors of twisting caves at 4 °C, with no
+sun or moon, under a dim violet [light](light.md#what-light-is) that comes from nowhere: everywhere just bright enough to see by, dimly.
+Its [danger](#who-lives-there-and-how-many) runs from 4 to 6, and only fey live there:
+[sprites](creatures.md#creature-sprite) and [pixies](creatures.md#creature-pixie), [quicklings](creatures.md#creature-quickling)
+on the last floor, and [boggles](creatures.md#creature-boggle), [darklings](creatures.md#creature-darkling), and
+[redcaps](creatures.md#creature-redcap) [out of depth](#who-lives-there-and-how-many). No
+[stray](#who-lives-there-and-how-many) finds the way in, but a fey that came of the bright court
+now and then wanders the halls, leaves you alone, and fights its hosts. It is thinly peopled, its
+[traps](traps.md) are [pits](traps.md#trap-pit) and [alarms](traps.md#trap-alarm), and it has no
+[shops](shops.md) and no [special rooms](special-rooms.md). On its third floor, always, is the
+**moss bower**: a ring of [glowing fungus](terrain.md#terrain-fungus) with a bed of moss in its middle, kept by a
+[quickling](creatures.md#creature-quickling) and a [boggle](creatures.md#creature-boggle) of the dark court. On the first floor,
+somewhere far off, pipes are playing.
 
 ### The lairs of the wanted
 

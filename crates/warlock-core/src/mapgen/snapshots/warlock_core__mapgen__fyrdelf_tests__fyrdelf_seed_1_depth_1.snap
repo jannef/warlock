@@ -13,31 +13,31 @@ bat at (67, 5) route W E W E W E W E
 lemure at (64, 5) route W E W E W E W E
 lemure at (64, 9) route W E W E W E W E W E W E W E W E W E
 stone_mote at (73, 5) route W E W E W E W E W E W E
-giant_centipede at (37, 18) route N N N N N N E E W W S S S S S S
-giant_centipede at (33, 7) route N S N N N W E E S S N N W W E S S S N S
-lemure at (46, 6) route W W N N E E W W S S E E
-giant_centipede at (11, 14) route W N N E W W W W E E E E W S S E
-giant_centipede at (13, 15) route S S S W W W W W W W E E E E E E E N N N
-ember_mote at (40, 18) route W W W N N N N S S S S E E E
-lemure at (10, 16) route N N N N S S S S
-kobold_archer at (21, 14) route S S S N N N N N S S S S S N N N carrying a short bow (readied), 20 horn arrows (quivered), an iron cap (being worn)
-giant_centipede at (27, 15) route S W W W S S W W N S E E N N E E E N
-kobold at (67, 7) route E E W W W W W E W E E E E E W W carrying a bone spear (wielded)
-lemure at (24, 16) route S S W W N N N N N S S S S S E E N N
-lemure at (39, 13) route E E W W E E W W
-dust_devil at (38, 17) route W N N N N E E W W S S S S E
-dust_devil at (14, 3) route E W W W W W W E E E E E E W
-giant_centipede at (69, 9) route E W E W E W E W E W
-lesser_earth_elemental at (21, 17) route N N N N S S S S
-bat at (44, 10) route N E W W W E E E W S
-lemure at (41, 13) route W E S S S N S N N N W E
-kobold at (70, 7) route W W W W W E E E E E carrying a bone spear (wielded)
-giant_centipede at (46, 4) route E E S S S W E N N N W W
-lemure at (31, 15) route S S S W W W E E E N N N
-giant_centipede at (42, 13) route E E N E S S S S S N N N N N W S W W
-barrow_ghoul at (6, 14) route W N N E W S S E
-ember_mote at (26, 3) route W W W W W W W E E E E E E E
-dust_devil at (10, 13) route S E E E E E W W W W W N
+animated_blade_5 at (42, 15) route S W N N N W W W W E E E E S S S E N carrying an iron rapier (wielded)
+kobold_archer at (27, 3) route S S N N S S S S N N N N S S N N carrying a short bow (readied), 20 horn arrows (quivered), an iron cap (being worn)
+giant_centipede at (30, 16) route W W W W W W E E E E E E
+kobold_archer at (27, 4) route S S N N N S S S S N N N N S S S N N carrying a hardwood short bow (readied), 20 arrows (quivered)
+lemure at (21, 15) route N S S S N S N S N S N N N S
+lemure at (8, 17) route S W W N S N N N N N S S S S S N S E E N
+lemure at (12, 14) route S S S S W W W E E E N N N N
+giant_centipede at (43, 12) route W W W W W S S S N N N E E E E E
+kobold_shaman at (5, 13) route N E W E E W W E W S carrying a cloth amulet (being worn)
+giant_centipede at (22, 12) route W E E E E E E E E E W W W W W W W W W E
+kobold at (12, 15) route N N N W W E W E W E E S S S carrying a horn spear (wielded), a padded coat (being worn), 9 copper coins
+animated_blade_5 at (41, 15) route W E E E N E E W E W W S W W W E carrying a great axe (wielded in both hands)
+animated_blade_5 at (28, 16) route S S E E E W W E E W W W N N carrying a halberd (wielded in both hands)
+lesser_earth_elemental at (23, 17) route N N N N S S S S
+kobold at (71, 7) route W W W W E E E E carrying a flint spear (wielded), a leather jerkin (being worn)
+kobold_archer at (24, 12) route E S S S N N N E E W W S S S N N N W carrying a short bow (readied), 12 chitin arrows (quivered)
+lemure at (35, 5) route S S W W E E W W W E E E W W E E N N
+lemure at (44, 14) route S S S S W W W W W E E E E E N N N N
+lemure at (39, 12) route E E E E E E W W W W W W
+barrow_ghoul at (7, 14) route W W N N S S E E
+bat at (39, 18) route N N N N S S N N S S S S
+dust_devil at (12, 13) route S E E E E E W W W W W N
+lesser_earth_elemental at (74, 7) route E E W W W W E E E E W W
+animated_blade_5 at (31, 14) route S N S S S S W W E E N N N N S N carrying a mace (wielded)
+animated_blade_5 at (38, 18) route W N N N N N N E W E W S S S S S S E carrying a chitin spear (wielded)
 spear trap at (9, 16)
 arrow trap at (56, 12)
 alarm trap at (67, 9)
@@ -46,20 +46,20 @@ shop general_store kept by Dregga at (55, 14)-(60, 16), post (55, 14)
 
   #######
   #¡....#####################
-  #...........e...........e.#  ######      #######
-  #...>.###################.#  #..)¡########..c..#  ######   #################
-  #.....#       #(..#.....#.####....+......+.....####....######)u#)b#}.#?e#[u#
-  #....¡#       #...+...h.+....'....######.#..u..'.......'...##+##+##+##+##+###
-  ####+##       #..(#.....#.####.c..#    #.#¡....#.##.<.¡###.+.....k..k......+#
+  #........................k#  ######      #######
+  #...>.###################k#  #..)¡########.....#  ######   #################
+  #.....#       #(..#.....#.####...u+......+.....####....######)u#)b#}.#?e#[u#
+  #....¡#       #...+...h.+....'....######.#.....'.......'...##+##+##+##+##+###
+  ####+##       #..(#.....#.####....#    #.#¡....#.##.<.¡###.+.........k..E..+#
      #.#        ###########.#  ######    #.##S####.####+## ####+##+##+##+##+###
-     #.#                  #.#            #.........#  #.#    ##[u#)^#c.#!.#?b#
-     #.#                  #.#            ###b.######  #.#    #################
+     #.#                  #.#            #.........#  #.#    ##[u#)^#[.#!.#?b#
+     #.#                  #.#            ###..######  #.#    #################
     ##+########     #######S#####   ########&##       #.##
-    #........¡#     #..........¡#   #.........#       #.^#
-    #.....e...#######.(..=......#   #..u.uc...#       ##+#####
-    #.z....c........+k.......⊟..#   #.........#       #h.([[¡#
-    #.....}).c#######......c...u#   #.........#       #}?*}..#
-    #..[.^u...#     #...u.......#   #.........#       #}.?%..#
-    #.........#     #E..........#   #.e.......#       ########
-    #¡........#     #¡..........#   #c..e.....#
+    #........¡#     #.c.k......¡#   #..u...c..#       #.^#
+    #k......e.#######.(..=......#   #......⊟..#       ##+#####
+    #..z....u.......+..........)#   #.......u.#       #h.([[¡#
+    #.....})k.#######u..........#   #....))...#       #}?*}..#
+    #..[.^....#     #.......).c.#   #.........#       #}.?%..#
+    #...u.....#     #..E........#   #.........#       ########
+    #¡........#     #¡..........#   #.)b......#
     ###########     #############   ###########

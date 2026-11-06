@@ -43,7 +43,15 @@ every new run starts in it.
   diggings, hidden in Ascdūn, §7 "Fyrdelf"), with **Ūtgang** (the way out, three floors from
   Fyrdelf's bottom up to a hidden cave on the volcano's foot, found by climbing out of it, §7
   "Ūtgang"). A hidden one is its plain terrain until a quest reveals it (§7 "Hidden locations"),
-  or, for Ūtgang, until the player comes out of it. The rest of the design's forty sites are reserved: plain
+  or, for Ūtgang, until the player comes out of it. **Holtwīc** (#1140, "the dwelling at the
+  wood"), the farming village at the north road's end (18, 17) on the edge of Holegnwudu, is a
+  hand-made outdoor level like the town (`levels/holtwic.toml`, 72×26, no stairs, no danger, no
+  shop): cottages round a green with a well, fields behind hedges, cottars (the `cottar` type) who
+  talk and mutter, a hoar-stone at the wood's edge, and the wise-woman **Gammer Wynflæd** (npc
+  `wynflaed`, type `wise_woman`) in her cottage under the trees, with three topics (the village,
+  the wood, the fair folk). Seven cells north-east in the wood, hidden, is the fairy mound over
+  **Ælfhām**, the Unseelie court's hall (§7 "Ælfhām"), which her quest reveals (#1141). Its dev
+  scenario is `holtwic`. The rest of the design's forty sites are reserved: plain
   cells today, spaced so a later level drops in without moving anything.
 - **Quests** (#340, design §6.2; `campaigns/ascmearc/data/quests/`): three people in Cēaptūn
   give a chain each (three quests, Wulfrun's two), every quest offered once the one before it

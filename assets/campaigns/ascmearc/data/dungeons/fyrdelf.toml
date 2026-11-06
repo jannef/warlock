@@ -85,13 +85,16 @@ from = 1
 to = 4
 vaults = ["foremans_cabin"]
 
-# The deep workings: caverns, warmer with every level nearer the volcano's heart.
+# The deep workings: caverns, warmer with every level nearer the volcano's heart, and the dread
+# oftener (docs/design/monster-dread.md §8; the galleries keep the default, one draw in 100):
+# one draw in 75 on 5 to 8, 60 on 9 and 10, 50 on 11, 40 at the drake's hoard.
 [[dungeon.levels]]
 from = 5
 to = 8
 generator = "caves"
 size = [120, 60]
 temperature = 16
+dread_one_in = 75
 
 [[dungeon.levels]]
 from = 9
@@ -99,6 +102,7 @@ to = 10
 generator = "caves"
 size = [120, 60]
 temperature = 20
+dread_one_in = 60
 
 # The second floor from the bottom: a worn statue of a hunter, its plinth inscribed
 # (docs/design/prestige-classes.md §8).
@@ -108,6 +112,7 @@ generator = "caves"
 size = [120, 60]
 temperature = 20
 vaults = ["hunters_statue"]
+dread_one_in = 50
 
 # The bottom: the fire drake on its hoard. Ūtgang's `below` names this floor, so it also has
 # stairs up into Ūtgang's bottom, near the hoard (data/dungeons/utgang.toml).
@@ -117,3 +122,4 @@ generator = "caves"
 size = [120, 60]
 temperature = 24
 vaults = ["drakes_hoard"]
+dread_one_in = 40

@@ -6,6 +6,7 @@ id = "chasme"
 level = 28
 xp = 150
 rarity = "uncommon"
+dread = true
 name = "chasme"
 glyph = "u"
 fg = "#606a80"

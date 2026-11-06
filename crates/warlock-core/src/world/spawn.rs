@@ -199,7 +199,9 @@ impl World {
         let once = &self.state.progress.uniques;
         let own = self.content.candidates(&spawning.population, once);
         let generic = self.content.candidates(&spawning.generic, once);
-        let creature = danger::draw(rng, &own, &generic, danger, &spawning.odds)?;
+        let level_id = &self.state.current_level;
+        let odds = (self.content.draw_odds_at(level_id)).unwrap_or(spawning.odds);
+        let creature = danger::draw(rng, &own, &generic, danger, &odds)?;
         let seen = Perception::compute(&self.state, &self.content, &mut self.lights);
         let level = self.state.current();
         let (content, player) = (&self.content, self.state.player().pos);

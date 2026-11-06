@@ -136,8 +136,27 @@ developer notes (CLAUDE.md, `docs/dev/`).
   all draws, `D + 2` 0.24 %, `D + 3` 0.012 %); where the drawn pool weighs nothing that deep (its
   types all more than 8 below) the generic list is drawn there instead, and where nothing
   weighs anything there the draw is made at `D` (a stray finding nothing at `D` takes the
-  population). The rolls come in a fixed order from the same streams: stray, out of depth, each
-  step deeper, the pick.
+  population). The rolls come in a fixed order from the same streams: dread, stray, out of
+  depth, each step deeper, the pick.
+  **Dread** (docs/design/monster-dread.md §8, #1124): a creature type with `dread = true`
+  (default false; the wiki's creature tables mark it) is one of the monsters to dread (the
+  basilisk, the shadows, the vampires, the nymph: §6's sort); its rarity tier stays its own.
+  Every random draw (the population's and the spawner's alike, dens, hoards' guardians,
+  summoned outcomes, encounters) first rolls one in `dread_one_in`: on a hit the draw is made
+  among the dread types alone (own folk and strays as above, each by its own level weight and
+  rarity), otherwise among the others; where the side rolled weighs nothing, the same draw is
+  made among the other side. `dread_one_in` (1 or more) is `[defaults]`'s (**100**: about one
+  floor in three of 40 creatures draws one), else a branch's or a hand-made level's own, else a
+  branch depth's (`[[dungeon.levels]]`), the most specific winning; an endless branch gives it
+  by depth instead (`[dungeon.endless] dread = { steps, halves, least }`: from each step's depth
+  on its one-in, and past the last step halved every `halves` floors, in a straight line within
+  each halving and in whole numbers, down to `least`). It is read from the level's data at each
+  draw; no floor keeps any state of it, and there is no cap. A vault's monster pool rolls none
+  (it places what it places, the flag unread), the type a den's warren or tribe starts from is
+  never dread, and legends, scenarios, mimics, and uniques (never dread) are untouched. The
+  Ascmearc's deeper floors draw dread oftener: Fennmynster 6–7 one in 75, 8 one in 50; Fyrdelf
+  5–8 one in 75, 9–10 one in 60, 11 one in 50, 12 one in 40; Ūtgang one in 50; Grundlēas 80 from
+  floor 30, 60 from 50, 40 from 70, then halving every ten floors to one in 5 from floor 100.
   **Rarity** (#373): a creature type's `rarity` is a tier of `data/creature_rarities.toml`
   (`common` 100, `uncommon` 50, `rare` 25, `very_rare` 10, in percent; default `common`), and its
   weight in every draw, strays and out-of-depth ones too, is the level weight above
@@ -359,3 +378,17 @@ developer notes (CLAUDE.md, `docs/dev/`).
   foot (103, 17), is a hidden location revealed only by climbing out of it, never by a quest. Its
   `arrival`: "Warm air breathes up the shaft from far below." The `utgang` dev scenario starts on
   level 1.
+- **Ælfhām** (#1140; `campaigns/ascmearc/data/dungeons/aelfham.toml`): "the elves' home", the
+  Unseelie court's hall behind a fairy mound in Holegnwudu, its way in a hidden location of the
+  overworld (25, 13), seven cells north-east of Holtwīc, leading to `aelfham:1` and revealed by
+  the village wise-woman's quest (#1141). Three floors of caves, 70×30, at 4 °C, under a dim
+  violet ambient light (`[44, 38, 80, 0]`, just over normal eyes' threshold). Danger 4 to 6, between the land round Cēaptūn and the
+  first dungeons' depths; only fey (`stray = 0`): the sprite, pixie, quickling, boggle, darkling,
+  and redcap, the last three only out of depth (a fey of both courts may still join the Seelie and
+  stand neutral; §8 "Courts"). A thin population (15 a thousand cells, 8 to 16); pit and alarm
+  traps, one or two a floor; 1 to 3 items of loot; no shops or special rooms. Its vault: the
+  **moss bower** on level 3 alone, a ring of glowing fungus with two keepers forced into the
+  Unseelie court (`faction = "unseelie"`) and in its middle the named place "the moss bed", where
+  the quest places the villager the fair folk took (empty until then). Its `arrival`: "The mound's
+  dark gives onto a dim, violet place. Somewhere far off, pipes are playing." The `aelfham` dev
+  scenario starts on level 1.

@@ -102,15 +102,14 @@ impl World {
         let content = self.content.clone();
         let fit = |list: Vec<Candidate>| -> Vec<Candidate> {
             (list.into_iter())
-                .filter(|&(c, _, _)| !content.creature(c).unique)
-                .filter(|&(c, _, _)| {
-                    player.is_some_and(|p| content.stance(c, p) == Stance::Hostile)
-                })
+                .filter(|&(c, ..)| !content.creature(c).unique)
+                .filter(|&(c, ..)| player.is_some_and(|p| content.stance(c, p) == Stance::Hostile))
                 .collect()
         };
         let once = &self.state.progress.uniques;
         let own = fit(content.candidates(&spawning.population, once));
         let generic = fit(content.candidates(&spawning.generic, once));
+        let odds = (content.draw_odds_at(&id)).unwrap_or(spawning.odds);
         let (cells, edge) = self.guard_cells(room);
         let mut unseen: Vec<Pos> = (edge.iter().copied())
             .filter(|&p| !self.perception.sees_actors_at(p))
@@ -125,7 +124,7 @@ impl World {
         let mut came = Vec::new();
         for _ in 0..count {
             let rng = &mut self.state.rng;
-            let Some(creature) = danger::draw(rng, &own, &generic, danger, &spawning.odds) else {
+            let Some(creature) = danger::draw(rng, &own, &generic, danger, &odds) else {
                 break;
             };
             let from = [&mut unseen, &mut seen, &mut inner]

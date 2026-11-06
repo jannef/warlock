@@ -6,6 +6,7 @@ id = "darkling"
 level = 9
 xp = 55
 rarity = "uncommon"
+dread = true
 name = "darkling"
 glyph = "f"
 fg = "#5a5a6a"
