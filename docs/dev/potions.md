@@ -79,7 +79,7 @@ Spec §8 "Potions" (`spec/08g-magic-items.md`); the combat progression design §
 - Known types live in `WorldState::known_scrolls` with scrolls, wands, and rods: learned by
   drinking, by `World::identify` (the scroll of identify, the appraisal service, dev
   `identify`), and from a chosen character's kit (`World::begin` adds kit potions as it adds
-  kit scrolls).
+  kit scrolls; every class's, #1104).
 - The item description (`magic/describe.rs::potion_lines`): a known potion's effect in words
   ("Heals wounds at once, and cures bleeding"), never dice; an unknown one "You do not know what
   this potion does."

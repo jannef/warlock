@@ -142,8 +142,10 @@ runs that never identify a scroll hash as before; saves change). `World::learn_s
 adds a labelled type (true if it was news); it is called by `say_read` (every read, spell or
 identify: "You read the scroll labelled ZUNBAR." then "It is a scroll of fireball."), by
 `World::identify` (a labelled scroll stack: "This is 2 scrolls of lightning!"; so the dev
-`identify` and F8 too), and `World::new` puts the kit's readable scrolls in the set (a chosen
-character knows their kit; a scenario's own pack is not a kit). Wand types (#398) are labelled
+`identify` and F8 too), and `World::begin` puts the kit's readable scrolls and potions in the set (a chosen
+character of any class knows their kit, the casters' random spell scrolls too, #1104, and a
+background story's things, `world/background.rs::story_item`; a scenario's own pack is not a kit;
+`kit.rs::every_starting_scroll_and_potion_is_known`). Wand types (#398) are labelled
 the same way from `data/wand_labels.toml` ("an oak wand"), drawn after the scrolls from the
 same stream, and learned by `World::use_charge` (docs/dev/spells.md "Wands"). Potion types
 (#565) come last, from `data/potion_labels.toml`: a word and the type's own colour ("a fizzy red

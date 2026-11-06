@@ -306,8 +306,13 @@ developer notes (CLAUDE.md, `docs/dev/`).
     roll from a stream of their own, `character/kit/<race>,<gender>,<class>`, in that order: a
     line draws only if it applies, one draw to pick among alternatives, then for a `magic` line
     the loot draws (rarity, affixes, a rare name, an ornament); so no stat, skill, weapon skill,
-    or style roll moves. Kit items are what they are: magic ones unidentified,
-    food made when the run starts (§8 "Hunger"). Data is checked when content loads (every item
+    or style roll moves. Last come the class's random spell scrolls (#1104; `random_scrolls =
+    { count = "1d3", below_level = 10 }`): the casters set out with a few more, the wizard and
+    the witch 1d3, the priest, the druid, and the ranger 1d2, the bard 1d4, every other class
+    none; each the scroll of a spell of spell level 0 to 9, drawn uniformly among those spells
+    (duplicates stack), from the same stream after every line. Kit items are what they are:
+    magic ones unidentified, food made when the run starts (§8 "Hunger"), and every scroll and
+    potion of the kit, any class's, known by type from the start (§8 "Scrolls", "Potions"). Data is checked when content loads (every item
     exists, what is wielded or worn fits a slot of that kind, `magic` only on base items, a
     class's `trained` only what it trains). Unfair on purpose: the aristocrat sets out rich, with
     a perhaps magic rapier and an heirloom ring (magic or rare), the merchant with goods and gems,
