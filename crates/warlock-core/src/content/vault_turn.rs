@@ -109,6 +109,7 @@ impl Vault {
             pinned: self.pinned,
             turns: self.turns,
             danger: self.danger,
+            down: (self.down).map(|(p, t)| (turn.pos(p, w, h), t)),
         }
     }
 }

@@ -1213,6 +1213,8 @@ impl World {
         if def.unique {
             let slain = def.id.clone();
             self.state.quests.slay(&slain);
+            // A layer boss's death opens its lair's way down (`layer_boss.rs`).
+            self.open_lair(&actor.level, &slain);
         }
         // A summoned ally leaves nothing: no corpse, no pile (spec §8 "Allies": "Summons"). Nor
         // does one risen berserk (`corpse_spell.rs`).

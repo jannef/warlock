@@ -226,6 +226,9 @@ pub(crate) struct Canvas<'a> {
     pub stamped: Grid<bool>,
     pub up: Option<Pos>,
     pub down: Option<Pos>,
+    /// A layer boss's lair's hidden way down, stamped as floor: its cell and the stairs' terrain
+    /// ([`Vault::down`], `world/layer_boss.rs`).
+    pub lair: Option<(Pos, TerrainId)>,
 }
 
 impl<'a> Canvas<'a> {
@@ -264,6 +267,7 @@ impl<'a> Canvas<'a> {
             stamped: Grid::new(width, height, false),
             up: None,
             down: None,
+            lair: None,
         }
     }
 
@@ -454,14 +458,16 @@ fn spaced_vaults<'a>(
 }
 
 /// Whom a level is generated for, as they first come: what their talents give their finds
-/// (`luck`), their level (a player-scaled danger reads it), and the unique creature types the
-/// run has met (none comes twice). Only the loot and the initial population read it, so the map
-/// is the same for anyone.
+/// (`luck`), their level (a player-scaled danger reads it), the unique creature types the
+/// run has met (none comes twice), and those slain (a slain layer boss's floor has no lair). Only
+/// the loot, the initial population, and a layer boss's lair read it, so the map is otherwise
+/// the same for anyone.
 #[derive(Clone, Copy, Debug, Default)]
 pub struct Visit<'a> {
     pub luck: Luck,
     pub player_level: u8,
     pub uniques: Option<&'a std::collections::BTreeSet<String>>,
+    pub slain: Option<&'a std::collections::BTreeSet<String>>,
 }
 
 /// [`generate_with`] for the player `visit` describes.
@@ -489,11 +495,17 @@ pub fn generate_for(
     let room_odds =
         (def.room_odds(depth)).ok_or_else(|| GenError::NotAGeneratedLevel(id.to_string()))?;
     let odds = (room_odds, def.shop_odds(depth));
+    // A layer boss not yet slain keeps its lair here, with the floor's way down hidden in it
+    // (spec §7 "The endless branch", `world/layer_boss.rs`).
+    let boss = (def.boss_at(depth)).filter(|b| {
+        let id = &content.creature(b.creature).id;
+        !visit.slain.is_some_and(|s| s.contains(id))
+    });
     let needs = Needs {
-        down: def.leads_down(depth),
+        down: def.leads_down(depth) && boss.is_none(),
         creatures: &def.creatures,
         key: def.key,
-        vaults: def.vaults(depth),
+        vaults: boss.map_or(def.vaults(depth), |b| std::slice::from_ref(&b.vault)),
     };
     let up_to = match (depth > 1, def.endless) {
         (true, _) => Some(def.level_id(depth - 1)),
@@ -501,7 +513,7 @@ pub fn generate_for(
         (false, Some(_)) => content.way_into(id).map(str::to_string),
         (false, None) => entered_from.map(str::to_string),
     };
-    let down_to = needs.down.then(|| def.level_id(depth + 1));
+    let down_to = def.leads_down(depth).then(|| def.level_id(depth + 1));
 
     // The danger the floor's pools draw at, which a vault's `danger` asks (`Vault::suits`).
     let danger = (content.spawning(id)).map_or(0, |(rule, at, _)| rule.at(at, visit.player_level));
@@ -530,7 +542,7 @@ pub fn generate_for(
         let (Some(up), down) = (canvas.up, canvas.down) else {
             continue;
         };
-        if down.is_some() != needs.down {
+        if down.is_some() != needs.down || canvas.lair.is_some() != boss.is_some() {
             continue;
         }
         let mut stairs = vec![StairsLink {
@@ -577,7 +589,10 @@ pub fn generate_for(
             locks: canvas.locks,
             chests,
             secrets: canvas.secrets,
-            hidden: BTreeMap::new(),
+            hidden: (boss.zip(canvas.lair))
+                .map(|(b, lair)| layer_boss_stairs(content, b, lair, down_to.clone()))
+                .into_iter()
+                .collect(),
             places: canvas.places,
             regions: Vec::new(),
             rooms: canvas.rooms,
@@ -641,6 +656,24 @@ pub fn generate_for(
     Err(GenError::Exhausted(MAX_ATTEMPTS))
 }
 
+/// A lair's hidden way down: the level keeps it as a hidden location named for the boss, which
+/// its death reveals (`world/layer_boss.rs`).
+fn layer_boss_stairs(
+    content: &Content,
+    boss: &crate::content::LayerBoss,
+    (at, terrain): (Pos, TerrainId),
+    to: Option<String>,
+) -> (Pos, crate::content::HiddenLocation) {
+    let creature = content.creature(boss.creature);
+    let hidden = crate::content::HiddenLocation {
+        id: creature.id.clone(),
+        terrain,
+        to,
+        name: creature.name.clone(),
+    };
+    (at, hidden)
+}
+
 /// The generator and size of a floor of an endless branch, drawn as it is made from its own
 /// stream `floor_kind/<level id>` (spec §7 "The endless branch"), so the draw moves nothing else.
 fn endless_plan(
@@ -682,7 +715,12 @@ fn hide_traps(
     let [least, most] = def.traps_per_level;
     let count = least + rng.below(most - least + 1);
     let patrolled = patrolled(template);
-    let near_stairs = |p: Pos| template.stairs.iter().any(|s| s.pos.chebyshev(p) <= 1);
+    // A lair's hidden way down counts: it will be stairs.
+    let near_stairs = |p: Pos| {
+        (template.stairs.iter().map(|s| s.pos))
+            .chain(template.hidden.keys().copied())
+            .any(|s| s.chebyshev(p) <= 1)
+    };
     // A sealed room (a greater treasure room) is walled up: nothing springs in it.
     let sealed = |p: Pos| {
         (template.rooms.iter())

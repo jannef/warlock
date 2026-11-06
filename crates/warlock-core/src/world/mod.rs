@@ -168,6 +168,7 @@ mod jack;
 mod knock;
 mod knowledge;
 mod lamp;
+mod layer_boss;
 mod learn;
 mod level;
 mod listen;
@@ -1785,6 +1786,8 @@ mod knowledge_tests;
 mod lamp_tests;
 #[cfg(test)]
 mod land_talent_tests;
+#[cfg(test)]
+mod layer_boss_tests;
 #[cfg(test)]
 mod learn_tests;
 #[cfg(test)]

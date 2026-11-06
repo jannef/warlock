@@ -113,6 +113,12 @@ impl Quests {
         self.slain.iter().map(String::as_str)
     }
 
+    /// The unique creature types that have died, as a set (a floor made for a slain layer
+    /// boss's depth has no lair, `mapgen::Visit::slain`).
+    pub(crate) fn slain_set(&self) -> &BTreeSet<String> {
+        &self.slain
+    }
+
     /// How many creatures of type `id` the player has killed, on every level.
     pub fn killed(&self, id: &str) -> u32 {
         self.kills.values().filter_map(|k| k.get(id)).sum()

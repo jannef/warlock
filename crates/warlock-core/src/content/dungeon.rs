@@ -52,6 +52,11 @@
 //! caves = 15                    # percent of floors that are caves, the rest rooms
 //! caves_size = [100, 40]        # the caves' size; the rooms' is the branch's `size`
 //!
+//! [[dungeon.endless.boss]]      # optional, one per layer: a layer boss and its lair
+//! depth = 10                    # the floor (each depth once)
+//! creature = "gnaegan"          # a unique type, placed by the lair alone
+//! vault = "gnaegans_midden"     # the lair: a vault placing the boss, with a `>` (hidden)
+//!
 //! [dungeon.room_effects]        # optional: the branch's own special-room odds
 //! chance = 25                   # percent a room is special; default the shared `chance`
 //! per_level = 2                 # at most this many a level (1 to 8); default the shared
@@ -178,6 +183,29 @@ struct DungeonSpec {
 struct EndlessSpec {
     caves: u8,
     caves_size: [i32; 2],
+    #[serde(default)]
+    boss: Vec<BossSpec>,
+}
+
+/// One `[[dungeon.endless.boss]]` row.
+#[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+struct BossSpec {
+    depth: u32,
+    creature: String,
+    vault: String,
+}
+
+/// A layer boss of an endless branch (spec §7 "The endless branch", `world/layer_boss.rs`): the
+/// unique creature whose lair, a vault, floor `depth` stamps until it is slain, with the floor's
+/// only way down hidden in it.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct LayerBoss {
+    pub depth: u32,
+    pub creature: CreatureId,
+    /// The lair's vault id (checked by `Content::load_dungeons`: it places the boss and marks
+    /// the stairs, [`super::Vault::down`]).
+    pub vault: String,
 }
 
 /// What makes a branch endless (spec §7 "The endless branch"): the odds of a floor's generator,
@@ -519,6 +547,8 @@ pub struct DungeonDef {
     pub depth: u32,
     /// Floors without end (spec §7 "The endless branch"); `None`: `depth` levels.
     pub endless: Option<Endless>,
+    /// An endless branch's layer bosses, by depth (none for any other branch).
+    pub bosses: Vec<LayerBoss>,
     pub ambient: Light,
     /// Creatures generators may place on patrol.
     pub creatures: Vec<CreatureId>,
@@ -597,6 +627,11 @@ impl DungeonDef {
             .map_or(&[], Vec::as_slice)
     }
 
+    /// The layer boss of floor `depth`, if it has one (slain or not).
+    pub fn boss_at(&self, depth: u32) -> Option<&LayerBoss> {
+        self.bosses.iter().find(|b| b.depth == depth)
+    }
+
     /// Every vault id some level of the branch names.
     pub fn named_vaults(&self) -> impl Iterator<Item = &str> {
         self.vaults.iter().flatten().map(String::as_str)
@@ -623,6 +658,39 @@ impl DungeonDef {
     pub fn level_name(&self, depth: u32) -> String {
         format!("{} {depth}", self.name)
     }
+}
+
+/// An endless branch's `[[dungeon.endless.boss]]` rows, by depth: each depth once, each creature
+/// known. What the content alone can tell (unique, the lair's marks) `Content` checks.
+fn resolve_bosses(
+    id: &str,
+    endless: Option<&EndlessSpec>,
+    creature_id: impl Fn(&str) -> Option<(CreatureId, u8)>,
+) -> Result<Vec<LayerBoss>, String> {
+    let mut bosses: Vec<LayerBoss> = Vec::new();
+    for row in endless.map_or(&[][..], |e| &e.boss) {
+        if row.depth < 2 {
+            return Err(format!(
+                "dungeon `{id}`: a layer boss's `depth` is 2 or more, not {}",
+                row.depth
+            ));
+        }
+        if bosses.iter().any(|b| b.depth == row.depth) {
+            return Err(format!(
+                "dungeon `{id}`: two layer bosses at depth {}",
+                row.depth
+            ));
+        }
+        let (creature, _) = creature_id(&row.creature)
+            .ok_or_else(|| format!("dungeon `{id}`: unknown layer boss `{}`", row.creature))?;
+        bosses.push(LayerBoss {
+            depth: row.depth,
+            creature,
+            vault: row.vault.clone(),
+        });
+    }
+    bosses.sort_by_key(|b| b.depth);
+    Ok(bosses)
 }
 
 /// `per_level` for each level below the first, on level `depth`.
@@ -873,11 +941,13 @@ impl DungeonFile {
                 check_lines([line], MAX_REPLY)
                     .map_err(|m| err(format!("dungeon `{id}`: `arrival`: {m}")))?;
             }
+            let bosses = resolve_bosses(&id, spec.endless.as_ref(), &creature_id).map_err(err)?;
             defs.push(DungeonDef {
                 name: spec.name.unwrap_or_else(|| id.clone()),
                 arrival: spec.arrival,
                 id,
                 depth: depth_of,
+                bosses,
                 endless: spec.endless.map(|e| Endless {
                     caves: e.caves,
                     caves_size: (e.caves_size[0], e.caves_size[1]),

@@ -8,6 +8,9 @@
 //! **entrances**: doors on the edge, never on a corner. Generators join every entrance to the rest
 //! of the level. A vault has no stairs and no player start, and every walkable cell must be
 //! reachable from an entrance (doors count as passable), so stamping one never strands anything.
+//! The one exception is a layer boss's lair (spec §7 "The endless branch"): one `>`, its
+//! [`Vault::down`], which the stamp lays as plain floor and the level keeps hidden until the boss
+//! dies (`world/layer_boss.rs`); only a vault an endless branch's boss row names may have it.
 //! Its locks (spec §8 "Doors") come with their keys: a key to every lock lies, or is carried by a
 //! creature, within reach of an unlocked entrance without unlocking a door. A legend's `loot` is
 //! rolled when it is stamped: a grade, or a pool of item classes (`magic/loot.rs`, [`LootPool`]),
@@ -68,6 +71,9 @@ pub struct Vault {
     pub turns: bool,
     /// The dangers it stamps at (a file's `danger`; default: every danger).
     pub danger: DangerRange,
+    /// A lair's hidden way down: the cell of its one `>`, with the stairs' terrain (a layer
+    /// boss's vault only, checked by `Content::load_dungeons`).
+    pub down: Option<(Pos, TerrainId)>,
 }
 
 /// The dangers a vault drawn at random stamps at: `danger = { from = 8 }`, `{ to = 6 }`, or both,
@@ -145,7 +151,18 @@ fn parse_fields(path: &str, text: &str) -> Result<VaultFields, ContentError> {
 
 impl Vault {
     /// Checks the vault rules for a parsed vault file.
-    pub(super) fn new(template: LevelTemplate, content: &Content) -> Result<Self, String> {
+    pub(super) fn new(mut template: LevelTemplate, content: &Content) -> Result<Self, String> {
+        // A lair's one `>` (module docs); any other staircase is refused.
+        let down = match template.stairs.as_slice() {
+            [] => None,
+            [s] if s.dir == super::terrain::StairsDir::Down
+                && template.kind == LevelKind::Dungeon =>
+            {
+                Some((s.pos, template.terrain[s.pos]))
+            }
+            [s, ..] => return Err(format!("a vault cannot have stairs (at {})", s.pos)),
+        };
+        template.stairs.clear();
         let terrain = &template.terrain;
         let (w, h) = (terrain.width(), terrain.height());
         if w < 3 || h < 3 {
@@ -153,9 +170,6 @@ impl Vault {
         }
         if template.player_start.is_some() {
             return Err("a vault cannot have a player start".into());
-        }
-        if let Some(stairs) = template.stairs.first() {
-            return Err(format!("a vault cannot have stairs (at {})", stairs.pos));
         }
         // A vault may be stamped many times; a unique character cannot be.
         if let Some(spawn) = template.creatures.iter().find(|c| c.npc.is_some()) {
@@ -264,6 +278,7 @@ impl Vault {
             pinned: false,
             turns: true,
             danger: DangerRange::default(),
+            down,
         })
     }
 

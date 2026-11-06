@@ -11,7 +11,8 @@
 //! (Held, Webbed, Pinned), is `flat_footed` (Stunned, Surprised), or `flees` (Frightened). Never
 //! one of a type that keeps its place: `budge` other than `always` (`off_post`, a shopkeeper,
 //! a guildmaster; `never`, rooted), a mimic, even found out, or a lurker no one has hurt
-//! (`lurk.rs`). Never an NPC, a shop's keeper, or an ally. Slowed creatures do come (Transfixed,
+//! (`lurk.rs`). Never an NPC, a shop's keeper, an ally, or a layer boss, which keeps to its
+//! lair (`layer_boss.rs`). Slowed creatures do come (Transfixed,
 //! Staggered), paying their slowed price for the stairs.
 //!
 //! **Where** ([`World::followers_arrive`]): in id order, each on the first free walkable cell of
@@ -65,6 +66,7 @@ impl World {
             || def.mimic.is_some()
             || (def.lurks && me.hp >= me.max_hp(content))
             || me.npc.is_some()
+            || content.is_layer_boss(me.creature)
             || (state.current().shops.iter()).any(|shop| shop.keeper == id);
         me.kind == ActorKind::Creature
             && me.ally.is_none()
