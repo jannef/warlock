@@ -101,7 +101,10 @@ The Phoenix's *[Rise from the ashes](talents.md#talent-rise-from-ashes)* comes o
 once you have risen, the gift is spent (the [character screen](controls.md#character) says so) and the next death is your
 last. *[Hound's nose](talents.md#talent-hounds-nose)* tells you how
 fresh [food](food.md#food-spoils) is in a word on the eat list (fresh, turning, or rotten); food that is turning is
-still fine to eat, rotten food is not.
+still fine to eat, rotten food is not. *[Gatekeeper](talents.md#talent-gatekeeper)* strikes a foe that steps up beside you
+only sometimes, by your [stance](combat.md#stances): always in a [frenzy](combat.md#stance-frenzy), one time in 2 when
+[aggressive](combat.md#stance-aggressive), in 4 when [neutral](combat.md#stance-neutral), in 8 when [defensive](combat.md#stance-defensive), and in 16 as a
+[coward](combat.md#stance-coward) (see [Free blows](combat.md#free-blows)).
 
 Your animal and your element also each change your starting [stats](stats.md) a little; both
 count. The changes are in the tables at the end of this page, added to your race's, gender's, and

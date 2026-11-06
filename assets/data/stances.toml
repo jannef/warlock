@@ -15,6 +15,8 @@
 #   flee_cost    what a step costs while fleeing: stepping away from an adjacent hostile (percent)
 #   flee_noise   how loud such a step is (percent)
 #   weapon_mark  weapon skill marks count this much (percent): used once weapon skills exist
+#   gatekeeper   the Gatekeeper gift's chance of a blow at a foe stepping up counts this much
+#                (percent; the talent's one in four, so 400 is always, and more is still always)
 
 [[stance]]
 id = "aggressive"
@@ -23,6 +25,7 @@ to_hit = 1
 damage = 2
 dodge = -3
 weapon_mark = 125
+gatekeeper = 200
 
 # Aggressive and more, at a higher price: blows that land harder and more often, a guard all but
 # given up, and no thought of running (a step away from a foe costs half again as much).
@@ -34,6 +37,7 @@ damage = 4
 dodge = -6
 flee_cost = 150
 weapon_mark = 125
+gatekeeper = 400
 
 [[stance]]
 id = "neutral"
@@ -46,6 +50,7 @@ to_hit = -2
 damage = -1
 dodge = 2
 parry = 1
+gatekeeper = 50
 
 [[stance]]
 id = "coward"
@@ -56,3 +61,4 @@ dodge = 4
 attack_cost = 125
 flee_cost = 85
 flee_noise = 50
+gatekeeper = 25

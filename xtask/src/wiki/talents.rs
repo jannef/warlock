@@ -966,7 +966,14 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
                 (content.skill_id(&skill)).map_or(skill.clone(), |s| content.skill(s).name.clone());
             format!("{name} counts {}", signed(value))
         }
-        TalentEffect::FreeBlow { trigger } => {
+        TalentEffect::FreeBlow {
+            trigger: warlock_core::content::FreeBlowTrigger::Gatekeeper,
+            one_in: Some(n),
+        } => format!(
+            "free blow: a hostile that steps up beside you takes one, one time in {n} in the \
+             neutral stance, more often the bolder your stance (the stances table)"
+        ),
+        TalentEffect::FreeBlow { trigger, .. } => {
             use warlock_core::content::FreeBlowTrigger as T;
             match trigger {
                 T::Cleave => {

@@ -1457,7 +1457,8 @@ mod tests {
             stances.contains("| Coward | \u{2212}4 | \u{2212}3 | +4 | - | 125% | 85% | 50% | - |")
         );
         assert!(text("hit-chances.md").contains("| 10 | 75% |"));
-        assert!(text("hit-chances.md").contains("| 24 | 0.7% |"));
+        assert!(text("hit-chances.md").contains("| 24 | 4.2% |"));
+        assert!(text("hit-chances.md").contains("| 21 | 6.9% |"));
         assert!(
             text("threats.md").contains("| 22–24 | 4.2% | 3.1% | 20 |"),
             "{}",
