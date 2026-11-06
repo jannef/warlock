@@ -3,6 +3,6 @@ id = "gatekeeper"
 name = "Gatekeeper"
 tree = "stars"
 granted = true
-description = "A foe that steps up beside you takes a free blow from you as it comes."
-effects = [{ kind = "free_blow", trigger = "gatekeeper" }]
+description = "A foe that steps up beside you may take a free blow from you as it comes, the likelier the bolder your stance."
+effects = [{ kind = "free_blow", trigger = "gatekeeper", one_in = 4 }]
 systems = ["free_blows"]

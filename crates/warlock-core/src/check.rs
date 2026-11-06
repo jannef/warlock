@@ -2,7 +2,8 @@
 //!
 //! A check succeeds when 2d12 (its natural roll, the same dice as an attack's: [`combat::
 //! roll_natural`]) plus the modifier of the stat it tests reaches its **difficulty**. A natural 2
-//! always fails and a natural 24 always succeeds. Diseases are resisted and fought off with
+//! always fails and a natural 24 always succeeds ([`makes`]: narrower than an attack's sure hit,
+//! a natural 22 or better, [`combat::hits`]). Diseases are resisted and fought off with
 //! checks, mostly of Toughness, a few of Willpower (spec §8 "Diseases"); disarming a trap is a
 //! Dexterity check whose failure counts by how much it fell short ([`roll`], spec §8 "Disarming
 //! traps"). Rolls come from the
@@ -16,9 +17,19 @@
 use crate::combat;
 use crate::rng::Rng;
 
+/// Whether a check's natural roll makes it: never a natural 2, always a natural 24, else when
+/// the natural roll plus the modifier reaches the difficulty.
+pub const fn makes(natural: i32, modifier: i32, difficulty: i32) -> bool {
+    match natural {
+        combat::FUMBLE => false,
+        combat::HIGHEST => true,
+        _ => natural + modifier >= difficulty,
+    }
+}
+
 /// Rolls a check with `modifier` against `difficulty`: two draws from `rng` (the natural roll).
 pub fn check(rng: &mut Rng, modifier: i32, difficulty: i32) -> bool {
-    combat::hits(combat::roll_natural(rng), modifier, difficulty)
+    makes(combat::roll_natural(rng), modifier, difficulty)
 }
 
 /// How a check came out, for a rule that cares how badly it failed (disarming a trap: a failure
@@ -37,7 +48,7 @@ pub enum Checked {
 /// from `rng`, as [`check`].
 pub fn roll(rng: &mut Rng, modifier: i32, difficulty: i32) -> Checked {
     let natural = combat::roll_natural(rng);
-    if combat::hits(natural, modifier, difficulty) {
+    if makes(natural, modifier, difficulty) {
         Checked::Made
     } else {
         let by = difficulty.saturating_sub(natural.saturating_add(modifier));
@@ -48,8 +59,8 @@ pub fn roll(rng: &mut Rng, modifier: i32, difficulty: i32) -> Checked {
 /// How many of the 144 natural rolls fail a check with `modifier` against `difficulty` by `by`
 /// or more ([`roll`]).
 pub fn ways_short_by(modifier: i32, difficulty: i32, by: i32) -> u32 {
-    (combat::FUMBLE..=combat::SURE_HIT)
-        .filter(|&n| !combat::hits(n, modifier, difficulty))
+    (combat::FUMBLE..=combat::HIGHEST)
+        .filter(|&n| !makes(n, modifier, difficulty))
         .filter(|&n| difficulty.saturating_sub(n.saturating_add(modifier)).max(0) >= by)
         .map(combat::ways)
         .sum()
@@ -57,7 +68,10 @@ pub fn ways_short_by(modifier: i32, difficulty: i32, by: i32) -> u32 {
 
 /// How many of the 144 natural rolls make a check with `modifier` against `difficulty`.
 pub fn ways(modifier: i32, difficulty: i32) -> u32 {
-    combat::hit_ways(modifier, difficulty)
+    (combat::FUMBLE..=combat::HIGHEST)
+        .filter(|&n| makes(n, modifier, difficulty))
+        .map(combat::ways)
+        .sum()
 }
 
 /// Rolls a contest: a check with `modifier` against the other side's check with `against`,
@@ -72,7 +86,7 @@ pub fn contest(rng: &mut Rng, modifier: i32, against: i32) -> bool {
 /// How many of the 144 × 144 ways both sides' dice can fall win a contest with `modifier`
 /// against `against` (out of [`CONTEST_WAYS`]).
 pub fn contest_ways(modifier: i32, against: i32) -> u32 {
-    (2..=24)
+    (combat::FUMBLE..=combat::HIGHEST)
         .map(|natural| combat::ways(natural) * ways(modifier, natural + against))
         .sum()
 }
@@ -124,7 +138,7 @@ mod tests {
         let mut b = a.clone();
         let theirs = combat::roll_natural(&mut b);
         let mine = combat::roll_natural(&mut b);
-        assert_eq!(contest(&mut a, 1, 2), combat::hits(mine, 1, theirs + 2));
+        assert_eq!(contest(&mut a, 1, 2), makes(mine, 1, theirs + 2));
         assert_eq!(a, b);
         // Over many rolls, it is won as often as its ways say.
         let mut rng = Rng::gameplay(5);

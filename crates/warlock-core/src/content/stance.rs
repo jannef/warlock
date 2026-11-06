@@ -164,6 +164,10 @@ pub struct StanceDef {
     /// Weapon skill marks count this much (percent): the hook for weapon skills (#134).
     #[serde(default = "hundred")]
     pub weapon_mark: u32,
+    /// The chance of a gatekeeper's blow by chance (the Gatekeeper gift) counts this much
+    /// (percent), at most always (`world/free_blow.rs::gatekeeper_odds`).
+    #[serde(default = "hundred")]
+    pub gatekeeper: u32,
 }
 
 impl StanceDef {
@@ -182,6 +186,7 @@ impl StanceDef {
             flee_cost: 100,
             flee_noise: 100,
             weapon_mark: 100,
+            gatekeeper: 100,
         }
     }
 
@@ -265,6 +270,7 @@ impl Stances {
                 ("flee_cost", def.flee_cost),
                 ("flee_noise", def.flee_noise),
                 ("weapon_mark", def.weapon_mark),
+                ("gatekeeper", def.gatekeeper),
             ] {
                 if !PERCENT.contains(&value) {
                     return Err(err(format!(

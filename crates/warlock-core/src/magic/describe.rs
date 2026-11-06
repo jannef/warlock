@@ -9,7 +9,7 @@
 //! it (no to-hit total, no modifier).
 
 use super::{AffixKind, Effect, Rolled};
-use crate::combat::SURE_HIT;
+use crate::combat::HIGHEST;
 use crate::content::{ActionKind, Content, Draught, ItemKind, ObjectDef, Rarity, weapon_noun};
 use crate::object::{Stack, format_weight};
 use crate::scroll_label::Lore;
@@ -515,10 +515,10 @@ fn stats(
     if let Some(attack) = attack {
         let less = spirit.map_or(0, |s| i32::from(s.threat));
         let threat = (i32::from(attack.threat) - less).max(crate::combat::FUMBLE + 1);
-        let critical = if threat >= SURE_HIT {
-            format!("{SURE_HIT}")
+        let critical = if threat >= HIGHEST {
+            format!("{HIGHEST}")
         } else {
-            format!("{threat}–{SURE_HIT}")
+            format!("{threat}–{HIGHEST}")
         };
         let shot = if def.launches.is_some() {
             " a shot"

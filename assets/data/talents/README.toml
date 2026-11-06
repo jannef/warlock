@@ -231,10 +231,12 @@
 #   skill { skill, value }        that skill counts that much higher (an untrained one from 0);
 #                                 `skill` left out: the chosen one (choice skill)
 #   distrusted                    no one makes way for it
-#   free_blow { trigger }         a free blow: "cleave", "great_cleave", "riposte",
+#   free_blow { trigger, one_in } a free blow: "cleave", "great_cleave", "riposte",
 #                                 "opportunist", "flurry" (a melee attack with nothing in
 #                                 hand strikes twice), or "gatekeeper" (a hostile stepping up
-#                                 beside it is struck; spec §8 "Free blows")
+#                                 beside it is struck; spec §8 "Free blows"); `one_in` (1 to
+#                                 100, the gatekeeper's only) strikes it one time in that many,
+#                                 scaled by the stance's `gatekeeper` (data/stances.toml)
 #   weapon { role, skill, to_hit, damage, threat, ranks, speed, reload, ease, bash, shield, crit, at_rank }
 #                                 what attacks with some weapon skills gain, as their ranks give
 #                                 it (data/weapon_skills.toml): the weapon skill or style `skill`
