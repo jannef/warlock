@@ -59,7 +59,7 @@
 //! [`Action::CastOn`]: crate::action::Action::CastOn
 
 use super::reflect::{Shot, Turned};
-use super::spell::{Caster, burst_cells, cone_cells};
+use super::spell::{Caster, burst_cells};
 use super::spell_aim::SpellAim;
 use super::spell_rung::CastBy;
 use super::talk::capitalized;
@@ -829,7 +829,9 @@ impl World {
             }
             Shape::Cone => {
                 self.sound_at(def.look.noise, here);
-                self.cast_cone((here, at, range), (&effect, roll, reroll), def, &mut made)
+                let caster = Caster::Actor(player);
+                let cone = (&effect[..], roll, reroll, def.damage_type);
+                self.cast_cone(caster, (here, at, range), cone, &mut made)
             }
             Shape::Ray | Shape::Bolt | Shape::Touch => {
                 self.sound_at(def.look.noise, here);
@@ -924,44 +926,6 @@ impl World {
                 self.spell_landed(cast, target, hit, events);
             }
         }
-    }
-
-    /// A cone from `here` toward `at`, `length` cells long: its effect drawn as a burst around
-    /// the caster over its cells, then one roll of `roll` (with `reroll`) for everyone in it,
-    /// in ascending actor id order, as an area's (Evasion halves it). What it rolled.
-    fn cast_cone(
-        &mut self,
-        (here, at, length): (Pos, Pos, i32),
-        (effect, roll, reroll): (&str, Roll, u32),
-        def: &SpellData,
-        made: &mut Vec<Event>,
-    ) -> i32 {
-        let level = self.state.current();
-        let opaque = |p: Pos| level.is_opaque(&self.content, p);
-        let cells = cone_cells(here, at, length, opaque);
-        if !effect.is_empty() {
-            made.push(Event::Spell {
-                effect: effect.to_string(),
-                origin: here,
-                shape: SpellShape::Burst {
-                    center: here,
-                    radius: length,
-                },
-                cells: cells.clone(),
-            });
-        }
-        let roll = roll.roll(&mut self.state.rng, reroll);
-        let level = self.state.current_level.clone();
-        let caught: Vec<ActorId> = (self.state.actors.values())
-            .filter(|a| a.level == level && cells.contains(&a.pos))
-            .map(|a| a.id)
-            .collect();
-        let player = self.state.player;
-        for id in caught {
-            let damage = Damage::new(roll, def.damage_type);
-            self.spell_hurts(Caster::Actor(player), id, (here, false), damage, made);
-        }
-        roll
     }
 
     /// A ray, a bolt, or a touch from `here` toward `at` (`reach` cells at most): it flies to

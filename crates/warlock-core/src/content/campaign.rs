@@ -371,6 +371,7 @@ mod tests {
                 "ascmearc",
                 "ceaptun",
                 "cealdhlaw",
+                "drake",
                 "fennmynster",
                 "fyrdelf",
                 "grundleas",

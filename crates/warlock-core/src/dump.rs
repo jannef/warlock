@@ -384,6 +384,7 @@ pub fn sound_char(sound: &PerceivedSound) -> char {
         SoundKind::Digging => 'd',
         SoundKind::Voice => 'v',
         SoundKind::Howl => 'h',
+        SoundKind::Roar => 'r',
         SoundKind::Heartbeat => 'q',
         SoundKind::Bell => 'a',
         SoundKind::Explosion => 'e',

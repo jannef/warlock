@@ -11,7 +11,9 @@
 //!    target is in range with a clear line of fire. A ranged creature or caster shoots or casts
 //!    when the target is within its range with a clear line of fire (no opaque cell and nobody
 //!    in between), else steps toward the nearest cell that gives it one (failing that, toward
-//!    the target). Leaving its routine, it remembers where it was (its post).
+//!    the target). A dragon breathes its element at the target whenever its breath is ready
+//!    and the target stands in the cone's reach with a clear line (`breath.rs`), and fights in
+//!    melee otherwise. Leaving its routine, it remembers where it was (its post).
 //!    An unharmed lurker waits where it stands instead of stepping toward it (`lurk.rs`).
 //! 3. **Search**: with no hostile in sight, it goes to where it last saw one.
 //! 4. **Listen**: failing that, to where it last heard a noise whose source it could not see
@@ -69,6 +71,8 @@ pub(super) enum Plan {
     },
     /// Call forth creatures of its side (`summon.rs`).
     Summon,
+    /// Breathe its element at the cell a hostile stands on (`breath.rs`).
+    Breathe(Pos),
     Step(Dir),
     Patrol,
     Wait,
@@ -153,6 +157,7 @@ impl World {
                 price
             }
             Plan::Summon => self.creature_summons(id, events),
+            Plan::Breathe(at) => self.creature_breathes(id, at, events),
             Plan::Step(dir) => self.step_or_wait(id, dir, events).1,
             Plan::Patrol => self.patrol(id, events),
             Plan::Wait => self.price_of(id, ActionKind::Wait),
@@ -326,6 +331,10 @@ impl World {
         // A creature that throws (`hurl.rs`) throws whenever it can from where it stands.
         if self.hurls_at(id, target, at) {
             return attack(AttackKind::Thrown);
+        }
+        // A dragon (`breath.rs`) breathes whenever it may; else it fights in melee below.
+        if self.breathes_at(id, target, at) {
+            return Plan::Breathe(at);
         }
         let close_in = || match self.route_to_shore(id, at, 1) {
             Route::Step(dir) => Plan::Step(dir),

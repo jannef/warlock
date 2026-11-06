@@ -229,5 +229,9 @@ Beorggeat, so no reveal is needed and no one starts beside it. No quest names it
 naming an endless branch's level is refused at load, and `Pick::Creatures` lists leave it out. Its
 dev scenario is `grundleas`.
 
+The dev scenario `drake` (#1099, `docs/dev/creatures.md` "Dragons") starts on `drakes_lair`, a
+hand-made Ascmearc level with no stairs: the fire drake in a lava hall like its hoard's, for
+replays and captures of a dragon's fight.
+
 Not yet (the design's later items): `dev = true` scenarios (not needed while a release build lists
 only the campaigns' starts: the dev scenarios `ceaptun`, `fyrdelf`, ... are never listed there).
