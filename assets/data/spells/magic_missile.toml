@@ -11,7 +11,7 @@ shape = "bolt"
 resolution = "auto"
 damage_type = "force"
 range = 8
-damage = "1d4"
+damage = "2d4"
 
 [spell.cast]
 effect = "arcane_bolt"
@@ -20,5 +20,5 @@ verb = "strikes"
 noise = { sound = "chanting", loudness = 30 }
 
 [spell.grows]
-damage = "intelligence 13 2d4, 16 3d4, 22 3d4+1"
+damage = "intelligence 13 4d4, 16 6d4, 22 6d4+1"
 range = "willpower 14 9, 18 10"

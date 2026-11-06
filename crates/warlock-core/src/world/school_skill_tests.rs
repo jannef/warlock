@@ -246,15 +246,15 @@ fn a_rank_changes_the_roll_the_mana_and_the_casts_time() {
             .expect("a roll");
         (roll.to_string(), me.spell_mods(&content, fireball).reroll)
     };
-    // Intelligence 14: the ladder's first rung, 3d6.
+    // Intelligence 14: the ladder's first rung, 6d6.
     ranks(&mut w, &[]);
-    assert_eq!(roll(&w), ("3d6".to_string(), 0));
+    assert_eq!(roll(&w), ("6d6".to_string(), 0));
     ranks(&mut w, &[("evocation", 3)]);
-    assert_eq!(roll(&w), ("3d6".to_string(), 1), "1s rolled again");
+    assert_eq!(roll(&w), ("6d6".to_string(), 1), "1s rolled again");
     ranks(&mut w, &[("evocation", 5)]);
-    assert_eq!(roll(&w), ("3d7".to_string(), 1), "a die a size bigger");
+    assert_eq!(roll(&w), ("6d7".to_string(), 1), "a die a size bigger");
     ranks(&mut w, &[("evocation", 6)]);
-    assert_eq!(roll(&w), ("4d7".to_string(), 1), "a die more");
+    assert_eq!(roll(&w), ("7d7".to_string(), 1), "a die more");
     // The mana: a twentieth off at rank 4, the floor of 1 holding.
     let cost = |w: &World| w.state.player().spell_cost(&content, fireball);
     ranks(&mut w, &[]);
@@ -306,13 +306,13 @@ fn schooled_and_magister_read_a_rank_higher_and_devotee_marks_half_again() {
         .to_string()
     };
     ranks(&mut w, &[("evocation", 4), ("necromancy", 1)]);
-    assert_eq!(roll(&w), "3d6");
+    assert_eq!(roll(&w), "6d6");
     w.player_mut().talents.take("schooled", Some("evocation"));
-    assert_eq!(roll(&w), "3d7", "evocation reads as 5");
+    assert_eq!(roll(&w), "6d7", "evocation reads as 5");
     let bonus = |w: &World| w.state.player().school_benefit(&content, hex).bonus;
     assert_eq!(bonus(&w), 0, "Schooled is for its chosen school");
     w.player_mut().talents.take("magister", None);
-    assert_eq!(roll(&w), "4d7", "evocation reads as 6");
+    assert_eq!(roll(&w), "7d7", "evocation reads as 6");
     assert_eq!(bonus(&w), 1, "necromancy reads as 2");
     // An untrained school stays untrained.
     let blessing = content.spell(sp("blessing"));

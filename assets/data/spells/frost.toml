@@ -11,7 +11,7 @@ resolution = "area"
 damage_type = "cold"
 range = 10
 radius = 2
-damage = "2d6"
+damage = "4d6"
 
 [spell.cast]
 effect = "frost_burst"
@@ -20,5 +20,5 @@ verb = "bites"
 message = "Bitter cold bursts from your hands!"
 
 [spell.grows]
-damage = "intelligence 13 3d6, 19 3d6+2, 25 3d6+4"
+damage = "intelligence 13 6d6, 19 6d6+2, 25 6d6+4"
 range = "willpower 14 11, 18 12"

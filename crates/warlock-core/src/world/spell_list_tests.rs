@@ -92,9 +92,9 @@ fn a_spell_scroll_casts_its_spell_free_of_mana_and_teaches_it() {
     assert!(out.took_turn);
     assert_eq!(count(&w, "scroll_of_magic_missile"), 1, "used up");
     assert_eq!(w.state.player().mana, mana, "free of mana");
-    // Magic missile never misses: 1d4 force at the scroll's level (3, the spell's own).
+    // Magic missile never misses: 2d4 force at the scroll's level (3, the spell's own).
     let lost = 1000 - w.state.actors[&target].hp;
-    assert!((1..=4).contains(&lost), "{lost}");
+    assert!((2..=8).contains(&lost), "{lost}");
     let said = said(&w);
     assert!(
         said.iter().any(|m| m == "It is a scroll of magic missile."),

@@ -10,11 +10,11 @@ expression: "render(case, content.clone())"
              │   b  Knock              in a direction                                 │
              │   c  Scribe             a scroll of a spell you know                   │
              │ Spells                                                                 │
-             │   d  Burning hands      2d4 fire, burns one in four, 2 mana, aimed     │
-             │   e  Ray of frost       1d8 cold, numbs, 1 mana, aimed                 │
-             │   f  Magic missile      3d4 force, shoves on a big hit, 2 mana, aimed  │
+             │   d  Burning hands      4d4 fire, burns one in four, 2 mana, aimed     │
+             │   e  Ray of frost       2d8 cold, numbs, 1 mana, aimed                 │
+             │   f  Magic missile      6d4 force, shoves on a big hit, 2 mana, aimed  │
              │   g  Blink              5 mana                                         │
-             │   h  Shatter            3d6 force, shoves on a big hit, 11 mana, aimed │
+             │   h  Shatter            6d6 force, shoves on a big hit, 11 mana, aimed │
              │ Talents                                                                │
              │   i  Blood magic                                                       │
              │ Skills                                                                 │

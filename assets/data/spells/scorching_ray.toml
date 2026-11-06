@@ -11,7 +11,7 @@ shape = "ray"
 resolution = "attack"
 damage_type = "fire"
 range = 8
-damage = "1d6"
+damage = "2d6"
 
 [spell.cast]
 effect = "fire_breath"
@@ -19,5 +19,5 @@ noun = "scorching ray"
 noise = { sound = "chanting", loudness = 30 }
 
 [spell.grows]
-damage = "intelligence 13 2d6, 16 3d6, 19 4d6, 25 3d6+1d10"
+damage = "intelligence 13 4d6, 16 6d6, 19 8d6, 25 6d6+2d10"
 range = "willpower 14 9, 18 10"

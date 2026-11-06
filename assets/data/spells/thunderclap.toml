@@ -12,7 +12,7 @@ resolution = "area"
 damage_type = "force"
 range = 0
 radius = 1
-damage = "1d6"
+damage = "2d6"
 effect = { status = "stunned", severity = 1 }
 
 [spell.cast]
@@ -23,5 +23,5 @@ message = "Thunder cracks about you!"
 noise = { sound = "thunder", loudness = 150 }
 
 [spell.grows]
-damage = "presence 13 2d6, 19 2d6+2"
+damage = "presence 13 4d6, 19 4d6+2"
 radius = "willpower 18 2"

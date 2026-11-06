@@ -308,8 +308,8 @@ fn the_first_fan_does_not_outclass_magic_missile() {
                 .map(|r| d.roll_at(r).expect("a roll").to_string())
                 .collect::<Vec<_>>()
         };
-        assert_eq!(rungs(fan), ["1d4", "1d6", "2d4", "2d4+2"], "{}", fan.id);
-        assert_eq!(rungs(missile), ["1d4", "2d4", "3d4", "3d4+1"]);
+        assert_eq!(rungs(fan), ["2d4", "2d6", "4d4", "4d4+2"], "{}", fan.id);
+        assert_eq!(rungs(missile), ["2d4", "4d4", "6d4", "6d4+1"]);
     }
 }
 
@@ -580,7 +580,7 @@ fn bolts_and_bursts_strike_as_scrolls_do_and_cost_mana() {
     let at = Pos::new(here.x + 2, here.y);
     w.apply(&Action::Cast("arcane_bolt".into(), Some(at)));
     let hurt = 500 - w.state.actors[&target].hp;
-    assert!((2..=12).contains(&hurt), "2d6: {hurt}");
+    assert!((4..=24).contains(&hurt), "4d6: {hurt}");
     assert_eq!(w.state.player().mana, 29, "level 6 × 1.8 for a line");
     assert!(
         said(&w).iter().any(|m| m.contains("arcane bolt")),

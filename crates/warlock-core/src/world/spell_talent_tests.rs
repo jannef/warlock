@@ -179,21 +179,21 @@ fn empower_and_archmage_climb_rungs_to_the_ladders_last_then_the_other_hooks_app
     let base = plain_wizard(&[]);
     assert_eq!(
         roll(&base, "fireball"),
-        "2d6",
+        "4d6",
         "the base at Intelligence 10"
     );
     let empowered = plain_wizard(&[("empower", None)]);
-    assert_eq!(roll(&empowered, "fireball"), "3d6", "a rung up");
+    assert_eq!(roll(&empowered, "fireball"), "6d6", "a rung up");
     assert_eq!(
         roll(&empowered, "ray_of_frost"),
-        "1d8",
+        "2d8",
         "a cantrip's one rung"
     );
     let both = plain_wizard(&[("empower", None), ("archmage", None)]);
-    assert_eq!(roll(&both, "fireball"), "5d6", "three rungs");
+    assert_eq!(roll(&both, "fireball"), "10d6", "three rungs");
     assert_eq!(
         roll(&both, "ray_of_frost"),
-        "1d8",
+        "2d8",
         "never past the last rung"
     );
     // Past the last rung, the other hooks still apply: Keen mind's bigger dice.
@@ -202,7 +202,7 @@ fn empower_and_archmage_climb_rungs_to_the_ladders_last_then_the_other_hooks_app
         ("archmage", None),
         ("keen_mind", Some("cold")),
     ]);
-    assert_eq!(roll(&keen, "ray_of_frost"), "1d9");
+    assert_eq!(roll(&keen, "ray_of_frost"), "2d9");
     // And the mana: Archmage half, Empower a tenth off.
     let def = BUILTIN.spell(sp("fireball"));
     assert_eq!(base.state.player().spell_cost(&BUILTIN, def), 26);
@@ -212,14 +212,14 @@ fn empower_and_archmage_climb_rungs_to_the_ladders_last_then_the_other_hooks_app
 #[test]
 fn keen_mind_grows_its_schools_dice_only() {
     let w = plain_wizard(&[("keen_mind", Some("evocation"))]);
-    assert_eq!(roll(&w, "fireball"), "2d7");
-    assert_eq!(roll(&w, "magic_missile"), "1d5");
+    assert_eq!(roll(&w, "fireball"), "4d7");
+    assert_eq!(roll(&w, "magic_missile"), "2d5");
     assert_eq!(roll(&w, "mend"), "1d3", "restoration is untouched");
     let w = plain_wizard(&[("keen_mind", Some("fire"))]);
-    assert_eq!(roll(&w, "fireball"), "2d7", "an element: fire");
+    assert_eq!(roll(&w, "fireball"), "4d7", "an element: fire");
     assert_eq!(
         roll(&w, "lightning_bolt"),
-        "2d6",
+        "4d6",
         "electricity is untouched"
     );
 }
@@ -228,9 +228,9 @@ fn keen_mind_grows_its_schools_dice_only() {
 fn brimming_rolls_a_die_more_and_costs_a_tenth_more() {
     let base = plain_wizard(&[]);
     let w = plain_wizard(&[("brimming", None)]);
-    assert_eq!(roll(&w, "fireball"), "3d6");
+    assert_eq!(roll(&w, "fireball"), "5d6");
     assert_eq!(roll(&w, "cure_wounds"), "3d6", "healing too");
-    assert_eq!(roll(&w, "scorching_ray"), "2d6");
+    assert_eq!(roll(&w, "scorching_ray"), "3d6");
     let def = BUILTIN.spell(sp("fireball"));
     let (before, after) = (
         base.state.player().spell_cost(&BUILTIN, def),
@@ -250,8 +250,8 @@ fn sure_hand_sets_its_hook() {
 
 #[test]
 fn scroll_adept_reads_a_spell_scroll_a_rung_higher() {
-    // The scroll of lightning casts at rung 2 (4d6, 24 at most); Scroll adept, the wizard's at
-    // level 1, takes it a rung higher (5d6), whatever the reader's Intelligence.
+    // The scroll of lightning casts at rung 2 (8d6, 48 at most); Scroll adept, the wizard's at
+    // level 1, takes it a rung higher (10d6), whatever the reader's Intelligence.
     let mut w = world_with(BUILTIN.clone(), "wizard");
     super::cast_tests::scores(&mut w, &[]);
     let def = BUILTIN.spell(sp("lightning_bolt"));
@@ -260,11 +260,11 @@ fn scroll_adept_reads_a_spell_scroll_a_rung_higher() {
         let by = CastBy::Scroll(2);
         me.spell_roll(&BUILTIN, def, by).map(|r| r.to_string())
     };
-    assert_eq!(at(&w).as_deref(), Some("5d6"));
+    assert_eq!(at(&w).as_deref(), Some("10d6"));
     w.player_mut().talents.forget("scroll_adept");
-    assert_eq!(at(&w).as_deref(), Some("4d6"), "the scroll's own rung");
+    assert_eq!(at(&w).as_deref(), Some("8d6"), "the scroll's own rung");
     w.player_mut().talents.take("scroll_adept", None);
-    // Read for real: past the scroll's own 24.
+    // Read for real: past the scroll's own 48.
     let target = kobold(&mut w, 2, 10_000);
     let scroll = BUILTIN
         .object_id("scroll_of_lightning")
@@ -290,5 +290,5 @@ fn scroll_adept_reads_a_spell_scroll_a_rung_higher() {
         let hurt = 10_000 - w.state.actors[&target].hp;
         most = most.max(hurt);
     }
-    assert!(most > 24, "past the scroll's own rung: {most}");
+    assert!(most > 48, "past the scroll's own rung: {most}");
 }

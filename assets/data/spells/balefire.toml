@@ -11,7 +11,7 @@ shape = "line"
 resolution = "area"
 damage_type = "fire"
 length = 5
-damage = "2d6"
+damage = "4d6"
 effect = { zone = { kind = "fire", turns = 10 } }
 
 [spell.cast]
@@ -22,5 +22,5 @@ message = "Fire springs up along the ground!"
 noise = { sound = "explosion", loudness = 60 }
 
 [spell.grows]
-damage = "intelligence 13 3d6, 16 4d6, 25 4d6+2"
+damage = "intelligence 13 6d6, 16 8d6, 25 8d6+2"
 length = "willpower 14 6, 18 7"

@@ -107,9 +107,9 @@ fn builtin_scrolls_cast_their_spells_at_their_rungs() {
         content.object(o).read.clone().expect("readable")
     };
     for (scroll, spell, rungs, roll) in [
-        ("scroll_of_fireball", "fireball", 1, "3d6"),
-        ("scroll_of_lightning", "lightning_bolt", 2, "4d6"),
-        ("scroll_of_frost", "frost", 0, "2d6"),
+        ("scroll_of_fireball", "fireball", 1, "6d6"),
+        ("scroll_of_lightning", "lightning_bolt", 2, "8d6"),
+        ("scroll_of_frost", "frost", 0, "4d6"),
     ] {
         let Reading::Cast(cast) = reading(scroll) else {
             panic!("a spell scroll")
@@ -379,7 +379,7 @@ fn a_fireball_flies_to_the_cell_aimed_at_and_bursts_like_the_trap() {
         }
     );
     let roll = lost(&w, near);
-    assert!((3..=18).contains(&roll), "{roll}");
+    assert!((6..=36).contains(&roll), "{roll}");
     // (9, 2) is at squared distance 2 from the center: inner (radius 1 reaches 2), the full roll.
     assert_eq!(lost(&w, edge), roll);
     assert_eq!(lost(&w, w.state.player), 0, "out of its reach");
@@ -454,7 +454,7 @@ fn lightning_runs_through_everyone_on_its_line_but_the_reader() {
     assert_eq!(path.first(), Some(&Pos::new(2, 1)));
     assert_eq!(path.last(), Some(&Pos::new(9, 1)));
     let roll = lost(&w, a);
-    assert!((4..=24).contains(&roll));
+    assert!((8..=48).contains(&roll));
     assert_eq!((lost(&w, b), lost(&w, far)), (roll, roll));
     assert_eq!(lost(&w, w.state.player), 0);
     assert_eq!(count(&w, "scroll_of_lightning"), 1);
@@ -477,7 +477,7 @@ fn frost_freezes_water_and_bites() {
     let mut w = world("##########\n#@...D...#\n#...~~~..#\n##########\n");
     let dummy = at(&w, Pos::new(5, 1));
     run(&mut w, "read:c:5,1");
-    assert!((2..=12).contains(&lost(&w, dummy)));
+    assert!((4..=24).contains(&lost(&w, dummy)));
     let level = w.state.current();
     assert!(
         (4..=6).all(|x| level.ice_at(Pos::new(x, 2)).is_some()),

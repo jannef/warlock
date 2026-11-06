@@ -11,7 +11,7 @@ resolution = "area"
 damage_type = "electricity"
 length = 8
 open_sky = true
-damage = "2d6"
+damage = "4d6"
 
 [spell.cast]
 effect = "lightning_bolt"
@@ -21,5 +21,5 @@ message = "Lightning answers your call!"
 noise = { sound = "thunder", loudness = 140 }
 
 [spell.grows]
-damage = "willpower 13 3d6, 16 4d6, 19 5d6, 25 5d6+2"
+damage = "willpower 13 6d6, 16 8d6, 19 10d6, 25 10d6+2"
 length = "willpower 14 9, 18 10"
