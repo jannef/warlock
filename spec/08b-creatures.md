@@ -118,8 +118,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
 - **Summoning** (`warlock-core/src/world/summon.rs`, the rules; `content/summon.rs`, the data;
   #520): an enemy-only creature ability; the player has none. A creature type's
   `[creature.summon]` names its pool (creature ids, each as likely, or a tag within a level
-  window, uniques and itself left out; a shared type calls only shared types), `count` (dice, 1
-  to 12), `cooldown` (6 to 600 s), `mana` (its cost; the type must have mana), and optionally
+  window, uniques and itself left out; a shared type calls only shared types; a list may name
+  the summoner's own type, a breeder's, docs/design/monster-dread.md §5.5 G5c), `count` (dice, 1
+  to 12), `cooldown` (6 to 600 s), `mana` (its cost, 1 to 1000; the type must then have mana;
+  left out, none: a breeder's, whose cooldown and `most` are its limits), and optionally
   `range` (default 8), `spread` (default 2), `most` (default 6), and `verb` (default
   "summons"). As step 2 begins, a creature with one summons when it sees a hostile within
   `range`, its casting is not blocked (a status that blocks `cast`: Silenced), its cooldown
@@ -139,6 +141,24 @@ developer notes (CLAUDE.md, `docs/dev/`).
   goblins and a warg!", "something" when they see none of it); an unseen summoner's creatures
   only as they appear in sight ("A skeleton appears!"); nothing seen, nothing said. Sight is the
   last turn's perception, so a summoning in the turn a door opens may go unseen.
+- **Splitting and dying into** (`warlock-core/src/world/split.rs`, the rules;
+  `content/split.rs`, the data; docs/design/monster-dread.md §5.5 G5a and G5b, #1129): an
+  enemy-only creature gimmick. `splits = { on = ["slashing", "piercing"], least = 8 }`: a blow
+  (melee or missile, anyone's) of a listed damage type that leaves the creature alive with at
+  least `2 × least` hit points halves them; it keeps the greater half, and a second creature of
+  its type takes the other on the first of `summon_cells(id, 1)` (none free: no split), with no
+  gear, the spawner's cap ignored, its side, summoner, and mind copied, and `Actor::split_from =
+  Half`. No draw. `dies_into = { creatures = [...], count = "2d4", spread = 1 }` (count 1 to 20,
+  spread 1 to 5, default 1; never the player, a unique, or itself): as it dies, on the
+  player's level, `count` is rolled on the gameplay stream and each is one `below(pool.len())`
+  draw, made on the next of `summon_cells(id, spread)` with the dead one's faction and no gear,
+  `split_from = Corpse`. A kill of a half pays 25 % of its experience (after an ally's share), of
+  a corpse's creature 10 %, and neither counts toward a quest's kills (`tally_kill`). Words: the
+  first split of a type the player sees in a run, "The charnel heap comes apart, and both
+  halves crawl." (`Progress::once` `split:<type>`), later "The charnel heap splits in two.";
+  "3 grave worms crawl out of the wormhost!" with the death, for what the player sees; look
+  mode adds ", writhing" after a `dies_into` type's parentheses. Bearers: the charnel heap
+  (splits), the wormhost and wormlord (die into grave worms; the wormlord breeds them too).
 - **Dragons** (`warlock-core/src/world/breath.rs`, the rules; `content/breath.rs`, the data;
   #1099): an enemy-only creature ability. A `combat = "dragon"` type has a `[creature.breath]`
   (and only a dragon has one): `damage` (dice), `damage_type` (its element, one type),

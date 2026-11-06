@@ -741,6 +741,7 @@ fn search_the_last_seen_spot_then_go_back_and_patrol_on() {
             weapon_skills: Default::default(),
             faction_override: None,
             summoner: None,
+            split_from: None,
             ally: None,
             risen: None,
             alignment: None,

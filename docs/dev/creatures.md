@@ -254,6 +254,15 @@ branch's odds. Tests: `content::danger::tests` (the roll, the fallbacks, determi
 `content::dread_roster_tests` (the sort's flags and tiers, no unique dread), and
 `world::spawn_tests::the_spawner_rolls_for_dread_at_the_levels_own_odds`,
 `draw_odds_take_the_most_specific_dread_one_in`.
+Splitting and dying into (docs/design/monster-dread.md §5.5, #1129; spec §8 "Splitting and dying
+into"): `CreatureDef::splits` (`content::Splits`: damage types, `least`) and `dies_into`
+(`content::DiesInto`: pool, count, spread), resolved in `Content::load_splits`
+(`content/split.rs`, after `load_summons`). The rules are `world/split.rs`: `World::split`, one
+line in `fight.rs::resolve` after a blow that left the target alive; `World::dies_into`, one
+line in `fight.rs::dies` before `creature_dies` (its line is said after the death's break
+lines); `World::offspring_share` in `dies` for the credit; `Actor::split_from` (`Split::Half`,
+`Split::Corpse`; saved, left out while `None`). Look mode's ", writhing" is the UI's
+(`ui/look.rs`). Tests: `world/split_tests.rs`, `ui::look::tests::what_lives_in_a_wormhost_shows_writhing`.
 Where the rosters are met (#531): the showcase's Depths has no danger (its patrol of rats, bats,
 and kobolds only; there is no general candidate pool). In the Ascmearc a type of level 17 or less
 (level 11 or less in Fennmynster, whose danger runs 3 to 10) is placed in a population where it

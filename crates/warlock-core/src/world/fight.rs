@@ -956,6 +956,8 @@ impl World {
                 self.big_hit_trigger((attacker, target), (kind, skills), blow, events);
                 self.after_blow(attacker, target, kind, (&blow, &made), events);
                 self.barbed(attacker, target, kind, events);
+                // A thing cut in two is two things (`split.rs`).
+                self.split(target, blow.kind);
             }
         }
         // A familiar's touch is its master's hex (`familiar.rs`), on a hit that leaves it alive.
@@ -1184,11 +1186,15 @@ impl World {
             }
             if credited {
                 let percent = master.map_or(100, |_| self.ally_share());
+                // A half, or what crawled out of a corpse, pays less and counts for no quest.
+                let (percent, counts) = self.offspring_share(id, percent);
                 self.earn_kill_at(creature, percent);
                 // One that followed the player counts where it came from (`stair_followers.rs`).
                 let home = self.actor_or_fallen(id).and_then(|a| a.home.clone());
                 let level = home.unwrap_or_else(|| self.state.current_level.clone());
-                self.tally_kill(creature, &level);
+                if counts {
+                    self.tally_kill(creature, &level);
+                }
                 self.judge_kill(id);
                 if master.is_some() && self.trains(Use::Handle) {
                     self.train(Use::Handle);
@@ -1196,8 +1202,11 @@ impl World {
             }
             // Malison: a death under the player's hex pays them mana (`malison.rs`).
             self.hex_tithe(id);
+            // What crawls out of its corpse (`split.rs`).
+            let crawled = self.dies_into(id);
             let lines = self.creature_dies(id, credited);
-            self.news.splice(earned..earned, lines);
+            self.news
+                .splice(earned..earned, lines.into_iter().chain(crawled));
         }
     }
 

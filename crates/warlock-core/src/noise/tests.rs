@@ -135,6 +135,7 @@ fn actor(content: &Content, creature: &str) -> Actor {
         weapon_skills: Default::default(),
         faction_override: None,
         summoner: None,
+        split_from: None,
         ally: None,
         risen: None,
         alignment: None,

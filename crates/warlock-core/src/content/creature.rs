@@ -11,6 +11,7 @@ use super::gear::{Gear, GearLineSpec, GearSpec};
 use super::light::LightId;
 use super::object::MAX_BONUS;
 use super::particles::ParticleEmitter;
+use super::split::{DiesInto, DiesIntoSpec, Splits, SplitsSpec};
 use super::status::{OnHit, OnHitSpec, StatusId};
 use super::summon::{Summon, SummonSpec};
 use super::throw::{Throw, ThrowSpec};
@@ -239,6 +240,10 @@ pub(super) struct CreatureSpec {
     pub throw: Option<ThrowSpec>,
     /// Its summoning (spec §8 "Summoning"): the creatures it calls forth.
     pub summon: Option<SummonSpec>,
+    /// Its splitting (docs/design/monster-dread.md §5.5 G5a): blows of these kinds cut it in two.
+    pub splits: Option<SplitsSpec>,
+    /// What crawls out of its corpse (docs/design/monster-dread.md §5.5 G5b).
+    pub dies_into: Option<DiesIntoSpec>,
     /// Its natural armour: hide, shell, or scales.
     pub natural: Option<Hide>,
     /// Whether it passes through solid terrain, and its Defence inside it (spec §8
@@ -751,6 +756,9 @@ impl CreatureSpec {
             throw: r.throw,
             summon: None,
             summon_spec: self.summon,
+            splits: None,
+            dies_into: None,
+            split_spec: (self.splits, self.dies_into),
             natural: self.natural,
             incorporeal: self.incorporeal,
             vitals: self.vitals,
@@ -926,6 +934,14 @@ pub struct CreatureDef {
     pub summon: Option<Summon>,
     /// Its summoning as written, resolved by `Content::load_summons`.
     pub(super) summon_spec: Option<SummonSpec>,
+    /// Gameplay: its splitting (`content/split.rs`, `world/split.rs`): a blow of a listed kind
+    /// that leaves it with at least twice `least` hit points cuts it in two; `None`: never.
+    pub splits: Option<Splits>,
+    /// Gameplay: what crawls out of its corpse when it dies (`content/split.rs`); `None`:
+    /// nothing.
+    pub dies_into: Option<DiesInto>,
+    /// Its `splits` and `dies_into` as written, resolved by `Content::load_splits`.
+    pub(super) split_spec: (Option<SplitsSpec>, Option<DiesIntoSpec>),
     /// Gameplay: its natural armour, if any.
     pub natural: Option<Hide>,
     /// Gameplay: whether it passes through solid terrain and stands inside it, and its Defence

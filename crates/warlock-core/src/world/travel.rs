@@ -692,6 +692,7 @@ pub(super) fn make_creature(
         faction_override: (spawn.faction)
             .or_else(|| super::court::join(content, state.seed, actor_id, spawn.creature)),
         summoner: None,
+        split_from: None,
         ally: None,
         risen: None,
         alignment: None,
