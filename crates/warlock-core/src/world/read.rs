@@ -70,7 +70,7 @@ impl World {
             }
             (&Reading::Cleanse(cleansing), None) => {
                 let price = self.read_price();
-                if self.read_cleanse(item, cleansing) {
+                if self.read_cleanse(item, cleansing, events) {
                     Spent::Turn(price)
                 } else {
                     Spent::Nothing
