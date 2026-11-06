@@ -65,4 +65,4 @@ dim but beside the player, its sneak attack kept.
 
 ## Variance
 
-The variance pass (#1134, `docs/dev/creatures.md` "Variance by role") sets the roles' to-hit (striker `L/4 + L/8`, brute and caster `L/4 − L/8`, the armed `L/4`), threat and crit (striker 19, brute 24 at ×3), and hit-point factors (quick and caster 0.5, brute 2.0). **Speed**: the fey are quick, 1000 to 1250 (the quickling, once 2000, and the yeth hound at the top of the bulk); the dread fey at 1400 (the pixie, the darkling, the nymph, the blink dog).
+The variance pass (#1134, `docs/dev/creatures.md` "Variance by role") sets the roles' to-hit (striker `L/4 + L/8`, brute and caster `L/4 − L/8`, the armed `L/4`), threat and crit (striker 19, brute 24 at ×3), and hit-point factors (quick and caster 0.5, brute 2.0). **Speed**: the fey are quick, 1000 to 1250 (the yeth hound at the top of the bulk); the quickling stays at 2000 (design §6, its sneak attack the claw bug of this game); the dread fey at 1400 (the pixie, the darkling, the nymph, the blink dog).

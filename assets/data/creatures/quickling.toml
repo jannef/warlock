@@ -9,7 +9,7 @@ rarity = "uncommon"
 name = "quickling"
 glyph = "f"
 fg = "#c8d0e0"
-speed = 1250
+speed = 2000
 factions = { seelie = 25, unseelie = 75 }
 tags = ["fey"]
 alignment = "evil"

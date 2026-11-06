@@ -98,6 +98,16 @@ const BULK: std::ops::RangeInclusive<u32> = 800..=1250;
 /// The least speed of the quick dread; the slow dread are at 600 or 700.
 const QUICK_DREAD: u32 = 1400;
 
+/// Fast by design, kept past the bulk: the quickling (docs/design/monster-dread.md §6, "the claw bug of this game")
+/// and the vortices (§5.3, D3: "speed +200").
+const FAST_BY_DESIGN: &[&str] = &[
+    "dust_devil",
+    "ember_mote",
+    "quickling",
+    "spark_mote",
+    "water_mote",
+];
+
 #[test]
 fn the_speed_rule_holds_tribe_by_tribe() {
     let content = Content::builtin().expect("content");
@@ -118,7 +128,7 @@ fn the_speed_rule_holds_tribe_by_tribe() {
                 "{id}: dread at 600 or 700, or {QUICK_DREAD} and up, not {}",
                 def.speed
             );
-        } else {
+        } else if !FAST_BY_DESIGN.contains(&id) {
             assert!(
                 BULK.contains(&def.speed),
                 "{id}: bulk between 800 and 1250, not {}",
