@@ -1,0 +1,20 @@
+# Vault: archers on a dais in a ring of water, their arms at their feet. The decision: wade
+# under fire, or trade shots from the door.
+# Every step toward the dais is through water, at twice the time; from the door only the
+# player's missiles decide it. The finds are missile weapons.
+name = "The Archers' Walk"
+danger = { from = 3 }
+map = '''
+###############
+#.............#
+#..~~~~~~~~~..#
++..~$aaaaa$~..#
+#..~~~~~~~~~..#
+#.............#
+###############
+'''
+
+[legend]
+# Three archers on five cells of the dais, so where they stand moves.
+"a" = { terrain = "floor", monsters = { pool = "archer", count = 3 } }
+"$" = { terrain = "floor", loot = { pool = "missile_weapons", grade = "magic" } }

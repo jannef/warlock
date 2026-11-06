@@ -1,0 +1,21 @@
+# Vault: a chamber of runes with a known teleport rune at its centre. The decision: a way out
+# that is not a door, when the room goes wrong.
+# Step on the rune and the level has the player somewhere else: a door out of a bad fight, or a
+# way past it to the finds that leaves the finds behind anyway.
+name = "The Rune-stone"
+map = '''
+#########
+#g.r.r.g#
+#gr...rg#
+#r.$T$.r#
+#gr...rg#
+#g.r.r.g#
+####+####
+'''
+
+[legend]
+"r" = "uv_rune"
+"T" = { terrain = "uv_rune", trap = "teleport", known = true }
+# Three of the floor's own on eight cells, so where they stand moves.
+"g" = { terrain = "floor", monsters = { pool = "level", count = 3 } }
+"$" = { terrain = "floor", loot = { pool = "scrolls" } }

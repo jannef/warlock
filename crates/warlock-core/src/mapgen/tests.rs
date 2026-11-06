@@ -102,9 +102,9 @@ fn special_room_snapshots() {
     let flooded = level(33, 2);
     assert_eq!(flooded.rooms.len(), 1);
     insta::assert_snapshot!("rooms_seed_33_depth_2_flooded", describe(&flooded));
-    let shadowed = level(42, 4);
+    let shadowed = level(5, 4);
     assert_eq!(shadowed.rooms.len(), 1);
-    insta::assert_snapshot!("caves_seed_42_depth_4_shadowed", describe(&shadowed));
+    insta::assert_snapshot!("caves_seed_5_depth_4_shadowed", describe(&shadowed));
     // Without the marks, the flooded room shows its water.
     let map = ascii(&flooded, &CONTENT);
     let water = CONTENT
@@ -809,19 +809,16 @@ fn vaults_are_stamped_whole_some_way_round_with_their_lights_and_creatures() {
     }
     // Dungeons get every dungeon vault and never the ruins meant for the overworld's local areas,
     // nor the vaults a branch level names (stamped only there), nor one whose `danger` the Depths'
-    // (none: 0) is outside of (their stamps: `vault_stamp_tests.rs`).
+    // (none: 0) is outside of.
     for (vault, count) in vaults.iter().zip(&seen) {
         if vault.pinned {
             assert_eq!(*count, 0, "vault `{}` stamped where not named", vault.id());
-        } else if !vault.suits(0) {
-            assert_eq!(
-                *count,
-                0,
-                "vault `{}` stamped outside its danger",
-                vault.id()
-            );
         } else if vault.is_outdoor() {
             assert_eq!(*count, 0, "outdoor vault `{}` in a dungeon", vault.id());
+        } else if !vault.suits(0) {
+            // The depths have no danger, and a deep vault keeps to its own (#1073); the vault
+            // stamp test finds it on floors it suits (`vault_stamp_tests.rs`).
+            assert_eq!(*count, 0, "vault `{}` above its danger", vault.id());
         } else {
             assert!(*count > 0, "vault `{}` never placed", vault.id());
         }
