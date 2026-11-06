@@ -221,7 +221,7 @@ fn the_forge_born_earn_marks_half_again_as_fast_in_every_skill() {
         Role::Melee,
         Role::Launcher,
         Role::Thrown,
-        Role::ShieldBlock,
+        Role::ShieldBash,
         Role::Style,
     ] {
         let drill = if role == Role::Melee { 25 } else { 0 };

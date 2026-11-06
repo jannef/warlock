@@ -627,14 +627,14 @@ developer notes (CLAUDE.md, `docs/dev/`).
   for, ranks 1 to 10: ten numbers, each more than the last, at most 1 000 000), `[[skill]]`s in
   the order the weapon skills screen lists them (at most 255): `id`, `name` (`Long blades`),
   `phrase` (the message's `with long blades`), `role` (`melee`, `launcher`, `thrown`, `unarmed`,
-  `shield_block`, `shield_bash`, `spell`, `style`; `unarmed` to `spell` at most one skill each),
+  `shield_bash`, `school`, `style`; `unarmed` and `shield_bash` at most one skill each),
   `curve` (a key of `curves`), and its benefits as eleven numbers, ranks 0 to 10 (0 at rank 0,
   never less at a higher rank; a list left out is all 0): `to_hit` and `damage` (0 to 20),
   `threat` (0 to 10), `crit` (added to a confirmed critical's multiplier, 0 to 3, never past ×5),
   and `speed` (percent off the attack's cost, 0 to 60) for the roles that attack (no `speed` for
   `spell` or a caster grip); `parry` (0 to
-  20) for `melee`, `reload` (0 to 60) for `launcher`, `shield` (0 to 20) for `shield_block` (a
-  benefit the role does not use is an error). A fighting style (`role = "style"`, §8 "Fighting
+  20) for `melee`, `reload` (0 to 60) for `launcher`, `shield` (0 to 20) for a style of grip
+  `weapon_and_shield` or `two_shields` (a benefit the role does not use is an error). A fighting style (`role = "style"`, §8 "Fighting
   styles") also has its `grip` (`one_weapon`, `two_weapons`, `two_handed`, `weapon_and_shield`,
   `unarmed`, `launcher`, `thrown`, and the caster grips `ranged_spell`, `touch_spell`,
   `armoured_spell`) and may name `weapons` (weapon skill ids of the roles its
@@ -654,19 +654,19 @@ developer notes (CLAUDE.md, `docs/dev/`).
   symmetric; styles default only to styles, weapon skills only to weapon skills. The built-in
   file: marks 1 an attempt, 2 more
   a hit, 20 % a level, at most 200 %; curves melee 15, 30, 60, 120, 240, 480, 960, 1920, 3840,
-  7680 and missile 10, 20, … 5120; sixteen skills: daggers and knives, short blades, long
+  7680 and missile 10, 20, … 5120; fifteen skills: daggers and knives, short blades, long
   blades, great blades, axes, maces and clubs, spears, polearms, staves (`melee`), unarmed;
   bows, crossbows, slings (`launcher`, missile curve), thrown weapons (missile curve); shield
-  blocking, shield bashing; the seven schools of magic (`school`, missile curve, the spell scaling
+  bashing; the seven schools of magic (`school`, missile curve, the spell scaling
   design §8: evocation, necromancy, abjuration, restoration, transmutation, enchantment,
   divination; defaults evocation ↔ transmutation, necromancy ↔ restoration, abjuration ↔
   enchantment −4); defaults: long ↔ short blades −2, long ↔ great blades −2, short
   blades ↔ daggers −2, long blades ↔ daggers −4, short blades ↔ thrown −4, daggers ↔ thrown −2,
   axes ↔ maces −2, axes ↔ polearms −3, maces ↔ staves −3, spears ↔ polearms −2, spears ↔
   staves −3, spears ↔ thrown −4, polearms ↔ great blades −4, bows ↔ crossbows −4, slings ↔
-  thrown −3, shield blocking ↔ shield bashing −3; two weapons −4 and −8; two shields −6, 50 %,
+  thrown −3; two weapons −4 and −8; two shields −6, 50 %,
   75 % (`[two_shields]`: `to_hit`, `slow`, `spell_failure`); far 5; twelve styles after the
-  sixteen skills and seven schools (§8 "Fighting styles": Duelist, Twin Blades, Great Weapon, Sword and Board,
+  fifteen skills and seven schools (§8 "Fighting styles": Duelist, Twin Blades, Great Weapon, Sword and Board,
   Two Shields (`hidden = true`: listed only once its owner has marks in it), Marksman (bows, crossbows, slings; missile curve), Skirmisher (missile curve),
   Brawler, Staff Fighter (staves), and the caster styles Sniper, Toucher, Battle caster
   (missile curve)), with the defaults duelist ↔ sword and board −3, duelist ↔ twin blades −3,

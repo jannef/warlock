@@ -37,8 +37,7 @@
 //! Weapon skills (spec §8 "Weapon skills"): every attack draws on a skill ([`Actor::attack_skill`];
 //! its profile and price carry what the rank gives), and each attack the player makes earns
 //! marks in it, more for a hit, more against a stronger opponent (by level, spec §8
-//! "Experience"); a blow the player's shield blocks earns marks in shield blocking
-//! ([`World::practise`]). A rank gained is said after the attack that earned it: "You feel more
+//! "Experience"; [`World::practise`]). A rank gained is said after the attack that earned it: "You feel more
 //! skilled with daggers." A shield bash ([`World::bash`]) is a blow with a held shield, its own
 //! damage, and its own skill.
 //!
@@ -850,7 +849,7 @@ impl World {
         let struck = self.small_target(attacker, target, struck);
         // False lead (a weapon active, `weapon_active.rs`): rolled without the categories it ignores.
         let struck = self.misled(attacker, struck);
-        let levels = (self.level_of(attacker), self.level_of(target));
+        let level = self.level_of(target);
         // A talent may roll a fumble again (a birth sign's Winner's luck).
         let lucky = (self.state.actors.get(&attacker))
             .is_some_and(|a| !a.talents.is_empty() && a.talent_mods(&self.content).reroll_fumble);
@@ -902,23 +901,12 @@ impl World {
         if let Some(blow) = &blow {
             self.train_fight((attacker, target), kind, blow);
         }
-        let player = self.state.player;
-        if let Some(blow) = blow {
-            if attacker == player {
-                // The weapon skill first, then the style: their news is said in that order.
-                for skill in skills.trained() {
-                    self.practise(skill, blow.strike.is_hit(), levels.1);
-                }
-            }
-            let blocked = Strike::Missed {
-                by: Some(Category::Shield),
-            };
-            let block = self.content.weapon_skills().of_role(Role::ShieldBlock);
-            if target == player
-                && blow.strike == blocked
-                && let Some(block) = block
-            {
-                self.practise(block, true, levels.0);
+        if let Some(blow) = blow
+            && attacker == self.state.player
+        {
+            // The weapon skill first, then the style: their news is said in that order.
+            for skill in skills.trained() {
+                self.practise(skill, blow.strike.is_hit(), level);
             }
         }
         // Resources built by blows (spec §8 "Resources"): a hit and a critical that do harm

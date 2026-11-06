@@ -115,8 +115,8 @@ Build the engine and framework, not the game. Everything built is production qua
   are set by the training marks meaningful use earns (ADOM's ladder), and the passive ones help: tumble (Dodge in Defence),
   stealth (quieter steps and doors), listen (hearing fainter sounds), balance (less burden
   slowdown), survival (quicker journeys); a Skills screen lists the player's (§8 "Skills")
-- Weapon skills (M22): ADOM-like marks and ranks 0 to 10 in sixteen weapon categories (shield
-  blocking and shield bashing among them) with per-category passive benefits, and *The Riddle of
+- Weapon skills (M22): ADOM-like marks and ranks 0 to 10 in fifteen weapon categories (shield
+  bashing among them) with per-category passive benefits, and *The Riddle of
   Steel*'s defaults between related categories; a weapon skills screen and a shield bash
   (§8 "Weapon skills")
 - Fighting styles (M22): eight styles after AD&D 2e's *Complete Fighter's Handbook* (Duelist,

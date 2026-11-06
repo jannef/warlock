@@ -796,7 +796,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     Weapon specialization (after Weapon focus for the same skill, that skill at 5: its benefits
     read a rank higher, never past 10), Improved critical (threat one roll wider), Stylist (the
     style's benefits one rank higher, never past 10, and only for a rank held), Two-weapon
-    training (both two-weapon penalties eased by 2), Shield expert (Shield +1; Sword and
+    training (both two-weapon penalties eased by 2), Shield expert (Sword and Board 2: Shield +1 in a shield style; Sword and
     Board's free bash 10 more likely where it has one), Deadly aim (+2 damage with shots),
     Thrower (+1 damage and 10 % cheaper throws), Rapid reload (reloading 25 % cheaper);
     `launcher_range` and `throw_range` (Far shot: +2 and +1 cells); `max_dex` (Armour
@@ -807,8 +807,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     to pain: a hit, a blow, shot, throw, or trap, does 1 less after the soak, never below 1;
     a status's or starving's harm is no hit); `resist` (Elemental ward: 25 % against
     the chosen element, any damage type that is no physical kind, summed and capped with the
-    gear's). A weapon-skill choice is a skill that attacks: never shield blocking (it only
-    defends) nor a style (chosen as a style). Steady hand (the ranger's focus) came with the
+    gear's). A weapon-skill choice is a skill that attacks: never a style (chosen as a
+    style) nor a school of magic (chosen as a school). Steady hand (the ranger's focus) came with the
     resource talents (R5, §8 "Resources").
   - **Vigour, Might, Finesse** (#237; the design's §7.5; Battle trance and Inner calm, on the
     class resources, came with R5, §8 "Resources"): `resting_percent` (Fast healer: resting's pace
@@ -1238,7 +1238,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     on a blank scroll for three times its mana and a study's time; §8 "Scrolls": "Writing
     scrolls").
   - **Passives**, each one read: Weapon drill (melee weapon skill marks +25 %, `practise`),
-    Shield line (Shield +1), Cleaving strike (the cleave free blow; with the Cleave talent too, great
+    Shield line (Shield +1 in a shield style, the styles' role since #1093), Cleaving strike (the cleave free blow; with the Cleave talent too, great
     cleave), Armour drill (worn armour's Dexterity cap +1, Protection +1 while wearing any),
     Weapon mastery (threat +1 with melee weapon skills at rank 8 or more), Iron stance (the
     aggressive stance's Dodge penalty and the defensive's to-hit penalty gone), Champion
@@ -1529,7 +1529,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
     role says what uses it: `melee` and `launcher` skills are named by weapons (`category`), the
     wielded weapon's for a blow, the readied missile weapon's for a shot; `thrown` is every
     throw, whatever is thrown; `unarmed` bare hands, natural attacks, and kicks, whatever is
-    wielded (§8 "Doors"); `shield_block` and `shield_bash` a held shield's blocks and bashes;
+    wielded (§8 "Doors"); `shield_bash` a held shield's bashes (there is no skill of blocking with
+    a shield: the shield's own Defence and the shield styles' `shield` are the Shield category,
+    #1093);
     `school` (a school of magic, one skill each of the seven) every spell of its school the
     caster casts with their own mana ("Schools of magic" below).
   - **Ranks**: 0 (untrained: no benefits; marks still count) to 10, on every actor
@@ -1537,12 +1539,12 @@ developer notes (CLAUDE.md, `docs/dev/`).
     creature's from its type (§7). Ranks are stored, not derived.
   - **Marks**: only the player trains. Each attack the player makes on someone (a blow, a bash,
     a kick, a shot or throw for each actor it reaches; hit or miss) earns `attempt` marks (1) in its
-    skill, a hit `hit` more (2); a blow the player's shield blocks (a miss credited to the
-    Shield category, "Combat" above) earns `attempt + hit` in shield blocking. The marks scale
+    skill, a hit `hit` more (2); a blow the player's shield blocks trains no weapon skill. The
+    marks scale
     by `100 + per_level × (the opponent's level − the rank)` percent (20 a level), kept within 0
     and `most` (200), rounded to the nearest mark (halves up): more against stronger
     opponents, fewer as the rank rises. The opponent's level is its creature type's `level`
-    (§8 "Experience"; the one attacked, or for a block the attacker): a level-1 giant rat
+    (§8 "Experience"; the one attacked): a level-1 giant rat
     teaches nothing past rank 5, a level-4 kobold shaman nothing past rank 8.
     A missile that reaches no one earns nothing; nothing rolls for marks. A spell earns marks
     in its school, whatever it does ("Schools of magic" below).
@@ -1559,8 +1561,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     never below 2), and a lower cost (`speed`, percent off `melee`, `shoot`, or `throw`;
     `reload` off reloading), all in the attack's `Profile` (`Profile::with`; `Actor::melee`,
     `ranged`, `thrown`, `bash`) and price (`World::attack_price`); Parry added to the wielded
-    weapon's own while it is wielded, Shield (shield blocking) added to a held shield's own
-    (`Actor::defence`). Benefits of several skills add up (`Benefit::plus`), so a later kind of
+    weapon's own while it is wielded, Shield (a shield style's, "Fighting styles") added to a held
+    shield's own (`Actor::defence`). Benefits of several skills add up (`Benefit::plus`), so a later kind of
     skill (fighting styles, #135) can stack on a weapon's: another role, with the same ranks,
     marks, curve, and benefits. Ranks 1 to 5 grow slowly, ranks 6 to 10 much faster: bigger
     damage, a wider threat, more speed and Parry, and moderate to-hit (#554; a long-blade
@@ -1820,8 +1822,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     `use:shield_wall`, `use:piercing_shot:12,5` (`Action::Cast` of an id that is no spell's:
     resolved after the class actives, the birth sign gifts, and the spells; a loader check keeps
     an active's id off theirs). Usable only while what the actor holds is for it
-    (`Actor::holds_for`: the abilities its blow's, or a shot's, weapon skill and style teach;
-    shield blocking's with a shield held), else greyed `Unavailable::NotSoHeld` ("your hands are
+    (`Actor::holds_for`: the abilities its blow's, or a shot's, weapon skill and style teach),
+    else greyed `Unavailable::NotSoHeld` ("your hands are
     not so held"); short of its stamina, `Unavailable::Short` ("you are short of breath", the
     resource's `lacking` words); a status that blocks the action it is, `While`. **Costs**, both
     paid only after its own refusals (nobody hostile there, no room to lunge, nothing to shoot):
@@ -1846,7 +1848,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     twice, bonus and riders once, −2 to hit). The catalogue (data; first guesses): Vital strike
     (blades 9; 4 stamina, a blow's time), Sunder (axes, maces, polearms 9; 4, 125 %), Lunge
     (spears, staves 9; 3, 100 %), Piercing shot (bows, crossbows, slings 9; 4, a shot's), Shield
-    wall (shield blocking 9; 5, a wait's), False lead (Duelist 7; 2, 100 %), Whirl (Twin Blades 7; 6,
+    wall (Sword and Board, Two Shields 9; 5, a wait's), False lead (Duelist 7; 2, 100 %), Whirl (Twin Blades 7; 6,
     150 %), Mighty swing (Great Weapon 7; 5, 150 %), Shield rush (Sword and Board 7; 4, 125 %),
     Gap shot (Marksman 7; 4, 150 % of a shot), Hip throw (Brawler 7; 4, 125 %), Staff sweep
     (Staff Fighter 7; 5, 150 %). Each is its own action (no stacking of actives on one blow);
