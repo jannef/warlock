@@ -63,7 +63,13 @@ impl QuestScreen {
                 let text = if quest.active { "Active" } else { "Done" };
                 lines.push((None, text.to_string()));
             }
-            lines.push((Some(i), quest.name.clone()));
+            // A failed quest (an escort's death) is among the finished ones, marked so.
+            let name = if quest.failed {
+                format!("{} (failed)", quest.name)
+            } else {
+                quest.name.clone()
+            };
+            lines.push((Some(i), name));
         }
         lines
     }
@@ -255,6 +261,10 @@ mod tests {
         let mut done = quests[0].clone();
         (done.name, done.active, done.status) = ("Three apples".into(), false, "Done.".into());
         quests.push(done);
+        let mut failed = quests[0].clone();
+        (failed.name, failed.active, failed.failed) = ("Eadgyth".into(), false, true);
+        failed.status = "Failed: Eadgyth is dead.".into();
+        quests.push(failed);
         let b = Bindings::default();
         let mut screen = QuestScreen {
             quests,
@@ -272,6 +282,10 @@ mod tests {
         screen.handle(&Press::nav(Nav::Down), &b);
         let shown = drawn(&screen, 80, 30);
         assert!(shown.contains("> Three apples"), "{shown}");
+        assert!(at("Three apples") < at("Eadgyth (failed)"));
+        screen.handle(&Press::nav(Nav::Down), &b);
+        let shown = drawn(&screen, 80, 30);
+        assert!(shown.contains("Failed: Eadgyth is dead."), "{shown}");
         assert!(shown.contains("↑↓ choose   q or Esc close"), "{shown}");
     }
 

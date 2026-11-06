@@ -250,6 +250,11 @@ impl World {
             return Spent::Turn(price);
         };
         self.stock_wares(id, dialogue);
+        // An escort found falls in behind the player (`escort.rs`).
+        if self.escort_joins(id, dialogue, events) {
+            self.train_stat(StatUse::Chat);
+            return Spent::Turn(price);
+        }
         let actor = &self.state.actors[&id];
         let d = self.content.dialogue(dialogue);
         let talk = actor.talk;

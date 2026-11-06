@@ -455,6 +455,8 @@ impl World {
         self.arrive_spawner(to);
         // The player's allies beside them come along, and the retinue steps out (`ally.rs`).
         self.follow_along(&from, to, old, arrival);
+        // An escort brought home completes its quest (`escort.rs`).
+        self.escorts_home();
         // Sounds remembered on the level left say nothing about this one.
         self.state.recent_sounds.clear();
         if let Some(line) = self.content.arrival(to) {

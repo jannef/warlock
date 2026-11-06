@@ -136,6 +136,7 @@ mod encounter;
 mod encounter_area;
 mod endless;
 mod equip;
+mod escort;
 mod experience;
 mod eyes;
 mod familiar;
@@ -289,6 +290,7 @@ pub use encounter::{
     Choice as EncounterChoice, EncounterView, Forced as EncounterForced, KNOWN_LINE,
     Outcome as EncounterOutcome, PENDING_REFUSED, Party, Pending,
 };
+pub use escort::{escort_slot, fits_escort};
 pub use experience::{Discovered, Progress};
 pub use familiar::{draw as familiar_draw, name_for as familiar_name};
 pub use fight::{Cause, Death};
@@ -1717,6 +1719,8 @@ mod endless_tests;
 mod equip_tests;
 #[cfg(test)]
 mod escape_tests;
+#[cfg(test)]
+mod escort_tests;
 #[cfg(test)]
 mod experience_tests;
 #[cfg(test)]

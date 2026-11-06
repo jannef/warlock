@@ -35,6 +35,15 @@ Talking about quests takes no time.
 - **Deliver**: the person gives you something as they give you the quest (you need room for it in your [pack](objects.md#your-pack)),
   to carry to someone else and hand in there. Without it in your [pack](objects.md#your-pack) you cannot hand it in: if
   you drop it, pick it up again.
+- **Escort**: bring someone home ("Bring Eadgyth safely to the Hamlet."). Find them and
+  [chat](npcs.md#chatting) with them: they fall in behind you as one of your [allies](allies.md),
+  in the [coward stance](combat.md#stances), and follow you from level to level. They are no fighter:
+  they strike only at an enemy right beside them and will not be [set on](allies.md#orders)
+  anything, though they come to heel and hold when told. [Give](abilities.md#ability-give) them a
+  weapon or armour and they put it on at once, dropping what they held or wore there; what they
+  cannot wear or wield they refuse. When they stand with you in the place they belong, the
+  quest is done there and then, and they stay. If they die, joined or not, the quest **fails**:
+  the log says so, and it is never offered again.
 
 ## Sorts of creatures
 

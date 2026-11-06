@@ -99,6 +99,15 @@ many allies you may lead.
 
 {{#include generated/charm-spells.md}}
 
+### Escorts
+
+Someone you bring home for an [escort quest](quests.md#kinds-of-quests) is an ally too, from the
+moment they agree to come: they follow you, come along on the stairs and travel with you over
+the overworld, and come to heel or hold as told, but they are never set on anything and strike
+only at what stands right beside them. [Give](abilities.md#ability-give) hands them any weapon
+or armour they can use, which they put on at once, dropping what they had there. Home, they are
+no one's ally any more and stay where they are.
+
 ### The druid's calls
 
 The druid calls the wild: [Call of the wild](magic.md#spell-call-of-the-wild) at level 6,

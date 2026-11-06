@@ -35,7 +35,8 @@ proper name (an npc dialogue's `name`, `Dialogue::name`, #336: "Sister Hild", no
 creature's dialogue from `SeenActor::dialogue` (`Content::dialogue_of`, not serialized): look
 mode names an npc by its proper name with the services it sells in words ("Sister Hild
 (unhurt), who cures and mends for gold, on plank floor."), and the dialogue screen's title is
-the name. Creatures that talk and fight no one
+the name. An escort quest's character, chatted with while the quest is active, joins the player instead of
+greeting them (`World::escort_joins`, the one line in `chat`; `docs/dev/quests.md`). Creatures that talk and fight no one
 never stop a rest by coming into view (`World::disturbs_rest`).
 
 **Services** (#329, the campaign design §6.1; spec §8 "Dialogue"): `world/service.rs`.
