@@ -87,6 +87,8 @@ impl World {
         level.secrets.remove(&p);
         // So is a hollow wall the player found (a sealed room's breach) once it is broken.
         level.hollows.remove(&p);
+        // A statue that is no more spills what it held (`statue.rs`).
+        self.statue_gone(p);
         let level = self.state.current();
         self.lights.terrain_changed(level, &self.content, p);
     }

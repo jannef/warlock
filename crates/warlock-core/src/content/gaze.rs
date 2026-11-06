@@ -221,10 +221,10 @@ mod tests {
                 }
             }
         }
-        // Nothing else gazes yet.
+        // Nothing else gazes yet but the basilisk, whose gaze is new (#1126).
         let gazers = (content.creature_defs().iter())
             .filter(|d| d.gaze.is_some())
             .count();
-        assert_eq!(gazers, MOVED.len());
+        assert_eq!(gazers, MOVED.len() + 1);
     }
 }

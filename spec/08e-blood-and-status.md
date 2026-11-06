@@ -162,6 +162,15 @@ developer notes (CLAUDE.md, `docs/dev/`).
     (`Event::Died`'s `of`; the player's death records it, `Death::of`). A creature that dies of
     a status counts as killed by whoever caused it (`Effect::by`): experience (#133) credits the
     player for creatures bleeding to death from wounds they dealt.
+    A status that `kills_at_max` kills as it reaches its max instead (`World::afflict`'s degree
+    step, one hook: the status goes, then the bearer dies of it by whoever gave the last degree,
+    as a tick's death is). **Stiffening** (#1126, a basilisk's gaze) is one: four degrees
+    adding up, two minutes a degree to ease, half again as slow and Dexterity −4 from the second;
+    its `stages` tell each degree lived to ("Your limbs stiffen.", "Your skin greys and
+    hardens.", "You can barely move."), and at the fourth the bearer is stone: "Turned to stone"
+    on the death screen, "The kobold turns to stone." for a creature, which leaves a statue
+    (`statue`, §8 "Statues"). The scroll of restoration (`restoration`) and a temple's cure
+    (`prayer`) end it, the Heal skill eases it a degree a try, Still mind's Stillness ends it.
   - **Cures**: `World::cure(actor, means)` ends every status that lists the means in its
     `cured_by` (a `bandage` stops the bleeding). The Heal skill treats a status with a `treat`
     table instead (#549, §8 "Treating oneself"): bleeding stops on a made check and may be

@@ -59,7 +59,12 @@ drains: `docs/dev/mana.md`), or change in the player's hunger (`docs/dev/hunger.
 splitting time never
 changes the result, the ticks' damage and then starving's through `hurt` (`Harm::Status`,
 `Harm::Starving`: whichever takes the last hit point kills), deaths at their exact moment
-(`dies(.., Some(status), when)`), the blood
+(`dies(.., Some(status), when)`); a status that `kills_at_max` (Stiffening, #1126) kills in
+`afflict_one`'s degree step instead (`killed_at_max`: the status removed, then `hurt` for the
+hit points left with `Harm::Status`, by the last degree's giver), and its `stages` (a line a
+degree, the first its `start`, loaded so) are said by `afflict_one` on `Added::Worse`; a rider
+with `check` (`Affliction::Status`'s, the basilisk's Toughness against 15) is resisted by
+`World::resists` (`drain.rs`, the drain's check shared); the blood
 drip hook `drip_blood` (#127's stains go there). The player's statuses beginning and ending are
 `Event::Status` (said by `perceive_events`: begin = `say`, stops a rest; end = `note`, does not;
 the rest loop keeps them from the turns it does not perceive). Presentation reads

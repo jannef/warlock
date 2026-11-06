@@ -258,6 +258,7 @@ fn widowmaker_poisons_on_every_hit() {
         what: Affliction::Status {
             status: poisoned,
             severity: 1,
+            check: None,
         },
         chance: 100,
     };
@@ -302,6 +303,7 @@ fn high_toby_frightens_at_its_chance_from_the_fixed_stream() {
         what: Affliction::Status {
             status: frightened,
             severity: 1,
+            check: None,
         },
         chance: 25,
     };

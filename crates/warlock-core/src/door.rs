@@ -103,6 +103,10 @@ pub fn check_lock_id(id: &str) -> Result<(), String> {
 /// The sturdiness a door may have: a kick breaks it with a chance of Strength in this.
 pub const STURDINESS: std::ops::RangeInclusive<u8> = 1..=100;
 
+/// The sturdiness a statue may have (spec §8 "Statues"): well above a door's, so that most
+/// kicks only bruise the stone.
+pub const STATUE_STURDINESS: std::ops::RangeInclusive<u8> = 100..=250;
+
 /// Whether a kick with `strength` (the kicker's Strength score, never its modifier) breaks a door
 /// of `sturdiness`: `1d(sturdiness) ≤ strength`, one draw of `rng`. So the chance is `strength`
 /// in `sturdiness` ([`break_chance`]), and a kicker at least as strong as the door is sturdy

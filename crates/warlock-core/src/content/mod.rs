@@ -1545,6 +1545,7 @@ impl Content {
                     _ => None,
                 },
                 chest: spec.chest,
+                statue: spec.sturdiness.filter(|_| spec.statue),
                 stairs: spec.stairs,
                 light,
                 bounce: spec.bounce,
@@ -1603,6 +1604,14 @@ impl Content {
             check_breaking(def, &defs).map_err(|m| err(format!("terrain `{}`: {m}", def.id)))?;
         }
         check_chests(&defs).map_err(err)?;
+        let statues: Vec<&str> = (defs.iter().filter(|d| d.statue.is_some()))
+            .map(|d| d.id.as_str())
+            .collect();
+        if let [first, second, ..] = statues[..] {
+            return Err(err(format!(
+                "terrain `{first}` and `{second}` are both a `statue`"
+            )));
+        }
         if let Some(def) = defs
             .iter()
             .find(|d| d.local.is_some_and(|l| !defs[usize::from(l.0)].walkable))
@@ -3353,6 +3362,13 @@ impl Content {
     }
 
     /// The terrain of a chest in `state` (the one whose `chest` field says so), if there is one.
+    /// The statue a stoned creature leaves (spec §8 "Statues"), if the terrain has one.
+    pub fn statue_terrain(&self) -> Option<TerrainId> {
+        (self.terrain.iter())
+            .position(|d| d.statue.is_some())
+            .map(|i| TerrainId(i as u16))
+    }
+
     pub fn chest_terrain(&self, state: crate::chest::ChestState) -> Option<TerrainId> {
         (self.terrain.iter())
             .position(|d| d.chest == Some(state))
@@ -4455,8 +4471,30 @@ fn check_terrain_ice(spec: &terrain::TerrainSpec) -> Result<(), String> {
 }
 
 /// Checks a terrain type's kicking fields (spec §8 "Doors"): only a closed door breaks, and
-/// `breaks_to` and `sturdiness` go together.
+/// `breaks_to` and `sturdiness` go together; a statue (spec §8 "Statues") has a `sturdiness`
+/// of its own, breaks (`hardness`), and is solid but seen past.
 fn check_kicking(spec: &terrain::TerrainSpec) -> Result<(), String> {
+    if spec.statue {
+        let range = crate::door::STATUE_STURDINESS;
+        return match spec.sturdiness {
+            Some(s)
+                if range.contains(&s)
+                    && spec.breaks_to.is_none()
+                    && spec.hardness.is_some()
+                    && !spec.walkable
+                    && spec.transparent
+                    && spec.chest.is_none() =>
+            {
+                Ok(())
+            }
+            _ => Err(format!(
+                "a `statue` has a `sturdiness` of {} to {}, a `hardness`, no `breaks_to` or \
+                 `chest`, and is not walkable but transparent",
+                range.start(),
+                range.end()
+            )),
+        };
+    }
     match (&spec.breaks_to, spec.sturdiness) {
         (None, None) => Ok(()),
         (Some(_), Some(_)) if spec.opens_to.is_none() => {

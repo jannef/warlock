@@ -142,6 +142,14 @@ impl World {
         if def.per_action && self.acting == Some(id) {
             self.fresh.push((id, status));
         }
+        // The degree step: a status that kills at its max does (Stiffening, to stone), and one
+        // with stages tells the player each degree past the first they live to reach.
+        let now = actor.effects.get(status).map_or(0, |e| e.severity);
+        let kills = def.kills_at_max && now >= def.max && added != Added::Same;
+        let stage = (usize::from(now).checked_sub(1))
+            .and_then(|i| def.stages.get(i))
+            .filter(|_| added == Added::Worse && id == self.state.player && !kills)
+            .cloned();
         if added == Added::Began && id == self.state.player {
             events.push(Event::Status {
                 actor: id,
@@ -151,6 +159,34 @@ impl World {
         }
         // Rage brings the frenzy (`frenzy.rs`).
         self.settle_stance(id);
+        if kills {
+            self.killed_at_max(id, status, events);
+        } else if let Some(line) = stage {
+            self.say(line);
+        }
+    }
+
+    /// Actor `id` reached the max of `status`, one that kills there (`kills_at_max`): the status
+    /// goes (so nothing lingers on one who rises from the ashes), and it dies of it, by whoever
+    /// gave the last degree, as a tick's death is.
+    fn killed_at_max(&mut self, id: ActorId, status: StatusId, events: &mut Vec<Event>) {
+        let Some(actor) = self.state.actors.get_mut(&id) else {
+            return;
+        };
+        let by = actor.effects.get(status).and_then(|e| e.by);
+        actor.effects.remove(status);
+        let hp = actor.hp.max(1);
+        let when = self.state.time;
+        self.hurt(
+            id,
+            hp,
+            super::fight::Harm::Status {
+                of: Some(status),
+                by,
+                when,
+            },
+            events,
+        );
     }
 
     /// Cures actor `id` with `cure`, a means named in the statuses' and diseases' `cured_by`
@@ -229,8 +265,18 @@ impl World {
             return;
         }
         match hit.what {
-            Affliction::Status { status, severity } => {
-                self.afflict(target, status, severity, Some(attacker), events);
+            Affliction::Status {
+                status,
+                severity,
+                check,
+            } => {
+                // A status with a check is resisted as a drain is (`drain.rs`).
+                let resisted = check.is_some_and(|(stat, difficulty)| {
+                    self.resists(target, Some(attacker), stat, difficulty, 0)
+                });
+                if !resisted {
+                    self.afflict(target, status, severity, Some(attacker), events);
+                }
             }
             Affliction::Hold { status, .. } => {
                 self.afflict(target, status, 1, Some(attacker), events);

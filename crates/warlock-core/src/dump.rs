@@ -269,6 +269,7 @@ pub fn layer_rows(world: &World, layer: Layer) -> Vec<String> {
             encounter_header(world),
             truth_rows(world),
             chest_rows(world),
+            statue_rows(world),
             hallow_rows(world),
             zone_rows(world),
         ]
@@ -543,6 +544,26 @@ fn chest_rows(world: &World) -> Vec<String> {
             format!(
                 "chest {} ({band}) at {p}: {state}{locked}{trapped}{holds}",
                 chest.level
+            )
+        })
+        .collect()
+}
+
+/// A line per statue of the stoned on the level (ground truth): what it was and how much it
+/// holds, `statue (basilisk) at (12, 5): holds 2 stacks`.
+fn statue_rows(world: &World) -> Vec<String> {
+    let content = world.content();
+    let (level, _) = world.ground_truth();
+    (level.statues().iter())
+        .map(|(&p, statue)| {
+            let holds = match statue.holds.len() {
+                0 => "empty".to_string(),
+                1 => "holds 1 stack".to_string(),
+                n => format!("holds {n} stacks"),
+            };
+            format!(
+                "statue ({}) at {p}: {holds}",
+                content.creature(statue.of).id
             )
         })
         .collect()

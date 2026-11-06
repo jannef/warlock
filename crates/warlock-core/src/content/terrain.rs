@@ -77,10 +77,15 @@ pub(super) struct TerrainSpec {
     /// door, open for good); with `sturdiness`.
     pub breaks_to: Option<String>,
     /// For a closed door that can be kicked in: a kick breaks it with a chance of the kicker's
-    /// Strength in this (spec §8 "Doors"); with `breaks_to`.
+    /// Strength in this (spec §8 "Doors"); with `breaks_to`. For a statue (`statue`): a kick
+    /// breaks it as digging would, with the same chance.
     pub sturdiness: Option<u8>,
     /// A chest (spec §8 "Chests"): `"shut"`, `"open"`, or `"smashed"`; at most one terrain each.
     pub chest: Option<crate::chest::ChestState>,
+    /// The statue a stoned creature leaves (spec §8 "Statues"; `world/statue.rs`): at most one
+    /// terrain, solid but seen past, breaking (`hardness`), with a `sturdiness`.
+    #[serde(default)]
+    pub statue: bool,
     pub stairs: Option<StairsDir>,
     /// Light preset the terrain emits (torch sconce, glowing fungus, rune). Must be transparent.
     pub light: Option<String>,
@@ -237,6 +242,10 @@ pub struct TerrainDef {
     /// Gameplay: a chest's terrain, and in which state (spec §8 "Chests"); its band, lock, and
     /// contents are per-cell state (`LevelState::chests`, `locks`).
     pub chest: Option<crate::chest::ChestState>,
+    /// Gameplay: the statue a stoned creature leaves (spec §8 "Statues"), with the sturdiness a
+    /// kick breaks it against as digging would ([`crate::door::kick_breaks`]); what it held is
+    /// per-cell state (`LevelState::statues`). `None`: no statue.
+    pub statue: Option<u8>,
     pub stairs: Option<StairsDir>,
     /// Light this terrain emits, if any.
     pub light: Option<LightId>,

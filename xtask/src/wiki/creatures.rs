@@ -418,10 +418,20 @@ pub(super) fn on_hit(content: &Content, attack: &NaturalAttack) -> Vec<String> {
 fn riders(content: &Content, riders: &[OnHit]) -> Vec<String> {
     (riders.iter())
         .map(|o| match o.what {
-            Affliction::Status { status, severity } => {
+            Affliction::Status {
+                status,
+                severity,
+                check,
+            } => {
                 let degrees = if severity == 1 { "degree" } else { "degrees" };
+                let resisted = match check {
+                    Some((stat, difficulty)) => {
+                        format!(", unless a {} check against {difficulty}", stat.name())
+                    }
+                    None => String::new(),
+                };
                 format!(
-                    "{}% {} ({severity} {degrees})",
+                    "{}% {} ({severity} {degrees}{resisted})",
                     o.chance,
                     content.status(status).name.to_lowercase()
                 )
