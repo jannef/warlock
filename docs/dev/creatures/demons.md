@@ -20,10 +20,10 @@ types with an attack cost. Only the dretch and the quasit are in a population (F
 rest wait for deep places.
 
 Creatures (what each one is): in Fyrdelf's population, the dretch 8 (small, slow, filthy claws
-that give filth fever) and the quasit 12 (small, quick, claws that poison and weaken). In no
+that give filth fever and eat at armour, `corrodes` 10, #1131) and the quasit 12 (small, quick, claws that poison and weaken). In no
 population yet, waiting for deep places: the balgura 24 (a savage ape, a brute on quick feet),
 the chasme 28 (a giant fly whose drone transfixes), the hezrou 30 (a hulking toad whose stench
-sickens: claws that poison), the vrock 34 (a vulture whose screech frightens), the marilith 40
+sickens: claws that poison, and whose filth eats at armour, `corrodes` 25, #1131), the vrock 34 (a vulture whose screech frightens), the marilith 40
 (six blades, striking twice as often), the glabrezu 44 (pincers that hold fast), the nalfeshnee 50
 (a winged boar whose bite fills with horror), and the balor 62 (wreathed in fire and lit by it,
 immune to fire, a great sword, often magic, struck faster than one blow a turn, and a flaming whip

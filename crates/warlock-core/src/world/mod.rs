@@ -118,6 +118,7 @@ mod companion;
 mod concentration;
 mod consecrate;
 mod corpse_spell;
+mod corrode;
 mod court;
 mod creation;
 mod creature_burst;
@@ -205,6 +206,7 @@ mod racial;
 mod rage;
 mod read;
 mod reflect;
+mod regen;
 mod resource;
 mod rest;
 mod restore;
@@ -1674,6 +1676,8 @@ mod collar_tests;
 mod concentration_tests;
 #[cfg(test)]
 mod corpse_spell_tests;
+#[cfg(test)]
+mod corrode_tests;
 #[cfg(test)]
 mod cost_tests;
 #[cfg(test)]

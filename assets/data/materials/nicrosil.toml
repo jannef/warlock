@@ -3,6 +3,7 @@
 id = "nicrosil"
 name = "nicrosil"
 group = "metal"
+corrodes = false
 color = "#9fa8a3"
 weight = 108
 to_hit = 0

@@ -31,6 +31,12 @@ on top of all that, yours and anyone's, and [magic items](magic-items.md) that s
   unhurt.
 - [Creatures](creatures.md) heal by the same rules, at their own [Toughness](stats.md#stat-toughness), while you are on their level; they
   never [rest](resting.md#how-resting-works).
+- Some creatures **regenerate**: most [trolls](creatures.md#creature-troll) heal four times as fast as their Toughness
+  alone would (the [creature numbers](creature-numbers.md) say which). Their pace counts as a status effect's
+  that quickens healing, so whatever slows it slows theirs. When you see one get a tenth of its
+  hit points back at once, you are told: *The troll's wounds close.*
+- **Fire and acid stop all healing** while they last: nothing heals while [Burning](status-effects.md#status-burning) or
+  [Corroded](status-effects.md#status-corroded), a troll's regeneration and your own alike.
 
 Your [mana](mana.md) comes back the same way, by your [Willpower](stats.md#stat-willpower).
 

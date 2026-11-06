@@ -350,11 +350,14 @@ impl Effects {
             .find(|&s| content.status(s).blocks.contains(&kind))
     }
 
-    /// How fast hit points come back while these last, in percent of normal: the slowest of
-    /// their statuses' `regen` while any slows it (below 100), else the fastest (Renewal's
-    /// `renewing`), 100 without any.
-    pub fn regen(&self, content: &Content) -> u16 {
-        let paces = (self.0.iter()).map(|e| content.status(e.status).regen);
+    /// How fast hit points come back while these last on one whose own pace is `innate` (its
+    /// creature type's `regen`: a troll's 400, everyone else's 100), in percent of normal: the
+    /// slowest of their statuses' `regen` and `innate` while any slows it (below 100), else the
+    /// fastest (Renewal's `renewing`, a troll's own), 100 without any. So Burning and Corroded
+    /// (`regen = 0`) stop a troll's healing as they stop everyone's.
+    pub fn regen(&self, content: &Content, innate: u16) -> u16 {
+        let statuses = (self.0.iter()).map(|e| content.status(e.status).regen);
+        let paces = statuses.chain(std::iter::once(innate));
         let slowest = paces.clone().min().unwrap_or(100);
         if slowest < 100 {
             slowest
@@ -522,8 +525,11 @@ mod tests {
         effects.add(bleed, &bleeding, 1, None);
         let order: Vec<StatusId> = effects.iter().map(|e| e.status).collect();
         assert_eq!(order, [bleed, poison], "the most important first");
-        assert_eq!(effects.regen(&content), bleeding.regen.min(poisoned.regen));
-        assert_eq!(Effects::default().regen(&content), 100);
+        assert_eq!(
+            effects.regen(&content, 100),
+            bleeding.regen.min(poisoned.regen)
+        );
+        assert_eq!(Effects::default().regen(&content, 100), 100);
         // Poison does nothing to stats until it is strong.
         assert_eq!(effects.penalty(&content), None);
         let from = poisoned.penalty.expect("poison has a penalty").from;

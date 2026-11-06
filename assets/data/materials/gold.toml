@@ -4,6 +4,7 @@ id = "gold"
 name = "gold"
 precious = true
 group = "metal"
+corrodes = false
 color = "#ffd24a"
 weight = 246
 to_hit = -2

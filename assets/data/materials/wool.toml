@@ -3,6 +3,7 @@
 id = "wool"
 name = "wool"
 group = "cloth"
+corrodes = true
 color = "#cfc4a8"
 weight = 30
 protection = 20

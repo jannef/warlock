@@ -1,0 +1,16 @@
+# The dread design §5.8 (#1131). Adamantium: heavier than iron and harder than anything else a
+# smith may work, an edge that bites deeper and mail that turns more, and acid runs off it. Better
+# than steel and dearer still than mithril: very rare, and only deeper.
+[[material]]
+id = "adamantium"
+name = "adamantium"
+group = "metal"
+corrodes = false
+color = "#4c5a70"
+weight = 120
+to_hit = 0
+damage = 1
+protection = 130
+value = 3000
+rarity = { weight = 10, level = 30 }
+gear = { weight = 5, level = 40 }

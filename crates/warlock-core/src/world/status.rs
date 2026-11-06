@@ -321,7 +321,9 @@ impl World {
             return 0;
         }
         // A disease that slows healing slows a quickened one too (`Effects::regen`).
-        let statuses = actor.effects.regen(&self.content);
+        // Its own pace (a troll's), which a slowing status still slows.
+        let innate = self.content.creature(actor.creature).regen;
+        let statuses = actor.effects.regen(&self.content, innate);
         let diseases = actor.diseases.regen(&self.content);
         let mut rate = u32::from(if diseases < 100 {
             statuses.min(diseases)
@@ -364,7 +366,9 @@ impl World {
             if dwelling {
                 self.dwell(id, events);
             }
+            let before = self.regenerating_hp(id);
             self.live(id, start, seconds, events);
+            self.say_wounds_close(id, before);
         }
     }
 

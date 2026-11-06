@@ -14,7 +14,7 @@ expression: "render(case, content.clone())"
            ┌─ Temper ───────────────────────────────────────────────────────────────────┐
            │                                                                            │
            │ Melee weapons                                                              │
-           │ > a - ) a damaged long sword (+0 hit, 1d9)                         1.8 kg  │
+           │ > a - ) a damaged long sword (+0 hit, 1d9-1)                       1.8 kg  │
            │   b - ) a dagger (+0 hit, 1d4, range 5)                             450 g  │
            │ Body armour                                                                │
            │   c - [ a chain mail shirt (Dv +2, Pv 3)                            11 kg  │

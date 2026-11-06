@@ -3,6 +3,7 @@
 id = "dragonscale"
 name = "dragonscale"
 group = "hide"
+corrodes = false
 color = "#3fa36b"
 weight = 40
 protection = 130

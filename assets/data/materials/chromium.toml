@@ -3,6 +3,7 @@
 id = "chromium"
 name = "chromium"
 group = "metal"
+corrodes = false
 color = "#e2e8ef"
 weight = 92
 to_hit = 0
