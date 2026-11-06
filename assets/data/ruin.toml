@@ -1,0 +1,170 @@
+# What an area spell does to the things lying in it (spec §8 "Spells": "Ruin"; #1100): a
+# Fireball burns the scrolls on the floor it reaches, a blast of frost shatters the potions. The
+# rules are `world/ruin.rs`; this file is the table.
+#
+# Every cast of an area spell (a burst, a cone, or a line; a scroll's, a wand's, and a dragon's
+# breath too) with a damage type rolls once for every item of every stack lying on a floor cell it
+# reaches: each item is lost at the chance of the first row below of the spell's damage type
+# that matches the stack, so a stack may lose some of its items or all of them. A stack no row
+# matches is never touched, and neither is anything carried, worn, in a chest, a unique item, or
+# an object a quest asks to be brought or delivered (`data/quests/`). Traps' and places' bursts
+# ruin nothing.
+#
+# The file is optional: without it no spell ruins anything.
+#
+# Each [[ruin]]:
+#   type      the damage type (damage_types.toml)
+#   class     the item class it matches (item_classes.toml), or
+#   material  the material of the stack's main part (materials/), or
+#   group     the group of that material (materials/README.toml: metal, wood, cloth, ...);
+#             exactly one of the three
+#   percent   the chance an item is lost, 0 to 100 (0: a row that spares what it matches, so
+#             no later row of the type does)
+#   says      what is said of the lost items the player sees: ["burns up", "burn up"], one item
+#             and several ("The scroll burns up.", "3 arrows burn up.")
+#
+# Rows are read in order within a type: put the narrow ones first.
+
+# Fire burns paper, cloth, wood, food, and wax; it may boil a potion.
+[[ruin]]
+type = "fire"
+class = "scrolls"
+percent = 50
+says = ["burns up", "burn up"]
+
+[[ruin]]
+type = "fire"
+material = "paper"
+percent = 40
+says = ["burns up", "burn up"]
+
+[[ruin]]
+type = "fire"
+material = "wax"
+percent = 50
+says = ["melts away", "melt away"]
+
+[[ruin]]
+type = "fire"
+group = "cloth"
+percent = 30
+says = ["burns away", "burn away"]
+
+[[ruin]]
+type = "fire"
+class = "food"
+percent = 25
+says = ["is burnt to a cinder", "are burnt to cinders"]
+
+[[ruin]]
+type = "fire"
+group = "wood"
+percent = 15
+says = ["burns to ash", "burn to ash"]
+
+[[ruin]]
+type = "fire"
+class = "potions"
+percent = 10
+says = ["boils and bursts", "boil and burst"]
+
+# Cold shatters potions and glass.
+[[ruin]]
+type = "cold"
+class = "potions"
+percent = 35
+says = ["freezes and shatters", "freeze and shatter"]
+
+[[ruin]]
+type = "cold"
+group = "glass"
+percent = 20
+says = ["shatters", "shatter"]
+
+# Lightning sets paper alight.
+[[ruin]]
+type = "electricity"
+class = "scrolls"
+percent = 20
+says = ["burns up", "burn up"]
+
+[[ruin]]
+type = "electricity"
+material = "paper"
+percent = 15
+says = ["burns up", "burn up"]
+
+# Acid eats most things: not glass, stone, gems, or coins.
+[[ruin]]
+type = "acid"
+class = "coins"
+percent = 0
+says = ["dissolves", "dissolve"]
+
+[[ruin]]
+type = "acid"
+class = "scrolls"
+percent = 40
+says = ["dissolves", "dissolve"]
+
+[[ruin]]
+type = "acid"
+material = "paper"
+percent = 40
+says = ["dissolves", "dissolve"]
+
+[[ruin]]
+type = "acid"
+class = "food"
+percent = 40
+says = ["dissolves", "dissolve"]
+
+[[ruin]]
+type = "acid"
+group = "cloth"
+percent = 35
+says = ["dissolves", "dissolve"]
+
+[[ruin]]
+type = "acid"
+group = "hide"
+percent = 25
+says = ["dissolves", "dissolve"]
+
+[[ruin]]
+type = "acid"
+group = "wood"
+percent = 20
+says = ["dissolves", "dissolve"]
+
+[[ruin]]
+type = "acid"
+group = "bone"
+percent = 15
+says = ["dissolves", "dissolve"]
+
+[[ruin]]
+type = "acid"
+group = "metal"
+percent = 5
+says = ["corrodes away", "corrode away"]
+
+# Force smashes the fragile.
+[[ruin]]
+type = "force"
+class = "potions"
+percent = 30
+says = ["shatters", "shatter"]
+
+[[ruin]]
+type = "force"
+group = "glass"
+percent = 30
+says = ["shatters", "shatter"]
+
+# Death rots food and corpses.
+[[ruin]]
+type = "necrotic"
+class = "food"
+percent = 30
+says = ["rots away", "rot away"]

@@ -17,7 +17,8 @@
 //! (spec §8 "Scrolls"), spells, and a dragon's breath alike: the
 //! effect's event, one roll of its damage for everyone it reaches (in ascending actor id order),
 //! then a burst's blast against walls and its heat or frost (its own, else its spell type's,
-//! `spell_type.rs`, for an actor's). Only who cast it differs
+//! `spell_type.rs`, for an actor's); an actor's ruins what lies on the floor it reached
+//! (`ruin.rs`). Only who cast it differs
 //! ([`Caster`]): a trap's blows are its own and its kills no one's; an actor's (the player
 //! reading a scroll) are theirs, and so are its kills, which earn them experience.
 
@@ -265,7 +266,7 @@ impl World {
         let roll = burst.damage.roll(&mut self.state.rng, burst.reroll);
         let inner = radius2(radius - 1);
         let level = self.state.current_level.clone();
-        let reached: BTreeSet<Pos> = cells.into_iter().collect();
+        let reached: BTreeSet<Pos> = cells.iter().copied().collect();
         // Scroll savant (spec §8 "Talents"): a caster's own burst may spare it.
         let spared = |a: &Actor| {
             matches!(caster, Caster::Actor(id) if id == a.id)
@@ -282,6 +283,8 @@ impl World {
             let damage = Damage::new(damage, burst.kind);
             self.spell_hurts(caster, id, (center, false), damage, events);
         }
+        // What lies on the floor it reached may be lost (`ruin.rs`).
+        self.ruin_items(caster, burst.kind, &cells);
         // A spell's type (`spell_type.rs`), a spell's own `heat` or `frost` standing in for its;
         // a trap's or a place's burst is no spell.
         let typed = matches!(caster, Caster::Actor(_)).then_some(burst.kind);
@@ -351,6 +354,7 @@ impl World {
             let damage = Damage::new(roll, bolt.kind);
             self.spell_hurts(caster, id, (origin, true), damage, events);
         }
+        self.ruin_items(caster, bolt.kind, path);
         roll
     }
 
@@ -392,6 +396,7 @@ impl World {
             let damage = Damage::new(roll, kind);
             self.spell_hurts(caster, id, (here, false), damage, events);
         }
+        self.ruin_items(caster, kind, &cells);
         roll
     }
 
