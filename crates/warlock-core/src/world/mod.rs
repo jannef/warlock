@@ -1613,6 +1613,8 @@ mod ambush_tests;
 #[cfg(test)]
 mod animated_blade_tests;
 #[cfg(test)]
+mod animated_dread_tests;
+#[cfg(test)]
 mod animated_panoply_tests;
 #[cfg(test)]
 mod animated_tests;

@@ -148,7 +148,8 @@ Some creatures go off in a burst of their element. The motes are **vortices**: a
 bursts instead, and is gone. Killed before it gets there, it goes out quietly, so shoot or throw
 at one as it comes, or close a door on it (a mote opens none). The elementals but the earth line,
 the [burning skull](creatures.md#creature-burning-skull), the
-[magma crawler](creatures.md#creature-magma-crawler), and the [balor](creatures.md#creature-balor)
+[magma crawler](creatures.md#creature-magma-crawler), the
+[animated lantern](creatures.md#creature-animated-lantern) (its oil), and the [balor](creatures.md#creature-balor)
 have **death throes**: they burst where they die, however they die, so an elemental is best killed
 from a cell or more away. The earth elementals do not burst; they hurl stones at what is not
 beside them, as the giants do (the throws above), and pound what is.

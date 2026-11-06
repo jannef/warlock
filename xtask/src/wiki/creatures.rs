@@ -436,10 +436,23 @@ fn riders(content: &Content, riders: &[OnHit]) -> Vec<String> {
                     content.status(status).name.to_lowercase()
                 )
             }
-            Affliction::Hold { status, difficulty } => {
+            Affliction::Hold {
+                status,
+                difficulty,
+                damage,
+            } => {
                 let def = content.status(status);
                 let grip = difficulty.or(def.hold.map(|h| h.difficulty)).unwrap_or(0);
-                format!("{}% {} (grip {grip})", o.chance, def.name.to_lowercase())
+                let harm = match damage {
+                    Some(1) if def.tick.is_some() => ", 1 hit point a tick".to_string(),
+                    Some(d) if def.tick.is_some() => format!(", {d} hit points a tick"),
+                    _ => String::new(),
+                };
+                format!(
+                    "{}% {} (grip {grip}{harm})",
+                    o.chance,
+                    def.name.to_lowercase()
+                )
             }
             Affliction::Disease(d) => format!(
                 "{}% {} (unless resisted)",

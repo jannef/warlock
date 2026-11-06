@@ -4,8 +4,8 @@
 //! The grade is [`Actor::grade`] (−1, 0, +1), drawn once as the creature is made
 //! ([`draw`], one line in `travel::make_creature`) from its own stream `grade/<actor id>`
 //! ([`Rng::grade`]), so no other draw moves with it. A type with `grades = false` (the people),
-//! a unique, a mimic, a generated type, and a unique character (a spawn with an `npc`) are
-//! never graded; a kept beast (a companion or a familiar) reads as ungraded
+//! a unique, a mimic, an animated type but the blades (their tier's `grade_words`), and a
+//! unique character (a spawn with an `npc`) are never graded; a kept beast (a companion or a familiar) reads as ungraded
 //! ([`Actor::graded`]), its own growth standing in for it.
 //!
 //! What it does, read in four places of the rules: maximum hit points ([`hp`],

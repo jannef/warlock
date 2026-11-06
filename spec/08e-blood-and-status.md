@@ -129,7 +129,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
       the hold's own `difficulty` (13). Made, "You break free of the ghast." and the step goes
       ahead; failed, "You struggle, but the ghast holds you fast." and the turn is spent (a
       step's price). Creatures never struggle. A hold no one caused (`afflict:held`) ends only by
-      its turns or a struggle. Drowning grip's Held is the same status. A trained **Escape
+      its turns or a struggle. A hold that ticks costs, a tick, the holder's `on_hit` entry's
+      `damage` while it holds (1 to 20; the rug of smothering's engulfing, 1), else the status's
+      own `damage`. Drowning grip's Held is the same status. A trained **Escape
       artist** (no action, no ability row, no key: the check is part of the attempt, #1015) takes
       the better of Strength and Dexterity, each with what talents add to its checks, plus the
       skill's `escape` (+8 at 100, +12 at 200, at most 20) in this check, and the same, without
