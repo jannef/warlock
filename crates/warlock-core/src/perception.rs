@@ -1836,10 +1836,13 @@ impl<'a> PerceptionView<'a> {
         self.player.throw_range(item, self.content)
     }
 
-    /// Whether inventory stack `item` is a throwing weapon, made for throwing (what the throw
-    /// choice lists).
+    /// Whether inventory stack `item` is made for throwing (what the throw choice lists): a
+    /// throwing weapon, or a potion, which shatters where it lands (spec §8 "Potions": "Flasks").
     pub fn is_throwing_weapon(&self, item: usize) -> bool {
-        (self.player.inventory.get(item)).is_some_and(|s| self.content.object(s.object).is_thrown())
+        (self.player.inventory.get(item)).is_some_and(|s| {
+            let def = self.content.object(s.object);
+            def.is_thrown() || def.shatters()
+        })
     }
 
     /// What seen creature `actor` wears and wields, each thing once, in slot order: all the

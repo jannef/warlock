@@ -1164,6 +1164,22 @@ const CASES: &[Case] = &[
         screen: Some("describe"),
         ..BASE
     },
+    // Flasks (spec §8 "Potions": "Flasks", #1223): the throw choice lists potions beside
+    // throwing weapons, and a known flask says what its throw does.
+    Case {
+        name: "throw-list-flasks",
+        actions: "drop:a move:N*3 open:N move:N*2 move:E*16 open:S move:S*3 open:S move:S*4 move:E*4 \
+            open:N move:N*2 move:E move:W*3 pickup identify",
+        keys: Some("T"),
+        ..BASE
+    },
+    Case {
+        name: "potion-description-flask",
+        actions: "drop move:N*3 open:N move:N*2 move:E*16 open:S move:S*3 open:S move:S*4 move:E*4 \
+            open:N move:N*2 move:E move:W*3 pickup:c identify",
+        screen: Some("describe"),
+        ..BASE
+    },
     Case {
         name: "item-description",
         actions: "drop:a move:N*3 open:N move:N*2 move:E*16 open:S move:S*4 open:W move:W*4 pickup \

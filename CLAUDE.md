@@ -220,13 +220,13 @@ around level cell (X, Y), in its line of sight; no time); `zone:KIND@X,Y,R` is t
 `memory` (seen terrain, remembered objects, and known traps), `light` (perceived brightness of
 visible cells as a digit, `0` dark to `9` fully lit), `sound` (heard sounds at their rough places
 over the view: `f` footsteps, `o`/`c` a door opening/closing, `x` fighting, `b` a bowstring, `m`
-chanting, `k` banging (a door kicked), `d` digging, `v` a voice, `h` a howl, `r` a roar (a dragon's breath), a creature's cries `z` buzzing, `g` giggling, `s` a hiss, `l` a rattle, `y` a scream, `w` a wail, `q` a heartbeat, `a` an alarm bell, `e` an
+chanting, `k` banging (a door kicked), `d` digging, `v` a voice, `h` a howl, `r` a roar (a dragon's breath), a creature's cries `z` buzzing, `g` giggling, `s` a hiss, `l` a rattle, `y` a scream, `w` a wail, `j` a crash of glass (a flask breaking), `q` a heartbeat, `a` an alarm bell, `e` an
 explosion, `t` a thunderclap, upper case when loud), `blood` (blood the
 player sees or remembers as a digit over the view, `1` a few drops to `9` soaked), `inventory`
 (what the player
 carries, grouped by item class under `Class:` header lines as the screens group it, each stack by
 its position as action text names it with its numbers as the lists show them, `a long sword (+0
-hit, 1d8)`, a spirit weapon marked `(spirit)`, a wand whose type is known with its rung, `(rung 2)`, and weighs, worn and wielded things marked, their burden
+hit, 1d8)`, a spirit weapon marked `(spirit)`, a wand whose type is known with its rung, `(rung 2)`, a flask whose type is known with its throw's range, `(throw 6)`, and weighs, worn and wielded things marked, their burden
 and its thresholds),
 `equipment` (the player's slots), `stats`
 (the player's name, race, gender, and class (`Class Bard`; `Class Bard 30` at the class's cap;
@@ -300,7 +300,7 @@ special room the player stands in, if they know it), and per inventory stack (in
 order) its `letter` (the position as action text), `class` (item class id), `name`, `rarity`,
 `identified`, `magic` (affixes only once identified), and `numbers` (what it gives as the
 player knows it: `to_hit`, `damage`, `range`, `dv`, `pv`, each null where it has none; null for
-nothing), and a wand's `wand_rung` once its type is known. Replay
+nothing), and a wand's `wand_rung` once its type is known, a flask's `throw` (`range`) once its type is known. Replay
 files are JSON
 `{game_version, scenario, seed, character, name, kit, steps:[{action, hash}]}` (`character` =
 `{race, gender, class, talents}`, `talents` the creation picks (left out while none), left out for a run without one; a replay without it starts as the

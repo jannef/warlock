@@ -74,6 +74,50 @@ Spec §8 "Potions" (`spec/08g-magic-items.md`); the combat progression design §
   which perception reports ("You feel sick.", "The poison wears off.").
 - Creatures do not drink.
 
+## Flasks: `world/flask.rs`
+
+The potions wave 2 design §3, §5 (`docs/design/potions-wave-2.md`), slice S1 (#1223). The path
+every later flask (smoke, fire, frost, acid, the bombers) builds on.
+
+- **Data**: `[object.throw]` (`ThrowSpec` → `Flask { spell, rungs, range, noise, words }` on
+  `ObjectDef::flask`, resolved in `content/potion.rs`). The loader checks only that `spell`
+  names a spell (the owner, #1205: well-formedness only; `range` is a `u8`, so nothing
+  overflows). `Flask::splash(content)` gives the splash's numbers at its rung of each ladder
+  and nobody's stats (`Splash { roll, radius, degrees }`): what the cast, the describe line,
+  the aiming warning, and the wiki read. `ObjectDef::shatters()` (a drink or a flask) and
+  `ObjectDef::throw_range()` (a flask's `range`, any other potion `IMPROVISED_RANGE`).
+- **The throw**: `World::throw` hands a stack that `shatters()` to `World::throw_flask` (the one
+  line in `shoot.rs`): `throw_range` (talents and items added), `may_loose`, `within_reach`,
+  priced `attack_price(Throw, AttackSkills::default())`, one taken (no keep), "You throw the
+  …", the throw's noise, then `shatter_flask`, `say_news`, `exert`.
+- **`World::shatter_flask(by, object, (from, at, range), events)`**, general over the thrower (a
+  creature's hurl, S8, calls it too): the centre by `burst_center`, an `Event::Missile` of the
+  object along the line to it (`Struck` when someone stands there), the flask's noise there
+  (`sound_at`), and when the player sees the centre (`perception.is_visible`): its `words`, and
+  `learn_scroll` with "It was a sleeping draught.". Then `Cast::by_flask(by, content, flask)`
+  (`Pay::Flask`, `Cast::by` the thrower, `reroll` 0, no riders or skills, reach and degrees at the
+  rung) and `splash`: `SpellPurpose::Damage` → `cast_burst_at(Caster::Actor(by), (centre,
+  centre), …)`, `spell_type_spreads`, `spell_lands`, `lay_spell_zone`; any other kind → the
+  spell's effect over its cells (a burst's `burst_cells`, else the centre alone), then its zone
+  (`lay_spell_zone`, by `cast.by`) or its status on everyone there but the thrower
+  (`splash_hex`). A player killed by their own is `Cause::Flask(object)`.
+- **Not `perform`**: the cast kinds in `cast.rs` aim from the player's cell and check the
+  spell's own range; a flask's splash goes off where it broke, so `flask.rs` calls the shared
+  pieces (as `creature_cast.rs` does) instead.
+- **Noise**: `SoundKind::Shatter` ("a crash of glass", `j` in the `sound` layer),
+  `noise::SHATTER_NOISE` 30.
+- **UI**: the throw choice (`ObjectList::Throw`, `PerceptionView::is_throwing_weapon`) lists
+  potions; the aiming mode's range is `throw_range`; a known flask of a harmful burst that
+  would catch the thrower asks first (`Aim::catches_reader`). Text snapshots `throw-list-flasks`,
+  `potion-description-flask`.
+- **Content**: the sleeping draught (`sleeping_draught.toml`, Sleep at rung 0, range 6; drunk,
+  Drowsy 3; pink).
+- **Tests**: `world/flask_tests.rs` (fixture flasks on Fireball, Hex of weakness, and Slick):
+  the throw and the burst on the dummy, the first creature in the way, the thrower's kill and
+  experience, learned only when seen and heard when not, a ray's hex, a zone by the thrower, a
+  potion that spills, refusals, a death by one's own flask, saves and replays, the loader's
+  one refusal.
+
 ## Labels and colours
 
 - `scroll_label.rs`: `Labels::draw` draws potion words **after** the rods' from the same
