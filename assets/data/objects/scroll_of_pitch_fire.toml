@@ -1,0 +1,20 @@
+# A scroll of pitch fire (spec §8 "Scrolls", "Spells"): read it (`r`) and aim, and it casts Pitch
+# fire, free of mana, at its base: burning pitch that leaves a pool of fire where it bursts. Study
+# it (`L`), and you may learn the spell for good.
+[[object]]
+id = "scroll_of_pitch_fire"
+name = "scroll of pitch fire"
+plural = "scrolls of pitch fire"
+glyph = "?"
+fg = "#e88a3c"
+class = "scrolls"
+materials = ["paper"]
+weight = 50
+value = 130
+stackable = true
+level = 4
+frequency = 30
+
+[object.read]
+kind = "spell"
+spell = "pitch_fire"

@@ -211,7 +211,8 @@ gives each flask's spell, its numbers, and its range in cells.
 
 Potions lie about as [loot](magic-items.md#finding-them). The common ones (healing, antidote)
 turn up more often and from the first depths, the better ones deeper down. General stores and
-provisioners sell a few among their wares. An **alchemist** sells only potions, always potions
+provisioners sell a few among their wares, but never the flasks of fire and frost or pitch fire.
+An **alchemist** sells only potions, always potions
 of healing first, and buys them too (see [Shops](shops.md)). Some [quests](quests.md) pay in
 potions.
 

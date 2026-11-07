@@ -364,7 +364,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
     drives everyone on it a cell on, nearest first, and puts its fires out; no harm); 12 Benison
     (one heal roll for the caster and their allies in a burst about them, two casts' time); 14
     Rebuke (fire on the undead in a burst alone, friend or foe, and Frightened 3); 20 Cloudburst
-    (an hour of rain under the open sky, putting out what burns there). No spell protects its
+    (an hour of rain under the open sky, putting out what burns there).
+    The potions wave 2 (#1227, its design §9.3) adds 8 Pitch fire (a fire burst of radius 1 that
+    leaves a pool of fire, a `fire` zone of 6 turns, on its cells: Balefire's zone in a burst;
+    from its scroll and the pitch fire flask only). No spell protects its
     caster or their allies from it (the owner's Q14). A spell is cast by its
     data id (`use:magic_missile:12,5`, any `use:ID` that is no class or birth sign ability; one
     that is no spell either is a weapon active's, §8i "Weapon abilities");
@@ -486,7 +489,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     scroll-only spells, `world/zone.rs`): an area that lies on the floor for some of the player's
     turns, on the cells of a burst or a line, never spreading, a new one replacing an old on shared
     cells, kept when the player leaves the level, none on the overworld. It takes the caster and
-    their allies like anyone; its kills are the caster's. `fire` (Balefire): a creature that starts
+    their allies like anyone; its kills are the caster's. `fire` (Balefire; Pitch fire's pool,
+    #1227): a creature that starts
     a turn on it or steps onto it takes its harm, rolled once as it is laid, and the fire type's
     rule; each cell sheds a fire's light; a cold spell's `douses` clears it cell by cell. `fouled`
     (Reek): a creature that starts a turn in it takes the poison type's rule; it does not block

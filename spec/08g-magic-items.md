@@ -571,9 +571,13 @@ developer notes (CLAUDE.md, `docs/dev/`).
     flask of thunder (Thunderclap, heard as thunder at 150; Stunned 1; 5, 8; 100; slate),
     blasting flask (Shatter, heard as an explosion at 100; Stunned 1; 7, 6; 200; slate), and
     flask of holy water (Rebuke, which harms only the undead; drunk, a `cure` of `holy_water`,
-    the means in Hexed's and Branded's `cured_by`; 5, 8; 100; silver; Willpower). **Where**:
+    the means in Hexed's and Branded's `cured_by`; 5, 8; 100; silver; Willpower); the fire and
+    cold flasks (#1227, the design's §4.4; the spell at rung 0, then the drink): flask of fire
+    (Fireball; Burning 1; 6, 10; 120; scarlet), flask of frost (Frost; Sluggish 2; 6, 10; 120;
+    white), and pitch fire (the Pitch fire spell, thrown 4 cells; Burning 2; 9, 6; 250;
+    scarlet). **Where**:
     loot (by `level` and `frequency`, never magic), general stores and provisioners (they stock
-    and buy potions; never the elixirs, the gambles, the flask of thunder, or the blasting flask), the
+    and buy potions; never the elixirs, the gambles, the flasks of thunder, fire, and frost, pitch fire, or the blasting flask), the
     alchemist (§7 "Shops": potions only, healing always first), quest rewards, and the hub's
     pile.
   - **Flasks** (the potions wave 2 design §3, §5; `world/flask.rs`, `[object.throw]` in
