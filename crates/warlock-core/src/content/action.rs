@@ -19,7 +19,8 @@ use std::ops::RangeInclusive;
 
 /// The cost of a normal action, in energy.
 pub const NORMAL_COST: u32 = 1000;
-/// The costs an action may have: a tenth of a normal action to ten times one.
+/// The costs the rules bring an action to: a talent's cut stops at a tenth of a normal action
+/// ([`crate::magic`]); data is not held to it.
 pub const COSTS: RangeInclusive<u32> = 100..=10_000;
 /// How long a normal action takes at normal speed: the base time of every action but a step on
 /// the overworld (spec §8 "Time").
@@ -338,7 +339,6 @@ impl ActionCosts {
                 .copied()
                 .find(|k| k.id() == id)
                 .ok_or_else(|| err(format!("unknown action `{id}`")))?;
-            check_cost(cost).map_err(|m| err(format!("action `{id}`: {m}")))?;
             costs.0[kind.index()] = cost;
         }
         Ok(costs)
@@ -347,19 +347,6 @@ impl ActionCosts {
     /// What `kind` costs, in energy (1000 for a normal action).
     pub fn cost(&self, kind: ActionKind) -> u32 {
         self.0[kind.index()]
-    }
-}
-
-/// Checks that `cost` is within [`COSTS`].
-pub(super) fn check_cost(cost: u32) -> Result<(), String> {
-    if COSTS.contains(&cost) {
-        Ok(())
-    } else {
-        Err(format!(
-            "cost {cost} is out of range ({} to {})",
-            COSTS.start(),
-            COSTS.end()
-        ))
     }
 }
 
@@ -384,7 +371,7 @@ mod tests {
     }
 
     #[test]
-    fn costs_parse_default_and_are_validated() {
+    fn costs_parse_default_and_name_actions() {
         let costs = ActionCosts::parse("a", "wait = 1000\nmelee = 1400\n").expect("valid");
         assert_eq!(costs.cost(ActionKind::Melee), 1400);
         assert_eq!(
@@ -399,11 +386,6 @@ mod tests {
         );
         for (text, message) in [
             ("sleep = 1000", "unknown action `sleep`"),
-            (
-                "wait = 99",
-                "action `wait`: cost 99 is out of range (100 to 10000)",
-            ),
-            ("wait = 10001", "cost 10001 is out of range"),
             ("wait = \"slow\"", "invalid type"),
         ] {
             let err = ActionCosts::parse("a", text).unwrap_err();

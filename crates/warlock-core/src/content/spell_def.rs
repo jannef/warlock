@@ -17,11 +17,8 @@ use super::effect::EffectShape;
 use super::spell::{Burst, BurstIce, SpellFields, check_effect, default_verb};
 use super::spell_ladder::{Ladder, RungValue, Unit};
 use super::spell_type::SpellType;
-use super::summon;
 use super::trap::TrapNoise;
-use super::{
-    Content, ContentError, CreatureId, DamageTypeId, MAX_SEVERITY, StatusId, duplicate_id,
-};
+use super::{Content, ContentError, CreatureId, DamageTypeId, StatusId, duplicate_id};
 use crate::dice::Roll;
 use crate::noise::MAX_LOUDNESS;
 use crate::stats::{PerStat, Stat};
@@ -32,34 +29,15 @@ use std::collections::BTreeMap;
 
 /// The highest level a spell may have (the spell scaling design §5.1): 0 (a cantrip) to 70.
 pub const MAX_SPELL_LEVEL: u8 = 70;
-/// The farthest a ray, bolt, or burst may reach and a line may run, in cells.
+/// The farthest a ray, bolt, or burst reaches and a line runs, in cells, however far it grows
+/// (`world/spell_rung.rs` clamps to it).
 pub const MAX_REACH: u8 = 20;
-/// The longest a cone may be, in cells.
+/// The longest a cone is, in cells, however long it grows.
 pub const MAX_CONE: u8 = 5;
-/// The most `casts` a spell may take.
-pub const MAX_CASTS: u8 = 10;
-/// The most mana a spell's explicit `mana` may ask.
-pub const MAX_SPELL_MANA: u16 = 500;
-/// The most cells a `blink` may carry its caster.
-pub const MAX_BLINK: u8 = 10;
-/// The most cells a `push` may drive a creature.
-pub const MAX_PUSH: u8 = 3;
-/// The most hours a `weather` spell's weather may last.
-pub const MAX_WEATHER_HOURS: u8 = 24;
 /// How far (Chebyshev) a jump of a spell with `arcs` reaches; any other arc, one cell.
 pub const ARC_REACH: i32 = 2;
 /// The creature tag of those with no eyes: a hex with `only_sighted` (Flare) passes them by.
 pub const EYELESS: &str = "eyeless";
-/// The most jumps `arcs` may take, its ladder and base alike.
-pub const MAX_ARCS: i32 = 12;
-/// The most minutes a summon spell's call may last, its ladder and base alike.
-pub const MAX_SUMMON_MINUTES: u16 = 600;
-/// The most of the player's turns a spell's zone may last.
-pub const MAX_ZONE_TURNS: u16 = 600;
-/// What a spell's `study_difficulty` may add to (or take from) the study check's difficulty.
-pub const STUDY_DIFFICULTY: std::ops::RangeInclusive<i32> = -20..=40;
-/// The percents a shape's or a resolution's multiplier may be.
-const PERCENTS: std::ops::RangeInclusive<u16> = 1..=1000;
 
 /// Index of a spell in [`Content::spells`], in path order (in the content fingerprint).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize)]
@@ -347,26 +325,16 @@ impl SpellRules {
     pub(super) fn parse(path: &str, text: &str) -> Result<Self, ContentError> {
         let err = |m: String| ContentError::new(path, m);
         let file: RulesFile = toml::from_str(text).map_err(|e| err(e.to_string()))?;
-        let ascending = |v: &[u16]| v.windows(2).all(|w| w[0] < w[1]);
         let s = &file.shapes;
         let shapes = [s.ray, s.bolt, s.touch, s.myself, s.cone, s.line];
-        let burst_ok = (1..=crate::content::BURST_RADII.end().unsigned_abs() as usize)
-            .contains(&s.burst.len());
-        if !shapes.iter().chain(&s.burst).all(|p| PERCENTS.contains(p))
-            || !burst_ok
-            || !ascending(&s.burst)
-        {
-            return Err(err(format!(
-                "shapes: each is 1 to 1000 percent; `burst` one ascending value per radius, 1 \
-                 to {}",
-                crate::content::BURST_RADII.end()
-            )));
+        // `shape_cost` indexes it, and its length is the largest radius (a clamp's top).
+        if s.burst.is_empty() {
+            return Err(err(
+                "shapes: `burst` has a value per radius, at least one".into()
+            ));
         }
         let r = &file.resolution;
         let resolutions = [r.attack, r.auto, r.area, r.touch];
-        if !(resolutions.iter()).all(|x| PERCENTS.contains(&x.cost)) {
-            return Err(err("resolution: `cost` is 1 to 1000 percent".into()));
-        }
         Ok(SpellRules {
             shapes,
             burst: s.burst.clone(),
@@ -440,21 +408,12 @@ struct SpellSpec {
     id: String,
     name: String,
     description: String,
-    /// 0 to [`MAX_SPELL_LEVEL`]; an `Option` so a file without it is told what it lacks.
-    level: Option<u8>,
-    /// Refused: the spell scaling design replaced tiers with levels (§5).
-    tier: Option<toml::Value>,
+    level: u8,
     school: School,
     kind: SpellPurpose,
     shape: Shape,
     resolution: Resolution,
     damage_type: Option<String>,
-    /// Refused, each naming its replacement (the spell scaling design §6.1).
-    max_range: Option<toml::Value>,
-    max_radius: Option<toml::Value>,
-    max_length: Option<toml::Value>,
-    scales: Option<toml::Value>,
-    scroll: Option<toml::Value>,
     range: Option<u8>,
     radius: Option<u8>,
     length: Option<u8>,
@@ -462,10 +421,10 @@ struct SpellSpec {
     #[serde(default)]
     open_sky: bool,
     mana: Option<u16>,
-    /// A roll (`"2d6"`); the old table form is refused naming it.
-    damage: Option<toml::Value>,
+    /// A roll (`"2d6"`).
+    damage: Option<String>,
     aim: Option<String>,
-    /// Added to the study check's difficulty ([`STUDY_DIFFICULTY`]; the owner's Q7 of #828).
+    /// Added to the study check's difficulty (the owner's Q7 of #828).
     study_difficulty: Option<i32>,
     effect: Option<EffectSpec>,
     cast: Option<CastSpec>,
@@ -489,8 +448,8 @@ struct CastSpec {
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
 struct EffectSpec {
-    /// A roll (`"2d6"`); the old table form is refused naming it.
-    heal: Option<toml::Value>,
+    /// A roll (`"2d6"`).
+    heal: Option<String>,
     status: Option<String>,
     severity: Option<u16>,
     #[serde(default)]
@@ -506,7 +465,7 @@ struct EffectSpec {
     corpse: Option<String>,
     rise: Option<RiseSpec>,
     /// A heal's mana back: a roll.
-    mana: Option<toml::Value>,
+    mana: Option<String>,
     /// A percent of the harm a single-target damage spell does that comes back to its caster.
     leech: Option<u8>,
     /// A burst's targets: only creatures of these tags (Rebuke).
@@ -997,71 +956,20 @@ pub(super) fn parse<'a>(
     Ok((rules, list))
 }
 
-/// A base roll (`damage`, `heal`) as written: a [`Roll`] that can do harm (at least 0, at most
-/// 1 or more). Nothing checks how much it rolls (decision 16). The old table form is refused,
-/// naming the new one.
-fn base_roll(name: &str, value: &toml::Value) -> Result<Roll, String> {
-    let Some(text) = value.as_str() else {
-        return Err(format!(
-            "`{name}` is a roll now, `{name} = \"2d6\"`: `dice`, `per_levels`, `max_dice`, and \
-             `bonus` are gone; a `[spell.grows] {name}` ladder grows it (docs/design/spell-scaling.md \
-             §6.1)"
-        ));
-    };
+/// A base roll (`damage`, `heal`, a heal's `mana`) as written: a [`Roll`] that never rolls
+/// below 0 (a negative roll would turn harm into healing and back). Nothing checks how much it
+/// rolls (decision 16).
+fn base_roll(name: &str, text: &str) -> Result<Roll, String> {
     let roll: Roll = text.parse()?;
-    if roll.min() < 0 || roll.max() < 1 {
-        return Err(format!(
-            "`{name}` must be a roll that can do something, not `{roll}`"
-        ));
+    if roll.min() < 0 {
+        return Err(format!("`{name}` must never roll below 0, not `{roll}`"));
     }
     Ok(roll)
 }
 
-/// The retired fields, each refused naming its replacement (the spell scaling design §6.1).
-fn retired(spec: &SpellSpec) -> Result<(), String> {
-    if spec.tier.is_some() {
-        return Err(format!(
-            "`tier` is gone: use `level`, 0 to {MAX_SPELL_LEVEL} (docs/design/spell-scaling.md §5)"
-        ));
-    }
-    let caps = [
-        ("max_range", spec.max_range.is_some(), "range"),
-        ("max_length", spec.max_length.is_some(), "length"),
-        ("max_radius", spec.max_radius.is_some(), "radius"),
-    ];
-    if let Some((old, _, new)) = caps.iter().find(|(_, given, _)| *given) {
-        return Err(format!(
-            "`{old}` is gone: the base `{new}` is what anyone casts, and a `[spell.grows] {new}` \
-             ladder grows it (docs/design/spell-scaling.md §6.1)"
-        ));
-    }
-    if spec.scales.is_some() {
-        return Err(
-            "`[spell.scales]` is gone: write ladders in `[spell.grows]` (`damage`, \
-                    `heal`, `range`, `length`, `radius`, `degrees`), and `aim` for the stat \
-                    that aims an attack (docs/design/spell-scaling.md §6.1)"
-                .into(),
-        );
-    }
-    if spec.scroll.is_some() {
-        return Err(
-            "`[spell.scroll] level` is gone: a spell scroll casts at its own `rungs`, on \
-                    the scroll's `read` table (docs/design/spell-scaling.md §7.4)"
-                .into(),
-        );
-    }
-    Ok(())
-}
-
 /// One spell, checked.
 fn resolve(spec: SpellSpec, rules: &SpellRules, content: &Content) -> Result<SpellData, String> {
-    retired(&spec)?;
-    let level = spec
-        .level
-        .ok_or_else(|| format!("a spell needs a `level`, 0 to {MAX_SPELL_LEVEL}"))?;
-    if level > MAX_SPELL_LEVEL {
-        return Err(format!("`level` is 0 to {MAX_SPELL_LEVEL}"));
-    }
+    let level = spec.level;
     if !spec.resolution.fits(spec.shape) {
         return Err(format!(
             "a `{}` cannot resolve as `{}`",
@@ -1069,11 +977,10 @@ fn resolve(spec: SpellSpec, rules: &SpellRules, content: &Content) -> Result<Spe
             spec.resolution.id()
         ));
     }
-    // Its base reach: each shape has exactly its own, within the engine's limits.
+    // Its base reach: each shape has exactly its own (casting clamps it to the engine's limits).
     let shape = spec.shape;
-    let reach = |name: &str, value: Option<u8>, wanted: bool, most: u8| match (value, wanted) {
-        (Some(v), true) if (1..=most).contains(&v) => Ok(Some(v)),
-        (Some(_), true) => Err(format!("`{name}` is 1 to {most}")),
+    let reach = |name: &str, value: Option<u8>, wanted: bool| match (value, wanted) {
+        (Some(v), true) => Ok(Some(v)),
         (None, true) => Err(format!("a `{}` needs `{name}`", shape.id())),
         (Some(_), false) => Err(format!("a `{}` has no `{name}`", shape.id())),
         (None, false) => Ok(None),
@@ -1094,25 +1001,15 @@ fn resolve(spec: SpellSpec, rules: &SpellRules, content: &Content) -> Result<Spe
     let range = if about {
         Some(0)
     } else {
-        reach("range", spec.range, ranged, MAX_REACH)?
+        reach("range", spec.range, ranged)?
     };
-    let radius = reach("radius", spec.radius, burst, rules.max_radius())?;
+    let radius = reach("radius", spec.radius, burst)?;
     let long = matches!(shape, Shape::Cone | Shape::Line);
-    let longest = if shape == Shape::Cone {
-        MAX_CONE
-    } else {
-        MAX_REACH
-    };
-    let length = reach("length", spec.length, long, longest)?;
+    let length = reach("length", spec.length, long)?;
     let casts = spec.casts.unwrap_or(1);
-    if !(1..=MAX_CASTS).contains(&casts) {
-        return Err(format!("`casts` is 1 to {MAX_CASTS}"));
-    }
-    if spec
-        .mana
-        .is_some_and(|m| !(1..=MAX_SPELL_MANA).contains(&m))
-    {
-        return Err(format!("`mana` is 1 to {MAX_SPELL_MANA}"));
+    // A cast's time is its price times `casts`: none would take no time at all.
+    if casts == 0 {
+        return Err("`casts` is at least 1".into());
     }
     let damage_type = match &spec.damage_type {
         None => None,
@@ -1128,9 +1025,6 @@ fn resolve(spec: SpellSpec, rules: &SpellRules, content: &Content) -> Result<Spe
         (Some(_), _) => return Err("only a `damage` spell has `damage`".into()),
         (None, _) => None,
     };
-    if spec.kind == SpellPurpose::Damage && damage_type.is_none() {
-        return Err("a `damage` spell needs a `damage_type`".into());
-    }
     let effect = match spec.effect {
         Some(e) => effect(e, (spec.kind, shape), content)?,
         None => SpellEffect::default(),
@@ -1152,35 +1046,8 @@ fn resolve(spec: SpellSpec, rules: &SpellRules, content: &Content) -> Result<Spe
         }
     }
     let study_difficulty = spec.study_difficulty.unwrap_or(0);
-    if !STUDY_DIFFICULTY.contains(&study_difficulty) {
-        return Err(format!(
-            "`study_difficulty` is {} to {}",
-            STUDY_DIFFICULTY.start(),
-            STUDY_DIFFICULTY.end()
-        ));
-    }
-    let needs = match spec.kind {
-        SpellPurpose::Heal => effect.heal.is_none().then_some("`heal`"),
-        SpellPurpose::Buff => effect.status.is_none().then_some("`status`"),
-        SpellPurpose::Hex => (effect.status.is_none()
-            && effect.push.is_none()
-            && effect.zone.is_none()
-            && effect.charm.is_none())
-        .then_some("`status`, `push`, `zone`, or `charm`"),
-        SpellPurpose::Cleanse => {
-            (effect.cures.is_empty() && !effect.diseases).then_some("`cures` or `diseases`")
-        }
-        SpellPurpose::Utility => {
-            (!effect.identify && effect.blink.is_none() && effect.weather.is_none())
-                .then_some("`identify`, `blink`, or `weather`")
-        }
-        SpellPurpose::Summon => {
-            (effect.summon.is_none() && effect.rise.is_none()).then_some("`summon` or `rise`")
-        }
-        SpellPurpose::Damage => None,
-    };
-    if let Some(zone) = effect.zone {
-        check_zone(zone, spec.kind, spec.damage_type.as_deref(), shape)?;
+    if effect.zone.is_some() && !matches!(shape, Shape::Burst | Shape::Line) {
+        return Err("a `zone` lies on a `burst`'s or a `line`'s cells".into());
     }
     if effect.identify && shape != Shape::Myself {
         return Err(
@@ -1189,12 +1056,6 @@ fn resolve(spec: SpellSpec, rules: &SpellRules, content: &Content) -> Result<Spe
     }
     if (effect.blink.is_some() || effect.weather.is_some()) && shape != Shape::Myself {
         return Err("a `blink` or a `weather` spell is cast on `self`".into());
-    }
-    if let Some(what) = needs {
-        return Err(format!(
-            "a `{}` spell needs {what} in [spell.effect]",
-            spec.kind.id()
-        ));
     }
     corpse_fits(&effect, spec.kind, shape)?;
     let attack = spec.kind == SpellPurpose::Damage
@@ -1217,23 +1078,19 @@ fn resolve(spec: SpellSpec, rules: &SpellRules, content: &Content) -> Result<Spe
     )
     .then_some(effect.status)
     .flatten()
-    .map(|(s, n)| (n, content.status(s).max.min(MAX_SEVERITY)));
+    .map(|(_, n)| n);
     let summon_minutes = (effect.summon.as_ref().map(|s| s.minutes))
         .or(effect.rise.as_ref().map(|r| r.minutes))
-        .or(effect.charm.as_ref().map(|c| c.minutes))
-        .map(|minutes| (minutes, MAX_SUMMON_MINUTES));
+        .or(effect.charm.as_ref().map(|c| c.minutes));
     let bases = Bases {
-        damage,
-        heal: effect.heal,
-        count: (effect.summon.as_ref().map(|s| s.count))
-            .or(effect.arcs.map(|n| Roll::fixed(i32::from(n)))),
+        damage: damage.is_some(),
+        heal: effect.heal.is_some(),
+        count: effect.summon.is_some() || effect.arcs.is_some(),
         jumps: effect.arcs.is_some(),
-        range,
-        length,
-        radius,
-        degrees: status_degrees.or(summon_minutes),
-        shape,
-        burst_most: rules.max_radius(),
+        range: range.is_some(),
+        length: length.is_some(),
+        radius: radius.is_some(),
+        degrees: status_degrees.or(summon_minutes).is_some(),
     };
     let grows = match spec.grows {
         Some(g) => grows(g, &bases)?,
@@ -1269,102 +1126,39 @@ fn resolve(spec: SpellSpec, rules: &SpellRules, content: &Content) -> Result<Spe
     })
 }
 
-/// A spell's base values, what its ladders are checked against.
+/// Which dimensions a spell has, what its ladders are checked against.
 struct Bases {
-    damage: Option<Roll>,
-    heal: Option<Roll>,
+    damage: bool,
+    heal: bool,
     /// A summon's count, or a damage spell's jumps.
-    count: Option<Roll>,
+    count: bool,
     /// Whether `count` is a damage spell's jumps.
     jumps: bool,
-    range: Option<u8>,
-    length: Option<u8>,
-    radius: Option<u8>,
-    /// A buff's or a hex's base degrees and the most its status takes; a summon's minutes and
-    /// [`MAX_SUMMON_MINUTES`].
-    degrees: Option<(u16, u16)>,
-    shape: Shape,
-    /// The largest radius a burst may have (the burst table's length).
-    burst_most: u8,
+    range: bool,
+    length: bool,
+    radius: bool,
+    /// A buff's, a hex's, or a damage spell's status degrees; a summon's minutes.
+    degrees: bool,
 }
 
 /// `[spell.grows]` checked against the spell's `bases` (the spell scaling design §6.3): a
-/// ladder only for a dimension the spell has; rolls that can do harm and never weaken (`min`
-/// and `max` non-decreasing from the base, each rung different from the one before); cells and
-/// degrees strictly ascending from the base, within the engine's limits (a range to
-/// [`MAX_REACH`], a cone to [`MAX_CONE`], a line to [`MAX_REACH`], a radius to the burst
-/// table's length, degrees to the status's `max` and [`MAX_SEVERITY`], a summon's minutes to
-/// [`MAX_SUMMON_MINUTES`]; a summon's count from 1 to [`summon::MAX_COUNT`]). Nothing reads how
-/// much a rung does (decision 16).
+/// ladder only for a dimension the spell has (another would never be read), and a jump count
+/// in whole numbers. Nothing reads how much a rung does (decision 16); casting clamps reach to
+/// the engine's limits (`world/spell_rung.rs`).
 fn grows(spec: GrowsSpec, bases: &Bases) -> Result<Grows, String> {
-    let lacks = |name: &str, why: &str| Err(format!("grows: `{name}` is for {why}"));
-    let rolls = |name: &str, text: Option<String>, base: Option<Roll>, why: &str| {
+    let ladder = |name: &str, text: Option<String>, has: bool, unit: Unit, why: &str| {
         let Some(text) = text else {
             return Ok(None);
         };
-        let Some(base) = base else {
-            return lacks(name, why);
-        };
-        let ladder = Ladder::parse(&text, Unit::Roll).map_err(|e| format!("grows: {e}"))?;
-        let mut before = base;
-        for value in ladder.values() {
-            let RungValue::Roll(roll) = *value else {
-                continue;
-            };
-            if roll.min() < 0 || roll.max() < 1 {
-                return Err(format!("grows: `{name}`'s rung `{roll}` can do nothing"));
-            }
-            if roll.max() < before.max() || roll.min() < before.min() || roll == before {
-                return Err(format!(
-                    "grows: `{name}`'s rung `{roll}` is below the one before it (`{before}`): a \
-                     rung never weakens a spell, and each differs from the last"
-                ));
-            }
-            before = roll;
+        if !has {
+            return Err(format!("grows: `{name}` is for {why}"));
         }
-        Ok(Some(ladder))
+        Ladder::parse(&text, unit)
+            .map(Some)
+            .map_err(|e| format!("grows: {e}"))
     };
-    let numbers =
-        |name: &str, text: Option<String>, base: Option<u16>, most: u16, unit: Unit, why: &str| {
-            let Some(text) = text else {
-                return Ok(None);
-            };
-            let Some(base) = base else {
-                return lacks(name, why);
-            };
-            let ladder = Ladder::parse(&text, unit).map_err(|e| format!("grows: {e}"))?;
-            let mut before = i32::from(base);
-            for value in ladder.values() {
-                let n = value.number().unwrap_or(0);
-                if n <= before || n > i32::from(most) {
-                    return Err(format!(
-                        "grows: `{name}`'s rungs rise strictly from its base, {base}, to at most \
-                         {most}; not {n}"
-                    ));
-                }
-                before = n;
-            }
-            Ok(Some(ladder))
-        };
-    let shape = bases.shape;
-    let length_most = if shape == Shape::Cone {
-        MAX_CONE
-    } else {
-        MAX_REACH
-    };
-    let degrees_most = (bases.degrees).map_or(MAX_SEVERITY, |(_, most)| most);
     let why = "a `summon` spell's count, or a `damage` spell's `arcs`";
-    let count = rolls("count", spec.count, bases.count, why)?;
-    if let Some(ladder) = &count
-        && let Some(roll) = (ladder.values())
-            .filter_map(RungValue::roll)
-            .find(|r| r.min() < 1 || r.max() > summon::MAX_COUNT)
-    {
-        return Err(format!(
-            "grows: `count`'s rung `{roll}` must lie within 1 to {}",
-            summon::MAX_COUNT
-        ));
-    }
+    let count = ladder("count", spec.count, bases.count, Unit::Roll, why)?;
     if bases.jumps
         && let Some(ladder) = &count
         && let Some(roll) = (ladder.values())
@@ -1381,44 +1175,47 @@ fn grows(spec: GrowsSpec, bases: &Bases) -> Result<Grows, String> {
         (count, None)
     };
     Ok(Grows {
-        damage: rolls(
+        damage: ladder(
             "damage",
             spec.damage,
             bases.damage,
+            Unit::Roll,
             "a `damage` spell's roll",
         )?,
-        heal: rolls("heal", spec.heal, bases.heal, "a `heal` spell's roll")?,
+        heal: ladder(
+            "heal",
+            spec.heal,
+            bases.heal,
+            Unit::Roll,
+            "a `heal` spell's roll",
+        )?,
         count,
         jumps,
-        range: numbers(
+        range: ladder(
             "range",
             spec.range,
-            bases.range.map(u16::from),
-            u16::from(MAX_REACH),
+            bases.range,
             Unit::Cells,
             "a ray's, a bolt's, or a burst's range",
         )?,
-        length: numbers(
+        length: ladder(
             "length",
             spec.length,
-            bases.length.map(u16::from),
-            u16::from(length_most),
+            bases.length,
             Unit::Cells,
             "a cone's or a line's length",
         )?,
-        radius: numbers(
+        radius: ladder(
             "radius",
             spec.radius,
-            bases.radius.map(u16::from),
-            u16::from(bases.burst_most),
+            bases.radius,
             Unit::Cells,
             "a burst's radius",
         )?,
-        degrees: numbers(
+        degrees: ladder(
             "degrees",
             spec.degrees,
-            bases.degrees.map(|(d, _)| d),
-            degrees_most,
+            bases.degrees,
             Unit::Degrees,
             "a buff's, a hex's, or a damage spell's status, or a summon's minutes",
         )?,
@@ -1433,10 +1230,9 @@ struct Looked {
 
 /// A spell's `[spell.cast]`, checked: an `effect` of the shape that draws it (only for a spell
 /// cast at a distance: burst and cone a burst's, ray, bolt, and line a bolt's; none: nothing is
-/// drawn), blast
-/// and heat or frost for a burst, a noise as loud as a trap's may be, no empty words. Its
-/// effect is checked against `data/effects.toml` once effects are loaded
-/// ([`check_effects`]).
+/// drawn), blast and heat or frost only for a burst, a noise at most [`MAX_LOUDNESS`] (which
+/// bounds how far a sound is carried). Its effect is checked against `data/effects.toml` once
+/// effects are loaded ([`check_effects`]).
 fn look(
     spec: Option<CastSpec>,
     shape: Shape,
@@ -1454,17 +1250,10 @@ fn look(
             noun: None,
         });
     };
-    let words = [&c.noun, &c.verb, &c.message];
-    if words
-        .iter()
-        .any(|w| w.as_ref().is_some_and(|w| w.trim().is_empty()))
-    {
-        return Err("cast: `noun`, `verb`, and `message` must not be empty".into());
-    }
     if let Some(noise) = c.noise
-        && !(1..=MAX_LOUDNESS).contains(&noise.loudness)
+        && noise.loudness > MAX_LOUDNESS
     {
-        return Err(format!("cast: `noise` loudness is 1 to {MAX_LOUDNESS}"));
+        return Err(format!("cast: `noise` loudness is at most {MAX_LOUDNESS}"));
     }
     let far = !matches!(shape, Shape::Touch | Shape::Myself);
     if c.effect.is_some() && !far {
@@ -1521,30 +1310,6 @@ pub(super) fn check_effects(content: &Content) -> Result<(), String> {
     Ok(())
 }
 
-/// A spell's `zone`, checked: an area with cells to lay it on, its time within bounds, and laid
-/// by the spell its kind works through: a `damage` spell of the kind's own type, or a `hex`.
-fn check_zone(
-    zone: SpellZone,
-    kind: SpellPurpose,
-    damage_type: Option<&str>,
-    shape: Shape,
-) -> Result<(), String> {
-    if !matches!(shape, Shape::Burst | Shape::Line) {
-        return Err("a `zone` lies on a `burst`'s or a `line`'s cells".into());
-    }
-    if !(1..=MAX_ZONE_TURNS).contains(&zone.turns) {
-        return Err(format!("a `zone`'s `turns` is 1 to {MAX_ZONE_TURNS}"));
-    }
-    let id = zone.kind.id();
-    match zone.kind.damage_type() {
-        Some(wants) if kind != SpellPurpose::Damage || damage_type != Some(wants) => {
-            Err(format!("a `{id}` zone is a `damage` spell's of `{wants}`"))
-        }
-        None if kind != SpellPurpose::Hex => Err(format!("a `{id}` zone is a `hex`'s")),
-        _ => Ok(()),
-    }
-}
-
 /// A spell's `[spell.effect]`, checked: only what its kind and shape use.
 fn effect(
     e: EffectSpec,
@@ -1585,12 +1350,6 @@ fn effect(
     shaped("clears", !e.clears.is_empty(), &[Shape::Line])?;
     only("blink", e.blink.is_some(), &[SpellPurpose::Utility])?;
     only("weather", e.weather.is_some(), &[SpellPurpose::Utility])?;
-    if e.leech.is_some_and(|p| !(1..=100).contains(&p)) {
-        return Err("`leech` is 1 to 100 percent".into());
-    }
-    if e.push.is_some_and(|n| !(1..=MAX_PUSH).contains(&n)) {
-        return Err(format!("`push` is 1 to {MAX_PUSH} cells"));
-    }
     only("heal", e.heal.is_some(), &[SpellPurpose::Heal])?;
     // A damage spell's status falls on everyone it harms (blight's poison).
     let marks = [SpellPurpose::Buff, SpellPurpose::Hex, SpellPurpose::Damage];
@@ -1601,11 +1360,6 @@ fn effect(
     only("identify", e.identify, &[SpellPurpose::Utility])?;
     only("summon", e.summon.is_some(), &[SpellPurpose::Summon])?;
     only("arcs", e.arcs.is_some(), &[SpellPurpose::Damage])?;
-    if e.arcs
-        .is_some_and(|n| !(1..=MAX_ARCS).contains(&i32::from(n)))
-    {
-        return Err(format!("`arcs` is 1 to {MAX_ARCS}"));
-    }
     only("rise", e.rise.is_some(), &[SpellPurpose::Summon])?;
     only("charm", e.charm.is_some(), &[SpellPurpose::Hex])?;
     shaped("charm", e.charm.is_some(), &[Shape::Ray, Shape::Bolt])?;
@@ -1619,22 +1373,13 @@ fn effect(
         Some(s) => Some(summon_call(s)?),
         None => None,
     };
-    let rise = match e.rise {
-        Some(r) => Some(spell_rise(r)?),
-        None => None,
-    };
-    let charm = match e.charm {
-        Some(c) if !(1..=MAX_SUMMON_MINUTES).contains(&c.minutes) => {
-            return Err(format!("charm: `minutes` is 1 to {MAX_SUMMON_MINUTES}"));
-        }
-        Some(c) => Some(SpellCharm {
-            minutes: c.minutes,
-            mindless: c.mindless,
-            message: c.message,
-            ends: c.ends,
-        }),
-        None => None,
-    };
+    let rise = e.rise.map(spell_rise);
+    let charm = e.charm.map(|c| SpellCharm {
+        minutes: c.minutes,
+        mindless: c.mindless,
+        message: c.message,
+        ends: c.ends,
+    });
     let corpse = match e.corpse.as_deref() {
         None => None,
         Some("consumed") => Some(CorpseUse::Consumed),
@@ -1644,13 +1389,7 @@ fn effect(
         }
     };
     let mana = match &e.mana {
-        Some(m) => {
-            let roll = base_roll("mana", m)?;
-            if roll.max() > MAX_HEAL_MANA {
-                return Err(format!("`mana` rolls at most {MAX_HEAL_MANA}"));
-            }
-            Some(roll)
-        }
+        Some(m) => Some(base_roll("mana", m)?),
         None => None,
     };
     let status = |name: &str| {
@@ -1665,9 +1404,6 @@ fn effect(
     let marked = match &e.status {
         Some(name) => {
             let severity = e.severity.unwrap_or(1);
-            if !(1..=MAX_SEVERITY).contains(&severity) {
-                return Err(format!("`severity` is 1 to {MAX_SEVERITY}"));
-            }
             let id = status(name)?;
             // Only the caster may be hastened (a buff): creatures' steps are never quicker
             // than their type's (a rest's batching counts on it).
@@ -1685,9 +1421,6 @@ fn effect(
         .map(|name| status(name))
         .collect::<Result<Vec<_>, _>>()?;
     let blink = match e.blink {
-        Some(b) if !(1..=MAX_BLINK).contains(&b.cells) => {
-            return Err(format!("blink: `cells` is 1 to {MAX_BLINK}"));
-        }
         Some(b) => Some(SpellBlink {
             cells: b.cells,
             ends: (b.ends.iter())
@@ -1696,16 +1429,10 @@ fn effect(
         }),
         None => None,
     };
-    let weather = match e.weather {
-        Some(w) if !(1..=MAX_WEATHER_HOURS).contains(&w.hours) => {
-            return Err(format!("weather: `hours` is 1 to {MAX_WEATHER_HOURS}"));
-        }
-        Some(w) => Some(SpellWeather {
-            kind: w.kind,
-            lasts: Duration::hours(u64::from(w.hours)),
-        }),
-        None => None,
-    };
+    let weather = e.weather.map(|w| SpellWeather {
+        kind: w.kind,
+        lasts: Duration::hours(u64::from(w.hours)),
+    });
     Ok(SpellEffect {
         heal,
         status: marked,
@@ -1731,9 +1458,6 @@ fn effect(
     })
 }
 
-/// The most a heal's `mana` may roll.
-const MAX_HEAL_MANA: i32 = 500;
-
 /// A spell's `corpse` and `rise` fit together and with its kind and shape: `corpse` on a burst of
 /// harm, a touch that heals, or a summon on `self` that raises (`rise`, which asks for `corpse`
 /// and stands in for `summon`).
@@ -1758,60 +1482,27 @@ fn corpse_fits(effect: &SpellEffect, kind: SpellPurpose, shape: Shape) -> Result
     Ok(())
 }
 
-/// A rising spell's `rise` table, checked: `most` and `minutes` as a summon's, `hit_points` 1 to
-/// 100, `berserk` 0 to 100.
-fn spell_rise(r: RiseSpec) -> Result<SpellRise, String> {
-    if !(1..=summon::MAX_COUNT).contains(&i32::from(r.most)) {
-        return Err(format!("rise: `most` is 1 to {}", summon::MAX_COUNT));
-    }
-    if !(1..=MAX_SUMMON_MINUTES).contains(&r.minutes) {
-        return Err(format!("rise: `minutes` is 1 to {MAX_SUMMON_MINUTES}"));
-    }
-    if !(1..=100).contains(&r.hit_points) {
-        return Err("rise: `hit_points` is 1 to 100".into());
-    }
-    if r.berserk > 100 {
-        return Err("rise: `berserk` is 0 to 100".into());
-    }
-    Ok(SpellRise {
+/// A rising spell's `rise` table.
+fn spell_rise(r: RiseSpec) -> SpellRise {
+    SpellRise {
         most: r.most,
         minutes: r.minutes,
         hit_points: r.hit_points,
         berserk: r.berserk,
         berserk_faction: r.berserk_faction,
         berserk_message: r.berserk_message,
-    })
+    }
 }
 
 /// A summon spell's `summon` table, checked as far as it can be before the creature types are
-/// known ([`resolve_summons`] resolves its pool): a pool of at least one, a count that brings 1
-/// to [`summon::MAX_COUNT`], `most` 1 to [`summon::MAX_COUNT`], minutes 1 to
-/// [`MAX_SUMMON_MINUTES`], a spread within [`summon::SPREADS`] (default 2).
+/// known ([`resolve_summons`] resolves its pool): a pool of at least one (the call draws from
+/// it), a count that parses, a spread (default 2).
 fn summon_call(s: SummonSpellSpec) -> Result<SpellSummon, String> {
     if s.creatures.is_empty() {
         return Err("summon: `creatures` names at least one".into());
     }
     let count: Roll = s.count.parse().map_err(|e| format!("summon: {e}"))?;
-    if count.min() < 1 || count.max() > summon::MAX_COUNT {
-        return Err(format!(
-            "summon: `count` must lie within 1 to {}",
-            summon::MAX_COUNT
-        ));
-    }
-    if !(1..=summon::MAX_COUNT).contains(&i32::from(s.most)) {
-        return Err(format!("summon: `most` is 1 to {}", summon::MAX_COUNT));
-    }
-    if !(1..=MAX_SUMMON_MINUTES).contains(&s.minutes) {
-        return Err(format!("summon: `minutes` is 1 to {MAX_SUMMON_MINUTES}"));
-    }
     let spread = s.spread.unwrap_or(2);
-    if !summon::SPREADS.contains(&spread) {
-        return Err(format!(
-            "summon: `spread` is {} to {}",
-            summon::SPREADS.start(),
-            summon::SPREADS.end()
-        ));
-    }
     Ok(SpellSummon {
         creatures: s.creatures,
         pool: Vec::new(),
@@ -1855,7 +1546,7 @@ pub(super) fn resolve_summons(content: &mut Content) -> Result<(), ContentError>
             let c = (content.creature_id(name))
                 .ok_or_else(|| err(format!("unknown creature `{name}`")))?;
             let def = content.creature(c);
-            if def.id == "player" || def.unique || def.animated.is_some() {
+            if def.id == "player" {
                 return Err(err(format!("`{name}` cannot be called")));
             }
             pool.push(c);
@@ -2073,16 +1764,7 @@ damage = "2d6"
     #[test]
     fn the_cost_table_is_refused_when_malformed() {
         for (from, to, why) in [
-            (
-                "burst = [180, 240, 300]",
-                "burst = [180, 300, 240]",
-                "one ascending value per radius",
-            ),
-            (
-                "touch = { cost = 70 }",
-                "touch = { cost = 0 }",
-                "resolution",
-            ),
+            ("burst = [180, 240, 300]", "burst = []", "at least one"),
             // The resolutions' damage column went with the cap (decision 16).
             (
                 "touch = { cost = 70 }",
@@ -2200,10 +1882,6 @@ damage = "2d6"
                 "`range = 0`",
             ),
             (
-                spell("damage", "ray", &format!("range = 0\n{harm}")),
-                "`range` is 1",
-            ),
-            (
                 spell(
                     "damage",
                     "burst",
@@ -2229,14 +1907,6 @@ damage = "2d6"
             ),
             (
                 spell(
-                    "damage",
-                    "ray",
-                    &format!("range = 3\n{harm}effect = {{ leech = 101 }}"),
-                ),
-                "`leech` is 1 to 100",
-            ),
-            (
-                spell(
                     "buff",
                     "self",
                     "effect = { status = \"hasted\", only_terrain = \"plants\" }",
@@ -2250,14 +1920,6 @@ damage = "2d6"
                     "range = 3\nradius = 1\neffect = { push = 1 }",
                 ),
                 "a `burst` has no `push`",
-            ),
-            (
-                spell("hex", "line", "length = 3\neffect = { push = 4 }"),
-                "`push` is 1 to",
-            ),
-            (
-                spell("hex", "line", "length = 3"),
-                "`status`, `push`, `zone`, or `charm`",
             ),
             (
                 spell("hex", "burst", &format!("range = 3\nradius = 1\n{charm}")),
@@ -2278,18 +1940,6 @@ damage = "2d6"
             ),
             (
                 spell(
-                    "hex",
-                    "ray",
-                    "range = 3\neffect = { charm = { minutes = 0, message = \"m\", ends = \"e\" } }",
-                ),
-                "charm: `minutes` is 1 to",
-            ),
-            (
-                spell("utility", "self", "effect = { blink = { cells = 11 } }"),
-                "`cells` is 1 to",
-            ),
-            (
-                spell(
                     "utility",
                     "self",
                     "effect = { blink = { cells = 2, ends = [\"nope\"] } }",
@@ -2299,14 +1949,10 @@ damage = "2d6"
             (
                 spell(
                     "utility",
-                    "self",
-                    "effect = { weather = { kind = \"rain\", hours = 25 } }",
+                    "burst",
+                    "range = 3\nradius = 1\neffect = { weather = { kind = \"rain\", hours = 2 } }",
                 ),
-                "`hours` is 1 to",
-            ),
-            (
-                spell("utility", "self", ""),
-                "`identify`, `blink`, or `weather`",
+                "cast on `self`",
             ),
         ];
         for (text, why) in refused {
@@ -2340,61 +1986,22 @@ damage = "2d6"
                 "resolution = \"attack\"",
                 "cannot resolve as",
             ),
-            ("radius = 2", "radius = 4", "`radius` is 1 to 3"),
             ("range = 8\n", "", "needs `range`"),
             ("radius = 2", "radius = 2\nlength = 3", "has no `length`"),
-            ("range = 8", "range = 21", "`range` is 1 to 20"),
-            ("damage_type = \"fire\"\n", "", "needs a `damage_type`"),
             (
                 "damage_type = \"fire\"",
                 "damage_type = \"holy\"",
                 "unknown damage type",
             ),
             ("\"2d6\"", "\"2x6\"", "bad roll"),
-            ("\"2d6\"", "\"-3\"", "a roll that can do something"),
+            ("\"2d6\"", "\"-3\"", "never roll below 0"),
             ("damage = \"2d6\"", "", "needs `damage`"),
-            ("level = 11", "level = 71", "`level` is 0 to 70"),
-            ("level = 11\n", "", "a spell needs a `level`, 0 to 70"),
-            (
-                "level = 11",
-                "tier = 3",
-                "`tier` is gone: use `level`, 0 to 70",
-            ),
-            (
-                "level = 11",
-                "level = 11\ntier = 3",
-                "`tier` is gone: use `level`",
-            ),
-            // The retired fields, each naming what replaced it (the spell scaling design §6.1).
+            ("level = 11\n", "", "missing field `level`"),
+            ("level = 11", "level = 11\ntier = 3", "unknown field `tier`"),
             (
                 "damage = \"2d6\"",
                 "damage = { dice = \"2d6\", per_levels = 4, max_dice = 3 }",
-                "`damage` is a roll now, `damage = \"2d6\"`",
-            ),
-            (
-                "range = 8",
-                "range = 8\nmax_range = 10",
-                "`max_range` is gone",
-            ),
-            (
-                "radius = 2",
-                "radius = 2\nmax_radius = 2",
-                "`max_radius` is gone",
-            ),
-            (
-                "range = 8",
-                "range = 8\nmax_length = 3",
-                "`max_length` is gone",
-            ),
-            (
-                "damage = \"2d6\"",
-                "damage = \"2d6\"\nscales = { damage = { intelligence = 10 } }",
-                "`[spell.scales]` is gone",
-            ),
-            (
-                "damage = \"2d6\"",
-                "damage = \"2d6\"\nscroll = { level = 12 }",
-                "`[spell.scroll] level` is gone",
+                "invalid type",
             ),
             // Only a buff on its caster may hasten (creatures never step quicker).
             (
@@ -2412,16 +2019,15 @@ damage = "2d6"
                 "radius = 2\nlength = 2",
                 "a `burst` has no `length`",
             ),
-            ("level = 11", "level = 11\ncasts = 0", "`casts` is 1 to 10"),
+            (
+                "level = 11",
+                "level = 11\ncasts = 0",
+                "`casts` is at least 1",
+            ),
             (
                 "damage = \"2d6\"",
                 "damage = \"2d6\"\ncast = { effect = \"fireball\", frost = 10, heat = true }",
                 "`heat` or `frost`, not both",
-            ),
-            (
-                "damage = \"2d6\"",
-                "damage = \"2d6\"\ncast = { effect = \"fireball\", noun = \" \" }",
-                "must not be empty",
             ),
             // An area aims at nothing: no attack roll for `aim` to add to.
             (
@@ -2448,8 +2054,7 @@ damage = "2d6"
     }
 
     /// The spell scaling design §6.3: a ladder only for a dimension the spell has, its stat
-    /// known, its rungs never below the base nor the one before, and within the engine's limits
-    /// of reach and degrees. Nothing reads how much a rung does (decision 16).
+    /// known, its scores rising. Nothing reads how much a rung does (decision 16).
     #[test]
     fn ladders_are_checked_against_the_base_and_the_engine() {
         let spell = |body: &str, grows: &str| {
@@ -2487,24 +2092,7 @@ damage = "2d6"
         ))
         .expect("an attack may aim with any stat");
         assert_eq!(ok[0].aim, Stat::Intelligence);
-        let nine: Vec<String> = (1..=9).map(|i| format!("{} {}d6", 10 + i, 2 + i)).collect();
-        let nine = format!("damage = \"intelligence {}\"", nine.join(", "));
         for (body, grows, why) in [
-            (
-                burst,
-                "damage = \"intelligence 13 1d6\"",
-                "below the one before it (`2d6`)",
-            ),
-            (
-                burst,
-                "damage = \"intelligence 13 4d6, 16 3d6\"",
-                "below the one before it (`4d6`)",
-            ),
-            (
-                burst,
-                "damage = \"intelligence 13 2d6\"",
-                "each differs from the last",
-            ),
             (
                 burst,
                 "heal = \"willpower 13 3d6\"",
@@ -2525,28 +2113,11 @@ damage = "2d6"
                 "damage = \"cunning 13 3d6\"",
                 "unknown stat `cunning`",
             ),
-            (burst, "radius = \"willpower 14 4\"", "to at most 3; not 4"),
-            (
-                burst,
-                "range = \"willpower 14 21\"",
-                "to at most 20; not 21",
-            ),
-            (
-                burst,
-                "range = \"willpower 14 8\"",
-                "rise strictly from its base, 8",
-            ),
             (burst, "range = \"willpower 18 10, 14 9\"", "rise strictly"),
-            (burst, &nine, "at most 8 rungs"),
             (
                 ray,
                 "radius = \"willpower 14 2\"",
                 "`radius` is for a burst's radius",
-            ),
-            (
-                hex,
-                "degrees = \"presence 14 2, 18 4\"",
-                "to at most 3; not 4",
             ),
             (
                 hex,

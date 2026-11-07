@@ -35,8 +35,7 @@ their own stream (`character/weapon-skills/...`), so stat rolls never move. Pres
 `PerceptionView::own_weapon_skills` only: ranks and a bar, **never a benefit**. The rank tables (#554, docs/design/combat-progression.md §3, §5): ranks 1 to 5 keep the first
 tables' values, ranks 6 to 10 grow by family (light blades, precise, heavy, middling, launchers
 and thrown; a pattern for writing the arrays, not a data concept);
-`rank_ten_holds_the_family_tables` holds every skill's and style's rank 10 to the design's table
-and every array to never less at a higher rank. `MAX_SAVING` is 60 (crossbows' `reload` at rank
+`rank_ten_holds_the_family_tables` holds every skill's and style's rank 10 to the design's table. `MAX_SAVING` is 60 (crossbows' `reload` at rank
 10); a saving past 100 % in all (crossbows 10 with Marksman 10) prices the reload at the floor,
 `Benefit::saving`'s 1. Tests:
 `content/weapon_skill.rs`, `weapon_skills.rs`, `world/weapon_skill_tests.rs`; the wiki's tables
@@ -113,7 +112,7 @@ the banes in `style-benefits.md` (`rank_table`'s bane columns).
 Caster styles (#571, combat progression family): spells that roll to hit
 (`SpellData::rolls_to_hit`: a damage spell, a ray, a bolt, or a touch, resolved by the attack
 roll) draw on their school's skill (`Role::School`, docs/dev/magic-skills.md; Spell attacks,
-`Role::Spell`, is retired into the schools) and a style of a caster grip (`Grip::RangedSpell`,
+is retired into the schools) and a style of a caster grip (`Grip::RangedSpell`,
 `TouchSpell`, `ArmouredSpell`; `Grip::casts`; their styles name no weapons).
 `Actor::spell_skills(content, spell, aim)` picks them: the spell's school, and the style of
 where the spell is cast from (`world/spell_aim.rs`'s `SpellAim`, docs/dev/magic-skills.md

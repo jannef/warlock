@@ -9,7 +9,7 @@ Doors (spec §8 "Doors"; M19, #130): the rules are `warlock-core/src/door.rs` (`
 `swing_open`, `close_door`, `kick`/`kick_door`, the kick's Strength `World::kick_force`
 (effective Strength + athletics + talents' `door_kick` + worn `door_kick`, Hobnailed; a chest's
 kick reads it too, and a statue's: `world/statue.rs::kick_statue`, against the terrain's `statue`
-sturdiness, `door::STATUE_STURDINESS` 100 to 250, the petrified statue's 200; broken, `break_wall`
+sturdiness, the petrified statue's 200; broken, `break_wall`
 with `Breach::Kicked`; #1126); kicking a creature is `World::player_kicks`, an
 unarmed blow whatever is wielded: `Actor::kick` (bare hands with unarmed fighting's benefits and
 the stance), training unarmed fighting, priced `kick` by `attack_price` (so the stance and

@@ -14,18 +14,11 @@ use crate::stats::{PerStat, Stat};
 use crate::time::{DAY, Duration, HOUR};
 use serde::{Deserialize, Deserializer};
 use std::collections::BTreeMap;
-use std::ops::RangeInclusive;
 
 /// The most nutrition anything gives, or anything may be set to, either way.
 pub const MAX_NUTRITION: i32 = 100_000;
-/// The most turns one meal takes.
-pub const MAX_MEAL: u32 = 100;
-/// The longest anything edible lasts before it has rotted away: ten years.
-pub const MAX_SHELF_LIFE: Duration = Duration::seconds(3600 * DAY);
 /// The actions whose exertion burns extra nutrition: fighting.
 pub const EXERTIONS: [ActionKind; 3] = [ActionKind::Melee, ActionKind::Shoot, ActionKind::Throw];
-/// What a percent chance may be.
-const PERCENT: RangeInclusive<u8> = 0..=100;
 
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -144,24 +137,14 @@ pub struct Food {
 }
 
 impl Food {
-    /// Checks the nutrition (1 to [`MAX_NUTRITION`]), the turns (1 to [`MAX_MEAL`]), and the
-    /// shelf life (it keeps an hour or more, and lasts longer than it keeps, up to
-    /// [`MAX_SHELF_LIFE`]).
+    /// Checks the nutrition (at most [`MAX_NUTRITION`]: the rules count it in an `i32`) and the
+    /// turns (at least 1: a meal is eaten turn by turn).
     pub(super) fn check(&self) -> Result<(), String> {
-        if self.nutrition == 0 || self.nutrition > MAX_NUTRITION as u32 {
-            return Err(format!("`nutrition` must be 1 to {MAX_NUTRITION}"));
+        if self.nutrition > MAX_NUTRITION as u32 {
+            return Err(format!("`nutrition` must be at most {MAX_NUTRITION}"));
         }
-        if !(1..=MAX_MEAL).contains(&self.turns) {
-            return Err(format!("`turns` must be 1 to {MAX_MEAL}"));
-        }
-        if self.keeps < Duration::hours(1)
-            || self.lasts <= self.keeps
-            || self.lasts > MAX_SHELF_LIFE
-        {
-            return Err(format!(
-                "`keeps` must be 1h or more and `lasts` longer than it, at most {}d",
-                MAX_SHELF_LIFE.as_seconds() / DAY
-            ));
+        if self.turns == 0 {
+            return Err("`turns` must be at least 1".into());
         }
         Ok(())
     }
@@ -301,8 +284,9 @@ impl HungerDef {
     ) -> Result<Self, ContentError> {
         let err = |m: String| ContentError::new(file, m);
         let parsed: HungerFile = toml::from_str(text).map_err(|e| err(e.to_string()))?;
-        if !(1..=86_400).contains(&parsed.burn_seconds) {
-            return Err(err("burn_seconds must be 1 to 86400".into()));
+        // A point burned every 0 seconds would never let time pass.
+        if parsed.burn_seconds == 0 {
+            return Err(err("burn_seconds must be at least 1".into()));
         }
         let s = parsed.states;
         let order = [
@@ -314,11 +298,6 @@ impl HungerDef {
             ("weak", s.weak),
             ("fainting", s.fainting),
         ];
-        if let Some((name, n)) = order.iter().find(|(_, n)| n.abs() > MAX_NUTRITION) {
-            return Err(err(format!(
-                "{name} {n} is out of range (±{MAX_NUTRITION})"
-            )));
-        }
         if let Some(w) = order.windows(2).find(|w| w[0].1 <= w[1].1) {
             return Err(err(format!(
                 "states: {} ({}) must be more than {} ({}): max, bloated, satiated, not_hungry, \
@@ -326,44 +305,18 @@ impl HungerDef {
                 w[0].0, w[0].1, w[1].0, w[1].1
             )));
         }
-        for (name, n) in [
-            ("start", parsed.start),
-            ("vomit_leaves", parsed.vomit_leaves),
-        ] {
-            if !(s.fainting..=parsed.max).contains(&n) {
-                return Err(err(format!(
-                    "{name} {n} must be from fainting ({}) to max ({})",
-                    s.fainting, parsed.max
-                )));
-            }
-        }
-        if !(100..=1000).contains(&parsed.bloated.slow) {
-            return Err(err("bloated: slow must be 100 to 1000 (percent)".into()));
+        // A price of 0 percent would let the bloated act without end in no time.
+        if parsed.bloated.slow == 0 {
+            return Err(err("bloated: slow must be above 0 (percent)".into()));
         }
         let mut weak = PerStat::splat(0);
         for (&stat, &by) in &parsed.weak.stats {
-            if !matches!(stat, Stat::Strength | Stat::Dexterity) {
-                return Err(err(format!(
-                    "weak: only strength and dexterity count for less, not {}",
-                    stat.id()
-                )));
-            }
-            if !(-10..=10).contains(&by) {
-                return Err(err(format!("weak: {} {by} must be -10 to 10", stat.id())));
-            }
             weak[stat] = i32::from(by);
         }
         let f = parsed.fainting;
-        if !PERCENT.contains(&f.chance) || !(1..=100).contains(&f.turns) {
-            return Err(err(
-                "fainting: chance must be 0 to 100 (percent) and turns 1 to 100".into(),
-            ));
-        }
         let st = parsed.starving;
-        if !(1..=86_400).contains(&st.seconds) || !(1..=1000).contains(&st.damage) {
-            return Err(err(
-                "starving: seconds must be 1 to 86400 and damage 1 to 1000".into(),
-            ));
+        if st.seconds == 0 {
+            return Err(err("starving: seconds must be at least 1".into()));
         }
         let mut exertion = BTreeMap::new();
         for (id, points) in parsed.exertion {
@@ -376,24 +329,9 @@ impl HungerDef {
                         known.join(", ")
                     ))
                 })?;
-            if points > 1000 {
-                return Err(err(format!("exertion: {id} {points} must be 0 to 1000")));
-            }
             exertion.insert(kind, points);
         }
         let o = parsed.overeating;
-        if !PERCENT.contains(&o.choke) || !PERCENT.contains(&o.vomit) {
-            return Err(err(
-                "overeating: choke and vomit are chances in percent, 0 to 100".into(),
-            ));
-        }
-        let r = &parsed.rotten;
-        if !PERCENT.contains(&r.vomit) {
-            return Err(err("rotten: vomit is a chance in percent, 0 to 100".into()));
-        }
-        if r.harm.min() < 0 || r.harm.max() > 1000 {
-            return Err(err(format!("rotten: harm {} must roll 0 to 1000", r.harm)));
-        }
         let corpses = (parsed.corpses)
             .map(|c| Corpses::resolve(c, sizes, &size_index))
             .transpose()
@@ -428,12 +366,6 @@ impl Corpses {
             let i = size_index(&id).ok_or_else(|| format!("size: unknown size `{id}`"))?;
             food.check().map_err(|m| format!("size {id}: {m}"))?;
             by_size[i] = Some(food);
-        }
-        if let Some(id) = (spec.skills.iter())
-            .find(|(_, n)| n.learn.trim().is_empty() || n.rise.trim().is_empty())
-            .map(|(id, _)| id)
-        {
-            return Err(format!("skills {id}: `learn` and `rise` must not be empty"));
         }
         let sizes = by_size
             .into_iter()
@@ -552,14 +484,7 @@ mod tests {
             let e = food(bad, "30d").unwrap_err();
             assert!(e.contains("bad shelf life"), "{bad}: {e}");
         }
-        let check = |keeps, lasts| food(keeps, lasts).expect("parses").check();
-        assert!(check("1h", "2h").is_ok());
-        assert!(
-            check("3600d", "3600d").is_err(),
-            "lasts longer than it keeps"
-        );
-        assert!(check("10d", "3601d").is_err(), "at most ten years");
-        assert!(check("0h", "2h").is_err(), "keeps an hour or more");
+        assert!(food("1h", "2h").expect("parses").check().is_ok());
     }
 
     #[test]
@@ -572,32 +497,9 @@ mod tests {
                 "bloated (5500) must be more",
             ),
             ("max = 6500", "max = 4000", "max (4000) must be more"),
-            (
-                "start = 3600",
-                "start = 7000",
-                "start 7000 must be from fainting",
-            ),
-            ("slow = 125", "slow = 99", "slow must be 100 to 1000"),
-            (
-                "dexterity = -1 }",
-                "dexterity = -1, toughness = -1 }",
-                "not toughness",
-            ),
-            ("chance = 5", "chance = 101", "fainting: chance"),
-            ("damage = 1", "damage = 0", "starving: seconds"),
+            ("slow = 125", "slow = 0", "slow must be above 0"),
+            ("seconds = 600", "seconds = 0", "starving: seconds"),
             ("throw = 1", "wait = 1", "`wait` is no exertion"),
-            ("choke = 0", "choke = 200", "overeating"),
-            (
-                "turns = 6, keeps = \"8h\", lasts = \"36h\"",
-                "turns = 6, keeps = \"8h\", lasts = \"8h\"",
-                "size medium: `keeps` must be 1h or more and `lasts` longer than it",
-            ),
-            ("harm = \"1d4\"", "harm = \"-1d4\"", "must roll 0"),
-            (
-                "[rotten]\nvomit = 50",
-                "[rotten]\nvomit = 150",
-                "rotten: vomit",
-            ),
             (
                 "medium = { nutrition = 1000, turns = 6, keeps = \"8h\", lasts = \"36h\" }",
                 "",
@@ -611,7 +513,7 @@ mod tests {
             (
                 "small = { nutrition = 400, turns = 3,",
                 "small = { nutrition = 400, turns = 0,",
-                "`turns` must be 1",
+                "`turns` must be at least 1",
             ),
             ("burn_seconds = 60", "burn_seconds = 0", "burn_seconds"),
         ] {

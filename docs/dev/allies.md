@@ -155,10 +155,10 @@ A spell of `kind = "summon"` (`content/spell_def.rs`; `SpellPurpose::Summon`, it
 otherwise as it loads), priced as any self spell. Its call is `[spell.effect] summon = {
 creatures, count, most, minutes, spread }` (`SpellEffect::summon: Option<SpellSummon>`): the
 pool's names, resolved by `spell_def::resolve_summons` once every creature type is known (one
-step after `Content::load_summons`; known, not `player`, not `unique`, not animated), `count` a
-`Roll` of 1 to `summon::MAX_COUNT` (12), `most` 1 to 12, `minutes` 1 to `MAX_SUMMON_MINUTES`
-(600), `spread` 1 to 5 (default 2). Ladders: `[spell.grows] count` (a roll ladder, a summon's
-alone, each rung 1 to 12; `Grows::roll()` is damage, heal, or count, so `SpellData::roll()`,
+step after `Content::load_summons`; known, never `player`), `count` a
+`Roll` (at least one comes), `most`, `minutes`,
+`spread` (default 2). Ladders: `[spell.grows] count` (a roll ladder, a summon's
+alone; `Grows::roll()` is damage, heal, or count, so `SpellData::roll()`,
 the rung, Empower, and the dice hooks act on the count as on any roll) and `degrees` on its
 minutes (`SpellData::base_degrees()`: a status's severity, else a summon's minutes; Lingering's
 `degrees` lengthen it). The menu and the `spells` dump say the count as `2 called` (JSON
@@ -359,8 +359,8 @@ level (`waits`, `world/escort_waits.rs`) is an ordinary creature of its type unt
 
 Beguile (#1003; the spell types design §7 entry 34; `world/charm.rs`): a `hex` ray or bolt with
 `[spell.effect] charm = { minutes, mindless, message, ends }` (`SpellEffect::charm:
-Option<SpellCharm>`; no `status`, `push`, or `zone` beside it; `minutes` 1 to
-`MAX_SUMMON_MINUTES`, the base its `degrees` ladder grows, `SpellData::base_degrees`).
+Option<SpellCharm>`; no `status`, `push`, or `zone` beside it; `minutes`,
+the base its `degrees` ladder grows, `SpellData::base_degrees`).
 `cast.rs::cast_hex` hands it to `World::cast_charm` (one arm):
 
 1. Refused, no time and no mana: without `allies.toml`; at one already an ally of anyone's

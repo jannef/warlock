@@ -10,8 +10,8 @@
 #   color      its colour, "#rrggbb", through the palette as every content colour is; the school
 #              must have a light `circle_<id>` in lights.toml
 #
-# [[status]]   one row per circled status; every `kind = "buff"` or `"hex"` spell's status has one
-#              but a sleep's (`sleeps`: Slumber's `asleep`, a den's sleep too, is never circled)
+# [[status]]   one row per circled status: a `kind = "buff"` or `"hex"` spell's status (one without
+#              a row has no circle; a sleep's, `sleeps`, never has one: Slumber's `asleep`, a den's)
 #   status     an id in data/status.toml; it must have `seen` (others see it on a creature)
 #   school     the school whose colour it is drawn in
 #

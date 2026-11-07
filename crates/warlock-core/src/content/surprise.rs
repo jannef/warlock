@@ -174,7 +174,7 @@ mod tests {
                 "\"no-such-thing\"",
                 "no creature carries it",
             ),
-            ("\"skeleton\"", "\"Skeleton\"", "lower-case words"),
+            ("\"skeleton\"", "\"skel eton\"", "a word without"),
             (
                 "lasts_turns = 60",
                 "lasts_turns = 0",

@@ -3,21 +3,15 @@
 //! coward's trades speed for flight. Every number is data, tuned by playtesting, and none is
 //! shown to the player: only the stance's name is.
 //!
-//! The file has exactly one entry for each [`CombatStance`]; without it every stance is plain
-//! (no effect at all). The frenzy is never chosen: only a berserker's rage puts them in it,
+//! The file has at most one entry for each [`CombatStance`]; a stance it leaves out (and every
+//! stance without the file) is plain (no effect at all). The frenzy is never chosen: only a berserker's rage puts them in it,
 //! and its end puts them in the aggressive stance (`world/frenzy.rs`).
 
 use super::ContentError;
 use crate::combat::{Category, Profile};
 use serde::{Deserialize, Serialize};
 use std::fmt;
-use std::ops::RangeInclusive;
 use std::str::FromStr;
-
-/// A stance bonus or penalty may be this large either way.
-pub const BONUS: RangeInclusive<i32> = -20..=20;
-/// A percentage (an action's cost, a step's noise, a weapon mark multiplier) may be this much.
-pub const PERCENT: RangeInclusive<u32> = 10..=1000;
 
 /// A combat stance. The player chooses one of [`CombatStance::CHOSEN`] (`+` and `-`); a raging
 /// berserker is [`CombatStance::Frenzy`], which nothing else gives; creatures stay
@@ -239,7 +233,7 @@ impl Stances {
         &self.0
     }
 
-    /// Parses `data/stances.toml`: exactly one entry for each stance, with numbers in range.
+    /// Parses `data/stances.toml`: at most one entry for each stance; one left out is plain.
     pub(super) fn parse(file: &str, text: &str) -> Result<Self, ContentError> {
         let err = |m: String| ContentError::new(file, m);
         let parsed: StanceFile = toml::from_str(text).map_err(|e| err(e.to_string()))?;
@@ -251,42 +245,7 @@ impl Stances {
                 return Err(err(format!("duplicate stance `{id}`")));
             }
             seen.push(id);
-            for (what, value) in [
-                ("to_hit", def.to_hit),
-                ("damage", def.damage),
-                ("dodge", def.dodge),
-                ("parry", def.parry),
-            ] {
-                if !BONUS.contains(&value) {
-                    return Err(err(format!(
-                        "stance `{id}`: {what} {value} is out of range ({} to {})",
-                        BONUS.start(),
-                        BONUS.end()
-                    )));
-                }
-            }
-            for (what, value) in [
-                ("attack_cost", def.attack_cost),
-                ("flee_cost", def.flee_cost),
-                ("flee_noise", def.flee_noise),
-                ("weapon_mark", def.weapon_mark),
-                ("gatekeeper", def.gatekeeper),
-            ] {
-                if !PERCENT.contains(&value) {
-                    return Err(err(format!(
-                        "stance `{id}`: {what} {value} is out of range ({} to {})",
-                        PERCENT.start(),
-                        PERCENT.end()
-                    )));
-                }
-            }
-            if def.name.trim().is_empty() {
-                return Err(err(format!("stance `{id}` has no name")));
-            }
             stances.0[id.index()] = def;
-        }
-        if let Some(missing) = CombatStance::ALL.iter().find(|s| !seen.contains(s)) {
-            return Err(err(format!("stance `{missing}` is missing")));
         }
         Ok(stances)
     }
@@ -316,20 +275,7 @@ mod tests {
     #[test]
     fn bad_stances_are_refused() {
         for (text, why) in [
-            (NEUTRAL.to_string(), "stance `coward` is missing"),
             (format!("{}{NEUTRAL}", all()), "duplicate stance `neutral`"),
-            (
-                all().replace("to_hit = 1", "to_hit = 21"),
-                "to_hit 21 is out of range",
-            ),
-            (
-                all().replace("to_hit = 1", "attack_cost = 9"),
-                "attack_cost 9 is out of range",
-            ),
-            (
-                all().replace("to_hit = 1", "flee_noise = 1001"),
-                "flee_noise 1001 is out of range",
-            ),
             (
                 all().replace("to_hit = 1", "speed = 3"),
                 "unknown field `speed`",

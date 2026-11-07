@@ -679,22 +679,6 @@ fn costs_come_from_data_and_are_validated() {
         "{}",
         err.message
     );
-    let err = load("data/actions.toml", "stairs = 50").unwrap_err();
-    assert!(
-        err.message.contains("cost 50 is out of range"),
-        "{}",
-        err.message
-    );
-    let creatures = CREATURES
-        .replace("PLAYER_SPEED", "1000")
-        .replace("attack_cost = 2000", "attack_cost = 20000");
-    let err = load("data/creatures.toml", &creatures).unwrap_err();
-    assert!(
-        err.message
-            .contains("creature `brute`: attack_cost: cost 20000 is out of range"),
-        "{}",
-        err.message
-    );
     // Without the file every action costs 1000.
     let mut files = files(1000);
     files.remove("data/actions.toml");

@@ -23,29 +23,15 @@
 
 use super::action::ActionKind;
 use super::disease::DiseaseId;
-use super::stance::BONUS;
 use super::{ContentError, DamageTypeId, LightId};
-use crate::damage::{MAX_RESISTANCE, MIN_RESISTANCE, Rider};
+use crate::damage::Rider;
 use crate::dice::Dice;
-use crate::stats::{ADJUSTMENTS, PerStat, Stat};
+use crate::stats::{PerStat, Stat};
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
-use std::ops::RangeInclusive;
 
 /// The most degrees of severity a status may have.
 pub const MAX_SEVERITY: u16 = 100;
-/// The fastest and slowest healing a status (or resting) may give, in percent of normal.
-pub const MAX_REGEN: u16 = 1000;
-/// The most hit points one tick may cost.
-pub const MAX_TICK_DAMAGE: u16 = 1000;
-/// How far a status's `senses` may reach, in cells.
-pub const MAX_SENSES: i32 = 20;
-/// What a status may make every action cost, in percent: half as much (Hasted) to ten times as
-/// much. Only a spell's buff on its caster, the player, and Sic 'em's Savage on their companion
-/// may hasten (`spell_def` refuses a hex's or a damage spell's that would), so the quickest step
-/// of a creature that disturbs a rest is what it always was (a rest's batching counts on it,
-/// `World::out_of_view_for`; an ally never disturbs one).
-pub const COST_PERCENT: RangeInclusive<u32> = 50..=1000;
 
 /// What makes a status a **hold** (`hold` in data; Held, spec §8 "Status effects"): the actor
 /// that caused it (its effect's `by`) holds the sufferer, and the hold ends when the holder dies,
@@ -254,16 +240,13 @@ pub enum Affliction {
     Drain(Drain),
 }
 
-/// The most points one drain may take.
-pub const MAX_DRAIN_POINTS: u8 = 5;
-
 /// What a drain does (spec §8 "Stats": "Drain"): unless the target makes a check of `check`
 /// against `difficulty`, `points` come off its score in `stat` for good (`World::drain`).
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Drain {
     /// The stat it drains; `None`: one of the six, drawn each time (`"random"` in data).
     pub stat: Option<Stat>,
-    /// The points it takes (1 to [`MAX_DRAIN_POINTS`]).
+    /// The points it takes.
     pub points: u8,
     /// The stat that resists it (Willpower unless data says otherwise).
     pub check: Stat,
@@ -299,11 +282,6 @@ impl OnHitSpec {
     ) -> Result<OnHit, String> {
         let name = (self.status.as_ref().or(self.disease.as_ref())).or(self.drain.as_ref());
         let name = name.map_or("", String::as_str);
-        if !(1..=100).contains(&self.chance) {
-            return Err(format!(
-                "on_hit `{name}`: chance must be 1 to 100 (percent)"
-            ));
-        }
         if let Some(drain) = &self.drain {
             if self.damage.is_some() {
                 return Err(format!("on_hit `{name}`: `damage` belongs to a hold"));
@@ -326,12 +304,6 @@ impl OnHitSpec {
                      `disease`, and no `check`"
                 ));
             }
-            if self.difficulty.is_some_and(|d| !(1..=40).contains(&d)) {
-                return Err(format!("on_hit `{name}`: difficulty must be 1 to 40"));
-            }
-            if self.damage.is_some_and(|d| !(1..=20).contains(&d)) {
-                return Err(format!("on_hit `{name}`: damage must be 1 to 20"));
-            }
             return Ok(OnHit {
                 what: Affliction::Hold {
                     status: found,
@@ -353,19 +325,11 @@ impl OnHitSpec {
         if self.damage.is_some() {
             return Err(format!("on_hit `{name}`: `damage` belongs to a hold"));
         }
-        if self.difficulty.is_some_and(|d| !(1..=40).contains(&d)) {
-            return Err(format!("on_hit `{name}`: difficulty must be 1 to 40"));
-        }
         let check = self.check.zip(self.difficulty);
         let what = match (&self.status, &self.disease, self.severity) {
             (Some(id), None, Some(severity)) => {
-                let (found, max, _) =
+                let (found, _, _) =
                     status(id).ok_or_else(|| format!("on_hit: unknown status `{id}`"))?;
-                if !(1..=max).contains(&severity) {
-                    return Err(format!(
-                        "on_hit `{id}`: severity must be 1 to {max} (the status's max)"
-                    ));
-                }
                 Affliction::Status {
                     status: found,
                     severity,
@@ -396,8 +360,7 @@ impl OnHitSpec {
     }
 
     /// The drain of an entry with `drain = id`: no status, disease, or severity beside it,
-    /// `points` 1 to [`MAX_DRAIN_POINTS`] (default 1), `check` Willpower by default, and a
-    /// `difficulty` of 1 to 40.
+    /// `points` 1 by default, `check` Willpower by default, and a `difficulty`.
     fn drain(&self, id: &str) -> Result<Drain, String> {
         if self.status.is_some() || self.disease.is_some() || self.severity.is_some() {
             return Err(format!(
@@ -411,16 +374,8 @@ impl OnHitSpec {
             })?),
         };
         let points = self.points.unwrap_or(1);
-        if !(1..=MAX_DRAIN_POINTS).contains(&points) {
-            return Err(format!(
-                "on_hit drain `{id}`: points must be 1 to {MAX_DRAIN_POINTS}"
-            ));
-        }
         let difficulty = (self.difficulty)
             .ok_or_else(|| format!("on_hit drain `{id}`: a drain needs a `difficulty`"))?;
-        if !(1..=40).contains(&difficulty) {
-            return Err(format!("on_hit drain `{id}`: difficulty must be 1 to 40"));
-        }
         Ok(Drain {
             stat,
             points,
@@ -611,11 +566,15 @@ pub struct StatusDef {
     pub penalty: Option<Penalty>,
     /// What it adds to the actor's fighting while it lasts.
     pub combat: CombatBonus,
-    /// What every action costs the actor while it lasts, in percent of its price ([`COST_PERCENT`]):
-    /// 150 half again as much (Slowed), 100 as usual.
+    /// What every action costs the actor while it lasts, in percent of its price (above 0):
+    /// 150 half again as much (Slowed), 100 as usual, 75 hastened. Only a spell's buff on its
+    /// caster, the player, and Sic 'em's Savage on their companion may hasten (`spell_def`
+    /// refuses a hex's or a damage spell's that would), so the quickest step of a creature that
+    /// disturbs a rest is what it always was (a rest's batching counts on it,
+    /// `World::out_of_view_for`; an ally never disturbs one).
     pub cost: u32,
     /// What every attack costs the actor while it lasts, in percent of its price, on top of
-    /// `cost` ([`COST_PERCENT`]; Walled: 125). Several multiply.
+    /// `cost` (above 0; Walled: 125). Several multiply.
     pub attack_cost: u32,
     /// The actions refused while it lasts, by their kind (`read`: a raging berserker cannot
     /// read); an ability that costs one of them cannot be used.
@@ -775,16 +734,6 @@ pub(super) fn parse(
 ) -> Result<(Healing, Vec<StatusDef>), ContentError> {
     let err = |m: String| ContentError::new(file, m);
     let parsed: StatusFile = toml::from_str(text).map_err(|e| err(e.to_string()))?;
-    if parsed.healing.resting > MAX_REGEN {
-        return Err(err(format!(
-            "healing: resting must be 0 to {MAX_REGEN} (percent)"
-        )));
-    }
-    if parsed.healing.mana_resting > MAX_REGEN {
-        return Err(err(format!(
-            "healing: mana_resting must be 0 to {MAX_REGEN} (percent)"
-        )));
-    }
     let mut list: Vec<StatusDef> = Vec::new();
     let mut follows = Vec::new();
     for spec in parsed.status {
@@ -840,82 +789,39 @@ fn resolve(
         &impl Fn(&str) -> Option<usize>,
     ),
 ) -> Result<StatusDef, String> {
-    if spec.id.trim().is_empty() || spec.name.trim().is_empty() {
-        return Err("`id` and `name` must not be empty".into());
+    if spec.id.is_empty() {
+        return Err("`id` must not be empty".into());
     }
-    if spec.seen.as_ref().is_some_and(|s| s.trim().is_empty()) {
-        return Err("`seen` must not be empty".into());
+    // Degrees run 1 to `max`; one that kills at its max is lived through to `max - 1`.
+    if spec.max == 0 {
+        return Err("max must be at least 1".into());
     }
-    if !(1..=MAX_SEVERITY).contains(&spec.max) {
-        return Err(format!("max must be 1 to {MAX_SEVERITY}"));
-    }
+    // A tick or an easing every 0 seconds would never let time pass.
     if spec.tick == Some(0) || spec.eases == Some(0) {
         return Err("`tick` and `eases` are seconds and must be at least 1".into());
-    }
-    if spec.damage > MAX_TICK_DAMAGE {
-        return Err(format!("damage must be at most {MAX_TICK_DAMAGE}"));
     }
     if spec.damage > 0 && spec.tick.is_none() {
         return Err("`damage` needs a `tick`".into());
     }
-    if spec.regen > MAX_REGEN {
-        return Err(format!("regen must be 0 to {MAX_REGEN} (percent)"));
+    if spec.mana_damage > 0 && spec.tick.is_none() {
+        return Err("`mana_damage` needs a `tick`".into());
     }
-    mana(&spec)?;
     let penalty = spec.penalty.map(|p| penalty(p, spec.max)).transpose()?;
-    let c = spec.combat;
-    for (what, value) in [
-        ("to_hit", c.to_hit),
-        ("damage", c.damage),
-        ("dodge", c.dodge),
-        ("parry", c.parry),
-        ("shield", c.shield),
-    ] {
-        if !BONUS.contains(&value) {
-            return Err(format!(
-                "combat: {what} {value} is out of range ({} to {})",
-                BONUS.start(),
-                BONUS.end()
-            ));
-        }
-    }
-    if !COST_PERCENT.contains(&spec.cost) {
-        return Err(format!(
-            "cost must be {} to {} (percent: statuses slow, never hasten)",
-            COST_PERCENT.start(),
-            COST_PERCENT.end()
-        ));
-    }
-    if !COST_PERCENT.contains(&spec.attack_cost) {
-        return Err(format!(
-            "attack_cost must be {} to {} (percent)",
-            COST_PERCENT.start(),
-            COST_PERCENT.end()
-        ));
+    // A price of 0 percent would let its sufferer act without end in no time.
+    if spec.cost == 0 || spec.attack_cost == 0 {
+        return Err("`cost` and `attack_cost` are percents above 0".into());
     }
     if spec.per_action && (spec.eases.is_some() || spec.tick.is_some()) {
         return Err("per_action: it eases by actions, so no `eases` and no `tick`".into());
     }
     let blocks = blocks(&spec.blocks)?;
-    if let Some(w) = &spec.wound
-        && (w.big_hit > spec.max || w.critical > spec.max || w.big_hit + w.critical == 0)
-    {
-        return Err(format!(
-            "wound: big_hit and critical must be 0 to {} (max), not both 0",
-            spec.max
-        ));
-    }
     let kind = |name: &str| damage(name).ok_or_else(|| format!("unknown damage type `{name}`"));
     let wound = match spec.wound {
         None => None,
         Some(w) => {
             let mut kinds = Vec::new();
             for name in &w.from {
-                let id = kind(name).map_err(|m| format!("wound: from: {m}"))?;
-                if kinds.contains(&id) {
-                    return Err(format!("wound: from: `{name}` twice"));
-                }
-                kinds.push(id);
+                kinds.push(kind(name).map_err(|m| format!("wound: from: {m}"))?);
             }
             Some(Wound {
                 big_hit: w.big_hit,
@@ -925,37 +831,19 @@ fn resolve(
         }
     };
     let damage_type = spec.damage_type.as_deref().map(kind).transpose()?;
-    if spec.cured_by.iter().any(|c| c.trim().is_empty()) {
-        return Err("cured_by: a cure must have a name".into());
-    }
     if let Some(hold) = &spec.hold {
-        check_hold(hold, spec.max, spec.eases, spec.stacking, &blocks)?;
+        check_hold(hold)?;
     }
     check_escape(
         spec.escape,
         spec.hold.is_some(),
         blocks.is_empty() && spec.cost <= 100,
     )?;
-    if spec.escape.is_some() && spec.seen.is_none() {
-        return Err("escape: the status needs a `seen` (\"you are still ...\")".into());
-    }
-    if let Some(t) = &spec.treat
-        && (!(0..=40).contains(&t.difficulty)
-            || !(0..=10).contains(&t.per_degree)
-            || t.made.trim().is_empty()
-            || t.failed.trim().is_empty())
-    {
-        return Err(
-            "treat: difficulty must be 0 to 40, per_degree 0 to 10, and `made` and `failed` \
-             must not be empty"
-                .into(),
-        );
-    }
     let rider = |what: &str, spec: &Option<RiderSpec>| {
         spec.as_ref()
             .map(|r| {
-                if r.damage.min() < 0 || r.damage.max() < 1 {
-                    return Err(format!("{what}: `damage` must be dice that can do harm"));
+                if r.damage.min() < 0 {
+                    return Err(format!("{what}: `damage` must be dice that never heal"));
                 }
                 let kind = kind(&r.damage_type).map_err(|m| format!("{what}: {m}"))?;
                 Ok(Rider {
@@ -976,12 +864,6 @@ fn resolve(
     let mut resist = Vec::new();
     for (name, &percent) in &spec.resist {
         let id = kind(name).map_err(|m| format!("resist: {m}"))?;
-        // Gear-like: never immunity, which only a creature's own nature gives.
-        if percent == 0 || !(MIN_RESISTANCE..=MAX_RESISTANCE).contains(&percent) {
-            return Err(format!(
-                "resist: `{name}` must be {MIN_RESISTANCE} to {MAX_RESISTANCE}, not 0"
-            ));
-        }
         resist.push((id, percent));
     }
     resist.sort_by_key(|&(id, _)| id);
@@ -993,20 +875,12 @@ fn resolve(
                 "stages: the first stage is the `start` line; give one or the other".into(),
             );
         }
-        if spec.stages.len() > usize::from(lived) || spec.stages.iter().any(|s| s.trim().is_empty())
-        {
+        // A line past the degrees it is lived through would never be said.
+        if spec.stages.len() > usize::from(lived) {
             return Err(format!(
-                "stages: at most {lived} lines (one a degree it is lived through), none empty"
+                "stages: at most {lived} lines (one a degree it is lived through)"
             ));
         }
-    }
-    if spec.kills_at_max && (spec.max < 2 || spec.stacking != Stacking::Add || spec.dies.is_none())
-    {
-        return Err(
-            "kills_at_max: a status that adds up (`stacking = \"add\"`) to a `max` of 2 or more, \
-             with a `dies` line"
-                .into(),
-        );
     }
     if spec.statue && !spec.kills_at_max {
         return Err("statue: only a status that `kills_at_max` leaves a statue".into());
@@ -1053,12 +927,7 @@ fn resolve(
         treat: spec.treat,
         light,
         quenched: spec.quenched,
-        senses: match spec.senses {
-            Some(senses) if !(1..=MAX_SENSES).contains(&senses.reach) => {
-                return Err(format!("`senses`: `reach` is 1 to {MAX_SENSES}"));
-            }
-            senses => senses,
-        },
+        senses: spec.senses,
         retaliates,
         blows,
         wades_free: spec.wades_free,
@@ -1068,40 +937,19 @@ fn resolve(
     })
 }
 
-/// Checks a hold: a grip of 1 to 40, at least one turn and no more than the status's `max`, and
-/// a status that eases, blocks steps, and keeps the longer of two doses.
-fn check_hold(
-    hold: &Hold,
-    max: u16,
-    eases: Option<u32>,
-    stacking: Stacking,
-    blocks: &[ActionKind],
-) -> Result<(), String> {
-    if !(1..=40).contains(&hold.difficulty) {
-        return Err("hold: difficulty must be 1 to 40".into());
-    }
-    if hold.turns.min() < 1 || hold.turns.max() > i32::from(max) {
-        return Err(format!(
-            "hold: turns must roll 1 to {max} (the status's max)"
-        ));
-    }
-    if eases.is_none() || stacking != Stacking::Highest {
-        return Err("hold: a hold needs `eases` (a turn) and `stacking = \"highest\"`".into());
-    }
-    if !blocks.contains(&ActionKind::Step) {
-        return Err("hold: a hold blocks `step`".into());
+/// Checks a hold: its turns are drawn as degrees, so they never roll below 1.
+fn check_hold(hold: &Hold) -> Result<(), String> {
+    if hold.turns.min() < 1 {
+        return Err("hold: turns must roll 1 or more".into());
     }
     Ok(())
 }
 
-/// Checks `escape`: a difficulty of 1 to 40, on no hold (its grip is its difficulty), on a status
-/// that blocks something or slows every action (not `idle`).
+/// Checks `escape`: on no hold (its grip is its difficulty), on a status that blocks something or
+/// slows every action (not `idle`), since only such a one is struggled against.
 fn check_escape(escape: Option<i32>, hold: bool, idle: bool) -> Result<(), String> {
-    let Some(escape) = escape else {
+    if escape.is_none() {
         return Ok(());
-    };
-    if !(1..=40).contains(&escape) {
-        return Err("escape: difficulty must be 1 to 40".into());
     }
     if hold {
         return Err("escape: a hold's grip is its difficulty".into());
@@ -1112,63 +960,26 @@ fn check_escape(escape: Option<i32>, hold: bool, idle: bool) -> Result<(), Strin
     Ok(())
 }
 
-/// Checks what a status does to mana (spec §8 "Mana"): its pace and its drain.
-fn mana(spec: &StatusSpec) -> Result<(), String> {
-    if spec.mana_damage > MAX_TICK_DAMAGE {
-        return Err(format!("mana_damage must be at most {MAX_TICK_DAMAGE}"));
-    }
-    if spec.mana_damage > 0 && spec.tick.is_none() {
-        return Err("`mana_damage` needs a `tick`".into());
-    }
-    if spec.mana_regen > MAX_REGEN {
-        return Err(format!("mana_regen must be 0 to {MAX_REGEN} (percent)"));
-    }
-    Ok(())
-}
-
-/// The action kinds `ids` names (`["read"]`), each once.
+/// The action kinds `ids` names (`["read"]`).
 fn blocks(ids: &[String]) -> Result<Vec<ActionKind>, String> {
     let mut kinds = Vec::new();
     for id in ids {
         let kind = (ActionKind::ALL.iter().copied())
             .find(|k| k.id() == id)
             .ok_or_else(|| format!("blocks: unknown action `{id}` (an id in actions.toml)"))?;
-        if kinds.contains(&kind) {
-            return Err(format!("blocks: `{id}` is listed twice"));
-        }
         kinds.push(kind);
     }
     Ok(kinds)
 }
 
 fn penalty(spec: PenaltySpec, max: u16) -> Result<Penalty, String> {
-    if !(1..=max).contains(&spec.from) {
-        return Err(format!("penalty: from must be 1 to {max} (max)"));
+    // One from past the status's max would never count.
+    if spec.from > max {
+        return Err(format!("penalty: from must be at most {max} (max)"));
     }
     let mut by = PerStat::splat(0i8);
     for (stat, value) in spec.stats {
-        if !ADJUSTMENTS.contains(&value) {
-            return Err(format!(
-                "penalty: {} {value} is out of range ({} to {})",
-                stat.id(),
-                ADJUSTMENTS.start(),
-                ADJUSTMENTS.end()
-            ));
-        }
-        // One that counts per degree stays in range at its most degrees.
-        let most = i32::from(value) * i32::from(if spec.per_degree { max } else { 1 });
-        if spec.per_degree
-            && !(i32::from(*ADJUSTMENTS.start())..=i32::from(*ADJUSTMENTS.end())).contains(&most)
-        {
-            return Err(format!(
-                "penalty: {} {value} a degree is out of range at {max} degrees",
-                stat.id()
-            ));
-        }
         by[stat] = value;
-    }
-    if by.iter().all(|(_, v)| v == 0) {
-        return Err("penalty: it changes no stat".into());
     }
     Ok(Penalty {
         from: spec.from,
@@ -1235,7 +1046,7 @@ mod tests {
             ),
             (
                 BLEEDING.replace("max = 5", "max = 0"),
-                "max must be 1 to 100",
+                "max must be at least 1",
             ),
             (
                 BLEEDING.replace("tick = 40", "tick = 0"),
@@ -1246,57 +1057,18 @@ mod tests {
                 "`damage` needs a `tick`",
             ),
             (
-                BLEEDING.replace("regen = 0", "regen = 1001"),
-                "regen must be 0 to 1000",
-            ),
-            (
                 format!("{BLEEDING}penalty = {{ from = 6, strength = -1 }}\n"),
-                "from must be 1 to 5",
-            ),
-            (
-                format!("{BLEEDING}penalty = {{ from = 1 }}\n"),
-                "it changes no stat",
+                "from must be at most 5",
             ),
             (
                 format!("{BLEEDING}penalty = {{ from = 1, luck = -1 }}\n"),
                 "unknown stat `luck`",
             ),
             (
-                format!("{BLEEDING}penalty = {{ from = 1, strength = -11 }}\n"),
-                "out of range",
-            ),
-            (
-                format!("{BLEEDING}wound = {{ big_hit = 6 }}\n"),
-                "wound: big_hit and critical",
-            ),
-            (format!("{BLEEDING}wound = {{}}\n"), "not both 0"),
-            (
-                format!("{BLEEDING}cured_by = [\"\"]\n"),
-                "a cure must have a name",
-            ),
-            (
-                format!(
-                    "{BLEEDING}treat = {{ difficulty = 41, made = \"Bound.\", failed = \"No.\" }}\n"
-                ),
-                "treat: difficulty must be 0 to 40",
-            ),
-            (
-                format!("{BLEEDING}treat = {{ difficulty = 6, made = \"\", failed = \"No.\" }}\n"),
-                "`made` and `failed` must not be empty",
-            ),
-            (
-                format!("{BLEEDING}seen = \" \"\n"),
-                "`seen` must not be empty",
-            ),
-            (
                 format!("{BLEEDING}stacking = \"stack\"\n"),
                 "unknown variant `stack`",
             ),
             (format!("{BLEEDING}colour = 1\n"), "unknown field `colour`"),
-            (
-                "[healing]\nresting = 2000\n".into(),
-                "resting must be 0 to 1000",
-            ),
         ] {
             let e = parse("status.toml", &text, |_| None, |_| None, |_| None).unwrap_err();
             assert!(e.message.contains(why), "{why}: {}", e.message);
@@ -1346,23 +1118,10 @@ mod tests {
     fn bad_buffs_are_refused() {
         let raging = |from: &str, to: &str| format!("{}{EXHAUSTED}", RAGING.replace(from, to));
         for (text, why) in [
-            (
-                raging("to_hit = 1", "to_hit = 21"),
-                "combat: to_hit 21 is out of range (-20 to 20)",
-            ),
             (raging("dodge = -2", "luck = 1"), "unknown field `luck`"),
-            (raging("cost = 150", "cost = 49"), "cost must be 50 to 1000"),
-            (
-                raging("cost = 150", "cost = 1001"),
-                "cost must be 50 to 1000",
-            ),
             (
                 raging("\"cast\"", "\"sleep\""),
                 "blocks: unknown action `sleep`",
-            ),
-            (
-                raging("\"cast\"", "\"read\""),
-                "blocks: `read` is listed twice",
             ),
             (
                 raging("\"exhausted\"", "\"calm\""),
@@ -1418,18 +1177,6 @@ mod tests {
             (
                 spec(Some("rotten"), None, 10, Some(2)),
                 "unknown status `rotten`",
-            ),
-            (
-                spec(Some("poisoned"), None, 0, Some(2)),
-                "chance must be 1 to 100",
-            ),
-            (
-                spec(Some("poisoned"), None, 101, Some(2)),
-                "chance must be 1 to 100",
-            ),
-            (
-                spec(Some("poisoned"), None, 10, Some(11)),
-                "severity must be 1 to 10",
             ),
             (spec(Some("poisoned"), None, 10, None), "needs a `severity`"),
             (spec(None, Some("pox"), 10, None), "unknown disease `pox`"),
@@ -1499,16 +1246,10 @@ mod tests {
             damage: Some(1),
             ..gripping_poison.clone()
         };
-        let crushing = OnHitSpec {
-            damage: Some(21),
-            ..hold(None, None)
-        };
         for (bad, why) in [
             (hold(None, Some(1)), "a hold has no `severity`"),
-            (hold(Some(41), None), "difficulty must be 1 to 40"),
             (gripping_poison, "`check` and `difficulty` go together"),
             (harmful_poison, "`damage` belongs to a hold"),
-            (crushing, "damage must be 1 to 20"),
         ] {
             let e = bad.resolve(known, disease).unwrap_err();
             assert!(e.contains(why), "{why}: {e}");
@@ -1516,7 +1257,7 @@ mod tests {
     }
 
     #[test]
-    fn a_hold_eases_blocks_steps_and_draws_its_turns_within_its_max() {
+    fn a_hold_draws_its_turns() {
         let held = |max: u16| {
             format!(
                 "[[status]]\nid = \"held\"\nname = \"Held\"\nmax = {max}\n\
@@ -1529,25 +1270,13 @@ mod tests {
         let hold = list[0].hold.expect("a hold");
         assert_eq!((hold.check, hold.difficulty), (Stat::Strength, 13));
         assert_eq!((hold.turns.min(), hold.turns.max()), (3, 12));
-        for (text, why) in [
-            (held(11), "turns must roll 1 to 11"),
-            (
-                held(12).replace("\"highest\"", "\"refresh\""),
-                "a hold needs `eases`",
-            ),
-            (held(12).replace("eases = 6\n", ""), "a hold needs `eases`"),
-            (
-                held(12).replace("\"step\"", "\"read\""),
-                "a hold blocks `step`",
-            ),
-            (
-                held(12).replace("difficulty = 13", "difficulty = 0"),
-                "difficulty must be 1 to 40",
-            ),
-        ] {
-            let e = parse("status.toml", &text, |_| None, |_| None, |_| None).unwrap_err();
-            assert!(e.message.contains(why), "{why}: {}", e.message);
-        }
+        let text = held(12).replace("3d4", "1d4-1");
+        let e = parse("status.toml", &text, |_| None, |_| None, |_| None).unwrap_err();
+        assert!(
+            e.message.contains("turns must roll 1 or more"),
+            "{}",
+            e.message
+        );
     }
 
     #[test]
@@ -1597,13 +1326,7 @@ mod tests {
         };
         for (bad, why) in [
             (drain("luck", None, None, Some(14)), "unknown stat `luck`"),
-            (drain("strength", Some(0), None, Some(14)), "points must be"),
-            (drain("strength", Some(6), None, Some(14)), "points must be"),
             (drain("strength", None, None, None), "needs a `difficulty`"),
-            (
-                drain("strength", None, None, Some(41)),
-                "difficulty must be",
-            ),
             (with_status, "names no `status`"),
             (lone_points, "belong to a `drain`"),
         ] {
@@ -1613,7 +1336,7 @@ mod tests {
     }
 
     #[test]
-    fn mana_paces_and_drains_parse_and_are_checked() {
+    fn mana_paces_and_drains_parse() {
         let text = format!(
             "[healing]\nresting = 200\nmana_resting = 400\n{BLEEDING}mana_regen = 50\n\
              mana_damage = 2\n"
@@ -1630,34 +1353,20 @@ mod tests {
             (100, 0),
             "the defaults"
         );
-        for (text, why) in [
-            (
-                format!("{BLEEDING}mana_regen = 1001\n"),
-                "mana_regen must be 0 to 1000",
-            ),
-            (
-                format!("{BLEEDING}mana_damage = 1001\n"),
-                "mana_damage must be at most 1000",
-            ),
-            (
-                format!(
-                    "{}mana_damage = 1\n",
-                    BLEEDING.replace("tick = 40\ndamage = 1\n", "")
-                ),
-                "`mana_damage` needs a `tick`",
-            ),
-            (
-                format!("[healing]\nresting = 200\nmana_resting = 1001\n{BLEEDING}"),
-                "mana_resting must be 0 to 1000",
-            ),
-        ] {
-            let e = parse("status.toml", &text, |_| None, |_| None, |_| None).unwrap_err();
-            assert!(e.message.contains(why), "{why}: {}", e.message);
-        }
+        let text = format!(
+            "{}mana_damage = 1\n",
+            BLEEDING.replace("tick = 40\ndamage = 1\n", "")
+        );
+        let e = parse("status.toml", &text, |_| None, |_| None, |_| None).unwrap_err();
+        assert!(
+            e.message.contains("`mana_damage` needs a `tick`"),
+            "{}",
+            e.message
+        );
     }
 
     #[test]
-    fn eyes_and_resistances_name_what_exists_and_never_immunity() {
+    fn eyes_and_resistances_name_what_exists() {
         let damage = |id: &str| (id == "fire").then_some(DamageTypeId(3));
         let vision = |id: &str| (id == "darkvision").then_some(2);
         let status = |extra: &str| {
@@ -1673,12 +1382,6 @@ mod tests {
             (
                 "resist = { brimstone = 50 }",
                 "unknown damage type `brimstone`",
-            ),
-            ("resist = { fire = 100 }", "must be -100 to 75"),
-            ("resist = { fire = 0 }", "must be -100 to 75"),
-            (
-                "penalty = { from = 1, strength = 6, per_degree = true }",
-                "out of range at 2 degrees",
             ),
         ] {
             let text = status(extra);

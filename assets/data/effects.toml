@@ -25,11 +25,11 @@
 #                  its glyph, thinner toward the edge) is at its hottest, 0 to 1
 #   branches       bolts: the chance, per cell and flash, of a short fork off the line
 #   light          { color = [r, g, b], radius }: the light it gives at full strength (255 = fully
-#                  lit, more = overbright, up to 4000; as in lights.toml), from a burst's center
+#                  lit, more = overbright; as in lights.toml), from a burst's center
 #                  or along a bolt every other cell. It lights the scene like any light, but
 #                  only on screen.
 #   darken         { amount, seconds }: everything but the effect's own light looks up to `amount`
-#                  darker (0.6 = 60 % darker on screen; at most 0.9) while it peaks, easing back by
+#                  darker (0.6 = 60 % darker on screen; the renderer stops at 0.9) while it peaks, easing back by
 #                  `seconds` after the impact starts. Off with the `screen_fades` switch.
 #   shake          { pixels, radius, seconds }: when it lands within `radius` cells of the player
 #                  the view shakes, at most `pixels` (logical pixels; less the farther), dying

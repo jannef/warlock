@@ -9,7 +9,7 @@
 //! ```
 //!
 //! A ladder is the stat's id, then rungs separated by commas, each `AT VALUE` with one space:
-//! `AT` a score, 1 to [`MAX_SCORE`], strictly ascending; at most [`MAX_RUNGS`] rungs. `VALUE` is a
+//! `AT` a score, 1 to [`MAX_SCORE`], strictly ascending ([`Ladder::rung_at`] counts them). `VALUE` is a
 //! [`Roll`] for `damage` and `heal`, whole cells for `range`, `length`, and `radius`, and whole
 //! degrees for `degrees`. The spell's own value is rung 0, the **base**; a caster whose
 //! effective score in the stat reaches a rung's `AT` casts that rung ([`Ladder::rung_at`]).
@@ -21,8 +21,6 @@ use crate::dice::Roll;
 use crate::stats::Stat;
 use std::fmt;
 
-/// The most rungs one ladder may have.
-pub const MAX_RUNGS: usize = 8;
 /// The highest score a rung may be at (the stats' range).
 pub const MAX_SCORE: u8 = 40;
 
@@ -74,8 +72,8 @@ impl fmt::Display for RungValue {
     }
 }
 
-/// Reads `rest`, rungs `AT VALUE` separated by commas, each value in `unit`: 1 to
-/// [`MAX_RUNGS`] of them, `AT` 1 to `at.1` strictly ascending (`at.0` names what `AT` is in the
+/// Reads `rest`, rungs `AT VALUE` separated by commas, each value in `unit`: at least one,
+/// `AT` 1 to `at.1` strictly ascending (`at.0` names what `AT` is in the
 /// errors: a `score` here, a `danger` for a trap's rungs, `content/trap.rs`).
 pub fn parse_rungs(rest: &str, unit: Unit, at: (&str, u8)) -> Result<Vec<(u8, RungValue)>, String> {
     let (what, most) = at;
@@ -105,9 +103,6 @@ pub fn parse_rungs(rest: &str, unit: Unit, at: (&str, u8)) -> Result<Vec<(u8, Ru
         };
         rungs.push((at, value));
     }
-    if rungs.len() > MAX_RUNGS {
-        return Err(format!("at most {MAX_RUNGS} rungs"));
-    }
     Ok(rungs)
 }
 
@@ -119,8 +114,8 @@ pub struct Ladder {
 }
 
 impl Ladder {
-    /// Reads `text` (module docs), its values in `unit`: the stat known, 1 to [`MAX_RUNGS`]
-    /// rungs, scores 1 to [`MAX_SCORE`] strictly ascending, each value of its unit. What a value
+    /// Reads `text` (module docs), its values in `unit`: the stat known, at least one rung,
+    /// scores 1 to [`MAX_SCORE`] strictly ascending, each value of its unit. What a value
     /// may be against the spell's base is the caller's check.
     pub fn parse(text: &str, unit: Unit) -> Result<Self, String> {
         let bad = |why: String| format!("ladder `{text}`: {why}");
@@ -238,11 +233,5 @@ mod tests {
         refused("willpower 14 two", Unit::Cells, "whole number of cells");
         refused("presence 14 2d6", Unit::Degrees, "whole number of degrees");
         refused("intelligence 13 3x6", Unit::Roll, "bad roll");
-        let nine: Vec<String> = (1..=9).map(|i| format!("{} {}d6", i * 2, i)).collect();
-        refused(
-            &format!("intelligence {}", nine.join(", ")),
-            Unit::Roll,
-            "at most 8 rungs",
-        );
     }
 }

@@ -6,23 +6,12 @@
 //! [`crate::Event::Spell`] with its effect; the dev action `effect:ID@X,Y` reads `shape` and
 //! `radius` to make such an event for captures. Without the file there are no effects to show.
 
-use super::{ContentError, MAX_LIGHT_RADIUS, ParticleEmitter, ParticleTrigger};
+use super::{ContentError, ParticleEmitter, ParticleTrigger};
 use crate::color::Rgb;
-use crate::perception::VIEW_RADIUS;
 use serde::Deserialize;
 
-/// Largest burst radius the dev action makes, in cells.
-pub const MAX_BURST_RADIUS: i32 = 8;
-/// Most an effect may dim the rest of the view: never all the way to black.
+/// Most the renderer lets an effect dim the rest of the view: never all the way to black.
 pub const MAX_DARKEN: f32 = 0.9;
-/// Largest screen shake, in logical pixels.
-pub const MAX_SHAKE_PIXELS: f32 = 12.0;
-/// Longest phase, darkening, or shake, in seconds: effects are short.
-pub const MAX_SECONDS: f32 = 2.0;
-/// Most flashes during an impact.
-pub const MAX_FLASHES: u32 = 6;
-/// Brightest light channel an effect may give (255 = fully lit).
-pub const MAX_EFFECT_LIGHT: u16 = 4000;
 /// The glyph a burst's body is drawn with behind its glyphs ([`EffectDef::fill`]).
 pub const FILL_GLYPH: char = '█';
 
@@ -52,7 +41,8 @@ pub struct EffectLight {
 #[derive(Clone, Copy, Debug, PartialEq, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Darken {
-    /// 0 to [`MAX_DARKEN`]: the share of the other light taken away at the deepest.
+    /// The share of the other light taken away at the deepest (the renderer stops at
+    /// [`MAX_DARKEN`]).
     pub amount: f32,
     /// From the start of the impact until the view is back to normal.
     pub seconds: f32,
@@ -137,45 +127,30 @@ impl EffectDef {
             .chain(self.particles.iter().flat_map(|e| e.glyphs.chars()))
     }
 
-    /// Checks the ranges, returning what is wrong.
+    /// Checks that it is well formed, returning what is wrong: an id action text can name,
+    /// times that are numbers, a projectile that arrives, colors and glyphs to draw with, and no
+    /// field its shape would ignore.
     fn check(&self) -> Result<(), String> {
         let bad_id = |c: char| matches!(c, ':' | '@' | '>') || c.is_whitespace();
         if self.id.is_empty() || self.id.contains(bad_id) {
             return Err("an effect id is a word without `:`, `@`, `>`, or spaces".into());
         }
-        let seconds = |what: &str, v: f32, zero: bool| {
-            let low = if zero { v >= 0.0 } else { v > 0.0 };
-            if v.is_finite() && low && v <= MAX_SECONDS {
-                Ok(())
-            } else {
-                let from = if zero { "0" } else { "above 0" };
-                Err(format!("`{what}` must be {from} to {MAX_SECONDS} seconds"))
-            }
-        };
-        seconds("impact", self.impact, false)?;
-        seconds("linger", self.linger, true)?;
-        seconds("flicker", self.flicker, false)?;
-        seconds("grow", self.grow, true)?;
-        if self.grow > self.impact {
-            return Err("`grow` must be at most `impact`".into());
+        let times = [
+            self.impact,
+            self.linger,
+            self.flicker,
+            self.grow,
+            self.darken.map_or(0.0, |d| d.seconds),
+            self.shake.map_or(0.0, |s| s.seconds),
+        ];
+        if times.iter().any(|v| !v.is_finite() || *v < 0.0) {
+            return Err("times are seconds, 0 or more".into());
         }
-        if !(self.speed.is_finite() && self.speed > 0.0 && self.speed <= 1000.0) {
-            return Err("`speed` must be above 0 and at most 1000 cells a second".into());
-        }
-        if self.flashes > MAX_FLASHES {
-            return Err(format!("`flashes` must be at most {MAX_FLASHES}"));
+        if !(self.speed.is_finite() && self.speed > 0.0) {
+            return Err("`speed` must be above 0 cells a second".into());
         }
         if self.colors.is_empty() {
             return Err("an effect needs at least one color".into());
-        }
-        for (what, v) in [
-            ("glow", self.glow),
-            ("branches", self.branches),
-            ("fill", self.fill),
-        ] {
-            if !(0.0..=1.0).contains(&v) {
-                return Err(format!("`{what}` must be between 0 and 1"));
-            }
         }
         let glyphs = self.glyphs.chars().count();
         match self.shape {
@@ -183,46 +158,15 @@ impl EffectDef {
                 if glyphs == 0 {
                     return Err("a burst needs at least one glyph".into());
                 }
-                if !(0..=MAX_BURST_RADIUS).contains(&self.radius) {
-                    return Err(format!("`radius` must be 0 to {MAX_BURST_RADIUS}"));
-                }
             }
             EffectShape::Bolt => {
                 if !(1..=2).contains(&glyphs) {
                     return Err("a bolt has one or two glyphs: its line, then its forks".into());
                 }
-                if self.flashes == 0 {
-                    return Err("a bolt flashes at least once (`flashes`)".into());
-                }
                 if self.projectile.is_some() || self.fill > 0.0 {
                     return Err("a bolt has no `projectile` or `fill`".into());
                 }
             }
-        }
-        if let Some(light) = self.light {
-            if !(1..=MAX_LIGHT_RADIUS).contains(&light.radius) {
-                return Err(format!("light `radius` must be 1 to {MAX_LIGHT_RADIUS}"));
-            }
-            if light.color.iter().any(|&c| c > MAX_EFFECT_LIGHT) {
-                return Err(format!(
-                    "light `color` channels must be 0 to {MAX_EFFECT_LIGHT}"
-                ));
-            }
-        }
-        if let Some(d) = self.darken {
-            if !(0.0..=MAX_DARKEN).contains(&d.amount) {
-                return Err(format!("darken `amount` must be 0 to {MAX_DARKEN}"));
-            }
-            seconds("darken.seconds", d.seconds, false)?;
-        }
-        if let Some(s) = self.shake {
-            if !(0.0..=MAX_SHAKE_PIXELS).contains(&s.pixels) {
-                return Err(format!("shake `pixels` must be 0 to {MAX_SHAKE_PIXELS}"));
-            }
-            if !(0..=VIEW_RADIUS).contains(&s.radius) {
-                return Err(format!("shake `radius` must be 0 to {VIEW_RADIUS}"));
-            }
-            seconds("shake.seconds", s.seconds, false)?;
         }
         for e in &self.particles {
             e.check().map_err(|m| format!("particles: {m}"))?;
@@ -330,28 +274,18 @@ branches = 0.3
             (format!("{BALL}{BALL}"), "twice"),
             (BALL.replace("\"ball\"", "\"fire ball\""), "effect id"),
             (BALL.replace("\"ball\"", "\"ball@2\""), "effect id"),
-            (BALL.replace("radius = 2", "radius = 9"), "radius"),
-            (BALL.replace("grow = 0.1", "grow = 0.3"), "grow"),
-            (BALL.replace("impact = 0.2", "impact = 0"), "impact"),
-            (BALL.replace("linger = 0.4", "linger = 3"), "linger"),
             (BALL.replace("speed = 20", "speed = 0"), "speed"),
+            (BALL.replace("linger = 0.4", "linger = -1"), "seconds"),
+            (BALL.replace("seconds = 0.25", "seconds = nan"), "seconds"),
             (BALL.replace("glyphs = \"▓▒░\"", "glyphs = \"\""), "glyph"),
             (
                 BALL.replace("colors = [\"#ffffff\", \"#ff8000\"]", "colors = []"),
                 "color",
             ),
-            (BALL.replace("radius = 6 }", "radius = 0 }"), "light"),
-            (BALL.replace("amount = 0.6", "amount = 1"), "darken"),
-            (BALL.replace("pixels = 4", "pixels = 40"), "shake"),
-            (
-                BALL.replace("seconds = 0.25", "seconds = 0"),
-                "shake.seconds",
-            ),
             (
                 BALL.replace("on = \"impact\"", "on = \"step\""),
                 "particles",
             ),
-            (BALL.replace("count = 2", "count = 0"), "particles"),
             (
                 BALL.replace("projectile = \"*\"\n", "")
                     .replace("\"impact\"", "\"flight\""),
@@ -359,9 +293,6 @@ branches = 0.3
             ),
             (BOLT.replace("━─", "━─│"), "one or two glyphs"),
             (BOLT.replace("\"━─\"", "\"\""), "one or two glyphs"),
-            (BOLT.replace("flashes = 3", "flashes = 0"), "flashes"),
-            (BOLT.replace("flashes = 3", "flashes = 9"), "flashes"),
-            (BOLT.replace("branches = 0.3", "branches = 2"), "branches"),
             (format!("{BOLT}projectile = \"*\"\n"), "projectile"),
             (format!("{BOLT}sparkle = 1\n"), "unknown field"),
         ] {

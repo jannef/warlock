@@ -21,12 +21,6 @@ pub struct ResourceId(pub u16);
 /// The largest maximum a resource may have, and the most an event may build.
 pub const MAX_RESOURCE: u16 = 1000;
 
-/// The longest a point may take to come back or wear off, in seconds: a day.
-pub const MAX_EVERY: u32 = 86_400;
-
-/// The longest a status bar label may be.
-pub const MAX_SHORT: usize = 12;
-
 /// What builds a resource up (`builds = [{ on = "kill", amount = 5 }]`): something its holder
 /// did or suffered, said where it happens (`World::gain_resource`).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Deserialize)]
@@ -231,10 +225,9 @@ impl ResourceDef {
     }
 }
 
-/// Parses `data/resources.toml`: resources with unique ids, a maximum of 1 to
-/// [`MAX_RESOURCE`], a start no higher than it (at least 1 for one that ends at zero), at most
-/// one way of changing over time, each building event once, and a `status` that `status` knows
-/// (`(id, whether it eases by itself)`) and that does not ease by itself.
+/// Parses `data/resources.toml`: resources with unique ids, at most one way of changing over
+/// time (a point at least a second), `ended` only on one that ends at zero, and a `status` that
+/// `status` knows (`(id, whether it eases by itself)`).
 pub(super) fn parse(
     file: &str,
     text: &str,
@@ -252,22 +245,7 @@ pub(super) fn parse(
         if list.iter().any(|r| r.id == id) {
             return Err(err("duplicate id"));
         }
-        if spec.name.trim().is_empty() || spec.short.trim().is_empty() {
-            return Err(err("`name` and `short` must not be empty"));
-        }
-        if spec.short.chars().count() > MAX_SHORT {
-            return Err(err(&format!("`short` is at most {MAX_SHORT} characters")));
-        }
-        if !(1..=MAX_RESOURCE).contains(&spec.max) {
-            return Err(err(&format!("`max` must be 1 to {MAX_RESOURCE}")));
-        }
         let start = spec.start.unwrap_or(spec.max);
-        if start > spec.max {
-            return Err(err("`start` must not be above `max`"));
-        }
-        if spec.ends_at_zero && start == 0 {
-            return Err(err("one that `ends_at_zero` must `start` above 0"));
-        }
         let over_time = match (spec.regenerates, spec.decays) {
             (Some(_), Some(_)) => {
                 return Err(err("it either `regenerates` or `decays`, not both"));
@@ -276,42 +254,22 @@ pub(super) fn parse(
             (None, Some(every)) => Some(OverTime::Decays { every }),
             (None, None) => None,
         };
-        if over_time.is_some_and(|o| !(1..=MAX_EVERY).contains(&o.every())) {
-            return Err(err(&format!(
-                "`regenerates` and `decays` are 1 to {MAX_EVERY} seconds a point"
-            )));
+        if over_time.is_some_and(|o| o.every() == 0) {
+            return Err(err(
+                "`regenerates` and `decays` are 1 or more seconds a point",
+            ));
         }
         if spec.ended.is_some() && !spec.ends_at_zero {
             return Err(err("`ended` is said when it ends: it needs `ends_at_zero`"));
-        }
-        if spec.lacking.as_ref().is_some_and(|t| t.trim().is_empty()) {
-            return Err(err("`lacking` must not be empty"));
-        }
-        if spec.ended.as_ref().is_some_and(|t| t.trim().is_empty()) {
-            return Err(err("`ended` must not be empty"));
         }
         let tied = match &spec.status {
             None => None,
             Some(name) => match status(name) {
                 None => return Err(err(&format!("names an unknown status `{name}`"))),
-                Some((_, true)) => {
-                    return Err(err(&format!(
-                        "its status `{name}` lasts while it is held: it must not `eases`"
-                    )));
-                }
-                Some((id, false)) => Some(id),
+                Some((id, _)) => Some(id),
             },
         };
-        let mut builds: Vec<(Build, u16)> = Vec::new();
-        for b in &spec.builds {
-            if builds.iter().any(|(on, _)| *on == b.on) {
-                return Err(err(&format!("builds on `{}` twice", b.on.id())));
-            }
-            if !(1..=MAX_RESOURCE).contains(&b.amount) {
-                return Err(err(&format!("a build's `amount` is 1 to {MAX_RESOURCE}")));
-            }
-            builds.push((b.on, b.amount));
-        }
+        let builds: Vec<(Build, u16)> = spec.builds.iter().map(|b| (b.on, b.amount)).collect();
         let max_from = match spec.max_from {
             None => None,
             Some(m) => {
@@ -323,9 +281,6 @@ pub(super) fn parse(
                 };
                 if m.per_levels == 0 {
                     return Err(err("`max_from`'s `per_levels` must be 1 or more"));
-                }
-                if m.least > spec.max {
-                    return Err(err("`max_from`'s `least` must not be above `max`"));
                 }
                 Some(MaxFrom {
                     stat,
@@ -385,7 +340,6 @@ mod tests {
                 .expect_err(status)
                 .to_string()
         };
-        assert!(bad("winded").contains("must not `eases`"));
         assert!(bad("sulking").contains("unknown status `sulking`"));
         assert_eq!(parse("r.toml", RAGE, none).expect("parses")[0].status, None);
     }
@@ -449,8 +403,6 @@ mod tests {
         };
         assert!(bad("max_from = { stat = \"luck\", per_levels = 10 }").contains("unknown stat"));
         assert!(bad("max_from = { stat = \"toughness\", per_levels = 0 }").contains("per_levels"));
-        let least = "max_from = { stat = \"toughness\", per_levels = 10, least = 11 }";
-        assert!(bad(least).contains("least"));
         assert!(bad("max_from = { stat = \"toughness\" }").contains("per_levels"));
     }
 
@@ -461,25 +413,10 @@ mod tests {
             let text = format!("{head}{rest}");
             parse("r.toml", &text, none).expect_err(rest).to_string()
         };
-        assert!(bad("max = 0").contains("`max`"));
-        assert!(bad("max = 1001").contains("`max`"));
-        assert!(bad("max = 5\nstart = 6").contains("above `max`"));
-        assert!(bad("max = 5\nstart = 0\nends_at_zero = true").contains("above 0"));
         assert!(bad("max = 5\nregenerates = 6\ndecays = 6").contains("not both"));
         assert!(bad("max = 5\ndecays = 0").contains("seconds a point"));
         assert!(bad("max = 5\nended = \"Gone.\"").contains("needs `ends_at_zero`"));
-        let twice =
-            "max = 5\nbuilds = [{ on = \"hit\", amount = 1 }, { on = \"hit\", amount = 2 }]";
-        assert!(bad(twice).contains("twice"));
-        assert!(bad("max = 5\nbuilds = [{ on = \"hit\", amount = 0 }]").contains("amount"));
         assert!(bad("max = 5\nbuilds = [{ on = \"sneeze\", amount = 1 }]").contains("sneeze"));
-        let long = "[[resource]]\nid = \"x\"\nname = \"X\"\nshort = \"Thirteen long\"\nmax = 5\n";
-        assert!(
-            parse("r.toml", long, none)
-                .expect_err("long")
-                .to_string()
-                .contains("`short`")
-        );
         let dup = format!("{RAGE}{RAGE}");
         assert!(
             parse("r.toml", &dup, none)

@@ -12,7 +12,7 @@
 //! - **Dug** through with a digging tool as a wall is (`dig.rs`: the terrain's `hardness`,
 //!   between a stone wall's and granite's), broken by a blast that beats it, and **kicked**
 //!   ([`World::kick_statue`]): a door's kick, [`kick_breaks`] with the kicker's force against the
-//!   terrain's sturdiness ([`crate::door::STATUE_STURDINESS`], well above a door's), one draw of
+//!   terrain's sturdiness (well above a door's), one draw of
 //!   the gameplay stream; every kick earns the marks a door's does (`Use::Kick`: Athletics and a
 //!   Strength mark). Broken, however, it falls to rubble ([`World::break_wall`]), and what it held
 //!   spills onto the rubble ([`World::statue_gone`], from `set_terrain`, whatever changes the

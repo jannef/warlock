@@ -640,13 +640,6 @@ fn the_rise_and_corpse_fields_are_checked_at_load() {
         "self",
     );
     assert!(ok.is_ok(), "{ok:?}");
-    // Numbers within their limits.
-    let bad = rise.replace("hit_points = 50", "hit_points = 0");
-    let err = spell(&format!("{{ {bad}, corpse = \"kept\" }}"), "summon", "self").unwrap_err();
-    assert!(err.contains("`hit_points` is 1 to 100"), "{err}");
-    let bad = rise.replace("berserk = 10", "berserk = 101");
-    let err = spell(&format!("{{ {bad}, corpse = \"kept\" }}"), "summon", "self").unwrap_err();
-    assert!(err.contains("`berserk` is 0 to 100"), "{err}");
     // What may ask for a corpse, and mana on a heal only.
     let err = spell("{ heal = \"1d4\", corpse = \"gone\" }", "heal", "touch").unwrap_err();
     assert!(err.contains("`consumed` or `kept`"), "{err}");
