@@ -21,9 +21,8 @@ Spec §8 "Potions" (`spec/08g-magic-items.md`); the combat progression design §
   `Boost { status, severity }` (the status must raise a stat), `Vision { status }` (it must
   have `vision`), `Haste { status, severity }` (status always `hasted`, the Haste spell's; data
   writes only `severity`), `Resistance { status }` (it must have `resist`),
-  `Status { status, severity }` (#1224, the potions wave 2 design §4.1: any status that ends by
-  itself, `eases` or `per_action`; never `kills_at_max`, never a resource's `status`, so Raging
-  and Diseased are refused); a severity is 1 to the status's `max`. `Draught::lends` is the
+  `Status { status, severity }` (#1224, the potions wave 2 design §4.1: any status; the data author
+  is trusted to pick one that ends, #1205); a severity is 1 to the status's `max`. `Draught::lends` is the
   status and degrees of the five that lend one.
   `marks` are
   `(Stat, count)` in stat order, 1 to `MAX_POTION_MARKS` each.
@@ -132,8 +131,8 @@ effect kinds (`potion_marks_percent`, `potion_heals`, `potion_smell`) and `World
   resistances add as gear and never reach immunity, haste, Lasting draughts, a save with a
   lengthened easing, descriptions, drinks that lend the wrong status refused; #1224's six
   `status` draughts (each lends its degrees, marks, and wears off on time; the unseen and sea
-  legs do what their statuses do; a second dose adds nothing; their words; a status that never
-  ends, kills at its max, or lacks a severity refused, a `per_action` one allowed).
+  legs do what their statuses do; a second dose adds nothing; their words; a draught that lacks a
+  severity refused, a `per_action` one allowed).
   `content/status.rs` tests `vision`, `resist`, and `per_degree`. Text snapshot
   `potion-boost` (the character screen and status bar with Fortified and Owl-eyed).
 - `world/potion_tests.rs`: every kind through `eat:`, a floor potion, food still eaten,

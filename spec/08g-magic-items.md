@@ -482,8 +482,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   status: a minute a degree, everything a quarter quicker), and `resistance` (its `status`
   resists as gear does for half an hour, 50 %: Warmed fire, Chill-proof cold, Earthed
   electricity, Proof against poison), and `status` (#1224, the potions wave 2 design §4.1:
-  `severity` degrees of any `status` that ends by itself, by `eases` or `per_action`, never one
-  that kills at its max or one a resource holds, such as Raging: Barkskin, Glamoured,
+  `severity` degrees of any `status`: Barkskin, Glamoured,
   Renewing, Quick-sensed, Invisible, Water-borne; the description says what it does in words,
   "Makes you harder to hit for a while"). A status lent says its own line as it begins ("You feel
   stronger.", "Your eyes open wide to the dark."); a stronger dose of one already felt says it

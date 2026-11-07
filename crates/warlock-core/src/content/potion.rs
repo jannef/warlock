@@ -25,9 +25,7 @@
 //! `diseases`; a mana potion `dice`; an elixir `stat`, `points`, and `potential`; a harm `dice`
 //! and `status`; a boost `status` (one that raises a stat, `penalty`) and `severity`; a vision
 //! `status` (one with `vision`); a haste `severity` (of Hasted, the Haste spell's status); a
-//! resistance `status` (one with `resist`); a status `status` and `severity`, of any status that
-//! ends by itself (`eases` or `per_action`), never one that kills at its `max` or one a resource
-//! holds (Raging). The colour's hue is its
+//! resistance `status` (one with `resist`); a status `status` and `severity`, of any status. The colour's hue is its
 //! family's (the design's rule, kept in data as the object's `fg`): potions that share a colour
 //! name share their `fg`.
 
@@ -325,24 +323,6 @@ impl DrinkSpec {
             "status" => {
                 only(&lending)?;
                 let status = status(self.status.as_deref())?;
-                let def = content.status(status);
-                let id = &def.id;
-                if def.eases.is_none() && !def.per_action {
-                    return Err(format!(
-                        "`drink`: a status draught's `{id}` never ends (no `eases`, not \
-                         `per_action`)"
-                    ));
-                }
-                if def.kills_at_max {
-                    return Err(format!(
-                        "`drink`: a status draught's `{id}` kills at its max"
-                    ));
-                }
-                if (content.resources().iter()).any(|r| r.status == Some(status)) {
-                    return Err(format!(
-                        "`drink`: a status draught's `{id}` is a resource's to give"
-                    ));
-                }
                 Draught::Status {
                     status,
                     severity: severity(status)?,

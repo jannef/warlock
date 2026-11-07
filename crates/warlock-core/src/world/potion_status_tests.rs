@@ -323,7 +323,7 @@ fn helpful_draughts_describe_themselves_in_words() {
 }
 
 #[test]
-fn a_status_draught_lends_only_a_status_that_ends() {
+fn a_status_draught_is_well_formed() {
     let potion = |drink: &str| {
         format!(
             "[[object]]\nid = \"odd\"\nname = \"odd potion\"\nplural = \"odd potions\"\n\
@@ -333,11 +333,6 @@ fn a_status_draught_lends_only_a_status_that_ends() {
         )
     };
     for drink in [
-        // Never ends by itself: a resource's, a disease's.
-        "kind = \"status\"\nstatus = \"raging\"\nseverity = 1",
-        "kind = \"status\"\nstatus = \"diseased\"\nseverity = 1",
-        // Kills at its max.
-        "kind = \"status\"\nstatus = \"stiffening\"\nseverity = 1",
         // No severity, past the max, another kind's field, no status.
         "kind = \"status\"\nstatus = \"barkskin\"",
         "kind = \"status\"\nstatus = \"barkskin\"\nseverity = 4",
