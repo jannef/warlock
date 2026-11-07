@@ -192,6 +192,9 @@ pub enum Effect {
     MaxDex,
     /// Percent off its weight.
     Weight,
+    /// Proof against item damage: no source of it harms the item (spec §7 "Materials"; a value
+    /// of 1, no more).
+    Proof,
     /// Defence: Dodge (stacks).
     Dodge,
     /// Defence: Deflection (the best counts).
@@ -288,6 +291,7 @@ impl Effect {
             Effect::Shield,
             Effect::MaxDex,
             Effect::Weight,
+            Effect::Proof,
             Effect::Dodge,
             Effect::Deflection,
             Effect::Natural,
@@ -350,6 +354,7 @@ impl Effect {
             Effect::Shield => "shield",
             Effect::MaxDex => "max_dex",
             Effect::Weight => "weight",
+            Effect::Proof => "proof",
             Effect::Dodge => "dodge",
             Effect::Deflection => "deflection",
             Effect::Natural => "natural",
@@ -395,7 +400,7 @@ impl Effect {
     }
 
     /// How many effects there are.
-    pub const COUNT: usize = 52 + Stat::COUNT;
+    pub const COUNT: usize = 53 + Stat::COUNT;
 
     /// Its place in [`Effect::all`].
     pub const fn index(self) -> usize {
@@ -416,43 +421,44 @@ impl Effect {
             Effect::Shield => 13,
             Effect::MaxDex => 14,
             Effect::Weight => 15,
-            Effect::Dodge => 16,
-            Effect::Deflection => 17,
-            Effect::Natural => 18,
-            Effect::MaxHp => 19,
-            Effect::Regeneration => 20,
-            Effect::MaxMana => 21,
-            Effect::ManaRegeneration => 22,
-            Effect::ManaCost => 23,
-            Effect::SpellEase => 24,
-            Effect::SpellToHit => 25,
-            Effect::SpellThreat => 26,
-            Effect::SpellRungs => 27,
-            Effect::SpellBonus => 28,
-            Effect::SpellSides => 29,
-            Effect::SpellDice => 30,
-            Effect::SpellReroll => 31,
-            Effect::SpellReach => 32,
-            Effect::SpellDuration => 33,
-            Effect::ManaOnKill => 34,
-            Effect::WandRungs => 35,
-            Effect::ResourceMax => 36,
-            Effect::ResourceRate => 37,
-            Effect::ActiveStamina => 38,
-            Effect::ResourceOnKill => 39,
-            Effect::Resistance => 40,
-            Effect::Stat(stat) => 41 + stat as usize,
-            Effect::MoveSpeed => 41 + Stat::COUNT,
-            Effect::Carry => 42 + Stat::COUNT,
-            Effect::Stealth => 43 + Stat::COUNT,
-            Effect::DoorKick => 44 + Stat::COUNT,
-            Effect::DigPercent => 45 + Stat::COUNT,
-            Effect::Hunger => 46 + Stat::COUNT,
-            Effect::TrapDamage => 47 + Stat::COUNT,
-            Effect::DiseaseCheck => 48 + Stat::COUNT,
-            Effect::PotionKept => 49 + Stat::COUNT,
-            Effect::Light => 50 + Stat::COUNT,
-            Effect::Skill => 51 + Stat::COUNT,
+            Effect::Proof => 16,
+            Effect::Dodge => 17,
+            Effect::Deflection => 18,
+            Effect::Natural => 19,
+            Effect::MaxHp => 20,
+            Effect::Regeneration => 21,
+            Effect::MaxMana => 22,
+            Effect::ManaRegeneration => 23,
+            Effect::ManaCost => 24,
+            Effect::SpellEase => 25,
+            Effect::SpellToHit => 26,
+            Effect::SpellThreat => 27,
+            Effect::SpellRungs => 28,
+            Effect::SpellBonus => 29,
+            Effect::SpellSides => 30,
+            Effect::SpellDice => 31,
+            Effect::SpellReroll => 32,
+            Effect::SpellReach => 33,
+            Effect::SpellDuration => 34,
+            Effect::ManaOnKill => 35,
+            Effect::WandRungs => 36,
+            Effect::ResourceMax => 37,
+            Effect::ResourceRate => 38,
+            Effect::ActiveStamina => 39,
+            Effect::ResourceOnKill => 40,
+            Effect::Resistance => 41,
+            Effect::Stat(stat) => 42 + stat as usize,
+            Effect::MoveSpeed => 42 + Stat::COUNT,
+            Effect::Carry => 43 + Stat::COUNT,
+            Effect::Stealth => 44 + Stat::COUNT,
+            Effect::DoorKick => 45 + Stat::COUNT,
+            Effect::DigPercent => 46 + Stat::COUNT,
+            Effect::Hunger => 47 + Stat::COUNT,
+            Effect::TrapDamage => 48 + Stat::COUNT,
+            Effect::DiseaseCheck => 49 + Stat::COUNT,
+            Effect::PotionKept => 50 + Stat::COUNT,
+            Effect::Light => 51 + Stat::COUNT,
+            Effect::Skill => 52 + Stat::COUNT,
         }
     }
 
@@ -493,6 +499,7 @@ impl Effect {
             Effect::Regeneration | Effect::ManaRegeneration | Effect::ResourceRate => 1..=300,
             Effect::Resistance => 1..=crate::damage::MAX_RESISTANCE,
             Effect::Light => 0..=0,
+            Effect::Proof => 1..=1,
             _ => 1..=10,
         }
     }
@@ -525,6 +532,7 @@ impl Effect {
                 | Effect::Shield
                 | Effect::MaxDex
                 | Effect::Weight
+                | Effect::Proof
                 | Effect::SpellEase
         )
     }

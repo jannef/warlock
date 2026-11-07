@@ -69,6 +69,37 @@ fn give(w: &mut World, id: &str) {
     w.player_mut().inventory.insert(0, stack);
 }
 
+#[test]
+fn a_failed_attempt_never_harms_a_sword_of_proof() {
+    // #1170: protected, a failure is withstood (`item_damage.rs`), its attempt still counted.
+    let mut w = world(false);
+    let id = object(&w, "long_sword");
+    let magic = Magic {
+        rarity: Rarity::Magic,
+        level: 10,
+        affixes: vec![Affix {
+            id: "of_proof".into(),
+            tier: 1,
+            value: 1,
+        }],
+        name: None,
+        identified: false,
+        carried: 0,
+        unique: None,
+    };
+    (w.player_mut().inventory).insert(0, Stack::with_magic(id, 1, magic));
+    let saved = w.state.clone();
+    let failed = (0..200).find(|&n| {
+        w.state = saved.clone();
+        w.state.rng = Rng::stream(n, "temper_tests_proof");
+        w.apply(&Action::Temper { item: 0 });
+        said(&w, "The work goes wrong, but no harm is done.")
+    });
+    assert!(failed.is_some(), "some attempt fails");
+    let after = first(&w).worked().cloned().expect("worked");
+    assert_eq!((after.damaged, after.attempts), (false, 1));
+}
+
 /// A long sword with an affix that rolls on it, of tier 1, unidentified, in the pack's first place.
 fn magic_sword(w: &mut World) {
     let id = object(w, "long_sword");

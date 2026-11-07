@@ -10,10 +10,10 @@
 //!   first: each item of it is lost at the chance of the table's row for the spell's damage type
 //!   and the stack (`data/ruin.toml`, [`crate::content::RuinRules::row`]); no row, untouched.
 //!   Carried, worn, and chest-held things are not on the floor and never touched.
-//! - **Spared**: a unique item, and every object a quest asks to be brought or delivered: a
-//!   fixed quest's until it is done for good, a rolled quest's drawn object while it is active
-//!   ([`World::quest_objects`]), so no stray Fireball can break a quest. A quest's reward is
-//!   not spared: it exists only once its quest is done.
+//! - **Spared**: what is protected from all item damage (`item_damage.rs`,
+//!   [`World::item_protected`]; #1170): a unique item, an item of Proof, and every object a
+//!   quest asks to be brought or delivered, so no stray Fireball can break a quest. A quest's
+//!   reward is not spared unless another quest asks for it.
 //! - **Draws**: the ruin stream ([`crate::rng::Rng::ruin`]), kept in the state from the first
 //!   draw on, so a cast over no pile the table touches leaves every other stream and the hash
 //!   as they were.
@@ -22,9 +22,10 @@
 //!   nothing is said, and the pile simply shows less when next seen.
 
 use super::World;
+use super::item_damage::protected;
 use super::spell::Caster;
 use super::talk::capitalized;
-use crate::content::{DamageTypeId, ObjectId};
+use crate::content::DamageTypeId;
 use crate::geom::Pos;
 use crate::object::Stack;
 use crate::rng::Rng;
@@ -42,7 +43,7 @@ impl World {
         if rules.rows.iter().all(|r| r.kind != kind) {
             return;
         }
-        let spared = self.quest_objects();
+        let quest = self.quest_objects();
         let cells: BTreeSet<Pos> = cells.iter().copied().collect();
         let seed = self.state.seed;
         // What the player saw go, by what it is and what is said of it, in the order first lost.
@@ -55,8 +56,7 @@ impl World {
             let seen = self.perception.sees_actors_at(p);
             let mut changed = false;
             for stack in &mut pile {
-                let unique = stack.magic().is_some_and(|m| m.unique.is_some());
-                if unique || spared.contains(&stack.object) {
+                if protected(&content, &quest, stack) {
                     continue;
                 }
                 let Some(row) = rules.row(&content, kind, stack) else {
@@ -96,22 +96,5 @@ impl World {
             };
             self.say(line);
         }
-    }
-
-    /// The objects no ruin may touch for the quests' sake: what a quest asks to be brought or
-    /// delivered, a fixed quest's until it is done for good (before it is given too: the
-    /// chalice lies in its barrow first), a rolled quest's drawn object while it is active.
-    pub(super) fn quest_objects(&self) -> BTreeSet<ObjectId> {
-        let quests = &self.state.quests;
-        let done = |id: &str| quests.record(id).is_some_and(|r| r.completed > 0);
-        (self.content.quests().iter())
-            .filter_map(|def| match def.is_rolled() {
-                false if done(&def.id) && !def.repeatable => None,
-                false => def.hand_in(),
-                true if quests.is_active(def) => quests.given(&self.content, def).hand_in(),
-                true => None,
-            })
-            .map(|(object, _)| object)
-            .collect()
     }
 }

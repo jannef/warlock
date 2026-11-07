@@ -139,3 +139,116 @@ fn the_loader_refuses_a_chance_past_100_and_the_old_key() {
     let err = tin_with(|t| t.replace(", fire = 30", ""));
     assert!(err.contains("fire"), "every kind is given: {err}");
 }
+
+/// The pack's first place made a long sword of the base material with `affixes` (each at its
+/// first tier, value 1), `unique` if given.
+fn make_magic(w: &mut World, unique: Option<&str>, affixes: &[&str]) {
+    use crate::magic::{Affix, Magic, Rarity};
+    let magic = Magic {
+        rarity: if unique.is_some() {
+            Rarity::Rare
+        } else {
+            Rarity::Magic
+        },
+        level: 6,
+        affixes: (affixes.iter())
+            .map(|id| Affix {
+                id: (*id).into(),
+                tier: 1,
+                value: 1,
+            })
+            .collect(),
+        name: unique.map(|_| "Widowmaker".into()),
+        identified: false,
+        carried: 0,
+        unique: unique.map(String::from),
+    };
+    let sword = w.content().object_id("long_sword").expect("sword");
+    w.player_mut().inventory[0] = Stack::with_magic(sword, 1, magic);
+}
+
+/// What every harm does to the pack's first item, from undamaged, over fates.
+fn harmed_by_all(w: &World) -> Vec<Harmed> {
+    let harms = [
+        ItemHarm::Acid,
+        ItemHarm::Rust,
+        ItemHarm::Fire,
+        ItemHarm::Work,
+    ];
+    (0..20u64)
+        .flat_map(|n| harms.map(|h| (n, h)))
+        .map(|(n, harm)| {
+            let mut v = w.clone();
+            v.state.rng = Rng::stream(n, "item_damage_protect");
+            let rng = v.state.rng.clone();
+            let protected = v.item_protected(&v.state.player().inventory[0]);
+            let came = v.harm_item(0, harm);
+            if protected {
+                assert_eq!(v.state.rng, rng, "protection draws nothing");
+            }
+            came
+        })
+        .collect()
+}
+
+#[test]
+fn uniques_proof_and_quest_objects_withstand_every_harm() {
+    // #1170: iron rusts nearly always, and no material withstands a failed attempt.
+    let plain = sword_of("iron");
+    assert!(harmed_by_all(&plain).contains(&Harmed::Damaged));
+    let mut unique = plain.clone();
+    make_magic(&mut unique, Some("widowmaker"), &[]);
+    let mut proof = plain.clone();
+    make_magic(&mut proof, None, &["of_proof"]);
+    let mut sharp = plain.clone();
+    make_magic(&mut sharp, None, &["sharp"]);
+    assert!(
+        harmed_by_all(&sharp).contains(&Harmed::Damaged),
+        "another affix protects nothing"
+    );
+    // The showcase's apples quest asks for apples.
+    let mut apples = plain.clone();
+    let apple = apples.content().object_id("apple").expect("apple");
+    apples.player_mut().inventory[0] = Stack::new(apple, 5);
+    for w in [&unique, &proof, &apples] {
+        assert!(w.item_protected(&w.state.player().inventory[0]));
+        assert!(harmed_by_all(w).iter().all(|h| *h == Harmed::Withstood));
+    }
+}
+
+/// Over every campaign's quests (#1170): what a fixed quest asks to be brought or delivered is
+/// protected from the run's start, and a reward only when some quest asks for it.
+#[test]
+fn every_campaigns_quest_objects_are_protected_and_rewards_only_when_needed() {
+    use std::collections::BTreeSet;
+    let w = world("warrior");
+    let content = w.content().clone();
+    let quest = w.quest_objects();
+    let asked: BTreeSet<_> = (content.quests().iter())
+        .filter(|q| !q.is_rolled())
+        .filter_map(|q| q.hand_in())
+        .map(|(o, _)| o)
+        .collect();
+    let campaigns: BTreeSet<_> = (content.quests().iter())
+        .filter_map(|q| q.campaign.clone())
+        .collect();
+    assert!(campaigns.len() > 1, "{campaigns:?}");
+    for o in &asked {
+        assert!(quest.contains(o), "{}", content.object(*o).id);
+    }
+    let mut unneeded = 0;
+    for q in content.quests() {
+        for s in &q.reward.items {
+            let plain = Stack::new(s.object, 1);
+            assert_eq!(
+                w.item_protected(&plain),
+                quest.contains(&s.object),
+                "{}'s reward {}",
+                q.id,
+                content.object(s.object).id
+            );
+            unneeded += usize::from(!quest.contains(&s.object));
+        }
+    }
+    assert!(unneeded > 0, "some reward is an ordinary item");
+}
