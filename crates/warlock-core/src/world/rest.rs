@@ -104,8 +104,9 @@ impl World {
     /// which a message was logged that stops a rest (an attack on the player, a hurt, hunger
     /// worsening), and when the player dies. Turns that end before any such creature could come
     /// within [`CLOSE`] ([`World::out_of_view_for`]), in which the player heard nothing, in
-    /// which nothing happened but creatures moving (an attack, a shot, a spell, a death, a door
-    /// anywhere: the player looks), in which the weather the player sees did not change, in
+    /// which nothing happened that perception would stop the action for ([`World::may_stop`]: a
+    /// hostile in view farther off may shoot or cast meanwhile), in which the weather the player
+    /// sees did not change, in
     /// which none of the player's diseases showed or went badly (news that stops a rest), and
     /// in which no trap went off (a teleport moves a creature farther than its steps) pass
     /// without perception, which cannot change the outcome; only the last turn's events are
@@ -152,16 +153,15 @@ impl World {
                 let trapped = self.sprung != sprung;
                 // A creature that came may walk into view sooner than the others could.
                 let newcomer = self.spawned != spawned;
-                // Within the stretch, a hostile in view but not yet close may shoot or cast,
-                // or a fight be seen: anything but creatures moving is looked at.
-                let happened = !events.iter().all(Self::passes_unseen);
+                // Within the stretch, a hostile in view but not yet close may shoot or cast, or a
+                // fight be seen near: what perception would stop the action for is looked at.
+                let happened = events.iter().any(|e| self.may_stop(e));
                 if done || heard || ill || trapped || newcomer || happened || self.weather_turned()
                 {
                     break;
                 }
-                // Past the time a creature could have come into view, the player looks, unless
-                // all that happened was creatures moving and those the player would see are
-                // those they saw.
+                // Past the time a creature could have come close, the player looks, unless those
+                // the player would see close are those they saw.
                 if self.state.time > unseen_until
                     && (self.watched_in_sight(&mut sightline)).is_none_or(|seen| seen != in_view)
                 {
@@ -191,16 +191,26 @@ impl World {
         ended
     }
 
-    /// Whether a long action's turn with `event` in it may pass without perception: a creature
-    /// moving, or one of the events kept for the next perception.
-    fn passes_unseen(event: &Event) -> bool {
-        matches!(
-            event,
-            Event::ActorMoved { .. }
-                | Event::Status { .. }
-                | Event::ResourceEnded { .. }
-                | Event::Disease { .. }
-        )
+    /// Whether a turn of a long action with `event` in it (as it happened, before perception
+    /// cuts it to what was seen) must be perceived, as perception may stop the action for it:
+    /// what [`World::stirs`] it, an attack or a death within [`CLOSE`] of the player
+    /// (`perceive_events` says others' farther off without stopping it), a wall blasted, a fall
+    /// through ice, a drain, a trap's blow. Creatures moving, doors, and the rest (the player's
+    /// own status effects, resources, and diseases are kept for the next perception) pass
+    /// unseen.
+    fn may_stop(&self, event: &Event) -> bool {
+        let here = self.player_pos();
+        let close = |p: Pos| p.chebyshev(here) <= CLOSE;
+        match event {
+            Event::Attacked { from, to, .. } => self.stirs(event) || close(*from) || close(*to),
+            Event::Died { at, .. } => close(*at),
+            Event::Missile { .. } | Event::Spell { .. } => self.stirs(event),
+            Event::TrapStruck { .. }
+            | Event::WallBroken { .. }
+            | Event::FellThroughIce { .. }
+            | Event::Drained { .. } => true,
+            _ => false,
+        }
     }
 
     /// Whether a perceived `event` stops a long action whatever was said of it: an attack on the
