@@ -242,7 +242,7 @@ from level 5 and the slowest ×1.7 to ×2.0 to level 20 and at 60; at 30 to 50 t
 stays at ×1.3, where the windows are small (24 to 35 types) and hold few brutes (the giants
 and most of the deep brutes there are armed or uniques, outside the role factors). Rounds to
 die keep their wide spread (the thief's, the wizard's, and the priest's columns: ×0.2 to ×0.5
-fast, ×1.3 to ×5 slow from level 10); a dread brute is a death, not a wall. A further pass
+fast, ×1.3 to ×5 slow from level 10); a dread brute is a death, not a wall. The speed review (#1167) restored speed above 1250 to the air and lightning elementals, the storm, the hunt's and grave's hounds, the nightwing and sluagh, and the ghouls (the table above is after it: the fastest tenth stays ×0.35 to ×0.58 from level 5 and the slow tail at ×1.3 to ×2.1 but 5.0 for the thief's deaths). A further pass
 for 30 to 50 is a content question (more unarmed brutes there), not an offset.
 
 ## Dragons
@@ -1247,6 +1247,18 @@ ranks the casting really reaches.
 - The wizard's spells keep growing to level 60 (#754 above): a rank-10 school doubles a spell
   over its ladder, and there is no cap. There is still no spell above level 12 (higher-level
   spells are the content's to add).
+
+## Traps
+
+Not in the probe: traps are not fights. Their damage grows with the danger of the level they lie
+on (#1165, `[trap.grows]` in `data/traps.toml`, the wiki's trap damage table). The base, at
+danger 0 to 2, is held under the fewest hit points a level-1 character starts with: 6 in the test's draws (a kobold
+wizard, over every race and class), against the worst base going off of 4 (a fireball or a
+lightning bolt at 1d4, an arrow's or a spear's 1d2 doubled by a critical).
+`world/trap_rung_tests.rs::the_lowest_rung_never_kills_a_fresh_character` checks it, so a race,
+class, or talent that lowers starting hit points, or a stronger base, fails there first. The old
+dice (the fireball's 3d6, the lightning's 4d6) come at danger 10, and twice or more of them at
+30.
 
 ## Tuning notes
 

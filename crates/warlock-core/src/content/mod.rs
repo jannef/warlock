@@ -223,8 +223,8 @@ pub use companion::{
 };
 pub use creature::{
     Budge, Combat, CorpseGifts, Corrodes, CorrodesWhat, CreatureDef, CreatureId, DEFAULT_SIGHT,
-    Hide, Incorporeal, MAX_TAG_WIDEN, MAX_TRAIN, MAX_WIDEN, NORMAL_SPEED, NaturalAttack, OnEat,
-    SPEEDS, SkillGift, is_proper, the, the_start,
+    Disarms, Hide, Incorporeal, MAX_TAG_WIDEN, MAX_TRAIN, MAX_WIDEN, NORMAL_SPEED, NaturalAttack,
+    OnEat, SPEEDS, SkillGift, is_proper, the, the_start,
 };
 pub use creature_rarity::{COMMON, CreatureRarity, FACTOR};
 pub use damage_type::{DamageTypeDef, DamageTypeId, MAX_DAMAGE_TYPES};
@@ -1995,6 +1995,15 @@ impl Content {
                 return Err(err(format!(
                     "creature `{}`: `corrodes`' `chance` is 1 to 100 percent, not {}",
                     spec.id, acid.chance
+                )));
+            }
+            if let Some(blow) = spec.disarms
+                && (!(1..=100).contains(&blow.chance) || !(2..=40).contains(&blow.difficulty))
+            {
+                return Err(err(format!(
+                    "creature `{}`: `disarms` takes a `chance` of 1 to 100 percent and a \
+                     `difficulty` of 2 to 40, not {} and {}",
+                    spec.id, blow.chance, blow.difficulty
                 )));
             }
             if let Some(animated) = &mut spec.animated {

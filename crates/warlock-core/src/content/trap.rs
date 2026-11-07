@@ -35,9 +35,11 @@
 //! "Trapped doors"); so may a shut chest, from the same list (spec §8 "Chests").
 
 use super::damage_type::TypeNames;
+use super::danger::MAX_DANGER;
 use super::effect::EffectShape;
 use super::object::{MAX_BONUS, ObjectDef, ObjectId};
 use super::spell::{self, Bolt, Burst, SpellFields, check_effect, default_verb, one_kind};
+use super::spell_ladder::{Unit, parse_rungs};
 use super::{Content, ContentError, DamageTypeId};
 use crate::color::Rgb;
 use crate::combat::{Attack, DEFAULT_CRIT, DEFAULT_THREAT};
@@ -188,6 +190,8 @@ pub(super) struct TrapSpec {
     damage: Option<Dice>,
     /// `shot`, `strike`, `burst`, `bolt`, `pit`: the kind of damage it does.
     damage_type: Option<TypeNames>,
+    /// Its damage by the level's danger (`[trap.grows]`, [`TrapGrows`]).
+    grows: Option<GrowsSpec>,
     /// `shot`, `strike`.
     #[serde(default)]
     to_hit: i32,
@@ -210,6 +214,67 @@ pub(super) struct TrapSpec {
     verb: Option<String>,
 }
 
+/// `[trap.grows]` as written: `damage = "danger 3 1d4, 6 1d6"`.
+#[derive(Clone, Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+struct GrowsSpec {
+    damage: String,
+}
+
+/// A trap's damage by the danger of the level it lies on (spec §8 "Traps", `[trap.grows]` in
+/// `data/traps.toml`, in the style of a spell's `[spell.grows]`, `content/spell_ladder.rs`):
+/// rungs `danger AT ROLL`, `AT` 1 to [`MAX_DANGER`] strictly ascending; a level of danger *D*
+/// reads the last rung at or below *D*, and below the first (a level without a danger: 0) the
+/// trap's own `damage`, the **base**. No rung does less, on average, than the one before it.
+#[derive(Clone, Debug, Default, PartialEq, Eq)]
+pub struct TrapGrows {
+    /// `(at, damage)`, `at` strictly ascending.
+    pub damage: Vec<(u8, Roll)>,
+}
+
+impl TrapGrows {
+    fn parse(text: &str, base: Roll) -> Result<Self, String> {
+        let bad = |why: String| format!("`[trap.grows]` damage `{text}`: {why}");
+        let rest = (text.trim().strip_prefix("danger "))
+            .ok_or_else(|| bad("`danger`, then rungs: `danger 3 1d4, 6 1d6`".into()))?;
+        let rungs = parse_rungs(rest, Unit::Roll, ("danger", MAX_DANGER)).map_err(bad)?;
+        let mut before = base;
+        let mut damage = Vec::with_capacity(rungs.len());
+        for (at, value) in rungs {
+            let roll = value.roll().unwrap_or(before);
+            if roll.min() < 0 || roll.mean_x2() < before.mean_x2() {
+                return Err(bad(format!(
+                    "the rung at {at}, {roll}, does less than the one before it, {before}"
+                )));
+            }
+            before = roll;
+            damage.push((at, roll));
+        }
+        Ok(Self { damage })
+    }
+
+    /// The rung a level of `danger` reads: how many rungs are at that danger or below (0, the
+    /// base, below the first).
+    pub fn rung_at(&self, danger: u8) -> usize {
+        self.damage.iter().filter(|(at, _)| *at <= danger).count()
+    }
+
+    /// The damage at `danger`: its rung's, else (rung 0) `base`.
+    pub fn damage_at(&self, danger: u8, base: Roll) -> Roll {
+        (self.rung_at(danger).checked_sub(1))
+            .and_then(|i| self.damage.get(i))
+            .map_or(base, |(_, roll)| *roll)
+    }
+
+    /// In words, as the wiki prints it: `danger 3: 1d4, 6: 1d6`.
+    pub fn words(&self) -> String {
+        let rungs: Vec<String> = (self.damage.iter())
+            .map(|(at, roll)| format!("{at}: {roll}"))
+            .collect();
+        format!("danger {}", rungs.join(", "))
+    }
+}
+
 /// What a trap does when it goes off.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum TrapEffect {
@@ -225,7 +290,7 @@ pub enum TrapEffect {
     Bolt(Bolt),
     /// A fall: `damage` of `kind` (bludgeoning), and the next action lost climbing out.
     Pit {
-        damage: Dice,
+        damage: Roll,
         kind: Option<DamageTypeId>,
     },
     /// Only its noise.
@@ -270,9 +335,25 @@ impl TrapEffect {
             TrapEffect::Burst(Burst { damage, .. }) | TrapEffect::Bolt(Bolt { damage, .. }) => {
                 Some(*damage)
             }
-            TrapEffect::Pit { damage, .. } => Some((*damage).into()),
+            TrapEffect::Pit { damage, .. } => Some(*damage),
             TrapEffect::Alarm | TrapEffect::Teleport => None,
         }
+    }
+
+    /// It with `damage` in place of its own (a rung of [`TrapGrows`]); one that does none, as
+    /// it is.
+    pub fn with_damage(&self, damage: Roll) -> Self {
+        let mut effect = self.clone();
+        match &mut effect {
+            TrapEffect::Shot { attack, .. } | TrapEffect::Strike { attack } => {
+                attack.damage = damage;
+            }
+            TrapEffect::Burst(Burst { damage: d, .. })
+            | TrapEffect::Bolt(Bolt { damage: d, .. })
+            | TrapEffect::Pit { damage: d, .. } => *d = damage,
+            TrapEffect::Alarm | TrapEffect::Teleport => {}
+        }
+        effect
     }
 
     /// The kind of damage it does, if it does any (spec §8 "Damage types").
@@ -308,7 +389,26 @@ pub struct TrapDef {
     /// What hits ("arrow", "fireball") and what it does ("hits", "burns"), for messages.
     pub noun: String,
     pub verb: String,
+    /// What it does, its damage the base (rung 0).
     pub effect: TrapEffect,
+    /// Its damage by the level's danger; `None`: the base at every danger.
+    pub grows: Option<TrapGrows>,
+}
+
+impl TrapDef {
+    /// Its damage on a level of `danger` (spec §8 "Traps": [`TrapGrows`]), if it does any.
+    pub fn damage_at(&self, danger: u8) -> Option<Roll> {
+        let base = self.effect.damage()?;
+        Some((self.grows.as_ref()).map_or(base, |g| g.damage_at(danger, base)))
+    }
+
+    /// What it does on a level of `danger`: its effect with that danger's damage.
+    pub fn effect_at(&self, danger: u8) -> TrapEffect {
+        match self.damage_at(danger) {
+            Some(damage) => self.effect.with_damage(damage),
+            None => self.effect.clone(),
+        }
+    }
 }
 
 impl TrapSpec {
@@ -446,7 +546,7 @@ impl TrapSpec {
             ),
             Pit => (
                 TrapEffect::Pit {
-                    damage: damage()?,
+                    damage: damage()?.into(),
                     kind: damage_kind,
                 },
                 "fall".into(),
@@ -461,6 +561,13 @@ impl TrapSpec {
             _ => Ok(()),
         }
         .map_err(err)?;
+        let grows = match (&self.grows, effect.damage()) {
+            (None, _) => None,
+            (Some(g), Some(base)) => Some(TrapGrows::parse(&g.damage, base).map_err(err)?),
+            (Some(_), None) => {
+                return Err(err("`[trap.grows]` is for a trap that does damage".into()));
+            }
+        };
         Ok(TrapDef {
             id: self.id,
             name: self.name,
@@ -476,6 +583,7 @@ impl TrapSpec {
                 .verb
                 .unwrap_or_else(|| default_verb(content, damage_kind)),
             effect,
+            grows,
         })
     }
 }

@@ -668,7 +668,8 @@ fn a_rest_stops_when_a_trap_goes_off_in_view() {
 }
 
 /// The trap hall's creatures walk into its hidden traps in view within fifteen turns, which are
-/// known from then on; the beetle dies of the lightning, which earns the player nothing.
+/// known from then on. The hall has no danger, so its traps deal their base damage (#1165): the
+/// lightning strikes the beetle and leaves it alive.
 #[test]
 fn the_trap_hall_shows_hidden_traps_going_off() {
     let content = Arc::new(Content::builtin().expect("builtin content"));
@@ -685,13 +686,11 @@ fn the_trap_hall_shows_hidden_traps_going_off() {
     for line in [
         "Spears spring from the floor!",
         "The lightning bolt strikes the cave beetle.",
-        "The cave beetle dies.",
         "A fireball explodes!",
         "An arrow shoots out of the wall!",
     ] {
         assert!(said.contains(&line.to_string()), "{line}: {said:?}");
     }
-    assert_eq!(w.state.experience, 0, "a trap's kill is not the player's");
 }
 
 #[test]

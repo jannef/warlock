@@ -23,6 +23,8 @@ hearing = 12
 weight = 90000
 stats = { strength = 29, dexterity = 21, toughness = 30, intelligence = 28, willpower = 32, presence = 28 }
 base_hp = 112
+# A hit may knock the player's weapon from their hand (#1166; the swordsman he was in life).
+disarms = { chance = 15, difficulty = 21 }
 natural = { defence = 3, protection = 0, name = "dead flesh" }
 resist = { cold = 50, poison = 100 }
 weapon_skills = { long_blades = 6, great_blades = 10 }

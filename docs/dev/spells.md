@@ -58,7 +58,9 @@ cast path shares.
   weak): `1d4` is `2d4`, `4d6` is `8d6`, in the base and in every `[spell.grows]` rung, flat
   bonuses unchanged; heals and summons were left alone. Numbers quoted below and in older
   sections are from before it. Scrolls and wands read the same rows and doubled with them;
-  traps carry their own `damage` (the `spell` there is only the effect shown) and did not.
+  traps carry their own `damage` (the `spell` there is only the effect shown) and did not;
+  their damage grows by the level's danger instead (`[trap.grows]`, #1165, docs/dev/traps.md),
+  in rungs read by the same `spell_ladder::parse_rungs` as a ladder's, `AT` a danger there.
 - **Ladders** (`content/spell_ladder.rs`: `Ladder { stat, rungs: Vec<(u8, RungValue)> }`,
   `RungValue::{Roll, Cells, Degrees}`, `Ladder::parse(text, Unit)`, `rung_at(score)` (how many
   rungs are at or below the score), `value(rung)` (`None` at 0, the base), `words()` (the wiki's

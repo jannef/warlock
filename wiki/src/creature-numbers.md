@@ -217,6 +217,27 @@ a closed door between you is still a door.
 
 {{#include generated/creature-blinks.md}}
 
+### Disarmers
+
+A few sword-masters know how to take a blade from a hand: the
+[drow blademaster](creatures.md#creature-drow-blademaster), the
+[drow captain](creatures.md#creature-drow-captain), the
+[death knight](creatures.md#creature-death-knight), the [ultroloth](creatures.md#creature-ultroloth),
+and [Wælcyrge the Chooser](creatures.md#creature-waelcyrge). Each time one of their blows [hits](combat.md#hitting) you up close and
+leaves you alive, with a weapon in your main hand, the chance below decides whether it tries to
+knock it away. If it does, you make a [Dexterity](stats.md) check against the difficulty below
+(2d12 plus your Dexterity modifier, as a [blow is rolled](combat.md#hitting)), adding your rank in
+the weapon's [skill](weapon-skills.md#marks-and-ranks) and your grip: +2 with both hands on a
+two-handed weapon, +1 with a shield on the other arm, and your rank in
+[Duelist](fighting-styles.md#style-duelist) with the weapon alone in your hands. Fail, and the
+weapon flies from your hand to a random open cell beside you (floor, no deep water, no closed
+door, no one standing there); [pick it up](equipment.md#what-fits-where) again and wield it as
+anything else. With no open cell beside you it stays in your hand. A
+[spirit weapon](abilities.md#ability-spirit-weapon) is not knocked anywhere: it fades. Unseen,
+"Something" knocks it away.
+
+{{#include generated/creature-disarmers.md}}
+
 ### The unseen
 
 Some creatures you do not see though you see where they stand. A **shadowy** one, on a cell

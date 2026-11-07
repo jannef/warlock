@@ -20,7 +20,9 @@ the gameplay stream; `max_hp`, `regen_seconds`, `Health` words). `world/fight.rs
 launcher for a shot, none for a spell) → `attack_with(attacker, target, kind, Option<Profile>)`
 (**the entry point for ranged combat, #117**) → `Event::Attacked { .., strike }`, noise, damage
 (`hurt`), `Event::Died`, then for a target left alive `World::after_blow` (status effects:
-wounds and `on_hit`, `world/status.rs`). **`hurt(id, damage, Harm)` is the one way hit points go
+wounds and `on_hit`, `world/status.rs`) and the gimmicks' riders, each its own line (`barbed`,
+`split`, `snatch`, `knock_away`: a duellist's hit may knock the player's weapon onto a cell
+beside them, `world/knock_away.rs`, docs/dev/creatures.md). **`hurt(id, damage, Harm)` is the one way hit points go
 down**: blows (`Harm::Actor`), traps (`Harm::Trap`), status ticks and diseases (`Harm::Status {
 of, by, when }`), starving (`Harm::Starving(when)`, `die_of`), and what never kills
 (`Harm::Spared`: the plunge through the ice, a disease that does not kill; it leaves the last hit
