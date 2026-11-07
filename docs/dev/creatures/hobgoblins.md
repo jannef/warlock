@@ -20,3 +20,5 @@ Spells (#1102, docs/dev/creatures.md "Casters"; in the order each prefers them):
 ## Variance
 
 The variance pass (#1134, `docs/dev/creatures.md` "Variance by role") sets the roles' to-hit (striker `L/4 + L/8`, brute and caster `L/4 − L/8`, the armed `L/4`), threat and crit (striker 19, brute 24 at ×3), and hit-point factors (quick and caster 0.5, brute 2.0). **Speed**: drilled soldiers marching at 1000 (the rank-and-file within 950 to 1050), the warlord's 1050.
+
+Gear condition (#1193, `data/gear_condition.toml`'s `hobgoblin` row, listed before `goblin` so it wins): a drilled order, damaged 10 %, Fine 10 %, Marvellous 2 %, Masterwork 0.4 % (docs/dev/creatures.md, "Gear condition").

@@ -93,3 +93,5 @@ Spells (#1102, docs/dev/creatures.md "Casters"; in the order each prefers them):
 The variance pass (#1134, `docs/dev/creatures.md` "Variance by role") sets the roles' to-hit (striker `L/4 + L/8`, brute and caster `L/4 − L/8`, the armed `L/4`), threat and crit (striker 19, brute 24 at ×3), and hit-point factors (quick and caster 0.5, brute 2.0). **Speed**: the rank-and-file at 1000 to 1050, the officers and casters at 1100, the stalker and the blademaster at 1250; the assassin, dread, at 1400.
 
 **The disarming blow** (#1166, `docs/dev/creatures.md`): the blademaster and the captain carry `disarms = { chance, difficulty }`, a melee hit that may knock the player's main-hand weapon onto an open cell beside them (blademaster 15 % at 18, captain 15 % at 19).
+
+Gear condition (#1193, `data/gear_condition.toml`'s `drow` row): damaged 10 %, Fine 12 %, Marvellous 3 %, Masterwork 0.8 % (docs/dev/creatures.md, "Gear condition").
