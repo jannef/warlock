@@ -61,11 +61,10 @@ and a racial weapon for up close. Numbers on the living base: XP `5L + 10`, `bas
 | L | id | faction | flask (spell) | gear | rarity | where |
 |---|---|---|---|---|---|---|
 | 3 | `kobold_alchemist` | kobolds | `flask_of_oil` (Slick) | 70 %: 1 or 2 | uncommon | Cealdhlāw, Fyrdelf (with the kobolds) |
-| 6 | `goblin_firebomber` | goblins | `blasting_flask` (Shatter) | 60 %: 1 or 2 | rare | Cealdhlāw, Fyrdelf (beside the goblin wizard) |
+| 6 | `goblin_firebomber` | goblins | `flask_of_fire` (Fireball) | 60 %: 1 or 2 | rare | Cealdhlāw, Fyrdelf (beside the goblin wizard) |
 | 8 | `cult_chymist` | cult | `stinking_flask` (Reek) | 60 %: 1 or 2 | uncommon | Fennmynster (with the cultists), the showcase's summoning hall (beside the necromancer) |
 
-The firebomber's flask is S5's `flask_of_fire` once that lands (#1241); until then the
-blasting flask, the one fire-adjacent harmful flask on main. The chymist is a shared type (not the
+The chymist is a shared type (not the
 Ascmearc's `cultist`, which is campaign-owned) so the showcase's hall may place it; it resists
 poison 25 %. Tests: `world/creature_flask_tests.rs`; `content::tag`'s test lists the kobold and
 goblin members.

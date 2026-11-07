@@ -101,11 +101,11 @@ fn the_firebombers_blast_hurts_and_is_no_attack_roll() {
     });
     assert!(!thrown_attack, "a flask has no to-hit roll");
     assert!(
-        texts(&w).contains(&"It was a blasting flask.".to_string()),
+        texts(&w).contains(&"It was a flask of fire.".to_string()),
         "{:?}",
         texts(&w)
     );
-    assert!(!lying(&w, "blasting_flask"));
+    assert!(!lying(&w, "flask_of_fire"));
 }
 
 #[test]
@@ -125,7 +125,7 @@ fn the_three_bombers_throw_flasks_and_carry_them() {
     let content = Content::builtin().expect("content");
     for (bomber, flask) in [
         ("kobold_alchemist", "flask_of_oil"),
-        ("goblin_firebomber", "blasting_flask"),
+        ("goblin_firebomber", "flask_of_fire"),
         ("cult_chymist", "stinking_flask"),
     ] {
         let def = content.creature(content.creature_id(bomber).expect(bomber));

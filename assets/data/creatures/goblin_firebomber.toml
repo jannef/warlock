@@ -27,10 +27,10 @@ on_eat = { message = "This goblin meat is rank, and singed!", vomit = 40 }
 weapon_skills = { maces = 1, thrown = 2 }
 racial_weapon = "club"
 [creature.throw]
-object = "blasting_flask"
+object = "flask_of_fire"
 range = 6
 verb = "hurls"
 
 [[creature.gear]]
 chance = 60
-one_of = ["blasting_flask", "blasting_flask*2"]
+one_of = ["flask_of_fire", "flask_of_fire*2"]

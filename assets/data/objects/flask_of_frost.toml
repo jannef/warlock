@@ -1,0 +1,26 @@
+# A flask of frost (spec §8 "Potions": "Flasks"; the potions wave 2 design §4.4): thrown, it
+# shatters into the Frost spell's burst of bitter cold where it breaks; drunk, the cold spreads
+# through the drinker and slows them. Cold is white.
+[[object]]
+id = "flask_of_frost"
+name = "flask of frost"
+plural = "flasks of frost"
+glyph = "!"
+fg = "#e8ecf0"
+class = "potions"
+materials = ["glass"]
+weight = 250
+value = 120
+stackable = true
+level = 6
+frequency = 10
+
+[object.drink]
+kind = "harm"
+dice = "2"
+status = "sluggish"
+colour = "white"
+
+[object.throw]
+spell = "frost"
+words = "Bitter cold bursts from the shards!"

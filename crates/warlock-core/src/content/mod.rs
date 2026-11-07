@@ -322,10 +322,10 @@ pub use slot::{MAX_SLOTS, SlotDef, SlotId};
 pub use smite::SmiteRules;
 pub use spell::{BOLT_LENGTHS, BURST_RADII, Bolt, Burst, BurstIce};
 pub use spell_def::{
-    ARC_REACH, CorpseUse, Grows, MAX_ARCS, MAX_CASTS, MAX_CONE, MAX_REACH, MAX_SPELL_LEVEL,
-    MAX_SUMMON_MINUTES, OnlyTerrain, Ratio, Resolution, STUDY_DIFFICULTY, School, Shape,
-    SpellBlink, SpellCharm, SpellData, SpellEffect, SpellId, SpellLook, SpellPurpose, SpellRise,
-    SpellRules, SpellSummon, SpellWeather, SpellZone, ZoneKind,
+    ARC_REACH, CorpseUse, EYELESS, Grows, MAX_ARCS, MAX_CASTS, MAX_CONE, MAX_REACH,
+    MAX_SPELL_LEVEL, MAX_SUMMON_MINUTES, OnlyTerrain, Ratio, Resolution, STUDY_DIFFICULTY, School,
+    Shape, SpellBlink, SpellCharm, SpellData, SpellEffect, SpellId, SpellLook, SpellPurpose,
+    SpellRise, SpellRules, SpellSummon, SpellWeather, SpellZone, ZoneKind,
 };
 pub use spell_ladder::{
     Ladder as SpellLadder, MAX_RUNGS, MAX_SCORE, RungValue, Unit as LadderUnit,
@@ -1291,6 +1291,7 @@ impl Content {
         // Outcome tables (spec §7 "Special rooms") last of the rules' data: they name terrain,
         // statuses, objects, damage types, and spell effects; then the rooms that offer them.
         content.outcomes = OutcomeTables::parse(files.table("outcomes"), &content)?;
+        potion::check_gambles(&content)?;
         let lights = content.light_ids.clone();
         let outcomes = content.outcomes.clone();
         (content.room_effects).resolve_places(&outcomes, |name| lights.get(name).copied())?;

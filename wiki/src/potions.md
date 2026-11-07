@@ -69,6 +69,24 @@ Four potions do one useful thing at once:
   [Staggered](status-effects.md#status-staggered), and
   [Transfixed](status-effects.md#status-transfixed).
 
+### Gambles
+
+Three potions are a gamble even once you know them: each time you drink one, one outcome is
+drawn by chance from its own table, as at a [healing spring](altars-forges-springs.md). It may
+do good, nothing, or harm. The tables below give every outcome and its exact chance per
+draught; the game only tells you what happens, in words.
+
+- The **draught of chance** mostly heals you, clears your head, or lends you a stat
+  [boost](#potions-that-last), but it may sicken you or make you drowsy.
+- The **vial of troll's blood** always does two things at once: your wounds close faster
+  ([Renewing](status-effects.md#status-renewing)) and you are
+  [Poisoned](status-effects.md#status-poisoned).
+- The **brewer's blunder** is a coin toss: a greater boost of one stat for a while, or a point
+  of one stat [drained](stats.md#drained-stats) for good. A potion of restoration gives a
+  drained point back.
+
+{{#include generated/potion-gambles.md}}
+
 ## Unknown potions
 
 A potion you have never drunk shows a **word and a colour** instead of its name: "a fizzy red
@@ -93,6 +111,10 @@ has a hue, and a potion with several effects mixes their hues.
 | The unseen and the unplaced ([Quick-sensed](status-effects.md#status-quick-sensed), [Invisible](status-effects.md#status-invisible), [blinking](#utility-potions)) | opal |
 | Utility ([Water-borne](status-effects.md#status-water-borne), [sustenance](#utility-potions)) | sky blue |
 | [Restoration](#utility-potions) | mint |
+| Smoke ([Fume](spellcasting.md#zones)) | ash grey |
+| Light ([Lit](status-effects.md#status-lit), a [Flare](spellcasting.md#spells-with-a-rule-of-their-own)) | silver |
+| [Acid](damage-types.md#damage-acid) | lime |
+| [Gambles](#gambles) | iridescent |
 | [Elixirs](#elixirs) (a [stat](stats.md) for good) | gold |
 | Harm | brown |
 
@@ -172,6 +194,10 @@ gives each flask's spell, its numbers, and its range in cells.
 - **Thrown at you**: some creatures throw flasks (the bombers on
   [Creature powers](creature-powers.md#throws)). Seeing where one breaks teaches you what it was,
   as when you throw it, and a bomber carries a flask or two of its kind that fall where it dies.
+- **Smoke**: a flask of smoke leaves a cloud of [smoke](spellcasting.md#zones) no eye sees into or
+  through, yours and every creature's: a way past archers, or out of a fight.
+- **Acid**: a vial of acid burns, keeps eating, and eats at the armour of anyone it harms, yours
+  too if you stand in it ([Acid](spellcasting.md#spell-types)).
 - **Drinking a flask** is a poor idea: the sleeping draught makes you drowsy, as the table says.
 - **A flask of holy water** is a kind one: thrown, it casts [Rebuke](magic.md#spell-rebuke),
   which sears and frightens only the undead and harms nothing living; drunk, it washes a hex off
@@ -181,12 +207,15 @@ gives each flask's spell, its numbers, and its range in cells.
   heard over the whole level ([Hearing](hearing.md#what-makes-noise)); a blasting flask as
   [Shatter](magic.md#spell-shatter), which breaks shut doors and chests. A general store or a
   provisioner never sells either: only an alchemist does.
+- **A flask of brilliance** is the kind one among the drinkable: drunk, it makes you shed light about you a while
+  ([Lit](status-effects.md#status-lit)).
 
 ## Where to find them
 
 Potions lie about as [loot](magic-items.md#finding-them). The common ones (healing, antidote)
 turn up more often and from the first depths, the better ones deeper down. General stores and
-provisioners sell a few among their wares. An **alchemist** sells only potions, always potions
+provisioners sell a few among their wares, but never the flasks of fire and frost or pitch fire.
+An **alchemist** sells only potions, always potions
 of healing first, and buys them too (see [Shops](shops.md)). Some [quests](quests.md) pay in
 potions.
 

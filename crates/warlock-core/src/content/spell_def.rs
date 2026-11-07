@@ -48,6 +48,8 @@ pub const MAX_PUSH: u8 = 3;
 pub const MAX_WEATHER_HOURS: u8 = 24;
 /// How far (Chebyshev) a jump of a spell with `arcs` reaches; any other arc, one cell.
 pub const ARC_REACH: i32 = 2;
+/// The creature tag of those with no eyes: a hex with `only_sighted` (Flare) passes them by.
+pub const EYELESS: &str = "eyeless";
 /// The most jumps `arcs` may take, its ladder and base alike.
 pub const MAX_ARCS: i32 = 12;
 /// The most minutes a summon spell's call may last, its ladder and base alike.
@@ -155,11 +157,19 @@ pub enum ZoneKind {
     Slick,
     /// No light reaches it, and a source on it sheds none.
     Dark,
+    /// No eye sees into it or through it; light passes (`world/zone.rs`).
+    Smoke,
 }
 
 impl ZoneKind {
     /// Every kind, in the order they are documented.
-    pub const ALL: &'static [ZoneKind] = &[Self::Fire, Self::Fouled, Self::Slick, Self::Dark];
+    pub const ALL: &'static [ZoneKind] = &[
+        Self::Fire,
+        Self::Fouled,
+        Self::Slick,
+        Self::Dark,
+        Self::Smoke,
+    ];
 
     /// As written in data and action text.
     pub const fn id(self) -> &'static str {
@@ -168,6 +178,7 @@ impl ZoneKind {
             Self::Fouled => "fouled",
             Self::Slick => "slick",
             Self::Dark => "dark",
+            Self::Smoke => "smoke",
         }
     }
 
@@ -176,12 +187,12 @@ impl ZoneKind {
         match self {
             Self::Fire => Some("fire"),
             Self::Fouled => Some("poison"),
-            Self::Slick | Self::Dark => None,
+            Self::Slick | Self::Dark | Self::Smoke => None,
         }
     }
 
-    /// Whether it lies on the ground, so only on walkable ground out of the water: a cloud and
-    /// a darkness hang over anything sight passes through.
+    /// Whether it lies on the ground, so only on walkable ground out of the water: a cloud, a
+    /// darkness, and smoke hang over anything sight passes through.
     pub const fn on_ground(self) -> bool {
         matches!(self, Self::Fire | Self::Slick)
     }
@@ -503,6 +514,9 @@ struct EffectSpec {
     only_tags: Vec<String>,
     /// An area hex's targets: only those standing on this ground (Bramble).
     only_terrain: Option<OnlyTerrain>,
+    /// An area hex's targets: only those with eyes (Flare).
+    #[serde(default)]
+    only_sighted: bool,
     /// A line hex's: how many cells it drives everyone on it (Gale).
     push: Option<u8>,
     /// A line hex's: it puts out the fires on its cells (Gale).
@@ -668,6 +682,9 @@ pub struct SpellEffect {
     pub only_tags: Vec<String>,
     /// An area hex's targets: only those standing on this ground (Bramble).
     pub only_terrain: Option<OnlyTerrain>,
+    /// An area hex's targets: only those with eyes, never a creature tagged
+    /// [`EYELESS`](crate::content::EYELESS) (Flare: a flash is light).
+    pub only_sighted: bool,
     /// A line hex's push: everyone on it is driven this many cells on (Gale).
     pub push: Option<u8>,
     /// A line hex puts out the fires on its cells (Gale).
@@ -1703,6 +1720,7 @@ fn effect(
         leech: e.leech,
         only_tags: e.only_tags,
         only_terrain: e.only_terrain,
+        only_sighted: e.only_sighted,
         push: e.push,
         douses: e.douses,
         clears: e.clears,
@@ -2583,6 +2601,7 @@ damage = "2d6"
         // learned from scrolls only): the spell scaling design §5.8, §12.1.
         let table = [
             ("acid_arrow", 5, Some("2d6"), 5, false),
+            ("acid_splash", 3, Some("2d4"), 5, false),
             ("arcane_bolt", 6, Some("4d6"), 11, true),
             ("balefire", 16, Some("4d6"), 29, false),
             ("barkskin", 3, None, 3, true),
@@ -2610,8 +2629,10 @@ damage = "2d6"
             ("fire_cloak", 12, None, 12, false),
             ("fireball", 11, Some("4d6"), 26, false),
             ("flame", 12, Some("6d6"), 29, true),
+            ("flare", 2, None, 4, false),
             ("flay", 8, Some("2d4"), 8, true),
             ("frost", 6, Some("4d6"), 14, true),
+            ("fume", 4, None, 10, false),
             ("gale", 11, None, 20, true),
             ("glamour", 8, None, 8, false),
             ("grave_breath", 1, Some("2d4"), 3, true),
@@ -2627,6 +2648,7 @@ damage = "2d6"
             ("mesmerise", 5, None, 5, true),
             ("mirk", 12, None, 29, false),
             ("nightsight", 4, None, 4, true),
+            ("pitch_fire", 8, Some("2d6"), 14, false),
             ("ray_of_frost", 1, Some("2d6"), 1, true),
             ("rebuke", 14, Some("4d6"), 34, true),
             ("identify", 6, None, 60, false),

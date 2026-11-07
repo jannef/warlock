@@ -334,7 +334,10 @@ fn the_spells_are_abilities_by_level() {
             "Mend",
             "Ray of frost",
             "Spark",
+            // Level 2.
+            "Flare",
             // Level 3.
+            "Acid splash",
             "Barkskin",
             "Blessing",
             "Cure wounds",
@@ -343,6 +346,7 @@ fn the_spells_are_abilities_by_level() {
             "Magic missile",
             // Level 4.
             "Cause wounds",
+            "Fume",
             "Nightsight",
             // Level 5.
             "Acid arrow",
@@ -369,6 +373,7 @@ fn the_spells_are_abilities_by_level() {
             "Bramble",
             "Flay",
             "Glamour",
+            "Pitch fire",
             "Shatter",
             "Unbinding",
             // Level 9.

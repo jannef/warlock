@@ -1,11 +1,13 @@
 //! Outcome tables (`data/outcomes/<id>.toml`, one table a file; spec §7 "Special rooms"): what
 //! using a place's ability draws: a forgotten altar's prayer, a healing spring's drink. The rules
-//! are `world/outcome.rs` (applying an outcome), `world/pray.rs` (the prayer), and
-//! `world/drink.rs` (the drink).
+//! are `world/outcome.rs` (applying an outcome), `world/pray.rs` (the prayer),
+//! `world/drink.rs` (the drink), and `world/potion.rs` (a gamble's draught, `kind = "gamble"`:
+//! the potions wave 2 design §4.3).
 //!
 //! ```toml
 //! # data/outcomes/forgotten_altar.toml
-//! seconds = 60                                  # how long the use takes (turns of `pray`)
+//! seconds = 60                                  # how long the use takes (turns of `pray`;
+//!                                               # none for a potion's gamble)
 //! kinds = { boon = 35, nothing = 30, bane = 35 } # the kinds' weights, before the lean
 //! lean = 15                                     # moved between boon and bane by the side
 //! exhaust = 50                                  # percent: spent after a completed use
@@ -31,6 +33,7 @@ use super::{
 };
 use crate::dice::Dice;
 use crate::magic::loot::LootGrade;
+use crate::stats::Stat;
 use serde::Deserialize;
 use std::collections::BTreeMap;
 
@@ -143,8 +146,9 @@ pub struct OutcomeEffect {
     pub mana: Option<Amount>,
     /// Mana lost (never below 0).
     pub drain: Option<Dice>,
-    /// A status, at this many degrees.
-    pub status: Option<(StatusId, u16)>,
+    /// Statuses, each at its degrees (`status = { id, degrees }`, or a list of them: troll's
+    /// blood's Renewing and Poisoned at once).
+    pub status: Vec<(StatusId, u16)>,
     /// Nutrition this many states better (or worse, negative), never past Satiated nor into
     /// Starving.
     pub hunger: i8,
@@ -174,6 +178,10 @@ pub struct OutcomeEffect {
     pub catch: Option<DiseaseId>,
     /// Stat damage to a random stat.
     pub wither: Option<Dice>,
+    /// Points drained off this stat's score for good, with no check (`drain_stat = { stat,
+    /// points }`; a brewer's blunder): the drain path a creature's touch takes, which a
+    /// restoration or a temple's mending gives back.
+    pub drain_stat: Option<(Stat, u8)>,
     /// Percent of the experience to the next level.
     pub xp: u8,
     /// The most valuable stack carried vanishes.
@@ -277,6 +285,7 @@ fn fifty() -> u8 {
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
 struct TableSpec {
+    #[serde(default)]
     seconds: u32,
     kinds: KindsSpec,
     #[serde(default)]
@@ -325,7 +334,7 @@ struct EffectSpec {
     mend: bool,
     mana: Option<String>,
     drain: Option<Dice>,
-    status: Option<StatusSpec>,
+    status: Option<StatusSpecs>,
     #[serde(default)]
     hunger: i8,
     #[serde(default)]
@@ -347,6 +356,7 @@ struct EffectSpec {
     disease: bool,
     catch: Option<String>,
     wither: Option<Dice>,
+    drain_stat: Option<DrainSpec>,
     #[serde(default)]
     xp: u8,
     #[serde(default)]
@@ -372,6 +382,26 @@ struct StatusSpec {
     id: String,
     #[serde(default = "one")]
     degrees: u16,
+}
+
+/// One status, or several at once.
+#[derive(Deserialize)]
+#[serde(untagged)]
+enum StatusSpecs {
+    One(StatusSpec),
+    Many(Vec<StatusSpec>),
+}
+
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct DrainSpec {
+    stat: String,
+    #[serde(default = "one_u8")]
+    points: u8,
+}
+
+fn one_u8() -> u8 {
+    1
 }
 
 fn one() -> u16 {
@@ -551,15 +581,26 @@ fn resolve_effect(e: EffectSpec, content: &Content) -> Result<OutcomeEffect, Str
             .ok_or_else(|| format!("unknown status `{name}`"))
     };
     let cure = e.cure.iter().map(|s| status(s)).collect::<Result<_, _>>()?;
-    let effect_status = match e.status {
-        Some(s) => {
-            let id = status(&s.id)?;
-            let max = content.status(id).max;
-            if s.degrees == 0 || s.degrees > max {
-                return Err(format!("status `{}`: `degrees` is 1 to {max}", s.id));
-            }
-            Some((id, s.degrees))
+    let specs = match e.status {
+        Some(StatusSpecs::One(s)) => vec![s],
+        Some(StatusSpecs::Many(list)) => list,
+        None => Vec::new(),
+    };
+    let mut effect_status = Vec::new();
+    for s in specs {
+        let id = status(&s.id)?;
+        let max = content.status(id).max;
+        if s.degrees == 0 || s.degrees > max {
+            return Err(format!("status `{}`: `degrees` is 1 to {max}", s.id));
         }
+        effect_status.push((id, s.degrees));
+    }
+    let drain_stat = match e.drain_stat {
+        Some(d) => Some((
+            Stat::from_id(&d.stat)
+                .ok_or_else(|| format!("`drain_stat` names no stat `{}`", d.stat))?,
+            d.points,
+        )),
         None => None,
     };
     if !(-6..=6).contains(&e.hunger) {
@@ -665,6 +706,7 @@ fn resolve_effect(e: EffectSpec, content: &Content) -> Result<OutcomeEffect, Str
         disease: e.disease,
         catch,
         wither: e.wither,
+        drain_stat,
         xp: e.xp,
         tithe: e.tithe,
         teleport: e.teleport,

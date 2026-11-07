@@ -96,7 +96,8 @@ fn only_the_weakest_folk_live_there_and_none_stray_in() {
                 (8..=most).contains(&count),
                 "seed {seed} depth {depth}: {count}"
             );
-            for c in &folk {
+            // A mimic stands in for a chest: no folk (`mapgen/chest_tests.rs`).
+            for c in folk.iter().filter(|c| !CONTENT.is_mimic(c.creature)) {
                 let id = CONTENT.creature(c.creature).id.as_str();
                 assert!(FOLK.contains(&id), "seed {seed} depth {depth}: {id}");
             }

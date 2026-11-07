@@ -22,7 +22,7 @@ expression: "render(case, content.clone())"
 │   h - % 3 strips of dried meat                                                            450 g  │
 │   i - % 2 loaves of bread                                                                 800 g  │
 │ Scrolls                                                                                          │
-│   j - ? a scroll of nightsight                                                             50 g  │
+│   j - ? a scroll of mesmerise                                                              50 g  │
 │ Coins                                                                                            │
 │   k - $ 36 gold coins                                                                     360 g  │
 │                                                                                                  │

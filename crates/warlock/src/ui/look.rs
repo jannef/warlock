@@ -90,6 +90,7 @@ fn zone_words(kind: ZoneKind) -> &'static str {
         ZoneKind::Fouled => "under a foul reek",
         ZoneKind::Slick => "slick underfoot",
         ZoneKind::Dark => "under a pall of dark",
+        ZoneKind::Smoke => "in thick smoke",
     }
 }
 

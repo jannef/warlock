@@ -1,0 +1,13 @@
+# Troll's blood's drink (spec §8 "Potions", the potions wave 2 design §4.3; content/outcome.rs
+# has the fields): one kind, one outcome, both statuses at once. The regeneration is real; so is
+# the sickness. A potion has no side, so nothing leans, and nothing is spent (`exhaust = 0`).
+kinds = { boon = 1 }
+exhaust = 0
+
+[[outcome]]
+kind = "boon"
+tier = "moderate"
+id = "troll_blooded"
+weight = 1
+effect = { status = [{ id = "renewing", degrees = 3 }, { id = "poisoned", degrees = 2 }] }
+message = "Your flesh begins to knit, but the blood sits ill in your stomach."

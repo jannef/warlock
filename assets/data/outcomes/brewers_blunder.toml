@@ -1,0 +1,118 @@
+# A brewer's blunder's drink (spec §8 "Potions", the potions wave 2 design §4.3;
+# content/outcome.rs has the fields): as likely a stat raised greatly for a while (a greater
+# boost) as a point of one drained for good (a potion or scroll of restoration, or a temple's
+# mending, gives it back). A potion has no side, so nothing leans, and nothing is spent
+# (`exhaust = 0`). Messages stay vague: never a number.
+kinds = { boon = 45, nothing = 10, bane = 45 }
+exhaust = 0
+
+# A greater boost, one outcome a stat (the greater potions of might, grace, ...'s degrees).
+[[outcome]]
+kind = "boon"
+tier = "moderate"
+id = "greatly_fortified"
+weight = 1
+effect = { status = { id = "fortified", degrees = 2 } }
+message = "Strength floods your limbs."
+
+[[outcome]]
+kind = "boon"
+tier = "moderate"
+id = "greatly_nimble"
+weight = 1
+effect = { status = { id = "nimble", degrees = 2 } }
+message = "Your limbs feel light and quick."
+
+[[outcome]]
+kind = "boon"
+tier = "moderate"
+id = "greatly_hale"
+weight = 1
+effect = { status = { id = "hale", degrees = 2 } }
+message = "You feel hale as an ox."
+
+[[outcome]]
+kind = "boon"
+tier = "moderate"
+id = "greatly_keen"
+weight = 1
+effect = { status = { id = "keen", degrees = 2 } }
+message = "Your thoughts race, keen and bright."
+
+[[outcome]]
+kind = "boon"
+tier = "moderate"
+id = "greatly_steadfast"
+weight = 1
+effect = { status = { id = "steadfast", degrees = 2 } }
+message = "Your will sets hard as iron."
+
+[[outcome]]
+kind = "boon"
+tier = "moderate"
+id = "greatly_imposing"
+weight = 1
+effect = { status = { id = "imposing", degrees = 2 } }
+message = "You feel you could command a hall."
+
+[[outcome]]
+kind = "nothing"
+tier = "minor"
+id = "flat"
+weight = 1
+message = "It tastes flat and stale."
+
+# A drained point, one outcome a stat. At the drain's floor nothing is lost: the `otherwise` line.
+[[outcome]]
+kind = "bane"
+tier = "moderate"
+id = "drained_strength"
+weight = 1
+effect = { drain_stat = { stat = "strength", points = 1 } }
+message = "You feel your strength drain away!"
+otherwise = "A chill passes through you, and is gone."
+
+[[outcome]]
+kind = "bane"
+tier = "moderate"
+id = "drained_dexterity"
+weight = 1
+effect = { drain_stat = { stat = "dexterity", points = 1 } }
+message = "You feel your dexterity drain away!"
+otherwise = "A chill passes through you, and is gone."
+
+[[outcome]]
+kind = "bane"
+tier = "moderate"
+id = "drained_toughness"
+weight = 1
+effect = { drain_stat = { stat = "toughness", points = 1 } }
+message = "You feel your toughness drain away!"
+otherwise = "A chill passes through you, and is gone."
+
+[[outcome]]
+kind = "bane"
+tier = "moderate"
+id = "drained_intelligence"
+weight = 1
+effect = { drain_stat = { stat = "intelligence", points = 1 } }
+message = "You feel your intelligence drain away!"
+otherwise = "A chill passes through you, and is gone."
+
+[[outcome]]
+kind = "bane"
+tier = "moderate"
+id = "drained_willpower"
+weight = 1
+effect = { drain_stat = { stat = "willpower", points = 1 } }
+message = "You feel your willpower drain away!"
+otherwise = "A chill passes through you, and is gone."
+
+[[outcome]]
+kind = "bane"
+tier = "moderate"
+id = "drained_presence"
+weight = 1
+effect = { drain_stat = { stat = "presence", points = 1 } }
+message = "You feel your presence drain away!"
+otherwise = "A chill passes through you, and is gone."

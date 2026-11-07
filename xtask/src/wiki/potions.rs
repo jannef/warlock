@@ -131,6 +131,11 @@ pub(super) fn potions(content: &Content) -> String {
                     plural(*severity)
                 ) + &lasting(content, *status, *severity)
             }
+            Draught::Gamble { .. } => format!(
+                "One outcome drawn: good, nothing, or bad (see [its \
+                 table](#gamble-{}))",
+                o.id.replace('_', "-")
+            ),
         };
         let marks = match drink.marks.as_slice() {
             [] => "none".to_string(),

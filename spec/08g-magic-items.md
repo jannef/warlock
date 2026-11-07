@@ -493,7 +493,18 @@ developer notes (CLAUDE.md, `docs/dev/`).
   every point of stat damage mended, every drained point back, Stiffening ended; "You feel
   whole." with nothing to restore, the potion drunk all the same), and `blink` (the potion of
   blinking: the drinker is moved at once to a free cell of the level as a teleport trap moves
-  its victim, no draw; "In a blink, you are elsewhere."; on the overworld nothing happens). A status lent says its own line as it begins ("You feel
+  its victim, no draw; "In a blink, you are elsewhere."; on the overworld nothing happens).
+  A **gamble** (kind `gamble`, the potions wave 2 design §4.3) names an `outcomes` table of
+  `data/outcomes/` (§7 "Special rooms"; checked to exist once the tables load): drunk, one
+  outcome is drawn from it as a healing spring's drink draws (the kind by the table's weights,
+  then one of its outcomes by weight: two gameplay draws; a potion has no side, nothing leans,
+  nothing is spent) and befalls the drinker where they stand, its own line said instead of the
+  statuses'. Two outcome effects serve the gambles: `status` may be a list (`status = [{ id =
+  "renewing", degrees = 3 }, { id = "poisoned", degrees = 2 }]`, each given), and `drain_stat =
+  { stat, points }` drains points off a stat's score for good with no check, through a drain's
+  path (counted as drained, never below the floor; restoration and a temple's mending give them
+  back; at the floor the outcome's `otherwise` line). The description says "Does good, or harm,
+  or nothing: a gamble". A status lent says its own line as it begins ("You feel
   stronger.", "Your eyes open wide to the dark."); a stronger dose of one already felt says it
   again, and one that changes nothing "Nothing more comes of it." The status bar and the
   character screen name it as they name Blessed, the raised score shown raised, never a number
@@ -524,7 +535,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     of several effects mixes theirs: healing red, cures green, healing and cures russet, mana
     blue, stat boosts orange (greater ones deep orange), vision violet, speed yellow, resistance
     teal, harm brown, wards bronze, renewal rose, the unseen and the unplaced opal, utility sky
-    blue. The colour hints at the family, never the type. The `!` shows in it,
+    blue, the gambles iridescent. The colour hints at the family, never the type. The `!` shows in it,
     known or not. A type is known (`WorldState::known_scrolls`) once one is drunk, identified
     (the scroll of identify, an appraisal), or in the character's starting kit (the witch's
     potion). The item description says what a known one does in words ("Heals wounds at once,
@@ -543,7 +554,13 @@ developer notes (CLAUDE.md, `docs/dev/`).
     barkskin (Barkskin 2; 3, 15; 100; bronze; Toughness), of glamour (Glamoured 2; 5, 12; 150;
     bronze; Presence), of renewal (Renewing 2; 4, 15; 120; rose; Toughness), of the quick
     (Quick-sensed 3; 5, 10; 150; opal; Willpower), of the unseen (Invisible 1; 7, 6; 300; opal;
-    Dexterity), and of sea legs (Water-borne 3; 4, 10; 100; sky blue; Dexterity); the sleeping
+    Dexterity), and of sea legs (Water-borne 3; 4, 10; 100; sky blue; Dexterity); the gambles
+    (kind `gamble`, iridescent `#c0a0e0`, never a general store's or a provisioner's): the
+    draught of chance (boon 50: 4d8 hit points 30, half the mana 15, a boost at 1, 5 each of
+    six; nothing 20; bane 30: Poisoned 2 15, Drowsy 2 10, Weakened 1 5; 2, 20; 30), troll's
+    blood (one outcome: Renewing 3 and Poisoned 2 at once; 5, 10; 120; Toughness), and the
+    brewer's blunder (boon 45: a greater boost, severity 2, one of six; nothing 10; bane 45: a
+    point of one of the six stats drained; 6, 8; 100); the sleeping
     draught (a flask of Sleep; harm, Drowsy 3; 3, 15; 60; pink); the flasks on existing spells
     (#1226, the design's §4.4; a flask of the spell at rung 0, then its drink): flask of oil
     (Slick; Poisoned 1; 2, 20; 25; colourless), stinking flask (Reek; Poisoned 3; 4, 12; 60;
@@ -554,9 +571,13 @@ developer notes (CLAUDE.md, `docs/dev/`).
     flask of thunder (Thunderclap, heard as thunder at 150; Stunned 1; 5, 8; 100; slate),
     blasting flask (Shatter, heard as an explosion at 100; Stunned 1; 7, 6; 200; slate), and
     flask of holy water (Rebuke, which harms only the undead; drunk, a `cure` of `holy_water`,
-    the means in Hexed's and Branded's `cured_by`; 5, 8; 100; silver; Willpower). **Where**:
+    the means in Hexed's and Branded's `cured_by`; 5, 8; 100; silver; Willpower); the fire and
+    cold flasks (#1227, the design's §4.4; the spell at rung 0, then the drink): flask of fire
+    (Fireball; Burning 1; 6, 10; 120; scarlet), flask of frost (Frost; Sluggish 2; 6, 10; 120;
+    white), and pitch fire (the Pitch fire spell, thrown 4 cells; Burning 2; 9, 6; 250;
+    scarlet). **Where**:
     loot (by `level` and `frequency`, never magic), general stores and provisioners (they stock
-    and buy potions; never the elixirs, the flask of thunder, or the blasting flask), the
+    and buy potions; never the elixirs, the gambles, the flasks of thunder, fire, and frost, pitch fire, or the blasting flask), the
     alchemist (§7 "Shops": potions only, healing always first), quest rewards, and the hub's
     pile.
   - **Flasks** (the potions wave 2 design §3, §5; `world/flask.rs`, `[object.throw]` in
@@ -591,8 +612,13 @@ developer notes (CLAUDE.md, `docs/dev/`).
     the creature the splash's thrower: its kills and zone; the type learned when the player sees
     where it breaks). Endless, as a giant's boulders (Q9); a flask in a creature's pack is never
     thrown or drunk (Q10). The three: the kobold alchemist (level 3, flask of oil), the goblin
-    firebomber (6, blasting flask), the cult chymist (8, stinking flask), each carrying one or two
+    firebomber (6, flask of fire), the cult chymist (8, stinking flask), each carrying one or two
     of its kind (a gear line) that fall where it dies.
+    The flasks (#1223, #1225): the
+    sleeping draught (Sleep), the flask of smoke (Fume, a smoke zone; drunk, Stunned 1), the
+    flask of brilliance (Flare, Stunned 1 on all with eyes, `only_sighted`; drunk, Lit 1, the
+    silver family's kind one), the vial of acid (Acid splash, acid that eats the player's
+    armour; drunk, Corroded 2).
   - **Talents** (system `potions`): Thrifty drinker (Delver, from level 6): a potion is not used
     up one time in four (one gameplay draw a drink, none while the chance is 0); worn
     `potion_kept` affixes add their percent to it, the sum at most 50 (a talent's own chance

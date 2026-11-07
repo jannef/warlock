@@ -58,6 +58,9 @@ impl World {
             {
                 self.afflict(id, rider.status, rider.severity, Some(by), events);
             }
+            if rule.corrodes && id == self.state.player {
+                self.spell_eats_gear();
+            }
             let ended: Vec<_> = (rule.ends.iter())
                 .filter_map(|&s| self.state.actors.get(&id)?.effects.get(s).copied())
                 .collect();

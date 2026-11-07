@@ -78,6 +78,21 @@ Spec §8 "Potions" (`spec/08g-magic-items.md`); the combat progression design §
   cell, no stream draw), refused in effect on the overworld ("The land lurches, and holds you
   where you are."). `World::cleanse` was taken (the Cleanse spell's, `world/cast.rs`), hence
   the name `restore`.
+- The gambles (#1229, the potions wave 2 design §4.3): `Gamble { outcomes }` names a table of
+  `data/outcomes/` (`content/outcome.rs`; the tables load after the objects, so
+  `potion::check_gambles` checks the id once they have, one line in `Content::load`).
+  `World::gamble` is the spring's `drunk`: `draw_outcome(table, table.kinds)` (two gameplay
+  draws, nothing leans) and `befall` at the player's cell (objects left "at the feature's foot"
+  land beside them). A table's `seconds` defaults to 0 (a gamble's has none); `exhaust = 0`
+  (nothing spent). The two outcome effects the gambles brought: `status` as a list (each
+  afflicted, the outcome's line said instead of the statuses'), and `drain_stat = { stat,
+  points }` (`World::drain_points`, the loss half of `World::drain` lifted out: no check,
+  counted in `Actor::drained`, never below the floor; found only when a point went, else the
+  `otherwise` line). Content: `draught_of_chance`, `trolls_blood` (named "vial of troll's
+  blood" for the article), `brewers_blunder`, each with its table of the same id, iridescent
+  `#c0a0e0`; the description line "Does good, or harm, or nothing: a gamble". Tests:
+  `world/potion_gamble_tests.rs`; the wiki's tables: `potion-gambles.md`
+  (`xtask/src/wiki/outcomes.rs::gamble_outcomes`).
 - Creatures do not drink.
 
 ## Flasks: `world/flask.rs`
@@ -127,7 +142,23 @@ every later flask (smoke, fire, frost, acid, the bombers) builds on.
   `only_tags`), drunk a `cure` of `holy_water`, the means in Ill-wished's and Branded's
   `cured_by`. The flasks of thunder and blasting are in general stores' and provisioners'
   `never` lists. Tests: `world/flask_content_tests.rs` (each one's throw and drink once).
-- **Tests**: `world/flask_tests.rs` (fixture flasks on Fireball, Hex of weakness, and Slick):
+- **Content, S3** (#1225): the flask of smoke (Fume: a smoke zone, radius 2, 15 turns;
+  drunk, Stunned 1; ash grey), the flask of brilliance (Flare: Stunned 1 on all with eyes,
+  radius 1; drunk, the safe one, `status` Lit 1 and Willpower marks; silver), the vial of acid
+  (Acid splash: 2d4 acid, radius 1, Corroded 1 and the player's armour eaten by acid's
+  `corrodes`; drunk, Corroded 2; lime). Their spells are plain spells with scrolls
+  (`docs/dev/spells.md`: "Zones" for smoke, "`only_sighted`", acid's `corrodes`).
+- **Fire and cold** (#1227, slice S5): `flask_of_fire.toml` (Fireball at rung 0; drunk, Burning
+  1; scarlet `#e04020`), `flask_of_frost.toml` (Frost at rung 0; drunk, Sluggish 2; white
+  `#e8ecf0`), and `pitch_fire.toml` (the Pitch fire spell, `data/spells/pitch_fire.toml`: a
+  fire burst of radius 1, 2d6, and a `fire` zone of 6 turns on its cells, a plain spell with
+  its `scroll_of_pitch_fire`, Q4 and Q11; `range = 4`; drunk, Burning 2; scarlet). No new
+  rule: the splash is `flask.rs`'s damage branch (`cast_burst_at`, the type's rules, then
+  `lay_spell_zone`). All three in the general store's and the provisioner's `never` lists.
+  Tests: `world/flask_fire_tests.rs` (each throw and drink, the pool's cells, turns, harm, and
+  owner, pitch fire's range, the scroll's cast).
+- **Tests**: `world/flask_tests.rs` (fixture flasks on Fireball, Hex of weakness, and Slick;
+  the three S3 flasks thrown at a dummy and brilliance drunk; `world/smoke_tests.rs` for smoke):
   the throw and the burst on the dummy, the first creature in the way, the thrower's kill and
   experience, learned only when seen and heard when not, a ray's hex, a zone by the thrower, a
   potion that spills, refusals, a death by one's own flask, saves and replays, the loader's
@@ -136,7 +167,7 @@ every later flask (smoke, fire, frost, acid, the bombers) builds on.
   and calls `shatter_flask` with the creature as `by` (no `fly`, no attack roll, endless, Q9; the
   pack's flasks never thrown or drunk, Q10); `docs/dev/ranged-combat.md` has the hook. The
   three types (`docs/dev/creatures/campaign-waves.md` "Bombers"): `kobold_alchemist`
-  (`flask_of_oil`), `goblin_firebomber` (`blasting_flask` until S5's `flask_of_fire` lands),
+  (`flask_of_oil`), `goblin_firebomber` (`flask_of_fire`),
   `cult_chymist` (`stinking_flask`). Tests: `world/creature_flask_tests.rs` (the oil's slick
   zone by the kobold and learned on sight, the blast with no `Attacked` event and nothing
   landing, melee up close, the three's throws and gear, the loader's damage-less throw rule, a

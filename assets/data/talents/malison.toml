@@ -14,6 +14,7 @@ effects = [
     { kind = "status_damage", status = "webbed", value = 3 },
     { kind = "status_damage", status = "pinned", value = 3 },
     { kind = "status_damage", status = "frightened", value = 3 },
+    { kind = "status_damage", status = "stunned", value = 3 },
     { kind = "status_damage", status = "silenced", value = 3 },
     { kind = "status_damage", status = "transfixed", value = 3 },
     { kind = "status_damage", status = "asleep", value = 3 },

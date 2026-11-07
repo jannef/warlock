@@ -41,8 +41,9 @@
 #   always    objects a generated shop always lays out first, a stack of each (at most `items`'
 #             least): the general store always has scrolls of identify (spec §8 "Scrolls")
 #   never     objects a generated shop never lays out, though it stocks their class: elixirs
-#             and the costly flasks (spec §8 "Potions") are never in a general store or a
-#             provisioner's, only in an alchemist's
+#             the costly flasks, and the gambles (draught of chance, troll's blood, brewer's
+#             blunder; spec §8 "Potions") are never in a general store or a provisioner's, only
+#             in an alchemist's
 #   buys      the classes it buys from you
 #   items     [least, most]: how many stacks of goods a generated shop lays out
 #   markup    its prices, in percent of the value
@@ -77,8 +78,10 @@ stock = [
 ]
 always = ["scroll_of_identify"]
 never = [
-    "blasting_flask", "elixir_of_grace", "elixir_of_might", "elixir_of_presence",
-    "elixir_of_vigour", "elixir_of_will", "elixir_of_wit", "flask_of_thunder",
+    "blasting_flask", "brewers_blunder", "draught_of_chance", "elixir_of_grace",
+    "elixir_of_might", "elixir_of_presence", "elixir_of_vigour", "elixir_of_will",
+    "elixir_of_wit", "flask_of_fire", "flask_of_frost", "flask_of_thunder", "pitch_fire",
+    "trolls_blood",
 ]
 buys = [
     "melee_weapons", "missile_weapons", "missiles", "shields", "body_armour", "helmets",
@@ -117,8 +120,10 @@ name = "provisioner"
 title = "{keeper}'s Provisions"
 stock = ["light_sources", "tools", "food", "potions"]
 never = [
-    "blasting_flask", "elixir_of_grace", "elixir_of_might", "elixir_of_presence",
-    "elixir_of_vigour", "elixir_of_will", "elixir_of_wit", "flask_of_thunder",
+    "blasting_flask", "brewers_blunder", "draught_of_chance", "elixir_of_grace",
+    "elixir_of_might", "elixir_of_presence", "elixir_of_vigour", "elixir_of_will",
+    "elixir_of_wit", "flask_of_fire", "flask_of_frost", "flask_of_thunder", "pitch_fire",
+    "trolls_blood",
 ]
 buys = ["light_sources", "tools", "food", "potions"]
 items = [6, 10]

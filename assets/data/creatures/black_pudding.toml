@@ -16,6 +16,7 @@ glyph = "P"
 fg = "#4a4a5a"
 speed = 700
 faction = "vermin"
+tags = ["eyeless"]
 alignment = "neutral"
 vision = "darkvision"
 sight = 4
