@@ -26,3 +26,10 @@ move."; `creature_steps` makes an overloaded creature wait). `World::apply` says
 the status bar (`Burdened`/`Strained`/`Overloaded` after the HP, priority 1), the inventory
 (72 wide; `Carrying 28.4 kg (burdened)` and the thresholds line, `character_screen::thresholds`)
 and the character screen.
+
+Talents touch burden through one line (#1198; `docs/dev/progression.md` "The burden line"):
+Pack mule, Porter, Beast of burden, each needing the one before. Their effects are read in one
+place each: `carry_percent` and `weightless_coins` (Deep pockets) in `burden::load`,
+`ignore_burdened` and `stout` into `Load` (so `Load::penalty` maps Burdened to Unburdened and
+Strained to Burdened), `burden_ease` beside Balance's ease in `World::burdened`, and `burden_dex`
+(and the sign gift Supple's) on the burden's cap in `Actor::defence`.

@@ -1,0 +1,9 @@
+# The burden line's last step (#1198).
+[[talent]]
+id = "beast_of_burden"
+name = "Beast of burden"
+tree = "grit"
+description = "A tenth more again, and being Strained costs you only what being Burdened costs others."
+needs = { talents = ["porter"], level = 12 }
+effects = [{ kind = "carry_percent", value = 10 }, { kind = "stout" }]
+systems = ["burden"]

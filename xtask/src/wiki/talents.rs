@@ -726,11 +726,6 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
             .to_string(),
         TalentEffect::CarryPercent { value } => format!("carrying limit {}", percent(value)),
         TalentEffect::IgnoreBurdened => "being Burdened costs you nothing (as a dwarf)".to_string(),
-        TalentEffect::StepSlowdownPercent { value } => format!(
-            "the slowdown your burden and being Bloated put on your steps {}",
-            percent(value)
-        ),
-        TalentEffect::CarryKg { value } => format!("carrying limit {} kg", signed(value)),
         TalentEffect::WeightlessCoins => "coins you carry weigh nothing".to_string(),
         TalentEffect::TravelPercent { value } => {
             format!("overworld journey time {}", percent(value))
