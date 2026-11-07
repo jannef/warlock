@@ -277,7 +277,8 @@ impl World {
         }
         let radius = sight::sight_radius(state, content, def.sight);
         let level = state.current();
-        let los = LineOfSight::compute(me.pos, radius, |p| level.is_opaque(content, p));
+        let stops = level.sight_stops(content, me.pos, state.time);
+        let los = LineOfSight::compute(me.pos, radius, stops);
         let eye = me.eyes(content, &content.vision_profiles()[def.vision]);
         (heard.iter().rev()).map(|h| h.at).find(|&at| {
             match sight::sees_by(state, content, lights, &los, &eye, at) {
@@ -337,9 +338,8 @@ impl World {
                 Some(l) if l.radius() >= reach => los.insert(l),
                 _ => {
                     let level = state.current();
-                    los.insert(LineOfSight::compute(from, reach, |q| {
-                        level.is_opaque(content, q)
-                    }))
+                    let stops = level.sight_stops(content, from, state.time);
+                    los.insert(LineOfSight::compute(from, reach, stops))
                 }
             };
             // The player may slip past it unseen in the dark (`slip.rs`).

@@ -1781,6 +1781,8 @@ mod first_sight_tests;
 #[cfg(test)]
 mod fixture_factions;
 #[cfg(test)]
+mod flask_content_tests;
+#[cfg(test)]
 mod flask_tests;
 #[cfg(test)]
 mod flavour_tests;
@@ -1994,6 +1996,8 @@ mod smite_mode_tests;
 mod smite_tests;
 #[cfg(test)]
 mod smite_wrath_tests;
+#[cfg(test)]
+mod smoke_tests;
 #[cfg(test)]
 mod song_tests;
 #[cfg(test)]

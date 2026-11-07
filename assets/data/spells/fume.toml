@@ -1,0 +1,23 @@
+# Fume (the potions wave 2 design §9.3): Obscuring mist, every wizard's escape: a burst of thick
+# smoke that lies where it is aimed, and no eye sees into it or through it. Light passes. The
+# flask of smoke is it in glass. Scroll only.
+[[spell]]
+id = "fume"
+name = "Fume"
+description = "A burst of thick smoke where you aim it, which lies there a while: no eye sees into it or through it, and those inside see no farther than an arm's length."
+level = 4
+school = "transmutation"
+kind = "hex"
+shape = "burst"
+resolution = "area"
+range = 8
+radius = 2
+effect = { zone = { kind = "smoke", turns = 15 } }
+
+[spell.cast]
+effect = "fume"
+noise = { sound = "chanting", loudness = 20 }
+
+[spell.grows]
+range = "willpower 14 9, 18 10"
+radius = "willpower 18 3"

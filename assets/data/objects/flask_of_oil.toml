@@ -1,0 +1,26 @@
+# A flask of oil (spec §8 "Potions": "Flasks"; the potions wave 2 design §4.4): thrown, it shatters
+# into the Slick spell's slick ground where it breaks; drunk, it is lamp oil, and the drinker
+# retches. Oil is colourless.
+[[object]]
+id = "flask_of_oil"
+name = "flask of oil"
+plural = "flasks of oil"
+glyph = "!"
+fg = "#c0c8cc"
+class = "potions"
+materials = ["glass"]
+weight = 250
+value = 25
+stackable = true
+level = 2
+frequency = 20
+
+[object.drink]
+kind = "harm"
+dice = "1"
+status = "poisoned"
+colour = "colourless"
+
+[object.throw]
+spell = "slick"
+words = "Oil spreads, slick and glistening, from the shards."

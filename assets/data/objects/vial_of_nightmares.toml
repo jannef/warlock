@@ -1,0 +1,26 @@
+# A vial of nightmares (spec §8 "Potions": "Flasks"; the potions wave 2 design §4.4): thrown, it
+# shatters into the Fear spell's dread where it breaks; drunk, dread floods the drinker. Dread
+# is indigo.
+[[object]]
+id = "vial_of_nightmares"
+name = "vial of nightmares"
+plural = "vials of nightmares"
+glyph = "!"
+fg = "#4830a0"
+class = "potions"
+materials = ["glass"]
+weight = 250
+value = 90
+stackable = true
+level = 5
+frequency = 8
+
+[object.drink]
+kind = "harm"
+dice = "2"
+status = "frightened"
+colour = "indigo"
+
+[object.throw]
+spell = "fear"
+words = "A shadowy wisp curls from the shards."

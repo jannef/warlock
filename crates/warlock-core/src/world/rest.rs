@@ -233,7 +233,8 @@ impl World {
     /// it, worked out by the rules of sight ([`sight::sees`], the perception's own) for their
     /// cells alone. `None`
     /// where the perception sees by more than line of sight and light: on the overworld, with
-    /// Blood scent, with light-blind eyes.
+    /// Blood scent, with light-blind eyes; and where smoke lies (a line of sight kept across
+    /// turns would not know it).
     pub(super) fn watched_in_sight(
         &mut self,
         kept: &mut Option<Sightline>,
@@ -245,6 +246,7 @@ impl World {
         if level.kind == LevelKind::Overworld
             || !player.talent_mods(&content).scent.is_empty()
             || (state.race_of(&content, player)).is_some_and(|r| r.light_blind.is_some())
+            || (level.zones.iter()).any(|z| z.kind == crate::content::ZoneKind::Smoke)
         {
             return None;
         }

@@ -1,0 +1,26 @@
+# A flask of darkness (spec §8 "Potions": "Flasks"; the potions wave 2 design §4.4): thrown, it
+# shatters into the Mirk spell's pall of darkness where it breaks; drunk, the drinker's sight
+# swims and their blows go astray (Hexed, which holy water washes off). Darkness is black.
+[[object]]
+id = "flask_of_darkness"
+name = "flask of darkness"
+plural = "flasks of darkness"
+glyph = "!"
+fg = "#303038"
+class = "potions"
+materials = ["glass"]
+weight = 250
+value = 90
+stackable = true
+level = 5
+frequency = 10
+
+[object.drink]
+kind = "harm"
+dice = "2"
+status = "ill_wished"
+colour = "black"
+
+[object.throw]
+spell = "mirk"
+words = "Darkness pours from the shards."

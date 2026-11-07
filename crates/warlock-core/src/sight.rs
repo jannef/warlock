@@ -8,7 +8,9 @@
 //! sanctuary's glow) or within its darkvision radius. On the overworld, sight is at map
 //! scale: line of sight within the daylight (and moonlight, and rain) radius and the creature's
 //! own sight, whatever the light. An actor on an opaque cell is seen
-//! only within darkvision (off the overworld; no such terrain exists there yet).
+//! only within darkvision (off the overworld; no such terrain exists there yet). Smoke stops
+//! every line of sight and hides what is in it beyond the cells beside the viewer
+//! ([`crate::world::LevelState::sight_stops`]), the player's and a creature's alike.
 //!
 //! Creatures never read the player's perception. They compute their own, and only for the cells
 //! where a hostile stands: a line of sight within their radius, and the light of those cells
@@ -139,10 +141,11 @@ pub(crate) fn sees_by(
     if p == los.origin {
         return Some(By::Light);
     }
-    if !los.contains(p) {
+    let level = state.current();
+    // Smoke hides what is in it beyond the cells beside the viewer (`world/zone.rs`).
+    if !los.contains(p) || level.smoke_hides(los.origin, p, state.time) {
         return None;
     }
-    let level = state.current();
     if level.kind == LevelKind::Overworld {
         return Some(By::Light);
     }

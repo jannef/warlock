@@ -358,6 +358,7 @@ impl World {
             }
             (self.state.actors.values())
                 .filter(|a| a.level == level && a.id != id && cells.contains(&a.pos))
+                .filter(|a| self.sees_flash(a, def.effect.only_sighted))
                 .map(|a| a.id)
                 .collect()
         } else {

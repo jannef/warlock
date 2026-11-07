@@ -2,7 +2,7 @@
 source: crates/warlock/src/ui/screen_snapshots.rs
 expression: "render(case, content.clone())"
 ---
- You pick up an opaque orange potion, a curdled violet potion, and a pungent pink potion.
+ You pick up a lumpy orange potion, an opaline violet potion, and a lustrous pink potion.
  This is a potion of might! This is a potion of owl's eyes! This is a sleeping draught!
 
 

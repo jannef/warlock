@@ -561,8 +561,19 @@ developer notes (CLAUDE.md, `docs/dev/`).
     blood (one outcome: Renewing 3 and Poisoned 2 at once; 5, 10; 120; Toughness), and the
     brewer's blunder (boon 45: a greater boost, severity 2, one of six; nothing 10; bane 45: a
     point of one of the six stats drained; 6, 8; 100); the sleeping
-    draught (a flask of Sleep; harm, Drowsy 3; 3, 15; 60; pink). **Where**: loot (by `level` and
-    `frequency`, never magic), general stores and provisioners (they stock and buy potions), the
+    draught (a flask of Sleep; harm, Drowsy 3; 3, 15; 60; pink); the flasks on existing spells
+    (#1226, the design's §4.4; a flask of the spell at rung 0, then its drink): flask of oil
+    (Slick; Poisoned 1; 2, 20; 25; colourless), stinking flask (Reek; Poisoned 3; 4, 12; 60;
+    olive), flask of tar (Web; Poisoned 1; 4, 10; 60; amber), flask of enfeeblement (Hex of
+    weakness; Weakened 2; 4, 10; 70; indigo), flask of sloth (Curse of sloth; Sluggish 2; 4, 10;
+    70; indigo), flask of darkness (Mirk; Hexed 2; 5, 10; 90; black), vial of nightmares (Fear;
+    Frightened 2; 5, 8; 90; indigo), vial of silence (Silence; Silenced 1; 5, 8; 90; black),
+    flask of thunder (Thunderclap, heard as thunder at 150; Stunned 1; 5, 8; 100; slate),
+    blasting flask (Shatter, heard as an explosion at 100; Stunned 1; 7, 6; 200; slate), and
+    flask of holy water (Rebuke, which harms only the undead; drunk, a `cure` of `holy_water`,
+    the means in Hexed's and Branded's `cured_by`; 5, 8; 100; silver; Willpower). **Where**:
+    loot (by `level` and `frequency`, never magic), general stores and provisioners (they stock
+    and buy potions; never the elixirs, the gambles, the flask of thunder, or the blasting flask), the
     alchemist (§7 "Shops": potions only, healing always first), quest rewards, and the hub's
     pile.
   - **Flasks** (the potions wave 2 design §3, §5; `world/flask.rs`, `[object.throw]` in
@@ -589,7 +600,11 @@ developer notes (CLAUDE.md, `docs/dev/`).
     potion shatters; the draught soaks away.") and teaches nothing. A death by one's own flask is
     "Killed by their own flask of …" (`Cause::Flask`). A known flask's description adds "Thrown,
     it shatters and casts Sleep where it breaks"; the `inventory` dump marks it `(throw 6)`, JSON
-    `throw: { range }`. Creatures do not throw flasks yet.
+    `throw: { range }`. Creatures do not throw flasks yet. The flasks (#1223, #1225): the
+    sleeping draught (Sleep), the flask of smoke (Fume, a smoke zone; drunk, Stunned 1), the
+    flask of brilliance (Flare, Stunned 1 on all with eyes, `only_sighted`; drunk, Lit 1, the
+    silver family's kind one), the vial of acid (Acid splash, acid that eats the player's
+    armour; drunk, Corroded 2).
   - **Talents** (system `potions`): Thrifty drinker (Delver, from level 6): a potion is not used
     up one time in four (one gameplay draw a drink, none while the chance is 0); worn
     `potion_kept` affixes add their percent to it, the sum at most 50 (a talent's own chance

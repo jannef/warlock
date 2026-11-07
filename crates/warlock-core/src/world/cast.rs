@@ -691,6 +691,7 @@ impl World {
             .filter(|a| a.level == level && a.id != player && cells.contains(&a.pos))
             .filter(|a| self.is_of_tags(a, &cast.def.effect.only_tags))
             .filter(|a| self.stands_on(a.pos, cast.def.effect.only_terrain))
+            .filter(|a| self.sees_flash(a, cast.def.effect.only_sighted))
             .map(|a| a.id)
             .collect();
         let content = self.content.clone();
