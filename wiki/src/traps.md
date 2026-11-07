@@ -50,6 +50,17 @@ on hidden traps too (see [Talents](talents.md)).
 
 {{#include generated/traps.md}}
 
+### Damage by danger
+
+The damage above is a trap's in the shallowest places. Deeper down traps hit harder: what a trap
+does depends on the [danger level](dungeons.md) of the place it lies in, rising in steps, the
+same for a trap on the floor, a [door](#trapped-doors), or a [chest](chests.md). A place with no
+danger at all counts as 0. At danger 0 to 2 no trap kills a new character at full
+[hit points](combat.md#hit-points) in one go, even with a [critical hit](combat.md#criticals);
+the column is the danger the step starts at.
+
+{{#include generated/trap-damage.md}}
+
 - **Attacks**: an [arrow](traps.md#trap-arrow) or [spears](traps.md#trap-spear) attack like a weapon, rolled against the [Defence](combat.md#defence) of whoever
   stepped on the trap (see [Combat](combat.md)): they can miss ("You dodge the arrow.", "The spear
   glances off your armour."), hit, or hit hard. An arrow flies like a shot (see
