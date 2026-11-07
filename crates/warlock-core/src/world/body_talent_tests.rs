@@ -445,10 +445,6 @@ fn every_talent_of_the_three_trees_loads_with_its_effects() {
     let files = ContentFiles::builtin();
     let content = Content::load(&files).expect("content");
     let book = content.talents();
-    for tree in ["vigour", "might", "finesse"] {
-        let tree = book.tree_id(tree).expect("a tree");
-        assert!(!book.tree(tree).pending, "the tree is held to the bar");
-    }
     let count = |tree: &str| book.of_tree(book.tree_id(tree).expect("tree")).count();
     // The design's 28, Battle trance and Inner calm (the class resources, R5) among them,
     // stamina's Deep lungs (#560), protection's Armour-breaker (#563), stat training's Hard

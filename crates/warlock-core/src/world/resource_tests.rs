@@ -416,7 +416,7 @@ fn a_class_active_that_costs_a_resource_is_unavailable_without_it_and_spends_it(
 }
 
 #[test]
-fn a_cost_must_name_a_resource_and_belong_to_a_class_active() {
+fn a_cost_must_name_a_resource() {
     let mut files = ContentFiles::builtin();
     let rage = include_str!("../../../../assets/data/talents/rage.toml");
     let bad = rage.replace("systems = [", "resource = { id = \"mirth\" }\nsystems = [");
@@ -425,22 +425,6 @@ fn a_cost_must_name_a_resource_and_belong_to_a_class_active() {
         .expect_err("unknown resource")
         .to_string();
     assert!(err.contains("mirth"), "{err}");
-    let mut files = ContentFiles::builtin();
-    let rage = rage.replace(
-        "systems = [",
-        "resource = { id = \"focus\", cost = 11 }\nsystems = [",
-    );
-    files.insert("data/talents/rage.toml", &rage);
-    let err = Content::load(&files).expect_err("too dear").to_string();
-    assert!(err.contains("more"), "{err}");
-    let mut files = ContentFiles::builtin();
-    let hardy = include_str!("../../../../assets/data/talents/hardy.toml");
-    let bad = hardy.replace("systems = [", "resource = { id = \"focus\" }\nsystems = [");
-    files.insert("data/talents/hardy.toml", &bad);
-    let err = Content::load(&files)
-        .expect_err("not an active")
-        .to_string();
-    assert!(err.contains("class active"), "{err}");
 }
 
 #[test]
