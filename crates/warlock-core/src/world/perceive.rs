@@ -38,10 +38,20 @@ impl World {
             .collect()
     }
 
-    /// Creatures the player sees whose coming into view stops a rest ([`World::disturbs_rest`]).
-    pub(super) fn watched_in_view(&self) -> Vec<ActorId> {
+    /// Creatures the player sees whose coming close stops a rest ([`World::disturbs_rest`]),
+    /// wherever they are in view.
+    pub(super) fn hostiles_in_view(&self) -> Vec<ActorId> {
         let mut seen = self.creatures_in_view();
         seen.retain(|id| self.disturbs_rest(&self.state.actors[id]));
+        seen
+    }
+
+    /// Those of [`World::hostiles_in_view`] within [`super::rest::CLOSE`] of the player: whose
+    /// coming there stops a rest.
+    pub(super) fn watched_in_view(&self) -> Vec<ActorId> {
+        let here = self.player_pos();
+        let mut seen = self.hostiles_in_view();
+        seen.retain(|id| self.state.actors[id].pos.chebyshev(here) <= super::rest::CLOSE);
         seen
     }
 
@@ -110,7 +120,8 @@ impl World {
     /// and kept with the attack that caused it, if the player saw who died. The player's own
     /// death is always said, and settles whether they saw what killed them. A death of a status
     /// effect is said if the player sees where it happened ("The giant rat bleeds to death.").
-    /// The player's own status effects are said as they begin (stopping a rest) and end (not
+    /// An attack on the player stops a rest; others' attacks and deaths only within
+    /// [`super::rest::CLOSE`] of them (spec §8 "Rest"). The player's own status effects are said as they begin (stopping a rest) and end (not
     /// stopping one); their diseases as they show and worsen (stopping a rest) and leave (not
     /// stopping one). A trap going off is said and kept if the player set it off, saw its cell,
     /// or saw any of its blast; what it did to someone if they are the player or the player saw
@@ -132,6 +143,10 @@ impl World {
         let mut killer_seen: Option<Option<CreatureId>> = None;
         let mut collapsed = 0;
         let perception = &self.perception;
+        // Others' fights and deaths stop a rest only within close reach of the player (spec §8
+        // "Rest", `rest.rs`): farther off they are told and the rest goes on.
+        let here = self.player_pos();
+        let close = |p: Pos| p.chebyshev(here) <= super::rest::CLOSE;
         let end = |id: ActorId, seen: bool| match self.actor_or_fallen(id) {
             _ if id == player => End::You,
             Some(a) if seen && a.master() == Some(player) => match a.kept() {
@@ -253,6 +268,7 @@ impl World {
                 }
                 // A spell's blow with a roll (one turned back, `reflect.rs`) was said as cast.
                 let said = kind == AttackKind::Spell && strike.is_some();
+                let stops = target == player || close(from) || close(to);
                 if let Some(me) = self.actor_or_fallen(attacker).filter(|_| !said) {
                     let guard = Guard::of(self.actor_or_fallen(target), &content, &self.state);
                     let (a, t) = (end(attacker, sees_attacker), end(target, sees_target));
@@ -260,7 +276,7 @@ impl World {
                     if let Some(throw) = hurl::thrown_by(&content, me, kind, with) {
                         let said =
                             hurl::throw_messages(&content, throw, (a, t), strike, damage, guard);
-                        reports.extend(said.into_iter().map(|text| (text, true)));
+                        reports.extend(said.into_iter().map(|text| (text, stops)));
                     } else {
                         // A natural attack after the first is said by its own words (`claws`).
                         let def = content.creature(me.creature);
@@ -270,7 +286,7 @@ impl World {
                                 None => Words::of(me, kind, with, damage, &content),
                             };
                         let said = attack_message(a, t, &words, kind, strike, guard);
-                        reports.extend(said.map(|text| (text, true)));
+                        reports.extend(said.map(|text| (text, stops)));
                     }
                 }
                 sees_attacker && sees_target
@@ -344,11 +360,12 @@ impl World {
                 if let (true, Some(dead)) = (seen, self.actor_or_fallen(actor)) {
                     let name = &content.creature(dead.creature).name;
                     let dies = content.status(status).dies.as_deref().unwrap_or("dies");
-                    reports.push((format!("{} {dies}.", crate::content::the_start(name)), true));
+                    let text = format!("{} {dies}.", crate::content::the_start(name));
+                    reports.push((text, close(at)));
                 }
                 seen
             }
-            Event::Died { actor, .. } => match last {
+            Event::Died { actor, at, .. } => match last {
                 None => actor == player,
                 Some(Last::Attack(_, _, _, by)) if actor == player => {
                     killer_seen = Some(by);
@@ -368,7 +385,7 @@ impl World {
                     if seen {
                         let dies = (self.actor_or_fallen(actor))
                             .map_or("dies", |a| content.creature(a.creature).death_verb());
-                        reports.push((death_message(end(actor, true), dies), true));
+                        reports.push((death_message(end(actor, true), dies), close(at)));
                     }
                     seen
                 }

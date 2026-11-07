@@ -33,6 +33,7 @@ fn files(map: &str, light: &str, scenario: &str) -> ContentFiles {
              \"E\" = \"packed_earth\"\n\"G\" = \"granite\"\n\
              \"l\" = {{ terrain = \"floor\", light = \"lamp\" }}\n\
              \"d\" = {{ terrain = \"floor\", creature = \"deer\", route = \"N4 S4\" }}\n\
+             \"r\" = {{ terrain = \"floor\", creature = \"rat\", route = \"N4 S4\" }}\n\
              \"k\" = {{ terrain = \"floor\", creature = \"kobold\" }}\n\
              \"F\" = {{ terrain = \"floor\", trap = \"fireball\" }}\n"
         ),
@@ -203,8 +204,8 @@ fn only_walls_that_break_can_be_dug() {
 
 #[test]
 fn digging_stops_like_resting_and_the_work_stays_on_the_wall() {
-    // A deer walks up a passage into the room while the player digs: they stop when it comes
-    // into view, and the wall keeps what was dug.
+    // A giant rat walks up a passage into the room while the player digs: they stop when it
+    // comes into view close by, and the wall keeps what was dug.
     const PASSAGE: &str = "
 ############
 #..........#
@@ -212,7 +213,7 @@ fn digging_stops_like_resting_and_the_work_stays_on_the_wall() {
 #####.######
 #####.######
 #####.######
-#####d######
+#####r######
 ############
 ";
     let content = content_of(PASSAGE, LIT, "");
@@ -224,10 +225,13 @@ fn digging_stops_like_resting_and_the_work_stays_on_the_wall() {
     assert_eq!(
         last_message(&w),
         format!(
-            "A deer comes into view; you stop digging after {}.",
+            "A giant rat comes into view; you stop digging after {}.",
             Duration::seconds(took).spoken()
         )
     );
+    // It would come for the player; gone, it leaves them to dig on.
+    let player = w.state.player;
+    w.state.actors.retain(|&id, _| id == player);
     let wall = Pos::new(1, 3);
     assert_eq!(terrain_at(&w, wall), "wall");
     let (level, _) = w.ground_truth();
@@ -238,8 +242,7 @@ fn digging_stops_like_resting_and_the_work_stays_on_the_wall() {
     let content = w.content().clone();
     let mut loaded = crate::save::decode(&crate::save::encode(&w), content).expect("loads");
     assert_eq!(loaded.state(), w.state());
-    // Digging again goes on from there (the deer comes and goes on its round, so it may take
-    // a few goes): six minutes in all.
+    // Digging again goes on from there: six minutes in all.
     let mut total = took;
     for _ in 0..20 {
         total += dig(&mut w, "S");

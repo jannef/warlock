@@ -124,11 +124,8 @@ impl World {
         match ended {
             Ended::Died => {}
             _ if left.get() == 0 => self.finish_scribe(writing),
-            Ended::Came(id) => {
-                let text = format!(
-                    "{} comes into view; you stop writing.",
-                    self.creature_called(id)
-                );
+            Ended::Came(came) => {
+                let text = format!("{}; you stop writing.", self.came_line(came));
                 self.say(text);
             }
             Ended::Said | Ended::Done => self.say("You stop writing."),

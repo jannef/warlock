@@ -98,11 +98,8 @@ impl World {
         match ended {
             Ended::Died => {}
             _ if self.state.time >= until => self.forage_done(),
-            Ended::Came(id) => {
-                let text = format!(
-                    "{} comes into view; you stop foraging.",
-                    self.creature_called(id)
-                );
+            Ended::Came(came) => {
+                let text = format!("{}; you stop foraging.", self.came_line(came));
                 self.say(text);
             }
             Ended::Said | Ended::Done => self.say("You stop foraging."),

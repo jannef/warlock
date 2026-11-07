@@ -133,11 +133,8 @@ impl World {
         match ended {
             Ended::Died => {}
             _ if left.get() == 0 => self.finish(dish, events),
-            Ended::Came(id) => {
-                let text = format!(
-                    "{} comes into view; you stop eating.",
-                    self.creature_called(id)
-                );
+            Ended::Came(came) => {
+                let text = format!("{}; you stop eating.", self.came_line(came));
                 self.say(text);
             }
             Ended::Said | Ended::Done => self.say("You stop eating."),

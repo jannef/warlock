@@ -286,10 +286,10 @@ impl World {
         match ended {
             Ended::Died => {}
             _ if self.state.time >= until => self.tempered(work),
-            Ended::Came(id) => {
+            Ended::Came(came) => {
                 let text = format!(
-                    "{} comes into view; you put down the {}.",
-                    self.creature_called(id),
+                    "{}; you put down the {}.",
+                    self.came_line(came),
                     work.craft.tool()
                 );
                 self.say(text);
