@@ -134,14 +134,6 @@ Two abilities that do the same thing never add up:
 - [Spell reflection](fighting-styles.md#style-ability-spell-reflection) turns back at most one spell per turn of yours, and a spell turned back is never
   turned back again. So two shield-bearers cannot bat a bolt between them.
 
-## Related styles
-
-Styles are related to each other the way weapon skills are (see
-[Related skills](weapon-skills.md#related-skills)), but never to a weapon skill. When you gain a rank in one, each related
-style rises to your new rank minus the penalty, if that is more than you have in it.
-
-{{#include generated/style-defaults.md}}
-
 ## Where your styles come from
 
 Your [class](classes.md) starts you with a rank in a style or two. A [warrior](classes.md#warrior) fights with

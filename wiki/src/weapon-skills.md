@@ -5,8 +5,9 @@ The more you fight with a kind of weapon, the better you get with it. Every kind
 the skill it uses. When you have enough marks you gain a rank: "You feel more skilled with long
 blades." A [shield](objects.md#class-shields) has a skill too, for [bashing](weapon-skills.md#weapon-skill-shield-bash) with it.
 
-Skill with one weapon carries over to related ones. Someone who is good with a
-[long sword](weapon-skills.md#weapon-skill-long-blades) is not a beginner with a short one.
+Each skill grows only by its own use. Someone who is good with a
+[long sword](weapon-skills.md#weapon-skill-long-blades) is still a beginner with a short one until
+they practise with it.
 
 ## The skills
 
@@ -59,18 +60,6 @@ few levels. From rank 7 on, each rank asks for far more, and the last ranks take
 Missile weapons need fewer marks than weapons up close. The schools of magic and the caster
 styles, trained by casting, follow a gentler curve of their own. You start every skill with no
 marks.
-
-## Related skills
-
-When you gain a rank in a skill, every related skill is raised to your new rank minus the penalty
-between the two, if that is more than you have in it. So [long blades](weapon-skills.md#weapon-skill-long-blades) 8 gives [short blades](weapon-skills.md#weapon-skill-short-blades) 6. A
-skill raised this way starts its marks again from 0.
-
-Relations go both ways, but only one step. A rank in [long blades](weapon-skills.md#weapon-skill-long-blades) raises [short blades](weapon-skills.md#weapon-skill-short-blades), but not,
-through them, [thrown weapons](weapon-skills.md#weapon-skill-thrown). Unrelated skills, such as [bows](weapon-skills.md#weapon-skill-bows) and [axes](weapon-skills.md#weapon-skill-axes), never move each
-other.
-
-{{#include generated/weapon-defaults.md}}
 
 ## What a rank gives
 
@@ -146,8 +135,7 @@ no free blows of their own.
 You start with some skills from your [race](races.md) and your [class](classes.md). A [warrior](classes.md#warrior) knows [long blades](weapon-skills.md#weapon-skill-long-blades),
 a [ranger](classes.md#ranger) knows [bows](weapon-skills.md#weapon-skill-bows), and a [thief](classes.md#thief) knows [daggers](weapon-skills.md#weapon-skill-daggers). Some starting ranks are dice (`1d2` is one or two),
 rolled when you start. A [berserker](classes.md#berserker) has learned either [axes](weapon-skills.md#weapon-skill-axes) or great blades, and the dice decide
-which. Your starting ranks then raise their related skills, as above. Your race's and your class's
-ranks add up.
+which. Your race's and your class's ranks add up.
 
 Creatures have skills too: the [kobolds](creatures.md#creature-kobold) of the war band know their [spears](weapon-skills.md#weapon-skill-spears) and [bows](weapon-skills.md#weapon-skill-bows). They do not
 get better (yet).

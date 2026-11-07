@@ -202,7 +202,7 @@ wiki's effect text appends "while raging".
 | `stout` | `burden::load` → `Load::stout`; `Load::penalty` gives Burdened while Strained (left out of the JSON while false) |
 | `small_target` | `World::small_target` (`world/racial.rs`) |
 | `launcher_range { skill }` | `Actor::launcher_range` through `TalentMods::launcher_range_for` (the launcher's `skill` id) |
-| `weapon_ranks` | handed out, not read: `class::hand_out` (`raise_ranks`) raises every row of `skills` (none named: every weapon skill and style of the content but schools and hidden styles, read from the table, never a list) held below `to` to it, `WeaponSkills::raise_to` (defaults with it); its `news` said by `grant_class` (Travelled hands, the bard's) |
+| `weapon_ranks` | handed out, not read: `class::hand_out` (`raise_ranks`) raises every row of `skills` (none named: every weapon skill and style of the content but schools and hidden styles, read from the table, never a list) held below `to` to it, `WeaponSkills::raise_to`; its `news` said by `grant_class` (Travelled hands, the bard's) |
 | `take_up_skills` | handed out, not read: `World::take_up_skills` (`world/jack.rs`, from `grant_class`, `take_talent`, and `bestow`) trains every skill of the content the player lacks, but `except`, at `dice` from `levels_rng` in file order; its `news` said by `grant_class` (Jack of all trades, the bard's) |
 | `ignore_burdened` | `burden::load` (`Load::ignores_burdened`, as a dwarf's) |
 | `no_bloating`, `corpse_stats_percent` | `eat.rs`: `feed` (nutrition stops one below Bloated, nothing overeats) and `corpse_gifts` (a corpse's `train` marks and `widen` chances scaled, the chance at most 100) |
