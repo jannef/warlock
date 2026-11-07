@@ -1,6 +1,8 @@
 //! A creature type's throw (spec §8 "Ranged combat": "Creatures' throws"): a natural ranged
 //! attack, `[creature.throw]`, that needs no ammunition. A giant hurls boulders: what flies is an
-//! object (for its look only; it never lands), the attack is a natural attack's.
+//! object (for its look only; it never lands), the attack is a natural attack's. A throw whose
+//! object is a flask (a bomber's, the potions wave 2 design §5) has no `damage`: the flask's
+//! splash is the attack (`world/hurl.rs`).
 
 use super::creature::{NaturalAttack, NaturalAttackSpec};
 use super::damage_type::TypeNames;
@@ -14,13 +16,14 @@ use serde::Deserialize;
 /// A throw as written: `[creature.throw]` with `object` (what flies), `damage`, `damage_type`,
 /// `range`, `verb` (what the thrower does: "hurls"), and optionally `name` (what it is called;
 /// default the object's name), `cost` (its energy; default `throw` in `data/actions.toml`), and
-/// `to_hit`, `threat`, `crit`, and `on_hit` as for a natural attack.
+/// `to_hit`, `threat`, `crit`, and `on_hit` as for a natural attack. `damage` may be left out
+/// only when `object` is a flask (checked once objects are known, `Content::load_throws`).
 #[derive(Clone, Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub(super) struct ThrowSpec {
     pub object: String,
     pub name: Option<String>,
-    pub damage: Dice,
+    pub damage: Option<Dice>,
     pub damage_type: Option<TypeNames>,
     pub verb: String,
     pub range: i32,
@@ -50,6 +53,8 @@ pub struct Throw {
     /// The object as written, and whether `name` was given (else the object's name is taken).
     pub(super) object_id: String,
     pub(super) named: bool,
+    /// Whether `damage` was written (else the object must be a flask).
+    pub(super) damage_given: bool,
 }
 
 impl ThrowSpec {
@@ -65,8 +70,9 @@ impl ThrowSpec {
             super::action::check_cost(cost).map_err(|m| format!("throw: cost: {m}"))?;
         }
         let named = self.name.is_some();
+        let damage_given = self.damage.is_some();
         let attack = NaturalAttackSpec {
-            damage: self.damage,
+            damage: self.damage.unwrap_or_default(),
             damage_type: self.damage_type,
             name: self.name.unwrap_or_else(|| self.object.clone()),
             verb: self.verb,
@@ -84,6 +90,7 @@ impl ThrowSpec {
             cost: self.cost,
             object_id: self.object,
             named,
+            damage_given,
         })
     }
 }

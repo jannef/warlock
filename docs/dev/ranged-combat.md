@@ -62,4 +62,9 @@ flight `loose` uses (so no gameplay draw beyond the attacks' and nothing comes d
 `status.rs::on_hit_of` gives a creature's thrown attacks its throw's `on_hit`. The flight is an
 `Event::Missile` of the throw's object (the `boulder`, which nothing else places), shown like an
 arrow; `perceive_events` says the throw through `hurl::throw_messages` (the thrower's announcement,
-then the blow with `End::Trap(noun)` as subject). Tests: `world/hurl_tests.rs`.
+then the blow with `End::Trap(noun)` as subject). A throw whose object is a flask (a bomber,
+#1230; `ThrowSpec::damage` optional then, `load_throws` refusing a damage-less throw of anything
+else) takes the one branch in `creature_hurls`: after pricing, noise, and `aim_at`, "The kobold
+alchemist hurls a flask." (`gaze.rs::end_of`'s subject) when the player sees the thrower, then
+`World::shatter_flask(id, object, (pos, at, range))` instead of `fly` (`docs/dev/potions.md`
+"Flasks"). Tests: `world/hurl_tests.rs`, `world/creature_flask_tests.rs`.

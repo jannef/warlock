@@ -19,6 +19,14 @@ A throw adds the thrower's [Dexterity](stats.md#stat-dexterity) modifier [to hit
 and its [Strength](stats.md#stat-strength) modifier to the [damage](combat.md#damage), as yours do.
 A boulder that does two kinds of damage does whichever hurts its target more.
 
+**Bombers** throw [flasks](potions.md#flasks) instead: a kobold alchemist its flasks of oil, a
+goblin firebomber flasks of fire, a cult chymist stinking flasks. A bomber's flask has no roll
+to [hit](combat.md#hitting): it breaks where a flask you throw would, on the first one in its
+way, and its spell's splash is the attack (the table names the spell). Whoever else stands in the
+splash catches it too, the bomber's own kind and the bomber itself. If you see where it breaks,
+you learn what the flask was, as when you throw one. Its flasks never run out either, but it
+carries one or two, which fall where it dies.
+
 {{#include generated/creature-throws.md}}
 
 ## Summoning

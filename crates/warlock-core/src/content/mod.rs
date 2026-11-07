@@ -2134,6 +2134,15 @@ impl Content {
                     ),
                 )
             })?;
+            if !throw.damage_given && self.object(object).flask.is_none() {
+                return Err(ContentError::new(
+                    "data/creatures/",
+                    format!(
+                        "creature `{}`: throw: no `damage`, and `{}` is no flask",
+                        self.creatures[i].id, throw.object_id
+                    ),
+                ));
+            }
             let name = self.object(object).name.clone();
             let throw = self.creatures[i].throw.as_mut().expect("a throw");
             throw.object = object;

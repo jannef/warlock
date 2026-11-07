@@ -191,6 +191,9 @@ gives each flask's spell, its numbers, and its range in cells.
   of glass" ([Hearing](hearing.md#what-makes-noise)), and you learn nothing.
 - **A potion that is no flask** spills uselessly: "The potion shatters; the draught soaks away."
   You learn nothing from it either. It is a way to be rid of a potion you know is bad.
+- **Thrown at you**: some creatures throw flasks (the bombers on
+  [Creature powers](creature-powers.md#throws)). Seeing where one breaks teaches you what it was,
+  as when you throw it, and a bomber carries a flask or two of its kind that fall where it dies.
 - **Smoke**: a flask of smoke leaves a cloud of [smoke](spellcasting.md#zones) no eye sees into or
   through, yours and every creature's: a way past archers, or out of a fight.
 - **Acid**: a vial of acid burns, keeps eating, and eats at the armour of anyone it harms, yours

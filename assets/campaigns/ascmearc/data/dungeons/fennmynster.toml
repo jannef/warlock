@@ -30,6 +30,7 @@ temperature = 6
 danger = 3
 population = [
     "corpse_candle", "giant_leech", "giant_frog", "pixie", "drowned", "crocodile", "cultist",
+    "cult_chymist",
     "lesser_water_elemental", "poltergeist", "will_o_wisp", "boggle", "ghast", "ghost", "shadow",
     "mud_golem", "cult_priest", "darkling", "marsh_troll", "bog_body", "wraith", "fen_ghoul",
     "bog_hag",

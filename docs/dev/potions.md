@@ -163,6 +163,15 @@ every later flask (smoke, fire, frost, acid, the bombers) builds on.
   experience, learned only when seen and heard when not, a ray's hex, a zone by the thrower, a
   potion that spills, refusals, a death by one's own flask, saves and replays, the loader's
   one refusal.
+- **Bombers** (S8, #1230): `hurl.rs::creature_hurls` sees a throw whose object has a `flask`
+  and calls `shatter_flask` with the creature as `by` (no `fly`, no attack roll, endless, Q9; the
+  pack's flasks never thrown or drunk, Q10); `docs/dev/ranged-combat.md` has the hook. The
+  three types (`docs/dev/creatures/campaign-waves.md` "Bombers"): `kobold_alchemist`
+  (`flask_of_oil`), `goblin_firebomber` (`flask_of_fire`),
+  `cult_chymist` (`stinking_flask`). Tests: `world/creature_flask_tests.rs` (the oil's slick
+  zone by the kobold and learned on sight, the blast with no `Attacked` event and nothing
+  landing, melee up close, the three's throws and gear, the loader's damage-less throw rule, a
+  replay).
 
 ## Labels and colours
 
@@ -188,6 +197,8 @@ every later flask (smoke, fire, frost, acid, the bombers) builds on.
   class (by loot frequency, so healing and antidote are the common ones); the `alchemist` kind
   stocks and buys potions only, a stack of potions of healing always first. Hand-made shops
   (Cēaptūn) are unchanged.
+- The bombers (S8): each carries one or two flasks of its throw (a gear line), dropped where it
+  dies.
 - Quest rewards and level piles name potions by id (the Watch's reward, the hub's pile, the
   still room vault).
 - Elixirs: deep loot (level 8, frequency 2), the forgotten altar's great boon `elixir`

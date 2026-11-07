@@ -572,6 +572,30 @@ pub(super) fn creature_throws(content: &Content) -> String {
         let Some(profile) = actor.hurled(content) else {
             continue;
         };
+        let saving = actor
+            .attack_benefit(content, AttackKind::Thrown, None)
+            .speed;
+        let cost = content.action_cost(id, ActionKind::Throw);
+        let takes = price(Benefit::saving(cost, saving), BASE_TURN);
+        let creature = link(Term::Creature, &c.id, &capital(&c.name));
+        let range = throw.range;
+        let takes = at_speed(takes, c.speed);
+        // A bomber's flask has no blow of its own: its splash, the flask's spell, is the attack.
+        if let Some(flask) = &content.object(throw.object).flask {
+            let spell = content.spell(flask.spell);
+            let _ = writeln!(
+                out,
+                "| {creature} | {} | its splash: {} (rung {}) | - | - | {range} cells | {takes} | - |",
+                link(
+                    Term::Potion,
+                    &content.object(throw.object).id,
+                    &throw.attack.name
+                ),
+                link(Term::Spell, &spell.id, &spell.name),
+                flask.rungs,
+            );
+            continue;
+        }
         let kinds: Vec<String> = (profile.kinds.iter())
             .map(|k| content.damage_type(k).name.clone())
             .collect();
@@ -580,22 +604,14 @@ pub(super) fn creature_throws(content: &Content) -> String {
             damage_text(profile.damage, profile.bonus),
             kinds.join(" or ")
         );
-        let saving = actor
-            .attack_benefit(content, AttackKind::Thrown, None)
-            .speed;
-        let cost = content.action_cost(id, ActionKind::Throw);
-        let takes = price(Benefit::saving(cost, saving), BASE_TURN);
         let _ = writeln!(
             out,
-            "| {} | {} | {} | {} | {} ×{} | {} cells | {} | {} |",
-            link(Term::Creature, &c.id, &capital(&c.name)),
+            "| {creature} | {} | {} | {} | {} ×{} | {range} cells | {takes} | {} |",
             throw.attack.name,
             damage.trim_end(),
             signed(profile.to_hit),
             threat_range(profile.threat),
             profile.crit,
-            throw.range,
-            at_speed(takes, c.speed),
             dash(&on_hit(content, &throw.attack))
         );
     }
@@ -1190,8 +1206,8 @@ mod tests {
         let table = creature_tags(&content);
         assert!(
             table.contains(
-                "| `goblin` | goblins | goblin, goblin archer, goblin chief, goblin wizard, hobgoblin, \
-                 hobgoblin archer, hobgoblin captain, hobgoblin legionnaire, hobgoblin sergeant, \
+                "| `goblin` | goblins | goblin, goblin archer, goblin chief, goblin firebomber, goblin wizard, \
+                 hobgoblin, hobgoblin archer, hobgoblin captain, hobgoblin legionnaire, hobgoblin sergeant, \
                  hobgoblin warcaster, hobgoblin warlord |"
             ),
             "{table}"

@@ -15,6 +15,13 @@
 //! **Words**: the player who sees the thrower is told it throws ("The hill giant hurls a
 //! boulder."); its blow is said as a trap's missile is, by what flies ("The boulder strikes
 //! you.", "You dodge the boulder."): what an unseen thrower did is said only to its target.
+//!
+//! **A bomber** (the potions wave 2 design §5): a throw whose object is a flask (`flask.rs`)
+//! has no attack of its own. It is priced and heard as any throw, the player who sees the thrower
+//! is told it throws ("The kobold alchemist hurls a flask."), and the flask flies and shatters as
+//! the player's does ([`World::shatter_flask`]), its splash cast by the thrower (its kills, its
+//! zone; the type learned when the player sees where it breaks). Its supply is endless, as a
+//! giant's boulders (the design's Q9); a flask in a creature's pack is never thrown (Q10).
 
 use super::fight::{End, Guard, Words, attack_message};
 use super::shoot::Flight;
@@ -60,6 +67,19 @@ impl World {
         let price = self.attack_price(id, ActionKind::Throw, None, skills);
         self.make_noise(id, Act::Attack(AttackKind::Thrown));
         let at = self.aim_at(id, target, at);
+        if content.object(throw.object).flask.is_some() {
+            let from = self.state.actors[&id].pos;
+            if self.perception.sees_actors_at(from) && !self.perception.conceals(id) {
+                let line = format!(
+                    "{} {} a flask.",
+                    self.end_of(id, true).subject(),
+                    throw.attack.verb
+                );
+                self.say(line);
+            }
+            self.shatter_flask(id, throw.object, (from, at, throw.range), events);
+            return price;
+        }
         let flight = Flight {
             kind: AttackKind::Thrown,
             with: throw.object,

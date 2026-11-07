@@ -1,0 +1,36 @@
+# The goblin war band's firebomber (the potions wave 2 design §7: a bomber): it hurls blasting
+# flasks from a few cells away, careless of whether its own kind stand where they burst, and
+# fights with a club (its racial weapon) once its foe is beside it. Its flasks never run out (a
+# creature's throw, `world/hurl.rs`); one or two are in its pack, and fall where it dies.
+[[creature]]
+id = "goblin_firebomber"
+level = 6
+xp = 40
+rarity = "rare"
+loot = 8
+name = "goblin firebomber"
+glyph = "g"
+fg = "#d07038"
+speed = 1050
+faction = "goblins"
+tags = ["goblin"]
+alignment = "evil"
+vision = "darkvision"
+opens_doors = true
+footsteps = 120
+hearing = 12
+weight = 29000
+size = "small"
+stats = { strength = 10, dexterity = 14, toughness = 8, intelligence = 9, willpower = 8, presence = 6 }
+base_hp = 8
+on_eat = { message = "This goblin meat is rank, and singed!", vomit = 40 }
+weapon_skills = { maces = 1, thrown = 2 }
+racial_weapon = "club"
+[creature.throw]
+object = "flask_of_fire"
+range = 6
+verb = "hurls"
+
+[[creature.gear]]
+chance = 60
+one_of = ["flask_of_fire", "flask_of_fire*2"]

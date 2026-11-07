@@ -604,7 +604,17 @@ developer notes (CLAUDE.md, `docs/dev/`).
     potion shatters; the draught soaks away.") and teaches nothing. A death by one's own flask is
     "Killed by their own flask of …" (`Cause::Flask`). A known flask's description adds "Thrown,
     it shatters and casts Sleep where it breaks"; the `inventory` dump marks it `(throw 6)`, JSON
-    `throw: { range }`. Creatures do not throw flasks yet. The flasks (#1223, #1225): the
+    `throw: { range }`. **Bombers** (#1230, the design's §5, §7): a creature type whose
+    `[creature.throw]` names a flask as its `object` (and may leave out `damage`; a throw of
+    anything else must have it) throws as any creature's throw is decided (`hurls_at`), priced and
+    heard as one, but with no attack of its own: "The kobold alchemist hurls a flask." to a player
+    who sees it, then the flask flies and shatters as the player's does (`World::shatter_flask`,
+    the creature the splash's thrower: its kills and zone; the type learned when the player sees
+    where it breaks). Endless, as a giant's boulders (Q9); a flask in a creature's pack is never
+    thrown or drunk (Q10). The three: the kobold alchemist (level 3, flask of oil), the goblin
+    firebomber (6, flask of fire), the cult chymist (8, stinking flask), each carrying one or two
+    of its kind (a gear line) that fall where it dies.
+    The flasks (#1223, #1225): the
     sleeping draught (Sleep), the flask of smoke (Fume, a smoke zone; drunk, Stunned 1), the
     flask of brilliance (Flare, Stunned 1 on all with eyes, `only_sighted`; drunk, Lit 1, the
     silver family's kind one), the vial of acid (Acid splash, acid that eats the player's
