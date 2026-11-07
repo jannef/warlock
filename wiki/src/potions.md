@@ -69,6 +69,24 @@ Four potions do one useful thing at once:
   [Staggered](status-effects.md#status-staggered), and
   [Transfixed](status-effects.md#status-transfixed).
 
+### Gambles
+
+Three potions are a gamble even once you know them: each time you drink one, one outcome is
+drawn by chance from its own table, as at a [healing spring](altars-forges-springs.md). It may
+do good, nothing, or harm. The tables below give every outcome and its exact chance per
+draught; the game only tells you what happens, in words.
+
+- The **draught of chance** mostly heals you, clears your head, or lends you a stat
+  [boost](#potions-that-last), but it may sicken you or make you drowsy.
+- The **vial of troll's blood** always does two things at once: your wounds close faster
+  ([Renewing](status-effects.md#status-renewing)) and you are
+  [Poisoned](status-effects.md#status-poisoned).
+- The **brewer's blunder** is a coin toss: a greater boost of one stat for a while, or a point
+  of one stat [drained](stats.md#drained-stats) for good. A potion of restoration gives a
+  drained point back.
+
+{{#include generated/potion-gambles.md}}
+
 ## Unknown potions
 
 A potion you have never drunk shows a **word and a colour** instead of its name: "a fizzy red
@@ -96,6 +114,7 @@ has a hue, and a potion with several effects mixes their hues.
 | Smoke ([Fume](spellcasting.md#zones)) | ash grey |
 | Light ([Lit](status-effects.md#status-lit), a [Flare](spellcasting.md#spells-with-a-rule-of-their-own)) | silver |
 | [Acid](damage-types.md#damage-acid) | lime |
+| [Gambles](#gambles) | iridescent |
 | [Elixirs](#elixirs) (a [stat](stats.md) for good) | gold |
 | Harm | brown |
 

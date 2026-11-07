@@ -1291,6 +1291,7 @@ impl Content {
         // Outcome tables (spec §7 "Special rooms") last of the rules' data: they name terrain,
         // statuses, objects, damage types, and spell effects; then the rooms that offer them.
         content.outcomes = OutcomeTables::parse(files.table("outcomes"), &content)?;
+        potion::check_gambles(&content)?;
         let lights = content.light_ids.clone();
         let outcomes = content.outcomes.clone();
         (content.room_effects).resolve_places(&outcomes, |name| lights.get(name).copied())?;

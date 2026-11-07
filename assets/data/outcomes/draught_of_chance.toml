@@ -1,0 +1,102 @@
+# A draught of chance's drink (spec §8 "Potions", the potions wave 2 design §4.3;
+# content/outcome.rs has the fields): one draw of the kinds and one by weight among that kind's
+# outcomes. A potion has no side, so nothing leans, and nothing is spent (`exhaust = 0`). Mostly
+# a small good, sometimes nothing, sometimes a sickness. Messages stay vague: never a number.
+kinds = { boon = 50, nothing = 20, bane = 30 }
+exhaust = 0
+
+[[outcome]]
+kind = "boon"
+tier = "minor"
+id = "mended"
+weight = 30
+effect = { heal = "4d8" }
+message = "Warmth spreads through you, and your wounds close."
+
+[[outcome]]
+kind = "boon"
+tier = "minor"
+id = "clear_headed"
+weight = 15
+effect = { mana = "half" }
+message = "Your head clears, and power wells up in you."
+
+# A boost at 1, one outcome a stat (the potions of might, grace, ...'s statuses).
+[[outcome]]
+kind = "boon"
+tier = "minor"
+id = "fortified"
+weight = 5
+effect = { status = { id = "fortified", degrees = 1 } }
+message = "You feel stronger."
+
+[[outcome]]
+kind = "boon"
+tier = "minor"
+id = "nimble"
+weight = 5
+effect = { status = { id = "nimble", degrees = 1 } }
+message = "You feel nimble."
+
+[[outcome]]
+kind = "boon"
+tier = "minor"
+id = "hale"
+weight = 5
+effect = { status = { id = "hale", degrees = 1 } }
+message = "You feel hale."
+
+[[outcome]]
+kind = "boon"
+tier = "minor"
+id = "keen"
+weight = 5
+effect = { status = { id = "keen", degrees = 1 } }
+message = "Your thoughts run keen and clear."
+
+[[outcome]]
+kind = "boon"
+tier = "minor"
+id = "steadfast"
+weight = 5
+effect = { status = { id = "steadfast", degrees = 1 } }
+message = "Your will feels steadfast."
+
+[[outcome]]
+kind = "boon"
+tier = "minor"
+id = "imposing"
+weight = 5
+effect = { status = { id = "imposing", degrees = 1 } }
+message = "You feel imposing."
+
+[[outcome]]
+kind = "nothing"
+tier = "minor"
+id = "nothing_much"
+weight = 1
+message = "It tastes of nothing much."
+
+[[outcome]]
+kind = "bane"
+tier = "minor"
+id = "sickened"
+weight = 15
+effect = { status = { id = "poisoned", degrees = 2 } }
+message = "It tastes foul, and your stomach turns."
+
+[[outcome]]
+kind = "bane"
+tier = "minor"
+id = "drowsy"
+weight = 10
+effect = { status = { id = "drowsy", degrees = 2 } }
+message = "A heavy drowsiness steals over you."
+
+[[outcome]]
+kind = "bane"
+tier = "minor"
+id = "weakened"
+weight = 5
+effect = { status = { id = "weakened", degrees = 1 } }
+message = "You feel weak."

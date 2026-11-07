@@ -22,6 +22,7 @@ parts = [
     "fuming", "seething", "smudged",
     "clotted", "dusty", "flecked", "lumpy", "muddy", "ropy", "sandy", "scummy", "slimy",
     "sludgy", "sooty",
+    "grainy", "mucky", "stringy",
     "brackish", "cloying", "curdled", "dusky", "effervescent", "gleaming", "gritty", "hazy",
     "inky", "glassy", "opaline", "pungent", "resinous", "silty", "speckled", "starry", "steaming",
     "watery",
