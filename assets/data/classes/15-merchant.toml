@@ -24,11 +24,12 @@ bonus_talents = { levels = [10, 20, 30, 45, 55], trees = ["delver", "scholar"] }
 kit = [
     { wield = "dagger" },
     { wear = "travelling_cloak" },
+    { wear = "long_coat" },
     { wear = "leather_boots" },
     "gem:garnet|gem:amethyst|gem:topaz",
     "gem:garnet|gem:amethyst|gem:topaz",
     "gold_coin*120",
-    "wool_cloak*2",
+    "wool_cloak",
     "candle*10",
     "rope",
     "dried_meat*4",

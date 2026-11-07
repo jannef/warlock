@@ -24,6 +24,7 @@ bonus_talents = { levels = [10, 20, 30, 45, 55], trees = ["weaponcraft", "guard"
 kit = [
     { wield = "hand_axe" },
     { wear = "leather_gloves" },
+    { wear = "leather_apron" },
     { wear = "leather_boots" },
     "rope|leather_boots|iron_helm",
     "candle*2",

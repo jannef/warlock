@@ -321,7 +321,7 @@ mod tests {
         let mail = world(
             "forge",
             "human,male,paladin",
-            "move:SW move:S pickup equip:body:l",
+            "move:SW move:S pickup equip:body:m",
         );
         let text = drawn(&MagicScreen::new(Some(&mail.perception())), 120, 50);
         let marked = format!("{IN_USE} Battle caster");

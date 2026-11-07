@@ -1,0 +1,11 @@
+# A kilt of woven reeds, as the swamp folk wear. Clothing: no Defence, no Protection (#1173).
+[[object]]
+id = "reed_kilt"
+name = "reed kilt"
+glyph = "["
+fg = "#7f9a5a"
+class = "clothing"
+materials = ["plant"]
+weight = 600
+value = 1
+slot = "body"

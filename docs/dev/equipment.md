@@ -17,6 +17,12 @@ slot, item }` / `Action::Remove(slot)` take off what is in the way (a swap) and 
 action (`wield`, `wear`, `body_armor`, `ready` in `data/actions.toml`) of everything put on or
 taken off (`World::price_for`); dropping takes off first (`take_off_before_dropping`) and
 `Equipment::after_removal` follows the positions (past the 26th too: the pack has no count limit).
+**Clothing** (#1173): item class `clothing` (`data/item_classes.toml`), everyday garments in the
+Body slot (tunic, kirtle, robe, ...) and shoes in the Feet slot (shoes, clogs, sandals, ...), one
+object file each; no `armour`, `protection`, or `kind` (never loot or magic), and the Body slot's
+`body_armor` action like any body armour. New characters' kits dress the body and the feet with
+it (docs/dev/character-creation.md "Starting kits"); `kit.rs`'s tests check every one is Dv 0
+Pv 0.
 **A status's blows** (Brand's `branded_blade`, #1002): `Actor::melee` and `Actor::off_hand_blow`
 extend the profile's riders with `Effects::blows` right after `Mods::sharpen` has added the worn
 `elemental` affixes', so it shows on the attack line and rolls and resists as they do. No type rule

@@ -40,11 +40,23 @@ fn highest_level(content: &Content, scrolls: &[warlock_core::content::ObjectId])
         .unwrap_or(0)
 }
 
-/// What each race adds to its class's kit, one row each.
+/// What each race adds to its class's kit, one row each, and the slots it leaves bare.
 pub(super) fn race_kits(content: &Content) -> String {
-    let mut out = String::from("| Race | Adds |\n|---|---|\n");
+    let mut out = String::from("| Race | Adds | Bare |\n|---|---|---|\n");
     for r in &content.races().list {
-        let _ = writeln!(out, "| {} | {} |", r.name, kit_text(content, &r.kit));
+        let bare: Vec<String> = (r.bare.iter())
+            .map(|&s| content.slot(s).name.to_lowercase())
+            .collect();
+        let bare = match bare.is_empty() {
+            true => "—".to_string(),
+            false => bare.join(", "),
+        };
+        let _ = writeln!(
+            out,
+            "| {} | {} | {bare} |",
+            r.name,
+            kit_text(content, &r.kit)
+        );
     }
     out
 }
@@ -93,6 +105,9 @@ pub(super) fn line_text(content: &Content, line: &KitItem) -> String {
     }
     if let Some(gender) = line.gender {
         notes.push(format!("if {}", gender.name().to_lowercase()));
+    }
+    if line.fill {
+        notes.push("if the slot is free".into());
     }
     match notes.is_empty() {
         true => what,

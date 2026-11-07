@@ -301,7 +301,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     fighting style: its fixed ranks, or the set of its choice that was picked; never the race's
     ranks or defaults), `gender` (only for that gender: the hook for gender's items), and
     `magic` (a base item made as loot makes it at item level 1, its rarity rolled at least
-    `any`, `magic`, or `rare`); `"a|b|c"` is one of them. Each item goes into the pack in order
+    `any`, `magic`, or `rare`) and `fill` (a `wield` or `wear` line given only into a slot still
+    free once everything else is given, else left out; #1173); `"a|b|c"` is one of them. Each item goes into the pack in order
     (a stackable one joins a stack of the same), and a `wield` or `wear` item into the first free
     slot it fits (a second light weapon to the off hand); one that finds none is carried. Kits
     roll from a stream of their own, `character/kit/<race>,<gender>,<class>`, in that order: a
@@ -311,9 +312,19 @@ developer notes (CLAUDE.md, `docs/dev/`).
     { count = "1d3", below_level = 10 }`): the casters set out with a few more, the wizard and
     the witch 1d3, the priest, the druid, and the ranger 1d2, the bard 1d4, every other class
     none; each the scroll of a spell of spell level 0 to 9, drawn uniformly among those spells
-    (duplicates stack), from the same stream after every line. Kit items are what they are:
-    magic ones unidentified, food made when the run starts (§8 "Hunger"), and every scroll and
-    potion of the kit, any class's, known by type from the start (§8 "Scrolls", "Potions"). Data is checked when content loads (every item
+    (duplicates stack), from the same stream after every line but the `fill` ones, which come
+    last, the kits in the same order, each drawing its alternative and given only if a slot it
+    fits is free. A race's `bare` slots (`bare = ["feet"]`: halflings go barefoot) take nothing
+    of any kit: an item for one is left out after its draw. **Everyone is dressed** (#1173): every
+    kit wears something on the body and, but for a bare race, on the feet, if only clothing
+    (item class `clothing`: Dv 0 Pv 0, never loot or magic; tunics, kirtles, smocks, robes,
+    habits, doublets, gowns, and the like, and shoes, turnshoes, clogs, sandals, slippers, soft,
+    felt, and hobnailed boots, footwraps): a class's own garb or armour first, else the race's
+    everyday clothes and shoes (its `fill` lines). Kit items are what they are: magic ones
+    unidentified and food made when the run starts (§8 "Hunger"); and **everything a run starts
+    with is known by type**, a rule of the run's start rather than of a kit: every scroll,
+    potion, wand, and rod of the starting pack, the kit's and a scenario's own pack alike (§8
+    "Scrolls", "Potions"). Data is checked when content loads (every item
     exists, what is wielded or worn fits a slot of that kind, `magic` only on base items, a
     class's `trained` only what it trains). Unfair on purpose: the aristocrat sets out rich, with
     a perhaps magic rapier and an heirloom ring (magic or rare), the merchant with goods and gems,
@@ -322,7 +333,13 @@ developer notes (CLAUDE.md, `docs/dev/`).
     gauntlets), every elven race with a bow and its ammunition of the weapon skill its race gives
     a rank in (the elf a hardwood long bow, the half-elf a hardwood short bow, the drow a
     crossbow and steel bolts), the halfling with a sling and stones, and the dwarf in steel (pick,
-    gauntlets, shod boots). Nobody starts Strained, not even the weakest character of a
+    gauntlets, shod boots). Since #1173 the dwarf also carries a steel hand axe and, where the
+    class gave none, wears a steel helm, a hardened leather jerkin, and readies a crossbow and
+    steel bolts; the duergar the same in iron, with a war hammer and no crossbow; the elf and the
+    drow carry a potion of healing, the elf wears a silk tunic, soft boots, and a travelling
+    cloak where free, the drow dark silk, felt boots, and a silk cloak. An ordinary small or
+    frail (a Toughness penalty: elves, drow) warrior or paladin may start Burdened under armour
+    and shoes. Nobody starts Strained, not even the weakest character of a
     combination (every die at its least and the worst sign); an ordinary one (every die at its
     mean, no sign) starts Unburdened, but for the aristocrat's and the merchant's wealth and a
     small race's warrior's or paladin's armour (tests check both). **Who starts with it**: a run whose character

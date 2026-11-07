@@ -2332,9 +2332,17 @@ impl Content {
             .collect::<Result<Vec<_>, _>>()?;
         let races = (self.races.list.iter())
             .map(|r| {
-                kit::resolve(&r.kit_spec, self, None).map_err(|m| {
+                let at = |m: String| {
                     ContentError::new("data/races.toml", format!("race `{}`: {m}", r.id))
-                })
+                };
+                let kit = kit::resolve(&r.kit_spec, self, None).map_err(at)?;
+                let bare = (r.bare_spec.iter())
+                    .map(|s| {
+                        self.slot_id(s)
+                            .ok_or_else(|| at(format!("`bare`: unknown slot `{s}`")))
+                    })
+                    .collect::<Result<Vec<_>, _>>()?;
+                Ok((kit, bare))
             })
             .collect::<Result<Vec<_>, _>>()?;
         let signs = |parts: &[SignPart]| {
@@ -2364,8 +2372,9 @@ impl Content {
             class.kit = kit;
             class.random_scrolls = scrolls;
         }
-        for (race, kit) in self.races.list.iter_mut().zip(races) {
+        for (race, (kit, bare)) in self.races.list.iter_mut().zip(races) {
             race.kit = kit;
+            race.bare = bare;
         }
         if let (Some(h), Some((animals, elements))) = (&mut self.horoscope, horoscope) {
             for (part, kit) in (h.animals.iter_mut()).zip(animals) {

@@ -1,0 +1,12 @@
+# Leather soles, strapped to the feet. Clothing: no Defence, no Protection (#1173).
+[[object]]
+id = "sandals"
+name = "pair of sandals"
+plural = "pairs of sandals"
+glyph = "["
+fg = "#9a7a50"
+class = "clothing"
+materials = ["leather"]
+weight = 300
+value = 2
+slot = "feet"

@@ -1,0 +1,12 @@
+# Light boots of supple leather, laced to the knee. Clothing: no Defence, no Protection (#1173).
+[[object]]
+id = "soft_boots"
+name = "pair of soft boots"
+plural = "pairs of soft boots"
+glyph = "["
+fg = "#5a6a3a"
+class = "clothing"
+materials = ["leather"]
+weight = 600
+value = 6
+slot = "feet"

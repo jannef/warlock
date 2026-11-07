@@ -1,0 +1,12 @@
+# Soft wool slippers, better on a library's floor than a dungeon's. Clothing: no Defence, no Protection (#1173).
+[[object]]
+id = "slippers"
+name = "pair of slippers"
+plural = "pairs of slippers"
+glyph = "["
+fg = "#7a5a7a"
+class = "clothing"
+materials = ["wool"]
+weight = 200
+value = 3
+slot = "feet"

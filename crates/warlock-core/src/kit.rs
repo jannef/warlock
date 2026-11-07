@@ -8,20 +8,25 @@
 //! draw to pick among its alternatives when it has several, then, for a `magic` line, the loot
 //! draws that make it ([`loot::make`] at item level [`ITEM_LEVEL`]). Each item goes into the pack
 //! (a stackable one joins a stack of the same), and a `wield` or `wear` line's item into the first
-//! free slot it fits; one that finds none stays in the pack. Last come the class's random spell
+//! free slot it fits; one that finds none stays in the pack. Then come the class's random spell
 //! scrolls, if it has any (`random_scrolls`, the casters'): its count rolled, then one draw per
-//! scroll among the spells below its level, each carried.
+//! scroll among the spells below its level, each carried. Last the `fill` lines, the kits in the
+//! same order: a fill line that applies draws its alternative, and its item is made and worn or
+//! wielded only if a slot it fits is still free, else left out (a race's everyday clothes and
+//! shoes, which yield to the class's). Nothing of any kit is worn or wielded in a slot the race
+//! leaves bare (`bare`, the halflings' feet): such an item is left out after its draw.
 //!
 //! Who starts with it: a run whose character the player chose (New run's character creation,
 //! `--character` or `--name` in the game and `warlock-cli`, a replay that says so) starts with the
 //! kit and the scenario's `carry` on top; a run on the scenario's own character that nobody chose
 //! (`--scenario` alone, tests, golden walks) with the scenario's `carry` alone
 //! ([`starting_pack`], [`crate::world::World::start_run`]). Food learns when it was made when the
-//! run starts (`rot::made_at`), magic items are unidentified like any loot, and the kit's scrolls
-//! and potions are known by type from the start (`World::begin`).
+//! run starts (`rot::made_at`), magic items are unidentified like any loot, and every type with a
+//! label that the starting pack holds, kit or scenario's (scrolls, potions, wands, rods), is
+//! known from the start ([`known_types`], `World::begin`).
 
 use crate::character::Character;
-use crate::content::{Content, Keep, Kit, ScenarioDef, WeaponSkillId};
+use crate::content::{Content, Keep, Kit, KitItem, ObjectId, ScenarioDef, SlotId, WeaponSkillId};
 use crate::equipment::{self, Equipment};
 use crate::magic::loot;
 use crate::object::{self, Stack};
@@ -105,32 +110,15 @@ pub fn roll(
     let spec = &character.spec;
     let mut rng = Rng::stream(seed, &format!("character/kit/{spec}"));
     let mut pack = Pack::default();
-    for kit in kits_of(content, character) {
-        for line in kit.items() {
-            if !line.applies(spec.gender, trained) {
-                continue;
-            }
-            let picked = line.pick(content, &mut rng, trained);
-            for stack in &line.one_of[picked] {
-                let stack = match line.magic {
-                    Some(grade) => {
-                        let (object, count) = (stack.object, stack.count);
-                        loot::make(content, &mut rng, object, count, ITEM_LEVEL, grade)
-                    }
-                    None => {
-                        let mut plain = stack.clone();
-                        plain.draw_wand_rung(content, &mut rng);
-                        plain
-                    }
-                };
-                let at = pack.put(stack, content);
-                if line.keep != Keep::Carry {
-                    pack.equip(at, content);
-                }
-            }
+    let bare = content.race(&spec.race).map_or(&[][..], |r| &r.bare[..]);
+    let kits = kits_of(content, character);
+    let lines = || (kits.iter()).flat_map(|k| k.items());
+    for line in lines().filter(|l| !l.fill) {
+        if line.applies(spec.gender, trained) {
+            give(content, &mut pack, &mut rng, line, trained, bare);
         }
     }
-    // The class's random spell scrolls, last, so no line's draw moves.
+    // The class's random spell scrolls, after every other line, so no line's draw moves.
     if let Some(random) = content
         .class(&spec.class)
         .and_then(|c| c.random_scrolls.as_ref())
@@ -140,7 +128,70 @@ pub fn roll(
             pack.put(Stack::new(scroll, 1), content);
         }
     }
+    // Last what fills the slots still free.
+    for line in lines().filter(|l| l.fill) {
+        if line.applies(spec.gender, trained) {
+            give(content, &mut pack, &mut rng, line, trained, bare);
+        }
+    }
     pack
+}
+
+/// Gives `line` to `pack`: its alternative drawn, then each of its items made and put in,
+/// worn or wielded as it says. Left out after the draw: an item worn or wielded in a slot of
+/// `bare`, and a `fill` line's when no slot it fits is free.
+fn give(
+    content: &Content,
+    pack: &mut Pack,
+    rng: &mut Rng,
+    line: &KitItem,
+    trained: &[WeaponSkillId],
+    bare: &[SlotId],
+) {
+    let picked = line.pick(content, rng, trained);
+    for stack in &line.one_of[picked] {
+        if line.keep != Keep::Carry {
+            let slot = equipment::free_slot(content, &Equipment::default(), stack.object);
+            let free = equipment::free_slot(content, &pack.equipment, stack.object);
+            if slot.is_some_and(|s| bare.contains(&s)) || (line.fill && free.is_none()) {
+                continue;
+            }
+        }
+        let stack = match line.magic {
+            Some(grade) => {
+                let (object, count) = (stack.object, stack.count);
+                loot::make(content, rng, object, count, ITEM_LEVEL, grade)
+            }
+            None => {
+                let mut plain = stack.clone();
+                plain.draw_wand_rung(content, rng);
+                plain
+            }
+        };
+        let at = pack.put(stack, content);
+        if line.keep != Keep::Carry {
+            pack.equip(at, content);
+        }
+    }
+}
+
+/// The types a run starts knowing (spec §8 "Scrolls", "Potions"): every type with a label that
+/// the starting pack `items` holds, kit or scenario's alike (scrolls, potions, wands, rods), so
+/// whatever the player sets out with shows by its name.
+pub fn known_types<'a>(
+    content: &'a Content,
+    items: impl IntoIterator<Item = &'a Stack> + 'a,
+) -> impl Iterator<Item = ObjectId> + 'a {
+    (items.into_iter())
+        .map(|s| s.object)
+        .filter(|&o| is_labelled(content, o))
+}
+
+/// Whether objects of type `object` go by a label until identified: a scroll, a potion, a wand,
+/// or a rod (`scroll_label.rs`).
+pub fn is_labelled(content: &Content, object: ObjectId) -> bool {
+    let def = content.object(object);
+    def.read.is_some() || def.drink.is_some() || def.wand.is_some() || def.rod.is_some()
 }
 
 /// The kits a character's starting kit is made of, in order: their class's, their race's, then
@@ -425,6 +476,67 @@ mod tests {
         }
     }
 
+    #[test]
+    fn every_kit_dresses_the_body_and_the_feet_but_a_bare_races() {
+        // Every race, class, gender, and pick, over a few seeds: something worn on the body, and
+        // on the feet unless the race goes barefoot (the halflings), when nothing is.
+        let slot = |id: &str| CONTENT.slot_id(id).expect("a slot");
+        let (body, feet) = (slot("body"), slot("feet"));
+        let halfling = CONTENT.race("halfling").expect("halflings");
+        assert_eq!(halfling.bare, [feet]);
+        for race in &CONTENT.races().list {
+            for class in CONTENT.classes() {
+                for gender in Gender::ALL {
+                    let character = format!("{},{},{}", race.id, gender.id(), class.id);
+                    for seed in 0..6 {
+                        let s = start(&CONTENT, &character, seed);
+                        for trained in trained_sets(class) {
+                            let pack = roll(&CONTENT, &s.character, &trained, seed);
+                            assert!(pack.equipment.get(body).is_some(), "{character}: {pack:?}");
+                            let shod = pack.equipment.get(feet).is_some();
+                            assert_eq!(shod, race.bare.is_empty(), "{character}: {pack:?}");
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn clothing_neither_defends_nor_protects_and_is_never_loot() {
+        let clothing = CONTENT.item_class_id("clothing").expect("clothing");
+        let clothes: Vec<_> = (CONTENT.object_defs().iter())
+            .filter(|o| o.class == clothing)
+            .collect();
+        assert!(clothes.len() >= 20, "{}", clothes.len());
+        for def in clothes {
+            assert_eq!((def.armour, def.protection), (0, 0), "{}", def.id);
+            assert!(def.kind.is_none() && def.slot.is_some(), "{}", def.id);
+        }
+    }
+
+    #[test]
+    fn a_races_fill_lines_dress_one_whose_class_left_the_slot_free() {
+        // The commoner wears nothing of their class but a club in hand: every fill line of
+        // their race puts one of its alternatives on.
+        for race in &CONTENT.races().list {
+            let fills: Vec<&KitItem> = race.kit.items().iter().filter(|l| l.fill).collect();
+            assert!(!fills.is_empty(), "{}", race.id);
+            let character = format!("{},female,commoner", race.id);
+            for seed in 0..4 {
+                let s = start(&CONTENT, &character, seed);
+                let pack = roll(&CONTENT, &s.character, &[], seed);
+                for line in &fills {
+                    let worn = (line.one_of.iter().flatten()).any(|alt| {
+                        (pack.items.iter().enumerate())
+                            .any(|(i, st)| st.object == alt.object && pack.equipment.holds(i))
+                    });
+                    assert!(worn, "{character}: {line:?} in {pack:?}");
+                }
+            }
+        }
+    }
+
     /// The lowest score in `stat` a character could start with: every die at its least, the
     /// worst birth sign for it, the gender's +1 only where it is sure.
     fn least_score(character: &Start, content: &Content, stat: Stat) -> u8 {
@@ -457,6 +569,14 @@ mod tests {
     }
 
     /// The most a kit line could weigh: its heaviest alternative.
+    /// The slot a line's item is worn or wielded in, if it is (its first alternative's).
+    fn slot_of(line: &KitItem) -> Option<SlotId> {
+        let object = line.one_of[0][0].object;
+        (line.keep != Keep::Carry)
+            .then(|| equipment::free_slot(&CONTENT, &Equipment::default(), object))
+            .flatten()
+    }
+
     fn heaviest(line: &KitItem) -> u64 {
         (line.one_of.iter())
             .map(|stacks| stacks.iter().map(|s| s.weight(&CONTENT)).sum::<u64>())
@@ -559,9 +679,12 @@ mod tests {
         let martial = ["paladin", "warrior"];
         for race in &CONTENT.races().list {
             let size = CONTENT.size(race.size);
+            // The frail: a race whose Toughness falls short (elves and drow), whose shoes on top
+            // of a warrior's armour may tip them over.
+            let frail = race.stats[Stat::Toughness].max() < 0;
             for class in CONTENT.classes() {
                 let may_burden = jokes.contains(&class.id.as_str())
-                    || (size.id == "small" && martial.contains(&class.id.as_str()));
+                    || ((size.id == "small" || frail) && martial.contains(&class.id.as_str()));
                 for gender in Gender::ALL {
                     let character = format!("{},{},{}", race.id, gender.id(), class.id);
                     let s = start(&CONTENT, &character, 1);
@@ -571,9 +694,19 @@ mod tests {
                     };
                     let (weakest, ordinary) = (limit(least_score), limit(ordinary_score));
                     for trained in trained_sets(class) {
-                        let kit: u64 = (lines(&CONTENT, &s).into_iter())
+                        // A fill line counts unless another line takes its slot for sure, and
+                        // nothing for a bare slot does.
+                        let applying: Vec<&KitItem> = (lines(&CONTENT, &s).into_iter())
                             .filter(|l| l.applies(gender, &trained))
-                            .map(heaviest)
+                            .filter(|l| slot_of(l).is_none_or(|s| !race.bare.contains(&s)))
+                            .collect();
+                        let taken: Vec<SlotId> = (applying.iter())
+                            .filter(|l| !l.fill)
+                            .filter_map(|l| slot_of(l))
+                            .collect();
+                        let kit: u64 = (applying.iter())
+                            .filter(|l| !l.fill || slot_of(l).is_none_or(|s| !taken.contains(&s)))
+                            .map(|l| heaviest(l))
                             .sum::<u64>()
                             + random_scrolls(class);
                         // The heritage talents' gold, gems, and heirloom on top, and the
@@ -734,6 +867,27 @@ mod tests {
     }
 
     #[test]
+    fn a_scenarios_own_pack_is_known_by_type_too() {
+        // A scenario whose own character sets out with a scroll and a potion: both known.
+        let mut files = ContentFiles::builtin();
+        let world = include_str!("../../../assets/campaigns/showcase/scenarios/world.toml");
+        files.insert(
+            "scenarios/packed.toml",
+            &format!("{world}carry = [\"scroll_of_frost\", \"potion_of_healing\"]\n"),
+        );
+        let content = Arc::new(Content::load(&files).expect("valid"));
+        let world = World::new(content.clone(), "packed", None).expect("world");
+        assert!(!world.started_with_kit());
+        let known = &world.state().known_scrolls;
+        assert!(known.contains(&id("scroll_of_frost")) && known.contains(&id("potion_of_healing")));
+        // Only what has a label: the lantern is not counted.
+        assert_eq!(known.len(), 2, "{known:?}");
+        let dump = crate::dump::ascii(&world, &[crate::dump::Layer::Inventory]);
+        assert!(dump.contains("a scroll of frost"), "{dump}");
+        assert!(dump.contains("a potion of healing"), "{dump}");
+    }
+
+    #[test]
     fn the_scenarios_pack_comes_on_top_or_alone() {
         // The world's ranger with a scenario's food on top.
         // Without background stories: the kit and the pack alone (a story's things come on top,
@@ -805,8 +959,8 @@ mod tests {
     fn genders_and_birth_signs_may_give_more() {
         let mut files = ContentFiles::builtin();
         let races = include_str!("../../../assets/data/races.toml").replace(
-            "kit = [{ wield = \"lantern\" }, \"bread*2\", \"gold_coin*5\"]",
-            "kit = [{ wield = \"lantern\" }, \"bread*2\", { carry = \"candle\", gender = \"female\" }]",
+            "    \"gold_coin*5\",\n",
+            "    { carry = \"candle\", gender = \"female\" },\n",
         );
         files.insert("data/races.toml", &races);
         let signs = include_str!("../../../assets/data/horoscope.toml").replace(

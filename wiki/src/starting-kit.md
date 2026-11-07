@@ -12,8 +12,18 @@ trade; the [commoner](classes.md#commoner) with a stick, two turnips, and a heel
 in hardened leather and an iron helm (a paladin with gauntlets besides); every [elf](races.md#race-elf) carries a bow
 of hardwood and [arrows](ammunition.md) (a long war bow for elves, a short bow for [half-elves](races.md#race-half-elf)) and every [drow](races.md#race-drow) a
 crossbow with steel-headed bolts; a [halfling](races.md#race-halfling) has a sling and stones; and a [dwarf](races.md#race-dwarf) goes in good
-[steel](objects.md#materials): a steel pick-axe, steel gauntlets, and steel-shod boots. Elves, half-elves, drow, and
-halflings also start trained in the [weapon](weapon-skills.md) their race gives them (see [Races](races.md)).
+[steel](objects.md#materials): a steel pick-axe and hand axe, steel gauntlets, a steel helm, steel-shod boots, a hardened
+leather jerkin, and a crossbow, where the class gave none of those. A [duergar](races.md#race-duergar) goes the same way in plain
+iron, with a war hammer for the axe and no crossbow; an elf and a drow carry a
+[potion of healing](potions.md), and wear fine silk and soft boots under a cloak. Elves, half-elves, drow, and halflings also start trained in the
+[weapon](weapon-skills.md) their race gives them (see [Races](races.md)).
+
+Everyone sets out dressed: something on the body and shoes on the feet, if only
+[clothing](objects.md#class-clothing) (no [Defence](combat.md#defence) and no [Protection](combat.md#protection)). A class with a garb of its
+own wears it (the wizard's robe and slippers, the priest's habit and sandals, the aristocrat's
+doublet, gown, or houppelande); everyone else wears what their folk wear, a human's tunic or
+kirtle and shoes, a dwarf's leather jerkin and iron-shod boots, a kobold's patched smock and
+footwraps. [Halflings](races.md#race-halfling) go barefoot: nobody's kit puts anything on their feet.
 
 ## What each class starts with
 
@@ -29,7 +39,11 @@ halflings also start trained in the [weapon](weapon-skills.md) their race gives 
   you had put it on yourself. A second light weapon goes to your [off hand](fighting-styles.md#two-weapons) (see
   [Fighting styles](fighting-styles.md)); what finds no free slot stays in your [pack](objects.md#your-pack). Your
   class's things come first, so an elven [ranger](classes.md#ranger) readies the ranger's short bow and carries the
-  elven long bow, and a dwarven paladin wears the order's gauntlets and carries the steel pair.
+  elven long bow.
+- **If the slot is free**: some of a race's things, its clothes and shoes above all, come only
+  if nothing else of the kit went there ("if the slot is free" in the tables): a dwarven
+  [paladin](classes.md#paladin) wears the order's gauntlets and helm and leaves the steel ones at home, a
+  dwarven [wizard](classes.md#wizard) the robe and slippers, not the jerkin and the boots.
 - **It follows your training**: some things come only with a [weapon skill](weapon-skills.md) or
   [fighting style](fighting-styles.md) your class trained you in. A [berserker](classes.md#berserker) who learned [axes](weapon-skills.md#weapon-skill-axes)
   carries a great axe, one who learned [great blades](weapon-skills.md#weapon-skill-great-blades) a great sword; a [thief](classes.md#thief) of [Twin Blades](fighting-styles.md#style-twin-blades)
@@ -44,14 +58,15 @@ halflings also start trained in the [weapon](weapon-skills.md) their race gives 
   [ranger](classes.md#ranger) 1d2, a [bard](classes.md#bard) 1d4 (the table above says the same). Each is the scroll of a
   spell of [spell level](magic.md#spell-levels) 0 to 9, every such spell as likely as any other, so two may be the
   same. Read one, or [study](magic.md#learning-spells-from-scrolls) it to learn its spell.
-- **Scrolls and potions you know**: every scroll and [potion](potions.md) you set out with, whoever you
-  are, you know by its true name from the first turn ("a scroll of magic missile", never an
-  [unknown label](scrolls.md#unknown-scrolls)), and so every other of its kind you find.
+- **Scrolls and potions you know**: every scroll, [potion](potions.md), wand, and rod you set out
+  with, whoever you are and whatever you start with, you know by its true name from the first
+  turn ("a scroll of magic missile", never an [unknown label](scrolls.md#unknown-scrolls)), and so every other of its kind
+  you find.
 - **Food** is fresh when you set out (see [Food](food.md)).
 - **Weight**: nobody starts [strained](burden.md#burden-1) under their kit, and an ordinary character starts
   unburdened, but for wealth and armour: a weak [aristocrat](classes.md#aristocrat) may stagger under that purse, a small
-  [merchant](classes.md#merchant) under their wares, and a small warrior or paladin under their armour (drop what you
-  can spare). The weakest of any race or class may start burdened. See [Burden](burden.md).
+  [merchant](classes.md#merchant) under their wares, and a small or frail ([elf](races.md#race-elf), [drow](races.md#race-drow)) warrior or paladin under
+  their armour (drop what you can spare). The weakest of any race or class may start burdened. See [Burden](burden.md).
 - **Your [birth sign](horoscope.md#what-a-sign-does)** gives nothing yet.
 
 ## Scenarios

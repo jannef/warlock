@@ -66,6 +66,12 @@ name = "Boots"
 kinds = ["boots"]
 group = "armour"
 
+# Clothing (#1173): everyday clothes and shoes for the body and the feet, no Defence and no
+# Protection, what a new character is dressed in; never magic, never loot.
+[[class]]
+id = "clothing"
+name = "Clothing"
+
 [[class]]
 id = "rings"
 name = "Rings"

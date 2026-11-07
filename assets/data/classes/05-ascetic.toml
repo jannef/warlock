@@ -17,6 +17,8 @@ kit = [
     { wield = "quarterstaff", trained = "staff_fighter" },
     { wear = "leather_gloves", trained = "brawler" },
     { wear = "wool_cloak" },
+    { wear = "frock" },
+    { wear = "sandals" },
     "apple*3",
     "copper_coin*7",
 ]

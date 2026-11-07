@@ -1,0 +1,12 @@
+# A great gown with trailing sleeves, the fashion of the rich. Clothing: no Defence, no Protection (#1173).
+[[object]]
+id = "houppelande"
+name = "houppelande"
+glyph = "["
+fg = "#3a5a3a"
+class = "clothing"
+materials = ["wool"]
+made_of = ["cloth"]
+weight = 700
+value = 40
+slot = "body"

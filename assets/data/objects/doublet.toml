@@ -1,0 +1,12 @@
+# A close-fitting padded jacket: a bard's or a lord's. Clothing: no Defence, no Protection (#1173).
+[[object]]
+id = "doublet"
+name = "doublet"
+glyph = "["
+fg = "#8a3a3a"
+class = "clothing"
+materials = ["wool"]
+made_of = ["cloth", "hide"]
+weight = 600
+value = 12
+slot = "body"

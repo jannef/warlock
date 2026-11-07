@@ -1,0 +1,12 @@
+# A long wool coat, warm on the road. Clothing: no Defence, no Protection (#1173).
+[[object]]
+id = "long_coat"
+name = "long coat"
+glyph = "["
+fg = "#5a5040"
+class = "clothing"
+materials = ["wool"]
+made_of = ["cloth"]
+weight = 1000
+value = 10
+slot = "body"
