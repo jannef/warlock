@@ -1,0 +1,12 @@
+# A knee-length tunic, belted at the waist. Clothing: no Defence, no Protection (#1173).
+[[object]]
+id = "tunic"
+name = "tunic"
+glyph = "["
+fg = "#a89870"
+class = "clothing"
+materials = ["cloth"]
+made_of = ["cloth"]
+weight = 500
+value = 2
+slot = "body"

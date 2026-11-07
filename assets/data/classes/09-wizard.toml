@@ -18,6 +18,8 @@ styles = { sniper = 1 }
 kit = [
     { wield = "quarterstaff" },
     { wear = "wool_cloak" },
+    { wear = "robe" },
+    { wear = "slippers" },
     "scroll_of_light",
     "scroll_of_identify",
     "scroll_of_fireball|scroll_of_frost|scroll_of_lightning",

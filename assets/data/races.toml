@@ -79,7 +79,12 @@
 #                 the class's: lines as in classes/README.toml's `kit` (a string is carried; `wield`,
 #                 `wear`, `trained`, `gender`, `magic`, and `"a|b"` work the same, `trained`
 #                 asking what the class trained). Every race without darkvision has a lantern
-#                 ready (`{ wield = "lantern" }`: the Tool slot, unlit; spec §5 "Light sources")
+#                 ready (`{ wield = "lantern" }`: the Tool slot, unlit; spec §5 "Light sources").
+#                 Every race dresses its folk with `fill` lines (worn only where the class's kit
+#                 left the slot free): everyday clothes for the body and shoes for the feet
+#   bare          slots no kit puts anything in for the race, by id in slots.toml (default
+#                 none): a `wield` or `wear` line's item for one is left out (halflings go
+#                 barefoot, `bare = ["feet"]`)
 #
 # A new character's score in each stat is 10 (the average), plus the race's adjustment, plus the
 # gender's (male: strength +1; female: dexterity +1; other: +1 to a stat picked from the run
@@ -118,7 +123,11 @@ kit = [
     { wield = "long_bow:hardwood" },
     { wield = "arrow*20" },
     { wield = "lantern" },
+    "potion_of_healing",
     "waybread*3",
+    { wear = "tunic:silk", fill = true },
+    { wear = "soft_boots", fill = true },
+    { wear = "travelling_cloak", fill = true },
 ]
 
 [[race]]
@@ -143,6 +152,8 @@ kit = [
     { wear = "silver_ring" },
     { wield = "lantern" },
     "waybread*2",
+    { wear = "tunic|kirtle", fill = true },
+    { wear = "shoes|soft_boots", fill = true },
 ]
 
 # No gift and no flaw, but the most room to grow (rolled).
@@ -165,7 +176,13 @@ talents = ["versatile"]
 hunger = 100
 experience = 100
 # No gift and no flaw: bread, like anyone's, and a little money.
-kit = [{ wield = "lantern" }, "bread*2", "gold_coin*5"]
+kit = [
+    { wield = "lantern" },
+    "bread*2",
+    "gold_coin*5",
+    { wear = "tunic|kirtle|smock|shift", fill = true },
+    { wear = "shoes|turnshoes", fill = true },
+]
 
 [[race]]
 id = "dwarf"
@@ -189,9 +206,14 @@ experience = 115
 # steel: the pick, gauntlets, and iron-shod boots. Dried meat.
 kit = [
     { wield = "pick_axe:steel" },
-    { wear = "gauntlets:steel" },
-    { wear = "iron_shod_boots:steel" },
+    "hand_axe:steel",
     "dried_meat*3",
+    { wear = "gauntlets:steel", fill = true },
+    { wear = "iron_shod_boots:steel", fill = true },
+    { wear = "iron_helm:steel", fill = true },
+    { wear = "leather_jerkin:hardened_leather", fill = true },
+    { wield = "crossbow", fill = true },
+    { wield = "bolt:steel*12", fill = true },
 ]
 
 [[race]]
@@ -213,7 +235,15 @@ experience = 95
 weapon_skills = { slings = 1 }
 # A sling and a pouch of stones, a pipe, and a lantern (no apples: a small character with a heavy
 # class kit would start burdened).
-kit = [{ wield = "sling" }, { wield = "sling_stone*10" }, { wield = "lantern" }, "pipe"]
+kit = [
+    { wield = "sling" },
+    { wield = "sling_stone*10" },
+    { wield = "lantern" },
+    "pipe",
+    { wear = "waistcoat|kirtle|tunic", fill = true },
+]
+# Halflings go barefoot: no kit puts anything on their feet.
+bare = ["feet"]
 
 [[race]]
 id = "gnome"
@@ -231,7 +261,14 @@ hunger = 90
 experience = 120
 weapon_skills = { crossbows = 1 }
 # A tinkerer's pockets: a scroll of light, a candle stub, and a curious stone.
-kit = [{ wield = "lantern" }, "scroll_of_light", "candle", "gem:zircon"]
+kit = [
+    { wield = "lantern" },
+    "scroll_of_light",
+    "candle",
+    "gem:zircon",
+    { wear = "smock|doublet", fill = true },
+    { wear = "clogs", fill = true },
+]
 
 [[race]]
 id = "half_orc"
@@ -249,7 +286,12 @@ hunger = 120
 experience = 90
 weapon_skills = { axes = 1 }
 # A hand axe at the belt, and meat for the road.
-kit = ["hand_axe", "dried_meat*3"]
+kit = [
+    "hand_axe",
+    "dried_meat*3",
+    { wear = "hide_tunic", fill = true },
+    { wear = "turnshoes", fill = true },
+]
 
 # The evil races (#255): each starts on the evil side, Callous or Evil (alignment.toml), with its
 # own gifts and flaws. Some are poor choices on purpose, and level faster for it. A good creature
@@ -274,7 +316,12 @@ hunger = 80
 experience = 80
 weapon_skills = { short_blades = 1, slings = 1 }
 # A sneaky knife, and scraps enough for a few days.
-kit = ["stiletto", "dried_meat*2"]
+kit = [
+    "stiletto",
+    "dried_meat*2",
+    { wear = "patched_smock|shift", fill = true },
+    { wear = "footwraps", fill = true },
+]
 
 [[race]]
 id = "drow"
@@ -307,6 +354,10 @@ kit = [
     { wield = "bolt:steel*12" },
     "waybread*2",
     "scroll_of_light",
+    "potion_of_healing",
+    { wear = "silk_shirt", fill = true },
+    { wear = "felt_boots", fill = true },
+    { wear = "wool_cloak:silk", fill = true },
 ]
 
 [[race]]
@@ -331,7 +382,12 @@ weapon_skills = { slings = 1, spears = 1 }
 
 # Cold-blooded: slower in the cold, once temperature has effects.
 # Candles to see by, and a strip of dried meat.
-kit = ["candle*2", "dried_meat"]
+kit = [
+    "candle*2",
+    "dried_meat",
+    { wear = "patched_smock", fill = true },
+    { wear = "footwraps", fill = true },
+]
 
 [[race]]
 id = "lizardfolk"
@@ -351,7 +407,12 @@ hunger = 90
 experience = 95
 weapon_skills = { spears = 1, thrown = 1 }
 # Dried meat, as much as they can stomach.
-kit = [{ wield = "lantern" }, "dried_meat*3"]
+kit = [
+    { wield = "lantern" },
+    "dried_meat*3",
+    { wear = "reed_kilt", fill = true },
+    { wear = "sandals", fill = true },
+]
 
 [[race]]
 id = "duergar"
@@ -372,7 +433,14 @@ passive_search = "stone"
 hunger = 90
 experience = 115
 # A pick for the stone, and meat.
-kit = [{ wield = "pick_axe" }, "dried_meat*3"]
+kit = [
+    { wield = "pick_axe" },
+    "war_hammer",
+    "dried_meat*3",
+    { wear = "iron_helm", fill = true },
+    { wear = "leather_jerkin:hardened_leather", fill = true },
+    { wear = "hobnailed_boots", fill = true },
+]
 
 [[race]]
 id = "ratfolk"
@@ -393,4 +461,11 @@ hunger = 110
 experience = 85
 weapon_skills = { daggers = 1 }
 # Whatever was lying about.
-kit = [{ wield = "lantern" }, "turnip", "apple", "dried_meat"]
+kit = [
+    { wield = "lantern" },
+    "turnip",
+    "apple",
+    "dried_meat",
+    { wear = "shift|patched_smock", fill = true },
+    { wear = "turnshoes|clogs|footwraps", fill = true },
+]

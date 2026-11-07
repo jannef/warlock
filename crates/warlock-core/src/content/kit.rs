@@ -17,7 +17,10 @@
 //! - `magic`: a base item made as loot makes it, its rarity rolled (`any`: perhaps magic,
 //!   `magic`: magic or rare, `rare`), unidentified like any other;
 //! - `prefer_trained`: among the alternatives, one of a weapon skill the character trains, if
-//!   any (a background story's heirloom, `data/background/`).
+//!   any (a background story's heirloom, `data/background/`);
+//! - `fill`: a `wield` or `wear` line that only fills a slot still free once every other line
+//!   of every kit is given, and is left out otherwise: a race's everyday clothes and shoes, worn
+//!   unless the class's kit dressed the character already ([`crate::kit::roll`]).
 //!
 //! A class may add `random_scrolls = { count = "1d3", below_level = 10 }`: that many spell
 //! scrolls more, each drawn uniformly among the scrolls of the spells below that spell level
@@ -66,6 +69,7 @@ pub struct KitLineSpec {
     gender: Option<Gender>,
     magic: Option<LootGrade>,
     prefer_trained: bool,
+    fill: bool,
 }
 
 /// A line written as a table.
@@ -80,6 +84,8 @@ struct KitTable {
     magic: Option<LootGrade>,
     #[serde(default)]
     prefer_trained: bool,
+    #[serde(default)]
+    fill: bool,
 }
 
 impl<'de> Deserialize<'de> for KitLineSpec {
@@ -103,6 +109,7 @@ impl<'de> Deserialize<'de> for KitLineSpec {
                     gender: None,
                     magic: None,
                     prefer_trained: false,
+                    fill: false,
                 })
             }
 
@@ -126,6 +133,7 @@ impl<'de> Deserialize<'de> for KitLineSpec {
                     gender: t.gender,
                     magic: t.magic,
                     prefer_trained: t.prefer_trained,
+                    fill: t.fill,
                 })
             }
         }
@@ -148,6 +156,8 @@ pub struct KitItem {
     pub magic: Option<LootGrade>,
     /// Among the alternatives, one of a weapon skill in `trained` if there is any.
     pub prefer_trained: bool,
+    /// Only into a slot still free once every other line is given (`fill`), else left out.
+    pub fill: bool,
 }
 
 impl KitItem {
@@ -268,6 +278,11 @@ pub(super) fn resolve(
         for stacks in &one_of {
             check_kept(spec.keep, spec.magic.is_some(), stacks, content).map_err(at)?;
         }
+        if spec.fill && spec.keep == Keep::Carry {
+            return Err(at(
+                "`fill`: only a `wield` or `wear` line fills a slot".into()
+            ));
+        }
         let trained = match &spec.trained {
             None => None,
             Some(name) => {
@@ -290,6 +305,7 @@ pub(super) fn resolve(
             gender: spec.gender,
             magic: spec.magic,
             prefer_trained: spec.prefer_trained,
+            fill: spec.fill,
         });
     }
     Ok(Kit(kit))
@@ -375,11 +391,12 @@ mod tests {
                 { wear = "gold_ring", magic = "magic", gender = "female" },
                 "club|quarterstaff",
                 { carry = "dagger*2" },
+                { wear = "leather_boots", fill = true },
             ]"#,
             None,
         )
         .expect("valid");
-        let [ration, dagger, ring, stick, daggers] = kit.items() else {
+        let [ration, dagger, ring, stick, daggers, boots] = kit.items() else {
             panic!("{kit:?}");
         };
         assert_eq!((ration.keep, ration.one_of.len()), (Keep::Carry, 1));
@@ -391,6 +408,7 @@ mod tests {
         assert_eq!(stick.one_of.len(), 2);
         // Two of what does not stack: two stacks, carried.
         assert_eq!(daggers.one_of[0].len(), 2);
+        assert!(boots.fill && !dagger.fill);
         let twin = CONTENT.weapon_skills().id("twin_blades").unwrap();
         assert!(dagger.applies(Gender::Male, &[twin]) && !dagger.applies(Gender::Male, &[]));
         assert!(ring.applies(Gender::Female, &[]) && !ring.applies(Gender::Other, &[]));
@@ -430,6 +448,10 @@ mod tests {
             (
                 r#"{ carry = "dagger", trained = "lances" }"#,
                 "unknown weapon skill",
+            ),
+            (
+                r#"{ carry = "dagger", fill = true }"#,
+                "only a `wield` or `wear`",
             ),
             (r#"12"#, "an item carried"),
         ] {

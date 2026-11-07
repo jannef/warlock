@@ -1,0 +1,11 @@
+# A plain long garment with wide sleeves, as monks wear. Clothing: no Defence, no Protection (#1173).
+[[object]]
+id = "frock"
+name = "frock"
+glyph = "["
+fg = "#9a7a50"
+class = "clothing"
+materials = ["wool"]
+weight = 1200
+value = 3
+slot = "body"

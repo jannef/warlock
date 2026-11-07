@@ -453,7 +453,7 @@ const CASES: &[Case] = &[
         name: "magic-screen-armoured",
         scenario: "forge",
         character: Some("human,male,paladin"),
-        actions: "move:SW move:S pickup equip:body:l",
+        actions: "move:SW move:S pickup equip:body:m",
         screen: Some("magic"),
         size: (112, 40),
         ..BASE

@@ -1,0 +1,12 @@
+# A tunic of tanned hide, laced at the sides. Clothing: no Defence, no Protection (#1173).
+[[object]]
+id = "hide_tunic"
+name = "hide tunic"
+glyph = "["
+fg = "#8a6a48"
+class = "clothing"
+materials = ["leather"]
+made_of = ["hide"]
+weight = 1500
+value = 3
+slot = "body"

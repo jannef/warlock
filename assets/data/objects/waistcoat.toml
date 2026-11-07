@@ -1,0 +1,12 @@
+# A snug waistcoat with brass buttons. Clothing: no Defence, no Protection (#1173).
+[[object]]
+id = "waistcoat"
+name = "waistcoat"
+glyph = "["
+fg = "#6a7a3a"
+class = "clothing"
+materials = ["wool"]
+made_of = ["cloth"]
+weight = 400
+value = 5
+slot = "body"

@@ -18,6 +18,7 @@ styles = { toucher = 1 }
 kit = [
     { wield = "dagger" },
     { wear = "wool_cloak" },
+    { wear = "gown|kirtle" },
     { wear = "bone_amulet", magic = "any" },
     "angelica_root*2",
     "potion_of_healing|potion_of_mana",

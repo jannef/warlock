@@ -1,0 +1,12 @@
+# Soft boots of felted wool: they make no sound on stone. Clothing: no Defence, no Protection (#1173).
+[[object]]
+id = "felt_boots"
+name = "pair of felt boots"
+plural = "pairs of felt boots"
+glyph = "["
+fg = "#3a3a44"
+class = "clothing"
+materials = ["wool"]
+weight = 500
+value = 5
+slot = "feet"

@@ -27,8 +27,9 @@ kit = [
     { wield = "rapier", magic = "any" },
     { wear = "gold_ring", magic = "magic" },
     { wear = "fur_cloak" },
+    { wear = "doublet|gown|houppelande" },
     { wear = "leather_boots" },
     "gem:ruby|gem:sapphire|gem:emerald",
-    "gold_coin*300",
+    "gold_coin*250",
     "apple*2",
 ]

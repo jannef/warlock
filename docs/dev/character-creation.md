@@ -111,19 +111,34 @@ these notes keep explaining the determinism exactly.
 wielded, for Fletching, #1021): the data side is `content/kit.rs`
 (`KitLineSpec`, parsed with the race, class, or sign as written, a string or a table;
 `Content::load_kits` resolves them into `Kit` (`KitItem { keep: Keep, one_of, trained,
-gender, magic }`) once objects, gems, slots, and weapon skills are known, checking each
+gender, magic, prefer_trained, fill }`; a `fill` line must wield or wear) and a race's `bare`
+slot ids into `RaceDef::bare: Vec<SlotId>` once objects, gems, slots, and weapon skills are known, checking each
 alternative with `object::parse_stacks` and `equipment::free_slot`); `RaceDef::kit`,
 `ClassDef::kit` (`ClassDef::trainable`: what a class's `trained` may name), and
 `SignPart::kit` (the horoscope's hook, empty in data). The rules are `warlock-core/src/kit.rs`:
 `kit::roll(content, character, trained, seed)` → `Pack { items, equipment }` from the stream
 `character/kit/<spec>`, the kits in `kits_of` order (class, race, animal, element), a line
 drawing only if `KitItem::applies` (one `rng.index` among alternatives, then
-`magic::loot::make` at `kit::ITEM_LEVEL` for a `magic` line), then last the class's random spell
-scrolls (#1104: `ClassDef::random_scrolls`, `random_scrolls = { count = "1d3", below_level = 10 }`
+`magic::loot::make` at `kit::ITEM_LEVEL` for a `magic` line; `kit.rs::give`), every line but
+the `fill` ones, then the class's random spell scrolls (#1104: `ClassDef::random_scrolls`, `random_scrolls = { count = "1d3", below_level = 10 }`
 in the class file, resolved by `content/kit.rs::resolve_scrolls` into `RandomScrolls { count,
 scrolls }`, the scroll of each spell below the level, `Content::scroll_of`, in spell order: the
 count rolled, then one `rng.index` per scroll, each carried; the wizard and witch 1d3, the priest,
-druid, and ranger 1d2, the bard 1d4, none else); `Pack::put` joins stackables,
+druid, and ranger 1d2, the bard 1d4, none else), then last the `fill` lines in the same kit
+order (#1173): each draws its alternative, and its item is made only if
+`equipment::free_slot` still finds a slot for it, else left out (never carried). Whatever line
+it comes from, an item to wear or wield whose slot is one of the race's `bare` is left out after
+its draw (the halflings' `bare = ["feet"]`). So the class's own garb or armour wins and the
+race's everyday clothes and shoes dress the rest: every class but the commoner, berserker,
+druid, and the martial ones in leather has a body garment of its own (robe, habit, frock,
+doublet, gown, kirtle, houppelande, long coat, leather apron), the priest, ascetic, and wizard
+shoes (sandals, slippers), and every race fills the body and the feet (the halfling the body
+only). Clothing is the item class `clothing` (`data/item_classes.toml`, after the armour
+classes; no `kind`, so never loot, magic, a shop's stock, or an animated panoply's part; the
+general store buys it): `data/objects/<id>.toml` per garment, Dv 0 Pv 0, in the Body or Feet
+slot (docs/dev/equipment.md). The dwarf's and duergar's steel and iron (gauntlets, helm, boots,
+jerkin, crossbow and bolts) are `fill` lines too, so a dwarven paladin wears the order's
+gauntlets and a dwarven ranger keeps the ranger's bow; `Pack::put` joins stackables,
 `Pack::equip` uses `equipment::free_slot`. `CharacterSpec::start` returns it as `Start::kit`
 (`weapon_skills` now also returns the class-trained set: its fixed ranks and the picked
 choice sets). **Who gets it**: `World::start_run(content, scenario, seed, character, name,
@@ -140,8 +155,12 @@ the halfling's apples gave way to it, so the weakest halfling paladin stays Unbu
 `Replay::new` copies it into the replay. `kit::starting_pack(content, scenario, kit)` is the one
 place the starting pack is put together (the kit, if any, else the scenario's `wield`, then `carry` on top): used by
 `World::start_run` and the summary (`ui/chargen_screen.rs::kit_words`, names from
-`Pack::names`). Every scroll and potion of the kit is known by type from the start (`World::begin`
-puts them in `WorldState::known_scrolls`; docs/dev/scrolls.md). A scenario's `spells` (`ScenarioDef::spells`, `spells = ["haste"]`, resolved by
+`Pack::names`). **Everything a run starts with is known by type** (#1173, a game rule rather
+than a kit's flag): `World::begin` puts `kit::known_types(content, &pack.items)` into
+`WorldState::known_scrolls`, every type of the whole starting pack with a label
+(`kit::is_labelled`: a scroll, potion, wand, or rod), the kit's and a scenario's own pack alike
+(docs/dev/scrolls.md); a background story's items the same way (`world/background.rs::story_item`).
+Magic items stay unidentified. A scenario's `spells` (`ScenarioDef::spells`, `spells = ["haste"]`, resolved by
 the loader, an unknown id refused) go into `Actor::spells` in `World::begin`, for its own
 character and a chosen one alike, on top of the class's: known from the start as a studied spell
 is (saved and hashed as `Actor::spells` always is). Only the test world's `circles` uses it, and
@@ -152,10 +171,13 @@ docs/dev/progression.md "Creation picks"): the summary's kit list does not name 
 refusals), `kit.rs` (Twin Blades and Duelist, the berserker's pick, deterministic choices, no
 other roll moves, the casters' random scrolls within their dice and below level 10, every
 starting scroll and potion known and named in the `inventory` dump, every worn or wielded item finds its slot unless an earlier line took it (a
-race's bow or gauntlets after the class's own: an elven ranger, a dwarven paladin), nobody
+race's bow after the class's own: an elven ranger), every kit dressing the body and the feet but
+a bare race's (every race, class, gender, and pick over six seeds), clothing Dv 0 Pv 0 and never
+loot, every race's `fill` lines worn by its commoner, a scenario's own pack known by type, nobody
 Strained at the worst case (`least_score`) and an ordinary character (`ordinary_score`, dice at
 their mean, no sign) Unburdened but for the aristocrat's and merchant's wealth and a small
-race's warrior or paladin (#695: their armour; a player may toss it), magic unidentified, who
+or frail race's warrior or paladin (#695: their armour; #1173: frail is a Toughness penalty,
+elves and drow, whose shoes tipped them over; a player may toss it), magic unidentified, who
 gets the kit and the scenario's pack, the gender and sign hooks, a replay with and without the
 flag). Since #695 the martial classes start armoured, the elven races with a bow (the drow a
 crossbow) of the weapon skill their race gives a rank in (the half-elf's `bows` is a fixed 1),

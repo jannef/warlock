@@ -842,13 +842,13 @@ impl World {
             stack.draw_wand_rung(&content, &mut rng);
         }
         let with_kit = kit.is_some();
-        // A character knows the scrolls and potions of their own kit (spec §8 "Scrolls",
-        // "Potions").
-        let known_scrolls: BTreeSet<ObjectId> = (kit.iter())
-            .flat_map(|k| &k.items)
-            .map(|s| s.object)
-            .filter(|&o| content.object(o).read.is_some() || content.object(o).drink.is_some())
-            .collect();
+        // Everything a character sets out with is known by type, the kit's and the scenario's
+        // own pack alike (spec §8 "Scrolls", "Potions"). A run without a character (a test's
+        // hall) knows nothing: its pack is as found.
+        let known_scrolls: BTreeSet<ObjectId> = match start {
+            Some(_) => crate::kit::known_types(&content, &pack.items).collect(),
+            None => BTreeSet::new(),
+        };
         let (stats, vision, (hp_base, mana_base), skills, character, weapon_skills, alignment) =
             match start {
                 Some(s) => {

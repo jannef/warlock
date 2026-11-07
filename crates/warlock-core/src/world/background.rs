@@ -135,8 +135,7 @@ impl World {
     fn story_item(&mut self, content: &Content, mut stack: Stack, keep: Keep) {
         let date = self.state.time;
         crate::rot::made_at(std::iter::once(&mut stack), content, date);
-        let def = content.object(stack.object);
-        if def.read.is_some() || def.drink.is_some() {
+        if crate::kit::is_labelled(content, stack.object) {
             self.state.known_scrolls.insert(stack.object);
         }
         let player = self.player_mut();

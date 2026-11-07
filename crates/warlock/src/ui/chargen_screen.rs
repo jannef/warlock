@@ -1040,7 +1040,7 @@ mod tests {
         for expected in [
             "Scenario  World, seed 1",
             "scroll of identify",
-            "2 wool cloaks",
+            "a wool cloak",
         ] {
             assert!(short.contains(expected), "{expected:?} in\n{short}");
         }
@@ -1136,9 +1136,10 @@ mod tests {
 
     #[test]
     fn the_summary_names_the_seed_only_in_developer_builds() {
-        let spec: CharacterSpec = "dwarf,female,warrior".parse().expect("a character");
+        let spec: CharacterSpec = "human,female,warrior".parse().expect("a character");
         let mut d = draft(1);
         d.chosen.set(Step::Race, &spec.race);
+        d.chosen.set(Step::Class, &spec.class);
         let dev = drawn(&SummaryScreen::new(&CONTENT, &d));
         assert!(dev.contains("Scenario  Showcase, seed 1"), "{dev}");
         if let Some(pick) = d.scenario.as_mut() {
