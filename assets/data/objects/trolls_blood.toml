@@ -1,0 +1,22 @@
+# Troll's blood (spec §8 "Potions", the potions wave 2 design §4.3): a gamble with one outcome
+# (data/outcomes/trolls_blood.toml): the regeneration is real, and so is the sickness. Gambles
+# are iridescent.
+[[object]]
+id = "trolls_blood"
+name = "vial of troll's blood"
+plural = "vials of troll's blood"
+glyph = "!"
+fg = "#c0a0e0"
+class = "potions"
+materials = ["glass"]
+weight = 250
+value = 120
+stackable = true
+level = 5
+frequency = 10
+
+[object.drink]
+kind = "gamble"
+outcomes = "trolls_blood"
+colour = "iridescent"
+marks = { toughness = 15 }

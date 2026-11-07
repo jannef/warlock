@@ -87,21 +87,31 @@ impl World {
             });
             return;
         }
+        let lost = self.drain_points(target, stat, drain.points);
+        events.push(Event::Drained {
+            actor: target,
+            stat: (lost > 0).then_some(stat),
+        });
+    }
+
+    /// Up to `points` come off actor `target`'s score in `stat` for good, with no check (the
+    /// loss of a drain failed, or a brewer's blunder's outcome, `outcome.rs`), counted in
+    /// [`Actor::drained`](super::Actor::drained) and never below the floor (module docs).
+    /// Returns the points taken.
+    pub(super) fn drain_points(&mut self, target: ActorId, stat: Stat, points: u8) -> u8 {
+        let content = self.content.clone();
         let Some(actor) = self.state.actors.get_mut(&target) else {
-            return;
+            return 0;
         };
         // A score always carries the stat damage on it (saves refuse one that does not).
         let floor = DRAIN_FLOOR.max(actor.damage.get(stat).saturating_add(1));
-        let lost = actor.stats.drain(stat, drain.points, floor);
+        let lost = actor.stats.drain(stat, points, floor);
         actor.drained[stat] = actor.drained[stat].saturating_add(lost);
         // The most hit points and mana may have fallen with it: what is left is cut down to
         // them (at least 1 each way: a drain never kills).
         actor.hp = actor.hp.min(actor.max_hp(&content)).max(1);
         actor.mana = actor.mana.min(actor.max_mana(&content));
-        events.push(Event::Drained {
-            actor: target,
-            stat: (lost > 0).then_some(stat),
-        });
+        lost
     }
 
     /// Every drained point of actor `id`'s comes back (a temple's mending, with its stat

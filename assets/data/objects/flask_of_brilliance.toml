@@ -1,0 +1,28 @@
+# A flask of brilliance (spec §8 "Potions": "Flasks"; the potions wave 2 design §4.4): thrown, it
+# shatters into the Flare spell's flash, which stuns all it reaches with eyes; drunk, it is the
+# safe one: its drinker sheds light about them a while (Lit, the Light cantrip's). The silver
+# family is kind.
+[[object]]
+id = "flask_of_brilliance"
+name = "flask of brilliance"
+plural = "flasks of brilliance"
+glyph = "!"
+fg = "#c8ccd4"
+class = "potions"
+materials = ["glass"]
+weight = 250
+value = 40
+stackable = true
+level = 2
+frequency = 20
+
+[object.drink]
+kind = "status"
+status = "lit"
+severity = 1
+colour = "silver"
+marks = { willpower = 15 }
+
+[object.throw]
+spell = "flare"
+words = "The shards burst into a blinding white flash!"

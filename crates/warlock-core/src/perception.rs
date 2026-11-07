@@ -597,7 +597,8 @@ fn bond_view<'a>(
     })?;
     let def = content.creature(beast.creature);
     let radius = sight::sight_radius(state, content, def.sight);
-    let los = LineOfSight::compute(beast.pos, radius, |p| level.is_opaque(content, p));
+    let stops = level.sight_stops(content, beast.pos, state.time);
+    let los = LineOfSight::compute(beast.pos, radius, stops);
     let eye = (beast.eyes(content, &content.vision_profiles()[def.vision])).into_owned();
     let least = (beast.familiar())
         .and_then(|_| content.familiars())
@@ -658,7 +659,9 @@ impl Perception {
         // Line of sight.
         let mut los = Grid::new(width, height, false);
         let mut los_cells = Vec::new();
-        compute_fov(viewer, range, is_opaque, |p| {
+        // Smoke stops sight as a wall does, but is no wall (`world/zone.rs`).
+        let stops = level.sight_stops(content, viewer, state.time);
+        compute_fov(viewer, range, stops, |p| {
             if let Some(seen) = los.get_mut(p)
                 && !*seen
             {
@@ -798,8 +801,9 @@ impl Perception {
         let mut sight = Grid::new(width, height, Sight::Hidden);
         let mut visible_cells = Vec::new();
         let mut seen = Vec::new();
+        let smoke_hides = |p: Pos| level.smoke_hides(viewer, p, state.time);
         for &p in los_cells.iter().filter(|p| !is_opaque(**p)) {
-            let by_eye = sees(light[p], p.dist2(viewer));
+            let by_eye = sees(light[p], p.dist2(viewer)) && !smoke_hides(p);
             if by_eye || p == viewer {
                 sight[p] = Sight::Seen;
                 visible_cells.push(p);
@@ -975,7 +979,9 @@ impl Perception {
         let zones: BTreeMap<Pos, ZoneKind> = if level.zones.is_empty() {
             BTreeMap::new()
         } else {
-            (visible_cells.iter())
+            // Smoke is seen where sight stops at it, though what is in it is not.
+            let smoke = (los_cells.iter()).filter(|&&p| level.smoky(p, state.time));
+            (visible_cells.iter().chain(smoke))
                 .filter_map(|&p| Some((p, level.zone_at(p, state.time)?.kind())))
                 .collect()
         };
@@ -1262,6 +1268,10 @@ impl Perception {
                         level.zone_memory.remove(&p);
                     }
                 }
+            }
+            // Smoke seen from outside it, on cells not seen.
+            for (&p, &kind) in &self.zones {
+                level.zone_memory.insert(p, kind);
             }
         }
         for &p in &self.visible_cells {

@@ -38,8 +38,8 @@ fn files_with(more: &[(&str, &str)]) -> ContentFiles {
         files.remove(&format!("data/objects/greater_potion_of_{gone}.toml"));
     }
     let fire = flask("fire_flask", "fireball", ("scarlet", "#e04020"));
-    let weakness = flask("weakness_flask", "hex_of_weakness", ("indigo", "#5040a0"));
-    let slick = flask("slick_flask", "slick", ("colourless", "#d0d0d0"));
+    let weakness = flask("weakness_flask", "hex_of_weakness", ("indigo", "#4830a0"));
+    let slick = flask("slick_flask", "slick", ("colourless", "#c0c8cc"));
     files.insert("data/objects/fire_flask.toml", &fire);
     files.insert("data/objects/weakness_flask.toml", &weakness);
     files.insert("data/objects/slick_flask.toml", &slick);
@@ -145,6 +145,42 @@ fn the_sleeping_draught_is_a_flask_of_sleep() {
     assert_eq!((splash.radius, splash.degrees), (Some(1), Some(2)));
     assert_eq!(def.throw_range(), Some(6));
     assert!(def.drink.is_some(), "a flask is still a potion");
+}
+
+#[test]
+fn the_flasks_of_smoke_and_brilliance_and_the_vial_of_acid_throw_and_drink() {
+    let mut w = world("##############\n#@.....D.....#\n##############\n");
+    let dummy = at(&w, Pos::new(7, 1));
+    let content = w.content.clone();
+    for (id, spell) in [
+        ("vial_of_acid", "acid_splash"),
+        ("flask_of_brilliance", "flare"),
+        ("flask_of_smoke", "fume"),
+        ("flask_of_brilliance", "flare"),
+    ] {
+        let object = content.object_id(id).expect(id);
+        let flask = content.object(object).flask.as_ref().expect("a flask");
+        assert_eq!(content.spell(flask.spell).id, spell);
+        w.player_mut().inventory.push(Stack::one(object));
+    }
+    // Acid, 2d4 at rung 0, and it keeps eating.
+    run(&mut w, "throw:f:7,1");
+    assert!((2..=8).contains(&lost(&w, dummy)), "{}", lost(&w, dummy));
+    // Then (each throw takes its stack away) a flash that stuns it.
+    run(&mut w, "throw:f:7,1");
+    assert!(texts(&w).contains(&"The training dummy is stunned.".to_string()));
+    // Smoke over it, and the player no longer sees it.
+    run(&mut w, "throw:f:7,1");
+    let level = w.state.current();
+    let smoke = level
+        .zone_at(Pos::new(7, 1), w.state.time)
+        .map(|z| z.kind());
+    assert_eq!(smoke, Some(ZoneKind::Smoke));
+    assert!(!w.perception.sees_actors_at(Pos::new(7, 1)));
+    assert!(texts(&w).contains(&"Smoke billows from the shards.".to_string()));
+    // Drunk, the flask of brilliance lights its drinker up.
+    run(&mut w, "eat:f");
+    assert_eq!(suffers(&w, w.state.player, "lit"), Some(1));
 }
 
 #[test]

@@ -1,0 +1,26 @@
+# A flask of enfeeblement (spec §8 "Potions": "Flasks"; the potions wave 2 design §4.4): thrown,
+# it casts the Hex of weakness on whoever stands where it shatters; drunk, the drinker's arms go
+# slack. Hexes are indigo.
+[[object]]
+id = "flask_of_enfeeblement"
+name = "flask of enfeeblement"
+plural = "flasks of enfeeblement"
+glyph = "!"
+fg = "#4830a0"
+class = "potions"
+materials = ["glass"]
+weight = 250
+value = 70
+stackable = true
+level = 4
+frequency = 10
+
+[object.drink]
+kind = "harm"
+dice = "2"
+status = "weakened"
+colour = "indigo"
+
+[object.throw]
+spell = "hex_of_weakness"
+words = "A grey vapour seeps from the shards."

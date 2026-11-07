@@ -78,6 +78,21 @@ Spec §8 "Potions" (`spec/08g-magic-items.md`); the combat progression design §
   cell, no stream draw), refused in effect on the overworld ("The land lurches, and holds you
   where you are."). `World::cleanse` was taken (the Cleanse spell's, `world/cast.rs`), hence
   the name `restore`.
+- The gambles (#1229, the potions wave 2 design §4.3): `Gamble { outcomes }` names a table of
+  `data/outcomes/` (`content/outcome.rs`; the tables load after the objects, so
+  `potion::check_gambles` checks the id once they have, one line in `Content::load`).
+  `World::gamble` is the spring's `drunk`: `draw_outcome(table, table.kinds)` (two gameplay
+  draws, nothing leans) and `befall` at the player's cell (objects left "at the feature's foot"
+  land beside them). A table's `seconds` defaults to 0 (a gamble's has none); `exhaust = 0`
+  (nothing spent). The two outcome effects the gambles brought: `status` as a list (each
+  afflicted, the outcome's line said instead of the statuses'), and `drain_stat = { stat,
+  points }` (`World::drain_points`, the loss half of `World::drain` lifted out: no check,
+  counted in `Actor::drained`, never below the floor; found only when a point went, else the
+  `otherwise` line). Content: `draught_of_chance`, `trolls_blood` (named "vial of troll's
+  blood" for the article), `brewers_blunder`, each with its table of the same id, iridescent
+  `#c0a0e0`; the description line "Does good, or harm, or nothing: a gamble". Tests:
+  `world/potion_gamble_tests.rs`; the wiki's tables: `potion-gambles.md`
+  (`xtask/src/wiki/outcomes.rs::gamble_outcomes`).
 - Creatures do not drink.
 
 ## Flasks: `world/flask.rs`
@@ -118,6 +133,21 @@ every later flask (smoke, fire, frost, acid, the bombers) builds on.
   `potion-description-flask`.
 - **Content**: the sleeping draught (`sleeping_draught.toml`, Sleep at rung 0, range 6; drunk,
   Drowsy 3; pink).
+- **Content on existing spells** (S4, #1226; each at rung 0, range 6; the design's §4.4 hues):
+  `flask_of_oil` (Slick), `stinking_flask` (Reek), `flask_of_tar` (Web),
+  `flask_of_enfeeblement` (Hex of weakness), `flask_of_sloth` (Curse of sloth),
+  `flask_of_darkness` (Mirk), `vial_of_nightmares` (Fear), `vial_of_silence` (Silence),
+  `flask_of_thunder` (Thunderclap, `noise` thunder 150), `blasting_flask` (Shatter, `noise`
+  explosion 100), each drunk a `harm`; `holy_water` (Rebuke: only the undead, by the spell's
+  `only_tags`), drunk a `cure` of `holy_water`, the means in Ill-wished's and Branded's
+  `cured_by`. The flasks of thunder and blasting are in general stores' and provisioners'
+  `never` lists. Tests: `world/flask_content_tests.rs` (each one's throw and drink once).
+- **Content, S3** (#1225): the flask of smoke (Fume: a smoke zone, radius 2, 15 turns;
+  drunk, Stunned 1; ash grey), the flask of brilliance (Flare: Stunned 1 on all with eyes,
+  radius 1; drunk, the safe one, `status` Lit 1 and Willpower marks; silver), the vial of acid
+  (Acid splash: 2d4 acid, radius 1, Corroded 1 and the player's armour eaten by acid's
+  `corrodes`; drunk, Corroded 2; lime). Their spells are plain spells with scrolls
+  (`docs/dev/spells.md`: "Zones" for smoke, "`only_sighted`", acid's `corrodes`).
 - **Fire and cold** (#1227, slice S5): `flask_of_fire.toml` (Fireball at rung 0; drunk, Burning
   1; scarlet `#e04020`), `flask_of_frost.toml` (Frost at rung 0; drunk, Sluggish 2; white
   `#e8ecf0`), and `pitch_fire.toml` (the Pitch fire spell, `data/spells/pitch_fire.toml`: a
@@ -127,7 +157,8 @@ every later flask (smoke, fire, frost, acid, the bombers) builds on.
   `lay_spell_zone`). All three in the general store's and the provisioner's `never` lists.
   Tests: `world/flask_fire_tests.rs` (each throw and drink, the pool's cells, turns, harm, and
   owner, pitch fire's range, the scroll's cast).
-- **Tests**: `world/flask_tests.rs` (fixture flasks on Fireball, Hex of weakness, and Slick):
+- **Tests**: `world/flask_tests.rs` (fixture flasks on Fireball, Hex of weakness, and Slick;
+  the three S3 flasks thrown at a dummy and brilliance drunk; `world/smoke_tests.rs` for smoke):
   the throw and the burst on the dummy, the first creature in the way, the thrower's kill and
   experience, learned only when seen and heard when not, a ray's hex, a zone by the thrower, a
   potion that spills, refusals, a death by one's own flask, saves and replays, the loader's
@@ -162,7 +193,8 @@ every later flask (smoke, fire, frost, acid, the bombers) builds on.
 - Elixirs: deep loot (level 8, frequency 2), the forgotten altar's great boon `elixir`
   (`data/outcomes/forgotten_altar.toml`, one of the six by weight), and the alchemist's draw (by
   frequency, so very rarely). A shop kind's `never` list (`ShopDef::never`, read in
-  `Shops::stocks`) keeps them out of general stores and provisioners.
+  `Shops::stocks`) keeps them, and the costly flasks (thunder, blasting), out of general stores
+  and provisioners.
 
 ## Talents (system `potions`)
 

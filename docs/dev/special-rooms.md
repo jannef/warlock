@@ -379,7 +379,8 @@ Outcomes (`world/outcome.rs`, `World::befall`): the line first (drawn among `mes
 outcome with `otherwise`, only once a hook found something to do, else `otherwise`), then the
 hooks: `heal`/`mana` (dice or `full`, capped), `cure` (statuses, `ended`), `cure_by`
 (`World::cure` with the means: `prayer` cures diseases), `mend` (`World::mend`), `drain`,
-`status` (afflicted with a scratch event list, so the status's own start line is not said),
+`status` (one table or a list of them, each afflicted with a scratch event list, so the
+status's own start line is not said),
 `hunger` (to the least nutrition of the state `hunger` states away, Satiated to Fainting),
 `objects` and `loot` (at `foot_of`: the walkable cell beside the feature nearest the player and
 not theirs, else theirs), `know_traps`, `identify`, `forget` (`Stack::forget`), `burn`
@@ -387,7 +388,10 @@ not theirs, else theirs), `know_traps`, `identify`, `forget` (`Stack::forget`), 
 (item class `coins`), `snuff`, `summon` (`danger::draw` over the branch's hostile non-unique
 candidates at the floor's danger plus `danger`, else its deepest; at `Near::Feature` the nearest
 free cell within 3, at `Near::Edge` a free cell of the room farthest from the feature, out of
-the player's view if any; none on a level without a danger), `disease`, `wither`, `xp` (a share
+the player's view if any; none on a level without a danger), `disease`, `wither`, `drain_stat`
+(`{ stat, points }`: `World::drain_points`, a drain's loss with no check, counted in
+`Actor::drained`; found only when a point was taken, else the `otherwise` line; the gambles'),
+`xp` (a share
 of the span to the next level, `grant_xp`), `tithe` (the most valuable stack, worn and wielded
 too), `teleport` (the trap's move), `explode` (`sound_at`, then `cast_burst` with
 `Caster::Place`, whose harm is `World::place_hurts`: resisted, "The altar's fire burns you.", a

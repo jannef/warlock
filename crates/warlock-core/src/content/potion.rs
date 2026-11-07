@@ -5,7 +5,7 @@
 //! ```toml
 //! [object.drink]
 //! kind = "heal"              # heal, cure, mana, elixir, harm, boost, vision, haste, resistance,
-//!                            # nourish, restore, blink, status
+//!                            # nourish, restore, blink, status, gamble
 //! dice = "2d8"               # heal: hit points back; mana: mana back; harm: degrees of sickness
 //! cures = ["bandage"]        # heal, cure: means named in the statuses' and diseases' `cured_by`
 //! diseases = true            # cure: ends every disease the drinker has
@@ -18,6 +18,7 @@
 //! points = 1                 # elixir: by how much (a trained rise each)
 //! potential = "1d2"          # elixir: the potential's further rise, rolled once
 //! satiation = 1500           # nourish: the nutrition it gives, as a meal's
+//! outcomes = "draught_of_chance"  # gamble: the table of data/outcomes/ it draws one outcome of
 //! colour = "red"             # what an unknown one is called by ("a fizzy red potion")
 //! marks = { toughness = 5 }  # sure training marks it gives, by stat
 //! ```
@@ -27,7 +28,7 @@
 //! and `status`; a boost `status` (one that raises a stat, `penalty`) and `severity`; a vision
 //! `status` (one with `vision`); a haste `severity` (of Hasted, the Haste spell's status); a
 //! resistance `status` (one with `resist`); a status `status` and `severity`, of any status; a
-//! nourish `satiation`; a restore and a blink nothing. The colour's hue is its
+//! nourish `satiation`; a gamble `outcomes`; a restore and a blink nothing. The colour's hue is its
 //! family's (the design's rule, kept in data as the object's `fg`): potions that share a colour
 //! name share their `fg`.
 //!
@@ -108,6 +109,10 @@ pub enum Draught {
     /// Any status that ends, lent for a while: `severity` degrees of `status` (Barkskin; the
     /// potions wave 2 design §4.1).
     Status { status: StatusId, severity: u16 },
+    /// One outcome drawn from the table `outcomes` of `data/outcomes/` and applied, as a
+    /// healing spring's drink draws (the potions wave 2 design §4.3; loaded after the objects,
+    /// so its id is checked once the tables are: [`check_gambles`]).
+    Gamble { outcomes: String },
 }
 
 impl Draught {
@@ -127,6 +132,7 @@ impl Draught {
             Draught::Restore => "restore",
             Draught::Blink => "blink",
             Draught::Status { .. } => "status",
+            Draught::Gamble { .. } => "gamble",
         }
     }
 
@@ -178,6 +184,7 @@ pub struct DrinkSpec {
     points: Option<u8>,
     potential: Option<Dice>,
     satiation: Option<i32>,
+    outcomes: Option<String>,
     colour: String,
     #[serde(default)]
     marks: BTreeMap<String, u16>,
@@ -227,6 +234,10 @@ impl DrinkSpec {
         // A nourish's field belongs to it alone.
         if self.kind != "nourish" {
             only(&[("satiation", self.satiation.is_some())])?;
+        }
+        // A gamble's field belongs to it alone.
+        if self.kind != "gamble" {
+            only(&[("outcomes", self.outcomes.is_some())])?;
         }
         // The kinds that do one fixed thing take none of the others' fields.
         let fixed = [
@@ -386,6 +397,12 @@ impl DrinkSpec {
                 only(&fixed)?;
                 Draught::Blink
             }
+            "gamble" => {
+                only(&fixed)?;
+                let outcomes = (self.outcomes.clone())
+                    .ok_or_else(|| "`drink`: a gamble names its `outcomes` table".to_string())?;
+                Draught::Gamble { outcomes }
+            }
             "status" => {
                 only(&lending)?;
                 let status = status(self.status.as_deref())?;
@@ -397,7 +414,7 @@ impl DrinkSpec {
             other => {
                 return Err(format!(
                     "`drink`: unknown kind `{other}` (heal, cure, mana, elixir, harm, boost, \
-                     vision, haste, resistance, status, nourish, restore, blink)"
+                     vision, haste, resistance, status, nourish, restore, blink, gamble)"
                 ));
             }
         };
@@ -504,4 +521,23 @@ impl ThrowSpec {
             words: self.words.or_else(|| def.look.message.clone()),
         })
     }
+}
+
+/// Every gamble's `outcomes` names a table of `data/outcomes/` (loaded after the objects, so
+/// checked once they are).
+pub(super) fn check_gambles(content: &Content) -> Result<(), super::ContentError> {
+    for def in content.object_defs() {
+        if let Some(Drink {
+            does: Draught::Gamble { outcomes },
+            ..
+        }) = &def.drink
+            && content.outcomes().get(outcomes).is_none()
+        {
+            return Err(super::ContentError::new(
+                &format!("data/objects/{}.toml", def.id),
+                format!("`drink`: no outcome table `{outcomes}` in data/outcomes/"),
+            ));
+        }
+    }
+    Ok(())
 }

@@ -1,0 +1,27 @@
+# A blasting flask (spec §8 "Potions": "Flasks"; the potions wave 2 design §4.4): thrown, it goes
+# off as the Shatter spell where it breaks, battering everyone it reaches and breaking shut doors
+# and chests; drunk, it goes off in the drinker's gut. Force is slate.
+[[object]]
+id = "blasting_flask"
+name = "blasting flask"
+plural = "blasting flasks"
+glyph = "!"
+fg = "#607080"
+class = "potions"
+materials = ["glass"]
+weight = 250
+value = 200
+stackable = true
+level = 7
+frequency = 6
+
+[object.drink]
+kind = "harm"
+dice = "1"
+status = "stunned"
+colour = "slate"
+
+[object.throw]
+spell = "shatter"
+noise = { sound = "explosion", loudness = 100 }
+words = "The flask bursts with a crack of force!"

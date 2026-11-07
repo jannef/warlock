@@ -2,7 +2,7 @@
 source: crates/warlock/src/ui/screen_snapshots.rs
 expression: "render(case, content.clone())"
 ---
- You pick up a slate rod and a jet rod.
+ You pick up an onyx rod and a slate rod.
  This is a rod of digging! This is a rod of sleep!
 
 

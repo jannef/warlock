@@ -15,8 +15,10 @@
 //!   sickness ([`World::afflict`]); a meal's nutrition, never into Bloated (a nourish,
 //!   [`World::satiate`]); the scroll of restoration's cleanse (a restore, [`World::restore`]);
 //!   the drinker moved to a free cell of the level as a teleport trap moves its victim (a blink,
-//!   [`World::teleport`]; nothing on the overworld). Dice are gameplay draws; the blink draws
-//!   nothing (the trap's cell is a hash of the turn and place).
+//!   [`World::teleport`]; nothing on the overworld); one outcome of a table of
+//!   `data/outcomes/` drawn and applied as a spring's drink is (a gamble, `outcome.rs`: two
+//!   draws, the kind and the outcome). Dice are gameplay draws; the blink draws nothing (the
+//!   trap's cell is a hash of the turn and place).
 //!   A boost, a vision, a haste, or a resistance gives its status for a while
 //!   ([`World::afflict`]: Fortified, Owl-eyed, Hasted, Warmed), which lasts as the status's
 //!   `eases` says and the drinker's talents lengthen (Lasting draughts: `status_lasts`). What begins and ends of statuses and diseases is told from the action's
@@ -172,6 +174,7 @@ impl World {
                 }
             }
             Draught::Blink => self.blink_draught(events),
+            Draught::Gamble { outcomes } => self.gamble(outcomes, events),
         }
         let used = match drink.does {
             Draught::Elixir { .. } => StatUse::Elixir,
@@ -221,6 +224,20 @@ impl World {
         } else {
             "In a blink, you are elsewhere."
         });
+    }
+
+    /// A gamble: one outcome of the table `outcomes` drawn (the kind, then one of its outcomes
+    /// by weight: two draws; nothing leans) and applied where the player stands, as a healing
+    /// spring's drink is (`outcome.rs`).
+    fn gamble(&mut self, outcomes: &str, events: &mut Vec<Event>) {
+        let content = self.content.clone();
+        let Some(table) = content.outcomes().get(outcomes) else {
+            return;
+        };
+        if let Some(outcome) = self.draw_outcome(table, table.kinds) {
+            let here = self.player_pos();
+            self.befall(outcome, here, events);
+        }
     }
 
     /// Takes one potion from where `meal` says: from the pack (the last empties its stack, and

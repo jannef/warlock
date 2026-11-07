@@ -16,8 +16,8 @@ expression: "render(case, content.clone())"
            ┌─ Decipher ─────────────────────────────────────────────────────────────────┐
            │                                                                            │
            │ Scrolls                                                                    │
-           │ > a - ? 2 scrolls labelled YOELAB                                   100 g  │
-           │   b - ? 2 scrolls labelled YOKA                                     100 g  │
+           │ > a - ? 2 scrolls labelled FOOGARFOO                                100 g  │
+           │   b - ? 2 scrolls labelled PRABARHU                                 100 g  │
            │                                                                            │
            │ a-b or Enter decipher   Esc cancel                                         │
            └────────────────────────────────────────────────────────────────────────────┘

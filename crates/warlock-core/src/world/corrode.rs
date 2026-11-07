@@ -22,6 +22,12 @@
 //! Draws: the gameplay stream, one for the chance, then (made, with pieces to choose among) one
 //! for the piece and one for the material's chance unless it is 0 or 100. None for a blow by or
 //! at anything without `corrodes`.
+//!
+//! **A spell type's `corrodes`** (acid's, `data/spells.toml` `[types]`; the potions wave 2
+//! design §9.3): a spell of the type that harms the player has the first piece they wear (the
+//! body armour first, as above) take acid's item damage, after the type's rider: no chance
+//! roll, only the material's draw ([`World::spell_eats_gear`]). Item damage is kept for the
+//! player's pack alone, so a creature's gear is never eaten.
 
 use super::item_damage::Harmed;
 use super::{ActorId, World};
@@ -107,9 +113,24 @@ impl World {
             return;
         }
         let item = exposed[self.state.rng.index(exposed.len())];
+        self.gear_harmed(item, harm.kind, what);
+    }
+
+    /// A spell of a type that `corrodes` harmed the player (module docs): the first piece they
+    /// wear takes acid's item damage, said as a corroding creature's touch is.
+    pub(super) fn spell_eats_gear(&mut self) {
+        let Some(&item) = self.exposed(CorrodesWhat::Armour, None).first() else {
+            return;
+        };
+        self.gear_harmed(item, ItemHarm::Acid, CorrodesWhat::Armour);
+    }
+
+    /// The player's piece at pack position `item`, reached by `kind` from side `what`, takes
+    /// it, and what came of it is said.
+    fn gear_harmed(&mut self, item: usize, kind: ItemHarm, what: CorrodesWhat) {
         let name = self.state.player().inventory[item].names(&self.content).0;
-        let lines = lines(harm.kind);
-        let line = match self.harm_item(item, harm.kind) {
+        let lines = lines(kind);
+        let line = match self.harm_item(item, kind) {
             Harmed::Withstood if self.state.progress.happened(lines.once) => return,
             Harmed::Withstood => {
                 self.state.progress.once.insert(lines.once.to_string());

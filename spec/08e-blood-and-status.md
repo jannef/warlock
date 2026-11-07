@@ -485,7 +485,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     (Potent: +1 / +2 / +3), `spell_sides`, `spell_dice`, `spell_reroll`, `wand_rungs` (of
     Wands), `spell_reach` (of Farcasting, cells), `spell_duration` (of Lingering, degrees).
     Derived at cast time; nothing saved.
-  - **Zones** (`docs/design/spell-types-and-new-spells.md` §7 "Zones"; `[spell.effect] zone`, four
+  - **Zones** (`docs/design/spell-types-and-new-spells.md` §7 "Zones"; `[spell.effect] zone`, five
     scroll-only spells, `world/zone.rs`): an area that lies on the floor for some of the player's
     turns, on the cells of a burst or a line, never spreading, a new one replacing an old on shared
     cells, kept when the player leaves the level, none on the overworld. It takes the caster and
@@ -496,8 +496,13 @@ developer notes (CLAUDE.md, `docs/dev/`).
     (Reek): a creature that starts a turn in it takes the poison type's rule; it does not block
     sight. `slick` (Slick): a step onto it or off it is a Dexterity check against 12, failed
     Staggered 1, the step still taken. `dark` (Mirk): no light reaches its cells and a source on them
-    sheds none, so eyes that need light see nothing there. The player sees a zone as a still tint
-    and in look mode's words, where they see or remember the cell.
+    sheds none, so eyes that need light see nothing there. `smoke` (Fume, the flask of smoke; the
+    potions wave 2 design §9.2): no eye sees into it or through it, the player's and a
+    creature's alike: a smoke cell stops a line of sight as a wall does, but what stands on it is
+    seen only from beside it, and a viewer inside sees only the cells beside them; light,
+    missiles, and spells pass; Gale clears it, rain does not. The player sees a zone as a still
+    tint and in look mode's words, where they see or remember the cell; smoke also from outside
+    it, on a known cell, where their sight stops at it.
   - **Ruin** (#1100; `data/ruin.toml`, `world/ruin.rs`): an area spell (a burst, a cone, or a
     line) with a damage type, cast by an actor (from mana, a scroll, or a wand; a dragon's breath
     too), may destroy the items lying on the floor cells it reaches: each item of each stack there
@@ -536,7 +541,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
     chest is any blast's already. **Poison**: Poisoned 1, certain (Blight's own line is 1). **Necrotic**:
     `bite`, before resistance: 150 % of the harm, rounded down, against a target below 50 % of its
     maximum hit points; `immune_tags = ["undead"]`: laid on those creature types' `resist` at load,
-    so an immunity to the type from whatever harm. **Acid**: Corroded 1, certain; never armour.
+    so an immunity to the type from whatever harm. **Acid**: Corroded 1, certain; `corrodes`
+    (the potions wave 2 design §9.3): when it harms the player, the first piece they wear (the
+    body armour first) takes acid's item damage after the rider, the material's chance to
+    withstand it its only draw (`world/corrode.rs`); a creature's gear is never eaten.
     **Corroded** (`data/status.toml`): max 3, adding; 1 hit point of acid per 6 s, a degree easing
     per 12 s: two points a degree. **Electricity** spreads from
     every creature it harmed, at the cast's one roll, with no roll to hit and no Evasion, and
