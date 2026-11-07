@@ -866,12 +866,17 @@ mod tests {
         assert!(
             potions.contains(
                 "| Potion of healing `!` | heal | 2d8 hit points back at once, never past your \
-                 maximum | red (`#c83c3c`) | 15 Toughness | item level 1, frequency 60 | 40 gold |"
+                 maximum | spills uselessly; range 3 | red (`#c83c3c`) | 15 Toughness | item \
+                 level 1, frequency 60 | 40 gold |"
             ),
             "{potions}"
         );
         assert!(
             potions.contains("| Murky draught `!` | harm | 2 degrees of Poisoned"),
+            "{potions}"
+        );
+        assert!(
+            potions.contains("| shatters into Sleep (rung 0): radius 1, Drowsy 2; range 6 |"),
             "{potions}"
         );
         assert!(

@@ -120,6 +120,35 @@ They are found only deep ([item level](affixes.md#base-items) 8 and below), and 
 alchemist very rarely has one for 2000 [gold](shops.md#money). A [general store](shops.md) or a
 provisioner never does.
 
+## Flasks
+
+Any potion can be **[thrown](ranged.md#shooting-and-throwing)**: `T` lists your potions beside
+your throwing weapons. A thrown potion never lands whole. It **shatters** where it comes down.
+
+A **flask** is a potion made for throwing, such as the sleeping draught. Where it shatters, it
+works as a [spell](magic.md#the-spells) does: the sleeping draught breathes the
+[Sleep](magic.md#spell-sleep) spell over everyone around the cell. The table's **Thrown** column
+gives each flask's spell, its numbers, and its range in cells.
+
+- **Where it breaks**: a flask breaks on the first creature in the line from you to the cell you
+  aim at, or before a wall, or on that cell. There is no roll to [hit](combat.md#hitting) and no
+  miss: what matters is who stands where.
+- **How far**: a flask flies its own range (6 cells for most), plus what
+  [talents](talents.md) and [magic items](affixes.md) add to your throws. Any other potion flies
+  only 3 cells.
+- **What it does**: the spell works as if you had cast it, but your [stats](stats.md) and talents
+  do not change it: a flask is always as strong as the table says. Its harm and its kills are
+  yours, [experience](experience.md) too. A burst that harms can catch you if you throw it too
+  close, and the game asks first. A flask that lays a [Drowsy](status-effects.md#status-drowsy)
+  cloud or another [status](status-effects.md) spares you. Throwing a flask takes a throw's time
+  and trains no [weapon skill](weapon-skills.md).
+- **Learning it**: if you see the cell where an unknown flask breaks, you learn what it was ("It
+  was a sleeping draught."). Thrown into the dark or round a corner, it is only heard, as "a crash
+  of glass" ([Hearing](hearing.md#what-makes-noise)), and you learn nothing.
+- **A potion that is no flask** spills uselessly: "The potion shatters; the draught soaks away."
+  You learn nothing from it either. It is a way to be rid of a potion you know is bad.
+- **Drinking a flask** is a poor idea: the sleeping draught makes you drowsy, as the table says.
+
 ## Where to find them
 
 Potions lie about as [loot](magic-items.md#finding-them). The common ones (healing, antidote)

@@ -162,6 +162,10 @@ impl World {
             self.say("It will not leave your hand.");
             return Spent::Nothing;
         }
+        // A potion shatters where it lands: a flask casts its splash there (`flask.rs`).
+        if content.object(stack.object).shatters() {
+            return self.throw_flask(item, at, events);
+        }
         let (Some(range), Some(profile)) =
             (me.throw_range(item, &content), me.thrown(item, &content))
         else {

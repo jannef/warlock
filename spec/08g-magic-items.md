@@ -534,11 +534,36 @@ developer notes (CLAUDE.md, `docs/dev/`).
     barkskin (Barkskin 2; 3, 15; 100; bronze; Toughness), of glamour (Glamoured 2; 5, 12; 150;
     bronze; Presence), of renewal (Renewing 2; 4, 15; 120; rose; Toughness), of the quick
     (Quick-sensed 3; 5, 10; 150; opal; Willpower), of the unseen (Invisible 1; 7, 6; 300; opal;
-    Dexterity), and of sea legs (Water-borne 3; 4, 10; 100; sky blue; Dexterity). **Where**:
-    loot (by `level` and
+    Dexterity), and of sea legs (Water-borne 3; 4, 10; 100; sky blue; Dexterity); the sleeping
+    draught (a flask of Sleep; harm, Drowsy 3; 3, 15; 60; pink). **Where**: loot (by `level` and
     `frequency`, never magic), general stores and provisioners (they stock and buy potions), the
     alchemist (§7 "Shops": potions only, healing always first), quest rewards, and the hub's
     pile.
+  - **Flasks** (the potions wave 2 design §3, §5; `world/flask.rs`, `[object.throw]` in
+    `content/potion.rs`; #1223): any potion may be thrown (`throw:c:X,Y`; the throw choice `T`
+    lists potions beside throwing weapons). A **flask** is a potion with an `[object.throw]`
+    table: `spell` (an id of `data/spells/`, the only thing the loader checks: the data author is
+    trusted, #1205), `rungs` (the rung of each of the spell's ladders it casts at, default 0),
+    `range` (cells, default 6), `noise` (`{ sound, loudness }`, default a crash of glass at 30,
+    `SoundKind::Shatter`), `words` (said to a thrower who sees it break; default the spell's
+    `cast.message`). Thrown, it flies as far as its range plus the thrower's `throw_range`
+    talents and items (any other potion as far as an improvised weapon, 3), with no to-hit roll:
+    it breaks by a burst spell's aim rule, on the first creature on the line through the cell
+    aimed at, else before something solid, else on that cell. Nothing lands. Its shattering is
+    heard there, and its spell is cast there by the thrower (its blows, kills, experience, and
+    zone are theirs) at the flask's rung and nobody's stats or hooks (`Cast::by_flask`,
+    `Pay::Flask`: no school marks, no triggers, no Empower): a burst damage spell strikes as a
+    scroll's burst (its type's rules, riders, and zone), a burst hex lays its zone or its status
+    on everyone in its cells but the thrower, a ray's or bolt's hex falls on whoever stands where
+    it broke. Priced as a throw (`attack_price(Throw)`, no weapon skill), one taken from the stack
+    (never kept), "You throw the fizzy pink potion."; refused with no time as every throw is (the
+    overworld, oneself, out of range, unpaid goods, Engulfed). The player who sees the cell where
+    it breaks is told its `words` and learns its type ("It was a sleeping draught."); unseen, it
+    is only heard, and nothing is learned. A potion with no `throw` table spills uselessly ("The
+    potion shatters; the draught soaks away.") and teaches nothing. A death by one's own flask is
+    "Killed by their own flask of …" (`Cause::Flask`). A known flask's description adds "Thrown,
+    it shatters and casts Sleep where it breaks"; the `inventory` dump marks it `(throw 6)`, JSON
+    `throw: { range }`. Creatures do not throw flasks yet.
   - **Talents** (system `potions`): Thrifty drinker (Delver, from level 6): a potion is not used
     up one time in four (one gameplay draw a drink, none while the chance is 0); worn
     `potion_kept` affixes add their percent to it, the sum at most 50 (a talent's own chance

@@ -244,7 +244,14 @@ fn potion_lines(stack: &Stack, lore: Lore<'_>) -> Vec<Line> {
         }
         Draught::Status { status, .. } => format!("{} for a while", lent(content, *status)),
     };
-    vec![line(LineKind::Stat, text)]
+    let mut lines = vec![line(LineKind::Stat, text)];
+    // A flask (spec §8 "Potions": "Flasks"): what its splash is, by its spell's name.
+    if let Some(flask) = &content.object(stack.object).flask {
+        let spell = &content.spell(flask.spell).name;
+        let text = format!("Thrown, it shatters and casts {spell} where it breaks");
+        lines.push(line(LineKind::Stat, text));
+    }
+    lines
 }
 
 /// What a status draught's status does for its drinker, in words, by the first thing it does
