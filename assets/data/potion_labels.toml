@@ -26,6 +26,6 @@ parts = [
     "brackish", "cloying", "curdled", "dusky", "effervescent", "gleaming", "gritty", "hazy",
     "inky", "glassy", "opaline", "pungent", "resinous", "silty", "speckled", "starry", "steaming",
     "watery",
-    "grainy", "limpid", "roiling",
+    "limpid", "roiling", "tarry",
     "briny", "chalky", "frothy", "gelid", "opaque",
 ]
