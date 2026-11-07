@@ -43,7 +43,7 @@ Your **burden** is what you carry against your limit, by thirds:
   down the [stairs](terrain.md#stairs). Everything else still works, as slowly as when strained: drop something, and
   you can go on. Picking things up is always allowed, even when it overloads you.
 
-**[Dwarves](races.md#race-dwarf)** have carried loads all their lives: being burdened costs them nothing, no time, no
+**[Dwarves](races.md#race-dwarf)** and **[duergar](races.md#race-duergar)** have carried loads all their lives: being burdened costs them nothing, no time, no
 [Dexterity](stats.md#stat-dexterity), no [noise](hearing.md#how-loud). From strained on, they suffer like everyone else.
 
 The [balance](skills.md#skill-balance) skill takes some of the slowdown away: at 100, a burden

@@ -108,9 +108,9 @@ When an attack misses, the message says why, as far as you saw it:
 ## Criticals
 
 A hit whose dice come up high enough **threatens a critical**: most weapons threaten on 22 to
-24, swords and [daggers](weapon-skills.md#weapon-skill-daggers) on 20 to 24. A second roll, against the same [Defence](combat.md#defence), decides: if it would
+24, swords and [daggers](weapon-skills.md#weapon-skill-daggers) on 20 to 24 or wider (each weapon's range is in the [weapons table](#damage)). A second roll, against the same [Defence](combat.md#defence), decides: if it would
 hit too, the critical is **confirmed** and the damage is rolled again and added, twice in all for
-most weapons, three times for [spears](weapon-skills.md#weapon-skill-spears) and [bows](weapon-skills.md#weapon-skill-bows). The message says so: "The kobold hits you
+most weapons, three times for the heavy ones, axes, hammers, [spears](weapon-skills.md#weapon-skill-spears), and [bows](weapon-skills.md#weapon-skill-bows) among them (the [weapons table](#damage) gives each one's). The message says so: "The kobold hits you
 hard!" A confirmed critical also opens a [bleeding](status-effects.md#bleeding) wound (see [Status effects](status-effects.md)).
 
 Some things have **no vitals** to find, and so are **immune to criticals** and to

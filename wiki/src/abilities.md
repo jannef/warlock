@@ -126,13 +126,13 @@ own: [Weapon skills](weapon-skills.md#what-a-rank-teaches) and
   it is [frightened](status-effects.md#status-frightened) three degrees and runs from you, about
   three turns. There is no level cut: a troll checks as a kobold does, only with more nerve.
   For example, a creature of Willpower 10 against a berserker of Strength 15 (+2), untrained in
-  Intimidate, stands on 14 or more: it flees 54 % of the time; at Intimidate 100 it flees
-  96 %. A roar with nobody near is still a roar: the turn, the rage, and the noise are spent.
+  Intimidate, stands on 12 or more: it flees 38 % of the time; at Intimidate 100 it flees
+  90 %. A roar with nobody near is still a roar: the turn, the rage, and the noise are spent.
   Every cry trains Intimidate.
 - **[Inspire](abilities.md#ability-inspire)** and the **[Lullaby](abilities.md#ability-lullaby)**,
   the [bard](classes.md#bard)'s at levels 9 and 20, are songs: see [Songs](#songs) below.
-- **Allies** ([Come to heel](abilities.md#ability-heel), [Hold here](abilities.md#ability-hold), [Set on](abilities.md#ability-set-on)): once a creature fights on your side (the
-  druid's calls and the ranger's companion are on their way), the Allies group appears, and the
+- **Allies** ([Come to heel](abilities.md#ability-heel), [Hold here](abilities.md#ability-hold), [Set on](abilities.md#ability-set-on)): once a creature fights on your side (a
+  druid's call, a ranger's companion; see [Allies](allies.md)), the Allies group appears, and the
   three orders tell every ally of yours on the level at once what to do: follow you and fight
   what threatens you (the default), hold where they stand, or go to a place you see and fight
   what is near it, then come back. An order takes no time, but it is a shout: anything near

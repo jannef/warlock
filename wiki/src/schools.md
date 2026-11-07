@@ -71,10 +71,11 @@ and its casting time.
 
 What each rank brings, in a sentence:
 
-- **Evocation**: 1 a surer aim; 2 a surer aim still; 3 a die that shows 1 is rolled again; 4 a
-  wider critical range, a twentieth off the mana; 5 every die a size bigger (a d6 a d7); 6 a die
-  more; 7 a tenth off the mana; 8 a die showing 1 or 2 is rolled again; 9 a second die more; 10
-  every die two sizes bigger. A [Fireball](magic.md#spell-fireball) at the top rung (10d6, 35
+- **Evocation**: 1 a surer aim; 2 nothing new; 3 a surer aim still, and a die that shows 1 is
+  rolled again; 4 a wider critical range, a twentieth off the mana; 5 a surer aim, every die a
+  size bigger (a d6 a d7); 6 a die more; 7 a surer aim, a wider critical range, a tenth off the
+  mana; 8 a die showing 1 or 2 is rolled again; 9 a surer aim, a second die more; 10 the surest
+  aim, the widest critical range, every die two sizes bigger, three twentieths off the mana. A [Fireball](magic.md#spell-fireball) at the top rung (10d6, 35
   on average) rolls 12d8 rerolling 1s and 2s at rank 10: 63.0.
 - **Necromancy**: 1 a surer aim; 2 a point more on every roll; 3 1s rolled again, hexes a degree
   longer; 4 a wider critical range, a twentieth off the mana; 5 two points more; 6 hexes two

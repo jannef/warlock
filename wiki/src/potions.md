@@ -12,7 +12,7 @@ not you are [hungry](hunger.md#how-hungry-you-are), and while [raging](status-ef
 
 [Hit points](combat.md#hit-points) and [mana](mana.md#how-much) never go past your maximum. Some potions work **for a while** instead: a
 boost raises a [stat](stats.md) by 2 for ten minutes (a greater one by 4, easing to 2 after ten minutes,
-then gone ten minutes later), a [vision](vision.md#the-four-types) potion lends you other eyes for half an hour, the potion
+then gone ten minutes later), a [vision](vision.md#the-four-types) potion lends you other eyes for a while (half an hour, the potion of seeing five minutes), the potion
 of quickness hastes you for a minute as the [Haste](magic.md#spell-haste) spell does, and a resistance potion makes you
 [resist](damage-types.md#armour-and-resistance) an element by 50 % for half an hour, counted as armour's resistance is, so together with
 what you wear it never reaches immunity (at most 75 %). Each shows on the [status bar](controls.md#the-screen) and the
@@ -80,4 +80,4 @@ an **alchemist** sells potions only, always potions of healing first, and buys t
 - **[Thrifty drinker](talents.md#talent-thrifty-drinker)** (Delver): one potion in four is not used up, an elixir too. Items that
   keep potions add their percent to the talent's chance, up to 50 % in all.
 - **[Lasting draughts](talents.md#talent-lasting-draughts)** (Vigour, needs [Toughness](stats.md#stat-toughness) 13): boost and vision potions last half again
-  as long (15 minutes a degree for a boost, 45 minutes for a vision potion).
+  as long (15 minutes a degree for a boost, 45 minutes for cat's, owl's, or moth's eyes).

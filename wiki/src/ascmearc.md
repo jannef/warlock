@@ -13,7 +13,7 @@ it all. How [travel](overworld.md#travel), [sight](sight.md#line-of-sight), [loc
 
 ## Getting about
 
-The road runs five cells east from the pass to **Cēaptūn**, the market town: under two hours'
+The road runs six cells east from the pass to **Cēaptūn**, the market town: under two hours'
 walk, and in sight from the pass by day. From the town roads lead on: east over the barrow downs
 of Hlāwdūn to the ford over Blæcwæter and the land beyond, south over the bridge on Beorhtburna
 and along its bank, and north to the edge of the holly wood. The march is about 120 cells
