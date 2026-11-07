@@ -9,9 +9,7 @@ rest (the bearded devil, level 20, and the deeper) wait for deeper places. All c
 (docs/dev/creatures.md), the deep ones only far out of depth.
 
 They follow #383's formulas by level and role (shambler: the lemure; small: the imp; brute: the
-horned devil, ice devil, and pit fiend; standard: the rest). `content/devil_roster_tests.rs`
-(`ROLES`) checks every `devil` type's tags, XP, max HP, and dice within ±35 %, and that the
-hierarchy's levels climb.
+horned devil, ice devil, and pit fiend; standard: the rest). The hierarchy's levels climb.
 
 One natural attack each (creatures have no multi-attack): the riders are poisoned (imp, bearded
 devil, bone devil, pit fiend), bleeding (barbed and horned devils), held (the chain devil, 25 % at

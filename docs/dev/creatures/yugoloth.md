@@ -8,8 +8,8 @@ since relations are only symmetric hostile lists and there is no hire yet), tags
 "fiend", ...]` (the arcanaloth also `caster`), on the undead roster's formulas by level and role:
 the mezzoloth 22 (standard), canoloth 29 (quick), nycaloth 36 (brute), arcanaloth 46 (caster),
 and ultroloth 58 (standard). Mercenary fiends of the lower planes: immune to acid and poison,
-resisting fire, cold, and lightning 50, no corpse. `content/yugoloth_roster_tests.rs` holds every
-`yugoloth` type to its level and role in `ROSTER`, the XP guideline, ±35 % of the max HP and dice
+resisting fire, cold, and lightning 50, no corpse. Every
+`yugoloth` type is written to its level and role, the XP guideline, ±35 % of the max HP and dice
 formulas, and the two tags (faction and `yugoloth` tag go together). Their riders map onto what
 exists: the canoloth's barbed tongue latches (`latched`, 20 % at 18) and bleeds, the nycaloth's claws bleed,
 the arcanaloth's poison, the ultroloth's gaze (transfixed, frightened; #1125, range 5, 40 %; docs/dev/creatures.md

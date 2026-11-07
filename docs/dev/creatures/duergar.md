@@ -27,8 +27,7 @@ casters In and Wp +4); `base_hp = 2.5 × L × role` (archer and standard 1.0, of
 who fight bare (the spider rider, whose spider bites, and the mindbreaker's mind-lash) have a
 natural attack on #383's dice ladder (caster one step down), to-hit by role (#1134: the spider rider a striker's, the
 mindbreaker a caster's), and a rider.
-`content/duergar_roster_tests.rs` checks all of it (the three older types only for XP and hit
-points), the stances, and the gear rolls (armed nine times in ten, the shooters with ammunition).
+`content/duergar_roster_tests.rs` checks the stances and the gear (weapons, and ammunition for the shooters).
 
 ## Roster
 

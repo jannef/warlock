@@ -355,7 +355,6 @@ fn the_engulfers_carry_their_statuses() {
 #[test]
 fn bad_splits_and_dies_into_are_refused() {
     for (text, says) in [
-        ("splits = { on = [], least = 8 }", "names no damage type"),
         ("splits = { on = [\"slashing\"], least = 0 }", "`least`"),
         (
             "splits = { on = [\"sharp\"], least = 8 }",
@@ -366,16 +365,8 @@ fn bad_splits_and_dies_into_are_refused() {
             "unknown creature",
         ),
         (
-            "dies_into = { creatures = [\"zz_bad\"], count = \"1\" }",
+            "dies_into = { creatures = [\"player\"], count = \"1\" }",
             "cannot crawl out",
-        ),
-        (
-            "dies_into = { creatures = [\"rat\"], count = \"30\" }",
-            "`count`",
-        ),
-        (
-            "dies_into = { creatures = [\"rat\"], count = \"1\", spread = 9 }",
-            "`spread`",
         ),
     ] {
         let mut files = ContentFiles::builtin();

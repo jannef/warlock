@@ -39,17 +39,16 @@ line's; plain; greater; elder; eldest):
 The fire line's blows also set alight (`on_hit` 25 % `burning`). The **earth line** does not
 burst: it throws stones (`[creature.throw]`, the `boulder` object named "stone", range
 5 + L/10, the fist's dice a size smaller, `cost = 1500`, bludgeoning, 15 % `staggered`), and one
-inside a wall comes out before it throws (`hurl.rs`). `content/elemental_roster_tests.rs`'s
-`RUNGS` table pins each line's burst and the earth line's throw, and every elemental is on a
-rung or a vortex.
+inside a wall comes out before it throws (`hurl.rs`). Each line has its burst, and the earth
+line its throw.
 
 The greater, elder, and eldest rungs are size medium with great weights (no larger size yet) and
 drop loot now and then. Riders are existing statuses only.
 
-`content/elemental_roster_tests.rs` holds every `elemental`-tagged type to the XP guideline and to
-±35 % of the max HP and dice formulas for its role (`ELEMENTS`: the element's role, motes `Small`),
-checks one element tag, poison and the element's own immunity, no corpse, and that each element has
-at least six rungs from level 10 or lower to 50 or higher. Test content that lists its own factions
+Every `elemental`-tagged type is written to the XP guideline and to the max HP and dice
+formulas for its role (the element's role, motes `Small`), with one element tag, poison and the
+element's own immunity, no corpse, and at least six rungs per element from level 10 or lower to
+50 or higher. Test content that lists its own factions
 (`world/{equip,magic,object,read}_tests.rs`) adds `elemental`, and `world/mana_tests.rs`'s own
 STATUS keeps `staggered` and `sluggish` for the elementals' riders.
 
@@ -69,9 +68,9 @@ The invisible stalker (#1132, docs/design/monster-dread.md §5.11): the air line
 never seen, it comes to the player wherever they are on its level; a quick role (1500, `3d8`
 slashing), no corpse, no blood, and, as every elemental now, no heartbeat for Sense the quick. No
 population names the air elementals of its depth yet, so it comes as a stray. It keeps the roster's
-formulas (`elemental_roster_tests`). It bursts where it dies as the air elemental does (`4d6`, radius 1, a
-gust; #1127's death throes, `elemental_roster_tests::KIN`).
+formulas. It bursts where it dies as the air elemental does (`4d6`, radius 1, a
+gust; #1127's death throes).
 
 ## Variance
 
-The variance pass (#1134, `docs/dev/creatures.md` "Variance by role") sets the roles' to-hit (striker `L/4 + L/8`, brute and caster `L/4 − L/8`, the armed `L/4`), threat and crit (striker 19, brute 24 at ×3), and hit-point factors (quick and caster 0.5, brute 2.0). **Speed**, by element: earth grinds at 800, ice at 850 to 950, fire and water at 1000 to 1100, air and lightning fast by design (#1167: air 1500 to 1850, lightning 1400 to 1600, the thunderhead 1700, the welkin wind 2000; `FAST_BY_DESIGN` in `variance_roster_tests.rs`); the vortices kept D3's quicker speeds (dust devil 1650, spark mote 1550, ember and water motes 1300; design §5.3); the invisible stalker at 1500.
+The variance pass (#1134, `docs/dev/creatures.md` "Variance by role") sets the roles' to-hit (striker `L/4 + L/8`, brute and caster `L/4 − L/8`, the armed `L/4`), threat and crit (striker 19, brute 24 at ×3), and hit-point factors (quick and caster 0.5, brute 2.0). **Speed**, by element: earth grinds at 800, ice at 850 to 950, fire and water at 1000 to 1100, air and lightning fast by design (#1167: air 1500 to 1850, lightning 1400 to 1600, the thunderhead 1700, the welkin wind 2000; fast by design); the vortices kept D3's quicker speeds (dust devil 1650, spark mote 1550, ember and water motes 1300; design §5.3); the invisible stalker at 1500.

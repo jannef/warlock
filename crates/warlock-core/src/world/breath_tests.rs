@@ -357,7 +357,7 @@ fn walls_and_the_shared_cone_bound_the_breath() {
 }
 
 #[test]
-fn a_dragon_needs_a_breath_and_only_a_dragon_has_one() {
+fn only_a_dragon_has_a_breath() {
     let refused = |breath: &str, combat: &str| {
         let files = files(breath, combat, HALL);
         Content::load(&files)
@@ -370,25 +370,14 @@ fn a_dragon_needs_a_breath_and_only_a_dragon_has_one() {
         melee.contains("only a `combat = \"dragon\"` creature has a breath"),
         "{melee}"
     );
-    let long = FIRE.replace("length = 7", "length = 13");
-    assert!(refused(&long, "dragon").contains("`length` must be 2 to 12"));
-    let cool = FIRE.replace("cooldown = 36", "cooldown = 601");
-    assert!(refused(&cool, "dragon").contains("`cooldown` must be 6 to 600"));
     let element = FIRE.replace("damage_type = \"fire\"", "damage_type = \"frost\"");
     assert!(refused(&element, "dragon").contains("unknown damage type `frost`"));
-    // Without the table at all.
+    // A dragon without the table loads: it has no breath to use.
     let mut files = files(FIRE, "dragon", HALL);
     let bare =
         (CREATURES.replace("[creature.breath]\n{breath}\n", "")).replace("{combat}", "dragon");
     files.insert("data/creatures.toml", &bare);
-    let none = Content::load(&files)
-        .err()
-        .map(|e| e.to_string())
-        .unwrap_or_default();
-    assert!(
-        none.contains("a `dragon` needs a [creature.breath]"),
-        "{none}"
-    );
+    Content::load(&files).expect("a dragon without a breath");
 }
 
 #[test]

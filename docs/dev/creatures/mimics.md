@@ -27,7 +27,7 @@ animated families) with the brute's adjustments from `[family]`.
   families, so first kills, kill quests (`mimic` or `tag:mimic`), and the wiki's creature
   tables treat the family as one. `Content::mimic_at(level)` is the member of a level, clamped
   to the family's; `Content::is_mimic`.
-- **Not a stray**: `stray = false` and no population names it (`mimic_roster_tests`); the
+- **Not a stray**: `stray = false` and no population names it ; the
   generic list test leaves mimics out as it does animated things.
 
 ## In play (`world/mimic.rs`)
@@ -76,8 +76,8 @@ JSON `seen_actors` and `chests` show the chest the player sees.
 
 ## Tests
 
-`content/mimic_roster_tests.rs` (one type a level on the brute formulas, the bands and names, no
+`content/mimic_roster_tests.rs` (one type a level, the bands and names, no
 population), `world/mimic_tests.rs` (the legend, the snapshot equal to a real chest's, touch,
 Knock, a blow, searching and Spot, Chest-wise seeing it and slipping its grip, no turn and no foe, the drop, unaware, a
-save and a replay, the dumps), `content/creature_body_tests.rs` (woody hide), and
+save and a replay, the dumps), and
 `warlock/src/ui/look.rs` (`a_disguised_mimic_looks_like_a_chest`).

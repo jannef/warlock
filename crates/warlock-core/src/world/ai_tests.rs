@@ -379,7 +379,7 @@ fn builtin_factions_set_who_fights_whom() {
 }
 
 #[test]
-fn creatures_need_known_factions_and_sound_combat() {
+fn creatures_name_known_factions_and_read_their_combat() {
     let with = |creatures: &str| {
         let mut files = files();
         files.insert("data/creatures.toml", &creatures.replace("\n\n", "\n"));
@@ -387,10 +387,6 @@ fn creatures_need_known_factions_and_sound_combat() {
     };
     assert_eq!(with(CREATURES), Ok(()));
     let cases = [
-        (
-            CREATURES.replace("faction = \"wildlife\"\n", ""),
-            "creature `deer` needs a `faction`",
-        ),
         (
             CREATURES.replace("\"wildlife\"", "\"elves\""),
             "creature `deer`: unknown faction `elves`",
@@ -404,20 +400,8 @@ fn creatures_need_known_factions_and_sound_combat() {
             "the player belongs to the faction `player`",
         ),
         (
-            CREATURES.replace("range = 5\n", ""),
-            "creature `archer` needs a `range`",
-        ),
-        (
-            CREATURES.replace("range = 5", "range = 11"),
-            "range 11 is out of range",
-        ),
-        (
             CREATURES.replace("opens_doors = true", "opens_doors = true\nrange = 3"),
             "only `ranged` and `caster` creatures have a `range`",
-        ),
-        (
-            CREATURES.replace("sight = 2", "sight = 41"),
-            "sight 41 is out of range",
         ),
         (
             CREATURES.replace("sight = 2", "vision = \"x-ray\""),

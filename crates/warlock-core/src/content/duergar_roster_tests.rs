@@ -1,225 +1,20 @@
-//! The duergar (#518): every `faction = "duergar"` type keeps to the tribe's formulas, the undead
-//! roster's (#383) hit points and roles on living stats, as the orcs' (#455) do; the armed ones
-//! wield their racial weapons at a rank that grows with their level, the two who fight bare by
-//! the roster's dice, and every one of them resists poison and a little cold.
+//! The duergar (#518): their stance toward the others, and their weapons and ammunition.
 
-use super::variance_roster_tests::{self, Shape};
 use super::{Combat, Content, Stance};
-use crate::stats::Stat;
 
-/// How far a type's hit points and dice may lie from the formulas, in percent.
-const TOLERANCE: f64 = 35.0;
-
-/// A role's adjustments (#518, #383's roles).
-#[derive(Clone, Copy, Debug, PartialEq)]
-enum Role {
-    /// The three of the delf wave (#335), which came before the roster: held to the XP guideline
-    /// and the hit points only.
-    Older,
-    Archer,
-    Standard,
-    Officer,
-    Quick,
-    Brute,
-    Caster,
-}
-
-impl Role {
-    /// What the role adds to the base Strength, Dexterity, and Toughness.
-    fn adjust(self) -> [f64; 3] {
-        match self {
-            Role::Older | Role::Standard | Role::Officer => [0.0, 0.0, 0.0],
-            Role::Archer => [0.0, 3.0, 0.0],
-            Role::Quick => [0.0, 5.0, -1.0],
-            Role::Brute => [5.0, -2.0, 5.0],
-            Role::Caster => [-3.0, 0.0, 0.0],
-        }
-    }
-
-    /// The factor on `base_hp`.
-    fn hp(self) -> f64 {
-        match self {
-            Role::Older | Role::Standard | Role::Archer => 1.0,
-            Role::Officer => 1.1,
-            Role::Quick => 0.5,
-            Role::Brute => 2.0,
-            Role::Caster => 0.5,
-        }
-    }
-
-    /// What the role does to the to-hit and the blow (the variance pass, #1134).
-    fn shape(self) -> Shape {
-        match self {
-            Role::Older | Role::Archer | Role::Standard | Role::Officer => Shape::Standard,
-            Role::Quick => Shape::Striker,
-            Role::Brute => Shape::Brute,
-            Role::Caster => Shape::Caster,
-        }
-    }
-
-    /// The dice ladder steps the role moves a natural attack.
-    fn step(self) -> isize {
-        match self {
-            Role::Brute => 1,
-            Role::Caster => -1,
-            _ => 0,
-        }
-    }
-}
-
-/// Every type of the duergar's faction and its role, in level order.
-const ROLES: &[(&str, Role)] = &[
-    ("duergar_slinger", Role::Archer),
-    ("duergar_miner", Role::Older),
-    ("duergar_warrior", Role::Older),
-    ("duergar_smith", Role::Older),
-    ("duergar_crossbowman", Role::Archer),
-    ("duergar_veteran", Role::Standard),
-    ("duergar_priest", Role::Caster),
-    ("duergar_hulk", Role::Brute),
-    ("duergar_spider_rider", Role::Quick),
-    ("duergar_mindbreaker", Role::Caster),
-    ("duergar_thane", Role::Officer),
-    ("duergar_king", Role::Officer),
+/// The duergar who wield their racial weapons or shoot (the miners, warriors, and smiths of the
+/// delf are `bestiary_tests`').
+const ARMED: &[&str] = &[
+    "duergar_slinger",
+    "duergar_crossbowman",
+    "duergar_veteran",
+    "duergar_priest",
+    "duergar_hulk",
+    "duergar_spider_rider",
+    "duergar_mindbreaker",
+    "duergar_thane",
+    "duergar_king",
 ];
-
-/// The roster's dice by average (#383 "Damage dice").
-const LADDER: &[f64] = &[
-    2.0, 2.5, 3.5, 4.5, 5.5, 7.0, 9.0, 10.5, 13.5, 14.0, 16.5, 18.0, 19.5, 22.5,
-];
-
-/// The formula's max HP: Toughness (12 + 0.4 L, by role) plus base_hp (2.5 L, by role).
-fn max_hp(level: f64, role: Role) -> f64 {
-    12.0 + 0.4 * level + role.adjust()[2] + 2.5 * level * role.hp()
-}
-
-/// The formula's natural attack: the ladder's nearest to `2 + 0.55 L`, flattening past L20,
-/// moved by the role's step.
-fn dice_average(level: f64, role: Role) -> f64 {
-    let target = if level <= 20.0 {
-        2.0 + 0.55 * level
-    } else {
-        13.0 + 0.25 * (level - 20.0)
-    };
-    let distance = |a: f64| (a - target).abs();
-    let nearest = (0..LADDER.len())
-        .min_by(|&a, &b| distance(LADDER[a]).total_cmp(&distance(LADDER[b])))
-        .expect("a ladder");
-    let stepped = (nearest as isize + role.step()).clamp(0, LADDER.len() as isize - 1);
-    LADDER[stepped as usize]
-}
-
-fn within(actual: f64, expected: f64) -> bool {
-    ((actual - expected) / expected * 100.0).abs() <= TOLERANCE
-}
-
-#[test]
-fn the_duergar_keep_to_the_tribes_formulas() {
-    let content = Content::builtin().expect("content");
-    let duergar = content
-        .factions()
-        .id("duergar")
-        .expect("the duergar's faction");
-    let guideline = content.experience().guideline();
-    let mut levels = Vec::new();
-    for def in (content.creature_defs().iter()).filter(|c| c.faction == Some(duergar)) {
-        let id = def.id.as_str();
-        let &(_, role) = (ROLES.iter().find(|(r, _)| *r == id))
-            .unwrap_or_else(|| panic!("{id}: give it a role in ROLES"));
-        levels.push(def.level);
-        assert_eq!(def.campaign, None, "{id}: shared");
-        assert_eq!(
-            def.xp,
-            guideline.xp(def.level),
-            "{id}: off the XP guideline"
-        );
-        let creature = content.creature_id(id).expect(id);
-        assert!(content.has_tag(creature, "duergar"), "{id}: tag `duergar`");
-        assert_eq!(
-            content.has_tag(creature, "archer"),
-            def.combat == Combat::Ranged,
-            "{id}: `archer` on the shooters only"
-        );
-        assert_eq!(
-            content.has_tag(creature, "caster"),
-            def.combat == Combat::Caster,
-            "{id}: `caster` on the casters only"
-        );
-        // Poison 25 and cold 10, the deep's fungus and its chill.
-        for (kind, least) in [("poison", 25), ("cold", 10)] {
-            let kind = content.damage_type_id(kind).expect(kind);
-            let resist = (def.resist.iter()).find(|(k, _)| *k == kind);
-            assert!(
-                resist.is_some_and(|&(_, r)| r >= least),
-                "{id}: resists {kind:?} {least}"
-            );
-        }
-        let level = f64::from(def.level);
-        let hp = f64::from(def.stats.score(Stat::Toughness)) + f64::from(def.base_hp);
-        let want = max_hp(level, role) * super::variance_roster_tests::starter(def.level);
-        assert!(within(hp, want), "{id}: max HP {hp}, the formula {want:.1}");
-        variance_roster_tests::check(&content, def, role.shape());
-        if matches!(role, Role::Standard | Role::Archer) {
-            variance_roster_tests::rank_and_file(def);
-        }
-        if role == Role::Older {
-            continue;
-        }
-        let [st, dx, to] = role.adjust();
-        for (stat, want) in [
-            (Stat::Strength, 12.0 + 0.4 * level + st),
-            (Stat::Dexterity, 10.0 + 0.25 * level + dx),
-            (Stat::Toughness, 12.0 + 0.4 * level + to),
-        ] {
-            let score = f64::from(def.stats.score(stat));
-            assert!(
-                (score - want).abs() <= 1.0,
-                "{id}: {stat:?} {score}, the formula {want}"
-            );
-        }
-        match def.gear.racial_weapon {
-            // Its racial weapon, at the formula's rank (1 + L/7) at least: the armed
-            // rule raises it to aim at L/4 (#1169, `armed_roster_tests`).
-            Some(weapon) => {
-                let skill = (content.object(weapon).skill)
-                    .unwrap_or_else(|| panic!("{id}: its racial weapon has no skill"));
-                assert!(
-                    u32::from(def.weapon_skills.rank(skill)) > u32::from(def.level) / 7,
-                    "{id}: weapon rank"
-                );
-            }
-            // Bare: a natural attack on the roster's dice, with a rider.
-            None => {
-                let attack = (def.attack.as_ref())
-                    .unwrap_or_else(|| panic!("{id}: neither a racial weapon nor an attack"));
-                let damage = attack.attack.damage;
-                let average = f64::from(damage.min() + damage.max()) / 2.0;
-                let want = dice_average(level, role);
-                assert!(
-                    within(average, want),
-                    "{id}: attack {average}, the formula {want}"
-                );
-                // The mindbreaker's rides its gaze (#1125).
-                let rider = !attack.on_hit.is_empty() || def.gaze.is_some();
-                assert!(rider, "{id}: a rider");
-            }
-        }
-    }
-    for (id, _) in ROLES {
-        let def = content.creature_id(id).map(|c| content.creature(c));
-        assert!(
-            def.is_some_and(|d| d.faction == Some(duergar)),
-            "{id}: listed in ROLES but of another faction"
-        );
-    }
-    // A notch below the drow: from level 8 to 40, two types or more in every band.
-    assert_eq!(levels.iter().min(), Some(&8));
-    assert_eq!(levels.iter().max(), Some(&40));
-    for band in [8..=14u8, 15..=21, 22..=30, 31..=40] {
-        let count = levels.iter().filter(|&&l| band.contains(&l)).count();
-        assert!(count >= 2, "{count} duergar types in levels {band:?}");
-    }
-}
 
 #[test]
 fn the_duergar_hunt_the_player_and_leave_their_old_foes_be() {
@@ -251,11 +46,7 @@ fn the_duergar_wield_their_weapons_and_the_shooters_their_ammunition() {
     use crate::gear;
     use crate::rng::Rng;
     let content = Content::builtin().expect("content");
-    for &(id, role) in ROLES {
-        if role == Role::Older {
-            // bestiary_tests' `the_delf_humanoids_wield_their_weapons` has them.
-            continue;
-        }
+    for &id in ARMED {
         let creature = content.creature_id(id).expect(id);
         let def = content.creature(creature);
         let mut armed = 0;

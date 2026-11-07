@@ -7,9 +7,8 @@ dretch 8, quasit 12, balgura 24, chasme 28, hezrou 30, vrock 34, marilith 40, gl
 nalfeshnee 50, balor 62), faction `demon` (hostile to the player, kobolds, goblins, duergar, and
 marsh things, and the devils (hostile both ways, from the demons' side); inserted after `fire`, and in the four test fixtures' factions files), tags
 `["demon", "fiend"]`. They use the undead roster's formulas and roles:
-`content/demon_roster_tests.rs` (`DEMONS`: id, level, role) imports `Role`, `max_hp`,
-`dice_average`, and `within` from `undead_roster_tests` and checks the XP guideline, ±35 % of
-max HP and dice, both tags, and no corpse; it also pins the faction's stances. Riders are
+Max HP and dice are written to #383's conventions, with both tags and no corpse;
+`content/demon_roster_tests.rs` pins the faction's stances. Riders are
 existing statuses only: the chasme's drone is `transfixed` (no sleep status exists), the
 hezrou's stench `poisoned`, the vrock's screech and the nalfeshnee's horror `frightened`, the
 glabrezu's pincers and the balor's whip `held` (difficulty 12 + level ÷ 5), the quasit's venom

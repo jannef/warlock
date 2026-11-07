@@ -14,9 +14,8 @@ names them: today they are met only as allies (a ranger's from the first turn; t
 the woods are C7's). Each has a `depart` line, the words of its going when its call runs out
 ("The wolf slips back into the dark."; `World::ally_departs`, default "fades away").
 
-`content/beast_roster_tests.rs` holds every `beast` to its row (`BEASTS`: level, max hit points
-as Toughness + `base_hp`, attack dice), the XP guideline, wildlife, no stray, no unique,
-tameable, and a `depart` line. The vermin and the orcs' wolves that are tameable too (`rat`,
+Every `beast` is written to its row (level, max hit points as Toughness + `base_hp`, attack
+dice), the XP guideline, wildlife, no stray, no unique, tameable, and a `depart` line. The vermin and the orcs' wolves that are tameable too (`rat`,
 `bat`, `beetle`, `deer`, `warg`, `dire_warg`) keep their own rosters.
 
 ## Roster

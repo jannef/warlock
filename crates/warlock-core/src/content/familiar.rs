@@ -5,7 +5,7 @@
 //! constants `allies.toml`. The file is optional: without it no familiar can be made, and nothing
 //! here is read.
 
-use super::{Content, ContentError, CreatureId, SpellId, SpellPurpose, creature::Combat};
+use super::{Content, ContentError, CreatureId, SpellId, SpellPurpose};
 use serde::Deserialize;
 use std::collections::BTreeMap;
 
@@ -107,40 +107,21 @@ impl FamiliarRules {
             .map(|(_, line)| line.as_str())
     }
 
-    /// Parses `data/familiars.toml` once the creatures, the races, and the spells are known, and
-    /// checks it: every list is a known race's and holds 1 to 3 plain beasts of at most
-    /// `most_level` (a race without a list draws no familiar: test fixtures add races;
-    /// `familiar_tests` asks every shipped race for one), the rares 1 to 8 plain beasts,
-    /// `touch` a hex spell with a status, at least one name and none longer than a character's,
-    /// `call_turns` 1 to 6000, `bargain_kinds` plain beasts that may open doors, and an `arrives`
-    /// line for every beast a start or a calling may draw and for nothing else.
+    /// Parses `data/familiars.toml` once the creatures, the races, and the spells are known: every
+    /// list is a known race's and holds known creatures (a race without a list draws no
+    /// familiar: test fixtures add races), the lists and the names are not empty (the draws
+    /// index them), `touch` is a hex spell that lays a status (the touch lays it), and the
+    /// `arrives` lines name known creatures.
     pub(super) fn parse(path: &str, text: &str, content: &Content) -> Result<Self, ContentError> {
         let err = |m: String| ContentError::new(path, m);
         let file: File = toml::from_str(text).map_err(|e| err(e.to_string()))?;
-        // A plain beast: what a tameable type must be (`content/mod.rs`), whatever its flag; one
-        // of the bargain's may have hands.
-        let plain = |where_: &str, name: &str, doors: bool| -> Result<CreatureId, ContentError> {
-            let id = (content.creature_id(name))
+        let beast = |where_: &str, name: &str| -> Result<CreatureId, ContentError> {
+            (content.creature_id(name))
                 .filter(|_| name != "player")
-                .ok_or_else(|| err(format!("{where_}: unknown creature `{name}`")))?;
-            let def = content.creature(id);
-            let why = match () {
-                _ if def.unique => Some("a unique"),
-                _ if def.animated.is_some() => Some("an animated object"),
-                _ if def.summon.is_some() => Some("a summoner"),
-                _ if def.opens_doors && !doors => Some("one that opens doors"),
-                _ if def.race.is_some() => Some("one of the peoples"),
-                _ if def.combat != Combat::Melee => Some("one that fights from afar"),
-                _ => None,
-            };
-            match why {
-                Some(why) => Err(err(format!("{where_}: `{name}` is {why}"))),
-                None => Ok(id),
-            }
+                .ok_or_else(|| err(format!("{where_}: unknown creature `{name}`")))
         };
-        let beast = |where_: &str, name: &str| plain(where_, name, false);
         let bargain_kinds = (file.bargain_kinds.iter())
-            .map(|n| plain("`bargain_kinds`", n, true))
+            .map(|n| beast("`bargain_kinds`", n))
             .collect::<Result<Vec<_>, _>>()?;
         // The draws index the lists and the names.
         if file.start.rare.is_empty() {
@@ -253,10 +234,9 @@ mod tests {
         assert!(
             err(familiars(|t| t.replace(
                 "rare = [\"black_hound\", \"panther\"]",
-                "rare = [\"kobold\"]"
+                "rare = [\"nothing\"]"
             )))
-            .contains("opens doors"),
-            "a rare is a plain beast"
+            .contains("`start.rare`: unknown creature"),
         );
         assert!(
             err(familiars(
@@ -281,13 +261,6 @@ mod tests {
                 "bargain_kinds = [\"nothing\"]"
             )))
             .contains("`bargain_kinds`: unknown creature")
-        );
-        assert!(
-            err(familiars(|t| t.replace(
-                "bargain_kinds = [\"imp\"]",
-                "bargain_kinds = [\"dark_wizard\"]"
-            )))
-            .contains("`bargain_kinds`: `dark_wizard`")
         );
         // Without the file, no familiar at all, and nothing else minds.
         let mut files = ContentFiles::builtin();

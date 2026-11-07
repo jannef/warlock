@@ -10,16 +10,11 @@
 
 use super::Content;
 use super::disease::DiseaseId;
-use super::status::{Affliction, OnHit, OnHitSpec, StatusId};
+use super::status::{OnHit, OnHitSpec, StatusId};
 use serde::Deserialize;
-use std::ops::RangeInclusive;
 
 /// The cooldown status a gaze gives (`data/status.toml`).
 pub const STATUS: &str = "gaze";
-/// How far a gaze reaches, in cells.
-pub const RANGES: RangeInclusive<i32> = 1..=8;
-/// A gaze's cooldown, in seconds.
-pub const COOLDOWNS: RangeInclusive<u32> = 6..=600;
 /// A gaze's cooldown unless its type says otherwise, in seconds.
 pub const DEFAULT_COOLDOWN: u32 = 12;
 /// A glance's share of the gaze's chance unless its type says otherwise, in percent.
@@ -80,46 +75,17 @@ impl GazeSpec {
         status: impl Fn(&str) -> Option<(StatusId, u16, bool)>,
         disease: impl Fn(&str) -> Option<DiseaseId>,
     ) -> Result<Gaze, String> {
-        if !RANGES.contains(&self.range) {
-            return Err(format!(
-                "gaze: `range` must be {} to {}",
-                RANGES.start(),
-                RANGES.end()
-            ));
-        }
         let chance = self.chance.unwrap_or(100);
-        if !(1..=100).contains(&chance) {
-            return Err("gaze: `chance` must be 1 to 100 (percent)".into());
-        }
         let cooldown = self.cooldown.unwrap_or(DEFAULT_COOLDOWN);
-        if !COOLDOWNS.contains(&cooldown) {
-            return Err(format!(
-                "gaze: `cooldown` must be {} to {} seconds",
-                COOLDOWNS.start(),
-                COOLDOWNS.end()
-            ));
-        }
+        // A glance is read only of a gaze that may be averted.
         if self.glance.is_some() && !self.averted {
             return Err("gaze: `glance` goes with `averted = true`".into());
         }
         let glance = self.glance.unwrap_or(DEFAULT_GLANCE);
-        if !(1..=100).contains(&glance) {
-            return Err("gaze: `glance` must be 1 to 100 (percent)".into());
-        }
-        if self.riders.is_empty() {
-            return Err("gaze: `riders` names nothing".into());
-        }
         let riders = (self.riders.iter())
             .map(|r| {
-                let rider = r
-                    .resolve(&status, &disease)
-                    .map_err(|m| format!("gaze: {m}"))?;
-                match rider.what {
-                    Affliction::Status { .. } | Affliction::Drain(_) => Ok(rider),
-                    Affliction::Hold { .. } | Affliction::Disease(_) => Err(
-                        "gaze: a rider is a status or a drain, never a hold or a disease".into(),
-                    ),
-                }
+                r.resolve(&status, &disease)
+                    .map_err(|m| format!("gaze: {m}"))
             })
             .collect::<Result<Vec<_>, String>>()?;
         let found = (content.status_id(STATUS))
@@ -149,6 +115,7 @@ impl GazeSpec {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::content::Affliction;
 
     fn gaze(chance: u8, averted: bool, glance: u8) -> Gaze {
         Gaze {

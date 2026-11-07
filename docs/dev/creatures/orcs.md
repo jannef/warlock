@@ -22,12 +22,11 @@ helm, large shield, a battle axe, gold).
 
 ## Tests
 
-`content/orc_roster_tests.rs` holds the formulas (#455's issue): each `orcs` type has a role in
-`ROLES`, is on the XP guideline, its St/Dx/To within 1 of `12 + 0.4L`, `10 + 0.25L`, `12 + 0.4L`
+The orcs are written to the formulas (#455's issue): each `orcs` type has a role, is on the XP guideline, its St/Dx/To within 1 of `12 + 0.4L`, `10 + 0.25L`, `12 + 0.4L`
 plus the role's adjustment, its max HP within ±35 % of the undead roster's shape, its racial
 weapon at rank `1 + L/7` at least (raised to aim at `L/4`, #1169, `docs/dev/creatures.md`), and the wargs' bites on #383's dice; two types or more in each band of
-3–7, 8–14, 15–21, and 22–30; the stances; and the gear rolls (armed nine times in ten, the bowmen
-with arrows).
+3–7, 8–14, 15–21, and 22–30. `content/orc_roster_tests.rs` checks the stances and the gear
+(shared and wielded weapons).
 
 ## Populations
 

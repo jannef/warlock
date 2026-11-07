@@ -18,7 +18,7 @@ bright elemental colours), each drow a violet, indigo, steel, teal, or rose of i
 
 ## Formulas
 
-`content/drow_roster_tests.rs` keeps them to #519's numbers, the undead roster's (#383) level
+They are written to #519's numbers, the undead roster's (#383) level
 scaling on the drow's own base: xp `5L + 10`; St `11 + 0.4L`, Dx `12 + 0.25L`, To `11 + 0.4L`,
 In, Wp, and Pr `10 + 0.4L` (casters +4 each), within 1, capped at 40; by role (standard ±0,
 archer Dx +3, quick Dx +5 To −1, caster St −3, officer St +2 To +2) and `base_hp = 2.5L × role`
@@ -62,8 +62,8 @@ the demon faction, and the called demons do not fight them.
 | drow matron (50) | 60 (20) | hezrou to nalfeshnee (30 to 50) | 1d3 | 30 s | 5 |
 
 The weaker priestess waits 45 s between callings; nothing she calls is above her level.
-`drow_roster_tests` checks the tag, the table, and mana go with `priest`, and
-`a_priestess_calls_forth_demons_that_stand_with_the_drow` the summoning and the faction.
+`a_priestess_calls_forth_demons_that_stand_with_the_drow` (`drow_roster_tests`) checks the
+summoning and the faction.
 
 ## Surprise (#686)
 

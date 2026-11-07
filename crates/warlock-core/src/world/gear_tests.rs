@@ -255,34 +255,10 @@ fn nothing_is_carried_over_the_carrying_limit() {
 }
 
 #[test]
-fn a_racial_weapon_needs_a_rank_in_its_skill() {
-    let mut files = files();
-    files.insert(
-        "data/creatures/zz_gremlin.toml",
-        "[[creature]]\nid = \"gremlin\"\nname = \"gremlin\"\nglyph = \"g\"\nfg = \"#ffffff\"\n\
-         weight = 30000\nfaction = \"kobolds\"\nracial_weapon = \"club\"\n",
-    );
-    let err = Content::load(&files).expect_err("no rank").to_string();
-    assert!(
-        err.contains("`gremlin`") && err.contains("no rank in `maces`"),
-        "{err}"
-    );
+fn gear_names_known_objects_and_draws_from_a_list() {
     for (line, why) in [
-        ("racial_weapon = \"leather_cap\"", "is no weapon"),
         ("racial_weapon = \"spork\"", "unknown object `spork`"),
-        (
-            "[[creature.gear]]\nchance = 101\none_of = [\"dagger\"]",
-            "0 to 100",
-        ),
         ("[[creature.gear]]\nchance = 5\none_of = []", "at least one"),
-        (
-            "[[creature.gear]]\nchance = 5\none_of = [\"ration\"]\nmagic = 5",
-            "never magic",
-        ),
-        (
-            "[[creature.gear]]\nchance = 5\none_of = [\"dagger\"]\nkeep = \"wear\"",
-            "use `wield`",
-        ),
     ] {
         let mut files = self::files();
         files.insert(

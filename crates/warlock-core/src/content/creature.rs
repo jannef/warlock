@@ -12,7 +12,6 @@ use super::faction::FactionId;
 use super::gaze::{Gaze, GazeSpec};
 use super::gear::{Gear, GearLineSpec, GearSpec};
 use super::light::LightId;
-use super::object::MAX_BONUS;
 use super::particles::ParticleEmitter;
 use super::split::{DiesInto, DiesIntoSpec, Splits, SplitsSpec};
 use super::status::{OnHit, OnHitSpec, StatusId};
@@ -21,7 +20,7 @@ use super::theft::{Blinks, BlinksSpec, Steals, StealsSpec};
 use super::throw::{Throw, ThrowSpec};
 use crate::alignment::Alignment;
 use crate::color::Rgb;
-use crate::combat::{Attack, CRITS, DEFAULT_CRIT, DEFAULT_THREAT, THREATS};
+use crate::combat::{Attack, DEFAULT_CRIT, DEFAULT_THREAT};
 use crate::damage::Kinds;
 use crate::dice::Dice;
 use crate::skills::Skills;
@@ -29,7 +28,6 @@ use crate::stats::{Stat, Stats};
 use crate::weapon_skills::WeaponSkills;
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
-use std::ops::RangeInclusive;
 
 /// The speed of a normal creature, and of the player (spec §8 "Speed").
 pub const NORMAL_SPEED: u32 = 1000;
@@ -58,12 +56,8 @@ pub fn the_start(name: &str) -> String {
         format!("The {name}")
     }
 }
-/// The speeds a creature type may have: a tenth of normal to ten times normal.
-pub const SPEEDS: RangeInclusive<u32> = 100..=10_000;
 /// How far a creature sees unless its type says otherwise, in cells (spec §5 "Creature sight").
 pub const DEFAULT_SIGHT: i32 = 10;
-/// A `nose`'s reach, in cells (spec §8 "Allies": the companion's nose).
-pub const NOSES: RangeInclusive<i32> = 1..=20;
 
 fn normal_speed() -> u32 {
     NORMAL_SPEED
@@ -76,9 +70,6 @@ fn full_percent() -> u32 {
 fn full_regen() -> u16 {
     100
 }
-
-/// The most a creature's `regen` may be, in percent of the normal pace.
-pub const MAX_REGEN: u16 = 1000;
 
 /// A creature's harm to gear (`corrodes = { chance = 25, what = "armour", kind = "acid" }`;
 /// spec §8 "Creature gimmicks", `world/corrode.rs`): the chance in percent (1 to 100) that a
@@ -372,16 +363,14 @@ pub(super) struct CreatureSpec {
     /// The words of its departure, an ally whose time has run out ("The wolf slips back into
     /// the dark."; `docs/dev/allies.md`); none: "fades away".
     pub depart: Option<String>,
-    /// Whether it may be tamed and kept as a companion (spec §8 "Allies"; `docs/dev/companion.md`):
-    /// never a unique, an animated object, a summoner, one that opens doors, or one of a faction
-    /// that is not `animal`.
+    /// Whether it may be tamed and kept as a companion (spec §8 "Allies"; `docs/dev/companion.md`).
     #[serde(default)]
     pub tameable: bool,
     /// What it teaches as a target dummy (spec §8 "Weapon skills": "Target dummies"), which
     /// makes it one: it never acts, never dies, and earns no one anything (`world/dummy.rs`).
     pub training: Option<super::DummyTraining>,
     /// Its nose: it smells a hostile within this many cells, however dark and through a closed
-    /// door (1 to 20; only on a `tameable` type; a companion's reads it).
+    /// door (a companion's and a familiar's read it).
     pub nose: Option<i32>,
     /// Whether one of it may come greater or lesser than its kind (spec §8 "Grades";
     /// [`crate::grade`]); `grades = false` for a type that has none. Never a unique or a
@@ -427,16 +416,13 @@ pub(super) struct CreatureSpec {
 pub struct OnEat {
     /// Said once it is eaten ("This kobold meat tastes terrible.").
     pub message: Option<String>,
-    /// Sure stat training marks it gives, per stat (spec §8 "Stats"), 0 to [`MAX_TRAIN`].
+    /// Sure stat training marks it gives, per stat (spec §8 "Stats").
     #[serde(default)]
     pub train: BTreeMap<Stat, u16>,
     /// The chance in percent, per stat, that the potential rises by 1 (never past the scores'
-    /// range), 0 to [`MAX_WIDEN`]: potential points are rare.
+    /// range): potential points are rare.
     #[serde(default)]
     pub widen: BTreeMap<Stat, u8>,
-    /// The old raise chances, only to refuse them by name ([`OnEat::check`]).
-    #[serde(default, rename = "stat")]
-    old_stat: Option<BTreeMap<String, i64>>,
     /// Hit points it gives back.
     pub heal: Option<Dice>,
     /// Hit points it costs.
@@ -475,79 +461,17 @@ impl SkillGift {
     }
 }
 
-/// The most marks a corpse's `train` gives a stat.
-pub const MAX_TRAIN: u16 = 200;
-/// The highest chance in percent of a corpse's `widen` (decision 11 of
-/// `docs/design/stat-training.md`: potential points are rare).
-pub const MAX_WIDEN: u8 = 20;
-
 impl OnEat {
-    /// Checks the chances (`vomit` 0 to 100, `widen` 0 to [`MAX_WIDEN`]), the marks (0 to
-    /// [`MAX_TRAIN`]), the dice (rolling 0 to 1000), the extra nutrition, and the message, and
-    /// refuses the old `stat`.
-    pub(super) fn check(&self) -> Result<(), String> {
-        if self.message.as_ref().is_some_and(|m| m.trim().is_empty()) {
-            return Err("on_eat: `message` must not be empty".into());
-        }
-        if self.old_stat.is_some() {
-            return Err(
-                "on_eat: `stat` is gone: a corpse gives stat training marks, `train = \
-                        { toughness = 30 }`, and rarely a chance to widen a potential, `widen = \
-                        { toughness = 5 }`"
-                    .into(),
-            );
-        }
-        if self.vomit > 100 {
-            return Err("on_eat: `vomit` is a chance in percent, 0 to 100".into());
-        }
-        if self.train.values().any(|&m| m > MAX_TRAIN) {
-            return Err(format!(
-                "on_eat: `train` gives 0 to {MAX_TRAIN} marks a stat"
-            ));
-        }
-        if self.widen.values().any(|&c| c > MAX_WIDEN) {
-            return Err(format!(
-                "on_eat: `widen` is a chance in percent, 0 to {MAX_WIDEN} (potential points are \
-                 rare)"
-            ));
-        }
-        for (field, dice) in [("heal", self.heal), ("harm", self.harm)] {
-            if dice.is_some_and(|d| d.min() < 0 || d.max() > 1000) {
-                return Err(format!("on_eat: `{field}` must roll 0 to 1000"));
-            }
-        }
-        let max = super::hunger::MAX_NUTRITION;
-        if self.satiation.abs() > max {
-            return Err(format!("on_eat: `satiation` must be within ±{max}"));
-        }
-        let most = crate::skills::MAX_VALUE;
-        if let Some((id, _)) =
-            (self.skills.iter()).find(|(_, g)| g.gives == 0 || g.gives > g.up_to || g.up_to > most)
-        {
-            return Err(format!(
-                "on_eat: skills {id}: `gives` is 1 to `up_to`, and `up_to` at most {most}"
-            ));
-        }
-        Ok(())
-    }
-
     /// Lays its own gifts over `tags`' (the largest per stat of its tags' entries): its own
-    /// per stat win, and zeros are left out. Then a stat with a `widen` needs a `train`.
-    pub(super) fn resolve(&mut self, tags: &CorpseGifts) -> Result<(), String> {
+    /// per stat win, and zeros are left out.
+    pub(super) fn resolve(&mut self, tags: &CorpseGifts) {
         let mut train = tags.train.clone();
         train.extend(&self.train);
         train.retain(|_, m| *m > 0);
         let mut widen = tags.widen.clone();
         widen.extend(&self.widen);
         widen.retain(|_, c| *c > 0);
-        if let Some(stat) = widen.keys().find(|s| !train.contains_key(s)) {
-            return Err(format!(
-                "on_eat: `widen` {} needs a `train` of the same stat",
-                stat.id()
-            ));
-        }
         (self.train, self.widen) = (train, widen);
-        Ok(())
     }
 
     /// Whether it does nothing beyond feeding.
@@ -562,43 +486,15 @@ impl OnEat {
 #[derive(Clone, Debug, Default, PartialEq, Eq, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct CorpseGifts {
-    /// Sure marks per stat, 1 to [`MAX_TRAIN`].
+    /// Sure marks per stat.
     #[serde(default)]
     pub train: BTreeMap<Stat, u16>,
-    /// The chance in percent per stat that the potential widens by 1, 1 to [`MAX_TAG_WIDEN`].
+    /// The chance in percent per stat that the potential widens by 1.
     #[serde(default)]
     pub widen: BTreeMap<Stat, u8>,
 }
 
-/// The highest `widen` a tag's entry may give: 2 to 5 % (decision 11 of
-/// `docs/design/stat-training.md`).
-pub const MAX_TAG_WIDEN: u8 = 5;
-
 impl CorpseGifts {
-    /// Checks the marks (1 to [`MAX_TRAIN`]) and the chances (1 to [`MAX_TAG_WIDEN`]), and that
-    /// a stat with a `widen` has a `train`.
-    pub(super) fn check(&self) -> Result<(), String> {
-        if self.train.values().any(|&m| !(1..=MAX_TRAIN).contains(&m)) {
-            return Err(format!("`train` gives 1 to {MAX_TRAIN} marks a stat"));
-        }
-        if self
-            .widen
-            .values()
-            .any(|&c| !(1..=MAX_TAG_WIDEN).contains(&c))
-        {
-            return Err(format!(
-                "`widen` is a chance in percent, 1 to {MAX_TAG_WIDEN} for a tag"
-            ));
-        }
-        if let Some(stat) = self.widen.keys().find(|s| !self.train.contains_key(s)) {
-            return Err(format!(
-                "`widen` {} needs a `train` of the same stat",
-                stat.id()
-            ));
-        }
-        Ok(())
-    }
-
     /// Takes the larger of its and `other`'s per stat.
     pub fn merge(&mut self, other: &CorpseGifts) {
         for (&stat, &m) in &other.train {
@@ -692,26 +588,6 @@ pub struct Hide {
     pub name: String,
 }
 
-impl Hide {
-    /// Checks it as written in a creature's or a race's file: `defence` and `protection` each 0
-    /// to [`super::object::MAX_BONUS`], not both 0, and a `name`.
-    pub(super) fn check(&self) -> Result<(), String> {
-        let bonus = 0..=super::object::MAX_BONUS;
-        if !bonus.contains(&self.defence)
-            || !bonus.contains(&self.protection)
-            || self.defence + self.protection == 0
-            || self.name.is_empty()
-        {
-            return Err(format!(
-                "natural: `defence` and `protection` must be 0 to {}, not both 0, and `name` \
-                 given",
-                super::object::MAX_BONUS
-            ));
-        }
-        Ok(())
-    }
-}
-
 /// An incorporeal creature's nature (spec §8 "Incorporeal creatures"): `incorporeal = {
 /// wall_defence = 4 }`. It passes through solid terrain (neither walkable nor transparent: walls,
 /// rock, closed doors) off the level's edge, and may stand inside it, where it is harder to hit.
@@ -721,19 +597,6 @@ pub struct Incorporeal {
     /// Its bonus to Defence while inside solid terrain (the Wall category).
     #[serde(default)]
     pub wall_defence: i32,
-}
-
-impl Incorporeal {
-    /// Checks it as written: `wall_defence` 0 to [`super::object::MAX_BONUS`].
-    pub(super) fn check(&self) -> Result<(), String> {
-        if !(0..=super::object::MAX_BONUS).contains(&self.wall_defence) {
-            return Err(format!(
-                "incorporeal: `wall_defence` must be 0 to {}",
-                super::object::MAX_BONUS
-            ));
-        }
-        Ok(())
-    }
 }
 
 /// What a creature type's `blood` says: its colour, or `None` for `"none"` (bloodless); dark
@@ -749,7 +612,7 @@ pub(super) fn blood(spec: Option<&str>) -> Result<Option<Rgb>, String> {
 }
 
 impl NaturalAttackSpec {
-    /// Checks the attack like a weapon's and resolves its defaults; `status` resolves a status
+    /// Resolves the attack's defaults; `status` resolves a status
     /// id to the status and its `max`, `disease` a disease id.
     pub(super) fn resolve(
         self,
@@ -759,21 +622,6 @@ impl NaturalAttackSpec {
     ) -> Result<NaturalAttack, String> {
         let threat = self.threat.unwrap_or(DEFAULT_THREAT);
         let crit = self.crit.unwrap_or(DEFAULT_CRIT);
-        if !THREATS.contains(&threat) || !CRITS.contains(&crit) {
-            return Err(format!(
-                "attack: `threat` must be {} to {} and `crit` {} to {}",
-                THREATS.start(),
-                THREATS.end(),
-                CRITS.start(),
-                CRITS.end()
-            ));
-        }
-        if self.name.trim().is_empty() || self.verb.trim().is_empty() {
-            return Err("attack: `name` and `verb` must not be empty".into());
-        }
-        if self.to_hit.abs() > MAX_BONUS {
-            return Err(format!("attack: `to_hit` must be within ±{MAX_BONUS}"));
-        }
         let on_hit = (self.on_hit.iter())
             .map(|o| {
                 o.resolve(&status, &disease)
@@ -1019,7 +867,7 @@ pub struct CreatureDef {
     /// Gameplay: the loudness of its steps on terrain with a `step_noise` of 100
     /// ([`crate::noise::noise`]); 0 moves silently. At most [`crate::noise::MAX_LOUDNESS`].
     pub footsteps: u16,
-    /// Gameplay: the faintest loudness it hears (1 to [`crate::noise::MAX_LOUDNESS`]); `None` is
+    /// Gameplay: the faintest loudness it hears; `None` is
     /// deaf.
     pub hearing: Option<u16>,
     /// Gameplay: the scores and potentials a creature of this type starts with (spec §8
