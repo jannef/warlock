@@ -77,8 +77,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
   filth fever one hit in ten), the deer kicks
   (1d4, "hoof"; `base_hp` 4), the cave beetle
   bites (1d3) and has a shell (3); kobolds fight with what they wield. Its weapon skills (§8
-  "Weapon skills"): `weapon_skills`, its ranks by skill id (0 to 10; each raises the skills it
-  defaults to; the player creature has none: race and class give the player's): the kobold
+  "Weapon skills"): `weapon_skills`, its ranks by skill id (0 to 10;
+  the player creature has none: race and class give the player's): the kobold
   spears 1, the kobold archer bows 1. For burden (§8
   "Burden"): `size`, a size in `data/sizes.toml` (default `medium`); the kobolds, the giant rat,
   the cave bat, and the cave beetle are small, the deer and the player creature medium (the
@@ -411,11 +411,24 @@ developer notes (CLAUDE.md, `docs/dev/`).
   ring"), else before the name ("bronze long sword"), after any ornament ("emerald-pommelled
   bronze long sword"). The description shows its parts, weight, damage dice with the material's
   bonus ("2d6-1"), and Protection; the to-hit stays hidden. **Where variants come from**: loot
-  draws the material last (§8 "Magic items"; the item's main part from its list by `rarity` at
-  the item level), creature drops by `gear` at the creature's level; a material worse in a fight
-  than the base item's own (to hit or damage lower on what strikes or is shot, Protection lower
-  on armour with some) but dearer weighs at most 10 (`VERY_RARE`) for that item, never for
-  jewellery. Hand-made levels keep their legends' gear unless a placement names a material
+  draws the material last (§8 "Magic items"; the item's main part from its list), creature gear
+  and drops the same way at the creature's level. The base item's own material dominates (#1191):
+  where another weighs anything, another is drawn only 10 % of the time at level 1, half a point
+  more each level, at most 20 % (from level 21; `variant::variant_percent`); that share goes to
+  the other materials of the list by their `rarity` at the item level (loot) or `gear` at the
+  creature's level, each scaled by how well it suits the item, its `fit` for the item's use
+  (`weapon`: what strikes or is shot; `armour`, with shields; `jewellery`; `other`): `good` as
+  is, `poor` a tenth, `odd` a hundredth (at least 1, so nothing is ruled out). Tin, pewter, zinc,
+  and cadmium are odd for weapons; cloth, wool, and fur odd for weapons and jewellery; copper,
+  the precious metals, and ivory poor for weapons and armour; hides poor for weapons and
+  jewellery; wood poor for armour. A material worse in a fight than the base item's own (to hit
+  or damage lower on what strikes or is shot, Protection lower on armour with some) but dearer
+  weighs at most 10 (`VERY_RARE`) for that item before its fit, never for jewellery. A creature's
+  faction may favour materials (`data/factions.toml` `gear = { bone = 55, iron = 15 }`): for
+  gear and drops whose list holds one, each takes its percent of the draw first, the usual draw
+  the rest (orcs bone and iron, goblins bronze, the undead bronze, duergar iron and steel,
+  kobolds flint, bone, and copper); a favourite never adds a material the item cannot be made
+  of. Hand-made levels keep their legends' gear unless a placement names a material
   (`"great_sword:bronze"`, or `[[item]]` `parts = [{ of = "bronze" }]`); shop stock is plain. The
   showcase's storeroom has a bronze great sword. Not yet: rust and wear.
   Every creature in `data/creatures.toml` has a base `weight` in grams (required, at least 1).
@@ -540,7 +553,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
 - **Magic items** (`data/affixes.toml`, optional; without it loot is always normal; M29, #149;
   §8 "Magic items"; the settings below live in that file and the affixes themselves in the
   `data/affixes/` directory, one a file, read in path order; see Definitions): `[rarity]` the
-  weights of normal, magic, and rare loot (85, 13, 2, not all
+  weights of normal, magic, and rare loot (1925, 65, 10, not all
   0); `[magic] prefix`, `suffix`, `both`, the weights of a magic item with a prefix only, a
   suffix only, or one of each (40, 40, 20; not all 0 while magic items are found); `[rare]
   affixes`, `[count, weight]` pairs for how many affixes a rare item rolls (1 to 6; built in:
@@ -662,8 +675,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   skill that is no style are errors. `[two_weapons]` (optional; default −4 and −8): `main` and
   `off`, the to-hit penalties of the main hand's and the off hand's blows with a weapon in each
   hand (−20 to 0). `[spell_attacks]` (optional; default 5): `far`, the distance (1 or more, the
-  larger of the two) from which a ranged spell's far benefits apply. `[[default]]`s, `between = [a, b]` and `penalty` (1 to 10), each pair once,
-  symmetric; styles default only to styles, weapon skills only to weapon skills. The built-in
+  larger of the two) from which a ranged spell's far benefits apply. The built-in
   file: marks 1 an attempt, 2 more
   a hit, 20 % a level, at most 100 % (#1095); curves melee 15, 45, 190, 500, 1750, 4000,
   17 500, 38 000, 68 000, 88 000, missile 10, 30, 125, … 58 700, and school 10, 20, … 640,
@@ -673,20 +685,13 @@ developer notes (CLAUDE.md, `docs/dev/`).
   bows, crossbows, slings (`launcher`, missile curve), thrown weapons (missile curve); shield
   bashing; the seven schools of magic (`school`, school curve, the spell scaling
   design §8: evocation, necromancy, abjuration, restoration, transmutation, enchantment,
-  divination; defaults evocation ↔ transmutation, necromancy ↔ restoration, abjuration ↔
-  enchantment −4); defaults: long ↔ short blades −2, long ↔ great blades −2, short
-  blades ↔ daggers −2, long blades ↔ daggers −4, short blades ↔ thrown −4, daggers ↔ thrown −2,
-  axes ↔ maces −2, axes ↔ polearms −3, maces ↔ staves −3, spears ↔ polearms −2, spears ↔
-  staves −3, spears ↔ thrown −4, polearms ↔ great blades −4, bows ↔ crossbows −4, slings ↔
-  thrown −3; two weapons −4 and −8; two shields −6, 50 %,
+  divination); two weapons −4 and −8; two shields −6, 50 %,
   75 % (`[two_shields]`: `to_hit`, `slow`, `spell_failure`); far 5; twelve styles after the
   fifteen skills and seven schools (§8 "Fighting styles": Duelist, Twin Blades, Great Weapon, Sword and Board,
   Two Shields (`hidden = true`: listed only once its owner has marks in it), Marksman (bows, crossbows, slings; missile curve), Skirmisher (missile curve),
   Brawler, Staff Fighter (staves), and the caster styles Sniper, Toucher, Battle caster
-  (school curve)), with the defaults duelist ↔ sword and board −3, duelist ↔ twin blades −3,
-  great weapon ↔ staff fighter −3, marksman ↔ skirmisher −4, sniper ↔ toucher −4, toucher ↔
-  battle caster −3. The wiki shows the skills, the
-  styles, the defaults, the marks and curves, and the benefits per rank in generated tables.
+  (school curve)). The wiki shows the skills, the
+  styles, the marks and curves, and the benefits per rank in generated tables.
 - **Weapon abilities** (`data/weapon_abilities/`, one `[[weapon_ability]]` a file named by its id,
   each campaign's too, read in path order; optional; #561, §8 "Weapon abilities"): `id`, `name`,
   `description`, `skills` (weapon skills or styles, never both), `rank` (1 to 10), `kind`
@@ -792,9 +797,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
   it is given (§8 "Quests", rolled quests): `pick = { creatures = [BRANCH, ...] }` (kill; the
   non-unique types of those branches' populations), `pick = { tags = [TAG, ...] }` (kill),
   `pick = { objects = { class = "scrolls", loot = true } }` (bring; `loot`: only what loot can
-  hold), or `[[quest.variant]]`s (`id`, `target`, `weight` 1 to 1000, default 1, and optional
-  `reveals`, `where`, `offer`, `accept`, `reminder`, `done`, each replacing the quest's own,
-  which may then be left out; at most 32); exactly one of `target`, `pick`, and variants. A
+  hold), or `[[quest.variant]]`s (`id`, `target`, `weight` 1 to 1000, default 1, `fallback`
+  (default false: drawn only when no other variant may be, as for a Beast-friend; not every
+  variant), and optional `reveals`, `where`, `offer`, `accept`, `reminder`, `done`, each
+  replacing the quest's own, which may then be left out; at most 32); exactly one of `target`, `pick`, and variants. A
   rolled quest's texts but its `name` may hold placeholders (`{target}`, `{targets}`,
   `{a_target}`, `{count}`, `{members}`, `{branch}`, `{where}`, and capitalised forms); each is
   checked filled with every target its pool can hold; a quest that is not rolled has none. A

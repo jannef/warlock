@@ -711,7 +711,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
   `carry`, `wield`, or `wear`) rolls the lines in order: each by its chance, one of its
   alternatives, made magic by its `magic` chance (as loot is, at least magic, at the floor's
   item level, unidentified) or else plain, of a material by the materials' `gear` at the
-  creature's level; a piece that would overload the creature is left out, one with no free slot
+  creature's level and its faction's favoured materials (§7 "Materials"); a piece that would
+  overload the creature is left out, one with no free slot
   stays carried. It fights with what it wields and wears (combat reads it as it reads anyone's),
   a ranged creature shoots with its bow and arrows, and all of it falls where it dies with the
   rest of what it carried. Others see what it wears and wields, never what else it carries.
@@ -720,6 +721,18 @@ developer notes (CLAUDE.md, `docs/dev/`).
   unique item (`unique:ID`, §8 "Magic items"): the Ascmearc's four wanted criminals (the
   `outlaws` faction, hostile to the player only and to no one else, with the footpads and
   footpad archers; #424, the guild design §8) each wield or wear their own this way.
+  **Condition** (`world/gear_condition.rs`, `data/gear_condition.toml`; #1193): every rolled
+  piece of arms or armour (not a stack of several, ammunition, rings, or a protected item: a
+  unique, of Proof, or anything a quest may ask for, §7 "Materials") draws a condition by the
+  creature's tribe (its first tag with a `[[tribe]]` row, else `[default]`; per mille): damaged
+  (the smith's state, §7 "Special rooms": a point worse, its word by its material: iron and steel
+  "rusted", other metals "corroded", wood, leather, and what withstands both plainly "damaged"),
+  Fine, Marvellous, or Masterwork (improvements as the Temper ability makes them, each counted as
+  an attempt), or as made. By default 30 % damaged, 4 % Fine, 0.8 % Marvellous, 0.2 % Masterwork;
+  the undead's gear 95 % damaged; scavengers' (kobolds, goblins, orcs, trolls) about half;
+  disciplined orders' (duergar, hobgoblins, drow, devils) 8 to 10 %, and Fine 10 to 15 %. A fixed
+  kit is never rolled and stays as made. The creature fights with the piece as it is, and it
+  drops as it is, its condition in its name. No talent (a sub-feature of item condition).
 - **Named monsters** (#424): a creature type whose `name` starts upper-case is a proper name
   ("Black Wystan"), said without an article wherever the game names a seen creature (combat,
   deaths, falls, waking, refusals, look mode: "Black Wystan (hostile, unhurt), ..."), as quest
@@ -854,8 +867,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     of any type carrying a **creature tag** (below), on its level or any level of its branch if it names
     one, else on every level summed. Kills are tallied per level and creature type, every type (saved;
     the ranger's Favoured prey reads the same tally, §8 "Class abilities"), so kills made before an
-    authored quest was given count, and a rolled quest or a repeat of a repeatable one counts only
-    the kills since it was given. A kill of a **named monster** (a `unique` type; `count` 1) is
+    authored quest was given count (a rolled quest's authored variant too), and a quest rolled
+    by a `pick` or a repeat of a repeatable one counts only the kills since it was given. A kill of a **named monster** (a `unique` type; `count` 1) is
     met by its death, at any hand (the player's, a trap's, another creature's) and whenever it
     died, before the quest was given too (the guild design §8.4: no quest can be softlocked):
     every death passes `creature_dies`, which keeps the dead unique types (`Quests::slain`,
@@ -931,7 +944,14 @@ developer notes (CLAUDE.md, `docs/dev/`).
     types), `{branch}` (the first branch, in the pick's order, it lives in), `{where}`, each
     also capitalised (`{A_target}`); every text, filled for every target the pool can hold, is
     checked at load (one line, at most 280 characters, no unknown placeholder). A variant's
-    `reveals` (`when = "given"`) marks its own location only. Dev: `quest_roll:ID:TARGET`
+    `reveals` (`when = "given"`) marks its own location only. **Beast-friend** (#1189): a
+    player with the talent (§8 "Talents") is never asked to kill what it calms: the pool, as the
+    quest is given, leaves out a creature type of an `animal` faction, a tag any of whose types
+    of the quest's campaign is one, and a variant asking for either (read by the talent, not the
+    class, at the giving; the saved roll keeps it). A variant with `fallback = true` is drawn
+    only when no other variant is left: Reeve Leofric's "Rats in the barrows" asks for giant
+    rats (`vermin`, an animal faction), and a Beast-friend draws its fallback, five skeletal
+    rats (undead), with his own words. Dev: `quest_roll:ID:TARGET`
     (§9) replaces an active rolled quest's roll while it has no progress (a target its pool
     can hold wherever the player can go, or a variant id), its kills counted from then and a
     variant's reveal made; no time.

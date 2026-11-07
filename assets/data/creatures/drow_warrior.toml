@@ -6,7 +6,7 @@ id = "drow_warrior"
 level = 14
 xp = 80
 rarity = "common"
-loot = 10
+loot = 3
 name = "drow warrior"
 glyph = "e"
 fg = "#8a7ab8"
@@ -35,7 +35,7 @@ on_hit = [{ status = "poisoned", chance = 20, severity = 2 }]
 [[creature.gear]]
 chance = 70
 one_of = ["studded_leather"]
-magic = 5
+magic = 1
 [[creature.gear]]
 chance = 50
 one_of = ["wool_cloak"]

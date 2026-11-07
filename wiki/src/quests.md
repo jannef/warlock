@@ -100,9 +100,15 @@ The pool is one of:
 - **a thing** of one [class](objects.md#item-classes), such as the [scrolls](scrolls.md) you can
   find lying about;
 - **one of a few named choices** the quest lists, each with its own words. Each choice may mark its
-  own hidden place on your map, but only the one drawn is marked.
+  own hidden place on your map, but only the one drawn is marked. A choice may be kept back for
+  when none of the others may be drawn.
 
-A drawn kill quest counts only the kills made after you were given it.
+A [Beast-friend](talents.md#talent-beast-friend) (every [druid](classes.md#druid) is one) is never
+sent to kill animals, the creatures of the [factions](creatures.md#factions) the talent calms: such a kind,
+a sort of creature with an animal among its kinds, and a choice asking for either are left out of
+the pool. Whether you are a Beast-friend counts as the quest is given, not after.
+
+A kill quest drawn from a pool of creatures counts only the kills made after you were given it.
 
 Some quests lead to a place nobody has found on their own. The person marks a
 [hidden location](overworld.md#hidden-locations) on your map, and the quest log says where it
@@ -146,7 +152,9 @@ Three people in [Cēaptūn](ascmearc.md#the-places) have work for you. Each has 
 offered one after the other.
 
 - **[Reeve Leofric](creatures.md#creature-reeve)** sends you into
-  [Cealdhlāw](dungeons.md#the-dungeons), the [barrow](dungeons.md#the-dungeons) east of town.
+  [Cealdhlāw](dungeons.md#the-dungeons), the [barrow](dungeons.md#the-dungeons) east of town. He
+  sends a [Beast-friend](talents.md#talent-beast-friend) after the barrow's skeletal rats instead
+  of the living ones.
 - **[Sister Hild](creatures.md#creature-sister)** at the Mynster wants back what the barrow and
   the drowned minster keep, and marks [Fennmynster](dungeon-guide.md#fennmynster) on your map.
 - **[Factor Wulfrun](creatures.md#creature-mine-factor)** marks the old mine,

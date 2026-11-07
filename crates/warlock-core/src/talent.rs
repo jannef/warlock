@@ -291,10 +291,6 @@ pub struct TalentMods {
     pub carry_percent: i32,
     /// Being Burdened costs it nothing.
     pub ignore_burdened: bool,
-    /// Percent more of the slowdown its burden and Bloated put on its steps (negative: less).
-    pub step_slowdown_percent: i32,
-    /// Kilograms more carrying limit.
-    pub carry_kg: i32,
     /// The coins it carries weigh nothing.
     pub weightless_coins: bool,
     /// Percent more time an overworld journey takes (negative: quicker).
@@ -1411,8 +1407,6 @@ impl TalentMods {
             }
             TalentEffect::CarryPercent { value } => self.carry_percent += value,
             TalentEffect::IgnoreBurdened => self.ignore_burdened = true,
-            TalentEffect::StepSlowdownPercent { value } => self.step_slowdown_percent += value,
-            TalentEffect::CarryKg { value } => self.carry_kg += value,
             TalentEffect::WeightlessCoins => self.weightless_coins = true,
             TalentEffect::TravelPercent { value } => self.travel_percent += value,
             TalentEffect::Swimmer => self.swimmer = true,

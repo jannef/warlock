@@ -607,10 +607,10 @@ fn creatures_drop_loot_deterministically() {
         .find(|a| a.kind == ActorKind::Creature)
         .expect("kobold")
         .clone();
-    assert_eq!(w.content().creature(kobold.creature).loot, 25);
+    assert_eq!(w.content().creature(kobold.creature).loot, 6);
     // From its own stream: the same actor drops the same thing.
     assert_eq!(w.loot_of(&kobold), w.loot_of(&kobold));
-    // Over many actors about a quarter drop something, always magic or rare, at the level's item
+    // Over many actors about 6 % drop something, always magic or rare, at the level's item
     // level (3), or now and then a loose gem (spec §7 "Gems").
     let mut drops = 0;
     for id in 1..400 {
@@ -626,7 +626,7 @@ fn creatures_drop_loot_deterministically() {
             assert_eq!(magic.level, 3);
         }
     }
-    assert!((60..140).contains(&drops), "{drops} of 399");
+    assert!((10..45).contains(&drops), "{drops} of 399");
 }
 
 /// A drop's item level is the dropping creature's, at least the floor's

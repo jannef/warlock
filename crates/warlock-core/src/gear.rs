@@ -7,7 +7,8 @@
 //! among its alternatives when it has several; for a line with a `magic` chance, one draw for
 //! it, and for a magic piece the loot draws that make it ([`loot::make_as`]: at least magic, at
 //! the floor's item level, with nobody's luck) with its material; for a plain one only its
-//! material, by the materials' `gear` weights at the creature's level ([`variant::draw`]; none
+//! material, by the materials' `gear` weights at the creature's level and its type's faction's
+//! favoured materials ([`variant::draw`]; none
 //! for a placement that names its material). A piece that would overload the creature (what it
 //! carries over its carrying limit, by its stats and size) is left out; one with no free slot
 //! stays carried.
@@ -36,7 +37,10 @@ pub fn roll(content: &Content, rng: &mut Rng, creature: CreatureId, item_level: 
         def.stats.score(Stat::Toughness),
         content.size(def.size).carry,
     );
-    let source = Source::Gear(def.level);
+    let source = Source::Gear {
+        level: def.level,
+        faction: def.faction,
+    };
     let mut pack = Pack::default();
     for line in &def.gear.lines {
         if !rng.chance(u32::from(line.chance)) {
@@ -107,12 +111,14 @@ fn make_piece(
 /// level's own stream `gear/<level id>`, in spawn order, on top of anything it carries already.
 pub fn arm(template: &mut LevelTemplate, content: &Content, seed: u64) {
     let mut rng = Rng::gear(seed, &template.id);
+    let mut condition = crate::world::gear_condition::stream(seed, &template.id);
     let level = template.item_level;
     for spawn in &mut template.creatures {
         if !spawn.rolls_gear {
             continue;
         }
-        let pack = roll(content, &mut rng, spawn.creature, level);
+        let mut pack = roll(content, &mut rng, spawn.creature, level);
+        crate::world::gear_condition::apply(content, &mut condition, spawn.creature, &mut pack);
         // What it was given already (a monster pool's key, `mapgen/population.rs`) comes after
         // its gear, so the gear's equipment still points at it.
         let given = std::mem::replace(&mut spawn.carry, pack.items);

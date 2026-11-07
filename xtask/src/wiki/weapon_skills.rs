@@ -1,7 +1,6 @@
 //! The weapon skills tables (spec §8 "Weapon skills"), from `data/weapon_skills.toml`: the
-//! skills and what trains them, how they default to each other, the marks each rank asks for,
-//! and what each rank gives; the fighting styles (spec §8 "Fighting styles"): their
-//! configurations, defaults, and what each rank gives (two-weapon penalties included); and the
+//! skills and what trains them, the marks each rank asks for, and what each rank gives; the
+//! fighting styles (spec §8 "Fighting styles"): their configurations and what each rank gives (two-weapon penalties included); and the
 //! starting ranks of races and classes, as data writes them.
 
 use super::order;
@@ -12,11 +11,6 @@ use warlock_core::content::{
     WeaponSkillDef, WeaponSkillId, WeaponSkillTable,
 };
 use warlock_core::dice::Dice;
-
-/// `n` with a real minus sign: `−2`.
-fn minus(n: u8) -> String {
-    format!("\u{2212}{n}")
-}
 
 /// What trains a skill of `role`, in words.
 fn trained_by(role: Role) -> &'static str {
@@ -79,77 +73,6 @@ pub fn skills(content: &Content) -> String {
             weapons_of(content, id, s.role),
             s.curve
         );
-    }
-    out
-}
-
-/// The defaults: for each skill the skills it raises, with the penalty, then the whole table
-/// as a matrix (rows and columns numbered alike).
-pub fn defaults(content: &Content) -> String {
-    let table = content.weapon_skills();
-    let mut out = default_list(table, Kind::Weapons);
-    let n = weapons(table).count();
-    out.push_str("\n| |");
-    for i in 1..=n {
-        let _ = write!(out, " {i} |");
-    }
-    out.push_str("\n|---|");
-    out.push_str(&":---:|".repeat(n));
-    out.push('\n');
-    for (i, (a, s)) in weapons(table).enumerate() {
-        let _ = write!(out, "| {} {} |", i + 1, s.name);
-        for (b, _) in weapons(table) {
-            let cell = match table.penalty(a, b) {
-                _ if a == b => "·".to_string(),
-                Some(p) => minus(p),
-                None => String::new(),
-            };
-            let _ = write!(out, " {cell} |");
-        }
-        out.push('\n');
-    }
-    out
-}
-
-/// The skills of a kind of the table, as [`default_list`] lists them.
-#[derive(Clone, Copy, PartialEq, Eq)]
-pub(super) enum Kind {
-    Weapons,
-    Styles,
-    Schools,
-}
-
-impl Kind {
-    fn of(s: &WeaponSkillDef) -> Kind {
-        match s.role {
-            Role::Style => Kind::Styles,
-            Role::School => Kind::Schools,
-            _ => Kind::Weapons,
-        }
-    }
-}
-
-/// For each skill of `kind` (a weapon skill, a fighting style, a school of magic) the skills it
-/// raises, with the penalty.
-pub(super) fn default_list(table: &WeaponSkillTable, kind: Kind) -> String {
-    let mut out = format!(
-        "| {} | Defaults to |\n|---|---|\n",
-        match kind {
-            Kind::Weapons => "Skill",
-            Kind::Styles => "Style",
-            Kind::Schools => "School",
-        }
-    );
-    for (id, s) in table.ids().filter(|(_, s)| Kind::of(s) == kind) {
-        let to: Vec<String> = (table.defaults_of(id).into_iter())
-            .map(|(other, p)| format!("{} {}", table.skill(other).name, minus(p)))
-            .collect();
-        let to = if to.is_empty() {
-            "nothing".to_string()
-        } else {
-            to.join(", ")
-        };
-        let _ = writeln!(out, "| {} | {to} |", s.name);
     }
     out
 }
@@ -219,6 +142,33 @@ pub fn marks(content: &Content) -> String {
             let _ = write!(out, " {} | {} |", thousands(one), thousands(all));
         }
         out.push('\n');
+    }
+    out
+}
+
+/// The target dummies (spec §8 "Weapon skills": "Target dummies"): every creature type with a
+/// `training` table, by name, with what it teaches and what becomes of missiles at it.
+pub fn dummies(content: &Content) -> String {
+    let mut rows: Vec<_> = (content.creature_defs().iter())
+        .filter_map(|c| c.training.map(|t| (c, t)))
+        .collect();
+    rows.sort_by(|a, b| a.0.name.cmp(&b.0.name));
+    let mut out = String::from(
+        "| Dummy | Level | Marks | Blows, bashes, kicks, and throws up to rank | Shots up to rank \
+         | Missiles ruined |\n|---|:---:|:---:|:---:|:---:|:---:|\n",
+    );
+    for (c, t) in rows {
+        let _ = writeln!(
+            out,
+            "| [{}](creatures.md#creature-{}) | {} | {}% | {} | {} | {}% |",
+            c.name,
+            c.id.replace('_', "-"),
+            c.level,
+            t.percent,
+            t.melee,
+            t.ranged,
+            t.breaks
+        );
     }
     out
 }
@@ -407,7 +357,7 @@ pub(super) fn grip_text(grip: Grip) -> &'static str {
 
 /// The fighting styles in file order but the caster styles (the schools page's,
 /// `schools::caster_style_benefits`): the configuration each is fought in, the weapon skills it
-/// is fought with, the curve it trains along, and the styles it defaults to.
+/// is fought with, and the curve it trains along.
 pub fn styles(content: &Content) -> String {
     let table = content.weapon_skills();
     let mut out = String::from("| Style | Fought with | Weapons | Marks |\n|---|---|---|---|\n");
@@ -435,11 +385,6 @@ pub fn styles(content: &Content) -> String {
         );
     }
     out
-}
-
-/// The defaults between fighting styles.
-pub fn style_defaults(content: &Content) -> String {
-    default_list(content.weapon_skills(), Kind::Styles)
 }
 
 /// What each rank of each fighting style but the caster styles gives, a table per style; Twin

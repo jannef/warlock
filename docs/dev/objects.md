@@ -132,11 +132,27 @@ the written name (`with_material`: spaces, hyphens, ends) or goes before it, the
 parts are added as before, so the order is [ornament] [material] base. The description
 (`magic::describe::lines`) shows damage dice with the material's bonus (`Dice::plus`) and the
 scaled Protection; `base_stats(def)` (the wiki's) is the base item's. Generation (`variant::
-weights`, `draw`, `worse_but_dearer`, `Source::{Loot, Gear(level)}`): the main part's list, each
-material's `rarity` (loot, item level) or `gear` (creature level) weight, capped at `VERY_RARE`
-when worse in a fight than the base material (to hit or damage lower on what strikes, protection
-lower on armour with Protection) and dearer, never for jewellery; one draw, none for a single
-material; `magic/loot.rs` step 8 and `World::loot_of` (`docs/dev/magic-items.md`). Placements
+weights`, `found`, `fit`, `variant_percent`, `draw`, `worse_but_dearer`, `Source::{Loot, Gear {
+level, faction }}`, `Source::gear(level)` for none; #1191): the main part's list, weighed in
+parts per million (`PER_MILLION`, every material that weighs anything at least 1). The base
+material takes all but `variant_percent(level)` (10 % at level 1, half a point a level, 20 % from
+21; all of it where no other weighs anything). The others share that by `found`: each material's
+`rarity` (loot, item level) or `gear` (creature level) weight, capped at `VERY_RARE` when worse in
+a fight than the base material (to hit or damage lower on what strikes, protection lower on
+armour with Protection) and dearer, never for jewellery, then scaled by its `fit` for the item's
+use (`MaterialDef::fit`, a `Fits` of `Fit::{Good, Poor, Odd}` per use: `weapon` by
+`ObjectDef::role` Weapon, `armour` by Armour, `jewellery` by `is_jewellery` first, `other`;
+`Fit::scale`: poor ÷ `POOR` (10), odd ÷ `ODD` (100), rounded up). Why per-material fits by use:
+the owner's wrong combinations are a material against a kind of item (tin blades, wool rings), the
+four uses are what the code already tells apart (`PartRole`, `is_jewellery`), and the default
+`good` keeps the data to one line on the twenty-odd materials that need it. A gear source's
+faction (`FactionDef::gear`, `data/factions.toml` `gear = { bone = 55 }`, resolved by
+`Factions::resolve_gear` once materials load: known grouped materials, 1 to 100 each, at most
+100 in all) takes its percent first for each favoured material on the item's list, the usual draw
+the rest; it never adds a material. `gear.rs` reads the creature type's faction (not a legend's
+override), `World::loot_of` the actor's (`Actor::faction`); animated bodies use `Source::gear`.
+One draw, none for a single material; `magic/loot.rs` step 8 and `World::loot_of`
+(`docs/dev/magic-items.md`). Placements
 name a material, `"great_sword:bronze"` (`parse_stacks` / `placement`, checked by
 `item_parts::check`), and `[[item]]` `parts = [{ of = "bronze" }]` (no size or cut); a unique item
 is placed by its id, `"unique:widowmaker"`, once in all content (`docs/dev/magic-items.md`, "Unique
@@ -144,7 +160,10 @@ items"). Tests:
 `world/variant_tests.rs` (material checks, construction lists and their refusals, the math,
 names and colours, the description, placements and refusals, combat, saves and replays, the
 weights and the cap, loot determinism, the built-in tables, a property test over thousands of
-loot items and drops across seeds and depths, and the depth shift).
+loot items and drops across seeds and depths); `world/material_draw_tests.rs` (#1191: the base
+share and the odd share of every object's weights at every level, sampled loot by use against
+the targets (own 85–93 %, poor under 3 %, odd under 0.5 % at levels 1 and 5), the fits of tin
+swords and wool rings, the factions' favourites within the list, and rolled skeleton gear).
 
 **Item damage** (#1131, #1168; the dread design §5.8): every material's file sets `resists =
 { acid, rust, fire }` (`content/material.rs::Resists`, percent 0 to 100, every kind given; the

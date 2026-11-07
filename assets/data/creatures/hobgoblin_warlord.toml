@@ -6,7 +6,7 @@ id = "hobgoblin_warlord"
 level = 24
 xp = 130
 rarity = "very_rare"
-loot = 80
+loot = 20
 name = "hobgoblin warlord"
 glyph = "g"
 fg = "#ff4040"
@@ -27,7 +27,7 @@ racial_weapon = "great_sword"
 [[creature.gear]]
 chance = 95
 one_of = ["banded_mail", "plate_armour"]
-magic = 30
+magic = 8
 [[creature.gear]]
 chance = 85
 one_of = ["great_helm"]

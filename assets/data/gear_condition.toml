@@ -1,0 +1,97 @@
+# The condition creature gear spawns in (spec §8 "Creature gear"; world/gear_condition.rs, the
+# item's state magic/worked.rs). Every piece of arms or armour a creature's gear table rolls (not a
+# stack of several, ammunition, rings, or what is protected: a unique, of Proof, or what a quest
+# may ask for) draws one condition: damaged (a point worse, its improvements none, its word the
+# kind's below), Fine, Marvellous, or Masterwork (one, two, or three improvements, as the Temper
+# ability makes them, capped at temper.toml's `most`), or else as made. A fixed kit (a level
+# file's placed gear) is never rolled and stays as made. Dropped, a piece keeps its condition.
+#
+# Chances are in per mille (1000 = always); each table's four add up to at most 1000.
+#
+# Fields:
+#   [default]      the odds of a creature of no tribe below
+#     damaged      per mille damaged
+#     fine         per mille Fine
+#     marvellous   per mille Marvellous
+#     masterwork   per mille Masterwork
+#   [[tribe]]      a tribe's own odds, the four above, for a creature with its `tag`; a creature
+#     tag          with several takes the first listed (so `hobgoblin` before `goblin`)
+#   [kinds]        by material group (materials' `group`), the kinds damaged gear of it may show,
+#                  `acid` ("corroded"), `rust` ("rusted"), `fire` ("scorched"): the one its
+#                  material withstands least (a tie: the first listed), never one it always
+#                  withstands (`resists` 100). None left, or a group not listed: "damaged".
+
+[default]
+damaged = 300
+fine = 40
+marvellous = 8
+masterwork = 2
+
+[kinds]
+metal = ["rust", "acid"]
+
+# The dead keep what they were buried with: almost all of it rotten with age.
+[[tribe]]
+tag = "undead"
+damaged = 950
+fine = 10
+marvellous = 0
+masterwork = 0
+
+# Disciplined orders and smiths: their arms kept, and often finer than most.
+[[tribe]]
+tag = "duergar"
+damaged = 80
+fine = 150
+marvellous = 40
+masterwork = 10
+
+[[tribe]]
+tag = "hobgoblin"
+damaged = 100
+fine = 100
+marvellous = 20
+masterwork = 4
+
+[[tribe]]
+tag = "drow"
+damaged = 100
+fine = 120
+marvellous = 30
+masterwork = 8
+
+[[tribe]]
+tag = "devil"
+damaged = 80
+fine = 100
+marvellous = 25
+masterwork = 6
+
+# Scavengers: whatever they found, as they found it.
+[[tribe]]
+tag = "kobold"
+damaged = 550
+fine = 10
+marvellous = 1
+masterwork = 0
+
+[[tribe]]
+tag = "goblin"
+damaged = 500
+fine = 15
+marvellous = 2
+masterwork = 0
+
+[[tribe]]
+tag = "orc"
+damaged = 450
+fine = 25
+marvellous = 4
+masterwork = 1
+
+[[tribe]]
+tag = "troll"
+damaged = 500
+fine = 10
+marvellous = 1
+masterwork = 0

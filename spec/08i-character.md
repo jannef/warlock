@@ -158,8 +158,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     or to the first wall, one roll of 2d6 fire for everyone on it through the scrolls' cast code,
     the `fire_breath` effect; then two degrees of Drained, ten minutes),
     Petrifying gaze (Basilisk, 12: the stare leaves 4 degrees of Transfixed and one of
-    Spent-eyed, an hour), Roc's grip (Roc, Strength 14: carrying +25 % more, Burdened costs
-    nothing), Dragon's hoard (Griffin, 12: Hoard sense's odds half again, loot +25 % and gems
+    Spent-eyed, an hour), Dragon's hoard (Griffin, 12: Hoard sense's odds half again, loot +25 % and gems
     +50 %, shop favour +10 %), Second rising (Phoenix, 18), Tentacles (Kraken, Twin Blades 3: off-hand blows
     +2 damage), **Hound's bay** (Barghest, 12: an active, `use:hounds_bay`, the time of a wait,
     refused on the overworld: a howl, `Act::Howl`, loudness 150, heard as "a howl" (`h` in the
@@ -279,16 +278,15 @@ developer notes (CLAUDE.md, `docs/dev/`).
   - **Mana**: the race's and the class's `mana` add to the mental stats' modifiers for the
     maximum (§8 "Mana").
   - **Weapon skills** ("Weapon skills" below): the race's starting ranks plus the class's, plus
-    one set of the class's `weapon_skill_choice` if it has one, at most 10 each; each then
-    raises the skills it defaults to. Dice among them roll from their own stream,
+    one set of the class's `weapon_skill_choice` if it has one, at most 10 each. Dice among
+    them roll from their own stream,
     `character/weapon-skills/<race>,<gender>,<class>`: the race's (in skill order), the
     class's, the pick of the choice (one draw), then the chosen set's; so they never move a
     stat roll.
   - **Fighting styles** ("Fighting styles" below): the class's `styles` plus one set of its
     `style_choice` if it has one, from yet another stream,
     `character/styles/<race>,<gender>,<class>`: the class's (in skill order), the pick of the
-    choice, then the chosen set's; so they never move a stat or a weapon skill roll. Each raises
-    the styles it defaults to.
+    choice, then the chosen set's; so they never move a stat or a weapon skill roll.
   - **Starting kit** (`warlock-core/src/kit.rs`, data `content/kit.rs`; #257): what the character
     carries, wields, and wears at the start. The class's `kit` (`data/classes/`) comes first,
     then the race's few racial items (`data/races.toml`: every race without darkvision, the elf,
@@ -299,7 +297,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     carried, a table says `carry`, `wield` (wielded or readied: hands, missile weapon, missiles,
     Tool slot), or `wear`, and may add `trained` (only if the class trained that weapon skill or
     fighting style: its fixed ranks, or the set of its choice that was picked; never the race's
-    ranks or defaults), `gender` (only for that gender: the hook for gender's items), and
+    ranks), `gender` (only for that gender: the hook for gender's items), and
     `magic` (a base item made as loot makes it at item level 1, its rarity rolled at least
     `any`, `magic`, or `rare`) and `fill` (a `wield` or `wear` line given only into a slot still
     free once everything else is given, else left out; #1173); `"a|b|c"` is one of them. Each item goes into the pack in order
@@ -856,7 +854,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     `World::attack_price`); `critical_status` (Staggering blow: a critical confirmed in melee
     leaves the target Staggered, `cost = 150` until its next action: that action half again
     as dear; `World::after_blow`, no draw of its own); `penetration` (Crusher: +2 on blows and kicks
-    that can do bludgeoning damage); `burden_dex` (Nimble: the burden's Dexterity cap +1);
+    that can do bludgeoning damage); `burden_dex` (the burden line's Pack mule and Porter: the burden's Dexterity cap +1 each);
     `sure_step` and `pit_proof` (Light step: a trap stepped onto gets a Dexterity check against
     its difficulty first, two draws only with the talent; made, it does not go off and is found;
     pits never catch you; steps only, never a door's trap; the talent also has Silent feet's
@@ -886,13 +884,13 @@ developer notes (CLAUDE.md, `docs/dev/`).
     like any other. The everyday folk have theirs (bonus picks at 10, 20, 30, 45, 55):
     aristocrat (Weaponcraft, Delver) Fencing (Duelist one rank higher), Riposte, Iron will (+2
     on Willpower checks, Presence +1), Peerless (+2 on the confirmation roll); commoner (any
-    tree) Hard work (60 % off the burden's slowdown on top of Balance), Stubborn (+1 on
+    tree) Pack mule (the burden line's first step, #1198), Stubborn (+1 on
     Toughness checks, poison never lowers scores), Big hands (+1 damage with maces and
     unarmed), Second wind, Salt of the earth (healing and resting +25 %), Unlikely hero (every
     stat +1); craftsperson (Weaponcraft, Guard, Delver) Sturdy work (Protection +1 in body
     armour), Masterwork (melee threat +1), Artisan (Protection +1 per armour piece worn, +2
     melee damage); merchant (Delver, Scholar) Haggler (favour +15 %: the one class ability on
-    shop favour, #787), Deep pockets (carrying +10 kg, coins weightless), Merchant's eye (#816, at 12: an
+    shop favour, #787), Deep pockets (coins weightless) and Pack mule (the burden line's first step, #1198), Merchant's eye (#816, at 12: an
     ability, on a thing carried, that identifies it as the scroll of identify would, for a
     reading's time and nothing else; refused, no time, for a thing already known); #789 cut its level 40 Insured (shops paid +50 %), a
     capstone that paid only in gold. The favour cap is 50 %. #774 cut the filler and the duplicates (Connoisseur, Hearty, Keen
@@ -990,11 +988,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
     roll more every level); `skill` without a `skill` field (Skill focus, the `skill` choice,
     a skill the taker is trained in, one pick for each: the chosen skill counts 25 higher wherever
     a benefit reads it, past 100 too, as an affix's bonus does, and sums with Master of none and
-    magic items; the value trained and shown does not move); `ignore_burdened` (Porter: Burdened costs nothing, as a dwarf's);
+    magic items; the value trained and shown does not move); `ignore_burdened` (Porter: Burdened costs nothing, as a dwarf's); the **burden line** (#1198): Pack mule (Strength 11: carrying +10 %, `burden_ease` 60, `burden_dex` 1), then Porter (Pack mule, Toughness 12: carrying +10 %, `burden_dex` 1, `ignore_burdened`), then Beast of burden (Porter, level 12: carrying +10 %, `stout`, Strained costs what Burdened costs others, `Load::penalty`), each a step further; it replaced Roc's grip, Stout, Hard work, Sure-footed, Nimble, and Uncanny dodge, and Deep pockets' 10 kg;
     `corpse_stats_percent` and `no_bloating` (Gourmand: a fresh corpse's stat training marks and
     its chances to widen a potential doubled, a chance at most certain; a meal stops one short of Bloated, what does not fit is lost, and
-    nothing overeats); `step_slowdown_percent` (Sure-footed: half the slowdown the burden and
-    Bloated put on steps; other actions as before); `searching` (Keen searcher: +4
+    nothing overeats); `searching` (Keen searcher: +4
     searching) with the birth signs' `search_reach` (a cell farther); `search` and `trap_damage_percent` (Trap sense: +3 to finding hidden
     traps and secret doors, searching and in passing; a trap's damage halved, rounded down, at
     least 1); `door_kick` and `kick_noise_percent` (Lockbreaker: a door or chest kick as if 6
@@ -1111,8 +1108,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     progressions twice as far apart, `World::disease_turn`). Half-elf: Diplomat (Presence 11: favour +10 %, quest gold +25 %). Dwarf: Stone
     sense (`stone_find` +4 to finding what is hidden on a `stone` cell, searching and in
     passing; digging +25 %), Dwarven resilience (Toughness 14: Poisoned eases twice as fast,
-    disease checks +2), Stout (level 12: `stout`, Strained costs what Burdened costs others,
-    `Load::penalty`). Halfling: Lucky (`reroll_fumble`), Slinger (slings 2: sling damage +1, and
+    disease checks +2). Halfling: Lucky (`reroll_fumble`), Slinger (slings 2: sling damage +1, and
     `launcher_range` with `skill = "slings"`, +2 cells for a sling only), Small target
     (Dexterity 13: `small_target`, Dodge +1 against an attacker of a larger size,
     `World::small_target` after `target_against`). Gnome: Tinkerer (Intelligence 12: the Disarm
@@ -1129,7 +1125,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     the talents the class tables give, counted apart from the talents; 0 until every class has
     its table), or a tree not `pending`, `no_free`, nor a class tree without `free_per_tree`
     prerequisite-free talents, is a content error. A wave that ships a system's talents removes
-    its `pending`; a new system of the game joins the list in the PR that ships its talents.
+    its `pending`.
     A cull that leaves a system without talents folds its tag into a parent (#787: `weather`
     into `travel`, the outdoors), or drops it when none fits (#787: `background`).
     **Policy for new systems** (design §8.2; #773): systems are broad (combat, stealth, magic,
@@ -1519,8 +1515,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     prey +1 and +2 more); Sneak attack (#682: the class passive beside the Sneak attack skill,
     whose dice the thief trains, `2d6+10` and known for: it grants the Openings pool from level
     1, and those the thief catches unawares make their initiative check 2 harder,
-    `surprise_difficulty`; §8 "Surprise and sneak attacks"), Uncanny dodge (the burden's
-    Dexterity cap +2), Improved sneak attack (+2d6 on top of the skill's: dice of the same sides
+    `surprise_difficulty`; §8 "Surprise and sneak attacks"), Pack mule and Porter (the
+    burden line's first two steps, #1198), Improved sneak attack (+2d6 on top of the skill's: dice of the same sides
     add up), Vanishing act (40, #684: a sneak attack of the thief's that kills leaves them
     Light-footed, a degree, `sneak_kill_status`, read where `Build::SneakKill` is raised in
     `World::resolve`; `world/thief.rs`), Hide in plain sight (no footsteps while Unburdened;
@@ -1531,7 +1527,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     (the bard's at 3, in Blessing's place, #871: a hand-out once, `weapon_ranks { to = 1 }`:
     every weapon skill and fighting style the bard holds at rank 0, whatever rows the content
     has, but the schools of magic and hidden styles, rises to rank 1 by
-    `WeaponSkills::raise_to`, its defaults with it; "Your hands know every weapon a little.";
+    `WeaponSkills::raise_to`; "Your hands know every weapon a little.";
     the optional `skills` names the rows instead, for a later class's trade); Fast healer
     (the Vigour talent, given at 6; its copy Song of rest until #790: resting heals half again
     as fast), Jack of all trades (12, #872: a hand-out once,
@@ -1546,7 +1542,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   - **Saves change**: `Quests::prey`, the tally of every type, the statuses `inspired` and
     `inspired_greatly`.
 - **Weapon skills** (`warlock-core/src/weapon_skills.rs`, training; `content/weapon_skill.rs`,
-  the data; M22, #134), ADOM-like, with *The Riddle of Steel*'s defaults:
+  the data; M22, #134), ADOM-like:
   - **Skills** (`data/weapon_skills.toml`, §7): the categories weapons belong to. A skill's
     role says what uses it: `melee` and `launcher` skills are named by weapons (`category`), the
     wielded weapon's for a blow, the readied missile weapon's for a shot; `thrown` is every
@@ -1558,7 +1554,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
     caster casts with their own mana ("Schools of magic" below).
   - **Ranks**: 0 (untrained: no benefits; marks still count) to 10, on every actor
     (`Actor::weapon_skills`, a rank and marks per skill): the player's from race and class, a
-    creature's from its type (§7). Ranks are stored, not derived.
+    creature's from its type (§7). A skill's rank comes only from its own training, starting
+    ranks, talents, and the dev `rank:` action: no skill raises another (#1188 removed *The
+    Riddle of Steel*'s defaults).
   - **Marks**: only the player trains. Each attack the player makes on someone (a blow, a bash,
     a kick, a shot or throw for each actor it reaches; hit or miss) earns `attempt` marks (1) in its
     skill, a hit `hit` more (2); a blow the player's shield blocks trains no weapon skill. The
@@ -1579,11 +1577,18 @@ developer notes (CLAUDE.md, `docs/dev/`).
     trained by far fewer casts than blows, `school`: 10, 20, 40, … 640 doubling, then 1200,
     2000, 3000 (docs/balance.md "School pace"). Marks
     past the need count toward the next rank (one rank at a time); rank 10 earns no more.
-  - **Defaults** (The Riddle of Steel): a symmetric table of penalties between related skills
-    (§7; long blades 8 gives short blades 6). When skill A gains a rank, every skill B with
-    `rank(A) − penalty(A, B) > rank(B)` rises to that rank and its marks start again from 0
-    (`WeaponSkills::raise`); defaults do not chain within one gain. Starting ranks raise their
-    defaults the same way, whatever their order (`WeaponSkills::from_ranks`).
+  - **Target dummies** (#1199; `world/dummy.rs`): a creature type with a `training` table
+    (`{ percent, melee, ranged, breaks }`, §7) is a dummy, the straw men in the Weyfarers' Gilde's
+    yard in Cēaptūn (§3). It never acts and never dies (its hit points never drop), so it gives
+    no experience, kill, loot, or quest credit; it is of the peaceful folk, but the player
+    strikes it by moving into it as they would a hostile. A blow, bash, kick, shot, or throw at
+    it is never a surprise or sneak attack, makes no noise of its own, angers and disturbs no
+    one, and trains no stat: only the attack's weapon skill and style, at `percent` (50) of the
+    marks a creature of the dummy's `level` (1) would give, rounded, and only below rank `melee`
+    (2) for blows, bashes, kicks, and throws, or `ranged` (4) for shots. A skill or style that
+    reaches that rank by a dummy's marks is told "You have learned all the dummy can teach
+    you."; from it on a blow there trains it no further. No daily cap: time is the price.
+    Missiles at a dummy: §8 "Ranged combat", Coming down.
   - **Benefits** (per skill and rank, data; never shown): to-hit and damage (to every roll of
     the dice) on attacks with the skill, a wider threat range (lower natural rolls threaten,
     never below 2), and a lower cost (`speed`, percent off `melee`, `shoot`, or `throw`;
@@ -1607,7 +1612,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     nobody there ("There is nothing there to bash."), or at someone not hostile ("You have no
     quarrel with the deer."; unseen: "Something is in the way."). Its event is an attack of
     kind `Melee` made `with` the shield; creatures do not bash.
-  - **Messages**: each skill that rose, its own rank or by default, is said after the attack
+  - **Messages**: a rank gained is said after the attack
     that earned it (and before the experience a kill earned), by its `phrase`: "You feel more
     skilled with long blades." No numbers.
   - **What the player perceives**: their own ranks and marks
@@ -1624,8 +1629,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     `Actor::school_benefit`, `World::practise_cast` in `world/cast.rs`;
     docs/dev/magic-skills.md): the seven schools (evocation, necromancy, abjuration,
     restoration, transmutation, enchantment, divination) are rows of role `school`, one each,
-    weapon skills in everything but what a rank gives (ranks, the school curve, `[marks]`, the
-    defaults, `rank:evocation:5`). A spell whose school has no row is refused at load. A rank
+    weapon skills in everything but what a rank gives (ranks, the school curve, `[marks]`,
+    `rank:evocation:5`). A spell whose school has no row is refused at load. A rank
     lifts every spell of its school through the spell hooks (§8 "Spells": "Hooks"): `reroll`,
     `sides`, `dice`, `bonus`, `cells`, `degrees` into `SpellMods` (`Actor::spell_mods`, beside
     the talents' and items'), `mana` percent off the spell's mana (the floor of 1 holds),
@@ -1643,9 +1648,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     trains nothing. Then the caster style it was cast in ("Fighting styles" below), by the same
     outcome, lands or not; none for a spell on oneself out of hindering armour. No daily band,
     no limit: time and mana are the price.
-    **Defaults**: evocation ↔ transmutation −4, necromancy ↔ restoration −4, abjuration ↔
-    enchantment −4; divination stands alone; schools default only to schools. **Starting
-    ranks**: wizard evocation 2, druid evocation 1, priest and bard restoration 1, witch
+    **Starting ranks**: wizard evocation 2, druid evocation 1, priest and bard restoration 1, witch
     necromancy 1, paladin abjuration 1; the ranger none; no race and no creature. A rank says
     "You feel more skilled at evocation."; nothing says what it gives. Spell attacks (#571's
     one skill of role `spell`, which trained on three spells) is retired into the schools: a
@@ -1655,7 +1658,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   `TwoWeapons`; `world/actor.rs`: `Actor::grip`, `style`, `styles_in_use`, `attack_skills`
   (`AttackSkills`: an attack's weapon skill and style), `attack_benefit`, `off_hand`,
   `off_hand_blow`), after AD&D 2e's *Complete Fighter's Handbook*: how weapons are
-  held and used, as skills with the weapon skills' ranks (0 to 10), marks, curves, defaults, and
+  held and used, as skills with the weapon skills' ranks (0 to 10), marks, curves, and
   benefits ("Weapon skills" above), in `data/weapon_skills.toml` (§7).
   - **Configurations** (`grip`): for blows, what the hands hold (`Actor::grip`, which counts for
     Defence too): nothing (`unarmed`), one one-handed weapon and every other hand empty
@@ -1757,7 +1760,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     a scroll or a wand never fails so) shrink with the style's `ease_bash`, `ease_slow`, and
     `ease_spell` to none at rank 9 (`Actor::shield_banes`). Boons: the style's Shield, damage,
     and the follow-up chance; Staggering block (rank 4) names it beside Sword and Board. The
-    style is `hidden` (§7): no class or race gives it, it defaults to no style, and it is not
+    style is `hidden` (§7): no class or race gives it, and it is not
     listed (the weapon skills screen, the `weapon_skills` dump layer and its JSON, the Talents
     page for a talent that asks for it, Stylist's choices) until its owner has marks in it
     (`WeaponSkills::shows`).

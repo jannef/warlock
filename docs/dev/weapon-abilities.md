@@ -190,7 +190,7 @@ and the ability's ("Long blades: Deep cut", a school's "Evocation: Thunderstruck
 the menu row shows its stamina first ("3 stamina, in a direction"). The abilities screen widens
 its panel to fit such rows.
 `World::ranks_news(risen, before)` (`fight.rs`) says a rank risen ("You feel more skilled with
-long blades.") with what it taught appended to its skill's line ("You have learned the deep
+long blades.") with what it taught appended to that line ("You have learned the deep
 cut."; a school's by name, "You have learned Thunderstruck."); `practise` computes `before` only
 when a rank rose. The dev action `rank:SKILL:N`
 (`Action::SetRank`, `World::set_rank_dev`) sets a rank as a rank risen would, said the same way.

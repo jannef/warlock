@@ -14,7 +14,7 @@ styles = { brawler = 1 }
 # The level table (spec §8 "Class abilities"): what a hard life taught them; bonus talents from
 # any tree, the commoner's gift.
 abilities = [
-    { level = 1, talent = "hard_work" },
+    { level = 1, talent = "pack_mule" },
     { level = 12, talent = "stubborn" },
     { level = 18, talent = "big_hands" },
     { level = 32, talent = "second_wind" },

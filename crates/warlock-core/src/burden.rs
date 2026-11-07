@@ -157,7 +157,7 @@ pub struct Load {
     pub limit: u64,
     /// Whether being Burdened costs it nothing (dwarves).
     pub ignores_burdened: bool,
-    /// Whether being Strained costs it what Burdened costs others (Stout, a dwarf's talent).
+    /// Whether being Strained costs it what Burdened costs others (Beast of burden).
     #[serde(skip_serializing_if = "std::ops::Not::not")]
     pub stout: bool,
 }
@@ -230,8 +230,8 @@ pub fn load(actor: &Actor, race: Option<&RaceDef>, content: &Content, room: u32)
         stats.score(Stat::Toughness),
         content.size(size).carry,
     );
-    // Talents (Pack mule) scale the limit; magic items and talents (Deep pockets) add to it.
-    // Porter shrugs off Burdened as a dwarf does.
+    // Talents (the burden line, Pack mule to Beast of burden) scale the limit; magic items add
+    // to it.
     let talents = actor.talent_mods(content);
     let base = TalentMods::scaled(base, talents.carry_percent);
     // Deep pockets (spec §8 "Class abilities"): coins weigh nothing.
@@ -243,16 +243,13 @@ pub fn load(actor: &Actor, race: Option<&RaceDef>, content: &Content, room: u32)
             .map(|s| s.weight(content))
             .sum(),
     };
-    let limit = with_carry(
-        base,
-        actor.mods(content).get(Effect::Carry) + talents.carry_kg,
-    );
+    let limit = with_carry(base, actor.mods(content).get(Effect::Carry));
     Load {
         carried,
         limit: in_room(limit, room),
         // Porter (spec §8) shrugs Burdened off as a dwarf does.
         ignores_burdened: ignores_burdened || talents.ignore_burdened,
-        // Stout (a dwarf's talent): Strained costs what Burdened costs others.
+        // Beast of burden: Strained costs what Burdened costs others.
         stout: talents.stout,
     }
 }
@@ -357,7 +354,8 @@ mod tests {
             "but no penalty"
         );
         assert_eq!(dwarf(50_000).penalty(), Burden::Strained);
-        // Stout: Strained costs what Burdened costs others (not nothing, as a dwarf's Burdened).
+        // Beast of burden: Strained costs what Burdened costs others (not nothing, as a dwarf's
+        // Burdened).
         let stout = |carried| Load {
             stout: true,
             ..dwarf(carried)

@@ -7,7 +7,7 @@ id = "dark_wizard"
 level = 24
 xp = 130
 rarity = "rare"
-loot = 60
+loot = 15
 name = "dark wizard"
 glyph = "@"
 fg = "#9a50d8"
@@ -33,11 +33,11 @@ racial_weapon = "quarterstaff"
 [[creature.gear]]
 chance = 70
 one_of = ["wool_cloak", "travelling_cloak"]
-magic = 30
+magic = 8
 [[creature.gear]]
 chance = 60
 one_of = ["gold_amulet", "jade_amulet"]
-magic = 40
+magic = 10
 [[creature.gear]]
 chance = 50
 one_of = ["copper_coin*30", "copper_coin*60"]

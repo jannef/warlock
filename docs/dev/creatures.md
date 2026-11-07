@@ -460,7 +460,9 @@ resolves `CreatureDef::gear`: the racial weapon's line first, `Keep` defaults by
 object fits, `kit::check_kept` shared with the starting kits, and the racial-weapon rank check).
 The rolls are `gear.rs`: `gear::roll(content, rng, creature, item_level) -> kit::Pack` (the
 kit's `Pack::put`/`equip`, `loot::make_as` for a magic piece, `variant::draw` with
-`Source::Gear(creature level)` for a plain one, the burden guard against `burden::limit` of the
+`Source::Gear { level, faction }` (the type's level and faction: a faction's `gear`
+favourites, `data/factions.toml`, #1191, `docs/dev/objects.md` "Materials and variants") for a
+plain one, the burden guard against `burden::limit` of the
 type's stats and size). Who rolls is `CreatureSpawn::rolls_gear` (true for a legend or vault
 entry without `carry`/`wield`/`wear`, `Canvas::add_patrol`, the local areas' deer; false for a
 keeper): a generated level clears it in `gear::arm` (stream `gear/<level id>`, after
@@ -470,6 +472,23 @@ keeper): a generated level clears it in `gear::arm` (stream `gear/<level id>`, a
 generated floor (rolled by `gear::arm` after it) and a spawn in play (rolled by
 `make_creature`). What falls is unidentified (Scavenger, which told it, was cut by #816). Tests: `world/gear_tests.rs`; the mapgen
 snapshots print each spawn's gear.
+
+Gear condition (#1193): right after each `gear::roll` (one line in `gear::arm`, one in
+`placed_gear`), `world/gear_condition.rs::apply` draws each piece's state ([`Worked`], the
+smith's: damaged with `by` for its word, or one to three improvements, each an attempt) from its
+own stream, `condition/<key>` with the gear stream's key, so the gear's draws and the rest of the
+level do not move. One draw below 1000 per piece against the creature's tribe's odds
+(`data/gear_condition.toml`, `content/gear_condition.rs`: `[default]`, `[[tribe]]` by creature
+tag, first match in file order), then one per improvement for its aspect. Only single pieces of
+arms or armour an anvil or knife could work (`temper::arms`, aspects), never protected ones
+(`item_damage::protected`, with every object any quest may ask for, fixed or rolled: gear is made
+before a quest is given). The kind is by the main part's material group (`[kinds]`, metal: rust
+and acid): the one the material withstands least, never one at 100; else `ItemHarm::Work`
+("damaged"). `World::loot_of` (a death's extra drop) is treasure, not gear, and takes no
+condition. Tribes chosen: undead (95 % damaged), duergar, hobgoblin, drow, devil (disciplined:
+8–10 % damaged, Fine 10–15 %), kobold, goblin, orc, troll (scavengers: 45–55 % damaged); the
+rest the default (30 %, Fine 4 %, Marvellous 0.8 %, Masterwork 0.2 %). Tests:
+`world/gear_condition_tests.rs`.
 
 ## Variance by role
 

@@ -139,7 +139,8 @@ pub enum ScreenName {
     Messages,
     /// Choose what to pick up from the pile here (`,` or `g` where several objects lie).
     PickUp,
-    /// Choose what to drop (`d` in play).
+    /// The inventory in its drop mode, as `d` in play opens it (#1196): choose what to drop.
+    /// The inventory's own `D` turns the mode on in place, under this name too while it lasts.
     Drop,
     /// Choose what to throw (`t` in play, with no throwing weapon readied).
     Throw,
@@ -440,7 +441,7 @@ impl Screen {
             ScreenName::Story => Screen::Story(StoryScreen::page(run)),
             ScreenName::Messages => Screen::Messages(MessagesScreen::new(run)),
             ScreenName::PickUp => objects(ObjectList::PickUp),
-            ScreenName::Drop => objects(ObjectList::Drop),
+            ScreenName::Drop => Screen::Objects(ObjectScreen::dropping(run)),
             ScreenName::Throw => objects(ObjectList::Throw),
             ScreenName::Eat => objects(ObjectList::Eat),
             ScreenName::Read => objects(ObjectList::Read),
@@ -478,9 +479,9 @@ impl Screen {
             Screen::Controls(screen) if screen.is_help() => ScreenName::Help,
             Screen::Controls(_) => ScreenName::Controls,
             Screen::Objects(screen) => match screen.list() {
+                ObjectList::Inventory if screen.is_dropping() => ScreenName::Drop,
                 ObjectList::Inventory => ScreenName::Inventory,
                 ObjectList::PickUp => ScreenName::PickUp,
-                ObjectList::Drop => ScreenName::Drop,
                 ObjectList::Throw => ScreenName::Throw,
                 ObjectList::Eat => ScreenName::Eat,
                 ObjectList::Read => ScreenName::Read,
@@ -2002,6 +2003,20 @@ mod tests {
             Some(&Action::Drop(Positions::of([0])))
         );
         assert!(names(&app).is_empty());
+        // `d` opens the inventory in its drop mode: Esc closes it, nothing dropped. `D` in the
+        // inventory turns the mode on; Esc there goes back to the plain inventory.
+        let count = actions(&app).len();
+        frame(&mut app, &[d]);
+        assert_eq!(names(&app), [ScreenName::Drop]);
+        frame(&mut app, &[ESC]);
+        assert!(names(&app).is_empty());
+        frame(&mut app, &[i, (KeyCode::KeyD, "D")]);
+        assert_eq!(names(&app), [ScreenName::Drop]);
+        frame(&mut app, &[ESC]);
+        assert_eq!(names(&app), [ScreenName::Inventory]);
+        frame(&mut app, &[ESC]);
+        assert!(names(&app).is_empty());
+        assert_eq!(actions(&app).len(), count);
     }
 
     #[test]
@@ -2141,6 +2156,73 @@ mod tests {
             "Esc returns to where the first was opened"
         );
         assert!(actions(&app).is_empty());
+    }
+
+    /// A numpad press with Num Lock off: the physical key, the arrow (or Home, ...) it stands
+    /// for, and no text (winit 0.30 on Windows and X11/Wayland).
+    fn num_lock_off(code: KeyCode, logical: Key) -> KeyboardInput {
+        KeyboardInput {
+            logical_key: logical,
+            ..key(code, "")
+        }
+    }
+
+    #[test]
+    fn the_numpad_navigates_screens_as_the_arrows_do() {
+        const NUM_ENTER: (KeyCode, &str) = (KeyCode::NumpadEnter, "");
+        const SOUTH: (KeyCode, &str) = (KeyCode::Numpad2, "2");
+        // A menu and the dialog: in the pause menu 8 wraps up to Quit and NumEnter asks; in the
+        // dialog 8 moves from No to Yes, and NumEnter takes it.
+        let mut menu = app(true);
+        frame(&mut menu, &[ESC, NORTH, NUM_ENTER]);
+        assert_eq!(names(&menu), [ScreenName::Pause, ScreenName::Dialog]);
+        frame(&mut menu, &[NORTH, NUM_ENTER]);
+        assert_eq!(saves_sent(&menu), [SaveCommand::SaveAndQuit]);
+        // Info pages: the numpad's digits never turn a page, Num Lock on or off.
+        let mut pages = app(true);
+        frame(&mut pages, &[(KeyCode::KeyI, "I")]);
+        assert_eq!(names(&pages), [ScreenName::Inventory]);
+        frame(&mut pages, &[SOUTH, (KeyCode::Numpad3, "3"), NORTH]);
+        pages
+            .world_mut()
+            .write_message(num_lock_off(KeyCode::Numpad3, Key::PageDown));
+        pages.update();
+        assert_eq!(names(&pages), [ScreenName::Inventory]);
+        assert!(actions(&pages).is_empty());
+        // The look cursor takes the numpad's diagonals, Num Lock on or off.
+        let mut look = app(true);
+        frame(&mut look, &[(KeyCode::KeyL, "l")]);
+        let InputMode::Look(at) = mode(&look) else {
+            panic!("looking")
+        };
+        frame(&mut look, &[(KeyCode::Numpad3, "3")]);
+        look.world_mut()
+            .write_message(num_lock_off(KeyCode::Numpad3, Key::PageDown));
+        look.update();
+        assert_eq!(mode(&look), InputMode::Look(at.step(Dir::SE).step(Dir::SE)));
+        // A paged list: 2 moves down to the pile's second stack, NumEnter picks it up.
+        let shared = content();
+        let game = Game::from_world(on_the_pile(shared.clone()), "tamsin-1".into());
+        let mut list = app_with(shared, Some(game));
+        frame(&mut list, &[(KeyCode::Comma, ",")]);
+        list.world_mut()
+            .write_message(num_lock_off(KeyCode::Numpad2, Key::ArrowDown));
+        list.update();
+        frame(&mut list, &[NUM_ENTER]);
+        assert_eq!(
+            actions(&list),
+            [Action::PickUp(warlock_core::Positions::of([1]))]
+        );
+        // A text field: the numpad's digits type, and NumEnter accepts. (Seven Enters reach the
+        // Name step of New run.)
+        let mut field = app(false);
+        field.update();
+        frame(&mut field, &[ENTER; 7]);
+        assert_eq!(names(&field).last(), Some(&ScreenName::Name));
+        frame(&mut field, &[(KeyCode::KeyE, "E"), NORTH, SOUTH, NUM_ENTER]);
+        assert_eq!(names(&field).last(), Some(&ScreenName::Summary));
+        let name = (field.world().resource::<ScreenStack>().draft()).name(&content());
+        assert_eq!(name, "E82");
     }
 
     #[test]

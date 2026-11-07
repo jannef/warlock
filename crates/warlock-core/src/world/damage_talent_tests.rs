@@ -173,7 +173,7 @@ fn armour_breaker_asks_for_a_heavy_weapon_at_seven() {
     );
     let table = w.content().weapon_skills().clone();
     let polearms = table.id("polearms").expect("polearms");
-    w.player_mut().weapon_skills.raise(&table, polearms, 7);
+    w.player_mut().weapon_skills.raise(polearms, 7);
     run(&mut w, "talent:armour_breaker");
     assert_eq!(last(&w), "You learn Armour-breaker.");
 }

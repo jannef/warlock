@@ -5,8 +5,9 @@ The more you fight with a kind of weapon, the better you get with it. Every kind
 the skill it uses. When you have enough marks you gain a rank: "You feel more skilled with long
 blades." A [shield](objects.md#class-shields) has a skill too, for [bashing](weapon-skills.md#weapon-skill-shield-bash) with it.
 
-Skill with one weapon carries over to related ones. Someone who is good with a
-[long sword](weapon-skills.md#weapon-skill-long-blades) is not a beginner with a short one.
+Each skill grows only by its own use. Someone who is good with a
+[long sword](weapon-skills.md#weapon-skill-long-blades) is still a beginner with a short one until
+they practise with it.
 
 ## The skills
 
@@ -60,17 +61,26 @@ Missile weapons need fewer marks than weapons up close. The schools of magic and
 styles, trained by casting, follow a gentler curve of their own. You start every skill with no
 marks.
 
-## Related skills
+## Target dummies
 
-When you gain a rank in a skill, every related skill is raised to your new rank minus the penalty
-between the two, if that is more than you have in it. So [long blades](weapon-skills.md#weapon-skill-long-blades) 8 gives [short blades](weapon-skills.md#weapon-skill-short-blades) 6. A
-skill raised this way starts its marks again from 0.
+The [Weyfarers' Gilde](guild.md#the-yard) keeps a yard of training dummies in Cēaptūn, straw men
+on posts that never fight back. Walk into one to strike it, or [shoot](ranged.md#shooting-and-throwing)
+or throw at it. A dummy never moves, is never hurt, and never dies, so it gives no
+[experience](experience.md), loot, or [quest](quests.md) credit, and the townsfolk do not mind
+you beating it. It is never [caught unawares](surprise.md#caught-unawares), and no attack on it is a [sneak attack](surprise.md#sneak-attacks).
 
-Relations go both ways, but only one step. A rank in [long blades](weapon-skills.md#weapon-skill-long-blades) raises [short blades](weapon-skills.md#weapon-skill-short-blades), but not,
-through them, [thrown weapons](weapon-skills.md#weapon-skill-thrown). Unrelated skills, such as [bows](weapon-skills.md#weapon-skill-bows) and [axes](weapon-skills.md#weapon-skill-axes), never move each
-other.
+A dummy teaches only the weapon skill and [fighting style](fighting-styles.md) of the attack,
+never a [stat](stats.md#training), and slowly: half the marks a level-1 opponent would give, rounded
+(2 for a hit and 1 for a miss at rank 0). It teaches blows, shield bashes, kicks, and throws up to
+**rank 2**, and shots with a bow, crossbow, or sling (and their style) up to **rank 4**. When a
+skill reaches that rank there, you are told "You have learned all the dummy can teach you.", and
+it learns nothing more there. There is no daily limit: the time it takes is the price.
 
-{{#include generated/weapon-defaults.md}}
+Missiles shot or thrown at a dummy stop there, hit or miss. One in four (25 %) is ruined; the
+rest drop on a free cell beside the dummy, to be picked up again. A missile that never breaks is
+never ruined.
+
+{{#include generated/target-dummies.md}}
 
 ## What a rank gives
 
@@ -146,8 +156,7 @@ no free blows of their own.
 You start with some skills from your [race](races.md) and your [class](classes.md). A [warrior](classes.md#warrior) knows [long blades](weapon-skills.md#weapon-skill-long-blades),
 a [ranger](classes.md#ranger) knows [bows](weapon-skills.md#weapon-skill-bows), and a [thief](classes.md#thief) knows [daggers](weapon-skills.md#weapon-skill-daggers). Some starting ranks are dice (`1d2` is one or two),
 rolled when you start. A [berserker](classes.md#berserker) has learned either [axes](weapon-skills.md#weapon-skill-axes) or great blades, and the dice decide
-which. Your starting ranks then raise their related skills, as above. Your race's and your class's
-ranks add up.
+which. Your race's and your class's ranks add up.
 
 Creatures have skills too: the [kobolds](creatures.md#creature-kobold) of the war band know their [spears](weapon-skills.md#weapon-skill-spears) and [bows](weapon-skills.md#weapon-skill-bows). They do not
 get better (yet).

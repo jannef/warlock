@@ -38,4 +38,4 @@ on_hit = [{ status = "frightened", chance = 20, severity = 2 }]
 [[creature.gear]]
 chance = 90
 one_of = ["long_sword", "glaive"]
-magic = 30
+magic = 8

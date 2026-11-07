@@ -6,16 +6,15 @@ rules it implements are in spec/08i-character.md. Keep it current with the code,
 Weapon skills (spec §8 "Weapon skills"; M22, #134): data is `data/weapon_skills.toml`
 (`content/weapon_skill.rs`: `WeaponSkillTable` with `MarkRules` (the scale clamped at
 `MOST_PERCENT`, 100: a strong opponent never speeds training, #1095), named need curves, skills
-(`WeaponSkillDef`: `id`, `name`, `phrase`, `Role`, curve, `[Benefit; 11]` per rank) and the
-symmetric defaults; `SkillId` is an index in file order, in the content fingerprint). Weapons
+(`WeaponSkillDef`: `id`, `name`, `phrase`, `Role`, curve, `[Benefit; 11]` per rank); `SkillId` is an index in file order, in the content fingerprint). Weapons
 name theirs (`category` → `ObjectDef::skill`, its role checked against what the weapon is),
 shields bash (`bash` → `ObjectDef::bash`), races and classes give starting ranks
 (`weapon_skills`, dice; classes `weapon_skill_choice`), creatures fixed ranks (an armed type's chosen so its weapon aims near `L/4`, #1169,
 `docs/dev/creatures.md` "Variance by role"). The runtime side
 is `weapon_skills.rs`: `WeaponSkills` (a `Training { rank, marks }` per skill on
 `Actor::weapon_skills`, saved and hashed), `train`
-(marks → a rank, then
-`raise`: the defaults rise, their marks reset; no chaining), `raise_to` (a floor: `raise` only
+(marks → a rank, by
+`raise`: that skill only, its marks reset; no skill raises another, #1188), `raise_to` (a floor: `raise` only
 from below, for a talent's `weapon_ranks` hand-out, Travelled hands), `from_ranks` (starting ranks,
 order-free), `progress`. The rules hook in at one place each: `Actor::attack_skill(kind, with)`
 picks the skill of an attack (a blow: the wielded weapon's, else unarmed; `Melee` `with` a
@@ -44,12 +43,26 @@ and every array to never less at a higher rank. `MAX_SAVING` is 60 (crossbows' `
 are `xtask/src/wiki/weapon_skills.rs`. What ranks teach (weapon abilities, #561) is
 `docs/dev/weapon-abilities.md`: a rank risen says it (`World::ranks_news`, called by `practise`).
 
+Target dummies (spec §8 "Weapon skills": "Target dummies", #1199; `world/dummy.rs`, its module
+docs the summary): a creature type's `training` table (`content/dummy.rs`, `DummyTraining`:
+`percent`, `melee`, `ranged`, `breaks`; checked in `Content::load`) makes it a dummy, read by
+`World::dummy(id)`. It is a creature so every attack reaches it through `World::resolve` as it
+reaches anyone; one hook each: `World::creature_turn` (waits), `World::hurt` and `World::dies`
+(nothing happens, so no XP, kill, loot, or quest credit), `travel.rs` (the player's bump strikes
+it though it is peaceful), `World::resolve` (no surprise, low blow, or sneak; no
+`attacked_near`, noise, provoking, or `train_fight`; the marks go through `World::practise_on`,
+which calls `World::practise_at` with the dummy's percent below its cap, `melee` for every kind
+but `AttackKind::Ranged`, and pushes `dummy::LEARNED_ALL` when a rank reaches the cap), and
+`World::fly` (`World::dummy_catches`, docs/dev/ranged-combat.md). The one placed: Cēaptūn's
+Gilde yard (`campaigns/ascmearc/data/creatures/training_dummy.toml`). Tests:
+`world/dummy_tests.rs`, `content/dummy.rs`.
+
 Fighting styles (spec §8 "Fighting styles"; M22, #135) are weapon skills of `Role::Style`: rows
 after the weapon skills in `data/weapon_skills.toml` with a `grip` (`content/weapon_skill.rs`:
 `Grip`, `Style { grip, weapons }`; a style naming no `weapons` takes the rest of its grip,
 `WeaponSkillTable::style_for`, one configuration one style), the same ranks, marks, curves, and
-`Benefit`s (plus `crit`, `ease_main`/`ease_off`, `bash`; which a grip may use is checked), and
-defaults only among styles. **Every rule asks the attack, not a skill**:
+`Benefit`s (plus `crit`, `ease_main`/`ease_off`, `bash`; which a grip may use is checked).
+**Every rule asks the attack, not a skill**:
 `Actor::attack_skills(kind, with)` is the `AttackSkills` of an attack (its weapon skill and its
 style, `Actor::style(kind, with)`: blows by `Actor::grip`, the hands' hold; shots `launcher`;
 throws `thrown`), and `Actor::attack_benefit(kind, with)` / `benefit_of(skills)` the weapon
@@ -74,11 +87,11 @@ attack `with` the off-hand weapon or the shield (`Actor::attack_skill` tells the
 `character/styles/...` after everything else. Presentation: `PerceptionView::own_styles_in_use`
 (the screen's `•`, the dump's `, in use`), never a benefit or penalty. Tests:
 `content/weapon_skill.rs` (`styles_are_checked`), `world/style_tests.rs`; wiki tables
-`styles.md`, `style-defaults.md`, `style-benefits.md` and the classes' column.
+`styles.md`, `style-benefits.md` and the classes' column.
 
 Two shields (#611; `world/two_shields.rs`, its module docs the summary): `Grip::TwoShields`
 (`Actor::grip`: two held objects with `bash`), the `two_shields` style (`hidden = true`, no class
-gives it, no default reaches it), and `[two_shields]` (`TwoShields`: `to_hit`, `slow`,
+gives it), and `[two_shields]` (`TwoShields`: `to_hit`, `slow`,
 `spell_failure`) eased by `Benefit::ease_bash`/`ease_slow`/`ease_spell` (checked per grip like
 the others; `shield` and `bash` are allowed for the grip too), mirroring `[two_weapons]`. Shields
 fit every hand slot (`Content::fits_properly`, as light weapons; `equipment::free_slot` tries an

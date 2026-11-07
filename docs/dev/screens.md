@@ -8,7 +8,7 @@ creation (race, gender, class, talents, name, summary), pause, settings, control
 (`i`) and its choice of what goes in a slot, an item's description (a letter in the inventory,
 an upper-case slot letter on the equipment screen), the character screen (`@`), the weapon skills
 screen (`W`), the quest log (`q`), the message history (`v`), choosing what to
-pick up (`,`/`;` on several stacks), drop (`d`), eat (`e`), or read (`r`; then, for the scroll of
+pick up (`,`/`;` on several stacks), drop (`d`: the inventory in its drop mode), eat (`e`), or read (`r`; then, for the scroll of
 identify, what to read it on, `ScreenName::Identify`, which takes the read list's place), the
 Decipher ability's list (`ScreenName::Decipher`, `ObjectList::Decipher`: the scrolls carried of a type
 not yet identified, `world::undeciphered`; choosing one sends `Action::Decipher`), the
@@ -53,7 +53,9 @@ to open, read keys for, or draw one:
 - **Input**: `input::route_keys` is the one reader of `KeyboardInput`. Stack not empty: the press
   goes to the top screen as a `Press` whose `nav` comes from the `Context::Menu` bindings (Esc is
   always `Nav::Back`; see `docs/dev/settings.md` for contexts: a screen never matches a key code or
-  a character, except list letters and digits and the typed seed) and whose `edit` comes from the
+  a character, except list letters and digits and the typed seed; a numpad key no `Context::Menu`
+  binding claims is the arrows' fixed alias there, `menu::numpad_nav`: 8, 2, 4, 6 are Up, Down,
+  Left, Right, and NumEnter is Confirm's own binding, #1197) and whose `edit` comes from the
   `Context::Text` bindings (Esc is always `Edit::Back`), for the text field, which reads only
   `edit` and `text` (the key event's text, literal; else the character its key stands for), so
   every key not bound there types; held keys type and erase but never accept
@@ -122,7 +124,15 @@ to open, read keys for, or draw one:
   reverses), `PrevPage`: existing commands, kept as they are (new screen keys are fixed, never `KeyCommand`s; `KeyCommand::context`: keys are unique
   per context, so Tab is `NextTarget` in play and `NextPage` here; `Bindings::owner_in` and
   `lookup` read one context). `Press::shift` carries Shift from the router. The dialogue screen
-  is no page: its digits ask about topics.
+  is no page: its digits ask about topics, the top row's only (`Press::is_numpad`).
+  **The numpad on screens** (#1197): it is navigation, never page switching, matched by
+  physical key (`KeyCode::NumpadN`) whatever Num Lock says. winit 0.30 reports a numpad key with
+  Num Lock on as `Key::Character("8")` with the text `8` (macOS, which has no Num Lock, always),
+  and with it off as `Key::ArrowUp`, `Home`, `PageUp`, and so on, with no text (Windows,
+  X11/Wayland). Page keys and dialog shortcuts are matched by `Press::binding`, which is
+  `KeyBinding::Code(NumpadN)` for a numpad key either way, so a numpad digit never turns a page
+  or answers; a text field types the digit's text (Num Lock on). The look and aiming cursors
+  read play's `Move` bindings, so they take all eight numpad directions.
 - **The Magic page** (`ui/magic_screen.rs`, `MagicScreen`, `ScreenName::Magic`, `--screen
   magic`; spec §6 "Magic"; the spell scaling design §11): page 6, no `KeyCommand` of its own
   (reached by its number or Tab; the weapon skills screen's footer names it with
@@ -268,7 +278,7 @@ to open, read keys for, or draw one:
   `ui/death_screen.rs`
   (who died, "Here lies Brakka,", who or what killed them, where, when, after how many turns).
 
-Key commands `,`/`;` (pick up: one stack at once, else the `PickUp` screen), `d` (`Drop` screen),
+Key commands `,`/`;` (pick up: one stack at once, else the `PickUp` screen), `d` (`Drop`: the inventory in its drop mode, #1196; `ObjectScreen::dropping`, Esc closes it; the inventory's own fixed `D`, upper case so it names no stack (letters are `a` to `z` down a page) and not Tab (a page key), turns the mode on in place, where Esc turns it off again with nothing dropped and the marks gone; the mode shows the title "Inventory: drop", no page tabs (the info-page keys do nothing there: `Screen::name` calls it `Drop`, no page), and marks, Enter dropping the marked stacks as one `Action::Drop`, which in a shop the sale dialog takes over as before),
 `I` (`Inventory` screen), `i` (`Equipment` screen), `@` (`Character` screen), `W` (`WeaponSkills`
 screen), `v` (`KeyCommand::Messages`: the `Messages` screen), `r` (`Read` screen, `KeyCommand::Read`: a basic command, not an ability), `L` (`Study` screen,
 `KeyCommand::Study`, next to Read: `ObjectList::Study` from `PerceptionView::studies`, each row

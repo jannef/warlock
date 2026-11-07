@@ -382,6 +382,8 @@ impl World {
         let through = self.reflected(shooter, at);
         // Piercing shot (a weapon active, `weapon_active.rs`): on past the first it hits.
         let mut pierce = self.pierces(shooter);
+        // A target dummy stops what reaches it, hit or miss (`dummy.rs`).
+        let mut dummy = None;
         for cell in from.ray(at) {
             let level = self.state.current();
             if cell.dist2(from) > reach {
@@ -411,6 +413,11 @@ impl World {
                 Some(target) => {
                     let profile = self.flight_profile(&flight, from, cell);
                     let blow = self.missile_hits(shooter, target, with, profile, &mut attacks);
+                    if self.dummy(target).is_some() {
+                        struck = blow.is_some_and(|b| b.strike.is_hit());
+                        dummy = Some((target, cell));
+                        break;
+                    }
                     if blow.is_some_and(|b| b.strike.is_hit()) {
                         if std::mem::take(&mut pierce) {
                             continue;
@@ -429,8 +436,11 @@ impl World {
         }
         self.caught = false;
         let end = path.last().copied().unwrap_or(from);
-        let broke = struck && flight.breaks > 0 && self.state.rng.chance(flight.breaks);
-        if let Some(lands) = flight.lands
+        let broke =
+            dummy.is_none() && struck && flight.breaks > 0 && self.state.rng.chance(flight.breaks);
+        if let Some((target, cell)) = dummy {
+            self.dummy_catches(target, cell, (flight.lands, flight.breaks));
+        } else if let Some(lands) = flight.lands
             && !broke
             && self.state.current().is_walkable(&content, end)
         {

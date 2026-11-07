@@ -43,15 +43,15 @@ on_hit = [{ status = "poisoned", chance = 35, severity = 5 }, { status = "weaken
 [[creature.gear]]
 chance = 100
 one_of = ["chain_mail"]
-magic = 75
+magic = 19
 [[creature.gear]]
 chance = 100
 one_of = ["gold_amulet"]
-magic = 75
+magic = 19
 [[creature.gear]]
 chance = 60
 one_of = ["gold_ring"]
-magic = 75
+magic = 19
 [[creature.gear]]
 chance = 100
 one_of = ["gold_coin*20"]

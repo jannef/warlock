@@ -825,19 +825,24 @@ impl World {
         let profile = profile.map(|p| self.pack_blow(attacker, target, kind, p));
         // Sic 'em's Savage: a sure critical, a degree for each hit (`sic.rs`).
         let profile = profile.map(|p| self.savage_blow(attacker, p));
+        // A target dummy (`dummy.rs`) is never caught unawares, and is struck in peace: no one
+        // minds, nothing is heard.
+        let dummy = self.dummy(target).is_some();
+        let fair = profile.is_some() && !dummy;
         // Caught unawares (`surprise.rs`): the initiative check, before the strike's draws.
         let missile = matches!(kind, AttackKind::Ranged | AttackKind::Thrown);
         // A lurk's blow finds a creature not hunting the player unawares; a low blow is a sneak
         // attack whatever the target knows (`thief.rs`).
-        let unaware =
-            profile.is_some() && (self.unaware(target, attacker) || self.lurked(attacker, target));
-        let low = profile.is_some() && self.low_blow_taken(attacker);
-        let unseen = profile.is_some() && self.sneaks(attacker, target, unaware || low, missile);
+        let unaware = fair && (self.unaware(target, attacker) || self.lurked(attacker, target));
+        let low = profile.is_some() && self.low_blow_taken(attacker) && !dummy;
+        let unseen = fair && self.sneaks(attacker, target, unaware || low, missile);
         // Hair trigger's blow may cut the attacker down before it strikes (`free_blow.rs`).
         if unaware && !self.startle(target, Some(attacker), events) {
             return None;
         }
-        self.attacked_near(attacker, target);
+        if !dummy {
+            self.attacked_near(attacker, target);
+        }
         // The player strikes from hallowed ground: the peace is broken (`sanctuary.rs`).
         if attacker == self.state.player {
             self.break_hallow();
@@ -887,11 +892,11 @@ impl World {
             damage: blow.and_then(|b| b.kind),
             natural: None,
         });
-        if noisy {
+        if noisy && !dummy {
             self.make_noise(attacker, Act::Attack(kind));
         }
         // A shopkeeper the player attacks turns on them (spec §7 "Shops").
-        if attacker == self.state.player {
+        if attacker == self.state.player && !dummy {
             self.provoke(target);
             self.provoke_court(target);
             self.break_empathy(target);
@@ -908,7 +913,7 @@ impl World {
         if dodged && target == self.state.player && self.trains(Use::Dodge) {
             self.train(Use::Dodge);
         }
-        if let Some(blow) = &blow {
+        if let Some(blow) = blow.as_ref().filter(|_| !dummy) {
             self.train_fight((attacker, target), kind, blow);
         }
         if let Some(blow) = blow
@@ -916,7 +921,7 @@ impl World {
         {
             // The weapon skill first, then the style: their news is said in that order.
             for skill in skills.trained() {
-                self.practise(skill, blow.strike.is_hit(), level);
+                self.practise_on(target, (kind, skill), blow.strike.is_hit(), level);
             }
         }
         // Resources built by blows (spec §8 "Resources"): a hit and a critical that do harm
@@ -991,61 +996,69 @@ impl World {
     }
 
     /// The player used weapon skill `skill` against an opponent of `level`: a `success` (a hit,
-    /// a blow blocked) or not. It earns its marks ([`crate::content::MarkRules`]), and each skill
-    /// a rank gained raised (with the skills it defaults to) waits in `news` to be said after the
-    /// attack's own messages: "You feel more skilled with long blades." No numbers.
+    /// a blow blocked) or not. It earns its marks ([`crate::content::MarkRules`]), and a rank
+    /// gained waits in `news` to be said after the attack's own messages: "You feel more skilled
+    /// with long blades." No numbers.
     pub(super) fn practise(&mut self, skill: WeaponSkillId, success: bool, level: u32) {
+        self.practise_at(skill, success, level, 100);
+    }
+
+    /// [`World::practise`] for `percent` of the marks (a target dummy's, `dummy.rs`). Returns
+    /// whether a rank was gained.
+    pub(super) fn practise_at(
+        &mut self,
+        skill: WeaponSkillId,
+        success: bool,
+        level: u32,
+        percent: u32,
+    ) -> bool {
         let content = self.content.clone();
         let table = content.weapon_skills();
         let Some(rules) = table.marks() else {
-            return;
+            return false;
         };
         let me = self.player_mut();
         let marks = rules.earned(success, level, me.weapon_skills.rank(skill));
+        let marks = (marks * percent + 50) / 100;
         // Weapon drill (spec §8 "Class abilities"): more marks in a role's skills.
         let marks = (me.talent_mods(&content)).marks(table.skill(skill).role, marks);
         if marks > 0 {
             let old = me.weapon_skills.clone();
-            let risen = me.weapon_skills.train(table, skill, marks);
-            if !risen.is_empty() {
+            if me.weapon_skills.train(table, skill, marks) {
                 // What the ranks taught before they rose, for the news of what they teach now.
                 let new = std::mem::replace(&mut self.player_mut().weapon_skills, old);
                 let before = self.state.player().weapon_abilities(&content);
                 self.player_mut().weapon_skills = new;
-                self.ranks_news(&risen, &before);
+                self.ranks_news(skill, &before);
+                return true;
             }
         }
+        false
     }
 
-    /// The news of the player's weapon skills `risen` (a rank gained, with the skills it raised
-    /// by default), and of the weapon abilities they teach that the player did not know
-    /// `before`: "You feel more skilled with long blades. You have learned the deep cut."
+    /// The news of the player's weapon skill `risen` (a rank gained), and of the weapon abilities
+    /// the ranks teach that the player did not know `before`: "You feel more skilled with long
+    /// blades. You have learned the deep cut."
     pub(super) fn ranks_news(
         &mut self,
-        risen: &[WeaponSkillId],
+        risen: WeaponSkillId,
         before: &[(WeaponSkillId, crate::content::WeaponAbilityId)],
     ) {
         let content = self.content.clone();
         let table = content.weapon_skills();
-        let mut lines: Vec<String> = (risen.iter())
-            .map(|&id| format!("You feel more skilled {}.", table.skill(id).phrase))
-            .collect();
+        let mut text = format!("You feel more skilled {}.", table.skill(risen).phrase);
         // The first active a rank teaches grants the stamina it is paid from to one without it
         // (the third place stamina is granted, beside the class tables and a restored run),
         // said after that active.
         let mut breath = self.grant_stamina(before);
-        // Each with the rank's line of the skill it is listed under (else the last line).
-        for (skill, mut line, active) in self.learned(before) {
+        for (_, line, active) in self.learned(before) {
+            text.push(' ');
+            text.push_str(&line);
             if active && std::mem::take(&mut breath) {
-                line.push_str(" You learn to pace your breath.");
-            }
-            let at = (risen.iter().position(|&s| s == skill)).or(lines.len().checked_sub(1));
-            if let Some(text) = at.and_then(|i| lines.get_mut(i)) {
-                text.push(' ');
-                text.push_str(&line);
+                text.push_str(" You learn to pace your breath.");
             }
         }
-        self.news.extend(lines);
+        self.news.push(text);
     }
 
     /// The player, who did not know them `before`, has learned an active weapon ability: they
@@ -1080,6 +1093,10 @@ impl World {
         harm: Harm,
         events: &mut Vec<Event>,
     ) -> bool {
+        // A target dummy takes every blow and loses nothing (`dummy.rs`).
+        if self.dummy(id).is_some() {
+            return false;
+        }
         // Any harm finds a disguised mimic out (`mimic.rs`), and ends a slip past (`slip.rs`).
         if self.disguised(id) {
             self.reveal_mimic(id, super::mimic::Reveal::Struck, events);
@@ -1166,6 +1183,10 @@ impl World {
         when: GameTime,
         events: &mut Vec<Event>,
     ) {
+        // A target dummy never dies (`dummy.rs`).
+        if self.dummy(id).is_some() {
+            return;
+        }
         let Some((at, creature, level)) =
             (self.state.actors.get(&id)).map(|a| (a.pos, a.creature, a.level.clone()))
         else {

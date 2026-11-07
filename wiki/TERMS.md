@@ -220,7 +220,7 @@ above.
 | Where a missile goes, missiles in flight | `ranged.md#where-a-missile-goes` |
 | Flaming arrows | `ranged.md#flaming-arrows` |
 | Weapon skill, rank, marks | `weapon-skills.md`, `weapon-skills.md#marks-and-ranks` |
-| Related weapon skills, defaults | `weapon-skills.md#related-skills` |
+| Target dummy, training dummy, the Gilde's yard | `weapon-skills.md#target-dummies`, `guild.md#the-yard` |
 | Fighting style | `fighting-styles.md` (a style: its row) |
 | Two-weapon fighting, off hand | `fighting-styles.md#two-weapons` |
 | Damage type | `damage-types.md` (a type: its row) |

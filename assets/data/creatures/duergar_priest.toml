@@ -7,7 +7,7 @@ id = "duergar_priest"
 level = 19
 xp = 105
 rarity = "rare"
-loot = 50
+loot = 13
 name = "duergar priest"
 glyph = "h"
 fg = "#c05068"
@@ -34,11 +34,11 @@ racial_weapon = "mace"
 [[creature.gear]]
 chance = 70
 one_of = ["chain_mail"]
-magic = 10
+magic = 3
 [[creature.gear]]
 chance = 50
 one_of = ["jade_amulet"]
-magic = 20
+magic = 5
 [[creature.gear]]
 chance = 40
 one_of = ["copper_coin*20", "gold_coin*2"]

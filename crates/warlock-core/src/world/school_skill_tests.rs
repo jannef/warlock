@@ -1,7 +1,7 @@
 //! The schools of magic (spec §8 "Weapon skills": "Schools of magic"; the spell scaling design
 //! §8): marks by casting, every kind of cast (a harm landed, a hex taken, a heal, a buff, a cast
 //! at nothing, a miss), the strongest struck weighing an area, scrolls and wands training
-//! nothing; what a rank does to the roll, the mana, and the cast's time; the defaults; Schooled,
+//! nothing; what a rank does to the roll, the mana, and the cast's time; Schooled,
 //! Devotee, and Magister; the dumps and the dev rank.
 
 use super::caster_tests::{kobold, kobold_at, reach, run, said, sp, world_with};
@@ -35,7 +35,7 @@ pub(super) fn ranks(w: &mut World, ranks: &[(&str, u8)]) {
     let ids: Vec<(WeaponSkillId, u8)> = (ranks.iter())
         .map(|&(name, rank)| (table.id(name).expect(name), rank))
         .collect();
-    w.player_mut().weapon_skills = WeaponSkills::from_ranks(table, ids);
+    w.player_mut().weapon_skills = WeaponSkills::from_ranks(ids);
 }
 
 /// The marks the player holds in `name` toward its next rank.
@@ -274,23 +274,6 @@ fn a_rank_changes_the_roll_the_mana_and_the_casts_time() {
     // A rank in another school does nothing to it.
     ranks(&mut w, &[("evocation", 10)]);
     assert_eq!(w.cast_price(player, cure), slow);
-}
-
-#[test]
-fn a_rank_defaults_to_its_kin_and_divination_stands_alone() {
-    let mut w = wizard();
-    let table = w.content().weapon_skills().clone();
-    let evocation = skill(&w, "evocation");
-    ranks(&mut w, &[]);
-    w.player_mut().weapon_skills.raise(&table, evocation, 8);
-    let rank = |w: &World, name| w.state.player().weapon_skills.rank(skill(w, name));
-    assert_eq!(rank(&w, "transmutation"), 4);
-    assert_eq!(rank(&w, "necromancy"), 0);
-    let divination = skill(&w, "divination");
-    w.player_mut().weapon_skills.raise(&table, divination, 10);
-    for other in ["abjuration", "enchantment", "restoration"] {
-        assert_eq!(rank(&w, other), 0, "{other}");
-    }
 }
 
 #[test]

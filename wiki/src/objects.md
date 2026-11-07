@@ -110,8 +110,11 @@ you pick up is not yours until you [pay for it](shops.md#buying).
 
 ## Dropping
 
-Press `d` to choose what to drop. The screen works like the pick-up screen and lists what you
-carry. Dropped objects go on top of the pile where you stand, and stackable ones join a stack of
+Press `d` to choose what to drop: it opens your [pack](#your-pack) in its drop mode, titled
+"Inventory: drop". In the pack itself, `D` turns the drop mode on. It works like the pick-up
+screen: a letter marks or unmarks a stack (marks stay as you turn the pages), `,` marks
+everything, and `Enter` drops what is marked. `Esc` drops nothing: it takes you back to the plain
+pack, or, if you pressed `d`, back to the game. Dropped objects go on top of the pile where you stand, and stackable ones join a stack of
 the same object already there.
 
 Dropping is one action too. Something you wear or wield is taken off first, which takes its own
@@ -123,7 +126,7 @@ You cannot close a [door](doors.md) while objects lie in its doorway.
 ## Your pack
 
 Press `I` to see what you carry. Nothing changes and no time passes. `Esc` closes the screen, and
-so does `I`. Press a stack's letter to look at it: the description says what it is and what it
+so does `I`. Press `D` to [drop](#dropping) things from it. Press a stack's letter to look at it: the description says what it is and what it
 does (see [Magic items](magic-items.md#looking-at-an-item)).
 
 Your pack holds as many stacks as you can carry. Only their weight limits you (see

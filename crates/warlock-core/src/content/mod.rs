@@ -50,6 +50,7 @@ mod dread_roster_tests;
 mod drow_roster_tests;
 #[cfg(test)]
 mod duergar_roster_tests;
+mod dummy;
 mod dungeon;
 mod effect;
 #[cfg(test)]
@@ -72,6 +73,7 @@ mod forage;
 mod forge_tests;
 mod gaze;
 mod gear;
+mod gear_condition;
 mod gem;
 #[cfg(test)]
 mod giant_roster_tests;
@@ -234,6 +236,7 @@ pub use dialogue::{
     ServiceKind, Speaker, Topic,
 };
 pub use disease::{DIFFICULTIES, DiseaseDef, DiseaseId, SOURCES, Wading};
+pub use dummy::DummyTraining;
 pub use dungeon::{
     ChestOdds, DungeonDef, Endless, Generator, LayerBoss, LevelPlan, RoomOdds, ShopOdds,
     parse_branch_level,
@@ -257,6 +260,7 @@ pub use flow::{FLOW_SPEEDS, Flow};
 pub use forage::{ForageGround, ForageRules};
 pub use gaze::Gaze;
 pub use gear::{Gear, GearLine, RACIAL_CHANCE};
+pub use gear_condition::{GearConditions, Odds, PER_MILLE, TribeOdds};
 pub use gem::{
     Cut, CutId, Cutting, GemDef, GemSize, GemSizeId, Gems, MAX_GEM_VALUE, MAX_GEM_WEIGHT,
     MAX_MULTIPLIER, Ornament, ROUGH_SATURATION, dull,
@@ -281,7 +285,8 @@ pub use level::{
 };
 pub use light::{Dips, Drift, HueDrift, LightId, LightPreset, MAX_LIGHT_RADIUS, Stability};
 pub use material::{
-    ANY, Found, ItemHarm, MAX_MATERIAL_VALUE, MaterialDef, MaterialId, Resists, VERY_RARE,
+    ANY, Fit, Fits, Found, ItemHarm, MAX_MATERIAL_VALUE, MaterialDef, MaterialId, ODD, POOR,
+    Resists, VERY_RARE,
 };
 pub use monster_pool::{MonsterPool, VaultMonsters};
 pub use names::{NameLists, Names};
@@ -699,6 +704,9 @@ pub struct Content {
     search: SearchRules,
     /// The numbers of working an item at an anvil (`data/temper.toml`, spec §7 "Special rooms").
     temper: TemperRules,
+    /// The condition creature gear spawns in (`data/gear_condition.toml`, spec §8 "Creature
+    /// gear"); without the file, as made.
+    gear_condition: GearConditions,
     /// The numbers of encounters (`data/encounters.toml`, spec §7 "Leaving an outdoor area").
     encounters: EncounterRules,
     /// What becomes of a creature that catches the player stealing (`data/steal.toml`, spec §8
@@ -891,6 +899,7 @@ impl Content {
             trap_avoid: TrapAvoid::default(),
             search: SearchRules::default(),
             temper: TemperRules::default(),
+            gear_condition: GearConditions::default(),
             encounters: EncounterRules::default(),
             steal: None,
             surprise: None,
@@ -1172,6 +1181,13 @@ impl Content {
         content.room_effects.check_factions(&content.factions)?;
         // Objects before creatures: an animated type is generated from its body's object.
         content.load_objects(files)?;
+        let (ids, materials) = (&content.material_ids, &content.materials);
+        (content.factions)
+            .resolve_gear(|name| {
+                let id = *ids.get(name)?;
+                Some((id, materials[usize::from(id.0)].group.is_some()))
+            })
+            .map_err(|m| ContentError::new("data/factions.toml", m))?;
         content.animated = Animated::parse(files, &content)?;
         // Chests before creatures: a mimic's band is its chest's, and its hold the band's.
         let path = "data/chests.toml";
@@ -1242,6 +1258,10 @@ impl Content {
         let path = "data/temper.toml";
         if let Some(text) = files.get_optional(path) {
             content.temper = TemperRules::parse(path, text)?;
+        }
+        let path = "data/gear_condition.toml";
+        if let Some(text) = files.get_optional(path) {
+            content.gear_condition = GearConditions::parse(path, text, &content)?;
         }
         let path = "data/steal.toml";
         if let Some(text) = files.get_optional(path) {
@@ -1831,7 +1851,7 @@ impl Content {
                 .starting_ranks(&ranks, weapon_skill::Ranked::Any))
             .map_err(|m| err(format!("creature `{}`: {m}", spec.id)))?;
             let ranks = ranks.iter().map(|&(id, rank)| (id, rank.max() as u8));
-            let weapon_skills = WeaponSkills::from_ranks(&self.weapon_skills, ranks);
+            let weapon_skills = WeaponSkills::from_ranks(ranks);
             if let Some(hide) = &spec.natural {
                 hide.check()
                     .map_err(|m| err(format!("creature `{}`: {m}", spec.id)))?;
@@ -1980,6 +2000,9 @@ impl Content {
                         creature::NOSES.end()
                     )));
                 }
+            }
+            if let Some(training) = &spec.training {
+                (training.check()).map_err(|m| err(format!("creature `{}`: {m}", spec.id)))?;
             }
             if spec.regen > creature::MAX_REGEN {
                 return Err(err(format!(
@@ -4132,6 +4155,12 @@ impl Content {
     /// else [`TemperRules::default`]).
     pub fn temper(&self) -> &TemperRules {
         &self.temper
+    }
+
+    /// The condition creature gear spawns in (spec §8 "Creature gear";
+    /// `data/gear_condition.toml`, else none: as made).
+    pub fn gear_condition(&self) -> &GearConditions {
+        &self.gear_condition
     }
 
     /// What every spell of damage type `kind` does beyond its damage (`[types]` in

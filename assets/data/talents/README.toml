@@ -141,9 +141,6 @@
 #                                 beside it is answered with a free blow at once (Hair trigger)
 #   carry_percent { value }       carrying limit, that percent more
 #   ignore_burdened               being Burdened costs it nothing, as a dwarf's burden
-#   step_slowdown_percent { value }   the slowdown its burden and Bloated put on its steps, that
-#                                 percent more (negative: less)
-#   carry_kg { value }            carrying limit, that many kilograms more
 #   weightless_coins              coins it carries weigh nothing
 #   travel_percent { value }      overworld journeys take that percent more time (negative:
 #                                 quicker)
@@ -175,7 +172,7 @@
 #                                 every weapon skill and style of `skills` (left out: every row
 #                                 of ../weapon_skills.toml but the schools of magic and hidden
 #                                 styles, whatever the content holds) held below rank `to` rises
-#                                 to it, its defaults with it; `news`, if any, said when a class
+#                                 to it; `news`, if any, said when a class
 #                                 table gives it
 #   take_up_skills { dice, except, news }   handed out once, as the talent is taken or given:
 #                                 every skill of ../skills.toml it is not trained in, but those

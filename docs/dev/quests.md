@@ -16,7 +16,7 @@ topics come first in `World::topics` (`quest_topics`: one `quest-ID` a quest) an
 are answered in `World::ask` (`ask_quest`, `Spent::NoTime` when state changes). **Asking gives
 the quest** (#422, `World::give`): the offer and the `accept` line in one reply, the record
 made active at once (with its roll, below, and a kill quest's `counted` baseline when it is
-rolled or a repeat), a delivery's item handed over, `reveals.when = "given"` fired. There is no
+a `pick` or a repeat), a delivery's item handed over, `reveals.when = "given"` fired. There is no
 accepting, declining, or `withdraw` any more; the `accept-ID`/`decline-ID` topics of older
 replays are no one's and refused, and an `offered` record of an older save loads as active
 (`#[serde(alias)]` on `Stage::Active`). A quest is
@@ -65,7 +65,16 @@ location of the run's overworld leads into the branch), `quest_pool`, `roll_ques
 `below`), `quest_roll_dev` (the dev `quest_roll:ID:TARGET`: active, no progress, target in the
 full pool or a variant id; resets `counted`, fires a variant's reveal), `quest_rolls` (the
 `progress` dump's `roll ...` rows). A rolled quest whose pool is empty now is
-not offered. Test content: the showcase gardener's `slug_charm` (a pick of scrolls; text
+not offered. **Beast-friend** (#1189): `quest_pool` leaves out a kill target the player's talent
+calms (`beast_friend::calms`, the creature type's own faction `animal`; a tag when any of its
+types of the quest's campaign is; a variant by its target), then the `fallback` variants
+(`Variant::fallback`, checked at load: not every variant) unless nothing else is left. The talent
+is read at the giving only; the saved `Roll` keeps it. A variant counts every kill, as an
+authored quest does; only a `pick` (or a repeat) sets the `counted` baseline at the giving
+(`give`). The example: Leofric's `barrow_rats` (`rats` → `rat`, fallback `skeletal` →
+`skeletal_rat` with his own words; `barrow_heart`'s "The rats were the least of it" reads right
+for both). Tests: `world/druid_quest_tests.rs` (every rolled kill quest of every campaign over
+200 draws for a druid). Test content: the showcase gardener's `slug_charm` (a pick of scrolls; text
 snapshots `quest-offer-rolled`, `quest-log-rolled`), and `world/quest_roll_tests.rs`'s
 fixtures in Cēaptūn (Godgifu gives a creature pick, a tag pick, and two variants revealing
 Fennmynster and Fyrdelf) and the arena (a kobold made the demilich, a shared unique).

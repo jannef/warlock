@@ -74,7 +74,7 @@
 #                 experience.toml. Long-lived races pay more, short-lived ones less
 #   weapon_skills starting ranks in weapon skills (spec §8 "Weapon skills"), by skill id in
 #                 weapon_skills.toml: a number or dice, every result within 0 to 10; added to
-#                 the class's (at most 10), then each raises the skills it defaults to
+#                 the class's (at most 10)
 #   kit           a few racial items for the starting kit (spec §8 "Character creation"), after
 #                 the class's: lines as in classes/README.toml's `kit` (a string is carried; `wield`,
 #                 `wear`, `trained`, `gender`, `magic`, and `"a|b"` work the same, `trained`

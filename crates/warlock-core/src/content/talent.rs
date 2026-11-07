@@ -366,11 +366,6 @@ pub enum TalentEffect {
     CarryPercent { value: i32 },
     /// Being Burdened costs it nothing, as a dwarf's burden (Porter).
     IgnoreBurdened,
-    /// The slowdown its burden and being Bloated put on its steps, this percent more (negative:
-    /// less; Sure-footed).
-    StepSlowdownPercent { value: i32 },
-    /// The carrying limit, this many kilograms more (on top of what magic items add).
-    CarryKg { value: i32 },
     /// Coins it carries weigh nothing.
     WeightlessCoins,
     /// Journeys on the overworld take this percent more time (negative: quicker).
@@ -416,9 +411,8 @@ pub enum TalentEffect {
     ExtraPick { level: u8 },
     /// Handed out once, as the talent is taken or given: every weapon skill and style of
     /// `skills` (none named: every row of `weapon_skills.toml` but the schools of magic and
-    /// hidden styles, whatever the content holds) held below rank `to` rises to it, its defaults
-    /// with it (Travelled hands; `WeaponSkills::raise_to`). `news` is said when a class table
-    /// gives it.
+    /// hidden styles, whatever the content holds) held below rank `to` rises to it (Travelled
+    /// hands; `WeaponSkills::raise_to`). `news` is said when a class table gives it.
     WeaponRanks {
         to: u8,
         #[serde(default)]
@@ -980,7 +974,7 @@ pub enum TalentEffect {
         #[serde(default)]
         no_shield: bool,
     },
-    /// Strained costs it what Burdened costs others (Stout).
+    /// Strained costs it what Burdened costs others (Beast of burden).
     Stout,
     /// Dodge added against shots, throws, and trap missiles.
     MissileDodge { value: i32 },
@@ -1445,7 +1439,6 @@ impl TalentEffect {
             | TalentEffect::Darkvision { value }
             | TalentEffect::NightSight { value }
             | TalentEffect::DaySight { value }
-            | TalentEffect::CarryKg { value }
             | TalentEffect::Checks { value, .. }
             | TalentEffect::CriticalConfirm { value }
             | TalentEffect::AbilityRanks { value }
@@ -2283,7 +2276,6 @@ impl TalentEffect {
             | TalentEffect::SpellDamagePercent { value }
             | TalentEffect::SpellManaPercent { value }
             | TalentEffect::AttackNoisePercent { value }
-            | TalentEffect::StepSlowdownPercent { value }
             | TalentEffect::CorpseStatsPercent { value }
             | TalentEffect::LootMagicPercent { value }
             | TalentEffect::GemFindPercent { value }
