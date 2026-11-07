@@ -51,7 +51,8 @@
 #              listed: any
 #   damage_type the kind of damage the status is (poison): a target immune to it never suffers
 #              it, and a resistance shrinks each dose it is given (spec §8 "Damage types")
-#   cured_by   what cures it at once (a bandage, an antidote)
+#   cured_by   what cures it at once (a bandage, an antidote, a potion of clear head's
+#              `clear_head`)
 #   treat      how the Heal skill treats it (the Heal ability, spec §8 "Skills"): an Intelligence
 #              check plus Heal against { difficulty = 6, per_degree = 2 } (difficulty 0 to 40,
 #              plus 0 to 10 for each degree); `stops = true`: made, it ends, and a failed try may
@@ -648,6 +649,7 @@ max = 1
 stacking = "refresh"
 per_action = true
 cost = 150
+cured_by = ["clear_head"]
 start = "You stagger."
 end = "You find your feet again."
 
@@ -663,6 +665,7 @@ stacking = "refresh"
 per_action = true
 cost = 150
 flat_footed = true
+cured_by = ["clear_head"]
 start = "You are stunned."
 end = "Your head clears."
 
@@ -676,6 +679,7 @@ max = 4
 stacking = "refresh"
 eases = 12
 cost = 200
+cured_by = ["clear_head"]
 start = "You are transfixed."
 end = "You shake off the stare."
 
@@ -713,6 +717,7 @@ max = 3
 stacking = "refresh"
 eases = 60
 cost = 150
+cured_by = ["clear_head"]
 start = "You feel sluggish."
 end = "You feel quick again."
 
@@ -728,6 +733,7 @@ max = 3
 stacking = "refresh"
 eases = 12
 cost = 300
+cured_by = ["clear_head"]
 start = "You feel terribly drowsy."
 end = "You shake off the drowsiness."
 
@@ -1006,6 +1012,7 @@ stacking = "refresh"
 eases = 6
 flees = true
 combat = { to_hit = -3 }
+cured_by = ["clear_head"]
 start = "You are frightened."
 end = "You master your fear."
 

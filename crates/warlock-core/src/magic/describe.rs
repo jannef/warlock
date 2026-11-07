@@ -242,6 +242,9 @@ fn potion_lines(stack: &Stack, lore: Lore<'_>) -> Vec<Line> {
             let kinds = crate::content::and_list(&kinds);
             format!("Wards you against {kinds} for a while")
         }
+        Draught::Nourish { .. } => "Fills you as a meal does".to_string(),
+        Draught::Restore => "Restores what was drained or damaged of you".to_string(),
+        Draught::Blink => "Takes you elsewhere at once".to_string(),
         Draught::Status { status, .. } => format!("{} for a while", lent(content, *status)),
     };
     let mut lines = vec![line(LineKind::Stat, text)];

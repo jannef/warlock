@@ -48,6 +48,27 @@ or resistance potion of the same kind starts its half hour over.
 A potion's **marks** are [stat training marks](stats.md#training) that you always get when you
 drink it (see [Stats](stats.md)): the body remembers the draught.
 
+### Utility potions
+
+Four potions do one useful thing at once:
+
+- The **potion of sustenance** feeds you as a [food ration](food.md) does, 1500
+  [nutrition](hunger.md#how-hungry-you-are), but never leaves you Bloated: what would go past
+  that is lost, and you never choke or vomit on it.
+- The **potion of restoration** does what the [scroll of
+  restoration](scrolls.md#the-scroll-of-restoration) does: every point of [stat
+  damage](diseases.md#stat-damage) is mended, every [drained](stats.md#drained-stats) point comes
+  back, and [Stiffening](status-effects.md#status-stiffening) ends. Unlike the scroll, it is
+  drunk even when there is nothing to restore ("You feel whole.").
+- The **potion of blinking** moves you at once to a random free cell of the level, as a
+  [teleport trap](traps.md#trap-teleport) does: anywhere, in sight or not, near danger or far
+  from it. On the [overworld](overworld.md) it does nothing.
+- The **potion of clear head** ends at once what clouds the mind or numbs the body:
+  [Frightened](status-effects.md#status-frightened), [Drowsy](status-effects.md#status-drowsy),
+  [Sluggish](status-effects.md#status-sluggish), [Stunned](status-effects.md#status-stunned),
+  [Staggered](status-effects.md#status-staggered), and
+  [Transfixed](status-effects.md#status-transfixed).
+
 ## Unknown potions
 
 A potion you have never drunk shows a **word and a colour** instead of its name: "a fizzy red
@@ -60,7 +81,7 @@ has a hue, and a potion with several effects mixes their hues.
 | Family | Hue |
 |---|---|
 | [Healing](healing.md#how-fast) | red |
-| Cures ([poison](damage-types.md#damage-poison), [disease](diseases.md#how-a-disease-goes)) | green |
+| Cures ([poison](damage-types.md#damage-poison), [disease](diseases.md#how-a-disease-goes), [a clouded mind](#utility-potions)) | green |
 | Healing and cures together | russet, red mixed with green |
 | [Mana](mana.md#how-much) | blue |
 | Stat boosts | orange (greater ones deep orange) |
@@ -69,8 +90,9 @@ has a hue, and a potion with several effects mixes their hues.
 | [Resistance](damage-types.md#armour-and-resistance) | teal |
 | Wards ([Barkskin](status-effects.md#status-barkskin), [Glamoured](status-effects.md#status-glamoured)) | bronze |
 | [Renewal](status-effects.md#status-renewing) | rose |
-| The unseen and the unplaced ([Quick-sensed](status-effects.md#status-quick-sensed), [Invisible](status-effects.md#status-invisible)) | opal |
-| Utility ([Water-borne](status-effects.md#status-water-borne)) | sky blue |
+| The unseen and the unplaced ([Quick-sensed](status-effects.md#status-quick-sensed), [Invisible](status-effects.md#status-invisible), [blinking](#utility-potions)) | opal |
+| Utility ([Water-borne](status-effects.md#status-water-borne), [sustenance](#utility-potions)) | sky blue |
+| [Restoration](#utility-potions) | mint |
 | [Elixirs](#elixirs) (a [stat](stats.md) for good) | gold |
 | Harm | brown |
 

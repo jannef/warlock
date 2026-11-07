@@ -107,6 +107,18 @@ pub(super) fn potions(content: &Content) -> String {
                 format!("resists {} ({}, as gear does)", kinds.join(", "), def.name)
                     + &lasting(content, *status, 1)
             }
+            Draught::Nourish { satiation } => format!(
+                "{satiation} [nutrition](hunger.md#how-hungry-you-are) at once, as a meal \
+                 gives, but never into Bloated (no overeating)"
+            ),
+            Draught::Restore => "Every point of [stat damage](diseases.md#stat-damage) mended \
+                 and every [drained](stats.md#drained-stats) point back at once, and \
+                 [Stiffening](status-effects.md#status-stiffening) ended: the [scroll of \
+                 restoration](scrolls.md#the-scroll-of-restoration)'s cleanse"
+                .to_string(),
+            Draught::Blink => "You are moved at once to a random free cell of the level, as a \
+                 [teleport trap](traps.md#trap-teleport) moves you; nothing on the overworld"
+                .to_string(),
             Draught::Status { status, severity } => {
                 let def = content.status(*status);
                 format!(
