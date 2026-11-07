@@ -8,7 +8,7 @@ creation (race, gender, class, talents, name, summary), pause, settings, control
 (`i`) and its choice of what goes in a slot, an item's description (a letter in the inventory,
 an upper-case slot letter on the equipment screen), the character screen (`@`), the weapon skills
 screen (`W`), the quest log (`q`), the message history (`v`), choosing what to
-pick up (`,`/`;` on several stacks), drop (`d`), eat (`e`), or read (`r`; then, for the scroll of
+pick up (`,`/`;` on several stacks), drop (`d`: the inventory in its drop mode), eat (`e`), or read (`r`; then, for the scroll of
 identify, what to read it on, `ScreenName::Identify`, which takes the read list's place), the
 Decipher ability's list (`ScreenName::Decipher`, `ObjectList::Decipher`: the scrolls carried of a type
 not yet identified, `world::undeciphered`; choosing one sends `Action::Decipher`), the
@@ -268,7 +268,7 @@ to open, read keys for, or draw one:
   `ui/death_screen.rs`
   (who died, "Here lies Brakka,", who or what killed them, where, when, after how many turns).
 
-Key commands `,`/`;` (pick up: one stack at once, else the `PickUp` screen), `d` (`Drop` screen),
+Key commands `,`/`;` (pick up: one stack at once, else the `PickUp` screen), `d` (`Drop`: the inventory in its drop mode, #1196; `ObjectScreen::dropping`, Esc closes it; the inventory's own fixed `D`, upper case so it names no stack (letters are `a` to `z` down a page) and not Tab (a page key), turns the mode on in place, where Esc turns it off again with nothing dropped and the marks gone; the mode shows the title "Inventory: drop", no page tabs (the info-page keys do nothing there: `Screen::name` calls it `Drop`, no page), and marks, Enter dropping the marked stacks as one `Action::Drop`, which in a shop the sale dialog takes over as before),
 `I` (`Inventory` screen), `i` (`Equipment` screen), `@` (`Character` screen), `W` (`WeaponSkills`
 screen), `v` (`KeyCommand::Messages`: the `Messages` screen), `r` (`Read` screen, `KeyCommand::Read`: a basic command, not an ability), `L` (`Study` screen,
 `KeyCommand::Study`, next to Read: `ObjectList::Study` from `PerceptionView::studies`, each row

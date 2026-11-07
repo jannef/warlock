@@ -1,0 +1,34 @@
+---
+source: crates/warlock/src/ui/screen_snapshots.rs
+expression: "render(case, content.clone())"
+---
+ You see here 12 gold coins.
+ You pick up 12 gold coins.
+
+
+
+
+┌─ Inventory: drop ────────────────────────────────────────────────────────────────────────────────┐
+│                                                                                                  │
+│ Melee weapons                                                                                    │
+│   a - ) a dagger (+0 hit, 1d4, range 5)                                                   450 g  │
+│ Body armour                                                                                      │
+│ > b + [ a leather jerkin (Dv +1, Pv 1)                                                   3.5 kg  │
+│ Light sources                                                                                    │
+│   c - ( 2 wax candles                                                                     200 g  │
+│ Tools                                                                                            │
+│   d - ( a lantern (in use)                                                                400 g  │
+│ Coins                                                                                            │
+│   e - $ 12 gold coins                                                                     120 g  │
+│                                                                                                  │
+│ Carrying 4.7 kg   ·   Your weight 74.7 kg (you 70 kg)                                            │
+│ Burdened over 14 kg, strained over 28 kg, overloaded over 42 kg                                  │
+│                                                                                                  │
+│ a-e mark   , all   Enter drop   Esc cancel                                                       │
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘
+
+
+
+
+
+ The Hub  ·  HP 18/18  ·  MP 2/2  ·  Openings 0/5  ·  Sta 10/10  ·  Lv 1  ·  08:00       ? controls

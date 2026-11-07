@@ -1,15 +1,18 @@
-//! Object screens (spec §6): the inventory (`i`), and the selection screens for picking up from a
-//! pile (`,` or `g` where several objects lie), for dropping (`d`), and for choosing what to
-//! throw (`T`: the throwing weapons the player carries; choosing one aims it, `ui::target`).
+//! Object screens (spec §6): the inventory (`I`), with its drop mode (`D` there, or `d` in play;
+//! #1196), and the selection screens for picking up from a pile (`,` or `g` where several objects
+//! lie) and for choosing what to throw (`T`: the throwing weapons the player carries; choosing
+//! one aims it, `ui::target`).
 //!
 //! Each is the one paged list (`paged_list`, spec §6 "Item lists"): stacks grouped by item class
 //! under a header per class, lettered down each page from `a`, with their glyph, name, and
-//! weight; `>` and `<` (PageDown, PageUp) turn the pages. The inventory and the drop screen mark
+//! weight; `>` and `<` (PageDown, PageUp) turn the pages. The inventory marks
 //! what is worn or wielded ("(being worn)", "(wielded)"; dropping it takes it off first). Names
 //! are in their rarity's color (spec §8 "Magic items"): magic blue, rare yellow. The inventory
 //! takes no action and also shows what the player carries and weighs, their burden when they
 //! have one, and the weights at which it changes (spec §8 "Burden"); a stack's letter there
-//! opens its description (`describe_screen`). In a selection screen a letter marks or unmarks
+//! opens its description (`describe_screen`). In its drop mode it is a selection screen that
+//! drops (titled "Inventory: drop", no page tabs), and Esc leaves the mode (or closes the
+//! inventory `d` opened in it). In a selection screen a letter marks or unmarks
 //! its stack (`+` marked, `-` not: never color alone), `,` marks everything on every page (or,
 //! with everything marked, nothing), the arrows move the `>` cursor (across pages) and Space
 //! marks its row, and Enter picks up or drops the marked stacks (the cursor's row if none is
@@ -59,12 +62,10 @@ use warlock_core::{Action, Meal, Positions, ReadTarget};
 /// Which list the screen shows, and what choosing does.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum ObjectList {
-    /// What the player carries; read-only.
+    /// What the player carries; read-only, until `D` turns on its drop mode ([`Dropping`]).
     Inventory,
     /// The pile on the player's cell: choose what to pick up.
     PickUp,
-    /// The inventory: choose what to drop.
-    Drop,
     /// The throwing weapons in the inventory: choose one to throw.
     Throw,
     /// Food lying here, then food in the pack: choose one to eat.
@@ -103,7 +104,6 @@ impl ObjectList {
         match self {
             ObjectList::Inventory => " Inventory ",
             ObjectList::PickUp => " Pick up ",
-            ObjectList::Drop => " Drop ",
             ObjectList::Throw => " Throw ",
             ObjectList::Eat => " Consume what? ",
             ObjectList::Read => " Read ",
@@ -118,7 +118,7 @@ impl ObjectList {
 
     fn empty(self) -> &'static str {
         match self {
-            ObjectList::Inventory | ObjectList::Drop => "You are not carrying anything.",
+            ObjectList::Inventory => "You are not carrying anything.",
             ObjectList::PickUp => "There is nothing here.",
             ObjectList::Throw => "You have nothing to throw.",
             ObjectList::Eat => "You have nothing to consume.",
@@ -138,7 +138,6 @@ impl ObjectList {
         match self {
             ObjectList::Inventory => super::info_tabs::panel_width(72),
             ObjectList::PickUp
-            | ObjectList::Drop
             | ObjectList::Throw
             | ObjectList::Eat
             | ObjectList::Read
@@ -170,6 +169,20 @@ impl ObjectList {
         )
     }
 }
+
+/// Whether the inventory is in its drop mode (#1196), and how it got there: `D` in the inventory
+/// (Esc goes back to the plain inventory), or `d` in play (Esc closes, back to the map, where
+/// the player asked from).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum Dropping {
+    No,
+    FromInventory,
+    FromPlay,
+}
+
+/// The key in the inventory that turns on its drop mode: upper case, so no stack's letter
+/// (letters name stacks in lower case only, `a` to `z` down each page; Tab turns the info pages).
+const DROP_MODE: char = 'D';
 
 /// Where a row's stack is: the pile on the player's cell, or the pack, by position.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -229,6 +242,8 @@ pub struct ObjectScreen {
     looked: Option<usize>,
     /// The identify list's spell, by the id it is cast by (`use:identify:c`).
     cast: Option<String>,
+    /// The inventory's drop mode: letters mark stacks, Enter drops them.
+    dropping: Dropping,
 }
 
 impl ObjectScreen {
@@ -245,6 +260,7 @@ impl ObjectScreen {
                 load: None,
                 looked: None,
                 cast: None,
+                dropping: Dropping::No,
             };
         };
         let content = view.content();
@@ -258,7 +274,7 @@ impl ObjectScreen {
         let studies = view.studies();
         let items: Vec<Item> = match list {
             ObjectList::PickUp => (0..pile.len()).map(Item::Floor).collect(),
-            ObjectList::Inventory | ObjectList::Drop => (0..pack.len()).map(Item::Pack).collect(),
+            ObjectList::Inventory => (0..pack.len()).map(Item::Pack).collect(),
             ObjectList::Throw => (0..pack.len())
                 .filter(|&i| view.is_throwing_weapon(i))
                 .map(Item::Pack)
@@ -389,6 +405,33 @@ impl ObjectScreen {
                 }
                 _ => None,
             },
+            dropping: Dropping::No,
+        }
+    }
+
+    /// The inventory in its drop mode, as `d` in play opens it: Esc closes it.
+    pub fn dropping(view: Option<&PerceptionView<'_>>) -> Self {
+        Self {
+            dropping: Dropping::FromPlay,
+            ..Self::new(ObjectList::Inventory, view)
+        }
+    }
+
+    /// Whether this is the inventory in its drop mode.
+    pub fn is_dropping(&self) -> bool {
+        self.dropping != Dropping::No
+    }
+
+    /// Whether this is the plain inventory: letters look, nothing is marked.
+    fn read_only(&self) -> bool {
+        self.list == ObjectList::Inventory && !self.is_dropping()
+    }
+
+    /// The panel's title: the list's, or the inventory's drop mode's.
+    fn title(&self) -> &'static str {
+        match self.is_dropping() {
+            true => " Inventory: drop ",
+            false => self.list.title(),
         }
     }
 
@@ -397,8 +440,9 @@ impl ObjectScreen {
     /// position, so a row kept from before would name another stack. The cursor stays on its
     /// row (or the last one); marks, which name positions, are dropped.
     pub fn refresh(&mut self, view: &PerceptionView<'_>) {
-        let (cursor, looked) = (self.entries.cursor(), self.looked);
+        let (cursor, looked, dropping) = (self.entries.cursor(), self.looked, self.dropping);
         *self = Self::new(self.list, Some(view));
+        self.dropping = dropping;
         self.entries
             .select(cursor.min(self.entries.iter().count().saturating_sub(1)));
         self.looked = looked.filter(|&i| i < view.inventory().len());
@@ -489,14 +533,21 @@ impl ObjectScreen {
 
     /// Applies a key press. Letters name the stacks of the page shown (never commands, even
     /// `h j k l`), and the list keys turn its pages. In the inventory a stack's letter opens its
-    /// description (spec §6 "Item description"); it closes on Esc, Enter, or its own key when
-    /// that names no stack.
+    /// description (spec §6 "Item description"), `D` turns on its drop mode (where it works as a
+    /// selection screen that drops, and Esc turns the mode off again, or closes it when `d` in
+    /// play opened it); it closes on Esc, Enter, or its own key when that names no stack.
     pub fn handle(&mut self, press: &Press, bindings: &Bindings) -> ScreenAction {
         let letter = press.text.filter(char::is_ascii_lowercase);
-        if self.list == ObjectList::Inventory {
+        if self.read_only() {
             if let Some(Item::Pack(i)) = self.lettered(press) {
                 self.looked = Some(i);
                 return ScreenAction::Open(super::ScreenName::Describe);
+            }
+            if press.text == Some(DROP_MODE) {
+                if !self.entries.is_empty() {
+                    self.dropping = Dropping::FromInventory;
+                }
+                return ScreenAction::Stay;
             }
             let own_key = press
                 .binding
@@ -510,6 +561,11 @@ impl ObjectScreen {
                 }
                 _ => {}
             }
+            return ScreenAction::Stay;
+        }
+        if press.nav == Nav::Back && self.dropping == Dropping::FromInventory {
+            self.dropping = Dropping::No;
+            self.marked = Positions::default();
             return ScreenAction::Stay;
         }
         if press.nav == Nav::Back || self.entries.is_empty() && press.nav == Nav::Enter {
@@ -558,8 +614,7 @@ impl ObjectScreen {
                 };
                 return ScreenAction::Act(match self.list {
                     ObjectList::PickUp => Action::PickUp(chosen),
-                    ObjectList::Drop
-                    | ObjectList::Inventory
+                    ObjectList::Inventory
                     | ObjectList::Throw
                     | ObjectList::Eat
                     | ObjectList::Read
@@ -618,16 +673,16 @@ impl ObjectScreen {
     /// the margin and the gaps are there (1) or gave way (0). Drawing calls it, and so does the
     /// screen stack before a press (`fit`), so a letter names what is drawn.
     fn layout(&self, cols: u32, rows: u32) -> (Vec<(String, Rgb)>, i32, i32) {
-        let read_only = self.list == ObjectList::Inventory;
+        let inventory = self.list == ObjectList::Inventory;
         // Rows: the frame, a margin, the list, a gap, the summary and the burden's thresholds
-        // (inventory), a gap, the footer, the frame.
+        // (inventory, in its drop mode too), a gap, the footer, the frame.
         let width = self.list.width().min(cols as i32) - 4;
-        let summary = if read_only {
+        let summary = if inventory {
             self.summary(width)
         } else {
             Vec::new()
         };
-        let gaps = if read_only { 3 } else { 2 };
+        let gaps = if inventory { 3 } else { 2 };
         let extra = 3 + gaps + summary.len() as i32;
         // A page takes what rows the console has for it (spec §6 "Item lists"); where that is
         // what pages the list (not its 26 letters), the margin and the gaps give way first.
@@ -649,7 +704,7 @@ impl ObjectScreen {
     }
 
     pub fn draw(&self, console: &mut Console, bindings: &Bindings) {
-        let read_only = self.list == ObjectList::Inventory;
+        let read_only = self.read_only();
         let (summary, extra, gap) = self.layout(console.cols(), console.rows());
         // An empty list's words, on as many rows as they take.
         let width = self.list.width().min(console.cols() as i32) - 8;
@@ -658,8 +713,9 @@ impl ObjectScreen {
             true => said.len(),
             false => self.entries.tallest().max(1),
         } as i32;
-        let panel = Panel::new(console, self.list.title(), self.list.width(), count + extra);
-        if self.list == ObjectList::Inventory {
+        let panel = Panel::new(console, self.title(), self.list.width(), count + extra);
+        // The drop mode turns no pages: marks would be lost.
+        if read_only {
             super::info_tabs::draw_tabs(console, &panel, bindings, super::ScreenName::Inventory);
         }
         self.entries.draw_label(console, &panel);
@@ -738,14 +794,30 @@ impl ObjectScreen {
             Some(l) => format!("{l} or {confirm} {verb}"),
             None => format!("{confirm} {verb}"),
         };
+        let mark = |verb: &str, esc: &str| {
+            format!(
+                "{}{} all   {confirm} {verb}   {page}Esc {esc}",
+                with("mark"),
+                keys.mark_all
+            )
+        };
         match self.list {
-            ObjectList::Inventory => {
-                let close = match bindings.keys_of(KeyCommand::Inventory).first() {
-                    Some(key) => format!("{} or Esc close", key.display()),
-                    None => "Esc close".to_string(),
-                };
-                format!("{page}{}{close}", with("look"))
-            }
+            ObjectList::Inventory => match self.dropping {
+                Dropping::FromInventory => mark("drop", "back"),
+                Dropping::FromPlay => mark("drop", "cancel"),
+                Dropping::No => {
+                    let close = match bindings.keys_of(KeyCommand::Inventory).first() {
+                        Some(key) => format!("{} or Esc close", key.display()),
+                        None => "Esc close".to_string(),
+                    };
+                    let drop = if letters.is_some() {
+                        format!("{DROP_MODE} drop   ")
+                    } else {
+                        String::new()
+                    };
+                    format!("{page}{}{drop}{close}", with("look"))
+                }
+            },
             ObjectList::Eat => format!("{}   {page}Esc cancel", either("consume")),
             ObjectList::Throw => format!("{}   {page}Esc cancel", either("choose")),
             ObjectList::Read => format!("{}   {page}Esc cancel", either("read")),
@@ -755,18 +827,7 @@ impl ObjectScreen {
             ObjectList::Whittle => format!("{}   {page}Esc cancel", either("whittle")),
             ObjectList::Decipher => format!("{}   {page}Esc cancel", either("decipher")),
             ObjectList::Give => format!("{}   {page}Esc cancel", either("give")),
-            ObjectList::PickUp | ObjectList::Drop => {
-                let verb = if self.list == ObjectList::PickUp {
-                    "pick up"
-                } else {
-                    "drop"
-                };
-                format!(
-                    "{}{} all   {confirm} {verb}   {page}Esc cancel",
-                    with("mark"),
-                    keys.mark_all
-                )
-            }
+            ObjectList::PickUp => mark("pick up", "cancel"),
         }
     }
 }
@@ -1115,18 +1176,74 @@ mod tests {
     }
 
     #[test]
-    fn drop_chooses_from_the_inventory() {
+    fn the_drop_mode_marks_and_unmarks_and_drops_the_marked_stacks() {
         let mut world = on_the_pile();
         world.apply(&Action::PickUp(Positions::default()));
         let b = Bindings::default();
-        let mut screen = ObjectScreen::new(ObjectList::Drop, Some(&world.perception()));
+        let mut screen = ObjectScreen::dropping(Some(&world.perception()));
         assert_eq!(screen.entries.iter().count(), 3);
-        // `b`, the second row: the jerkin, inventory position 0.
-        screen.handle(&typed('b'), &b);
+        assert!(screen.is_dropping());
+        // The rows: `a` the dagger (1), `b` the jerkin (0), `c` the candles (2). `b` and `c`
+        // marked, `c` unmarked again: Enter drops the jerkin alone.
+        for ch in ['b', 'c', 'c'] {
+            assert_eq!(screen.handle(&typed(ch), &b), ScreenAction::Stay);
+        }
+        let text = drawn(&screen, &b);
+        assert!(has(&text, " Inventory: drop "), "{text:#?}");
+        assert!(has(&text, "b + [ a leather jerkin") && has(&text, "c - ( 2 wax candles"));
+        assert!(has(&text, "a-c mark   , all   Enter drop   Esc cancel"));
+        assert!(!has(&text, "1 Inventory"), "no page tabs: {text:#?}");
         assert_eq!(
             screen.handle(&Press::nav(Nav::Enter), &b),
             ScreenAction::Act(Action::Drop(Positions::of([0])))
         );
+        // Opened by `d` in play, Esc closes it with nothing dropped.
+        let mut screen = ObjectScreen::dropping(Some(&world.perception()));
+        screen.handle(&typed('a'), &b);
+        assert_eq!(
+            screen.handle(&Press::nav(Nav::Back), &b),
+            ScreenAction::Close
+        );
+    }
+
+    #[test]
+    fn d_in_the_inventory_turns_the_drop_mode_on_and_esc_off() {
+        let mut world = on_the_pile();
+        world.apply(&Action::PickUp(Positions::default()));
+        let b = Bindings::default();
+        let mut screen = ObjectScreen::new(ObjectList::Inventory, Some(&world.perception()));
+        assert!(has(
+            &drawn(&screen, &b),
+            "a-c look   D drop   I or Esc close"
+        ));
+        assert_eq!(screen.handle(&typed('D'), &b), ScreenAction::Stay);
+        assert!(screen.is_dropping());
+        // Letters mark now, not look.
+        assert_eq!(screen.handle(&typed('a'), &b), ScreenAction::Stay);
+        assert_eq!(screen.looked(), None);
+        let text = drawn(&screen, &b);
+        assert!(has(&text, "a + ) a dagger"), "{text:#?}");
+        assert!(has(&text, "Enter drop   Esc back"));
+        // Esc drops nothing: back to the plain inventory, the marks gone; a second Esc closes.
+        assert_eq!(
+            screen.handle(&Press::nav(Nav::Back), &b),
+            ScreenAction::Stay
+        );
+        assert!(!screen.is_dropping());
+        assert!(screen.marked.is_empty());
+        assert!(has(&drawn(&screen, &b), "a - ) a dagger"));
+        assert_eq!(
+            screen.handle(&typed('a'), &b),
+            ScreenAction::Open(crate::ui::ScreenName::Describe)
+        );
+        assert_eq!(
+            screen.handle(&Press::nav(Nav::Back), &b),
+            ScreenAction::Close
+        );
+        // An empty inventory has nothing to drop: `D` stays in the plain inventory.
+        let mut screen = ObjectScreen::new(ObjectList::Inventory, None);
+        screen.handle(&typed('D'), &b);
+        assert!(!screen.is_dropping());
     }
 
     #[test]
@@ -1149,7 +1266,7 @@ mod tests {
         row("│ Body armour");
         assert!(row("Carrying").contains("Carrying 4.2 kg"));
         assert!(row("Carrying").contains("Your weight 74.2 kg (you 70 kg)"));
-        assert!(row("Esc close").contains("a-c look   I or Esc close"));
+        assert!(row("Esc close").contains("a-c look   D drop   I or Esc close"));
         // A stack's letter opens its description; `i` (naming no stack here) closes, like Esc.
         assert_eq!(
             screen.handle(&typed('b'), &b),
@@ -1217,7 +1334,7 @@ mod tests {
     }
 
     #[test]
-    fn the_inventory_and_drop_screens_mark_what_is_worn_or_wielded() {
+    fn the_inventory_and_its_drop_mode_mark_what_is_worn_or_wielded() {
         let mut world = on_the_pile();
         world.apply(&Action::PickUp(Positions::default()));
         for (slot, item) in [("body", 0), ("main_hand", 1)] {
@@ -1227,8 +1344,11 @@ mod tests {
             });
         }
         let b = Bindings::default();
-        for list in [ObjectList::Inventory, ObjectList::Drop] {
-            let screen = ObjectScreen::new(list, Some(&world.perception()));
+        for dropping in [false, true] {
+            let screen = match dropping {
+                false => ObjectScreen::new(ObjectList::Inventory, Some(&world.perception())),
+                true => ObjectScreen::dropping(Some(&world.perception())),
+            };
             let mut console = Console::default();
             console.resize(80, 30);
             screen.draw(&mut console, &b);
@@ -1312,7 +1432,7 @@ mod tests {
         assert!(has(&text, "t - ) a dagger") && !has(&text, "u - "));
         assert!(!has(&text, "leather cap"));
         assert!(
-            has(&text, "> < page   a-t look   I or Esc close"),
+            has(&text, "> < page   a-t look   D drop   I or Esc close"),
             "{text:#?}"
         );
         // `>` (the next list page) turns it: the caps and the cloaks, each under its header (no
@@ -1407,14 +1527,17 @@ mod tests {
         assert!(!has(&text, "Page "), "{text:#?}");
         assert!(has(&text, "i - [ a pair of leather boots"));
         assert!(has(&text, "Carrying 20.9 kg (burdened)"));
-        assert!(has(&text, "a-i look   I or Esc close"));
+        assert!(has(&text, "a-i look   D drop   I or Esc close"));
     }
 
     #[test]
     fn empty_lists_and_tiny_consoles() {
         let b = Bindings::default();
-        for list in [ObjectList::Inventory, ObjectList::PickUp, ObjectList::Drop] {
-            let mut screen = ObjectScreen::new(list, None);
+        let screens = [ObjectList::Inventory, ObjectList::PickUp]
+            .map(|list| ObjectScreen::new(list, None))
+            .into_iter()
+            .chain([ObjectScreen::dropping(None)]);
+        for mut screen in screens {
             for (cols, rows) in [(80, 30), (20, 6), (0, 0)] {
                 let mut console = Console::default();
                 console.resize(cols, rows);
