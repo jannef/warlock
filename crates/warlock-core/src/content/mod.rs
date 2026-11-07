@@ -12,6 +12,8 @@ mod anim;
 pub mod animated;
 #[cfg(test)]
 mod animated_tests;
+#[cfg(test)]
+mod armed_roster_tests;
 mod aura;
 #[cfg(test)]
 mod aura_roster_tests;

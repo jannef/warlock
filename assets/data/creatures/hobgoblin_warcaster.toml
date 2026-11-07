@@ -27,7 +27,7 @@ stats = { strength = 14, dexterity = 14, toughness = 18, intelligence = 16, will
 base_hp = 17
 skills = { concentration = 52, spellcraft = 57 }
 on_eat = { message = "This hobgoblin meat is rank, and bitter.", vomit = 35, train = { willpower = 18 }, skills = { decipher_script = { gives = 5, up_to = 40 } } }
-weapon_skills = { staves = 1 }
+weapon_skills = { staves = 3 }
 racial_weapon = "quarterstaff"
 [[creature.gear]]
 chance = 60

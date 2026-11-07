@@ -23,7 +23,7 @@ hags, the trader; at least 45 apart in RGB from all of them).
 `10 + 0.25L`, by role (archer Dx +3; standard and officer ±0; quick Dx +5 To −1; brute St +5 Dx
 −2 To +5; caster St −3); In `9 + 0.2L`, Wp `12 + 0.3L`, Pr `6 + 0.25L` (dour and stubborn, joyless;
 casters In and Wp +4); `base_hp = 2.5 × L × role` (archer and standard 1.0, officer 1.1, quick
-0.5, brute 2.0, caster 0.5; #1134). The armed ones hold their racial weapon at rank `1 + L/7`; the two
+0.5, brute 2.0, caster 0.5; #1134). The armed ones hold their racial weapon at rank `1 + L/7` at least (raised to aim at `L/4`, #1169, `docs/dev/creatures.md`); the two
 who fight bare (the spider rider, whose spider bites, and the mindbreaker's mind-lash) have a
 natural attack on #383's dice ladder (caster one step down), to-hit by role (#1134: the spider rider a striker's, the
 mindbreaker a caster's), and a rider.

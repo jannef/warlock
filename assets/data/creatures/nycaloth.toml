@@ -23,7 +23,7 @@ stats = { strength = 30, dexterity = 17, toughness = 31, intelligence = 24, will
 base_hp = 233
 natural = { defence = 2, protection = 3, name = "hide" }
 resist = { acid = 100, poison = 100, fire = 50, cold = 50, electricity = 50 }
-weapon_skills = { axes = 5, great_weapon = 3 }
+weapon_skills = { axes = 9, great_weapon = 3 }
 corpse = false
 blood = "#1e3028"
 [creature.attack]

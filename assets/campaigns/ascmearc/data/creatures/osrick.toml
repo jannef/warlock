@@ -32,7 +32,7 @@ stats = { strength = 13, dexterity = 11, toughness = 15, intelligence = 17, will
 base_hp = 32
 skills = { concentration = 50, spellcraft = 50 }
 resist = { cold = 50, poison = 50 }
-weapon_skills = { maces = 2 }
+weapon_skills = { maces = 3, duelist = 1 }
 [[creature.gear]]
 chance = 100
 one_of = ["mace"]

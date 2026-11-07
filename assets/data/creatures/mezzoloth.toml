@@ -23,7 +23,7 @@ base_hp = 55
 natural = { defence = 1, protection = 3, name = "chitin" }
 attack = { damage = "3d8", damage_type = "slashing", name = "claws", verb = "claws", to_hit = 5 }
 resist = { acid = 100, poison = 100, fire = 50, cold = 50, electricity = 50 }
-weapon_skills = { spears = 3 }
+weapon_skills = { spears = 7, duelist = 3 }
 corpse = false
 blood = "#3a4020"
 # Its gear (spec §8 "Creature gear"): the trident it is paid to carry.

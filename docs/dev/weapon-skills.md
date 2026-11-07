@@ -10,7 +10,8 @@ Weapon skills (spec §8 "Weapon skills"; M22, #134): data is `data/weapon_skills
 symmetric defaults; `SkillId` is an index in file order, in the content fingerprint). Weapons
 name theirs (`category` → `ObjectDef::skill`, its role checked against what the weapon is),
 shields bash (`bash` → `ObjectDef::bash`), races and classes give starting ranks
-(`weapon_skills`, dice; classes `weapon_skill_choice`), creatures fixed ranks. The runtime side
+(`weapon_skills`, dice; classes `weapon_skill_choice`), creatures fixed ranks (an armed type's chosen so its weapon aims near `L/4`, #1169,
+`docs/dev/creatures.md` "Variance by role"). The runtime side
 is `weapon_skills.rs`: `WeaponSkills` (a `Training { rank, marks }` per skill on
 `Actor::weapon_skills`, saved and hashed), `train`
 (marks → a rank, then

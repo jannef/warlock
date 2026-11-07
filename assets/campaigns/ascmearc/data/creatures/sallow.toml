@@ -30,7 +30,7 @@ stats = { strength = 11, dexterity = 17, toughness = 13, intelligence = 16, will
 base_hp = 24
 skills = { stealth = 60, heal = 50 }
 resist = { poison = 100 }
-weapon_skills = { daggers = 3 }
+weapon_skills = { daggers = 4, duelist = 1 }
 [[creature.gear]]
 chance = 100
 one_of = ["unique:widowmaker"]

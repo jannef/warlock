@@ -21,7 +21,7 @@ weight = 80000
 stats = { strength = 16, dexterity = 17, toughness = 15, intelligence = 9, willpower = 12, presence = 8 }
 base_hp = 11
 on_eat = { message = "This orc meat is rank!", vomit = 30 }
-weapon_skills = { axes = 2 }
+weapon_skills = { axes = 3, duelist = 1 }
 racial_weapon = "battle_axe"
 [[creature.gear]]
 chance = 40

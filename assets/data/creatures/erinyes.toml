@@ -24,7 +24,7 @@ stats = { strength = 26, dexterity = 22, toughness = 27, intelligence = 25, will
 base_hp = 95
 natural = { defence = 2, protection = 0, name = "hide" }
 resist = { fire = 100, poison = 50, cold = 50 }
-weapon_skills = { long_blades = 5 }
+weapon_skills = { long_blades = 9, duelist = 7 }
 loot = 25
 corpse = false
 blood = "#4a1010"
