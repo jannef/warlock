@@ -22,35 +22,6 @@ stay hidden in the game (the wiki states them). -->
 <!-- Messages, screens, keys (only play-context commands are rebindable KeyCommands, menu/screen/prompt/targeting keys are fixed; abilities only in the one
 abilities menu), dumps. -->
 
-## Talents and class abilities
-
-<!-- The coverage policy (spec §8 "Talents", docs/dev/progression.md "Coverage policy"): a new
-broad system of the game (combat, stealth, magic, light, hunger, ...) ships with at least one
-talent, under a new [[system]] tag in assets/data/talents.toml (and a class ability once the
-class tables have landed). Which talents and trees, which tag? If it is a resource (mana, a pool
-like Rage or Focus), which talent changes its maximum, its refill, or its costs?
-A talent must earn its place: a real choice at its tier that changes how a build plays or what
-it can do. Not information only; not a small percentage on a niche mechanic; not an effect
-another talent, class ability, or skill rank already gives (extend that one instead); not
-something that matters only in a rare room or against one rare creature.
-Capstones are not economy, quests, or XP: from class level 40 on, a class ability changes what
-the character can do in a fight or a dungeon (not gold, favour, quest rewards, or XP alone, nor
-only outside the dungeon); no XP or quest-reward effect at or above level 30; a quest-reward
-effect is judged by its total over the campaign's fixed pool, not by its percent.
-A class table names the pickable's id, never a clone of it (two talents with the same effects
-fail the load), and a talent whose one talent prerequisite shares an effect kind with it is
-that talent's next rank, not a talent of its own (also a load check; deliberate pairs are
-listed in `alike`, assets/data/talents.toml).
-A flaw's cost shows up on an ordinary dungeon floor, and no two sources share one. A talent
-that works only outdoors (the overworld, its local areas, the open sky) or in one season counts
-as niche unless it also does something underground. An effect on stat-training marks (never
-shown) is at least twice a common source's, or the talent has a visible effect beside it. An
-information half may garnish a good talent; a whole talent of information may not. No new
-source of shop favour among the pickable talents or the class tables (Haggler is the one).
-Or none: a sub-feature (a room effect, a creature family's gimmick, a chest kind, an info
-readout) extends its parent system: name the tag and the talents that already touch it. Or it is
-presentation only (no rule reads it, as blood stains). -->
-
 ## Tests
 
 <!-- Unit, property, or snapshot tests in warlock-core; a replay created and verified; text

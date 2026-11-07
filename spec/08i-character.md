@@ -1128,7 +1128,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     the talents the class tables give, counted apart from the talents; 0 until every class has
     its table), or a tree not `pending`, `no_free`, nor a class tree without `free_per_tree`
     prerequisite-free talents, is a content error. A wave that ships a system's talents removes
-    its `pending`; a new system of the game joins the list in the PR that ships its talents.
+    its `pending`.
     A cull that leaves a system without talents folds its tag into a parent (#787: `weather`
     into `travel`, the outdoors), or drops it when none fits (#787: `background`).
     **Policy for new systems** (design §8.2; #773): systems are broad (combat, stealth, magic,
