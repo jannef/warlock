@@ -369,6 +369,7 @@ fn the_spells_are_abilities_by_level() {
             "Bramble",
             "Flay",
             "Glamour",
+            "Pitch fire",
             "Shatter",
             "Unbinding",
             // Level 9.

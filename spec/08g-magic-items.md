@@ -544,7 +544,11 @@ developer notes (CLAUDE.md, `docs/dev/`).
     bronze; Presence), of renewal (Renewing 2; 4, 15; 120; rose; Toughness), of the quick
     (Quick-sensed 3; 5, 10; 150; opal; Willpower), of the unseen (Invisible 1; 7, 6; 300; opal;
     Dexterity), and of sea legs (Water-borne 3; 4, 10; 100; sky blue; Dexterity); the sleeping
-    draught (a flask of Sleep; harm, Drowsy 3; 3, 15; 60; pink). **Where**: loot (by `level` and
+    draught (a flask of Sleep; harm, Drowsy 3; 3, 15; 60; pink);
+    the fire and cold flasks (#1227, the design's §4.4; the spell at rung 0, then the drink):
+    flask of fire (Fireball; Burning 1; 6, 10; 120; scarlet), flask of frost (Frost; Sluggish 2;
+    6, 10; 120; white), and pitch fire (the Pitch fire spell, thrown 4 cells; Burning 2; 9, 6;
+    250; scarlet); none of the three in a general store or a provisioner's. **Where**: loot (by `level` and
     `frequency`, never magic), general stores and provisioners (they stock and buy potions), the
     alchemist (§7 "Shops": potions only, healing always first), quest rewards, and the hub's
     pile.

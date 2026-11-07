@@ -1,0 +1,28 @@
+# Pitch fire (the potions wave 2 design §9.3, #1227): burning pitch that bursts where it is aimed
+# and leaves a pool of fire that burns a while, and all who stand in it or cross it. Balefire lays
+# a line; this lays a pool. Scroll only (and the pitch fire flask's splash): a find.
+[[spell]]
+id = "pitch_fire"
+name = "Pitch fire"
+description = "Burning pitch that bursts where you aim it: it leaves a pool of fire that burns a while, and all who stand in it or cross it."
+level = 8
+school = "evocation"
+kind = "damage"
+shape = "burst"
+resolution = "area"
+damage_type = "fire"
+range = 6
+radius = 1
+damage = "2d6"
+effect = { zone = { kind = "fire", turns = 6 } }
+
+[spell.cast]
+effect = "fireball"
+noun = "pitch fire"
+verb = "burns"
+message = "Burning pitch bursts and spreads across the ground!"
+noise = { sound = "explosion", loudness = 60 }
+
+[spell.grows]
+damage = "intelligence 13 3d6, 16 4d6, 22 4d6+2"
+range = "willpower 14 7, 18 8"

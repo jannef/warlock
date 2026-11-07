@@ -118,6 +118,15 @@ every later flask (smoke, fire, frost, acid, the bombers) builds on.
   `potion-description-flask`.
 - **Content**: the sleeping draught (`sleeping_draught.toml`, Sleep at rung 0, range 6; drunk,
   Drowsy 3; pink).
+- **Fire and cold** (#1227, slice S5): `flask_of_fire.toml` (Fireball at rung 0; drunk, Burning
+  1; scarlet `#e04020`), `flask_of_frost.toml` (Frost at rung 0; drunk, Sluggish 2; white
+  `#e8ecf0`), and `pitch_fire.toml` (the Pitch fire spell, `data/spells/pitch_fire.toml`: a
+  fire burst of radius 1, 2d6, and a `fire` zone of 6 turns on its cells, a plain spell with
+  its `scroll_of_pitch_fire`, Q4 and Q11; `range = 4`; drunk, Burning 2; scarlet). No new
+  rule: the splash is `flask.rs`'s damage branch (`cast_burst_at`, the type's rules, then
+  `lay_spell_zone`). All three in the general store's and the provisioner's `never` lists.
+  Tests: `world/flask_fire_tests.rs` (each throw and drink, the pool's cells, turns, harm, and
+  owner, pitch fire's range, the scroll's cast).
 - **Tests**: `world/flask_tests.rs` (fixture flasks on Fireball, Hex of weakness, and Slick):
   the throw and the burst on the dummy, the first creature in the way, the thrower's kill and
   experience, learned only when seen and heard when not, a ray's hex, a zone by the thrower, a
