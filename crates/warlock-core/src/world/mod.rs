@@ -1736,6 +1736,8 @@ mod door_trap_tests;
 #[cfg(test)]
 mod drain_tests;
 #[cfg(test)]
+mod druid_quest_tests;
+#[cfg(test)]
 mod dwell_tests;
 #[cfg(test)]
 mod eat_tests;
