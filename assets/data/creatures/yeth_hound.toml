@@ -9,7 +9,7 @@ rarity = "rare"
 name = "yeth hound"
 glyph = "C"
 fg = "#6a3a7a"
-speed = 1250
+speed = 1350
 factions = { seelie = 25, unseelie = 75 }
 tags = ["fey"]
 alignment = "evil"
