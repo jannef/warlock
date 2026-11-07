@@ -37,40 +37,17 @@ struct IntimidateFile {
 }
 
 impl IntimidateRules {
-    /// Parses `data/intimidate.toml`: the status must flee, the numbers be in range, and the
-    /// ladder start at 0 points and rise, each rung's degrees 1 to the status's `max`.
+    /// Parses `data/intimidate.toml`: the status must be known, and the ladder's points rise
+    /// ([`Self::degrees_at`] reads the rungs in order).
     pub(super) fn parse(file: &str, text: &str, content: &Content) -> Result<Self, ContentError> {
         let err = |m: String| ContentError::new(file, m);
         let parsed: IntimidateFile = toml::from_str(text).map_err(|e| err(e.to_string()))?;
         let status = (content.status_id(&parsed.status))
             .ok_or_else(|| err(format!("unknown status `{}`", parsed.status)))?;
-        let def = content.status(status);
-        if !def.flees {
-            return Err(err(format!(
-                "`status`: `{}` must be one that `flees`",
-                parsed.status
-            )));
-        }
-        if !(1..=20).contains(&parsed.range) {
-            return Err(err("`range` is 1 to 20".into()));
-        }
-        if !(0..=30).contains(&parsed.difficulty) {
-            return Err(err("`difficulty` is 0 to 30".into()));
-        }
-        let ladder = &parsed.degrees;
-        let rising = ladder
-            .windows(2)
-            .all(|w| w[0].0 < w[1].0 && w[0].1 < w[1].1);
-        if ladder.first().map(|r| r.0) != Some(0) || !rising {
+        if !parsed.degrees.windows(2).all(|w| w[0].0 < w[1].0) {
             return Err(err(
-                "`degrees`: [points, degrees] rungs from 0 points, both rising".into(),
+                "`degrees`: [points, degrees] rungs, the points rising".into()
             ));
-        }
-        if (ladder.iter()).any(|&(_, d)| !(1..=def.max).contains(&d)) {
-            return Err(err(format!(
-                "`degrees`: each is 1 to the status's max, {}",
-                def.max
-            )));
         }
         Ok(Self {
             range: parsed.range,
@@ -121,23 +98,13 @@ mod tests {
         let good = "range = 6\ndifficulty = 10\nstatus = \"frightened\"\n";
         for (text, why) in [
             (
-                "range = 6\ndifficulty = 10\nstatus = \"stunned\"\ndegrees = [[0, 1]]\n",
-                "must be one that `flees`",
-            ),
-            (
                 "range = 6\ndifficulty = 10\nstatus = \"nobody\"\ndegrees = [[0, 1]]\n",
                 "unknown status",
             ),
             (
-                "range = 0\ndifficulty = 10\nstatus = \"frightened\"\ndegrees = [[0, 1]]\n",
-                "`range`",
+                &format!("{good}degrees = [[0, 1], [3, 2], [3, 3]]\n"),
+                "the points rising",
             ),
-            (&format!("{good}degrees = [[1, 1]]\n"), "from 0 points"),
-            (
-                &format!("{good}degrees = [[0, 2], [3, 1]]\n"),
-                "both rising",
-            ),
-            (&format!("{good}degrees = [[0, 1], [3, 4]]\n"), "max, 3"),
         ] {
             let mut files = ContentFiles::builtin();
             files.insert(PATH, text);

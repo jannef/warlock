@@ -29,23 +29,12 @@ struct FeintFile {
 }
 
 impl FeintRules {
-    /// Parses `data/feint.toml`: the status must leave its sufferer flat-footed, ease by its
-    /// actions, and have one degree (one blow), and the difficulty be in range.
+    /// Parses `data/feint.toml`: the status must be known.
     pub(super) fn parse(file: &str, text: &str, content: &Content) -> Result<Self, ContentError> {
         let err = |m: String| ContentError::new(file, m);
         let parsed: FeintFile = toml::from_str(text).map_err(|e| err(e.to_string()))?;
         let status = (content.status_id(&parsed.status))
             .ok_or_else(|| err(format!("unknown status `{}`", parsed.status)))?;
-        let def = content.status(status);
-        if !def.flat_footed || !def.per_action || def.max != 1 {
-            return Err(err(format!(
-                "`status`: `{}` must be `flat_footed` and `per_action` with `max = 1`",
-                parsed.status
-            )));
-        }
-        if !(0..=30).contains(&parsed.difficulty) {
-            return Err(err("`difficulty` is 0 to 30".into()));
-        }
         Ok(Self {
             difficulty: parsed.difficulty,
             status,
@@ -68,19 +57,11 @@ mod tests {
 
     #[test]
     fn a_bad_file_is_refused_and_none_is_no_feinting() {
-        for (text, why) in [
-            (
-                "difficulty = 10\nstatus = \"frightened\"\n",
-                "must be `flat_footed`",
-            ),
-            ("difficulty = 10\nstatus = \"nobody\"\n", "unknown status"),
-            ("difficulty = 31\nstatus = \"surprised\"\n", "`difficulty`"),
-        ] {
-            let mut files = ContentFiles::builtin();
-            files.insert(PATH, text);
-            let err = Content::load(&files).expect_err(text);
-            assert!(err.message.contains(why), "{text}: {}", err.message);
-        }
+        let text = "difficulty = 10\nstatus = \"nobody\"\n";
+        let mut files = ContentFiles::builtin();
+        files.insert(PATH, text);
+        let err = Content::load(&files).expect_err(text);
+        assert!(err.message.contains("unknown status"), "{}", err.message);
         let mut files = ContentFiles::builtin();
         files.remove(PATH);
         let content = Content::load(&files).expect("feinting is optional");

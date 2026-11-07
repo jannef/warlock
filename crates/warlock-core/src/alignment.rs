@@ -198,19 +198,6 @@ impl Requirement {
         self.min.is_none_or(|min| band >= min) && self.max.is_none_or(|max| band <= max)
     }
 
-    /// Why it can never be met, if so: its `min` is better than its `max`, or it names neither.
-    pub fn check(self) -> Result<(), String> {
-        match (self.min, self.max) {
-            (None, None) => Err("an alignment range names a `min` band, a `max`, or both".into()),
-            (Some(min), Some(max)) if min > max => Err(format!(
-                "an alignment range asks for {} or better and {} or worse at once",
-                min.name(),
-                max.name()
-            )),
-            _ => Ok(()),
-        }
-    }
-
     /// What it asks for, in words: "Good or better", "Callous or worse", "Kind to Saintly".
     pub fn words(self) -> String {
         match (self.min, self.max) {
@@ -308,13 +295,6 @@ mod tests {
             max: Some(Band::Good),
         };
         assert_eq!(between.words(), "Kind to Good");
-        assert!(between.check().is_ok());
-        assert!(Requirement::default().check().is_err());
-        let never = Requirement {
-            min: Some(Band::Good),
-            max: Some(Band::Kind),
-        };
-        assert!(never.check().is_err());
         assert!(toml::from_str::<Requirement>("min = \"lawful\"").is_err());
     }
 }

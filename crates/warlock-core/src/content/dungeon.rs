@@ -1181,7 +1181,7 @@ mod tests {
             (at(70), at(80), at(90), at(100), at(500)),
             (Some(40), Some(20), Some(10), Some(5), Some(5))
         );
-        let bad = text.replace("least = 5", "least = 0");
+        let bad = text.replace("halves = 10", "halves = 0");
         assert!(resolve(&bad).is_err());
     }
 

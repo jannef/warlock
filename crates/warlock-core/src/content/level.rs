@@ -815,19 +815,15 @@ pub(super) fn parse_level(
                     .map_err(|m| err(format!("legend `{ch}`: {m}")))?;
                 chest_levels.insert(pos, level);
             }
-            if let Some(spec) = detail.secret {
-                let difficulty = (spec.difficulty(content.search()))
-                    .map_err(|m| err(format!("legend `{ch}`: {m}")))?;
-                if let Some(difficulty) = difficulty {
-                    if !content.terrain(terrain).is_closed_door() || locks.contains_key(&pos) {
-                        return Err(err(format!(
-                            "legend `{ch}` makes terrain `{}` secret: only an unlocked closed door \
-                             can be",
-                            entry.terrain()
-                        )));
-                    }
-                    secret_doors.push((pos, terrain, difficulty));
+            if let Some(difficulty) = detail.secret.and_then(|s| s.difficulty(content.search())) {
+                if !content.terrain(terrain).is_closed_door() || locks.contains_key(&pos) {
+                    return Err(err(format!(
+                        "legend `{ch}` makes terrain `{}` secret: only an unlocked closed door \
+                         can be",
+                        entry.terrain()
+                    )));
                 }
+                secret_doors.push((pos, terrain, difficulty));
             }
             if let Some(light) = &detail.light {
                 let id = content
@@ -966,9 +962,9 @@ pub(super) fn parse_level(
         }
     }
 
-    let monsters: Vec<VaultMonsters> = (monsters.into_iter())
-        .map(|(ch, group)| (group.counted()).map_err(|m| err(format!("legend `{ch}`: {m}"))))
-        .collect::<Result<_, _>>()?;
+    let monsters: Vec<VaultMonsters> = (monsters.into_values())
+        .map(VaultMonsters::counted)
+        .collect();
 
     let mut regions = Vec::with_capacity(parsed.region.len());
     for spec in parsed.region {

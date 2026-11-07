@@ -37,7 +37,7 @@
 use super::damage_type::TypeNames;
 use super::danger::MAX_DANGER;
 use super::effect::EffectShape;
-use super::object::{MAX_BONUS, ObjectDef, ObjectId};
+use super::object::{ObjectDef, ObjectId};
 use super::spell::{self, Bolt, Burst, SpellFields, check_effect, default_verb, one_kind};
 use super::spell_ladder::{Unit, parse_rungs};
 use super::{Content, ContentError, DamageTypeId};
@@ -53,9 +53,6 @@ use std::collections::BTreeMap;
 /// so the content fingerprint covers them.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize)]
 pub struct TrapId(pub u16);
-
-/// The most charges a trap may have.
-pub const MAX_CHARGES: u16 = 1000;
 
 fn trap_glyph() -> char {
     '^'
@@ -114,15 +111,13 @@ impl TrapAvoid {
         percent.clamp(i32::from(self.min), i32::from(self.max)) as u32
     }
 
+    /// `min` no more than `max`: [`Self::chance`] clamps between them.
     fn check(&self) -> Result<(), String> {
-        if self.min > self.max || self.max > 100 {
+        if self.min > self.max {
             return Err(format!(
-                "[avoid]: min ({}) and max ({}) must be within 0 to 100, min first",
+                "[avoid]: min ({}) must be no more than max ({})",
                 self.min, self.max
             ));
-        }
-        if !(0..=100).contains(&self.base) || !(0..=50).contains(&self.per_point) {
-            return Err("[avoid]: base must be 0 to 100 and per_point 0 to 50".into());
         }
         Ok(())
     }
@@ -225,7 +220,7 @@ struct GrowsSpec {
 /// `data/traps.toml`, in the style of a spell's `[spell.grows]`, `content/spell_ladder.rs`):
 /// rungs `danger AT ROLL`, `AT` 1 to [`MAX_DANGER`] strictly ascending; a level of danger *D*
 /// reads the last rung at or below *D*, and below the first (a level without a danger: 0) the
-/// trap's own `damage`, the **base**. No rung does less, on average, than the one before it.
+/// trap's own `damage`, the **base**.
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub struct TrapGrows {
     /// `(at, damage)`, `at` strictly ascending.
@@ -242,9 +237,9 @@ impl TrapGrows {
         let mut damage = Vec::with_capacity(rungs.len());
         for (at, value) in rungs {
             let roll = value.roll().unwrap_or(before);
-            if roll.min() < 0 || roll.mean_x2() < before.mean_x2() {
+            if roll.min() < 0 {
                 return Err(bad(format!(
-                    "the rung at {at}, {roll}, does less than the one before it, {before}"
+                    "the rung at {at}, {roll}, can roll below 0: harm would turn into healing"
                 )));
             }
             before = roll;
@@ -421,17 +416,6 @@ impl TrapSpec {
         let id = self.id.clone();
         let err = |m: String| format!("trap `{id}`: {m}");
         let kind = self.kind;
-        if !super::DIFFICULTIES.contains(&i32::from(self.difficulty)) {
-            return Err(err(format!(
-                "difficulty {} is out of range ({} to {})",
-                self.difficulty,
-                super::DIFFICULTIES.start(),
-                super::DIFFICULTIES.end()
-            )));
-        }
-        if self.sign.trim().is_empty() {
-            return Err(err("`sign` must not be empty".into()));
-        }
         let allowed = |field: &str, given: bool, kinds: &[Kind]| {
             if given && !kinds.contains(&kind) {
                 Err(err(format!(
@@ -462,36 +446,23 @@ impl TrapSpec {
             self.damage_type.is_some(),
             &[Shot, Strike, Burst, Bolt, Pit],
         )?;
-        if self.name.trim().is_empty() || self.verb.as_ref().is_some_and(|v| v.trim().is_empty()) {
-            return Err(err("`name` and `verb` must not be empty".into()));
-        }
         // What does damage does it of a kind.
         let damage_kind = if self.damage.is_some() {
             one_kind(content, self.damage_type.as_ref()).map_err(err)?
         } else {
             None
         };
-        if self.to_hit.abs() > MAX_BONUS {
-            return Err(err(format!("`to_hit` must be within ±{MAX_BONUS}")));
-        }
-        if self
-            .charges
-            .is_some_and(|c| !(1..=MAX_CHARGES).contains(&c))
-        {
-            return Err(err(format!("`charges` must be 1 to {MAX_CHARGES}")));
-        }
         if let Some(noise) = self.noise
-            && !(1..=MAX_LOUDNESS).contains(&noise.loudness)
+            && noise.loudness > MAX_LOUDNESS
         {
-            return Err(err(format!("`noise` loudness must be 1 to {MAX_LOUDNESS}")));
-        }
-        if kind == Alarm && self.noise.is_none() {
-            return Err(err("an alarm needs a `noise`".into()));
+            return Err(err(format!(
+                "`noise` loudness must be at most {MAX_LOUDNESS}"
+            )));
         }
         let damage = || {
-            self.damage
-                .filter(|d| d.min() >= 0 && d.max() >= 1)
-                .ok_or_else(|| err("needs `damage` dice that can do harm, e.g. \"1d6\"".into()))
+            self.damage.filter(|d| d.min() >= 0).ok_or_else(|| {
+                err("needs `damage` dice that never roll below 0, e.g. \"1d6\"".into())
+            })
         };
         let attack = |damage: Dice| Attack {
             damage: damage.into(),
@@ -512,11 +483,7 @@ impl TrapSpec {
             frost: self.frost,
             length: self.length,
         };
-        let noun = || {
-            (self.noun.clone())
-                .filter(|s| !s.trim().is_empty())
-                .ok_or_else(|| err("needs a `noun`: what hits".into()))
-        };
+        let noun = || (self.noun.clone()).ok_or_else(|| err("needs a `noun`: what hits".into()));
         let (effect, noun) = match kind {
             Shot => {
                 let name = self.object.as_deref().unwrap_or_default();

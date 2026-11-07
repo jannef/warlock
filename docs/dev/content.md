@@ -30,9 +30,9 @@ can hold nothing of the grade even at the highest item level (`magic/pool_tests.
 cell per find; prefer a pool to a static `[[pile]]` in a generic vault. A vault's legend entry may
 draw `monsters` too (`content/monster_pool.rs`): `monsters = { pool = "level", count = 20 }`
 (`"level"` the floor's population, or tags: `pool = "goblin"`, `pool = ["orc", "troll"]`; `count`
-over the entry's marked cells, default one on each; refused at load: `MonsterPoolSpec::resolve`,
-`VaultMonsters::counted`, `Vault::check_monsters`, `parse_level`'s checks; docs/dev/creatures.md
-for the draw and the cap). Beside `monsters` the entry may give `status`, `carry`, and `route`
+over the entry's marked cells, default one on each, never more than they hold; refused at load:
+`MonsterPoolSpec::resolve` (`"level"` beside tags, a `count` of 0), `parse_level`'s checks; a tag
+no drawable type carries loads and brings no one; docs/dev/creatures.md for the draw and the cap). Beside `monsters` the entry may give `status`, `carry`, and `route`
 (`level.rs::pool_cell` parses them into `VaultMonsters::{status, carry, route}` with the placed
 creature's parsers; the route is checked from every marked cell, `validate_walk`, and turns with
 the vault, `vault_turn.rs`; a pool's `carry` key counts in `LevelTemplate::has_key_for` when every

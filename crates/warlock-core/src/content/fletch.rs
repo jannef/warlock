@@ -8,9 +8,6 @@ use super::{ContentError, ObjectId, WeaponSkillId};
 use crate::dice::Dice;
 use serde::Deserialize;
 
-/// The shortest and longest a batch may take, in seconds.
-pub const SECONDS: std::ops::RangeInclusive<u32> = 60..=3600;
-
 /// The rules of fletching that live in data.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct FletchRules {
@@ -89,9 +86,8 @@ struct MakesSpec {
 }
 
 impl FletchRules {
-    /// Parses `data/fletch.toml`: a time within [`SECONDS`], a count of at least 1, bands that
-    /// widen, a knife that is a weapon skill, and for each launcher kind, once, objects of its
-    /// ammunition.
+    /// Parses `data/fletch.toml`: a time of at least a second, a `value_per_count` above 0 (a
+    /// divisor), a knife that is a weapon skill, and for each launcher kind, once, known objects.
     pub(super) fn parse(
         file: &str,
         text: &str,
@@ -99,23 +95,11 @@ impl FletchRules {
     ) -> Result<Self, ContentError> {
         let err = |m: String| ContentError::new(file, m);
         let parsed: FletchFile = toml::from_str(text).map_err(|e| err(e.to_string()))?;
-        if !SECONDS.contains(&parsed.seconds) {
-            return Err(err(format!(
-                "`seconds` must be {} to {}",
-                SECONDS.start(),
-                SECONDS.end()
-            )));
-        }
-        if parsed.count.min() < 1 {
-            return Err(err("`count` must give at least 1".into()));
+        if parsed.seconds == 0 {
+            return Err(err("`seconds` must be at least 1".into()));
         }
         if parsed.value_per_count == 0 {
             return Err(err("`value_per_count` must be 1 or more".into()));
-        }
-        if parsed.half_within < 0 || parsed.one_within < parsed.half_within {
-            return Err(err(
-                "`half_within` must be 0 or more, and `one_within` at least that".into(),
-            ));
         }
         let knives = (content.weapon_skills().id(&parsed.knives))
             .ok_or_else(|| err(format!("unknown weapon skill `{}`", parsed.knives)))?;
@@ -124,24 +108,16 @@ impl FletchRules {
             if makes.iter().any(|m| m.launches == spec.launches) {
                 return Err(err(format!("`{}` is listed twice", spec.launches)));
             }
-            let ammunition = |id: &str| -> Result<ObjectId, ContentError> {
-                let object =
-                    (content.object_id(id)).ok_or_else(|| err(format!("unknown object `{id}`")))?;
-                if content.object(object).ammo.as_deref() != Some(spec.launches.as_str()) {
-                    return Err(err(format!("`{id}` is not {} ammunition", spec.launches)));
-                }
-                Ok(object)
+            let object = |id: &str| -> Result<ObjectId, ContentError> {
+                (content.object_id(id)).ok_or_else(|| err(format!("unknown object `{id}`")))
             };
-            let brittle = ammunition(&spec.brittle)?;
-            let plain = ammunition(&spec.plain)?;
+            let brittle = object(&spec.brittle)?;
+            let plain = object(&spec.plain)?;
             makes.push(FletchMakes {
                 launches: spec.launches,
                 brittle,
                 plain,
             });
-        }
-        if makes.is_empty() {
-            return Err(err("`makes` is empty".into()));
         }
         Ok(FletchRules {
             seconds: parsed.seconds,
@@ -182,20 +158,18 @@ mod tests {
     fn bad_files_are_refused() {
         let text = include_str!("../../../../assets/data/fletch.toml");
         for (from, to, says) in [
-            ("seconds = 600", "seconds = 5", "`seconds`"),
+            ("seconds = 600", "seconds = 0", "`seconds`"),
             (
                 "knives = \"daggers\"",
                 "knives = \"cutlery\"",
                 "weapon skill",
             ),
-            (
-                "brittle = \"brittle_arrow\"",
-                "brittle = \"bolt\"",
-                "not arrow",
-            ),
             ("plain = \"bolt\"", "plain = \"nothing\"", "unknown object"),
-            ("one_within = 6", "one_within = 2", "`one_within`"),
-            ("count = \"1d4\"", "count = \"1d4-2\"", "`count`"),
+            (
+                "value_per_count = ",
+                "value_per_count = 0 #",
+                "`value_per_count`",
+            ),
         ] {
             let bad = text.replace(from, to);
             assert_ne!(bad, text, "{from}");

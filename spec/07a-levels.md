@@ -89,15 +89,16 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   campaign or of none. `count` monsters are drawn when the level is generated, by the population's
   own draw at the floor's danger (a draw may go deeper as any does, and a tag pool stays in its
   tags), each on a different cell the entry marks, each with a short walk where one fits (no door
-  on it) and its kind's gear; without a `count`, one on every marked cell. Monsters on a floor
+  on it) and its kind's gear; without a `count`, one on every marked cell, and never more than the
+  cells it marks. Monsters on a floor
   with no danger, or from a tribe with nothing at the danger, leave the cells bare. They come on
   top of the floor's population and outside the spawning cap (§7 "Danger levels"). A marked cell
   is left to them, drawn or not: no population on it (a hidden trap may lie there, and the cell then
   stays empty). Only dungeon vaults
-  draw them (in a level file or an outdoor vault it is a content error), and a pool that can hold
-  nothing (an unknown tag, one no drawable type has, a tag pool of a campaign vault with no type
-  of its campaign), `"level"` beside tags, a `count` of 0 or over the cells, or a cell with a
-  `creature` or `trap` too, is a content error. The entry may also
+  draw them (in a level file or an outdoor vault it is a content error), and `"level"` beside
+  tags (it would read as a tag), a `count` of 0 (it stands for every cell), or a cell with a
+  `creature` or `trap` too, is a content error. A pool that can hold nothing (a tag no drawable
+  type of the campaign carries) leaves its cells bare: the loader trusts the author (#1205). The entry may also
   give what a placed creature's may, applied to what is drawn (the draw itself is the same):
   `status` (each draw is placed with it, `status = ["asleep"]`: a sleeping crowd), `carry` (the
   first one placed carries it on top of its gear, `carry = ["brass_key"]`: the key to the vault's
@@ -125,7 +126,7 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   chests yet.
 - **Secret doors in level files** (#140, §8 "Searching"): a legend entry on a closed door makes
   it secret with `secret = true` (difficulty `data/search.toml`'s `secret_door`) or `secret = N`
-  (difficulty N, 1 to 50). The cell then shows the wall around it (of its solid neighbors north,
+  (difficulty N). The cell then shows the wall around it (of its solid neighbors north,
   east, south, and west that are no door, the most common) until the player finds it. A secret
   on anything but an unlocked closed door, or one with no wall beside it, is a content error.
   Indoor vaults place secret doors the same way and generators stamp them with the vault (a key
@@ -178,21 +179,21 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
 - **Traps** (`data/traps.toml`, optional; without it there are no traps; M18): `[[trap]]`s with
   `id`, `name` ("fireball trap", said in "Really step onto the fireball trap?"), `glyph` (default
   `^`) and `fg` (how it shows once known), an optional `message` said when the player perceives
-  it go off ("A fireball explodes!"), `difficulty` (how hard it is to find, 1 to 50, default 15;
+  it go off ("A fireball explodes!"), `difficulty` (how hard it is to find, default 15;
   §8 "Searching") and `sign` (what gives it away when found, default "a pressure plate": "You
-  notice a tripwire: an alarm trap."), optional `charges` (1 to 1000; how often it goes off before
+  notice a tripwire: an alarm trap."), optional `charges` (how often it goes off before
   it is spent and gone; none: every time), an optional `noise` (`{ sound, loudness }`: a sound
-  kind of §5 "Hearing" and its loudness on the trap's cell, 1 to 300), and its `kind`, with the
+  kind of §5 "Hearing" and its loudness on the trap's cell, at most 300), and its `kind`, with the
   fields each kind needs (any other is a content error): `shot` (`object`, the missile, which
   lands as that object; `damage`, `to_hit`), `strike` (`noun`, `damage`, `to_hit`), `burst`
   (`radius` 1 to 5, `damage`, `spell`, `noun`, an optional `blast` 0 to 10000: the walls it
   reaches whose hardness is below it break, §8 "Digging"; and either `heat = true`, it melts the
   ice it reaches, or `frost` 1 to 1000, the water it reaches freezes to at least that many mm of
   ice, §5 "Ice"), `bolt` (`length` 1 to 40, `damage`,
-  `spell`, `noun`), `pit` (`damage`), `alarm` (needs a `noise`), `teleport`. `noun` and `verb`
+  `spell`, `noun`), `pit` (`damage`), `alarm` (its `noise`), `teleport`. `noun` and `verb`
   (default "hits") make the messages ("The fireball burns you."); `spell` names the effect
-  presentation shows (`data/effects.toml`; §4.8). `to_hit` is within ±20 and never shown;
-  `damage` is dice that can do harm. The built-in traps: arrow (`shot`, an arrow, 1d6, a
+  presentation shows (`data/effects.toml`; §4.8). `to_hit` is never shown;
+  `damage` is dice that never roll below 0. The built-in traps: arrow (`shot`, an arrow, 1d6, a
   bowstring 40), spear (`strike`, 1d8), fireball (`burst` radius 2, 3d6, a blast of 1000, heat,
   once, an explosion 150), frost (`burst` radius 2, 2d6, frost 100 mm, once, silent), lightning
   bolt

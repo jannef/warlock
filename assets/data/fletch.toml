@@ -17,19 +17,19 @@
 # The ranger's Fletcher (talents/fletcher.toml, the effect's numbers there) changes all of this.
 #
 # Fields:
-#   seconds          how long a batch takes, in seconds (60 to 3600)
+#   seconds          how long a batch takes, in seconds (at least 1)
 #   difficulty       what the check must reach for the whole count
-#   count            dice: how many before Woodcraft (at least 1)
+#   count            dice: how many before Woodcraft (at least 1 is made)
 #   value_per_count  Woodcraft's value that gives one more (1 or more)
-#   half_within      how far below the difficulty still makes half (0 or more)
-#   one_within       how far below the difficulty still makes one (at least `half_within`)
+#   half_within      how far below the difficulty still makes half
+#   one_within       how far below the difficulty still makes one
 #   plain_from       Woodcraft's value from which they come out plain, not brittle
 #   knives           the weapon skill whose weapons are knives (a stack of it carried, in the
 #                    pack, worn or wielded or neither, is a knife)
 #   [[makes]]        one row per thing a launcher's `launches` may be
 #     launches       what the launcher shoots (objects' `launches`, `ammo`), once
-#     brittle        the object made under `plain_from`: of that ammunition
-#     plain          the object made from `plain_from`: of that ammunition
+#     brittle        the object made under `plain_from`
+#     plain          the object made from `plain_from`
 
 seconds = 600
 difficulty = 12

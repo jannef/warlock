@@ -62,16 +62,16 @@ in `world/intimidate.rs`: a single-target threat on War cry's check, sharing
 `World::threat_difficulty` (the one read of `intimidate` for the difficulty), `World::heard_by`
 (who would hear a noise, asked before it is made), and `World::cow` (the nerve check, the
 status, the message) with `World::war_cry`. Its numbers are data, `data/intimidate.toml`
-(`content/intimidate.rs`, `IntimidateRules`: `range`, `difficulty`, `status` (one that
-`flees`), and `degrees`, the ladder of `[points, degrees]` by what Intimidate adds, read by
-`IntimidateRules::degrees_at`); without the file the skill stays "not usable yet". It is
+(`content/intimidate.rs`, `IntimidateRules`: `range`, `difficulty`, `status` (Frightened, one
+that `flees`), and `degrees`, the ladder of `[points, degrees]` by what Intimidate adds, its
+points rising (the one load check beside resolution), read by `IntimidateRules::degrees_at`); without the file the skill stays "not usable yet". It is
 marked once a threat, refused or not reached (no hearing, no sight) aside. Tests:
 `world/intimidate_tests.rs` (the menu row, refusals with no time and no draw, the turn and the
 voice and the mark, the check, the ladder), `content/intimidate.rs` (parsing, refusals). Bluff's
 `feint` (#1016; `docs/design/skill-uses.md` §6.2 B1) is read in `World::feint` (`world/feint.rs`),
 Bluff's use: `Action::Feint(Dir)` (replay text `feint:DIR`, cost `feint`, `ActionKind::Feint`),
 `Ability::Feint`, data `data/feint.toml` (`content/feint.rs`, `FeintRules`: `difficulty`, `status`,
-one that is `flat_footed` and `per_action` with `max = 1`). The foe's nerve (its Willpower modifier
+Surprised, `flat_footed` and `per_action` with `max = 1`; the loader only resolves it). The foe's nerve (its Willpower modifier
 and talents' checks, two gameplay draws, `check::check`) against `difficulty` + the player's Presence
 modifier + the points; failed, Surprised, caused by the player. No noise, no need of being heard
 or seen. Marked by `Use::Feint` at 50 %, on the training stream, whatever came of it. Surprised

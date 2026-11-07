@@ -28,10 +28,11 @@ disease and poison), `prayer_of_release` (18, release), `litany_of_restoring` (2
 Litany/Rite, restoration), `litany_of_the_mind` (32, mana), `benediction` (40, tier 4
 Benediction/Pact, two answers), `miracle` (60, tier 5 Miracle, `all`), and `communion` (9,
 Communion with the dark: `{ kind = "communion" }`, `alignment = { max = "callous" }`, beside
-Consecrate). Load checks: the numbers
-in range (`strain` 1–1000, `decay` 10 s–1 h, `fizzle_per_100` 1–100), no band left unanswered by
-both faces, the release statuses known, none twice, none bleeding, poisoned, the diseases'
-status, or a status a resource brings; every use once. A prayer effect: `tier` 1–5 with a
+Consecrate). Load checks (well-formedness only, #1205): `decay` a duration, the release statuses
+known and none the diseases' status or a status a resource brings (each lasts exactly while its
+disease or pool does), each use at most once (a second's words would never be read). A band
+neither face allows is answered by the holy face (`PrayerRules::face`); a use left out of the
+list is never answered. A prayer effect: `tier` 1–5 with a
 `title` (and only a tier), `answers` 1–7, no use twice, and something given.
 
 ## The rule (`World::orison`)

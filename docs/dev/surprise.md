@@ -10,8 +10,8 @@ Keep it current with the code, as CLAUDE.md says.
 - `assets/data/surprise.toml`, `content/surprise.rs`: `SurpriseRules` (`status`, `difficulty`,
   `missile_reach`, `memory_turns`, `no_vitals`), `Content::surprise()`. Optional: without it
   nobody is surprised, no Defence is stripped, and the player is never unaware (fixtures). Load
-  checks: the status exists, is `per_action` with `max = 1`; the numbers in range; each
-  `no_vitals` tag carried by some creature type. `Content::has_vitals(creature)` (#682) is the
+  checks (well-formedness only, #1205): the status exists; each `no_vitals` tag has the tag
+  form (`tag::check`). `Content::has_vitals(creature)` (#682) is the
   one reader of what has no vitals: incorporeal, `vitals = false` (`CreatureDef::vitals`,
   default true), an animated object, or a `no_vitals` tag (Anatomist, which found vitals in
   some, was cut in #787); everything has vitals without the file.

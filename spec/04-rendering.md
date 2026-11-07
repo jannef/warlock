@@ -119,8 +119,9 @@ Water is calm by design; motion stays tasteful, never busy:
     intensity of the sources lighting the cell, weighted by the light they draw; base light counts
     as steady) applied after shading, so it reads the same in dim and bright light. Creature
     shadows scale the modulated light.
-  - Subtle by design: felt more than noticed, no strobing. `amount` and `depth` are at most 0.25
-    each, `degrees` at most 30. Off (steady light) with the flicker switch or reduced effects.
+  - Subtle by design: felt more than noticed, no strobing (the shipped presets keep `amount` and
+    `depth` at most 0.25 each, `degrees` at most 30; the loader asks only finite numbers and a dip
+    no longer than its slot). Off (steady light) with the flicker switch or reduced effects.
 - **Creature shadows** (visual only: gameplay light and visibility ignore them, so creatures never
   hide in each other's shadows): every visible creature, the player included, shades each perceived
   source that lights its cell, except a source on its own cell (the light it carries). The cells

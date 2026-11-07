@@ -33,32 +33,25 @@ pub struct DreadCurve {
     pub steps: Vec<(u32, u16)>,
     /// Past the last step, the one-in halves every this many floors; `None`: it stays.
     pub halves: Option<u32>,
-    /// The least the one-in falls to (1 or more).
+    /// The least the one-in falls to.
     pub least: u16,
 }
 
 impl DreadCurveSpec {
-    /// The curve, checked: steps by rising depth, each one-in 1 or more and up to 65 535,
-    /// `halves` and `least` 1 or more.
+    /// The curve, checked: steps by rising depth ([`DreadCurve::at`] reads them in order), each
+    /// one-in up to 65 535 (a `u16`), and `halves` 1 or more (a divisor).
     pub(super) fn resolve(self) -> Result<DreadCurve, String> {
-        if self.steps.is_empty() {
-            return Err("`dread.steps` needs a step".into());
-        }
         let mut steps = Vec::new();
         for [depth, one_in] in self.steps {
-            let one_in = u16::try_from(one_in)
-                .ok()
-                .filter(|&n| n > 0)
-                .ok_or("`dread.steps`: a one-in is 1 to 65535")?;
-            if depth == 0 || steps.last().is_some_and(|&(d, _)| d >= depth) {
-                return Err(
-                    "`dread.steps`: depths are 1 or more, each deeper than the last".into(),
-                );
+            let one_in =
+                u16::try_from(one_in).map_err(|_| "`dread.steps`: a one-in is 0 to 65535")?;
+            if steps.last().is_some_and(|&(d, _)| d >= depth) {
+                return Err("`dread.steps`: each depth deeper than the last".into());
             }
             steps.push((depth, one_in));
         }
-        if self.halves == Some(0) || self.least == Some(0) {
-            return Err("`dread.halves` and `dread.least` are 1 or more".into());
+        if self.halves == Some(0) {
+            return Err("`dread.halves` is 1 or more".into());
         }
         Ok(DreadCurve {
             steps,
@@ -124,14 +117,10 @@ mod tests {
     #[test]
     fn a_bad_curve_is_refused() {
         for bad in [
-            "steps = []\n",
-            "steps = [[10, 0]]\n",
-            "steps = [[0, 50]]\n",
             "steps = [[10, 70000]]\n",
             "steps = [[20, 50], [10, 40]]\n",
             "steps = [[20, 50], [20, 40]]\n",
             "steps = [[20, 50]]\nhalves = 0\n",
-            "steps = [[20, 50]]\nleast = 0\n",
             "steps = [[20, 50]]\nodds = 3\n",
         ] {
             assert!(curve(bad).is_err(), "{bad}");
