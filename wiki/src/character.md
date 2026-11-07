@@ -78,8 +78,8 @@ callings level slowly, while short-lived races and everyday folk level quickly.
 
 The character screen (`@`) shows your [race](races.md), gender, and [class](classes.md), your age, birthday, and [sign](horoscope.md),
 your [stats](stats.md) with your attacks beside them (what you hit with, your bonus to hit, your [damage](combat.md#damage),
-and a [missile](ranged.md#getting-ready)'s range; see [Combat](combat.md#hitting)), your [alignment](alignment.md), your [level](experience.md#levels) and experience (see [Experience](experience.md)), and your [hit points](combat.md#hit-points) (your [Toughness](stats.md#stat-toughness) plus what your race and class give; see
-[Combat](combat.md#hit-points)) with your mana beside them (see [Mana](mana.md)), [Defence](combat.md#defence), and [Protection](combat.md#protection) (see
+and a [missile](ranged.md#getting-ready)'s range; see [Combat](combat.md#hitting)), your [alignment](alignment.md), your [level](experience.md#levels) and experience (see [Experience](experience.md)), and your [hit points](hit-points.md#hit-points) (your [Toughness](stats.md#stat-toughness) plus what your race and class give; see
+[Combat](hit-points.md#hit-points)) with your mana beside them (see [Mana](mana.md)), [Defence](combat.md#defence), and [Protection](combat.md#protection) (see
 [Combat](combat.md#protection)), each [resource](resources.md) you hold, what ails you (see
 [Status effects](status-effects.md)) and which diseases you know you have (see
 [Diseases](diseases.md)), and what you weigh and carry against what you can (see

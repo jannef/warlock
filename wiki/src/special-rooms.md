@@ -63,7 +63,7 @@ gets where a dungeon favours or bans nothing. "Only" says where it can come at a
 - **Hushed chamber.** The opposite: [noise](hearing.md#what-makes-noise) made inside barely carries. A good place to sneak
   through, or to fight without drawing a crowd.
 - **Sanctuary.** A place of peace with a faint warm glow, enough to see by. You [heal](healing.md#how-fast) much faster
-  while you stand in it (see [Combat](combat.md#getting-better)), and creatures [hostile](creatures.md#factions) to you
+  while you stand in it (see [Combat](hit-points.md#getting-better)), and creatures [hostile](creatures.md#factions) to you
   will not step in: they stay outside, waiting. They can still strike at you across its
   threshold if you stand in the doorway, and shoot at you from outside. Creatures that are not
   hostile to you come and go as they please.
@@ -80,7 +80,7 @@ gets where a dungeon favours or bans nothing. "Only" says where it can come at a
   throughout instead.
 - **Sweltering chamber.** Hot air: it is 25 °C warmer than the level around it, and glows a
   faint red. The heat does nothing to you yet, but [ice](temperature.md#walking-on-ice) melts in it (see
-  [Temperature and ice](temperature.md)). The [status bar](controls.md#the-screen) shows the heat as you step in.
+  [Temperature and ice](temperature.md)). The [status bar](the-screen.md#the-screen) shows the heat as you step in.
 - **Frigid hall.** Bitter cold: 25 °C colder than the level around it, with a faint blue glow.
   Its [water](terrain.md#water) freezes even on a mild level, so a pool in it is usually solid [ice](temperature.md#walking-on-ice). The cold does
   nothing to you yet.
@@ -151,10 +151,10 @@ gets where a dungeon favours or bans nothing. "Only" says where it can come at a
 
 - **Altar room.** An old altar stands in the middle of the room, its god long forgotten, and a
   faint glow rises from it: you notice it from the doorway. Stand beside it and you may [pray](abilities.md#ability-pray)
-  (see [Forgotten altars](#forgotten-altars) below). Only rooms of 9 floor cells or more can be one.
+  (see [Forgotten altars](altars-forges-springs.md#forgotten-altars) below). Only rooms of 9 floor cells or more can be one.
 - **Forge.** A cold forge with an old anvil in the middle of the room; you smell soot and cold
   iron from the doorway. Stand beside the anvil and you may [temper](abilities.md#ability-temper) metal arms or armour you carry
-  (see [Forges](#forges) below). Only rooms of 9 floor cells or more can be one.
+  (see [Forges](altars-forges-springs.md#forges) below). Only rooms of 9 floor cells or more can be one.
 - **Shrine.** A squat stone shrine stands in the middle of the room. Like a forgotten altar it
   has a hidden side, here only **[good or evil](alignment.md)** (as likely either way), and its stone's light
   tells which: gold for good, red for evil. It cares only whether you are on its side (see
@@ -180,54 +180,6 @@ can lift one thing from a [tempting hoard](special-rooms.md#room-hoard) before i
 Only what happens inside counts: a sound made in an [echoing hall](special-rooms.md#room-echoing) is [loud](hearing.md#how-loud) wherever it is heard,
 while one made outside and heard inside is not changed. Light outside a [shadowed room](special-rooms.md#room-shadowed) is as
 bright as ever, even right at its door.
-
-## Teeming dens
-
-A teeming den comes only on a level with a danger (see [Dungeons and danger](dungeons.md)), in a room
-of 16 floor cells or more. Its sleepers are the level's own kind of creatures: each is drawn just
-as the level's other creatures are (by the level's danger, how rare each kind is, now and then a
-weaker stray or one from deeper down), only creatures [hostile](creatures.md#factions) to you and never a unique one.
-Sometimes the whole den is of one kind (a *warren*: a nest of rats, say) or of one [faction](creatures.md#factions) (a
-*tribe*: a goblin camp). They lie on the floor among their hoard, a few [items](objects.md) a little better
-than the level's own.
-
-A *[beast den](special-rooms.md#room-beast-den)* is a den of animals and fen things only: its sleepers are drawn the same way, but
-only among the wildlife, the vermin, and the marsh things, whether they are [hostile](creatures.md#factions) to you or
-not. A dungeon whose own creatures hold none of these never has one. Its hoard is no treasure
-but what the beasts dragged in: piles of bones and fresh [corpses](food.md#corpses) of the level's creatures, good
-to [eat](food.md#eating) when you first come to the level (they [rot](food.md#food-spoils) from then on).
-
-{{#include generated/teeming-dens.md}}
-
-"Wakes at" is how loud a noise must be where a sleeper lies, in percent of the loudness it can
-just hear (see [Hearing](hearing.md)): sleepers hear a whisper but wake only to twice that.
-Sleepers never wake by themselves, however long you wait or rest nearby. They wake when
-
-- a [noise](hearing.md#what-makes-noise) is loud enough where they lie: your footsteps, a door, a fight, a kick, [digging](digging.md#digging);
-- something hurts them, a blow, a missile, a [spell](magic.md#the-spells), even [poison](status-effects.md#status-poisoned); or
-- a neighbour wakes: every sleeper that wakes cries out at once ("Cry" is its loudness), and the
-  cry may wake those near it, and theirs the next, until the whole den is up.
-
-[Light](light.md#what-light-is) does not wake them: carrying your [lantern](lantern.md) in is safe. Your plain footsteps (60) wake a
-kobold (which hears 15, so wakes at 30) up to three cells away; with some [Stealth](skills.md#skill-stealth) you can walk
-right past. A sleeper has seen no one, so *[sneak attacks](talents.md#talent-sneak-attack)* land on it every
-time; but every blow is noise, and a kill is a fight its neighbours may hear. A sleeper you see
-shows as "asleep" in [look mode](controls.md#look-mode), and you are told when one wakes.
-
-Sleepers count among the level's creatures: while the den is full, fewer newcomers find their
-way to the level. Killing a sleeper is like killing any other foe.
-
-### Homes of animated things
-
-Two dens have creatures of their own, whatever the dungeon's: an **[armoury](special-rooms.md#room-armoury)** sleeps
-[animated](animated.md) blades, hollow armour, and panoplies, drawn as if the level were four
-[dangers](dungeons.md#who-lives-there-and-how-many) deeper, among weapon racks (`‡`) along its walls; a **[workshop](special-rooms.md#room-workshop)** sleeps the household
-things of a house's work (bellows, brooms, buckets, chairs, coat stands, cooking pots, kettles,
-ladles, stools, and warming pans) among workbenches (`π`). Racks and benches are seen over but not
-walked through, and never stand beside a door or bar the way across the room. Each comes only
-where its creatures can be met at the level's [danger](dungeons.md#who-lives-there-and-how-many): an armoury from [danger](dungeons.md#who-lives-there-and-how-many) 1, a workshop no
-deeper than danger 16. Animated things never stray, so these rooms are where they are found
-outside the dungeons that keep them (see [Animated objects](animated.md#where-they-are-found)).
 
 ## Cursed rooms
 
@@ -286,88 +238,3 @@ Look at a cell of it and it reads "on hallowed ground"; a priest answered by the
 (see [Prayer](prayer.md#the-holy-and-the-dark)) lays "dreaded ground" instead, which works the same. It gives no light, and
 it cannot be laid on the overworld, in water, in a shop, or on ground already hallowed (no time
 or mana spent).
-
-## Forgotten altars
-
-An altar room holds a **forgotten altar**: worn stone, its carvings rubbed smooth, its god's name
-long lost, and yet something there still listens. It is not a temple and not a god you serve:
-nothing to sacrifice, nothing to convert. It is a gamble. Walk into it and say yes when asked, or stand beside it and choose **[Pray](abilities.md#ability-pray)**
-from the [abilities menu](abilities.md#the-abilities-menu) (it is listed under *Here* only while you stand next to such an altar).
-A prayer takes a minute; anything that would stop a [rest](resting.md#how-resting-works) (a creature coming into view, a blow, a
-noise) breaks it, and a broken prayer gives nothing, though the minute is gone.
-
-At the end of a prayer one outcome is drawn. Most prayers do little: a few [coins](shops.md#money), a little
-[healing](healing.md#how-fast), a pang of [hunger](hunger.md#how-hungry-you-are), a brief hex, a wandering creature, or nothing at all but a line of
-flavour. A few do more, for good or ill, and now and then the altar itself bursts apart in [fire](damage-types.md#damage-fire),
-hurting everyone near it, you included (it can kill), and leaving rubble.
-
-Every altar has a hidden side, **[good, neutral, or evil](alignment.md)**. The game never says which, but its
-glow does: gold, grey, or red. The side tilts the odds against your own [alignment](alignment.md) (see
-[Alignment](alignment.md)): pray at an altar of your own side and the boons come more often,
-at one of the other side the banes. A neutral altar, or a neutral you, leans neither way.
-Praying also moves your [alignment](alignment.md#what-moves-you) a little: toward good at a good altar, toward evil (more) at an
-evil one. The talent *[Pious](talents.md#talent-pious)* (Wayfarer) doubles the lean of an altar of your side and takes
-away an opposed one's.
-
-After each completed prayer, there is an even chance the altar is **[spent](terrain.md#terrain-spent-altar)**: its glow gutters and
-dies, it stands cold and dark, and nothing answers there again. So an altar usually gives one or
-two prayers. Seek out the next one: about one generated floor in twenty has one.
-
-{{#include generated/altar-shares.md}}
-
-Rarely, an altar marks you for good. The great boons raise a [stat](stats.md) for good, give a whole
-[level](experience.md#levels) at once, grant a [talent](talents.md) for life (never one of your level's picks), or leave a relic or
-an elixir (see [Potions](potions.md#elixirs)) at the altar's foot. The great banes lower a [stat](stats.md) for good, take a [level](experience.md#levels) away (what you chose at
-that level you keep, but gaining it again gives no new choices), mark you with a flaw for life,
-or call a horde around the altar. Talents an altar gave you are marked "altar" on the Talents
-page.
-
-The outcomes, by kind and tier ("Of its kind" is its share of its kind's draws):
-
-{{#include generated/altar-outcomes.md}}
-
-## Forges
-
-A forge is a cold smithy: soot on the walls and an **anvil**, its hammer chained beside it. One more anvil stands in Cēaptūn, in Eadric's Forge beside the smith's fire (free to use; it is not the shop's service). Walk
-into the anvil and say yes when asked, or stand beside it and choose **[Temper](abilities.md#ability-temper)** from the [abilities menu](abilities.md#the-abilities-menu) (listed under *Here* only there),
-then pick something of metal you carry: a weapon, a missile weapon, armour, or a shield whose main
-part is a metal, as its [description](objects.md#what-an-object-is) says (so no leather, wood, or bone, and never
-[ammunition](ammunition.md), rings, or amulets). An attempt is ten minutes of work; anything that would stop a
-[rest](resting.md#how-resting-works) stops it, and then the item is untouched and the attempt does not count, but the time
-is gone. Anyone may temper; *[Metalcraft](skills.md#skill-metalcraft)* only makes it go better. Every finished attempt may train
-[Metalcraft](skills.md#skill-metalcraft) and [Strength](stats.md#stat-strength), whatever came of it.
-
-It is one action, and what it does depends on the item:
-
-| The item | Made | Failed |
-|---|---|---|
-| Not damaged | It takes one **improvement** | It is **damaged**: all its improvements are gone |
-| Damaged | The damage is gone: a plain item again | It is **destroyed**, even from your hand, with its [affixes](magic-items.md) and however rare it is |
-| Three improvements | It can be made no finer, and the anvil will not take it | |
-
-**Every attempt is harder than the last, made or failed, for the item's whole life**, repairs too,
-so an item worked long enough will only ever break. Nothing tells you how many it has had.
-
-{{#include generated/temper-odds.md}}
-
-An improvement goes to something drawn at random, evenly, among what the item has, and the same may
-come twice. The item's name says how far it has come, whatever you know of its magic:
-
-{{#include generated/temper-grades.md}}
-
-A damaged item is a point worse than a plain one until it is mended: its [Protection](combat.md#protection)
-if it gives some, else its [Defence](combat.md#defence), else its [damage](combat.md#damage), so stopping there is a real choice.
-[Acid](objects.md#corrosion) damages an item the same way. The anvil neither adds nor takes [affixes](magic-items.md); they stay through improvement, damage,
-and repair. Whatever survives is [identified](magic-items.md#unidentified-items). A worked item is like no other and never stacks;
-of a stack, one is worked at a time. The anvil never wears out.
-
-## Healing springs
-
-A spring room holds a **healing spring**: clear water welling up in an old stone basin. Walk
-into it and say yes when asked, or stand beside it and choose **[Drink](abilities.md#ability-drink)** from the [abilities menu](abilities.md#the-abilities-menu) (listed under *Here* only while you stand
-next to a spring). A drink takes ten seconds; anything that would stop a [rest](resting.md#how-resting-works) breaks it off, and
-a broken drink gives nothing. Most drinks are good, some taste only of stone, and now and then
-the water is foul and gives you [marsh ague](diseases.md#disease-marsh-ague), which a prayer (a temple's [cure](npcs.md#services)) or a remedy cures. A
-spring never runs dry: drink as often as you like, and take the risk each time.
-
-{{#include generated/spring-outcomes.md}}

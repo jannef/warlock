@@ -65,7 +65,7 @@ paid from the keeper's purse; the thing stays on the shop floor, for sale. Choos
 has no use for what it does not buy, and you cannot leave it lying there. A shop pays only part
 of what a thing is worth, and always less than it asks for it.
 
-An item worked at an [anvil](special-rooms.md#forges) is worth more for each improvement, and half as much while damaged.
+An item worked at an [anvil](altars-forges-springs.md#forges) is worth more for each improvement, and half as much while damaged.
 
 Rotten food is worth nothing (see [Food](food.md#food-spoils)): a keeper sniffs at it and will
 not buy it at any price, and what rots on a shop's floor is no longer for sale.
@@ -90,7 +90,7 @@ theft: through a wall you have [dug](digging.md#digging) open, say. You are aske
 paying, or stay). Leave without paying and the shopkeeper shouts "Stop, thief!", turns [hostile](creatures.md#factions),
 and comes after you, and the goods you took are yours, stolen. A shopkeeper you attack turns on you
 the same way, and so does one who catches you picking their pocket with the [Steal](skills.md#skill-steal) skill ("Ælfric
-catches you stealing. \"Stop, thief!\""; see [Stealing](skills.md#stealing)). A purse lifted
+catches you stealing. \"Stop, thief!\""; see [Stealing](skill-uses.md#stealing)). A purse lifted
 unnoticed leaves the shop open, though the shopkeeper cannot pay for what you sell until they
 have gold again. Shopkeepers are tough, quick, and well armed: stealing is always your choice,
 and the town stays safe unless you make it. An angry shopkeeper trades no more.

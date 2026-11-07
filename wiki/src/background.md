@@ -10,7 +10,7 @@ character creation, and it may change what you start with.
 The story is shown once, as the run begins: right after you start the run from the summary of
 [character creation](character.md), it opens over the first turn, before you can move. Nothing
 on it can be chosen; `Enter` (or `Esc`) goes on into the run, and the arrow keys scroll it on a
-small window. Afterwards it is page 9 of the [info pages](controls.md#info-pages), "Story": open
+small window. Afterwards it is page 9 of the [info pages](the-screen.md#info-pages), "Story": open
 any info page and press `9`. A character who has no story (the start of a scenario played as its
 own character, or a character saved before stories were told) reads "Your story is not written."
 there. A run you continue is never shown it again, and nothing on the death screen repeats it.
@@ -26,7 +26,7 @@ The chapters, in order:
 | The trial | what it cost you, and what you kept |
 | Fortune | what was given you |
 | Leaving | why you left |
-| The companion | how the beast at your side came to be yours: told only to one who begins with a [companion](allies.md#companions) or a [familiar](allies.md#familiars) |
+| The companion | how the beast at your side came to be yours: told only to one who begins with a [companion](companions.md#companions) or a [familiar](familiars.md#familiars) |
 | The road | how you came to where the run begins: [the Ascmearc](ascmearc.md)'s own chapter |
 
 Each sentence fits the character it is told of: a line may ask for a [race](races.md), a
@@ -135,8 +135,8 @@ dice start the [skill](skills.md) if you were not trained in it, or raise it if 
 
 ### The companion
 
-Told only to one who begins with an [animal companion](allies.md#companions) or a
-[familiar](allies.md#familiars): one sentence for each beast a companion's start may bring, one for each
+Told only to one who begins with an [animal companion](companions.md#companions) or a
+[familiar](familiars.md#familiars): one sentence for each beast a companion's start may bring, one for each
 beast a familiar's start may bring (the witch's own tales, apart from the ranger's), and a plain one
 for a beast with no tale of its own (the rare black hound and panther of a witch's start).
 

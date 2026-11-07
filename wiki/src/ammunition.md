@@ -9,7 +9,7 @@ it lies, to be [picked up](objects.md#picking-up) again and joined to the stack.
 
 - **Breaking**: an arrow or a bolt that hits may break, by the chance in the table; one that
   misses never does. Stones and [thrown](ranged.md#shooting-and-throwing) weapons do not break.
-- **Brittle arrows and bolts** are what the unskilled [fletch](skills.md#fletching): they break on any hit. They cannot be
+- **Brittle arrows and bolts** are what the unskilled [fletch](skill-uses.md#fletching): they break on any hit. They cannot be
   bought, and sell for nothing.
 - **Flaming arrows** never lie to be picked up: they burn where they land, [lighting](light.md#light-sources) the dark
   around them, and then they are gone (see [Ranged combat](ranged.md)).

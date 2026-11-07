@@ -39,7 +39,7 @@ where it dies. [Dungeons](dungeons.md) hide them in their vaults and secret room
 ## Items set with a gem
 
 Some items are set with a gem when they are found: [rings](objects.md#class-rings) and [amulets](objects.md#class-amulets) often, [weapons](objects.md#class-melee-weapons), [shields](objects.md#class-shields),
-and [helms](objects.md#class-helmets) sometimes. The gem is a part of the item (see [Materials](objects.md#materials)), so you
+and [helms](objects.md#class-helmets) sometimes. The gem is a part of the item (see [Materials](materials.md#materials)), so you
 see it at once, [identified or not](magic-items.md#unidentified-items), and the item's name shows it: "a gold and ruby ring", "an
 emerald-pommelled long sword", "a garnet-studded iron helm", "a topaz-tipped quarterstaff". A
 [magic item](magic-items.md)'s [prefix](magic-items.md#prefixes) goes before it and its [suffix](magic-items.md#suffixes) after: "a Sharp emerald-pommelled long sword

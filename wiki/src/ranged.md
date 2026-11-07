@@ -4,7 +4,7 @@ You can fight from a distance: shoot with a **[missile weapon](ranged.md#getting
 **[throw](ranged.md#shooting-and-throwing)** a throwing weapon (a dagger, a spear, a rock). [Hitting](combat.md#hitting), [criticals](combat.md#criticals), and [Defence](combat.md#defence) work as in
 [Combat](combat.md); here is what is different.
 
-Out of arrows or bolts? With a knife and your bow or crossbow [ready](#getting-ready), you can [fletch](skills.md#fletching) more.
+Out of arrows or bolts? With a knife and your bow or crossbow [ready](#getting-ready), you can [fletch](skill-uses.md#fletching) more.
 
 ## Getting ready
 
@@ -67,7 +67,7 @@ its range.
 
 A missile flies along a straight line from you through the cell you aimed at, as far as its range,
 and stops before anything solid: walls, closed [doors](doors.md), trees. A ghostly creature standing inside
-the wall it reaches is attacked there ([Creatures](creatures.md#incorporeal-creatures)): a missile
+the wall it reaches is attacked there ([Creatures](creature-bodies.md#incorporeal-creatures)): a missile
 that hits it is lost in the stone, one that misses falls before the wall.
 
 - **Whoever stands in its way** is attacked, the nearest first. If it misses, the missile flies
@@ -90,7 +90,7 @@ Giants throw too, with nothing to run out of: a [hill giant](creatures.md#creatu
 are in range with nobody between you, and fights up close once it is next to you ("The hill
 giant hurls a boulder." "The boulder strikes you."). A throw takes a giant longer than a blow,
 and the boulder breaks where it lands. What each giant throws, how hard, and how far is under
-[Creature numbers](creature-numbers.md#throws).
+[Creature numbers](creature-powers.md#throws).
 
 ## Flaming arrows
 

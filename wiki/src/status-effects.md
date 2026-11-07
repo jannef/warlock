@@ -1,16 +1,16 @@
 # Status effects
 
 Some harm lasts longer than a blow. A deep wound keeps bleeding, and a bite can leave poison
-behind. These **status effects** cost [hit points](combat.md#hit-points) as time passes, slow your
+behind. These **status effects** cost [hit points](hit-points.md#hit-points) as time passes, slow your
 [healing](healing.md), sometimes weaken you, and wear off on their own. They can kill.
 **[Diseased](status-effects.md#status-diseased)** is a status effect too, shown while any [disease](diseases.md) has broken out; it
 lasts as long as the diseases do. Not every status effect harms: a [rage](resources.md#rage) makes you stronger for a
 while, and some leave you spent once they are over (see [Buffs and cooldowns](#buffs-and-cooldowns)).
 
-You always know what ails you: the [status bar](controls.md#the-screen) names it right after your
-[hit points](combat.md#hit-points) (`HP 12/17 · Bleeding · Poisoned`), the [character screen](character.md) lists it, and
+You always know what ails you: the [status bar](the-screen.md#the-screen) names it right after your
+[hit points](hit-points.md#hit-points) (`HP 12/17 · Bleeding · Poisoned`), the [character screen](character.md) lists it, and
 the message line tells you when it starts and stops. You never see how bad it is, or how long it
-will last, as a number: you see your [hit points](combat.md#hit-points) go. The table gives the exact paces, and who
+will last, as a number: you see your [hit points](hit-points.md#hit-points) go. The table gives the exact paces, and who
 causes what, with the chance a hit has:
 
 {{#include generated/status-effects.md}}
@@ -18,7 +18,7 @@ causes what, with the chance a hit has:
 ## How they work
 
 - **Severity.** Every status effect has a severity, in degrees. The worse it is, the faster it
-  costs [hit points](combat.md#hit-points): a wound twice as bad bleeds twice as fast.
+  costs [hit points](hit-points.md#hit-points): a wound twice as bad bleeds twice as fast.
 - **They add up.** A second wound while you are still [bleeding](#bleeding) makes the bleeding worse; a
   second dose of [poison](#poisoned) makes you sicker, and stronger poison lasts longer. Each status has a
   worst it can get.
@@ -26,20 +26,20 @@ causes what, with the chance a hit has:
 - **Time is time.** Status effects run on game time, whatever you do meanwhile: waiting, walking,
   [resting](resting.md), or a long journey on the [overworld](overworld.md) all count the same.
   The game only skips them for creatures on other levels, which wait for you to come back.
-- **They can kill.** If a status effect takes your last [hit point](combat.md#hit-points), you die of it, and the death
+- **They can kill.** If a status effect takes your last [hit point](hit-points.md#hit-points), you die of it, and the death
   screen says so: "Bled to death".
 
 ## Bleeding
 
-A **[big hit](combat.md#damage)**, one that takes at least a third of your [hit points](combat.md#hit-points) at once, or a **[confirmed
+A **[big hit](combat.md#damage)**, one that takes at least a third of your [hit points](hit-points.md#hit-points) at once, or a **[confirmed
 critical](combat.md#criticals)** ("The kobold stabs you hard!") opens a wound: "You are bleeding." A critical opens a
 worse one than a big hit. Only a blow that **cuts or stabs** does it: a club's, a fall's, or a
 [fireball](magic.md#spell-fireball)'s does not (see [Damage types](damage-types.md)).
 
-While you bleed, you lose a [hit point](combat.md#hit-points) every so often, faster the worse you bleed, and your [hit
-points](combat.md#hit-points) do not come back at all. The bleeding eases by itself and stops after a while: "The
+While you bleed, you lose a [hit point](hit-points.md#hit-points) every so often, faster the worse you bleed, and your [hit
+points](hit-points.md#hit-points) do not come back at all. The bleeding eases by itself and stops after a while: "The
 bleeding stops." If you are trained in **[Heal](skills.md#skill-heal)**, you can bind the wound and stop it sooner, trying
-again as often as it takes (see [Treating yourself](skills.md#treating-yourself)).
+again as often as it takes (see [Treating yourself](skill-uses.md#treating-yourself)).
 
 Creatures bleed the same way, and you can see it: [look mode](controls.md#look-mode) says "A giant
 rat (hostile, wounded, bleeding)". A creature can bleed to death after a fight: "The giant rat
@@ -49,17 +49,17 @@ bleeds to death." A creature without blood (a [skeleton](creatures.md#creature-s
 
 ## Burning
 
-A [fire spell](magic.md#spell-types) sometimes leaves what it harms burning. "You are burning!" It costs a [hit point](combat.md#hit-points) every
+A [fire spell](spellcasting.md#spell-types) sometimes leaves what it harms burning. "You are burning!" It costs a [hit point](hit-points.md#hit-points) every
 ten seconds, faster the more degrees of it you have, and each degree burns out in half a minute: "The flames go out." What
 resists [fire](damage-types.md#damage-fire) takes it less, and what is immune never burns.
 
 What burns gives off a small light, so it cannot hide in the dark, and look mode names it: "A kobold (hostile, burning)".
-A step into [water](terrain.md#water), or a fall through ice into it, puts it out at once, and so does a [cold spell](magic.md#spell-types) that harms you.
+A step into [water](terrain.md#water), or a fall through ice into it, puts it out at once, and so does a [cold spell](spellcasting.md#spell-types) that harms you.
 
 ## Corroded
 
-Every [acid spell](magic.md#spell-types) that harms something leaves it Corroded: "The acid keeps eating." A degree costs a
-[hit point](combat.md#hit-points) every six seconds and is spent in twelve, so two more hit points a cast: "The acid is spent." What
+Every [acid spell](spellcasting.md#spell-types) that harms something leaves it Corroded: "The acid keeps eating." A degree costs a
+[hit point](hit-points.md#hit-points) every six seconds and is spent in twelve, so two more hit points a cast: "The acid is spent." What
 resists [acid](damage-types.md#damage-acid) takes it less. Look mode names it. It never eats armour.
 
 ## Poisoned
@@ -68,12 +68,12 @@ Some creatures' attacks carry poison: now and then a [giant rat](creatures.md#cr
 "You feel sick." So does bad food: [rotten food](food.md#food-spoils) (a [corpse](food.md#corpses) too) that stays down, and the flesh of
 some creatures (see [Food and corpses](food.md)).
 
-Poison works slowly: a [hit point](combat.md#hit-points) every couple of minutes, faster the stronger it is, and your [hit
-points](combat.md#hit-points) come back only half as fast. **Strong poison** (a few doses at once) also makes you
+Poison works slowly: a [hit point](hit-points.md#hit-points) every couple of minutes, faster the stronger it is, and your [hit
+points](hit-points.md#hit-points) come back only half as fast. **Strong poison** (a few doses at once) also makes you
 weaker and clumsier: your [Strength](stats.md#stat-strength) and [Dexterity](stats.md#stat-dexterity) count one less, in everything they do, from
-[hitting](combat.md#hitting) and [Defence](combat.md#defence) to how much you can [carry](burden.md#how-much-you-can-carry). The [character screen](controls.md#character) shows them lowered. Poison
+[hitting](combat.md#hitting) and [Defence](combat.md#defence) to how much you can [carry](burden.md#how-much-you-can-carry). The [character screen](the-screen.md#character) shows them lowered. Poison
 wears off by itself: "The poison wears off." Trained in **[Heal](skills.md#skill-heal)**, you may try to draw out
-some of a dose (see [Treating yourself](skills.md#treating-yourself)).
+some of a dose (see [Treating yourself](skill-uses.md#treating-yourself)).
 
 You cannot tell whether a creature is poisoned by looking at it.
 
@@ -131,7 +131,7 @@ over you."), the [nightworm](creatures.md#creature-nightworm) swallows you whole
 or a [canoloth](creatures.md#creature-canoloth)'s tongue fastens on
 ([Latched](status-effects.md#status-latched)). Each is a hold like any other: the struggle, the
 grip (14 unless the attack says otherwise), and the endings above, but it lasts **2d4 turns** at
-most, and each costs [hit points](combat.md#hit-points) as it ticks: Engulfed 2 every 6 seconds
+most, and each costs [hit points](hit-points.md#hit-points) as it ticks: Engulfed 2 every 6 seconds
 for each turn it has left (1 in the rug's folds), Swallowed 4, Latched 1 every 12 seconds, so
 the harm is heaviest as it begins. Engulfed and Swallowed also stop you shooting, throwing, and reading; your blows and
 your spells still go, so you can hack your way out of what holds you.
@@ -173,13 +173,13 @@ longer feel unwelcome." once it passes.
 A status effect can also help, or hinder, in other ways while it lasts (the table's last
 column says which):
 
-- **Stats.** It may raise a score as well as lower one. [Hit points](combat.md#hit-points) that a higher [Toughness](stats.md#stat-toughness) let
+- **Stats.** It may raise a score as well as lower one. [Hit points](hit-points.md#hit-points) that a higher [Toughness](stats.md#stat-toughness) let
   you [heal](healing.md#how-fast) up to go again when it ends.
 - **Fighting.** It may add to your [to-hit](combat.md#hitting) and [damage](combat.md#damage), or to your [Dodge](combat.md#defence) and [Parry](combat.md#defence), as a
   [combat stance](combat.md#stances) does, on top of your stance. Creatures can suffer these too.
 - **Blows.** It may add damage of a [kind](damage-types.md) to your melee blows with either hand, as a
   [Flaming](magic-items.md#prefixes) sword's: [Brand](magic.md#spell-brand) does 1d4 [fire](damage-types.md#damage-fire) more ([burning blade](status-effects.md#status-branded-blade)). A kick or a shield bash does not
-  carry it. No [spell type's rule](magic.md#spell-types) reads a blow, so it never leaves anyone [burning](status-effects.md#burning).
+  carry it. No [spell type's rule](spellcasting.md#spell-types) reads a blow, so it never leaves anyone [burning](status-effects.md#burning).
 - **Striking back.** It may hurt whoever lands a melee blow on you, as a spell of that kind would:
   [Fire cloak](magic.md#spell-fire-cloak) does 1d6 fire to the striker ([fire-cloaked](status-effects.md#status-fire-cloaked)), and one time in four leaves them burning. What it kills is your kill.
 - **Water.** It may bear you up: [Water walking](magic.md#spell-water-walking) ([water-borne](status-effects.md#status-water-borne)) makes [wading](terrain.md#water) cost no more than a
@@ -204,12 +204,12 @@ The bard's [songs](abilities.md#songs) give three more: [Inspired](status-effect
 those who fail to shake it off; each goes up to three degrees, as many as a song with
 [Music](skills.md#skill-music) gives.
 
-A **hex** is a status a [hex spell](magic.md#shapes) lays: [Hexed](status-effects.md#status-ill-wished),
+A **hex** is a status a [hex spell](spellcasting.md#shapes) lays: [Hexed](status-effects.md#status-ill-wished),
 [Weakened](status-effects.md#status-weakened), [Sluggish](status-effects.md#status-sluggish),
 [Drowsy](status-effects.md#status-drowsy), and [Webbed](status-effects.md#status-webbed). A
 [witch](classes.md#witch)'s [cackle](abilities.md#ability-cackle) keeps the hexes she laid on: each
 on a creature she sees grows a degree, to its maximum, and its degree's time starts again. Her
-[familiar](allies.md#the-touch)'s touch lays her Hexed on what it hits and starts her other hexes on it afresh. Her
+[familiar](familiars.md#the-touch)'s touch lays her Hexed on what it hits and starts her other hexes on it afresh. Her
 [malison](talents.md#talent-malison) makes a creature under a hex take 3 more damage from her
 for each hex, and one dying under a hex of hers pays her mana.
 

@@ -5,8 +5,8 @@ Some harm comes slowly. A filthy bite, a night in the marshes, or a bad meal can
 by day until your body fights it off. Some diseases never go by themselves, and one of them can
 kill.
 
-Whatever the disease, it shows the same way: as **[Diseased](status-effects.md#status-diseased)**, after your [hit points](combat.md#hit-points) in the
-[status bar](controls.md#the-screen) and among your [status effects](status-effects.md#how-they-work) on the
+Whatever the disease, it shows the same way: as **[Diseased](status-effects.md#status-diseased)**, after your [hit points](hit-points.md#hit-points) in the
+[status bar](the-screen.md#the-screen) and among your [status effects](status-effects.md#how-they-work) on the
 [character screen](character.md). Which disease it is, you learn from its symptoms, and once it
 has run its course for a day, the character screen names it (`Diseased  Filth fever`).
 
@@ -51,20 +51,20 @@ bonus):
 ## Stat damage
 
 The points a disease takes off your [stats](stats.md) count everywhere your stats do: a weaker [Strength](stats.md#stat-strength) hits
-softer and carries less, a clumsier [Dexterity](stats.md#stat-dexterity) dodges worse. The [character screen](controls.md#character) shows your
+softer and carries less, a clumsier [Dexterity](stats.md#stat-dexterity) dodges worse. The [character screen](the-screen.md#character) shows your
 [stats](stats.md) with the damage taken off, in red.
 
-- **[Toughness](stats.md#stat-toughness) damage lowers your most [hit points](combat.md#hit-points)**, as Toughness gives them (see
-  [Combat](combat.md#hit-points)). If you have more [hit points](combat.md#hit-points) than your new most, you are left
+- **[Toughness](stats.md#stat-toughness) damage lowers your most [hit points](hit-points.md#hit-points)**, as Toughness gives them (see
+  [Combat](hit-points.md#hit-points)). If you have more [hit points](hit-points.md#hit-points) than your new most, you are left
   with the most.
 - **It never kills you by itself**: no [stat](stats.md) goes below 1, and a disease's damage never takes your
-  last [hit point](combat.md#hit-points), except for a disease that kills.
+  last [hit point](hit-points.md#hit-points), except for a disease that kills.
 - **It mends slowly**: once no disease shows, a point of each damaged stat comes back every day.
   While you are still [Diseased](status-effects.md#status-diseased), nothing mends.
 
 ## Healing while Diseased
 
-Your [hit points](combat.md#hit-points) come back at half the pace while you are [Diseased](status-effects.md#status-diseased), and [marsh ague](#disease-marsh-ague) slows them even
+Your [hit points](hit-points.md#hit-points) come back at half the pace while you are [Diseased](status-effects.md#status-diseased), and [marsh ague](#disease-marsh-ague) slows them even
 more (see [Healing](healing.md)). [Resting](resting.md#how-resting-works) still doubles the pace.
 
 ## Where diseases come from
@@ -106,7 +106,7 @@ the [stat damage](#stat-damage) at once, and the points the undead drained (see 
 [Drained stats](stats.md#drained-stats)).
 
 The **[Heal](skills.md#skill-heal)** skill eases a disease that shows, as many tries as you like, but never cures it (see
-[Treating yourself](skills.md#treating-yourself)).
+[Treating yourself](skill-uses.md#treating-yourself)).
 
 ## In the message line
 

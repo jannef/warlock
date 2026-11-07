@@ -72,7 +72,7 @@ The style protects well (its Shield adds to your shields'), hits harder, and fro
 your shields turn [staggers](status-effects.md#status-staggered) its striker (*[Staggering block](fighting-styles.md#style-ability-staggering-block)*). But two shields are clumsy: every
 bash is at a penalty to hit, every attack takes longer, and a spell you cast with your own [mana](mana.md#how-much)
 may fail, your hands full of shields: the mana and the time are spent all the same. The style
-eases all three, and from rank 9 none is left. A [scroll](scrolls.md) read or a [wand](magic.md#wands) used never fails so.
+eases all three, and from rank 9 none is left. A [scroll](scrolls.md) read or a [wand](wands-and-rods.md#wands) used never fails so.
 
 ## What a rank gives
 

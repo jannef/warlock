@@ -46,7 +46,7 @@ of the floor's [danger](dungeons.md#who-lives-there-and-how-many) (a blade of le
 
 When one is destroyed, what it was made of falls **whole** half the time, as the object it was
 (a silver candlestick you can [sell](shops.md#selling)). Otherwise it **breaks into the parts it was made of**: a
-[gem](gems.md) set in it falls loose, every other part falls as [pieces](objects.md#pieces) of its material (a silver
+[gem](gems.md) set in it falls loose, every other part falls as [pieces](materials.md#pieces) of its material (a silver
 candlestick as pieces of silver, still worth something), and paper and wax are lost. Whatever
 magic it had is gone with it. They
 leave no [corpse](food.md#corpses) and never [bleed](status-effects.md#bleeding).
@@ -63,12 +63,12 @@ what they carry is what they are.
 A few have a trick of their own. The [animated rug](creatures.md#creature-animated-rug), the
 rug of smothering, now and then closes over what it wraps: you are
 [engulfed](status-effects.md#status-engulfed) until you struggle free or it dies, and it costs
-you 1 [hit point](combat.md#hit-points) a tick, where a
+you 1 [hit point](hit-points.md#hit-points) a tick, where a
 [charnel heap](creatures.md#creature-charnel-heap)'s costs 2. The
 [bellows'](creatures.md#creature-animated-bellows) gust may leave you
 [staggered](status-effects.md#status-staggered). The
 [animated lantern](creatures.md#creature-animated-lantern)'s oil bursts as it dies, burning
-everyone beside it ([death throes](creature-numbers.md#bursts): step back from a dying one). And
+everyone beside it ([death throes](creature-powers.md#bursts): step back from a dying one). And
 blades, like most creatures, come in [grades](creatures.md#grades): one in six is **notched**,
 weaker than its kind, and one in six **keen**, stronger; look mode says which. No other
 animated thing is graded.
@@ -82,14 +82,14 @@ gives it more life, armour of the Salamander takes the edge off [fire](damage-ty
 
 | Affix effect | Works for an animated thing? |
 |---|---|
-| [Stat raises](stats.md) (of the Bear, of the Lynx, of the Ox, ...) | Yes: [hit points](combat.md#hit-points), [to hit](combat.md#hitting), [damage](combat.md#damage), [Defence](combat.md#defence) |
+| [Stat raises](stats.md) (of the Bear, of the Lynx, of the Ox, ...) | Yes: [hit points](hit-points.md#hit-points), [to hit](combat.md#hitting), [damage](combat.md#damage), [Defence](combat.md#defence) |
 | [To hit](combat.md#hitting), [damage](combat.md#damage), added damage, [threat](combat.md#criticals), [criticals](combat.md#criticals), parrying | Yes |
 | [Elemental damage](damage-types.md) (Flaming, Freezing, ...) | Yes |
 | [Attack speed](turns.md#speed), [moving speed](turns.md#speed) | Yes |
 | [Armour](combat.md#defence), shields, Dodge, Deflection, natural armour | Yes |
 | [Protection](combat.md#protection) | Yes |
 | [Resistances](damage-types.md#armour-and-resistance) | Yes |
-| More [hit points](combat.md#hit-points) | Yes |
+| More [hit points](hit-points.md#hit-points) | Yes |
 | [Regeneration](healing.md#how-fast) | Yes |
 | [Stealth](skills.md#skill-stealth) (quieter steps) | Yes |
 | [Light](light.md#what-light-is) | Yes: it glows |
@@ -105,10 +105,10 @@ The barrow of [Cealdhlāw](ascmearc.md#the-places) keeps candlesticks, cutlery, 
 goods; the drowned minster of [Fennmynster](ascmearc.md#the-places) its candlesticks, books, lanterns, and rugs. Blades
 dance in the barrow's lower floors and all through [Fyrdelf](ascmearc.md#the-places), where the [duergar smiths'](creatures.md#creature-duergar-smith) work
 wakes, and empty suits of armour walk Fyrdelf's deeper floors (they are of level 12 at least).
-Blades and empty suits walk [Ūtgang](dungeons.md#ūtgang), the way up from the drake's deep, too.
+Blades and empty suits walk [Ūtgang](dungeon-guide.md#ūtgang), the way up from the drake's deep, too.
 They never stray anywhere else.
 
-Their homes are two [special rooms](special-rooms.md#homes-of-animated-things), which may turn
+Their homes are two [special rooms](teeming-dens.md#homes-of-animated-things), which may turn
 up in any [dungeon](dungeons.md) with a [danger](dungeons.md#who-lives-there-and-how-many), whatever lives there: an **[armoury](special-rooms.md#room-armoury)**, weapon racks along its
 walls and blades, hollow armour, and panoplies asleep among them, drawn as if the level were
 four [dangers](dungeons.md#who-lives-there-and-how-many) deeper; and a **[workshop](special-rooms.md#room-workshop)**, workbenches along its walls and the household things of
@@ -121,7 +121,7 @@ its halls.
 Every animated type is generated from its tier and its body by the formulas below (rounded down
 part by part): [Strength](stats.md#stat-strength) 11 + 0.4 × level, [Toughness](stats.md#stat-toughness) 12 + 0.4 × level, [Dexterity](stats.md#stat-dexterity) 10 + 0.25 ×
 level, [Willpower](stats.md#stat-willpower) 16 + 0.35 × level, [Intelligence](stats.md#stat-intelligence) and [Presence](stats.md#stat-presence) 2 (they are mindless), then the
-tier's adjustments; [hit points](combat.md#hit-points) beyond Toughness 2.5 × level × the tier's factor; [damage](combat.md#damage) dice the
+tier's adjustments; [hit points](hit-points.md#hit-points) beyond Toughness 2.5 × level × the tier's factor; [damage](combat.md#damage) dice the
 nearest of 1d2, 1d3, … 5d12 to 2 + 0.55 × level, moved by the tier's steps. A blade has no dice
 of its own (it strikes with its weapon); its [speed](turns.md#speed) is 1200 + 5 × level (at most 1600) and its
 natural [Defence](combat.md#defence) 2 + level / 10.
@@ -139,7 +139,7 @@ natural [Defence](combat.md#defence) 2 + level / 10.
 A blade's weapon is drawn among the melee weapons found at its level or below, by how common
 each is, then made **[at least magic](magic-items.md#rarity)** by the chance below (and a magic one may come out [rare](magic-items.md#rarity), as
 any find may), or **[rare](magic-items.md#rarity)** outright by the second chance, at an [item level](magic-items.md#base-items) equal to the blade's;
-otherwise it is plain, of a [material](objects.md#materials) drawn as a monster's gear is. Its [rank](weapon-skills.md#marks-and-ranks) in the weapon's skill
+otherwise it is plain, of a [material](materials.md#materials) drawn as a monster's gear is. Its [rank](weapon-skills.md#marks-and-ranks) in the weapon's skill
 is 1 + level / 10, at most 8.
 
 Animated armour and a panoply draw each of their pieces the same way, slot by slot in the order
@@ -161,7 +161,7 @@ The rest falls as its parts.
 ### The household things
 
 [Speed](turns.md#speed) 1000 is a normal pace. A thing's [Protection](combat.md#protection), [resistances](damage-types.md#armour-and-resistance), and death line come from the
-[material](objects.md#materials) its object is first made of; one drawn of another material (a silver candlestick of a
+[material](materials.md#materials) its object is first made of; one drawn of another material (a silver candlestick of a
 brass kind) changes its colour and worth, never its numbers.
 
 {{#include generated/animated-bodies.md}}
@@ -174,6 +174,6 @@ brass kind) changes its colour and worth, never its numbers.
 
 What each household thing falls to when it breaks, by the material it is made of. The pieces
 are half a part's weight, counted in pieces of that material (see
-[pieces](objects.md#pieces)), one at least.
+[pieces](materials.md#pieces)), one at least.
 
 {{#include generated/animated-parts.md}}

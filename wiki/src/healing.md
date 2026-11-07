@@ -1,12 +1,12 @@
 # Healing
 
-Lost [hit points](combat.md#hit-points) come back by themselves, with time, and [resting](resting.md) (`b`) is the
+Lost [hit points](hit-points.md#hit-points) come back by themselves, with time, and [resting](resting.md) (`b`) is the
 quickest way to let the time pass. A [potion of healing](potions.md#potion-of-healing) brings some back at once (see
 [Potions](potions.md)).
 
 ## How fast
 
-At the usual pace, a [hit point](combat.md#hit-points) comes back every so often, faster the tougher you are:
+At the usual pace, a [hit point](hit-points.md#hit-points) comes back every so often, faster the tougher you are:
 
 {{#include generated/regeneration.md}}
 
@@ -27,7 +27,7 @@ on top of all that, yours and anyone's, and [magic items](magic-items.md) that s
 
 - Healing runs on game time, whatever you do: waiting, walking, fighting, or a long journey on
   the [overworld](overworld.md). Only the time counts, and it does not matter how it is cut up.
-- Progress toward the next [hit point](combat.md#hit-points) carries over from turn to turn, and is lost once you are
+- Progress toward the next [hit point](hit-points.md#hit-points) carries over from turn to turn, and is lost once you are
   unhurt.
 - [Creatures](creatures.md) heal by the same rules, at their own [Toughness](stats.md#stat-toughness), while you are on their level; they
   never [rest](resting.md#how-resting-works).
@@ -40,4 +40,4 @@ on top of all that, yours and anyone's, and [magic items](magic-items.md) that s
 
 Your [mana](mana.md) comes back the same way, by your [Willpower](stats.md#stat-willpower).
 
-See also [Status effects](status-effects.md) and [Combat](combat.md#hit-points).
+See also [Status effects](status-effects.md) and [Combat](hit-points.md#hit-points).

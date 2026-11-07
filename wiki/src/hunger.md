@@ -11,13 +11,13 @@ your food in points of **nutrition**; you never see the count, only how hungry y
 {{#include generated/hunger-states.md}}
 
 - **Hungry** is a warning: eat soon. Becoming hungry stops a [rest](resting.md#how-resting-works) and
-  makes you read the [message](controls.md#messages) before you go on (see [What you see](#what-you-see)).
+  makes you read the [message](the-screen.md#messages) before you go on (see [What you see](#what-you-see)).
 - **Weak**: your [Strength](stats.md#stat-strength) and [Dexterity](stats.md#stat-dexterity) count for less, in a fight and in what you can carry
-  (see [Stats](stats.md) and [Burden](burden.md)). The [character screen](controls.md#character) shows the lowered
+  (see [Stats](stats.md) and [Burden](burden.md)). The [character screen](the-screen.md#character) shows the lowered
   scores. Being fed again gives them back.
 - **Fainting**: now and then you faint from hunger ("You faint from hunger.") and lose a few
   [turns](time.md#what-takes-time), while everything around you goes on.
-- **Starving**: your wounds stop [healing](healing.md#how-fast), and you lose [hit points](combat.md#hit-points) by the clock until you eat,
+- **Starving**: your wounds stop [healing](healing.md#how-fast), and you lose [hit points](hit-points.md#hit-points) by the clock until you eat,
   or starve to death.
 - **Satiated** does nothing, but **Bloated** slows everything you do, as a [burden](burden.md#burden-1) does: wait for
   it to pass. Eating past the most your stomach holds is **overeating**: you may vomit, which
@@ -41,11 +41,11 @@ above).
 
 ## What you see
 
-- The **[status bar](controls.md#the-screen)** shows how hungry you are, unless you are not hungry: `Hungry`, `Weak`,
+- The **[status bar](the-screen.md#the-screen)** shows how hungry you are, unless you are not hungry: `Hungry`, `Weak`,
   `Fainting`, `Starving`, `Satiated`, or `Bloated`. From `Hungry` down the word stands out as it
   worsens: `Hungry` mild yellow, `Weak` strong orange, `Fainting` and `Starving` alarming reds. It never gives way on a
-  narrow screen; `Satiated` and `Bloated` are among the last things to (see [Controls](controls.md#the-screen)).
-- A **[message](controls.md#messages)** says when it changes: "You are getting hungry.", "You feel weak from hunger. You should eat soon.",
+  narrow screen; `Satiated` and `Bloated` are among the last things to (see [Controls](the-screen.md#the-screen)).
+- A **[message](the-screen.md#messages)** says when it changes: "You are getting hungry.", "You feel weak from hunger. You should eat soon.",
   "You feel faint from hunger. Eat now, or you will starve!", "You are starving! Eat, or you will die!", and, eating, "You are no longer hungry.",
   "You feel satiated.", "You feel bloated."
 - **Getting hungrier stops you.** Becoming `Hungry`, `Weak`, `Fainting`, or `Starving` waits at

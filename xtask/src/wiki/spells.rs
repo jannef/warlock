@@ -126,9 +126,9 @@ pub(super) fn ruin(content: &Content) -> String {
                     link(Term::ItemClass, &def.id, &def.name)
                 }
                 RuinOf::Material(m) => {
-                    format!("[{}](objects.md#materials)", content.material(*m).name)
+                    format!("[{}](materials.md#materials)", content.material(*m).name)
                 }
-                RuinOf::Group(group) => format!("anything of [{group}](objects.md#materials)"),
+                RuinOf::Group(group) => format!("anything of [{group}](materials.md#materials)"),
             };
             let chance = match row.percent {
                 0 => "never".to_string(),
@@ -420,7 +420,7 @@ pub(super) fn does(content: &Content, spell: &SpellData) -> String {
         let then = if text.is_empty() { "" } else { "; then " };
         let _ = write!(
             text,
-            "{then}[{what}](#zones) for {} turns ({} seconds)",
+            "{then}[{what}](spellcasting.md#zones) for {} turns ({} seconds)",
             zone.turns,
             u32::from(zone.turns) * 6
         );

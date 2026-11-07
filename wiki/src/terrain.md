@@ -34,7 +34,7 @@ not come if it is:
   [webbed](status-effects.md#status-webbed), [pinned](status-effects.md#status-pinned),
   [stunned](status-effects.md#status-stunned), [surprised](status-effects.md#status-surprised), or
   [frightened](status-effects.md#status-frightened);
-- [slipped past](skills.md#slipping-past) or otherwise unaware of you;
+- [slipped past](skill-uses.md#slipping-past) or otherwise unaware of you;
 - a [mimic](mimics.md), a creature that [lurks](creatures.md#what-they-do) and has not been hurt,
   one rooted to its place, a [shopkeeper](shops.md), or someone you can [talk](npcs.md) to by name;
 - out of room: only the cells right beside where you arrive will do, your
@@ -54,7 +54,7 @@ a level never breaks. See [Digging and walls](digging.md).
 A [worn statue](#terrain-statue) stands in the way as a wall does, but you see past it. Step up
 beside one and you are told what it is, and what is cut into it, if anything: some carry words
 in the old tongue worth reading (one deep in Fyrdelf keeps an oath; see
-[Prestige classes](classes.md#prestige-classes)).
+[Prestige classes](prestige-classes.md#prestige-classes)).
 
 ## Water
 

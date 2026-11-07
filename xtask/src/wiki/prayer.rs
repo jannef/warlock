@@ -140,7 +140,7 @@ fn use_text(content: &Content, rules: &PrayerRules, id: PrayerUse) -> (String, S
         ),
         PrayerUse::Wounds => (
             format!(
-                "{} or lost [hit points](combat.md#hit-points)",
+                "{} or lost [hit points](hit-points.md#hit-points)",
                 status("bleeding", "Bleeding")
             ),
             "the bleeding stops, hit points to full".into(),

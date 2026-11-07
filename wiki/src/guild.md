@@ -15,7 +15,7 @@ any other [quest](quests.md). What each job asks for is [drawn](quests.md#drawn-
 and stands until it is done. Kills count only from the giving on.
 
 1. **A bounty**: kill one creature of a kind drawn from those that live in [Cealdhlāw](dungeons.md#the-dungeons),
-   [Fennmynster](dungeons.md#fennmynster), and [Fyrdelf](dungeons.md#fyrdelf) (never a named monster), of the dungeons you can get into when Wat
+   [Fennmynster](dungeon-guide.md#fennmynster), and [Fyrdelf](dungeon-guide.md#fyrdelf) (never a named monster), of the dungeons you can get into when Wat
    gives it. 40 [gold](shops.md#money), 60 [experience](experience.md).
 2. **A score and five**: kill 25 creatures of one sort, drawn from [kobolds](creatures.md#creature-kobold), [goblins](creatures.md#creature-goblin), the undead,
    vermin, marsh things, duergar, and fire things, of those living in a dungeon you can get
@@ -29,7 +29,7 @@ and stands until it is done. Kills count only from the giving on.
    the job; the other three lairs stay hidden for the rest of your life. A named monster: only
    their death counts, however it came and whoever dealt it. 500 [gold](shops.md#money), 800 [experience](experience.md). [Good.](alignment.md)
 
-5. **Eleven floors down**: reach the eleventh floor of [Grundlēas](dungeons.md#grundlēas), the endless stair in the grass south of the
+5. **Eleven floors down**: reach the eleventh floor of [Grundlēas](dungeon-guide.md#grundlēas), the endless stair in the grass south of the
    Beorhtburna road, past the tenth floor and whatever keeps it. Reaching it once is enough. 600 [gold](shops.md#money), 900 [experience](experience.md). [A little good](alignment.md).
 
 The chain goes on: more jobs are to come.
@@ -38,7 +38,7 @@ The chain goes on: more jobs are to come.
 
 The four are people of the town's own day, known by what the broadsheets call them. Each lair
 is four floors deep, of [danger](dungeons.md#who-lives-there-and-how-many) 6 on its first floor to 9 on its last (see
-[Dungeons and danger](dungeons.md#the-lairs-of-the-wanted)), and the criminal waits in a room of
+[Dungeons and danger](dungeon-guide.md#the-lairs-of-the-wanted)), and the criminal waits in a room of
 their own on the fourth, asleep until something wakes them. Each carries a [unique item](magic-items.md#unique-items) of their
 own (see [Magic items](magic-items.md)), and drops it where they fall.
 

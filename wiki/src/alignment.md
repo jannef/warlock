@@ -2,7 +2,7 @@
 
 Every character stands somewhere between **good** and **evil**, and what you do moves you along
 the way. Behind it is a score from −1000 (as evil as can be) to +1000 (as good), which the game
-never shows: the [character screen](controls.md#character) (`@`) and the summary at character creation name your
+never shows: the [character screen](the-screen.md#character) (`@`) and the summary at character creation name your
 **band**, one of seven words.
 
 {{#include generated/alignment-bands.md}}
@@ -43,7 +43,7 @@ or +1000.
   own kills count, and those of a wound you dealt.
 - **[Shops](shops.md)**: attacking a shopkeeper who trades with you, and walking out with what you have not
   paid for, are evil; so is lifting something from anyone and getting away with it (see
-  [Stealing](skills.md#stealing)); paying what you owe is a little good.
+  [Stealing](skill-uses.md#stealing)); paying what you owe is a little good.
 - **Corpses**: eating a [corpse](food.md#corpses) of your own race, or of someone who talks and meant you no harm,
   is very evil, fresh or rotten.
 - **[Quests](quests.md)** that help someone are a little good; a dark errand would be evil.

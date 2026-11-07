@@ -61,7 +61,7 @@ no label and is known on sight. A [shop](shops.md#prices)'s price for an unknown
 ## Spell scrolls
 
 Every [spell](magic.md#the-spells) comes on a scroll of its own: a scroll of [magic missile](magic.md#spell-magic-missile), of
-[haste](magic.md#spell-haste), of [web](magic.md#spell-web). Reading one casts its spell once, as if you cast it yourself (its [shape](magic.md#shapes), its
+[haste](magic.md#spell-haste), of [web](magic.md#spell-web). Reading one casts its spell once, as if you cast it yourself (its [shape](spellcasting.md#shapes), its
 resolution, its [damage](combat.md#damage)), as written in the [spell's row](magic.md#the-spells), at the rung the scroll's row says
 (the table's "Casts at"; the base for most): your stats do not grow a scroll's damage or
 healing (its reach and how long it lasts are yours, as for your own casts);
@@ -96,7 +96,7 @@ These three never roll [to hit](combat.md#hitting): they hurt everyone they reac
 as [ray of frost](magic.md#spell-ray-of-frost), rolls to hit as the spell does, with your Dexterity). Unlike a trap's, a spell you read is
 **yours**: what it kills earns you [experience](experience.md) and counts for your
 [quests](quests.md), and a [shopkeeper](shops.md#theft) it hurts turns on you. A scroll that kills you is named on
-the [death](combat.md#death) screen ("Killed by their own scroll of fireball"). The explosion and the thunder are
+the [death](hit-points.md#death) screen ("Killed by their own scroll of fireball"). The explosion and the thunder are
 heard like any noise (see [Hearing](hearing.md)). Spells cannot be read on the [overworld](overworld.md#travel).
 
 Reading a scroll uses it up. Scholars do better (see [Talents](talents.md)): [Scroll savant](talents.md#talent-scroll-savant) reads
@@ -108,7 +108,7 @@ scroll."). A scroll you study is always used up, Scroll savant or not.
 
 Choose the scroll of identify and a second list opens: the unidentified items you carry (see
 [Magic items](magic-items.md)), the scrolls you carry that show only their label, and the wands
-and rods you do not know (a wand's charges too; see [Magic](magic.md#wands)). Choose one, and you
+and rods you do not know (a wand's charges too; see [Magic](wands-and-rods.md#wands)). Choose one, and you
 know what it is from then on: "This is a Sharp dagger of the Lynx!", "This is 2 scrolls of
 lightning!" (and every scroll of lightning shows by its name). With nothing unidentified, the
 list says so, and the scroll is kept. It is [made out](#making-out-a-scroll) as any other scroll, a spell of level 6:

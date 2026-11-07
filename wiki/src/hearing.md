@@ -93,7 +93,7 @@ footsteps here.", or "You hear footsteps here, where you remember a stone floor.
 
 ## Messages
 
-New sounds are written to the [message line](controls.md#messages), with the direction they came from:
+New sounds are written to the [message line](the-screen.md#messages), with the direction they came from:
 
 ```
 You hear footsteps to the north-east.

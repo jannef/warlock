@@ -80,6 +80,6 @@ you see into what was behind it, and you [remember](sight.md#memory) it as you r
 
 ## Where to dig
 
-**[Fyrdelf](dungeons.md#fyrdelf)**, the fire diggings under the hills of Ascdūn ([The Ascmearc](ascmearc.md)), is a
+**[Fyrdelf](dungeon-guide.md#fyrdelf)**, the fire diggings under the hills of Ascdūn ([The Ascmearc](ascmearc.md)), is a
 mine, and the place to try digging: its foreman's cabin keeps a spare [pick-axe](#digging) behind a plank
 wall.

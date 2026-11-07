@@ -16,7 +16,7 @@ or at a ford.
 
 Roads and bridges are the fast way to travel, and swamp and dense forest the slow way. The
 [survival](skills.md#what-skills-give) skill makes every journey quicker, by up to a fifth. The
-[status bar](controls.md#the-screen) shows the name of the region you are in, here and in its [local areas](#local-areas). A long journey
+[status bar](the-screen.md#the-screen) shows the name of the region you are in, here and in its [local areas](#local-areas). A long journey
 takes days, and you get [hungry](hunger.md#how-hungry-you-are) on the way: take [food](food.md#eating) (see [Hunger](hunger.md)).
 On the way you may [meet someone](encounters.md): footpads, raiders, travellers, or animals,
 the more the longer you are out in the wild.
@@ -84,7 +84,7 @@ explore that cell on foot. You enter an outdoor area, 80 by 40 cells, made for t
   along the sides where the overworld has them, and now and then ponds, brooks, ruins, or [deer](creatures.md#creature-deer).
   A wood may hide a [boar](creatures.md#creature-boar), a deep wood a [lynx](creatures.md#creature-lynx),
   and the hills a [badger](creatures.md#creature-badger): wild beasts that leave you be unless you
-  fall on them, the kinds a ranger may keep as a [companion](allies.md#companions).
+  fall on them, the kinds a ranger may keep as a [companion](companions.md#companions).
   Woods blend towards the neighboring cells so areas side by side fit together.
 - You arrive on the side you walked onto the cell from (on the road if you came along one), or in a
   clearing in the middle if you did not walk there.

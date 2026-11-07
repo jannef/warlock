@@ -38,7 +38,7 @@ own cell: the [sun](sun.md#the-suns-path) well up under a clear sky, a bright fi
 nothing farther than ten cells, whatever your vision type (see
 [Races](races.md#the-evil-races)).
 
-A [developer key](controls.md#developer-keys)
+A [developer key](the-screen.md#developer-keys)
 (`F3`) cycles through the types for trying them out.
 
 Creatures have eyes of these types too, and see by the same rules (see

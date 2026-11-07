@@ -4,8 +4,8 @@ Everyone is born under a sign: the **animal** and the **element** of the year th
 do not choose yours: the stars decide. When you make a character (see
 [Your character](character.md)), right after you choose your race the game tells you when you
 were born and under which sign, and what the stars gave you (*Born under the stars*). The summary
-and the [character screen](controls.md#character) (`@`) show it again, for example *Age 34 · born 29 Greenleaf 1410 · year
-of the Water Basilisk*, and the [character screen](controls.md#character) lists your sign's gifts by name on its *Stars*
+and the [character screen](the-screen.md#character) (`@`) show it again, for example *Age 34 · born 29 Greenleaf 1410 · year
+of the Water Basilisk*, and the [character screen](the-screen.md#character) lists your sign's gifts by name on its *Stars*
 line.
 
 ## The Great Race
@@ -98,7 +98,7 @@ once more); two are things you do, used from the [abilities menu](abilities.md#t
 {{#include generated/horoscope-talents.md}}
 
 The Phoenix's *[Rise from the ashes](talents.md#talent-rise-from-ashes)* comes once in a life (twice with the pick *[Second rising](talents.md#talent-second-rising)*):
-once you have risen, the gift is spent (the [character screen](controls.md#character) says so) and the next death is your
+once you have risen, the gift is spent (the [character screen](the-screen.md#character) says so) and the next death is your
 last. *[Hound's nose](talents.md#talent-hounds-nose)* tells you how
 fresh [food](food.md#food-spoils) is in a word on the eat list (fresh, turning, or rotten); food that is turning is
 still fine to eat, rotten food is not. *[Gatekeeper](talents.md#talent-gatekeeper)* strikes a foe that steps up beside you
@@ -130,7 +130,7 @@ at the default start.
 
 The [calendar](time.md#the-calendar) and the moons touch a few gifts, a little: on your birthday you [heal](healing.md#how-fast) faster, in the
 month you were born your sign's actives rest sooner, and while the [moon](sun.md#moonlight) is full and up the gifts
-that reach out reach farther. The game shows nothing new for them (the [status bar](controls.md#the-screen) already shows
+that reach out reach farther. The game shows nothing new for them (the [status bar](the-screen.md#the-screen) already shows
 the moon's [phase](sun.md#phases)); here are the exact rules.
 
 {{#include generated/horoscope-flavour.md}}
@@ -140,7 +140,7 @@ the moon's [phase](sun.md#phases)); here are the exact rules.
 Your starting age depends on your race: a [human](races.md#race-human) starts between 16 and 35 years old, an [elf](races.md#race-elf)
 between 90 and 300 (see [Races](races.md) for every race). Your birthday can be any day of the
 year. Your birth date is counted back from the day the run starts: you are exactly that old on
-it. You get a year older on every birthday, and the [character screen](controls.md#character) shows your age on the day
+it. You get a year older on every birthday, and the [character screen](the-screen.md#character) shows your age on the day
 you look.
 
 {{#include generated/horoscope.md}}

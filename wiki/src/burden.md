@@ -57,11 +57,11 @@ overloaded inside, but you can always step out.
 
 ## What you see
 
-- The **[status bar](controls.md#the-screen)** shows your burden when you have one (`Burdened`, `Strained`, `Overloaded`),
-  right after your [hit points](combat.md#hit-points); it is one of the last things to give way on a narrow screen.
-- A **[message](controls.md#messages)** says when it changes: "You are burdened.", "You strain under your load.", "You
+- The **[status bar](the-screen.md#the-screen)** shows your burden when you have one (`Burdened`, `Strained`, `Overloaded`),
+  right after your [hit points](hit-points.md#hit-points); it is one of the last things to give way on a narrow screen.
+- A **[message](the-screen.md#messages)** says when it changes: "You are burdened.", "You strain under your load.", "You
   carry too much to move.", "You are no longer burdened."
-- The **[inventory](objects.md#your-pack)** (`I`) and the **[character screen](controls.md#character)** (`@`) show what you carry, your burden
+- The **[inventory](objects.md#your-pack)** (`I`) and the **[character screen](the-screen.md#character)** (`@`) show what you carry, your burden
   if you have one, and the weights at which it changes:
   `Burdened over 15 kg, strained over 30 kg, overloaded over 45 kg`.
 

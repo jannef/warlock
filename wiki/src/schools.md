@@ -10,7 +10,7 @@ at evocation."
 A spell **lands** when it does what it is for: a harm on someone, a hex that takes, a heal of a
 hit point or more, a buff on you, a cure, an item identified. One that lands earns an attempt's
 marks and a success's; one that misses (a ray or a touch that [rolls to
-hit](magic.md#how-a-spell-finds-its-target) and fails) or finds nobody earns an attempt's. The
+hit](spellcasting.md#how-a-spell-finds-its-target) and fails) or finds nobody earns an attempt's. The
 marks are weighed by the strongest creature the spell struck at, or by your own level when it
 struck at nobody (a buff, a fireball into an empty corridor). An area spell is one cast: it
 earns once, weighed by the strongest creature it caught, however many it caught. The marks and
@@ -18,7 +18,7 @@ their weighing are the [weapon skills'](weapon-skills.md#marks-and-ranks), on a 
 limits how often you may train: a [Light](magic.md#spell-light) cast ten times trains evocation
 ten times, for its mana and its time.
 
-A spell read from a [scroll](scrolls.md) or used from a [wand](magic.md#wands) trains nothing:
+A spell read from a [scroll](scrolls.md) or used from a [wand](wands-and-rods.md#wands) trains nothing:
 the magic is the item's.
 
 Each rank is a leg up on every spell of its school, said in one sentence a row of the school's
@@ -34,7 +34,7 @@ game.
 
 ## The Magic page
 
-The **Magic page** is page `6` of the [info pages](controls.md#info-pages), between the
+The **Magic page** is page `6` of the [info pages](the-screen.md#info-pages), between the
 [weapon skills](weapon-skills.md#seeing-your-skills) and the [quest log](quests.md#the-quest-log):
 open any info page and press `6`, or `Tab` to it. It has no key of its own in play. It is one
 column that scrolls (↑↓) when the window is too small for it, and shows, from the top: your
@@ -117,7 +117,7 @@ Restoration, transmutation, and divination teach none yet.
 
 {{#include generated/school-abilities.md}}
 
-A school ability and the [rule of a spell's type](magic.md#spell-types) both work: one is the rank's, the
+A school ability and the [rule of a spell's type](spellcasting.md#spell-types) both work: one is the rank's, the
 other the type's.
 
 ## Talents
@@ -143,7 +143,7 @@ from a wand trains no style.
 
 - **[Sniper](schools.md#style-sniper)**: a spell aimed farther than beside you, out of such
   armour: a ray, a bolt, a burst, a cone, a line, a hex on a foe across the room, or a cell with
-  nobody in it. Its spells that [roll to hit](magic.md#how-a-spell-finds-its-target) hit more
+  nobody in it. Its spells that [roll to hit](spellcasting.md#how-a-spell-finds-its-target) hit more
   often, and better still against a target five cells away or more, where its [critical
   range](combat.md#criticals) is wider too. From rank 5 every spell cast so reaches a cell
   farther, from rank 9 two. From rank 4 its best shots pin the target where it stands

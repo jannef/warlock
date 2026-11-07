@@ -1,6 +1,6 @@
 # Resources
 
-Beside your [hit points](combat.md#hit-points) and your [mana](mana.md), which everyone has, a
+Beside your [hit points](hit-points.md#hit-points) and your [mana](mana.md), which everyone has, a
 character may come to hold **resources** of their own: pools of points that something grants
 them, such as a [berserker](classes.md#berserker)'s [rage](resources.md#rage) or a [ranger](classes.md#ranger)'s [focus](resources.md#resource-focus). You may hold several at once, each with its
 own rules:
@@ -119,7 +119,7 @@ add to it (see [Talents](talents.md)):
 - **[Mighty rage](talents.md#talent-mighty-rage)** (level 50): [Raging](status-effects.md#status-raging) gives Strength +4 and Toughness +4, rage holds up to 30, and
   the exhaustion lasts 75 seconds.
 - **[Unstoppable](talents.md#talent-unstoppable)** (level 60): while [raging](status-effects.md#status-raging), [bleeding](status-effects.md#status-bleeding) and [poison](status-effects.md#status-poisoned) cost no hit points, and a blow
-  that would take your last [hit point](combat.md#hit-points) leaves it to you for 10 rage, as often as you have that
+  that would take your last [hit point](hit-points.md#hit-points) leaves it to you for 10 rage, as often as you have that
   much; spending the last of it ends the rage.
 
 ## Talents on resources

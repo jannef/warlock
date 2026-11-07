@@ -1,8 +1,8 @@
 # Combat
 
 Fights are decided by dice, as in Dungeons & Dragons, but with two twelve-sided dice instead of
-one twenty-sided die, and with ADOM's kind of [hit points](combat.md#hit-points). Every blow is rolled, can miss, can hit
-hard, and hurts; what loses all its [hit points](combat.md#hit-points) dies. That goes for you too, and [death](combat.md#death) is final.
+one twenty-sided die, and with ADOM's kind of [hit points](hit-points.md#hit-points). Every blow is rolled, can miss, can hit
+hard, and hurts; what loses all its [hit points](hit-points.md#hit-points) dies. That goes for you too, and [death](hit-points.md#death) is final.
 
 You attack by moving into a hostile creature (see [Controls](controls.md)), which takes a [turn](time.md#what-takes-time),
 by [bashing](abilities.md#ability-shield-bash) it with your [shield](objects.md#class-shields), or from afar: you shoot or throw with `t` (or `T`), see
@@ -10,7 +10,7 @@ by [bashing](abilities.md#ability-shield-bash) it with your [shield](objects.md#
 the [fighting style](fighting-styles.md) you fight in, and your [ranks](weapon-skills.md#marks-and-ranks) in them help you hit, hurt,
 and defend. With a [weapon in each hand](fighting-styles.md#two-weapons), an attack up close is a blow with each.
 Creatures fight each other and you by the same rules (see [Creatures](creatures.md)), and casters
-cast the same [spells](magic.md#the-spells) you do (see [Spells](creature-numbers.md#spells)).
+cast the same [spells](magic.md#the-spells) you do (see [Spells](creature-powers.md#spells)).
 
 ## Hitting
 
@@ -77,7 +77,7 @@ protects you, in kinds:
   the higher it is, and so do [magic items](magic-items.md) that make you nimble.
 - **Deflection**: [magic items](magic-items.md) that turn blows aside.
 - **Wall**: the stone around an incorporeal creature standing inside a wall
-  ([Creatures](creatures.md#incorporeal-creatures)).
+  ([Creatures](creature-bodies.md#incorporeal-creatures)).
 
 Within each kind only the best counts: two pieces of armour do not add up. Dodge is the one kind
 that does.
@@ -117,9 +117,9 @@ Some things have **no vitals** to find, and so are **immune to criticals** and t
 [sneak attacks](skills.md#skill-sneak-attack): a threat on them is a plain hit, and
 [Vital strike](weapon-skills.md#weapon-ability-vital-strike) or a
 [master thief](talents.md#talent-master-thief)'s finisher only a plain blow ("It has no vital
-spot."). They are the [incorporeal](creatures.md#incorporeal-creatures) (ghosts and wraiths),
+spot."). They are the [incorporeal](creature-bodies.md#incorporeal-creatures) (ghosts and wraiths),
 [animated objects](animated.md), and every [creature](creatures.md) tagged elemental, skeleton,
-spirit, or construct (the mud golem; [elementals](creatures.md#elementals)). The fleshy undead
+spirit, or construct (the mud golem; [elementals](creature-bodies.md#elementals)). The fleshy undead
 (draugr, ghouls, the drowned, vampires, mummies) have vitals. The list is under [Surprise and sneak attacks](surprise.md#no-vitals).
 
 {{#include generated/threats.md}}
@@ -146,7 +146,7 @@ Messages never give numbers, and say what kind of blow it was: "The kobold stabs
 slash the giant rat hard!", "The giant rat bites the kobold.", "You cleave the kobold." (see
 [Damage types](damage-types.md)).
 
-A **big hit**, one that takes at least a third of the target's [hit points](combat.md#hit-points) at once, makes it
+A **big hit**, one that takes at least a third of the target's [hit points](hit-points.md#hit-points) at once, makes it
 [bleed](status-effects.md#bleeding), and some creatures' attacks can [poison](status-effects.md#status-poisoned): see [Status effects](status-effects.md). Some bites
 carry a [disease](diseases.md): see [Diseases](diseases.md).
 
@@ -170,7 +170,7 @@ amount in between as likely:
 - **[Criticals](combat.md#criticals) punch through**: a confirmed critical rolls its damage twice (or more) first, and
   the Protection comes off only once.
 - **A hit can do nothing at all**: if Protection takes all of its damage, the blow glances off,
-  and nothing else comes of it: no [blood](combat.md#blood), no [bleeding](status-effects.md#bleeding), no [poison](status-effects.md#status-poisoned). "Your sword glances off the
+  and nothing else comes of it: no [blood](hit-points.md#blood), no [bleeding](status-effects.md#bleeding), no [poison](status-effects.md#status-poisoned). "Your sword glances off the
   cave beetle's shell.", "The kobold's spear glances off your chain mail shirt." It still landed,
   so it trains your [weapon skill](weapon-skills.md) as a hit does.
 - **Some weapons pierce armour**, ignoring part of the Protection of whatever they hit. Their
@@ -191,7 +191,7 @@ you never see a creature's Protection, only how its armour turns your blows; see
 Like ADOM's, your fighting **stance** trades attack for defence. Press `+` to take a more aggressive stance
 (coward, defensive, neutral, aggressive: it stops at the end) and `-` for a more defensive one; each takes no time, and you keep it
 until you change it, even across a save. "You take an aggressive stance." You start neutral. The
-[status bar](controls.md#the-screen) names your stance when it is not neutral, and the [character screen](character.md)
+[status bar](the-screen.md#the-screen) names your stance when it is not neutral, and the [character screen](character.md)
 always does. The game never shows what a stance adds: you feel it in the fight.
 
 - **Aggressive**: you hit more often and harder, but are easier to hit. ([Weapon skill marks](weapon-skills.md#marks-and-ranks) will
@@ -259,68 +259,10 @@ holds it from [level](experience.md#levels) 1. Its most is
 
 with [talents](talents.md) adding on top ([Deep lungs](talents.md#talent-deep-lungs): +4). [Toughness](stats.md#stat-toughness) 14 (modifier +2) at level 1 holds 12;
 Toughness 18 (+4) at level 60 holds 20. [Damage to your Toughness](stats.md#drained-stats) lowers it, as it lowers your [hit
-points](combat.md#hit-points). It comes back a point every 12 seconds (2 base [turns](time.md#what-takes-time)), [resting](resting.md#how-resting-works) too, half again as fast
+points](hit-points.md#hit-points). It comes back a point every 12 seconds (2 base [turns](time.md#what-takes-time)), [resting](resting.md#how-resting-works) too, half again as fast
 with [Steady breathing](talents.md#talent-steady-breathing). Spent, it sits
 at 0 and comes back. Creatures never hold it. The active weapon abilities spend it (see
 [What a rank teaches](weapon-skills.md#what-a-rank-teaches)); anyone else is given it by the
 first rank that teaches one. [Drillmaster](talents.md#talent-drillmaster) (the warrior's, at level 25) takes a point off every
 active's cost, [Armour-breaker](talents.md#talent-armour-breaker) 2 off [Sunder's](weapon-skills.md#weapon-ability-sunder) and [Gap shot's](fighting-styles.md#style-ability-gap-shot) (never below 1), and [Practised
 technique](talents.md#talent-practised-technique) a quarter off their time (never below half the action's).
-
-## Hit points
-
-Your **hit points** are your [Toughness](stats.md#stat-toughness) plus what your [race](races.md) and your
-[class](classes.md) give:
-
-{{#include generated/hit-points.md}}
-
-A [dwarf](races.md#race-dwarf) [berserker](classes.md#berserker) with Toughness 16 has 6 + 8 + 16 = 30 hit points; an [elf](races.md#race-elf) [wizard](classes.md#wizard) with Toughness
-8 has 10. You start every run unhurt. The [status bar](controls.md#the-screen) shows your hit points (`HP 18/24`), and so
-does the character screen.
-
-Creatures have hit points too, but you never see their numbers in the game (they are on
-[Creatures in numbers](creature-numbers.md#hit-points-defence-and-resistances)).
-[Look mode](controls.md#look-mode) says how hurt a creature looks: unhurt, lightly wounded (more than two
-thirds left), wounded (more than a third), badly wounded (more than a sixth), or nearly dead:
-
-{{#include generated/health.md}}
-
-### Getting better
-
-Hit points come back with time, faster the tougher you are, twice as fast while you
-[rest](resting.md#how-resting-works), and slower or not at all while you [bleed](status-effects.md#bleeding), are [poisoned](status-effects.md#status-poisoned), or are [diseased](status-effects.md#status-diseased): see
-[Healing](healing.md). A [disease](diseases.md) that lowers your [Toughness](stats.md#stat-toughness) lowers your most hit points too (see
-[Diseases](diseases.md)). Creatures heal the same way, while you are on their level. In a
-[sanctuary](special-rooms.md#room-sanctuary) (a [special room](special-rooms.md)) wounds heal three times as fast, yours and
-anyone's.
-
-## Death
-
-A creature at 0 [hit points](combat.md#hit-points) dies: "The giant rat dies." It is gone, and everything it carried,
-what it wore and wielded too, falls where it stood, for you to pick up, with its corpse on top
-(see [Food and corpses](food.md)). A wounded creature may also die later of its wounds: "The
-giant rat bleeds to death."
-
-When **you** reach 0 [hit points](combat.md#hit-points), you die: "You die..." The run is over, and a screen tells you
-what killed you (if you saw it, or "Bled to death" when your wounds did, or that you starved; see
-[Hunger](hunger.md)), where, when, and after how many turns. There is no going back:
-your save is deleted at once (see [Saving](saving.md)). Press `Enter` or `Esc` to return to the
-main menu and start a new run.
-
-## Blood
-
-Big hits and kills leave blood where they land. A blow that takes at least a third of its
-target's [hit points](combat.md#hit-points), or any [critical](combat.md#criticals) ("hits you hard!"), leaves a little spatter; a kill leaves a
-pool where the victim fell and a spray behind it, away from whoever struck the blow. How much
-depends on how big the victim was and how it died: a blow far past what killed it, or a critical,
-spills more; an arrow or a thrown weapon less, sprayed along its flight. Blood that sprays into
-a wall right beside the victim stains that wall on the side facing it.
-
-Blood adds up: one kill is easy to miss, but where many died the floor is soaked. Fresh blood is
-red, and it dries darker and browner over a few hours; the cave beetle bleeds a greenish-black
-ichor. Water, lava, and fire take no stains. You see blood where you see the floor (on a wall,
-only from the side that was splattered), remember it as you last saw it, and [look mode](controls.md#look-mode) mentions
-it: "on blood-stained stone floor".
-
-Blood is only for show: it never changes a fight, and the Blood switch in the
-[settings](settings.md) hides it.

@@ -68,15 +68,15 @@ Magic works while the item is **[worn or wielded](equipment.md#what-fits-where)*
   you make, bare hands and thrown rocks included.
 - Magic that changes the item itself (its [Armour](combat.md#defence), [Protection](combat.md#protection), [Shield](combat.md#defence), or [Parry](combat.md#defence), how much
   [Dexterity](stats.md#stat-dexterity) it lets add to your [Defence](combat.md#defence), its weight) is the item's own.
-- Everything else is yours: [stats](stats.md), [hit points](combat.md#hit-points), [Dodge](combat.md#defence) and [Deflection](combat.md#defence) and natural armour, how fast
+- Everything else is yours: [stats](stats.md), [hit points](hit-points.md#hit-points), [Dodge](combat.md#defence) and [Deflection](combat.md#defence) and natural armour, how fast
   your wounds [heal](healing.md#how-fast), how fast you [move](turns.md#speed), how much you can [carry](burden.md#how-much-you-can-carry), how quietly you [walk](hearing.md#what-makes-noise), [light](light.md#what-light-is), and
   [skills](skills.md): "+20 to Stealth" works as if your [Stealth](skills.md#skill-stealth) were 20 higher, even if you
-  never trained it (the [Skills screen](controls.md#skills) still shows what you have trained).
+  never trained it (the [Skills screen](the-screen.md#skills) still shows what you have trained).
 
 A few rules from elsewhere carry over:
 
 - **Stats** raised by an item count everywhere a stat does: [Strength](stats.md#stat-strength) [to hit](combat.md#hitting) and in your [carrying
-  limit](burden.md#how-much-you-can-carry), [Toughness](stats.md#stat-toughness) in your [hit points](combat.md#hit-points), [Dexterity](stats.md#stat-dexterity) in your [Defence](combat.md#defence). The [character
+  limit](burden.md#how-much-you-can-carry), [Toughness](stats.md#stat-toughness) in your [hit points](hit-points.md#hit-points), [Dexterity](stats.md#stat-dexterity) in your [Defence](combat.md#defence). The [character
   screen](character.md) shows your stats with what you wear. A [status effect](status-effects.md)
   that lowers a stat lowers it from there: [poisoned](status-effects.md#status-poisoned) while wearing a ring of Strength, you are
   still stronger than without the ring.
@@ -84,7 +84,7 @@ A few rules from elsewhere carry over:
   Dodge adds up (see [Combat](combat.md)). **[Protection](combat.md#protection)** always adds up, piece by piece, and a
   [Hardened](talents.md#talent-hardened) piece of armour adds its magic to its own (see
   [Combat](combat.md#protection)).
-- **[Hit points](combat.md#hit-points)** and **[mana](mana.md#how-much)**: putting on something that adds to them raises your maximum, not
+- **[Hit points](hit-points.md#hit-points)** and **[mana](mana.md#how-much)**: putting on something that adds to them raises your maximum, not
   what you have; taking it off lowers both, if need be (see [Mana](mana.md)).
 - **Healing**: magic that speeds healing adds on top of everything else that changes its pace
   (see [Healing](healing.md)); nothing heals you while you [bleed](status-effects.md#bleeding), magic or not.
@@ -125,7 +125,7 @@ Prefixes are mostly offensive, or flat [Defence](combat.md#defence) and life. *F
 *Shocking*, *Corrosive*, and *Withering* add a die of [fire](damage-types.md#damage-fire), [cold](damage-types.md#damage-cold), [poison](damage-types.md#damage-poison), [electricity](damage-types.md#damage-electricity), [acid](damage-types.md#damage-acid), or
 [necrotic](damage-types.md#damage-necrotic) damage to every hit, which no armour soaks (see [Damage types](damage-types.md)).
 *Mage-wrought*, *Baleful*, and *Potent* serve a caster (see [Magic](magic.md)): *Potent* adds 1 to 3
-more on every [spell](magic.md#how-a-spell-grows)'s roll, harm or healing. *Tireless* raises
+more on every [spell](spellcasting.md#how-a-spell-grows)'s roll, harm or healing. *Tireless* raises
 your [stamina](resources.md#resource-stamina) (see [Resources](resources.md)), *Hobnailed* [boots](objects.md#class-boots) [kick doors](doors.md#kicking) in more easily, and a
 *Delving* tool or pair of gloves [digs](digging.md#digging) faster (a magic pick-axe turns up in loot).
 
@@ -138,7 +138,7 @@ Warmth*, *of the Adder*, *of the Storm*, *of Glass*, *of the Anvil*, and *of the
 [fire](damage-types.md#damage-fire), [cold](damage-types.md#damage-cold), [poison](damage-types.md#damage-poison), [electricity](damage-types.md#damage-electricity), [acid](damage-types.md#damage-acid), [force](damage-types.md#damage-force), and [necrotic](damage-types.md#damage-necrotic) damage, in percent (see [Damage
 types](damage-types.md)). The casters'
 suffixes (of Thrift, of the Magus, of Farcasting, of Lingering, of Siphoning, of
-Wands) are told on the [Magic](magic.md) and [Mana](mana.md) pages: *of Wands* makes the [wands](magic.md#wands) you use cast a
+Wands) are told on the [Magic](magic.md) and [Mana](mana.md) pages: *of Wands* makes the [wands](wands-and-rods.md#wands) you use cast a
 rung or two higher; of Breath, of Ease, and of the
 Hunt help [stamina](resources.md#resource-stamina). *Of Fury*, *of Steadiness*, *of Stillness*, *of Guile*, and *of the Muse* raise
 the most [rage](resources.md#rage), [focus](resources.md#resource-focus), [ki](resources.md#resource-ki), [openings](resources.md#resource-openings), or [inspiration](resources.md#resource-inspiration) you can hold: only [berserkers](classes.md#berserker), [rangers](classes.md#ranger), [ascetics](classes.md#ascetic),
@@ -178,7 +178,7 @@ fitting what it is, and is called by its name and its base: "Grim Bite, long swo
 item is set with (see [Gems](gems.md#items-set-with-a-gem)) goes between the prefix and the base,
 "Sharp emerald-pommelled long sword of the Bear", and shows unidentified too; a rare item keeps
 its two words and the gem follows in its base, "Grim Bite, emerald-pommelled long sword". An
-item of another material than its usual one (see [Objects](objects.md#items-of-other-materials))
+item of another material than its usual one (see [Objects](materials.md#items-of-other-materials))
 names it after the gem: "Sharp emerald-pommelled bronze long sword of the Bear".
 
 {{#include generated/magic-names.md}}

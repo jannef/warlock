@@ -99,8 +99,8 @@ your [pack](objects.md#your-pack) is put at your feet. A few quests can be done 
 `q` opens the **quest log**: the quests you were given, then the ones you have done. Choose
 one with the arrows to see what it asks, first in the giver's name ("Reeve Leofric wants you to
 kill 5 giant rats in Cealdhlāw."), how far you have got ("2 / 5 killed.", "Return to
-Reeve Leofric."), and who gave it, in their words. It is page 7 of the [info screens](controls.md#info-pages): `1` to `9`,
-`Tab`, and `Shift`+`Tab` switch between it and the [character screen](controls.md#character), the [inventory](objects.md#your-pack), the
+Reeve Leofric."), and who gave it, in their words. It is page 7 of the [info screens](the-screen.md#info-pages): `1` to `9`,
+`Tab`, and `Shift`+`Tab` switch between it and the [character screen](the-screen.md#character), the [inventory](objects.md#your-pack), the
 [equipment](equipment.md), your [skills](skills.md), your [weapon skills](weapon-skills.md), the
 [Magic page](schools.md#the-magic-page), your [talents](talents.md), and [your story](background.md#when-it-is-told).
 
@@ -111,11 +111,11 @@ no limit on how many you may be on at once. Opening the log takes no time.
 
 In [Cēaptūn](ascmearc.md#the-places), three people have work for you, each a chain of quests offered one after the other:
 **[Reeve Leofric](creatures.md#creature-reeve)** sends you into [Cealdhlāw](dungeons.md#the-dungeons), the [barrow](dungeons.md#the-dungeons) east of town; **[Sister Hild](creatures.md#creature-sister)** at
-the Mynster wants back what the barrow and the drowned minster keep, and marks [Fennmynster](dungeons.md#fennmynster) on
+the Mynster wants back what the barrow and the drowned minster keep, and marks [Fennmynster](dungeon-guide.md#fennmynster) on
 your map; once you have been deep in the barrow and reached level 5, **[Factor Wulfrun](creatures.md#creature-mine-factor)** marks
-the old mine, [Fyrdelf](dungeons.md#fyrdelf) (ask her sooner and she tells you you are not ready, and gives you
+the old mine, [Fyrdelf](dungeon-guide.md#fyrdelf) (ask her sooner and she tells you you are not ready, and gives you
 nothing). In [Holtwīc](ascmearc.md#the-places), at the end of the north road, **[Gammer Wynflæd](creatures.md#creature-wise-woman)**
-the wise-woman asks you to bring home a girl the fair folk took, and marks [Ælfhām](dungeons.md#ælfhām),
+the wise-woman asks you to bring home a girl the fair folk took, and marks [Ælfhām](dungeon-guide.md#ælfhām),
 their hall in the holly wood, on your map: the girl waits at its very bottom. The table lists every quest in its chain's order, what it asks, what it pays, what
 must be done first, the level you must have reached for it to be given, and the [hidden place](overworld.md#hidden-locations) it
 shows you.

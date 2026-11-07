@@ -3,7 +3,7 @@
 An overview of what the game does today, feature by feature; the other pages explain the
 rules behind each.
 
-This is the engine and framework phase: [creatures](creatures.md) hunt you, fight, shoot, cast [spells](magic.md), and die, [death](combat.md#death) is permanent, and you grow by [experience levels](experience.md#levels) and by [skills](skills.md) that
+This is the engine and framework phase: [creatures](creatures.md) hunt you, fight, shoot, cast [spells](magic.md), and die, [death](hit-points.md#death) is permanent, and you grow by [experience levels](experience.md#levels) and by [skills](skills.md) that
 improve with use. You come into **[the Ascmearc](ascmearc.md)** through a mountain pass that closes behind you
 (see [The Ascmearc](ascmearc.md)): an ADOM-like **[overworld](overworld.md)** with [day and night](time.md#days) and [weather](weather.md#how-the-weather-changes),
 outdoor areas [generated from it](overworld.md#local-areas), the market town of [Cēaptūn](ascmearc.md#the-places), and procedurally generated
@@ -31,7 +31,7 @@ outdoor areas [generated from it](overworld.md#local-areas), the market town of 
 - **[Perception and memory](sight.md)** — symmetric [line of sight](sight.md#line-of-sight); explored terrain and the objects seen on
   it stay as dim [memory](sight.md#memory), never showing creatures or current light.
 - **[Objects](objects.md)** — [weapons](objects.md#class-melee-weapons), [armor](objects.md#class-body-armour), [tools](objects.md#class-tools), [potions](potions.md), [scrolls](scrolls.md), [food](food.md), [gems](gems.md), [coins](objects.md#class-coins), [rings](objects.md#class-rings), and [amulets](objects.md#class-amulets),
-  each with its own glyph, color, [material](objects.md#materials), and weight, lie in [piles](objects.md#piles) to pick up and drop; an
+  each with its own glyph, color, [material](materials.md#materials), and weight, lie in [piles](objects.md#piles) to pick up and drop; an
   ADOM-style [inventory](objects.md#your-pack) lettered a–z shows what you carry and what it weighs, and an ADOM-style
   [equipment](equipment.md) screen puts it on: [helm](objects.md#class-helmets), [amulet](objects.md#class-amulets), [armor](objects.md#class-body-armour), [cloak](objects.md#class-cloaks), weapons and [shield](objects.md#class-shields) (or a second, light
   weapon, or a two-handed staff or great sword), [gloves](objects.md#class-gloves), [rings](objects.md#class-rings), [boots](objects.md#class-boots), a bow and arrows, and a
@@ -45,13 +45,13 @@ outdoor areas [generated from it](overworld.md#local-areas), the market town of 
   [Defence](combat.md#defence) ([Dexterity](stats.md#stat-dexterity), armour, shield, [parry](combat.md#defence), a beetle's shell), misses say why ("You block the
   kobold's spear with your shield."), [criticals](combat.md#criticals) threaten and confirm ("The kobold hits you
   hard!"), armour and hides soak damage like ADOM's PV ("Your sword glances off the cave beetle's
-  shell."), and weapons and armour come from data. ADOM-like [hit points](combat.md#hit-points) from [Toughness](stats.md#stat-toughness), [race](races.md), and
+  shell."), and weapons and armour come from data. ADOM-like [hit points](hit-points.md#hit-points) from [Toughness](stats.md#stat-toughness), [race](races.md), and
   [class](classes.md) [heal](healing.md#how-fast) with time; creatures die and drop what they carried, look as hurt as they are, and
   your own death ends the run for good: the [save](saving.md) is gone.
 - **[Experience](experience.md)** — every creature has a level and an [XP](experience.md) value; kills you make yourself (melee,
   shots, throws) earn XP, less and less the further the monster is below your level, as in World
   of Warcraft (nothing from grey ones, a little extra from tougher ones). [Levels](experience.md#levels) run to 60 (the bard's to 30) and, up
-  to level 50, make you hardier. Your level and XP show on the [status bar](controls.md#the-screen), the [character screen](controls.md#character),
+  to level 50, make you hardier. Your level and XP show on the [status bar](the-screen.md#the-screen), the [character screen](the-screen.md#character),
   and the death screen.
 - **[Magic items](magic-items.md)** — after Path of Exile: [base items](magic-items.md#base-items) (daggers to great axes, bows and
   crossbows, padded coats to plate, helms, cloaks, gloves, boots, shields, rings, amulets) roll
@@ -64,7 +64,7 @@ outdoor areas [generated from it](overworld.md#local-areas), the market town of 
   rare finds, larger and finer deeper down, and what rings, amulets, and now and then weapons,
   shields, and helms are set with: "an emerald-pommelled long sword", "a gold and ruby ring".
   General [stores](shops.md) buy them at what they are worth.
-- **[Materials](objects.md#materials)** — metals, from tin to nicrosil, and woods, bones, stones, hides, and
+- **[Materials](materials.md#materials)** — metals, from tin to nicrosil, and woods, bones, stones, hides, and
   cloths, each with its weight, what it does as a blade or as armour, its worth, and its colour.
   Items are found made of other materials than their usual one, by what each may be made of: "a
   bronze long sword" (heavier, a little weaker, cheaper), "a flint spear", "a dragonbone
@@ -78,8 +78,8 @@ outdoor areas [generated from it](overworld.md#local-areas), the market town of 
 - **[Magic](magic.md)** — [spells](magic.md#the-spells) of [levels](magic.md#spell-levels) 0 to 70 ([cantrips](magic.md#spell-levels) at 0 and 1), cast from the [abilities menu](abilities.md#the-abilities-menu) for
   [mana](mana.md#how-much) by its level: a few come with a casting [class](classes.md), the rest are learned from scrolls, and one far
   above your [learning](magic.md#learning) is hard to learn and can go badly wrong. Rays and bolts, cones, lines,
-  and bursts, each with dice of its own and [ladders](magic.md#the-spells) your stats climb. [Wands](magic.md#wands) cast
-  their spell from their charges at a rung of their own, for anyone; [rods](magic.md#rods) do what no spell does (digging, sleep,
+  and bursts, each with dice of its own and [ladders](magic.md#the-spells) your stats climb. [Wands](wands-and-rods.md#wands) cast
+  their spell from their charges at a rung of their own, for anyone; [rods](wands-and-rods.md#rods) do what no spell does (digging, sleep,
   terror, teleport other) for your own mana (see [Magic](magic.md)).
 - **[People and talk](npcs.md)** — [Cēaptūn](ascmearc.md#the-places) has folk to talk to: townsfolk on the square, Sister Hild in the
   Mynster, Godgifu at the inn, the reeve and the mine-factor. [Chat](npcs.md#chatting) with `C`: most say a
@@ -98,13 +98,13 @@ outdoor areas [generated from it](overworld.md#local-areas), the market town of 
   ADOM-style with a cursor and a faint line of fire, watch the arrow fly, and pick it up where it
   fell. A [flaming arrow](ranged.md#flaming-arrows) flies burning and lights the dark where it lands until it burns out:
   shoot one into the dark to see what waits there (and be seen).
-- **[Blood](combat.md#blood)** — big hits and kills stain the floor and the walls beside the victim, by its size and
+- **[Blood](hit-points.md#blood)** — big hits and kills stain the floor and the walls beside the victim, by its size and
   how the blow landed; subtle for one kill, a slaughterhouse where many fell (a [setting](settings.md) hides it).
 - **[Weapon skills](weapon-skills.md)** — ADOM-style: every blow, shot, and throw earns marks in its weapon's skill
   (daggers, long blades, axes, bows, …, fifteen in all, shield bashing among them), and [ranks](weapon-skills.md#marks-and-ranks) 0 to 10 come slower and slower; each rank makes you hit, hurt, or parry
   a little better ("You feel more skilled with long blades."). Skill carries over to
   [related weapons](weapon-skills.md#related-skills), as in *The Riddle of Steel*: long blades 8 makes short blades 6. Your race and
-  class start you off, a [weapon skills screen](controls.md#info-pages) shows your ranks, and a shield can [bash](abilities.md#ability-shield-bash) too.
+  class start you off, a [weapon skills screen](the-screen.md#info-pages) shows your ranks, and a shield can [bash](abilities.md#ability-shield-bash) too.
 - **[Fighting styles](fighting-styles.md)** — after AD&D's *Complete Fighter's Handbook*, how you hold your weapons is a
   skill of its own: [Duelist](fighting-styles.md#style-duelist), [Twin Blades](fighting-styles.md#style-twin-blades), [Great Weapon](fighting-styles.md#style-great-weapon), [Sword and Board](fighting-styles.md#style-sword-and-board), [Marksman](fighting-styles.md#style-marksman), [Skirmisher](fighting-styles.md#style-skirmisher),
   [Brawler](fighting-styles.md#style-brawler), and [Staff Fighter](fighting-styles.md#style-staff-fighter), each with ranks 0 to 10 trained by fighting that way and benefits
@@ -117,7 +117,7 @@ outdoor areas [generated from it](overworld.md#local-areas), the market town of 
   stop healing, and can kill (creatures bleed to death too); strong poison saps [Strength](stats.md#stat-strength) and
   [Dexterity](stats.md#stat-dexterity). The status bar names what ails you, [look mode](controls.md#look-mode) shows a creature bleeding; never a
   number. Hit points come back twice as fast while you [rest](resting.md#how-resting-works).
-- **[Mana](mana.md)** — a second pool beside your [hit points](combat.md#hit-points), for spells and rods: from your race and
+- **[Mana](mana.md)** — a second pool beside your [hit points](hit-points.md#hit-points), for spells and rods: from your race and
   class, your [Intelligence](stats.md#stat-intelligence), [Willpower](stats.md#stat-willpower), and [Presence](stats.md#stat-presence), your levels, and magic items. It comes back
   with time by your Willpower, faster while you rest or in a [sanctuary](special-rooms.md#room-sanctuary), slower while poisoned or
   diseased, not at all while starving. The status bar shows it (`MP 5/12`).
@@ -129,7 +129,7 @@ outdoor areas [generated from it](overworld.md#local-areas), the market town of 
   rotten food, and more, in the spirit of D&D 3.5: caught unseen when a hidden [check](diseases.md#checks) fails, they
   [incubate](diseases.md#how-a-disease-goes) for days, then you are [Diseased](status-effects.md#status-diseased). Each day your body fights back with another check;
   a loss takes points off your [stats](stats.md) ([Toughness](stats.md#stat-toughness) damage lowers your hit points), two wins in a
-  row shake it off, and grave rot never goes by itself. The [character screen](controls.md#character) names the disease
+  row shake it off, and grave rot never goes by itself. The [character screen](the-screen.md#character) names the disease
   once it has run a day; lost stat points [mend](stats.md#drained-stats) a point a day once you are well.
 - **[Traps](traps.md)** — arrow and spear traps, fireballs, lightning bolts, pits, alarms, and teleports lie
   hidden until someone steps on them: you, or a creature you lure there; a [trapped door](traps.md#trapped-doors) goes off
@@ -156,7 +156,7 @@ outdoor areas [generated from it](overworld.md#local-areas), the market town of 
   some do more than feed you (a kobold tastes terrible; a [beetle](creatures.md#creature-beetle) might toughen you). Rotten food
   makes you sick. Cēaptūn's provisioner sells food.
 - **[Stats](stats.md)** — [Strength](stats.md#stat-strength), [Dexterity](stats.md#stat-dexterity), [Toughness](stats.md#stat-toughness), [Intelligence](stats.md#stat-intelligence), [Willpower](stats.md#stat-willpower), and [Presence](stats.md#stat-presence), inspired by
-  D&D, for you and every creature; a [character screen](controls.md#character) shows your own. Strength, Dexterity, and
+  D&D, for you and every creature; a [character screen](the-screen.md#character) shows your own. Strength, Dexterity, and
   Toughness count in a fight, and Strength [kicks doors in](doors.md#kicking); Intelligence and Willpower find hidden things ([Searching](searching.md)), Willpower brings [mana](mana.md#how-fast-it-comes-back) back, and Presence sways [shop prices](shops.md#prices).
 - **[Character creation](character.md)** — ADOM-style, at the start of every run: thirteen [races](races.md) ([elf](races.md#race-elf), [half-elf](races.md#race-half-elf),
   [human](races.md#race-human), [dwarf](races.md#race-dwarf), [halfling](races.md#race-halfling), [gnome](races.md#race-gnome), [half-orc](races.md#race-half-orc), and the [evil](races.md#the-evil-races) [goblin](races.md#race-goblin), [drow](races.md#race-drow), [kobold](races.md#race-kobold), [lizardfolk](races.md#race-lizardfolk),
@@ -171,7 +171,7 @@ outdoor areas [generated from it](overworld.md#local-areas), the market town of 
   meaningful use may earn a [training mark](skills.md#getting-better); past 100 they grow slowly), and the passive ones help
   already: [tumbling](skills.md#skill-tumble) adds to your Defence, [stealth](skills.md#skill-stealth) quiets your steps and doors, [listening](skills.md#skill-listen) lets you
   hear fainter sounds, [balance](skills.md#skill-balance) eases a heavy load, and [survival](skills.md#skill-survival) speeds your journeys. A Skills
-  [screen](controls.md#skills) (`A`) shows their values, never the numbers behind them.
+  [screen](the-screen.md#skills) (`A`) shows their values, never the numbers behind them.
 - **[Abilities](abilities.md)** — unlike ADOM's key for each, one [menu](abilities.md#the-abilities-menu) (`a`) holds everything you can do
   because of who you are: a [shield bash](abilities.md#ability-shield-bash), the skills you use as actions, and later racial, class,
   and item abilities. What you cannot use right now is greyed out with why, and `X` repeats the

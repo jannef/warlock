@@ -51,7 +51,7 @@ pub(super) fn abilities(content: &Content) -> String {
             Ability::Feint => "everyone trained in Bluff".into(),
             Ability::Tame => {
                 "everyone trained in Handle animal, at any level (not while they have a companion; \
-                 see [Taming](allies.md#taming))"
+                 see [Taming](companions.md#taming))"
                     .into()
             }
             Ability::Intimidate => "everyone trained in Intimidate".into(),

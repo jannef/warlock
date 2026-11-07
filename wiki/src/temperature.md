@@ -1,6 +1,6 @@
 # Temperature and ice
 
-The air has a temperature wherever you are, and the [status bar](controls.md#the-screen) always
+The air has a temperature wherever you are, and the [status bar](the-screen.md#the-screen) always
 shows it, as `4 °C` (or in °F: see [Settings](settings.md)). Below freezing it is tinted a cool
 blue, and from 30 °C a warm orange; the number says it all. The cold does nothing to you yet; it
 freezes water.
@@ -79,7 +79,7 @@ A step onto ice is a careful one and takes a little longer than on dry ground; i
 ## Falling in
 
 When the ice gives way: "The ice cracks beneath you and you plunge into the freezing water!" The
-cold costs you a few [hit points](combat.md#hit-points), but never your last one (it cannot kill you yet). If you are trained in
+cold costs you a few [hit points](hit-points.md#hit-points), but never your last one (it cannot kill you yet). If you are trained in
 [Swim](skills.md#skill-swim) you make a check as you go in, [Toughness](stats.md#stat-toughness) plus Swim's points against 11; made, it costs half
 as much, rounded down ("You keep your head, and the cold bites less deep."). You are in the
 water where the ice was: a hole of open water, which freezes over again in time (a few hours in a
@@ -93,11 +93,11 @@ hard frost).
 - **[Creatures](creatures.md)** fall through too, by the same rules, and climb out the same way.
 
 There is no going back once the ice cracks, but nothing is lost for good: only time, and a few
-[hit points](combat.md#hit-points).
+[hit points](hit-points.md#hit-points).
 
 ## Heat and frost
 
-Bursts of heat and frost change the ice at once (see [Traps](traps.md), and [spell types](magic.md#spell-types)): a
+Bursts of heat and frost change the ice at once (see [Traps](traps.md), and [spell types](spellcasting.md#spell-types)): a
 [fireball](traps.md#trap-fireball) melts the ice it reaches, and whoever stood on it falls in (but the ice under someone
 [water-borne](status-effects.md#status-water-borne) holds); a [frost trap](traps.md#trap-frost) freezes the
 [water](terrain.md#water) it reaches at once, into ice that holds a laden person (10 cm). A blast without heat (none

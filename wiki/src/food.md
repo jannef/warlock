@@ -34,7 +34,7 @@ and when.
 
 Food a little past its best is fine to eat. Food past its keeping is **rotten**, and eating it is
 a bad idea: "Ugh! The loaf of bread was rotten." You may vomit, and if it stays down it makes
-you sick ("You feel sick."): food poisoning, which costs [hit points](combat.md#hit-points) for a while until it wears
+you sick ("You feel sick."): food poisoning, which costs [hit points](hit-points.md#hit-points) for a while until it wears
 off (see [Status effects](status-effects.md#poisoned)), though it still feeds you. Rotten food
 may also give you [grave rot](diseases.md#disease-grave-rot) (see [Diseases](diseases.md)). [Ratfolk](races.md#race-ratfolk) eat it without harm: "The
 loaf of bread was rotten, but your stomach does not mind." It feeds them as fresh food would, no
@@ -55,7 +55,7 @@ and rots away altogether in a day or two, from the floor and from your pack alik
 rat corpse has rotted away."). A corpse does not show how old it is: remember when it fell.
 Eating a rotten one is as bad an idea as any rotten food: "Ugh! The kobold corpse was rotten."
 
-A corpse is good for more than a meal. [Necromancy](magic.md#spell-types) has three uses for one,
+A corpse is good for more than a meal. [Necromancy](spellcasting.md#spell-types) has three uses for one,
 of any age, each of them using it up: [Charnel burst](magic.md#spell-charnel-burst) blows it apart,
 [Grave feast](magic.md#spell-grave-feast) draws out what life is left, and [Rouse the
 dead](allies.md#the-risen) stands it up again.

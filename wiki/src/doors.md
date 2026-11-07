@@ -65,7 +65,7 @@ How often a try works, by the lock's difficulty and what you add (your [Dexterit
 {{#include generated/lock-picking.md}}
 
 A force spell's blast breaks every shut door it reaches, locked or trapped, whatever its sturdiness: see
-[spell types](magic.md#spell-types).
+[spell types](spellcasting.md#spell-types).
 
 ## Kicking
 

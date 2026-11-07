@@ -1,13 +1,13 @@
 # Mana
 
-Mana is your second pool beside your [hit points](combat.md#hit-points), and it works the same way:
+Mana is your second pool beside your [hit points](hit-points.md#hit-points), and it works the same way:
 you have some, it has a most, and it comes back by itself with time. [Spells](magic.md#the-spells) spend it
 (those your class gives, see [Classes](classes.md#levels), and those you learn from [scrolls](scrolls.md#spell-scrolls)), and
-so do [rods](magic.md#rods): each costs its mana, and with too little you cannot cast it until
+so do [rods](wands-and-rods.md#rods): each costs its mana, and with too little you cannot cast it until
 enough has come back.
 
-The [status bar](controls.md#the-screen) shows it right after your [hit points](combat.md#hit-points), as `MP 5/12`: what you have left of your
-most. The [character screen](character.md) (`@`) shows it beside your [hit points](combat.md#hit-points). Creatures may
+The [status bar](the-screen.md#the-screen) shows it right after your [hit points](hit-points.md#hit-points), as `MP 5/12`: what you have left of your
+most. The [character screen](character.md) (`@`) shows it beside your [hit points](hit-points.md#hit-points). Creatures may
 have mana too, but you never see theirs. [Magic items](magic-items.md) work for a creature exactly as for you: one
 that wears or wields a "+5 to maximum mana" ring has 5 more mana (and starts with all of it), and one
 whose amulet makes "mana come back 50% faster" regains it half again as fast. A summoner pays for its summons from that larger
@@ -25,7 +25,7 @@ more), and only [elves](races.md#race-elf), [gnomes](races.md#race-gnome), [half
 
 Each [level](experience.md#levels) up to 60 raises it (and the mana you have now) by half your class's mana plus what the
 better of your [Intelligence](stats.md#stat-intelligence) and [Willpower](stats.md#stat-willpower) adds (see
-[Experience](experience.md#what-a-level-gives)): a wizard keeps growing it after [hit points](combat.md#hit-points) stop
+[Experience](experience.md#what-a-level-gives)): a wizard keeps growing it after [hit points](hit-points.md#hit-points) stop
 at level 50; a [warrior](classes.md#warrior) with ordinary wits gains none. [Magic items](magic-items.md) that add to it
 ("+5 to maximum mana") raise your most, not what you have. The talent *[Deep well](talents.md#talent-deep-well)* raises both,
 by 1 for every 4 [character levels](experience.md#levels) and at least 2, as you take it and
@@ -70,10 +70,10 @@ three pieces of 20 % and the talent still take only 50 %, so 10 becomes 5. It wo
 item you have not identified, and stops when you take it off. This cut comes last, after
 everything else that changes a spell's or a rod's cost (see
 [What a spell costs](magic.md#what-a-spell-costs)), and it is the one for every ability that
-costs mana: spells, [rods](magic.md#rods), a summoning.
+costs mana: spells, [rods](wands-and-rods.md#rods), a summoning.
 
 The talent *[Blood magic](talents.md#talent-blood-magic)* gives you an ability (in the [abilities menu](abilities.md#the-abilities-menu)) that turns 5 of your [hit
-points](combat.md#hit-points) into 3 mana at once, for the time of a wait. It never takes your last [hit point](combat.md#hit-points) (with 5
+points](hit-points.md#hit-points) into 3 mana at once, for the time of a wait. It never takes your last [hit point](hit-points.md#hit-points) (with 5
 or fewer it refuses), never brings your mana above your most, and does nothing while your mana
 is full. It is not a wound: nothing soaks it, and it trains nothing.
 
@@ -103,7 +103,7 @@ never above her most. It adds to an item of Siphoning's.
 
 ## The fine print
 
-- Mana comes back on game time, whatever you do, like [hit points](combat.md#hit-points): waiting, walking, fighting, or a
+- Mana comes back on game time, whatever you do, like [hit points](hit-points.md#hit-points): waiting, walking, fighting, or a
   long journey. Only the time counts, and it does not matter how it is cut up.
 - Progress toward the next point carries over from turn to turn, and is lost once you are full.
 - You never see how fast it comes back as a number, only your mana rising.

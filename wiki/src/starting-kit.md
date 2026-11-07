@@ -12,7 +12,7 @@ trade; the [commoner](classes.md#commoner) with a stick, two turnips, and a heel
 in hardened leather and an iron helm (a paladin with gauntlets besides); every [elf](races.md#race-elf) carries a bow
 of hardwood and [arrows](ammunition.md) (a long war bow for elves, a short bow for [half-elves](races.md#race-half-elf)) and every [drow](races.md#race-drow) a
 crossbow with steel-headed bolts; a [halfling](races.md#race-halfling) has a sling and stones; and a [dwarf](races.md#race-dwarf) goes in good
-[steel](objects.md#materials): a steel pick-axe, steel gauntlets, and steel-shod boots. Elves, half-elves, drow, and
+[steel](materials.md#materials): a steel pick-axe, steel gauntlets, and steel-shod boots. Elves, half-elves, drow, and
 halflings also start trained in the [weapon](weapon-skills.md) their race gives them (see [Races](races.md)).
 
 ## What each class starts with

@@ -17,7 +17,7 @@ of 10 (see [Your character](character.md)). After that they grow by use: see
 Press `@` to open the **character screen**. It shows your name, your [race](races.md), gender, and [class](classes.md),
 your age, birthday, and [birth sign](horoscope.md), your stats in the order above (with their
 short names; a stat that a [status effect](status-effects.md#how-they-work) or a [disease](diseases.md#how-a-disease-goes) lowers is shown lowered, in red), your [hit
-points](combat.md#hit-points), [mana](mana.md#how-much) (see [Mana](mana.md)), and [Defence](combat.md#defence) (see [Combat](combat.md)), your weight: your own, plus what you carry (see [Objects and your pack](objects.md)), and how much you can carry (see
+points](hit-points.md#hit-points), [mana](mana.md#how-much) (see [Mana](mana.md)), and [Defence](combat.md#defence) (see [Combat](combat.md)), your weight: your own, plus what you carry (see [Objects and your pack](objects.md)), and how much you can carry (see
 [Burden](burden.md)). Looking takes no time; press `@` or `Esc` to close it.
 
 [Creatures](creatures.md) have stats too, but you cannot see theirs in the game: they are on
@@ -33,7 +33,7 @@ In a fight (see [Combat](combat.md)), under a load (see [Burden](burden.md)), at
   [door](doors.md#kicking) in and [dig](digging.md#digging) through a wall.
 - **[Dexterity](stats.md#stat-dexterity)** helps you aim a shot or a throw and dodge blows: it adds to your [Defence](combat.md#defence) (less
   under a heavy load or heavy armour).
-- **[Toughness](stats.md#stat-toughness)** gives you [hit points](combat.md#hit-points), and makes them come back sooner. It counts toward how much
+- **[Toughness](stats.md#stat-toughness)** gives you [hit points](hit-points.md#hit-points), and makes them come back sooner. It counts toward how much
   you can [carry](burden.md#how-much-you-can-carry), and fights off most [diseases](diseases.md).
 - **[Intelligence](stats.md#stat-intelligence)** helps you find hidden things when you search ([Searching](searching.md)), adds
   to your [mana](mana.md), and grows the spells whose [ladders](magic.md#the-spells) name it (most spells' damage).
@@ -100,7 +100,7 @@ when it lasts more than one turn and is not interrupted.
 Every stat has paths outside its obvious one. A fighter who never opens a scroll still sharpens
 Intelligence by exploring, searching, foraging, and disarming traps; a wizard grows stronger by
 wading, hauling, and struggling free of a grip. Casting a spell you know trains the stats the
-spell grows with ([its ladders](magic.md#how-a-spell-grows)): Intelligence for most, Willpower for
+spell grows with ([its ladders](spellcasting.md#how-a-spell-grows)): Intelligence for most, Willpower for
 those that reach far, Presence for hexes and blessings that last. Some uses train two stats at
 once (disarming a trap, struggling against a hold).
 
@@ -135,7 +135,7 @@ nothing is ever wasted. A lucky rise from a short pile spends what there was and
 stat rises at most one point a check, so a great pile becomes a point a day and one a level. The
 game says only "You feel stronger." (quicker, tougher, sharper, more resolute, more confident);
 the new score shows on the character screen. A rise in [Toughness](stats.md#stat-toughness) brings its
-[hit point](combat.md#hit-points) at once, and a rise at 06:00 stops a [rest](resting.md#how-resting-works). The check comes whether
+[hit point](hit-points.md#hit-points) at once, and a rise at 06:00 stops a [rest](resting.md#how-resting-works). The check comes whether
 you are awake or resting, once a day, at that hour and no other; nothing decays and nothing is
 capped, so the only limit is the clock.
 
@@ -167,7 +167,7 @@ resolve wavers.", "You feel less sure of yourself."), and the drop pays its pric
 zero, never past it. A drop never takes a stat below 3, nor below the
 [stat damage](diseases.md#how-a-disease-goes) on it plus one, and never lowers the potential: a
 point lost below the potential is won back at its plain price. Your most
-[hit points](combat.md#hit-points) and [mana](mana.md) fall with it, but a drop never kills.
+[hit points](hit-points.md#hit-points) and [mana](mana.md) fall with it, but a drop never kills.
 
 At 14, losing a point takes 75 marks of deeds (five dawns greeted Weak) and winning it back 150
 marks of use, so there is nothing to gain by going up and down.
@@ -179,7 +179,7 @@ you live, you make a **check** of a stat ([Willpower](stats.md#stat-willpower), 
 plus the stat's [modifier](stats.md#modifiers) against the drain's difficulty, as a [disease](diseases.md#how-a-disease-goes)'s check. If you hold, "A
 deathly chill passes through you." and nothing is lost. If not, points come off one of your stats
 **for good** ("You feel your strength drain away!"): your score is simply lower from then on,
-for everything it does. A drain of [Toughness](stats.md#stat-toughness) lowers your most [hit points](combat.md#hit-points), one of [Intelligence](stats.md#stat-intelligence),
+for everything it does. A drain of [Toughness](stats.md#stat-toughness) lowers your most [hit points](hit-points.md#hit-points), one of [Intelligence](stats.md#stat-intelligence),
 [Willpower](stats.md#stat-willpower), or [Presence](stats.md#stat-presence) your most [mana](mana.md#how-much); it never kills you, and no drain takes a score below 3
 (nor below what the [stat damage](diseases.md#stat-damage) on it needs). [Resting](resting.md#how-resting-works) never brings drained points back.
 

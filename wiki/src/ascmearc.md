@@ -40,15 +40,15 @@ A little cave, **[Lytelscræf](dungeons.md#the-dungeons)**, opens two cells from
 short floors of rats, bats, and kobolds, the easiest dungeon there is, with a chest at the bottom.
 Three dungeons lie nearest the town, deeper and more dangerous one after another (see
 [Dungeons and danger](dungeons.md)): **[Cealdhlāw](dungeons.md#the-dungeons)**, the cold barrow in the downs, which you can
-see from the road; **[Fennmynster](dungeons.md#fennmynster)**, the cellars of a minster drowned in the great fen; and
-**[Fyrdelf](dungeons.md#fyrdelf)**, the fire diggings under the hills below the volcano. The last two are
+see from the road; **[Fennmynster](dungeon-guide.md#fennmynster)**, the cellars of a minster drowned in the great fen; and
+**[Fyrdelf](dungeon-guide.md#fyrdelf)**, the fire diggings under the hills below the volcano. The last two are
 **[hidden](overworld.md#hidden-locations)**: until a [quest](quests.md) tells you where one lies, its cell is just the swamp or the hills it
-looks like (see [Hidden locations](overworld.md#hidden-locations)). So are the [four lairs](dungeons.md#the-lairs-of-the-wanted) of
+looks like (see [Hidden locations](overworld.md#hidden-locations)). So are the [four lairs](dungeon-guide.md#the-lairs-of-the-wanted) of
 the criminals the [Weyfarers' Gilde](guild.md#the-wanted) wants dead: Wyrtholm in the fen,
 Wulfeshol in Deorcholt, Bānfeld on the downs, and Brocenburg in the holly wood; you are shown
-only one of them. Under the volcano, **[Ūtgang](dungeons.md#ūtgang)**, a way up from the bottom of
+only one of them. Under the volcano, **[Ūtgang](dungeon-guide.md#ūtgang)**, a way up from the bottom of
 Fyrdelf, is hidden too, and no one tells of it: you find its mouth by climbing out of it.
-Somewhere in the holly wood near Holtwīc, a fairy mound hides **[Ælfhām](dungeons.md#ælfhām)**, the
+Somewhere in the holly wood near Holtwīc, a fairy mound hides **[Ælfhām](dungeon-guide.md#ælfhām)**, the
 hall of the dark court of the fey. The map below shows them all anyway. Places that lead "nowhere yet" are still being built: for now `>` there says so.
 
 ## The places
@@ -127,7 +127,7 @@ the English of the day:
 
 ## Regions
 
-The [status bar](controls.md#the-screen) names the region you are in, on the [overworld](overworld.md) and in its [local areas](overworld.md#local-areas):
+The [status bar](the-screen.md#the-screen) names the region you are in, on the [overworld](overworld.md) and in its [local areas](overworld.md#local-areas):
 
 {{#include generated/overworld-regions.md}}
 

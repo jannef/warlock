@@ -39,7 +39,7 @@ On the [overworld](overworld.md#travel) a step is a journey: it takes the time g
 You can move in eight directions, diagonals included. You cannot step into a [wall](terrain.md#walls) or other solid
 terrain; trying takes no time. Walking into a closed [door](doors.md) opens it, which costs the same as
 opening it. Moving into a [creature](creatures.md) that is [hostile](creatures.md#factions) to you attacks it (see
-[Creatures](creatures.md#attacks)). Moving into any other creature swaps places with it, for
+[Creatures](creature-bodies.md#attacks)). Moving into any other creature swaps places with it, for
 your step's time ("You swap places with the deer."), unless it will not make way, which takes no
 time ("The sentry doesn't budge."); see [People and talk](npcs.md#getting-past).
 

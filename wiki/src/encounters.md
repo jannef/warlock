@@ -69,7 +69,7 @@ you can do nothing else (but pick what a new level brings, or change your
 [stance](combat.md#stance-neutral)).
 
 - **Lie in wait** (when you have the drop): you take cover for ten minutes and let them walk into
-  you. They come on unaware of you, as a creature you [slipped past](skills.md#slipping-past)
+  you. They come on unaware of you, as a creature you [slipped past](skill-uses.md#slipping-past)
   is, and a step behind: your first blows are [sneak attacks](surprise.md#sneak-attacks).
 - **Slip past** (when you have the drop) or **Give them the slip** (when you met): a check of
   your [Dexterity](stats.md#stat-dexterity) [modifier](stats.md#modifiers) plus what
@@ -83,7 +83,7 @@ you can do nothing else (but pick what a new level brings, or change your
   than fight: footpads on the road, in the woods, and in the vale, the duergar prospectors at
   Ascdūn, and the cultists on the fen road; the tables below say "talked past"): their leader
   rolls 2d12 plus its [Willpower](stats.md#stat-willpower) [modifier](stats.md#modifiers) against
-  the same difficulty a [feint](skills.md#feinting) asks, plus your
+  the same difficulty a [feint](skill-uses.md#feinting) asks, plus your
   [Presence](stats.md#stat-presence) modifier, plus what your talents add to Presence checks,
   plus what your Bluff adds to a feint. Short of it, "You talk your way past.": they let you go,
   and it took as long as a word with someone. Otherwise, "They are not fooled.", and the fight
@@ -122,7 +122,7 @@ always finds your camp: made, you wake in time to meet them ("You wake to the so
 footpads close by your camp."); failed, you wake with them upon you. Travellers and animals wake
 you too. Either way your rest stops.
 
-[Foraging](skills.md#foraging) in the wild has the land's whole chance for the time it takes, and
+[Foraging](skill-uses.md#foraging) in the wild has the land's whole chance for the time it takes, and
 you keep a traveller's lookout.
 
 ## The Ascmearc's encounters
@@ -148,7 +148,7 @@ only then.
 - By day, on the roads, in the vale, on the downs, and in the woods, a
   [bard](classes.md#bard) whose class is full may meet a
   [strange spirit](npcs.md#the-strange-spirit), and nobody else ever does (see
-  [Prestige classes](classes.md#prestige-classes)).
+  [Prestige classes](prestige-classes.md#prestige-classes)).
 
 {{#include generated/encounter-tables-ascmearc.md}}
 

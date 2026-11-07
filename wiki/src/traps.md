@@ -79,7 +79,7 @@ The **[Trap sense](talents.md#talent-trap-sense)** talent halves the [damage](co
 [Magic items](magic-items.md)), a creature's too. Together they never take more than **75%**
 off: a trap always hurts.
 
-A trap's blow wounds like any other: a big one spills [blood](combat.md#blood) and can leave you
+A trap's blow wounds like any other: a big one spills [blood](hit-points.md#blood) and can leave you
 [bleeding](status-effects.md#bleeding). Traps can kill, you as well as creatures. Creatures
 killed by a trap drop what they carried, as from any death, but a trap's kill earns you no
 [experience](experience.md) and counts for no [quest](quests.md), even if you lured the creature

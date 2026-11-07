@@ -4,7 +4,7 @@ Every character has a save of its own: you can suspend a run and continue it lat
 [characters](character.md) going side by side, but there are no manual save slots and no going back. Saves are
 for continuing, not for retrying.
 
-**Death is final.** When you die (see [Combat](combat.md#death)), that character's save is
+**Death is final.** When you die (see [Combat](hit-points.md#death)), that character's save is
 deleted at once, and only that one: your other characters are untouched. A run that has ended is
 never saved again: there is nothing to continue.
 
@@ -12,13 +12,13 @@ never saved again: there is nothing to continue.
 
 - When a run starts, so a new character is saved at once.
 - When you close the window (no question asked).
-- When you choose **Save and quit to menu** or **Quit** in the [pause menu](controls.md#menus) (`Esc`) and answer Yes to the question that follows. Quitting always asks first: `y` or Enter on Yes confirms; `n`, `Esc`, or Enter on the default No cancels. You can bind a quick "Save and quit" key in the [Controls](controls.md#rebinding-keys) screen; it asks too.
+- When you choose **Save and quit to menu** or **Quit** in the [pause menu](the-screen.md#menus) (`Esc`) and answer Yes to the question that follows. Quitting always asks first: `y` or Enter on Yes confirms; `n`, `Esc`, or Enter on the default No cancels. You can bind a quick "Save and quit" key in the [Controls](controls.md#rebinding-keys) screen; it asks too.
 - Automatically every 50 [turns](time.md#what-takes-time).
 - Automatically when you change level.
 
 On the web the page is also saved when it is hidden or closed.
 
-Choose **Continue** on the [main menu](controls.md#menus) to resume the character you played last (it names them, and
+Choose **Continue** on the [main menu](the-screen.md#menus) to resume the character you played last (it names them, and
 appears only if a character this version of the game can continue is saved). **Characters** lists every saved character: name, [race](races.md)
 and [class](classes.md), [level](experience.md#levels), and for the one selected where they are and when you last played them (in UTC).
 Press `Enter` to resume one, or `Delete` to delete one for good (the game asks first). A
@@ -72,7 +72,7 @@ kept as `NAME.bak-<time>`), and it will not run while the game is running.
 **Browser.** The saves are kept in your browser's local storage for the page, under
 `warlock/saves/` (`warlock/saves/brakka-1.sav`), as are your [settings](settings.md). They survive reloads. If the browser blocks storage (some private modes), the
 game runs but cannot save, and writes a warning to its log. If the browser runs out of room, a
-message appears on the [message line](controls.md#messages).
+message appears on the [message line](the-screen.md#messages).
 
 ## Good to know
 
@@ -81,4 +81,4 @@ message appears on the [message line](controls.md#messages).
   older version of the game can still continue them. A save that cannot be read at all is renamed (`brakka-1.sav.bad`) and never deleted, and the list of characters no
   longer shows it. Saves made before characters had their own (a single `run.sav`) are left where
   they are and not read.
-- The [status bar](controls.md#the-screen) shows the run's **seed**: give it when you report a problem with a run.
+- The [status bar](the-screen.md#the-screen) shows the run's **seed**: give it when you report a problem with a run.

@@ -4,7 +4,7 @@ Under the open sky (outdoor areas and the [overworld](overworld.md)) there is we
 **overcast**, **rain**, or **heavy rain**. It is the same everywhere in the land at a time. In
 [dungeons](dungeons.md) you cannot tell what the weather is outside.
 
-The [status bar](controls.md#the-screen) shows the weather while you are under the sky, for
+The [status bar](the-screen.md#the-screen) shows the weather while you are under the sky, for
 example `14:32 · 12 Rainmoon, Year 1444 · ◑ First quarter · Rain`.
 
 ## How the weather changes
@@ -49,7 +49,7 @@ the weather only changes the light.
 
 ## Messages and resting
 
-When the weather changes while you are under the sky, the [message line](controls.md#messages) says so:
+When the weather changes while you are under the sky, the [message line](the-screen.md#messages) says so:
 
 | From | To | Message |
 |---|---|---|

@@ -38,7 +38,7 @@ shields), then your [fighting styles](fighting-styles.md), each with your rank a
 your marks toward the next one; a `•` marks the styles you fight in now. It takes no time.
 Skills you know stand out; untrained ones are dimmer. In a wide window the list is in two
 columns; in a small one it scrolls (↑↓). It is page 5 of the
-[info pages](controls.md#info-pages), right after your [skills](skills.md) and before the
+[info pages](the-screen.md#info-pages), right after your [skills](skills.md) and before the
 [Magic page](schools.md#the-magic-page) (`6`, named on its bottom line), where the
 [caster styles](schools.md#caster-styles) are listed.
 

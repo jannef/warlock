@@ -2,8 +2,8 @@
 
 Your race is the first choice of a new run (see [Your character](character.md)). It changes your
 starting [stats](stats.md), gives you your eyes (the [vision type](vision.md#the-four-types) you start with),
-sets how old you can be when you start, adds to your [hit points](combat.md#hit-points) (see
-[Combat](combat.md#hit-points)), trains you in a [skill](skills.md) or two ([humans](races.md#race-human): a little more in one of
+sets how old you can be when you start, adds to your [hit points](hit-points.md#hit-points) (see
+[Combat](hit-points.md#hit-points)), trains you in a [skill](skills.md) or two ([humans](races.md#race-human): a little more in one of
 their class's; see [Skills](skills.md#who-trains-what)), may give you a rank in a
 [weapon skill](weapon-skills.md) or two, added to your class's, and adds a few things to your
 [starting kit](starting-kit.md): an [elf](races.md#race-elf)'s waybread, a [dwarf](races.md#race-dwarf)'s pick-axe, a [halfling](races.md#race-halfling)'s pipe.
@@ -54,7 +54,7 @@ an Evil character coldly, but that is your [alignment](alignment.md), not your r
 **Strong [light](light.md#what-light-is)** dazzles [drow](races.md#race-drow): while the light on your own cell is bright enough (the [sun](sun.md#sky-light) well
 up under a clear sky, a bright fire close by; their own [lantern](lantern.md) alone is not), you see nothing
 farther than ten cells and fight a little worse. The game tells you when it begins and ends,
-and the [status bar](controls.md#the-screen) shows `Dazzled` while it lasts.
+and the [status bar](the-screen.md#the-screen) shows `Dazzled` while it lasts.
 
 The races' gifts and flaws beyond their stats, exactly:
 

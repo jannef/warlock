@@ -79,34 +79,34 @@ own: [Weapon skills](weapon-skills.md#what-a-rank-teaches) and
   [Doors](doors.md#picking-locks)).
 - **Steal**: anyone trained in the [Steal](skills.md#skill-steal) skill has it, in the skill's place among the Skills.
   It asks for a direction and tries to lift something from whoever stands there, if they are
-  not hostile to you (see [Stealing](skills.md#stealing)).
+  not hostile to you (see [Stealing](skill-uses.md#stealing)).
 - **Feint**: anyone trained in the [Bluff](skills.md#skill-bluff) skill has it, in the skill's place among the Skills.
   It asks for a direction and lies to the hostile creature there: unless it sees through you it is
   [surprised](status-effects.md#status-surprised), and your next blow finds it off its guard (see
-  [Feinting](skills.md#feinting)). Not the [False lead](fighting-styles.md#style-ability-false-lead) of the Duelist's style, a blow.
+  [Feinting](skill-uses.md#feinting)). Not the [False lead](fighting-styles.md#style-ability-false-lead) of the Duelist's style, a blow.
 - **Intimidate**: anyone trained in the [Intimidate](skills.md#skill-intimidate) skill has it, in the skill's place among
   the Skills. It asks for a place you see, within 6 cells, and threatens the hostile creature
   there: unless it keeps its nerve it is [frightened](status-effects.md#status-frightened) and
-  flees, longer the better your skill (see [Intimidating](skills.md#intimidating)).
+  flees, longer the better your skill (see [Intimidating](skill-uses.md#intimidating)).
 - **Heal**: anyone trained in the [Heal](skills.md#skill-heal) skill has it, in the skill's place among the Skills. It
   treats you, or an [ally](allies.md) beside you: [bleeding](status-effects.md#bleeding), a [poison](status-effects.md#poisoned), or a [disease](diseases.md#how-a-disease-goes) that shows, asking which when there is more
   than one; greyed out "nothing to treat" otherwise (see
-  [Treating yourself](skills.md#treating-yourself)).
+  [Treating yourself](skill-uses.md#treating-yourself)).
 - **Fletch**: everyone has it, in [Woodcraft](skills.md#skill-woodcraft)'s place among the Skills. It asks for nothing: you
   spend ten minutes cutting arrows or bolts for the bow or crossbow you have [ready](ranged.md#getting-ready). Greyed out
   "you have no knife" without one, in your pack or anywhere on you, and "you have no bow or crossbow
-  ready" (see [Fletching](skills.md#fletching)).
-- **Whittle**: everyone has it, beside Fletch in [Woodcraft](skills.md#skill-woodcraft)'s place among the Skills. It asks which wooden weapon you carry to improve, and takes ten minutes. Greyed out "you have no knife" without one (see [Whittling](skills.md#whittling)).
+  ready" (see [Fletching](skill-uses.md#fletching)).
+- **Whittle**: everyone has it, beside Fletch in [Woodcraft](skills.md#skill-woodcraft)'s place among the Skills. It asks which wooden weapon you carry to improve, and takes ten minutes. Greyed out "you have no knife" without one (see [Whittling](skill-uses.md#whittling)).
 - **Wedge a door**: anyone trained in [Woodcraft](skills.md#skill-woodcraft) has it, in the skill's place among the Skills.
   Choose a direction: a turn spent wedging the closed door that way shut, so that creatures must kick it in
   (see [Wedging a door](doors.md#wedging-a-door)).
 - **Forage**: anyone trained in [Survival](skills.md#skill-survival) has it, in the skill's place among the Skills. It asks
   for nothing: you spend ten minutes searching the wild around you for food. Only in the wild,
   on the [overworld](overworld.md#travel) and in its [local areas](overworld.md#local-areas); elsewhere it is greyed out, "not usable here" (see
-  [Foraging](skills.md#foraging)).
+  [Foraging](skill-uses.md#foraging)).
 - **Tame**: anyone trained in [Handle animal](skills.md#skill-handle-animal) has it, in the skill's place among the Skills. It
   asks for the direction of a beast next to you, and a while beside it decides whether it is your
-  [companion](allies.md#companions) for good (see [Taming](allies.md#taming)). Greyed out "you already have a companion" while
+  [companion](companions.md#companions) for good (see [Taming](companions.md#taming)). Greyed out "you already have a companion" while
   you have one.
 - **Other skills used as actions** ([Knowledge](skills.md#skill-knowledge), ...): each is in the menu once you are trained
   in it (see [Skills](skills.md)), greyed out until its use comes to the game.
@@ -137,9 +137,9 @@ own: [Weapon skills](weapon-skills.md#what-a-rank-teaches) and
   what threatens you (the default), hold where they stand, or go to a place you see and fight
   what is near it, then come back. An order takes no time, but it is a shout: anything near
   enough hears it (see [Hearing](hearing.md)). Greyed out "no allies here" while none of them is
-  on the level with you. Each order, and each kill of theirs, trains [Handle animal](skills.md#skill-handle-animal), as does a try at [taming](allies.md#taming).
+  on the level with you. Each order, and each kill of theirs, trains [Handle animal](skills.md#skill-handle-animal), as does a try at [taming](companions.md#taming).
   [Give](abilities.md#ability-give) is no order: it joins them with a companion, takes time, and
-  asks for [something for its neck](allies.md#the-collar); greyed out "not beside you" while it is away.
+  asks for [something for its neck](companions.md#the-collar); greyed out "not beside you" while it is away.
   Set on asks for the place as aiming a shot does; Tab skips your own allies. On the map an ally
   of yours has a short, faint green line under it, and looking at one says it is yours ("Your
   wolf (unhurt)").
@@ -191,7 +191,7 @@ seconds a degree.
 ## Keys of their own
 
 If you use an ability often, you can give it a key in the [Controls](controls.md#rebinding-keys) screen (the [shield bash](abilities.md#ability-shield-bash) is
-"Bash with your shield", [disarming](traps.md#disarming-traps) "Disarm a trap", [picking a lock](doors.md#picking-locks) "Pick a lock", [stealing](skills.md#stealing)
+"Bash with your shield", [disarming](traps.md#disarming-traps) "Disarm a trap", [picking a lock](doors.md#picking-locks) "Pick a lock", [stealing](skill-uses.md#stealing)
 "Steal", and [throwing your voice](hearing.md#throwing-your-voice) "Throw your voice"; none has a
 key by default): the key uses the ability just as the menu would, asking for a direction or a
 place if it needs one. Without a shield, it says so at once and takes no time. `a` ("Abilities")

@@ -1,7 +1,7 @@
 # Experience
 
 Killing monsters earns **experience points** (XP), and enough of them make you a higher **level**.
-Your level (`Lv`) is in the [status bar](controls.md#the-screen), and the [character screen](character.md) (`@`) shows it
+Your level (`Lv`) is in the [status bar](the-screen.md#the-screen), and the [character screen](character.md) (`@`) shows it
 with your XP and the XP at which the next level comes, like `XP  85 / 192`. Dying shows the level
 you had reached.
 
@@ -55,7 +55,7 @@ So a [kobold shaman](creatures.md#creature-kobold-shaman) is worth less every le
 
 Every [class](classes.md) stops at level 60, its last, but the [bard](classes.md#bard), who stops at
 30 (the table below says so for each), and the road there is long. A bard at 30 keeps every point
-of XP earned after it; one who becomes a [hunter](classes.md#prestige-classes) gains at once every level that XP buys, from
+of XP earned after it; one who becomes a [hunter](prestige-classes.md#prestige-classes) gains at once every level that XP buys, from
 level 31 on. The curve itself runs on to level 100, for levels a class does not give.
 Each level costs a number of kills of [creatures](creatures.md) of your own level: 38 for level 2,
 about 160 a level by level 10, and more for every level after that, up to 365 for level 60 and
@@ -81,9 +81,9 @@ quickest and the slowest [race](races.md) and [class](classes.md), with what eac
 
 ## What a level gives
 
-Each level up to 50 raises your maximum **[hit points](combat.md#hit-points)** (and the hit points you have now) by half
+Each level up to 50 raises your maximum **[hit points](hit-points.md#hit-points)** (and the hit points you have now) by half
 your [class](classes.md)'s hit points plus your [Toughness](stats.md#stat-toughness)'s share, at least 1 (see
-[Combat](combat.md#hit-points)). From level 51 on, levels grow no [hit points](combat.md#hit-points): [hit point](combat.md#hit-points) pools do
+[Combat](hit-points.md#hit-points)). From level 51 on, levels grow no [hit points](hit-points.md#hit-points): [hit point](hit-points.md#hit-points) pools do
 not run away. Each level also gives every [stat](stats.md) a chance to rise by what you have done with it
 since (see [Stats](stats.md#training)). Up to level 60 each level raises your **[mana](mana.md#how-much)** too, by
 half your [class](classes.md)'s mana plus what the better of your [Intelligence](stats.md#stat-intelligence) and [Willpower](stats.md#stat-willpower) adds, if that

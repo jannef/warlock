@@ -37,7 +37,7 @@ only the talents you may take now, by tree. A talent with a choice ([Weapon focu
 asks for it next. The screen can't be closed until everything is chosen. Two levels at once are
 one sequence, the lower level's choices first.
 
-The **Talents page** (`G`, or page 8 of the [information pages](controls.md#info-pages)) lists your talents, then every other
+The **Talents page** (`G`, or page 8 of the [information pages](the-screen.md#info-pages)) lists your talents, then every other
 talent you could still pick, by tree, with what it needs; the parts you already meet stand out
 from those you don't, so you can plan a build there.
 
@@ -105,7 +105,7 @@ In the game a talent is described in words; the tables below state the rule exac
 talents simply change a rule for good. An **active** talent ([Second wind](talents.md#talent-second-wind)) is something you do:
 it appears in the [abilities menu](abilities.md) under Talents, and after use it leaves a
 status ([Winded](status-effects.md#status-winded)) during which it cannot be used again; [Blood magic](talents.md#talent-blood-magic) is active too, and has no
-waiting time: it costs [hit points](combat.md#hit-points) instead (see [Mana](mana.md#spending-it)). Five talents
+waiting time: it costs [hit points](hit-points.md#hit-points) instead (see [Mana](mana.md#spending-it)). Five talents
 work on a [class](classes.md)'s [resources](resources.md#talents-on-resources) and can be taken only by that
 class ([Battle trance](talents.md#talent-battle-trance), [Inner calm](talents.md#talent-inner-calm), [Steady hand](talents.md#talent-steady-hand), [Patient blade](talents.md#talent-patient-blade), [Zealot](talents.md#talent-zealot)); one that needs the [lantern's hood](lantern.md#the-hood)
 (Hooded light) is still to come. [Skill focus](talents.md#talent-skill-focus) adds 25 to the
@@ -134,7 +134,7 @@ This is a promise about the future too: **every new part of the game arrives wit
 talent**, so no system is ever left with nothing that makes it better at it. That holds for
 new [resources](resources.md) as well: [mana](mana.md#how-much) came with talents for a deeper pool, a quicker refill, and cheaper
 casting, [spells](magic.md#the-spells) with the Spellcraft tree ([Quick study](talents.md#talent-quick-study), [Overreach](talents.md#talent-overreach), [School focus](talents.md#talent-school-focus)) and talents for
-[wands](magic.md#wands) and [rods](magic.md#rods) ([Wand mastery](talents.md#talent-wand-mastery), [Channeler](talents.md#talent-channeler)), and the same goes for each [class](classes.md)'s own pool later (a [berserker](classes.md#berserker)'s
+[wands](wands-and-rods.md#wands) and [rods](wands-and-rods.md#rods) ([Wand mastery](talents.md#talent-wand-mastery), [Channeler](talents.md#talent-channeler)), and the same goes for each [class](classes.md)'s own pool later (a [berserker](classes.md#berserker)'s
 [rage](resources.md#rage), a [ranger](classes.md#ranger)'s [focus](resources.md#resource-focus)). [Abilities](abilities.md) that cost such a [resource](resources.md) have no waiting time on top: the
 [resource](resources.md) coming back with time is the limit.
 

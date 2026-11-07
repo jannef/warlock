@@ -2,7 +2,7 @@
 
 Your class is the last choice of a new run (see [Your character](character.md)): what you did
 before you set out. For now a class changes your starting [stats](stats.md), adds to your [hit
-points](combat.md#hit-points) (see [Combat](combat.md#hit-points)), trains you in a handful of
+points](hit-points.md#hit-points) (see [Combat](hit-points.md#hit-points)), trains you in a handful of
 [skills](skills.md#who-trains-what) (and sets how many skill rolls each level gives and which
 skills it is known for, see [Getting better](skills.md#getting-better)), and gives you your first ranks in a few
 [weapon skills](weapon-skills.md) (a berserker has learned one of two) and
@@ -39,9 +39,9 @@ you a talent pick in its place.
 The spells a class gives (the [priest](classes.md#priest)'s, [druid](classes.md#druid)'s, [wizard](classes.md#wizard)'s, and [witch](classes.md#witch)'s few, a [bard](classes.md#bard)'s, a
 [paladin](classes.md#paladin)'s, or a [ranger](classes.md#ranger)'s one or two; see [What your class gives](magic.md#what-your-class-gives))
 are used from the menu as **spells** ([Magic](magic.md)): each costs [mana](mana.md#spending-it) by its [spell level](magic.md#spell-levels) and your armour, and is
-greyed out ("too little") while you have less; there is no other wait. A [burst](magic.md#shapes) flies and goes
-off as a [scroll](scrolls.md)'s does, a [line](magic.md#shapes) runs through everyone on it, its blows and kills
-yours; a [hex](magic.md#shapes) falls on a [hostile](creatures.md#factions) you see within its reach. [Call lightning](abilities.md#ability-call-lightning) answers only under the
+greyed out ("too little") while you have less; there is no other wait. A [burst](spellcasting.md#shapes) flies and goes
+off as a [scroll](scrolls.md)'s does, a [line](spellcasting.md#shapes) runs through everyone on it, its blows and kills
+yours; a [hex](spellcasting.md#shapes) falls on a [hostile](creatures.md#factions) you see within its reach. [Call lightning](abilities.md#ability-call-lightning) answers only under the
 open sky. The [druid](classes.md#druid)'s calls bring wolves, bears, and elementals to fight beside them
 as [allies](allies.md).
 
@@ -57,7 +57,7 @@ The bard knows a little of everything and masters nothing: a wandering singer wh
 every weapon once, picked up every trade a little, and sings. Their table is shorter than the
 others': it gives its last ability at level 30 and stops there. A bard learns nothing new past
 30; experience earned after it still counts, but buys no level, and what comes after is found,
-not given (see [Prestige classes](#prestige-classes)). The bard's two
+not given (see [Prestige classes](prestige-classes.md#prestige-classes)). The bard's two
 **[songs](abilities.md#songs)**, **[inspire](abilities.md#ability-inspire)** (level 9, paid in
 [inspiration](resources.md#resource-inspiration), lifting you) and the
 **[lullaby](abilities.md#ability-lullaby)** (level 20, paid in [mana](mana.md#spending-it), making
@@ -155,7 +155,7 @@ refused, for no time and no zeal; a miss still spends its zeal.
 | 1 | [Smite](abilities.md#ability-smite) | 3 | The blow, and nothing more |
 | 12 | [Branding smite](abilities.md#ability-branding-smite) | 3 | The foe it wounds is [Branded](status-effects.md#status-branded) for five minutes: it sheds a faint light wherever it goes, so you can see it in the dark and it lights its fellows |
 | 32 | [Wrathful smite](abilities.md#ability-wrathful-smite) | 4 | The foe it wounds makes a [Willpower](stats.md#stat-willpower) [check](diseases.md#checks) against 13 plus your Presence modifier; failing, it is [Frightened](status-effects.md#status-frightened) of you for 2d3 turns and flees |
-| 50 | [Banishing smite](abilities.md#ability-banishing-smite) | 6 | A foe it wounds that was [summoned](creature-numbers.md#summoning) is unmade, whatever its [hit points](combat.md#hit-points), your kill as any other; an unholy foe not summoned takes the smite's dice twice over; anyone else takes a plain smite |
+| 50 | [Banishing smite](abilities.md#ability-banishing-smite) | 6 | A foe it wounds that was [summoned](creature-powers.md#summoning) is unmade, whatever its [hit points](hit-points.md#hit-points), your kill as any other; an unholy foe not summoned takes the smite's dice twice over; anyone else takes a plain smite |
 
 A rider with nothing to do still spends its zeal, and a blow that does no damage carries none.
 
@@ -192,10 +192,10 @@ The [ranger](classes.md#ranger)'s [rapid shot](talents.md#talent-rapid-shot) and
 The [ranger](classes.md#ranger)'s **favoured prey** is the kind of [creature](creatures.md) you have killed most, counted over every
 [level](experience.md#levels); when two are tied, the one that got there first stays favoured until another is killed
 more often. From level 18 **[Pack tactics](talents.md#talent-pack-tactics)** makes you and your
-[companion](allies.md#companions) hunt as one: a creature standing beside you both is
+[companion](companions.md#companions) hunt as one: a creature standing beside you both is
 **flanked**, and your melee attacks and your companion's at it get +2 [to hit](combat.md#hitting)
 (not shots, throws, or spells), and your companion's attacks at your favoured prey carry your
-favoured prey's bonus, to hit and damage ([Master hunter](talents.md#talent-master-hunter)'s too). From level 40 **[Sic 'em](abilities.md#ability-sic)** sets your companion on a creature you see for 5 [focus](resources.md#resource-focus): it [hunts that creature, savage](allies.md#companions). A **[volley](abilities.md#ability-volley)** looses three shots of your [readied missile weapon](ranged.md#getting-ready) at the place you [aim](controls.md#aiming)
+favoured prey's bonus, to hit and damage ([Master hunter](talents.md#talent-master-hunter)'s too). From level 40 **[Sic 'em](abilities.md#ability-sic)** sets your companion on a creature you see for 5 [focus](resources.md#resource-focus): it [hunts that creature, savage](companions.md#companions). A **[volley](abilities.md#ability-volley)** looses three shots of your [readied missile weapon](ranged.md#getting-ready) at the place you [aim](controls.md#aiming)
 at, one after another, for the time of one ordinary shot; it stops early when you run out, and
 costs 6 [focus](resources.md#resource-focus). **[Rapid shot](talents.md#talent-rapid-shot)** gives you focus (10, full); every shot you loose while you have
 at least 2 spends 2 and takes 10 % less [time](turns.md#what-actions-cost), and with less it is an ordinary shot.
@@ -217,9 +217,9 @@ blank scroll, for three times the spell's [mana](mana.md#spending-it) and a stud
 {{#include generated/class-levels.md:witch}}
 
 **The witch's familiar** ([Familiar](talents.md#talent-familiar), from level 1) is a small beast at
-her heel whose [touch](allies.md#the-touch) lays her [evil eye](magic.md#spell-evil-eye) and which
-[goes for what she has hexed](allies.md#what-it-goes-for). Lost, another comes to an hour's
-[calling](allies.md#call-familiar), and from level 30 that may be an [imp](creatures.md#creature-imp).
+her heel whose [touch](familiars.md#the-touch) lays her [evil eye](magic.md#spell-evil-eye) and which
+[goes for what she has hexed](familiars.md#what-it-goes-for). Lost, another comes to an hour's
+[calling](familiars.md#call-familiar), and from level 30 that may be an [imp](creatures.md#creature-imp).
 
 **The witch's cackle** ([Cackle](abilities.md#ability-cackle), from level 6) keeps her hexes on.
 It costs no [mana](mana.md#spending-it) and takes the time of a spell: every hex she laid herself
@@ -248,49 +248,3 @@ creature dies under a hex she laid herself, whatever killed it and wherever it i
 {{#include generated/class-levels.md:craftsperson}}
 
 {{#include generated/class-levels.md:merchant}}
-
-## Prestige classes
-
-There is no multiclassing: you keep the class you chose for good. But a class that stops short
-of the rest, as the [bard](#bard) does at 30, may later open onto a **prestige class**: a
-second table of levels, reached only by a **calling**, a deed found somewhere in the world, never
-by experience alone. The game never names one; the world leaves hints, such as a
-[statue](terrain.md#walls)'s inscription.
-
-- **Your level is your total.** A bard of level 30 called into a prestige class becomes
-  Hunter 1 at level 31, and Hunter 30 at 60. The [status bar](controls.md#the-screen) shows the
-  total; the [character screen](character.md) shows both, `Bard 30, Hunter 4`.
-- **The cap.** Each class has a last level (the [table](experience.md#levels) says which): past
-  it your [experience](experience.md) still counts but buys no level. A calling raises your cap by
-  the prestige class's levels.
-- **The calling** is open to a character of a class it calls from, at the level it asks (that
-  class's last), with no prestige class yet. Walking through it calls you at once: you are told so,
-  and if you have less experience than the next level costs you are given exactly what you lack, so
-  your first prestige level comes at once (experience banked past your old cap buys every level
-  it can, all at once, too).
-- **What carries across**: everything. Your class's abilities, talents, skills, hit points, and
-  [mana](mana.md) stay as they were. Each level from then on is the prestige class's: its
-  [hit points](combat.md#hit-points), its mana, its [skill rolls](skills.md#getting-better) and the
-  skills it is known for, its bonus [talents](talents.md), and its abilities, at its own levels.
-  What a level gives by your total still holds (no hit points past 50, no mana past 60; see
-  [What a level gives](experience.md#what-a-level-gives)), and so does the experience your race
-  and first class need.
-
-{{#include generated/prestige-classes.md}}
-
-{{#include generated/prestige-levels.md}}
-
-The **Hunter** has sworn the old oath and been answered: a fighter whose weapon comes when
-called. **[Spirit weapon](abilities.md#ability-spirit-weapon)**, from Hunter 1, calls a weapon of
-spirit-stuff into your hand in the shape of any melee weapon you choose, for the time of wielding
-one and nothing else: a plain weapon of that kind in every way (its damage, weight, and grip),
-+3 [to hit](combat.md#hitting), with a [threat](combat.md#criticals) 2 lower, ignoring every
-point of the target's [Protection](combat.md#protection). It fades the moment it leaves your
-hands, and cannot be thrown (see [Spirit weapon](abilities.md#ability-spirit-weapon)).
-
-### Callings
-
-Each world calls in its own way. The words are stated plain here (see
-[Saying words](npcs.md#saying-words)):
-
-{{#include generated/callings.md}}
