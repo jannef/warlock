@@ -52,7 +52,7 @@ fn ranks(w: &mut World, ranks: &[(&str, u8)]) {
     let ids: Vec<(WeaponSkillId, u8)> = (ranks.iter())
         .map(|&(name, rank)| (table.id(name).expect(name), rank))
         .collect();
-    w.player_mut().weapon_skills = WeaponSkills::from_ranks(table, ids);
+    w.player_mut().weapon_skills = WeaponSkills::from_ranks(ids);
 }
 
 /// The player casts Arcane bolt at `target`, `(tx, ty)` from them, `n` times, their ranks and

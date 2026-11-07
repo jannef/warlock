@@ -416,9 +416,8 @@ pub enum TalentEffect {
     ExtraPick { level: u8 },
     /// Handed out once, as the talent is taken or given: every weapon skill and style of
     /// `skills` (none named: every row of `weapon_skills.toml` but the schools of magic and
-    /// hidden styles, whatever the content holds) held below rank `to` rises to it, its defaults
-    /// with it (Travelled hands; `WeaponSkills::raise_to`). `news` is said when a class table
-    /// gives it.
+    /// hidden styles, whatever the content holds) held below rank `to` rises to it (Travelled
+    /// hands; `WeaponSkills::raise_to`). `news` is said when a class table gives it.
     WeaponRanks {
         to: u8,
         #[serde(default)]

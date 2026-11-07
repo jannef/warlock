@@ -991,9 +991,9 @@ impl World {
     }
 
     /// The player used weapon skill `skill` against an opponent of `level`: a `success` (a hit,
-    /// a blow blocked) or not. It earns its marks ([`crate::content::MarkRules`]), and each skill
-    /// a rank gained raised (with the skills it defaults to) waits in `news` to be said after the
-    /// attack's own messages: "You feel more skilled with long blades." No numbers.
+    /// a blow blocked) or not. It earns its marks ([`crate::content::MarkRules`]), and a rank
+    /// gained waits in `news` to be said after the attack's own messages: "You feel more skilled
+    /// with long blades." No numbers.
     pub(super) fn practise(&mut self, skill: WeaponSkillId, success: bool, level: u32) {
         let content = self.content.clone();
         let table = content.weapon_skills();
@@ -1006,46 +1006,39 @@ impl World {
         let marks = (me.talent_mods(&content)).marks(table.skill(skill).role, marks);
         if marks > 0 {
             let old = me.weapon_skills.clone();
-            let risen = me.weapon_skills.train(table, skill, marks);
-            if !risen.is_empty() {
+            if me.weapon_skills.train(table, skill, marks) {
                 // What the ranks taught before they rose, for the news of what they teach now.
                 let new = std::mem::replace(&mut self.player_mut().weapon_skills, old);
                 let before = self.state.player().weapon_abilities(&content);
                 self.player_mut().weapon_skills = new;
-                self.ranks_news(&risen, &before);
+                self.ranks_news(skill, &before);
             }
         }
     }
 
-    /// The news of the player's weapon skills `risen` (a rank gained, with the skills it raised
-    /// by default), and of the weapon abilities they teach that the player did not know
-    /// `before`: "You feel more skilled with long blades. You have learned the deep cut."
+    /// The news of the player's weapon skill `risen` (a rank gained), and of the weapon abilities
+    /// the ranks teach that the player did not know `before`: "You feel more skilled with long
+    /// blades. You have learned the deep cut."
     pub(super) fn ranks_news(
         &mut self,
-        risen: &[WeaponSkillId],
+        risen: WeaponSkillId,
         before: &[(WeaponSkillId, crate::content::WeaponAbilityId)],
     ) {
         let content = self.content.clone();
         let table = content.weapon_skills();
-        let mut lines: Vec<String> = (risen.iter())
-            .map(|&id| format!("You feel more skilled {}.", table.skill(id).phrase))
-            .collect();
+        let mut text = format!("You feel more skilled {}.", table.skill(risen).phrase);
         // The first active a rank teaches grants the stamina it is paid from to one without it
         // (the third place stamina is granted, beside the class tables and a restored run),
         // said after that active.
         let mut breath = self.grant_stamina(before);
-        // Each with the rank's line of the skill it is listed under (else the last line).
-        for (skill, mut line, active) in self.learned(before) {
+        for (_, line, active) in self.learned(before) {
+            text.push(' ');
+            text.push_str(&line);
             if active && std::mem::take(&mut breath) {
-                line.push_str(" You learn to pace your breath.");
-            }
-            let at = (risen.iter().position(|&s| s == skill)).or(lines.len().checked_sub(1));
-            if let Some(text) = at.and_then(|i| lines.get_mut(i)) {
-                text.push(' ');
-                text.push_str(&line);
+                text.push_str(" You learn to pace your breath.");
             }
         }
-        self.news.extend(lines);
+        self.news.push(text);
     }
 
     /// The player, who did not know them `before`, has learned an active weapon ability: they

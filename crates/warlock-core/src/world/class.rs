@@ -40,7 +40,7 @@ pub(super) fn hand_out(content: &Content, actor: &mut Actor, def: &TalentDef, le
 
 /// A `weapon_ranks` hand-out (Travelled hands): every weapon skill and style `skills` names
 /// (none: every row but the schools of magic and hidden styles, whatever the content holds)
-/// held below rank `to` rises to it, in file order, its defaults with it.
+/// held below rank `to` rises to it, in file order.
 fn raise_ranks(content: &Content, actor: &mut Actor, to: u8, skills: &[String]) {
     let table = content.weapon_skills();
     let rows: Vec<_> = match skills.is_empty() {
@@ -51,7 +51,7 @@ fn raise_ranks(content: &Content, actor: &mut Actor, to: u8, skills: &[String]) 
         false => skills.iter().filter_map(|s| table.id(s)).collect(),
     };
     for id in rows {
-        actor.weapon_skills.raise_to(table, id, to);
+        actor.weapon_skills.raise_to(id, to);
     }
 }
 

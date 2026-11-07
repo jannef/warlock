@@ -37,12 +37,12 @@ fn two_shields(w: &mut World) {
     }
 }
 
-/// The player's ranks are exactly `ranks` (and their defaults).
+/// The player's ranks are exactly `ranks`.
 fn ranks(w: &mut World, ranks: &[(&str, u8)]) {
     let content = w.content().clone();
     let table = content.weapon_skills();
     let ranks = ranks.iter().map(|&(s, r)| (table.id(s).expect(s), r));
-    w.player_mut().weapon_skills = WeaponSkills::from_ranks(table, ranks);
+    w.player_mut().weapon_skills = WeaponSkills::from_ranks(ranks);
 }
 
 fn style(w: &World) -> crate::content::WeaponSkillId {
