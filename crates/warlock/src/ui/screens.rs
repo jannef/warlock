@@ -1691,11 +1691,18 @@ mod tests {
         frame(&mut app, &[fire, tab, ENTER]);
         assert_eq!(aim(&app), None);
         assert_eq!(actions(&app)[before..], [Action::Fire(second.at)]);
-        // The next `t` starts on that creature again: `t`, Enter shoots it once more.
+        // The next `t` starts on that creature again if it is within range (else on the
+        // nearest one that is): `t`, Enter shoots it once more.
         frame(&mut app, &[fire]);
-        assert_eq!(aim(&app).map(|a| a.at), Some(second.at));
+        let reach = warlock_core::fov::radius2(first.range(&view).expect("a range"));
+        let again = if second.at.dist2(view.viewer()) <= reach {
+            second.at
+        } else {
+            first.at
+        };
+        assert_eq!(aim(&app).map(|a| a.at), Some(again));
         frame(&mut app, &[ENTER]);
-        assert_eq!(actions(&app).last(), Some(&Action::Fire(second.at)));
+        assert_eq!(actions(&app).last(), Some(&Action::Fire(again)));
         // `T` opens the choice of what to throw.
         frame(&mut app, &[(KeyCode::KeyT, "T")]);
         assert_eq!(names(&app), [ScreenName::Throw]);
