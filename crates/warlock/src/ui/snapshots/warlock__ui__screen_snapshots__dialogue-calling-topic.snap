@@ -2,11 +2,8 @@
 source: crates/warlock/src/ui/screen_snapshots.rs
 expression: "render(&case, content.clone())"
 ---
- You feel at peace here.
+ You learn Sworn foe (devil).
  The old hermit says: "Hm? A visitor. Sit, if you can find a stone nobody's sitting on."
-
-
-
 
 
 
@@ -17,10 +14,15 @@ expression: "render(&case, content.clone())"
                   │ "Hm? A visitor. Sit, if you can find a stone nobody's        │
                   │ sitting on."                                                 │
                   │                                                              │
-                  │   What do you say to the old hermit?                         │
-                  │   [_                                        ]                │
+                  │ > 1  Rats in the arena                                       │
+                  │   2  This hall                                               │
+                  │   3  The dark chamber                                        │
+                  │   4  The gallery                                             │
+                  │   5  The water garden                                        │
+                  │   6  These stairs                                            │
+                  │   7  Life before death                                       │
                   │                                                              │
-                  │ Enter  say    Backspace  erase    Esc  back                  │
+                  │ 1-7 or Enter  ask    Esc  leave                              │
                   └──────────────────────────────────────────────────────────────┘
 
 
@@ -29,6 +31,4 @@ expression: "render(&case, content.clone())"
 
 
 
-
-
- The Hub  ·  HP 18/18  ·  MP 2/2  ·  Openings 0/5  ·  Sta 10/10  ·  Lv 1  ·  08:08       ? controls
+ The Hub  ·  HP 44/44  ·  MP 96/96  ·  Inspiration 0/5  ·  Sta 9/16  ·  Lv 30            ? controls

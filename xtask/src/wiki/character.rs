@@ -446,7 +446,7 @@ mod tests {
         assert!(levels.contains("### Hunter"), "{levels}");
         assert!(levels.contains("| 1 | Spirit weapon |"), "{levels}");
         let callings = super::super::dialogue::callings(&content);
-        assert!(callings.contains("*Life before death*"), "{callings}");
+        assert!(callings.contains("grants it when spoken to"), "{callings}");
         assert!(
             callings.contains("[strange spirit](creatures.md#creature-strange-spirit)"),
             "{callings}"

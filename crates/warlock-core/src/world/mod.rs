@@ -284,7 +284,6 @@ mod weapon_ability;
 mod weapon_active;
 mod wedge;
 mod witch;
-mod words;
 mod wriggle;
 mod zap;
 mod zone;
@@ -1489,7 +1488,6 @@ impl World {
             Action::Encounter(choice) => return self.answer_encounter(*choice),
             Action::Chat(dir) => return self.chat(*dir, events),
             Action::Ask { dir, topic } => return self.ask(*dir, topic, events),
-            Action::Say { dir, words } => return self.say_to(*dir, words, events),
             Action::Steal(dir) => return self.steal(*dir),
             Action::Feint(dir) => return self.feint(*dir, events),
             Action::Tame(dir) => return self.start_tame(*dir),
@@ -2094,8 +2092,6 @@ mod wedge_tests;
 mod whittle_tests;
 #[cfg(test)]
 mod witch_tests;
-#[cfg(test)]
-mod words_tests;
 #[cfg(test)]
 mod wriggle_tests;
 #[cfg(test)]

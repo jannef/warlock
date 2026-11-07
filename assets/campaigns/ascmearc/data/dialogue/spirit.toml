@@ -1,28 +1,21 @@
 # The Strange Spirit (docs/design/prestige-classes.md §7; data/creatures/strange_spirit.toml): it
 # speaks only to the good side of the scale (Kind, Good, Saintly); anyone else it looks through.
-# Nothing to ask it: the Say row is the whole conversation, and it waits for the oath. Said (in
-# any case and punctuation), the spirit echoes the oath whole, calls the bard into the Hunter
-# (data/callings/hunter.toml), and fades. The words are cut into a statue's plinth on Fyrdelf's
-# eleventh floor (vaults/hunters_statue.toml).
+# One topic, the oath, offered while the Hunter's calling (data/callings/hunter.toml) is open to
+# the player: asked, the spirit echoes the oath whole, calls the bard into the Hunter, and fades.
+# The words are cut into a statue's plinth on Fyrdelf's eleventh floor (vaults/hunters_statue.toml).
 [[dialogue]]
 creature = "strange_spirit"
 #
-# Its greeting, lines, and `unheard` are spoken (the game says them as "The strange spirit says:
-# ..."); `silent` is told plainly.
+# Its greeting and lines are spoken (the game says them as "The strange spirit says: ...");
+# `silent` is told plainly.
 greet = "You have come at last. I have waited long on this road."
 lines = ["I wait.", "Speak, or go your way.", "The road is long. I am patient."]
 speaks_to = { min = "kind" }
 silent = "The spirit looks through you as if you were not there."
-unheard = "Those are not the words."
 
-[[dialogue.word]]
-phrase = "Life before death"
-reply = [
-    "Life before death.",
-    "Strength before weakness.",
-    "Journey before destination.",
-    "I will protect those who stand in darkness.",
-    "I will strive to mend what is broken.",
-    "And when I cannot see the light, I will take the next step.",
-]
-does = { calls = "hunter", departs = true }
+[[dialogue.topic]]
+id = "life_before_death"
+name = "Life before death"
+reply = "Life before death. Strength before weakness. Journey before destination. I will protect those who stand in darkness. I will strive to mend what is broken. And when I cannot see the light, I will take the next step."
+calls = "hunter"
+departs = true

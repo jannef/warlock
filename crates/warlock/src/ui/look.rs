@@ -348,15 +348,16 @@ fn services(content: &Content, actor: &SeenActor) -> String {
     }
 }
 
-/// ", who waits" after a seen creature's name when its dialogue knows words and offers nothing
-/// else, no topic, service, or wares (the Strange Spirit: "a strange spirit (unhurt), who waits";
-/// docs/design/prestige-classes.md §7); nothing for any other.
+/// ", who waits" after a seen creature's name when its dialogue's only topics are callings'
+/// (`calls`), with no service or wares (the Strange Spirit: "a strange spirit (unhurt), who
+/// waits"; docs/design/prestige-classes.md §7); nothing for any other.
 fn waits(content: &Content, actor: &SeenActor) -> &'static str {
     let Some(dialogue) = actor.dialogue else {
         return "";
     };
     let d = content.dialogue(dialogue);
-    match !d.words.is_empty() && d.topics.is_empty() && d.services.is_empty() && d.offer.is_none() {
+    let callings = !d.topics.is_empty() && d.topics.iter().all(|t| t.calls.is_some());
+    match callings && d.services.is_empty() && d.offer.is_none() {
         true => ", who waits",
         false => "",
     }

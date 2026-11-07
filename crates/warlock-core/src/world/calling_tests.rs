@@ -51,10 +51,13 @@ static FIXTURE: LazyLock<Arc<Content>> = LazyLock::new(|| {
     });
     files.insert("data/prestige/warden.toml", WARDEN);
     // The test world's own door into the Hunter, from the bard too, makes way for the Warden's
-    // (one door a class), and the hermit's word calls the Warden instead.
+    // (one door a class), and the hermit's topic calls the Warden instead.
     files.remove("campaigns/showcase/data/callings/hunter.toml");
     files.edit_table("dialogue", |t| {
-        t.replace("calls = \"hunter\" }", "calls = \"warden\" }")
+        t.replace(
+            "hunter.\"\ncalls = \"hunter\"",
+            "hunter.\"\ncalls = \"warden\"",
+        )
     });
     files.insert("campaigns/showcase/data/callings/warden.toml", CALLING);
     Arc::new(Content::load(&files).expect("fixture content"))
