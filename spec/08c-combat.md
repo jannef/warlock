@@ -468,10 +468,15 @@ developer notes (CLAUDE.md, `docs/dev/`).
     like anyone. Vital strike or the finisher that hits one says "It has no vital spot." after
     the blow's line. The fleshy undead have vitals. Without `data/surprise.toml` everything has
     vitals and a missile's sneak attack has no reach limit.
-  - **Told after the fact**, never before, never a roll: "You catch the kobold unawares." / "The
-    kobold whirls to face you." before the player's blow's line (nothing more on a sleeper or a
-    mimic); "You are taken by surprise!" / "You keep your wits about you." before a creature's
-    attack line, after a trap's; look mode's "surprised"; Surprised in the status bar.
+  - **Told after the fact**, never before, never a roll: the player's attack that rolls to hit
+    (a blow, a shot, a throw, a spell) names its target, seen, by how it found it, in its own
+    line, hit or miss (#1211): "You hit the sleeping kobold." (asleep), "You hit the
+    unsuspecting kobold." (unaware and the check failed, or a mimic in disguise), "You miss the
+    surprised kobold." / "the stunned kobold" (already flat-footed by a status, by its `seen`
+    word); a check made is told by "The kobold whirls to face you." before the blow's line and
+    nothing more; an aware target or an unseen one, nothing. A creature's attack on the player
+    adds no such words: "You are taken by surprise!" / "You keep your wits about you." before
+    its attack line, after a trap's; look mode's "surprised"; Surprised in the status bar.
   - **Stalker's eye** (#687; the ranger's class ability at level 2 since #788): the perception snapshot carries `SeenActor::unaware` for each
     creature in view (`surprise::creature_unaware`, the creature half of `World::unaware`, a
     function of state: a sleeper, a mimic Chest-wise sees, one slipped past, one hunting no one

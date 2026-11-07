@@ -108,7 +108,13 @@ impl World {
         let (pos, creature) = (actor.pos, actor.creature);
         if id != self.state.player && self.perception.sees_actors_at(pos) {
             let name = self.content.creature(creature).name.clone();
-            self.say(format!("{} wakes up.", crate::content::the_start(&name)));
+            let text = format!("{} wakes up.", crate::content::the_start(&name));
+            // Woken by the player's attack that found it asleep: after that attack's line.
+            if self.sleeper_struck == Some(id) {
+                self.news.push(text);
+            } else {
+                self.say(text);
+            }
         }
         let level = self.state.current();
         let cry = (level.effects_at(&self.content, pos).swarm()).map_or(0, |s| s.cry);

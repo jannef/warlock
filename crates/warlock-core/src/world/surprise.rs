@@ -24,10 +24,10 @@
 //! player is never unaware (a creature's half still decides the ambush dice, `ambush.rs`).
 
 use super::{ActorId, ActorKind, World, WorldState};
-use crate::action::Event;
+use crate::action::{Caught, Event};
 use crate::check;
 use crate::combat::{Category, Target};
-use crate::content::{Content, StatusId, the, the_start};
+use crate::content::{Content, StatusId, the_start};
 use crate::fov::radius2;
 use crate::light::LightCache;
 use crate::sight::{self, LineOfSight};
@@ -272,19 +272,56 @@ impl World {
                 Some(_) => self.say(text),
                 None => self.news.push(text),
             }
-        } else if by == Some(player) && !helpless && self.perception.sees_actors_at(pos) {
-            // Failed, but immune to the status (a ward, its type): no word either way.
-            if made {
-                self.say(format!("{} whirls to face you.", the_start(&name)));
-            } else if self.surprised(target) {
-                self.say(format!("You catch {} unawares.", the(&name)));
-            }
+        } else if by == Some(player) && made && self.perception.sees_actors_at(pos) {
+            // Failed, it is told in the attack's own words ([`World::caught_by`]).
+            self.say(format!("{} whirls to face you.", the_start(&name)));
         }
         // Hair trigger: one blow per surprise, after the check's word.
         match by {
             Some(attacker) if made => self.hair_trigger(target, attacker, events),
             _ => true,
         }
+    }
+
+    /// Actor `attacker`'s attack that rolls to hit, finding `target` `unaware` of it or not:
+    /// the initiative check if it was ([`World::startle`]), and how the attack found it, for
+    /// its words when the attacker is the player ([`Caught`]): asleep; unaware and Surprised by
+    /// it now (the check failed, or a disguised mimic); else already flat-footed (Surprised,
+    /// Stunned). A check made is said by itself ("The kobold whirls to face you."), so is not
+    /// told again. `None` when Hair trigger's blow cut the attacker down.
+    pub(super) fn caught_by(
+        &mut self,
+        attacker: ActorId,
+        target: ActorId,
+        unaware: bool,
+        events: &mut Vec<Event>,
+    ) -> Option<Option<Caught>> {
+        let player = attacker == self.state.player;
+        let asleep = player && self.asleep(target);
+        if player {
+            self.sleeper_struck = asleep.then_some(target);
+        }
+        let before = player && self.surprised(target);
+        if unaware && !self.startle(target, Some(attacker), events) {
+            return None;
+        }
+        if !player {
+            return Some(None);
+        }
+        let caught = if asleep {
+            Some(Caught::Asleep)
+        } else if unaware && !before && self.surprised(target) {
+            Some(Caught::Unaware)
+        } else {
+            (self.state.actors.get(&target))
+                .and_then(|a| {
+                    a.effects
+                        .iter()
+                        .find(|e| self.content.status(e.status).flat_footed)
+                })
+                .map(|e| Caught::OffGuard(e.status))
+        };
+        Some(caught)
     }
 
     /// Actor `id`'s craft at catching others unawares: what it adds to the difficulty of their
@@ -318,5 +355,42 @@ impl World {
         };
         let ease = u32::try_from(ease.clamp(0, 100)).unwrap_or(0);
         100 + (cost - 100) * (100 - ease) / 100
+    }
+}
+
+/// Marks the attack of `by` on `target` among `made` (a spell's events, the first of them its
+/// own) with how it found its target, `caught`.
+pub(super) fn mark_caught(
+    made: &mut [Event],
+    (by, at): (ActorId, ActorId),
+    caught: Option<Caught>,
+) {
+    let attack = made.iter_mut().find_map(|e| match e {
+        Event::Attacked {
+            attacker,
+            target,
+            caught,
+            ..
+        } if *attacker == by && *target == at => Some(caught),
+        _ => None,
+    });
+    if let Some(mark) = attack {
+        *mark = caught;
+    }
+}
+
+/// `name`, a creature's type's, as an attack that found it `caught` calls it: "sleeping
+/// kobold", "unsuspecting kobold", "stunned kobold" (by its status's `seen` word); its own
+/// name when the attack found it aware.
+pub(super) fn caught_name(content: &Content, name: &str, caught: Option<Caught>) -> String {
+    let word = match caught {
+        None => None,
+        Some(Caught::Asleep) => Some("sleeping"),
+        Some(Caught::Unaware) => Some("unsuspecting"),
+        Some(Caught::OffGuard(status)) => content.status(status).seen.as_deref(),
+    };
+    match word {
+        Some(word) => format!("{word} {name}"),
+        None => name.to_string(),
     }
 }
