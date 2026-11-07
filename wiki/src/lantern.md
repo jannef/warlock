@@ -27,7 +27,7 @@ watch creatures that carry their own light without being seen. See [Creatures](c
 Your lantern has a hood: `u` on a lit lantern lowers it, and `u` again puts the lantern out
 (lit again, it burns open).
 
-Hooded, the lantern gives a third of its light and reaches 2 cells instead of 5 (see the [table of
+Hooded, the lantern gives half its light and reaches 2 cells instead of 5 (see the [table of
 lights](light.md#light-sources)), and the hood keeps the light off you: it lights the ground
 around you but not the cell you stand on.
 
