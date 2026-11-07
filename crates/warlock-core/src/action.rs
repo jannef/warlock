@@ -729,6 +729,12 @@ pub enum Event {
         /// The affected cells the player can see; perception-filtered, never ground truth.
         cells: Vec<Pos>,
     },
+    /// The player identified inventory stack `item` by the Identify spell (a cast or the scroll
+    /// of identify) and learned something of it. The screen for that stack opens (the game's
+    /// description screen). Not sent for the other ways of identifying.
+    Identified {
+        item: usize,
+    },
     /// The player chatted with a creature, or asked it about a topic, and it answered (spec §8
     /// "Dialogue"): what it said and what the player may ask it about. One with topics opens
     /// the dialogue screen.

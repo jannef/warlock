@@ -135,10 +135,11 @@ pub(super) fn populate(
     }
     let outside: BTreeSet<Pos> = placed.iter().map(|s| s.pos).collect();
     // The generic list holds no uniques: its candidates stay the same all the floor long.
-    let generic = content.candidates(&spawning.generic, &met);
+    // Neutral animals weigh `odds.neutral` % (#1195).
+    let odds = &spawning.odds;
+    let generic = content.draw_candidates(&spawning.generic, &met, odds);
     for _ in 0..count {
-        let own = content.candidates(&spawning.population, &met);
-        let odds = &spawning.odds;
+        let own = content.draw_candidates(&spawning.population, &met, odds);
         let Some(creature) = danger::draw(&mut rng, &own, &generic, danger, odds) else {
             break;
         };

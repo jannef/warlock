@@ -381,6 +381,19 @@ population is met as a stray, and people, keepers, hand-placed guardians, and qu
 `world::spawn_tests::strays_come_from_every_hostile_type_but_those_kept_out`; `populate` builds the generic candidates once a floor, the own ones per creature (a
 unique leaves them). Hand-placed creatures (level legends, vaults,
 scenario people, shopkeepers) are never drawn, whatever their tier.
+Neutral animals (#1195; the owner: "it's a game about killing stuff, not Dwarf Fortress"):
+`Odds::neutral` (`neutral`, percent 0 to 100, `[defaults]`'s, overridable by a branch or a
+hand-made level; 100 without the field) scales the rarity factor of every candidate not hostile
+to the player by its data stance (`Content::stance` with `player`; the `wildlife` faction and
+anything else neutral by default; never Beast-friend's empathy, which is the player's, not the
+type's) in `Content::draw_candidates`, at least 1 unless 0 %. The floor's population
+(`mapgen/population.rs`, the count's draws) and the spawner (`world/spawn.rs::draw_spawn`) draw
+by it; the count is unchanged, so the freed weight goes to the hostile types. Untouched, as
+places that mean what they draw: a vault's monster pools, teeming dens (a beast den's
+`swarm.factions` is animals by design), hoards' guardians (hostile anyway), outcomes' summons,
+and overworld encounters (wildlife belongs outdoors). Tests:
+`mapgen::neutral_share_tests` (the share over every branch floor and many seeds; the ignored
+`print_neutral_shares` prints the per-branch table), `content::danger::tests` (the bounds).
 Dread (docs/design/monster-dread.md §8, #1124): `CreatureDef::dread` (`dread = true`, default
 false) marks the types to dread, flagged for every type §6 sorts as dread (the gimmicks come in
 later slices); a rarity tier is still the type's own. `danger::draw` rolls first, when

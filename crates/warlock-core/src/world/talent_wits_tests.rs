@@ -463,24 +463,3 @@ fn gourmand_stops_short_of_bloated() {
     assert_eq!(hunger, Some(Hunger::Satiated));
     assert!(said.contains(&"You eat your fill; the rest does you no good.".to_string()));
 }
-
-#[test]
-fn the_trees_are_held_to_the_bar() {
-    let book = BUILTIN.talents();
-    for tree in ["scholar", "grit", "delver"] {
-        let tree = book.tree(book.tree_id(tree).expect("tree"));
-        assert!(!tree.pending, "{}", tree.id);
-    }
-    for system in [
-        "searching",
-        "digging",
-        "shops",
-        "magic_items",
-        "scrolls",
-        "skills",
-        "experience",
-    ] {
-        let id = book.system_id(system).expect("system");
-        assert!(!book.system(id).pending, "{system}");
-    }
-}

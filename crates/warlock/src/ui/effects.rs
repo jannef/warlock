@@ -219,6 +219,7 @@ pub(super) fn track(
             | Event::Disease { .. }
             | Event::Drained { .. }
             | Event::Talked(_)
+            | Event::Identified { .. }
             | Event::FellThroughIce { .. }
             | Event::TrapSprung { .. }
             | Event::TrapStruck { .. }

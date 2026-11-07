@@ -1,6 +1,6 @@
 # Talents (spec §8 "Talents"), one file per talent, named by its id (`hardy.toml`); a file holds
-# one `[[talent]]`. The settings ([coverage], the trees, the systems) stay in
-# ../talents.toml, and may be set in one file only. This file holds only the notes below: a file
+# one `[[talent]]`. The settings (the trees, the systems) stay in
+# ../talents.toml. This file holds only the notes below: a file
 # of comments defines nothing. Saves name talents by id, so a new talent is a new file (never
 # edited into another's), a renamed id is a renamed file, and the same id in two files is a load
 # error naming both (docs/dev/content.md).
@@ -8,12 +8,12 @@
 # Every talent defines:
 #   id, name      its id (in replays: `talent:hardy`) and its name, as the game shows it
 #   tree          a tree id of ../talents.toml; `class` for a class ability, which a class's level
-#                 table gives (../classes/) and which needs `granted = true`
+#                 table gives (../classes/), with `granted = true`
 #   description   what it does, in the game's words: never a number the game hides (a modifier,
 #                 a chance, a speed); where the game shows the quantity (Defence, Protection,
 #                 carrying, XP) the number may be said. The wiki shows the rule.
-#   systems       the systems it touches, ids from the closed list in ../talents.toml (at least
-#                 one): the coverage check counts them
+#   systems       the systems it touches, ids from the list in ../talents.toml (the wiki's
+#                 talents-by-system matrix reads them)
 #   choice        what it is chosen for, if it takes a choice: "weapon_skill", "style", "skill"
 #                 (a skill the taker is trained in), "element" (a damage type that is no physical
 #                 kind), "school" (a school of magic, `evocation`, or an element: a spell
@@ -23,9 +23,9 @@
 #                 `talent:weapon_focus:long_blades`, and each choice is a pick of its own
 #   needs         what taking it asks, all of which must hold at the pick (nothing is
 #                 checked again later):
-#                   talents = ["dodge", "hardy"]         those talents; a talent
-#                                                        with a choice may be needed only by one
-#                                                        of the same choice, taken for the same
+#                   talents = ["dodge", "hardy"]         those talents; one with a
+#                                                        choice, needed by a talent of the same
+#                                                        choice, taken for the same
 #                   stats = { toughness = 14 }           the stored score, never the effective
 #                   skills = { stealth = 25 }            trained, at that value at least
 #                   weapon_skills = { bows = 3 }         a weapon skill or style at that rank

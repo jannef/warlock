@@ -95,8 +95,7 @@ Lockbreaker (Delver, Strength 12; its `systems` gained `chests`: `door_kick` is 
 `break_chest` on a smash only), Trap sense (its `trap_damage_percent` reaches a chest's trap
 through `trap_deals`, no hook of its own), and the wizard's Knock (level 4, 5 mana). #775
 merged Deft breaker into Lockbreaker and Mimic-wise and Slick into Chest-wise, rather than a
-new Chest delver: Chest-wise alone was information only, which the coverage policy no longer
-allows, and knowing a mimic and slipping its glue are knowing a chest's tricks; Deft breaker's
+new Chest delver: Chest-wise alone was information only, and knowing a mimic and slipping its glue are knowing a chest's tricks; Deft breaker's
 softer kick is Lockbreaker's kick.
 
 ## Tests

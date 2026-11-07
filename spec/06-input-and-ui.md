@@ -709,8 +709,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
   A spell scroll chosen to read (`r`, above) is aimed the same way, as far as its spell reaches
   (its `range`; a bolt's length); a bolt's line is blocked only by what is solid, as it runs
   through creatures. Aiming is an input mode like look mode: no time passes.
-  The cursor starts on the last target if the player still sees it (a creature) or it is on this
-  level (a cell), else on the nearest hostile creature in view, else on the player; `Tab` and
+  The cursor starts on the last target if it is a creature the player still sees, else on the
+  nearest hostile creature in view, in either case only within the aim's range (a kind with no
+  known range limits nothing), else on the player (an empty cell is never remembered); `Tab` and
   `Shift`+`Tab` cycle through the creatures in view, nearest first (ties: the lower id); the
   movement keys move it anywhere on the level. The line of fire (the integer line the rules fly
   the missile along, §8) is drawn as faint, unlit dots from the player toward the cursor, over
