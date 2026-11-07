@@ -1,12 +1,14 @@
 //! Outcome tables (spec §7 "Special rooms"): what a forgotten altar's prayer may bring, exactly,
 //! and how often, per prayer and per altar, computed from `data/outcomes/forgotten_altar.toml`;
-//! and what a healing spring's drink may bring, per drink (`data/outcomes/spring.toml`).
+//! what a healing spring's drink may bring, per drink (`data/outcomes/spring.toml`); and what
+//! each gamble potion may bring, per draught (spec §8 "Potions").
 
 use super::text::capital;
 use std::fmt::Write as _;
 use warlock_core::alignment::Alignment;
 use warlock_core::content::{
-    Amount, Content, Near, OutcomeDef, OutcomeEffect, OutcomeKind, OutcomeTable, OutcomeTier,
+    Amount, Content, Draught, Near, OutcomeDef, OutcomeEffect, OutcomeKind, OutcomeTable,
+    OutcomeTier,
 };
 use warlock_core::magic::loot::LootGrade;
 
@@ -54,7 +56,7 @@ fn does(content: &Content, effect: &OutcomeEffect) -> String {
     if let Some(drain) = effect.drain {
         out.push(format!("{drain} mana lost (never below 0)"));
     }
-    if let Some((status, degrees)) = effect.status {
+    for &(status, degrees) in &effect.status {
         let def = content.status(status);
         let lasts = def
             .eases
@@ -153,6 +155,13 @@ fn does(content: &Content, effect: &OutcomeEffect) -> String {
     }
     if let Some(wither) = effect.wither {
         out.push(format!("{wither} stat damage to a random stat"));
+    }
+    if let Some((stat, points)) = effect.drain_stat {
+        out.push(format!(
+            "{points} {} [drained](stats.md#drained-stats) for good, with no check (never below \
+             the drain's floor)",
+            stat.name()
+        ));
     }
     if effect.xp > 0 {
         out.push(format!(
@@ -349,10 +358,50 @@ pub(super) fn spring_outcomes(content: &Content) -> String {
     let Some(table) = content.outcomes().get("spring") else {
         return String::new();
     };
+    let mut out = per_draw(content, table, "drink");
+    let dry = if table.exhaust == 0 {
+        "A spring never runs dry: drink as often as you like.".to_string()
+    } else {
+        format!(
+            "After a drink the spring runs dry with {}% chance.",
+            table.exhaust
+        )
+    };
+    let _ = write!(out, "\nA drink takes {} seconds. {dry}\n", table.seconds);
+    out
+}
+
+/// Every gamble potion's table (spec §8 "Potions": a `gamble` draught draws one outcome), by the
+/// potion's name: a heading anchored for links, then each outcome's kind, tier, chance per
+/// draught, what it does exactly, and what it says.
+pub(super) fn gamble_outcomes(content: &Content) -> String {
+    let mut gambles: Vec<_> = (content.object_defs().iter())
+        .filter_map(|o| match o.drink.as_ref().map(|d| &d.does) {
+            Some(Draught::Gamble { outcomes }) => Some((o, content.outcomes().get(outcomes)?)),
+            _ => None,
+        })
+        .collect();
+    gambles.sort_by_key(|(o, _)| o.name.to_lowercase());
+    let mut out = String::new();
+    for (o, table) in gambles {
+        let _ = writeln!(
+            out,
+            "### <a id=\"gamble-{}\"></a>{}\n",
+            o.id.replace('_', "-"),
+            capital(&o.name)
+        );
+        out.push_str(&per_draw(content, table, "draught"));
+        out.push('\n');
+    }
+    out
+}
+
+/// `table`'s outcomes, each with its chance per `draw` (a drink, a draught).
+fn per_draw(content: &Content, table: &OutcomeTable, draw: &str) -> String {
     let sum = f64::from(table.kinds.iter().sum::<u32>().max(1));
-    let mut out = String::from(
-        "| Kind | Tier | Outcome | Per drink | What it does | Message |\n\
-         |---|---|---|:---:|---|---|\n",
+    let mut out = format!(
+        "| Kind | Tier | Outcome | Per {draw} | What it does | Message |\n\
+         |---|---|---|:---:|---|---|\n"
     );
     for (kind, w) in OutcomeKind::ALL.into_iter().zip(table.kinds) {
         let total = f64::from(table.total(kind).max(1));
@@ -371,14 +420,5 @@ pub(super) fn spring_outcomes(content: &Content) -> String {
             );
         }
     }
-    let dry = if table.exhaust == 0 {
-        "A spring never runs dry: drink as often as you like.".to_string()
-    } else {
-        format!(
-            "After a drink the spring runs dry with {}% chance.",
-            table.exhaust
-        )
-    };
-    let _ = write!(out, "\nA drink takes {} seconds. {dry}\n", table.seconds);
     out
 }

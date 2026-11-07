@@ -2219,6 +2219,7 @@ damage = "2d6"
             ("mesmerise", 5, None, 5, true),
             ("mirk", 12, None, 29, false),
             ("nightsight", 4, None, 4, true),
+            ("pitch_fire", 8, Some("2d6"), 14, false),
             ("ray_of_frost", 1, Some("2d6"), 1, true),
             ("rebuke", 14, Some("4d6"), 34, true),
             ("identify", 6, None, 60, false),

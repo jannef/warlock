@@ -246,6 +246,7 @@ fn potion_lines(stack: &Stack, lore: Lore<'_>) -> Vec<Line> {
         Draught::Restore => "Restores what was drained or damaged of you".to_string(),
         Draught::Blink => "Takes you elsewhere at once".to_string(),
         Draught::Status { status, .. } => format!("{} for a while", lent(content, *status)),
+        Draught::Gamble { .. } => "Does good, or harm, or nothing: a gamble".to_string(),
     };
     let mut lines = vec![line(LineKind::Stat, text)];
     // A flask (spec §8 "Potions": "Flasks"): what its splash is, by its spell's name.

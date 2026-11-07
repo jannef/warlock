@@ -207,6 +207,8 @@ A **zone** is an area that lies on the floor for a while. [Balefire](magic.md#th
 [Reek](magic.md#the-spells) poisons, [Mirk](magic.md#the-spells) darkens,
 [Slick](magic.md#the-spells) trips, and [Fume](magic.md#the-spells) smokes. All five come only
 from [scrolls](magic.md#learning-spells-from-scrolls) you find (and a flask of smoke lays Fume's).
+[Pitch fire](magic.md#spell-pitch-fire) burns too, in a pool where it bursts; it comes from a scroll or
+a [flask](potions.md#flasks) of it.
 
 - A zone's cells stay as they were laid, and it never spreads.
 - It takes you and your [allies](allies.md) like anyone else. The caster has no protection from

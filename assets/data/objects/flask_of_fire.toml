@@ -1,0 +1,26 @@
+# A flask of fire (spec §8 "Potions": "Flasks"; the potions wave 2 design §4.4): thrown, it
+# shatters into the Fireball spell's burst where it breaks; drunk, it burns all the way down. Fire
+# is scarlet, kin to healing's red.
+[[object]]
+id = "flask_of_fire"
+name = "flask of fire"
+plural = "flasks of fire"
+glyph = "!"
+fg = "#e04020"
+class = "potions"
+materials = ["glass"]
+weight = 250
+value = 120
+stackable = true
+level = 6
+frequency = 10
+
+[object.drink]
+kind = "harm"
+dice = "1"
+status = "burning"
+colour = "scarlet"
+
+[object.throw]
+spell = "fireball"
+words = "Fire bursts roaring from the shards!"

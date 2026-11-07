@@ -168,7 +168,7 @@ impl World {
             super::mana::drain(self.player_mut(), amount);
             done = true;
         }
-        if let Some((status, degrees)) = effect.status {
+        for &(status, degrees) in &effect.status {
             // The outcome's line tells it, not the status's own.
             self.afflict(me, status, degrees, None, &mut Vec::new());
             done = true;
@@ -243,6 +243,13 @@ impl World {
             let actor = self.player_mut();
             let score = actor.stats.score(stat);
             actor.damage.take(stat, points, score);
+            done = true;
+        }
+        if let Some((stat, points)) = effect.drain_stat
+            && self.drain_points(me, stat, points) > 0
+        {
+            // The outcome's line tells it, not a drain's own.
+            found(self);
             done = true;
         }
         if effect.xp > 0 {

@@ -1,0 +1,27 @@
+# Pitch fire (spec §8 "Potions": "Flasks"; the potions wave 2 design §4.4): a heavy flask of
+# burning pitch, thrown no farther than four cells; it shatters into the Pitch fire spell's pool of
+# fire where it breaks. Drunk, it is liquid fire. Fire is scarlet.
+[[object]]
+id = "pitch_fire"
+name = "pitch fire"
+plural = "pitch fires"
+glyph = "!"
+fg = "#e04020"
+class = "potions"
+materials = ["glass"]
+weight = 250
+value = 250
+stackable = true
+level = 9
+frequency = 6
+
+[object.drink]
+kind = "harm"
+dice = "2"
+status = "burning"
+colour = "scarlet"
+
+[object.throw]
+spell = "pitch_fire"
+range = 4
+words = "Burning pitch spatters from the shards and pools on the ground."

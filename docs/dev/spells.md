@@ -745,10 +745,18 @@ What an area spell does to the items lying in it (#1100; spec §8 "Spells", "Rui
 An area that lies on the floor for a time (`world/zone.rs`; the design's §7 "Zones", #1000).
 Balefire, Reek, Mirk, Slick, and Fume (scroll only) lay one, and so do the flasks of Reek, Mirk, and Slick
 (stinking, darkness, oil: `docs/dev/potions.md`), with `[spell.effect] zone = { kind, turns }`
+<<<<<<< HEAD
 (`SpellZone`, `ZoneKind`; `content/spell_def.rs::resolve`: a burst or a line, on a `damage`
 spell or a `hex`; `turns` of 6 s; by custom `fire` a `damage` spell of fire, `fouled` of poison,
 `dark`, `slick`, and `smoke` a `hex` with no `status`; a fire's harm is the spell's roll, none
 without one).
+=======
+(`SpellZone`, `ZoneKind`; `content/spell_def.rs::check_zone`: a burst or a line; `turns` 1 to
+`MAX_ZONE_TURNS`, of 6 s; `fire` a `damage` spell of fire, `fouled` of poison, `dark`, `slick`, and
+`smoke` a `hex`, whose `status` is then not asked).
+Pitch fire (#1227, scroll and flask only) lays a `fire` zone of 6 turns on a burst's cells,
+radius 1: Balefire's zone in a pool.
+>>>>>>> origin/main
 
 - **State**: `LevelState::zones: Vec<Zone>` (`kind`, `cells`, `until`, `by`, `harm`, `light`,
   `spell`), saved, hashed, left out while empty, and `LevelState::zone_memory`, what the player saw.

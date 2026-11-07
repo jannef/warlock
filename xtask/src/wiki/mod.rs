@@ -423,6 +423,7 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("scrolls.md", scrolls::scrolls),
         ("decipher-chances.md", scrolls::decipher_chances),
         ("potions.md", potions::potions),
+        ("potion-gambles.md", outcomes::gamble_outcomes),
         ("weapon-skills.md", weapon_skills::skills),
         ("weapon-marks.md", weapon_skills::marks),
         ("target-dummies.md", weapon_skills::dummies),
