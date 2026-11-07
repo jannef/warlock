@@ -710,10 +710,11 @@ What an area spell does to the items lying in it (#1100; spec §8 "Spells", "Rui
   `Reach`: its kind spared, no halving at the edge, `creature_burst.rs`), `cast_bolt` (lines; a
   birth sign's Fire breath too), `cast_cone` (cones and a dragon's breath, `breath.rs`). `Caster::Actor` only: a trap's or a place's burst ruins nothing; a spell
   with no damage type returns at once.
-- **Spared**: a stack whose magic is a unique (`Magic::unique`), and `World::quest_objects`: every
-  fixed quest's `hand_in` object (bring, deliver) until the quest is completed and not
-  repeatable, and an active rolled quest's drawn one (`Quests::given`). Rewards are not spared:
-  they only exist once their quest is done. Only `LevelState::objects` is read: inventories and
+- **Spared**: what item damage's one protection spares (`item_damage::protected`,
+  `docs/dev/objects.md` "Protection"; #1170): a unique, an item of Proof, and
+  `World::quest_objects` (every fixed quest's `hand_in` object, bring or deliver, until the quest
+  is completed and not repeatable, and an active rolled quest's drawn one). A reward is spared
+  only when another quest asks for it. Only `LevelState::objects` is read: inventories and
   chests are never touched.
 - **Draws**: one `chance(percent)` per item, cells in position order, each pile top first, from
   `WorldState::ruin_rng` (`Rng::ruin`, the `ruin` stream), made on the first draw like
