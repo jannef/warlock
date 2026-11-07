@@ -162,6 +162,9 @@ mod free_blow;
 mod frenzy;
 pub(crate) mod freshness;
 mod gaze;
+pub(crate) mod gear_condition;
+#[cfg(test)]
+mod gear_condition_tests;
 mod gifts;
 mod glare;
 mod graveyard;

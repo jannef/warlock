@@ -39,8 +39,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
   (`treasure/<level id>`, after its chests, so the rest of the level is the same with or
   without them, §7 "Special rooms"); a generated level's creatures' gear (`gear/<level id>`, in
   spawn order after its loot, so the rest of the level is the same with or without it, §8
-  "Creature gear"); the gear of a creature placed in play without a fixed kit (`gear/<actor
-  id>`: a hand-made level's, rolled as the level is first entered); what a creature drops when
+  "Creature gear"), and their condition (`condition/<level id>`, in the same order, so the gear
+  is the same with or without it); the gear of a creature placed in play without a fixed kit (`gear/<actor
+  id>`: a hand-made level's, rolled as the level is first entered; its condition from
+  `condition/<actor id>`); what a creature drops when
   it dies (`drop/<actor id>`, so a
   kill never changes a later roll of the gameplay stream; actor ids are never reused);
   gameplay (`gameplay`, kept in the world state and saved; a teleport trap's destination is a
