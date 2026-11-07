@@ -653,7 +653,7 @@ impl Actor {
             })
             .collect();
         let dexterity = self.stats_with(content, &mods).modifier(Stat::Dexterity);
-        // Talents (spec §8 "Talents"): Armour training raises worn armour's cap, Nimble the burden's.
+        // Talents (spec §8 "Talents"): Armour training raises worn armour's cap, Pack mule the burden's.
         let talents = self.talent_mods(content);
         let worn = (equipped.iter()).filter_map(|(_, o, m, _)| {
             Some(o.max_dex? + m.get(ItemEffect::MaxDex) + talents.max_dex)

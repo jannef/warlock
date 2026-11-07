@@ -135,6 +135,7 @@ mod disease;
 mod door;
 mod drain;
 mod drink;
+mod dummy;
 mod eat;
 mod edge_leave;
 mod element_gifts;
@@ -161,6 +162,9 @@ mod free_blow;
 mod frenzy;
 pub(crate) mod freshness;
 mod gaze;
+pub(crate) mod gear_condition;
+#[cfg(test)]
+mod gear_condition_tests;
 mod gifts;
 mod glare;
 mod graveyard;
@@ -1738,6 +1742,8 @@ mod drain_tests;
 #[cfg(test)]
 mod druid_quest_tests;
 #[cfg(test)]
+mod dummy_tests;
+#[cfg(test)]
 mod dwell_tests;
 #[cfg(test)]
 mod eat_tests;
@@ -1861,6 +1867,8 @@ mod malison_tests;
 mod mana_talent_tests;
 #[cfg(test)]
 mod mana_tests;
+#[cfg(test)]
+mod material_draw_tests;
 #[cfg(test)]
 mod merchants_eye_tests;
 #[cfg(test)]

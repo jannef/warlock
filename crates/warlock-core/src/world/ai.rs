@@ -129,6 +129,10 @@ impl World {
     /// the player perceive (events, noise) starts here too. What the creature heard since it
     /// last acted ([`super::Actor::heard`]) is read here and spent.
     pub(super) fn creature_turn(&mut self, id: ActorId, events: &mut Vec<Event>) -> i64 {
+        // A target dummy never acts (`dummy.rs`).
+        if self.dummy(id).is_some() {
+            return self.price_of(id, ActionKind::Wait);
+        }
         // A zone where it stands does what it does first, awake or not (`zone.rs`); it may not
         // live to act.
         self.zone_turn_start(id, events);

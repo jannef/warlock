@@ -8,6 +8,7 @@
 //!
 //! The file is optional: without it there are no factions and everyone is neutral to everyone.
 
+use super::MaterialId;
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
@@ -46,6 +47,11 @@ pub(super) struct FactionSpec {
     /// Hostile to every faction, itself too.
     #[serde(default)]
     pub hostile_to_all: bool,
+    /// The materials its creatures favour for their gear (#1191): a material's percent of the
+    /// draws for an item that may be made of it, `gear = { bone = 40, iron = 25 }`
+    /// ([`FactionDef::gear`]).
+    #[serde(default)]
+    pub gear: BTreeMap<String, u8>,
 }
 
 #[derive(Deserialize)]
@@ -66,6 +72,12 @@ pub struct FactionDef {
     pub provoked: Option<FactionId>,
     /// Hostile to every faction, itself too.
     pub hostile_to_all: bool,
+    /// The materials its creatures favour for their gear and drops (#1191), by material id,
+    /// each with its percent of the draws for an item whose main part may be made of it
+    /// ([`crate::variant::weights`]); together at most 100. Resolved once the materials are
+    /// loaded ([`Factions::resolve_gear`]).
+    pub gear: Vec<(MaterialId, u8)>,
+    gear_names: BTreeMap<String, u8>,
 }
 
 /// Every faction and the hostility between them.
@@ -144,9 +156,48 @@ impl Factions {
                 animal: s.animal,
                 provoked,
                 hostile_to_all: s.hostile_to_all,
+                gear: Vec::new(),
+                gear_names: s.gear,
             });
         }
         Ok(Self { defs, ids, hostile })
+    }
+
+    /// Resolves each faction's `gear` by `material` (a material's id and whether it has a
+    /// group, which is what an item of another material may be made of): known materials of a
+    /// group, each 1 to 100 percent, together at most 100.
+    pub(super) fn resolve_gear(
+        &mut self,
+        material: impl Fn(&str) -> Option<(MaterialId, bool)>,
+    ) -> Result<(), String> {
+        for def in &mut self.defs {
+            let mut gear = Vec::with_capacity(def.gear_names.len());
+            for (name, &percent) in &def.gear_names {
+                let Some((id, grouped)) = material(name) else {
+                    return Err(format!(
+                        "faction `{}`: `gear` names unknown material `{name}`",
+                        def.id
+                    ));
+                };
+                if !grouped || !(1..=100).contains(&percent) {
+                    return Err(format!(
+                        "faction `{}`: `gear`'s `{name}` is a material of a group, 1 to 100 \
+                         percent",
+                        def.id
+                    ));
+                }
+                gear.push((id, percent));
+            }
+            if gear.iter().map(|(_, p)| u32::from(*p)).sum::<u32>() > 100 {
+                return Err(format!(
+                    "faction `{}`: `gear` is at most 100 percent in all",
+                    def.id
+                ));
+            }
+            gear.sort_unstable();
+            def.gear = gear;
+        }
+        Ok(())
     }
 
     pub fn is_empty(&self) -> bool {
@@ -338,6 +389,38 @@ name = "wildlife"
         for (text, expected) in cases {
             let err = resolve(text).unwrap_err();
             assert!(err.contains(expected), "{text}: {err}");
+        }
+    }
+
+    #[test]
+    fn gear_names_grouped_materials_within_a_hundred_percent() {
+        // bone (0) and iron (1) have a group; paper (2) has none.
+        let material = |name: &str| match name {
+            "bone" => Some((MaterialId(0), true)),
+            "iron" => Some((MaterialId(1), true)),
+            "paper" => Some((MaterialId(2), false)),
+            _ => None,
+        };
+        let with = |gear: &str| {
+            let mut f = resolve(&format!(
+                "[[faction]]\nid = \"player\"\nname = \"p\"\n\n[[faction]]\nid = \"orcs\"\n\
+                 name = \"orcs\"\ngear = {gear}\n"
+            ))
+            .expect("valid");
+            f.resolve_gear(material).map(|()| f)
+        };
+        let f = with("{ iron = 15, bone = 55 }").expect("valid");
+        let orcs = f.def(f.id("orcs").expect("orcs"));
+        assert_eq!(orcs.gear, [(MaterialId(0), 55), (MaterialId(1), 15)]);
+        assert!(f.def(f.id("player").expect("player")).gear.is_empty());
+        for (gear, expected) in [
+            ("{ mithril = 10 }", "unknown material `mithril`"),
+            ("{ paper = 10 }", "material of a group"),
+            ("{ bone = 0 }", "1 to 100"),
+            ("{ bone = 60, iron = 41 }", "at most 100"),
+        ] {
+            let err = with(gear).expect_err(gear);
+            assert!(err.contains(expected), "{gear}: {err}");
         }
     }
 }

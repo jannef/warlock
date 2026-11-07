@@ -1064,12 +1064,21 @@ const CASES: &[Case] = &[
         size: (80, 24),
         ..BASE
     },
+    // The inventory's drop mode (#1196): `D` there, marks kept across pages; and as `d` in
+    // play opens it.
     Case {
-        name: "drop-page-2",
+        name: "inventory-drop-mode",
         actions: HOARD,
-        screen: Some("drop"),
-        keys: Some("a > b"),
+        screen: Some("inventory"),
+        keys: Some("D a > b"),
         size: (80, 24),
+        ..BASE
+    },
+    Case {
+        name: "drop-mode-from-play",
+        actions: "move:SW*2 pickup move:NE*2 move:E*2 move:NE pickup",
+        screen: Some("drop"),
+        keys: Some("b"),
         ..BASE
     },
     Case {
@@ -1400,6 +1409,15 @@ const CASES: &[Case] = &[
         scenario: "courtyard",
         actions: concat!(shop!(), " move:E move:NE pickup move:E move:E pickup"),
         screen: Some("inventory"),
+        ..BASE
+    },
+    // Selling is a drop in a shop: marked in the drop mode, Enter asks.
+    Case {
+        name: "shop-sell",
+        scenario: "courtyard",
+        actions: concat!(shop!(), " move:E move:NE pickup move:SW move:W"),
+        screen: Some("inventory"),
+        keys: Some("D b Enter"),
         ..BASE
     },
     Case {
@@ -1949,6 +1967,7 @@ pub(super) fn start(case: &Case, content: Arc<Content>) -> App {
                     screens::refresh,
                     screens::on_run_start,
                     screens::converse,
+                    screens::show_identified,
                     screens::on_death,
                     encounter::on_encounter,
                     screens::on_level_up,

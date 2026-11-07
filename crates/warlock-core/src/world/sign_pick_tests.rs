@@ -18,14 +18,13 @@ use std::sync::LazyLock;
 static BUILTIN: LazyLock<Arc<Content>> =
     LazyLock::new(|| Arc::new(Content::builtin().expect("content")));
 
-/// The fifteen picks with the sign each asks for (`(animal, element)`, one of them set).
-const PICKS: [(&str, Option<&str>, Option<&str>); 15] = [
+/// The fourteen picks with the sign each asks for (`(animal, element)`, one of them set).
+const PICKS: [(&str, Option<&str>, Option<&str>); 14] = [
     ("another_head", Some("hydra"), None),
     ("relentless_fury", Some("manticore"), None),
     ("horn_of_plenty", Some("unicorn"), None),
     ("fire_breath", Some("wyvern"), None),
     ("petrifying_gaze", Some("basilisk"), None),
-    ("rocs_grip", Some("roc"), None),
     ("dragon_hoard", Some("griffin"), None),
     ("second_rising", Some("phoenix"), None),
     ("tentacles", Some("kraken"), None),
@@ -337,15 +336,6 @@ fn petrifying_gaze_holds_longer_and_rests_sooner() {
     assert!(plain.apply(&stare).took_turn, "{}", last(&plain));
     assert_eq!(severity(&plain, kobold, "transfixed"), 2);
     assert_eq!(severity(&plain, player, "spent_eyed"), 2);
-}
-
-#[test]
-fn rocs_grip_carries_more_and_shrugs_off_burdened() {
-    let limit = |w: &World| w.actor_load(w.player_id()).expect("load").limit;
-    let roc = born("roc", "fire");
-    let grip = with("roc", "fire", "rocs_grip");
-    assert!(limit(&grip) > limit(&roc));
-    assert!(mods(&grip).ignore_burdened && !mods(&roc).ignore_burdened);
 }
 
 #[test]

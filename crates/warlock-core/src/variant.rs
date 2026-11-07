@@ -20,14 +20,18 @@
 //! everything here shows at once, though the to-hit stays one of the numbers the game keeps to
 //! itself (the wiki states it).
 //!
-//! **Where variants come from** ([`draw`]): loot draws its item's material by the materials'
-//! `rarity` at the item level, and what a creature drops (its gear) by their `gear` at the
-//! creature's level, both from the base item's construction list, its own material among them
-//! ([`weights`]); a material worse in a fight than the base item's own but dearer weighs at most
-//! [`VERY_RARE`]. Hand-made levels place what their files name.
+//! **Where variants come from** ([`draw`]): from the base item's construction list, its own
+//! material among them ([`weights`]). Most items are their own material: another is found only
+//! [`variant_percent`] of the time (#1191), and then by the materials' `rarity` at the item level
+//! (loot) or `gear` at the creature's level (what a creature carries and drops), scaled by how
+//! well each suits the item ([`fit`]); a material worse in a fight than the base item's own but
+//! dearer weighs at most [`VERY_RARE`]. A creature's faction may favour materials, which take
+//! their percent first. Hand-made levels place what their files name.
 
 use crate::color::Rgb;
-use crate::content::{Content, MaterialDef, MaterialId, ObjectDef, Part, VERY_RARE};
+use crate::content::{
+    Content, FactionId, Fit, MaterialDef, MaterialId, ObjectDef, Part, PartRole, VERY_RARE,
+};
 use crate::item_parts::ItemPart;
 use crate::magic::loot::pick_weighted;
 use crate::rng::Rng;
@@ -99,21 +103,94 @@ pub fn color(def: &ObjectDef, parts: &[Part], content: &Content) -> Option<Rgb> 
 }
 
 /// Where an item comes from, for how often it is made of each material: loot (by the materials'
-/// `rarity` at the item level), or a creature's gear (by their `gear` at the creature's level,
-/// which it carries).
+/// `rarity` at the item level), or a creature's gear and drops (by their `gear` at the
+/// creature's `level`, and its `faction`'s favoured materials, if any).
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Source {
     Loot,
-    Gear(u8),
+    Gear {
+        level: u8,
+        faction: Option<FactionId>,
+    },
+}
+
+impl Source {
+    /// A creature's gear at `level`, of no faction that favours a material.
+    pub const fn gear(level: u8) -> Self {
+        Source::Gear {
+            level,
+            faction: None,
+        }
+    }
+}
+
+/// What the [`weights`] add up to (or a little more, by rounding up): parts per million.
+pub const PER_MILLION: u32 = 1_000_000;
+
+/// The percent of finds at item (or creature) level `level` made of another material than their
+/// base item's, where another weighs anything (#1191): 10 at level 1, half a point more each
+/// level, at most 20 (from level 21).
+pub const fn variant_percent(level: u8) -> u32 {
+    let level = if level < 1 { 1 } else { level as u32 };
+    let percent = 10 + (level - 1) / 2;
+    if percent > 20 { 20 } else { percent }
+}
+
+/// How well `made` suits one of `def` (#1191, [`crate::content::Fits`]): by what it is for,
+/// jewellery first, then a weapon (what strikes or is shot), armour (with shields), or anything
+/// else.
+pub fn fit(def: &ObjectDef, made: &MaterialDef) -> Fit {
+    let fits = &made.fit;
+    if def.is_jewellery() {
+        return fits.jewellery;
+    }
+    match def.role() {
+        PartRole::Weapon => fits.weapon,
+        PartRole::Armour => fits.armour,
+        PartRole::Any => fits.other,
+    }
+}
+
+/// How often one of `def` from `source` at item level `level` (a creature's gear: at its own
+/// level instead) is made of material `made` instead of its own, against the other materials it may be
+/// made of ([`weights`]): `made`'s `rarity` (loot) or `gear` weight there
+/// ([`crate::content::Found::at`]), at most [`VERY_RARE`] when worse in a fight than the base
+/// item's own but dearer ([`worse_but_dearer`]), then scaled by how well it suits the item
+/// ([`fit`]).
+pub fn found(
+    content: &Content,
+    def: &ObjectDef,
+    made: MaterialId,
+    source: Source,
+    level: u8,
+) -> u32 {
+    let made = content.material(made);
+    let (found, level) = match source {
+        Source::Loot => (made.rarity, level),
+        Source::Gear { level, .. } => (made.gear, level),
+    };
+    let weight = found.map_or(0, |f| f.at(level));
+    let capped = if worse_but_dearer(def, content.material(def.material()), made) {
+        weight.min(VERY_RARE)
+    } else {
+        weight
+    };
+    fit(def, made).scale(capped)
 }
 
 /// How often one of `def` from `source` at item level `level` is made of each material its main
-/// part may be made of, in its construction list's order (by material id): each material's
-/// `rarity` (loot) or `gear` (a creature's, at its own level) weight there
-/// ([`crate::content::Found::at`]), at
-/// most [`VERY_RARE`] for one worse in a fight than the base item's own material but dearer
-/// ([`worse_but_dearer`]).
-/// Empty when it may be made only of its own material.
+/// part may be made of, in its construction list's order (by material id), in parts per
+/// million ([`PER_MILLION`]; a material that weighs anything at least 1). Empty when it may be
+/// made only of its own material. The draw (#1191):
+///
+/// - its `faction`'s favoured materials (a creature's, [`crate::content::FactionDef::gear`]) on
+///   its list take their percent first;
+/// - of the rest, the base item's own material takes all but [`variant_percent`], and the other
+///   materials share that by their `rarity` (loot, item level) or `gear` (a creature's, at its
+///   own level) weight there ([`crate::content::Found::at`]), at most [`VERY_RARE`] for one
+///   worse in a fight than the base item's own but dearer ([`worse_but_dearer`]), then scaled by
+///   how well each suits the item ([`fit`]); where none weighs anything, the base material takes
+///   all of it.
 pub fn weights(
     content: &Content,
     def: &ObjectDef,
@@ -124,22 +201,45 @@ pub fn weights(
     if list.len() < 2 {
         return Vec::new();
     }
-    let (gear, level) = match source {
-        Source::Loot => (false, level),
-        Source::Gear(creature) => (true, creature),
+    let (level, faction) = match source {
+        Source::Loot => (level, None),
+        Source::Gear { level, faction } => (level, faction),
     };
-    let base = content.material(def.material());
-    (list.iter())
-        .map(|&id| {
-            let made = content.material(id);
-            let found = if gear { made.gear } else { made.rarity };
-            let weight = found.map_or(0, |f| f.at(level));
-            let capped = if id != def.material() && worse_but_dearer(def, base, made) {
-                weight.min(VERY_RARE)
+    let own = def.material();
+    let others: Vec<u64> = (list.iter())
+        .map(|&id| match id == own {
+            true => 0,
+            false => u64::from(found(content, def, id, source, level)),
+        })
+        .collect();
+    let favoured_by = faction.map_or(&[][..], |f| &content.factions().def(f).gear[..]);
+    let favoured = |id: MaterialId| -> u64 {
+        (favoured_by.iter())
+            .find(|(m, _)| *m == id)
+            .map_or(0, |(_, p)| u64::from(*p))
+    };
+    let taken: u64 = list.iter().map(|&id| favoured(id)).sum::<u64>().min(100);
+    let rest = others.iter().sum::<u64>();
+    let variant = if rest == 0 {
+        0
+    } else {
+        u64::from(variant_percent(level))
+    };
+    let rest = rest.max(1);
+    // Each material's share of the whole, over `100 × 100 × rest`: its favoured percent, plus
+    // the unfavoured draw's share of what is left.
+    let whole = 100 * 100 * rest;
+    (list.iter().zip(&others))
+        .map(|(&id, &other)| {
+            let normal = if id == own {
+                (100 - variant) * rest
             } else {
-                weight
+                variant * other
             };
-            (id, capped)
+            let share = favoured(id) * 100 * rest + normal * (100 - taken);
+            let ppm = share * u64::from(PER_MILLION) / whole;
+            let ppm = if share > 0 { ppm.max(1) } else { 0 };
+            (id, u32::try_from(ppm).unwrap_or(PER_MILLION))
         })
         .collect()
 }

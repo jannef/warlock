@@ -158,8 +158,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     or to the first wall, one roll of 2d6 fire for everyone on it through the scrolls' cast code,
     the `fire_breath` effect; then two degrees of Drained, ten minutes),
     Petrifying gaze (Basilisk, 12: the stare leaves 4 degrees of Transfixed and one of
-    Spent-eyed, an hour), Roc's grip (Roc, Strength 14: carrying +25 % more, Burdened costs
-    nothing), Dragon's hoard (Griffin, 12: Hoard sense's odds half again, loot +25 % and gems
+    Spent-eyed, an hour), Dragon's hoard (Griffin, 12: Hoard sense's odds half again, loot +25 % and gems
     +50 %, shop favour +10 %), Second rising (Phoenix, 18), Tentacles (Kraken, Twin Blades 3: off-hand blows
     +2 damage), **Hound's bay** (Barghest, 12: an active, `use:hounds_bay`, the time of a wait,
     refused on the overworld: a howl, `Act::Howl`, loudness 150, heard as "a howl" (`h` in the
@@ -736,8 +735,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
   `world/talent.rs`, the picks; M30, #229; design `docs/design/progression.md` §7, §10): knacks
   a character picks as they level, each a typed effect read where the rules already read what
   magic items do.
-  - **Data** (§7): `data/talents.toml` (the settings: `[coverage]`, the `[[tree]]`s
-    in display order, the closed `[[system]]` list) and `data/talents/<id>.toml`, one `[[talent]]`
+  - **Data** (§7): `data/talents.toml` (the settings: the `[[tree]]`s
+    in display order, the `[[system]]` list) and `data/talents/<id>.toml`, one `[[talent]]`
     a file (`id`, `name`, `tree`, `description` in the game's words,
     `choice` (`weapon_skill`, `style`, `skill`, `element`, `stat`), `needs`, `effects`,
     `systems` from the list, `granted`:
@@ -855,7 +854,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     `World::attack_price`); `critical_status` (Staggering blow: a critical confirmed in melee
     leaves the target Staggered, `cost = 150` until its next action: that action half again
     as dear; `World::after_blow`, no draw of its own); `penetration` (Crusher: +2 on blows and kicks
-    that can do bludgeoning damage); `burden_dex` (Nimble: the burden's Dexterity cap +1);
+    that can do bludgeoning damage); `burden_dex` (the burden line's Pack mule and Porter: the burden's Dexterity cap +1 each);
     `sure_step` and `pit_proof` (Light step: a trap stepped onto gets a Dexterity check against
     its difficulty first, two draws only with the talent; made, it does not go off and is found;
     pits never catch you; steps only, never a door's trap; the talent also has Silent feet's
@@ -885,13 +884,13 @@ developer notes (CLAUDE.md, `docs/dev/`).
     like any other. The everyday folk have theirs (bonus picks at 10, 20, 30, 45, 55):
     aristocrat (Weaponcraft, Delver) Fencing (Duelist one rank higher), Riposte, Iron will (+2
     on Willpower checks, Presence +1), Peerless (+2 on the confirmation roll); commoner (any
-    tree) Hard work (60 % off the burden's slowdown on top of Balance), Stubborn (+1 on
+    tree) Pack mule (the burden line's first step, #1198), Stubborn (+1 on
     Toughness checks, poison never lowers scores), Big hands (+1 damage with maces and
     unarmed), Second wind, Salt of the earth (healing and resting +25 %), Unlikely hero (every
     stat +1); craftsperson (Weaponcraft, Guard, Delver) Sturdy work (Protection +1 in body
     armour), Masterwork (melee threat +1), Artisan (Protection +1 per armour piece worn, +2
     melee damage); merchant (Delver, Scholar) Haggler (favour +15 %: the one class ability on
-    shop favour, #787), Deep pockets (carrying +10 kg, coins weightless), Merchant's eye (#816, at 12: an
+    shop favour, #787), Deep pockets (coins weightless) and Pack mule (the burden line's first step, #1198), Merchant's eye (#816, at 12: an
     ability, on a thing carried, that identifies it as the scroll of identify would, for a
     reading's time and nothing else; refused, no time, for a thing already known); #789 cut its level 40 Insured (shops paid +50 %), a
     capstone that paid only in gold. The favour cap is 50 %. #774 cut the filler and the duplicates (Connoisseur, Hearty, Keen
@@ -989,11 +988,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
     roll more every level); `skill` without a `skill` field (Skill focus, the `skill` choice,
     a skill the taker is trained in, one pick for each: the chosen skill counts 25 higher wherever
     a benefit reads it, past 100 too, as an affix's bonus does, and sums with Master of none and
-    magic items; the value trained and shown does not move); `ignore_burdened` (Porter: Burdened costs nothing, as a dwarf's);
+    magic items; the value trained and shown does not move); `ignore_burdened` (Porter: Burdened costs nothing, as a dwarf's); the **burden line** (#1198): Pack mule (Strength 11: carrying +10 %, `burden_ease` 60, `burden_dex` 1), then Porter (Pack mule, Toughness 12: carrying +10 %, `burden_dex` 1, `ignore_burdened`), then Beast of burden (Porter, level 12: carrying +10 %, `stout`, Strained costs what Burdened costs others, `Load::penalty`), each a step further; it replaced Roc's grip, Stout, Hard work, Sure-footed, Nimble, and Uncanny dodge, and Deep pockets' 10 kg;
     `corpse_stats_percent` and `no_bloating` (Gourmand: a fresh corpse's stat training marks and
     its chances to widen a potential doubled, a chance at most certain; a meal stops one short of Bloated, what does not fit is lost, and
-    nothing overeats); `step_slowdown_percent` (Sure-footed: half the slowdown the burden and
-    Bloated put on steps; other actions as before); `searching` (Keen searcher: +4
+    nothing overeats); `searching` (Keen searcher: +4
     searching) with the birth signs' `search_reach` (a cell farther); `search` and `trap_damage_percent` (Trap sense: +3 to finding hidden
     traps and secret doors, searching and in passing; a trap's damage halved, rounded down, at
     least 1); `door_kick` and `kick_noise_percent` (Lockbreaker: a door or chest kick as if 6
@@ -1021,8 +1019,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     damage, Poisoned for a ward against poison, and the character screen says "Resistant to
     fire" in words) and Crusher (Might; St 13, Maces and clubs or Unarmed 3: `penetration` +2
     on melee blows, off-hand blows, shield bashes, and kicks that can do bludgeoning damage;
-    never shots or throws) make the `damage_types` system's two, so it is held to the coverage
-    bar. The witch's Blight (#245) is poison-typed when it lands: its burst names
+    never shots or throws) make the `damage_types` system's two. The witch's Blight (#245) is poison-typed when it lands: its burst names
     `damage_type = "poison"`, and the Poisoned it gives meets poison resistance as every dose
     does (`World::afflict`), so no rule of its own.
   - **Shadow and Wayfarer** (#239; the design's §7.5 but for Hooded light, which waits for the
@@ -1110,8 +1107,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     progressions twice as far apart, `World::disease_turn`). Half-elf: Diplomat (Presence 11: favour +10 %, quest gold +25 %). Dwarf: Stone
     sense (`stone_find` +4 to finding what is hidden on a `stone` cell, searching and in
     passing; digging +25 %), Dwarven resilience (Toughness 14: Poisoned eases twice as fast,
-    disease checks +2), Stout (level 12: `stout`, Strained costs what Burdened costs others,
-    `Load::penalty`). Halfling: Lucky (`reroll_fumble`), Slinger (slings 2: sling damage +1, and
+    disease checks +2). Halfling: Lucky (`reroll_fumble`), Slinger (slings 2: sling damage +1, and
     `launcher_range` with `skill = "slings"`, +2 cells for a sling only), Small target
     (Dexterity 13: `small_target`, Dodge +1 against an attacker of a larger size,
     `World::small_target` after `target_against`). Gnome: Tinkerer (Intelligence 12: the Disarm
@@ -1122,45 +1118,14 @@ developer notes (CLAUDE.md, `docs/dev/`).
     race may grant only granted talents of the racial tree, checked at load): `extra_pick` at
     level 1 (a creation pick more, `creation_count`) and at level 30 (`World::level_up`). A
     race's grants join the birth sign's (`stars::grant`, at the start and on every restore),
-    shown as the race's ("(race)" in the dump). The talk and gems systems are held to the bar.
-  - **Coverage** (the design's §8): every talent names the systems it touches; at load a
-    system not `pending` with fewer than `min_talents` talents (or `min_class` class abilities,
-    the talents the class tables give, counted apart from the talents; 0 until every class has
-    its table), or a tree not `pending`, `no_free`, nor a class tree without `free_per_tree`
-    prerequisite-free talents, is a content error. A wave that ships a system's talents removes
-    its `pending`; a new system of the game joins the list in the PR that ships its talents.
-    A cull that leaves a system without talents folds its tag into a parent (#787: `weather`
-    into `travel`, the outdoors), or drops it when none fits (#787: `background`).
-    **Policy for new systems** (design §8.2; #773): systems are broad (combat, stealth, magic,
-    light, hunger, ...); a room effect, a creature family's gimmick, a chest kind, or an info
-    readout extends its parent system and is no system of its own. Every new system ships with
-    at least `min_talents` talents (one) and `min_class` class abilities, tagged with its new
-    `[[system]]` in the same PR, and its feature issue says which in the template's "Talents
-    and class abilities" section (§13), or why none (presentation only, or an extension of a
-    system already listed). **A talent earns its place**: a real choice at its tier that changes
-    how a build plays or what it can do; never information only, a small percentage on a niche
-    mechanic, an effect another talent, class ability, or skill rank already gives, or one that
-    matters only in a rare room or against one rare creature. **Capstones are not economy,
-    quests, or XP** (#789): from class level 40 on a class ability changes what the character
-    can do in a fight or a dungeon, and there is no XP or quest-reward effect at or above level
-    30; a quest-reward effect is judged by its total over a campaign's fixed pool, not its
-    percent. **No clones** (#790): a class table names the pickable's
-    id, never a talent that does the same; the load refuses one, but for the pairs
-    `alike` lists in `data/talents.toml` (Cleave and Cleaving strike, which stack into a great
-    cleave; the birth signs' gifts). A pickable a class table gives that the character already
-    picked brings a talent pick in its place at that level. **Flaws, the outdoors, hidden marks,
-    information, shop favour** (#791): a flaw's cost shows up on an ordinary dungeon floor, and
-    no two sources share one (the horoscope's flaws are kept as they are); a talent that works
-    only outdoors or in one season is niche unless it also does something underground; an
-    effect on stat-training marks, which are never shown, is at least twice a common source's,
-    or the talent has a visible effect beside it; a whole talent of information goes, an
-    information half of a good talent may stay; and Haggler (the merchant's) is the one class
-    ability on shop favour, with no new source among the pickables or the class tables (the
-    half-elf's Diplomat and the horoscope's Dragon's hoard stay). A talent names a system only if
-    its effect reads that system. Resources are systems too: mana and the pools of #225 join the
-    list with talents on their maximum, refill, and costs, and abilities that spend them carry
-    their tag; a cost in a resource stands instead of a cooldown status, never beside one.
-    Developer notes: `docs/dev/progression.md` "Coverage policy".
+    shown as the race's ("(race)" in the dump).
+  - **Systems**: a talent may name the systems it touches from the list in
+    `data/talents.toml`; the wiki's talents-by-system table reads them. The load checks only
+    that the talent table is well formed (#1205): it parses, every id it names (talents, trees,
+    systems, statuses, resources, skills, weapon skills, races, classes, eyes, damage types,
+    lights, spells, terrain) resolves, a choice-keyed effect has its choice, and a die's sides or
+    a divisor is not 0. Whether a talent is worth taking, alike to another, or in range is the
+    data author's call.
   - **Determinism and saves**: picks are replayed actions; nothing here draws from the gameplay
     stream; the `levels` stream (`WorldState::levels_rng`, for the skill rolls and stat checks
     to come) is made on its first draw. `Actor::talents` (by id, like affixes: adding talents
@@ -1304,7 +1269,6 @@ developer notes (CLAUDE.md, `docs/dev/`).
     (§8 "Resources", R1); Martial arts grants the Ki resource, which Flurry, Step of the wind, Stunning strike,
     Patient defence, Stillness, Diamond soul's catch, and Quivering palm spend (R4, #252; #846, #847,
     #848, #849, #850, #851).
-  - **Coverage**: `min_class` stays 0 until every class has its table.
 - **The casters' class tables, and their spells** (`content/spell_def.rs`: `SpellId`;
   `data/spells/`; `world/cast.rs`, `world/caster.rs`; M30, #245, #395; design §4.9–4.12, §3.7):
   the priest, druid, wizard,
@@ -1424,8 +1388,6 @@ developer notes (CLAUDE.md, `docs/dev/`).
     in a life (`Progress::once`), what would kill the player (not starving or choking) leaves
     them at 1 hit point, Worn thin a day (hit points and mana back half as fast), and for the
     Hag's bargain Presence −2 for good; "A miracle! You do not fall."
-  - **Coverage**: `min_class` stays 0 while the ranger's, thief's, and bard's tables (#244)
-    are still to come.
   - **What the player sees**: the news of each level ("You gain Rage."); the actives in the
     abilities menu with their cooldowns, and the abilities in the dumps' `abilities` layer.
     Never a number the game hides: the wiki's class tables state the rules. **Saves change**
@@ -1518,8 +1480,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     prey +1 and +2 more); Sneak attack (#682: the class passive beside the Sneak attack skill,
     whose dice the thief trains, `2d6+10` and known for: it grants the Openings pool from level
     1, and those the thief catches unawares make their initiative check 2 harder,
-    `surprise_difficulty`; §8 "Surprise and sneak attacks"), Uncanny dodge (the burden's
-    Dexterity cap +2), Improved sneak attack (+2d6 on top of the skill's: dice of the same sides
+    `surprise_difficulty`; §8 "Surprise and sneak attacks"), Pack mule and Porter (the
+    burden line's first two steps, #1198), Improved sneak attack (+2d6 on top of the skill's: dice of the same sides
     add up), Vanishing act (40, #684: a sneak attack of the thief's that kills leaves them
     Light-footed, a degree, `sneak_kill_status`, read where `Build::SneakKill` is raised in
     `World::resolve`; `world/thief.rs`), Hide in plain sight (no footsteps while Unburdened;
@@ -1580,6 +1542,18 @@ developer notes (CLAUDE.md, `docs/dev/`).
     trained by far fewer casts than blows, `school`: 10, 20, 40, … 640 doubling, then 1200,
     2000, 3000 (docs/balance.md "School pace"). Marks
     past the need count toward the next rank (one rank at a time); rank 10 earns no more.
+  - **Target dummies** (#1199; `world/dummy.rs`): a creature type with a `training` table
+    (`{ percent, melee, ranged, breaks }`, §7) is a dummy, the straw men in the Weyfarers' Gilde's
+    yard in Cēaptūn (§3). It never acts and never dies (its hit points never drop), so it gives
+    no experience, kill, loot, or quest credit; it is of the peaceful folk, but the player
+    strikes it by moving into it as they would a hostile. A blow, bash, kick, shot, or throw at
+    it is never a surprise or sneak attack, makes no noise of its own, angers and disturbs no
+    one, and trains no stat: only the attack's weapon skill and style, at `percent` (50) of the
+    marks a creature of the dummy's `level` (1) would give, rounded, and only below rank `melee`
+    (2) for blows, bashes, kicks, and throws, or `ranged` (4) for shots. A skill or style that
+    reaches that rank by a dummy's marks is told "You have learned all the dummy can teach
+    you."; from it on a blow there trains it no further. No daily cap: time is the price.
+    Missiles at a dummy: §8 "Ranged combat", Coming down.
   - **Benefits** (per skill and rank, data; never shown): to-hit and damage (to every roll of
     the dice) on attacks with the skill, a wider threat range (lower natural rolls threaten,
     never below 2), and a lower cost (`speed`, percent off `melee`, `shoot`, or `throw`;

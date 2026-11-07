@@ -86,6 +86,11 @@ pub struct MaterialDef {
     /// How often a creature's gear is of it, by the creature's level ([`Found`]); none: never.
     #[serde(default)]
     pub gear: Option<Found>,
+    /// How well it suits an item of each use, for how often an item of another material is
+    /// made of it (#1191, [`Fits`]): `fit = { weapon = "odd", armour = "poor" }`; every use
+    /// `good` by default.
+    #[serde(default)]
+    pub fit: Fits,
     /// How it withstands each kind of item damage, in percent (spec §7 "Materials";
     /// `world/item_damage.rs`): `resists = { acid = 20, rust = 10, fire = 95 }`, every kind
     /// given. Every material of the game's content sets it (`material_resists_tests.rs`); one
@@ -155,6 +160,59 @@ impl Resists {
             ItemHarm::Work => 0,
         }
     }
+}
+
+/// How well a material suits an item of some use (#1191): a `good` one is found by its own
+/// weight, a `poor` one at a tenth of it ([`POOR`]), an `odd` one (a wool ring, a tin long
+/// sword) at a hundredth ([`ODD`]), never below 1 where it weighs anything, so nothing found is
+/// ruled out.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, PartialOrd, Ord, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum Fit {
+    #[default]
+    Good,
+    Poor,
+    Odd,
+}
+
+/// What a [`Fit::Poor`] material's weight is divided by.
+pub const POOR: u32 = 10;
+/// What a [`Fit::Odd`] material's weight is divided by.
+pub const ODD: u32 = 100;
+
+impl Fit {
+    /// Every fit, best first.
+    pub const ALL: [Fit; 3] = [Fit::Good, Fit::Poor, Fit::Odd];
+
+    /// `weight` scaled by the fit: divided by [`POOR`] or [`ODD`], rounded up.
+    pub const fn scale(self, weight: u32) -> u32 {
+        match self {
+            Fit::Good => weight,
+            Fit::Poor => weight.div_ceil(POOR),
+            Fit::Odd => weight.div_ceil(ODD),
+        }
+    }
+
+    /// Its word, as data and the wiki write it.
+    pub const fn id(self) -> &'static str {
+        match self {
+            Fit::Good => "good",
+            Fit::Poor => "poor",
+            Fit::Odd => "odd",
+        }
+    }
+}
+
+/// How well a material suits an item by its use (#1191): what strikes or is shot (`weapon`),
+/// armour and shields (`armour`), rings and amulets (`jewellery`), and everything else
+/// (`other`). Read with [`crate::variant::fit`].
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Deserialize)]
+#[serde(deny_unknown_fields, default)]
+pub struct Fits {
+    pub weapon: Fit,
+    pub armour: Fit,
+    pub jewellery: Fit,
+    pub other: Fit,
 }
 
 /// How often something is made of a material, among the materials its item may be made of: a

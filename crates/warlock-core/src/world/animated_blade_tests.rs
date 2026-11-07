@@ -204,14 +204,14 @@ fn magic_and_rare_pieces_by_the_tiers_odds() {
         }
         (magic, rare)
     };
-    // Level 5: at least magic 10 % (a piece made magic may come out rare by the rarities'
+    // Level 5: at least magic 2 % (a piece made magic may come out rare by the rarities'
     // weights, as loot's "magic or better" does).
     let (magic, rare) = count("animated_blade_5");
-    assert!((140..=260).contains(&(magic + rare)), "{magic} {rare}");
-    // Level 20: at least magic 40 %, rare made so 5 % of them all, and more by the weights.
+    assert!((20..=75).contains(&(magic + rare)), "{magic} {rare}");
+    // Level 20: at least magic 10 %, rare made so 1 % of them all, and more by the weights.
     let (magic, rare) = count("animated_blade_20");
-    assert!((700..=900).contains(&(magic + rare)), "{magic} {rare}");
-    assert!(rare >= 100 && rare > count("animated_blade_5").1, "{rare}");
+    assert!((130..=290).contains(&(magic + rare)), "{magic} {rare}");
+    assert!(rare >= 10 && rare > count("animated_blade_5").1, "{rare}");
 }
 
 /// Kills actor `id` outright by the player's hand.

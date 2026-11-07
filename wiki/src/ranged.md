@@ -80,6 +80,9 @@ in the stone. One that misses falls before the wall.
 - **Where it comes down**, it lies on the floor for you to pick up again: on the cell of whoever it
   hit, or where it stopped. An arrow or a bolt that hits may break (see
   [Ammunition](ammunition.md)). One that comes down where there is no floor is lost.
+- **A [training dummy](weapon-skills.md#target-dummies)** stops whatever reaches it, hit or miss.
+  One missile in four (25 %) is ruined, unless it never breaks; the rest drop on a free cell
+  beside the dummy.
 
 Each shot takes one piece of ammunition from your Missiles slot. When the last is gone, the slot is
 empty ("You have no arrows left."). Each throw takes one of what you throw, out of your hand if you

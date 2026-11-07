@@ -583,32 +583,50 @@ fn loot_and_gear_draw_materials_by_how_often_they_are_found() {
     let id = |m: &str| content.material_id(m).expect(m);
     let sword = content.object(object(&content, "long_sword"));
     let weights = |source, level| crate::variant::weights(&content, sword, source, level);
-    // By the construction list's order (material ids), each by its rarity at the item level.
+    let found =
+        |m: &str, source, level| crate::variant::found(&content, sword, id(m), source, level);
+    // Each other material by its rarity at the item level.
+    for (m, weight) in [
+        ("bronze", 800),
+        ("gold", 10),
+        ("iron", 300),
+        ("silver", 10),
+        ("tin", 300),
+    ] {
+        assert_eq!(found(m, Source::Loot, 1), weight, "{m}");
+    }
+    // Deeper: fewer primitive metals, more steel.
+    assert_eq!(found("bronze", Source::Loot, 11), 400);
+    assert_eq!(found("tin", Source::Loot, 11), 100);
+    // A creature's gear by its own level, whatever the item level.
+    assert_eq!(found("bronze", Source::gear(1), 20), 600);
+    // By the construction list's order (material ids), in parts per million: the own material
+    // takes 90% at level 1, the others the rest by their weights.
     let shallow = weights(Source::Loot, 1);
     let list: Vec<_> = shallow.iter().map(|(m, _)| *m).collect();
     assert_eq!(list, sword.made_of(0));
-    for found in [
-        (id("bronze"), 800),
-        (id("gold"), 10),
-        (id("iron"), 300),
-        (id("silver"), 10),
-        (id("steel"), 300),
-        (id("tin"), 300),
-    ] {
-        assert!(shallow.contains(&found), "{found:?}");
-    }
-    // Deeper: fewer primitive metals, more steel.
-    let deep = weights(Source::Loot, 11);
-    assert!(deep.contains(&(id("bronze"), 400)) && deep.contains(&(id("steel"), 900)));
-    assert!(deep.contains(&(id("tin"), 100)));
-    // A creature's gear by its own level, whatever the item level.
-    let gear = weights(Source::Gear(1), 20);
-    assert!(gear.contains(&(id("steel"), 20)) && gear.contains(&(id("bronze"), 600)));
+    let ppm = |weights: &[(crate::content::MaterialId, u32)], m: &str| {
+        weights.iter().find(|(w, _)| *w == id(m)).expect(m).1
+    };
+    assert_eq!(ppm(&shallow, "steel"), 900_000);
+    let total: u32 = shallow.iter().map(|(_, w)| w).sum();
+    assert!((1_000_000 - 50..1_000_000 + 50).contains(&total), "{total}");
+    let (bronze, iron) = (ppm(&shallow, "bronze"), ppm(&shallow, "iron"));
+    assert!(bronze.abs_diff(iron * 8 / 3) < 10, "{bronze} {iron}");
+    // From level 21 the own material takes 80%.
+    assert_eq!(ppm(&weights(Source::Loot, 21), "steel"), 800_000);
+    assert_eq!(crate::variant::variant_percent(1), 10);
+    assert_eq!(crate::variant::variant_percent(11), 15);
+    assert_eq!(crate::variant::variant_percent(40), 20);
     // Below its level a material is not found: dragonscale from item level 10.
     let jerkin = content.object(object(&content, "leather_jerkin"));
     let hides = |level| crate::variant::weights(&content, jerkin, Source::Loot, level);
     assert!(hides(9).contains(&(id("dragonscale"), 0)));
-    assert!(hides(10).contains(&(id("dragonscale"), 10)));
+    assert!(
+        hides(10)
+            .iter()
+            .any(|&(m, w)| m == id("dragonscale") && w > 0)
+    );
     // Nothing to draw for an object made only of its own material.
     let rock = content.object(object(&content, "rock"));
     assert!(crate::variant::weights(&content, rock, Source::Loot, 5).is_empty());
@@ -628,12 +646,11 @@ fn worse_but_dearer_is_very_rare_except_in_jewellery() {
     let gold = content.material_id("gold").expect("gold");
     let weight_of = |id: &str| {
         let def = content.object(content.object_id(id).expect(id));
-        let weights = crate::variant::weights(&content, def, Source::Loot, 1);
-        weights.iter().find(|(m, _)| *m == gold).expect("gold").1
+        crate::variant::found(&content, def, gold, Source::Loot, 1)
     };
     assert_eq!(weight_of("long_sword"), crate::content::VERY_RARE);
     assert_eq!(weight_of("chain_mail"), crate::content::VERY_RARE);
-    assert_eq!(weight_of("gold_ring"), 800, "a ring is worth only");
+    assert_eq!(weight_of("iron_ring"), 800, "a ring is worth only");
     // Better and dearer is not capped: steel on an iron chain mail shirt.
     let mail = content.object(content.object_id("chain_mail").expect("mail"));
     let (iron, steel) = (
@@ -670,10 +687,13 @@ fn loot_rolls_variants_from_its_list_deterministically() {
     let count = |list: &[String], m: &str| list.iter().filter(|x| *x == m).count();
     let shallow_swords = swords(&shallow);
     assert!(shallow_swords.len() > 50, "{}", shallow_swords.len());
-    // Shallow, bronze outnumbers steel; deep, steel outnumbers bronze.
-    assert!(count(&shallow_swords, "bronze") > count(&shallow_swords, "steel"));
-    let deep_swords = swords(&roll_many(2, 15));
-    assert!(count(&deep_swords, "steel") > count(&deep_swords, "bronze"));
+    // Most are steel, their own material (#1191), and some are not.
+    let steel = count(&shallow_swords, "steel");
+    assert!(
+        steel * 100 > shallow_swords.len() * 80,
+        "{shallow_swords:?}"
+    );
+    assert!(steel < shallow_swords.len(), "{shallow_swords:?}");
     // Every variant is on its base item's list, and named so (a loose gem is its gem).
     for stack in &shallow {
         assert!(stack.is_valid_for(&content), "{stack:?}");
@@ -865,7 +885,7 @@ fn generated_variants_are_on_their_base_items_lists() {
             let found = (0..250)
                 .filter_map(|_| loot::roll(&content, &mut loot_rng, level, LootGrade::Any))
                 .chain((0..100).filter_map(|_| {
-                    let gear = Source::Gear(level);
+                    let gear = Source::gear(level);
                     loot::roll_from(&content, &mut gear_rng, level, LootGrade::Magic, gear)
                 }));
             for stack in found {
@@ -887,71 +907,7 @@ fn generated_variants_are_on_their_base_items_lists() {
         }
     }
     assert!(
-        seen > 10_000 && variants > 3000,
+        seen > 10_000 && variants > 1000,
         "{seen} items, {variants} variants"
     );
-}
-
-#[test]
-fn shallow_loot_is_primitive_and_steel_comes_with_depth() {
-    let content = builtin();
-    // Melee weapons whose own material is steel, by the material loot made them of.
-    let steel = content.material_id("steel").expect("steel");
-    let made = |source: Source, level: u8| {
-        let mut by: std::collections::BTreeMap<String, usize> = Default::default();
-        let mut total = 0;
-        for seed in 1..=6u64 {
-            let mut rng = crate::rng::Rng::stream(seed, &format!("test/metals/{level}"));
-            for _ in 0..3000 {
-                let grade = LootGrade::Any;
-                let Some(stack) = loot::roll_from(&content, &mut rng, level, grade, source) else {
-                    continue;
-                };
-                let def = content.object(stack.object);
-                if def.material() != steel || def.attack.is_none() {
-                    continue;
-                }
-                let main = stack.parts(&content)[0].material;
-                *by.entry(content.material(main).id.clone()).or_default() += 1;
-                total += 1;
-            }
-        }
-        (by, total)
-    };
-    let share = |by: &std::collections::BTreeMap<String, usize>, total: usize, ids: &[&str]| {
-        ids.iter()
-            .map(|id| by.get(*id).copied().unwrap_or(0))
-            .sum::<usize>()
-            * 100
-            / total
-    };
-    let (shallow, total) = made(Source::Loot, 1);
-    assert!(total > 500, "{total}");
-    let primitive = share(&shallow, total, &["bronze", "copper", "iron", "tin"]);
-    assert!(
-        primitive > 50,
-        "{primitive}% primitive at level 1: {shallow:?}"
-    );
-    let worse_dearer = [
-        "gold",
-        "silver",
-        "electrum",
-        "cadmium",
-        "bendalloy",
-        "aluminium",
-        "duralumin",
-    ];
-    assert!(share(&shallow, total, &worse_dearer) <= 3, "{shallow:?}");
-    assert_eq!(
-        share(&shallow, total, &["chromium", "nicrosil", "dragonbone"]),
-        0
-    );
-    let (deep, total) = made(Source::Loot, 15);
-    let most = deep.iter().max_by_key(|(_, n)| **n).map(|(m, _)| m.clone());
-    assert_eq!(most.as_deref(), Some("steel"), "{deep:?}");
-    assert!(share(&deep, total, &["chromium", "nicrosil", "dragonbone"]) > 0);
-    // A kobold's gear (level 2): mostly primitive, seldom steel.
-    let (kobold, total) = made(Source::Gear(2), 1);
-    assert!(share(&kobold, total, &["steel"]) < 10, "{kobold:?}");
-    assert!(share(&kobold, total, &["bronze", "copper", "iron", "tin"]) > 70);
 }

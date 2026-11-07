@@ -139,7 +139,8 @@ pub enum ScreenName {
     Messages,
     /// Choose what to pick up from the pile here (`,` or `g` where several objects lie).
     PickUp,
-    /// Choose what to drop (`d` in play).
+    /// The inventory in its drop mode, as `d` in play opens it (#1196): choose what to drop.
+    /// The inventory's own `D` turns the mode on in place, under this name too while it lasts.
     Drop,
     /// Choose what to throw (`t` in play, with no throwing weapon readied).
     Throw,
@@ -440,7 +441,7 @@ impl Screen {
             ScreenName::Story => Screen::Story(StoryScreen::page(run)),
             ScreenName::Messages => Screen::Messages(MessagesScreen::new(run)),
             ScreenName::PickUp => objects(ObjectList::PickUp),
-            ScreenName::Drop => objects(ObjectList::Drop),
+            ScreenName::Drop => Screen::Objects(ObjectScreen::dropping(run)),
             ScreenName::Throw => objects(ObjectList::Throw),
             ScreenName::Eat => objects(ObjectList::Eat),
             ScreenName::Read => objects(ObjectList::Read),
@@ -478,9 +479,9 @@ impl Screen {
             Screen::Controls(screen) if screen.is_help() => ScreenName::Help,
             Screen::Controls(_) => ScreenName::Controls,
             Screen::Objects(screen) => match screen.list() {
+                ObjectList::Inventory if screen.is_dropping() => ScreenName::Drop,
                 ObjectList::Inventory => ScreenName::Inventory,
                 ObjectList::PickUp => ScreenName::PickUp,
-                ObjectList::Drop => ScreenName::Drop,
                 ObjectList::Throw => ScreenName::Throw,
                 ObjectList::Eat => ScreenName::Eat,
                 ObjectList::Read => ScreenName::Read,
@@ -993,6 +994,25 @@ pub(super) fn converse(
     let shown = |talk: &Conversation| !talk.topics.is_empty() || talk.asked.is_some();
     if last_talk(&game.last_outcome).is_some_and(shown) {
         screens.open(ScreenName::Dialogue);
+    }
+}
+
+/// Opens the description screen of the stack the player's action this frame identified with the
+/// Identify spell or the scroll of identify and learned something of (`Event::Identified` of the core).
+pub(super) fn show_identified(
+    game: Res<Game>,
+    mut actions: MessageReader<PlayerAction>,
+    mut screens: Screens,
+) {
+    if actions.read().count() == 0 || !screens.stack.is_empty() {
+        return;
+    }
+    let identified = (game.last_outcome.events.iter()).find_map(|e| match e {
+        warlock_core::action::Event::Identified { item } => Some(*item),
+        _ => None,
+    });
+    if let Some(item) = identified {
+        screens.open_on(ScreenName::Describe, Some(item));
     }
 }
 
@@ -1671,11 +1691,18 @@ mod tests {
         frame(&mut app, &[fire, tab, ENTER]);
         assert_eq!(aim(&app), None);
         assert_eq!(actions(&app)[before..], [Action::Fire(second.at)]);
-        // The next `t` starts on that creature again: `t`, Enter shoots it once more.
+        // The next `t` starts on that creature again if it is within range (else on the
+        // nearest one that is): `t`, Enter shoots it once more.
         frame(&mut app, &[fire]);
-        assert_eq!(aim(&app).map(|a| a.at), Some(second.at));
+        let reach = warlock_core::fov::radius2(first.range(&view).expect("a range"));
+        let again = if second.at.dist2(view.viewer()) <= reach {
+            second.at
+        } else {
+            first.at
+        };
+        assert_eq!(aim(&app).map(|a| a.at), Some(again));
         frame(&mut app, &[ENTER]);
-        assert_eq!(actions(&app).last(), Some(&Action::Fire(second.at)));
+        assert_eq!(actions(&app).last(), Some(&Action::Fire(again)));
         // `T` opens the choice of what to throw.
         frame(&mut app, &[(KeyCode::KeyT, "T")]);
         assert_eq!(names(&app), [ScreenName::Throw]);
@@ -2002,6 +2029,20 @@ mod tests {
             Some(&Action::Drop(Positions::of([0])))
         );
         assert!(names(&app).is_empty());
+        // `d` opens the inventory in its drop mode: Esc closes it, nothing dropped. `D` in the
+        // inventory turns the mode on; Esc there goes back to the plain inventory.
+        let count = actions(&app).len();
+        frame(&mut app, &[d]);
+        assert_eq!(names(&app), [ScreenName::Drop]);
+        frame(&mut app, &[ESC]);
+        assert!(names(&app).is_empty());
+        frame(&mut app, &[i, (KeyCode::KeyD, "D")]);
+        assert_eq!(names(&app), [ScreenName::Drop]);
+        frame(&mut app, &[ESC]);
+        assert_eq!(names(&app), [ScreenName::Inventory]);
+        frame(&mut app, &[ESC]);
+        assert!(names(&app).is_empty());
+        assert_eq!(actions(&app).len(), count);
     }
 
     #[test]
@@ -2141,6 +2182,73 @@ mod tests {
             "Esc returns to where the first was opened"
         );
         assert!(actions(&app).is_empty());
+    }
+
+    /// A numpad press with Num Lock off: the physical key, the arrow (or Home, ...) it stands
+    /// for, and no text (winit 0.30 on Windows and X11/Wayland).
+    fn num_lock_off(code: KeyCode, logical: Key) -> KeyboardInput {
+        KeyboardInput {
+            logical_key: logical,
+            ..key(code, "")
+        }
+    }
+
+    #[test]
+    fn the_numpad_navigates_screens_as_the_arrows_do() {
+        const NUM_ENTER: (KeyCode, &str) = (KeyCode::NumpadEnter, "");
+        const SOUTH: (KeyCode, &str) = (KeyCode::Numpad2, "2");
+        // A menu and the dialog: in the pause menu 8 wraps up to Quit and NumEnter asks; in the
+        // dialog 8 moves from No to Yes, and NumEnter takes it.
+        let mut menu = app(true);
+        frame(&mut menu, &[ESC, NORTH, NUM_ENTER]);
+        assert_eq!(names(&menu), [ScreenName::Pause, ScreenName::Dialog]);
+        frame(&mut menu, &[NORTH, NUM_ENTER]);
+        assert_eq!(saves_sent(&menu), [SaveCommand::SaveAndQuit]);
+        // Info pages: the numpad's digits never turn a page, Num Lock on or off.
+        let mut pages = app(true);
+        frame(&mut pages, &[(KeyCode::KeyI, "I")]);
+        assert_eq!(names(&pages), [ScreenName::Inventory]);
+        frame(&mut pages, &[SOUTH, (KeyCode::Numpad3, "3"), NORTH]);
+        pages
+            .world_mut()
+            .write_message(num_lock_off(KeyCode::Numpad3, Key::PageDown));
+        pages.update();
+        assert_eq!(names(&pages), [ScreenName::Inventory]);
+        assert!(actions(&pages).is_empty());
+        // The look cursor takes the numpad's diagonals, Num Lock on or off.
+        let mut look = app(true);
+        frame(&mut look, &[(KeyCode::KeyL, "l")]);
+        let InputMode::Look(at) = mode(&look) else {
+            panic!("looking")
+        };
+        frame(&mut look, &[(KeyCode::Numpad3, "3")]);
+        look.world_mut()
+            .write_message(num_lock_off(KeyCode::Numpad3, Key::PageDown));
+        look.update();
+        assert_eq!(mode(&look), InputMode::Look(at.step(Dir::SE).step(Dir::SE)));
+        // A paged list: 2 moves down to the pile's second stack, NumEnter picks it up.
+        let shared = content();
+        let game = Game::from_world(on_the_pile(shared.clone()), "tamsin-1".into());
+        let mut list = app_with(shared, Some(game));
+        frame(&mut list, &[(KeyCode::Comma, ",")]);
+        list.world_mut()
+            .write_message(num_lock_off(KeyCode::Numpad2, Key::ArrowDown));
+        list.update();
+        frame(&mut list, &[NUM_ENTER]);
+        assert_eq!(
+            actions(&list),
+            [Action::PickUp(warlock_core::Positions::of([1]))]
+        );
+        // A text field: the numpad's digits type, and NumEnter accepts. (Seven Enters reach the
+        // Name step of New run.)
+        let mut field = app(false);
+        field.update();
+        frame(&mut field, &[ENTER; 7]);
+        assert_eq!(names(&field).last(), Some(&ScreenName::Name));
+        frame(&mut field, &[(KeyCode::KeyE, "E"), NORTH, SOUTH, NUM_ENTER]);
+        assert_eq!(names(&field).last(), Some(&ScreenName::Summary));
+        let name = (field.world().resource::<ScreenStack>().draft()).name(&content());
+        assert_eq!(name, "E82");
     }
 
     #[test]
@@ -2494,6 +2602,35 @@ mod tests {
     }
 
     #[test]
+    fn identifying_opens_the_description_of_the_stack_it_told_about() {
+        let content = content();
+        let mut world = warlock_core::World::new(content.clone(), "traps", None).expect("run");
+        for action in warlock_core::action::parse_actions("move:E pickup").expect("actions") {
+            world.apply(&action);
+        }
+        let mut app = app_with(content, Some(Game::from_world(world, "tamsin-1".into())));
+        fn apply(mut actions: MessageReader<PlayerAction>, mut game: ResMut<Game>) {
+            for PlayerAction(action) in actions.read() {
+                game.apply(action);
+            }
+        }
+        app.add_systems(
+            Update,
+            (apply, show_identified).chain().after(count_actions),
+        );
+        // Read the scroll of identify: its list of the unidentified stacks.
+        frame(&mut app, &[(KeyCode::KeyR, "r"), (KeyCode::KeyD, "d")]);
+        assert_eq!(names(&app), [ScreenName::Identify]);
+        // Choosing the first stack identifies it and opens its description over the map.
+        frame(&mut app, &[(KeyCode::KeyA, "a")]);
+        assert!(matches!(actions(&app).last(), Some(Action::Read { .. })));
+        assert_eq!(names(&app), [ScreenName::Describe]);
+        // Esc returns to the map.
+        frame(&mut app, &[ESC]);
+        assert!(names(&app).is_empty());
+    }
+
+    #[test]
     fn chat_talks_to_the_one_beside_and_the_dialogue_stays_open_while_asking() {
         let content = content();
         let mut world = warlock_core::World::new(content.clone(), "showcase", None).expect("run");
@@ -2508,7 +2645,12 @@ mod tests {
                 game.apply(action);
             }
         }
-        app.add_systems(Update, (apply, converse).chain().after(count_actions));
+        app.add_systems(
+            Update,
+            (apply, converse, show_identified)
+                .chain()
+                .after(count_actions),
+        );
         // `C` talks to the one creature beside the player at once; he has topics.
         frame(&mut app, &[(KeyCode::KeyC, "C")]);
         assert_eq!(actions(&app), [Action::Chat(Dir::SE)]);

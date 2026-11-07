@@ -159,7 +159,8 @@ impl World {
             let target = other.id;
             let seen = self.perception.sees_actors_at(to);
             let player = self.state.player;
-            if self.stance(player, target) == Stance::Hostile {
+            // A target dummy is struck too (`dummy.rs`).
+            if self.stance(player, target) == Stance::Hostile || self.dummy(target).is_some() {
                 return self.strike_at(target, seen, events);
             }
             let refusal = (self.refusal(target)).or(self.swimming().then_some(Refusal::Water));
@@ -761,7 +762,10 @@ fn placed_gear(
     if !spawn.rolls_gear {
         return (spawn.carry.clone(), spawn.equipment.clone());
     }
-    let mut rng = crate::rng::Rng::gear(seed, &id.0.to_string());
-    let pack = crate::gear::roll(content, &mut rng, spawn.creature, content.item_level(level));
+    let key = id.0.to_string();
+    let mut rng = crate::rng::Rng::gear(seed, &key);
+    let mut pack = crate::gear::roll(content, &mut rng, spawn.creature, content.item_level(level));
+    let mut condition = super::gear_condition::stream(seed, &key);
+    super::gear_condition::apply(content, &mut condition, spawn.creature, &mut pack);
     (pack.items, pack.equipment)
 }

@@ -21,7 +21,8 @@
 # Gæsthūs (the inn), where Godgifu (G) has news of the march and bread on the table for
 # travellers; Reeve Leofric's house (L); Factor Wulfrun's office (F); and in the south-east corner
 # the Gildhalle, the hall of the Weyfarers' Gilde (docs/design/adventurers-guild.md §4), where
-# Wat One-Eye (M) gives the guild's work, its bounty board (N) beside the door. A shrine stone
+# Wat One-Eye (M) gives the guild's work, its bounty board (N) beside the door; across the lane
+# its yard, where training dummies (Y) stand to be struck and shot at. A shrine stone
 # stands by the Mynster's door.
 #
 # Texture: the granary by the wall, fields inside the wall, the pond north-east, and outside
@@ -48,10 +49,10 @@ TTTTTT#TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT
 ......#..........:.............*..:::::::::::::::::::::::..*..........................↓↓..
 ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::↓↓..
 :::::::::4::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::↓↓..
-......#..........:................::::::::::::@::::::::::.............................↓↓..
-.bbb..#..........:...............T:::::B:::::::::::B:::::...T.............T...........↓↓..
-.bbb..#."""""""".:................:2:::::::::::::::::::::**...........................↓↓..
-......#."""""""".:................:::::::::::::::::::::::.............................↓↓..
+......#..........:................::::::::::::@::::::::::................Y,,,,,,,,,,,,↓↓..
+.bbb..#..........:...............T:::::B:::::::::::B:::::...T............,,,,,,,,,,,,,↓↓..
+.bbb..#."""""""".:................:2:::::::::::::::::::::**..............,,,,Y,,Y,,Y,,↓↓..
+......#."""""""".:................:::::::::::::::::::::::................,,,,,,,,,,,,,↓↓..
 ..T...#."""""""".:::5:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::....↓↓..
 ......#.""T"""""...######t+t######....WWWWWWt+tWWWWWW...WWWW+WWWW...WWWW+WWWWWWWW+WNWW↓↓.T
 ......#.""""""""...#ppppppppppppp#.O..WpppppppppppppW...WpppppppW...WpppppppWWpppppppW↓↓..
@@ -99,6 +100,10 @@ TTTTTT#TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT
 "M" = { terrain = "plank_floor", creature = "guildmaster", npc = "wat" }
 # The Gildhalle's bounty board, nailed up beside its door (a named place: look mode reads it).
 "N" = { terrain = "timber_wall", name = "the bounty board", note = "Bills nailed up three deep, most of them years old." }
+# The Gilde's yard across the lane (spec §8 "Weapon skills": "Target dummies"): beaten earth, a
+# dummy at the west end of the shooting lane (the top row), three to strike below it.
+"," = "dirt_road"
+"Y" = { terrain = "dirt_road", creature = "training_dummy" }
 
 # The Mynster, walls and door included, is a sanctuary (data/room_effects.toml).
 [[room]]

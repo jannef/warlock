@@ -6,7 +6,7 @@ id = "troll_chieftain"
 level = 37
 xp = 195
 rarity = "rare"
-loot = 75
+loot = 19
 name = "troll chieftain"
 glyph = "T"
 fg = "#c0a040"
@@ -40,11 +40,11 @@ on_hit = [{ status = "frightened", chance = 15, severity = 1 }]
 chance = 80
 one_of = ["great_axe"]
 keep = "wield"
-magic = 40
+magic = 10
 [[creature.gear]]
 chance = 60
 one_of = ["scale_mail"]
-magic = 25
+magic = 6
 [[creature.gear]]
 chance = 60
 one_of = ["iron_helm"]

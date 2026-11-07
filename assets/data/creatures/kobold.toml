@@ -3,7 +3,7 @@ id = "kobold"
 level = 2
 xp = 15
 rarity = "common"
-loot = 25
+loot = 6
 name = "kobold"
 glyph = "k"
 fg = "#7cb85a"
@@ -34,8 +34,7 @@ one_of = ["leather_cap"]
 [[creature.gear]]
 chance = 15
 one_of = ["padded_coat", "leather_jerkin"]
-magic = 5
-
+magic = 1
 [[creature.gear]]
 chance = 30
 one_of = ["copper_coin*4", "copper_coin*9"]

@@ -43,6 +43,20 @@ and every array to never less at a higher rank. `MAX_SAVING` is 60 (crossbows' `
 are `xtask/src/wiki/weapon_skills.rs`. What ranks teach (weapon abilities, #561) is
 `docs/dev/weapon-abilities.md`: a rank risen says it (`World::ranks_news`, called by `practise`).
 
+Target dummies (spec §8 "Weapon skills": "Target dummies", #1199; `world/dummy.rs`, its module
+docs the summary): a creature type's `training` table (`content/dummy.rs`, `DummyTraining`:
+`percent`, `melee`, `ranged`, `breaks`; checked in `Content::load`) makes it a dummy, read by
+`World::dummy(id)`. It is a creature so every attack reaches it through `World::resolve` as it
+reaches anyone; one hook each: `World::creature_turn` (waits), `World::hurt` and `World::dies`
+(nothing happens, so no XP, kill, loot, or quest credit), `travel.rs` (the player's bump strikes
+it though it is peaceful), `World::resolve` (no surprise, low blow, or sneak; no
+`attacked_near`, noise, provoking, or `train_fight`; the marks go through `World::practise_on`,
+which calls `World::practise_at` with the dummy's percent below its cap, `melee` for every kind
+but `AttackKind::Ranged`, and pushes `dummy::LEARNED_ALL` when a rank reaches the cap), and
+`World::fly` (`World::dummy_catches`, docs/dev/ranged-combat.md). The one placed: Cēaptūn's
+Gilde yard (`campaigns/ascmearc/data/creatures/training_dummy.toml`). Tests:
+`world/dummy_tests.rs`, `content/dummy.rs`.
+
 Fighting styles (spec §8 "Fighting styles"; M22, #135) are weapon skills of `Role::Style`: rows
 after the weapon skills in `data/weapon_skills.toml` with a `grip` (`content/weapon_skill.rs`:
 `Grip`, `Style { grip, weapons }`; a style naming no `weapons` takes the rest of its grip,

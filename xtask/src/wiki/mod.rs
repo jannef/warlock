@@ -32,6 +32,7 @@ mod dungeons;
 mod encounters;
 mod experience;
 mod familiars;
+mod gear_condition;
 mod gems;
 mod guild;
 mod healing;
@@ -175,6 +176,7 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("creatures.md", creatures::creatures),
         ("factions.md", creatures::factions),
         ("creature-tags.md", creatures::creature_tags),
+        ("gear-condition.md", gear_condition::gear_condition),
         ("creature-stats.md", creatures::creature_stats),
         ("creature-defences.md", creatures::creature_defences),
         ("creature-attacks.md", creatures::creature_attacks),
@@ -209,6 +211,7 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("layer-bosses.md", dungeons::layer_bosses),
         ("danger-weights.md", dungeons::danger_weights),
         ("creature-rarities.md", dungeons::creature_rarities),
+        ("neutral-weight.md", dungeons::neutral_weight),
         ("draw-odds.md", dungeons::draw_odds),
         ("dread-draws.md", dungeons::dread_draws),
         ("dialogue.md", dialogue::dialogue),
@@ -227,6 +230,8 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("equipment.md", objects::equipment),
         ("materials.md", materials::materials),
         ("material-finds.md", materials::material_finds),
+        ("material-odds.md", materials::material_odds),
+        ("material-tribes.md", materials::material_tribes),
         ("construction.md", materials::construction),
         ("variants.md", materials::variants),
         ("pieces.md", materials::pieces),
@@ -420,6 +425,7 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("potions.md", potions::potions),
         ("weapon-skills.md", weapon_skills::skills),
         ("weapon-marks.md", weapon_skills::marks),
+        ("target-dummies.md", weapon_skills::dummies),
         ("weapon-benefits.md", weapon_skills::benefits),
         ("weapon-abilities.md", weapon_abilities::weapon_abilities),
         ("styles.md", weapon_skills::styles),
@@ -959,10 +965,15 @@ mod tests {
         assert!(text("materials.md").contains(
             "| Bronze | metal | `#cd7f32` | 112% | +0 / −1 | 80% | ×0.8 | no | 40% | 80% | 80% | bronze keys, minster reliquaries |"
         ));
-        assert!(
-            text("material-finds.md")
-                .contains("| Steel | 300 (common) | +60 | 1 | 20 (rare) | +15 |")
-        );
+        assert!(text("material-finds.md").contains(
+            "| Steel | 300 (common) | +60 | 1 | 20 (rare) | +15 | good | good | good | good |"
+        ));
+        assert!(text("material-finds.md").contains(
+            "| Tin | 300 (common) | −20 | 1 | 200 (common) | −15 | odd | poor | good | good |"
+        ));
+        // #1191: a long sword is steel nine times in ten at depth 1; orcs favour bone.
+        assert!(text("material-odds.md").contains("| Long sword | 1 | 90% |"));
+        assert!(text("material-tribes.md").contains("| Orcs | bone 55%, iron 15% |"));
         let construction = text("construction.md");
         assert!(construction.contains("| Long sword | steel | any metal, dragonbone |"));
         assert!(construction.contains("| Gold ring | gold | any material |"));
@@ -1463,7 +1474,7 @@ mod tests {
                 && weapons.contains("| 6 cells | Thrown weapons | - |")
         );
         // Magic items: rarity, bases, affixes with their tiers, and the words of rare names.
-        assert!(text("magic-rarity.md").contains("| Rare | 2% |"));
+        assert!(text("magic-rarity.md").contains("| Rare | 0.5% |"));
         assert!(text("magic-rarity.md").contains("| a prefix and a suffix | 20% |"));
         assert!(text("magic-bases.md").contains("| Long sword | weapons |"));
         let prefixes = text("magic-prefixes.md");

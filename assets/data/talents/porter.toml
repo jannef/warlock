@@ -1,8 +1,9 @@
+# The burden line's second step (#1198).
 [[talent]]
 id = "porter"
 name = "Porter"
 tree = "grit"
-description = "Being burdened no longer slows or hinders you, as it does not a dwarf."
+description = "A tenth more again, your dodging hampered less still, and being Burdened costs you nothing."
 needs = { talents = ["pack_mule"], stats = { toughness = 12 } }
-effects = [{ kind = "ignore_burdened" }]
+effects = [{ kind = "carry_percent", value = 10 }, { kind = "burden_dex", value = 1 }, { kind = "ignore_burdened" }]
 systems = ["burden"]

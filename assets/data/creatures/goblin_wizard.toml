@@ -7,7 +7,7 @@ id = "goblin_wizard"
 level = 8
 xp = 50
 rarity = "very_rare"
-loot = 40
+loot = 10
 name = "goblin wizard"
 glyph = "g"
 fg = "#c070e0"
@@ -33,7 +33,7 @@ racial_weapon = "quarterstaff"
 [[creature.gear]]
 chance = 60
 one_of = ["bone_amulet"]
-magic = 20
+magic = 5
 [[creature.gear]]
 chance = 40
 one_of = ["copper_coin*10", "copper_coin*20"]

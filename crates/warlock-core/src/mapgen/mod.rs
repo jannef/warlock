@@ -997,6 +997,8 @@ mod leavings_tests;
 #[cfg(test)]
 mod lytelscraef_tests;
 #[cfg(test)]
+mod neutral_share_tests;
+#[cfg(test)]
 mod scriptorium_tests;
 #[cfg(test)]
 mod seeds_tests;

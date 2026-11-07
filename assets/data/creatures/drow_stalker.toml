@@ -6,7 +6,7 @@ id = "drow_stalker"
 level = 19
 xp = 105
 rarity = "uncommon"
-loot = 20
+loot = 5
 name = "drow stalker"
 glyph = "e"
 fg = "#5a4a80"
@@ -40,11 +40,11 @@ on_hit = [{ status = "poisoned", chance = 30, severity = 3 }]
 [[creature.gear]]
 chance = 70
 one_of = ["leather_jerkin"]
-magic = 10
+magic = 3
 [[creature.gear]]
 chance = 80
 one_of = ["wool_cloak"]
-magic = 10
+magic = 3
 [[creature.gear]]
 chance = 60
 one_of = ["copper_coin*30", "copper_coin*50"]

@@ -267,7 +267,11 @@ developer notes (CLAUDE.md, `docs/dev/`).
   items": a branch level's depth, a hand-made level's `item_level`), "You gain 10 experience for
   finding your way here." as the turn is perceived; the level a run starts on, the overworld, and
   local areas give none, so walking the land is worth nothing. A level is new when this arrival
-  made its state (`World::travel`), so arrivals need no memory. A level
+  made its state (`World::travel`), so arrivals need no memory. **Learning a spell** by study
+  (or a lucky mishap's insight; never one a class, race, talent, or dev action hands out) gives
+  `[spell] per_level` (5) × the spell's level (a level-0 spell counts as 1), once, as the spell
+  joins the known set: "You gain 55 experience for learning Fireball." A failed study gives
+  nothing. A level
   gained says "You feel more experienced." and "Welcome to level N." (once per kill, naming the
   last level; after the attack's own messages, or as the turn is perceived for a creature that
   bled to death), and each level gained up to `hp_level` (50)
@@ -522,7 +526,12 @@ developer notes (CLAUDE.md, `docs/dev/`).
     something solid, at the end of its range, or the cell aimed at), on top of the pile there, to
     be picked up again (stackable ammunition joins its stack). On a hit it breaks with its
     `breaks` chance (one draw of the gameplay stream, made only when the chance is not 0); a
-    missile that comes down on a cell that is not walkable is lost.
+    missile that comes down on a cell that is not walkable is lost. A target dummy (§8 "Weapon
+    skills", Target dummies) stops what reaches it, hit or miss (a Piercing shot too): the
+    missile is destroyed by the dummy's `breaks` chance (25 %; one draw, made only when both the
+    missile's own chance and the dummy's are above 0, so one that never breaks never does) in
+    place of its own, else it drops into a cell beside the dummy that is walkable and holds
+    no one (one draw among them), or on the dummy's own cell when there is none.
   - **Fires**: a burning object (`light` and `burns`) that comes down starts a fire on its cell
     (`LevelState::fires`: the light preset and when it has burned out; saved), a light source
     keyed by the level and the cell (`LightCache`, only while the clock is before its end, so

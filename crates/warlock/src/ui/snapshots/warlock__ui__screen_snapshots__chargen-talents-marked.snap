@@ -17,24 +17,24 @@ expression: "render(case, content.clone())"
               │ Finesse                                                              │
               │   g  Dodge            You slip aside from blows: Dodge +1 to your D… │
               │   h  Light step       You tread lightly: a trap you step onto may n… │
-              │   i  Nimble           A load slows your feet less than most: your b… │
-              │   j  Opportunist      A foe that turns from you pays for it: one th… │
+              │   i  Opportunist      A foe that turns from you pays for it: one th… │
               │ Weaponcraft                                                          │
-              │   k  Far shot         Your shots fly 2 cells farther, and what you … │
-              │   l  Sworn foe        You have sworn yourself against one kind of c… │
-              │   m  Wand mastery     You draw more from a wand than its maker put … │
-              │   n  Weapon focus     You have drilled with one kind of weapon unti… │
+              │   j  Far shot         Your shots fly 2 cells farther, and what you … │
+              │   k  Sworn foe        You have sworn yourself against one kind of c… │
+              │   l  Wand mastery     You draw more from a wand than its maker put … │
+              │   m  Weapon focus     You have drilled with one kind of weapon unti… │
               │ Guard                                                                │
-              │   o  Armour training  You move freely in armour: it hampers your De… │
+              │   n  Armour training  You move freely in armour: it hampers your De… │
               │ Shadow                                                               │
-              │   p  Keen ears        You hear fainter sounds.                       │
-              │   q  Lamplighter      You tend your lantern well: it burns brighter… │
-              │   r  Night eyes       Your eyes grow used to the dark: you see by h… │
+              │   o  Keen ears        You hear fainter sounds.                       │
+              │   p  Lamplighter      You tend your lantern well: it burns brighter… │
+              │   q  Night eyes       Your eyes grow used to the dark: you see by h… │
               │ Wayfarer                                                             │
-              │   s  Pious            You keep the old observances: an altar of you… │
+              │   r  Pious            You keep the old observances: an altar of you… │
               │ Scholar                                                              │
-              │   t  Deep well        Your power runs deep: more mana, and more as … │
-              │   u  Skill focus      You have a knack for one trade you know: your… │
+              │   s  Deep well        Your power runs deep: more mana, and more as … │
+              │   t  Skill focus      You have a knack for one trade you know: your… │
+              │   u  Treasure hunter  The loot you find, and what creatures drop, i… │
               │                                                                      │
               │ You were born to money: you set out with far more gold than most,    │
               │ and a few gems besides.                                              │

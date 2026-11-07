@@ -260,18 +260,90 @@ fn skill_focus_counts_the_chosen_trained_skill_higher_past_100_too() {
 }
 
 #[test]
-fn porter_shrugs_off_burdened() {
+fn the_burden_line_eases_each_level_a_step_further() {
+    use crate::stats::Stat;
     let mut w = world();
     let me = w.state.player;
-    let limit = w.load_of(me).limit;
-    let stone = w.content().object_id("dagger").expect("dagger");
-    let weight = Stack::one(stone).weight(w.content());
-    let count = u32::try_from(limit / 2 / weight).expect("count");
-    w.player_mut().inventory = vec![Stack::new(stone, count)];
-    assert_eq!(w.load_of(me).penalty(), Burden::Burdened);
+    // Dexterity 30, so every burden's cap on it in Defence binds; nothing worn caps it, and no
+    // Balance eases the slowdown.
+    let mut scores = PerStat::splat(14);
+    scores[Stat::Dexterity] = 30;
+    w.player_mut().stats = Stats::new(scores, PerStat::splat(40));
+    w.player_mut().equipment = Default::default();
+    w.player_mut().inventory = Vec::new();
+    w.player_mut().skills = Default::default();
+    let content = w.content().clone();
+    let dex = (w.state.player().stats).modifier(Stat::Dexterity);
+    let free_dv = w.perception().own_defence();
+    let wait = w.price_of(me, crate::content::ActionKind::Wait);
+    let base = w.load_of(me).limit;
+    let dagger = content.object_id("dagger").expect("dagger");
+    let weight = Stack::one(dagger).weight(&content);
+    // Carries `num`/`den` of the limit now: the burden, the penalty, a wait's price, Defence.
+    let at = |w: &mut World, num: u64, den: u64| {
+        let count = u32::try_from(w.load_of(me).limit * num / den / weight).expect("count");
+        w.player_mut().inventory = vec![Stack::new(dagger, count)];
+        let load = w.load_of(me);
+        let wait = w.price_of(me, crate::content::ActionKind::Wait);
+        (
+            load.burden(),
+            load.penalty(),
+            wait,
+            w.perception().own_defence(),
+        )
+    };
+    let dv = |cap: i32| free_dv - dex + dex.min(cap);
+    let (burdened, strained) = (Burden::Burdened, Burden::Strained);
+    // Without the line: Burdened ×1.25 and Dexterity +3, Strained ×1.5 and +1.
+    assert_eq!(
+        at(&mut w, 1, 2),
+        (burdened, burdened, burdened.slow(wait), dv(3))
+    );
+    assert_eq!(
+        at(&mut w, 5, 6),
+        (strained, strained, strained.slow(wait), dv(1))
+    );
+    // Pack mule: a tenth more, 60 % of the slowdown off, the caps 1 higher.
+    give(&mut w, "pack_mule");
+    assert_eq!(w.load_of(me).limit, base * 110 / 100 / 3 * 3);
+    assert_eq!(
+        at(&mut w, 1, 2),
+        (burdened, burdened, burdened.slow_eased(wait, 60), dv(4))
+    );
+    assert_eq!(
+        at(&mut w, 5, 6),
+        (strained, strained, strained.slow_eased(wait, 60), dv(2))
+    );
+    // Porter: a tenth more again, Burdened costs nothing, the caps 1 higher again.
     give(&mut w, "porter");
-    assert_eq!(w.load_of(me).burden(), Burden::Burdened, "still burdened");
-    assert_eq!(w.load_of(me).penalty(), Burden::Unburdened);
+    assert_eq!(w.load_of(me).limit, base * 120 / 100 / 3 * 3);
+    assert_eq!(
+        at(&mut w, 1, 2),
+        (burdened, Burden::Unburdened, wait, free_dv)
+    );
+    assert_eq!(
+        at(&mut w, 5, 6),
+        (strained, strained, strained.slow_eased(wait, 60), dv(3))
+    );
+    // Beast of burden: a tenth more again, and Strained costs what Burdened costs others.
+    give(&mut w, "beast_of_burden");
+    assert_eq!(w.load_of(me).limit, base * 130 / 100 / 3 * 3);
+    assert_eq!(
+        at(&mut w, 5, 6),
+        (strained, burdened, burdened.slow_eased(wait, 60), dv(5))
+    );
+    // Overloaded is the end of it, whatever the line.
+    assert_eq!(at(&mut w, 11, 10).1, Burden::Overloaded);
+}
+
+#[test]
+fn each_step_of_the_burden_line_needs_the_one_before() {
+    let book = BUILTIN.talents();
+    for (id, before) in [("porter", "pack_mule"), ("beast_of_burden", "porter")] {
+        let def = book.get(book.id(id).expect(id));
+        let before = book.id(before).expect("the step before");
+        assert_eq!(def.needs.talents, [before], "{id}");
+    }
 }
 
 #[test]
@@ -390,46 +462,4 @@ fn gourmand_stops_short_of_bloated() {
     let (hunger, said) = eat(true);
     assert_eq!(hunger, Some(Hunger::Satiated));
     assert!(said.contains(&"You eat your fill; the rest does you no good.".to_string()));
-}
-
-#[test]
-fn sure_footed_halves_the_slowdown_on_steps_only() {
-    let mut w = world();
-    let me = w.state.player;
-    w.player_mut()
-        .satiation
-        .as_mut()
-        .expect("hungers")
-        .nutrition = 6000;
-    let content = w.content().clone();
-    let floor = content.terrain(content.terrain_id("floor").expect("floor"));
-    let plain = w.step_price(me, floor, false);
-    let wait = w.price_of(me, crate::content::ActionKind::Wait);
-    give(&mut w, "sure_footed");
-    let step = w.step_price(me, floor, false);
-    assert!(step < plain, "{step} < {plain}");
-    // ×1.25 Bloated becomes ×1.125.
-    assert_eq!(step, plain * 1125 / 1250);
-    assert_eq!(w.price_of(me, crate::content::ActionKind::Wait), wait);
-}
-
-#[test]
-fn the_trees_are_held_to_the_bar() {
-    let book = BUILTIN.talents();
-    for tree in ["scholar", "grit", "delver"] {
-        let tree = book.tree(book.tree_id(tree).expect("tree"));
-        assert!(!tree.pending, "{}", tree.id);
-    }
-    for system in [
-        "searching",
-        "digging",
-        "shops",
-        "magic_items",
-        "scrolls",
-        "skills",
-        "experience",
-    ] {
-        let id = book.system_id(system).expect("system");
-        assert!(!book.system(id).pending, "{system}");
-    }
 }

@@ -8,7 +8,7 @@ id = "wight_lord"
 level = 24
 xp = 130
 rarity = "rare"
-loot = 60
+loot = 15
 name = "wight lord"
 glyph = "W"
 fg = "#7090d0"
@@ -39,4 +39,4 @@ on_hit = [{ drain = "toughness", points = 1, chance = 10, check = "toughness", d
 [[creature.gear]]
 chance = 80
 one_of = ["long_sword"]
-magic = 40
+magic = 10

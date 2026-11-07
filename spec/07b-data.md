@@ -411,11 +411,24 @@ developer notes (CLAUDE.md, `docs/dev/`).
   ring"), else before the name ("bronze long sword"), after any ornament ("emerald-pommelled
   bronze long sword"). The description shows its parts, weight, damage dice with the material's
   bonus ("2d6-1"), and Protection; the to-hit stays hidden. **Where variants come from**: loot
-  draws the material last (§8 "Magic items"; the item's main part from its list by `rarity` at
-  the item level), creature drops by `gear` at the creature's level; a material worse in a fight
-  than the base item's own (to hit or damage lower on what strikes or is shot, Protection lower
-  on armour with some) but dearer weighs at most 10 (`VERY_RARE`) for that item, never for
-  jewellery. Hand-made levels keep their legends' gear unless a placement names a material
+  draws the material last (§8 "Magic items"; the item's main part from its list), creature gear
+  and drops the same way at the creature's level. The base item's own material dominates (#1191):
+  where another weighs anything, another is drawn only 10 % of the time at level 1, half a point
+  more each level, at most 20 % (from level 21; `variant::variant_percent`); that share goes to
+  the other materials of the list by their `rarity` at the item level (loot) or `gear` at the
+  creature's level, each scaled by how well it suits the item, its `fit` for the item's use
+  (`weapon`: what strikes or is shot; `armour`, with shields; `jewellery`; `other`): `good` as
+  is, `poor` a tenth, `odd` a hundredth (at least 1, so nothing is ruled out). Tin, pewter, zinc,
+  and cadmium are odd for weapons; cloth, wool, and fur odd for weapons and jewellery; copper,
+  the precious metals, and ivory poor for weapons and armour; hides poor for weapons and
+  jewellery; wood poor for armour. A material worse in a fight than the base item's own (to hit
+  or damage lower on what strikes or is shot, Protection lower on armour with some) but dearer
+  weighs at most 10 (`VERY_RARE`) for that item before its fit, never for jewellery. A creature's
+  faction may favour materials (`data/factions.toml` `gear = { bone = 55, iron = 15 }`): for
+  gear and drops whose list holds one, each takes its percent of the draw first, the usual draw
+  the rest (orcs bone and iron, goblins bronze, the undead bronze, duergar iron and steel,
+  kobolds flint, bone, and copper); a favourite never adds a material the item cannot be made
+  of. Hand-made levels keep their legends' gear unless a placement names a material
   (`"great_sword:bronze"`, or `[[item]]` `parts = [{ of = "bronze" }]`); shop stock is plain. The
   showcase's storeroom has a bronze great sword. Not yet: rust and wear.
   Every creature in `data/creatures.toml` has a base `weight` in grams (required, at least 1).
@@ -540,7 +553,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
 - **Magic items** (`data/affixes.toml`, optional; without it loot is always normal; M29, #149;
   §8 "Magic items"; the settings below live in that file and the affixes themselves in the
   `data/affixes/` directory, one a file, read in path order; see Definitions): `[rarity]` the
-  weights of normal, magic, and rare loot (85, 13, 2, not all
+  weights of normal, magic, and rare loot (1925, 65, 10, not all
   0); `[magic] prefix`, `suffix`, `both`, the weights of a magic item with a prefix only, a
   suffix only, or one of each (40, 40, 20; not all 0 while magic items are found); `[rare]
   affixes`, `[count, weight]` pairs for how many affixes a rare item rolls (1 to 6; built in:
@@ -586,21 +599,21 @@ developer notes (CLAUDE.md, `docs/dev/`).
   `wield`/`wear` name it the same way to wear the one carried.
 - **Talents** (`data/talents.toml`, the settings; `data/talents/`, one talent a file, read in
   path order; optional, without them no level asks for a pick; M30, #229; §8 "Talents"):
-  `[coverage]` (`min_talents`, `min_class`, `free_per_tree`), `[[tree]]`s
-  (`id`, `name`, `description`, `pending`, `no_free`) in display order, and `[[system]]`s (`id`,
-  `name`, `pending`), the closed list a talent's `systems` may name. A `[[talent]]`: `id`,
+  `[[tree]]`s (`id`, `name`, `description`, `class`) in display order, and `[[system]]`s (`id`,
+  `name`), the list a talent's `systems` may name (the wiki's talents-by-system table). A `[[talent]]`: `id`,
   `name`, `tree`, `description`, `choice` (`weapon_skill`, `style`, `skill`, `element`, `school`, `school_skill`, `tag`), `needs`
   (`talents = ["dodge"]`, `stats = { toughness = 14 }`, `skills = { stealth = 25 }`,
   `weapon_skills = { bows = 3 }`, `chosen`, `level`, `race`, `class`, `eyes`), `effects`
   (`{ kind = "dodge", value = 1 }`: `dodge`, `natural`, `melee_damage`, `max_hp_per_levels
   { per_levels, at_least }`, `healing_percent`, `footsteps_percent`, `silent_doors`, `hearing`,
   `carry_percent`, `travel_percent`, `hunger_percent`, `no_exertion`, `xp_percent`, `notice`,
-  `free_blow { trigger }`; bonuses −20 to 20, percents −100 to 100, never 0; every kind is in
+  `free_blow { trigger }`; every kind is in
   `talents/README.toml`, among them the bard's `song`, `virtuoso`, `weapon_ranks`, and
-  `take_up_skills` and the Hunter's `spirit_weapon`), `systems` (at least one),
+  `take_up_skills` and the Hunter's `spirit_weapon`), `systems`,
   `granted`, `resource` (a class active's cost), `alignment` (`{ min = "kind" }`: the bands a holy
   class active works for; it bars nothing, §8 "Alignment"). Talents are saved by id (not in the content fingerprint); without skills content a
-  skill need is left out, as skill affixes are. Load fails on a coverage gap (§8 "Talents").
+  skill need is left out, as skill affixes are. The load checks only that the table is well
+  formed (#1205): it parses, and every id it names resolves; its numbers are the author's.
 - **Damage types** (`data/damage_types.toml`, optional; without it nothing is typed, nobody
   resists anything, and no data may name a kind; #151, §8 "Damage types"): an ordered list of
   `[[type]]`s, each with `id`, `name`, `physical` (Protection soaks it; default false), `verb`

@@ -6,6 +6,7 @@ expression: "render(case, content.clone())"
                               │                                                          │
                               │ Esc always backs out and cancels; it cannot be rebound.  │
                               │ Letters (a-z) and digits that pick list rows are fixed.  │
+                              │ On screens the numpad moves as the arrows do (fixed).    │
                               │                                                          │
                               │ In play                                                  │
                               │ > Move north                           Num8 ↑            │
@@ -37,7 +38,6 @@ expression: "render(case, content.clone())"
                               │   Rest                                 b                 │
                               │   Consume                              e                 │
                               │   Read a scroll                        r                 │
-                              │   Study a scroll's spell               L                 │
                               │                                                          │
                               │                                                          │
                               │                                                          │

@@ -36,9 +36,14 @@ hardness = 200
 locked = 60
 trapped = 25
 mimic = 5
+<<<<<<< HEAD
 # A starter's grip is rare (#1200): the coffer's mimics are of levels 1 and 2.
 hold = 1
 loot = { items = "1d3", loot_level = 0, magic = 10, rare = 1, gold = { dice = "2d6", each = 1 }, gems = "1d4-3" }
+=======
+hold = 10
+loot = { items = "1d3", loot_level = 0, magic = 3, rare = 0, gold = { dice = "2d6", each = 1 }, gems = "1d4-3" }
+>>>>>>> origin/main
 
 [[band]]
 id = "chest"
@@ -52,7 +57,7 @@ locked = 65
 trapped = 30
 mimic = 6
 hold = 10
-loot = { items = "1d3+1", loot_level = 0, magic = 15, rare = 1, gold = { dice = "2d6", each = 2 }, gems = "1d4-2" }
+loot = { items = "1d3+1", loot_level = 0, magic = 4, rare = 0, gold = { dice = "2d6", each = 2 }, gems = "1d4-2" }
 
 [[band]]
 id = "hutch"
@@ -65,9 +70,14 @@ hardness = 400
 locked = 70
 trapped = 35
 mimic = 7
+<<<<<<< HEAD
 # At most 12 for its level-5 mimic (#1200, content/starter.rs).
 hold = 12
 loot = { items = "2d3", loot_level = 1, magic = 20, rare = 2, gold = { dice = "3d6", each = 2 }, gems = "1d3-1" }
+=======
+hold = 15
+loot = { items = "2d3", loot_level = 1, magic = 5, rare = 1, gold = { dice = "3d6", each = 2 }, gems = "1d3-1" }
+>>>>>>> origin/main
 
 [[band]]
 id = "banded_chest"
@@ -81,7 +91,7 @@ locked = 75
 trapped = 40
 mimic = 8
 hold = 15
-loot = { items = "2d3+1", loot_level = 1, magic = 25, rare = 3, gold = { dice = "3d6", each = 3 }, gems = "1d2" }
+loot = { items = "2d3+1", loot_level = 1, magic = 6, rare = 1, gold = { dice = "3d6", each = 3 }, gems = "1d2" }
 
 [[band]]
 id = "strongbox"
@@ -95,7 +105,7 @@ locked = 80
 trapped = 45
 mimic = 9
 hold = 15
-loot = { items = "2d4", loot_level = 2, magic = 30, rare = 4, gold = { dice = "4d6", each = 4 }, gems = "1d2" }
+loot = { items = "2d4", loot_level = 2, magic = 8, rare = 1, gold = { dice = "4d6", each = 4 }, gems = "1d2" }
 
 [[band]]
 id = "kist"
@@ -109,7 +119,7 @@ locked = 85
 trapped = 50
 mimic = 10
 hold = 20
-loot = { items = "3d4", loot_level = 2, magic = 35, rare = 5, gold = { dice = "4d6", each = 6 }, gems = "1d3" }
+loot = { items = "3d4", loot_level = 2, magic = 9, rare = 1, gold = { dice = "4d6", each = 6 }, gems = "1d3" }
 
 [[band]]
 id = "ark"
@@ -123,7 +133,7 @@ locked = 90
 trapped = 55
 mimic = 11
 hold = 20
-loot = { items = "3d4+1", loot_level = 3, magic = 40, rare = 7, gold = { dice = "5d6", each = 8 }, gems = "1d3+1" }
+loot = { items = "3d4+1", loot_level = 3, magic = 10, rare = 2, gold = { dice = "5d6", each = 8 }, gems = "1d3+1" }
 
 [[band]]
 id = "forcer"
@@ -137,7 +147,7 @@ locked = 95
 trapped = 60
 mimic = 12
 hold = 20
-loot = { items = "3d4+2", loot_level = 3, magic = 45, rare = 9, gold = { dice = "6d6", each = 10 }, gems = "1d3+1" }
+loot = { items = "3d4+2", loot_level = 3, magic = 11, rare = 2, gold = { dice = "6d6", each = 10 }, gems = "1d3+1" }
 
 [[band]]
 id = "silvered_ark"
@@ -151,7 +161,7 @@ locked = 100
 trapped = 65
 mimic = 13
 hold = 25
-loot = { items = "4d4+1", loot_level = 4, magic = 50, rare = 12, gold = { dice = "6d6", each = 15 }, gems = "2d3" }
+loot = { items = "4d4+1", loot_level = 4, magic = 13, rare = 3, gold = { dice = "6d6", each = 15 }, gems = "2d3" }
 
 [[band]]
 id = "gilded_ark"
@@ -165,7 +175,7 @@ locked = 100
 trapped = 70
 mimic = 15
 hold = 25
-loot = { items = "4d4+2", loot_level = 5, magic = 60, rare = 15, gold = { dice = "8d6", each = 20 }, gems = "2d3+1" }
+loot = { items = "4d4+2", loot_level = 5, magic = 15, rare = 4, gold = { dice = "8d6", each = 20 }, gems = "2d3+1" }
 
 [smash]
 destroyed = 50

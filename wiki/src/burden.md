@@ -61,6 +61,23 @@ The [Balance](skills.md#skill-balance) skill takes away some of the slowdown. At
 burdened slows you by a tenth instead of a quarter, and being strained by a fifth instead of a
 half.
 
+The **burden line**, three [talents](talents.md) of the Grit tree taken in order, eases all of
+it a step at a time:
+
+- [Pack mule](talents.md#talent-pack-mule) (Strength 11): you carry a tenth more, 60 % of the
+  slowdown is gone (added to what [Balance](skills.md#skill-balance) takes away; together they
+  can take it all), and each burden's limit on your [Dexterity](stats.md#stat-dexterity) in
+  [Defence](combat.md#defence) is 1 higher.
+- [Porter](talents.md#talent-porter) (Pack mule, Toughness 12): a tenth more again, the
+  Dexterity limits 1 higher again, and being burdened costs you nothing, as it costs a dwarf
+  nothing.
+- [Beast of burden](talents.md#talent-beast-of-burden) (Porter, level 12): a tenth more again,
+  and being strained costs you only what being burdened costs others.
+
+Some classes are given the first steps: [commoners](classes.md#commoner) Pack mule at
+level 1, [merchants](classes.md#merchant) at 6, and [thieves](classes.md#thief)
+Pack mule and Porter at 25.
+
 [Creatures](creatures.md) carry by the same rules, using their own
 [Strength](stats.md#stat-strength), [Toughness](stats.md#stat-toughness), and size.
 

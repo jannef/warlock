@@ -9,7 +9,7 @@ id = "cult_priest"
 level = 9
 xp = 55
 rarity = "very_rare"
-loot = 50
+loot = 13
 name = "cult priest"
 glyph = "@"
 fg = "#d04a8a"
@@ -37,7 +37,7 @@ racial_weapon = "dagger"
 chance = 90
 one_of = ["dagger"]
 keep = "wield"
-magic = 20
+magic = 5
 [[creature.gear]]
 chance = 40
 one_of = [

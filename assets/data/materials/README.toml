@@ -36,15 +36,22 @@
 #             other parts than its base item is worth the base item's value times what its parts
 #             are worth (each part's share of the weight times its material's value) over what
 #             the base item's are (a gem part an item carries is worth what its gem is, below)
-#   rarity    how often loot makes an item of it, among the materials its base item may be made
-#             of (its construction list, its own material too): { weight = 800, deeper = -40,
+#   rarity    how often loot makes an item of it instead of its base item's own material, among
+#             the other materials it may be made of (its construction list; the own material is
+#             not weighed: it takes 90% of finds at level 1, 80% from level 21, #1191, variant.rs
+#             `variant_percent`): { weight = 800, deeper = -40,
 #             level = 1 }, a weight at item level 1, `deeper` more (or less: never below 0) each
 #             item level past the first, and none below `level` (default 1). None: loot never
 #             makes anything of it. A material worse in a fight than an item's own (to hit or
 #             damage lower on a weapon, Protection lower on armour) and dearer weighs at most 10
 #             (very rare) for that item, whatever it says here; jewellery is never worse
 #   gear      the same for what creatures carry (what they drop), by the creature's level instead
-#             of the item level: primitive materials for kobolds, steel for tougher creatures
+#             of the item level: primitive materials for kobolds, steel for tougher creatures (a
+#             creature's faction may favour materials besides: data/factions.toml `gear`)
+#   fit       how well it suits an item by its use (#1191), `fit = { weapon = "odd", armour =
+#             "poor" }`: weapon (what strikes or is shot), armour (with shields), jewellery
+#             (rings and amulets), other; each "good" (the default: its weight as given),
+#             "poor" (a tenth), or "odd" (a hundredth, at least 1: a tin long sword, a wool ring)
 #   resists   required: its chance in percent, 0 to 100, to withstand each kind of item damage,
 #             `{ acid = 20, rust = 10, fire = 95 }` (world/item_damage.rs). An item is damaged by
 #             its main part's material: acid and rust by a creature's `corrodes`

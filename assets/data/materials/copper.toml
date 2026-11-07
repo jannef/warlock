@@ -12,3 +12,4 @@ protection = 60
 value = 70
 rarity = { weight = 800, deeper = -50 }
 gear = { weight = 600, deeper = -40 }
+fit = { weapon = "poor", armour = "poor" }

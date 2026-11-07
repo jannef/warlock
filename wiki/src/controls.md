@@ -22,7 +22,7 @@ bar, and the info pages.
 | Go down [stairs](terrain.md#stairs), or enter a place on the [overworld](overworld.md#locations) | `>` |
 | Go up [stairs](terrain.md#stairs), or [leave an outdoor area](overworld.md#leaving-an-area) when no enemy is about | `<` |
 | [Pick up](objects.md#picking-up) | `,` or `;` |
-| [Drop](objects.md#dropping) | `d` |
+| [Drop](objects.md#dropping) (your [pack](objects.md#your-pack) in its drop mode; `D` there too) | `d` |
 | [Pay](shops.md#buying) the [shopkeeper](creatures.md#creature-shopkeeper) | `p` |
 | [Equipment](equipment.md) ([wear and wield](equipment.md#what-fits-where)) | `i` |
 | [Inventory](objects.md#your-pack) (your pack) | `I` |
@@ -76,9 +76,9 @@ On every menu and screen:
 
 | Command | Keys |
 |---|---|
-| Up / down | Up / Down, or `k` / `j` |
-| Left / right (change a setting) | Left / Right, or `h` / `l` |
-| Choose | `Enter` |
+| Up / down | Up / Down, numpad `8` / `2`, or `k` / `j` |
+| Left / right (change a setting) | Left / Right, numpad `4` / `6`, or `h` / `l` |
+| Choose | `Enter` or numpad `Enter` |
 | Back | `Esc`, always |
 | Reset a key (Controls), delete a saved [character](saving.md#when-the-game-saves) (Characters) | `Delete` or `Backspace` |
 | Mark a [stack](objects.md#piles), mark everything ([picking up](objects.md#picking-up), [dropping](objects.md#dropping)) | `Space`, `,` |
@@ -90,7 +90,7 @@ In a text field (your character's [name](character.md#name)), every key types wh
 
 | Command | Keys |
 |---|---|
-| Accept the text | `Enter` |
+| Accept the text | `Enter` or numpad `Enter` |
 | Erase the last character | `Backspace` or `Delete` |
 | A random name | `Tab` |
 | Back | `Esc`, always |
@@ -98,7 +98,9 @@ In a text field (your character's [name](character.md#name)), every key types wh
 Some lists name their rows by letter, such as your [pack](objects.md#your-pack), a
 [pile](objects.md#piles), or the [equipment](equipment.md#what-fits-where) slots. Others name them
 by number, such as the [topics](npcs.md#chatting) someone offers. On those lists the letters and
-digits always pick rows, whatever else they are bound to.
+digits always pick rows, whatever else they are bound to. The numpad's digits never pick rows
+or turn [pages](the-screen.md#info-pages): on a screen the numpad moves the selection, as the
+arrows do, with Num Lock on or off. In a text field they type.
 
 A list of items is grouped by kind ([weapons](objects.md#class-melee-weapons),
 [armour](objects.md#class-body-armour), [food](objects.md#class-food), and so on) and shows one
@@ -215,8 +217,9 @@ can choose one. There is no separate key for firing a launcher: `t` does it.
 
 Either key puts a cursor on the map:
 
-- It starts on your last target if you still see it (or on the same spot), else on the nearest
-  [hostile](creatures.md#factions) creature you see, else on you.
+- It starts on your last target if you still see it and it is within range (an empty spot is never
+  remembered), else on the nearest [hostile](creatures.md#factions) creature you see within range,
+  else on you.
 - `Tab` moves it to the next creature you see, nearest first, and `Shift`+`Tab` moves it back. The
   movement keys move it anywhere, into the dark too.
 - A faint dotted line shows the way the missile would fly, as far as you know the ground. It ends

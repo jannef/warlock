@@ -123,18 +123,46 @@ item](magic-items.md#looking-at-an-item), but its to-hit does not.
 
 ### How often each material is found
 
-Loot picks an item's material from its list by how often each material is found at that depth.
-Primitive metals are the common ones near the surface (copper and bronze, then iron and tin),
-and steel becomes the usual metal only deeper. What a [creature](creatures.md) carries, and so
-drops, is picked by the creature's level instead. [Kobolds](creatures.md#creature-kobold)' gear
-is mostly copper, bronze, iron, bone, flint, and hide, and steel comes only with tougher
-creatures.
+Most items are made of their usual material: a long sword is steel, a cloak wool. At depth 1, an
+item that could be made of something else is its usual material 90% of the time. The chance of
+another material grows by half a point with each depth, to 20% from depth 21 on. A
+[creature](creatures.md)'s gear, and what it drops, goes by the creature's level instead of the
+depth.
 
-The weights in the table are relative among the materials an item may be made of, its usual one
-included. Some materials are worse in a fight than an item's usual one but dearer, such as gold,
-silver, or aluminium on a sword, or ivory on a dagger. Such a material is found at weight 10 at
-most, which is very rare, whatever its own weight says. Rings and amulets are only about worth,
-so this never applies to them.
+When an item is made of another material, that material is picked from the item's list by the
+weights in the table further down. The weights compare only the other materials, not the usual one.
+Primitive metals are the common ones near the surface (copper and bronze, then iron and tin),
+and steel becomes the common one only deeper. Some materials are worse in a fight than an item's
+usual one but dearer, such as gold, silver, or aluminium on a sword, or ivory on a dagger. Such
+a material's weight is 10 at most, which is very rare, whatever its own weight says. Rings and
+amulets are only about worth, so this never applies to them.
+
+A material's weight also depends on how well it **suits** the item. The table gives each
+material's fit for weapons (anything that strikes or is shot), armour (shields too), jewellery
+(rings and amulets), and other items:
+
+- **good**: its weight as given;
+- **poor**: a tenth of it. Copper and the precious metals make poor weapons and armour, hides
+  make poor weapons and jewellery, and wood makes poor armour;
+- **odd**: a hundredth of it. Tin, pewter, zinc, and cadmium make odd blades. Cloth, wool, and
+  fur make odd weapons and odd rings.
+
+{{#include generated/material-finds.md}}
+
+An odd material is never ruled out, but it is very rare: a wool ring or a tin long sword is
+found well under once in a thousand of those items. How often a few items turn up in each kind
+of material, at depths 1, 10, and 21:
+
+{{#include generated/material-odds.md}}
+
+Some [factions](creatures.md#factions) **favour** materials for the gear they carry and drop.
+Each favoured material takes its share of the picks first, for any item whose list holds it.
+The usual picking described above covers the rest. An orc's spear is
+bone more often than not, the dead of the barrows carry bronze, and
+[kobolds](creatures.md#creature-kobold) like flint, bone, and copper. A favourite never makes
+an item of a material it could not otherwise be made of: no tribe carries a bone long sword.
+
+{{#include generated/material-tribes.md}}
 
 Chromium, nicrosil, dragonbone, and dragonscale appear only deep. Mithril appears only from
 depth 20 and adamantium from depth 30 (on creatures, from levels 30 and 40).
@@ -146,8 +174,6 @@ depth 20 and adamantium from depth 30 (on creatures, from levels 30 and 40).
 Neither is a precious metal, and acid runs off both. An [anvil](altars-forges-springs.md#forges)
 works them as it does steel. Items placed by hand in the world's made places are always what
 they were placed as.
-
-{{#include generated/material-finds.md}}
 
 A long sword and a chain mail shirt in each metal:
 

@@ -6,7 +6,7 @@ id = "duergar_spider_rider"
 level = 25
 xp = 135
 rarity = "uncommon"
-loot = 30
+loot = 8
 name = "duergar spider rider"
 glyph = "h"
 fg = "#60c0a0"
@@ -29,7 +29,7 @@ on_eat = { message = "Tough and sour, and it tastes of the spider.", vomit = 40 
 [[creature.gear]]
 chance = 60
 one_of = ["studded_leather"]
-magic = 10
+magic = 3
 # It fades from sight on a cooldown (docs/dev/creatures.md "The unseen").
 [creature.invisible]
 cooldown = 300

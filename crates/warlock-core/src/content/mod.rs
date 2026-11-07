@@ -50,6 +50,7 @@ mod dread_roster_tests;
 mod drow_roster_tests;
 #[cfg(test)]
 mod duergar_roster_tests;
+mod dummy;
 mod dungeon;
 mod effect;
 #[cfg(test)]
@@ -72,6 +73,7 @@ mod forage;
 mod forge_tests;
 mod gaze;
 mod gear;
+mod gear_condition;
 mod gem;
 #[cfg(test)]
 mod giant_roster_tests;
@@ -170,7 +172,6 @@ mod surprise;
 mod swim;
 mod tag;
 mod talent;
-mod talent_alike;
 mod temper;
 mod terrain;
 mod theft;
@@ -235,6 +236,7 @@ pub use dialogue::{
     ServiceKind, Speaker, Topic,
 };
 pub use disease::{DIFFICULTIES, DiseaseDef, DiseaseId, SOURCES, Wading};
+pub use dummy::DummyTraining;
 pub use dungeon::{
     ChestOdds, DungeonDef, Endless, Generator, LayerBoss, LevelPlan, RoomOdds, ShopOdds,
     parse_branch_level,
@@ -258,6 +260,7 @@ pub use flow::{FLOW_SPEEDS, Flow};
 pub use forage::{ForageGround, ForageRules};
 pub use gaze::Gaze;
 pub use gear::{Gear, GearLine, RACIAL_CHANCE};
+pub use gear_condition::{GearConditions, Odds, PER_MILLE, TribeOdds};
 pub use gem::{
     Cut, CutId, Cutting, GemDef, GemSize, GemSizeId, Gems, MAX_GEM_VALUE, MAX_GEM_WEIGHT,
     MAX_MULTIPLIER, Ornament, ROUGH_SATURATION, dull,
@@ -282,7 +285,8 @@ pub use level::{
 };
 pub use light::{Dips, Drift, HueDrift, LightId, LightPreset, MAX_LIGHT_RADIUS, Stability};
 pub use material::{
-    ANY, Found, ItemHarm, MAX_MATERIAL_VALUE, MaterialDef, MaterialId, Resists, VERY_RARE,
+    ANY, Fit, Fits, Found, ItemHarm, MAX_MATERIAL_VALUE, MaterialDef, MaterialId, ODD, POOR,
+    Resists, VERY_RARE,
 };
 pub use monster_pool::{MonsterPool, VaultMonsters};
 pub use names::{NameLists, Names};
@@ -366,9 +370,9 @@ pub use surprise::SurpriseRules;
 pub use swim::SwimRules;
 pub use tag::{MAX_TAG, TAG_TARGET, spoken};
 pub use talent::{
-    AnyWeaponSkill, Choice, Coverage, FreeBlowTrigger, Need, Needs, ResourceCost, SmiteRiderKind,
-    SongOn, SystemDef, SystemId, TalentActive, TalentBook, TalentDef, TalentEffect, TalentId,
-    TreeDef, TreeId,
+    AnyWeaponSkill, Choice, FreeBlowTrigger, Need, Needs, ResourceCost, SmiteRiderKind, SongOn,
+    SystemDef, SystemId, TalentActive, TalentBook, TalentDef, TalentEffect, TalentId, TreeDef,
+    TreeId,
 };
 pub use temper::TemperRules;
 pub use terrain::{
@@ -700,6 +704,9 @@ pub struct Content {
     search: SearchRules,
     /// The numbers of working an item at an anvil (`data/temper.toml`, spec §7 "Special rooms").
     temper: TemperRules,
+    /// The condition creature gear spawns in (`data/gear_condition.toml`, spec §8 "Creature
+    /// gear"); without the file, as made.
+    gear_condition: GearConditions,
     /// The numbers of encounters (`data/encounters.toml`, spec §7 "Leaving an outdoor area").
     encounters: EncounterRules,
     /// What becomes of a creature that catches the player stealing (`data/steal.toml`, spec §8
@@ -892,6 +899,7 @@ impl Content {
             trap_avoid: TrapAvoid::default(),
             search: SearchRules::default(),
             temper: TemperRules::default(),
+            gear_condition: GearConditions::default(),
             encounters: EncounterRules::default(),
             steal: None,
             surprise: None,
@@ -1173,6 +1181,13 @@ impl Content {
         content.room_effects.check_factions(&content.factions)?;
         // Objects before creatures: an animated type is generated from its body's object.
         content.load_objects(files)?;
+        let (ids, materials) = (&content.material_ids, &content.materials);
+        (content.factions)
+            .resolve_gear(|name| {
+                let id = *ids.get(name)?;
+                Some((id, materials[usize::from(id.0)].group.is_some()))
+            })
+            .map_err(|m| ContentError::new("data/factions.toml", m))?;
         content.animated = Animated::parse(files, &content)?;
         // Chests before creatures: a mimic's band is its chest's, and its hold the band's.
         let path = "data/chests.toml";
@@ -1243,6 +1258,10 @@ impl Content {
         let path = "data/temper.toml";
         if let Some(text) = files.get_optional(path) {
             content.temper = TemperRules::parse(path, text)?;
+        }
+        let path = "data/gear_condition.toml";
+        if let Some(text) = files.get_optional(path) {
+            content.gear_condition = GearConditions::parse(path, text, &content)?;
         }
         let path = "data/steal.toml";
         if let Some(text) = files.get_optional(path) {
@@ -1981,6 +2000,9 @@ impl Content {
                         creature::NOSES.end()
                     )));
                 }
+            }
+            if let Some(training) = &spec.training {
+                (training.check()).map_err(|m| err(format!("creature `{}`: {m}", spec.id)))?;
             }
             if spec.regen > creature::MAX_REGEN {
                 return Err(err(format!(
@@ -3746,6 +3768,31 @@ impl Content {
             .collect()
     }
 
+    /// The candidates of a floor's population or a timed spawn ([`Content::candidates`]), each
+    /// type not hostile to the player by default (the neutral animals; their stance in the data,
+    /// whatever empathy a player has) weighed at `odds.neutral` % of its rarity's factor (#1195:
+    /// a dungeon is for fighting).
+    pub fn draw_candidates(
+        &self,
+        kinds: &[CreatureId],
+        met: &BTreeSet<String>,
+        odds: &danger::Odds,
+    ) -> Vec<danger::Candidate> {
+        let mut candidates = self.candidates(kinds, met);
+        if odds.neutral < 100 {
+            let player = self.creature_id("player");
+            for (c, _, factor, _) in &mut candidates {
+                if player.is_some_and(|p| self.stance(*c, p) != faction::Stance::Hostile) {
+                    // At least 1 unless 0 % (a rare type at a small share still comes).
+                    let scaled = u32::from(*factor) * u32::from(odds.neutral) / 100;
+                    let scaled = if odds.neutral > 0 { scaled.max(1) } else { 0 };
+                    *factor = u16::try_from(scaled).unwrap_or(u16::MAX);
+                }
+            }
+        }
+        candidates
+    }
+
     /// The index of size `id` in [`Content::sizes`].
     pub fn size_index(&self, id: &str) -> Option<usize> {
         self.sizes.iter().position(|s| s.id == id)
@@ -4033,9 +4080,8 @@ impl Content {
         })
     }
 
-    /// Checks the classes' level tables against the talents (spec §8 "Class abilities"), then
-    /// the coverage bar (spec §8 "Talents"), counting as a system's class abilities the talents
-    /// the class tables give that name it, each once.
+    /// Checks the classes' and prestige classes' level tables against the talents (spec §8
+    /// "Class abilities"): what they name resolves.
     fn check_class_tables(&self) -> Result<(), ContentError> {
         for class in &self.classes {
             class.check_table(&self.talents)?;
@@ -4043,30 +4089,7 @@ impl Content {
         for prestige in &self.prestige {
             prestige.check_table(&self.talents)?;
         }
-        let book = &self.talents;
-        // A prestige class's abilities are class abilities too.
-        let tables = (self.classes.iter().map(Table::Class))
-            .chain(self.prestige.iter().map(Table::Prestige));
-        let mut given: Vec<TalentId> = tables
-            .flat_map(|t| t.abilities_to(book, MAX_LEVEL))
-            .collect();
-        given.sort();
-        given.dedup();
-        let class_abilities = |system: &str| {
-            let Some(system) = book.system_id(system) else {
-                return 0;
-            };
-            (given.iter())
-                .filter(|&&t| book.get(t).systems.contains(&system))
-                .count() as u32
-        };
-        match book.coverage_gap(&class_abilities) {
-            Some(gap) => Err(ContentError::new(
-                "data/talents.toml",
-                format!("coverage: {gap}"),
-            )),
-            None => Ok(()),
-        }
+        Ok(())
     }
 
     /// The alignment rules of `data/alignment.toml` (spec §8 "Alignment"); `None` without the
@@ -4108,6 +4131,12 @@ impl Content {
     /// else [`TemperRules::default`]).
     pub fn temper(&self) -> &TemperRules {
         &self.temper
+    }
+
+    /// The condition creature gear spawns in (spec §8 "Creature gear";
+    /// `data/gear_condition.toml`, else none: as made).
+    pub fn gear_condition(&self) -> &GearConditions {
+        &self.gear_condition
     }
 
     /// What every spell of damage type `kind` does beyond its damage (`[types]` in
@@ -5394,6 +5423,7 @@ mod tests {
             deeper: 100,
             deeper_cap: danger::MAX_DEEPER_CAP,
             dread_one_in: 0,
+            neutral: 100,
         };
         let mut rng = crate::rng::Rng::stream(1, "test");
         for _ in 0..50 {

@@ -37,3 +37,5 @@ plus one naming rule (below).
 - **Tests**: `world/outlaw_tests.rs` (faction and tags, the gear rolls, stances against every
   lair population, a lit den where outlaws and lair types wait 40 turns unhurt, the powers
   working for their owners, the proper names, the note); `world/bestiary_tests.rs`'s `WAVES`.
+
+Gear materials (#1191): the faction's `gear` in `data/factions.toml`: outlaws favour iron (25 %), the village smith's, each its share of the draws for an item whose construction list holds it, the usual draw the rest (`docs/dev/objects.md` "Materials and variants").

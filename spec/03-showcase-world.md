@@ -40,7 +40,10 @@ floors), the Mynster (the temple, a sanctuary) where Sister Hild cures and mends
 reveal), the houses of Reeve Leofric and Factor Wulfrun (who identifies everything the player
 carries for 100 gold per unidentified stack, §8 "Dialogue", Services), the Gildhalle in the
 south-east corner, the hall of the Weyfarers' Gilde, where Wat One-Eye gives the guild's chain
-(§3b "Quests"; a named place, "the bounty board", beside its door), and townsfolk (the campaign's
+(§3b "Quests"; a named place, "the bounty board", beside its door) with its yard across the
+lane, a dirt square of four training dummies (the campaign's `training_dummy`, §8 "Weapon
+skills", Target dummies; one at the west end of the top row, a shooting lane, three in the row
+below it to strike), and townsfolk (the campaign's
 `villager` type) on their rounds; everyone in it is peaceful. The people are the campaign's own
 creature types (`sister`, `innkeeper`, `reeve`, `mine_factor`, `guildmaster`) placed as unique
 npcs with proper names. The dev scenario `ceaptun` starts on the square with 60 gold.
