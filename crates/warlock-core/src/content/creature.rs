@@ -377,6 +377,9 @@ pub(super) struct CreatureSpec {
     /// that is not `animal`.
     #[serde(default)]
     pub tameable: bool,
+    /// What it teaches as a target dummy (spec §8 "Weapon skills": "Target dummies"), which
+    /// makes it one: it never acts, never dies, and earns no one anything (`world/dummy.rs`).
+    pub training: Option<super::DummyTraining>,
     /// Its nose: it smells a hostile within this many cells, however dark and through a closed
     /// door (1 to 20; only on a `tameable` type; a companion's reads it).
     pub nose: Option<i32>,
@@ -898,6 +901,7 @@ impl CreatureSpec {
             dies: self.dies,
             depart: self.depart,
             tameable: self.tameable,
+            training: self.training,
             nose: self.nose,
             grades: self.grades && !self.unique && self.mimic.is_none(),
             grade_words,
@@ -1154,6 +1158,8 @@ pub struct CreatureDef {
     /// Gameplay: whether it may be tamed and kept as a companion (spec §8 "Allies"; the ranger's
     /// starting beast is drawn from the `tameable` types; `world/companion.rs`).
     pub tameable: bool,
+    /// Gameplay: what it teaches as a target dummy, which makes it one (`world/dummy.rs`).
+    pub training: Option<super::DummyTraining>,
     /// Gameplay: whether one of it may be made greater or lesser than its kind (spec §8
     /// "Grades"; [`crate::grade`]): false for a unique, a mimic, an animated type whose tier
     /// names no grade words (all but the blades), or one whose file says `grades = false` (the

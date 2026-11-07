@@ -1,17 +1,15 @@
 //! Talents (spec §8 "Talents"; `assets/data/talents.toml` for the settings, one file per talent
 //! under `assets/data/talents/`): what a character may pick as they level up. A talent has a
 //! tree, prerequisites ([`Needs`]) that must all hold when it is chosen, and typed effects ([`TalentEffect`]) summed by [`crate::talent::TalentMods`] and
-//! read where the rules already read what magic items do. Every talent names the systems it
-//! touches from the closed list in the settings file; the **coverage check** at load fails when
-//! a system that is not `pending` has fewer talents than `[coverage]` asks, or a tree that is
-//! not `pending` (nor `no_free`) has no talent free of prerequisites, so no system is left
-//! behind as the list grows. Without the files there are no talents, and no level asks for one.
+//! read where the rules already read what magic items do. A talent may name the systems it
+//! touches from the list in the settings file (the wiki's matrix reads them). The loader checks
+//! only that the data is well formed: what it names resolves (#1205). Without the files there
+//! are no talents, and no level asks for one.
 
-use super::affix::Once;
 use super::level::OneOrMany;
 use super::{
-    Build, CombatStance, Content, ContentError, ItemKind, MAX_ITEM_LEVEL, MAX_LEVEL, MAX_RANK,
-    MAX_RESOURCE, ResourceId, Role, StatusId, WeaponSkillId, duplicate_id,
+    Build, CombatStance, Content, ContentError, ItemKind, ResourceId, Role, StatusId,
+    WeaponSkillId, duplicate_id,
 };
 use crate::alignment::Requirement;
 use crate::dice::Dice;
@@ -36,16 +34,9 @@ pub struct TalentId(pub u16);
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct TreeId(pub u8);
 
-/// A system of the coverage list, an index into [`TalentBook::systems`].
+/// A system of the settings file's list, an index into [`TalentBook::systems`].
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct SystemId(pub u8);
-
-/// What a stat prerequisite may ask for.
-const SCORES: std::ops::RangeInclusive<u8> = 1..=40;
-/// What a flat bonus (Dodge, natural armour, damage, hearing, noticing) may be.
-const BONUSES: std::ops::RangeInclusive<i32> = -20..=20;
-/// What a percent effect may be.
-const PERCENTS: std::ops::RangeInclusive<i32> = -100..=100;
 
 /// A tree of talents (`[[tree]]` in the settings file), in display order.
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -54,40 +45,17 @@ pub struct TreeDef {
     pub name: String,
     /// One line: what the tree is about.
     pub description: String,
-    /// Its talents are still to come: the coverage check does not ask it for a free talent yet.
-    pub pending: bool,
-    /// It never needs a free talent: nothing picks from it alone (the birth signs' tree).
-    pub no_free: bool,
     /// Its talents are class abilities (spec §8 "Class abilities"): given by the class tables
-    /// (`data/classes/`), never picked, and counted by the coverage check as class abilities,
-    /// not talents.
+    /// (`data/classes/`), never picked.
     pub class: bool,
 }
 
-/// A system of the game that talents may touch (`[[system]]` in the settings file): the
-/// coverage check asks each one that is not `pending` for its talents.
+/// A system of the game that talents may touch (`[[system]]` in the settings file), for the
+/// wiki's matrix.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct SystemDef {
     pub id: String,
     pub name: String,
-    /// Its talents are still to come: counted and shown, not yet required.
-    pub pending: bool,
-    /// The fewest talents it may have, when not the bar's (`[coverage]`): a young system that
-    /// ships with one.
-    pub min_talents: Option<u32>,
-}
-
-/// The bar the coverage check holds every system and tree to (`[coverage]`); without the table,
-/// nothing is asked.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Deserialize)]
-#[serde(deny_unknown_fields)]
-pub struct Coverage {
-    /// The fewest talents a system may have.
-    pub min_talents: u32,
-    /// The fewest class abilities a system may have (0 until every class has its table).
-    pub min_class: u32,
-    /// The fewest talents without prerequisites a tree may have.
-    pub free_per_tree: u32,
 }
 
 /// What a talent with a `choice` is chosen for (`talent:weapon_focus:long_blades`).
@@ -366,11 +334,6 @@ pub enum TalentEffect {
     CarryPercent { value: i32 },
     /// Being Burdened costs it nothing, as a dwarf's burden (Porter).
     IgnoreBurdened,
-    /// The slowdown its burden and being Bloated put on its steps, this percent more (negative:
-    /// less; Sure-footed).
-    StepSlowdownPercent { value: i32 },
-    /// The carrying limit, this many kilograms more (on top of what magic items add).
-    CarryKg { value: i32 },
     /// Coins it carries weigh nothing.
     WeightlessCoins,
     /// Journeys on the overworld take this percent more time (negative: quicker).
@@ -561,7 +524,7 @@ pub enum TalentEffect {
     /// What attacks with some weapon skills gain, as their ranks give it
     /// ([`super::Benefit`]): the weapon skill or style `skill` names, else the chosen one's (no
     /// `role`; the talent takes a choice), else every skill of `role`'s. `ranks`: its benefits read that many ranks higher
-    /// (a rank held, never past [`MAX_RANK`]); `bash` only where a free bash is had already.
+    /// (a rank held, never past [`super::MAX_RANK`]); `bash` only where a free bash is had already.
     Weapon {
         #[serde(default)]
         role: Option<Role>,
@@ -979,7 +942,7 @@ pub enum TalentEffect {
         #[serde(default)]
         no_shield: bool,
     },
-    /// Strained costs it what Burdened costs others (Stout).
+    /// Strained costs it what Burdened costs others (Beast of burden).
     Stout,
     /// Dodge added against shots, throws, and trap missiles.
     MissileDodge { value: i32 },
@@ -1364,1149 +1327,241 @@ impl TalentEffect {
             )
     }
 
-    /// Whether the numbers are within what the rules expect, and the statuses and damage types
-    /// it names are in `content` (content without statuses or damage types has nothing to check
-    /// them by: they stay, and do nothing).
+    /// Whether what it names resolves in `content` (statuses, resources, damage types, skills,
+    /// weapon skills, races, lights, spells, effects), its times parse, and its choice-keyed
+    /// forms have the choice they read; content without a table has nothing to check those ids
+    /// by: they stay, and do nothing. Numbers are the data author's (#1205): only a die's sides
+    /// and a divisor are kept from 0.
     pub(super) fn check(&self, content: &Content, choice: Option<Choice>) -> Result<(), String> {
         let status = |id: &str| {
             (content.status_ids().next().is_none() || content.status_id(id).is_some())
                 .then_some(())
                 .ok_or_else(|| format!("names an unknown status `{id}`"))
         };
-        // A resource it names, by id; `None` for content without resources, which has nothing
-        // to check it by (it stays, and does nothing).
-        let resource = |id: &str| match content.resource_id(id) {
-            Some(r) => Ok(Some(r)),
-            None if content.resources().is_empty() => Ok(None),
-            None => Err(format!("names an unknown resource `{id}`")),
-        };
-        // A cost of 1 to the maximum of the resource `id` names, for effect `kind`.
-        let resource_cost = |kind: &str, id: &str, cost: u16| {
-            if cost == 0 {
-                return Err(format!("`{kind}`: cost is at least 1"));
-            }
-            match resource(id)?.map(|r| content.resource(r).most()) {
-                Some(max) if cost > max => Err(format!(
-                    "`{kind}`: costs {cost} of `{id}`, more than its maximum {max}"
-                )),
-                _ => Ok(()),
-            }
-        };
-        let bonus = |v: i32| {
-            (v != 0 && BONUSES.contains(&v))
+        let resource = |id: &str| {
+            (content.resources().is_empty() || content.resource_id(id).is_some())
                 .then_some(())
-                .ok_or_else(|| {
-                    format!("a bonus is {} to {}, not 0", BONUSES.start(), BONUSES.end())
-                })
+                .ok_or_else(|| format!("names an unknown resource `{id}`"))
         };
-        let percent = |v: i32| {
-            (v != 0 && PERCENTS.contains(&v))
+        let damage_type = |id: &str| {
+            (content.damage_types().is_empty() || content.damage_type_id(id).is_some())
                 .then_some(())
-                .ok_or_else(|| {
-                    format!(
-                        "a percent is {} to {}, not 0",
-                        PERCENTS.start(),
-                        PERCENTS.end()
-                    )
-                })
+                .ok_or_else(|| format!("names an unknown damage type `{id}`"))
         };
+        let light = |id: &str| {
+            (content.light_presets().is_empty() || content.light_id(id).is_some())
+                .then_some(())
+                .ok_or_else(|| format!("names an unknown light preset `{id}`"))
+        };
+        let weapon_skill = |id: &str| {
+            let table = content.weapon_skills();
+            (table.skills().is_empty() || table.id(id).is_some())
+                .then_some(())
+                .ok_or_else(|| format!("names an unknown weapon skill `{id}`"))
+        };
+        let skill = |id: &str| {
+            (content.skills().is_empty() || content.skill_id(id).is_some())
+                .then_some(())
+                .ok_or_else(|| format!("names an unknown skill `{id}`"))
+        };
+        // A die's sides and a divisor: 0 would roll an empty range or divide by zero.
+        let nonzero = |kind: &str, field: &str, v: u32| {
+            (v != 0)
+                .then_some(())
+                .ok_or_else(|| format!("`{kind}`: {field} is at least 1"))
+        };
+        let duration = |text: &str| text.parse::<crate::time::Duration>().map(|_| ());
         match self {
-            TalentEffect::Dodge { value }
-            | TalentEffect::Natural { value }
-            | TalentEffect::Hardened { bonus: value }
-            | TalentEffect::MeleeDamage { value }
-            | TalentEffect::Hearing { value }
-            | TalentEffect::Notice { value }
-            | TalentEffect::InitiativeBonus { value }
-            | TalentEffect::SurpriseDifficulty { value }
-            | TalentEffect::SneakReach { value }
-            | TalentEffect::Threat { value }
-            | TalentEffect::Search { value }
-            | TalentEffect::SearchReach { value }
-            | TalentEffect::SeesMimics { value }
-            | TalentEffect::HoardGrace { value }
-            | TalentEffect::ThrowRange { value }
-            | TalentEffect::MaxDex { value }
-            | TalentEffect::Deflection { value }
-            | TalentEffect::Pain { value }
-            | TalentEffect::DiseaseChecks { value }
-            | TalentEffect::DrainChecks { value }
-            | TalentEffect::DiseaseRecovery { value }
-            | TalentEffect::DoorKick { value }
-            | TalentEffect::BurdenDex { value }
-            | TalentEffect::MissileDodge { value }
-            | TalentEffect::DeflectionUnarmoured { value }
-            | TalentEffect::SmallTarget { value }
-            | TalentEffect::Ferocity { value }
-            | TalentEffect::StoneFind { value }
-            | TalentEffect::Searching { value }
-            | TalentEffect::SkillRolls { value }
-            | TalentEffect::Darkvision { value }
-            | TalentEffect::NightSight { value }
-            | TalentEffect::DaySight { value }
-            | TalentEffect::CarryKg { value }
-            | TalentEffect::Checks { value, .. }
-            | TalentEffect::CriticalConfirm { value }
-            | TalentEffect::AbilityRanks { value }
-            | TalentEffect::CriticalPenetration { value }
-            | TalentEffect::OffHandDamage { value }
-            | TalentEffect::BestSkillThreat { value }
-            | TalentEffect::TrapEase { value }
-            | TalentEffect::TrainedSkills { value }
-            | TalentEffect::Barbs { damage: value } => bonus(*value),
-            TalentEffect::FavouredPrey { to_hit, damage }
-            | TalentEffect::SwornFoe { to_hit, damage } => {
-                if [to_hit, damage].iter().all(|&&v| v == 0)
-                    || ![to_hit, damage].iter().all(|v| BONUSES.contains(v))
-                {
-                    return Err(
-                        "`favoured_prey`, `sworn_foe`: to_hit and damage are -20 to 20, not both 0"
-                            .into(),
-                    );
-                }
-                Ok(())
-            }
-            TalentEffect::AmbushThreat { value } => {
-                if !(1..=5).contains(value) {
-                    return Err("`ambush_threat`: value is 1 to 5".into());
-                }
-                Ok(())
-            }
-            TalentEffect::GrantsResource { resource: id } => resource(id).map(|_| ()),
-            TalentEffect::RapidShot {
-                resource: id,
-                cost,
-                saving,
-            } => {
-                if !(1..=50).contains(saving) {
-                    return Err("`rapid_shot`: saving is 1 to 50".into());
-                }
-                match resource(id)?.map(|r| content.resource(r).most()) {
-                    Some(max) if *cost > max => Err(format!(
-                        "`rapid_shot`: costs {cost} of `{id}`, more than its maximum {max}"
-                    )),
-                    _ => Ok(()),
-                }
-            }
-            TalentEffect::Tame { bonus } => match bonus {
-                1..=10 => Ok(()),
-                _ => Err("`tame`: a bonus of 1 to 10".into()),
-            },
-            TalentEffect::PackTactics { to_hit } => match to_hit {
-                1..=10 => Ok(()),
-                _ => Err("`pack_tactics`: to_hit is 1 to 10".into()),
-            },
-            TalentEffect::AllyMod {
-                to_hit,
-                protection,
-                count,
-                duration_percent,
-                lasting,
-                most,
-            } => {
-                if *to_hit == 0
-                    && *protection == 0
-                    && *count == 0
-                    && *duration_percent == 0
-                    && !*lasting
-                    && *most == 0
-                {
-                    return Err("`ally_mod`: gives nothing".into());
-                }
-                for v in [to_hit, protection].into_iter().filter(|v| **v != 0) {
-                    bonus(*v)?;
-                }
-                if !(0..=6).contains(count) || !(0..=6).contains(most) {
-                    return Err("`ally_mod`: count and most are 0 to 6".into());
-                }
-                if !(0..=500).contains(duration_percent) {
-                    return Err("`ally_mod`: duration_percent is 0 to 500".into());
-                }
-                Ok(())
-            }
-            TalentEffect::SummonBias { tag, weight } => {
-                if tag.trim().is_empty() || *weight == 1 || *weight > 100 {
-                    return Err(
-                        "`summon_bias`: a tag, and a weight of 0 or 2 to 100 (1 changes nothing)"
-                            .into(),
-                    );
-                }
-                Ok(())
-            }
-            TalentEffect::Volley { shots } => {
-                if !(2..=5).contains(shots) {
-                    return Err("`volley`: shots is 2 to 5".into());
-                }
-                Ok(())
-            }
-            TalentEffect::Sic {
-                status: id,
-                blows,
-                range,
-            } => {
-                status(id)?;
-                if !(1..=20).contains(range) {
-                    return Err("`sic`: range is 1 to 20".into());
-                }
-                // Its degrees are its blows: no tick to hurt the beast, and enough to hold them.
-                if let Some(def) = content.status_id(id).map(|s| content.status(s))
-                    && (!def.auto_critical || def.tick.is_some() || !(1..=def.max).contains(blows))
-                {
-                    return Err(format!(
-                        "`sic`: `{id}` is `auto_critical` with no tick, and blows is 1 to its max"
-                    ));
-                }
-                Ok(())
-            }
+            TalentEffect::GrantsResource { resource: id }
+            | TalentEffect::RapidShot { resource: id, .. }
+            | TalentEffect::FlurryCost { resource: id, .. }
+            | TalentEffect::Retribution { resource: id, .. }
+            | TalentEffect::CatchMissiles { resource: id, .. }
+            | TalentEffect::Rage { resource: id }
+            | TalentEffect::ResourceBuild { resource: id, .. }
+            | TalentEffect::ResourceMax { resource: id, .. }
+            | TalentEffect::ResourceStart { resource: id, .. }
+            | TalentEffect::ResourceRate { resource: id, .. } => resource(id),
+            TalentEffect::Sic { status: id, .. }
+            | TalentEffect::Virtuoso { status: id }
+            | TalentEffect::RoomStatusImmune { status: id }
+            | TalentEffect::RaisePercent { status: id, .. }
+            | TalentEffect::VeteransWind { cooldown: id, .. }
+            | TalentEffect::SecondWind { cooldown: id, .. }
+            | TalentEffect::Lurk { status: id }
+            | TalentEffect::SneakKillStatus { status: id }
+            | TalentEffect::WindStep { status: id }
+            | TalentEffect::QuiveringPalm { status: id, .. }
+            | TalentEffect::StunningStrike { status: id, .. }
+            | TalentEffect::PatientDefence { status: id }
+            | TalentEffect::WarCry { status: id, .. }
+            | TalentEffect::StatusDamage { status: id, .. }
+            | TalentEffect::Scent { status: id, .. }
+            | TalentEffect::StatusEases { status: id, .. }
+            | TalentEffect::StatusLasts { status: id, .. }
+            | TalentEffect::Brace { status: id, .. }
+            | TalentEffect::NoPenalty { status: id }
+            | TalentEffect::CriticalStatus { status: id }
+            | TalentEffect::Grip { status: id }
+            | TalentEffect::Reprieve { status: id, .. } => status(id),
             TalentEffect::Song {
                 id,
-                on,
                 status: status_id,
-                severity,
                 resource: pool,
-                cost,
-                mana,
-                check,
-                difficulty,
+                ..
             } => {
                 if (super::ClassActive::from_id(id)).is_none_or(|a| !a.sings()) {
                     return Err(format!("`song`: `{id}` is no song's active"));
                 }
-                match (pool, *mana) {
-                    (Some(pool), 0) => resource_cost("song", pool, *cost)?,
-                    (None, 1..=100) if *cost == 0 => {}
-                    _ => {
-                        return Err(
-                            "`song`: costs one thing, `cost` of a `resource` or 1 to 100 `mana`"
-                                .into(),
-                        );
-                    }
-                }
-                if !(1..=10).contains(severity) {
-                    return Err("`song`: severity is 1 to 10".into());
-                }
-                match (on, check) {
-                    (SongOn::Hearers, Some(_)) if (0..=30).contains(difficulty) => {}
-                    (SongOn::Singer, None) if *difficulty == 0 => {}
-                    _ => {
-                        return Err("`song`: a song on its hearers asks a `check` against a \
-                                    `difficulty` of 0 to 30; one on the singer neither"
-                            .into());
-                    }
+                if let Some(pool) = pool {
+                    resource(pool)?;
                 }
                 status(status_id)
             }
-            TalentEffect::FlurryCost { resource: id, cost } => {
-                resource_cost("flurry_cost", id, *cost)
+            TalentEffect::Consecrate { time, .. } => duration(time),
+            TalentEffect::Sanctuary { time, lasts, .. } => {
+                duration(time)?;
+                duration(lasts)
             }
-            TalentEffect::Retribution { resource: id, cost } => {
-                resource_cost("retribution", id, *cost)
-            }
-            TalentEffect::CatchMissiles { resource: id, cost } => {
-                resource_cost("catch_missiles", id, *cost)
-            }
-            TalentEffect::Virtuoso { status: id } => status(id),
-            TalentEffect::Consecrate { mana, time } => {
-                if !(0..=100).contains(mana) {
-                    return Err("`consecrate`: mana is 0 to 100".into());
-                }
-                let time: crate::time::Duration = time.parse()?;
-                if !(1..=3600).contains(&time.as_seconds()) {
-                    return Err("`consecrate`: time is 1s to 1h".into());
-                }
-                Ok(())
-            }
-            TalentEffect::Sanctuary {
-                mana,
-                time,
-                radius,
-                lasts,
-                regen,
-            } => {
-                if !(1..=500).contains(mana) {
-                    return Err("`sanctuary`: mana is 1 to 500".into());
-                }
-                let time: crate::time::Duration = time.parse()?;
-                if !(10..=3600).contains(&time.as_seconds()) {
-                    return Err("`sanctuary`: time is 10s to 1h".into());
-                }
-                if !(1..=5).contains(radius) {
-                    return Err("`sanctuary`: radius is 1 to 5".into());
-                }
-                let lasts: crate::time::Duration = lasts.parse()?;
-                if !(600..=12 * 3600).contains(&lasts.as_seconds()) {
-                    return Err("`sanctuary`: lasts is 10m to 12h".into());
-                }
-                if !(100..=1000).contains(regen) {
-                    return Err("`sanctuary`: regen is 100 to 1000".into());
-                }
-                Ok(())
-            }
-            TalentEffect::Prayer {
-                tier,
-                title,
-                uses,
-                answers,
-                all,
-            } => {
-                if tier.is_some_and(|t| !(1..=5).contains(&t)) {
-                    return Err("`prayer`: tier is 1 to 5".into());
-                }
-                if tier.is_some() != title.is_some() {
-                    return Err("`prayer`: a tier has a `title`, and only a tier".into());
-                }
-                if answers.is_some_and(|a| !(1..=7).contains(&a)) {
-                    return Err("`prayer`: answers is 1 to 7".into());
-                }
-                if (1..uses.len()).any(|i| uses[..i].contains(&uses[i])) {
-                    return Err("`prayer`: a use named twice".into());
-                }
-                if tier.is_none() && uses.is_empty() && answers.is_none() && !all {
-                    return Err("`prayer`: it gives a tier, uses, answers, or all".into());
-                }
-                Ok(())
-            }
-            TalentEffect::Knock { mana } => {
-                if !(0..=100).contains(mana) {
-                    return Err("`knock`: mana is 0 to 100".into());
-                }
-                Ok(())
-            }
-            TalentEffect::Scribe { mana_times } => {
-                if !(1..=10).contains(mana_times) {
-                    return Err("`scribe`: mana_times is 1 to 10".into());
-                }
-                Ok(())
-            }
-            TalentEffect::SpiritWeapon {
-                to_hit,
-                threat,
-                phrase,
-                ..
-            } => {
-                if !(0..=10).contains(to_hit) || *threat > 10 {
-                    return Err("`spirit_weapon`: to_hit and threat are 0 to 10".into());
-                }
-                if phrase.trim().is_empty() {
-                    return Err("`spirit_weapon`: needs a `phrase`".into());
-                }
-                Ok(())
-            }
-            TalentEffect::RoomStatusImmune { status: id } => status(id),
-            TalentEffect::Stat { value, .. } => {
-                if *value == 0 || !(-5..=5).contains(value) {
-                    return Err("`stat`: value is -5 to 5, not 0".into());
-                }
-                Ok(())
-            }
-            TalentEffect::Skill { skill, value } => {
-                match (skill, choice) {
-                    (Some(skill), _)
-                        if !content.skills().is_empty() && content.skill_id(skill).is_none() =>
-                    {
-                        return Err(format!("names an unknown skill `{skill}`"));
-                    }
-                    (None, Some(Choice::Skill)) | (Some(_), _) => {}
-                    (None, _) => {
-                        return Err(
-                            "`skill` names a skill, or is for the chosen one: `choice = \"skill\"`"
-                                .into(),
-                        );
-                    }
-                }
-                percent(*value)
-            }
-            TalentEffect::StartingGold {
-                percent,
-                at_least,
-                at_most,
-            } => {
-                if *percent > 1000 || at_least > at_most || *at_most > 10_000 {
-                    return Err(
-                        "`starting_gold`: percent up to 1000, at_least up to at_most, \
-                                at_most up to 10000"
-                            .into(),
-                    );
-                }
-                Ok(())
-            }
-            TalentEffect::StartingGems { min, max, level } => {
-                if *min > *max || *max > 10 || !(1..=MAX_ITEM_LEVEL).contains(level) {
-                    return Err(format!(
-                        "`starting_gems`: min up to max up to 10, level 1 to {MAX_ITEM_LEVEL}"
-                    ));
-                }
-                Ok(())
-            }
-            TalentEffect::Heirloom {
-                weapons,
-                fallback,
-                min,
-                max,
-                level,
-            } => {
-                if !(1..=*max).contains(min) || *max > 6 || !(1..=MAX_ITEM_LEVEL).contains(level) {
-                    return Err(format!(
-                        "`heirloom`: min 1 to max, max up to 6, level 1 to {MAX_ITEM_LEVEL}"
-                    ));
-                }
+            TalentEffect::Skill { skill: name, .. } => match (name, choice) {
+                (Some(name), _) => skill(name),
+                (None, Some(Choice::Skill)) => Ok(()),
+                (None, _) => Err(
+                    "`skill` names a skill, or is for the chosen one: `choice = \"skill\"`".into(),
+                ),
+            },
+            TalentEffect::Heirloom { weapons, .. } => {
                 for race in weapons.keys() {
                     if !content.races().list.is_empty() && content.race(race).is_none() {
                         return Err(format!("`heirloom`: names an unknown race `{race}`"));
                     }
                 }
                 // Its weapons are checked once the objects load (`check_heirlooms`).
-                let _ = fallback;
                 Ok(())
             }
-            TalentEffect::IdentifyCarried { hours } => {
-                if !(1..=240).contains(hours) {
-                    return Err("`identify_carried`: hours is 1 to 240".into());
-                }
-                Ok(())
+            TalentEffect::WeaponRanks { skills, .. } => {
+                skills.iter().try_for_each(|id| weapon_skill(id))
             }
-            TalentEffect::WeaponRanks { to, skills, .. } => {
-                if !(1..=super::MAX_RANK).contains(to) {
-                    return Err(format!("`weapon_ranks`: to is 1 to {}", super::MAX_RANK));
-                }
-                let table = content.weapon_skills();
-                match skills
-                    .iter()
-                    .find(|s| !table.is_empty() && table.id(s).is_none())
-                {
-                    Some(id) => Err(format!("names an unknown weapon skill `{id}`")),
-                    None => Ok(()),
-                }
-            }
-            TalentEffect::TakeUpSkills { dice, except, .. } => {
-                if dice.min() < 1 || dice.max() > 100 {
-                    return Err("`take_up_skills`: its dice roll 1 to 100".into());
-                }
-                let unknown = (except.iter())
-                    .find(|s| !content.skills().is_empty() && content.skill_id(s).is_none());
-                match unknown {
-                    Some(id) => Err(format!("names an unknown skill `{id}`")),
-                    None => Ok(()),
-                }
-            }
-            TalentEffect::ScrollKept { chance } => {
-                if !(1..=100).contains(chance) {
-                    return Err("`scroll_kept`: chance is 1 to 100".into());
-                }
-                Ok(())
-            }
-            TalentEffect::PotionKept { chance } => {
-                if !(1..=100).contains(chance) {
-                    return Err("`potion_kept`: chance is 1 to 100".into());
-                }
-                Ok(())
-            }
-            TalentEffect::Protection {
-                value,
-                body_armour,
-                shield,
-                per_piece,
-            } => {
-                if *per_piece && (body_armour.is_some() || *shield) {
-                    return Err("`protection`: per_piece asks nothing else".into());
-                }
-                bonus(*value)?;
-                match body_armour {
-                    Some(at) if !(1..=20).contains(at) => {
-                        Err("`protection`: body_armour is 1 to 20".into())
-                    }
-                    _ => Ok(()),
-                }
-            }
-            TalentEffect::StanceToHit { percent: value, .. }
-            | TalentEffect::StanceDodge { percent: value, .. }
-            | TalentEffect::WeaponMarks { value, .. }
-            | TalentEffect::SchoolMarksPercent { value }
-            | TalentEffect::StepPercent { value, .. }
-            | TalentEffect::SlipPercent { value } => percent(*value),
-            TalentEffect::RaisePercent { status: id, value } => {
-                status(id)?;
-                percent(*value)
-            }
-            TalentEffect::TwoHandedCrit { value } => {
-                if !(1..=3).contains(value) {
-                    return Err("`two_handed_crit`: value is 1 to 3".into());
-                }
-                Ok(())
-            }
+            TalentEffect::TakeUpSkills { except, .. } => except.iter().try_for_each(|id| skill(id)),
             TalentEffect::UnarmedDie { sides } => {
-                if !(2..=20).contains(sides) {
-                    return Err("`unarmed_die`: sides is 2 to 20".into());
-                }
-                Ok(())
+                nonzero("unarmed_die", "sides", u32::from(*sides))
             }
-            TalentEffect::VeteransWind {
-                per_level,
-                at_least,
-                cooldown,
-            } => {
-                if !(1..=20).contains(per_level) || !(0..=100).contains(at_least) {
-                    return Err("`veterans_wind`: per_level is 1 to 20, at_least 0 to 100".into());
-                }
-                status(cooldown)
-            }
-            TalentEffect::LayOnHands { per_level } => {
-                if !(1..=20).contains(per_level) {
-                    return Err("`lay_on_hands`: per_level is 1 to 20".into());
-                }
-                Ok(())
-            }
-            TalentEffect::Avatar { hands_cost_percent } => {
-                if !(1..=100).contains(hands_cost_percent) {
-                    return Err("`avatar`: hands_cost_percent is 1 to 100".into());
-                }
-                Ok(())
-            }
+            TalentEffect::KickDie { sides } => nonzero("kick_die", "sides", u32::from(*sides)),
             TalentEffect::Smite {
-                per_levels,
-                sides,
-                unholy,
-                ..
+                per_levels, sides, ..
             } => {
-                if !(1..=20).contains(per_levels) || !(2..=20).contains(sides) || *unholy > 5 {
-                    return Err(
-                        "`smite`: per_levels is 1 to 20, sides 2 to 20, unholy 0 to 5".into(),
-                    );
-                }
-                Ok(())
-            }
-            TalentEffect::SmiteMode {
-                mode,
-                status: id,
-                severity,
-                turns,
-                check,
-                difficulty,
-            } => {
-                match (mode, turns, check) {
-                    (SmiteRiderKind::Banish, None, None)
-                        if id.is_empty() && *severity == 0 && *difficulty == 0 =>
-                    {
-                        return Ok(());
-                    }
-                    (SmiteRiderKind::Brand, None, None)
-                        if (1..=10).contains(severity) && *difficulty == 0 => {}
-                    (SmiteRiderKind::Fear, Some(_), Some(_))
-                        if *severity == 0 && (0..=30).contains(difficulty) => {}
-                    _ => {
-                        return Err("`smite_mode`: `brand` takes a severity of 1 to 10; `fear` \
-                                    `turns`, a `check`, and a `difficulty` of 0 to 30; `banish` \
-                                    nothing more"
-                            .into());
-                    }
-                }
-                status(id)?;
-                let flees = content.status_id(id).map(|s| content.status(s).flees);
-                if *mode == SmiteRiderKind::Fear && flees == Some(false) {
-                    return Err(format!(
-                        "`smite_mode`: `fear`'s status `{id}` does not flee"
-                    ));
-                }
-                Ok(())
-            }
-            TalentEffect::HolyWrath { dice } => {
-                if dice.max() < 1 || dice.min() < 0 {
-                    return Err("`holy_wrath`: dice that harm".into());
-                }
-                Ok(())
-            }
-            TalentEffect::Lurk { status: id }
-            | TalentEffect::SneakKillStatus { status: id }
-            | TalentEffect::WindStep { status: id } => status(id),
-            TalentEffect::Stillness { name, statuses } => {
-                if name.trim().is_empty() || statuses.is_empty() {
-                    return Err("`stillness`: a name, and at least one status".into());
-                }
-                statuses.iter().try_for_each(|id| status(id))
-            }
-            TalentEffect::QuiveringPalm {
-                status: id,
-                severity,
-            }
-            | TalentEffect::StunningStrike {
-                status: id,
-                severity,
-            } => {
-                if *severity == 0 {
-                    return Err("a palm blow's severity is at least 1".into());
-                }
-                status(id)
-            }
-            TalentEffect::PatientDefence { status: id } => status(id),
-            TalentEffect::Blaze {
-                radius,
-                damage,
-                damage_type,
-                spell,
-                fire,
-                burns,
-                cooldown,
-            } => {
-                if !(1..=3).contains(radius) || damage.max() < 1 || damage.min() < 0 {
-                    return Err("`blaze`: radius is 1 to 3, damage dice that can do harm".into());
-                }
-                if !(1..=3600).contains(burns) || spell.trim().is_empty() {
-                    return Err("`blaze`: burns is 1 to 3600 seconds, and it names a spell".into());
-                }
-                let types = content.damage_types();
-                if !types.is_empty() && content.damage_type_id(damage_type).is_none() {
-                    return Err(format!("names an unknown damage type `{damage_type}`"));
-                }
-                if !content.light_presets().is_empty() && content.light_id(fire).is_none() {
-                    return Err(format!("names an unknown light preset `{fire}`"));
-                }
-                status(cooldown)
-            }
-            TalentEffect::Rage { resource: id } => {
-                let r = resource(id)?;
-                if r.is_some_and(|r| content.resource(r).status.is_none()) {
-                    return Err(format!("`rage`: the resource `{id}` brings no `status`"));
-                }
-                Ok(())
-            }
-            TalentEffect::WarCry {
-                status: id,
-                severity,
-                difficulty,
-            } => {
-                if *severity == 0 || !(0..=30).contains(difficulty) {
-                    return Err("`war_cry`: severity is at least 1, difficulty 0 to 30".into());
-                }
-                status(id)
-            }
-            TalentEffect::Cackle { degrees, noise } => {
-                if !(1..=6).contains(degrees) || !(1..=crate::noise::MAX_LOUDNESS).contains(noise) {
-                    return Err("`cackle`: degrees 1 to 6, noise 1 to 300".into());
-                }
-                Ok(())
-            }
-            TalentEffect::ResourceBuild {
-                resource: id,
-                amount,
-                ..
-            } => {
-                resource(id)?;
-                if !(1..=MAX_RESOURCE).contains(amount) {
-                    return Err(format!("`resource_build`: amount is 1 to {MAX_RESOURCE}"));
-                }
-                Ok(())
-            }
-            TalentEffect::ResourceMax {
-                resource: id,
-                value,
-            } => {
-                resource(id)?;
-                if !(1..=MAX_RESOURCE).contains(value) {
-                    return Err(format!("`resource_max`: value is 1 to {MAX_RESOURCE}"));
-                }
-                Ok(())
-            }
-            TalentEffect::ResourceStart {
-                resource: id,
-                value,
-            } => {
-                resource(id)?;
-                if !(1..=MAX_RESOURCE).contains(value) {
-                    return Err(format!("`resource_start`: value is 1 to {MAX_RESOURCE}"));
-                }
-                Ok(())
-            }
-            TalentEffect::ResourceRate {
-                resource: id,
-                value,
-            } => {
-                resource(id)?;
-                percent(*value)
-            }
-            TalentEffect::StatusDamage { status: id, value } => {
-                bonus(*value)?;
-                status(id)
+                nonzero("smite", "per_levels", u32::from(*per_levels))?;
+                nonzero("smite", "sides", u32::from(*sides))
             }
             TalentEffect::HexTithe { per_levels } => {
-                if !(1..=10).contains(per_levels) {
-                    return Err("`hex_tithe`: per_levels 1 to 10".into());
-                }
-                Ok(())
+                nonzero("hex_tithe", "per_levels", u32::from(*per_levels))
             }
-            TalentEffect::Radiance { status: id, light } => {
-                status(id)?;
-                if content.light_id(light).is_none() {
-                    return Err(format!("names an unknown light `{light}`"));
-                }
-                Ok(())
+            TalentEffect::MaxHpPerLevels { per_levels, .. } => {
+                nonzero("max_hp_per_levels", "per_levels", u32::from(*per_levels))
             }
-            TalentEffect::Unstoppable { statuses, cost } => {
-                if !(1..=MAX_RESOURCE).contains(cost) {
-                    return Err(format!("`unstoppable`: cost is 1 to {MAX_RESOURCE}"));
-                }
+            TalentEffect::MaxManaPerLevels { per_levels, .. } => {
+                nonzero("max_mana_per_levels", "per_levels", u32::from(*per_levels))
+            }
+            TalentEffect::FreeBlow {
+                one_in: Some(n), ..
+            } => nonzero("free_blow", "one_in", *n),
+            TalentEffect::SmiteMode {
+                mode, status: id, ..
+            } => match mode {
+                SmiteRiderKind::Banish => Ok(()),
+                _ => status(id),
+            },
+            TalentEffect::Stillness { statuses, .. }
+            | TalentEffect::Unstoppable { statuses, .. } => {
                 statuses.iter().try_for_each(|id| status(id))
             }
-            TalentEffect::Resist {
-                value,
-                damage: Some(kind),
+            TalentEffect::Blaze {
+                damage_type: kind,
+                fire,
+                cooldown,
+                ..
             } => {
-                if !content.damage_types().is_empty() && content.damage_type_id(kind).is_none() {
-                    return Err(format!("names an unknown damage type `{kind}`"));
-                }
-                percent(*value)
+                damage_type(kind)?;
+                light(fire)?;
+                status(cooldown)
+            }
+            TalentEffect::Radiance {
+                status: id,
+                light: l,
+            } => {
+                status(id)?;
+                light(l)
+            }
+            TalentEffect::InnerLight { light: l } | TalentEffect::LanternLight { light: l } => {
+                light(l)
             }
             TalentEffect::Resist {
-                value,
-                damage: None,
-            } => match choice {
-                Some(Choice::Element) => percent(*value),
+                damage: Some(kind), ..
+            }
+            | TalentEffect::Penetration { damage: kind, .. } => damage_type(kind),
+            TalentEffect::Resist { damage: None, .. } => match choice {
+                Some(Choice::Element) => Ok(()),
                 _ => Err(
                     "`resist` without a `damage` is for the chosen element: it needs \
-                          `choice = \"element\"`"
+                     `choice = \"element\"`"
                         .into(),
                 ),
             },
-            TalentEffect::Streak { max, damage_every } => {
-                if !(1..=10).contains(max) || *damage_every > 10 {
-                    return Err("`streak`: max is 1 to 10, damage_every 0 to 10".into());
-                }
-                Ok(())
-            }
-            TalentEffect::WoundMore { value } => {
-                if !(1..=5).contains(value) {
-                    return Err("`wound_more`: value is 1 to 5".into());
-                }
-                Ok(())
-            }
             TalentEffect::HornsGrace {
-                cures,
-                diseases,
-                cooldown,
-                degrees,
+                cures, cooldown, ..
             } => {
-                if cures.is_empty() && *diseases == 0 {
-                    return Err("`horns_grace` cures a status or a disease".into());
-                }
-                if *degrees == 0 {
-                    return Err("`horns_grace`: degrees is at least 1".into());
-                }
                 cures.iter().try_for_each(|id| status(id))?;
                 status(cooldown)
             }
-            TalentEffect::HornOfPlenty { per_level, degrees } => {
-                if !(1..=20).contains(per_level) || *degrees == 0 {
-                    return Err("`horn_of_plenty`: per_level is 1 to 20, degrees at least 1".into());
-                }
-                Ok(())
-            }
             TalentEffect::Stare {
                 status: id,
-                severity,
                 cooldown,
-                degrees,
+                ..
+            }
+            | TalentEffect::HoundsBay {
+                status: id,
+                cooldown,
+                ..
             } => {
-                if *severity == 0 || *degrees == 0 {
-                    return Err("`stare`: severity and degrees are at least 1".into());
-                }
                 status(id)?;
                 status(cooldown)
             }
-            TalentEffect::PetrifyingGaze { severity, degrees } => {
-                if *severity == 0 || *degrees == 0 {
-                    return Err("`petrifying_gaze`: severity and degrees are at least 1".into());
-                }
-                Ok(())
-            }
-            TalentEffect::Wildfire { radius, damage } => {
-                if !(1..=3).contains(radius) || damage.max() < 1 || damage.min() < 0 {
-                    return Err("`wildfire`: radius is 1 to 3, damage dice that can do harm".into());
-                }
-                Ok(())
-            }
             TalentEffect::FireBreath {
-                length,
-                damage,
-                damage_type,
+                damage_type: kind,
                 spell,
                 cooldown,
-                degrees,
+                ..
             } => {
-                if !(1..=crate::world::BREATH_RANGE).contains(length)
-                    || damage.max() < 1
-                    || damage.min() < 0
-                    || *degrees == 0
-                {
-                    return Err(format!(
-                        "`fire_breath`: length is 1 to {}, damage dice that can do harm, \
-                         degrees at least 1",
-                        crate::world::BREATH_RANGE
-                    ));
-                }
-                let types = content.damage_types();
-                if !types.is_empty() && content.damage_type_id(damage_type).is_none() {
-                    return Err(format!("names an unknown damage type `{damage_type}`"));
-                }
+                damage_type(kind)?;
                 super::spell::check_effect(content, spell, super::effect::EffectShape::Bolt)?;
                 status(cooldown)
             }
-            TalentEffect::HoundsBay {
-                status: id,
-                severity,
-                cooldown,
-            } => {
-                if *severity == 0 {
-                    return Err("`hounds_bay`: severity is at least 1".into());
-                }
-                status(id)?;
-                status(cooldown)
-            }
-            TalentEffect::Weapon {
-                role,
-                skill,
-                to_hit,
-                damage,
-                threat,
-                ranks,
-                speed,
-                reload,
-                ease,
-                bash,
-                shield,
-                crit,
-                at_rank,
-            } => {
-                if let Some(id) = skill {
-                    if role.is_some() {
-                        return Err("`weapon` names a `role` or a `skill`, not both".into());
-                    }
-                    let table = content.weapon_skills();
-                    if !table.skills().is_empty() && table.id(id).is_none() {
-                        return Err(format!("names an unknown weapon skill `{id}`"));
-                    }
-                } else if role.is_none() && !choice.is_some_and(Choice::is_weapon_skill) {
-                    return Err(
-                        "`weapon` without a `role` or a `skill` is for the chosen weapon skill, \
-                         style, or school skill: it needs that `choice`"
-                            .into(),
-                    );
-                }
-                let small = [to_hit, damage, shield].iter().all(|v| BONUSES.contains(v))
-                    && [threat, ranks, ease, crit].iter().all(|&&v| v <= 5)
-                    && *at_rank <= MAX_RANK;
-                let percents = [speed, reload, bash].iter().all(|&&v| v <= 100);
-                let any = [to_hit, damage, shield].iter().any(|&&v| v != 0)
-                    || [threat, ranks, ease, speed, reload, bash, crit]
-                        .iter()
-                        .any(|&&v| v != 0);
-                if !small || !percents || !any {
-                    return Err("`weapon`: to_hit, damage, shield are -20 to 20; threat, \
-                                ranks, ease, crit 0 to 5; at_rank 0 to 10; speed, reload, bash \
-                                0 to 100; not all 0"
-                        .into());
-                }
-                Ok(())
-            }
-            TalentEffect::SpellMod(spec) => spec.check(content, choice == Some(Choice::School)),
-            TalentEffect::SpellType { arc_chance, when } => {
-                if !(1..=100).contains(arc_chance) {
-                    return Err("`spell_type`: arc_chance is 1 to 100 percent".into());
-                }
-                if when.is_empty() {
-                    return Err("`spell_type`: `when` names at least one damage type".into());
-                }
-                match (when.iter()).find(|id| {
-                    !content.damage_types().is_empty() && content.damage_type_id(id).is_none()
-                }) {
-                    Some(id) => Err(format!("names an unknown damage type `{id}`")),
-                    None => Ok(()),
-                }
-            }
-            TalentEffect::Study {
-                bonus: b,
-                percent: p,
-                overreach_percent: o,
-            } => {
-                // Each may be 0, not all three.
-                if (*b, *p, *o) == (0, 0, 0) {
-                    return Err("`study`: bonus, percent, and overreach_percent not all 0".into());
-                }
-                if *b != 0 {
-                    bonus(*b)?;
-                }
-                for v in [*p, *o].into_iter().filter(|v| *v != 0) {
-                    percent(v)?;
-                }
-                Ok(())
-            }
-            TalentEffect::LauncherRange { value, skill } => {
-                let table = content.weapon_skills();
-                if let Some(id) = skill
-                    && !table.skills().is_empty()
-                    && table.id(id).is_none()
-                {
-                    return Err(format!("names an unknown weapon skill `{id}`"));
-                }
-                bonus(*value)
-            }
-            TalentEffect::ExtraPick { level } => {
-                if !(1..=crate::content::MAX_LEVEL).contains(level) {
-                    return Err(format!(
-                        "`extra_pick`: level is 1 to {}",
-                        crate::content::MAX_LEVEL
-                    ));
-                }
-                Ok(())
-            }
-            TalentEffect::HealingPercent { value }
-            | TalentEffect::DiseaseIntervalPercent { value }
-            | TalentEffect::ManaRegenPercent { value }
-            | TalentEffect::ManaRestingPercent { value }
-            | TalentEffect::ManaCostPercent { value }
-            | TalentEffect::RodCostPercent { value }
-            | TalentEffect::FootstepsPercent { value }
-            | TalentEffect::CarryPercent { value }
-            | TalentEffect::TravelPercent { value }
-            | TalentEffect::HungerPercent { value }
-            | TalentEffect::XpPercent { value }
-            | TalentEffect::RotHarmPercent { value }
-            | TalentEffect::RestingPercent { value }
-            | TalentEffect::PenaltyPercent { value }
-            | TalentEffect::DigPercent { value }
-            | TalentEffect::SpawnEveryPercent { value }
-            | TalentEffect::RoomPacePercent { value }
-            | TalentEffect::SurpriseEase { value }
-            | TalentEffect::TwoHandedPrice { value }
-            | TalentEffect::AttackPricePercent { value }
-            | TalentEffect::WeaponEnergyPercent { value }
-            | TalentEffect::SpeedPercent { value }
-            | TalentEffect::SpellDamagePercent { value }
-            | TalentEffect::SpellManaPercent { value }
-            | TalentEffect::AttackNoisePercent { value }
-            | TalentEffect::StepSlowdownPercent { value }
-            | TalentEffect::CorpseStatsPercent { value }
-            | TalentEffect::LootMagicPercent { value }
-            | TalentEffect::GemFindPercent { value }
-            | TalentEffect::MaxHpPercent { value }
-            | TalentEffect::ReadPercent { value }
-            | TalentEffect::TrapDamagePercent { value }
-            | TalentEffect::KickNoisePercent { value }
-            | TalentEffect::SmashDestroyPercent { value }
-            | TalentEffect::ThresholdPercent { value }
-            | TalentEffect::ClimbPercent { value }
-            | TalentEffect::QuestGoldPercent { value }
-            | TalentEffect::FavourPercent { value }
-            | TalentEffect::BurdenEase { value } => percent(*value),
-            TalentEffect::Scent { status: id, radius } => {
-                if !(1..=20).contains(radius) {
-                    return Err("`scent`: radius is 1 to 20".into());
-                }
-                status(id)
-            }
-            TalentEffect::InnerLight { light } => {
-                if !content.light_presets().is_empty() && content.light_id(light).is_none() {
-                    return Err(format!("names an unknown light `{light}`"));
-                }
-                Ok(())
-            }
             TalentEffect::RiseFromAshes {
-                hp_percent,
                 status: id,
                 spell,
-                radius,
-                damage,
-                damage_type,
+                damage_type: kind,
+                ..
             } => {
-                if !(1..=100).contains(hp_percent) || !(1..=5).contains(radius) {
-                    return Err("`rise_from_ashes`: hp_percent is 1 to 100, radius 1 to 5".into());
-                }
-                if damage.is_zero() {
-                    return Err("`rise_from_ashes`: damage is not 0".into());
-                }
-                if !content.damage_types().is_empty()
-                    && content.damage_type_id(damage_type).is_none()
-                {
-                    return Err(format!("names an unknown damage type `{damage_type}`"));
-                }
+                damage_type(kind)?;
                 super::spell::check_effect(content, spell, super::effect::EffectShape::Burst)?;
                 status(id)
             }
-            TalentEffect::LanternLight { light } => {
-                if !content.light_presets().is_empty() && content.light_id(light).is_none() {
-                    return Err(format!("names an unknown light preset `{light}`"));
-                }
-                Ok(())
-            }
-            TalentEffect::Ambush { dice } => {
-                if dice.is_zero() {
-                    return Err("`ambush`: dice is not 0".into());
-                }
-                Ok(())
-            }
-            TalentEffect::TerrainAs { terrains, .. } => {
-                // The terrain ids are checked once the terrain has loaded
-                // ([`TalentBook::check_terrain`]).
-                if terrains.is_empty() {
-                    return Err("`terrain_as`: terrains names at least one".into());
-                }
-                Ok(())
-            }
-            TalentEffect::StatusEases { status: id, value }
-            | TalentEffect::StatusLasts { status: id, value } => {
-                status(id)?;
-                percent(*value)
-            }
-            TalentEffect::Brace { to_hit, status: id } => {
-                status(id)?;
-                bonus(*to_hit)
-            }
-            // The abilities it names are checked once they are loaded, after the talents
-            // (`content/weapon_ability.rs`).
-            TalentEffect::WeaponStamina { value, .. } => {
-                if !(1..=10).contains(value) {
-                    return Err("`weapon_stamina`: value is 1 to 10".into());
-                }
-                Ok(())
-            }
-            TalentEffect::NoPenalty { status: id }
-            | TalentEffect::CriticalStatus { status: id }
-            | TalentEffect::Grip { status: id } => status(id),
-            TalentEffect::Fletcher {
-                check,
-                count_times,
-                time_percent,
-            } => {
-                if !(0..=20).contains(check)
-                    || !(1..=10).contains(count_times)
-                    || !(1..=100).contains(time_percent)
-                {
-                    return Err(
-                        "`fletcher`: check is 0 to 20, count_times 1 to 10, time_percent 1 to 100"
-                            .into(),
-                    );
-                }
-                Ok(())
-            }
-            TalentEffect::SecondWind {
-                per_level,
-                at_least,
-                cooldown,
-            } => {
-                if !(1..=20).contains(per_level) || !(0..=100).contains(at_least) {
-                    return Err("`second_wind`: per_level is 1 to 20, at_least 0 to 100".into());
-                }
-                status(cooldown)
-            }
-            TalentEffect::KickDie { sides } => {
-                if !(2..=20).contains(sides) {
-                    return Err("`kick_die`: sides is 2 to 20".into());
-                }
-                Ok(())
-            }
-            TalentEffect::Penetration {
-                damage: kind,
-                value,
-            } => {
-                if !content.damage_types().is_empty() && content.damage_type_id(kind).is_none() {
-                    return Err(format!("names an unknown damage type `{kind}`"));
-                }
-                bonus(*value)
-            }
-            TalentEffect::MaxHpPerLevels {
-                per_levels,
-                at_least,
-            } => {
-                if !(1..=20).contains(per_levels) || !(0..=20).contains(at_least) {
-                    return Err(
-                        "`max_hp_per_levels`: per_levels is 1 to 20, at_least 0 to 20".into(),
-                    );
-                }
-                Ok(())
-            }
-            TalentEffect::MaxManaPerLevels {
-                per_levels,
-                at_least,
-            } => {
-                if !(1..=20).contains(per_levels) || !(0..=20).contains(at_least) {
-                    return Err(
-                        "`max_mana_per_levels`: per_levels is 1 to 20, at_least 0 to 20".into(),
-                    );
-                }
-                Ok(())
-            }
-            TalentEffect::BloodMagic { hp, mana } => {
-                if !(1..=50).contains(hp) || !(1..=50).contains(mana) {
-                    return Err("`blood_magic`: hp and mana are 1 to 50".into());
-                }
-                Ok(())
-            }
-            TalentEffect::FreeBlow { trigger, one_in } => match one_in {
-                Some(_) if *trigger != FreeBlowTrigger::Gatekeeper => {
-                    Err("`free_blow`: only the gatekeeper's takes `one_in`".into())
-                }
-                Some(n) if !(1..=100).contains(n) => Err("`free_blow`: one_in is 1 to 100".into()),
-                _ => Ok(()),
+            TalentEffect::Weapon { role, skill, .. } => match skill {
+                Some(id) => weapon_skill(id),
+                None if role.is_some() || choice.is_some_and(Choice::is_weapon_skill) => Ok(()),
+                None => Err(
+                    "`weapon` without a `role` or a `skill` is for the chosen weapon skill, \
+                     style, or school skill: it needs that `choice`"
+                        .into(),
+                ),
             },
-            TalentEffect::SilentDoors
-            | TalentEffect::NoExertion
-            | TalentEffect::RerollFumble
-            | TalentEffect::RebornWhole
-            | TalentEffect::SecondRising
-            | TalentEffect::StarvingHeals
-            | TalentEffect::EatsRotten
-            | TalentEffect::WadesFree
-            | TalentEffect::Swimmer
-            | TalentEffect::StoneSense
-            | TalentEffect::IronStomach
-            | TalentEffect::Clotting
-            | TalentEffect::SureStep
-            | TalentEffect::PitProof
-            | TalentEffect::IgnoreBurdened
-            | TalentEffect::NoBloating
-            | TalentEffect::NoHungerWeakness
-            | TalentEffect::SparesSelf
-            | TalentEffect::ChestWise
-            | TalentEffect::Slick
-            | TalentEffect::KickBack
-            | TalentEffect::Devout
-            | TalentEffect::CollapseProof
-            | TalentEffect::ExactFootsteps
-            | TalentEffect::SmellRot
-            | TalentEffect::StanceCosts
-            | TalentEffect::PlungeProof
-            | TalentEffect::LightOnIce
-            | TalentEffect::WadingProof
-            | TalentEffect::BeastFriend
-            | TalentEffect::Stout
-            | TalentEffect::DiseaseImmune
-            | TalentEffect::NoPenaltyTo { .. }
-            | TalentEffect::Whirlwind
-            | TalentEffect::WeightlessCoins
-            | TalentEffect::Pilgrim
-            | TalentEffect::GemWorth
-            | TalentEffect::SeesUnaware
-            | TalentEffect::Companion
-            | TalentEffect::Familiar
-            | TalentEffect::SharedSight
-            | TalentEffect::FamiliarSight
-            | TalentEffect::SharedBuffs
-            | TalentEffect::SharesFavouredPrey
-            | TalentEffect::StartledBlow
-            | TalentEffect::Distrusted
-            | TalentEffect::ExactSounds
-            | TalentEffect::SilentUnburdened
-            | TalentEffect::PickLock
-            | TalentEffect::Steal
-            | TalentEffect::ThrowVoice
-            | TalentEffect::Finisher
-            | TalentEffect::LowBlow
-            | TalentEffect::MerchantsEye
-            | TalentEffect::GraveWarden
-            | TalentEffect::Disarm
-            | TalentEffect::Purify
-            | TalentEffect::Communion
-            | TalentEffect::CorpseHarmless => Ok(()),
-            // A spell ability names a spell of data/spells/ of its id, aimed as the ability is
-            // (content without spells has nothing to check it by).
+            TalentEffect::SpellMod(spec) => spec.check(content),
+            TalentEffect::SpellType { when, .. } => when.iter().try_for_each(|id| damage_type(id)),
+            TalentEffect::LauncherRange {
+                skill: Some(id), ..
+            } => weapon_skill(id),
+            // A spell ability names a spell of data/spells/ of its id (content without spells
+            // has nothing to check it by).
             TalentEffect::Spell { spell } => {
                 if content.spells().is_empty() || content.spell_id(spell).is_some() {
                     Ok(())
@@ -2514,27 +1569,9 @@ impl TalentEffect {
                     Err(format!("`spell`: no spell `{spell}` in data/spells/"))
                 }
             }
-            TalentEffect::MealHeals { dice, .. } => {
-                if dice.max() < 1 || dice.min() < 0 {
-                    return Err("`meal_heals`: dice that heal".into());
-                }
-                Ok(())
-            }
-            TalentEffect::Reprieve {
-                once,
-                status: id,
-                stat,
-                by,
-                message,
-            } => {
-                if once.trim().is_empty() || message.trim().is_empty() {
-                    return Err("`reprieve`: needs `once` and a `message`".into());
-                }
-                if stat.is_some() != (*by != 0) || !(-5..=5).contains(by) {
-                    return Err("`reprieve`: a `stat` with `by` -5 to 5, not 0, or neither".into());
-                }
-                status(id)
-            }
+            // Terrain is checked once it has loaded ([`TalentBook::check_terrain`]); the weapon
+            // abilities `weapon_stamina` names once they have (`content/weapon_ability.rs`).
+            _ => Ok(()),
         }
     }
 }
@@ -2772,7 +1809,6 @@ impl TalentDef {
 pub struct TalentBook {
     pub trees: Vec<TreeDef>,
     pub systems: Vec<SystemDef>,
-    pub coverage: Coverage,
     list: Vec<TalentDef>,
     ids: BTreeMap<String, TalentId>,
 }
@@ -2863,65 +1899,11 @@ impl TalentBook {
         self.iter()
             .filter(move |(_, t)| t.systems.contains(&system))
     }
-
-    /// The coverage check (spec §8 "Talents"): every system not `pending` has at least
-    /// `min_talents` talents (its own `min_talents`, if it gives one) (those of a class tree are class abilities, not talents) and
-    /// `min_class` class abilities (`class_abilities` counts them by system id: the talents the
-    /// class tables give), and every tree not `pending`, `no_free`, nor a class tree has at least
-    /// `free_per_tree` talents without prerequisites. The first gap, in words.
-    pub fn coverage_gap(&self, class_abilities: &dyn Fn(&str) -> u32) -> Option<String> {
-        let bar = self.coverage;
-        for (i, system) in (0u8..).zip(&self.systems) {
-            if system.pending {
-                continue;
-            }
-            let talents = (self.of_system(SystemId(i)))
-                .filter(|(_, t)| !self.tree(t.tree).class)
-                .count() as u32;
-            let least = system.min_talents.unwrap_or(bar.min_talents);
-            if talents < least {
-                return Some(format!(
-                    "system `{}` has {talents} talent{} but at least {least} are needed (mark it \
-                     `pending = true` until they land)",
-                    system.id,
-                    if talents == 1 { "" } else { "s" },
-                ));
-            }
-            let abilities = class_abilities(&system.id);
-            if abilities < bar.min_class {
-                return Some(format!(
-                    "system `{}` has {abilities} class abilit{} but at least {} are needed",
-                    system.id,
-                    if abilities == 1 { "y" } else { "ies" },
-                    bar.min_class
-                ));
-            }
-        }
-        for (i, tree) in (0u8..).zip(&self.trees) {
-            if tree.pending || tree.no_free || tree.class {
-                continue;
-            }
-            let free = self.of_tree(TreeId(i)).filter(|(_, t)| t.is_free()).count() as u32;
-            if free < bar.free_per_tree {
-                return Some(format!(
-                    "tree `{}` has {free} talent{} without prerequisites but at least {} are \
-                     needed, so a pick from it is never impossible",
-                    tree.id,
-                    if free == 1 { "" } else { "s" },
-                    bar.free_per_tree
-                ));
-            }
-        }
-        None
-    }
 }
 
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
 struct TalentFile {
-    coverage: Option<Coverage>,
-    /// The pairs the identical-effects check lets be (`talent_alike.rs`).
-    alike: Option<Vec<[String; 2]>>,
     #[serde(default)]
     tree: Vec<TreeSpec>,
     #[serde(default)]
@@ -2937,10 +1919,6 @@ struct TreeSpec {
     name: String,
     description: String,
     #[serde(default)]
-    pending: bool,
-    #[serde(default)]
-    no_free: bool,
-    #[serde(default)]
     class: bool,
 }
 
@@ -2949,9 +1927,6 @@ struct TreeSpec {
 struct SystemSpec {
     id: String,
     name: String,
-    #[serde(default)]
-    pending: bool,
-    min_talents: Option<u32>,
 }
 
 #[derive(Deserialize)]
@@ -3047,23 +2022,6 @@ struct NeedsSpec {
     either: Option<Box<NeedsSpec>>,
 }
 
-impl NeedsSpec {
-    /// How many prerequisites it names.
-    fn count(&self) -> usize {
-        let one = |b: bool| usize::from(b);
-        self.talents.len()
-            + self.stats.len()
-            + self.skills.len()
-            + self.weapon_skills.len()
-            + one(self.any_weapon_skill.is_some())
-            + one(self.chosen.is_some())
-            + one(self.level > 0)
-            + one(self.race.is_some())
-            + one(self.eyes.is_some())
-            + one(self.class.is_some())
-    }
-}
-
 /// `any_weapon_skill = { roles = ["melee"], of = ["unarmed"], rank = 3 }`: any skill of those
 /// roles, or any named, at that rank.
 #[derive(Deserialize)]
@@ -3082,9 +2040,6 @@ fn resolve_any(spec: AnySpec, content: &Content) -> Result<Option<AnyWeaponSkill
     if table.skills().is_empty() {
         return Ok(None);
     }
-    if spec.rank == 0 || spec.rank > MAX_RANK {
-        return Err(format!("`any_weapon_skill`: ranks are 1 to {MAX_RANK}"));
-    }
     let mut named = Vec::new();
     for name in &spec.of {
         let id =
@@ -3095,9 +2050,6 @@ fn resolve_any(spec: AnySpec, content: &Content) -> Result<Option<AnyWeaponSkill
         .filter(|(id, def)| spec.roles.contains(&def.role) || named.contains(id))
         .map(|(id, _)| id)
         .collect();
-    if skills.len() < 2 {
-        return Err("`any_weapon_skill` names fewer than two skills".into());
-    }
     let mut parts: Vec<String> = (named.iter())
         .map(|&id| table.skill(id).name.clone())
         .collect();
@@ -3123,12 +2075,10 @@ struct Pending<'a> {
     spec: TalentSpec,
 }
 
-/// Resolves `spec`'s prerequisites against `content` and the talent `ids`; `choice` is the
-/// talent's, for `chosen`.
+/// Resolves `spec`'s prerequisites against `content` and the talent `ids`.
 fn resolve_needs(
     spec: NeedsSpec,
     ids: &BTreeMap<String, TalentId>,
-    choice: Option<Choice>,
     content: &Content,
 ) -> Result<Needs, String> {
     let mut talents = Vec::new();
@@ -3136,22 +2086,11 @@ fn resolve_needs(
         let id = *ids
             .get(&name)
             .ok_or_else(|| format!("needs an unknown talent `{name}`"))?;
-        if talents.contains(&id) {
-            return Err(format!("needs `{name}` twice"));
-        }
         talents.push(id);
     }
     let mut stats = PerStat::splat(0u8);
     for (name, score) in spec.stats {
         let stat = Stat::from_id(&name).ok_or_else(|| format!("needs an unknown stat `{name}`"))?;
-        if !SCORES.contains(&score) {
-            return Err(format!(
-                "needs {} {score}: scores are {} to {}",
-                stat.name(),
-                SCORES.start(),
-                SCORES.end()
-            ));
-        }
         stats[stat] = score;
     }
     // Content without skills (no `data/skills.toml`) has nothing to measure a skill need by:
@@ -3163,12 +2102,6 @@ fn resolve_needs(
         }
         let id =
             (content.skill_id(&name)).ok_or_else(|| format!("needs an unknown skill `{name}`"))?;
-        if value == 0 || value > crate::skills::MAX_VALUE {
-            return Err(format!(
-                "needs {name} {value}: values are 1 to {}",
-                crate::skills::MAX_VALUE
-            ));
-        }
         skills.push((id, value));
     }
     let mut weapon_skills = Vec::new();
@@ -3178,33 +2111,12 @@ fn resolve_needs(
         }
         let id = (content.weapon_skills().id(&name))
             .ok_or_else(|| format!("needs an unknown weapon skill `{name}`"))?;
-        if rank == 0 || rank > MAX_RANK {
-            return Err(format!("needs {name} {rank}: ranks are 1 to {MAX_RANK}"));
-        }
         weapon_skills.push((id, rank));
     }
     let any_weapon_skill = match spec.any_weapon_skill {
         Some(any) => resolve_any(any, content)?,
         None => None,
     };
-    if let Some(rank) = spec.chosen {
-        match choice {
-            None => return Err("`chosen` needs a `choice`".into()),
-            Some(Choice::Element | Choice::Skill | Choice::School) => {
-                return Err("`chosen` asks a weapon skill's or style's rank".into());
-            }
-            Some(_) if rank == 0 || rank > MAX_RANK => {
-                return Err(format!("`chosen` is a rank, 1 to {MAX_RANK}"));
-            }
-            Some(_) => {}
-        }
-    }
-    if spec.level > MAX_LEVEL {
-        return Err(format!(
-            "needs level {}: levels are 1 to {MAX_LEVEL}",
-            spec.level
-        ));
-    }
     // A race, class, or eyes is checked against its table when the content has one; without
     // (a fixture), the need stays and is simply never met.
     if let Some(race) = &spec.race
@@ -3225,14 +2137,8 @@ fn resolve_needs(
     }
     let either = match spec.either {
         Some(alternatives) => {
-            if alternatives.either.is_some() {
-                return Err("`either` within `either`".into());
-            }
-            if alternatives.count() < 2 {
-                return Err("`either` names fewer than two alternatives".into());
-            }
             // Content without skills (a fixture) leaves a skill alternative out, as above.
-            let alternatives = resolve_needs(*alternatives, ids, choice, content)?;
+            let alternatives = resolve_needs(*alternatives, ids, content)?;
             alternatives.iter().collect()
         }
         None => Vec::new(),
@@ -3281,15 +2187,12 @@ pub(super) fn check_heirlooms(content: &Content) -> Result<(), String> {
     Ok(())
 }
 
-/// Parses the talent table: the settings (`[coverage]`, `[[tree]]`, `[[system]]`,
-/// each set in at most one file) and the talents, resolved against `content`, which must have
+/// Parses the talent table: the settings (`[[tree]]`, `[[system]]`) and the talents, resolved against `content`, which must have
 /// its skills, weapon skills, races, classes, vision profiles, and damage types already.
 pub(super) fn parse<'a>(
     files: impl IntoIterator<Item = (&'a str, &'a str)>,
     content: &Content,
 ) -> Result<TalentBook, ContentError> {
-    let mut coverage = Once::new("coverage");
-    let mut alike = Once::new("alike");
     let mut first_file = None;
     let mut trees: Vec<(&str, TreeSpec)> = Vec::new();
     let mut systems: Vec<(&str, SystemSpec)> = Vec::new();
@@ -3298,18 +2201,14 @@ pub(super) fn parse<'a>(
         first_file.get_or_insert(file);
         let parsed: TalentFile =
             toml::from_str(text).map_err(|e| ContentError::new(file, e.to_string()))?;
-        coverage.take(file, parsed.coverage)?;
-        alike.take(file, parsed.alike.map(|pairs| (file, pairs)))?;
         trees.extend(parsed.tree.into_iter().map(|t| (file, t)));
         systems.extend(parsed.system.into_iter().map(|s| (file, s)));
         pending.extend(parsed.talent.into_iter().map(|spec| Pending { file, spec }));
     }
     let first_file = first_file.unwrap_or("data/talents.toml");
-    let coverage = coverage.get_or(Coverage::default());
     let mut book = TalentBook {
         trees: Vec::new(),
         systems: Vec::new(),
-        coverage,
         list: Vec::new(),
         ids: BTreeMap::new(),
     };
@@ -3318,18 +2217,10 @@ pub(super) fn parse<'a>(
         if let Some(first) = tree_files.insert(t.id.clone(), file) {
             return Err(duplicate_id("tree", &t.id, file, first));
         }
-        if t.name.is_empty() || t.description.is_empty() {
-            return Err(ContentError::new(
-                file,
-                format!("tree `{}` needs a name and a description", t.id),
-            ));
-        }
         book.trees.push(TreeDef {
             id: t.id,
             name: t.name,
             description: t.description,
-            pending: t.pending,
-            no_free: t.no_free,
             class: t.class,
         });
     }
@@ -3338,17 +2229,9 @@ pub(super) fn parse<'a>(
         if let Some(first) = system_files.insert(s.id.clone(), file) {
             return Err(duplicate_id("system", &s.id, file, first));
         }
-        if s.name.is_empty() {
-            return Err(ContentError::new(
-                file,
-                format!("system `{}` needs a name", s.id),
-            ));
-        }
         book.systems.push(SystemDef {
             id: s.id,
             name: s.name,
-            pending: s.pending,
-            min_talents: s.min_talents,
         });
     }
     if book.trees.len() > usize::from(u8::MAX) || book.systems.len() > usize::from(u8::MAX) {
@@ -3375,26 +2258,11 @@ pub(super) fn parse<'a>(
         }
         book.ids.insert(spec.id.clone(), TalentId(i as u16));
     }
-    let mut spell_ids = std::collections::BTreeSet::new();
-    for (i, p) in pending.into_iter().enumerate() {
+    for p in pending {
         let spec = p.spec;
         let err = |m: String| ContentError::new(p.file, format!("talent `{}`: {m}", spec.id));
-        if spec.name.is_empty() || spec.description.is_empty() {
-            return Err(err("needs a name and a description".into()));
-        }
         let tree = (book.tree_id(&spec.tree))
             .ok_or_else(|| err(format!("unknown tree `{}`", spec.tree)))?;
-        if book.tree(tree).class && !spec.granted {
-            return Err(err(format!(
-                "is in the class tree `{}`: a class ability needs `granted = true`",
-                spec.tree
-            )));
-        }
-        if spec.systems.is_empty() {
-            return Err(err(
-                "names no `systems` (the coverage list in data/talents.toml)".into(),
-            ));
-        }
         let mut systems = Vec::new();
         for name in &spec.systems {
             let id = (book.system_id(name)).ok_or_else(|| {
@@ -3402,61 +2270,26 @@ pub(super) fn parse<'a>(
                     "names a system `{name}` that is not in the list (data/talents.toml)"
                 ))
             })?;
-            if systems.contains(&id) {
-                return Err(err(format!("names system `{name}` twice")));
-            }
             systems.push(id);
         }
-        let needs = resolve_needs(spec.needs, &book.ids, spec.choice, content).map_err(err)?;
-        if needs.talents.contains(&TalentId(i as u16)) {
-            return Err(err("needs itself".into()));
-        }
+        let needs = resolve_needs(spec.needs, &book.ids, content).map_err(err)?;
         let (effects, effects_while) =
             split_effects(spec.effects, content, spec.choice).map_err(err)?;
-        for effect in &effects {
-            if let TalentEffect::Spell { spell } = effect
-                && !spell_ids.insert(spell.clone())
-            {
-                return Err(err(format!("spell `{spell}` is given twice")));
-            }
-        }
-        if effects.is_empty() && effects_while.is_empty() {
-            return Err(err("does nothing: it needs `effects`".into()));
-        }
-        if spec.flaw && !spec.granted {
-            return Err(err("a `flaw` is `granted`: nobody picks a flaw".into()));
-        }
         let resource = match &spec.resource {
             None => None,
             Some(cost) => {
-                if !effects.iter().any(|e| e.active().is_some()) {
-                    return Err(err("a `resource` cost is for a class active".into()));
-                }
                 let resource = content.resource_id(&cost.id).ok_or_else(|| {
                     err(format!(
                         "costs a resource `{}` that is not in data/resources.toml",
                         cost.id
                     ))
                 })?;
-                if cost.cost > content.resource(resource).most() {
-                    return Err(err(format!("costs more `{}` than it can hold", cost.id)));
-                }
                 Some(ResourceCost {
                     resource,
                     amount: cost.cost,
                 })
             }
         };
-        if let Some(bands) = spec.alignment {
-            if !(effects.iter()).any(|e| e.band_gated() || e.active().is_some_and(|a| a.holy())) {
-                return Err(err(
-                    "an `alignment` is for a holy class active (lay_on_hands, smite, \
-                     holy_radiance, consecrate) or a band-gated passive (communion, retribution)"
-                        .into(),
-                ));
-            }
-            bands.check().map_err(err)?;
-        }
         book.list.push(TalentDef {
             id: spec.id,
             name: spec.name,
@@ -3473,38 +2306,6 @@ pub(super) fn parse<'a>(
             alignment: spec.alignment,
         });
     }
-    // A talent that needs one with a choice of its own kind is taken for the same choice: only
-    // talents of the same choice kind may chain that way.
-    for def in &book.list {
-        for &other in &def.needs.talents {
-            let other = book.get(other);
-            if other.flaw {
-                return Err(ContentError::new(
-                    files[&def.id],
-                    format!(
-                        "talent `{}` needs `{}`, a flaw: a flaw is never a prerequisite",
-                        def.id, other.id
-                    ),
-                ));
-            }
-            if let Some(kind) = other.choice
-                && def.choice != Some(kind)
-            {
-                return Err(ContentError::new(
-                    files[&def.id],
-                    format!(
-                        "talent `{}` needs `{}`, which takes {}: only a talent with the same \
-                         choice may need it",
-                        def.id,
-                        other.id,
-                        kind.words()
-                    ),
-                ));
-            }
-        }
-    }
-    let (alike_file, alike) = alike.get_or((first_file, Vec::new()));
-    super::talent_alike::check(&book, &alike, alike_file)?;
     Ok(book)
 }
 
@@ -3528,10 +2329,6 @@ mod tests {
     }
 
     const SETTINGS: &str = r#"
-[coverage]
-min_talents = 2
-min_class = 0
-free_per_tree = 1
 [[tree]]
 id = "vigour"
 name = "Vigour"
@@ -3540,14 +2337,12 @@ description = "Hit points."
 id = "shadow"
 name = "Shadow"
 description = "Stealth."
-pending = true
 [[system]]
 id = "hit_points"
 name = "Hit points"
 [[system]]
 id = "stealth"
 name = "Stealth"
-pending = true
 "#;
 
     const HEALTHY: &str = r#"
@@ -3595,7 +2390,6 @@ systems = ["hit_points"]
         assert!(!hardy.is_free());
         assert!(book.get(book.id("healthy").expect("healthy")).is_free());
         assert_eq!(book.by_tree().count(), 2);
-        assert_eq!(book.coverage_gap(&|_| 0), None);
     }
 
     #[test]
@@ -3639,9 +2433,6 @@ systems = ["hit_points"]
                 .contains("unknown status `sulking`")
         );
         assert!(
-            err(with("{ kind = \"dodge\", value = 0, while = \"raging\" }")).contains("a bonus")
-        );
-        assert!(
             err(with("{ kind = \"dodge\", value = 2, whilst = \"raging\" }"))
                 .contains("unknown field")
         );
@@ -3655,7 +2446,7 @@ systems = ["hit_points"]
     }
 
     #[test]
-    fn a_song_names_a_song_and_costs_one_thing() {
+    fn a_song_names_a_song_and_what_it_costs() {
         let song = |fields: &str| {
             let text = format!(
                 "[[talent]]\nid = \"x\"\nname = \"X\"\ntree = \"vigour\"\n\
@@ -3671,22 +2462,11 @@ systems = ["hit_points"]
         song(&format!("{inspire}, resource = \"inspiration\", cost = 3")).expect("a pool");
         song(&format!("{inspire}, mana = 6")).expect("mana");
         let refused = |fields: &str| err(song(fields));
-        assert!(
-            refused(&format!("{inspire}, mana = 6, resource = \"x\", cost = 3"))
-                .contains("one thing")
-        );
-        assert!(refused(inspire).contains("one thing"), "free");
-        assert!(refused(&format!("{inspire}, mana = 6, cost = 3")).contains("one thing"));
         assert!(refused("id = \"rage\", on = \"self\", mana = 6").contains("no song"));
-        assert!(refused(&format!("{inspire}, mana = 6, severity = 0")).contains("severity"));
-        // A song on the singer asks no check; one on its hearers asks one.
         assert!(
-            refused(&format!(
-                "{inspire}, mana = 6, check = \"willpower\", difficulty = 13"
-            ))
-            .contains("neither")
+            refused(&format!("{inspire}, resource = \"nerve\", cost = 3"))
+                .contains("unknown resource `nerve`")
         );
-        assert!(refused("id = \"inspire\", on = \"hearers\", mana = 6").contains("asks a `check`"));
         song(
             "id = \"inspire\", on = \"hearers\", mana = 6, check = \"willpower\", difficulty = 13",
         )
@@ -3705,45 +2485,20 @@ systems = ["hit_points"]
                 &[("healthy", HEALTHY), ("hardy", HARDY), ("x", &text)],
             ))
         };
-        assert!(bad("effects = [{ kind = \"dodge\", value = 0 }]").contains("a bonus"));
-        // Alignment bars nothing: it is neither a prerequisite nor for anything but a holy gift.
-        assert!(
-            bad("effects = [{ kind = \"dodge\", value = 1 }]\nalignment = { min = \"good\" }")
-                .contains("is for a holy class active")
-        );
+        // Alignment bars nothing: it is no prerequisite.
         assert!(
             bad("effects = [{ kind = \"dodge\", value = 1 }]\n\
                  needs = { requires_alignment = { min = \"good\" } }")
             .contains("unknown field")
         );
-        assert!(bad("effects = [{ kind = \"xp_percent\", value = 500 }]").contains("a percent"));
-        // The spell hooks (the spell scaling design §7.1): something to do, a filter by the
-        // choice or by known tags, a cost that is a percent.
-        assert!(bad("effects = [{ kind = \"spell_mod\" }]").contains("does nothing"));
-        assert!(
-            bad("choice = \"school\"\neffects = [{ kind = \"spell_mod\", sides = 1, when = [\"fire\"] }]")
-                .contains("keys on the choice")
-        );
+        // The spell hooks (the spell scaling design §7.1) filter by known tags.
         assert!(
             bad("effects = [{ kind = \"spell_mod\", rungs = 1, when = [\"sneezing\"] }]")
                 .contains("no school, kind, shape, or damage type")
         );
-        assert!(bad("effects = [{ kind = \"spell_mod\", cost = -200 }]").contains("a percent"));
         assert!(
             bad("effects = [{ kind = \"spell_mod\", rungs = 1, lift = 10 }]")
                 .contains("unknown field")
-        );
-        assert!(
-            bad("effects = [{ kind = \"study\", overreach_percent = -200 }]").contains("a percent")
-        );
-        assert!(bad("effects = [{ kind = \"dodge\", value = 1 }]\nneeds = { stats = { toughness = 50 } }").contains("scores are"));
-        assert!(
-            bad("effects = [{ kind = \"dodge\", value = 1 }]\nneeds = { talents = [\"hardy\", \"hardy\"] }")
-                .contains("needs `hardy` twice")
-        );
-        assert!(
-            bad("effects = [{ kind = \"dodge\", value = 1 }]\nneeds = { talents = [\"x\"] }")
-                .contains("needs itself")
         );
         assert!(
             bad("effects = [{ kind = \"dodge\", value = 1 }]\nneeds = { race = \"orc\" }")
@@ -3754,22 +2509,8 @@ systems = ["hit_points"]
                 .contains("unknown eyes")
         );
         assert!(
-            bad("effects = [{ kind = \"dodge\", value = 1 }]\nneeds = { chosen = 2 }")
-                .contains("needs a `choice`")
-        );
-        assert!(bad("").contains("does nothing"));
-        assert!(bad("effects = [{ kind = \"weapon_ranks\", to = 0 }]").contains("to is 1 to"));
-        assert!(
             bad("effects = [{ kind = \"weapon_ranks\", to = 1, skills = [\"x\"] }]")
                 .contains("unknown weapon skill `x`")
-        );
-        assert!(
-            bad("effects = [{ kind = \"take_up_skills\", dice = \"1d200\" }]")
-                .contains("roll 1 to 100")
-        );
-        assert!(
-            bad("effects = [{ kind = \"dodge\", value = 1 }]\nneeds = { either = { level = 3 } }")
-                .contains("fewer than two")
         );
         assert!(
             bad("effects = [{ kind = \"skill\", value = 25 }]").contains("`choice = \"skill\"`")
@@ -3780,18 +2521,13 @@ systems = ["hit_points"]
                 .contains("unknown terrain `bog`")
         );
         assert!(
-            bad("effects = [{ kind = \"terrain_as\", terrains = [], like = \"floor\" }]")
-                .contains("at least one")
-        );
-        assert!(
             bad("effects = [{ kind = \"lantern_light\", light = \"sun\" }]")
                 .contains("unknown light preset")
         );
-        // The element gifts' (#268): Blaze names what exists and keeps its numbers in range.
+        // The element gifts' (#268): Blaze names what exists.
         let blaze = |fields: &str| bad(&format!("effects = [{{ kind = \"blaze\", {fields} }}]"));
         let ok = "damage = \"2d6\", damage_type = \"fire\", spell = \"blaze\", \
                   fire = \"arrow_fire\", burns = 60, cooldown = \"burnt_out\"";
-        assert!(blaze(&format!("radius = 4, {ok}")).contains("radius is 1 to 3"));
         let fields = ok.replace("\"arrow_fire\"", "\"sun\"");
         assert!(blaze(&format!("radius = 1, {fields}")).contains("unknown light preset"));
         let fields = ok.replace("\"burnt_out\"", "\"smouldering\"");
@@ -3799,14 +2535,10 @@ systems = ["hit_points"]
         let fields = ok.replace("\"fire\",", "\"plasma\",");
         assert!(blaze(&format!("radius = 1, {fields}")).contains("unknown damage type"));
         assert!(
-            bad("effects = [{ kind = \"scent\", status = \"bleeding\", radius = 0 }]")
-                .contains("radius is 1 to 20")
-        );
-        assert!(
             bad("effects = [{ kind = \"scent\", status = \"sniffles\", radius = 4 }]")
                 .contains("unknown status")
         );
-        assert!(bad("effects = [{ kind = \"ambush\", dice = \"0\" }]").contains("not 0"));
+        assert!(bad("effects = [{ kind = \"kick_die\", sides = 0 }]").contains("at least 1"));
         let no_system = "[[talent]]\nid = \"x\"\nname = \"X\"\ntree = \"vigour\"\ndescription = \"d\"\n\
                          effects = [{ kind = \"dodge\", value = 1 }]\nsystems = [\"nope\"]\n";
         assert!(
@@ -3819,38 +2551,7 @@ systems = ["hit_points"]
     }
 
     #[test]
-    fn coverage_holds_systems_and_trees_to_the_bar() {
-        // Stealth is pending with no talents: fine. Un-pend it: it has none.
-        let strict = SETTINGS.replace("name = \"Stealth\"\npending = true", "name = \"Stealth\"");
-        let e = err(load(&strict, &[("healthy", HEALTHY), ("hardy", HARDY)]));
-        assert!(e.contains("system `stealth` has 0 talents"), "{e}");
-        // Hit points with one talent is under the bar of two.
-        let e = err(load(
-            SETTINGS,
-            &[(
-                "hardy",
-                HARDY.replace(", talents = [\"healthy\"]", "").as_str(),
-            )],
-        ));
-        assert!(e.contains("system `hit_points` has 1 talent but"), "{e}");
-        // A tree whose only talents have prerequisites, not pending.
-        let strict = SETTINGS.replace(
-            "name = \"Shadow\"\ndescription = \"Stealth.\"\npending = true",
-            "name = \"Shadow\"\ndescription = \"Stealth.\"",
-        );
-        let e = err(load(&strict, &[("healthy", HEALTHY), ("hardy", HARDY)]));
-        assert!(
-            e.contains("tree `shadow` has 0 talents without prerequisites"),
-            "{e}"
-        );
-        // A class bar nobody meets yet.
-        let strict = SETTINGS.replace("min_class = 0", "min_class = 1");
-        let e = err(load(&strict, &[("healthy", HEALTHY), ("hardy", HARDY)]));
-        assert!(e.contains("class abilities"), "{e}");
-    }
-
-    #[test]
-    fn choices_chain_only_among_their_own_kind() {
+    fn choices_list_their_options() {
         let focus = r#"
 [[talent]]
 id = "weapon_focus"
@@ -3862,30 +2563,7 @@ needs = { chosen = 2 }
 effects = [{ kind = "melee_damage", value = 1 }]
 systems = ["hit_points"]
 "#;
-        let spec = r#"
-[[talent]]
-id = "specialization"
-name = "Specialization"
-tree = "vigour"
-description = "d"
-needs = { talents = ["weapon_focus"] }
-effects = [{ kind = "healing_percent", value = 10 }]
-systems = ["hit_points"]
-"#;
-        let e = err(load(
-            SETTINGS,
-            &[("healthy", HEALTHY), ("focus", focus), ("spec", spec)],
-        ));
-        assert!(e.contains("same choice"), "{e}");
-        let same = spec.replace(
-            "description = \"d\"",
-            "description = \"d\"\nchoice = \"weapon_skill\"",
-        );
-        let content = load(
-            SETTINGS,
-            &[("healthy", HEALTHY), ("focus", focus), ("spec", &same)],
-        )
-        .expect("loads");
+        let content = load(SETTINGS, &[("healthy", HEALTHY), ("focus", focus)]).expect("loads");
         let options = Choice::WeaponSkill.options(&content);
         assert!(options.iter().any(|o| o == "long_blades"), "{options:?}");
         assert!(
@@ -3910,20 +2588,12 @@ systems = ["hit_points"]
     }
 
     #[test]
-    fn the_built_in_talents_cover_what_they_promise() {
+    fn the_built_in_talents_load() {
         let content = Content::builtin().expect("content");
-        let book = content.talents();
-        assert!(book.len() >= 12, "{} talents", book.len());
-        assert_eq!(book.coverage_gap(&|_| 0), None);
-        // Every system and tree that is not pending meets the bar; the pending ones are named
-        // so the gaps show in the wiki.
         assert!(
-            book.systems.iter().any(|s| !s.pending),
-            "some system is held to the bar"
-        );
-        assert!(
-            book.trees.iter().any(|t| !t.pending),
-            "some tree is held to the bar"
+            content.talents().len() >= 12,
+            "{} talents",
+            content.talents().len()
         );
     }
 }

@@ -16,6 +16,7 @@ weapon_skills = { daggers = 1 }
 abilities = [
     { level = 1, talent = "haggler" },
     { level = 6, talent = "deep_pockets" },
+    { level = 6, talent = "pack_mule" },
     { level = 12, talent = "merchants_eye" },
 ]
 bonus_talents = { levels = [10, 20, 30, 45, 55], trees = ["delver", "scholar"] }

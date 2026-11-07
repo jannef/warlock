@@ -34,7 +34,7 @@ expression: "render(case, content.clone())"
             │   s  School focus                You have made one school of magic, or … │
             │ Grit                                                                     │
             │   t  Lean                        You go hungry more slowly, and exertin… │
-            │   u  Pack mule                   You can carry a tenth more.             │
+            │   u  Pack mule                   You carry a tenth more, and a load slo… │
             │                                                                          │
             │ Your stamina holds a good deal more.                                     │
             │                                                                          │

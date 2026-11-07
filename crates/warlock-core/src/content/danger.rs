@@ -159,10 +159,20 @@ pub struct Odds {
     /// monster pool, which places what it places).
     #[serde(default = "dread_one_in")]
     pub dread_one_in: u16,
+    /// The weight, in percent of its own, of a type not hostile to the player by default (the
+    /// neutral animals, #1195) in a draw of a floor's population or of a timed spawn
+    /// ([`super::Content::draw_candidates`]); 100 (the default without the field) leaves them
+    /// as they are, 0 draws none.
+    #[serde(default = "neutral")]
+    pub neutral: u8,
 }
 
 fn dread_one_in() -> u16 {
     DREAD_ONE_IN
+}
+
+fn neutral() -> u8 {
+    100
 }
 
 impl Odds {
@@ -172,6 +182,7 @@ impl Odds {
             ("stray", self.stray),
             ("out_of_depth", self.out_of_depth),
             ("deeper", self.deeper),
+            ("neutral", self.neutral),
         ] {
             if p > 100 {
                 return Err(format!("`{name}` is a percent, 0 to 100"));
@@ -456,6 +467,7 @@ pub(super) struct OddsSpec {
     pub(super) deeper: Option<u8>,
     pub(super) deeper_cap: Option<u8>,
     pub(super) dread_one_in: Option<u16>,
+    pub(super) neutral: Option<u8>,
 }
 
 impl OddsSpec {
@@ -465,6 +477,7 @@ impl OddsSpec {
             || self.deeper.is_some()
             || self.deeper_cap.is_some()
             || self.dread_one_in.is_some()
+            || self.neutral.is_some()
     }
 
     /// The odds: each given field, else `defaults`'.
@@ -475,6 +488,7 @@ impl OddsSpec {
             deeper: self.deeper.unwrap_or(defaults.deeper),
             deeper_cap: self.deeper_cap.unwrap_or(defaults.deeper_cap),
             dread_one_in: self.dread_one_in.unwrap_or(defaults.dread_one_in),
+            neutral: self.neutral.unwrap_or(defaults.neutral),
         };
         odds.check()?;
         Ok(odds)
@@ -559,7 +573,8 @@ impl SpawningSpec {
             if given {
                 return Err(
                     "`population`, `population_count`, `stray`, `stray_pool`, `out_of_depth`, \
-                            `deeper`, `deeper_cap`, `dread_one_in`, and `spawn` need a `danger`"
+                            `deeper`, `deeper_cap`, `dread_one_in`, `neutral`, and `spawn` need a \
+                            `danger`"
                         .into(),
                 );
             }
@@ -661,6 +676,7 @@ mod tests {
         deeper: 5,
         deeper_cap: 10,
         dread_one_in: DREAD_ONE_IN,
+        neutral: 10,
     };
 
     /// Every draw two deeper.
@@ -670,6 +686,7 @@ mod tests {
         deeper: 100,
         deeper_cap: 1,
         dread_one_in: 0,
+        neutral: 100,
     };
 
     /// No strays and no out-of-depth draws.
@@ -679,6 +696,7 @@ mod tests {
         deeper: 0,
         deeper_cap: 0,
         dread_one_in: 0,
+        neutral: 100,
     };
 
     fn rule(text: &str) -> Result<Option<(DangerRule, Spawning)>, String> {
@@ -702,14 +720,16 @@ mod tests {
 
     #[test]
     fn an_area_may_give_its_own_odds() {
-        let (_, s) = rule("danger = 2\npopulation = [\"rat\"]\nstray = 0\ndeeper_cap = 3\n")
-            .unwrap()
-            .unwrap();
+        let (_, s) =
+            rule("danger = 2\npopulation = [\"rat\"]\nstray = 0\ndeeper_cap = 3\nneutral = 20\n")
+                .unwrap()
+                .unwrap();
         assert_eq!(
             s.odds,
             Odds {
                 stray: 0,
                 deeper_cap: 3,
+                neutral: 20,
                 ..ODDS
             }
         );
@@ -779,7 +799,9 @@ mod tests {
             "danger = 1\npopulation = [\"rat\"]\nout_of_depth = 101\n",
             "danger = 1\npopulation = [\"rat\"]\nstray = 101\n",
             "danger = 1\npopulation = [\"rat\"]\ndeeper_cap = 51\n",
+            "danger = 1\npopulation = [\"rat\"]\nneutral = 101\n",
             "stray = 5\n",
+            "neutral = 10\n",
             "danger = 1\npopulation = [\"rat\"]\nspawn = { every = \"30s\" }\n",
             "danger = 1\npopulation = [\"rat\"]\nspawn = { chance = 101 }\n",
             "danger = 1\npopulation = [\"rat\"]\npopulation_count = 201\n",
@@ -897,6 +919,7 @@ mod tests {
             deeper: 0,
             deeper_cap: 0,
             dread_one_in: 0,
+            neutral: 100,
         };
         assert!((0..500).all(|_| draw(&mut rng, &own, &generic, 5, &one) == Some(CreatureId(1))));
         // Nine deeper, at 14: level 5 is too weak to weigh, so the generic list is drawn.

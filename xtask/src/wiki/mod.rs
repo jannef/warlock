@@ -32,6 +32,7 @@ mod dungeons;
 mod encounters;
 mod experience;
 mod familiars;
+mod gear_condition;
 mod gems;
 mod guild;
 mod healing;
@@ -175,6 +176,7 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("creatures.md", creatures::creatures),
         ("factions.md", creatures::factions),
         ("creature-tags.md", creatures::creature_tags),
+        ("gear-condition.md", gear_condition::gear_condition),
         ("creature-stats.md", creatures::creature_stats),
         ("creature-defences.md", creatures::creature_defences),
         ("creature-attacks.md", creatures::creature_attacks),
@@ -209,6 +211,7 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("layer-bosses.md", dungeons::layer_bosses),
         ("danger-weights.md", dungeons::danger_weights),
         ("creature-rarities.md", dungeons::creature_rarities),
+        ("neutral-weight.md", dungeons::neutral_weight),
         ("draw-odds.md", dungeons::draw_odds),
         ("dread-draws.md", dungeons::dread_draws),
         ("dialogue.md", dialogue::dialogue),
@@ -422,6 +425,7 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("potions.md", potions::potions),
         ("weapon-skills.md", weapon_skills::skills),
         ("weapon-marks.md", weapon_skills::marks),
+        ("target-dummies.md", weapon_skills::dummies),
         ("weapon-benefits.md", weapon_skills::benefits),
         ("weapon-abilities.md", weapon_abilities::weapon_abilities),
         ("styles.md", weapon_skills::styles),

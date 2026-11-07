@@ -146,6 +146,33 @@ pub fn marks(content: &Content) -> String {
     out
 }
 
+/// The target dummies (spec §8 "Weapon skills": "Target dummies"): every creature type with a
+/// `training` table, by name, with what it teaches and what becomes of missiles at it.
+pub fn dummies(content: &Content) -> String {
+    let mut rows: Vec<_> = (content.creature_defs().iter())
+        .filter_map(|c| c.training.map(|t| (c, t)))
+        .collect();
+    rows.sort_by(|a, b| a.0.name.cmp(&b.0.name));
+    let mut out = String::from(
+        "| Dummy | Level | Marks | Blows, bashes, kicks, and throws up to rank | Shots up to rank \
+         | Missiles ruined |\n|---|:---:|:---:|:---:|:---:|:---:|\n",
+    );
+    for (c, t) in rows {
+        let _ = writeln!(
+            out,
+            "| [{}](creatures.md#creature-{}) | {} | {}% | {} | {} | {}% |",
+            c.name,
+            c.id.replace('_', "-"),
+            c.level,
+            t.percent,
+            t.melee,
+            t.ranged,
+            t.breaks
+        );
+    }
+    out
+}
+
 /// The benefits a table shows, with their headings, and how each value reads.
 type Column = (&'static str, fn(&Benefit) -> i32, fn(i32) -> String);
 

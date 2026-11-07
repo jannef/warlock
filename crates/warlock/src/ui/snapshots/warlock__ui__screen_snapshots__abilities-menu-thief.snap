@@ -2,8 +2,8 @@
 source: crates/warlock/src/ui/screen_snapshots.rs
 expression: "render(case, content.clone())"
 ---
- Your appraise improves. (×56) You learn Light step. You learn Nimble. You learn Opportunist. You
- learn Quick. You learn Keen ears. You learn Petrifying gaze. You learn Undertow.
+ Your appraise improves. (×56) You learn Light step. You learn Opportunist. You learn Quick. You
+ learn Keen ears. You learn Lamplighter. You learn Petrifying gaze. You learn Undertow.
 
                    ┌─ Abilities ───────────────────────────────────────────────┐
                    │                                                           │

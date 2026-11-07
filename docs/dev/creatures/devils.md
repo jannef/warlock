@@ -39,3 +39,5 @@ it fades from sight every five minutes and stays in the room; its poison kept.
 ## Variance
 
 The variance pass (#1134, `docs/dev/creatures.md` "Variance by role") sets the roles' to-hit (striker `L/4 + L/8`, brute and caster `L/4 − L/8`, the armed `L/4`), threat and crit (striker 19, brute 24 at ×3), and hit-point factors (quick and caster 0.5, brute 2.0). **Speed**: the hierarchy marches, 1000 to 1150 (the imp the quickest), the lemure crawls at 800; the dread barbed devil and pit fiend at 1400.
+
+Gear condition (#1193, `data/gear_condition.toml`'s `devil` row): the lawful host keeps its arms, damaged 8 %, Fine 10 %, Marvellous 2.5 %, Masterwork 0.6 % (docs/dev/creatures.md, "Gear condition").

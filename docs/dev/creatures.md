@@ -381,6 +381,19 @@ population is met as a stray, and people, keepers, hand-placed guardians, and qu
 `world::spawn_tests::strays_come_from_every_hostile_type_but_those_kept_out`; `populate` builds the generic candidates once a floor, the own ones per creature (a
 unique leaves them). Hand-placed creatures (level legends, vaults,
 scenario people, shopkeepers) are never drawn, whatever their tier.
+Neutral animals (#1195; the owner: "it's a game about killing stuff, not Dwarf Fortress"):
+`Odds::neutral` (`neutral`, percent 0 to 100, `[defaults]`'s, overridable by a branch or a
+hand-made level; 100 without the field) scales the rarity factor of every candidate not hostile
+to the player by its data stance (`Content::stance` with `player`; the `wildlife` faction and
+anything else neutral by default; never Beast-friend's empathy, which is the player's, not the
+type's) in `Content::draw_candidates`, at least 1 unless 0 %. The floor's population
+(`mapgen/population.rs`, the count's draws) and the spawner (`world/spawn.rs::draw_spawn`) draw
+by it; the count is unchanged, so the freed weight goes to the hostile types. Untouched, as
+places that mean what they draw: a vault's monster pools, teeming dens (a beast den's
+`swarm.factions` is animals by design), hoards' guardians (hostile anyway), outcomes' summons,
+and overworld encounters (wildlife belongs outdoors). Tests:
+`mapgen::neutral_share_tests` (the share over every branch floor and many seeds; the ignored
+`print_neutral_shares` prints the per-branch table), `content::danger::tests` (the bounds).
 Dread (docs/design/monster-dread.md §8, #1124): `CreatureDef::dread` (`dread = true`, default
 false) marks the types to dread, flagged for every type §6 sorts as dread (the gimmicks come in
 later slices); a rarity tier is still the type's own. `danger::draw` rolls first, when
@@ -459,6 +472,23 @@ keeper): a generated level clears it in `gear::arm` (stream `gear/<level id>`, a
 generated floor (rolled by `gear::arm` after it) and a spawn in play (rolled by
 `make_creature`). What falls is unidentified (Scavenger, which told it, was cut by #816). Tests: `world/gear_tests.rs`; the mapgen
 snapshots print each spawn's gear.
+
+Gear condition (#1193): right after each `gear::roll` (one line in `gear::arm`, one in
+`placed_gear`), `world/gear_condition.rs::apply` draws each piece's state ([`Worked`], the
+smith's: damaged with `by` for its word, or one to three improvements, each an attempt) from its
+own stream, `condition/<key>` with the gear stream's key, so the gear's draws and the rest of the
+level do not move. One draw below 1000 per piece against the creature's tribe's odds
+(`data/gear_condition.toml`, `content/gear_condition.rs`: `[default]`, `[[tribe]]` by creature
+tag, first match in file order), then one per improvement for its aspect. Only single pieces of
+arms or armour an anvil or knife could work (`temper::arms`, aspects), never protected ones
+(`item_damage::protected`, with every object any quest may ask for, fixed or rolled: gear is made
+before a quest is given). The kind is by the main part's material group (`[kinds]`, metal: rust
+and acid): the one the material withstands least, never one at 100; else `ItemHarm::Work`
+("damaged"). `World::loot_of` (a death's extra drop) is treasure, not gear, and takes no
+condition. Tribes chosen: undead (95 % damaged), duergar, hobgoblin, drow, devil (disciplined:
+8–10 % damaged, Fine 10–15 %), kobold, goblin, orc, troll (scavengers: 45–55 % damaged); the
+rest the default (30 %, Fine 4 %, Marvellous 0.8 %, Masterwork 0.2 %). Tests:
+`world/gear_condition_tests.rs`.
 
 ## Variance by role
 

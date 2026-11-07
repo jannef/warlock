@@ -226,8 +226,7 @@ The ranger's level 18 (`assets/data/talents/pack_tactics.toml`: tree `class`, `g
   stays `favoured`'s.
 
 Only the player's talents are read (a companion is the player's). Nothing is said and nothing is
-saved: the flank is read from where everyone stands at the blow. It is no clone of Beast-bond
-(`ally_mod`): the alike check compares effect kinds. Tests: `world/pack_tests.rs` (the table's
+saved: the flank is read from where everyone stands at the blow. Tests: `world/pack_tests.rs` (the table's
 row and the mods; flanking both ways, diagonals, not for shots, throws, spells, or the kobold's
 blows; one side only or the retinue, nothing; the shared prey with and without Master hunter,
 flanked too, and another type nothing).

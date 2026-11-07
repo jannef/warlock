@@ -158,3 +158,27 @@ fn the_scroll_of_identify_teaches_identify() {
     assert!(w.state.player().knows_spell(&w.content, id), "{}", last(&w));
     assert_eq!(w.state.player().inventory[0].count, 1, "one scroll used up");
 }
+
+#[test]
+fn a_scroll_of_identify_tells_which_stack_it_identified_and_only_when_it_told_something() {
+    let mut w = world(0);
+    let at = ring(&mut w);
+    let letter = (b'a' + at as u8) as char;
+    let read = format!("read:a:{letter}");
+    let outcomes = run(&mut w, &read);
+    let identified = |o: &Outcome| {
+        (o.events.iter()).find_map(|e| match e {
+            Event::Identified { item } => Some(*item),
+            _ => None,
+        })
+    };
+    assert_eq!(identified(&outcomes[0]), Some(at));
+    // Known now: the read is refused and says nothing of an identification.
+    let again = run(&mut w, &read);
+    assert_eq!(identified(&again[0]), None);
+    // The dev identify is no cast.
+    let at = ring(&mut w);
+    let letter = (b'a' + at as u8) as char;
+    let dev = run(&mut w, &format!("identify:{letter}"));
+    assert_eq!(identified(&dev[0]), None);
+}

@@ -21,7 +21,7 @@
 //! }` on a talent chosen for a school or an element (the choice is its filter), or `{ kind =
 //! "spell_mod", rider = { status = "sluggish", severity = 1 }, when = ["cold"] }`.
 
-use super::{Content, MAX_SEVERITY, Shape, SpellPurpose, StatusId};
+use super::{Content, Shape, SpellPurpose, StatusId};
 use serde::Deserialize;
 
 /// The six hooks' fields (module docs), summed. Every field defaults to nothing.
@@ -139,47 +139,13 @@ pub struct SpellModSpec {
 }
 
 impl SpellModSpec {
-    /// Checked: something it does; its rider's status known, severity 1 to [`MAX_SEVERITY`];
-    /// each tag of `when` a school, a kind, a shape, or a damage type; `when` left out on a
-    /// talent `chosen` for a school or an element (the choice is its filter); its cost a
-    /// percent. Nothing bounds how much it adds (the spell scaling design, decision 16).
-    pub fn check(&self, content: &Content, chosen: bool) -> Result<(), String> {
-        let numbers = [
-            self.rungs,
-            self.scroll_rungs,
-            self.wand_rungs,
-            self.reach_rungs,
-            self.degree_rungs,
-            self.bonus,
-            self.cells,
-            self.radius_cells,
-            self.degrees,
-            self.cost,
-        ];
-        let counts = [self.sides, self.dice, self.reroll];
-        if numbers.iter().all(|n| *n == 0) && counts.iter().all(|n| *n == 0) && self.rider.is_none()
+    /// Checked: its rider's status known, and each tag of `when` a school, a kind, a shape, or
+    /// a damage type. Its numbers are the data author's (#1205).
+    pub fn check(&self, content: &Content) -> Result<(), String> {
+        if let Some(rider) = &self.rider
+            && content.status_id(&rider.status).is_none()
         {
-            return Err("`spell_mod` does nothing: give it a field".into());
-        }
-        if !(-100..=100).contains(&self.cost) {
-            return Err("`spell_mod`: `cost` is a percent, -100 to 100".into());
-        }
-        if let Some(rider) = &self.rider {
-            if content.status_id(&rider.status).is_none() {
-                return Err(format!("`spell_mod`: unknown status `{}`", rider.status));
-            }
-            if !(1..=MAX_SEVERITY).contains(&rider.severity) {
-                return Err(format!(
-                    "`spell_mod`: a rider's severity is 1 to {MAX_SEVERITY}"
-                ));
-            }
-        }
-        if chosen && !self.when.is_empty() {
-            return Err(
-                "`spell_mod`: a talent chosen for a school or an element keys on the \
-                        choice; leave `when` out"
-                    .into(),
-            );
+            return Err(format!("`spell_mod`: unknown status `{}`", rider.status));
         }
         if let Some(bad) = self.when.iter().find(|t| !is_tag(content, t)) {
             return Err(format!(

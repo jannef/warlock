@@ -9,20 +9,19 @@ hit points a level gives) is `docs/dev/experience.md`.
 
 | Where | What |
 |---|---|
-| `content/talent.rs` | `TalentBook` from `data/talents.toml` (settings: `[coverage]`, `[[tree]]`, `[[system]]`, each set in one file) and `data/talents/*.toml` (one `[[talent]]` a file, `ContentFiles::table("talents")` order; `TalentId` an index, saves name talents by id so it is **not** in the content fingerprint). `TalentDef` (tree, `needs`, `effects`, `choice`, `systems`, `granted`), `Needs`/`Need` (the prerequisite kinds and their words: talents, stat scores, skill values, weapon-skill ranks, any skill of a role (`any_weapon_skill`), `chosen`, level, race, class, eyes (never an alignment band: alignment bars nothing, `docs/dev/alignment.md`), and `either`, any one of several, `Need::Either`), `TalentEffect` (the typed effects), `Choice::options`/`name` (`school`: a spell school or a non-physical damage type, #400), and the **coverage check** (`TalentBook::coverage_gap`, run at load: a `ContentError`). |
-| `content/talent_alike.rs` | The identical-effects check (#790, "Coverage policy"): no two talents alike, but for `alike`'s pairs in `data/talents.toml`. |
+| `content/talent.rs` | `TalentBook` from `data/talents.toml` (settings: `[[tree]]`, `[[system]]`) and `data/talents/*.toml` (one `[[talent]]` a file, `ContentFiles::table("talents")` order; `TalentId` an index, saves name talents by id so it is **not** in the content fingerprint). `TalentDef` (tree, `needs`, `effects`, `choice`, `systems`, `granted`), `Needs`/`Need` (the prerequisite kinds and their words: talents, stat scores, skill values, weapon-skill ranks, any skill of a role (`any_weapon_skill`), `chosen`, level, race, class, eyes (never an alignment band: alignment bars nothing, `docs/dev/alignment.md`), and `either`, any one of several, `Need::Either`), `TalentEffect` (the typed effects), `Choice::options`/`name` (`school`: a spell school or a non-physical damage type, #400). The load checks only that the table is well formed ("Loading" below). |
 | `talent.rs` | The runtime: `Talents` (`Vec<Taken { id, choice }>` on `Actor::talents`, `holds(id, choice)`, `has(id)`, saved and hashed, left out of the JSON while empty), `TalentMods` (every effect summed; `Talents::mods(content, effects)`, the effects under a status counted while the holder suffers it, / `Actor::talent_mods`, a `Cow`: borrowed and shared for an actor without talents, which most creatures are, so the many reads a turn copy nothing), `Candidate` (what prerequisites read: `Candidate::player`), `unmet`, `may_take` → `Refusal` (in words; `Held`, "You have Hardy already."), `openings`, `offers` (the pick list, tree by tree). |
 | `world/talent.rs` | `Due { level, talents }` in `Progress::due` (lowest level first); `World::level_up(from, to)` from `grant_xp` (a pick every `Experience::talent_every` levels, and the per-level hit points of talents held); `refuse_due` (the first line of `player_acts`: everything but `Talent`, `Advance`, `LevelUpAuto` is refused with "You have skill rolls to spend." or "You must choose a talent first."); `take_talent` (the first due with a pick, so a talent may come before the rolls), `level_up_auto` (dev); `settle_due` drops talent picks nothing can be spent on (`offers` empty and no roll left) and rolls when no skill is trained, asked again after each pick. `Due { level, talents, rolls, bonus }`: a level with rolls but no pick is due too; `bonus` are the class's bonus picks (a talent of the class's trees spends one before an ordinary pick; "You must choose a talent of Weaponcraft or Delver."), dropped like the others when nothing fits. |
 | `world/creation.rs` | Creation picks (#236; below): `creation_count`, `World::open_creation` (a level 1 `Due` from `begin`, for a run with the kit), `take_creation` (from `start_run`: the spec's picks, else `take_random` on the `character/talents/<spec>` stream; recorded in `CharacterSpec::talents`), `World::draft` / `creation_offers` / `random_creation` (character creation's Talents step), `chosen_with_talents` and `parse_talents` (`--talents`). `World::learn` (`world/talent.rs`) is `take_talent` without its words. |
 | `world/class.rs` | Class abilities (#246): `grant` gives the talents a class's level table names up to a level that the player lacks (`hand_out` for hit points by level, stat gifts, and `weapon_ranks`), at creation (`start_run`, level 1), as each level comes (`level_up`, with the news "You gain Fencing."), and on `from_state` (a grown table reaches saves; nothing is taken away); `bonus_trees`; `appraise_carried` (Lore, Arcane lore, Old lore, from `World::live` for the player). |
-| `content/class.rs` | `ClassDef::abilities` (`[(level, talent id)]`), `bonus_talents` (`levels`, `trees`; none: any), `abilities_to`, `bonus_at`, `bonus_trees`, `check_table` (after the talents load, from `Content::check_class_tables`, which then runs the coverage check with the class abilities counted). A book without a class tree (fixtures) gives nothing and checks nothing. |
+| `content/class.rs` | `ClassDef::abilities` (`[(level, talent id)]`), `bonus_talents` (`levels`, `trees`; none: any), `abilities_to`, `bonus_at`, `bonus_trees`, `check_table` (after the talents load, from `Content::check_class_tables`: the talents and trees named resolve). Rows are read by level, lowest first (`table_rows` sorts them; `abilities_to` takes them while their level is reached). A book without a class tree (fixtures) gives nothing and checks nothing. |
 | `world/skill_roll.rs` | The skill rolls (#230, `docs/dev/skills.md`): `roll_count`/`skill_roll` (the count's parts and a roll's dice, shared with the level-up screen, #543), `level_rolls`, `advance_skill` (`advance:SKILL`), `advance_auto` (`levelup:auto`'s rolls). `World::due()` and `candidate()`. |
 | `world/experience.rs` | `grant_xp` scales every gain by `TalentMods::xp_percent` and calls `level_up`; the dev `xp:N` (`grant_xp_dev`). |
 | `perception.rs` | `due()`, `dues()` (every level's, for the level-up screen's sequence), `roll_count()`, `skill_roll(skill)` (the skill-roll step's numbers, #543), `bonus_trees()`, `own_talents()` (`OwnTalent`), `talents()` (`TalentView`: `held`, the needs with `met`, `openings`): what the level-up screen (`ui/level_up_screen.rs`), the Talents page (`ui/talents_screen.rs`), and the creation step (`ui/chargen_talents_screen.rs`) read (`docs/dev/screens.md`). |
 | `dump.rs` | layers `talents` (held, `Skill focus (stealth)`) and `progress` (dev: dues, `due level 3: 3 skill rolls, 1 talent`, `rolls a level 3 (class 2, race 1, intelligence 0, talents 0)`, `roll dice athletics 1d3, balance +2`, takeable ids with choices, discovered kills, `empathy broken rat`); JSON `talents`, `due` (`level`, `talents`, `rolls`) |
 | `action.rs` | `Talent { id, choice }` (`talent:hardy`, `talent:weapon_focus:long_blades`; ids keep their case), `Advance(skill)`, dev `LevelUpAuto` (`levelup:auto`), `GrantXp` (`xp:N`); all `Spent::NoTime` or refused. |
 | `rng.rs` | `Rng::levels(seed)`, the `levels` stream, kept in `WorldState::levels_rng: Option<Rng>` **from the first draw** (the stat checks of each level, `world/stat_training.rs`; skill rolls, `world/skill_roll.rs`), so runs that never drew hash as before. |
-| `xtask/src/wiki/talents.rs` | `talents.md` (trees with the rules), `talents-by-system.md` (the coverage matrix, class abilities beside the talents); `effect_text`, the rule of one effect, shared with the class tables. |
+| `xtask/src/wiki/talents.rs` | `talents.md` (trees with the rules), `talents-by-system.md` (each system's talents, class abilities beside them); `effect_text`, the rule of one effect, shared with the class tables. |
 | `content/class.rs` (#243) | `ClassActive`, the actives (id = the ability's id, aim, cost); `strip_tables` (tests that load talents of their own). |
 | `world/caster.rs` | `cast_spell` (`Action::Cast`, `use:blessing`, `use:arcane_bolt:12,5`), `Actor::spell_cost`, the strike on the scrolls' shared code, `reprieve` (Hag's bargain, from `hurt`), `lore_blow` (Poison lore, Malison; from `resolve` and `spell_strikes`). |
 | `world/racial.rs` | The racial talents (#241): `grants` (a race's `talents`, `data/races.toml`, put in by `stars::grant` before the sign's gifts, through `Talents::regrant`, which now replaces every granted talent outside a class tree), `World::small_target` (Small target's Dodge, from `resolve` after `target_against`, when the attacker's `size_of` is larger). `content/race.rs::check_talents` (at load): a race grants only `granted` talents of the `racial` tree. |
@@ -48,8 +47,7 @@ adds the effect while `effects` (the holder's statuses; `Actor::talent_mods` pas
 every reader of a talent's effects other than the sum see only the plain ones, so a kind they
 read is refused a condition (`TalentEffect::may_be_conditional`: actives, Second wind, Blood
 magic, `spell`, `spell_mod`, `weapon_stamina`, what is rolled or handed down when taken,
-`terrain_as`, and the gifts' `scent` and `night_sight`). The alike check counts the status as
-part of the effect (`talent_alike.rs::Effect`). Battle-scarred (`protection 2`), Headlong
+`terrain_as`, and the gifts' `scent` and `night_sight`). Battle-scarred (`protection 2`), Headlong
 (`step_percent −20`), and Blood frenzy (`attack_price_percent −20`) use it with `raging`; the
 wiki's effect text appends "while raging".
 
@@ -206,12 +204,11 @@ wiki's effect text appends "while raging".
 | `take_up_skills` | handed out, not read: `World::take_up_skills` (`world/jack.rs`, from `grant_class`, `take_talent`, and `bestow`) trains every skill of the content the player lacks, but `except`, at `dice` from `levels_rng` in file order; its `news` said by `grant_class` (Jack of all trades, the bard's) |
 | `ignore_burdened` | `burden::load` (`Load::ignores_burdened`, as a dwarf's) |
 | `no_bloating`, `corpse_stats_percent` | `eat.rs`: `feed` (nutrition stops one below Bloated, nothing overeats) and `corpse_gifts` (a corpse's `train` marks and `widen` chances scaled, the chance at most 100) |
-| `step_slowdown_percent` | `World::step_price` → `slowed` (the burden's ease and `bloated`'s slowdown, steps only) |
 | `searching` | `search.rs::search_modifier` (searching only; Keen searcher; `search`, in both looks, is above) |
 | `trap_damage_percent` | `World::trap_deals` (before the blood and the hurt; at least 1) |
 | `kick_noise_percent` | `noise::noise` (`Act::Kick`) |
 | `stat` | handed out, not read: `class::hand_out` raises score and potential (`Stats::gift`) at the pick or the grant; a Toughness gift raises `hp` with the maximum |
-| `carry_kg`, `weightless_coins` | `burden::load` (with the affixes' kilograms; coins, item class `coins`, left out of the load) |
+| `weightless_coins` | `burden::load` (coins, item class `coins`, left out of the load) |
 | `quest_gold_percent` | `World::complete` (`quest.rs`) |
 | `favour_percent` | `world::shop::favour` (before the cap, `MAX_FAVOUR`) |
 | `gem_worth` | `PerceptionView::appraisal` → `magic::describe::appraised` (the describe screen) |
@@ -258,7 +255,7 @@ Sign-limited picks (#270; `world/sign_picks.rs`), and their hooks:
 | `eats_rotten` | `eat.rs::eat_rotten`: as a race that `eats_rotten` |
 | `wades_free` | `World::step_price` through `Actor::wades_free` (a status's too), beside `swimmer` (no disease immunity) |
 
-The rest (Roc's grip, Dragon's hoard, Deep roots' Dodge, Bedrock, Undertow's plunge) are
+The rest (Dragon's hoard, Deep roots' Dodge, Bedrock, Undertow's plunge) are
 existing kinds.
 
 Effects that name a status (`second_wind`'s `cooldown`, `status_eases`, `no_penalty`,
@@ -316,25 +313,22 @@ New statuses: Blessed, Hexed (`ill_wished`), Weakened, Sluggish (`sluggish`, cos
 150), Worn thin (the reprieves'); new effects `arcane_bolt` and `blight` in `data/effects.toml`.
 Tests: `world/caster_tests.rs`.
 
-## Coverage policy
+## Loading
 
-`data/talents.toml` holds the closed `[[system]]` list and `[coverage]` (`min_talents = 0`, `min_class = 0` until every class has its table, `free_per_tree = 1`); class
-abilities are counted by `Content::check_class_tables`. A `[[system]]` may still set its own
-`min_talents` in place of the bar's (`SystemDef::min_talents`).
-`spells` (#394, docs/dev/spells.md) joined pending, with nothing taking it; #396 added the Spellcraft tree with its
-first talent, Quick study (`TalentEffect::Study`), and #400 the rest (Overreach, School focus
-with the `school` choice: a school or an element), the wizard's Arcane training, Empower and
-Archmage reworked (they also lower costs; their dice are held to the cap, a scroll's too), and
-took `spells` off `pending` (`world/spell_talent_tests.rs`). Wand mastery comes with wands
-(#398), Channeler with rods (#399): their hooks do not exist yet. A talent must name systems from
-the list; a system or tree marked `pending = true` is counted and shown in the wiki but not yet
-held to the bar. **A wave that brings a system's talents removes its `pending`** (and a tree's
-once it has a talent without prerequisites); `min_class` becomes 1 with the class tables. A new
-system of the game joins the list in the PR that ships its talents. The check runs at load, so
-`Content::builtin()` (and the game) fail on a gap; `content::talent::tests` covers the gaps. Talents of a `class = true` tree are class abilities:
-not counted as talents, nor asked for a free one; the class abilities a system has are the
-talents the class tables give that name it (each once). `min_class` stays 0 until every class
-has its table (I1–I3).
+The loader trusts the data author (#1205): it checks only that the talent table is well formed,
+so the game can build it and run without panicking. Kept: TOML that parses into the types
+(`deny_unknown_fields`); unique ids, and ids free of `:` and spaces (action text reads
+`talent:ID:CHOICE`); every id named resolves (talents, trees, systems, statuses, resources,
+skills, weapon skills, races, classes, eyes, damage types, lights, spells and their effects,
+terrain, heirloom weapons); the forms keyed on a choice have it (`skill` without a skill,
+`resist` without a damage type, `weapon` without a role or skill, `chosen`'s own resolution);
+a `while` only on an effect the sum reads (`may_be_conditional`: elsewhere it would be lost);
+durations that parse; a die's sides and a divisor (`per_levels`, `one_in`) not 0; at most 255
+trees or systems and 65,535 talents (the ids' widths). Everything else is the author's: numbers
+in any range, a talent with no effects or no systems, two talents alike, a chain of choices of
+different kinds (`Candidate::meets` reads a need of another kind as held at all), a flaw that
+is needed, a resource cost or alignment on a talent that has no active. `data/talents.toml`'s
+`[[system]]` list is read only by the wiki's talents-by-system table.
 
 ## Creation picks
 
@@ -393,8 +387,8 @@ light ids after it). A run without talents content (fixtures) never has a pick d
 
 `world/class_active_tests.rs` (the adventurers' tables: abilities by level, bonus picks, every
 passive's rule, the actives and their cooldowns, the holy gifts unanswered outside their bands, replays);
-`content/talent.rs` (loading, validation, the coverage gaps, choice chains), `talent.rs`
-(summing, ranks per choice, serialization), `world/talent_arms_tests.rs` (the Weaponcraft and Guard hooks, the role need's words), `world/damage_talent_tests.rs` (Elemental ward and Crusher, the damage-types bar), `world/land_talent_tests.rs` (the Shadow and Wayfarer hooks), `world/talent_tests.rs` (dues and refusals,
+`content/talent.rs` (loading, the well-formedness refusals, choices' options), `talent.rs`
+(summing, ranks per choice, serialization), `world/talent_arms_tests.rs` (the Weaponcraft and Guard hooks, the role need's words), `world/damage_talent_tests.rs` (Elemental ward and Crusher), `world/land_talent_tests.rs` (the Shadow and Wayfarer hooks), `world/talent_tests.rs` (dues and refusals,
 prerequisites in words, Hardy's growth, several levels at once and `levelup:auto`,
 dropped picks, every hook, a free-blow talent, saves and replays, perception and dumps).
 
@@ -410,6 +404,28 @@ Strength 14; `kick_back`, `dig_percent` 25), Old hand (Delver; level 10), Weapon
 only), Spell recall (Scholar; Intelligence 15, level 12), and the bard's Master of none (granted
 at 25). `needs = { talents = ["hardy"] }` is a list of ids (`Need::Talent(id)`, its words "Hardy"). Anvil and hammer and Second blade's rend, the styles' second tier, were cut with
 `rend_off_hand`, until weapon and style feats are reworked.
+
+## The burden line
+
+The talents that eased burden were one line by #1198 (the owner: "combine talents that ease
+effects of burden into one line. There are too many."): three Grit talents, each needing the one
+before and adding to it (talents sum, `TalentMods::add`), so a rank is a talent held:
+
+| Step | Needs | Effects |
+|---|---|---|
+| Pack mule | Strength 11 | `carry_percent` 10, `burden_ease` 60, `burden_dex` 1 |
+| Porter | Pack mule, Toughness 12 | `carry_percent` 10, `burden_dex` 1, `ignore_burdened` |
+| Beast of burden | Porter, level 12 | `carry_percent` 10, `stout` |
+
+It replaced Roc's grip (the Roc's sign pick: the Roc has none now, its born take the line),
+Stout (the dwarf's racial), Hard work (the commoner's 1, now Pack mule), Sure-footed (its
+Bloated half went with it), Nimble, Uncanny dodge (the thief's 25, now Pack mule and Porter),
+and Deep pockets' 10 kg (the merchant's 6 now gives Deep pockets, coins weightless, and Pack
+mule). `carry_kg` and `step_slowdown_percent` went with their only talents. Kept: Roc's
+strength and Supple, birth-sign gifts (a sign grants only `granted` talents of the `stars`
+tree, `horoscope::check`, so they cannot name the line; the horoscope is kept whole). A table
+that gives a step the character already took gives a pick in its place (`class::held_already`).
+Tests: `talent_wits_tests.rs` (each step's limit, penalty, price, and Defence; the chain).
 
 ## Class tables
 
@@ -438,14 +454,13 @@ is "You gain Jack of all trades.", then the hand-out's own `news`. `held_already
 pickable held. `class_rogue_tests.rs` covers the bard's Jack of all trades and Master of none, a restore past
 both, and a skill the content adds being taken up.
 
-A class's table stops at its `max_level` (`ClassDef::settle_cap` refuses a row or a bonus level
-past it), and a **prestige class's** table (`data/prestige/`, `PrestigeDef`, #876) is a second
+A class's table stops at its `max_level` (`ClassDef::settle_cap`: never past the curve's top; a
+row past it never comes), and a **prestige class's** table (`data/prestige/`, `PrestigeDef`, #876) is a second
 one at its own levels, read once the character is called (`docs/dev/experience.md` "Prestige
 classes"): `class::grant` walks `Character::class_levels` (every table with the level reached in
 it), `held_already` and the bonus pick of a level read `Character::class_of`, and each `Due`'s
 bonus trees are the class of its level's (`World::bonus_trees_at`). A prestige class's abilities
-are class abilities to the coverage check (`Content::check_class_tables` counts both tables) and
-are marked `(class)` in the dumps like a class's. One ships, the Hunter (`data/prestige/hunter.toml`,
+are class abilities too (`Content::check_class_tables` checks both tables) and are marked `(class)` in the dumps like a class's. One ships, the Hunter (`data/prestige/hunter.toml`,
 #881): the warrior's hit points, two rolls, Athletics and Survival known for, bonus picks at its 5,
 10, 15, 23, and 28 from Weaponcraft and Guard, and one row, Spirit weapon at its level 1; its door
 is a campaign's calling. The tests' Warden (`world/calling_tests.rs`) gives Fencing at its level 1
@@ -467,7 +482,7 @@ taker is trained in, `talent::may_take` refuses another as a `BadChoice`;
 first with an `either` prerequisite (`Need::Either`, "Intelligence 12 or Appraise 20").
 
 The racial talents (#241) are the `racial` tree (`no_free`: each asks for its race): Elven
-accuracy, Ageless, Diplomat, Stone sense, Dwarven resilience, Stout, Lucky,
+accuracy, Ageless, Diplomat, Stone sense, Dwarven resilience, Lucky,
 Slinger, Small target, Tinkerer, Gem lore, Ferocity, Orcish hide, and the humans' granted
 Versatile. The gnome's disarming talent is `tinkerer` ("Tinkerer"; the craftsperson's `tinker`,
 the same effect, was cut in #787). With Diplomat and Gem lore the `talk` and `gems`

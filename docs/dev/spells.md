@@ -429,6 +429,9 @@ cast path shares.
     time lost, scroll kept (design §14 q1, the default). Done: the scroll is found again by
     object (positions may shift), the `study` use is trained, the odds are taken now, the
     scroll used up (`use_scroll`, never Scroll savant's keeping: §14 q7, decided no), then the check.
+  - **Experience** (#1212): `learn_spell` pays `Experience::spell_xp(level)` (`[spell] per_level`
+    5 × max(level, 1)) through `grant_xp` when the spell was not known; class grants and dev
+    actions insert into `spells` directly or via `TalentMods` and pay nothing.
   - **Learning, the number** (`Actor::learning(content) -> Option<i32>`, #987,
     `docs/design/no-caster-level.md` §2): the `learn` benefit (`skills::Effect::Learn`, Spellcraft's
     in `data/skills.toml`; ceiling `MAX_SPELL_LEVEL`) through `Actor::skill_effect`, so skill
@@ -836,7 +839,7 @@ What every spell of a damage type does beyond its damage (the design:
     a wall would strike what no one could see). `arcs` is refused at load off those four shapes
     and on a type with no `arc`.
   - `TalentEffect::SpellType { arc_chance, when }` (`TalentMods::arc_chance`, the highest): read
-    in `spell_type_spreads`, by the caster's talents. Conductor's. It needs no `alike` line.
+    in `spell_type_spreads`, by the caster's talents. Conductor's.
 - **`World::lay_fire`** (`spell_type.rs`): the one laying of a fire on a walkable cell, longest
   wins; Blaze's `kindle` calls it, and a burning missile's `come_down` keeps its own (it adds to a
   pile). `douses` goes through `shoot.rs::put_out`, burning objects there with it.

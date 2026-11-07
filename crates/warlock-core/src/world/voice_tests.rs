@@ -107,10 +107,6 @@ fn world() -> World {
 }
 
 const TALENTS: &str = r#"
-[coverage]
-min_talents = 1
-min_class = 0
-free_per_tree = 0
 [[tree]]
 id = "class"
 name = "Class"
@@ -119,7 +115,6 @@ class = true
 [[system]]
 id = "hearing"
 name = "Hearing"
-pending = true
 "#;
 
 const THROW_VOICE: &str = r#"

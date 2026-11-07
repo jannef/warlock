@@ -450,7 +450,8 @@ fn the_thiefs_skills_give_disarm_pick_lock_and_steal_from_the_first_level() {
             "Lurk",
             "Low blow",
             "Evasion",
-            "Uncanny dodge",
+            "Pack mule",
+            "Porter",
             "Improved sneak attack",
             "Vanishing act",
             "Hide in plain sight",
@@ -647,17 +648,14 @@ fn vanishing_act_a_sneak_attack_that_kills_leaves_the_thief_light_footed() {
 }
 
 #[test]
-fn uncanny_dodge_fast_healer_and_jack_of_all_trades() {
+fn the_burden_line_fast_healer_and_jack_of_all_trades() {
     let mut t = world("thief");
     let content = t.content().clone();
-    // The bonus picks of Finesse may have raised it too.
-    reach(&mut t, 24);
-    let before = t.state.player().talent_mods(&content).burden_dex;
+    // The thief's 25 gives the burden line's first two steps (Uncanny dodge's place, #1198).
     reach(&mut t, 25);
-    assert_eq!(
-        t.state.player().talent_mods(&content).burden_dex,
-        before + 2
-    );
+    let me = t.state.player();
+    assert!(me.talents.holds("pack_mule", None) && me.talents.holds("porter", None));
+    assert_eq!(me.talent_mods(&content).burden_dex, 2);
     let mut b = world("bard");
     // Fast healer, the Vigour talent the table gives (Song of rest before #790): resting's pace
     // half again (`healing_rate` reads it).

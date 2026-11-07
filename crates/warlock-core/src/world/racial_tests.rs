@@ -4,7 +4,6 @@
 
 use super::*;
 use crate::action::parse_actions;
-use crate::burden::Burden;
 use crate::character::CharacterSpec;
 use crate::combat::Category;
 use crate::content::{ContentFiles, Role};
@@ -186,32 +185,12 @@ fn stone_sense_finds_what_is_hidden_in_stone_and_digs_faster() {
 }
 
 #[test]
-fn dwarven_resilience_eases_poison_and_stout_lightens_a_strained_load() {
+fn dwarven_resilience_eases_poison_and_disease() {
     let mut w = world("dwarf,male,warrior");
     give(&mut w, "dwarven_resilience");
     let poisoned = w.content().status_id("poisoned").expect("poisoned");
     let m = mods(&w);
     assert_eq!((m.eases_every(poisoned, 60), m.disease_checks), (30, 2));
-    // Strained: a dwarf with Stout pays only Burdened's price.
-    let content = w.content().clone();
-    let limit = w.state.load(&content, w.state.player()).limit;
-    let stone = content.object_id("rock").expect("a rock");
-    let each = u64::from(content.object(stone).weight);
-    let count = u32::try_from(limit * 4 / 5 / each).expect("fits");
-    w.player_mut()
-        .inventory
-        .push(crate::object::Stack::new(stone, count));
-    let load = w.state.load(&content, w.state.player());
-    assert_eq!(
-        (load.burden(), load.penalty()),
-        (Burden::Strained, Burden::Strained)
-    );
-    give(&mut w, "stout");
-    let load = w.state.load(&content, w.state.player());
-    assert_eq!(
-        (load.burden(), load.penalty()),
-        (Burden::Strained, Burden::Burdened)
-    );
 }
 
 #[test]

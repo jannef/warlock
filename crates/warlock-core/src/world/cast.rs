@@ -476,6 +476,7 @@ impl World {
         };
         if matches!(self.identify(on), super::Identified::Now(_)) {
             self.train_stat(crate::content::StatUse::Identified);
+            events.push(Event::Identified { item: on });
         }
         self.spell_landed(cast, self.state.player, true, events);
         true

@@ -1,8 +1,10 @@
+# The burden line (#1198), its first step: Pack mule, then Porter, then Beast of burden, each
+# needing the one before and adding to it.
 [[talent]]
 id = "pack_mule"
 name = "Pack mule"
 tree = "grit"
-description = "You can carry a tenth more."
+description = "You carry a tenth more, and a load slows you and hampers your dodging less."
 needs = { stats = { strength = 11 } }
-effects = [{ kind = "carry_percent", value = 10 }]
+effects = [{ kind = "carry_percent", value = 10 }, { kind = "burden_ease", value = 60 }, { kind = "burden_dex", value = 1 }]
 systems = ["burden"]

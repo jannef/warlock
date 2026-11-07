@@ -153,6 +153,21 @@ creature also gets a [magic](magic-items.md) piece, made as loot is, at the floo
 - What it gets is made of a material by the creature's level, as drops are.
 - What falls when it dies is [unidentified](magic-items.md#unidentified-items), as any find is.
 
+#### Condition
+
+Each piece of arms or armour a creature gets is often worn out and now and then finer than most.
+It may be **damaged**, a point worse than a plain one, or **Fine**, **Marvellous**, or
+**Masterwork**, with one, two, or three improvements in what an improvement can better, as if
+worked at a [forge](altars-forges-springs.md#forges) (each counts as one attempt made on it). A
+damaged piece is called by what wore it out: *rusted* iron and steel, *corroded* bronze, silver,
+and other metals, and plainly *damaged* wood, leather, and cloth. The creature fights with it as
+it is, and it falls as it is. A stack of several (thrown weapons, ammunition), rings and amulets,
+a [unique](magic-items.md#unique-items) item, one [of Proof](materials.md#protected-items), anything a [quest](quests.md) may ask for, and a set
+kit a place gives a creature are always as made. The chances, by the creature's
+[tag](quests.md#sorts-of-creatures):
+
+{{#include generated/gear-condition.md}}
+
 ## Grades
 
 Two of the same creature need not be the same fight. When a creature comes into being, there is a

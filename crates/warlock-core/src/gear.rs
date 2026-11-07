@@ -111,12 +111,14 @@ fn make_piece(
 /// level's own stream `gear/<level id>`, in spawn order, on top of anything it carries already.
 pub fn arm(template: &mut LevelTemplate, content: &Content, seed: u64) {
     let mut rng = Rng::gear(seed, &template.id);
+    let mut condition = crate::world::gear_condition::stream(seed, &template.id);
     let level = template.item_level;
     for spawn in &mut template.creatures {
         if !spawn.rolls_gear {
             continue;
         }
-        let pack = roll(content, &mut rng, spawn.creature, level);
+        let mut pack = roll(content, &mut rng, spawn.creature, level);
+        crate::world::gear_condition::apply(content, &mut condition, spawn.creature, &mut pack);
         // What it was given already (a monster pool's key, `mapgen/population.rs`) comes after
         // its gear, so the gear's equipment still points at it.
         let given = std::mem::replace(&mut spawn.carry, pack.items);
