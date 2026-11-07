@@ -27,7 +27,7 @@ weight = 90000
 stats = { strength = 20, dexterity = 12, toughness = 19, intelligence = 10, willpower = 13, presence = 13 }
 base_hp = 40
 skills = { intimidate = 40 }
-weapon_skills = { axes = 3, great_weapon = 2 }
+weapon_skills = { axes = 6, great_weapon = 2 }
 [[creature.gear]]
 chance = 100
 one_of = ["great_axe"]

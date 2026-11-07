@@ -24,7 +24,7 @@ base_hp = 220
 natural = { defence = 2, protection = 3, name = "dead flesh" }
 attack = { damage = "4d8", damage_type = "bludgeoning", name = "slam", verb = "slams", to_hit = 8 }
 resist = { cold = 75, poison = 100 }
-weapon_skills = { axes = 4 }
+weapon_skills = { axes = 9 }
 on_eat = { message = "Grave-cold meat, older than the mound.", vomit = 80, harm = "1d4" }
 blood = "#202a38"
 # Its gear (spec §8 "Creature gear"): the axe he was laid in the mound with.

@@ -219,7 +219,17 @@ The exact numbers are on [Creatures in numbers](creature-numbers.md).
   with gear of their own, by their kind's table ("Gear" below): each line in turn by its
   chance, one of what it lists, and now and then a [magic](magic-items.md) piece (made as loot is, at the floor's
   item level, and [unidentified](magic-items.md#unidentified-items)). A kind's **racial weapon** is the first line, 90% unless the
-  table says otherwise, and every kind with one is trained in its [weapon skill](weapon-skills.md). What a creature
+  table says otherwise, and every kind with one is trained in its [weapon skill](weapon-skills.md). An armed
+  creature gets no flat bonus to hit: its [ranks](weapon-skills.md#marks-and-ranks) in the
+  weapon's skill (and in [Duelist](fighting-styles.md#style-duelist), for a one-handed weapon
+  with no shield) are the fewest that bring the weapon to a quarter of its level to hit (a
+  spellcaster's to an eighth), as the creatures that fight with claws and teeth hit; no rank
+  is higher than a trained warrior of the creature's level holds (2 at level 1, 7 at 15 to 22,
+  10 from 42), so a heavy weapon (great blades, axes, polearms) may stay below and hits harder
+  instead. Its ranks bring what ranks bring anyone: damage, speed, [Parry](combat.md#defence),
+  and the abilities they teach that work by themselves ([Deep cut](weapon-skills.md#weapon-ability-deep-cut),
+  [Crushing blow](weapon-skills.md#weapon-ability-crushing-blow), [Brace](weapon-skills.md#weapon-ability-brace),
+  [Riposte](fighting-styles.md#style-ability-riposte)). What a creature
   could not carry (over its [carrying limit](burden.md#how-much-you-can-carry)) it goes without, and what it gets is made of a
   material by the creature's level, as the drops are. What falls is
   [unidentified](magic-items.md#unidentified-items), as any find is.

@@ -27,7 +27,7 @@ stats = { strength = 18, dexterity = 13, toughness = 24, intelligence = 14, will
 base_hp = 25
 skills = { concentration = 73, spellcraft = 78 }
 natural = { defence = 1, protection = 2, name = "hide" }
-weapon_skills = { staves = 2 }
+weapon_skills = { staves = 6 }
 resist = { fire = -50 }
 on_eat = { message = "It tastes of smoke and bitter herbs.", vomit = 50, skills = { decipher_script = { gives = 7, up_to = 50 } } }
 blood = "#2a4a2a"

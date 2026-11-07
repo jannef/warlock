@@ -156,11 +156,11 @@ fn a_blade_wields_a_melee_weapon_of_its_level_with_a_rank() {
         assert_eq!(blade.equipment.get(main), Some(0), "wielded");
         assert_eq!(def.class, melee);
         assert!(def.level <= level && def.frequency > 0, "{}", def.id);
-        // 1 + L/10 ranks in its skill.
+        // 1 + 0.35 L ranks in its skill (#1169).
         let skill = def.skill.expect("a weapon skill");
         assert_eq!(
             blade.weapon_skills.rank(skill),
-            1 + level / 10,
+            u8::try_from(1 + u32::from(level) * 35 / 100).expect("a rank"),
             "{}",
             def.id
         );

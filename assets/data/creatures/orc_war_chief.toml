@@ -21,7 +21,7 @@ weight = 95000
 stats = { strength = 20, dexterity = 15, toughness = 20, intelligence = 10, willpower = 15, presence = 14 }
 base_hp = 50
 on_eat = { message = "This orc meat is rank!", vomit = 30 }
-weapon_skills = { short_blades = 3, sword_and_board = 2 }
+weapon_skills = { short_blades = 7, sword_and_board = 2 }
 racial_weapon = "scimitar"
 [[creature.gear]]
 chance = 80

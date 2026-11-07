@@ -24,7 +24,7 @@ stats = { strength = 27, dexterity = 20, toughness = 28, intelligence = 26, will
 base_hp = 98
 natural = { defence = 2, protection = 0, name = "skin" }
 resist = { fire = 50, cold = 50 }
-weapon_skills = { long_blades = 4, great_blades = 4 }
+weapon_skills = { long_blades = 9, great_blades = 9, duelist = 7 }
 on_eat = { message = "Half of it was almost a man.", vomit = 70, harm = "1d4" }
 blood = "#5a0a0a"
 [creature.attack]

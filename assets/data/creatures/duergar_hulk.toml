@@ -25,7 +25,7 @@ base_hp = 144
 natural = { defence = 1, name = "grey hide" }
 resist = { poison = 25, cold = 10 }
 on_eat = { message = "Tough and sour, and far too much of it.", vomit = 30, train = { strength = 18 } }
-weapon_skills = { maces = 4 }
+weapon_skills = { maces = 7 }
 racial_weapon = "maul"
 # It fades from sight on a cooldown (docs/dev/creatures.md "The unseen").
 [creature.invisible]

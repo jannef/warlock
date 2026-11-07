@@ -51,7 +51,11 @@ and by `ability_ranks` (Early mastery); an untrained skill stays 0. `Actor::weap
 lists what the ranks teach, each once, with the skill it is listed under (the first of its
 skills, in skill order, whose rank teaches it), in skill order, rank, path order: the menu's
 order. Creatures have ranks from their types (`weapon_skills` in creature data, animated
-objects' by their tier), so they have the abilities by the same rule.
+objects' by their tier), so they have the abilities by the same rule. Since #1169 armed types hold more ranks
+(`docs/dev/creatures.md` "Variance by role"), so more of them have the triggered ones: Deep cut
+and Crushing blow (rank 5, a big hit's status), Brace (spears and staves 5, the gatekeeper's
+blow), and Riposte (Duelist 4). The AI uses no active (Lunge, Vital strike, Sunder, False lead,
+Mighty swing, Shield wall wait in the menu only), so a rank 9 brings a creature nothing new.
 
 What works now is what the actor fights with: `Actor::abilities_through(skills)` (private) reads
 the abilities of an attack's `AttackSkills` (weapon skill and style). So a style's ability works

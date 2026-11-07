@@ -24,7 +24,7 @@ stats = { strength = 21, dexterity = 11, toughness = 22, intelligence = 15, will
 base_hp = 80
 attack = { damage = "3d6", damage_type = "bludgeoning", name = "slam", verb = "slams", to_hit = 3 }
 resist = { cold = 50, poison = 100 }
-weapon_skills = { axes = 2 }
+weapon_skills = { axes = 6 }
 on_eat = { message = "Grave-cold meat, long gone bad.", vomit = 80, harm = "1d4" }
 blood = "#2a3440"
 # Its gear (spec §8 "Creature gear"): the axe it was laid in the mound with.
