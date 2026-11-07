@@ -133,7 +133,7 @@ fn cause_id(world: &World, cause: warlock_core::world::Cause) -> String {
         Cause::Fall => "fell".into(),
         Cause::Choked(_) => "choked".into(),
         Cause::Trap(t) => content.trap(t).id.clone(),
-        Cause::Scroll(o) => content.object(o).id.clone(),
+        Cause::Scroll(o) | Cause::Flask(o) => content.object(o).id.clone(),
         Cause::Spell(_) => "own_spell".into(),
         Cause::Altar => "altar".into(),
     }

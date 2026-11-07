@@ -302,7 +302,7 @@ pub use overworld::{Landscape, LocalArea, local_area_id, parse_local_area};
 pub use part::{MAX_OBJECT_PARTS, MAX_PARTS, Part, PartDef, PartId, PartRole, and_list};
 pub use particles::{ParticleEmitter, ParticleTrigger};
 pub use plural::{MAX_WORD, Plurals};
-pub use potion::{Draught, Drink, MAX_POTION_MARKS};
+pub use potion::{Draught, Drink, Flask, MAX_POTION_MARKS, Splash};
 pub use prayer::{Face, FaceWords, Faced, PrayerRules, PrayerUse, UseDef};
 pub use prestige::{MAX_PRESTIGE_LEVELS, PrestigeDef, Table};
 pub use quest::{

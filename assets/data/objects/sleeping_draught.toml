@@ -1,0 +1,26 @@
+# A sleeping draught (spec §8 "Potions": "Flasks"; the potions wave 2 design §4.4): a flask.
+# Thrown, it shatters into the Sleep spell's breath of slumber where it breaks; drunk, it makes
+# its drinker drowsy. Sleep is pink.
+[[object]]
+id = "sleeping_draught"
+name = "sleeping draught"
+plural = "sleeping draughts"
+glyph = "!"
+fg = "#e890b8"
+class = "potions"
+materials = ["glass"]
+weight = 250
+value = 60
+stackable = true
+level = 3
+frequency = 15
+
+[object.drink]
+kind = "harm"
+dice = "3"
+status = "drowsy"
+colour = "pink"
+
+[object.throw]
+spell = "sleep"
+words = "A sweet, heavy mist puffs from the shards."

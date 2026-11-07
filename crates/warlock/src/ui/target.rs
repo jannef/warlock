@@ -280,6 +280,20 @@ impl Aim {
                 let reach = view.own_spell_reach(id)?;
                 (reach.radius?, reach.range?, spell.look.noun.clone())
             }
+            // A flask whose type the player knows, of a burst that harms (a hex's spares its
+            // thrower): its splash at its own rung, as far as they throw it.
+            AimKind::Throw(item) => {
+                let stack = view.inventory().get(item)?;
+                let content = view.content();
+                let flask = (content.object(stack.object).flask.as_ref())
+                    .filter(|_| view.lore().is_identified(stack.object))?;
+                let spell = content.spell(flask.spell);
+                if spell.shape != Shape::Burst || spell.kind != SpellPurpose::Damage {
+                    return None;
+                }
+                let radius = flask.splash(content).radius?;
+                (radius, view.throw_range(item)?, spell.look.noun.clone())
+            }
             _ => return None,
         };
         let me = view.viewer();

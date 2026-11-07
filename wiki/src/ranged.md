@@ -29,7 +29,8 @@ stones (see [Ammunition](ammunition.md)).
 - With nothing ready: "You have nothing ready to throw or shoot." No time passes.
 
 `T` opens a list of everything you carry that is made for throwing, so you can throw any of it
-without readying it first. A shot takes a [turn](time.md#what-takes-time), and so does a throw. A [crossbow](weapon-skills.md#weapon-skill-crossbows) takes longer, because it
+without readying it first. Your [potions](potions.md#flasks) are on it too: a potion thrown
+shatters where it lands, and a flask works a spell there. A shot takes a [turn](time.md#what-takes-time), and so does a throw. A [crossbow](weapon-skills.md#weapon-skill-crossbows) takes longer, because it
 must be reloaded after every shot. [Turns and movement](turns.md) gives the times.
 
 {{#include generated/launchers.md}}

@@ -70,8 +70,8 @@ use crate::action::position_text;
 use crate::action::{AttackKind, Event, ReadTarget, SpellShape};
 use crate::combat::{self, Attack, Category, Profile, Strike};
 use crate::content::{
-    Bolt, Burst, Content, Grip, Resolution, Shape, SpellData, SpellPurpose, Stance, StatusId,
-    Trigger, merge_rider,
+    Bolt, Burst, Content, Flask, Grip, Resolution, Shape, SpellData, SpellPurpose, Stance,
+    StatusId, Trigger, merge_rider,
 };
 use crate::content::{Effect as ItemEffect, ObjectId, SpellId};
 use crate::damage::{Damage, Kinds};
@@ -365,7 +365,8 @@ impl World {
                 cast.read.set(Some((scroll.object, kept)));
             }
             Pay::Wand(item, _) => self.use_charge(item),
-            Pay::Creature => {}
+            // The flask broke as it landed (`flask.rs`).
+            Pay::Creature | Pay::Flask => {}
         }
         true
     }
@@ -1122,12 +1123,16 @@ enum Pay {
     Wand(usize, u8),
     /// A creature's own spell (`creature_cast.rs`): its mana spent before the cast.
     Creature,
+    /// A flask, thrown and shattered (`flask.rs`): gone before the cast.
+    Flask,
 }
 
 /// One cast's settled facts, handed to each kind's code.
 pub(super) struct Cast<'c> {
     pub(super) spell: SpellId,
     pub(super) def: &'c SpellData,
+    /// Who casts it: whose its blows, kills, and zone are (a flask's thrower).
+    pub(super) by: ActorId,
     pay: Pay,
     pub(super) reach: Reach,
     /// The school and the caster style it is cast in (`spell_aim.rs`), decided once before its
@@ -1170,6 +1175,32 @@ impl<'c> Cast<'c> {
         Self::settle(caster, content, spell, Pay::Creature, aim)
     }
 
+    /// The splash of `flask` thrown by `by` (`flask.rs`): the spell it names at its rung of
+    /// each of the spell's ladders ([`Flask::splash`]), with no caster's stats, hooks, school,
+    /// or style (glass, not skill).
+    pub(super) fn by_flask(by: ActorId, content: &'c Content, flask: &Flask) -> Self {
+        let def = content.spell(flask.spell);
+        let splash = flask.splash(content);
+        Cast {
+            spell: flask.spell,
+            def,
+            by,
+            pay: Pay::Flask,
+            skills: AttackSkills::default(),
+            reach: Reach {
+                range: Some(flask.range),
+                radius: splash.radius,
+                jumps: def.effect.arcs.map(i32::from),
+            },
+            roll: splash.roll,
+            reroll: 0,
+            degrees: splash.degrees,
+            riders: Vec::new(),
+            read: Cell::new(None),
+            outcome: Cell::new(Outcome::default()),
+        }
+    }
+
     /// `caster`'s cast of `def`, paid by `pay`, from `aim`: its hooks summed once with the
     /// caster style's ([`Actor::spell_mods_from`]), the roll at the rung of who casts it (its
     /// own, a scroll's, a wand's), the reach and the degrees the caster's own.
@@ -1182,13 +1213,14 @@ impl<'c> Cast<'c> {
     ) -> Self {
         let mods = caster.spell_mods_from(content, def, aim);
         let by = match pay {
-            Pay::Mana(_) | Pay::Creature => CastBy::Own,
+            Pay::Mana(_) | Pay::Creature | Pay::Flask => CastBy::Own,
             Pay::Scroll(_, rungs) => CastBy::Scroll(rungs),
             Pay::Wand(_, rungs) => CastBy::Wand(rungs),
         };
         Cast {
             spell,
             def,
+            by: caster.id,
             pay,
             skills: caster.spell_skills(content, def, aim),
             reach: caster.spell_reach_with(content, def, &mods),

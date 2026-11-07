@@ -1,0 +1,34 @@
+---
+source: crates/warlock/src/ui/screen_snapshots.rs
+expression: "render(case, content.clone())"
+---
+ You pick up an inky orange potion, a silty violet potion, and a syrupy pink potion.
+ This is a potion of might! This is a potion of owl's eyes! This is a sleeping draught!
+
+
+
+
+
+
+
+
+           ┌─ Throw ────────────────────────────────────────────────────────────────────┐
+           │                                                                            │
+           │ Potions                                                                    │
+           │ > a - ! a potion of might                                           250 g  │
+           │   b - ! a potion of owl's eyes                                      250 g  │
+           │   c - ! a sleeping draught                                          250 g  │
+           │                                                                            │
+           │ a-c or Enter choose   Esc cancel                                           │
+           └────────────────────────────────────────────────────────────────────────────┘
+
+
+
+
+
+
+
+
+
+
+ The Hub  ·  HP 18/18  ·  MP 2/2  ·  Openings 0/5  ·  Sta 10/10  ·  Lv 1  ·  08:04       ? controls

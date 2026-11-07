@@ -113,6 +113,8 @@ pub enum SoundKind {
     Scream,
     /// A wail (the banshee: her aura too).
     Wail,
+    /// A crash of glass: a flask shattering where it was thrown (spec §8 "Potions").
+    Shatter,
     /// A heartbeat: Sense the quick's, a living creature near (spec §8 "Spells"). No noise anyone
     /// makes: only the player hears one, and never its exact place.
     Heartbeat,
@@ -145,6 +147,7 @@ impl SoundKind {
             SoundKind::Rattle => "rattle",
             SoundKind::Scream => "scream",
             SoundKind::Wail => "wail",
+            SoundKind::Shatter => "shatter",
             SoundKind::Heartbeat => "heartbeat",
             SoundKind::Bell => "bell",
             SoundKind::Explosion => "explosion",
@@ -172,6 +175,7 @@ impl SoundKind {
             SoundKind::Rattle => "a rattle",
             SoundKind::Scream => "a scream",
             SoundKind::Wail => "a wail",
+            SoundKind::Shatter => "a crash of glass",
             SoundKind::Heartbeat => "a heartbeat",
             SoundKind::Bell => "a bell ring",
             SoundKind::Explosion => "an explosion",
@@ -185,6 +189,9 @@ impl SoundKind {
 pub const MELEE_NOISE: u16 = 60;
 pub const SHOT_NOISE: u16 = 40;
 pub const THROW_NOISE: u16 = 30;
+/// How loud a flask shattering is where it breaks, unless its `noise` says otherwise (spec §8
+/// "Potions"): as loud as the throw.
+pub const SHATTER_NOISE: u16 = 30;
 pub const SPELL_NOISE: u16 = 50;
 /// How loud a kick at a door is on the door, whether it breaks or holds: loud.
 pub const KICK_NOISE: u16 = 100;

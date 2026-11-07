@@ -103,6 +103,8 @@ pub enum Cause {
     Trap(TrapId),
     /// The spell of a scroll of this kind they read caught them (spec §8 "Scrolls").
     Scroll(ObjectId),
+    /// The splash of a flask of this kind they threw caught them (spec §8 "Potions": "Flasks").
+    Flask(ObjectId),
     /// They fell through a collapsed floor (spec §7 "Special rooms").
     Fall,
     /// A spell of their own caught them (spec §8 "Class abilities").
@@ -124,7 +126,9 @@ impl Cause {
                 let name = &content.trap(t).name;
                 format!("Killed by {} {name}", article(name))
             }
-            Cause::Scroll(o) => format!("Killed by their own {}", content.object(o).name),
+            Cause::Scroll(o) | Cause::Flask(o) => {
+                format!("Killed by their own {}", content.object(o).name)
+            }
             Cause::Spell(spell) => {
                 let noun = (content.spell_of(spell))
                     .map_or_else(|| "spell".into(), |s| s.look.noun.clone());
@@ -141,9 +145,12 @@ impl Cause {
         match self {
             Cause::Starvation => "You starve to death...".into(),
             Cause::Choked(o) => format!("You choke to death on the {}...", name(o)),
-            Cause::Trap(_) | Cause::Scroll(_) | Cause::Spell(_) | Cause::Altar | Cause::Fall => {
-                "You die...".into()
-            }
+            Cause::Trap(_)
+            | Cause::Scroll(_)
+            | Cause::Flask(_)
+            | Cause::Spell(_)
+            | Cause::Altar
+            | Cause::Fall => "You die...".into(),
         }
     }
 }

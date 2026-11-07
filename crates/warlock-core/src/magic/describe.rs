@@ -243,7 +243,14 @@ fn potion_lines(stack: &Stack, lore: Lore<'_>) -> Vec<Line> {
             format!("Wards you against {kinds} for a while")
         }
     };
-    vec![line(LineKind::Stat, text)]
+    let mut lines = vec![line(LineKind::Stat, text)];
+    // A flask (spec §8 "Potions": "Flasks"): what its splash is, by its spell's name.
+    if let Some(flask) = &content.object(stack.object).flask {
+        let spell = &content.spell(flask.spell).name;
+        let text = format!("Thrown, it shatters and casts {spell} where it breaks");
+        lines.push(line(LineKind::Stat, text));
+    }
+    lines
 }
 
 /// What a boost of `stat` makes its drinker, in words: "stronger".
