@@ -3768,6 +3768,31 @@ impl Content {
             .collect()
     }
 
+    /// The candidates of a floor's population or a timed spawn ([`Content::candidates`]), each
+    /// type not hostile to the player by default (the neutral animals; their stance in the data,
+    /// whatever empathy a player has) weighed at `odds.neutral` % of its rarity's factor (#1195:
+    /// a dungeon is for fighting).
+    pub fn draw_candidates(
+        &self,
+        kinds: &[CreatureId],
+        met: &BTreeSet<String>,
+        odds: &danger::Odds,
+    ) -> Vec<danger::Candidate> {
+        let mut candidates = self.candidates(kinds, met);
+        if odds.neutral < 100 {
+            let player = self.creature_id("player");
+            for (c, _, factor, _) in &mut candidates {
+                if player.is_some_and(|p| self.stance(*c, p) != faction::Stance::Hostile) {
+                    // At least 1 unless 0 % (a rare type at a small share still comes).
+                    let scaled = u32::from(*factor) * u32::from(odds.neutral) / 100;
+                    let scaled = if odds.neutral > 0 { scaled.max(1) } else { 0 };
+                    *factor = u16::try_from(scaled).unwrap_or(u16::MAX);
+                }
+            }
+        }
+        candidates
+    }
+
     /// The index of size `id` in [`Content::sizes`].
     pub fn size_index(&self, id: &str) -> Option<usize> {
         self.sizes.iter().position(|s| s.id == id)
@@ -5422,6 +5447,7 @@ mod tests {
             deeper: 100,
             deeper_cap: danger::MAX_DEEPER_CAP,
             dread_one_in: 0,
+            neutral: 100,
         };
         let mut rng = crate::rng::Rng::stream(1, "test");
         for _ in 0..50 {

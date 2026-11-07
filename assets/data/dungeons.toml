@@ -67,6 +67,10 @@
 #              the generic list is drawn there instead
 #   deeper     percent of each further step deeper (0 to 100, default `[defaults]`'s)
 #   deeper_cap  the most steps past the first (0 to 50, default `[defaults]`'s)
+#   neutral    the weight, in percent of its own (0 to 100, default `[defaults]`'s), that a
+#              type not hostile to the player by default (wildlife and the like) keeps in the
+#              draws of a floor's population and its timed spawns; the hostile types take the
+#              rest (a vault's pools and a teeming den draw as before)
 #   dread_one_in  one draw in this many (1 or more, default `[defaults]`'s) is made among the
 #              dread types alone (a creature's `dread = true`), each by its level and rarity,
 #              and every other draw among the rest; where the side rolled has nothing to draw,
@@ -93,7 +97,8 @@
 #
 # [defaults] (this file only; required once any branch or level has a danger): the odds every
 # area with a danger draws by unless it gives its own `stray`, `out_of_depth`, `deeper`,
-# `deeper_cap`, and `dread_one_in` (spec §7 "Danger levels"; `dread_one_in` defaults to 100).
+# `deeper_cap`, `dread_one_in`, and `neutral` (spec §7 "Danger levels"; `dread_one_in` defaults
+# to 100, `neutral` to 100).
 #
 # Generators build with the terrain void, wall, floor, door_closed, door_open, stairs_up,
 # stairs_down, water, sconce, fungus and the light lamp, and stamp vaults (assets/vaults).
@@ -110,3 +115,6 @@ deeper_cap = 10
 # One draw in this many is made among the dread types alone, every other among the rest
 # (docs/design/monster-dread.md §8; the owner: "let's increase the default to 1-in-100").
 dread_one_in = 100
+# Neutral animals keep this percent of their weight in a dungeon's draws (#1195; the owner: "it's
+# a game about killing stuff, not Dwarf Fortress").
+neutral = 10

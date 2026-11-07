@@ -31,6 +31,8 @@ danger = { base = 4, per_depth = 1 }
 population = ["sprite", "pixie", "quickling", "boggle", "darkling", "redcap"]
 # Only fey: nothing from outside finds the way in.
 stray = 0
+# The fey neutral to the player are its folk, not wildlife: they keep their whole weight (#1195).
+neutral = 100
 population_count = { per_1000 = 15, least = 8, most = 16 }
 # No one trades under the hill (spec §7 "Shops"), and its rooms are its own.
 shops = { chance = 0 }
