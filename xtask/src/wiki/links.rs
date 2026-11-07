@@ -47,9 +47,11 @@ pub(super) fn check(src: &Path, book: &Path) -> Result<(), String> {
                 misses.push(format!("{stem}.md: anchor #{id} is defined twice"));
             }
         }
-        misses.extend(twin_sections(&html).into_iter().map(|(a, b)| {
-            format!("{stem}.md: sections #{a} and #{b} are one topic twice")
-        }));
+        misses.extend(
+            twin_sections(&html)
+                .into_iter()
+                .map(|(a, b)| format!("{stem}.md: sections #{a} and #{b} are one topic twice")),
+        );
         for target in attribute_values(&html, "href")
             .into_iter()
             .chain(attribute_values(&html, "src"))
@@ -121,7 +123,9 @@ fn twin_sections(html: &str) -> Vec<(String, String)> {
         .collect();
     let mut twins = Vec::new();
     for id in &headings {
-        let repeat = id.rsplit_once('-').filter(|(_, n)| n.parse::<u32>().is_ok());
+        let repeat = id
+            .rsplit_once('-')
+            .filter(|(_, n)| n.parse::<u32>().is_ok());
         let base = repeat.map(|(base, _)| base).or(id.strip_prefix("the-"));
         if let Some(base) = base.filter(|b| headings.contains(*b)) {
             twins.push((base.to_string(), id.clone()));
@@ -165,7 +169,10 @@ mod tests {
         let html = r#"<h3 id="paladin">P</h3><h3 id="the-paladin">P</h3><h3 id="bard">B</h3>
             <h3 id="bard-1">B</h3><h3 id="level-1">L</h3><a id="the-bard"></a>"#;
         let twins = twin_sections(html);
-        let pairs: Vec<(&str, &str)> = twins.iter().map(|(a, b)| (a.as_str(), b.as_str())).collect();
+        let pairs: Vec<(&str, &str)> = twins
+            .iter()
+            .map(|(a, b)| (a.as_str(), b.as_str()))
+            .collect();
         assert_eq!(pairs, [("bard", "bard-1"), ("paladin", "the-paladin")]);
     }
 }

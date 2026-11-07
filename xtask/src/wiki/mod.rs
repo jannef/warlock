@@ -524,7 +524,9 @@ mod tests {
     fn only_statuses_with_a_light_shed_one() {
         let content = Content::builtin().expect("content loads");
         let table = healing::status_effects(&content);
-        let rows: Vec<&str> = (table.lines()).filter(|l| l.starts_with("| <a id=")).collect();
+        let rows: Vec<&str> = (table.lines())
+            .filter(|l| l.starts_with("| <a id="))
+            .collect();
         assert_eq!(rows.len(), content.status_defs().len());
         for ((i, def), row) in content.status_defs().iter().enumerate().zip(rows) {
             let sheds = row.contains("shed light") || row.contains("sheds a faint light");
