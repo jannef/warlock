@@ -281,7 +281,8 @@ pub use level::{
 };
 pub use light::{Dips, Drift, HueDrift, LightId, LightPreset, MAX_LIGHT_RADIUS, Stability};
 pub use material::{
-    ANY, Found, ItemHarm, MAX_MATERIAL_VALUE, MaterialDef, MaterialId, Resists, VERY_RARE,
+    ANY, Fit, Fits, Found, ItemHarm, MAX_MATERIAL_VALUE, MaterialDef, MaterialId, ODD, POOR,
+    Resists, VERY_RARE,
 };
 pub use monster_pool::{MonsterPool, VaultMonsters};
 pub use names::{NameLists, Names};
@@ -1172,6 +1173,13 @@ impl Content {
         content.room_effects.check_factions(&content.factions)?;
         // Objects before creatures: an animated type is generated from its body's object.
         content.load_objects(files)?;
+        let (ids, materials) = (&content.material_ids, &content.materials);
+        (content.factions)
+            .resolve_gear(|name| {
+                let id = *ids.get(name)?;
+                Some((id, materials[usize::from(id.0)].group.is_some()))
+            })
+            .map_err(|m| ContentError::new("data/factions.toml", m))?;
         content.animated = Animated::parse(files, &content)?;
         // Chests before creatures: a mimic's band is its chest's, and its hold the band's.
         let path = "data/chests.toml";
