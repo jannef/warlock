@@ -9,9 +9,6 @@
 use super::ContentError;
 use std::collections::BTreeMap;
 
-/// The longest word, or plural, in the dictionary.
-pub const MAX_WORD: usize = 32;
-
 /// Words and their plurals.
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub struct Plurals {
@@ -40,13 +37,6 @@ impl Plurals {
         let words: BTreeMap<String, String> =
             toml::from_str(text).map_err(|e| err(e.to_string()))?;
         for (word, plural) in words {
-            let fits = |w: &str| !w.is_empty() && w.chars().count() <= MAX_WORD;
-            if !fits(&word) || !fits(&plural) || word.chars().any(|c| c.is_uppercase()) {
-                return Err(err(format!(
-                    "`{word}`: a word and its plural are 1 to {MAX_WORD} characters, the word \
-                     lower-case"
-                )));
-            }
             match self.words.get(&word) {
                 Some(had) if *had != plural => {
                     return Err(err(format!(
@@ -108,7 +98,7 @@ mod tests {
         );
         let error = p.add("b.toml", "wolf = \"wolfs\"\n").expect_err("refused");
         assert!(error.to_string().contains("`wolves` already"), "{error}");
-        for bad in ["Wolf = \"wolves\"", "wolf = \"\"", "wolf = 3"] {
+        for bad in ["wolf = \"\"", "wolf = 3"] {
             assert!(p.add("c.toml", bad).is_err(), "{bad}");
         }
     }

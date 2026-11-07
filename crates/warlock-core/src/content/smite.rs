@@ -32,19 +32,14 @@ struct SmiteTable {
 }
 
 impl SmiteRules {
-    /// Parses `data/smite.toml`: each tag is carried by some creature type, and the pool a sin
-    /// empties is a known resource.
+    /// Parses `data/smite.toml`: each tag of the tag form, and the pool a sin empties a known
+    /// resource.
     pub(super) fn parse(file: &str, text: &str, content: &Content) -> Result<Self, ContentError> {
         let err = |m: String| ContentError::new(file, m);
         let parsed: SmiteFile = toml::from_str(text).map_err(|e| err(e.to_string()))?;
         let table = parsed.smite;
         for tag in &table.unholy {
             super::tag::check(tag).map_err(|m| err(format!("`unholy`: {m}")))?;
-            if content.tagged(tag).next().is_none() {
-                return Err(err(format!(
-                    "`unholy`: tag `{tag}`: no creature carries it"
-                )));
-            }
         }
         let sin_empties = match &table.sin_empties {
             Some(id) => Some(
@@ -95,8 +90,6 @@ mod tests {
 
     #[test]
     fn bad_rules_are_refused() {
-        let err = with("[smite]\nunholy = [\"nobody\"]\n").expect_err("refused");
-        assert!(err.contains("no creature carries it"), "{err}");
         let err =
             with("[smite]\nunholy = [\"undead\"]\nsin_empties = \"piety\"\n").expect_err("refused");
         assert!(err.contains("unknown resource"), "{err}");

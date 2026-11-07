@@ -40,8 +40,8 @@ picks `Dir::toward` when the victim stands next to the trap), and a burst's own 
 (`input::trap_dialog`) skips doors. **Damage by danger** (#1165): `TrapDef::grows`
 (`content::TrapGrows`, parsed from `[trap.grows]`'s `damage = "danger 3 1d4, ..."` by
 `spell_ladder::parse_rungs`, the rung reader `[spell.grows]` shares; refused: no `danger` prefix,
-rungs not rising, out of 1 to `MAX_DANGER`, a rung below the one before on average
-(`Roll::mean_x2`), or rungs on a trap without damage). `spring_trap` reads
+rungs not rising, out of 1 to `MAX_DANGER`, a rung that can roll below 0, or rungs on a trap
+without damage). `spring_trap` reads
 `TrapDef::effect_at(World::danger(level))`, a clone of the effect with `damage_at`'s roll put
 in by `TrapEffect::with_damage`; `TrapEffect::damage()` stays the base (rung 0), which is what
 `def.effect` holds. A pit's damage is a `Roll` (rolled with reroll 0, the same draws as its

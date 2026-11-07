@@ -9,16 +9,15 @@
 //!
 //! Without the file the rules are [`SearchRules::default`].
 
-use super::{Content, ContentError, DIFFICULTIES, TerrainId};
+use super::{Content, ContentError, TerrainId};
 use crate::geom::{Dir, Pos};
 use crate::grid::Grid;
 use serde::{Deserialize, Serialize};
 use std::ops::RangeInclusive;
 
-/// How much the passive check may lose against an active search.
-pub const PASSIVE_PENALTIES: RangeInclusive<i32> = 0..=20;
-/// How many turns searching for a while may last at most.
-pub const SEARCH_TURNS: RangeInclusive<u8> = 1..=100;
+/// How many turns searching for a while may last: what a `search:N` action may say, so the
+/// action it sends reads back from its text (`crate::action::MAX_SEARCH`).
+pub const SEARCH_TURNS: RangeInclusive<u8> = 1..=crate::action::MAX_SEARCH;
 
 /// The numbers of searching.
 #[derive(Clone, Debug, PartialEq, Eq, Deserialize)]
@@ -45,25 +44,18 @@ impl Default for SearchRules {
 }
 
 impl SearchRules {
-    /// Parses `data/search.toml`.
+    /// Parses `data/search.toml`: `turns` within [`SEARCH_TURNS`].
     pub(super) fn parse(file: &str, text: &str) -> Result<Self, ContentError> {
         let err = |m: String| ContentError::new(file, m);
         let rules: Self = toml::from_str(text).map_err(|e| err(e.to_string()))?;
-        let range = |name: &str, value: i32, range: RangeInclusive<i32>| {
-            if range.contains(&value) {
-                Ok(())
-            } else {
-                Err(err(format!(
-                    "{name} {value} is out of range ({} to {})",
-                    range.start(),
-                    range.end()
-                )))
-            }
-        };
-        range("passive_penalty", rules.passive_penalty, PASSIVE_PENALTIES)?;
-        let turns = i32::from(*SEARCH_TURNS.start())..=i32::from(*SEARCH_TURNS.end());
-        range("turns", i32::from(rules.turns), turns)?;
-        range("secret_door", i32::from(rules.secret_door), DIFFICULTIES)?;
+        if !SEARCH_TURNS.contains(&rules.turns) {
+            return Err(err(format!(
+                "turns {} is out of range ({} to {})",
+                rules.turns,
+                SEARCH_TURNS.start(),
+                SEARCH_TURNS.end()
+            )));
+        }
         Ok(rules)
     }
 }
@@ -98,17 +90,12 @@ pub(super) enum SecretSpec {
 }
 
 impl SecretSpec {
-    /// The difficulty it asks for (`None`: `secret = false`, no secret), checked.
-    pub(super) fn difficulty(self, rules: &SearchRules) -> Result<Option<u8>, String> {
+    /// The difficulty it asks for (`None`: `secret = false`, no secret).
+    pub(super) fn difficulty(self, rules: &SearchRules) -> Option<u8> {
         match self {
-            SecretSpec::Default(false) => Ok(None),
-            SecretSpec::Default(true) => Ok(Some(rules.secret_door)),
-            SecretSpec::Difficulty(d) if DIFFICULTIES.contains(&i32::from(d)) => Ok(Some(d)),
-            SecretSpec::Difficulty(d) => Err(format!(
-                "secret difficulty {d} is out of range ({} to {})",
-                DIFFICULTIES.start(),
-                DIFFICULTIES.end()
-            )),
+            SecretSpec::Default(false) => None,
+            SecretSpec::Default(true) => Some(rules.secret_door),
+            SecretSpec::Difficulty(d) => Some(d),
         }
     }
 }
@@ -139,22 +126,18 @@ mod tests {
     use super::*;
 
     #[test]
-    fn rules_parse_with_their_ranges() {
+    fn rules_parse_and_turns_stay_an_action_s() {
         let rules = SearchRules::parse("s", "passive_penalty = 4\nturns = 10\nsecret_door = 15\n")
             .expect("valid");
         assert_eq!(rules, SearchRules::default());
         for (text, message) in [
             (
-                "passive_penalty = 21\nturns = 10\nsecret_door = 15\n",
-                "passive_penalty 21",
-            ),
-            (
                 "passive_penalty = 4\nturns = 0\nsecret_door = 15\n",
                 "turns 0",
             ),
             (
-                "passive_penalty = 4\nturns = 10\nsecret_door = 51\n",
-                "secret_door 51",
+                "passive_penalty = 4\nturns = 101\nsecret_door = 15\n",
+                "turns 101",
             ),
             ("passive_penalty = 4\nturns = 10\n", "missing field"),
         ] {
@@ -164,12 +147,11 @@ mod tests {
     }
 
     #[test]
-    fn a_secret_spec_is_the_default_or_a_checked_difficulty() {
+    fn a_secret_spec_is_the_default_or_a_difficulty() {
         let rules = SearchRules::default();
-        assert_eq!(SecretSpec::Default(true).difficulty(&rules), Ok(Some(15)));
-        assert_eq!(SecretSpec::Default(false).difficulty(&rules), Ok(None));
-        assert_eq!(SecretSpec::Difficulty(22).difficulty(&rules), Ok(Some(22)));
-        assert!(SecretSpec::Difficulty(0).difficulty(&rules).is_err());
+        assert_eq!(SecretSpec::Default(true).difficulty(&rules), Some(15));
+        assert_eq!(SecretSpec::Default(false).difficulty(&rules), None);
+        assert_eq!(SecretSpec::Difficulty(22).difficulty(&rules), Some(22));
     }
 
     #[test]

@@ -234,12 +234,7 @@ fn bad_rungs_are_refused() {
     refused("danger 3 1d6, 3 2d6", "pit", "dangers rise strictly");
     refused("danger 0 1d6", "pit", "1 to 99");
     refused("danger 100 1d6", "pit", "1 to 99");
-    refused("danger 3 1d2", "pit", "does less than the one before it");
-    refused(
-        "danger 3 1d6, 6 1d4",
-        "pit",
-        "does less than the one before it",
-    );
+    refused("danger 3 1d6-2", "pit", "can roll below 0");
     refused("danger 3 1x6", "pit", "bad roll");
     refused("danger 3 1d6", "alarm", "for a trap that does damage");
 }

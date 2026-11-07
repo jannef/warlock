@@ -32,7 +32,7 @@ is the Steal skill's use: `Action::Steal(Dir)` (replay text `steal:DIR`, cost `s
   `Equipment::after_removal` follows the victim's letters, and the stack joins the player's pack.
   Caught: `World::caught_stealing` (`shop.rs`) outrages a keeper of an open shop on the level as
   a robbery does (`outrage`), else the victim's `faction_override` becomes `StealRules::caught`
-  (hostile to the player, checked on load), so the AI and every stance follow. Then
+  (by custom one hostile to the player; the loader only resolves it), so the AI and every stance follow. Then
   `train(Use::Steal)` (training stream). Nothing is stored beyond what changed hands and the
   override (saved and hashed as they already are), so saves change only by content (the new
   `ActionKind`, no new indexed id).

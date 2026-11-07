@@ -15,6 +15,6 @@
 #
 # Try as often as you like: a creature that caught you stays angry, and that is the price.
 
-# The faction a creature that catches you stealing joins (factions.toml): it must be hostile to
-# you, so the creature comes after you.
+# The faction a creature that catches you stealing joins (factions.toml): one hostile to you, so
+# the creature comes after you.
 caught = "outraged"

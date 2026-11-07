@@ -18,12 +18,12 @@
 # Every check is rolled afresh: try as often as you like; time is the only price.
 
 # What the passive check loses against searching: you notice less in passing than where you
-# look (0 to 20).
+# look.
 passive_penalty = 4
 # Searching for a while (`z`) goes on for at most this many turns, stopping at once when
-# something is found or interrupts it (1 to 100).
+# something is found or interrupts it (1 to 100: what a `search:N` action may say).
 turns = 10
 # A secret door's difficulty where its level gives none: `secret = true` in a level legend, and
-# the doors the generators hide (1 to 50). An average searcher (Intelligence 10, untrained) finds
+# the doors the generators hide. An average searcher (Intelligence 10, untrained) finds
 # one at 14 nearly half of the time with each turn of searching.
 secret_door = 14

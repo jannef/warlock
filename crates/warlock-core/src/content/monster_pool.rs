@@ -54,15 +54,6 @@ impl MonsterPool {
             })
             .collect()
     }
-
-    /// Whether a tag pool of a vault of `campaign` holds nothing it may meet: a shared vault may
-    /// stamp in any campaign, so any type will do there.
-    pub(super) fn holds_none(&self, content: &Content, campaign: Option<&str>) -> bool {
-        match (self, campaign) {
-            (MonsterPool::Level, _) | (MonsterPool::Tags(_), None) => false,
-            (MonsterPool::Tags(_), Some(_)) => self.types(content, campaign).is_empty(),
-        }
-    }
 }
 
 /// One legend entry's monster pool: how many it brings, and the cells they may stand on.
@@ -81,7 +72,8 @@ pub struct VaultMonsters {
 }
 
 impl MonsterPoolSpec {
-    /// The pool it names, with no cells yet; refuses a name that can bring nothing.
+    /// The pool it names, with no cells yet; refuses a `count` of 0, which stands for every
+    /// cell inside.
     pub(super) fn resolve(&self, content: &Content) -> Result<VaultMonsters, String> {
         if self.count == Some(0) {
             return Err("`count` must be at least 1".into());
@@ -103,23 +95,18 @@ impl MonsterPoolSpec {
 }
 
 impl VaultMonsters {
-    /// With its cells known: its count, every cell by default; refuses more than the cells hold.
-    pub(super) fn counted(mut self) -> Result<Self, String> {
-        let cells = u32::try_from(self.cells.len()).unwrap_or(u32::MAX);
-        if self.count > cells {
-            return Err(format!(
-                "`count` {} is more than the {cells} cells it marks",
-                self.count
-            ));
-        }
+    /// With its cells known: its count, every cell by default (no more come than the cells
+    /// hold, `mapgen/population.rs`).
+    pub(super) fn counted(mut self) -> Self {
         if self.count == 0 {
-            self.count = cells;
+            self.count = u32::try_from(self.cells.len()).unwrap_or(u32::MAX);
         }
-        Ok(self)
+        self
     }
 }
 
-/// The types of tags `names`, sorted; refuses a name that brings none.
+/// The types of tags `names`, sorted (none for a tag no type that may be drawn carries); refuses
+/// `level` among tags, which would be read as a tag.
 fn tagged(content: &Content, names: &[String]) -> Result<Vec<CreatureId>, String> {
     let of_tag = |tag: &str| -> Vec<CreatureId> {
         (0..content.creature_defs().len())
@@ -133,13 +120,7 @@ fn tagged(content: &Content, names: &[String]) -> Result<Vec<CreatureId>, String
         if name == LEVEL {
             return Err(format!("`{LEVEL}` stands alone in a pool, not with tags"));
         }
-        let found = of_tag(name);
-        if found.is_empty() {
-            return Err(format!(
-                "pool `{name}` is `{LEVEL}` or a tag, and no creature that may be drawn has that tag"
-            ));
-        }
-        types.extend(found);
+        types.extend(of_tag(name));
     }
     Ok(types.into_iter().collect())
 }

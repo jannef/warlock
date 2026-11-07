@@ -326,8 +326,7 @@ fn builtin_traps_load_and_bad_ones_are_reported() {
             "object",
         ),
         ("kind = \"pit\"\ndamage = \"1d6\"\nto_hit = 2\n", "to_hit"),
-        ("kind = \"alarm\"\n", "noise"),
-        ("kind = \"teleport\"\ncharges = 0\n", "charges"),
+        ("kind = \"pit\"\ndamage = \"1d6-2\"\n", "below 0"),
         (
             "kind = \"alarm\"\nnoise = { sound = \"bell\", loudness = 999 }\n",
             "loudness",

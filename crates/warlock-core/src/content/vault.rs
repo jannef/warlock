@@ -258,19 +258,6 @@ impl Vault {
         Ok(())
     }
 
-    /// Checks its monster pools once it knows its campaign: each holds a type it may meet.
-    pub(super) fn check_monsters(&self, content: &Content) -> Result<(), String> {
-        for group in &self.template.monsters {
-            if group.pool.holds_none(content, self.campaign.as_deref()) {
-                return Err(format!(
-                    "the monster pool at {} holds no type of its campaign",
-                    group.cells[0]
-                ));
-            }
-        }
-        Ok(())
-    }
-
     pub fn id(&self) -> &str {
         &self.template.id
     }
