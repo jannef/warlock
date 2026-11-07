@@ -28,7 +28,7 @@ rat at (57, 8) route E E W W W W E E E E W W
 grave_worm at (16, 14) route S S W W W W W N S E E E E E N N
 bat at (19, 14) route W W W W W W W E E E E E E E
 crawling_hand at (23, 10) route E E W W W N N N S S S E E E W W
-sprite at (49, 12) route W W W W W W E E E E E E carrying a short bow (readied), 8 bone arrows (quivered)
+sprite at (49, 12) route W W W W W W E E E E E E carrying a short bow (readied), 8 flint arrows (quivered)
 grave_worm at (38, 15) route E E E E E N S W W W W W
 bat at (47, 7) route E W W E E E W W W E E E W W W E E W
 rat at (68, 9) route W W W W W N N S S E E E E E

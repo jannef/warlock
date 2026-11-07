@@ -44,3 +44,5 @@ Cries (#1128, `world/aura.rs`): the warg and the dire warg howl now and then (lo
 ## Variance
 
 The variance pass (#1134, `docs/dev/creatures.md` "Variance by role") sets the roles' to-hit (striker `L/4 + L/8`, brute and caster `L/4 − L/8`, the armed `L/4`), threat and crit (striker 19, brute 24 at ×3), and hit-point factors (quick and caster 0.5, brute 2.0). **Speed**: the orcs press on at 1000 (the rank-and-file within 950 to 1050), the raider at 1100, the berserker at 1200, the wargs lope at 1250.
+
+Gear materials (#1191): the faction's `gear` in `data/factions.toml`: orcs favour bone (55 %) and iron (15 %): crude weapons, a spear mostly bone-headed, each its share of the draws for an item whose construction list holds it, the usual draw the rest (`docs/dev/objects.md` "Materials and variants").

@@ -17,17 +17,17 @@ mud_golem at (15, 20) route N N N W N N E W E E W W E W S S E S S S
 marsh_troll at (77, 5) route N N N E E E S N W W W S S S
 mud_golem at (79, 3) route W W S S S S S N N N N N E E
 mud_golem at (42, 34) route N E E E S N W W W S
-footpad at (32, 5) route S S S S S S S N N N N N N N carrying an aluminium short sword (wielded)
-footpad at (37, 10) route E E E E W W W W carrying a copper short sword (wielded), a leather jerkin (being worn)
+footpad at (32, 5) route S S S S S S S N N N N N N N carrying a bendalloy short sword (wielded)
+footpad at (37, 10) route E E E E W W W W carrying a short sword (wielded), a leather jerkin (being worn)
 giant_leech at (12, 10) route S S N N S N S S N N
 mud_golem at (14, 37) route N N N N W W E E S S S S
 mud_golem at (9, 8) route E S S S W W W W E E E E N N N W
 giant_frog at (63, 33) route S W W W W W W W E E E E E E E N
 marsh_troll at (30, 11) route E E E E E E E W W W W W W W
 warg at (67, 18) route E W W S S S N N N E E W
-footpad at (53, 11) route E E E E E E W W W W W W carrying a bronze short sword (wielded), a hardened leather jerkin (being worn)
+footpad at (53, 11) route E E E E E E W W W W W W carrying an iron short sword (wielded), a leather jerkin (being worn)
 mud_golem at (5, 22) route E E S S S E W N N N S S S E W N N N W W
-footpad at (46, 3) route W W W W E W E E E E carrying an iron short sword (wielded)
+footpad at (46, 3) route W W W W E W E E E E carrying a short sword (wielded)
 giant_frog at (15, 35) route E E W W W W W E E E E E W W
 marsh_troll at (22, 37) route W W N E E E E W W W W S E E
 crocodile at (16, 19) route W W N N S S E E
@@ -39,22 +39,22 @@ mud_golem at (64, 34) route N N E E E E S S S N N N W W W W S S
 mud_golem at (74, 34) route E N N S S E W W E W E E W N N S S W
 marsh_troll at (7, 32) route N N N N N W W E E S S S S S
 giant_centipede at (59, 14) route W N N W W N N N N S S S S E E S S E
-footpad at (55, 20) route W W W S S N N E E E carrying a bronze short sword (wielded)
+footpad at (55, 20) route W W W S S N N E E E carrying an iron short sword (wielded)
 crocodile at (38, 12) route E E E E E N S W W W W W
 mud_golem at (40, 11) route S S S S W W W N S E E E N N N N
 mud_golem at (31, 11) route S S S S N N N N
 marsh_troll at (76, 7) route W W E E E N N N N N S S S S S W W W E E
 footpad at (79, 9) route E E S S S S S N N N N N W W carrying a leather jerkin (being worn)
 mud_golem at (9, 32) route N N N N N N E W S S S S S S
-footpad at (68, 9) route E W E E E E E W W W W W E W carrying a copper short sword (wielded)
+footpad at (68, 9) route E W E E E E E W W W W W E W carrying a short sword (wielded)
 crocodile at (5, 15) route E W W N E E E W W W S E E W
 marsh_troll at (38, 27) route S S S S N S N N N N
 giant_leech at (49, 9) route N N N S S N N S S S
 giant_leech at (38, 9) route W S S S S S N N N N N E
 marsh_troll at (47, 6) route S S W W W E E E N N
 crocodile at (9, 10) route W W W W N N N S S N N S S S E E E E
-duergar_slinger at (34, 34) route W W W W W W W W W E E E E E E E E E carrying a sling (readied), 20 sling stones (quivered), a chromium hand axe (wielded), an iron cap (being worn)
-footpad at (16, 20) route S W W W E E E N carrying a bronze short sword (wielded), a leather jerkin (being worn)
+duergar_slinger at (34, 34) route W W W W W W W W W E E E E E E E E E carrying a sling (readied), 20 sling stones (quivered), a flint hand axe (wielded), a leather cap (being worn)
+footpad at (16, 20) route S W W W E E E N carrying an iron short sword (wielded), a leather jerkin (being worn)
 giant_centipede at (90, 5) route E E E S E E S S N N W W N W W W
 giant_centipede at (32, 32) route E E E E E E W W W W W W
 giant_centipede at (7, 4) route E E S S E S S S S S N N N N N W N N W W
@@ -72,13 +72,13 @@ crocodile at (76, 12) route S S S S E E E W W W N N N N
 giant_centipede at (21, 24) route N N S N N N N E W S S S S N S S
 mud_golem at (32, 31) route N N N E W S S S
 lesser_fire_elemental at (5, 7) route S E E E E E S N W W W W W N
-footpad at (73, 29) route E S S S S S S S N N N N N N N W carrying a bronze short sword (wielded), a leather jerkin (being worn)
+footpad at (73, 29) route E S S S S S S S N N N N N N N W carrying an iron short sword (wielded), a leather jerkin (being worn)
 mud_golem at (30, 3) route S W W W W E E E E N
 giant_leech at (78, 5) route W N N N E E E S N W W W S S S E
 crocodile at (91, 16) route S S S S N N N N
 giant_centipede at (63, 32) route E S S N N E E E E W W W W S S N N W
 footpad at (44, 32) route W W E E E S S S N N N W W W E E carrying a short sword (wielded)
-footpad at (81, 11) route N N N W W E E S S S carrying a copper short sword (wielded)
+footpad at (81, 11) route N N N W W E E S S S carrying a short sword (wielded)
 animated_blade_9 at (73, 24) route N E E E S N W W W S carrying a hand axe (wielded)
 mud_golem at (41, 22) route N N N N N S S S S S
 giant_leech at (54, 22) route S S W W W W W E E E E E N N

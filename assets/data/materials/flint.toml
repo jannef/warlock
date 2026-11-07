@@ -11,3 +11,4 @@ damage = -1
 value = 10
 rarity = { weight = 300, deeper = -15 }
 gear = { weight = 600, deeper = -40 }
+fit = { jewellery = "poor" }
