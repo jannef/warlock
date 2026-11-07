@@ -127,10 +127,9 @@ impl World {
         let text = match (standing(self), ended) {
             (_, Ended::Died) => return,
             (false, _) => format!("After {took}, the {name} crumbles."),
-            (true, Ended::Came(id)) => format!(
-                "{} comes into view; you stop digging after {took}.",
-                self.creature_called(id)
-            ),
+            (true, Ended::Came(came)) => {
+                format!("{}; you stop digging after {took}.", self.came_line(came))
+            }
             (true, Ended::Said | Ended::Done) => format!("You stop digging after {took}."),
         };
         self.say(text);

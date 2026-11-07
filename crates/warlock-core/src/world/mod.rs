@@ -1922,6 +1922,8 @@ mod resource_talent_tests;
 #[cfg(test)]
 mod resource_tests;
 #[cfg(test)]
+mod rest_close_tests;
+#[cfg(test)]
 mod retribution_tests;
 #[cfg(test)]
 mod reveal_tests;

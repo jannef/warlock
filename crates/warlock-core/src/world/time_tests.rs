@@ -74,6 +74,7 @@ name = "you"
 glyph = "@"
 fg = "#ffffff"
 weight = 70000
+faction = "player"
 
 [[creature]]
 id = "rat"
@@ -81,6 +82,32 @@ name = "rat"
 glyph = "r"
 fg = "#806040"
 weight = 4000
+faction = "wildlife"
+
+[[creature]]
+id = "giant_rat"
+name = "giant rat"
+glyph = "r"
+fg = "#806040"
+weight = 4000
+faction = "vermin"
+"##;
+
+/// Giant rats are hostile to the player (only a hostile stops a rest, spec §8 "Rest"); rats
+/// are neutral.
+const FACTIONS: &str = r##"
+[[faction]]
+id = "player"
+name = "you"
+
+[[faction]]
+id = "wildlife"
+name = "wildlife"
+
+[[faction]]
+id = "vermin"
+name = "vermin"
+hostile = ["player"]
 "##;
 
 const LEGEND: &str = r##"
@@ -130,10 +157,12 @@ fn files() -> ContentFiles {
     let mut files = ContentFiles::default();
     files.insert("data/terrain.toml", TERRAIN);
     files.insert("data/creatures.toml", CREATURES);
+    files.insert("data/factions.toml", FACTIONS);
     files.insert("data/legend.toml", LEGEND);
     files.insert("levels/camp.toml", CAMP);
     files.insert("levels/cellar.toml", CELLAR);
-    // A hall far longer than the view range; the rat starts 94 cells from the player.
+    // A hall far longer than the view range; a giant rat starts 94 cells from the player and
+    // walks to 4 cells from them.
     let row = format!("#@{}r{}#", ".".repeat(93), ".".repeat(5));
     let wall = "#".repeat(row.len());
     files.insert(
@@ -141,7 +170,7 @@ fn files() -> ContentFiles {
         &format!(
             "name = \"Hall\"\nmap = '''\n{wall}\n{row}\n{wall}\n'''\n[legend]\n\
              \"@\" = {{ terrain = \"floor\", spawn = \"player\" }}\n\
-             \"r\" = {{ terrain = \"floor\", creature = \"rat\", route = \"W60 E60\" }}\n"
+             \"r\" = {{ terrain = \"floor\", creature = \"giant_rat\", route = \"W90 E90\" }}\n"
         ),
     );
     files.insert(
@@ -189,9 +218,10 @@ fn secs(s: u64) -> Duration {
     Duration::seconds(s)
 }
 
-/// Waits until a creature comes into view; returns how many turns that took.
+/// Waits until a hostile creature comes close in view (what stops a rest); returns how many
+/// turns that took.
 fn waits_until_a_creature_shows(world: &mut World) -> u64 {
-    while world.creatures_in_view().is_empty() {
+    while world.watched_in_view().is_empty() {
         world.apply(&Action::Wait);
         assert!(world.turn() < 1000, "no creature ever came into view");
     }
@@ -282,28 +312,30 @@ fn resting_passes_turns_until_the_goal() {
 fn resting_stops_on_the_turn_a_creature_comes_into_view() {
     // In the hall the rat is far enough away for turns to pass between perceptions; the rest
     // must still stop on the very turn it comes into view.
-    assert_eq!(world("hall").out_of_view_for(), secs(6 * (94 - 41)));
-    assert_eq!(world("camp").out_of_view_for(), Duration::ZERO);
-    for scenario in ["camp", "hall"] {
-        let mut waited = world(scenario);
-        let turns = waits_until_a_creature_shows(&mut waited);
-        assert!(turns > 1, "{scenario}: the rat starts out of view");
+    assert_eq!(world("hall").out_of_view_for(), secs(6 * (94 - 6)));
+    // The camp's rat is neutral: it never stops a rest.
+    assert_eq!(world("camp").out_of_view_for(), Duration::seconds(u64::MAX));
+    let mut camp = world("camp");
+    let out = camp.apply(&Action::Rest(Rest::For(Duration::hours(1))));
+    assert_eq!(out.elapsed, Duration::hours(1), "{}", last_message(&camp));
+    let mut waited = world("hall");
+    let turns = waits_until_a_creature_shows(&mut waited);
+    assert!(turns > 1, "the rat starts out of view");
 
-        let mut rested = world(scenario);
-        let out = rested.apply(&Action::Rest(Rest::For(Duration::hours(1))));
-        assert_eq!(rested.turn(), turns, "{scenario}");
-        assert_eq!(out.elapsed, secs(6 * turns));
-        assert_eq!(rested.state().actors, waited.state().actors, "{scenario}");
-        let rested_for = secs(6 * turns).spoken();
-        assert_eq!(
-            last_message(&rested),
-            format!("A rat comes into view; you stop resting after {rested_for}.")
-        );
-        // Resting on with the rat in view goes on until it leaves and comes back.
-        let before = rested.turn();
-        rested.apply(&Action::Rest(Rest::For(Duration::hours(1))));
-        assert!(rested.turn() > before + 1, "{scenario}");
-    }
+    let mut rested = world("hall");
+    let out = rested.apply(&Action::Rest(Rest::For(Duration::hours(1))));
+    assert_eq!(rested.turn(), turns);
+    assert_eq!(out.elapsed, secs(6 * turns));
+    assert_eq!(rested.state().actors, waited.state().actors);
+    let rested_for = secs(6 * turns).spoken();
+    assert_eq!(
+        last_message(&rested),
+        format!("A giant rat comes into view; you stop resting after {rested_for}.")
+    );
+    // Resting on with the rat in view goes on until it leaves and comes back.
+    let before = rested.turn();
+    rested.apply(&Action::Rest(Rest::For(Duration::hours(1))));
+    assert!(rested.turn() > before + 1);
 }
 
 #[test]

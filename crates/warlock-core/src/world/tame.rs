@@ -137,10 +137,7 @@ impl World {
                     capitalized(&called)
                 )
             }
-            Ended::Came(id) => format!(
-                "{} comes into view; you stop taming {called}.",
-                self.creature_called(id)
-            ),
+            Ended::Came(came) => format!("{}; you stop taming {called}.", self.came_line(came)),
             _ => format!("You stop taming {called}."),
         };
         self.say(text);
