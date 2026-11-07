@@ -70,7 +70,7 @@ and the endings above. But each lasts **2d4 turns** at most, and costs hit point
 
 - Engulfed: 2 every 6 seconds for each turn it has left (1 in the rug's folds).
 - Swallowed: 4 every 6 seconds for each turn it has left.
-- Latched: 1 every 12 seconds.
+- Latched: 1 every 12 seconds for each turn it has left.
 
 So the harm is heaviest at the start. Engulfed and Swallowed also stop you shooting, throwing, and
 reading. Your blows and your spells still work, so you can hack your way out of what holds you.
