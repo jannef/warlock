@@ -1,92 +1,14 @@
-//! Corroding gear and regeneration (`world/corrode.rs`, `world/regen.rs`; the dread design §5.8
-//! and §5.9, #1131): the materials' review, the roll and what it eats, never twice, the weapon
-//! form, the once-only runoff line, acid resistance; a troll's pace and what stops it.
+//! Harm to gear and regeneration (`world/corrode.rs`, `world/regen.rs`; the dread design §5.8
+//! and §5.9, #1131, #1168): the roll and what it reaches, the material's chance, damaged then
+//! destroyed, the weapon form, the once-only line of a piece withstanding it, acid resistance,
+//! rust; a troll's pace and what stops it.
 
 use super::class_active_tests::{beside, last, world};
-use super::corrode::{RUNS_OFF, chance};
+use super::corrode::chance;
 use super::*;
 use crate::action::AttackKind;
-use crate::content::Corrosion;
 use crate::item_parts::ItemPart;
 use crate::object::Stack;
-
-/// What the review (the dread design §5.8's table) says of every material.
-const CORRODES: &[&str] = &[
-    "iron",
-    "steel",
-    "copper",
-    "bronze",
-    "brass",
-    "tin",
-    "zinc",
-    "lead",
-    "pewter",
-    "cadmium",
-    "aluminium",
-    "duralumin",
-    "bendalloy",
-    "leather",
-    "hardened_leather",
-    "fur",
-    "cloth",
-    "wool",
-    "silk",
-];
-const HALF: &[&str] = &["bone", "horn", "ivory", "chitin"];
-
-#[test]
-fn every_material_is_reviewed_for_acid() {
-    let content = Content::builtin().expect("content");
-    for def in content.materials() {
-        let id = def.id.as_str();
-        let want = if CORRODES.contains(&id) {
-            Corrosion::Yes
-        } else if HALF.contains(&id) {
-            Corrosion::Half
-        } else {
-            Corrosion::No
-        };
-        assert_eq!(def.corrodes(), want, "{id}");
-    }
-    for id in [
-        "gold",
-        "silver",
-        "electrum",
-        "chromium",
-        "nicrosil",
-        "mithril",
-        "adamantium",
-    ] {
-        let def = content.material(content.material_id(id).expect(id));
-        assert_eq!(def.corrodes(), Corrosion::No, "{id}: a metal acid runs off");
-    }
-    // The two new metals: metal, and no more precious than bronze.
-    for id in ["mithril", "adamantium"] {
-        let def = content.material(content.material_id(id).expect(id));
-        assert_eq!(
-            (def.group.as_deref(), def.precious),
-            (Some("metal"), false),
-            "{id}"
-        );
-    }
-}
-
-#[test]
-fn a_bad_corrodes_word_is_refused_at_load() {
-    let mut files = crate::content::ContentFiles::builtin();
-    let path = "data/materials/tin.toml";
-    let text = (files.table("materials"))
-        .find(|(p, _)| *p == path)
-        .map(|(_, t)| t.to_string())
-        .expect("tin");
-    let text = text.replace(
-        "group = \"metal\"",
-        "group = \"metal\"\ncorrodes = \"some\"",
-    );
-    files.insert(path, &text);
-    let err = Content::load(&files).expect_err("refused");
-    assert!(err.to_string().contains("`corrodes`"), "{err}");
-}
 
 #[test]
 fn acid_resistance_halves_the_chance() {
@@ -136,27 +58,38 @@ fn count(w: &World, line: &str) -> usize {
         .count()
 }
 
+/// Hits of `attacker` on `target` until `done` holds (at most 400).
+fn hit_until(w: &mut World, who: (ActorId, ActorId), done: impl Fn(&World) -> bool) {
+    for _ in 0..400 {
+        if done(w) {
+            return;
+        }
+        hits(w, who, 1);
+    }
+    assert!(done(w), "it never came");
+}
+
 #[test]
-fn the_hezrou_eats_at_worn_mail_once_and_never_again() {
+fn the_hezrou_damages_worn_mail_then_eats_it_away() {
     let mut w = world("warrior");
     let player = w.state.player;
     let mail = dressed(&mut w, &[("chain_mail", "body", None)])[0];
     let hezrou = beside(&mut w, "hezrou", 500);
-    let mut n = 0;
-    while !damaged(&w, mail) {
-        hits(&mut w, (hezrou, player), 1);
-        n += 1;
-        assert!(n < 200, "the acid never took");
-    }
+    hit_until(&mut w, (hezrou, player), |w| damaged(w, mail));
     assert_eq!(last(&w), "The acid eats at your chain mail shirt.");
-    let after = w.state.player().inventory[mail].worked().cloned();
-    hits(&mut w, (hezrou, player), 200);
+    let worked = w.state.player().inventory[mail].worked().cloned();
     assert_eq!(
-        w.state.player().inventory[mail].worked().cloned(),
-        after,
-        "never twice"
+        worked.and_then(|w| w.by),
+        Some(crate::content::ItemHarm::Acid)
     );
-    assert_eq!(count(&w, "The acid eats at your chain mail shirt."), 1);
+    hit_until(&mut w, (hezrou, player), |w| {
+        w.state.player().inventory.is_empty()
+    });
+    assert_eq!(last(&w), "The acid eats your chain mail shirt away.");
+    assert!(
+        w.state.player().equipment.items().is_empty(),
+        "nothing worn"
+    );
     // Its armour acid eats nothing of the player's when they strike it.
     let sword = dressed(&mut w, &[("long_sword", "main_hand", None)])[0];
     hits(&mut w, (player, hezrou), 200);
@@ -164,45 +97,45 @@ fn the_hezrou_eats_at_worn_mail_once_and_never_again() {
 }
 
 #[test]
-fn the_draw_takes_only_what_corrodes() {
+fn the_draw_takes_any_piece_and_its_material_decides() {
     let mut w = world("warrior");
     let player = w.state.player;
     let at = dressed(
         &mut w,
         &[
-            ("chain_mail", "body", Some("mithril")),
+            ("chain_mail", "body", Some("adamantium")),
             ("iron_helm", "head", None),
         ],
     );
     let hezrou = beside(&mut w, "hezrou", 500);
-    hits(&mut w, (hezrou, player), 300);
-    assert!(!damaged(&w, at[0]), "mithril is never eaten");
-    assert!(damaged(&w, at[1]), "the helm is");
+    hit_until(&mut w, (hezrou, player), |w| damaged(w, at[1]));
+    assert!(!damaged(&w, at[0]), "adamantium withstands acid");
     assert_eq!(
-        count(&w, "The acid runs off your mithril chain mail shirt."),
-        0
+        count(&w, "The acid runs off your adamantium chain mail shirt."),
+        1,
+        "the draw came to the mail too, and said so once"
     );
 }
 
 #[test]
-fn acid_runs_off_mithril_and_says_so_once_in_a_life() {
+fn acid_runs_off_adamantium_and_says_so_once_in_a_life() {
     let mut w = world("warrior");
     let player = w.state.player;
-    let mail = dressed(&mut w, &[("chain_mail", "body", Some("mithril"))])[0];
+    let mail = dressed(&mut w, &[("chain_mail", "body", Some("adamantium"))])[0];
     let hezrou = beside(&mut w, "hezrou", 500);
     hits(&mut w, (hezrou, player), 300);
     assert!(!damaged(&w, mail));
     assert_eq!(
-        count(&w, "The acid runs off your mithril chain mail shirt."),
+        count(&w, "The acid runs off your adamantium chain mail shirt."),
         1
     );
-    assert!(w.state.progress.happened(RUNS_OFF));
+    assert!(w.state.progress.happened("acid_runs_off"));
     // Nothing worn at all: nothing to say.
     let mut w = world("warrior");
     dressed(&mut w, &[]);
     let hezrou = beside(&mut w, "hezrou", 500);
     hits(&mut w, (hezrou, player), 100);
-    assert!(!w.state.progress.happened(RUNS_OFF));
+    assert!(!w.state.progress.happened("acid_runs_off"));
 }
 
 #[test]
@@ -211,24 +144,40 @@ fn the_ember_beetles_blood_pits_the_weapon_that_strikes_it() {
     let player = w.state.player;
     let sword = dressed(&mut w, &[("long_sword", "main_hand", None)])[0];
     let beetle = beside(&mut w, "ember_beetle", 500);
-    let mut n = 0;
-    while !damaged(&w, sword) {
-        hits(&mut w, (player, beetle), 1);
-        n += 1;
-        assert!(n < 200, "the blood never took");
-    }
+    hit_until(&mut w, (player, beetle), |w| damaged(w, sword));
     assert_eq!(last(&w), "Your long sword comes away pitted.");
     // Its blows on the player eat nothing (its acid is in its blood).
     let mail = dressed(&mut w, &[("chain_mail", "body", None)])[0];
     hits(&mut w, (beetle, player), 200);
     assert!(!damaged(&w, mail));
-    // A club of wood is never pitted.
-    let club = dressed(&mut w, &[("club", "main_hand", None)])[0];
-    hits(&mut w, (player, beetle), 200);
-    assert!(!damaged(&w, club));
-    assert_eq!(count(&w, "The acid runs off your club."), 1);
 }
 
+#[test]
+fn the_rust_monster_rusts_both_ways_and_never_cloth() {
+    // #1138: `what = "both"`, the worn mail by its hits and the sword that strikes it.
+    let mut w = world("warrior");
+    let player = w.state.player;
+    let at = dressed(
+        &mut w,
+        &[
+            ("chain_mail", "body", None),
+            ("long_sword", "main_hand", None),
+        ],
+    );
+    let rust = beside(&mut w, "rust_monster", 500);
+    hit_until(&mut w, (rust, player), |w| damaged(w, at[0]));
+    assert_eq!(last(&w), "Rust spreads over your chain mail shirt.");
+    assert!(!damaged(&w, at[1]), "its hits eat no wielded sword");
+    hit_until(&mut w, (player, rust), |w| damaged(w, at[1]));
+    assert_eq!(last(&w), "Your long sword comes away rusted.");
+    // Leather takes no rust, and acid resistance does not help against it.
+    let mut w = world("warrior");
+    let leather = dressed(&mut w, &[("chain_mail", "body", Some("leather"))])[0];
+    let rust = beside(&mut w, "rust_monster", 500);
+    hits(&mut w, (rust, player), 200);
+    assert!(!damaged(&w, leather));
+    assert_eq!(count(&w, "Your leather chain mail shirt takes no rust."), 1);
+}
 #[test]
 fn a_hit_that_lands_corrodes_through_the_blow() {
     let mut w = world("warrior");
@@ -296,24 +245,4 @@ fn the_player_sees_the_trolls_wounds_close() {
     let kobold = beside(&mut w, "kobold", 1);
     assert_eq!(w.regenerating_hp(kobold), None);
     assert_eq!(w.regenerating_hp(w.state.player), None);
-}
-
-#[test]
-fn the_rust_monster_eats_both_ways() {
-    // #1138: `what = "both"`, the worn mail by its hits and the sword that strikes it.
-    let mut w = world("warrior");
-    let player = w.state.player;
-    let at = dressed(
-        &mut w,
-        &[
-            ("chain_mail", "body", None),
-            ("long_sword", "main_hand", None),
-        ],
-    );
-    let rust = beside(&mut w, "rust_monster", 500);
-    hits(&mut w, (rust, player), 100);
-    assert!(damaged(&w, at[0]), "the mail rusts under its feelers");
-    assert!(!damaged(&w, at[1]), "its hits eat no wielded sword");
-    hits(&mut w, (player, rust), 100);
-    assert!(damaged(&w, at[1]), "the sword that strikes it rusts");
 }

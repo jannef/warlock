@@ -2,4 +2,5 @@
 [[material]]
 id = "plant"
 name = "plant matter"
+resists = { acid = 0, rust = 100, fire = 0 }
 color = "#7fa65a"

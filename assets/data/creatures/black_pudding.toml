@@ -27,7 +27,7 @@ stats = { strength = 22, dexterity = 6, toughness = 24, intelligence = 1, willpo
 base_hp = 68
 resist = { acid = 100, cold = 50, poison = 100 }
 splits = { on = ["slashing", "piercing"], least = 8 }
-corrodes = { chance = 25, what = "both" }
+corrodes = { chance = 25, what = "both", kind = "acid" }
 corpse = false
 blood = "none"
 [creature.attack]

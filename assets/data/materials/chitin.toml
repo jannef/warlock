@@ -1,8 +1,8 @@
 [[material]]
 id = "chitin"
 name = "chitin"
+resists = { acid = 50, rust = 100, fire = 40 }
 group = "bone"
-corrodes = "half"
 color = "#4b5a3a"
 weight = 45
 to_hit = 0

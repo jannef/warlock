@@ -179,6 +179,7 @@ mod hurl;
 mod ice;
 mod incorporeal;
 mod intimidate;
+mod item_damage;
 mod jack;
 mod knock;
 mod knowledge;
@@ -1825,6 +1826,8 @@ mod identify_spell_tests;
 mod incorporeal_tests;
 #[cfg(test)]
 mod intimidate_tests;
+#[cfg(test)]
+mod item_damage_tests;
 #[cfg(test)]
 mod ki_tests;
 #[cfg(test)]

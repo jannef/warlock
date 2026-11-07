@@ -157,10 +157,12 @@
 #   regen     how fast its wounds close, in percent of the normal pace (default 100, 0 to 1000;
 #             a troll's 400): counted with its statuses' paces, so Burning and Corroded stop it.
 #             Only a brute of its level or a dread type regenerates (the dread design §5.9)
-#   corrodes  its acid (the dread design §5.8, world/corrode.rs): { chance = 25, what = "armour" }
-#             (a hit of its eats at a piece the player wears) or what = "weapon" (the player's
-#             hit on it eats at what struck) or what = "both" (each, the rust monster's); the
-#             materials' `corrodes` says what acid eats
+#   corrodes  its harm to gear (the dread design §5.8, world/corrode.rs):
+#             { chance = 25, what = "armour", kind = "acid" } (a hit of its damages a piece the
+#             player wears) or what = "weapon" (the player's hit on it damages what struck) or
+#             what = "both" (each, the rust monster's); kind is the item damage, "acid", "rust",
+#             or "fire": the materials' `resists` of that kind withstand it, and a piece damaged
+#             already is destroyed (world/item_damage.rs)
 #   attack    its natural attack, used when it wields no weapon (without one: bare hands, 1d3):
 #             { damage = "1d4", damage_type = "piercing", name = "bite", verb = "bites" } and
 #             optionally threat, crit, and to_hit as for weapons (objects.toml); Strength adds

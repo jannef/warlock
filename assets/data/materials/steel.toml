@@ -2,6 +2,7 @@
 [[material]]
 id = "steel"
 name = "steel"
+resists = { acid = 20, rust = 10, fire = 95 }
 group = "metal"
 color = "#a8b0b8"
 to_hit = 0

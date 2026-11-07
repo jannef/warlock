@@ -2,6 +2,7 @@
 [[material]]
 id = "cadmium"
 name = "cadmium"
+resists = { acid = 20, rust = 100, fire = 40 }
 group = "metal"
 color = "#b9c3b0"
 weight = 110

@@ -17,9 +17,11 @@
 //!   Strength checks, against [`TemperRules::against`] the attempts made on the item so far. A
 //!   natural 2 always fails, a natural 24 always succeeds. Every attempt counts, made or failed.
 //! - **The outcome**: made, an improvement in an [`Aspect`] drawn evenly (one gameplay draw) among
-//!   those the base item has, or a damaged item repaired; failed, the item damaged, or a damaged
-//!   one destroyed. A stack of several is worked one at a time: the one worked is set apart at
-//!   the end of the pack, and being worked it joins nothing again. Then the item, if it survived,
+//!   those the base item has, or a damaged item repaired, whatever damaged it (acid, rust, heat,
+//!   or a failure); failed, item damage of the kind [`ItemHarm::Work`] (`item_damage.rs`): the
+//!   item damaged, or a damaged one destroyed. No material withstands a failure: it is the
+//!   craft's own blunder, not the world's. A stack of several is worked one at a time: the one
+//!   worked is set apart at the end of the pack, and being worked it joins nothing again. Then the item, if it survived,
 //!   is identified, and says what it is now ("This is ...!"). Metalcraft may earn a mark
 //!   ([`Use::Temper`]), whatever came of it. The anvil is never spent.
 //!
@@ -35,14 +37,14 @@
 //! [`TemperRules::against`]: crate::content::TemperRules::against
 //! [`Aspect`]: crate::magic::Aspect
 
+use super::item_damage::Harmed;
 use super::loot::Identified;
-use super::outcome::remove_stacks;
 use super::rest::Ended;
 use super::{Actor, Spent, World};
 use crate::ability::Unavailable;
 use crate::action::Event;
 use crate::combat;
-use crate::content::{ActionKind, Content, ItemKind, Offer};
+use crate::content::{ActionKind, Content, ItemHarm, ItemKind, Offer};
 use crate::geom::{Dir, Pos};
 use crate::magic::Worked;
 use crate::magic::worked::aspects;
@@ -127,6 +129,10 @@ impl Craft {
         }
     }
 }
+
+/// What is said of a failed attempt the item withstands (`item_damage.rs`; no material
+/// withstands a failure, so only a protection could).
+const WITHSTOOD: &str = "The work goes wrong, but no harm is done.";
 
 /// Whether `stack` is of a kind an anvil works at all: a weapon, a missile weapon, armour, or a
 /// shield (not ammunition, rings, or amulets).
@@ -340,28 +346,26 @@ impl World {
     /// `worked` its state so far (the attempt counted): whether it survived.
     fn work_out(&mut self, craft: Craft, at: usize, mut worked: Worked, made: bool) -> bool {
         let [good, bad, mended, ended] = craft.lines();
-        let line = match (worked.damaged, made) {
-            (false, true) => {
-                let object = self.state.player().inventory[at].object;
-                let among = aspects(self.content.object(object));
-                let i = self.state.rng.index(among.len());
-                worked.improve(among[i]);
-                good
-            }
-            (false, false) => {
-                worked.damage();
-                bad
-            }
-            (true, true) => {
-                worked.repair();
-                mended
-            }
-            (true, false) => {
-                self.say(ended);
-                remove_stacks(self.player_mut(), &[at]);
-                self.keep_hp_within_max(self.state.player);
-                return false;
-            }
+        if !made {
+            // A failure is item damage like any other (`item_damage.rs`).
+            self.player_mut().inventory[at].set_worked(worked);
+            let (line, survived) = match self.harm_item(at, ItemHarm::Work) {
+                Harmed::Withstood => (WITHSTOOD, true),
+                Harmed::Damaged => (bad, true),
+                Harmed::Destroyed => (ended, false),
+            };
+            self.say(line);
+            return survived;
+        }
+        let line = if worked.damaged {
+            worked.repair();
+            mended
+        } else {
+            let object = self.state.player().inventory[at].object;
+            let among = aspects(self.content.object(object));
+            let i = self.state.rng.index(among.len());
+            worked.improve(among[i]);
+            good
         };
         self.say(line);
         self.player_mut().inventory[at].set_worked(worked);

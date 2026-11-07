@@ -2,8 +2,8 @@
 [[material]]
 id = "silk"
 name = "silk"
+resists = { acid = 0, rust = 100, fire = 0 }
 group = "cloth"
-corrodes = true
 color = "#f2e6f0"
 weight = 18
 protection = 20

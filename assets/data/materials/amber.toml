@@ -2,6 +2,7 @@
 [[material]]
 id = "amber"
 name = "amber"
+resists = { acid = 80, rust = 100, fire = 10 }
 precious = true
 group = "resin"
 color = "#e0a040"
