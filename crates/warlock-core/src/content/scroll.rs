@@ -9,16 +9,14 @@
 //! kind = "spell"        # the spell of data/spells/ named by `spell`, which it also teaches
 //! spell = "fireball"
 //! rungs = 1             # the rung of the spell's damage or heal ladder it casts at (default 0,
-//!                       # the base; at most the ladder's length); the reader's Scroll adept adds
+//!                       # the base; one past the ladder casts at its last); the reader's Scroll
+//!                       # adept adds
 //!
 //! [object.read]
 //! kind = "cleanse"      # no spell: read on oneself
 //! mends = true          # every point of stat damage mends (default false)
-//! restores = true       # every point drains took comes back (default false); one of the two
+//! restores = true       # every point drains took comes back (default false)
 //! ```
-//!
-//! The older `burst` and `bolt` readings are gone (the spell scaling design §7.4): the three
-//! scrolls that had them name their spells and cast them at a rung.
 
 use super::{Content, SpellId};
 use serde::Deserialize;
@@ -27,9 +25,6 @@ use serde::Deserialize;
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "snake_case")]
 enum Kind {
-    /// Refused: the old readings (module docs).
-    Burst,
-    Bolt,
     Spell,
     Cleanse,
 }
@@ -122,29 +117,19 @@ impl Reading {
 }
 
 impl ReadSpec {
-    /// Checks the spec: a `spell` reading of a spell of `data/spells/` (spells load before
-    /// objects), its `rungs` within the spell's roll ladder; a `cleanse` reading with no spell
-    /// and something to do.
+    /// Resolves the spec: a `spell` reading of a spell of `data/spells/` (spells load before
+    /// objects); a `cleanse` reading with no spell or rungs, and `mends` and `restores` only on
+    /// it (neither would be read on the other kind).
     pub(super) fn resolve(self, content: &Content) -> Result<Reading, String> {
         if self.kind == Kind::Cleanse {
             if self.spell.is_some() || self.rungs.is_some() {
                 return Err("`read`: a `cleanse` reading has no `spell` or `rungs`".into());
-            }
-            if !self.mends && !self.restores {
-                return Err("`read`: a `cleanse` reading `mends` or `restores`, or both".into());
             }
             let (mends, restores) = (self.mends, self.restores);
             return Ok(Reading::Cleanse(Cleansing { mends, restores }));
         }
         if self.mends || self.restores {
             return Err("`read`: `mends` and `restores` belong to a `cleanse` reading".into());
-        }
-        if self.kind != Kind::Spell {
-            return Err(
-                "`read`: `burst` and `bolt` readings are gone: name a spell of data/spells/ \
-                 (`kind = \"spell\"`, `spell = \"fireball\"`) and the rung it casts at (`rungs`)"
-                    .into(),
-            );
         }
         let id = self
             .spell
@@ -153,12 +138,6 @@ impl ReadSpec {
             .ok_or_else(|| format!("`read`: no spell `{id}` in data/spells/"))?;
         let def = content.spell(spell);
         let rungs = self.rungs.unwrap_or(0);
-        let most = def.grows.roll().map_or(0, |l| l.len());
-        if usize::from(rungs) > most {
-            return Err(format!(
-                "`read`: `rungs` is 0 to {most}, the length of `{id}`'s damage or heal ladder"
-            ));
-        }
         Ok(Reading::Cast(SpellScroll {
             spell,
             rungs,

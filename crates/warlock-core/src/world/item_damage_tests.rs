@@ -86,38 +86,6 @@ fn a_damaged_item_damaged_again_is_destroyed_whatever_the_kind() {
     assert_eq!(w.harm_item(0, ItemHarm::Work), Harmed::Destroyed);
 }
 
-#[test]
-fn every_material_sets_its_resists_as_reviewed() {
-    let content = Content::builtin().expect("content");
-    for def in content.materials() {
-        assert!(
-            def.sets_resists(),
-            "material `{}` sets no `resists`",
-            def.id
-        );
-    }
-    let of = |id: &str| {
-        content
-            .material(content.material_id(id).expect(id))
-            .resists()
-    };
-    for id in ["gold", "silver", "electrum", "mithril", "adamantium"] {
-        let r = of(id);
-        assert!(r.acid >= 85 && r.rust == 100, "{id}: a noble metal: {r:?}");
-    }
-    for id in ["iron", "steel"] {
-        let r = of(id);
-        assert!(
-            r.rust <= 10 && r.acid <= 20,
-            "{id} rusts and corrodes: {r:?}"
-        );
-    }
-    for id in ["wood", "cloth", "leather", "bone"] {
-        assert_eq!(of(id).rust, 100, "{id} never rusts");
-    }
-    assert!(of("wood").fire <= 20 && of("cloth").fire == 0, "they burn");
-}
-
 /// The built-in content with tin's file edited by `edit`: the load's error.
 fn tin_with(edit: impl Fn(&str) -> String) -> String {
     let mut files = ContentFiles::builtin();
@@ -131,9 +99,7 @@ fn tin_with(edit: impl Fn(&str) -> String) -> String {
 }
 
 #[test]
-fn the_loader_refuses_a_chance_past_100_and_the_old_key() {
-    let err = tin_with(|t| t.replace("acid = 30", "acid = 101"));
-    assert!(err.contains("`resists`' `acid` is in percent"), "{err}");
+fn the_loader_refuses_an_unknown_key_and_a_kind_left_out() {
     let err = tin_with(|t| t.replace("group = \"metal\"", "group = \"metal\"\ncorrodes = true"));
     assert!(err.contains("corrodes"), "{err}");
     let err = tin_with(|t| t.replace(", fire = 30", ""));

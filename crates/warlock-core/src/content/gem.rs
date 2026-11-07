@@ -23,14 +23,6 @@ use crate::color::Rgb;
 use serde::Deserialize;
 use std::collections::BTreeSet;
 
-/// The most a plain gem may be worth, in gold coins.
-pub const MAX_GEM_VALUE: u32 = 100_000;
-/// The most a size or cut may multiply a gem's value by, in percent (×100).
-pub const MAX_MULTIPLIER: u32 = 10_000;
-/// The most a gem of one size may weigh, in grams.
-pub const MAX_GEM_WEIGHT: u32 = 1000;
-/// The most sizes, and the most cuts, there may be.
-pub const MAX_GRADES: usize = 16;
 /// How much of its colour's saturation a rough (uncut) gem shows, in percent.
 pub const ROUGH_SATURATION: u32 = 50;
 
@@ -42,30 +34,13 @@ pub struct GemDef {
     /// Its colour: a loose gem's glyph, and the glyph of an item that takes its gem's colour (a
     /// ring set with it).
     pub color: Rgb,
-    /// What a plain one (of the plain size and cut) is worth, in gold coins: 1 to
-    /// [`MAX_GEM_VALUE`].
+    /// What a plain one (of the plain size and cut) is worth, in gold coins ([`Gems::value`]
+    /// clamps the worth of a gem to 1 to [`MAX_VALUE`]).
     pub value: u32,
     /// How often loot finds it among the gems: a weight (0: never found, but it may be placed).
     pub rarity: u32,
     /// "rubies"; the material's name plus `s` if absent.
     pub plural: Option<String>,
-}
-
-impl GemDef {
-    /// Checks what a material's `gem` table cannot say on its own.
-    pub(super) fn check(&self, material: &str) -> Result<(), String> {
-        if !(1..=MAX_GEM_VALUE).contains(&self.value) {
-            return Err(format!(
-                "material `{material}`: a gem's `value` is in gold, 1 to {MAX_GEM_VALUE}"
-            ));
-        }
-        if self.plural.as_deref().is_some_and(|p| p.trim().is_empty()) {
-            return Err(format!(
-                "material `{material}`: a gem's `plural` must not be empty"
-            ));
-        }
-        Ok(())
-    }
 }
 
 /// Index of a gem size in [`Gems::sizes`], smallest first. Stacks save sizes by id, so sizes
@@ -201,19 +176,6 @@ pub(super) struct Known<'a> {
     pub parts: &'a [PartDef],
 }
 
-/// Checks a size's or cut's common fields; `what` names it in errors.
-fn check_grade(what: &str, id: &str, name: &str, value: u32) -> Result<(), String> {
-    if id.trim().is_empty() || name.trim().is_empty() {
-        return Err(format!("{what} `{id}`: `id` and `name` must not be empty"));
-    }
-    if !(1..=MAX_MULTIPLIER).contains(&value) {
-        return Err(format!(
-            "{what} `{id}`: `value` multiplies a gem's value, in percent: 1 to {MAX_MULTIPLIER}"
-        ));
-    }
-    Ok(())
-}
-
 /// The one entry of `plain` that is true, as an index: names leave it unsaid.
 fn the_plain(what: &str, plain: impl Iterator<Item = bool>) -> Result<u8, String> {
     let marked: Vec<usize> = (plain.enumerate())
@@ -241,25 +203,13 @@ impl Gems {
                 parsed.object
             )));
         }
-        if parsed.chance > 100 {
-            return Err(err("`chance` is a percent, 0 to 100".into()));
-        }
-        let counts = (parsed.size.len(), parsed.cut.len());
-        if !(1..=MAX_GRADES).contains(&counts.0) || !(1..=MAX_GRADES).contains(&counts.1) {
-            return Err(err(format!(
-                "1 to {MAX_GRADES} sizes and 1 to {MAX_GRADES} cuts"
-            )));
+        // Sizes and cuts are named by `u8` ids.
+        if parsed.size.len() > 256 || parsed.cut.len() > 256 {
+            return Err(err("at most 256 sizes and 256 cuts".into()));
         }
         let mut ids = BTreeSet::new();
         let mut sizes = Vec::with_capacity(parsed.size.len());
         for s in &parsed.size {
-            check_grade("size", &s.id, &s.name, s.value).map_err(err)?;
-            if !(1..=MAX_GEM_WEIGHT).contains(&s.weight) {
-                return Err(err(format!(
-                    "size `{}`: `weight` is in grams, 1 to {MAX_GEM_WEIGHT}",
-                    s.id
-                )));
-            }
             if !ids.insert(s.id.clone()) {
                 return Err(err(format!("duplicate size id `{}`", s.id)));
             }
@@ -275,10 +225,6 @@ impl Gems {
         let mut ids = BTreeSet::new();
         let mut cuts = Vec::with_capacity(parsed.cut.len());
         for c in &parsed.cut {
-            check_grade("cut", &c.id, &c.name, c.value).map_err(err)?;
-            if c.plain && c.rough {
-                return Err(err(format!("cut `{}`: the plain cut is not rough", c.id)));
-            }
             if !ids.insert(c.id.clone()) {
                 return Err(err(format!("duplicate cut id `{}`", c.id)));
             }
@@ -303,9 +249,6 @@ impl Gems {
             let class = ItemClassId(class as u8);
             let part = (known.parts.iter().position(|p| p.id == o.part))
                 .ok_or_else(|| bad(format!("no part `{}` (data/parts.toml)", o.part)))?;
-            if o.chance > 100 {
-                return Err(bad("`chance` is a percent, 0 to 100".into()));
-            }
             if ornaments.iter().any(|x| x.class == class) {
                 return Err(bad("one ornament per class".into()));
             }
@@ -317,23 +260,12 @@ impl Gems {
             });
         }
         for def in known.objects {
-            let placed = ornaments.iter().find(|o| o.class == def.class);
-            match (placed, def.ornament) {
-                (None, Some(_)) => {
-                    return Err(err(format!(
-                        "object `{}` names its `ornament`, but its class has no `[[ornament]]` \
-                         here",
-                        def.id
-                    )));
-                }
-                (Some(o), part) if def.parts[0].part == Some(part.unwrap_or(o.part)) => {
-                    return Err(err(format!(
-                        "object `{}`: a gem is set as one of its other parts, never as its main \
-                         part (give it another `ornament`)",
-                        def.id
-                    )));
-                }
-                _ => {}
+            let placed = ornaments.iter().any(|o| o.class == def.class);
+            if !placed && def.ornament.is_some() {
+                return Err(err(format!(
+                    "object `{}` names its `ornament`, but its class has no `[[ornament]]` here",
+                    def.id
+                )));
             }
         }
         Ok(Self {

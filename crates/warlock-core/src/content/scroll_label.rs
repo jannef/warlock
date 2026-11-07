@@ -7,11 +7,6 @@ use super::ContentError;
 use crate::color::Rgb;
 use serde::Deserialize;
 
-/// How many syllables a label may have, at most.
-pub const MAX_SYLLABLES: u8 = 6;
-/// How many syllables the file must offer, at least.
-pub const MIN_PARTS: usize = 8;
-
 /// `data/scroll_labels.toml`.
 #[derive(Clone, Debug, PartialEq, Eq, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -29,34 +24,10 @@ pub struct ScrollLabelDef {
 }
 
 impl ScrollLabelDef {
-    /// Parses `data/scroll_labels.toml`: both names with `{label}`, a syllable count of 1 to
-    /// [`MAX_SYLLABLES`] (least first), and at least [`MIN_PARTS`] distinct, non-empty syllables.
+    /// Parses `data/scroll_labels.toml`. The draw tolerates any syllable counts and parts: two
+    /// labels drawn the same are told apart by a number (`scroll_label::draw_into`).
     pub(super) fn parse(path: &str, text: &str) -> Result<Self, ContentError> {
-        let err = |m: String| ContentError::new(path, m);
-        let def: Self = toml::from_str(text).map_err(|e| err(e.to_string()))?;
-        for (what, name) in [("name", &def.name), ("plural", &def.plural)] {
-            if !name.contains("{label}") {
-                return Err(err(format!("{what} `{name}` has no `{{label}}`")));
-            }
-        }
-        let [least, most] = def.syllables;
-        if least == 0 || least > most || most > MAX_SYLLABLES {
-            return Err(err(format!(
-                "syllables [{least}, {most}]: 1 to {MAX_SYLLABLES}, least first"
-            )));
-        }
-        if def.parts.len() < MIN_PARTS {
-            return Err(err(format!("at least {MIN_PARTS} parts")));
-        }
-        for (i, part) in def.parts.iter().enumerate() {
-            if part.trim().is_empty() || part.trim() != part {
-                return Err(err(format!("part `{part}` is empty or padded")));
-            }
-            if def.parts[..i].contains(part) {
-                return Err(err(format!("duplicate part `{part}`")));
-            }
-        }
-        Ok(def)
+        toml::from_str(text).map_err(|e| ContentError::new(path, e.to_string()))
     }
 
     /// `label`'s scroll's names, singular and plural: "scroll labelled ZUNBAR".
@@ -90,20 +61,8 @@ parts = ["A", "B", "C", "D", "E", "F", "G", "H"]
                 "scrolls labelled ZUN".to_string()
             )
         );
-    }
-
-    #[test]
-    fn refuses_bad_files() {
-        for (from, to) in [
-            ("scroll labelled {label}", "scroll"),
-            ("[2, 3]", "[3, 2]"),
-            ("[2, 3]", "[0, 2]"),
-            ("[2, 3]", "[2, 9]"),
-            ("\"H\"]", "\"A\"]"),
-            (", \"H\"]", "]"),
-        ] {
-            let text = GOOD.replace(from, to);
-            assert!(ScrollLabelDef::parse("x", &text).is_err(), "{from} -> {to}");
-        }
+        let odd = GOOD.replace("[2, 3]", "[3, 2]");
+        assert!(ScrollLabelDef::parse("x", &odd).is_ok());
+        assert!(ScrollLabelDef::parse("x", &GOOD.replace("fg", "colour")).is_err());
     }
 }

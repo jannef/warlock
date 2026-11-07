@@ -3,11 +3,11 @@
 //! and parts, an item level, a power ([`Power`]: a rule only a unique carries), and a line of
 //! lore. Content places one as `unique:ID` wherever it names objects (a pile, a legend's
 //! `objects` and `carry`, and `wield`/`wear` by the same name, a gear line, a kit, a shop's or a
-//! scenario's `carry`, a quest reward's `items`); [`Uniques::place`] makes it, and refuses a
-//! second placement anywhere in the content (a load error), so with pinned vaults and unique
-//! creatures a run holds it at most once with no save state. Loot never rolls one. A trader's
-//! offer may name uniques instead (`content/offer.rs`, #808): those are made at run time, once
-//! a run each (`WorldState::uniques_offered`), and no other content may place them.
+//! scenario's `carry`, a quest reward's `items`); [`Uniques::place`] makes it. Content places
+//! each once, so with pinned vaults and unique creatures a run holds it at most once with no
+//! save state (the data author's promise: a load does not count placements). Loot never rolls
+//! one. A trader's offer may name uniques instead (`content/offer.rs`, #808): those are made at
+//! run time, once a run each (`WorldState::uniques_offered`).
 //!
 //! The item is [`Magic`] of rarity rare with its name, plus [`Magic::unique`] (its id, saved),
 //! by which its power and lore are found again ([`Content::unique`]).
@@ -20,7 +20,6 @@ use crate::magic::Magic;
 use crate::object::Stack;
 use serde::Deserialize;
 use std::collections::BTreeMap;
-use std::sync::atomic::{AtomicBool, Ordering};
 
 /// How a placement names a unique item: `unique:widowmaker`.
 pub const UNIQUE: &str = "unique:";
@@ -70,13 +69,11 @@ impl UniqueDef {
     }
 }
 
-/// The unique items, in table order, and which of them content has placed.
+/// The unique items, in table order.
 #[derive(Debug, Default)]
 pub struct Uniques {
     defs: Vec<UniqueDef>,
     ids: BTreeMap<String, usize>,
-    /// Whether each has been placed while content loads (the once-a-run check).
-    placed: Vec<AtomicBool>,
 }
 
 impl Uniques {
@@ -88,20 +85,9 @@ impl Uniques {
         self.ids.get(id).map(|&i| &self.defs[i])
     }
 
-    /// Whether content has placed unique item `id` (`false` for an unknown id).
-    pub(super) fn is_placed(&self, id: &str) -> bool {
-        (self.ids.get(id)).is_some_and(|&i| self.placed[i].load(Ordering::Relaxed))
-    }
-
-    /// The unique item `id` as a placement makes it; an error for an unknown id or one already
-    /// placed (each unique is named by one placement in all content).
+    /// The unique item `id` as a placement makes it; an error for an unknown id.
     pub(super) fn place(&self, id: &str) -> Result<Stack, String> {
         let &i = (self.ids.get(id)).ok_or_else(|| format!("unknown unique item `{id}`"))?;
-        if self.placed[i].swap(true, Ordering::Relaxed) {
-            return Err(format!(
-                "`{UNIQUE}{id}` is placed twice: a unique item has one placement in all content"
-            ));
-        }
         Ok(self.defs[i].stack.clone())
     }
 }
@@ -139,9 +125,6 @@ struct PowerSpec {
     phrase: String,
 }
 
-/// The longest name a unique item may have, in characters.
-const MAX_NAME: usize = 30;
-
 /// Parses the uniques table (`table`: its files in order), against `content`'s objects,
 /// affixes, materials, statuses, and vision profiles.
 pub(super) fn parse<'a>(
@@ -163,30 +146,16 @@ pub(super) fn parse<'a>(
             def.campaign = super::campaign::of_path(path).map(str::to_string);
             uniques.ids.insert(def.id.clone(), uniques.defs.len());
             uniques.defs.push(def);
-            uniques.placed.push(AtomicBool::new(false));
         }
     }
     Ok(uniques)
 }
 
 fn resolve(spec: UniqueSpec, content: &Content) -> Result<UniqueDef, String> {
-    let ok_id = |c: char| c.is_ascii_lowercase() || c.is_ascii_digit() || c == '_';
-    if spec.id.is_empty() || !spec.id.chars().all(ok_id) {
-        return Err("ids are lower-case letters, digits, and underscores".into());
-    }
     let name = spec.name.trim();
-    if name.is_empty() || name.chars().count() > MAX_NAME {
-        return Err(format!("`name` is 1 to {MAX_NAME} characters"));
-    }
-    if spec.affixes.is_empty() {
-        return Err("a unique item has `affixes`".into());
-    }
     let object = (content.object_id(&spec.object))
         .ok_or_else(|| format!("unknown object `{}`", spec.object))?;
     let def = content.object(object);
-    if def.stackable {
-        return Err(format!("`{}` stacks: a unique item is one", def.id));
-    }
     let mut magic: Magic = magic_of(def, &spec.affixes, Some(name.into()), spec.level, content)?;
     magic.unique = Some(spec.id.clone());
     let mut stack = Stack::with_magic(object, 1, magic);
@@ -198,13 +167,7 @@ fn resolve(spec: UniqueSpec, content: &Content) -> Result<UniqueDef, String> {
         stack = stack.with_parts(own);
     }
     let (power, phrase) = match spec.power {
-        Some(p) => {
-            let phrase = p.phrase.trim().to_string();
-            if phrase.is_empty() {
-                return Err("power: `phrase` says what it does".into());
-            }
-            (Some(power(&p, content)?), Some(phrase))
-        }
+        Some(p) => (Some(power(&p, content)?), Some(p.phrase.trim().to_string())),
         None => (None, None),
     };
     let lore = (spec.lore.map(|l| l.trim().to_string())).filter(|l| !l.is_empty());
@@ -262,7 +225,6 @@ fn power(p: &PowerSpec, content: &Content) -> Result<Power, String> {
     let status =
         (content.status_id(ward)).ok_or_else(|| format!("power: unknown status `{ward}`"))?;
     let message = (p.message.as_deref().map(str::trim))
-        .filter(|m| !m.is_empty())
         .ok_or("power: `ward` needs a `message` (what the player is told)")?;
     Ok(Power::Ward {
         status,

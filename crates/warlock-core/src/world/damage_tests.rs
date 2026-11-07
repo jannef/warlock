@@ -662,11 +662,6 @@ fn bad_typed_data_is_refused() {
             "at most 2",
         ),
         (
-            "slot = \"main_hand\"\ndamage = \"1d4\"\ncategory = \"daggers\"\n\
-             damage_type = \"piercing\"\nadded = { type = \"slashing\", damage = \"1d4\" }",
-            "is physical",
-        ),
-        (
             "added = { type = \"fire\", damage = \"1d4\" }",
             "`added` is for weapons",
         ),

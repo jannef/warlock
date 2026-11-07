@@ -27,6 +27,7 @@
 #             patrol through it. Caverns have none. Its kind is picked uniformly
 #   names     shopkeepers' names for generated shops, picked uniformly
 #   bundle    [least, most]: how many of a stackable object lie in one stack of generated stock
+#             (least at least 1)
 #   [keeper]  every shopkeeper: `creature` (creatures.toml), what it carries (`carry`, as in level
 #             legends: `"gold_coin*250"` is its purse, which pays for what it buys), and what of
 #             that it wields and wears (`wield`, `wear`)
@@ -38,8 +39,9 @@
 #   stock     the classes generated shops stock (each item drawn from those objects by its loot
 #             `frequency`, objects.toml, 100 for what is never loot: a spell scroll of a low spell
 #             level lies in a general store more often than one of a high level)
-#   always    objects a generated shop always lays out first, a stack of each (at most `items`'
-#             least): the general store always has scrolls of identify (spec §8 "Scrolls")
+#   always    objects a generated shop always lays out first, a stack of each (as many as its
+#             count of stacks allows): the general store always has scrolls of identify (spec §8
+#             "Scrolls")
 #   never     objects a generated shop never lays out, though it stocks their class: elixirs
 #             the costly flasks, and the gambles (draught of chance, troll's blood, brewer's
 #             blunder; spec §8 "Potions") are never in a general store or a provisioner's, only

@@ -67,10 +67,10 @@ elemental prefix (`magic/tests.rs`, #638), and each rider lands unsoaked
 (`world/damage_tests.rs`). **Categories** (#621): `AffixDef::category` (required in data) is the
 rule loot and `Magic::check` read: an item never has two affixes of one category
 (`loot::roll_affix` leaves out the categories already rolled; `Magic::check` refuses a repeat in a
-save, a legend's `[[item]]`, or a unique). `content::affix::check_category` makes every affix of
-one `Group` name one category (so one per category is one per group, which `Mods` relies on) and
-a category on both prefixes and suffixes one group. Tests: `content/affix.rs`
-(`affix_categories_are_checked`), `magic/tests.rs` (`no_rolled_item_repeats_an_affix_category`,
+save, a legend's `[[item]]`, or a unique). The data gives every affix of one `Group` one
+category, so one per category is one per group; nothing checks it at load (#1205: two affixes of
+one group on an item would only add up in `Mods`). Tests: `magic/tests.rs`
+(`no_rolled_item_repeats_an_affix_category`,
 over many rare rolls at four item levels). Hard
 rule: presentation reads an item's affixes only through `Stack::known_magic` (none until
 identified; `Stack::magic` is crate-private), names only through `Stack::describe` /
@@ -78,7 +78,7 @@ identified; `Stack::magic` is crate-private), names only through `Stack::describ
 cannot leak; dev dumps use `describe_truth`. Tests: `world/numbers_tests.rs` (a +1 sword, an
 unidentified armour's base numbers and its affixes once identified, a shield, a launcher's
 range, ammunition, a worn thing's to-hit). A new effect is a
-variant of `Effect` (id, value range, local/global, `allowed_on`; `index()` and `all()` insert
+variant of `Effect` (id, local/global, `allowed_on`; `index()` and `all()` insert
 it by group, never at the end), its reader in one rule, a
 phrase in `describe.rs`, and a wiki word and tier form in `xtask/src/wiki/magic.rs`
 (`effect_words`, `tier_value`). Affixes are saved by id, so
@@ -141,11 +141,11 @@ stamina, global) in `Actor::weapon_stamina`. **On a kill** (E1, #632; `world/sip
 the kill point of an attack (`fight.rs::resolve`, `spell.rs::spell_strikes`), the slain within
 `SIPHON_RANGE` (3, a radius); never from `dies`, so a status tick's or a trap's death gives
 nothing. **`Group`** is a struct `{ effect, skill, damage_type, resource }` (`Group::of` for an
-effect that names nothing else): one group per (effect, resource), so `check_category` keeps
-Tireless (stamina) and of Fury (rage) apart. **`ItemKind::Tool`** (`ALL` is a slice; the `tools`
+effect that names nothing else): one group per (effect, resource), so Tireless (stamina) and of
+Fury (rage) are two. **`ItemKind::Tool`** (`ALL` is a slice; the `tools`
 item class holds the kind; rare names' second words `tool = [...]` in `data/affixes.toml`): a
-kind for digging tools, which the pick-axe takes in D1. **Tiers**: at most `MAX_TIERS` (12) per
-affix, a loader check. Every shipped ladder (X1, #637, regraded the old affixes but Flaming,
+kind for digging tools, which the pick-axe takes in D1. **Tiers**: rising by item level (`tier_window` reads them in order;
+at most 255, a rolled affix names its tier as a `u8`). Every shipped ladder (X1, #637, regraded the old affixes but Flaming,
 Freezing, and Venomous, which W1 (#638) put on the elemental ladder, 1d2 at item level 2 to 1d8
 at 12, with Shocking, Corrosive, and Withering; the two light affixes keep their three glow presets, and
 Brutal and of Ruin their one tier) runs from its first level to item level 12, a tier every level
@@ -195,13 +195,12 @@ the item's id (saved, hashed; `skip_serializing_if` none, so other items' saves 
 `Magic::check` refuses an unknown id, another base, or another rarity than rare.
 
 - **Placement**: `parse_stacks` (`content/object.rs`) makes `unique:ID` through
-  `Content::place_unique` (`Uniques::place`), which marks it placed (an `AtomicBool` per unique,
-  set while `Content::load` runs: every placement is parsed then, once per legend cell that
-  names it) and refuses a second placement and a count. `level::equip_ids` takes `unique:ID` in
+  `Content::place_unique` (`Uniques::place`). Content places each unique once (the data
+  author's promise, not counted at load, #1205). `level::equip_ids` takes `unique:ID` in
   `wield`/`wear` for the carried stack of that unique (not a placement). Gear (`gear::make`)
-  and kits keep a unique as it is, and `kit::check_kept` refuses a `magic` chance on one. The
+  and kits keep a unique as it is (a `magic` chance never rerolls one). The
   Ascmearc's four are placed by their owners' gear lines (the criminals, #424,
-  `docs/dev/creatures/outlaws.md`), so no other content may name them: a test that needs a
+  `docs/dev/creatures/outlaws.md`), so no other content names them: a test that needs a
   placement defines a unique of its own (`world/unique_tests.rs`), and a test that drops the
   uniques table puts the base items in their place (`character.rs`'s `skill_free_content`). The
   wiki's table names who carries each (`xtask/src/wiki/uniques.rs`, from the gear lines).
@@ -209,9 +208,8 @@ the item's id (saved, hashed; `skip_serializing_if` none, so other items' saves 
   and Grendles Grāpe (gauntlets), `campaigns/ascmearc/data/uniques/`, each item level 12 with six
   affixes and a `ward`, after ADOM's black torc (resistances, speed, Defence and Protection; the
   caster's and the fighter's counterparts). They are placed only at run time, through a trader's
-  offer (`docs/dev/npcs.md` "A trader's offer"): `offer::check_placements` refuses content that
-  also places one, and the run's `WorldState::uniques_offered` keeps each to one offer a run (the
-  load-time `Uniques::place` flag does not apply: it marks content placements). The wiki's
+  offer (`docs/dev/npcs.md` "A trader's offer"; no other content places them), and the run's
+  `WorldState::uniques_offered` keeps each to one offer a run. The wiki's
   "Carried by" names the offer with its chance (`offered_by`).
 - **Powers**, a variant each, read in one place each: `Power::Inflict(OnHit)` rides
   `Mods::local` of the weapon into `Profile::on_hit` (`sharpen`), which `World::resolve` hands
@@ -231,7 +229,7 @@ the item's id (saved, hashed; `skip_serializing_if` none, so other items' saves 
   `(spirit)`.
 - **Adding a power**: a `Power` variant, its parse in `unique::power`, its one read, and its
   words in `xtask/src/wiki/uniques.rs` (`power_text`); the item's own words are its `phrase`.
-- **Tests**: `world/unique_tests.rs` (the table, hiding until identified, one placement,
+- **Tests**: `world/unique_tests.rs` (the table, hiding until identified, placement,
   Widowmaker's poison on every hit, High Toby's fear by its chance on the gameplay stream, the
   Bedes' darkvision on and off and under the dev override, the Turncoat's ward, a save); the
   item description's text snapshots `unique-description` and `unique-description-unidentified`

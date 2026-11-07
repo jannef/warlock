@@ -33,7 +33,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     food, and a few potions, §8 "Potions"; 120 %, 30 %), an alchemist ("{keeper}'s Apothecary":
     potions only, a stack of potions of healing always first; 140 %, 40 %), and a fletcher ("{keeper}'s Fletchery": missile weapons and missiles;
     125 %, 40 %). General stores stock and buy scrolls (§8 "Scrolls"), and a generated one always lays out a
-    stack of scrolls of identify first (the kind's `always`, at most its least `items`); scribes wait for more scrolls.
+    stack of scrolls of identify first (the kind's `always`, as many as its count of stacks allows); scribes wait for more scrolls.
     A kind's `never` lists objects of a stocked class it never lays out: general stores and
     provisioners never have an elixir (§8 "Potions"; #568).
   - **Prices** (`Shops::price`, `Shops::offer`; integers): a stack's value (each one's times the

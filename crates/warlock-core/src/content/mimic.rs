@@ -99,16 +99,12 @@ impl Mimics {
         };
         let err = |m: String| ContentError::new(RULES, m);
         let file: FamilyFile = toml::from_str(text).map_err(|e| err(e.to_string()))?;
-        let [from, to] = file.family.levels;
-        // The family is numbered in a row of its levels, least first.
-        if from > to {
-            return Err(err("`levels` must be least first".into()));
-        }
         if let Some(key) = OWN.iter().find(|k| file.creature.contains_key(**k)) {
             return Err(err(format!(
                 "[creature]: `{key}` is each member's own, not the family's"
             )));
         }
+        // A member's band indexes the chest bands too ([`Mimics::member`]).
         let chests = &content.chests().bands;
         if file.band.len() != chests.len() {
             return Err(err(format!(
@@ -116,14 +112,6 @@ impl Mimics {
                 file.band.len(),
                 chests.len()
             )));
-        }
-        for (band, chest) in file.band.iter().zip(chests) {
-            if band.from != chest.from {
-                return Err(err(format!(
-                    "band `{}`: `from` {} is not chest band `{}`'s {}",
-                    band.id, band.from, chest.id, chest.from
-                )));
-            }
         }
         Ok(Self {
             family: file.family.id,

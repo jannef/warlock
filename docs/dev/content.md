@@ -25,8 +25,8 @@ its cell (`docs/dev/overworld.md`, "Named places"); a vault's are stamped with i
 grade (`loot = "magic"`: `any`, `magic`, or `rare`, anything of at least that) or a pool (`loot = {
 pool = ["armour", "rings"], grade = "magic" }`, `grade` optional, default `any`; `pool` one name or
 a list). A pool's names are item class ids or the `group`s of `data/item_classes.toml` (`weapons`,
-`armour`, `jewellery`, `money`); `LootPool::named` refuses at load a name that is neither, or that
-can hold nothing of the grade even at the highest item level (`magic/pool_tests.rs`). Use one
+`armour`, `jewellery`, `money`); `LootPool::named` refuses at load a name that is neither; a pool
+that can hold nothing of its grade leaves its cell bare (`magic/pool_tests.rs`). Use one
 cell per find; prefer a pool to a static `[[pile]]` in a generic vault. A vault's legend entry may
 draw `monsters` too (`content/monster_pool.rs`): `monsters = { pool = "level", count = 20 }`
 (`"level"` the floor's population, or tags: `pool = "goblin"`, `pool = ["orc", "troll"]`; `count`

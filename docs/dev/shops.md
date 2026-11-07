@@ -8,7 +8,7 @@ the currency, the outraged faction, `presence`, the generation `chance`, keeper 
 `[keeper]` template, and the kinds, `ShopDef`: `always` (objects a generated shop lays out
 first, a stack each, before its drawn goods: the general store's scrolls of identify, #393),
 `never` (objects of a stocked class a generated shop never lays out, read in `Shops::stocks`:
-the general store's and the provisioner's elixirs, #568; none may also be in `always`),
+the general store's and the provisioner's elixirs, #568),
 `stock`/`buys` by item class (`ItemClassId`, ids
 in `data/item_classes.toml`, `docs/dev/objects.md`), `items`, `markup`, `pays`; `Shops::price`/`offer` are the one place
 prices are made, from `Stack::value` (an item worked at an anvil by its `Worked::value`, and a

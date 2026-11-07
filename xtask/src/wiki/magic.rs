@@ -6,9 +6,7 @@ use super::text::capital;
 use super::vision::glow_word;
 use std::fmt::Write as _;
 use warlock_core::content::Effect as ItemEffect;
-use warlock_core::content::{
-    AffixDef, AffixKind, Content, ItemKind, MAX_ITEM_LEVEL, MAX_TIERS, Rarity,
-};
+use warlock_core::content::{AffixDef, AffixKind, Content, ItemKind, MAX_ITEM_LEVEL, Rarity};
 use warlock_core::magic::describe;
 use warlock_core::magic::loot::TIER_WINDOW;
 use warlock_core::object::format_weight;
@@ -60,7 +58,7 @@ pub(super) fn magic_rarity(content: &Content) -> String {
     let window = TIER_WINDOW - 1;
     let _ = writeln!(
         out,
-        "\nAn affix has at most {MAX_TIERS} tiers. Its tier is drawn evenly among the tiers whose \
+        "\nAn affix's tier is drawn evenly among the tiers whose \
          item level is at most the item's and at least {window} below it (an item of level 12 \
          rolls the tiers of levels 9 to 12); an item whose level is past the affix's last tier, \
          or with no tier that close, gets the highest tier it may have. What a creature drops \

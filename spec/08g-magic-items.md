@@ -128,8 +128,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     kill), of Fury, of Steadiness, of Stillness, of Guile, of the Muse (the maxima of rage,
     focus, ki, openings, inspiration: of no use to one without the pool), of Sustenance
     (hunger), of Wariness (traps), of Health (disease checks), of the Alchemist (potions kept)),
-    each with the kinds of item it rolls on and its tiers by item level (at most twelve,
-    `MAX_TIERS`; every affix on a ladder to item level 12, a tier every item level or two where
+    each with the kinds of item it rolls on and its tiers by item level (up to twelve; every
+    affix on a ladder to item level 12, a tier every item level or two where
     its value can step, #637). A save's affix whose tier no longer holds its value (a ladder
     regraded since) is re-tiered as it loads, to the first tier that holds the value or the
     nearest, the value kept: no save is refused for it.
@@ -197,9 +197,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
     saved like the affixes), by which its power and lore are found. Content places one as
     `unique:ID` wherever it names objects (a pile, a legend's `objects` and `carry`, and `wield`
     or `wear` by the same name, a gear line, a kit, a shop's or a scenario's `carry`, a quest
-    reward's `items`); each is named by **one placement in all content** (a load error
-    otherwise), so with pinned vaults and unique creatures a run holds it at most once, with no
-    save state. Loot never makes one; a gear line's `magic` never rerolls one. Identification is
+    reward's `items`); content names each in **one placement** (the data author's promise; a
+    load does not count them), so with pinned vaults and unique creatures a run holds it at most
+    once, with no save state. Loot never makes one; a gear line's `magic` never rerolls one. Identification is
     as for any magic item: unidentified it is "a stiletto (rare)"; identified its name, affixes,
     power in words, and lore (the item description's last line), all through
     `Stack::known_magic`. A power works while the item is worn or wielded, identified or not,
@@ -228,7 +228,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     world's Stonebiter lies in the quarry. The pedlar's three (#808), after ADOM's black torc,
     are placed only through a trader's offer (§8 "Dialogue", "An offer"), each at most once a
     run (`WorldState::uniques_offered`, the one save state a unique has), and no other content
-    may place them: the Brosinga Mene (gold amulet: Shimmering, Oaken, Hale, of the Salamander,
+    places them: the Brosinga Mene (gold amulet: Shimmering, Oaken, Hale, of the Salamander,
     of Warmth, of the Wind; never poisoned), the Eorcanstān (gold ring: Mystic, Potent, Hale, of
     the Adept, of Clarity, of Thrift; never silenced), and Grendles Grāpe (gauntlets: Accurate,
     Vicious, Hardened, of the Bear, of Celerity, of the Ox; never staggered), each at item
@@ -363,7 +363,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
 
 - **Wands** (`warlock-core/src/world/zap.rs`, data `wand` in `data/objects/` §7, `content/wand.rs`;
   the magic design §9; #398): objects (`-`, the wands class, one at a time) whose `[object.wand]`
-  holds a spell of `data/spells/` (an aimed one), its `charges` (its own, required, 1 to 99:
+  holds a spell of `data/spells/` (an aimed one), its `charges` (its own, required:
   the wand's, not its spell's), and the `rungs = { min, max }` a wand of the kind casts at
   (default 0 to its spell's damage ladder's length; the seven shipped wands give 0 to 2, or
   0 to 0 for Sleep and Web, which roll nothing). A wand goes in the
@@ -377,7 +377,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     **wand's own rung** of the spell's damage ladder (`[object.wand] rungs = { min, max }`,
     default 0 to the ladder's length), never the user's stats, plus Wand
     mastery's rung and the worn `wand_rungs` (of Wands), the user's other hooks applying,
-    nothing holding the roll. `caster_level` on a wand is refused, naming `rungs`.
+    nothing holding the roll.
     A charge pays instead of mana; a cast refused (at oneself, out of reach, no one to touch)
     uses none and takes no time; one that goes off takes the `cast` action's time (times the
     spell's `casts`). Its kills are the user's; one that kills its user is the spell's
@@ -420,7 +420,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
 - **Rods** (`warlock-core/src/world/rod.rs`, data `rod` in `data/objects/` §7 and
   `data/rod_effects/`, `content/rod.rs`; the magic design §9; #399): objects (`-`, the rods
   class, one at a time) whose `[object.rod]` holds an **effect no spell has** (`effect`, an id of
-  `data/rod_effects/`) and the `mana` a use costs (1 to 100). A rod goes in the **missile weapon
+  `data/rod_effects/`) and the `mana` a use costs. A rod goes in the **missile weapon
   slot** and is used as a wand is (`t`, `AimKind::Zap`; `fire:X,Y`); the aiming mode shows its
   reach once its type is known.
   - **Mana, not charges**: a use costs the user the rod's `mana`, less Channeler's quarter

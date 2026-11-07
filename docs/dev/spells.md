@@ -482,10 +482,10 @@ cast path shares.
     `spells` and `scrolls`; Overreach is the same effect's `overreach_percent` (S1).
 - **Wands** (#398; design §9; `content/wand.rs`, `world/zap.rs`, tests `world/zap_tests.rs`):
   - **Data**: `[object.wand]` (`WandSpec` → `Wand { spell, charges, min_rung, max_rung }` on
-    `ObjectDef::wand`): an aimed spell (`SpellData::aimed`), `charges` 1 to `MAX_WAND_CHARGES`
-    (99; required since S1: the wand's own, the seven shipped with the old tier defaults, 12,
-    12, 9, 9, 9, 7, 7), `rungs = { min, max }` (S2: default `min` 0, `max` the spell's roll
-    ladder's length; within it, `min` at most `max`; `caster_level` refused naming it). The
+    `ObjectDef::wand`): an aimed spell (`SpellData::aimed`), `charges` (required since S1: the
+    wand's own, the seven shipped with the old tier defaults, 12, 12, 9, 9, 9, 7, 7),
+    `rungs = { min, max }` (S2: default `min` 0, `max` the spell's roll ladder's length; a rung
+    past the ladder casts at its last, `world/spell_rung.rs::rung_of`). The
     five wands that roll ship with `rungs = { min = 0, max = 2 }`, Sleep and Web with none (no
     roll ladder). A wand has a `slot`, is not `stackable`, and has no attack, `launches`, range,
     food, `read`, or `kind`; it may have `level` and `frequency` (loot). Class `wands`
@@ -549,19 +549,15 @@ cast path shares.
   - **Effects** (the registry, distinct from spells): `data/rod_effects/` (`RodEffect`, one
     `[[rod_effect]]` a file, its `README.toml` the format; `Content::rod_effects`, an index is
     the id, `rod_effect_index`), loaded after spells (they name statuses) and before objects.
-    `shape` (`RodShape`: line, bolt, burst; each kind fixes its shape), `range` 1 to
-    `MAX_ROD_REACH` (20), `grows.range` (`RodEffect::grows: Option<Ladder>`, S2's
-    `content/spell_ladder.rs` in `Unit::Cells`, rungs rising strictly from `range` to at most
-    20; the spell scaling design §7.5), `radius` 1 to `MAX_ROD_RADIUS` (3) for a burst only,
-    optional `noise`, and `kind` with only its fields (`RodDoes`): `dig` (`power` 1 to
-    `MAX_ROD_POWER`), `teleport`, `status` (`status`, `severity` 1 to its max, `up_to_level`, a
-    creature level of 1 or more). The retired `max_range`, `per_levels`, and
-    `up_to_caster_level` are refused naming their replacements. `RodEffect::reach(stats)` = the
+    `shape` (`RodShape`: line, bolt, burst; each kind fixes its shape), `range`, `grows.range`
+    (`RodEffect::grows: Option<Ladder>`, S2's `content/spell_ladder.rs` in `Unit::Cells`; the
+    spell scaling design §7.5), `radius` (default 0) for a burst only, optional `noise`, and
+    `kind` with only its fields (`RodDoes`): `dig` (`power`), `teleport`, `status` (`status`,
+    `severity`, clamped to its max as it is lent, `up_to_level`, a creature level). `RodEffect::reach(stats)` = the
     ladder's value at the rung the score in its stat reaches, `range` below the first;
     `Actor::rod_reach` reads it at `effective_stats`. Nothing of the user's level is read
     anywhere in rods (decision 10). No visual effect yet (no `Event::Spell`).
-  - **Rods**: `[object.rod]` (`RodSpec` → `Rod { effect, mana }` on `ObjectDef::rod`): `mana` 1
-    to `MAX_ROD_MANA` (100); a rod has a `slot`, is not `stackable`, and has no attack,
+  - **Rods**: `[object.rod]` (`RodSpec` → `Rod { effect, mana }` on `ObjectDef::rod`): `mana`; a rod has a `slot`, is not `stackable`, and has no attack,
     `launches`, range, food, `read`, `wand`, or `kind`; it may have `level` and `frequency`
     (loot). Class `rods`. Four in `data/objects/rod_of_*.toml`; general stores stock and buy
     them; the trap hall has a pile of two (digging, sleep) at (40, 19).

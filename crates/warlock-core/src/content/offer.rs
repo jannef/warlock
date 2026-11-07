@@ -4,7 +4,7 @@
 //! taken or left (`world/wares.rs`). The item is a favoured roll
 //! ([`crate::magic::loot::favoured`]: rare, with `affixes` of them at the player's level plus
 //! `level.bonus`), or, by `uniques.chance` in basis points, one of `uniques.items` not yet
-//! offered in the run, which no other content may place.
+//! offered in the run.
 //!
 //! ```toml
 //! [dialogue.offer]
@@ -19,7 +19,7 @@
 //! ```
 
 use super::dialogue::{ID_SHAPE, is_id};
-use super::{Content, ContentError, MAX_ITEM_LEVEL, MAX_PER_KIND};
+use super::{Content, MAX_ITEM_LEVEL, MAX_PER_KIND};
 use serde::Deserialize;
 
 /// A trader's one offer, as data.
@@ -89,27 +89,8 @@ struct UniquesSpec {
     items: Vec<String>,
 }
 
-/// Every unique an offer names is placed only through it: no other content names it (checked
-/// once everything that places objects has loaded).
-pub(super) fn check_placements(content: &Content) -> Result<(), ContentError> {
-    for d in content.dialogues() {
-        let Some(offer) = &d.offer else { continue };
-        if let Some(id) = (offer.uniques.iter()).find(|id| content.uniques.is_placed(id)) {
-            return Err(ContentError::new(
-                "data/uniques",
-                format!(
-                    "`{}{id}` is placed by content, but offer `{}` names it: \
-                     a trader's unique is placed only through the offer",
-                    super::unique::UNIQUE,
-                    offer.id
-                ),
-            ));
-        }
-    }
-    Ok(())
-}
-
-/// The most affixes an item has: three prefixes and three suffixes.
+/// The most affixes an item has: three prefixes and three suffixes. More would split past
+/// [`MAX_PER_KIND`] of a kind ([`crate::magic::loot::heirloom`]'s split).
 const MOST_AFFIXES: u8 = 2 * MAX_PER_KIND as u8;
 
 /// Resolves the offer of a dialogue of `campaign` against `content` (its uniques and shops);
@@ -132,7 +113,7 @@ pub(super) fn resolve(
             "it is paid in the shops' currency: data/shops.toml is needed".into(),
         ));
     }
-    // The draw clamps the level to `least` and the top: past the top the range is empty.
+    // The draw clamps the level to `least` and the top: `clamp` panics past the top.
     if spec.level.least > MAX_ITEM_LEVEL {
         return Err(bad(format!("`level.least` is at most {MAX_ITEM_LEVEL}")));
     }

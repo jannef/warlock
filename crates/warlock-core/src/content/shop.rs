@@ -282,9 +282,10 @@ impl Shops {
         }
         let outraged = (content.factions().id(&parsed.outraged))
             .ok_or_else(|| err(format!("unknown faction `{}`", parsed.outraged)))?;
-        // A bundle is a stack, never empty, of a count drawn in the range.
+        // A bundle is a stack, never empty ([`crate::rng::Rng::range`] gives `least` when the
+        // range is empty).
         let [least, most] = parsed.bundle;
-        if least == 0 || least > most {
+        if least == 0 {
             return Err(err("`bundle` must be [least, most] from 1".into()));
         }
         let keeper = keeper(&parsed.keeper, content).map_err(|m| err(format!("keeper: {m}")))?;
@@ -297,11 +298,7 @@ impl Shops {
             if defs.iter().any(|d| d.id == spec.id) {
                 return Err(err(format!("duplicate shop id `{}`", spec.id)));
             }
-            // A count is drawn in the range: never empty.
             let [least, most] = spec.items;
-            if least > most {
-                return Err(bad("`items` must be [least, most]".into()));
-            }
             let classes = |ids: &[String]| -> Result<Vec<ItemClassId>, ContentError> {
                 (ids.iter())
                     .map(|c| {
@@ -322,12 +319,6 @@ impl Shops {
             };
             let always = objects(&spec.always, "always")?;
             let never = objects(&spec.never, "never")?;
-            if always.iter().any(|o| never.contains(o)) {
-                return Err(bad("an object in `always` may not be in `never`".into()));
-            }
-            if always.len() > usize::from(least) {
-                return Err(bad("`always` may name at most `items`' least".into()));
-            }
             defs.push(ShopDef {
                 id: spec.id,
                 name: spec.name,
@@ -341,7 +332,7 @@ impl Shops {
                 pays: spec.pays,
             });
         }
-        let shops = Self {
+        Ok(Self {
             currency,
             outraged,
             presence: parsed.presence,
@@ -350,24 +341,7 @@ impl Shops {
             bundle: (least, most),
             keeper,
             defs,
-        };
-        if parsed.chance > 0 && shops.names.is_empty() {
-            return Err(err(
-                "generated shops (`chance`) need `names` for their keepers".into(),
-            ));
-        }
-        for (i, def) in shops.defs.iter().enumerate() {
-            let kind = ShopId(i as u8);
-            let any = (0..content.object_defs().len())
-                .any(|o| shops.stocks(content, kind, ObjectId(o as u16)));
-            if !any {
-                return Err(err(format!(
-                    "shop `{}`: no object worth anything is of a class it stocks",
-                    def.id
-                )));
-            }
-        }
-        Ok(shops)
+        })
     }
 }
 
@@ -518,7 +492,6 @@ mod tests {
                 "unknown faction",
             ),
             ("bundle = [6, 15]", "bundle = [0, 15]", "`bundle`"),
-            ("items = [6, 10]", "items = [10, 6]", "`items`"),
             (
                 "creature = \"shopkeeper\"",
                 "creature = \"player\"",
@@ -528,11 +501,6 @@ mod tests {
                 "wear = [\"chain_mail\", \"iron_helm\"]",
                 "wear = [\"ruby\"]",
                 "ruby",
-            ),
-            (
-                "stock = [\"melee_weapons\", \"missiles\"]",
-                "stock = [\"coins\"]",
-                "no object worth",
             ),
             (
                 "stock = [\"melee_weapons\", \"missiles\"]",

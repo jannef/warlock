@@ -4,23 +4,13 @@
 //! A chest's band is the last whose `from` its level reaches ([`ChestRules::band_of`]): it names
 //! the chest, colours it, and gives how sturdy it is against a kick (a door's scale), how hard
 //! against a blast (a wall's scale), and, for generated chests (later slices), how often one is
-//! locked, trapped, or a mimic, a mimic's hold, and the loot table. Everything is checked when
-//! it loads. Without the file there are no bands: a chest is then named by its terrain.
+//! locked, trapped, or a mimic, a mimic's hold, and the loot table. A load checks only that
+//! the ids are unique and the `from`s rise. Without the file there are no bands: a chest is then named by its terrain.
 
 use super::ContentError;
 use crate::color::Rgb;
 use crate::dice::Dice;
-use crate::door::STURDINESS;
 use serde::Deserialize;
-
-/// The most a chest's hardness may be (a wall's bound).
-pub const MAX_CHEST_HARDNESS: u16 = 10_000;
-/// The highest level a band may start from.
-pub const MAX_CHEST_LEVEL: u8 = 99;
-/// The most a loot table's `gold.each` may be.
-pub const MAX_GOLD_EACH: u32 = 1000;
-/// The most levels above the floor's a loot table may roll at.
-pub const MAX_LOOT_LEVEL: u8 = 10;
 
 /// A band of chests: what chests of its levels are called and like.
 #[derive(Clone, Debug, PartialEq, Eq, Deserialize)]
@@ -101,12 +91,6 @@ impl ChestRules {
     pub(super) fn parse(path: &str, text: &str) -> Result<Self, ContentError> {
         let err = |m: String| ContentError::new(path, m);
         let file: ChestFile = toml::from_str(text).map_err(|e| err(e.to_string()))?;
-        if file.band.is_empty() {
-            return Err(err("at least one `[[band]]` is needed".into()));
-        }
-        if file.smash.destroyed > 100 {
-            return Err(err("`[smash] destroyed` is a percent, 0 to 100".into()));
-        }
         for (i, band) in file.band.iter().enumerate() {
             band.check(i, &file.band)
                 .map_err(|m| err(format!("band `{}`: {m}", band.id)))?;
@@ -143,58 +127,15 @@ impl ChestRules {
 }
 
 impl ChestBand {
-    /// Checks band number `i` of `all`: its numbers in range and its `from` above the band
-    /// before it (the first from 1).
+    /// Checks band number `i` of `all`: its id not used twice ([`ChestRules::band`] would find
+    /// the first) and its `from` above the band before it ([`ChestRules::band_index`] reads them
+    /// in order).
     fn check(&self, i: usize, all: &[ChestBand]) -> Result<(), String> {
-        if self.id.trim().is_empty() || self.name.trim().is_empty() {
-            return Err("`id` and `name` must not be empty".into());
-        }
         if all.iter().filter(|b| b.id == self.id).count() > 1 {
             return Err("the id is used twice".into());
         }
-        match i {
-            0 if self.from != 1 => return Err("the first band is `from = 1`".into()),
-            0 => {}
-            _ if self.from <= all[i - 1].from => {
-                return Err("`from` must rise from band to band".into());
-            }
-            _ => {}
-        }
-        if self.from > MAX_CHEST_LEVEL {
-            return Err(format!("`from` is 1 to {MAX_CHEST_LEVEL}"));
-        }
-        if !STURDINESS.contains(&self.sturdiness) {
-            return Err(format!(
-                "`sturdiness` is {} to {}",
-                STURDINESS.start(),
-                STURDINESS.end()
-            ));
-        }
-        if !(1..=MAX_CHEST_HARDNESS).contains(&self.hardness) {
-            return Err(format!("`hardness` is 1 to {MAX_CHEST_HARDNESS}"));
-        }
-        let percents = [
-            ("locked", self.locked),
-            ("trapped", self.trapped),
-            ("mimic", self.mimic),
-            ("hold", self.hold),
-            ("loot.magic", self.loot.magic),
-            ("loot.rare", self.loot.rare),
-        ];
-        if let Some((name, _)) = percents.iter().find(|(_, v)| *v > 100) {
-            return Err(format!("`{name}` is a percent, 0 to 100"));
-        }
-        if self.loot.rare > self.loot.magic {
-            return Err("`loot.rare` counts in `loot.magic`: it cannot be more".into());
-        }
-        if self.loot.loot_level > MAX_LOOT_LEVEL {
-            return Err(format!("`loot.loot_level` is 0 to {MAX_LOOT_LEVEL}"));
-        }
-        if self.loot.items.min() < 0 || self.loot.gold.dice.min() < 0 {
-            return Err("`loot.items` and `loot.gold.dice` never roll below 0".into());
-        }
-        if !(1..=MAX_GOLD_EACH).contains(&self.loot.gold.each) {
-            return Err(format!("`loot.gold.each` is 1 to {MAX_GOLD_EACH}"));
+        if i > 0 && self.from <= all[i - 1].from {
+            return Err("`from` must rise from band to band".into());
         }
         Ok(())
     }
@@ -255,19 +196,13 @@ mod tests {
         let smash = "[smash]\ndestroyed = 50\n";
         let ok = format!("{}{}{smash}", band("a", 1), band("b", 3));
         assert!(parse(&ok).is_ok());
-        let late = format!("{}{smash}", band("a", 2));
-        assert!(parse(&late).is_err(), "the first band starts at 1");
+        let odd = format!("{}[smash]\ndestroyed = 101\n", band("a", 2))
+            .replace("sturdiness = 20", "sturdiness = 0")
+            .replace("rare = 1", "rare = 20");
+        assert!(parse(&odd).is_ok(), "the numbers are the author's");
         let falling = format!("{}{}{}{smash}", band("a", 1), band("b", 5), band("c", 4));
         assert!(parse(&falling).is_err(), "from must rise");
         let twice = format!("{}{}{smash}", band("a", 1), band("a", 3));
         assert!(parse(&twice).is_err(), "ids are unique");
-        let flimsy =
-            format!("{}{smash}", band("a", 1)).replace("sturdiness = 20", "sturdiness = 0");
-        assert!(parse(&flimsy).is_err(), "sturdiness 1 to 100");
-        let rare = format!("{}{smash}", band("a", 1)).replace("rare = 1", "rare = 20");
-        assert!(parse(&rare).is_err(), "rare counts in magic");
-        let over = format!("{}[smash]\ndestroyed = 101\n", band("a", 1));
-        assert!(parse(&over).is_err(), "destroyed is a percent");
-        assert!(parse(smash).is_err(), "a band is needed");
     }
 }

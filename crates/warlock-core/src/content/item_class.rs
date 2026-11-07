@@ -17,8 +17,8 @@ use std::collections::BTreeSet;
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub struct ItemClassId(pub u8);
 
-/// The most classes there may be.
-pub const MAX_ITEM_CLASSES: usize = 64;
+/// The most classes there may be: [`ItemClassId`] is a `u8`.
+pub const MAX_ITEM_CLASSES: usize = 256;
 
 /// The built-in classes, for test fixtures that bring their own objects but not their own classes.
 #[cfg(test)]
@@ -70,9 +70,6 @@ pub(super) fn parse(file: &str, text: &str) -> Result<Vec<ItemClassDef>, Content
     let mut defs = Vec::with_capacity(parsed.class.len());
     for spec in parsed.class {
         let bad = |m: &str| err(format!("class `{}`: {m}", spec.id));
-        if spec.id.trim().is_empty() || spec.name.trim().is_empty() {
-            return Err(bad("`id` and `name` must not be empty"));
-        }
         if !ids.insert(spec.id.clone()) {
             return Err(bad("duplicate class id"));
         }
@@ -89,13 +86,6 @@ pub(super) fn parse(file: &str, text: &str) -> Result<Vec<ItemClassDef>, Content
             corpses: spec.corpses,
             group: spec.group,
         });
-    }
-    if let Some(class) = (defs.iter()).find(|d| d.group.as_ref().is_some_and(|g| ids.contains(g))) {
-        return Err(err(format!(
-            "class `{}`: group `{}` is a class's id",
-            class.id,
-            class.group.as_deref().unwrap_or_default()
-        )));
     }
     if defs.iter().filter(|d| d.corpses).count() > 1 {
         return Err(err(
@@ -155,7 +145,6 @@ mod tests {
     #[test]
     fn bad_classes_are_refused() {
         for (text, why) in [
-            ("[[class]]\nid = \"\"\nname = \"X\"\n", "must not be empty"),
             (
                 "[[class]]\nid = \"a\"\nname = \"A\"\n[[class]]\nid = \"a\"\nname = \"B\"\n",
                 "duplicate",

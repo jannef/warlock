@@ -38,9 +38,9 @@
 //! with Protection may stand better or worse against a physical kind (`protects = { slashing =
 //! 1, piercing = -1 }`).
 //!
-//! Every weapon names its weapon skill (`category`, an id in `data/weapon_skills.toml`; spec §8
-//! "Weapon skills"): a skill of role `melee` for what is wielded in a hand, `launcher` for a
-//! missile weapon, `thrown` for what is only thrown (a rock).
+//! A weapon names its weapon skill (`category`, an id in `data/weapon_skills.toml`; spec §8
+//! "Weapon skills"): the game's give a skill of role `melee` to what is wielded in a hand,
+//! `launcher` to a missile weapon, `thrown` to what is only thrown (a rock).
 //!
 //! Keys (spec §8 "Doors") say which locks they open: `key = "pantry"` opens the locks with that
 //! lock id, `key = "*"` (a skeleton key) every lock.
@@ -77,7 +77,7 @@
 //! `frequency`), never magic.
 
 use super::action::check_cost;
-use super::affix::{ItemKind, MAX_ITEM_LEVEL};
+use super::affix::ItemKind;
 use super::creature::CreatureDef;
 use super::damage_type::TypeNames;
 use super::hunger::Food;
@@ -91,28 +91,23 @@ use super::rod::{Rod, RodSpec};
 use super::scroll::{ReadSpec, Reading};
 use super::slot::SlotDef;
 use super::wand::{Wand, WandSpec};
-use super::weapon_skill::{Role, WeaponSkillId, WeaponSkillTable};
+use super::weapon_skill::{WeaponSkillId, WeaponSkillTable};
 use super::{Content, ContentError, CreatureId, DamageTypeId};
 use crate::color::Rgb;
-use crate::combat::{Attack, CRITS, DEFAULT_CRIT, DEFAULT_THREAT, THREATS};
+use crate::combat::{Attack, DEFAULT_CRIT, DEFAULT_THREAT};
 use crate::damage::{Kinds, MAX_RESISTANCE, MIN_RESISTANCE, Rider};
 use crate::dice::Dice;
 use crate::door::Key;
 use crate::item_parts::ItemPart;
 use crate::object::Stack;
-use crate::time::{DAY, Duration};
+use crate::time::Duration;
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
-/// The largest Defence bonus one object may give, and the largest `to_hit` either way.
+/// The largest Protection adjustment (`protects`) one object may give, either way.
 pub const MAX_BONUS: i32 = 20;
-/// The farthest anything shoots or is thrown, in cells: as far as anyone sees.
-pub const MAX_RANGE: i32 = crate::perception::VIEW_RADIUS;
-/// The longest anything burns where it lies, in seconds: a day.
-pub const MAX_BURN: u32 = DAY as u32;
-/// The most power a digging tool may have (a pick-axe has 10).
-pub const MAX_DIG: u16 = 100;
-/// The most one object may be worth, in gold coins.
+/// The most one object counts as worth, in gold coins: what it is made of is capped there
+/// ([`ObjectDef::value_with`]).
 pub const MAX_VALUE: u32 = 1_000_000;
 
 /// Index of an object definition in [`super::Content::object_defs`].
@@ -121,9 +116,6 @@ pub const MAX_VALUE: u32 = 1_000_000;
 /// fingerprint to catch a reordering.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize)]
 pub struct ObjectId(pub u16);
-
-/// Most of one object a level file may place with `"id*N"`.
-pub const MAX_PLACED: u32 = 9999;
 
 /// What one weapon of each weapon skill (`category`, an id in `data/weapon_skills.toml`) is
 /// called, for item descriptions (spec §8 "Magic items"): a skill not listed is called by its
@@ -177,12 +169,10 @@ pub(super) struct ObjectSpec {
     /// What its main part may be made of (#194, the shorthand for its table's `made_of`): groups
     /// and materials ([`part::construction`]).
     pub made_of: Option<Vec<String>>,
-    /// The single material objects had before parts: refused, with a pointer to `materials`.
-    pub material: Option<String>,
     /// The part a gem is set as when loot ornaments it (a part id: `tip`), instead of its
     /// class's in `data/gems.toml` (spec §7 "Gems").
     pub ornament: Option<String>,
-    /// Grams, at least 1.
+    /// Grams.
     pub weight: u32,
     /// What one is worth, in gold coins (shops; spec §7 "Shops").
     pub value: u32,
@@ -343,9 +333,9 @@ pub struct ObjectDef {
     pub construction: Vec<Vec<MaterialId>>,
     /// The part a gem is set as when loot ornaments it, instead of its class's (spec §7 "Gems").
     pub ornament: Option<PartId>,
-    /// Weight of one, in grams; at least 1.
+    /// Weight of one, in grams.
     pub weight: u32,
-    /// What one is worth, in gold coins, at most [`MAX_VALUE`]; 0 for junk (spec §7 "Shops":
+    /// What one is worth, in gold coins; 0 for junk (spec §7 "Shops":
     /// nobody buys or sells it).
     pub value: u32,
     /// Several lie in one stack (coins, arrows) instead of a stack each.
@@ -464,19 +454,12 @@ pub struct AddedSpec {
 }
 
 impl AddedSpec {
-    /// The rider it names: a damage type that is no physical kind (Protection never soaks
-    /// added damage), with dice that can do harm.
+    /// The rider it names: a damage type, with dice that never roll below 0.
     fn resolve(&self, content: &Content) -> Result<Rider, String> {
         let kind = (content.damage_type_id(&self.kind))
             .ok_or_else(|| format!("`added`: unknown damage type `{}`", self.kind))?;
-        if content.damage_type(kind).physical {
-            return Err(format!(
-                "`added`: `{}` is physical; added damage is of another kind (fire, cold, ...)",
-                self.kind
-            ));
-        }
-        if self.damage.min() < 0 || self.damage.max() < 1 {
-            return Err("`added`: `damage` must be dice that can do harm, e.g. \"1d4\"".into());
+        if self.damage.min() < 0 {
+            return Err("`added`: `damage` must never roll below 0 (it would heal)".into());
         }
         Ok(Rider {
             kind,
@@ -707,28 +690,7 @@ impl ObjectSpec {
         skills: &WeaponSkillTable,
     ) -> Result<(ObjectDef, Option<String>), ContentError> {
         let err = |m: String| ContentError::new(file, format!("object `{}`: {m}", self.id));
-        if self.name.trim().is_empty() || self.plural.as_ref().is_some_and(|p| p.trim().is_empty())
-        {
-            return Err(err("`name` and `plural` must not be empty".into()));
-        }
-        if self.glyph.is_whitespace() || self.glyph.is_control() {
-            return Err(err("`glyph` must be a visible character".into()));
-        }
-        if self.weight == 0 {
-            return Err(err(
-                "`weight` is in grams and must be at least 1; every object weighs something".into(),
-            ));
-        }
-        if self.value > MAX_VALUE {
-            return Err(err(format!("`value` is in gold coins, 0 to {MAX_VALUE}")));
-        }
         let class = self.item_class(classes).map_err(err)?;
-        if let Some(material) = &self.material {
-            return Err(err(format!(
-                "`material` is now `materials`, a list of parts, the first the main one: \
-                 `materials = [\"{material}\"]` for one"
-            )));
-        }
         let parts = parts(&self.materials).map_err(err)?;
         if let Some(slot) = &self.slot
             && !slots.iter().any(|s| s.fits == *slot)
@@ -765,11 +727,6 @@ impl ObjectSpec {
                 ));
             }
         }
-        for (field, kind) in [("ammo", &self.ammo), ("launches", &self.launches)] {
-            if kind.as_ref().is_some_and(|k| k.trim().is_empty()) {
-                return Err(err(format!("`{field}` must not be empty")));
-            }
-        }
         // A weapon names its kind of damage; a shield's names its bash's, else bare hands'.
         let armed = self.damage.is_some() || self.bash.is_some();
         let kinds = content
@@ -782,9 +739,9 @@ impl ObjectSpec {
         }
         let attack = self.attack(kinds).map_err(err)?;
         self.check_defence().map_err(err)?;
-        self.check_protection(slots).map_err(err)?;
+        self.check_protection().map_err(err)?;
         self.check_ranged().map_err(err)?;
-        let skill = self.skill(slots, skills).map_err(err)?;
+        let skill = self.skill(skills).map_err(err)?;
         let bash = match (self.bash, self.shield) {
             (None, _) => None,
             (Some(damage), shield) if shield > 0 => Some(Attack {
@@ -798,9 +755,6 @@ impl ObjectSpec {
             }),
             (Some(_), _) => return Err(err("`bash` is for shields (`shield`)".into())),
         };
-        if self.verb.as_ref().is_some_and(|v| v.trim().is_empty()) {
-            return Err(err("`verb` must not be empty".into()));
-        }
         if self.verb.is_some() && !armed {
             return Err(err(
                 "`verb` is for weapons (`damage`) and shields that `bash`".into(),
@@ -848,9 +802,6 @@ impl ObjectSpec {
             }
             _ => return Err(err("`light` goes with `burns` (a thing burning where it lies) or with a `slot` (a carried light)".into())),
         };
-        if !(0.0..=1.0).contains(&self.glow) {
-            return Err(err("`glow` must be between 0 and 1".into()));
-        }
         self.check_base(attack.is_some()).map_err(err)?;
         if let Some(food) = &self.food {
             food.check().map_err(|m| err(format!("food: {m}")))?;
@@ -869,12 +820,10 @@ impl ObjectSpec {
             .map(Key::parse)
             .transpose()
             .map_err(err)?;
-        if let Some(power) = self.dig
-            && (!(1..=MAX_DIG).contains(&power) || self.slot.is_none())
-        {
-            return Err(err(format!(
-                "`dig` is a digging tool's power, 1 to {MAX_DIG}, and a tool goes in a `slot`"
-            )));
+        if self.dig.is_some() && self.slot.is_none() {
+            return Err(err(
+                "`dig` is a digging tool's power, and a tool goes in a `slot`".into(),
+            ));
         }
         let read = self
             .read
@@ -1111,9 +1060,6 @@ impl ObjectSpec {
                     .into(),
             );
         }
-        if self.level.is_some_and(|l| l == 0 || l > MAX_ITEM_LEVEL) {
-            return Err(format!("`level` must be 1 to {MAX_ITEM_LEVEL}"));
-        }
         if let Some(cost) = self.attack_cost {
             if !weapon || self.slot.is_none() {
                 return Err(
@@ -1130,42 +1076,24 @@ impl ObjectSpec {
         self.ammo.is_some() || (self.range.is_some() && self.launches.is_none())
     }
 
-    /// The fields of ranged combat: a missile weapon needs a range and may reload; a throwing
-    /// weapon (a range without `launches`) needs its own damage; ammunition takes its range from
-    /// the launcher; only what flies may break or be lit.
+    /// The fields of ranged combat: only a missile weapon reloads; ammunition takes its range
+    /// from the launcher; only what flies may break or be lit.
     fn check_ranged(&self) -> Result<(), String> {
-        if let Some(range) = self.range
-            && !(1..=MAX_RANGE).contains(&range)
-        {
-            return Err(format!("`range` must be 1 to {MAX_RANGE} cells"));
-        }
-        if self.launches.is_some() && self.range.is_none() {
-            return Err("a missile weapon (`launches`) needs a `range`".into());
-        }
         if self.ammo.is_some() && self.range.is_some() {
             return Err(
                 "ammunition (`ammo`) flies as far as its launcher shoots: no `range`".into(),
             );
         }
         let thrown = self.range.is_some() && self.launches.is_none();
-        if thrown && self.damage.is_none() {
-            return Err("a throwing weapon (`range`) needs its `damage` dice".into());
-        }
         if self.reloads && self.launches.is_none() {
             return Err("only missile weapons (`launches`) `reload`".into());
         }
         let flies = self.ammo.is_some() || thrown;
-        if self.breaks > 100 {
-            return Err("`breaks` is a chance in percent, 0 to 100".into());
-        }
         if !flies && (self.breaks > 0 || self.lit.is_some()) {
             return Err(
                 "`breaks` and `lit` are for things that fly: ammunition and throwing weapons"
                     .into(),
             );
-        }
-        if self.burns.is_some_and(|s| !(1..=MAX_BURN).contains(&s)) {
-            return Err(format!("`burns` must be 1 to {MAX_BURN} seconds"));
         }
         Ok(())
     }
@@ -1183,9 +1111,6 @@ impl ObjectSpec {
             if let Some((field, _)) = weapon_only.iter().find(|(_, given)| *given) {
                 return Err(format!("`{field}` is for weapons, which have a `damage`"));
             }
-            if self.launches.is_some() {
-                return Err("a missile weapon (`launches`) needs its `damage` dice".into());
-            }
             return Ok(None);
         };
         if self.slot.is_none() && self.range.is_none() {
@@ -1193,54 +1118,20 @@ impl ObjectSpec {
                 "a weapon (`damage`) must go in a slot (`slot`) or be thrown (`range`)".into(),
             );
         }
-        let threat = self.threat.unwrap_or(DEFAULT_THREAT);
-        let crit = self.crit.unwrap_or(DEFAULT_CRIT);
-        if !THREATS.contains(&threat) || !CRITS.contains(&crit) {
-            return Err(format!(
-                "`threat` must be {} to {} (the lowest natural roll that threatens) and `crit` \
-                 {} to {}",
-                THREATS.start(),
-                THREATS.end(),
-                CRITS.start(),
-                CRITS.end()
-            ));
-        }
-        if self.to_hit.abs() > MAX_BONUS {
-            return Err(format!("`to_hit` must be within ±{MAX_BONUS}"));
-        }
-        if self
-            .strength
-            .is_some_and(|s| !crate::stats::SCORES.contains(&s))
-        {
-            return Err("`strength` is a Strength score, 1 to 40".into());
-        }
         Ok(Some(Attack {
             damage: damage.into(),
             to_hit: self.to_hit,
-            threat,
-            crit,
+            threat: self.threat.unwrap_or(DEFAULT_THREAT),
+            crit: self.crit.unwrap_or(DEFAULT_CRIT),
             strength: self.strength,
             finesse: self.finesse,
             kinds,
         }))
     }
 
-    /// The weapon skill a weapon names (`category`): every weapon names one when there are
-    /// weapon skills, nothing else does, and its role fits what the weapon is: a missile weapon
-    /// a `launcher`, what is wielded in a hand `melee`, anything else (only thrown) `thrown`.
-    fn skill(
-        &self,
-        slots: &[SlotDef],
-        skills: &WeaponSkillTable,
-    ) -> Result<Option<WeaponSkillId>, String> {
+    /// The weapon skill a weapon names (`category`); nothing but a weapon names one.
+    fn skill(&self, skills: &WeaponSkillTable) -> Result<Option<WeaponSkillId>, String> {
         let Some(name) = &self.category else {
-            if self.damage.is_some() && !skills.is_empty() {
-                return Err(
-                    "a weapon (`damage`) names its weapon skill (`category`, an id in \
-                     data/weapon_skills.toml)"
-                        .into(),
-                );
-            }
             return Ok(None);
         };
         if self.damage.is_none() {
@@ -1249,38 +1140,13 @@ impl ObjectSpec {
         let id = skills
             .id(name)
             .ok_or_else(|| format!("unknown weapon skill `{name}` (data/weapon_skills.toml)"))?;
-        let in_hand = (slots.iter()).any(|s| s.hand && Some(&s.fits) == self.slot.as_ref());
-        let role = if self.launches.is_some() {
-            Role::Launcher
-        } else if in_hand {
-            Role::Melee
-        } else {
-            Role::Thrown
-        };
-        let has = skills.skill(id).role;
-        if has != role {
-            return Err(format!(
-                "`category = \"{name}\"` is a skill of role `{}`, but this weapon needs one of \
-                 role `{}`",
-                has.id(),
-                role.id()
-            ));
-        }
         Ok(Some(id))
     }
 
-    /// Defence bonuses are for things worn or wielded, 0 to [`MAX_BONUS`].
+    /// Defence bonuses are for things worn or wielded.
     fn check_defence(&self) -> Result<(), String> {
-        let bonuses = [
-            ("parry", self.parry),
-            ("armour", self.armour),
-            ("shield", self.shield),
-            ("max_dex", self.max_dex.unwrap_or(0)),
-        ];
-        if let Some((field, _)) = bonuses.iter().find(|(_, b)| !(0..=MAX_BONUS).contains(b)) {
-            return Err(format!("`{field}` must be 0 to {MAX_BONUS}"));
-        }
-        let given = bonuses.iter().any(|(_, b)| *b != 0) || self.max_dex.is_some();
+        let bonuses = [self.parry, self.armour, self.shield];
+        let given = bonuses.iter().any(|b| *b != 0) || self.max_dex.is_some();
         if given && self.slot.is_none() {
             return Err(
                 "`parry`, `armour`, `max_dex`, and `shield` are for things worn or wielded \
@@ -1291,47 +1157,27 @@ impl ObjectSpec {
         Ok(())
     }
 
-    /// Protection is for armour worn, never in a hand (a shield's is Defence only), and
-    /// penetration for weapons and ammunition; each 0 to [`MAX_BONUS`].
-    fn check_protection(&self, slots: &[SlotDef]) -> Result<(), String> {
-        for (field, value) in [
-            ("protection", self.protection),
-            ("penetration", self.penetration),
-        ] {
-            if !(0..=MAX_BONUS).contains(&value) {
-                return Err(format!("`{field}` must be 0 to {MAX_BONUS}"));
-            }
+    /// Protection and `spell_cost_percent` are for things worn (`slot`), and penetration for
+    /// weapons and ammunition.
+    fn check_protection(&self) -> Result<(), String> {
+        if self.protection != 0 && self.slot.is_none() {
+            return Err("`protection` is for armour worn (`slot`)".into());
         }
-        let in_hand = (slots.iter()).any(|s| s.hand && Some(&s.fits) == self.slot.as_ref());
-        if self.protection > 0 && (self.slot.is_none() || in_hand || self.shield > 0) {
-            return Err(
-                "`protection` is for armour worn (a `slot` that is no hand; a shield's is \
-                 `shield`)"
-                    .into(),
-            );
+        if self.spell_cost_percent > 0 && self.slot.is_none() {
+            return Err("`spell_cost_percent` is for things worn (`slot`)".into());
         }
-        if self.spell_cost_percent > MAX_SPELL_COST
-            || (self.spell_cost_percent > 0 && self.slot.is_none())
-        {
-            return Err(format!(
-                "`spell_cost_percent` is 0 to {MAX_SPELL_COST}, for things worn (`slot`)"
-            ));
-        }
-        if self.penetration > 0 && self.damage.is_none() && self.ammo.is_none() {
+        if self.penetration != 0 && self.damage.is_none() && self.ammo.is_none() {
             return Err("`penetration` is for weapons (`damage`) and ammunition (`ammo`)".into());
         }
         Ok(())
     }
 }
 
-/// The most `spell_cost_percent` a worn thing may add.
-pub const MAX_SPELL_COST: u16 = 100;
-
 /// Parses objects as level files place them: ids, each optionally with a count (`"arrow*12"`),
 /// first on top; a loose gem names its gem (`"gem:ruby*3"`: the gems' object made of that gem,
 /// of the plain size and cut; spec §7 "Gems"), and anything else may name another material its
 /// base item may be made of (`"dagger:bronze"`, a variant, #193), and a unique item is named by
-/// its id (`"unique:widowmaker"`, spec §8 "Magic items": once in all content). A stackable
+/// its id (`"unique:widowmaker"`, spec §8 "Magic items"). A stackable
 /// object becomes one stack (the same placement twice joins it); any other object becomes a
 /// stack of one per count.
 pub(super) fn parse_stacks(specs: &[String], content: &Content) -> Result<Vec<Stack>, String> {
@@ -1343,20 +1189,16 @@ pub(super) fn parse_stacks(specs: &[String], content: &Content) -> Result<Vec<St
                     .trim()
                     .parse::<u32>()
                     .ok()
-                    .filter(|n| (1..=MAX_PLACED).contains(n))
-                    .ok_or_else(|| {
-                        format!("`{spec}`: the count must be a number from 1 to {MAX_PLACED}")
-                    })?;
+                    .filter(|n| *n >= 1)
+                    .ok_or_else(|| format!("`{spec}`: the count must be a number, 1 or more"))?;
                 (id.trim(), count)
             }
             None => (spec.trim(), 1),
         };
-        // A unique item (`unique:widowmaker`), one and once (`super::unique`).
+        // A unique item (`unique:widowmaker`, `super::unique`): a stack of one per count.
         if let Some(unique) = placed.strip_prefix(super::UNIQUE) {
-            if count != 1 {
-                return Err(format!("`{spec}`: a unique item is placed one at a time"));
-            }
-            stacks.push(content.place_unique(unique.trim())?);
+            let stack = content.place_unique(unique.trim())?;
+            stacks.extend((0..count).map(|_| stack.clone()));
             continue;
         }
         let (id, made) = match placed.split_once(':') {

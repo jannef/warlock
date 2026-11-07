@@ -35,14 +35,14 @@ impl TemperRules {
     pub(super) fn parse(file: &str, text: &str) -> Result<Self, ContentError> {
         let err = |m: String| ContentError::new(file, m);
         let rules: Self = toml::from_str(text).map_err(|e| err(e.to_string()))?;
+        // No time would pass.
         if rules.seconds == 0 {
             return Err(err("`seconds` must be at least 1".into()));
         }
-        if rules.per_attempt < 0 {
-            return Err(err("`per_attempt` must not be negative".into()));
-        }
-        if !(1..=GRADES.len()).contains(&usize::from(rules.most)) {
-            return Err(err(format!("`most` must be 1 to {}", GRADES.len())));
+        // An item finer than the last grade has no name, and its state is no item's
+        // (`Worked::is_valid`).
+        if usize::from(rules.most) > GRADES.len() {
+            return Err(err(format!("`most` must be at most {}", GRADES.len())));
         }
         Ok(rules)
     }
@@ -67,8 +67,8 @@ mod tests {
         assert!(bad(
             "seconds = 0\ndifficulty = 13\nper_attempt = 2\nmost = 3\n"
         ));
-        assert!(bad(
-            "seconds = 1\ndifficulty = 13\nper_attempt = -1\nmost = 3\n"
+        assert!(!bad(
+            "seconds = 1\ndifficulty = 13\nper_attempt = -1\nmost = 0\n"
         ));
         assert!(bad(
             "seconds = 1\ndifficulty = 13\nper_attempt = 2\nmost = 4\n"

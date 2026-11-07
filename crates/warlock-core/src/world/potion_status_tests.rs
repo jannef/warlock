@@ -216,7 +216,7 @@ fn potions_of_every_new_kind_describe_themselves_in_words() {
 }
 
 #[test]
-fn drinks_must_lend_the_status_their_kind_says() {
+fn drinks_take_their_kinds_fields_and_any_status() {
     let potion = |drink: &str| {
         format!(
             "[[object]]\nid = \"odd\"\nname = \"odd potion\"\nplural = \"odd potions\"\n\
@@ -225,13 +225,21 @@ fn drinks_must_lend_the_status_their_kind_says() {
              {drink}\n"
         )
     };
+    // Which status suits which kind is the author's, and a severity past the max is the max.
     for drink in [
-        // A boost that raises nothing, eyes that lend none, a ward that resists nothing.
         "kind = \"boost\"\nstatus = \"poisoned\"\nseverity = 1",
         "kind = \"vision\"\nstatus = \"fortified\"",
         "kind = \"resistance\"\nstatus = \"owl_eyed\"",
-        // Past the status's max, and fields of other kinds.
         "kind = \"boost\"\nstatus = \"fortified\"\nseverity = 3",
+    ] {
+        let text = potion(drink);
+        assert!(
+            content_with("[]", &[("data/objects/odd.toml", &text)]).is_ok(),
+            "{drink}"
+        );
+    }
+    // Fields of other kinds.
+    for drink in [
         "kind = \"haste\"\nseverity = 1\nstatus = \"hasted\"",
         "kind = \"vision\"\nstatus = \"owl_eyed\"\ndice = \"1d4\"",
     ] {
@@ -333,9 +341,8 @@ fn a_status_draught_is_well_formed() {
         )
     };
     for drink in [
-        // No severity, past the max, another kind's field, no status.
+        // No severity, another kind's field, no status.
         "kind = \"status\"\nstatus = \"barkskin\"",
-        "kind = \"status\"\nstatus = \"barkskin\"\nseverity = 4",
         "kind = \"status\"\nstatus = \"barkskin\"\nseverity = 1\ndice = \"1d4\"",
         "kind = \"status\"\nseverity = 1",
     ] {

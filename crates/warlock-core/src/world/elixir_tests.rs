@@ -222,6 +222,9 @@ fn content_refuses_an_elixir_without_a_stat_or_with_another_kinds_fields() {
         Content::load(&files).map(|_| ()).map_err(|e| e.to_string())
     };
     load("kind = \"elixir\"\nstat = \"strength\"\npotential = \"1d2\"\n").expect("valid");
+    // Points and potential are the author's: a roll below 0 lifts nothing.
+    load("kind = \"elixir\"\nstat = \"strength\"\npotential = \"1d2-3\"\npoints = 9\n")
+        .expect("the author's");
     for (drink, says) in [
         (
             "kind = \"elixir\"\npotential = \"1d2\"\n",
@@ -234,10 +237,6 @@ fn content_refuses_an_elixir_without_a_stat_or_with_another_kinds_fields() {
         (
             "kind = \"elixir\"\nstat = \"strength\"\n",
             "needs `potential`",
-        ),
-        (
-            "kind = \"elixir\"\nstat = \"strength\"\npotential = \"1d2\"\npoints = 9\n",
-            "`points` are 1 to 3",
         ),
         (
             "kind = \"elixir\"\nstat = \"strength\"\npotential = \"1d2\"\ndice = \"1d4\"\n",

@@ -12,8 +12,8 @@
 //! status = "poisoned"        # harm: the status it gives, `dice` degrees of it; boost, vision,
 //!                            # resistance: the status it gives (a raise, eyes, a `resist`);
 //!                            # status: any status that ends (Barkskin)
-//! severity = 1               # boost, haste, status: the degrees it gives (1 to the status's
-//!                            # `max`)
+//! severity = 1               # boost, haste, status: the degrees it gives (past the status's
+//!                            # `max`, its max)
 //! stat = "strength"          # elixir: the stat it raises for good
 //! points = 1                 # elixir: by how much (a trained rise each)
 //! potential = "1d2"          # elixir: the potential's further rise, rolled once
@@ -23,12 +23,12 @@
 //! marks = { toughness = 5 }  # sure training marks it gives, by stat
 //! ```
 //!
-//! Only its kind's fields: a heal has `dice` and maybe `cures`; a cure has `cures` or
+//! Only its kind's fields: a heal has `dice` and maybe `cures`; a cure has `cures` and/or
 //! `diseases`; a mana potion `dice`; an elixir `stat`, `points`, and `potential`; a harm `dice`
 //! and `status`; a boost `status` (one that raises a stat, `penalty`) and `severity`; a vision
 //! `status` (one with `vision`); a haste `severity` (of Hasted, the Haste spell's status); a
-//! resistance `status` (one with `resist`); a status `status` and `severity`, of any status; a
-//! nourish `satiation`; a gamble `outcomes`; a restore and a blink nothing. The colour's hue is its
+//! resistance `status` (one with `resist`); a status `status` and `severity`, of any status (which
+//! status suits which kind is the author's: each lends it the same way); a nourish `satiation`; a gamble `outcomes`; a restore and a blink nothing. The colour's hue is its
 //! family's (the design's rule, kept in data as the object's `fg`): potions that share a colour
 //! name share their `fg`.
 //!
@@ -63,13 +63,8 @@ use std::collections::BTreeMap;
 /// How far a flask is thrown unless its `range` says otherwise.
 const FLASK_RANGE: i32 = 6;
 
-/// The most marks a potion may give a stat.
-pub const MAX_POTION_MARKS: u16 = 100;
-
 /// The status a haste gives: the Haste spell's.
 const HASTE: &str = "hasted";
-/// The points an elixir may raise its stat by.
-pub const ELIXIR_POINTS: std::ops::RangeInclusive<u8> = 1..=3;
 
 /// What drinking a potion does (spec §8 "Potions").
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -191,8 +186,9 @@ pub struct DrinkSpec {
 }
 
 impl DrinkSpec {
-    /// Resolves it against the statuses (loaded before objects): only its kind's fields, a
-    /// colour, and marks of known stats, 1 to [`MAX_POTION_MARKS`] each.
+    /// Resolves it against the statuses (loaded before objects): only its kind's fields (another
+    /// kind's would never be read), the ones its kind needs, and marks of known stats. The rest
+    /// is the data author's (#1205): `Effects::add` clamps a severity to its status's max.
     pub(super) fn resolve(self, content: &Content) -> Result<Drink, String> {
         let only = |fields: &[(&str, bool)]| match fields.iter().find(|(_, set)| *set) {
             Some((field, _)) => Err(format!("`drink`: a {} has no `{field}`", self.kind)),
@@ -213,15 +209,8 @@ impl DrinkSpec {
             (content.status_id(name))
                 .ok_or_else(|| format!("`drink`: no status `{name}` in data/status.toml"))
         };
-        let severity = |status: StatusId| {
-            let max = content.status(status).max;
-            match self.severity {
-                Some(s) if (1..=max).contains(&s) => Ok(s),
-                Some(_) => Err(format!(
-                    "`drink`: `severity` is 1 to {max} (the status's max)"
-                )),
-                None => Err(format!("`drink`: a {} needs `severity`", self.kind)),
-            }
+        let severity = |_: StatusId| {
+            (self.severity).ok_or_else(|| format!("`drink`: a {} needs `severity`", self.kind))
         };
         // An elixir's fields belong to it alone.
         if self.kind != "elixir" {
@@ -266,9 +255,6 @@ impl DrinkSpec {
                     ("status", self.status.is_some()),
                     ("severity", self.severity.is_some()),
                 ])?;
-                if self.cures.is_empty() && !self.diseases {
-                    return Err("`drink`: a cure names `cures` or `diseases = true`".into());
-                }
                 Draught::Cure {
                     cures: self.cures.clone(),
                     diseases: self.diseases,
@@ -298,18 +284,8 @@ impl DrinkSpec {
                 let stat = Stat::from_id(name)
                     .ok_or_else(|| format!("`drink`: `stat` names no stat `{name}`"))?;
                 let points = self.points.unwrap_or(1);
-                if !ELIXIR_POINTS.contains(&points) {
-                    return Err(format!(
-                        "`drink`: an elixir's `points` are {} to {}",
-                        ELIXIR_POINTS.start(),
-                        ELIXIR_POINTS.end()
-                    ));
-                }
                 let potential = (self.potential)
                     .ok_or_else(|| "`drink`: an elixir needs `potential` dice".to_string())?;
-                if potential.min() < 0 {
-                    return Err("`drink`: an elixir's `potential` never lowers it".into());
-                }
                 Draught::Elixir {
                     stat,
                     points,
@@ -334,17 +310,6 @@ impl DrinkSpec {
             "boost" => {
                 only(&lending)?;
                 let status = status(self.status.as_deref())?;
-                let def = content.status(status);
-                if def
-                    .penalty
-                    .as_ref()
-                    .is_none_or(|p| p.by.iter().all(|(_, v)| v <= 0))
-                {
-                    return Err(format!(
-                        "`drink`: a boost's status `{}` raises no stat",
-                        def.id
-                    ));
-                }
                 Draught::Boost {
                     status,
                     severity: severity(status)?,
@@ -353,15 +318,6 @@ impl DrinkSpec {
             "vision" => {
                 only(&[lending.as_slice(), &[("severity", self.severity.is_some())]].concat())?;
                 let status = status(self.status.as_deref())?;
-                // Eyes of another profile, or Seeing's sight of the unseen.
-                let def = content.status(status);
-                if def.vision.is_none() && !def.sees_unseen {
-                    let id = &def.id;
-                    return Err(format!(
-                        "`drink`: a vision's status `{id}` lends no `vision` and does not \
-                         `sees_unseen`"
-                    ));
-                }
                 Draught::Vision { status }
             }
             "haste" => {
@@ -375,12 +331,6 @@ impl DrinkSpec {
             "resistance" => {
                 only(&[lending.as_slice(), &[("severity", self.severity.is_some())]].concat())?;
                 let status = status(self.status.as_deref())?;
-                if content.status(status).resist.is_empty() {
-                    let id = &content.status(status).id;
-                    return Err(format!(
-                        "`drink`: a resistance's status `{id}` has no `resist`"
-                    ));
-                }
                 Draught::Resistance { status }
             }
             "nourish" => {
@@ -418,16 +368,10 @@ impl DrinkSpec {
                 ));
             }
         };
-        if self.colour.trim().is_empty() || self.colour.trim() != self.colour {
-            return Err("`drink`: `colour` must be a name, not empty or padded".into());
-        }
         let mut marks = Vec::new();
         for (name, &count) in &self.marks {
             let stat = Stat::from_id(name)
                 .ok_or_else(|| format!("`drink`: `marks` names no stat `{name}`"))?;
-            if !(1..=MAX_POTION_MARKS).contains(&count) {
-                return Err(format!("`drink`: `marks` are 1 to {MAX_POTION_MARKS}"));
-            }
             marks.push((stat, count));
         }
         marks.sort_by_key(|&(stat, _)| Stat::ALL.iter().position(|&s| s == stat));

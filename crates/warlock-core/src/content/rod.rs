@@ -23,15 +23,6 @@ use crate::stats::Stats;
 use serde::Deserialize;
 use std::collections::BTreeMap;
 
-/// The most mana a rod may cost a use.
-pub const MAX_ROD_MANA: u16 = 100;
-/// The farthest a rod effect may reach, in cells.
-pub const MAX_ROD_REACH: u8 = 20;
-/// The largest burst a rod effect may have.
-pub const MAX_ROD_RADIUS: u8 = 3;
-/// The hardest wall a digging effect may be able to break.
-pub const MAX_ROD_POWER: u16 = 10_000;
-
 /// How a rod effect goes from its user.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum RodShape {
@@ -131,8 +122,7 @@ pub struct RodSpec {
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Rod {
     pub effect: usize,
-    /// The mana a use costs its user, 1 to [`MAX_ROD_MANA`], before their talents (Channeler,
-    /// Frugal caster).
+    /// The mana a use costs its user, before their talents (Channeler, Frugal caster).
     pub mana: u16,
 }
 
@@ -141,9 +131,6 @@ impl RodSpec {
     pub(super) fn resolve(self, content: &Content) -> Result<Rod, String> {
         let effect = (content.rod_effect_index(&self.effect))
             .ok_or_else(|| format!("`rod`: no effect `{}` in data/rod_effects/", self.effect))?;
-        if !(1..=MAX_ROD_MANA).contains(&self.mana) {
-            return Err(format!("`rod`: `mana` is 1 to {MAX_ROD_MANA}"));
-        }
         Ok(Rod {
             effect,
             mana: self.mana,
@@ -174,10 +161,6 @@ struct RodEffectSpec {
     status: Option<String>,
     severity: Option<u16>,
     up_to_level: Option<u8>,
-    // Retired (the spell scaling design §7.5): refused, naming what replaced them.
-    max_range: Option<toml::Value>,
-    per_levels: Option<toml::Value>,
-    up_to_caster_level: Option<toml::Value>,
 }
 
 /// `[rod_effect.grows]` as written: the reach's ladder.
@@ -212,33 +195,25 @@ pub(super) fn parse<'a>(
 }
 
 fn resolve(spec: RodEffectSpec, content: &Content) -> Result<RodEffect, String> {
-    if spec.name.trim().is_empty() || spec.description.trim().is_empty() {
-        return Err("`name` and `description` are not empty".into());
-    }
     let shape = match spec.shape.as_str() {
         "line" => RodShape::Line,
         "bolt" => RodShape::Bolt,
         "burst" => RodShape::Burst,
         other => return Err(format!("unknown shape `{other}` (line, bolt, burst)")),
     };
-    retired(&spec)?;
-    if !(1..=MAX_ROD_REACH).contains(&spec.range) {
-        return Err(format!("`range` is 1 to {MAX_ROD_REACH}"));
-    }
     let grows = match spec.grows.and_then(|g| g.range) {
-        Some(text) => Some(reach_ladder(&text, spec.range)?),
+        Some(text) => Some(Ladder::parse(&text, Unit::Cells).map_err(|e| format!("grows: {e}"))?),
         None => None,
     };
     let radius = match (shape, spec.radius) {
-        (RodShape::Burst, Some(r)) if (1..=MAX_ROD_RADIUS).contains(&r) => r,
-        (RodShape::Burst, _) => return Err(format!("a burst's `radius` is 1 to {MAX_ROD_RADIUS}")),
+        (RodShape::Burst, r) => r.unwrap_or(0),
         (_, Some(_)) => return Err("only a burst has a `radius`".into()),
         (_, None) => 0,
     };
     if let Some(noise) = spec.noise
-        && !(1..=MAX_LOUDNESS).contains(&noise.loudness)
+        && noise.loudness > MAX_LOUDNESS
     {
-        return Err(format!("`noise` loudness is 1 to {MAX_LOUDNESS}"));
+        return Err(format!("`noise` loudness is at most {MAX_LOUDNESS}"));
     }
     // Only the fields its kind reads.
     let fields = [
@@ -262,23 +237,14 @@ fn resolve(spec: RodEffectSpec, content: &Content) -> Result<RodEffect, String> 
     let does = match spec.kind.as_str() {
         "dig" => {
             let power = spec.power.ok_or("a `dig` effect needs a `power`")?;
-            if !(1..=MAX_ROD_POWER).contains(&power) {
-                return Err(format!("`power` is 1 to {MAX_ROD_POWER}"));
-            }
             RodDoes::Dig { power }
         }
         "teleport" => RodDoes::Teleport,
         _ => {
             let name = spec.status.ok_or("a `status` effect needs a `status`")?;
             let status = (content.status_id(&name)).ok_or(format!("unknown status `{name}`"))?;
+            // `Effects::add` clamps it to 1 to the status's max.
             let severity = spec.severity.unwrap_or(1);
-            let max = content.status(status).max;
-            if severity < 1 || severity > max {
-                return Err(format!("`severity` is 1 to the status's max, {max}"));
-            }
-            if spec.up_to_level == Some(0) {
-                return Err("`up_to_level` is at least 1".into());
-            }
             RodDoes::Status {
                 status,
                 severity,
@@ -297,44 +263,6 @@ fn resolve(spec: RodEffectSpec, content: &Content) -> Result<RodEffect, String> 
         noise: spec.noise,
         does,
     })
-}
-
-/// The retired fields, each refused naming its replacement (the spell scaling design §7.5).
-fn retired(spec: &RodEffectSpec) -> Result<(), String> {
-    if spec.max_range.is_some() || spec.per_levels.is_some() {
-        return Err(
-            "`max_range` and `per_levels` are gone: `range` is what anyone reaches, and a \
-             `grows.range` ladder grows it (`willpower 14 4, 18 5`; docs/design/spell-scaling.md \
-             §7.5)"
-                .into(),
-        );
-    }
-    if spec.up_to_caster_level.is_some() {
-        return Err(
-            "`up_to_caster_level` is gone: `up_to_level` is the highest creature level it takes \
-             (docs/design/spell-scaling.md §7.5)"
-                .into(),
-        );
-    }
-    Ok(())
-}
-
-/// `grows.range` read and checked: a ladder of whole cells rising strictly from `base` to at
-/// most [`MAX_ROD_REACH`].
-fn reach_ladder(text: &str, base: u8) -> Result<Ladder, String> {
-    let ladder = Ladder::parse(text, Unit::Cells).map_err(|e| format!("grows: {e}"))?;
-    let mut before = i32::from(base);
-    for value in ladder.values() {
-        let n = value.number().unwrap_or(0);
-        if n <= before || n > i32::from(MAX_ROD_REACH) {
-            return Err(format!(
-                "grows: `range`'s rungs rise strictly from its base, {base}, to at most \
-                 {MAX_ROD_REACH}; not {n}"
-            ));
-        }
-        before = n;
-    }
-    Ok(ladder)
 }
 
 #[cfg(test)]
@@ -405,28 +333,8 @@ mod tests {
                 "needs a `power`",
             ),
             (
-                "shape = \"burst\"\nrange = 3\nkind = \"status\"\nstatus = \"asleep\"",
-                "radius",
-            ),
-            (
                 "shape = \"burst\"\nrange = 3\nradius = 1\nkind = \"status\"\nstatus = \"nope\"",
                 "unknown status",
-            ),
-            (
-                "shape = \"burst\"\nrange = 3\nradius = 1\nkind = \"status\"\nstatus = \"asleep\"\nseverity = 5",
-                "`severity` is 1",
-            ),
-            (
-                "shape = \"bolt\"\nrange = 0\nkind = \"teleport\"",
-                "`range` is 1 to 20",
-            ),
-            (
-                "shape = \"bolt\"\nrange = 4\ngrows.range = \"willpower 14 4\"\nkind = \"teleport\"",
-                "rise strictly from its base, 4",
-            ),
-            (
-                "shape = \"bolt\"\nrange = 4\ngrows.range = \"willpower 14 21\"\nkind = \"teleport\"",
-                "to at most 20",
             ),
             (
                 "shape = \"bolt\"\nrange = 4\ngrows.range = \"cunning 14 5\"\nkind = \"teleport\"",
@@ -441,21 +349,12 @@ mod tests {
                 "has no `up_to_level`",
             ),
             (
-                "shape = \"burst\"\nrange = 3\nradius = 1\nkind = \"status\"\nstatus = \"asleep\"\nup_to_level = 0",
-                "`up_to_level` is at least 1",
-            ),
-            // The retired fields, each naming what replaced it (the spell scaling design §7.5).
-            (
                 "shape = \"bolt\"\nrange = 3\nmax_range = 9\nkind = \"teleport\"",
-                "`max_range` and `per_levels` are gone",
+                "unknown field `max_range`",
             ),
             (
-                "shape = \"bolt\"\nrange = 3\nper_levels = 3\nkind = \"teleport\"",
-                "a `grows.range` ladder",
-            ),
-            (
-                "shape = \"burst\"\nrange = 3\nradius = 1\nkind = \"status\"\nstatus = \"asleep\"\nup_to_caster_level = true",
-                "`up_to_caster_level` is gone: `up_to_level`",
+                "shape = \"bolt\"\nrange = 3\nradius = 1\nkind = \"teleport\"",
+                "only a burst has a `radius`",
             ),
         ];
         for (body, want) in cases {
@@ -463,6 +362,13 @@ mod tests {
                 .expect_err(body)
                 .to_string();
             assert!(err.contains(want), "{body}: {err}");
+        }
+        // Ranges, severities, and reaches are the author's.
+        for body in [
+            "shape = \"burst\"\nrange = 0\nkind = \"status\"\nstatus = \"asleep\"\nseverity = 5",
+            "shape = \"bolt\"\nrange = 4\ngrows.range = \"willpower 14 3, 18 40\"\nkind = \"teleport\"",
+        ] {
+            load_with(&format!("{base}{body}\n")).expect(body);
         }
     }
 }
