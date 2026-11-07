@@ -1,0 +1,21 @@
+# A potion of barkskin (spec §8 "Potions", the potions wave 2 design §4.1): Barkskin for two minutes, harder to hit. Wards are bronze.
+[[object]]
+id = "potion_of_barkskin"
+name = "potion of barkskin"
+plural = "potions of barkskin"
+glyph = "!"
+fg = "#b07838"
+class = "potions"
+materials = ["glass"]
+weight = 250
+value = 100
+stackable = true
+level = 3
+frequency = 15
+
+[object.drink]
+kind = "status"
+status = "barkskin"
+severity = 2
+colour = "bronze"
+marks = { toughness = 15 }

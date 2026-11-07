@@ -4,13 +4,16 @@
 //!
 //! ```toml
 //! [object.drink]
-//! kind = "heal"              # heal, cure, mana, elixir, harm, boost, vision, haste, resistance
+//! kind = "heal"              # heal, cure, mana, elixir, harm, boost, vision, haste, resistance,
+//!                            # status
 //! dice = "2d8"               # heal: hit points back; mana: mana back; harm: degrees of sickness
 //! cures = ["bandage"]        # heal, cure: means named in the statuses' and diseases' `cured_by`
 //! diseases = true            # cure: ends every disease the drinker has
 //! status = "poisoned"        # harm: the status it gives, `dice` degrees of it; boost, vision,
-//!                            # resistance: the status it gives (a raise, eyes, a `resist`)
-//! severity = 1               # boost, haste: the degrees it gives (1 to the status's `max`)
+//!                            # resistance: the status it gives (a raise, eyes, a `resist`);
+//!                            # status: any status that ends (Barkskin)
+//! severity = 1               # boost, haste, status: the degrees it gives (1 to the status's
+//!                            # `max`)
 //! stat = "strength"          # elixir: the stat it raises for good
 //! points = 1                 # elixir: by how much (a trained rise each)
 //! potential = "1d2"          # elixir: the potential's further rise, rolled once
@@ -22,7 +25,9 @@
 //! `diseases`; a mana potion `dice`; an elixir `stat`, `points`, and `potential`; a harm `dice`
 //! and `status`; a boost `status` (one that raises a stat, `penalty`) and `severity`; a vision
 //! `status` (one with `vision`); a haste `severity` (of Hasted, the Haste spell's status); a
-//! resistance `status` (one with `resist`). The colour's hue is its
+//! resistance `status` (one with `resist`); a status `status` and `severity`, of any status that
+//! ends by itself (`eases` or `per_action`), never one that kills at its `max` or one a resource
+//! holds (Raging). The colour's hue is its
 //! family's (the design's rule, kept in data as the object's `fg`): potions that share a colour
 //! name share their `fg`.
 
@@ -67,6 +72,9 @@ pub enum Draught {
     Haste { status: StatusId, severity: u16 },
     /// A resistance for a while: `status` (Warmed), which resists as gear does.
     Resistance { status: StatusId },
+    /// Any status that ends, lent for a while: `severity` degrees of `status` (Barkskin; the
+    /// potions wave 2 design §4.1).
+    Status { status: StatusId, severity: u16 },
 }
 
 impl Draught {
@@ -82,17 +90,18 @@ impl Draught {
             Draught::Vision { .. } => "vision",
             Draught::Haste { .. } => "haste",
             Draught::Resistance { .. } => "resistance",
+            Draught::Status { .. } => "status",
         }
     }
 
     /// The status it gives the drinker for a while and the degrees of it, for the kinds that
-    /// give one (boost, vision, haste, resistance); not a harm's sickness, whose degrees are
-    /// rolled.
+    /// give one (boost, vision, haste, resistance, status); not a harm's sickness, whose degrees
+    /// are rolled.
     pub fn lends(&self) -> Option<(StatusId, u16)> {
         match *self {
-            Draught::Boost { status, severity } | Draught::Haste { status, severity } => {
-                Some((status, severity))
-            }
+            Draught::Boost { status, severity }
+            | Draught::Haste { status, severity }
+            | Draught::Status { status, severity } => Some((status, severity)),
             Draught::Vision { status } | Draught::Resistance { status } => Some((status, 1)),
             _ => None,
         }
@@ -313,10 +322,36 @@ impl DrinkSpec {
                 }
                 Draught::Resistance { status }
             }
+            "status" => {
+                only(&lending)?;
+                let status = status(self.status.as_deref())?;
+                let def = content.status(status);
+                let id = &def.id;
+                if def.eases.is_none() && !def.per_action {
+                    return Err(format!(
+                        "`drink`: a status draught's `{id}` never ends (no `eases`, not \
+                         `per_action`)"
+                    ));
+                }
+                if def.kills_at_max {
+                    return Err(format!(
+                        "`drink`: a status draught's `{id}` kills at its max"
+                    ));
+                }
+                if (content.resources().iter()).any(|r| r.status == Some(status)) {
+                    return Err(format!(
+                        "`drink`: a status draught's `{id}` is a resource's to give"
+                    ));
+                }
+                Draught::Status {
+                    status,
+                    severity: severity(status)?,
+                }
+            }
             other => {
                 return Err(format!(
                     "`drink`: unknown kind `{other}` (heal, cure, mana, elixir, harm, boost, \
-                     vision, haste, resistance)"
+                     vision, haste, resistance, status)"
                 ));
             }
         };

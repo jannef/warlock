@@ -3,7 +3,8 @@
 Spec §8 "Potions" (`spec/08g-magic-items.md`); the combat progression design §10
 (`docs/design/combat-progression.md`); #565 (Q1: the kinds `heal`, `cure`, `mana`, `harm`); #567
 (Q2: `boost`, `vision`, `haste`, `resistance`, their thirteen statuses, Lasting draughts);
-#568 (Q3: `elixir`).
+#568 (Q3: `elixir`); the potions wave 2 design (`docs/design/potions-wave-2.md`) S2, #1224:
+`status`.
 
 ## Objects and data
 
@@ -19,8 +20,11 @@ Spec §8 "Potions" (`spec/08g-magic-items.md`); the combat progression design §
   `Harm { dice, status }` (status required: hunger is loaded after objects),
   `Boost { status, severity }` (the status must raise a stat), `Vision { status }` (it must
   have `vision`), `Haste { status, severity }` (status always `hasted`, the Haste spell's; data
-  writes only `severity`), `Resistance { status }` (it must have `resist`); a severity is 1 to
-  the status's `max`. `Draught::lends` is the status and degrees of the four that lend one.
+  writes only `severity`), `Resistance { status }` (it must have `resist`),
+  `Status { status, severity }` (#1224, the potions wave 2 design §4.1: any status that ends by
+  itself, `eases` or `per_action`; never `kills_at_max`, never a resource's `status`, so Raging
+  and Diseased are refused); a severity is 1 to the status's `max`. `Draught::lends` is the
+  status and degrees of the five that lend one.
   `marks` are
   `(Stat, count)` in stat order, 1 to `MAX_POTION_MARKS` each.
 - Content checks (`content/mod.rs`): a drink's `cures` must be named in some status's or
@@ -32,7 +36,9 @@ Spec §8 "Potions" (`spec/08g-magic-items.md`); the combat progression design §
   `murky_draught`; the six `elixir_of_*`: might, grace, vigour, wit, will, presence; #567:
   `potion_of_might`, `_grace`, `_vigour`, `_wit`, `_will`, `_presence` and their
   `greater_potion_of_*`, `potion_of_cats_eyes`, `_owls_eyes`, `_moths_eyes`,
-  `potion_of_quickness`, `potion_of_warmth`, `_frost`, `_earthing`, `_proofing`). The witch's old `red_potion` and `blue_potion` are now the potions of
+  `potion_of_quickness`, `potion_of_warmth`, `_frost`, `_earthing`, `_proofing`; #1224, kind
+  `status`: `potion_of_barkskin`, `_glamour`, `_renewal`, `_the_quick`, `_the_unseen`,
+  `_sea_legs`, their colours the design's §4.5 hues: bronze, rose, opal, sky blue). The witch's old `red_potion` and `blue_potion` are now the potions of
   healing and mana (ids renamed; saves change).
 
 ## Drinking: `world/potion.rs`
@@ -58,8 +64,8 @@ Spec §8 "Potions" (`spec/08g-magic-items.md`); the combat progression design §
   given at once (as `stat_checks` does), and "You feel stronger[, and that you could be stronger
   yet]." (the clause when the potential rose by 2 or more; "You feel no different." at the top
   of the scores); its marks go through `StatUse::Elixir`, every other kind's through
-  `StatUse::Drank`; `Harm` rolls degrees and `afflict`s them. `Boost`, `Vision`, `Haste`, and
-  `Resistance` go through `World::lend`: `afflict` the
+  `StatUse::Drank`; `Harm` rolls degrees and `afflict`s them. `Boost`, `Vision`, `Haste`,
+  `Resistance`, and `Status` go through `World::lend`: `afflict` the
   status at its degrees; its start line is the event's when it begins, said here when an
   existing one grows stronger, and "Nothing more comes of it." when nothing changes (boosts
   stack `highest`, the others `refresh`). The statuses (`data/status.toml`, the potions' group
@@ -82,7 +88,9 @@ Spec §8 "Potions" (`spec/08g-magic-items.md`); the combat progression design §
   kit scrolls; every class's, #1104).
 - The item description (`magic/describe.rs::potion_lines`): a known potion's effect in words
   ("Heals wounds at once, and cures bleeding"), never dice; an unknown one "You do not know what
-  this potion does."
+  this potion does." A `status` draught's words come from what its status does (`lent`: unseen,
+  wades free, senses, quicker regeneration, a defence or a blow bonus, a cheaper action), else
+  its name: "Makes you harder to hit for a while".
 
 ## Sources
 
@@ -122,7 +130,10 @@ effect kinds (`potion_marks_percent`, `potion_heals`, `potion_smell`) and `World
 - `world/potion_status_tests.rs` (#567): boosts raise and wear off, greater ones ease to
   common ones, `highest`, visions change `Actor::eyes` and what is seen in the dark,
   resistances add as gear and never reach immunity, haste, Lasting draughts, a save with a
-  lengthened easing, descriptions, drinks that lend the wrong status refused.
+  lengthened easing, descriptions, drinks that lend the wrong status refused; #1224's six
+  `status` draughts (each lends its degrees, marks, and wears off on time; the unseen and sea
+  legs do what their statuses do; a second dose adds nothing; their words; a status that never
+  ends, kills at its max, or lacks a severity refused, a `per_action` one allowed).
   `content/status.rs` tests `vision`, `resist`, and `per_degree`. Text snapshot
   `potion-boost` (the character screen and status bar with Fortified and Owl-eyed).
 - `world/potion_tests.rs`: every kind through `eat:`, a floor potion, food still eaten,

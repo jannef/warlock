@@ -1,0 +1,21 @@
+# A potion of sea legs (spec §8 "Potions", the potions wave 2 design §4.1): Water-borne for six minutes, walking on water. Utility draughts are sky blue.
+[[object]]
+id = "potion_of_sea_legs"
+name = "potion of sea legs"
+plural = "potions of sea legs"
+glyph = "!"
+fg = "#70b0e0"
+class = "potions"
+materials = ["glass"]
+weight = 250
+value = 100
+stackable = true
+level = 4
+frequency = 10
+
+[object.drink]
+kind = "status"
+status = "water_borne"
+severity = 3
+colour = "sky blue"
+marks = { dexterity = 15 }

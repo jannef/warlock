@@ -28,6 +28,15 @@ Some potions work **for a while** instead of at once:
 - A **resistance** potion makes you [resist](damage-types.md#armour-and-resistance) an element
   by 50 % for half an hour. It counts the way armour's resistance does, so together with what
   you wear it never reaches immunity: 75 % at most.
+- A **helpful draught** lends you a [status effect](status-effects.md) a spell could also give:
+  the potion of barkskin [Barkskin](status-effects.md#status-barkskin) and the potion of glamour
+  [Glamoured](status-effects.md#status-glamoured) (both harder to hit, two minutes), the potion
+  of renewal [Renewing](status-effects.md#status-renewing) (wounds close faster, four minutes),
+  the potion of the quick [Quick-sensed](status-effects.md#status-quick-sensed) (you feel the
+  living about you, three minutes), the potion of the unseen
+  [Invisible](status-effects.md#status-invisible) (two minutes), and the potion of sea legs
+  [Water-borne](status-effects.md#status-water-borne) (you walk on water, six minutes). A
+  second one of the same kind starts its time over.
 
 Each of these shows by name on the [status bar](the-screen.md#the-screen) and the [character
 screen](the-screen.md#character): [Fortified](status-effects.md#status-fortified),
@@ -58,6 +67,10 @@ has a hue, and a potion with several effects mixes their hues.
 | [Vision](vision.md#the-four-types) | violet |
 | [Speed](turns.md#speed) | yellow |
 | [Resistance](damage-types.md#armour-and-resistance) | teal |
+| Wards ([Barkskin](status-effects.md#status-barkskin), [Glamoured](status-effects.md#status-glamoured)) | bronze |
+| [Renewal](status-effects.md#status-renewing) | rose |
+| The unseen and the unplaced ([Quick-sensed](status-effects.md#status-quick-sensed), [Invisible](status-effects.md#status-invisible)) | opal |
+| Utility ([Water-borne](status-effects.md#status-water-borne)) | sky blue |
 | [Elixirs](#elixirs) (a [stat](stats.md) for good) | gold |
 | Harm | brown |
 

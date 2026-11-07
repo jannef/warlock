@@ -1,6 +1,6 @@
 //! Potions (spec §8 "Potions").
 
-use super::text::{Term, anchored, capital};
+use super::text::{Term, anchored, capital, link};
 use std::fmt::Write as _;
 use warlock_core::content::{Content, Draught, StatusId};
 
@@ -104,6 +104,14 @@ pub(super) fn potions(content: &Content) -> String {
                     .collect();
                 format!("resists {} ({}, as gear does)", kinds.join(", "), def.name)
                     + &lasting(content, *status, 1)
+            }
+            Draught::Status { status, severity } => {
+                let def = content.status(*status);
+                format!(
+                    "{}, {severity} degree{}",
+                    link(Term::Status, &def.id, &def.name),
+                    plural(*severity)
+                ) + &lasting(content, *status, *severity)
             }
         };
         let marks = match drink.marks.as_slice() {
