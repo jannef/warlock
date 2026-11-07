@@ -839,7 +839,7 @@ What every spell of a damage type does beyond its damage (the design:
     a wall would strike what no one could see). `arcs` is refused at load off those four shapes
     and on a type with no `arc`.
   - `TalentEffect::SpellType { arc_chance, when }` (`TalentMods::arc_chance`, the highest): read
-    in `spell_type_spreads`, by the caster's talents. Conductor's. It needs no `alike` line.
+    in `spell_type_spreads`, by the caster's talents. Conductor's.
 - **`World::lay_fire`** (`spell_type.rs`): the one laying of a fire on a walkable cell, longest
   wins; Blaze's `kindle` calls it, and a burning missile's `come_down` keeps its own (it adds to a
   pile). `douses` goes through `shoot.rs::put_out`, burning objects there with it.

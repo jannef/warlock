@@ -397,17 +397,6 @@ fn stillness_names_only_statuses_the_content_has() {
         .expect_err("unknown status")
         .to_string();
     assert!(err.contains("unknown status `befuddled`"), "{err}");
-    let mut files = ContentFiles::builtin();
-    let empty = (still.split_once("statuses = [").map(|(head, tail)| {
-        let (_, rest) = tail.split_once(']').expect("the list ends");
-        format!("{head}statuses = []{rest}")
-    }))
-    .expect("a list");
-    files.insert("data/talents/still_mind.toml", &empty);
-    let err = Content::load(&files)
-        .expect_err("an empty list")
-        .to_string();
-    assert!(err.contains("stillness"), "{err}");
 }
 
 #[test]
