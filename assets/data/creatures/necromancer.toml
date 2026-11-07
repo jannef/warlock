@@ -7,7 +7,7 @@ id = "necromancer"
 level = 18
 xp = 100
 rarity = "rare"
-loot = 50
+loot = 13
 name = "necromancer"
 glyph = "@"
 fg = "#7ab05a"
@@ -35,15 +35,14 @@ racial_weapon = "dagger"
 chance = 90
 one_of = ["dagger"]
 keep = "wield"
-magic = 25
+magic = 6
 [[creature.gear]]
 chance = 50
 one_of = ["wool_cloak"]
 [[creature.gear]]
 chance = 60
 one_of = ["bone_amulet"]
-magic = 30
-
+magic = 8
 # The lesser dead (every undead type of level 3 to 12), one to four at a time, every half a
 # minute while his mana lasts, eight of them at most.
 [creature.summon]

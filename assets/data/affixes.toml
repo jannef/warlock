@@ -16,9 +16,9 @@
 
 # How often loot is normal, magic, or rare (weights).
 [rarity]
-normal = 85
-magic = 13
-rare = 2
+normal = 1925
+magic = 65
+rare = 10
 
 # What a magic item has (weights): a prefix only, a suffix only, or one of each.
 [magic]

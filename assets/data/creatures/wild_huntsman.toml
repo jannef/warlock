@@ -37,4 +37,4 @@ to_hit = 14
 [[creature.gear]]
 chance = 90
 one_of = ["spear", "glaive"]
-magic = 50
+magic = 13

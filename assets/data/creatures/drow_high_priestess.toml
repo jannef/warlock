@@ -6,7 +6,7 @@ id = "drow_high_priestess"
 level = 44
 xp = 230
 rarity = "very_rare"
-loot = 75
+loot = 19
 name = "drow high priestess"
 glyph = "e"
 fg = "#e04a6a"
@@ -41,11 +41,11 @@ on_hit = [{ status = "poisoned", chance = 30, severity = 4 }, { status = "weaken
 [[creature.gear]]
 chance = 90
 one_of = ["chain_mail"]
-magic = 50
+magic = 13
 [[creature.gear]]
 chance = 80
 one_of = ["gold_amulet"]
-magic = 60
+magic = 15
 [[creature.gear]]
 chance = 80
 one_of = ["gold_coin*10"]

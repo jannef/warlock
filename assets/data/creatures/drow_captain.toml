@@ -6,7 +6,7 @@ id = "drow_captain"
 level = 37
 xp = 195
 rarity = "rare"
-loot = 60
+loot = 15
 name = "drow captain"
 glyph = "e"
 fg = "#d4c8f0"
@@ -38,15 +38,15 @@ on_hit = [{ status = "poisoned", chance = 25, severity = 3 }, { status = "fright
 [[creature.gear]]
 chance = 90
 one_of = ["chain_mail"]
-magic = 40
+magic = 10
 [[creature.gear]]
 chance = 70
 one_of = ["wool_cloak"]
-magic = 25
+magic = 6
 [[creature.gear]]
 chance = 60
 one_of = ["leather_boots"]
-magic = 15
+magic = 4
 [[creature.gear]]
 chance = 80
 one_of = ["copper_coin*200", "gold_coin*6"]

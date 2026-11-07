@@ -1839,7 +1839,7 @@ impl Content {
                 .starting_ranks(&ranks, weapon_skill::Ranked::Any))
             .map_err(|m| err(format!("creature `{}`: {m}", spec.id)))?;
             let ranks = ranks.iter().map(|&(id, rank)| (id, rank.max() as u8));
-            let weapon_skills = WeaponSkills::from_ranks(&self.weapon_skills, ranks);
+            let weapon_skills = WeaponSkills::from_ranks(ranks);
             if let Some(hide) = &spec.natural {
                 hide.check()
                     .map_err(|m| err(format!("creature `{}`: {m}", spec.id)))?;

@@ -635,7 +635,7 @@ fn casts(w: &World) -> Vec<Cast> {
         let skills = me.spell_skills(content, def, me.standing_aim(content, def));
         let mut bare = me.clone();
         for id in [skills.skill, skills.style].into_iter().flatten() {
-            bare.weapon_skills.raise(table, id, 0);
+            bare.weapon_skills.raise(id, 0);
         }
         let bare_reroll = bare.standing_spell_mods(content, def).reroll;
         let bare = (bare.spell_roll(content, def, CastBy::Own)).unwrap_or(rolled);
@@ -991,7 +991,7 @@ fn career(
                 None => rank(level).saturating_sub(less).max(1),
             };
             if r > w.state.player().weapon_skills.rank(id) {
-                w.player_mut().weapon_skills.raise(table, id, r);
+                w.player_mut().weapon_skills.raise(id, r);
             }
         }
         if let Some(id) = content.skill_id("sneak_attack") {

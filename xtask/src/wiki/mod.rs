@@ -421,12 +421,10 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("decipher-chances.md", scrolls::decipher_chances),
         ("potions.md", potions::potions),
         ("weapon-skills.md", weapon_skills::skills),
-        ("weapon-defaults.md", weapon_skills::defaults),
         ("weapon-marks.md", weapon_skills::marks),
         ("weapon-benefits.md", weapon_skills::benefits),
         ("weapon-abilities.md", weapon_abilities::weapon_abilities),
         ("styles.md", weapon_skills::styles),
-        ("style-defaults.md", weapon_skills::style_defaults),
         ("style-benefits.md", weapon_skills::style_benefits),
         ("style-abilities.md", weapon_abilities::style_abilities),
         ("search-features.md", searching::search_features),
@@ -985,7 +983,7 @@ mod tests {
         assert!(ornaments.contains("| Rings | as its setting, in its gem's colour | 35% |"));
         assert!(ornaments.contains("as their tip instead: ironwood staves, quarterstaves."));
         assert!(text("objects.md").contains("| Gem | `*` | gems | its gem | 1–4 g | its gem's |"));
-        // Fighting styles: their configurations, defaults, ranks, and the classes' starting ones.
+        // Fighting styles: their configurations, ranks, and the classes' starting ones.
         let styles = text("styles.md");
         for row in [
             "| Duelist | A one-handed weapon, the other hand empty | any | melee |",
@@ -995,9 +993,6 @@ mod tests {
         ] {
             assert!(styles.contains(row), "{row}\n{styles}");
         }
-        assert!(
-            text("style-defaults.md").contains("| Duelist | Twin Blades −3, Sword and Board −3 |")
-        );
         let benefits = text("style-benefits.md");
         assert!(benefits.contains("main hand strikes at **−4** to hit and the off hand at **−8**"));
         assert!(
@@ -1475,7 +1470,7 @@ mod tests {
                 && weapons.contains("| 6 cells | Thrown weapons | - |")
         );
         // Magic items: rarity, bases, affixes with their tiers, and the words of rare names.
-        assert!(text("magic-rarity.md").contains("| Rare | 2% |"));
+        assert!(text("magic-rarity.md").contains("| Rare | 0.5% |"));
         assert!(text("magic-rarity.md").contains("| a prefix and a suffix | 20% |"));
         assert!(text("magic-bases.md").contains("| Long sword | weapons |"));
         let prefixes = text("magic-prefixes.md");

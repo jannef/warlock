@@ -855,8 +855,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     of any type carrying a **creature tag** (below), on its level or any level of its branch if it names
     one, else on every level summed. Kills are tallied per level and creature type, every type (saved;
     the ranger's Favoured prey reads the same tally, §8 "Class abilities"), so kills made before an
-    authored quest was given count, and a rolled quest or a repeat of a repeatable one counts only
-    the kills since it was given. A kill of a **named monster** (a `unique` type; `count` 1) is
+    authored quest was given count (a rolled quest's authored variant too), and a quest rolled
+    by a `pick` or a repeat of a repeatable one counts only the kills since it was given. A kill of a **named monster** (a `unique` type; `count` 1) is
     met by its death, at any hand (the player's, a trap's, another creature's) and whenever it
     died, before the quest was given too (the guild design §8.4: no quest can be softlocked):
     every death passes `creature_dies`, which keeps the dead unique types (`Quests::slain`,
@@ -932,7 +932,14 @@ developer notes (CLAUDE.md, `docs/dev/`).
     types), `{branch}` (the first branch, in the pick's order, it lives in), `{where}`, each
     also capitalised (`{A_target}`); every text, filled for every target the pool can hold, is
     checked at load (one line, at most 280 characters, no unknown placeholder). A variant's
-    `reveals` (`when = "given"`) marks its own location only. Dev: `quest_roll:ID:TARGET`
+    `reveals` (`when = "given"`) marks its own location only. **Beast-friend** (#1189): a
+    player with the talent (§8 "Talents") is never asked to kill what it calms: the pool, as the
+    quest is given, leaves out a creature type of an `animal` faction, a tag any of whose types
+    of the quest's campaign is one, and a variant asking for either (read by the talent, not the
+    class, at the giving; the saved roll keeps it). A variant with `fallback = true` is drawn
+    only when no other variant is left: Reeve Leofric's "Rats in the barrows" asks for giant
+    rats (`vermin`, an animal faction), and a Beast-friend draws its fallback, five skeletal
+    rats (undead), with his own words. Dev: `quest_roll:ID:TARGET`
     (§9) replaces an active rolled quest's roll while it has no progress (a target its pool
     can hold wherever the player can go, or a variant id), its kills counted from then and a
     variant's reveal made; no time.

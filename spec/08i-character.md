@@ -279,16 +279,15 @@ developer notes (CLAUDE.md, `docs/dev/`).
   - **Mana**: the race's and the class's `mana` add to the mental stats' modifiers for the
     maximum (§8 "Mana").
   - **Weapon skills** ("Weapon skills" below): the race's starting ranks plus the class's, plus
-    one set of the class's `weapon_skill_choice` if it has one, at most 10 each; each then
-    raises the skills it defaults to. Dice among them roll from their own stream,
+    one set of the class's `weapon_skill_choice` if it has one, at most 10 each. Dice among
+    them roll from their own stream,
     `character/weapon-skills/<race>,<gender>,<class>`: the race's (in skill order), the
     class's, the pick of the choice (one draw), then the chosen set's; so they never move a
     stat roll.
   - **Fighting styles** ("Fighting styles" below): the class's `styles` plus one set of its
     `style_choice` if it has one, from yet another stream,
     `character/styles/<race>,<gender>,<class>`: the class's (in skill order), the pick of the
-    choice, then the chosen set's; so they never move a stat or a weapon skill roll. Each raises
-    the styles it defaults to.
+    choice, then the chosen set's; so they never move a stat or a weapon skill roll.
   - **Starting kit** (`warlock-core/src/kit.rs`, data `content/kit.rs`; #257): what the character
     carries, wields, and wears at the start. The class's `kit` (`data/classes/`) comes first,
     then the race's few racial items (`data/races.toml`: every race without darkvision, the elf,
@@ -299,7 +298,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     carried, a table says `carry`, `wield` (wielded or readied: hands, missile weapon, missiles,
     Tool slot), or `wear`, and may add `trained` (only if the class trained that weapon skill or
     fighting style: its fixed ranks, or the set of its choice that was picked; never the race's
-    ranks or defaults), `gender` (only for that gender: the hook for gender's items), and
+    ranks), `gender` (only for that gender: the hook for gender's items), and
     `magic` (a base item made as loot makes it at item level 1, its rarity rolled at least
     `any`, `magic`, or `rare`) and `fill` (a `wield` or `wear` line given only into a slot still
     free once everything else is given, else left out; #1173); `"a|b|c"` is one of them. Each item goes into the pack in order
@@ -1531,7 +1530,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     (the bard's at 3, in Blessing's place, #871: a hand-out once, `weapon_ranks { to = 1 }`:
     every weapon skill and fighting style the bard holds at rank 0, whatever rows the content
     has, but the schools of magic and hidden styles, rises to rank 1 by
-    `WeaponSkills::raise_to`, its defaults with it; "Your hands know every weapon a little.";
+    `WeaponSkills::raise_to`; "Your hands know every weapon a little.";
     the optional `skills` names the rows instead, for a later class's trade); Fast healer
     (the Vigour talent, given at 6; its copy Song of rest until #790: resting heals half again
     as fast), Jack of all trades (12, #872: a hand-out once,
@@ -1546,7 +1545,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   - **Saves change**: `Quests::prey`, the tally of every type, the statuses `inspired` and
     `inspired_greatly`.
 - **Weapon skills** (`warlock-core/src/weapon_skills.rs`, training; `content/weapon_skill.rs`,
-  the data; M22, #134), ADOM-like, with *The Riddle of Steel*'s defaults:
+  the data; M22, #134), ADOM-like:
   - **Skills** (`data/weapon_skills.toml`, §7): the categories weapons belong to. A skill's
     role says what uses it: `melee` and `launcher` skills are named by weapons (`category`), the
     wielded weapon's for a blow, the readied missile weapon's for a shot; `thrown` is every
@@ -1558,7 +1557,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
     caster casts with their own mana ("Schools of magic" below).
   - **Ranks**: 0 (untrained: no benefits; marks still count) to 10, on every actor
     (`Actor::weapon_skills`, a rank and marks per skill): the player's from race and class, a
-    creature's from its type (§7). Ranks are stored, not derived.
+    creature's from its type (§7). A skill's rank comes only from its own training, starting
+    ranks, talents, and the dev `rank:` action: no skill raises another (#1188 removed *The
+    Riddle of Steel*'s defaults).
   - **Marks**: only the player trains. Each attack the player makes on someone (a blow, a bash,
     a kick, a shot or throw for each actor it reaches; hit or miss) earns `attempt` marks (1) in its
     skill, a hit `hit` more (2); a blow the player's shield blocks trains no weapon skill. The
@@ -1579,11 +1580,6 @@ developer notes (CLAUDE.md, `docs/dev/`).
     trained by far fewer casts than blows, `school`: 10, 20, 40, … 640 doubling, then 1200,
     2000, 3000 (docs/balance.md "School pace"). Marks
     past the need count toward the next rank (one rank at a time); rank 10 earns no more.
-  - **Defaults** (The Riddle of Steel): a symmetric table of penalties between related skills
-    (§7; long blades 8 gives short blades 6). When skill A gains a rank, every skill B with
-    `rank(A) − penalty(A, B) > rank(B)` rises to that rank and its marks start again from 0
-    (`WeaponSkills::raise`); defaults do not chain within one gain. Starting ranks raise their
-    defaults the same way, whatever their order (`WeaponSkills::from_ranks`).
   - **Benefits** (per skill and rank, data; never shown): to-hit and damage (to every roll of
     the dice) on attacks with the skill, a wider threat range (lower natural rolls threaten,
     never below 2), and a lower cost (`speed`, percent off `melee`, `shoot`, or `throw`;
@@ -1607,7 +1603,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     nobody there ("There is nothing there to bash."), or at someone not hostile ("You have no
     quarrel with the deer."; unseen: "Something is in the way."). Its event is an attack of
     kind `Melee` made `with` the shield; creatures do not bash.
-  - **Messages**: each skill that rose, its own rank or by default, is said after the attack
+  - **Messages**: a rank gained is said after the attack
     that earned it (and before the experience a kill earned), by its `phrase`: "You feel more
     skilled with long blades." No numbers.
   - **What the player perceives**: their own ranks and marks
@@ -1624,8 +1620,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     `Actor::school_benefit`, `World::practise_cast` in `world/cast.rs`;
     docs/dev/magic-skills.md): the seven schools (evocation, necromancy, abjuration,
     restoration, transmutation, enchantment, divination) are rows of role `school`, one each,
-    weapon skills in everything but what a rank gives (ranks, the school curve, `[marks]`, the
-    defaults, `rank:evocation:5`). A spell whose school has no row is refused at load. A rank
+    weapon skills in everything but what a rank gives (ranks, the school curve, `[marks]`,
+    `rank:evocation:5`). A spell whose school has no row is refused at load. A rank
     lifts every spell of its school through the spell hooks (§8 "Spells": "Hooks"): `reroll`,
     `sides`, `dice`, `bonus`, `cells`, `degrees` into `SpellMods` (`Actor::spell_mods`, beside
     the talents' and items'), `mana` percent off the spell's mana (the floor of 1 holds),
@@ -1643,9 +1639,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     trains nothing. Then the caster style it was cast in ("Fighting styles" below), by the same
     outcome, lands or not; none for a spell on oneself out of hindering armour. No daily band,
     no limit: time and mana are the price.
-    **Defaults**: evocation ↔ transmutation −4, necromancy ↔ restoration −4, abjuration ↔
-    enchantment −4; divination stands alone; schools default only to schools. **Starting
-    ranks**: wizard evocation 2, druid evocation 1, priest and bard restoration 1, witch
+    **Starting ranks**: wizard evocation 2, druid evocation 1, priest and bard restoration 1, witch
     necromancy 1, paladin abjuration 1; the ranger none; no race and no creature. A rank says
     "You feel more skilled at evocation."; nothing says what it gives. Spell attacks (#571's
     one skill of role `spell`, which trained on three spells) is retired into the schools: a
@@ -1655,7 +1649,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   `TwoWeapons`; `world/actor.rs`: `Actor::grip`, `style`, `styles_in_use`, `attack_skills`
   (`AttackSkills`: an attack's weapon skill and style), `attack_benefit`, `off_hand`,
   `off_hand_blow`), after AD&D 2e's *Complete Fighter's Handbook*: how weapons are
-  held and used, as skills with the weapon skills' ranks (0 to 10), marks, curves, defaults, and
+  held and used, as skills with the weapon skills' ranks (0 to 10), marks, curves, and
   benefits ("Weapon skills" above), in `data/weapon_skills.toml` (§7).
   - **Configurations** (`grip`): for blows, what the hands hold (`Actor::grip`, which counts for
     Defence too): nothing (`unarmed`), one one-handed weapon and every other hand empty
@@ -1757,7 +1751,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     a scroll or a wand never fails so) shrink with the style's `ease_bash`, `ease_slow`, and
     `ease_spell` to none at rank 9 (`Actor::shield_banes`). Boons: the style's Shield, damage,
     and the follow-up chance; Staggering block (rank 4) names it beside Sword and Board. The
-    style is `hidden` (§7): no class or race gives it, it defaults to no style, and it is not
+    style is `hidden` (§7): no class or race gives it, and it is not
     listed (the weapon skills screen, the `weapon_skills` dump layer and its JSON, the Talents
     page for a talent that asks for it, Stylist's choices) until its owner has marks in it
     (`WeaponSkills::shows`).

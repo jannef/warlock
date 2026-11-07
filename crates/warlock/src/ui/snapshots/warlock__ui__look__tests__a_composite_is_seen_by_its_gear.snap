@@ -2,5 +2,5 @@
 source: crates/warlock/src/ui/look.rs
 expression: "said.join(\"\\n\")"
 ---
-An animated armour (hostile, unhurt), wearing a leather cap and a padded coat, on stone floor.
-An animated panoply (hostile, unhurt), wielding a dagger, wearing a leather cap (magic), a leather jerkin (rare), and a gold ring (magic), on stone floor.
+An animated armour (hostile, unhurt), wearing a bronze cap and a padded coat, on stone floor.
+An animated panoply (hostile, unhurt), wielding an ironwood staff, wearing an iron great helm, a hardened leather jerkin (magic), and a pair of hardened leather gloves, on stone floor.

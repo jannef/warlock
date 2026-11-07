@@ -11,7 +11,7 @@ id = "barrow_wight"
 level = 6
 xp = 40
 rarity = "very_rare"
-loot = 40
+loot = 10
 name = "barrow wight"
 glyph = "W"
 fg = "#a8c8e0"
@@ -39,4 +39,4 @@ blood = "none"
 [[creature.gear]]
 chance = 60
 one_of = ["long_sword"]
-magic = 25
+magic = 6

@@ -168,8 +168,7 @@ pub fn kit(
 
 /// The weapon skills of a creature of family type `creature` that wields what `equipment`
 /// holds of `carry`: its tier's `weapon_rank` at its level in the skill of each weapon it
-/// wields (with the ranks that skill's defaults give). `None` for any other type, or one that
-/// wields no weapon of a skill.
+/// wields. `None` for any other type, or one that wields no weapon of a skill.
 pub fn weapon_skills(
     content: &Content,
     creature: CreatureId,
@@ -202,7 +201,7 @@ pub fn weapon_skills(
     {
         ranks.push((style, shield_rank));
     }
-    (!ranks.is_empty()).then(|| WeaponSkills::from_ranks(content.weapon_skills(), ranks))
+    (!ranks.is_empty()).then(|| WeaponSkills::from_ranks(ranks))
 }
 
 /// Composes every animated spawn of generated level `template` from the level's own stream
