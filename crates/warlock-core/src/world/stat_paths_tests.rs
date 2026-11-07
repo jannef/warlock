@@ -317,8 +317,7 @@ fn a_weapon_ability_paid_in_stamina_trains_toughness() {
         .put(&crate::equipment::slots_taken(&content, spear, slot), item);
     let table = content.weapon_skills();
     let spears = table.id("spears").expect("spears");
-    w.player_mut().weapon_skills =
-        crate::weapon_skills::WeaponSkills::from_ranks(table, [(spears, 9)]);
+    w.player_mut().weapon_skills = crate::weapon_skills::WeaponSkills::from_ranks([(spears, 9)]);
     let stamina = content.resource_id("stamina").expect("stamina");
     let player = w.player_id();
     w.grant_resource(player, stamina);

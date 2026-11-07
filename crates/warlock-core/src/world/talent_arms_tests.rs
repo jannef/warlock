@@ -58,8 +58,7 @@ fn skill(w: &World, name: &str) -> WeaponSkillId {
 /// Sets the player's rank in weapon skill or style `name`.
 fn set_rank(w: &mut World, name: &str, rank: u8) {
     let id = skill(w, name);
-    let table = w.content().weapon_skills().clone();
-    w.player_mut().weapon_skills.raise(&table, id, rank);
+    w.player_mut().weapon_skills.raise(id, rank);
 }
 
 /// What the player's ranks (and talents) in `name` give.

@@ -175,7 +175,7 @@
 #                                 every weapon skill and style of `skills` (left out: every row
 #                                 of ../weapon_skills.toml but the schools of magic and hidden
 #                                 styles, whatever the content holds) held below rank `to` rises
-#                                 to it, its defaults with it; `news`, if any, said when a class
+#                                 to it; `news`, if any, said when a class
 #                                 table gives it
 #   take_up_skills { dice, except, news }   handed out once, as the talent is taken or given:
 #                                 every skill of ../skills.toml it is not trained in, but those

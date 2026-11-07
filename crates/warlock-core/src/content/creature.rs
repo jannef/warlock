@@ -1176,7 +1176,7 @@ pub struct CreatureDef {
     /// `data/mimics.toml`; `None` for every other.
     pub mimic: Option<super::mimic::MimicDef>,
     /// Gameplay: the ranks in weapon skills a creature of this type has (spec §8 "Weapon
-    /// skills"), defaults included. Rules only: never shown. The player's come from their race
+    /// skills"). Rules only: never shown. The player's come from their race
     /// and class.
     pub weapon_skills: WeaponSkills,
     /// Gameplay: what a creature of this type may spawn carrying, wielding, and wearing (spec §8

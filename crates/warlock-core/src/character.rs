@@ -38,8 +38,8 @@
 //!   the guaranteed ones only.
 //! - **Eyes**: the player's vision profile is the race's.
 //! - **Weapon skills** (spec §8 "Weapon skills"): the race's starting ranks plus the class's,
-//!   and one set of the class's `weapon_skill_choice` if it has one, at most 10 each; each
-//!   then raises the skills it defaults to. Dice among them are rolled from their own stream,
+//!   and one set of the class's `weapon_skill_choice` if it has one, at most 10 each. Dice
+//!   among them are rolled from their own stream,
 //!   `character/weapon-skills/<race>,<gender>,<class>`, in this order: the race's (in skill
 //!   order), the class's, the pick of the choice (one draw), then the chosen set's; so the
 //!   stat rolls above never move.
@@ -436,7 +436,7 @@ pub struct Start {
     pub mana: i32,
     /// The trained skills, with their starting values (spec §8 "Skills").
     pub skills: Skills,
-    /// Starting ranks in weapon skills, defaults included (spec §8 "Weapon skills").
+    /// Starting ranks in weapon skills (spec §8 "Weapon skills").
     pub weapon_skills: WeaponSkills,
     /// The starting alignment score (spec §8 "Alignment"): the race's plus the class's plus the
     /// birth animal's nudge, kept on the scale.
@@ -575,7 +575,7 @@ impl CharacterSpec {
         let ranks = ranks
             .into_iter()
             .map(|(id, rank)| (id, rank.clamp(0, i32::from(crate::content::MAX_RANK)) as u8));
-        let skills = WeaponSkills::from_ranks(content.weapon_skills(), ranks);
+        let skills = WeaponSkills::from_ranks(ranks);
         (skills, trained)
     }
 }

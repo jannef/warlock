@@ -1,8 +1,8 @@
 //! Fighting styles in the world (spec §8 "Fighting styles"): each style's configuration, marks
 //! earned only while fighting in it, its benefits on attacks, Defence, and prices, two-weapon
 //! fighting (both hands strike, at penalties a style eases; the off hand only takes a light
-//! weapon and draws on its own skill), the shield bash that may follow a blow, defaults between
-//! styles, starting ranks from classes, and all of it saved and replayed.
+//! weapon and draws on its own skill), the shield bash that may follow a blow, starting ranks
+//! from classes, and all of it saved and replayed.
 
 use super::*;
 use crate::action::{AttackKind, parse_actions};
@@ -311,13 +311,12 @@ fn training(w: &World, name: &str) -> Training {
     w.state.player().weapon_skills.get(id(w, name))
 }
 
-/// Sets the player's rank in skill or style `name` (and what it raises by default).
+/// Sets the player's rank in skill or style `name`.
 fn set(w: &mut World, name: &str, rank: u8) {
     let skill = id(w, name);
     let player = w.state.player;
-    let table = w.content.weapon_skills().clone();
     let me = w.state.actors.get_mut(&player).expect("the player");
-    me.weapon_skills.raise(&table, skill, rank);
+    me.weapon_skills.raise(skill, rank);
 }
 
 /// The style the player fights in for a blow, by its id.
@@ -497,17 +496,17 @@ fn style_ranks_add_to_attacks_defence_and_prices() {
     );
     let quicker = w.attack_price(me, ActionKind::Melee, sword, blow);
     assert_eq!((price, quicker), (6000, 4800));
-    // Staff Fighter 10 with the staff: +5 to hit, +7 parry. Great Weapon 10 gives it nothing of
-    // its own (no damage, no critical), only Staff Fighter 7 by default: +3 to hit.
+    // Staff Fighter 10 with the staff: +5 to hit, +7 parry. Great Weapon 10 gives it nothing
+    // (no damage, no critical, and no Staff Fighter rank).
     let mut w = yard();
     arm(&mut w, &["staff"]);
     let plain = player(&w).melee(&content);
     set(&mut w, "great_weapon", 10);
-    assert_eq!(training(&w, "staff_fighter").rank, 7);
+    assert_eq!(training(&w, "staff_fighter").rank, 0);
     let great = player(&w).melee(&content);
     assert_eq!(
         (great.to_hit, great.bonus, great.crit),
-        (plain.to_hit + 3, plain.bonus, plain.crit),
+        (plain.to_hit, plain.bonus, plain.crit),
         "the staff is no great weapon"
     );
     set(&mut w, "staff_fighter", 10);
@@ -723,23 +722,6 @@ fn sword_and_board_follows_a_hit_with_a_shield_bash() {
     }
     assert!(bashes > 0 && bashes < hits, "{bashes} of {hits}");
     assert!(training(&w, "shield_bash") != Training::default());
-}
-
-#[test]
-fn styles_default_to_styles() {
-    let w = yard();
-    let table = w.content().weapon_skills();
-    let duelist = id(&w, "duelist");
-    let skills = WeaponSkills::from_ranks(table, [(duelist, 7)]);
-    assert_eq!(skills.rank(id(&w, "sword_and_board")), 4);
-    assert_eq!(skills.rank(id(&w, "twin_blades")), 4);
-    assert_eq!(skills.rank(id(&w, "great_weapon")), 0);
-    // Never a weapon skill.
-    assert_eq!(skills.rank(id(&w, "long_blades")), 0);
-    let skills = WeaponSkills::from_ranks(table, [(id(&w, "long_blades"), 10)]);
-    for (style, ..) in table.styles() {
-        assert_eq!(skills.rank(style), 0);
-    }
 }
 
 static BUILTIN: LazyLock<Arc<Content>> =
