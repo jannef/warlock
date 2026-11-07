@@ -241,6 +241,7 @@ impl World {
                 with,
                 damage,
                 natural,
+                ..
             } => {
                 let sees_attacker = attacker == player
                     || (perception.sees_actors_at(from) && !perception.conceals(attacker));

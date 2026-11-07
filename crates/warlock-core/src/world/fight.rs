@@ -833,10 +833,12 @@ impl World {
             profile.is_some() && (self.unaware(target, attacker) || self.lurked(attacker, target));
         let low = profile.is_some() && self.low_blow_taken(attacker);
         let unseen = profile.is_some() && self.sneaks(attacker, target, unaware || low, missile);
-        // Hair trigger's blow may cut the attacker down before it strikes (`free_blow.rs`).
-        if unaware && !self.startle(target, Some(attacker), events) {
-            return None;
-        }
+        // Hair trigger's blow may cut the attacker down before it strikes (`free_blow.rs`); how
+        // the blow found its target is told in its words (`surprise.rs`).
+        let caught = match profile {
+            Some(_) => self.caught_by(attacker, target, unaware, events)?,
+            None => None,
+        };
         self.attacked_near(attacker, target);
         // The player strikes from hallowed ground: the peace is broken (`sanctuary.rs`).
         if attacker == self.state.player {
@@ -886,6 +888,7 @@ impl World {
             with,
             damage: blow.and_then(|b| b.kind),
             natural: None,
+            caught,
         });
         if noisy {
             self.make_noise(attacker, Act::Attack(kind));
@@ -1453,15 +1456,23 @@ impl World {
             Some(name) if seen => End::Seen(name),
             _ => End::Unseen,
         };
-        let strike = made.iter().find_map(|e| match e {
-            Event::Attacked { strike, .. } => *strike,
-            _ => None,
-        });
+        let (strike, caught) = (made.iter())
+            .find_map(|e| match e {
+                Event::Attacked { strike, caught, .. } => Some((*strike, *caught)),
+                _ => None,
+            })
+            .unwrap_or_default();
         let died = made.iter().any(|e| matches!(e, Event::Died { .. }));
+        // How the blow found the one it struck at, in its words (`surprise.rs`).
+        let caught = name.map(|n| super::surprise::caught_name(&content, n, caught));
+        let struck_at = match (end, caught.as_deref()) {
+            (End::Seen(_), Some(caught)) => End::Seen(caught),
+            _ => end,
+        };
         let mut said = Vec::new();
         said.extend(attack_message(
             End::You,
-            end,
+            struck_at,
             &words,
             AttackKind::Melee,
             strike,

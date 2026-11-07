@@ -157,7 +157,11 @@ impl World {
         for event in made {
             match event {
                 Event::Attacked {
-                    target, to, strike, ..
+                    target,
+                    to,
+                    strike,
+                    caught,
+                    ..
                 } => {
                     let fallen = self.actor_or_fallen(target);
                     let def = fallen.map(|a| content.creature(a.creature));
@@ -167,9 +171,18 @@ impl World {
                         Some(d) if self.perception.sees_actors_at(to) => End::Seen(&d.name),
                         _ => End::Unseen,
                     };
+                    // How the spell found the one it struck at, in its words (`surprise.rs`).
+                    let named =
+                        def.map(|d| super::surprise::caught_name(&content, &d.name, caught));
+                    let struck_at = match (end, named.as_deref()) {
+                        (End::Seen(_), Some(named)) => End::Seen(named),
+                        _ => end,
+                    };
                     let caster = End::Trap(noun);
                     let kind = AttackKind::Spell;
-                    said.extend(attack_message(caster, end, &words, kind, strike, guard));
+                    said.extend(attack_message(
+                        caster, struck_at, &words, kind, strike, guard,
+                    ));
                     seen =
                         (end != End::Unseen).then(|| (end, def.map_or("dies", |d| d.death_verb())));
                     if seen.is_some() {

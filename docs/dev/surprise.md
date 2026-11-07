@@ -135,9 +135,22 @@ calls `end_slip`; `dump.rs` says `slipped past` and `missed turn N`.
 
 ## Messages
 
-Told after the fact, never the roll: the player's attack, check failed: "You catch the kobold
-unawares." (said at once, before the blow's line; only when the player sees the creature); made:
-"The kobold whirls to face you."; a sleeper or a mimic: nothing beyond the waking or reveal line.
+Told after the fact, never the roll. The player's attack that rolls to hit says how it found
+its target in its own line (#1211): `World::caught_by` (`surprise.rs`, called by
+`fight.rs::resolve` and `cast.rs::spell_attack` in place of a bare `startle`) decides an
+`action::Caught` for the player's attacks only: `Asleep` (asleep before the check), `Unaware` (the
+attack was unaware and left it newly Surprised: the check failed, or a mimic in disguise),
+else `OffGuard(status)` (the first flat-footed status it suffers, Surprised or Stunned), else
+none. It rides on `Event::Attacked::caught` (a spell's set by `surprise::mark_caught` after
+`spell_strikes` pushed the event). The three places the player's attacks are said
+(`fight.rs::player_strikes`, `shoot.rs::player_looses`, `read.rs::say_spell`) name the target
+by `surprise::caught_name`, only when it is seen (`End::Seen`): "the sleeping kobold", "the
+unsuspecting kobold", "the stunned kobold" (the status's `seen` word); the death line keeps the
+plain name. A sleeper the attack wakes is told so after that line ("You hit the sleeping
+goblin. The goblin wakes up."): `caught_by` keeps it in `World::sleeper_struck` (not saved),
+and `den.rs::wake` puts its line in the news for it. A check made: "The kobold whirls to face you." (said at once, before the blow's
+line) and the blow adds nothing (one telling). Creatures' attacks are never marked: the player
+caught is told by the status's own line.
 The player caught: "You are taken by surprise!" (the status's `start`, through `Event::Status`,
 so after a trap's line and before a creature's attack line); made: "You keep your wits about
 you." (`say` for an attack, before its line; `news` for a trap, after its line). Look mode shows

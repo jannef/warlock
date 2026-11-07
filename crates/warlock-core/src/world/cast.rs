@@ -1028,7 +1028,7 @@ impl World {
         made: &mut Vec<Event>,
     ) -> (Strike, i32) {
         let def = shot.def;
-        let (amount, strike, sneak) = match def.resolution {
+        let (amount, strike, sneak, caught) = match def.resolution {
             Resolution::Attack | Resolution::Touch => {
                 let attack = Attack {
                     damage: shot.dice,
@@ -1052,10 +1052,11 @@ impl World {
                 // sneak attack within reach (`ambush.rs`), its dice after it.
                 let unaware = self.unaware(target, by);
                 let unseen = self.sneaks(by, target, unaware, missile);
-                // Hair trigger's blow may cut the caster down before the spell lands.
-                if unaware && !self.startle(target, Some(by), made) {
+                // Hair trigger's blow may cut the caster down before the spell lands; how the
+                // spell found its target is told in its words (`surprise.rs`).
+                let Some(caught) = self.caught_by(by, target, unaware, made) else {
                     return (Strike::Missed { by: None }, 0);
-                }
+                };
                 self.attacked_near(by, target);
                 let struck = self.target_against(target, missile);
                 let struck = self.vitals(target, struck);
@@ -1075,16 +1076,19 @@ impl World {
                 self.spell_practised(target, skills, blow, made);
                 let spell = (AttackKind::Spell, skills);
                 self.sneak_trigger((by, target), spell, (unseen, Some(blow)), made);
-                (blow.damage, blow.strike, sneak)
+                (blow.damage, blow.strike, sneak, caught)
             }
             Resolution::Auto | Resolution::Area => (
                 shot.dice.roll(&mut self.state.rng, shot.reroll).max(0),
                 Strike::Hit { critical: false },
                 0,
+                None,
             ),
         };
         let damage = Damage::new(amount + sneak, def.damage_type);
+        let start = made.len();
         let harm = self.spell_strikes(by, target, source, (damage, strike), made);
+        super::surprise::mark_caught(&mut made[start..], (by, target), caught);
         self.leech(by, def, harm);
         (strike, amount + sneak)
     }
