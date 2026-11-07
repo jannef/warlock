@@ -349,14 +349,8 @@ fn speeds_come_from_content_and_the_player_has_normal_speed() {
 }
 
 #[test]
-fn speeds_are_validated() {
-    for (speed, ok) in [
-        (0, false),
-        (99, false),
-        (100, true),
-        (10_000, true),
-        (10_001, false),
-    ] {
+fn a_speed_of_0_is_refused() {
+    for (speed, ok) in [(0, false), (1, true), (100_000, true)] {
         let mut files = files();
         let creatures = CREATURES.replace("speed = 900", &format!("speed = {speed}"));
         files.insert("data/creatures.toml", &creatures);
@@ -364,10 +358,7 @@ fn speeds_are_validated() {
             Ok(_) => assert!(ok, "speed {speed} accepted"),
             Err(e) => {
                 assert!(!ok, "speed {speed} rejected: {}", e.message);
-                assert!(
-                    e.message
-                        .contains(&format!("speed {speed} is out of range"))
-                );
+                assert!(e.message.contains("speed 0"));
             }
         }
     }

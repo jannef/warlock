@@ -85,8 +85,10 @@ fn only_the_weakest_folk_live_there_and_none_stray_in() {
             let floor = level(seed, depth);
             // A shared vault's crowd (the Catacomb's dead ...) is drawn at the floor's danger
             // from its own pool, outside the cap: of the cave's weakest, but not its folk.
-            let (crowd, folk): (Vec<_>, Vec<_>) =
-                (floor.creatures.iter()).partition(|c| floor.outside_cap.contains(&c.pos));
+            // A chest's mimic stands in for the chest: neither folk nor crowd.
+            let (crowd, folk): (Vec<_>, Vec<_>) = (floor.creatures.iter())
+                .filter(|c| !CONTENT.is_mimic(c.creature))
+                .partition(|c| floor.outside_cap.contains(&c.pos));
             let count = folk.len();
             // The population's 8 to 16, and the cache's two keepers on the bottom floor.
             let most = if depth == 3 { 18 } else { 16 };

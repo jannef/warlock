@@ -9,18 +9,11 @@
 use super::Content;
 use super::status::StatusId;
 use serde::Deserialize;
-use std::ops::RangeInclusive;
 
 /// The cooldown status a theft gives (`data/status.toml`).
 pub const STEAL_STATUS: &str = "theft";
 /// The cooldown status a blink gives (`data/status.toml`).
 pub const BLINK_STATUS: &str = "blink";
-/// A theft's or a blink's cooldown, in seconds.
-pub const COOLDOWNS: RangeInclusive<u32> = 6..=600;
-/// A theft's chance on a hit, in percent.
-pub const CHANCES: RangeInclusive<u8> = 1..=100;
-/// How far a blink reaches, in cells (Chebyshev from where the creature stands).
-pub const RANGES: RangeInclusive<i32> = 2..=12;
 /// The item classes a `small` thief takes (`data/item_classes.toml`): coins, gems, potions, a
 /// ring, scrolls. A class the content lacks is left out.
 pub const SMALL: [&str; 5] = ["coins", "gems", "potions", "rings", "scrolls"];
@@ -81,13 +74,6 @@ pub struct Blinks {
 impl StealsSpec {
     /// Resolves the theft against `content` (the cooldown status, already loaded).
     pub(super) fn resolve(&self, content: &Content) -> Result<Steals, String> {
-        if !CHANCES.contains(&self.chance) {
-            return Err(format!(
-                "steals: `chance` must be {} to {}",
-                CHANCES.start(),
-                CHANCES.end()
-            ));
-        }
         let (status, degrees) = cooldown(content, "steals", STEAL_STATUS, self.cooldown)?;
         Ok(Steals {
             what: self.what,
@@ -102,13 +88,6 @@ impl StealsSpec {
 impl BlinksSpec {
     /// Resolves the blink against `content` (the cooldown status, already loaded).
     pub(super) fn resolve(&self, content: &Content) -> Result<Blinks, String> {
-        if !RANGES.contains(&self.range) {
-            return Err(format!(
-                "blinks: `range` must be {} to {}",
-                RANGES.start(),
-                RANGES.end()
-            ));
-        }
         let (status, degrees) = cooldown(content, "blinks", BLINK_STATUS, self.cooldown)?;
         Ok(Blinks {
             range: self.range,
@@ -127,13 +106,6 @@ fn cooldown(
     id: &str,
     seconds: u32,
 ) -> Result<(StatusId, u16), String> {
-    if !COOLDOWNS.contains(&seconds) {
-        return Err(format!(
-            "{field}: `cooldown` must be {} to {} seconds",
-            COOLDOWNS.start(),
-            COOLDOWNS.end()
-        ));
-    }
     let status = (content.status_id(id))
         .ok_or_else(|| format!("{field}: needs the `{id}` status in data/status.toml"))?;
     let def = content.status(status);

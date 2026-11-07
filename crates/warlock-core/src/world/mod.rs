@@ -1781,6 +1781,8 @@ mod first_sight_tests;
 #[cfg(test)]
 mod fixture_factions;
 #[cfg(test)]
+mod flask_content_tests;
+#[cfg(test)]
 mod flask_tests;
 #[cfg(test)]
 mod flavour_tests;
@@ -1906,6 +1908,8 @@ mod parts_tests;
 mod potion_status_tests;
 #[cfg(test)]
 mod potion_tests;
+#[cfg(test)]
+mod potion_utility_tests;
 #[cfg(test)]
 mod protection_tests;
 #[cfg(test)]

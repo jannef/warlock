@@ -245,14 +245,16 @@ fn the_three_uniques_are_a_ring_a_neck_and_hands_and_nowhere_else() {
 fn an_offer_is_checked_when_content_loads() {
     for (from, to, says) in [
         ("id = \"wares\"", "id = \"news\"", "a topic's"),
-        ("affixes = [[4, 50]", "affixes = [[7, 50]", "counts 1 to 6"),
-        ("chance = 200,", "chance = 20000,", "basis points"),
+        (
+            "affixes = [[4, 50]",
+            "affixes = [[7, 50]",
+            "at most 6 affixes",
+        ),
         (
             "\"grendles_grape\"]",
             "\"grendles_grape\", \"nobody\"]",
             "unknown unique",
         ),
-        ("affix = 15,", "affix = 0,", "`price.affix`"),
     ] {
         let mut files = files();
         let text = road_text(&files);

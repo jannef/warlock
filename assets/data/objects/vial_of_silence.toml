@@ -1,0 +1,26 @@
+# A vial of silence (spec §8 "Potions": "Flasks"; the potions wave 2 design §4.4): thrown, it
+# shatters into the Silence spell's hush where it breaks; drunk, the drinker's voice is gone a
+# moment. Silence is black.
+[[object]]
+id = "vial_of_silence"
+name = "vial of silence"
+plural = "vials of silence"
+glyph = "!"
+fg = "#303038"
+class = "potions"
+materials = ["glass"]
+weight = 250
+value = 90
+stackable = true
+level = 5
+frequency = 8
+
+[object.drink]
+kind = "harm"
+dice = "1"
+status = "silenced"
+colour = "black"
+
+[object.throw]
+spell = "silence"
+words = "A hush spreads from the shards."

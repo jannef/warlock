@@ -16,11 +16,11 @@ developer notes (CLAUDE.md, `docs/dev/`).
   singular words, lower-case words joined by hyphens, 1 to 24 characters, each once: `["goblin",
   "archer"]`; nothing declares a tag, a creature carrying it is all there is; a kill quest may
   ask for a tag, §8 "Quests"; never shown to the player), a
-  `speed` (100 to 10 000, default 1000, the player's; never shown to the player; §8 "Speed"): the
+  `speed` (never 0, default 1000, the player's; never shown to the player; §8 "Speed"): the
   giant rat 1200, the cave bat 2000, the kobold 900, the deer 1300; and for hearing (§5)
-  `footsteps` (at most 300; default 0, silent) and `hearing` (the faintest loudness heard, 1 to
-  300; default none, deaf). For behavior (§8 "Creature behavior") a creature type names its
-  `faction` (below; required when factions exist, the player's is `player`), its eyes `vision`
+  `footsteps` (default 0, silent; a sound is heard at most at 300) and `hearing` (the faintest
+  loudness heard; default none, deaf). For behavior (§8 "Creature behavior") a creature type names its
+  `faction` (below; none: neutral to all; the player's is `player`), its eyes `vision`
   (a profile; default `normal`) and `sight` (radius, 1 to 40, default 10), how it fights:
   `combat = "melee"` (default), `"ranged"`, or `"caster"`, the latter two with a `range` (2 to its
   sight), `opens_doors` (default false), `budge` (whether the player may swap places with it
@@ -752,71 +752,68 @@ developer notes (CLAUDE.md, `docs/dev/`).
   time the player arrives by stairs.
 - **Dialogue** (`data/dialogue.toml`, optional; without it nobody talks; §8 "Dialogue"): each
   `[[dialogue]]` names exactly one of `creature` (a creature type, not the player) or `npc` (an
-  npc id: lower-case letters, digits, and underscores; an npc's may give its proper `name`, 1 to
-  24 characters, "Sister Hild": messages, look mode, and the dialogue screen call it so, without
+  npc id; an npc's may give its proper `name`, "Sister Hild": messages, look mode, and the dialogue screen call it so, without
   an article, and quest texts name it so as a giver), at most one dialogue each, and has `lines`
   (at least one one-liner), an optional `greet`, optional cold greetings (`greet_evil`, lines a
   good speaker says to an Evil or Wicked character instead of its greeting and one-liners, in
   turn; `greet_good`, an evil speaker's to a Good or Saintly character; §8 "Alignment"), optional
-  `[[dialogue.topic]]`s (at most 9, each
-  with a unique `id` in lower-case letters, digits, and underscores, a `name`, a `reply`, and an
+  `[[dialogue.topic]]`s (each
+  with a unique `id` without `:` or whitespace, a `name`, a `reply`, and an
   optional `route`, the way the topic describes as waypoints `[[x, y], ...]` on the campaign's
-  overworld, joined by straight lines: at least two, every cell walkable, only in a campaign's
-  dialogue; §8 "Dialogue", Rumoured ways), an optional `calls` (a calling of the dialogue's
+  overworld, joined by straight lines, only in a campaign's dialogue; §8 "Dialogue", Rumoured
+  ways), an optional `calls` (a calling of the dialogue's
   campaign: the topic offered only while it is open, asking it calling the player; §8
-  "Dialogue", "Callings") and `departs` (only on a creature type's dialogue: the speaker leaves
-  once it has answered)), an optional `speaks_to` (an alignment
+  "Dialogue", "Callings") and `departs` (the speaker leaves once it has answered)), an optional
+  `speaks_to` (an alignment
   range, `{ min, max }` bands as a quest's `requires_alignment`) with the `silent` line it
   needs (said instead of anything to a character outside it), and
-  an optional `mutter = { chance, verb, lines }` (`chance` in percent per action, 1 to 100; `verb`
-  one lower-case word, default "mutters"; at least one line). Lines, greetings, topic names, and
-  muttered lines are one line of at most 72 characters (they fit the message line with the
-  speaker's name), replies at most 280 (the dialogue screen wraps them); none is empty or padded.
+  an optional `mutter = { chance, verb, lines }` (`chance` in percent per action; `verb`, default
+  "mutters"; at least one line). The texts are the author's (#1205): one-liners fit the message
+  line with the speaker's name best at 72 characters or fewer, and the dialogue screen wraps
+  replies and cuts what overflows; it numbers nine topics, the arrow keys reach the rest.
   Built in: the gardener (one-liners; grumbles), the wandering bard (one-liners and topics: the
   moon, the Great Race, this year, the Wildlands; sings), and the old hermit (a greeting,
   one-liners, and topics: this hall, the dark chamber, the gallery, the water garden, these
   stairs; mutters). The gardener, the bard, the hermit, and the shopkeepers have two cold
   lines each for an evil character ("Prices are higher for your sort. Take it or leave it.").
 - **Quests** (`data/quests.toml`, optional; without it nobody gives quests; §8 "Quests"): each
-  `[[quest]]` has a unique `id` (lower-case letters, digits, and underscores), a `name` (the log's
-  title and the topic, at most 32 characters), a `giver` (a creature type with a dialogue, or an
-  npc id with one), a `type` and a `target`: `kill` (a creature type, not the player, `count` 1 to
-  99, default 1; or a creature tag, `tag:goblin`, `count` 1 to 999, refused when no creature
+  `[[quest]]` has a unique `id` (without `:` or whitespace: a topic is `quest-ID`), a `name` (the
+  log's title and the topic), a `giver` (a creature type with a dialogue, or an
+  npc id with one), a `type` and a `target`: `kill` (a creature type, not the player, `count`,
+  default 1; or a creature tag, `tag:goblin`, refused when no creature
   type a run of the quest's campaign can meet carries it; optional `level`, a level id or a
-  dungeon branch id for any of its levels; optional `what`, 1 to 24 characters, what the quest
+  dungeon branch id for any of its levels; optional `what`, what the quest
   calls them instead of the type's name or the tag's plural),
   `bring` (an object type; `count`; optional `to`, someone else with a dialogue who takes it),
-  `reach` (a level id, a branch level such as `depths:3` included; never `repeatable`), or
-  `deliver` (an object type the giver hands over; `to` required, not the giver); a field another
-  type has is a content error. `reward = { gold, items, xp }` (each optional: gold coins, at most
-  9999, which needs the `gold_coin` object; objects as levels place them; experience, at most
-  1 000 000). Texts, one line each of at most 280 characters, neither empty nor padded: `offer`
+  `reach` (a level id, a branch level such as `depths:3` included), or
+  `deliver` (an object type the giver hands over; `to` required); a field another
+  type has is a content error. `reward = { gold, items, xp }` (each optional: gold coins, which
+  needs the `gold_coin` object; objects as levels place them; experience). Texts: `offer`
   (said as it is given), optional `accept` (said after the offer, in the same reply), `reminder`
   (the giver's), and `done` (said by whoever it is handed in to); there is no `decline` (#422:
   quests are given, never declined). Instead of `target`, a kill or bring quest may draw it as
   it is given (§8 "Quests", rolled quests): `pick = { creatures = [BRANCH, ...] }` (kill; the
   non-unique types of those branches' populations), `pick = { tags = [TAG, ...] }` (kill),
   `pick = { objects = { class = "scrolls", loot = true } }` (bring; `loot`: only what loot can
-  hold), or `[[quest.variant]]`s (`id`, `target`, `weight` 1 to 1000, default 1, `fallback`
-  (default false: drawn only when no other variant may be, as for a Beast-friend; not every
-  variant), and optional `reveals`, `where`, `offer`, `accept`, `reminder`, `done`, each
-  replacing the quest's own, which may then be left out; at most 32); exactly one of `target`, `pick`, and variants. A
+  hold), or `[[quest.variant]]`s (`id`, `target`, `weight`, default 1, `fallback`
+  (default false: drawn only when no other variant may be, as for a Beast-friend), and optional
+  `reveals`, `where`, `offer`, `accept`, `reminder`, `done`, each
+  replacing the quest's own, which may then be left out); exactly one of `target`, `pick`, and variants. A
   rolled quest's texts but its `name` may hold placeholders (`{target}`, `{targets}`,
   `{a_target}`, `{count}`, `{members}`, `{branch}`, `{where}`, and capitalised forms); each is
-  checked filled with every target its pool can hold; a quest that is not rolled has none. A
-  kill of a unique type asks for 1. Optional `requires` (a quest loaded before this
+  checked filled with every target its pool can hold (no unknown or unclosed placeholder).
+  Optional `requires` (a quest loaded before this
   one, or a list of them, `["barrow_rats", "barrow_heart"]`, all done before this one is
   offered), `requires_alignment` (the bands it is offered to, §8
   "Alignment": `{ min = "kind" }` Kind or better, `{ max = "callous" }` Callous or worse, or
-  both; never neither, nor a `min` above the `max`), `min_level` with `early` (the character
-  level, 1 to 100, the player must have reached for it to be given, and what the giver says
+  both), `min_level` with `early` (the character
+  level the player must have reached for it to be given, and what the giver says
   asked about it before then; one never without the other), `alignment` (how far completing it moves the
   player's alignment, −1000 to 1000, default 0), `repeatable` (default false), `reveals = {
   location = "ID", when = "given" }` (a hidden location of the overworld it reveals, §7
   "Hidden locations", as it is `given` (the default) or `done`; several quests
   may reveal the same one, the first to get there does), and `where` (where its goal lies, in
-  words, after the objective in the quest log; one line of at most 280 characters). Everyone's topics must fit
-  the dialogue screen's nine: their dialogue's own, and one per quest they give or take in.
+  words, after the objective in the quest log).
   Built in: the old hermit's "Rats in the arena" (kill 3
   giant rats in the arena; 20 gold, 30 XP) and, after it, "Three levels down" (reach the Depths 3;
   50 gold, a jade amulet, 100 XP), the gardener's "Three apples" (bring 3 apples; 10 gold, 15

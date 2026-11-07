@@ -4,8 +4,8 @@ General conventions: `docs/dev/creatures.md`.
 
 The hags (#451): the green hag 18 (caster), sea hag 26 (standard), annis hag 34 (brute), and
 bheur hag 42 (caster), shared types in `assets/data/creatures/` on the undead roster's formulas;
-`content/hag_roster_tests.rs` holds every type of the `hags` faction to them (its own `ROLES`,
-±35 %) and checks the `hag` tag, which the bog hag (faction `marsh`, the fen's) carries too.
+every type of the `hags` faction is written to them (±35 %), and
+`content/hag_roster_tests.rs` checks the `hag` tag, which the bog hag (faction `marsh`, the fen's) carries too.
 Faction `hags` (hostile to the player only), so the fixtures that write their own factions file
 list it. Their riders are existing mechanics only: the green hag's `transfixed` and `ill_wished`
 (illusions and misery), the sea hag's `frightened` and a Toughness drain (her death gaze, `[creature.gaze]` since #1125:

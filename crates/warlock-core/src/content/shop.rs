@@ -19,7 +19,7 @@ use super::faction::FactionId;
 use super::item_class::ItemClassId;
 use super::level::{CreatureSpawn, equip_ids};
 use super::object::{ObjectId, parse_stacks};
-use super::{Content, ContentError, Stance};
+use super::{Content, ContentError};
 use crate::geom::Pos;
 use crate::object::Stack;
 use serde::{Deserialize, Serialize};
@@ -28,10 +28,8 @@ use serde::{Deserialize, Serialize};
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize)]
 pub struct ShopId(pub u8);
 
-/// The most kinds of shop there can be.
-pub const MAX_SHOPS: usize = 32;
-/// The most stacks of goods a generated shop lays out.
-pub const MAX_ITEMS: u8 = 52;
+/// The most kinds of shop there can be: [`ShopId`] is a `u8`.
+pub const MAX_SHOPS: usize = 256;
 /// The most the player's favour moves a price, in percent either way.
 pub const MAX_FAVOUR: i32 = 50;
 /// The most favour there can be once talents lift the cap (spec §8 "Class abilities": the
@@ -282,31 +280,12 @@ impl Shops {
                 parsed.currency
             )));
         }
-        let factions = content.factions();
-        let outraged = factions
-            .id(&parsed.outraged)
+        let outraged = (content.factions().id(&parsed.outraged))
             .ok_or_else(|| err(format!("unknown faction `{}`", parsed.outraged)))?;
-        let player = factions.id(super::PLAYER_FACTION);
-        if player.is_none_or(|p| factions.stance(outraged, p) != Stance::Hostile) {
-            return Err(err(format!(
-                "the outraged faction `{}` must be hostile to the player",
-                parsed.outraged
-            )));
-        }
-        if parsed.presence > 10 || parsed.chance > 100 {
-            return Err(err(
-                "`presence` must be 0 to 10 and `chance` a percent, 0 to 100".into(),
-            ));
-        }
-        if parsed.names.iter().any(|n| n.trim().is_empty()) {
-            return Err(err("`names` must not be empty".into()));
-        }
+        // A bundle is a stack, never empty, of a count drawn in the range.
         let [least, most] = parsed.bundle;
-        if least == 0 || least > most || most > super::MAX_PLACED {
-            return Err(err(format!(
-                "`bundle` must be [least, most] from 1 to {}",
-                super::MAX_PLACED
-            )));
+        if least == 0 || least > most {
+            return Err(err("`bundle` must be [least, most] from 1".into()));
         }
         let keeper = keeper(&parsed.keeper, content).map_err(|m| err(format!("keeper: {m}")))?;
         if parsed.shop.len() > MAX_SHOPS {
@@ -318,25 +297,10 @@ impl Shops {
             if defs.iter().any(|d| d.id == spec.id) {
                 return Err(err(format!("duplicate shop id `{}`", spec.id)));
             }
-            if spec.name.trim().is_empty() || !spec.title.contains(KEEPER) {
-                return Err(bad(format!(
-                    "`name` must not be empty and `title` must name the keeper with `{KEEPER}`"
-                )));
-            }
-            if spec.stock.is_empty() {
-                return Err(bad("`stock` must name at least one class".into()));
-            }
+            // A count is drawn in the range: never empty.
             let [least, most] = spec.items;
-            if least == 0 || least > most || most > MAX_ITEMS {
-                return Err(bad(format!(
-                    "`items` must be [least, most] from 1 to {MAX_ITEMS}"
-                )));
-            }
-            if !(100..=1000).contains(&spec.markup) || spec.pays > 100 {
-                return Err(bad(
-                    "`markup` must be 100 to 1000 and `pays` 0 to 100 (percent of the value)"
-                        .into(),
-                ));
+            if least > most {
+                return Err(bad("`items` must be [least, most]".into()));
             }
             let classes = |ids: &[String]| -> Result<Vec<ItemClassId>, ContentError> {
                 (ids.iter())
@@ -550,19 +514,11 @@ mod tests {
             ),
             (
                 "outraged = \"outraged\"",
-                "outraged = \"merchants\"",
-                "hostile to the player",
+                "outraged = \"nobody\"",
+                "unknown faction",
             ),
-            ("chance = 70", "chance = 101", "`chance`"),
             ("bundle = [6, 15]", "bundle = [0, 15]", "`bundle`"),
-            ("markup = 150", "markup = 50", "`markup`"),
-            ("pays = 30", "pays = 101", "`pays`"),
             ("items = [6, 10]", "items = [10, 6]", "`items`"),
-            (
-                "title = \"{keeper}'s General Store\"",
-                "title = \"General Store\"",
-                "`title`",
-            ),
             (
                 "creature = \"shopkeeper\"",
                 "creature = \"player\"",

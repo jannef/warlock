@@ -28,8 +28,6 @@
 
 use super::{Content, WeaponSkillId, object};
 use crate::character::Gender;
-use crate::content::ActionKind;
-use crate::equipment::{self, Equipment};
 use crate::magic::LootGrade;
 use crate::object::Stack;
 use serde::de::{self, MapAccess, Visitor};
@@ -282,53 +280,6 @@ pub(super) fn resolve(specs: &[KitLineSpec], content: &Content) -> Result<Kit, S
         });
     }
     Ok(Kit(kit))
-}
-
-/// Whether one alternative of a creature's gear line, `stacks`, may be kept as `keep` says
-/// ([`super::gear`]): what is wielded or worn is one stack that goes in a slot of that kind, and
-/// what may be made `magic` is a base item.
-pub(super) fn check_kept(
-    keep: Keep,
-    magic: bool,
-    stacks: &[Stack],
-    content: &Content,
-) -> Result<(), String> {
-    for stack in stacks {
-        let def = content.object(stack.object);
-        if magic && def.kind.is_none() {
-            return Err(format!(
-                "`magic`: `{}` is never magic (it has no `kind`)",
-                def.id
-            ));
-        }
-        if magic && stack.magic().is_some() {
-            return Err("`magic`: a unique item is made as it is".into());
-        }
-        if keep == Keep::Carry {
-            continue;
-        }
-        if stacks.len() > 1 {
-            return Err(format!(
-                "`{}`: wield or wear one at a time (it does not stack)",
-                keep.id()
-            ));
-        }
-        let slot = equipment::free_slot(content, &Equipment::default(), stack.object)
-            .ok_or_else(|| format!("`{}` cannot be worn or wielded", def.id))?;
-        let held = matches!(
-            content.slot(slot).action,
-            ActionKind::Wield | ActionKind::Ready
-        );
-        if held != (keep == Keep::Wield) {
-            let (is, other) = if held {
-                ("wielded, not worn", "wield")
-            } else {
-                ("worn, not wielded", "wear")
-            };
-            return Err(format!("`{}` is {is}: use `{other}`", def.id));
-        }
-    }
-    Ok(())
 }
 
 #[cfg(test)]

@@ -5,7 +5,7 @@
 use super::*;
 use crate::action::parse_actions;
 use crate::character::CharacterSpec;
-use crate::content::{ContentFiles, Goal, Rolled};
+use crate::content::{ContentFiles, Goal};
 use std::sync::LazyLock;
 
 const LEOFRIC: Pos = Pos::new(60, 26);
@@ -158,21 +158,4 @@ fn no_rolled_kill_quest_draws_what_a_beast_friend_calms() {
     assert!(
         (druid.quest_pool(def(&druid, "barrow_rats")).iter()).all(|c| c.target == "skeletal_rat")
     );
-}
-
-#[test]
-fn a_quest_of_fallbacks_alone_is_refused() {
-    let mut files = ContentFiles::builtin();
-    files.insert(
-        "campaigns/ascmearc/data/quests/fallback_test.toml",
-        "[[quest]]\nid = \"q\"\nname = \"Q\"\ngiver = \"godgifu\"\ntype = \"kill\"\n\
-         offer = \"O.\"\nreminder = \"R.\"\ndone = \"D.\"\n\
-         [[quest.variant]]\nid = \"a\"\ntarget = \"skeletal_rat\"\nfallback = true\n",
-    );
-    let err = Content::load(&files).expect_err("refused").to_string();
-    assert!(err.contains("not all fallbacks"), "{err}");
-    assert!(matches!(
-        def(&town("warrior"), "barrow_rats").roll,
-        Some(Rolled::Variants(_))
-    ));
 }

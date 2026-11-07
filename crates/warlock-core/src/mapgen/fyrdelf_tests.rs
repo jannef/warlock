@@ -337,10 +337,6 @@ fn a_branch_level_names_vaults_of_its_own_campaign() {
     for (vaults, says) in [
         ("vaults = [\"nowhere\"]", "unknown vault `nowhere`"),
         ("vaults = [\"stone_circle\"]", "is outdoor"),
-        (
-            "vaults = [\"drakes_hoard\", \"drakes_hoard\"]",
-            "names vault `drakes_hoard` twice",
-        ),
     ] {
         let mut files = ContentFiles::builtin();
         files.insert(fyrdelf, &text.replace(named, vaults));

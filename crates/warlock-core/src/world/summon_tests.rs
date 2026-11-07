@@ -295,9 +295,7 @@ fn a_pool_by_tag_leaves_out_uniques_and_the_summoner() {
 }
 
 #[test]
-fn a_summoner_without_mana_or_with_an_empty_pool_is_refused() {
-    let err = Content::load(&files(RAISES, 0, HALL)).expect_err("no mana");
-    assert!(err.to_string().contains("needs `mana`"), "{err}");
+fn a_summoner_with_an_empty_pool_is_refused() {
     let summon = "tag = \"undead\"\nlevels = [50, 60]\ncount = \"1\"\ncooldown = 30\nmana = 8";
     let err = Content::load(&files(summon, 10, HALL)).expect_err("empty pool");
     assert!(err.to_string().contains("no creature fits"), "{err}");

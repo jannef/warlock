@@ -1,6 +1,5 @@
 //! A shrine of a side's data (`shrine = { ... }`, spec §7 "Special rooms"): parsed with its
-//! status resolved, and refused without `sides`, with a pace out of range, an empty line, or a
-//! status that does not ease slowly enough.
+//! status resolved, and refused without `sides` or with an unknown status.
 
 use super::{Content, RoomEffectId, RoomEffects};
 
@@ -61,29 +60,13 @@ fn a_bad_shrine_is_refused() {
             "regen = 200, status = \"unwelcome\"",
             "needs `sides`",
         ),
-        (true, "regen = 0, status = \"unwelcome\"", "shrine.regen 0"),
-        (
-            true,
-            "regen = 1001, status = \"unwelcome\"",
-            "shrine.regen 1001",
-        ),
         (
             true,
             "regen = 200, status = \"nothing\"",
             "unknown status `nothing`",
         ),
-        (true, "regen = 200, status = \"asleep\"", "must ease"),
     ] {
         let e = parse(&content, &shrine(sides, fields)).unwrap_err();
         assert!(e.contains(why), "{fields}: {e}");
     }
-    let blank = format!(
-        "{SHRINE}sides = {{ good = \"altar_good\" }}\nshrine = {{ welcome = \" \", unwelcome = \
-         \"Out.\", regen = 200, status = \"unwelcome\" }}\n"
-    );
-    assert!(
-        parse(&content, &blank)
-            .unwrap_err()
-            .contains("must not be empty")
-    );
 }

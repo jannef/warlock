@@ -20,24 +20,19 @@ Spec §8 "Potions" (`spec/08g-magic-items.md`); the combat progression design §
   `Harm { dice, status }` (status required: hunger is loaded after objects),
   `Boost { status, severity }` (the status must raise a stat), `Vision { status }` (it must
   have `vision`), `Haste { status, severity }` (status always `hasted`, the Haste spell's; data
-  writes only `severity`), `Resistance { status }` (it must have `resist`),
-  `Status { status, severity }` (#1224, the potions wave 2 design §4.1: any status; the data author
-  is trusted to pick one that ends, #1205); a severity is 1 to the status's `max`. `Draught::lends` is the
-  status and degrees of the five that lend one.
   `marks` are
   `(Stat, count)` in stat order, 1 to `MAX_POTION_MARKS` each.
 - Content checks (`content/mod.rs`): a drink's `cures` must be named in some status's or
   disease's `cured_by` (with food's `cures`); potions of one `colour` share one `fg`;
   `data/potion_labels.toml` says `{colour}` and has at least as many labels as potion types
-  (`check_potion_labels`). Poisoned's `cured_by` has `antidote` for the antidote.
+  (`check_potion_labels`). Poisoned's `cured_by` has `antidote` for the antidote; Frightened,
+  Drowsy, Sluggish, Stunned, Staggered, and Transfixed have `clear_head` for the potion of
+  clear head (a plain `cure`).
 - Files: one per potion in `assets/data/objects/` (`potion_of_healing`, `potion_of_greater_healing`,
   `potion_of_full_healing`, `potion_of_antidote`, `potion_of_cure_disease`, `potion_of_mana`,
   `murky_draught`; the six `elixir_of_*`: might, grace, vigour, wit, will, presence; #567:
   `potion_of_might`, `_grace`, `_vigour`, `_wit`, `_will`, `_presence` and their
   `greater_potion_of_*`, `potion_of_cats_eyes`, `_owls_eyes`, `_moths_eyes`,
-  `potion_of_quickness`, `potion_of_warmth`, `_frost`, `_earthing`, `_proofing`; #1224, kind
-  `status`: `potion_of_barkskin`, `_glamour`, `_renewal`, `_the_quick`, `_the_unseen`,
-  `_sea_legs`, their colours the design's §4.5 hues: bronze, rose, opal, sky blue). The witch's old `red_potion` and `blue_potion` are now the potions of
   healing and mana (ids renamed; saves change).
 
 ## Drinking: `world/potion.rs`
@@ -72,6 +67,17 @@ Spec §8 "Potions" (`spec/08g-magic-items.md`); the combat progression design §
   visions (`vision`, `eases = 1800`), four resistances (`resist`, 50 %, `eases = 1800`); what
   they do is the statuses' (docs/dev/status-effects.md). Status and disease beginnings and ends are not said here: they are the action's events,
   which perception reports ("You feel sick.", "The poison wears off.").
+- The utility kinds (#1228): `Nourish` is `World::satiate` (`world/eat.rs`, beside `feed`):
+  the nutrition added at once, held below `states.bloated` (never lowered when already past
+  it), no overeating, choking, or vomiting; nothing without `data/hunger.toml`. `Restore` is
+  `World::restore` (`world/restore.rs`), the scroll of restoration's cleanse lifted out of
+  `read_cleanse` (its two callers: the read, with the scroll's `Cleansing`, and the potion,
+  mending and restoring both); with nothing to do the potion is drunk all the same ("You feel
+  whole."), since refusing would tell what an unknown potion is. `Blink` is the teleport trap's
+  `World::teleport` (`world/trap.rs`: a free cell by a hash of seed, level, turn, actor, and
+  cell, no stream draw), refused in effect on the overworld ("The land lurches, and holds you
+  where you are."). `World::cleanse` was taken (the Cleanse spell's, `world/cast.rs`), hence
+  the name `restore`.
 - Creatures do not drink.
 
 ## Flasks: `world/flask.rs`
@@ -111,7 +117,17 @@ every later flask (smoke, fire, frost, acid, the bombers) builds on.
   would catch the thrower asks first (`Aim::catches_reader`). Text snapshots `throw-list-flasks`,
   `potion-description-flask`.
 - **Content**: the sleeping draught (`sleeping_draught.toml`, Sleep at rung 0, range 6; drunk,
-  Drowsy 3; pink). S3 (#1225): the flask of smoke (Fume: a smoke zone, radius 2, 15 turns;
+  Drowsy 3; pink).
+- **Content on existing spells** (S4, #1226; each at rung 0, range 6; the design's §4.4 hues):
+  `flask_of_oil` (Slick), `stinking_flask` (Reek), `flask_of_tar` (Web),
+  `flask_of_enfeeblement` (Hex of weakness), `flask_of_sloth` (Curse of sloth),
+  `flask_of_darkness` (Mirk), `vial_of_nightmares` (Fear), `vial_of_silence` (Silence),
+  `flask_of_thunder` (Thunderclap, `noise` thunder 150), `blasting_flask` (Shatter, `noise`
+  explosion 100), each drunk a `harm`; `holy_water` (Rebuke: only the undead, by the spell's
+  `only_tags`), drunk a `cure` of `holy_water`, the means in Ill-wished's and Branded's
+  `cured_by`. The flasks of thunder and blasting are in general stores' and provisioners'
+  `never` lists. Tests: `world/flask_content_tests.rs` (each one's throw and drink once).
+- **Content, S3** (#1225): the flask of smoke (Fume: a smoke zone, radius 2, 15 turns;
   drunk, Stunned 1; ash grey), the flask of brilliance (Flare: Stunned 1 on all with eyes,
   radius 1; drunk, the safe one, `status` Lit 1 and Willpower marks; silver), the vial of acid
   (Acid splash: 2d4 acid, radius 1, Corroded 1 and the player's armour eaten by acid's
@@ -153,7 +169,8 @@ every later flask (smoke, fire, frost, acid, the bombers) builds on.
 - Elixirs: deep loot (level 8, frequency 2), the forgotten altar's great boon `elixir`
   (`data/outcomes/forgotten_altar.toml`, one of the six by weight), and the alchemist's draw (by
   frequency, so very rarely). A shop kind's `never` list (`ShopDef::never`, read in
-  `Shops::stocks`) keeps them out of general stores and provisioners.
+  `Shops::stocks`) keeps them, and the costly flasks (thunder, blasting), out of general stores
+  and provisioners.
 
 ## Talents (system `potions`)
 
@@ -189,6 +206,10 @@ effect kinds (`potion_marks_percent`, `potion_heals`, `potion_smell`) and `World
   refusals with no time, words and colours, `known_scrolls`, identify, marks by count, Thrifty
   drinker (no draw without it), the witch's kit, earlier labels unchanged,
   content refusals.
+- `world/potion_utility_tests.rs` (#1228): sustenance feeds 1500 and stops below Bloated,
+  restoration mends, restores, and ends Stiffening (and is drunk with nothing to do), blinking
+  moves the drinker without a draw (and not on the overworld), clear head ends its six
+  statuses, the kinds' content refusals.
 - `world/elixir_tests.rs`: score +1 and potential +1 or +2 over seeds (both come up), the
   potential lifted first, hit points after a Toughness elixir and maximum mana after an
   Intelligence one, 60 marks and Quick study's 120, each elixir its own stat, the top of the

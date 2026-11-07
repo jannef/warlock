@@ -87,22 +87,17 @@
 use super::ContentError;
 use super::creature::CreatureId;
 use super::danger::{
-    CountSpec, DangerRule, DangerSpec, Odds, OddsSpec, SpawnSpec, Spawning, SpawningSpec,
-    StrayPool, check_dread,
+    CountSpec, DangerRule, DangerSpec, Odds, OddsSpec, SpawnSpec, Spawning, SpawningSpec, StrayPool,
 };
-use super::dialogue::{MAX_REPLY, check_lines};
 use super::dread::{DreadCurve, DreadCurveSpec};
 use super::object::ObjectId;
 use super::room_effect::{RoomEffectId, RoomEffects};
 use super::shop::{ShopId, Shops};
 use super::trap::TrapId;
 use crate::light::Light;
-use crate::temperature::{LEVEL_TEMPERATURES, Temperature};
+use crate::temperature::Temperature;
 use serde::Deserialize;
 use std::collections::BTreeMap;
-
-/// The most items of loot a branch level's floor may hold.
-pub const MAX_LOOT: u8 = 50;
 
 /// Which generator builds a level.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Deserialize)]
@@ -249,8 +244,6 @@ struct RoomOddsSpec {
     per_level: Option<u8>,
     favoured: Option<BTreeMap<String, u8>>,
     banned: Option<Vec<String>>,
-    /// Retired: refused with a pointer to `favoured` and `banned`.
-    effects: Option<toml::Value>,
 }
 
 /// A branch's (or a range of its depths') `shops` table, falling back as [`RoomOddsSpec`] does.
@@ -262,9 +255,6 @@ struct ShopOddsSpec {
     names: Option<Vec<String>>,
     keeper: Option<String>,
 }
-
-/// The most special rooms a branch may give a level.
-const MAX_ROOMS_PER_LEVEL: u8 = 8;
 
 /// How often a generated level's rooms are special, and which effects they get (spec §7
 /// "Special rooms"): the shared odds of `room_effects.toml` or a branch's own. The effects not
@@ -345,14 +335,6 @@ impl ShopOdds {
     }
 }
 
-/// A percent from data: 0 to 100.
-fn check_percent(chance: Option<u8>) -> Result<(), String> {
-    match chance {
-        Some(c) if c > 100 => Err(format!("chance {c} is a percent: 0 to 100")),
-        _ => Ok(()),
-    }
-}
-
 impl RoomOddsSpec {
     /// A depth's table: `over`'s fields (its `[[dungeon.levels]]` entry), else `branch`'s.
     fn layer(over: Option<&Self>, branch: Option<&Self>) -> Self {
@@ -363,35 +345,17 @@ impl RoomOddsSpec {
             per_level: over.per_level.or(branch.per_level),
             favoured: over.favoured.or(branch.favoured),
             banned: over.banned.or(branch.banned),
-            effects: over.effects.or(branch.effects),
         }
     }
 
     /// The odds, the shared ones filling in what the table leaves out.
     fn resolve(self, rooms: &RoomEffects) -> Result<RoomOdds, String> {
-        if self.effects.is_some() {
-            return Err(
-                "`effects` is retired: name `favoured` effects (each with its share of \
-                        the draws) and `banned` ones instead"
-                    .into(),
-            );
-        }
         let shared = RoomOdds::shared(rooms);
-        check_percent(self.chance)?;
-        if self
-            .per_level
-            .is_some_and(|n| !(1..=MAX_ROOMS_PER_LEVEL).contains(&n))
-        {
-            return Err(format!("per_level must be 1 to {MAX_ROOMS_PER_LEVEL}"));
-        }
         let id = |e: &str| {
             (rooms.id(e)).ok_or_else(|| format!("unknown effect `{e}` (room_effects.toml)"))
         };
         let mut favoured = Vec::new();
         for (name, &share) in self.favoured.iter().flatten() {
-            if !(1..=100).contains(&share) {
-                return Err(format!("favoured `{name}`: a share is 1 to 100 (percent)"));
-            }
             favoured.push((id(name)?, share));
         }
         favoured.sort();
@@ -400,26 +364,12 @@ impl RoomOddsSpec {
             .collect::<Result<Vec<_>, _>>()?;
         banned.sort();
         banned.dedup();
-        if let Some(&(both, _)) = favoured.iter().find(|(e, _)| banned.contains(e)) {
-            let name = &rooms.get(both).id;
-            return Err(format!("`{name}` is both favoured and banned"));
-        }
-        let shares: u32 = favoured.iter().map(|&(_, s)| u32::from(s)).sum();
-        if shares > 100 {
-            return Err(format!(
-                "the favoured shares add up to {shares}: at most 100"
-            ));
-        }
-        let odds = RoomOdds {
+        Ok(RoomOdds {
             chance: self.chance.unwrap_or(shared.chance),
             per_level: self.per_level.unwrap_or(shared.per_level),
             favoured,
             banned,
-        };
-        if odds.chance > 0 && !rooms.defs().is_empty() && odds.banned.len() >= rooms.defs().len() {
-            return Err("every effect is banned while `chance` is above 0".into());
-        }
-        Ok(odds)
+        })
     }
 }
 
@@ -443,12 +393,7 @@ impl ShopOddsSpec {
         shops: &Shops,
         creature_id: impl Fn(&str) -> Option<CreatureId>,
     ) -> Result<ShopOdds, String> {
-        let given = self.chance.is_some()
-            || self.kinds.is_some()
-            || self.names.is_some()
-            || self.keeper.is_some();
         let shared = ShopOdds::shared(shops);
-        check_percent(self.chance)?;
         let kinds = match self.kinds {
             Some(names) => (names.iter())
                 .map(|k| {
@@ -459,40 +404,23 @@ impl ShopOddsSpec {
                 .collect::<Result<Vec<_>, _>>()?,
             None => shared.kinds,
         };
-        if self.names.iter().flatten().any(|n| n.trim().is_empty()) {
-            return Err("`names` must not be empty".into());
-        }
         let keeper = match self.keeper {
             Some(k) => (creature_id(&k))
                 .filter(|_| k != "player")
                 .ok_or_else(|| format!("unknown keeper creature `{k}`"))?,
             None => shared.keeper,
         };
-        let odds = ShopOdds {
+        Ok(ShopOdds {
             chance: self.chance.unwrap_or(shared.chance),
             kinds,
             names: self.names.unwrap_or(shared.names),
             keeper,
-        };
-        if given && odds.chance > 0 && (odds.kinds.is_empty() || odds.names.is_empty()) {
-            return Err("`kinds` and `names` must not be empty while `chance` is above 0".into());
-        }
-        Ok(odds)
+        })
     }
 }
 
 /// How many traps a level gets unless its branch says otherwise: 2 to 4.
 const TRAPS_PER_LEVEL: [u32; 2] = [2, 4];
-/// The most traps a generated level may get.
-const MAX_TRAPS_PER_LEVEL: u32 = 50;
-/// The most secret doors a generated level may get.
-const MAX_SECRET_DOORS: u32 = 20;
-/// The most a level down may add to how hard hidden features are to find.
-const MAX_HIDDEN_PER_DEPTH: u8 = 5;
-/// The most a level down may add to how hard locks are to pick.
-const MAX_LOCKS_PER_DEPTH: u8 = 5;
-/// The most chests a generated floor may get.
-pub const MAX_CHESTS_PER_LEVEL: u8 = 8;
 
 /// How often a branch's floors get chests (spec §8 "Chests"; `mapgen/chest.rs`): with `chance`
 /// percent a floor has some, between `count`'s least and most. One floor in five has one unless
@@ -713,12 +641,6 @@ fn resolve_bosses(
 ) -> Result<Vec<LayerBoss>, String> {
     let mut bosses: Vec<LayerBoss> = Vec::new();
     for row in endless.map_or(&[][..], |e| &e.boss) {
-        if row.depth < 2 {
-            return Err(format!(
-                "dungeon `{id}`: a layer boss's `depth` is 2 or more, not {}",
-                row.depth
-            ));
-        }
         if bosses.iter().any(|b| b.depth == row.depth) {
             return Err(format!(
                 "dungeon `{id}`: two layer bosses at depth {}",
@@ -780,10 +702,7 @@ impl DungeonFile {
                 return Err(err(format!("duplicate dungeon id `{id}`")));
             }
             let depth_of = match (spec.depth, &spec.endless) {
-                (Some(depth), None) if (1..=99).contains(&depth) => depth,
-                (Some(_), None) => {
-                    return Err(err(format!("dungeon `{id}`: depth must be 1 to 99")));
-                }
+                (Some(depth), None) => depth,
                 // One row of tables: every floor's.
                 (None, Some(_)) => 1,
                 _ => {
@@ -811,10 +730,9 @@ impl DungeonFile {
             check_size(spec.generator, spec.size)?;
             if let Some(e) = &spec.endless {
                 check_size(Generator::Caves, e.caves_size)?;
-                if spec.generator != Generator::Rooms || e.caves > 100 {
+                if spec.generator != Generator::Rooms {
                     return Err(err(format!(
-                        "dungeon `{id}`: an endless branch's `generator` is \"rooms\", and its \
-                         `caves` a percent"
+                        "dungeon `{id}`: an endless branch's `generator` is \"rooms\""
                     )));
                 }
                 if !spec.levels.is_empty() {
@@ -889,15 +807,7 @@ impl DungeonFile {
                         "dungeon `{id}`: a level's `dread_one_in` needs the branch's `danger`"
                     )));
                 }
-                check_dread(dread_one_in).map_err(|m| err(format!("dungeon `{id}`: {m}")))?;
                 check_size(generator, [width, height])?;
-                if let Some(c) = temperature.filter(|c| !LEVEL_TEMPERATURES.contains(c)) {
-                    return Err(err(format!(
-                        "dungeon `{id}`: temperature {c} is outside {} to {} (°C)",
-                        LEVEL_TEMPERATURES.start(),
-                        LEVEL_TEMPERATURES.end()
-                    )));
-                }
                 plans.push(LevelPlan {
                     generator,
                     width,
@@ -947,11 +857,11 @@ impl DungeonFile {
                 })
                 .collect::<Result<Vec<_>, _>>()?;
             let traps_per_level = spec.traps_per_level.unwrap_or(TRAPS_PER_LEVEL);
+            // Each `[least, most]` is a range a draw is made in: never empty.
             let [least, most] = traps_per_level;
-            if least > most || most > MAX_TRAPS_PER_LEVEL {
+            if least > most {
                 return Err(err(format!(
-                    "dungeon `{id}`: traps_per_level must be [least, most], at most \
-                     {MAX_TRAPS_PER_LEVEL}"
+                    "dungeon `{id}`: traps_per_level is [least, most]"
                 )));
             }
             if spec.traps_per_level.is_some() && traps.is_empty() {
@@ -959,33 +869,17 @@ impl DungeonFile {
                     "dungeon `{id}` has traps_per_level but no `traps`"
                 )));
             }
-            let [least, most] = spec.secret_doors;
-            if least > most || most > MAX_SECRET_DOORS {
+            if spec.secret_doors[0] > spec.secret_doors[1] {
                 return Err(err(format!(
-                    "dungeon `{id}`: secret_doors must be [least, most], at most \
-                     {MAX_SECRET_DOORS}"
+                    "dungeon `{id}`: secret_doors is [least, most]"
                 )));
             }
-            if spec.hidden_per_depth > MAX_HIDDEN_PER_DEPTH {
-                return Err(err(format!(
-                    "dungeon `{id}`: hidden_per_depth must be 0 to {MAX_HIDDEN_PER_DEPTH}"
-                )));
+            if spec.loot[0] > spec.loot[1] {
+                return Err(err(format!("dungeon `{id}`: `loot` is [fewest, most]")));
             }
-            if spec.locks_per_depth > MAX_LOCKS_PER_DEPTH {
+            if spec.chests.count[0] > spec.chests.count[1] {
                 return Err(err(format!(
-                    "dungeon `{id}`: locks_per_depth must be 0 to {MAX_LOCKS_PER_DEPTH}"
-                )));
-            }
-            if spec.loot[0] > spec.loot[1] || spec.loot[1] > MAX_LOOT {
-                return Err(err(format!(
-                    "dungeon `{id}`: `loot` is [fewest, most], at most {MAX_LOOT}"
-                )));
-            }
-            let [least, most] = spec.chests.count;
-            if spec.chests.chance > 100 || least > most || most > MAX_CHESTS_PER_LEVEL {
-                return Err(err(format!(
-                    "dungeon `{id}`: `chests` is {{ chance = 0 to 100, count = [least, most] }}, \
-                     at most {MAX_CHESTS_PER_LEVEL}"
+                    "dungeon `{id}`: `chests.count` is [least, most]"
                 )));
             }
             let key = match &spec.key {
@@ -996,10 +890,6 @@ impl DungeonFile {
                 })?),
                 None => None,
             };
-            if let Some(line) = &spec.arrival {
-                check_lines([line], MAX_REPLY)
-                    .map_err(|m| err(format!("dungeon `{id}`: `arrival`: {m}")))?;
-            }
             let bosses = resolve_bosses(&id, spec.endless.as_ref(), &creature_id).map_err(err)?;
             let dread = (spec.endless.as_mut())
                 .and_then(|e| e.dread.take())
@@ -1129,9 +1019,6 @@ mod tests {
         assert_eq!((odds.chance, odds.per_level), (40, 1));
         assert!(odds.favoured.is_empty() && odds.banned.is_empty());
         for (bad, says) in [
-            ("room_effects = { chance = 101 }\n", "percent"),
-            ("room_effects = { per_level = 0 }\n", "per_level"),
-            ("room_effects = { per_level = 9 }\n", "per_level"),
             (
                 "room_effects = { favoured = { lava = 10 } }\n",
                 "unknown effect `lava`",
@@ -1139,23 +1026,7 @@ mod tests {
             ("room_effects = { banned = [\"lava\"] }\n", "unknown effect"),
             (
                 "room_effects = { effects = [\"hushed\"] }\n",
-                "`effects` is retired",
-            ),
-            (
-                "room_effects = { favoured = { hushed = 10 }, banned = [\"hushed\"] }\n",
-                "both favoured and banned",
-            ),
-            (
-                "room_effects = { favoured = { hushed = 60, echoing = 50 } }\n",
-                "add up to 110",
-            ),
-            (
-                "room_effects = { favoured = { hushed = 0 } }\n",
-                "a share is 1 to 100",
-            ),
-            (
-                "room_effects = { banned = [\"hushed\", \"shadowed\", \"echoing\"] }\n",
-                "every effect is banned",
+                "unknown field",
             ),
             ("room_effects = { odds = 3 }\n", "unknown field"),
             ("shops = { chance = 0 }\n", "shops.toml"),
@@ -1163,14 +1034,6 @@ mod tests {
             let e = resolve(&format!("{base}{bad}")).unwrap_err().message;
             assert!(e.contains(says), "{bad}: {e}");
         }
-        // No chance may ban them all.
-        assert!(
-            resolve(&format!(
-                "{base}room_effects = {{ chance = 0, banned = [\"hushed\", \"shadowed\", \
-                 \"echoing\"] }}\n"
-            ))
-            .is_ok()
-        );
     }
 
     #[test]
@@ -1190,12 +1053,7 @@ mod tests {
             }
         );
         assert_eq!(odds("chests = { chance = 0 }\n").unwrap().count, [1, 1]);
-        for bad in [
-            "chests = { chance = 101 }\n",
-            "chests = { count = [2, 1] }\n",
-            "chests = { count = [1, 9] }\n",
-            "chests = { often = 3 }\n",
-        ] {
+        for bad in ["chests = { count = [2, 1] }\n", "chests = { often = 3 }\n"] {
             assert!(odds(bad).is_err(), "{bad}");
         }
     }
@@ -1217,7 +1075,6 @@ mod tests {
         for bad in [
             "traps = [\"dragon_trap\"]\n",
             "traps = [\"pit\"]\ntraps_per_level = [3, 1]\n",
-            "traps = [\"pit\"]\ntraps_per_level = [1, 100]\n",
             "traps_per_level = [1, 2]\n",
         ] {
             assert!(resolve(&format!("{base}{bad}")).is_err(), "{bad}");
@@ -1280,8 +1137,6 @@ mod tests {
             resolve(plain).unwrap()[0].plan(1).unwrap().temperature,
             None
         );
-        let hot = format!("{plain}temperature = 41\n");
-        assert!(resolve(&hot).unwrap_err().message.contains("temperature"));
     }
 
     #[test]
@@ -1304,9 +1159,6 @@ mod tests {
             odds("[[dungeon.levels]]\nfrom = 3\ndread_one_in = 20\n"),
             [100, 100, 20]
         );
-        let refused = |text: &str| resolve(&format!("{base}{text}")).is_err();
-        assert!(refused("dread_one_in = 0\n"));
-        assert!(refused("[[dungeon.levels]]\nfrom = 3\ndread_one_in = 0\n"));
         let no_danger = "[[dungeon]]\nid = \"d\"\ngenerator = \"rooms\"\ndepth = 3\n\
                          size = [80, 21]\n[[dungeon.levels]]\nfrom = 3\ndread_one_in = 20\n";
         assert!(

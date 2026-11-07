@@ -1,0 +1,21 @@
+# A potion of restoration (spec §8 "Potions", the potions wave 2 design §4.2): the scroll of
+# restoration's cleanse, drunk: stat damage mended, drained points back, Stiffening ended.
+# Restoration is mint.
+[[object]]
+id = "potion_of_restoration"
+name = "potion of restoration"
+plural = "potions of restoration"
+glyph = "!"
+fg = "#90e0b0"
+class = "potions"
+materials = ["glass"]
+weight = 250
+value = 250
+stackable = true
+level = 6
+frequency = 8
+
+[object.drink]
+kind = "restore"
+colour = "mint"
+marks = { willpower = 15 }

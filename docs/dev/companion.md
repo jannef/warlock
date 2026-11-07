@@ -61,13 +61,14 @@ nothing on `from_state` (a saved run has its own, or lost it).
 3. **The name** (`companion::name_for`): one draw on `companion/name/<actor id>` from `names`.
 4. The line: "Snel, your hound, pads at your heel."
 
-**The data** (`companions.toml`): `[start] rare_per_mille`, `rare` (known `tameable` beasts, at
-least one: the draw indexes it), `most_level` (2); `[start.by_race]` a list of known `tameable`
-beasts per race, at least one (a race the content lacks is refused; a shipped race without a
+**The data** (`companions.toml`): `[start] rare_per_mille`, `rare` (known creatures, never the
+player, at least one: the draw indexes it), `most_level` (2); `[start.by_race]` a list of known
+creatures per race, at least one (a race the content lacks is refused; a shipped race without a
 list is a test's failure, `content/companion.rs::tests`, not a load error, so fixtures that add
 races load); `[tame]` ("Taming" below); `[growth]` (every `every` at least 1: they divide);
-`names` at least one. The rest is the author's (#1205): the numbers, the beasts' levels against
-`most_level`, and an `only` line in the `companion` chapter for every beast a start may draw
+`names` at least one. The rest is the author's (#1205): the numbers, whether a beast listed is
+`tameable`, the beasts' levels against `most_level`, and an `only` line in the `companion`
+chapter for every beast a start may draw
 (`when = { companion = ["<id>"] }`; a beast without one is told the chapter's other lines).
 
 ## Taming
@@ -95,13 +96,12 @@ the actors; no cooldown (time is the price). Tests: `world/tame_tests.rs`; the o
 
 ## Creature types: `tameable` and `nose`
 
-`CreatureDef::tameable` (default false) marks a type a companion may be; the loader refuses it on
-a unique, an animated object, a summoner, one that `opens_doors`, one of the peoples (a `race`),
-one that fights from afar, or one that carries gear (`racial_weapon` or `gear` lines). The
-faction is not what decides: the orcs' wargs are beasts of a people's faction, and tameable (the
-design's §12.2 lists them; its "animal faction" clause would have refused them, so this is the
-check instead). `CreatureDef::nose: Option<i32>` (1 to 20, only on a `tameable` type) is how far
-it smells.
+`CreatureDef::tameable` (default false) marks a type Tame may make a companion of. The shipped
+tameable types are plain beasts (no unique, animated object, summoner, door-opener, one of the
+peoples, ranged fighter, or gear-carrier), but that is the data author's choice, not a load check
+(#1205). The faction is not what decides: the orcs' wargs are beasts of a people's faction, and
+tameable (the design's §12.2). `CreatureDef::nose: Option<i32>` is how far it smells (read for a
+companion or a familiar).
 
 The ten new beasts (`hound`, `polecat`, `lynx`, `badger`, `boar`, `large_spider`, `cave_lizard`;
 the rares `black_hound`, `great_boar`, `panther`) are shared types in `assets/data/creatures/`
@@ -129,7 +129,7 @@ one place in `actor.rs`:
 | hit points | `Actor::max_hp` | `+ hp_per_level × above` (2) |
 | to hit, damage | `Actor::melee` (`Actor::grown`) | `+ above ÷ to_hit_every` (4); `+ above ÷ damage_bonus_every` (6) flat and `above ÷ damage_dice_every` (12) more dice of the attack's first group (`Roll::more`) |
 | Defence | `Actor::defence` | `+ above ÷ defence_every` (6) in the Natural category, with the hide's or alone |
-| Protection | `Actor::protection_plus` | the body rule at the grade (`companion::body_protection`: by what the hide is called, as `creature_body_tests` groups them: a hide (grade − 10) ÷ 8, bony grade ÷ 6, armoured grade ÷ 4 + 1, a body with none 0; no hide: a hide), never below the type's own |
+| Protection | `Actor::protection_plus` | the body rule at the grade (`companion::body_protection`: by what the hide is called, as `docs/dev/creatures.md` "Natural Protection by body and level" groups them: a hide (grade − 10) ÷ 8, bony grade ÷ 6, armoured grade ÷ 4 + 1, a body with none 0; no hide: a hide), never below the type's own |
 | stats | `Actor::stats_with` | St, Dx, To `+ above ÷ stat_every` (5), so Toughness feeds the hit points and Strength the blow too |
 
 Speed, senses, size, and resistances are the type's. The wiki prints the table at the cadence
@@ -354,8 +354,8 @@ the body rule; a companion coming along from across the level while a summon is 
 the retinue in and out (and a replay of the road); the nose through a closed door that stops the
 eyes (the lynx without one; beyond its reach, nothing), the growl once; the words (the orders,
 the kill, the dumps, the mark); a save round trip. `content/companion.rs::tests`: the shipped
-file and every race's list, the refusals, loading without the file, `tameable` and `nose`
-refusals. `content/beast_roster_tests.rs`: the twelve beasts' rows. `background_tests` pins the
+file and every race's list, the refusals, loading without the file, the wolf's `tameable` and
+`nose`. `background_tests` pins the
 chapter list; the samples (`the_samples_read_as_written`) prove a non-ranger's story unchanged.
 Screen snapshots (`crates/warlock/src/ui/screen_snapshots.rs`): every ranger case shows the
 status bar's segment, the Character screen's row, and the Allies group.

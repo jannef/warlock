@@ -9,9 +9,8 @@ strays (the dread draw's, `dread_one_in`, and the out-of-depth draws); no popula
 yet. Each dread type has a `first_sight` line (D9); the leavings are the ones that suit.
 
 They follow #383's formulas by level and role, the natural attacks' dice summed (the hydra's five
-heads share a brute's budget). `content/second_wave_roster_tests.rs` (`ROLES`) checks the XP
-guideline, max HP and dice within ±35 %, the dread flags, a level each of its own, and each
-type's gimmick; `content/dread_roster_tests.rs` lists the five at their tiers and their leavings.
+heads share a brute's budget). XP, max HP and dice follow the guideline and the ±35 % band;
+`content/second_wave_roster_tests.rs` checks each type's gimmick; `content/dread_roster_tests.rs` lists the five at their tiers and their leavings.
 
 ## Roster
 

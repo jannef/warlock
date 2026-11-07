@@ -283,17 +283,18 @@ fn service_data_is_validated() {
     let ok = "id = \"cure\"\nname = \"A cure\"\nprice = 5\ndoes = \"cure\"\nreply = \"r\"\nnothing = \"n\"\n";
     assert_eq!(load(&service(ok)), Ok(()));
     let cases = [
-        (ok.replace("price = 5", "price = 0"), "at least 1 gold"),
         (
             ok.replace("\"cure\"\nname", "\"t\"\nname"),
             "another service",
         ),
-        (ok.replace("\"cure\"\nname", "\"Cure\"\nname"), "lower-case"),
+        (
+            ok.replace("\"cure\"\nname", "\"cure me\"\nname"),
+            "holds no `:` or whitespace",
+        ),
         (
             ok.replace("does = \"cure\"", "does = \"bless\""),
             "unknown variant",
         ),
-        (ok.replace("nothing = \"n\"", "nothing = \"\""), "not empty"),
     ];
     for (fields, error) in cases {
         let got = load(&service(&fields)).expect_err(error);

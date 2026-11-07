@@ -1,5 +1,5 @@
 //! A special room's `haunt` (spec §7 "Special rooms"): parsed, refused without `needs_danger` or
-//! out of its range, never over a whole level, and read by [`Here::haunt`] of the room only.
+//! a period, never over a whole level, and read by [`Here::haunt`] of the room only.
 
 use super::{Here, RoomEffectId, RoomEffects};
 use crate::time::Duration;
@@ -24,7 +24,7 @@ fn haunt_parses_and_is_none_by_default() {
 }
 
 #[test]
-fn haunt_needs_a_danger_and_a_sane_period() {
+fn haunt_needs_a_danger_and_a_period() {
     let refused = |extra: &str| {
         RoomEffects::parse("e.toml", &effect(extra), |_| None)
             .unwrap_err()
@@ -32,9 +32,7 @@ fn haunt_needs_a_danger_and_a_sane_period() {
     };
     let e = refused("haunt = { faction = \"undead\", every = \"1h\" }");
     assert!(e.contains("needs_danger"), "{e}");
-    let e = refused("needs_danger = true\nhaunt = { faction = \"undead\", every = \"5m\" }");
-    assert!(e.contains("haunt.every"), "{e}");
-    let e = refused("needs_danger = true\nhaunt = { faction = \"undead\", every = \"25h\" }");
+    let e = refused("needs_danger = true\nhaunt = { faction = \"undead\", every = \"0s\" }");
     assert!(e.contains("haunt.every"), "{e}");
     let e = refused("needs_danger = true\nhaunt = { faction = \"undead\" }");
     assert!(e.contains("every"), "{e}");

@@ -37,9 +37,9 @@ fn files_with(more: &[(&str, &str)]) -> ContentFiles {
     for gone in ["wit", "will", "presence"] {
         files.remove(&format!("data/objects/greater_potion_of_{gone}.toml"));
     }
-    let fire = flask("fire_flask", "fireball", ("scarlet", "#e03020"));
-    let weakness = flask("weakness_flask", "hex_of_weakness", ("indigo", "#5040a0"));
-    let slick = flask("slick_flask", "slick", ("colourless", "#d0d0d0"));
+    let fire = flask("fire_flask", "fireball", ("scarlet", "#e04020"));
+    let weakness = flask("weakness_flask", "hex_of_weakness", ("indigo", "#4830a0"));
+    let slick = flask("slick_flask", "slick", ("colourless", "#c0c8cc"));
     files.insert("data/objects/fire_flask.toml", &fire);
     files.insert("data/objects/weakness_flask.toml", &weakness);
     files.insert("data/objects/slick_flask.toml", &slick);

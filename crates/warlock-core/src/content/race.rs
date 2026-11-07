@@ -272,9 +272,6 @@ impl Races {
                 )));
             }
             let (stats, potential) = (adjustments(&spec.stats), adjustments(&spec.potential));
-            if let Some(hide) = &spec.natural {
-                hide.check().map_err(|m| err(format!("race `{id}`: {m}")))?;
-            }
             let resist = resist(&spec.resist).map_err(|m| err(format!("race `{id}`: {m}")))?;
             let size_id = spec.size.as_deref().unwrap_or(super::MEDIUM);
             let size = size_index(size_id)
@@ -526,14 +523,6 @@ mod tests {
             (
                 "base_potential = 15\nrace = []\n".into(),
                 "at least one race",
-            ),
-            (
-                format!("{ONE}natural = {{ protection = 0, name = \"skin\" }}\n"),
-                "race `human`: natural: `defence` and `protection` must be 0 to 20, not both 0",
-            ),
-            (
-                format!("{ONE}natural = {{ protection = 21, name = \"skin\" }}\n"),
-                "must be 0 to 20",
             ),
             (
                 format!("{ONE}natural = {{ protection = 1 }}\n"),

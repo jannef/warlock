@@ -2,8 +2,6 @@
 
 use super::ContentError;
 use crate::character::{CharacterSpec, Gender, check_name};
-use crate::combat::MAX_BASE_HP;
-use crate::mana::MAX_BASE_MANA;
 use crate::stats::{Stat, Stats};
 use crate::time::{GameTime, HOUR, MINUTE, parse_time_of_day};
 use serde::Deserialize;
@@ -166,15 +164,6 @@ impl ScenarioDef {
                     .into(),
             ));
         }
-        if def.hp > MAX_BASE_HP {
-            return Err(err(format!("hp {} is more than {MAX_BASE_HP}", def.hp)));
-        }
-        if def.mana > MAX_BASE_MANA {
-            return Err(err(format!(
-                "mana {} is more than {MAX_BASE_MANA}",
-                def.mana
-            )));
-        }
         Ok(def)
     }
 
@@ -271,13 +260,11 @@ mod tests {
             7,
             "hit points without a character"
         );
-        assert!(parse("hp = 1001").is_err());
         assert_eq!(
             parse("mana = 4").unwrap().mana,
             4,
             "mana without a character"
         );
-        assert!(parse("mana = 1001").is_err());
         for extra in [
             "vision = \"normal\"",
             "stats = { strength = 12 }",

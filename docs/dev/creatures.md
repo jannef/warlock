@@ -137,10 +137,11 @@ Dragons and several natural attacks (spec §8 "Creature behavior": "Dragons", "S
 attacks", #1099). **Data**: `Combat::Dragon` (`combat = "dragon"`) and `[creature.breath]`
 (`content/breath.rs`: `BreathSpec` resolved in the creature loop by `BreathSpec::resolve` into
 `CreatureDef::breath: Option<Breath>`, the damage type and the `breath` status's degrees,
-`ceil(cooldown / eases)`; refused out of bounds, with an unknown type, or without the status;
-`check_combat` refuses a dragon without a breath and a breath on any other type;
+`ceil(cooldown / eases)`; refused with an unknown type, without the status, or with a cooldown
+the status cannot hold; `check_combat` refuses a breath on any type but a dragon (it would never
+be read); a dragon without one has no breath to use;
 `breath::check_effects` runs once effects are loaded: a burst effect; its optional `riders`,
-`on_hit` entries resolved as a gaze's, statuses and drains only, #1138). Natural attacks are one
+`on_hit` entries resolved as a gaze's, #1138). Natural attacks are one
 table or a list (`creature::NaturalAttacks`, its own `Deserialize`: a table or an array of
 tables, so parse errors stay the field's): `CreatureDef::attack` is the first,
 `CreatureDef::more_attacks` the rest, `CreatureDef::natural_attacks()` all in order. **Rules**:
@@ -201,11 +202,12 @@ D2's basilisk. **Tests**: `world/gaze_tests.rs`, and `content/gaze.rs`'s roster 
 riders (`MOVED`). Keep the rider generic: D2's stiffening is a status rider like any.
 Bursts: vortices and death throes (the dread design `docs/design/monster-dread.md` §5.3, #1127).
 **Data**: `[creature.burst]` (`content/burst.rs`: `BurstSpec` resolved in the creature loop into
-`CreatureDef::burst: Option<CreatureBurst>`: `damage`, `damage_type`, `radius` 0 to 3, `when`
+`CreatureDef::burst: Option<CreatureBurst>`: `damage`, `damage_type`, `radius`, `when`
 (`BurstWhen::Touches`, a vortex; `Dies`, death throes), `effect` (a burst effect, checked by
 `burst::check_effects` once effects load), optional `noun`/`verb`, `rider` (the spell types'
 rider form, `spell_type::rider`), `douses`, `gust`); `check_combat` refuses a `touches` burst on
-a type with an `attack` or a `combat` other than melee. **Rules**: `world/creature_burst.rs`:
+a type with an `attack` or a `combat` other than melee (the burst is struck instead of every
+melee blow, so the attack would never be). **Rules**: `world/creature_burst.rs`:
 `ai.rs::creature_turn` sends every melee plan of a vortex (`World::bursts_on_touch`) to
 `World::creature_bursts` (a melee attack's price; the burst, then `dies` with no killer);
 `fight.rs::dies` calls `World::death_throes` after `creature_dies` (current level only; the
@@ -242,8 +244,8 @@ it land, nothing unseen. **Wiki**: `creature_thieves` and `creature_blinks`
 (`creature-thieves.md`, `creature-blinks.md`, "Thieves" and "Blinkers" in
 `creature-numbers.md`). **Tests**: `world/theft_tests.rs`. No talent (design §11).
 The disarming blow (#1166). **Data**: `disarms = { chance, difficulty }` on a type
-(`CreatureSpec::disarms`, `CreatureDef::disarms: Option<Disarms>`, `content/creature.rs`; the
-creature loop refuses a chance outside 1 to 100 or a difficulty outside 2 to 40). **Rules**:
+(`CreatureSpec::disarms`, `CreatureDef::disarms: Option<Disarms>`, `content/creature.rs`).
+**Rules**:
 `world/knock_away.rs` (`World::knock_away`, one line in `fight.rs` after `snatch`): a melee hit
 on the player that leaves them alive, a weapon in the first hand slot; one `chance` draw, then
 the open cells beside the player in row order (`is_walkable`, not `swim`, not a closed door, no
@@ -260,7 +262,7 @@ Casters (spec §8 "Creature behavior": "Casters", #1102). **Data**: `spells = [.
 `combat = "caster"` type (`CreatureSpec::spells`, resolved in the creature loop by
 `content/creature_spells.rs::resolve` into `CreatureDef::spells: Vec<SpellId>`, in preference
 order; spells load before creatures). Refused: a caster without a list, a list on any other
-type, an unknown or repeated id, and a spell no creature casts (`creature_spells::castable`:
+type (never read), an unknown id, and a spell no creature casts (`creature_spells::castable`:
 zones, corpses, the open sky, pushes, charms, ground- or tag-bound hexes, heals not by touch,
 summons, cleansings, utilities). A caster's `mana` is its pool (summoners' summons share it).
 **Rules**: `world/creature_cast.rs`: `World::creature_spell` (one branch in `ai.rs::fight`
@@ -277,24 +279,21 @@ and `cast.rs::cast_single`, which now takes its caster's id, then `spell_type_sp
 `balance_probe/casters.rs` (docs/balance.md "Casters"). **Tests**:
 `world/creature_cast_tests.rs`, the silent vault's in `silent_tests.rs`. Adding a caster:
 `combat = "caster"`, a `range`, `spells` (up to level 10 only level-1 harm and level ≤ 3 hexes,
-heals, and buffs, and `rarity = "very_rare"`; the content test checks it), and `mana` for a
+heals, and buffs, and `rarity = "very_rare"`), and `mana` for a
 handful of its main spell.
 
 Natural Protection by body and level (spec §8 "Natural Protection by body and level", #563,
 `docs/design/combat-progression.md` §8): data only. Every type's `natural.protection` is the
 body's at its level, the hide's `name` picking the body: none 0, hide (L − 10) ÷ 8, bony L ÷ 6,
-armoured L ÷ 4 + 1. `content/creature_body_tests.rs` holds the rule: `Body::of` (the name table:
-**a new hide name goes there**, or the test panics), `EXCEPTIONS` (hand-tuned: beetle, ember
-beetle, stone troll, mud golem, balor, pit fiend), `PEOPLES` (tags whose types wear their
-Protection: 0), the armed rule (gear that may roll a piece with Protection or armour: 0), the
-hags who cast (half a hide's), the living trolls' floor of 2, and `BODILESS` (types past level
-17 with no `natural` and a body of none; any other type with no `natural` must be under level 18
-or a hag). A hide of Protection 0 needs a Defence or it is left out (`Hide::check`: not both 0).
-Animated objects (tag `animated`) keep their own table. A new creature type: give it the hide
-its body asks at its level, or the test names it.
+armoured L ÷ 4 + 1. The shipped types were written to the rule, but for the hand-tuned (beetle,
+ember beetle, stone troll, mud golem, balor, pit fiend), the peoples (who wear their Protection:
+0), armed types (gear that may roll a piece with Protection or armour: 0), the hags who cast
+(half a hide's), and the living trolls (a floor of 2); no test holds them to it (#1205: the data
+author decides). Animated objects (tag `animated`) keep their own table, which their generator
+computes. A new creature type: give it the hide its body asks at its level.
 
 Incorporeal creatures (spec §8 "Incorporeal creatures", #381): the data is a creature type's
-`incorporeal = { wall_defence }` (`content/creature.rs::Incorporeal`, checked in `Content::load`
+`incorporeal = { wall_defence }` (`content/creature.rs::Incorporeal`, read in `Content::load`
 beside `natural`; `Content::incorporeal(type)`). The rules are `world/incorporeal.rs`:
 `LevelState::phaseable` (solid terrain, neither walkable nor transparent, off the level's edge:
 walls, rock, closed doors), `World::in_wall`, `World::wall_defence` (read by
@@ -457,7 +456,7 @@ draws by rarity), `content/creature_rarity.rs` (the tier file and its refusals),
 Creature gear (spec §8 "Creature gear", #328): the data is `content/gear.rs` (`GearLineSpec`
 as written, kept on `CreatureDef::gear_spec` until objects load, then `Content::load_gear`
 resolves `CreatureDef::gear`: the racial weapon's line first, `Keep` defaults by the slot an
-object fits, `kit::check_kept` shared with the starting kits, and the racial-weapon rank check).
+object fits; what fits no slot as kept is carried, `Pack::equip`).
 The rolls are `gear.rs`: `gear::roll(content, rng, creature, item_level) -> kit::Pack` (the
 kit's `Pack::put`/`equip`, `loot::make_as` for a magic piece, `variant::draw` with
 `Source::Gear { level, faction }` (the type's level and faction: a faction's `gear`
@@ -492,22 +491,20 @@ rest the default (30 %, Fine 4 %, Marvellous 0.8 %, Masterwork 0.2 %). Tests:
 
 ## Variance by role
 
-The variance pass (#1134, `docs/design/monster-dread.md` §7.2) spreads a level's monsters by
-role on #1097's `to_hit = L/4`; every roster test maps its roles onto a
-`content/variance_roster_tests.rs::Shape` and calls its `check`:
+The variance pass (#1134, `docs/design/monster-dread.md` §7.2) spread a level's monsters by
+role on #1097's `to_hit = L/4`. The shipped types were written to these rules; since #1205 no
+test holds the data to them (the data author decides):
 - **to-hit** of the natural attack: a striker (quick, assassin) `L/4 + L/8` (at most the data's
   20), a brute, shambler, or caster `L/4 − L/8`, everyone else `L/4`, each part rounded down. An
-  armed type (`variance_roster_tests::armed`: a wielded weapon in its gear, the racial weapon
-  too) keeps `L/4`: its spread is the gear's and the weapon skill's. **Armed types aim by
-  their ranks, never a flat to-hit** (#1169, `content/armed_roster_tests.rs`): the weapon's
+  armed type (a wielded weapon in its gear, the racial weapon too) keeps `L/4`: its spread is
+  the gear's and the weapon skill's. **Armed types aim by their ranks, never a flat to-hit**
+  (#1169): the weapon's
   skill (and Duelist, for a one-handed weapon fought with no shield in the gear) is raised to
   the fewest ranks whose to-hit reaches `L/4` (a caster, a type with spells, `L/4 − L/8`), no
   rank past what a trained warrior of the level holds (the balance probe's `rank`: 2 at level
   1, 7 at 15–22, 10 from 42); a heavy weapon (great blades, axes, polearms: their ranks give
-  damage first) may stay below and holds the most the cap gives. The test pins every wielded
-  melee weapon's to-hit (its own, its skill's, its grip's style's, beside a shield whenever
-  the gear may give one) between that and `L/4 + 1`. A new armed type takes its ranks by the
-  same rule.
+  damage first) may stay below and holds the most the cap gives. A new armed type takes its
+  ranks by the same rule.
 - **threat and crit** of the natural attack: a striker `threat = 19` (crit ×2), a brute
   `threat = 24`, `crit = 3`, everyone else the defaults (22, ×2). The mean of the dice is the
   rosters' as before.
@@ -518,20 +515,17 @@ role on #1097's `to_hit = L/4`; every roster test maps its roles onto a
   mimics' `hp_factor` is the brute's.
 - **the starters** (#1200, `content/starter.rs`): a type of level 1 to 5 has
   `starter::hp_percent` of its formula's hit points (40 % at level 1, 55, 70, 80, 90 % at 5),
-  Toughness and `base_hp` alike: the generated families' `Numbers::of` cut both, each
-  hand-written file states its cut numbers, and every roster test multiplies its formula by
-  `variance_roster_tests::starter` (`starter::tests::starters_are_soft` holds every type's
-  Toughness to 20 × the share). Their riders are rare and mild
-  (`starter::tests::starter_riders_are_rare_and_mild`): at most `starter::rider_cap` (1 % at level
-  1, 3 % at 2 and 3, 4 % at 4, 5 % at 5), one degree, no drain; a rider that defines its creature
-  (the spiders' and the centipede's venom, the leech's latch and bleeding; the test's `DEFINING`)
-  up to `starter::DEFINING_CAP`, 12 %, from level 2. No poison at level 1.
-- **speed** (`the_speed_rule_holds_tribe_by_tribe`, every faction but the beasts, the people, the
-  player, and the layer keepers; uniques and the generated families left out): the bulk between
+  Toughness and `base_hp` alike: the generated families' `Numbers::of` cut both, and each
+  hand-written file states its cut numbers (Toughness at most 20 × the share). Their riders were
+  written rare and mild: at most 1 % at level 1, 3 % at 2 and 3, 4 % at 4, 5 % at 5, one degree,
+  no drain; a rider that defines its creature (the spiders' and the centipede's venom, the
+  leech's latch and bleeding) up to 12 % from level 2. No poison at level 1.
+- **speed** (every faction but the beasts, the people, the player, and the layer keepers;
+  uniques and the generated families left out): the bulk between
   800 and 1250 by the tribe's temperament (each tribe file names it), the dread at 600 or 700
   (the slow and awful) or 1400 and up (the quick dread), no tribe with every type at 1000, and a
-  people's rank-and-file (the orcs', hobgoblins', drow's, and duergar's standards and archers,
-  `variance_roster_tests::rank_and_file`) at 950 to 1050.
+  people's rank-and-file (the orcs', hobgoblins', drow's, and duergar's standards and archers)
+  at 950 to 1050.
 
 The probe's "Spread" table (`balance_probe/spread.rs`, `docs/balance.md`) measures what it does:
 rounds to kill and to die over a level's monsters as a distribution.
@@ -555,7 +549,7 @@ wave, #335 the delf wave): content only, on the fields above. A wave adds
 
 **`hostile_to_all`** (`content/faction.rs`): a faction with it (`berserk`, Rouse the dead's,
 `docs/dev/allies.md` "The risen") fills its row, column, and own diagonal of the hostility matrix
-and may list no `hostile`. So `World::stance` of an actor and itself is `Neutral` by id
+(a `hostile` list beside it adds nothing). So `World::stance` of an actor and itself is `Neutral` by id
 (`stance_between`), and `Factions::has_enemies` counts a faction's own quarrels only: being on the
 berserk's list makes no one a fighter (`disturbs_rest`, hearing, `stride.rs`, the wiki's `fights`).
 `fixture_factions.rs` strips the line with the other grudges, so a fixture's berserk are at peace;

@@ -31,20 +31,12 @@ use serde::Deserialize;
 
 /// The highest danger a level may have.
 pub const MAX_DANGER: u8 = 99;
-/// The most a level down may add to a branch's danger.
-pub const MAX_PER_DEPTH: u8 = 5;
-/// The most a player-scaled area counts of each player level past `from`, in percent.
-pub const MAX_PLAYER_PERCENT: u16 = 200;
-/// The largest population a level may be counted for.
-pub const MAX_POPULATION: u32 = 200;
 /// The default population: creatures per 1000 walkable cells, at least, at most.
 pub const POPULATION: Count = Count::PerCells {
     per_1000: 35,
     least: 25,
     most: 80,
 };
-/// The most dangers an out-of-depth draw may go past its first one deeper (`deeper_cap`).
-pub const MAX_DEEPER_CAP: u8 = 50;
 /// One draw in this many is made among the dread types unless `[defaults]` says otherwise
 /// (`dread_one_in`; owner, 2026-11-06: "let's increase the default to 1-in-100").
 pub const DREAD_ONE_IN: u16 = 100;
@@ -52,8 +44,6 @@ pub const DREAD_ONE_IN: u16 = 100;
 pub const EVERY: Duration = Duration::minutes(2);
 /// The default chance in percent that an attempt brings one.
 pub const CHANCE: u8 = 60;
-/// The shortest and longest time allowed between attempts.
-const EVERY_LIMITS: (Duration, Duration) = (Duration::minutes(1), Duration::hours(24));
 /// Types this far below the danger and further are never drawn.
 pub const TOO_WEAK: u8 = 8;
 
@@ -176,38 +166,12 @@ fn neutral() -> u8 {
 }
 
 impl Odds {
-    /// Checks the bounds: percents 0 to 100, `deeper_cap` at most [`MAX_DEEPER_CAP`].
-    pub(super) fn check(&self) -> Result<(), String> {
-        for (name, p) in [
-            ("stray", self.stray),
-            ("out_of_depth", self.out_of_depth),
-            ("deeper", self.deeper),
-            ("neutral", self.neutral),
-        ] {
-            if p > 100 {
-                return Err(format!("`{name}` is a percent, 0 to 100"));
-            }
-        }
-        if self.deeper_cap > MAX_DEEPER_CAP {
-            return Err(format!("`deeper_cap` is at most {MAX_DEEPER_CAP}"));
-        }
-        check_dread(Some(self.dread_one_in))
-    }
-
     /// These odds with no dread roll: every type drawn by its weight alone, flag or not.
     pub fn without_dread(self) -> Self {
         Self {
             dread_one_in: 0,
             ..self
         }
-    }
-}
-
-/// `dread_one_in` as written: 1 (every draw) or more.
-pub(super) fn check_dread(one_in: Option<u16>) -> Result<(), String> {
-    match one_in {
-        Some(0) => Err("`dread_one_in` is 1 or more (one draw in that many)".into()),
-        _ => Ok(()),
     }
 }
 
@@ -490,7 +454,6 @@ impl OddsSpec {
             dread_one_in: self.dread_one_in.unwrap_or(defaults.dread_one_in),
             neutral: self.neutral.unwrap_or(defaults.neutral),
         };
-        odds.check()?;
         Ok(odds)
     }
 }
@@ -503,14 +466,10 @@ pub(super) struct DefaultsFile {
 }
 
 impl DefaultsFile {
-    /// The default odds of `text` (`data/dungeons.toml`), checked; `None` without `[defaults]`.
+    /// The default odds of `text` (`data/dungeons.toml`); `None` without `[defaults]`.
     pub(super) fn parse(text: &str) -> Result<Option<Odds>, String> {
         let file: DefaultsFile = toml::from_str(text).map_err(|e| e.to_string())?;
-        let Some(odds) = file.defaults else {
-            return Ok(None);
-        };
-        odds.check().map_err(|m| format!("[defaults]: {m}"))?;
-        Ok(Some(odds))
+        Ok(file.defaults)
     }
 }
 
@@ -535,19 +494,6 @@ impl DangerSpec {
                 }
             }
         };
-        if rule.base > MAX_DANGER {
-            return Err(format!("`danger` must be 0 to {MAX_DANGER}"));
-        }
-        if rule.per_depth > MAX_PER_DEPTH {
-            return Err(format!("`danger.per_depth` must be 0 to {MAX_PER_DEPTH}"));
-        }
-        if let Some(p) = rule.player
-            && (!(1..=MAX_PLAYER_PERCENT).contains(&p.percent) || p.max > MAX_DANGER)
-        {
-            return Err(format!(
-                "`danger.player`: percent is 1 to {MAX_PLAYER_PERCENT}, max at most {MAX_DANGER}"
-            ));
-        }
         Ok(rule)
     }
 }
@@ -608,12 +554,9 @@ impl SpawningSpec {
                 least,
                 most,
             })) => {
-                if per_1000 > 1000 || least > most {
-                    return Err(
-                        "`population_count`: per_1000 is at most 1000, least at most \
-                                most"
-                            .into(),
-                    );
+                // The count is clamped to the range: never empty.
+                if least > most {
+                    return Err("`population_count`: least is at most most".into());
                 }
                 Count::PerCells {
                     per_1000,
@@ -622,32 +565,17 @@ impl SpawningSpec {
                 }
             }
         };
-        let most = match count {
-            Count::Fixed(n) => n,
-            Count::PerCells { most, .. } => most,
-        };
-        if most > MAX_POPULATION {
-            return Err(format!("`population_count` is at most {MAX_POPULATION}"));
-        }
         let odds = self.odds.resolve(defaults)?;
         let spawn = self.spawn.unwrap_or_default();
         let every = match &spawn.every {
             Some(text) => text.parse::<Duration>()?,
             None => EVERY,
         };
-        if every < EVERY_LIMITS.0 || every > EVERY_LIMITS.1 {
-            return Err(format!(
-                "`spawn.every` must be {} to {}",
-                EVERY_LIMITS.0, EVERY_LIMITS.1
-            ));
+        // A spawn comes at every full multiple of it on the clock.
+        if every.as_seconds() == 0 {
+            return Err("`spawn.every` is more than no time".into());
         }
         let chance = spawn.chance.unwrap_or(CHANCE);
-        if chance > 100 {
-            return Err("`spawn.chance` is a percent, 0 to 100".into());
-        }
-        if spawn.cap.is_some_and(|c| c > MAX_POPULATION) {
-            return Err(format!("`spawn.cap` is at most {MAX_POPULATION}"));
-        }
         Ok(Some((
             rule,
             Spawning {
@@ -714,8 +642,6 @@ mod tests {
         let text = include_str!("../../../../assets/data/dungeons.toml");
         assert_eq!(DefaultsFile::parse(text).unwrap(), Some(ODDS));
         assert_eq!(DefaultsFile::parse("").unwrap(), None);
-        let bad = "[defaults]\nstray = 5\nout_of_depth = 5\ndeeper = 5\ndeeper_cap = 51\n";
-        assert!(DefaultsFile::parse(bad).is_err());
     }
 
     #[test]
@@ -792,23 +718,13 @@ mod tests {
         for bad in [
             "population = [\"rat\"]\n",
             "spawn = { chance = 5 }\n",
-            "danger = 100\npopulation = [\"rat\"]\n",
-            "danger = { base = 1, per_depth = 6 }\npopulation = [\"rat\"]\n",
             "danger = 1\n",
             "danger = 1\npopulation = [\"dragon\"]\n",
-            "danger = 1\npopulation = [\"rat\"]\nout_of_depth = 101\n",
-            "danger = 1\npopulation = [\"rat\"]\nstray = 101\n",
-            "danger = 1\npopulation = [\"rat\"]\ndeeper_cap = 51\n",
-            "danger = 1\npopulation = [\"rat\"]\nneutral = 101\n",
             "stray = 5\n",
             "neutral = 10\n",
-            "danger = 1\npopulation = [\"rat\"]\nspawn = { every = \"30s\" }\n",
-            "danger = 1\npopulation = [\"rat\"]\nspawn = { chance = 101 }\n",
-            "danger = 1\npopulation = [\"rat\"]\npopulation_count = 201\n",
+            "danger = 1\npopulation = [\"rat\"]\nspawn = { every = \"0s\" }\n",
             "danger = 1\npopulation = [\"rat\"]\npopulation_count = { per_1000 = 5, least = \
              9, most = 3 }\n",
-            "danger = { base = 1, player = { percent = 0, from = 1, max = 9 } }\npopulation = \
-             [\"rat\"]\n",
         ] {
             assert!(rule(bad).is_err(), "{bad}");
         }
@@ -1152,8 +1068,7 @@ mod tests {
     }
 
     #[test]
-    fn dread_one_in_is_one_or_more() {
-        assert!(rule("danger = 2\npopulation = [\"rat\"]\ndread_one_in = 0\n").is_err());
+    fn dread_one_in_is_read_and_defaulted() {
         let (_, s) = rule("danger = 2\npopulation = [\"rat\"]\ndread_one_in = 7\n")
             .unwrap()
             .unwrap();
@@ -1163,8 +1078,5 @@ mod tests {
             .unwrap();
         assert_eq!(s.odds.dread_one_in, DREAD_ONE_IN, "the default's");
         assert!(rule("dread_one_in = 7\n").is_err(), "needs a danger");
-        let bad = "[defaults]\nstray = 5\nout_of_depth = 5\ndeeper = 5\ndeeper_cap = 5\n\
-                   dread_one_in = 0\n";
-        assert!(DefaultsFile::parse(bad).is_err());
     }
 }

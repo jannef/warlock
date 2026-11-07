@@ -131,22 +131,17 @@ impl CompanionRules {
         out
     }
 
-    /// Parses `data/companions.toml` once the creatures, the races, and the background story
-    /// are known, and checks it: every list is a known race's and holds 1 to 3 known `tameable`
-    /// beasts of at most `most_level` (a race without a list draws no starting beast: test
-    /// fixtures add races; `companion_tests` asks every shipped race for one), the rares 1 to 8
-    /// known `tameable` beasts, every number in range, at least one name, and, when the content
-    /// tells stories and has the companion chapter, an `only` line for every beast listed.
+    /// Parses `data/companions.toml` once the creatures and the races are known: every list is a
+    /// known race's and holds known creatures (a race without a list draws no starting beast:
+    /// test fixtures add races), the lists and the names are not empty (the draws index them),
+    /// and the growth's divisors are 1 or more.
     pub(super) fn parse(path: &str, text: &str, content: &Content) -> Result<Self, ContentError> {
         let err = |m: String| ContentError::new(path, m);
         let file: File = toml::from_str(text).map_err(|e| err(e.to_string()))?;
         let beast = |where_: &str, name: &str| -> Result<CreatureId, ContentError> {
-            let id = (content.creature_id(name))
-                .ok_or_else(|| err(format!("{where_}: unknown creature `{name}`")))?;
-            if !content.creature(id).tameable {
-                return Err(err(format!("{where_}: `{name}` is not `tameable`")));
-            }
-            Ok(id)
+            (content.creature_id(name))
+                .filter(|_| name != "player")
+                .ok_or_else(|| err(format!("{where_}: unknown creature `{name}`")))
         };
         // The draws index the lists and the names.
         if file.start.rare.is_empty() {
@@ -258,8 +253,8 @@ mod tests {
     fn the_file_is_checked() {
         let err = |r: Result<Content, String>| r.expect_err("refused");
         assert!(
-            err(companions(|t| t.replace("\"wolf\", ", "\"kobold\", "))).contains("not `tameable`"),
-            "a rare must be tameable"
+            err(companions(|t| t.replace("\"wolf\", ", "\"wolfe\", ")))
+                .contains("unknown creature `wolfe`"),
         );
         assert!(
             err(companions(
@@ -285,33 +280,7 @@ mod tests {
     }
 
     #[test]
-    fn a_tameable_type_is_a_beast_and_a_nose_is_a_tameable_types() {
-        let err = |path: &str, text: &str| with(path, text).expect_err("refused");
-        let kobold = include_str!("../../../../assets/data/creatures/kobold.toml");
-        assert!(
-            err(
-                "data/creatures/kobold.toml",
-                &kobold.replace("opens_doors = true", "opens_doors = true\ntameable = true")
-            )
-            .contains("`tameable`, but"),
-            "a kobold opens doors and carries a spear"
-        );
-        let deer = include_str!("../../../../assets/data/creatures/deer.toml");
-        assert!(
-            err(
-                "data/creatures/deer.toml",
-                &deer.replace("tameable = true", "nose = 6")
-            )
-            .contains("`nose` is for a `tameable` type")
-        );
-        let wolf = include_str!("../../../../assets/data/creatures/wolf.toml");
-        assert!(
-            err(
-                "data/creatures/wolf.toml",
-                &wolf.replace("nose = 8", "nose = 21")
-            )
-            .contains("1 to 20 cells")
-        );
+    fn the_wolf_is_tameable_and_has_a_nose() {
         let content = Content::builtin().expect("content");
         let wolf = content.creature_id("wolf").unwrap();
         assert_eq!(content.creature(wolf).nose, Some(8));

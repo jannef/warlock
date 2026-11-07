@@ -13,14 +13,14 @@ for a caster (XP `5L + 10`, St −3, base_hp `2.5 × L × 0.5` (#1134), In and W
 | 24 | `dark_wizard` | cult | cultist, caster, summoner | tag `devil`, levels 5 to 20 | 1d3 | 36 (12) | 5 |
 
 All have a 30 s cooldown and the default range (8) and spread (2). The goblin wizard stays at
-level 8, below the hobgoblins (`hobgoblin_roster_tests` holds every hobgoblin above every other
+level 8, below the hobgoblins (every hobgoblin is above every other
 goblin); the wargs it calls join the goblins. The necromancer and the dark wizard are human
 (`race = "human"`) and of the cult's faction and tag (`cultist`): living men dealing with the
 same powers; the undead and devils they call take the cult's side, so they leave the goblins and
 kobolds alone while the summoner lives in their ranks.
 
-`content/summoner_roster_tests.rs` checks every `summoner` against its table, another tribe's
-tag, and mana, and the three above against the XP guideline and the HP formula (±35 %);
+`content/summoner_roster_tests.rs` checks that every `summoner` summons and carries another
+tribe's tag; the three above are written to the XP guideline and the HP formula (±35 %);
 `content::tag`'s test lists them. The showcase's summoning hall (`summoners` scenario) places
 all three. Since #531 Fyrdelf's population has the goblin wizard (with the war bands; rare, so a
 floor holds one or two); the necromancer (18) and the dark wizard (24) are in none, no window

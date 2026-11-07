@@ -214,15 +214,6 @@ fn a_pool_that_can_hold_nothing_is_refused() {
 
 #[test]
 fn only_a_dungeon_vault_draws_monsters() {
-    // Not on a door.
-    let mut files = ContentFiles::builtin();
-    files.insert(
-        "vaults/door.toml",
-        "name = \"Door\"\nmap = '''\n##D##\n#...#\n#####\n'''\n[legend]\n\
-         \"D\" = { terrain = \"door_closed\", monsters = { pool = \"level\" } }\n",
-    );
-    let err = Content::load(&files).expect_err("a door").message;
-    assert!(err.contains("not a door"), "{err}");
     // Not in the local areas, which have no danger.
     let mut files = ContentFiles::builtin();
     files.insert(
@@ -333,18 +324,6 @@ fn a_pool_s_key_is_carried_by_exactly_one_draw_on_top_of_its_gear() {
         );
     }
     assert!(armed > 0, "a key-bearer rolls its gear too");
-}
-
-#[test]
-fn a_pool_s_key_counts_for_the_lock_only_when_every_cell_is_within_reach() {
-    let legend = "monsters = { pool = \"goblin\", count = 4 }, carry = [\"brass_key\"]";
-    content_of(&treasury(legend, false), 5).expect("the key is in the hall");
-    let plain = "monsters = { pool = \"goblin\", count = 4 }";
-    let err = content_of(&treasury(plain, false), 5).expect_err("no key");
-    assert!(err.contains("no key"), "{err}");
-    // One cell lies behind the lock, and the key may be drawn there.
-    let err = content_of(&treasury(legend, true), 5).expect_err("behind the lock");
-    assert!(err.contains("no key"), "{err}");
 }
 
 #[test]

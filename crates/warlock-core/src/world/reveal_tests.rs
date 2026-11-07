@@ -396,8 +396,8 @@ fn content_checks_hidden_locations_and_reveals() {
             "unknown level `nowhere`",
         ),
         (
-            hidden("swamp", "dungeon_entrance", "depths:1").replace("barrow\"", "Barrow\""),
-            "ids are lower-case",
+            hidden("swamp", "dungeon_entrance", "depths:1").replace("barrow\"", "bar:row\""),
+            "hidden location `bar:row`",
         ),
     ] {
         let message = error(&with(&legend));

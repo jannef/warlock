@@ -31,16 +31,17 @@ pedlar's offer: "The pedlar's offer" below). Keep it current with the code, as C
   `before_days`, `calling` (a prestige class's id: holds while `World::calling_open` says its
   calling is open to the player, their class, their level, and not called yet; #879, the
   Strange Spirit's entries `strange_spirit_<table>` on the Ascmearc's roads, vale, downs, and
-  woods, by day, weight 2). Load checks (`content/encounter_tests.rs`): regions of the
+  woods, by day, weight 2). Load checks (`content/encounter_tests.rs`; only what resolves and
+  what the code needs, #1205): regions of the
   campaign's overworld, landscapes, terrain ids, quests of the campaign, a variant of that quest,
-  hidden locations of its overworld, a calling of the campaign (or of none), creature types of the campaign or shared, no unique, a
-  hostile entry of hostile types and a peaceful or wildlife one of types not hostile to the
-  player, the first row's dice at least 1, at most 12 a row, `lead` one of the group,
-  `replaces` another table, entry ids unique in the campaign; a `draw` only on a hostile entry,
-  without a `group` or a `lead`, its pool a branch of the campaign with a population, danger 1 to
-  99, a count of 1 to 12; an `npc` only on a peaceful entry, a dialogue `npc = ID` of the
-  campaign's; `talk_past` only on a hostile entry with a `group` (never a `draw`: what is drawn
-  may be anything).
+  hidden locations of its overworld, a calling of the campaign (or of none), creature types of
+  the campaign or shared, a `group` or a `draw` (one of them), the first row's dice at least 1
+  (its first member leads), `lead` one of the group, `replaces` another table, entry ids
+  unique in the campaign (`meet:ENTRY`) and without `:` or whitespace; a `draw` only on a
+  hostile entry, without a `lead`, its pool a branch of the campaign with a population, a count
+  of at least 1; an `npc` only on a peaceful entry, a dialogue `npc = ID` of the campaign's;
+  `talk_past` only on a hostile entry. The rules file: every landscape rated and covered, the
+  seven tables all given or none, `pursuit_per` at least 1 (a divisor).
 - **`draw`** (`EncounterDraw`; `World::draw_members`): the count's dice, then `danger::draw` per
   member on the `encounters` stream, from the branch's `population` and `generic` lists
   (`Content::candidates`, the uniques met left out) with its odds, uniques and types not hostile

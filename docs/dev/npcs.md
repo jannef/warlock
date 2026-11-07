@@ -10,9 +10,12 @@ legend entry gives a creature, `Actor::npc`; `Content::dialogue_of` prefers the 
 `lines`, `greet`, `greet_evil`/`greet_good` (cold lines for a character the speaker scorns for
 their alignment, said in turn instead of the greeting and lines: `World::cold_greeting`,
 `docs/dev/alignment.md`), `[[dialogue.topic]]`s (`id`, `name`, `reply`), `[[dialogue.service]]`s
-(`id`, `name`, `price`, `does`, `reply`, `nothing`; topic and service ids share one namespace, at
-most nine of them together, and a service needs `data/shops.toml` for its currency), and `mutter`
-(chance per action, verb, lines). `world/talk.rs` is the one place talk happens: `World::chat` (`Action::Chat`, cost
+(`id`, `name`, `price`, `does`, `reply`, `nothing`; topic and service ids share one namespace,
+and a service needs `data/shops.toml` for its currency), and `mutter` (chance per action, verb,
+lines). The loader checks only what resolves and what the code needs (#1205): ids once and
+without `:` or whitespace (`ask:E:ID`), at least one line to rotate and to mutter, `silent` with
+`speaks_to`; no length, count, or style limits (the dialogue screen asks topics past nine by the
+arrow keys and cuts what overflows). `world/talk.rs` is the one place talk happens: `World::chat` (`Action::Chat`, cost
 `chat`), `World::ask` (`Action::Ask`, no time), `World::topics` (the one source of what an NPC can
 be asked about: quests, #148, add their topics there and answer them in `ask`; services follow
 the topics with `TopicView::price`), `rotation` (each
@@ -64,10 +67,10 @@ the screen's row in `ui/dialogue_screen.rs`; the wiki's table is `xtask/src/wiki
 `content/offer.rs` (`TradeOffer`, a dialogue's `[dialogue.offer]`: `id`, `name`, `reply` said on
 a sale, `sold` said after, `level = { bonus, least }`, `affixes` as `[count, weight]` pairs,
 `price = { affix, unique }`, `uniques = { chance, items }` with the chance in basis points),
-`world/wares.rs`. Its id shares the topic namespace (the nine counts it); load checks: an id,
-not a topic's or service's, the shops' currency, lines, `least` 1 to 99, counts 1 to 6 with some
-weight, `price.affix` ≥ 1, the chance ≤ 10 000, `price.unique` ≥ 1 with uniques, each unique
-known, of the dialogue's campaign or shared, once; and, after everything that places objects
+`world/wares.rs`. Its id shares the topic namespace; load checks (only what resolves and what
+the code needs, #1205): an id without `:` or whitespace, not a topic's or service's, the shops'
+currency, `least` at most `MAX_ITEM_LEVEL` (the draw clamps from it to the top), counts at most
+6 (an item's affixes), each unique known, of the dialogue's campaign or shared; and, after everything that places objects
 loaded, `offer::check_placements`: a unique an offer names is placed by no other content
 (`Uniques::is_placed`), so it comes only through the offer. `World::stock_wares` (one line in
 `chat` and in `ask`, after `listens`) makes a trader's `Wares` once, from `Rng::stream(seed,
@@ -98,8 +101,8 @@ find, the three's slots and the placement refusal, the load checks, a replay and
 **Rumoured ways** (the owner's request of 2026-10-27; spec §8 "Dialogue"): `world/rumour.rs`.
 A topic's optional `route` (`Topic::route`, waypoints `[x, y]` on the campaign's overworld;
 `Topic::route_cells` joins them with `Pos::line_between`) is checked when content loads
-(`Content::check_topic_routes`, one line in `Content::load`: a campaign's dialogue only, two
-waypoints or more, every cell walkable on its overworld). `World::ask` calls
+(`Content::check_topic_routes`, one line in `Content::load`: a campaign's dialogue with an
+overworld only; the waypoints are the author's, #1205). `World::ask` calls
 `World::mark_rumoured_way` after a dialogue topic's reply: it makes the overworld if the run has
 none yet (`World::visit`), runs `fov::compute_fov` with `daylight::SIGHT_DAY` from every route
 cell over the overworld's opacity, and writes each cell seen into `LevelState::memory` from the

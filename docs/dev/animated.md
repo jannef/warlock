@@ -21,9 +21,9 @@ reads it as it reads a kobold, and the guideline and roster tests cover it with 
   `Animated::parse` (`Content::animated`), after the objects (`load_objects` now runs before
   `load_creatures`) and before the creatures. Without the rules file there are none, and a body
   file without it is an error. Bodies are shared: a campaign's `data/animated/` is refused.
-- **Checks**: a body's object exists and is of class `household`; its level lies within its
-  tier's `levels`; `count` only on a stackable object; `plural` only with `name`; its light
-  exists. Every other check is the creature table's own, since the generated spec goes through
+- **Checks**: a body's object exists; `count` is `[least, most]`, 1 or more, only on a stackable
+  object; `plural` only with `name`; its light exists; a tier's `levels` least first. The rest
+  (the object's class, a body's level against its tier's, the percents) is the author's (#1205). Every other check is the creature table's own, since the generated spec goes through
   `load_creatures` like a file's.
 - **Generation** (`Animated::specs`): one `CreatureSpec` per body, `animated_<id>` (`ID_PREFIX`),
   built as a TOML table and deserialized, so a generated type is checked exactly as a written
@@ -49,7 +49,7 @@ reads it as it reads a kobold, and the guideline and roster tests cover it with 
   tier's damage type, name, and verb, the dice `Numbers::at` gives at L), and `opens_doors`
   when the tier says. What every generated type shares is `Animated::common`. The tier's
   slot lines are resolved at parse (`Animated::lines`, by tier; slot and classes must exist,
-  `shown_by` must be one of the lines' slots; `count` 1 to 4, and a line tried more than once
+  `shown_by` must be one of the lines' slots, `classes` not empty; a line tried more than once
   gets `Line::slots`, its slot and every other of the same `fits`, as many as its `count` at
   least). `Tier::family` is its id, `animated_<tier>`;
   `Content::name_families` registers it in `creature_ids` for the first member (a creature

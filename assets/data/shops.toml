@@ -19,9 +19,9 @@
 #
 # Top-level fields:
 #   currency  the object shops are paid in (stackable): gold coins
-#   outraged  the faction a robbed or attacked shopkeeper joins (factions.toml; it must be hostile
-#             to the player)
-#   presence  percent better (or worse) prices for each point of the Presence modifier, 0 to 10
+#   outraged  the faction a robbed or attacked shopkeeper joins (factions.toml; one hostile to the
+#             player)
+#   presence  percent better (or worse) prices for each point of the Presence modifier
 #   chance    percent of generated rooms-and-corridors levels with a shop (at most one a level):
 #             a room with a single door, not the arrival room, no stairs, no special room, and no
 #             patrol through it. Caverns have none. Its kind is picked uniformly
@@ -41,12 +41,12 @@
 #   always    objects a generated shop always lays out first, a stack of each (at most `items`'
 #             least): the general store always has scrolls of identify (spec §8 "Scrolls")
 #   never     objects a generated shop never lays out, though it stocks their class: elixirs
-#             (spec §8 "Potions") are never in a general store or a provisioner's, only, rarely,
-#             in an alchemist's
+#             and the costly flasks (spec §8 "Potions") are never in a general store or a
+#             provisioner's, only in an alchemist's
 #   buys      the classes it buys from you
 #   items     [least, most]: how many stacks of goods a generated shop lays out
-#   markup    its prices, in percent of the value (100 to 1000)
-#   pays      what it pays for what it buys, in percent of the value (0 to 100)
+#   markup    its prices, in percent of the value
+#   pays      what it pays for what it buys, in percent of the value
 
 currency = "gold_coin"
 outraged = "outraged"
@@ -77,8 +77,8 @@ stock = [
 ]
 always = ["scroll_of_identify"]
 never = [
-    "elixir_of_grace", "elixir_of_might", "elixir_of_presence", "elixir_of_vigour",
-    "elixir_of_will", "elixir_of_wit",
+    "blasting_flask", "elixir_of_grace", "elixir_of_might", "elixir_of_presence",
+    "elixir_of_vigour", "elixir_of_will", "elixir_of_wit", "flask_of_thunder",
 ]
 buys = [
     "melee_weapons", "missile_weapons", "missiles", "shields", "body_armour", "helmets",
@@ -117,8 +117,8 @@ name = "provisioner"
 title = "{keeper}'s Provisions"
 stock = ["light_sources", "tools", "food", "potions"]
 never = [
-    "elixir_of_grace", "elixir_of_might", "elixir_of_presence", "elixir_of_vigour",
-    "elixir_of_will", "elixir_of_wit",
+    "blasting_flask", "elixir_of_grace", "elixir_of_might", "elixir_of_presence",
+    "elixir_of_vigour", "elixir_of_will", "elixir_of_wit", "flask_of_thunder",
 ]
 buys = ["light_sources", "tools", "food", "potions"]
 items = [6, 10]

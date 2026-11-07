@@ -18,7 +18,7 @@
 //! uniques = { chance = 200, items = ["brosinga_mene"] }
 //! ```
 
-use super::dialogue::{MAX_LINE, MAX_REPLY, check_lines, is_id};
+use super::dialogue::{ID_SHAPE, is_id};
 use super::{Content, ContentError, MAX_ITEM_LEVEL, MAX_PER_KIND};
 use serde::Deserialize;
 
@@ -122,9 +122,7 @@ pub(super) fn resolve(
 ) -> Result<TradeOffer, String> {
     let bad = |m: String| format!("offer `{}`: {m}", spec.id);
     if !is_id(&spec.id) {
-        return Err(bad(
-            "ids are lower-case letters, digits, and underscores".into()
-        ));
+        return Err(bad(ID_SHAPE.into()));
     }
     if taken(&spec.id) {
         return Err(bad("its id is a topic's or a service's".into()));
@@ -134,38 +132,23 @@ pub(super) fn resolve(
             "it is paid in the shops' currency: data/shops.toml is needed".into(),
         ));
     }
-    check_lines([&spec.name], MAX_LINE)
-        .and_then(|()| check_lines([&spec.reply, &spec.sold], MAX_REPLY))
-        .map_err(bad)?;
-    if spec.level.least == 0 || spec.level.least > MAX_ITEM_LEVEL {
-        return Err(bad(format!("`level.least` is 1 to {MAX_ITEM_LEVEL}")));
+    // The draw clamps the level to `least` and the top: past the top the range is empty.
+    if spec.level.least > MAX_ITEM_LEVEL {
+        return Err(bad(format!("`level.least` is at most {MAX_ITEM_LEVEL}")));
     }
-    let counts_ok = (spec.affixes.iter()).all(|&(n, _)| (1..=MOST_AFFIXES).contains(&n));
-    if !counts_ok || spec.affixes.iter().all(|&(_, w)| w == 0) {
+    if (spec.affixes.iter()).any(|&(n, _)| n > MOST_AFFIXES) {
         return Err(bad(format!(
-            "`affixes` are [count, weight] pairs, counts 1 to {MOST_AFFIXES}, some weight above 0"
+            "`affixes`: an item has at most {MOST_AFFIXES} affixes"
         )));
-    }
-    if spec.price.affix == 0 {
-        return Err(bad("`price.affix` is at least 1 gold".into()));
     }
     let (chance, uniques) = match spec.uniques {
         Some(u) => (u.chance, u.items),
         None => (0, Vec::new()),
     };
-    if chance > 10_000 {
-        return Err(bad("`uniques.chance` is in basis points, 0 to 10000".into()));
-    }
-    if !uniques.is_empty() && spec.price.unique == 0 {
-        return Err(bad("`price.unique` is at least 1 gold".into()));
-    }
-    for (i, id) in uniques.iter().enumerate() {
+    for id in &uniques {
         let def = (content.unique(id)).ok_or_else(|| bad(format!("unknown unique item `{id}`")))?;
         if def.campaign.is_some() && def.campaign.as_deref() != campaign {
             return Err(bad(format!("`{id}` is another campaign's")));
-        }
-        if uniques[..i].contains(id) {
-            return Err(bad(format!("`{id}` is named twice")));
         }
     }
     Ok(TradeOffer {
