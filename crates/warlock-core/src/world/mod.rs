@@ -2056,6 +2056,8 @@ mod theft_tests;
 #[cfg(test)]
 mod time_tests;
 #[cfg(test)]
+mod trap_rung_tests;
+#[cfg(test)]
 mod trap_tests;
 #[cfg(test)]
 mod treasury_tests;
