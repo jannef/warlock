@@ -411,11 +411,24 @@ developer notes (CLAUDE.md, `docs/dev/`).
   ring"), else before the name ("bronze long sword"), after any ornament ("emerald-pommelled
   bronze long sword"). The description shows its parts, weight, damage dice with the material's
   bonus ("2d6-1"), and Protection; the to-hit stays hidden. **Where variants come from**: loot
-  draws the material last (§8 "Magic items"; the item's main part from its list by `rarity` at
-  the item level), creature drops by `gear` at the creature's level; a material worse in a fight
-  than the base item's own (to hit or damage lower on what strikes or is shot, Protection lower
-  on armour with some) but dearer weighs at most 10 (`VERY_RARE`) for that item, never for
-  jewellery. Hand-made levels keep their legends' gear unless a placement names a material
+  draws the material last (§8 "Magic items"; the item's main part from its list), creature gear
+  and drops the same way at the creature's level. The base item's own material dominates (#1191):
+  where another weighs anything, another is drawn only 10 % of the time at level 1, half a point
+  more each level, at most 20 % (from level 21; `variant::variant_percent`); that share goes to
+  the other materials of the list by their `rarity` at the item level (loot) or `gear` at the
+  creature's level, each scaled by how well it suits the item, its `fit` for the item's use
+  (`weapon`: what strikes or is shot; `armour`, with shields; `jewellery`; `other`): `good` as
+  is, `poor` a tenth, `odd` a hundredth (at least 1, so nothing is ruled out). Tin, pewter, zinc,
+  and cadmium are odd for weapons; cloth, wool, and fur odd for weapons and jewellery; copper,
+  the precious metals, and ivory poor for weapons and armour; hides poor for weapons and
+  jewellery; wood poor for armour. A material worse in a fight than the base item's own (to hit
+  or damage lower on what strikes or is shot, Protection lower on armour with some) but dearer
+  weighs at most 10 (`VERY_RARE`) for that item before its fit, never for jewellery. A creature's
+  faction may favour materials (`data/factions.toml` `gear = { bone = 55, iron = 15 }`): for
+  gear and drops whose list holds one, each takes its percent of the draw first, the usual draw
+  the rest (orcs bone and iron, goblins bronze, the undead bronze, duergar iron and steel,
+  kobolds flint, bone, and copper); a favourite never adds a material the item cannot be made
+  of. Hand-made levels keep their legends' gear unless a placement names a material
   (`"great_sword:bronze"`, or `[[item]]` `parts = [{ of = "bronze" }]`); shop stock is plain. The
   showcase's storeroom has a bronze great sword. Not yet: rust and wear.
   Every creature in `data/creatures.toml` has a base `weight` in grams (required, at least 1).

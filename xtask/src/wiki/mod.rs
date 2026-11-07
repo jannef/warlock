@@ -227,6 +227,8 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("equipment.md", objects::equipment),
         ("materials.md", materials::materials),
         ("material-finds.md", materials::material_finds),
+        ("material-odds.md", materials::material_odds),
+        ("material-tribes.md", materials::material_tribes),
         ("construction.md", materials::construction),
         ("variants.md", materials::variants),
         ("pieces.md", materials::pieces),
@@ -959,10 +961,15 @@ mod tests {
         assert!(text("materials.md").contains(
             "| Bronze | metal | `#cd7f32` | 112% | +0 / −1 | 80% | ×0.8 | no | 40% | 80% | 80% | bronze keys, minster reliquaries |"
         ));
-        assert!(
-            text("material-finds.md")
-                .contains("| Steel | 300 (common) | +60 | 1 | 20 (rare) | +15 |")
-        );
+        assert!(text("material-finds.md").contains(
+            "| Steel | 300 (common) | +60 | 1 | 20 (rare) | +15 | good | good | good | good |"
+        ));
+        assert!(text("material-finds.md").contains(
+            "| Tin | 300 (common) | −20 | 1 | 200 (common) | −15 | odd | poor | good | good |"
+        ));
+        // #1191: a long sword is steel nine times in ten at depth 1; orcs favour bone.
+        assert!(text("material-odds.md").contains("| Long sword | 1 | 90% |"));
+        assert!(text("material-tribes.md").contains("| Orcs | bone 55%, iron 15% |"));
         let construction = text("construction.md");
         assert!(construction.contains("| Long sword | steel | any metal, dragonbone |"));
         assert!(construction.contains("| Gold ring | gold | any material |"));

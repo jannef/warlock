@@ -101,7 +101,10 @@ impl World {
             return None;
         }
         let level = drop_level(&self.content, actor);
-        let gear = Source::Gear(self.content.creature(actor.creature).level);
+        let gear = Source::Gear {
+            level: self.content.creature(actor.creature).level,
+            faction: actor.faction(&self.content),
+        };
         // Treasure hunter (spec §8 "Talents"), Hoard sense (spec §8 "Birth sign"): the player's
         // luck, whoever made the kill.
         let talents = self.state.player().talent_mods(&self.content);

@@ -711,7 +711,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
   `carry`, `wield`, or `wear`) rolls the lines in order: each by its chance, one of its
   alternatives, made magic by its `magic` chance (as loot is, at least magic, at the floor's
   item level, unidentified) or else plain, of a material by the materials' `gear` at the
-  creature's level; a piece that would overload the creature is left out, one with no free slot
+  creature's level and its faction's favoured materials (§7 "Materials"); a piece that would
+  overload the creature is left out, one with no free slot
   stays carried. It fights with what it wields and wears (combat reads it as it reads anyone's),
   a ranged creature shoots with its bow and arrows, and all of it falls where it dies with the
   rest of what it carried. Others see what it wears and wields, never what else it carries.
