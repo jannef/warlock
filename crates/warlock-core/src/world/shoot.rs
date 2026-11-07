@@ -240,7 +240,11 @@ impl World {
         for event in made {
             match event {
                 Event::Attacked {
-                    target, to, strike, ..
+                    target,
+                    to,
+                    strike,
+                    caught,
+                    ..
                 } => {
                     attacked = true;
                     let fallen = self.actor_or_fallen(target);
@@ -250,7 +254,21 @@ impl World {
                         Some(d) if self.perception.sees_actors_at(to) => End::Seen(&d.name),
                         _ => End::Unseen,
                     };
-                    said.extend(attack_message(End::You, end, &words, kind, strike, guard));
+                    // How the missile found the one it struck at, in its words (`surprise.rs`).
+                    let named =
+                        def.map(|d| super::surprise::caught_name(&content, &d.name, caught));
+                    let struck_at = match (end, named.as_deref()) {
+                        (End::Seen(_), Some(named)) => End::Seen(named),
+                        _ => end,
+                    };
+                    said.extend(attack_message(
+                        End::You,
+                        struck_at,
+                        &words,
+                        kind,
+                        strike,
+                        guard,
+                    ));
                     seen =
                         (end != End::Unseen).then(|| (end, def.map_or("dies", |d| d.death_verb())));
                     if seen.is_some() {

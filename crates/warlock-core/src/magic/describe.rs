@@ -242,6 +242,7 @@ fn potion_lines(stack: &Stack, lore: Lore<'_>) -> Vec<Line> {
             let kinds = crate::content::and_list(&kinds);
             format!("Wards you against {kinds} for a while")
         }
+        Draught::Status { status, .. } => format!("{} for a while", lent(content, *status)),
     };
     let mut lines = vec![line(LineKind::Stat, text)];
     // A flask (spec §8 "Potions": "Flasks"): what its splash is, by its spell's name.
@@ -251,6 +252,30 @@ fn potion_lines(stack: &Stack, lore: Lore<'_>) -> Vec<Line> {
         lines.push(line(LineKind::Stat, text));
     }
     lines
+}
+
+/// What a status draught's status does for its drinker, in words, by the first thing it does
+/// that the words know ("Makes you harder to hit"), else by its name ("Makes you barkskin").
+fn lent(content: &Content, status: crate::content::StatusId) -> String {
+    let def = content.status(status);
+    let does = if def.unseen {
+        "Hides you from sight"
+    } else if def.wades_free || def.ice_holds {
+        "Lets you walk on water"
+    } else if def.senses.is_some() {
+        "Lets you feel the living about you"
+    } else if def.regen > 100 {
+        "Closes your wounds quicker"
+    } else if def.combat.dodge > 0 || def.combat.parry > 0 || def.combat.shield > 0 {
+        "Makes you harder to hit"
+    } else if def.combat.to_hit > 0 || def.combat.damage > 0 {
+        "Makes your blows surer"
+    } else if def.cost < 100 {
+        "Quickens you"
+    } else {
+        return format!("Makes you {}", def.name.to_lowercase());
+    };
+    does.to_string()
 }
 
 /// What a boost of `stat` makes its drinker, in words: "stronger".

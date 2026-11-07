@@ -13,9 +13,6 @@ use super::{Content, ContentError, PrestigeDef, duplicate_id};
 use serde::Deserialize;
 use std::collections::BTreeMap;
 
-/// The longest `message`, in characters.
-pub const MAX_MESSAGE: usize = 160;
-
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
 struct CallingFile {
@@ -88,22 +85,11 @@ fn resolve(
 ) -> Result<CallingDef, String> {
     let prestige: &PrestigeDef = (content.prestige(&spec.class))
         .ok_or_else(|| format!("`class`: unknown prestige class `{}`", spec.class))?;
-    if spec.from.is_empty() {
-        return Err("`from` names at least one class".into());
-    }
     for from in &spec.from {
-        let class =
-            (content.class(from)).ok_or_else(|| format!("`from`: unknown class `{from}`"))?;
-        if spec.from.iter().filter(|f| *f == from).count() > 1 {
-            return Err(format!("`from`: `{from}` twice"));
+        if content.class(from).is_none() {
+            return Err(format!("`from`: unknown class `{from}`"));
         }
-        if spec.level < class.max_level {
-            return Err(format!(
-                "`level` {} is below `{from}`'s highest level, {}: a prestige level would come \
-                 before the class is full",
-                spec.level, class.max_level
-            ));
-        }
+        // `Content::calling` finds a class's calling by its base class: one a campaign.
         if let Some(other) = (before.iter())
             .filter(|c| c.campaign == campaign)
             .find(|c| c.is_from(from))
@@ -114,15 +100,11 @@ fn resolve(
             ));
         }
     }
-    let message = spec.message.trim();
-    if message.is_empty() || message.chars().count() > MAX_MESSAGE {
-        return Err(format!("`message` is 1 to {MAX_MESSAGE} characters"));
-    }
     Ok(CallingDef {
         class: prestige.id.clone(),
         from: spec.from,
         level: spec.level,
-        message: message.to_string(),
+        message: spec.message.trim().to_string(),
         campaign,
     })
 }
@@ -199,20 +181,8 @@ mod tests {
                 "unknown prestige class `ranger`",
             ),
             (
-                "[[calling]]\nclass = \"hunter\"\nfrom = []\nlevel = 60\nmessage = \"x\"\n",
-                "at least one class",
-            ),
-            (
                 "[[calling]]\nclass = \"hunter\"\nfrom = [\"skald\"]\nlevel = 60\nmessage = \"x\"\n",
                 "unknown class `skald`",
-            ),
-            (
-                "[[calling]]\nclass = \"hunter\"\nfrom = [\"bard\"]\nlevel = 20\nmessage = \"x\"\n",
-                "below `bard`'s highest level, 30",
-            ),
-            (
-                "[[calling]]\nclass = \"hunter\"\nfrom = [\"bard\"]\nlevel = 60\nmessage = \"\"\n",
-                "`message` is 1 to",
             ),
             (
                 "[[calling]]\nclass = \"hunter\"\nfrom = [\"bard\"]\nlevel = 60\nmessage = \"x\"\n\

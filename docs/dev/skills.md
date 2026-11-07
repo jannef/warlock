@@ -31,7 +31,7 @@ Tests: `skills.rs` (ladder, rolls, meter), `content/skill.rs`, `content/class.rs
 streams, saves and replays), `world/skills_tests.rs` (marks by use). Race and class grants are dice rolled in `character.rs` after every
 other roll, so they never move a score. A class's **optional skills** (#662,
 `ClassDef::optional_skills`, `content::OptionalSkill { skill, chance, dice }`; the loader checks
-the ids, chance 1 to 99, the dice within 0 to 100, and that none is one of the class's `skills`)
+the ids)
 are rolled by `character::optional_skills` from their own stream,
 `character/optional-skills/<spec>` (chance, then dice, in skill order; a class without any draws
 nothing), so no other roll moves; the result is just the actor's `Skills`, saved and hashed as
@@ -42,7 +42,7 @@ skill starts go through `Skills::add` too, after every roll (docs/dev/background
 do a fresh caster corpse's (#1103, `on_eat.skills`, `World::corpse_skills` in `world/eat.rs`:
 Decipher script learned at `gives` or raised by it up to `up_to`; docs/dev/hunger.md). A race's optional skills
 (#682, `RaceDef::optional_skills`: the drow's Sneak attack) share the type and the parser
-(`content/skill.rs::optional_skills`, "one of the race's skills" refused) and the stream: the
+(`content/skill.rs::optional_skills`) and the stream: the
 class's are rolled first, then the race's, so no class's draws move and a race without any
 draws nothing more. Tests: `content/class.rs`, `content/race.rs` (parsing, refusals),
 `character.rs` (`optional_skills_come_by_chance_and_never_move_another_roll`,

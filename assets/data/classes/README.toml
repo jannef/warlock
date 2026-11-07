@@ -14,7 +14,7 @@
 #   stats         adjustments to the starting scores by stat id (strength, dexterity, toughness,
 #                 intelligence, willpower, presence; a missing one 0): a number (`1`, `-2`) or
 #                 dice (`"1d3+1"`, `"-1d2"`), rolled in the background when the character is made,
-#                 ADOM-like; every result within -10 to 10. Each class rolls its key stats;
+#                 ADOM-like; the score is kept within 1 to 40. Each class rolls its key stats;
 #                 penalties may be rolled too
 #   hp            what the class adds to the hit points (spec §8 "Combat"; default 0): a
 #                 character's maximum is their Toughness plus their race's (races.toml) and their
@@ -37,19 +37,19 @@
 #                 "Alignment"; alignment.toml; -1000 evil to 1000 good, default 0), added to the
 #                 race's: paladins start Good, thieves and witches Callous, everyone else Neutral
 #   skills        the skills the class trains (spec §8 "Skills"; skills.toml), by skill id: dice
-#                 (`"2d6+10"`) or a number, rolled when the character is made, every result
-#                 within 0 to 100; added to the race's. Each class has a few skills it is known
+#                 (`"2d6+10"`) or a number, rolled when the character is made; added to the
+#                 race's. Each class has a few skills it is known
 #                 for (2d6+10) and a few more (2d4+4); every other skill is untrained
 #   known_for     the skills the class is known for (its 2d6+10 ones; each one of `skills`): a
 #                 level-up roll on one throws the die one step up the skill ladder (skills.toml
 #                 `[ladder]`); a roll on one of the class's other skills adds 1 (default none)
 #   optional_skills  skills a new character may or may not start with (ADOM-like), by skill id:
-#                 `{ chance = 30, dice = "2d4" }`, the chance in percent (1 to 99) that it comes,
+#                 `{ chance = 30, dice = "2d4" }`, the chance in percent that it comes,
 #                 rolled once when the character is made (from its own stream, so no other roll
-#                 moves), then its dice (every result within 0 to 100), added to the race's. None
-#                 is one of `skills`. They are pleasant surprises, not the class's core: a level-up
+#                 moves), then its dice, added to the race's. None is one of `skills` so far.
+#                 They are pleasant surprises, not the class's core: a level-up
 #                 roll on one adds nothing for the class (default none)
-#   rolls         the skill rolls each level gives (spec §8 "Skills"; 0 to 10, default 2): the
+#   rolls         the skill rolls each level gives (spec §8 "Skills"; default 2): the
 #                 race's (races.toml) and Intelligence's (skills.toml `[rolls]`) are added. Most
 #                 classes 2, the thief and the ranger 3, the bard 4: learning is the bard's gift
 #   creation_talents  talent picks at creation beyond everyone's (experience.toml `[levels]`
@@ -75,9 +75,9 @@
 #                   { wear = "..." }   worn: armour, clothing, cloaks, gloves, boots, rings,
 #                                      amulets
 #                 and may add:
-#                   trained = "id"     only if the class trained that weapon skill or fighting
-#                                      style: its weapon_skills or styles, or the set of its
-#                                      choice that was picked (the berserker's great axe with
+#                   trained = "id"     only if the character trained that weapon skill or
+#                                      fighting style: the class's weapon_skills or styles, or
+#                                      the set of its choice that was picked (the berserker's great axe with
 #                                      axes, the thief's second dagger with Twin Blades)
 #                   gender = "female"  only for that gender (male, female, or other)
 #                   magic = "any"      a base item (one with a `kind`) made as loot makes it, its

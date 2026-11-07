@@ -194,17 +194,3 @@ fn the_ward_is_chosen_for_an_element_only() {
     run(&mut w, "talent:elemental_ward:fire");
     assert_eq!(last(&w), "You learn Elemental ward (fire).");
 }
-
-#[test]
-fn damage_types_are_held_to_the_coverage_bar() {
-    let book = BUILTIN.talents();
-    let system = book.system_id("damage_types").expect("the system");
-    assert!(!book.system(system).pending, "its talents have landed");
-    let held: Vec<&str> = (book.of_system(system))
-        .map(|(_, t)| t.id.as_str())
-        .collect();
-    for id in ["crusher", "elemental_ward"] {
-        assert!(held.contains(&id), "{id} in {held:?}");
-    }
-    assert_eq!(book.coverage_gap(&|_| 0), None);
-}

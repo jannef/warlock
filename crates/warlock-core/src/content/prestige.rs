@@ -12,14 +12,9 @@
 
 use super::class::{self, BonusTalents, ClassDef};
 use super::{ContentError, TalentBook, TalentId, TreeId, duplicate_id};
-use crate::combat::MAX_BASE_HP;
-use crate::mana::MAX_BASE_MANA;
 use crate::skills::SkillId;
 use serde::Deserialize;
 use std::collections::BTreeMap;
-
-/// The most levels a prestige class may have.
-pub const MAX_PRESTIGE_LEVELS: u8 = 60;
 
 fn two_rolls() -> u8 {
     2
@@ -59,8 +54,8 @@ pub struct PrestigeDef {
     pub name: String,
     /// One line, for the wiki and the character screen.
     pub description: String,
-    /// How many levels it has (1 to [`MAX_PRESTIGE_LEVELS`]): a character's cap grows by this
-    /// many when called.
+    /// How many levels it has: a character's cap grows by this many when called (never past
+    /// the curve's top, `Character::level_cap`).
     pub levels: u8,
     /// What each of its levels adds to the hit points, as a class's `hp` (half of it a level).
     pub hp: i32,
@@ -117,55 +112,21 @@ impl PrestigeDef {
     ) -> Result<Self, ContentError> {
         let err = |m: String| ContentError::new(file, m);
         let what = format!("prestige `{}`", spec.id);
-        if !super::dialogue::is_id(&spec.id) {
+        // Action text names it: `call:ID`.
+        if spec.id.is_empty() || spec.id.contains(':') || spec.id.contains(char::is_whitespace) {
             return Err(err(format!(
-                "{what}: ids are lower-case letters, digits, and underscores"
-            )));
-        }
-        if spec.name.trim().is_empty() || spec.name.chars().count() > super::MAX_NAME {
-            return Err(err(format!(
-                "{what}: `name` is 1 to {} characters",
-                super::MAX_NAME
-            )));
-        }
-        if !(1..=MAX_PRESTIGE_LEVELS).contains(&spec.levels) {
-            return Err(err(format!(
-                "{what}: levels {} is not 1 to {MAX_PRESTIGE_LEVELS}",
-                spec.levels
-            )));
-        }
-        if spec.hp > MAX_BASE_HP {
-            return Err(err(format!(
-                "{what}: hp {} is more than {MAX_BASE_HP}",
-                spec.hp
-            )));
-        }
-        if spec.mana > MAX_BASE_MANA {
-            return Err(err(format!(
-                "{what}: mana {} is more than {MAX_BASE_MANA}",
-                spec.mana
-            )));
-        }
-        if spec.rolls > class::MAX_ROLLS {
-            return Err(err(format!(
-                "{what}: rolls {} is more than {}",
-                spec.rolls,
-                class::MAX_ROLLS
+                "{what}: an id is not empty and has no `:` or whitespace"
             )));
         }
         let mut known_for = Vec::with_capacity(spec.known_for.len());
         for name in &spec.known_for {
             let skill = skill_id(name)
                 .ok_or_else(|| err(format!("{what}: known_for: unknown skill `{name}`")))?;
-            if known_for.contains(&skill) {
-                return Err(err(format!("{what}: known_for: `{name}` twice")));
-            }
             known_for.push(skill);
         }
         known_for.sort();
-        let abilities = class::table_rows(&err, &what, spec.abilities)?;
-        let bonus_talents = class::bonus_rows(&err, &what, spec.bonus_talents)?;
-        class::check_levels(&err, &what, &abilities, &bonus_talents, spec.levels)?;
+        let abilities = class::table_rows(spec.abilities);
+        let bonus_talents = class::bonus_rows(spec.bonus_talents);
         Ok(PrestigeDef {
             id: spec.id,
             name: spec.name.trim().to_string(),
@@ -335,27 +296,9 @@ mod tests {
     #[test]
     fn a_prestige_class_refuses_bad_tables() {
         for (text, why) in [
-            (format!("{ONE}levels = 0\n"), "levels 0 is not 1 to 60"),
-            (format!("{ONE}levels = 61\n"), "levels 61 is not 1 to 60"),
-            (
-                format!("{ONE}levels = 10\nabilities = [{{ level = 11, talent = \"x\" }}]\n"),
-                "past its highest level, 10",
-            ),
-            (
-                format!("{ONE}levels = 10\nbonus_talents = {{ levels = [12] }}\n"),
-                "past its highest level, 10",
-            ),
             (
                 format!("{ONE}levels = 10\nknown_for = [\"stealth\"]\n"),
                 "unknown skill `stealth`",
-            ),
-            (
-                format!("{ONE}levels = 10\nknown_for = [\"survival\", \"survival\"]\n"),
-                "`survival` twice",
-            ),
-            (
-                format!("{ONE}levels = 10\nrolls = 11\n"),
-                "rolls 11 is more than 10",
             ),
             (format!("{ONE}levels = 10\nstats = {{}}\n"), "unknown field"),
         ] {

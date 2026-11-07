@@ -523,6 +523,7 @@ impl World {
             with: None,
             damage: damage.kind,
             natural: None,
+            caught: None,
         });
         if by == self.state.player && target != by {
             self.provoke(target);

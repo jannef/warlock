@@ -26,6 +26,9 @@ Nothing tells you which creatures have not noticed you, unless you have
 [Stalker's eye](talents.md#talent-stalkers-eye) (the [ranger](classes.md#ranger)'s, from level 2). With it, look mode says
 "unaware of you", and such creatures are drawn with a slow, faint shimmer.
 
+After you attack, though, the attack's own message tells you how it found a target you see (see
+[What the attack says](#what-the-attack-says)).
+
 ## Caught unawares
 
 An attack that finds its target unaware **surprises** it. That covers a blow, a shot, a throw, or
@@ -44,7 +47,8 @@ trap springing beside you does not.
 - **Made**: "You keep your wits about you." (or "The kobold whirls to face you."). Nothing more
   happens. With [Hair trigger](talents.md#talent-hair-trigger), if the attacker is a hostile beside
   you, you strike it at once, before its attack is rolled.
-- **Failed**: "You are taken by surprise!" (or "You catch the kobold unawares."). The target is
+- **Failed**: "You are taken by surprise!" (or, for your attack, "You hit the unsuspecting
+  kobold."). The target is
   [Surprised](status-effects.md#status-surprised) until it next acts (after a
   [feint](skill-uses.md#feinting), for one action more). While Surprised:
   - it stays flat-footed, with no Dexterity and no Dodge in its Defence;
@@ -68,6 +72,24 @@ Surprised: no Dexterity and no Dodge in Defence, no free blow, and
 [sneak dice](#sneak-attacks) land on it. Its next action also takes half as long again, but
 neither [Initiative](skills.md#skill-initiative) nor [Cool head](talents.md#talent-cool-head)
 saves any of that time. They help against surprise, not against a blow to the head.
+
+### What the attack says
+
+Your own attack that rolls to hit (a blow, a shot, a throw, or a [spell](magic.md)) names its
+target by how it caught it, in the attack's own line, hit or miss:
+
+| The target was | The message |
+|---|---|
+| asleep | "You hit the sleeping kobold." |
+| unaware of you, and failed its [initiative check](#caught-unawares) (or a mimic in disguise) | "You hit the unsuspecting kobold." |
+| already [Surprised](status-effects.md#status-surprised) | "You hit the surprised kobold." |
+| [Stunned](status-effects.md#status-stunned) | "You miss the stunned kobold." |
+
+These are exactly the times your [sneak dice](#sneak-attacks) can land, except one: an unaware
+target that makes its check whirls to face you ("The kobold whirls to face you."), and that line
+is all you are told, though the attack was still struck flat-footed. Nothing is said of a target
+you do not see, and never a number. A creature's attack on you says nothing of the kind: "You
+are taken by surprise!" already tells it.
 
 ## Sneak attacks
 

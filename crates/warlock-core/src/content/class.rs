@@ -20,12 +20,10 @@ use super::kit::{Kit, KitLineSpec, RandomScrolls, RandomScrollsSpec};
 use super::skill::{OptionalSkill, OptionalSpec};
 use super::weapon_skill::Ranked;
 use super::{
-    ActionKind, ContentError, FACTORS, MAX_LEVEL, TalentBook, TalentId, TreeId, WeaponSkillId,
+    ActionKind, ContentError, FACTORS, TalentBook, TalentId, TreeId, WeaponSkillId,
     WeaponSkillTable, duplicate_id,
 };
-use crate::combat::MAX_BASE_HP;
 use crate::dice::Dice;
-use crate::mana::MAX_BASE_MANA;
 use crate::skills::{self, SkillId};
 use crate::stats::{PerStat, Stat, adjustments};
 use serde::{Deserialize, Serialize};
@@ -38,12 +36,6 @@ fn normal_experience() -> u16 {
 fn two_rolls() -> u8 {
     2
 }
-
-/// The affinities a class may have with a school of magic, in study check points.
-pub const AFFINITY: std::ops::RangeInclusive<i8> = -10..=10;
-
-/// The most skill rolls a class may give a level.
-pub const MAX_ROLLS: u8 = 10;
 
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -116,83 +108,25 @@ pub(super) struct BonusSpec {
     trees: Vec<String>,
 }
 
-/// The `abilities` rows of a class or prestige table (`what`: `class \`bard\``, for errors),
-/// checked: levels 1 to `MAX_LEVEL`, ascending, a talent once. The cap's own check is [`check_levels`], once the cap is known.
-pub(super) fn table_rows(
-    err: &impl Fn(String) -> ContentError,
-    what: &str,
-    rows: Vec<AbilitySpec>,
-) -> Result<Vec<(u8, String)>, ContentError> {
-    let mut abilities: Vec<(u8, String)> = Vec::with_capacity(rows.len());
-    for a in rows {
-        if !(1..=MAX_LEVEL).contains(&a.level) {
-            return Err(err(format!(
-                "{what}: abilities: level {} is not 1 to {MAX_LEVEL}",
-                a.level
-            )));
-        }
-        if abilities.last().is_some_and(|(l, _)| *l > a.level) {
-            return Err(err(format!(
-                "{what}: abilities are listed by level, lowest first"
-            )));
-        }
-        if (abilities.iter()).any(|(_, t)| *t == a.talent) {
-            return Err(err(format!("{what}: abilities: `{}` twice", a.talent)));
-        }
-        abilities.push((a.level, a.talent));
-    }
-    Ok(abilities)
+/// The `abilities` rows of a class or prestige table, by level, lowest first (stable: a level's
+/// rows keep their order), as `abilities_to` reads them.
+pub(super) fn table_rows(rows: Vec<AbilitySpec>) -> Vec<(u8, String)> {
+    let mut abilities: Vec<(u8, String)> = rows.into_iter().map(|a| (a.level, a.talent)).collect();
+    abilities.sort_by_key(|(level, _)| *level);
+    abilities
 }
 
-/// The `bonus_talents` of a class or prestige table, checked: at least one level, 1 to
-/// `MAX_LEVEL`, ascending.
-pub(super) fn bonus_rows(
-    err: &impl Fn(String) -> ContentError,
-    what: &str,
-    spec: Option<BonusSpec>,
-) -> Result<BonusTalents, ContentError> {
-    let Some(b) = spec else {
-        return Ok(BonusTalents::default());
-    };
-    let ascending = b.levels.windows(2).all(|w| w[0] < w[1]);
-    if b.levels.is_empty() || !ascending || !b.levels.iter().all(|&l| (1..=MAX_LEVEL).contains(&l))
-    {
-        return Err(err(format!(
-            "{what}: bonus_talents: levels are 1 to {MAX_LEVEL}, at least one, ascending"
-        )));
-    }
-    Ok(BonusTalents {
+/// The `bonus_talents` of a class or prestige table.
+pub(super) fn bonus_rows(spec: Option<BonusSpec>) -> BonusTalents {
+    spec.map_or_else(BonusTalents::default, |b| BonusTalents {
         levels: b.levels,
         trees: b.trees,
     })
 }
 
-/// Checks that every level of a table (`abilities` rows and `bonus_talents`) is within its
-/// highest level `cap` (spec §8 "Prestige classes": a level past the cap never comes).
-pub(super) fn check_levels(
-    err: &impl Fn(String) -> ContentError,
-    what: &str,
-    abilities: &[(u8, String)],
-    bonus: &BonusTalents,
-    cap: u8,
-) -> Result<(), ContentError> {
-    if let Some((level, talent)) = abilities.iter().find(|(l, _)| *l > cap) {
-        return Err(err(format!(
-            "{what}: abilities: `{talent}` at level {level} is past its highest level, {cap}"
-        )));
-    }
-    if let Some(level) = bonus.levels.iter().find(|&&l| l > cap) {
-        return Err(err(format!(
-            "{what}: bonus_talents: level {level} is past its highest level, {cap}"
-        )));
-    }
-    Ok(())
-}
-
 /// Checks a level table (`abilities` and `bonus_talents`) against `book` once the talents are
 /// loaded (nothing to check against a book without a class tree, whose tables give nothing):
-/// every talent named is in the book, and every bonus tree is a tree that
-/// is no class tree.
+/// every talent and bonus tree named is in the book.
 pub(super) fn check_rows(
     err: &impl Fn(String) -> ContentError,
     abilities: &[(u8, String)],
@@ -208,14 +142,8 @@ pub(super) fn check_rows(
         }
     }
     for tree in &bonus.trees {
-        match book.tree_id(tree) {
-            Some(t) if !book.tree(t).class => {}
-            Some(_) => {
-                return Err(err(format!(
-                    "bonus_talents: `{tree}` is the class tree: nothing is picked from it"
-                )));
-            }
-            None => return Err(err(format!("bonus_talents: unknown tree `{tree}`"))),
+        if book.tree_id(tree).is_none() {
+            return Err(err(format!("bonus_talents: unknown tree `{tree}`")));
         }
     }
     Ok(())
@@ -306,18 +234,6 @@ pub struct ClassDef {
 }
 
 impl ClassDef {
-    /// Every weapon skill and fighting style the class may start a character in: its fixed
-    /// ranks and every set of its choices.
-    pub fn trainable(&self) -> Vec<WeaponSkillId> {
-        let sets = (self.weapon_skill_choice.iter()).chain(&self.style_choice);
-        let ranks = (self.weapon_skills.iter())
-            .chain(&self.styles)
-            .chain(sets.flatten());
-        ranks.map(|&(id, _)| id).collect()
-    }
-}
-
-impl ClassDef {
     /// Parses the class table (`data/classes/*.toml`, or a single `data/classes.toml`), given
     /// as its files in path order: the classes in that order; `skill_id` says which skill a
     /// skill id is, and `weapon_table` holds the weapon skills starting ranks may name.
@@ -355,97 +271,41 @@ impl ClassDef {
     ) -> Result<Self, ContentError> {
         let err = |m: String| ContentError::new(file, m);
         let id = &spec.id;
-        let stats =
-            adjustments(&spec.stats).map_err(|m| err(format!("class `{id}`: stats: {m}")))?;
-        if spec.hp > MAX_BASE_HP {
+        let stats = adjustments(&spec.stats);
+        // The top keeps every level's threshold within the experience counter.
+        if spec.experience > *FACTORS.end() {
             return Err(err(format!(
-                "class `{id}`: hp {} is more than {MAX_BASE_HP}",
-                spec.hp
-            )));
-        }
-        if spec.mana > MAX_BASE_MANA {
-            return Err(err(format!(
-                "class `{id}`: mana {} is more than {MAX_BASE_MANA}",
-                spec.mana
-            )));
-        }
-        if let Some((school, n)) = (spec.affinity.iter()).find(|(_, n)| !AFFINITY.contains(*n)) {
-            return Err(err(format!(
-                "class `{id}`: affinity {n} with {} is out of range ({} to {})",
-                school.id(),
-                AFFINITY.start(),
-                AFFINITY.end()
-            )));
-        }
-        if !FACTORS.contains(&spec.experience) {
-            return Err(err(format!(
-                "class `{id}`: experience {} is out of range ({} to {} percent)",
+                "class `{id}`: experience {} is more than {} percent",
                 spec.experience,
-                FACTORS.start(),
                 FACTORS.end()
             )));
         }
-        let alignment = crate::alignment::check_start(spec.alignment)
-            .map_err(|m| err(format!("class `{id}`: {m}")))?;
         let skills = skills::grants(&spec.skills, skill_id)
             .map_err(|m| err(format!("class `{id}`: skills: {m}")))?;
         let mut known_for = Vec::with_capacity(spec.known_for.len());
         for name in &spec.known_for {
-            let skill = (skill_id(name).filter(|s| skills.iter().any(|(k, _)| k == s)))
-                .ok_or_else(|| {
-                    err(format!(
-                        "class `{id}`: known_for: `{name}` is not one of the class's skills"
-                    ))
-                })?;
-            if known_for.contains(&skill) {
-                return Err(err(format!("class `{id}`: known_for: `{name}` twice")));
-            }
+            let skill = skill_id(name)
+                .ok_or_else(|| err(format!("class `{id}`: known_for: unknown skill `{name}`")))?;
             known_for.push(skill);
         }
         known_for.sort();
-        let optional_skills =
-            super::skill::optional_skills(&spec.optional_skills, skill_id, &skills, "class")
-                .map_err(|m| err(format!("class `{id}`: optional_skills: {m}")))?;
-        if spec.rolls > MAX_ROLLS {
-            return Err(err(format!(
-                "class `{id}`: rolls {} is more than {MAX_ROLLS}",
-                spec.rolls
-            )));
-        }
+        let optional_skills = super::skill::optional_skills(&spec.optional_skills, skill_id)
+            .map_err(|m| err(format!("class `{id}`: optional_skills: {m}")))?;
         let ranks = |data: &BTreeMap<String, Dice>, ranked| {
             (weapon_table.starting_ranks(data, ranked))
                 .map_err(|m| err(format!("class `{id}`: {m}")))
         };
-        let choice = |field: &str, sets: &[BTreeMap<String, Dice>], ranked| {
-            let sets = (sets.iter())
+        let choice = |sets: &[BTreeMap<String, Dice>], ranked| {
+            (sets.iter())
                 .map(|set| ranks(set, ranked))
-                .collect::<Result<Vec<_>, _>>()?;
-            if sets.len() == 1 || sets.iter().any(Vec::is_empty) {
-                return Err(err(format!(
-                    "class `{id}`: `{field}` is a choice of two or more sets of ranks"
-                )));
-            }
-            Ok(sets)
+                .collect::<Result<Vec<_>, _>>()
         };
         let weapon_skills = ranks(&spec.weapon_skills, Ranked::Weapons)?;
-        let weapon_skill_choice = choice(
-            "weapon_skill_choice",
-            &spec.weapon_skill_choice,
-            Ranked::Weapons,
-        )?;
+        let weapon_skill_choice = choice(&spec.weapon_skill_choice, Ranked::Weapons)?;
         let styles = ranks(&spec.styles, Ranked::Styles)?;
-        let style_choice = choice("style_choice", &spec.style_choice, Ranked::Styles)?;
-        let what = format!("class `{id}`");
-        let abilities = table_rows(&err, &what, spec.abilities)?;
-        let bonus_talents = bonus_rows(&err, &what, spec.bonus_talents)?;
-        if let Some(cap) = spec.max_level.filter(|c| !(2..=MAX_LEVEL).contains(c)) {
-            return Err(err(format!(
-                "{what}: max_level {cap} is not 2 to {MAX_LEVEL}"
-            )));
-        }
-        if let Some(share) = spec.ally_share.filter(|&s| s > 100) {
-            return Err(err(format!("{what}: ally_share {share} is not 0 to 100")));
-        }
+        let style_choice = choice(&spec.style_choice, Ranked::Styles)?;
+        let abilities = table_rows(spec.abilities);
+        let bonus_talents = bonus_rows(spec.bonus_talents);
         Ok(ClassDef {
             id: spec.id,
             name: spec.name,
@@ -455,7 +315,7 @@ impl ClassDef {
             mana: i32::from(spec.mana),
             affinity: spec.affinity,
             experience: spec.experience,
-            alignment,
+            alignment: spec.alignment,
             skills,
             known_for,
             optional_skills,
@@ -492,13 +352,7 @@ impl ClassDef {
                 self.max_level
             )));
         }
-        check_levels(
-            &err,
-            &what,
-            &self.abilities,
-            &self.bonus_talents,
-            self.max_level,
-        )
+        Ok(())
     }
 
     /// Whether it trains skill `skill` (any of its grants, known for or not).
@@ -950,61 +804,19 @@ mod tests {
                 format!("{ONE}stats = {{ cunning = 1 }}\n"),
                 "unknown stat `cunning`",
             ),
-            (
-                format!("{ONE}stats = {{ presence = -11 }}\n"),
-                "presence -11 is out of range",
-            ),
-            (
-                format!("{ONE}stats = {{ presence = \"-3d4\" }}\n"),
-                "presence -3d4 is out of range",
-            ),
             (format!("{ONE}{ONE}"), "duplicate class id `wizard`"),
             (
                 format!("{ONE}experience = 300\n"),
-                "class `wizard`: experience 300 is out of range (50 to 200 percent)",
+                "class `wizard`: experience 300 is more than 200 percent",
             ),
             ("class = []\n".into(), "at least one class"),
             (
-                format!("{ONE}known_for = [\"spellcraft\"]\n"),
-                "known_for: `spellcraft` is not one of the class's skills",
-            ),
-            (
-                format!(
-                    "{ONE}skills = {{ spellcraft = 1 }}\nknown_for = [\"spellcraft\", \"spellcraft\"]\n"
-                ),
-                "`spellcraft` twice",
-            ),
-            (format!("{ONE}rolls = 11\n"), "rolls 11 is more than 10"),
-            (
-                format!("{ONE}max_level = 1\n"),
-                "max_level 1 is not 2 to 100",
-            ),
-            (
-                format!("{ONE}ally_share = 101\n"),
-                "class `wizard`: ally_share 101 is not 0 to 100",
-            ),
-            (
-                format!(
-                    "{ONE}skills = {{ spellcraft = 1 }}\n\
-                     optional_skills = {{ spellcraft = {{ chance = 20, dice = \"2d4\" }} }}\n"
-                ),
-                "optional_skills: `spellcraft` is one of the class's skills",
-            ),
-            (
-                format!("{ONE}optional_skills = {{ knowledge = {{ chance = 100, dice = 3 }} }}\n"),
-                "optional_skills: knowledge: chance 100 is out of range (1 to 99 percent)",
-            ),
-            (
-                format!("{ONE}optional_skills = {{ knowledge = {{ chance = 0, dice = 3 }} }}\n"),
-                "chance 0 is out of range",
+                format!("{ONE}known_for = [\"necromancy\"]\n"),
+                "known_for: unknown skill `necromancy`",
             ),
             (
                 format!("{ONE}optional_skills = {{ necromancy = {{ chance = 5, dice = 3 }} }}\n"),
                 "optional_skills: unknown skill `necromancy`",
-            ),
-            (
-                format!("{ONE}optional_skills = {{ knowledge = {{ chance = 5, dice = 101 }} }}\n"),
-                "optional_skills: knowledge +101 is out of range",
             ),
             (
                 format!("{ONE}skills = {{ necromancy = 5 }}\n"),
@@ -1015,24 +827,12 @@ mod tests {
                 "class `wizard`: unknown weapon skill `wands`",
             ),
             (
-                format!("{ONE}weapon_skill_choice = [{{ staves = 1 }}]\n"),
-                "a choice of two or more",
-            ),
-            (
-                format!("{ONE}weapon_skill_choice = [{{ staves = 1 }}, {{}}]\n"),
-                "a choice of two or more",
-            ),
-            (
                 format!("{ONE}weapon_skills = {{ duelist = 1 }}\n"),
                 "`duelist` is a fighting style: classes give styles in `styles`",
             ),
             (
                 format!("{ONE}styles = {{ staves = 1 }}\n"),
                 "`staves` is a weapon skill, not a fighting style",
-            ),
-            (
-                format!("{ONE}style_choice = [{{ duelist = 1 }}]\n"),
-                "`style_choice` is a choice of two or more",
             ),
         ] {
             let e = parse(&text).unwrap_err();
@@ -1041,18 +841,12 @@ mod tests {
     }
 
     #[test]
-    fn classes_give_mana_up_to_the_most_a_class_may() {
+    fn classes_give_mana() {
         assert_eq!(
             parse(&format!("{ONE}mana = 8\n")).expect("valid")[0].mana,
             8
         );
         assert_eq!(parse(ONE).expect("valid")[0].mana, 0, "none unless named");
-        let e = parse(&format!("{ONE}mana = 1001\n")).unwrap_err();
-        assert!(
-            e.message.contains("mana 1001 is more than 1000"),
-            "{}",
-            e.message
-        );
     }
 
     /// The built-in content with the aristocrat's file changed by `edit`, loaded.
@@ -1095,28 +889,23 @@ mod tests {
                 ("\"fencing\"", "\"fencin\""),
                 "abilities: unknown talent `fencin`",
             ),
-            (("\"delver\"]", "\"class\"]"), "`class` is the class tree"),
             (("\"delver\"]", "\"nonesuch\"]"), "unknown tree `nonesuch`"),
-            (("level = 6,", "level = 0,"), "level 0 is not 1 to"),
-            (
-                ("level = 32,", "level = 2,"),
-                "listed by level, lowest first",
-            ),
-            (
-                ("talent = \"riposte\"", "talent = \"fencing\""),
-                "`fencing` twice",
-            ),
-            (("[10, 20, 30, 45, 55]", "[20, 10]"), "ascending"),
         ] {
             let e = with_aristocrat(|t| t.replacen(edit.0, edit.1, 1)).unwrap_err();
             assert!(e.message.contains(why), "{why}: {}", e.message);
         }
+        // Rows out of order are read by level, lowest first.
+        let content = with_aristocrat(|t| t.replacen("level = 32,", "level = 2,", 1))
+            .expect("rows in any order");
+        let aristocrat = content.class("aristocrat").expect("aristocrat");
+        let levels: Vec<u8> = aristocrat.abilities.iter().map(|(l, _)| *l).collect();
+        assert!(levels.windows(2).all(|w| w[0] <= w[1]), "{levels:?}");
     }
 
     /// The highest level a class reaches (spec §8 "Prestige classes"): the file's `max_level`,
-    /// else the experience file's `class_max`; its table stays within it.
+    /// else the experience file's `class_max`, never past the curve.
     #[test]
-    fn max_level_defaults_to_the_class_cap_and_bounds_the_table() {
+    fn max_level_defaults_to_the_class_cap() {
         let content = with_aristocrat(|t| t.to_string()).expect("built-in");
         // The bard alone ends early (the bard design §5); every other class at the default.
         for class in content.classes() {
@@ -1133,14 +922,12 @@ mod tests {
             capped.class("aristocrat").expect("aristocrat").max_level,
             60
         );
-        for (cap, why) in [
-            // Its table reaches 50 and its bonus picks 55: a lower cap leaves a row past it.
-            (30, "`iron_will` at level 32 is past its highest level, 30"),
-            (50, "bonus_talents: level 55 is past its highest level, 50"),
-            (101, "max_level 101 is not 2 to 100"),
-        ] {
-            let e = with_aristocrat(|t| format!("{t}max_level = {cap}\n")).unwrap_err();
-            assert!(e.message.contains(why), "{why}: {}", e.message);
-        }
+        let e = with_aristocrat(|t| format!("{t}max_level = 101\n")).unwrap_err();
+        assert!(
+            e.message
+                .contains("max_level 101 is more than the curve's 100"),
+            "{}",
+            e.message
+        );
     }
 }

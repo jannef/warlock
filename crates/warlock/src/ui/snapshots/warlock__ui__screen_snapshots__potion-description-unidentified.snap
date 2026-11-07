@@ -14,9 +14,9 @@ expression: "render(case, content.clone())"
 
                   ┌─ Item ───────────────────────────────────────────────────────┐
                   │                                                              │
-                  │ ! Foaming red potion                                         │
+                  │ ! Steaming red potion                                        │
                   │                                                              │
-                  │ 2 foaming red potions · glass · 500 g                        │
+                  │ 2 steaming red potions · glass · 500 g                       │
                   │                                                              │
                   │ You do not know what this potion does.                       │
                   │                                                              │

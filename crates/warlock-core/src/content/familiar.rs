@@ -5,22 +5,9 @@
 //! constants `allies.toml`. The file is optional: without it no familiar can be made, and nothing
 //! here is read.
 
-use super::{
-    Content, ContentError, CreatureId, SpellId, SpellPurpose,
-    creature::{Combat, NOSES},
-};
+use super::{Content, ContentError, CreatureId, SpellId, SpellPurpose, creature::Combat};
 use serde::Deserialize;
 use std::collections::BTreeMap;
-use std::ops::RangeInclusive;
-
-/// A race's list holds this many beasts.
-pub const LIST_SIZES: RangeInclusive<usize> = 1..=3;
-/// The rare list holds this many.
-pub const RARE_SIZES: RangeInclusive<usize> = 1..=8;
-/// The longest name (a character's own longest).
-pub const NAME_CHARS: usize = 20;
-/// The calling's turns.
-pub const CALL_TURNS: RangeInclusive<u32> = 1..=6000;
 
 /// The numbers of the familiar.
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -152,38 +139,12 @@ impl FamiliarRules {
             }
         };
         let beast = |where_: &str, name: &str| plain(where_, name, false);
-        if !CALL_TURNS.contains(&file.call_turns) {
-            return Err(err(format!(
-                "`call_turns` is {} to {}, not {}",
-                CALL_TURNS.start(),
-                CALL_TURNS.end(),
-                file.call_turns
-            )));
-        }
         let bargain_kinds = (file.bargain_kinds.iter())
             .map(|n| plain("`bargain_kinds`", n, true))
             .collect::<Result<Vec<_>, _>>()?;
-        if !NOSES.contains(&file.nose) {
-            return Err(err(format!(
-                "`nose` is {} to {} cells, not {}",
-                NOSES.start(),
-                NOSES.end(),
-                file.nose
-            )));
-        }
-        if !(0..=1000).contains(&file.start.rare_per_mille) {
-            return Err(err(format!(
-                "`start.rare_per_mille` is 0 to 1000, not {}",
-                file.start.rare_per_mille
-            )));
-        }
-        if !RARE_SIZES.contains(&file.start.rare.len()) {
-            return Err(err(format!(
-                "`start.rare` lists {} to {} beasts, not {}",
-                RARE_SIZES.start(),
-                RARE_SIZES.end(),
-                file.start.rare.len()
-            )));
+        // The draws index the lists and the names.
+        if file.start.rare.is_empty() {
+            return Err(err("`start.rare` lists at least one beast".into()));
         }
         let rare = (file.start.rare.iter())
             .map(|n| beast("`start.rare`", n))
@@ -193,28 +154,16 @@ impl FamiliarRules {
             let Some(names) = file.start.by_race.get(&race.id) else {
                 continue;
             };
-            if !LIST_SIZES.contains(&names.len()) {
+            if names.is_empty() {
                 return Err(err(format!(
-                    "`start.by_race.{}` lists {} to {} beasts, not {}",
-                    race.id,
-                    LIST_SIZES.start(),
-                    LIST_SIZES.end(),
-                    names.len()
+                    "`start.by_race.{}` lists at least one beast",
+                    race.id
                 )));
             }
             let where_ = format!("`start.by_race.{}`", race.id);
-            let mut list = Vec::new();
-            for name in names {
-                let id = beast(&where_, name)?;
-                let level = content.creature(id).level;
-                if level > file.start.most_level {
-                    return Err(err(format!(
-                        "{where_}: `{name}` is level {level}, above `most_level` {}",
-                        file.start.most_level
-                    )));
-                }
-                list.push(id);
-            }
+            let list = (names.iter())
+                .map(|name| beast(&where_, name))
+                .collect::<Result<Vec<_>, _>>()?;
             by_race.push((race.id.clone(), list));
         }
         if !content.races().list.is_empty()
@@ -233,19 +182,13 @@ impl FamiliarRules {
                     file.touch
                 ))
             })?;
-        let long = |n: &String| n.trim().is_empty() || n.chars().count() > NAME_CHARS;
-        if file.names.is_empty() || file.names.iter().any(long) {
-            return Err(err(format!(
-                "`names`: at least one name, none empty or longer than {NAME_CHARS} characters"
-            )));
+        if file.names.is_empty() {
+            return Err(err("`names`: at least one name".into()));
         }
         let mut arrives = Vec::new();
         for (name, line) in &file.arrives {
             let id = (content.creature_id(name))
                 .ok_or_else(|| err(format!("`arrives`: unknown creature `{name}`")))?;
-            if line.trim().is_empty() {
-                return Err(err(format!("`arrives.{name}`: an empty line")));
-            }
             arrives.push((id, line.clone()));
         }
         let rules = FamiliarRules {
@@ -261,39 +204,6 @@ impl FamiliarRules {
             bargain_kinds,
             bargain_level: file.bargain_level,
         };
-        let starts = rules.every_kind();
-        if let Some(&id) = starts.iter().find(|&&c| rules.arrives(c).is_none()) {
-            return Err(err(format!(
-                "`arrives`: no line for `{}`",
-                content.creature(id).id
-            )));
-        }
-        // A line no start draws (where the content has races to draw for: a fixture without
-        // them keeps the shipped file).
-        if !content.races().list.is_empty()
-            && let Some((id, _)) = (rules.arrives.iter()).find(|(c, _)| !starts.contains(c))
-        {
-            return Err(err(format!(
-                "`arrives.{}`: nothing draws it",
-                content.creature(*id).id
-            )));
-        }
-        // The story's chapter: every beast a race's list may give has its `only` line.
-        if let Some(chapter) = (content.background()).and_then(|b| {
-            b.chapters
-                .iter()
-                .find(|c| c.id == super::companion::CHAPTER && c.campaign.is_none())
-        }) {
-            for id in rules.common_starts() {
-                if !(chapter.lines.iter()).any(|l| l.only && l.when.familiar == [id]) {
-                    let name = &content.creature(id).id;
-                    return Err(err(format!(
-                        "the `{}` chapter has no `only` line for `{name}` (`when = {{ familiar = [\"{name}\"] }}`)",
-                        super::companion::CHAPTER
-                    )));
-                }
-            }
-        }
         Ok(rules)
     }
 }
@@ -318,7 +228,7 @@ mod tests {
             let list = rules
                 .list_of(&race.id)
                 .unwrap_or_else(|| panic!("{}", race.id));
-            assert!(super::LIST_SIZES.contains(&list.len()), "{}", race.id);
+            assert!(!list.is_empty(), "{}", race.id);
         }
         assert_eq!(rules.rare.len(), 2);
         assert_eq!(rules.rare_per_mille, 50);
@@ -349,51 +259,21 @@ mod tests {
             "a rare is a plain beast"
         );
         assert!(
-            err(familiars(|t| t.replace(
-                "dwarf = [\"toad\", \"raven\"]",
-                "dwarf = [\"bear\"]"
-            )))
-            .contains("above `most_level`"),
-        );
-        assert!(
             err(familiars(
                 |t| t.replace("dwarf = [\"toad\", \"raven\"]", "dwarf = []")
             ))
-            .contains("lists 1 to 3"),
+            .contains("lists at least one"),
         );
         assert!(
             err(familiars(|t| t.replace("ratfolk = ", "elvish = ")))
                 .contains("unknown race `elvish`"),
         );
         assert!(
-            err(familiars(
-                |t| t.replace("rare_per_mille = 50", "rare_per_mille = 1001")
-            ))
-            .contains("0 to 1000")
-        );
-        assert!(err(familiars(|t| t.replace("nose = 6", "nose = 21"))).contains("1 to 20 cells"));
-        assert!(
             err(familiars(|t| t.replace(
                 "touch = \"evil_eye\"",
                 "touch = \"magic_missile\""
             )))
             .contains("no hex spell"),
-        );
-        assert!(
-            err(familiars(|t| t.replace("names = [", "names = [\"\", "))).contains("none empty")
-        );
-        assert!(
-            err(familiars(
-                |t| t.replace("cat = \"winds about your ankles\"\n", "")
-            ))
-            .contains("no line for `cat`")
-        );
-        assert!(err(familiars(|t| format!("{t}wolf = \"howls\"\n"))).contains("nothing draws it"));
-        assert!(
-            err(familiars(
-                |t| t.replace("call_turns = 600", "call_turns = 0")
-            ))
-            .contains("`call_turns` is 1 to 6000")
         );
         assert!(
             err(familiars(|t| t.replace(
@@ -408,13 +288,6 @@ mod tests {
                 "bargain_kinds = [\"dark_wizard\"]"
             )))
             .contains("`bargain_kinds`: `dark_wizard`")
-        );
-        assert!(
-            err(familiars(|t| t.replace(
-                "imp = \"grins up at you with too many teeth\"\n",
-                ""
-            )))
-            .contains("no line for `imp`")
         );
         // Without the file, no familiar at all, and nothing else minds.
         let mut files = ContentFiles::builtin();

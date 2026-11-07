@@ -813,7 +813,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     (`World::spend_resource`; refused, so the blow falls, with less), as often as the rage
     holds; spent to nothing, the rage ends and Exhausted follows. While raging no mana is spent
     (Raging blocks `cast`).
-  - **Talents** (R5, #253): the `resources` system is in the coverage list, held to its bar by
+  - **Talents** (R5, #253): the `resources` system is in the systems list, named by
     the five resource talents, the only picks limited to a class (a resource belongs to the class
     that has it; Zealot by its prerequisite, Smite): **Battle trance** (Might; berserker, level 6): rage starts 6 higher (18) and
     decays at 67 % of its pace; **Inner calm** (Finesse; ascetic, level 18): ki holds 2 more (7) and

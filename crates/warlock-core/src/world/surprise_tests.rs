@@ -22,7 +22,7 @@ const HALL: &str = "\
 
 /// What `data/surprise.toml` says in a fixture.
 #[derive(Clone, Copy)]
-enum Rules {
+pub(super) enum Rules {
     /// The shipped file.
     Shipped,
     /// The shipped file with this difficulty: 40 fails all but a natural 24, 1 makes all but a
@@ -33,7 +33,7 @@ enum Rules {
 }
 
 /// The built-in content with [`HALL`] at `ambient` light, the surprise rules `rules`.
-fn world(ambient: u8, rules: Rules) -> World {
+pub(super) fn world(ambient: u8, rules: Rules) -> World {
     let mut files = ContentFiles::builtin();
     let path = "data/surprise.toml";
     match rules {
@@ -72,7 +72,7 @@ fn world(ambient: u8, rules: Rules) -> World {
 }
 
 /// The goblin standing in column `x`.
-fn goblin(w: &World, x: i32) -> ActorId {
+pub(super) fn goblin(w: &World, x: i32) -> ActorId {
     (w.state.actors.values())
         .find(|a| a.kind == ActorKind::Creature && a.pos.x == x)
         .expect("a goblin")
@@ -80,7 +80,7 @@ fn goblin(w: &World, x: i32) -> ActorId {
 }
 
 /// Puts `id` to sleep: it takes no turn.
-fn lull(w: &mut World, id: ActorId) {
+pub(super) fn lull(w: &mut World, id: ActorId) {
     let asleep = w.content.sleep_status().expect("asleep");
     let def = w.content.status(asleep).clone();
     w.state
@@ -91,11 +91,11 @@ fn lull(w: &mut World, id: ActorId) {
         .add(asleep, &def, 1, None);
 }
 
-fn surprised_status(w: &World) -> crate::content::StatusId {
+pub(super) fn surprised_status(w: &World) -> crate::content::StatusId {
     w.content.status_id("surprised").expect("surprised")
 }
 
-fn texts(w: &World) -> Vec<String> {
+pub(super) fn texts(w: &World) -> Vec<String> {
     w.messages().iter().map(|m| m.text.clone()).collect()
 }
 
@@ -169,10 +169,8 @@ fn a_failed_check_surprises_and_a_made_one_does_not() {
     };
     let (caught, said) = surprised(Rules::Difficulty(40));
     assert!(caught);
-    assert_eq!(
-        said.last().map(String::as_str),
-        Some("You catch the goblin unawares.")
-    );
+    // Failed, it is told in the attack's own line (`surprise_words_tests.rs`).
+    assert!(said.iter().all(|t| !t.contains("goblin")), "{said:?}");
     let (caught, said) = surprised(Rules::Difficulty(1));
     assert!(!caught);
     assert_eq!(

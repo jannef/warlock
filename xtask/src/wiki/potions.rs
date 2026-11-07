@@ -107,6 +107,14 @@ pub(super) fn potions(content: &Content) -> String {
                 format!("resists {} ({}, as gear does)", kinds.join(", "), def.name)
                     + &lasting(content, *status, 1)
             }
+            Draught::Status { status, severity } => {
+                let def = content.status(*status);
+                format!(
+                    "{}, {severity} degree{}",
+                    link(Term::Status, &def.id, &def.name),
+                    plural(*severity)
+                ) + &lasting(content, *status, *severity)
+            }
         };
         let marks = match drink.marks.as_slice() {
             [] => "none".to_string(),

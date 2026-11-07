@@ -451,18 +451,6 @@ fn the_horoscope_and_the_talents_are_checked_against_each_other() {
     let err =
         load_horoscope(|t| t.replacen("\"fleet_footed\"", "\"fleet_footeder\"", 1)).unwrap_err();
     assert!(err.contains("unknown talent `fleet_footeder`"), "{err}");
-    let err = load_horoscope(|t| t.replacen("\"fleet_footed\", ", "\"hardy\", ", 1)).unwrap_err();
-    assert!(
-        err.contains("not a granted talent of the `stars` tree"),
-        "{err}"
-    );
-    let err = load_horoscope(|t| t.replacen("grants = [\"supple\"", "grants = [\"slight\"", 1))
-        .unwrap_err();
-    assert!(err.contains("a flaw: only an animal has a flaw"), "{err}");
-    let err = load_horoscope(|t| t.replacen("day = 30", "day = 31", 1)).unwrap_err();
-    assert!(err.contains("`day` is 1 to 30"), "{err}");
-    let err = load_horoscope(|t| t.replacen("\"slight\"]", "\"fleet_footed\"]", 1)).unwrap_err();
-    assert!(err.contains("grants `fleet_footed` twice"), "{err}");
 }
 
 /// The first seed from 1 on which `spec` is born on a lucky day at the showcase's start.

@@ -20,9 +20,6 @@ pub(super) struct OptionalSpec {
     dice: Dice,
 }
 
-/// The chances an optional skill may have, in percent: 100 would be a guaranteed skill.
-pub const OPTIONAL_CHANCE: std::ops::RangeInclusive<u8> = 1..=99;
-
 /// A skill a new character of a class or a race may start with (spec §8 "Skills", ADOM-like):
 /// rolled once when the character is made.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -35,29 +32,14 @@ pub struct OptionalSkill {
 }
 
 /// Resolves `optional_skills` as a class or a race writes them, in skill order: each a known
-/// skill, none of `trained` (the guaranteed skills of the same `owner`, "class" or "race"), its
-/// chance within [`OPTIONAL_CHANCE`] and its dice within the grants' range.
+/// skill.
 pub(super) fn optional_skills(
     specs: &BTreeMap<String, OptionalSpec>,
     skill_id: impl Fn(&str) -> Option<SkillId>,
-    trained: &[(SkillId, Dice)],
-    owner: &str,
 ) -> Result<Vec<OptionalSkill>, String> {
     let mut out = Vec::with_capacity(specs.len());
     for (name, o) in specs {
-        let grant = crate::skills::grants(&BTreeMap::from([(name.clone(), o.dice)]), &skill_id)?;
-        let skill = grant[0].0;
-        if trained.iter().any(|&(s, _)| s == skill) {
-            return Err(format!("`{name}` is one of the {owner}'s skills"));
-        }
-        if !OPTIONAL_CHANCE.contains(&o.chance) {
-            return Err(format!(
-                "{name}: chance {} is out of range ({} to {} percent)",
-                o.chance,
-                OPTIONAL_CHANCE.start(),
-                OPTIONAL_CHANCE.end()
-            ));
-        }
+        let skill = skill_id(name).ok_or_else(|| format!("unknown skill `{name}`"))?;
         out.push(OptionalSkill {
             skill,
             chance: o.chance,
@@ -130,10 +112,6 @@ impl SkillBook {
         let err = |m: String| ContentError::new(file, m);
         let parsed: SkillFile = toml::from_str(text).map_err(|e| err(e.to_string()))?;
         parsed.ladder.check().map_err(err)?;
-        parsed.rolls.check().map_err(err)?;
-        if parsed.skill.is_empty() {
-            return Err(err("at least one skill is required".into()));
-        }
         if parsed.skill.len() > usize::from(u8::MAX) + 1 {
             return Err(err("too many skills (at most 256)".into()));
         }
@@ -142,15 +120,6 @@ impl SkillBook {
             let id = &spec.id;
             if list.iter().any(|s| &s.id == id) {
                 return Err(err(format!("duplicate skill id `{id}`")));
-            }
-            if spec.name.trim().is_empty() {
-                return Err(err(format!("skill `{id}`: `name` must not be empty")));
-            }
-            if let Some(rule) = spec.mark.iter().find(|m| !(1..=100).contains(&m.chance)) {
-                return Err(err(format!(
-                    "skill `{id}`: a mark's chance is 1 to 100 percent, not {}",
-                    rule.chance
-                )));
             }
             let benefits = (spec.benefit.into_iter())
                 .map(BenefitSpec::resolve)
@@ -234,12 +203,7 @@ mod tests {
     fn bad_skills_are_refused() {
         for (text, why) in [
             (format!("{ONE}{ONE}"), "duplicate skill id `stealth`"),
-            ("skill = []\n".into(), "at least one skill"),
             (ONE.replace("passive", "magic"), "unknown variant `magic`"),
-            (
-                format!("{ONE}mark = [{{ on = \"sneak\", chance = 0 }}]\n"),
-                "1 to 100 percent, not 0",
-            ),
             (
                 format!("{ONE}mark = [{{ on = \"whistle\", chance = 5 }}]\n"),
                 "unknown variant `whistle`",
@@ -249,22 +213,12 @@ mod tests {
                 "skill `stealth`: a benefit needs",
             ),
             (
-                format!("[ladder]\ndice = [1]\nmarks = [3]\n{ONE}"),
-                "start at 0",
-            ),
-            (
-                format!(
-                    "[rolls]\nintelligence_from = 14\nintelligence_every = 4\nspend = 120\nsoft_cap = 100\n{ONE}"
-                ),
-                "is a percent",
+                format!("[ladder]\ndice = [1]\nmarks = [0, 3]\n{ONE}"),
+                "one entry per step",
             ),
             (
                 format!("[increase]\nmarks = 4\n{ONE}"),
                 "unknown field `increase`",
-            ),
-            (
-                ONE.replace("\"Stealth\"", "\" \""),
-                "`name` must not be empty",
             ),
             (format!("{ONE}level = 3\n"), "unknown field `level`"),
             (

@@ -217,8 +217,9 @@ can choose one. There is no separate key for firing a launcher: `t` does it.
 
 Either key puts a cursor on the map:
 
-- It starts on your last target if you still see it (or on the same spot), else on the nearest
-  [hostile](creatures.md#factions) creature you see, else on you.
+- It starts on your last target if you still see it and it is within range (an empty spot is never
+  remembered), else on the nearest [hostile](creatures.md#factions) creature you see within range,
+  else on you.
 - `Tab` moves it to the next creature you see, nearest first, and `Shift`+`Tab` moves it back. The
   movement keys move it anywhere, into the dark too.
 - A faint dotted line shows the way the missile would fly, as far as you know the ground. It ends

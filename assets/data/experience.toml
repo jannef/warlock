@@ -5,7 +5,7 @@
 # k(n) = plateau × m ÷ (m + ramp) + slope_per_100 ÷ 100 × m kills of the player's own level, each
 # worth the creature XP guideline, per_level × n + base. That level's XP is k(n) × guideline(n),
 # times the level's early discount (the [early] table: percent[0] for level 2, percent[1] for
-# level 3, ...; 100 % after the list; values 1 to 100, never decreasing), rounded once, and the
+# level 3, ...; 100 % after the list), rounded once, and the
 # XP total needed to reach level n is the sum of those for levels 2 to n. With 213, 5, and 285
 # and the discount below: 10 kills for level 2 (192 XP; 38 and 767 undiscounted), 146 for level
 # 10 (29 715 XP in all), 365 for level 60 (2 845 856 XP in all), 485 for level 100 (9 966 935

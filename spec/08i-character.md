@@ -735,8 +735,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
   `world/talent.rs`, the picks; M30, #229; design `docs/design/progression.md` §7, §10): knacks
   a character picks as they level, each a typed effect read where the rules already read what
   magic items do.
-  - **Data** (§7): `data/talents.toml` (the settings: `[coverage]`, the `[[tree]]`s
-    in display order, the closed `[[system]]` list) and `data/talents/<id>.toml`, one `[[talent]]`
+  - **Data** (§7): `data/talents.toml` (the settings: the `[[tree]]`s
+    in display order, the `[[system]]` list) and `data/talents/<id>.toml`, one `[[talent]]`
     a file (`id`, `name`, `tree`, `description` in the game's words,
     `choice` (`weapon_skill`, `style`, `skill`, `element`, `stat`), `needs`, `effects`,
     `systems` from the list, `granted`:
@@ -904,10 +904,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
     finding a 'hidden' mechanism"): a character has **one level**, read off the one curve from
     their XP as ever, but it stops at their class's **cap**, `ClassDef::max_level`
     (`data/classes/`, default `data/experience.toml` `[levels] class_max`, 60; the bard's
-    30, #874, the only class below it; checked at load: 2 to the curve's top, every `abilities` row and `bonus_talents`
-    level within it), plus a **prestige class's** `levels` once they are called
+    30, #874, the only class below it; checked at load: at most the curve's top), plus a **prestige class's** `levels` once they are called
     (`Character::level_cap`). A prestige class (`data/prestige/`, `PrestigeDef`: `id`, `name`,
-    `description`, `levels` 1 to 60, `hp`, `mana`, `rolls`, `known_for`, `abilities`,
+    `description`, `levels`, `hp`, `mana`, `rolls`, `known_for`, `abilities`,
     `bonus_talents` at its own levels; never a class's id) is a class in everything a level
     reads and nothing a creation reads. Levels up to the cap are the class's; each level past
     it is the prestige class's at its own level (`Character::class_of`: a bard capped at 30
@@ -921,8 +920,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     known for; talent picks (every third level), stat checks, casting (the class's percent of
     the total level), and the experience factor are unchanged. **The calling** is the door:
     `CallingDef` (a campaign's `data/callings/`, `content/calling.rs`: `class` a prestige id,
-    `from` the base classes, each named by one calling of a campaign, `level` at least each
-    one's cap, `message`; one outside every campaign is a fixture's and any run's). It is
+    `from` the base classes, each named by one calling of a campaign, `level` (each one's cap in
+    the shipped data), `message`; one outside every campaign is a fixture's and any run's). It is
     **open** (`World::calling_open`) to a character of a `from` class at that level with no
     prestige class yet; `World::call` (`world/calling.rs`, the one place a prestige class is
     given) sets `Character::prestige` (saved, hashed, left out while none; never cleared),
@@ -1019,8 +1018,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     damage, Poisoned for a ward against poison, and the character screen says "Resistant to
     fire" in words) and Crusher (Might; St 13, Maces and clubs or Unarmed 3: `penetration` +2
     on melee blows, off-hand blows, shield bashes, and kicks that can do bludgeoning damage;
-    never shots or throws) make the `damage_types` system's two, so it is held to the coverage
-    bar. The witch's Blight (#245) is poison-typed when it lands: its burst names
+    never shots or throws) make the `damage_types` system's two. The witch's Blight (#245) is poison-typed when it lands: its burst names
     `damage_type = "poison"`, and the Poisoned it gives meets poison resistance as every dose
     does (`World::afflict`), so no rule of its own.
   - **Shadow and Wayfarer** (#239; the design's §7.5 but for Hooded light, which waits for the
@@ -1116,48 +1114,17 @@ developer notes (CLAUDE.md, `docs/dev/`).
     gems found twice as often). Half-orc: Ferocity (`ferocity` +2 damage on every attack while
     below a third of the hit points, `Actor::stanced`), Orcish hide (Toughness 13: Protection
     +1). Humans are **granted Versatile** (`talents = ["versatile"]` in `data/races.toml`; a
-    race may grant only granted talents of the racial tree, checked at load): `extra_pick` at
+    race grants granted talents of the racial tree): `extra_pick` at
     level 1 (a creation pick more, `creation_count`) and at level 30 (`World::level_up`). A
     race's grants join the birth sign's (`stars::grant`, at the start and on every restore),
-    shown as the race's ("(race)" in the dump). The talk and gems systems are held to the bar.
-  - **Coverage** (the design's §8): every talent names the systems it touches; at load a
-    system not `pending` with fewer than `min_talents` talents (or `min_class` class abilities,
-    the talents the class tables give, counted apart from the talents; 0 until every class has
-    its table), or a tree not `pending`, `no_free`, nor a class tree without `free_per_tree`
-    prerequisite-free talents, is a content error. A wave that ships a system's talents removes
-    its `pending`.
-    A cull that leaves a system without talents folds its tag into a parent (#787: `weather`
-    into `travel`, the outdoors), or drops it when none fits (#787: `background`).
-    **Policy for new systems** (design §8.2; #773): systems are broad (combat, stealth, magic,
-    light, hunger, ...); a room effect, a creature family's gimmick, a chest kind, or an info
-    readout extends its parent system and is no system of its own. Every new system ships with
-    at least `min_talents` talents (one) and `min_class` class abilities, tagged with its new
-    `[[system]]` in the same PR, and its feature issue says which in the template's "Talents
-    and class abilities" section (§13), or why none (presentation only, or an extension of a
-    system already listed). **A talent earns its place**: a real choice at its tier that changes
-    how a build plays or what it can do; never information only, a small percentage on a niche
-    mechanic, an effect another talent, class ability, or skill rank already gives, or one that
-    matters only in a rare room or against one rare creature. **Capstones are not economy,
-    quests, or XP** (#789): from class level 40 on a class ability changes what the character
-    can do in a fight or a dungeon, and there is no XP or quest-reward effect at or above level
-    30; a quest-reward effect is judged by its total over a campaign's fixed pool, not its
-    percent. **No clones** (#790): a class table names the pickable's
-    id, never a talent that does the same; the load refuses one, but for the pairs
-    `alike` lists in `data/talents.toml` (Cleave and Cleaving strike, which stack into a great
-    cleave; the birth signs' gifts). A pickable a class table gives that the character already
-    picked brings a talent pick in its place at that level. **Flaws, the outdoors, hidden marks,
-    information, shop favour** (#791): a flaw's cost shows up on an ordinary dungeon floor, and
-    no two sources share one (the horoscope's flaws are kept as they are); a talent that works
-    only outdoors or in one season is niche unless it also does something underground; an
-    effect on stat-training marks, which are never shown, is at least twice a common source's,
-    or the talent has a visible effect beside it; a whole talent of information goes, an
-    information half of a good talent may stay; and Haggler (the merchant's) is the one class
-    ability on shop favour, with no new source among the pickables or the class tables (the
-    half-elf's Diplomat and the horoscope's Dragon's hoard stay). A talent names a system only if
-    its effect reads that system. Resources are systems too: mana and the pools of #225 join the
-    list with talents on their maximum, refill, and costs, and abilities that spend them carry
-    their tag; a cost in a resource stands instead of a cooldown status, never beside one.
-    Developer notes: `docs/dev/progression.md` "Coverage policy".
+    shown as the race's ("(race)" in the dump).
+  - **Systems**: a talent may name the systems it touches from the list in
+    `data/talents.toml`; the wiki's talents-by-system table reads them. The load checks only
+    that the talent table is well formed (#1205): it parses, every id it names (talents, trees,
+    systems, statuses, resources, skills, weapon skills, races, classes, eyes, damage types,
+    lights, spells, terrain) resolves, a choice-keyed effect has its choice, and a die's sides or
+    a divisor is not 0. Whether a talent is worth taking, alike to another, or in range is the
+    data author's call.
   - **Determinism and saves**: picks are replayed actions; nothing here draws from the gameplay
     stream; the `levels` stream (`WorldState::levels_rng`, for the skill rolls and stat checks
     to come) is made on its first draw. `Actor::talents` (by id, like affixes: adding talents
@@ -1301,7 +1268,6 @@ developer notes (CLAUDE.md, `docs/dev/`).
     (§8 "Resources", R1); Martial arts grants the Ki resource, which Flurry, Step of the wind, Stunning strike,
     Patient defence, Stillness, Diamond soul's catch, and Quivering palm spend (R4, #252; #846, #847,
     #848, #849, #850, #851).
-  - **Coverage**: `min_class` stays 0 until every class has its table.
 - **The casters' class tables, and their spells** (`content/spell_def.rs`: `SpellId`;
   `data/spells/`; `world/cast.rs`, `world/caster.rs`; M30, #245, #395; design §4.9–4.12, §3.7):
   the priest, druid, wizard,
@@ -1421,8 +1387,6 @@ developer notes (CLAUDE.md, `docs/dev/`).
     in a life (`Progress::once`), what would kill the player (not starving or choking) leaves
     them at 1 hit point, Worn thin a day (hit points and mana back half as fast), and for the
     Hag's bargain Presence −2 for good; "A miracle! You do not fall."
-  - **Coverage**: `min_class` stays 0 while the ranger's, thief's, and bard's tables (#244)
-    are still to come.
   - **What the player sees**: the news of each level ("You gain Rage."); the actives in the
     abilities menu with their cooldowns, and the abilities in the dumps' `abilities` layer.
     Never a number the game hides: the wiki's class tables state the rules. **Saves change**

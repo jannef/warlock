@@ -225,6 +225,7 @@ impl World {
             }
             Event::LevelChanged { .. }
             | Event::Talked(_)
+            | Event::Identified { .. }
             | Event::VoiceThrown { .. }
             | Event::Ordered { .. } => true,
             // An ally departed where the player sees (spec §8 "Allies").
@@ -241,6 +242,7 @@ impl World {
                 with,
                 damage,
                 natural,
+                ..
             } => {
                 let sees_attacker = attacker == player
                     || (perception.sees_actors_at(from) && !perception.conceals(attacker));

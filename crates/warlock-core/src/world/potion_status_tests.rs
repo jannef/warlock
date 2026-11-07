@@ -1,6 +1,7 @@
 //! Potions that lend a status for a while (spec §8 "Potions", #567): boosts, visions, quickness,
 //! and resistances drunk through `eat:`; how they stack and wear off; Lasting draughts and
-//! Cauldron-wise; the content checks of `vision` and `resist` on statuses.
+//! Cauldron-wise; the content checks of `vision` and `resist` on statuses; the helpful draughts
+//! of kind `status` (the potions wave 2 design §4.1) and their checks.
 
 use super::*;
 use crate::action::parse_actions;
@@ -239,5 +240,110 @@ fn drinks_must_lend_the_status_their_kind_says() {
         assert!(err.is_err(), "{drink}");
     }
     let fine = potion("kind = \"boost\"\nstatus = \"fortified\"\nseverity = 2");
+    assert!(content_with("[]", &[("data/objects/odd.toml", &fine)]).is_ok());
+}
+
+// The helpful draughts (kind `status`; the potions wave 2 design §4.1): any status that ends,
+// lent through the same path as the boosts.
+
+/// Each draught, its status and degrees, the stat it marks, and the minutes it lasts.
+const HELPFUL: [(&str, &str, u16, Stat, u64); 6] = [
+    ("potion_of_barkskin", "barkskin", 2, Stat::Toughness, 2),
+    ("potion_of_glamour", "glamoured", 2, Stat::Presence, 2),
+    ("potion_of_renewal", "renewing", 2, Stat::Toughness, 4),
+    ("potion_of_the_quick", "quick_sensed", 3, Stat::Willpower, 3),
+    ("potion_of_the_unseen", "invisible", 1, Stat::Dexterity, 2),
+    ("potion_of_sea_legs", "water_borne", 3, Stat::Dexterity, 6),
+];
+
+#[test]
+fn each_helpful_draught_lends_its_status_marks_and_wears_off() {
+    for (potion, status, degrees, stat, minutes) in HELPFUL {
+        let mut w = world(&format!("[\"{potion}\"]"));
+        run(&mut w, "eat:a");
+        assert_eq!(severity(&w, status), Some(degrees), "{potion}");
+        assert_eq!(w.state.player().stat_marks[stat], 15, "{potion}");
+        let id = w.content.status_id(status).expect("status");
+        let start = w.content.status(id).start.clone().expect("a start line");
+        assert!(said(&w).contains(&start), "{potion}: {:?}", said(&w));
+        pass(&mut w, minutes - 1);
+        assert!(severity(&w, status).is_some(), "{potion}: still on");
+        pass(&mut w, 2);
+        assert_eq!(severity(&w, status), None, "{potion}: worn off");
+    }
+}
+
+#[test]
+fn the_unseen_and_sea_legs_do_what_their_statuses_do() {
+    let mut w = world("[\"potion_of_the_unseen\", \"potion_of_sea_legs\"]");
+    assert!(!w.state.player().effects.unseen(&w.content));
+    assert!(!w.state.player().wades_free(&w.content));
+    run(&mut w, "eat:a eat:a");
+    assert!(w.state.player().effects.unseen(&w.content));
+    assert!(w.state.player().wades_free(&w.content));
+}
+
+#[test]
+fn a_second_draught_at_the_same_strength_adds_nothing() {
+    let mut w = world("[\"potion_of_barkskin*2\"]");
+    run(&mut w, "eat:a eat:a");
+    assert_eq!(severity(&w, "barkskin"), Some(2));
+    assert!(said(&w).iter().any(|m| m == "Nothing more comes of it."));
+}
+
+#[test]
+fn helpful_draughts_describe_themselves_in_words() {
+    let pack: Vec<String> = HELPFUL.iter().map(|h| format!("\"{}\"", h.0)).collect();
+    let mut w = world(&format!("[{}]", pack.join(", ")));
+    run(&mut w, "identify");
+    let text = |w: &World, i: usize| {
+        let stack = &w.state.player().inventory[i];
+        crate::magic::describe::appraised(stack, w.lore(), Default::default())
+            .iter()
+            .map(|l| l.text.clone())
+            .collect::<Vec<_>>()
+            .join("\n")
+    };
+    let words = [
+        "Makes you harder to hit for a while",
+        "Makes you harder to hit for a while",
+        "Closes your wounds quicker for a while",
+        "Lets you feel the living about you for a while",
+        "Hides you from sight for a while",
+        "Lets you walk on water for a while",
+    ];
+    for (i, words) in words.into_iter().enumerate() {
+        assert!(
+            text(&w, i).contains(words),
+            "{}: {}",
+            HELPFUL[i].0,
+            text(&w, i)
+        );
+    }
+}
+
+#[test]
+fn a_status_draught_is_well_formed() {
+    let potion = |drink: &str| {
+        format!(
+            "[[object]]\nid = \"odd\"\nname = \"odd potion\"\nplural = \"odd potions\"\n\
+             glyph = \"!\"\nfg = \"#b07838\"\nclass = \"potions\"\nmaterials = [\"glass\"]\n\
+             weight = 250\nvalue = 1\nstackable = true\n[object.drink]\ncolour = \"bronze\"\n\
+             {drink}\n"
+        )
+    };
+    for drink in [
+        // No severity, past the max, another kind's field, no status.
+        "kind = \"status\"\nstatus = \"barkskin\"",
+        "kind = \"status\"\nstatus = \"barkskin\"\nseverity = 4",
+        "kind = \"status\"\nstatus = \"barkskin\"\nseverity = 1\ndice = \"1d4\"",
+        "kind = \"status\"\nseverity = 1",
+    ] {
+        let text = potion(drink);
+        let err = content_with("[]", &[("data/objects/odd.toml", &text)]);
+        assert!(err.is_err(), "{drink}");
+    }
+    // One that eases by actions is fine too (Staggered).
+    let fine = potion("kind = \"status\"\nstatus = \"staggered\"\nseverity = 1");
     assert!(content_with("[]", &[("data/objects/odd.toml", &fine)]).is_ok());
 }

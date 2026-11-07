@@ -33,9 +33,10 @@
 //! name, the shop floor's `area` (inclusive: everything lying there is for sale), and the
 //! keeper's `post` on it, where the keeper (`data/shops.toml`'s `[keeper]`) is spawned.
 //! Optional `danger = N` (spec §7 "Danger levels"; 0 to 99, or `{ base, player }`) with
-//! `population` (creature ids), `population_count`, `stray`, `stray_pool`, `out_of_depth`, `deeper`,
-//! `deeper_cap`, `dread_one_in`, and `spawn`, as a dungeon branch gives them (`super::danger`):
-//! creatures of about that danger keep coming while the player is there; none on the overworld.
+//! `population` (creature ids), `population_count`, `stray`, `stray_pool`, `out_of_depth`,
+//! `deeper`, `deeper_cap`, `dread_one_in`, `neutral`, and `spawn`, as a dungeon branch gives them
+//! (`super::danger`): creatures of about that danger keep coming while the player is there; none on
+//! the overworld.
 
 use super::creature::CreatureId;
 use super::danger::{
@@ -156,6 +157,7 @@ struct LevelFile {
     deeper: Option<u8>,
     deeper_cap: Option<u8>,
     dread_one_in: Option<u16>,
+    neutral: Option<u8>,
     spawn: Option<SpawnSpec>,
     /// A vault's branches and branch levels (read by `vault::parse_dungeons`; refused on a
     /// level).
@@ -1182,6 +1184,7 @@ pub(super) fn parse_level(
             deeper: parsed.deeper,
             deeper_cap: parsed.deeper_cap,
             dread_one_in: parsed.dread_one_in,
+            neutral: parsed.neutral,
         },
         stray_pool: parsed.stray_pool,
         spawn: parsed.spawn,

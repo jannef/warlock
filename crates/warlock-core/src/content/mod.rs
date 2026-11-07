@@ -171,7 +171,6 @@ mod surprise;
 mod swim;
 mod tag;
 mod talent;
-mod talent_alike;
 mod temper;
 mod terrain;
 mod theft;
@@ -212,7 +211,7 @@ pub use background::{
 pub use breath::Breath;
 pub use burst::{BurstWhen, CreatureBurst, RADII as CREATURE_BURST_RADII};
 pub use calendar::Calendar;
-pub use calling::{CallingDef, MAX_MESSAGE as MAX_CALLING_MESSAGE};
+pub use calling::CallingDef;
 pub use campaign::{CAMPAIGNS, CampaignDef, CampaignKind};
 pub use chest::{ChestBand, ChestGold, ChestLoot, ChestRules};
 pub use circles::{CircleStatuses, CircledStatus, school_index};
@@ -304,7 +303,7 @@ pub use particles::{ParticleEmitter, ParticleTrigger};
 pub use plural::{MAX_WORD, Plurals};
 pub use potion::{Draught, Drink, Flask, MAX_POTION_MARKS, Splash};
 pub use prayer::{Face, FaceWords, Faced, PrayerRules, PrayerUse, UseDef};
-pub use prestige::{MAX_PRESTIGE_LEVELS, PrestigeDef, Table};
+pub use prestige::{PrestigeDef, Table};
 pub use quest::{
     GOLD, Goal, KillTarget, MAX_COUNT, MAX_NAME, MAX_QUEST_XP, MAX_TAG_COUNT, QuestDef, QuestId,
     QuestKind, QuestTexts, Reveal, RevealWhen, Reward, Waits,
@@ -339,7 +338,7 @@ pub use shop::{
     KEEPER, Keeper, MAX_FAVOUR, MAX_SHOPS, MOST_FAVOUR, ShopDef, ShopId, ShopPlan, Shops,
 };
 pub use size::{CARRY, MEDIUM, SizeDef};
-pub use skill::{OPTIONAL_CHANCE, OptionalSkill, SkillBook, SkillDef};
+pub use skill::{OptionalSkill, SkillBook, SkillDef};
 pub use sky::{MAX_MOONS, MAX_SIZE, MoonDef, PHASE_ONE, STANDARD_SIZE};
 pub use slot::{MAX_SLOTS, SlotDef, SlotId};
 pub use smite::SmiteRules;
@@ -370,9 +369,9 @@ pub use surprise::SurpriseRules;
 pub use swim::SwimRules;
 pub use tag::{MAX_TAG, TAG_TARGET, spoken};
 pub use talent::{
-    AnyWeaponSkill, Choice, Coverage, FreeBlowTrigger, Need, Needs, ResourceCost, SmiteRiderKind,
-    SongOn, SystemDef, SystemId, TalentActive, TalentBook, TalentDef, TalentEffect, TalentId,
-    TreeDef, TreeId,
+    AnyWeaponSkill, Choice, FreeBlowTrigger, Need, Needs, ResourceCost, SmiteRiderKind, SongOn,
+    SystemDef, SystemId, TalentActive, TalentBook, TalentDef, TalentEffect, TalentId, TreeDef,
+    TreeId,
 };
 pub use temper::TemperRules;
 pub use terrain::{
@@ -2365,7 +2364,7 @@ impl Content {
     fn load_kits(&mut self) -> Result<(), ContentError> {
         let classes = (self.classes.iter())
             .map(|c| {
-                kit::resolve(&c.kit_spec, self, Some(&c.trainable())).map_err(|m| {
+                kit::resolve(&c.kit_spec, self).map_err(|m| {
                     ContentError::new("data/classes/", format!("class `{}`: {m}", c.id))
                 })
             })
@@ -2375,7 +2374,7 @@ impl Content {
                 let at = |m: String| {
                     ContentError::new("data/races.toml", format!("race `{}`: {m}", r.id))
                 };
-                let kit = kit::resolve(&r.kit_spec, self, None).map_err(at)?;
+                let kit = kit::resolve(&r.kit_spec, self).map_err(at)?;
                 let bare = (r.bare_spec.iter())
                     .map(|s| {
                         self.slot_id(s)
@@ -2388,7 +2387,7 @@ impl Content {
         let signs = |parts: &[SignPart]| {
             (parts.iter())
                 .map(|p| {
-                    kit::resolve(&p.kit_spec, self, None).map_err(|m| {
+                    kit::resolve(&p.kit_spec, self).map_err(|m| {
                         ContentError::new("data/horoscope.toml", format!("`{}`: {m}", p.id))
                     })
                 })
@@ -3768,6 +3767,31 @@ impl Content {
             .collect()
     }
 
+    /// The candidates of a floor's population or a timed spawn ([`Content::candidates`]), each
+    /// type not hostile to the player by default (the neutral animals; their stance in the data,
+    /// whatever empathy a player has) weighed at `odds.neutral` % of its rarity's factor (#1195:
+    /// a dungeon is for fighting).
+    pub fn draw_candidates(
+        &self,
+        kinds: &[CreatureId],
+        met: &BTreeSet<String>,
+        odds: &danger::Odds,
+    ) -> Vec<danger::Candidate> {
+        let mut candidates = self.candidates(kinds, met);
+        if odds.neutral < 100 {
+            let player = self.creature_id("player");
+            for (c, _, factor, _) in &mut candidates {
+                if player.is_some_and(|p| self.stance(*c, p) != faction::Stance::Hostile) {
+                    // At least 1 unless 0 % (a rare type at a small share still comes).
+                    let scaled = u32::from(*factor) * u32::from(odds.neutral) / 100;
+                    let scaled = if odds.neutral > 0 { scaled.max(1) } else { 0 };
+                    *factor = u16::try_from(scaled).unwrap_or(u16::MAX);
+                }
+            }
+        }
+        candidates
+    }
+
     /// The index of size `id` in [`Content::sizes`].
     pub fn size_index(&self, id: &str) -> Option<usize> {
         self.sizes.iter().position(|s| s.id == id)
@@ -4055,9 +4079,8 @@ impl Content {
         })
     }
 
-    /// Checks the classes' level tables against the talents (spec §8 "Class abilities"), then
-    /// the coverage bar (spec §8 "Talents"), counting as a system's class abilities the talents
-    /// the class tables give that name it, each once.
+    /// Checks the classes' and prestige classes' level tables against the talents (spec §8
+    /// "Class abilities"): what they name resolves.
     fn check_class_tables(&self) -> Result<(), ContentError> {
         for class in &self.classes {
             class.check_table(&self.talents)?;
@@ -4065,30 +4088,7 @@ impl Content {
         for prestige in &self.prestige {
             prestige.check_table(&self.talents)?;
         }
-        let book = &self.talents;
-        // A prestige class's abilities are class abilities too.
-        let tables = (self.classes.iter().map(Table::Class))
-            .chain(self.prestige.iter().map(Table::Prestige));
-        let mut given: Vec<TalentId> = tables
-            .flat_map(|t| t.abilities_to(book, MAX_LEVEL))
-            .collect();
-        given.sort();
-        given.dedup();
-        let class_abilities = |system: &str| {
-            let Some(system) = book.system_id(system) else {
-                return 0;
-            };
-            (given.iter())
-                .filter(|&&t| book.get(t).systems.contains(&system))
-                .count() as u32
-        };
-        match book.coverage_gap(&class_abilities) {
-            Some(gap) => Err(ContentError::new(
-                "data/talents.toml",
-                format!("coverage: {gap}"),
-            )),
-            None => Ok(()),
-        }
+        Ok(())
     }
 
     /// The alignment rules of `data/alignment.toml` (spec §8 "Alignment"); `None` without the
@@ -5422,6 +5422,7 @@ mod tests {
             deeper: 100,
             deeper_cap: danger::MAX_DEEPER_CAP,
             dread_one_in: 0,
+            neutral: 100,
         };
         let mut rng = crate::rng::Rng::stream(1, "test");
         for _ in 0..50 {

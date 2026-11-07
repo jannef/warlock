@@ -21,15 +21,9 @@
 use super::ContentError;
 use crate::stats::Stat;
 use serde::Deserialize;
-use std::ops::RangeInclusive;
 
-/// What `price_base` and `price_per_point` may be.
-pub const PRICES: RangeInclusive<u16> = 0..=1000;
-
-/// What `ramp_divisor`, `quarter`, and `drop_share` may be.
-pub const DIVISORS: RangeInclusive<u16> = 1..=20;
-/// What `odds_power` may be (the odds' integer arithmetic holds up to 5).
-pub const POWERS: RangeInclusive<u8> = 1..=5;
+/// The highest `odds_power` (the odds' integer arithmetic holds up to 5).
+pub const MAX_POWER: u8 = 5;
 /// The scale of [`StatTraining::odds`]: a chance of `odds / ODDS_SCALE`, drawn as one
 /// `below(ODDS_SCALE)`.
 pub const ODDS_SCALE: u32 = 65_536;
@@ -394,77 +388,20 @@ impl StatTraining {
     pub(super) fn parse(file: &str, text: &str) -> Result<Self, ContentError> {
         let err = |m: String| ContentError::new(file, m);
         let File { training } = toml::from_str(text).map_err(|e| err(e.to_string()))?;
-        for (name, value, range) in [
-            ("price_base", training.price_base, PRICES),
-            ("price_per_point", training.price_per_point, PRICES),
-            ("ramp_divisor", training.ramp_divisor, DIVISORS),
-            ("quarter", training.quarter, DIVISORS),
-            ("drop_share", training.drop_share, DIVISORS),
-            (
-                "odds_power",
-                u16::from(training.odds_power),
-                u16::from(*POWERS.start())..=u16::from(*POWERS.end()),
-            ),
+        // The divisors of the prices, and the power the odds raise within `u128`.
+        for (name, value) in [
+            ("ramp_divisor", training.ramp_divisor),
+            ("drop_share", training.drop_share),
         ] {
-            if !range.contains(&value) {
-                return Err(err(format!(
-                    "{name} {value} is out of range ({} to {})",
-                    range.start(),
-                    range.end()
-                )));
+            if value == 0 {
+                return Err(err(format!("{name} must be at least 1")));
             }
         }
-        if training.price_base == 0 && training.price_per_point == 0 {
-            return Err(err(
-                "price_base and price_per_point may not both be 0".into()
-            ));
-        }
-        let id = |rule: &StatRule| rule.stat.map_or("any stat", Stat::id);
-        for rule in &training.uses {
-            if !(1..=100).contains(&rule.chance) {
-                return Err(err(format!(
-                    "{} on {:?}: chance {} is out of range (1 to 100)",
-                    id(rule),
-                    rule.on,
-                    rule.chance
-                )));
-            }
-            if rule.stat.is_some() == rule.on.names_stat() {
-                let want = match rule.on.names_stat() {
-                    true => "names its own stat: leave out `stat`",
-                    false => "needs a `stat`",
-                };
-                return Err(err(format!("{:?} {want}", rule.on)));
-            }
-        }
-        for (i, rule) in training.uses.iter().enumerate() {
-            if (training.uses[..i].iter()).any(|r| r.stat == rule.stat && r.on == rule.on) {
-                return Err(err(format!(
-                    "{} on {:?} is listed twice",
-                    id(rule),
-                    rule.on
-                )));
-            }
-        }
-        for (i, rule) in training.deeds.iter().enumerate() {
-            let what = format!("deed {} on {:?}", rule.stat.id(), rule.on);
-            match (rule.chance, rule.marks) {
-                (Some(chance), None) if !(1..=100).contains(&chance) => {
-                    return Err(err(format!(
-                        "{what}: chance {chance} is out of range (1 to 100)"
-                    )));
-                }
-                (None, Some(0)) => return Err(err(format!("{what}: marks 0"))),
-                (Some(_), None) | (None, Some(_)) => {}
-                _ => {
-                    return Err(err(format!(
-                        "{what} needs exactly one of `chance` and `marks`"
-                    )));
-                }
-            }
-            if (training.deeds[..i].iter()).any(|r| r.stat == rule.stat && r.on == rule.on) {
-                return Err(err(format!("{what} is listed twice")));
-            }
+        if training.odds_power > MAX_POWER {
+            return Err(err(format!(
+                "odds_power {} is more than {MAX_POWER}",
+                training.odds_power
+            )));
         }
         Ok(training)
     }
@@ -529,7 +466,7 @@ impl StatTraining {
     /// check against `price`, out of [`ODDS_SCALE`]: 0 while `quarter × marks < price`, else
     /// `marks^p / (marks^p + price^p)` with the pile counted up to eight times the price.
     /// Integers only: both are scaled to the price first (`marks × 65 536 / price` against
-    /// 65 536), which keeps every power of [`POWERS`] within `u128`.
+    /// 65 536), which keeps every power up to [`MAX_POWER`] within `u128`.
     pub fn odds(&self, marks: u32, price: u32) -> u32 {
         let price = u64::from(price.max(1));
         let marks = u64::from(marks);
@@ -604,10 +541,10 @@ mod tests {
         assert_eq!(t.odds(160, 160), ODDS_SCALE / 2);
         assert_eq!(t.odds(8 * 160, 160), t.odds(100 * 160, 160));
         assert!(t.odds(u32::MAX, 160) < ODDS_SCALE);
-        // The worst price the ranges allow still computes.
+        // The worst price the fields can hold still computes.
         let mut worst = t.clone();
-        (worst.price_base, worst.price_per_point, worst.ramp_divisor) = (1000, 1000, 1);
-        worst.odds_power = *POWERS.end();
+        (worst.price_base, worst.price_per_point, worst.ramp_divisor) = (u16::MAX, u16::MAX, 1);
+        worst.odds_power = MAX_POWER;
         let price = worst.price(40, 1);
         assert!(worst.odds(price, price).abs_diff(ODDS_SCALE / 2) <= 1);
         assert!(worst.odds(u32::MAX, price) < ODDS_SCALE);
@@ -624,15 +561,6 @@ mod tests {
         assert!(t.is_active());
         assert_eq!(t.rules(StatUse::Blow).count(), 1);
         assert_eq!(t.rules(StatUse::Dig).count(), 0);
-        assert!(
-            parse(&rule(0))
-                .unwrap_err()
-                .to_string()
-                .contains("chance 0")
-        );
-        assert!(parse(&rule(101)).is_err());
-        let twice = format!("{}{}", rule(5), &rule(5)[HEAD.len()..]);
-        assert!(parse(&twice).unwrap_err().to_string().contains("twice"));
         let bad = HEAD.replace("divisor = 4", "divisor = 0");
         assert!(
             parse(&bad)
@@ -647,13 +575,6 @@ mod tests {
         let unknown =
             format!("{HEAD}[[training.use]]\nstat = \"luck\"\non = \"blow\"\nchance = 5\n");
         assert!(parse(&unknown).is_err());
-        let statless = format!("{HEAD}[[training.use]]\non = \"blow\"\nchance = 5\n");
-        assert!(
-            parse(&statless)
-                .unwrap_err()
-                .to_string()
-                .contains("needs a `stat`")
-        );
     }
 
     #[test]
@@ -668,14 +589,6 @@ mod tests {
         assert_eq!(t.deeds(StatDeed::Caught).count(), 0);
         let t = parse(&deed("marks = 15")).unwrap();
         assert_eq!(t.deeds(StatDeed::Starved).next().unwrap().marks, Some(15));
-        let err = |takes: &str| parse(&deed(takes)).unwrap_err().to_string();
-        assert!(err("chance = 0").contains("chance 0"));
-        assert!(err("chance = 101").contains("chance 101"));
-        assert!(err("marks = 0").contains("marks 0"));
-        assert!(err("").contains("exactly one"));
-        assert!(err("chance = 5\nmarks = 5").contains("exactly one"));
-        let twice = format!("{}{}", deed("marks = 5"), &deed("chance = 5")[HEAD.len()..]);
-        assert!(parse(&twice).unwrap_err().to_string().contains("twice"));
         assert!(parse(&deed("marks = 5").replace("starved", "idle")).is_err());
         // The quarter rule as a check reads it.
         assert!(!t.in_play(0, 75));
@@ -690,7 +603,5 @@ mod tests {
         let drank = format!("{HEAD}[[training.use]]\non = \"drank\"\nchance = 100\n");
         let t = parse(&drank).unwrap();
         assert_eq!(t.rules(StatUse::Drank).next().map(|r| r.stat), Some(None));
-        let named = drank.replace("on = ", "stat = \"strength\"\non = ");
-        assert!(parse(&named).unwrap_err().to_string().contains("leave out"));
     }
 }

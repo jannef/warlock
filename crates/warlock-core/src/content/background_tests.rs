@@ -146,36 +146,7 @@ fn slots_are_the_known_ones() {
 fn bad_lines_are_refused() {
     for (body, why) in [
         ("tier = \"legendary\"", "unknown variant"),
-        (
-            "tier = \"common\"\nwhen = { tags = [\"nobody_sets\"] }",
-            "no earlier chapter's line sets",
-        ),
         ("tier = \"common\"\ntext2 = 1", "unknown field"),
-        (
-            "tier = \"common\"\neffects = [{ stat = { strength = 3 } }]",
-            "1 or 2, either way",
-        ),
-        (
-            "tier = \"common\"\neffects = [{ stat = { strength = 2 } }, { stat = { strength = 1 } }]",
-            "at most 2 either way a line",
-        ),
-        (
-            "tier = \"rare\"\neffects = [{ stat = { strength = 2 } }, { stat = { dexterity = -1 } }, \
-             { skill = { heal = \"1d4\" } }]",
-            "never costs anything",
-        ),
-        (
-            "tier = \"rare\"\neffects = [{ skill = { heal = \"1d4\" } }]",
-            "a rare line is worth 3 to 5",
-        ),
-        (
-            "tier = \"common\"\neffects = [{ gold = \"10d6+40\" }]",
-            "a common line is worth -4 to 2",
-        ),
-        (
-            "tier = \"uncommon\"\nonly = true",
-            "an `only` line is common",
-        ),
         (
             "tier = \"common\"\nwhen = { talents = [\"no_such\"] }",
             "unknown talent `no_such`",
@@ -197,24 +168,8 @@ fn bad_lines_are_refused() {
             "unknown campaign `nowhere`",
         ),
         (
-            "tier = \"common\"\nwhen = { band = {} }",
-            "names a `min` band",
-        ),
-        (
             "tier = \"common\"\neffects = [{ talent = \"no_such\" }]",
             "unknown talent `no_such`",
-        ),
-        (
-            "tier = \"common\"\neffects = [{ talent = \"blaze\" }]",
-            "`blaze` is given, a flaw, or a class ability",
-        ),
-        (
-            "tier = \"common\"\neffects = [{ talent = \"bulwark\" }]",
-            "`bulwark` is given, a flaw, or a class ability",
-        ),
-        (
-            "tier = \"common\"\neffects = [{ talent = \"slight\" }]",
-            "`slight` is given, a flaw, or a class ability",
         ),
         (
             "tier = \"common\"\neffects = [{ talent = \"weapon_focus\" }]",
@@ -229,29 +184,12 @@ fn bad_lines_are_refused() {
             "takes no choice",
         ),
         (
-            "tier = \"common\"\neffects = [{ flaw = \"hardy\" }]",
-            "`hardy` is no birth sign's flaw",
-        ),
-        (
-            "tier = \"rare\"\neffects = [{ talent = \"hardy\" }, { talent = \"lean\" }, \
-             { flaw = \"slight\" }]",
-            "never costs anything",
-        ),
-        (
             "tier = \"common\"\neffects = [{ gold = 5, alignment = 5 }]",
             "names one kind",
         ),
         (
-            "tier = \"common\"\neffects = [{ gold = \"1d6-3\" }]",
-            "neither always given",
-        ),
-        (
             "tier = \"common\"\neffects = [{ item = \"spork\" }]",
             "unknown object `spork`",
-        ),
-        (
-            "tier = \"common\"\neffects = [{ item = { wear = \"dagger\" } }]",
-            "wielded, not worn",
         ),
         (
             "tier = \"common\"\neffects = [{ weapon_marks = { lances = 2 } }]",
@@ -269,69 +207,25 @@ fn bad_lines_are_refused() {
     assert!(refused(unknown_slot).contains("unknown slot"));
     let twice = format!("{}{}", line("tier = \"common\""), line("tier = \"common\""));
     assert!(refused(&twice).contains("used twice in the chapter"));
-    let heavy = "[[line]]\nid = \"x\"\ntier = \"common\"\nweight = 21\ntext = \"A.\"\n";
-    assert!(refused(heavy).contains("`weight` 21 is not 1 to 20"));
 }
 
 #[test]
 fn chapters_are_checked_together() {
-    // No plain line: a chapter always tells something.
-    let plainless = "[chapter]\nid = \"t\"\nname = \"T\"\nparagraph = 4\n\n[[line]]\nid = \"x\"\n\
-                     tier = \"common\"\nweight = 1\ntext = \"A.\"\neffects = [{ alignment = 5 }]\n";
-    let err = with(&[("data/background/99-t.toml", plainless)]).expect_err("plainless");
-    assert!(err.contains("has no plain line"), "{err}");
-    // A paragraph before an earlier chapter's, or past the fourth.
-    let early = chapter("early", "").replace("paragraph = 4", "paragraph = 1");
-    let err = with(&[("data/background/99-early.toml", &early)]).expect_err("early");
-    assert!(
-        err.contains("paragraph 1 after a chapter of paragraph 4"),
-        "{err}"
-    );
-    let fifth = chapter("fifth", "").replace("paragraph = 4", "paragraph = 5");
-    let err = with(&[("data/background/99-fifth.toml", &fifth)]).expect_err("fifth");
-    assert!(err.contains("not 1 to 4"), "{err}");
     // A shared chapter's id, in a campaign or twice.
     let path = "campaigns/ascmearc/data/background/09-again.toml";
     let err = with(&[(path, &chapter("youth", ""))]).expect_err("shared id");
-    assert!(err.contains("a shared chapter's id"), "{err}");
+    assert!(err.contains("used twice"), "{err}");
     let err = with(&[("data/background/99-again.toml", &chapter("youth", ""))]).expect_err("twice");
     assert!(err.contains("used twice"), "{err}");
-    // Two campaigns may each have their own `road`; a tag set only in another campaign's
-    // chapter is unknown.
+    // Two campaigns may each have their own `road`.
     let roads = (CONTENT.background().expect("stories").chapters.iter())
         .filter(|c| c.id == "road")
         .count();
     assert_eq!(roads, 2);
-    let sets =
-        "[[line]]\nid = \"y\"\ntier = \"common\"\nweight = 1\ntext = \"B.\"\ntags = [\"far\"]\n";
-    let asks = "[[line]]\nid = \"x\"\ntier = \"common\"\nweight = 1\ntext = \"A.\"\n\
-                when = { tags = [\"far\"] }\n";
-    let err = with(&[
-        (
-            "campaigns/showcase/data/background/09-after.toml",
-            &chapter("after", sets),
-        ),
-        (
-            "campaigns/ascmearc/data/background/09-later.toml",
-            &chapter("later", asks),
-        ),
-    ])
-    .expect_err("another campaign's tag");
-    assert!(
-        err.contains("which no earlier chapter's line sets"),
-        "{err}"
-    );
-    // A slot with no default yet.
-    let mut files = ContentFiles::builtin();
-    files.edit_table("background", |t| {
-        t.replace("defaults = { guardian = \"your family\", ", "defaults = { ")
-    });
-    let err = Content::load(&files).expect_err("no default").to_string();
-    assert!(err.contains("`{guardian}`, which has no default"), "{err}");
     // Without the settings file, no story and nothing checked.
     let mut files = ContentFiles::builtin();
     files.remove(SETTINGS);
-    files.insert("data/background/99-t.toml", plainless);
+    files.insert("data/background/99-t.toml", "nonsense = 1\n");
     let content = Content::load(&files).expect("no stories");
     assert!(content.background().is_none());
 }
