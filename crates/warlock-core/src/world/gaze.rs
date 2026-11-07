@@ -110,7 +110,7 @@ impl World {
     }
 
     /// Actor `id` as the fight's lines name it, `seen` or not (`fight.rs::End`).
-    fn end_of(&self, id: ActorId, seen: bool) -> End<'_> {
+    pub(super) fn end_of(&self, id: ActorId, seen: bool) -> End<'_> {
         let player = self.state.player;
         match self.state.actors.get(&id) {
             _ if id == player => End::You,

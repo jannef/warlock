@@ -19,16 +19,16 @@ grave_worm at (42, 5) route E E E E E E W W W W W W
 ghost at (7, 5) route S S S W N N N N S S S S E N N N
 barrow_spider at (59, 10) route S S S E S S S N S N N N W N N N
 drowned at (52, 8) route E E E E W W W W
-dretch at (39, 15) route N E E E E W W W W S
+cult_chymist at (39, 15) route N E E E E W W W W S carrying 2 stinking flasks
 grave_worm at (71, 4) route N N E E W W S S
-skeleton at (11, 14) route E S W N N E W S S E N W
+skeleton at (11, 14) route E S W N N E W S S E N W carrying a corroded bronze spear (wielded)
 ghost at (25, 8) route N E E E E W W W W S
 ghost at (47, 5) route E E S S S W W W W W E E E E E N N N W W
 ghost at (34, 10) route W W W W W E E E E E
 drowned at (41, 15) route E S S S N N N W
 skeleton at (45, 6) route E W E W W W W N N S S E E E E W E W
 skeleton at (30, 7) route N E E E E S S S N N N W W W W S
-skeleton at (49, 14) route S N N E W S S N carrying a corroded bronze spear (wielded)
+skeleton at (49, 14) route S N N E W S S N carrying a rusted iron short sword (wielded)
 zombie at (59, 14) route N N N N E W W E E W S S S S
 zombie at (50, 13) route E S S W E N N W
 zombie at (36, 9) route N S S S S S N N N N N S
@@ -52,7 +52,7 @@ special room hushed at (41, 2)-(50, 9)
       ###+####                     #...........*#####   #"...#
       #¡.....#                     #.##########.#.z.#####....#
       #....zz#           ###########.##.(.!..#..+z..+...S.wz.#
-      #......#           #....^..¡##.##u.z...S.##...#####....#
+      #......#           #....^..¡##.##@.z...S.##...#####....#
       #####+##############<.......'...+......########   #....#
           #..z......^....+..^.....#####......#          ######
           ################¡.......#   #......#

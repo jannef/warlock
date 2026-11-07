@@ -1,0 +1,37 @@
+# The cult's chymist (the potions wave 2 design §7: a bomber): a living man of the cult's kind
+# (faction "cult"), who brews foulness for its rites and hurls stinking flasks from a few cells
+# away, and fights with a dagger (his racial weapon) once his foe is beside him. His flasks never
+# run out (a creature's throw, `world/hurl.rs`); one or two are in his pack, and fall where he
+# dies.
+[[creature]]
+id = "cult_chymist"
+level = 8
+xp = 50
+rarity = "uncommon"
+loot = 8
+name = "cult chymist"
+glyph = "@"
+fg = "#a08850"
+faction = "cult"
+tags = ["cultist"]
+alignment = "evil"
+race = "human"
+opens_doors = true
+footsteps = 90
+hearing = 12
+weight = 68000
+stats = { strength = 11, dexterity = 15, toughness = 12, intelligence = 14, willpower = 12, presence = 9 }
+base_hp = 10
+# Used to his own fumes.
+resist = { poison = 25 }
+on_eat = { message = "It tastes of brimstone and worse.", vomit = 60 }
+weapon_skills = { daggers = 2, thrown = 2 }
+racial_weapon = "dagger"
+[creature.throw]
+object = "stinking_flask"
+range = 6
+verb = "hurls"
+
+[[creature.gear]]
+chance = 60
+one_of = ["stinking_flask", "stinking_flask*2"]

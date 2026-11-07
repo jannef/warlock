@@ -83,7 +83,7 @@ barghest at (29, 41) route N N N N E E S W W W E E E N W W S S S S
 gallows_dead at (58, 33) route S S S S S N N N N S S S S N N N N N
 orc_berserker at (110, 30) route W W S E S S S S S N N N N N W N E E carrying a rusted great axe (wielded in both hands)
 duergar_skeleton at (101, 3) route W S S E W N N E carrying a rusted iron helm (being worn)
-marsh_troll at (21, 29) route E N S S S S S S N N N N N N S W
+magma_crawler at (21, 29) route E N S S S S S S N N N N N N S W
 hobgoblin_archer at (12, 39) route E E E E E E W W W W W W carrying a long war bow (readied), 15 horn arrows (quivered), a studded leather jerkin (being worn)
 animated_armour_19 at (65, 21) route  carrying a leather jerkin (being worn), a large shield (in off hand)
 animated_armour_19 at (55, 20) route  carrying a studded leather jerkin (being worn)
@@ -127,7 +127,7 @@ place a hooded figure at (46, 54): Its empty hands are held as if about a hilt t
   ##*................####...........## #.....##  #~~~~~###..##  ##..##             #.........###E......##   #........##
   #.................T.###..........##  ##...##  ##~~~~~~#####    ####              #.......### ##......#   ##........*#
   #.........C....h.................#    #####  ##~~~~~~~.##                       ##.......#    #.....##   #..........#
-  #..................T............##          ##~~~~~~~...##                     ##........######.....#    #......"...#
+  #..................w............##          ##~~~~~~~...##                     ##........######.....#    #......"...#
  ##...............................#       #####..~~~~~~~...#                     #..E.........##......#   ##..o......##
  #..........................CG....##     ##......~~....~...#                     #....................## ##..........##
  #.................................###  ##........~........#                     #..........g..........###.........z..#

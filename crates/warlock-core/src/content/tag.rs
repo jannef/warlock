@@ -109,6 +109,7 @@ mod tests {
                 "goblin",
                 "goblin_archer",
                 "goblin_chief",
+                "goblin_firebomber",
                 "goblin_wizard",
                 "hobgoblin",
                 "hobgoblin_archer",
@@ -122,7 +123,12 @@ mod tests {
         );
         assert_eq!(
             members("kobold"),
-            ["kobold", "kobold_archer", "kobold_shaman"]
+            [
+                "kobold",
+                "kobold_alchemist",
+                "kobold_archer",
+                "kobold_shaman"
+            ]
         );
         assert!(!members("vermin").contains(&"basilisk".to_string()));
         assert!(members("vermin").contains(&"rat".to_string()));

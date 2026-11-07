@@ -1,0 +1,39 @@
+# The kobold war band's alchemist (the potions wave 2 design §7: a bomber): it hurls flasks of
+# oil from a few cells away, so a corridor goes slick under whoever comes down it (the kobold
+# trick), and fights with a spear (its racial weapon) once they are beside it. Its flasks never
+# run out (a creature's throw, `world/hurl.rs`); one or two are in its pack, and fall where it
+# dies.
+[[creature]]
+id = "kobold_alchemist"
+level = 3
+xp = 25
+rarity = "uncommon"
+loot = 8
+name = "kobold alchemist"
+glyph = "k"
+fg = "#a0c860"
+speed = 900
+faction = "kobolds"
+tags = ["kobold"]
+# Its grades (spec §8 "Grades"): the lesser and the greater.
+grade_words = ["scrawny", "big"]
+alignment = "evil"
+vision = "darkvision"
+opens_doors = true
+footsteps = 70
+hearing = 12
+weight = 20000
+size = "small"
+stats = { strength = 7, dexterity = 14, toughness = 7, intelligence = 12, willpower = 10, presence = 8 }
+base_hp = 4
+on_eat = { message = "This kobold meat tastes terrible, and of lamp oil!", vomit = 50 }
+weapon_skills = { spears = 1, thrown = 1 }
+racial_weapon = "spear"
+[creature.throw]
+object = "flask_of_oil"
+range = 6
+verb = "hurls"
+
+[[creature.gear]]
+chance = 70
+one_of = ["flask_of_oil", "flask_of_oil*2"]

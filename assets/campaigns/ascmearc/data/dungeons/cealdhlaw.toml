@@ -25,10 +25,10 @@ temperature = 8
 # the family `animated_blade`, levels 5 to 20, met from the fifth floor on).
 danger = 1
 population = [
-    "rat", "bat", "beetle", "kobold", "kobold_archer", "kobold_shaman",
+    "rat", "bat", "beetle", "kobold", "kobold_archer", "kobold_shaman", "kobold_alchemist",
     "grave_worm", "crawling_hand", "skeletal_rat", "barrow_spider", "kobold_zombie", "goblin",
     "goblin_archer", "skeleton", "zombie", "giant_centipede", "barrow_ghoul", "skeleton_archer",
-    "goblin_chief", "skeletal_wolf", "barrow_wight", "skeleton_warrior",
+    "goblin_chief", "goblin_firebomber", "skeletal_wolf", "barrow_wight", "skeleton_warrior",
     "orc_runt", "orc_warrior", "orc_archer", "warg",
     "animated_candlestick", "animated_cutlery", "animated_teapot", "animated_cooking_pot",
     "animated_blade",

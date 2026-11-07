@@ -1,7 +1,8 @@
 # The summoning hall (spec §3, §8 "Summoning", #520): the summoners, one to a room, to watch
 # what they call forth. You arrive in the lit hall to the south; each room opens onto it by a
 # door. West: a goblin wizard (G), who calls forth goblins, goblin archers, hobgoblins, and
-# wargs. Middle: a necromancer (N), who raises the lesser dead. East: a dark wizard (D), who
+# wargs. Middle: a necromancer (N), who raises the lesser dead, and a cult chymist (C) beside him,
+# who hurls stinking flasks (a bomber, the potions wave 2 design §7). East: a dark wizard (D), who
 # calls forth devils. Open a door and the summoner behind it sees you: it summons at once, and
 # again every half a minute while its mana lasts. What comes is of its side, fights you, and pays
 # its experience when you kill it. The `summoners` scenario starts here; no stairs lead in or out.
@@ -12,7 +13,7 @@ ambient = [48, 46, 42, 0]
 map = '''
 #########################################
 #...........#.............#.............#
-#.....G.....#......N......#......D......#
+#.....G.....#....C.N......#......D......#
 #...........#.............#.............#
 #t.........t#t...........t#t...........t#
 ######+#############+#############+######
@@ -27,4 +28,5 @@ map = '''
 "t" = "sconce"
 "G" = { terrain = "floor", creature = "goblin_wizard" }
 "N" = { terrain = "floor", creature = "necromancer" }
+"C" = { terrain = "floor", creature = "cult_chymist" }
 "D" = { terrain = "floor", creature = "dark_wizard" }

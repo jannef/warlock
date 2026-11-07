@@ -169,6 +169,9 @@ gives each flask's spell, its numbers, and its range in cells.
   of glass" ([Hearing](hearing.md#what-makes-noise)), and you learn nothing.
 - **A potion that is no flask** spills uselessly: "The potion shatters; the draught soaks away."
   You learn nothing from it either. It is a way to be rid of a potion you know is bad.
+- **Thrown at you**: some creatures throw flasks (the bombers on
+  [Creature powers](creature-powers.md#throws)). Seeing where one breaks teaches you what it was,
+  as when you throw it, and a bomber carries a flask or two of its kind that fall where it dies.
 - **Drinking a flask** is a poor idea: the sleeping draught makes you drowsy, as the table says.
 - **A flask of holy water** is a kind one: thrown, it casts [Rebuke](magic.md#spell-rebuke),
   which sears and frightens only the undead and harms nothing living; drunk, it washes a hex off

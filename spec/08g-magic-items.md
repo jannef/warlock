@@ -583,7 +583,16 @@ developer notes (CLAUDE.md, `docs/dev/`).
     potion shatters; the draught soaks away.") and teaches nothing. A death by one's own flask is
     "Killed by their own flask of …" (`Cause::Flask`). A known flask's description adds "Thrown,
     it shatters and casts Sleep where it breaks"; the `inventory` dump marks it `(throw 6)`, JSON
-    `throw: { range }`. Creatures do not throw flasks yet.
+    `throw: { range }`. **Bombers** (#1230, the design's §5, §7): a creature type whose
+    `[creature.throw]` names a flask as its `object` (and may leave out `damage`; a throw of
+    anything else must have it) throws as any creature's throw is decided (`hurls_at`), priced and
+    heard as one, but with no attack of its own: "The kobold alchemist hurls a flask." to a player
+    who sees it, then the flask flies and shatters as the player's does (`World::shatter_flask`,
+    the creature the splash's thrower: its kills and zone; the type learned when the player sees
+    where it breaks). Endless, as a giant's boulders (Q9); a flask in a creature's pack is never
+    thrown or drunk (Q10). The three: the kobold alchemist (level 3, flask of oil), the goblin
+    firebomber (6, blasting flask), the cult chymist (8, stinking flask), each carrying one or two
+    of its kind (a gear line) that fall where it dies.
   - **Talents** (system `potions`): Thrifty drinker (Delver, from level 6): a potion is not used
     up one time in four (one gameplay draw a drink, none while the chance is 0); worn
     `potion_kept` affixes add their percent to it, the sum at most 50 (a talent's own chance

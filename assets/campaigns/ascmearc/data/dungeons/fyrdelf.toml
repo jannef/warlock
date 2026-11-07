@@ -39,7 +39,7 @@ temperature = 10
 # what next to never comes here.
 danger = 5
 population = [
-    "bat", "kobold", "kobold_archer", "kobold_shaman", "giant_centipede",
+    "bat", "kobold", "kobold_archer", "kobold_shaman", "kobold_alchemist", "giant_centipede",
     "ember_beetle", "duergar_miner", "ogre_zombie", "lesser_fire_elemental", "grave_hound",
     "dretch", "duergar_warrior", "duergar_smith", "ogre", "burning_skull", "quasit", "troll",
     "earth_elemental", "knocker", "hell_hound", "hill_troll", "fire_salamander",
@@ -59,7 +59,7 @@ population = [
     # shade, the fetch, the revenant, the mummy priest) wait for deeper places.
     "stone_mote", "ember_mote", "dust_devil", "lesser_earth_elemental", "spark_mote",
     "lesser_air_elemental", "water_elemental", "lesser_lightning_elemental",
-    "lemure", "imp", "goblin_wizard", "meenlock",
+    "lemure", "imp", "goblin_wizard", "goblin_firebomber", "meenlock",
     "draugr", "barghest", "hand_of_glory", "vampire_spawn", "gallows_dead",
 ]
 # How many: the default, 35 a thousand walkable cells, 25 to 80. A gallery floor (about 350 cells)

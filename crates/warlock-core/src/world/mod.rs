@@ -1719,6 +1719,8 @@ mod creature_burst_tests;
 #[cfg(test)]
 mod creature_cast_tests;
 #[cfg(test)]
+mod creature_flask_tests;
+#[cfg(test)]
 mod creature_magic_tests;
 #[cfg(test)]
 mod curse_tests;

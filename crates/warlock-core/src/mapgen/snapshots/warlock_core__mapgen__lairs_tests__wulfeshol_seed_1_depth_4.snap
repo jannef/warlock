@@ -14,7 +14,7 @@ barrow_spider at (39, 7) route N N N N N N S N S S S S S S
 footpad at (23, 18) route E E E W W E E W W W carrying a rusted short sword (wielded), a leather jerkin (being worn)
 footpad at (58, 33) route W N N S N N N S S S N N N S S S N S S E
 footpad_archer at (67, 24) route W W W W E E E E carrying a short bow (readied), 25 arrows (quivered), a leather jerkin (being worn)
-lesser_water_elemental at (51, 13) route S S S S S S S S N N N N N N N N
+lesser_fire_elemental at (51, 13) route S S S S S S S S N N N N N N N N
 footpad at (10, 26) route E E S S S S S E W N N N N N W W carrying a corroded bronze short sword (wielded), a leather jerkin (being worn)
 footpad_archer at (30, 31) route W W W N N N S S S E E E carrying a damaged short bow (readied), 25 arrows (quivered), a dagger (wielded)
 footpad at (34, 8) route N N N N N S S E E W W N N S S S S S carrying a Fine iron short sword (wielded), a leather jerkin (being worn)

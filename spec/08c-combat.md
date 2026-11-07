@@ -566,7 +566,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
     left on the floor, no new state. Nothing in deciding it is random. Said by what flies
     (`hurl::throw_messages`): "The hill giant hurls a boulder." when the player sees the thrower,
     then the blow as a trap's missile's ("The boulder strikes you.", "You dodge the boulder.",
-    "The block of ice chills the kobold hard!"); an unseen thrower is not named.
+    "The block of ice chills the kobold hard!"); an unseen thrower is not named. A throw whose
+    `object` is a flask (a bomber's; `damage` may then be left out) has no blow: the flask flies
+    and shatters as the player's thrown flask does (§8 "Potions": "Flasks"), its splash the
+    thrower's.
   - **What the player perceives**: `Event::Missile { object, from, path, end }`, the whole flight
     cut to the stretch between the first and the last cell of its path the player sees (a burning
     one: in their line of sight, light itself); `from` only if they saw it leave; `end` `Struck`,

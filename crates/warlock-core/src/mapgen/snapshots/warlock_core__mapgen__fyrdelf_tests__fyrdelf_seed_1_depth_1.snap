@@ -21,14 +21,14 @@ lemure at (21, 15) route N S S S N S N S N S N N N S
 lemure at (8, 17) route S W W N S N N N N N S S S S S N S E E N
 lemure at (12, 14) route S S S S W W W E E E N N N N
 giant_centipede at (43, 12) route W W W W W S S S N N N E E E E E
-lemure at (5, 13) route N E W E E W W E W S
+kobold_shaman at (5, 13) route N E W E E W W E W S
 giant_centipede at (22, 12) route W E E E E E E E E E W W W W W W W W W E
-kobold at (12, 15) route N N N W W E W E W E E S S S carrying a rusted spear (wielded), a bone cap (being worn)
+kobold at (12, 15) route N N N W W E W E W E E S S S carrying a damaged bone spear (wielded), 9 copper coins
 animated_blade_5 at (41, 15) route W E E E N E E W E W W S W W W E carrying a great axe (wielded in both hands)
 animated_blade_5 at (28, 16) route S S E E E W W E E W W W N N carrying a halberd (wielded in both hands)
 lesser_earth_elemental at (23, 17) route N N N N S S S S
-kobold at (71, 7) route W W W W E E E E carrying a rusted spear (wielded)
-kobold_shaman at (24, 12) route E S S S N N N E E W W S S S N N N W carrying a bone amulet (being worn)
+kobold at (71, 7) route W W W W E E E E carrying a rusted spear (wielded), a damaged leather jerkin (being worn)
+kobold_archer at (24, 12) route E S S S N N N E E W W S S S N N N W carrying a damaged short bow (readied), 12 flint arrows (quivered)
 lemure at (35, 5) route S S W W E E W W W E E E W W E E N N
 lemure at (44, 14) route S S S S W W W W W E E E E E N N N N
 lemure at (39, 12) route E E E E E E W W W W W W
@@ -56,7 +56,7 @@ shop general_store kept by Dregga at (55, 14)-(60, 16), post (55, 14)
      #.#                  #.#            ###..######  #.#    #################
     ##+########     #######S#####   ########&##       #.##
     #........¡#     #.c.k......¡#   #..u...c..#       #.^#
-    #u......e.#######.(..=......#   #......⊟..#       ##+#####
+    #k......e.#######.(..=......#   #......⊟..#       ##+#####
     #..z....u.......+..........)#   #.......u.#       #h.[[)¡#
     #.....})k.#######u..........#   #....))...#       #}?*}..#
     #..[.^....#     #.......).k.#   #.........#       #}.?[..#

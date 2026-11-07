@@ -50,4 +50,24 @@ The will-o'-wisp (#1132, docs/dev/creatures.md "The unseen"): `[creature.invisib
 300`, it winks out with its light (an invisible creature sheds none of its own) and comes again
 unseen; its spark sets the struck one's mana ebbing (`ebbing`, 30 % of hits).
 
+## Bombers
+
+The potions wave 2 design §7 (#1230): three bombers, each a `[creature.throw]` whose `object` is
+a flask (no `damage`: the splash is the attack, `docs/dev/potions.md` "Flasks"), `range` 6,
+`verb = "hurls"`, the default throw cost; each carries one or two of its flask (a gear line)
+and a racial weapon for up close. Numbers on the living base: XP `5L + 10`, `base_hp`
+`2.5 × L × 0.5` (quick).
+
+| L | id | faction | flask (spell) | gear | rarity | where |
+|---|---|---|---|---|---|---|
+| 3 | `kobold_alchemist` | kobolds | `flask_of_oil` (Slick) | 70 %: 1 or 2 | uncommon | Cealdhlāw, Fyrdelf (with the kobolds) |
+| 6 | `goblin_firebomber` | goblins | `blasting_flask` (Shatter) | 60 %: 1 or 2 | rare | Cealdhlāw, Fyrdelf (beside the goblin wizard) |
+| 8 | `cult_chymist` | cult | `stinking_flask` (Reek) | 60 %: 1 or 2 | uncommon | Fennmynster (with the cultists), the showcase's summoning hall (beside the necromancer) |
+
+The firebomber's flask is S5's `flask_of_fire` once that lands (#1241); until then the
+blasting flask, the one fire-adjacent harmful flask on main. The chymist is a shared type (not the
+Ascmearc's `cultist`, which is campaign-owned) so the showcase's hall may place it; it resists
+poison 25 %. Tests: `world/creature_flask_tests.rs`; `content::tag`'s test lists the kobold and
+goblin members.
+
 Gear condition (#1193, `data/gear_condition.toml`): the scavengers' gear is often damaged, the kobolds' 55 % and the goblins' 50 % (Fine 1 % and 1.5 %); the undead's 95 % (docs/dev/creatures.md, "Gear condition").
