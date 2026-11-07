@@ -26,7 +26,7 @@ more), and only [elves](races.md#race-elf), [gnomes](races.md#race-gnome), [half
 Each [level](experience.md#levels) up to 60 raises it (and the mana you have now) by half your class's mana plus what the
 better of your [Intelligence](stats.md#stat-intelligence) and [Willpower](stats.md#stat-willpower) adds (see
 [Experience](experience.md#what-a-level-gives)): a wizard keeps growing it after [hit points](combat.md#hit-points) stop
-at level 20; a [warrior](classes.md#warrior) with ordinary wits gains none. [Magic items](magic-items.md) that add to it
+at level 50; a [warrior](classes.md#warrior) with ordinary wits gains none. [Magic items](magic-items.md) that add to it
 ("+5 to maximum mana") raise your most, not what you have. The talent *[Deep well](talents.md#talent-deep-well)* raises both,
 by 1 for every 4 [character levels](experience.md#levels) and at least 2, as you take it and
 as each level after comes (see [Talents](talents.md)).

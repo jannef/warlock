@@ -26,7 +26,7 @@ stats = { strength = 18, dexterity = 17, toughness = 18, intelligence = 12, will
 base_hp = 38
 resist = { poison = 25, cold = 10 }
 on_eat = { message = "Tough and sour, like old leather.", vomit = 25 }
-weapon_skills = { crossbows = 3, axes = 2 }
+weapon_skills = { axes = 4, crossbows = 3, duelist = 1 }
 racial_weapon = "crossbow"
 [[creature.gear]]
 chance = 95

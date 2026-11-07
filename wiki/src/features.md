@@ -50,12 +50,12 @@ outdoor areas [generated from it](overworld.md#local-areas), the market town of 
   your own death ends the run for good: the [save](saving.md) is gone.
 - **[Experience](experience.md)** — every creature has a level and an [XP](experience.md) value; kills you make yourself (melee,
   shots, throws) earn XP, less and less the further the monster is below your level, as in World
-  of Warcraft (nothing from grey ones, a little extra from tougher ones). [Levels](experience.md#levels) run to 50 and, up
+  of Warcraft (nothing from grey ones, a little extra from tougher ones). [Levels](experience.md#levels) run to 60 (the bard's to 30) and, up
   to level 50, make you hardier. Your level and XP show on the [status bar](controls.md#the-screen), the [character screen](controls.md#character),
   and the death screen.
-- **[Magic items](magic-items.md)** — after Path of Exile: sixty [base items](magic-items.md#base-items) (daggers to great axes, bows and
+- **[Magic items](magic-items.md)** — after Path of Exile: [base items](magic-items.md#base-items) (daggers to great axes, bows and
   crossbows, padded coats to plate, helms, cloaks, gloves, boots, shields, rings, amulets) roll
-  [prefixes](magic-items.md#prefixes) and [suffixes](magic-items.md#suffixes) from 47 affixes in tiers that deepen with the [dungeon](dungeons.md). A magic item has one
+  [prefixes](magic-items.md#prefixes) and [suffixes](magic-items.md#suffixes) in tiers that deepen with the [dungeon](dungeons.md). A magic item has one
   or two ("Sharp long sword of the Bear", in blue); a [rare](magic-items.md#rarity) one up to six and a name ("Grim Bite,
   long sword", in yellow). Found [unidentified](magic-items.md#unidentified-items), they work all the same; each remembers what it
   rolled. They lie in the dungeons, in vaults, and fall from slain creatures, and an item's
@@ -64,7 +64,7 @@ outdoor areas [generated from it](overworld.md#local-areas), the market town of 
   rare finds, larger and finer deeper down, and what rings, amulets, and now and then weapons,
   shields, and helms are set with: "an emerald-pommelled long sword", "a gold and ruby ring".
   General [stores](shops.md) buy them at what they are worth.
-- **[Materials](objects.md#materials)** — seventeen metals, from tin to nicrosil, and woods, bones, stones, hides, and
+- **[Materials](objects.md#materials)** — metals, from tin to nicrosil, and woods, bones, stones, hides, and
   cloths, each with its weight, what it does as a blade or as armour, its worth, and its colour.
   Items are found made of other materials than their usual one, by what each may be made of: "a
   bronze long sword" (heavier, a little weaker, cheaper), "a flint spear", "a dragonbone
@@ -166,7 +166,7 @@ outdoor areas [generated from it](overworld.md#local-areas), the market town of 
   random, and the year you were born gives you a [horoscope](horoscope.md) sign: one of twelve mythological
   [animals](horoscope.md#animals) and five [elements](horoscope.md#elements), sixty signs in a [great cycle](horoscope.md#the-great-cycle) (the Fire Manticore, the Water
   Basilisk). Not balanced, on purpose: some characters are a challenge.
-- **[Skills](skills.md)** — 27 ADOM-like skills, from [stealth](skills.md#skill-stealth) and [tumble](skills.md#skill-tumble) to [open lock](skills.md#skill-open-lock) and [spellcraft](skills.md#skill-spellcraft). Your race
+- **[Skills](skills.md)** — ADOM-like skills, from [stealth](skills.md#skill-stealth) and [tumble](skills.md#skill-tumble) to [open lock](skills.md#skill-open-lock) and [spellcraft](skills.md#skill-spellcraft). Your race
   and class train you in a few; the rest you simply do not have. Skills grow with use (each
   meaningful use may earn a [training mark](skills.md#getting-better); past 100 they grow slowly), and the passive ones help
   already: [tumbling](skills.md#skill-tumble) adds to your Defence, [stealth](skills.md#skill-stealth) quiets your steps and doors, [listening](skills.md#skill-listen) lets you

@@ -267,7 +267,6 @@ above.
 | Familiar's sight | `allies.md#familiars-sight` |
 | Hunter's bond, shared sight, shared buffs | `allies.md#hunters-bond` |
 | People, townsfolk, chatting, topics | `npcs.md#chatting` |
-| Saying words, passwords, riddles | `npcs.md#saying-words` |
 | Services (cure, mending, identification) | `npcs.md#services` |
 | The pedlar's offer, his wares | `npcs.md#the-pedlars-offer` |
 | Quest, quest log | `quests.md`, `quests.md#the-quest-log` |

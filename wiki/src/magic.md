@@ -488,7 +488,7 @@ brighter and wins over it.
   to 71), where the UV shows as a violet tint.
 - **A buff lights your cell.** Creatures see by the same rule, so a hasted, blessed, or
   bark-skinned sneak is seen by any normal-eyed creature with them in line of sight, as Inner
-  light is. A hex marks its target the same way: a webbed or sleeping creature glows for as long
+  light is. A hex marks its target the same way: a webbed or drowsy creature glows for as long
   as it lasts.
 - **[Light-blind](vision.md#the-four-types) eyes** add it to the cell's light: a drow in daylight just under their glare (250)
   can be dazzled by their own [Blessing](#spell-blessing).

@@ -30,7 +30,7 @@ weight = 75000
 stats = { strength = 15, dexterity = 18, toughness = 15, intelligence = 11, willpower = 12, presence = 14 }
 base_hp = 30
 skills = { stealth = 40, spot = 50 }
-weapon_skills = { bows = 3, marksman = 1, short_blades = 2 }
+weapon_skills = { short_blades = 3, bows = 3, duelist = 1, marksman = 1 }
 [[creature.gear]]
 chance = 100
 one_of = ["unique:high_toby"]

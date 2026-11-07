@@ -213,7 +213,6 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("dread-draws.md", dungeons::dread_draws),
         ("dialogue.md", dialogue::dialogue),
         ("rumoured-ways.md", dialogue::rumoured_ways),
-        ("words.md", dialogue::words),
         ("quests.md", dialogue::quests),
         ("guild-ranks.md", guild::guild_ranks),
         ("guild-draws.md", guild::guild_draws),
@@ -432,6 +431,7 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("search-depths.md", searching::search_depths),
         ("search-races.md", searching::search_races),
         ("traps.md", traps::traps),
+        ("trap-damage.md", traps::by_danger),
         ("trap-avoid.md", traps::avoiding),
         ("trap-disarm.md", traps::disarming),
     ];
@@ -498,6 +498,44 @@ mod tests {
         }
         out.push_str(rest);
         out
+    }
+
+    /// The classes page includes every class's level table once, by its anchor, so a class's
+    /// prose sits in its one section (#1171: the paladin and the bard had two).
+    #[test]
+    fn the_classes_page_includes_every_class_table_once() {
+        let content = Content::builtin().expect("content loads");
+        let table = talents::class_levels(&content);
+        let page = std::fs::read_to_string(workspace_root().join("wiki/src/classes.md"))
+            .expect("classes.md");
+        assert!(!page.contains("{{#include generated/class-levels.md}}"));
+        for class in content.classes() {
+            let anchored = table.contains(&format!("<!-- ANCHOR: {} -->", class.id));
+            let include = format!("{{{{#include generated/class-levels.md:{}}}}}", class.id);
+            let wanted = usize::from(anchored);
+            assert_eq!(page.matches(&include).count(), wanted, "{}", class.id);
+            let heading = format!("### The {}\n", class.name.to_lowercase());
+            assert!(!page.contains(&heading), "{}: a second section", class.id);
+        }
+    }
+
+    /// Only a status with a light (its own in data/status.toml, or its spell circle's in
+    /// data/circles.toml) says it sheds one, and a circle's is named as the circle's.
+    #[test]
+    fn only_statuses_with_a_light_shed_one() {
+        let content = Content::builtin().expect("content loads");
+        let table = healing::status_effects(&content);
+        let rows: Vec<&str> = (table.lines())
+            .filter(|l| l.starts_with("| <a id="))
+            .collect();
+        assert_eq!(rows.len(), content.status_defs().len());
+        for ((i, def), row) in content.status_defs().iter().enumerate().zip(rows) {
+            let sheds = row.contains("shed light") || row.contains("sheds a faint light");
+            assert_eq!(sheds, def.light.is_some(), "{}", def.id);
+            let circled = (content.circles().rows().iter())
+                .any(|c| usize::from(c.status.0) == i && Some(c.light) == def.light);
+            assert_eq!(row.contains("spell circle sheds"), circled, "{}", def.id);
+        }
     }
 
     /// Rows that define a term carry the anchor prose links to (`wiki/TERMS.md`).
@@ -778,10 +816,19 @@ mod tests {
             "{traps}"
         );
         assert!(
-            traps.contains("| 3d6 fire | once | Explosion, very loud (150) |"),
+            traps.contains("| 1d4 fire | once | Explosion, very loud (150) |"),
             "{traps}"
         );
         assert!(traps.contains("| Pit `^` |") && !traps.contains("to_hit"));
+        let by_danger = text("trap-damage.md");
+        assert!(
+            by_danger.contains("| Trap | 0–2 | 3–5 | 6–9 | 10–14 | 15–21 | 22–29 | 30+ |")
+                && by_danger.contains(
+                    "| [Fireball trap](#trap-fireball) | 1d4 fire | 2d4 fire | 2d6 fire | \
+                     3d6 fire | 4d6 fire | 6d6 fire | 8d6 fire |"
+                ),
+            "{by_danger}"
+        );
         let scrolls = text("scrolls.md");
         assert!(
             scrolls.contains("| Scroll of fireball `?` | Casts Fireball a rung up its ladder"),
@@ -832,7 +879,7 @@ mod tests {
         ));
         assert!(
             text("status-effects.md")
-                .contains("To hit +1; you shed light on your cell and the cells beside you")
+                .contains("To hit +1; its abjuration spell circle sheds a faint light on your cell and the cells beside you")
         );
         assert!(text("status-effects.md").contains("You shed light 6 cells around you"));
         assert!(

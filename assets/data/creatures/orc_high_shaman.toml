@@ -26,7 +26,7 @@ stats = { strength = 19, dexterity = 16, toughness = 22, intelligence = 16, will
 base_hp = 30
 skills = { concentration = 82, spellcraft = 87 }
 on_eat = { message = "It tastes rank, and of smoke and bitter herbs.", vomit = 30, train = { willpower = 30 }, skills = { decipher_script = { gives = 8, up_to = 60 } } }
-weapon_skills = { staves = 4 }
+weapon_skills = { staves = 6 }
 racial_weapon = "quarterstaff"
 
 [[creature.gear]]

@@ -28,7 +28,7 @@ mana = 60
 skills = { concentration = 66, spellcraft = 73 }
 # Its corpse teaches something of its letters.
 on_eat = { skills = { decipher_script = { gives = 6, up_to = 45 } } }
-weapon_skills = { daggers = 2 }
+weapon_skills = { daggers = 3 }
 racial_weapon = "dagger"
 # The racial weapon's line written out, for its magic.
 [[creature.gear]]

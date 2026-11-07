@@ -99,7 +99,7 @@ are rid of them, but they can kill, as [grave rot](#disease-grave-rot) can, so a
 An **angelica root** (`%`) cures every disease you have the moment you eat it (`e`), [grave rot](#disease-grave-rot)
 too, and even one that has not broken out yet: "The rot is gone from your flesh." It feeds you a
 little, too. [Shops](shops.md) that sell food sell it (a general store or a provisioner, found in the
-dungeons), and Ælfric's General Store in [Cēaptūn](ascmearc.md#the-places) has one. [Potions](potions.md) will come.
+dungeons), and Ælfric's General Store in [Cēaptūn](ascmearc.md#the-places) has one. A [potion of cure disease](potions.md#potion-of-cure-disease) ends every disease at once.
 
 A temple's **cure** does the same for gold, every disease included, and a **mending** gives back
 the [stat damage](#stat-damage) at once, and the points the undead drained (see [Services](npcs.md#services) and

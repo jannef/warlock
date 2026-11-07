@@ -113,7 +113,7 @@ resist = { piercing = 50, bludgeoning = -25 }
 slots = [{ slot = "main_hand", classes = ["melee_weapons"], chance = 100 }]
 magic = { base = 0, per_level = 2, most = 40 }
 rare = { from = 15, base = 1, per_level = 1, most = 5 }
-weapon_rank = { base = 1, per_level = 0.1, most = 8 }   # ranks in its weapon's skill: 1 + L/10
+weapon_rank = { base = 1, per_level = 0.35, most = 10 }   # ranks in its weapon's skill: 1 + 0.35 L (#1169)
 # Graded, as other creatures are (spec §8 "Grades"): one in six notched, one in six keen. The
 # other tiers name no words and are never graded.
 grade_words = ["notched", "keen"]
@@ -186,5 +186,5 @@ slots = [
 ]
 magic = { base = 20, per_level = 1, most = 80 }
 rare = { from = 20, base = 1, per_level = 0.5, most = 30 }
-weapon_rank = { base = 1, per_level = 0.1, most = 8 }   # 1 + L/10
+weapon_rank = { base = 1, per_level = 0.35, most = 10 }   # 1 + 0.35 L, at most 10 (#1169)
 shield_rank = { per_level = 0.0667 }                    # L/15 in Sword and board, beside a shield

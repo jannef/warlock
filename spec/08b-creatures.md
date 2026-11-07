@@ -566,7 +566,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   as loot's "magic or better" does), else plain of a material by the `gear` weights; a magic
   or rare piece is made by `loot::make_as` at item level L. It is wielded in its slot (no
   burden check), from the same streams as a household body; its rank in the weapon's skill is
-  `1 + L/10` (at most 8), set as it is placed (`animated::weapon_skills`, no draws). It fights
+  `1 + 0.35 L` (at most 10; #1169: near `L/4` to hit), set as it is placed (`animated::weapon_skills`, no draws). It fights
   with the weapon as anyone does and is seen by it: the weapon's glyph in its material's colour
   (the tier's `shown_by` slot and `item_glyph`); look mode's gear line names it unidentified.
   A family is **one kind** wherever kinds are counted: one danger candidate (§7 "Danger
@@ -589,7 +589,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   `attack`: its gauntlets slam, bludgeoning, the curve's dice at L); a panoply wears body armour
   and wields a melee weapon always, a shield (60 %) and a helm (75 %), from L30 gloves and boots
   (50 % each), from L40 a cloak (50 %), from L50 an amulet and two rings (30 % each), and holds
-  `1 + L/10` ranks in its weapon's skill and, beside a shield, `L/15` in the style of weapon and
+  `1 + 0.35 L` ranks (at most 10) in its weapon's skill and, beside a shield, `L/15` in the style of weapon and
   shield (Sword and Board, the tier's `shield_rank`). Pieces are at least magic by 10 + L % (at
   most 40, armour) and 20 + L % (at most 80, panoply), rare from L20. Everything they wear and
   wield works for them as for anyone (`Mods::worn`: stats, riders, resistances, light, ...),
@@ -671,7 +671,11 @@ developer notes (CLAUDE.md, `docs/dev/`).
   hold it, `docs/dev/creatures.md` "Variance by role"): two monsters of one level are not the
   same fight. A natural attack hits at `L/4` for the standard, `L/4 + L/8` for a striker (the
   quick and the assassins, at most +20), and `L/4 − L/8` for a brute, shambler, or caster (each
-  part rounded down); an armed type keeps `L/4`, its spread the gear's. A striker's blow
+  part rounded down); an armed type keeps `L/4` on its natural attack, and its weapon aims by
+  its weapon skill's ranks (and Duelist's, one-handed with no shield), never a flat bonus: the
+  fewest ranks that bring the weapon to `L/4` (a caster's `L/4 − L/8`), none past what a
+  trained warrior of its level holds, so a heavy weapon may stay below and hits harder instead
+  (#1169). A striker's blow
   threatens from 19 (×2), a brute's crits ×3 on the natural 24 only. Hit points by role run 0.5
   (quick, small, caster) to 2.0 (brute) of the standard's, ±35 %. Speed is bimodal: the bulk
   between 800 and 1250 by the tribe's temperament (a people's rank-and-file at 950 to 1050, no
@@ -741,38 +745,24 @@ developer notes (CLAUDE.md, `docs/dev/`).
     (§6). Asking (`Action::Ask { dir, topic }`, replay text `ask:E:rooms`) takes no time and gets
     the topic's reply; an unknown topic is "The sage knows nothing about that." `World::topics`
     is the one place topics come from: quests ("Quests" below) add theirs there, first.
-  - **Saying words** (`warlock-core/src/words.rs`, `content/word.rs`, `world/words.rs`;
-    docs/design/prestige-classes.md §6, #878): a dialogue may know words (`[[dialogue.word]]`,
-    §7 "Dialogue"). Saying something (`Action::Say { dir, words }`, replay text
-    `say:E:life_before_death`, the words normalised and joined by `_`) to the creature beside
-    the player is refused as a chat is (no one seen there: no time; no dialogue or a hostile:
-    the chat's words and its time). Else what was said is normalised (`words::normalise`:
-    Unicode lower case, every character that is not a letter or digit a space, runs of spaces
-    one, trimmed; so case and punctuation never matter) and matched against the dialogue's
-    words in order: the first whose normalised `phrase` equals it and whose `does` can be done
-    is heard. Its `reply` lines are said, each a message (`The spirit says: "…"`), the last the
-    dialogue screen's line; then what it `does`: `quest` gives that quest as asking its topic
-    would, if it could be asked for now (not active, its requirements and alignment met, the
-    player not too green; else the reply is all); `departs` sends the speaker away after the
-    reply (`World::departs`, as an ally whose time is up: no corpse, no pile, no experience, no
-    kill; the screen does not reopen); `calls` (a prestige class's calling, §8 "Prestige
-    classes", one of the dialogue's campaign) makes the calling after the reply, before
-    `quest` and `departs`, and the word is heard only while the calling is open (anyone else
-    gets `unheard`). The Ascmearc's **Strange Spirit** (`strange_spirit`, faction `spirits`,
-    hostile to no one; good; one hit point, no corpse, no blood, no experience; rooted,
-    `budge = never`) is met on the roads, vale, downs, and woods by day (`when = { calling =
-    "hunter" }`, weight 2), speaks only to the Kind or better (`speaks_to`), has no topics, and
-    knows one word, *life before death*: it echoes the oath's six lines, calls the bard into
-    the Hunter, and departs ("The strange spirit fades, and is gone."). Killed, it is a
-    peaceful good soul killed; its party is forgotten and it may be met again while the calling
-    is open. Look mode says ", who waits" after one whose dialogue has words and nothing else
-    to offer. No match: the
-    dialogue's `unheard` line (without one, "The sage says nothing.", told plainly, the
-    screen's line "…"). Either way it takes the time
-    of `chat`: no count of tries, no lock-out. Nothing is drawn, trained, or saved; others hear
-    a chat. A dialogue's `speaks_to` (an alignment range, §8 "Alignment") is the speaker's
-    reaction to the player: outside it a chat or a say gets only its `silent` line (a chat's
-    time; an ask, none), with no topics and no Say row.
+  - **Callings** (`world/calling.rs`, `World::ask_calling`; #1174): a topic may `calls` a
+    prestige class's calling (§8 "Prestige classes", one of the dialogue's campaign). It is
+    offered (`World::topics`) only while the calling is open to the player; asked, the topic's
+    reply is said, the calling made, and, with `departs`, the speaker sent away
+    (`World::departs`, as an ally whose time is up: no corpse, no pile, no experience, no kill;
+    the reply is a message only, and the screen does not reopen). It takes the time of `chat`.
+    Asked while not open (by replay text), it is unknown ("The sage knows nothing about
+    that."), and takes none. The Ascmearc's **Strange Spirit** (`strange_spirit`, faction
+    `spirits`, hostile to no one; good; one hit point, no corpse, no blood, no experience;
+    rooted, `budge = never`) is met on the roads, vale, downs, and woods by day (`when = {
+    calling = "hunter" }`, weight 2), speaks only to the Kind or better (`speaks_to`), and has
+    one topic, *Life before death* (`life_before_death`, `calls = "hunter"`, `departs`): it
+    echoes the oath, calls the bard into the Hunter, and departs ("The strange spirit fades,
+    and is gone."). Killed, it is a peaceful good soul killed; its party is forgotten and it
+    may be met again while the calling is open. Look mode says ", who waits" after one whose
+    dialogue's only topics are callings', with no service or wares. A dialogue's `speaks_to`
+    (an alignment range, §8 "Alignment") is the speaker's reaction to the player: outside it a
+    chat or an ask gets only its `silent` line (a chat's time; an ask, none), with no topics.
   - **Rumoured ways** (`world/rumour.rs`; the owner's request of 2026-10-27): a topic with a
     `route` (§7 "Dialogue") tells the way to a place. Asking it, every time, marks on the
     player's overworld map what walking the route by day would show: each cell in line of sight

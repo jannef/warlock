@@ -1,6 +1,6 @@
 # The test world's door into the Hunter (docs/design/prestige-classes.md §4.2): the same door as
 # the Ascmearc's, made by another deed. The hermit by the hub's stairs knows the oath's first
-# words (data/dialogue/showcase.toml): a bard whose class is full says them to him and is called.
+# words (data/dialogue/showcase.toml): a bard whose class is full asks him of them and is called.
 # No spirit and no encounter: those are the Ascmearc's alone.
 [[calling]]
 class = "hunter"

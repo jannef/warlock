@@ -588,10 +588,13 @@ fn the_catch_replays_in_the_trap_hall() {
     let spec: CharacterSpec = "human,male,ascetic".parse().expect("a character");
     let mut w = World::start_run(content, "traps", None, Some(&spec), None, true).expect("world");
     let mut replay = Replay::new(&w);
-    // Bare-handed at level 40 and more, on and off the proving row's arrow trap.
-    let text = "remove:main_hand xp:5000000 levelup:auto move:N*14 move:W*21 move:N*3 \
-                move:S move:N move:S move:N move:S move:N move:S move:N move:S move:N";
-    for action in parse_actions(text).expect("actions") {
+    // Bare-handed at level 40 and more, on and off the proving row's arrow trap, often enough
+    // that it goes off (a known trap is mostly sidestepped) and an arrow is caught.
+    let text = format!(
+        "remove:main_hand xp:5000000 levelup:auto move:N*14 move:W*21 move:N*3 {}",
+        "move:S move:N ".repeat(120)
+    );
+    for action in parse_actions(&text).expect("actions") {
         w.apply(&action);
         replay.push(&action, &w);
     }

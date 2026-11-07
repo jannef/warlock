@@ -27,7 +27,7 @@
 use super::{Actor, ActorId, ActorKind, Spent, World};
 use crate::action::Event;
 use crate::content::StatUse;
-use crate::content::{ActionKind, Budge, Dialogue, DialogueId, Stance};
+use crate::content::{ActionKind, Budge, Dialogue, DialogueId, Stance, Topic};
 use crate::geom::{Dir, Pos};
 use crate::noise::{self, Act, Heard, SoundKind, Volume};
 use serde::{Deserialize, Serialize};
@@ -93,10 +93,6 @@ pub struct Conversation {
     /// The topic this answers, if the player asked about one.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub asked: Option<String>,
-    /// Whether the player may say words to them (their dialogue knows some, and speaks to the
-    /// player): the dialogue screen's Say row (`words.rs`).
-    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    pub words: bool,
 }
 
 /// A line muttered during the current turn (not saved): said when perception runs, if the
@@ -219,7 +215,9 @@ impl World {
         }
         let mut topics = self.quest_topics(id);
         let dialogue = self.content.dialogue(id);
-        topics.extend(dialogue.topics.iter().map(|t| TopicView {
+        // A calling's topic only while the calling is open to the player (`calling.rs`).
+        let open = |t: &&Topic| (t.calls.as_ref()).is_none_or(|class| self.calling_open(class));
+        topics.extend(dialogue.topics.iter().filter(open).map(|t| TopicView {
             id: t.id.clone(),
             name: t.name.clone(),
             price: None,
@@ -300,6 +298,9 @@ impl World {
         if let Some(spent) = self.ask_offer(id, dialogue, topic, events) {
             return spent;
         }
+        if let Some(spent) = self.ask_calling(id, dialogue, topic, events) {
+            return spent;
+        }
         let reply = (self.content.dialogue(dialogue).topic(topic)).map(|t| t.reply.clone());
         match reply {
             Some(reply) => {
@@ -363,15 +364,11 @@ impl World {
         asked: Option<String>,
         events: &mut Vec<Event>,
     ) {
-        let words = (self.state.actors.get(&id))
-            .and_then(|a| self.dialogue_of(a))
-            .is_some_and(|d| self.speaks_to(d) && !self.content.dialogue(d).words.is_empty());
         events.push(Event::Talked(Conversation {
             with: id,
             line,
             topics: self.topics(id),
             asked,
-            words,
         }));
     }
 

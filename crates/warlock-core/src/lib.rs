@@ -63,7 +63,6 @@ pub mod time;
 pub mod variant;
 pub mod weapon_skills;
 pub mod weather;
-pub mod words;
 pub mod world;
 
 pub use action::{

@@ -39,6 +39,13 @@
 #                lightning electricity, the pit bludgeoning; what the victim resists of it
 #   noun, verb   what hits and what it does, for messages ("The fireball burns you."; verb
 #                default: the damage type's); a shot uses its object's name
+#   [trap.grows] damage by the danger of the level the trap lies on (spec §7 "Danger levels"),
+#                in the style of a spell's [spell.grows]: `damage = "danger 3 1d4, 6 1d6"`,
+#                rungs `AT ROLL`, AT 1 to 99 rising strictly, at most 8; a level of danger D
+#                deals the last rung at or below D, and below the first (a level without a
+#                danger is 0) the trap's own `damage`. No rung may do less on average than the
+#                one before it. Shallow traps hurt but should not kill a fresh character: the
+#                base (danger 0 to 2) never kills one at full health, crits included.
 
 # Stepping onto a known trap on purpose (a move onto it, after the question), you may avoid it:
 # it stays where it is, untouched. The chance in percent is `base` plus `per_point` for each point
@@ -60,10 +67,12 @@ fg = "#c8b48c"
 message = "An arrow shoots out of the wall!"
 kind = "shot"
 object = "arrow"
-damage = "1d6"
+damage = "1d2"
 damage_type = "piercing"
 to_hit = 3
 noise = { sound = "bowstring", loudness = 40 }
+[trap.grows]
+damage = "danger 3 1d4, 6 1d6, 10 2d4, 15 2d6, 22 3d6, 30 4d6"
 
 [[trap]]
 id = "spear"
@@ -73,9 +82,11 @@ fg = "#b4b8c4"
 message = "Spears spring from the floor!"
 kind = "strike"
 noun = "spear"
-damage = "1d8"
+damage = "1d2"
 damage_type = "piercing"
 to_hit = 3
+[trap.grows]
+damage = "danger 3 1d5, 6 1d8, 10 2d6, 15 2d8, 22 3d8, 30 4d8"
 
 [[trap]]
 id = "fireball"
@@ -90,12 +101,14 @@ spell = "fireball"
 noun = "fireball"
 verb = "burns"
 radius = 2
-damage = "3d6"
+damage = "1d4"
 damage_type = "fire"
 # Blows stone walls and packed earth apart; granite holds. Melts ice.
 blast = 1000
 heat = true
 noise = { sound = "explosion", loudness = 150 }
+[trap.grows]
+damage = "danger 3 2d4, 6 2d6, 10 3d6, 15 4d6, 22 6d6, 30 8d6"
 
 # A burst of bitter cold: it freezes the water around it hard enough to walk on.
 [[trap]]
@@ -111,9 +124,11 @@ spell = "frost_burst"
 noun = "frost"
 verb = "bites"
 radius = 2
-damage = "2d6"
+damage = "1d3"
 damage_type = "cold"
 frost = 100
+[trap.grows]
+damage = "danger 3 1d6, 6 2d4, 10 2d6, 15 3d6, 22 4d6, 30 6d6"
 
 [[trap]]
 id = "lightning_bolt"
@@ -128,9 +143,11 @@ spell = "lightning_bolt"
 noun = "lightning bolt"
 verb = "strikes"
 length = 12
-damage = "4d6"
+damage = "1d4"
 damage_type = "electricity"
 noise = { sound = "thunder", loudness = 120 }
+[trap.grows]
+damage = "danger 3 2d4, 6 3d6, 10 4d6, 15 5d6, 22 7d6, 30 9d6"
 
 [[trap]]
 id = "pit"
@@ -139,8 +156,10 @@ difficulty = 13
 sign = "a thin crust over a hole"
 fg = "#9a7a58"
 kind = "pit"
-damage = "1d6"
+damage = "1d2"
 damage_type = "bludgeoning"
+[trap.grows]
+damage = "danger 3 1d4, 6 1d6, 10 2d4, 15 2d6, 22 3d6, 30 4d6"
 
 [[trap]]
 id = "alarm"

@@ -578,13 +578,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   numbered 1 to 9 with a `>` marker on the selected one; a topic's number, or Enter on the
   selected one (the arrows move it), asks about it, which takes no time: the screen closes, the
   answer is said, and the screen opens again with it, on the topic asked (also when nothing is
-  left to ask: a quest handed in to someone without other topics). Where the speaker knows
-  words (§8 "Dialogue", "Saying words") a fixed row `s  Say something…` follows the topics (the
-  arrows reach it too), and the hint line names `s  say`: `s` (a fixed key, not rebindable)
-  opens in the panel the question "What do you say to the old hermit?" and a text field of 40
-  characters (the Name step's field); Enter says it (`say:DIR:WORDS`, a chat's time; the screen
-  closes and the reply reopens it), an empty line closes the field, Esc goes back to the
-  topics. The screen also opens for someone with words and no topics. Esc (or `C`) leaves. Quest
+  left to ask: a quest handed in to someone without other topics). Esc (or `C`) leaves. Quest
   topics (§8 "Quests") come first, one per quest: asking gives it (no accept or decline
   topic), and the screen reopens on it, now its reminder.
   Chatting takes the time of `chat` (§7 "Action costs"); with no creature the player sees there,

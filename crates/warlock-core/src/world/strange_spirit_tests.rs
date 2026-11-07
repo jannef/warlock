@@ -1,10 +1,9 @@
 //! The Strange Spirit and the oath (#879; docs/design/prestige-classes.md §7; spec §8 "Prestige
 //! classes"): the Ascmearc's door into the Hunter. The spirit's entries are drawn only while the
-//! calling is open (a bard whose class is full, not yet called); it speaks to the good alone; the
-//! oath in any case and punctuation calls the bard and sends the spirit away; wrong words cost a
-//! chat's time and nothing else; killed, it leaves nothing but the stain on the killer, and the
+//! calling is open (a bard whose class is full, not yet called); it speaks to the good alone; its
+//! one topic, the oath, calls the bard and sends the spirit away; killed, it leaves nothing but the stain on the killer, and the
 //! road may bring it again. End to end by replay, from a new bard to Hunter 1. The test world's
-//! door, the hermit's word, too. The bard's cap and the callings' level are the shipped ones, 30
+//! door, the hermit's topic, too. The bard's cap and the callings' level are the shipped ones, 30
 //! (#874).
 
 use super::*;
@@ -22,7 +21,8 @@ const CAP: u8 = 30;
 const ROAD: Pos = Pos::new(19, 28);
 const TO_THE_ROAD: &str = "move:E*7 skip:4h";
 const ENTRY: &str = "strange_spirit_roads";
-const OATH: &str = "LIFE, before... death!";
+/// The oath's topic, the spirit's and the hermit's.
+const OATH: &str = "life_before_death";
 
 /// The built-in content, nobody hungering, the class tables stripped, and the bard started Good
 /// (so a test's replay need not do good deeds first).
@@ -194,11 +194,11 @@ fn an_unknown_calling_on_an_entry_is_refused() {
     });
     let err = Content::load(&files).expect_err("no such calling");
     assert!(err.message.contains("no calling `skald`"), "{err}");
-    // A word may only call a door of its own world.
+    // A topic may only call a door of its own world.
     let mut files = ContentFiles::builtin();
     files.remove("campaigns/ascmearc/data/callings/hunter.toml");
     files.remove_encounter_tables();
-    let err = Content::load(&files).expect_err("the spirit's word calls nothing");
+    let err = Content::load(&files).expect_err("the spirit's topic calls nothing");
     assert!(
         err.message.contains("no calling `hunter` in its campaign"),
         "{err}"
@@ -247,7 +247,7 @@ fn the_spirit_waits_and_speaks_only_to_the_good() {
     let at = w.state.actors[&id].pos;
     run(&mut w, "wait*5");
     assert_eq!(w.state.actors[&id].pos, at, "it stands and waits");
-    // Neutral: it looks through the bard; no screen, no topics, no row.
+    // Neutral: it looks through the bard; no screen, no topics.
     let dir = approach(&mut w, &mut None);
     let out = w.apply(&Action::Chat(dir));
     assert!(out.took_turn);
@@ -256,17 +256,11 @@ fn the_spirit_waits_and_speaks_only_to_the_good() {
         last_message(&w),
         "The spirit looks through you as if you were not there."
     );
-    // The oath said to it then is not heard either: it does not listen.
-    run(
-        &mut w,
-        &format!(
-            "say:{dir:?}:{}",
-            crate::words::normalise(OATH).replace(' ', "_")
-        ),
-    );
+    // The oath asked of it then is not heard either: it does not listen.
+    run(&mut w, &format!("ask:{dir:?}:{OATH}"));
     assert_eq!(prestige(&w), None);
     assert!(spirit(&w).is_some());
-    // Kind: it speaks; nothing to ask, and the Say row.
+    // Kind: it speaks, and the oath is its one topic.
     set_score(&mut w, 200);
     let out = w.apply(&Action::Chat(dir));
     let talk = out.events.iter().find_map(|e| match e {
@@ -274,57 +268,46 @@ fn the_spirit_waits_and_speaks_only_to_the_good() {
         _ => None,
     });
     let talk = talk.expect("the dialogue screen");
-    assert!(talk.words && talk.topics.is_empty());
+    let topics: Vec<(&str, &str)> = (talk.topics.iter())
+        .map(|t| (t.id.as_str(), t.name.as_str()))
+        .collect();
+    assert_eq!(topics, [(OATH, "Life before death")]);
     assert!(said(&w, "I have waited long on this road."));
 }
 
 #[test]
-fn wrong_words_cost_a_chat_and_the_oath_calls_the_bard() {
+fn asking_the_oath_calls_the_bard() {
     let mut w = hailed(500);
     let dir = approach(&mut w, &mut None);
-    let level = w.player_level();
-    for _ in 0..3 {
-        let start = w.time();
-        let out = w.apply(&Action::Say {
-            dir,
-            words: "life after death".into(),
-        });
-        assert!(out.took_turn);
-        assert_eq!(w.time().since(start), crate::time::Duration::seconds(3));
-        assert_eq!(
-            last_message(&w),
-            "The strange spirit says: \"Those are not the words.\""
-        );
-    }
-    assert_eq!((prestige(&w), w.player_level()), (None, level));
     let entry_party = |w: &World| known_party(w);
     assert!(entry_party(&w));
-    w.apply(&Action::Say {
+    let start = w.time();
+    let out = w.apply(&Action::Ask {
         dir,
-        words: OATH.into(),
+        topic: OATH.into(),
     });
+    assert!(out.took_turn, "a chat's time");
+    assert_eq!(w.time().since(start), crate::time::Duration::seconds(3));
+    assert!(
+        !out.events.iter().any(|e| matches!(e, Event::Talked(_))),
+        "no screen on one gone"
+    );
     let texts: Vec<String> = w.messages().iter().map(|m| m.text.clone()).collect();
+    let oath = "The strange spirit says: \"Life before death. Strength before weakness. Journey \
+                before destination. I will protect those who stand in darkness. I will strive to \
+                mend what is broken. And when I cannot see the light, I will take the next \
+                step.\"";
     let from = (texts.iter())
-        .position(|t| t == "The strange spirit says: \"Life before death.\"")
+        .position(|t| t == oath)
         .expect("the oath echoed");
-    let oath = [
-        "Life before death.",
-        "Strength before weakness.",
-        "Journey before destination.",
-        "I will protect those who stand in darkness.",
-        "I will strive to mend what is broken.",
-        "And when I cannot see the light, I will take the next step.",
-    ]
-    .map(|line| format!("The strange spirit says: \"{line}\""));
-    assert_eq!(texts[from..from + 6], oath, "{texts:?}");
     assert_eq!(
-        texts[from + 6],
+        texts[from + 1],
         "The oath is in you now, as a blade is in its sheath. You are a hunter."
     );
     // The spirit fades as the action ends; the level's news comes after it, as it always does.
-    assert_eq!(texts[from + 7], "The strange spirit fades, and is gone.");
+    assert_eq!(texts[from + 2], "The strange spirit fades, and is gone.");
     let welcome = (texts.iter()).position(|t| t == "Welcome to level 31.");
-    assert!(welcome.is_some_and(|i| i > from + 7), "{texts:?}");
+    assert!(welcome.is_some_and(|i| i > from + 2), "{texts:?}");
     assert_eq!(prestige(&w), Some("hunter"));
     assert_eq!(w.player_level(), CAP + 1, "Hunter 1, at once");
     assert!(spirit(&w).is_none(), "gone, with no corpse");
@@ -373,7 +356,7 @@ fn a_new_bard_becomes_a_hunter_by_replay() {
     let dir = approach(&mut w, &mut r);
     act(
         &mut w,
-        &format!("chat:{dir:?} say:{dir:?}:life_before_death wait"),
+        &format!("chat:{dir:?} ask:{dir:?}:{OATH} wait"),
         &mut r,
     );
     assert_eq!(prestige(&w), Some("hunter"));
@@ -389,7 +372,7 @@ fn a_new_bard_becomes_a_hunter_by_replay() {
 }
 
 #[test]
-fn the_hermit_hears_the_oath_from_a_full_bard_only() {
+fn the_hermit_offers_the_oath_to_a_full_bard_only() {
     // The test world's door: the hermit by the hub's stairs (south-east of the start after
     // the walk the screen snapshots take; here, set beside the player).
     for (class, called) in [("warrior", false), ("bard", true)] {
@@ -411,11 +394,18 @@ fn the_hermit_hears_the_oath_from_a_full_bard_only() {
             .expect("room beside the player");
         w.state.actors.get_mut(&id).expect("hermit").pos = me.step(dir);
         w.perceive(&mut Vec::new());
-        // Saying it below the full class: nothing.
-        run(&mut w, &format!("say:{dir:?}:life_before_death"));
-        assert_eq!(last_message(&w), "The old hermit says nothing.", "{class}");
+        // Below the full class: not offered, and asked anyway, not known.
+        let offered = |w: &World| w.topics(id).iter().any(|t| t.id == OATH);
+        assert!(!offered(&w), "{class}");
+        run(&mut w, &format!("ask:{dir:?}:{OATH}"));
+        assert_eq!(
+            last_message(&w),
+            "The old hermit knows nothing about that.",
+            "{class}"
+        );
         reach(&mut w, CAP, &mut None);
-        run(&mut w, &format!("say:{dir:?}:life_before_death"));
+        assert_eq!(offered(&w), called, "{class}");
+        run(&mut w, &format!("ask:{dir:?}:{OATH}"));
         assert_eq!(prestige(&w).is_some(), called, "{class}");
         if called {
             assert!(said(&w, "You are a hunter."));
@@ -423,8 +413,9 @@ fn the_hermit_hears_the_oath_from_a_full_bard_only() {
             assert!(w.state.actors.contains_key(&id), "the hermit stays");
             // The shipped bard, called at its cap: Hunter 1 at once, at total level 31.
             assert_eq!(w.player_level(), CAP + 1);
+            assert!(!offered(&w), "no longer offered once called");
         } else {
-            assert_eq!(last_message(&w), "The old hermit says nothing.");
+            assert_eq!(last_message(&w), "The old hermit knows nothing about that.");
         }
     }
 }

@@ -27,7 +27,7 @@ base_hp = 112
 disarms = { chance = 15, difficulty = 21 }
 natural = { defence = 3, protection = 0, name = "dead flesh" }
 resist = { cold = 50, poison = 100 }
-weapon_skills = { long_blades = 6 }
+weapon_skills = { long_blades = 6, great_blades = 10 }
 on_eat = { message = "Grave-cold meat, kept in black iron.", vomit = 80, harm = "1d4" }
 blood = "#202838"
 [creature.attack]

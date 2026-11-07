@@ -20,7 +20,7 @@ weight = 90000
 stats = { strength = 19, dexterity = 15, toughness = 20, intelligence = 13, willpower = 16, presence = 13 }
 base_hp = 52
 on_eat = { message = "This hobgoblin meat is rank!", vomit = 35 }
-weapon_skills = { long_blades = 4, sword_and_board = 3 }
+weapon_skills = { long_blades = 7, sword_and_board = 3 }
 racial_weapon = "long_sword"
 [[creature.gear]]
 chance = 85

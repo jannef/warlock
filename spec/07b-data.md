@@ -757,12 +757,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
   with a unique `id` in lower-case letters, digits, and underscores, a `name`, a `reply`, and an
   optional `route`, the way the topic describes as waypoints `[[x, y], ...]` on the campaign's
   overworld, joined by straight lines: at least two, every cell walkable, only in a campaign's
-  dialogue; §8 "Dialogue", Rumoured ways), optional `[[dialogue.word]]`s (at most 9: words the
-  player may say to it, §8 "Dialogue", "Saying words": a `phrase` of 1 to 40 characters with a
-  letter or digit, no two alike once normalised; a `reply` of 1 to 9 lines; an optional
-  `does = { calls, quest, departs }`: `quest` a quest of the dialogue's campaign, `departs` only
-  on a creature type's dialogue, `calls` a calling of the dialogue's campaign), an
-  optional `unheard` (said to words it does not know), an optional `speaks_to` (an alignment
+  dialogue; §8 "Dialogue", Rumoured ways), an optional `calls` (a calling of the dialogue's
+  campaign: the topic offered only while it is open, asking it calling the player; §8
+  "Dialogue", "Callings") and `departs` (only on a creature type's dialogue: the speaker leaves
+  once it has answered)), an optional `speaks_to` (an alignment
   range, `{ min, max }` bands as a quest's `requires_alignment`) with the `silent` line it
   needs (said instead of anything to a character outside it), and
   an optional `mutter = { chance, verb, lines }` (`chance` in percent per action, 1 to 100; `verb`

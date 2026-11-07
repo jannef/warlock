@@ -176,7 +176,9 @@ impl World {
         });
         let def = content.trap(kind);
         self.sound_at(def.noise, at);
-        match &def.effect {
+        // Its damage is its rung's at the level's danger (`TrapGrows`): the base without one.
+        let danger = self.danger(&self.state.current().id);
+        match &def.effect_at(danger) {
             TrapEffect::Shot { object, attack } => {
                 self.trap_shot(kind, at, victim, *object, Profile::bare(attack), events);
             }
@@ -199,7 +201,7 @@ impl World {
                     return 0;
                 }
                 let climb = self.climb_price(victim);
-                let fall = Damage::new(damage.roll(&mut self.state.rng), *of);
+                let fall = Damage::new(damage.roll(&mut self.state.rng, 0), *of);
                 let from = self.state.actors.get(&victim).map_or(at, |a| a.pos);
                 self.trap_hurts(kind, victim, (from, false), fall, events);
                 if victim == self.state.player {

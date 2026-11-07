@@ -81,7 +81,10 @@ to this character); `World::call(calling)` is the one place a prestige class is 
 level's threshold when it is short (`threshold_for(cap + 1, factor)`, exactly; a fuller bank is
 left alone), then `rise_from(before)` brings every level the XP buys. `add_xp` is now
 `add_xp` + `rise_from(before)`, so a cap that rises and XP that grows take the same path. The
-dev action `call:ID` (`Action::Call`, `World::call_dev`) ignores the level. Draws: none of its
+dev action `call:ID` (`Action::Call`, `World::call_dev`) ignores the level. The world's way
+in is a dialogue topic with `calls` (`World::ask_calling`, offered only while the calling is
+open; docs/dev/npcs.md "Callings by topic"): the Ascmearc's Strange Spirit, the test world's
+hermit. Draws: none of its
 own. Dumps: `stats` `Class Bard 30, Hunter 4` (`Character::class_text`), `progress` the calling
 rows (`dump::calling_rows`), JSON `character.prestige`, `character.classes`, and `callings` with
 `--state`. Tests: `world/calling_tests.rs` on a fixture (the class tables stripped, the bard

@@ -256,12 +256,17 @@ pub(super) fn corpse_effects(content: &Content) -> String {
             |s| content.status(s).name.to_lowercase(),
         );
     let mut out = String::from("| Corpse | Eaten fresh | It says |\n|---|---|---|\n");
+    // Kinds of one name and body (a mimic's every disguise) leave one corpse: one row.
+    let mut written = std::collections::BTreeSet::new();
     for (_, o) in order::objects(content) {
         let (Some(_), Some(creature)) = (o.food, o.corpse) else {
             continue;
         };
         let Some(eat) = &content.creature(creature).on_eat else {
-            let _ = writeln!(out, "| {} | nothing more | - |", capital(&o.name));
+            let row = format!("| {} | nothing more | - |\n", capital(&o.name));
+            if written.insert(row.clone()) {
+                out.push_str(&row);
+            }
             continue;
         };
         let mut does: Vec<String> = Vec::new();
@@ -303,7 +308,10 @@ pub(super) fn corpse_effects(content: &Content) -> String {
             .message
             .as_deref()
             .map_or_else(|| "-".to_string(), |m| format!("\"{m}\""));
-        let _ = writeln!(out, "| {} | {does} | {says} |", capital(&o.name));
+        let row = format!("| {} | {does} | {says} |\n", capital(&o.name));
+        if written.insert(row.clone()) {
+            out.push_str(&row);
+        }
     }
     out
 }
@@ -318,15 +326,16 @@ pub(super) fn corpses(content: &Content) -> String {
         "| Corpse | Size | Weight | Nutrition | Feeds a human for | Turns to eat | Keeps for | \
          Rots away after |\n|---|---|---:|---:|---:|:---:|---|---|\n",
     );
+    // Kinds of one name and body (a mimic's every disguise) leave one corpse: one row.
+    let mut written = std::collections::BTreeSet::new();
     for (_, o) in order::objects(content) {
         let (Some(food), Some(creature)) = (o.food, o.corpse) else {
             continue;
         };
         let size = content.size(content.creature(creature).size);
         let nutrition = i32::try_from(food.nutrition).unwrap_or(i32::MAX);
-        let _ = writeln!(
-            out,
-            "| {} | {} | {} | {} | {} | {} | {} | {} |",
+        let row = format!(
+            "| {} | {} | {} | {} | {} | {} | {} | {} |\n",
             capital(&o.name),
             size.name,
             format_weight(u64::from(o.weight)),
@@ -336,6 +345,9 @@ pub(super) fn corpses(content: &Content) -> String {
             shelf(food.keeps),
             shelf(food.lasts)
         );
+        if written.insert(row.clone()) {
+            out.push_str(&row);
+        }
     }
     out
 }

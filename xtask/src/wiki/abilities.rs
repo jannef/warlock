@@ -262,6 +262,32 @@ fn sign_holders(content: &Content, active: SignActive) -> String {
             .filter(|p| gives(&p.grants))
             .map(|p| format!("the {}-born", p.name)),
     );
+    who.extend(
+        (h.lucky.iter())
+            .filter(|l| gives(&l.grants))
+            .map(|l| format!("those born on the day of {}", l.title)),
+    );
+    // A sign's pick (a Stars talent that asks for the sign) is had by those who take it.
+    if let Some(def) = content.sign_active(active) {
+        let level = match def.needs.level {
+            0 => String::new(),
+            l => format!(", from level {l}"),
+        };
+        let animal = (def.needs.animal.as_deref())
+            .and_then(|id| h.animals.iter().find(|p| p.id == id))
+            .map(|p| format!("those born in the year of the {}", p.name));
+        let element = (def.needs.element.as_deref())
+            .and_then(|id| h.elements.iter().find(|p| p.id == id))
+            .map(|p| format!("the {}-born", p.name));
+        who.extend(
+            (animal.into_iter().chain(element))
+                .map(|born| format!("{born} who pick it (a sign's pick{level})")),
+        );
+    }
+    if who.is_empty() {
+        // An active in the rules that no sign hands out: say so, not an empty cell.
+        return "nobody: no birth sign gives it".to_string();
+    }
     who.join(", ")
 }
 

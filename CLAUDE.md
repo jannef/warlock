@@ -124,7 +124,7 @@ log, active first) from perception;
 
 Action text syntax: whitespace-separated `move:DIR wait open:DIR close:DIR kick:DIR pick:DIR ascend descend use_tool
 pickup[:LETTERS] drop[:LETTERS] sell[:LETTERS] pay[:DIR] equip:SLOT:LETTER remove:SLOT bash:DIR fire:X,Y throw:LETTER:X,Y
-eat:LETTER eat:floor:LETTER fletch give:LETTER[:DIR] read:LETTER[:X,Y|:LETTER] study:LETTER scribe:SPELL dig:DIR search search:N disarm:DIR listen:DIR wedge:DIR heal[:ID[:DIR]] feint:DIR intimidate:X,Y pray temper:LETTER whittle:LETTER decipher:LETTER drink use:ID[:DIR|:X,Y] chat:DIR ask:DIR:TOPIC say:DIR:WORDS steal:DIR tame:DIR throw_voice:X,Y order:follow|stay|hunt:X,Y rest:GOAL encounter:CHOICE stance:NAME vision:PROFILE
+eat:LETTER eat:floor:LETTER fletch give:LETTER[:DIR] read:LETTER[:X,Y|:LETTER] study:LETTER scribe:SPELL dig:DIR search search:N disarm:DIR listen:DIR wedge:DIR heal[:ID[:DIR]] feint:DIR intimidate:X,Y pray temper:LETTER whittle:LETTER decipher:LETTER drink use:ID[:DIR|:X,Y] chat:DIR ask:DIR:TOPIC steal:DIR tame:DIR throw_voice:X,Y order:follow|stay|hunt:X,Y rest:GOAL encounter:CHOICE stance:NAME vision:PROFILE
 talent:ID[:CHOICE] advance:SKILL levelup:auto xp:N call:ID rank:SKILL:N
 skip:DURATION weather:KIND spawn ally:CREATURE[:N[:DURATION]] meet:ENTRY[:OUTCOME] effect:ID@X,Y[>X,Y] zone:KIND@X,Y,R identify[:LETTERS] afflict:STATUS drain:N resource:ID infect:DISEASE reveal:ID quest_roll:ID:TARGET`
 (`DIR` = N
@@ -163,13 +163,10 @@ the player, `ask:E:rooms` asks it about topic `rooms` (an id in a campaign's `da
 quest topics are `quest-ID`, ids in a campaign's `data/quests/`: asking gives the quest, there is
 no accepting or declining (#422); a
 service is asked for by its id the same way, `ask:E:cure`, paid in gold and taking a chat's time,
-and a trader's one offer too, `ask:E:wares` buying it (the pedlar's; docs/dev/npcs.md "A trader's offer"),
+and a trader's one offer too, `ask:E:wares` buying it (the pedlar's; docs/dev/npcs.md "A trader's offer"), and a calling's,
+`ask:E:life_before_death`, offered only while the calling is open, calling the player and taking a chat's time (the strange spirit's; docs/dev/npcs.md "Callings by topic"),
 docs/dev/npcs.md);
 `tame:N` tames the beast north of the player (the Tame ability, for those trained in Handle animal: ten turns beside it, then a Willpower check; refused, with no time, with a companion already or no beast there that may be tamed now; docs/dev/companion.md "Taming");
-`say:E:life_before_death` says words to the creature east (normalised: lower case, letters and
-digits, joined by `_`; it answers what its dialogue's `[[dialogue.word]]`s know, else its
-`unheard` line; a chat's time either way; docs/dev/npcs.md "Saying words"; in the game the
-dialogue screen's `s` row, so `--keys "s h e l l o Enter"` types and says it);
 `use_tool` uses the light ready in the Tool slot (a lantern: unlit, lit, hooded, unlit again; `u`
 in the game, which asks for a direction to dig instead without one), `throw_voice:X,Y`
 throws the player's voice to level cell (X, Y) (one they see, within 6; the bard's, refused without the ability);

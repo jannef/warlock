@@ -26,7 +26,7 @@ each other, and some are poor choices on purpose.
 
 Each class's level table gives an ability at levels 1, 6, 12, 18, 25, 32, 40, 50, and 60, and
 a bonus [talent](talents.md) at a few levels between, from the trees it names. The
-[bard](classes.md#bard)'s is shorter: it stops at level 30 (see [The bard](#the-bard) below),
+[bard](classes.md#bard)'s is shorter: it stops at level 30 (see [The bard](#bard) below),
 with its abilities at 1, 3, 6, 9, 12, 16, 20, 25, and 30. An ability comes the moment
 you reach its level ("You gain Fencing."), and works from then on; in the game each is told in
 words, here exactly. A stat it raises rises for good, score and potential. Some abilities are
@@ -35,15 +35,6 @@ used from the [abilities menu](abilities.md); the rest simply work. So far the [
 [thief](classes.md#thief), the [bard](classes.md#bard), and the everyday folk have their tables. A table may hand out an ordinary talent
 (the [ranger](classes.md#ranger)'s and the [thief](classes.md#thief)'s [Evasion](talents.md#talent-evasion), the [bard](classes.md#bard)'s [Fast healer](talents.md#talent-fast-healer), the [druid](classes.md#druid)'s [Beast-friend](talents.md#talent-beast-friend)); if you took it already, the level gives
 you a talent pick in its place.
-
-
-{{#include generated/class-levels.md}}
-
-The [paladin](#the-paladin) has a section of its own below. The [berserker](classes.md#berserker)'s [rage](abilities.md#ability-rage) runs on a pool of its own, [Rage](resources.md#rage), and the
-[ranger](classes.md#ranger)'s [rapid shot](talents.md#talent-rapid-shot) and [volley](abilities.md#ability-volley) on [focus](resources.md#resource-focus) (see [Resources](resources.md)); the
-[thief](classes.md#thief)'s [sneak attacks](talents.md#talent-sneak-attack) build [openings](resources.md#resource-openings), which [low blow](abilities.md#ability-low-blow) and [master thief](abilities.md#ability-master-thief)'s finisher spend; the
-[ascetic](classes.md#ascetic)'s [flurry](talents.md#talent-flurry), [stunning strike](abilities.md#ability-stunning-strike), and [quivering palm](abilities.md#ability-quivering-palm) run on [ki](resources.md#resource-ki), and the [bard](classes.md#bard)'s [inspire](abilities.md#ability-inspire) spends
-[inspiration](resources.md#resource-inspiration).
 
 The spells a class gives (the [priest](classes.md#priest)'s, [druid](classes.md#druid)'s, [wizard](classes.md#wizard)'s, and [witch](classes.md#witch)'s few, a [bard](classes.md#bard)'s, a
 [paladin](classes.md#paladin)'s, or a [ranger](classes.md#ranger)'s one or two; see [What your class gives](magic.md#what-your-class-gives))
@@ -54,28 +45,37 @@ yours; a [hex](magic.md#shapes) falls on a [hostile](creatures.md#factions) you 
 open sky. The [druid](classes.md#druid)'s calls bring wolves, bears, and elementals to fight beside them
 as [allies](allies.md).
 
-**The witch's familiar** ([Familiar](talents.md#talent-familiar), from level 1) is a small beast at
-her heel whose [touch](allies.md#the-touch) lays her [evil eye](magic.md#spell-evil-eye) and which
-[goes for what she has hexed](allies.md#what-it-goes-for). Lost, another comes to an hour's
-[calling](allies.md#call-familiar), and from level 30 that may be an [imp](creatures.md#creature-imp).
+{{#include generated/class-levels.md:berserker}}
 
-**The witch's cackle** ([Cackle](abilities.md#ability-cackle), from level 6) keeps her hexes on.
-It costs no [mana](mana.md#spending-it) and takes the time of a spell: every hex she laid herself
-([hexed](status-effects.md#status-ill-wished), [weakened](status-effects.md#status-weakened),
-[sluggish](status-effects.md#status-sluggish), [drowsy](status-effects.md#status-drowsy),
-[webbed](status-effects.md#status-webbed)) on a creature she sees grows a degree, up to its
-maximum, and its degree's time starts again; one already at its maximum only starts again.
-Another's hex and a creature out of sight are untouched, and with no creature in sight under a
-hex of hers she does not cackle at all (no time is spent). The cackle is loud, a voice of
-[loudness](hearing.md#how-loud) 60, louder than talk: whoever [hears it](hearing.md#creatures-hear-you)
-comes to look.
+The [berserker](classes.md#berserker)'s [rage](abilities.md#ability-rage) runs on a pool of its own, [Rage](resources.md#rage) (see [Resources](resources.md)).
 
-**The witch's malison** ([Malison](talents.md#talent-malison), from level 18) is a passive. A
-creature under a hex (anyone's) takes 3 more [damage](combat.md) from her blows, shots, and
-spells for each hex it is under, before its [resistances](damage-types.md#armour-and-resistance). And when a
-creature dies under a hex she laid herself, whatever killed it and wherever it is, she gains
-[mana](mana.md) equal to half its level (rounded down, at least 1), never past her maximum:
-"The hex comes home."
+{{#include generated/class-levels.md:bard}}
+
+The [bard](classes.md#bard)'s [inspire](abilities.md#ability-inspire) spends [inspiration](resources.md#resource-inspiration) (see [Resources](resources.md)).
+
+The bard knows a little of everything and masters nothing: a wandering singer who has handled
+every weapon once, picked up every trade a little, and sings. Their table is shorter than the
+others': it gives its last ability at level 30 and stops there. A bard learns nothing new past
+30; experience earned after it still counts, but buys no level, and what comes after is found,
+not given (see [Prestige classes](#prestige-classes)). The bard's two
+**[songs](abilities.md#songs)**, **[inspire](abilities.md#ability-inspire)** (level 9, paid in
+[inspiration](resources.md#resource-inspiration), lifting you) and the
+**[lullaby](abilities.md#ability-lullaby)** (level 20, paid in [mana](mana.md#spending-it), making
+[hostile](creatures.md#factions) hearers [drowsy](status-effects.md#status-drowsy)), are told in
+full under [Songs](abilities.md#songs): what they cost, how far they are heard, how
+[Music](skills.md#skill-music) lengthens them, and the odds of shaking the lullaby off. A
+[virtuoso](talents.md#talent-virtuoso) (level 30) sings for nothing, a degree longer.
+
+**[Travelled hands](talents.md#talent-travelled-hands)** (level 3) raises every
+[weapon skill](weapon-skills.md) and [fighting style](fighting-styles.md) the bard has at rank 0 to rank 1, once (never a
+[school of magic](schools.md), and never a hidden style): a point surer with whatever comes to hand.
+**[Jack of all trades](talents.md#talent-jack-of-all-trades)**, at level 12, trains every
+[skill](skills.md) the bard lacks (but Sneak attack, the thief's) at 1d4+1, whatever skills there
+are; from then on they are skills like any other, used, marked, and raised at a level.
+**[Master of none](talents.md#talent-master-of-none)**, at level 25, makes every skill they are
+trained in count 5 higher.
+
+{{#include generated/class-levels.md:priest}}
 
 **The priest's prayer** ([Orison](abilities.md#ability-orison), from level 1) costs no [mana](mana.md#spending-it) and takes the time of a spell:
 it answers the worst thing that ails you, as far as your prayers reach ([wounds](prayer.md#prayer-wounds) at first; [hunger](prayer.md#prayer-hunger),
@@ -97,24 +97,11 @@ The priest's **[Sanctuary](abilities.md#ability-sanctuary)** (level 50, 30 [mana
 for an hour: hostile creatures keep off it and whoever stands on it heals and gets mana back
 three times as fast, until the priest strikes from it (see [Special rooms](special-rooms.md#hallowed-ground)).
 
-The [wizard](classes.md#wizard)'s **[Knock](abilities.md#ability-knock)** (from level 4, 5 [mana](mana.md#spending-it)) springs the lock of the [locked door](doors.md#locked-doors) or chest in a
-direction; nothing opens by itself (see [Chests](chests.md#locked-chests)).
+{{#include generated/class-levels.md:druid}}
 
-The [wizard](classes.md#wizard)'s **[Scribe](abilities.md#ability-scribe)** (from level 12) writes a scroll of a spell he knows on a
-blank scroll, for three times the spell's [mana](mana.md#spending-it) and a study's time (see
-[Scrolls](scrolls.md#writing-scrolls)): mana banked between fights, read in the next. His
-**[Magister](talents.md#talent-magister)** comes at level 40.
+{{#include generated/class-levels.md:ascetic}}
 
-The [ranger](classes.md#ranger)'s **favoured prey** is the kind of [creature](creatures.md) you have killed most, counted over every
-[level](experience.md#levels); when two are tied, the one that got there first stays favoured until another is killed
-more often. From level 18 **[Pack tactics](talents.md#talent-pack-tactics)** makes you and your
-[companion](allies.md#companions) hunt as one: a creature standing beside you both is
-**flanked**, and your melee attacks and your companion's at it get +2 [to hit](combat.md#hitting)
-(not shots, throws, or spells), and your companion's attacks at your favoured prey carry your
-favoured prey's bonus, to hit and damage ([Master hunter](talents.md#talent-master-hunter)'s too). From level 40 **[Sic 'em](abilities.md#ability-sic)** sets your companion on a creature you see for 5 [focus](resources.md#resource-focus): it [hunts that creature, savage](allies.md#companions). A **[volley](abilities.md#ability-volley)** looses three shots of your [readied missile weapon](ranged.md#getting-ready) at the place you [aim](controls.md#aiming)
-at, one after another, for the time of one ordinary shot; it stops early when you run out, and
-costs 6 [focus](resources.md#resource-focus). **[Rapid shot](talents.md#talent-rapid-shot)** gives you focus (10, full); every shot you loose while you have
-at least 2 spends 2 and takes 10 % less [time](turns.md#what-actions-cost), and with less it is an ordinary shot.
+The [ascetic](classes.md#ascetic)'s [flurry](talents.md#talent-flurry), [stunning strike](abilities.md#ability-stunning-strike), and [quivering palm](abilities.md#ability-quivering-palm) run on [ki](resources.md#resource-ki) (see [Resources](resources.md)).
 
 The [ascetic](classes.md#ascetic)'s **[martial arts](talents.md#talent-martial-arts)** gives you [ki](resources.md#resource-ki) at level 1, full (5 with
 [Willpower](stats.md#stat-willpower) 12, growing with Willpower and your [level](experience.md#levels)), and **[flurry](talents.md#talent-flurry)**, from level 1
@@ -142,7 +129,7 @@ spent by itself: the hit is a miss, and the missile falls at your feet. With no 
 blasts are never caught.
 **[Quivering palm](abilities.md#ability-quivering-palm)** (level 50) costs 5 ki and has no other wait; it cannot be used with a weapon in hand.
 
-### The paladin
+{{#include generated/class-levels.md:paladin}}
 
 The paladin's fight is one pool, **[zeal](resources.md#resource-zeal)**, for wrath and mercy
 alike: it holds 10, plus your [Presence](stats.md#stat-presence) [modifier](stats.md#modifiers),
@@ -198,34 +185,74 @@ hits you builds 2 zeal instead of 1, for a paladin who stands in the doorway and
 (a smite says "You call for holy wrath, but none answers."). The passives do not care, but for
 Retribution, which answers no blow outside them; your zeal builds whichever side you are on.
 
-### The bard
+{{#include generated/class-levels.md:ranger}}
 
-The bard knows a little of everything and masters nothing: a wandering singer who has handled
-every weapon once, picked up every trade a little, and sings. Their table is shorter than the
-others': it gives its last ability at level 30 and stops there. A bard learns nothing new past
-30; experience earned after it still counts, but buys no level, and what comes after is found,
-not given (see [Prestige classes](#prestige-classes)). The bard's two
-**[songs](abilities.md#songs)**, **[inspire](abilities.md#ability-inspire)** (level 9, paid in
-[inspiration](resources.md#resource-inspiration), lifting you) and the
-**[lullaby](abilities.md#ability-lullaby)** (level 20, paid in [mana](mana.md#spending-it), making
-[hostile](creatures.md#factions) hearers [drowsy](status-effects.md#status-drowsy)), are told in
-full under [Songs](abilities.md#songs): what they cost, how far they are heard, how
-[Music](skills.md#skill-music) lengthens them, and the odds of shaking the lullaby off. A
-[virtuoso](talents.md#talent-virtuoso) (level 30) sings for nothing, a degree longer.
+The [ranger](classes.md#ranger)'s [rapid shot](talents.md#talent-rapid-shot) and [volley](abilities.md#ability-volley) run on [focus](resources.md#resource-focus) (see [Resources](resources.md)).
 
-**[Travelled hands](talents.md#talent-travelled-hands)** (level 3) raises every
-[weapon skill](weapon-skills.md) and [fighting style](fighting-styles.md) the bard has at rank 0 to rank 1, once (never a
-[school of magic](schools.md), and never a hidden style): a point surer with whatever comes to hand.
-**[Jack of all trades](talents.md#talent-jack-of-all-trades)**, at level 12, trains every
-[skill](skills.md) the bard lacks (but Sneak attack, the thief's) at 1d4+1, whatever skills there
-are; from then on they are skills like any other, used, marked, and raised at a level.
-**[Master of none](talents.md#talent-master-of-none)**, at level 25, makes every skill they are
-trained in count 5 higher.
+The [ranger](classes.md#ranger)'s **favoured prey** is the kind of [creature](creatures.md) you have killed most, counted over every
+[level](experience.md#levels); when two are tied, the one that got there first stays favoured until another is killed
+more often. From level 18 **[Pack tactics](talents.md#talent-pack-tactics)** makes you and your
+[companion](allies.md#companions) hunt as one: a creature standing beside you both is
+**flanked**, and your melee attacks and your companion's at it get +2 [to hit](combat.md#hitting)
+(not shots, throws, or spells), and your companion's attacks at your favoured prey carry your
+favoured prey's bonus, to hit and damage ([Master hunter](talents.md#talent-master-hunter)'s too). From level 40 **[Sic 'em](abilities.md#ability-sic)** sets your companion on a creature you see for 5 [focus](resources.md#resource-focus): it [hunts that creature, savage](allies.md#companions). A **[volley](abilities.md#ability-volley)** looses three shots of your [readied missile weapon](ranged.md#getting-ready) at the place you [aim](controls.md#aiming)
+at, one after another, for the time of one ordinary shot; it stops early when you run out, and
+costs 6 [focus](resources.md#resource-focus). **[Rapid shot](talents.md#talent-rapid-shot)** gives you focus (10, full); every shot you loose while you have
+at least 2 spends 2 and takes 10 % less [time](turns.md#what-actions-cost), and with less it is an ordinary shot.
+
+{{#include generated/class-levels.md:thief}}
+
+The [thief](classes.md#thief)'s [sneak attacks](talents.md#talent-sneak-attack) build [openings](resources.md#resource-openings), which [low blow](abilities.md#ability-low-blow) and [master thief](abilities.md#ability-master-thief)'s finisher spend (see [Resources](resources.md)).
+
+{{#include generated/class-levels.md:wizard}}
+
+The [wizard](classes.md#wizard)'s **[Knock](abilities.md#ability-knock)** (from level 4, 5 [mana](mana.md#spending-it)) springs the lock of the [locked door](doors.md#locked-doors) or chest in a
+direction; nothing opens by itself (see [Chests](chests.md#locked-chests)).
+
+The [wizard](classes.md#wizard)'s **[Scribe](abilities.md#ability-scribe)** (from level 12) writes a scroll of a spell he knows on a
+blank scroll, for three times the spell's [mana](mana.md#spending-it) and a study's time (see
+[Scrolls](scrolls.md#writing-scrolls)): mana banked between fights, read in the next. His
+**[Magister](talents.md#talent-magister)** comes at level 40.
+
+{{#include generated/class-levels.md:witch}}
+
+**The witch's familiar** ([Familiar](talents.md#talent-familiar), from level 1) is a small beast at
+her heel whose [touch](allies.md#the-touch) lays her [evil eye](magic.md#spell-evil-eye) and which
+[goes for what she has hexed](allies.md#what-it-goes-for). Lost, another comes to an hour's
+[calling](allies.md#call-familiar), and from level 30 that may be an [imp](creatures.md#creature-imp).
+
+**The witch's cackle** ([Cackle](abilities.md#ability-cackle), from level 6) keeps her hexes on.
+It costs no [mana](mana.md#spending-it) and takes the time of a spell: every hex she laid herself
+([hexed](status-effects.md#status-ill-wished), [weakened](status-effects.md#status-weakened),
+[sluggish](status-effects.md#status-sluggish), [drowsy](status-effects.md#status-drowsy),
+[webbed](status-effects.md#status-webbed)) on a creature she sees grows a degree, up to its
+maximum, and its degree's time starts again; one already at its maximum only starts again.
+Another's hex and a creature out of sight are untouched, and with no creature in sight under a
+hex of hers she does not cackle at all (no time is spent). The cackle is loud, a voice of
+[loudness](hearing.md#how-loud) 60, louder than talk: whoever [hears it](hearing.md#creatures-hear-you)
+comes to look.
+
+**The witch's malison** ([Malison](talents.md#talent-malison), from level 18) is a passive. A
+creature under a hex (anyone's) takes 3 more [damage](combat.md) from her blows, shots, and
+spells for each hex it is under, before its [resistances](damage-types.md#armour-and-resistance). And when a
+creature dies under a hex she laid herself, whatever killed it and wherever it is, she gains
+[mana](mana.md) equal to half its level (rounded down, at least 1), never past her maximum:
+"The hex comes home."
+
+{{#include generated/class-levels.md:warrior}}
+
+{{#include generated/class-levels.md:aristocrat}}
+
+{{#include generated/class-levels.md:commoner}}
+
+{{#include generated/class-levels.md:craftsperson}}
+
+{{#include generated/class-levels.md:merchant}}
 
 ## Prestige classes
 
 There is no multiclassing: you keep the class you chose for good. But a class that stops short
-of the rest, as the [bard](#the-bard) does at 30, may later open onto a **prestige class**: a
+of the rest, as the [bard](#bard) does at 30, may later open onto a **prestige class**: a
 second table of levels, reached only by a **calling**, a deed found somewhere in the world, never
 by experience alone. The game never names one; the world leaves hints, such as a
 [statue](terrain.md#walls)'s inscription.
@@ -263,7 +290,6 @@ hands, and cannot be thrown (see [Spirit weapon](abilities.md#ability-spirit-wea
 
 ### Callings
 
-Each world calls in its own way. The words are stated plain here (see
-[Saying words](npcs.md#saying-words)):
+Each world calls in its own way:
 
 {{#include generated/callings.md}}
