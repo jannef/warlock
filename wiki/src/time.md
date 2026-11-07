@@ -1,7 +1,7 @@
 # Time and the calendar
 
-The game has a clock that every action that takes time advances. The clock is part of your run and
-is saved with it. Nothing depends on real-world time.
+The game has its own clock. Every action that takes time moves it forward. The clock belongs to
+your run and is saved with it; nothing depends on real-world time.
 
 ## Days
 
@@ -41,15 +41,16 @@ instead, for example `Moon ●  Ilse ☽`.
 
 Under the open sky the [status bar](the-screen.md#the-screen) also shows the [weather](weather.md), after the moon. When the
 window is narrow, the [status bar](the-screen.md#the-screen) shortens the moon's phase to its picture and the date to its day
-and month before it drops them; see [Controls](the-screen.md#the-screen).
+and month before it drops them; see [The screen](the-screen.md#the-screen).
 
 ## What takes time
 
-Almost everything you do that changes the world takes game time, and what you do decides how
-much: every action has a [cost](turns.md#what-actions-cost), and a normal action, such as waiting, opening a [door](doors.md), or a step,
-takes 6 seconds. Costlier actions take longer, and a step through [water](terrain.md#water) takes twice as long as a
-normal one. Steps on the [overworld](overworld.md#travel) are journeys of minutes or hours. Creatures that are [quicker](turns.md#speed)
-than you take less time for the same action, so they act more often. See
+Almost everything you do that changes the world takes game time. Every action has a
+[cost](turns.md#what-actions-cost). A normal action, such as waiting, opening a [door](doors.md),
+or taking a step, takes 6 seconds. Costlier actions take longer, and a step through
+[water](terrain.md#water) takes twice as long as a normal one. Steps on the
+[overworld](overworld.md#travel) are journeys of minutes or hours. Creatures that are
+[quicker](turns.md#speed) than you take less time for the same action, so they act more often. See
 [Turns and movement](turns.md) for what each action costs, and [Resting](resting.md) for passing
 a long time at once.
 

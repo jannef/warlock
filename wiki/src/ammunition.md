@@ -1,17 +1,20 @@
 # Ammunition
 
-[Missile weapons](objects.md#class-missile-weapons) shoot their own kind of ammunition: arrows for bows, bolts for crossbows, stones
-for slings. Ammunition is stackable: a quiver of 24 arrows is one [stack](objects.md#piles) in your [pack](objects.md#your-pack), [readied](ranged.md#getting-ready) in
-the Missiles slot on the [equipment](equipment.md) screen. A shot takes one; where it comes down
-it lies, to be [picked up](objects.md#picking-up) again and joined to the stack.
+Each [missile weapon](objects.md#class-missile-weapons) shoots its own ammunition: bows shoot
+arrows, crossbows shoot bolts, and slings shoot stones. Ammunition stacks, so a quiver of 24
+arrows is one [stack](objects.md#piles) in your [pack](objects.md#your-pack). You
+[ready](ranged.md#getting-ready) it in the Missiles slot on the [equipment](equipment.md)
+screen. Every shot uses one. It lies where it comes down, and you can [pick it
+up](objects.md#picking-up) again to join it back to the stack.
 
 {{#include generated/ammunition.md}}
 
-- **Breaking**: an arrow or a bolt that hits may break, by the chance in the table; one that
-  misses never does. Stones and [thrown](ranged.md#shooting-and-throwing) weapons do not break.
-- **Brittle arrows and bolts** are what the unskilled [fletch](skill-uses.md#fletching): they break on any hit. They cannot be
-  bought, and sell for nothing.
-- **Flaming arrows** never lie to be picked up: they burn where they land, [lighting](light.md#light-sources) the dark
-  around them, and then they are gone (see [Ranged combat](ranged.md)).
-- Ammunition weighs what it weighs: a full quiver counts toward your [weight](burden.md) like anything else
-  ([Objects and your pack](objects.md)).
+- **Breaking**: an arrow or a bolt that hits may break, by the chance in the table. One that
+  misses never breaks. Stones and [thrown](ranged.md#shooting-and-throwing) weapons never break.
+- **Brittle arrows and bolts** are what the unskilled [fletch](skill-uses.md#fletching). They
+  break on any hit. You cannot buy them, and they sell for nothing.
+- **Flaming arrows** never lie on the ground to be picked up. They burn where they land,
+  [lighting](light.md#light-sources) the dark around them, and then they are gone (see [Ranged
+  combat](ranged.md)).
+- Ammunition has weight like anything else. A full quiver counts toward your
+  [burden](burden.md) (see [Objects and your pack](objects.md)).

@@ -1,146 +1,152 @@
 # Weapon skills
 
-The more you fight with a kind of weapon, the better you get with it, as in ADOM. Every kind of
-weapon is a **weapon skill** with a **rank** from 0 (untrained) to 10. Each attack you make
-earns **marks** in the skill it uses, and when you have enough marks you gain a rank: "You feel
-more skilled with long blades." A [shield](objects.md#class-shields) has a skill too, for
-[bashing](weapon-skills.md#weapon-skill-shield-bash) with it.
+The more you fight with a kind of weapon, the better you get with it. Every kind of weapon is a
+**weapon skill** with a **rank** from 0 (untrained) to 10. Each attack you make earns **marks** in
+the skill it uses. When you have enough marks you gain a rank: "You feel more skilled with long
+blades." A [shield](objects.md#class-shields) has a skill too, for [bashing](weapon-skills.md#weapon-skill-shield-bash) with it.
 
-Skill with one weapon carries over to related ones, as in the tabletop game *The Riddle of
-Steel*: a swordsman who is good with a [long sword](weapon-skills.md#weapon-skill-long-blades) is not a beginner with a short one.
+Skill with one weapon carries over to related ones. Someone who is good with a
+[long sword](weapon-skills.md#weapon-skill-long-blades) is not a beginner with a short one.
 
 ## The skills
 
 {{#include generated/weapon-skills.md}}
 
 Every weapon belongs to one skill (see the weapon tables in [Combat](combat.md#damage) and
-[Ranged combat](ranged.md)). Every throw trains **[thrown weapons](weapon-skills.md#weapon-skill-thrown)**, whatever you throw: a dagger
-thrown is not a dagger held. **[Unarmed](weapon-skills.md#weapon-skill-unarmed)** is fighting with your bare hands, and every [kick](doors.md#kicking) at a
-creature, whatever you wield (see [Doors](doors.md)).
+[Ranged combat](ranged.md)). Every throw trains **[thrown weapons](weapon-skills.md#weapon-skill-thrown)**, whatever you throw: a dagger thrown is
+not a dagger held. **[Unarmed](weapon-skills.md#weapon-skill-unarmed)** covers fighting with your bare hands, and every [kick](doors.md#kicking) at a creature,
+whatever you wield (see [Doors](doors.md)).
 
-No skill trains when your [shield](objects.md#class-shields) stops a blow: the shield's own Shield part of your
-[Defence](combat.md#defence) grows only with the shield styles, [Sword and Board](fighting-styles.md#style-sword-and-board) and
-[Two Shields](fighting-styles.md#style-two-shields). **[Shield bashing](weapon-skills.md#weapon-skill-shield-bash)** is an attack of its own: it bashes whoever stands
-in a direction with the shield you hold, for the shield's own [damage](combat.md#damage) (and your [Strength](stats.md#stat-strength), as
-every blow), in the time of a blow. You need a shield to bash with, and you bash only what is
-[hostile](creatures.md#factions) to you. A shield bash is an *ability*: choose it from the abilities menu (`a`, see
-[Abilities](abilities.md)), then a direction. It has no key of its own by default; give it one in
-the [Controls screen](controls.md#rebinding-keys) ("Bash with your shield") if you like.
+No skill trains when your [shield](objects.md#class-shields) stops a blow. The Shield part of your [Defence](combat.md#defence) grows only with
+the shield styles, [Sword and Board](fighting-styles.md#style-sword-and-board) and [Two Shields](fighting-styles.md#style-two-shields).
 
-Spells have a page of their own: each [school of magic](schools.md) is a skill trained as these
-are, by casting, and a spell that rolls to hit aims with its school's rank. The schools and the
-caster styles are on the [Magic page](schools.md#the-magic-page), page 6.
+**[Shield bashing](weapon-skills.md#weapon-skill-shield-bash)** is an attack of its own. It bashes whoever stands in a direction with the
+shield you hold. It does the shield's own [damage](combat.md#damage) plus your [Strength](stats.md#stat-strength), like every blow, and takes the
+time of a blow. You need a shield to bash with, and you bash only what is [hostile](creatures.md#factions) to you. A shield
+bash is an *ability*: choose it from the abilities menu (`a`, see [Abilities](abilities.md)), then pick a
+direction. It has no key of its own by default. You can give it one in the
+[Controls screen](controls.md#rebinding-keys) ("Bash with your shield").
+
+Spells have their own page. Each [school of magic](schools.md) is a skill trained the same way, by
+casting, and a spell that rolls to hit aims with its school's rank. The schools and the caster
+styles are on the [Magic page](schools.md#the-magic-page), page 6.
 
 ## Seeing your skills
 
-`W` opens the **weapon skills screen**: every skill, by kind (melee, missile and thrown,
-shields), then your [fighting styles](fighting-styles.md), each with your rank and a faint bar of
-your marks toward the next one; a `•` marks the styles you fight in now. It takes no time.
-Skills you know stand out; untrained ones are dimmer. In a wide window the list is in two
-columns; in a small one it scrolls (↑↓). It is page 5 of the
-[info pages](the-screen.md#info-pages), right after your [skills](skills.md) and before the
-[Magic page](schools.md#the-magic-page) (`6`, named on its bottom line), where the
+`W` opens the **weapon skills screen**. It lists every skill by kind (melee, missile and thrown,
+shields), then your [fighting styles](fighting-styles.md). Each shows your rank and a faint bar of your marks
+toward the next rank. A `•` marks the styles you fight in now. Opening it takes no time.
+
+Skills you know stand out, and untrained ones are dimmer. In a wide window the list is in two
+columns. In a small one it scrolls (↑↓). It is page 5 of the [info pages](the-screen.md#info-pages), right after your
+[skills](skills.md) and before the [Magic page](schools.md#the-magic-page) (`6`, named on its bottom line), where the
 [caster styles](schools.md#caster-styles) are listed.
 
-The game never tells you what a rank gives you, in numbers: you see your ranks, and you feel the
-difference in a fight. The tables below are the rules, exactly.
+The game never tells you in numbers what a rank gives you. You see your ranks, and you feel the
+difference in a fight. The tables below are the exact rules.
 
 ## Marks and ranks
 
-You earn marks for every attack, more for a hit. How much you learn depends on whom you fight:
-an opponent whose [level](experience.md#levels) is below your rank teaches you less, and at last
-nothing at all, while one at your rank or above teaches you the full marks, never more: past rank 5 a [giant rat](creatures.md#creature-rat) (level 1) teaches you nothing more,
-and to become a master you need masterful foes.
+You earn marks for every attack, and more for a hit. How much you learn depends on whom you
+fight. An opponent whose [level](experience.md#levels) is below your rank teaches you less, and eventually nothing at
+all. One at your rank or above teaches you the full marks, but never more. Past rank 5, a
+[giant rat](creatures.md#creature-rat) (level 1) teaches you nothing. To become a master you need masterful foes.
 
 {{#include generated/weapon-marks.md}}
 
-The marks you earn past what a rank needs count toward the next one. The first ranks come within
-a few levels, but from rank 7 on each rank asks for far more: the last ranks take most of a
-career. Missile weapons need fewer marks than weapons up close, and the schools of magic and the
-caster styles, trained by casting, follow a gentler curve of their own. You start every skill with no marks.
+Marks you earn beyond what a rank needs count toward the next one. The first ranks come within a
+few levels. From rank 7 on, each rank asks for far more, and the last ranks take most of a career.
+Missile weapons need fewer marks than weapons up close. The schools of magic and the caster
+styles, trained by casting, follow a gentler curve of their own. You start every skill with no
+marks.
 
 ## Related skills
 
-When you gain a rank in a skill, every related skill is raised to your new rank less the
-penalty between the two, if that is more than you have in it: [long blades](weapon-skills.md#weapon-skill-long-blades) 8 gives [short blades](weapon-skills.md#weapon-skill-short-blades)
-6. A skill raised this way starts its marks again from 0. The relations go both ways, and only
-one step: a rank in [long blades](weapon-skills.md#weapon-skill-long-blades) raises [short blades](weapon-skills.md#weapon-skill-short-blades), but not, through them, [thrown weapons](weapon-skills.md#weapon-skill-thrown).
-Unrelated skills ([bows](weapon-skills.md#weapon-skill-bows) and [axes](weapon-skills.md#weapon-skill-axes)) never move each other.
+When you gain a rank in a skill, every related skill is raised to your new rank minus the penalty
+between the two, if that is more than you have in it. So [long blades](weapon-skills.md#weapon-skill-long-blades) 8 gives [short blades](weapon-skills.md#weapon-skill-short-blades) 6. A
+skill raised this way starts its marks again from 0.
+
+Relations go both ways, but only one step. A rank in [long blades](weapon-skills.md#weapon-skill-long-blades) raises [short blades](weapon-skills.md#weapon-skill-short-blades), but not,
+through them, [thrown weapons](weapon-skills.md#weapon-skill-thrown). Unrelated skills, such as [bows](weapon-skills.md#weapon-skill-bows) and [axes](weapon-skills.md#weapon-skill-axes), never move each
+other.
 
 {{#include generated/weapon-defaults.md}}
 
 ## What a rank gives
 
-Each skill has its own benefits per rank, applied while you fight with it:
+Each skill has its own benefits per rank, which apply while you fight with it:
 
-- **[To hit](combat.md#hitting)** and **[Damage](combat.md#damage)** add to every attack with the skill (damage to every roll of the
-  dice, so a critical gets it twice or more).
-- **[Critical range](combat.md#criticals)** widens the rolls that threaten a critical: a dagger that threatens on 20
-  to 24 threatens on 19 to 24 one wider (see [Criticals](combat.md#criticals)).
-- **Time** takes that much off the time of each attack (a quick dagger), **Reload time** off
-  reloading a [crossbow](weapon-skills.md#weapon-skill-crossbows).
+- **[To hit](combat.md#hitting)** and **[Damage](combat.md#damage)** add to every attack with the skill. Damage is added to every roll
+  of the dice, so a critical gets it twice or more.
+- **[Critical range](combat.md#criticals)** widens the rolls that threaten a critical. A dagger that threatens on 20 to
+  24 threatens on 19 to 24 at one wider (see [Criticals](combat.md#criticals)).
+- **Time** takes that much off the time of each attack (a quick dagger). **Reload time** takes
+  that much off reloading a [crossbow](weapon-skills.md#weapon-skill-crossbows).
 - **[Parry](combat.md#defence)** adds to the Parry part of your [Defence](combat.md#defence) while you wield a weapon of the skill.
 - **[Shield](combat.md#defence)** adds to the Shield part of your Defence while you hold a shield.
 
-Rank 0 gives nothing. The first five ranks grow slowly; ranks 6 to 10 grow much faster, in
-damage above all, with a wider critical range, quicker attacks, and more Parry, while to hit
-rises only a little more. Rank 10 is mastery.
+Rank 0 gives nothing. The first five ranks grow slowly. Ranks 6 to 10 grow much faster, above all
+in damage, with a wider critical range, quicker attacks, and more Parry. To hit rises only a little
+more. Rank 10 is mastery.
 
 {{#include generated/weapon-benefits.md}}
 
 ## What a rank teaches
 
-Abilities come with ranks too. A rank may **teach an ability**: you are told so with the rank
-("You feel more skilled with long blades. You have learned the deep cut."), and the
-[abilities menu](abilities.md) (`a`) lists it under *Weapon skills*, after the skill that taught
-it ("Long blades: Deep cut"). The ones below **fire by themselves**: they cost nothing, take no
-time, and work whenever you fight with a weapon of the skill, so the menu shows them greyed with
-"fires by itself". An ability names its skills: [Deep cut](weapon-skills.md#weapon-ability-deep-cut) is any blade's, at rank 5 in that
-blade's skill. Creatures with the rank have them too, by the same rules: a spearman of rank 5
-braces against you as you come.
+Ranks can also **teach an ability**. You are told so with the rank ("You feel more skilled with
+long blades. You have learned the deep cut."). The [abilities menu](abilities.md) (`a`) then lists it
+under *Weapon skills*, after the skill that taught it ("Long blades: Deep cut").
 
-**Active abilities** (marked *active* in the table) are used, not fired: you pick one from the
-abilities menu, aim it as it asks (a direction for a blow, a place for a shot, nothing for a
-sweep or Shield wall), and it costs two things, both only once it goes ahead (a refused use, with
-nobody to strike or nothing to shoot, costs nothing):
+Most of these **fire by themselves**. They cost nothing, take no time, and work whenever you fight
+with a weapon of the skill, so the menu shows them greyed with "fires by itself". An ability names
+its skills: [Deep cut](weapon-skills.md#weapon-ability-deep-cut) belongs to any blade, at rank 5 in that blade's skill. Creatures with the
+rank have the abilities too, by the same rules: a spearman of rank 5 braces against you as you
+come.
 
-- its **stamina** (see [Combat](combat.md#stamina); the menu shows it: "Spears: Lunge  3 stamina, in a direction"), and
-- its **time**: the percent in the table of what the action it is takes you (a blow with what you
-  hold, so your weapon's speed, your [style](fighting-styles.md), and your [stance](combat.md#stances) count; a shot; a wait). No active is
-  instant. The game never shows this time.
+**Active abilities** (marked *active* in the table) are used, not fired. You pick one from the
+abilities menu and aim it as it asks: a direction for a blow, a place for a shot, nothing for a
+sweep or Shield wall. It costs two things, and only once it goes ahead. A refused use, with nobody
+to strike or nothing to shoot, costs nothing.
 
-The menu greys an active out while you are short of stamina ("you are short of breath") or while
-what you hold is not for it ("your hands are not so held": [Lunge](weapon-skills.md#weapon-ability-lunge) needs a spear or a staff in
-hand, a style's actives its grip: [Shield wall](fighting-styles.md#style-ability-shield-wall) a shield and a weapon, or two shields). Each active is its own action: three in
-three turns cost the three together, and the empty pool is the price; with a pool of 12 that
-comes back a point every 12 seconds, a 5-point active comes at best once every ten turns. A
-character without stamina is given it, full, by the first rank that teaches an active ("You
-learn to pace your breath."). Creatures use no actives.
+- **Stamina** (see [Combat](stances.md#stamina)). The menu shows it: "Spears: Lunge  3 stamina, in a direction".
+- **Time**: the percentage in the table of the time the action normally takes you. For a blow
+  with what you hold, that means your weapon's speed, your [style](fighting-styles.md), and your [stance](stances.md#stances) all count.
+  The action may also be a shot or a wait. No active is instant. The game never shows this time.
 
-- **[Lunge](weapon-skills.md#weapon-ability-lunge)** strikes the first foe within 2 cells along the direction; the cell between must be
-  empty and passable (a closed [door](doors.md) blocks), and nothing on it is sprung. A foe struck over the
-  empty cell brings no free blows (no [riposte](talents.md#talent-riposte), no [cleave](talents.md#talent-cleave)).
-- **[Piercing shot](weapon-skills.md#weapon-ability-piercing-shot)**: a hit flies on along its line and attacks the next one there, whoever it is,
-  once.
-- **[Sunder](weapon-skills.md#weapon-ability-sunder)** and **[Gap shot](fighting-styles.md#style-ability-gap-shot)** ignore all [Protection](combat.md#protection); against a foe with none they cost the same
+The menu greys an active out while you are short of stamina ("you are short of breath"), or while
+what you hold does not suit it ("your hands are not so held"). [Lunge](weapon-skills.md#weapon-ability-lunge) needs a spear or a staff in hand.
+A style's actives need its grip: [Shield wall](fighting-styles.md#style-ability-shield-wall) needs a shield and a weapon, or two shields.
+
+Each active is its own action. Three in three turns cost all three together, and the empty pool is
+the price. With a pool of 12 that comes back a point every 12 seconds, a 5-point active comes at
+best once every ten turns. A character without stamina gets a full pool from the first rank that
+teaches an active ("You learn to pace your breath."). Creatures use no actives.
+
+- **[Lunge](weapon-skills.md#weapon-ability-lunge)** strikes the first foe within 2 cells in the direction. The cell between must be empty
+  and passable (a closed [door](doors.md) blocks), and nothing on it is sprung. A foe struck across the empty
+  cell brings no free blows (no [riposte](talents.md#talent-riposte), no [cleave](talents.md#talent-cleave)).
+- **[Piercing shot](weapon-skills.md#weapon-ability-piercing-shot)**: a hit flies on along its line and attacks the next one there, whoever it
+  is, once.
+- **[Sunder](weapon-skills.md#weapon-ability-sunder)** and **[Gap shot](fighting-styles.md#style-ability-gap-shot)** ignore all [Protection](combat.md#protection). Against a foe with none, they cost the same
   and do nothing more (the game never tells you a foe's Protection).
-- **[Shield wall](fighting-styles.md#style-ability-shield-wall)** ([Sword and Board](fighting-styles.md#style-sword-and-board) or [Two Shields](fighting-styles.md#style-two-shields)) leaves you [Walled](status-effects.md#status-walled) for 5 turns: your Shield +3 on top of the shield's own, and
-  every attack you make takes a quarter longer. Walled and [Hasted](status-effects.md#status-hasted) multiply.
+- **[Shield wall](fighting-styles.md#style-ability-shield-wall)** ([Sword and Board](fighting-styles.md#style-sword-and-board) or [Two Shields](fighting-styles.md#style-two-shields)) leaves you [Walled](status-effects.md#status-walled) for 5 turns. Your Shield gets +3 on
+  top of the shield's own, and every attack you make takes a quarter longer. Walled and [Hasted](status-effects.md#status-hasted)
+  multiply.
 
 {{#include generated/weapon-abilities.md}}
 
-The [Early mastery](talents.md#talent-early-mastery) talent teaches every one of them a rank sooner, and so do the
-talents that make you fight as one more practised than you are ([Stylist](talents.md#talent-stylist), [Fencing](talents.md#talent-fencing)). A status they
-leave ([Bleeding](status-effects.md#bleeding), [Staggered](status-effects.md#status-staggered)) is a [status effect](status-effects.md) like any other: a [staggered](status-effects.md#status-staggered)
-foe's next action takes half again as long. A brace and a point-blank shot are
-[free blows](combat.md#free-blows): they bring none of their own.
+The [Early mastery](talents.md#talent-early-mastery) talent teaches every one of them a rank sooner. So do the talents that
+make you fight as someone more practised ([Stylist](talents.md#talent-stylist), [Fencing](talents.md#talent-fencing)). A status these abilities leave,
+such as [Bleeding](status-effects.md#bleeding) or [Staggered](status-effects.md#status-staggered), is a [status effect](status-effects.md) like any other: a [staggered](status-effects.md#status-staggered) foe's next
+action takes half again as long. A brace and a point-blank shot are [free blows](stances.md#free-blows), so they bring
+no free blows of their own.
 
 ## Where your skills come from
 
-You start with some skills from your [race](races.md) and your [class](classes.md): a [warrior](classes.md#warrior)
-knows [long blades](weapon-skills.md#weapon-skill-long-blades), a [ranger](classes.md#ranger) [bows](weapon-skills.md#weapon-skill-bows), a [thief](classes.md#thief) [daggers](weapon-skills.md#weapon-skill-daggers). Some are dice (`1d2` is one or two), rolled
-when you start, and a [berserker](classes.md#berserker) learned either [axes](weapon-skills.md#weapon-skill-axes) or great blades: which one, the dice decide.
-Your starting ranks then raise their related skills, as above. Your race's and your class's
+You start with some skills from your [race](races.md) and your [class](classes.md). A [warrior](classes.md#warrior) knows [long blades](weapon-skills.md#weapon-skill-long-blades),
+a [ranger](classes.md#ranger) knows [bows](weapon-skills.md#weapon-skill-bows), and a [thief](classes.md#thief) knows [daggers](weapon-skills.md#weapon-skill-daggers). Some starting ranks are dice (`1d2` is one or two),
+rolled when you start. A [berserker](classes.md#berserker) has learned either [axes](weapon-skills.md#weapon-skill-axes) or great blades, and the dice decide
+which. Your starting ranks then raise their related skills, as above. Your race's and your class's
 ranks add up.
 
 Creatures have skills too: the [kobolds](creatures.md#creature-kobold) of the war band know their [spears](weapon-skills.md#weapon-skill-spears) and [bows](weapon-skills.md#weapon-skill-bows). They do not

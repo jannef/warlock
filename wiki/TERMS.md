@@ -34,7 +34,7 @@ table on its page, or grep the built page: `grep -o 'id="status-[a-z-]*"' wiki/b
 | A damage type (fire, slashing, …) | `damage-types.md#damage-ID` | `damage-types.md#damage-fire` |
 | A resource (Rage, Stamina, Ki, Focus, Inspiration, Openings, Zeal) | `resources.md#resource-ID` | `resources.md#resource-ki` |
 | The unholy (what holy wrath falls hardest on) | `classes.md#paladin` | |
-| A stance | `combat.md#stance-NAME` | `combat.md#stance-frenzy` |
+| A stance | `combat.md#stance-NAME` | `stances.md#stance-frenzy` |
 | A stat | `stats.md#stat-NAME` | `stats.md#stat-toughness` |
 | A race | `races.md#race-ID` | `races.md#race-half-elf` |
 | A weapon skill | `weapon-skills.md#weapon-skill-ID` | `weapon-skills.md#weapon-skill-long-blades` |
@@ -135,8 +135,8 @@ above.
 | Loot, item level | `magic-items.md#finding-them` |
 | Looking at an item, its description | `magic-items.md#looking-at-an-item` |
 | Unidentified, identify | `magic-items.md#unidentified-items` |
-| Affix, prefix, suffix | `magic-items.md#prefixes`, `magic-items.md#suffixes` |
-| Base item | `magic-items.md#base-items` |
+| Affix, prefix, suffix | `affixes.md#prefixes`, `affixes.md#suffixes` |
+| Base item | `affixes.md#base-items` |
 | Unique item | `magic-items.md#unique-items` |
 | Ammunition, arrows, bolts | `ammunition.md` |
 | Burden (Unburdened, Burdened, Strained, Overloaded), carrying limit | `burden.md#burden-1`, `burden.md#how-much-you-can-carry` |
@@ -175,7 +175,7 @@ above.
 | Strain, a fizzled prayer | `prayer.md#strain` |
 | The holy and the dark powers, the dark face's twists (Whisper, Invocation, Rite, Pact) | `prayer.md#the-holy-and-the-dark` |
 | Communion with the dark | `talents.md#talent-communion`, `prayer.md#communion-and-sanctuary` |
-| Hallowed ground, dreaded ground (Sanctuary) | `special-rooms.md#hallowed-ground` |
+| Hallowed ground, dreaded ground (Sanctuary) | `cursed-and-hallowed.md#hallowed-ground` |
 | Stats (Strength, Dexterity, …), score | `stats.md` (a stat: its row) |
 | Modifier | `stats.md#modifiers` |
 | Potential | `stats.md#potentials` |
@@ -206,9 +206,9 @@ above.
 | Protection | `combat.md#protection` |
 | Resistance, resists, immune, vulnerable | `damage-types.md#armour-and-resistance` |
 | Big hit | `combat.md#damage` |
-| Stance | `combat.md#stances` (a stance: its row) |
-| Free blow, cleave | `combat.md#free-blows` |
-| Stamina | `combat.md#stamina` |
+| Stance | `stances.md#stances` (a stance: its row) |
+| Free blow, cleave | `stances.md#free-blows` |
+| Stamina | `stances.md#stamina` |
 | Hit points, regeneration | `hit-points.md#hit-points`, `healing.md#how-fast` |
 | Death, permadeath | `hit-points.md#death`, `saving.md` |
 | Blood, stains | `hit-points.md#blood` |

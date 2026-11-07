@@ -836,7 +836,7 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
             min, max, level, ..
         } => format!(
             "at creation, your race's heirloom weapon (Heirlooms, below) with {min} to {max} \
-             [affixes](magic-items.md#prefixes) rolled at [item level](magic-items.md#finding-them) \
+             [affixes](affixes.md#prefixes) rolled at [item level](magic-items.md#finding-them) \
              {level} (two: [magic](magic-items.md); more: [rare](magic-items.md#rarity)), \
              [identified](magic-items.md#unidentified-items), readied in its own \
              [slot](equipment.md#what-fits-where) if that is free, else carried"

@@ -47,7 +47,7 @@ is the Steal skill's use: `Action::Steal(Dir)` (replay text `steal:DIR`, cost `s
 - **Wiki**: the Steal benefit's table comes from `data/skills.toml` (`xtask/src/wiki/skills.rs`),
   the odds by edge from `check::contest_ways` (`stealing()`, `generated/stealing.md`), the
   ability's row from `Ability::every`, the cost from `data/actions.toml`; the page text is
-  `wiki/src/skills.md` ("Stealing").
+  `wiki/src/skill-uses.md` ("Stealing").
 - **Stolen from** (docs/design/monster-dread.md §5.6, #1130): creatures with `steals` (the
   pixie, the nymph, the imp, the succubus, the incubus) take from the player's pack as they
   fight, on a cooldown: `world/snatch.rs`, documented in `docs/dev/creatures.md` ("Theft and the

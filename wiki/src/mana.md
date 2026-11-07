@@ -1,111 +1,148 @@
 # Mana
 
-Mana is your second pool beside your [hit points](hit-points.md#hit-points), and it works the same way:
-you have some, it has a most, and it comes back by itself with time. [Spells](magic.md#the-spells) spend it
-(those your class gives, see [Classes](classes.md#levels), and those you learn from [scrolls](scrolls.md#spell-scrolls)), and
-so do [rods](wands-and-rods.md#rods): each costs its mana, and with too little you cannot cast it until
-enough has come back.
+Mana is your second pool, beside your [hit points](hit-points.md#hit-points), and it works the
+same way. You have a maximum, you spend it, and it comes back by itself over time.
 
-The [status bar](the-screen.md#the-screen) shows it right after your [hit points](hit-points.md#hit-points), as `MP 5/12`: what you have left of your
-most. The [character screen](character.md) (`@`) shows it beside your [hit points](hit-points.md#hit-points). Creatures may
-have mana too, but you never see theirs. [Magic items](magic-items.md) work for a creature exactly as for you: one
-that wears or wields a "+5 to maximum mana" ring has 5 more mana (and starts with all of it), and one
-whose amulet makes "mana come back 50% faster" regains it half again as fast. A summoner pays for its summons from that larger
-pool.
+[Spells](magic.md#the-spells) spend it: those your class gives (see
+[Classes](classes.md#levels)) and those you learn from [scrolls](scrolls.md#spell-scrolls).
+[Rods](wands-and-rods.md#rods) spend it too. Each costs its mana, and with too little you cannot
+cast it until enough has come back.
+
+The [status bar](the-screen.md#the-screen) shows your mana right after your hit points, as
+`MP 5/12`: what you have left out of your maximum. The [character screen](character.md) (`@`)
+shows it beside your hit points.
+
+Creatures may have mana too, but you never see theirs. [Magic items](magic-items.md) work for a
+creature exactly as they do for you. One that wears or wields a "+5 to maximum mana" ring has 5
+more mana (and starts with all of it). One whose amulet makes "mana come back 50% faster" regains
+it half again as fast. A summoner pays for its summons from that larger pool.
 
 ## How much
 
-Your most mana is what your [race](races.md) and your [class](classes.md) give, plus what your
-[Intelligence](stats.md#stat-intelligence), [Willpower](stats.md#stat-willpower), and [Presence](stats.md#stat-presence) add: high scores add to it, low ones take from it, and it
-never goes below nothing. [Wizards](classes.md#wizard) and [witches](classes.md#witch) have the most, and [aristocrats](classes.md#aristocrat) oddly much;
-every class gives at least 1 ([warriors](classes.md#warrior), [berserkers](classes.md#berserker), [thieves](classes.md#thief), [commoners](classes.md#commoner), and [craftspeople](classes.md#craftsperson) no
-more), and only [elves](races.md#race-elf), [gnomes](races.md#race-gnome), [half-elves](races.md#race-half-elf), [halflings](races.md#race-halfling), and [humans](races.md#race-human) have any of their race's.
+Your maximum mana is what your [race](races.md) and your [class](classes.md) give, plus what your
+[Intelligence](stats.md#stat-intelligence), [Willpower](stats.md#stat-willpower), and
+[Presence](stats.md#stat-presence) add. High scores add to it and low ones take from it, but it
+never goes below zero.
+
+[Wizards](classes.md#wizard) and [witches](classes.md#witch) have the most, and
+[aristocrats](classes.md#aristocrat) a surprising amount. Every class gives at least 1, and
+[warriors](classes.md#warrior), [berserkers](classes.md#berserker), [thieves](classes.md#thief),
+[commoners](classes.md#commoner), and [craftspeople](classes.md#craftsperson) give no more than
+that. Only [elves](races.md#race-elf), [gnomes](races.md#race-gnome),
+[half-elves](races.md#race-half-elf), [halflings](races.md#race-halfling), and
+[humans](races.md#race-human) get any mana from their race.
 
 {{#include generated/mana.md}}
 
-Each [level](experience.md#levels) up to 60 raises it (and the mana you have now) by half your class's mana plus what the
-better of your [Intelligence](stats.md#stat-intelligence) and [Willpower](stats.md#stat-willpower) adds (see
-[Experience](experience.md#what-a-level-gives)): a wizard keeps growing it after [hit points](hit-points.md#hit-points) stop
-at level 50; a [warrior](classes.md#warrior) with ordinary wits gains none. [Magic items](magic-items.md) that add to it
-("+5 to maximum mana") raise your most, not what you have. The talent *[Deep well](talents.md#talent-deep-well)* raises both,
-by 1 for every 4 [character levels](experience.md#levels) and at least 2, as you take it and
-as each level after comes (see [Talents](talents.md)).
+Each [level](experience.md#levels) up to 60 raises your maximum, and the mana you have now, by
+half your class's mana plus what the better of your Intelligence and Willpower adds (see
+[Experience](experience.md#what-a-level-gives)). So a wizard keeps growing their mana after
+[hit points](hit-points.md#hit-points) stop at level 50, while a [warrior](classes.md#warrior)
+with ordinary wits gains none.
 
-The skill *[Concentration](skills.md#skill-concentration)*, once you are trained in it, deepens your pool a little: +1 mana at 25,
-+5 at 100, +8 at 200, but never more than a fifth of what your pool would be without it (a pool
-under 5 gains nothing). Untrained, it gives nothing, even when an item raises it (see
-[Skills](skills.md) for the table by value).
+[Magic items](magic-items.md) that add to it ("+5 to maximum mana") raise your maximum, not what
+you have now. The talent *[Deep well](talents.md#talent-deep-well)* raises both: by 1 for every 4
+[character levels](experience.md#levels), at least 2, when you take it and again as each later
+level comes (see [Talents](talents.md)).
+
+The skill *[Concentration](skills.md#skill-concentration)*, once you are trained in it, deepens
+your pool a little: +1 mana at 25, +5 at 100, +8 at 200. It never adds more than a fifth of what
+your pool would be without it, so a pool under 5 gains nothing. Untrained, it gives nothing, even
+when an item raises it (see [Skills](skills.md) for the table by value).
 
 ## How fast it comes back
 
-At the usual pace, a point of mana comes back every so often, faster the stronger your [Willpower](stats.md#stat-willpower):
+At the usual pace, a point of mana comes back every so often. The stronger your
+[Willpower](stats.md#stat-willpower), the faster it comes:
 
 {{#include generated/mana-regeneration.md}}
 
-[Resting](resting.md#how-resting-works), some [status effects](status-effects.md#how-they-work) and [diseases](diseases.md), [starving](hunger.md#how-hungry-you-are), and [special rooms](special-rooms.md) change the pace:
+[Resting](resting.md#how-resting-works), some [status effects](status-effects.md#how-they-work)
+and [diseases](diseases.md), [starving](hunger.md#how-hungry-you-are), and
+[special rooms](special-rooms.md) change the pace:
 
 {{#include generated/mana-paces.md}}
 
-When several [status effects](status-effects.md#how-they-work) slow it, the slowest counts; a disease that slows it more than being
-[Diseased](status-effects.md#status-diseased) does counts too. [Resting](resting.md#how-resting-works) makes up for some of it, as it does for healing, and so does a
-[sanctuary](special-rooms.md#room-sanctuary) (a [special room](special-rooms.md)). [Magic items](magic-items.md) that speed it ("mana comes back 50%
-faster") add on top of all that, and so does being born under [Water](horoscope.md#elements) (the gift *[Tidal](talents.md#talent-tidal)*: mana comes
-back 25 % faster; see [Horoscope](horoscope.md)), the talent *[Clear mind](talents.md#talent-clear-mind)* (25 % faster too),
-and a trained *[Concentration](skills.md#skill-concentration)* (5 % faster at 20, 40 % at 100, 60 % at 200; see
-[Skills](skills.md)), adding their percents to theirs. Spending mana now and then trains
-[Concentration](skills.md#skill-concentration). The talent *[Meditation](talents.md#talent-meditation)* makes resting bring it back half again
-as fast (resting's pace times 1.5). Nothing else changes it: not your [burden](burden.md), not the [cold](temperature.md), not
-your [combat stance](combat.md#stances).
+When several things change the pace at once:
+
+- If several status effects slow it, only the slowest counts.
+- A disease that slows it more than being [Diseased](status-effects.md#status-diseased) does counts
+  too.
+- Resting makes up for some of the slowing, as it does for healing, and so does a
+  [sanctuary](special-rooms.md#room-sanctuary).
+- These speed it up on top of all that, their percents added together:
+  - [magic items](magic-items.md) that speed it ("mana comes back 50% faster");
+  - being born under [Water](horoscope.md#elements), whose gift
+    *[Tidal](talents.md#talent-tidal)* makes mana come back 25 % faster (see [Horoscope](horoscope.md));
+  - the talent *[Clear mind](talents.md#talent-clear-mind)*, 25 % faster;
+  - trained *[Concentration](skills.md#skill-concentration)*: 5 % faster at 20, 40 % at 100, 60 %
+    at 200 (see [Skills](skills.md)).
+- The talent *[Meditation](talents.md#talent-meditation)* makes resting bring mana back half again
+  as fast (resting's pace times 1.5).
+
+Nothing else changes it: not your [burden](burden.md), not the [cold](temperature.md), and not
+your [combat stance](stances.md#stances). Spending mana now and then trains Concentration.
 
 ## Spending it
 
-Whatever spends mana is refused when you have too little, and spends nothing then. Spending any
-trains your [Willpower](stats.md#stat-willpower) (a chance at a training mark each time; see
-[Stats](stats.md#training)). The talent *[Frugal caster](talents.md#talent-frugal-caster)* makes abilities cost a fifth less mana,
-rounded to the nearest point and never below 1: 5 becomes 4, 6 becomes 5, 10 becomes 8.
-[Magic items](magic-items.md) *of Thrift* make abilities cheaper the same way, by their percent;
-everything you wear and the talent are added up before the one rounding, and never take more
-than half off together: *[Frugal caster](talents.md#talent-frugal-caster)* (20 %) and a ring of 10 % take 30 % off, so 7 becomes 5;
-three pieces of 20 % and the talent still take only 50 %, so 10 becomes 5. It works on a worn
-item you have not identified, and stops when you take it off. This cut comes last, after
-everything else that changes a spell's or a rod's cost (see
-[What a spell costs](magic.md#what-a-spell-costs)), and it is the one for every ability that
-costs mana: spells, [rods](wands-and-rods.md#rods), a summoning.
+Anything that costs mana is refused when you have too little, and then spends nothing. Spending
+any mana trains your [Willpower](stats.md#stat-willpower): each time is a chance at a training mark
+(see [Stats](stats.md#training)).
 
-The talent *[Blood magic](talents.md#talent-blood-magic)* gives you an ability (in the [abilities menu](abilities.md#the-abilities-menu)) that turns 5 of your [hit
-points](hit-points.md#hit-points) into 3 mana at once, for the time of a wait. It never takes your last [hit point](hit-points.md#hit-points) (with 5
-or fewer it refuses), never brings your mana above your most, and does nothing while your mana
-is full. It is not a wound: nothing soaks it, and it trains nothing.
+The talent *[Frugal caster](talents.md#talent-frugal-caster)* makes abilities cost a fifth less
+mana, rounded to the nearest point and never below 1: 5 becomes 4, 6 becomes 5, 10 becomes 8.
+[Magic items](magic-items.md) *of Thrift* make abilities cheaper in the same way, by their percent.
+
+The talent and everything you wear are added up first, then rounded once. Together they never
+take off more than half. For example, Frugal caster (20 %) and a 10 % ring take 30 % off, so 7
+becomes 5. Three 20 % items and the talent still take off only 50 %, so 10 becomes 5. An item of
+Thrift works even before you have identified it, and stops when you take it off.
+
+This cut comes last, after everything else that changes the cost of a spell or a rod (see
+[What a spell costs](magic.md#what-a-spell-costs)). It applies to every ability that costs mana:
+spells, [rods](wands-and-rods.md#rods), and summoning.
+
+The talent *[Blood magic](talents.md#talent-blood-magic)* gives you an ability (in the
+[abilities menu](abilities.md#the-abilities-menu)) that turns 5 of your hit points into 3 mana at
+once. It takes as long as a wait. It never takes your last hit point, so with 5 or fewer it refuses.
+It never brings your mana above your maximum, and does nothing while your mana is full. It is not
+a wound: nothing soaks it, and it trains nothing.
 
 ## Mana on a kill
 
-[Magic items](magic-items.md) *of Siphoning* give you so many points of mana when you kill
-something close by, never above your most. Only a kill of your own counts: your blow, your shot
-or throw, or your spell, with the one you killed standing **within 3 cells** of you (measured
-round, as every radius: 3 cells in a straight line, 3 across and 1 aside, or 2 diagonally; not
-3 across and 2 aside). A creature that
-dies of [poison](status-effects.md#status-poisoned) or [bleeding](status-effects.md#status-bleeding) you caused, one a [trap](traps.md) kills, or one your summoned creature kills
-gives nothing, and neither does a kill farther off. Two items add up, identified or not. A
-creature wearing such an item refills its own mana the same way when it kills.
+[Magic items](magic-items.md) *of Siphoning* give you some mana when you kill something close by,
+never above your maximum. Only your own kills count, by your blow, your shot or throw, or your
+spell, and the one you killed must stand **within 3 cells** of you.
 
-A [witch](classes.md#witch)'s [Malison](talents.md#talent-malison) (from level 18) pays her
-mana for a death under one of her [hexes](status-effects.md#status-ill-wished), however it died
-and whoever killed it, at any distance: half the creature's level (rounded down, at least 1),
-never above her most. It adds to an item of Siphoning's.
+Distance is measured round, as for every radius: 3 cells in a straight line, 3 across and 1 aside,
+or 2 diagonally, but not 3 across and 2 aside.
+
+You get nothing for a creature that dies of [poison](status-effects.md#status-poisoned) or
+[bleeding](status-effects.md#status-bleeding) you caused, one a [trap](traps.md) kills, or one
+your summoned creature kills, nor for a kill farther off. Two such items add up, identified or not.
+A creature wearing one refills its own mana the same way when it kills.
+
+A [witch](classes.md#witch)'s [Malison](talents.md#talent-malison) (from level 18) pays her mana
+for every death under one of her [hexes](status-effects.md#status-ill-wished), however it died,
+whoever killed it, and at any distance. She gets half the creature's level (rounded down, at least
+1), never above her maximum. This adds to what an item of Siphoning gives.
 
 ## When the most falls
 
-- Taking off a [magic item](magic-items.md) that raised it lowers what you have down to your new most, if need be.
-- A [disease](diseases.md) that damages your [Intelligence](stats.md#stat-intelligence), [Willpower](stats.md#stat-willpower), or [Presence](stats.md#stat-presence) lowers your most,
-  and what you have with it.
-- A [status effect](status-effects.md#how-they-work) that lowers one of those stats lowers your most only while it lasts: you keep
-  the mana you had, but none comes back above the lower most until it passes.
+- Taking off a [magic item](magic-items.md) that raised your maximum lowers the mana you have to
+  the new maximum, if need be.
+- A [disease](diseases.md) that damages your Intelligence, Willpower, or Presence lowers your
+  maximum, and the mana you have with it.
+- A [status effect](status-effects.md#how-they-work) that lowers one of those stats lowers your
+  maximum only while it lasts. You keep the mana you had, but none comes back above the lower
+  maximum until the effect passes.
 
 ## The fine print
 
-- Mana comes back on game time, whatever you do, like [hit points](hit-points.md#hit-points): waiting, walking, fighting, or a
-  long journey. Only the time counts, and it does not matter how it is cut up.
-- Progress toward the next point carries over from turn to turn, and is lost once you are full.
+- Mana comes back on game time, like [hit points](hit-points.md#hit-points), whatever you are doing:
+  waiting, walking, fighting, or making a long journey. Only the total time counts, not how it is
+  split up.
+- Progress toward the next point carries over from turn to turn. It is lost once you are full.
 - You never see how fast it comes back as a number, only your mana rising.
 
 See also [Healing](healing.md) and [Stats](stats.md).

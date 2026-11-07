@@ -538,7 +538,7 @@ cast path shares.
   - **Talents**: Wand mastery (`wand_mastery`, `spell_mod { wand_rungs = 1 }`).
   - **Wiki**: `xtask/src/wiki/spells.rs` `wands.md` (wand, spell, spell level, charges, its
     strength, the rolls at the range's ends, `roll_at(min_rung)` to `roll_at(max_rung)`, item
-    level, frequency, value) on `wiki/src/magic.md`'s "Wands".
+    level, frequency, value) on `wiki/src/wands-and-rods.md`'s "Wands".
 - **Rods** (#399; design §9; `content/rod.rs`, `world/rod.rs`, tests `world/rod_tests.rs` and
   `content/rod.rs`):
   - **Effects** (the registry, distinct from spells): `data/rod_effects/` (`RodEffect`, one

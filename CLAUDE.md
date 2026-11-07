@@ -468,7 +468,15 @@ links) on the Linux job, and the release workflow does the same before publishin
 preview: `cargo xtask wiki --build`, then open `wiki/book/index.html`. Tables sort by explicit
 keys (class, level, name), never by content file order. New pages go into
 `wiki/src/SUMMARY.md` by topic, never at the end; a new table is its own function in its
-topic's module plus one line in `generate()` next to its topic.
+topic's module plus one line in `generate()` next to its topic. A page that grows past about
+250 lines is split into sub-pages by topic (flat files in `wiki/src/`, nested under the parent in
+`SUMMARY.md`; the parent keeps a short overview linking them), its moved anchors fixed everywhere
+they are linked (pages, `xtask/src/wiki/`, `wiki/TERMS.md`).
+
+**Wiki prose is written for players** (#1172): plain words, short sentences and paragraphs, the
+question a player would ask answered first; no developer terms (modules, fields, ids the player
+never sees) and no padded register (stacked hedges, empty summaries, a heading that restates the
+page). The numbers stay exact.
 
 **The game is vague, the wiki is accurate** (the owner, 2026-10-20): in the game, hidden numbers
 stay hidden and effects are told in words (the perception rules above are unchanged), but the

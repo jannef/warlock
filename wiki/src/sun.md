@@ -2,9 +2,10 @@
 
 ## Which places have a sky
 
-Levels under the open sky are lit by the sun and the sky by day and by the moon at night: [outdoor
-areas](overworld.md#local-areas) and the [overworld](overworld.md). [Dungeons](dungeons.md) never are. Terrain with a roof (for example the
-floor under a [gazebo](terrain.md#terrain-gazebo-floor)) never receives sun, moon, or sky light even on an outdoor level.
+[Outdoor areas](overworld.md#local-areas) and the [overworld](overworld.md) lie under the open sky.
+They are lit by the sun and the sky by day, and by the moon at night. [Dungeons](dungeons.md) never
+are. Terrain with a roof, such as the floor under a [gazebo](terrain.md#terrain-gazebo-floor), never
+gets sun, moon, or sky light, even on an outdoor level.
 
 Everything on this page is for a clear sky. Clouds dim the sun, the sky, and the moon, and soften
 their shadows; see [Weather](weather.md).
@@ -34,10 +35,12 @@ and from dusk until about 23 minutes after.
 ## Shadows
 
 Terrain stands a number of cells tall (see the height column in the [terrain](terrain.md) table):
-[trees](terrain.md#terrain-tree) 2, [pines](terrain.md#terrain-pine) 3, [standing stones](terrain.md#terrain-standing-stone) 3, [bushes](terrain.md#terrain-bush) and [reeds](terrain.md#terrain-reeds) 1, and [walls](terrain.md#walls) 1. Anything tall casts a shadow
-away from the sun, and cells in a shadow get no direct sunlight, only sky light. The shadow is long
-when the sun is low (at dawn and dusk) and short at noon, when it falls just a cell or so from a
-tree. Shadows turn as the sun moves.
+[trees](terrain.md#terrain-tree) 2, [pines](terrain.md#terrain-pine) 3, [standing
+stones](terrain.md#terrain-standing-stone) 3, [bushes](terrain.md#terrain-bush) and
+[reeds](terrain.md#terrain-reeds) 1, and [walls](terrain.md#walls) 1. Anything tall casts a shadow
+away from the sun. Cells in a shadow get no direct sunlight, only sky light. Shadows are long when
+the sun is low, at dawn and dusk, and short at noon, when a tree's shadow falls just a cell or so
+from it. Shadows turn as the sun moves.
 
 [Creatures](creatures.md) cast soft shadows too, but those are only for show and do not change what you can see.
 
@@ -74,11 +77,11 @@ So the moon rises about 50 minutes later every day.
 
 ### Moonlight
 
-Moonlight is faint and slightly purple. It is brightest when the moon is full and high in the sky,
-less when only part of it is lit, faint just after it rises and just before it sets, and none at
-all by day: the sun drowns it out, so moonlight grows in as the evening twilight fades and fades
-away in the morning twilight. Besides its
-direct light, the moon gives a very faint glow from the whole sky, on every cell under the sky.
+Moonlight is faint and slightly purple. It is brightest when the moon is full and high in the sky.
+It is weaker when only part of the moon is lit, and faint just after the moon rises and just before
+it sets. By day there is none: the sun drowns it out. So moonlight grows as the evening twilight
+fades, and fades away in the morning twilight. Besides its direct light, the moon gives a very faint
+glow from the whole sky, on every cell under the sky.
 
 Tall things cast **moon shadows** away from the moon, just as they cast shadows from the sun: long
 while the moon is low, short when it is high. In a moon shadow there is only the faint glow of the
@@ -95,11 +98,12 @@ What you can see by moonlight depends on your [eyes](vision.md):
 Clouds hide the moon too: under an overcast or rainy sky even a full moon is too faint for normal
 eyes (see [Weather](weather.md)).
 
-When the moon is new or down, outdoor areas are dark unless you bring a [light](light.md#light-sources) of your own. Light
-your [lantern](lantern.md). A few things, such as a torch-carrying [creature](creatures.md) or a glowing [altar](terrain.md#terrain-altar),
+When the moon is new or down, outdoor areas are dark unless you bring a
+[light](light.md#light-sources) of your own, so light your [lantern](lantern.md). A few things,
+such as a torch-carrying [creature](creatures.md) or a glowing [altar](terrain.md#terrain-altar),
 shine on any night.
 
-The overworld is a special case: it is drawn by a faint cold light at night, so you can tell the
-cells you see from the ones you only remember, and moonlight comes on top of it. That light does
-not decide what you see; the moon does widen your sight there, though. See
-[The overworld](overworld.md).
+The overworld is a special case. At night it is drawn by a faint cold light, so you can tell the
+cells you see from the ones you only remember, and moonlight comes on top of that. The cold light
+does not decide what you see there, but the moon does widen your sight. See [The
+overworld](overworld.md).

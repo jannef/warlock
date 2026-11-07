@@ -50,7 +50,7 @@ creatures of its side, with no ability in the abilities menu, no action, no key,
   already dead changes nothing: the record stands.
 - **Dumps**: the dev `actors` layer adds `; summoned by #N` to a summoned actor.
 - **Wiki**: `xtask/src/wiki/creatures.rs::creature_summons` (`creature-summons.md`, the
-  "Summoning" section of `wiki/src/creature-numbers.md`); the tag in `creature-tags.md`.
+  "Summoning" section of `wiki/src/creature-powers.md`); the tag in `creature-tags.md`.
 - **Fixture**: the showcase's summoning hall (`levels/summoning_hall.toml`, scenario
   `summoners`), one summoner to a room behind a door.
 - **Tests**: `world/summon_tests.rs` (on a fixture content: the summoned around it on its side,
