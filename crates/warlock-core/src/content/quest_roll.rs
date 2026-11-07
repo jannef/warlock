@@ -11,8 +11,12 @@
 //!   of the quest's campaign the player can enter (a kill quest).
 //! - `pick = { objects = { class = "scrolls", loot = true } }`: an object type of that item class,
 //!   with `loot` only those loot can hold (a bring quest).
-//! - `[[quest.variant]]` (`id`, `target`, `weight`, `reveals`, `where`, and any of the texts): an
-//!   authored option, drawn by weight; what it gives replaces the quest's own.
+//! - `[[quest.variant]]` (`id`, `target`, `weight`, `fallback`, `reveals`, `where`, and any of the
+//!   texts): an authored option, drawn by weight; what it gives replaces the quest's own. A
+//!   `fallback` variant is drawn only when no other can be (`world/quest_roll.rs`).
+//!
+//! A kill the player's Beast-friend talent forbids (a creature type of an animal faction, or a
+//! tag one carries) is left out of the pool as the quest is given (`world/quest_roll.rs`).
 //!
 //! The pool is in content order (creature, object, and tag order; variants in file order), never
 //! a hash order; the draw is the world's (`world/quest_roll.rs`).
@@ -61,6 +65,9 @@ pub struct Variant {
     pub target: String,
     /// How likely it is drawn, against the others' weights.
     pub weight: u32,
+    /// Drawn only when no variant that is not a fallback can be (Leofric's rats for a
+    /// Beast-friend: `skeletal`).
+    pub fallback: bool,
     /// The hidden location it reveals, instead of the quest's.
     pub reveals: Option<Reveal>,
     /// Where its goal lies, instead of the quest's `where`.
@@ -103,6 +110,8 @@ pub(super) struct VariantSpec {
     id: String,
     target: String,
     weight: Option<u32>,
+    #[serde(default)]
+    fallback: bool,
     reveals: Option<RevealSpec>,
     #[serde(rename = "where")]
     where_: Option<String>,
@@ -531,6 +540,7 @@ pub(super) fn parse_variants(
             id: spec.id,
             target: spec.target,
             weight,
+            fallback: spec.fallback,
             reveals,
             where_: spec.where_,
             offer: spec.offer,
@@ -541,6 +551,9 @@ pub(super) fn parse_variants(
     }
     if variants.is_empty() {
         return Err("a quest's variants are at least one".into());
+    }
+    if variants.iter().all(|v| v.fallback) {
+        return Err("a quest's variants are not all fallbacks".into());
     }
     Ok(variants)
 }

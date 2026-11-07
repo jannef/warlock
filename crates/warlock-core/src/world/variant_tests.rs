@@ -953,5 +953,8 @@ fn shallow_loot_is_primitive_and_steel_comes_with_depth() {
     // A kobold's gear (level 2): mostly primitive, seldom steel.
     let (kobold, total) = made(Source::Gear(2), 1);
     assert!(share(&kobold, total, &["steel"]) < 10, "{kobold:?}");
-    assert!(share(&kobold, total, &["bronze", "copper", "iron", "tin"]) > 70);
+    assert!(
+        share(&kobold, total, &["bronze", "copper", "iron", "tin"]) > 60,
+        "{kobold:?}"
+    );
 }

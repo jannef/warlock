@@ -293,9 +293,9 @@ fn chest_loot_is_magic_as_often_as_the_table_says() {
             items += 1;
         }
     }
-    // A hutch: 20 % of items at least magic, plus what an ordinary roll makes magic.
+    // A hutch: 5 % of items at least magic, plus what an ordinary roll makes magic.
     let share = magic * 100 / items;
-    assert!((15..=50).contains(&share), "{share} % magic");
+    assert!((3..=14).contains(&share), "{share} % magic");
 }
 
 /// Where `vault`'s terrain appears verbatim in `level`, the first spot.

@@ -78,8 +78,12 @@
 #              { objects = { class = "scrolls", loot = true } }: an object type of that item class
 #              (with loot = true only those loot can hold); a bring quest
 #   [[quest.variant]]  authored options instead: `id`, `target` (as the quest's), `weight`
-#              (default 1; 1 to 1000), and optionally `reveals`, `where`, `offer`, `accept`,
-#              `reminder`, `done`, each replacing the quest's own (which may then be left out)
+#              (default 1; 1 to 1000), `fallback` (default false: drawn only when no other
+#              variant can be; not every variant), and optionally `reveals`, `where`, `offer`,
+#              `accept`, `reminder`, `done`, each replacing the quest's own (which may then be
+#              left out)
+# A kill a Beast-friend's talent forbids is never drawn for one: a creature type of an animal
+# faction (data/factions.toml), a tag any of whose types is one, or a variant asking for either.
 # Their texts (all but `name`) may name the roll: {target} and {targets} (the name and plural),
 # {a_target} (with its article; a unique's name alone), {count}, {members} (a tag's types,
 # plurals in a list), {branch} (the first branch, in the pick's order, it lives in), {where} (the

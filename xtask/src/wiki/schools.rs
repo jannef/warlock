@@ -1,11 +1,11 @@
 //! The schools of magic tables (spec §8 "Weapon skills": "Schools of magic"; the spell scaling
 //! design §8), from `data/weapon_skills.toml`'s rows of role `school`: each school with its
-//! spells, its defaults, and the classes that start ranked in it; what each rank gives; and the
+//! spells and the classes that start ranked in it; what each rank gives; and the
 //! school abilities a rank teaches (the design §8.5, `data/weapon_abilities/`). The caster
 //! styles' ranks too (`grip` a caster's: where a spell is cast from), on the same page.
 
 use super::text::{Term, anchored, link};
-use super::weapon_skills::{Kind, default_list, grip_text, rank_table};
+use super::weapon_skills::{grip_text, rank_table};
 use std::fmt::Write as _;
 use warlock_core::content::{Content, Role, WeaponSkillId};
 
@@ -17,7 +17,7 @@ fn schools(content: &Content) -> Vec<(WeaponSkillId, &warlock_core::content::Wea
 }
 
 /// Each school: how many of the shipped spells are of it, the curve it trains along, and the
-/// classes that start with a rank in it (by class name), then the defaults between schools.
+/// classes that start with a rank in it (by class name).
 pub fn skills(content: &Content) -> String {
     let mut out = String::from(
         "| School | Spells | Marks | Starting ranks by class |\n|---|:---:|:---:|---|\n",
@@ -53,8 +53,6 @@ pub fn skills(content: &Content) -> String {
             s.curve
         );
     }
-    out.push('\n');
-    out.push_str(&default_list(content.weapon_skills(), Kind::Schools));
     out
 }
 

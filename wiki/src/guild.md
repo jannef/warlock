@@ -21,11 +21,13 @@ from the moment the job is given.
 1. **A bounty**: kill one creature of a kind drawn from those that live in
    [Cealdhlāw](dungeons.md#the-dungeons), [Fennmynster](dungeon-guide.md#fennmynster), and
    [Fyrdelf](dungeon-guide.md#fyrdelf), never a named monster. Only the dungeons you can get into
-   when Wat gives it count. Pays 40 [gold](shops.md#money) and 60 [experience](experience.md).
+   when Wat gives it count, and a [Beast-friend](talents.md#talent-beast-friend) (a
+   [druid](classes.md#druid)) is never given an animal ([drawn quests](quests.md#drawn-quests)). Pays 40 [gold](shops.md#money) and 60 [experience](experience.md).
 2. **A score and five**: kill 25 creatures of one sort, drawn from
    [kobolds](creatures.md#creature-kobold), [goblins](creatures.md#creature-goblin), the undead,
    vermin, marsh things, duergar, and fire things, among those living in a dungeon you can get
-   into. Any kind of the sort counts, anywhere, and the [quest log](quests.md#the-quest-log) lists
+   into; a Beast-friend never draws a sort with an animal among its kinds (the vermin). Any kind
+   of the sort counts, anywhere, and the [quest log](quests.md#the-quest-log) lists
    the kinds. Pays 250 gold, two red [potions](objects.md#class-potions), and 500 experience.
    [A little good](alignment.md).
 3. **A [scroll](scrolls.md) for the Gilde**: bring Wat a scroll of a kind drawn from those found as

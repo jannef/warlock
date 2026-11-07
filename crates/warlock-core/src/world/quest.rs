@@ -17,8 +17,8 @@
 //! **Goals**, and how far they have got ([`progress`]):
 //! - kill: the player's own kills of the creature type, or of any type carrying the tag (on
 //!   its level or branch, if it names one; else on every level summed), counted from a tally of
-//!   the kills of every creature type (so kills made before the quest was given count; a rolled
-//!   quest or a repeat counts only those since). A unique type (a named monster) is met by its
+//!   the kills of every creature type (so kills made before the quest was given count; a quest
+//!   rolled by a `pick` or a repeat counts only those since). A unique type (a named monster) is met by its
 //!   death, at any hand and whenever it died ([`Quests::slain`], design §8.4);
 //! - bring: how many of the object the player carries;
 //! - reach: whether the player has been to the level (before taking the quest too);
@@ -67,7 +67,7 @@ pub struct QuestRecord {
     /// How many times the player has completed it.
     #[serde(default, skip_serializing_if = "is_zero")]
     pub completed: u32,
-    /// A rolled or repeated kill quest: the kills already counted when it was given.
+    /// A picked or repeated kill quest: the kills already counted when it was given.
     #[serde(default, skip_serializing_if = "is_zero")]
     pub counted: u32,
     /// A reach quest: the player has been there.
@@ -442,7 +442,7 @@ fn rolled_asks(content: &Content, def: &QuestDef, rolled: &Rolled) -> String {
             let names: Vec<&str> = names.iter().map(String::as_str).collect();
             format!(
                 "Kill {} of one type drawn at random from the populations of {} (of those \
-                 open when it is given; no uniques).",
+                 open when it is given; no uniques, and no animals for a Beast-friend).",
                 some("creature", "creatures"),
                 crate::content::and_list(&names)
             )
@@ -453,7 +453,8 @@ fn rolled_asks(content: &Content, def: &QuestDef, rolled: &Rolled) -> String {
                 .collect();
             let plurals: Vec<&str> = plurals.iter().map(String::as_str).collect();
             format!(
-                "Kill {} of one kind drawn at random from {}.",
+                "Kill {} of one kind drawn at random from {} (for a Beast-friend, none \
+                 with an animal among them).",
                 some("creature", "creatures"),
                 crate::content::and_list(&plurals)
             )
@@ -468,33 +469,51 @@ fn rolled_asks(content: &Content, def: &QuestDef, rolled: &Rolled) -> String {
             )
         }
         Rolled::Variants(variants) => {
-            let names: Vec<String> = (variants.iter())
-                .map(|v| {
-                    let given = def.rolled(
-                        content,
-                        &Roll {
-                            target: v.target.clone(),
-                            variant: Some(v.id.clone()),
-                            count: n,
-                        },
-                    );
-                    match &given.goal {
-                        Goal::Kill { .. } => creatures(content, &given, n),
-                        Goal::Bring { object, .. } => content.object(*object).describe(n),
-                        _ => v.id.clone(),
+            let name = |v: &crate::content::Variant| {
+                let given = def.rolled(
+                    content,
+                    &Roll {
+                        target: v.target.clone(),
+                        variant: Some(v.id.clone()),
+                        count: n,
+                    },
+                );
+                match &given.goal {
+                    Goal::Kill { .. } => creatures(content, &given, n),
+                    Goal::Bring { object, .. } => content.object(*object).describe(n),
+                    _ => v.id.clone(),
+                }
+            };
+            let one_of = |fallback: bool| {
+                let names: Vec<String> = (variants.iter())
+                    .filter(|v| v.fallback == fallback)
+                    .map(name)
+                    .collect();
+                match names.as_slice() {
+                    [one] => one.clone(),
+                    _ => {
+                        let names: Vec<&str> = names.iter().map(String::as_str).collect();
+                        format!(
+                            "one of {}, drawn at random",
+                            crate::content::and_list(&names)
+                        )
                     }
-                })
-                .collect();
-            let names: Vec<&str> = names.iter().map(String::as_str).collect();
+                }
+            };
             let verb = if def.kind() == QuestKind::Kill {
                 "Kill"
             } else {
                 "Bring"
             };
-            format!(
-                "{verb} one of {}, drawn at random.",
-                crate::content::and_list(&names)
-            )
+            let mut asks = format!("{verb} {}.", one_of(false));
+            if variants.iter().any(|v| v.fallback) {
+                asks.push_str(&format!(
+                    " For one who may draw none of these (a Beast-friend, never sent after \
+                     animals): {}.",
+                    one_of(true)
+                ));
+            }
+            asks
         }
     }
 }
@@ -715,7 +734,7 @@ impl World {
     }
 
     /// Creature `id` gives the player quest `q` (#422): a rolled quest draws its target, the
-    /// quest is active at once (a kill quest counting from now when it is rolled or a repeat),
+    /// quest is active at once (a kill quest counting from now when it is a pick or a repeat),
     /// the giver says the offer and their `accept` line, reveals what it reveals as given, and
     /// hands over what is to be delivered; if its goal is met already, the player is told.
     pub(super) fn give(&mut self, id: ActorId, q: QuestId, topic: &str, events: &mut Vec<Event>) {
@@ -739,12 +758,13 @@ impl World {
         record.stage = Stage::Active;
         record.reached = reached;
         record.roll = roll;
-        let rolled = record.roll.is_some();
+        // A pick, drawn from a whole pool, or a repeat counts only the kills from now on; an
+        // authored variant counts every kill, as a quest not rolled does (Leofric's rats).
+        let picked = record.roll.is_some() && matches!(def.roll, Some(Rolled::Pick(_)));
         let given = quests.given(&content, def).into_owned();
         let kills = quests.kills_for(&content, &given);
         if let Some(record) = quests.records.get_mut(&def.id) {
-            // A rolled quest, or a repeat, counts only the kills from now on.
-            record.counted = if rolled || repeat { kills } else { 0 };
+            record.counted = if picked || repeat { kills } else { 0 };
         }
         let handed = match given.goal {
             Goal::Deliver { object, .. } => {

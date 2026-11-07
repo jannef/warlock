@@ -31,4 +31,4 @@ blood = "#202a38"
 [[creature.gear]]
 chance = 90
 one_of = ["great_axe"]
-magic = 25
+magic = 6

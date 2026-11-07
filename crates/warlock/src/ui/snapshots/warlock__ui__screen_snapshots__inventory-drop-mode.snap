@@ -1,0 +1,28 @@
+---
+source: crates/warlock/src/ui/screen_snapshots.rs
+expression: "render(case, content.clone())"
+---
+┌─ Inventory: drop ───────────────────────────────────────────────── Page 2/2 ─┐
+│ Boots                                                                        │
+│   a - [ a pair of leather boots (Dv +0, Pv 0)                          1 kg  │
+│ Light sources                                                                │
+│ > b + ( 2 wax candles                                                 200 g  │
+│ Tools                                                                        │
+│   c - ( a lantern (in use)                                            400 g  │
+│ Coins                                                                        │
+│   d - $ 12 gold coins                                                 120 g  │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│ Carrying 25.5 kg (burdened)   ·   Your weight 95.5 kg (you 70 kg)            │
+│ Burdened over 14 kg, strained over 28 kg, overloaded over 42 kg              │
+│ a-d mark   , all   Enter drop   > < page   Esc back                          │
+└──────────────────────────────────────────────────────────────────────────────┘
+ The Hub  ·  HP 18/18  ·  MP 2/2  ·  Openings 0/5  ·  Sta 10/10      ? controls

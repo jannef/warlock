@@ -1,7 +1,7 @@
 # Weapon skills (spec §8 "Weapon skills"): the categories of weapons the player and creatures
-# train with, ADOM-like, and how they default to each other, after The Riddle of Steel. And the
-# fighting styles (spec §8 "Fighting styles"), after AD&D 2e's Complete Fighter's Handbook: how
-# the weapons are held and used, skills with the same ranks, marks, and benefits (at the end).
+# train with, ADOM-like. And the fighting styles (spec §8 "Fighting styles"), after AD&D 2e's
+# Complete Fighter's Handbook: how the weapons are held and used, skills with the same ranks,
+# marks, and benefits (at the end).
 #
 # Ranks go from 0 (untrained: no benefits, but marks still count) to 10. The player sees their
 # ranks and a bar of their marks toward the next one (the weapon skills screen, `W`); the numbers
@@ -417,8 +417,8 @@ cells = [0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2]
 #              whatever is cast (spells.toml's armour percents)
 #   hidden     true: listed (the weapon skills screen, the dumps, talents that ask for it) only
 #              once its owner has marks or a rank in it; nobody starts with it
-# Styles default only to styles (below). Rank 10 is where a style's later active or triggered
-# abilities will hang (a duelist's riposte, a staff fighter's trip).
+# Rank 10 is where a style's later active or triggered abilities will hang (a duelist's
+# riposte, a staff fighter's trip).
 [[skill]]
 id = "duelist"
 name = "Duelist"
@@ -463,8 +463,8 @@ shield = [0, 1, 1, 1, 2, 2, 2, 3, 4, 5, 6]
 bash = [0, 0, 0, 5, 5, 10, 10, 15, 20, 25, 35]
 
 # A shield on each arm (#611): every blow a bash, the other shield following up. Hidden until
-# the first marks, given by no class, defaulting to no style: found by fighting so. The banes
-# ([two_shields]) are gone at rank 9: no penalty to hit, no slowness, and no spell that fails.
+# the first marks, given by no class: found by fighting so. The banes ([two_shields])
+# are gone at rank 9: no penalty to hit, no slowness, and no spell that fails.
 [[skill]]
 id = "two_shields"
 name = "Two Shields"
@@ -562,110 +562,3 @@ grip = "armoured_spell"
 curve = "school"
 to_hit = [0, 0, 1, 1, 1, 2, 2, 2, 3, 3, 4]
 armour = [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50]
-
-# Defaults (The Riddle of Steel): skill with one weapon carries over to related ones, less a
-# penalty, both ways. When a rank is gained in A, every B with rank(A) - penalty > rank(B) rises to
-# rank(A) - penalty, and its marks start again from 0. Long blades 8 gives short blades 6.
-# Skills not listed here are unrelated: no default.
-[[default]]
-between = ["long_blades", "short_blades"]
-penalty = 2
-
-[[default]]
-between = ["long_blades", "great_blades"]
-penalty = 2
-
-[[default]]
-between = ["short_blades", "daggers"]
-penalty = 2
-
-[[default]]
-between = ["long_blades", "daggers"]
-penalty = 4
-
-[[default]]
-between = ["short_blades", "thrown"]
-penalty = 4
-
-[[default]]
-between = ["daggers", "thrown"]
-penalty = 2
-
-[[default]]
-between = ["axes", "maces"]
-penalty = 2
-
-[[default]]
-between = ["axes", "polearms"]
-penalty = 3
-
-[[default]]
-between = ["maces", "staves"]
-penalty = 3
-
-[[default]]
-between = ["spears", "polearms"]
-penalty = 2
-
-[[default]]
-between = ["spears", "staves"]
-penalty = 3
-
-[[default]]
-between = ["spears", "thrown"]
-penalty = 4
-
-[[default]]
-between = ["polearms", "great_blades"]
-penalty = 4
-
-[[default]]
-between = ["bows", "crossbows"]
-penalty = 4
-
-[[default]]
-between = ["slings", "thrown"]
-penalty = 3
-
-# Between the schools of magic: a blast and a change both remake the stuff of the world; the
-# arts of death and of mending know the same flesh; a ward and a charm are both bindings.
-# Divination stands alone.
-[[default]]
-between = ["evocation", "transmutation"]
-penalty = 4
-
-[[default]]
-between = ["necromancy", "restoration"]
-penalty = 4
-
-[[default]]
-between = ["abjuration", "enchantment"]
-penalty = 4
-
-# Between fighting styles: a duelist is no beginner with a shield on the other arm, or a second
-# blade in the other hand; a staff is a great weapon; a marksman has an eye for a throw.
-[[default]]
-between = ["duelist", "sword_and_board"]
-penalty = 3
-
-[[default]]
-between = ["duelist", "twin_blades"]
-penalty = 3
-
-[[default]]
-between = ["great_weapon", "staff_fighter"]
-penalty = 3
-
-[[default]]
-between = ["marksman", "skirmisher"]
-penalty = 4
-
-# Between the caster styles: a touch is a spell at no range, and a battle caster lays hands on
-# foes.
-[[default]]
-between = ["sniper", "toucher"]
-penalty = 4
-
-[[default]]
-between = ["toucher", "battle_caster"]
-penalty = 3

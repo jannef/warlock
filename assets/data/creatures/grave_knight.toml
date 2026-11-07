@@ -30,7 +30,7 @@ blood = "#3a3030"
 [[creature.gear]]
 chance = 90
 one_of = ["long_sword"]
-magic = 25
+magic = 6
 [[creature.gear]]
 chance = 70
 one_of = ["small_shield"]

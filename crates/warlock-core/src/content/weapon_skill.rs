@@ -1,5 +1,5 @@
 //! Weapon skills (`assets/data/weapon_skills.toml`, spec §8 "Weapon skills"): the categories of
-//! weapons an actor trains with, ADOM-like, and how they relate, after *The Riddle of Steel*;
+//! weapons an actor trains with, ADOM-like;
 //! and the fighting styles (spec §8 "Fighting styles"), after AD&D 2e's *Complete Fighter's
 //! Handbook*: skills of how weapons are held and used.
 //!
@@ -15,9 +15,6 @@
 //! - **Marks** ([`MarkRules`]): every attempt earns some, a success more, scaled by how the
 //!   opponent's level compares with the rank. A rank is gained when its marks reach the need of
 //!   the next rank, which grows along an exponential **curve** (`curves.melee`: 15, 30, 60, ...).
-//! - **Defaults** (The Riddle of Steel): symmetric penalties between related skills. When a rank
-//!   is gained in A, every B with `rank(A) − penalty(A, B) > rank(B)` rises to that rank
-//!   (`crate::weapon_skills`). Styles default only to styles, weapon skills only to weapon skills.
 //!
 //! The numbers are rules, never shown in the game: the player sees ranks, and a marks bar.
 
@@ -546,12 +543,10 @@ pub(super) enum Ranked {
     Any,
 }
 
-/// Every skill, the defaults between them, and how marks are earned.
+/// Every skill, and how marks are earned.
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub struct WeaponSkillTable {
     skills: Vec<WeaponSkillDef>,
-    /// The penalty between two skills, keyed by the pair in id order.
-    defaults: BTreeMap<(WeaponSkillId, WeaponSkillId), u8>,
     marks: Option<MarkRules>,
     /// The curves by name, as the file gives them.
     curves: BTreeMap<String, [u32; MAX_RANK as usize]>,
@@ -572,8 +567,6 @@ struct SkillFile {
     #[serde(default)]
     spell_attacks: SpellAttacks,
     skill: Vec<SkillSpec>,
-    #[serde(default)]
-    default: Vec<DefaultSpec>,
 }
 
 #[derive(Deserialize)]
@@ -613,13 +606,6 @@ struct SkillSpec {
     mana: Option<Vec<i32>>,
     #[serde(default)]
     hidden: bool,
-}
-
-#[derive(Deserialize)]
-#[serde(deny_unknown_fields)]
-struct DefaultSpec {
-    between: [String; 2],
-    penalty: u8,
 }
 
 /// One benefit's ranks as the file gives them: [`RANKS`] numbers, 0 at rank 0, never falling,
@@ -902,7 +888,6 @@ impl WeaponSkillTable {
         }
         let mut table = Self {
             skills,
-            defaults: BTreeMap::new(),
             marks: Some(marks),
             curves,
             two_weapons: two,
@@ -910,41 +895,6 @@ impl WeaponSkillTable {
             spell_attacks: parsed.spell_attacks,
         };
         table.resolve_styles(&weapons).map_err(err)?;
-        for spec in parsed.default {
-            let [a, b] = &spec.between;
-            let (Some(x), Some(y)) = (table.id(a), table.id(b)) else {
-                return Err(err(format!(
-                    "default between `{a}` and `{b}`: unknown skill"
-                )));
-            };
-            if x == y {
-                return Err(err(format!("default between `{a}` and itself")));
-            }
-            let kind = |id| {
-                let skill = table.skill(id);
-                (skill.is_style(), skill.role == Role::School)
-            };
-            if kind(x) != kind(y) {
-                return Err(err(format!(
-                    "default between `{a}` and `{b}`: fighting styles default only to fighting \
-                     styles, schools of magic to schools, and weapon skills to weapon skills"
-                )));
-            }
-            if !(1..=MAX_RANK).contains(&spec.penalty) {
-                return Err(err(format!(
-                    "default between `{a}` and `{b}`: `penalty` must be 1 to {MAX_RANK}"
-                )));
-            }
-            if table
-                .defaults
-                .insert((x.min(y), x.max(y)), spec.penalty)
-                .is_some()
-            {
-                return Err(err(format!(
-                    "default between `{a}` and `{b}` is given twice"
-                )));
-            }
-        }
         Ok(table)
     }
 
@@ -1080,24 +1030,6 @@ impl WeaponSkillTable {
         &self.curves
     }
 
-    /// The penalty between `a` and `b`, if one defaults to the other (the same both ways).
-    pub fn penalty(&self, a: WeaponSkillId, b: WeaponSkillId) -> Option<u8> {
-        self.defaults.get(&(a.min(b), a.max(b))).copied()
-    }
-
-    /// The skills `a` defaults to, with their penalties, in id order.
-    pub fn defaults_of(&self, a: WeaponSkillId) -> Vec<(WeaponSkillId, u8)> {
-        let mut out: Vec<(WeaponSkillId, u8)> = (self.defaults.iter())
-            .filter_map(|(&(x, y), &p)| match (x == a, y == a) {
-                (true, _) => Some((y, p)),
-                (_, true) => Some((x, p)),
-                _ => None,
-            })
-            .collect();
-        out.sort_unstable();
-        out
-    }
-
     /// What rank `rank` (capped at [`MAX_RANK`]) of skill `id` gives.
     pub fn benefit(&self, id: WeaponSkillId, rank: u8) -> Benefit {
         self.skills
@@ -1178,16 +1110,6 @@ mod tests {
         assert_eq!(table.skills().len(), 34);
         assert_eq!(table.styles().count(), 12);
         let id = |name: &str| table.id(name).expect(name);
-        // The owner's example: long blades 8 → short blades 6.
-        assert_eq!(
-            table.penalty(id("long_blades"), id("short_blades")),
-            Some(2)
-        );
-        assert_eq!(
-            table.penalty(id("short_blades"), id("long_blades")),
-            Some(2)
-        );
-        assert_eq!(table.penalty(id("bows"), id("axes")), None);
         for role in Role::ALL.into_iter().filter(|r| r.is_implicit()) {
             assert!(table.of_role(role).is_some(), "{role:?}");
         }
@@ -1226,13 +1148,6 @@ mod tests {
         }
         assert_eq!(style(Grip::Thrown, &["thrown"]), Some("skirmisher"));
         assert_eq!(style(Grip::Thrown, &["daggers"]), Some("skirmisher"));
-        // Styles default to styles: duelist ↔ sword and board −3, never to a weapon skill.
-        assert_eq!(table.penalty(id("duelist"), id("sword_and_board")), Some(3));
-        for (s, ..) in table.styles() {
-            for (other, _) in table.defaults_of(s) {
-                assert!(table.skill(other).is_style());
-            }
-        }
         assert_eq!(table.two_weapons(), TwoWeapons { main: -4, off: -8 });
         // Twin Blades 10 eases both penalties away: a full attack with each hand.
         let twin = table.benefit(id("twin_blades"), MAX_RANK);
@@ -1535,13 +1450,6 @@ mod tests {
                 "`crit`: each rank's value must be 0 to 3",
             ),
             (
-                format!(
-                    "{MARKS}{staves}{}[[default]]\nbetween = [\"a\", \"staves\"]\npenalty = 2\n",
-                    style("a", "two_handed", "")
-                ),
-                "fighting styles default only to fighting styles",
-            ),
-            (
                 format!("{MARKS}[two_weapons]\nmain = 2\noff = -8\n{staves}"),
                 "two_weapons: `main` and `off` are penalties",
             ),
@@ -1628,23 +1536,6 @@ mod tests {
     }
 
     #[test]
-    fn defaults_are_symmetric_and_listed_both_ways() {
-        let text = format!(
-            "{MARKS}{}{}{}[[default]]\nbetween = [\"a\", \"c\"]\npenalty = 3\n\
-             [[default]]\nbetween = [\"b\", \"a\"]\npenalty = 2\n",
-            skill("a", "melee", ""),
-            skill("b", "melee", ""),
-            skill("c", "melee", "")
-        );
-        let table = parse(&text).expect("valid");
-        let (a, b, c) = (WeaponSkillId(0), WeaponSkillId(1), WeaponSkillId(2));
-        assert_eq!(table.defaults_of(a), [(b, 2), (c, 3)]);
-        assert_eq!(table.defaults_of(b), [(a, 2)]);
-        assert_eq!(table.penalty(c, a), Some(3));
-        assert_eq!(table.penalty(b, c), None);
-    }
-
-    #[test]
     fn bad_tables_are_refused() {
         let ok = skill("a", "melee", "");
         let eleven = "[0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5]";
@@ -1692,27 +1583,8 @@ mod tests {
                 "unknown curve `great`",
             ),
             (
-                format!("{MARKS}{ok}[[default]]\nbetween = [\"a\", \"z\"]\npenalty = 2\n"),
-                "unknown skill",
-            ),
-            (
-                format!("{MARKS}{ok}[[default]]\nbetween = [\"a\", \"a\"]\npenalty = 2\n"),
-                "and itself",
-            ),
-            (
-                format!(
-                    "{MARKS}{ok}{}[[default]]\nbetween = [\"a\", \"b\"]\npenalty = 2\n\
-                     [[default]]\nbetween = [\"b\", \"a\"]\npenalty = 3\n",
-                    skill("b", "melee", "")
-                ),
-                "given twice",
-            ),
-            (
-                format!(
-                    "{MARKS}{ok}{}[[default]]\nbetween = [\"a\", \"b\"]\npenalty = 0\n",
-                    skill("b", "melee", "")
-                ),
-                "`penalty` must be 1 to 10",
+                format!("{MARKS}{ok}[[default]]\nbetween = [\"a\", \"b\"]\npenalty = 2\n"),
+                "unknown field `default`",
             ),
             (
                 MARKS.replace("15, 30", "30, 15") + &ok,
@@ -1747,11 +1619,6 @@ mod tests {
         );
         let ten = table.benefit(id("restoration"), MAX_RANK).spell_mods();
         assert_eq!((ten.bonus, ten.dice, ten.sides), (3, 1, 2));
-        // The defaults (open question (c)): three pairs at 4, divination alone.
-        assert_eq!(table.penalty(id("evocation"), id("transmutation")), Some(4));
-        assert_eq!(table.penalty(id("necromancy"), id("restoration")), Some(4));
-        assert_eq!(table.penalty(id("abjuration"), id("enchantment")), Some(4));
-        assert!(table.defaults_of(id("divination")).is_empty());
         // One configuration, one caster style.
         let style = |grip| {
             table
@@ -1875,14 +1742,6 @@ mod tests {
                     school("s", "evocation", &format!("dice = {eleven}"))
                 ),
                 "`dice`: each rank's value must be 0 to 3",
-            ),
-            (
-                format!(
-                    "{MARKS}{}{}",
-                    school("a", "evocation", ""),
-                    skill("b", "melee", "")
-                ) + "[[default]]\nbetween = [\"a\", \"b\"]\npenalty = 2\n",
-                "schools of magic to schools",
             ),
             (
                 format!(

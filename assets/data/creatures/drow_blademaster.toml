@@ -6,7 +6,7 @@ id = "drow_blademaster"
 level = 28
 xp = 150
 rarity = "uncommon"
-loot = 30
+loot = 8
 name = "drow blademaster"
 glyph = "e"
 fg = "#a8a8d0"
@@ -40,7 +40,7 @@ on_hit = [{ status = "poisoned", chance = 20, severity = 3 }]
 [[creature.gear]]
 chance = 70
 one_of = ["chain_mail"]
-magic = 20
+magic = 5
 [[creature.gear]]
 chance = 50
 one_of = ["wool_cloak"]

@@ -7,7 +7,7 @@ level = 32
 xp = 170
 rarity = "rare"
 dread = true
-loot = 40
+loot = 10
 name = "drow assassin"
 first_sight = "A drow assassin. You see it now; you may not see it again."
 glyph = "e"
@@ -42,15 +42,15 @@ on_hit = [{ status = "poisoned", chance = 40, severity = 4 }, { status = "weaken
 [[creature.gear]]
 chance = 70
 one_of = ["studded_leather"]
-magic = 25
+magic = 6
 [[creature.gear]]
 chance = 80
 one_of = ["wool_cloak"]
-magic = 25
+magic = 6
 [[creature.gear]]
 chance = 50
 one_of = ["leather_boots"]
-magic = 10
+magic = 3
 [[creature.gear]]
 chance = 60
 one_of = ["copper_coin*100", "gold_coin*4"]

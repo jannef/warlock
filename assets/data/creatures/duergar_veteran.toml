@@ -6,7 +6,7 @@ id = "duergar_veteran"
 level = 17
 xp = 95
 rarity = "uncommon"
-loot = 35
+loot = 9
 name = "duergar veteran"
 glyph = "h"
 fg = "#7090c8"
@@ -28,11 +28,11 @@ racial_weapon = "battle_axe"
 [[creature.gear]]
 chance = 80
 one_of = ["scale_mail"]
-magic = 10
+magic = 3
 [[creature.gear]]
 chance = 70
 one_of = ["iron_helm"]
-magic = 5
+magic = 1
 [[creature.gear]]
 chance = 60
 one_of = ["small_shield"]

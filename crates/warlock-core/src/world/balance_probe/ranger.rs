@@ -41,7 +41,7 @@ fn ranger(p: &Probe, level: u8, seed: u64) -> World {
     let id = table.id("short_blades").expect("short_blades");
     let rank = super::rank(level);
     if rank > w.state.player().weapon_skills.rank(id) {
-        w.player_mut().weapon_skills.raise(table, id, rank);
+        w.player_mut().weapon_skills.raise(id, rank);
     }
     w
 }

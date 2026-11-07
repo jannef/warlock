@@ -139,7 +139,8 @@ pub enum ScreenName {
     Messages,
     /// Choose what to pick up from the pile here (`,` or `g` where several objects lie).
     PickUp,
-    /// Choose what to drop (`d` in play).
+    /// The inventory in its drop mode, as `d` in play opens it (#1196): choose what to drop.
+    /// The inventory's own `D` turns the mode on in place, under this name too while it lasts.
     Drop,
     /// Choose what to throw (`t` in play, with no throwing weapon readied).
     Throw,
@@ -440,7 +441,7 @@ impl Screen {
             ScreenName::Story => Screen::Story(StoryScreen::page(run)),
             ScreenName::Messages => Screen::Messages(MessagesScreen::new(run)),
             ScreenName::PickUp => objects(ObjectList::PickUp),
-            ScreenName::Drop => objects(ObjectList::Drop),
+            ScreenName::Drop => Screen::Objects(ObjectScreen::dropping(run)),
             ScreenName::Throw => objects(ObjectList::Throw),
             ScreenName::Eat => objects(ObjectList::Eat),
             ScreenName::Read => objects(ObjectList::Read),
@@ -478,9 +479,9 @@ impl Screen {
             Screen::Controls(screen) if screen.is_help() => ScreenName::Help,
             Screen::Controls(_) => ScreenName::Controls,
             Screen::Objects(screen) => match screen.list() {
+                ObjectList::Inventory if screen.is_dropping() => ScreenName::Drop,
                 ObjectList::Inventory => ScreenName::Inventory,
                 ObjectList::PickUp => ScreenName::PickUp,
-                ObjectList::Drop => ScreenName::Drop,
                 ObjectList::Throw => ScreenName::Throw,
                 ObjectList::Eat => ScreenName::Eat,
                 ObjectList::Read => ScreenName::Read,
@@ -2002,6 +2003,20 @@ mod tests {
             Some(&Action::Drop(Positions::of([0])))
         );
         assert!(names(&app).is_empty());
+        // `d` opens the inventory in its drop mode: Esc closes it, nothing dropped. `D` in the
+        // inventory turns the mode on; Esc there goes back to the plain inventory.
+        let count = actions(&app).len();
+        frame(&mut app, &[d]);
+        assert_eq!(names(&app), [ScreenName::Drop]);
+        frame(&mut app, &[ESC]);
+        assert!(names(&app).is_empty());
+        frame(&mut app, &[i, (KeyCode::KeyD, "D")]);
+        assert_eq!(names(&app), [ScreenName::Drop]);
+        frame(&mut app, &[ESC]);
+        assert_eq!(names(&app), [ScreenName::Inventory]);
+        frame(&mut app, &[ESC]);
+        assert!(names(&app).is_empty());
+        assert_eq!(actions(&app).len(), count);
     }
 
     #[test]

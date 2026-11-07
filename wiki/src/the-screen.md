@@ -138,7 +138,7 @@ on, and `Esc` goes back a step (see [Your character](character.md)).
 
 No game time passes while a menu or screen is open. That includes the
 [inventory](objects.md#your-pack), the [equipment screen](equipment.md#the-equipment-screen), the
-[character screen](#character), the pick-up and drop screens, the [abilities
+[character screen](#character), the pick-up screen and the pack's drop mode, the [abilities
 menu](abilities.md#the-abilities-menu), and the screen of [topics](npcs.md#chatting) someone you
 [chat](npcs.md#chatting) with offers. Only what you choose to do there takes time:
 [picking up](objects.md#picking-up), [dropping](objects.md#dropping), putting on or taking off,

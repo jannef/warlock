@@ -6,7 +6,7 @@ id = "ogre_mage"
 level = 18
 xp = 100
 rarity = "rare"
-loot = 50
+loot = 13
 name = "ogre mage"
 glyph = "O"
 fg = "#5a7ac8"
@@ -32,7 +32,7 @@ on_eat = { message = "It tastes of the ogre, and of something bitter.", vomit = 
 [[creature.gear]]
 chance = 50
 one_of = ["bone_amulet"]
-magic = 20
+magic = 5
 [[creature.gear]]
 chance = 40
 one_of = ["gold_coin*3", "gold_coin*8"]

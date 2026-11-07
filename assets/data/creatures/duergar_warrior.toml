@@ -6,7 +6,7 @@ id = "duergar_warrior"
 level = 11
 xp = 65
 rarity = "uncommon"
-loot = 30
+loot = 8
 name = "duergar warrior"
 glyph = "h"
 fg = "#7c8894"
@@ -31,7 +31,7 @@ one_of = ["small_shield"]
 [[creature.gear]]
 chance = 60
 one_of = ["chain_mail"]
-magic = 5
+magic = 1
 # It fades from sight on a cooldown (docs/dev/creatures.md "The unseen").
 [creature.invisible]
 cooldown = 300

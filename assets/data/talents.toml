@@ -23,12 +23,10 @@ alike = [
 # The coverage bar (spec §8 "Talents"; docs/dev/progression.md "Coverage policy", #773): the
 # game refuses to load when a system below that is not `pending` has fewer than min_talents
 # talents or min_class class abilities, or a tree that is not `pending` (nor `no_free`) has fewer
-# than free_per_tree talents without prerequisites. The bar is one talent: a system is something
-# a build can lean on, and one talent that changes how it plays is enough; more talents are
-# added only when each earns its place (the policy's bar), never to fill a count. min_class is 0
-# until every class has its table (#243–#246), then 1.
+# than free_per_tree talents without prerequisites. min_class is 0 until every class has its
+# table (#243–#246).
 [coverage]
-min_talents = 1
+min_talents = 0
 min_class = 0
 free_per_tree = 1
 

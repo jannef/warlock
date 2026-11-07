@@ -1,12 +1,13 @@
 # Reeve Leofric's quests (docs/design/campaign.md §6.2; the fields: data/quests.toml): the
 # Cealdhlāw chain. The road east, the first delve, the barrow's heart, and its wight.
 
+# A Beast-friend (the druid's talent) is never sent after the rats, which it calms: they draw the
+# fallback, the barrow's dead rats, raised bones and nothing else (`world/quest_roll.rs`, #1189).
 [[quest]]
 id = "barrow_rats"
 name = "Rats in the barrows"
 giver = "leofric"
 type = "kill"
-target = "rat"
 count = 5
 level = "cealdhlaw"
 reward = { gold = 25, xp = 30 }
@@ -15,6 +16,19 @@ offer = "The rats are the first thing out of Cealdhlāw each spring, and the she
 accept = "Capital. East along the road, the great mound. Five rats, and mind what else lies down there."
 reminder = "Five rats from Cealdhlāw. The barrow is east along the road, in the downs."
 done = "Five fewer. The shepherds will find something else to shout about. The town's coin, as promised."
+
+[[quest.variant]]
+id = "rats"
+target = "rat"
+
+[[quest.variant]]
+id = "skeletal"
+target = "skeletal_rat"
+fallback = true
+offer = "Your sort keep faith with the beasts, I know, so I shan't send you after the living rats. But some come up out of Cealdhlāw dead and walking still, bare bones. Pray go into the barrow, east along the road in Hlāwdūn, and lay five to rest. The town will stand the cost."
+accept = "Capital. East along the road, the great mound. Five of the dead ones; the living you may leave be."
+reminder = "Five skeletal rats from Cealdhlāw. The barrow is east along the road, in the downs."
+done = "Five laid to rest. Even the shepherds draw the line at a rat that will not stay dead. The town's coin, as promised."
 
 [[quest]]
 id = "barrow_heart"

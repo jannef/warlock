@@ -266,7 +266,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
   (above) with glyph, name, and weight: a letter marks or unmarks its stack (`+` marked, `-`
   not), `,` marks everything (on every page), the arrows move the `>` cursor and Space marks its
   row, Enter picks up the marked stacks (the cursor's row if none is marked), Esc cancels. **Drop**
-  (`d`) chooses from the inventory the same way. Picking up and dropping are one action each
+  is the inventory's drop mode (#1196; there is no drop screen of its own): `D` in the
+  inventory turns it on, `d` in play opens the inventory in it; it is titled "Inventory: drop"
+  and chooses from the inventory the same way (marks kept across pages, Enter drops); Esc leaves
+  it with nothing dropped, back to the plain inventory (or, opened by `d`, back to the map). Picking up and dropping are one action each
   (replay text `pickup:ac`, `drop:b`, by position: `a` to `z` are the first 26, and any position
   may be written as a number, `drop:0,2,30`; `pickup` and `drop` alone take everything) and take their
   action's time (§8 "Time"; at the burden the player has as they begin, §8 "Burden"); with
@@ -275,7 +278,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   takes it off first ("You take off a leather jerkin."), which takes its time too, and the stacks
   after a dropped one move up a place (worn things keep being worn). In a shop, picking up goods
   adds them to what the player owes, and dropping puts back what is unpaid and offers to buy the
-  player's own things (§7 "Shops"); the inventory and drop screens mark what is unpaid
+  player's own things (§7 "Shops"); the inventory (in its drop mode too) marks what is unpaid
   ("(unpaid, 45 gold)"), the pick-up screen what is for sale.
 - **Inventory** (`I`, ADOM's backpack key): what the player carries, ADOM-like: as many stacks as they can carry
   (weight is the only limit, §8 "Burden"), in the item list (above), each with its glyph, name,
@@ -285,10 +288,11 @@ developer notes (CLAUDE.md, `docs/dev/`).
   kg, overloaded over 45 kg` (from scores the player knows, never a modifier; lines wrap at part
   boundaries in a narrow window). What is worn or wielded is marked with its slot's mark: "(being
   worn)", "(wielded)", "(in off hand)", "(on left hand)", "(readied)", "(quivered)", "(in use)"
-  (a tool), and a two-handed weapon "(wielded in both hands)"; the drop screen marks it the same
+  (a tool), and a two-handed weapon "(wielded in both hands)"; its drop mode marks it the same
   way. Names are in their rarity's color (§8 "Magic items": magic a soft blue, rare a pale
   yellow; normal as ever; palettes apply as to all UI text); the glyph keeps its own. It takes no
-  action: a stack's letter opens its **description** (below); `I` or Esc closes it.
+  action: a stack's letter opens its **description** (below), `D` turns on its drop mode
+  (**Drop**, above); `I` or Esc closes it.
 - **Item description** (#149): one carried stack as the player knows it, opened by its letter in
   the inventory or by a slot's upper-case letter (`A` to `M`) on the equipment screen, over the
   screen it came from: its glyph and name (in its rarity's color, with its mark if worn or

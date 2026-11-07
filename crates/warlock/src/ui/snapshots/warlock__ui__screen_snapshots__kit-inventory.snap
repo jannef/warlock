@@ -29,6 +29,6 @@ expression: "render(case, content.clone())"
 │ Carrying 9.3 kg   ·   Your weight 79.3 kg (you 70 kg)                                            │
 │ Burdened over 17.5 kg, strained over 35 kg, overloaded over 52.5 kg                              │
 │                                                                                                  │
-│ a-k look   I or Esc close                                                                        │
+│ a-k look   D drop   I or Esc close                                                               │
 └─ 1 Char · 2 Inv · 3 Eqp · 4 Skl · 5 Weap · 6 Mag · 7 Qst · 8 Tal · 9 Story ──────────────────────┘
  The Wildlands  ·  HP 23/23  ·  MP 4/4  ·  Sta 10/10  ·  Lv 1  ·  Lēof  ·  08:00         ? controls

@@ -37,4 +37,4 @@ on_hit = [{ status = "bleeding", chance = 25, severity = 2 }]
 [[creature.gear]]
 chance = 100
 one_of = ["great_axe"]
-magic = 15
+magic = 4
