@@ -37,3 +37,5 @@ a creature's level is a `u8` with no cap at load, the XP guideline (5 × level +
 level, its §8.2 table only checked to 70. Tests: `world/layer_boss_tests.rs` (the content checks
 among them; the depths list runs to 100), `creature_body_tests` (each `natural` on its body's line), `summoner_roster_tests`
 (the four summoners carry `summoner` and another tribe's tag).
+
+**The disarming blow** (#1166, `docs/dev/creatures.md`): Wælcyrge carries `disarms = { chance, difficulty }`, a melee hit that may knock the player's main-hand weapon onto an open cell beside them (20 % at 28).
