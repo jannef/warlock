@@ -202,6 +202,15 @@ corrode easily but stand heat; copper and its alloys corrode but hardly rust; th
 wood and cloth burn; nothing but metal rusts. A failed attempt at an anvil is never withstood.
 Fighting bare-handed or with a spell risks nothing.
 
+### Protected items
+
+Some items no harm reaches at all: not acid, rust, or fire, not a failed attempt at an
+[anvil](special-rooms.md) or with the knife, and not a spell's [ruin](magic.md#what-lies-in-its-way) of what lies on the floor.
+They are [unique items](magic-items.md#unique-items), items of the [of Proof](magic-items.md#suffixes) affix (it works whether
+or not you have identified it), and anything a [quest](quests.md) asks you to bring or deliver
+(until that quest is done for good). What a quest gives you as its reward is an ordinary item,
+unless another quest asks for it.
+
 ### Items of other materials
 
 Most items can be found made of another material than their usual one: *a bronze long sword*,

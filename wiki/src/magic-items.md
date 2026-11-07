@@ -133,6 +133,10 @@ your [stamina](resources.md#resource-stamina) (see [Resources](resources.md)), *
 
 ## Suffixes
 
+*Of Proof* (from item level 4, on anything but ammunition, rarer than most) makes its item
+[proof against all harm](objects.md#protected-items): acid, rust, fire, a failed attempt at an anvil, and a spell's
+ruin never touch it, whether or not you have identified it.
+
 Suffixes are mostly [stats](stats.md), [speed](turns.md#speed), [criticals](combat.md#criticals), utility, and [skills](skills.md); *of the Salamander*, *of
 Warmth*, *of the Adder*, *of the Storm*, *of Glass*, *of the Anvil*, and *of the Living* [resist](damage-types.md#armour-and-resistance)
 [fire](damage-types.md#damage-fire), [cold](damage-types.md#damage-cold), [poison](damage-types.md#damage-poison), [electricity](damage-types.md#damage-electricity), [acid](damage-types.md#damage-acid), [force](damage-types.md#damage-force), and [necrotic](damage-types.md#damage-necrotic) damage, in percent (see [Damage
@@ -190,8 +194,8 @@ and a **power**, a rule of its own that no affix gives. It is found unidentified
 item ("a stiletto (rare)"); identified, it shows its name, its affixes, its power in words, and a
 line of lore. Each lies in one place in the world (most are carried by those who own them; three
 are only ever offered by a [pedlar](npcs.md#the-pedlars-offer), very rarely), so a character
-finds each at most once; loot never makes one. Its power works while it is worn or
-wielded, identified or not:
+finds each at most once; loot never makes one. No [item damage](objects.md#protected-items) ever
+harms one. Its power works while it is worn or wielded, identified or not:
 
 - **Inflict**: a hit with it that leaves its target alive causes a [status](status-effects.md#how-they-work), every time or by a
   chance (the status's resistance applies, as to a poisonous bite). A bow's power rides its

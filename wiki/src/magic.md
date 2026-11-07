@@ -225,8 +225,7 @@ An area spell (a burst, a cone, or a line; [shapes](#shapes)) with a [damage typ
 item of every stack there is lost at the chance of the first row below of the spell's type that fits it, by its
 [item class](objects.md#item-classes) or the [material](objects.md#materials) of its main part, so a stack may lose
 some of its items or all of them. A stack no row fits is never touched. What you carry or wear, what lies in a
-[chest](chests.md), a [unique item](magic-items.md), and anything a [quest](quests.md) asks you to bring or deliver
-(until that quest is done for good) are never touched, and [traps](traps.md) ruin nothing. A [corpse](food.md) that
+[chest](chests.md), and what is [protected from item damage](objects.md#protected-items) are never touched, and [traps](traps.md) ruin nothing. A [corpse](food.md) that
 burns away never rises. You are told what you see go: "The scroll burns up.", "3 potions freeze and shatter."
 
 {{#include generated/spell-ruin.md}}

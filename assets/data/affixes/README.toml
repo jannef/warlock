@@ -33,6 +33,8 @@
 #                           gloves, boots)
 #             max_dex       + to the most Dexterity may add to Defence while it is worn
 #             weight        N% lighter
+#             proof         nothing damages the item (acid, rust, fire, a spell's ruin, a failed
+#                           temper; world/item_damage.rs); its tiers' values are 1
 #             dodge         + Dodge (bonuses add up)
 #             deflection    + Deflection (the best counts)
 #             natural       + natural armour (the best counts, with a creature's own)

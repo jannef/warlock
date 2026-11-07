@@ -502,8 +502,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     cloth, food, and wood, and may boil a potion; cold shatters potions and glass; lightning
     burns scrolls; acid eats most things but glass, stone, gems, and coins; force smashes potions
     and glass; necrotic rots food). A stack may lose some or all. Never touched: what is carried,
-    worn, or in a chest, a unique item, and an object a quest asks to be brought or delivered
-    (a fixed quest's until it is done for good, a rolled quest's drawn object while active).
+    worn, or in a chest, and what is protected from all item damage (spec §7 "Materials": a unique
+    item, an item of Proof, and an object a quest asks to be brought or delivered).
     Traps' and places' bursts ruin nothing. The draws are the run's own `ruin` stream. Seen
     cells say what went, a line per kind of item ("The scroll burns up.", "3 potions freeze and
     shatter."); unseen, nothing is said.

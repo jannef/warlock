@@ -189,6 +189,9 @@ fn effect_words(effect: ItemEffect) -> String {
         ItemEffect::Shield => "Shield".into(),
         ItemEffect::MaxDex => "Dexterity may add more to Defence".into(),
         ItemEffect::Weight => "lighter".into(),
+        ItemEffect::Proof => {
+            "nothing damages the item: acid, rust, fire, a spell's ruin, or a failed temper".into()
+        }
         ItemEffect::Dodge => "Dodge".into(),
         ItemEffect::Deflection => "Deflection".into(),
         ItemEffect::Natural => "natural armour".into(),
@@ -267,6 +270,7 @@ fn tier_value(effect: ItemEffect, tier: &warlock_core::content::Tier, content: &
             let radius = tier.light.map_or(0, |id| content.light(id).radius);
             format!("{} ({radius} cells)", glow_word(radius))
         }
+        ItemEffect::Proof => "proof".into(),
         _ => range("+", ""),
     }
 }
@@ -329,7 +333,7 @@ fn system_of(content: &Content, a: &AffixDef) -> &'static str {
         E::Stat(_) => "Stats",
         E::MoveSpeed => "Speed",
         E::Weight | E::Carry => "Burden",
-        E::Durability => "Objects",
+        E::Durability | E::Proof => "Objects",
         E::Stealth => "Stealth",
         E::Light => "Light",
         E::Skill => "Skills",

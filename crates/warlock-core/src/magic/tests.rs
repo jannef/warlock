@@ -713,6 +713,10 @@ fn reader(effect: Effect) -> (&'static str, &'static str) {
         | Effect::MaxHp
         | Effect::MaxMana => ACTOR,
         Effect::Weight | Effect::Protection => ("object.rs", include_str!("../object.rs")),
+        Effect::Proof => (
+            "world/item_damage.rs",
+            include_str!("../world/item_damage.rs"),
+        ),
         Effect::AttackSpeed | Effect::MoveSpeed => {
             ("world/schedule.rs", include_str!("../world/schedule.rs"))
         }
@@ -884,4 +888,32 @@ fn every_element_has_a_resistance_and_all_but_force_a_weapon_prefix() {
         let prefixes = if t.id == "force" { 0 } else { 1 };
         assert_eq!(of(Effect::Elemental, kind), prefixes, "{}'s prefixes", t.id);
     }
+}
+
+/// Proof (#1170) rolls in loot like any affix, and an identified item's description names it.
+#[test]
+fn proof_rolls_in_loot_and_is_named_once_identified() {
+    let c = content();
+    let proof =
+        |s: &Stack| (s.magic()).is_some_and(|m| m.affixes.iter().any(|a| a.id == "of_proof"));
+    assert!(
+        roll_many(&c, 3000, 6, LootGrade::Magic).iter().any(proof),
+        "of Proof rolls at item level 6"
+    );
+    assert!(
+        !roll_many(&c, 3000, 3, LootGrade::Magic).iter().any(proof),
+        "never below its tier's level"
+    );
+    let mut sword = item(&c, "long_sword", &[("of_proof", 1, 1)], None);
+    assert!(!(describe::lines(&sword, &c).iter()).any(|l| l.text.contains("damage it")));
+    sword.identify();
+    assert_eq!(sword.describe(&c), "a long sword of Proof");
+    assert!(
+        (describe::lines(&sword, &c).iter()).any(|l| l.text == "of Proof: nothing can damage it"),
+        "{:?}",
+        describe::lines(&sword, &c)
+            .iter()
+            .map(|l| &l.text)
+            .collect::<Vec<_>>()
+    );
 }

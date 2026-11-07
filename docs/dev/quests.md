@@ -37,7 +37,11 @@ wound counts too; under the level it died on, or `Actor::home` for a stair follo
 quests' `progress` before the player acts and says what rose after it, and again after the
 turn (`quest_progress`/`quest_news`), so pick-ups, kills, and arrivals all report through one
 place. `reveal_at` (beside the answer at the two places a stage is set: `give` and
-`complete`) reveals a quest's location after the speaker's words. No abandoning and no cap on active quests (the owner's decision): don't add either.
+`complete`) reveals a quest's location after the speaker's words. No abandoning and no cap on active quests (the owner's decision): don't add either. What a quest asks to be
+brought or delivered (`World::quest_objects`) is protected from all item damage, ruin, acid, rust,
+heat, and a failed temper alike (`world/item_damage.rs`, #1170; docs/dev/objects.md
+"Protection"); a quest's reward is an ordinary item unless another quest's `hand_in` names it
+(the owner: no special quest items for rewards).
 The log's objective is the **first breadcrumb**, `world::quest_wants`: "<Giver> wants you to
 <asks, lower-cased>." (a bring to the giver names no recipient); `quest_asks` stays the plain
 goal, and for a rolled quest describes its pool (the wiki's goal column).

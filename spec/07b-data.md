@@ -353,7 +353,11 @@ developer notes (CLAUDE.md, `docs/dev/`).
   anvil's one state that Temper or Whittle mends, and one damaged already is destroyed; a failed
   Temper or Whittle is item damage no material withstands. Noble metals, mithril, adamantium,
   dragonscale, and the gems withstand nearly everything; iron and steel rust and corrode but
-  stand heat; wood and cloth burn; nothing but metal rusts; `world/item_damage.rs`).
+  stand heat; wood and cloth burn; nothing but metal rusts; `world/item_damage.rs`). Protected
+  from all item damage, a spell's ruin of floor items too (#1170): a unique item, an item of the
+  `proof` affix ("of Proof"), and an object a quest asks to be brought or delivered (a fixed
+  quest's until it is done for good, a rolled quest's drawn object while active); a quest's
+  reward is an ordinary item unless another quest asks for it.
   The seventeen metals (#193; no lerasium, atium, or malatium), weight / to hit / damage / armour
   / value: steel 100 / 0 / 0 / 100% / ×1, iron 100 / −1 / 0 / 90% / ×0.6, tin 93 / 0 / −2 / 40%
   / ×0.4, pewter 93 / 0 / −2 / 40% / ×0.5, bronze 112 / 0 / −1 / 80% / ×0.8, copper 114 / 0 / −1

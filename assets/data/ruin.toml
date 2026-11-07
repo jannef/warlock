@@ -6,9 +6,11 @@
 # breath too) with a damage type rolls once for every item of every stack lying on a floor cell it
 # reaches: each item is lost at the chance of the first row below of the spell's damage type
 # that matches the stack, so a stack may lose some of its items or all of them. A stack no row
-# matches is never touched, and neither is anything carried, worn, in a chest, a unique item, or
-# an object a quest asks to be brought or delivered (`data/quests/`). Traps' and places' bursts
-# ruin nothing.
+# matches is never touched, and neither is anything carried, worn, or in a chest, or anything
+# protected from all item damage (`world/item_damage.rs`, #1170): a unique item, an item of
+# Proof (`affixes/of_proof.toml`), and an object a quest asks to be brought or delivered
+# (`data/quests/`; a quest's reward only when another quest asks for it). Traps' and places'
+# bursts ruin nothing.
 #
 # The file is optional: without it no spell ruins anything.
 #
