@@ -50,6 +50,7 @@ mod dread_roster_tests;
 mod drow_roster_tests;
 #[cfg(test)]
 mod duergar_roster_tests;
+mod dummy;
 mod dungeon;
 mod effect;
 #[cfg(test)]
@@ -234,6 +235,7 @@ pub use dialogue::{
     ServiceKind, Speaker, Topic,
 };
 pub use disease::{DIFFICULTIES, DiseaseDef, DiseaseId, SOURCES, Wading};
+pub use dummy::DummyTraining;
 pub use dungeon::{
     ChestOdds, DungeonDef, Endless, Generator, LayerBoss, LevelPlan, RoomOdds, ShopOdds,
     parse_branch_level,
@@ -1980,6 +1982,9 @@ impl Content {
                         creature::NOSES.end()
                     )));
                 }
+            }
+            if let Some(training) = &spec.training {
+                (training.check()).map_err(|m| err(format!("creature `{}`: {m}", spec.id)))?;
             }
             if spec.regen > creature::MAX_REGEN {
                 return Err(err(format!(

@@ -64,6 +64,13 @@
 #                going about its routine: a shopkeeper at its counter), or "never" (rooted)
 #   attack_cost  what its attacks cost in energy (100 to 10000), instead of the attack's cost in
 #                actions.toml (melee, shoot, or cast; 1000 is a normal action)
+#   training    makes it a target dummy (spec §8 "Weapon skills": "Target dummies"): it never
+#                acts or dies, the player strikes it by moving into it, a blow at it disturbs no
+#                one and trains weapon skills and styles only, at `percent` (1 to 100) of the
+#                marks, below rank `melee` (blows, bashes, kicks, throws) or `ranged` (shots);
+#                a missile that reaches it stops, and is destroyed by `breaks` percent (never one
+#                that never breaks), else drops beside it: { percent = 50, melee = 2, ranged = 4,
+#                breaks = 25 }
 #
 # Tags (spec §8 "Quests", #441; never shown to the player; the wiki lists them): tags, plain
 # words a quest or a rule may ask for, `tags = ["goblin", "archer"]`. One flat pool: nothing

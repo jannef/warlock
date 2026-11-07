@@ -521,7 +521,12 @@ developer notes (CLAUDE.md, `docs/dev/`).
     something solid, at the end of its range, or the cell aimed at), on top of the pile there, to
     be picked up again (stackable ammunition joins its stack). On a hit it breaks with its
     `breaks` chance (one draw of the gameplay stream, made only when the chance is not 0); a
-    missile that comes down on a cell that is not walkable is lost.
+    missile that comes down on a cell that is not walkable is lost. A target dummy (§8 "Weapon
+    skills", Target dummies) stops what reaches it, hit or miss (a Piercing shot too): the
+    missile is destroyed by the dummy's `breaks` chance (25 %; one draw, made only when both the
+    missile's own chance and the dummy's are above 0, so one that never breaks never does) in
+    place of its own, else it drops into a cell beside the dummy that is walkable and holds
+    no one (one draw among them), or on the dummy's own cell when there is none.
   - **Fires**: a burning object (`light` and `burns`) that comes down starts a fire on its cell
     (`LevelState::fires`: the light preset and when it has burned out; saved), a light source
     keyed by the level and the cell (`LightCache`, only while the clock is before its end, so
