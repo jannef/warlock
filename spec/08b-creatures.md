@@ -291,6 +291,18 @@ developer notes (CLAUDE.md, `docs/dev/`).
   teleport could land (no trap, no ice), drawn among those cells; it takes `ceil(cooldown /
   eases)` degrees of `blink`, and the blink costs a step. It never blinks away. Words: "The
   blink dog is suddenly beside you." where the player sees it land; unseen, nothing.
+- **The disarming blow** (`warlock-core/src/world/knock_away.rs`; #1166): an enemy-only creature
+  ability, the duellists'. `disarms = { chance, difficulty }` on a type (`chance` 1 to 100,
+  `difficulty` 2 to 40): when one of its melee blows hits the player and leaves them alive, with
+  a weapon (a thing with an attack) in their main hand, the chance is drawn; made, and with an
+  open cell beside the player (walkable, no deep water, no closed door, no one there), the player
+  makes a Dexterity check against `difficulty`, adding their rank in the weapon's skill and
+  their grip (+2 a two-handed weapon, +1 a shield in the other hand, their rank in the lone
+  weapon's style, Duelist, with the other hand empty). Failed, the whole stack leaves the hands
+  and the pack and lies on one of those cells, drawn among them; a spirit weapon fades instead.
+  Without an open cell, nothing happens. Words: "The drow blademaster knocks your scimitar from
+  your hand!" ("Something" when unseen), then "It lands beside you.". The drow blademaster and
+  captain, the death knight, the ultroloth, and Wælcyrge the Chooser.
 - **Casters** (`warlock-core/src/world/creature_cast.rs`, the rules;
   `content/creature_spells.rs`, the data; #1102): a `combat = "caster"` type has a `spells`
   list (ids in `data/spells/`, in the order it prefers them; only a caster has one), and only

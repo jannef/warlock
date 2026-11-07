@@ -844,6 +844,26 @@ pub(super) fn creature_blinks(content: &Content) -> String {
     out
 }
 
+/// Each duellist's disarming blow (#1166): its chance on a hit, and the difficulty of the
+/// Dexterity check that keeps the weapon in hand.
+pub(super) fn creature_disarmers(content: &Content) -> String {
+    let mut out =
+        String::from("| Creature | Chance on a hit | Difficulty to hold on |\n|---|---:|---:|\n");
+    for (_, c) in listed(content) {
+        let Some(blow) = c.disarms else {
+            continue;
+        };
+        let _ = writeln!(
+            out,
+            "| {} | {}% | {} |",
+            link(Term::Creature, &c.id, &capital(&c.name)),
+            blow.chance,
+            blow.difficulty
+        );
+    }
+    out
+}
+
 /// Warning signs (docs/design/monster-dread.md §9): every creature that leaves something about
 /// it where the generator places it, or has a line said the first time it is seen.
 pub(super) fn creature_signs(content: &Content) -> String {

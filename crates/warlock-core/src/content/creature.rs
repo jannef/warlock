@@ -92,6 +92,17 @@ pub struct Corrodes {
     pub kind: super::ItemHarm,
 }
 
+/// A creature's disarming blow (`disarms = { chance = 15, difficulty = 18 }`; #1166,
+/// `world/knock_away.rs`): the chance in percent (1 to 100) that a melee hit of its on the player
+/// tries to knock the weapon from their main hand, and the difficulty of the Dexterity check
+/// that keeps it.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct Disarms {
+    pub chance: u8,
+    pub difficulty: i32,
+}
+
 /// Whose gear a creature's acid eats.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "snake_case")]
@@ -341,6 +352,9 @@ pub(super) struct CreatureSpec {
     pub resist: BTreeMap<String, i32>,
     /// Its acid (spec §8 "Creature gimmicks"; `world/corrode.rs`): what of a foe's gear it eats.
     pub corrodes: Option<Corrodes>,
+    /// Its disarming blow (#1166; `world/knock_away.rs`): a hit that may knock the player's
+    /// weapon from their hand.
+    pub disarms: Option<Disarms>,
     /// Whether it leaves a corpse when it dies (spec §8 "Hunger"; with `data/hunger.toml`).
     #[serde(default = "yes")]
     pub corpse: bool,
@@ -876,6 +890,7 @@ impl CreatureSpec {
             vitals: self.vitals,
             resist: r.resist,
             corrodes: self.corrodes,
+            disarms: self.disarms,
             corpse: self.corpse,
             on_eat: self.on_eat,
             blood: r.blood,
@@ -1117,6 +1132,9 @@ pub struct CreatureDef {
     pub resist: Vec<(DamageTypeId, i32)>,
     /// Gameplay: its acid, eating at a foe's gear (`world/corrode.rs`).
     pub corrodes: Option<Corrodes>,
+    /// Gameplay: its disarming blow (`world/knock_away.rs`): a melee hit on the player may
+    /// knock their main-hand weapon onto a cell beside them. Rules only (the wiki states it).
+    pub disarms: Option<Disarms>,
     /// Gameplay: whether it leaves a corpse when it dies (spec §8 "Hunger"; only with
     /// `data/hunger.toml`, which says how corpses rot and feed).
     pub corpse: bool,

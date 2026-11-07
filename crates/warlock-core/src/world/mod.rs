@@ -182,6 +182,7 @@ mod intimidate;
 mod item_damage;
 mod jack;
 mod knock;
+mod knock_away;
 mod knowledge;
 mod lamp;
 mod layer_boss;
@@ -1830,6 +1831,8 @@ mod intimidate_tests;
 mod item_damage_tests;
 #[cfg(test)]
 mod ki_tests;
+#[cfg(test)]
+mod knock_away_tests;
 #[cfg(test)]
 mod knowledge_tests;
 #[cfg(test)]

@@ -99,13 +99,38 @@ const BULK: std::ops::RangeInclusive<u32> = 800..=1250;
 const QUICK_DREAD: u32 = 1400;
 
 /// Fast by design, kept past the bulk: the quickling (docs/design/monster-dread.md §6, "the claw bug of this game")
-/// and the vortices (§5.3, D3: "speed +200").
+/// and the vortices (§5.3, D3: "speed +200"); the speed review (#1167) restored the air and lightning
+/// elementals and the storm (thunderhead, welkin wind: the wind is their fantasy), the hunt's and the
+/// grave's hounds (hound of the hunt, wild huntsman, yeth hound, black shuck, church grim: the chase),
+/// the flyers of the dark (nightwing, sluagh), and the ghouls (barrow ghoul, ghoul lord, ghoul king: the
+/// run-down). Clamped for good reason and kept at 1250: dire warg, giant frog, barrow spider, canoloth,
+/// ankou, drow, forest troll, headless knight, poltergeist, nightmare, ghost dragon, duergar spider rider.
 const FAST_BY_DESIGN: &[&str] = &[
+    "air_elemental",
+    "barrow_ghoul",
+    "black_shuck",
+    "church_grim",
     "dust_devil",
+    "elder_air_elemental",
+    "elder_lightning_elemental",
     "ember_mote",
+    "ghoul_king",
+    "ghoul_lord",
+    "greater_air_elemental",
+    "greater_lightning_elemental",
+    "hound_of_the_hunt",
+    "lesser_air_elemental",
+    "lesser_lightning_elemental",
+    "lightning_elemental",
+    "nightwing",
     "quickling",
+    "sluagh",
     "spark_mote",
+    "thunderhead",
     "water_mote",
+    "welkin_wind",
+    "wild_huntsman",
+    "yeth_hound",
 ];
 
 #[test]
@@ -164,4 +189,39 @@ fn the_shapes_give_the_designs_numbers() {
     assert_eq!(Shape::Striker.to_hit(20), 7);
     assert_eq!(Shape::Striker.threat_crit(), (19, 2));
     assert_eq!(Shape::Brute.threat_crit(), (24, 3));
+}
+
+/// The speed review (#1167): the types restored above the bulk keep their speeds.
+#[test]
+fn the_restored_fast_types_keep_their_speeds() {
+    let content = Content::builtin().expect("content");
+    for (id, speed) in [
+        ("air_elemental", 1600),
+        ("lesser_air_elemental", 1500),
+        ("greater_air_elemental", 1700),
+        ("elder_air_elemental", 1850),
+        ("lightning_elemental", 1450),
+        ("lesser_lightning_elemental", 1400),
+        ("greater_lightning_elemental", 1500),
+        ("elder_lightning_elemental", 1600),
+        ("thunderhead", 1700),
+        ("welkin_wind", 2000),
+        ("hound_of_the_hunt", 1700),
+        ("wild_huntsman", 1500),
+        ("yeth_hound", 1350),
+        ("black_shuck", 1350),
+        ("church_grim", 1400),
+        ("nightwing", 1600),
+        ("sluagh", 1600),
+        ("barrow_ghoul", 1300),
+        ("ghoul_lord", 1350),
+        ("ghoul_king", 1400),
+    ] {
+        let def = content
+            .creature_defs()
+            .iter()
+            .find(|d| d.id.as_str() == id)
+            .unwrap_or_else(|| panic!("{id}"));
+        assert_eq!(def.speed, speed, "{id}");
+    }
 }
