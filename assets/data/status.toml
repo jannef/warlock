@@ -517,6 +517,7 @@ max = 1
 stacking = "refresh"
 eases = 300
 light = "item_glow"
+cured_by = ["holy_water"]
 start = "Holy light clings to you."
 end = "The holy light about you fades."
 
@@ -691,6 +692,7 @@ max = 3
 stacking = "refresh"
 eases = 60
 combat = { to_hit = -2 }
+cured_by = ["holy_water"]
 start = "You feel hexed."
 end = "The hex lifts."
 

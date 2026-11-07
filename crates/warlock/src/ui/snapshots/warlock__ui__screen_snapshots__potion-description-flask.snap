@@ -2,7 +2,7 @@
 source: crates/warlock/src/ui/screen_snapshots.rs
 expression: "render(case, content.clone())"
 ---
- You pick up a mottled pink potion.
+ You pick up a gritty pink potion.
  This is a sleeping draught!
 
 

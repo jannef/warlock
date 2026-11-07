@@ -1,0 +1,28 @@
+# A flask of thunder (spec §8 "Potions": "Flasks"; the potions wave 2 design §4.4): thrown, it
+# goes off as the Thunderclap spell where it shatters, battering everyone beside it, and the
+# whole level hears it (a decoy anyone can throw); drunk, the drinker's ears ring. Force is
+# slate.
+[[object]]
+id = "flask_of_thunder"
+name = "flask of thunder"
+plural = "flasks of thunder"
+glyph = "!"
+fg = "#607080"
+class = "potions"
+materials = ["glass"]
+weight = 250
+value = 100
+stackable = true
+level = 5
+frequency = 8
+
+[object.drink]
+kind = "harm"
+dice = "1"
+status = "stunned"
+colour = "slate"
+
+[object.throw]
+spell = "thunderclap"
+noise = { sound = "thunder", loudness = 150 }
+words = "Thunder cracks from the shards!"

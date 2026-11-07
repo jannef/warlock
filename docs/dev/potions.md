@@ -112,6 +112,15 @@ every later flask (smoke, fire, frost, acid, the bombers) builds on.
   `potion-description-flask`.
 - **Content**: the sleeping draught (`sleeping_draught.toml`, Sleep at rung 0, range 6; drunk,
   Drowsy 3; pink).
+- **Content on existing spells** (S4, #1226; each at rung 0, range 6; the design's §4.4 hues):
+  `flask_of_oil` (Slick), `stinking_flask` (Reek), `flask_of_tar` (Web),
+  `flask_of_enfeeblement` (Hex of weakness), `flask_of_sloth` (Curse of sloth),
+  `flask_of_darkness` (Mirk), `vial_of_nightmares` (Fear), `vial_of_silence` (Silence),
+  `flask_of_thunder` (Thunderclap, `noise` thunder 150), `blasting_flask` (Shatter, `noise`
+  explosion 100), each drunk a `harm`; `holy_water` (Rebuke: only the undead, by the spell's
+  `only_tags`), drunk a `cure` of `holy_water`, the means in Ill-wished's and Branded's
+  `cured_by`. The flasks of thunder and blasting are in general stores' and provisioners'
+  `never` lists. Tests: `world/flask_content_tests.rs` (each one's throw and drink once).
 - **Tests**: `world/flask_tests.rs` (fixture flasks on Fireball, Hex of weakness, and Slick):
   the throw and the burst on the dummy, the first creature in the way, the thrower's kill and
   experience, learned only when seen and heard when not, a ray's hex, a zone by the thrower, a
@@ -147,7 +156,8 @@ every later flask (smoke, fire, frost, acid, the bombers) builds on.
 - Elixirs: deep loot (level 8, frequency 2), the forgotten altar's great boon `elixir`
   (`data/outcomes/forgotten_altar.toml`, one of the six by weight), and the alchemist's draw (by
   frequency, so very rarely). A shop kind's `never` list (`ShopDef::never`, read in
-  `Shops::stocks`) keeps them out of general stores and provisioners.
+  `Shops::stocks`) keeps them, and the costly flasks (thunder, blasting), out of general stores
+  and provisioners.
 
 ## Talents (system `potions`)
 

@@ -4,6 +4,7 @@ use super::text::{Term, anchored, capital, damage_link, link};
 use std::fmt::Write as _;
 use warlock_core::combat::IMPROVISED_RANGE;
 use warlock_core::content::{Content, Draught, ObjectDef, SpellPurpose, StatusId};
+use warlock_core::noise::SoundKind;
 
 /// The potions: what drinking each does in numbers, its colour, the training marks it gives,
 /// what throwing it does (a flask's splash, spec §8 "Potions": "Flasks"), from which item level
@@ -52,11 +53,14 @@ pub(super) fn potions(content: &Content) -> String {
                 stat.name(),
                 potential.to_string().trim_start_matches('+')
             ),
-            Draught::Harm { dice, status } => format!(
-                "{} degrees of {} (as rotten food)",
-                dice.to_string().trim_start_matches('+'),
-                content.status(*status).name
-            ),
+            Draught::Harm { dice, status } => {
+                let def = content.status(*status);
+                let dice = dice.to_string();
+                let dice = dice.trim_start_matches('+');
+                let degrees = if dice == "1" { "degree" } else { "degrees" };
+                let name = link(Term::Status, &def.id, &def.name);
+                format!("{dice} {degrees} of {name}")
+            }
             Draught::Boost { status, severity } => {
                 let def = content.status(*status);
                 let raised: Vec<String> = (def.penalty.iter())
@@ -195,6 +199,19 @@ fn thrown(content: &Content, o: &ObjectDef) -> String {
             "a {} zone for {} turns",
             zone.kind.id(),
             zone.turns
+        ));
+    }
+    if !spell.effect.only_tags.is_empty() {
+        does.push(format!(
+            "only the {}",
+            spell.effect.only_tags.join(" and the ")
+        ));
+    }
+    if flask.noise.sound != SoundKind::Shatter {
+        does.push(format!(
+            "heard as {} at loudness {}",
+            flask.noise.sound.heard_as(),
+            flask.noise.loudness
         ));
     }
     format!(
