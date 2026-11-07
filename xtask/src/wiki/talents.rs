@@ -763,7 +763,7 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
             .to_string(),
         TalentEffect::HungerPercent { value } => format!("hunger pace {}", percent(value)),
         TalentEffect::SmellRot => {
-            "the eat list says whether food smells fresh, turning (old),              or rotten"
+            "the eat list says whether food smells fresh, turning (old), or rotten"
                 .to_string()
         }
         TalentEffect::RotHarmPercent { value } => {
