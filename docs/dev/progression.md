@@ -206,12 +206,11 @@ wiki's effect text appends "while raging".
 | `take_up_skills` | handed out, not read: `World::take_up_skills` (`world/jack.rs`, from `grant_class`, `take_talent`, and `bestow`) trains every skill of the content the player lacks, but `except`, at `dice` from `levels_rng` in file order; its `news` said by `grant_class` (Jack of all trades, the bard's) |
 | `ignore_burdened` | `burden::load` (`Load::ignores_burdened`, as a dwarf's) |
 | `no_bloating`, `corpse_stats_percent` | `eat.rs`: `feed` (nutrition stops one below Bloated, nothing overeats) and `corpse_gifts` (a corpse's `train` marks and `widen` chances scaled, the chance at most 100) |
-| `step_slowdown_percent` | `World::step_price` → `slowed` (the burden's ease and `bloated`'s slowdown, steps only) |
 | `searching` | `search.rs::search_modifier` (searching only; Keen searcher; `search`, in both looks, is above) |
 | `trap_damage_percent` | `World::trap_deals` (before the blood and the hurt; at least 1) |
 | `kick_noise_percent` | `noise::noise` (`Act::Kick`) |
 | `stat` | handed out, not read: `class::hand_out` raises score and potential (`Stats::gift`) at the pick or the grant; a Toughness gift raises `hp` with the maximum |
-| `carry_kg`, `weightless_coins` | `burden::load` (with the affixes' kilograms; coins, item class `coins`, left out of the load) |
+| `weightless_coins` | `burden::load` (coins, item class `coins`, left out of the load) |
 | `quest_gold_percent` | `World::complete` (`quest.rs`) |
 | `favour_percent` | `world::shop::favour` (before the cap, `MAX_FAVOUR`) |
 | `gem_worth` | `PerceptionView::appraisal` → `magic::describe::appraised` (the describe screen) |
@@ -258,7 +257,7 @@ Sign-limited picks (#270; `world/sign_picks.rs`), and their hooks:
 | `eats_rotten` | `eat.rs::eat_rotten`: as a race that `eats_rotten` |
 | `wades_free` | `World::step_price` through `Actor::wades_free` (a status's too), beside `swimmer` (no disease immunity) |
 
-The rest (Roc's grip, Dragon's hoard, Deep roots' Dodge, Bedrock, Undertow's plunge) are
+The rest (Dragon's hoard, Deep roots' Dodge, Bedrock, Undertow's plunge) are
 existing kinds.
 
 Effects that name a status (`second_wind`'s `cooldown`, `status_eases`, `no_penalty`,
@@ -496,10 +495,9 @@ focus, Great cleave → Cleave, Breaker → Mighty kick, each then folded into i
 follow-up talents again, below). No class-table level was emptied. Kept: the stronger class versions of a pickable's effect
 (Improved sneak attack's 2d6 beside Ambusher's 1d6, Arcane mastery's +100 % mana regeneration beside Clear mind's +25 %, Diamond
 soul's Deflection +2 beside Deflection's +1, Saint's healing +100 % beside Healthy's +25 %,
-Uncanny dodge's burden Dexterity 2 beside Nimble's 1, Bulwark's plain Protection +2), Miracle and Hag's bargain
+Bulwark's plain Protection +2), Miracle and Hag's bargain
 (the bargain costs Presence), Schooled and Stylist (one `weapon` effect for a school and for a
-style), and the pairs `alike` lists (above). The chains left (Fast healer after Healthy, Porter
-after Pack mule, Meditation after Clear mind, and the others) add an effect of another kind.
+style), and the pairs `alike` lists (above). The chains left (Fast healer after Healthy, Meditation after Clear mind, and the others) add an effect of another kind.
 
 **The rules 5-9 audit** (#791) read every pickable, class table entry, racial pick, and heritage
 talent (not the horoscope) with its hook. Rule 5: no flaw outside the horoscope (the races grant
@@ -597,6 +595,28 @@ only), Spell recall (Scholar; Intelligence 15, level 12), and the bard's Master 
 at 25). `needs = { talents = ["hardy"] }` is a list of ids (`Need::Talent(id)`, its words "Hardy"). Anvil and hammer and Second blade's rend, the styles' second tier, were cut with
 `rend_off_hand`, until weapon and style feats are reworked.
 
+## The burden line
+
+The talents that eased burden were one line by #1198 (the owner: "combine talents that ease
+effects of burden into one line. There are too many."): three Grit talents, each needing the one
+before and adding to it (talents sum, `TalentMods::add`), so a rank is a talent held:
+
+| Step | Needs | Effects |
+|---|---|---|
+| Pack mule | Strength 11 | `carry_percent` 10, `burden_ease` 60, `burden_dex` 1 |
+| Porter | Pack mule, Toughness 12 | `carry_percent` 10, `burden_dex` 1, `ignore_burdened` |
+| Beast of burden | Porter, level 12 | `carry_percent` 10, `stout` |
+
+It replaced Roc's grip (the Roc's sign pick: the Roc has none now, its born take the line),
+Stout (the dwarf's racial), Hard work (the commoner's 1, now Pack mule), Sure-footed (its
+Bloated half went with it), Nimble, Uncanny dodge (the thief's 25, now Pack mule and Porter),
+and Deep pockets' 10 kg (the merchant's 6 now gives Deep pockets, coins weightless, and Pack
+mule). `carry_kg` and `step_slowdown_percent` went with their only talents. Kept: Roc's
+strength and Supple, birth-sign gifts (a sign grants only `granted` talents of the `stars`
+tree, `horoscope::check`, so they cannot name the line; the horoscope is kept whole). A table
+that gives a step the character already took gives a pick in its place (`class::held_already`).
+Tests: `talent_wits_tests.rs` (each step's limit, penalty, price, and Defence; the chain).
+
 ## Class tables
 
 The everyday folk (#246: aristocrat, commoner, craftsperson, merchant) have their tables: nine
@@ -653,7 +673,7 @@ taker is trained in, `talent::may_take` refuses another as a `BadChoice`;
 first with an `either` prerequisite (`Need::Either`, "Intelligence 12 or Appraise 20").
 
 The racial talents (#241) are the `racial` tree (`no_free`: each asks for its race): Elven
-accuracy, Ageless, Diplomat, Stone sense, Dwarven resilience, Stout, Lucky,
+accuracy, Ageless, Diplomat, Stone sense, Dwarven resilience, Lucky,
 Slinger, Small target, Tinkerer, Gem lore, Ferocity, Orcish hide, and the humans' granted
 Versatile. The gnome's disarming talent is `tinkerer` ("Tinkerer"; the craftsperson's `tinker`,
 the same effect, was cut in #787). With Diplomat and Gem lore the `talk` and `gems`
