@@ -6,6 +6,7 @@
 //!   each of their allies in the burst about them. Hostiles nothing.
 //! - **Rebuke and Bramble**: `only_tags` ([`World::is_of_tags`]) and `only_terrain`
 //!   ([`World::stands_on`]) filter whom a burst takes; everything else of it stands.
+//! - **Flare**: `only_sighted` ([`World::sees_flash`]) passes the eyeless by: a flash is light.
 //! - **Gale** ([`World::cast_gale`], from `cast_hex`): everyone on the line is driven on, nearest
 //!   first, and its fires are out. No harm, no roll, no draw; a shut door stands.
 //! - **Blink** ([`World::cast_blink`]): to a free cell in reach, and the statuses it ends end.
@@ -59,6 +60,12 @@ impl World {
     /// Whether actor `a` carries one of the tags `only` (none: anyone will do).
     pub(super) fn is_of_tags(&self, a: &Actor, only: &[String]) -> bool {
         only.is_empty() || (only.iter()).any(|t| self.content.has_tag(a.creature, t))
+    }
+
+    /// Whether `a` is reached by a hex that reaches `only_sighted` (Flare): any creature with
+    /// eyes, never one tagged [`crate::content::EYELESS`].
+    pub(super) fn sees_flash(&self, a: &Actor, only_sighted: bool) -> bool {
+        !only_sighted || !self.content.has_tag(a.creature, crate::content::EYELESS)
     }
 
     /// Whether cell `p` of the current level is the ground `only` asks for (none: anywhere).

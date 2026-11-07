@@ -737,11 +737,11 @@ What an area spell does to the items lying in it (#1100; spec §8 "Spells", "Rui
 ## Zones
 
 An area that lies on the floor for a time (`world/zone.rs`; the design's §7 "Zones", #1000).
-Balefire, Reek, Mirk, and Slick (scroll only) lay one, and so do the flasks of Reek, Mirk, and Slick
+Balefire, Reek, Mirk, Slick, and Fume (scroll only) lay one, and so do the flasks of Reek, Mirk, and Slick
 (stinking, darkness, oil: `docs/dev/potions.md`), with `[spell.effect] zone = { kind, turns }`
 (`SpellZone`, `ZoneKind`; `content/spell_def.rs::check_zone`: a burst or a line; `turns` 1 to
-`MAX_ZONE_TURNS`, of 6 s; `fire` a `damage` spell of fire, `fouled` of poison, `dark` and `slick` a
-`hex`, whose `status` is then not asked).
+`MAX_ZONE_TURNS`, of 6 s; `fire` a `damage` spell of fire, `fouled` of poison, `dark`, `slick`, and
+`smoke` a `hex`, whose `status` is then not asked).
 
 - **State**: `LevelState::zones: Vec<Zone>` (`kind`, `cells`, `until`, `by`, `harm`, `light`,
   `spell`), saved, hashed, left out while empty, and `LevelState::zone_memory`, what the player saw.
@@ -757,23 +757,34 @@ Balefire, Reek, Mirk, and Slick (scroll only) lay one, and so do the flasks of R
   are sources in `LightCache::sources`, each keyed by `zone_key`, a light of the fire type's
   `fire.light`. A stride stops short of a zone's cell (`stride.rs`), so a coarse turn never crosses one
   unburnt. Bounce light is not cut: light landing on a dark cell may still bounce faintly beside it.
+  `smoke` (the potions wave 2 design §9.2, #1225): `LevelState::sight_stops(content, viewer, now)`
+  is the closure every viewer's line of sight is computed with (the player's `perception.rs`, the
+  bonded beast's, a creature's in `ai.rs` and `surprise.rs`, the missiles' in `perceive.rs`): opaque
+  terrain or smoke, and every cell for a viewer standing in smoke. `LevelState::smoke_hides` (a
+  smoke cell not beside the viewer) keeps it from being seen in `perception.rs`'s transparent pass
+  and in `sight.rs::sees_by`. `is_opaque` itself is unchanged: light, missiles, bursts, and
+  zones pass. Rest's kept line of sight (`rest.rs::watched_in_sight`) steps aside while smoke lies.
+  Creatures tagged `eyeless` are no different here: they see by the same rules.
 - **The cast**: `cast_damage` takes the cells before the cast (`zone_cells`: a burst's centre moves
   when who stood in its way falls) and lays after `spell_lands`; `cast_hex` hands a hex with a zone
   to `cast_zone`. A fire's `harm` is rolled once as it is laid (the spell's `Cast::roll`), so nothing
   draws at a burn; ice under a fire melts as it is laid; `fire` and `slick` lie only on walkable ground
-  out of open water, `fouled` and `dark` on anything sight passes through.
+  out of open water, `fouled`, `dark`, and `smoke` on anything sight passes through.
 - **Clearing**: `LevelState::clear_zone_cells(cells, kinds)`. Cold's `douses` reads it in
   `spell_type.rs::douse` (`[Fire]`). Gale's `clears` reads it in `spell_rule.rs::cast_gale`
-  (`[Fire, Fouled, Dark]` from its data) on the cells of its line.
+  (`[Fire, Fouled, Dark, Smoke]` from its data) on the cells of its line. Rain clears nothing.
 - **What the player knows**: `Perception::zones`, the zones on visible cells; `remember` keeps
   them in `zone_memory` as terrain is; `PerceptionView::zone_at` is visible, remembered, or nothing
   on a hidden cell. A dark cell is not visible without darkvision, so it shows by the dark itself.
+  Smoke on a cell in the line of sight but not seen is in `Perception::zones` too, and
+  remembered, so smoke shows from outside it where the cell is known.
   The words are `ui/look.rs::zone_words`, the tint `ui/zone_tint.rs`.
 - **Determinism**: a fire's roll at the cast; Slick's check (two draws) at the step; the type's
   rider's chance per creature harmed; nothing else, and a level with no zone only reads an empty list.
 - **Dev**: `zone:KIND@X,Y,R` (`zone_dev`: by the player, ten turns, a fire's harm 4, no time); the
   `truth` layer has a line a zone, JSON `--state` a `zones` list.
-- **Tests**: `world/zone_tests.rs`, `ui/look.rs` (the words' snapshot), `ui/zone_tint.rs`.
+- **Tests**: `world/zone_tests.rs`, `world/smoke_tests.rs` (smoke, Fume, Gale, Flare),
+  `ui/look.rs` (the words' snapshot), `ui/zone_tint.rs`.
 
 ## Spell types
 
@@ -806,6 +817,11 @@ What every spell of a damage type does beyond its damage (the design:
     stays. A status blocking `Step` holds it (`Effects::blocking`). `weapon_active.rs::drive_back`
     moves it and pushes `Event::ActorMoved` to `made`; `read.rs::say_spell` reports it after the blow
     (`knock_back`'s direct `say` would come before it) and a blast's `Event::DoorBroken`, seen, too.
+  - `corrodes` (acid's; the potions wave 2 design §9.3) in `spell_type_lands`, after the rider,
+    for the player among `harmed`: `corrode.rs::spell_eats_gear`, the first piece they wear (the
+    body armour first) takes acid's item damage, no chance roll, the material's one draw, said
+    as a corroding creature's touch. Item damage is the player's pack's alone, so a creature's
+    gear is never eaten.
   - `immune_tags` has no hook on the cast path: `spell_type::lay_immunities` at load (after
     `load_creatures`) sets the type to `IMMUNE` on the `resist` of every creature type of the tag,
     so `Actor::resistances`, Knowledge's `known_resistances`, the creature's description, and the
@@ -900,6 +916,10 @@ the shape too and refuses each field off its kind and shape).
   `cast_burst` with the filter (the traps', the scrolls', and Blaze's calls are unchanged); the
   untagged are not struck, so no event, no provoking. The burst's walls, ice, and type rule are its
   own all the same (Rebuke's fire on its centre). An undead ally is struck.
+- **`only_sighted = true`** (Flare; an area hex's, the potions wave 2 design §9.2): `World::sees_flash`
+  in `cast_area_hex`, `flask.rs::splash_hex`, and `creature_cast.rs::creature_hexes`: a creature
+  tagged `eyeless` (`content::EYELESS`: the grave worm, the nightworm, the black pudding, the
+  canoloth) is passed by. Nothing is drawn for it.
 - **`only_terrain = "plants"`** (Bramble; an area hex's): `World::stands_on`, the `plants` flag in
   `data/terrain.toml` (grass, tall and dry grass, marsh, reeds, flowers, buttercups, bluebells,
   bush, forest floor, fungus).

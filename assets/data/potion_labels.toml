@@ -19,6 +19,7 @@ parts = [
     "bubbling", "cloudy", "fizzy", "foaming", "glittering", "milky", "misty", "oily", "pearly",
     "shimmering", "smoky", "sparkling", "swirling", "syrupy", "thick", "thin", "viscous",
     "lustrous", "mottled", "powdery", "sticky", "streaked", "turbid",
+    "fuming", "seething", "smudged",
     "clotted", "dusty", "flecked", "lumpy", "muddy", "ropy", "sandy", "scummy", "slimy",
     "sludgy", "sooty",
     "brackish", "cloying", "curdled", "dusky", "effervescent", "gleaming", "gritty", "hazy",

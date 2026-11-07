@@ -1,0 +1,26 @@
+# Acid splash (the potions wave 2 design §9.3): the cantrip: a burst of acid that keeps eating
+# (the acid type's Corroded) and eats at the gear of those it harms (the type's `corrodes`). The
+# vial of acid throws it. Scroll only.
+[[spell]]
+id = "acid_splash"
+name = "Acid splash"
+description = "A spray of acid bursts where you aim it: it burns everyone it reaches, keeps eating, and eats at what they wear."
+level = 3
+school = "evocation"
+kind = "damage"
+shape = "burst"
+resolution = "area"
+damage_type = "acid"
+range = 8
+radius = 1
+damage = "2d4"
+
+[spell.cast]
+effect = "acid_splash"
+noun = "acid"
+verb = "burns"
+noise = { sound = "chanting", loudness = 30 }
+
+[spell.grows]
+damage = "intelligence 13 2d6, 19 4d4"
+range = "willpower 14 9, 18 10"

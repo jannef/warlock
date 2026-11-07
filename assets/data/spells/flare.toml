@@ -1,0 +1,22 @@
+# Flare (the potions wave 2 design §9.3): the cantrip: a white flash where it is aimed that stuns
+# everyone it reaches with eyes to see it (`only_sighted`: the eyeless take nothing). The flask of
+# brilliance throws it. Scroll only.
+[[spell]]
+id = "flare"
+name = "Flare"
+description = "A blinding flash where you aim it: everyone it reaches who has eyes is stunned a moment."
+level = 2
+school = "evocation"
+kind = "hex"
+shape = "burst"
+resolution = "area"
+range = 8
+radius = 1
+effect = { status = "stunned", severity = 1, only_sighted = true }
+
+[spell.cast]
+effect = "flare"
+noise = { sound = "chanting", loudness = 20 }
+
+[spell.grows]
+range = "willpower 14 9, 18 10"

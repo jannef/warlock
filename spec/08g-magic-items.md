@@ -583,7 +583,11 @@ developer notes (CLAUDE.md, `docs/dev/`).
     potion shatters; the draught soaks away.") and teaches nothing. A death by one's own flask is
     "Killed by their own flask of …" (`Cause::Flask`). A known flask's description adds "Thrown,
     it shatters and casts Sleep where it breaks"; the `inventory` dump marks it `(throw 6)`, JSON
-    `throw: { range }`. Creatures do not throw flasks yet.
+    `throw: { range }`. Creatures do not throw flasks yet. The flasks (#1223, #1225): the
+    sleeping draught (Sleep), the flask of smoke (Fume, a smoke zone; drunk, Stunned 1), the
+    flask of brilliance (Flare, Stunned 1 on all with eyes, `only_sighted`; drunk, Lit 1, the
+    silver family's kind one), the vial of acid (Acid splash, acid that eats the player's
+    armour; drunk, Corroded 2).
   - **Talents** (system `potions`): Thrifty drinker (Delver, from level 6): a potion is not used
     up one time in four (one gameplay draw a drink, none while the chance is 0); worn
     `potion_kept` affixes add their percent to it, the sum at most 50 (a talent's own chance

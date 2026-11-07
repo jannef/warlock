@@ -61,6 +61,13 @@ pub(super) fn types(content: &Content) -> String {
             if rule.conducts {
                 harmed.push("strikes everyone in its body of water".into());
             }
+            if rule.corrodes {
+                harmed.push(
+                    "eats at the first piece you wear, body armour first \
+                     ([item damage](materials.md#item-damage))"
+                        .into(),
+                );
+            }
             if rule.shove {
                 harmed.push(
                     "a [big hit](combat.md#damage) or a critical knocks it a cell away".to_string(),
@@ -416,6 +423,7 @@ pub(super) fn does(content: &Content, spell: &SpellData) -> String {
             ZoneKind::Fouled => "a cloud that poisons",
             ZoneKind::Slick => "slick ground that trips",
             ZoneKind::Dark => "a darkness no light reaches into",
+            ZoneKind::Smoke => "smoke no eye sees into or through",
         };
         let then = if text.is_empty() { "" } else { "; then " };
         let _ = write!(
@@ -457,6 +465,9 @@ pub(super) fn does(content: &Content, spell: &SpellData) -> String {
     if spell.effect.only_terrain.is_some() {
         text.push_str("; only those on ground where things grow");
     }
+    if spell.effect.only_sighted {
+        text.push_str("; only those with eyes");
+    }
     if let Some(percent) = spell.effect.leech {
         let _ = write!(
             text,
@@ -473,6 +484,7 @@ pub(super) fn does(content: &Content, spell: &SpellData) -> String {
                 ZoneKind::Fouled => "foul cloud",
                 ZoneKind::Slick => "slick ground",
                 ZoneKind::Dark => "darkness",
+                ZoneKind::Smoke => "smoke",
             })
             .collect();
         let _ = write!(text, "; it clears its cells of {} zones", kinds.join(", "));

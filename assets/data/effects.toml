@@ -383,3 +383,55 @@ projectile = "*"
 colors = ["#e8ffc0", "#b8e070", "#7aa83a", "#4e7a24", "#2c4a14", "#14240a"]
 glow = 0.3
 light = { color = [260, 420, 160], radius = 4 }
+
+# Acid splash's (the potions wave 2 design §9.3): Acid arrow's colours in a small, quick burst; no
+# projectile glow to speak of, no shake.
+[[effect]]
+id = "acid_splash"
+shape = "burst"
+radius = 1
+speed = 20
+grow = 0.08
+impact = 0.14
+linger = 0.4
+flicker = 0.06
+glyphs = "▒░·"
+fill = 0.3
+projectile = "*"
+colors = ["#f0ffd0", "#d0f090", "#a8d070", "#78a040", "#4a6824", "#24340e"]
+glow = 0.4
+light = { color = [300, 420, 190], radius = 2 }
+
+# Fume's (the potions wave 2 design §9.3): a grey billow that grows slowly and fades slowly over
+# the cells the smoke will lie on; no light, no glow, no shake. The smoke itself is the zone's
+# still tint (ui/zone_tint.rs) once it has settled.
+[[effect]]
+id = "fume"
+shape = "burst"
+radius = 2
+speed = 12
+grow = 0.25
+impact = 0.25
+linger = 0.9
+flicker = 0.14
+glyphs = "▒░·"
+fill = 0.35
+projectile = "·"
+colors = ["#b4b4ae", "#9a9a94", "#7c7c78", "#5c5c58", "#3c3c3a", "#222220"]
+glow = 0.0
+
+# Flare's (the potions wave 2 design §9.3): a white flash, brief, with a burst of light about it;
+# no projectile trail to speak of, no darkening, no shake.
+[[effect]]
+id = "flare"
+shape = "burst"
+radius = 1
+speed = 40
+grow = 0.03
+impact = 0.08
+linger = 0.15
+flicker = 0.04
+glyphs = "*+·"
+colors = ["#ffffff", "#fffbe8", "#f0ecd0", "#b8b4a0", "#5c5a50"]
+glow = 0.8
+light = { color = [900, 900, 820], radius = 4 }

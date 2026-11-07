@@ -148,6 +148,42 @@ fn the_sleeping_draught_is_a_flask_of_sleep() {
 }
 
 #[test]
+fn the_flasks_of_smoke_and_brilliance_and_the_vial_of_acid_throw_and_drink() {
+    let mut w = world("##############\n#@.....D.....#\n##############\n");
+    let dummy = at(&w, Pos::new(7, 1));
+    let content = w.content.clone();
+    for (id, spell) in [
+        ("vial_of_acid", "acid_splash"),
+        ("flask_of_brilliance", "flare"),
+        ("flask_of_smoke", "fume"),
+        ("flask_of_brilliance", "flare"),
+    ] {
+        let object = content.object_id(id).expect(id);
+        let flask = content.object(object).flask.as_ref().expect("a flask");
+        assert_eq!(content.spell(flask.spell).id, spell);
+        w.player_mut().inventory.push(Stack::one(object));
+    }
+    // Acid, 2d4 at rung 0, and it keeps eating.
+    run(&mut w, "throw:f:7,1");
+    assert!((2..=8).contains(&lost(&w, dummy)), "{}", lost(&w, dummy));
+    // Then (each throw takes its stack away) a flash that stuns it.
+    run(&mut w, "throw:f:7,1");
+    assert!(texts(&w).contains(&"The training dummy is stunned.".to_string()));
+    // Smoke over it, and the player no longer sees it.
+    run(&mut w, "throw:f:7,1");
+    let level = w.state.current();
+    let smoke = level
+        .zone_at(Pos::new(7, 1), w.state.time)
+        .map(|z| z.kind());
+    assert_eq!(smoke, Some(ZoneKind::Smoke));
+    assert!(!w.perception.sees_actors_at(Pos::new(7, 1)));
+    assert!(texts(&w).contains(&"Smoke billows from the shards.".to_string()));
+    // Drunk, the flask of brilliance lights its drinker up.
+    run(&mut w, "eat:f");
+    assert_eq!(suffers(&w, w.state.player, "lit"), Some(1));
+}
+
+#[test]
 fn a_flask_flies_shatters_on_whom_it_is_thrown_at_and_casts_its_spell_there() {
     let mut w = world("############\n#@....D....#\n############\n");
     know(&mut w, "fire_flask");
