@@ -4,11 +4,11 @@ expression: "describe(&level(\"banfeld\", 1, 4))"
 ---
 Bānfeld 4 (banfeld:4) 80x21
 stairs Up at (26, 16) -> banfeld:3
-osrick at (23, 8) route  carrying a mace (wielded), a bone amulet (rare) (being worn)
+osrick at (23, 8) route  carrying a rusted mace (wielded), a bone amulet (rare) (being worn)
 zombie at (26, 8) route 
 zombie at (30, 8) route 
 zombie at (13, 17) route E W W E E W W E E W
-skeleton at (49, 8) route N N N N S S S S carrying a spear (wielded)
+skeleton at (49, 8) route N N N N S S S S carrying a rusted spear (wielded)
 barrow_ghoul at (70, 3) route S S S S S N N N N N
 zombie at (34, 8) route S S W W E E N N
 grave_worm at (58, 14) route E E S S W W W N N E W S S E E E N N W W
@@ -28,7 +28,7 @@ ghost at (34, 10) route W W W W W E E E E E
 drowned at (41, 15) route E S S S N N N W
 skeleton at (45, 6) route E W E W W W W N N S S E E E E W E W
 skeleton at (30, 7) route N E E E E S S S N N N W W W W S
-skeleton at (49, 14) route S N N E W S S N carrying a bronze spear (wielded)
+skeleton at (49, 14) route S N N E W S S N carrying a corroded bronze spear (wielded)
 zombie at (59, 14) route N N N N E W W E E W S S S S
 zombie at (50, 13) route E S S W E N N W
 zombie at (36, 9) route N S S S S S N N N N N S

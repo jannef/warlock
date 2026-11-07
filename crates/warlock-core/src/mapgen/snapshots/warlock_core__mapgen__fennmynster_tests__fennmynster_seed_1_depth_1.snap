@@ -10,15 +10,15 @@ stone_haunt at (56, 3) route S W N N S S E N
 sprite at (40, 14) route E E W W W W W E E E E E W W carrying a short bow (readied), 8 flint arrows (quivered)
 stone_haunt at (10, 17) route W W W E W E E E
 stone_haunt at (58, 12) route N N E E E E E E E E W W W W W W W W S S
-sprite at (28, 5) route E S S S S N N N N W carrying a short bow (readied), 8 arrows (quivered)
+sprite at (28, 5) route E S S S S N N N N W carrying a damaged short bow (readied), 8 arrows (quivered)
 sprite at (44, 14) route N N E E E E W W W W S S carrying a short bow (readied), 8 arrows (quivered)
 corpse_candle at (9, 13) route E S S S S W N N W W E E S S E N N N N W
 animated_book at (8, 17) route E E S W W E E N W W carrying a book
 sprite at (19, 16) route E E W W W W W W E E E E E E W W carrying a short bow (readied), 15 arrows (quivered)
 sprite at (9, 15) route N W W S S S S N S N S N S N N N N E E S carrying a hardwood short bow (readied), 15 arrows (quivered)
 corpse_candle at (10, 18) route W W W N S E E E
-sprite at (7, 12) route S S S S S E E E S W E N W W W N N N N N carrying a short bow (readied), 15 arrows (quivered)
-sprite at (28, 12) route N N W N S E S S carrying a short bow (readied), 8 arrows (quivered)
+sprite at (7, 12) route S S S S S E E E S W E N W W W N N N N N carrying a damaged short bow (readied), 15 arrows (quivered)
+sprite at (28, 12) route N N W N S E S S carrying a damaged short bow (readied), 8 arrows (quivered)
 stone_haunt at (21, 16) route E E W W W W W W W W E E E E E E E E W W
 sprite at (54, 3) route W W W W W E E E W W W E E E E E carrying a short bow (readied), 15 arrows (quivered)
 stone_haunt at (10, 14) route S S S S W W E E N N N N
