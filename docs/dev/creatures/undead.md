@@ -52,7 +52,7 @@ All sixteen ship in no population (strays only). Each is one file in `assets/dat
 |---|---|---|
 | 41 | wraith lord | incorporeal, a touch that drains 2 Toughness |
 | 42 | barrow king | a caster, drains 2 Toughness, an enchanted long sword, loot |
-| 43 | sluagh | incorporeal, the fastest of the bulk spirits (speed 1250), claws that frighten |
+| 43 | sluagh | incorporeal, the fastest of the bulk spirits (speed 1600; fast by design, #1167), claws that frighten |
 | 44 | ghoul king | quick, opens doors, claws that hold and carry grave rot |
 | 45 | death knight | black plate and an enchanted great sword, hardened to cold, loot |
 | 45 | vampire lord | quick, a bite that drains 2 Toughness and a stare that transfixes, loot |
@@ -65,7 +65,7 @@ All sixteen ship in no population (strays only). Each is one file in `assets/dat
 | 52 | rotting dragon | slow brute, grave rot |
 | 53 | ghost lord | an incorporeal caster, transfixes and drains 2 Willpower |
 | 54 | archlich | a caster (range 10), holds and drains 2 Intelligence, loot, very rare |
-| 55 | hound of the hunt | speed 1250 (the bulk's top), frightens |
+| 55 | hound of the hunt | speed 1700 (fast by design, #1167), frightens |
 
 Drains are two points from level 40 (difficulty 12 + level ÷ 5, Toughness's checked by
 toughness); the spirits' wall Defence is 2 + level ÷ 10 (6 to 7). The ghoul king's hold is 20 % at
@@ -84,7 +84,7 @@ All fifteen ship in no population (strays only). Each is one file in `assets/dat
 | Level | Type | Notes |
 |---|---|---|
 | 56 | mummy king | caster, fist with mummy rot (35 %), wrappings with protection 5, fire hurts it more |
-| 57 | wild huntsman | quick on foot (speed 1250), spear or glaive, sometimes magic |
+| 57 | wild huntsman | quick on foot (speed 1500; fast by design, #1167), spear or glaive, sometimes magic |
 | 58 | elder vampire | drains Toughness 2, transfixes |
 | 59 | dread lord | plate and a great sword (magic 75), frightens |
 | 60 | deathshade | incorporeal, drains Strength 2, frightens |
@@ -131,4 +131,4 @@ unseen unless beside them, and a cold draught tells of one within 2. Their drain
 
 ## Variance
 
-The variance pass (#1134, `docs/dev/creatures.md` "Variance by role") sets the roles' to-hit (striker `L/4 + L/8`, brute and caster `L/4 − L/8`, the armed `L/4`), threat and crit (striker 19, brute 24 at ×3), and hit-point factors (quick and caster 0.5, brute 2.0). **Speed**, by temperament: the dead are slow and patient. The shamblers walk at 800 (the zombies, the drowned, the bog bodies), the standards at 1000, the ghouls and hounds lope up to 1250; the dread are the quick spirits and vampires at 1400 and up (the shadows, wraiths, banshee, white lady, washer, night mare, the vampires) and the slow and awful at 700 (the charnel heap, the wormhost and wormlord, the nightworm, the lich and archlich).
+The variance pass (#1134, `docs/dev/creatures.md` "Variance by role") sets the roles' to-hit (striker `L/4 + L/8`, brute and caster `L/4 − L/8`, the armed `L/4`), threat and crit (striker 19, brute 24 at ×3), and hit-point factors (quick and caster 0.5, brute 2.0). **Speed**, by temperament: the dead are slow and patient. The shamblers walk at 800 (the zombies, the drowned, the bog bodies), the standards at 1000, the ghouls (barrow ghoul 1300, ghoul lord 1350, ghoul king 1400) and the hounds (yeth hound and black shuck 1350, church grim 1400, hound of the hunt 1700) run fast by design (#1167), the nightwing and sluagh at 1600; the dread are the quick spirits and vampires at 1400 and up (the shadows, wraiths, banshee, white lady, washer, night mare, the vampires) and the slow and awful at 700 (the charnel heap, the wormhost and wormlord, the nightworm, the lich and archlich).
