@@ -38,6 +38,8 @@ struct ExperienceFile {
     discovery: Discovery,
     #[serde(default)]
     levels: Levels,
+    #[serde(default)]
+    spell: SpellXp,
     zero_difference: Vec<Band>,
 }
 
@@ -118,6 +120,15 @@ pub struct Discovery {
     pub arrival: u32,
 }
 
+/// The reward for learning a spell by one's own effort (`[spell]`).
+#[derive(Clone, Copy, Debug, Default, Deserialize, PartialEq, Eq)]
+#[serde(deny_unknown_fields)]
+pub struct SpellXp {
+    /// XP per spell level (at least this much, so a cantrip pays it once).
+    #[serde(default)]
+    pub per_level: u32,
+}
+
 /// A character's experience factor (spec §8 "Experience"): their race's and their class's
 /// `experience`, in percent, which scale every threshold (Angband's `expfact`). 100 % each
 /// without a character.
@@ -188,6 +199,7 @@ pub struct Experience {
     early: Vec<u8>,
     discovery: Discovery,
     levels: Levels,
+    spell: SpellXp,
     /// `(from player level, zero difference)`, ascending, the first from level 1.
     zero_difference: Vec<(u8, u8)>,
     /// The XP total needed to reach each level at a factor of 100 %: index 0 is level 1 (0),
@@ -208,6 +220,7 @@ impl Default for Experience {
             early: Vec::new(),
             discovery: Discovery::default(),
             levels: Levels::default(),
+            spell: SpellXp::default(),
             zero_difference: vec![(1, 5)],
             thresholds: vec![0],
         }
@@ -272,6 +285,7 @@ impl Experience {
             k.guideline.base,
             p.discovery.first_kill,
             p.discovery.arrival,
+            p.spell.per_level,
         ];
         if params.iter().any(|&v| v > MAX_PARAM) {
             return Err(err(format!(
@@ -328,6 +342,7 @@ impl Experience {
             early,
             discovery: p.discovery,
             levels: p.levels,
+            spell: p.spell,
             zero_difference: p.zero_difference.iter().map(|b| (b.from, b.zd)).collect(),
             thresholds,
         })
@@ -467,6 +482,11 @@ impl Experience {
     pub fn first_kill_xp(&self, xp: u32) -> u32 {
         let scaled = (u64::from(xp) * u64::from(self.discovery.first_kill) + 50) / 100;
         u32::try_from(scaled).unwrap_or(u32::MAX)
+    }
+
+    /// What learning a spell of `level` by study gives: `per_level` per level, at least once.
+    pub fn spell_xp(&self, level: u8) -> u32 {
+        self.spell.per_level * u32::from(level.max(1))
     }
 
     /// What the player's first arrival on a level of item level `item_level` gives.
@@ -668,6 +688,10 @@ mod tests {
         assert_eq!(x.first_kill_xp(0), 0);
         assert_eq!(x.arrival_xp(1), 5, "a hand-made level");
         assert_eq!(x.arrival_xp(4), 20, "the fourth level of a dungeon");
+        assert_eq!(
+            (x.spell_xp(0), x.spell_xp(11), x.spell_xp(70)),
+            (5, 55, 350)
+        );
         let none = Experience::parse("x", &SHIPPED.replace("[discovery]", "[nothing]"));
         assert!(none.is_err(), "unknown tables are refused");
         let start = SHIPPED.find("\n[discovery]").expect("discovery");

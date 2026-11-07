@@ -429,6 +429,9 @@ cast path shares.
     time lost, scroll kept (design §14 q1, the default). Done: the scroll is found again by
     object (positions may shift), the `study` use is trained, the odds are taken now, the
     scroll used up (`use_scroll`, never Scroll savant's keeping: §14 q7, decided no), then the check.
+  - **Experience** (#1212): `learn_spell` pays `Experience::spell_xp(level)` (`[spell] per_level`
+    5 × max(level, 1)) through `grant_xp` when the spell was not known; class grants and dev
+    actions insert into `spells` directly or via `TalentMods` and pay nothing.
   - **Learning, the number** (`Actor::learning(content) -> Option<i32>`, #987,
     `docs/design/no-caster-level.md` §2): the `learn` benefit (`skills::Effect::Learn`, Spellcraft's
     in `data/skills.toml`; ceiling `MAX_SPELL_LEVEL`) through `Actor::skill_effect`, so skill
