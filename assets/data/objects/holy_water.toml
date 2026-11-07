@@ -1,0 +1,27 @@
+# A flask of holy water (spec §8 "Potions": "Flasks"; the potions wave 2 design §4.4): thrown, it shatters
+# into the Rebuke spell where it breaks, searing and frightening the undead and harming nothing
+# living; drunk, it washes a hex off (`holy_water`, a means in Hexed's and Branded's
+# `cured_by`). The holy is silver.
+[[object]]
+id = "holy_water"
+name = "flask of holy water"
+plural = "flasks of holy water"
+glyph = "!"
+fg = "#d8dce8"
+class = "potions"
+materials = ["glass"]
+weight = 250
+value = 100
+stackable = true
+level = 5
+frequency = 8
+
+[object.drink]
+kind = "cure"
+cures = ["holy_water"]
+colour = "silver"
+marks = { willpower = 15 }
+
+[object.throw]
+spell = "rebuke"
+words = "The water flashes bright as it splashes."

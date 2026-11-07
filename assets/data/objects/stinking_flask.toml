@@ -1,0 +1,26 @@
+# A stinking flask (spec §8 "Potions": "Flasks"; the potions wave 2 design §4.4): thrown, it
+# shatters into the Reek spell's foul cloud where it breaks; drunk, it is foul beyond words and
+# poisons the drinker. Stench is olive.
+[[object]]
+id = "stinking_flask"
+name = "stinking flask"
+plural = "stinking flasks"
+glyph = "!"
+fg = "#787830"
+class = "potions"
+materials = ["glass"]
+weight = 250
+value = 60
+stackable = true
+level = 4
+frequency = 12
+
+[object.drink]
+kind = "harm"
+dice = "3"
+status = "poisoned"
+colour = "olive"
+
+[object.throw]
+spell = "reek"
+words = "A foul cloud billows from the shards!"

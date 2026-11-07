@@ -544,8 +544,19 @@ developer notes (CLAUDE.md, `docs/dev/`).
     bronze; Presence), of renewal (Renewing 2; 4, 15; 120; rose; Toughness), of the quick
     (Quick-sensed 3; 5, 10; 150; opal; Willpower), of the unseen (Invisible 1; 7, 6; 300; opal;
     Dexterity), and of sea legs (Water-borne 3; 4, 10; 100; sky blue; Dexterity); the sleeping
-    draught (a flask of Sleep; harm, Drowsy 3; 3, 15; 60; pink). **Where**: loot (by `level` and
-    `frequency`, never magic), general stores and provisioners (they stock and buy potions), the
+    draught (a flask of Sleep; harm, Drowsy 3; 3, 15; 60; pink); the flasks on existing spells
+    (#1226, the design's §4.4; a flask of the spell at rung 0, then its drink): flask of oil
+    (Slick; Poisoned 1; 2, 20; 25; colourless), stinking flask (Reek; Poisoned 3; 4, 12; 60;
+    olive), flask of tar (Web; Poisoned 1; 4, 10; 60; amber), flask of enfeeblement (Hex of
+    weakness; Weakened 2; 4, 10; 70; indigo), flask of sloth (Curse of sloth; Sluggish 2; 4, 10;
+    70; indigo), flask of darkness (Mirk; Hexed 2; 5, 10; 90; black), vial of nightmares (Fear;
+    Frightened 2; 5, 8; 90; indigo), vial of silence (Silence; Silenced 1; 5, 8; 90; black),
+    flask of thunder (Thunderclap, heard as thunder at 150; Stunned 1; 5, 8; 100; slate),
+    blasting flask (Shatter, heard as an explosion at 100; Stunned 1; 7, 6; 200; slate), and
+    flask of holy water (Rebuke, which harms only the undead; drunk, a `cure` of `holy_water`,
+    the means in Hexed's and Branded's `cured_by`; 5, 8; 100; silver; Willpower). **Where**:
+    loot (by `level` and `frequency`, never magic), general stores and provisioners (they stock
+    and buy potions; never the elixirs, the flask of thunder, or the blasting flask), the
     alchemist (§7 "Shops": potions only, healing always first), quest rewards, and the hub's
     pile.
   - **Flasks** (the potions wave 2 design §3, §5; `world/flask.rs`, `[object.throw]` in

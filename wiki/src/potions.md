@@ -170,6 +170,14 @@ gives each flask's spell, its numbers, and its range in cells.
 - **A potion that is no flask** spills uselessly: "The potion shatters; the draught soaks away."
   You learn nothing from it either. It is a way to be rid of a potion you know is bad.
 - **Drinking a flask** is a poor idea: the sleeping draught makes you drowsy, as the table says.
+- **A flask of holy water** is a kind one: thrown, it casts [Rebuke](magic.md#spell-rebuke),
+  which sears and frightens only the undead and harms nothing living; drunk, it washes a hex off
+  ([Hexed](status-effects.md#status-ill-wished) and [Branded](status-effects.md#status-branded)
+  end at once).
+- **Thunder and blasting**: a flask of thunder goes off as [Thunderclap](magic.md#spell-thunderclap),
+  heard over the whole level ([Hearing](hearing.md#what-makes-noise)); a blasting flask as
+  [Shatter](magic.md#spell-shatter), which breaks shut doors and chests. A general store or a
+  provisioner never sells either: only an alchemist does.
 
 ## Where to find them
 

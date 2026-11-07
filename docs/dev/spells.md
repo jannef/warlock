@@ -737,7 +737,8 @@ What an area spell does to the items lying in it (#1100; spec §8 "Spells", "Rui
 ## Zones
 
 An area that lies on the floor for a time (`world/zone.rs`; the design's §7 "Zones", #1000).
-Balefire, Reek, Mirk, and Slick (scroll only) lay one with `[spell.effect] zone = { kind, turns }`
+Balefire, Reek, Mirk, and Slick (scroll only) lay one, and so do the flasks of Reek, Mirk, and Slick
+(stinking, darkness, oil: `docs/dev/potions.md`), with `[spell.effect] zone = { kind, turns }`
 (`SpellZone`, `ZoneKind`; `content/spell_def.rs::check_zone`: a burst or a line; `turns` 1 to
 `MAX_ZONE_TURNS`, of 6 s; `fire` a `damage` spell of fire, `fouled` of poison, `dark` and `slick` a
 `hex`, whose `status` is then not asked).
