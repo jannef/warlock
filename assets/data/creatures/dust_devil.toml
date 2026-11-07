@@ -18,8 +18,8 @@ footsteps = 20
 hearing = 8
 weight = 2000
 size = "small"
-stats = { strength = 8, dexterity = 15, toughness = 9, intelligence = 2, willpower = 17, presence = 2 }
-base_hp = 4
+stats = { strength = 8, dexterity = 15, toughness = 6, intelligence = 2, willpower = 17, presence = 2 }
+base_hp = 3
 natural = { defence = 2, protection = 0, name = "rushing wind" }
 resist = { piercing = 50, electricity = 50, poison = 100 }
 corpse = false

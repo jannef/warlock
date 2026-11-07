@@ -27,7 +27,7 @@ fn one_mimic_a_level_on_the_brute_formulas() {
         assert_eq!(def.budge, super::Budge::Never);
         let l = f64::from(level);
         let hp = f64::from(def.stats.score(Stat::Toughness)) + f64::from(def.base_hp);
-        let want = max_hp(l, Role::Brute);
+        let want = max_hp(l, Role::Brute) * super::variance_roster_tests::starter(level);
         assert!(
             within(hp, want),
             "{}: max HP {hp}, the formula {want:.1}",

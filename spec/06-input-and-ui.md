@@ -590,9 +590,11 @@ developer notes (CLAUDE.md, `docs/dev/`).
 - **Rest** (`b`) asks in the message line: `Rest: (h)our, until (d)awn, until (n)ightfall? (Esc to
   cancel)`. `h` rests an hour, `d` until 06:00, `n` until 18:00 (replay text `rest:1h`,
   `rest:dawn`, `rest:dusk`); any other command cancels. Resting is one action that passes turn
-  after turn and stops early when a creature comes into view (not one who talks and fights no
-  one, such as the showcase's people: the player sees who it is) or a message is logged (§8
-  "Time"),
+  after turn and stops early when a creature hostile to the player comes into view within 5
+  steps or comes that close in view (one farther off may be seen and the rest goes on; a neutral
+  or peaceful creature never stops it by being seen), when something attacks the player or a
+  shot or a spell comes within 5 steps of them, missed or resisted too, or when a message is
+  logged (§8 "Time"),
   such as an attack the player perceives (§8 "Combat"), a status effect beginning ("You feel
   sick."), a disease showing or worsening ("You feel feverish.", "Fever wracks you."; §8
   "Diseases"), a sound that is news (§5 "Hearing"), or rain starting or growing heavier (§5

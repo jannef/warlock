@@ -20,8 +20,8 @@ footsteps = 20
 hearing = 10
 weight = 8000
 size = "small"
-stats = { strength = 10, dexterity = 14, toughness = 11, intelligence = 1, willpower = 10, presence = 3 }
-base_hp = 2
+stats = { strength = 10, dexterity = 14, toughness = 6, intelligence = 1, willpower = 10, presence = 3 }
+base_hp = 1
 tameable = true
 depart = "scuttles back into the dark"
 on_eat = { message = "Bitter, and it disagrees with you.", vomit = 25 }
@@ -32,4 +32,4 @@ damage = "1d4"
 damage_type = "piercing"
 name = "bite"
 verb = "bites"
-on_hit = [{ status = "poisoned", chance = 25, severity = 2 }]
+on_hit = [{ status = "poisoned", chance = 10, severity = 1 }]

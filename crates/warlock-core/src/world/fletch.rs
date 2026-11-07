@@ -92,11 +92,8 @@ impl World {
         match ended {
             Ended::Died => {}
             _ if self.state.time >= until => self.fletched(),
-            Ended::Came(id) => {
-                let text = format!(
-                    "{} comes into view; you put down the knife.",
-                    self.creature_called(id)
-                );
+            Ended::Came(came) => {
+                let text = format!("{}; you put down the knife.", self.came_line(came));
                 self.say(text);
             }
             Ended::Said | Ended::Done => self.say("You put down the knife."),

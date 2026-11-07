@@ -87,10 +87,10 @@ fn strike(w: &mut World, victim: ActorId, blow: Blow, times: u64) {
 fn big_hits_and_kills_bleed_lesser_blows_do_not() {
     let mut w = world();
     let rat = actor_of(&w, "rat");
-    // The rat has 12 hit points: 3 is a lesser blow, 4 (a third) a big hit, 12 a kill.
-    strike(&mut w, rat, hit(3, false), 1);
+    // The rat has 5 hit points: 1 is a lesser blow, 2 (a third) a big hit, 5 a kill.
+    strike(&mut w, rat, hit(1, false), 1);
     assert!(blood(&w).is_empty());
-    strike(&mut w, rat, hit(4, false), 1);
+    strike(&mut w, rat, hit(2, false), 1);
     let spatter: u32 = blood(&w).values().map(|s| u32::from(s.amount)).sum();
     assert!(spatter > 0);
     // Any confirmed critical bleeds.
@@ -99,7 +99,7 @@ fn big_hits_and_kills_bleed_lesser_blows_do_not() {
     assert!(!blood(&w).is_empty());
     // A kill spills much more, most of it on the victim's cell.
     let mut w = world();
-    strike(&mut w, rat, hit(12, false), 1);
+    strike(&mut w, rat, hit(5, false), 1);
     let at = w.state().actors[&rat].pos;
     let pool = blood(&w)[&at].amount;
     let kill: u32 = blood(&w).values().map(|s| u32::from(s.amount)).sum();

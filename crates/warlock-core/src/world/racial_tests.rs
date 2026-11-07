@@ -281,17 +281,14 @@ fn half_orcs_hit_harder_when_badly_hurt_and_have_a_thicker_hide() {
 }
 
 #[test]
-fn a_race_may_grant_only_a_granted_racial_talent() {
+fn a_race_grants_only_a_known_talent() {
     let mut files = ContentFiles::builtin();
     let races = include_str!("../../../../assets/data/races.toml");
-    let wrong = races.replacen("talents = [\"versatile\"]", "talents = [\"healthy\"]", 1);
+    let wrong = races.replacen("talents = [\"versatile\"]", "talents = [\"versatiler\"]", 1);
     assert_ne!(wrong.as_str(), races);
     files.insert("data/races.toml", &wrong);
     let err = Content::load(&files).expect_err("refused").to_string();
-    assert!(
-        err.contains("not a granted talent of the `racial` tree"),
-        "{err}"
-    );
+    assert!(err.contains("grants unknown talent `versatiler`"), "{err}");
 }
 
 #[test]

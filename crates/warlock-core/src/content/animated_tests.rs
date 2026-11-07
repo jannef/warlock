@@ -58,11 +58,12 @@ fn the_numbers_follow_the_tiers_formulas() {
     let content = builtin();
     let def = |id: &str| content.creature(content.creature_id(id).expect(id));
     let scores = |id: &str| Stat::ALL.map(|s| def(id).stats.score(s));
-    // St Dx To In Wi Pr: the base, then small's −4 St, +4 Dx, −4 To.
-    assert_eq!(scores("animated_broom"), [7, 14, 8, 2, 16, 2]);
+    // St Dx To In Wi Pr: the base, then small's −4 St, +4 Dx, −4 To; a level-1 starter's
+    // Toughness cut to 40 % (#1200).
+    assert_eq!(scores("animated_broom"), [7, 14, 3, 2, 16, 2]);
     assert_eq!(scores("animated_coat_stand"), [10, 16, 11, 2, 18, 2]);
     let broom = def("animated_broom");
-    assert_eq!((broom.level, broom.base_hp, broom.xp), (1, 1, 15));
+    assert_eq!((broom.level, broom.base_hp, broom.xp), (1, 0, 15));
     let damage = |id: &str| {
         def(id)
             .attack

@@ -17,7 +17,7 @@ sight = 12
 hearing = 8
 weight = 1200
 size = "small"
-stats = { strength = 2, dexterity = 16, toughness = 9, intelligence = 2, willpower = 12, presence = 6 }
+stats = { strength = 2, dexterity = 16, toughness = 4, intelligence = 2, willpower = 12, presence = 6 }
 depart = "flaps away into the dark"
 on_eat = { message = "Dark, tough meat that tastes of carrion.", vomit = 20 }
 [creature.attack]

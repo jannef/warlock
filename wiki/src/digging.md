@@ -41,7 +41,8 @@ ground says "There is nothing to dig there."
 
 ### Stopping and going on
 
-Digging stops early, as resting does, when a [creature comes into view](sight.md#line-of-sight)
+Digging stops early, as [resting](resting.md#how-resting-works) does, when a
+[hostile](creatures.md#factions) creature comes within 5 steps in [view](sight.md#line-of-sight)
 ("A kobold comes into view; you stop digging after 3 minutes.") or something worth a message
 happens, such as a [sound you hear](hearing.md#what-you-hear), an attack on you, or the
 [rain](weather.md) starting.

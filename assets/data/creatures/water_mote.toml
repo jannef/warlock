@@ -18,8 +18,8 @@ footsteps = 20
 hearing = 8
 weight = 10000
 size = "small"
-stats = { strength = 9, dexterity = 15, toughness = 10, intelligence = 2, willpower = 17, presence = 2 }
-base_hp = 5
+stats = { strength = 9, dexterity = 15, toughness = 8, intelligence = 2, willpower = 17, presence = 2 }
+base_hp = 4
 resist = { fire = 50, piercing = 50, electricity = -50, poison = 100 }
 corpse = false
 blood = "none"

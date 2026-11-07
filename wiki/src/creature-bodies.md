@@ -32,9 +32,11 @@ look and whether they [bleed](status-effects.md#bleeding).
 [Big hits](combat.md#damage) and criticals make creatures [bleed](status-effects.md#bleeding),
 just as they make you bleed. A badly wounded creature may
 [bleed to death](status-effects.md#bleeding) after the fight. Some attacks carry more: a
-[giant rat](creatures.md#creature-rat)'s bite may [poison](status-effects.md#status-poisoned)
-whatever it bites (see [Status effects](status-effects.md)), or give it
-[filth fever](diseases.md#disease-filth-fever) (see [Diseases](diseases.md)).
+[barrow spider](creatures.md#creature-barrow-spider)'s bite may
+[poison](status-effects.md#status-poisoned) whatever it bites (see
+[Status effects](status-effects.md)), and once in a long while a
+[giant rat](creatures.md#creature-rat)'s gives it [filth fever](diseases.md#disease-filth-fever)
+(see [Diseases](diseases.md)).
 
 ### Bumping into creatures
 

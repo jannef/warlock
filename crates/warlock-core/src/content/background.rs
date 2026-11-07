@@ -28,9 +28,6 @@ use std::collections::{BTreeMap, BTreeSet};
 /// The settings file.
 pub const SETTINGS: &str = "data/background.toml";
 
-/// The most a line may move one stat, either way.
-pub const MAX_STAT: i32 = 2;
-
 /// How rare a line is: drawn first for every chapter ([`Tiers`]).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Deserialize)]
 #[serde(rename_all = "lowercase")]
@@ -482,6 +479,7 @@ impl Content {
         let settings: SettingsFile =
             toml::from_str(text).map_err(|e| ContentError::new(SETTINGS, e.to_string()))?;
         let total = settings.tiers.uncommon + settings.tiers.rare + settings.tiers.fateful;
+        // The tiers' draw is out of 1000, the common tier the rest.
         if total > 1000 {
             return Err(ContentError::new(
                 SETTINGS,
@@ -498,7 +496,7 @@ impl Content {
                 .map_err(|m| ContentError::new(path, m))?;
             chapters.push((path, chapter));
         }
-        check_order(&chapters, &settings.points)?;
+        check_ids(&chapters)?;
         self.background = Some(Background {
             tiers: settings.tiers,
             points: settings.points,
@@ -514,12 +512,6 @@ impl Content {
         campaign: Option<String>,
     ) -> Result<Chapter, String> {
         let head = file.chapter;
-        if !(1..=4).contains(&head.paragraph) {
-            return Err(format!(
-                "chapter `{}`: `paragraph` {} is not 1 to 4",
-                head.id, head.paragraph
-            ));
-        }
         if let Some(slot) = head
             .defaults
             .keys()
@@ -540,13 +532,6 @@ impl Content {
             let line = self.story_line(spec, &head.id).map_err(|m| m.to_string());
             lines.push(line?);
         }
-        if !lines.iter().any(Line::is_plain) {
-            return Err(format!(
-                "chapter `{}` has no plain line (common, no `when`, no `effects`): a chapter \
-                 always tells something",
-                head.id
-            ));
-        }
         Ok(Chapter {
             id: head.id,
             name: head.name,
@@ -561,9 +546,6 @@ impl Content {
     /// One line resolved.
     fn story_line(&self, spec: LineSpec, chapter: &str) -> Result<Line, String> {
         let at = |m: String| format!("chapter `{chapter}`, line `{}`: {m}", spec.id);
-        if !(1..=20).contains(&spec.weight) {
-            return Err(at(format!("`weight` {} is not 1 to 20", spec.weight)));
-        }
         slots_of(&spec.text).map_err(at)?;
         if let Some(slot) = spec.set.keys().find(|k| !SET_SLOTS.contains(&k.as_str())) {
             return Err(at(format!(
@@ -571,29 +553,10 @@ impl Content {
                 SET_SLOTS.join(", ")
             )));
         }
-        if spec.only && spec.tier != Tier::Common {
-            return Err(at(
-                "an `only` line is common: it forces the chapter whatever \
-                           the tier drawn"
-                    .into(),
-            ));
-        }
         let when = self.story_when(spec.when).map_err(at)?;
         let mut effects = Vec::new();
         for effect in spec.effects {
             effects.extend(self.story_effect(effect).map_err(at)?);
-        }
-        let mut moved: BTreeMap<Stat, i32> = BTreeMap::new();
-        for effect in &effects {
-            if let Effect::Stat(stat, by) = effect {
-                *moved.entry(*stat).or_default() += by;
-            }
-        }
-        if let Some((stat, by)) = moved.iter().find(|(_, by)| by.abs() > MAX_STAT) {
-            return Err(at(format!(
-                "moves {} by {by}: at most {MAX_STAT} either way a line",
-                stat.id()
-            )));
         }
         Ok(Line {
             id: spec.id,
@@ -644,11 +607,8 @@ impl Content {
                     .ok_or_else(|| format!("`when.skills`: unknown skill `{s}`"))
             })
             .collect::<Result<Vec<_>, _>>()?;
-        if let Some(band) = spec.band {
-            band.check().map_err(|m| format!("`when.band`: {m}"))?;
-            if self.alignment().is_none() {
-                return Err("`when.band`, but there is no alignment".into());
-            }
+        if spec.band.is_some() && self.alignment().is_none() {
+            return Err("`when.band`, but there is no alignment".into());
         }
         for c in &spec.campaign {
             self.campaign(c)
@@ -657,8 +617,7 @@ impl Content {
         let companion = (spec.companion.iter())
             .map(|c| {
                 (self.creature_id(c))
-                    .filter(|&id| self.creature(id).tameable)
-                    .ok_or_else(|| format!("`when.companion`: `{c}` is no tameable creature"))
+                    .ok_or_else(|| format!("`when.companion`: unknown creature `{c}`"))
             })
             .collect::<Result<Vec<_>, _>>()?;
         let familiar = (spec.familiar.iter())
@@ -713,23 +672,15 @@ impl Content {
                 .map(|(name, by)| {
                     let stat = (Stat::ALL.into_iter().find(|s| s.id() == name))
                         .ok_or_else(|| format!("`stat`: unknown stat `{name}`"))?;
-                    if by == 0 || by.abs() > MAX_STAT {
-                        return Err(format!("`stat`: {name} by {by}: 1 or 2, either way"));
-                    }
                     Ok(Effect::Stat(stat, by))
                 })
                 .collect();
         }
         if let Some(gold) = spec.gold {
-            if gold.is_zero() || gold.min().signum() != gold.max().signum() {
-                return Err(format!(
-                    "`gold`: `{gold}` is neither always given nor always taken"
-                ));
-            }
             return Ok(vec![Effect::Gold(gold)]);
         }
         if let Some(line) = spec.item {
-            let kit = kit::resolve(std::slice::from_ref(&line), self, None)
+            let kit = kit::resolve(std::slice::from_ref(&line), self)
                 .map_err(|m| format!("`item`: {m}"))?;
             return Ok(kit.0.into_iter().map(Effect::Item).collect());
         }
@@ -738,9 +689,6 @@ impl Content {
                 .map(|(name, dice)| {
                     let id = (self.skill_id(&name))
                         .ok_or_else(|| format!("`skill`: unknown skill `{name}`"))?;
-                    if dice.min() < 1 {
-                        return Err(format!("`skill`: {name} `{dice}` may give nothing"));
-                    }
                     Ok(Effect::Skill(id, dice))
                 })
                 .collect();
@@ -748,9 +696,6 @@ impl Content {
         if let Some(marks) = spec.weapon_marks {
             return (marks.into_iter())
                 .map(|(name, count)| {
-                    if count == 0 {
-                        return Err(format!("`weapon_marks`: {name} 0"));
-                    }
                     let to = match name.as_str() {
                         "best" => Marks::Best,
                         _ => Marks::Skill((self.weapon_skills().id(&name)).ok_or_else(|| {
@@ -762,9 +707,6 @@ impl Content {
                 .collect();
         }
         if let Some(by) = spec.alignment {
-            if by == 0 || by.abs() > 100 {
-                return Err(format!("`alignment` {by}: 1 to 100, either way"));
-            }
             return Ok(vec![Effect::Alignment(by)]);
         }
         if let Some(text) = spec.talent {
@@ -776,11 +718,7 @@ impl Content {
             let def = (book.id(id))
                 .map(|t| book.get(t))
                 .ok_or_else(|| format!("`talent`: unknown talent `{id}`"))?;
-            if def.granted || def.flaw || book.tree(def.tree).class {
-                return Err(format!(
-                    "`talent`: `{id}` is given, a flaw, or a class ability: never a story's"
-                ));
-            }
+            // The choice keys the talent held.
             match (def.choice, &choice) {
                 (None, None) => {}
                 (None, Some(c)) => {
@@ -797,100 +735,28 @@ impl Content {
             return Ok(vec![Effect::Talent(id.to_string(), choice)]);
         }
         let id = spec.flaw.expect("one kind is named");
-        let book = self.talents();
-        let def = (book.id(&id))
-            .map(|t| book.get(t))
-            .ok_or_else(|| format!("`flaw`: unknown talent `{id}`"))?;
-        if !def.flaw {
-            return Err(format!("`flaw`: `{id}` is no birth sign's flaw"));
+        if self.talents().id(&id).is_none() {
+            return Err(format!("`flaw`: unknown talent `{id}`"));
         }
         Ok(vec![Effect::Flaw(id)])
     }
 }
 
-/// Checks what spans chapters: chapter ids (a campaign's never a shared one's), paragraphs in
-/// order, tags asked only once an earlier chapter's line sets them, slots used only with a
-/// default by then, and every line's worth within its tier's band.
-fn check_order(chapters: &[(&str, Chapter)], points: &Points) -> Result<(), ContentError> {
-    let shared: Vec<&(&str, Chapter)> = chapters
-        .iter()
+/// Checks the chapter ids across files: a story's chapters are found by id
+/// ([`Background::chapter`]), so a campaign's never takes a shared one's, nor any its own twice.
+fn check_ids(chapters: &[(&str, Chapter)]) -> Result<(), ContentError> {
+    let shared: BTreeSet<&str> = (chapters.iter())
         .filter(|(_, c)| c.campaign.is_none())
+        .map(|(_, c)| c.id.as_str())
         .collect();
-    let owners: BTreeSet<&str> = (chapters.iter())
-        .filter_map(|(_, c)| c.campaign.as_deref())
-        .collect();
-    // Each story's order: the shared chapters alone, then the shared ones and each campaign's.
-    let mut runs: Vec<Vec<&(&str, Chapter)>> = vec![shared.clone()];
-    for owner in owners {
-        let mut run = shared.clone();
-        run.extend(
-            chapters
-                .iter()
-                .filter(|(_, c)| c.campaign.as_deref() == Some(owner)),
-        );
-        runs.push(run);
-    }
-    for run in runs {
-        let mut ids: BTreeSet<&str> = BTreeSet::new();
-        let mut set: BTreeSet<&str> = BTreeSet::new();
-        let mut defaults: BTreeSet<&str> = BTreeSet::new();
-        let mut paragraph = 1;
-        for (path, chapter) in run {
-            let err = |m: String| ContentError::new(path, format!("chapter `{}`: {m}", chapter.id));
-            if !ids.insert(&chapter.id) {
-                return Err(err(match chapter.campaign {
-                    Some(_) => {
-                        "a campaign's chapter has a shared chapter's id, or its own twice".into()
-                    }
-                    None => "the id is used twice".into(),
-                }));
-            }
-            if chapter.paragraph < paragraph {
-                return Err(err(format!(
-                    "paragraph {} after a chapter of paragraph {paragraph}",
-                    chapter.paragraph
-                )));
-            }
-            paragraph = chapter.paragraph;
-            defaults.extend(chapter.defaults.keys().map(String::as_str));
-            for line in &chapter.lines {
-                let at = |m: String| err(format!("line `{}`: {m}", line.id));
-                for tag in line.when.tags.iter().chain(&line.when.not_tags) {
-                    if !set.contains(tag.as_str()) {
-                        return Err(at(format!(
-                            "asks for tag `{tag}`, which no earlier chapter's line sets"
-                        )));
-                    }
-                }
-                let slots = slots_of(&line.text).unwrap_or_default();
-                for slot in slots.into_iter().map(str::to_lowercase) {
-                    let fills = SET_SLOTS.contains(&slot.as_str());
-                    if fills && !defaults.contains(slot.as_str()) {
-                        return Err(at(format!(
-                            "uses `{{{slot}}}`, which has no default in this chapter or an earlier one"
-                        )));
-                    }
-                }
-                let (boons, banes) = line.worth(points);
-                let (low, high, bane) = line.tier.band();
-                let net = boons - banes;
-                if !(low..=high).contains(&net) {
-                    return Err(at(format!(
-                        "worth {net} points ({boons} given, {banes} taken): a {} line is worth \
-                         {low} to {high}",
-                        line.tier.id()
-                    )));
-                }
-                if !bane && banes > 0 {
-                    return Err(at(format!(
-                        "takes {banes} points: a {} line never costs anything",
-                        line.tier.id()
-                    )));
-                }
-            }
-            for line in &chapter.lines {
-                set.extend(line.tags.iter().map(String::as_str));
-            }
+    let mut seen: BTreeSet<(Option<&str>, &str)> = BTreeSet::new();
+    for (path, chapter) in chapters {
+        let taken = chapter.campaign.is_some() && shared.contains(chapter.id.as_str());
+        if taken || !seen.insert((chapter.campaign.as_deref(), &chapter.id)) {
+            return Err(ContentError::new(
+                path,
+                format!("chapter `{}`: the id is used twice", chapter.id),
+            ));
         }
     }
     Ok(())

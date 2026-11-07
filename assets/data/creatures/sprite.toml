@@ -18,8 +18,8 @@ range = 8
 hearing = 14
 weight = 1500
 size = "small"
-stats = { strength = 8, dexterity = 14, toughness = 9, intelligence = 11, willpower = 11, presence = 13 }
-base_hp = 2
+stats = { strength = 8, dexterity = 14, toughness = 5, intelligence = 11, willpower = 11, presence = 13 }
+base_hp = 1
 weapon_skills = { bows = 1 }
 # Its gear (spec §8 "Creature gear"): a short bow, as a rule, and arrows.
 racial_weapon = "short_bow"
@@ -28,7 +28,7 @@ damage = "1d4"
 damage_type = "piercing"
 name = "stab"
 verb = "stabs"
-on_hit = [{ status = "poisoned", chance = 25, severity = 1 }]
+on_hit = [{ status = "poisoned", chance = 3, severity = 1 }]
 [[creature.gear]]
 chance = 95
 one_of = ["arrow*8", "arrow*15"]

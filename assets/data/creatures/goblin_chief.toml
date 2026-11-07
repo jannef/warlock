@@ -17,8 +17,8 @@ opens_doors = true
 footsteps = 120
 hearing = 12
 weight = 50000
-stats = { strength = 14, dexterity = 12, toughness = 14, intelligence = 10, willpower = 11, presence = 12 }
-base_hp = 8
+stats = { strength = 14, dexterity = 12, toughness = 13, intelligence = 10, willpower = 11, presence = 12 }
+base_hp = 7
 on_eat = { message = "This goblin meat is rank!", vomit = 40 }
 weapon_skills = { maces = 2, short_blades = 1 }
 racial_weapon = "club"

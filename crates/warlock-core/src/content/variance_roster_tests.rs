@@ -54,6 +54,13 @@ pub(super) fn armed(content: &Content, def: &CreatureDef) -> bool {
         .any(|o| o.attack.is_some() && o.launches.is_none() && o.ammo.is_none())
 }
 
+/// The share of the roster formulas' hit points a type of `level` has: the starters' cut
+/// (#1200, `content/starter.rs`), 1 from level 6. Every roster's hit point check multiplies its
+/// formula by it.
+pub(super) fn starter(level: u8) -> f64 {
+    f64::from(super::starter::hp_percent(level)) / 100.0
+}
+
 /// The role's to-hit offset, threat, and crit on the type's natural attack.
 pub(super) fn check(content: &Content, def: &CreatureDef, shape: Shape) {
     let id = def.id.as_str();

@@ -22,15 +22,24 @@ the clock (whole seconds; leftover energy carries, so a run of actions takes its
 up to the second the actor is ready, with no drift) to each action, and `rest` loops waits until
 the goal or an interruption, its last turn cut short with `price_until` so it ends exactly at the
 goal at any player speed. Long actions (`rest`, `dig`, meals) go through `World::keep_at(events, more,
-act)`: turn after turn of `act` while `more` holds, stopping on a creature coming into view (but
-for one who talks and fights no one, `World::disturbs_rest`), a message (`say`; `note` does not
-stop it), or death (`Ended`), perceiving only after turns in which a creature that disturbs a
-rest could have come into view (`out_of_view_for`, which accounts for speed and the cheapest
-step and leaves out those who talk and fight no one), in which the player heard something, or in
-which the weather the player would see changed (`weather_turned`); past that stretch a turn
-still passes unperceived when its events are only creatures moving (and the kept kinds) and
+act)`: turn after turn of `act` while `more` holds, stopping on a creature hostile to the player
+(`World::disturbs_rest`: neutral and peaceful ones and allies never) coming within
+`rest::CLOSE` (5 steps, Chebyshev; owner, #1216) in view (`watched_in_view`; one farther off,
+`hostiles_in_view`, may be seen and the action goes on; `Ended::Came(Came { id, seen })`,
+`World::came_line` says "comes into view" or, seen farther off before, "comes close"), on a
+perceived attack on the player or a shot or a spell within `CLOSE` of them (`World::stirs`, so a
+miss or a resisted spell stops it whatever is said), a message (`say`; `note` does not stop it;
+hunger worsening, a hurt, an attack said; others' attacks and deaths stop it only within `CLOSE`,
+`perceive_events`, and a creature's spell only at the player or cast by or at one within
+`CLOSE`, its lines held and noted otherwise, `creature_cast.rs`), or death (`Ended`). The same rule holds for every long
+action through `keep_at` (dig, meals, search, study, ...). It perceives only after turns in which
+a creature that disturbs a rest could have come within `CLOSE` (`out_of_view_for`, which
+accounts for speed and the cheapest step and leaves out all but hostiles), in which the player
+heard something, in which anything happened but creatures moving (a hostile in view but not yet
+close may shoot or cast; `passes_unseen`), or in which the weather the player would see changed
+(`weather_turned`); past that stretch a turn still passes unperceived when
 `World::watched_in_sight` (the rules of sight, `sight::sees`, for the cells of the creatures
-that disturb a rest, with the player's line of sight kept while `World::reshaped`, bumped by
+that disturb a rest within `CLOSE`, with the player's line of sight kept while `World::reshaped`, bumped by
 `set_terrain`, and their cell are unchanged) finds the same creatures in view; `None` on the
 overworld, with Blood scent, and for light-blind eyes, where only a perception will do
 (`stride_tests::a_rest_sees_whom_a_perception_sees`). While the player rests (`World::resting`),

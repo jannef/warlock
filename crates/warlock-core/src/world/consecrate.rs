@@ -72,11 +72,8 @@ impl World {
         match ended {
             Ended::Died => {}
             _ if self.state.time >= until => self.consecrated(),
-            Ended::Came(id) => {
-                let text = format!(
-                    "{} comes into view; you stop your prayer.",
-                    self.creature_called(id)
-                );
+            Ended::Came(came) => {
+                let text = format!("{}; you stop your prayer.", self.came_line(came));
                 self.say(text);
             }
             Ended::Said | Ended::Done => self.say("You stop your prayer."),

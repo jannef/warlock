@@ -60,7 +60,7 @@ fn the_summoners_keep_to_the_roster() {
         assert!(def.gear.racial_weapon.is_some(), "{id}: armed");
         let level = f64::from(def.level);
         let hp = f64::from(def.stats.score(Stat::Toughness)) + f64::from(def.base_hp);
-        let want = max_hp(level);
+        let want = max_hp(level) * super::variance_roster_tests::starter(def.level);
         assert!(
             ((hp - want) / want * 100.0).abs() <= TOLERANCE,
             "{id}: max HP {hp}, the formula {want:.1}"

@@ -10,7 +10,7 @@ Your potions are in the same list and are drunk the same way (see [Potions](poti
 
 A meal takes a few turns, each a normal action (6 seconds at a normal pace; see [Turns and
 movement](turns.md)). Like a [rest](resting.md#how-resting-works), it stops early when a
-[creature](creatures.md) comes into view or something happens that you are told about: "A
+[hostile](creatures.md#factions) creature comes close in view or something happens that you are told about: "A
 kobold comes into view; you stop eating." Then nothing is eaten and the food is left as it was.
 The food is eaten, and feeds you, only when the last turn is done: "You eat the food ration.
 You feel satiated."

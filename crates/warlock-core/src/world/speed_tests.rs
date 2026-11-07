@@ -81,6 +81,7 @@ name = "you"
 glyph = "@"
 fg = "#ffffff"
 weight = 70000
+faction = "player"
 
 [[creature]]
 id = "normal"
@@ -89,6 +90,7 @@ glyph = "n"
 fg = "#806040"
 weight = 1000
 grades = false
+faction = "wildlife"
 
 [[creature]]
 id = "quick"
@@ -97,6 +99,7 @@ glyph = "q"
 fg = "#806040"
 weight = 1000
 grades = false
+faction = "wildlife"
 speed = 1500
 
 [[creature]]
@@ -106,6 +109,7 @@ glyph = "f"
 fg = "#806040"
 weight = 1000
 grades = false
+faction = "wildlife"
 speed = 2000
 
 [[creature]]
@@ -115,7 +119,49 @@ glyph = "s"
 fg = "#806040"
 weight = 1000
 grades = false
+faction = "wildlife"
 speed = 900
+
+# The hall's: hostile to the player (only a hostile stops a rest, spec §8 "Rest"), and too
+# short-sighted and hard of hearing to notice them four cells off: they keep to their rounds.
+[[creature]]
+id = "fast_foe"
+name = "fast foe"
+glyph = "f"
+fg = "#806040"
+weight = 1000
+grades = false
+faction = "foes"
+sight = 1
+hearing = 1
+speed = 2000
+
+[[creature]]
+id = "slow_foe"
+name = "slow foe"
+glyph = "s"
+fg = "#806040"
+weight = 1000
+grades = false
+faction = "foes"
+sight = 1
+hearing = 1
+speed = 900
+"##;
+
+const FACTIONS: &str = r##"
+[[faction]]
+id = "player"
+name = "you"
+
+[[faction]]
+id = "wildlife"
+name = "wildlife"
+
+[[faction]]
+id = "foes"
+name = "foes"
+hostile = ["player"]
 "##;
 
 const LEGEND: &str = r##"
@@ -204,13 +250,14 @@ fn files() -> ContentFiles {
     let mut files = ContentFiles::default();
     files.insert("data/terrain.toml", TERRAIN);
     files.insert("data/creatures.toml", CREATURES);
+    files.insert("data/factions.toml", FACTIONS);
     files.insert("data/legend.toml", LEGEND);
     files.insert("levels/track.toml", TRACK);
     files.insert("levels/cellar.toml", CELLAR);
     files.insert("levels/contest.toml", CONTEST);
     files.insert("levels/wilds.toml", WILDS);
-    // A long hall: the fast creature starts 94 cells from the player in the first row, at
-    // (95, 1), the slow one 59 cells away in the second, at (60, 2); both walk towards the
+    // A long hall: the fast foe starts 94 cells from the player in the first row, at (95, 1),
+    // the slow one 59 cells away in the second, at (60, 2); both walk to 4 cells from the
     // player and back.
     let fast = format!("#@{}f{}#", ".".repeat(93), ".".repeat(5));
     let slow = format!("#{}s{}#", ".".repeat(59), ".".repeat(40));
@@ -220,8 +267,8 @@ fn files() -> ContentFiles {
         &format!(
             "name = \"Hall\"\nmap = '''\n{wall}\n{fast}\n{slow}\n{wall}\n'''\n[legend]\n\
              \"@\" = {{ terrain = \"floor\", spawn = \"player\" }}\n\
-             \"f\" = {{ terrain = \"floor\", creature = \"fast\", route = \"W60 E60\" }}\n\
-             \"s\" = {{ terrain = \"floor\", creature = \"slow\", route = \"W55 E55\" }}\n"
+             \"f\" = {{ terrain = \"floor\", creature = \"fast_foe\", route = \"W90 E90\" }}\n\
+             \"s\" = {{ terrain = \"floor\", creature = \"slow_foe\", route = \"W55 E55\" }}\n"
         ),
     );
     for name in ["track", "contest", "wilds", "hall"] {
@@ -497,15 +544,15 @@ fn skipping_time_gives_nobody_energy() {
 
 #[test]
 fn resting_accounts_for_fast_creatures() {
-    // The fast creature 94 cells away may take 53 steps before it could come into view, and has
-    // the energy for them after 159 s; the slow one 59 cells away has 18 steps, 120 s.
+    // The fast foe 94 cells away may take 88 steps before it could come close, and has the
+    // energy for them after 264 s; the slow one 59 cells away has 53 steps, 354 s.
     let w = world("hall");
-    assert_eq!(w.out_of_view_for(), Duration::seconds(120));
+    assert_eq!(w.out_of_view_for(), Duration::seconds(264));
     // Resting stops on the very turn resting turn by turn (a rest of one turn after another,
     // each looked at) would see a creature come into view, in the same state: the far ones
     // stride alike in both (`stride.rs`).
     let mut waited = world("hall");
-    while waited.creatures_in_view().is_empty() {
+    while waited.watched_in_view().is_empty() {
         waited.apply(&Action::Rest(Rest::For(Duration::seconds(6))));
         assert!(waited.turn() < 1000, "no creature ever came into view");
     }
@@ -515,15 +562,15 @@ fn resting_accounts_for_fast_creatures() {
     assert_eq!(out.elapsed, Duration::seconds(6 * waited.turn()));
     assert_eq!(rested.time(), waited.time());
     assert_eq!(rested.state().actors, waited.state().actors);
-    assert_eq!(rested.creatures_in_view(), waited.creatures_in_view());
+    assert_eq!(rested.watched_in_view(), waited.watched_in_view());
     // Resting on, they come and go; each rest stops like resting turn by turn would.
     for _ in 0..5 {
         let mut waited = rested.clone();
-        let mut seen = waited.creatures_in_view();
+        let mut seen = waited.watched_in_view();
         let start = waited.turn();
         loop {
             waited.apply(&Action::Rest(Rest::For(Duration::seconds(6))));
-            let now = waited.creatures_in_view();
+            let now = waited.watched_in_view();
             if now.iter().any(|a| !seen.contains(a)) || waited.turn() - start == 600 {
                 break;
             }

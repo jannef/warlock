@@ -18,8 +18,8 @@ footsteps = 10
 hearing = 10
 weight = 6000
 size = "small"
-stats = { strength = 11, dexterity = 9, toughness = 16, intelligence = 1, willpower = 10, presence = 2 }
-base_hp = 6
+stats = { strength = 11, dexterity = 9, toughness = 13, intelligence = 1, willpower = 10, presence = 2 }
+base_hp = 5
 on_eat = { message = "It is mostly someone else's blood.", vomit = 50, heal = "1d2" }
 blood = "#5a1018"
 [creature.attack]
@@ -29,6 +29,6 @@ name = "sucker"
 verb = "latches onto"
 to_hit = 1
 on_hit = [
-    { status = "bleeding", chance = 40, severity = 1 },
-    { status = "latched", chance = 25, difficulty = 10 },
+    { status = "bleeding", chance = 12, severity = 1 },
+    { status = "latched", chance = 12, difficulty = 10 },
 ]

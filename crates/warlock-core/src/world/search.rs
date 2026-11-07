@@ -241,10 +241,9 @@ impl World {
         let took = self.state.time.since(start).spoken();
         let text = match ended {
             Ended::Died => return,
-            Ended::Came(id) => format!(
-                "{} comes into view; you stop searching after {took}.",
-                self.creature_called(id)
-            ),
+            Ended::Came(came) => {
+                format!("{}; you stop searching after {took}.", self.came_line(came))
+            }
             Ended::Said => format!("You stop searching after {took}."),
             Ended::Done => format!("You search for {took} and find nothing."),
         };

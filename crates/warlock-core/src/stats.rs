@@ -148,23 +148,13 @@ pub fn adjusted(score: u8, by: i32) -> u8 {
 }
 
 /// Stat adjustments as data gives them (`stats = { strength = "1d3+1", presence = -1 }`): a
-/// fixed number or [`Dice`] per stat, 0 if missing, every possible result within
-/// [`ADJUSTMENTS`]; the error names the stat.
-pub fn adjustments(data: &BTreeMap<Stat, Dice>) -> Result<PerStat<Dice>, String> {
+/// fixed number or [`Dice`] per stat, 0 if missing.
+pub fn adjustments(data: &BTreeMap<Stat, Dice>) -> PerStat<Dice> {
     let mut out = PerStat::splat(Dice::fixed(0));
-    let range = i32::from(*ADJUSTMENTS.start())..=i32::from(*ADJUSTMENTS.end());
     for (&stat, &by) in data {
-        if !range.contains(&by.min()) || !range.contains(&by.max()) {
-            return Err(format!(
-                "{} {by} is out of range ({} to {})",
-                stat.id(),
-                ADJUSTMENTS.start(),
-                ADJUSTMENTS.end()
-            ));
-        }
         out[stat] = by;
     }
-    Ok(out)
+    out
 }
 
 /// Rolls an adjustment for every stat, in display order, from `rng` (fixed numbers draw
@@ -742,26 +732,18 @@ mod tests {
     }
 
     #[test]
-    fn adjustments_default_to_zero_and_stay_in_range() {
+    fn adjustments_default_to_zero() {
         let dice = |t: &str| t.parse::<Dice>().expect("dice");
         let data = BTreeMap::from([
             (Stat::Strength, Dice::fixed(3)),
             (Stat::Toughness, dice("1d3+1")),
             (Stat::Presence, Dice::fixed(-10)),
         ]);
-        let adj = adjustments(&data).expect("valid");
+        let adj = adjustments(&data);
         assert_eq!(
             adj.iter().map(|(_, v)| v.to_string()).collect::<Vec<_>>(),
             ["+3", "0", "1d3+1", "0", "0", "-10"]
         );
-        let err = adjustments(&BTreeMap::from([(Stat::Willpower, Dice::fixed(11))])).unwrap_err();
-        assert!(err.contains("willpower +11 is out of range"), "{err}");
-        assert!(adjustments(&BTreeMap::from([(Stat::Dexterity, Dice::fixed(-11))])).is_err());
-        // Every result of a roll must be in range: 3d4 can be 12, -1d12 can be -12.
-        let err = adjustments(&BTreeMap::from([(Stat::Strength, dice("3d4"))])).unwrap_err();
-        assert!(err.contains("strength 3d4 is out of range"), "{err}");
-        assert!(adjustments(&BTreeMap::from([(Stat::Strength, dice("-1d12"))])).is_err());
-        assert!(adjustments(&BTreeMap::from([(Stat::Strength, dice("2d4+2"))])).is_ok());
         // Rolls follow the stat order; fixed numbers draw nothing.
         let mut rng = Rng::stream(1, "stats-test");
         let rolled = roll(&adj, &mut rng);

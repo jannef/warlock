@@ -18,8 +18,8 @@ footsteps = 20
 hearing = 15
 weight = 1500
 size = "small"
-stats = { strength = 6, dexterity = 16, toughness = 9, intelligence = 2, willpower = 10, presence = 4 }
-base_hp = 1
+stats = { strength = 6, dexterity = 16, toughness = 4, intelligence = 2, willpower = 10, presence = 4 }
+base_hp = 0
 tameable = true
 nose = 6
 depart = "darts away into the straw"

@@ -139,23 +139,28 @@ assets/           fonts, levels, scenarios, vaults, definitions, shaders
     each turn), the others act, perception runs; the last turn is cut short so the rest ends
     exactly at its goal at any speed of the player (it costs all the energy the player has and
     gains until the goal; one hour, the next 06:00, or the next 18:00; at most a day). It stops after a turn in which a
-    creature came into view (one not seen the turn before; never one who talks and fights no one,
-    a creature with a dialogue whose faction is hostile to nobody, as the showcase's people: the
-    player sees who it is) or a message was logged that stops a
-    rest (all but weather news other than rain starting or growing heavier, §5 "Weather", and
+    creature hostile to the player came within 5 steps (Chebyshev) in view (one not so the turn
+    before: "A kobold comes into view", or "The kobold comes close" for one seen farther off;
+    a hostile farther away may be in view and the rest goes on; neutral and peaceful creatures
+    and the player's allies never stop it by being seen, wherever they are; owner, #1216), in
+    which something attacked the player (a blow, a shot, a throw, a spell, missed or resisted
+    too) or a shot or a spell came within 5 steps of them, or in which a message was logged
+    that stops a
+    rest (others' fights, deaths, and creatures' spells only within 5 steps of the player:
+    farther off they are logged and the rest goes on) (all but weather news other than rain starting or growing heavier, §5 "Weather", and
     muttering, "Dialogue" below), and
     logs how long the player rested. The player heals twice as fast all the while ("Healing"
     below), and the player's status effects beginning and ending in the turns that pass without
     perception are said all the same. Digging ("Digging" below) runs through the same loop
     (`World::keep_at`). Turns that end before any creature on the level that could stop the rest
-    could come within view, in which the player heard nothing, in which the weather the
-    player would see did not change, and in which no trap went off (a teleport moves a creature
-    farther than its steps; §8 "Traps"), pass without
-    perception: a creature is seen only within the view range, and before its
-    first step that could bring it there it needs the energy for every step that cannot (each at
+    could come within those 5 steps, in which the player heard nothing, in which nothing
+    happened but creatures moving (a hostile in view farther off may shoot or cast meanwhile),
+    in which the weather the player would see did not change, and in which no trap went off (a
+    teleport moves a creature farther than its steps; §8 "Traps"), pass without
+    perception: before a creature's
+    first step that could bring it that close it needs the energy for every step that cannot (each at
     least the level's cheapest step), so a fast creature shortens the stretch. Those turns cannot
-    change when the rest stops (sounds carry at most 30 cells, less than the view range, so none
-    is missed), and a night's rest stays fast on large levels
+    change when the rest stops, and a night's rest stays fast on large levels
     (`cargo xtask bench-turns` times one; budget 500 ms; also one beside a fight in the
     arena out of the player's sight and hearing, which goes on until one side is dead, and one
     on a generated floor at full population, 80 creatures). Past that stretch a turn still

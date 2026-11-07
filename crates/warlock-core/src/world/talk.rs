@@ -188,16 +188,13 @@ impl World {
             .then_some(actor.id)
     }
 
-    /// Whether `actor` stops a rest by coming into view (spec §8 "Rest"): any creature but one
-    /// who talks (has a dialogue) and fights no one (its faction is hostile to nobody): the
-    /// showcase's people go about their business, and the player sees who they are.
+    /// Whether `actor` stops a rest by coming close in view (spec §8 "Rest", `rest.rs`): a
+    /// creature hostile to the player. Neutral and peaceful ones (the showcase's people, a deer)
+    /// and the player's allies never do; the player sees who they are.
     pub(super) fn disturbs_rest(&self, actor: &Actor) -> bool {
-        let fights =
-            (actor.faction(&self.content)).is_some_and(|f| self.content.factions().has_enemies(f));
-        // An ally of the player's never disturbs their rest (`ally.rs`).
         actor.kind == ActorKind::Creature
             && actor.ally.is_none()
-            && (fights || self.dialogue_of(actor).is_none())
+            && self.stance(self.state.player, actor.id) == Stance::Hostile
     }
 
     /// What the player may ask `actor` about: its quest topics first (`quest.rs`), then its
