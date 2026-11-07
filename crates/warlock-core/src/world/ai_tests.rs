@@ -787,7 +787,15 @@ fn rest_stops_when_a_hostile_attacks() {
     let mut w = world("duel");
     let start = w.time();
     w.apply(&Action::Rest(Rest::For(Duration::hours(1))));
-    // The rat was in view from the start, so its approach did not stop the rest; its attack did.
+    // The rat was in view from the start, six cells off: its coming within five stopped the
+    // rest (spec §8 "Rest").
+    let shown = messages(&w);
+    assert!(
+        (shown.last()).is_some_and(|m| m.starts_with("The giant rat comes close")),
+        "{shown:?}"
+    );
+    // Rested on beside it, its attack stops the rest.
+    w.apply(&Action::Rest(Rest::For(Duration::hours(1))));
     assert!(w.time().since(start) < Duration::minutes(2));
     let shown = messages(&w);
     assert!(

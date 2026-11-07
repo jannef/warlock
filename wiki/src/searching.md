@@ -16,7 +16,7 @@ here sounds hollow*. It stays a stone wall until you [dig](digging.md#digging) o
 
 - `s` searches the cells around you, once: it takes a [turn](time.md#what-takes-time) (6 seconds).
 - `S` **searches for a while**: turn after turn, up to 10 turns, and it stops at once when you
-  find something. Like a [rest](resting.md#how-resting-works), it also stops when a creature comes into view or something
+  find something. Like a [rest](resting.md#how-resting-works), it also stops when a hostile creature comes close in view or something
   happens worth a message.
 
 Each turn of searching gives every hidden thing on the eight cells around you a fresh chance to

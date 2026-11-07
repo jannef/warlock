@@ -33,7 +33,6 @@ use crate::content::{ActionKind, BASE_TURN, Benefit, LevelKind, TerrainDef, perc
 use crate::geom::Pos;
 use crate::magic::Mods;
 use crate::magic::mods::faster;
-use crate::perception::VIEW_RADIUS;
 use crate::skills::Effect;
 use crate::time::{Duration, GameTime};
 use std::collections::BTreeMap;
@@ -418,18 +417,18 @@ impl World {
     }
 
     /// How long from now no creature on the current level that disturbs a rest
-    /// ([`World::disturbs_rest`]) could come into view, so a rest need not look after turns that
-    /// end by then and in which the player heard nothing (spec §8 "Rest"). A creature is seen
-    /// only within [`VIEW_RADIUS`] (and heard only within [`crate::noise::MAX_REACH`], less than
-    /// that), and every step costs at least the level's cheapest step: before its first step that
-    /// could bring it into view, it needs the energy for all the steps that cannot. (Creature
+    /// ([`World::disturbs_rest`], one hostile to the player) could come within
+    /// [`super::rest::CLOSE`] of them, so a rest need not look after turns that end by then and
+    /// in which the player heard nothing and nothing happened but creatures moving (spec §8
+    /// "Rest"). Only one that close stops a rest, and every step costs at least the level's
+    /// cheapest step: before its first step that could bring it that close, it needs the energy
+    /// for all the steps that cannot. (Creature
     /// types give only their attacks costs of their own, so a step costs every creature the same
     /// but for what magic items it wears take off; a burden only makes it dearer, and an
-    /// overloaded creature cannot step at all.) The others (the showcase's people) never stop a
-    /// rest by coming into view, and what they do that the player could notice is heard (their
-    /// steps, their muttering) or done nowhere near.
+    /// overloaded creature cannot step at all.) The others (neutral and peaceful ones) never
+    /// stop a rest by coming into view, and what they do that the player could notice is heard
+    /// (their steps, their muttering) or an event that ends the stretch (`keep_at`).
     pub(super) fn out_of_view_for(&self) -> Duration {
-        const _: () = assert!(crate::noise::MAX_REACH < VIEW_RADIUS);
         let level = self.state.current();
         // The cheapest step on the level for each step cost, as creatures need them.
         let mut cheapest_for: BTreeMap<u32, i64> = BTreeMap::new();
@@ -454,7 +453,8 @@ impl World {
             .values()
             .filter(|a| a.level == level.id && self.disturbs_rest(a))
             .map(|a| {
-                let steps = i64::from((a.pos.chebyshev(player) - VIEW_RADIUS - 1 - ahead).max(0));
+                let steps =
+                    i64::from((a.pos.chebyshev(player) - super::rest::CLOSE - 1 - ahead).max(0));
                 let cheapest = cheapest(self.cost_of(a.id, ActionKind::Step));
                 let short = steps.saturating_mul(cheapest).saturating_sub(a.energy);
                 let speed = a.speed(&self.content);

@@ -6,7 +6,6 @@ use super::encounter::Watch;
 use super::{ActorId, Spent, World};
 use crate::action::{DiseaseNews, Event, MAX_REST, Rest};
 use crate::content::{ActionKind, LevelKind, StatUse};
-use crate::fov::radius2;
 use crate::geom::Pos;
 use crate::perception::VIEW_RADIUS;
 use crate::sight::{self, LineOfSight};
@@ -16,13 +15,25 @@ use crate::time::{self, GameTime};
 /// ([`World::reshaped`]) and where they stand.
 pub(super) type Sightline = ((u64, Pos), LineOfSight);
 
+/// How near, in steps (Chebyshev), a hostile creature in view must come to stop a long action
+/// ([`World::keep_at`], spec §8 "Rest"); one farther off may be seen and the action goes on.
+pub(super) const CLOSE: i32 = 5;
+
+/// A creature that stopped a long action by coming within [`CLOSE`] in view.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(super) struct Came {
+    pub id: ActorId,
+    /// Whether the player saw it farther off before (it came close), or not (it came into view).
+    pub seen: bool,
+}
+
 /// How a long action (a rest, digging; [`World::keep_at`]) ended.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub(super) enum Ended {
     /// There was nothing more to do.
     Done,
-    /// This creature came into view.
-    Came(ActorId),
+    /// This hostile creature came close in view.
+    Came(Came),
     /// A message was logged that stops it.
     Said,
     /// The player died.
@@ -55,10 +66,9 @@ impl World {
         let rested = self.state.time.since(start).spoken();
         let text = match (ended, goal) {
             (Ended::Died, _) => return,
-            (Ended::Came(id), _) => format!(
-                "{} comes into view; you stop resting after {rested}.",
-                self.creature_called(id)
-            ),
+            (Ended::Came(came), _) => {
+                format!("{}; you stop resting after {rested}.", self.came_line(came))
+            }
             (Ended::Said, _) => format!("You stop resting after {rested}."),
             (Ended::Done, Rest::For(_)) => format!("You rest for {rested}."),
             (Ended::Done, Rest::Dawn) => "You rest until dawn.".into(),
@@ -67,19 +77,41 @@ impl World {
         self.say(text);
     }
 
+    /// What is said of a creature that stopped a long action ([`Came`]): "A kobold comes into
+    /// view", or, seen farther off before, "The kobold comes close".
+    pub(super) fn came_line(&self, came: Came) -> String {
+        let called = self.creature_called(came.id);
+        if !came.seen {
+            return format!("{called} comes into view");
+        }
+        let name = &self
+            .content
+            .creature(self.state.actors[&came.id].creature)
+            .name;
+        let called = match crate::content::is_proper(name) {
+            true => called,
+            false => crate::content::the_start(name),
+        };
+        format!("{called} comes close")
+    }
+
     /// Passes turn after turn of a long action (a rest, digging) through the normal pipeline
     /// while `more` says there is more to do: the player does `act` (which returns what it
-    /// costs), the others act, perception. It stops after a turn in which a creature came into
-    /// view (one not seen the turn before; but for one who talks and fights no one,
-    /// [`World::disturbs_rest`]: the player sees who it is) or a message was logged that stops a
-    /// rest, and when the player dies. Turns that end before any creature that disturbs a rest
-    /// could come into view ([`World::out_of_view_for`]), in which the player heard nothing, in
-    /// which the weather the player sees did not change, in which none of the player's diseases
-    /// showed or went badly (news that stops a rest), and in which no trap went off (a teleport
-    /// moves a creature farther than its steps) pass without perception, which cannot change the
-    /// outcome; only the last turn's events are kept, and the player's status effects beginning
-    /// and ending in the others, their resources ending, and their diseases' news (so they are
-    /// said).
+    /// costs), the others act, perception. It stops after a turn in which a creature hostile to
+    /// the player ([`World::disturbs_rest`]) came within [`CLOSE`] in view (one not so the turn
+    /// before; one farther off may be seen and the action goes on), in which something attacked
+    /// the player or a shot or a spell came within [`CLOSE`] of them ([`World::stirs`]), or in
+    /// which a message was logged that stops a rest (an attack on the player, a hurt, hunger
+    /// worsening), and when the player dies. Turns that end before any such creature could come
+    /// within [`CLOSE`] ([`World::out_of_view_for`]), in which the player heard nothing, in
+    /// which nothing happened that perception would stop the action for ([`World::may_stop`]: a
+    /// hostile in view farther off may shoot or cast meanwhile), in which the weather the player
+    /// sees did not change, in
+    /// which none of the player's diseases showed or went badly (news that stops a rest), and
+    /// in which no trap went off (a teleport moves a creature farther than its steps) pass
+    /// without perception, which cannot change the outcome; only the last turn's events are
+    /// kept, and the player's status effects beginning and ending in the others, their
+    /// resources ending, and their diseases' news (so they are said).
     pub(super) fn keep_at(
         &mut self,
         events: &mut Vec<Event>,
@@ -88,12 +120,14 @@ impl World {
     ) -> Ended {
         let said = self.said;
         let mut in_view = self.watched_in_view();
+        let mut seen = self.hostiles_in_view();
         let mut came = None;
+        let mut stirred = false;
         let alive = |w: &Self| w.state.death.is_none();
         let mut turns = 0u32;
         // The player's line of sight, kept while they stay put and the terrain is unchanged.
         let mut sightline = None;
-        while more(self) && came.is_none() && self.said == said && alive(self) {
+        while more(self) && came.is_none() && !stirred && self.said == said && alive(self) {
             // What was perceived was said.
             events.clear();
             let unseen_until = self.state.time + self.out_of_view_for();
@@ -119,30 +153,35 @@ impl World {
                 let trapped = self.sprung != sprung;
                 // A creature that came may walk into view sooner than the others could.
                 let newcomer = self.spawned != spawned;
-                if done || heard || ill || trapped || newcomer || self.weather_turned() {
+                // Within the stretch, a hostile in view but not yet close may shoot or cast, or a
+                // fight be seen near: what perception would stop the action for is looked at.
+                let happened = events.iter().any(|e| self.may_stop(e));
+                if done || heard || ill || trapped || newcomer || happened || self.weather_turned()
+                {
                     break;
                 }
-                // Past the time a creature could have come into view, the player looks, unless
-                // all that happened was creatures moving and those the player would see are
-                // those they saw.
+                // Past the time a creature could have come close, the player looks, unless those
+                // the player would see close are those they saw.
                 if self.state.time > unseen_until
-                    && !(events.iter().all(Self::passes_unseen)
-                        && self
-                            .watched_in_sight(&mut sightline)
-                            .is_some_and(|seen| seen == in_view))
+                    && (self.watched_in_sight(&mut sightline)).is_none_or(|seen| seen != in_view)
                 {
                     break;
                 }
             }
             self.perceive(events);
+            stirred = events.iter().any(|e| self.stirs(e));
             let now_in_view = self.watched_in_view();
-            came = now_in_view.iter().find(|a| !in_view.contains(a)).copied();
+            came = (now_in_view.iter().find(|a| !in_view.contains(a))).map(|&id| Came {
+                id,
+                seen: seen.contains(&id),
+            });
             in_view = now_in_view;
+            seen = self.hostiles_in_view();
         }
         let ended = match came {
             _ if !alive(self) => Ended::Died,
-            Some(id) => Ended::Came(id),
-            None if self.said != said => Ended::Said,
+            Some(came) => Ended::Came(came),
+            None if self.said != said || stirred => Ended::Said,
             None => Ended::Done,
         };
         // Seen through to its end, longer than a turn: it trains Willpower (spec §8 "Stats").
@@ -152,21 +191,47 @@ impl World {
         ended
     }
 
-    /// Whether a long action's turn with `event` in it may pass without perception: a creature
-    /// moving, or one of the events kept for the next perception.
-    fn passes_unseen(event: &Event) -> bool {
-        matches!(
-            event,
-            Event::ActorMoved { .. }
-                | Event::Status { .. }
-                | Event::ResourceEnded { .. }
-                | Event::Disease { .. }
-        )
+    /// Whether a turn of a long action with `event` in it (as it happened, before perception
+    /// cuts it to what was seen) must be perceived, as perception may stop the action for it:
+    /// what [`World::stirs`] it, an attack or a death within [`CLOSE`] of the player
+    /// (`perceive_events` says others' farther off without stopping it), a wall blasted, a fall
+    /// through ice, a drain, a trap's blow. Creatures moving, doors, and the rest (the player's
+    /// own status effects, resources, and diseases are kept for the next perception) pass
+    /// unseen.
+    fn may_stop(&self, event: &Event) -> bool {
+        let here = self.player_pos();
+        let close = |p: Pos| p.chebyshev(here) <= CLOSE;
+        match event {
+            Event::Attacked { from, to, .. } => self.stirs(event) || close(*from) || close(*to),
+            Event::Died { at, .. } => close(*at),
+            Event::Missile { .. } | Event::Spell { .. } => self.stirs(event),
+            Event::TrapStruck { .. }
+            | Event::WallBroken { .. }
+            | Event::FellThroughIce { .. }
+            | Event::Drained { .. } => true,
+            _ => false,
+        }
     }
 
-    /// The creatures that disturb a rest ([`World::disturbs_rest`]) the player sees now, in actor
-    /// order: [`World::watched_in_view`] as a fresh perception would find it, worked out by the
-    /// rules of sight ([`sight::sees`], the perception's own) for their cells alone. `None`
+    /// Whether a perceived `event` stops a long action whatever was said of it: an attack on the
+    /// player (a blow, a shot, a throw, a spell, missed or resisted too), or a shot or a spell
+    /// within [`CLOSE`] of them.
+    fn stirs(&self, event: &Event) -> bool {
+        let player = self.state.player;
+        let here = self.player_pos();
+        let close = |p: &Pos| p.chebyshev(here) <= CLOSE;
+        match event {
+            Event::Attacked { target, .. } | Event::TrapStruck { target, .. } => *target == player,
+            Event::Missile { path, .. } => path.iter().any(close),
+            Event::Spell { cells, .. } => cells.iter().any(close),
+            _ => false,
+        }
+    }
+
+    /// The creatures that disturb a rest ([`World::disturbs_rest`]) the player sees within
+    /// [`CLOSE`] now, in actor order: [`World::watched_in_view`] as a fresh perception would find
+    /// it, worked out by the rules of sight ([`sight::sees`], the perception's own) for their
+    /// cells alone. `None`
     /// where the perception sees by more than line of sight and light: on the overworld, with
     /// Blood scent, with light-blind eyes.
     pub(super) fn watched_in_sight(
@@ -185,7 +250,7 @@ impl World {
         }
         let viewer = player.pos;
         let near: Vec<(ActorId, Pos)> = (state.actors.values())
-            .filter(|a| a.level == level.id && a.pos.dist2(viewer) <= radius2(VIEW_RADIUS))
+            .filter(|a| a.level == level.id && a.pos.chebyshev(viewer) <= CLOSE)
             .filter(|a| self.disturbs_rest(a))
             .map(|a| (a.id, a.pos))
             .collect();

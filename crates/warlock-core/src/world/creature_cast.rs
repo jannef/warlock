@@ -244,6 +244,11 @@ impl World {
             return price;
         }
         self.make_noise(id, Act::Attack(AttackKind::Spell));
+        // A spell at the player or cast near them stops a rest; one farther off is only told
+        // (spec §8 "Rest"): what it says meanwhile is held, then logged. A hurt to the player
+        // stops a rest all the same (`rest.rs`, `World::stirs`).
+        let far = on != self.state.player && !self.near_player(id) && !self.near_player(on);
+        let outer = far.then(|| self.held.replace(Vec::new()));
         self.say_cast(id, def, on);
         match def.kind {
             SpellPurpose::Buff => {
@@ -256,7 +261,20 @@ impl World {
             SpellPurpose::Damage => self.creature_harms(id, &cast, (here, at), events),
             _ => {}
         }
+        if let Some(outer) = outer {
+            let lines = std::mem::replace(&mut self.held, outer).unwrap_or_default();
+            match &mut self.held {
+                Some(outer) => outer.extend(lines),
+                None => lines.into_iter().for_each(|line| self.note(line)),
+            }
+        }
         price
+    }
+
+    /// Whether actor `id` stands within [`super::rest::CLOSE`] of the player.
+    fn near_player(&self, id: ActorId) -> bool {
+        let here = self.player_pos();
+        (self.state.actors.get(&id)).is_some_and(|a| a.pos.chebyshev(here) <= super::rest::CLOSE)
     }
 
     /// What the player is told of creature `id` casting `def` on `on`, if they see it.
