@@ -1225,6 +1225,18 @@ ranks the casting really reaches.
   over its ladder, and there is no cap. There is still no spell above level 12 (higher-level
   spells are the content's to add).
 
+## Traps
+
+Not in the probe: traps are not fights. Their damage grows with the danger of the level they lie
+on (#1165, `[trap.grows]` in `data/traps.toml`, the wiki's trap damage table). The base, at
+danger 0 to 2, is held under the fewest hit points a level-1 character starts with: 6 in the test's draws (a kobold
+wizard, over every race and class), against the worst base going off of 4 (a fireball or a
+lightning bolt at 1d4, an arrow's or a spear's 1d2 doubled by a critical).
+`world/trap_rung_tests.rs::the_lowest_rung_never_kills_a_fresh_character` checks it, so a race,
+class, or talent that lowers starting hit points, or a stronger base, fails there first. The old
+dice (the fireball's 3d6, the lightning's 4d6) come at danger 10, and twice or more of them at
+30.
+
 ## Tuning notes
 
 These are findings for their own PRs (data changes are not made here). Each says what the probe

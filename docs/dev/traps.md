@@ -37,7 +37,20 @@ same list, the shut chest's cell skipped by `step_onto_trap`, a shot out of the 
 victim where it stands, a bolt without a `dir` runs from the door through the victim (`spring_trap`
 picks `Dir::toward` when the victim stands next to the trap), and a burst's own cell never stops it
 (`World::cast_burst`), so a shut door's blast leaves both sides. The app's step prompt
-(`input::trap_dialog`) skips doors. A trap's blow is dealt like any other
+(`input::trap_dialog`) skips doors. **Damage by danger** (#1165): `TrapDef::grows`
+(`content::TrapGrows`, parsed from `[trap.grows]`'s `damage = "danger 3 1d4, ..."` by
+`spell_ladder::parse_rungs`, the rung reader `[spell.grows]` shares; refused: no `danger` prefix,
+rungs not rising, out of 1 to `MAX_DANGER`, a rung below the one before on average
+(`Roll::mean_x2`), or rungs on a trap without damage). `spring_trap` reads
+`TrapDef::effect_at(World::danger(level))`, a clone of the effect with `damage_at`'s roll put
+in by `TrapEffect::with_damage`; `TrapEffect::damage()` stays the base (rung 0), which is what
+`def.effect` holds. A pit's damage is a `Roll` (rolled with reroll 0, the same draws as its
+old `Dice`). Tests: `world/trap_rung_tests.rs` (every builtin trap's rung per band; a sprung
+trap at danger 0, 2, 3, 10, 30; a door's trap; every race and class at level 1 survives every
+damaging trap at danger 0, and no base's worst, a critical doubling a shot's or a strike's,
+reaches the fewest hit points among them; malformed rungs refused). The wiki's
+`trap-damage.md` (`xtask/src/wiki/traps.rs::by_danger`) is the trap × band table. A trap's blow
+is dealt like any other
 (`World::trap_deals`: the target's Trap sense percent less its worn `trap_damage` (of Wariness),
 at most `TRAP_DAMAGE_CUT` = 75 % off, rounded down, at least 1; blood by `World::spill`, `hurt` with `Harm::Trap`, then the wound's
 statuses by `World::wounded`), of the trap's `damage_type` (`TrapEffect::damage_kind`;

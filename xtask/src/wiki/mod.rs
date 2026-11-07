@@ -431,6 +431,7 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("search-depths.md", searching::search_depths),
         ("search-races.md", searching::search_races),
         ("traps.md", traps::traps),
+        ("trap-damage.md", traps::by_danger),
         ("trap-avoid.md", traps::avoiding),
         ("trap-disarm.md", traps::disarming),
     ];
@@ -777,10 +778,19 @@ mod tests {
             "{traps}"
         );
         assert!(
-            traps.contains("| 3d6 fire | once | Explosion, very loud (150) |"),
+            traps.contains("| 1d4 fire | once | Explosion, very loud (150) |"),
             "{traps}"
         );
         assert!(traps.contains("| Pit `^` |") && !traps.contains("to_hit"));
+        let by_danger = text("trap-damage.md");
+        assert!(
+            by_danger.contains("| Trap | 0–2 | 3–5 | 6–9 | 10–14 | 15–21 | 22–29 | 30+ |")
+                && by_danger.contains(
+                    "| [Fireball trap](#trap-fireball) | 1d4 fire | 2d4 fire | 2d6 fire | \
+                     3d6 fire | 4d6 fire | 6d6 fire | 8d6 fire |"
+                ),
+            "{by_danger}"
+        );
         let scrolls = text("scrolls.md");
         assert!(
             scrolls.contains("| Scroll of fireball `?` | Casts Fireball a rung up its ladder"),

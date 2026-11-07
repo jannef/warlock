@@ -63,6 +63,55 @@ pub(super) fn traps(content: &Content) -> String {
     out
 }
 
+/// Each damaging trap's damage by the danger of the level it lies on (spec §8 "Traps",
+/// `[trap.grows]`): a column for each band between the rungs any trap has, from 0 (a place with
+/// no danger) on, the trap's roll at that band's start.
+pub(super) fn by_danger(content: &Content) -> String {
+    let damaging: Vec<_> = (content.trap_defs().iter())
+        .filter(|t| t.effect.damage().is_some())
+        .collect();
+    let mut starts: Vec<u8> = vec![0];
+    for t in &damaging {
+        starts.extend(
+            t.grows
+                .iter()
+                .flat_map(|g| g.damage.iter().map(|(at, _)| *at)),
+        );
+    }
+    starts.sort_unstable();
+    starts.dedup();
+    let bands: Vec<String> = (starts.iter().enumerate())
+        .map(|(i, from)| match starts.get(i + 1) {
+            Some(next) if *next == from + 1 => from.to_string(),
+            Some(next) => format!("{from}–{}", next - 1),
+            None => format!("{from}+"),
+        })
+        .collect();
+    let mut out = format!(
+        "| Trap | {} |\n|---|{}\n",
+        bands.join(" | "),
+        ":---:|".repeat(bands.len())
+    );
+    let mut rows = damaging;
+    rows.sort_by(|a, b| a.name.cmp(&b.name));
+    for t in rows {
+        let cells: Vec<String> = (starts.iter())
+            .map(|d| {
+                let roll = t.damage_at(*d).expect("a damaging trap");
+                super::damage::typed_dice(content, roll, t.effect.damage_kind())
+            })
+            .collect();
+        let _ = writeln!(
+            out,
+            "| [{}](#trap-{}) | {} |",
+            capital(&t.name),
+            t.id.replace('_', "-"),
+            cells.join(" | ")
+        );
+    }
+    out
+}
+
 /// Disarming each trap (spec §8 "Disarming traps"), by name: its difficulty (the one finding it
 /// takes, before a dungeon's depth adds to it) and how often a try disarms it and how often it
 /// sets it off, at Dexterity 10 untrained, at Dexterity 14, and at Dexterity 14 with Disable

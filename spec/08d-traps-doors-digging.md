@@ -55,6 +55,18 @@ developer notes (CLAUDE.md, `docs/dev/`).
       victim's resistance to the kind takes its share; a fall is no cut, so it opens no wound).
       A burst's or a bolt's damage a victim resists in full is `Strike::Resisted`: "The
       fireball does the salamander no harm."
+    - **Damage by danger** (#1165): a trap's damage is read at a rung chosen by the danger of
+      the level it lies on (§7 "Danger levels"; 0 for a level without one), when it goes off.
+      `[trap.grows]` in `data/traps.toml`, in the style of a spell's `[spell.grows]`, gives
+      `damage = "danger 3 1d4, 6 1d6"`: rungs `AT ROLL` (`AT` 1 to 99, strictly rising, at most
+      8, none doing less on average than the one before); a level of danger *D* reads the last
+      rung at or below *D*, and below the first the trap's own `damage`, the base. The rung is
+      a pure function of the level's danger, nothing stored: saves and replays are unchanged by
+      it. A door's and a chest's trap read the same rungs. The base (danger 0 to 2) never kills
+      a level-1 character at full hit points in one going off, a critical included (the owner:
+      "we can't make them too dead right away"); today's builtin rungs rise at danger 3, 6, 10,
+      15, 22, and 30, reaching the old dice (the fireball's 3d6) at 10 and going beyond.
+      Messages are unchanged; the game never names the damage, the wiki does.
     - **alarm**: only its noise.
     - **teleport**: the victim is moved at once to a free cell of the level (walkable, no one
       there, no trap, no ice: §5 "Ice"), the cell at index `hash % count` of those in row order,
