@@ -8,10 +8,9 @@ when lesser and "ancient" when greater, by its `undead` tag (`grade::TAG_WORDS`)
 
 The undead roster (#383; batch 1 #384, levels 1–10; batch 2 #385, 11–20; batch 3 #386, 21–30; batch 4 #387, 31–40; batch 5 #388, 41–55): shared types, one file each in
 `assets/data/creatures/`, on the conventions noted in that directory's `README.toml`. Each batch
-adds its types to `content/undead_roster_tests.rs` (`ROLES`, the type's role) and raises
-`ROSTER_TOP`: every `undead` type must be on the XP guideline (`OFF_GUIDELINE` lists the pale
-drinker), lie within ±35 % of #383's max HP and dice formulas for its level and role, and every
-level from 1 to `ROSTER_TOP` must have one. Batch 1's population lines: Cealdhlāw the crawling
+is written to #383's conventions: every `undead` type is on the XP guideline (the pale drinker
+is the exception), lies within ±35 % of #383's max HP and dice formulas for its level and role,
+and every level from 1 to 70 has one. Batch 1's population lines: Cealdhlāw the crawling
 hand, skeletal rat, kobold zombie, skeleton archer, skeletal wolf, and skeleton warrior;
 Fennmynster the corpse candle, poltergeist, ghast, shadow, and bog body; Fyrdelf the ogre zombie
 and grave hound. Batch 2's: Fennmynster the wraith and fen ghoul; Fyrdelf the burning skull,
@@ -101,7 +100,7 @@ All fifteen ship in no population (strays only). Each is one file in `assets/dat
 
 Drains are 2 points (3 for the two apexes) at difficulty 12 + level ÷ 5; wall Defence is 8 for the
 three spirits. The nightworm swallows (`swallowed`, docs/dev/status-effects.md) at 15 % and 24. Plurals: `huntsman`, `demilich`.
-`ROSTER_TOP` in `undead_roster_tests.rs` is 70, the top of both batches.
+The roster runs to level 70, the top of both batches.
 
 Spells (#1102, docs/dev/creatures.md "Casters"; in the order each prefers them): the barrow wight `hex_of_weakness`, `grave_breath` (mana 6); the ash wraith `scorching_ray`, `grave_breath` (mana 24); the mummy priest `fear`, `cause_wounds`, `blight` (mana 60); the lich `haste`, `chain_lightning`, `fireball`, `grave_spear` (mana 120); the mummy lord `fear`, `blight`, `grave_spear` (mana 80); the barrow king `fear`, `grave_spear`, `rime` (mana 110); the wormlord `fear`, `leech`, `blight` (mana 90); the ghost lord `fear`, `slumber`, `grave_spear` (mana 120); the archlich `haste`, `silence`, `sunfire`, `chain_lightning`, `grave_spear` (mana 300); the mummy king `fear`, `flame`, `grave_spear` (mana 130); the deathless king `haste`, `fear`, `sunfire`, `grave_spear`, `chain_lightning` (mana 300); the demilich `silence`, `sunfire`, `chain_lightning`, `leech`, `grave_spear` (mana 350).
 

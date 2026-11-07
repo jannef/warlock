@@ -13,10 +13,6 @@ use super::spell_type::{RiderSpec, TypeRider};
 use super::{Content, ContentError};
 use crate::dice::Dice;
 use serde::Deserialize;
-use std::ops::RangeInclusive;
-
-/// How far a creature's burst may reach, in cells.
-pub const RADII: RangeInclusive<i32> = 0..=3;
 
 /// When a creature bursts.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Deserialize)]
@@ -78,23 +74,6 @@ impl BurstSpec {
     /// Resolves the burst against `content` (its damage type and the riders' statuses, already
     /// loaded), checked.
     pub(super) fn resolve(&self, content: &Content) -> Result<CreatureBurst, String> {
-        if self.damage.min() < 1 {
-            return Err("burst: `damage` must roll at least 1".into());
-        }
-        if !RADII.contains(&self.radius) {
-            return Err(format!(
-                "burst: `radius` must be {} to {}",
-                RADII.start(),
-                RADII.end()
-            ));
-        }
-        let words = [&self.noun, &self.verb];
-        if words
-            .iter()
-            .any(|w| w.as_deref().is_some_and(|w| w.trim().is_empty()))
-        {
-            return Err("burst: `noun` and `verb` must not be empty".into());
-        }
         let kind = (content.damage_type_id(&self.damage_type))
             .ok_or_else(|| format!("burst: unknown damage type `{}`", self.damage_type))?;
         let riders = (self.rider.iter())

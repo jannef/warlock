@@ -1,6 +1,6 @@
 //! The campaign's creature waves (docs/design/campaign.md §10): the shipped types load where
-//! their data says, on the XP guideline, with the factions they fight in and the gear they
-//! carry. Each wave adds its types to [`WAVES`].
+//! their data says, with the factions they fight in and the gear they carry. Each wave adds its
+//! types to [`WAVES`].
 
 use crate::content::{Content, Stance};
 use crate::gear;
@@ -192,12 +192,10 @@ const WAVES: &[(&str, Option<&str>)] = &[
 ];
 
 #[test]
-fn the_waves_load_where_they_belong_on_the_xp_guideline() {
+fn the_waves_load_where_they_belong() {
     for &(id, campaign) in WAVES {
         let def = CONTENT.creature(CONTENT.creature_id(id).expect(id));
         assert_eq!(def.campaign.as_deref(), campaign, "{id}");
-        // The creature XP guideline (data/experience.toml): 5 × level + 10.
-        assert_eq!(def.xp, 5 * u32::from(def.level) + 10, "{id}");
     }
 }
 

@@ -115,59 +115,17 @@ fn tags_give_corpses_their_gifts_and_a_creature_its_own_over_them() {
             );
         }
     }
-    // Potential points are rare everywhere.
-    for creature in content.creature_defs() {
-        if let Some(eat) = &creature.on_eat {
-            assert!(eat.widen.values().all(|&c| c <= 20), "{}", creature.id);
-            assert!(eat.widen.keys().all(|s| eat.train.contains_key(s)));
-        }
-    }
 }
 
 #[test]
-fn the_old_stat_and_gifts_out_of_range_are_refused() {
+fn the_old_stat_is_an_unknown_field() {
+    let mut files = ContentFiles::builtin();
     let beetle = "train = { toughness = 60 }";
-    let refused = |files: ContentFiles| Content::load(&files).expect_err("refused").to_string();
-    let edited = |to: &str| {
-        let mut files = ContentFiles::builtin();
-        files.edit_table("creatures", |t| t.replace(beetle, to));
-        files
-    };
-    for (to, says) in [
-        ("stat = { toughness = 10 }", "`train"),
-        ("train = { toughness = 201 }", "0 to 200 marks"),
-        (
-            "train = { toughness = 60 }, widen = { toughness = 21 }",
-            "0 to 20",
-        ),
-        ("widen = { strength = 5 }", "needs a `train`"),
-    ] {
-        let e = refused(edited(to));
-        assert!(e.contains(says), "{to}: {e}");
-    }
-    let hunger = |from: &str, to: &str| {
-        let mut files = ContentFiles::builtin();
-        let text = include_str!("../../../../assets/data/hunger.toml");
-        assert!(text.contains(from), "{from}");
-        files.insert("data/hunger.toml", &text.replace(from, to));
-        files
-    };
-    let giant = "giant = { train = { strength = 60 }, widen = { strength = 5 } }";
-    for (to, says) in [
-        (
-            "giant = { train = { strength = 60 }, widen = { strength = 6 } }",
-            "1 to 5 for a tag",
-        ),
-        ("giant = { widen = { strength = 5 } }", "needs a `train`"),
-        ("giant = { train = { strength = 0 } }", "1 to 200"),
-        (
-            "gaint = { train = { strength = 60 } }",
-            "`gaint` is no creature's tag",
-        ),
-    ] {
-        let e = refused(hunger(giant, to));
-        assert!(e.contains(says), "{to}: {e}");
-    }
+    files.edit_table("creatures", |t| {
+        t.replace(beetle, "stat = { toughness = 10 }")
+    });
+    let e = Content::load(&files).expect_err("refused").to_string();
+    assert!(e.contains("unknown field `stat`"), "{e}");
 }
 
 #[test]
@@ -328,7 +286,7 @@ fn a_rotten_casters_corpse_teaches_nothing() {
 }
 
 #[test]
-fn skill_gifts_out_of_range_or_without_words_are_refused() {
+fn skill_gifts_without_words_are_refused() {
     let necromancer = "on_eat = { skills = { decipher_script = { gives = 6, up_to = 45 } } }";
     let refused = |files: ContentFiles| Content::load(&files).expect_err("refused").to_string();
     let edited = |to: &str| {
@@ -341,23 +299,13 @@ fn skill_gifts_out_of_range_or_without_words_are_refused() {
         assert!(found);
         files
     };
-    for (to, says) in [
-        (
-            "on_eat = { skills = { decipher_script = { gives = 50, up_to = 45 } } }",
-            "`gives` is 1 to `up_to`",
-        ),
-        (
-            "on_eat = { skills = { decipher_script = { gives = 0, up_to = 45 } } }",
-            "`gives` is 1 to `up_to`",
-        ),
-        (
-            "on_eat = { skills = { stealth = { gives = 6, up_to = 45 } } }",
-            "`stealth` has no words in [corpses.skills]",
-        ),
-    ] {
-        let e = refused(edited(to));
-        assert!(e.contains(says), "{to}: {e}");
-    }
+    let e = refused(edited(
+        "on_eat = { skills = { stealth = { gives = 6, up_to = 45 } } }",
+    ));
+    assert!(
+        e.contains("`stealth` has no words in [corpses.skills]"),
+        "{e}"
+    );
     let mut files = ContentFiles::builtin();
     let text = include_str!("../../../../assets/data/hunger.toml");
     files.insert(

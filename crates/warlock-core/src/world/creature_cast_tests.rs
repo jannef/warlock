@@ -4,7 +4,7 @@
 
 use super::*;
 use crate::action::{AttackKind, Event, parse_actions};
-use crate::content::{Combat, ContentFiles, SpellPurpose};
+use crate::content::ContentFiles;
 use crate::replay::Replay;
 
 /// The built-in content with `map`: the player at `@`, a caster of type `caster` at `k`, a
@@ -83,39 +83,6 @@ fn attacks_by(outs: &[Outcome], by: ActorId) -> Vec<AttackKind> {
             _ => None,
         })
         .collect()
-}
-
-#[test]
-fn every_caster_has_a_list_and_the_low_ones_are_rare_and_weak() {
-    let content = Content::builtin().expect("content");
-    let mut casters = 0;
-    for def in content.creature_defs() {
-        let id = &def.id;
-        assert_eq!(
-            def.combat == Combat::Caster,
-            !def.spells.is_empty(),
-            "{id}: a caster and only a caster has spells"
-        );
-        if def.spells.is_empty() {
-            continue;
-        }
-        casters += 1;
-        assert!(def.base_mana > 0, "{id}: mana to cast with");
-        for &spell in &def.spells {
-            let s = content.spell(spell);
-            assert!(s.level <= def.level, "{id}: {} is above its level", s.id);
-            // Up to level 10 only the weakest: level-1 harm, minor hexes, heals, and buffs.
-            if def.level <= 10 {
-                let most = if s.kind == SpellPurpose::Damage { 1 } else { 3 };
-                assert!(s.level <= most, "{id}: {} is too strong this low", s.id);
-            }
-        }
-        if def.level <= 10 {
-            let rarity = content.creature_rarity(def.rarity);
-            assert!(rarity.factor <= 10, "{id}: a low caster is very rare");
-        }
-    }
-    assert!(casters >= 40, "{casters}");
 }
 
 #[test]

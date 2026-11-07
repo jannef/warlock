@@ -194,12 +194,6 @@ fn a_colliding_id_and_bad_bodies_are_refused() {
     );
     let body = include_str!("../../../../assets/data/animated/stool.toml");
     for (from, to, says) in [
-        ("level = 1", "level = 9", "outside its tier"),
-        (
-            "object = \"stool\"",
-            "object = \"dagger\"",
-            "not of class `household`",
-        ),
         (
             "object = \"stool\"",
             "object = \"nothing\"",

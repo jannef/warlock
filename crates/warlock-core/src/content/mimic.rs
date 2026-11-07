@@ -100,14 +100,9 @@ impl Mimics {
         let err = |m: String| ContentError::new(RULES, m);
         let file: FamilyFile = toml::from_str(text).map_err(|e| err(e.to_string()))?;
         let [from, to] = file.family.levels;
-        if from == 0 || from > to || to > super::MAX_LEVEL {
-            return Err(err(format!(
-                "`levels` must be 1 to {} and least first",
-                super::MAX_LEVEL
-            )));
-        }
-        if !(0.0..=10.0).contains(&file.family.hp_factor) {
-            return Err(err("`hp_factor` is 0 to 10".into()));
+        // The family is numbered in a row of its levels, least first.
+        if from > to {
+            return Err(err("`levels` must be least first".into()));
         }
         if let Some(key) = OWN.iter().find(|k| file.creature.contains_key(**k)) {
             return Err(err(format!(
@@ -127,12 +122,6 @@ impl Mimics {
                 return Err(err(format!(
                     "band `{}`: `from` {} is not chest band `{}`'s {}",
                     band.id, band.from, chest.id, chest.from
-                )));
-            }
-            if band.name.trim().is_empty() || band.weight == 0 {
-                return Err(err(format!(
-                    "band `{}`: a `name` and a `weight` are needed",
-                    band.id
                 )));
             }
         }

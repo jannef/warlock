@@ -7,8 +7,8 @@ the kobolds, as the ogre was among the goblins, so Fyrdelf plays as before; the 
 undead list it; the goblins and their kin stay neutral), tags `giant` on every type and `ogre` on
 the ogre, ogre mauler, and ogre mage, `caster` on the ogre mage and giant shaman. The ogre moved
 there from `goblins`, and its fist went from 1d8 to 2d8 to sit on the formula. Shared types, one
-file each; `content/giant_roster_tests.rs` keeps them to #457's formulas (#383's for a living
-brute: `ROLES` gives each its role, giant, ogre, or caster; max HP and dice within ±35 %, the XP
+file each; they are written to #457's formulas (#383's for a living
+brute: each has a role, giant, ogre, or caster; max HP and dice within ±35 %, the XP
 guideline, the tags, and every giant but the shaman throws a boulder at the level's dice from
 5 + L/10 cells, the stone giant two farther).
 

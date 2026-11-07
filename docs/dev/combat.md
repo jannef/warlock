@@ -72,7 +72,7 @@ Critical immunity (#682): `combat::Target::no_criticals`, set by `World::target_
 threat (and a sure critical) as a plain hit and draws no confirmation.
 
 Creatures' natural Protection follows a rule by body and level (spec §8 "Natural Protection by
-body and level", #563): data only, checked by `content/creature_body_tests.rs` (the body table by
+body and level", #563): data only (the body table by
 hide name, the peoples and armed types at 0, the exceptions list); `docs/dev/creatures.md`.
 A confirmed critical adds `Profile::critical_penetration` (Armour-breaker's
 `critical_penetration`, set in `Actor::stanced`) to the penetration in `combat::strike`.

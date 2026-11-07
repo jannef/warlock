@@ -415,10 +415,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
   wolf, a black hound, a great boar, a panther), on its own stream (two draws); named from
   `names` (Old English: Snel, Brūn, Græg, …; one draw on its own stream); "Snel, your hound, pads
   at your heel." A character with a starting beast is told a line of it in the story's
-  **companion** chapter (§8 "Background story"). Only `tameable` creature types may be
-  companions (a beast: never a unique, an animated object, a summoner, one that opens doors, one
-  of the peoples, one that fights from afar, or one that carries gear); a type's `nose` (1 to
-  20 cells) is how far it smells. **Growth**: the companion's `grade` is its master's level
+  **companion** chapter (§8 "Background story"). Only `tameable` creature types may be tamed
+  (the shipped ones are plain beasts); a type's `nose` (in cells) is how far it smells. **Growth**: the companion's `grade` is its master's level
   (`[growth] grade_percent` 100 of it, never below its type's own), re-set at every level-up
   ("Snel grows stronger."); above its type's level each level adds `hp_per_level` (2) hit points,
   and every `to_hit_every` (4) +1 to hit, `damage_bonus_every` (6) +1 damage, `damage_dice_every`

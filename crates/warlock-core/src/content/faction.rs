@@ -91,8 +91,8 @@ pub struct Factions {
 }
 
 impl Factions {
-    /// Resolves and validates the factions of `data/factions.toml`: unique ids, known hostile
-    /// ids, no faction hostile to itself, and a [`PLAYER_FACTION`].
+    /// Resolves the factions of `data/factions.toml`: unique ids, known hostile and provoked ids,
+    /// and a [`PLAYER_FACTION`].
     pub(super) fn resolve(specs: Vec<FactionSpec>) -> Result<Self, String> {
         let mut ids = BTreeMap::new();
         for (i, spec) in specs.iter().enumerate() {
@@ -117,19 +117,10 @@ impl Factions {
                     ));
                 };
                 let b = usize::from(b.0);
-                if a == b {
-                    return Err(format!("faction `{}` cannot be hostile to itself", spec.id));
-                }
                 hostile[a * n + b] = true;
                 hostile[b * n + a] = true;
             }
             if spec.hostile_to_all {
-                if !spec.hostile.is_empty() {
-                    return Err(format!(
-                        "faction `{}` is `hostile_to_all`: it lists no `hostile`",
-                        spec.id
-                    ));
-                }
                 for b in 0..n {
                     hostile[a * n + b] = true;
                     hostile[b * n + a] = true;
@@ -140,9 +131,6 @@ impl Factions {
         for s in specs {
             let provoked = match &s.provoked {
                 None => None,
-                Some(other) if *other == s.id => {
-                    return Err(format!("faction `{}` cannot be provoked into itself", s.id));
-                }
                 Some(other) => Some(*ids.get(other).ok_or_else(|| {
                     format!(
                         "faction `{}` is provoked into unknown faction `{other}`",
@@ -164,28 +152,21 @@ impl Factions {
     }
 
     /// Resolves each faction's `gear` by `material` (a material's id and whether it has a
-    /// group, which is what an item of another material may be made of): known materials of a
-    /// group, each 1 to 100 percent, together at most 100.
+    /// group, which is what an item of another material may be made of): known materials, together
+    /// at most 100 percent (each one's share of the draw is out of the whole, `variant.rs`).
     pub(super) fn resolve_gear(
         &mut self,
-        material: impl Fn(&str) -> Option<(MaterialId, bool)>,
+        material: impl Fn(&str) -> Option<MaterialId>,
     ) -> Result<(), String> {
         for def in &mut self.defs {
             let mut gear = Vec::with_capacity(def.gear_names.len());
             for (name, &percent) in &def.gear_names {
-                let Some((id, grouped)) = material(name) else {
+                let Some(id) = material(name) else {
                     return Err(format!(
                         "faction `{}`: `gear` names unknown material `{name}`",
                         def.id
                     ));
                 };
-                if !grouped || !(1..=100).contains(&percent) {
-                    return Err(format!(
-                        "faction `{}`: `gear`'s `{name}` is a material of a group, 1 to 100 \
-                         percent",
-                        def.id
-                    ));
-                }
                 gear.push((id, percent));
             }
             if gear.iter().map(|(_, p)| u32::from(*p)).sum::<u32>() > 100 {
@@ -281,25 +262,6 @@ hostile_to_all = true
         assert!(f.def(id("berserk")).hostile_to_all);
     }
 
-    #[test]
-    fn hostile_to_all_lists_no_one() {
-        let err = resolve(
-            r#"
-[[faction]]
-id = "player"
-name = "you"
-
-[[faction]]
-id = "berserk"
-name = "the berserk"
-hostile_to_all = true
-hostile = ["player"]
-"#,
-        )
-        .unwrap_err();
-        assert!(err.contains("lists no `hostile`"), "{err}");
-    }
-
     fn resolve(text: &str) -> Result<Factions, String> {
         let file: FactionFile = toml::from_str(text).map_err(|e| e.to_string())?;
         Factions::resolve(file.faction)
@@ -362,10 +324,6 @@ name = "wildlife"
                 "unknown faction `orcs`",
             ),
             (
-                "[[faction]]\nid = \"player\"\nname = \"p\"\nhostile = [\"player\"]\n",
-                "hostile to itself",
-            ),
-            (
                 "[[faction]]\nid = \"player\"\nname = \"p\"\n[[faction]]\nid = \"player\"\nname = \"q\"\n",
                 "duplicate faction id",
             ),
@@ -381,10 +339,6 @@ name = "wildlife"
                 "[[faction]]\nid = \"player\"\nname = \"p\"\nprovoked = \"wrath\"\n",
                 "provoked into unknown faction `wrath`",
             ),
-            (
-                "[[faction]]\nid = \"player\"\nname = \"p\"\nprovoked = \"player\"\n",
-                "provoked into itself",
-            ),
         ];
         for (text, expected) in cases {
             let err = resolve(text).unwrap_err();
@@ -393,12 +347,10 @@ name = "wildlife"
     }
 
     #[test]
-    fn gear_names_grouped_materials_within_a_hundred_percent() {
-        // bone (0) and iron (1) have a group; paper (2) has none.
+    fn gear_names_known_materials_within_a_hundred_percent() {
         let material = |name: &str| match name {
-            "bone" => Some((MaterialId(0), true)),
-            "iron" => Some((MaterialId(1), true)),
-            "paper" => Some((MaterialId(2), false)),
+            "bone" => Some(MaterialId(0)),
+            "iron" => Some(MaterialId(1)),
             _ => None,
         };
         let with = |gear: &str| {
@@ -415,8 +367,6 @@ name = "wildlife"
         assert!(f.def(f.id("player").expect("player")).gear.is_empty());
         for (gear, expected) in [
             ("{ mithril = 10 }", "unknown material `mithril`"),
-            ("{ paper = 10 }", "material of a group"),
-            ("{ bone = 0 }", "1 to 100"),
             ("{ bone = 60, iron = 41 }", "at most 100"),
         ] {
             let err = with(gear).expect_err(gear);

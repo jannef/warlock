@@ -13,9 +13,8 @@ of "the goblins' ogres and trolls" is now of the `troll` faction, so the spec's 
 
 A troll heals by its Toughness, so the tribe's formulas are the undead roster's (#383) with
 Toughness 4 higher, and fire hurts all but the fire troll (`resist fire` negative).
-`content/troll_roster_tests.rs` checks every living troll (`ROLES`: brute, standard, quick,
-caster) against the formulas (XP guideline, ±35 % of max HP and dice average) and the span's
-ends.
+Every living troll (brute, standard, quick, caster) is written to the formulas (XP
+guideline, ±35 % of max HP and dice average).
 
 **Regeneration** (#1131, the dread design §5.9): the brutes carry `regen = 400` (four times the
 pace, `world/regen.rs`; Burning and Corroded stop it, `regen = 0` on both statuses), and only

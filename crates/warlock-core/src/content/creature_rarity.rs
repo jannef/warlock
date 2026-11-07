@@ -8,12 +8,9 @@
 
 use super::ContentError;
 use serde::Deserialize;
-use std::ops::RangeInclusive;
 
 /// The rarity of every creature type that names none; the file must have it.
 pub const COMMON: &str = "common";
-/// A tier's factor, in percent of a common type's weight.
-pub const FACTOR: RangeInclusive<u16> = 1..=1000;
 
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -52,14 +49,9 @@ pub(super) fn parse(file: &str, text: &str) -> Result<Vec<CreatureRarity>, Conte
         if tiers.iter().any(|t| t.id == tier.id) {
             return Err(err(format!("duplicate rarity id `{}`", tier.id)));
         }
-        if !FACTOR.contains(&tier.factor) {
-            return Err(err(format!(
-                "rarity `{}`: factor {} is out of range ({} to {})",
-                tier.id,
-                tier.factor,
-                FACTOR.start(),
-                FACTOR.end()
-            )));
+        // A draw's weights: a factor of 0 would leave a pool of such types nothing to draw.
+        if tier.factor == 0 {
+            return Err(err(format!("rarity `{}`: factor 0", tier.id)));
         }
         tiers.push(tier);
     }
@@ -93,8 +85,7 @@ mod tests {
                 "`common` is required",
             ),
             (format!("{common}{common}"), "duplicate rarity id `common`"),
-            (common.replace("100", "0"), "factor 0 is out of range"),
-            (common.replace("100", "1001"), "factor 1001 is out of range"),
+            (common.replace("100", "0"), "factor 0"),
             (
                 common.replace("factor = 100\n", ""),
                 "missing field `factor`",

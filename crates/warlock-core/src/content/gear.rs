@@ -7,10 +7,10 @@
 //! hand, the missile weapon or missiles slot, or the Tool slot takes is wielded, what another
 //! slot takes is worn, the rest carried), and `magic` (the percent that the piece is made magic
 //! as loot is, default 0). The racial weapon is the first line, `{ chance = 90, one_of =
-//! [racial_weapon], keep = "wield" }`, unless a line of the type's names it alone; a type must
-//! have a rank in its weapon skill (the affinity is ranks, which combat already applies).
+//! [racial_weapon], keep = "wield" }`, unless a line of the type's names it alone. What fits no
+//! slot as kept is carried (`Pack::equip`), and a piece that is never magic is made plain.
 
-use super::kit::{self, Keep};
+use super::kit::Keep;
 use super::{Content, ObjectId, object};
 use crate::equipment::{self, Equipment};
 use crate::object::Stack;
@@ -80,13 +80,8 @@ fn default_keep(stacks: &[Stack], content: &Content) -> Keep {
     }
 }
 
-/// Resolves the gear of the creature type with weapon-skill ranks `rank` (by the object's
-/// skill).
-pub(super) fn resolve(
-    spec: &GearSpec,
-    content: &Content,
-    rank: impl Fn(super::WeaponSkillId) -> u8,
-) -> Result<Gear, String> {
+/// Resolves a creature type's gear.
+pub(super) fn resolve(spec: &GearSpec, content: &Content) -> Result<Gear, String> {
     let mut lines = Vec::new();
     let racial_weapon = match &spec.racial_weapon {
         None => None,
@@ -94,20 +89,6 @@ pub(super) fn resolve(
             let id = content
                 .object_id(name)
                 .ok_or_else(|| format!("racial_weapon: unknown object `{name}`"))?;
-            let def = content.object(id);
-            if def.attack.is_none() {
-                return Err(format!(
-                    "racial_weapon: `{name}` is no weapon (no `damage`)"
-                ));
-            }
-            if let Some(skill) = def.skill
-                && rank(skill) == 0
-            {
-                let skill = &content.weapon_skills().skill(skill).id;
-                return Err(format!(
-                    "racial_weapon: `{name}` but no rank in `{skill}` (its `weapon_skills`)"
-                ));
-            }
             let written = (spec.lines.iter()).any(|l| l.one_of.len() == 1 && l.one_of[0] == *name);
             if !written {
                 lines.push(GearLine {
@@ -121,11 +102,7 @@ pub(super) fn resolve(
     };
     for line in &spec.lines {
         let at = |m: String| format!("gear `{}`: {m}", line.one_of.join("|"));
-        if line.chance > 100 || line.magic > 100 {
-            return Err(at(
-                "`chance` and `magic` are chances in percent, 0 to 100".into()
-            ));
-        }
+        // The draw indexes the alternatives.
         if line.one_of.is_empty() {
             return Err(at("`one_of` names at least one object".into()));
         }
@@ -133,7 +110,6 @@ pub(super) fn resolve(
         for placed in &line.one_of {
             let stacks = object::parse_stacks(std::slice::from_ref(placed), content).map_err(at)?;
             let keep = line.keep.unwrap_or_else(|| default_keep(&stacks, content));
-            kit::check_kept(keep, line.magic > 0, &stacks, content).map_err(at)?;
             one_of.push((stacks, keep));
         }
         lines.push(GearLine {

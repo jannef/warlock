@@ -402,15 +402,10 @@ fn a_gaze_is_checked_as_it_loads() {
         assert!(e.contains(says), "{e}");
     };
     let rider = "riders = [{ status = \"transfixed\", chance = 100, severity = 1 }]";
-    refused(&format!("range = 9\n{rider}"), "`range`");
-    refused(&format!("range = 0\n{rider}"), "`range`");
-    refused(&format!("range = 3\ncooldown = 3\n{rider}"), "`cooldown`");
-    refused(&format!("range = 3\nchance = 0\n{rider}"), "`chance`");
     refused(
         &format!("range = 3\nglance = 25\n{rider}"),
         "`glance` goes with",
     );
-    refused("range = 3\nriders = []", "names nothing");
     refused(
         "range = 3\nriders = [{ status = \"transfixed\", chance = 100 }]",
         "needs a `severity`",

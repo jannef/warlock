@@ -16,11 +16,11 @@ developer notes (CLAUDE.md, `docs/dev/`).
   singular words, lower-case words joined by hyphens, 1 to 24 characters, each once: `["goblin",
   "archer"]`; nothing declares a tag, a creature carrying it is all there is; a kill quest may
   ask for a tag, §8 "Quests"; never shown to the player), a
-  `speed` (100 to 10 000, default 1000, the player's; never shown to the player; §8 "Speed"): the
+  `speed` (never 0, default 1000, the player's; never shown to the player; §8 "Speed"): the
   giant rat 1200, the cave bat 2000, the kobold 900, the deer 1300; and for hearing (§5)
-  `footsteps` (at most 300; default 0, silent) and `hearing` (the faintest loudness heard, 1 to
-  300; default none, deaf). For behavior (§8 "Creature behavior") a creature type names its
-  `faction` (below; required when factions exist, the player's is `player`), its eyes `vision`
+  `footsteps` (default 0, silent; a sound is heard at most at 300) and `hearing` (the faintest
+  loudness heard; default none, deaf). For behavior (§8 "Creature behavior") a creature type names its
+  `faction` (below; none: neutral to all; the player's is `player`), its eyes `vision`
   (a profile; default `normal`) and `sight` (radius, 1 to 40, default 10), how it fights:
   `combat = "melee"` (default), `"ranged"`, or `"caster"`, the latter two with a `range` (2 to its
   sight), `opens_doors` (default false), `budge` (whether the player may swap places with it

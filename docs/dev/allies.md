@@ -45,9 +45,8 @@ the file: then no ally can be made, and fixtures without it hash as before): `[f
 (2), `leash` (8), `comes_along` (3; the owner's Q5), `[stay] reach` (1), `[hunt] reach` (3),
 `[orders] noise` (60), `[allies] most` (8), `[xp] ally_percent` (50: what a master whose class
 has no `ally_share` is paid; the ranger's and the druid's `ally_share = 100` in
-`data/classes/`, `ClassDef::ally_share`, checked 0 to 100; #915). Checks:
-distances 1 to 20, the leash at least the heel, the noise 1 to `MAX_LOUDNESS`, `most` 1 to 24,
-the percent 0 to 100.
+`data/classes/`, `ClassDef::ally_share`; #915). Every field is needed; the numbers are the
+author's (#1205).
 
 ## Its mind
 
@@ -237,8 +236,7 @@ player's own blow at one, `fight.rs`; a throw's, `hurl.rs`); a companion is `End
 bites the kobold."; unseen it is "something" as ever.
 
 Tests: `world/caster_tests.rs` (the table to 60 by `levelup:auto`, the calls one of each and
-the raises, the fight words and the departure), `content/beast_roster_tests.rs`,
-`content/spell_def.rs`'s shipped-spell table, `world/spell_list_tests.rs` (the calls counted
+the raises, the fight words and the departure), `content/spell_def.rs`'s shipped-spell table, `world/spell_list_tests.rs` (the calls counted
 apart from a full caster's four to six spells). The balance probe's "Summons" table
 (`balance_probe/summons.rs`, `docs/balance.md`).
 
@@ -319,7 +317,7 @@ along and being left behind, the clock here and on a level left, a rest undistur
 round trip, Beast-bond through the master (and nobody else), the Handle animal mark, the
 retinue across the showcase's overworld (never drawn, not in the way, stepping out, the timed
 one gone on the road, back into the retinue, saved), the dumps and the menu rows, and a replay
-through all of it without divergence. `content/ally.rs` checks the file. The showcase's dump
+through all of it without divergence. `content/ally.rs` parses the file. The showcase's dump
 snapshots are untouched: no scenario makes an ally.
 
 ## The risen

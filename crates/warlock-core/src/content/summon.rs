@@ -19,18 +19,11 @@ use std::ops::RangeInclusive;
 
 /// The cooldown status a summoning gives (`data/status.toml`).
 pub const STATUS: &str = "summoning";
-/// The most creatures one summoning may bring.
+/// The most creatures a summoning spell may bring (`spell_def.rs`).
 pub const MAX_COUNT: i32 = 12;
-/// A summoning's cooldown, in seconds.
-pub const COOLDOWNS: RangeInclusive<u32> = 6..=600;
-/// What a summoning may cost in mana, when it names a cost (left out: none).
-pub const MANA: RangeInclusive<i32> = 1..=1000;
-/// How far away a summoner may see the hostile it summons at, in cells.
-pub const RANGES: RangeInclusive<i32> = 1..=20;
-/// How far from the summoner the summoned may appear, in cells (Chebyshev).
+/// How far from the caster a summoning spell's summoned may appear, in cells (Chebyshev;
+/// `spell_def.rs`).
 pub const SPREADS: RangeInclusive<i32> = 1..=5;
-/// How many of one summoner's summoned may live at once.
-pub const MOSTS: RangeInclusive<u8> = 1..=20;
 
 /// A summoning as written: `[creature.summon]` (`data/creatures/README.toml` has the fields).
 #[derive(Clone, Debug, Deserialize)]
@@ -74,7 +67,8 @@ pub struct Summon {
 }
 
 impl SummonSpec {
-    /// Checks what can be checked before the other creature types are known.
+    /// Checks the pool's form before the other creature types are known: `creatures` or `tag`,
+    /// and `levels` with `tag` only (a field the other form would leave unread).
     pub(super) fn check(&self) -> Result<(), String> {
         match (self.creatures.is_empty(), &self.tag) {
             (true, None) => return Err("summon: needs `creatures` or `tag`".into()),
@@ -86,53 +80,6 @@ impl SummonSpec {
                 return Err("summon: `levels` goes with `tag`".into());
             }
             _ => {}
-        }
-        if let Some([lo, hi]) = self.levels
-            && lo > hi
-        {
-            return Err("summon: `levels` must be [lowest, highest]".into());
-        }
-        if self.count.min() < 1 || self.count.max() > MAX_COUNT {
-            return Err(format!("summon: `count` must lie within 1 to {MAX_COUNT}"));
-        }
-        let within = |name: &str, v: i32, r: RangeInclusive<i32>| {
-            if r.contains(&v) {
-                Ok(())
-            } else {
-                Err(format!(
-                    "summon: `{name}` must be {} to {}",
-                    r.start(),
-                    r.end()
-                ))
-            }
-        };
-        if !COOLDOWNS.contains(&self.cooldown) {
-            return Err(format!(
-                "summon: `cooldown` must be {} to {} seconds",
-                COOLDOWNS.start(),
-                COOLDOWNS.end()
-            ));
-        }
-        if let Some(mana) = self.mana {
-            within("mana", mana, MANA)?;
-        }
-        if let Some(range) = self.range {
-            within("range", range, RANGES)?;
-        }
-        if let Some(spread) = self.spread {
-            within("spread", spread, SPREADS)?;
-        }
-        if let Some(most) = self.most
-            && !MOSTS.contains(&most)
-        {
-            return Err(format!(
-                "summon: `most` must be {} to {}",
-                MOSTS.start(),
-                MOSTS.end()
-            ));
-        }
-        if self.verb.as_deref().is_some_and(|v| v.trim().is_empty()) {
-            return Err("summon: `verb` must not be empty".into());
         }
         Ok(())
     }
@@ -185,9 +132,6 @@ pub(super) fn resolve(
         return Err("summon: no creature fits the pool".into());
     }
     let mana = spec.mana.unwrap_or(0);
-    if mana > 0 && def.base_mana <= 0 {
-        return Err("summon: a summoner needs `mana`".into());
-    }
     let status = (content.status_id(STATUS))
         .ok_or_else(|| format!("summon: needs the `{STATUS}` status in data/status.toml"))?;
     let status_def = content.status(status);
@@ -251,44 +195,8 @@ mod tests {
                 "needs `levels",
             ),
             (
-                "tag = \"devil\"\nlevels = [9, 2]\ncount = \"1d3\"\ncooldown = 30\nmana = 8",
-                "[lowest, highest]",
-            ),
-            (
                 "creatures = [\"imp\"]\nlevels = [1, 2]\ncount = \"1d3\"\ncooldown = 30\nmana = 8",
                 "goes with `tag`",
-            ),
-            (
-                "creatures = [\"imp\"]\ncount = \"1d4-1\"\ncooldown = 30\nmana = 8",
-                "`count`",
-            ),
-            (
-                "creatures = [\"imp\"]\ncount = \"2d12\"\ncooldown = 30\nmana = 8",
-                "`count`",
-            ),
-            (
-                "creatures = [\"imp\"]\ncount = \"1d3\"\ncooldown = 2\nmana = 8",
-                "`cooldown`",
-            ),
-            (
-                "creatures = [\"imp\"]\ncount = \"1d3\"\ncooldown = 30\nmana = 0",
-                "`mana`",
-            ),
-            (
-                "creatures = [\"imp\"]\ncount = \"1d3\"\ncooldown = 30\nmana = 8\nrange = 30",
-                "`range`",
-            ),
-            (
-                "creatures = [\"imp\"]\ncount = \"1d3\"\ncooldown = 30\nmana = 8\nspread = 0",
-                "`spread`",
-            ),
-            (
-                "creatures = [\"imp\"]\ncount = \"1d3\"\ncooldown = 30\nmana = 8\nmost = 0",
-                "`most`",
-            ),
-            (
-                "creatures = [\"imp\"]\ncount = \"1d3\"\ncooldown = 30\nmana = 8\nverb = \" \"",
-                "`verb`",
             ),
         ] {
             let err = spec(text).expect_err(text);
