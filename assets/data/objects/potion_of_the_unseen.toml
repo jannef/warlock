@@ -1,0 +1,21 @@
+# A potion of the unseen (spec §8 "Potions", the potions wave 2 design §4.1): Invisible for two minutes, unseen by what needs eyes. The unseen and the unplaced are opal.
+[[object]]
+id = "potion_of_the_unseen"
+name = "potion of the unseen"
+plural = "potions of the unseen"
+glyph = "!"
+fg = "#b8d0e0"
+class = "potions"
+materials = ["glass"]
+weight = 250
+value = 300
+stackable = true
+level = 7
+frequency = 6
+
+[object.drink]
+kind = "status"
+status = "invisible"
+severity = 1
+colour = "opal"
+marks = { dexterity = 15 }

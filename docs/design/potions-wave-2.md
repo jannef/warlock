@@ -241,7 +241,7 @@ Identification by drinking is as today: the type is learned whatever happens, an
 | Change | Where |
 |---|---|
 | `[object.throw]` → `ThrowSpec` → `Flask { spell, rungs, range, noise, words }` on `ObjectDef::flask`; checks (§3); a flask must also `drink` | `content/potion.rs` (the one potion module), `content/object.rs` (`can_throw`, `throw_range`) |
-| `Draught::Status { status, severity }` (the status must end: `eases` or `per_action`; not `kills_at_max`; not one a resource or disease gives: Raging, Diseased), `Draught::Nourish { satiation }`, `Draught::Restore`, `Draught::Blink`, `Draught::Gamble { outcomes }` (the file must exist and every outcome's effect be one a drink may do) | `content/potion.rs` |
+| `Draught::Status { status, severity }` (any status; the loader checks only that it resolves, #1205), `Draught::Nourish { satiation }`, `Draught::Restore`, `Draught::Blink`, `Draught::Gamble { outcomes }` (the file must exist and every outcome's effect be one a drink may do) | `content/potion.rs` |
 | `cured_by` means `clear_head` (Frightened, Drowsy, Sluggish, Stunned, Staggered, Transfixed) and `holy_water` (Ill-wished, Branded) | `data/status.toml` |
 | `OutcomeEffect::Status { id, severity }`, `::Drain(n)` | `content/outcome.rs`, `world/outcome.rs` |
 | three spells (§9.3), their scrolls (`scroll_of_fume`, `_flare`, `_acid_splash`, by the every-spell-has-a-scroll rule, Q4), two effects (`fume`, `flare`) | `data/spells/`, `data/objects/`, `data/effects.toml` |

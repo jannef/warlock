@@ -481,7 +481,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
   Moth-eyed the ultraviolet sight), `haste` (`severity` degrees of Hasted, the Haste spell's
   status: a minute a degree, everything a quarter quicker), and `resistance` (its `status`
   resists as gear does for half an hour, 50 %: Warmed fire, Chill-proof cold, Earthed
-  electricity, Proof against poison). A status lent says its own line as it begins ("You feel
+  electricity, Proof against poison), and `status` (#1224, the potions wave 2 design §4.1:
+  `severity` degrees of any `status`: Barkskin, Glamoured,
+  Renewing, Quick-sensed, Invisible, Water-borne; the description says what it does in words,
+  "Makes you harder to hit for a while"). A status lent says its own line as it begins ("You feel
   stronger.", "Your eyes open wide to the dark."); a stronger dose of one already felt says it
   again, and one that changes nothing "Nothing more comes of it." The status bar and the
   character screen name it as they name Blessed, the raised score shown raised, never a number
@@ -511,7 +514,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     one `fg`, checked). The colour follows one rule: each effect family has a hue, and a potion
     of several effects mixes theirs: healing red, cures green, healing and cures russet, mana
     blue, stat boosts orange (greater ones deep orange), vision violet, speed yellow, resistance
-    teal, harm brown. The colour hints at the family, never the type. The `!` shows in it,
+    teal, harm brown, wards bronze, renewal rose, the unseen and the unplaced opal, utility sky
+    blue. The colour hints at the family, never the type. The `!` shows in it,
     known or not. A type is known (`WorldState::known_scrolls`) once one is drunk, identified
     (the scroll of identify, an appraisal), or in the character's starting kit (the witch's
     potion). The item description says what a known one does in words ("Heals wounds at once,
@@ -525,8 +529,13 @@ developer notes (CLAUDE.md, `docs/dev/`).
     wit, will, and presence (boost, severity 1; 3, 20 each; 150; orange) and their greater
     potions (severity 2; 8, 8 each; 400; deep orange; 30 marks), of cat's eyes, owl's eyes, and
     moth's eyes (vision; 3, 15 each; 100; violet; Willpower), of quickness (haste 1; 6, 10;
-    250; yellow; Dexterity), and of warmth, frost, earthing, and proofing (resistance; 4, 15
-    each; 120; teal; Toughness). **Where**: loot (by `level` and
+    250; yellow; Dexterity), of warmth, frost, earthing, and proofing (resistance; 4, 15
+    each; 120; teal; Toughness); the helpful draughts (kind `status`; #1224): potion of
+    barkskin (Barkskin 2; 3, 15; 100; bronze; Toughness), of glamour (Glamoured 2; 5, 12; 150;
+    bronze; Presence), of renewal (Renewing 2; 4, 15; 120; rose; Toughness), of the quick
+    (Quick-sensed 3; 5, 10; 150; opal; Willpower), of the unseen (Invisible 1; 7, 6; 300; opal;
+    Dexterity), and of sea legs (Water-borne 3; 4, 10; 100; sky blue; Dexterity). **Where**:
+    loot (by `level` and
     `frequency`, never magic), general stores and provisioners (they stock and buy potions), the
     alchemist (§7 "Shops": potions only, healing always first), quest rewards, and the hub's
     pile.
