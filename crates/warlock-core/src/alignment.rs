@@ -69,18 +69,6 @@ impl From<Score> for i32 {
     }
 }
 
-/// Checks a race's or a class's part of a new character's score (`alignment` in
-/// `data/races.toml` and `data/classes/`): −[`MAX`] to [`MAX`]; the sum is kept on the scale.
-pub fn check_start(value: i32) -> Result<i32, String> {
-    if (-MAX..=MAX).contains(&value) {
-        Ok(value)
-    } else {
-        Err(format!(
-            "alignment {value} is out of range (-{MAX} to {MAX})"
-        ))
-    }
-}
-
 /// Where a creature stands, fixed by its type (`alignment` in its file) or its level (a legend
 /// entry's `alignment`). The player's comes from their score's band ([`Band::side`]).
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]

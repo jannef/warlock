@@ -535,7 +535,11 @@ impl CharacterSpec {
             mana: race.mana + class.mana,
             skills,
             weapon_skills,
-            alignment: Score::new(race.alignment + class.alignment + nudge),
+            alignment: Score::new(
+                (race.alignment)
+                    .saturating_add(class.alignment)
+                    .saturating_add(nudge),
+            ),
             kit: kit::roll(content, &character, &trained, seed),
             character,
         })

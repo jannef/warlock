@@ -237,17 +237,12 @@ pub(super) fn resolve_scrolls(
     spec: &RandomScrollsSpec,
     content: &Content,
 ) -> Result<RandomScrolls, String> {
-    if spec.count.min() < 0 {
-        return Err(format!(
-            "`random_scrolls`: count `{}` may come out below 0",
-            spec.count
-        ));
-    }
     let scrolls: Vec<super::ObjectId> = (0..content.spells().len())
         .map(|i| super::SpellId(u16::try_from(i).expect("spell ids fit")))
         .filter(|&spell| content.spell(spell).level < spec.below_level)
         .filter_map(|spell| content.scroll_of(spell))
         .collect();
+    // The draw indexes the list.
     if scrolls.is_empty() {
         return Err(format!(
             "`random_scrolls`: no spell scroll of a spell below level {}",
@@ -260,14 +255,8 @@ pub(super) fn resolve_scrolls(
     })
 }
 
-/// Resolves the lines `specs` against `content` (its objects and weapon skills). `trainable` is
-/// what a class's kit's `trained` may name (what the class trains, or may by its choices); `None`
-/// for a race's or a sign's, which may name any weapon skill or style.
-pub(super) fn resolve(
-    specs: &[KitLineSpec],
-    content: &Content,
-    trainable: Option<&[WeaponSkillId]>,
-) -> Result<Kit, String> {
+/// Resolves the lines `specs` against `content` (its objects and weapon skills).
+pub(super) fn resolve(specs: &[KitLineSpec], content: &Content) -> Result<Kit, String> {
     let mut kit = Vec::new();
     for spec in specs {
         let at = |m: String| format!("kit `{}`: {m}", spec.items);
@@ -275,29 +264,13 @@ pub(super) fn resolve(
             .map(|placed| object::parse_stacks(&[placed.trim().to_string()], content))
             .collect::<Result<Vec<_>, _>>()
             .map_err(at)?;
-        for stacks in &one_of {
-            check_kept(spec.keep, spec.magic.is_some(), stacks, content).map_err(at)?;
-        }
-        if spec.fill && spec.keep == Keep::Carry {
-            return Err(at(
-                "`fill`: only a `wield` or `wear` line fills a slot".into()
-            ));
-        }
-        let trained = match &spec.trained {
-            None => None,
-            Some(name) => {
-                let id = (content.weapon_skills().id(name)).ok_or_else(|| {
+        let trained =
+            match &spec.trained {
+                None => None,
+                Some(name) => Some((content.weapon_skills().id(name)).ok_or_else(|| {
                     at(format!("`trained`: unknown weapon skill or style `{name}`"))
-                })?;
-                if trainable.is_some_and(|t| !t.contains(&id)) {
-                    return Err(at(format!(
-                        "`trained`: the class never trains `{name}` (its weapon skills, styles, \
-                         and their choices)"
-                    )));
-                }
-                Some(id)
-            }
-        };
+                })?),
+            };
         kit.push(KitItem {
             keep: spec.keep,
             one_of,
@@ -311,9 +284,9 @@ pub(super) fn resolve(
     Ok(Kit(kit))
 }
 
-/// Whether one alternative of a line, `stacks`, may be kept as `keep` says: what is wielded or
-/// worn is one stack that goes in a slot of that kind, and what may be made `magic` is a base
-/// item.
+/// Whether one alternative of a creature's gear line, `stacks`, may be kept as `keep` says
+/// ([`super::gear`]): what is wielded or worn is one stack that goes in a slot of that kind, and
+/// what may be made `magic` is a base item.
 pub(super) fn check_kept(
     keep: Keep,
     magic: bool,
@@ -371,30 +344,22 @@ mod tests {
         kit: Vec<KitLineSpec>,
     }
 
-    /// The kit written in `text` (`kit = [...]`), resolved; `trainable` as for a class.
-    fn kit(text: &str, trainable: Option<&[&str]>) -> Result<Kit, String> {
+    /// The kit written in `text` (`kit = [...]`), resolved.
+    fn kit(text: &str) -> Result<Kit, String> {
         let lines: Lines = toml::from_str(text).map_err(|e| e.to_string())?;
-        let ids: Option<Vec<WeaponSkillId>> = trainable.map(|names| {
-            (names.iter())
-                .map(|n| CONTENT.weapon_skills().id(n).expect("a weapon skill"))
-                .collect()
-        });
-        resolve(&lines.kit, &CONTENT, ids.as_deref())
+        resolve(&lines.kit, &CONTENT)
     }
 
     #[test]
     fn lines_are_items_carried_or_tables() {
-        let kit = kit(
-            r#"kit = [
+        let kit = kit(r#"kit = [
                 "ration*2",
                 { wield = "dagger", trained = "twin_blades" },
                 { wear = "gold_ring", magic = "magic", gender = "female" },
                 "club|quarterstaff",
                 { carry = "dagger*2" },
                 { wear = "leather_boots", fill = true },
-            ]"#,
-            None,
-        )
+            ]"#)
         .expect("valid");
         let [ration, dagger, ring, stick, daggers, boots] = kit.items() else {
             panic!("{kit:?}");
@@ -428,20 +393,6 @@ mod tests {
             (r#""dagger|spork""#, "unknown object `spork`"),
             (r#""kobold_corpse""#, "corpse"),
             (
-                r#"{ wield = "ration" }"#,
-                "`ration` cannot be worn or wielded",
-            ),
-            (r#"{ wear = "dagger" }"#, "wielded, not worn: use `wield`"),
-            (
-                r#"{ wield = "leather_jerkin" }"#,
-                "worn, not wielded: use `wear`",
-            ),
-            (r#"{ wield = "dagger*2" }"#, "one at a time"),
-            (
-                r#"{ carry = "ration", magic = "any" }"#,
-                "`ration` is never magic",
-            ),
-            (
                 r#"{ carry = "dagger", magic = "legendary" }"#,
                 "unknown variant",
             ),
@@ -449,20 +400,11 @@ mod tests {
                 r#"{ carry = "dagger", trained = "lances" }"#,
                 "unknown weapon skill",
             ),
-            (
-                r#"{ carry = "dagger", fill = true }"#,
-                "only a `wield` or `wear`",
-            ),
             (r#"12"#, "an item carried"),
         ] {
-            let err = kit(&format!("kit = [{line}]"), None).expect_err(line);
+            let err = kit(&format!("kit = [{line}]")).expect_err(line);
             assert!(err.contains(why), "{line}: {err}");
         }
-        // A class's kit may only follow what the class trains.
-        let line = r#"kit = [{ wield = "short_bow", trained = "bows" }]"#;
-        let err = kit(line, Some(&["daggers", "twin_blades"])).expect_err("not trained");
-        assert!(err.contains("the class never trains `bows`"), "{err}");
-        assert!(kit(line, Some(&["bows"])).is_ok() && kit(line, None).is_ok());
     }
 
     #[test]

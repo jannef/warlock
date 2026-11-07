@@ -16,9 +16,6 @@ use crate::skills::SkillId;
 use serde::Deserialize;
 use std::collections::BTreeMap;
 
-/// The most levels a prestige class may have.
-pub const MAX_PRESTIGE_LEVELS: u8 = 60;
-
 fn two_rolls() -> u8 {
     2
 }
@@ -57,8 +54,8 @@ pub struct PrestigeDef {
     pub name: String,
     /// One line, for the wiki and the character screen.
     pub description: String,
-    /// How many levels it has (1 to [`MAX_PRESTIGE_LEVELS`]): a character's cap grows by this
-    /// many when called.
+    /// How many levels it has: a character's cap grows by this many when called (never past
+    /// the curve's top, `Character::level_cap`).
     pub levels: u8,
     /// What each of its levels adds to the hit points, as a class's `hp` (half of it a level).
     pub hp: i32,
@@ -115,15 +112,10 @@ impl PrestigeDef {
     ) -> Result<Self, ContentError> {
         let err = |m: String| ContentError::new(file, m);
         let what = format!("prestige `{}`", spec.id);
-        if !super::dialogue::is_id(&spec.id) {
+        // Action text names it: `call:ID`.
+        if spec.id.is_empty() || spec.id.contains(':') || spec.id.contains(char::is_whitespace) {
             return Err(err(format!(
-                "{what}: ids are lower-case letters, digits, and underscores"
-            )));
-        }
-        if !(1..=MAX_PRESTIGE_LEVELS).contains(&spec.levels) {
-            return Err(err(format!(
-                "{what}: levels {} is not 1 to {MAX_PRESTIGE_LEVELS}",
-                spec.levels
+                "{what}: an id is not empty and has no `:` or whitespace"
             )));
         }
         let mut known_for = Vec::with_capacity(spec.known_for.len());
@@ -304,8 +296,6 @@ mod tests {
     #[test]
     fn a_prestige_class_refuses_bad_tables() {
         for (text, why) in [
-            (format!("{ONE}levels = 0\n"), "levels 0 is not 1 to 60"),
-            (format!("{ONE}levels = 61\n"), "levels 61 is not 1 to 60"),
             (
                 format!("{ONE}levels = 10\nknown_for = [\"stealth\"]\n"),
                 "unknown skill `stealth`",

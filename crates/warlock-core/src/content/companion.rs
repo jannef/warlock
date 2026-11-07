@@ -7,18 +7,7 @@
 use super::{Content, ContentError, CreatureId};
 use serde::Deserialize;
 use std::collections::BTreeMap;
-use std::ops::RangeInclusive;
 
-/// A race's list holds this many beasts.
-pub const LIST_SIZES: RangeInclusive<usize> = 1..=3;
-/// The rare list holds this many.
-pub const RARE_SIZES: RangeInclusive<usize> = 1..=8;
-/// The taming channel, in actions.
-pub const TURNS: RangeInclusive<u32> = 1..=100;
-/// A grade in percent of the master's level.
-pub const GRADE_PERCENTS: RangeInclusive<u32> = 1..=300;
-/// Each `every` of the growth table, in levels.
-pub const EVERIES: RangeInclusive<u32> = 1..=60;
 /// The chapter of the background story told to a character with a starting beast.
 pub const CHAPTER: &str = "companion";
 
@@ -159,19 +148,9 @@ impl CompanionRules {
             }
             Ok(id)
         };
-        if !(0..=1000).contains(&file.start.rare_per_mille) {
-            return Err(err(format!(
-                "`start.rare_per_mille` is 0 to 1000, not {}",
-                file.start.rare_per_mille
-            )));
-        }
-        if !RARE_SIZES.contains(&file.start.rare.len()) {
-            return Err(err(format!(
-                "`start.rare` lists {} to {} beasts, not {}",
-                RARE_SIZES.start(),
-                RARE_SIZES.end(),
-                file.start.rare.len()
-            )));
+        // The draws index the lists and the names.
+        if file.start.rare.is_empty() {
+            return Err(err("`start.rare` lists at least one beast".into()));
         }
         let rare = (file.start.rare.iter())
             .map(|n| beast("`start.rare`", n))
@@ -181,28 +160,16 @@ impl CompanionRules {
             let Some(names) = file.start.by_race.get(&race.id) else {
                 continue;
             };
-            if !LIST_SIZES.contains(&names.len()) {
+            if names.is_empty() {
                 return Err(err(format!(
-                    "`start.by_race.{}` lists {} to {} beasts, not {}",
-                    race.id,
-                    LIST_SIZES.start(),
-                    LIST_SIZES.end(),
-                    names.len()
+                    "`start.by_race.{}` lists at least one beast",
+                    race.id
                 )));
             }
             let where_ = format!("`start.by_race.{}`", race.id);
-            let mut list = Vec::new();
-            for name in names {
-                let id = beast(&where_, name)?;
-                let level = content.creature(id).level;
-                if level > file.start.most_level {
-                    return Err(err(format!(
-                        "{where_}: `{name}` is level {level}, above `most_level` {}",
-                        file.start.most_level
-                    )));
-                }
-                list.push(id);
-            }
+            let list = (names.iter())
+                .map(|name| beast(&where_, name))
+                .collect::<Result<Vec<_>, _>>()?;
             by_race.push((race.id.clone(), list));
         }
         // A list for a race the content lacks (where it has races at all: a fixture without
@@ -212,31 +179,8 @@ impl CompanionRules {
         {
             return Err(err(format!("`start.by_race`: unknown race `{race}`")));
         }
-        if !TURNS.contains(&file.tame.turns) {
-            return Err(err(format!(
-                "`tame.turns` is {} to {}, not {}",
-                TURNS.start(),
-                TURNS.end(),
-                file.tame.turns
-            )));
-        }
-        if file.tame.difficulty < 0 || file.tame.per_level < 0 || file.tame.food < 0 {
-            return Err(err(
-                "`tame`: difficulty, per_level, and food are 0 or more".into()
-            ));
-        }
         let g = file.growth;
-        if !GRADE_PERCENTS.contains(&g.grade_percent) {
-            return Err(err(format!(
-                "`growth.grade_percent` is {} to {}, not {}",
-                GRADE_PERCENTS.start(),
-                GRADE_PERCENTS.end(),
-                g.grade_percent
-            )));
-        }
-        if g.hp_per_level < 0 {
-            return Err(err("`growth.hp_per_level` is 0 or more".into()));
-        }
+        // Divisors of the growth.
         for (name, every) in [
             ("to_hit_every", g.to_hit_every),
             ("damage_bonus_every", g.damage_bonus_every),
@@ -244,16 +188,12 @@ impl CompanionRules {
             ("defence_every", g.defence_every),
             ("stat_every", g.stat_every),
         ] {
-            if !u32::try_from(every).is_ok_and(|e| EVERIES.contains(&e)) {
-                return Err(err(format!(
-                    "`growth.{name}` is {} to {}, not {every}",
-                    EVERIES.start(),
-                    EVERIES.end()
-                )));
+            if every < 1 {
+                return Err(err(format!("`growth.{name}` is at least 1, not {every}")));
             }
         }
-        if file.names.is_empty() || file.names.iter().any(|n| n.trim().is_empty()) {
-            return Err(err("`names`: at least one name, none empty".into()));
+        if file.names.is_empty() {
+            return Err(err("`names`: at least one name".into()));
         }
         let rules = CompanionRules {
             rare_per_mille: file.start.rare_per_mille,
@@ -277,23 +217,6 @@ impl CompanionRules {
             },
             names: file.names,
         };
-        // The story's chapter: every beast a start may draw has its `only` line.
-        if let Some(chapter) = (content.background()).and_then(|b| {
-            b.chapters
-                .iter()
-                .find(|c| c.id == CHAPTER && c.campaign.is_none())
-        }) {
-            for id in rules.every_start() {
-                let told = (chapter.lines.iter()).any(|l| l.only && l.when.companion == [id]);
-                if !told {
-                    return Err(err(format!(
-                        "the `{CHAPTER}` chapter has no `only` line for `{}` (`when = {{ companion = [\"{}\"] }}`)",
-                        content.creature(id).id,
-                        content.creature(id).id
-                    )));
-                }
-            }
-        }
         Ok(rules)
     }
 }
@@ -322,22 +245,13 @@ mod tests {
             let list = rules
                 .list_of(&race.id)
                 .unwrap_or_else(|| panic!("{}", race.id));
-            assert!(super::LIST_SIZES.contains(&list.len()), "{}", race.id);
+            assert!(!list.is_empty(), "{}", race.id);
         }
         assert_eq!(rules.rare.len(), 4);
         assert_eq!(rules.growth.grade(30, 1), 30);
         assert_eq!(rules.growth.grade(1, 6), 6, "never below the type's level");
         assert_eq!(super::Growth::above(30, 4), 26);
         assert_eq!(super::Growth::above(2, 6), 0);
-        // Every beast a start may draw has its line in the story.
-        let chapter = (content.background().unwrap().chapter("", super::CHAPTER)).unwrap();
-        for id in rules.every_start() {
-            assert!(
-                (chapter.lines.iter()).any(|l| l.only && l.when.companion == [id]),
-                "{}",
-                content.creature(id).id
-            );
-        }
     }
 
     #[test]
@@ -348,18 +262,10 @@ mod tests {
             "a rare must be tameable"
         );
         assert!(
-            err(companions(|t| t.replace(
-                "human = [\"hound\", \"boar\"]",
-                "human = [\"bear\"]"
-            )))
-            .contains("above `most_level`"),
-            "a race's list keeps to most_level"
-        );
-        assert!(
             err(companions(
                 |t| t.replace("human = [\"hound\", \"boar\"]", "human = []")
             ))
-            .contains("lists 1 to 3"),
+            .contains("lists at least one"),
         );
         assert!(
             err(companions(|t| t.replace("ratfolk = ", "elvish = ")))
@@ -367,35 +273,9 @@ mod tests {
         );
         assert!(
             err(companions(
-                |t| t.replace("rare_per_mille = 50", "rare_per_mille = 1001")
-            ))
-            .contains("0 to 1000")
-        );
-        assert!(
-            err(companions(
-                |t| t.replace("grade_percent = 100", "grade_percent = 0")
-            ))
-            .contains("grade_percent")
-        );
-        assert!(
-            err(companions(
                 |t| t.replace("to_hit_every = 4", "to_hit_every = 0")
             ))
             .contains("to_hit_every")
-        );
-        assert!(err(companions(|t| t.replace("turns = 10", "turns = 0"))).contains("tame.turns"));
-        assert!(
-            err(companions(|t| t.replace("names = [", "names = [\"\", "))).contains("none empty")
-        );
-        // A start beast without its `only` line in the chapter.
-        let chapter = include_str!("../../../../assets/data/background/08-companion.toml");
-        let cut = chapter.replace(
-            "when = { companion = [\"hound\"] }",
-            "when = { companion = [\"boar\"] }",
-        );
-        assert!(
-            err(with("data/background/08-companion.toml", &cut))
-                .contains("no `only` line for `hound`")
         );
         // Without the file, no companion at all, and nothing else minds.
         let mut files = ContentFiles::builtin();

@@ -6,19 +6,20 @@ developer notes (CLAUDE.md, `docs/dev/`).
 
 - **Stat adjustments** (races, classes, the horoscope) are, per stat id, a fixed number (`2`,
   `-1`) or dice as text (`"2d3+1"`, `"1d4-1"`, `"-1d2"`; §8 "Dice"), rolled when the character
-  is made; a missing stat is 0, and every result a roll can have must lie within −10 to 10.
+  is made; a missing stat is 0, and every score is kept within 1 to 40.
 - **Races** (`data/races.toml`, optional; §8 "Character creation"), in the order New run offers
   them: `id`, `name`, a one-line `description`, `vision` (a profile in `vision.toml`: the player's
-  eyes), `age = [youngest, oldest]` (a new character's age in years, 1 to 1000), `stats`
+  eyes), `age = [youngest, oldest]` (a new character's age in years, the youngest no older than the
+  oldest), `stats`
   (adjustments to the starting scores), `potential` (adjustments to the potentials, the same way;
-  hidden from the player), `hp` (its hit points, 0 to 1000, default 0; §8 "Combat"), `mana` (its
-  mana, 0 to 1000, default 0; §8 "Mana"), `natural`
+  hidden from the player), `hp` (its hit points, default 0; §8 "Combat"), `mana` (its
+  mana, default 0; §8 "Mana"), `natural`
   (natural armour as a creature's, `{ defence, protection, name }`, each 0 to 20, not both 0;
   default none; §8 "Combat": lizardfolk's scales, Protection 1), `resist` (what the character
   resists, in percent per damage type, −100 to 100, as a creature's; default none; §8 "Damage
   types": drow poison 25), `light_blind` (`{ glare, sight, to_hit }`: eyes strong light dazzles,
   §8 "Character creation"; default none; drow 250, 10, −1), `disease_check` (points added to
-  the checks against diseases, −10 to 10, default 0; §8 "Diseases": ratfolk 4), `eats_rotten`
+  the checks against diseases, default 0; §8 "Diseases": ratfolk 4), `eats_rotten`
   (default false: whether rotten food feeds the character without harm; §8 "Hunger": ratfolk),
   `alignment` (its part of a new character's alignment score, −1000 to 1000, default 0; §8
   "Alignment": elf and halfling 50, half-orc −50, goblin, kobold, lizardfolk, and ratfolk −200
@@ -27,23 +28,24 @@ developer notes (CLAUDE.md, `docs/dev/`).
   Burdened, the first level of burden, costs the character nothing), `passive_search` (which
   hidden features the character notices in passing without the Spot skill: `"all"`, elves and
   drow, `"stone"`, dwarves and duergar, or `"traps"`, kobolds (hidden traps only); default none;
-  §8 "Searching"), `search` (points added to searching and noticing alike, −10 to 10, default
+  §8 "Searching"), `search` (points added to searching and noticing alike, default
   0; elves and kobolds 2), `skills` (the skills it trains,
-  by skill id: dice or a number, every result 0 to 100; §8 "Skills"), `optional_skills` (as a
+  by skill id: dice or a number; a value is kept within 0 to 999; §8 "Skills"), `optional_skills` (as a
   class's, below, rolled after the class's; the drow's Sneak attack, 40 % `2d4`; #682),
   `class_skill` (dice added
   to one of the class's skills, picked when the character is made; default none), `rolls` (skill
-  rolls each level gives beyond the class's, 0 to 10, default 0; humans 1), `hunger` (how
-  much the character needs to eat, in percent of a human, 10 to 1000, default 100; §8 "Hunger":
+  rolls each level gives beyond the class's, default 0; humans 1), `hunger` (how
+  much the character needs to eat, in percent of a human, default 100; §8 "Hunger":
   elf 80, half-elf 90, human 100, dwarf 110, halfling 125, gnome 90, half-orc 120, goblin 80,
   drow 80, kobold 80, lizardfolk 90, duergar 90, ratfolk 110),
-  `experience` (how much XP a level needs, in percent, 50 to 200, default 100, multiplied with
+  `experience` (how much XP a level needs, in percent, at most 200 (the counter holds every
+  threshold), default 100, multiplied with
   the class's; §8 "Experience": elf 140, half-elf 105, human 100, dwarf 115, halfling 95, gnome
   120, half-orc 90, goblin 80, drow 130, kobold 75, lizardfolk 95, duergar 115, ratfolk 85;
   long-lived races pay more, and the poor choices less), and
   `weapon_skills` (starting ranks by weapon skill id, a fixed number or dice, every result 0 to
   10; §8 "Weapon skills"); and at the top
-  `base_potential` (1 to 40), what every potential is before the race adjusts it (15). Races are
+  `base_potential`, what every potential is before the race adjusts it (15). Races are
   mostly fixed numbers, their identity, with a little dice. The races, their eyes, ages, and hit
   points: elf (low-light, 90–300, 2), half-elf (low-light, 20–60, 3), human (normal, 16–35, 4),
   dwarf (darkvision, 40–120, 6), halfling (normal, 20–50, 2), gnome (low-light, 40–150, 3), half-orc
@@ -155,16 +157,16 @@ developer notes (CLAUDE.md, `docs/dev/`).
   paladin 550, Good under any birth animal unless the race is evil (#317); thief and witch −200, Callous; the rest 0), `skills` (as for races),
   `known_for` (the skills of `skills` it is known for, its `2d6+10` ones: a level-up roll on one
   throws its die a step up the ladder), `optional_skills` (ADOM-like: skills a new character
-  may or may not start with, each `{ chance, dice }`, the chance 1 to 99 percent; none of them
-  one of `skills`; #662), `rolls` (skill rolls each level gives, 0 to 10, default
+  may or may not start with, each `{ chance, dice }`, the chance in percent; #662), `rolls`
+  (skill rolls each level gives, default
   2: the thief and the ranger 3, the bard 4), `weapon_skills` (starting ranks as for races), `weapon_skill_choice` (two or more
   sets of such ranks, one picked at random when the character is made), and `styles` and
   `style_choice` (the same for fighting styles, §8 "Fighting styles"; `weapon_skills` names no
   style and `styles` nothing but styles), `abilities` (the level table: `{ level, talent }`
   rows, lowest level first, each a talent of `data/talents/` the class gives at that level, §8
   "Class abilities"), `bonus_talents` (`{ levels, trees }`: a bonus talent pick at each of
-  those levels from those trees, none named: any), and `max_level` (the class's last level, 2
-  to the curve's top, default `data/experience.toml` `[levels] class_max`, 60; the bard's is
+  those levels from those trees, none named: any), and `max_level` (the class's last level, at
+  most the curve's top, default `data/experience.toml` `[levels] class_max`, 60; the bard's is
   30; every row and bonus level within it; §8 "Prestige classes"). Each class rolls
   its key stats (the warrior St `1d3+1` and To `1d3`, the wizard In `2d2+1` and To `-1d2`, the
   commoner To `1d3-1`); the rest are fixed. Adventurers: berserker (8 hit points), bard (2),
@@ -229,10 +231,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
   steal, stealth, survival, swim, tumble, woodcraft.
 - **Background stories** (`data/background.toml`, optional; without it no story is told; §8
   "Background story"): `[tiers]` (per mille of the uncommon, rare, and fateful tiers) and
-  `[points]` (each effect kind's worth, for the load-time tier check), then the chapters,
+  `[points]` (each effect kind's worth, which the tiers' bands are written in), then the chapters,
   `data/background/NN-<chapter>.toml` in file-name order and a campaign's own after them
   (`campaigns/<id>/data/background/`, never a shared chapter's id): `[chapter]` (`id`, `name`,
-  `paragraph` 1 to 4, slot `defaults`) and `[[line]]`s (`id`, `tier`, `weight`, `text` with
+  `paragraph`, slot `defaults`) and `[[line]]`s (`id`, `tier`, `weight`, `text` with
   slots, `when`, `only`, `effects`, `tags`, `set`). Every field and check is in the file's
   comments and `docs/dev/background.md`.
 - **Horoscope** (`data/horoscope.toml`, optional; §8 "Character creation"): `anchor_year`, a
@@ -240,14 +242,14 @@ developer notes (CLAUDE.md, `docs/dev/`).
   then the `[[animal]]`s in the order of the Great Race and the `[[element]]`s, each with `id`,
   `name`, a one-line `description`, `stats` (small fixed adjustments), and `grants` (the talents
   of the `stars` tree those born under it are given, §8 "Birth sign": `granted` talents, a
-  `flaw` only among an animal's). Their numbers must have no common divisor, so every pair comes
+  `flaw` only among an animal's). With numbers that share no divisor (12 and 5) every pair comes
   once a great cycle. The twelve animals: Salamander, Hydra, Manticore, Unicorn, Wyvern,
   Basilisk, Roc, Griffin, Sphinx, Phoenix, Kraken, Barghest; the five elements: Wood, Fire,
-  Earth, Metal, Water. `[[lucky]]` entries are the lucky days: `animal`, `element`, `day` (1 to
-  30, any month), `title`, `description` (the reveal's line), and `grants` (the extra gift); no
+  Earth, Metal, Water. `[[lucky]]` entries are the lucky days: `animal`, `element`, `day` (of
+  any month), `title`, `description` (the reveal's line), and `grants` (the extra gift); no
   pair twice. An optional `[flavour]` table (§8 "Birth sign", the calendar and moon flavour):
-  `birthday_healing` and `birth_month_cooldown` (percents, 1 to 400, default 100),
-  `full_moon_reach` (cells, 0 to 10, default 0), and `full_moon_light` (a light preset, default
-  none); without it, none of the flavour. Checked against the talents at load (the grants exist, are granted talents of the
-  `stars` tree, none twice for one sign; talents' `animal`/`element` needs name real ones);
+  `birthday_healing` and `birth_month_cooldown` (percents, default 100),
+  `full_moon_reach` (cells, default 0), and `full_moon_light` (a light preset, default
+  none); without it, none of the flavour. Checked against the talents at load (the grants exist; talents' `animal`/`element` needs name
+  real ones);
   content without the `stars` tree grants nothing. Without the file there are no signs.

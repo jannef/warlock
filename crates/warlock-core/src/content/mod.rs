@@ -211,7 +211,7 @@ pub use background::{
 pub use breath::Breath;
 pub use burst::{BurstWhen, CreatureBurst, RADII as CREATURE_BURST_RADII};
 pub use calendar::Calendar;
-pub use calling::{CallingDef, MAX_MESSAGE as MAX_CALLING_MESSAGE};
+pub use calling::CallingDef;
 pub use campaign::{CAMPAIGNS, CampaignDef, CampaignKind};
 pub use chest::{ChestBand, ChestGold, ChestLoot, ChestRules};
 pub use circles::{CircleStatuses, CircledStatus, school_index};
@@ -303,7 +303,7 @@ pub use particles::{ParticleEmitter, ParticleTrigger};
 pub use plural::{MAX_WORD, Plurals};
 pub use potion::{Draught, Drink, MAX_POTION_MARKS};
 pub use prayer::{Face, FaceWords, Faced, PrayerRules, PrayerUse, UseDef};
-pub use prestige::{MAX_PRESTIGE_LEVELS, PrestigeDef, Table};
+pub use prestige::{PrestigeDef, Table};
 pub use quest::{
     GOLD, Goal, KillTarget, MAX_COUNT, MAX_NAME, MAX_QUEST_XP, MAX_TAG_COUNT, QuestDef, QuestId,
     QuestKind, QuestTexts, Reveal, RevealWhen, Reward, Waits,
@@ -338,7 +338,7 @@ pub use shop::{
     KEEPER, Keeper, MAX_FAVOUR, MAX_SHOPS, MOST_FAVOUR, ShopDef, ShopId, ShopPlan, Shops,
 };
 pub use size::{CARRY, MEDIUM, SizeDef};
-pub use skill::{OPTIONAL_CHANCE, OptionalSkill, SkillBook, SkillDef};
+pub use skill::{OptionalSkill, SkillBook, SkillDef};
 pub use sky::{MAX_MOONS, MAX_SIZE, MoonDef, PHASE_ONE, STANDARD_SIZE};
 pub use slot::{MAX_SLOTS, SlotDef, SlotId};
 pub use smite::SmiteRules;
@@ -2364,7 +2364,7 @@ impl Content {
     fn load_kits(&mut self) -> Result<(), ContentError> {
         let classes = (self.classes.iter())
             .map(|c| {
-                kit::resolve(&c.kit_spec, self, Some(&c.trainable())).map_err(|m| {
+                kit::resolve(&c.kit_spec, self).map_err(|m| {
                     ContentError::new("data/classes/", format!("class `{}`: {m}", c.id))
                 })
             })
@@ -2374,7 +2374,7 @@ impl Content {
                 let at = |m: String| {
                     ContentError::new("data/races.toml", format!("race `{}`: {m}", r.id))
                 };
-                let kit = kit::resolve(&r.kit_spec, self, None).map_err(at)?;
+                let kit = kit::resolve(&r.kit_spec, self).map_err(at)?;
                 let bare = (r.bare_spec.iter())
                     .map(|s| {
                         self.slot_id(s)
@@ -2387,7 +2387,7 @@ impl Content {
         let signs = |parts: &[SignPart]| {
             (parts.iter())
                 .map(|p| {
-                    kit::resolve(&p.kit_spec, self, None).map_err(|m| {
+                    kit::resolve(&p.kit_spec, self).map_err(|m| {
                         ContentError::new("data/horoscope.toml", format!("`{}`: {m}", p.id))
                     })
                 })

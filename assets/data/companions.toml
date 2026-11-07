@@ -11,13 +11,13 @@ names = ["Snel", "Brūn", "Græg", "Blæc", "Hwīt", "Lēof", "Hræfn", "Wulf", 
 # The starting beast (the ranger's Animal companion), drawn as the run begins on the stream
 # `companion/<race>,<gender>,<class>`: at `rare_per_mille` in a thousand a beast of `rare`,
 # else one of the race's list. A race's list holds beasts of level at most `most_level`; the
-# rares are free of it. Every beast listed must be `tameable` (creatures/).
+# rares are free of it. Every beast listed is `tameable` (creatures/).
 [start]
 rare_per_mille = 50
 rare = ["wolf", "black_hound", "great_boar", "panther"]
 most_level = 2
 
-# Every race of races.toml has one to three beasts here (the loader refuses a race without).
+# Every race of races.toml has one to three beasts here (the tests check it).
 [start.by_race]
 human = ["hound", "boar"]
 elf = ["lynx", "hound"]

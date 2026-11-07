@@ -5,11 +5,11 @@
 #   description   one line, shown when choosing
 #   vision        the race's eyes: a profile in vision.toml; the player starts with it
 #   age           [youngest, oldest]: a new character's age in years, picked at random from the
-#                 run seed (1 to 1000)
+#                 run seed (the youngest no older than the oldest)
 #   stats         adjustments to the starting scores, by stat id (strength, dexterity, toughness,
 #                 intelligence, willpower, presence; a missing one 0): a number (`2`, `-1`) or
-#                 dice (`"1d2+1"`, `"-1d3"`), rolled when the character is made; every result
-#                 within -10 to 10
+#                 dice (`"1d2+1"`, `"-1d3"`), rolled when the character is made; the score is
+#                 kept within 1 to 40
 #   potential     adjustments to the potentials, the same way (hidden from the player)
 #   hp            hit points (spec §8 "Combat"; default 0): a character's maximum is their
 #                 Toughness plus their race's and their class's (classes/)
@@ -28,8 +28,8 @@
 #   light_blind   eyes that strong light dazzles: { glare = 250, sight = 10, to_hit = -1 }.
 #                 While the light on the character's own cell, as their eyes perceive it (the
 #                 status bar's Light), is at least `glare` bright (the sun well up, a bright fire
-#                 close by), they are dazzled: they see nothing farther than `sight` cells (1 to
-#                 40) and every attack they make is `to_hit` worse (-20 to 0). The game says
+#                 close by), they are dazzled: they see nothing farther than `sight` cells and
+#                 every attack they make is `to_hit` worse. The game says
 #                 when it begins and ends, and shows Dazzled while it lasts. Default none
 #   disease_check points added to the character's checks against diseases (spec §8 "Diseases";
 #                 diseases.toml): resisting one they are exposed to, and each progression (-10 to
@@ -50,27 +50,26 @@
 #                 character notices in passing without the Spot skill (for traps, Detect
 #                 traps): "all", "stone" (those on stone, terrain.toml `stone`), or "traps"
 #                 (hidden traps only); default none: only with the skill trained
-#   search        points added to searching and to noticing in passing alike (-10 to 10,
-#                 default 0)
+#   search        points added to searching and to noticing in passing alike (default 0)
 #   skills        the skills the race trains (spec §8 "Skills"; skills.toml), by skill id: dice
-#                 (`"1d6+4"`) or a number, rolled when the character is made, every result within
-#                 0 to 100; added to the class's (a skill both train sums the two)
+#                 (`"1d6+4"`) or a number, rolled when the character is made; added to the
+#                 class's (a skill both train sums the two)
 #   optional_skills  skills a new character of the race may or may not start with, as a
 #                 class's (classes/README.toml): `{ chance = 40, dice = "2d4" }`, rolled after the
-#                 class's from the same stream (so no class's roll moves); none is one of `skills`;
-#                 a skill the class trains too sums the two (default none; the drow's Sneak attack)
+#                 class's from the same stream (so no class's roll moves); a skill the class
+#                 trains too, or `skills` does, sums the two (default none; the drow's Sneak attack)
 #   class_skill  dice added to one of the class's skills, picked from the run seed when the
 #                 character is made (default none; humans: one extra class skill)
-#   rolls         skill rolls each level gives beyond the class's (spec §8 "Skills"; 0 to 10,
+#   rolls         skill rolls each level gives beyond the class's (spec §8 "Skills";
 #                 default 0; humans 1). A level-up roll on a skill the race trains (`skills`)
 #                 adds 1 (classes/README.toml)
 #   talents       talents the race grants (spec §8 "Talents"), by id: `granted` talents of the
 #                 `racial` tree in talents/, held from the start and never picked (default none;
 #                 humans: Versatile). The race's other talents are picks that ask for the race
 #   hunger       how much the character needs to eat, in percent of a human (spec §8 "Hunger";
-#                 10 to 1000, default 100): game time burns their nutrition this much faster
-#   experience    how much experience a level needs, in percent (spec §8 "Experience"; 50 to
-#                 200, default 100): multiplied with the class's onto every threshold in
+#                 default 100): game time burns their nutrition this much faster
+#   experience    how much experience a level needs, in percent (spec §8 "Experience"; at
+#                 most 200, default 100): multiplied with the class's onto every threshold in
 #                 experience.toml. Long-lived races pay more, short-lived ones less
 #   weapon_skills starting ranks in weapon skills (spec §8 "Weapon skills"), by skill id in
 #                 weapon_skills.toml: a number or dice, every result within 0 to 10; added to
