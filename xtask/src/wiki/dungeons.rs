@@ -4,7 +4,7 @@
 use std::collections::BTreeSet;
 use std::fmt::Write as _;
 use warlock_core::content::danger::{self, Odds, StrayPool, TOO_WEAK};
-use warlock_core::content::{Content, Count, DangerRule, Generator, Spawning};
+use warlock_core::content::{Content, Count, DangerRule, Generator, Spawning, Stance};
 
 /// A danger rule in words: `4`, `2 + 1 a floor down`, with a player-scaled part.
 fn rule_text(rule: DangerRule, branch: bool) -> String {
@@ -73,8 +73,9 @@ fn spawn_text(content: &Content, s: &Spawning) -> String {
     } else {
         let o = s.odds;
         format!(
-            "{}% strays; {}% of draws deeper, each further step {}%, at most {} more",
-            o.stray, o.out_of_depth, o.deeper, o.deeper_cap
+            "{}% strays; {}% of draws deeper, each further step {}%, at most {} more; kinds \
+             not hostile to you at {}% of their weight",
+            o.stray, o.out_of_depth, o.deeper, o.deeper_cap, o.neutral
         )
     };
     format!(
@@ -300,6 +301,37 @@ pub(super) fn creature_rarities(content: &Content) -> String {
     out
 }
 
+/// The weight of the kinds not hostile to the player (#1195): `[defaults]`'s `neutral`, and the
+/// kinds of the dungeons' populations it scales, by name.
+pub(super) fn neutral_weight(content: &Content) -> String {
+    let Some(odds) = content.draw_odds() else {
+        return "(no defaults)\n".into();
+    };
+    let player = content.creature_id("player");
+    let branches = content.dungeons().filter_map(|d| d.spawning.as_ref());
+    let levels = content
+        .levels()
+        .filter_map(|l| Some(&l.spawning.as_ref()?.1));
+    let mut names: Vec<&str> = (branches.chain(levels))
+        .flat_map(|s| s.population.iter().copied())
+        .filter(|&c| player.is_some_and(|p| content.stance(c, p) != Stance::Hostile))
+        .map(|c| content.creature(c).name.as_str())
+        .collect::<BTreeSet<_>>()
+        .into_iter()
+        .collect();
+    names.sort_unstable();
+    let names = if names.is_empty() {
+        "-".to_string()
+    } else {
+        names.join(", ")
+    };
+    let mut out =
+        String::from("| Kind | Weight | Among the dungeons' own folk |\n|---|---:|---|\n");
+    let _ = writeln!(out, "| hostile to you | 100% | the rest |");
+    let _ = writeln!(out, "| not hostile to you | {}% | {names} |", odds.neutral);
+    out
+}
+
 /// A chance in percent, to four decimals without trailing zeros: `5`, `0.2375`.
 fn percent(p: f64) -> String {
     let text = format!("{p:.4}");
@@ -320,6 +352,7 @@ pub(super) fn draw_odds(content: &Content) -> String {
         deeper,
         deeper_cap,
         dread_one_in,
+        ..
     }) = content.draw_odds()
     else {
         return "(no defaults)\n".into();
