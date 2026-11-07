@@ -287,8 +287,8 @@ fn ranks_in_the_weapons_skill_and_in_sword_and_board_beside_a_shield() {
         let weapon = (pack.equipment.iter())
             .find_map(|(_, i)| content.object(pack.items[i].object).skill)
             .expect("a weapon");
-        // 1 + L/10, at most 8; L/15 in the style beside a shield.
-        assert_eq!(skills.rank(weapon), 7);
+        // 1 + 0.35 L, at most 10 (#1169); L/15 in the style beside a shield.
+        assert_eq!(skills.rank(weapon), 10);
         let shield = (pack.equipment.iter())
             .any(|(_, i)| content.object(pack.items[i].object).class == shields);
         if shield {

@@ -436,3 +436,27 @@ fn what_a_kill_drops_falls_unidentified() {
         .expect("the dagger");
     assert!(!stack.is_identified());
 }
+
+#[test]
+fn an_armed_kobold_aims_by_its_spear_and_its_rank() {
+    // #1169: no flat to-hit; the spear's skill rank brings the blow to `L/4` (to `L/4 + 1`).
+    let content = Arc::new(Content::builtin().expect("content"));
+    let arena = World::new(content.clone(), "arena", None).expect("arena");
+    let kobold = content.creature_id("kobold").expect("kobold");
+    let k = (arena.state.actors.values())
+        .find(|a| a.creature == kobold)
+        .expect("an arena kobold");
+    assert!(k.weapon_item(&content).is_some(), "it wields its spear");
+    let spears = content.weapon_skills().id("spears").expect("spears");
+    assert!(k.weapon_skills.rank(spears) >= 1, "a rank in spears");
+    let strength = k
+        .effective_stats(&content)
+        .modifier(crate::stats::Stat::Strength);
+    let aim = k.melee(&content).to_hit - strength;
+    let level = content.creature(kobold).level;
+    let mark = i32::from(level / 4);
+    assert!(
+        (mark..=mark + 1).contains(&aim),
+        "to-hit {aim} at level {level}"
+    );
+}

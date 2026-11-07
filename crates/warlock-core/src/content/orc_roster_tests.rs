@@ -152,15 +152,15 @@ fn the_orcs_keep_to_the_tribes_formulas() {
             );
         } else {
             assert!(tagged, "{id}: an orc carries the `orc` tag");
-            // Its racial weapon, at the rank the formula gives (1 + L/7).
+            // Its racial weapon, at the formula's rank (1 + L/7) at least: the armed
+            // rule raises it to aim at L/4 (#1169, `armed_roster_tests`).
             let weapon =
                 (def.gear.racial_weapon).unwrap_or_else(|| panic!("{id}: no racial weapon"));
             let skill = (content.object(weapon).skill)
                 .unwrap_or_else(|| panic!("{id}: its racial weapon has no skill"));
             let rank = def.weapon_skills.rank(skill);
-            assert_eq!(
-                u32::from(rank),
-                1 + u32::from(def.level) / 7,
+            assert!(
+                u32::from(rank) > u32::from(def.level) / 7,
                 "{id}: weapon rank"
             );
         }
