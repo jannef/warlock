@@ -4,7 +4,8 @@
 //!
 //! ```toml
 //! [object.drink]
-//! kind = "heal"              # heal, cure, mana, elixir, harm, boost, vision, haste, resistance
+//! kind = "heal"              # heal, cure, mana, elixir, harm, boost, vision, haste, resistance,
+//!                            # nourish, restore, blink
 //! dice = "2d8"               # heal: hit points back; mana: mana back; harm: degrees of sickness
 //! cures = ["bandage"]        # heal, cure: means named in the statuses' and diseases' `cured_by`
 //! diseases = true            # cure: ends every disease the drinker has
@@ -14,6 +15,7 @@
 //! stat = "strength"          # elixir: the stat it raises for good
 //! points = 1                 # elixir: by how much (a trained rise each)
 //! potential = "1d2"          # elixir: the potential's further rise, rolled once
+//! satiation = 1500           # nourish: the nutrition it gives, as a meal's
 //! colour = "red"             # what an unknown one is called by ("a fizzy red potion")
 //! marks = { toughness = 5 }  # sure training marks it gives, by stat
 //! ```
@@ -22,7 +24,8 @@
 //! `diseases`; a mana potion `dice`; an elixir `stat`, `points`, and `potential`; a harm `dice`
 //! and `status`; a boost `status` (one that raises a stat, `penalty`) and `severity`; a vision
 //! `status` (one with `vision`); a haste `severity` (of Hasted, the Haste spell's status); a
-//! resistance `status` (one with `resist`). The colour's hue is its
+//! resistance `status` (one with `resist`); a nourish `satiation`; a restore and a blink
+//! nothing. The colour's hue is its
 //! family's (the design's rule, kept in data as the object's `fg`): potions that share a colour
 //! name share their `fg`.
 
@@ -67,6 +70,14 @@ pub enum Draught {
     Haste { status: StatusId, severity: u16 },
     /// A resistance for a while: `status` (Warmed), which resists as gear does.
     Resistance { status: StatusId },
+    /// A meal's worth at once: `satiation` nutrition, never into Bloated (the potions wave 2
+    /// design §4.2).
+    Nourish { satiation: i32 },
+    /// The scroll of restoration's cleanse: stat damage mended, drained points back, Stiffening
+    /// ended ([`crate::world::World`]'s one cleanse).
+    Restore,
+    /// The drinker is elsewhere on the level at once, as a teleport trap moves its victim.
+    Blink,
 }
 
 impl Draught {
@@ -82,6 +93,9 @@ impl Draught {
             Draught::Vision { .. } => "vision",
             Draught::Haste { .. } => "haste",
             Draught::Resistance { .. } => "resistance",
+            Draught::Nourish { .. } => "nourish",
+            Draught::Restore => "restore",
+            Draught::Blink => "blink",
         }
     }
 
@@ -132,6 +146,7 @@ pub struct DrinkSpec {
     stat: Option<String>,
     points: Option<u8>,
     potential: Option<Dice>,
+    satiation: Option<i32>,
     colour: String,
     #[serde(default)]
     marks: BTreeMap<String, u16>,
@@ -178,6 +193,19 @@ impl DrinkSpec {
                 ("potential", self.potential.is_some()),
             ])?;
         }
+        // A nourish's field belongs to it alone.
+        if self.kind != "nourish" {
+            only(&[("satiation", self.satiation.is_some())])?;
+        }
+        // The kinds that do one fixed thing take none of the others' fields.
+        let fixed = [
+            lending.as_slice(),
+            &[
+                ("status", self.status.is_some()),
+                ("severity", self.severity.is_some()),
+            ],
+        ]
+        .concat();
         let does = match self.kind.as_str() {
             "heal" => {
                 only(&[
@@ -313,10 +341,24 @@ impl DrinkSpec {
                 }
                 Draught::Resistance { status }
             }
+            "nourish" => {
+                only(&fixed)?;
+                let satiation = (self.satiation)
+                    .ok_or_else(|| "`drink`: a nourish needs `satiation`".to_string())?;
+                Draught::Nourish { satiation }
+            }
+            "restore" => {
+                only(&fixed)?;
+                Draught::Restore
+            }
+            "blink" => {
+                only(&fixed)?;
+                Draught::Blink
+            }
             other => {
                 return Err(format!(
                     "`drink`: unknown kind `{other}` (heal, cure, mana, elixir, harm, boost, \
-                     vision, haste, resistance)"
+                     vision, haste, resistance, nourish, restore, blink)"
                 ));
             }
         };

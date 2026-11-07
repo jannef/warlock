@@ -503,6 +503,21 @@ impl World {
         }
     }
 
+    /// The player gains `points` of nutrition at once, not from a meal (a potion of sustenance):
+    /// the eat path's add, never into Bloated (no overeating, no choking), never lowering it.
+    /// Returns whether they are fuller; nothing without hunger.
+    pub(super) fn satiate(&mut self, points: i32) -> bool {
+        let Some(bloated) = self.content.hunger().map(|h| h.states.bloated) else {
+            return false;
+        };
+        let Some(fed) = self.player_mut().satiation.as_mut() else {
+            return false;
+        };
+        let before = fed.nutrition;
+        fed.feed(points.max(0), (bloated - 1).max(before));
+        fed.nutrition > before
+    }
+
     /// The player vomits: what they ate does not feed them, and they are left with at most
     /// `vomit_leaves` nutrition.
     fn vomit(&mut self) {

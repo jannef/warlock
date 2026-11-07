@@ -99,6 +99,7 @@ learn."), a mishap never backfires it, and the aiming mode never sees it. `World
 to `World::read_cleanse` (`world/restore.rs`): refused, no time, with a target or with nothing to
 mend (no stat damage while `mends`, no drained point while `restores`, and no status
 `cured_by` `restore::RESTORATION`, Stiffening: "There is nothing to restore."); otherwise `deciphers(None, 0)` (above), `use_up` (Scroll savant's keep, the Read stat training), `say_read`, then
+`World::restore` (shared with the potion of restoration, docs/dev/potions.md):
 `StatDamage::mend_all` and `World::restore_drained` (the temple's `World::mend`, split by the two
 switches), `World::cure(player, RESTORATION)` (Stiffening ends, its end line said; #1126), and "You
 feel your strength return." for each stat that came back. No disease check

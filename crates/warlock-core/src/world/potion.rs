@@ -12,7 +12,11 @@
 //! - **What it does**, by its kind ([`Draught`]), each through the one path that does it: hit
 //!   points back (never past the maximum) and what it cures; cures ([`World::cure`], and every
 //!   disease for `diseases`); mana back; a stat raised for good (an elixir, `world/elixir.rs`);
-//!   sickness ([`World::afflict`]). Dice are gameplay draws.
+//!   sickness ([`World::afflict`]); a meal's nutrition, never into Bloated (a nourish,
+//!   [`World::satiate`]); the scroll of restoration's cleanse (a restore, [`World::restore`]);
+//!   the drinker moved to a free cell of the level as a teleport trap moves its victim (a blink,
+//!   [`World::teleport`]; nothing on the overworld). Dice are gameplay draws; the blink draws
+//!   nothing (the trap's cell is a hash of the turn and place).
 //!   A boost, a vision, a haste, or a resistance gives its status for a while
 //!   ([`World::afflict`]: Fortified, Owl-eyed, Hasted, Warmed), which lasts as the status's
 //!   `eases` says and the drinker's talents lengthen (Lasting draughts: `status_lasts`). What begins and ends of statuses and diseases is told from the action's
@@ -29,7 +33,9 @@
 
 use super::{Actor, Spent, World};
 use crate::action::{Event, Meal, Positions};
-use crate::content::{ActionKind, Content, Draught, Effect, StatUse, StatusId};
+use crate::content::{
+    ActionKind, Cleansing, Content, Draught, Effect, LevelKind, StatUse, StatusId,
+};
 use crate::object::Stack;
 
 /// The most the worn items of the Alchemist raise the chance a potion is kept to, in percent,
@@ -50,6 +56,12 @@ impl Actor {
 
 /// What the player is told when Thrifty drinker keeps a potion they drank.
 pub(super) const KEPT: &str = "There is enough left in the flask for another draught.";
+
+/// What a potion of restoration cleanses: stat damage and drains both.
+const RESTORE: Cleansing = Cleansing {
+    mends: true,
+    restores: true,
+};
 
 impl World {
     /// The player drinks one of `stack`, lying where `meal` says (module docs). Returns what it
@@ -145,6 +157,20 @@ impl World {
                     self.lend(status, severity, events);
                 }
             }
+            &Draught::Nourish { satiation } => {
+                let fuller = self.satiate(satiation);
+                self.say(if fuller {
+                    "It fills you as a good meal would."
+                } else {
+                    "You feel no fuller."
+                });
+            }
+            Draught::Restore => {
+                if !self.restore(RESTORE, events) {
+                    self.say("You feel whole.");
+                }
+            }
+            Draught::Blink => self.blink_draught(events),
         }
         let used = match drink.does {
             Draught::Elixir { .. } => StatUse::Elixir,
@@ -176,6 +202,23 @@ impl World {
             (Some(_), _) => self.say("Nothing more comes of it."),
             _ => {}
         }
+    }
+
+    /// A potion of blinking: the player is moved at once to a free cell of the level, as a
+    /// teleport trap moves its victim ([`World::teleport`]: no draw). Not on the overworld, a
+    /// map of the land.
+    fn blink_draught(&mut self, events: &mut Vec<Event>) {
+        if self.state.current().kind == LevelKind::Overworld {
+            self.say("The land lurches, and holds you where you are.");
+            return;
+        }
+        let (player, here) = (self.state.player, self.player_pos());
+        self.teleport(player, here, events);
+        self.say(if self.player_pos() == here {
+            "You feel a lurch, but stay where you are."
+        } else {
+            "In a blink, you are elsewhere."
+        });
     }
 
     /// Takes one potion from where `meal` says: from the pack (the last empties its stack, and
