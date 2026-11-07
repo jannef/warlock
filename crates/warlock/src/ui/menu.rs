@@ -40,6 +40,36 @@ pub enum Nav {
     Other,
 }
 
+/// The numpad keys, by physical key whatever Num Lock says: with it on they report the digit
+/// (`Key::Character("8")`, and macOS has no Num Lock: always so), with it off the arrow, Home,
+/// and the like (`Key::ArrowUp`, winit 0.30 on Windows and X11/Wayland).
+const NUMPAD: [KeyCode; 11] = [
+    KeyCode::Numpad0,
+    KeyCode::Numpad1,
+    KeyCode::Numpad2,
+    KeyCode::Numpad3,
+    KeyCode::Numpad4,
+    KeyCode::Numpad5,
+    KeyCode::Numpad6,
+    KeyCode::Numpad7,
+    KeyCode::Numpad8,
+    KeyCode::Numpad9,
+    KeyCode::NumpadEnter,
+];
+
+/// The numpad's fixed menu meaning, for a key no `Context::Menu` binding claims: 8, 2, 4, and 6
+/// are the arrows (#1197; NumEnter is Confirm's own binding). Fixed screen keys, never
+/// rebindable (CLAUDE.md): an alias, not a binding.
+fn numpad_nav(code: KeyCode) -> Nav {
+    match code {
+        KeyCode::Numpad8 => Nav::Up,
+        KeyCode::Numpad2 => Nav::Down,
+        KeyCode::Numpad4 => Nav::Left,
+        KeyCode::Numpad6 => Nav::Right,
+        _ => Nav::Other,
+    }
+}
+
 /// A key press reduced to what a text field cares about besides the text typed: the
 /// `Context::Text` command it is bound to, or Esc, which always backs out.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -90,7 +120,7 @@ impl Press {
                 Some(KeyCommand::MarkAll) => Nav::MarkAll,
                 Some(KeyCommand::NextListPage) => Nav::NextPage,
                 Some(KeyCommand::PrevListPage) => Nav::PrevPage,
-                _ => Nav::Other,
+                _ => numpad_nav(input.key_code),
             }
         };
         let edit = if input.key_code == KeyCode::Escape {
@@ -126,6 +156,13 @@ impl Press {
             text,
             shift: false,
         }
+    }
+
+    /// Whether the press came from the numpad. Its digits are navigation on screens (#1197), so
+    /// a screen that reads a typed digit as a choice (a dialogue's topic) leaves these alone;
+    /// text fields still type them.
+    pub fn is_numpad(&self) -> bool {
+        matches!(&self.binding, Some(KeyBinding::Code(code)) if NUMPAD.contains(code))
     }
 
     /// A press of a navigation key.
@@ -585,6 +622,40 @@ mod tests {
             ("↑↓".into(), "Enter")
         );
         assert_eq!(Hints::of(&b).up_down(), "↑/s");
+    }
+
+    #[test]
+    fn the_numpad_is_the_arrows_with_num_lock_on_or_off() {
+        let b = Bindings::default();
+        // Num Lock on (and macOS, which has none): the digit; off: the arrow, Home, and so on.
+        let on = |code, digit: &str| key(code, Key::Character(digit.into()));
+        for (code, digit, off, nav) in [
+            (KeyCode::Numpad8, "8", Key::ArrowUp, Nav::Up),
+            (KeyCode::Numpad2, "2", Key::ArrowDown, Nav::Down),
+            (KeyCode::Numpad4, "4", Key::ArrowLeft, Nav::Left),
+            (KeyCode::Numpad6, "6", Key::ArrowRight, Nav::Right),
+            (KeyCode::Numpad7, "7", Key::Home, Nav::Other),
+            (KeyCode::Numpad5, "5", Key::Clear, Nav::Other),
+        ] {
+            for input in [on(code, digit), key(code, off)] {
+                let press = Press::from_input(&input, &b);
+                assert_eq!(press.nav, nav, "{code:?}");
+                assert!(press.is_numpad());
+                assert_eq!(press.binding, Some(KeyBinding::Code(code)));
+            }
+            // With Num Lock on it still types its digit, for a text field.
+            assert_eq!(
+                Press::from_input(&on(code, digit), &b).text,
+                digit.chars().next()
+            );
+        }
+        let enter = Press::from_input(&key(KeyCode::NumpadEnter, Key::Enter), &b);
+        assert_eq!(enter.nav, Nav::Enter);
+        assert_eq!(enter.edit, Some(Edit::Confirm));
+        // The top row's digits are no navigation, and no numpad.
+        let top = Press::from_input(&key(KeyCode::Digit8, Key::Character("8".into())), &b);
+        assert_eq!(top.nav, Nav::Other);
+        assert!(!top.is_numpad());
     }
 
     #[test]

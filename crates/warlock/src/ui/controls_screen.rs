@@ -77,9 +77,10 @@ impl Row {
 const ABILITY_KEYS_TITLE: &str = "Ability keys (all in the abilities menu too)";
 
 /// What the list says first: the keys no binding changes.
-const NOTES: [&str; 2] = [
+const NOTES: [&str; 3] = [
     "Esc always backs out and cancels; it cannot be rebound.",
     "Letters (a-z) and digits that pick list rows are fixed.",
+    "On screens the numpad moves as the arrows do (fixed).",
 ];
 
 /// Selection state of the controls screen. Rows are the notes, then each context's commands
