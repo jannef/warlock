@@ -965,6 +965,8 @@ impl World {
                 self.split(target, blow.kind);
                 // A thief's hit may snatch from the player's pack (`snatch.rs`).
                 self.snatch(attacker, target, kind, events);
+                // A duelist's hit may knock the player's weapon away (`knock_away.rs`).
+                self.knock_away(attacker, target, kind);
             }
         }
         // A familiar's touch is its master's hex (`familiar.rs`), on a hit that leaves it alive.

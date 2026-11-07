@@ -241,6 +241,20 @@ from you!" ("Something" unseen); "The blink dog is suddenly beside you." where t
 it land, nothing unseen. **Wiki**: `creature_thieves` and `creature_blinks`
 (`creature-thieves.md`, `creature-blinks.md`, "Thieves" and "Blinkers" in
 `creature-numbers.md`). **Tests**: `world/theft_tests.rs`. No talent (design §11).
+The disarming blow (#1166). **Data**: `disarms = { chance, difficulty }` on a type
+(`CreatureSpec::disarms`, `CreatureDef::disarms: Option<Disarms>`, `content/creature.rs`; the
+creature loop refuses a chance outside 1 to 100 or a difficulty outside 2 to 40). **Rules**:
+`world/knock_away.rs` (`World::knock_away`, one line in `fight.rs` after `snatch`): a melee hit
+on the player that leaves them alive, a weapon in the first hand slot; one `chance` draw, then
+the open cells beside the player in row order (`is_walkable`, not `swim`, not a closed door, no
+actor; none: nothing more drawn), then the Dexterity check (`check::check`, two draws) with
+`knock_away::hold` (Dexterity modifier and talent checks, the weapon's skill rank, the grip:
+`TWO_HANDED_HOLD`, `SHIELD_HOLD`, or the `OneWeapon` style's rank), then `index(n)` for the cell
+with two or more. The stack leaves the pack (`after_removal`) onto the cell's pile; a spirit
+stack is taken off and `fade_spirit` says it goes. No noise of its own (the fight's is heard).
+**Words**: "The ultroloth knocks your long sword from your hand!", "It lands beside you.".
+**Wiki**: `creature_disarmers` (`creature-disarmers.md`, "Disarmers" in `creature-numbers.md`).
+**Tests**: `world/knock_away_tests.rs` (the roster pinned there). No talent (a gimmick).
 
 Casters (spec §8 "Creature behavior": "Casters", #1102). **Data**: `spells = [...]` on a
 `combat = "caster"` type (`CreatureSpec::spells`, resolved in the creature loop by
