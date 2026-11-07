@@ -1903,6 +1903,8 @@ mod pack_tests;
 #[cfg(test)]
 mod parts_tests;
 #[cfg(test)]
+mod potion_gamble_tests;
+#[cfg(test)]
 mod potion_status_tests;
 #[cfg(test)]
 mod potion_tests;

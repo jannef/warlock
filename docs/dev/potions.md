@@ -78,6 +78,21 @@ Spec §8 "Potions" (`spec/08g-magic-items.md`); the combat progression design §
   cell, no stream draw), refused in effect on the overworld ("The land lurches, and holds you
   where you are."). `World::cleanse` was taken (the Cleanse spell's, `world/cast.rs`), hence
   the name `restore`.
+- The gambles (#1229, the potions wave 2 design §4.3): `Gamble { outcomes }` names a table of
+  `data/outcomes/` (`content/outcome.rs`; the tables load after the objects, so
+  `potion::check_gambles` checks the id once they have, one line in `Content::load`).
+  `World::gamble` is the spring's `drunk`: `draw_outcome(table, table.kinds)` (two gameplay
+  draws, nothing leans) and `befall` at the player's cell (objects left "at the feature's foot"
+  land beside them). A table's `seconds` defaults to 0 (a gamble's has none); `exhaust = 0`
+  (nothing spent). The two outcome effects the gambles brought: `status` as a list (each
+  afflicted, the outcome's line said instead of the statuses'), and `drain_stat = { stat,
+  points }` (`World::drain_points`, the loss half of `World::drain` lifted out: no check,
+  counted in `Actor::drained`, never below the floor; found only when a point went, else the
+  `otherwise` line). Content: `draught_of_chance`, `trolls_blood` (named "vial of troll's
+  blood" for the article), `brewers_blunder`, each with its table of the same id, iridescent
+  `#c0a0e0`; the description line "Does good, or harm, or nothing: a gamble". Tests:
+  `world/potion_gamble_tests.rs`; the wiki's tables: `potion-gambles.md`
+  (`xtask/src/wiki/outcomes.rs::gamble_outcomes`).
 - Creatures do not drink.
 
 ## Flasks: `world/flask.rs`
