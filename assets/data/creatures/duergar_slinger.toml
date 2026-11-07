@@ -26,7 +26,7 @@ stats = { strength = 15, dexterity = 15, toughness = 15, intelligence = 11, will
 base_hp = 20
 resist = { poison = 25, cold = 10 }
 on_eat = { message = "Tough and sour, like old leather.", vomit = 25 }
-weapon_skills = { slings = 2, axes = 1 }
+weapon_skills = { axes = 2, slings = 2, duelist = 1 }
 racial_weapon = "sling"
 [[creature.gear]]
 chance = 95

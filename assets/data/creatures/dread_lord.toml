@@ -23,7 +23,7 @@ stats = { strength = 35, dexterity = 25, toughness = 36, intelligence = 37, will
 base_hp = 148
 natural = { defence = 4, protection = 0, name = "dead flesh" }
 resist = { cold = 50, poison = 100 }
-weapon_skills = { long_blades = 8, great_blades = 8 }
+weapon_skills = { long_blades = 8, great_blades = 10 }
 on_eat = { message = "Cold meat in a rusted shell.", vomit = 80, harm = "1d4" }
 blood = "#1a1c28"
 [creature.attack]

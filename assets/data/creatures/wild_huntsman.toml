@@ -24,7 +24,7 @@ stats = { strength = 34, dexterity = 24, toughness = 35, intelligence = 36, will
 base_hp = 142
 natural = { defence = 4, protection = 5, name = "dead flesh" }
 resist = { cold = 50, poison = 100 }
-weapon_skills = { spears = 7, polearms = 7 }
+weapon_skills = { spears = 10, polearms = 10, duelist = 10 }
 on_eat = { message = "Grave-cold meat that never has stopped running.", vomit = 80, harm = "1d4" }
 blood = "#1a2a24"
 [creature.attack]

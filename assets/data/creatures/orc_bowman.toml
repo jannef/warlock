@@ -25,7 +25,7 @@ weight = 80000
 stats = { strength = 19, dexterity = 17, toughness = 19, intelligence = 10, willpower = 14, presence = 9 }
 base_hp = 42
 on_eat = { message = "This orc meat is rank!", vomit = 30 }
-weapon_skills = { bows = 3, short_blades = 2 }
+weapon_skills = { short_blades = 5, bows = 3, duelist = 2 }
 racial_weapon = "composite_bow"
 [[creature.gear]]
 chance = 95
