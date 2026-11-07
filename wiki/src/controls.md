@@ -22,7 +22,7 @@ bar, and the info pages.
 | Go down [stairs](terrain.md#stairs), or enter a place on the [overworld](overworld.md#locations) | `>` |
 | Go up [stairs](terrain.md#stairs), or [leave an outdoor area](overworld.md#leaving-an-area) when no enemy is about | `<` |
 | [Pick up](objects.md#picking-up) | `,` or `;` |
-| [Drop](objects.md#dropping) | `d` |
+| [Drop](objects.md#dropping) (your [pack](objects.md#your-pack) in its drop mode; `D` there too) | `d` |
 | [Pay](shops.md#buying) the [shopkeeper](creatures.md#creature-shopkeeper) | `p` |
 | [Equipment](equipment.md) ([wear and wield](equipment.md#what-fits-where)) | `i` |
 | [Inventory](objects.md#your-pack) (your pack) | `I` |
