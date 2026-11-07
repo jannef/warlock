@@ -13,10 +13,9 @@
 #   id          stable id, used by `on_hit` (creatures.toml) and saves
 #   name        how the character screen names it once it is known
 #   difficulty  what a check must reach to resist it, as it is caught and at each progression
-#               (1 to 50)
 #   check       the stat whose modifier the checks add: "toughness" (the default), or any stat
 #   incubation  days from catching it to its onset: dice ("1d3") or a number, at least 1
-#   interval    days between its progressions (default 1)
+#   interval    days between its progressions (default 1; at least 1)
 #   damage      what a failed check takes off the stats, in points of stat damage:
 #               { dexterity = "1d3", toughness = "1d3" }. It never takes a score below 1 unless
 #               the disease kills, and mends a point a day in each stat once no disease shows.

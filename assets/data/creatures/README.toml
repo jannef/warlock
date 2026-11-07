@@ -62,7 +62,7 @@
 #   budge       whether you can swap places with it when it is not hostile to you (spec §8
 #                "Displacement"): "always" (default), "off_post" (not while it keeps its post,
 #                going about its routine: a shopkeeper at its counter), or "never" (rooted)
-#   attack_cost  what its attacks cost in energy (100 to 10000), instead of the attack's cost in
+#   attack_cost  what its attacks cost in energy, instead of the attack's cost in
 #                actions.toml (melee, shoot, or cast; 1000 is a normal action)
 #   training    makes it a target dummy (spec §8 "Weapon skills": "Target dummies"): it never
 #                acts or dies, the player strikes it by moving into it, a blow at it disturbs no
@@ -76,7 +76,7 @@
 # words a quest or a rule may ask for, `tags = ["goblin", "archer"]`. One flat pool: nothing
 # declares a tag, a creature carrying it is all there is, and a kill quest's `target =
 # "tag:goblin"` counts every type that carries it. A tag is the base word, singular (`goblin`,
-# never `goblins`), lower-case words joined by hyphens, 1 to 24 characters. Its plural, said in
+# never `goblins`), lower-case words joined by hyphens (no `:` or spaces). Its plural, said in
 # quests, comes from data/plurals.toml (default the word plus "s"): a tag or a creature name
 # with an irregular plural adds its line there. **Tag every new creature** that belongs to a
 # group or a role below (a new tag only when something could use it):
@@ -230,7 +230,7 @@
 #             "Creatures' throws"; the giants' boulders): [creature.throw] with object (what
 #             flies, for its look: "boulder"; it never lands), damage, damage_type, range (cells,
 #             2 to 20), verb (what it does as it throws: "hurls"), and optionally name (what flies
-#             is called; default the object's name), cost (a throw's energy, 100 to 10000;
+#             is called; default the object's name), cost (a throw's energy;
 #             default `throw` in actions.toml), and to_hit, threat, crit, and on_hit as for
 #             attack. Dexterity adds to hit, Strength to damage. Not next to its target, it throws
 #             whenever the target is in range with a clear line of fire

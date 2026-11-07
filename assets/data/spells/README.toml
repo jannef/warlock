@@ -8,77 +8,80 @@
 # Fields:
 #   id, name      the spell's id and its name
 #   description   one line
-#   level         its spell level, 0 to 70: its base mana (the level, at least 1) and the
-#                 learning at which a scroll of it teaches for certain (../study.toml). 0 and 1
-#                 are cantrips. (`tier` is refused: the levels replaced the tiers)
+#   level         its spell level, 0 to 70 by design: its base mana (the level, at least 1)
+#                 and the learning at which a scroll of it teaches for certain (../study.toml).
+#                 0 and 1 are cantrips.
 #   The tags (talents, abilities, items, and the wiki key on them; magic design §6):
 #   school        evocation, necromancy, abjuration, restoration, transmutation, enchantment,
 #                 or divination
 #   kind          damage, heal, buff, hex, cleanse, utility, or summon (a summon is cast on
 #                 `self` with `auto`: it calls creatures to the caster's side, spec §8 "Allies")
 #   shape         ray, bolt, touch, self (single targets), cone, line, or burst (areas)
-#   damage_type   a damage type of ../damage_types.toml (needed by a `damage` spell, its tag)
+#   damage_type   a damage type of ../damage_types.toml (a `damage` spell's, its tag)
 #   resolution    how it finds its targets (../spells.toml [resolution]): `area` for the area
 #                 shapes and only them; `touch` only with the touch shape; `attack` with a ray
 #                 or a bolt; `auto` with any single target
 #   range, radius, length   its base reach, what anyone who casts it reaches: `range` for a ray,
-#                 a bolt, and a burst (1 to 20: the farthest cell it reaches or is centred on),
-#                 `radius` for a burst (1 to the length of ../spells.toml's `burst`), `length`
-#                 for a cone (1 to 5) and a line (1 to 20); each exactly where its shape has it
-#                 (touch and self have none). A burst costs by its `radius`. (`max_range`,
-#                 `max_radius`, and `max_length` are refused: the ladders replaced them)
-#   casts         its time, in `cast` actions (1 to 10; default 1)
+#                 a bolt, and a burst (the farthest cell it reaches or is centred on; casting
+#                 holds it to 20), `radius` for a burst (casting holds it to the length of
+#                 ../spells.toml's `burst`), `length` for a cone (held to 5) and a line (to 20);
+#                 each exactly where its shape has it (touch and self have none). A burst costs
+#                 by its `radius`.
+#   casts         its time, in `cast` actions (at least 1; default 1)
 #   open_sky      true: it is cast only under the open sky (default false)
-#   mana          its base mana cost given outright (1 to 500), in place of its level's: the
+#   mana          its base mana cost given outright, in place of its level's: the
 #                 shape and resolution do not count; the armour worn and the talents still do.
 #                 For a spell whose price is not its difficulty (Identify; Burning hands and Grave breath)
 #   damage        a `damage` spell's base roll: a roll, `"2d6"`, `"3d6+1d10"`, `"5d6+2"` (dice
-#                 of 2 to 20 sides, a d7 or a d9 like any other; the old table form is refused)
+#                 of 2 to 20 sides, a d7 or a d9 like any other; never below 0)
 #   aim           an `attack` or `touch` damage spell's: the stat whose modifier is added to
 #                 its attack roll, as a blow adds Dexterity's (default `dexterity`). A scroll's
 #                 or a wand's always aims with Dexterity
-#   study_difficulty  added to the study check's difficulty (-20 to 40, default 0); above 0, a
+#   study_difficulty  added to the study check's difficulty (default 0); above 0, a
 #                 study of it is a check at any learning, never certain (the calls' scrolls
 #                 are very hard to learn: the owner, #828 Q7)
 #   [spell.effect]  what a spell of another kind does:
 #     heal        a `heal` spell's base hit points: a roll, as `damage`
 #     status, severity  a `buff`'s status on the caster, a `hex`'s on its target, a `damage`
-#                 spell's on everyone it harms (a status of ../status.toml; severity 1 to 10,
-#                 default 1: a buff's or a hex's base degrees; the status's `max` holds them)
+#                 spell's on everyone it harms (a status of ../status.toml; severity default 1:
+#                 a buff's or a hex's base degrees; the status's `max` holds them). Only a
+#                 buff's status may hasten (creatures never step quicker than their type)
 #     cures, diseases   a `cleanse` ends these statuses, and with `diseases = true` every
 #                 disease
 #     identify    true: a `utility` spell on `self` that identifies one stack the caster carries
 #                 (asked for as it is cast, `use:identify:c`)
 #     summon      a `summon` spell's call, `{ creatures = ["wolf"], count = "1d2", most = 1,
-#                 minutes = 5, spread = 2 }`: each comes from the pool `creatures` (known types;
-#                 not the player, a unique, or an animated thing; each as likely), `count` a roll
-#                 that brings 1 to 12, `most` (1 to 12) of this spell's calls kept at once (past
-#                 it the oldest departs), `minutes` (1 to 600) their stay, `spread` (1 to 5,
-#                 default 2) how far from the caster they appear
+#                 minutes = 5, spread = 2 }`: each comes from the pool `creatures` (at least one,
+#                 known types, never the player; each as likely), `count` a roll (at least 1
+#                 comes), `most` of this spell's calls kept at once (past it the oldest
+#                 departs), `minutes` their stay, `spread` (default 2) how far from the caster
+#                 they appear
 #     corpse      `consumed` or `kept`: it is aimed at a corpse the caster sees, the pile's
 #                 top-most, and `consumed` uses it up; on a `damage` burst (it goes off there), a
 #                 `heal` touch (the caster heals), or a `summon` on `self` with `rise`
 #     rise        a `summon` spell's raising of the corpse, in place of `summon`: `{ most = 2,
 #                 minutes = 10, hit_points = 50, berserk = 10, berserk_faction = "berserk",
-#                 berserk_message = "..." }`: the corpse's own type stands at `hit_points` (1 to
-#                 100) percent of its hit points, `most` and `minutes` as a summon's; `berserk`
-#                 (0 to 100) percent rise in `berserk_faction` instead, saying `berserk_message`
+#                 berserk_message = "..." }`: the corpse's own type stands at `hit_points`
+#                 percent of its hit points, `most` and `minutes` as a summon's; `berserk`
+#                 percent rise in `berserk_faction` instead, saying `berserk_message`
 #     charm       a `hex` ray's or bolt's, with no `status`: `{ minutes = 5, mindless = ["undead"],
 #                 message = "takes you for a friend", ends = "shakes off the charm" }`: the
-#                 creature it falls on is the caster's ally for `minutes` (1 to 600; its
+#                 creature it falls on is the caster's ally for `minutes` (its
 #                 `degrees` ladder grows it), then itself again where it stands; refused on a
 #                 unique, an animated thing, and a creature with a `mindless` tag; `message` and
 #                 `ends` follow its name as it takes and as it ends
-#     mana        a `heal` spell's mana back to the caster: a roll (at most 500)
+#     mana        a `heal` spell's mana back to the caster: a roll
 #     arcs        a `damage` ray's, bolt's, touch's, or line's, of a type that arcs (`[types]` in
-#                 ../spells.toml), 1 to 12: that many jumps are taken without a draw, every jump of
+#                 ../spells.toml): that many jumps are taken without a draw, every jump of
 #                 it reaching 2 cells rather than the arc's one
 #     zone        `{ kind = "fire", turns = 10 }`: an area that stays on the cells of a burst's or
-#                 a line's shape for that many of the player's turns (1 to 600; the turn is 6 s;
-#                 docs/dev/spells.md "Zones"): `fire` (a `damage` spell of fire: burns who starts
-#                 a turn on it or steps onto it, one roll as it is laid), `fouled` (a `damage` spell
-#                 of poison: poisons who starts a turn in it), `slick` and `dark` (a `hex`, then
-#                 with no `status`: trips who steps on it or off it; no light reaches it)
+#                 a line's shape for that many of the player's turns (the turn is 6 s;
+#                 docs/dev/spells.md "Zones"), on a `damage` spell or a `hex`: `fire` (by
+#                 custom a `damage` spell of fire: burns who starts a turn on it or steps onto
+#                 it, one roll of the spell's as it is laid), `fouled` (by custom a `damage`
+#                 spell of poison: poisons who starts a turn in it), `slick` and `dark` (by
+#                 custom a `hex` with no `status`: trips who steps on it or off it; no light
+#                 reaches it)
 #   [spell.cast]  how it shows and sounds (needed by a `damage` spell cast at a distance):
 #     effect      the effect presentation shows (../effects.toml): a burst's for a burst or a
 #                 cone, a bolt's for a ray, a bolt, or a line; none for touch or self
@@ -94,21 +97,17 @@
 #     damage      a `damage` spell's roll        heal      a `heal` spell's roll
 #     range       a ray's, bolt's, or burst's    length    a cone's or a line's
 #     radius      a burst's                      degrees   a buff's, a hex's, or a damage spell's
-#     count       a `summon`'s count (a roll,              status's degrees, or a summon's or
-#                 each rung bringing 1 to 12); a spell     a charm's minutes (to 600)
-#                 with `arcs`, its jumps (whole, 1 to 12)
+#     count       a `summon`'s count (a roll);             status's degrees, or a summon's or
+#                 a spell with `arcs`, its jumps           a charm's minutes
+#                 (whole numbers)
 #                 A ladder is one string: the stat's id, then rungs separated by commas, each
 #                 `AT VALUE` with one space: `"intelligence 13 3d6, 16 4d6, 19 5d6, 25 5d6+2"`.
-#                 `AT` is a score, 1 to 40, strictly ascending; at most 8 rungs. `VALUE` is a
-#                 roll for `damage` and `heal` (each rung's lowest and highest at least the one
-#                 before's, and not the same roll), whole cells or degrees for the rest (each
-#                 more than the one before, the first more than the base; a range to 20, a cone
-#                 to 5, a line to 20, a radius to the burst table's length, degrees to the
-#                 status's `max`). A caster whose effective score reaches a rung's `AT` casts
-#                 that rung; below the first, the base. Talents and items may add rungs and
-#                 change the roll (the six hooks, ../talents/README.toml `spell_mod`).
-#   (`[spell.scales]` and `[spell.scroll] level` are refused: the ladders replaced the first,
-#   a scroll's own `rungs` the second)
+#                 `AT` is a score, 1 to 40, strictly ascending. `VALUE` is a roll for `damage`
+#                 and `heal`, whole cells or degrees for the rest (casting holds reach to 20, a
+#                 cone to 5, a radius to the burst table's length, degrees to the status's
+#                 `max`). A caster whose effective score reaches a rung's `AT` casts that rung;
+#                 below the first, the base. Talents and items may add rungs and change the
+#                 roll (the six hooks, ../talents/README.toml `spell_mod`).
 #
 # Authoring conventions (templates, not checks; the spell scaling design §6.4):
 #   [A] cells or degrees, one more a rung: Willpower for reach at 14, 18, 22, 26

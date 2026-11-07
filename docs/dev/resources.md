@@ -30,11 +30,13 @@ Openings (R3), Ki and Inspiration (R4), and the four resource talents (R5). Rage
 - **Data**: `content/resource.rs` parses `data/resources.toml` into `ResourceDef`s (`id`,
   `name`, `short`, `max`, `start`, `starts_full` (no `start` in data: granted at its maximum by
   data, `max_from` included, talents not), `max_from: Option<MaxFrom>` (`{ stat, per_levels,
-  least }`, checked: a known stat, `per_levels` at least 1, `least` at most `max`;
+  least }`, checked: a known stat, `per_levels` at least 1 (a divisor);
   `MaxFrom::max` is the sum), `show_max`, `over_time: Option<OverTime>` (`Regenerates {
-  every }` or `Decays { every }`, seconds a point), `resting`, `ends_at_zero`, `ended`,
+  every }` or `Decays { every }`, seconds a point, at least 1; never both), `resting`, `ends_at_zero`, `ended`,
   `builds: Vec<(Build, u16)>`, `status: Option<StatusId>`, the status it brings: parsed after the
-statuses, refused if it `eases`). `ResourceId` is an index, in `Content::fingerprint` (its own
+statuses).
+  The loader checks only well-formedness (#1205): unique ids, resolution, the divisors above,
+  `ended` only with `ends_at_zero`; the grant and the pool keep a value within the maximum. `ResourceId` is an index, in `Content::fingerprint` (its own
   group, after the damage types). `Build` is the closed list of events (`kill`, `hit`,
   `critical`, `struck`, `sneak_attack`; `Build::ALL` in wiki order). Loaded before the talents,
   whose class actives may cost one (`TalentDef::resource: Option<ResourceCost>`, data `resource =

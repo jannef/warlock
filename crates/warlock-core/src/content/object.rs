@@ -76,7 +76,6 @@
 //! spell the reader aims, with the traps' rules, or identify an item. They are loot too (`level`,
 //! `frequency`), never magic.
 
-use super::action::check_cost;
 use super::affix::ItemKind;
 use super::creature::CreatureDef;
 use super::damage_type::TypeNames;
@@ -95,7 +94,7 @@ use super::weapon_skill::{WeaponSkillId, WeaponSkillTable};
 use super::{Content, ContentError, CreatureId, DamageTypeId};
 use crate::color::Rgb;
 use crate::combat::{Attack, DEFAULT_CRIT, DEFAULT_THREAT};
-use crate::damage::{Kinds, MAX_RESISTANCE, MIN_RESISTANCE, Rider};
+use crate::damage::{Kinds, Rider};
 use crate::dice::Dice;
 use crate::door::Key;
 use crate::item_parts::ItemPart;
@@ -104,8 +103,6 @@ use crate::time::Duration;
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
-/// The largest Protection adjustment (`protects`) one object may give, either way.
-pub const MAX_BONUS: i32 = 20;
 /// The most one object counts as worth, in gold coins: what it is made of is capped there
 /// ([`ObjectDef::value_with`]).
 pub const MAX_VALUE: u32 = 1_000_000;
@@ -769,15 +766,11 @@ impl ObjectSpec {
             }
             Some(spec) => Some(spec.resolve(content).map_err(err)?),
         };
-        let percent = MIN_RESISTANCE..=MAX_RESISTANCE;
-        let resist =
-            (content.resolve_per_kind("resist", &self.resist, percent, false)).map_err(err)?;
+        let resist = (content.resolve_per_kind("resist", &self.resist, false)).map_err(err)?;
         if !resist.is_empty() && self.slot.is_none() {
             return Err(err("`resist` is for things worn or held (`slot`)".into()));
         }
-        let protects =
-            (content.resolve_per_kind("protects", &self.protects, -MAX_BONUS..=MAX_BONUS, true))
-                .map_err(err)?;
+        let protects = (content.resolve_per_kind("protects", &self.protects, true)).map_err(err)?;
         if !protects.is_empty() && self.protection == 0 {
             return Err(err("`protects` is for armour with `protection`".into()));
         }
@@ -1060,13 +1053,8 @@ impl ObjectSpec {
                     .into(),
             );
         }
-        if let Some(cost) = self.attack_cost {
-            if !weapon || self.slot.is_none() {
-                return Err(
-                    "`attack_cost` is for weapons worn or wielded (`damage`, `slot`)".into(),
-                );
-            }
-            check_cost(cost).map_err(|m| format!("`attack_cost`: {m}"))?;
+        if self.attack_cost.is_some() && (!weapon || self.slot.is_none()) {
+            return Err("`attack_cost` is for weapons worn or wielded (`damage`, `slot`)".into());
         }
         Ok(())
     }

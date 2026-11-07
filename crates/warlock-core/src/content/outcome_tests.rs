@@ -149,7 +149,7 @@ fn bad_outcomes_are_refused() {
             "unknown status",
         ),
         (
-            "message = \"A.\"\neffect = { status = { id = \"inspired\", degrees = 4 } }\n",
+            "message = \"A.\"\neffect = { status = { id = \"inspired\", degrees = 0 } }\n",
             "degrees",
         ),
         (
@@ -167,11 +167,6 @@ fn bad_outcomes_are_refused() {
         (
             "message = \"A.\"\neffect = { objects = [{ object = \"nonesuch\", count = \"1\" }] }\n",
             "unknown object",
-        ),
-        (
-            "message = \"A.\"\neffect = { explode = { spell = \"fireball\", radius = 99, \
-             damage = \"1d6\" } }\n",
-            "radius",
         ),
         (
             "message = \"A.\"\neffect = { wish = true }\n",

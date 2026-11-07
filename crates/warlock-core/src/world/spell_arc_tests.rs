@@ -481,8 +481,6 @@ fn loads(body: &str) -> Result<Content, String> {
 fn arcs_are_checked_as_they_load() {
     assert!(loads("shape = \"bolt\"\neffect = { arcs = 3 }").is_ok());
     for (body, says) in [
-        ("shape = \"bolt\"\neffect = { arcs = 0 }", "`arcs` is 1 to"),
-        ("shape = \"bolt\"\neffect = { arcs = 13 }", "`arcs` is 1 to"),
         (
             "shape = \"burst\"\nradius = 1\neffect = { arcs = 3 }",
             "`arcs` is a ray's",

@@ -351,24 +351,14 @@ fn a_summon_spell_is_checked_as_it_loads() {
     );
     refused(
         &call(
-            "creatures = [\"rat\"], count = \"0\", most = 1, minutes = 5",
+            "creatures = [\"rat\"], count = \"1x\", most = 1, minutes = 5",
             "",
         ),
-        "`count`",
+        "summon: ",
     );
     refused(
-        &call(
-            "creatures = [\"rat\"], count = \"1\", most = 0, minutes = 5",
-            "",
-        ),
-        "`most`",
-    );
-    refused(
-        &call(
-            "creatures = [\"rat\"], count = \"1\", most = 1, minutes = 0",
-            "",
-        ),
-        "`minutes`",
+        &call("creatures = [], count = \"1\", most = 1, minutes = 5", ""),
+        "`creatures` names at least one",
     );
     refused(
         &call(
@@ -383,11 +373,6 @@ fn a_summon_spell_is_checked_as_it_loads() {
             "",
         ),
         "cannot be called",
-    );
-    refused(&call(fine, "study_difficulty = 99\n"), "`study_difficulty`");
-    refused(
-        &call(fine, "[spell.grows]\ncount = \"willpower 14 13\"\n"),
-        "1 to 12",
     );
     // The count ladder is a summon's alone; its minutes grow on `degrees`.
     refused(

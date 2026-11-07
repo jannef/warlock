@@ -67,19 +67,19 @@ developer notes (CLAUDE.md, `docs/dev/`).
   daggers 1; humans none.
 - **Status effects** (`data/status.toml`, optional; without it nothing ails anyone and resting
   heals twice as fast; §8 "Status effects", "Healing"): `[healing] resting` (how fast hit points
-  come back while the player rests, in percent of the normal pace, 0 to 1000; 200) and
+  come back while the player rests, in percent of the normal pace; 200) and
   `mana_resting` (the same for mana, §8 "Mana"; default 200), then the
   `[[status]]`s in order of importance (the status bar shows the first first): `id`, `name`
   (as the status bar and the character screen show it), `seen` (how look mode names it on a
   creature the player sees; none: it does not show on others), `max` (the most degrees of
-  severity, 1 to 100), `stacking` (`add`, the default: a new dose's degrees add up, to `max`;
+  severity, at least 1), `stacking` (`add`, the default: a new dose's degrees add up, to `max`;
   `highest`: the stronger of the two; `refresh`: the stronger, its easing starting over),
-  `tick` (seconds between ticks at one degree; `n` times as often at `n` degrees) and `damage`
+  `tick` (seconds between ticks at one degree, at least 1; `n` times as often at `n` degrees) and `damage`
   (hit points a tick costs, default 0, needing a `tick`), `eases` (seconds for it to ease by a
-  degree; none: until cured), `regen` (how fast hit points come back while it lasts, in percent,
-  0 to 1000, default 100), `mana_regen` (the same for mana, §8 "Mana") and `mana_damage` (mana a
+  degree, at least 1; none: until cured), `regen` (how fast hit points come back while it lasts,
+  in percent, default 100), `mana_regen` (the same for mana, §8 "Mana") and `mana_damage` (mana a
   tick drains, default 0, needing a `tick`; never below 0), `penalty` (`{ from = 4, strength = -1, dexterity = -1 }`: what it
-  does to scores from a severity on, each −10 to 10), `wound` (`{ big_hit = 1, critical = 2 }`:
+  does to scores from a severity on, at most its `max`), `wound` (`{ big_hit = 1, critical = 2 }`:
   the degrees a big hit and a confirmed critical cause), `cured_by` (the means that end it at
   once: `bandage`), and the words: `start` and `end` (said to the player), `dies` (a creature
   the player sees dying of it: "bleeds to death"), `death` (the death screen's line: "Bled to
@@ -94,21 +94,19 @@ developer notes (CLAUDE.md, `docs/dev/`).
 - **Diseases** (`data/diseases.toml`, optional; without it nobody falls ill; §8 "Checks",
   "Diseases"): `status` (the status every disease shows as, required with any disease:
   `diseased`), then the `[[disease]]`s in file order: `id`, `name` (as the character screen
-  names it once known: `filth fever`), `difficulty` (what a check must reach to resist it, 1 to
-  50), `check` (the stat whose modifier the checks add, default `toughness`), `incubation` (days
-  from catching it to its onset: dice or a number, at least 1, at most 365, whatever it rolls),
-  `interval` (days between progressions, default 1, 1 to 365), `damage` (stat damage a failed
-  check does: `{ dexterity = "1d3", toughness = "1d3" }`, each 1 to 40 whatever it rolls), `hp`
-  (hit points a failed check costs: dice, 1 to 1000; none by default; a failed check must do
-  one or the other), `recovery` (checks won in a row that shake it off, default 2; 0: never by
+  names it once known: `filth fever`), `difficulty` (what a check must reach to resist it), `check` (the stat whose modifier the checks add, default `toughness`), `incubation` (days
+  from catching it to its onset: dice or a number, at least 1 whatever it rolls),
+  `interval` (days between progressions, default 1, at least 1), `damage` (stat damage a failed
+  check does: `{ dexterity = "1d3", toughness = "1d3" }`), `hp`
+  (hit points a failed check costs: dice; none by default), `recovery` (checks won in a row that shake it off, default 2; 0: never by
   itself), `kills` (default false: whether its damage may take Toughness to 0 or the last hit
   point, which kills), `regen` (how fast hit points come back while it shows, in percent, when
-  slower than its status's; 0 to 1000), `mana_regen` (the same for mana; the built-in brain
+  slower than its status's), `mana_regen` (the same for mana; the built-in brain
   fever 25), `caught` (the sources rules expose to it by name:
   `rotten_food`), `wading` (`{ terrain = ["marsh", "swamp"], per_hour = 4 }`: the terrain the
-  player catches it in, a chance in percent for each hour spent crossing it, 1 to 100),
+  player catches it in, a chance in percent for each hour spent crossing it),
   `cured_by` (the means that cure it at once: `remove_disease`; nothing applies one yet), and the
-  words, all required: `onset` (said as it shows), `symptoms` (said at the progressions that go
+  words: `onset` (said as it shows), `symptoms` (said at the progressions that go
   badly, in turn, the first again after the last), `recovered` (said as it leaves). Built in, our
   own in the D&D 3.5 spirit (a check of 2d12 + modifier against the difficulty): **filth fever**
   (difficulty 13, `1d3` days, `1d3` Dexterity and `1d3` Toughness; from the giant rat's bite),
@@ -128,21 +126,20 @@ developer notes (CLAUDE.md, `docs/dev/`).
   is only medium.
 - **Hunger** (`data/hunger.toml`, optional; §8 "Hunger"; without it nobody hungers, nothing can
   be eaten, food does not rot, and creatures leave no corpses): `burn_seconds` (game seconds per
-  nutrition point burned at 100 % hunger, 1 to 86 400: 60), `start` (nutrition at the start of a
+  nutrition point burned at 100 % hunger, at least 1: 60), `start` (nutrition at the start of a
   run: 3600), `max` (the most there can be: 6500), `vomit_leaves` (the most left after
   vomiting: 1000), `sickness` (the status id, `data/status.toml`, that harm from eating gives:
   `poisoned`; needed when anything eaten harms), `[states]` (the least nutrition of `bloated` 5500, `satiated` 4000, `not_hungry` 1440,
   `hungry` 720, `weak` 240, and `fainting` 0, strictly falling and below `max`; below
-  `fainting` the player is Starving; `start` and `vomit_leaves` lie from `fainting` to `max`),
-  `[bloated] slow` (percent of an action's price while Bloated, 100 to 1000: 125), `[weak]
-  stats` (what Weak, Fainting, and Starving take from Strength and Dexterity, only those two,
-  −10 to 10: −1 each), `[fainting]` (`chance`, percent each turn, 0 to 100: 5; `turns` lost, 1
-  to 100: 5), `[starving]` (`damage` hit points, 1 to 1000: 1, every `seconds` of game time, 1
-  to 86 400: 600), `[exertion]` (extra points the player's `melee`, `shoot`, and `throw` burn,
-  0 to 1000: 2, 1, 1; no other action), `[overeating]` (`choke`, the percent chance a meal past
+  `fainting` the player is Starving),
+  `[bloated] slow` (percent of an action's price while Bloated, above 0: 125), `[weak]
+  stats` (what Weak, Fainting, and Starving take from Strength and Dexterity: −1 each),
+  `[fainting]` (`chance`, percent each turn: 5; `turns` lost: 5), `[starving]` (`damage` hit
+  points: 1, every `seconds` of game time, at least 1: 600), `[exertion]` (extra points the
+  player's `melee`, `shoot`, and `throw` burn: 2, 1, 1; no other action), `[overeating]` (`choke`, the percent chance a meal past
   `max` chokes the eater to death: 0, off; `vomit`, else the chance they vomit: 50), `[rotten]`
   (what eating rotten food of any kind does: `vomit`, percent: 50; `harm`, dice of degrees of
-  sickness, 0 to 1000: `1d4`), and `[corpses]` (optional; without it creatures leave none:
+  sickness: `1d4`), and `[corpses]` (optional; without it creatures leave none:
   `material` (`flesh`), and `[corpses.size]` with every size of `data/sizes.toml` and what its
   corpses give and how long they keep, `{ nutrition, turns, keeps, lasts }` as for food (§7
   "Objects"): small 400 and 3, medium 1000 and 6, both keeping `"8h"` and lasting `"36h"`). The

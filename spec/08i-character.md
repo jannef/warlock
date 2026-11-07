@@ -1824,7 +1824,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     paid only after its own refusals (nobody hostile there, no room to lunge, nothing to shoot):
     its `stamina` through `World::spend_resource`, less Drillmaster's point and Armour-breaker's
     2 for Sunder and Gap shot (`TalentMods::weapon_stamina`, `ability_stamina`; at least 1);
-    and its `energy`, `percent` (50 to 300) of the price of the action it is, priced before it
+    and its `energy`, `percent` of the price of the action it is, priced before it
     is made: `attack_price` for a blow (weapon speed, style, stance, statuses: Light-footed
     halves it, Walled adds its quarter), `shot_price` for a shot, `wait` for Shield wall;
     Practised technique cuts a quarter (`weapon_energy_percent`, never below 50 % of the

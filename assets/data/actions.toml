@@ -1,7 +1,7 @@
 # What actions cost, in energy (spec §8 "Time"). 1000 is a normal action: it takes a creature of
 # normal speed (the player's) 6 seconds; a cost of 1400 would take it 8.4 seconds. How long an
 # action takes is cost / 1000 × 1000 / speed × 6 s, so a creature twice as fast takes half as
-# long. Costs are 100 to 10000; an action left out costs 1000. Creature types may give their
+# long. An action left out costs 1000. Creature types may give their
 # attacks a cost of their own (`attack_cost` in creatures.toml).
 
 # A step onto terrain of move_cost 100; a step costs this scaled by the terrain's move_cost

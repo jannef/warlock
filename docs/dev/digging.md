@@ -4,8 +4,8 @@ Developer notes for working on this part of Warlock (moved from CLAUDE.md, #185)
 rules it implements are in spec/08d-traps-doors-digging.md. Keep it current with the code, as CLAUDE.md says.
 
 Digging (spec §8 "Digging"; M19, #131) lives in `warlock-core/src/world/dig.rs`. Terrain that
-breaks has `hardness` and `becomes` (`TerrainDef::breaks: Option<Breakable>`, validated: only
-solid terrain breaks, into walkable, transparent, plain ground); `void` (solid rock) has a `face`
+breaks has `hardness` and `becomes` (`TerrainDef::breaks: Option<Breakable>`; the data breaks only
+solid terrain, into walkable, transparent, plain ground); `void` (solid rock) has a `face`
 (`wall`) it turns into when a cell next to it opens, as mapgen walls open ground. Cells on a
 level's edge never break (`LevelState::on_edge`, `breaks_at`). `Action::Dig(Dir)` (`dig:DIR`,
 key `u` = `KeyCommand::UseTool`, ADOM's use-tool key, a direction prompt; `a` is the

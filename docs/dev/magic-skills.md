@@ -12,8 +12,7 @@ CLAUDE.md says.
   `school`). `content/weapon_skill.rs`: `Role::School` (not implicit: one skill a school, not
   one a role), `WeaponSkillDef::school` (`Some` exactly for a school), `WeaponSkillTable::of_school`.
   The loader refuses a school row without `school`, a `school` on another role, a school with
-  two rows, an unknown school (serde), and `role = "spell"` (Spell attacks, retired, with a
-  message naming `school`; `SkillSpec::role` is read as text for it, `Role::from_id`).
+  two rows (`of_school` would read only the first), and an unknown school (serde).
   `Content::load` refuses a spell whose school has no row (once there are weapon skills at all).
 - A school row is a weapon skill in everything else: its own `school` curve (#1095), `[marks]`,
   `Training { rank, marks }` on `Actor::weapon_skills` (saved by index), `train`, `raise`,
@@ -27,11 +26,10 @@ CLAUDE.md says.
 ## What a rank gives
 
 `Benefit` gained the spell fields, each an array of 11 and allowed for a school only (the
-per-role check in `SkillSpec::benefits`): `reroll`, `sides`, `dice`, `cells`, `degrees` (0 to
-3), `bonus` (0 to 6), `mana` (0 to 50). `speed` is allowed for a school (still refused for the
-caster grips), `to_hit` and `threat` are the existing fields; `damage` and `crit` are refused for
-a school. These ranges are the table's own field ranges (`MAX_SPELL_DICE`, `MAX_SPELL_BONUS`,
-`MAX_SPELL_MANA`), not a bound on what a spell does (decision 16: nothing clamps a spell).
+per-role check in `SkillSpec::benefits`): `reroll`, `sides`, `dice`, `cells`, `degrees`,
+`bonus`, `mana` (those held in a `u8` 0 to 255; no other range, #1205). `speed` is allowed for a
+school (still refused for the caster grips), `to_hit` and `threat` are the existing fields;
+`damage` and `crit` are refused for a school (decision 16: nothing clamps a spell).
 
 Read in one place each:
 

@@ -476,42 +476,16 @@ fn breaking_terrain_and_digging_tools_are_validated() {
         Content::load(&files).map(|_| ()).map_err(|e| e.message)
     };
     let wall = "hardness = 600\nbecomes = \"rubble\"";
-    for (replace, with, message) in [
-        (
-            wall,
-            "hardness = 600",
-            "`hardness` and `becomes` go together",
-        ),
-        (
-            wall,
-            "hardness = 0\nbecomes = \"rubble\"",
-            "hardness must be 1 to 10000",
-        ),
-        (
-            wall,
-            "hardness = 600\nbecomes = \"granite\"",
-            "which must be open ground",
-        ),
-        (
-            wall,
-            "hardness = 600\nbecomes = \"stairs_down\"",
-            "which must be open ground",
-        ),
-        (
-            "fg = \"#6a6a72\"\nbg = \"#0d0d10\"",
-            "fg = \"#6a6a72\"\nbg = \"#0d0d10\"\nhardness = 5\nbecomes = \"rubble\"",
-            "only solid terrain breaks",
-        ),
-        (
-            "face = \"wall\"",
-            "face = \"floor\"",
-            "only solid rock has a `face`",
-        ),
-    ] {
-        assert!(TERRAIN.contains(replace), "{replace}");
-        let err = load("data/terrain.toml", TERRAIN.replacen(replace, with, 1)).unwrap_err();
-        assert!(err.contains(message), "{with}: {err}");
-    }
+    assert!(TERRAIN.contains(wall), "{wall}");
+    let err = load(
+        "data/terrain.toml",
+        TERRAIN.replacen(wall, "hardness = 600", 1),
+    )
+    .unwrap_err();
+    assert!(
+        err.contains("`hardness` and `becomes` go together"),
+        "{err}"
+    );
     let pick = "kind = \"tool\"\nlevel = 3\nfrequency = 10\nslot = \"tool\"\ndig = 10";
     assert!(PICK_AXE.contains(pick));
     let path = "data/objects/pick_axe.toml";

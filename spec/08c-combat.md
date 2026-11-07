@@ -290,7 +290,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   neutral for now, and the AI may pick one later). `Action::SetStance(stance)`, text
   `stance:aggressive`, takes no game time (`Spent::NoTime`) and is recorded in replays; it says
   "You take an aggressive stance." (a neutral, a defensive, a cowardly). `+` and `-` step towards aggressive and towards coward (`CombatStance::more_aggressive`, `more_defensive`; they stop at the ends).
-  The file has exactly one `[[stance]]` per stance (`id`, `name`) and, all optional: `to_hit` and
+  The file has at most one `[[stance]]` per stance (`id`, `name`; one left out is plain) and, all optional: `to_hit` and
   `damage` (added to the stanced actor's melee, shot, and thrown attacks: `StanceDef::apply`,
   through `Actor::stanced`), `dodge` and `parry` (added to its Defence in those categories, so
   Dodge stacks and Parry only counts above the weapon's own; a stance may make Defence worse),
@@ -300,7 +300,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   the actor has a hostile next to it and the step ends out of that creature's reach,
   `World::flees`), and `weapon_mark` (percent: the multiplier for weapon skill marks, the hook
   for #134; nothing counts marks yet), and `gatekeeper` (percent: scales the Gatekeeper gift's
-  chance of a blow, capped at always, §8 "Free blows"). Bonuses are -20 to 20, percentages 10 to 1000. Shipped
+  chance of a blow, capped at always, §8 "Free blows"). Shipped
   numbers (first guesses, tuned by playtesting; none is ever shown, only the stance's name):
   aggressive +1 to hit, +2 damage, -3 Dodge, marks ×1.25; defensive -2 to hit, -1 damage, +2
   Dodge, +1 Parry; coward -4 to hit, -3 damage, +4 Dodge, attacks ×1.25, fleeing steps ×0.85

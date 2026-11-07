@@ -21,15 +21,15 @@
 //! [[mishap]]
 //! id = "fizzle"
 //! band = "slight"       # slight, bad, terrible, or lucky (drawn beside any band)
-//! weight = 40           # its share of its band's draw, 1 to 1000
+//! weight = 40           # its share of its band's draw
 //! message = "The words crumble to dust as you read them."
 //! effect = { kind = "nothing" }
 //! ```
 //!
-//! Effects: `nothing`; `status` (`status`, `severity` 1 to its max); `backfire` (the scroll's
-//! own spell goes off on the reader); `mana` (`percent` of the mana left, 1 to 100, is lost);
+//! Effects: `nothing`; `status` (`status`, `severity`, default 1); `backfire` (the scroll's
+//! own spell goes off on the reader); `mana` (`percent` of the mana left is lost);
 //! `teleport` (to a free cell of the level); `lose_mark` (one stat training mark, of a stat
-//! with any, is lost); `drain` (`stat` or `"random"`, `points` 1 to 3, `difficulty`: a
+//! with any, is lost); `drain` (`stat` or `"random"`, `points`, `difficulty`: a
 //! Willpower check or the points are lost for good); `summon` (`creature`, hostile, next to the
 //! reader); `learn` (the spell is learned anyway); `mark` (`stat`: a training mark more).
 
@@ -37,11 +37,6 @@ use super::{Content, ContentError, CreatureId, StatusId, duplicate_id};
 use crate::stats::Stat;
 use serde::Deserialize;
 use std::collections::BTreeMap;
-
-/// The heaviest a mishap's weight may be.
-pub const MAX_WEIGHT: u16 = 1000;
-/// The most points a mishap's drain may take.
-pub const MAX_DRAIN: u8 = 3;
 
 /// The study check and its time (`data/study.toml`).
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -78,28 +73,12 @@ struct StudyFile {
 
 impl StudyRules {
     pub(super) fn parse(path: &str, text: &str) -> Result<Self, ContentError> {
-        let err = |m: &str| ContentError::new(path, m.to_string());
         let f: StudyFile =
             toml::from_str(text).map_err(|e| ContentError::new(path, e.to_string()))?;
-        if !(2..=40).contains(&f.base) || !(0..=20).contains(&f.per_overreach) {
-            return Err(err("`base` is 2 to 40 and `per_overreach` 0 to 20"));
-        }
-        if !(1..=100).contains(&f.known_per_point) {
-            return Err(err("`known_per_point` is 1 to 100"));
-        }
-        if !(1..=1000).contains(&f.turns_base) || f.turns_per_level > 1000 {
-            return Err(err(
-                "`turns_base` is 1 to 1000 and `turns_per_level` 0 to 1000",
-            ));
-        }
-        let most = i32::from(super::MAX_SPELL_LEVEL);
-        if !(1..f.terrible_from).contains(&f.bad_from) || f.terrible_from > most {
-            return Err(err(
-                "`bad_from` is at least 1 and below `terrible_from`, at most 70",
-            ));
-        }
-        if f.struggle == 0 || f.struggle >= f.easy || f.easy > 144 {
-            return Err(err("`struggle` is above 0 and below `easy`, at most 144"));
+        // A divisor of the difficulty.
+        if f.known_per_point < 1 {
+            let why = "`known_per_point` is at least 1";
+            return Err(ContentError::new(path, why.to_string()));
         }
         Ok(Self {
             base: f.base,
@@ -282,12 +261,6 @@ pub(super) fn parse<'a>(
 }
 
 fn resolve(spec: MishapSpec, content: &Content) -> Result<Mishap, String> {
-    if !(1..=MAX_WEIGHT).contains(&spec.weight) {
-        return Err(format!("`weight` is 1 to {MAX_WEIGHT}"));
-    }
-    if spec.message.trim().is_empty() {
-        return Err("`message` is empty".into());
-    }
     let e = spec.effect;
     // Only the fields its kind reads.
     let fields = [
@@ -329,30 +302,17 @@ fn resolve(spec: MishapSpec, content: &Content) -> Result<Mishap, String> {
             let name = e.status.ok_or("a `status` effect needs a `status`")?;
             let status = (content.status_id(&name)).ok_or(format!("unknown status `{name}`"))?;
             let severity = e.severity.unwrap_or(1);
-            let max = content.status(status).max;
-            if severity < 1 || severity > max {
-                return Err(format!("`severity` is 1 to the status's max, {max}"));
-            }
             MishapEffect::Status { status, severity }
         }
         "mana" => {
             let percent = e.percent.ok_or("a `mana` effect needs a `percent`")?;
-            if !(1..=100).contains(&percent) {
-                return Err("`percent` is 1 to 100".into());
-            }
             MishapEffect::Mana { percent }
         }
         "drain" => {
             let points = e.points.ok_or("a `drain` effect needs `points`")?;
-            if !(1..=MAX_DRAIN).contains(&points) {
-                return Err(format!("`points` is 1 to {MAX_DRAIN}"));
-            }
             let difficulty = e
                 .difficulty
                 .ok_or("a `drain` effect needs a `difficulty`")?;
-            if !(2..=40).contains(&difficulty) {
-                return Err("`difficulty` is 2 to 40".into());
-            }
             MishapEffect::Drain {
                 stat: stat(&e.stat, true)?,
                 points,
@@ -370,13 +330,6 @@ fn resolve(spec: MishapSpec, content: &Content) -> Result<Mishap, String> {
         },
         other => return Err(format!("unknown effect kind `{other}`")),
     };
-    let lucky = matches!(effect, MishapEffect::Learn | MishapEffect::Mark { .. });
-    if lucky != (spec.band == Band::Lucky) && !matches!(effect, MishapEffect::Status { .. }) {
-        return Err(
-            "`learn` and `mark` are lucky, and a lucky mishap is `learn`, `mark`, or a status"
-                .into(),
-        );
-    }
     Ok(Mishap {
         id: spec.id,
         band: spec.band,
@@ -419,24 +372,11 @@ mod tests {
     #[test]
     fn bad_rules_are_refused() {
         for bad in [
-            RULES.replace("bad_from = 6", "bad_from = 15"),
-            RULES.replace("struggle = 36", "struggle = 100"),
             RULES.replace("known_per_point = 20", "known_per_point = 0"),
-            RULES.replace("turns_base = 100", "turns_base = 0"),
-            RULES.replace("terrible_from = 15", "terrible_from = 71"),
+            RULES.replace("easy = 96\n", ""),
         ] {
             assert!(StudyRules::parse("study.toml", &bad).is_err(), "{bad}");
         }
-    }
-
-    #[test]
-    fn the_shipped_mishaps_cover_every_band() {
-        let content = Content::builtin().expect("content");
-        let mishaps = content.mishaps();
-        for band in Band::ALL {
-            assert!(mishaps.iter().any(|m| m.band == band), "{band:?}");
-        }
-        assert!(content.study_rules().is_some());
     }
 
     fn one(effect: &str, band: &str) -> Result<Vec<Mishap>, ContentError> {
@@ -464,19 +404,14 @@ mod tests {
         for (effect, band) in [
             ("{ kind = \"boom\" }", "slight"),
             ("{ kind = \"status\", status = \"nope\" }", "slight"),
-            (
-                "{ kind = \"status\", status = \"sluggish\", severity = 9 }",
-                "slight",
-            ),
             ("{ kind = \"nothing\", percent = 5 }", "slight"),
-            ("{ kind = \"mana\", percent = 0 }", "bad"),
+            ("{ kind = \"mana\" }", "bad"),
             (
-                "{ kind = \"drain\", stat = \"random\", points = 9, difficulty = 15 }",
+                "{ kind = \"drain\", stat = \"random\", points = 2 }",
                 "terrible",
             ),
             ("{ kind = \"summon\", creature = \"nobody\" }", "terrible"),
-            ("{ kind = \"learn\" }", "slight"),
-            ("{ kind = \"nothing\" }", "lucky"),
+            ("{ kind = \"mark\", stat = \"luck\" }", "lucky"),
         ] {
             assert!(one(effect, band).is_err(), "{effect} {band}");
         }

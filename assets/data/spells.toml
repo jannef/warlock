@@ -2,8 +2,8 @@
 # design docs/design/spell-scaling.md §5): the cost table every spell's mana is measured by. The
 # spells themselves are in spells/, one file each.
 #
-# A spell has a level, 0 to 70 (spells/README.toml). It is one number with two meanings: the
-# spell's base mana (its level, at least 1: a cantrip of level 0 or 1 costs 1), and the learning
+# A spell has a level, 0 to 70 by design (spells/README.toml). It is one number with two
+# meanings: the spell's base mana (its level, at least 1: a cantrip of level 0 or 1 costs 1), and the learning
 # at which a scroll of it teaches for certain (study.toml). Nothing says how much a spell
 # of a level may do: its own data does.
 #

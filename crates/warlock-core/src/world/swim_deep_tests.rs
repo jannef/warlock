@@ -138,7 +138,7 @@ fn seed_where(made: bool, make: impl Fn(u64) -> World) -> World {
 }
 
 #[test]
-fn the_terrain_loads_as_the_issue_has_it_and_a_solid_or_walkable_one_is_refused() {
+fn the_terrain_loads_as_the_issue_has_it_and_a_walkable_one_is_refused() {
     let content = &*CONTENT;
     let def = content.terrain(content.terrain_id("deep_water").expect("deep water"));
     assert!(def.swim && !def.walkable && def.transparent && def.freeze.is_none());
@@ -151,17 +151,15 @@ fn the_terrain_loads_as_the_issue_has_it_and_a_solid_or_walkable_one_is_refused(
     assert_eq!((rules.difficulty, rules.per_burden, rules.cold), (11, 2, 1));
 
     let text = include_str!("../../../../assets/data/terrain.toml");
-    for to in [
+    let bad = text.replace(
+        "walkable = false\nswim = true\n",
         "swim = true\nwalkable = true\n",
-        "walkable = false\nswim = true\ntransparent = false\n",
-    ] {
-        let bad = text.replace("walkable = false\nswim = true\n", to);
-        assert_ne!(text, bad);
-        let mut files = files();
-        files.insert("data/terrain.toml", &bad);
-        let error = Content::load(&files).expect_err("refused").to_string();
-        assert!(error.contains("deep water"), "{error}");
-    }
+    );
+    assert_ne!(text, bad);
+    let mut files = files();
+    files.insert("data/terrain.toml", &bad);
+    let error = Content::load(&files).expect_err("refused").to_string();
+    assert!(error.contains("deep water"), "{error}");
 }
 
 #[test]

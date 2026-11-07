@@ -13,22 +13,13 @@
 
 use super::{ContentError, StatusId, TerrainId};
 use crate::dice::Dice;
-use crate::stats::{PerStat, SCORES, Stat};
+use crate::stats::{PerStat, Stat};
 use serde::Deserialize;
 use std::collections::BTreeMap;
 
 /// The ways a disease may be caught that rules name (`caught`): eating a rotten corpse (hunger,
 /// #137, exposes the eater).
 pub const SOURCES: [&str; 1] = ["rotten_food"];
-
-/// The difficulties a disease may have: what a check (2d12 plus a modifier) must reach.
-pub const DIFFICULTIES: std::ops::RangeInclusive<i32> = 1..=50;
-
-/// The longest incubation, and the longest interval between progressions, in days.
-pub const MAX_DAYS: i32 = 365;
-
-/// The most hit points one failed check may cost.
-pub const MAX_HP: i32 = 1000;
 
 /// Index of a disease in [`super::Content::disease_defs`], in file order.
 #[derive(
@@ -208,60 +199,17 @@ fn resolve(
     spec: DiseaseSpec,
     terrain_id: &impl Fn(&str) -> Option<TerrainId>,
 ) -> Result<DiseaseDef, String> {
-    if spec.id.trim().is_empty() || spec.name.trim().is_empty() {
-        return Err("`id` and `name` must not be empty".into());
+    if spec.id.is_empty() {
+        return Err("`id` must not be empty".into());
     }
-    if !DIFFICULTIES.contains(&spec.difficulty) {
-        return Err(format!(
-            "difficulty must be {} to {}",
-            DIFFICULTIES.start(),
-            DIFFICULTIES.end()
-        ));
+    // Its turns come every `interval` days: 0 would never let time pass.
+    if spec.interval == 0 {
+        return Err("interval must be at least 1 day".into());
     }
     let incubation = spec.incubation;
-    if incubation.min() < 1 || incubation.max() > MAX_DAYS {
-        return Err(format!(
-            "incubation must be 1 to {MAX_DAYS} days, whatever it rolls"
-        ));
-    }
-    if !(1..=MAX_DAYS as u32).contains(&spec.interval) {
-        return Err(format!("interval must be 1 to {MAX_DAYS} days"));
-    }
     let mut damage = PerStat::splat(Dice::fixed(0));
-    let most = i32::from(*SCORES.end());
     for (stat, dice) in spec.damage {
-        if dice.min() < 1 || dice.max() > most {
-            return Err(format!(
-                "damage: {} {dice} must do 1 to {most} points, whatever it rolls",
-                stat.id()
-            ));
-        }
         damage[stat] = dice;
-    }
-    if let Some(hp) = spec.hp
-        && (hp.min() < 1 || hp.max() > MAX_HP)
-    {
-        return Err(format!(
-            "hp: {hp} must cost 1 to {MAX_HP} hit points, whatever it rolls"
-        ));
-    }
-    if damage.iter().all(|(_, d)| d.is_zero()) && spec.hp.is_none() {
-        return Err("a failed check must do something: `damage` or `hp`".into());
-    }
-    if spec.regen.is_some_and(|r| r > super::status::MAX_REGEN) {
-        return Err(format!(
-            "regen must be 0 to {} (percent)",
-            super::status::MAX_REGEN
-        ));
-    }
-    if spec
-        .mana_regen
-        .is_some_and(|r| r > super::status::MAX_REGEN)
-    {
-        return Err(format!(
-            "mana_regen must be 0 to {} (percent)",
-            super::status::MAX_REGEN
-        ));
     }
     if let Some(bad) = spec.caught.iter().find(|c| !SOURCES.contains(&c.as_str())) {
         return Err(format!(
@@ -272,32 +220,15 @@ fn resolve(
     let wading = spec
         .wading
         .map(|w| {
-            if !(1..=100).contains(&w.per_hour) {
-                return Err("wading: per_hour must be 1 to 100 (percent)".to_string());
-            }
-            if w.terrain.is_empty() {
-                return Err("wading: name at least one terrain".to_string());
-            }
             let terrain = (w.terrain.iter())
                 .map(|t| terrain_id(t).ok_or_else(|| format!("wading: unknown terrain `{t}`")))
-                .collect::<Result<Vec<_>, _>>()?;
-            Ok(Wading {
+                .collect::<Result<Vec<_>, String>>()?;
+            Ok::<_, String>(Wading {
                 terrain,
                 per_hour: w.per_hour,
             })
         })
         .transpose()?;
-    if spec.cured_by.iter().any(|c| c.trim().is_empty()) {
-        return Err("cured_by: a cure must have a name".into());
-    }
-    let blank = |s: &String| s.trim().is_empty();
-    if blank(&spec.onset)
-        || blank(&spec.recovered)
-        || spec.symptoms.is_empty()
-        || spec.symptoms.iter().any(blank)
-    {
-        return Err("`onset`, `recovered`, and at least one symptom must have words".into());
-    }
     Ok(DiseaseDef {
         id: spec.id,
         name: spec.name,
@@ -398,31 +329,7 @@ mod tests {
                 FEVER.replace("\"diseased\"", "\"sick\""),
                 "unknown status `sick`",
             ),
-            (
-                FEVER.replace("difficulty = 12", "difficulty = 0"),
-                "difficulty must be 1 to 50",
-            ),
-            (
-                FEVER.replace("\"1d3\"\n", "\"1d3-1\"\n"),
-                "incubation must be 1 to 365 days",
-            ),
-            (
-                FEVER.replace("toughness = \"1d3\"", "toughness = \"1d3-1\""),
-                "damage: toughness",
-            ),
-            (
-                FEVER.replace("damage = {", "hp = 0\ndamage = {"),
-                "hp: 0 must cost",
-            ),
-            (
-                FEVER.replace(
-                    "damage = { dexterity = \"1d3\", toughness = \"1d3\" }",
-                    "damage = {}",
-                ),
-                "must do something",
-            ),
             (format!("{FEVER}interval = 0\n"), "interval must be"),
-            (format!("{FEVER}regen = 2000\n"), "regen must be 0 to 1000"),
             (
                 format!("{FEVER}caught = [\"water\"]\n"),
                 "unknown source `water`",
@@ -430,22 +337,6 @@ mod tests {
             (
                 format!("{FEVER}wading = {{ terrain = [\"bog\"], per_hour = 2 }}\n"),
                 "unknown terrain `bog`",
-            ),
-            (
-                format!("{FEVER}wading = {{ terrain = [\"marsh\"], per_hour = 0 }}\n"),
-                "per_hour must be 1 to 100",
-            ),
-            (
-                format!("{FEVER}wading = {{ terrain = [], per_hour = 1 }}\n"),
-                "at least one terrain",
-            ),
-            (
-                format!("{FEVER}cured_by = [\" \"]\n"),
-                "a cure must have a name",
-            ),
-            (
-                FEVER.replace("[\"You shiver.\"]", "[]"),
-                "at least one symptom",
             ),
             (format!("{FEVER}check = \"luck\"\n"), "unknown stat `luck`"),
             (format!("{FEVER}colour = 1\n"), "unknown field `colour`"),
@@ -456,19 +347,13 @@ mod tests {
     }
 
     #[test]
-    fn mana_paces_parse_and_are_checked() {
+    fn mana_paces_parse() {
         let (_, list) = parsed(&format!("{FEVER}mana_regen = 25\n")).expect("valid");
         assert_eq!(list[0].mana_regen, Some(25));
         assert_eq!(
             parsed(FEVER).expect("valid").1[0].mana_regen,
             None,
             "as the status says"
-        );
-        let e = parsed(&format!("{FEVER}mana_regen = 2000\n")).unwrap_err();
-        assert!(
-            e.message.contains("mana_regen must be 0 to 1000"),
-            "{}",
-            e.message
         );
     }
 }

@@ -670,10 +670,6 @@ fn bad_typed_data_is_refused() {
             "`resist` is for things worn or held",
         ),
         (
-            "slot = \"body\"\nprotection = 2\nresist = { fire = 80 }",
-            "`fire` must be -100 to 75",
-        ),
-        (
             "slot = \"body\"\nprotection = 2\nprotects = { fire = 1 }",
             "no physical damage type",
         ),
@@ -698,12 +694,6 @@ fn bad_typed_data_is_refused() {
          damage_type = \"fire\"\nbases = [\"weapon\"]\ntiers = [{ level = 1, min = 1, max = 2 }]\n",
     );
     assert!(err.contains("`damage_type` is for affixes"), "{err}");
-    let err = bad(
-        "data/creatures/zz_x.toml",
-        "[[creature]]\nid = \"zz_x\"\nname = \"x\"\nglyph = \"x\"\nfg = \"#ffffff\"\n\
-         weight = 1000\nresist = { fire = 101 }\n",
-    );
-    assert!(err.contains("`fire` must be -100 to 100"), "{err}");
     let mut files = ContentFiles::builtin();
     files.edit_table("status", |t| {
         t.replace("from = [\"slashing\", \"piercing\"]", "from = [\"sonic\"]")

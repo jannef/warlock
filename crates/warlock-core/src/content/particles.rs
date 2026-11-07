@@ -115,7 +115,8 @@ fn half() -> f32 {
 }
 
 impl ParticleEmitter {
-    /// Checks that the emitter can produce particles.
+    /// Checks that the emitter is well formed: numbers that are numbers, and glyphs and colors
+    /// to draw from (the renderer skips one with no `rate` or `life`).
     pub fn check(&self) -> Result<(), String> {
         let finite = [
             self.rate,
@@ -144,33 +145,7 @@ impl ParticleEmitter {
         if self.colors.is_empty() {
             return Err("particles need at least one color".into());
         }
-        if self.life <= 0.0 || self.scale <= 0.0 {
-            return Err("particle `life` and `scale` must be positive".into());
-        }
-        if [self.fade, self.glow, self.opacity]
-            .iter()
-            .any(|v| !(0.0..=1.0).contains(v))
-        {
-            return Err("particle `fade`, `glow`, and `opacity` must be between 0 and 1".into());
-        }
-        match self.on {
-            ParticleTrigger::Ambient if self.rate <= 0.0 => {
-                Err("ambient particles need a positive `rate`".into())
-            }
-            ParticleTrigger::Obstacle | ParticleTrigger::Flight if self.rate <= 0.0 => Err(
-                format!("{} particles need a positive `rate`", self.on.name()),
-            ),
-            ParticleTrigger::Step
-            | ParticleTrigger::Toggle
-            | ParticleTrigger::Attack
-            | ParticleTrigger::Impact
-            | ParticleTrigger::Linger
-                if self.count == 0 =>
-            {
-                Err("particle bursts need a positive `count`".into())
-            }
-            _ => Ok(()),
-        }
+        Ok(())
     }
 }
 
@@ -194,28 +169,14 @@ mod tests {
     }
 
     #[test]
-    fn checks_reject_emitters_that_cannot_emit() {
+    fn checks_reject_emitters_with_nothing_to_draw() {
         let base = "glyphs = \".\"\ncolors = [\"#ffffff\"]\nlife = 1\n";
-        assert!(parse(base).check().is_err(), "ambient without a rate");
-        assert!(parse(&format!("{base}on = \"step\"\n")).check().is_err());
-        assert_eq!(
-            parse(&format!("{base}on = \"toggle\"\ncount = 3\n")).check(),
-            Ok(())
-        );
+        assert_eq!(parse(base).check(), Ok(()), "no rate: it never emits");
         let no_glyphs = "glyphs = \"\"\ncolors = [\"#ffffff\"]\nlife = 1\nrate = 1\n";
         assert!(parse(no_glyphs).check().is_err());
         let no_colors = "glyphs = \".\"\ncolors = []\nlife = 1\nrate = 1\n";
         assert!(parse(no_colors).check().is_err());
-        assert!(
-            parse(&format!("{base}rate = 1\nglow = 2\n"))
-                .check()
-                .is_err()
-        );
-        assert!(
-            parse(&format!("{base}rate = 1\nopacity = 1.5\n"))
-                .check()
-                .is_err()
-        );
+        assert!(parse(&format!("{base}rate = nan\n")).check().is_err());
         assert!(toml::from_str::<ParticleEmitter>(&format!("{base}speed = 1\n")).is_err());
     }
 }

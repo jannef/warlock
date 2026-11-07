@@ -3,9 +3,6 @@
 use crate::light::Light;
 use serde::{Deserialize, Serialize};
 
-/// Largest light radius the effects' lights were held to (`content/effect.rs`).
-pub const MAX_LIGHT_RADIUS: i32 = 32;
-
 /// Index of a light preset in [`super::Content::light_presets`].
 ///
 /// Ids are assigned in file order when content loads, like [`super::TerrainId`].

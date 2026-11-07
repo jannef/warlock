@@ -255,8 +255,8 @@ fn tag_targets_are_checked_at_load() {
 fn bad_creature_tags_are_refused() {
     let mut files = ContentFiles::builtin();
     files.edit_table("creatures", |text| {
-        text.replace("tags = [\"goblin\"]\n", "tags = [\"Goblin\"]\n")
+        text.replace("tags = [\"goblin\"]\n", "tags = [\"gob lin\"]\n")
     });
     let error = Content::load(&files).map(|_| ()).expect_err("refused");
-    assert!(error.to_string().contains("lower-case words"), "{error}");
+    assert!(error.to_string().contains("a word without"), "{error}");
 }

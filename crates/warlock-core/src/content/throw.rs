@@ -66,9 +66,6 @@ impl ThrowSpec {
         disease: impl Fn(&str) -> Option<DiseaseId>,
         kinds: Kinds,
     ) -> Result<Throw, String> {
-        if let Some(cost) = self.cost {
-            super::action::check_cost(cost).map_err(|m| format!("throw: cost: {m}"))?;
-        }
         let named = self.name.is_some();
         let damage_given = self.damage.is_some();
         let attack = NaturalAttackSpec {

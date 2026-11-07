@@ -88,11 +88,12 @@ impl GlyphAnim {
             GlyphAnim::Shimmer { speed, .. } => ([*speed, 0.0], 0.0),
             GlyphAnim::Cycle { fps, .. } => ([*fps, 0.0], 0.0),
         };
-        if values.iter().any(|v| !v.is_finite() || *v < 0.0) {
+        if values
+            .iter()
+            .chain([&glint])
+            .any(|v| !v.is_finite() || *v < 0.0)
+        {
             return Err("animation values must be finite and not negative".into());
-        }
-        if !(0.0..=1.0).contains(&glint) {
-            return Err("animation `glint` must be between 0 and 1".into());
         }
         Ok(())
     }

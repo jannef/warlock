@@ -288,12 +288,6 @@ fn noise_fields_are_validated() {
     };
     assert_eq!(with(TERRAIN, CREATURES), Ok(()));
     let err = with(
-        &TERRAIN.replace("step_noise = 200", "step_noise = 1001"),
-        CREATURES,
-    )
-    .unwrap_err();
-    assert!(err.contains("terrain `water`: `step_noise`"), "{err}");
-    let err = with(
         &TERRAIN.replace("step_noise = 200", "toggle_noise = 5"),
         CREATURES,
     )

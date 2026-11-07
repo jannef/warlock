@@ -17,17 +17,9 @@
 //! electricity), which the targets resist and no armour soaks.
 
 use super::effect::EffectShape;
-use super::terrain::MAX_HARDNESS;
 use super::{Content, DamageTypeId};
 use crate::dice::{Dice, Roll};
 use crate::ice;
-use crate::perception::VIEW_RADIUS;
-use std::ops::RangeInclusive;
-
-/// The radii a burst may have, in cells.
-pub const BURST_RADII: RangeInclusive<i32> = 1..=5;
-/// The lengths a bolt may have, in cells (a trap's own cell is the first).
-pub const BOLT_LENGTHS: RangeInclusive<i32> = 1..=VIEW_RADIUS;
 
 /// What a burst does to the ice and the water it reaches (spec §5 "Ice").
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -96,34 +88,24 @@ impl SpellFields {
 
     fn damage(&self) -> Result<Dice, String> {
         self.damage
-            .filter(|d| d.min() >= 0 && d.max() >= 1)
-            .ok_or_else(|| "needs `damage` dice that can do harm, e.g. \"1d6\"".into())
+            .filter(|d| d.min() >= 0)
+            .ok_or_else(|| "needs `damage` dice that never roll below 0, e.g. \"1d6\"".into())
     }
 }
 
 impl Burst {
-    /// The burst `fields` describe, checked: a radius in [`BURST_RADII`], a blast up to
-    /// [`MAX_HARDNESS`], `heat` or `frost` (1 to [`ice::MAX_MM`] mm) but not both.
+    /// The burst `fields` describe, checked: `heat` or `frost` but not both, and `frost` at
+    /// most [`ice::MAX_MM`] mm (the thickest ice the simulation keeps).
     pub(super) fn new(fields: &SpellFields) -> Result<Self, String> {
         let radius = fields.radius.unwrap_or(0);
-        if !BURST_RADII.contains(&radius) {
-            return Err(format!(
-                "`radius` must be {} to {}",
-                BURST_RADII.start(),
-                BURST_RADII.end()
-            ));
-        }
         let blast = fields.blast.unwrap_or(0);
-        if blast > MAX_HARDNESS {
-            return Err(format!("`blast` must be 0 to {MAX_HARDNESS}"));
-        }
         let ice = match (fields.heat, fields.frost) {
             (true, Some(_)) => return Err("a burst has `heat` or `frost`, not both".into()),
             (true, None) => Some(BurstIce::Melts),
-            (false, Some(mm)) if (1..=ice::MAX_MM).contains(&mm) => {
-                Some(BurstIce::Freezes(u32::from(mm) * 1000))
+            (false, Some(mm)) if mm <= ice::MAX_MM => Some(BurstIce::Freezes(u32::from(mm) * 1000)),
+            (false, Some(_)) => {
+                return Err(format!("`frost` must be at most {} mm", ice::MAX_MM));
             }
-            (false, Some(_)) => return Err(format!("`frost` must be 1 to {} mm", ice::MAX_MM)),
             (false, None) => None,
         };
         Ok(Self {
@@ -139,16 +121,9 @@ impl Burst {
 }
 
 impl Bolt {
-    /// The bolt `fields` describe, checked: a length in [`BOLT_LENGTHS`].
+    /// The bolt `fields` describe.
     pub(super) fn new(fields: &SpellFields) -> Result<Self, String> {
         let length = fields.length.unwrap_or(0);
-        if !BOLT_LENGTHS.contains(&length) {
-            return Err(format!(
-                "`length` must be {} to {}",
-                BOLT_LENGTHS.start(),
-                BOLT_LENGTHS.end()
-            ));
-        }
         Ok(Self {
             spell: fields.spell()?,
             length,

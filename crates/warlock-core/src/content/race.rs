@@ -350,7 +350,7 @@ mod tests {
             |s| sizes.iter().position(|id| *id == s),
             |k| (skills.iter().position(|id| *id == k)).map(|i| SkillId(i as u8)),
             content.weapon_skills(),
-            |m| content.resolve_per_kind("resist", m, -100..=100, false),
+            |m| content.resolve_per_kind("resist", m, false),
         )
     }
 
@@ -509,14 +509,6 @@ mod tests {
                 "race `human`: unknown weapon skill `whips`",
             ),
             (
-                format!("{ONE}weapon_skills = {{ bows = \"1d12\" }}\n"),
-                "must give a rank from 0 to 10",
-            ),
-            (
-                format!("{ONE}weapon_skills = {{ bows = -1 }}\n"),
-                "must give a rank from 0 to 10",
-            ),
-            (
                 format!("{ONE}{}", ONE.replace("base_potential = 15\n", "")),
                 "duplicate race id `human`",
             ),
@@ -531,10 +523,6 @@ mod tests {
             (
                 format!("{ONE}resist = {{ luck = 25 }}\n"),
                 "race `human`: `resist`: unknown damage type `luck`",
-            ),
-            (
-                format!("{ONE}resist = {{ poison = 101 }}\n"),
-                "`resist`: `poison` must be -100 to 100",
             ),
             (
                 format!("{ONE}light_blind = {{ glare = 250, sight = 10 }}\n"),

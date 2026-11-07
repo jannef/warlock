@@ -12,12 +12,6 @@ use crate::geom::Pos;
 use crate::time::Duration;
 use serde::{Deserialize, Serialize};
 
-/// Tallest terrain for sun shadows, in cells: it bounds how far a shadow can reach.
-pub const MAX_HEIGHT: u8 = 4;
-/// The hardest a wall may be (spec §8 "Digging"): a thousand digs with a pick-axe at Strength
-/// 10.
-pub const MAX_HARDNESS: u16 = 10_000;
-
 /// Index of a terrain definition in [`super::Content::terrain`].
 ///
 /// Ids are assigned in file order when content loads; saves must not assume they are stable
@@ -253,7 +247,7 @@ pub struct TerrainDef {
     /// full [`crate::light::BOUNCE`] fraction).
     pub bounce: Rgb,
     /// Gameplay: how tall it stands, in cells, for sun shadows ([`crate::light::Sun`]); 0 casts
-    /// none. At most [`MAX_HEIGHT`].
+    /// none; the tallest bounds how far a shadow can reach.
     pub height: u8,
     /// Gameplay: under a roof, so never lit by the sun or the sky.
     pub roofed: bool,

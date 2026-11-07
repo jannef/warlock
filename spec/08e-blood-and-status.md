@@ -421,7 +421,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     level 0 or 1 is a *cantrip* (1 mana unless it names its own `mana`, as Burning hands and Grave
     breath do, 3; anyone trained in Spellcraft learns it for certain). There is no
     table of levels, no ceiling, and no check on how much a spell of a level may do: its own
-    data says it (decision 16). A `tier` key is refused, saying to use `level`.
+    data says it (decision 16).
   - **Cost table** (`data/spells.toml`): the **shapes** multiply the base mana (ray, bolt,
     touch, self ×1; cone ×1.6; line ×1.8; a burst ×1.8, ×2.4, ×3 by radius 1 to 3, its
     largest), and each **resolution** multiplies it (`attack`, `auto` ×1, `area` at its shape's
@@ -429,34 +429,32 @@ developer notes (CLAUDE.md, `docs/dev/`).
   - **Spells** (`data/spells/`, one `[[spell]]` file each, numbered in path order: `SpellId` an
     index, in the content fingerprint): id, name, description, level, the **tags** school
     (evocation, necromancy, abjuration, restoration, transmutation, enchantment, divination),
-    kind (damage, heal, buff, hex, cleanse, utility, summon), shape, and damage type (a `damage` spell's,
-    needed); a resolution that fits the shape (`area` exactly for cone, line, and burst, `touch`
+    kind (damage, heal, buff, hex, cleanse, utility, summon), shape, and damage type (a `damage`
+    spell's); a resolution that fits the shape (`area` exactly for cone, line, and burst, `touch`
     only for touch, `attack` for a ray or a bolt, `auto` for any single target); its **base**
-    reach, each shape exactly its own (`range` 1 to 20 for a ray, bolt, or burst, `radius` 1
-    to the burst table's length for a burst, `length` for a cone, 1 to 5, or a line, 1 to 20);
+    reach, each shape exactly its own (`range` for a ray, bolt, or burst, `radius` for a burst,
+    `length` for a cone or a line; casting holds a range or a line to 20, a cone to 5, a radius
+    to the burst table's length);
     `damage`, a damage spell's base roll (a `Roll`, `"2d6"`, `"3d6+1d10"`); `[spell.effect]`
     for the other kinds (a heal's base roll `heal = "2d6"`, a buff's or hex's `status` and base
     `severity`, a cleanse's `cures` and `diseases`, a damage spell's `status` suffered by
     everyone it harms); `aim` (an attack or touch damage spell's: the stat whose modifier aims
-    it, default Dexterity); `casts` (its time in `cast` actions, 1 to 10); `open_sky`; `mana`, a
+    it, default Dexterity); `casts` (its time in `cast` actions, at least 1); `open_sky`; `mana`, a
     cost given outright in place of its level's (Identify); `[spell.effect] identify` (a
     `utility` spell on `self` that asks for a stack); `[spell.effect] summon` (a `summon`
     spell's call on `self` with `auto`: `creatures`, `count`, `most`, `minutes`, `spread`; spec
     §8 "Allies"); `study_difficulty`; `[spell.cast]` (the `effect` drawn,
     `noun`, `verb`, `message`, `noise`, and a burst's `blast`, `heat`, `frost`); and
-    `[spell.grows]`, its ladders (below). Retired and refused, each naming its replacement:
-    `tier`, `[spell.damage]`'s table form (`dice`, `per_levels`, `max_dice`, `bonus`),
-    `max_range`, `max_length`, `max_radius`, `[spell.scales]`, `[spell.scroll] level`.
+    `[spell.grows]`, its ladders (below). The loader checks only that a spell is well formed
+    (#1205): ids resolve, and no field is given where its kind or shape would never read it.
   - **Ladders** (the spell scaling design §4, §6; `content/spell_ladder.rs`): `[spell.grows]`
     gives each dimension the spell has an optional ladder: `damage` and `heal` (rolls),
     `range`, `length`, `radius` (cells), `degrees` (of a buff's or a hex's status). A ladder is
     one string, the stat's id then rungs `AT VALUE` separated by commas (`"intelligence 13 3d6,
-    16 4d6, 19 5d6, 25 5d6+2"`), at most 8, `AT` a score 1 to 40 strictly ascending. The
-    loader refuses a ladder for a dimension the spell lacks, an unknown stat, a roll that
-    weakens (each rung's lowest and highest at least the one before's, the base first, and not
-    the same roll), cells or degrees not strictly ascending from the base or past the engine's
-    limits (a range to 20, a cone to 5, a line to 20, a radius to the burst table's length,
-    degrees to the status's `max`). **No check reads how much a rung does** (decision 16). The
+    16 4d6, 19 5d6, 25 5d6+2"`), `AT` a score 1 to 40 strictly ascending. The loader refuses a
+    ladder for a dimension the spell lacks and an unknown stat. **No check reads how much a
+    rung does** (decision 16); casting holds reach to the engine's limits (a range to 20, a
+    cone to 5, a line to 20, a radius to the burst table's length). The
     rung a caster reaches is how many rungs their **effective score** in the ladder's stat
     (statuses, stat damage, drains, worn items counted) is at or above; below the first, the
     base, so a low score never shrinks a spell. The cast rung is that plus the rungs from
@@ -553,7 +551,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     water) not yet struck, in actor id order; a burst and a cone conduct too. Then `arc = { chance
     = 25 }`, a ray's, a bolt's, a touch's, or a line's only: the nearest creature beside it not
     yet struck, ties by actor id, one draw when there is one to jump to. A spell's `[spell.effect]
-    arcs` (1 to 12; its `count` ladder grows them) takes that many jumps with no draw, and its
+    arcs` (its `count` ladder grows them) takes that many jumps with no draw, and its
     jumps reach 2 cells, never through what stops sight (Chain lightning, 3 to 6). **Conductor**
     (Spellcraft, level 12): the player's electricity spells arc every time, and they resist
     electricity 25 %; the arcs still jump back and the water still conducts. A spell turned back
