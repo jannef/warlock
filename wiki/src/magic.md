@@ -86,7 +86,7 @@ far it reaches now and which dice you roll again.
 
 **[Identify](#spell-identify)** asks which of your things to cast it on. The list of what you carry
 unidentified opens, as for the [scroll of identify](scrolls.md#scroll-of-identify) (see
-[Scrolls](scrolls.md#the-scroll-of-identify)).
+[Scrolls](scrolls.md#the-scroll-of-identify)). When it tells you something new, the thing's description opens.
 
 Every [scroll](scrolls.md) holds a spell. Each one you can read casts its spell, and each teaches
 its spell if you study it. The [scroll of identify](scrolls.md#scroll-of-identify) teaches

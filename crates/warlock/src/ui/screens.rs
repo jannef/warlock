@@ -997,6 +997,25 @@ pub(super) fn converse(
     }
 }
 
+/// Opens the description screen of the stack the player's action this frame identified with the
+/// Identify spell or the scroll of identify and learned something of (`Event::Identified` of the core).
+pub(super) fn show_identified(
+    game: Res<Game>,
+    mut actions: MessageReader<PlayerAction>,
+    mut screens: Screens,
+) {
+    if actions.read().count() == 0 || !screens.stack.is_empty() {
+        return;
+    }
+    let identified = (game.last_outcome.events.iter()).find_map(|e| match e {
+        warlock_core::action::Event::Identified { item } => Some(*item),
+        _ => None,
+    });
+    if let Some(item) = identified {
+        screens.open_on(ScreenName::Describe, Some(item));
+    }
+}
+
 /// Opens the screens the command line asks for (see [`startup_screens`]).
 pub(super) fn open_startup_screens(args: Res<Args>, game: Option<Res<Game>>, mut screens: Screens) {
     for name in startup_screens(args.screen, game.is_some()) {
@@ -2576,6 +2595,35 @@ mod tests {
     }
 
     #[test]
+    fn identifying_opens_the_description_of_the_stack_it_told_about() {
+        let content = content();
+        let mut world = warlock_core::World::new(content.clone(), "traps", None).expect("run");
+        for action in warlock_core::action::parse_actions("move:E pickup").expect("actions") {
+            world.apply(&action);
+        }
+        let mut app = app_with(content, Some(Game::from_world(world, "tamsin-1".into())));
+        fn apply(mut actions: MessageReader<PlayerAction>, mut game: ResMut<Game>) {
+            for PlayerAction(action) in actions.read() {
+                game.apply(action);
+            }
+        }
+        app.add_systems(
+            Update,
+            (apply, show_identified).chain().after(count_actions),
+        );
+        // Read the scroll of identify: its list of the unidentified stacks.
+        frame(&mut app, &[(KeyCode::KeyR, "r"), (KeyCode::KeyD, "d")]);
+        assert_eq!(names(&app), [ScreenName::Identify]);
+        // Choosing the first stack identifies it and opens its description over the map.
+        frame(&mut app, &[(KeyCode::KeyA, "a")]);
+        assert!(matches!(actions(&app).last(), Some(Action::Read { .. })));
+        assert_eq!(names(&app), [ScreenName::Describe]);
+        // Esc returns to the map.
+        frame(&mut app, &[ESC]);
+        assert!(names(&app).is_empty());
+    }
+
+    #[test]
     fn chat_talks_to_the_one_beside_and_the_dialogue_stays_open_while_asking() {
         let content = content();
         let mut world = warlock_core::World::new(content.clone(), "showcase", None).expect("run");
@@ -2590,7 +2638,12 @@ mod tests {
                 game.apply(action);
             }
         }
-        app.add_systems(Update, (apply, converse).chain().after(count_actions));
+        app.add_systems(
+            Update,
+            (apply, converse, show_identified)
+                .chain()
+                .after(count_actions),
+        );
         // `C` talks to the one creature beside the player at once; he has topics.
         frame(&mut app, &[(KeyCode::KeyC, "C")]);
         assert_eq!(actions(&app), [Action::Chat(Dir::SE)]);

@@ -225,6 +225,7 @@ impl World {
             }
             Event::LevelChanged { .. }
             | Event::Talked(_)
+            | Event::Identified { .. }
             | Event::VoiceThrown { .. }
             | Event::Ordered { .. } => true,
             // An ally departed where the player sees (spec §8 "Allies").
