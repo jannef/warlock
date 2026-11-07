@@ -93,51 +93,6 @@ pub(super) fn rumoured_ways(content: &Content) -> String {
     out
 }
 
-/// Who knows words (`[[dialogue.word]]`, those the wiki describes): each speaker, whom they
-/// speak to at all, each phrase as written, and what saying it does; sorted by who, then by the
-/// phrase.
-pub(super) fn words(content: &Content) -> String {
-    let mut rows: Vec<(String, String, String, String)> = Vec::new();
-    for d in (content.dialogues().iter())
-        .filter(|d| super::order::described(content, d.campaign.as_deref()))
-    {
-        let who = match (&d.speaker, &d.name) {
-            (Speaker::Creature(c), _) => capital(&content.creature(*c).name),
-            (Speaker::Npc(_), Some(name)) => name.clone(),
-            (Speaker::Npc(npc), None) => format!("`{npc}`"),
-        };
-        let speaks_to = speaks_to_text(d);
-        for w in &d.words {
-            let mut does: Vec<String> = Vec::new();
-            if let Some(class) = &w.does.calls {
-                let who = calling_text(content, d.campaign.as_deref(), class);
-                does.push(format!("calls {who}"));
-            }
-            if let Some(q) = (w.does.quest.as_deref()).and_then(|q| content.quest_id(q)) {
-                does.push(format!("gives the quest {}", content.quest(q).name));
-            }
-            if w.does.departs {
-                does.push("the speaker leaves".to_string());
-            }
-            let does = if does.is_empty() {
-                "a reply".to_string()
-            } else {
-                does.join(", then ")
-            };
-            rows.push((who.clone(), w.phrase.clone(), speaks_to.clone(), does));
-        }
-    }
-    if rows.is_empty() {
-        return "No one knows words to say to them yet.\n".to_string();
-    }
-    rows.sort();
-    let mut out = String::from("| Who | Words | Speaks to | Saying them |\n|---|---|---|---|\n");
-    for (who, phrase, speaks_to, does) in rows {
-        let _ = writeln!(out, "| {who} | *{phrase}* | {speaks_to} | {does} |");
-    }
-    out
-}
-
 /// Whom dialogue `d` speaks to at all, by alignment band: "Kind or better", or "anyone".
 fn speaks_to_text(d: &Dialogue) -> String {
     d.speaks_to.map_or_else(
@@ -152,8 +107,8 @@ fn speaks_to_text(d: &Dialogue) -> String {
 }
 
 /// Each campaign's callings (spec §8 "Prestige classes"), stated plain: who the calling is
-/// open to, the words that make it and to whom they are said (the dialogue words whose `does`
-/// `calls` it, in the calling's campaign), whom the speaker speaks to, and the encounter tables
+/// open to, who grants it when spoken to (the speakers with a topic that `calls` it, in the
+/// calling's campaign), whom the speaker speaks to, and the encounter tables
 /// that bring the speaker (entries whose `when.calling` is the class). By campaign, then class.
 pub(super) fn callings(content: &Content) -> String {
     let mut rows: Vec<(String, String, String)> = Vec::new();
@@ -186,9 +141,8 @@ pub(super) fn callings(content: &Content) -> String {
                 Some(_) => format!(" (who speaks only to the {})", speaks_to_text(d)),
                 None => String::new(),
             };
-            for w in (d.words.iter()).filter(|w| w.does.calls.as_deref() == Some(c.class.as_str()))
-            {
-                ways.push(format!("say *{}* to {speaker}{band}", w.phrase));
+            if (d.topics.iter()).any(|t| t.calls.as_deref() == Some(c.class.as_str())) {
+                ways.push(format!("{speaker}{band} grants it when spoken to"));
             }
         }
         let tables: Vec<String> = (content.encounter_tables(campaign))

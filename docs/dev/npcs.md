@@ -113,37 +113,23 @@ cell (18, 28). Tests: `world/rumour_tests.rs` (marks after the ask and not befor
 not the map, idempotent, no time, hidden locations stay hidden while Cealdhlāw shows, the
 `memory` and `locations` layers back on the map, a replay, the validation).
 
-**Saying words** (#878, docs/design/prestige-classes.md §6; spec §8 "Dialogue", "Saying
-words"): `words.rs` (`normalise`, pure: Unicode lower case, non-alphanumerics to spaces, runs
-collapsed, trimmed; idempotent; `MAX_SAID` 40), `content/word.rs` (`[[dialogue.word]]`: `phrase`,
-its normalised `said`, `reply` lines, `does` = `calls`/`quest`/`departs`; the dialogue's
-`unheard`, `speaks_to`, `silent`; `resolve` checks them inside `dialogue.rs`'s parse, one call,
-and `Content::check_words`, one line in `Content::load` after the quests, checks a `quest` is
-the dialogue's campaign's), `world/words.rs` (`World::say_to`, `Action::Say`'s one line in
-`World::apply`: refusals as `chat`'s through `listens`; the first word whose `said` equals the
-normalised words and whose `does` can be done; `do_word` says the reply lines, the last through
-`World::answer` (so the dialogue screen reopens on it) unless the word departs, then
-`word_quest` (`World::give`, only when the quest topic would be listed for its giver now, not
-active, and the player's level is met) and `World::departs` (factored out of
-`World::ally_departs`, `world/ally.rs`); no match: `unheard` through `answer`; `chat`'s price
-either way). `speaks_to` lives in `talk.rs`: `World::speaks_to(dialogue)` (the player's band
-against the range); outside it `listens` says `silent` (so `chat`, `ask`, and `say_to` all
-refuse alike) and `World::topics` is empty. `Conversation::words` (an event, not saved) is set
-by `answer` when the dialogue has words and speaks to the player; `screens::converse` opens the
-dialogue screen on it too. `calls` (#879): `Content::check_words` checks it names a calling of
-the dialogue's campaign (or, for a dialogue outside every campaign, one outside every campaign);
-`World::can_do` asks `World::calling_open`, so a word whose calling is not open is unheard (a
-warrior saying the oath gets the `unheard` line); `do_word` makes the call (`World::call`) after
-the reply, before `quest` and `departs`. The level-up's news ("Welcome to level 31.") is said as
-the action ends, after the departure line. The words in content: the Strange Spirit's oath
-(`campaigns/ascmearc/data/dialogue/spirit.toml`, `does = { calls = "hunter", departs = true }`,
+**Callings by topic** (#1174, which removed #878's saying words; spec §8 "Dialogue",
+"Callings"): a `[[dialogue.topic]]` may have `calls` (a prestige class's calling of the
+dialogue's campaign, or, outside every campaign, one outside every campaign:
+`Content::check_topic_callings`, one line in `Content::load` after the callings) and `departs`
+(a creature type's dialogue only, checked in `dialogue.rs`'s parse). `World::topics` lists such
+a topic only while `World::calling_open`; `World::ask` hands it to `World::ask_calling`
+(`world/calling.rs`), which says the reply (through `World::answer`, or as a message only when
+it departs, so the screen does not reopen on one gone), makes the call (`World::call`), then
+`World::departs` (`world/ally.rs`), and takes a chat's time; not open, it is "knows nothing
+about that" and no time. The level-up's news ("Welcome to level 31.") is said as the action
+ends, after the departure line. In content: the Strange Spirit's oath
+(`campaigns/ascmearc/data/dialogue/spirit.toml`, `calls = "hunter"`, `departs = true`, with
 `speaks_to = { min = "kind" }`) and the test world's hermit (`calls = "hunter"`, no `departs`).
-Look mode says ", who waits" after a creature whose dialogue has words and no topic, service, or
-offer (`ui/look.rs::waits`: "a strange spirit (unhurt), who waits"). Nothing
-new is saved; nothing is drawn; no marks. The app: `ui/text_field.rs` (`TextField`, out of the
-Name step), `DialogueScreen`'s fixed `s` row and field (`SAY_KEY`; no `KeyCommand`). Tests:
-`words.rs`, `world/words_tests.rs` (fixture content: a match in any case, unheard and no
-lock-out, a quest given once, departs, `silent` with no topics or row, the refusals, no draws,
-a replay and a save, the load checks), `action.rs` (the text), `ui/text_field.rs`, and the
-screen snapshots `dialogue-say-row`, `dialogue-say-field`, `dialogue-say-field-typed`,
-`dialogue-say-reply` (`screen_snapshots.rs::saying_words`, the hermit given a word).
+`speaks_to` lives in `talk.rs`: `World::speaks_to(dialogue)` (the player's band against the
+range); outside it `listens` says `silent` (so `chat` and `ask` refuse alike) and
+`World::topics` is empty. Look mode says ", who waits" after a creature whose dialogue's only
+topics are callings', with no service or offer (`ui/look.rs::waits`: "a strange spirit
+(unhurt), who waits"). Nothing new is saved; nothing is drawn. Tests:
+`world/strange_spirit_tests.rs` (the spirit's silence and its topic, the oath asked, a replay
+and a save, the hermit's topic offered to a full bard only), `world/calling_tests.rs`.

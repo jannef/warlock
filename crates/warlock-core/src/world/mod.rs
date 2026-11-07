@@ -181,6 +181,7 @@ mod incorporeal;
 mod intimidate;
 mod jack;
 mod knock;
+mod knock_away;
 mod knowledge;
 mod lamp;
 mod layer_boss;
@@ -284,7 +285,6 @@ mod weapon_ability;
 mod weapon_active;
 mod wedge;
 mod witch;
-mod words;
 mod wriggle;
 mod zap;
 mod zone;
@@ -1489,7 +1489,6 @@ impl World {
             Action::Encounter(choice) => return self.answer_encounter(*choice),
             Action::Chat(dir) => return self.chat(*dir, events),
             Action::Ask { dir, topic } => return self.ask(*dir, topic, events),
-            Action::Say { dir, words } => return self.say_to(*dir, words, events),
             Action::Steal(dir) => return self.steal(*dir),
             Action::Feint(dir) => return self.feint(*dir, events),
             Action::Tame(dir) => return self.start_tame(*dir),
@@ -1828,6 +1827,8 @@ mod intimidate_tests;
 #[cfg(test)]
 mod ki_tests;
 #[cfg(test)]
+mod knock_away_tests;
+#[cfg(test)]
 mod knowledge_tests;
 #[cfg(test)]
 mod lamp_tests;
@@ -2056,6 +2057,8 @@ mod theft_tests;
 #[cfg(test)]
 mod time_tests;
 #[cfg(test)]
+mod trap_rung_tests;
+#[cfg(test)]
 mod trap_tests;
 #[cfg(test)]
 mod treasury_tests;
@@ -2094,8 +2097,6 @@ mod wedge_tests;
 mod whittle_tests;
 #[cfg(test)]
 mod witch_tests;
-#[cfg(test)]
-mod words_tests;
 #[cfg(test)]
 mod wriggle_tests;
 #[cfg(test)]

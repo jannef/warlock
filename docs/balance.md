@@ -208,15 +208,15 @@ Rounds to kill and to die over the monsters within two levels, trained stats in 
 
 | L | n | Warrior kills | Warrior dies | Thief dies | Wizard dies | Priest dies |
 |---|---|---|---|---|---|---|
-| 1 | 56 | 1.6 (1.2–2.6) ×0.77/×1.6 | 511 (25–>999) ×0.05/×4.5 | 71 (8.6–>999) ×0.12/×26.2 | 14 (4.6–487) ×0.33/×35.3 | 18 (6.1–657) ×0.35/×37.4 |
-| 5 | 61 | 3.1 (2.0–5.6) ×0.63/×1.8 | 65 (18–>999) ×0.28/×42.1 | 17 (6.4–563) ×0.39/×33.8 | 5.8 (2.9–42) ×0.49/×7.2 | 18 (6.5–>999) ×0.36/×55.0 |
-| 10 | 55 | 4.4 (2.6–8.9) ×0.58/×2.0 | 48 (14–405) ×0.28/×8.5 | 27 (8.8–69) ×0.33/×2.6 | 5.0 (2.5–12) ×0.50/×2.5 | 16 (6.2–78) ×0.39/×4.8 |
-| 15 | 46 | 6.1 (3.4–10) ×0.56/×1.7 | 31 (15–112) ×0.47/×3.6 | 28 (13–60) ×0.46/×2.2 | 4.3 (2.7–6.0) ×0.63/×1.4 | 16 (8.7–29) ×0.55/×1.8 |
-| 20 | 49 | 6.4 (3.0–12) ×0.47/×1.8 | 61 (12–289) ×0.19/×4.8 | 69 (12–156) ×0.17/×2.2 | 5.3 (2.3–8.3) ×0.44/×1.6 | 20 (6.7–48) ×0.34/×2.5 |
-| 30 | 35 | 10 (3.7–13) ×0.36/×1.3 | 41 (12–434) ×0.28/×10.5 | 29 (7.0–98) ×0.24/×3.4 | 5.5 (2.9–10) ×0.53/×1.9 | 12 (7.0–38) ×0.58/×3.1 |
-| 40 | 28 | 10 (3.7–13) ×0.36/×1.3 | 62 (14–213) ×0.22/×3.4 | 39 (9.7–117) ×0.25/×3.0 | 8.8 (4.5–11) ×0.51/×1.2 | 19 (9.7–31) ×0.51/×1.6 |
-| 50 | 24 | 12 (6.6–16) ×0.54/×1.3 | 26 (13–182) ×0.50/×6.9 | 15 (11–73) ×0.73/×5.0 | 7.2 (5.4–12) ×0.74/×1.6 | 14 (11–27) ×0.78/×1.9 |
-| 60 | 18 | 12 (5.1–22) ×0.42/×1.8 | 40 (10–88) ×0.25/×2.2 | 18 (6.9–36) ×0.39/×2.0 | 7.1 (4.2–8.9) ×0.58/×1.2 | 16 (8.7–20) ×0.56/×1.3 |
+| 1 | 56 | 1.6 (1.2–2.6) ×0.75/×1.6 | 478 (22–>999) ×0.05/×4.8 | 50 (8.4–>999) ×0.17/×37.7 | 14 (4.3–486) ×0.31/×34.6 | 18 (5.8–656) ×0.32/×36.1 |
+| 5 | 63 | 3.2 (1.9–5.6) ×0.58/×1.8 | 71 (19–>999) ×0.26/×39.8 | 18 (7.1–301) ×0.40/×16.9 | 6.4 (2.9–34) ×0.45/×5.3 | 18 (6.9–458) ×0.38/×25.6 |
+| 10 | 56 | 4.3 (2.5–8.8) ×0.59/×2.1 | 44 (12–357) ×0.28/×8.0 | 28 (8.7–122) ×0.31/×4.4 | 4.9 (2.4–12) ×0.49/×2.4 | 15 (6.4–92) ×0.42/×6.1 |
+| 15 | 46 | 5.8 (3.2–10.0) ×0.55/×1.7 | 33 (15–151) ×0.45/×4.6 | 31 (12–65) ×0.39/×2.1 | 4.3 (2.6–6.2) ×0.60/×1.4 | 17 (8.7–34) ×0.53/×2.0 |
+| 20 | 50 | 6.2 (3.0–12) ×0.48/×2.0 | 58 (11–292) ×0.18/×5.0 | 56 (10–140) ×0.19/×2.5 | 5.5 (2.4–8.5) ×0.44/×1.6 | 19 (6.3–52) ×0.33/×2.7 |
+| 30 | 36 | 10.0 (3.8–13) ×0.38/×1.4 | 39 (10–232) ×0.26/×5.9 | 28 (6.1–129) ×0.22/×4.7 | 5.5 (2.7–9.4) ×0.50/×1.7 | 12 (6.5–32) ×0.53/×2.6 |
+| 40 | 28 | 10 (3.7–14) ×0.35/×1.3 | 65 (14–215) ×0.21/×3.3 | 40 (9.7–177) ×0.24/×4.4 | 8.8 (4.6–12) ×0.52/×1.4 | 19 (9.7–33) ×0.50/×1.7 |
+| 50 | 24 | 12 (6.2–16) ×0.51/×1.3 | 25 (13–177) ×0.54/×7.1 | 15 (11–70) ×0.72/×4.5 | 7.3 (5.4–12) ×0.74/×1.6 | 14 (11–26) ×0.78/×1.9 |
+| 60 | 18 | 12 (5.5–24) ×0.46/×2.1 | 44 (9.1–172) ×0.21/×3.9 | 17 (6.2–36) ×0.37/×2.1 | 7.2 (3.6–9.7) ×0.49/×1.3 | 16 (7.3–23) ×0.46/×1.5 |
 
 What it says (#1134, the variance pass; the dread design §7.3): before the pass (main after
 D0 to D8 and D11) the warrior's rounds to kill ran ×0.56 to ×0.78 of the median at the fastest
@@ -227,7 +227,7 @@ from level 5 and the slowest ×1.7 to ×2.0 to level 20 and at 60; at 30 to 50 t
 stays at ×1.3, where the windows are small (24 to 35 types) and hold few brutes (the giants
 and most of the deep brutes there are armed or uniques, outside the role factors). Rounds to
 die keep their wide spread (the thief's, the wizard's, and the priest's columns: ×0.2 to ×0.5
-fast, ×1.3 to ×5 slow from level 10); a dread brute is a death, not a wall. A further pass
+fast, ×1.3 to ×5 slow from level 10); a dread brute is a death, not a wall. The speed review (#1167) restored speed above 1250 to the air and lightning elementals, the storm, the hunt's and grave's hounds, the nightwing and sluagh, and the ghouls (the table above is after it: the fastest tenth stays ×0.35 to ×0.58 from level 5 and the slow tail at ×1.3 to ×2.1 but 5.0 for the thief's deaths). A further pass
 for 30 to 50 is a content question (more unarmed brutes there), not an offset.
 
 ## Dragons
@@ -1224,6 +1224,18 @@ ranks the casting really reaches.
 - The wizard's spells keep growing to level 60 (#754 above): a rank-10 school doubles a spell
   over its ladder, and there is no cap. There is still no spell above level 12 (higher-level
   spells are the content's to add).
+
+## Traps
+
+Not in the probe: traps are not fights. Their damage grows with the danger of the level they lie
+on (#1165, `[trap.grows]` in `data/traps.toml`, the wiki's trap damage table). The base, at
+danger 0 to 2, is held under the fewest hit points a level-1 character starts with: 6 in the test's draws (a kobold
+wizard, over every race and class), against the worst base going off of 4 (a fireball or a
+lightning bolt at 1d4, an arrow's or a spear's 1d2 doubled by a critical).
+`world/trap_rung_tests.rs::the_lowest_rung_never_kills_a_fresh_character` checks it, so a race,
+class, or talent that lowers starting hit points, or a stronger base, fails there first. The old
+dice (the fireball's 3d6, the lightning's 4d6) come at danger 10, and twice or more of them at
+30.
 
 ## Tuning notes
 

@@ -5,8 +5,8 @@
 # figure that stands on the march's roads and waits for one who knows the old oath. Met only by a
 # bard whose class is full and who has not been called (the encounter entries
 # `strange_spirit_*`, `when = { calling = "hunter" }`); it talks only to the good (its dialogue's
-# `speaks_to`, data/dialogue/spirit.toml), and when the oath is said to it, it echoes it, calls
-# the bard into the Hunter, and fades (`does = { calls = "hunter", departs = true }`).
+# `speaks_to`, data/dialogue/spirit.toml), and when asked of the oath, it echoes it, calls the
+# bard into the Hunter, and fades (its topic's `calls = "hunter"`, `departs = true`).
 #
 # It never fights: hostile to no one (the `spirits` faction), rooted where it stands. Struck, it
 # dies as any peaceful creature does, with one hit point, leaving no corpse, no blood, and no

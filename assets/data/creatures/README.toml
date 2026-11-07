@@ -284,6 +284,12 @@
 #             `blink` status is off, moves at once to a free cell beside the target within range
 #             (2 to 12, Chebyshev) and in its own line of sight, and takes the status for
 #             cooldown seconds (6 to 600). It never blinks away
+#   disarms   a duellist's disarming blow (#1166; enemy-only; world/knock_away.rs):
+#             { chance = 15, difficulty = 18 }. A melee hit on the player that leaves them alive,
+#             with a weapon in their main hand and an open cell beside them, tries by its chance
+#             (1 to 100) to knock it away: the player's Dexterity check against the difficulty
+#             (2 to 40), plus the weapon's skill rank and their grip, keeps it; failed, it lies on
+#             a random open cell beside them (a spirit weapon fades instead)
 #   resist    what it resists, in percent per damage type (spec §8 "Damage types"):
 #             { acid = 50 }; -100 (it takes double) to 100 (immune: nothing of the kind hurts
 #             it, whatever it wears). What it wears adds up with this, capped at 75 short of

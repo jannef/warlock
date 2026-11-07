@@ -42,7 +42,6 @@ leaves your hands, and cannot be thrown (see [Spirit weapon](abilities.md#abilit
 
 ## Callings
 
-Each world calls in its own way. The words are given plainly here (see
-[Saying words](npcs.md#saying-words)):
+Each world calls in its own way:
 
 {{#include generated/callings.md}}

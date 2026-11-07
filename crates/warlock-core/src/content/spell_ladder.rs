@@ -74,6 +74,43 @@ impl fmt::Display for RungValue {
     }
 }
 
+/// Reads `rest`, rungs `AT VALUE` separated by commas, each value in `unit`: 1 to
+/// [`MAX_RUNGS`] of them, `AT` 1 to `at.1` strictly ascending (`at.0` names what `AT` is in the
+/// errors: a `score` here, a `danger` for a trap's rungs, `content/trap.rs`).
+pub fn parse_rungs(rest: &str, unit: Unit, at: (&str, u8)) -> Result<Vec<(u8, RungValue)>, String> {
+    let (what, most) = at;
+    let mut rungs: Vec<(u8, RungValue)> = Vec::new();
+    for rung in rest.split(',') {
+        let rung = rung.trim();
+        let (at, value) = rung
+            .split_once(' ')
+            .ok_or_else(|| format!("rung `{rung}` is not `AT VALUE`"))?;
+        let at: u8 = at
+            .parse()
+            .ok()
+            .filter(|a| (1..=most).contains(a))
+            .ok_or_else(|| format!("a rung's {what} is 1 to {most}, not `{at}`"))?;
+        if rungs.last().is_some_and(|(before, _)| *before >= at) {
+            return Err(format!("the {what}s rise strictly, rung by rung"));
+        }
+        let value = match unit {
+            Unit::Roll => RungValue::Roll(value.parse()?),
+            Unit::Cells => RungValue::Cells(
+                (value.parse()).map_err(|_| format!("`{value}` is not a whole number of cells"))?,
+            ),
+            Unit::Degrees => RungValue::Degrees(
+                (value.parse())
+                    .map_err(|_| format!("`{value}` is not a whole number of degrees"))?,
+            ),
+        };
+        rungs.push((at, value));
+    }
+    if rungs.len() > MAX_RUNGS {
+        return Err(format!("at most {MAX_RUNGS} rungs"));
+    }
+    Ok(rungs)
+}
+
 /// A stat and its rungs, `(at, value)` with `at` strictly ascending.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Ladder {
@@ -91,36 +128,7 @@ impl Ladder {
             .split_once(' ')
             .ok_or_else(|| bad("a stat, then rungs: `intelligence 13 3d6, 16 4d6`".into()))?;
         let stat = Stat::from_id(stat).ok_or_else(|| bad(format!("unknown stat `{stat}`")))?;
-        let mut rungs: Vec<(u8, RungValue)> = Vec::new();
-        for rung in rest.split(',') {
-            let rung = rung.trim();
-            let (at, value) = rung
-                .split_once(' ')
-                .ok_or_else(|| bad(format!("rung `{rung}` is not `AT VALUE`")))?;
-            let at: u8 = at
-                .parse()
-                .ok()
-                .filter(|a| (1..=MAX_SCORE).contains(a))
-                .ok_or_else(|| bad(format!("a rung's score is 1 to {MAX_SCORE}, not `{at}`")))?;
-            if rungs.last().is_some_and(|(before, _)| *before >= at) {
-                return Err(bad("the scores rise strictly, rung by rung".into()));
-            }
-            let value = match unit {
-                Unit::Roll => RungValue::Roll(value.parse().map_err(bad)?),
-                Unit::Cells => RungValue::Cells(
-                    (value.parse())
-                        .map_err(|_| bad(format!("`{value}` is not a whole number of cells")))?,
-                ),
-                Unit::Degrees => RungValue::Degrees(
-                    (value.parse())
-                        .map_err(|_| bad(format!("`{value}` is not a whole number of degrees")))?,
-                ),
-            };
-            rungs.push((at, value));
-        }
-        if rungs.len() > MAX_RUNGS {
-            return Err(bad(format!("at most {MAX_RUNGS} rungs")));
-        }
+        let rungs = parse_rungs(rest, unit, ("score", MAX_SCORE)).map_err(bad)?;
         Ok(Ladder { stat, rungs })
     }
 

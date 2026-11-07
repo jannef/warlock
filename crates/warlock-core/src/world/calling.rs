@@ -11,19 +11,21 @@
 //! (`World::add_xp`'s rule, not `grant_xp`'s), and nothing is drawn: the level-up's stat checks
 //! draw from the levels stream as any level-up's do.
 //!
-//! Who calls: a dialogue word's `calls` (`world/words.rs`, heard only while the calling is open:
-//! the Strange Spirit's oath in the Ascmearc, the hermit's in the test world), and the dev action
+//! Who calls: a dialogue topic's `calls` ([`World::ask_calling`], offered only while the calling
+//! is open: the Strange Spirit's oath in the Ascmearc, the hermit's in the test world), and the dev action
 //! `call:ID` ([`crate::action::Action::Call`]) here, whatever the level (for tests and captures).
 //! An encounter entry's `when = { calling = "ID" }` holds while it is open.
 //! There is no `from_state`: a restore grants both tables' abilities (`World::grant_class`).
 
-use super::{Spent, World};
-use crate::content::CallingDef;
+use super::talk::capitalized;
+use super::{ActorId, Spent, World};
+use crate::action::Event;
+use crate::content::{ActionKind, CallingDef, DialogueId};
 
 /// Where the player stands with a calling, for the dev `progress` dump.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum CallingStatus {
-    /// Open: it would be made if its words were said now.
+    /// Open: it would be made if its topic were asked now.
     Open,
     /// Their class is none it is `from`.
     NotFrom,
@@ -86,6 +88,42 @@ impl World {
         }
         self.rise_from(before);
         true
+    }
+
+    /// The player asks creature `id`, speaking dialogue `speaker`, about `topic`, if it is a
+    /// calling's (`calls`): its reply, then the calling made, then the speaker's departure if the
+    /// topic `departs` (said as a message only, so the farewell is heard and no screen opens on
+    /// one gone). Takes a chat's time. Not open (the topic is not offered): it knows nothing of
+    /// it, and no time passes. `None` for any other topic.
+    pub(super) fn ask_calling(
+        &mut self,
+        id: ActorId,
+        speaker: DialogueId,
+        topic: &str,
+        events: &mut Vec<Event>,
+    ) -> Option<Spent> {
+        let content = self.content.clone();
+        let t = content.dialogue(speaker).topic(topic)?;
+        let class = t.calls.as_ref()?;
+        let calling = (content.calling(self.campaign(), class))
+            .filter(|c| self.calling_status(c) == CallingStatus::Open);
+        let who = capitalized(&self.called(&self.state.actors[&id]));
+        let Some(calling) = calling else {
+            self.say(format!("{who} knows nothing about that."));
+            return Some(Spent::Nothing);
+        };
+        if t.departs {
+            self.say(format!("{who} says: \"{}\"", t.reply));
+        } else {
+            self.answer(id, t.reply.clone(), Some(topic.into()), events);
+        }
+        self.call(calling);
+        if t.departs {
+            self.departs(id, events);
+        }
+        Some(Spent::Turn(
+            self.price_of(self.state.player, ActionKind::Chat),
+        ))
     }
 
     /// The dev action `call:ID` ([`crate::action::Action::Call`]): the player is called into

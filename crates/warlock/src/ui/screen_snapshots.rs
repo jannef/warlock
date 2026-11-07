@@ -1473,34 +1473,20 @@ fn quest_refused_as_too_early() {
     insta::assert_snapshot!(case.name, render(&case, content));
 }
 
-/// The hermit knowing a word (`[[dialogue.word]]`, #878), which the showcase's content does
-/// not give him: the dialogue screen's Say row under his topics, the say field open, the field
-/// with words typed in it, and his reply once they are said.
+/// The hermit's oath (#1174): a calling's topic, offered to a bard whose class is full (the dev
+/// experience and level-ups bring the showcase's bard to 30). Asking it is the core's
+/// (`world/strange_spirit_tests.rs`): the level-up it brings would cover this screen.
 #[test]
-fn saying_words() {
-    let mut files = warlock_core::content::ContentFiles::builtin();
-    let path = "campaigns/showcase/data/dialogue/showcase.toml";
-    let dialogue =
-        include_str!("../../../../assets/campaigns/showcase/data/dialogue/showcase.toml");
-    let word = "\n[[dialogue.word]]\nphrase = \"Hello\"\nreply = [\"Hm. Hello yourself.\"]\n";
-    files.insert(path, &format!("{dialogue}{word}"));
-    let content = Arc::new(Content::load(&files).expect("content"));
-    let cases = [
-        ("dialogue-say-row", None),
-        ("dialogue-say-field", Some("s")),
-        ("dialogue-say-field-typed", Some("s H e l")),
-        ("dialogue-say-reply", Some("s H e l l o Enter")),
-    ];
-    for (name, keys) in cases {
-        let case = Case {
-            name,
-            actions: concat!(hermit!(), " chat:SE"),
-            screen: Some("dialogue"),
-            keys,
-            ..BASE
-        };
-        insta::assert_snapshot!(case.name, render(&case, content.clone()));
-    }
+fn the_oath_topic() {
+    let content = Arc::new(Content::builtin().expect("content"));
+    let case = Case {
+        name: "dialogue-calling-topic",
+        character: Some("human,male,bard"),
+        actions: concat!(hermit!(), " xp:545660 levelup:auto chat:SE"),
+        screen: Some("dialogue"),
+        ..BASE
+    };
+    insta::assert_snapshot!(case.name, render(&case, content));
 }
 
 /// Look mode with a wizard's Knowledge (#1030): the skeleton below it says what it resists on the
