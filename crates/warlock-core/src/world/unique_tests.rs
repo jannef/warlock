@@ -196,7 +196,7 @@ fn unidentified_it_hides_its_name_affixes_power_and_lore() {
 }
 
 #[test]
-fn a_unique_has_one_placement_in_all_content() {
+fn a_unique_is_placed_by_its_id() {
     let level = |objects: &str| {
         format!(
             "name = \"Twice\"\nmap = '''\n####\n#@.#\n####\n'''\n[legend]\n\
@@ -219,13 +219,9 @@ fn a_unique_has_one_placement_in_all_content() {
         files.insert("levels/twice.toml", &level(objects));
         Content::load(&files).map(|_| ()).map_err(|e| e.to_string())
     };
-    let twice = load(r#"["unique:test_blade", "unique:test_blade"]"#).expect_err("twice");
-    assert!(twice.contains("placed twice"), "{twice}");
-    let two = load(r#"["unique:test_blade*2"]"#).expect_err("two at once");
-    assert!(two.contains("one at a time"), "{two}");
-    // A shipped unique is placed once already: Mother Sallow wields Widowmaker.
-    let shipped = load(r#"["unique:widowmaker"]"#).expect_err("placed by her gear");
-    assert!(shipped.contains("placed twice"), "{shipped}");
+    // Placements are not counted: content places each once, the author's promise (#1205).
+    load(r#"["unique:test_blade", "unique:test_blade"]"#).expect("twice loads");
+    load(r#"["unique:test_blade*2"]"#).expect("two at once loads");
     let unknown = load(r#"["unique:nobody"]"#).expect_err("unknown");
     assert!(
         unknown.contains("unknown unique item `nobody`"),

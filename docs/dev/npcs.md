@@ -70,9 +70,8 @@ a sale, `sold` said after, `level = { bonus, least }`, `affixes` as `[count, wei
 `world/wares.rs`. Its id shares the topic namespace; load checks (only what resolves and what
 the code needs, #1205): an id without `:` or whitespace, not a topic's or service's, the shops'
 currency, `least` at most `MAX_ITEM_LEVEL` (the draw clamps from it to the top), counts at most
-6 (an item's affixes), each unique known, of the dialogue's campaign or shared; and, after everything that places objects
-loaded, `offer::check_placements`: a unique an offer names is placed by no other content
-(`Uniques::is_placed`), so it comes only through the offer. `World::stock_wares` (one line in
+6 (an item's affixes), each unique known, of the dialogue's campaign or shared (no other content places them: the
+data author's promise). `World::stock_wares` (one line in
 `chat` and in `ask`, after `listens`) makes a trader's `Wares` once, from `Rng::stream(seed,
 "wares/<actor id>")`: one `below(10_000)` against the chance (only with uniques); made, one
 `below` among its uniques not in `WorldState::uniques_offered` (then added); else
@@ -93,7 +92,7 @@ offered`. The app: `DialogueScreen` opens the one dialog for a topic with a `war
 ask and "Leave it" closing it; short of gold, " You have only N." and "Leave it" alone).
 Leaving it is nothing. Tests: `world/wares_tests.rs` (determinism, the favoured roll's rarity,
 count, level, and price, buy, sold, can't pay, the uniques by a certain chance each once then a
-find, the three's slots and the placement refusal, the load checks, a replay and a save),
+find, the three's slots, the load checks, a replay and a save),
 `ui/dialogue_screen.rs::an_offer_asks_buy_it_or_leave_it` (snapshots `offer-buy`,
 `offer-short`); the wiki's `npcs.md` "The pedlar's offer" and the uniques table's offer column
 (`xtask/src/wiki/uniques.rs::offered_by`).

@@ -178,7 +178,7 @@ mod weather;
 pub use action::{ActionCosts, ActionKind, BASE_TURN, COSTS, NORMAL_COST, price};
 pub use affix::{
     AffixDef, AffixKind, Affixes, Effect, Group, ItemKind, MAX_ITEM_LEVEL, MAX_PER_KIND, MAX_SPEED,
-    MAX_TIERS, Rarity, Tier,
+    Rarity, Tier,
 };
 pub use alignment::{AlignmentRules, BandDef, ByAlignment, Shifts};
 pub use ally::AllyRules;
@@ -212,7 +212,7 @@ pub use damage_type::{DamageTypeDef, DamageTypeId, MAX_DAMAGE_TYPES};
 pub use danger::{Count, DangerRule, PlayerScale, Spawning};
 pub use decipher::DecipherRules;
 pub use dialogue::{Dialogue, DialogueId, Mutter, Service, ServiceKind, Speaker, Topic};
-pub use disease::{DIFFICULTIES, DiseaseDef, DiseaseId, SOURCES, Wading};
+pub use disease::{DiseaseDef, DiseaseId, SOURCES, Wading};
 pub use dummy::DummyTraining;
 pub use dungeon::{
     ChestOdds, DungeonDef, Endless, Generator, LayerBoss, LevelPlan, RoomOdds, ShopOdds,
@@ -236,8 +236,7 @@ pub use gaze::Gaze;
 pub use gear::{Gear, GearLine, RACIAL_CHANCE};
 pub use gear_condition::{GearConditions, Odds, PER_MILLE, TribeOdds};
 pub use gem::{
-    Cut, CutId, Cutting, GemDef, GemSize, GemSizeId, Gems, MAX_GEM_VALUE, MAX_GEM_WEIGHT,
-    MAX_MULTIPLIER, Ornament, ROUGH_SATURATION, dull,
+    Cut, CutId, Cutting, GemDef, GemSize, GemSizeId, Gems, Ornament, ROUGH_SATURATION, dull,
 };
 pub use guild::{GuildDef, RankBy, RankDef};
 pub use horoscope::{FULL_MOON_WITHIN, Flavour, Horoscope, Lucky, Sign, SignActive, SignPart};
@@ -256,16 +255,13 @@ pub use level::{
     CreatureSpawn, EdgeExit, HiddenLocation, LevelKind, LevelTemplate, Place, Region, StairsLink,
     parse_route,
 };
-pub use light::{Dips, Drift, HueDrift, LightId, LightPreset, MAX_LIGHT_RADIUS, Stability};
+pub use light::{Dips, Drift, HueDrift, LightId, LightPreset, Stability};
 pub use material::{
-    ANY, Fit, Fits, Found, ItemHarm, MAX_MATERIAL_VALUE, MaterialDef, MaterialId, ODD, POOR,
-    Resists, VERY_RARE,
+    ANY, Fit, Fits, Found, ItemHarm, MaterialDef, MaterialId, ODD, POOR, Resists, VERY_RARE,
 };
 pub use monster_pool::{MonsterPool, VaultMonsters};
 pub use names::{NameLists, Names};
-pub use object::{
-    MAX_BONUS, MAX_DIG, MAX_PLACED, MAX_VALUE, ObjectDef, ObjectId, article, counted, weapon_noun,
-};
+pub use object::{MAX_VALUE, ObjectDef, ObjectId, article, counted, weapon_noun};
 pub use offer::TradeOffer;
 pub use outcome::{
     Amount, Explosion, Harmful, Near, OutcomeDef, OutcomeEffect, OutcomeKind, OutcomeSummon,
@@ -275,7 +271,7 @@ pub use overworld::{Landscape, LocalArea, local_area_id, parse_local_area};
 pub use part::{MAX_OBJECT_PARTS, MAX_PARTS, Part, PartDef, PartId, PartRole, and_list};
 pub use particles::{ParticleEmitter, ParticleTrigger};
 pub use plural::Plurals;
-pub use potion::{Draught, Drink, Flask, MAX_POTION_MARKS, Splash};
+pub use potion::{Draught, Drink, Flask, Splash};
 pub use prayer::{Face, FaceWords, Faced, PrayerRules, PrayerUse, UseDef};
 pub use prestige::{PrestigeDef, Table};
 pub use quest::{
@@ -287,9 +283,7 @@ pub use quest_roll::{Candidate, Pick, Roll, Rolled, Variant, one_of};
 pub use race::{HUNGER, LightBlind, RaceDef, Races};
 pub use ranged::{RangeBand, RangedRules};
 pub use resource::{Build, MAX_RESOURCE, MaxFrom, OverTime, ResourceDef, ResourceId};
-pub use rod::{
-    MAX_ROD_MANA, MAX_ROD_POWER, MAX_ROD_RADIUS, MAX_ROD_REACH, Rod, RodDoes, RodEffect, RodShape,
-};
+pub use rod::{Rod, RodDoes, RodEffect, RodShape};
 pub use room_effect::{
     Collapse, Dressing, Here, Hoard, Mirrors, Offer, RoomEffectDef, RoomEffectId, RoomEffects,
     SpecialRoom, Swarm, Themes, Treasure,
@@ -350,7 +344,7 @@ pub use unseen::Invisible;
 pub use vault::{DangerRange, Vault};
 pub use vault_turn::Turn;
 pub use vision::VisionProfile;
-pub use wand::{MAX_WAND_CHARGES, Wand};
+pub use wand::Wand;
 pub use weapon_ability::{
     Active, ActiveAim, Categories, ExtraDice, FreeBlowKind, On, STAMINA, Trigger, WeaponAbility,
     WeaponAbilityId, WeaponDoes,
@@ -995,9 +989,7 @@ impl Content {
         }
         let path = "data/potion_labels.toml";
         if let Some(text) = files.get_optional(path) {
-            let def = ScrollLabelDef::parse(path, text)?;
-            content.check_potion_labels(path, &def)?;
-            content.potion_labels = Some(def);
+            content.potion_labels = Some(ScrollLabelDef::parse(path, text)?);
         }
         let path = "data/stances.toml";
         if let Some(text) = files.get_optional(path) {
@@ -1415,7 +1407,6 @@ impl Content {
         content.validate()?;
         content.check_topic_routes()?;
         content.check_topic_callings()?;
-        offer::check_placements(&content)?;
         content.check_campaigns()?;
         Ok(content)
     }
@@ -2301,24 +2292,6 @@ impl Content {
             };
             self.objects[i].lit = Some(target);
         }
-        // A remedy cures what some status or disease names as its cure.
-        for (o, path) in self.objects.iter().zip(&paths) {
-            let named = |cure: &String| {
-                (self.statuses.iter().any(|s| s.cured_by.contains(cure)))
-                    || (self.diseases.iter().any(|d| d.cured_by.contains(cure)))
-            };
-            let drunk = o.drink.iter().flat_map(|d| d.does.cures());
-            if let Some(cure) = o.cures.iter().chain(drunk).find(|c| !named(c)) {
-                return Err(ContentError::new(
-                    path,
-                    format!(
-                        "object `{}` cures `{cure}`, but no status or disease names it in \
-                         `cured_by`",
-                        o.id
-                    ),
-                ));
-            }
-        }
         // Potions of one colour show in one colour (spec §8 "Potions": the colour is the hint).
         for (o, path) in self.objects.iter().zip(&paths) {
             let Some(drink) = &o.drink else { continue };
@@ -2330,20 +2303,6 @@ impl Content {
                     format!(
                         "potion `{}` is `{}` as `{}` is, but its `fg` differs: one colour, one fg",
                         o.id, drink.colour, other.id
-                    ),
-                ));
-            }
-        }
-        // Launchers and ammunition pair by kind: a launcher shoots something there is.
-        for (o, path) in self.objects.iter().zip(&paths) {
-            if let Some(kind) = &o.launches
-                && !self.objects.iter().any(|a| a.ammo.as_ref() == Some(kind))
-            {
-                return Err(ContentError::new(
-                    path,
-                    format!(
-                        "object `{}` launches `{kind}`, but no object has `ammo = \"{kind}\"`",
-                        o.id
                     ),
                 ));
             }
@@ -3394,23 +3353,6 @@ impl Content {
     /// Unidentified potions' labels (`data/potion_labels.toml`), if potions have them.
     pub fn potion_labels(&self) -> Option<&ScrollLabelDef> {
         self.potion_labels.as_ref()
-    }
-
-    /// `data/potion_labels.toml` fits the potions (spec §8 "Potions"): its names say the
-    /// `{colour}`, and it has a word for every potion type, so no two share one.
-    fn check_potion_labels(&self, path: &str, def: &ScrollLabelDef) -> Result<(), ContentError> {
-        let err = |m: String| ContentError::new(path, m);
-        if !def.name.contains("{colour}") || !def.plural.contains("{colour}") {
-            return Err(err("`name` and `plural` say the potion's `{colour}`".into()));
-        }
-        let types = self.objects.iter().filter(|o| o.drink.is_some()).count();
-        let labels = def.parts.len().pow(u32::from(def.syllables[0]));
-        if labels < types {
-            return Err(err(format!(
-                "{types} potion types but only {labels} labels: add words to `parts`"
-            )));
-        }
-        Ok(())
     }
 
     /// The combat stances of `data/stances.toml` (all plain without the file).
@@ -5602,14 +5544,6 @@ mod tests {
         };
         let cases = [
             (
-                object("materials = [\"iron\"]\nweight = 0\nvalue = 1\n"),
-                "at least 1",
-            ),
-            (
-                object("materials = [\"iron\"]\nweight = 5\nvalue = 1000001\n"),
-                "`value` is in gold coins",
-            ),
-            (
                 object("materials = [\"iron\"]\nweight = 5\n"),
                 "missing field `value`",
             ),
@@ -5640,8 +5574,7 @@ mod tests {
             ),
             (
                 object("material = \"iron\"\nweight = 5\nvalue = 1\n"),
-                "`material` is now `materials`, a list of parts, the first the main one: \
-                 `materials = [\"iron\"]` for one",
+                "unknown field `material`",
             ),
             (
                 object(
@@ -5649,10 +5582,6 @@ mod tests {
                      weight = 5\nvalue = 1\n",
                 ),
                 "unknown part `grip` (data/parts.toml)",
-            ),
-            (
-                object("materials = [\"iron\"]\nweight = 5\nvalue = 1\n").replace("\"(\"", "\" \""),
-                "visible character",
             ),
             (
                 format!(
@@ -5706,30 +5635,11 @@ mod tests {
             ("slot = \"tail\"", "`slot = \"tail\"` is no slot"),
             ("slot = \"head\"\ntwo_handed = true", "`two_handed` needs"),
             ("two_handed = true", "`two_handed` needs"),
-            ("ammo = \"\"", "`ammo` must not be empty"),
-            (
-                "slot = \"head\"\nlaunches = \"bolt\"\ndamage = \"1d6\"\nrange = 9",
-                "launches `bolt`, but no object has",
-            ),
-            // Ranged combat: missile weapons shoot so far, throwing weapons have damage, and
-            // only what flies breaks or is lit.
-            (
-                "slot = \"head\"\nlaunches = \"bolt\"\ndamage = \"1d6\"",
-                "a missile weapon (`launches`) needs a `range`",
-            ),
-            (
-                "range = 4",
-                "a throwing weapon (`range`) needs its `damage`",
-            ),
-            ("damage = \"1d3\"\nrange = 0", "`range` must be 1 to 40"),
-            ("damage = \"1d3\"\nrange = 41", "`range` must be 1 to 40"),
+            // Ranged combat: ammunition flies as far as its launcher shoots, only missile
+            // weapons reload, and only what flies breaks or is lit.
             ("ammo = \"bolt\"\nrange = 5", "no `range`"),
             ("reloads = true", "only missile weapons"),
             ("breaks = 20", "`breaks` and `lit` are for things that fly"),
-            (
-                "ammo = \"bolt\"\nbreaks = 101",
-                "`breaks` is a chance in percent",
-            ),
             (
                 "ammo = \"bolt\"\nlit = \"key\"",
                 "must name an object that burns",
@@ -5743,11 +5653,6 @@ mod tests {
                 "`light` goes with `burns` (a thing burning where it lies) or with a `slot` (a carried light)",
             ),
             ("light = \"sun\"\nburns = 30", "unknown light preset `sun`"),
-            ("glow = 2.0", "`glow` must be between 0 and 1"),
-            (
-                "launches = \"bolt\"",
-                "a missile weapon (`launches`) needs its `damage`",
-            ),
             // Combat: weapons have damage, and only things worn or wielded fight or protect.
             ("damage = \"1d4\"", "a weapon (`damage`) must go in a slot"),
             (
@@ -5760,61 +5665,33 @@ mod tests {
                 "`strength` is for weapons",
             ),
             (
-                "slot = \"main_hand\"\ndamage = \"1d4\"\nthreat = 1",
-                "`threat` must be 2 to 24",
-            ),
-            (
-                "slot = \"main_hand\"\ndamage = \"1d4\"\ncrit = 6",
-                "`crit` 2 to 5",
-            ),
-            (
-                "slot = \"main_hand\"\ndamage = \"1d4\"\nto_hit = 21",
-                "`to_hit` must be within",
-            ),
-            (
-                "slot = \"main_hand\"\ndamage = \"1d4\"\nstrength = 41",
-                "`strength` is a Strength score",
-            ),
-            (
                 "slot = \"main_hand\"\ndamage = \"2d\"",
                 "number of sides is missing",
             ),
             ("armour = 2", "are for things worn or wielded"),
             ("max_dex = 3", "are for things worn or wielded"),
-            ("slot = \"head\"\nshield = -1", "`shield` must be 0 to 20"),
-            ("slot = \"head\"\narmour = 21", "`armour` must be 0 to 20"),
-            // Protection is for armour worn, never in a hand or on a shield; penetration for
-            // weapons and ammunition.
+            // Protection is for armour worn; penetration for weapons and ammunition.
             ("protection = 1", "`protection` is for armour worn"),
-            (
-                "slot = \"main_hand\"\nprotection = 1",
-                "`protection` is for armour worn",
-            ),
-            (
-                "slot = \"head\"\nshield = 1\nprotection = 1",
-                "`protection` is for armour worn",
-            ),
-            (
-                "slot = \"head\"\nprotection = 21",
-                "`protection` must be 0 to 20",
-            ),
             (
                 "slot = \"head\"\npenetration = 1",
                 "`penetration` is for weapons",
-            ),
-            (
-                "slot = \"main_hand\"\ndamage = \"1d4\"\npenetration = -1",
-                "`penetration` must be 0 to 20",
             ),
         ] {
             let err = load(&slots, &object(fields)).unwrap_err();
             assert_eq!(err.file, "data/objects.toml", "{fields}");
             assert!(err.message.contains(expected), "{fields}: {}", err.message);
         }
+        // The data author is trusted with the numbers: none of these is refused.
         for fields in [
             "slot = \"head\"\nprotection = 2",
             "slot = \"main_hand\"\ndamage = \"1d8\"\npenetration = 2",
             "ammo = \"bolt\"\npenetration = 2",
+            "slot = \"main_hand\"\nprotection = 1",
+            "slot = \"head\"\narmour = 21\nshield = -1",
+            "slot = \"main_hand\"\ndamage = \"1d4\"\nthreat = 1\ncrit = 6\nto_hit = 21",
+            "damage = \"1d3\"\nrange = 41",
+            "slot = \"head\"\nlaunches = \"bolt\"",
+            "ammo = \"bolt\"\nbreaks = 101",
         ] {
             assert!(load(&slots, &object(fields)).is_ok(), "{fields}");
         }

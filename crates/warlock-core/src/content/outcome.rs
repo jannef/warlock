@@ -589,9 +589,9 @@ fn resolve_effect(e: EffectSpec, content: &Content) -> Result<OutcomeEffect, Str
     let mut effect_status = Vec::new();
     for s in specs {
         let id = status(&s.id)?;
-        let max = content.status(id).max;
-        if s.degrees == 0 || s.degrees > max {
-            return Err(format!("status `{}`: `degrees` is 1 to {max}", s.id));
+        // No dose of nothing; more than the status's `max` is clamped as it is given.
+        if s.degrees == 0 {
+            return Err(format!("status `{}`: `degrees` is at least 1", s.id));
         }
         effect_status.push((id, s.degrees));
     }
@@ -603,9 +603,6 @@ fn resolve_effect(e: EffectSpec, content: &Content) -> Result<OutcomeEffect, Str
         )),
         None => None,
     };
-    if !(-6..=6).contains(&e.hunger) {
-        return Err("`hunger` is -6 to 6 states".into());
-    }
     let objects = (e.objects.iter())
         .map(|o| {
             let id = (content.object_id(&o.object))

@@ -21,15 +21,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize)]
 pub struct MaterialId(pub u16);
 
-/// The most a material's `value` may be, in percent of steel's.
-pub const MAX_MATERIAL_VALUE: u32 = 10_000;
-/// The most a material's `weight` may be, in percent of steel's.
-pub const MAX_MATERIAL_WEIGHT: u32 = 1000;
-/// The most a material's weapon modifiers (`to_hit`, `damage`) may be, either way.
-pub const MAX_MODIFIER: i32 = 10;
-/// The most a material's `protection` may be, in percent of an armour's Protection.
-pub const MAX_PROTECTION: u32 = 500;
-/// The most a [`Found`] weight may be, at any level.
+/// The most a [`Found`] weight counts for, at any level ([`Found::at`] caps it there).
 pub const MAX_FOUND: u32 = 100_000;
 /// The heaviest weight a very rare material is found with (spec §7 "Materials"): a variant
 /// worse in a fight than its base item's own material but dearer is found at most this often
@@ -48,8 +40,7 @@ pub struct MaterialDef {
     #[serde(default)]
     pub precious: bool,
     /// What it is worth, in percent of steel (100, the default): an object's value follows its
-    /// parts' materials by their shares ([`super::ObjectDef::value_with`]). 1 to
-    /// [`MAX_MATERIAL_VALUE`].
+    /// parts' materials by their shares ([`super::ObjectDef::value_with`]).
     #[serde(default = "steel")]
     pub value: u32,
     /// A gem (spec §7 "Gems"): its colour, what a plain one is worth, and how often loot finds
@@ -93,8 +84,7 @@ pub struct MaterialDef {
     pub fit: Fits,
     /// How it withstands each kind of item damage, in percent (spec §7 "Materials";
     /// `world/item_damage.rs`): `resists = { acid = 20, rust = 10, fire = 95 }`, every kind
-    /// given. Every material of the game's content sets it (`material_resists_tests.rs`); one
-    /// without (a test's) withstands nothing.
+    /// given. One without withstands nothing.
     #[serde(default)]
     pub(super) resists: Option<Resists>,
 }
@@ -248,32 +238,12 @@ impl Found {
         let weight = (i64::from(self.weight) + more).clamp(0, i64::from(MAX_FOUND));
         u32::try_from(weight).unwrap_or(0)
     }
-
-    fn check(&self, material: &str, what: &str) -> Result<(), String> {
-        let limit = i32::try_from(MAX_FOUND).unwrap_or(i32::MAX);
-        if self.weight > MAX_FOUND || !(-limit..=limit).contains(&self.deeper) {
-            return Err(format!(
-                "material `{material}`: `{what}` weighs 0 to {MAX_FOUND}, `deeper` ±{MAX_FOUND}"
-            ));
-        }
-        if self.level == 0 {
-            return Err(format!(
-                "material `{material}`: `{what}`'s `level` is 1 or more"
-            ));
-        }
-        Ok(())
-    }
 }
 
 impl MaterialDef {
     /// Its chances to withstand item damage: its own `resists`, else none at all.
     pub fn resists(&self) -> Resists {
         self.resists.unwrap_or_default()
-    }
-
-    /// Whether its file sets `resists`.
-    pub fn sets_resists(&self) -> bool {
-        self.resists.is_some()
     }
 
     /// Its weapon modifiers, to hit and to damage, if it can be a weapon's working part (one of
@@ -285,82 +255,32 @@ impl MaterialDef {
         }
     }
 
-    /// Checks what a material file cannot say on its own.
+    /// Checks what a material file cannot say on its own: a `weight` above 0 (a variant's
+    /// weight divides by its base material's, [`crate::variant::weight`]); a `rarity` or `gear`
+    /// only with a `group` (only grouped materials are drawn for another item's); and a gem
+    /// with no `group` (a part's material is never a gem: gems are set, [`super::gem`]).
     pub(super) fn check(&self) -> Result<(), String> {
-        if self.id.trim().is_empty() || self.name.trim().is_empty() {
+        if self.weight == 0 {
             return Err(format!(
-                "material `{}`: `id` and `name` must not be empty",
-                self.id
-            ));
-        }
-        if !(1..=MAX_MATERIAL_VALUE).contains(&self.value) {
-            return Err(format!(
-                "material `{}`: `value` is in percent of steel's, 1 to {MAX_MATERIAL_VALUE}",
-                self.id
-            ));
-        }
-        if !(1..=MAX_MATERIAL_WEIGHT).contains(&self.weight) {
-            return Err(format!(
-                "material `{}`: `weight` is in percent of steel's, 1 to {MAX_MATERIAL_WEIGHT}",
-                self.id
-            ));
-        }
-        let mut modifiers = [self.to_hit, self.damage].into_iter().flatten();
-        if modifiers.any(|m| !(-MAX_MODIFIER..=MAX_MODIFIER).contains(&m)) {
-            return Err(format!(
-                "material `{}`: `to_hit` and `damage` are -{MAX_MODIFIER} to {MAX_MODIFIER}",
-                self.id
-            ));
-        }
-        if self.protection.is_some_and(|p| p > MAX_PROTECTION) {
-            return Err(format!(
-                "material `{}`: `protection` is in percent, 0 to {MAX_PROTECTION}",
-                self.id
-            ));
-        }
-        if let Some(group) = &self.group
-            && (group.trim().is_empty() || group.contains(char::is_whitespace) || group == ANY)
-        {
-            return Err(format!(
-                "material `{}`: `group` is one word, not `{ANY}`",
+                "material `{}`: `weight` is at least 1 (percent of steel's)",
                 self.id
             ));
         }
         for (what, found) in [("rarity", &self.rarity), ("gear", &self.gear)] {
-            if let Some(found) = found {
-                found.check(&self.id, what)?;
-                if self.group.is_none() {
-                    return Err(format!(
-                        "material `{}`: `{what}`: only a material of a `group` is found as \
-                         another item's material",
-                        self.id
-                    ));
-                }
+            if found.is_some() && self.group.is_none() {
+                return Err(format!(
+                    "material `{}`: `{what}`: only a material of a `group` is found as \
+                     another item's material",
+                    self.id
+                ));
             }
         }
-        let mut resisted = ItemHarm::RESISTED.into_iter();
-        if let Some(harm) = resisted.find(|&h| self.resists().of(h) > 100) {
+        if self.gem.is_some() && self.group.is_some() {
             return Err(format!(
-                "material `{}`: `resists`' `{}` is in percent, 0 to 100",
-                self.id,
-                harm.id()
+                "material `{}`: a gem is set in an item, never what one is made of: no \
+                 `group`",
+                self.id
             ));
-        }
-        if let Some(gem) = &self.gem {
-            if !self.precious {
-                return Err(format!(
-                    "material `{}`: a gem is precious (`precious = true`)",
-                    self.id
-                ));
-            }
-            if self.group.is_some() {
-                return Err(format!(
-                    "material `{}`: a gem is set in an item, never what one is made of: no \
-                     `group`",
-                    self.id
-                ));
-            }
-            gem.check(&self.id)?;
         }
         Ok(())
     }

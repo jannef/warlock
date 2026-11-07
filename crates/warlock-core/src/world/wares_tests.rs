@@ -208,7 +208,7 @@ fn the_uniques_come_by_their_chance_each_once_a_run() {
 }
 
 #[test]
-fn the_three_uniques_are_a_ring_a_neck_and_hands_and_nowhere_else() {
+fn the_three_uniques_are_a_ring_a_neck_and_hands() {
     let slots: BTreeSet<String> = ["brosinga_mene", "eorcanstan", "grendles_grape"]
         .into_iter()
         .map(|id| {
@@ -223,21 +223,6 @@ fn the_three_uniques_are_a_ring_a_neck_and_hands_and_nowhere_else() {
     assert_eq!(
         slots,
         BTreeSet::from(["Amulet", "Gloves", "Ring"].map(String::from))
-    );
-    // A legend that places one is refused: they come only through the offer.
-    let mut files = files();
-    let text = road_text(&files);
-    files.insert(
-        DIALOGUE,
-        &text.replace(
-            "[\"brosinga_mene\", ",
-            "[\"widowmaker\", \"brosinga_mene\", ",
-        ),
-    );
-    let err = Content::load(&files).expect_err("Widowmaker is placed by its owner's gear");
-    assert!(
-        err.to_string().contains("placed only through the offer"),
-        "{err}"
     );
 }
 

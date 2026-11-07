@@ -27,7 +27,7 @@ pub struct RuinRow {
     /// The damage type of the spells it is for.
     pub kind: DamageTypeId,
     pub of: RuinOf,
-    /// The chance each item of a matching stack is lost, 0 to 100.
+    /// The chance each item of a matching stack is lost, in percent (100 or more: every one).
     pub percent: u32,
     /// What is said of one item lost, and of several: "burns up", "burn up".
     pub one: String,
@@ -60,7 +60,7 @@ struct RowSpec {
 
 impl RuinRules {
     /// Parses `data/ruin.toml`: every row names a known damage type and exactly one known class,
-    /// material, or material group, a chance of 0 to 100, and two words to say.
+    /// material, or material group (a group no material has matches nothing).
     pub(super) fn parse(file: &str, text: &str, content: &Content) -> Result<Self, ContentError> {
         let err = |m: String| ContentError::new(file, m);
         let parsed: RuinFile = toml::from_str(text).map_err(|e| err(e.to_string()))?;
@@ -78,23 +78,10 @@ impl RuinRules {
                     (content.material_id(&material))
                         .ok_or_else(|| at(format!("unknown material `{material}`")))?,
                 ),
-                (None, None, Some(group)) => {
-                    let known = (content.materials().iter())
-                        .any(|m| m.group.as_deref() == Some(group.as_str()));
-                    if !known {
-                        return Err(at(format!("no material is of group `{group}`")));
-                    }
-                    RuinOf::Group(group)
-                }
+                (None, None, Some(group)) => RuinOf::Group(group),
                 _ => return Err(at("name one of `class`, `material`, or `group`".into())),
             };
-            if row.percent > 100 {
-                return Err(at("`percent` is 0 to 100".into()));
-            }
             let [one, many] = row.says;
-            if one.trim().is_empty() || many.trim().is_empty() {
-                return Err(at("`says` needs two words".into()));
-            }
             rows.push(RuinRow {
                 kind,
                 of,
@@ -151,24 +138,12 @@ mod tests {
         let row = |body: &str| format!("[[ruin]]\ntype = \"fire\"\n{body}\n");
         for (text, why) in [
             (
-                row("class = \"scrolls\"\npercent = 101\nsays = [\"a\", \"b\"]"),
-                "`percent`",
-            ),
-            (
                 row("class = \"nothing\"\npercent = 1\nsays = [\"a\", \"b\"]"),
                 "unknown item class",
             ),
             (
-                row("group = \"cheese\"\npercent = 1\nsays = [\"a\", \"b\"]"),
-                "group `cheese`",
-            ),
-            (
                 row("class = \"scrolls\"\ngroup = \"wood\"\npercent = 1\nsays = [\"a\", \"b\"]"),
                 "name one of",
-            ),
-            (
-                row("class = \"scrolls\"\npercent = 1\nsays = [\"a\", \" \"]"),
-                "two words",
             ),
         ] {
             let mut files = ContentFiles::builtin();

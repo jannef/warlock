@@ -42,9 +42,7 @@
 
 use super::{Affix, AffixKind, Magic, Rarity, may_roll};
 use crate::chest;
-use crate::content::{
-    AffixDef, Content, ItemClassId, ItemKind, MAX_ITEM_LEVEL, ObjectDef, ObjectId,
-};
+use crate::content::{AffixDef, Content, ItemClassId, ItemKind, ObjectDef, ObjectId};
 use crate::gem;
 use crate::object::Stack;
 use crate::rng::Rng;
@@ -95,26 +93,15 @@ pub struct LootPool {
 
 impl LootPool {
     /// The pool `names` (class ids and class groups) name at `grade`. Refused when one names
-    /// nothing or, at any item level, can hold nothing of that grade (coins are never magic), so
-    /// a vault's cell is never dead on every floor. A class named twice counts once.
+    /// nothing. A class named twice counts once; a pool that can hold nothing of its grade
+    /// leaves its cell bare ([`roll_pool`]).
     pub fn named(content: &Content, names: &[String], grade: LootGrade) -> Result<Self, String> {
-        if names.is_empty() {
-            return Err("a loot pool must name a class or a group".into());
-        }
         let mut classes = Vec::new();
         for name in names {
             let named = content.pool_classes(name);
             if named.is_empty() {
                 return Err(format!(
                     "loot pool: `{name}` is no item class or class group"
-                ));
-            }
-            if !named
-                .iter()
-                .any(|c| holds(content, *c, MAX_ITEM_LEVEL, grade))
-            {
-                return Err(format!(
-                    "loot pool: `{name}` can hold nothing of grade {grade:?} at any item level"
                 ));
             }
             for class in named {

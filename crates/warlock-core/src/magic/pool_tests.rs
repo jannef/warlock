@@ -203,32 +203,18 @@ fn a_vault_s_legend_takes_a_grade_or_a_pool() {
 }
 
 #[test]
-fn a_pool_that_can_hold_nothing_is_refused() {
-    for (loot, why) in [
-        ("{ pool = [] }", "must name a class or a group"),
-        ("{ pool = \"swords\" }", "`swords` is no item class"),
-        (
-            "{ pool = \"money\", grade = \"magic\" }",
-            "`money` can hold nothing",
-        ),
-        (
-            "{ pool = \"coins\", grade = \"rare\" }",
-            "`coins` can hold nothing",
-        ),
-        (
-            "{ pool = \"potions\", grade = \"magic\" }",
-            "`potions` can hold nothing",
-        ),
-        // Every name must hold something, not only one of them.
-        (
-            "{ pool = [\"rings\", \"gems\"], grade = \"magic\" }",
-            "`gems` can hold nothing",
-        ),
-    ] {
+fn an_unknown_pool_is_refused_and_an_empty_one_loads() {
+    let legend = "\"m\" = { terrain = \"floor\", loot = { pool = \"swords\" } }";
+    let err = vault_with(legend).expect_err("swords");
+    assert!(err.contains("`swords` is no item class"), "{err}");
+    // A pool that can hold nothing of its grade leaves its cell bare.
+    for loot in ["{ pool = [] }", "{ pool = \"coins\", grade = \"rare\" }"] {
         let legend = format!("\"m\" = {{ terrain = \"floor\", loot = {loot} }}");
-        let err = vault_with(&legend).expect_err(loot);
-        assert!(err.contains(why), "{loot}: {err}");
+        assert!(vault_with(&legend).is_ok(), "{loot}");
     }
+    let c = content();
+    let coins = pool(&c, &["coins"], LootGrade::Rare);
+    assert!(roll_many(&c, &coins, MAX_ITEM_LEVEL, 50).is_empty());
 }
 
 #[test]
@@ -243,15 +229,4 @@ fn a_level_file_may_not_roll_a_pool() {
         .expect_err("a level with a pool")
         .message;
     assert!(err.contains("rolled only in vaults"), "{err}");
-}
-
-#[test]
-fn a_group_may_not_be_a_class_s_id() {
-    let mut files = ContentFiles::builtin();
-    files.insert(
-        "data/item_classes.toml",
-        &crate::content::BUILTIN_ITEM_CLASSES.replace("group = \"money\"", "group = \"rings\""),
-    );
-    let err = Content::load(&files).expect_err("a clash").message;
-    assert!(err.contains("group `rings` is a class's id"), "{err}");
 }

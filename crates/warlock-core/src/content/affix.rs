@@ -7,10 +7,11 @@
 //! Every object that may be found magic says what kind of item it is (`kind` in
 //! `data/objects.toml`, [`ItemKind`]): a weapon, a missile weapon, ammunition, body armour, a
 //! helmet, a cloak, gloves, boots, a shield, a ring, an amulet, or a tool. An affix names the
-//! kinds it may roll on (`bases`), the one [`Effect`] it has, and its **tiers** (at most
-//! [`MAX_TIERS`]): from which item level each is found, and the range its value is rolled in (a
-//! light's tier names a light preset instead). An item never has two affixes of one [`Group`]
-//! (the effect, and the skill, damage type, or resource it names).
+//! kinds it may roll on (`bases`), the one [`Effect`] it has, and its **tiers**
+//! (rising): from which item level each is found, and the range its value is rolled in (a
+//! light's tier names a light preset instead). An item never has two affixes of one category;
+//! the data gives each [`Group`] (the effect, and the skill, damage type, or resource it
+//! names) one category.
 //!
 //! Attack effects (to-hit, damage, criticals, attack speed, range, ...) on a weapon, a missile
 //! weapon, or ammunition are **local**: they change attacks made with that item only. Elsewhere
@@ -25,15 +26,11 @@ use crate::skills::SkillId;
 use crate::stats::Stat;
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
-use std::ops::RangeInclusive;
 
 /// The highest item level: dungeon depth gives it (spec §8 "Magic items").
 pub const MAX_ITEM_LEVEL: u8 = 99;
 /// The most prefixes, and the most suffixes, an item may have (a rare: three of each).
 pub const MAX_PER_KIND: usize = 3;
-/// The most tiers an affix may have: a ladder that steps up every item level or two
-/// (docs/design/affixes-systems.md §3).
-pub const MAX_TIERS: usize = 12;
 /// The most an item's attack speed or its wearer's moving speed may be raised, in percent off
 /// the cost.
 pub const MAX_SPEED: i32 = 50;
@@ -479,31 +476,6 @@ impl Effect {
         )
     }
 
-    /// The values a tier may roll (a light's tier has none).
-    pub const fn values(self) -> RangeInclusive<i32> {
-        match self {
-            Effect::ExtraDamage | Effect::Elemental => 2..=20,
-            Effect::Threat | Effect::Crit | Effect::SpellThreat => 1..=3,
-            Effect::AttackSpeed | Effect::MoveSpeed | Effect::DigPercent => 1..=MAX_SPEED,
-            Effect::ManaCost | Effect::PotionKept => 1..=50,
-            Effect::ActiveStamina => 1..=5,
-            Effect::ManaOnKill | Effect::ResourceOnKill => 1..=20,
-            Effect::Hunger | Effect::TrapDamage => 1..=75,
-            Effect::Durability | Effect::Weight | Effect::Stealth => 1..=90,
-            Effect::MaxHp
-            | Effect::MaxMana
-            | Effect::Carry
-            | Effect::Skill
-            | Effect::SpellEase
-            | Effect::ResourceMax => 1..=100,
-            Effect::Regeneration | Effect::ManaRegeneration | Effect::ResourceRate => 1..=300,
-            Effect::Resistance => 1..=crate::damage::MAX_RESISTANCE,
-            Effect::Light => 0..=0,
-            Effect::Proof => 1..=1,
-            _ => 1..=10,
-        }
-    }
-
     /// Whether it is an attack effect: local on what attacks are made with, global elsewhere.
     pub const fn is_attack(self) -> bool {
         matches!(
@@ -874,60 +846,31 @@ pub(super) fn parse<'a>(
         specs.extend((parsed.suffix.into_iter()).map(|s| (file, AffixKind::Suffix, s)));
     }
     let first_file = first_file.unwrap_or("data/affixes.toml");
-    let (file, rarity_spec) = rarity_spec.get(first_file)?;
-    let err = |m: String| ContentError::new(file, m);
+    let (_, rarity_spec) = rarity_spec.get(first_file)?;
     let rarity = [rarity_spec.normal, rarity_spec.magic, rarity_spec.rare];
-    if rarity.iter().sum::<u32>() == 0 {
-        return Err(err("`rarity`: the weights may not all be 0".into()));
-    }
-    let (file, magic_spec) = magic_spec.get(first_file)?;
-    let err = |m: String| ContentError::new(file, m);
+    let (_, magic_spec) = magic_spec.get(first_file)?;
     let magic_affixes = [magic_spec.prefix, magic_spec.suffix, magic_spec.both];
-    if rarity[Rarity::Magic as usize] > 0 && magic_affixes.iter().all(|w| *w == 0) {
-        return Err(err(
-            "`magic`: the weights may not all be 0 while magic items are found".into(),
-        ));
-    }
     let (file, rare_spec) = rare_spec.get(first_file)?;
     let err = |m: String| ContentError::new(file, m);
+    // More than a rare may hold would split into more prefixes or suffixes than
+    // `Magic::check` (the saves' guard) allows.
     let most = 2 * MAX_PER_KIND as u32;
     let mut rare_counts = Vec::new();
     for [count, weight] in rare_spec.affixes {
-        if !(1..=most).contains(&count) {
+        if count > most {
             return Err(err(format!(
-                "`rare.affixes`: a rare item rolls 1 to {most} affixes, not {count}"
+                "`rare.affixes`: a rare item rolls at most {most} affixes, not {count}"
             )));
         }
         rare_counts.push((count as u8, weight));
     }
-    if rarity[Rarity::Rare as usize] > 0 && rare_counts.iter().all(|(_, w)| *w == 0) {
-        return Err(err(
-            "`rare.affixes` needs a count with a weight above 0 while rares are found".into(),
-        ));
-    }
     let (file, names_spec) = names_spec.get(first_file)?;
     let err = |m: String| ContentError::new(file, m);
-    let names = |list: &[String]| list.iter().all(|n| !n.trim().is_empty()) && !list.is_empty();
-    if !names(&names_spec.first) {
-        return Err(err("`names.first` needs words, none of them empty".into()));
-    }
     let mut second_names = BTreeMap::new();
     for (kind, words) in names_spec.second {
         let kind = ItemKind::from_id(&kind)
             .ok_or_else(|| err(format!("`names.second`: unknown kind of item `{kind}`")))?;
-        if !names(&words) {
-            return Err(err(format!(
-                "`names.second.{}` needs words, none of them empty",
-                kind.id()
-            )));
-        }
         second_names.insert(kind, words);
-    }
-    if let Some(kind) = (ItemKind::ALL.iter().copied()).find(|k| !second_names.contains_key(k)) {
-        return Err(err(format!(
-            "`names.second` has no words for `{}`",
-            kind.id()
-        )));
     }
 
     let mut affixes = Affixes {
@@ -957,41 +900,10 @@ pub(super) fn parse<'a>(
         if let Some(first) = seen.insert(id.clone(), file) {
             return Err(super::duplicate_id("affix", &id, file, first));
         }
-        check_category(&affixes, &def).map_err(|m| ContentError::new(file, m))?;
         affixes.ids.insert(id, affixes.defs.len());
         affixes.defs.push(def);
     }
     Ok(affixes)
-}
-
-/// Refuses `def` when its category and the affixes read before it disagree: every affix of one
-/// [`Group`] names one category (so one affix per category is one per group too), and a category
-/// on both prefixes and suffixes is one group, the same effect either way.
-fn check_category(affixes: &Affixes, def: &AffixDef) -> Result<(), String> {
-    for other in affixes.all() {
-        let same_category = other.category == def.category;
-        if other.group() == def.group() && !same_category {
-            return Err(format!(
-                "{} `{}`: category `{}`, but `{}` does the same in `{}`",
-                def.kind.name().to_lowercase(),
-                def.id,
-                def.category,
-                other.id,
-                other.category
-            ));
-        }
-        if same_category && other.kind != def.kind && other.group() != def.group() {
-            return Err(format!(
-                "{} `{}`: category `{}` is on prefixes and suffixes, so both do one thing, \
-                 but `{}` does another",
-                def.kind.name().to_lowercase(),
-                def.id,
-                def.category,
-                other.id
-            ));
-        }
-    }
-    Ok(())
 }
 
 impl AffixSpec {
@@ -1000,19 +912,8 @@ impl AffixSpec {
         let damage = |id: &str| lookups.damage_type.and_then(|f| f(id));
         let resource = |id: &str| lookups.resource.and_then(|f| f(id));
         let light = lookups.light;
-        if self.id.trim().is_empty() || self.name.trim().is_empty() {
-            return Err("`id` and `name` must not be empty".into());
-        }
         let effect = Effect::from_id(&self.effect)
             .ok_or_else(|| format!("unknown effect `{}`", self.effect))?;
-        let words = self.category.split('_');
-        if !(words.into_iter()).all(|w| !w.is_empty() && w.bytes().all(|b| b.is_ascii_lowercase()))
-        {
-            return Err(format!(
-                "`category` is lower-case words joined by `_`, not `{}`",
-                self.category
-            ));
-        }
         let skill = match (effect, &self.skill) {
             (Effect::Skill, Some(id)) => {
                 Some(skill(id).ok_or_else(|| format!("unknown skill `{id}`"))?)
@@ -1047,9 +948,6 @@ impl AffixSpec {
             }
             (false, None) => None,
         };
-        if self.bases.is_empty() {
-            return Err("`bases` names no kind of item".into());
-        }
         let mut bases = Vec::new();
         for base in &self.bases {
             let k = ItemKind::from_id(base).ok_or_else(|| format!("unknown kind `{base}`"))?;
@@ -1060,26 +958,17 @@ impl AffixSpec {
                     k.plural()
                 ));
             }
-            if bases.contains(&k) {
-                return Err(format!("`{base}` is in `bases` twice"));
+            if !bases.contains(&k) {
+                bases.push(k);
             }
-            bases.push(k);
         }
-        if self.tiers.is_empty() {
-            return Err("an affix needs at least one tier".into());
-        }
-        if self.tiers.len() > MAX_TIERS {
-            return Err(format!(
-                "an affix has at most {MAX_TIERS} tiers, not {}",
-                self.tiers.len()
-            ));
+        // A rolled affix names its tier as a `u8`.
+        if self.tiers.len() > usize::from(u8::MAX) {
+            return Err(format!("at most {} tiers", u8::MAX));
         }
         let mut tiers = Vec::new();
         for (i, t) in self.tiers.into_iter().enumerate() {
             let n = i + 1;
-            if t.level == 0 || t.level > MAX_ITEM_LEVEL {
-                return Err(format!("tier {n}: `level` must be 1 to {MAX_ITEM_LEVEL}"));
-            }
             if tiers.last().is_some_and(|p: &Tier| p.level >= t.level) {
                 return Err(format!("tier {n}: levels must rise from tier to tier"));
             }
@@ -1096,13 +985,9 @@ impl AffixSpec {
                     ));
                 }
                 (_, Some(min), Some(max), None) => {
-                    let values = effect.values();
-                    if min > max || !values.contains(&min) || !values.contains(&max) {
-                        return Err(format!(
-                            "tier {n}: `min` and `max` must be {} to {}, `min` at most `max`",
-                            values.start(),
-                            values.end()
-                        ));
+                    // A value outside `min..=max` fails `Magic::check`, the saves' guard.
+                    if min > max {
+                        return Err(format!("tier {n}: `min` is at most `max`"));
                     }
                     Tier {
                         level: t.level,
@@ -1308,12 +1193,9 @@ tiers = [{ level = 1, min = 1, max = 2 }]
             assert!(e.to_string().contains(needle), "{e}");
         }
         let cases = [
-            "tiers = []",
             "tiers = [{ level = 3, min = 1, max = 1 }, { level = 2, min = 1, max = 1 }]",
             "tiers = [{ level = 1, min = 3, max = 1 }]",
-            "tiers = [{ level = 1, min = 1, max = 99 }]",
             "tiers = [{ level = 1, light = \"glow\" }]",
-            "tiers = [{ level = 0, min = 1, max = 1 }]",
         ];
         for tiers in cases {
             let text = format!(
@@ -1326,64 +1208,6 @@ tiers = [{ level = 1, min = 1, max = 2 }]
                      [\"weapon\"]\ntiers = [{ level = 1, min = 1, max = 1 }]\n";
         let e = parse_with(&format!("{twice}{twice}")).expect_err("duplicate");
         assert!(e.to_string().contains("duplicate"), "{e}");
-    }
-
-    /// Every affix names a category; one group is one category, and a category on both kinds is
-    /// one group.
-    #[test]
-    fn affix_categories_are_checked() {
-        let affix = |kind: &str, id: &str, effect: &str, category: &str| {
-            format!(
-                "[[{kind}]]\nid = \"{id}\"\nname = \"X\"\neffect = \"{effect}\"\n\
-                 category = \"{category}\"\nbases = [\"weapon\"]\n\
-                 tiers = [{{ level = 1, min = 1, max = 1 }}]\n"
-            )
-        };
-        let good = [
-            affix("prefix", "sharp", "damage", "physical_damage"),
-            affix("prefix", "heavy", "extra_damage", "physical_damage")
-                .replace("min = 1, max = 1", "min = 2, max = 3"),
-            affix("prefix", "glinting", "to_hit", "accuracy"),
-            affix("suffix", "of_precision", "to_hit", "accuracy"),
-        ]
-        .concat();
-        let a = parse_with(&good).expect("valid");
-        assert_eq!(
-            a.get("heavy").map(|d| d.category.as_str()),
-            Some("physical_damage")
-        );
-        let missing = "[[prefix]]\nid = \"x\"\nname = \"X\"\neffect = \"damage\"\nbases = \
-                       [\"weapon\"]\ntiers = [{ level = 1, min = 1, max = 1 }]\n";
-        let e = parse_with(missing).expect_err("no category");
-        assert!(e.to_string().contains("category"), "{e}");
-        let bad = [
-            (
-                affix("prefix", "x", "damage", "Physical damage"),
-                "lower-case words",
-            ),
-            (affix("prefix", "x", "damage", ""), "lower-case words"),
-            (
-                [
-                    affix("prefix", "sharp", "damage", "physical_damage"),
-                    affix("prefix", "vicious", "damage", "brutality"),
-                ]
-                .concat(),
-                "`sharp` does the same in `physical_damage`",
-            ),
-            (
-                [
-                    affix("prefix", "sharp", "damage", "physical_damage"),
-                    affix("suffix", "of_heft", "extra_damage", "physical_damage")
-                        .replace("min = 1, max = 1", "min = 2, max = 3"),
-                ]
-                .concat(),
-                "on prefixes and suffixes",
-            ),
-        ];
-        for (text, needle) in bad {
-            let e = parse_with(&text).expect_err(needle);
-            assert!(e.to_string().contains(needle), "{e}");
-        }
     }
 
     /// One affix file's text: `effect` on `bases` with `extra` lines and one tier of `tier`.
@@ -1534,8 +1358,7 @@ tiers = [{ level = 1, min = 1, max = 2 }]
             one("prefix", "hardy", "resource_max", "\"ring\"", stamina, tier),
         ]
         .concat();
-        let e = parse_with(&same).expect_err("one group, two categories");
-        assert!(e.to_string().contains("does the same"), "{e}");
+        assert!(parse_with(&same).is_ok(), "the author's call");
         // Without resources in content, pooled affixes are left out, as skill affixes are
         // without skills.
         let light = |_: &str| None;
@@ -1548,21 +1371,6 @@ tiers = [{ level = 1, min = 1, max = 2 }]
         let text = format!("{HEAD}\n{two}");
         let a = parse([("data/affixes.toml", text.as_str())], &lookups).expect("valid");
         assert!(a.is_empty());
-    }
-
-    /// An affix has at most twelve tiers.
-    #[test]
-    fn an_affix_has_at_most_twelve_tiers() {
-        let ladder = |n: u8| -> String {
-            let tiers: Vec<String> = (1..=n)
-                .map(|l| format!("{{ level = {l}, min = 1, max = 2 }}"))
-                .collect();
-            one("prefix", "x", "damage", "\"weapon\"", "", &tiers.join(", "))
-        };
-        let a = parse_with(&ladder(12)).expect("twelve tiers");
-        assert_eq!(a.get("x").map(|d| d.tiers.len()), Some(MAX_TIERS));
-        let e = parse_with(&ladder(13)).expect_err("thirteen");
-        assert!(e.to_string().contains("at most 12 tiers, not 13"), "{e}");
     }
 
     /// Tools are a kind of item: rare names have words for them, and affixes may roll on them.
@@ -1582,9 +1390,6 @@ tiers = [{ level = 1, min = 1, max = 2 }]
             let text = one("prefix", "x", effect, "\"tool\"", "", tier);
             assert!(parse_with(&text).is_err(), "{effect} on a tool");
         }
-        let no_words = HEAD.replace("tool = [\"Tooth\"]\n", "");
-        let e = parse_files([("data/affixes.toml", no_words.as_str())]).unwrap_err();
-        assert_eq!(e.message, "`names.second` has no words for `tool`");
     }
 
     #[test]

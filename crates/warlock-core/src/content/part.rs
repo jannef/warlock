@@ -34,8 +34,8 @@ use std::collections::BTreeSet;
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub struct PartId(pub u8);
 
-/// The most part names there may be.
-pub const MAX_PARTS: usize = 64;
+/// The most part names there may be: a [`PartId`] is a `u8`.
+pub const MAX_PARTS: usize = 256;
 /// The most parts one object may have.
 pub const MAX_OBJECT_PARTS: usize = 8;
 
@@ -79,13 +79,6 @@ pub(super) fn parse(file: &str, text: &str) -> Result<Vec<PartDef>, ContentError
     let mut defs = Vec::with_capacity(parsed.part.len());
     for spec in parsed.part {
         let bad = |m: &str| err(format!("part `{}`: {m}", spec.id));
-        let not_a_word = |s: &str| s.trim().is_empty() || s.contains(char::is_whitespace);
-        if spec.id.trim().is_empty() || spec.name.trim().is_empty() {
-            return Err(bad("`id` and `name` must not be empty"));
-        }
-        if spec.adjective.as_deref().is_some_and(not_a_word) {
-            return Err(bad("`adjective` is one word, not empty"));
-        }
         if !ids.insert(spec.id.clone()) {
             return Err(bad("duplicate part id"));
         }
@@ -243,8 +236,9 @@ pub enum PartRole {
 /// material). A part's list is its table's `made_of`, or for the main part `main` (the object's
 /// own `made_of`, the shorthand); each entry names a group (every material of that `group`),
 /// `any` (every material of a group), or a material. The main part keeps only the materials
-/// that can be what `role` asks; a material named by itself that cannot is an error, and so is a
-/// list without the part's own material, or a gem (gems are set in items, never made into them).
+/// that can be what `role` asks (a material named by itself is taken as it is); a list without
+/// the part's own material is an error, and so is a gem (gems are set in items, never made into
+/// them).
 pub(super) fn construction(
     entries: &[PartEntry],
     main: Option<&[String]>,
@@ -328,18 +322,10 @@ fn made_of(
                 "`made_of`: `{name}` is neither a material's `group` nor a material"
             ));
         };
-        let m = &materials[i];
-        if m.gem.is_some() {
+        if materials[i].gem.is_some() {
             return Err(format!(
                 "`made_of`: `{name}` is a gem, set in items but never what one is made of"
             ));
-        }
-        if !role.allows(m) {
-            let why = match role {
-                PartRole::Weapon => "a weapon's working part (it has no `to_hit` or `damage`)",
-                _ => "armour (it has no `protection`)",
-            };
-            return Err(format!("`made_of`: `{name}` cannot be {why}"));
         }
         made.insert(id(i));
     }
@@ -761,19 +747,8 @@ mod tests {
         )
         .expect("parts");
         assert_eq!(defs[0].adjective.as_deref(), Some("pommelled"));
-        for (text, expected) in [
-            ("[[part]]\nid = \"a\"\nname = \"\"\n", "must not be empty"),
-            (
-                "[[part]]\nid = \"a\"\nname = \"a\"\nadjective = \"well set\"\n",
-                "one word",
-            ),
-            (
-                "[[part]]\nid = \"a\"\nname = \"a\"\n[[part]]\nid = \"a\"\nname = \"b\"\n",
-                "duplicate part id",
-            ),
-        ] {
-            let err = parse("data/parts.toml", text).expect_err(text);
-            assert!(err.message.contains(expected), "{text}: {}", err.message);
-        }
+        let text = "[[part]]\nid = \"a\"\nname = \"a\"\n[[part]]\nid = \"a\"\nname = \"b\"\n";
+        let err = parse("data/parts.toml", text).expect_err(text);
+        assert!(err.message.contains("duplicate part id"), "{}", err.message);
     }
 }

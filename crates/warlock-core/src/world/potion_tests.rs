@@ -309,7 +309,7 @@ fn content_refuses_a_potion_with_another_kinds_fields_or_a_split_colour() {
         format!(
             "[[object]]\nid = \"odd_potion\"\nname = \"odd potion\"\nglyph = \"!\"\n\
              fg = \"{fg}\"\nclass = \"potions\"\nmaterials = [\"glass\"]\nweight = 250\n\
-             stackable = true\n\n[object.drink]\n{drink}\n"
+             value = 1\nstackable = true\n\n[object.drink]\n{drink}\n"
         )
     };
     for (drink, fg) in [
@@ -318,14 +318,9 @@ fn content_refuses_a_potion_with_another_kinds_fields_or_a_split_colour() {
             "#3c6ec8",
         ),
         ("kind = \"heal\"\ncolour = \"red\"", "#c83c3c"),
-        ("kind = \"cure\"\ncolour = \"green\"", "#3ca050"),
         (
             "kind = \"heal\"\ndice = \"1d4\"\ncolour = \"red\"",
             "#ffffff",
-        ),
-        (
-            "kind = \"heal\"\ndice = \"1d4\"\ncures = [\"nothing\"]\ncolour = \"red\"",
-            "#c83c3c",
         ),
         (
             "kind = \"harm\"\ndice = \"1\"\ncolour = \"brown\"",
@@ -340,7 +335,7 @@ fn content_refuses_a_potion_with_another_kinds_fields_or_a_split_colour() {
         files.insert("data/objects/odd_potion.toml", &potion(drink, fg));
         assert!(Content::load(&files).is_err(), "{drink}");
     }
-    // Too few words for the potion types.
+    // Too few words for the potion types is the author's: the draw tells the labels apart.
     let mut files = ContentFiles::builtin();
     files.insert(
         "data/potion_labels.toml",
@@ -359,5 +354,5 @@ fn content_refuses_a_potion_with_another_kinds_fields_or_a_split_colour() {
         );
     }
     files.insert("data/objects/odd_potions.toml", &more);
-    assert!(Content::load(&files).is_err());
+    Content::load(&files).expect("loads");
 }

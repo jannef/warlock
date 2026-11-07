@@ -7,9 +7,10 @@
 //! ```toml
 //! [object.wand]
 //! spell = "fireball"            # an aimed spell of data/spells/
-//! charges = 7                   # required: the wand's own, 1 to 99
+//! charges = 7                   # required: the wand's own
 //! rungs = { min = 0, max = 2 }  # the rungs a wand of the kind casts at (default min 0, max the
-//!                               # spell's damage or heal ladder's length; at most that length)
+//!                               # spell's damage or heal ladder's length; a rung past it casts
+//!                               # at its last)
 //! ```
 //!
 //! Each wand draws its own rung evenly in its kind's range as it is made (`Stack::wand_rung`,
@@ -19,9 +20,6 @@
 use super::{Content, SpellId};
 use serde::Deserialize;
 
-/// The most charges a wand may hold.
-pub const MAX_WAND_CHARGES: u8 = 99;
-
 /// `[object.wand]` as data writes it.
 #[derive(Clone, Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -29,8 +27,6 @@ pub struct WandSpec {
     spell: String,
     charges: u8,
     rungs: Option<RungsSpec>,
-    /// Refused: the spell scaling design §7.4 replaced it with `rungs`.
-    caster_level: Option<toml::Value>,
 }
 
 /// `rungs = { min, max }` as written.
@@ -45,7 +41,7 @@ struct RungsSpec {
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Wand {
     pub spell: SpellId,
-    /// The charges a wand of this kind is made with, 1 to [`MAX_WAND_CHARGES`].
+    /// The charges a wand of this kind is made with.
     pub charges: u8,
     /// The lowest rung of its spell's damage or heal ladder a wand of the kind casts at.
     pub min_rung: u8,
@@ -55,16 +51,9 @@ pub struct Wand {
 
 impl WandSpec {
     /// Resolves it against the spells (loaded before objects): an aimed spell (a wand is
-    /// aimed as a missile weapon is), charges 1 to [`MAX_WAND_CHARGES`] (its own, required), its
-    /// `rungs` within the spell's damage or heal ladder (`min` at most `max`).
+    /// aimed as a missile weapon is) and its `rungs` (by default the whole of the spell's damage or
+    /// heal ladder; the cast clamps a rung to the ladder, `world/spell_rung.rs`).
     pub(super) fn resolve(self, content: &Content) -> Result<Wand, String> {
-        if self.caster_level.is_some() {
-            return Err(
-                "`wand`: `caster_level` is gone: a wand casts at its `rungs` on its spell's \
-                        ladder, `rungs = { min = 0, max = 2 }` (docs/design/spell-scaling.md §7.4)"
-                    .into(),
-            );
-        }
         let spell = (content.spell_id(&self.spell))
             .ok_or_else(|| format!("`wand`: no spell `{}` in data/spells/", self.spell))?;
         let def = content.spell(spell);
@@ -75,22 +64,12 @@ impl WandSpec {
             ));
         }
         let charges = self.charges;
-        if !(1..=MAX_WAND_CHARGES).contains(&charges) {
-            return Err(format!("`wand`: `charges` is 1 to {MAX_WAND_CHARGES}"));
-        }
         let most = u8::try_from(def.grows.roll().map_or(0, |l| l.len())).unwrap_or(u8::MAX);
         let given = self.rungs.unwrap_or(RungsSpec {
             min: None,
             max: None,
         });
         let (min_rung, max_rung) = (given.min.unwrap_or(0), given.max.unwrap_or(most));
-        if min_rung > max_rung || max_rung > most {
-            return Err(format!(
-                "`wand`: `rungs` is `min` to `max` within 0 to {most}, the length of `{}`'s \
-                 damage or heal ladder",
-                self.spell
-            ));
-        }
         Ok(Wand {
             spell,
             charges,

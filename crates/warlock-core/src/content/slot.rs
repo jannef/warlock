@@ -81,14 +81,8 @@ pub(super) fn parse(file: &str, text: &str) -> Result<Vec<SlotDef>, ContentError
     let mut slots = Vec::with_capacity(parsed.slot.len());
     for spec in parsed.slot {
         let bad = |m: &str| err(format!("slot `{}`: {m}", spec.id));
-        if spec.id.trim().is_empty() || !ids.insert(spec.id.clone()) {
-            return Err(err(format!(
-                "slot ids must be unique and not empty: `{}`",
-                spec.id
-            )));
-        }
-        if spec.name.trim().is_empty() || spec.mark.trim().is_empty() {
-            return Err(bad("`name` and `mark` must not be empty"));
+        if !ids.insert(spec.id.clone()) {
+            return Err(err(format!("slot ids must be unique: `{}`", spec.id)));
         }
         let action = ActionKind::ALL
             .iter()
@@ -98,9 +92,6 @@ pub(super) fn parse(file: &str, text: &str) -> Result<Vec<SlotDef>, ContentError
                 bad("`action` must be `wield`, `wear`, `body_armor`, or `ready` (actions.toml)")
             })?;
         let fits = spec.fits.unwrap_or_else(|| spec.id.clone());
-        if fits.trim().is_empty() {
-            return Err(bad("`fits` must not be empty"));
-        }
         slots.push(SlotDef {
             id: spec.id,
             name: spec.name,
@@ -143,11 +134,6 @@ mod tests {
         let one = |fields: &str| format!("[[slot]]\nid = \"x\"\nname = \"X\"\n{fields}\n");
         for (text, message) in [
             (one("action = \"wait\"\nmark = \"m\""), "`action` must be"),
-            (one("action = \"wear\"\nmark = \"\""), "must not be empty"),
-            (
-                one("action = \"wear\"\nmark = \"m\"\nfits = \" \""),
-                "`fits`",
-            ),
             (
                 one("action = \"wear\"\nmark = \"m\"").repeat(2),
                 "slot ids must be unique",

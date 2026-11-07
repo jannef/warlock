@@ -15,17 +15,18 @@ Spec §8 "Potions" (`spec/08g-magic-items.md`); the combat progression design §
   `frequency` make it loot, never magic (`check_base`, the `loot` flag in `resolve`).
 - `Drink { does: Draught, colour, marks }`. `Draught` is the kind with only its fields:
   `Heal { dice, cures }`, `Cure { cures, diseases }`, `Mana { dice }`,
-  `Elixir { stat, points, potential }` (`points` 1 to `ELIXIR_POINTS`' end, default 1;
-  `potential` dice, never negative; `stat`, `points`, `potential` refused on any other kind),
+  `Elixir { stat, points, potential }` (`points` default 1; `potential` dice, a roll below 0
+  lifting nothing; `stat`, `points`, `potential` refused on any other kind),
   `Harm { dice, status }` (status required: hunger is loaded after objects),
-  `Boost { status, severity }` (the status must raise a stat), `Vision { status }` (it must
-  have `vision`), `Haste { status, severity }` (status always `hasted`, the Haste spell's; data
+  `Boost { status, severity }` (a status that raises a stat), `Vision { status }` (one with
+  `vision`; which status suits which kind is the author's, not checked), `Haste { status, severity }` (status always `hasted`, the Haste spell's; data
   `marks` are
-  `(Stat, count)` in stat order, 1 to `MAX_POTION_MARKS` each.
+  `(Stat, count)` in stat order. A `severity` past its status's max is that max
+  (`Effects::add`).
 - Content checks (`content/mod.rs`): a drink's `cures` must be named in some status's or
   disease's `cured_by` (with food's `cures`); potions of one `colour` share one `fg`;
-  `data/potion_labels.toml` says `{colour}` and has at least as many labels as potion types
-  (`check_potion_labels`). Poisoned's `cured_by` has `antidote` for the antidote; Frightened,
+  `data/potion_labels.toml` is parsed as the scroll labels are (two labels drawn alike are
+  told apart by a number, `scroll_label::draw_into`). Poisoned's `cured_by` has `antidote` for the antidote; Frightened,
   Drowsy, Sluggish, Stunned, Staggered, and Transfixed have `clear_head` for the potion of
   clear head (a plain `cure`).
 - Files: one per potion in `assets/data/objects/` (`potion_of_healing`, `potion_of_greater_healing`,

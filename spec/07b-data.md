@@ -170,9 +170,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
   terrain; §8 "Chests"): ten `[[band]]`s, least first: `id`, `name` (what look mode and messages
   call it: coffer, chest, hutch, banded chest, strongbox, kist, ark, forcer, silvered ark, gilded
   ark), `description` (look mode adds it), `fg` (its colour on the map, over its terrain's),
-  `from` (the least level of the band: the first from 1, rising), `sturdiness` (a kick breaks it
-  with a chance of Strength in this, 1 to 100: 20 to 70), `hardness` (a blast must beat it, 1 to
-  10000: 200 to 3000), `locked`, `trapped` (percents of generated chests that come locked and
+  `from` (the least level of the band, rising; a level below the first band's is of the first),
+  `sturdiness` (a kick breaks it with a chance of Strength in this: 20 to 70), `hardness` (a
+  blast must beat it: 200 to 3000), `locked`, `trapped` (percents of generated chests that come locked and
   trapped), `mimic` (percent that are a mimic instead, §8 "Mimics"), `hold` (the chance a mimic of
   the band holds on a hit: its slam's), and `loot = { items, loot_level, magic, rare, gold = {
   dice, each }, gems }` (dice; `rare` counts in `magic`; what a generated chest holds, §8 "Magic
@@ -310,7 +310,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   `part` a gem becomes in its items (melee weapons a pommel, missile weapons and shields an
   inlay, helmets studs, rings and amulets a setting), its `chance` in percent, and `colour` (the
   item takes its gem's colour: rings). An object may name its own `ornament` part (staves a tip;
-  clubs and polearms an inlay); a gem never becomes an item's main part. A gem is worth its
+  clubs and polearms an inlay); the data never makes a gem an item's main part. A gem is worth its
   value × its size's × its cut's multiplier (`Gems::value`, rounded, at least 1). **A loose
   gem** is the gems' object made of its gem as its main part, with a size and cut: it is named
   "[uncut] [size] [cut] gem", the plain size and cut unsaid ("a ruby", "a large fine emerald",
@@ -338,17 +338,16 @@ developer notes (CLAUDE.md, `docs/dev/`).
   with a ruby pommel gives 2 pieces of tin and the ruby; a steel long sword 8 pieces of steel and
   3 of leather.
 - **Materials** (#193, #194): a material's properties are on one scale, steel's (all optional,
-  so a material without them is as it was): `group` (one word, not `any`: metal, wood, bone,
+  so a material without them is as it was): `group` (metal, wood, bone,
   stone, hide, cloth, glass, resin; none for paper, wax, food, and the gems, which are set in
   items but never made into them), `color` (an item of it drawn so where its base item is of
-  another material), `weight` (percent of steel's for an item of it, 1 to 1000; metals by real
-  density, the rest an effective weight), `to_hit` and `damage` (as a weapon's working part, ±10;
-  neither: it cannot be one), `protection` (percent of an armour's Protection kept, 0 to 500;
-  none: it cannot be armour), `value` (above), `rarity` and `gear` (how often loot, by item
+  another material), `weight` (percent of steel's for an item of it, at least 1; metals by real
+  density, the rest an effective weight), `to_hit` and `damage` (as a weapon's working part;
+  neither: it cannot be one), `protection` (percent of an armour's Protection kept; none: it
+  cannot be armour), `value` (above), `rarity` and `gear` (how often loot, by item
   level, and creatures' gear, by creature level, make an item of it: `{ weight, deeper, level }`,
   the weight at level 1, `deeper` per level past the first, never below 0, none below `level`),
-  `resists` (required, #1168: `{ acid, rust, fire }`, its chance in percent, 0 to 100, to
-  withstand each kind of item damage; withstood, nothing happens, else the item is damaged, the
+  `resists` (#1168: `{ acid, rust, fire }`, its chance in percent to withstand each kind of item damage, none withstood without it; withstood, nothing happens, else the item is damaged, the
   anvil's one state that Temper or Whittle mends, and one damaged already is destroyed; a failed
   Temper or Whittle is item damage no material withstands. Noble metals, mithril, adamantium,
   dragonscale, and the gems withstand nearly everything; iron and steel rust and corrode but
@@ -443,8 +442,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   fits every hand slot too, for fighting with two shields; the built-in light weapons are the
   dagger, the stiletto, the short sword, and the hand axe, as in D&D: one-handers like the
   scimitar, the rapier, and the club are not), `ammo` (the kind of ammunition it is, `ammo = "arrow"`), and
-  `launches` (the kind a missile weapon shoots, `launches = "arrow"`; some object must be that
-  ammunition). Launchers and ammunition pair by that kind (`Content::fires`). Food (§8
+  `launches` (the kind a missile weapon shoots, `launches = "arrow"`). Launchers and ammunition pair by that kind (`Content::fires`). Food (§8
   "Hunger") has `food = { nutrition = 1500, turns = 4, keeps = "30d", lasts = "60d" }`: the
   nutrition points it gives (at most 100 000), the turns of eating it takes (at least 1; never on
   things worn, wielded, shot, thrown, or burned), and its shelf life in whole hours or days
@@ -453,8 +451,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
   away): strips of dried meat (600, 2 turns, 60 and 120 days), apples (150, 1, 14 and 28), food
   rations (1500, 4, 30 and 60), loaves of bread (800, 3, 5 and 10), angelica roots (20, 1, 30
   and 60). A remedy also has `cures`, the means it
-  applies as it is eaten (names some status or disease lists in its `cured_by`, else a content
-  error; food only): the angelica root `cures = ["remove_disease"]` (§8 "Diseases"). A
+  applies as it is eaten (the means some status or disease lists in its `cured_by`; food
+  only): the angelica root `cures = ["remove_disease"]` (§8 "Diseases"). A
   **scroll** (§8 "Scrolls") has `read`, what reading it does (never on things worn, wielded,
   eaten, shot, or thrown): `kind = "burst"` or `"bolt"`, a trap's spell with a trap's fields
   (`spell`, an effect of its shape in `data/effects.toml`; `noun`, `verb` (default: the kind's),
@@ -469,28 +467,29 @@ developer notes (CLAUDE.md, `docs/dev/`).
   feeding and keeping by the creature's size. Level files and `carry` cannot place them (a
   content error): only creatures that die leave them, each knowing when it died. What they do in a
   fight (§8 "Combat"; only for things with a `slot`): a weapon's `damage` dice (`"1d8"`; a
-  launcher's, required for one, are its shots' and carry its draw weight, `"1d8+2"`), `threat`
-  (the lowest natural roll that threatens a critical, 2 to 24, default 22), `crit` (the damage
-  multiplier, 2 to 5, default 2), `to_hit` (default 0, within ±20), and for bows `strength` (the
-  Strength they need, 1 to 40), all four only with `damage`; `parry` (Defence while wielded),
+  launcher's are its shots' and carry its draw weight, `"1d8+2"`; one without them does not
+  shoot), `threat` (the lowest natural roll that threatens a critical, default 22), `crit` (the
+  damage multiplier, default 2), `to_hit` (default 0), and for bows `strength` (the Strength
+  they need), all four only with `damage`; `parry` (Defence while wielded),
   `armour` (while worn) and `max_dex` (the most Dexterity may add to Defence while it is worn),
-  and `shield` (while held), each 0 to 20; `protection` (damage soaked off every hit while worn,
-  0 to 20, adding up across what is worn; only on armour worn, never in a hand or on a shield);
-  `penetration` (how much of a target's Protection it ignores, 0 to 20; weapons and
-  ammunition); `spell_cost_percent` (while worn or held, a spell costs this percent more mana,
-  0 to 100, adding up across what is worn; only on things with a `slot`; §8 "Spells"); `bash` (a shield's damage dice when bashing with it,
+  and `shield` (while held), only on things with a `slot`; `protection` (damage soaked off every
+  hit while worn, adding up across what is worn; only on things with a `slot`: the game's are
+  armour worn, never a shield or anything in a hand); `penetration` (how much of a target's
+  Protection it ignores; weapons and ammunition); `spell_cost_percent` (while worn or held, a
+  spell costs this percent more mana, adding up across what is worn; only on things with a `slot`; §8 "Spells"); `bash` (a shield's damage dice when bashing with it,
   only with `shield`; §8 "Weapon skills"); and `category`, the weapon skill a weapon draws on and
-  trains (an id in `data/weapon_skills.toml`; required for every weapon when there are weapon
-  skills, refused on anything else): a `melee` skill for what goes in a hand, a `launcher` one
-  for a missile weapon, the `thrown` one for what is only thrown (a rock). Ranged combat (§8 "Ranged combat"): `range` (1 to
-  40 cells; required for a missile weapon: how far it shoots; on anything else it makes a
-  throwing weapon, thrown that far with its own `damage`, which then needs no `slot`: a rock;
-  ammunition has none), `reloads` (missile weapons: each shot also takes the `reload` action);
+  trains (an id in `data/weapon_skills.toml`; refused on anything but a weapon; every weapon of
+  the game names one): a `melee` skill for what goes in a hand, a `launcher` one for a missile
+  weapon, the `thrown` one for what is only thrown (a rock). Ranged combat (§8 "Ranged
+  combat"): `range` (cells; for a missile weapon how far it shoots, and one without it does not
+  shoot; on anything else it makes a throwing weapon, thrown that far with its own `damage`,
+  which then needs no `slot`: a rock; ammunition has none), `reloads` (missile weapons: each shot also takes the `reload` action);
   damage types (§8 "Damage types"): `damage_type`, the kind a weapon does (an id in
   `data/damage_types.toml`, or two of which a blow does the better: `["slashing", "piercing"]`;
   a launcher's is its shots', a shield's its bash's, which is the unarmed kind without one;
   only on weapons and shields that bash), `verb`, what a blow with a weapon does instead of
-  the kind's verb ("cleaves"), `added`, damage of another, non-physical kind every hit with a
+  the kind's verb ("cleaves"), `added`, damage of another kind (the game's are non-physical; its
+  dice never below 0) every hit with a
   weapon, a missile weapon, or ammunition adds (`{ type = "fire", damage = "1d4" }`: the
   flaming arrow), `resist`, what a worn or held thing resists in percent per kind (`{ cold = 20
   }`, −100 to 75; the fur cloak cold 20, the wool cloak and padded coat cold 10, the leather
@@ -498,11 +497,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
   more or less than its `protection` (`{ slashing = 1, piercing = -1 }`, within ±20; chain
   mail, scale mail slashing +1 and bludgeoning −1, banded mail slashing +1; only with
   `protection`);
-  `breaks` (ammunition and throwing weapons: the chance in percent, 0 to 100, that it breaks on a
-  hit), `lit` (ammunition and throwing weapons: the object it flies and lands as, lit as it is
+  `breaks` (ammunition and throwing weapons: the chance in percent that it breaks on a hit), `lit` (ammunition and throwing weapons: the object it flies and lands as, lit as it is
   loosed, which must burn), `light` and `burns` (together: the light preset it gives where it
-  lies and for how many seconds, 1 to a day, it burns there before it is gone); and
-  for digging (§8 "Digging"): `dig`, a digging tool's power (1 to 100; it needs a `slot`); and
+  lies and for how many seconds it burns there before it is gone); and
+  for digging (§8 "Digging"): `dig`, a digging tool's power (it needs a `slot`); and
   presentation only: `missile` (the glyph it flies as, drawn pointing right; default its own,
   upright), `spins` (it tumbles in flight), `glow` (0 to 1, where it lies), and particle
   `particles` (`ambient`: while it lies in view on top of its pile; `flight`: while it flies).
@@ -527,7 +525,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   (`weapon`: has `damage` and a hand `slot`; `launcher`: `launches`; `ammo`: `ammo` and a `slot`;
   `shield`: `shield`; `body`, `helmet`, `cloak`, `gloves`, `boots`, `ring`, `amulet`: worn, no
   `damage`; anything else is a content error): only things with a kind are ever magic or loot;
-  `level`, the lowest item level loot holds it at (1 to 99, default 1), and `frequency`, how often
+  `level`, the lowest item level loot holds it at (default 1), and `frequency`, how often
   (default 100, 0 never), both only with a kind. Weapons (things with `damage`) may have an
   `attack_cost` (worn or wielded weapons only), what a blow with it (a missile
   weapon: a shot) costs instead of the `melee` (`shoot`) action, before its weapon skill's
@@ -552,17 +550,14 @@ developer notes (CLAUDE.md, `docs/dev/`).
 - **Magic items** (`data/affixes.toml`, optional; without it loot is always normal; M29, #149;
   §8 "Magic items"; the settings below live in that file and the affixes themselves in the
   `data/affixes/` directory, one a file, read in path order; see Definitions): `[rarity]` the
-  weights of normal, magic, and rare loot (1925, 65, 10, not all
-  0); `[magic] prefix`, `suffix`, `both`, the weights of a magic item with a prefix only, a
-  suffix only, or one of each (40, 40, 20; not all 0 while magic items are found); `[rare]
-  affixes`, `[count, weight]` pairs for how many affixes a rare item rolls (1 to 6; built in:
-  3 50, 4 30, 5 15, 6 5); `[names] first` (words, none empty) and
-  `[names.second]`, words for every kind of item (rare names: one of each, "Grim Bite"). Then
+  weights of normal, magic, and rare loot (1925, 65, 10); `[magic] prefix`, `suffix`, `both`,
+  the weights of a magic item with a prefix only, a suffix only, or one of each (40, 40, 20);
+  `[rare] affixes`, `[count, weight]` pairs for how many affixes a rare item rolls (at most 6,
+  three prefixes and three suffixes; built in: 3 50, 4 30, 5 15, 6 5); `[names] first` (words)
+  and `[names.second]`, words for each kind of item (rare names: one of each, "Grim Bite"). Then
   `[[prefix]]`s and `[[suffix]]`es (ids unique across both): `id`, `name` ("Sharp", "of the
-  Bear"), `category` (lower-case words joined by `_`, `physical_damage`: an item never has
-  two affixes of one category; every affix of one effect (of one skill, of one damage type)
-  names the same category, and a category on both prefixes and suffixes is one effect; else a
-  content error), `effect` (one of `to_hit`, `damage`, `extra_damage` (adds 1dN), `threat`, `crit`,
+  Bear"), `category` (`physical_damage`: an item never has two affixes of one category; the data
+  gives every affix of one effect (of one skill, of one damage type) the same category), `effect` (one of `to_hit`, `damage`, `extra_damage` (adds 1dN), `threat`, `crit`,
   `attack_speed`, `range`, `draw`, `durability`, `parry`, `armour`, `protection`, `shield`,
   `max_dex`,
   `weight`, `dodge`, `deflection`, `natural`, `max_hp`, `regeneration`, `max_mana`,
@@ -572,29 +567,27 @@ developer notes (CLAUDE.md, `docs/dev/`).
   the affix's kind to every roll) and `resistance` (+N % resistance to it) with a
   `damage_type`, an id in `data/damage_types.toml`; without damage types they are left out; §8
   "Damage types"), `bases` (kinds of item it
-  rolls on, at least one; an effect only
+  rolls on; an effect only
   attacks can use, `extra_damage`, `elemental`, `range`, `draw`, `durability`, needs weapons,
   missile weapons, or ammunition, `parry` weapons, `armour` body armour, `protection` armour (body armour,
   helmets, cloaks, gloves, boots), `shield` shields, `max_dex` body armour or shields; else a
-  content error), `weight` (default 100), and `tiers`, at least one, item levels
-  rising: `{ level, min, max }` (values within the effect's range: 1 to 10 for most, dice sides 2
-  to 20 for `extra_damage` and `elemental`, 1 to 3 for `threat` and `crit`, percent 1 to 50 for
-  speeds, 1 to 90
-  for `durability`, `weight`, `stealth`, 1 to 100 for `max_hp`, `max_mana`, `carry` (kg), and `skill`, 1 to
-  300 for `regeneration` and `mana_regeneration`, 1 to 75 for `resistance`), or for `light` `{ level, light }` naming a
+  content error), `weight` (default 100), and `tiers`, item levels
+  rising: `{ level, min, max }` (`min` at most `max`; the rules clamp what they read: speeds to
+  50 % in all, threat and criticals to their ranges), or for `light` `{ level, light }` naming a
   light preset. The built-in
   affixes: 26 prefixes and 29 suffixes in up to four tiers (item levels 1, 3, 5, 7 for most); the wiki
   lists them in generated tables. The light presets `item_glow_faint`, `item_glow`, and
   `item_glow_bright` (radius 2, 3, 4; steady, cool) are the glowing tiers'.
 - **Unique items** (`data/uniques/` and each campaign's `data/uniques/`, one item a file named
   by its id, read in path order; optional; #423; §8 "Magic items"): `[[unique]]`s with `id`,
-  `name` (1 to 30 characters), `object` (a base item with a `kind` that does not stack),
+  `name`, `object` (a base item with a `kind`),
   `affixes` (as an `[[item]]`'s: `"venomous:2"`, the value the top of the tier's range; checked
   as a rare item's), optional `parts` (as an `[[item]]`'s), `level` (default: its highest
   tier's), optional `power`, one of `{ inflict = STATUS, chance = 1..100, severity = 1..max }`,
   `{ vision = PROFILE }`, `{ ward = STATUS, message = "..." }`, each with a `phrase` (the power
   in words, for the item description), and optional `lore` (the description's last line).
-  Placed as `unique:ID` (no count) wherever objects are named, once in all content; a legend's
+  Placed as `unique:ID` (no count) wherever objects are named, once in all content (the data
+  author's promise: a load does not count placements); a legend's
   `wield`/`wear` name it the same way to wear the one carried.
 - **Talents** (`data/talents.toml`, the settings; `data/talents/`, one talent a file, read in
   path order; optional, without them no level asks for a pick; M30, #229; §8 "Talents"):

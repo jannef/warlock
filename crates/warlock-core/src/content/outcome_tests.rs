@@ -149,7 +149,7 @@ fn bad_outcomes_are_refused() {
             "unknown status",
         ),
         (
-            "message = \"A.\"\neffect = { status = { id = \"inspired\", degrees = 4 } }\n",
+            "message = \"A.\"\neffect = { status = { id = \"inspired\", degrees = 0 } }\n",
             "degrees",
         ),
         (

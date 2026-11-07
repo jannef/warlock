@@ -407,12 +407,10 @@ fn rod_data_is_checked() {
         Content::load(&files).map(|_| ()).map_err(|e| e.to_string())
     };
     assert_eq!(load("effect = \"digging\"\nmana = 3"), Ok(()));
-    let refused = [
-        "effect = \"flying\"\nmana = 3",
-        "effect = \"digging\"\nmana = 0",
-        "effect = \"digging\"\nmana = 101",
-        "effect = \"digging\"",
-    ];
+    // The cost is the author's.
+    assert_eq!(load("effect = \"digging\"\nmana = 0"), Ok(()));
+    assert_eq!(load("effect = \"digging\"\nmana = 101"), Ok(()));
+    let refused = ["effect = \"flying\"\nmana = 3", "effect = \"digging\""];
     for rod in refused {
         assert!(load(rod).is_err(), "{rod}");
     }

@@ -56,7 +56,7 @@ Parts (spec §7 "Objects and materials", #199): an object is made of parts, each
 material id is one unnamed part, the shorthand `materials = ["steel"]`; a table is `{ part, of,
 share }`), resolved by `part::resolve` into `ObjectDef::parts` (`Part { part: Option<PartId>,
 material, share }`, shares summing to 100, the first the main part, which takes what the others
-leave). The old `material` key is refused with a message naming `materials`. Part names are
+leave). Part names are
 `data/parts.toml` (`PartDef` with `id`, `name`, `adjective`; `PartId` an index in file order,
 not saved, so not in the fingerprint; `Content::part_defs`/`part_id`; optional, without it only
 unnamed parts). **The main part is what a single material was**: `ObjectDef::material()` returns
@@ -110,14 +110,16 @@ Whittle (#1028) works the same `Stack::worked` state as Temper, on a weapon, lau
 `MaterialDef` gains `group`, `color`, `weight` (percent of steel's), `to_hit` and `damage`
 (`MaterialDef::weapon`: `None` when neither is given, it cannot be a weapon's working part),
 `protection` (`None`: cannot be armour), and `rarity` and `gear` (`Found { weight, deeper, level
-}`, `Found::at(level)`), all optional and checked in `MaterialDef::check` (a gem has no group;
-only a material of a group is found). `VERY_RARE` (10) is the cap for a worse-but-dearer
-material, `ANY` the reserved group word. Construction lists: `made_of` in a part's table
+}`, `Found::at(level)`, capped at `MAX_FOUND`), all optional; `MaterialDef::check` keeps
+what the code needs: a `weight` above 0 (`variant::weight` divides by the base material's), a
+`rarity` or `gear` only with a group (only grouped materials are drawn), and a gem with no group
+(gems are set, never a part's material). `VERY_RARE` (10) is the cap `variant.rs` puts on a
+worse-but-dearer material, whatever its data says; `ANY` the group word for every group. Construction lists: `made_of` in a part's table
 (`PartTable::made_of`) or the object's own `made_of` for the main part (`ObjectSpec::made_of`),
 resolved by `part::construction` in `Content::load_objects` after `ObjectSpec::resolve` (the
 object's `ObjectDef::role()`, a `PartRole`: `Weapon` for what has an `attack` or is ammunition,
 `Armour` for armour kinds and shields, else `Any`; `PartRole::allows` filters a group's
-materials, a material named alone that it refuses is an error) into `ObjectDef::construction`
+materials; a material named alone is taken as it is) into `ObjectDef::construction`
 (one list per part, sorted by material id, empty when no part has one); read it with
 `ObjectDef::made_of(part)` (the list, else only the part's own material).
 `ObjectDef::is_jewellery()` (ring and amulet kinds) changes only worth and colour. The math is
@@ -165,14 +167,11 @@ share and the odd share of every object's weights at every level, sampled loot b
 the targets (own 85–93 %, poor under 3 %, odd under 0.5 % at levels 1 and 5), the fits of tin
 swords and wool rings, the factions' favourites within the list, and rolled skeleton gear).
 
-**Item damage** (#1131, #1168; the dread design §5.8): every material's file sets `resists =
-{ acid, rust, fire }` (`content/material.rs::Resists`, percent 0 to 100, every kind given; the
-old `corrodes` key is refused, `deny_unknown_fields`), its chance to withstand that kind of
+**Item damage** (#1131, #1168; the dread design §5.8): a material's file sets `resists =
+{ acid, rust, fire }` (`content/material.rs::Resists`, percent, every kind given;
+`deny_unknown_fields`), its chance to withstand that kind of
 `ItemHarm` (`Acid`, `Rust`, `Fire`, and `Work`, a failed temper or whittle, which no material
-withstands). A material without it (a test fixture's) withstands nothing; the built-in content's
-every material sets it (`world/item_damage_tests.rs::every_material_sets_its_resists_as_reviewed`,
-which also pins the review's shape: noble metals high, iron and steel low, wood and cloth burn,
-nothing organic rusts). `world/item_damage.rs` is the one path: `World::withstands(at, harm)`
+withstands). A material without it withstands nothing. `world/item_damage.rs` is the one path: `World::withstands(at, harm)`
 (the one check every source makes; 0 and 100 draw nothing, else one gameplay draw; a protected
 item withstands everything first, drawing nothing) and `World::harm_item(at, harm) -> Harmed::{Withstood, Damaged,
 Destroyed}`: withstood, nothing; else an undamaged item is damaged (`Worked::damage(harm)`, its

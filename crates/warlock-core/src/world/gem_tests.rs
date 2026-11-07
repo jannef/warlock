@@ -144,20 +144,6 @@ fn bad_gem_data_is_reported() {
     let gems = include_str!("../../../../assets/data/gems.toml");
     let cases = [
         (
-            "data/materials/ruby.toml",
-            "[[material]]\nid = \"ruby\"\nname = \"ruby\"\ngem = { color = \"#ff0000\", value = 1, \
-             rarity = 1 }\n"
-                .to_string(),
-            "a gem is precious",
-        ),
-        (
-            "data/materials/ruby.toml",
-            "[[material]]\nid = \"ruby\"\nname = \"ruby\"\nprecious = true\ngem = { color = \
-             \"#ff0000\", value = 0, rarity = 1 }\n"
-                .to_string(),
-            "`value` is in gold",
-        ),
-        (
             "data/gems.toml",
             gems.replacen("plain = true", "", 1),
             "exactly one size",
@@ -186,16 +172,6 @@ fn bad_gem_data_is_reported() {
             "data/gems.toml",
             gems.replace("class = \"helmets\"", "class = \"rings\""),
             "one ornament per class",
-        ),
-        (
-            "data/gems.toml",
-            gems.replace("value = 1500", "value = 0"),
-            "multiplies a gem's value",
-        ),
-        (
-            "data/gems.toml",
-            gems.replace("part = \"setting\"\nchance = 30", "part = \"pendant\"\nchance = 30"),
-            "never as its main part",
         ),
     ];
     for (file, text, expected) in cases {

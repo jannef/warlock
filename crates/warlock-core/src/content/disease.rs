@@ -21,9 +21,6 @@ use std::collections::BTreeMap;
 /// #137, exposes the eater).
 pub const SOURCES: [&str; 1] = ["rotten_food"];
 
-/// The difficulties a disease may have: what a check (2d12 plus a modifier) must reach.
-pub const DIFFICULTIES: std::ops::RangeInclusive<i32> = 1..=50;
-
 /// Index of a disease in [`super::Content::disease_defs`], in file order.
 #[derive(
     Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, serde::Serialize, Deserialize,

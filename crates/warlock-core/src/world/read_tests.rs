@@ -338,22 +338,17 @@ fn bad_readings_are_reported() {
         );
         Content::load(&files).expect_err("refused").to_string()
     };
-    // The old burst and bolt readings are gone (the spell scaling design §7.4), refused naming
-    // what replaced them.
     let err = bad("kind = \"burst\"\nspell = \"fireball\"");
-    assert!(
-        err.contains("`burst` and `bolt` readings are gone"),
-        "{err}"
-    );
+    assert!(err.contains("unknown variant `burst`"), "{err}");
     let err = bad("kind = \"identify\"");
     assert!(err.contains("unknown variant `identify`"), "{err}");
     let err = bad("kind = \"spell\"\nspell = \"identify\"\nnoun = \"x\"");
     assert!(err.contains("unknown field `noun`"), "{err}");
     let err = bad("kind = \"spell\"");
     assert!(err.contains("needs its `spell`"), "{err}");
-    // A scroll's rungs within its spell's ladder: Fireball's has four, Identify none.
-    assert!(bad("kind = \"spell\"\nspell = \"fireball\"\nrungs = 5").contains("`rungs` is 0 to 4"));
-    assert!(bad("kind = \"spell\"\nspell = \"identify\"\nrungs = 1").contains("`rungs` is 0 to 0"));
+    // Fields of the other kind would never be read.
+    let err = bad("kind = \"spell\"\nspell = \"fireball\"\nmends = true");
+    assert!(err.contains("belong to a `cleanse` reading"), "{err}");
 }
 
 #[test]

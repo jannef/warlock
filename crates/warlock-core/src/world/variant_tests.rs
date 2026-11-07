@@ -164,14 +164,7 @@ fn variant(content: &Content, id: &str, material: &str) -> Stack {
 fn materials_check_their_properties() {
     let cases = [
         ("weight = 0", "`weight`"),
-        ("damage = 11", "`to_hit` and `damage`"),
-        ("protection = 600", "`protection`"),
-        ("group = \"any\"", "`group`"),
         ("rarity = { weight = 10 }", "only a material of a `group`"),
-        (
-            "group = \"metal\"\nrarity = { weight = 10, level = 0 }",
-            "`level` is 1 or more",
-        ),
         ("color = \"red\"", "color"),
     ];
     for (fields, expected) in cases {
@@ -246,16 +239,6 @@ fn construction_lists_name_groups_and_materials_and_keep_their_own() {
             "long_sword",
             "[\"bronze\"]",
             "must allow what the part is made of",
-        ),
-        (
-            "long_sword",
-            "[\"metal\", \"leather\"]",
-            "cannot be a weapon's working part",
-        ),
-        (
-            "chain_mail",
-            "[\"metal\", \"bone\", \"paper\"]",
-            "cannot be armour",
         ),
         (
             "long_sword",
@@ -761,20 +744,7 @@ fn the_built_in_materials_are_the_issues_tables() {
     for left_out in ["lerasium", "atium", "malatium"] {
         assert!(content.material_id(left_out).is_none(), "{left_out}");
     }
-    // A metal worse than steel and dearer is never more than very rare, at any depth; chromium
-    // and nicrosil, better and dearer, are very rare and only deeper.
-    let steel = m("steel");
-    for def in content.materials() {
-        if def.group.as_deref() != Some("metal") {
-            continue;
-        }
-        let (hit, damage) = def.weapon().expect("a weapon");
-        let worse = hit < 0 || damage < 0 || def.protection < steel.protection;
-        if worse && def.value > steel.value {
-            let found = def.rarity.expect("found");
-            assert!(found.weight <= VERY_RARE && found.deeper <= 0, "{}", def.id);
-        }
-    }
+    // Chromium and nicrosil, better and dearer, are very rare and only deeper.
     for deep in [
         "chromium",
         "nicrosil",

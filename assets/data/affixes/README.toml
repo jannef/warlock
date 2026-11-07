@@ -74,7 +74,8 @@
 #   weight  how often it rolls among those that may (default 100)
 #   tiers   from the lowest item level (`level`, the dungeon depth) each is found at, the range
 #           its value is rolled in (`min`, `max`); a light's tiers name a `light` preset instead.
-#           At most twelve tiers, on a ladder: a tier every item level or two from the first to
+#           Levels rise from tier to tier, and `min` is at most `max`. Shipped as a ladder of up
+#           to twelve tiers: a tier every item level or two from the first to
 #           the last (usually 12), the values stepping evenly between (#637). Loot picks evenly
 #           among the tiers found within four levels below its item level (the tier window).
 #           A saved item whose tier a regrade moved is re-tiered when it loads, its value kept.

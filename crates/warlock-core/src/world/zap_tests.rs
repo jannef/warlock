@@ -452,19 +452,22 @@ fn wand_data_is_checked() {
         load("spell = \"fireball\"\ncharges = 7\nrungs = { min = 1, max = 4 }"),
         Ok(())
     );
-    let e = load("spell = \"fireball\"\ncharges = 7\ncaster_level = 12").unwrap_err();
-    assert!(e.contains("`caster_level` is gone"), "{e}");
+    // Charges and rungs are the author's: a rung past the ladder casts at its last.
+    for wand in [
+        "spell = \"fireball\"\ncharges = 0",
+        "spell = \"fireball\"\ncharges = 100",
+        "spell = \"fireball\"\ncharges = 7\nrungs = { min = 0, max = 5 }",
+        "spell = \"fireball\"\ncharges = 7\nrungs = { min = 3, max = 2 }",
+        "spell = \"web\"\ncharges = 7\nrungs = { min = 0, max = 1 }",
+    ] {
+        assert_eq!(load(wand), Ok(()), "{wand}");
+    }
     let refused = [
         "spell = \"haste\"\ncharges = 7",
         "spell = \"nothing\"\ncharges = 7",
         "spell = \"fireball\"",
-        "spell = \"fireball\"\ncharges = 0",
-        "spell = \"fireball\"\ncharges = 100",
-        // `caster_level` is gone (the spell scaling design §7.4); `rungs` within the ladder.
+        // An unknown field.
         "spell = \"fireball\"\ncharges = 7\ncaster_level = 12",
-        "spell = \"fireball\"\ncharges = 7\nrungs = { min = 0, max = 5 }",
-        "spell = \"fireball\"\ncharges = 7\nrungs = { min = 3, max = 2 }",
-        "spell = \"web\"\ncharges = 7\nrungs = { min = 0, max = 1 }",
     ];
     for wand in refused {
         assert!(load(wand).is_err(), "{wand}");

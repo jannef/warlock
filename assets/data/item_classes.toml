@@ -10,7 +10,7 @@
 #            kinds must be of this class, and each kind is of one class only
 #   corpses  corpses are of this class (one class; needed where creatures leave corpses)
 #   group    the word a vault's loot pool names it by with its fellows (`loot = { pool = "armour" }`
-#            in a vault's legend, docs/dev/content.md): never a class's own id
+#            in a vault's legend, docs/dev/content.md)
 
 [[class]]
 id = "melee_weapons"

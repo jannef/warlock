@@ -173,7 +173,7 @@ pub fn currency(content: &Content) -> Option<ObjectId> {
 /// the same (`magic/loot.rs`).
 pub fn purse(content: &Content, rng: &mut Rng, level: u8) -> Option<Stack> {
     let gold = &content.chests().band_of(level)?.loot.gold;
-    let coins = gold.dice.roll(rng).max(0) as u32 * gold.each;
+    let coins = (gold.dice.roll(rng).max(0) as u32).saturating_mul(gold.each);
     let currency = currency(content)?;
     (coins > 0).then(|| Stack::new(currency, coins))
 }
