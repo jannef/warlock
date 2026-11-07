@@ -6,7 +6,7 @@ id = "drow_arbalester"
 level = 34
 xp = 180
 rarity = "uncommon"
-loot = 30
+loot = 8
 name = "drow arbalester"
 glyph = "e"
 fg = "#70a8a0"
@@ -47,7 +47,7 @@ on_hit = [{ status = "drowsy", chance = 25, severity = 2 }, { status = "poisoned
 [[creature.gear]]
 chance = 60
 one_of = ["chain_mail"]
-magic = 15
+magic = 4
 [[creature.gear]]
 chance = 60
 one_of = ["wool_cloak"]

@@ -540,7 +540,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
 - **Magic items** (`data/affixes.toml`, optional; without it loot is always normal; M29, #149;
   §8 "Magic items"; the settings below live in that file and the affixes themselves in the
   `data/affixes/` directory, one a file, read in path order; see Definitions): `[rarity]` the
-  weights of normal, magic, and rare loot (85, 13, 2, not all
+  weights of normal, magic, and rare loot (1925, 65, 10, not all
   0); `[magic] prefix`, `suffix`, `both`, the weights of a magic item with a prefix only, a
   suffix only, or one of each (40, 40, 20; not all 0 while magic items are found); `[rare]
   affixes`, `[count, weight]` pairs for how many affixes a rare item rolls (1 to 6; built in:

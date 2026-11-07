@@ -6,7 +6,7 @@ id = "duergar_crossbowman"
 level = 15
 xp = 85
 rarity = "uncommon"
-loot = 25
+loot = 6
 name = "duergar crossbowman"
 glyph = "h"
 fg = "#909060"
@@ -37,7 +37,7 @@ one_of = ["hand_axe"]
 [[creature.gear]]
 chance = 60
 one_of = ["studded_leather"]
-magic = 5
+magic = 1
 # It fades from sight on a cooldown (docs/dev/creatures.md "The unseen").
 [creature.invisible]
 cooldown = 300

@@ -5,7 +5,7 @@ id = "kobold_shaman"
 level = 4
 xp = 40
 rarity = "very_rare"
-loot = 50
+loot = 13
 name = "kobold shaman"
 glyph = "k"
 fg = "#b080d8"
@@ -36,8 +36,7 @@ on_eat = { message = "It tastes terrible, and of bitter herbs.", vomit = 40, tra
 [[creature.gear]]
 chance = 60
 one_of = ["bone_amulet"]
-magic = 15
-
+magic = 4
 [[creature.gear]]
 chance = 30
 one_of = ["copper_coin*5", "copper_coin*12"]

@@ -111,8 +111,8 @@ resist = { piercing = 50, bludgeoning = -25 }
 # What it is made of: a base item of the classes, of level at most L, by frequency, made at
 # item level L, at least magic by `magic` percent (rare among them by `rare`).
 slots = [{ slot = "main_hand", classes = ["melee_weapons"], chance = 100 }]
-magic = { base = 0, per_level = 2, most = 40 }
-rare = { from = 15, base = 1, per_level = 1, most = 5 }
+magic = { base = 0, per_level = 0.5, most = 10 }
+rare = { from = 15, base = 0.25, per_level = 0.25, most = 1.25 }
 weapon_rank = { base = 1, per_level = 0.35, most = 10 }   # ranks in its weapon's skill: 1 + 0.35 L (#1169)
 # Graded, as other creatures are (spec §8 "Grades"): one in six notched, one in six keen. The
 # other tiers name no words and are never graded.
@@ -150,8 +150,8 @@ slots = [
   { slot = "off_hand", classes = ["shields"], chance = 40 },
   { slot = "hands", classes = ["gloves"], chance = 30 },
 ]
-magic = { base = 10, per_level = 1, most = 40 }
-rare = { from = 20, base = 1, per_level = 1, most = 10 }
+magic = { base = 2.5, per_level = 0.25, most = 10 }
+rare = { from = 20, base = 0.25, per_level = 0.25, most = 2.5 }
 
 # The panoply: the full kit of a knight with no knight, one type per level
 # (`animated_panoply_20` … `animated_panoply_70`), the family `animated_panoply`. It wields and
@@ -184,7 +184,7 @@ slots = [
   { slot = "neck", classes = ["amulets"], chance = 30, from = 50 },
   { slot = "left_ring", classes = ["rings"], chance = 30, from = 50, count = 2 },
 ]
-magic = { base = 20, per_level = 1, most = 80 }
-rare = { from = 20, base = 1, per_level = 0.5, most = 30 }
+magic = { base = 5, per_level = 0.25, most = 20 }
+rare = { from = 20, base = 0.25, per_level = 0.125, most = 7.5 }
 weapon_rank = { base = 1, per_level = 0.35, most = 10 }   # 1 + 0.35 L, at most 10 (#1169)
 shield_rank = { per_level = 0.0667 }                    # L/15 in Sword and board, beside a shield

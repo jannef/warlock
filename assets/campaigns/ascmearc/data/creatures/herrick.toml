@@ -11,7 +11,7 @@ id = "herrick"
 level = 12
 xp = 70
 rarity = "very_rare"
-loot = 50
+loot = 13
 unique = true
 name = "Sergeant Herrick"
 glyph = "@"
@@ -32,7 +32,7 @@ weapon_skills = { axes = 6, great_weapon = 2 }
 chance = 100
 one_of = ["great_axe"]
 keep = "wield"
-magic = 50
+magic = 13
 [[creature.gear]]
 chance = 100
 one_of = ["unique:turncoat"]

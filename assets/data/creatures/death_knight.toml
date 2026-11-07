@@ -7,7 +7,7 @@ id = "death_knight"
 level = 45
 xp = 235
 rarity = "rare"
-loot = 80
+loot = 20
 name = "death knight"
 glyph = "Z"
 fg = "#884040"
@@ -40,7 +40,7 @@ to_hit = 11
 [[creature.gear]]
 chance = 95
 one_of = ["great_sword"]
-magic = 50
+magic = 13
 [[creature.gear]]
 chance = 95
 one_of = ["plate_armour"]

@@ -46,7 +46,7 @@ on_hit = [{ status = "held", chance = 15, difficulty = 24 }]
 chance = 100
 one_of = ["great_sword"]
 keep = "wield"
-magic = 75
+magic = 19
 # Death throes (the dread design §5.3): it bursts where it dies.
 [creature.burst]
 damage = "8d12"

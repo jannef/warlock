@@ -29,15 +29,15 @@ racial_weapon = "war_hammer"
 [[creature.gear]]
 chance = 90
 one_of = ["plate_armour"]
-magic = 50
+magic = 13
 [[creature.gear]]
 chance = 80
 one_of = ["great_helm"]
-magic = 30
+magic = 8
 [[creature.gear]]
 chance = 70
 one_of = ["large_shield"]
-magic = 30
+magic = 8
 [[creature.gear]]
 chance = 100
 one_of = ["gold_coin*15", "gold_coin*30"]

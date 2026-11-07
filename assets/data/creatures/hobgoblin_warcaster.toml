@@ -7,7 +7,7 @@ id = "hobgoblin_warcaster"
 level = 14
 xp = 80
 rarity = "rare"
-loot = 50
+loot = 13
 name = "hobgoblin warcaster"
 glyph = "g"
 fg = "#a860d0"
@@ -32,7 +32,7 @@ racial_weapon = "quarterstaff"
 [[creature.gear]]
 chance = 60
 one_of = ["bone_amulet"]
-magic = 20
+magic = 5
 [[creature.gear]]
 chance = 50
 one_of = ["studded_leather"]
