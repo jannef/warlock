@@ -181,6 +181,7 @@ mod incorporeal;
 mod intimidate;
 mod jack;
 mod knock;
+mod knock_away;
 mod knowledge;
 mod lamp;
 mod layer_boss;
@@ -1827,6 +1828,8 @@ mod incorporeal_tests;
 mod intimidate_tests;
 #[cfg(test)]
 mod ki_tests;
+#[cfg(test)]
+mod knock_away_tests;
 #[cfg(test)]
 mod knowledge_tests;
 #[cfg(test)]

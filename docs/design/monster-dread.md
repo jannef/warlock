@@ -528,6 +528,19 @@ Breath and several natural attacks are **#1099**; creature spells, darkness, and
 **#1102** (invisibility cast on a cooldown is G11's, through #1102's self-buff step); flight,
 swimming, and a large size are the rosters' standing follow-ups and stay so.
 
+### 5.14 The disarming blow (added after the design, #1166)
+
+The owner (2026-11-07): "add disarm to some dread enemies (with a duelist fantasy) - if
+successful, players weapons drops in random open square next to player". `disarms = { chance,
+difficulty }` on a type: a melee hit on the player, with a weapon in their main hand and an open
+cell beside them, draws the chance; made, the player's Dexterity check (plus the weapon's skill
+rank and the grip: two hands +2, a shield +1, Duelist's rank with the other hand empty) against
+the difficulty keeps it; failed, the weapon lies on a random open cell beside them, a spirit
+weapon fades. Counterplay: a two-handed grip, Duelist ranks, Dexterity, a wall at the back (no
+open cell, no disarm), and a spare weapon in the pack. Holders, the duellists: the drow
+blademaster and captain, the death knight, the ultroloth, Wælcyrge the Chooser; never a beast or
+the mindless. Rules `world/knock_away.rs`; no talent (a gimmick).
+
 ## 6. The sort: every creature type, bulk or dread
 
 The rules of the sort: **people** (the showcase's and the Ascmearc's folk, the merchants, the

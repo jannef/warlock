@@ -132,3 +132,5 @@ unseen unless beside them, and a cold draught tells of one within 2. Their drain
 ## Variance
 
 The variance pass (#1134, `docs/dev/creatures.md` "Variance by role") sets the roles' to-hit (striker `L/4 + L/8`, brute and caster `L/4 − L/8`, the armed `L/4`), threat and crit (striker 19, brute 24 at ×3), and hit-point factors (quick and caster 0.5, brute 2.0). **Speed**, by temperament: the dead are slow and patient. The shamblers walk at 800 (the zombies, the drowned, the bog bodies), the standards at 1000, the ghouls and hounds lope up to 1250; the dread are the quick spirits and vampires at 1400 and up (the shadows, wraiths, banshee, white lady, washer, night mare, the vampires) and the slow and awful at 700 (the charnel heap, the wormhost and wormlord, the nightworm, the lich and archlich).
+
+**The disarming blow** (#1166, `docs/dev/creatures.md`): the death knight carries `disarms = { chance, difficulty }`, a melee hit that may knock the player's main-hand weapon onto an open cell beside them (15 % at 21).
