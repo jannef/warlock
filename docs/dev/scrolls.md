@@ -84,7 +84,7 @@ refusals come before `pay_cast`, so a stack with nothing to tell draws nothing);
 is kept and identifies nothing. It is a spell of level 6, so a character trained in Spellcraft below
 learning 6 makes the check. **Scribe** (`world/scribe.rs`, below) reads nothing and asks no check:
 it needs the spell known, the blank, and the mana, as before, and its scroll is an ordinary scroll,
-which reads by this rule for its writer too (known by overreach above their learning, a check).
+which reads by this rule for its writer too (the spell is known, so it reads at once, whatever their learning).
 The dev `identify` and F8 are not reads. Wands, rods, and spells cast for mana never ask. The file
 is optional (`Content::decipher`): without it every scroll simply reads; fixtures whose tests are
 about what a read does remove it (`files.remove("data/decipher.toml")`) rather than draw a check.

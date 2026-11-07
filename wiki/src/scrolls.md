@@ -218,9 +218,8 @@ Choose one, and you write its scroll on the first blank scroll you carry.
 - **The scroll** is the ordinary scroll of that spell, at its own [rung](#spell-scrolls), as one
   you found would be, and you know what it is. It reads, studies, and sells like any other (a
   shop buys it at its usual offer). [Scroll adept](talents.md#talent-scroll-adept) adds its rung
-  when you read it. Writing it asks no [check](#making-out-a-scroll), but reading it does, as for
-  any scroll: knowing a spell you learned beyond your [learning](magic.md#learning) does not make
-  its scroll plain to you.
+  when you read it. Neither writing nor reading it asks a [check](#making-out-a-scroll): you know the
+  spell, so you read it at once, even one you learned beyond your [learning](magic.md#learning).
 - **Scribe is refused**, with no time or mana spent, for a spell you do not know, with no blank
   scroll ("You have nothing to write on."), while raging, or with too little mana ("You lack the
   mana to write it."). Light and place do not matter.
