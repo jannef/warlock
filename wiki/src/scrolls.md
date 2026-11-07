@@ -118,8 +118,8 @@ when you cast it.
 
 An aimed scroll is aimed like a [shot](ranged.md#shooting-and-throwing) (see
 [Controls](controls.md#aiming)). After you choose the scroll, a cursor appears on the map. It
-starts on your last target if it is still there, otherwise on the nearest
-[hostile](creatures.md#factions) [creature](creatures.md) you see, otherwise on you. `Tab` moves
+starts on your last target (a creature you still see) if it is within range, otherwise on the
+nearest [hostile](creatures.md#factions) [creature](creatures.md) you see within range, otherwise on you. `Tab` moves
 it from creature to creature, and the movement keys move it anywhere. `Enter` (or `r` again)
 reads the scroll at the cursor, and `Esc` puts it away unread. A cell out of reach is marked "Out
 of range.", and the scroll is not used.
