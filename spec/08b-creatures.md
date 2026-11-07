@@ -247,21 +247,23 @@ developer notes (CLAUDE.md, `docs/dev/`).
   `(4 + L/4)d6` of their level; radius and rider by rung, `docs/dev/creatures/elementals.md`), the
   burning skull, the magma crawler, the animated lantern, and the balor. The earth line throws stones instead
   (`[creature.throw]`).
-- **Corroding gear** (`warlock-core/src/world/corrode.rs`; #1131, the dread design §5.8): a type's
-  `corrodes = { chance, what }` (chance 1 to 100). `what = "armour"`: its melee hit that lands
-  on the player rolls the chance; made, one piece the player wears (armour or a shield) whose
-  main part's material corrodes and is not damaged yet is drawn and damaged (`Worked::damage`,
-  the anvil's state: improvements gone, a point worse until mended): "The acid eats at your
-  chain mail shirt." `what = "weapon"`: the player's melee hit on it rolls on what struck (the
-  main hand's weapon, the off hand's, or the bashing shield): "Your long sword comes away
-  pitted." `what = "both"`: each of the two at the chance (#1138). Any acid resistance halves the chance; a `"half"` material takes a second roll at
-  50; nothing is damaged twice or destroyed; a spirit weapon and a stack of several are left be.
-  Made with nothing that corrodes: the first time in a life, "The acid runs off your mithril
-  chain mail shirt." (`Progress::once`). Draws: one for the chance, then one for the piece and
-  one for `"half"`. The materials' `corrodes` (true, false, `"half"`; default by group: metal and
-  hide) is spec §7's. The ember beetle (weapon, 25; its acid blood, the innate `acid_blood`,
+- **Corroding gear** (`warlock-core/src/world/corrode.rs`; #1131, #1168, the dread design §5.8): a
+  type's `corrodes = { chance, what, kind }` (chance 1 to 100; kind the item damage, `acid`,
+  `rust`, or `fire`). `what = "armour"`: its melee hit that lands on the player rolls the
+  chance; made, one piece the player wears (armour or a shield) is drawn and takes the harm
+  (`world/item_damage.rs`, spec §7 "Materials"): its main part's material withstands it by its
+  `resists` chance of the kind, else it is damaged (the anvil's state: improvements gone, a point
+  worse until mended): "The acid eats at your chain mail shirt.", "Rust spreads over your chain
+  mail shirt."; one damaged already is destroyed: "The acid eats your corroded chain mail shirt
+  away." `what = "weapon"`: the player's melee hit on it rolls on what struck (the main hand's
+  weapon, the off hand's, or the bashing shield): "Your long sword comes away pitted." `what =
+  "both"`: each of the two at the chance (#1138). Any resistance to the damage type named like
+  the kind (acid, fire) halves the chance; a spirit weapon and a stack of several are left be.
+  Withstood: the first time in a life for each kind, "The acid runs off your mithril chain mail
+  shirt.", "Your leather armour takes no rust." (`Progress::once`). Draws: one for the chance,
+  then one for the piece and one for the material's chance unless it is 0 or 100. The ember beetle (weapon, 25; its acid blood, the innate `acid_blood`,
   also strikes back at a melee blow for `1d3` acid), the hezrou (armour, 25), the dretch (armour,
-  10), the rust monster (both, 50), and the black pudding (both, 25).
+  10), and the black pudding (both, 25) are acid; the rust monster (both, 50) is rust.
 - **Regeneration** (`world/regen.rs`; #1131, the dread design §5.9): a type's `regen` (percent of
   the normal healing pace, 0 to 1000, default 100) counts among its statuses' paces in
   `Effects::regen`, so a status that slows healing slows it (Burning and Corroded have `regen =
