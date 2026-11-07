@@ -283,7 +283,7 @@ fn brought_by(content: &Content, status: usize) -> Option<String> {
 /// What else a status does while it lasts and as it ends, in words: its fighting bonuses (as a
 /// stance's), how much slower it makes every action, what it keeps you from doing, and what
 /// follows it.
-fn also(content: &Content, def: &StatusDef) -> String {
+fn also(content: &Content, status: usize, def: &StatusDef) -> String {
     let mut parts = Vec::new();
     let c = def.combat;
     let fighting: Vec<String> = [
@@ -375,7 +375,17 @@ fn also(content: &Content, def: &StatusDef) -> String {
             1 => "on your cell and the cells beside you".to_string(),
             r => format!("{r} cells around you"),
         };
-        parts.push(format!("you shed light {reach}"));
+        // A status with no light of its own in data/status.toml sheds its spell circle's
+        // (data/circles.toml; the loader fills `StatusDef::light` with it): say which.
+        let circle = (content.circles().rows().iter())
+            .find(|row| usize::from(row.status.0) == status && row.light == light);
+        match circle {
+            Some(row) => parts.push(format!(
+                "its {} spell circle sheds a faint light {reach} (everyone sees it)",
+                row.school.id()
+            )),
+            None => parts.push(format!("you shed light {reach}")),
+        }
     }
     if let Some(senses) = def.senses {
         parts.push(format!(
@@ -518,7 +528,7 @@ pub(super) fn status_effects(content: &Content) -> String {
             capital(&costs),
             capital(&eases),
             capital(&pace(u32::from(def.regen))),
-            also(content, def),
+            also(content, i, def),
         );
     }
     out

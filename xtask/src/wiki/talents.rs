@@ -164,13 +164,15 @@ pub(super) fn prestige_levels(content: &Content) -> String {
 }
 
 /// One class's (or prestige class's) table: a heading, its bonus picks, then each row's
-/// ability with what it does.
+/// ability with what it does, between mdBook anchors named by its id, so a page can include one
+/// class's section (`{{#include generated/class-levels.md:paladin}}`) and follow it with prose.
 fn level_table(content: &Content, table: Table, out: &mut String) {
     let book = content.talents();
     let bonus = table.bonus_talents();
     if table.abilities().is_empty() && bonus.levels.is_empty() {
         return;
     }
+    let _ = writeln!(out, "<!-- ANCHOR: {} -->\n", table.id());
     let _ = writeln!(out, "### {}\n", table.name());
     if !bonus.levels.is_empty() {
         let levels: Vec<String> = bonus.levels.iter().map(u8::to_string).collect();
@@ -195,6 +197,7 @@ fn level_table(content: &Content, table: Table, out: &mut String) {
         let _ = writeln!(out, "| {level} | {} | {effects} |", def.name);
     }
     out.push('\n');
+    let _ = writeln!(out, "<!-- ANCHOR_END: {} -->\n", table.id());
 }
 
 /// The coverage matrix: every system of the closed list with the talents that touch it, and
@@ -760,7 +763,7 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
             .to_string(),
         TalentEffect::HungerPercent { value } => format!("hunger pace {}", percent(value)),
         TalentEffect::SmellRot => {
-            "the eat list says whether food smells fresh, turning (old),              or rotten"
+            "the eat list says whether food smells fresh, turning (old), or rotten"
                 .to_string()
         }
         TalentEffect::RotHarmPercent { value } => {

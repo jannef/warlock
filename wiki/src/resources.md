@@ -130,7 +130,7 @@ pick from their trees, from the level given):
 - **[Battle trance](talents.md#talent-battle-trance)** (Might; [berserker](classes.md#berserker), level 6): your rage starts at 18 instead of 12 (never
   above its most), and wears off at two thirds of its pace: a point about every 9 seconds
   instead of every 6.
-- **[Inner calm](talents.md#talent-inner-calm)** (Finesse; [ascetic](classes.md#ascetic), level 18): ki holds up to 7 instead of 5, and comes back half
+- **[Inner calm](talents.md#talent-inner-calm)** (Finesse; [ascetic](classes.md#ascetic), level 18): ki holds 2 more, and comes back half
   again as fast: a point every 12 seconds instead of every 18.
 - **[Steady hand](talents.md#talent-steady-hand)** (Weaponcraft; [ranger](classes.md#ranger), level 12): focus comes back half again as fast, a point
   every 4 seconds instead of every 6; still not while you rest.

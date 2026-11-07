@@ -105,6 +105,7 @@ The barrow of [Cealdhlāw](ascmearc.md#the-places) keeps candlesticks, cutlery, 
 goods; the drowned minster of [Fennmynster](ascmearc.md#the-places) its candlesticks, books, lanterns, and rugs. Blades
 dance in the barrow's lower floors and all through [Fyrdelf](ascmearc.md#the-places), where the [duergar smiths'](creatures.md#creature-duergar-smith) work
 wakes, and empty suits of armour walk Fyrdelf's deeper floors (they are of level 12 at least).
+Blades and empty suits walk [Ūtgang](dungeons.md#ūtgang), the way up from the drake's deep, too.
 They never stray anywhere else.
 
 Their homes are two [special rooms](special-rooms.md#homes-of-animated-things), which may turn

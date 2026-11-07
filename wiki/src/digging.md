@@ -53,8 +53,8 @@ hear it and some come to look, and you hear it as "digging" when it is out of si
 
 ## What breaks and what does not
 
-- **[Packed earth](terrain.md#terrain-packed-earth)** gives way quickly, **[stone walls](terrain.md#terrain-wall)** take a while, and **[granite](terrain.md#terrain-granite)** takes the
-  better part of an hour.
+- **[Packed earth](terrain.md#terrain-packed-earth)** gives way quickly, **[stone walls](terrain.md#terrain-wall)** take a while, and **[granite](terrain.md#terrain-granite)** takes longest (the table below
+  gives each one's time).
 - **[Doors](doors.md), [trees](terrain.md#terrain-tree), crystals, torches, and the like** never break: "You cannot dig through the closed
   door."
 - **The [edge](terrain.md#walls) of a level** never breaks, whatever it is made of. Every level is closed by walls you
