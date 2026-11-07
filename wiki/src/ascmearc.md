@@ -1,55 +1,83 @@
 # The Ascmearc
 
-The Ascmearc, "the ash march", is the world you play in. Every new run starts there: **New run**
+The Ascmearc, "the ash march", is the world you play in. Every new run starts there. **New run**
 goes straight on to creating your character (see [Your character](character.md)), and the run
-begins on **Beorggeat**, the pass in the mountain wall on the march's western edge, at eight in
-the morning: "The pass opens on the Ascmearc. Far to the east, Fyrbeorg smokes." Snow closes
-the pass behind you. There is no way back, and nothing to explore there.
+begins at eight in the morning on **Beorggeat**, the pass in the mountain wall on the march's
+western edge: "The pass opens on the Ascmearc. Far to the east, Fyrbeorg smokes." Snow closes the
+pass behind you. There is no way back, and nothing to explore there.
 
-It is an old, plain-spoken land of farmers and barrow-diggers: a market town living off the
-pass, a cold barrow in the downs, a minster drowned in the fen, and a fire mountain smoking over
-it all. How [travel](overworld.md#travel), [sight](sight.md#line-of-sight), [locations](overworld.md#locations), and [local areas](overworld.md#local-areas) work on the overworld is on
-[The overworld](overworld.md).
+It is an old, plain-spoken land of farmers and barrow-diggers. A market town lives off the pass, a
+cold barrow lies in the downs, a minster lies drowned in the fen, and a fire mountain smokes over
+it all. How [travel](overworld.md#travel), [sight](sight.md#line-of-sight),
+[locations](overworld.md#locations), and [local areas](overworld.md#local-areas) work on the
+overworld is explained on [The overworld](overworld.md).
 
 ## Getting about
 
-The road runs six cells east from the pass to **Cēaptūn**, the market town: under two hours'
-walk, and in sight from the pass by day. From the town roads lead on: east over the barrow downs
-of Hlāwdūn to the ford over Blæcwæter and the land beyond, south over the bridge on Beorhtburna
-and along its bank, and north to the edge of the holly wood. The march is about 120 cells
-across, three to four days by road. Rivers can be crossed only at the bridge and the ford.
+The road runs six cells east from the pass to **Cēaptūn**, the market town. It is under two hours'
+walk, and in sight from the pass by day. From the town, roads lead on:
 
-**Cēaptūn** is the first place to go: a walled market town, safe, with four [shops](shops.md) on its
-square, the Mynster (the temple, where you may [rest](resting.md#how-resting-works) and Sister Hild [cures and mends](npcs.md#services) for [gold](shops.md#money)),
-the Gæsthūs, the inn, where Godgifu has news of the march, and the Gildhalle of the
-[Weyfarers' Gilde](guild.md), where Wat One-Eye gives out work (see [Shops](shops.md) and
-[People and talk](npcs.md)). You arrive on the square. The town has no [stairs](terrain.md#stairs): like any outdoor
-area, walk off its edge to return to its cell on the [overworld](overworld.md), or press `<` when no enemy is
-about ([Leaving an area](overworld.md#leaving-an-area)).
+- east over the barrow downs of Hlāwdūn to the ford over Blæcwæter and the land beyond;
+- south over the bridge on Beorhtburna and along its bank;
+- north to the edge of the holly wood.
 
-At the end of the north road, some three hours' walk from the town on the edge of the holly wood, is
-**Holtwīc**, a farming village: cottages round a green and a well, barley fields behind their
-hedges, and cottars who will pass the time of day. It is safe, and has no [shop](shops.md).
-Its wise-woman, **Gammer Wynflæd**, keeps a cottage apart under the first trees; she knows the
+The march is about 120 cells across, three to four days by road. Rivers can be crossed only at the
+bridge and the ford.
+
+### Cēaptūn
+
+**Cēaptūn** is the first place to go. It is a walled market town, and safe. On its square stand
+four [shops](shops.md); the Mynster, the temple, where you may
+[rest](resting.md#how-resting-works) and Sister Hild [cures and mends](npcs.md#services) for
+[gold](shops.md#money); the Gæsthūs, the inn, where Godgifu has news of the march; and the
+Gildhalle of the [Weyfarers' Gilde](guild.md), where Wat One-Eye gives out work (see
+[Shops](shops.md) and [People and talk](npcs.md)).
+
+You arrive on the square. The town has no [stairs](terrain.md#stairs). As in any outdoor area,
+walk off its edge to return to its cell on the [overworld](overworld.md), or press `<` when no
+enemy is about ([Leaving an area](overworld.md#leaving-an-area)).
+
+### Holtwīc
+
+At the end of the north road, some three hours' walk from the town on the edge of the holly wood,
+lies **Holtwīc**, a farming village. It has cottages round a green and a well, barley fields
+behind their hedges, and cottars who will pass the time of day. It is safe, and has no
+[shop](shops.md).
+
+Its wise-woman, **Gammer Wynflæd**, keeps a cottage apart under the first trees. She knows the
 village, the wood, and the fair folk, and will [talk](npcs.md) of them. A girl of the village,
-Ælfrun, has gone missing in the wood, and the wise-woman will ask you to bring her home: the
-first [escort](quests.md#kinds-of-quests) of the march. Like the town, Holtwīc
-has no [stairs](terrain.md#stairs): walk off its edge to leave.
+Ælfrun, has gone missing in the wood, and the wise-woman will ask you to bring her home: the first
+[escort](quests.md#kinds-of-quests) of the march. Like the town, Holtwīc has no
+[stairs](terrain.md#stairs); walk off its edge to leave.
 
-A little cave, **[Lytelscræf](dungeons.md#the-dungeons)**, opens two cells from the pass where you come in: three
-short floors of rats, bats, and kobolds, the easiest dungeon there is, with a chest at the bottom.
-Three dungeons lie nearest the town, deeper and more dangerous one after another (see
-[Dungeons and danger](dungeons.md)): **[Cealdhlāw](dungeons.md#the-dungeons)**, the cold barrow in the downs, which you can
-see from the road; **[Fennmynster](dungeons.md#fennmynster)**, the cellars of a minster drowned in the great fen; and
-**[Fyrdelf](dungeons.md#fyrdelf)**, the fire diggings under the hills below the volcano. The last two are
-**[hidden](overworld.md#hidden-locations)**: until a [quest](quests.md) tells you where one lies, its cell is just the swamp or the hills it
-looks like (see [Hidden locations](overworld.md#hidden-locations)). So are the [four lairs](dungeons.md#the-lairs-of-the-wanted) of
-the criminals the [Weyfarers' Gilde](guild.md#the-wanted) wants dead: Wyrtholm in the fen,
-Wulfeshol in Deorcholt, Bānfeld on the downs, and Brocenburg in the holly wood; you are shown
-only one of them. Under the volcano, **[Ūtgang](dungeons.md#ūtgang)**, a way up from the bottom of
-Fyrdelf, is hidden too, and no one tells of it: you find its mouth by climbing out of it.
-Somewhere in the holly wood near Holtwīc, a fairy mound hides **[Ælfhām](dungeons.md#ælfhām)**, the
-hall of the dark court of the fey. The map below shows them all anyway. Places that lead "nowhere yet" are still being built: for now `>` there says so.
+### The dungeons
+
+A little cave, **[Lytelscræf](dungeons.md#the-dungeons)**, opens two cells from the pass where you
+come in. It has three short floors of rats, bats, and kobolds, with a chest at the bottom: the
+easiest dungeon there is.
+
+Three dungeons lie nearest the town, each deeper and more dangerous than the last (see
+[Dungeons and danger](dungeons.md)):
+
+- **[Cealdhlāw](dungeons.md#the-dungeons)**, the cold barrow in the downs, which you can see from
+  the road;
+- **[Fennmynster](dungeon-guide.md#fennmynster)**, the cellars of a minster drowned in the great
+  fen;
+- **[Fyrdelf](dungeon-guide.md#fyrdelf)**, the fire diggings under the hills below the volcano.
+
+The last two are **[hidden](overworld.md#hidden-locations)**. Until a [quest](quests.md) tells you
+where one lies, its cell is just the swamp or the hills it looks like (see
+[Hidden locations](overworld.md#hidden-locations)). So are the
+[four lairs](dungeon-guide.md#the-lairs-of-the-wanted) of the criminals the
+[Weyfarers' Gilde](guild.md#the-wanted) wants dead: Wyrtholm in the fen, Wulfeshol in Deorcholt,
+Bānfeld on the downs, and Brocenburg in the holly wood. You are shown only one of them.
+
+Under the volcano, **[Ūtgang](dungeon-guide.md#ūtgang)**, a way up from the bottom of Fyrdelf, is
+hidden too, and no one tells of it: you find its mouth by climbing out of it. Somewhere in the
+holly wood near Holtwīc, a fairy mound hides **[Ælfhām](dungeon-guide.md#ælfhām)**, the hall of
+the dark court of the fey.
+
+The map below shows them all anyway. A few places lead "nowhere yet": `>` there says so.
 
 ## The places
 
@@ -57,9 +85,9 @@ hall of the dark court of the fey. The map below shows them all anyway. Places t
 
 ## The names
 
-Every name in the Ascmearc is a plain description of what a place is, put into Old English, so
-it says what the place is before you get there: a fen minster stands in the fen. The people
-have names of the same kind. Creatures keep their plain English names.
+Every name in the Ascmearc is a plain description of the place, put into Old English, so the name
+tells you what you will find: a fen minster stands in the fen. The people have names of the same
+kind. Creatures keep their plain English names.
 
 | Name | Old English | Meaning | What it is |
 |---|---|---|---|
@@ -107,15 +135,15 @@ have names of the same kind. Creatures keep their plain English names.
 | Wynflæd | *wynn* "joy" + *flǣd* "beauty" | | the wise-woman of Holtwīc |
 | Ælfrun | *ælf* "elf" + *rūn* "secret, counsel" | | the girl the fair folk took |
 
-The guild is younger than the town, so its names are Middle English, not Old; its master, Wat
-One-Eye, is a commoner, called by a short name and a byname. The guild's [ranks](guild.md#ranks) (Tin to Gold)
-are plain English.
+The guild is younger than the town, so its names are Middle English, not Old. Its master, Wat
+One-Eye, is a commoner, called by a short name and a byname. The guild's [ranks](guild.md#ranks)
+(Tin to Gold) are plain English.
 
 The game writes *ǣ* as **æ** and *ȳ* as **y** (Græg-, Fyr-), as its font draws them.
 
 The language has moved on since the old places were named. People of the march's own day go by
-the later forms of the old names, and the outlaws by the bynames the broadsheets give them, in
-the English of the day:
+the later forms of the old names. The outlaws go by the bynames the broadsheets give them, in the
+English of the day:
 
 | Name | From | Register | Who |
 |---|---|---|---|
@@ -127,14 +155,14 @@ the English of the day:
 
 ## Regions
 
-The [status bar](controls.md#the-screen) names the region you are in, on the [overworld](overworld.md) and in its [local areas](overworld.md#local-areas):
+The [status bar](the-screen.md#the-screen) names the region you are in, on the [overworld](overworld.md) and in its [local areas](overworld.md#local-areas):
 
 {{#include generated/overworld-regions.md}}
 
 ## The map
 
-The whole march as the game draws it, one character a cell. Colour tells apart what shares a
-glyph here (the red volcano among the mountains, the ford's road colour among the swamp's
-green).
+The whole march as the game draws it, one character a cell. Where two things share a glyph,
+colour tells them apart: the red volcano among the mountains, the ford's road colour among the
+swamp's green.
 
 {{#include generated/overworld-map.md}}

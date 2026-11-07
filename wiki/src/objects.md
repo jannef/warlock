@@ -1,18 +1,23 @@
 # Objects and your pack
 
-Weapons, armor, [tools](#class-tools), [potions](potions.md), [scrolls](scrolls.md), [food](food.md), stones and [gems](gems.md), [coins](#class-coins), [rings](#class-rings), and [amulets](#class-amulets) lie about
-the world. You can pick them up, carry them, and put them down again, and [wear and wield](equipment.md#what-fits-where) weapons,
-armor, rings, and amulets (see [Equipment](equipment.md)). Weapons and armour fight and protect
-(see [Combat](combat.md)), some of them, the pick-axe too, are magic (see
-[Magic items](magic-items.md)), and
-everything you carry weighs on you (see [Burden](burden.md)). Food can be eaten (see [Food and
-corpses](food.md)), [potions](potions.md) drunk, and [scrolls](scrolls.md) read.
+Weapons, armor, [tools](#class-tools), [potions](potions.md), [scrolls](scrolls.md),
+[food](food.md), stones and [gems](gems.md), [coins](#class-coins), [rings](#class-rings), and
+[amulets](#class-amulets) lie about the world. You can pick them up, carry them, and put them
+down again. Weapons, armor, rings, and amulets can be [worn and
+wielded](equipment.md#what-fits-where) (see [Equipment](equipment.md)). Food can be eaten (see
+[Food and corpses](food.md)), potions drunk, and scrolls read.
+
+Weapons and armour fight and protect (see [Combat](combat.md)). Some of them are magic, and so
+are some tools, the pick-axe among them (see [Magic items](magic-items.md)). Everything you
+carry weighs on you (see [Burden](burden.md)). What things are made of, and why it matters, is
+on its own page: [Materials](materials.md).
 
 ## What an object is
 
-Every object has its own glyph and color, a [class](#item-classes), what it is made of (see
-[Materials](#materials)), a weight, and a worth in [gold](shops.md#money) (what [shops](shops.md) price it from).
-The glyph hints at what kind of thing it is, as in ADOM:
+Every object has its own glyph and color, a [class](#item-classes), the
+[materials](materials.md#materials) it is made of, a weight, and a worth in
+[gold](shops.md#money). [Shops](shops.md) set their prices from the worth. The glyph hints at
+what kind of thing it is:
 
 | Glyph | Kind |
 |:---:|---|
@@ -35,248 +40,129 @@ are `"`. Color and [look mode](controls.md#look-mode) tell them apart.
 
 ### Item classes
 
-Every object belongs to an **item class**, as in ADOM: what kind of thing it is. Every list of
-objects (your pack, a pile, what to drop, eat, throw, or put on) groups them by class, in the
-order below, each class under a heading with its name; within a class they stay in the order
-you picked them up (or the order of the pile). [Shops](shops.md) sell and buy by class. You
-know the class of anything you see, even of a [magic item](magic-items.md) you have not [identified](magic-items.md#unidentified-items).
+Every object belongs to an **item class**: the kind of thing it is. Every list of objects (your
+pack, a pile, what to drop, eat, throw, or put on) groups them by class, in the order below, with
+each class under a heading. Within a class, things stay in the order you picked them up, or in
+the order of the pile. [Shops](shops.md) sell and buy by class. You always know the class of
+anything you see, even of a [magic item](magic-items.md) you have not
+[identified](magic-items.md#unidentified-items).
 
 {{#include generated/item-classes.md}}
 
-Weights are in grams. They read `450 g` below a kilogram and `3.5 kg` above. Some objects
-**stack**: coins, [arrows](ammunition.md), candles, [potions](potions.md), [scrolls](scrolls.md), [food](food.md), and stones and [gems](gems.md) lie together as
-one stack, such as "12 gold coins" (the "Stacks" column below). Everything else is a stack of one
-each: three daggers are three stacks.
+Weights are in grams. They read `450 g` below a kilogram and `3.5 kg` above.
+
+Some objects **stack**: coins, [arrows](ammunition.md), candles, [potions](potions.md),
+[scrolls](scrolls.md), [food](food.md), and stones and [gems](gems.md) lie together as one
+stack, such as "12 gold coins" (see the "Stacks" column below). Everything else is a stack of
+one, so three daggers are three stacks.
 
 ## Piles
 
-Objects lie in **piles**, any number to a cell. The map shows the top object of a pile in place of
-the floor, lit by the [light](light.md#what-light-is) around it like the floor would be, and under any [creature](creatures.md) standing
-there. The last thing dropped on a pile goes on top. Objects lie only where you can walk.
+Objects lie in **piles**, any number to a cell, and only where you can walk. The map shows the
+top object of a pile in place of the floor. It is lit by the [light](light.md#what-light-is)
+around it as the floor would be, and drawn under any [creature](creatures.md) standing there.
+The last thing dropped on a pile goes on top.
 
-When you step onto a pile, the [message line](controls.md#messages) says what is there: `You see here a dagger.` for a
-single stack, `There are several objects here.` for more. If you arrive on a special feature of
-the ground, an [altar](special-rooms.md#forgotten-altars) or a faint rune, it is named first, once each time you come to it:
-`There is an altar here.` One you cannot stand on, a [worn statue](terrain.md#terrain-statue), is named when you come
-beside it, and not again while you walk around it; whatever is written on it is read out after. [Look mode](controls.md#look-mode)
-(`l`) names what lies on any cell you see or remember: up to three stacks by name ("a dagger and
-12 arrows"), more as a count ("17 objects").
+When you step onto a pile, the [message line](the-screen.md#messages) tells you what is there:
+`You see here a dagger.` for a single stack, `There are several objects here.` for more.
 
-You see objects where you would see a [creature](creatures.md): on cells in your [line of sight](sight.md) that
-are [lit](light.md#what-light-is) enough for your eyes, or within your [darkvision](vision.md#the-four-types). Your own cell is always visible, so you
-always know what lies under you. A pile in the dark stays unseen until you [light](light.md#light-sources) it or come close
-enough.
+If you arrive on a special feature of the ground, such as an
+[altar](altars-forges-springs.md#forgotten-altars) or a faint rune, it is named first, once each
+time you come to it: `There is an altar here.` A feature you cannot stand on, such as a [worn
+statue](terrain.md#terrain-statue), is named when you come beside it, and not again while you
+walk around it. Whatever is written on it is read out after.
+
+[Look mode](controls.md#look-mode) (`l`) names what lies on any cell you see or remember: up to
+three stacks by name ("a dagger and 12 arrows"), or a count for more ("17 objects").
+
+You see objects where you would see a [creature](creatures.md): on cells in your [line of
+sight](sight.md) that are [lit](light.md#what-light-is) enough for your eyes, or within your
+[darkvision](vision.md#the-four-types). Your own cell is always visible, so you always know what
+lies under you. A pile in the dark stays unseen until you [light](light.md#light-sources) it or
+come close enough.
 
 ## Remembering piles
 
-The game remembers each pile as you last saw it, the same way it remembers [terrain](terrain.md) (see
-[Sight and memory](sight.md#memory)). Remembered piles are drawn dim like the rest of what you
-remember. If a pile changes while you are not looking, you still remember it as it was. Once you
-see the cell again, your memory catches up. If the pile is gone, it is gone from memory too.
+The game remembers each pile as you last saw it, the same way it remembers [terrain](terrain.md)
+(see [Sight and memory](sight.md#memory)). Remembered piles are drawn dim, like the rest of what
+you remember. If a pile changes while you are not looking, you still remember it as it was. Once
+you see the cell again, your memory catches up. If the pile is gone, it is gone from memory too.
 
 ## Picking up
 
 Stand on a pile and press `,` or `;`. A single stack is picked up at once. Where several lie, a
 screen lists them, grouped by [class](#item-classes) (see [Lists of objects](#lists-of-objects)):
 
-- each stack has a letter, `a` for the first on the page, with its glyph, name, and weight;
-- press a letter to mark or unmark that stack (`+` marked, `-` not), or `,` to mark everything
-  (again to unmark everything);
-- the arrow keys move the `>` cursor, and Space marks the cursor's row;
-- `>` and `<` (or `PageDown` and `PageUp`) turn the pages of a long list; what you marked stays
-  marked on every page;
-- `Enter` picks up everything marked, or the cursor's row if nothing is marked;
+- Each stack has a letter (`a` for the first on the page), its glyph, its name, and its weight.
+- Press a letter to mark or unmark that stack (`+` marked, `-` not). Press `,` to mark
+  everything, and again to unmark everything.
+- The arrow keys move the `>` cursor, and Space marks the cursor's row.
+- `>` and `<` (or `PageDown` and `PageUp`) turn the pages of a long list. What you marked stays
+  marked on every page.
+- `Enter` picks up everything marked, or the cursor's row if nothing is marked.
 - `Esc` cancels.
 
 On this screen every letter names a stack, even `h`, `j`, `k`, and `l`.
 
-Picking up is one [action](turns.md#what-actions-cost) (6 seconds), however many stacks you take. With nothing here, you are told so and no
-time passes. In a [shop](shops.md), what you pick up is not yours until you [pay for it](shops.md#buying).
+Picking up is one [action](turns.md#what-actions-cost) (6 seconds), however many stacks you
+take. If there is nothing here, you are told so and no time passes. In a [shop](shops.md), what
+you pick up is not yours until you [pay for it](shops.md#buying).
 
 ## Dropping
 
 Press `d` to choose what to drop. The screen works like the pick-up screen and lists what you
 carry. Dropped objects go on top of the pile where you stand, and stackable ones join a stack of
-the same object already there. Dropping is one action too. Something you wear or wield is taken
-off first, which takes its own time as well (see [Equipment](equipment.md)). In a
-[shop](shops.md), dropping puts back what you have not paid for and offers to buy your own
-things.
+the same object already there.
+
+Dropping is one action too. Something you wear or wield is taken off first, which takes its own
+time as well (see [Equipment](equipment.md)). In a [shop](shops.md), dropping puts back what you
+have not paid for, and the keeper offers to buy your own things.
 
 You cannot close a [door](doors.md) while objects lie in its doorway.
 
 ## Your pack
 
-Press `I` to see what you carry. Nothing changes and no time passes; `Esc` closes the screen, and
-so does `I`. Press a stack's letter to look at it:
-its description says what it is and does (see [Magic items](magic-items.md#looking-at-an-item)).
-Your pack holds as many stacks as you can carry: only their weight limits you (see
-[Burden](burden.md)). Picking up a stackable object you already carry adds to that stack. Magic
-and [rare](magic-items.md#rarity) items show their names in blue and yellow; see [Magic items](magic-items.md).
+Press `I` to see what you carry. Nothing changes and no time passes. `Esc` closes the screen, and
+so does `I`. Press a stack's letter to look at it: the description says what it is and what it
+does (see [Magic items](magic-items.md#looking-at-an-item)).
+
+Your pack holds as many stacks as you can carry. Only their weight limits you (see
+[Burden](burden.md)). Picking up a stackable object you already carry adds it to that stack.
+Magic items show their names in blue and [rare](magic-items.md#rarity) items in yellow (see
+[Magic items](magic-items.md)).
 
 {{#include generated/pack.md}}
 
 ## Lists of objects
 
-Your pack, a pile to pick up from, and every other list of objects you choose from (what to drop,
-throw, or eat, what to put on in an equipment slot) work the same way:
+Your pack, a pile to pick up from, and every other list you choose objects from (what to drop,
+throw, or eat, what to put on in an equipment slot) all work the same way:
 
-- stacks are grouped by [item class](#item-classes), each class under a heading (headings have
-  no letter);
-- weapons and armour say what they give after their name, "a long sword (+0 hit, 1d9)", "a
-  leather jerkin (Dv +1, Pv 1)" (see [Equipment](equipment.md#numbers));
-- the list shows a page at a time, as many rows as fit your window and at most 26 stacks, and
-  the frame says which page you are on (`Page 2/3`);
-- the letters `a` to `z` name the stacks of the page you see and start again at `a` on every
-  page; a class that goes on over the next page shows its heading there again;
+- Stacks are grouped by [item class](#item-classes), each class under a heading. Headings have
+  no letter.
+- Weapons and armour show what they give after their name: "a long sword (+0 hit, 1d9)", "a
+  leather jerkin (Dv +1, Pv 1)" (see [Equipment](equipment.md#numbers)).
+- The list shows one page at a time: as many rows as fit your window, and at most 26 stacks. The
+  frame says which page you are on (`Page 2/3`).
+- The letters `a` to `z` name the stacks on the page you see, starting again at `a` on every
+  page. A class that runs over onto the next page shows its heading there again.
 - `>` or `PageDown` turns to the next page, `<` or `PageUp` to the one before (you can change
-  these keys in Controls); the arrow keys move the `>` cursor from page to page.
+  these keys in Controls). The arrow keys move the `>` cursor from page to page.
 
-The inventory screen lists each stack's weight, marks what you wear or wield ("(being worn)",
-"(wielded)", and so on; see [Equipment](equipment.md)), then:
+The inventory screen lists each stack's weight and marks what you wear or wield ("(being worn)",
+"(wielded)", and so on; see [Equipment](equipment.md)). Below the list it shows:
 
-- **Carrying**: the weight of everything in your pack, worn and wielded things included, and your
-  [burden](burden.md#burden-1) if you have one;
+- **Carrying**: the weight of everything in your pack, worn and wielded things included, and
+  your [burden](burden.md#burden-1) if you have one;
 - **Your weight**: your own weight plus what you carry;
 - the weights at which you become [burdened, strained, and overloaded](burden.md#burden-1).
 
-What you carry has a weight limit, from your [Strength](stats.md#stat-strength) and [Toughness](stats.md#stat-toughness): carry too much and
-everything you do is slower, until, [overloaded](burden.md#burden-1), you cannot move. See [Burden](burden.md).
-[Creatures](creatures.md) have weights too, and some carry objects, but you cannot see what they carry or what
-they weigh, only what they wear and wield.
+What you can carry is limited by your [Strength](stats.md#stat-strength) and
+[Toughness](stats.md#stat-toughness). Carry too much and everything you do is slower, until you
+are [overloaded](burden.md#burden-1) and cannot move. See [Burden](burden.md).
+[Creatures](creatures.md) have weights too, and some carry objects, but you cannot see what they
+carry or what they weigh, only what they wear and wield.
 
 ## The objects
 
 {{#include generated/objects.md}}
-
-## Materials
-
-Every object is made of one or more **parts**, each of one material: most are of one material
-throughout (a steel dagger), some of several (a long sword's steel blade and leather grip, a gold
-amulet's chain and the ruby in its setting). The first part is the main one: it is the material
-the object is mostly made of, and the one the table above names first.
-
-You can always see what something is made of, even a magic item you have not identified. An
-item's name shows its **gems and precious metals** (the precious materials below) that it does
-not mention already: a gold amulet set with a ruby is a *gold and ruby amulet*, and a long sword
-with a ruby pommel is a *ruby-pommelled long sword*. Plain parts, like a leather grip, show
-only when you look at the item (see [Magic items](magic-items.md#looking-at-an-item)), which lists
-every part.
-
-**Gems** are materials too, each with a size and a cut (see [Gems](gems.md)): a loose gem is made
-of its gem alone, and an item found set with a gem has it as one of its parts, which adds the
-gem's worth to the item's.
-
-Every other material has its properties on one scale, steel's: its **weight** (how heavy an item
-of it is against the same item of steel: metals by their real densities, the rest by what an
-item of them weighs), what it does as a weapon's blade or head (**[to hit](combat.md#hitting)** and **[damage](combat.md#damage)**),
-how much of an armour's [Protection](combat.md#protection) an armour of it keeps (**armour**), and its **worth**. A
-material with no weapon figures cannot be a weapon's working part (no leather sword), one with
-no armour figure cannot be armour (no flint mail). Materials come in **groups**: metal, wood,
-bone (horn, ivory, chitin, and dragonbone with it), stone, hide, cloth, glass, and resin (amber).
-
-{{#include generated/materials.md}}
-
-### Item damage
-
-An item can be **damaged** in several ways, and it is always the same state: it loses its
-improvements and is a point worse until it is mended at an [anvil](special-rooms.md#forges) (or with a knife,
-for wood: [Whittle](abilities.md#ability-whittle)), the same state as a failed attempt there. An item damaged
-again, by anything, is **destroyed**. Only its name tells what did it: *a corroded*, *a rusted*,
-*a scorched*, or *a damaged long sword*.
-
-Some [creatures](creatures.md) harm your gear in melee. The [hezrou](creatures.md#creature-hezrou) and the
-[dretch](creatures.md#creature-dretch) carry acid that eats at what you wear: each of their blows that lands has a chance
-(25% for the hezrou, 10% for the dretch) to reach one piece of armour or a shield you wear, drawn
-at random. The [ember beetle](creatures.md#creature-ember-beetle)'s acid blood eats at what strikes it: each of
-your blows that lands has a 25% chance to reach the weapon (or the shield) it struck with. The
-[black pudding](creatures.md#creature-black-pudding)'s acid does both, each way at 25%, and the
-[rust monster](creatures.md#creature-rust-monster) rusts both ways at 50%. Any [resistance](damage-types.md) to acid halves
-the chance of acid (rust has no damage type to resist).
-
-What is reached then **withstands** it by its main material's chance, in the **Withstands acid**,
-**Withstands rust**, and **Withstands fire** columns of the table above: withstood, nothing happens
-(the first time for each kind you are told so: *The acid runs off your mithril chain mail
-shirt.*); else it is damaged, or destroyed if it was damaged already. Gold, silver, mithril,
-adamantium, dragonscale, and the gems nearly always withstand everything; iron and steel rust and
-corrode easily but stand heat; copper and its alloys corrode but hardly rust; the soft metals melt;
-wood and cloth burn; nothing but metal rusts. A failed attempt at an anvil is never withstood.
-Fighting bare-handed or with a spell risks nothing.
-
-### Protected items
-
-Some items no harm reaches at all: not acid, rust, or fire, not a failed attempt at an
-[anvil](special-rooms.md) or with the knife, and not a spell's [ruin](magic.md#what-lies-in-its-way) of what lies on the floor.
-They are [unique items](magic-items.md#unique-items), items of the [of Proof](magic-items.md#suffixes) affix (it works whether
-or not you have identified it), and anything a [quest](quests.md) asks you to bring or deliver
-(until that quest is done for good). What a quest gives you as its reward is an ordinary item,
-unless another quest asks for it.
-
-### Items of other materials
-
-Most items can be found made of another material than their usual one: *a bronze long sword*,
-*a duralumin chain mail shirt*, *a flint spear*, *a dragonbone quarterstaff*, *a silk cloak*.
-What an item may be made of is its **construction list**, below, by group or by material; loot
-and creatures never make anything else, so there are no leather swords or wooden chain mail.
-Rings and amulets may be made of any material of a group (never paper or wax). Rocks, food,
-[potions](potions.md), [scrolls](scrolls.md), coins, [gems](gems.md), and [keys](doors.md#keys) are only ever what they are.
-
-Against its usual material, an item of another one:
-
-- **weighs** more or less: each of its parts weighs its share of the item's weight times its
-  material's weight over the usual one's (a bronze long sword's blade is 112% as heavy, its
-  leather grip the same);
-- **strikes** better or worse: [to hit](combat.md#hitting) and [damage](combat.md#damage) change by the difference between the two
-  materials' weapon figures (a bronze long sword: +0 to hit, −1 damage against steel's), for
-  every blow, throw, and shot made with it, [arrows and bolts](ammunition.md) by their heads;
-- **protects** more or less: armour keeps its [Protection](combat.md#protection) times its material's armour figure
-  over the usual one's, rounded to the nearest (an iron chain mail shirt's Protection 3 is 1
-  in tin, 4 in chromium);
-- is **worth** more or less, by its parts' shares and their materials' worth, as every item of
-  other parts (a gold long sword is worth about nineteen steel ones);
-- is drawn in its material's **colour** (a ring set with a gem keeps its gem's colour).
-
-Rings and amulets change only in worth and colour. An item's name says its material when it is
-not the usual one, after any gem and before the item: *a Sharp emerald-pommelled bronze long
-sword of the Bear*; a material the name already says gives way (*an iron helm* of bone is *a
-bone helm*, *a pair of iron-shod boots* of bronze *a pair of bronze-shod boots*). Like every
-material, it shows at once, identified or not; its [damage](combat.md#damage) and [Protection](combat.md#protection) show when you [look at
-the item](magic-items.md#looking-at-an-item), its to-hit does not.
-
-{{#include generated/construction.md}}
-
-**How often.** Loot draws an item's material from its list by how often each material is
-found at its depth: primitive metals (copper and bronze, then iron and tin) are the common ones
-near the surface, and steel becomes the usual metal only deeper. What a [creature](creatures.md) carries, and
-so drops, is drawn by the creature's level instead: [kobolds](creatures.md#creature-kobold)' gear is mostly copper, bronze,
-iron, bone, flint, and hide, and steel comes only with tougher creatures. The weights are
-relative among the materials an item may be made of (its usual one too), and a material worse
-in a fight than the item's usual one but dearer (gold, silver, aluminium on a sword; ivory on a
-dagger) is found at most at weight 10, very rare, whatever its own weight says; rings and
-amulets are worth only, so that never applies to them. Chromium, nicrosil, dragonbone, and
-dragonscale appear only deep, mithril only from depth 20 and adamantium from depth 30 (on
-creatures, from levels 30 and 40). Mithril is half the weight of steel and quicker in the hand
-(+1 to hit); adamantium is a little heavier, bites deeper (+1 damage), and armour of it keeps
-130% of its Protection. Neither is a precious metal, and acid runs off both. An [anvil](special-rooms.md#forges) works
-them as it does steel. Items placed by hand in the world's made places are what they are
-placed as.
-
-{{#include generated/material-finds.md}}
-
-A long sword and a chain mail shirt in each metal:
-
-{{#include generated/variants.md}}
-
-### Pieces
-
-Nothing lies about as raw material but **pieces**: what a broken thing falls to (an animated
-thing that does not fall whole, see [Animated objects](animated.md)). A piece is a piece of one
-material (*a piece of tin*, *3 pieces of silk*), shown as `,` in its material's colour, weighs
-what 100 g of steel would in that material, and is worth what a piece of steel (1 gold) would,
-by the material's worth (rounded: a piece of tin is worth nothing, one of gold 20 [gold](shops.md#money)).
-Pieces of one material stack; they are miscellaneous goods, which no [shop](shops.md#selling) buys yet. A broken thing falls as the parts it was made of: a [gem](gems.md) set in it falls loose (its [size
-and cut](gems.md#size-and-cut) kept), each other part as pieces of its material, half the part's weight in pieces
-(one at least; parts of one material counted together), and paper, wax, and the like as
-nothing. Its [magic](magic-items.md) is lost. A tin dagger with a ruby pommel breaks into 2 pieces of tin and
-the ruby; a steel long sword into 8 pieces of steel and 3 of leather.
-
-{{#include generated/pieces.md}}

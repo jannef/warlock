@@ -677,35 +677,35 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
             count_times,
             time_percent,
         } => format!(
-            "[fletching](skills.md#fletching) takes {time_percent} % of its time, +{check} on its \
+            "[fletching](skill-uses.md#fletching) takes {time_percent} % of its time, +{check} on its \
              check, {count_times} times the arrows or bolts after the check, and they are plain \
              at any Woodcraft"
         ),
-        TalentEffect::Companion => "an [animal companion](allies.md#companions) from the first \
+        TalentEffect::Companion => "an [animal companion](companions.md#companions) from the first \
                                     turn: a beast of your race's kind, or rarely a rarer one, \
                                     that fights for you, always comes along, and grows with \
                                     your level"
             .into(),
-        TalentEffect::Familiar => "a [familiar](allies.md#familiars) from the first turn: a \
-                                   small beast whose touch is your [evil eye](allies.md#the-touch), \
+        TalentEffect::Familiar => "a [familiar](familiars.md#familiars) from the first turn: a \
+                                   small beast whose touch is your [evil eye](familiars.md#the-touch), \
                                    that goes for what you have hexed, always comes along, and \
                                    grows with your level"
             .into(),
         TalentEffect::Tame { bonus } => format!("{} on your taming checks", signed(bonus)),
-        TalentEffect::SharedSight => "you see what your [companion](allies.md#hunters-bond) \
+        TalentEffect::SharedSight => "you see what your [companion](companions.md#hunters-bond) \
                                       sees, by its own eyes, and the foes its nose finds, \
                                       through the dark and closed doors"
             .into(),
-        TalentEffect::FamiliarSight => "you see what your [familiar](allies.md#familiars-sight) \
+        TalentEffect::FamiliarSight => "you see what your [familiar](familiars.md#familiars-sight) \
                                         sees, by its own eyes, and the foes its nose finds, \
                                         through the dark and closed doors"
             .into(),
-        TalentEffect::SharedBuffs => "a [buff](allies.md#hunters-bond) that lands on you or \
+        TalentEffect::SharedBuffs => "a [buff](companions.md#hunters-bond) that lands on you or \
                                       your companion lands on the other too, at the same \
                                       strength; a hex never does"
             .into(),
         TalentEffect::PackTactics { to_hit } => format!(
-            "a creature beside both you and your [companion](allies.md#companions) is flanked: \
+            "a creature beside both you and your [companion](companions.md#companions) is flanked: \
              your melee attacks and your companion's at it, to hit {} (not shots, throws, or \
              spells)",
             signed(to_hit)
@@ -836,7 +836,7 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
             min, max, level, ..
         } => format!(
             "at creation, your race's heirloom weapon (Heirlooms, below) with {min} to {max} \
-             [affixes](magic-items.md#prefixes) rolled at [item level](magic-items.md#finding-them) \
+             [affixes](affixes.md#prefixes) rolled at [item level](magic-items.md#finding-them) \
              {level} (two: [magic](magic-items.md); more: [rare](magic-items.md#rarity)), \
              [identified](magic-items.md#unidentified-items), readied in its own \
              [slot](equipment.md#what-fits-where) if that is free, else carried"

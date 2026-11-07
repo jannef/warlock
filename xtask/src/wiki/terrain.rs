@@ -72,7 +72,8 @@ pub(super) fn local_terrain(content: &Content) -> String {
         }
         if t.plants {
             notes.push(
-                "things grow on it ([Bramble](magic.md#spells-with-a-rule-of-their-own))".into(),
+                "things grow on it ([Bramble](spellcasting.md#spells-with-a-rule-of-their-own))"
+                    .into(),
             );
         }
         if let Some(f) = t.freeze {

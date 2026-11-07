@@ -140,7 +140,7 @@ fn use_text(content: &Content, rules: &PrayerRules, id: PrayerUse) -> (String, S
         ),
         PrayerUse::Wounds => (
             format!(
-                "{} or lost [hit points](combat.md#hit-points)",
+                "{} or lost [hit points](hit-points.md#hit-points)",
                 status("bleeding", "Bleeding")
             ),
             "the bleeding stops, hit points to full".into(),
@@ -309,7 +309,7 @@ pub(super) fn prayer_rites(content: &Content) -> String {
                     TalentEffect::Consecrate { mana, time } => (
                         link(Term::Ability, &def.id, &def.name),
                         format!(
-                            "{mana} [mana](mana.md#spending-it) and {} of prayer in an unholy place: its curse lifted for good (see [Special rooms](special-rooms.md#cursed-rooms))",
+                            "{mana} [mana](mana.md#spending-it) and {} of prayer in an unholy place: its curse lifted for good (see [Special rooms](cursed-and-hallowed.md#cursed-rooms))",
                             spoken(time)
                         ),
                     ),
@@ -333,7 +333,7 @@ pub(super) fn prayer_rites(content: &Content) -> String {
                         (
                             link(Term::Ability, &def.id, &def.name),
                             format!(
-                                "{mana} [mana](mana.md#spending-it) and {} of kneeling: every cell within {radius} of where you knelt (a {side} by {side} square) is [hallowed ground](special-rooms.md#hallowed-ground) for {}; hostile creatures do not step onto it, and whoever stands on it [heals](healing.md#how-fast) and gets [mana back](mana.md#how-fast-it-comes-back) {pace}",
+                                "{mana} [mana](mana.md#spending-it) and {} of kneeling: every cell within {radius} of where you knelt (a {side} by {side} square) is [hallowed ground](cursed-and-hallowed.md#hallowed-ground) for {}; hostile creatures do not step onto it, and whoever stands on it [heals](healing.md#how-fast) and gets [mana back](mana.md#how-fast-it-comes-back) {pace}",
                                 spoken(time),
                                 spoken(lasts)
                             ),

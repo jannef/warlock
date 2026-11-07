@@ -33,8 +33,8 @@ table on its page, or grep the built page: `grep -o 'id="status-[a-z-]*"' wiki/b
 | A spell | `magic.md#spell-ID` | `magic.md#spell-fireball` |
 | A damage type (fire, slashing, …) | `damage-types.md#damage-ID` | `damage-types.md#damage-fire` |
 | A resource (Rage, Stamina, Ki, Focus, Inspiration, Openings, Zeal) | `resources.md#resource-ID` | `resources.md#resource-ki` |
-| The unholy (what holy wrath falls hardest on) | `classes.md#the-paladin` | |
-| A stance | `combat.md#stance-NAME` | `combat.md#stance-frenzy` |
+| The unholy (what holy wrath falls hardest on) | `classes.md#paladin` | |
+| A stance | `combat.md#stance-NAME` | `stances.md#stance-frenzy` |
 | A stat | `stats.md#stat-NAME` | `stats.md#stat-toughness` |
 | A race | `races.md#race-ID` | `races.md#race-half-elf` |
 | A weapon skill | `weapon-skills.md#weapon-skill-ID` | `weapon-skills.md#weapon-skill-long-blades` |
@@ -111,13 +111,14 @@ above.
 | Dungeon, danger level, population | `dungeons.md`, `dungeons.md#who-lives-there-and-how-many` |
 | Out of depth, strays | `dungeons.md#who-lives-there-and-how-many` |
 | Dread, a dread draw | `dungeons.md#dread` |
-| Lairs of the wanted | `dungeons.md#the-lairs-of-the-wanted` |
-| Grundlēas, floors forgotten | `dungeons.md#grundlēas` |
+| Lairs of the wanted | `dungeon-guide.md#the-lairs-of-the-wanted` |
+| Grundlēas, floors forgotten | `dungeon-guide.md#grundlēas` |
 | Special room | `special-rooms.md` (a room: its row) |
-| Forgotten altar, praying | `special-rooms.md#forgotten-altars` |
-| Forge, tempering, Fine, Marvellous, Masterwork, damaged items | `special-rooms.md#forges` |
-| Item damage, corroded, rusted, scorched, withstanding | `objects.md#item-damage` |
-| Healing spring | `special-rooms.md#healing-springs` |
+| Forgotten altar, praying | `altars-forges-springs.md#forgotten-altars` |
+| Forge, tempering, Fine, Marvellous, Masterwork, damaged items | `altars-forges-springs.md#forges` |
+| Item damage, corroded, rusted, scorched, withstanding | `materials.md#item-damage` |
+| Protected items, of Proof | `materials.md#protected-items` |
+| Healing spring | `altars-forges-springs.md#healing-springs` |
 | Trap, hidden trap, known trap | `traps.md#finding-traps` |
 | Disarming | `traps.md#disarming-traps` |
 | Searching, noticing in passing | `searching.md#searching-1`, `searching.md#noticing-in-passing` |
@@ -125,7 +126,7 @@ above.
 | Object, item class | `objects.md#what-an-object-is`, `objects.md#item-classes` |
 | Stack, pile | `objects.md#piles` |
 | Pack, inventory | `objects.md#your-pack` |
-| Material, pieces | `objects.md#materials`, `objects.md#pieces` |
+| Material, pieces | `materials.md#materials`, `materials.md#pieces` |
 | Gem, size and cut | `gems.md`, `gems.md#size-and-cut` |
 | Scroll, reading, unknown scrolls | `scrolls.md`, `scrolls.md#unknown-scrolls` |
 | Making out a scroll, the check to read one (Decipher script's use) | `scrolls.md#making-out-a-scroll` |
@@ -136,8 +137,8 @@ above.
 | Loot, item level | `magic-items.md#finding-them` |
 | Looking at an item, its description | `magic-items.md#looking-at-an-item` |
 | Unidentified, identify | `magic-items.md#unidentified-items` |
-| Affix, prefix, suffix | `magic-items.md#prefixes`, `magic-items.md#suffixes` |
-| Base item | `magic-items.md#base-items` |
+| Affix, prefix, suffix | `affixes.md#prefixes`, `affixes.md#suffixes` |
+| Base item | `affixes.md#base-items` |
 | Unique item | `magic-items.md#unique-items` |
 | Ammunition, arrows, bolts | `ammunition.md` |
 | Burden (Unburdened, Burdened, Strained, Overloaded), carrying limit | `burden.md#burden-1`, `burden.md#how-much-you-can-carry` |
@@ -166,33 +167,33 @@ above.
 | Racial talents | `talents.md#racial-talents` |
 | A talent tree (Vigour, Shadow, Delver, …) | its heading, `talents.md#delver` |
 | Class abilities | `talents.md#class-abilities`, `abilities.md` |
-| The bard, a bard's cap at 30, Travelled hands, Jack of all trades | `classes.md#the-bard` |
+| The bard, a bard's cap at 30, Travelled hands, Jack of all trades | `classes.md#bard` |
 | Songs (Inspire, the Lullaby), singing, a song's degrees, shaking a song off, Virtuoso | `abilities.md#songs` |
-| Prestige class, the Hunter, total level, a class's cap (last level) | `classes.md#prestige-classes` (a prestige class's table: its heading, `classes.md#hunter`) |
-| A calling, being called | `classes.md#callings` |
+| Prestige class, the Hunter, total level, a class's cap (last level) | `prestige-classes.md#prestige-classes` (a prestige class's table: its heading, `prestige-classes.md#hunter`) |
+| A calling, being called | `prestige-classes.md#callings` |
 | Spirit weapon | `abilities.md#ability-spirit-weapon` |
 | The Strange Spirit, the oath | `npcs.md#the-strange-spirit` |
 | The priest's prayer (Orison, Prayer, Litany, Benediction, Miracle), what it answers | `prayer.md`, `prayer.md#what-it-answers` (a use: its row) |
 | Strain, a fizzled prayer | `prayer.md#strain` |
 | The holy and the dark powers, the dark face's twists (Whisper, Invocation, Rite, Pact) | `prayer.md#the-holy-and-the-dark` |
 | Communion with the dark | `talents.md#talent-communion`, `prayer.md#communion-and-sanctuary` |
-| Hallowed ground, dreaded ground (Sanctuary) | `special-rooms.md#hallowed-ground` |
+| Hallowed ground, dreaded ground (Sanctuary) | `cursed-and-hallowed.md#hallowed-ground` |
 | Stats (Strength, Dexterity, …), score | `stats.md` (a stat: its row) |
 | Modifier | `stats.md#modifiers` |
 | Potential | `stats.md#potentials` |
 | Stat training, training marks of a stat | `stats.md#training` |
-| The daily check | `stats.md#the-daily-check` |
+| The daily check | `stats.md#the-checks` |
 | Drained stats, stat damage | `stats.md#drained-stats`, `diseases.md#stat-damage` |
 | Skills, trained and untrained | `skills.md`, `skills.md#what-skills-give` (a skill: its row) |
 | Skill rolls, skill marks | `skills.md#getting-better` |
 | A skill's ladder (what it gives by value: Music's song degrees and difficulty, …) | `skills.md#what-skills-give` |
-| Slipping past (a creature with darkvision, unlit) | `skills.md#slipping-past` |
-| Stealing | `skills.md#stealing` |
-| Feinting (a lie in combat, Bluff's use) | `skills.md#feinting` |
-| Intimidating (a threat at one foe) | `skills.md#intimidating` |
-| Treating yourself, binding a wound | `skills.md#treating-yourself` |
-| Fletching, brittle arrows and bolts, a knife | `skills.md#fletching` |
-| Foraging | `skills.md#foraging` |
+| Slipping past (a creature with darkvision, unlit) | `skill-uses.md#slipping-past` |
+| Stealing | `skill-uses.md#stealing` |
+| Feinting (a lie in combat, Bluff's use) | `skill-uses.md#feinting` |
+| Intimidating (a threat at one foe) | `skill-uses.md#intimidating` |
+| Treating yourself, binding a wound | `skill-uses.md#treating-yourself` |
+| Fletching, brittle arrows and bolts, a knife | `skill-uses.md#fletching` |
+| Foraging | `skill-uses.md#foraging` |
 | Abilities, the abilities menu | `abilities.md#the-abilities-menu` |
 | Experience, XP, levels | `experience.md`, `experience.md#levels` |
 | The level curve to 100, the XP of every level | `experience.md#levels` |
@@ -207,12 +208,12 @@ above.
 | Protection | `combat.md#protection` |
 | Resistance, resists, immune, vulnerable | `damage-types.md#armour-and-resistance` |
 | Big hit | `combat.md#damage` |
-| Stance | `combat.md#stances` (a stance: its row) |
-| Free blow, cleave | `combat.md#free-blows` |
-| Stamina | `combat.md#stamina` |
-| Hit points, regeneration | `combat.md#hit-points`, `healing.md#how-fast` |
-| Death, permadeath | `combat.md#death`, `saving.md` |
-| Blood, stains | `combat.md#blood` |
+| Stance | `stances.md#stances` (a stance: its row) |
+| Free blow, cleave | `stances.md#free-blows` |
+| Stamina | `stances.md#stamina` |
+| Hit points, regeneration | `hit-points.md#hit-points`, `healing.md#how-fast` |
+| Death, permadeath | `hit-points.md#death`, `saving.md` |
+| Blood, stains | `hit-points.md#blood` |
 | Ranged combat, shooting, throwing | `ranged.md#shooting-and-throwing` |
 | Missile weapon, launcher, readied missiles | `ranged.md#getting-ready` |
 | Shot distance, long range, a shot from beside the target | `ranged.md#distance` |
@@ -233,26 +234,26 @@ above.
 | Magic, spells, casting | `magic.md`, `magic.md#the-spells` |
 | Learning (what a scroll teaches for certain, Spellcraft's curve) | `magic.md#learning` |
 | Spell level, cantrip | `magic.md#spell-levels` |
-| Ladder, rung, base | `magic.md#the-spells`, `magic.md#how-a-spell-grows` |
-| What talents and items do to a spell (a rung, bigger dice, a bonus, a reroll, a rider) | `magic.md#how-a-spell-grows` |
-| Spell shape (bolt, burst, cone, …) | `magic.md#shapes` |
-| Spell type, what a spell of a damage type does beyond its damage | `magic.md#spell-types` |
-| Arc, conducting through water, what an electricity spell does | `magic.md#spell-types` |
+| Ladder, rung, base | `magic.md#the-spells`, `spellcasting.md#how-a-spell-grows` |
+| What talents and items do to a spell (a rung, bigger dice, a bonus, a reroll, a rider) | `spellcasting.md#how-a-spell-grows` |
+| Spell shape (bolt, burst, cone, …) | `spellcasting.md#shapes` |
+| Spell type, what a spell of a damage type does beyond its damage | `spellcasting.md#spell-types` |
+| Arc, conducting through water, what an electricity spell does | `spellcasting.md#spell-types` |
 | Burning | `status-effects.md#burning` |
 | Corroded | `status-effects.md#corroded` |
-| How a spell resolves (attack, auto, area, touch) | `magic.md#how-a-spell-finds-its-target` |
+| How a spell resolves (attack, auto, area, touch) | `spellcasting.md#how-a-spell-finds-its-target` |
 | Mishap | `magic.md#learning-spells-from-scrolls` |
 | Studying a spell from a scroll, overreach | `magic.md#learning-spells-from-scrolls` |
-| Wand, rod, charges | `magic.md#wands`, `magic.md#rods` |
-| Spell circle, buff, hex (as seen on a creature) | `magic.md#spell-circles` |
+| Wand, rod, charges | `wands-and-rods.md#wands`, `wands-and-rods.md#rods` |
+| Spell circle, buff, hex (as seen on a creature) | `spell-circles.md#spell-circles` |
 | Resource (Rage, Ki, Focus, …) | `resources.md` (a resource: its row; Rage: `resources.md#rage`) |
 | **Creatures and people** | |
 | Creature, monster | `creatures.md` (a creature: its row) |
 | Faction, hostile, peaceful | `creatures.md#factions` |
 | What creatures do, lurking | `creatures.md#what-they-do` |
 | Peaceful folk, the fey courts | `creatures.md#factions` |
-| Incorporeal | `creatures.md#incorporeal-creatures` |
-| Elementals | `creatures.md#elementals` |
+| Incorporeal | `creature-bodies.md#incorporeal-creatures` |
+| Elementals | `creature-bodies.md#elementals` |
 | Grades: a greater or lesser creature (big, scrawny, ancient, withered) | `creatures.md#grades` |
 | A creature's numbers (stats, hit points, attacks) | `creature-numbers.md` |
 | A creature's craft for surprise (its sneak attack, initiative, spot) | `creature-numbers.md#surprise` |
@@ -260,12 +261,12 @@ above.
 | Mimic | `mimics.md` |
 | Ally, your wolf, orders (Come to heel, Hold here, Set on) | `allies.md`, `allies.md#orders` |
 | Summon, summon spell, a call (the druid's) | `allies.md#summons`, `allies.md#the-druids-calls` |
-| Companion, animal companion, the nose, a companion's level (grade) | `allies.md#companions`, `allies.md#starting-companions`, `allies.md#growth` |
-| The collar, Give | `allies.md#the-collar` |
-| Tame, taming | `allies.md#taming` |
-| Familiar, a familiar's touch, what it goes for, calling one | `allies.md#familiars`, `allies.md#the-touch`, `allies.md#what-it-goes-for`, `allies.md#call-familiar` |
-| Familiar's sight | `allies.md#familiars-sight` |
-| Hunter's bond, shared sight, shared buffs | `allies.md#hunters-bond` |
+| Companion, animal companion, the nose, a companion's level (grade) | `companions.md#companions`, `companions.md#starting-companions`, `companions.md#growth` |
+| The collar, Give | `companions.md#the-collar` |
+| Tame, taming | `companions.md#taming` |
+| Familiar, a familiar's touch, what it goes for, calling one | `familiars.md#familiars`, `familiars.md#the-touch`, `familiars.md#what-it-goes-for`, `familiars.md#call-familiar` |
+| Familiar's sight | `familiars.md#familiars-sight` |
+| Hunter's bond, shared sight, shared buffs | `companions.md#hunters-bond` |
 | People, townsfolk, chatting, topics | `npcs.md#chatting` |
 | Services (cure, mending, identification) | `npcs.md#services` |
 | The pedlar's offer, his wares | `npcs.md#the-pedlars-offer` |
@@ -276,9 +277,9 @@ above.
 | Controls, keys, rebinding | `controls.md`, `controls.md#rebinding-keys` |
 | Look mode | `controls.md#look-mode` |
 | Aiming | `controls.md#aiming` |
-| Message line, status bar | `controls.md#the-screen`, `controls.md#messages` |
-| Character screen, info pages | `controls.md#character`, `controls.md#info-pages` |
-| The skills screen | `controls.md#skills` |
-| Main menu, pause menu | `controls.md#menus` |
+| Message line, status bar | `the-screen.md#the-screen`, `the-screen.md#messages` |
+| Character screen, info pages | `the-screen.md#character`, `the-screen.md#info-pages` |
+| The skills screen | `the-screen.md#skills` |
+| Main menu, pause menu | `the-screen.md#menus` |
 | Settings, reduced effects, palettes | `settings.md`, `settings.md#palettes` |
 | Saving, autosave | `saving.md#when-the-game-saves` |

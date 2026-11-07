@@ -2,9 +2,10 @@
 
 What you see depends on your eyes. Each vision type has three properties:
 
-- how much [light](light.md#what-light-is) a cell needs before you can see it (a **threshold**; full light is 100%),
-- a **darkvision radius**: cells this close are visible however dark they are, and
-- whether you **see UV** [light](light.md#what-light-is).
+- how much [light](light.md#what-light-is) a cell needs before you can see it (a **threshold**;
+  full light is 100%);
+- a **darkvision radius**: cells this close are visible however dark they are;
+- whether you **see UV** light.
 
 The brightness of a cell is the weighted brightness of its red, green, and blue light (green counts
 most, blue least). For eyes that see UV, [UV](light.md#what-light-is) light adds to it. For other eyes UV does not exist at
@@ -26,20 +27,25 @@ all: they do not see it, and it does not light anything for them.
   violet tint, and only if you see UV.
 
 Your vision type comes from your race: the table on [Races](races.md) lists each race's eyes.
-[Talents](talents.md) of the Shadow tree change them: **[Night eyes](talents.md#talent-night-eyes)** (normal eyes) halves the light
-a cell needs, **[Dark adaptation](talents.md#talent-dark-adaptation)** (darkvision or low-light) adds 2 cells
-of darkvision: darkvision reaches 2 cells farther, and low-light eyes see 2 cells around them
-however dark it is. Your eyes keep their type's name; the
-talents only change what it does. **[Blood scent](talents.md#talent-blood-scent)** (darkvision) sees a [bleeding](status-effects.md#bleeding) [creature](creatures.md) in your
-line of sight within 9 cells however dark it is.
+[Talents](talents.md) of the Shadow tree change them:
 
-[Drow](races.md#race-drow) eyes are also **light-blind**: in strong light (a perceived brightness of 250 or more on your
-own cell: the [sun](sun.md#the-suns-path) well up under a clear sky, a bright fire close by) you are dazzled and see
-nothing farther than ten cells, whatever your vision type (see
-[Races](races.md#the-evil-races)).
+- **[Night eyes](talents.md#talent-night-eyes)** (normal eyes) halves the light a cell needs.
+- **[Dark adaptation](talents.md#talent-dark-adaptation)** (darkvision or low-light) adds 2 cells of
+  darkvision. Darkvision reaches 2 cells farther, and low-light eyes see 2 cells around them
+  however dark it is.
+- **[Blood scent](talents.md#talent-blood-scent)** (darkvision) sees a
+  [bleeding](status-effects.md#bleeding) [creature](creatures.md) in your line of sight within 9
+  cells, however dark it is.
 
-A [developer key](controls.md#developer-keys)
-(`F3`) cycles through the types for trying them out.
+Your eyes keep their type's name; the talents only change what it does.
 
-Creatures have eyes of these types too, and see by the same rules (see
-[Creatures](creatures.md)); the game does not tell you which eyes a creature has.
+[Drow](races.md#race-drow) eyes are also **light-blind**. In strong light you are dazzled and see
+nothing farther than ten cells, whatever your vision type (see [Races](races.md#the-evil-races)).
+Strong light means a perceived brightness of 250 or more on your own cell: the
+[sun](sun.md#the-suns-path) well up under a clear sky, or a bright fire close by.
+
+A [developer key](the-screen.md#developer-keys) (`F3`) cycles through the types for trying them
+out.
+
+Creatures have eyes of these types too, and see by the same rules (see [Creatures](creatures.md)).
+The game does not tell you which eyes a creature has.

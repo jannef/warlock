@@ -1,19 +1,21 @@
 # Your story
 
-Every [character](character.md) you make has a youth behind them. When the run begins, fate
-tells it: a short story in four paragraphs, one sentence for each **chapter** of a life. Nothing
-in it is chosen, and there is no way back from it: it is told after every choice you made in
-character creation, and it may change what you start with.
+Every [character](character.md) you make has a youth behind them. When the run begins, fate tells
+it: a short story in four paragraphs, one sentence for each **chapter** of a life. You choose
+nothing in it, and you cannot undo it. It is told after every choice you made in character
+creation, and it may change what you start with.
 
 ## When it is told
 
-The story is shown once, as the run begins: right after you start the run from the summary of
-[character creation](character.md), it opens over the first turn, before you can move. Nothing
-on it can be chosen; `Enter` (or `Esc`) goes on into the run, and the arrow keys scroll it on a
-small window. Afterwards it is page 9 of the [info pages](controls.md#info-pages), "Story": open
-any info page and press `9`. A character who has no story (the start of a scenario played as its
-own character, or a character saved before stories were told) reads "Your story is not written."
-there. A run you continue is never shown it again, and nothing on the death screen repeats it.
+The story is shown once, as the run begins. Right after you start the run from the summary of
+[character creation](character.md), it opens over the first turn, before you can move. There is
+nothing to choose on it. `Enter` (or `Esc`) goes on into the run, and the arrow keys scroll it on a
+small window.
+
+Afterwards it is page 9 of the [info pages](the-screen.md#info-pages), "Story": open any info page
+and press `9`. A character with no story reads "Your story is not written." there. That is the
+start of a scenario played as its own character, or a character saved before stories were told. A
+run you continue never shows the story again, and the death screen does not repeat it.
 
 The chapters, in order:
 
@@ -26,83 +28,93 @@ The chapters, in order:
 | The trial | what it cost you, and what you kept |
 | Fortune | what was given you |
 | Leaving | why you left |
-| The companion | how the beast at your side came to be yours: told only to one who begins with a [companion](allies.md#companions) or a [familiar](allies.md#familiars) |
+| The companion | how the beast at your side came to be yours: told only to one who begins with a [companion](companions.md#companions) or a [familiar](familiars.md#familiars) |
 | The road | how you came to where the run begins: [the Ascmearc](ascmearc.md)'s own chapter |
 
-Each sentence fits the character it is told of: a line may ask for a [race](races.md), a
-[class](classes.md), a gender, a birth animal or element, a [lucky day](horoscope.md#lucky-days),
-your starting [alignment](alignment.md), the [talents](talents.md) and [skills](skills.md) you
-start with, your age, the beast at your side, and what the story has already said (a foundling's
-leaving is not a quarrel with their parents). A whole chapter may be for some characters only:
-The companion is told to a [ranger](classes.md#ranger) and a [witch](classes.md#witch), who each begin with a beast, and skipped for
-everyone else, whose story is no shorter for it.
+Each sentence fits the character it is told of. A line may ask for any of these:
+
+- a [race](races.md), a [class](classes.md), or a gender;
+- a birth animal or element, or a [lucky day](horoscope.md#lucky-days);
+- your starting [alignment](alignment.md);
+- the [talents](talents.md) and [skills](skills.md) you start with;
+- your age, or the beast at your side;
+- what the story has already said (a foundling's leaving is not a quarrel with their parents).
+
+A whole chapter may be for some characters only. The companion is told to a
+[ranger](classes.md#ranger) and a [witch](classes.md#witch), who each begin with a beast. Everyone
+else skips it, and their story is no shorter for it.
 
 ## What a story gives
 
 A sentence may give or take:
 
-- **stat points**: the score and its [potential](stats.md#potentials) move together, one or two
-  points of a [stat](stats.md) a sentence; a score never falls below 1;
-- **gold**: a purse, or (taken) never below none;
-- **an item**: as the [starting kit](starting-kit.md) gives one, worn or wielded if a slot is
-  free; a [magic item](magic-items.md) from a story is already [identified](magic-items.md#unidentified-items)
-  (you grew up with it), and a [scroll](scrolls.md) from it is known;
-- **a skill**: a start in a [skill](skills.md), or more of one you have;
-- **marks** in a [weapon skill](weapon-skills.md#marks-and-ranks), never a rank;
-- a nudge to your starting [alignment](alignment.md);
-- **a [talent](talents.md#choices-and-prerequisites)**, for life, whatever
-  it would ask of you (the flux's [Hardy](talents.md#talent-hardy)): never one you hold already,
-  so a sentence that would give it is not told to you; a class whose table names it later gives
-  you a [talent pick](talents.md) in its place at that level. The Talents page marks it "(story)";
-- **a flaw**: one of the [birth signs'](horoscope.md#what-a-sign-does) flaws, for life, likewise; marked
-  "(story, flaw)".
+- **Stat points.** One or two points of a [stat](stats.md) a sentence; the score and its
+  [potential](stats.md#potentials) move together. A score never falls below 1.
+- **Gold.** A purse; when gold is taken, never below none.
+- **An item**, as the [starting kit](starting-kit.md) gives one, worn or wielded if a slot is free.
+  A [magic item](magic-items.md) from a story is already
+  [identified](magic-items.md#unidentified-items) (you grew up with it), and a [scroll](scrolls.md)
+  from it is known.
+- **A skill**: a start in a [skill](skills.md), or more of one you have.
+- **Marks** in a [weapon skill](weapon-skills.md#marks-and-ranks), never a rank.
+- **A nudge** to your starting [alignment](alignment.md).
+- **A [talent](talents.md#choices-and-prerequisites)**, for life, whatever it would ask of you (the
+  flux sentence gives [Hardy](talents.md#talent-hardy)). It is never one you hold already: a
+  sentence that would give one is not told to you. If your class's table names that talent later,
+  it gives you a [talent pick](talents.md) in its place at that level. The Talents page marks it
+  "(story)".
+- **A flaw**: one of the [birth signs'](horoscope.md#what-a-sign-does) flaws, for life, in the same
+  way. It is marked "(story, flaw)".
 
-Nothing limits what a story gives or takes in all: a kind story may give a lot, and a grim one
-may take a lot, and nothing protects you from either. The game tells you the story in words
-only; the scores, the pack, and the skills show what it did.
+Nothing limits what a story gives or takes in all. A kind story may give a lot, a grim one may take
+a lot, and nothing protects you from either. The game tells you the story in words only; your
+scores, your pack, and your skills show what it did.
 
-The [heritage talents](talents.md#heritage-only-at-character-creation) are not paid twice: with
-[Family wealth](talents.md#talent-family-wealth) your parents are always the old money the talent
-gave you, and the story gives no more gold for it; with
-[Father's sword](talents.md#talent-fathers-sword) the story tells of the blade you carry, and
-gives no other heirloom.
+The [heritage talents](talents.md#heritage-only-at-character-creation) are not paid twice. With
+[Family wealth](talents.md#talent-family-wealth), your parents are always the old money the talent
+gave you, and the story gives no more gold for it. With
+[Father's sword](talents.md#talent-fathers-sword), the story tells of the blade you carry, and gives
+no other heirloom.
 
 ## How rare
 
-Each chapter is drawn in two steps: first how rare its sentence is (its **kind**), then a
-sentence of that kind that fits you, by the weights below (if none fits, a sentence of the next
-commoner kind; every chapter has a plain common sentence that fits anyone). The kinds:
+Each chapter is drawn in two steps. First comes how rare its sentence is (its **kind**). Then a
+sentence of that kind that fits you is drawn, by the weights below. If none fits, a sentence of the
+next commoner kind is drawn; every chapter has a plain common sentence that fits anyone. The kinds:
 
-- **Common**: the plain sentences, the small turns, the griefs with something kept;
-- **Uncommon**: a gift, perhaps at a price;
-- **Rare**: a thing people tell; always good news;
+- **Common**: the plain sentences, the small turns, the griefs with something kept.
+- **Uncommon**: a gift, perhaps at a price.
+- **Rare**: a thing people tell; always good news.
 - **Fateful**: once in a life.
 
-The odds of each kind, for every chapter as it is drawn (the expected counts are for a story in
-[the Ascmearc](ascmearc.md), whose road is the eighth chapter), and what a sentence of each kind
-is worth:
+The odds of each kind, for every chapter as it is drawn, and what a sentence of each kind is worth.
+The expected counts are for a story in [the Ascmearc](ascmearc.md), whose road is the eighth
+chapter.
 
 {{#include generated/background-tiers.md}}
 
-What a sentence gives is weighed in points, and a sentence's worth (what it gives less what it
-takes) must lie in its kind's range above. Nothing adds up a whole story's points: they only keep
-each sentence true to its kind.
+What a sentence gives is weighed in points. A sentence's worth, what it gives less what it takes,
+must lie in its kind's range above. Nothing adds up a whole story's points; they only keep each
+sentence true to its kind.
 
 {{#include generated/background-points.md}}
 
-Only a character you make is told a story; a run that is resumed keeps the story it had.
+Only a character you make is told a story. A run that is resumed keeps the story it had.
 
 ## Every sentence
 
-Every sentence of every chapter, with what it asks for, what it gives, and what it leaves for
-the chapters after it. A sentence's **weight** is its share among the sentences of its kind that
-fit: a weight of 4 is told twice as often as a weight of 2. **Tags** are what the story
-remembers: a later sentence may ask for one ("after `orphan`") or refuse one ("never after
-`deep`"). Some sentences also choose words a later one uses: `{guardian}` (who raised you: "your
-family" until a sentence says otherwise), `{home}` ("home"), and `{trade}` ("your trade").
+Every sentence of every chapter, with what it asks for, what it gives, and what it leaves for the
+chapters after it.
 
-Dice are written as the game rolls them: 2d4 is two four-sided dice added together. A skill's
-dice start the [skill](skills.md) if you were not trained in it, or raise it if you were.
+- A sentence's **weight** is its share among the sentences of its kind that fit. A weight of 4 is
+  told twice as often as a weight of 2.
+- **Tags** are what the story remembers. A later sentence may ask for one ("after `orphan`") or
+  refuse one ("never after `deep`").
+- Some sentences choose words a later one uses: `{guardian}` (who raised you: "your family" until a
+  sentence says otherwise), `{home}` ("home"), and `{trade}` ("your trade").
+
+Dice are written as the game rolls them: 2d4 is two four-sided dice added together. A skill's dice
+start the [skill](skills.md) if you were not trained in it, or raise it if you were.
 [Weapon marks](weapon-skills.md#marks-and-ranks) bring you toward your next rank, never past it.
 
 ### Parents
@@ -135,10 +147,11 @@ dice start the [skill](skills.md) if you were not trained in it, or raise it if 
 
 ### The companion
 
-Told only to one who begins with an [animal companion](allies.md#companions) or a
-[familiar](allies.md#familiars): one sentence for each beast a companion's start may bring, one for each
-beast a familiar's start may bring (the witch's own tales, apart from the ranger's), and a plain one
-for a beast with no tale of its own (the rare black hound and panther of a witch's start).
+Told only to one who begins with an [animal companion](companions.md#companions) or a
+[familiar](familiars.md#familiars). There is one sentence for each beast a companion's start may
+bring, and one for each beast a familiar's start may bring (the witch's own tales, apart from the
+ranger's). A plain one covers a beast with no tale of its own: the rare black hound and panther of a
+witch's start.
 
 {{#include generated/background-companion.md}}
 

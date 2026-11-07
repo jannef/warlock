@@ -1,8 +1,10 @@
 # Controls
 
-The game is played with the keyboard. These are the default keys; every one of them can be
-rebound (see [Rebinding keys](#rebinding-keys)), and the hints on screen always name your keys.
-The in-game `?` screen is authoritative: it is generated from your current key bindings.
+The game is played with the keyboard. These are the default keys for play. You can rebind every
+one of them (see [Rebinding keys](#rebinding-keys)), and the hints on screen always name your own
+keys. In the game, `?` shows the list made from your current keys, so trust it over this page.
+[The screen](the-screen.md) explains what the window shows: the map, the message line, the status
+bar, and the info pages.
 
 | Command | Keys |
 |---|---|
@@ -24,21 +26,21 @@ The in-game `?` screen is authoritative: it is generated from your current key b
 | [Pay](shops.md#buying) the [shopkeeper](creatures.md#creature-shopkeeper) | `p` |
 | [Equipment](equipment.md) ([wear and wield](equipment.md#what-fits-where)) | `i` |
 | [Inventory](objects.md#your-pack) (your pack) | `I` |
-| [Character](#character) (your [stats](stats.md) and weight) | `@` |
-| [Skills](#skills) | `A` |
+| [Character](the-screen.md#character) (your [stats](stats.md) and weight) | `@` |
+| [Skills](the-screen.md#skills) | `A` |
 | [Weapon skills](weapon-skills.md) | `W` |
 | [Quest log](quests.md#the-quest-log) | `q` |
 | [Talents](talents.md) (yours, and every other with what it needs) | `G` |
-| [Message history](#messages) (see [Messages](#messages)) | `v` |
-| [Info page](#info-pages) 1 to 9 (while an info screen is open) | `1` to `9` |
-| Next / previous [info page](#info-pages) (wraps) | `Tab` / `Shift`+`Tab` |
+| [Message history](the-screen.md#messages) (see [Messages](the-screen.md#messages)) | `v` |
+| [Info page](the-screen.md#info-pages) 1 to 9 (while an info screen is open) | `1` to `9` |
+| Next / previous [info page](the-screen.md#info-pages) (wraps) | `Tab` / `Shift`+`Tab` |
 | [Rest](resting.md#how-resting-works) | `b` |
 | Consume ([eat](food.md#eating)) | `e` |
 | Read a [scroll](scrolls.md) | `r`, choose it, then aim a [spell](magic.md) (see [Scrolls](scrolls.md)) |
 | [Look around](#look-mode) | `l` |
 | [Shoot or throw](ranged.md#shooting-and-throwing) what is in your [Missile weapon slot](ranged.md#getting-ready) | `t`, then [aim](#aiming) (see below) |
 | [Throw](ranged.md#shooting-and-throwing) something from your [pack](objects.md#your-pack) | `T`, choose it, then [aim](#aiming) |
-| More aggressive combat [stance](combat.md#stances), more defensive (no time passes) | `+`, `-` |
+| More aggressive combat [stance](stances.md#stances), more defensive (no time passes) | `+`, `-` |
 | [Abilities](abilities.md#the-abilities-menu): everything you can do because of who you are, in one menu | `a` (see [Abilities](abilities.md)) |
 | Use the [ability](abilities.md) you used last again | `X` |
 | [Bash](abilities.md#ability-shield-bash) with your shield (an [ability](abilities.md): also in the [abilities menu](abilities.md#the-abilities-menu)) | no key until you bind one, then a direction |
@@ -48,21 +50,25 @@ The in-game `?` screen is authoritative: it is generated from your current key b
 | Next target while [aiming](#aiming) (with Shift: the one before) | `Tab` |
 | Use a tool: light, hood, or douse a [lantern](lantern.md) ready in the Tool [slot](equipment.md#what-fits-where); else [dig](digging.md) into a wall with a pick-axe | `u` (to dig, then a direction) |
 | Show or hide the controls | `?` |
-| Show the next [messages](#messages) at `--more--` / skip the rest | `Space` or `Enter` / `Esc` |
+| Show the next [messages](the-screen.md#messages) at `--more--` / skip the rest | `Space` or `Enter` / `Esc` |
 | Yes / no, when a question asks | `y` / `n` |
-| [Pause menu](#menus) | `Esc` |
+| [Pause menu](the-screen.md#menus) | `Esc` |
 
-The default keys are [ADOM](https://www.adom.de/)'s wherever ADOM has the command, so ADOM
-players find them where their fingers expect them. Movement is the numpad and the arrows, as in
-ADOM (the arrows move in four directions only); if you prefer the vi keys (`hjklyubn`), bind them
-in Controls (`k`, `l`, and `u` are Kick, Look around, and Use a tool, as in ADOM: give those
-other keys first). Commands ADOM does not have, or has only behind a prefix or `Ctrl` (which the
-game does not bind), have keys ADOM leaves free:
-the [message history](#messages) `v`, [rest](resting.md#how-resting-works) `b`, the [talents](talents.md) `G`, and the quick repeat of an [ability](abilities.md) `X`. Search for a while is
-search's key in capitals, `S` (ADOM's save and quit): save and quit from the pause menu (`Esc`),
-or bind a quick key for it in Controls. Symbol keys such as
-`<`, `>`, and `?` are matched by the character they produce, so they work on other keyboard
-layouts.
+Wherever [ADOM](https://www.adom.de/) has the same command, the default key is ADOM's, so ADOM
+players find keys where their fingers expect them. You move with the numpad or the arrows; the
+arrows move in four directions only. If you prefer the vi keys (`hjklyubn`), bind them in
+Controls. Give Kick, Look around, and Use a tool other keys first, since they use `k`, `l`, and
+`u`, as in ADOM.
+
+Some commands ADOM does not have, or has only behind a prefix or `Ctrl`, which this game does not
+bind. They get keys ADOM leaves free: the [message history](the-screen.md#messages) `v`,
+[rest](resting.md#how-resting-works) `b`, the [talents](talents.md) `G`, and repeating an
+[ability](abilities.md) `X`. Searching for a while is `S`, search's key in capitals. In ADOM that
+key saves and quits; here you save and quit from the pause menu (`Esc`), or bind a key for it in
+Controls.
+
+Symbol keys such as `<`, `>`, and `?` are matched by the character they type, so they work on any
+keyboard layout.
 
 ## Menus and screens
 
@@ -89,275 +95,194 @@ In a text field (your character's [name](character.md#name)), every key types wh
 | A random name | `Tab` |
 | Back | `Esc`, always |
 
-On a list that names its rows by letter (your [pack](objects.md#your-pack), a [pile](objects.md#piles), the [equipment](equipment.md#what-fits-where) slots) or by number
-(the [topics](npcs.md#chatting) someone offers), those letters and digits always pick rows, whatever
-else they are bound to. A list of items is grouped by kind of item ([weapons](objects.md#class-melee-weapons), [armour](objects.md#class-body-armour), [food](objects.md#class-food), ...)
-and shows a page at a time: the letters name the rows of the page you see, starting again at
-`a` on every page.
+Some lists name their rows by letter, such as your [pack](objects.md#your-pack), a
+[pile](objects.md#piles), or the [equipment](equipment.md#what-fits-where) slots. Others name them
+by number, such as the [topics](npcs.md#chatting) someone offers. On those lists the letters and
+digits always pick rows, whatever else they are bound to.
+
+A list of items is grouped by kind ([weapons](objects.md#class-melee-weapons),
+[armour](objects.md#class-body-armour), [food](objects.md#class-food), and so on) and shows one
+page at a time. The letters name the rows of the page you see, and start again at `a` on every
+page.
 
 ## Rebinding keys
 
-Keys of menus, lists, screens, and prompts are fixed; new ones are never rebindable. Where the Controls screen lists such keys, it is the current state, and a later update may fix them. You can rebind the keys of play in the Controls screen (main menu or pause menu, then
-Controls). It lists the commands in groups, by where they are used: in play, while aiming, in the
-[rest prompt](resting.md#how-resting-works), at `--more--`, on menus and screens, in text fields, on the [info pages](#info-pages), in the question windows, and (in builds
-that have them) the developer keys; last come the [ability](abilities.md#keys-of-their-own) keys, unbound until you give one a key. Select a command, press `Enter`, then press the new key. It
-becomes the command's main key, and its other keys (such as the numpad) stay. A key another
-command of the same group already uses moves to the new command, and the screen says what moved;
-the old command keeps its other keys, or shows `(none)` if that was its only one. The same key
-can mean different things in different groups: `Tab` is the next target while [aiming](#aiming) and the next
-page on an [info screen](#info-pages), and `d` [drops](objects.md#dropping) in play but [rests](resting.md#how-resting-works) until dawn in the rest prompt.
+You rebind the keys of play in the Controls screen: open the main menu or the pause menu, then
+Controls. The keys of menus, lists, screens, and prompts are fixed. Controls still lists some of
+them as rebindable today; a later update may fix those too.
 
-You cannot lock yourself out: `Esc` always backs out of every screen and cancels every prompt,
-and it cannot be taken; neither can the last key of up, down, or choose on the menus, which you
-need to come back to Controls, nor the last key that accepts a text field, which you need to name
-a new character. `Delete` resets the selected command to its default keys, and
-**Reset all keys** resets every command. If your keys still get in the way, start the game with
-`warlock --reset-keys`: every key goes back to its default, and the game starts as usual. Your keys
-are kept with your [settings](settings.md).
+Controls lists the commands in groups, by where they are used: in play, while aiming, in the
+[rest prompt](resting.md#how-resting-works), at `--more--`, on menus and screens, in text fields,
+on the [info pages](the-screen.md#info-pages), in the question windows, and (in builds that have
+them) the developer keys. Last come the [ability](abilities.md#keys-of-their-own) keys, which have
+no key until you give them one.
+
+To rebind, select a command, press `Enter`, then press the new key. It becomes the command's main
+key, and its other keys (such as the numpad) stay. If another command in the same group already
+uses that key, the key moves to the new command and the screen says what moved. The old command
+keeps its other keys, or shows `(none)` if that was its only one.
+
+The same key can mean different things in different groups. `Tab` is the next target while
+[aiming](#aiming) and the next page on an [info screen](the-screen.md#info-pages). `d`
+[drops](objects.md#dropping) in play but [rests](resting.md#how-resting-works) until dawn in the
+rest prompt.
+
+You cannot lock yourself out. `Esc` always backs out of every screen and cancels every prompt, and
+it cannot be taken. Nor can the last key for up, down, or choose on the menus (you need them to
+get back to Controls), or the last key that accepts a text field (you need it to name a new
+character). `Delete` resets the selected command to its default keys, and **Reset all keys**
+resets every command. If your keys still get in the way, start the game with
+`warlock --reset-keys`: every key goes back to its default, and the game starts as usual. Your
+keys are kept with your [settings](settings.md).
 
 ### Sharing your keys
 
 **Export keys…** in Controls writes all your keys to a file, `warlock-keys.toml`, in the folder
-with your settings (Settings, then Files, shows where); in the browser version it downloads the
-file. **Import keys…** reads it back (in the browser, choose the file). Copy it to another
-computer or install, back it up, or share it. It is a plain text file you can edit: each command
-by name with its keys, in groups like the Controls screen's, as in `descend = [">"]`. An import
-changes only the commands the file lists, moves keys the way rebinding does, skips anything it does
-not know (and says so), and is saved at once. From the command line, `warlock --export-keys FILE`
-and `warlock --import-keys FILE` do the same. The desktop downloads come with the default keys as
-such a file, `keymaps/default.toml`.
+with your settings (Settings, then Files, shows where). In the browser it downloads the file.
+**Import keys…** reads it back; in the browser, you choose the file. Use it to copy your keys to
+another computer, to back them up, or to share them.
+
+It is a plain text file you can edit. It lists each command by name with its keys, in the same
+groups as the Controls screen, as in `descend = [">"]`. An import changes only the commands the
+file lists and moves keys the way rebinding does. It skips anything it does not know, says so,
+and is saved at once. From the command line, `warlock --export-keys FILE` and
+`warlock --import-keys FILE` do the same. The desktop downloads come with the default keys in such
+a file, `keymaps/default.toml`.
 
 ## Prompts
 
-Opening, closing, and [kicking](doors.md#kicking) a [door](doors.md), [bashing](abilities.md#ability-shield-bash) with your shield, and [stealing](abilities.md#ability-steal) ask `In which
-direction? (Esc to cancel)` on the [message line](#messages), [digging](digging.md) asks `Dig in which direction? (Esc to cancel)` (see
-[Digging and walls](digging.md)), [chatting](npcs.md#chatting) with several creatures near asks `Talk in which
-direction? (Esc to cancel)` (see [People and talk](npcs.md)), [disarming a trap](traps.md#disarming-traps) asks `Disarm in
-which direction? (Esc to cancel)` (see [Traps](traps.md#disarming-traps)), and
-[resting](resting.md#how-resting-works) asks how long (see [Resting](resting.md)). Answer with a direction or the key shown, or
-press `Esc` to cancel. Pressing any other command cancels the prompt. The [rest prompt's](resting.md#how-resting-works) keys (`h`,
-`d`, `n`) are their own: they can be rebound without touching the keys of play (where `d`
-drops), and the prompt names them as bound.
+Some commands ask a question on the [message line](the-screen.md#messages) before they act:
+
+- Opening, closing, or [kicking](doors.md#kicking) a [door](doors.md),
+  [bashing](abilities.md#ability-shield-bash) with your shield, and
+  [stealing](abilities.md#ability-steal) ask `In which direction? (Esc to cancel)`.
+- [Digging](digging.md) asks `Dig in which direction? (Esc to cancel)` (see [Digging and
+  walls](digging.md)).
+- [Chatting](npcs.md#chatting) when several creatures are near asks `Talk in which direction? (Esc
+  to cancel)` (see [People and talk](npcs.md)).
+- [Disarming a trap](traps.md#disarming-traps) asks `Disarm in which direction? (Esc to cancel)`
+  (see [Traps](traps.md#disarming-traps)).
+- [Resting](resting.md#how-resting-works) asks how long (see [Resting](resting.md)).
+
+Answer with a direction or the key shown, or press `Esc` to cancel. Pressing any other command also
+cancels the prompt. The [rest prompt's](resting.md#how-resting-works) keys (`h`, `d`, `n`) are its
+own. You can rebind them without touching the keys of play (where `d` drops), and the prompt names
+them as you bound them.
 
 A few things ask first, in a small window over the map: quitting, stepping onto a trap you know
-(see [Traps](traps.md)), leaving a [shop](shops.md) owing money, and dropping something a shop would buy
-(see [Shops](shops.md)). The window lists its answers,
-each with the keys that choose it: `y` picks the yes answer, `n` the no answer, and `Esc` the
-one that backs out; or move with the arrow keys and press `Enter`. The safe answer is chosen at
-first, so `Enter` alone never does what you might regret. The yes and no keys are their own: you
-can rebind them without touching any key of play.
+(see [Traps](traps.md)), leaving a [shop](shops.md) owing money, and dropping something a shop
+would buy (see [Shops](shops.md)). The window lists its answers, each with the keys that choose it.
+`y` picks the yes answer, `n` the no answer, and `Esc` the one that backs out. You can also move
+with the arrow keys and press `Enter`. The safe answer is selected at first, so pressing `Enter`
+alone never does something you might regret. The yes and no keys are their own: you can rebind
+them without touching any key of play.
 
 ## Look mode
 
 `l` puts a cursor on the map, on you. Move it with the movement keys, and the message line
 describes what you know about the cell under it:
 
-- what you see there: a [creature](creatures.md), marked "hostile" if it is [hostile](creatures.md#factions) to you (see
-  [Creatures](creatures.md)), with how hurt it looks (unhurt, lightly wounded, wounded, badly
-  wounded, or nearly dead; see [Combat](combat.md)) and whether it [bleeds](status-effects.md#bleeding) (see
-  [Status effects](status-effects.md)), what it [wields and wears](equipment.md#what-fits-where), the [objects](objects.md) lying there, and
-  the [terrain](terrain.md), as in "A giant rat (hostile, unhurt), on stone floor." or "A kobold (hostile,
-  badly wounded, bleeding), wielding a spear, on stone floor."; a wall you have started digging
-  into is "partly dug";
-- a [trap](traps.md#finding-traps) you know there, as part of the ground: "A pit, on stone floor." (see [Traps](traps.md));
-- what you remember there, if you cannot see it now: the terrain and the objects you saw on it;
-- for [stairs](terrain.md#stairs) and the places on the [overworld](overworld.md#locations), where they lead;
-- the [special room](special-rooms.md) the ground lies in, once you have been inside it, as in
-  "A stone floor in an echoing hall.";
-- a [sound](hearing.md) you heard there this turn ([Hearing](hearing.md));
-- or "You don't know what is there."
+- What you see there. For a [creature](creatures.md): "hostile" if it is
+  [hostile](creatures.md#factions) to you, how hurt it looks (unhurt, lightly wounded, wounded,
+  badly wounded, or nearly dead; see [Combat](combat.md)), whether it
+  [bleeds](status-effects.md#bleeding) (see [Status effects](status-effects.md)), and what it
+  [wields and wears](equipment.md#what-fits-where). Then the [objects](objects.md) lying there and
+  the [terrain](terrain.md): "A giant rat (hostile, unhurt), on stone floor." or "A kobold
+  (hostile, badly wounded, bleeding), wielding a spear, on stone floor." A wall you have started
+  digging into is "partly dug".
+- A [trap](traps.md#finding-traps) you know there, as part of the ground: "A pit, on stone
+  floor." (see [Traps](traps.md)).
+- What you remember there, if you cannot see it now: the terrain and the objects you saw on it.
+- Where [stairs](terrain.md#stairs) and places on the [overworld](overworld.md#locations) lead.
+- The [special room](special-rooms.md) the cell lies in, once you have been inside it: "A stone
+  floor in an echoing hall."
+- A [sound](hearing.md) you heard there this turn ([Hearing](hearing.md)).
+- Otherwise, "You don't know what is there."
 
-Below it, on a [creature](creatures.md) whose level your [Knowledge](skills.md#skill-knowledge) stands above, is what you
-know of its kind: "You know the skeleton is immune to poison, resistant to piercing, and
+If your [Knowledge](skills.md#skill-knowledge) is above a creature's level, a second line says
+what you know of its kind: "You know the skeleton is immune to poison, resistant to piercing, and
 vulnerable to bludgeoning." (see [Skills](skills.md#skill-knowledge)).
 
 Looking takes no time. Press `l` or `Esc` to leave.
 
 ## Aiming
 
-`t` shoots or throws whatever is in your Missile weapon slot: a [bow, a crossbow, or a sling](ranged.md#getting-ready)
-shoots its [ammunition](ammunition.md) from the Missiles slot (ready both with `i`); a [throwing weapon](ranged.md#shooting-and-throwing) (a dagger,
-a spear, rocks) or any other weapon is thrown. `T` instead lists what you carry that can be
-thrown, to choose one. (There is no separate key for firing a launcher: `t` does it.) Either puts a cursor on the map:
+`t` shoots or throws whatever is in your Missile weapon slot. A [bow, a crossbow, or a
+sling](ranged.md#getting-ready) shoots its [ammunition](ammunition.md) from the Missiles slot; you
+ready both with `i`. A [throwing weapon](ranged.md#shooting-and-throwing) (a dagger, a spear,
+rocks) or any other weapon is thrown. `T` instead lists what you carry that can be thrown, so you
+can choose one. There is no separate key for firing a launcher: `t` does it.
 
-- it starts on your last target, if you still see it (or on the same spot), else on the nearest
-  [hostile](creatures.md#factions) creature you see, else on you;
-- `Tab` moves it to the next creature you see, nearest first, `Shift`+`Tab` back; the movement
-  keys move it anywhere, also into the dark;
-- a faint dotted line shows the way the missile would fly, as far as you know the ground: it
-  ends before anything solid you know of and at the edge of the range. A target beyond it is
-  marked on the cursor and in the message line: "Out of range." or "The way is blocked." (a
-  wall, or a creature in the way, which the missile would reach first);
-- the [message line](#messages) describes the target as [look mode](#look-mode) does. It never shows a chance to hit;
-- `Enter` (or `t` again) shoots or throws, `Esc` cancels. Doing it again later starts on the same
-  target, so `t` `Enter` shoots it again. The aiming keys (next target, previous target, which has
-  no key until you bind one, and shoot or throw) are their own group in Controls.
+Either key puts a cursor on the map:
 
-A spell scroll you read (`r`, see [Scrolls](scrolls.md)) is aimed the same way: `Enter` or `r`
-reads it at the cursor. A [lightning bolt](magic.md#spell-lightning-bolt) runs through creatures, so only walls block its line;
-a [fireball](magic.md#spell-fireball) read so close that it may catch you asks first.
+- It starts on your last target if you still see it (or on the same spot), else on the nearest
+  [hostile](creatures.md#factions) creature you see, else on you.
+- `Tab` moves it to the next creature you see, nearest first, and `Shift`+`Tab` moves it back. The
+  movement keys move it anywhere, into the dark too.
+- A faint dotted line shows the way the missile would fly, as far as you know the ground. It ends
+  before anything solid you know of, and at the edge of the range. A target past the line's end is
+  marked on the cursor, and the message line says "Out of range." or "The way is blocked." (a
+  wall, or a creature in the way that the missile would reach first).
+- The [message line](the-screen.md#messages) describes the target as [look mode](#look-mode) does.
+  It never shows a chance to hit.
+- `Enter` (or `t` again) shoots or throws, and `Esc` cancels. The next time, the cursor starts on
+  the same target, so `t` `Enter` shoots it again.
 
-[Throwing your voice](hearing.md#throwing-your-voice) (an [ability](abilities.md)) is aimed the same way too, but nothing flies, so
-there is no line: the cursor is marked, and the message line says "You do not see there.", on a
-cell you do not see (or a wall), and "Out of range." beyond 6 cells. `Enter` throws it there.
+The aiming keys are their own group in Controls: next target, previous target (no key until you
+bind one), and shoot or throw.
+
+A spell scroll you read (`r`, see [Scrolls](scrolls.md)) is aimed the same way, and `Enter` or `r`
+reads it at the cursor. A [lightning bolt](magic.md#spell-lightning-bolt) runs through creatures,
+so only walls block its line. If a [fireball](magic.md#spell-fireball) would land close enough to
+catch you, the game asks first.
+
+[Throwing your voice](hearing.md#throwing-your-voice) (an [ability](abilities.md)) is aimed the
+same way too. Nothing flies, so there is no line. On a cell you do not see, or a wall, the cursor
+is marked and the message line says "You do not see there."; beyond 6 cells it says "Out of
+range." `Enter` throws your voice there.
 
 See [Ranged combat](ranged.md).
 
 ## Objects
 
-`,` or `;` picks up what lies where you stand: a single stack at once, or, where several lie, from
-a list of them. `d` opens the same kind of list for what you carry, to drop. On these lists a
-letter marks or unmarks a [stack](objects.md#piles) (even `h`, `j`, `k`, `l`), `,` marks everything (on every
-page), the arrows and Space work too, `>` and `<` turn the pages of a long list (what you marked
-stays marked), `Enter` confirms, and `Esc` cancels. `I` shows your
-[pack](objects.md#your-pack), what it weighs, and how much more you can carry before your [burden](burden.md) grows; it
-takes no time. See [Objects and your pack](objects.md).
+`,` or `;` picks up what lies where you stand. A single stack is picked up at once; where several
+lie, you choose from a list. `d` opens the same kind of list for what you carry, to drop.
 
-`T` opens a list of what you carry that can be [thrown](ranged.md#shooting-and-throwing): choose one by its letter and aim it.
+On these lists:
 
-`e` (Consume) opens a list of what you can [eat](food.md#eating), titled "Consume what?": [food](food.md) lying where you stand first, then the food you carry.
-A letter, or `Enter` on the marked row, eats it. See
-[Food and corpses](food.md).
+- A letter marks or unmarks a [stack](objects.md#piles), even `h`, `j`, `k`, and `l`.
+- `,` marks everything, on every page.
+- The arrows and Space work too.
+- `>` and `<` turn the pages of a long list. What you marked stays marked.
+- `Enter` confirms, and `Esc` cancels.
+
+`I` shows your [pack](objects.md#your-pack), what it weighs, and how much more you can carry before
+your [burden](burden.md) grows. It takes no time. See [Objects and your pack](objects.md).
+
+`T` opens a list of what you carry that can be [thrown](ranged.md#shooting-and-throwing). Choose
+one by its letter and aim it.
+
+`e` (Consume) opens a list of what you can [eat](food.md#eating), titled "Consume what?". It shows
+[food](food.md) lying where you stand first, then the food you carry. A letter, or `Enter` on the
+marked row, eats it. See [Food and corpses](food.md).
 
 ## Abilities
 
-`a` opens the [abilities menu](abilities.md#the-abilities-menu): everything you can do because of who you are ([throwing your voice](hearing.md#throwing-your-voice),
-a [shield bash](abilities.md#ability-shield-bash), [disarming a trap](traps.md#disarming-traps), the other [skills](skills.md) you use as actions, and
-later racial and class abilities), grouped by where each comes from and lettered like a list of
-items. Choose one by its letter, or `Enter` on the `>` row; one you cannot use now is greyed out
-with why. It then asks for what it needs, such as a direction or a place to aim at. The menu opens
-on the ability you used last, and `X` uses that one again at once.
-Abilities have no keys of their own unless you give them one in Controls, where those few keys
-are listed last, under "Ability keys". See [Abilities](abilities.md).
+`a` opens the [abilities menu](abilities.md#the-abilities-menu): everything you can do because of
+who you are. That includes [throwing your voice](hearing.md#throwing-your-voice), a [shield
+bash](abilities.md#ability-shield-bash), [disarming a trap](traps.md#disarming-traps), the other
+[skills](skills.md) you use as actions, and racial and class abilities. They are grouped by where
+each comes from and lettered like a list of items.
 
-`i` shows what you [wear and wield](equipment.md#what-fits-where), slot by slot, as ADOM's `i` does (`I` is your pack). A slot's
-letter (on this screen every letter names a slot) opens a list of what you carry that fits there: its letter puts it on, swapping
-out what was there, and choosing what is there takes it off. Each change takes its time; you
-stay on the equipment screen until you press `Esc`. See [Equipment](equipment.md).
+Choose one by its letter, or press `Enter` on the `>` row. One you cannot use now is greyed out,
+with the reason. The ability then asks for what it needs, such as a direction or a place to aim
+at. The menu opens on the ability you used last, and `X` uses that one again at once.
 
-## The screen
+Abilities have no keys of their own unless you give them one in Controls, where they are listed
+last, under "Ability keys". See [Abilities](abilities.md).
 
-The map fills most of the window. Above it, the **[message line](#messages)** (two rows) shows what this
-turn brought (see [Messages](#messages)). Prompts and [look mode](#look-mode) use the same line.
-
-Below the map, the **status bar** shows, from left to right:
-
-- the name of the level, and on the overworld and in its local areas the region you are in;
-- your [hit points](combat.md#hit-points), as `HP 18/24`: what you have left of your most (see [Combat](combat.md));
-- your [mana](mana.md#how-much), as `MP 5/12`, the same way (see [Mana](mana.md));
-- each [resource](resources.md) you hold, as `Rage 7` or `Focus 7/10` (see [Resources](resources.md));
-- what ails you, if anything, the most urgent first: `Bleeding`, `Poisoned`, `Diseased` (see
-  [Status effects](status-effects.md) and [Diseases](diseases.md));
-- how [hungry](hunger.md#how-hungry-you-are) you are, unless you are not hungry: `Hungry`, `Weak`, `Fainting`, `Starving`,
-  `Satiated`, or `Bloated`, from `Hungry` down in a colour that grows more alarming as it worsens (see [Hunger](hunger.md#what-you-see));
-- your [burden](burden.md#burden-1), when you have one: `Burdened`, `Strained`, or `Overloaded` (see
-  [Burden](burden.md));
-- the time, the date, and the [phase of the moon](sun.md#phases) (see [Time and the calendar](time.md));
-- the [weather](weather.md#how-the-weather-changes), while you are under the open sky (see [Weather](weather.md));
-- the [temperature](temperature.md) where you are, as `4 °C` (or °F), cool blue below freezing and warm orange
-  from 30 °C (see [Temperature and ice](temperature.md));
-- the [turn](time.md#what-takes-time) count and your position (column, row);
-- `Light`: how brightly your own cell is [lit](light.md#what-light-is), where 255 is full light (see [Light](light.md));
-- your [vision type](vision.md#the-four-types) and the run's seed.
-
-At its right end, `? controls` reminds you where the keys are. It names the key as you bound it
-(`Esc menu` when the controls have no key), and so does the welcome line a new run starts with.
-
-When the window is too narrow for everything, the status bar leaves out the least important parts
-first: the seed, your position, your vision, the light at your feet, and the turn
-count; then it shortens the moon's [phase](sun.md#phases) to its picture, and only then drops it; then the
-temperature, the region, then the year of the date, then the date. The [weather](weather.md#how-the-weather-changes), the time, your
-[burden](burden.md#burden-1), your [hunger](hunger.md#how-hungry-you-are), your [status effects](status-effects.md#how-they-work) (the least urgent first), your [resources](resources.md) (the last
-first), your [mana](mana.md#how-much), your [hit points](combat.md#hit-points),
-and the name of the level stay longest, and from `Hungry` down your hunger outlasts them all. Parts come back as soon as there is room.
-
-## Messages
-
-The message line shows the messages of this turn, everything said since you last acted, one
-after another, wrapped at the ends of words. Rows they leave free show earlier messages, one a
-row; those from before the last turn are dimmed. A message repeated in a row is shown once with
-a count, as in `You open the door. (×2)`.
-
-When a turn says more than the two rows hold, the line shows what fits followed by `--more--`
-and waits: `Space` or `Enter` shows the rest, a page at a time, and `Esc` skips what is left of
-this turn's messages. Until then no other key does anything (a key you hold down never turns
-the page), so nothing happens that you have not read. A [rest](resting.md#how-resting-works) or a long [dig](digging.md) counts as one turn
-here: what was said during it, and what stopped it, shows the same way. Both keys can be rebound in their own group in Controls
-(skipping has no key until you bind one; `Esc` always skips). A screen that opens by itself,
-such as someone answering you, comes first: `--more--` waits beneath it until it closes.
-
-`v` opens the **message history**: every message the game keeps (the last 200), the newest at
-the bottom, where it opens. The up and down keys scroll it a line at a time, `<` and `>` (or
-`PageUp` and `PageDown`) a screenful; `Esc`, `Enter`, or `v` closes it. It takes no time.
-
-## Character
-
-`@` shows your name, your [race](races.md), [gender](character.md#gender), and [class](classes.md), your [age, birthday](character.md#age-birthday-and-sign), and
-[birth sign](horoscope.md), your [stats](stats.md) (one that a status effect or a disease lowers
-is shown lowered, in red), your [hit points](combat.md#hit-points) and [Defence](combat.md#defence) (`Dv`; see [Combat](combat.md)), what ails
-you (`Status  Bleeding, Poisoned`; see [Status effects](status-effects.md)), the diseases you know
-you have (`Diseased  Filth fever`; see [Diseases](diseases.md)), your weight and what you
-carry, and the weights at which your [burden](burden.md) changes. It takes no time; press `@` or
-`Esc` to close it, or `A` for your skills.
-
-## Skills
-
-`A` lists the [skills](skills.md) you are trained in, each with its value and a small meter of how
-practised it is (how big its next [roll at a level-up](skills.md#getting-better) will be). The arrow keys pick a skill to read what it is about. It takes no
-time; press `A` or `Esc` to close it.
-
-## Info pages
-
-The [character screen](#character), the [inventory](objects.md#your-pack), the [equipment screen](equipment.md#the-equipment-screen), the [skills screen](#skills), the [weapon skills](weapon-skills.md)
-screen, the [Magic page](schools.md#the-magic-page), the [quest log](quests.md#the-quest-log), the [talents](talents.md) page, and [your story](background.md#when-it-is-told) are numbered pages of one set, shown on the bottom
-edge of each as
-`1 Character · 2 Inventory · 3 Equipment · 4 Skills · 5 Weapons · 6 Magic · 7 Quests · 8 Talents · 9 Story`, the one
-you are on highlighted. All pages are the same width, so the frame stays put as you turn them.
-On a window too small for that, every page goes by short names
-(`1 Char · 2 Inv · 3 Eqp · 4 Skl · 5 Weap · 6 Mag · 7 Qst · 8 Tal · 9 Story`), and on the narrowest
-by their numbers alone. While one of them is open, `1` to `9` switch to the page with that number (the row
-of number keys above the letters; the numpad still moves), and `Tab` / `Shift`+`Tab` go to the
-next or previous page, wrapping around. The page replaces the one you were on, so `Esc` closes it
-and takes you back to where you opened the first one, as if you had only ever opened that one.
-The number keys do nothing during play, and they keep their own meaning on a screen that is a
-step of a page, such as choosing what goes in a slot. Each page but the Magic page also keeps
-its own key (`@`, `I`, `i`, `A`) to open it and to close it; the Magic page is reached by its
-number from another page. All of these keys can be rebound in the Controls screen, as
-"Info page 1" to "Info page 9", "Next info page", and "Previous info page"; they are separate
-from the play keys, so `Tab` can be both "next target" while aiming and "next info page" on an
-info screen.
-
-## Death
-
-When you die, a screen says what killed you (if you saw it), where, when, and after how many
-turns. Your save is already gone (see [Saving](saving.md)); `Enter` or `Esc` returns to the main
-menu.
-
-## Menus
-
-`Esc` during play (when no prompt is open) opens the pause menu: Resume, Settings, Controls, Save
-and quit to menu, and Quit, which saves too. The main menu, where the game opens, has Continue
-(when there is a saved run), New run, Settings, Controls, and Quit; see [Saving](saving.md) and
-[Settings](settings.md). New run goes on to creating your character, a step at a time: the arrow
-keys (or `j` and `k`) choose, `Enter` goes on, and `Esc` goes back a step (see
-[Your character](character.md)). While any menu or screen is open (including the [inventory](objects.md#your-pack), the
-[equipment screen](equipment.md#the-equipment-screen), the [character screen](#character), the pick-up and drop screens, the [abilities menu](abilities.md#the-abilities-menu), and the
-screen of [topics](npcs.md#chatting) someone you [chat](npcs.md#chatting) with offers), no game time passes, except for what you choose
-there: [picking up](objects.md#picking-up), [dropping](objects.md#dropping), putting on or taking off, and an [ability](abilities.md) take their time. Asking
-about a topic takes none.
-
-## Developer keys
-
-Builds made for testing, and desktop builds started with `--dev`, add a few keys for trying
-things out. They are not part of normal play, and they are not in the browser version. `?` lists
-them, marked "(dev)", and Controls can rebind them there:
-
-| Key | Does |
-|---|---|
-| `F2` | Reveal the map: draws everything on the level, even what you cannot see, in violet |
-| `F3` | Switch to the next [vision type](vision.md) |
-| `F4` | Show how brightly each cell you see is lit, as a digit from `0` (dark) to `9` (fully lit) |
-| `F5` / `F9` | Save / load a snapshot of the run |
-| `F6` | Skip an hour: the [clock](time.md#the-calendar) jumps ahead, and nobody acts meanwhile |
-| `F7` | Set the next [weather](weather.md) for three hours, after which the usual weather returns |
-| `F8` | Identify everything you carry: [magic items](magic-items.md) show what they are |
+`i` shows what you [wear and wield](equipment.md#what-fits-where), slot by slot, as ADOM's `i`
+does (`I` is your pack). On this screen every letter names a slot. A slot's letter opens a list of
+what you carry that fits there. Picking an item puts it on, swapping out what was there; picking
+what is already there takes it off. Each change takes its time. You stay on the equipment screen
+until you press `Esc`. See [Equipment](equipment.md).

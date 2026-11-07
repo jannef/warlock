@@ -389,7 +389,7 @@ pub(super) fn creature_defences(content: &Content) -> String {
         // Acid blood (`world/corrode.rs`): what strikes it may come away damaged.
         if let Some(acid) = c.corrodes.filter(|a| a.what.eats(CorrodesWhat::Weapon)) {
             resists.push(format!(
-                "{}% to [damage](objects.md#item-damage) the weapon that strikes it ({})",
+                "{}% to [damage](materials.md#item-damage) the weapon that strikes it ({})",
                 acid.chance,
                 acid.kind.id()
             ));
@@ -536,7 +536,7 @@ pub(super) fn creature_attacks(content: &Content) -> String {
             // Its filth (`world/corrode.rs`): a worn piece damaged.
             if let Some(acid) = c.corrodes.filter(|a| a.what.eats(CorrodesWhat::Armour)) {
                 caused.push(format!(
-                    "{}% [damages](objects.md#item-damage) a piece worn ({})",
+                    "{}% [damages](materials.md#item-damage) a piece worn ({})",
                     acid.chance,
                     acid.kind.id()
                 ));

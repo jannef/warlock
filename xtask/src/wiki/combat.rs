@@ -432,7 +432,7 @@ pub(super) fn to_hit(content: &Content) -> String {
     );
     let _ = writeln!(
         out,
-        "| Stance ([below](#stances)) | to hit: {}; damage: {} | the same | the same |",
+        "| Stance ([see Stances](stances.md#stances)) | to hit: {}; damage: {} | the same | the same |",
         stance("hit"),
         stance("damage")
     );
