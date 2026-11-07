@@ -420,6 +420,7 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("potions.md", potions::potions),
         ("weapon-skills.md", weapon_skills::skills),
         ("weapon-marks.md", weapon_skills::marks),
+        ("target-dummies.md", weapon_skills::dummies),
         ("weapon-benefits.md", weapon_skills::benefits),
         ("weapon-abilities.md", weapon_abilities::weapon_abilities),
         ("styles.md", weapon_skills::styles),

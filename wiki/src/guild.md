@@ -9,6 +9,12 @@ door is on the lane, with the bounty board nailed up beside it. Inside,
 **[Wat One-Eye](creatures.md#creature-guildmaster)**, the guildmaster, hands out the work. He is
 an old delver who has stopped going down.
 
+## The yard
+
+Across the lane from the hall's door is the Gilde's yard, a square of beaten earth with four
+[training dummies](weapon-skills.md#target-dummies): one at the west end of the top row, to shoot
+at down the yard, and three in the row below, to strike. Anyone may use them.
+
 ## The chain
 
 Wat gives one job at a time, as a [quest](quests.md). [Chat](npcs.md#chatting) with him (`C`) and

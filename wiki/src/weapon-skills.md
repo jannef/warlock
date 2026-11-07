@@ -61,6 +61,27 @@ Missile weapons need fewer marks than weapons up close. The schools of magic and
 styles, trained by casting, follow a gentler curve of their own. You start every skill with no
 marks.
 
+## Target dummies
+
+The [Weyfarers' Gilde](guild.md#the-yard) keeps a yard of training dummies in Cēaptūn, straw men
+on posts that never fight back. Walk into one to strike it, or [shoot](ranged.md#shooting-and-throwing)
+or throw at it. A dummy never moves, is never hurt, and never dies, so it gives no
+[experience](experience.md), loot, or [quest](quests.md) credit, and the townsfolk do not mind
+you beating it. It is never [caught unawares](surprise.md#caught-unawares), and no attack on it is a [sneak attack](surprise.md#sneak-attacks).
+
+A dummy teaches only the weapon skill and [fighting style](fighting-styles.md) of the attack,
+never a [stat](stats.md#training), and slowly: half the marks a level-1 opponent would give, rounded
+(2 for a hit and 1 for a miss at rank 0). It teaches blows, shield bashes, kicks, and throws up to
+**rank 2**, and shots with a bow, crossbow, or sling (and their style) up to **rank 4**. When a
+skill reaches that rank there, you are told "You have learned all the dummy can teach you.", and
+it learns nothing more there. There is no daily limit: the time it takes is the price.
+
+Missiles shot or thrown at a dummy stop there, hit or miss. One in four (25 %) is ruined; the
+rest drop on a free cell beside the dummy, to be picked up again. A missile that never breaks is
+never ruined.
+
+{{#include generated/target-dummies.md}}
+
 ## What a rank gives
 
 Each skill has its own benefits per rank, which apply while you fight with it:

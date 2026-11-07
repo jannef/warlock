@@ -30,7 +30,8 @@ bridge and the ford.
 four [shops](shops.md); the Mynster, the temple, where you may
 [rest](resting.md#how-resting-works) and Sister Hild [cures and mends](npcs.md#services) for
 [gold](shops.md#money); the Gæsthūs, the inn, where Godgifu has news of the march; and the
-Gildhalle of the [Weyfarers' Gilde](guild.md), where Wat One-Eye gives out work (see
+Gildhalle of the [Weyfarers' Gilde](guild.md), where Wat One-Eye gives out work, with its
+[yard of training dummies](guild.md#the-yard) across the lane (see
 [Shops](shops.md) and [People and talk](npcs.md)).
 
 You arrive on the square. The town has no [stairs](terrain.md#stairs). As in any outdoor area,
