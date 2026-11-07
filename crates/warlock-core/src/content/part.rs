@@ -497,7 +497,7 @@ mod tests {
             protection: None,
             rarity: None,
             gear: None,
-            corrodes: None,
+            resists: None,
         }
     }
 

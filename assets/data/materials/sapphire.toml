@@ -1,5 +1,6 @@
 [[material]]
 id = "sapphire"
 name = "sapphire"
+resists = { acid = 100, rust = 100, fire = 100 }
 precious = true
 gem = { color = "#2f5bd3", value = 280, rarity = 5 }

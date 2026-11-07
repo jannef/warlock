@@ -26,7 +26,7 @@ stats = { strength = 28, dexterity = 15, toughness = 29, intelligence = 22, will
 base_hp = 204
 natural = { defence = 2, protection = 2, name = "warty hide" }
 resist = { fire = 50, cold = 25, electricity = 25, poison = 100 }
-corrodes = { chance = 25, what = "armour" }
+corrodes = { chance = 25, what = "armour", kind = "acid" }
 corpse = false
 blood = "#3a4a1a"
 [creature.aura]

@@ -2,4 +2,5 @@
 [[material]]
 id = "wax"
 name = "wax"
+resists = { acid = 20, rust = 100, fire = 0 }
 color = "#f0e6c8"

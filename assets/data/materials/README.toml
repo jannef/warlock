@@ -45,11 +45,17 @@
 #             (very rare) for that item, whatever it says here; jewellery is never worse
 #   gear      the same for what creatures carry (what they drop), by the creature's level instead
 #             of the item level: primitive materials for kobolds, steel for tougher creatures
-#   corrodes  whether acid eats it (a creature's `corrodes`, creatures/README.toml): true, false,
-#             or "half" (at half the chance: acid etches bone slowly). Default: true for the
-#             metal and hide groups, false for the rest; stated where a material differs (the
-#             noble metals, chromium, nicrosil, mithril, adamantium, and dragonscale do not
-#             corrode; cloth, wool, silk, and lead do)
+#   resists   required: its chance in percent, 0 to 100, to withstand each kind of item damage,
+#             `{ acid = 20, rust = 10, fire = 95 }` (world/item_damage.rs). An item is damaged by
+#             its main part's material: acid and rust by a creature's `corrodes`
+#             (creatures/README.toml), fire by one whose `corrodes` kind is fire. Withstood,
+#             nothing happens; else the item is damaged (the smith's one state, mended by Temper
+#             or Whittle), and one damaged already is destroyed. A failed Temper or Whittle is
+#             never withstood. The scale: the noble metals, mithril, adamantium, dragonscale, and
+#             gems near 100 for all; iron and steel rust and corrode, but stand heat; copper and
+#             its alloys corrode but hardly rust; the soft metals (tin, pewter, lead, zinc,
+#             cadmium, bendalloy) melt; cloth, flesh, plant, paper, and wax nothing but rust;
+#             wood burns; stone and glass stand acid and heat
 #   gem       makes it a gem (spec §7 "Gems"; it must be precious, with no group): an inline
 #             table of
 #               color   "#rrggbb": a loose gem's glyph, and a ring set with it

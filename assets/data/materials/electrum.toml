@@ -2,8 +2,8 @@
 [[material]]
 id = "electrum"
 name = "electrum"
+resists = { acid = 90, rust = 100, fire = 80 }
 group = "metal"
-corrodes = false
 color = "#e6d690"
 weight = 191
 to_hit = -1

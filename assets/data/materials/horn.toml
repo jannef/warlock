@@ -1,8 +1,8 @@
 [[material]]
 id = "horn"
 name = "horn"
+resists = { acid = 50, rust = 100, fire = 30 }
 group = "bone"
-corrodes = "half"
 color = "#8c7a5b"
 weight = 50
 to_hit = 0

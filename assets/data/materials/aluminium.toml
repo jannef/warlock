@@ -2,6 +2,7 @@
 [[material]]
 id = "aluminium"
 name = "aluminium"
+resists = { acid = 30, rust = 100, fire = 50 }
 group = "metal"
 color = "#d0d5db"
 weight = 34

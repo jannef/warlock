@@ -564,16 +564,20 @@ developer notes (CLAUDE.md, `docs/dev/`).
       non-zero `armour`, `shield`, or `parry`: +1 of that kind), Protection (a non-zero
       `protection`: +1). Not damaged and failed, **damaged**: all improvements gone, and no other
       penalty ("The metal cracks under the hammer."). Damaged and made, the damaged condition goes,
-      a base item with its attempts ("You hammer the damage out."). Damaged and failed, **destroyed**,
-      from the hand too, a unique also ("It shatters under the hammer!"). The anvil adds, raises,
+      a base item with its attempts ("You hammer the damage out."), whatever damaged it (acid,
+      rust, heat, or a failure). Damaged and failed, **destroyed**, from the hand too, a unique
+      also ("It shatters under the hammer!"). A failure is item damage (#1168, spec §7
+      "Materials" `resists`, `world/item_damage.rs`) of its own kind, which no material withstands:
+      it is the craft's blunder, not the world's. The anvil adds, raises,
       and removes no affix; they stay through all of it and go only with the item. A stack of
       several is worked one at a time. What survives is identified and says what it is ("This is
       ...!"), and every finished attempt marks Metalcraft. The anvil is never spent. Every draw is
       from the gameplay stream.
-    - **The item**: `Stack::worked` (`Worked { improved, attempts, damaged }`, saved, none on an
+    - **The item**: `Stack::worked` (`Worked { improved, attempts, damaged, by }`, `by` what damaged it, saved, none on an
       item never worked); a worked item is like no other and never stacks. Names, ahead of the rest,
       whatever is identified: 1 Fine, 2 Marvellous, 3 Masterwork ("a Marvellous Sharp long sword of
-      the Bear", "Grim Bite, a Fine long sword"), or "a damaged long sword". Numbers show as any
+      the Bear", "Grim Bite, a Fine long sword"), or "a damaged long sword" (a failure's word;
+      "a corroded", "a rusted", "a scorched long sword" by what else damaged it). Numbers show as any
       item's; the attempts are hidden, printed by the dev `actors` dump. Worth (`Stack::value`):
       Fine ×2, Marvellous ×3, Masterwork ×5, damaged ×½ rounded up.
 

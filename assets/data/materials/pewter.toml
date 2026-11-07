@@ -1,6 +1,7 @@
 [[material]]
 id = "pewter"
 name = "pewter"
+resists = { acid = 30, rust = 100, fire = 30 }
 group = "metal"
 color = "#8e9196"
 weight = 93

@@ -1,6 +1,7 @@
 [[material]]
 id = "tin"
 name = "tin"
+resists = { acid = 30, rust = 100, fire = 30 }
 group = "metal"
 color = "#c9ccce"
 weight = 93

@@ -176,24 +176,31 @@ bone (horn, ivory, chitin, and dragonbone with it), stone, hide, cloth, glass, a
 
 {{#include generated/materials.md}}
 
-### Corrosion
+### Item damage
 
-Some [creatures](creatures.md) carry acid. The [hezrou](creatures.md#creature-hezrou) and the [dretch](creatures.md#creature-dretch) eat at what you wear: each of their
-blows that lands has a chance (25% for the hezrou, 10% for the dretch) to **damage** one piece of
-armour or a shield you wear, drawn at random among those whose material corrodes. The [ember
-beetle](creatures.md#creature-ember-beetle)'s blood eats at what strikes it: each of your blows that lands has a 25% chance to damage the
-weapon (or the shield) it struck with. The [rust monster](creatures.md#creature-rust-monster) and the
-[black pudding](creatures.md#creature-black-pudding) do both, each way at its own chance (50% for the
-rust monster, 25% for the pudding). A damaged item loses its improvements and is a point worse
-until it is mended, the same state as a failed attempt at an [anvil](special-rooms.md#forges), where it is mended; acid
-never damages an item twice and never destroys one.
+An item can be **damaged** in several ways, and it is always the same state: it loses its
+improvements and is a point worse until it is mended at an [anvil](special-rooms.md#forges) (or with a knife,
+for wood: [Whittle](abilities.md#ability-whittle)), the same state as a failed attempt there. An item damaged
+again, by anything, is **destroyed**. Only its name tells what did it: *a corroded*, *a rusted*,
+*a scorched*, or *a damaged long sword*.
 
-The **Corrodes** column above says which materials acid eats: yes (the common metals, leather,
-fur, and cloth), half (bone, horn, ivory, and chitin: at half the chance), or no (gold, silver,
-electrum, chromium, nicrosil, mithril, adamantium, dragonscale, dragonbone, wood, stone, glass,
-and the gems). Any [resistance](damage-types.md) to acid halves the chance. If nothing you wear (or the weapon
-that struck) corrodes, nothing happens, and the first time you are told so: *The acid runs off
-your mithril chain mail shirt.* Fighting bare-handed or with a spell risks nothing.
+Some [creatures](creatures.md) harm your gear in melee. The [hezrou](creatures.md#creature-hezrou) and the
+[dretch](creatures.md#creature-dretch) carry acid that eats at what you wear: each of their blows that lands has a chance
+(25% for the hezrou, 10% for the dretch) to reach one piece of armour or a shield you wear, drawn
+at random. The [ember beetle](creatures.md#creature-ember-beetle)'s acid blood eats at what strikes it: each of
+your blows that lands has a 25% chance to reach the weapon (or the shield) it struck with. The
+[black pudding](creatures.md#creature-black-pudding)'s acid does both, each way at 25%, and the
+[rust monster](creatures.md#creature-rust-monster) rusts both ways at 50%. Any [resistance](damage-types.md) to acid halves
+the chance of acid (rust has no damage type to resist).
+
+What is reached then **withstands** it by its main material's chance, in the **Withstands acid**,
+**Withstands rust**, and **Withstands fire** columns of the table above: withstood, nothing happens
+(the first time for each kind you are told so: *The acid runs off your mithril chain mail
+shirt.*); else it is damaged, or destroyed if it was damaged already. Gold, silver, mithril,
+adamantium, dragonscale, and the gems nearly always withstand everything; iron and steel rust and
+corrode easily but stand heat; copper and its alloys corrode but hardly rust; the soft metals melt;
+wood and cloth burn; nothing but metal rusts. A failed attempt at an anvil is never withstood.
+Fighting bare-handed or with a spell risks nothing.
 
 ### Items of other materials
 

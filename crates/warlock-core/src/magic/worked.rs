@@ -5,15 +5,16 @@
 //! same one may come twice: **Fine**, **Marvellous**, **Masterwork**. A failure leaves it
 //! **damaged**, which takes all its improvements and makes it a point worse until it is mended:
 //! its Protection if it gives some, else its Defence, else its damage ([`super::Mods::local`]).
-//! Acid damages an item the same way (`world/corrode.rs`). A damaged item is repaired or
-//! destroyed. Every attempt counts for the item's
+//! Acid, rust, and heat damage an item the same way (`world/item_damage.rs`), and the state
+//! keeps the kind for its word ("rusted", "corroded", "scorched"; a failed attempt's is
+//! "damaged"). A damaged item is repaired or destroyed. Every attempt counts for the item's
 //! whole life and is never shown in the game. Affixes are another matter ([`super::Magic`]): the
 //! work never touches them.
 //!
 //! The numbers are read in two places: to hit, plus damage, Defence, and Protection through
 //! [`super::Mods::local`], the dice through [`Stack::attack`](crate::object::Stack::attack).
 
-use crate::content::ObjectDef;
+use crate::content::{ItemHarm, ObjectDef};
 use serde::{Deserialize, Serialize};
 
 /// What its dice grow by, in sides, per [`Aspect::Die`].
@@ -90,6 +91,9 @@ pub struct Worked {
     /// Whether it is damaged.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     pub(crate) damaged: bool,
+    /// What damaged it, for its word; none: a failed attempt (or not damaged).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub(crate) by: Option<ItemHarm>,
 }
 
 impl Worked {
@@ -108,7 +112,7 @@ impl Worked {
     /// improved nor damaged (it may have been worked and repaired).
     pub fn word(&self) -> Option<&'static str> {
         if self.damaged {
-            return Some(DAMAGED);
+            return Some(self.by.map_or(DAMAGED, ItemHarm::word));
         }
         let grade = self.improved.len().checked_sub(1)?;
         GRADES.get(grade).map(|&(word, _)| word)
@@ -139,21 +143,24 @@ impl Worked {
         self.improved.push(aspect);
     }
 
-    /// It is damaged: all its improvements are gone.
-    pub(crate) fn damage(&mut self) {
+    /// It is damaged by `harm`: all its improvements are gone.
+    pub(crate) fn damage(&mut self, harm: ItemHarm) {
         self.improved.clear();
         self.damaged = true;
+        self.by = (harm != ItemHarm::Work).then_some(harm);
     }
 
     /// The damage is gone: a plain base item, with its attempts.
     pub(crate) fn repair(&mut self) {
         self.damaged = false;
+        self.by = None;
     }
 
     /// Whether this could be the state of an item of base item `def`.
     pub(crate) fn is_valid(&self, def: &ObjectDef) -> bool {
         self.improved.len() <= GRADES.len()
             && !(self.damaged && !self.improved.is_empty())
+            && (self.damaged || self.by.is_none())
             && self.improved.iter().all(|a| a.of(def))
     }
 }
@@ -195,10 +202,14 @@ mod tests {
         w.improve(Aspect::ToHit);
         assert_eq!((w.word(), w.count(Aspect::ToHit)), (Some("Masterwork"), 1));
         assert!(w.finished(3) && !Worked::default().finished(3));
-        w.damage();
+        w.damage(ItemHarm::Work);
         assert_eq!((w.word(), w.sides(), w.attempts), (Some("damaged"), 0, 3));
         w.repair();
         assert_eq!((w.word(), w.attempts), (None, 3));
+        w.damage(ItemHarm::Rust);
+        assert_eq!(w.word(), Some("rusted"));
+        w.repair();
+        assert_eq!((w.word(), w.by), (None, None));
     }
 
     #[test]
@@ -224,6 +235,7 @@ mod tests {
             improved,
             attempts: 1,
             damaged,
+            by: None,
         };
         assert!(of(vec![Aspect::Die], false).is_valid(sword));
         assert!(!of(vec![Aspect::Die], false).is_valid(shirt));

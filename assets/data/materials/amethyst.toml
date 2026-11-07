@@ -1,5 +1,6 @@
 [[material]]
 id = "amethyst"
 name = "amethyst"
+resists = { acid = 100, rust = 100, fire = 100 }
 precious = true
 gem = { color = "#9b59d0", value = 80, rarity = 10 }

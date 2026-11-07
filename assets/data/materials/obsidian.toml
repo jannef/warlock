@@ -2,6 +2,7 @@
 [[material]]
 id = "obsidian"
 name = "obsidian"
+resists = { acid = 90, rust = 100, fire = 90 }
 group = "stone"
 color = "#2a2433"
 weight = 75

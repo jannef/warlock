@@ -1,5 +1,6 @@
 [[material]]
 id = "garnet"
 name = "garnet"
+resists = { acid = 100, rust = 100, fire = 100 }
 precious = true
 gem = { color = "#8e1f2f", value = 60, rarity = 20 }

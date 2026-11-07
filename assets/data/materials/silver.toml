@@ -2,9 +2,9 @@
 [[material]]
 id = "silver"
 name = "silver"
+resists = { acid = 85, rust = 100, fire = 80 }
 precious = true
 group = "metal"
-corrodes = false
 color = "#d9dee3"
 weight = 134
 to_hit = -1

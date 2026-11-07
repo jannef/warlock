@@ -2,6 +2,7 @@
 [[material]]
 id = "hardened_leather"
 name = "hardened leather"
+resists = { acid = 40, rust = 100, fire = 40 }
 group = "hide"
 color = "#6b3e1e"
 weight = 45

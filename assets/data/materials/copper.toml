@@ -2,6 +2,7 @@
 [[material]]
 id = "copper"
 name = "copper"
+resists = { acid = 30, rust = 90, fire = 70 }
 group = "metal"
 color = "#b87333"
 weight = 114

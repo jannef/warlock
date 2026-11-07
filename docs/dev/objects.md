@@ -146,14 +146,24 @@ names and colours, the description, placements and refusals, combat, saves and r
 weights and the cap, loot determinism, the built-in tables, a property test over thousands of
 loot items and drops across seeds and depths, and the depth shift).
 
-**Corrosion** (#1131, the dread design §5.8): `MaterialDef::corrodes()` (`Corrosion::{No, Half,
-Yes}`) from the file's `corrodes` (true, false, or `"half"`; any other word refused at load),
-else `Corrosion::of_group` (metal and hide yes, the rest no). The review's values are pinned by
-`world/corrode_tests.rs::every_material_is_reviewed_for_acid`, which fails for a new material
-until it is listed. Mithril and adamantium (`data/materials/`) are metals that do not corrode,
-very rare from item level 20 and 30 (gear from creature level 30 and 40); the wiki's materials
-table has the column. The rules that read it are `world/corrode.rs`
-(`docs/dev/creatures.md`'s gimmicks; the spec's "Creature gimmicks").
+**Item damage** (#1131, #1168; the dread design §5.8): every material's file sets `resists =
+{ acid, rust, fire }` (`content/material.rs::Resists`, percent 0 to 100, every kind given; the
+old `corrodes` key is refused, `deny_unknown_fields`), its chance to withstand that kind of
+`ItemHarm` (`Acid`, `Rust`, `Fire`, and `Work`, a failed temper or whittle, which no material
+withstands). A material without it (a test fixture's) withstands nothing; the built-in content's
+every material sets it (`world/item_damage_tests.rs::every_material_sets_its_resists_as_reviewed`,
+which also pins the review's shape: noble metals high, iron and steel low, wood and cloth burn,
+nothing organic rusts). `world/item_damage.rs` is the one path: `World::withstands(at, harm)`
+(the one check every source makes; 0 and 100 draw nothing, else one gameplay draw; #1170's
+protection goes here) and `World::harm_item(at, harm) -> Harmed::{Withstood, Damaged,
+Destroyed}`: withstood, nothing; else an undamaged item is damaged (`Worked::damage(harm)`, its
+`by` kept for the word: "corroded", "rusted", "scorched", "damaged"), one damaged already
+destroyed (`remove_stacks`, off the equipment too). The sources: a creature's `corrodes`
+(`world/corrode.rs`, its `kind` acid, rust, or fire; `docs/dev/creatures.md`'s gimmicks) and a
+failed attempt (`world/temper.rs`, kind `Work`). Ruin (`world/ruin.rs`) is not item damage: it
+destroys floor items outright by its own table, which already goes by material and group.
+Mithril and adamantium (`data/materials/`) are very rare from item level 20 and 30 (gear from
+creature level 30 and 40); the wiki's materials table has the three chances.
 
 **Gems** (spec §7 "Gems", #191): a gem is a material with a `gem` table (`content/gem.rs`,
 `GemDef`: `color`, `value` in gold for the plain size and cut, `rarity`, `plural`; a gem is

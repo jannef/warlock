@@ -2,6 +2,7 @@
 [[material]]
 id = "bendalloy"
 name = "bendalloy"
+resists = { acid = 40, rust = 90, fire = 10 }
 group = "metal"
 color = "#c9a0c8"
 weight = 118

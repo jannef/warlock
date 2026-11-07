@@ -2,6 +2,7 @@
 [[material]]
 id = "bronze"
 name = "bronze"
+resists = { acid = 40, rust = 80, fire = 80 }
 group = "metal"
 color = "#cd7f32"
 weight = 112

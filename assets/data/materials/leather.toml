@@ -2,6 +2,7 @@
 [[material]]
 id = "leather"
 name = "leather"
+resists = { acid = 30, rust = 100, fire = 30 }
 group = "hide"
 color = "#8b5a2b"
 weight = 35

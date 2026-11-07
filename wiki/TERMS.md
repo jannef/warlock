@@ -116,6 +116,7 @@ above.
 | Special room | `special-rooms.md` (a room: its row) |
 | Forgotten altar, praying | `special-rooms.md#forgotten-altars` |
 | Forge, tempering, Fine, Marvellous, Masterwork, damaged items | `special-rooms.md#forges` |
+| Item damage, corroded, rusted, scorched, withstanding | `objects.md#item-damage` |
 | Healing spring | `special-rooms.md#healing-springs` |
 | Trap, hidden trap, known trap | `traps.md#finding-traps` |
 | Disarming | `traps.md#disarming-traps` |

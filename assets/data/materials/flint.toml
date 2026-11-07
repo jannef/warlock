@@ -2,6 +2,7 @@
 [[material]]
 id = "flint"
 name = "flint"
+resists = { acid = 80, rust = 100, fire = 100 }
 group = "stone"
 color = "#5b5650"
 weight = 80

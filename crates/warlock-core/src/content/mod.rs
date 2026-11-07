@@ -280,7 +280,9 @@ pub use level::{
     parse_route,
 };
 pub use light::{Dips, Drift, HueDrift, LightId, LightPreset, MAX_LIGHT_RADIUS, Stability};
-pub use material::{ANY, Corrosion, Found, MAX_MATERIAL_VALUE, MaterialDef, MaterialId, VERY_RARE};
+pub use material::{
+    ANY, Found, ItemHarm, MAX_MATERIAL_VALUE, MaterialDef, MaterialId, Resists, VERY_RARE,
+};
 pub use monster_pool::{MonsterPool, VaultMonsters};
 pub use names::{NameLists, Names};
 pub use object::{
@@ -1993,6 +1995,12 @@ impl Content {
                 return Err(err(format!(
                     "creature `{}`: `corrodes`' `chance` is 1 to 100 percent, not {}",
                     spec.id, acid.chance
+                )));
+            }
+            if spec.corrodes.is_some_and(|c| c.kind == ItemHarm::Work) {
+                return Err(err(format!(
+                    "creature `{}`: `corrodes`' `kind` is acid, rust, or fire",
+                    spec.id
                 )));
             }
             if let Some(blow) = spec.disarms
