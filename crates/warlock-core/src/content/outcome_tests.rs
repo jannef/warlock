@@ -117,18 +117,10 @@ fn the_lean_moves_weight_between_boon_and_bane() {
 #[test]
 fn bad_tables_are_refused() {
     let cases = [
-        (
-            "seconds = 0\nkinds = { boon = 1 }\nexhaust = 0\n",
-            "seconds",
-        ),
         ("seconds = 60\nkinds = { }\nexhaust = 0\n", "not all 0"),
         (
             "seconds = 60\nkinds = { boon = 10, bane = 5 }\nlean = 6\nexhaust = 0\n",
             "lean",
-        ),
-        (
-            "seconds = 60\nkinds = { boon = 1 }\nexhaust = 101\n",
-            "percent",
         ),
         ("seconds = 60\nkinds = { boon = 1 }\n", "needs `spent`"),
         (
@@ -152,7 +144,6 @@ fn bad_outcomes_are_refused() {
     };
     let cases = [
         ("", "message"),
-        ("message = \" \"\n", "message"),
         (
             "message = \"A.\"\neffect = { status = { id = \"nonesuch\" } }\n",
             "unknown status",
@@ -162,12 +153,8 @@ fn bad_outcomes_are_refused() {
             "degrees",
         ),
         (
-            "message = \"A.\"\neffect = { heal = \"0\" }\n",
-            "at least 1",
-        ),
-        (
-            "message = \"A.\"\neffect = { know_traps = 99 }\n",
-            "know_traps",
+            "message = \"A.\"\neffect = { heal = \"1d2-2\" }\n",
+            "below 0",
         ),
         (
             "message = \"A.\"\neffect = { lose_coins = 120 }\n",

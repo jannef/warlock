@@ -104,7 +104,7 @@ fn the_tempting_hoard_is_data() {
 }
 
 #[test]
-fn a_hoard_needs_a_danger_and_sane_numbers() {
+fn a_hoard_needs_a_danger_and_a_range_of_guardians() {
     let shipped = include_str!("../../../../assets/data/room_effects.toml");
     let line = "hoard = { items = 3, loot_level = 3, guardians = [2, 4], danger = 1 }";
     assert!(shipped.contains(line));
@@ -113,16 +113,8 @@ fn a_hoard_needs_a_danger_and_sane_numbers() {
     for (what, text) in [
         ("no needs_danger", without_danger),
         (
-            "no items",
-            shipped.replace(line, &line.replace("items = 3", "items = 0")),
-        ),
-        (
             "least above most",
             shipped.replace(line, &line.replace("[2, 4]", "[5, 4]")),
-        ),
-        (
-            "too many guardians",
-            shipped.replace(line, &line.replace("[2, 4]", "[2, 17]")),
         ),
         (
             "over a whole level",

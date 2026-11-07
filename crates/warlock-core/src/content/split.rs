@@ -13,14 +13,6 @@
 use super::{Content, ContentError, CreatureId, DamageTypeId};
 use crate::dice::Dice;
 use serde::Deserialize;
-use std::ops::RangeInclusive;
-
-/// The fewest hit points a half may have (`least`).
-pub const LEASTS: RangeInclusive<i32> = 1..=500;
-/// The most creatures a death brings.
-pub const MAX_COUNT: i32 = 20;
-/// How far from the corpse what crawls out may appear, in cells (Chebyshev).
-pub const SPREADS: RangeInclusive<i32> = 1..=5;
 /// What a half cut off a creature pays when killed, in percent of its type's experience.
 pub const HALF_SHARE: u8 = 25;
 /// What a creature that crawled out of a corpse pays when killed, in percent.
@@ -90,15 +82,9 @@ impl Content {
     }
 
     fn resolve_splits(&self, spec: &SplitsSpec) -> Result<Splits, String> {
-        if spec.on.is_empty() {
-            return Err("splits: `on` names no damage type".into());
-        }
-        if !LEASTS.contains(&spec.least) {
-            return Err(format!(
-                "splits: `least` must be {} to {}",
-                LEASTS.start(),
-                LEASTS.end()
-            ));
+        // Each half keeps at least `least` hit points: never none.
+        if spec.least < 1 {
+            return Err("splits: `least` must be 1 or more".into());
         }
         let on = (spec.on.iter())
             .map(|name| {
@@ -116,19 +102,7 @@ impl Content {
         if spec.creatures.is_empty() {
             return Err("dies_into: `creatures` names none".into());
         }
-        if spec.count.min() < 1 || spec.count.max() > MAX_COUNT {
-            return Err(format!(
-                "dies_into: `count` must lie within 1 to {MAX_COUNT}"
-            ));
-        }
         let spread = spec.spread.unwrap_or(1);
-        if !SPREADS.contains(&spread) {
-            return Err(format!(
-                "dies_into: `spread` must be {} to {}",
-                SPREADS.start(),
-                SPREADS.end()
-            ));
-        }
         let campaign = self.creature(me).campaign.as_deref();
         let pool = (spec.creatures.iter())
             .map(|name| {
@@ -141,7 +115,7 @@ impl Content {
                         other.campaign.as_deref().unwrap_or_default()
                     ));
                 }
-                if c == me || other.unique || other.id == "player" {
+                if other.unique || other.id == "player" {
                     return Err(format!("dies_into: `{name}` cannot crawl out of a corpse"));
                 }
                 Ok(c)

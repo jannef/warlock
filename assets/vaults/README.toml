@@ -33,8 +33,10 @@
 #    over one empty cell).
 # 11. Fixed creatures carry keys and colour; pools carry the danger. A placed `creature` is
 #    level 2 on floor 20.
-# 12. Locks ship their key: one key object per lock id, in `assets/data/objects/`. A chest is
-#    the keyless lock. `locked = true` on a door is not used.
+# 12. Locks ship their key: one key object per lock id, in `assets/data/objects/`, lying or
+#    carried within reach of an entrance without unlocking a door, and every walkable cell is
+#    reached from an entrance: the loader does not check either (#1205). A chest is the keyless
+#    lock. `locked = true` on a door is not used.
 # 13. A vault offers nothing to pray at, drink from, or temper on: anvils, springs, and altars
 #    are decoration until a room effect names them.
 # 14. Campaign lore stays in campaign vaults. A shared vault names no place, people, god, or

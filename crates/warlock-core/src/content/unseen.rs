@@ -11,14 +11,11 @@
 use super::Content;
 use super::status::StatusId;
 use serde::Deserialize;
-use std::ops::RangeInclusive;
 
 /// The status a fading gives (`data/status.toml`): Invisible.
 pub const STATUS: &str = "invisible";
 /// The cooldown status a fading gives (`data/status.toml`).
 pub const SPENT: &str = "invisibility";
-/// A fading's cooldown, in seconds.
-pub const COOLDOWNS: RangeInclusive<u32> = 6..=600;
 
 /// `invisible` as written: `invisible = true` or `[creature.invisible]` with its `cooldown`.
 #[derive(Clone, Copy, Debug, Deserialize)]
@@ -61,13 +58,6 @@ impl InvisibleSpec {
             InvisibleSpec::Always(true) => return Ok(Some(Invisible::Innate)),
             InvisibleSpec::Fades(fade) => fade,
         };
-        if !COOLDOWNS.contains(&fade.cooldown) {
-            return Err(format!(
-                "invisible: `cooldown` must be {} to {} seconds",
-                COOLDOWNS.start(),
-                COOLDOWNS.end()
-            ));
-        }
         let status = (content.status_id(STATUS))
             .filter(|&s| content.status(s).unseen)
             .ok_or_else(|| format!("invisible: needs the `{STATUS}` status, `unseen`"))?;

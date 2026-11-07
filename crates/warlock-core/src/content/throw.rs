@@ -10,10 +10,6 @@ use super::status::{OnHitSpec, StatusId};
 use crate::damage::Kinds;
 use crate::dice::Dice;
 use serde::Deserialize;
-use std::ops::RangeInclusive;
-
-/// How far a throw may reach, in cells.
-pub const THROW_RANGES: RangeInclusive<i32> = 2..=20;
 
 /// A throw as written: `[creature.throw]` with `object` (what flies), `damage`, `damage_type`,
 /// `range`, `verb` (what the thrower does: "hurls"), and optionally `name` (what it is called;
@@ -65,13 +61,6 @@ impl ThrowSpec {
         disease: impl Fn(&str) -> Option<DiseaseId>,
         kinds: Kinds,
     ) -> Result<Throw, String> {
-        if !THROW_RANGES.contains(&self.range) {
-            return Err(format!(
-                "throw: `range` must be {} to {}",
-                THROW_RANGES.start(),
-                THROW_RANGES.end()
-            ));
-        }
         if let Some(cost) = self.cost {
             super::action::check_cost(cost).map_err(|m| format!("throw: cost: {m}"))?;
         }

@@ -229,11 +229,10 @@ fn tag_targets_are_checked_at_load() {
         "{error}"
     );
     let error = with_quest("tag:Goblin", 5).expect_err("refused");
-    assert!(error.contains("lower-case words"), "{error}");
-    let error = with_quest("tag:goblin", 1000).expect_err("refused");
-    assert!(error.contains("`count` is 1 to 999"), "{error}");
-    let error = with_quest("goblin", 100).expect_err("refused");
-    assert!(error.contains("`count` is 1 to 99"), "{error}");
+    assert!(
+        error.contains("tag `Goblin`: no creature carries it"),
+        "{error}"
+    );
     // A tag only another campaign's creatures carry: the hermit is the showcase's, so an
     // Ascmearc quest may not ask for it.
     let mut files = ContentFiles::builtin();
@@ -254,15 +253,10 @@ fn tag_targets_are_checked_at_load() {
 
 #[test]
 fn bad_creature_tags_are_refused() {
-    for (tags, says) in [
-        ("[\"Goblin\"]", "lower-case words"),
-        ("[\"goblin\", \"goblin\"]", "tag `goblin` twice"),
-    ] {
-        let mut files = ContentFiles::builtin();
-        files.edit_table("creatures", |text| {
-            text.replace("tags = [\"goblin\"]\n", &format!("tags = {tags}\n"))
-        });
-        let error = Content::load(&files).map(|_| ()).expect_err("refused");
-        assert!(error.to_string().contains(says), "{tags}: {error}");
-    }
+    let mut files = ContentFiles::builtin();
+    files.edit_table("creatures", |text| {
+        text.replace("tags = [\"goblin\"]\n", "tags = [\"Goblin\"]\n")
+    });
+    let error = Content::load(&files).map(|_| ()).expect_err("refused");
+    assert!(error.to_string().contains("lower-case words"), "{error}");
 }

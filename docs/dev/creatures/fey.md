@@ -28,8 +28,8 @@ each of the Seelie or the Unseelie court by its weights (the creatures README's 
 may hold), dryad 19 and nymph 22 (casters whose touch transfixes; the nymph steals anything), korred 25 (small, very tough,
 fists that may hold), yeth hound 31 (quick, a bite that frightens). Lean Unseelie: redcap and
 meenlock 10/90, quickling and yeth hound 25/75; lean Seelie: dryad and nymph 90/10, blink dog
-80/20; the rest even. `content/fey_roster_tests.rs` holds levels, roles, and court weights against
-#383's formulas (XP `5L + 10`; max HP and dice within ±35 %). Riders are existing statuses only
+80/20; the rest even. Levels, roles, and court weights follow
+#383's formulas (XP `5L + 10`; max HP and dice within ±35 %); `content/fey_roster_tests.rs` checks the courts. Riders are existing statuses only
 (poisoned, transfixed, frightened, held); the redcap has no bleeding rider (`mana_tests`' status
 fixture lacks Bleeding). Tests of the mechanism: `world/court_tests.rs` (weights over many draws,
 per-seed determinism, save and load, a level's faction winning, look mode's stance, a struck

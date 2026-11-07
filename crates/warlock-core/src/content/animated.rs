@@ -342,14 +342,6 @@ impl Animated {
         };
         let err = |m: String| ContentError::new(RULES, m);
         let rules: RulesFile = toml::from_str(text).map_err(|e| err(e.to_string()))?;
-        if rules.drops.intact > 100 {
-            return Err(err(
-                "drops: `intact` is a chance in percent, 0 to 100".into()
-            ));
-        }
-        if rules.drops.pieces > 100 {
-            return Err(err("drops: `pieces` is a percent, 0 to 100".into()));
-        }
         let mut lines = Vec::new();
         let mut tiers = rules.tier;
         for tier in &mut tiers {
@@ -368,15 +360,12 @@ impl Animated {
             } else {
                 Vec::new()
             });
-            if from == 0 || from > to || to > super::MAX_LEVEL {
+            // A family is numbered in a row of its levels, least first.
+            if from > to {
                 return Err(err(format!(
-                    "tier `{}`: `levels` must be 1 to {} and least first",
-                    tier.id,
-                    super::MAX_LEVEL
+                    "tier `{}`: `levels` must be least first",
+                    tier.id
                 )));
-            }
-            if !(0.0..=10.0).contains(&tier.hp_factor) {
-                return Err(err(format!("tier `{}`: `hp_factor` is 0 to 10", tier.id)));
             }
         }
         if tiers.iter().filter(|t| t.bodies).count() > 1 {
@@ -421,19 +410,6 @@ impl Animated {
         let object = (content.object_id(&spec.object))
             .ok_or_else(|| format!("body `{id}`: unknown object `{}`", spec.object))?;
         let def = content.object(object);
-        if content.item_class(def.class).id != "household" {
-            return Err(format!(
-                "body `{id}`: object `{}` is not of class `household`",
-                spec.object
-            ));
-        }
-        let [from, to] = self.tiers[tier].levels;
-        if !(from..=to).contains(&spec.level) {
-            return Err(format!(
-                "body `{id}`: level {} is outside its tier's {from} to {to}",
-                spec.level
-            ));
-        }
         let count = match spec.count {
             None => (1, 1),
             Some([least, most]) if least >= 1 && least <= most && def.stackable => (least, most),
@@ -698,10 +674,10 @@ fn family_lines(tier: &Tier, content: &Content) -> Result<Vec<Line>, String> {
                     .ok_or_else(|| format!("tier `{id}`: unknown class `{c}`"))
             })
             .collect::<Result<Vec<_>, _>>()?;
-        if line.chance > 100 || classes.is_empty() || !(1..=4).contains(&line.count) {
+        // The draw indexes the classes.
+        if classes.is_empty() {
             return Err(format!(
-                "tier `{id}`: slot `{}`: `chance` is 0 to 100, `count` 1 to 4, and `classes` not \
-                 empty",
+                "tier `{id}`: slot `{}`: `classes` is empty",
                 line.slot
             ));
         }

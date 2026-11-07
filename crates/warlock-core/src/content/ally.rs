@@ -4,14 +4,7 @@
 //! nothing here is read.
 
 use super::ContentError;
-use crate::noise::MAX_LOUDNESS;
 use serde::Deserialize;
-use std::ops::RangeInclusive;
-
-/// Each distance here, in cells.
-pub const DISTANCES: RangeInclusive<i32> = 1..=20;
-/// How many allies the player may lead on one level, at most.
-pub const MOSTS: RangeInclusive<u8> = 1..=24;
 
 /// The numbers of the ally core.
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -81,49 +74,16 @@ impl AllyRules {
     pub(super) fn parse(file: &str, text: &str) -> Result<Self, ContentError> {
         let err = |m: String| ContentError::new(file, m);
         let parsed: AllyFile = toml::from_str(text).map_err(|e| err(e.to_string()))?;
-        let distance = |name: &str, v: i32| {
-            DISTANCES.contains(&v).then_some(v).ok_or_else(|| {
-                err(format!(
-                    "`{name}` is {} to {} cells, not {v}",
-                    DISTANCES.start(),
-                    DISTANCES.end()
-                ))
-            })
-        };
-        let rules = AllyRules {
-            heel: distance("follow.heel", parsed.follow.heel)?,
-            leash: distance("follow.leash", parsed.follow.leash)?,
-            comes_along: distance("follow.comes_along", parsed.follow.comes_along)?,
-            stay_reach: distance("stay.reach", parsed.stay.reach)?,
-            hunt_reach: distance("hunt.reach", parsed.hunt.reach)?,
+        Ok(AllyRules {
+            heel: parsed.follow.heel,
+            leash: parsed.follow.leash,
+            comes_along: parsed.follow.comes_along,
+            stay_reach: parsed.stay.reach,
+            hunt_reach: parsed.hunt.reach,
             order_noise: parsed.orders.noise,
             most: parsed.allies.most,
             ally_percent: parsed.xp.ally_percent,
-        };
-        if rules.leash < rules.heel {
-            return Err(err("`follow.leash` is at least `follow.heel`".into()));
-        }
-        if !(1..=MAX_LOUDNESS).contains(&rules.order_noise) {
-            return Err(err(format!(
-                "`orders.noise` is 1 to {MAX_LOUDNESS}, not {}",
-                rules.order_noise
-            )));
-        }
-        if !MOSTS.contains(&rules.most) {
-            return Err(err(format!(
-                "`allies.most` is {} to {}, not {}",
-                MOSTS.start(),
-                MOSTS.end(),
-                rules.most
-            )));
-        }
-        if rules.ally_percent > 100 {
-            return Err(err(format!(
-                "`xp.ally_percent` is 0 to 100, not {}",
-                rules.ally_percent
-            )));
-        }
-        Ok(rules)
+        })
     }
 }
 
@@ -164,20 +124,11 @@ mod tests {
     }
 
     #[test]
-    fn bad_numbers_are_refused() {
-        let bad = |from: &str, to: &str, says: &str| {
-            let text = FILE.replace(from, to);
-            let err = AllyRules::parse("allies.toml", &text)
-                .expect_err("refused")
-                .to_string();
-            assert!(err.contains(says), "{err}");
-        };
-        bad("heel = 2", "heel = 0", "follow.heel");
-        bad("comes_along = 3", "comes_along = 21", "comes_along");
-        bad("leash = 8", "leash = 1", "at least `follow.heel`");
-        bad("noise = 60", "noise = 0", "orders.noise");
-        bad("most = 8", "most = 0", "allies.most");
-        bad("ally_percent = 100", "ally_percent = 101", "ally_percent");
-        bad("[xp]\nally_percent = 100\n", "", "missing field");
+    fn a_missing_field_is_refused() {
+        let text = FILE.replace("[xp]\nally_percent = 100\n", "");
+        let err = AllyRules::parse("allies.toml", &text)
+            .expect_err("refused")
+            .to_string();
+        assert!(err.contains("missing field"), "{err}");
     }
 }

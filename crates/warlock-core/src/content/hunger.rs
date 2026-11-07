@@ -429,9 +429,6 @@ impl Corpses {
             food.check().map_err(|m| format!("size {id}: {m}"))?;
             by_size[i] = Some(food);
         }
-        for (tag, gifts) in &spec.by_tag {
-            gifts.check().map_err(|m| format!("by_tag {tag}: {m}"))?;
-        }
         if let Some(id) = (spec.skills.iter())
             .find(|(_, n)| n.learn.trim().is_empty() || n.rise.trim().is_empty())
             .map(|(id, _)| id)

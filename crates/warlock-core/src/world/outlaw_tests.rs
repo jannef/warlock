@@ -90,11 +90,6 @@ fn the_outlaws_are_the_ascmearcs_own_and_hunt_only_the_player() {
     ] {
         let def = CONTENT.creature(CONTENT.creature_id(id).expect(id));
         assert_eq!(def.campaign.as_deref(), Some("ascmearc"), "{id}");
-        assert_eq!(
-            def.xp,
-            5 * u32::from(def.level) + 10,
-            "{id}: the XP guideline"
-        );
         assert!(
             CONTENT.has_tag(CONTENT.creature_id(id).expect(id), "outlaw"),
             "{id}"

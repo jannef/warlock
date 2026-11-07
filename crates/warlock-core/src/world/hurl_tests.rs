@@ -340,7 +340,7 @@ fn throwing_fights_replay_exactly() {
 }
 
 #[test]
-fn a_throw_needs_a_known_object_and_a_range_it_can_fly() {
+fn a_throw_needs_a_known_object() {
     let bad = |from: &str, to: &str| {
         let mut files = files("#@#\n");
         files.insert("data/creatures.toml", &CREATURES.replacen(from, to, 1));
@@ -348,6 +348,4 @@ fn a_throw_needs_a_known_object_and_a_range_it_can_fly() {
     };
     let err = bad("object = \"boulder\"", "object = \"pebble\"");
     assert!(err.contains("throw: unknown object `pebble`"), "{err}");
-    let err = bad("range = 6", "range = 1");
-    assert!(err.contains("throw: `range` must be 2 to 20"), "{err}");
 }

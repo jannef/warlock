@@ -1,13 +1,11 @@
 //! The mimics (spec §8 "Mimics", `data/mimics.toml`; docs/design/chests-and-treasure.md §5.6):
-//! one type a level, named by bands that match the chest bands, every level a brute on the
-//! roster's formulas, and placed by nothing but a chest.
+//! one type a level, named by bands that match the chest bands, every level's slam holding, and
+//! placed by nothing but a chest.
 
 use super::Content;
-use super::undead_roster_tests::{Role, dice_average, max_hp, within};
-use crate::stats::Stat;
 
 #[test]
-fn one_mimic_a_level_on_the_brute_formulas() {
+fn one_mimic_a_level_whose_slam_holds() {
     let content = Content::builtin().expect("content");
     let mimics = content.mimics();
     assert_eq!(mimics.levels, [1, 60]);
@@ -25,19 +23,7 @@ fn one_mimic_a_level_on_the_brute_formulas() {
         assert!(!def.stray && def.faction == vermin, "{}", def.id);
         assert!(def.tags.iter().any(|t| t == "mimic"));
         assert_eq!(def.budge, super::Budge::Never);
-        let l = f64::from(level);
-        let hp = f64::from(def.stats.score(Stat::Toughness)) + f64::from(def.base_hp);
-        let want = max_hp(l, Role::Brute) * super::variance_roster_tests::starter(level);
-        assert!(
-            within(hp, want),
-            "{}: max HP {hp}, the formula {want:.1}",
-            def.id
-        );
         let attack = def.attack.as_ref().expect("a slam");
-        let damage = attack.attack.damage;
-        let average = f64::from(damage.min() + damage.max()) / 2.0;
-        let want = dice_average(l, Role::Brute, false);
-        assert!(within(average, want), "{}: dice {average}, {want}", def.id);
         let held = content.status_id("held").expect("held");
         assert!(
             (attack.on_hit.iter()).any(

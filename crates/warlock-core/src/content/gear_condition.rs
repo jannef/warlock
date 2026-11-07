@@ -103,13 +103,9 @@ struct TribeSpec {
 }
 
 impl GearConditions {
-    /// Parses `data/gear_condition.toml`: odds that add up to at most [`PER_MILLE`], each tribe's
-    /// tag once and worn by some creature, and kinds that materials resist.
-    pub(super) fn parse(
-        file: &str,
-        text: &str,
-        content: &super::Content,
-    ) -> Result<Self, ContentError> {
+    /// Parses `data/gear_condition.toml`: odds that add up to at most [`PER_MILLE`] (a roll out
+    /// of it falls in one band), each tribe's tag once.
+    pub(super) fn parse(file: &str, text: &str) -> Result<Self, ContentError> {
         let err = |m: String| ContentError::new(file, m);
         let parsed: File = toml::from_str(text).map_err(|e| err(e.to_string()))?;
         let check = |name: &str, odds: &Odds| {
@@ -126,9 +122,6 @@ impl GearConditions {
             if tribes.iter().any(|t| t.tag == spec.tag) {
                 return Err(err(format!("tribe `{}` is listed twice", spec.tag)));
             }
-            if !content.creatures.iter().any(|c| c.tags.contains(&spec.tag)) {
-                return Err(err(format!("no creature has tag `{}`", spec.tag)));
-            }
             tribes.push(TribeOdds {
                 tag: spec.tag,
                 odds: spec.odds,
@@ -139,11 +132,6 @@ impl GearConditions {
             let list: Vec<ItemHarm> = list
                 .try_into()
                 .map_err(|e: toml::de::Error| err(format!("kinds of `{group}`: {e}")))?;
-            if list.iter().any(|k| !ItemHarm::RESISTED.contains(k)) {
-                return Err(err(format!(
-                    "kinds of `{group}`: only acid, rust, and fire"
-                )));
-            }
             kinds.push((group, list));
         }
         Ok(Self {

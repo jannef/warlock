@@ -26,33 +26,33 @@
 #              §8 "Searching"; default none): only doors the stairs and every key are reached
 #              without, so a level may get fewer
 #   hidden_per_depth  how much harder its hidden features (secret doors, hidden traps) are to
-#              find for each level below the first (0 to 5, default 0)
+#              find for each level below the first (default 0)
 #   locks_per_depth  how much harder its locks are to pick (spec §8 "Doors") for each level below
-#              the first, on top of the lock's own difficulty (14 unless a vault gives it one; 0
-#              to 5, default 0)
+#              the first, on top of the lock's own difficulty (14 unless a vault gives it one;
+#              default 0)
 #   loot       [fewest, most] items of loot on the floor of each level, rolled at the depth as
 #              item level (spec §8 "Magic items"; default none)
-#   chests     `{ chance, count }`: percent of its floors with chests (0 to 100) and how many such
-#              a floor gets, `[least, most]` (at most 8), each of the floor's level, locked,
+#   chests     `{ chance, count }`: percent of its floors with chests and how many such
+#              a floor gets, `[least, most]`, each of the floor's level, locked,
 #              trapped, and filled by its band in data/chests.toml (spec §8 "Chests"; default
 #              `{ chance = 20, count = [1, 1] }`: one floor in five has one)
 #   ambient    [r, g, b, uv] light everywhere (default none)
-#   temperature  °C on its levels (spec §5 "Temperature"; -40 to 40, default 10, the dungeon
+#   temperature  °C on its levels (spec §5 "Temperature"; default 10, the dungeon
 #              default): water there freezes below 0
 #   key        a key (objects.toml, spec §8 "Doors"): the rooms generator locks the door of up to
 #              two rooms that have only one, with the lock this key opens, and leaves the key
 #              where the player reaches it without unlocking anything (default none: no locks)
 #   danger     how dangerous its floors are (spec §7 "Danger levels"; default none: 0, and
 #              nothing comes): `danger = 4` is `{ base = 4, per_depth = 1 }`, the floor at depth d
-#              `base + (d - 1) × per_depth` (base 0 to 99, per_depth 0 to 5); `player = {
+#              `base + (d - 1) × per_depth` (at most 99 a floor); `player = {
 #              percent, from, max }` adds percent % of each player level past `from`, at most
 #              `max` (an area that grows with the player). With a danger, also:
 #   population  creature ids that live there (default `creatures`); each type's level is its
 #              danger, and draws favour types at about the floor's
 #   population_count  how many a floor holds: a number, or `{ per_1000, least, most }` by its
-#              walkable cells (default { per_1000 = 35, least = 25, most = 80 }; at most 200)
+#              walkable cells (default { per_1000 = 35, least = 25, most = 80 })
 #   stray      percent of draws made from the generic creature list instead of `population`
-#              (0 to 100, default `[defaults]`'s): every type of this campaign or of none that
+#              (default `[defaults]`'s): every type of this campaign or of none that
 #              is hostile to the player, no unique, no animated object, and not marked
 #              `stray = false`, whether a population names it or not, and every type that lives
 #              in some branch or level with a danger of this campaign or of none, uniques left
@@ -61,17 +61,17 @@
 #   stray_pool  where the strays come from: "all" (the default, as above) or "populations"
 #              (only the types living in some branch or level with a danger of this campaign
 #              or of none, uniques left out: a branch whose folk are a design's table)
-#   out_of_depth  percent of draws made out of depth (0 to 100, default `[defaults]`'s): one
+#   out_of_depth  percent of draws made out of depth (default `[defaults]`'s): one
 #              danger deeper, then `deeper` % again and again one deeper still, at most
 #              `deeper_cap` times; where `population` weighs nothing that deep (all too weak),
 #              the generic list is drawn there instead
-#   deeper     percent of each further step deeper (0 to 100, default `[defaults]`'s)
-#   deeper_cap  the most steps past the first (0 to 50, default `[defaults]`'s)
-#   neutral    the weight, in percent of its own (0 to 100, default `[defaults]`'s), that a
+#   deeper     percent of each further step deeper (default `[defaults]`'s)
+#   deeper_cap  the most steps past the first (default `[defaults]`'s)
+#   neutral    the weight, in percent of its own (default `[defaults]`'s), that a
 #              type not hostile to the player by default (wildlife and the like) keeps in the
 #              draws of a floor's population and its timed spawns; the hostile types take the
 #              rest (a vault's pools and a teeming den draw as before)
-#   dread_one_in  one draw in this many (1 or more, default `[defaults]`'s) is made among the
+#   dread_one_in  one draw in this many (0: none, default `[defaults]`'s) is made among the
 #              dread types alone (a creature's `dread = true`), each by its level and rarity,
 #              and every other draw among the rest; where the side rolled has nothing to draw,
 #              the draw is made among the other. A vault's monster pool rolls none
@@ -79,12 +79,12 @@
 #              while the player is on a floor, every `every` a creature comes with `chance` %
 #              unless the floor holds `cap` creatures hostile to the player
 #   room_effects  the branch's own special-room odds (spec §7 "Special rooms"), a table:
-#              `chance` (percent a room is special, 0 to 100), `per_level` (at most this many a
-#              level, 1 to 8), `effects` (ids in room_effects.toml, picked uniformly; not empty
-#              while `chance` is above 0); each field defaults to room_effects.toml's (`effects`:
-#              all of them), e.g. `room_effects = { chance = 25, effects = ["flooded"] }`
+#              `chance` (percent a room is special), `per_level` (at most this many a level),
+#              `favoured` (`{ id = share }`, ids in room_effects.toml, each its fixed percent of
+#              the draws) and `banned` (ids never drawn); each field defaults to
+#              room_effects.toml's, e.g. `room_effects = { chance = 25, favoured = { flooded = 40 } }`
 #   shops      the branch's own shop odds (spec §7 "Shops"), a table: `chance` (percent of its
-#              rooms levels with a shop, 0 to 100), `kinds` (ids in shops.toml, picked
+#              rooms levels with a shop), `kinds` (ids in shops.toml, picked
 #              uniformly), `names` (the keepers' names), `keeper` (the keepers' creature type;
 #              they carry the shared `[keeper]`'s kit); each field defaults to shops.toml's,
 #              e.g. `shops = { chance = 0 }` for none

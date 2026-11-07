@@ -7,15 +7,9 @@ use crate::light::Light;
 use crate::time::{DAY, GameTime};
 use serde::Deserialize;
 
-/// Most moons a sky may have.
-pub const MAX_MOONS: usize = 8;
-/// Longest cycle a moon may have, in days (ten years).
-pub const MAX_PERIOD_DAYS: u32 = 3600;
 /// Apparent size of a standard moon, in percent: one of this size gives its `color` and `sky`
 /// at full moon, high in the night sky.
 pub const STANDARD_SIZE: u16 = 100;
-/// Largest apparent size, in percent of a standard moon.
-pub const MAX_SIZE: u16 = 400;
 /// [`MoonDef::phase_at`] of a whole cycle (16-bit fixed point).
 pub const PHASE_ONE: u32 = 1 << 16;
 
@@ -68,25 +62,13 @@ struct SkyFile {
 pub(super) fn parse(file: &str, text: &str) -> Result<Vec<MoonDef>, ContentError> {
     let err = |m: String| ContentError::new(file, m);
     let parsed: SkyFile = toml::from_str(text).map_err(|e| err(e.to_string()))?;
-    if parsed.moon.len() > MAX_MOONS {
-        return Err(err(format!("at most {MAX_MOONS} moons")));
-    }
-    for (i, moon) in parsed.moon.iter().enumerate() {
-        let err = |m: &str| err(format!("moon {} (`{}`): {m}", i + 1, moon.name));
-        if moon.name.trim().is_empty() {
-            return Err(err("empty name"));
-        }
-        if !(1..=MAX_PERIOD_DAYS).contains(&moon.period_days) {
-            return Err(err(&format!(
-                "`period_days` must be 1 to {MAX_PERIOD_DAYS}"
-            )));
-        }
-        if moon.phase_offset_days >= moon.period_days {
-            return Err(err("`phase_offset_days` must be less than `period_days`"));
-        }
-        if !(1..=MAX_SIZE).contains(&moon.size) {
-            return Err(err(&format!("`size` must be 1 to {MAX_SIZE}")));
-        }
+    // The phase is the time modulo the period.
+    if let Some((i, moon)) = (parsed.moon.iter().enumerate()).find(|(_, m)| m.period_days == 0) {
+        return Err(err(format!(
+            "moon {} (`{}`): `period_days` is at least 1",
+            i + 1,
+            moon.name
+        )));
     }
     Ok(parsed.moon)
 }
@@ -117,15 +99,7 @@ period_days = 30
     fn rejects_bad_moons() {
         for (bad, why) in [
             (ONE.replace("30", "0"), "period_days"),
-            (ONE.replace("30", "3601"), "period_days"),
-            (
-                format!("{ONE}phase_offset_days = 30\n"),
-                "phase_offset_days",
-            ),
-            (format!("{ONE}size = 0\n"), "size"),
-            (ONE.replace("\"Moon\"", "\" \""), "empty name"),
             (format!("{ONE}tides = 2\n"), "unknown field"),
-            (ONE.repeat(MAX_MOONS + 1), "at most"),
         ] {
             let e = parse("sky", &bad).expect_err(why);
             assert!(e.message.contains(why), "{why}: {}", e.message);

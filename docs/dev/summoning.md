@@ -16,14 +16,14 @@ creatures of its side, with no ability in the abilities menu, no action, no key,
   with `summon::resolve` into `CreatureDef::summon: Option<Summon>`: the pool (ids, or a tag
   within `levels`, uniques and the summoner left out, in creature order; a shared summoner may
   call only shared types, a campaign's its own too; a list may name the summoner itself, a
-  breeder, docs/design/monster-dread.md §5.5 G5c, #1129), `count` (dice, 1 to `MAX_COUNT` = 12),
+  breeder, docs/design/monster-dread.md §5.5 G5c, #1129), `count` (dice),
   `cooldown` and the degrees of the cooldown status it gives (`ceil(cooldown / eases)`), `mana`
-  (`SummonSpec::mana: Option`, 1 to 1000 when given; left out, 0, and the summoner needs no
-  mana: a breeder's, limited by its cooldown and `most`),
+  (`SummonSpec::mana: Option`; left out, 0: a breeder's, limited by its cooldown and `most`),
   `range` (default 8), `spread` (default 2), `most` (default 6), `verb` (default "summons").
-  Refused: no pool or both kinds, `tag` without `levels`, out-of-range numbers, an unknown or
-  another campaign's creature, the player, an empty pool, a cost on a summoner without `mana`, and a missing
-  `summoning` status (`summon::STATUS`) or one that ticks or never eases.
+  Refused: no pool or both kinds, `tag` without `levels` or `levels` without `tag`, an unknown or
+  another campaign's creature, the player, an empty pool, and a missing `summoning` status
+  (`summon::STATUS`), one that ticks or never eases, or one too short for the cooldown. The
+  numbers are the author's (#1205): a summoner with too little mana for its cost never summons.
 - **The cooldown is a status** (`data/status.toml` `summoning`: no tick, eases 6 s a degree, max
   100, refresh, no `seen`): the house rule for ability limits (`ability.rs` module docs). It is
   saved with the actor's `effects`, as every status is; nothing counts uses.
@@ -57,11 +57,11 @@ creatures of its side, with no ability in the abilities menu, no action, no key,
   the mana paid and the status given, the message; the cooldown; no mana; the cap; Silence;
   walls; the tag pool; the load refusals; the save round trip; determinism; and on the shipped
   content, the goblin wizard in the summoning hall and a summoned kill paying XP),
-  `content/summon.rs` (the spec checks), `content/summoner_roster_tests.rs` (every summoning
-  goes with the `summoner` tag and another tribe's, and the roster's numbers).
+  `content/summon.rs` (the pool's form), `content/summoner_roster_tests.rs` (every summoning
+  goes with the `summoner` tag and another tribe's).
 
 Adding a summoner: give the type `mana` (unless its summoning costs none), a `[creature.summon]`,
-and the tag `summoner` besides its own tribe's; the roster tests check the rest. **Breeders**
+and the tag `summoner` besides its own tribe's. **Breeders**
 (G5c): the wormlord sheds grave worms (`1d2` every 30 s, `most = 6`, no cost, verb "sheds");
 `world/split_tests.rs` checks it breeds to its cap, and a fixture type that breeds its own kind
 at no cost. What a creature lets out as it dies is no summoning: `dies_into`

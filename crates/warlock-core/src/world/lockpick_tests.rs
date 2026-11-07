@@ -359,38 +359,14 @@ fn picking_replays() {
 }
 
 #[test]
-fn bad_lock_difficulties_are_reported() {
-    let level = |legend: &str| {
-        format!(
-            "name = \"x\"\nmap = '''\n#####\n#@X.#\n#####\n'''\n[legend]\n\"X\" = {legend}\n\
-             \"@\" = {{ terrain = \"floor\", spawn = \"player\" }}\n"
-        )
-    };
-    for (legend, expected) in [
-        (
-            "{ terrain = \"door_closed\", lock_difficulty = 20 }",
-            "has a `lock_difficulty` but no lock",
-        ),
-        (
-            "{ terrain = \"door_closed\", locked = true, lock_difficulty = 0 }",
-            "`lock_difficulty` is 1 to 50, not 0",
-        ),
-        (
-            "{ terrain = \"door_closed\", lock = \"a\", lock_difficulty = 51 }",
-            "`lock_difficulty` is 1 to 50, not 51",
-        ),
-    ] {
-        let mut files = files(false);
-        files.insert("levels/hall.toml", &level(legend));
-        let err = Content::load(&files).unwrap_err().message;
-        assert!(err.contains(expected), "{legend}: {err}");
-    }
+fn a_lock_difficulty_without_a_lock_is_reported() {
+    let legend = "{ terrain = \"door_closed\", lock_difficulty = 20 }";
+    let level = format!(
+        "name = \"x\"\nmap = '''\n#####\n#@X.#\n#####\n'''\n[legend]\n\"X\" = {legend}\n\
+         \"@\" = {{ terrain = \"floor\", spawn = \"player\" }}\n"
+    );
     let mut files = files(false);
-    let path = "campaigns/showcase/data/dungeons/showcase.toml";
-    let (_, dungeons) = (files.table("dungeons").find(|(p, _)| *p == path)).expect("the depths");
-    let steep = dungeons.replace("locks_per_depth = 1", "locks_per_depth = 6");
-    assert_ne!(steep, dungeons);
-    files.insert(path, &steep);
+    files.insert("levels/hall.toml", &level);
     let err = Content::load(&files).unwrap_err().message;
-    assert!(err.contains("locks_per_depth must be 0 to 5"), "{err}");
+    assert!(err.contains("has a `lock_difficulty` but no lock"), "{err}");
 }

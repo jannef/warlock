@@ -17,38 +17,18 @@
 use super::damage_type::DamageTypeId;
 use super::status::StatusId;
 use super::{Content, creature::CreatureSpec};
-use crate::noise::{MAX_LOUDNESS, SoundKind};
+use crate::noise::SoundKind;
 use crate::stats::Stat;
 use serde::Deserialize;
-use std::ops::RangeInclusive;
 
 /// The cooldown status an aura gives its bearer (`data/status.toml`).
 pub const STATUS: &str = "aura";
-/// How far an aura reaches, in cells.
-pub const RADII: RangeInclusive<i32> = 1..=6;
-/// Seconds between an aura's touches.
-pub const EVERIES: RangeInclusive<u32> = 6..=600;
 /// An aura's touches without `every`: two turns apart.
 pub const DEFAULT_EVERY: u32 = 12;
 /// How loud a heard aura is without `loudness`: a voice.
 pub const DEFAULT_LOUDNESS: u16 = crate::noise::VOICE_NOISE;
-/// Seconds between a creature's cries, on average.
-pub const CRY_EVERIES: RangeInclusive<u32> = 6..=3600;
 /// The seconds one idle action stands for in a cry's chance: a turn.
 pub const CRY_TURN: u32 = 6;
-/// The sounds a creature may cry.
-pub const CRY_KINDS: [SoundKind; 9] = [
-    SoundKind::Banging,
-    SoundKind::Voice,
-    SoundKind::Howl,
-    SoundKind::Buzzing,
-    SoundKind::Giggle,
-    SoundKind::Hiss,
-    SoundKind::Rattle,
-    SoundKind::Scream,
-    SoundKind::Wail,
-];
-
 /// An aura as written: `[creature.aura]` (`data/creatures/README.toml` has the fields).
 #[derive(Clone, Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -130,32 +110,18 @@ pub(super) fn resolve(content: &Content, spec: &CreatureSpec) -> Result<Presence
     for name in &spec.innate {
         let status = (content.status_id(name))
             .ok_or_else(|| format!("creature `{id}`: innate: unknown status `{name}`"))?;
-        let def = content.status(status);
-        if def.hold.is_some() || def.hides || def.flees || def.sleeps {
-            return Err(format!(
-                "creature `{id}`: innate: `{name}` holds, hides, frightens, or sleeps"
-            ));
-        }
-        if innate.contains(&status) {
-            return Err(format!("creature `{id}`: innate: `{name}` twice"));
+        // A hold names its holder, and an innate status has none.
+        if content.status(status).hold.is_some() {
+            return Err(format!("creature `{id}`: innate: `{name}` holds"));
         }
         innate.push(status);
     }
     let cry = spec
         .cry
         .map(|c| {
-            if !CRY_KINDS.contains(&c.kind) {
-                return Err(format!("`{}` is no cry", c.kind.name()));
-            }
-            if c.loudness == 0 || c.loudness > MAX_LOUDNESS {
-                return Err(format!("`loudness` must be 1 to {MAX_LOUDNESS}"));
-            }
-            if !CRY_EVERIES.contains(&c.every) {
-                return Err(format!(
-                    "`every` must be {} to {} seconds",
-                    CRY_EVERIES.start(),
-                    CRY_EVERIES.end()
-                ));
+            // A cry's chance is a draw below `every` (`world/aura.rs`).
+            if c.every == 0 {
+                return Err("`every` is 0".into());
             }
             Ok(Cry {
                 kind: c.kind,
@@ -177,30 +143,12 @@ fn aura(content: &Content, spec: &AuraSpec) -> Result<Aura, String> {
         return Err("a hold is a blow's, not an aura's".into());
     }
     let severity = spec.severity.unwrap_or(1);
-    if severity == 0 || severity > def.max {
-        return Err(format!("`severity` must be 1 to {}", def.max));
-    }
-    if !RADII.contains(&spec.radius) {
-        return Err(format!(
-            "`radius` must be {} to {}",
-            RADII.start(),
-            RADII.end()
-        ));
-    }
     let check = match (spec.check, spec.difficulty) {
-        (Some(stat), Some(d)) if (1..=40).contains(&d) => Some((stat, d)),
-        (Some(_), Some(_)) => return Err("`difficulty` must be 1 to 40".into()),
+        (Some(stat), Some(d)) => Some((stat, d)),
         (None, None) => None,
         _ => return Err("`check` and `difficulty` go together".into()),
     };
     let every = spec.every.unwrap_or(DEFAULT_EVERY);
-    if !EVERIES.contains(&every) {
-        return Err(format!(
-            "`every` must be {} to {} seconds",
-            EVERIES.start(),
-            EVERIES.end()
-        ));
-    }
     let cooldown = (content.status_id(STATUS))
         .ok_or_else(|| format!("needs the `{STATUS}` status in status.toml"))?;
     let eases = content.status(cooldown).eases.unwrap_or(1).max(1);
@@ -215,9 +163,6 @@ fn aura(content: &Content, spec: &AuraSpec) -> Result<Aura, String> {
         (false, None) => None,
         (false, Some(_)) => return Err("`loudness` goes with `heard = true`".into()),
     };
-    if heard.is_some_and(|l| l == 0 || l > MAX_LOUDNESS) {
-        return Err(format!("`loudness` must be 1 to {MAX_LOUDNESS}"));
-    }
     let kind = (spec.damage_type.as_deref())
         .map(|k| {
             content
@@ -225,12 +170,6 @@ fn aura(content: &Content, spec: &AuraSpec) -> Result<Aura, String> {
                 .ok_or_else(|| format!("unknown damage type `{k}`"))
         })
         .transpose()?;
-    if spec.touch.trim().is_empty() || spec.unseen.as_ref().is_some_and(|u| u.trim().is_empty()) {
-        return Err("`touch` and `unseen` must not be empty".into());
-    }
-    if !spec.touch.contains("{the}") {
-        return Err("`touch` names the bearer as `{the}`".into());
-    }
     Ok(Aura {
         status,
         severity,

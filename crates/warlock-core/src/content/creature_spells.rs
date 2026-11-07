@@ -30,9 +30,6 @@ pub(super) fn resolve(content: &Content, spec: &CreatureSpec) -> Result<Vec<Spel
     for name in &spec.spells {
         let spell = (content.spell_id(name))
             .ok_or_else(|| format!("creature `{id}`: spells: unknown spell `{name}`"))?;
-        if spells.contains(&spell) {
-            return Err(format!("creature `{id}`: spells: `{name}` twice"));
-        }
         castable(content.spell(spell))
             .map_err(|why| format!("creature `{id}`: spells: `{name}` {why}"))?;
         spells.push(spell);

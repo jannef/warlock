@@ -23,19 +23,6 @@ use super::creature::CreatureId;
 use super::{Content, ContentError};
 use crate::geom::Pos;
 use serde::Deserialize;
-use std::ops::RangeInclusive;
-
-/// The longest one-liner, greeting, or muttered line, in characters: with the speaker's name it
-/// fits the message line.
-pub const MAX_LINE: usize = 72;
-/// The longest reply to a topic, in characters: the dialogue screen wraps it.
-pub const MAX_REPLY: usize = 280;
-/// The longest proper name of an npc, in characters (it heads its lines on the message line).
-pub const MAX_NAME: usize = 24;
-/// The most topics a creature talks about: they are numbered 1 to 9 on the dialogue screen.
-pub const MAX_TOPICS: usize = 9;
-/// The chance, in percent per action, that a creature mutters.
-pub const MUTTER_CHANCES: RangeInclusive<u8> = 1..=100;
 
 /// Index of a dialogue in [`Content::dialogues`].
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
@@ -241,8 +228,7 @@ impl Content {
     }
 
     /// Checks every topic's `route` (spec §8 "Dialogue", "Rumoured ways"): only in a campaign's
-    /// dialogue, at least two waypoints, and every cell of it on walkable ground of the
-    /// campaign's overworld, so the way it marks is one the player could walk.
+    /// dialogue with an overworld, the map it is marked on.
     pub(super) fn check_topic_routes(&self) -> Result<(), ContentError> {
         for dialogue in &self.dialogues {
             for topic in dialogue.topics.iter().filter(|t| !t.route.is_empty()) {
@@ -258,18 +244,11 @@ impl Content {
                         format!("dialogue of {who}: topic `{}`: {m}", topic.id),
                     )
                 };
-                let overworld = (dialogue.campaign.as_deref())
+                if (dialogue.campaign.as_deref())
                     .and_then(|c| self.overworld_of(c))
-                    .ok_or_else(|| bad("a `route` needs its campaign's overworld".into()))?;
-                if topic.route.len() < 2 {
-                    return Err(bad("a `route` has at least two waypoints".into()));
-                }
-                for p in topic.route_cells() {
-                    let walkable =
-                        (overworld.terrain.get(p)).is_some_and(|t| self.terrain(*t).walkable);
-                    if !walkable {
-                        return Err(bad(format!("the route leaves walkable ground at {p}")));
-                    }
+                    .is_none()
+                {
+                    return Err(bad("a `route` needs its campaign's overworld".into()));
                 }
             }
         }
@@ -352,12 +331,7 @@ fn parse_file<'a>(
                 Some(c) => Speaker::Creature(c),
                 None => return Err(err(format!("dialogue for unknown creature `{id}`"))),
             },
-            (None, Some(npc)) if is_id(&npc) => Speaker::Npc(npc),
-            (None, Some(npc)) => {
-                return Err(err(format!(
-                    "npc `{npc}`: ids are lower-case letters, digits, and underscores"
-                )));
-            }
+            (None, Some(npc)) => Speaker::Npc(npc),
             _ => {
                 return Err(err(
                     "every dialogue names exactly one of `creature` and `npc`".into(),
@@ -380,70 +354,29 @@ fn parse_file<'a>(
         if spec.lines.is_empty() {
             return Err(bad("`lines` needs at least one line".into()));
         }
-        match (&spec.name, &speaker) {
-            (Some(_), Speaker::Creature(_)) => {
-                return Err(bad("only an npc has a `name` of its own".into()));
-            }
-            (Some(name), _) if name.trim().is_empty() || name.chars().count() > MAX_NAME => {
-                return Err(bad(format!("`name` is 1 to {MAX_NAME} characters")));
-            }
-            _ => {}
-        }
-        let said = (spec.greet.iter())
-            .chain(&spec.lines)
-            .chain(&spec.greet_evil)
-            .chain(&spec.greet_good);
-        check_lines(said, MAX_LINE).map_err(bad)?;
-        let offers = usize::from(spec.offer.is_some());
-        if spec.topic.len() + spec.service.len() + offers > MAX_TOPICS {
-            return Err(bad(format!(
-                "at most {MAX_TOPICS} topics, services, and an offer"
-            )));
-        }
         for (i, topic) in spec.topic.iter().enumerate() {
             if !is_id(&topic.id) {
-                return Err(bad(format!(
-                    "topic `{}`: ids are lower-case letters, digits, and underscores",
-                    topic.id
-                )));
+                return Err(bad(format!("topic `{}`: {ID_SHAPE}", topic.id)));
             }
             if spec.topic[..i].iter().any(|t| t.id == topic.id) {
                 return Err(bad(format!("duplicate topic `{}`", topic.id)));
-            }
-            check_lines([&topic.name], MAX_LINE)
-                .and_then(|()| check_lines([&topic.reply], MAX_REPLY))
-                .map_err(|m| bad(format!("topic `{}`: {m}", topic.id)))?;
-            if topic.departs && matches!(speaker, Speaker::Npc(_)) {
-                return Err(bad(format!(
-                    "topic `{}`: `departs` is only for a creature type's dialogue: an npc leaving \
-                     is a level's",
-                    topic.id
-                )));
             }
         }
         for (i, service) in spec.service.iter().enumerate() {
             let bad = |m: String| bad(format!("service `{}`: {m}", service.id));
             if !is_id(&service.id) {
-                return Err(bad(
-                    "ids are lower-case letters, digits, and underscores".into()
-                ));
+                return Err(bad(ID_SHAPE.into()));
             }
             let taken = (spec.topic.iter()).any(|t| t.id == service.id)
                 || spec.service[..i].iter().any(|s| s.id == service.id);
             if taken {
                 return Err(bad("its id is a topic's or another service's".into()));
             }
-            if service.price == 0 {
-                return Err(bad("`price` is at least 1 gold".into()));
-            }
             if content.shops().is_none() {
                 return Err(bad(
                     "it is paid in the shops' currency: data/shops.toml is needed".into(),
                 ));
             }
-            check_lines([&service.name], MAX_LINE)
-                .and_then(|()| check_lines([&service.reply, &service.nothing], MAX_REPLY))
-                .map_err(bad)?;
         }
         let offer = match spec.offer {
             Some(o) => {
@@ -457,36 +390,20 @@ fn parse_file<'a>(
             None => None,
         };
         match (spec.speaks_to, &spec.silent) {
-            (Some(r), Some(line)) => {
-                r.check().map_err(|m| bad(format!("`speaks_to`: {m}")))?;
-                check_lines([line], MAX_LINE).map_err(|m| bad(format!("`silent`: {m}")))?;
-            }
             (Some(_), None) => return Err(bad("`speaks_to` needs a `silent` line".into())),
             (None, Some(_)) => {
                 return Err(bad("`silent` is said only outside a `speaks_to`".into()));
             }
-            (None, None) => {}
+            (Some(_), Some(_)) | (None, None) => {}
         }
         let mutter = match spec.mutter {
             Some(m) => {
-                if !MUTTER_CHANCES.contains(&m.chance) {
-                    return Err(bad(format!(
-                        "mutter: `chance` is a percent, {} to {}",
-                        MUTTER_CHANCES.start(),
-                        MUTTER_CHANCES.end()
-                    )));
-                }
                 if m.lines.is_empty() {
                     return Err(bad("mutter: `lines` needs at least one line".into()));
                 }
-                check_lines(&m.lines, MAX_LINE).map_err(|e| bad(format!("mutter: {e}")))?;
-                let verb = m.verb.unwrap_or_else(|| "mutters".into());
-                if verb.is_empty() || !verb.chars().all(|c| c.is_ascii_lowercase()) {
-                    return Err(bad("mutter: `verb` is one lower-case word".into()));
-                }
                 Some(Mutter {
                     chance: m.chance,
-                    verb,
+                    verb: m.verb.unwrap_or_else(|| "mutters".into()),
                     lines: m.lines,
                 })
             }
@@ -512,25 +429,11 @@ fn parse_file<'a>(
     Ok(())
 }
 
-/// Whether `id` is a topic or npc id: lower-case letters, digits, and underscores.
-pub(super) fn is_id(id: &str) -> bool {
-    !id.is_empty() && (id.chars()).all(|c| c.is_ascii_lowercase() || c.is_ascii_digit() || c == '_')
-}
+/// What [`is_id`] asks of an id, as an error says it.
+pub(super) const ID_SHAPE: &str = "an id is not empty and holds no `:` or whitespace";
 
-/// Every line is said as it is written: not empty, one line, at most `max` characters.
-pub(super) fn check_lines<'a>(
-    lines: impl IntoIterator<Item = &'a String>,
-    max: usize,
-) -> Result<(), String> {
-    for line in lines {
-        if line.trim().is_empty() || line.trim() != line {
-            return Err(format!("`{line}`: lines are not empty nor padded"));
-        }
-        if line.contains('\n') || line.chars().count() > max {
-            return Err(format!(
-                "`{line}`: lines are one line of at most {max} characters"
-            ));
-        }
-    }
-    Ok(())
+/// Whether `id` is well formed as an id: not empty, no `:` (action text such as
+/// `ask:E:TOPIC` splits on it), and no whitespace (it splits action text into actions).
+pub(super) fn is_id(id: &str) -> bool {
+    !id.is_empty() && !id.contains(':') && !id.chars().any(char::is_whitespace)
 }

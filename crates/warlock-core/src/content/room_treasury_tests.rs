@@ -44,9 +44,6 @@ fn the_fields_parse_and_are_none_by_default() {
 fn bad_fields_are_refused() {
     for (extra, message) in [
         ("secret_doors = \"some\"".to_string(), "unknown variant"),
-        ("arrive = \" \"".to_string(), "must not be empty"),
-        (TREASURE.replace("1d2", "4d6"), "treasure.chests"),
-        (TREASURE.replace("each = 2", "each = 0"), "gold.each"),
         (TREASURE.replace("3d6", "1d6-2"), "gold.dice"),
         (
             format!("level_chance = 5\npervade = \"P.\"\n{TREASURE}"),

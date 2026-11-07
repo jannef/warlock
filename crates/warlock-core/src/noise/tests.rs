@@ -287,14 +287,6 @@ fn noise_fields_are_validated() {
         Content::load(&files).map(|_| ()).map_err(|e| e.message)
     };
     assert_eq!(with(TERRAIN, CREATURES), Ok(()));
-    let err = with(TERRAIN, &CREATURES.replace("hearing = 10", "hearing = 0")).unwrap_err();
-    assert!(err.contains("`hearing` 1 to 300"), "{err}");
-    let err = with(
-        TERRAIN,
-        &CREATURES.replace("footsteps = 50", "footsteps = 301"),
-    )
-    .unwrap_err();
-    assert!(err.contains("`footsteps` must be at most 300"), "{err}");
     let err = with(
         &TERRAIN.replace("step_noise = 200", "step_noise = 1001"),
         CREATURES,

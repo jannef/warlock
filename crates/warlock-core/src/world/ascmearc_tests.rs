@@ -363,7 +363,7 @@ fn a_run_of_the_ascmearc_replays_exactly() {
 }
 
 #[test]
-fn the_legend_names_places_and_refuses_what_would_give_a_hidden_one_away() {
+fn the_legend_names_places_and_a_note_needs_a_name() {
     let pass = r#""P" = { terrain = "mountain_pass", spawn = "player", name = "Beorggeat", note = "The way you came; snow has closed it behind you." }"#;
     assert!(LEVEL.contains(pass), "the pass's legend line");
     let with = |line: &str| {
@@ -374,21 +374,7 @@ fn the_legend_names_places_and_refuses_what_would_give_a_hidden_one_away() {
         );
         Content::load(&files).expect_err("refused").to_string()
     };
-    for (line, says) in [
-        (
-            r#""P" = { terrain = "mountain_pass", spawn = "player", note = "A note." }"#,
-            "a `note` needs a `name`",
-        ),
-        (
-            r#""P" = { terrain = "mountain_pass", spawn = "player", name = " " }"#,
-            "the `name` is empty",
-        ),
-        (
-            r#""P" = { terrain = "mountain_pass", spawn = "player", name = "Beorggeat", hidden = { id = "gate", terrain = "town", name = "Gate" } }"#,
-            "its name in `hidden` only",
-        ),
-    ] {
-        let error = with(line);
-        assert!(error.contains(says), "{line}: {error}");
-    }
+    let line = r#""P" = { terrain = "mountain_pass", spawn = "player", note = "A note." }"#;
+    let error = with(line);
+    assert!(error.contains("a `note` needs a `name`"), "{line}: {error}");
 }

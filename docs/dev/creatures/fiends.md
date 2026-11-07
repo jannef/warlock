@@ -9,10 +9,9 @@ formulas (#383) for their level and role (quick, standard, caster). Their factio
 fiends in a beast's shape, so a Beast-friend calms neither. All carry the `fiend` tag (the demon,
 devil, and yugoloth rosters share it; each family has its own faction and tag besides), the
 casters `caster`, and the night hag `hag` (the hags' tag). The succubus and the incubus are one
-fiend under two names: two types with the same numbers, told apart by name, colour, and weight
-(`the_succubus_and_the_incubus_share_their_numbers`). `content/fiend_roster_tests.rs` checks each
-type's level, faction, tags, alignment, XP, and the HP and dice formulas (within ±35 %, as the
-undead's), and that the faction holds no type it does not list. Riders map onto what exists: fire
+fiend under two names: two types with the same numbers, told apart by name, colour, and weight. Each type's level, faction, tags, alignment, XP, and HP and dice follow the undead's formulas
+(within ±35 %), and the faction holds no type it does not list; `content/fiend_roster_tests.rs`
+checks only that no Beast-friend calms a fiend. Riders map onto what exists: fire
 damage for the hound's bite and the steed's hooves, a Toughness drain (difficulty 17, checked by
 Toughness) for the kiss, `held` (15 % at 18: the hag on the sleeper's chest) and `frightened` for
 the night hag, `transfixed` and `frightened` for the rakshasa, now on its gaze (#1125: range 5,

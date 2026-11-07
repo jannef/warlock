@@ -10,6 +10,9 @@
 //! as a spell of level 0), the scroll is used up (Scroll savant's chance keeps it, and the read trains its stat, through `use_up`), said read (which
 //! identifies its type), and each stat that comes back is named: "You feel your strength
 //! return." No stream is drawn but the check's and Scroll savant's, and nothing new is saved.
+//!
+//! The cleanse itself ([`World::restore`]) is shared with the potion of restoration (kind
+//! `restore`, `world/potion.rs`), which mends and restores both.
 
 use super::World;
 use crate::action::Event;
@@ -28,17 +31,7 @@ impl World {
         cleansing: Cleansing,
         events: &mut Vec<Event>,
     ) -> bool {
-        let me = self.state.player();
-        // Stiffening (a basilisk's gaze) ends too: what `restoration` cures.
-        let cures = |by: &[String]| by.iter().any(|c| c == RESTORATION);
-        let stone = (me.effects.iter()).any(|e| cures(&self.content.status(e.status).cured_by));
-        let back: Vec<Stat> = (Stat::ALL.into_iter())
-            .filter(|&stat| {
-                (cleansing.mends && me.damage.get(stat) > 0)
-                    || (cleansing.restores && me.drained[stat] > 0)
-            })
-            .collect();
-        if back.is_empty() && !stone {
+        if !self.needs_cleansing(cleansing) {
             self.say("There is nothing to restore.");
             return false;
         }
@@ -50,6 +43,40 @@ impl World {
             return false;
         };
         self.say_read(&scroll);
+        self.restore(cleansing, events);
+        if kept {
+            self.say(super::read::KEPT);
+        }
+        true
+    }
+
+    /// Whether `cleansing` would do anything for the player: stat damage to mend, drained points
+    /// to give back, or a status `restoration` cures.
+    fn needs_cleansing(&self, cleansing: Cleansing) -> bool {
+        let me = self.state.player();
+        let cures = |by: &[String]| by.iter().any(|c| c == RESTORATION);
+        (me.effects.iter()).any(|e| cures(&self.content.status(e.status).cured_by))
+            || !self.cleansed_stats(cleansing).is_empty()
+    }
+
+    /// The stats `cleansing` would bring back for the player, in stat order.
+    fn cleansed_stats(&self, cleansing: Cleansing) -> Vec<Stat> {
+        let me = self.state.player();
+        (Stat::ALL.into_iter())
+            .filter(|&stat| {
+                (cleansing.mends && me.damage.get(stat) > 0)
+                    || (cleansing.restores && me.drained[stat] > 0)
+            })
+            .collect()
+    }
+
+    /// The one cleanse (the scroll of restoration's read and the potion of restoration's
+    /// draught): every point of stat damage mended (`mends`), every drained point back
+    /// (`restores`), and every status `restoration` cures ended (Stiffening, its end line
+    /// said); each stat that comes back is named. Draws nothing. Returns whether anything was
+    /// done.
+    pub(super) fn restore(&mut self, cleansing: Cleansing, events: &mut Vec<Event>) -> bool {
+        let back = self.cleansed_stats(cleansing);
         let player = self.state.player;
         if cleansing.mends
             && let Some(actor) = self.state.actors.get_mut(&player)
@@ -59,16 +86,13 @@ impl World {
         if cleansing.restores {
             self.restore_drained(player);
         }
-        self.cure(player, RESTORATION, events);
-        for stat in back {
+        let cured = self.cure(player, RESTORATION, events);
+        for stat in &back {
             self.say(format!(
                 "You feel your {} return.",
                 stat.name().to_lowercase()
             ));
         }
-        if kept {
-            self.say(super::read::KEPT);
-        }
-        true
+        cured || !back.is_empty()
     }
 }

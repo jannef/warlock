@@ -10,18 +10,13 @@
 use super::damage_type::DamageTypeId;
 use super::disease::DiseaseId;
 use super::effect::EffectShape;
-use super::status::{Affliction, OnHit, OnHitSpec, StatusId};
+use super::status::{OnHit, OnHitSpec, StatusId};
 use super::{Content, ContentError};
 use crate::dice::Dice;
 use serde::Deserialize;
-use std::ops::RangeInclusive;
 
 /// The cooldown status a breath gives (`data/status.toml`).
 pub const STATUS: &str = "breath";
-/// How long a breath's cone may be, in cells.
-pub const LENGTHS: RangeInclusive<i32> = 2..=12;
-/// A breath's cooldown, in seconds.
-pub const COOLDOWNS: RangeInclusive<u32> = 6..=600;
 
 /// A breath as written: `[creature.breath]` (`data/creatures/README.toml` has the fields).
 #[derive(Clone, Debug, Deserialize)]
@@ -73,30 +68,6 @@ impl BreathSpec {
         status_of: impl Fn(&str) -> Option<(StatusId, u16, bool)>,
         disease_of: impl Fn(&str) -> Option<DiseaseId>,
     ) -> Result<Breath, String> {
-        if self.damage.min() < 1 {
-            return Err("breath: `damage` must roll at least 1".into());
-        }
-        if !LENGTHS.contains(&self.length) {
-            return Err(format!(
-                "breath: `length` must be {} to {}",
-                LENGTHS.start(),
-                LENGTHS.end()
-            ));
-        }
-        if !COOLDOWNS.contains(&self.cooldown) {
-            return Err(format!(
-                "breath: `cooldown` must be {} to {} seconds",
-                COOLDOWNS.start(),
-                COOLDOWNS.end()
-            ));
-        }
-        let words = [&self.noun, &self.verb];
-        if words
-            .iter()
-            .any(|w| w.as_deref().is_some_and(|w| w.trim().is_empty()))
-        {
-            return Err("breath: `noun` and `verb` must not be empty".into());
-        }
         let kind = (content.damage_type_id(&self.damage_type))
             .ok_or_else(|| format!("breath: unknown damage type `{}`", self.damage_type))?;
         let status = (content.status_id(STATUS))
@@ -115,15 +86,8 @@ impl BreathSpec {
             })?;
         let riders = (self.riders.iter())
             .map(|r| {
-                let rider = r
-                    .resolve(&status_of, &disease_of)
-                    .map_err(|m| format!("breath: {m}"))?;
-                match rider.what {
-                    Affliction::Status { .. } | Affliction::Drain(_) => Ok(rider),
-                    Affliction::Hold { .. } | Affliction::Disease(_) => Err(
-                        "breath: a rider is a status or a drain, never a hold or a disease".into(),
-                    ),
-                }
+                r.resolve(&status_of, &disease_of)
+                    .map_err(|m| format!("breath: {m}"))
             })
             .collect::<Result<Vec<_>, String>>()?;
         Ok(Breath {

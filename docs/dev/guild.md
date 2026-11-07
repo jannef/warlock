@@ -8,11 +8,10 @@ the code, as CLAUDE.md says.
 
 `content/guild.rs` loads the `guilds` table (`data/guilds/` and each campaign's `data/guilds/`, one
 file per guild, `[[guild]]`) after the quests: `GuildDef { id, name, master, ranks, campaign }`,
-`RankDef { title, material, by }`, `RankBy::{Given(QuestId), Done(QuestId)}`. Checks: the id, the
-name (1 to 32 characters), the master (a speaker with a dialogue, `Content::speaker`), 1 to
-`MAX_RANKS` ranks, each title 1 to `MAX_TITLE` characters and listed once, its `material` a
-material, `given` or `done` (never both) a quest of the guild's own campaign; a rank with neither
-(kept for later links) comes after every rank that has one. The field reference is the comment
+`RankDef { title, material, by }`, `RankBy::{Given(QuestId), Done(QuestId)}`. Checks (only what
+resolves, #1205): the id once, the master (a speaker with a dialogue, `Content::speaker`), each
+rank's `material` a material, `given` or `done` (never both) a quest of the guild's own campaign;
+a rank with neither is kept for later links. The field reference is the comment
 at the top of `campaigns/ascmearc/data/guilds/weyfarers.toml`.
 
 ## Ranks

@@ -33,9 +33,9 @@ Depths 60 to 100 are #1122; past 100 a tenth floor is ordinary. **Levels past 70
 be whatever level you deem suitable"): 81, 91, and 100, not 101, so the deepest keeper stands at
 the player's own cap (`experience.toml`'s `max_level`, 100). Nothing had to be extended for them:
 a creature's level is a `u8` with no cap at load, the XP guideline (5 × level + 10) and
-`Experience::kill_xp` take any level, and the body rule (`creature_body_tests`) is a formula by
-level, its §8.2 table only checked to 70. Tests: `world/layer_boss_tests.rs` (the content checks
-among them; the depths list runs to 100), `creature_body_tests` (each `natural` on its body's line), `summoner_roster_tests`
+`Experience::kill_xp` take any level, and the body rule is a formula by
+level. Tests: `world/layer_boss_tests.rs` (the content checks
+among them; the depths list runs to 100), `summoner_roster_tests`
 (the four summoners carry `summoner` and another tribe's tag).
 
 **The disarming blow** (#1166, `docs/dev/creatures.md`): Wælcyrge carries `disarms = { chance, difficulty }`, a melee hit that may knock the player's main-hand weapon onto an open cell beside them (20 % at 28).

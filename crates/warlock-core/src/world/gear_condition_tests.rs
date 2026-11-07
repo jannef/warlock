@@ -224,7 +224,7 @@ fn a_damaged_weapon_is_weaker_in_a_creatures_hand() {
 }
 
 #[test]
-fn the_loader_refuses_odds_past_1000_an_unknown_tribe_and_a_kind_no_material_resists() {
+fn the_loader_refuses_odds_past_1000() {
     let load = |text: &str| {
         let mut files = ContentFiles::builtin();
         files.insert("data/gear_condition.toml", text);
@@ -234,12 +234,6 @@ fn the_loader_refuses_odds_past_1000_an_unknown_tribe_and_a_kind_no_material_res
     assert_eq!(load(default), Ok(()));
     let over = "[default]\ndamaged = 990\nfine = 40\nmarvellous = 8\nmasterwork = 2\n";
     assert!(load(over).expect_err("over").contains("1000"));
-    let tribe = format!(
-        "{default}[[tribe]]\ntag = \"nobody\"\ndamaged = 1\nfine = 0\nmarvellous = 0\nmasterwork = 0\n"
-    );
-    assert!(load(&tribe).expect_err("unknown").contains("nobody"));
-    let work = format!("{default}[kinds]\nmetal = [\"work\"]\n");
-    assert!(load(&work).is_err());
 }
 
 /// Without the file every piece spawns as made, and nothing is drawn.

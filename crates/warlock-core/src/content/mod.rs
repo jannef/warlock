@@ -12,14 +12,10 @@ mod anim;
 pub mod animated;
 #[cfg(test)]
 mod animated_tests;
-#[cfg(test)]
-mod armed_roster_tests;
 mod aura;
 #[cfg(test)]
 mod aura_roster_tests;
 mod background;
-#[cfg(test)]
-mod beast_roster_tests;
 mod breath;
 mod burst;
 mod calendar;
@@ -30,8 +26,6 @@ mod circles;
 mod class;
 mod companion;
 mod creature;
-#[cfg(test)]
-mod creature_body_tests;
 mod creature_rarity;
 mod creature_spells;
 mod damage_type;
@@ -39,8 +33,6 @@ pub mod danger;
 mod decipher;
 #[cfg(test)]
 mod demon_roster_tests;
-#[cfg(test)]
-mod devil_roster_tests;
 mod dialogue;
 mod disease;
 pub mod dread;
@@ -75,13 +67,9 @@ mod gaze;
 mod gear;
 mod gear_condition;
 mod gem;
-#[cfg(test)]
-mod giant_roster_tests;
 mod guild;
 #[cfg(test)]
 mod hag_roster_tests;
-#[cfg(test)]
-mod hobgoblin_roster_tests;
 mod horoscope;
 mod hunger;
 mod intimidate;
@@ -177,14 +165,8 @@ mod terrain;
 mod theft;
 mod throw;
 mod trap;
-#[cfg(test)]
-mod troll_roster_tests;
-#[cfg(test)]
-mod undead_roster_tests;
 mod unique;
 mod unseen;
-#[cfg(test)]
-mod variance_roster_tests;
 mod vault;
 mod vault_turn;
 mod vision;
@@ -192,8 +174,6 @@ mod wand;
 mod weapon_ability;
 mod weapon_skill;
 mod weather;
-#[cfg(test)]
-mod yugoloth_roster_tests;
 
 pub use action::{ActionCosts, ActionKind, BASE_TURN, COSTS, NORMAL_COST, price};
 pub use affix::{
@@ -210,7 +190,7 @@ pub use background::{
     Points, Tier as StoryTier, Tiers, When,
 };
 pub use breath::Breath;
-pub use burst::{BurstWhen, CreatureBurst, RADII as CREATURE_BURST_RADII};
+pub use burst::{BurstWhen, CreatureBurst};
 pub use calendar::Calendar;
 pub use calling::CallingDef;
 pub use campaign::{CAMPAIGNS, CampaignDef, CampaignKind};
@@ -224,17 +204,14 @@ pub use companion::{
 };
 pub use creature::{
     Budge, Combat, CorpseGifts, Corrodes, CorrodesWhat, CreatureDef, CreatureId, DEFAULT_SIGHT,
-    Disarms, Hide, Incorporeal, MAX_TAG_WIDEN, MAX_TRAIN, MAX_WIDEN, NORMAL_SPEED, NaturalAttack,
-    OnEat, SPEEDS, SkillGift, is_proper, the, the_start,
+    Disarms, Hide, Incorporeal, NORMAL_SPEED, NaturalAttack, OnEat, SkillGift, is_proper, the,
+    the_start,
 };
-pub use creature_rarity::{COMMON, CreatureRarity, FACTOR};
+pub use creature_rarity::{COMMON, CreatureRarity};
 pub use damage_type::{DamageTypeDef, DamageTypeId, MAX_DAMAGE_TYPES};
 pub use danger::{Count, DangerRule, PlayerScale, Spawning};
 pub use decipher::DecipherRules;
-pub use dialogue::{
-    Dialogue, DialogueId, MAX_LINE, MAX_REPLY, MAX_TOPICS, MUTTER_CHANCES, Mutter, Service,
-    ServiceKind, Speaker, Topic,
-};
+pub use dialogue::{Dialogue, DialogueId, Mutter, Service, ServiceKind, Speaker, Topic};
 pub use disease::{DIFFICULTIES, DiseaseDef, DiseaseId, SOURCES, Wading};
 pub use dummy::DummyTraining;
 pub use dungeon::{
@@ -246,8 +223,8 @@ pub use effect::{
     MAX_SHAKE_PIXELS, Shake,
 };
 pub use encounter::{
-    Checks, Draw as EncounterDraw, EDGE_REACHES, EncounterEntry, EncounterRules, EncounterTable,
-    EntryStance, Evade, Meetings, PhaseRates, PlayerPlaces, Positions, When as EncounterWhen,
+    Checks, Draw as EncounterDraw, EncounterEntry, EncounterRules, EncounterTable, EntryStance,
+    Evade, Meetings, PhaseRates, PlayerPlaces, Positions, When as EncounterWhen,
 };
 pub use experience::{
     Discovery, Experience, FACTORS, Factor, Guideline, Kills, Levels, MAX_LEVEL, MAX_XP, pace_words,
@@ -265,7 +242,7 @@ pub use gem::{
     Cut, CutId, Cutting, GemDef, GemSize, GemSizeId, Gems, MAX_GEM_VALUE, MAX_GEM_WEIGHT,
     MAX_MULTIPLIER, Ornament, ROUGH_SATURATION, dull,
 };
-pub use guild::{GuildDef, MAX_RANKS, MAX_TITLE, RankBy, RankDef};
+pub use guild::{GuildDef, RankBy, RankDef};
 pub use horoscope::{FULL_MOON_WITHIN, Flavour, Horoscope, Lucky, Sign, SignActive, SignPart};
 pub use hunger::{
     Corpses, EXERTIONS, Faint, Food, HungerDef, MAX_MEAL, MAX_NUTRITION, MAX_SHELF_LIFE,
@@ -306,11 +283,11 @@ pub use potion::{Draught, Drink, Flask, MAX_POTION_MARKS, Splash};
 pub use prayer::{Face, FaceWords, Faced, PrayerRules, PrayerUse, UseDef};
 pub use prestige::{PrestigeDef, Table};
 pub use quest::{
-    GOLD, Goal, KillTarget, MAX_COUNT, MAX_NAME, MAX_QUEST_XP, MAX_TAG_COUNT, QuestDef, QuestId,
-    QuestKind, QuestTexts, Reveal, RevealWhen, Reward, Waits,
+    GOLD, Goal, KillTarget, QuestDef, QuestId, QuestKind, QuestTexts, Reveal, RevealWhen, Reward,
+    Waits,
 };
 pub(crate) use quest_roll::roll_known;
-pub use quest_roll::{Candidate, MAX_VARIANTS, MAX_WEIGHT, Pick, Roll, Rolled, Variant, one_of};
+pub use quest_roll::{Candidate, Pick, Roll, Rolled, Variant, one_of};
 pub use race::{HUNGER, LightBlind, RaceDef, Races};
 pub use ranged::{RangeBand, RangedRules};
 pub use resource::{
@@ -323,11 +300,11 @@ pub use room_effect::{
     Collapse, Dressing, Here, Hoard, Mirrors, Offer, RoomEffectDef, RoomEffectId, RoomEffects,
     SpecialRoom, Swarm, Themes, Treasure,
 };
-pub use room_haunt::{HAUNT_EVERY, Haunt};
+pub use room_haunt::Haunt;
 pub use room_lore::RoomLoot;
 pub use room_shrine::{Regard, Shrine};
 pub(crate) use room_treasury::breach_fault;
-pub use room_treasury::{Heaps, MAX_COINS_EACH, MAX_TREASURE, Sealed, SecretDoors, Treasury};
+pub use room_treasury::{Heaps, Sealed, SecretDoors, Treasury};
 pub use ruin::{RuinOf, RuinRow, RuinRules};
 pub use scenario::ScenarioDef;
 pub use scroll::{Cleansing, Reading, SpellScroll};
@@ -340,7 +317,7 @@ pub use shop::{
 };
 pub use size::{CARRY, MEDIUM, SizeDef};
 pub use skill::{OptionalSkill, SkillBook, SkillDef};
-pub use sky::{MAX_MOONS, MAX_SIZE, MoonDef, PHASE_ONE, STANDARD_SIZE};
+pub use sky::{MoonDef, PHASE_ONE, STANDARD_SIZE};
 pub use slot::{MAX_SLOTS, SlotDef, SlotId};
 pub use smite::SmiteRules;
 pub use spell::{BOLT_LENGTHS, BURST_RADII, Bolt, Burst, BurstIce};
@@ -379,7 +356,7 @@ pub use terrain::{
     Breakable, Freeze, FreezeSpec, MAX_HARDNESS, MAX_HEIGHT, StairsDir, TerrainDef, TerrainId,
 };
 pub use theft::{Blinks, SMALL as SMALL_LOOT, Steals, Takes};
-pub use throw::{THROW_RANGES, Throw};
+pub use throw::Throw;
 pub use trap::{MAX_CHARGES, Trap, TrapAvoid, TrapDef, TrapEffect, TrapId, TrapNoise};
 pub use unique::{Power, UNIQUE, UniqueDef, Uniques};
 pub use unseen::Invisible;
@@ -395,13 +372,10 @@ pub use weapon_skill::{
     Benefit, Grip, MAX_RANK, MOST_PERCENT, MarkRules, RANKS, Role, Section, SpellAttacks, Style,
     TwoShields, TwoWeapons, WeaponSkillDef, WeaponSkillId, WeaponSkillTable,
 };
-pub use weather::{
-    Climate, MAX_CHILL, MAX_SIGHT_LOSS, MAX_SWING, MILD, MILD_SWING, MONTH_TEMPERATURES, WeatherDef,
-};
+pub use weather::{Climate, MILD, MILD_SWING, WeatherDef};
 
 use crate::dice::Dice;
 use crate::noise::MAX_LOUDNESS;
-use crate::perception::VIEW_RADIUS;
 use crate::skills::{Ladder, RollRules, SkillId, Skills};
 use crate::stats::Stats;
 use crate::weapon_skills::WeaponSkills;
@@ -1181,12 +1155,9 @@ impl Content {
         content.room_effects.check_factions(&content.factions)?;
         // Objects before creatures: an animated type is generated from its body's object.
         content.load_objects(files)?;
-        let (ids, materials) = (&content.material_ids, &content.materials);
+        let ids = &content.material_ids;
         (content.factions)
-            .resolve_gear(|name| {
-                let id = *ids.get(name)?;
-                Some((id, materials[usize::from(id.0)].group.is_some()))
-            })
+            .resolve_gear(|name| ids.get(name).copied())
             .map_err(|m| ContentError::new("data/factions.toml", m))?;
         content.animated = Animated::parse(files, &content)?;
         // Chests before creatures: a mimic's band is its chest's, and its hold the band's.
@@ -1261,7 +1232,7 @@ impl Content {
         }
         let path = "data/gear_condition.toml";
         if let Some(text) = files.get_optional(path) {
-            content.gear_condition = GearConditions::parse(path, text, &content)?;
+            content.gear_condition = GearConditions::parse(path, text)?;
         }
         let path = "data/steal.toml";
         if let Some(text) = files.get_optional(path) {
@@ -1729,11 +1700,8 @@ impl Content {
         for (i, (path, mut spec)) in specs.into_iter().enumerate() {
             let err = |m: String| ContentError::new(path, m);
             let id = CreatureId(u16::try_from(i).map_err(|_| err("too many creatures".into()))?);
-            for (n, t) in spec.tags.iter().enumerate() {
+            for t in &spec.tags {
                 tag::check(t).map_err(|m| err(format!("creature `{}`: {m}", spec.id)))?;
-                if spec.tags[..n].contains(t) {
-                    return Err(err(format!("creature `{}`: tag `{t}` twice", spec.id)));
-                }
             }
             if spec.plural.is_none() {
                 spec.plural = Some(self.plural(&spec.name));
@@ -1742,25 +1710,12 @@ impl Content {
                 return Err(duplicate_id("creature", &spec.id, path, first));
             }
             self.creature_ids.insert(spec.id.clone(), id);
-            if !SPEEDS.contains(&spec.speed) {
-                return Err(err(format!(
-                    "creature `{}`: speed {} is out of range ({} to {})",
-                    spec.id,
-                    spec.speed,
-                    SPEEDS.start(),
-                    SPEEDS.end()
-                )));
+            // A creature of speed 0 never gains the energy to act, and the scheduler would wait
+            // on it for ever.
+            if spec.speed == 0 {
+                return Err(err(format!("creature `{}`: speed 0", spec.id)));
             }
             let light = self.resolve_light(path, spec.light.as_deref())?;
-            if spec.footsteps > MAX_LOUDNESS
-                || spec.hearing.is_some_and(|h| h == 0 || h > MAX_LOUDNESS)
-            {
-                return Err(err(format!(
-                    "creature `{}`: `footsteps` must be at most {MAX_LOUDNESS} and `hearing` 1 to \
-                     {MAX_LOUDNESS}",
-                    spec.id
-                )));
-            }
             check_effects(
                 path,
                 "creature",
@@ -1783,33 +1738,11 @@ impl Content {
                     missing.id()
                 )));
             }
-            if spec
-                .first_sight
-                .as_deref()
-                .is_some_and(|l| l.trim().is_empty())
-            {
-                return Err(err(format!(
-                    "creature `{}`: `first_sight` must not be empty",
-                    spec.id
-                )));
-            }
-            if spec.weight == 0 {
-                return Err(err(format!(
-                    "creature `{}`: `weight` is in grams and must be at least 1",
-                    spec.id
-                )));
-            }
             // Without races (no characters) a creature's race means nothing, and is not checked.
             let unknown = |r: &&str| self.race(r).is_none() && !self.races.list.is_empty();
             if let Some(race) = spec.race.as_deref().filter(unknown) {
                 return Err(err(format!(
                     "creature `{}`: unknown race `{race}`",
-                    spec.id
-                )));
-            }
-            if !(1..=MAX_LEVEL).contains(&spec.level) || spec.xp > MAX_XP {
-                return Err(err(format!(
-                    "creature `{}`: `level` must be 1 to {MAX_LEVEL} and `xp` at most {MAX_XP}",
                     spec.id
                 )));
             }
@@ -1820,14 +1753,6 @@ impl Content {
                      scenario (`stats`, `potential`, `hp`, and `mana` in scenarios/*.toml)"
                         .into(),
                 ));
-            }
-            if spec.mana > crate::mana::MAX_BASE_MANA {
-                return Err(err(format!(
-                    "creature `{}`: mana {} is more than {}",
-                    spec.id,
-                    spec.mana,
-                    crate::mana::MAX_BASE_MANA
-                )));
             }
             if spec.id == "player" && !spec.skills.is_empty() {
                 return Err(err(
@@ -1852,13 +1777,6 @@ impl Content {
             .map_err(|m| err(format!("creature `{}`: {m}", spec.id)))?;
             let ranks = ranks.iter().map(|&(id, rank)| (id, rank.max() as u8));
             let weapon_skills = WeaponSkills::from_ranks(ranks);
-            if let Some(hide) = &spec.natural {
-                hide.check()
-                    .map_err(|m| err(format!("creature `{}`: {m}", spec.id)))?;
-            }
-            if let Some(incorporeal) = &spec.incorporeal {
-                (incorporeal.check()).map_err(|m| err(format!("creature `{}`: {m}", spec.id)))?;
-            }
             // The status diseases show as comes of a disease, never of a blow.
             let status = |id: &str| {
                 let found = self
@@ -1869,12 +1787,6 @@ impl Content {
             };
             // One natural attack or several, each struck in turn (`[[creature.attack]]`).
             let written = spec.attack.as_ref().map_or(&[][..], |a| a.0.as_slice());
-            if spec.attack.is_some() && written.is_empty() {
-                return Err(err(format!(
-                    "creature `{}`: attack: an empty list",
-                    spec.id
-                )));
-            }
             let mut attacks = Vec::new();
             for a in written {
                 let kinds = (self.resolve_kinds(a.damage_type.as_ref()))
@@ -1926,12 +1838,6 @@ impl Content {
                 action::check_cost(cost)
                     .map_err(|m| err(format!("creature `{}`: attack_cost: {m}", spec.id)))?;
             }
-            if spec.loot > 100 {
-                return Err(err(format!(
-                    "creature `{}`: `loot` is a chance in percent, 0 to 100",
-                    spec.id
-                )));
-            }
             let size_id = spec.size.as_deref().unwrap_or(MEDIUM);
             let size = (self.size_index(size_id))
                 .ok_or_else(|| err(format!("creature `{}`: unknown size `{size_id}`", spec.id)))?;
@@ -1950,91 +1856,6 @@ impl Content {
                 .map(|s| self.status_id(s))
                 .collect::<Option<Vec<_>>>()
                 .ok_or_else(|| err(format!("creature `{}`: immune: unknown status", spec.id)))?;
-            if spec.dies.as_ref().is_some_and(|d| d.trim().is_empty()) {
-                return Err(err(format!(
-                    "creature `{}`: `dies` must not be empty",
-                    spec.id
-                )));
-            }
-            if spec.depart.as_ref().is_some_and(|d| d.trim().is_empty()) {
-                return Err(err(format!(
-                    "creature `{}`: `depart` must not be empty",
-                    spec.id
-                )));
-            }
-            // A companion's type (spec §8 "Allies"): a beast, and nothing cleverer (the orcs'
-            // wargs are beasts of a people's faction, so the faction is not what decides).
-            if spec.tameable {
-                let armed = spec.racial_weapon.is_some() || !spec.gear.is_empty();
-                let why = match () {
-                    _ if spec.unique => Some("a unique"),
-                    _ if spec.animated.is_some() => Some("an animated object"),
-                    _ if spec.summon.is_some() => Some("a summoner"),
-                    _ if spec.opens_doors => Some("one that opens doors"),
-                    _ if spec.race.is_some() => Some("one of the peoples"),
-                    _ if spec.combat != creature::Combat::Melee => {
-                        Some("one that fights from afar")
-                    }
-                    _ if armed => Some("one that carries gear"),
-                    _ => None,
-                };
-                if let Some(why) = why {
-                    return Err(err(format!(
-                        "creature `{}`: `tameable`, but {why}",
-                        spec.id
-                    )));
-                }
-            }
-            if let Some(nose) = spec.nose {
-                if !spec.tameable {
-                    return Err(err(format!(
-                        "creature `{}`: `nose` is for a `tameable` type",
-                        spec.id
-                    )));
-                }
-                if !creature::NOSES.contains(&nose) {
-                    return Err(err(format!(
-                        "creature `{}`: `nose` is {} to {} cells, not {nose}",
-                        spec.id,
-                        creature::NOSES.start(),
-                        creature::NOSES.end()
-                    )));
-                }
-            }
-            if let Some(training) = &spec.training {
-                (training.check()).map_err(|m| err(format!("creature `{}`: {m}", spec.id)))?;
-            }
-            if spec.regen > creature::MAX_REGEN {
-                return Err(err(format!(
-                    "creature `{}`: `regen` is 0 to {} percent, not {}",
-                    spec.id,
-                    creature::MAX_REGEN,
-                    spec.regen
-                )));
-            }
-            if let Some(acid) = spec.corrodes
-                && !(1..=100).contains(&acid.chance)
-            {
-                return Err(err(format!(
-                    "creature `{}`: `corrodes`' `chance` is 1 to 100 percent, not {}",
-                    spec.id, acid.chance
-                )));
-            }
-            if spec.corrodes.is_some_and(|c| c.kind == ItemHarm::Work) {
-                return Err(err(format!(
-                    "creature `{}`: `corrodes`' `kind` is acid, rust, or fire",
-                    spec.id
-                )));
-            }
-            if let Some(blow) = spec.disarms
-                && (!(1..=100).contains(&blow.chance) || !(2..=40).contains(&blow.difficulty))
-            {
-                return Err(err(format!(
-                    "creature `{}`: `disarms` takes a `chance` of 1 to 100 percent and a \
-                     `difficulty` of 2 to 40, not {} and {}",
-                    spec.id, blow.chance, blow.difficulty
-                )));
-            }
             if let Some(animated) = &mut spec.animated {
                 animated.family = CreatureId(id.0 - u16::from(animated.member));
             }
@@ -2077,16 +1898,12 @@ impl Content {
                     .check()
                     .map_err(|m| err(format!("creature `{}`: {m}", spec.id)))?;
             }
-            if let Some(on_eat) = &spec.on_eat {
-                on_eat
-                    .check()
-                    .map_err(|m| err(format!("creature `{}`: {m}", spec.id)))?;
-                if !spec.corpse || spec.id == "player" {
-                    return Err(err(format!(
-                        "creature `{}`: `on_eat` is for creatures that leave a corpse",
-                        spec.id
-                    )));
-                }
+            // A creature without a corpse is never eaten: its `on_eat` would be lost.
+            if spec.on_eat.is_some() && (!spec.corpse || spec.id == "player") {
+                return Err(err(format!(
+                    "creature `{}`: `on_eat` is for creatures that leave a corpse",
+                    spec.id
+                )));
             }
             let mut def = spec.resolve(resolved);
             def.campaign = campaign::of_path(path).map(str::to_string);
@@ -2101,25 +1918,19 @@ impl Content {
         self.name_families()
     }
 
-    /// A creature type's skills as data lists them (`skills = { listen = 30 }`): fixed values,
-    /// 0 to [`crate::skills::MAX_VALUE`], of skills `data/skills.toml` has.
+    /// A creature type's skills as data lists them (`skills = { listen = 30 }`): fixed values of
+    /// skills `data/skills.toml` has.
     fn creature_skills(&self, data: &BTreeMap<String, u16>) -> Result<Skills, String> {
         let mut skills = Skills::default();
         for (name, &value) in data {
             let id = (self.skill_id(name)).ok_or_else(|| format!("unknown skill `{name}`"))?;
-            if value > crate::skills::MAX_VALUE {
-                return Err(format!(
-                    "{name} {value} is more than {}",
-                    crate::skills::MAX_VALUE
-                ));
-            }
             skills.add(id, i32::from(value));
         }
         Ok(skills)
     }
 
-    /// The faction a creature type names. With factions defined, every creature but the player
-    /// must name one, and the player belongs to [`PLAYER_FACTION`]; without, none may.
+    /// The faction a creature type names (none: it stands neutral to all). With factions
+    /// defined the player belongs to [`PLAYER_FACTION`]; without, none may be named.
     fn creature_faction(&self, spec: &creature::CreatureSpec) -> Result<Option<FactionId>, String> {
         if self.factions.is_empty() {
             return match &spec.faction {
@@ -2148,12 +1959,7 @@ impl Content {
         let name = match &spec.faction {
             Some(name) => name.as_str(),
             None if is_player => PLAYER_FACTION,
-            None => {
-                return Err(format!(
-                    "creature `{}` needs a `faction` (data/factions.toml)",
-                    spec.id
-                ));
-            }
+            None => return Ok(None),
         };
         if is_player && name != PLAYER_FACTION {
             return Err(format!(
@@ -2167,7 +1973,8 @@ impl Content {
     }
 
     /// The factions a creature type's creatures each draw one of (`factions = { seelie = 50,
-    /// unseelie = 50 }`), in id order: known ids, weights 1 to 1000; empty when it gives none.
+    /// unseelie = 50 }`), in id order: known ids, weights 1 or more (a draw over them); empty when
+    /// it gives none.
     fn creature_factions(
         &self,
         spec: &creature::CreatureSpec,
@@ -2176,11 +1983,8 @@ impl Content {
             .map(|(name, &weight)| {
                 let id = (self.factions.id(name))
                     .ok_or_else(|| format!("creature `{}`: unknown faction `{name}`", spec.id))?;
-                if !(1..=1000).contains(&weight) {
-                    return Err(format!(
-                        "creature `{}`: faction `{name}` weighs {weight}, not 1 to 1000",
-                        spec.id
-                    ));
+                if weight == 0 {
+                    return Err(format!("creature `{}`: faction `{name}` weighs 0", spec.id));
                 }
                 Ok((id, weight))
             })
@@ -2300,9 +2104,9 @@ impl Content {
     fn load_gear(&mut self) -> Result<(), ContentError> {
         let gear = (self.creatures.iter())
             .map(|c| {
-                gear::resolve(&c.gear_spec, self, |skill| c.weapon_skills.rank(skill)).map_err(
-                    |m| ContentError::new("data/creatures/", format!("creature `{}`: {m}", c.id)),
-                )
+                gear::resolve(&c.gear_spec, self).map_err(|m| {
+                    ContentError::new("data/creatures/", format!("creature `{}`: {m}", c.id))
+                })
             })
             .collect::<Result<Vec<_>, _>>()?;
         for (creature, gear) in self.creatures.iter_mut().zip(gear) {
@@ -2683,23 +2487,15 @@ impl Content {
     }
 
     /// Lays `[corpses.by_tag]` under every corpse-leaving creature's `on_eat` (`OnEat::resolve`),
-    /// so the rules and the wiki read one resolved gift per stat; a tag entry no creature carries
-    /// is refused (a typo).
+    /// so the rules and the wiki read one resolved gift per stat.
     fn resolve_corpse_gifts(&mut self, corpses: &hunger::Corpses) -> Result<(), String> {
-        if let Some(tag) =
-            (corpses.by_tag.keys()).find(|t| !self.creatures.iter().any(|c| c.tags.contains(t)))
-        {
-            return Err(format!("corpses: by_tag `{tag}` is no creature's tag"));
-        }
         for creature in &mut self.creatures {
             if creature.id == "player" || !creature.corpse {
                 continue;
             }
             let tags = corpses.gifts_of(&creature.tags);
             let mut on_eat = creature.on_eat.take().unwrap_or_default();
-            on_eat
-                .resolve(&tags)
-                .map_err(|m| format!("creature `{}`: {m}", creature.id))?;
+            on_eat.resolve(&tags);
             creature.on_eat = (!on_eat.is_empty()).then_some(on_eat);
         }
         // What a corpse teaches is a skill with its words in `[corpses.skills]` (without
@@ -2915,15 +2711,12 @@ impl Content {
             && player.is_some_and(|p| p != c && self.stance(c, p) == faction::Stance::Hostile)
     }
 
-    /// Checks the vaults branch `def`'s levels name (dungeon vaults, shared or of its campaign,
-    /// once a level) and marks them [`Vault::pinned`].
+    /// Checks the vaults branch `def`'s levels name (dungeon vaults, shared or of its campaign)
+    /// and marks them [`Vault::pinned`].
     fn pin_vaults(&mut self, def: &DungeonDef) -> Result<(), String> {
         for depth in 1..=def.depth {
             let names = def.vaults(depth);
-            for (i, name) in names.iter().enumerate() {
-                if names[..i].contains(name) {
-                    return Err(format!("level {depth} names vault `{name}` twice"));
-                }
+            for name in names {
                 let vault = (self.vaults.iter_mut())
                     .find(|v| v.id() == name)
                     .ok_or_else(|| format!("unknown vault `{name}`"))?;
@@ -4676,29 +4469,15 @@ fn check_breaking(def: &TerrainDef, defs: &[TerrainDef]) -> Result<(), String> {
     Ok(())
 }
 
-/// Checks a creature type's sight and combat: it sees 1 to [`VIEW_RADIUS`] cells; `ranged` and
-/// `caster` creatures need a `range` of 2 up to their sight, melee creatures have none.
+/// Checks the fields a creature type's `combat` would leave unread: only a dragon breathes
+/// (`world/breath.rs`), a burst on touch is struck instead of every melee blow, and only
+/// `ranged` and `caster` creatures have a `range`.
 fn check_combat(spec: &creature::CreatureSpec) -> Result<(), String> {
     let id = &spec.id;
-    if !(1..=VIEW_RADIUS).contains(&spec.sight) {
+    if spec.breath.is_some() && spec.combat != Combat::Dragon {
         return Err(format!(
-            "creature `{id}`: sight {} is out of range (1 to {VIEW_RADIUS})",
-            spec.sight
+            "creature `{id}`: only a `combat = \"dragon\"` creature has a breath"
         ));
-    }
-    // A dragon (`world/breath.rs`) breathes, and only a dragon.
-    match (spec.combat, &spec.breath) {
-        (Combat::Dragon, None) => {
-            return Err(format!(
-                "creature `{id}`: a `dragon` needs a [creature.breath]"
-            ));
-        }
-        (Combat::Melee | Combat::Ranged | Combat::Caster, Some(_)) => {
-            return Err(format!(
-                "creature `{id}`: only a `combat = \"dragon\"` creature has a breath"
-            ));
-        }
-        _ => {}
     }
     // A vortex's burst is its whole offence (`world/creature_burst.rs`): no attack beside it.
     if (spec.burst.as_ref()).is_some_and(|b| b.when == crate::content::BurstWhen::Touches)
@@ -4708,18 +4487,12 @@ fn check_combat(spec: &creature::CreatureSpec) -> Result<(), String> {
             "creature `{id}`: a burst on touch is its offence: no attack, and `combat` melee"
         ));
     }
-    match (spec.combat, spec.range) {
-        (Combat::Melee | Combat::Dragon, None) => Ok(()),
-        (Combat::Melee | Combat::Dragon, Some(_)) => Err(format!(
+    if spec.range.is_some() && matches!(spec.combat, Combat::Melee | Combat::Dragon) {
+        return Err(format!(
             "creature `{id}`: only `ranged` and `caster` creatures have a `range`"
-        )),
-        (_, None) => Err(format!("creature `{id}` needs a `range` to shoot or cast")),
-        (_, Some(range)) if !(2..=spec.sight).contains(&range) => Err(format!(
-            "creature `{id}`: range {range} is out of range (2 to its sight, {})",
-            spec.sight
-        )),
-        _ => Ok(()),
+        ));
     }
+    Ok(())
 }
 
 /// Checks the presentation-only animation and effect fields of a terrain or creature type.
@@ -5235,11 +5008,6 @@ mod tests {
                 "creature `deer`: skills: unknown skill `tracking`",
             ),
             (
-                "skills = { listen = 30 }",
-                "skills = { listen = 1000 }",
-                "listen 1000 is more than 999",
-            ),
-            (
                 "hearing = 10\nweight = 70000",
                 "hearing = 10\nweight = 70000\nskills = { stealth = 5 }",
                 "the player's skills come from their race and class",
@@ -5421,7 +5189,7 @@ mod tests {
             stray: 0,
             out_of_depth: 100,
             deeper: 100,
-            deeper_cap: danger::MAX_DEEPER_CAP,
+            deeper_cap: 50,
             dread_one_in: 0,
             neutral: 100,
         };
@@ -5647,14 +5415,6 @@ mod tests {
             err.message
         );
 
-        let mut files = minimal_files(
-            "#@T#\n",
-            "\"T\" = { terrain = \"wall\", light = \"torch\" }",
-        );
-        files.insert("data/lights.toml", LIGHTS);
-        let err = Content::load(&files).unwrap_err();
-        assert!(err.message.contains("opaque terrain"), "{}", err.message);
-
         let mut files = minimal_files("#@#\n", "");
         files.insert(
             "data/lights.toml",
@@ -5763,7 +5523,6 @@ mod tests {
             ("####\n#..#\n####\n", "needs at least one entrance"),
             ("##+##\n#.<.#\n#####\n", "cannot have stairs"),
             ("##+##\n#...#\n#.#.#\n##.##\n", "must be solid"),
-            ("##+##\n#.#.#\n#####\n", "cannot be reached"),
             ("+###\n#..#\n####\n", "not on a corner"),
         ];
         for (map, expected) in cases {
@@ -5776,18 +5535,6 @@ mod tests {
             assert_eq!(err.file, "vaults/bad.toml");
             assert!(err.message.contains(expected), "{map}: {}", err.message);
         }
-        // A vault may be stamped many times: no unique character in one.
-        let mut files = ContentFiles::builtin();
-        let dialogue = files.get("data/dialogue.toml").unwrap().to_string();
-        let twin = "[[dialogue]]\nnpc = \"twin\"\nlines = [\"Again?\"]\n";
-        files.insert("data/dialogue.toml", &format!("{dialogue}\n{twin}"));
-        files.insert(
-            "vaults/bad.toml",
-            "name = \"Bad\"\nmap = '''\n##+##\n#.s.#\n#####\n'''\n[legend]\n\
-             \"s\" = { terrain = \"floor\", creature = \"deer\", npc = \"twin\" }\n",
-        );
-        let err = Content::load(&files).unwrap_err();
-        assert!(err.message.contains("unique npc"), "{}", err.message);
         let content = Content::builtin().unwrap();
         let ids: Vec<_> = content.vaults().iter().map(Vault::id).collect();
         assert_eq!(
@@ -5875,7 +5622,7 @@ mod tests {
     }
 
     #[test]
-    fn outdoor_vaults_are_open_but_connected() {
+    fn outdoor_vaults_are_open() {
         let load = |map: &str, kind: &str| {
             let mut files = ContentFiles::builtin();
             files.insert(
@@ -5893,14 +5640,13 @@ mod tests {
             .expect("ruin");
         assert!(ruin.is_outdoor());
         assert!(ruin.entrances.len() > 5);
-        // A walled-in cell is still an error, and so is a ruin with no open edge.
-        for (map, expected) in [
-            (".####\n.#..#\n.####\n", "cannot be reached"),
-            ("###\n###\n###\n", "needs an open cell on its edge"),
-        ] {
-            let err = load(map, "outdoor").unwrap_err();
-            assert!(err.message.contains(expected), "{map}: {}", err.message);
-        }
+        // A ruin with no open edge has no way in.
+        let err = load("###\n###\n###\n", "outdoor").unwrap_err();
+        assert!(
+            err.message.contains("needs an open cell on its edge"),
+            "{}",
+            err.message
+        );
         assert!(load("###\n#.#\n###\n", "overworld").is_err());
     }
 
@@ -5970,10 +5716,6 @@ mod tests {
             (
                 "\"s\" = { terrain = \"floor\", flow_speed = 50 }\n",
                 "`flow_speed` but no `flow`",
-            ),
-            (
-                "\"s\" = { terrain = \"running_water\", flow = \"S\", flow_speed = 0 }\n",
-                "expected 10 to 300",
             ),
             (
                 "\"s\" = { terrain = \"running_water\", flow = \"Down\" }\n",
@@ -6136,14 +5878,6 @@ mod tests {
             assert_eq!(err.file, "data/objects.toml", "{objects}");
             assert!(err.message.contains(expected), "{objects}: {}", err.message);
         }
-        let mut files = minimal_files("#@#\n", "");
-        let creatures = files
-            .get("data/creatures.toml")
-            .unwrap()
-            .replace("weight = 4000", "weight = 0");
-        files.insert("data/creatures.toml", &creatures);
-        let err = Content::load(&files).unwrap_err();
-        assert!(err.message.contains("creature `rat`"), "{}", err.message);
     }
 
     #[test]
@@ -6382,36 +6116,8 @@ mod tests {
             ("player", "mana = 3", "come from the scenario"),
             (
                 "rat",
-                "mana = 1001",
-                "creature `rat`: mana 1001 is more than 1000",
-            ),
-            ("rat", "level = 0", "`level` must be 1 to 100"),
-            ("rat", "level = 101", "`level` must be 1 to 100"),
-            ("rat", "xp = 100001", "`xp` at most 100000"),
-            (
-                "rat",
-                "attack = { damage = \"1d4\", name = \"bite\", verb = \"bites\", threat = 25 }",
-                "creature `rat`: attack: `threat` must be 2 to 24",
-            ),
-            (
-                "rat",
-                "attack = { damage = \"1d4\", name = \"\", verb = \"bites\" }",
-                "`name` and `verb` must not be empty",
-            ),
-            (
-                "rat",
                 "attack = { damage = \"1d1\", name = \"bite\", verb = \"bites\" }",
                 "2 to 1000 sides",
-            ),
-            (
-                "rat",
-                "natural = { defence = 0, name = \"hide\" }",
-                "natural: `defence` and `protection` must be 0 to 20, not both 0",
-            ),
-            (
-                "rat",
-                "natural = { protection = 21, name = \"hide\" }",
-                "natural: `defence` and `protection` must be 0 to 20",
             ),
             // Without data/sizes.toml there is only medium.
             (
@@ -6501,7 +6207,6 @@ mod tests {
             ("\"blest\"", "unknown status `blest`"),
             ("\"blessed*4\"", "more than its 3 degrees"),
             ("\"blessed*0\"", "count must be"),
-            ("\"blessed\", \"blessed\"", "twice"),
         ] {
             let legend = format!("{kobold}, status = [{status}] }}\n");
             let err = stream(map, &legend).unwrap_err();
@@ -6525,10 +6230,6 @@ mod tests {
                 "count must be",
             ),
             (
-                "\"x\" = { terrain = \"wall\", objects = [\"dagger\"] }",
-                "not walkable",
-            ),
-            (
                 "\"x\" = { terrain = \"floor\", carry = [\"dagger\"] }",
                 "carry, wield, wear, or status but no creature",
             ),
@@ -6539,14 +6240,6 @@ mod tests {
             (
                 "\"x\" = \"floor\"\n[[pile]]\nat = [9, 9]\nobjects = [\"dagger\"]",
                 "outside",
-            ),
-            (
-                "\"x\" = \"floor\"\n[[pile]]\nat = [0, 0]\nobjects = [\"dagger\"]",
-                "not walkable",
-            ),
-            (
-                "\"x\" = \"floor\"\n[[pile]]\nat = [1, 1]\nobjects = []",
-                "has no objects",
             ),
         ];
         for (legend, expected) in cases {

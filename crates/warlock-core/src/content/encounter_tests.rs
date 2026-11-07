@@ -12,10 +12,7 @@ fn the_shipped_file_holds_at_three() {
 }
 
 #[test]
-fn an_edge_reach_out_of_range_is_refused() {
-    let err = EncounterRules::parse("x", "edge_reach = 11").unwrap_err();
-    assert!(err.to_string().contains("out of range"), "{err}");
-    assert!(EncounterRules::parse("x", "edge_reach = -1").is_err());
+fn an_edge_reach_alone_meets_nobody() {
     let rules = EncounterRules::parse("x", "edge_reach = 0").unwrap();
     assert_eq!(rules.edge_reach, 0);
     assert_eq!(rules.meetings, None, "no tables: nobody meets anybody");
@@ -39,7 +36,7 @@ fn the_shipped_meetings_read_as_the_design_has_them() {
 }
 
 #[test]
-fn the_meetings_are_all_given_or_none_and_in_range() {
+fn the_meetings_are_all_given_or_none() {
     let some = "edge_reach = 3\n[phase]\nday = 100\ntwilight = 100\nnight = 100\n";
     let err = EncounterRules::parse("x", some).unwrap_err().to_string();
     assert!(err.contains("all given or none"), "{err}");
@@ -48,10 +45,6 @@ fn the_meetings_are_all_given_or_none_and_in_range() {
         .unwrap_err()
         .to_string();
     assert!(err.contains("names no `swamp`"), "{err}");
-    let far = SHIPPED.replace("fight = 7 ", "fight = 30 ");
-    assert!(EncounterRules::parse("x", &far).is_err());
-    let past = SHIPPED.replace("ambushed = 100 }", "ambushed = 101 }");
-    assert!(EncounterRules::parse("x", &past).is_err());
 }
 
 /// A fixture table in the showcase campaign.
@@ -126,11 +119,6 @@ fn the_load_checks_refuse_what_is_not_there() {
             "unknown field",
         ),
         (
-            "weight = 3",
-            "weight = 3\nstance = \"peaceful\"",
-            "hostile to the player",
-        ),
-        (
             "id = \"wilds\"",
             "id = \"wilds\"\nreplaces = [\"gone\"]",
             "no other table",
@@ -140,8 +128,6 @@ fn the_load_checks_refuse_what_is_not_there() {
         let err = load(&TABLE.replacen(from, to, 1)).expect_err(to);
         assert!(err.contains(why), "{to}: {err}");
     }
-    let err = load(&TABLE.replace("kobold\"", "hermit\"")).expect_err("hermit");
-    assert!(err.contains("not hostile"), "{err}");
     // A level ceiling is the one level condition (the owner, #796 Q5).
     let max = TABLE.replacen(
         "weight = 3",
@@ -188,10 +174,9 @@ fn draws_npcs_and_quest_variants_are_checked() {
         ),
         (
             "ascmearc",
-            drawn.replace("danger = 3", "danger = 0"),
-            "1 to 99",
+            drawn.replace("1d3", "1d3-1"),
+            "gives at least 1",
         ),
-        ("ascmearc", drawn.replace("1d3", "1d3-1"), "gives 1 to"),
         (
             "ascmearc",
             drawn_with("stance = \"wildlife\""),
@@ -262,16 +247,6 @@ fn talk_past_is_only_for_a_hostile_group() {
             "{stance}: {err}"
         );
     }
-    // Never a draw: what is drawn may be anything.
-    let group = "group = [{ creature = \"kobold\", count = \"1d2+1\" }]";
-    let draw = "draw = { pool = \"wulfeshol\", danger = 3, count = \"1d3\" }";
-    let mut files = ContentFiles::builtin();
-    files.insert(
-        "campaigns/ascmearc/data/encounters/test.toml",
-        &flagged.replacen(group, draw, 1),
-    );
-    let err = Content::load(&files).expect_err("a draw").to_string();
-    assert!(err.contains("never talked past"), "{err}");
 }
 
 #[test]

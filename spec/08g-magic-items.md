@@ -467,7 +467,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
   class, stackable) whose `[object.drink]` says what drinking one does by its `kind`, each
   through the one path that does it: `heal` (`dice` hit points back at once, never past the
   maximum, and what its `cures` names cured), `cure` (`cures`, means of the statuses' and
-  diseases' `cured_by`: `bandage` stops bleeding, `antidote` ends poison; `diseases = true` ends
+  diseases' `cured_by`: `bandage` stops bleeding, `antidote` ends poison, `clear_head` (the
+  potion of clear head's) ends the clouded mind and the numbed body, Frightened, Drowsy,
+  Sluggish, Stunned, Staggered, and Transfixed; `diseases = true` ends
   every disease), `mana` (`dice` mana back, never past the maximum), `elixir` (#568: its `stat`
   +`points` (1) for good, each a trained rise, the potential then lifted to the score where it
   was below (a trained rise alone never moves it, §8 "Stats"), then the potential +a roll of `potential`, "1d2", one gameplay draw; hit points
@@ -484,7 +486,14 @@ developer notes (CLAUDE.md, `docs/dev/`).
   electricity, Proof against poison), and `status` (#1224, the potions wave 2 design §4.1:
   `severity` degrees of any `status`: Barkskin, Glamoured,
   Renewing, Quick-sensed, Invisible, Water-borne; the description says what it does in words,
-  "Makes you harder to hit for a while"). A status lent says its own line as it begins ("You feel
+  "Makes you harder to hit for a while"). Three utility kinds (the potions wave 2 design §4.2):
+  `nourish` (`satiation` nutrition at once, a food ration's 1500 for the potion of sustenance,
+  never into Bloated: no overeating, no choking; "It fills you as a good meal would.", or "You
+  feel no fuller."), `restore` (the potion of restoration: the scroll of restoration's cleanse,
+  every point of stat damage mended, every drained point back, Stiffening ended; "You feel
+  whole." with nothing to restore, the potion drunk all the same), and `blink` (the potion of
+  blinking: the drinker is moved at once to a free cell of the level as a teleport trap moves
+  its victim, no draw; "In a blink, you are elsewhere."; on the overworld nothing happens). A status lent says its own line as it begins ("You feel
   stronger.", "Your eyes open wide to the dark."); a stronger dose of one already felt says it
   again, and one that changes nothing "Nothing more comes of it." The status bar and the
   character screen name it as they name Blessed, the raised score shown raised, never a number

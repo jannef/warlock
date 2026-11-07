@@ -306,11 +306,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
 - **Vaults** (`assets/vaults/*.toml`): hand-made pieces in the level-file format, stamped whole
   (terrain, lights, objects, traps, locks, named places with their notes, creatures) where they fit — into rock with room for corridors or tunnels to
   every entrance. A vault's edge is solid except for its entrances (doors, not on a corner); it has
-  no stairs, player start, or unique character (`npc`), and all its walkable cells are reachable
-  from an entrance. Its locks
-  come with their keys: a key to every lock lies, or is carried by a creature, within reach of an
-  unlocked entrance without unlocking a door (the guard post: its store room locked, the brass
-  key carried by its kobold). A legend entry may draw a monster pool (§7 "Level file format"). Vaults of
+  no stairs or player start. Its author keeps every walkable cell reachable from an entrance and
+  gives its locks their keys: a key to every lock lies, or is carried by a creature, within reach
+  of an unlocked entrance without unlocking a door (the guard post: its store room locked, the
+  brass key carried by its kobold); the loader trusts the author on both (#1205). A legend entry may draw a monster pool (§7 "Level file format"). Vaults of
   `kind = "outdoor"` are ruins for local areas, stamped on open land with a ring of open ground
   around them: their spaces (`void`) keep the area's own ground, every open cell on their edge is
   a way in, and their walkable cells are reachable from the edge; they have no traps. Dungeon
