@@ -141,9 +141,6 @@
 #                                 beside it is answered with a free blow at once (Hair trigger)
 #   carry_percent { value }       carrying limit, that percent more
 #   ignore_burdened               being Burdened costs it nothing, as a dwarf's burden
-#   step_slowdown_percent { value }   the slowdown its burden and Bloated put on its steps, that
-#                                 percent more (negative: less)
-#   carry_kg { value }            carrying limit, that many kilograms more
 #   weightless_coins              coins it carries weigh nothing
 #   travel_percent { value }      overworld journeys take that percent more time (negative:
 #                                 quicker)

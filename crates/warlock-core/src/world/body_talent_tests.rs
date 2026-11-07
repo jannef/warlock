@@ -303,7 +303,7 @@ fn a_staggering_blow_staggers_on_a_confirmed_critical_in_melee() {
 }
 
 #[test]
-fn nimble_raises_the_burden_cap_on_dexterity() {
+fn pack_mule_raises_the_burden_cap_on_dexterity() {
     let mut w = world();
     set_scores(&mut w, 20);
     w.player_mut().equipment = Equipment::default();
@@ -312,7 +312,7 @@ fn nimble_raises_the_burden_cap_on_dexterity() {
         (w.state.player().defence(&content, Burden::Strained, None)).bonus(Category::Dexterity)
     };
     assert_eq!(dex(&w), 1, "Strained caps it at +1");
-    give(&mut w, "nimble");
+    give(&mut w, "pack_mule");
     assert_eq!(dex(&w), 2);
 }
 
@@ -456,6 +456,7 @@ fn every_talent_of_the_three_trees_loads_with_its_effects() {
     // surprise's Hair trigger (#687), and stat training's Late bloomer (#726); less the cull's
     // Second breath, Bellows, and Gifted (#774), and Deft breaker and Slick, merged into
     // Lockbreaker and Chest-wise of the delver tree (#775), Hard training and Late bloomer,
-    // whose marks no one sees (#791), and Second blade's rend (#965).
-    assert_eq!(count("vigour") + count("might") + count("finesse"), 33);
+    // whose marks no one sees (#791), Second blade's rend (#965), and Nimble, folded into the
+    // burden line (#1198).
+    assert_eq!(count("vigour") + count("might") + count("finesse"), 32);
 }

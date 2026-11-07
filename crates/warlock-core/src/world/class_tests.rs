@@ -284,7 +284,7 @@ fn class_levels_replay_exactly() {
         w.apply(action);
         replay.push(action, &w);
     }
-    assert!(holds(&w, "hard_work") && holds(&w, "stubborn"));
+    assert!(holds(&w, "pack_mule") && holds(&w, "stubborn"));
     let back = replay.run(BUILTIN.clone()).expect("replays");
     assert_eq!(back.state_hash(), w.state_hash());
 }
@@ -407,16 +407,13 @@ fn burden_and_coins_follow_the_talents() {
     let before = w.load_of(id);
     give(&mut w, "deep_pockets");
     let after = w.load_of(id);
-    assert!(
-        after.limit.abs_diff(before.limit + 10_000) < 3,
-        "kept a multiple of 3 g"
-    );
+    assert_eq!(after.limit, before.limit, "no more carrying");
     assert_eq!(
         before.carried - after.carried,
         10_000,
         "a thousand coins at 10 g"
     );
-    // Hard work: Burdened's slowdown nearly gone.
+    // Pack mule (the commoner's at 1): Burdened's slowdown nearly gone.
     let mut w = world("warrior");
     let stone = w.content().object_id("gold_coin").expect("gold");
     let limit = w.load_of(id).limit;
@@ -424,7 +421,7 @@ fn burden_and_coins_follow_the_talents() {
     w.player_mut().inventory.push(Stack::new(stone, coins));
     assert_eq!(w.load_of(id).penalty(), crate::burden::Burden::Burdened);
     let slowed = w.price_of(id, crate::content::ActionKind::Wait);
-    give(&mut w, "hard_work");
+    give(&mut w, "pack_mule");
     let eased = w.price_of(id, crate::content::ActionKind::Wait);
     assert!(eased < slowed, "{slowed} → {eased}");
 }
