@@ -1,0 +1,12 @@
+# A long robe with a hood, a scholar's. Clothing: no Defence, no Protection (#1173).
+[[object]]
+id = "robe"
+name = "robe"
+glyph = "["
+fg = "#4a5a8a"
+class = "clothing"
+materials = ["wool"]
+made_of = ["cloth"]
+weight = 1000
+value = 6
+slot = "body"

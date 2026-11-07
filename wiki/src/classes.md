@@ -7,7 +7,7 @@ points](combat.md#hit-points) (see [Combat](combat.md#hit-points)), trains you i
 skills it is known for, see [Getting better](skills.md#getting-better)), and gives you your first ranks in a few
 [weapon skills](weapon-skills.md) (a berserker has learned one of two) and
 [fighting styles](fighting-styles.md) (a thief or an ascetic one of two), and decides most of your
-[starting kit](starting-kit.md); no [spells](magic.md) come with it. A class with a level table also gives
+[starting kit](starting-kit.md), its garb among it (a wizard's robe, a priest's habit); no [spells](magic.md) come with it. A class with a level table also gives
 **[class abilities](talents.md#class-abilities)** as you reach its levels, and bonus [talents](talents.md) (see
 [Levels](#levels) below).
 

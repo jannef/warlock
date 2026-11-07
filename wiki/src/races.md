@@ -6,7 +6,8 @@ sets how old you can be when you start, adds to your [hit points](combat.md#hit-
 [Combat](combat.md#hit-points)), trains you in a [skill](skills.md) or two ([humans](races.md#race-human): a little more in one of
 their class's; see [Skills](skills.md#who-trains-what)), may give you a rank in a
 [weapon skill](weapon-skills.md) or two, added to your class's, and adds a few things to your
-[starting kit](starting-kit.md): an [elf](races.md#race-elf)'s waybread, a [dwarf](races.md#race-dwarf)'s pick-axe, a [halfling](races.md#race-halfling)'s pipe.
+[starting kit](starting-kit.md): an [elf](races.md#race-elf)'s waybread, a [dwarf](races.md#race-dwarf)'s pick-axe, a [halfling](races.md#race-halfling)'s pipe, and the
+everyday clothes and shoes of your folk where your class gives none ([halflings](races.md#race-halfling) go barefoot).
 
 {{#include generated/races.md}}
 

@@ -1,0 +1,12 @@
+# A loose smock, worn over everything at work. Clothing: no Defence, no Protection (#1173).
+[[object]]
+id = "smock"
+name = "smock"
+glyph = "["
+fg = "#b8a888"
+class = "clothing"
+materials = ["cloth"]
+made_of = ["cloth"]
+weight = 600
+value = 2
+slot = "body"

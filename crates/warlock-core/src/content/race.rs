@@ -15,7 +15,7 @@ use super::kit::{Kit, KitLineSpec};
 use super::skill::{OptionalSkill, OptionalSpec};
 use super::weapon_skill::Ranked;
 use super::{
-    ContentError, DamageTypeId, FACTORS, Hide, PassiveSearch, TalentBook, WeaponSkillId,
+    ContentError, DamageTypeId, FACTORS, Hide, PassiveSearch, SlotId, TalentBook, WeaponSkillId,
     WeaponSkillTable,
 };
 use crate::combat::MAX_BASE_HP;
@@ -97,6 +97,8 @@ struct RaceSpec {
     weapon_skills: BTreeMap<String, Dice>,
     #[serde(default)]
     kit: Vec<KitLineSpec>,
+    #[serde(default)]
+    bare: Vec<String>,
 }
 
 /// Checks the races' granted talents against the talents (spec §8 "Talents"): each exists, is
@@ -247,6 +249,11 @@ pub struct RaceDef {
     /// What the race adds to a new character's pack after the class's kit (spec §8 "Character
     /// creation"); filled in by the loader once objects are known.
     pub kit: Kit,
+    /// The slots, by id as written, the race's starting kits leave bare; resolved into `bare`.
+    pub(super) bare_spec: Vec<String>,
+    /// The slots every kit leaves bare for the race: nothing of any kit is worn or wielded
+    /// there (the halflings' feet); filled in by the loader once slots are known.
+    pub bare: Vec<SlotId>,
 }
 
 /// Every race, and the base every potential starts from.
@@ -418,6 +425,8 @@ impl Races {
                 weapon_skills,
                 kit_spec: spec.kit,
                 kit: Kit::default(),
+                bare_spec: spec.bare,
+                bare: Vec::new(),
             });
         }
         Ok(Self {

@@ -73,7 +73,8 @@
 #                                      light weapon goes to the off hand), a missile weapon or
 #                                      missiles, a tool; each in the first free slot it fits (one
 #                                      that finds none is carried)
-#                   { wear = "..." }   worn: armour, cloaks, gloves, boots, rings, amulets
+#                   { wear = "..." }   worn: armour, clothing, cloaks, gloves, boots, rings,
+#                                      amulets
 #                 and may add:
 #                   trained = "id"     only if the class trained that weapon skill or fighting
 #                                      style: its weapon_skills or styles, or the set of its
@@ -83,11 +84,18 @@
 #                   magic = "any"      a base item (one with a `kind`) made as loot makes it, its
 #                                      rarity rolled: "any" (perhaps magic), "magic" (magic or
 #                                      rare), or "rare"; unidentified
+#                   fill = true        a `wield` or `wear` line given last, after every other
+#                                      line of every kit and the random scrolls, and only if a
+#                                      slot it fits is still free; else left out (a race's
+#                                      everyday clothes and shoes, which yield to the class's)
 #                 `"a|b|c"` is one of them, picked at random when the character is made (from its
 #                 own stream, so no other roll moves). Food is as fresh as the run is new. Nobody
 #                 starts Strained; an ordinary character starts Unburdened, but for the
 #                 aristocrat's and the merchant's wealth and a small warrior's or paladin's armour.
-#                 Every scroll and potion of the kit is known by type from the start.
+#                 Every kit dresses the character: something on the body and on the feet (the
+#                 class's, else the race's `fill` lines), but for a race's `bare` slots (the
+#                 halflings' feet). Every scroll, potion, wand, and rod a run starts with (the
+#                 kit's, the scenario's) is known by type from the start.
 #   random_scrolls  `{ count = "1d3", below_level = 10 }`: that many spell scrolls more, rolled
 #                 when the character is made, each the scroll of a spell of a spell level below
 #                 `below_level`, drawn uniformly among them (duplicates stack); carried, after

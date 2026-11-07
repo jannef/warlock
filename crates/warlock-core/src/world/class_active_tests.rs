@@ -406,7 +406,8 @@ fn battle_scarred_headlong_and_blood_frenzy_count_while_raging_in_any_armour() {
             run(&mut w, &format!("equip:body:{at}"));
             assert!(w.state.player().equipment.get(body).is_some(), "in plate");
         } else {
-            assert!(w.state.player().equipment.get(body).is_none(), "bare");
+            // Clothes at most: no armour.
+            assert!(!w.state.player().wears_body_armour(w.content()), "bare");
         }
         let without = |w: &World| {
             let mut plain = w.clone();

@@ -1,0 +1,11 @@
+# A shirt of dark silk, dyed the black of the deep. Clothing: no Defence, no Protection (#1173).
+[[object]]
+id = "silk_shirt"
+name = "silk shirt"
+glyph = "["
+fg = "#3a3448"
+class = "clothing"
+materials = ["silk"]
+weight = 250
+value = 15
+slot = "body"

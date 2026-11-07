@@ -1,0 +1,11 @@
+# A priest's long habit of undyed wool. Clothing: no Defence, no Protection (#1173).
+[[object]]
+id = "habit"
+name = "habit"
+glyph = "["
+fg = "#5a4a3a"
+class = "clothing"
+materials = ["wool"]
+weight = 800
+value = 4
+slot = "body"

@@ -775,11 +775,19 @@ impl Actor {
         Protection::new(content, base + natural, adjustments)
     }
 
-    /// Whether it wears body armour: anything in a slot worn as body armour (`body_armor`, the
-    /// Body slot). Mage armour and Fleet ask for none (spec §8 "Class abilities").
+    /// Whether it wears body armour: armour in a slot worn as body armour (`body_armor`, the
+    /// Body slot), anything there that defends, protects, or is a base item; clothing (a robe,
+    /// a tunic: none of those, #1173) is no armour. Mage armour and Fleet ask for none (spec §8
+    /// "Class abilities").
     pub fn wears_body_armour(&self, content: &Content) -> bool {
-        (self.equipment.items().into_iter())
-            .any(|(slot, _)| content.slot(slot).action == ActionKind::BodyArmor)
+        (self.equipment.items().into_iter()).any(|(slot, item)| {
+            let armour = |s: &Stack| {
+                let def = content.object(s.object);
+                def.armour != 0 || def.protection != 0 || def.kind.is_some()
+            };
+            content.slot(slot).action == ActionKind::BodyArmor
+                && self.inventory.get(item).is_some_and(armour)
+        })
     }
 
     /// The Protection its talents add (spec §8 "Talents": Heavy armour mastery while its body
