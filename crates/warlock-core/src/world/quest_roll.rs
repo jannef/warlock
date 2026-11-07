@@ -13,9 +13,16 @@
 //! when it is given ([`World::branch_open`]): a branch is closed while a hidden location of the
 //! run's overworld that leads into it is not revealed. A roll that is never drawn again can so
 //! never point at a place the player cannot go; a rolled quest whose pool is empty is not given.
+//!
+//! **Beast-friend** (#1189): a player with the talent is never asked to kill what it calms
+//! ([`beast_friend::calms`]: a creature type of an animal faction). The pool leaves out such a
+//! type, a tag any of whose types (of the quest's campaign) is one, and a variant asking for
+//! either; a `fallback` variant is then drawn only when no other is left (Leofric's rats). The
+//! talent is read as the quest is given: the roll is saved, so a talent taken later changes
+//! nothing about a quest given already.
 
-use super::{Spent, World};
-use crate::content::{Candidate, QuestDef, Roll, Rolled};
+use super::{Spent, World, beast_friend};
+use crate::content::{Candidate, QuestDef, Roll, Rolled, TAG_TARGET};
 use crate::rng::Rng;
 
 impl World {
@@ -31,9 +38,31 @@ impl World {
         })
     }
 
-    /// What rolled quest `def` may draw now, in content order.
+    /// What rolled quest `def` may draw now, in content order: of the branches the player can
+    /// enter, nothing their Beast-friend talent calms, and a fallback variant only when no
+    /// other is left.
     pub(super) fn quest_pool(&self, def: &QuestDef) -> Vec<Candidate> {
-        def.candidates(&self.content, &|b| self.branch_open(b))
+        let mut pool = def.candidates(&self.content, &|b| self.branch_open(b));
+        pool.retain(|c| !self.calmed(def, &c.target));
+        let fallback = |c: &Candidate| match (&def.roll, c.variant) {
+            (Some(Rolled::Variants(v)), Some(i)) => v[i].fallback,
+            _ => false,
+        };
+        if pool.iter().any(|c| !fallback(c)) {
+            pool.retain(|c| !fallback(c));
+        }
+        pool
+    }
+
+    /// Whether kill target `target` (a creature type's id, or `tag:` and a tag of quest `def`'s
+    /// campaign) is one the player's Beast-friend talent calms, or any type of the tag is.
+    fn calmed(&self, def: &QuestDef, target: &str) -> bool {
+        let (content, player) = (&self.content, self.state.player());
+        let calms = |c| beast_friend::calms(content, player, c);
+        match target.strip_prefix(TAG_TARGET) {
+            Some(tag) => content.tagged_in(tag, def.campaign.as_deref()).any(calms),
+            None => content.creature_id(target).is_some_and(calms),
+        }
     }
 
     /// Draws rolled quest `def`'s target from its pool, as it is given; `None` when the pool is

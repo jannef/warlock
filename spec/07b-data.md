@@ -792,9 +792,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
   it is given (§8 "Quests", rolled quests): `pick = { creatures = [BRANCH, ...] }` (kill; the
   non-unique types of those branches' populations), `pick = { tags = [TAG, ...] }` (kill),
   `pick = { objects = { class = "scrolls", loot = true } }` (bring; `loot`: only what loot can
-  hold), or `[[quest.variant]]`s (`id`, `target`, `weight` 1 to 1000, default 1, and optional
-  `reveals`, `where`, `offer`, `accept`, `reminder`, `done`, each replacing the quest's own,
-  which may then be left out; at most 32); exactly one of `target`, `pick`, and variants. A
+  hold), or `[[quest.variant]]`s (`id`, `target`, `weight` 1 to 1000, default 1, `fallback`
+  (default false: drawn only when no other variant may be, as for a Beast-friend; not every
+  variant), and optional `reveals`, `where`, `offer`, `accept`, `reminder`, `done`, each
+  replacing the quest's own, which may then be left out; at most 32); exactly one of `target`, `pick`, and variants. A
   rolled quest's texts but its `name` may hold placeholders (`{target}`, `{targets}`,
   `{a_target}`, `{count}`, `{members}`, `{branch}`, `{where}`, and capitalised forms); each is
   checked filled with every target its pool can hold; a quest that is not rolled has none. A

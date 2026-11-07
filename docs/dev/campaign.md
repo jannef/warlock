@@ -178,7 +178,7 @@ snapshots.
 
 `campaigns/ascmearc/data/quests/{hild,leofric,wulfrun}.toml`, one file a giver, three chains
 (three quests each, Wulfrun's two), each quest offered once the one before it is done (so a
-giver shows one quest topic at a time): Reeve Leofric's Cealdhlāw chain (`barrow_rats`: kill 5 rats anywhere in Cealdhlāw;
+giver shows one quest topic at a time): Reeve Leofric's Cealdhlāw chain (`barrow_rats`: kill 5 rats anywhere in Cealdhlāw, 5 skeletal rats for a Beast-friend, a `fallback` variant;
 `barrow_heart`: reach `cealdhlaw:4`; `wight`: kill the barrow wight), Sister Hild's Fennmynster
 chain (`grave_goods`: bring the `silver_chalice`; `fen_minster`: reach `fennmynster:3`, which
 reveals `fennmynster` as it is given; `water_keeps`: bring the `minster_reliquary`), and
