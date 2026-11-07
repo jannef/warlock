@@ -1,0 +1,12 @@
+# Strips of rag wound about the feet. Clothing: no Defence, no Protection (#1173).
+[[object]]
+id = "footwraps"
+name = "pair of footwraps"
+plural = "pairs of footwraps"
+glyph = "["
+fg = "#8a8070"
+class = "clothing"
+materials = ["cloth"]
+weight = 150
+value = 1
+slot = "feet"

@@ -53,7 +53,11 @@ through `World::healing_rate` like every other pace change, the mana affixes (My
 `max_mana`; of Clarity, `mana_regeneration`) through `Actor::max_mana` and `World::mana_rate`
 (`docs/dev/mana.md`; mana follows the maximum down with `World::keep_mana_within_max`); the Protection affix (Hardened, an
 item effect, local, on armour kinds: `ItemKind::is_armour`) through `Stack::protection`, which
-`Actor::protection` sums (docs/dev/combat.md); the typed effects (docs/dev/combat.md "Damage
+`Actor::protection` sums (docs/dev/combat.md); Proof (of Proof, `Effect::Proof`, #1170: an item
+effect, local, its one tier's value 1, weight 30, from item level 4, on every kind but
+ammunition, which breaks by its own rule) through `world/item_damage.rs::protected`, item
+damage's one protection (docs/dev/objects.md "Protection"; it works unidentified, and the
+description names it once identified: "of Proof: nothing can damage it"); the typed effects (docs/dev/combat.md "Damage
 types"): `Effect::Elemental` (an attack effect, local on what attacks: `Mods::elemental` is one
 rider per kind, `sharpen` adds them to the profile) and `Effect::Resistance` (global:
 `Mods::resistances`, which `Actor::resistances` adds to what is worn and what the creature is),

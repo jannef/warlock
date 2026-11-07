@@ -1,0 +1,12 @@
+# Shoes carved of a block of wood. Clothing: no Defence, no Protection (#1173).
+[[object]]
+id = "clogs"
+name = "pair of clogs"
+plural = "pairs of clogs"
+glyph = "["
+fg = "#a08050"
+class = "clothing"
+materials = ["wood"]
+weight = 900
+value = 1
+slot = "feet"

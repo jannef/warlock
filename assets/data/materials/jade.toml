@@ -2,6 +2,7 @@
 [[material]]
 id = "jade"
 name = "jade"
+resists = { acid = 80, rust = 100, fire = 100 }
 group = "stone"
 color = "#68c090"
 weight = 85

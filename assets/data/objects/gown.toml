@@ -1,0 +1,12 @@
+# A long gown, worn by a witch or a lady. Clothing: no Defence, no Protection (#1173).
+[[object]]
+id = "gown"
+name = "gown"
+glyph = "["
+fg = "#6a3a6a"
+class = "clothing"
+materials = ["wool"]
+made_of = ["cloth"]
+weight = 700
+value = 10
+slot = "body"

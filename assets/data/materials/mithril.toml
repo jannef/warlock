@@ -3,8 +3,8 @@
 [[material]]
 id = "mithril"
 name = "mithril"
+resists = { acid = 95, rust = 100, fire = 95 }
 group = "metal"
-corrodes = false
 color = "#c8d8e8"
 weight = 50
 to_hit = 1

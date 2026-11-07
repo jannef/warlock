@@ -1,6 +1,7 @@
 [[material]]
 id = "zinc"
 name = "zinc"
+resists = { acid = 20, rust = 100, fire = 40 }
 group = "metal"
 color = "#a7b4bc"
 weight = 91

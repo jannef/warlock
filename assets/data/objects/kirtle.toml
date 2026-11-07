@@ -1,0 +1,12 @@
+# A long wool kirtle, everyday wear of every folk. Clothing: no Defence, no Protection (#1173).
+[[object]]
+id = "kirtle"
+name = "kirtle"
+glyph = "["
+fg = "#7a6a8a"
+class = "clothing"
+materials = ["wool"]
+made_of = ["cloth"]
+weight = 800
+value = 3
+slot = "body"

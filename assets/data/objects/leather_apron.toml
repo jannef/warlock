@@ -1,0 +1,12 @@
+# A heavy apron of a craftsman's trade, over his shirt. Clothing: no Defence, no Protection (#1173).
+[[object]]
+id = "leather_apron"
+name = "leather apron"
+glyph = "["
+fg = "#7a5434"
+class = "clothing"
+materials = ["leather"]
+made_of = ["hide"]
+weight = 1200
+value = 4
+slot = "body"

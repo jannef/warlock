@@ -19,7 +19,7 @@ type's gimmick; `content/dread_roster_tests.rs` lists the five at their tiers an
 |---|---:|---|---|---|---:|---|---|---|
 | `hydra_head` | 4 | small | common (not dread; `stray = false`) | marsh | 15 | bite 1d6 | what a hydra dies into | — |
 | `cockatrice` | 7 | small | rare | vermin | 20 | beak 1d8, Stiffening 25 % behind Toughness 13 | stiffening by touch (D2); a hiss cry | statue |
-| `rust_monster` | 12 | standard | uncommon | vermin | 47 | feelers 2d6 bludgeoning | `corrodes = { chance = 50, what = "both" }` (D7): its hits rust the armour worn, the weapon that strikes it rusts; quick (1200) | — |
+| `rust_monster` | 12 | standard | uncommon | vermin | 47 | feelers 2d6 bludgeoning | `corrodes = { chance = 50, what = "both", kind = "rust" }` (D7, #1168): its hits rust the armour worn, the weapon that strikes it rusts; quick (1200) | — |
 | `black_pudding` | 18 | shambler | rare | vermin | 92 | pseudopod 3d6 acid | `splits` under slashing and piercing (D5); `corrodes` both, 25 (D7); no vitals, no corpse, bloodless; slow (700) | acid pit |
 | `hydra` | 24 | brute | rare | marsh | 123 | five bites 1d6 | five natural attacks (#1099), `regen = 400` (D7: a brute), `dies_into` 1d4 hydra heads (D5); fire hurts it more; a hiss cry | — |
 | `gorgon` | 28 | brute | very rare | vermin | 140 | horns 3d10 | `combat = "dragon"`: a breath of grey vapour (4d6 poison, a 5-cell cone, a minute's cooldown) whose `riders` give a degree of Stiffening behind Toughness 17; immune to poison | statue |
@@ -35,6 +35,6 @@ Two small extensions of what D1–D9 built, each for one of these types:
   (`the_gorgons_breath_stiffens_...`).
 - **`corrodes` both ways** (`CorrodesWhat::Both`, `CorrodesWhat::eats`): the armour and the
   weapon forms at the one chance. The rust monster's and the black pudding's. Test:
-  `world/corrode_tests.rs::the_rust_monster_eats_both_ways`.
+  `world/corrode_tests.rs::the_rust_monster_rusts_both_ways_and_never_cloth`.
 
 The hydra's heads: `world/split_tests.rs::heads_crawl_out_of_a_dead_hydra`.

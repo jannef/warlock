@@ -378,6 +378,7 @@ pub fn phrase(rolled: &Rolled<'_>, kind: ItemKind, content: &Content) -> String 
         Effect::Shield => format!("+{v} to Shield"),
         Effect::MaxDex => format!("lets Dexterity add {v} more to Defence"),
         Effect::Weight => format!("{v}% lighter"),
+        Effect::Proof => "nothing can damage it".into(),
         Effect::Dodge => format!("+{v} to Dodge"),
         Effect::Deflection => format!("+{v} to Deflection"),
         Effect::Natural => format!("+{v} to natural armour"),

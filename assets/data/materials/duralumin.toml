@@ -2,6 +2,7 @@
 [[material]]
 id = "duralumin"
 name = "duralumin"
+resists = { acid = 30, rust = 90, fire = 60 }
 group = "metal"
 color = "#b4bcc6"
 weight = 36

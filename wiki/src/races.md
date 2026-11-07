@@ -11,7 +11,8 @@ things:
   more in one of their class's skills (see [Skills](skills.md#who-trains-what)).
 - It may give you a rank in a [weapon skill](weapon-skills.md) or two, on top of your class's.
 - It adds a few things to your [starting kit](starting-kit.md): an [elf](races.md#race-elf)'s
-  waybread, a [dwarf](races.md#race-dwarf)'s pick-axe, a [halfling](races.md#race-halfling)'s pipe.
+  waybread, a [dwarf](races.md#race-dwarf)'s pick-axe, a [halfling](races.md#race-halfling)'s pipe. It also gives the everyday clothes and shoes of
+  your folk where your class gives none ([halflings](races.md#race-halfling) go barefoot).
 
 {{#include generated/races.md}}
 

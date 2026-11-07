@@ -20,11 +20,23 @@ Kits are not fair, and are not meant to be.
   bow for elves, a short bow for [half-elves](races.md#race-half-elf).
 - Every [drow](races.md#race-drow) carries a crossbow with steel-headed bolts.
 - A [halfling](races.md#race-halfling) has a sling and stones.
-- A [dwarf](races.md#race-dwarf) goes in good [steel](materials.md#materials): a steel pick-axe,
-  steel gauntlets, and steel-shod boots.
+- A [dwarf](races.md#race-dwarf) goes in good [steel](materials.md#materials): a steel pick-axe
+  and hand axe, steel gauntlets, a steel helm, steel-shod boots, a hardened leather jerkin, and a
+  crossbow, where the class gave none of those. A [duergar](races.md#race-duergar) goes the same
+  way in plain iron, with a war hammer for the axe and no crossbow.
+- An elf and a drow carry a [potion of healing](potions.md), and wear fine silk and soft boots
+  under a cloak.
 
 Elves, half-elves, drow, and halflings also start trained in the [weapon](weapon-skills.md) their
 race gives them (see [Races](races.md)).
+
+Everyone sets out dressed: something on the body and shoes on the feet, if only
+[clothing](objects.md#class-clothing) (no [Defence](combat.md#defence) and no
+[Protection](combat.md#protection)). A class with a garb of its own wears it: the wizard's robe
+and slippers, the priest's habit and sandals, the aristocrat's doublet, gown, or houppelande.
+Everyone else wears what their folk wear: a human's tunic or kirtle and shoes, a dwarf's leather
+jerkin and iron-shod boots, a kobold's patched smock and footwraps.
+[Halflings](races.md#race-halfling) go barefoot: nobody's kit puts anything on their feet.
 
 ## What each class starts with
 
@@ -41,8 +53,12 @@ race gives them (see [Races](races.md)).
   weapon goes to your [off hand](fighting-styles.md#two-weapons) (see
   [Fighting styles](fighting-styles.md)). What finds no free slot stays in your
   [pack](objects.md#your-pack). Your class's things come first. So an elven
-  [ranger](classes.md#ranger) readies the ranger's short bow and carries the elven long bow, and a
-  dwarven paladin wears the order's gauntlets and carries the steel pair.
+  [ranger](classes.md#ranger) readies the ranger's short bow and carries the elven long bow.
+- **If the slot is free.** Some of a race's things, its clothes and shoes above all, come only if
+  nothing else of the kit went there ("if the slot is free" in the tables). A dwarven
+  [paladin](classes.md#paladin) wears the order's gauntlets and helm and leaves the steel ones at
+  home, and a dwarven [wizard](classes.md#wizard) wears the robe and slippers, not the jerkin and
+  the boots.
 - **It follows your training.** Some things come only with a [weapon skill](weapon-skills.md) or
   [fighting style](fighting-styles.md) your class trained you in. A
   [berserker](classes.md#berserker) who learned [axes](weapon-skills.md#weapon-skill-axes) carries a
@@ -63,14 +79,16 @@ race gives them (see [Races](races.md)).
   Each is the scroll of a spell of [spell level](magic.md#spell-levels) 0 to 9, every such spell as
   likely as any other, so two may be the same. Read one, or
   [study](magic.md#learning-spells-from-scrolls) it to learn its spell.
-- **Scrolls and potions you know.** You know every scroll and [potion](potions.md) you set out with
-  by its true name from the first turn ("a scroll of magic missile", never an
-  [unknown label](scrolls.md#unknown-scrolls)). So you know every other of its kind you find, too.
+- **Scrolls and potions you know.** You know every scroll, [potion](potions.md), wand, and rod you
+  set out with, whatever you start with, by its true name from the first turn ("a scroll of magic
+  missile", never an [unknown label](scrolls.md#unknown-scrolls)). So you know every other of its
+  kind you find, too.
 - **Food** is fresh when you set out (see [Food](food.md)).
 - **Weight.** Nobody starts [strained](burden.md#burden-1) under their kit. An ordinary character
   starts unburdened, except for wealth and armour. A weak [aristocrat](classes.md#aristocrat) may
   stagger under that purse, a small [merchant](classes.md#merchant) under their wares, and a small
-  warrior or paladin under their armour; drop what you can spare. The weakest of any race or class
+  or frail ([elf](races.md#race-elf), [drow](races.md#race-drow)) warrior or paladin under their
+  armour; drop what you can spare. The weakest of any race or class
   may start burdened. See [Burden](burden.md).
 - **Your [birth sign](horoscope.md#what-a-sign-does)** gives nothing yet.
 

@@ -2,7 +2,7 @@
 
 Every [object](objects.md) is made of something, and what it is made of matters. A bronze sword
 hits differently from a steel one, mithril mail is lighter than steel, gold is worth more than
-tin, and acid eats some materials but not others. This page explains how.
+tin, and some materials stand acid, rust, and fire better than others. This page explains how.
 
 An object is made of one or more **parts**, each of one material. Most objects are one material
 throughout, such as a steel dagger. Some have several parts: a long sword has a steel blade and
@@ -38,34 +38,50 @@ stone, hide, cloth, glass, and resin (amber).
 
 {{#include generated/materials.md}}
 
-## Corrosion
+## Item damage
 
-Some [creatures](creatures.md) carry acid, and acid **damages** gear:
+An item can be **damaged** in several ways, and it is always the same state. A damaged item loses
+its improvements and is a point worse until it is mended, at an
+[anvil](altars-forges-springs.md#forges) or, for wood, with a knife
+([Whittle](abilities.md#ability-whittle)). That is the state a failed attempt at an anvil leaves it
+in. An item damaged again, by anything, is **destroyed**. Only its name tells what did it: *a
+corroded*, *a rusted*, *a scorched*, or *a damaged long sword*.
 
-- The [hezrou](creatures.md#creature-hezrou) and the [dretch](creatures.md#creature-dretch) eat
-  at what you wear. Each of their blows that lands has a chance (25% for the hezrou, 10% for the
-  dretch) to damage one piece of armour or a shield you wear, picked at random among those whose
-  material corrodes.
-- The [ember beetle](creatures.md#creature-ember-beetle)'s blood eats at what strikes it. Each of
-  your blows that lands has a 25% chance to damage the weapon or shield you struck with.
-- The [rust monster](creatures.md#creature-rust-monster) and the [black
-  pudding](creatures.md#creature-black-pudding) do both, each way at its own chance: 50% for the
-  rust monster, 25% for the pudding.
+Some [creatures](creatures.md) harm your gear in melee:
 
-A damaged item loses its improvements and is a point worse until it is mended. That is the same
-state a failed attempt at an [anvil](altars-forges-springs.md#forges) leaves it in, and an anvil
-is also where it is mended. Acid never damages an item twice and never destroys one.
+- The [hezrou](creatures.md#creature-hezrou) and the [dretch](creatures.md#creature-dretch) carry
+  acid that eats at what you wear. Each of their blows that lands has a chance (25% for the
+  hezrou, 10% for the dretch) to reach one piece of armour or a shield you wear, picked at random.
+- The [ember beetle](creatures.md#creature-ember-beetle)'s acid blood eats at what strikes it.
+  Each of your blows that lands has a 25% chance to reach the weapon or shield you struck with.
+- The [black pudding](creatures.md#creature-black-pudding)'s acid does both, each way at 25%, and
+  the [rust monster](creatures.md#creature-rust-monster) rusts both ways at 50%.
 
-The **Corrodes** column above says which materials acid eats:
+Any [resistance](damage-types.md) to acid halves the chance of acid. Rust has no damage type to
+resist.
 
-- **yes**: the common metals, leather, fur, and cloth;
-- **half**: bone, horn, ivory, and chitin, at half the chance;
-- **no**: gold, silver, electrum, chromium, nicrosil, mithril, adamantium, dragonscale,
-  dragonbone, wood, stone, glass, and the gems.
+What is reached then **withstands** it by its main material's chance, in the **Withstands acid**,
+**Withstands rust**, and **Withstands fire** columns above:
 
-Any [resistance](damage-types.md) to acid halves the chance. If nothing you wear (or the weapon
-that struck) corrodes, nothing happens, and the first time you are told so: *The acid runs off
-your mithril chain mail shirt.* Fighting bare-handed or with a spell risks nothing.
+- Withstood, nothing happens. The first time for each kind you are told so: *The acid runs off
+  your mithril chain mail shirt.*
+- Otherwise the item is damaged, or destroyed if it was damaged already.
+
+Gold, silver, mithril, adamantium, dragonscale, and the gems nearly always withstand everything.
+Iron and steel rust and corrode easily but stand heat. Copper and its alloys corrode but hardly
+rust. The soft metals melt. Wood and cloth burn. Nothing but metal rusts. A failed attempt at an
+anvil is never withstood. Fighting bare-handed or with a spell risks nothing.
+
+### Protected items
+
+Some items no harm reaches at all: not acid, rust, or fire, not a failed attempt at an
+[anvil](altars-forges-springs.md#forges) or with the knife, and not a spell's
+[ruin](spellcasting.md#what-lies-in-its-way) of what lies on the floor. They are:
+
+- [unique items](magic-items.md#unique-items);
+- items of the [of Proof](affixes.md#suffixes) affix, whether or not you have identified it;
+- anything a [quest](quests.md) asks you to bring or deliver, until that quest is done for good.
+  What a quest gives you as its reward is an ordinary item, unless another quest asks for it.
 
 ## Items of other materials
 

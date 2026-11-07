@@ -154,8 +154,7 @@ Some things are never touched:
 
 - what you carry or wear;
 - what lies in a [chest](chests.md);
-- a [unique item](magic-items.md);
-- anything a [quest](quests.md) asks you to bring or deliver, until that quest is done for good.
+- what is [protected from item damage](materials.md#protected-items).
 
 [Traps](traps.md) ruin nothing. A [corpse](food.md) that burns away never rises. You are told what
 you see go: "The scroll burns up.", "3 potions freeze and shatter."

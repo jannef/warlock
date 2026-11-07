@@ -22,7 +22,7 @@ size = "small"
 stats = { strength = 10, dexterity = 16, toughness = 11, intelligence = 7, willpower = 18, presence = 7 }
 base_hp = 10
 resist = { fire = 25, poison = 100 }
-corrodes = { chance = 10, what = "armour" }
+corrodes = { chance = 10, what = "armour", kind = "acid" }
 corpse = false
 blood = "#4a3a1a"
 [creature.attack]

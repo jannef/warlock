@@ -69,6 +69,37 @@ fn give(w: &mut World, id: &str) {
     w.player_mut().inventory.insert(0, stack);
 }
 
+#[test]
+fn a_failed_attempt_never_harms_a_sword_of_proof() {
+    // #1170: protected, a failure is withstood (`item_damage.rs`), its attempt still counted.
+    let mut w = world(false);
+    let id = object(&w, "long_sword");
+    let magic = Magic {
+        rarity: Rarity::Magic,
+        level: 10,
+        affixes: vec![Affix {
+            id: "of_proof".into(),
+            tier: 1,
+            value: 1,
+        }],
+        name: None,
+        identified: false,
+        carried: 0,
+        unique: None,
+    };
+    (w.player_mut().inventory).insert(0, Stack::with_magic(id, 1, magic));
+    let saved = w.state.clone();
+    let failed = (0..200).find(|&n| {
+        w.state = saved.clone();
+        w.state.rng = Rng::stream(n, "temper_tests_proof");
+        w.apply(&Action::Temper { item: 0 });
+        said(&w, "The work goes wrong, but no harm is done.")
+    });
+    assert!(failed.is_some(), "some attempt fails");
+    let after = first(&w).worked().cloned().expect("worked");
+    assert_eq!((after.damaged, after.attempts), (false, 1));
+}
+
 /// A long sword with an affix that rolls on it, of tier 1, unidentified, in the pack's first place.
 fn magic_sword(w: &mut World) {
     let id = object(w, "long_sword");
@@ -149,6 +180,7 @@ fn set_worked(w: &mut World, improved: Vec<Aspect>, attempts: u8, damaged: bool)
         improved,
         attempts,
         damaged,
+        by: None,
     };
     w.player_mut().inventory[0].set_worked(worked);
 }
@@ -384,6 +416,62 @@ fn damaged_it_is_repaired_or_destroyed() {
     attempt(&mut w, Came::Failed);
     assert!(w.state.player().inventory.is_empty(), "gone");
     assert!(said(&w, "It shatters under the hammer!"));
+}
+
+/// Item damage of `harm` on stack 0 until it takes (fate tried over on other draws): what came.
+fn harmed(w: &mut World, harm: crate::content::ItemHarm) -> super::item_damage::Harmed {
+    let saved = w.state.clone();
+    for n in 0..500 {
+        w.state = saved.clone();
+        w.state.rng = Rng::stream(n, "temper_tests_harm");
+        let came = w.harm_item(0, harm);
+        if came != super::item_damage::Harmed::Withstood {
+            return came;
+        }
+    }
+    panic!("the item never took {harm:?}");
+}
+
+#[test]
+fn acid_and_a_failed_attempt_leave_the_one_state_the_anvil_mends() {
+    use super::item_damage::Harmed;
+    use crate::content::ItemHarm;
+    // #1168: acid damages a fine sword exactly as a failure does, but for its word.
+    let mut w = world(false);
+    give(&mut w, "long_sword");
+    set_worked(&mut w, vec![Aspect::Die], 1, false);
+    let saved = w.state.clone();
+    attempt(&mut w, Came::Failed);
+    let failed = worked_after(&w).expect("worked");
+    w.state = saved;
+    assert_eq!(harmed(&mut w, ItemHarm::Acid), Harmed::Damaged);
+    let corroded = worked_after(&w).expect("worked");
+    assert_eq!(corroded.by, Some(ItemHarm::Acid));
+    assert_eq!(
+        Worked {
+            attempts: failed.attempts,
+            ..corroded.clone()
+        },
+        Worked {
+            by: Some(ItemHarm::Acid),
+            ..failed
+        },
+        "the same state"
+    );
+    assert_eq!(w.lore().describe(first(&w)), "a corroded long sword");
+    // The anvil mends it as any damage.
+    let saved = w.state.clone();
+    attempt(&mut w, Came::Made);
+    let mended = worked_after(&w).expect("worked");
+    assert_eq!((mended.damaged, mended.by), (false, None));
+    assert_eq!(w.lore().describe(first(&w)), "a long sword");
+    // A failure on it, or rust on it, destroys it.
+    w.state = saved.clone();
+    attempt(&mut w, Came::Failed);
+    assert!(w.state.player().inventory.is_empty(), "shattered");
+    w.state = saved;
+    assert_eq!(harmed(&mut w, ItemHarm::Rust), Harmed::Destroyed);
+    assert!(w.state.player().inventory.is_empty(), "rusted away");
 }
 
 #[test]

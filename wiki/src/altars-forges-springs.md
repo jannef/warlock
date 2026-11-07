@@ -101,7 +101,9 @@ twice. The item's name says how far it has come, whatever you know of its magic:
 A damaged item is a point worse than a plain one until it is mended. It loses a point of
 [Protection](combat.md#protection) if it gives some, else of [Defence](combat.md#defence), else of
 [damage](combat.md#damage). So stopping while you are ahead is a real choice.
-[Acid](materials.md#corrosion) damages an item the same way.
+[Acid, rust, and heat](materials.md#item-damage) damage an item the same way (it is then called
+*corroded*, *rusted*, or *scorched* instead of *damaged*), and the anvil mends it all the same.
+Damaged again by anything, it is destroyed. No material withstands a failed attempt.
 
 The anvil neither adds nor takes [affixes](magic-items.md); they stay through improvement, damage,
 and repair. Whatever survives is [identified](magic-items.md#unidentified-items). A worked item is

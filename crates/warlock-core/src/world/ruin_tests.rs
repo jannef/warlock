@@ -135,8 +135,23 @@ fn quest_objects_and_uniques_survive_any_number_of_casts() {
         carried: 0,
         unique: Some("widowmaker".into()),
     };
+    let proof = Magic {
+        rarity: Rarity::Magic,
+        level: 6,
+        affixes: vec![crate::magic::Affix {
+            id: "of_proof".into(),
+            tier: 1,
+            value: 1,
+        }],
+        name: None,
+        identified: false,
+        carried: 0,
+        unique: None,
+    };
     let mut pile = w.state.current().objects[&at].clone();
     pile.push(Stack::with_magic(sword, 1, magic));
+    pile.push(Stack::with_magic(sword, 1, proof));
+    pile.push(Stack::new(sword, 1));
     w.state.current_mut().set_pile(at, pile);
     let fire = Some(kind(&w, "fire"));
     let player = w.state.player;
@@ -144,7 +159,11 @@ fn quest_objects_and_uniques_survive_any_number_of_casts() {
         blow(&mut w, Caster::Actor(player), at, &burst(fire));
     }
     assert_eq!(count(&w, at, "apple"), 5);
-    assert_eq!(count(&w, at, "long_sword"), 1, "a unique never burns");
+    assert_eq!(
+        count(&w, at, "long_sword"),
+        2,
+        "a unique and one of Proof never burn, a plain one does"
+    );
     assert_eq!(count(&w, at, "bread"), 0, "food no quest asks for burns");
 }
 

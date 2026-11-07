@@ -86,46 +86,75 @@ pub struct MaterialDef {
     /// How often a creature's gear is of it, by the creature's level ([`Found`]); none: never.
     #[serde(default)]
     pub gear: Option<Found>,
-    /// Whether acid eats it (spec §7 "Materials"; a creature's `corrodes`, `world/corrode.rs`):
-    /// `true`, `false`, or `"half"` (at half the chance: bone, horn, ivory, chitin). None: its
-    /// group's ([`Corrosion::of_group`]).
+    /// How it withstands each kind of item damage, in percent (spec §7 "Materials";
+    /// `world/item_damage.rs`): `resists = { acid = 20, rust = 10, fire = 95 }`, every kind
+    /// given. Every material of the game's content sets it (`material_resists_tests.rs`); one
+    /// without (a test's) withstands nothing.
     #[serde(default)]
-    pub(super) corrodes: Option<CorrodesSpec>,
+    pub(super) resists: Option<Resists>,
 }
 
-/// How acid takes a material: not at all, at half the chance, or at the full chance.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum Corrosion {
-    No,
-    Half,
-    Yes,
+/// A kind of item damage (spec §7 "Materials", `world/item_damage.rs`): what leaves an item
+/// damaged, the smith's one state ([`crate::magic::Worked`]), and destroys one damaged already.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum ItemHarm {
+    /// Acid eating at it (the hezrou's filth, the ember beetle's blood, a pudding).
+    Acid,
+    /// Rust (the rust monster's feelers).
+    Rust,
+    /// Heat scorching it.
+    Fire,
+    /// A failed attempt at the anvil or with the knife (`world/temper.rs`): no material
+    /// withstands it, being the craft's own blunder.
+    Work,
 }
 
-impl Corrosion {
-    /// A material's without a `corrodes` of its own: the metals and hides corrode, nothing else.
-    pub fn of_group(group: Option<&str>) -> Self {
-        match group {
-            Some("metal" | "hide") => Corrosion::Yes,
-            _ => Corrosion::No,
+impl ItemHarm {
+    /// The kinds a material's `resists` gives, in its order.
+    pub const RESISTED: [ItemHarm; 3] = [ItemHarm::Acid, ItemHarm::Rust, ItemHarm::Fire];
+
+    /// Its id, as data and the wiki write it.
+    pub const fn id(self) -> &'static str {
+        match self {
+            ItemHarm::Acid => "acid",
+            ItemHarm::Rust => "rust",
+            ItemHarm::Fire => "fire",
+            ItemHarm::Work => "work",
         }
     }
 
-    /// Its word, as the wiki writes it.
+    /// What an item it damaged is called, ahead of its name: "a rusted long sword".
     pub const fn word(self) -> &'static str {
         match self {
-            Corrosion::No => "no",
-            Corrosion::Half => "half",
-            Corrosion::Yes => "yes",
+            ItemHarm::Acid => "corroded",
+            ItemHarm::Rust => "rusted",
+            ItemHarm::Fire => "scorched",
+            ItemHarm::Work => crate::magic::worked::DAMAGED,
         }
     }
 }
 
-/// A material's `corrodes` as written: a bool, or `"half"`.
-#[derive(Clone, Debug, Deserialize)]
-#[serde(untagged)]
-pub(super) enum CorrodesSpec {
-    Flag(bool),
-    Word(String),
+/// A material's chance in percent (0 to 100) to withstand each kind of item damage that
+/// materials resist ([`ItemHarm::RESISTED`]).
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct Resists {
+    pub acid: u8,
+    pub rust: u8,
+    pub fire: u8,
+}
+
+impl Resists {
+    /// The chance to withstand `harm`: 0 for [`ItemHarm::Work`].
+    pub const fn of(&self, harm: ItemHarm) -> u8 {
+        match harm {
+            ItemHarm::Acid => self.acid,
+            ItemHarm::Rust => self.rust,
+            ItemHarm::Fire => self.fire,
+            ItemHarm::Work => 0,
+        }
+    }
 }
 
 /// How often something is made of a material, among the materials its item may be made of: a
@@ -179,14 +208,14 @@ impl Found {
 }
 
 impl MaterialDef {
-    /// Whether acid eats it: its own `corrodes`, else its group's.
-    pub fn corrodes(&self) -> Corrosion {
-        match &self.corrodes {
-            Some(CorrodesSpec::Flag(true)) => Corrosion::Yes,
-            Some(CorrodesSpec::Flag(false)) => Corrosion::No,
-            Some(CorrodesSpec::Word(w)) if w == "half" => Corrosion::Half,
-            _ => Corrosion::of_group(self.group.as_deref()),
-        }
+    /// Its chances to withstand item damage: its own `resists`, else none at all.
+    pub fn resists(&self) -> Resists {
+        self.resists.unwrap_or_default()
+    }
+
+    /// Whether its file sets `resists`.
+    pub fn sets_resists(&self) -> bool {
+        self.resists.is_some()
     }
 
     /// Its weapon modifiers, to hit and to damage, if it can be a weapon's working part (one of
@@ -251,12 +280,12 @@ impl MaterialDef {
                 }
             }
         }
-        if let Some(CorrodesSpec::Word(word)) = &self.corrodes
-            && word != "half"
-        {
+        let mut resisted = ItemHarm::RESISTED.into_iter();
+        if let Some(harm) = resisted.find(|&h| self.resists().of(h) > 100) {
             return Err(format!(
-                "material `{}`: `corrodes` is true, false, or \"half\", not \"{word}\"",
-                self.id
+                "material `{}`: `resists`' `{}` is in percent, 0 to 100",
+                self.id,
+                harm.id()
             ));
         }
         if let Some(gem) = &self.gem {

@@ -18,6 +18,8 @@ kit = [
     { wield = "mace" },
     { wield = "buckler" },
     { wear = "wool_cloak" },
+    { wear = "habit" },
+    { wear = "sandals" },
     { wear = "amber_amulet" },
     "scroll_of_light",
     "candle*3",

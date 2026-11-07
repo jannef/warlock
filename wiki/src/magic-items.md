@@ -176,6 +176,8 @@ world, so a character finds each at most once, and loot never makes one. Most ar
 those who own them. Three are only ever offered, very rarely, by a
 [pedlar](npcs.md#the-pedlars-offer).
 
+No [item damage](materials.md#protected-items) ever harms it.
+
 Its power works while it is worn or wielded, identified or not:
 
 - **Inflict**: a hit with it that leaves its target alive causes a

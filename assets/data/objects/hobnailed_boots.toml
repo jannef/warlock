@@ -1,0 +1,12 @@
+# Heavy work boots, their soles studded with nails. Clothing: no Defence, no Protection (#1173).
+[[object]]
+id = "hobnailed_boots"
+name = "pair of hobnailed boots"
+plural = "pairs of hobnailed boots"
+glyph = "["
+fg = "#5a4a3a"
+class = "clothing"
+materials = ["leather"]
+weight = 1100
+value = 4
+slot = "feet"

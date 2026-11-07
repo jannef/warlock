@@ -2,8 +2,8 @@
 [[material]]
 id = "wool"
 name = "wool"
+resists = { acid = 10, rust = 100, fire = 10 }
 group = "cloth"
-corrodes = true
 color = "#cfc4a8"
 weight = 30
 protection = 20

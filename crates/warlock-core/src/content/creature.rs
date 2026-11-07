@@ -80,14 +80,16 @@ fn full_regen() -> u16 {
 /// The most a creature's `regen` may be, in percent of the normal pace.
 pub const MAX_REGEN: u16 = 1000;
 
-/// A creature's acid (`corrodes = { chance = 25, what = "armour" }`; spec §8 "Creature
-/// gimmicks", `world/corrode.rs`): the chance in percent (1 to 100) that a blow eats at gear,
-/// and whose.
+/// A creature's harm to gear (`corrodes = { chance = 25, what = "armour", kind = "acid" }`;
+/// spec §8 "Creature gimmicks", `world/corrode.rs`): the chance in percent (1 to 100) that a
+/// blow damages gear, whose, and by what kind of item damage (acid, rust, or fire; the
+/// material's `resists` of that kind withstands it, `world/item_damage.rs`).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Corrodes {
     pub chance: u8,
     pub what: CorrodesWhat,
+    pub kind: super::ItemHarm,
 }
 
 /// A creature's disarming blow (`disarms = { chance = 15, difficulty = 18 }`; #1166,

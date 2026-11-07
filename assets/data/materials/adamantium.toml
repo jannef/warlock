@@ -4,8 +4,8 @@
 [[material]]
 id = "adamantium"
 name = "adamantium"
+resists = { acid = 100, rust = 100, fire = 100 }
 group = "metal"
-corrodes = false
 color = "#4c5a70"
 weight = 120
 to_hit = 0

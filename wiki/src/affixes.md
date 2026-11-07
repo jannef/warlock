@@ -29,6 +29,10 @@ Prefixes are mostly offensive, or give flat [Defence](combat.md#defence) and lif
 Suffixes are mostly [stats](stats.md), [speed](turns.md#speed), [criticals](combat.md#criticals),
 utility, and [skills](skills.md).
 
+- **Proof**: *of Proof* (from item level 4, on anything but ammunition, rarer than most) makes its
+  item [proof against all harm](materials.md#protected-items): acid, rust, fire, a failed attempt
+  at an anvil, and a spell's ruin never touch it, whether or not you have identified it.
+
 - **Resistance**: *of the Salamander*, *of Warmth*, *of the Adder*, *of the Storm*, *of Glass*,
   *of the Anvil*, and *of the Living* [resist](damage-types.md#armour-and-resistance)
   [fire](damage-types.md#damage-fire), [cold](damage-types.md#damage-cold),

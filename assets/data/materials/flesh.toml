@@ -2,4 +2,5 @@
 [[material]]
 id = "flesh"
 name = "flesh"
+resists = { acid = 0, rust = 100, fire = 0 }
 color = "#b06848"

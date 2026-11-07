@@ -1,0 +1,12 @@
+# A plain shift of undyed cloth. Clothing: no Defence, no Protection (#1173).
+[[object]]
+id = "shift"
+name = "shift"
+glyph = "["
+fg = "#d8d0b8"
+class = "clothing"
+materials = ["cloth"]
+made_of = ["cloth"]
+weight = 300
+value = 1
+slot = "body"

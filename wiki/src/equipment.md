@@ -113,6 +113,12 @@ screen, and they count everything you wear, unidentified [magic](magic-items.md)
 - **Tools** go in the Tool slot. A pick-axe or a mattock ready there is what you dig with (`u`;
   see [Digging and walls](digging.md)). Other tools, such as [keys](doors.md#keys), rope, and
   candles, do not fit anywhere yet.
+- **[Clothing](objects.md#class-clothing)** is everyday dress, such as a tunic, a kirtle, or a
+  robe, and shoes, clogs, or sandals. It goes in the Body and Feet slots, where body armour and
+  boots go. It gives no [Defence](combat.md#defence) and no [Protection](combat.md#protection): it
+  is what a new character is dressed in (see [Starting kit](starting-kit.md)). It is never magic,
+  and it is no body armour: whatever asks for none, such as the wizard's Mage armour, still works
+  in a robe.
 - Things that are not equipment ([potions](potions.md), [food](food.md),
   [coins](objects.md#class-coins)) fit nowhere.
 

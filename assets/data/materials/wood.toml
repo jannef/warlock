@@ -1,6 +1,7 @@
 [[material]]
 id = "wood"
 name = "wood"
+resists = { acid = 60, rust = 100, fire = 10 }
 group = "wood"
 color = "#9c6b3c"
 weight = 40

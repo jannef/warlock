@@ -167,7 +167,7 @@ line read the trained value, `Skills::value_of_effect`, so no item or talent bon
 Marks: `Use::Fletch` for every batch that ran its time, whatever it made. Fletcher's numbers are
 its effect's (`talents/fletcher.toml`).
 
-A damaged item (Temper's failure, or acid: `world/corrode.rs`, #1131) is a point worse until
+A damaged item (Temper's failure, or acid, rust, or heat: `world/item_damage.rs`, #1131, #1168) is a point worse until
 mended (`Mods::add_worked`: its Protection if it gives some, else its Defence, else its damage).
 Mithril and adamantium are metals, so Temper works them as steel.
 

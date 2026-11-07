@@ -1,0 +1,11 @@
+# A smock more patch than cloth. Clothing: no Defence, no Protection (#1173).
+[[object]]
+id = "patched_smock"
+name = "patched smock"
+glyph = "["
+fg = "#8a7a60"
+class = "clothing"
+materials = ["cloth"]
+weight = 500
+value = 1
+slot = "body"

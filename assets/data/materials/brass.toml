@@ -1,6 +1,7 @@
 [[material]]
 id = "brass"
 name = "brass"
+resists = { acid = 40, rust = 85, fire = 75 }
 group = "metal"
 color = "#d4b04c"
 weight = 108

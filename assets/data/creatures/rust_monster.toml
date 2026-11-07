@@ -24,7 +24,7 @@ stats = { strength = 14, dexterity = 15, toughness = 17, intelligence = 2, willp
 base_hp = 30
 natural = { defence = 2, protection = 2, name = "plates" }
 resist = { acid = 50 }
-corrodes = { chance = 50, what = "both" }
+corrodes = { chance = 50, what = "both", kind = "rust" }
 on_eat = { message = "It tastes of old nails.", vomit = 40 }
 blood = "#7a3a1a"
 [creature.attack]

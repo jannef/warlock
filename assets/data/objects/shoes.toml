@@ -1,0 +1,12 @@
+# Plain leather shoes, buckled. Clothing: no Defence, no Protection (#1173).
+[[object]]
+id = "shoes"
+name = "pair of shoes"
+plural = "pairs of shoes"
+glyph = "["
+fg = "#6a4a2a"
+class = "clothing"
+materials = ["leather"]
+weight = 500
+value = 3
+slot = "feet"

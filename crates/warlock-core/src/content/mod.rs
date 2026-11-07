@@ -280,7 +280,9 @@ pub use level::{
     parse_route,
 };
 pub use light::{Dips, Drift, HueDrift, LightId, LightPreset, MAX_LIGHT_RADIUS, Stability};
-pub use material::{ANY, Corrosion, Found, MAX_MATERIAL_VALUE, MaterialDef, MaterialId, VERY_RARE};
+pub use material::{
+    ANY, Found, ItemHarm, MAX_MATERIAL_VALUE, MaterialDef, MaterialId, Resists, VERY_RARE,
+};
 pub use monster_pool::{MonsterPool, VaultMonsters};
 pub use names::{NameLists, Names};
 pub use object::{
@@ -1995,6 +1997,12 @@ impl Content {
                     spec.id, acid.chance
                 )));
             }
+            if spec.corrodes.is_some_and(|c| c.kind == ItemHarm::Work) {
+                return Err(err(format!(
+                    "creature `{}`: `corrodes`' `kind` is acid, rust, or fire",
+                    spec.id
+                )));
+            }
             if let Some(blow) = spec.disarms
                 && (!(1..=100).contains(&blow.chance) || !(2..=40).contains(&blow.difficulty))
             {
@@ -2341,9 +2349,17 @@ impl Content {
             .collect::<Result<Vec<_>, _>>()?;
         let races = (self.races.list.iter())
             .map(|r| {
-                kit::resolve(&r.kit_spec, self, None).map_err(|m| {
+                let at = |m: String| {
                     ContentError::new("data/races.toml", format!("race `{}`: {m}", r.id))
-                })
+                };
+                let kit = kit::resolve(&r.kit_spec, self, None).map_err(at)?;
+                let bare = (r.bare_spec.iter())
+                    .map(|s| {
+                        self.slot_id(s)
+                            .ok_or_else(|| at(format!("`bare`: unknown slot `{s}`")))
+                    })
+                    .collect::<Result<Vec<_>, _>>()?;
+                Ok((kit, bare))
             })
             .collect::<Result<Vec<_>, _>>()?;
         let signs = |parts: &[SignPart]| {
@@ -2373,8 +2389,9 @@ impl Content {
             class.kit = kit;
             class.random_scrolls = scrolls;
         }
-        for (race, kit) in self.races.list.iter_mut().zip(races) {
+        for (race, (kit, bare)) in self.races.list.iter_mut().zip(races) {
             race.kit = kit;
+            race.bare = bare;
         }
         if let (Some(h), Some((animals, elements))) = (&mut self.horoscope, horoscope) {
             for (part, kit) in (h.animals.iter_mut()).zip(animals) {

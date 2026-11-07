@@ -1,0 +1,12 @@
+# Shoes sewn inside out and turned, as the common folk make them. Clothing: no Defence, no Protection (#1173).
+[[object]]
+id = "turnshoes"
+name = "pair of turnshoes"
+plural = "pairs of turnshoes"
+glyph = "["
+fg = "#7a5a3a"
+class = "clothing"
+materials = ["leather"]
+weight = 400
+value = 2
+slot = "feet"

@@ -2,6 +2,7 @@
 [[material]]
 id = "glass"
 name = "glass"
+resists = { acid = 95, rust = 100, fire = 70 }
 group = "glass"
 color = "#a8d8e0"
 weight = 90

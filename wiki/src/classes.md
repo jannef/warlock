@@ -9,7 +9,8 @@ did before you set out. Your class:
   each level gives and which skills it is known for (see [Getting better](skills.md#getting-better));
 - gives you your first ranks in a few [weapon skills](weapon-skills.md) (a berserker has learned
   one of two) and [fighting styles](fighting-styles.md) (a thief or an ascetic one of two);
-- decides most of your [starting kit](starting-kit.md).
+- decides most of your [starting kit](starting-kit.md), its garb among it (a wizard's robe, a
+  priest's habit).
 
 No [spells](magic.md) come with it at the start. A class with a level table also gives
 **[class abilities](talents.md#class-abilities)** as you reach its levels, and bonus

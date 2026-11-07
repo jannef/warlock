@@ -1,45 +1,80 @@
-//! Corroding gear (spec §8 "Creature gimmicks"; the dread design §5.8): a creature type's
-//! `corrodes = { chance, what }` eats at the player's gear in melee, and leaves it **damaged**,
-//! the smith's state ([`Worked`]: its improvements gone and a point worse until mended at an
+//! Harm to gear (spec §8 "Creature gimmicks"; the dread design §5.8): a creature type's
+//! `corrodes = { chance, what, kind }` damages the player's gear in melee by item damage of
+//! `kind` (acid, rust, or fire; `item_damage.rs`, the one damaged state the smith mends at an
 //! anvil, `world/temper.rs`).
 //!
 //! - **`armour`** (the hezrou's filth): a melee hit of its that lands on the player rolls the
-//!   chance; made, one piece the player wears (armour or a shield) whose material corrodes
-//!   ([`crate::content::MaterialDef::corrodes`], by its main part) and is not damaged yet is
-//!   drawn and damaged: "The acid eats at your chain mail."
+//!   chance; made, one piece the player wears (armour or a shield) is drawn: "The acid eats at
+//!   your chain mail."
 //! - **`weapon`** (the ember beetle's acid blood): a melee hit of the player's that strikes it
 //!   rolls the chance on what struck (the weapon in hand, or the shield that bashed): "Your long
 //!   sword comes away pitted."
-//! - **`both`** (the rust monster's feelers, #1138): each of the two, at the chance.
-//! - The chance is halved for a player who resists acid at all, and a material that corrodes at
-//!   `"half"` (bone, horn, ivory, chitin) takes a second roll at 50. Nothing is damaged twice and
-//!   nothing is destroyed. A spirit weapon and a stack of several are left be.
-//! - Made, but nothing the player has on corrodes (mithril, gold, wood, stone): nothing happens,
-//!   and the first time in a life they are told why: "The acid runs off your mithril chain
-//!   mail." (`Progress::once`, [`RUNS_OFF`]).
+//! - **`both`** (the rust monster's feelers and the black pudding, #1138): each of the two, at
+//!   the chance.
+//! - The chance is halved for a player who resists the damage type of the kind's id at all
+//!   (acid, fire; rust has none). A spirit weapon and a stack of several are left be.
+//! - The piece drawn then takes the harm ([`World::harm_item`]): its material withstands it by
+//!   its `resists` chance of the kind (mithril and gold nearly always, iron seldom), else it is
+//!   damaged, and one damaged already is destroyed: "The acid eats your chain mail away."
+//!   Withstood, the first time in a life for each kind the player is told why: "The acid runs
+//!   off your mithril chain mail." (`Progress::once`, [`Lines::once`]).
 //!
 //! Draws: the gameplay stream, one for the chance, then (made, with pieces to choose among) one
-//! for the piece and one for a `"half"` material's second roll. None for a blow by or at
-//! anything without `corrodes`.
+//! for the piece and one for the material's chance unless it is 0 or 100. None for a blow by or
+//! at anything without `corrodes`.
 
+use super::item_damage::Harmed;
 use super::{ActorId, World};
 use crate::action::AttackKind;
-use crate::content::{CorrodesWhat, Corrosion, ObjectId};
-use crate::magic::Worked;
+use crate::content::{CorrodesWhat, ItemHarm, ObjectId};
 
-/// The chance in percent that acid of `chance` eats at the gear of one who resists acid by
-/// `resistance` percent: halved (rounded down) for any resistance at all.
+/// The chance in percent that harm of `chance` reaches the gear of one who resists its damage
+/// type by `resistance` percent: halved (rounded down) for any resistance at all.
 pub(super) fn chance(chance: u8, resistance: i32) -> u32 {
     let chance = u32::from(chance);
     if resistance > 0 { chance / 2 } else { chance }
 }
 
-/// The once-in-a-life flag of the line that says why acid did nothing.
-pub(super) const RUNS_OFF: &str = "acid_runs_off";
+/// What is said of harm of one kind to a piece named `{}`: worn, struck with, destroyed, and
+/// withstood (that once in a life, by the flag `once`).
+pub(super) struct Lines {
+    pub(super) worn: &'static str,
+    pub(super) struck: &'static str,
+    pub(super) gone: &'static str,
+    pub(super) withstood: &'static str,
+    pub(super) once: &'static str,
+}
+
+/// The lines of harm `kind` (never [`ItemHarm::Work`], refused at load for a creature).
+pub(super) const fn lines(kind: ItemHarm) -> Lines {
+    match kind {
+        ItemHarm::Rust => Lines {
+            worn: "Rust spreads over your {}.",
+            struck: "Your {} comes away rusted.",
+            gone: "Your {} rusts away to nothing.",
+            withstood: "Your {} takes no rust.",
+            once: "rust_takes_none",
+        },
+        ItemHarm::Fire => Lines {
+            worn: "The heat scorches your {}.",
+            struck: "Your {} comes away scorched.",
+            gone: "Your {} burns away.",
+            withstood: "The heat leaves your {} unmarked.",
+            once: "heat_leaves_unmarked",
+        },
+        ItemHarm::Acid | ItemHarm::Work => Lines {
+            worn: "The acid eats at your {}.",
+            struck: "Your {} comes away pitted.",
+            gone: "The acid eats your {} away.",
+            withstood: "The acid runs off your {}.",
+            once: "acid_runs_off",
+        },
+    }
+}
 
 impl World {
     /// A melee hit by `attacker` landed on `target`, struck `with` what [`World::resolve`] names
-    /// (none: the main hand's weapon): the acid of either eats at the player's gear, as the
+    /// (none: the main hand's weapon): the harm of either reaches the player's gear, as the
     /// module docs say.
     pub(super) fn corrode(
         &mut self,
@@ -57,62 +92,36 @@ impl World {
         } else {
             return;
         };
-        let acid =
+        let harm =
             (self.actor_or_fallen(bearer)).and_then(|a| self.content.creature(a.creature).corrodes);
-        let Some(acid) = acid.filter(|a| a.what.eats(what)) else {
+        let Some(harm) = harm.filter(|a| a.what.eats(what)) else {
             return;
         };
-        let resistance = (self.content.damage_type_id("acid"))
-            .map_or(0, |acid| self.resistances_of(player).get(Some(acid)));
-        if !self.state.rng.chance(chance(acid.chance, resistance)) {
+        let resistance = (self.content.damage_type_id(harm.kind.id()))
+            .map_or(0, |t| self.resistances_of(player).get(Some(t)));
+        if !self.state.rng.chance(chance(harm.chance, resistance)) {
             return;
         }
         let exposed = self.exposed(what, with);
-        let content = self.content.clone();
-        let me = self.state.player();
-        let corrodes = |item: usize| {
-            let main = me.inventory[item]
-                .parts(&content)
-                .first()
-                .map(|p| p.material);
-            main.map_or(Corrosion::No, |m| content.material(m).corrodes())
-        };
-        let damaged = |item: usize| me.inventory[item].worked().is_some_and(|w| w.damaged);
-        let eaten: Vec<(usize, Corrosion)> = (exposed.iter())
-            .map(|&item| (item, corrodes(item)))
-            .filter(|&(_, c)| c != Corrosion::No)
-            .collect();
-        let shown = exposed
-            .first()
-            .map(|&item| me.inventory[item].names(&content).0);
-        let fresh: Vec<(usize, Corrosion)> = (eaten.iter().copied())
-            .filter(|&(item, _)| !damaged(item))
-            .collect();
-        if eaten.is_empty() {
-            if let Some(name) = shown
-                && !self.state.progress.happened(RUNS_OFF)
-            {
-                self.state.progress.once.insert(RUNS_OFF.to_string());
-                self.say(format!("The acid runs off your {name}."));
+        if exposed.is_empty() {
+            return;
+        }
+        let item = exposed[self.state.rng.index(exposed.len())];
+        let name = self.state.player().inventory[item].names(&self.content).0;
+        let lines = lines(harm.kind);
+        let line = match self.harm_item(item, harm.kind) {
+            Harmed::Withstood if self.state.progress.happened(lines.once) => return,
+            Harmed::Withstood => {
+                self.state.progress.once.insert(lines.once.to_string());
+                lines.withstood
             }
-            return;
-        }
-        if fresh.is_empty() {
-            return;
-        }
-        let (item, corrosion) = fresh[self.state.rng.index(fresh.len())];
-        if corrosion == Corrosion::Half && !self.state.rng.chance(50) {
-            return;
-        }
-        let stack = &mut self.player_mut().inventory[item];
-        let name = stack.names(&content).0;
-        let mut worked = stack.worked().cloned().unwrap_or_else(Worked::default);
-        worked.damage();
-        stack.set_worked(worked);
-        self.say(match what {
-            CorrodesWhat::Armour | CorrodesWhat::Both => format!("The acid eats at your {name}."),
-            CorrodesWhat::Weapon => format!("Your {name} comes away pitted."),
-        });
+            Harmed::Damaged => match what {
+                CorrodesWhat::Armour | CorrodesWhat::Both => lines.worn,
+                CorrodesWhat::Weapon => lines.struck,
+            },
+            Harmed::Destroyed => lines.gone,
+        };
+        self.say(line.replacen("{}", &name, 1));
     }
 
     /// Where in the player's pack lies what acid of `what` may reach, the body armour first: what

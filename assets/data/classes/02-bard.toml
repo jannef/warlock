@@ -18,6 +18,7 @@ styles = { duelist = 1 }
 kit = [
     { wield = "short_sword|scimitar" },
     { wear = "travelling_cloak" },
+    { wear = "doublet" },
     "dagger",
     "lute",
     "bread",

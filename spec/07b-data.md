@@ -348,10 +348,16 @@ developer notes (CLAUDE.md, `docs/dev/`).
   none: it cannot be armour), `value` (above), `rarity` and `gear` (how often loot, by item
   level, and creatures' gear, by creature level, make an item of it: `{ weight, deeper, level }`,
   the weight at level 1, `deeper` per level past the first, never below 0, none below `level`),
-  `corrodes` (whether acid eats it, #1131: true, false, or `"half"`; default true for metal and
-  hide, false for the rest; not: gold, silver, electrum, chromium, nicrosil, mithril, adamantium,
-  dragonscale, dragonbone, wood, stone, glass, amber, gems, flesh, plant; half: bone, horn, ivory,
-  chitin; yes besides the metals and hides: cloth, wool, silk, lead).
+  `resists` (required, #1168: `{ acid, rust, fire }`, its chance in percent, 0 to 100, to
+  withstand each kind of item damage; withstood, nothing happens, else the item is damaged, the
+  anvil's one state that Temper or Whittle mends, and one damaged already is destroyed; a failed
+  Temper or Whittle is item damage no material withstands. Noble metals, mithril, adamantium,
+  dragonscale, and the gems withstand nearly everything; iron and steel rust and corrode but
+  stand heat; wood and cloth burn; nothing but metal rusts; `world/item_damage.rs`). Protected
+  from all item damage, a spell's ruin of floor items too (#1170): a unique item, an item of the
+  `proof` affix ("of Proof"), and an object a quest asks to be brought or delivered (a fixed
+  quest's until it is done for good, a rolled quest's drawn object while active); a quest's
+  reward is an ordinary item unless another quest asks for it.
   The seventeen metals (#193; no lerasium, atium, or malatium), weight / to hit / damage / armour
   / value: steel 100 / 0 / 0 / 100% / ×1, iron 100 / −1 / 0 / 90% / ×0.6, tin 93 / 0 / −2 / 40%
   / ×0.4, pewter 93 / 0 / −2 / 40% / ×0.5, bronze 112 / 0 / −1 / 80% / ×0.8, copper 114 / 0 / −1
