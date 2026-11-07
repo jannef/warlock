@@ -30,24 +30,21 @@ told only to a witness with a kept beast, a companion or a familiar (`Witness::k
 shared ones; `Chapter::campaign` from the path). A story told in campaign `c` is the shared
 chapters, then `c`'s (`Background::chapters_for`). Two campaigns may each have a `road`.
 
-**Checks** (each refused with the file, chapter, and line): the settings' tiers at most 1000;
-a chapter's `paragraph` 1 to 4 and never less than an earlier chapter's; ids unique (a line's in
-its chapter, a chapter's in each story's order, so a campaign never redefines a shared one);
-`weight` 1 to 20; every id a `when` names exists (races, classes, animals, elements, talents,
-skills, campaigns, `companion` a known `tameable` creature; a `band` well formed); a tag in `when.tags`/`not_tags` is set by a line of an
-earlier chapter of that story; slots are `{name}`, `{they}`, `{them}`, `{their}`, `{guardian}`,
-`{home}`, `{trade}` (and capitalised), `set` and `defaults` fill only the last three, and a slot
-used has a default in this chapter or an earlier one; an `only` line is common; an effect names
-one kind; kit lines resolve as kits do (`content::kit::resolve`: objects, alternatives, `magic`
-on base items, a free slot for `wear`/`wield`; `prefer_trained` is the one addition to the kit
-syntax, honoured by kits too, `KitItem::pick`); a stat 1 or 2 either way, at most 2 a stat a
-line; gold always given or always taken; skill dice at least 1; marks at least 1; alignment
-1 to 100 either way; a `talent` a known one, never `granted`, `flaw`, or of a class tree, its
-choice (`"id:choice"`) given exactly when it takes one and one of `Choice::options`; a `flaw` a
-known `flaw` talent (B5); a line's net worth within
-its tier's band (`Tier::band`: common −4 to 2, uncommon 1 to 3, rare 3 to 5, fateful 5 to 8;
-rare and fateful never cost anything); every chapter has a plain line (common, no `when`, no
-effects). Content without `data/background.toml` tells no story and checks nothing (test
+**Checks** (well-formedness only, #1205; each refused with the file, chapter, and line): the
+settings' tiers at most 1000 (the draw is out of 1000); ids unique (a line's in its chapter, a
+chapter's in each story's order, so a campaign never redefines a shared one); every id a
+`when` names exists (races, classes, animals, elements, talents, skills, campaigns, creatures; a
+`band` only with the alignment rules); slots are `{name}`, `{they}`, `{them}`, `{their}`,
+`{guardian}`, `{home}`, `{trade}` (and capitalised), and `set` and `defaults` fill only the last
+three; an effect names one kind; kit lines resolve as kits do (`content::kit::resolve`: objects
+and alternatives; `prefer_trained` is the one addition to the kit syntax, honoured by kits too,
+`KitItem::pick`); a `talent` or `flaw` a known one, a talent's choice (`"id:choice"`) given
+exactly when it takes one and one of `Choice::options`. The rest is the author's: weights,
+paragraphs, the tiers' worth bands (`Tier::band`: common −4 to 2, uncommon 1 to 3, rare 3 to 5,
+fateful 5 to 8, rare and fateful never costing anything; the wiki states them), a plain line in
+every chapter, tags set before they are asked, a default for every slot used (an unfilled slot
+reads as nothing). The telling copes with all of it: a weight of 0 is never drawn, a chapter
+where no line fits tells nothing. Content without `data/background.toml` tells no story and checks nothing (test
 fixtures that strip talents, skills, races, or classes remove it; `background::storyless()` is
 the built-in content without it, for tests of what a story would add to).
 
@@ -82,8 +79,8 @@ they are spread:
 - **The road** (the Ascmearc's) is the one chapter naming the march's places; the showcase's
   two-line `road` stays the tests' chapter.
 
-`when.tags` holds when **every** tag is set (and the loader refuses a tag no earlier chapter
-sets, so `not_tags` on a tag of the same chapter is refused too): a line meant for "an orphan or
+`when.tags` holds when **every** tag is set (only earlier chapters' lines set them, so a tag of
+the same chapter never holds): a line meant for "an orphan or
 a priest" is two lines. A line that kills `{guardian}` (`the_fever`, `the_debt`, `the_heirloom`) sets `orphan`, so
 no later line has them alive (the quarrel, the parting gift). `{guardian}` may be any of the
 values the Parents lines set ("the

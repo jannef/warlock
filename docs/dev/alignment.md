@@ -12,7 +12,8 @@ Alignment is good against evil, ADOM's law and chaos turned. Three modules:
   Saintly, ordered so `>=` is "as good or better"; `ALL` best first; `side`, `scorned_by`),
   `Alignment` (a creature's fixed good, neutral, or evil; `band` for where a band is asked),
   `Requirement` (`{ min, max }` bands, `allows`, `check`, `words`: what a quest's
-  `requires_alignment` and a holy gift's `alignment` deserialize to), and `check_start` (a race's or class's part of the start).
+  `requires_alignment` and a holy gift's `alignment` deserialize to). A race's, a class's, and a
+  birth animal's part of the start are plain numbers, the sum kept on the scale (`Score::new`).
 - `content/alignment.rs`: `AlignmentRules` from `data/alignment.toml` (optional;
   `Content::alignment()`): the seven `[[band]]`s with `from`, `description` (the wiki), and the
   `rise`/`fall` lines (`news(from, to)`), `[shift]` (`Shifts`, `ByAlignment` for the kills), and
@@ -32,7 +33,7 @@ Alignment is good against evil, ADOM's law and chaos turned. Three modules:
 **State.** `Actor::alignment: Option<Score>` is the player's score (set at the start when the
 content has the rules: `Start::alignment`, the race's plus the class's `alignment` plus the birth
 animal's nudge, `Horoscope::alignment(sign)` (#272: `alignment` on an `[[animal]]` in
-`data/horoscope.toml`, checked by `check_start`; an element with one is refused on load), or 0
+`data/horoscope.toml`; an element with one is refused on load, since only the animal's is read), or 0
 without a character; a background story's `alignment` effects then move it, its fourth term,
 docs/dev/background.md); `Actor::alignment_override: Option<Alignment>` is a level legend entry's `alignment`
 (`CreatureSpawn::alignment`). Read the one that counts with `Actor::nature(content)` (a score's

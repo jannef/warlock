@@ -264,18 +264,11 @@ impl Experience {
     pub(super) fn parse(file: &str, text: &str) -> Result<Self, ContentError> {
         let err = |m: String| ContentError::new(file, m);
         let p: ExperienceFile = toml::from_str(text).map_err(|e| err(e.to_string()))?;
-        if !(1..=MAX_LEVEL).contains(&p.max_level) {
-            return Err(err(format!("max_level must be 1 to {MAX_LEVEL}")));
+        // Every character is at least level 1, on the curve.
+        if p.max_level == 0 {
+            return Err(err("max_level must be at least 1".into()));
         }
-        if p.hp_level > p.max_level {
-            return Err(err("hp_level is more than max_level".into()));
-        }
-        if p.mana_level > p.max_level {
-            return Err(err("mana_level is more than max_level".into()));
-        }
-        if p.levels.class_max > p.max_level {
-            return Err(err("[levels] class_max is more than max_level".into()));
-        }
+        // Keeps the guideline's and the rewards' `u32` arithmetic from overflowing.
         let k = &p.kills;
         let params = [
             k.plateau,
@@ -292,39 +285,15 @@ impl Experience {
                 "every number in [kills] and [discovery] must be at most {MAX_PARAM}"
             )));
         }
-        if p.bonus_percent > 100 {
-            return Err(err("bonus_percent must be at most 100".into()));
-        }
-        if p.zero_difference.first().map(|b| b.from) != Some(1) {
-            return Err(err("the first zero_difference must be from level 1".into()));
-        }
+        // `Experience::zero_difference` reads the bands from the last.
         if (p.zero_difference.windows(2)).any(|pair| pair[1].from <= pair[0].from) {
             return Err(err("zero_difference `from` levels must ascend".into()));
         }
-        if p.zero_difference.iter().any(|b| b.zd == 0) {
-            return Err(err("zero_difference `zd` must be at least 1".into()));
-        }
         let early = p.early.percent;
-        if early.len() >= usize::from(p.max_level) {
-            return Err(err(format!(
-                "[early] percent lists more levels than 2 to max_level ({})",
-                p.max_level
-            )));
-        }
-        if early.iter().any(|&v| !(1..=100).contains(&v)) {
-            return Err(err("[early] percent values must be 1 to 100".into()));
-        }
-        if early.windows(2).any(|pair| pair[1] < pair[0]) {
-            return Err(err("[early] percent values must not decrease".into()));
-        }
         let mut thresholds = vec![0u32];
         let mut total: u128 = 0;
         for n in 2..=p.max_level {
-            let xp = level_xp(&p.kills, &early, n);
-            if xp == 0 {
-                return Err(err(format!("[kills] makes level {n} cost no XP")));
-            }
-            total += xp;
+            total += level_xp(&p.kills, &early, n);
             if total * u128::from(MAX_SCALE) > u128::from(u32::MAX) {
                 return Err(err(format!(
                     "[kills] makes the XP for level {n} too large to count"
@@ -665,9 +634,6 @@ mod tests {
         assert_ne!(none, SHIPPED, "class_max is in the file");
         let without = Experience::parse("x", &none).expect("valid");
         assert_eq!(without.class_max(), 100, "the curve's top without it");
-        let over = SHIPPED.replace("class_max = 60\n", "class_max = 101\n");
-        let err = Experience::parse("x", &over).expect_err("refused");
-        assert!(err.to_string().contains("class_max"), "{err}");
     }
 
     #[test]
@@ -808,38 +774,16 @@ mod tests {
     fn bad_files_are_refused() {
         for (from, to) in [
             ("max_level = 100", "max_level = 0"),
-            ("max_level = 100", "max_level = 101"),
-            ("hp_level = 50", "hp_level = 101"),
-            ("mana_level = 60", "mana_level = 101"),
-            ("from = 1\nzd = 5", "from = 2\nzd = 5"),
-            ("zd = 5", "zd = 0"),
             ("plateau = 213", "plateau = 100001"),
             ("plateau = 213\nramp = 5\nslope_per_100 = 285", "ramp = 5"),
-            (
-                "plateau = 213\nramp = 5\nslope_per_100 = 285",
-                "plateau = 0\nramp = 5\nslope_per_100 = 0",
-            ),
             ("bonus_levels = 4", "bonus_levels = 4\nlinear = 10"),
             ("arrival = 5", "arrival = 5\nidentify = 10"),
-            ("[25, 30,", "[0, 30,"),
-            ("[25, 30,", "[101, 30,"),
-            ("[25, 30,", "[35, 30,"),
             ("percent = [25,", "speed = 2\npercent = [25,"),
         ] {
             let text = SHIPPED.replace(from, to);
             assert_ne!(text, SHIPPED, "{from} is in the file");
             assert!(Experience::parse("x", &text).is_err(), "{to}");
         }
-        // The early discount may cover levels 2 to max_level, no more.
-        let capped = |max: u8| {
-            SHIPPED
-                .replace("max_level = 100", &format!("max_level = {max}"))
-                .replace("class_max = 60", &format!("class_max = {max}"))
-                .replace("hp_level = 50", "hp_level = 1")
-                .replace("mana_level = 60", "mana_level = 1")
-        };
-        assert!(Experience::parse("x", &capped(11)).is_ok());
-        assert!(Experience::parse("x", &capped(10)).is_err());
         // A curve too steep to count at the top is refused, not wrapped.
         let steep = SHIPPED.replace("plateau = 213", "plateau = 100000");
         assert!(Experience::parse("x", &steep).is_err());
@@ -862,13 +806,6 @@ mod tests {
         assert_eq!(
             Experience::parse("x", &some).expect("valid").mana_level(),
             3
-        );
-        let bad = format!("mana_level = 101\n{none}");
-        let e = Experience::parse("x", &bad).unwrap_err();
-        assert!(
-            e.message.contains("mana_level is more than max_level"),
-            "{}",
-            e.message
         );
     }
 }

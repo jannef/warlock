@@ -904,10 +904,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
     finding a 'hidden' mechanism"): a character has **one level**, read off the one curve from
     their XP as ever, but it stops at their class's **cap**, `ClassDef::max_level`
     (`data/classes/`, default `data/experience.toml` `[levels] class_max`, 60; the bard's
-    30, #874, the only class below it; checked at load: 2 to the curve's top, every `abilities` row and `bonus_talents`
-    level within it), plus a **prestige class's** `levels` once they are called
+    30, #874, the only class below it; checked at load: at most the curve's top), plus a **prestige class's** `levels` once they are called
     (`Character::level_cap`). A prestige class (`data/prestige/`, `PrestigeDef`: `id`, `name`,
-    `description`, `levels` 1 to 60, `hp`, `mana`, `rolls`, `known_for`, `abilities`,
+    `description`, `levels`, `hp`, `mana`, `rolls`, `known_for`, `abilities`,
     `bonus_talents` at its own levels; never a class's id) is a class in everything a level
     reads and nothing a creation reads. Levels up to the cap are the class's; each level past
     it is the prestige class's at its own level (`Character::class_of`: a bard capped at 30
@@ -921,8 +920,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     known for; talent picks (every third level), stat checks, casting (the class's percent of
     the total level), and the experience factor are unchanged. **The calling** is the door:
     `CallingDef` (a campaign's `data/callings/`, `content/calling.rs`: `class` a prestige id,
-    `from` the base classes, each named by one calling of a campaign, `level` at least each
-    one's cap, `message`; one outside every campaign is a fixture's and any run's). It is
+    `from` the base classes, each named by one calling of a campaign, `level` (each one's cap in
+    the shipped data), `message`; one outside every campaign is a fixture's and any run's). It is
     **open** (`World::calling_open`) to a character of a `from` class at that level with no
     prestige class yet; `World::call` (`world/calling.rs`, the one place a prestige class is
     given) sets `Character::prestige` (saved, hashed, left out while none; never cleared),
@@ -1115,7 +1114,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     gems found twice as often). Half-orc: Ferocity (`ferocity` +2 damage on every attack while
     below a third of the hit points, `Actor::stanced`), Orcish hide (Toughness 13: Protection
     +1). Humans are **granted Versatile** (`talents = ["versatile"]` in `data/races.toml`; a
-    race may grant only granted talents of the racial tree, checked at load): `extra_pick` at
+    race grants granted talents of the racial tree): `extra_pick` at
     level 1 (a creation pick more, `creation_count`) and at level 30 (`World::level_up`). A
     race's grants join the birth sign's (`stars::grant`, at the start and on every restore),
     shown as the race's ("(race)" in the dump).

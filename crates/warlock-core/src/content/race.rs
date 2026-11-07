@@ -18,13 +18,10 @@ use super::{
     ContentError, DamageTypeId, FACTORS, Hide, PassiveSearch, SlotId, TalentBook, WeaponSkillId,
     WeaponSkillTable,
 };
-use crate::combat::MAX_BASE_HP;
 use crate::dice::Dice;
 use crate::light::Light;
-use crate::mana::MAX_BASE_MANA;
-use crate::perception::VIEW_RADIUS;
-use crate::skills::{self, GRANTS, SkillId};
-use crate::stats::{PerStat, SCORES, Stat, adjustments};
+use crate::skills::{self, SkillId};
+use crate::stats::{PerStat, Stat, adjustments};
 use serde::Deserialize;
 use std::collections::BTreeMap;
 use std::ops::RangeInclusive;
@@ -54,7 +51,7 @@ struct RaceSpec {
     name: String,
     description: String,
     vision: String,
-    age: [u32; 2],
+    age: [u16; 2],
     #[serde(default)]
     stats: BTreeMap<Stat, Dice>,
     #[serde(default)]
@@ -101,38 +98,22 @@ struct RaceSpec {
     bare: Vec<String>,
 }
 
-/// Checks the races' granted talents against the talents (spec §8 "Talents"): each exists, is
-/// in the `racial` tree, and is `granted`. Content without that tree (a fixture's talents)
-/// grants nothing, so it checks nothing.
+/// Resolves the races' granted talents against the talents (spec §8 "Talents"): each exists.
+/// Content without the `racial` tree (a fixture's talents) grants nothing, so it checks nothing.
 pub(super) fn check_talents(races: &Races, talents: &TalentBook) -> Result<(), ContentError> {
-    let Some(racial) = talents.tree_id("racial") else {
+    if talents.tree_id("racial").is_none() {
         return Ok(());
-    };
+    }
     for race in &races.list {
-        for id in &race.talents {
-            let def = (talents.id(id)).map(|t| talents.get(t));
-            if !def.is_some_and(|d| d.granted && d.tree == racial) {
-                return Err(ContentError::new(
-                    "data/races.toml",
-                    format!(
-                        "race `{}` grants `{id}`, which is not a granted talent of the `racial` tree",
-                        race.id
-                    ),
-                ));
-            }
+        if let Some(id) = race.talents.iter().find(|id| talents.id(id).is_none()) {
+            return Err(ContentError::new(
+                "data/races.toml",
+                format!("race `{}` grants unknown talent `{id}`", race.id),
+            ));
         }
     }
     Ok(())
 }
-
-/// The oldest a character may start, in years.
-pub const MAX_AGE: u32 = 1000;
-
-/// What a race may add to searching and noticing (spec §8 "Searching").
-pub const SEARCH_BONUSES: RangeInclusive<i32> = -10..=10;
-
-/// What a race may add to its checks against diseases (spec §8 "Diseases").
-pub const DISEASE_BONUSES: RangeInclusive<i32> = -10..=10;
 
 /// Eyes that strong light dazzles (spec §8 "Character creation"; drow): `light_blind = { glare
 /// = 250, sight = 10, to_hit = -1 }`. While the light on the player's own cell, as their eyes
@@ -154,19 +135,6 @@ impl LightBlind {
     /// The one rule of light-blindness: perception reads it for sight, attacks for to-hit.
     pub fn dazzled_by(&self, light: Light) -> bool {
         light.brightness() >= self.glare
-    }
-
-    fn check(&self) -> Result<(), String> {
-        if self.glare == 0
-            || !(1..=VIEW_RADIUS).contains(&self.sight)
-            || !(-20..=0).contains(&self.to_hit)
-        {
-            return Err(format!(
-                "light_blind: `glare` must be at least 1, `sight` 1 to {VIEW_RADIUS}, and \
-                 `to_hit` -20 to 0"
-            ));
-        }
-        Ok(())
     }
 }
 
@@ -281,14 +249,6 @@ impl Races {
     ) -> Result<Self, ContentError> {
         let err = |m: String| ContentError::new(file, m);
         let parsed: RaceFile = toml::from_str(text).map_err(|e| err(e.to_string()))?;
-        if !SCORES.contains(&parsed.base_potential) {
-            return Err(err(format!(
-                "base_potential {} is out of range ({} to {})",
-                parsed.base_potential,
-                SCORES.start(),
-                SCORES.end()
-            )));
-        }
         if parsed.race.is_empty() {
             return Err(err("at least one race is required".into()));
         }
@@ -305,92 +265,30 @@ impl Races {
                 )));
             }
             let [young, old] = spec.age;
-            if young == 0 || young > old || old > MAX_AGE {
+            // An empty range has no age to draw.
+            if young > old {
                 return Err(err(format!(
-                    "race `{id}`: age [{young}, {old}] must be [youngest, oldest] within 1 to \
-                     {MAX_AGE}"
+                    "race `{id}`: age [{young}, {old}] must be [youngest, oldest]"
                 )));
             }
-            let stats =
-                adjustments(&spec.stats).map_err(|m| err(format!("race `{id}`: stats: {m}")))?;
-            let potential = adjustments(&spec.potential)
-                .map_err(|m| err(format!("race `{id}`: potential: {m}")))?;
-            if spec.hp > MAX_BASE_HP {
-                return Err(err(format!(
-                    "race `{id}`: hp {} is more than {MAX_BASE_HP}",
-                    spec.hp
-                )));
-            }
-            if spec.mana > MAX_BASE_MANA {
-                return Err(err(format!(
-                    "race `{id}`: mana {} is more than {MAX_BASE_MANA}",
-                    spec.mana
-                )));
-            }
+            let (stats, potential) = (adjustments(&spec.stats), adjustments(&spec.potential));
             if let Some(hide) = &spec.natural {
                 hide.check().map_err(|m| err(format!("race `{id}`: {m}")))?;
             }
             let resist = resist(&spec.resist).map_err(|m| err(format!("race `{id}`: {m}")))?;
-            if let Some(blind) = &spec.light_blind {
-                blind
-                    .check()
-                    .map_err(|m| err(format!("race `{id}`: {m}")))?;
-            }
-            let alignment = crate::alignment::check_start(spec.alignment)
-                .map_err(|m| err(format!("race `{id}`: {m}")))?;
             let size_id = spec.size.as_deref().unwrap_or(super::MEDIUM);
             let size = size_index(size_id)
                 .ok_or_else(|| err(format!("race `{id}`: unknown size `{size_id}`")))?;
             let skills = skills::grants(&spec.skills, &skill_id)
                 .map_err(|m| err(format!("race `{id}`: skills: {m}")))?;
-            let optional_skills =
-                super::skill::optional_skills(&spec.optional_skills, &skill_id, &skills, "race")
-                    .map_err(|m| err(format!("race `{id}`: optional_skills: {m}")))?;
-            let extra = spec.class_skill;
-            if !GRANTS.contains(&extra.min()) || !GRANTS.contains(&extra.max()) {
+            let optional_skills = super::skill::optional_skills(&spec.optional_skills, &skill_id)
+                .map_err(|m| err(format!("race `{id}`: optional_skills: {m}")))?;
+            // The top keeps every level's threshold within the experience counter.
+            if spec.experience > *FACTORS.end() {
                 return Err(err(format!(
-                    "race `{id}`: class_skill {extra} is out of range ({} to {})",
-                    GRANTS.start(),
-                    GRANTS.end()
-                )));
-            }
-            if !HUNGER.contains(&spec.hunger) {
-                return Err(err(format!(
-                    "race `{id}`: hunger {} is out of range ({} to {} percent)",
-                    spec.hunger,
-                    HUNGER.start(),
-                    HUNGER.end()
-                )));
-            }
-            if spec.rolls > super::class::MAX_ROLLS {
-                return Err(err(format!(
-                    "race `{id}`: rolls {} is more than {}",
-                    spec.rolls,
-                    super::class::MAX_ROLLS
-                )));
-            }
-            if !FACTORS.contains(&spec.experience) {
-                return Err(err(format!(
-                    "race `{id}`: experience {} is out of range ({} to {} percent)",
+                    "race `{id}`: experience {} is more than {} percent",
                     spec.experience,
-                    FACTORS.start(),
                     FACTORS.end()
-                )));
-            }
-            if !DISEASE_BONUSES.contains(&spec.disease_check) {
-                return Err(err(format!(
-                    "race `{id}`: disease_check {} is out of range ({} to {})",
-                    spec.disease_check,
-                    DISEASE_BONUSES.start(),
-                    DISEASE_BONUSES.end()
-                )));
-            }
-            if !SEARCH_BONUSES.contains(&spec.search) {
-                return Err(err(format!(
-                    "race `{id}`: search {} is out of range ({} to {})",
-                    spec.search,
-                    SEARCH_BONUSES.start(),
-                    SEARCH_BONUSES.end()
                 )));
             }
             let weapon_skills = (weapon_table.starting_ranks(&spec.weapon_skills, Ranked::Weapons))
@@ -400,7 +298,7 @@ impl Races {
                 name: spec.name,
                 description: spec.description,
                 vision: spec.vision,
-                age: young..=old,
+                age: u32::from(young)..=u32::from(old),
                 stats,
                 potential,
                 hp: i32::from(spec.hp),
@@ -410,14 +308,14 @@ impl Races {
                 light_blind: spec.light_blind,
                 disease_check: spec.disease_check,
                 eats_rotten: spec.eats_rotten,
-                alignment,
+                alignment: spec.alignment,
                 size,
                 ignores_burdened: spec.ignores_burdened,
                 passive_search: spec.passive_search,
                 search: spec.search,
                 skills,
                 optional_skills,
-                class_skill: extra,
+                class_skill: spec.class_skill,
                 rolls: spec.rolls,
                 talents: spec.talents,
                 hunger: spec.hunger,
@@ -564,24 +462,13 @@ mod tests {
                 dice: "2d4".parse().expect("dice"),
             }]
         );
-        for (line, why) in [
-            (
-                "optional_skills = { spot = { chance = 40, dice = 2 } }",
-                "optional_skills: `spot` is one of the race's skills",
-            ),
-            (
-                "optional_skills = { listen = { chance = 100, dice = 2 } }",
-                "chance 100 is out of range (1 to 99 percent)",
-            ),
-            (
-                "optional_skills = { juggling = { chance = 5, dice = 2 } }",
-                "optional_skills: unknown skill `juggling`",
-            ),
-        ] {
-            let text = format!("{ONE}skills = {{ spot = 3 }}\n{line}\n");
-            let err = parse(&text).expect_err(why);
-            assert!(err.message.contains(why), "{}", err.message);
-        }
+        let text = format!("{ONE}optional_skills = {{ juggling = {{ chance = 5, dice = 2 }} }}\n");
+        let err = parse(&text).expect_err("an unknown skill");
+        assert!(
+            (err.message).contains("optional_skills: unknown skill `juggling`"),
+            "{}",
+            err.message
+        );
         assert!(human.weapon_skills.is_empty());
         let elf = parse(&format!(
             "{ONE}weapon_skills = {{ long_blades = 1, bows = \"1d2\" }}\n"
@@ -606,48 +493,19 @@ mod tests {
                 "unknown stat `luck`",
             ),
             (
-                format!("{ONE}stats = {{ strength = 11 }}\n"),
-                "strength +11 is out of range",
-            ),
-            (
-                format!("{ONE}stats = {{ strength = \"2d6\" }}\n"),
-                "strength 2d6 is out of range",
-            ),
-            (
                 format!("{ONE}stats = {{ strength = \"2x\" }}\n"),
                 "bad dice `2x`",
             ),
             (ONE.replace("[16, 35]", "[35, 16]"), "age [35, 16]"),
-            (ONE.replace("[16, 35]", "[0, 16]"), "age [0, 16]"),
-            (ONE.replace("[16, 35]", "[16, 1001]"), "within 1 to 1000"),
             (ONE.replace("age = [16, 35]\n", ""), "missing field `age`"),
-            (
-                format!("{ONE}potential = {{ toughness = -12 }}\n"),
-                "potential: toughness",
-            ),
-            (ONE.replace("15", "0"), "base_potential 0"),
             (format!("{ONE}size = \"huge\"\n"), "unknown size `huge`"),
-            (format!("{ONE}hunger = 5\n"), "hunger 5 is out of range"),
-            (format!("{ONE}rolls = 11\n"), "rolls 11 is more than 10"),
-            (
-                format!("{ONE}experience = 49\n"),
-                "experience 49 is out of range",
-            ),
             (
                 format!("{ONE}experience = 201\n"),
-                "experience 201 is out of range",
+                "experience 201 is more than 200 percent",
             ),
             (
                 format!("{ONE}skills = {{ luck = 5 }}\n"),
                 "race `human`: skills: unknown skill `luck`",
-            ),
-            (
-                format!("{ONE}skills = {{ spot = \"1d6-3\" }}\n"),
-                "spot 1d6-3 is out of range",
-            ),
-            (
-                format!("{ONE}class_skill = \"1d100+5\"\n"),
-                "class_skill 1d100+5 is out of range",
             ),
             (
                 format!("{ONE}weapon_skills = {{ whips = 1 }}\n"),
@@ -690,24 +548,8 @@ mod tests {
                 "`resist`: `poison` must be -100 to 100",
             ),
             (
-                format!("{ONE}light_blind = {{ glare = 0, sight = 10, to_hit = -1 }}\n"),
-                "race `human`: light_blind: `glare` must be at least 1",
-            ),
-            (
-                format!("{ONE}light_blind = {{ glare = 250, sight = 41, to_hit = -1 }}\n"),
-                "`sight` 1 to 40",
-            ),
-            (
-                format!("{ONE}light_blind = {{ glare = 250, sight = 10, to_hit = 1 }}\n"),
-                "`to_hit` -20 to 0",
-            ),
-            (
                 format!("{ONE}light_blind = {{ glare = 250, sight = 10 }}\n"),
                 "missing field `to_hit`",
-            ),
-            (
-                format!("{ONE}disease_check = 11\n"),
-                "race `human`: disease_check 11 is out of range (-10 to 10)",
             ),
         ] {
             let e = parse(&text).unwrap_err();
@@ -716,19 +558,13 @@ mod tests {
     }
 
     #[test]
-    fn races_give_mana_up_to_the_most_a_race_may() {
+    fn races_give_mana() {
         let elf = parse(&format!("{ONE}mana = 4\n")).expect("valid");
         assert_eq!(elf.list[0].mana, 4);
         assert_eq!(
             parse(ONE).expect("valid").list[0].mana,
             0,
             "none unless named"
-        );
-        let e = parse(&format!("{ONE}mana = 1001\n")).unwrap_err();
-        assert!(
-            e.message.contains("mana 1001 is more than 1000"),
-            "{}",
-            e.message
         );
     }
 }

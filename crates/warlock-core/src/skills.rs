@@ -40,14 +40,9 @@ use crate::rng::Rng;
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 use std::fmt;
-use std::ops::RangeInclusive;
 
 /// The highest value a skill can reach.
 pub const MAX_VALUE: u16 = 999;
-
-/// What a grant (a race's or a class's dice, `data/races.toml`, `data/classes/`) may give:
-/// every result its dice can have lies within.
-pub const GRANTS: RangeInclusive<i32> = 0..=100;
 
 /// How finely the player senses how practised a skill is (its ladder step): in quarters.
 pub const PROGRESS_STEPS: u8 = 4;
@@ -571,8 +566,9 @@ pub(crate) struct BenefitSpec {
 }
 
 impl BenefitSpec {
-    /// Checks the growth and resolves it: steps strictly rising, `every` at least 1, a curve of
-    /// at least two points from value 0, rising in value, within the effect's range.
+    /// Checks the growth and resolves it: one form, `every` at least 1 (it divides), a curve of
+    /// at least two points from value 0, rising in value (it interpolates between them), and
+    /// within the effect's range (several are percents taken off a quantity).
     pub(crate) fn resolve(self) -> Result<Benefit, String> {
         let effect = self.effect;
         let growth = match self.curve {
@@ -591,9 +587,6 @@ impl BenefitSpec {
             None => {
                 if self.steps.is_empty() && self.every.is_none() {
                     return Err("a benefit needs `steps`, `every`, or a `curve`".into());
-                }
-                if self.steps.first() == Some(&0) || self.steps.windows(2).any(|w| w[0] >= w[1]) {
-                    return Err("`steps` must rise from above 0".into());
                 }
                 if self.every == Some(0) {
                     return Err("`every` must be at least 1".into());
@@ -799,17 +792,11 @@ impl Default for Ladder {
 }
 
 impl Ladder {
-    /// Checks that it has a step, a mark threshold per die, rising from 0, and dice that always
-    /// add at least 1.
+    /// Checks that it has a step ([`Ladder::die`] indexes the dice) and a mark threshold per
+    /// die.
     pub(crate) fn check(&self) -> Result<(), String> {
         if self.dice.is_empty() || self.dice.len() != self.marks.len() {
             return Err("ladder: `dice` and `marks` need one entry per step, at least one".into());
-        }
-        if self.marks[0] != 0 || self.marks.windows(2).any(|w| w[0] >= w[1]) {
-            return Err("ladder: `marks` start at 0 and rise from step to step".into());
-        }
-        if let Some(d) = self.dice.iter().find(|d| d.min() < 1) {
-            return Err(format!("ladder: every die adds at least 1, not {d}"));
         }
         Ok(())
     }
@@ -858,21 +845,6 @@ impl Default for RollRules {
 }
 
 impl RollRules {
-    /// Checks that the steps are at least 1 and the spend a percent.
-    pub(crate) fn check(&self) -> Result<(), String> {
-        if self.intelligence_from == 0 || self.intelligence_every == 0 || self.soft_cap == 0 {
-            return Err(
-                "rolls: `intelligence_from`, `intelligence_every`, and `soft_cap` must be \
-                        at least 1"
-                    .into(),
-            );
-        }
-        if self.spend > 100 {
-            return Err(format!("rolls: `spend` is a percent, not {}", self.spend));
-        }
-        Ok(())
-    }
-
     /// The rolls an Intelligence score of `score` adds to a level's.
     pub fn for_intelligence(&self, score: u8) -> u8 {
         match score.checked_sub(self.intelligence_from) {
@@ -1086,9 +1058,8 @@ impl fmt::Display for SkillId {
     }
 }
 
-/// Grants (a race's or a class's `skills`) as data gives them, by skill id: every result each
-/// can have within [`GRANTS`]; resolved to skill indices by `skill_id`, in skill order. The
-/// error names the skill.
+/// Grants (a race's or a class's `skills`) as data gives them, by skill id: resolved to skill
+/// indices by `skill_id`, in skill order. The error names the skill.
 pub fn grants(
     data: &BTreeMap<String, Dice>,
     skill_id: impl Fn(&str) -> Option<SkillId>,
@@ -1096,13 +1067,6 @@ pub fn grants(
     let mut out = Vec::with_capacity(data.len());
     for (name, &dice) in data {
         let id = skill_id(name).ok_or_else(|| format!("unknown skill `{name}`"))?;
-        if !GRANTS.contains(&dice.min()) || !GRANTS.contains(&dice.max()) {
-            return Err(format!(
-                "{name} {dice} is out of range ({} to {})",
-                GRANTS.start(),
-                GRANTS.end()
-            ));
-        }
         out.push((id, dice));
     }
     out.sort_by_key(|&(id, _)| id);
@@ -1184,11 +1148,6 @@ mod tests {
                 "{ effect = \"dodge\" }",
                 "needs `steps`, `every`, or a `curve`",
             ),
-            ("{ effect = \"dodge\", steps = [40, 20] }", "must rise"),
-            (
-                "{ effect = \"dodge\", steps = [0, 20] }",
-                "must rise from above 0",
-            ),
             ("{ effect = \"dodge\", every = 0 }", "at least 1"),
             (
                 "{ effect = \"quiet\", curve = [[5, 0], [100, 60]] }",
@@ -1232,20 +1191,12 @@ mod tests {
         assert_eq!(ladder.die(99).to_string(), "4d5", "above the top, the top");
         for bad in [
             Ladder {
-                marks: vec![1],
-                dice: vec![Dice::fixed(1)],
-            },
-            Ladder {
-                marks: vec![0, 5, 5],
-                dice: vec![Dice::fixed(1); 3],
-            },
-            Ladder {
                 marks: vec![0],
                 dice: vec![],
             },
             Ladder {
-                marks: vec![0],
-                dice: vec![Dice::fixed(0)],
+                marks: vec![0, 5],
+                dice: vec![Dice::fixed(1)],
             },
         ] {
             assert!(bad.check().is_err(), "{bad:?}");
@@ -1255,7 +1206,6 @@ mod tests {
     #[test]
     fn rolls_grow_a_trained_skill_and_spend_half_its_marks() {
         let rules = RollRules::default();
-        assert_eq!(rules.check(), Ok(()));
         let (stealth, listen) = (SkillId(3), SkillId(5));
         let mut skills = Skills::default();
         assert!(skills.is_empty());
@@ -1317,22 +1267,6 @@ mod tests {
             [0, 1, 2, 3, 49, 50].map(|m| rules.spent(m)),
             [0, 1, 1, 2, 25, 25]
         );
-        assert!(
-            RollRules {
-                spend: 101,
-                ..rules
-            }
-            .check()
-            .is_err()
-        );
-        assert!(
-            RollRules {
-                intelligence_every: 0,
-                ..rules
-            }
-            .check()
-            .is_err()
-        );
     }
 
     #[test]
@@ -1358,7 +1292,7 @@ mod tests {
     }
 
     #[test]
-    fn grants_check_their_range_and_roll_in_skill_order() {
+    fn grants_resolve_and_roll_in_skill_order() {
         let ids = ["appraise", "stealth", "tumble"];
         let id = |name: &str| (ids.iter().position(|n| *n == name)).map(|i| SkillId(i as u8));
         let dice = |t: &str| t.parse::<Dice>().expect("dice");
@@ -1382,14 +1316,8 @@ mod tests {
             skills.value(SkillId(2)).map(i32::from),
             Some(dice("2d6+10").roll(&mut again))
         );
-        for (name, text, why) in [
-            ("luck", "1d6", "unknown skill `luck`"),
-            ("stealth", "1d6-2", "out of range"),
-            ("stealth", "2d50+5", "out of range"),
-        ] {
-            let data = BTreeMap::from([(name.to_string(), dice(text))]);
-            let err = grants(&data, id).unwrap_err();
-            assert!(err.contains(why), "{err}");
-        }
+        let data = BTreeMap::from([("luck".to_string(), dice("1d6"))]);
+        let err = grants(&data, id).unwrap_err();
+        assert!(err.contains("unknown skill `luck`"), "{err}");
     }
 }

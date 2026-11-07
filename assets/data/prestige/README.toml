@@ -18,9 +18,10 @@
 # Fields:
 #   id, name      the prestige class's id (a class and a prestige class never share one) and name
 #   description   one line, for the wiki
-#   levels        how many levels it has (1 to 60): the character's cap grows by this many
+#   levels        how many levels it has: the character's cap grows by this many (never past
+#                 the curve's top)
 #   hp, mana      what each of its levels adds, as a class's `hp` and `mana` (default 0)
-#   rolls         the skill rolls each of its levels gives (0 to 10, default 2)
+#   rolls         the skill rolls each of its levels gives (default 2)
 #   known_for     the skills it is known for, by skill id (skills.toml; default none)
 #   abilities     its level table, at its *own* levels 1 to `levels`: `{ level = 1, talent = "x" }`
 #                 rows, lowest first, each a talent given as the level comes (a talent of
@@ -34,8 +35,8 @@
 #   class         the prestige class it opens (its id here)
 #   from          the base classes it is open to, by id; a class is named by at most one calling
 #                 of a campaign (one door a class)
-#   level         the total level it asks: at least every `from` class's `max_level`
-#   message       what the character is told as they are called (1 to 160 characters)
+#   level         the total level it asks: every `from` class's `max_level` so far
+#   message       what the character is told as they are called
 # The calling is open to a character of a `from` class at that level who holds no prestige class
 # yet. How a world makes it (a word said to the right creature, the design's W1 and C1) is that
 # world's; the dev action `call:ID` makes it whatever the level. Being called gives exactly the

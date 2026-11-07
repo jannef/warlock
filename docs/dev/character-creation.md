@@ -30,8 +30,8 @@ sum of their `alignment`s and the birth animal's, the starting score, `docs/dev/
 and `data/horoscope.toml` (`content/horoscope.rs`: `Horoscope` with `anchor_year`, `animals`,
 `elements`, `sign_of_year`, `great_cycle` (60), `name` ("Fire Manticore"), `alignment(sign)`
 (the animal's nudge to the starting score, #272)); all optional.
-Adjustments are `PerStat<Dice>` (`stats::adjustments` checks every result is within -10..=10;
-`stats::roll` rolls them in stat order) and are rolled from `character/rolls/<spec>` in a fixed
+Adjustments are `PerStat<Dice>` (`stats::adjustments`, 0 for a stat not named; `stats::roll`
+rolls them in stat order, and every score is kept within 1 to 40) and are rolled from `character/rolls/<spec>` in a fixed
 order (race, class, animal, element, race potentials): **adding a die to data changes later
 rolls** of every character with that race or class. `Dice` (`warlock-core/src/dice.rs`) is the
 one dice type (parse `2d3+1`/`-1d2`/`+2`, `Display`, `min`/`max`, `roll(&mut Rng)`); combat
@@ -111,10 +111,10 @@ these notes keep explaining the determinism exactly.
 wielded, for Fletching, #1021): the data side is `content/kit.rs`
 (`KitLineSpec`, parsed with the race, class, or sign as written, a string or a table;
 `Content::load_kits` resolves them into `Kit` (`KitItem { keep: Keep, one_of, trained,
-gender, magic, prefer_trained, fill }`; a `fill` line must wield or wear) and a race's `bare`
-slot ids into `RaceDef::bare: Vec<SlotId>` once objects, gems, slots, and weapon skills are known, checking each
-alternative with `object::parse_stacks` and `equipment::free_slot`); `RaceDef::kit`,
-`ClassDef::kit` (`ClassDef::trainable`: what a class's `trained` may name), and
+gender, magic, prefer_trained, fill }`) and a race's `bare`
+slot ids into `RaceDef::bare: Vec<SlotId>` once objects, gems, slots, and weapon skills are known, resolving each
+alternative with `object::parse_stacks` (what a line keeps is the author's: something worn or
+wielded where no slot takes it stays carried, `Pack::equip`); `RaceDef::kit`, `ClassDef::kit`, and
 `SignPart::kit` (the horoscope's hook, empty in data). The rules are `warlock-core/src/kit.rs`:
 `kit::roll(content, character, trained, seed)` → `Pack { items, equipment }` from the stream
 `character/kit/<spec>`, the kits in `kits_of` order (class, race, animal, element), a line

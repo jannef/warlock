@@ -29,8 +29,10 @@ or in the retinue. A familiar's kill pays as any ally's (`[xp] ally_percent`): t
 (`["imp"]`) and `bargain_level` (30), `[start]` (`rare_per_mille` 50, `rare`, `most_level` 2,
 `[start.by_race]` one to three beasts a race, as `companions.toml`'s), `[arrives]` (a line for every
 beast a start or a calling may draw, `every_kind()`). The load checks: known creatures of the
-plain-beast shape (`content/familiar.rs`; the bargain's may open doors), an `arrives` for each kind
-drawn, `call_turns` 1 to 6000, names of at most 20 characters.
+plain-beast shape (`content/familiar.rs`; the bargain's may open doors), a hex `touch` that lays a
+status, lists and names not empty (the draws index them); the rest is the author's (#1205: a kind
+without an `arrives` line arrives unsaid; `world/familiar_tests.rs` checks the shipped lists have
+theirs).
 Its growth is `companions.toml`'s `[growth]`, one table. The new creatures are `cat`, `toad`,
 `raven`, `hare` (`docs/dev/creatures/beasts.md`), wildlife in no population: **not** `tameable`,
 since a familiar is called, not tamed.
@@ -79,8 +81,8 @@ study). A start never draws the bargain's: `draw` is unchanged.
 The companion chapter (`data/background/08-companion.toml`, `docs/dev/background.md`) is told to a
 witch because `Witness::kept` holds; her beast's tale is the `only` line whose
 `when = { familiar = [kind] }` fits `Witness::familiar` (`World::tell_background` reads
-`World::familiar()`), one for every beast a race's list may give. `FamiliarRules::parse` refuses a
-list beast without one; the rare black hound and panther are told the plain line. A companion and a
+`World::familiar()`), one for every beast a race's list may give (the author's to keep: a beast without one is told
+the plain line); the rare black hound and panther are told the plain line. A companion and a
 familiar at once: each `only` line fits by its own condition, the chapter drawing among those that fit.
 
 ## The touch
