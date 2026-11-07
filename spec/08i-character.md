@@ -1580,6 +1580,18 @@ developer notes (CLAUDE.md, `docs/dev/`).
     trained by far fewer casts than blows, `school`: 10, 20, 40, … 640 doubling, then 1200,
     2000, 3000 (docs/balance.md "School pace"). Marks
     past the need count toward the next rank (one rank at a time); rank 10 earns no more.
+  - **Target dummies** (#1199; `world/dummy.rs`): a creature type with a `training` table
+    (`{ percent, melee, ranged, breaks }`, §7) is a dummy, the straw men in the Weyfarers' Gilde's
+    yard in Cēaptūn (§3). It never acts and never dies (its hit points never drop), so it gives
+    no experience, kill, loot, or quest credit; it is of the peaceful folk, but the player
+    strikes it by moving into it as they would a hostile. A blow, bash, kick, shot, or throw at
+    it is never a surprise or sneak attack, makes no noise of its own, angers and disturbs no
+    one, and trains no stat: only the attack's weapon skill and style, at `percent` (50) of the
+    marks a creature of the dummy's `level` (1) would give, rounded, and only below rank `melee`
+    (2) for blows, bashes, kicks, and throws, or `ranged` (4) for shots. A skill or style that
+    reaches that rank by a dummy's marks is told "You have learned all the dummy can teach
+    you."; from it on a blow there trains it no further. No daily cap: time is the price.
+    Missiles at a dummy: §8 "Ranged combat", Coming down.
   - **Benefits** (per skill and rank, data; never shown): to-hit and damage (to every roll of
     the dice) on attacks with the skill, a wider threat range (lower natural rolls threaten,
     never below 2), and a lower cost (`speed`, percent off `melee`, `shoot`, or `throw`;

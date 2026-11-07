@@ -159,7 +159,8 @@ impl World {
             let target = other.id;
             let seen = self.perception.sees_actors_at(to);
             let player = self.state.player;
-            if self.stance(player, target) == Stance::Hostile {
+            // A target dummy is struck too (`dummy.rs`).
+            if self.stance(player, target) == Stance::Hostile || self.dummy(target).is_some() {
                 return self.strike_at(target, seen, events);
             }
             let refusal = (self.refusal(target)).or(self.swimming().then_some(Refusal::Water));

@@ -26,6 +26,13 @@ with `FreeGlyph::turn`, trail, embers via `particles::trail`, impact puff) and w
 `render::lighting::Transients` (the moving light of a burning missile, and landed lights held back
 until it arrives; `draw_map`, object glow, and object particles hold back what is `arriving` too).
 
+A target dummy (`world/dummy.rs`, docs/dev/weapon-skills.md "Target dummies") stops a missile in
+`World::fly`, hit or miss (pierce or not): the flight ends on its cell and
+`World::dummy_catches` takes the place of `breaks` and `come_down`: destroyed by the dummy's
+`breaks` (one gameplay draw, only when the missile's own chance and the dummy's are both above
+0), else down on a walkable cell beside it holding no actor (one gameplay draw), or on its own
+cell when there is none. Tests: `world/dummy_tests.rs`.
+
 Shots by distance (spec §8 "Ranged combat": "Distance", #956): `data/ranged.toml` (optional;
 `content/ranged.rs`, `RangedRules`, `Content::ranged`) holds the `adjacent` penalty and the
 `[[band]]`s. `World::fly` asks `flight_profile` for the profile it attacks each creature with, by

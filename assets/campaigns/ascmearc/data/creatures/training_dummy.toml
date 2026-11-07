@@ -1,0 +1,26 @@
+# The training dummies of the Weyfarers' Gilde's yard in Cēaptūn (spec §8 "Weapon skills":
+# "Target dummies", #1199): straw men on posts, a sack for a head, that members and hopefuls beat
+# and shoot at. A dummy never acts or dies; a blow or a shot at it teaches weapon skills and
+# fighting styles at half the marks a level-1 foe gives, up to rank 2 for blows, bashes, kicks,
+# and throws, rank 4 for shots, and nothing else. Arrows and bolts drop beside it, one in four
+# ruined (`training`; docs/dev/weapon-skills.md).
+[[creature]]
+id = "training_dummy"
+name = "training dummy"
+plural = "training dummies"
+glyph = "Y"
+fg = "#c8b06a"
+faction = "peaceful"
+grades = false
+alignment = "neutral"
+level = 1
+sight = 1
+footsteps = 1
+budge = "never"
+weight = 30000
+stats = { strength = 10, dexterity = 1, toughness = 10, intelligence = 1, willpower = 1, presence = 1 }
+base_hp = 10
+vitals = false
+corpse = false
+blood = "none"
+training = { percent = 50, melee = 2, ranged = 4, breaks = 25 }

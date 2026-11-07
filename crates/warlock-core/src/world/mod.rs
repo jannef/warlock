@@ -135,6 +135,7 @@ mod disease;
 mod door;
 mod drain;
 mod drink;
+mod dummy;
 mod eat;
 mod edge_leave;
 mod element_gifts;
@@ -1737,6 +1738,8 @@ mod door_trap_tests;
 mod drain_tests;
 #[cfg(test)]
 mod druid_quest_tests;
+#[cfg(test)]
+mod dummy_tests;
 #[cfg(test)]
 mod dwell_tests;
 #[cfg(test)]
