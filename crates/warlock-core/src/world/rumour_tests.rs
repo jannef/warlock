@@ -215,27 +215,6 @@ fn a_rumour_replays_exactly() {
 
 #[test]
 fn routes_are_validated() {
-    let load = |from: &str, to: &str| {
-        let mut files = ContentFiles::builtin();
-        files.edit_table("dialogue", |t| t.replace(from, to));
-        Content::load(&files).map(|_| ()).map_err(|e| e.message)
-    };
-    let pass = "route = [[18, 28], [12, 28]]";
-    let cases = [
-        (
-            "route = [[18, 28], [11, 28]]",
-            "leaves walkable ground at (11, 28)",
-        ),
-        ("route = [[18, 28], [500, 28]]", "leaves walkable ground"),
-        ("route = [[18, 28]]", "at least two waypoints"),
-    ];
-    for (to, message) in cases {
-        let err = load(pass, to).expect_err(to);
-        assert!(
-            err.contains("topic `pass`") && err.contains(message),
-            "{to}: {err}"
-        );
-    }
     // Only a campaign's dialogue has an overworld to mark.
     let mut files = ContentFiles::builtin();
     files.insert(

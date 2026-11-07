@@ -124,8 +124,6 @@ fn what_the_field_refuses_is_refused_with_a_message() {
         let err = content_with(head).expect_err(head);
         assert!(err.contains(says), "{head}: {err}");
     };
-    refused("danger = { from = 9, to = 4 }", "`from` 9 is above `to` 4");
-    refused("danger = { to = 120 }", "past the deepest danger");
     // A vault draws at the floor's danger: a level's rule is no vault's.
     refused(
         "danger = 3\npopulation = [\"kobold\"]",

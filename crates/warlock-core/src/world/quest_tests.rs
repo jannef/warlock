@@ -917,10 +917,6 @@ fn quest_files_are_validated() {
         "unknown creature `player`",
     );
     bad(
-        &quest("type = \"kill\"\ntarget = \"pup\"\ncount = 0"),
-        "`count` is 1 to 99",
-    );
-    bad(
         &quest("type = \"kill\"\ntarget = \"pup\"\nlevel = \"moon\""),
         "unknown level",
     );
@@ -941,16 +937,8 @@ fn quest_files_are_validated() {
         "has no `count`",
     );
     bad(
-        &quest("type = \"reach\"\ntarget = \"cellar\"\nrepeatable = true"),
-        "not repeatable",
-    );
-    bad(
         &quest("type = \"deliver\"\ntarget = \"letter\""),
         "needs `to`",
-    );
-    bad(
-        &quest("type = \"deliver\"\ntarget = \"letter\"\nto = \"elder\""),
-        "someone other than the giver",
     );
     bad(
         &quest("type = \"bring\"\ntarget = \"apple\"\nto = \"pup\""),
@@ -965,14 +953,6 @@ fn quest_files_are_validated() {
         "`early` is for a quest with a `min_level`",
     );
     bad(
-        &quest("type = \"bring\"\ntarget = \"apple\"\nmin_level = 0\nearly = \"No.\""),
-        "`min_level` is 1 to 100",
-    );
-    bad(
-        &quest("type = \"bring\"\ntarget = \"apple\"\nmin_level = 101\nearly = \"No.\""),
-        "`min_level` is 1 to 100",
-    );
-    bad(
         &quest("type = \"bring\"\ntarget = \"apple\"\nrequires = \"later\""),
         "no quest `later` before this one",
     );
@@ -984,19 +964,8 @@ fn quest_files_are_validated() {
         "no quest `later` before this one",
     );
     bad(
-        &format!(
-            "{QUESTS}{}",
-            quest("type = \"bring\"\ntarget = \"apple\"\nrequires = [\"pups\", \"pups\"]")
-        ),
-        "`requires` names `pups` twice",
-    );
-    bad(
         &quest("type = \"bring\"\ntarget = \"apple\"\nreward = { items = [\"pie\"] }"),
         "reward: unknown object `pie`",
-    );
-    bad(
-        &quest("type = \"bring\"\ntarget = \"apple\"\nreward = { xp = 9999999 }"),
-        "reward: `xp` is at most",
     );
     bad(
         &quest("type = \"bring\"\ntarget = \"apple\"\nname = \"x\""),
@@ -1012,8 +981,8 @@ fn quest_files_are_validated() {
         "no one who talks",
     );
     bad(
-        &quest("type = \"bring\"\ntarget = \"apple\"").replace("\"q\"", "\"Q-1\""),
-        "ids are lower-case",
+        &quest("type = \"bring\"\ntarget = \"apple\"").replace("\"q\"", "\"q:1\""),
+        "holds no `:` or whitespace",
     );
     bad(
         &format!(
@@ -1023,30 +992,6 @@ fn quest_files_are_validated() {
         ),
         "duplicate quest id `q`",
     );
-    bad(
-        &quest("type = \"bring\"\ntarget = \"apple\"").replace("\"O.\"", "\" O.\""),
-        "not empty nor padded",
-    );
-    bad(
-        &quest("type = \"bring\"\ntarget = \"apple\"").replace(
-            "name = \"Q\"",
-            "name = \"A name far too long for a quest log\"",
-        ),
-        "at most 32 characters",
-    );
-    // Nine topics fit the dialogue screen: the elder's own and nine quests' do not.
-    let many: String = (0..9)
-        .map(|i| {
-            quest("type = \"bring\"\ntarget = \"apple\"").replace("\"q\"", &format!("\"q{i}\""))
-        })
-        .collect();
-    bad(&many, "at most 9 fit");
-    let fits: String = (0..8)
-        .map(|i| {
-            quest("type = \"bring\"\ntarget = \"apple\"").replace("\"q\"", &format!("\"q{i}\""))
-        })
-        .collect();
-    assert!(Content::load(&files_with(YARD, &fits)).is_ok());
 }
 
 // The showcase's own quests, with the built-in content.

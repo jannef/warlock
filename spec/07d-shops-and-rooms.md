@@ -399,9 +399,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     dumps `known_hollows`) until it is broken. A pick-axe (§8 "Digging") or a blast (a scroll of
     fireball's 1000 beats the wall's 600) opens it; without either there is no way in, by
     design. A level file's `[[room]]` of a sealed effect names its `breach = [x, y]` (refused
-    without one, with one that does not open the room as above, reached from the player's start,
-    or where the room is reached without breaking a wall; `breach` on any other effect is
-    refused). The `rooms` dev layer adds `, breach (x, y)`; `truth` draws a standing breach `H`.
+    without one; that it opens the room as above is the author's to see to; `breach` on any other
+    effect is refused). The `rooms` dev layer adds `, breach (x, y)`; `truth` draws a standing breach `H`.
     Never over a whole level.
   - **Shrines of a side** (`shrine = { regen = 200, status = "unwelcome", welcome, unwelcome
     }`, #413; `world/shrine.rs`, design §9.3): the room has a hidden side, drawn at generation
@@ -707,13 +706,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
     levels).
   - **A dungeon's own special rooms** (`room_effects` on a branch in a campaign's
     `data/dungeons/`, or on a range of its depths in `[[dungeon.levels]]`, overriding the
-    branch's table field by field): `chance` (0 to 100), `per_level` (1 to 8), `favoured = { id
-    = share }` (fixed shares of its draws in percent, 1 to 100 each, at most 100 together: a
-    favoured effect keeps its share however many effects are added) and `banned = [ids]` (never
-    drawn), each defaulting to `room_effects.toml`'s (no favoured, none banned). Unknown ids, an
-    effect both favoured and banned, shares over 100, and every effect banned while `chance` is
-    above 0 are content errors; the old `effects` list is refused, pointing to `favoured` and
-    `banned`. A new effect therefore turns up in every dungeon that does not ban it.
+    branch's table field by field): `chance` (percent), `per_level`, `favoured = { id = share }`
+    (fixed shares of its draws in percent: a favoured effect keeps its share however many effects
+    are added) and `banned = [ids]` (never drawn), each defaulting to `room_effects.toml`'s (no
+    favoured, none banned). Unknown ids are content errors. A new effect therefore turns up in every dungeon that does not ban it.
     Fennmynster: `chance` 25, `per_level` 2, favoured flooded 35, hushed 15, shadowed 15,
     banned hot.
   - **Level files** mark rooms with `[[room]] effect = "sanctuary" area = [x0, y0, x1, y1]`

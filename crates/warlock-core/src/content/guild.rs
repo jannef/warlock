@@ -9,11 +9,6 @@ use crate::color::Rgb;
 use serde::Deserialize;
 use std::collections::BTreeMap;
 
-/// The longest rank title, in characters.
-pub const MAX_TITLE: usize = 16;
-/// The most ranks a guild has.
-pub const MAX_RANKS: usize = 16;
-
 /// What reaches a rank.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum RankBy {
@@ -128,22 +123,12 @@ pub(super) fn parse<'a>(
 }
 
 fn resolve(spec: GuildSpec, campaign: Option<&str>, content: &Content) -> Result<GuildDef, String> {
-    if !super::dialogue::is_id(&spec.id) {
-        return Err("ids are lower-case letters, digits, and underscores".into());
-    }
-    let name = spec.name.trim();
-    if name.is_empty() || name.chars().count() > super::MAX_NAME {
-        return Err(format!("`name` is 1 to {} characters", super::MAX_NAME));
-    }
     let master = (content.speaker(&spec.master)).ok_or_else(|| {
         format!(
             "`master`: `{}` is no one who talks (a creature or npc with a dialogue)",
             spec.master
         )
     })?;
-    if spec.ranks.is_empty() || spec.ranks.len() > MAX_RANKS {
-        return Err(format!("a guild has 1 to {MAX_RANKS} `ranks`"));
-    }
     let quest = |id: &str| {
         let q = (content.quest_id(id)).ok_or_else(|| format!("unknown quest `{id}`"))?;
         if content.quest(q).campaign.as_deref() != campaign {
@@ -153,13 +138,7 @@ fn resolve(spec: GuildSpec, campaign: Option<&str>, content: &Content) -> Result
     };
     let mut ranks = Vec::with_capacity(spec.ranks.len());
     for r in spec.ranks {
-        let title = r.title.trim();
-        if title.is_empty() || title.chars().count() > MAX_TITLE {
-            return Err(format!("a rank's `title` is 1 to {MAX_TITLE} characters"));
-        }
-        if ranks.iter().any(|k: &RankDef| k.title == title) {
-            return Err(format!("rank `{title}` is listed twice"));
-        }
+        let title = r.title.as_str();
         let material = (content.material_id(&r.material))
             .ok_or_else(|| format!("rank `{title}`: unknown material `{}`", r.material))?;
         let by = match (r.given, r.done) {
@@ -172,20 +151,15 @@ fn resolve(spec: GuildSpec, campaign: Option<&str>, content: &Content) -> Result
             (None, Some(q)) => Some(RankBy::Done(quest(&q)?)),
             (None, None) => None,
         };
-        if by.is_some() && ranks.last().is_some_and(|k: &RankDef| k.by.is_none()) {
-            return Err(format!(
-                "rank `{title}`: a rank nothing reaches yet comes after those something does"
-            ));
-        }
         ranks.push(RankDef {
-            title: title.to_string(),
+            title: r.title,
             material,
             by,
         });
     }
     Ok(GuildDef {
         id: spec.id,
-        name: name.to_string(),
+        name: spec.name,
         master,
         ranks,
         campaign: campaign.map(str::to_string),

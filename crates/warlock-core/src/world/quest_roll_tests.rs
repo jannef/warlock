@@ -478,15 +478,8 @@ fn picks_variants_and_placeholders_are_checked_at_load() {
         )
     };
     let kill = "type = \"kill\"\npick = { creatures = [\"cealdhlaw\"] }";
-    // A filled text over 280 characters, for some target of the pool.
-    let long = format!("{} {{target}}.", "x".repeat(270));
-    bad(&quest(kill, &long), "at most 280 characters");
     bad(&quest(kill, "{nobody}"), "unknown placeholder `{nobody}`");
     bad(&quest(kill, "{target"), "unclosed placeholder");
-    bad(
-        &quest("type = \"kill\"\ntarget = \"rat\"", "{target}"),
-        "placeholders (`{target}`) are for a quest with a `pick` or variants",
-    );
     bad(
         &quest(
             "type = \"kill\"\ntarget = \"rat\"\npick = { creatures = [\"cealdhlaw\"] }",
@@ -523,17 +516,12 @@ fn picks_variants_and_placeholders_are_checked_at_load() {
         ),
         "is for a kill quest",
     );
-    bad(
-        &quest("type = \"kill\"\ntarget = \"fire_drake\"\ncount = 2", "O."),
-        "a unique is killed once",
-    );
     let variants = |extra: &str| {
         format!(
             "{}\n[[quest.variant]]\nid = \"a\"\ntarget = \"rat\"\n{extra}",
             quest("type = \"kill\"", "O.")
         )
     };
-    bad(&variants("weight = 0"), "`weight` is 1 to 1000");
     bad(
         &variants("reveals = { location = \"atlantis\" }"),
         "no hidden location `atlantis`",

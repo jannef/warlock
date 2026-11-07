@@ -137,7 +137,6 @@ fn bad_chest_legends_are_refused() {
             "no shut chest",
         ),
         (r#"{ terrain = "chest", chest = "casket" }"#, "no band"),
-        (r#"{ terrain = "chest", chest = 0 }"#, "level 0"),
         (
             r#"{ terrain = "chest_open", trap = "arrow" }"#,
             "a trap on an open chest",

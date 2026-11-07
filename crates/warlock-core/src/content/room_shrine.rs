@@ -4,7 +4,6 @@
 //! everyone inside by their own side: one who agrees heals faster, one opposed holds a status
 //! (Unwelcome), a neutral one is ignored. `world/shrine.rs` applies it.
 
-use super::room_effect::{DWELL_EASES, REGEN};
 use super::{StatusDef, StatusId};
 use crate::alignment::Alignment;
 use serde::Deserialize;
@@ -64,9 +63,8 @@ impl Shrine {
         }
     }
 
-    /// Resolves and checks `spec`: its status as a room's (it must ease, slowly enough), its
-    /// pace in range, its lines not empty. `has_sides`: whether the effect has `sides` (a
-    /// shrine needs them, for its side and its light).
+    /// Resolves `spec`: its status. `has_sides`: whether the effect has `sides` (a shrine needs
+    /// them, for its side and its light).
     pub(super) fn parse<'s>(
         spec: &ShrineSpec,
         has_sides: bool,
@@ -75,25 +73,8 @@ impl Shrine {
         if !has_sides {
             return Err("a `shrine` needs `sides` (and so a `feature`)".into());
         }
-        if !REGEN.contains(&spec.regen) {
-            return Err(format!(
-                "shrine.regen {} is out of range ({} to {})",
-                spec.regen,
-                REGEN.start(),
-                REGEN.end()
-            ));
-        }
-        if spec.welcome.trim().is_empty() || spec.unwelcome.trim().is_empty() {
-            return Err("shrine: `welcome` and `unwelcome` must not be empty".into());
-        }
         let name = &spec.status;
-        let (id, def) = status(name).ok_or_else(|| format!("unknown status `{name}`"))?;
-        if def.eases.is_none_or(|every| every < DWELL_EASES) {
-            return Err(format!(
-                "shrine status `{name}` must ease, and take at least {DWELL_EASES} seconds a \
-                 degree, so it never lapses while one stays inside"
-            ));
-        }
+        let (id, _) = status(name).ok_or_else(|| format!("unknown status `{name}`"))?;
         Ok(Shrine {
             regen: spec.regen,
             status: id,

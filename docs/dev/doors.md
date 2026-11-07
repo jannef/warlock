@@ -36,7 +36,7 @@ nothing, so trying again is free but for time. The ability is `Ability::PickLock
 (`warlock_core::ability`, Open lock's use; `KeyCommand::PickLock`, unbound). `Lock::difficulty`
 is saved only when a level gives one (`skip_serializing_if`), so locks without one hash as
 before. Level legends lock with `lock = "id"` or
-`locked = true` (and `lock_difficulty = N`, 1 to 50); objects are keys with `key = "id"` (`"*"`: skeleton); closed doors break with
+`locked = true` (and `lock_difficulty = N`); objects are keys with `key = "id"` (`"*"`: skeleton); closed doors break with
 `breaks_to` + `sturdiness` (`TerrainDef::kicked_in`; digging and blasts break only terrain with a
 `hardness`, `TerrainDef::breaks`, never a door, with one exception: a spell type with `doors`, force,
 breaks the closed doors its `blast` reaches, `World::blast_doors`, no sturdiness check, lock and trap

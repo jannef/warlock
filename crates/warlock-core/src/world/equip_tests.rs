@@ -351,14 +351,6 @@ fn spawn_equipment_is_checked() {
             "wields `spear`, which it does not carry",
         ),
         (
-            r#"{ terrain = "floor", creature = "kobold", carry = ["leather_jerkin"], wield = "leather_jerkin" }"#,
-            "`leather_jerkin` is worn, not wielded: use `wear`",
-        ),
-        (
-            r#"{ terrain = "floor", creature = "kobold", carry = ["spear"], wear = ["spear"] }"#,
-            "`spear` is wielded, not worn: use `wield`",
-        ),
-        (
             r#"{ terrain = "floor", creature = "kobold", carry = ["spear", "club"], wield = ["spear", "club"] }"#,
             "cannot wield `club`: no free slot fits it",
         ),

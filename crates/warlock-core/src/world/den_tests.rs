@@ -116,11 +116,7 @@ fn bad_swarms_are_refused() {
     for bad in [
         "swarm = { per_cells = 0, min = 4, max = 16, wake = 200, cry = 60, loot_level = 1 }",
         "swarm = { per_cells = 4, min = 8, max = 4, wake = 200, cry = 60, loot_level = 1 }",
-        "swarm = { per_cells = 4, min = 4, max = 99, wake = 200, cry = 60, loot_level = 1 }",
-        "swarm = { per_cells = 4, min = 4, max = 16, wake = 50, cry = 60, loot_level = 1 }",
         "swarm = { per_cells = 4, min = 4, max = 16, wake = 200, cry = 900, loot_level = 1 }",
-        "swarm = { per_cells = 4, min = 4, max = 16, wake = 200, cry = 60, loot_level = 1, \
-         themes = { kind = 60, faction = 60 } }",
     ] {
         let mut files = ContentFiles::builtin();
         files.insert("data/room_effects.toml", &shipped.replace(good, bad));

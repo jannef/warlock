@@ -10,12 +10,6 @@ use super::ItemClassId;
 use crate::skills::SkillId;
 use serde::Deserialize;
 use std::collections::BTreeMap;
-use std::ops::RangeInclusive;
-
-/// How many items a room's `loot` may lay.
-pub const LOOT_COUNT: RangeInclusive<u8> = 1..=16;
-/// The percent of a training mark's chance a room may give.
-pub const TRAIN: RangeInclusive<u16> = 1..=1000;
 
 /// `loot = { class = "scrolls", count = [2, 4] }` as data writes it.
 #[derive(Clone, Debug, Deserialize)]
@@ -46,24 +40,11 @@ impl LoreNames {
         loot: Option<LootSpec>,
         train: BTreeMap<String, u16>,
     ) -> Result<Self, String> {
-        if let Some(l) = &loot {
-            let [least, most] = l.count;
-            if least > most || !LOOT_COUNT.contains(&least) || !LOOT_COUNT.contains(&most) {
-                return Err(format!(
-                    "loot.count is [least, most], each {} to {}, least at most most",
-                    LOOT_COUNT.start(),
-                    LOOT_COUNT.end()
-                ));
-            }
-        }
-        for (skill, percent) in &train {
-            if !TRAIN.contains(percent) {
-                return Err(format!(
-                    "train.{skill} {percent} is out of range ({} to {})",
-                    TRAIN.start(),
-                    TRAIN.end()
-                ));
-            }
+        // A draw is made in the range: never empty.
+        if let Some(l) = &loot
+            && l.count[0] > l.count[1]
+        {
+            return Err("loot.count is [least, most]".into());
         }
         Ok(Self {
             loot: loot.map(|l| (l.class, l.count)),

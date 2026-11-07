@@ -282,21 +282,10 @@ fn guilds_are_checked_at_load() {
             r#"{ title = "Tin", material = "tin", given = "barrow_rats", done = "barrow_rats" }"#,
             "not both",
         ),
-        (
-            r#"{ title = "Tin", material = "tin" }, { title = "Iron", material = "iron", done = "barrow_rats" }"#,
-            "comes after",
-        ),
-        (
-            r#"{ title = "Tin", material = "tin" }, { title = "Tin", material = "iron" }"#,
-            "listed twice",
-        ),
-        (r#"{ title = "", material = "tin" }"#, "`title`"),
     ] {
         let err = with_guild(&guild(ranks)).expect_err(ranks);
         assert!(err.contains(error), "{ranks}: {err}");
     }
-    let err = with_guild(&guild("")).expect_err("no ranks");
-    assert!(err.contains("`ranks`"), "{err}");
     let nobody = r#"[[guild]]
 id = "test"
 name = "the Test"

@@ -943,7 +943,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     proper name alone, "the fire drake" for a lower-case one), `{count}`, `{members}` (a tag's
     types), `{branch}` (the first branch, in the pick's order, it lives in), `{where}`, each
     also capitalised (`{A_target}`); every text, filled for every target the pool can hold, is
-    checked at load (one line, at most 280 characters, no unknown placeholder). A variant's
+    checked at load (no unknown or unclosed placeholder). A variant's
     `reveals` (`when = "given"`) marks its own location only. **Beast-friend** (#1189): a
     player with the talent (§8 "Talents") is never asked to kill what it calms: the pool, as the
     quest is given, leaves out a creature type of an `animal` faction, a tag any of whose types

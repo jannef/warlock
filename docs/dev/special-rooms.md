@@ -7,44 +7,44 @@ change edits this file, not the generator notes.
 ## Data
 
 `data/room_effects.toml` (`content/room_effect.rs`): the shared `chance` (12 % per room) and
-`per_level` (1), and one `[[effect]]` per kind of special room (a **feature**), at most 32, ids are
-indices (in the save fingerprint; new effects go at the end). Fields: `id`, `name`, `mark` (the
-`rooms` dev layer), `enter`, `weight` (1 to 100, default 10), `near` (optional), `level_chance`
+`per_level` (1), and one `[[effect]]` per kind of special room (a **feature**), at most 256 (a
+`u8` id), ids are indices (in the save fingerprint; new effects go at the end). The loader checks
+only what resolves and what the code needs (#1205): no ranges on the numbers. Fields: `id`,
+`name`, `mark` (the `rooms` dev layer), `enter`, `weight` (default 10), `near` (optional), `level_chance`
 (percent, default 0) and `pervade` (needed with it), the eligibility fields `needs_danger`,
 `needs_below`, `min_cells`, `max_cells` ([`RoomEffectDef::eligible`]), and what it does: `light`,
 `glow`, `noise`, `regen`, `mana_regen`, `shunned`, `floor`, `status` (a status id, resolved and
 checked at load: it must ease, at least `DWELL_EASES`, 10 s a degree; `RoomEffects::parse_with`
 takes the statuses' lookup, `parse` in tests none), `swarm` (a teeming den's numbers,
-[`Swarm`]: `per_cells`, `min`, `max` (1 to 64), `wake` (100 to 1000), `cry` (0 to
-`noise::MAX_LOUDNESS`), `loot_level`, `themes = { kind, faction }` (percents, at most 100
-together), `factions` (faction ids, checked once the factions load,
-`RoomEffects::check_factions`: known, none twice), `hoard` (`Hoard::Items`, the default, or
+[`Swarm`]: `per_cells` (at least 1, a divisor), `min` and `max` (`min` at most `max`), `wake`,
+`cry` (at most `noise::MAX_LOUDNESS`, the farthest sound carries), `loot_level`, `themes = {
+kind, faction }` (percents), `factions` (faction ids, checked once the factions load,
+`RoomEffects::check_factions`: known), `hoard` (`Hoard::Items`, the default, or
 `Hoard::Corpses`), `population` (creature ids, resolved into `Swarm::kinds` once the creatures
-load, `RoomEffects::resolve_populations`: known, not unique, none twice; never with `factions`),
-`danger` (0 to `MAX_DEN_DANGER` 10, default 0); it needs `needs_danger` and can never pervade), `temperature` (degrees Celsius added to
-the level's, -40 to 40, default 0), `burden` (percent of the carrying limit, `BURDEN` 10 to
-1000, default 100), `mirrors` (`{ images = N }`, 1 to 8, `content::Mirrors`), `warp` (percent a
-step inside warps the stepper, 0 to 100, default 0), `collapse` (`{ chance, damage }`,
-`content::Collapse`: chance 0 to 100, damage dice; needs `needs_below`), `rise` (`{ faction, after }`, `content::Rise`:
-`after` a duration, `RISE_AFTER` 1 s to 1 h; needs `needs_danger`; the faction checked in
-`RoomEffects::check_factions`), `haunt` (`{ faction, every }`, `content::Haunt`,
-`content/room_haunt.rs`: `every` a duration, `HAUNT_EVERY` 10 minutes to a day; needs
-`needs_danger`; never over a whole level; the faction checked in `check_factions`), `unholy`
-(Consecrate lifts it), `feature` (a terrain id,
-transparent and not walkable, not stairs or a door), `sides` (`{ good = LIGHT, evil = LIGHT }`: the
+load, `RoomEffects::resolve_populations`: known; never with `factions`),
+`danger` (default 0); it needs `needs_danger` and can never pervade), `temperature` (degrees Celsius added to
+the level's, default 0), `burden` (percent of the carrying limit, default 100), `mirrors` (`{
+images = N }`, `content::Mirrors`), `warp` (percent a step inside warps the stepper, default 0),
+`collapse` (`{ chance, damage }`, `content::Collapse`: chance, damage dice; needs
+`needs_below`), `rise` (`{ faction, after }`, `content::Rise`: `after` a duration; needs
+`needs_danger`; the faction checked in `RoomEffects::check_factions`), `haunt` (`{ faction,
+every }`, `content::Haunt`, `content/room_haunt.rs`: `every` a duration, more than no time (the
+clock is taken modulo it); needs `needs_danger`; never over a whole level; the faction checked
+in `check_factions`), `unholy` (Consecrate lifts it), `feature` (a terrain id), `sides` (`{ good = LIGHT, evil = LIGHT }`: the
 room draws a hidden side, its feature a light per side; the lights are resolved after they load,
 `RoomEffects::resolve_places`), `dressing` (`{ terrain, per_cells, most }`, `content::Dressing`:
-a terrain as a feature's, `per_cells` at least 1, `most` 1 to `MAX_DRESSING` 16; never pervades),
+a terrain id, `per_cells` and `most` at least 1, `Dressing::pieces` dividing by the one and
+clamping to the other; never pervades),
 `offers` (`{ pray = TABLE }`, `{ drink = TABLE }`, or `{ temper = true }`, exactly one:
 `Offer::Pray`/`Offer::Drink` and an outcome table id, checked in `resolve_places` once
 `data/outcomes/` is loaded, or `Offer::Temper` with no table; `Content::offer` says what a terrain
 offers, `Content::offer_at` the same with its table, for those with one; `offers` and
 `sides` need a `feature`), `shrine` (`{ regen, status, welcome, unwelcome }`, `content::Shrine`,
-`content/room_shrine.rs`: a shrine of a side; needs `sides`; `status` resolved and held to a
-room status's easing), `hoard` (a tempting hoard, `content::Treasure`: `items` 1 to 16, `loot_level`,
-`guardians = [least, most]` at most 16, `danger`; it needs `needs_danger` and can never pervade),
-`loot` (`{ class, count = [least, most] }`, `content::RoomLoot`: an item class id, 1 to 16 items;
-can never pervade) and `train` (`{ skill = percent }`, 1 to 1000, a mark's chance inside); both
+`content/room_shrine.rs`: a shrine of a side; needs `sides`; `status` resolved), `hoard` (a
+tempting hoard, `content::Treasure`: `items`, `loot_level`, `guardians = [least, most]` (least
+at most most), `danger`; it needs `needs_danger` and can never pervade),
+`loot` (`{ class, count = [least, most] }`, `content::RoomLoot`: an item class id, least at most
+most; can never pervade) and `train` (`{ skill = percent }`, a mark's chance inside); both
 name content loaded after the effects, so `content/room_lore.rs` keeps the names until
 `RoomEffects::resolve_lore` (after `resolve_places`) resolves them, refusing unknown ones
 (`train` is dropped when the content has no skills at all).
@@ -88,11 +88,11 @@ favours the armoury at 20.
 
 A dungeon's `room_effects` (on a branch or a `[[dungeon.levels]]` range; `content/dungeon.rs`,
 `RoomOddsSpec::layer`/`resolve`, field by field: the range's, the branch's, the shared file's)
-sets `chance`, `per_level`, `favoured = { id = share, ... }` (fixed shares in percent, 1 to 100,
-together at most 100) and `banned = [ids]`, resolved into `RoomOdds { chance, per_level,
-favoured, banned }` (`RoomOdds::shared` has neither list). Content errors: unknown ids, an id both
-favoured and banned, shares over 100, every feature banned while `chance` is above 0, and the
-retired `effects` list (refused, pointing to `favoured` and `banned`). Fennmynster favours flooded
+sets `chance`, `per_level`, `favoured = { id = share, ... }` (fixed shares in percent) and
+`banned = [ids]`, resolved into `RoomOdds { chance, per_level, favoured, banned }`
+(`RoomOdds::shared` has neither list). Content errors: unknown ids (the numbers are the
+author's, #1205: shares past 100 leave the rest undrawn, a feature with nothing left to draw is
+not made). Fennmynster favours flooded
 35, cursed 15, hushed 15, shadowed 15, and bans forges and hot rooms.
 
 ## Generation
@@ -305,10 +305,9 @@ out while 0/false, so other rooms hash as before. The `rooms` dev layer adds `, 
   secret, so a dug or blasted breach is no longer hollow. `PerceptionView::hollow` and
   `known_hollows` read it; look mode says "a hollow stone wall"; JSON dumps `known_hollows`.
   The map shows the wall as any wall.
-- **Level files** (`content/level.rs`, `check_sealed`): a `[[room]]` of a sealed effect needs
-  `breach = [x, y]`, which `breach_fault` checks against the cells reached from the player's
-  start (beside the breach on a level without one); no cell of the room may be reached without
-  breaking a wall. `breach` on another effect is refused. The showcase's `chests` scenario
+- **Level files** (`content/level.rs`): a `[[room]]` of a sealed effect needs `breach = [x, y]`
+  (the wall that opens it is the author's to lay, #1205); `breach` on another effect is refused.
+  The showcase's `chests` scenario
   (level `treasure_hall`, #619) has a hand-made treasure room behind a secret door and a greater
   one with its breach beside a pick-axe (`world/chest_hall_tests.rs`).
 - **Dumps**: `rooms` adds `, breach (x, y)`; `truth` draws a standing breach `H`.
@@ -427,8 +426,8 @@ its own: a shrine is never neutral, so its side's light is always placed), the s
 `unwelcome` (`status.toml`, beside Silenced: `regen = 50`, `combat = { to_hit = -1 }`, `eases =
 30`). Generation (`mapgen/special.rs::place`): an effect with `shrine` draws its side with one
 `below(2)` (0 good, else evil) instead of the altar's `below(4)`; the feature and its light are
-the altar's code. Level files (`content/level.rs`) refuse a shrine room without `side = "good"`
-or `"evil"`.
+the altar's code. A level file's shrine room takes its `side` as written (a neutral one ignores
+everyone, `Regard::Ignored`).
 
 Rules (`world/shrine.rs`): `LevelState::shrine_at(content, pos)` (the room's `Shrine` and its
 side) and `Shrine::regard(side, Actor::nature)` (`Welcome`, `Unwelcome`, `Ignored`). Three

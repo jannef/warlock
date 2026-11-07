@@ -31,7 +31,7 @@ underfoot win and dungeons and the overworld are untouched. Tests: `world/quick_
 The edge rule (#803, `world/edge_leave.rs`): `player_moves` off the grid of a level with an
 `exit` asks `held_at_edge` before `leave_by_edge`: any actor on the level with `Stance::Hostile`
 toward the player within `EncounterRules::edge_reach` (`data/encounters.toml`,
-`content/encounter.rs`; 3, 0 to 10, 0 off; without the file the default 3), Chebyshev, seen or
+`content/encounter.rs`; 3, 0 off; without the file the default 3), Chebyshev, seen or
 not (ground truth, like the quick leave's unseen clause, so no sight test). Refused, it says
 `EDGE_LEAVE_REFUSED` and spends nothing. The quick leave is untouched (its wider check refuses
 first). `data/encounters.toml` is the file the encounters design (docs/design/overworld-encounters.md)
@@ -105,8 +105,8 @@ before and after, back down and up again with no second mark, a replay; out of F
 Grundlēas nothing is revealed).
 
 Named places (#332): a legend's `name` (and `note`, a sentence for look mode) on any cell of a
-hand-made level goes into `LevelTemplate::places` (`content/level.rs::parse_place`; refused
-beside a `hidden`, which would give it away). A way in on that cell carries the name as
+hand-made level goes into `LevelTemplate::places` (`content/level.rs::parse_place`; the author
+keeps it off a `hidden` one, which it would give away). A way in on that cell carries the name as
 `StairsLink::name`, so look mode, "The way into … is here." (`world/travel.rs`), and the
 `locations` layer name it even while it leads nowhere yet; `PerceptionView::place` gives the
 place on a cell the player sees or remembers, and `ui/look.rs` names it after the terrain and

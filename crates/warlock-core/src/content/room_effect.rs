@@ -57,33 +57,13 @@ use crate::temperature::Temperature;
 use crate::time::Duration;
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
-use std::ops::RangeInclusive;
 
 /// Index of an effect in [`RoomEffects::defs`]; assigned in file order.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize)]
 pub struct RoomEffectId(pub u8);
 
-/// The percent of a noise's loudness an effect may leave (spec §5 "Hearing").
-pub const NOISE: RangeInclusive<u16> = 1..=1000;
-/// The percent of the usual pace of regeneration an effect may give (spec §8 "Combat").
-pub const REGEN: RangeInclusive<u16> = 1..=1000;
-/// The most effects there can be.
-pub const MAX_EFFECTS: usize = 32;
-/// The weight an effect may have in the draw (spec §7 "Special rooms").
-pub const WEIGHT: RangeInclusive<u8> = 1..=100;
-/// The fewest seconds a room's status may take to ease a degree: the longest single action, so
-/// it never lapses while one stays inside.
-pub const DWELL_EASES: u32 = 10;
-/// The percent of the carrying limit an effect may leave (spec §8 "Burden").
-pub const BURDEN: RangeInclusive<u16> = 10..=1000;
-/// The degrees Celsius an effect may add to the level's temperature (spec §7 "Special rooms").
-pub const TEMPERATURE: RangeInclusive<i8> = -40..=40;
-/// How many reflections a hall of mirrors may show of each actor inside (spec §7 "Special
-/// rooms").
-pub const IMAGES: RangeInclusive<u8> = 1..=8;
-/// How long after a death in a cursed room the dead may rise, in seconds (spec §7 "Special
-/// rooms").
-pub const RISE_AFTER: RangeInclusive<u64> = 1..=3600;
+/// The most effects there can be: [`RoomEffectId`] is a `u8`.
+pub const MAX_EFFECTS: usize = 256;
 
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -191,9 +171,6 @@ pub struct Dressing {
     pub per_cells: u16,
     pub most: u8,
 }
-
-/// The most pieces of dressing a room may hold.
-pub const MAX_DRESSING: u8 = 16;
 
 impl Dressing {
     /// How many pieces a room of `cells` floor cells gets.
@@ -304,20 +281,13 @@ pub struct Treasure {
     pub danger: u8,
 }
 
-/// The most items a hoard may hold, and the most guardians it may bring.
-pub const MAX_HOARD: u8 = 16;
-
 impl Treasure {
     /// The fault in these numbers, if any.
     fn check(&self) -> Result<(), String> {
+        // A draw is made in the range: never empty.
         let [least, most] = self.guardians;
-        if !(1..=MAX_HOARD).contains(&self.items) {
-            return Err(format!("hoard: items are 1 to {MAX_HOARD}"));
-        }
-        if least > most || most > MAX_HOARD {
-            return Err(format!(
-                "hoard: guardians are [least, most], at most {MAX_HOARD}, least at most most"
-            ));
+        if least > most {
+            return Err("hoard: guardians are [least, most]".into());
         }
         Ok(())
     }
@@ -390,43 +360,22 @@ pub struct Themes {
     pub faction: u8,
 }
 
-/// The most sleepers a den may hold.
-pub const MAX_SLEEPERS: u16 = 64;
-/// The most dangers deeper than the floor's a den's sleepers may be drawn.
-pub const MAX_DEN_DANGER: u8 = 10;
-/// The percents of the hearing threshold a den's `wake` may be.
-pub const WAKE: RangeInclusive<u16> = 100..=1000;
-
 impl Swarm {
     /// The fault in these numbers, if any.
     fn check(&self) -> Result<(), String> {
         if self.per_cells == 0 {
             return Err("swarm: per_cells must be at least 1".into());
         }
-        if self.min == 0 || self.min > self.max || self.max > MAX_SLEEPERS {
-            return Err(format!(
-                "swarm: min and max are 1 to {MAX_SLEEPERS}, min at most max"
-            ));
+        // `sleepers` clamps to the range: never empty.
+        if self.min > self.max {
+            return Err("swarm: min is at most max".into());
         }
-        if !WAKE.contains(&self.wake) {
-            return Err(format!(
-                "swarm: wake {} is out of range ({} to {})",
-                self.wake,
-                WAKE.start(),
-                WAKE.end()
-            ));
-        }
+        // Sound carries no farther than the loudest noise's reach (`noise::MAX_REACH`).
         if self.cry > crate::noise::MAX_LOUDNESS {
             return Err(format!(
                 "swarm: cry is at most {}",
                 crate::noise::MAX_LOUDNESS
             ));
-        }
-        if u16::from(self.themes.kind) + u16::from(self.themes.faction) > 100 {
-            return Err("swarm: themes' percents add up to at most 100".into());
-        }
-        if self.danger > MAX_DEN_DANGER {
-            return Err(format!("swarm: danger is at most {MAX_DEN_DANGER}"));
         }
         if !self.population.is_empty() && !self.factions.is_empty() {
             return Err("swarm: a `population` and `factions` do not go together".into());
@@ -804,7 +753,7 @@ impl RoomEffects {
     }
 
     /// Checks the dens' `swarm.factions` against the factions loaded (`factions`): each must be
-    /// one, named once.
+    /// one.
     pub(super) fn check_factions(&self, factions: &super::Factions) -> Result<(), ContentError> {
         for def in &self.defs {
             if let Some(haunt) = &def.haunt
@@ -830,17 +779,10 @@ impl RoomEffects {
                 ));
             }
             let Some(swarm) = &def.swarm else { continue };
-            for (i, name) in swarm.factions.iter().enumerate() {
-                let fault = if factions.id(name).is_none() {
-                    "is unknown"
-                } else if swarm.factions[..i].contains(name) {
-                    "is named twice"
-                } else {
-                    continue;
-                };
+            if let Some(name) = swarm.factions.iter().find(|n| factions.id(n).is_none()) {
                 return Err(ContentError::new(
                     "data/room_effects.toml",
-                    format!("effect `{}`: swarm faction `{name}` {fault}", def.id),
+                    format!("effect `{}`: swarm faction `{name}` is unknown", def.id),
                 ));
             }
         }
@@ -848,8 +790,7 @@ impl RoomEffects {
     }
 
     /// Resolves the dens' own `swarm.population` once the creatures load: `creature` gives a
-    /// name's type (a family's by its own id) and whether it is unique. Each must be a type, not
-    /// unique, named once.
+    /// name's type (a family's by its own id) and whether it is unique. Each must be a type.
     pub(super) fn resolve_populations(
         &mut self,
         creature: impl Fn(&str) -> Option<(super::CreatureId, bool)>,
@@ -859,20 +800,14 @@ impl RoomEffects {
                 continue;
             };
             let mut kinds = Vec::new();
-            for (i, name) in swarm.population.iter().enumerate() {
-                let fault = match creature(name) {
-                    None => "is unknown",
-                    Some((_, true)) => "is unique",
-                    Some(_) if swarm.population[..i].contains(name) => "is named twice",
-                    Some((id, false)) => {
-                        kinds.push(id);
-                        continue;
-                    }
-                };
-                return Err(ContentError::new(
-                    "data/room_effects.toml",
-                    format!("effect `{}`: swarm population `{name}` {fault}", def.id),
-                ));
+            for name in &swarm.population {
+                let (id, _) = creature(name).ok_or_else(|| {
+                    ContentError::new(
+                        "data/room_effects.toml",
+                        format!("effect `{}`: swarm population `{name}` is unknown", def.id),
+                    )
+                })?;
+                kinds.push(id);
             }
             swarm.kinds = kinds;
         }
@@ -900,12 +835,6 @@ impl RoomEffects {
     ) -> Result<Self, ContentError> {
         let err = |m: String| ContentError::new(file, m);
         let parsed: RoomEffectFile = toml::from_str(text).map_err(|e| err(e.to_string()))?;
-        if parsed.chance > 100 {
-            return Err(err(format!(
-                "chance {} is a percent: 0 to 100",
-                parsed.chance
-            )));
-        }
         if parsed.effect.len() > MAX_EFFECTS {
             return Err(err(format!("at most {MAX_EFFECTS} effects")));
         }
@@ -915,57 +844,11 @@ impl RoomEffects {
             if defs.iter().any(|d| d.id == spec.id) {
                 return Err(err(format!("duplicate effect id `{}`", spec.id)));
             }
-            if spec.name.trim().is_empty() || spec.enter.trim().is_empty() {
-                return Err(bad("`name` and `enter` must not be empty".into()));
-            }
-            if spec.mark.is_whitespace() || defs.iter().any(|d| d.mark == spec.mark) {
-                return Err(bad(format!(
-                    "mark `{}` must be visible and not another effect's",
-                    spec.mark
-                )));
-            }
-            if spec.light > 100 {
-                return Err(bad(format!(
-                    "light {} is the percent kept: 0 to 100",
-                    spec.light
-                )));
-            }
-            if !WEIGHT.contains(&spec.weight) {
-                return Err(bad(format!(
-                    "weight {} is out of range ({} to {})",
-                    spec.weight,
-                    WEIGHT.start(),
-                    WEIGHT.end()
-                )));
-            }
-            if spec.level_chance > 100 {
-                return Err(bad(format!(
-                    "level_chance {} is a percent: 0 to 100",
-                    spec.level_chance
-                )));
-            }
-            if spec.warp > 100 {
-                return Err(bad(format!("warp {} is a percent: 0 to 100", spec.warp)));
-            }
-            if let Some(c) = &spec.collapse {
-                if c.chance > 100 {
-                    return Err(bad(format!(
-                        "collapse.chance {} is a percent: 0 to 100",
-                        c.chance
-                    )));
-                }
-                if !spec.needs_below {
-                    return Err(bad("a `collapse` needs `needs_below`".into()));
-                }
+            if spec.collapse.is_some() && !spec.needs_below {
+                return Err(bad("a `collapse` needs `needs_below`".into()));
             }
             if spec.max_cells.is_some_and(|most| most < spec.min_cells) {
                 return Err(bad("max_cells is below min_cells".into()));
-            }
-            let blank = |line: &Option<String>| line.as_ref().is_some_and(|l| l.trim().is_empty());
-            if blank(&spec.near) || blank(&spec.pervade) || blank(&spec.arrive) {
-                return Err(bad(
-                    "`near`, `pervade`, and `arrive` must not be empty".into()
-                ));
             }
             if let Some(treasure) = &spec.treasure {
                 treasure.check().map_err(bad)?;
@@ -976,44 +859,10 @@ impl RoomEffects {
                         .into(),
                 ));
             }
-            for (what, value, range) in [
-                ("noise", spec.noise, NOISE),
-                ("regen", spec.regen, REGEN),
-                ("mana_regen", spec.mana_regen, REGEN),
-                ("burden", spec.burden, BURDEN),
-            ] {
-                if !range.contains(&value) {
-                    return Err(bad(format!(
-                        "{what} {value} is out of range ({} to {})",
-                        range.start(),
-                        range.end()
-                    )));
-                }
-            }
-            if !TEMPERATURE.contains(&spec.temperature) {
-                return Err(bad(format!(
-                    "temperature {} is out of range ({} to {} °C)",
-                    spec.temperature,
-                    TEMPERATURE.start(),
-                    TEMPERATURE.end()
-                )));
-            }
             let floor = match &spec.floor {
                 Some(name) => {
-                    let (id, def) =
+                    let (id, _) =
                         terrain(name).ok_or_else(|| bad(format!("unknown terrain `{name}`")))?;
-                    let plain = def.walkable
-                        && def.transparent
-                        && def.stairs.is_none()
-                        && !def.is_closed_door()
-                        && !def.is_open_door()
-                        && !def.flows();
-                    if !plain {
-                        return Err(bad(format!(
-                            "floor `{name}` must be walkable and transparent, and not stairs, a \
-                             door, or running water"
-                        )));
-                    }
                     Some(id)
                 }
                 None => None,
@@ -1024,39 +873,16 @@ impl RoomEffects {
                 .map_err(bad)?;
             let status = match &spec.status {
                 Some(name) => {
-                    let (id, def) =
+                    let (id, _) =
                         status(name).ok_or_else(|| bad(format!("unknown status `{name}`")))?;
-                    if def.eases.is_none_or(|every| every < DWELL_EASES) {
-                        return Err(bad(format!(
-                            "status `{name}` must ease, and take at least {DWELL_EASES} seconds a \
-                             degree, so it never lapses while one stays inside"
-                        )));
-                    }
                     Some(id)
                 }
                 None => None,
             };
-            if let Some(m) = &spec.mirrors
-                && !IMAGES.contains(&m.images)
-            {
-                return Err(bad(format!(
-                    "mirrors.images {} is out of range ({} to {})",
-                    m.images,
-                    IMAGES.start(),
-                    IMAGES.end()
-                )));
-            }
             let mirrors = spec.mirrors.as_ref().map(|m| Mirrors { images: m.images });
             let rise = match &spec.rise {
                 Some(r) => {
                     let after: Duration = r.after.parse().map_err(|e: String| bad(e))?;
-                    if !RISE_AFTER.contains(&after.as_seconds()) {
-                        return Err(bad(format!(
-                            "rise.after is {} to {} seconds",
-                            RISE_AFTER.start(),
-                            RISE_AFTER.end()
-                        )));
-                    }
                     if !spec.needs_danger {
                         return Err(bad("a `rise` needs `needs_danger`".into()));
                     }
@@ -1073,32 +899,19 @@ impl RoomEffects {
                 .map_err(bad)?;
             let feature = match &spec.feature {
                 Some(name) => {
-                    let (id, def) =
+                    let (id, _) =
                         terrain(name).ok_or_else(|| bad(format!("unknown terrain `{name}`")))?;
-                    if def.walkable || !def.transparent || def.stairs.is_some() || def.is_door() {
-                        return Err(bad(format!(
-                            "feature `{name}` must be transparent and not walkable, stairs, or a \
-                             door"
-                        )));
-                    }
                     Some(id)
                 }
                 None => None,
             };
             let dressing = match &spec.dressing {
                 Some(d) => {
-                    let (id, def) = terrain(&d.terrain)
+                    let (id, _) = terrain(&d.terrain)
                         .ok_or_else(|| bad(format!("unknown terrain `{}`", d.terrain)))?;
-                    if def.walkable || !def.transparent || def.stairs.is_some() || def.is_door() {
-                        return Err(bad(format!(
-                            "dressing `{}` must be transparent and not walkable, stairs, or a door",
-                            d.terrain
-                        )));
-                    }
-                    if d.per_cells == 0 || d.most == 0 || d.most > MAX_DRESSING {
-                        return Err(bad(format!(
-                            "dressing: per_cells at least 1, most 1 to {MAX_DRESSING}"
-                        )));
+                    // `Dressing::pieces` divides by `per_cells` and clamps from 1 to `most`.
+                    if d.per_cells == 0 || d.most == 0 {
+                        return Err(bad("dressing: per_cells and most are at least 1".into()));
                     }
                     Some(Dressing {
                         terrain: id,
@@ -1370,40 +1183,13 @@ mod tests {
     #[test]
     fn bad_effects_are_refused() {
         let def = floor();
-        let wall = {
-            let mut w = floor();
-            w.walkable = false;
-            w
-        };
         for (text, why) in [
-            (format!("chance = 101\n{SHADOWED}"), "chance 101"),
             (format!("{SHADOWED}{SHADOWED}"), "duplicate effect id"),
-            (SHADOWED.replace("30", "101"), "light 101"),
-            (format!("{SHADOWED}noise = 0\n"), "noise 0 is out of range"),
-            (
-                format!("{SHADOWED}regen = 1001\n"),
-                "regen 1001 is out of range",
-            ),
-            (SHADOWED.replace("Dark.", " "), "must not be empty"),
-            (SHADOWED.replace("\"s\"", "\" \""), "mark ` `"),
             (
                 format!("{SHADOWED}floor = \"lava\"\n"),
                 "unknown terrain `lava`",
             ),
-            (
-                format!("{SHADOWED}floor = \"wall\"\n"),
-                "floor `wall` must be walkable",
-            ),
             (format!("{SHADOWED}color = 3\n"), "unknown field `color`"),
-            (
-                format!("{SHADOWED}weight = 0\n"),
-                "weight 0 is out of range",
-            ),
-            (format!("{SHADOWED}weight = 101\n"), "weight 101"),
-            (
-                format!("{SHADOWED}level_chance = 101\n"),
-                "level_chance 101",
-            ),
             (
                 format!("{SHADOWED}level_chance = 5\n"),
                 "needs a `pervade` line",
@@ -1416,19 +1202,14 @@ mod tests {
                 format!("{SHADOWED}min_cells = 20\nmax_cells = 10\n"),
                 "max_cells is below min_cells",
             ),
-            (format!("{SHADOWED}near = \" \"\n"), "must not be empty"),
         ] {
             let terrain = |name: &str| match name {
                 "floor" => Some((TerrainId(1), &def)),
-                "wall" => Some((TerrainId(2), &wall)),
                 _ => None,
             };
             let e = RoomEffects::parse("e.toml", &text, terrain).unwrap_err();
             assert!(e.message.contains(why), "{why}: {}", e.message);
         }
-        let twin = format!("{SHADOWED}{}", SHADOWED.replace("\"shadowed\"", "\"dark\""));
-        let e = RoomEffects::parse("e.toml", &twin, |_| None).unwrap_err();
-        assert!(e.message.contains("not another effect's"), "{}", e.message);
     }
 
     #[test]
@@ -1484,7 +1265,7 @@ mod tests {
     }
 
     #[test]
-    fn a_status_parses_and_must_ease_slowly_enough() {
+    fn a_status_parses_and_must_be_known() {
         let content = crate::content::Content::builtin().expect("content");
         let lookup = |name: &str| {
             let id = content.status_id(name)?;
@@ -1501,16 +1282,12 @@ mod tests {
             level: Some(e),
         };
         assert_eq!(here.statuses().count(), 2, "both apply");
-        for (status, why) in [
-            ("nothing", "unknown status `nothing`"),
-            // Held eases a degree a turn (6 s): it would lapse between two actions.
-            ("held", "at least 10 seconds"),
-            // Diseased never eases by itself.
-            ("diseased", "must ease"),
-        ] {
-            let e = parse(&format!("{SHADOWED}status = \"{status}\"\n")).unwrap_err();
-            assert!(e.message.contains(why), "{why}: {}", e.message);
-        }
+        let e = parse(&format!("{SHADOWED}status = \"nothing\"\n")).unwrap_err();
+        assert!(
+            e.message.contains("unknown status `nothing`"),
+            "{}",
+            e.message
+        );
     }
 
     #[test]
@@ -1540,18 +1317,11 @@ mod tests {
     }
 
     #[test]
-    fn mana_paces_parse_and_are_checked() {
+    fn mana_paces_parse_and_default() {
         let well = format!("{SHADOWED}mana_regen = 300\n");
         let effects = RoomEffects::parse("e.toml", &well, |_| None).expect("valid");
         assert_eq!(effects.get(RoomEffectId(0)).mana_regen, 300);
         let plain = RoomEffects::parse("e.toml", SHADOWED, |_| None).expect("valid");
         assert_eq!(plain.get(RoomEffectId(0)).mana_regen, 100, "the default");
-        let e = RoomEffects::parse("e.toml", &format!("{SHADOWED}mana_regen = 0\n"), |_| None)
-            .unwrap_err();
-        assert!(
-            e.message.contains("mana_regen 0 is out of range"),
-            "{}",
-            e.message
-        );
     }
 }

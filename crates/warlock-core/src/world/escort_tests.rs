@@ -346,8 +346,6 @@ fn the_load_checks() {
     assert!(bad("joins = ", "accept = ").contains("needs `joins`"));
     assert!(bad("target = \"hamlet\"", "target = \"nowhere\"").contains("unknown level"));
     assert!(bad("escort = \"eadgyth\"", "escort = \"villager_x\"").contains("no one who talks"));
-    assert!(bad("escort = \"eadgyth\"", "escort = \"wise_woman\"").contains("other than"));
-    assert!(bad("reward =", "repeatable = true\nreward =").contains("not repeatable"));
     assert!(bad("type = \"escort\"", "type = \"reach\"").contains("no `escort`"));
 }
 

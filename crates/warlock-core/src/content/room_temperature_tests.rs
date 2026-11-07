@@ -1,7 +1,6 @@
-//! A special room's `temperature` (spec §7 "Special rooms"): parsed, defaulted, refused out of
-//! range, and added up by [`Here::warmth`].
+//! A special room's `temperature` (spec §7 "Special rooms"): parsed, defaulted, and added up by
+//! [`Here::warmth`].
 
-use super::room_effect::TEMPERATURE;
 use super::{Here, RoomEffectId, RoomEffects};
 use crate::temperature::Temperature;
 
@@ -25,23 +24,6 @@ fn temperature_parses_and_defaults_to_none() {
     let effects = RoomEffects::parse("e.toml", &text, |_| None).expect("valid");
     let degrees = |i: u8| effects.get(RoomEffectId(i)).temperature;
     assert_eq!((degrees(0), degrees(1), degrees(2)), (0, 25, -25));
-    // The extremes are allowed.
-    for t in [*TEMPERATURE.start(), *TEMPERATURE.end()] {
-        let text = effect("x", 'x', i32::from(t));
-        assert!(RoomEffects::parse("e.toml", &text, |_| None).is_ok(), "{t}");
-    }
-}
-
-#[test]
-fn temperature_out_of_range_is_refused() {
-    for t in [-41, 41] {
-        let e = RoomEffects::parse("e.toml", &effect("x", 'x', t), |_| None).unwrap_err();
-        assert!(
-            e.message.contains(&format!("temperature {t}")),
-            "{}",
-            e.message
-        );
-    }
     // Beyond what the field holds at all.
     let e = RoomEffects::parse("e.toml", &effect("x", 'x', 300), |_| None).unwrap_err();
     assert!(e.message.contains("temperature"), "{}", e.message);

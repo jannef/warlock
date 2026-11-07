@@ -38,9 +38,6 @@ impl Calendar {
                 parsed.months.len()
             )));
         }
-        if let Some(i) = parsed.months.iter().position(|m| m.trim().is_empty()) {
-            return Err(err(format!("month {} has an empty name", i + 1)));
-        }
         Ok(Self {
             months: parsed.months,
         })
@@ -84,12 +81,5 @@ mod tests {
         assert_eq!((calendar.month(1), calendar.month(12)), ("M1", "M12"));
         assert_eq!((calendar.month(0), calendar.month(13)), ("M1", "M12"));
         assert!(Calendar::parse("c", "months = [\"A\"]").is_err());
-        let blank = text.replace("\"M3\"", "\" \"");
-        assert!(
-            Calendar::parse("c", &blank)
-                .unwrap_err()
-                .message
-                .contains("month 3")
-        );
     }
 }

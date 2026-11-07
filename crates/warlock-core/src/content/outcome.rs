@@ -34,16 +34,8 @@ use crate::magic::loot::LootGrade;
 use serde::Deserialize;
 use std::collections::BTreeMap;
 
-/// The heaviest an outcome's or a kind's weight may be.
-pub const MAX_WEIGHT: u32 = 1000;
-/// The longest a use may take, in seconds.
-pub const MAX_SECONDS: u32 = 3600;
 /// The seconds of one turn of a use (the `pray` action's time at normal speed).
 pub const TURN_SECONDS: u32 = 10;
-/// The farthest the `know_traps` hook reaches, in cells.
-pub const MAX_REACH: i32 = 30;
-/// The most experience levels an outcome gives or takes.
-pub const MAX_LEVELS: i8 = 5;
 
 /// What kind of outcome it is: the kinds' weights are drawn first, leaned by the side.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Deserialize)]
@@ -467,20 +459,14 @@ impl OutcomeTables {
 }
 
 fn resolve(id: &str, spec: TableSpec, content: &Content) -> Result<OutcomeTable, String> {
-    if !(1..=MAX_SECONDS).contains(&spec.seconds) {
-        return Err(format!("`seconds` is 1 to {MAX_SECONDS}"));
-    }
+    // A kind is drawn among the weights: some weight to draw. The lean is taken off the boon's or
+    // the bane's weight.
     let kinds = [spec.kinds.boon, spec.kinds.nothing, spec.kinds.bane];
-    if kinds.iter().any(|&w| w > MAX_WEIGHT) || kinds.iter().sum::<u32>() == 0 {
-        return Err(format!(
-            "`kinds` weights are 0 to {MAX_WEIGHT}, and not all 0"
-        ));
+    if kinds.iter().all(|&w| w == 0) {
+        return Err("`kinds` weights are not all 0".into());
     }
     if spec.lean > spec.kinds.boon.min(spec.kinds.bane) {
         return Err("`lean` moves at most what the boon and the bane each have".into());
-    }
-    if spec.exhaust > 100 {
-        return Err("`exhaust` is a percent: 0 to 100".into());
     }
     let terrain = |name: &str| {
         content
@@ -497,13 +483,11 @@ fn resolve(id: &str, spec: TableSpec, content: &Content) -> Result<OutcomeTable,
         if outcomes.iter().any(|d| d.id == o.id) {
             return Err(format!("duplicate outcome `{}`", o.id));
         }
-        if !(1..=MAX_WEIGHT).contains(&o.weight) {
-            return Err(bad(format!("`weight` is 1 to {MAX_WEIGHT}")));
-        }
+        // One of its messages is drawn.
         let mut messages = o.messages;
         messages.extend(o.message);
-        if messages.is_empty() || messages.iter().any(|m| m.trim().is_empty()) {
-            return Err(bad("needs a `message` or `messages`, none empty".into()));
+        if messages.is_empty() {
+            return Err(bad("needs a `message` or `messages`".into()));
         }
         let effect = resolve_effect(o.effect, content).map_err(bad)?;
         outcomes.push(OutcomeDef {
@@ -540,8 +524,8 @@ fn amount(text: &str) -> Result<Amount, String> {
         _ => {}
     }
     let dice: Dice = text.parse()?;
-    if dice.min() < 0 || dice.max() < 1 {
-        return Err(format!("`{text}` must give at least 1"));
+    if dice.min() < 0 {
+        return Err(format!("`{text}` never gives below 0"));
     }
     Ok(Amount::Dice(dice))
 }
@@ -550,8 +534,8 @@ fn harmful(spec: Option<HarmSpec>, content: &Content) -> Result<Option<Harmful>,
     let Some(spec) = spec else {
         return Ok(None);
     };
-    if spec.damage.min() < 0 || spec.damage.max() < 1 {
-        return Err("`damage` dice must be able to do harm".into());
+    if spec.damage.min() < 0 {
+        return Err("`damage` dice never roll below 0".into());
     }
     let kind = one_kind(content, spec.damage_type.as_ref())?;
     Ok(Some(Harmful {
@@ -585,27 +569,16 @@ fn resolve_effect(e: EffectSpec, content: &Content) -> Result<OutcomeEffect, Str
         .map(|o| {
             let id = (content.object_id(&o.object))
                 .ok_or_else(|| format!("unknown object `{}`", o.object))?;
-            if o.count.min() < 1 || o.weight == 0 {
-                return Err(format!(
-                    "object `{}`: `count` gives at least 1 and `weight` is at least 1",
-                    o.object
-                ));
-            }
             Ok((id, o.count, o.weight))
         })
         .collect::<Result<_, String>>()?;
-    if e.know_traps.is_some_and(|r| !(1..=MAX_REACH).contains(&r)) {
-        return Err(format!("`know_traps` is 1 to {MAX_REACH} cells"));
-    }
+    // Shares of what one has: never more than all of it.
     if e.lose_coins > 100 || e.xp > 100 {
         return Err("`lose_coins` and `xp` are percents: 0 to 100".into());
     }
     let summon = match e.summon {
         Some(s) => {
             let count = s.count.unwrap_or_else(|| "1".parse().expect("one"));
-            if count.min() < 1 || count.max() > 12 {
-                return Err("summon: `count` gives 1 to 12".into());
-            }
             Some(OutcomeSummon {
                 danger: s.danger,
                 near: s.near,
@@ -626,11 +599,12 @@ fn resolve_effect(e: EffectSpec, content: &Content) -> Result<OutcomeEffect, Str
             };
             let burst = Burst::new(&fields).map_err(|m| format!("explode: {m}"))?;
             check_effect(content, &x.spell, EffectShape::Burst)?;
+            // Sound carries no farther than the loudest noise's reach (`noise::MAX_REACH`).
             if let Some(n) = x.noise
-                && !(1..=crate::noise::MAX_LOUDNESS).contains(&n.loudness)
+                && n.loudness > crate::noise::MAX_LOUDNESS
             {
                 return Err(format!(
-                    "explode: `noise.loudness` is 1 to {}",
+                    "explode: `noise.loudness` is at most {}",
                     crate::noise::MAX_LOUDNESS
                 ));
             }
@@ -665,12 +639,9 @@ fn resolve_effect(e: EffectSpec, content: &Content) -> Result<OutcomeEffect, Str
         Some(other) => return Err(format!("`rarity` is `magic` or `rare`, not `{other}`")),
     };
     for (name, dice) in [("gift", e.gift), ("wrath", e.wrath)] {
-        if dice.is_some_and(|d| d.min() < 1) {
-            return Err(format!("`{name}` dice give at least 1"));
+        if dice.is_some_and(|d| d.min() < 0) {
+            return Err(format!("`{name}` dice never roll below 0"));
         }
-    }
-    if !(-MAX_LEVELS..=MAX_LEVELS).contains(&e.levels) {
-        return Err(format!("`levels` is -{MAX_LEVELS} to {MAX_LEVELS}"));
     }
     Ok(OutcomeEffect {
         heal: e.heal.as_deref().map(amount).transpose()?,

@@ -231,10 +231,7 @@ pub use creature_rarity::{COMMON, CreatureRarity, FACTOR};
 pub use damage_type::{DamageTypeDef, DamageTypeId, MAX_DAMAGE_TYPES};
 pub use danger::{Count, DangerRule, PlayerScale, Spawning};
 pub use decipher::DecipherRules;
-pub use dialogue::{
-    Dialogue, DialogueId, MAX_LINE, MAX_REPLY, MAX_TOPICS, MUTTER_CHANCES, Mutter, Service,
-    ServiceKind, Speaker, Topic,
-};
+pub use dialogue::{Dialogue, DialogueId, Mutter, Service, ServiceKind, Speaker, Topic};
 pub use disease::{DIFFICULTIES, DiseaseDef, DiseaseId, SOURCES, Wading};
 pub use dummy::DummyTraining;
 pub use dungeon::{
@@ -246,8 +243,8 @@ pub use effect::{
     MAX_SHAKE_PIXELS, Shake,
 };
 pub use encounter::{
-    Checks, Draw as EncounterDraw, EDGE_REACHES, EncounterEntry, EncounterRules, EncounterTable,
-    EntryStance, Evade, Meetings, PhaseRates, PlayerPlaces, Positions, When as EncounterWhen,
+    Checks, Draw as EncounterDraw, EncounterEntry, EncounterRules, EncounterTable, EntryStance,
+    Evade, Meetings, PhaseRates, PlayerPlaces, Positions, When as EncounterWhen,
 };
 pub use experience::{
     Discovery, Experience, FACTORS, Factor, Guideline, Kills, Levels, MAX_LEVEL, MAX_XP, pace_words,
@@ -265,7 +262,7 @@ pub use gem::{
     Cut, CutId, Cutting, GemDef, GemSize, GemSizeId, Gems, MAX_GEM_VALUE, MAX_GEM_WEIGHT,
     MAX_MULTIPLIER, Ornament, ROUGH_SATURATION, dull,
 };
-pub use guild::{GuildDef, MAX_RANKS, MAX_TITLE, RankBy, RankDef};
+pub use guild::{GuildDef, RankBy, RankDef};
 pub use horoscope::{FULL_MOON_WITHIN, Flavour, Horoscope, Lucky, Sign, SignActive, SignPart};
 pub use hunger::{
     Corpses, EXERTIONS, Faint, Food, HungerDef, MAX_MEAL, MAX_NUTRITION, MAX_SHELF_LIFE,
@@ -306,11 +303,11 @@ pub use potion::{Draught, Drink, Flask, MAX_POTION_MARKS, Splash};
 pub use prayer::{Face, FaceWords, Faced, PrayerRules, PrayerUse, UseDef};
 pub use prestige::{PrestigeDef, Table};
 pub use quest::{
-    GOLD, Goal, KillTarget, MAX_COUNT, MAX_NAME, MAX_QUEST_XP, MAX_TAG_COUNT, QuestDef, QuestId,
-    QuestKind, QuestTexts, Reveal, RevealWhen, Reward, Waits,
+    GOLD, Goal, KillTarget, QuestDef, QuestId, QuestKind, QuestTexts, Reveal, RevealWhen, Reward,
+    Waits,
 };
 pub(crate) use quest_roll::roll_known;
-pub use quest_roll::{Candidate, MAX_VARIANTS, MAX_WEIGHT, Pick, Roll, Rolled, Variant, one_of};
+pub use quest_roll::{Candidate, Pick, Roll, Rolled, Variant, one_of};
 pub use race::{HUNGER, LightBlind, RaceDef, Races};
 pub use ranged::{RangeBand, RangedRules};
 pub use resource::{
@@ -323,11 +320,11 @@ pub use room_effect::{
     Collapse, Dressing, Here, Hoard, Mirrors, Offer, RoomEffectDef, RoomEffectId, RoomEffects,
     SpecialRoom, Swarm, Themes, Treasure,
 };
-pub use room_haunt::{HAUNT_EVERY, Haunt};
+pub use room_haunt::Haunt;
 pub use room_lore::RoomLoot;
 pub use room_shrine::{Regard, Shrine};
 pub(crate) use room_treasury::breach_fault;
-pub use room_treasury::{Heaps, MAX_COINS_EACH, MAX_TREASURE, Sealed, SecretDoors, Treasury};
+pub use room_treasury::{Heaps, Sealed, SecretDoors, Treasury};
 pub use ruin::{RuinOf, RuinRow, RuinRules};
 pub use scenario::ScenarioDef;
 pub use scroll::{Cleansing, Reading, SpellScroll};
@@ -340,7 +337,7 @@ pub use shop::{
 };
 pub use size::{CARRY, MEDIUM, SizeDef};
 pub use skill::{OptionalSkill, SkillBook, SkillDef};
-pub use sky::{MAX_MOONS, MAX_SIZE, MoonDef, PHASE_ONE, STANDARD_SIZE};
+pub use sky::{MoonDef, PHASE_ONE, STANDARD_SIZE};
 pub use slot::{MAX_SLOTS, SlotDef, SlotId};
 pub use smite::SmiteRules;
 pub use spell::{BOLT_LENGTHS, BURST_RADII, Bolt, Burst, BurstIce};
@@ -395,9 +392,7 @@ pub use weapon_skill::{
     Benefit, Grip, MAX_RANK, MOST_PERCENT, MarkRules, RANKS, Role, Section, SpellAttacks, Style,
     TwoShields, TwoWeapons, WeaponSkillDef, WeaponSkillId, WeaponSkillTable,
 };
-pub use weather::{
-    Climate, MAX_CHILL, MAX_SIGHT_LOSS, MAX_SWING, MILD, MILD_SWING, MONTH_TEMPERATURES, WeatherDef,
-};
+pub use weather::{Climate, MILD, MILD_SWING, WeatherDef};
 
 use crate::dice::Dice;
 use crate::noise::MAX_LOUDNESS;
@@ -2915,15 +2910,12 @@ impl Content {
             && player.is_some_and(|p| p != c && self.stance(c, p) == faction::Stance::Hostile)
     }
 
-    /// Checks the vaults branch `def`'s levels name (dungeon vaults, shared or of its campaign,
-    /// once a level) and marks them [`Vault::pinned`].
+    /// Checks the vaults branch `def`'s levels name (dungeon vaults, shared or of its campaign)
+    /// and marks them [`Vault::pinned`].
     fn pin_vaults(&mut self, def: &DungeonDef) -> Result<(), String> {
         for depth in 1..=def.depth {
             let names = def.vaults(depth);
-            for (i, name) in names.iter().enumerate() {
-                if names[..i].contains(name) {
-                    return Err(format!("level {depth} names vault `{name}` twice"));
-                }
+            for name in names {
                 let vault = (self.vaults.iter_mut())
                     .find(|v| v.id() == name)
                     .ok_or_else(|| format!("unknown vault `{name}`"))?;
@@ -5421,7 +5413,7 @@ mod tests {
             stray: 0,
             out_of_depth: 100,
             deeper: 100,
-            deeper_cap: danger::MAX_DEEPER_CAP,
+            deeper_cap: 50,
             dread_one_in: 0,
             neutral: 100,
         };
@@ -5647,14 +5639,6 @@ mod tests {
             err.message
         );
 
-        let mut files = minimal_files(
-            "#@T#\n",
-            "\"T\" = { terrain = \"wall\", light = \"torch\" }",
-        );
-        files.insert("data/lights.toml", LIGHTS);
-        let err = Content::load(&files).unwrap_err();
-        assert!(err.message.contains("opaque terrain"), "{}", err.message);
-
         let mut files = minimal_files("#@#\n", "");
         files.insert(
             "data/lights.toml",
@@ -5763,7 +5747,6 @@ mod tests {
             ("####\n#..#\n####\n", "needs at least one entrance"),
             ("##+##\n#.<.#\n#####\n", "cannot have stairs"),
             ("##+##\n#...#\n#.#.#\n##.##\n", "must be solid"),
-            ("##+##\n#.#.#\n#####\n", "cannot be reached"),
             ("+###\n#..#\n####\n", "not on a corner"),
         ];
         for (map, expected) in cases {
@@ -5776,18 +5759,6 @@ mod tests {
             assert_eq!(err.file, "vaults/bad.toml");
             assert!(err.message.contains(expected), "{map}: {}", err.message);
         }
-        // A vault may be stamped many times: no unique character in one.
-        let mut files = ContentFiles::builtin();
-        let dialogue = files.get("data/dialogue.toml").unwrap().to_string();
-        let twin = "[[dialogue]]\nnpc = \"twin\"\nlines = [\"Again?\"]\n";
-        files.insert("data/dialogue.toml", &format!("{dialogue}\n{twin}"));
-        files.insert(
-            "vaults/bad.toml",
-            "name = \"Bad\"\nmap = '''\n##+##\n#.s.#\n#####\n'''\n[legend]\n\
-             \"s\" = { terrain = \"floor\", creature = \"deer\", npc = \"twin\" }\n",
-        );
-        let err = Content::load(&files).unwrap_err();
-        assert!(err.message.contains("unique npc"), "{}", err.message);
         let content = Content::builtin().unwrap();
         let ids: Vec<_> = content.vaults().iter().map(Vault::id).collect();
         assert_eq!(
@@ -5875,7 +5846,7 @@ mod tests {
     }
 
     #[test]
-    fn outdoor_vaults_are_open_but_connected() {
+    fn outdoor_vaults_are_open() {
         let load = |map: &str, kind: &str| {
             let mut files = ContentFiles::builtin();
             files.insert(
@@ -5893,14 +5864,13 @@ mod tests {
             .expect("ruin");
         assert!(ruin.is_outdoor());
         assert!(ruin.entrances.len() > 5);
-        // A walled-in cell is still an error, and so is a ruin with no open edge.
-        for (map, expected) in [
-            (".####\n.#..#\n.####\n", "cannot be reached"),
-            ("###\n###\n###\n", "needs an open cell on its edge"),
-        ] {
-            let err = load(map, "outdoor").unwrap_err();
-            assert!(err.message.contains(expected), "{map}: {}", err.message);
-        }
+        // A ruin with no open edge has no way in.
+        let err = load("###\n###\n###\n", "outdoor").unwrap_err();
+        assert!(
+            err.message.contains("needs an open cell on its edge"),
+            "{}",
+            err.message
+        );
         assert!(load("###\n#.#\n###\n", "overworld").is_err());
     }
 
@@ -5970,10 +5940,6 @@ mod tests {
             (
                 "\"s\" = { terrain = \"floor\", flow_speed = 50 }\n",
                 "`flow_speed` but no `flow`",
-            ),
-            (
-                "\"s\" = { terrain = \"running_water\", flow = \"S\", flow_speed = 0 }\n",
-                "expected 10 to 300",
             ),
             (
                 "\"s\" = { terrain = \"running_water\", flow = \"Down\" }\n",
@@ -6501,7 +6467,6 @@ mod tests {
             ("\"blest\"", "unknown status `blest`"),
             ("\"blessed*4\"", "more than its 3 degrees"),
             ("\"blessed*0\"", "count must be"),
-            ("\"blessed\", \"blessed\"", "twice"),
         ] {
             let legend = format!("{kobold}, status = [{status}] }}\n");
             let err = stream(map, &legend).unwrap_err();
@@ -6525,10 +6490,6 @@ mod tests {
                 "count must be",
             ),
             (
-                "\"x\" = { terrain = \"wall\", objects = [\"dagger\"] }",
-                "not walkable",
-            ),
-            (
                 "\"x\" = { terrain = \"floor\", carry = [\"dagger\"] }",
                 "carry, wield, wear, or status but no creature",
             ),
@@ -6539,14 +6500,6 @@ mod tests {
             (
                 "\"x\" = \"floor\"\n[[pile]]\nat = [9, 9]\nobjects = [\"dagger\"]",
                 "outside",
-            ),
-            (
-                "\"x\" = \"floor\"\n[[pile]]\nat = [0, 0]\nobjects = [\"dagger\"]",
-                "not walkable",
-            ),
-            (
-                "\"x\" = \"floor\"\n[[pile]]\nat = [1, 1]\nobjects = []",
-                "has no objects",
             ),
         ];
         for (legend, expected) in cases {

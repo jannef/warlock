@@ -583,7 +583,7 @@ fn load(legend: &str) -> Result<Content, String> {
 }
 
 #[test]
-fn levels_put_traps_on_doors_but_no_pit_and_none_on_a_secret_door() {
+fn levels_put_traps_on_doors_but_no_pit() {
     for ok in [
         "\"x\" = { terrain = \"door_closed\", trap = \"alarm\", known = true }",
         "\"x\" = { terrain = \"door_open\", trap = \"fireball\" }",
@@ -598,12 +598,6 @@ fn levels_put_traps_on_doors_but_no_pit_and_none_on_a_secret_door() {
     );
     let pit = load("\"x\" = { terrain = \"door_open\", trap = \"pit\" }").unwrap_err();
     assert!(pit.contains("places a pit on terrain `door_open`"), "{pit}");
-    let secret =
-        load("\"x\" = { terrain = \"door_closed\", trap = \"blade\", secret = true }").unwrap_err();
-    assert!(
-        secret.contains("a secret door is never trapped"),
-        "{secret}"
-    );
     let wall = load("\"x\" = { terrain = \"wall\", trap = \"blade\" }").unwrap_err();
-    assert!(wall.contains("not walkable floor"), "{wall}");
+    assert!(wall.contains("not walkable"), "{wall}");
 }

@@ -9,16 +9,12 @@
 //! are [`EncounterRules::default`]: the edge rule at 3 and nobody meets anybody; so does a
 //! campaign without tables.
 
-use super::{Content, ContentError, CreatureId, Landscape, Stance};
+use super::{Content, ContentError, CreatureId, Landscape};
 use crate::daylight::DayPhase;
 use crate::dice::Dice;
 use crate::weather::Weather;
 use serde::Deserialize;
 use std::collections::BTreeMap;
-use std::ops::RangeInclusive;
-
-/// How near a hostile creature may hold the player at an area's edge, in cells (0: never).
-pub const EDGE_REACHES: RangeInclusive<i32> = 0..=10;
 
 /// The numbers of encounters.
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -49,13 +45,6 @@ const LANDSCAPES: [Landscape; 7] = [
     Landscape::DenseForest,
     Landscape::Swamp,
 ];
-
-/// The most members a group row may roll.
-const MAX_MEMBERS: i32 = 12;
-/// The longest an entry's name may be.
-const MAX_NAME: usize = 60;
-/// The farthest a party stands from the player, in cells.
-const MAX_CELLS: i32 = 20;
 
 /// The numbers of meeting someone on the overworld.
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -214,19 +203,11 @@ fn by_landscape<T: Copy>(
 }
 
 impl EncounterRules {
-    /// Parses `data/encounters.toml`: an `edge_reach` within [`EDGE_REACHES`]; and the
+    /// Parses `data/encounters.toml`: an `edge_reach`; and the
     /// meetings' tables all given or none ([`Meetings::parse`]).
     pub(super) fn parse(file: &str, text: &str) -> Result<Self, ContentError> {
         let err = |m: String| ContentError::new(file, m);
         let parsed: RulesFile = toml::from_str(text).map_err(|e| err(e.to_string()))?;
-        if !EDGE_REACHES.contains(&parsed.edge_reach) {
-            return Err(err(format!(
-                "edge_reach {} is out of range ({} to {})",
-                parsed.edge_reach,
-                EDGE_REACHES.start(),
-                EDGE_REACHES.end()
-            )));
-        }
         let edge_reach = parsed.edge_reach;
         let meetings = match parsed {
             RulesFile {
@@ -282,56 +263,15 @@ struct MeetingsFile {
 }
 
 impl Meetings {
-    /// Every landscape of land and the road rated and covered, the numbers in range.
+    /// Every landscape of land and the road rated and covered; the pursuit's divisor not 0.
     fn parse(parsed: MeetingsFile) -> Result<Self, String> {
-        let err = |m: String| m;
-        let rate = by_landscape("rate", &parsed.rate).map_err(err)?;
-        if rate.values().any(|&r| r > 10_000) {
-            return Err(err("`rate` is 0 to 10000 basis points an hour".into()));
-        }
-        let p = parsed.phase;
-        if [p.day, p.twilight, p.night].iter().any(|&v| v > 1000) {
-            return Err(err("`phase` is 0 to 1000 percent".into()));
-        }
+        let rate = by_landscape("rate", &parsed.rate)?;
         let c = &parsed.checks;
-        let cover = by_landscape("checks.cover", &c.cover).map_err(err)?;
-        let small = |v: i32| (0..=10).contains(&v);
-        if !(1..=30).contains(&c.difficulty) {
-            return Err(err("`checks.difficulty` is 1 to 30".into()));
-        }
-        let terms = [c.night, c.twilight, c.rain, c.heavy_rain, c.light];
-        if !cover.values().copied().chain(terms).all(small) {
-            return Err(err("the checks' terms are 0 to 10".into()));
-        }
+        let cover = by_landscape("checks.cover", &c.cover)?;
         let pos = parsed.positions;
-        let cells = [pos.fight, pos.ambush, pos.ambushed, pos.close];
-        if cells.iter().any(|&c| !(1..=MAX_CELLS).contains(&c)) {
-            return Err(err(format!("`positions` are 1 to {MAX_CELLS} cells")));
-        }
-        let pl = pos.player;
-        if [pl.ambush, pl.fight, pl.close, pl.ambushed]
-            .iter()
-            .any(|&v| v > 100)
-        {
-            return Err(err("`positions.player` is 0 to 100 percent".into()));
-        }
         let e = parsed.evade;
-        if !(1..=30).contains(&e.difficulty)
-            || e.detour_percent > 500
-            || !small(e.aware)
-            || e.pursuit_per == 0
-        {
-            return Err(err(
-                "`evade`: difficulty 1 to 30, detour_percent 0 to 500, aware 0 to 10, \
-                 pursuit_per at least 1"
-                    .into(),
-            ));
-        }
-        if !(1..=crate::time::MINUTES_PER_DAY * 60).contains(&parsed.ambush.wait_seconds) {
-            return Err(err("`ambush.wait_seconds` is 1 to a day".into()));
-        }
-        if parsed.rest.rate_percent > 1000 {
-            return Err(err("`rest.rate_percent` is 0 to 1000".into()));
+        if e.pursuit_per == 0 {
+            return Err("`evade.pursuit_per` is at least 1".into());
         }
         Ok(Self {
             rate,
@@ -574,11 +514,6 @@ pub(super) fn parse<'a>(
         for spec in parsed.table {
             let id = spec.id.clone();
             let bad = |m: String| err(format!("encounter table `{id}`: {m}"));
-            if !super::dialogue::is_id(&id) {
-                return Err(bad(
-                    "ids are lower-case letters, digits, and underscores".into()
-                ));
-            }
             if let Some(first) = seen.insert((campaign.to_string(), id.clone()), file) {
                 return Err(super::duplicate_id("encounter table", &id, file, first));
             }
@@ -618,9 +553,6 @@ pub(super) const RULES: &str = "data/encounters.toml";
 
 fn resolve(spec: TableSpec, campaign: &str, content: &Content) -> Result<EncounterTable, String> {
     let when = when(spec.when, campaign, content)?;
-    if spec.rate_percent > 1000 {
-        return Err("`rate_percent` is 0 to 1000".into());
-    }
     let mut entries = Vec::new();
     for e in spec.entry {
         let id = e.id.clone();
@@ -638,14 +570,7 @@ fn resolve(spec: TableSpec, campaign: &str, content: &Content) -> Result<Encount
 
 fn entry(spec: EntrySpec, campaign: &str, content: &Content) -> Result<EncounterEntry, String> {
     if !super::dialogue::is_id(&spec.id) {
-        return Err("ids are lower-case letters, digits, and underscores".into());
-    }
-    let n = spec.name.chars().count();
-    if n == 0 || n > MAX_NAME || spec.name.contains('\n') {
-        return Err(format!("`name` is one line of 1 to {MAX_NAME} characters"));
-    }
-    if !(1..=1000).contains(&spec.weight) {
-        return Err("`weight` is 1 to 1000".into());
+        return Err(super::dialogue::ID_SHAPE.into());
     }
     let draw = match (&spec.draw, spec.group.is_empty()) {
         (Some(_), false) => return Err("an entry has a `group` or a `draw`, not both".into()),
@@ -670,10 +595,6 @@ fn entry(spec: EntrySpec, campaign: &str, content: &Content) -> Result<Encounter
     if spec.talk_past && spec.stance != EntryStance::Hostile {
         return Err("only a hostile entry is talked past (`talk_past`)".into());
     }
-    if spec.talk_past && spec.draw.is_some() {
-        return Err("a `draw` entry is never talked past: what is drawn may be anything".into());
-    }
-    let player = content.creature_id("player");
     let mut group = Vec::new();
     for m in &spec.group {
         let c = (content.creature_id(&m.creature))
@@ -686,26 +607,7 @@ fn entry(spec: EntrySpec, campaign: &str, content: &Content) -> Result<Encounter
                 def.campaign.as_deref().unwrap_or_default()
             ));
         }
-        if def.unique {
-            return Err(format!("`{}` is unique: no party is made of one", def.id));
-        }
         let dice: Dice = m.count.parse()?;
-        if dice.max() > MAX_MEMBERS {
-            return Err(format!("`count` gives at most {MAX_MEMBERS}"));
-        }
-        // Peaceful and wildlife parties are not the player's enemies; hostile ones are.
-        if let Some(player) = player {
-            let hostile = content.stance(c, player) == Stance::Hostile;
-            match (spec.stance, hostile) {
-                (EntryStance::Hostile, false) => {
-                    return Err(format!("`{}` is not hostile to the player", def.id));
-                }
-                (EntryStance::Peaceful | EntryStance::Wildlife, true) => {
-                    return Err(format!("`{}` is hostile to the player", def.id));
-                }
-                _ => {}
-            }
-        }
         group.push((c, dice));
     }
     if draw.is_none() && group[0].1.min() < 1 {
@@ -758,12 +660,10 @@ fn draw(
             spec.pool
         ));
     }
-    if !(1..=99).contains(&spec.danger) {
-        return Err("`draw.danger` is 1 to 99".into());
-    }
+    // The party's first member leads it: there is one.
     let count: Dice = spec.count.parse()?;
-    if count.min() < 1 || count.max() > MAX_MEMBERS {
-        return Err(format!("`draw.count` gives 1 to {MAX_MEMBERS}"));
+    if count.min() < 1 {
+        return Err("`draw.count` gives at least 1".into());
     }
     Ok(Draw {
         pool: spec.pool.clone(),
@@ -809,12 +709,7 @@ fn when(spec: WhenSpec, campaign: &str, content: &Content) -> Result<When, Strin
                 }),
         })
         .collect::<Result<_, _>>()?;
-    let level_max = match spec.level {
-        Some(LevelSpec { max }) if !(1..=60).contains(&max) => {
-            return Err("`when.level.max` is 1 to 60".into());
-        }
-        level => level.map(|l| l.max),
-    };
+    let level_max = spec.level.map(|l| l.max);
     for q in [&spec.quest_active, &spec.quest_done, &spec.quest_not]
         .into_iter()
         .flatten()
@@ -843,11 +738,6 @@ fn when(spec: WhenSpec, campaign: &str, content: &Content) -> Result<When, Strin
     for h in [&spec.revealed, &spec.hidden].into_iter().flatten() {
         if content.hidden_location(campaign, h).is_none() {
             return Err(format!("`when`: no hidden location `{h}` on the overworld"));
-        }
-    }
-    for d in [spec.after_days, spec.before_days].into_iter().flatten() {
-        if d > 3600 {
-            return Err("`when.after_days` and `before_days` are 0 to 3600".into());
         }
     }
     if let Some(class) = &spec.calling

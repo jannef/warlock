@@ -4,11 +4,6 @@
 
 use crate::time::Duration;
 use serde::Deserialize;
-use std::ops::RangeInclusive;
-
-/// How often a haunted room may haunt a rest, in seconds (spec §7 "Special rooms"): ten minutes
-/// to a day.
-pub const HAUNT_EVERY: RangeInclusive<u64> = 600..=86_400;
 
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -28,16 +23,12 @@ pub struct Haunt {
 }
 
 impl HauntSpec {
-    /// The haunt it describes, or why not: `every` out of [`HAUNT_EVERY`], or no `needs_danger`
-    /// (what comes is of the floor's danger).
+    /// The haunt it describes, or why not: `every` no time (the clock is taken modulo it), or
+    /// no `needs_danger` (what comes is of the floor's danger).
     pub(super) fn resolve(&self, needs_danger: bool) -> Result<Haunt, String> {
         let every: Duration = self.every.parse()?;
-        if !HAUNT_EVERY.contains(&every.as_seconds()) {
-            return Err(format!(
-                "haunt.every is {} to {} seconds",
-                HAUNT_EVERY.start(),
-                HAUNT_EVERY.end()
-            ));
+        if every.as_seconds() == 0 {
+            return Err("haunt.every is more than no time".into());
         }
         if !needs_danger {
             return Err("a `haunt` needs `needs_danger`".into());

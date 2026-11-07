@@ -6,13 +6,10 @@
 //! `chest` level or band of their own, no mimic), and one given no `objects` is filled by its
 //! band's loot table when the level is made (`mapgen/chest.rs::fill_vaults`). Its outer edge must be solid (non-walkable terrain such as walls) except for its
 //! **entrances**: doors on the edge, never on a corner. Generators join every entrance to the rest
-//! of the level. A vault has no stairs and no player start, and every walkable cell must be
-//! reachable from an entrance (doors count as passable), so stamping one never strands anything.
-//! The one exception is a layer boss's lair (spec §7 "The endless branch"): one `>`, its
+//! of the level. A vault has no stairs and no player start. The one exception is a layer boss's lair (spec §7 "The endless branch"): one `>`, its
 //! [`Vault::down`], which the stamp lays as plain floor and the level keeps hidden until the boss
 //! dies (`world/layer_boss.rs`); only a vault an endless branch's boss row names may have it.
-//! Its locks (spec §8 "Doors") come with their keys: a key to every lock lies, or is carried by a
-//! creature, within reach of an unlocked entrance without unlocking a door. A legend's `loot` is
+//! Its author places the keys to its locks (spec §8 "Doors"). A legend's `loot` is
 //! rolled when it is stamped: a grade, or a pool of item classes (`magic/loot.rs`, [`LootPool`]),
 //! at the floor's item level. A legend's `monsters` draws creatures at the floor's danger
 //! ([`VaultMonsters`], `mapgen/population.rs`), on top of its population and outside the cap.
@@ -22,9 +19,8 @@
 //!
 //! A vault of kind `outdoor` (ruins for the local areas of the overworld) is stamped onto open
 //! ground instead of into rock: its `void` cells (the default legend's space) are the local
-//! area's own ground, every open cell on its edge (walkable, a door, or void) is an entrance, and
-//! every walkable cell must be reachable from its edge. Dungeon generators use only dungeon
-//! vaults, local areas only outdoor ones.
+//! area's own ground, and every open cell on its edge (walkable, a door, or void) is an entrance.
+//! Dungeon generators use only dungeon vaults, local areas only outdoor ones.
 //!
 //! Where a dungeon vault stamps ([`Vault::stamps_on`]): a shared one (`assets/vaults/`) in every
 //! branch, a campaign's (`campaigns/<id>/vaults/`) only in that campaign's branches, and one whose
@@ -41,12 +37,10 @@
 //! its file says `turns = false`, for text that depends on direction or a layout that must not
 //! turn. A vault a branch level names keeps the way its file draws it.
 
-use super::danger::MAX_DANGER;
 use super::dungeon::{DungeonDef, parse_branch_level};
 use super::level::{LevelKind, LevelTemplate};
 use super::{Content, ContentError, TerrainId};
 use crate::geom::{Dir, Pos};
-use crate::grid::Grid;
 use serde::Deserialize;
 
 /// A validated vault.
@@ -95,22 +89,6 @@ impl DangerRange {
     pub fn is_given(&self) -> bool {
         self.from.is_some() || self.to.is_some()
     }
-
-    /// Checks the ends: each a danger, `from` not above `to`.
-    fn check(&self) -> Result<(), String> {
-        let end = [self.from, self.to].into_iter().flatten().max();
-        if let Some(end) = end.filter(|e| *e > MAX_DANGER) {
-            return Err(format!(
-                "`danger`: {end} is past the deepest danger, {MAX_DANGER}"
-            ));
-        }
-        if let (Some(from), Some(to)) = (self.from, self.to)
-            && from > to
-        {
-            return Err(format!("`danger`: `from` {from} is above `to` {to}"));
-        }
-        Ok(())
-    }
 }
 
 /// The vault-only fields of a vault file (the level-file parser reads the rest and ignores them).
@@ -136,13 +114,9 @@ pub(super) fn parse_turns(path: &str, text: &str) -> Result<Option<bool>, Conten
 /// The `danger = { from, to }` a vault file (or a level file, which may not give it) says; `None`
 /// for none, or for a level's own `danger` rule (`danger = 3`, `{ base = 2, per_depth = 1 }`).
 pub(super) fn parse_danger(path: &str, text: &str) -> Result<Option<DangerRange>, ContentError> {
-    let range = (parse_fields(path, text)?.danger)
+    Ok((parse_fields(path, text)?.danger)
         .and_then(|v| DangerRange::deserialize(v).ok())
-        .filter(DangerRange::is_given);
-    if let Some(range) = range {
-        range.check().map_err(|m| ContentError::new(path, m))?;
-    }
-    Ok(range)
+        .filter(DangerRange::is_given))
 }
 
 fn parse_fields(path: &str, text: &str) -> Result<VaultFields, ContentError> {
@@ -170,13 +144,6 @@ impl Vault {
         }
         if template.player_start.is_some() {
             return Err("a vault cannot have a player start".into());
-        }
-        // A vault may be stamped many times; a unique character cannot be.
-        if let Some(spawn) = template.creatures.iter().find(|c| c.npc.is_some()) {
-            return Err(format!(
-                "a vault cannot place a unique npc (at {})",
-                spawn.pos
-            ));
         }
         if !template.rooms.is_empty() {
             return Err("a vault cannot mark special rooms".into());
@@ -230,46 +197,11 @@ impl Vault {
                     .into(),
             );
         }
-        let is_door = |p: Pos| {
-            let def = content.terrain(terrain[p]);
-            def.is_closed_door() || def.is_open_door()
-        };
         let entrances = match template.kind {
             LevelKind::Dungeon => door_entrances(&template, content)?,
             LevelKind::Outdoor => open_edges(&template, content)?,
             LevelKind::Overworld => return Err("a vault cannot be of kind `overworld`".into()),
         };
-
-        // Everything walkable is reachable from the first entrance (4-connected, doors passable);
-        // in outdoor vaults from any open edge cell, over the open ground too.
-        let ground = outdoor_ground(&template, content);
-        let passable = |p: Pos| {
-            terrain
-                .get(p)
-                .is_some_and(|t| content.terrain(*t).walkable || is_door(p) || ground(*t))
-        };
-        let seeds = match template.kind {
-            LevelKind::Outdoor => entrances.len(),
-            _ => 1,
-        };
-        let mut seen = Grid::new(w, h, false);
-        let mut stack: Vec<Pos> = entrances[..seeds].iter().map(|(p, _)| *p).collect();
-        for p in &stack {
-            seen[*p] = true;
-        }
-        while let Some(p) = stack.pop() {
-            for dir in [Dir::N, Dir::E, Dir::S, Dir::W] {
-                let q = p.step(dir);
-                if passable(q) && !seen[q] {
-                    seen[q] = true;
-                    stack.push(q);
-                }
-            }
-        }
-        if let Some((p, _)) = terrain.iter().find(|(p, _)| passable(*p) && !seen[*p]) {
-            return Err(format!("{p} cannot be reached from the entrances"));
-        }
-        check_keys(&template, &entrances, passable, content)?;
         Ok(Self {
             template,
             entrances,
@@ -366,51 +298,6 @@ impl Vault {
     /// Whether the vault is for the local areas of the overworld (kind `outdoor`).
     pub fn is_outdoor(&self) -> bool {
         self.template.kind == LevelKind::Outdoor
-    }
-}
-
-/// A vault's locks (spec §8 "Doors") come with their keys: for every lock, a key that opens it
-/// lies, or is carried by a creature, within reach of an unlocked entrance without unlocking any
-/// door, so a generator never has to place a vault's keys.
-fn check_keys(
-    template: &LevelTemplate,
-    entrances: &[(Pos, Dir)],
-    passable: impl Fn(Pos) -> bool,
-    content: &Content,
-) -> Result<(), String> {
-    if template.locks.is_empty() {
-        return Ok(());
-    }
-    let terrain = &template.terrain;
-    let unlocked = |p: Pos| passable(p) && !template.locks.contains_key(&p);
-    let mut seen = Grid::new(terrain.width(), terrain.height(), false);
-    let mut stack: Vec<Pos> = (entrances.iter())
-        .map(|(p, _)| *p)
-        .filter(|p| unlocked(*p))
-        .collect();
-    for p in &stack {
-        seen[*p] = true;
-    }
-    while let Some(p) = stack.pop() {
-        for dir in [Dir::N, Dir::E, Dir::S, Dir::W] {
-            let q = p.step(dir);
-            if unlocked(q) && !seen[q] {
-                seen[q] = true;
-                stack.push(q);
-            }
-        }
-    }
-    // A chest's lock wants no key: Pick lock, Knock, or a kick open it, and a chest is never in
-    // the way (spec §8 "Chests").
-    let chest = |p: Pos| content.terrain(terrain[p]).is_shut_chest();
-    match (template.locks.iter())
-        .find(|(p, lock)| !chest(**p) && !template.has_key_for(content, lock, |q| seen[q]))
-    {
-        Some((p, _)) => Err(format!(
-            "no key to the lock at {p} lies or is carried within reach of an unlocked entrance \
-             (without unlocking a door)"
-        )),
-        None => Ok(()),
     }
 }
 
