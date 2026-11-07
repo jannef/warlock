@@ -197,10 +197,13 @@ impl World {
             return None;
         }
         let once = &self.state.progress.uniques;
-        let own = self.content.candidates(&spawning.population, once);
-        let generic = self.content.candidates(&spawning.generic, once);
         let level_id = &self.state.current_level;
         let odds = (self.content.draw_odds_at(level_id)).unwrap_or(spawning.odds);
+        // Neutral animals weigh `odds.neutral` % (#1195).
+        let own = self
+            .content
+            .draw_candidates(&spawning.population, once, &odds);
+        let generic = self.content.draw_candidates(&spawning.generic, once, &odds);
         let creature = danger::draw(rng, &own, &generic, danger, &odds)?;
         let seen = Perception::compute(&self.state, &self.content, &mut self.lights);
         let level = self.state.current();
