@@ -602,8 +602,11 @@ fn a_spawn_rolls_its_gear_from_its_own_stream() {
             continue;
         };
         let actor = &w.state.actors[&id];
-        let mut rng = crate::rng::Rng::gear(w.state.seed, &id.0.to_string());
-        let pack = crate::gear::roll(&w.content, &mut rng, actor.creature, 1);
+        let key = id.0.to_string();
+        let mut rng = crate::rng::Rng::gear(w.state.seed, &key);
+        let mut pack = crate::gear::roll(&w.content, &mut rng, actor.creature, 1);
+        let mut condition = super::gear_condition::stream(w.state.seed, &key);
+        super::gear_condition::apply(&w.content, &mut condition, actor.creature, &mut pack);
         assert_eq!(
             (&actor.inventory, &actor.equipment),
             (&pack.items, &pack.equipment),

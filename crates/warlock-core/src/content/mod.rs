@@ -72,6 +72,7 @@ mod forage;
 mod forge_tests;
 mod gaze;
 mod gear;
+mod gear_condition;
 mod gem;
 #[cfg(test)]
 mod giant_roster_tests;
@@ -257,6 +258,7 @@ pub use flow::{FLOW_SPEEDS, Flow};
 pub use forage::{ForageGround, ForageRules};
 pub use gaze::Gaze;
 pub use gear::{Gear, GearLine, RACIAL_CHANCE};
+pub use gear_condition::{GearConditions, Odds, PER_MILLE, TribeOdds};
 pub use gem::{
     Cut, CutId, Cutting, GemDef, GemSize, GemSizeId, Gems, MAX_GEM_VALUE, MAX_GEM_WEIGHT,
     MAX_MULTIPLIER, Ornament, ROUGH_SATURATION, dull,
@@ -699,6 +701,9 @@ pub struct Content {
     search: SearchRules,
     /// The numbers of working an item at an anvil (`data/temper.toml`, spec §7 "Special rooms").
     temper: TemperRules,
+    /// The condition creature gear spawns in (`data/gear_condition.toml`, spec §8 "Creature
+    /// gear"); without the file, as made.
+    gear_condition: GearConditions,
     /// The numbers of encounters (`data/encounters.toml`, spec §7 "Leaving an outdoor area").
     encounters: EncounterRules,
     /// What becomes of a creature that catches the player stealing (`data/steal.toml`, spec §8
@@ -891,6 +896,7 @@ impl Content {
             trap_avoid: TrapAvoid::default(),
             search: SearchRules::default(),
             temper: TemperRules::default(),
+            gear_condition: GearConditions::default(),
             encounters: EncounterRules::default(),
             steal: None,
             surprise: None,
@@ -1242,6 +1248,10 @@ impl Content {
         let path = "data/temper.toml";
         if let Some(text) = files.get_optional(path) {
             content.temper = TemperRules::parse(path, text)?;
+        }
+        let path = "data/gear_condition.toml";
+        if let Some(text) = files.get_optional(path) {
+            content.gear_condition = GearConditions::parse(path, text, &content)?;
         }
         let path = "data/steal.toml";
         if let Some(text) = files.get_optional(path) {
@@ -4107,6 +4117,12 @@ impl Content {
     /// else [`TemperRules::default`]).
     pub fn temper(&self) -> &TemperRules {
         &self.temper
+    }
+
+    /// The condition creature gear spawns in (spec §8 "Creature gear";
+    /// `data/gear_condition.toml`, else none: as made).
+    pub fn gear_condition(&self) -> &GearConditions {
+        &self.gear_condition
     }
 
     /// What every spell of damage type `kind` does beyond its damage (`[types]` in

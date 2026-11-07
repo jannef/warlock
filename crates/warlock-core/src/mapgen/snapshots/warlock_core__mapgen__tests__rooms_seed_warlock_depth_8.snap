@@ -4,7 +4,7 @@ expression: "describe(&level(seed, 8))"
 ---
 The Depths 8 (depths:8) 80x21
 stairs Up at (67, 15) -> depths:7
-kobold at (3, 12) route E E W W carrying a flint spear (wielded)
+kobold at (3, 12) route E E W W carrying a damaged flint spear (wielded)
 kobold at (32, 12) route E E E E E E E E E E E E E S S S S W W W W W W W W W W W W W N N N N carrying a flint spear (wielded), 9 copper coins
 rat at (61, 5) route E E E E E S S W W W W W N N
 alarm trap at (60, 6)

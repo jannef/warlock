@@ -761,7 +761,10 @@ fn placed_gear(
     if !spawn.rolls_gear {
         return (spawn.carry.clone(), spawn.equipment.clone());
     }
-    let mut rng = crate::rng::Rng::gear(seed, &id.0.to_string());
-    let pack = crate::gear::roll(content, &mut rng, spawn.creature, content.item_level(level));
+    let key = id.0.to_string();
+    let mut rng = crate::rng::Rng::gear(seed, &key);
+    let mut pack = crate::gear::roll(content, &mut rng, spawn.creature, content.item_level(level));
+    let mut condition = super::gear_condition::stream(seed, &key);
+    super::gear_condition::apply(content, &mut condition, spawn.creature, &mut pack);
     (pack.items, pack.equipment)
 }
