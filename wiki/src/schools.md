@@ -70,8 +70,8 @@ A character who knows no spells sees "You know no spells." under the schools.
 
 {{#include generated/school-skills.md}}
 
-A rank in one school carries over to its related schools, as with weapon skills: a rank 8 evoker
-is a rank 4 transmuter without ever having tried. Divination stands alone.
+Each school is trained on its own: a rank 8 evoker who has never cast a transmutation is
+untrained in transmutation.
 
 ## What each rank gives
 
@@ -209,10 +209,8 @@ The [wizard](classes.md#wizard) and the [druid](classes.md#druid) start in Snipe
 [paladin](classes.md#paladin) in Battle caster. Any caster may advance in any of them by casting
 that way.
 
-Sniper and Toucher default to each other at 4 ranks less, and Toucher and Battle caster at 3 (see
-[Related styles](fighting-styles.md#related-styles)). The [Magic page](#the-magic-page) marks
-Battle caster as the style you cast in while you wear such armour. Sniper and Toucher depend on each
-cast's target, so it never marks them.
+The [Magic page](#the-magic-page) marks Battle caster as the style you cast in while you wear
+such armour. Sniper and Toucher depend on each cast's target, so it never marks them.
 
 What each rank gives, exactly: *To hit far away* and *Critical range far away* count from five
 cells. *Reach* is cells farther (a range, a length), on top of the school's. *Every roll* is a point

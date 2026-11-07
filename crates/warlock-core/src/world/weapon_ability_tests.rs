@@ -231,7 +231,7 @@ pub(super) fn give(w: &mut World, id: ActorId, object: &str) {
         .put(&equipment::slots_taken(&content, object, slot), item);
 }
 
-/// Actor `id`'s ranks are exactly `ranks` (and their defaults).
+/// Actor `id`'s ranks are exactly `ranks`.
 pub(super) fn ranks(w: &mut World, id: ActorId, ranks: &[(&str, u8)]) {
     let content = w.content().clone();
     let table = content.weapon_skills();
@@ -240,7 +240,7 @@ pub(super) fn ranks(w: &mut World, id: ActorId, ranks: &[(&str, u8)]) {
         .actors
         .get_mut(&id)
         .expect("the actor")
-        .weapon_skills = WeaponSkills::from_ranks(table, ranks);
+        .weapon_skills = WeaponSkills::from_ranks(ranks);
 }
 
 pub(super) fn at(w: &World, x: i32, y: i32) -> ActorId {

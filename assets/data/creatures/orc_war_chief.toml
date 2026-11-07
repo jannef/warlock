@@ -6,7 +6,7 @@ id = "orc_war_chief"
 level = 20
 xp = 110
 rarity = "rare"
-loot = 50
+loot = 13
 name = "orc war chief"
 glyph = "o"
 fg = "#e0a030"
@@ -26,11 +26,11 @@ racial_weapon = "scimitar"
 [[creature.gear]]
 chance = 80
 one_of = ["chain_mail"]
-magic = 10
+magic = 3
 [[creature.gear]]
 chance = 70
 one_of = ["iron_helm"]
-magic = 5
+magic = 1
 [[creature.gear]]
 chance = 50
 one_of = ["small_shield"]

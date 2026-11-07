@@ -6,7 +6,7 @@ id = "cambion"
 level = 39
 xp = 205
 rarity = "rare"
-loot = 30
+loot = 8
 name = "cambion"
 glyph = "p"
 fg = "#c03a3a"
@@ -37,8 +37,8 @@ to_hit = 9
 [[creature.gear]]
 chance = 80
 one_of = ["long_sword", "great_sword"]
-magic = 20
+magic = 5
 [[creature.gear]]
 chance = 50
 one_of = ["chain_mail"]
-magic = 20
+magic = 5

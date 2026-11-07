@@ -273,7 +273,7 @@ fn ranks(w: &mut World, ranks: &[(&str, u8)]) {
     let content = w.content().clone();
     let table = content.weapon_skills();
     let ranks = ranks.iter().map(|&(s, r)| (table.id(s).expect(s), r));
-    w.player_mut().weapon_skills = WeaponSkills::from_ranks(table, ranks);
+    w.player_mut().weapon_skills = WeaponSkills::from_ranks(ranks);
 }
 
 fn at(w: &World, x: i32, y: i32) -> ActorId {

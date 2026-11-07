@@ -8,7 +8,7 @@ id = "barrow_king"
 level = 42
 xp = 220
 rarity = "rare"
-loot = 80
+loot = 20
 name = "barrow king"
 glyph = "W"
 fg = "#3a6a5a"
@@ -47,4 +47,4 @@ on_hit = [
 [[creature.gear]]
 chance = 90
 one_of = ["long_sword"]
-magic = 60
+magic = 15

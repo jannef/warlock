@@ -227,7 +227,7 @@ fn a_level_with_both_picks_spends_the_bonus_on_a_talent_of_its_trees() {
     let table = BUILTIN.weapon_skills();
     for skill in ["long_blades", "duelist", "bows"] {
         let id = table.id(skill).expect(skill);
-        w.player_mut().weapon_skills.raise(table, id, 9);
+        w.player_mut().weapon_skills.raise(id, 9);
     }
     arrive(&mut w, 30);
     // Two ordinary picks: a human's Versatile adds one at level 30.

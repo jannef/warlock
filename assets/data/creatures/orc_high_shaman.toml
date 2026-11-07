@@ -6,7 +6,7 @@ id = "orc_high_shaman"
 level = 24
 xp = 130
 rarity = "rare"
-loot = 60
+loot = 15
 name = "orc high shaman"
 glyph = "o"
 fg = "#e070e0"
@@ -32,8 +32,7 @@ racial_weapon = "quarterstaff"
 [[creature.gear]]
 chance = 80
 one_of = ["bone_amulet"]
-magic = 30
-
+magic = 8
 [[creature.gear]]
 chance = 60
 one_of = ["copper_coin*20", "gold_coin*2"]

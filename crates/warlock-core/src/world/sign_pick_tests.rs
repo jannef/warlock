@@ -139,7 +139,7 @@ fn raise(w: &mut World, name: &str, rank: u8) {
     let skill = table.id(name).expect(name);
     let player = w.state.player;
     let me = w.state.actors.get_mut(&player).expect("the player");
-    me.weapon_skills.raise(&table, skill, rank);
+    me.weapon_skills.raise(skill, rank);
 }
 
 /// Whether the player of `w` at character level `level` may take `id` now.

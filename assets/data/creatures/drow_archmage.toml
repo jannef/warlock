@@ -6,7 +6,7 @@ id = "drow_archmage"
 level = 40
 xp = 210
 rarity = "rare"
-loot = 75
+loot = 19
 name = "drow archmage"
 glyph = "e"
 fg = "#e080ff"
@@ -41,15 +41,15 @@ on_hit = [{ status = "poisoned", chance = 20, severity = 3 }]
 [[creature.gear]]
 chance = 90
 one_of = ["wool_cloak"]
-magic = 50
+magic = 13
 [[creature.gear]]
 chance = 70
 one_of = ["gold_amulet"]
-magic = 60
+magic = 15
 [[creature.gear]]
 chance = 40
 one_of = ["silver_ring"]
-magic = 60
+magic = 15
 [[creature.gear]]
 chance = 80
 one_of = ["gold_coin*8"]

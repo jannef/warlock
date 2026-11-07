@@ -1,5 +1,5 @@
 //! Weapon skills in the world (spec §8 "Weapon skills"): attacks earn marks (more for a hit,
-//! fewer as the rank rises), a rank gained raises the skills it defaults to and is said, a
+//! fewer as the rank rises), a rank gained is said and raises no other skill, a
 //! shield bash is a blow of its own, ranks change
 //! to-hit, damage, threat, Defence, and cost, starting ranks come from race and class, and all of
 //! it is saved and replayed.
@@ -292,7 +292,7 @@ fn set(w: &mut World, name: &str, rank: u8, marks: u32) {
     let player = w.state.player;
     let me = w.state.actors.get_mut(&player).expect("the player");
     let mut skills = me.weapon_skills.clone();
-    skills.raise(w.content.weapon_skills(), id, rank);
+    skills.raise(id, rank);
     skills.train(w.content.weapon_skills(), id, marks);
     me.weapon_skills = skills;
 }
@@ -382,7 +382,7 @@ fn stronger_opponents_teach_no_more_than_the_full_marks() {
 }
 
 #[test]
-fn a_rank_gained_raises_its_defaults_and_is_said() {
+fn a_rank_gained_is_said_and_raises_no_other_skill() {
     let mut w = world_on(YARD);
     arm(&mut w, &["sword"]);
     // One mark short of long blades 3; short blades has marks of its own.
@@ -390,21 +390,23 @@ fn a_rank_gained_raises_its_defaults_and_is_said() {
     set(&mut w, "short_blades", 0, 5);
     w.apply(&Action::Move(Dir::E));
     assert_eq!(training(&w, "long_blades").rank, 3);
-    // Long blades 3 gives short and great blades 1 (−2), and short blades' marks start over;
-    // daggers (−4) stay untrained.
-    assert_eq!(training(&w, "short_blades"), Training { rank: 1, marks: 0 });
-    assert_eq!(training(&w, "great_blades"), Training { rank: 1, marks: 0 });
-    assert_eq!(training(&w, "daggers"), Training::default());
+    // Related skills stay as they were: short blades keeps its marks, great blades untrained.
+    assert_eq!(training(&w, "short_blades"), Training { rank: 0, marks: 5 });
+    assert_eq!(training(&w, "great_blades"), Training::default());
     let said = messages(&w);
-    let at = |text: &str| said.iter().position(|m| m == text);
-    let long = at("You feel more skilled with long blades.").expect("said");
-    let short = at("You feel more skilled with short blades.").expect("said");
-    let great = at("You feel more skilled with great blades.").expect("said");
-    // After the blow that earned it, the skill first, then what it raised.
+    let long = (said.iter())
+        .position(|m| m == "You feel more skilled with long blades.")
+        .expect("said");
+    assert!(
+        !said
+            .iter()
+            .any(|m| m.contains("short blades") || m.contains("great blades"))
+    );
+    // After the blow that earned it.
     let blow = (said.iter())
         .position(|m| m.starts_with("You hit") || m.starts_with("You miss"))
         .expect("the blow");
-    assert!(blow < long && long < short && short < great, "{said:#?}");
+    assert!(blow < long, "{said:#?}");
     // No numbers.
     assert!(
         !said
@@ -585,9 +587,8 @@ fn ranks_change_to_hit_damage_threat_defence_and_cost() {
     arm(&mut fresh, &["dagger"]);
     let untrained = thrown_with(&fresh);
     assert_eq!(
-        thrown.to_hit,
-        untrained.to_hit + 3,
-        "daggers 7 gives throwing 5 (−2)"
+        thrown.to_hit, untrained.to_hit,
+        "daggers 7 gives throwing nothing"
     );
 }
 
@@ -700,13 +701,13 @@ fn starting_ranks_come_from_race_and_class_and_never_move_the_stats() {
     assert_eq!(warrior, ranks_of("human,male,warrior", 7));
     assert_eq!(warrior.rank(id("long_blades")), 2);
     // An elf ranger: bows 1 + 2, long blades 1 from the race, short blades 1 from the class
-    // (long blades 1 − 2 adds nothing); defaults from bows 3: crossbows −4, nothing.
+    // and nothing more.
     let ranger = ranks_of("elf,female,ranger", 3);
     assert_eq!(ranger.rank(id("bows")), 3);
     assert_eq!(ranger.rank(id("long_blades")), 1);
     assert_eq!(ranger.rank(id("short_blades")), 1);
     assert_eq!(ranger.rank(id("crossbows")), 0);
-    // A thief: daggers 2 and thrown 1; daggers 2 gives thrown 0 (−2): thrown stays 1.
+    // A thief: daggers 2 and thrown 1.
     let thief = ranks_of("human,female,thief", 1);
     assert_eq!(thief.rank(id("daggers")), 2);
     assert_eq!(thief.rank(id("thrown")), 1);

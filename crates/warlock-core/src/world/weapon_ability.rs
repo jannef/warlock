@@ -634,8 +634,8 @@ impl World {
     }
 
     /// The dev action `rank:SKILL:N` ([`crate::action::Action::SetRank`]): the player's rank in
-    /// weapon skill or style `skill` becomes `rank` (the skills it raises by default rise too),
-    /// said as a rank risen is, with what the ranks teach. Takes no time.
+    /// weapon skill or style `skill` becomes `rank`, said as a rank risen is, with what the ranks
+    /// teach. Takes no time.
     pub(super) fn set_rank_dev(&mut self, skill: &str, rank: u8) -> Spent {
         let content = self.content.clone();
         let table = content.weapon_skills();
@@ -644,8 +644,8 @@ impl World {
             return Spent::Nothing;
         };
         let before = self.state.player().weapon_abilities(&content);
-        let risen = self.player_mut().weapon_skills.raise(table, id, rank);
-        self.ranks_news(&risen, &before);
+        self.player_mut().weapon_skills.raise(id, rank);
+        self.ranks_news(id, &before);
         self.say_news();
         Spent::NoTime
     }

@@ -435,7 +435,7 @@ fn a_prerequisite_may_ask_for_any_of_several_weapon_skills() {
         "You cannot take Crusher: you need Maces and clubs or Unarmed 3."
     );
     let axes = table.id("axes").expect("axes");
-    w.player_mut().weapon_skills.raise(&table, axes, 3);
+    w.player_mut().weapon_skills.raise(axes, 3);
     run(&mut w, "talent:cleave");
     assert_eq!(last(&w), "You learn Cleave.");
 }

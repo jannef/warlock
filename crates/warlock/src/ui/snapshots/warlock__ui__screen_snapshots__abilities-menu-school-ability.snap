@@ -2,8 +2,8 @@
 source: crates/warlock/src/ui/screen_snapshots.rs
 expression: "render(case, content.clone())"
 ---
- You feel more skilled at evocation. You have learned Thunderstruck. You feel more skilled at
- transmutation.
+ Welcome to Showcase. Press ? for controls.
+ You feel more skilled at evocation. You have learned Thunderstruck.
 
            ┌─ Abilities ───────────────────────────────────────────────────────────────┐
            │                                                                           │

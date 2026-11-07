@@ -96,7 +96,7 @@ fn reach(content: &Content, def: &CreatureDef, w: &Weapon) -> i32 {
         .into_iter()
         .flatten()
         .map(|id| (id, def.weapon_skills.rank(id).max(cap)));
-    to_hit(content, &WeaponSkills::from_ranks(table, ranks), w)
+    to_hit(content, &WeaponSkills::from_ranks(ranks), w)
 }
 
 #[test]

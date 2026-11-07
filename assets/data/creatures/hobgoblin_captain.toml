@@ -5,7 +5,7 @@ id = "hobgoblin_captain"
 level = 19
 xp = 105
 rarity = "rare"
-loot = 60
+loot = 15
 name = "hobgoblin captain"
 glyph = "g"
 fg = "#f0c040"
@@ -28,7 +28,7 @@ one_of = ["small_shield", "large_shield"]
 [[creature.gear]]
 chance = 90
 one_of = ["scale_mail", "banded_mail"]
-magic = 15
+magic = 4
 [[creature.gear]]
 chance = 80
 one_of = ["iron_helm", "great_helm"]

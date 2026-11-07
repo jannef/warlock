@@ -18,9 +18,7 @@ CLAUDE.md says.
 - A school row is a weapon skill in everything else: its own `school` curve (#1095), `[marks]`,
   `Training { rank, marks }` on `Actor::weapon_skills` (saved by index), `train`, `raise`,
   `progress`, `ranks_news` ("You feel more skilled at evocation."), the dev `rank:evocation:5`.
-  Defaults: evocation ↔ transmutation, necromancy ↔ restoration, abjuration ↔ enchantment, 4
-  each; divination none. Schools default only to schools (the loader's family check: styles,
-  schools, weapon skills).
+  A rank in one school raises no other.
 - `Role::section` is `None` for a school: the weapon skills screen lists none, nor the caster
   styles; the Magic page (`ui/magic_screen.rs`, page 6 of the info pages, `docs/dev/screens.md`)
   lists the schools, the caster styles (Battle caster marked from `own_styles_in_use`), and the
@@ -140,8 +138,8 @@ index, a save's Spell attacks training dropped (the content fingerprint refuses 
 
 `content/weapon_skill.rs` (`the_builtin_table_loads`, `rank_ten_holds_the_family_tables` with
 the seven schools, `the_caster_ladder_loads_and_is_checked`: the rows, `spell_mods`, the
-defaults, the refusals), `world/school_skill_tests.rs` (marks per kind of cast, a miss, an area,
-scrolls and wands, a rank's roll, mana, and time, the defaults, Schooled, Devotee, Magister, the
+refusals), `world/school_skill_tests.rs` (marks per kind of cast, a miss, an area,
+scrolls and wands, a rank's roll, mana, and time, Schooled, Devotee, Magister, the
 dumps and `rank:evocation:5`, a school forgotten), `world/caster_style_tests.rs` (the styles
 by where one casts from: a Fireball from afar trains Sniper, a Blessing on oneself none, a heal
 and a ray at the creature beside Toucher, every spell in hindering armour Battle caster with full

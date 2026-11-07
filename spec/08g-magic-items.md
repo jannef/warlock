@@ -12,8 +12,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     10; Delving, Featherweight, and of the Bear roll on it); the pick-axes placed in levels, worn
     by creatures, and in starting kits are plain; a tool shows no numbers in the lists, its description its digging power, "Digs at 10"). Only they are
     magic; they and scrolls (§8 "Scrolls", never magic) are loot.
-  - **Rarity**: *normal* (no affixes; 85 % of loot), *magic* (13 %: a prefix only 40 %, a
-    suffix only 40 %, one of each 20 %), *rare* (2 %: three affixes 50 %, four 30 %, five 15 %,
+  - **Rarity**: *normal* (no affixes; 96.25 % of loot), *magic* (3.25 %: a prefix only 40 %, a
+    suffix only 40 %, one of each 20 %), *rare* (0.5 %: three affixes 50 %, four 30 %, five 15 %,
     six 5 %, at most three prefixes and three suffixes, and a two-word name: a first word and a second for its kind, "Grim Bite"); a *unique*
     item is a rare one with a set name and a power (below). An item never has two affixes of
     one category (below).

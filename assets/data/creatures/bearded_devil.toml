@@ -34,4 +34,4 @@ on_hit = [{ status = "poisoned", chance = 20, severity = 2 }]
 [[creature.gear]]
 chance = 60
 one_of = ["glaive"]
-magic = 10
+magic = 3

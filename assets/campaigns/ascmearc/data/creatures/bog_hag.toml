@@ -10,7 +10,7 @@ id = "bog_hag"
 level = 11
 xp = 65
 rarity = "very_rare"
-loot = 75
+loot = 19
 unique = true
 name = "bog hag"
 glyph = "h"
@@ -39,4 +39,4 @@ blood = "#3a5a2a"
 [[creature.gear]]
 chance = 80
 one_of = ["quarterstaff"]
-magic = 50
+magic = 13
