@@ -25,7 +25,7 @@ footsteps = 60
 hearing = 10
 weight = 18000
 size = "small"
-stats = { strength = 7, dexterity = 11, toughness = 8, intelligence = 12, willpower = 14, presence = 10 }
+stats = { strength = 7, dexterity = 11, toughness = 6, intelligence = 12, willpower = 14, presence = 10 }
 skills = { concentration = 20, spellcraft = 25 }
 # Used to its own fire.
 resist = { fire = 25 }

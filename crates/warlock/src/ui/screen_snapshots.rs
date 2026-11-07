@@ -1421,7 +1421,7 @@ const CASES: &[Case] = &[
         scenario: "arena",
         // Pip's birth sign has gifts (#265): seed 4 is one where the fight still ends in his death.
         seed: Some(4),
-        actions: "use_tool wait*20",
+        actions: "use_tool wait*27",
         ..BASE
     },
     // The death remembered in the graveyard (#1137).
@@ -1429,7 +1429,7 @@ const CASES: &[Case] = &[
         name: "death-screen-graveyard",
         scenario: "arena",
         seed: Some(4),
-        actions: "use_tool wait*20",
+        actions: "use_tool wait*27",
         graveyard: Some(GRAVEYARD),
         ..BASE
     },
@@ -1438,7 +1438,7 @@ const CASES: &[Case] = &[
         scenario: "arena",
         // Seed 142 gives Pip a lucky day, the Iron Scourge (#269), and the fight his death.
         seed: Some(142),
-        actions: "use_tool wait*14",
+        actions: "use_tool wait*16",
         ..BASE
     },
 ];

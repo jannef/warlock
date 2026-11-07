@@ -2620,8 +2620,9 @@ mod tests {
         );
         let kobold = actors.iter().find(|a| a.contains(" kobold at "));
         assert!(
-            kobold.is_some_and(|k| k
-                .ends_with("St 9/9 Dx 13/13 To 10/10 In 10/10 Wi 9/9 Pr 8/8; unaware of player")),
+            kobold
+                .is_some_and(|k| k
+                    .ends_with("St 9/9 Dx 13/13 To 6/6 In 10/10 Wi 9/9 Pr 8/8; unaware of player")),
             "{actors:#?}"
         );
         assert!(Layer::Actors.is_dev_only() && !Layer::Stats.is_dev_only());

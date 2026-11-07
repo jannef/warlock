@@ -20,7 +20,7 @@ footsteps = 120
 hearing = 12
 weight = 30000
 size = "small"
-stats = { strength = 11, dexterity = 12, toughness = 11, intelligence = 8, willpower = 8, presence = 6 }
+stats = { strength = 11, dexterity = 12, toughness = 6, intelligence = 8, willpower = 8, presence = 6 }
 on_eat = { message = "This goblin meat is rank!", vomit = 40 }
 weapon_skills = { maces = 1 }
 racial_weapon = "club"

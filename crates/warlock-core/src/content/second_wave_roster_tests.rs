@@ -119,7 +119,7 @@ fn the_second_wave_keeps_to_the_roster() {
         assert!(!def.unique, "{id}: no unique");
         let level = f64::from(def.level);
         let hp = f64::from(def.stats.score(Stat::Toughness)) + f64::from(def.base_hp);
-        let want = max_hp(level, role);
+        let want = max_hp(level, role) * super::variance_roster_tests::starter(def.level);
         assert!(within(hp, want), "{id}: max HP {hp}, the formula {want:.1}");
         let average: f64 = (def.natural_attacks())
             .map(|a| f64::from(a.attack.damage.min() + a.attack.damage.max()) / 2.0)

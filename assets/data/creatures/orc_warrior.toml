@@ -18,8 +18,8 @@ opens_doors = true
 footsteps = 130
 hearing = 12
 weight = 80000
-stats = { strength = 14, dexterity = 11, toughness = 14, intelligence = 8, willpower = 10, presence = 7 }
-base_hp = 12
+stats = { strength = 14, dexterity = 11, toughness = 13, intelligence = 8, willpower = 10, presence = 7 }
+base_hp = 11
 on_eat = { message = "This orc meat is rank!", vomit = 30 }
 weapon_skills = { short_blades = 1 }
 racial_weapon = "scimitar"

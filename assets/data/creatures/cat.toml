@@ -20,8 +20,8 @@ footsteps = 10
 hearing = 6
 weight = 4000
 size = "small"
-stats = { strength = 3, dexterity = 18, toughness = 9, intelligence = 2, willpower = 12, presence = 8 }
-base_hp = 1
+stats = { strength = 3, dexterity = 18, toughness = 4, intelligence = 2, willpower = 12, presence = 8 }
+base_hp = 0
 depart = "slips away without a sound"
 on_eat = { message = "Stringy, and you feel watched while you eat it.", vomit = 20 }
 [creature.attack]

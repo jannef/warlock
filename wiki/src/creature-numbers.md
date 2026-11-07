@@ -69,6 +69,14 @@ its numbers around its level, L. Each part below is rounded down.
 **Hit points.** Its [hit points](hit-points.md#hit-points) are a standard amount (about
 `12 + 2.9 L`) times the role's factor, within 35 % either way. The factors are 0.5 for the quick,
 the small, and the casters, 0.6 for the spirits, 1.5 for the shamblers, and 2.0 for the brutes.
+The first levels are softer: a creature of level 1 has 40 % of that, level 2 55 %, level 3 70 %,
+level 4 80 %, and level 5 90 % (its Toughness and what its kind adds cut alike).
+
+**What its blows carry.** The poisons, diseases, and holds of a creature of level 1 to 5 are rare
+and mild: at most a 1 % chance at level 1, 3 % at levels 2 and 3, 4 % at level 4, and 5 % at
+level 5, one degree of a [status effect](status-effects.md) at most, and no poison at level 1.
+A creature whose blow is its own (a spider's or a centipede's venom, the blood a leech draws, a
+[mimic](mimics.md)'s grip) may have up to 12 % from level 2.
 
 **Speed.** Its [speed](turns.md#speed) comes from its kind's temperament: 800 to 1250 for most,
 and 950 to 1050 for the rank and file of a people (orcs, hobgoblins, drow, duergar). A

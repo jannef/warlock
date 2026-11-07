@@ -117,13 +117,13 @@ fn the_numbers_follow_the_quick_role() {
     let def = |c: &str| content.creature(id(&content, c));
     let scores = |c: &str| crate::stats::Stat::ALL.map(|s| def(c).stats.score(s));
     // St Dx To In Wi Pr: the base (11 + 0.4 L, 10 + 0.25 L, 12 + 0.4 L, 2, 16 + 0.35 L, 2), then
-    // the quick role's +5 Dx, −2 To.
-    assert_eq!(scores("animated_blade_5"), [13, 16, 12, 2, 17, 2]);
+    // the quick role's +5 Dx, −2 To; level 5's Toughness cut to 90 % (#1200).
+    assert_eq!(scores("animated_blade_5"), [13, 16, 11, 2, 17, 2]);
     assert_eq!(scores("animated_blade_20"), [19, 20, 18, 2, 23, 2]);
-    // Hit points 2.5 × L × 0.6; speed 1200 + 5 L; Defence 2 + L/10 (its thin edge); no attack
+    // Hit points 2.5 × L × 0.6 (cut to 90 % at level 5); speed 1200 + 5 L; Defence 2 + L/10 (its thin edge); no attack
     // of its own: it wields.
     let five = def("animated_blade_5");
-    assert_eq!((five.base_hp, five.speed, five.xp), (7, 1225, 35));
+    assert_eq!((five.base_hp, five.speed, five.xp), (6, 1225, 35));
     let hide = five.natural.as_ref().expect("an edge");
     assert_eq!((hide.defence, hide.protection), (2, 0));
     assert!(five.attack.is_none());

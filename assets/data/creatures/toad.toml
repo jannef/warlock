@@ -18,7 +18,7 @@ sight = 6
 hearing = 15
 weight = 300
 size = "small"
-stats = { strength = 2, dexterity = 15, toughness = 10, intelligence = 2, willpower = 14, presence = 4 }
+stats = { strength = 2, dexterity = 15, toughness = 4, intelligence = 2, willpower = 14, presence = 4 }
 depart = "crawls away under a stone"
 on_eat = { message = "Bitter and foul: your mouth goes numb.", harm = "1d4" }
 [creature.attack]

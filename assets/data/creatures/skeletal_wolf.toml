@@ -19,8 +19,8 @@ sight = 10
 footsteps = 40
 hearing = 15
 weight = 15000
-stats = { strength = 13, dexterity = 16, toughness = 13, intelligence = 2, willpower = 18, presence = 2 }
-base_hp = 6
+stats = { strength = 13, dexterity = 16, toughness = 12, intelligence = 2, willpower = 18, presence = 2 }
+base_hp = 5
 attack = { damage = "1d8", damage_type = "piercing", name = "bite", verb = "bites", to_hit = 1, threat = 19 }
 resist = { piercing = 50, bludgeoning = -50, poison = 100 }
 corpse = false

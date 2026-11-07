@@ -172,7 +172,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
   - **Hit points** (ADOM-like, no hit dice, no levels): maximum = Toughness + race HP + class
     HP (§7 tables: e.g. a dwarf berserker with To 16 has 6 + 8 + 16 = 30; a human warrior with
     To 12 has 23; an elf wizard with To 8 has 10), at least 1; a creature's = Toughness + its
-    type's `base_hp` (a giant rat with To 12 and none has 12). Linear in Toughness: no runaway
+    type's `base_hp` (a giant rat with To 5 and none has 5; the monsters of levels 1 to 5 have
+    40 % to 90 % of their roster's hit points, `content/starter.rs`). Linear in Toughness: no runaway
     pools. Every actor starts at its maximum (`Actor::hp`, `hp_base`). Magic items add to the
     maximum (and Toughness affixes through the score; `Actor::max_hp(content)`), not to what it
     has; when the maximum falls (taking one off), hit points above it are lost at once (above
@@ -188,8 +189,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     hit points is a **big hit** (`combat::big_hit`). A blow that hits and leaves its target alive
     may cause status effects: those whose `wound` it meets (bleeding: a big hit 1 degree, a
     confirmed critical 2; every blow alike until weapons have categories), then each `on_hit`
-    effect of the attack (a creature's natural attack: the giant rat's bite poisons, or exposes to
-    filth fever, by its chance) ("Status effects", "Diseases" below).
+    effect of the attack (a creature's natural attack: the giant rat's bite exposes to filth fever, by
+    its chance, 1 %; the riders of levels 1 to 5 are rare and mild) ("Status effects", "Diseases" below).
   - **Death**: at 0 hit points an actor dies (`Event::Died { actor, at, of }`, right after the
     attack, or at the moment a status effect takes the last hit point, `of` naming it). A
     creature leaves the world, and what it carried, worn and wielded things too, falls on its

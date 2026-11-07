@@ -19,8 +19,8 @@ footsteps = 110
 hearing = 12
 weight = 40000
 size = "small"
-stats = { strength = 9, dexterity = 15, toughness = 9, intelligence = 8, willpower = 10, presence = 7 }
-base_hp = 4
+stats = { strength = 9, dexterity = 15, toughness = 6, intelligence = 8, willpower = 10, presence = 7 }
+base_hp = 3
 on_eat = { message = "This orc meat is rank!", vomit = 30 }
 weapon_skills = { daggers = 1 }
 racial_weapon = "dagger"

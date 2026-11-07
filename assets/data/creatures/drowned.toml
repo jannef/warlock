@@ -19,8 +19,8 @@ sight = 7
 footsteps = 70
 hearing = 8
 weight = 70000
-stats = { strength = 15, dexterity = 7, toughness = 17, intelligence = 1, willpower = 12, presence = 1 }
-base_hp = 12
+stats = { strength = 15, dexterity = 7, toughness = 15, intelligence = 1, willpower = 12, presence = 1 }
+base_hp = 11
 resist = { poison = 100, cold = 25 }
 on_eat = { message = "Waterlogged and putrid.", vomit = 90, harm = "1d4" }
 blood = "#3a4a3a"
@@ -30,4 +30,4 @@ damage_type = "bludgeoning"
 name = "fist"
 verb = "pummels"
 to_hit = 1
-on_hit = [{ disease = "filth_fever", chance = 20 }]
+on_hit = [{ disease = "filth_fever", chance = 5 }]

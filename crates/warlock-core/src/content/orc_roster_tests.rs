@@ -121,7 +121,10 @@ fn the_orcs_keep_to_the_tribes_formulas() {
         for (stat, want) in [
             (Stat::Strength, 12.0 + 0.4 * level + st),
             (Stat::Dexterity, 10.0 + 0.25 * level + dx),
-            (Stat::Toughness, 12.0 + 0.4 * level + to),
+            (
+                Stat::Toughness,
+                (12.0 + 0.4 * level + to) * super::variance_roster_tests::starter(def.level),
+            ),
         ] {
             let score = f64::from(def.stats.score(stat));
             assert!(
@@ -130,7 +133,7 @@ fn the_orcs_keep_to_the_tribes_formulas() {
             );
         }
         let hp = f64::from(def.stats.score(Stat::Toughness)) + f64::from(def.base_hp);
-        let want = max_hp(level, role);
+        let want = max_hp(level, role) * super::variance_roster_tests::starter(def.level);
         assert!(within(hp, want), "{id}: max HP {hp}, the formula {want:.1}");
         variance_roster_tests::check(&content, def, role.shape());
         if matches!(role, Role::Standard | Role::Archer) {

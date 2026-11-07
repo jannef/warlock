@@ -88,7 +88,7 @@ fn the_hobgoblins_keep_to_the_roster() {
         assert!(!def.unique, "{id}: no hobgoblin is unique");
         let level = f64::from(def.level);
         let hp = f64::from(def.stats.score(Stat::Toughness)) + f64::from(def.base_hp);
-        let want = max_hp(level, role);
+        let want = max_hp(level, role) * super::variance_roster_tests::starter(def.level);
         assert!(
             ((hp - want) / want * 100.0).abs() <= TOLERANCE,
             "{id}: max HP {hp}, the formula {want:.1}"

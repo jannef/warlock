@@ -17,7 +17,7 @@ footsteps = 50
 hearing = 5
 weight = 4000
 size = "small"
-stats = { strength = 10, dexterity = 17, toughness = 12, intelligence = 1, willpower = 12, presence = 4 }
+stats = { strength = 10, dexterity = 17, toughness = 5, intelligence = 1, willpower = 12, presence = 4 }
 # A rat too clever for the traps may be tamed, and is the warren races' starting companion (spec
 # §8 "Allies").
 tameable = true
@@ -25,13 +25,11 @@ nose = 4
 # Nothing special, slightly gross.
 on_eat = { message = "Gamey and stringy, but it stays down." }
 
-# Its bite is filthy: now and then it poisons, or gives filth fever (unless resisted).
+# Its bite is filthy: once in a long while it gives filth fever (unless resisted). A starter's
+# rider is rare (#1200).
 [creature.attack]
 damage = "1d4"
 damage_type = "piercing"
 name = "bite"
 verb = "bites"
-on_hit = [
-    { status = "poisoned", chance = 10, severity = 2 },
-    { disease = "filth_fever", chance = 10 },
-]
+on_hit = [{ disease = "filth_fever", chance = 1 }]

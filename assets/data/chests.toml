@@ -36,7 +36,8 @@ hardness = 200
 locked = 60
 trapped = 25
 mimic = 5
-hold = 10
+# A starter's grip is rare (#1200): the coffer's mimics are of levels 1 and 2.
+hold = 1
 loot = { items = "1d3", loot_level = 0, magic = 10, rare = 1, gold = { dice = "2d6", each = 1 }, gems = "1d4-3" }
 
 [[band]]
@@ -64,7 +65,8 @@ hardness = 400
 locked = 70
 trapped = 35
 mimic = 7
-hold = 15
+# At most 12 for its level-5 mimic (#1200, content/starter.rs).
+hold = 12
 loot = { items = "2d3", loot_level = 1, magic = 20, rare = 2, gold = { dice = "3d6", each = 2 }, gems = "1d3-1" }
 
 [[band]]
