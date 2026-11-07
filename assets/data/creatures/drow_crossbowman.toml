@@ -6,7 +6,7 @@ id = "drow_crossbowman"
 level = 16
 xp = 90
 rarity = "common"
-loot = 10
+loot = 3
 name = "drow crossbowman"
 glyph = "e"
 fg = "#5a60b8"
@@ -45,7 +45,7 @@ on_hit = [{ status = "drowsy", chance = 20, severity = 1 }, { status = "poisoned
 [[creature.gear]]
 chance = 70
 one_of = ["studded_leather"]
-magic = 5
+magic = 1
 [[creature.gear]]
 chance = 60
 one_of = ["wool_cloak"]

@@ -25,7 +25,7 @@ stats = { strength = 40, dexterity = 24, toughness = 40, intelligence = 36, will
 base_hp = 445
 natural = { defence = 5, protection = 10, name = "scales" }
 resist = { fire = 100, poison = 100, cold = 50 }
-loot = 50
+loot = 13
 corpse = false
 blood = "#4a1010"
 innate = ["fire_cloaked"]

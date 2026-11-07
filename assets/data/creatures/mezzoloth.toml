@@ -30,4 +30,4 @@ blood = "#3a4020"
 [[creature.gear]]
 chance = 80
 one_of = ["trident"]
-magic = 5
+magic = 1

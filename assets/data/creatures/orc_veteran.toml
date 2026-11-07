@@ -6,7 +6,7 @@ id = "orc_veteran"
 level = 15
 xp = 85
 rarity = "uncommon"
-loot = 30
+loot = 8
 name = "orc veteran"
 glyph = "o"
 fg = "#708068"
@@ -26,7 +26,7 @@ racial_weapon = "scimitar"
 [[creature.gear]]
 chance = 60
 one_of = ["scale_mail"]
-magic = 5
+magic = 1
 [[creature.gear]]
 chance = 50
 one_of = ["iron_helm"]

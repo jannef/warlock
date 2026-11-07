@@ -25,7 +25,7 @@ base_hp = 95
 natural = { defence = 2, protection = 0, name = "hide" }
 resist = { fire = 100, poison = 50, cold = 50 }
 weapon_skills = { long_blades = 9, duelist = 7 }
-loot = 25
+loot = 6
 corpse = false
 blood = "#4a1010"
 [creature.attack]
@@ -38,8 +38,8 @@ to_hit = 9
 [[creature.gear]]
 chance = 90
 one_of = ["long_sword"]
-magic = 25
+magic = 6
 [[creature.gear]]
 chance = 60
 one_of = ["chain_mail"]
-magic = 15
+magic = 4

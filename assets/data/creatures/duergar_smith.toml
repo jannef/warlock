@@ -7,7 +7,7 @@ id = "duergar_smith"
 level = 13
 xp = 75
 rarity = "rare"
-loot = 75
+loot = 19
 name = "duergar smith"
 glyph = "h"
 fg = "#c87a3a"
@@ -30,7 +30,7 @@ racial_weapon = "war_hammer"
 chance = 95
 one_of = ["war_hammer"]
 keep = "wield"
-magic = 15
+magic = 4
 [[creature.gear]]
 chance = 80
 one_of = ["chain_mail"]
