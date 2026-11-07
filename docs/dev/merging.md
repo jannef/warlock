@@ -6,22 +6,12 @@ and again when the integrator says your PR is next.
 
 ## When to merge main, and what to run after
 
-- **Don't chase main.** A PR merges (or rebases onto) `origin/main` once, when the integrator says
-  it is next in line, not after every merge into `main`. Until then, keep working on the branch.
-  `main`'s protection does not require branches to be up to date, so a PR behind `main` still
-  merges. The finisher does not re-merge `main` just before pushing.
-- **Push early.** The owner's rule (2026-10-26): a finisher pushes a fix as soon as the merge
-  conflicts are potentially fixed, after a quick compile and with no clippy, tests, replays, or
-  goldens first. If CI fails, it fails; CI that is already ahead (red) is ahead of the game. The
-  finisher keeps verifying in its session after the push (the PR's own replays, which CI does not
-  run; clippy and `cargo test --workspace` after conflicts in code, snapshots, or registries or a
-  fix of its own; the golden update in the cloud sandbox if anything visible changed, CLAUDE.md
-  "Golden screenshots"), pushes each follow-up fix at once, and stops the checks when CI is green.
+- **Merge when green.** A PR is squash-merged as soon as its CI is green, without merging `main`
+  first: `main`'s protection does not require branches to be up to date. After each merge,
+  `main`'s CI is checked, and a red `main` is fixed before anything else.
+- **Conflicts**: resolve, push at once, and let CI check it.
 - **The full check list** (CLAUDE.md "Verification") runs once, before the PR opens.
-- **Keep PRs small**: one feature per PR, rules first (core, tests, dumps), then the UI, then the
-  content that uses it, when they can stand alone. Small PRs merge in minutes and conflict less.
-- The integrator **schedules features by overlap**: at most about three PRs at once that add
-  actions or save state; PRs that touch the same registries wait for each other.
+- **Keep PRs small**: one feature per PR. Small PRs merge in minutes and conflict less.
 
 ## The false-conflict trick
 
@@ -147,39 +137,8 @@ issue body, or one with many choices to review) is a **draft PR that adds
 - A document can be any length (issue and Discussion bodies stop at 65,536 characters). Prefer
   tables to prose.
 
-## Agents, finishers, and context
+## Agents and context
 
-The owner's token-saving rules (2026-10-24). The local subagents' briefs live in the repo, in
-`ops/agents/local/` (`feature.md` for a feature agent, `finisher.md` for a finisher; the spawn
-message adds the fields each one lists), so they survive a wiped `/tmp`:
-
-1. **A feature agent stops when its PR is open.** It pushes, opens the PR, triggers CI (pushing
-   does it), names in its report the golden entries its change alters or adds (it makes no
-   references and starts no update run), reports briefly, and stops. It never waits for CI
-   (`gh pr checks --watch` is out), never fixes CI in the same context, and is never resumed for
-   the merge.
-2. **A finisher agent** (fresh, small context, Sonnet; in the cloud sandbox, for its lavapipe)
-   later handles one PR in one pass: it reads the CI result and fixes failures; when the
-   integrator says the PR is next it merges `origin/main` (both sides of registry insertions;
-   main's side of generated files and PNGs, then regenerate); it updates the golden references
-   (CLAUDE.md "Golden screenshots": `cargo xtask golden`, look at every difference, `--update`,
-   keep only the images the change explains; an unexplained difference is a bug to fix, not a
-   reference to update); it pushes as soon as the conflicts are potentially fixed (a quick compile,
-   no re-merge of `origin/main` before pushing), then keeps verifying in the session: the PR's
-   replays (`replay --verify`, re-created if hashes moved), and clippy `-D warnings` and
-   `cargo test --workspace` only after conflicts or a fix of its own, pushing follow-up fixes and
-   stopping the checks once CI is green. There is no CI update run and no second CI
-   round. It does not merge the PR: the integrator's merge watcher squash-merges a PR once it is
-   non-draft and CLEAN. A local finisher (macOS, no lavapipe) falls back to the CI update run.
-3. **Agents keep contexts small**: read files in parts, grep, filter test output, never print
-   whole diffs or logs.
-4. **Local or cloud, never both.** Every agent job above (feature, finisher, an escalation fix, a
-   design document, filing issues) can run as a local subagent (subscription quota) or as a
-   Claude Managed Agent in a cloud sandbox (API credits) with the same brief and the same
-   stopping point; `ops/agents/README.md` has the launchers and when to pick which. The
-   integrator chooses one place per job, by quota; a cloud agent never doubles a local one. A
-   cloud-built PR is verified on Linux (the sandbox has CI's lavapipe, so `cargo xtask golden`
-   compares there) instead of on macOS. A PR that changes golden captures gets a cloud finisher:
-   only there can references be made.
-
-The integrator schedules finishers: one per PR, when that PR is next in line.
+The local subagents' briefs live in `ops/agents/local/` (`feature.md`, `finisher.md`), so they
+survive a wiped `/tmp`. A feature agent stops when its PR is open: it never waits for CI and is
+never resumed. Agents keep contexts small: read files in parts, grep, filter test output.

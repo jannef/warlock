@@ -365,7 +365,7 @@ file). Topics:
 - `docs/dev/alignment.md` — the good–evil score and its bands, the deeds that move it (one hook each), what reads it
 - `docs/dev/skills.md` — trained skills, effects and uses, training marks, the skills screen
 - `docs/dev/experience.md` — the level curve, kill XP, level-ups
-- `docs/dev/progression.md` — talents (data, `TalentMods`, the hooks), the picks a level brings and their refusal, the `levels` stream, the coverage policy
+- `docs/dev/progression.md` — talents (data, `TalentMods`, the hooks), the picks a level brings and their refusal, the `levels` stream
 - `docs/dev/status-effects.md` — statuses and severities, healing paces, checks, diseases and stat damage
 - `docs/dev/mana.md` — the second pool: its maximum, regeneration in the status loop, every modifier's one hook, spending, the dev drain
 - `docs/dev/magic-skills.md` — the schools of magic as skills: the `school` rows, `Benefit::spell_mods`, `practise_cast` and the `Outcome`, the `schools` talents and dump layer, the Magic page
@@ -416,19 +416,13 @@ Hard rules:
   text fields, and the targeting mode are FIXED, never rebindable (owner, 2026-10-26: "do not
   fucking make menus rebindable. that just gets too messy"; "at least menu lists like that. it
   just won't work"). New ones are plain fixed keys in their screen or input-mode code, named in
-  the screen's hint line; add no `KeyCommand` or `Context` entry for them. Existing menu-context
-  bindings stay as they are for now (not widened, not removed; a cleanup is a later owner call)
-  (`docs/dev/settings.md`); the back-style ones (`Back`, `TextBack`, `MoreSkip`, `PrevPage`,
+  the screen's hint line; add no `KeyCommand` or `Context` entry for them.
+  The back-style ones (`Back`, `TextBack`, `MoreSkip`, `PrevPage`,
   `PrevTarget`, unbound) stay exactly as they are (owner, #644).
 - Abilities (racial, class, skill, weapon skill and style, item; #156) register in
   `warlock_core::ability`, the one registry, and are used from the one abilities menu (`a`):
   never a default key of their own (an ability's own `KeyCommand` stays unbound by default,
   `settings/keys.rs::UNBOUND`, and Controls lists it last, `ABILITY_KEYS`). Basic commands keep their keys (`docs/dev/screens.md`).
-- A new broad system ships with one talent that earns its place, under its `[[system]]` tag in
-  `assets/data/talents.toml`; a sub-feature (a room effect, a creature gimmick, a chest kind, an
-  info readout) extends its parent and adds no tag and no talent. No info-only, niche, or
-  duplicate talents; tags only where the effect reads the system. The feature issue answers the
-  template's "Talents and class abilities" section (`docs/dev/progression.md` "Coverage policy").
 - Keep modules small with clear responsibilities. No speculative abstractions, no premature
   optimization.
 
@@ -532,7 +526,7 @@ A successful compile does not verify anything visual. Before opening a PR:
 
 ## Workflow
 
-- Work is tracked in GitHub issues under milestones (M0–M12, Housekeeping); use the `gh` CLI.
+- Work is tracked in GitHub issues under milestones (and Housekeeping); use the `gh` CLI.
 - One branch and PR per issue (or a tight group of related issues); reference issues with
   `Closes #N`. CI must be green before a squash merge into `main`.
 - CI runs on Linux only (`CI` workflow: fmt, clippy, tests, headless screenshots, wasm32 check,
@@ -541,21 +535,10 @@ A successful compile does not verify anything visual. Before opening a PR:
   on macOS, so run the full local check there before every PR (a PR built by a cloud agent,
   `ops/agents/`, runs it on Linux instead). `main` is branch-protected: PRs
   only, the Linux, wasm32, and cargo-deny checks must pass, linear history.
-- **Merging** (`docs/dev/merging.md` has the details): agents don't chase `main`. A PR merges
-  or rebases onto `origin/main` once, when the integrator says it is next in line. The cloud
-  finisher doing it also updates the golden references in the same pass ("Golden screenshots"),
-  and pushes as soon as the conflicts are potentially fixed (a quick compile, no clippy, tests,
-  replays, or goldens first, and no re-merge of `origin/main` before pushing): if CI fails, it
-  fails; it then keeps verifying in the session (the PR's replays; clippy and
-  `cargo test --workspace` after conflicts or a fix of its own), pushes follow-up fixes, and
-  stops the checks once CI is green. CI, required on every push, is the check; `main` does not
-  require branches to be up to date. The goal is the shortest total handling time. The full check
-  list ("Verification") runs once, before the PR opens.
-  Agents stop when their PR is open; a finisher agent handles CI and the merge (`docs/dev/merging.md`,
-  "Agents, finishers, and context").
-- **Keep PRs small**: one feature per PR, rules first (core, tests, dumps), then the UI, then
-  the content that uses it, when they can stand alone. The integrator schedules features by
-  overlap: at most about three PRs at once that add actions or save state.
+- **Merging** (`docs/dev/merging.md`): a PR is squash-merged as soon as its CI is green;
+  branches need not be up to date with `main`, so `main`'s CI is checked after each merge and a
+  red `main` is fixed first. Agents stop when their PR is open.
+- **Keep PRs small**: one feature per PR.
 - **Hot files**: new entries in registries go where they belong (by group or alphabetically),
   never at the end; generated files are never hand-merged (take one side, regenerate);
   saves are pinned to the game version (no format number, no load-time id maps); a
