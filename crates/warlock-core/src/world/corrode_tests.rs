@@ -139,6 +139,33 @@ fn acid_runs_off_adamantium_and_says_so_once_in_a_life() {
 }
 
 #[test]
+fn an_acid_spell_that_harms_the_player_eats_the_body_armour_first() {
+    // Acid's `corrodes` (`[types]`, the potions wave 2 design §9.3): no chance roll, the body
+    // armour first, the material's draw.
+    let mut w = world("warrior");
+    let player = w.state.player;
+    let at = dressed(
+        &mut w,
+        &[
+            ("iron_helm", "head", None),
+            ("chain_mail", "body", Some("silk")),
+        ],
+    );
+    let acid = w.content().damage_type_id("acid");
+    let mut events = Vec::new();
+    w.spell_type_lands(player, acid, &[player], &mut events);
+    assert!(damaged(&w, at[1]), "silk never withstands acid");
+    assert!(!damaged(&w, at[0]), "one piece");
+    assert_eq!(last(&w), "The acid eats at your silk chain mail shirt.");
+    w.spell_type_lands(player, acid, &[player], &mut events);
+    assert_eq!(w.state.player().inventory.len(), 1, "eaten away");
+    // Fire eats no gear.
+    let fire = w.content().damage_type_id("fire");
+    w.spell_type_lands(player, fire, &[player], &mut events);
+    assert!(!damaged(&w, 0));
+}
+
+#[test]
 fn the_ember_beetles_blood_pits_the_weapon_that_strikes_it() {
     let mut w = world("warrior");
     let player = w.state.player;

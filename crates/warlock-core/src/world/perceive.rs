@@ -165,9 +165,8 @@ impl World {
             if los.is_none() {
                 let level = self.state.current();
                 let viewer = self.state.player().pos;
-                *los = Some(LineOfSight::compute(viewer, VIEW_RADIUS, |p| {
-                    level.is_opaque(&content, p)
-                }));
+                let stops = level.sight_stops(&content, viewer, self.state.time);
+                *los = Some(LineOfSight::compute(viewer, VIEW_RADIUS, stops));
             }
         };
         for event in events.iter_mut() {

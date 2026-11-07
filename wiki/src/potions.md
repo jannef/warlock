@@ -71,6 +71,9 @@ has a hue, and a potion with several effects mixes their hues.
 | [Renewal](status-effects.md#status-renewing) | rose |
 | The unseen and the unplaced ([Quick-sensed](status-effects.md#status-quick-sensed), [Invisible](status-effects.md#status-invisible)) | opal |
 | Utility ([Water-borne](status-effects.md#status-water-borne)) | sky blue |
+| Smoke ([Fume](spellcasting.md#zones)) | ash grey |
+| Light ([Lit](status-effects.md#status-lit), a [Flare](spellcasting.md#spells-with-a-rule-of-their-own)) | silver |
+| [Acid](damage-types.md#damage-acid) | lime |
 | [Elixirs](#elixirs) (a [stat](stats.md) for good) | gold |
 | Harm | brown |
 
@@ -147,7 +150,13 @@ gives each flask's spell, its numbers, and its range in cells.
   of glass" ([Hearing](hearing.md#what-makes-noise)), and you learn nothing.
 - **A potion that is no flask** spills uselessly: "The potion shatters; the draught soaks away."
   You learn nothing from it either. It is a way to be rid of a potion you know is bad.
+- **Smoke**: a flask of smoke leaves a cloud of [smoke](spellcasting.md#zones) no eye sees into or
+  through, yours and every creature's: a way past archers, or out of a fight.
+- **Acid**: a vial of acid burns, keeps eating, and eats at the armour of anyone it harms, yours
+  too if you stand in it ([Acid](spellcasting.md#spell-types)).
 - **Drinking a flask** is a poor idea: the sleeping draught makes you drowsy, as the table says.
+  The flask of brilliance is the kind one: drunk, it makes you shed light about you a while
+  ([Lit](status-effects.md#status-lit)).
 
 ## Where to find them
 

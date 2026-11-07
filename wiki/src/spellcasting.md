@@ -134,7 +134,9 @@ creature below half its hit points, before what it resists. The undead are immun
 
 **Acid keeps eating.** Every creature an acid spell harms is
 [Corroded](status-effects.md#corroded) one degree: two more hit points over the next twelve seconds.
-Acid does not eat armour.
+Acid that harms you also eats at what you wear: the first piece (your body armour first) is
+[damaged](materials.md#item-damage) unless its material withstands acid by its chance, and a piece already
+damaged is eaten away. Acid eats no creature's gear.
 
 ### What lies in its way
 
@@ -181,7 +183,9 @@ Some [spells](magic.md#the-spells) do something no other spell does. None of the
 - **Gale** drives everyone on its line one cell straight away from you, the nearest first. Anyone
   with someone behind them stays put, and so does anyone [held or webbed](status-effects.md#status-held).
   It harms no one. It puts out the fires on its line and tears away the [zones](#zones) of fire,
-  foul cloud, and darkness on it; slick ground stays. A shut door stops it.
+  foul cloud, darkness, and smoke on it; slick ground stays.
+- **Flare** [stuns](status-effects.md#status-stunned) everyone it reaches who has eyes. The eyeless
+  (worms, the black pudding, the canoloth) take nothing. A shut door stops it.
 - **Bind** holds one hostile creature you see where it stands. It is
   [Pinned](status-effects.md#status-pinned) two degrees (more as your Presence grows), so it cannot
   step, though it may still strike. A pin eases a degree with each action it takes. Bind never
@@ -200,9 +204,9 @@ Some [spells](magic.md#the-spells) do something no other spell does. None of the
 ## Zones
 
 A **zone** is an area that lies on the floor for a while. [Balefire](magic.md#the-spells) burns,
-[Reek](magic.md#the-spells) poisons, [Mirk](magic.md#the-spells) darkens, and
-[Slick](magic.md#the-spells) trips. All four come only from
-[scrolls](magic.md#learning-spells-from-scrolls) you find.
+[Reek](magic.md#the-spells) poisons, [Mirk](magic.md#the-spells) darkens,
+[Slick](magic.md#the-spells) trips, and [Fume](magic.md#the-spells) smokes. All five come only
+from [scrolls](magic.md#learning-spells-from-scrolls) you find (and a flask of smoke lays Fume's).
 
 - A zone's cells stay as they were laid, and it never spreads.
 - It takes you and your [allies](allies.md) like anyone else. The caster has no protection from
@@ -216,6 +220,7 @@ A **zone** is an area that lies on the floor for a while. [Balefire](magic.md#th
 | Fire | whoever starts a turn on it or steps onto it | the spell's [fire](#spell-types) harm, one number rolled when it is laid and the same for all its time, halved by [Evasion](talents.md#talent-evasion); then fire's one chance in four of [burning](status-effects.md#burning). Each cell sheds a fire's light, and the [ice](temperature.md#water-freezes) under it melts as it is laid. It lies only on walkable ground out of the water |
 | Foul cloud | whoever starts a turn in it | [Poisoned](status-effects.md#poisoned) one degree more, no other harm; nothing to the [poison-immune](damage-types.md). It does not block sight |
 | Slick ground | whoever steps onto it or off it | a [Dexterity](stats.md#stat-dexterity) check against 12. Failed: [Staggered](status-effects.md#status-staggered), the next action half again as slow. The step is still taken. Nothing incorporeal slips. It lies only on walkable ground out of the water |
+| Smoke | no one directly | no eye sees into it or through it, yours and every creature's: your sight stops at its edge as at a wall, and whoever stands in it is seen only from a cell beside them. From inside, you see only the cells beside you. Light, missiles, and spells pass through it. [Gale](#spells-with-a-rule-of-their-own) tears it away; rain does not |
 | Darkness | no one directly | no light reaches its cells, the sun's included, and a light inside sheds none, a burning creature's too. Eyes that need light see nothing inside; [darkvision](vision.md#the-four-types) sees in as far as it reaches. Your own eyes follow the same rule: from inside, you see only the cell you stand on and what is lit beyond |
 
 A [cold](#spell-types) spell puts out the fire on each cell it reaches, and the rest of the zone

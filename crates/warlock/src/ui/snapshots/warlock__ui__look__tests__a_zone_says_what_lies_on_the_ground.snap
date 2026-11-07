@@ -19,4 +19,8 @@ expression: words
         Dark,
         "You remember a stone floor here, slick underfoot.",
     ),
+    (
+        Smoke,
+        "A stone floor in thick smoke.",
+    ),
 ]

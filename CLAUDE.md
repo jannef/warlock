@@ -215,7 +215,7 @@ no game time; `reveal` is the dev reveal: hidden location `ID` of the overworld 
 instead (a creature, `tag:` a tag, or an object id its pool can hold, or a variant id; its kills
 count from then, a variant's reveal is made; `docs/dev/quests.md`), no game time;
 `freeze:X,Y,R` and `thaw:X,Y,R` are the dev frost and heat bursts (radius 0 to 20
-around level cell (X, Y), in its line of sight; no time); `zone:KIND@X,Y,R` is the dev zone (`KIND` = `fire`, `fouled`, `slick`, `dark`; by the player, for ten turns, a fire's harm 4, within radius 0 to 20 in its line of sight; no time; refused on the overworld; `docs/dev/spells.md` "Zones"); `ACTION*N` repeats one, e.g.
+around level cell (X, Y), in its line of sight; no time); `zone:KIND@X,Y,R` is the dev zone (`KIND` = `fire`, `fouled`, `slick`, `dark`, `smoke`; by the player, for ten turns, a fire's harm 4, within radius 0 to 20 in its line of sight; no time; refused on the overworld; `docs/dev/spells.md` "Zones"); `ACTION*N` repeats one, e.g.
 `wait*10`). Dump layers: `view` (what the player sees), `fov` (`*` visible),
 `memory` (seen terrain, remembered objects, and known traps), `light` (perceived brightness of
 visible cells as a digit, `0` dark to `9` fully lit), `sound` (heard sounds at their rough places

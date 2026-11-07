@@ -15,6 +15,12 @@
 //! - **dark** (Mirk): no light reaches its cells and a source on them sheds none
 //!   ([`LevelState::shade`]), so eyes that need light see nothing there, the player's and a
 //!   creature's alike (`perception.rs`, `sight.rs`, one shade for both).
+//! - **smoke** (Fume): no eye sees into it or through it, the player's and a creature's alike
+//!   ([`LevelState::sight_stops`], the one rule the line of sight of every viewer is computed
+//!   with): a smoke cell stops a line of sight as a wall does, a viewer standing in smoke sees
+//!   only the cells beside it, and actors on a smoke cell farther than that are not seen
+//!   ([`LevelState::smoke_hides`]). Light passes, and nothing else reads it: no harm, no
+//!   check, and missiles and spells fly through. Gale clears it; rain does not.
 //!
 //! Rules: the cells are fixed, it never spreads; a new zone replaces an old one on the shared
 //! cells; it takes the caster and their allies like anyone (`by` is whose kill it is, never who
@@ -113,6 +119,30 @@ impl LevelState {
     /// Whether a darkness lies on `p` at `now`.
     pub(crate) fn darkened(&self, p: Pos, now: GameTime) -> bool {
         (self.zone_at(p, now)).is_some_and(|z| z.kind == ZoneKind::Dark)
+    }
+
+    /// Whether smoke lies on `p` at `now`.
+    pub(crate) fn smoky(&self, p: Pos, now: GameTime) -> bool {
+        !self.zones.is_empty() && (self.zone_at(p, now)).is_some_and(|z| z.kind == ZoneKind::Smoke)
+    }
+
+    /// The cells a line of sight from `viewer` at `now` stops at (module docs, "smoke"): opaque
+    /// terrain and smoke, and every cell for a viewer standing in smoke, who so sees only the
+    /// cells beside them. The one rule every viewer's line of sight is computed with.
+    pub(crate) fn sight_stops<'a>(
+        &'a self,
+        content: &'a Content,
+        viewer: Pos,
+        now: GameTime,
+    ) -> impl Fn(Pos) -> bool + 'a {
+        let blind = self.smoky(viewer, now);
+        move |p| blind || self.is_opaque(content, p) || self.smoky(p, now)
+    }
+
+    /// Whether smoke hides cell `p` from a viewer on `viewer` at `now`: it lies on `p`, and `p`
+    /// is not beside the viewer.
+    pub(crate) fn smoke_hides(&self, viewer: Pos, p: Pos, now: GameTime) -> bool {
+        viewer.chebyshev(p) > 1 && self.smoky(p, now)
     }
 
     /// What is left of `light` at `p` at `now`: a special room's share of it, and none in a

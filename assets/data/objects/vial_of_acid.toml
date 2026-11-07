@@ -1,0 +1,26 @@
+# A vial of acid (spec §8 "Potions": "Flasks"; the potions wave 2 design §4.4): thrown, it
+# shatters into the Acid splash spell's spray where it breaks, which keeps eating and eats at what
+# those it harms wear; drunk, it sears its drinker (Corroded). Acid is lime.
+[[object]]
+id = "vial_of_acid"
+name = "vial of acid"
+plural = "vials of acid"
+glyph = "!"
+fg = "#a8e040"
+class = "potions"
+materials = ["glass"]
+weight = 250
+value = 80
+stackable = true
+level = 4
+frequency = 12
+
+[object.drink]
+kind = "harm"
+dice = "2"
+status = "corroded"
+colour = "lime"
+
+[object.throw]
+spell = "acid_splash"
+words = "Acid sprays hissing from the shards."

@@ -111,8 +111,14 @@ every later flask (smoke, fire, frost, acid, the bombers) builds on.
   would catch the thrower asks first (`Aim::catches_reader`). Text snapshots `throw-list-flasks`,
   `potion-description-flask`.
 - **Content**: the sleeping draught (`sleeping_draught.toml`, Sleep at rung 0, range 6; drunk,
-  Drowsy 3; pink).
-- **Tests**: `world/flask_tests.rs` (fixture flasks on Fireball, Hex of weakness, and Slick):
+  Drowsy 3; pink). S3 (#1225): the flask of smoke (Fume: a smoke zone, radius 2, 15 turns;
+  drunk, Stunned 1; ash grey), the flask of brilliance (Flare: Stunned 1 on all with eyes,
+  radius 1; drunk, the safe one, `status` Lit 1 and Willpower marks; silver), the vial of acid
+  (Acid splash: 2d4 acid, radius 1, Corroded 1 and the player's armour eaten by acid's
+  `corrodes`; drunk, Corroded 2; lime). Their spells are plain spells with scrolls
+  (`docs/dev/spells.md`: "Zones" for smoke, "`only_sighted`", acid's `corrodes`).
+- **Tests**: `world/flask_tests.rs` (fixture flasks on Fireball, Hex of weakness, and Slick;
+  the three S3 flasks thrown at a dummy and brilliance drunk; `world/smoke_tests.rs` for smoke):
   the throw and the burst on the dummy, the first creature in the way, the thrower's kill and
   experience, learned only when seen and heard when not, a ray's hex, a zone by the thrower, a
   potion that spills, refusals, a death by one's own flask, saves and replays, the loader's

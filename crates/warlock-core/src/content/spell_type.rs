@@ -44,6 +44,8 @@ struct TypeSpec {
     bite: Option<BiteSpec>,
     #[serde(default)]
     immune_tags: Vec<String>,
+    #[serde(default)]
+    corrodes: bool,
 }
 
 #[derive(Deserialize)]
@@ -149,6 +151,9 @@ pub struct SpellType {
     pub bite: Option<TypeBite>,
     /// The creature tags immune to the type (`Content::load` lays it on their `resist`).
     pub immune_tags: Vec<String>,
+    /// Whether it eats the gear of those it harms: a piece the player wears takes acid's item
+    /// damage (`world/corrode.rs`).
+    pub corrodes: bool,
 }
 
 /// Reads and checks `[types]` of `data/spells.toml`: every key a damage type, every status and
@@ -262,6 +267,7 @@ fn resolve(spec: TypeSpec, content: &Content) -> Result<SpellType, String> {
         doors: spec.doors,
         bite,
         immune_tags: spec.immune_tags,
+        corrodes: spec.corrodes,
     })
 }
 
