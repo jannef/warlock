@@ -773,11 +773,6 @@ impl<'a, T> Once<'a, T> {
         self.set
             .ok_or_else(|| ContentError::new(first, format!("`[{}]` is missing", self.name)))
     }
-
-    /// The table, or `default` when no file set it.
-    pub(super) fn get_or(self, default: T) -> T {
-        self.set.map_or(default, |(_, value)| value)
-    }
 }
 
 #[derive(Deserialize)]

@@ -79,7 +79,6 @@ pub struct Aim {
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Target {
     Creature(ActorId),
-    Cell(Pos),
 }
 
 /// The last target the player loosed a missile at, on which level.
@@ -87,18 +86,18 @@ pub enum Target {
 pub struct LastTarget(pub Option<(String, Target)>);
 
 impl LastTarget {
-    /// Remembers what lies under `aim`'s cursor: the creature the player sees there, else the
-    /// cell.
+    /// Remembers the creature the player sees under `aim`'s cursor; an empty cell (or the
+    /// player's own) leaves no last target.
     pub fn remember(&mut self, view: &PerceptionView<'_>, aim: Aim) {
-        let target = match view.actor_at(aim.at) {
-            Some(actor) if aim.at != view.viewer() => Target::Creature(actor.id),
-            _ => Target::Cell(aim.at),
+        self.0 = match view.actor_at(aim.at) {
+            Some(actor) if aim.at != view.viewer() => {
+                Some((view.level_id().to_string(), Target::Creature(actor.id)))
+            }
+            _ => None,
         };
-        self.0 = Some((view.level_id().to_string(), target));
     }
 
-    /// Where the last target is now, if the player still sees it (a creature) or it lies on
-    /// this level (a cell).
+    /// Where the last target is now, if the player still sees that creature.
     fn now(&self, view: &PerceptionView<'_>) -> Option<Pos> {
         let (level, target) = self.0.as_ref()?;
         if level != view.level_id() {
@@ -106,7 +105,6 @@ impl LastTarget {
         }
         match *target {
             Target::Creature(id) => view.actors().iter().find(|a| a.id == id).map(|a| a.pos),
-            Target::Cell(p) => Some(p),
         }
     }
 }
@@ -124,18 +122,22 @@ fn targets(view: &PerceptionView<'_>) -> Vec<(Pos, Stance)> {
 }
 
 impl Aim {
-    /// Starts aiming `kind`: on the last target if it is still there, else on the nearest hostile
-    /// creature in view, else on the player.
+    /// Starts aiming `kind`: on the last target if it is still seen and within range, else on
+    /// the nearest hostile creature in view within range, else on the player. A kind with no
+    /// known range limits nothing.
     pub fn start(kind: AimKind, view: &PerceptionView<'_>, last: &LastTarget) -> Self {
+        let me = view.viewer();
+        let reach = Self { kind, at: me }.range(view).map(radius2);
+        let in_range = |p: &Pos| reach.is_none_or(|r| p.dist2(me) <= r);
         if aims_corpse(view, kind) {
-            let at = (view.corpses_in_sight().first().copied()).unwrap_or(view.viewer());
+            let at = (view.corpses_in_sight().into_iter().find(in_range)).unwrap_or(me);
             return Self { kind, at };
         }
-        let hostile = targets(view)
-            .into_iter()
-            .find(|(_, stance)| *stance == Stance::Hostile)
-            .map(|(p, _)| p);
-        let at = last.now(view).or(hostile).unwrap_or(view.viewer());
+        let hostile = (targets(view).into_iter())
+            .filter(|(_, stance)| *stance == Stance::Hostile)
+            .map(|(p, _)| p)
+            .find(in_range);
+        let at = (last.now(view).filter(in_range)).or(hostile).unwrap_or(me);
         Self { kind, at }
     }
 
@@ -543,12 +545,16 @@ mod tests {
         last.remember(&view, Aim { at: other, ..aim });
         assert!(matches!(last.0, Some((_, Target::Creature(_)))));
         assert_eq!(Aim::start(AimKind::Fire, &view, &last).at, other);
-        // A cell is remembered as a cell.
-        let spot = Pos::new(2, 2);
-        last.remember(&view, Aim { at: spot, ..aim });
-        assert_eq!(last.0, Some(("arena".to_string(), Target::Cell(spot))));
-        assert_eq!(Aim::start(AimKind::Fire, &view, &last).at, spot);
-        last.0 = Some(("hub".into(), Target::Cell(spot)));
+        // An empty cell is not remembered, and clears what was.
+        last.remember(
+            &view,
+            Aim {
+                at: Pos::new(2, 2),
+                ..aim
+            },
+        );
+        assert_eq!(last.0, None);
+        last.0 = Some(("hub".into(), Target::Creature(ActorId(0))));
         assert_eq!(Aim::start(AimKind::Fire, &view, &last).at, nearest);
         // With no one in view, the cursor starts on the player.
         let content = Arc::new(Content::builtin().expect("content"));
@@ -561,6 +567,52 @@ mod tests {
                 kind: AimKind::Throw(2),
                 at: view.viewer()
             }
+        );
+    }
+
+    #[test]
+    fn the_cursor_starts_only_within_range() {
+        let content = Arc::new(Content::builtin().expect("content"));
+        let spec: warlock_core::character::CharacterSpec =
+            "human,female,wizard".parse().expect("a wizard");
+        let mut w = World::start_run(content.clone(), "arena", Some(7), Some(&spec), None, true)
+            .expect("a run");
+        for action in
+            warlock_core::action::parse_actions("xp:2000000 levelup:auto wait*8").expect("ok")
+        {
+            w.apply(&action);
+        }
+        let view = w.perception();
+        let me = view.viewer();
+        let kind = AimKind::Ability(Ability::Spell(
+            content.spell_id("arcane_bolt").expect("a spell"),
+        ));
+        let aim = Aim { kind, at: me };
+        let reach = radius2(aim.range(&view).expect("a range"));
+        let hostiles: Vec<Pos> = (targets(&view).into_iter())
+            .filter(|(_, s)| *s == Stance::Hostile)
+            .map(|(p, _)| p)
+            .collect();
+        let (near, far) = (hostiles[0], *hostiles.last().expect("hostiles"));
+        // The nearest hostile in range is preferred; the cursor never starts out of range.
+        let started = Aim::start(kind, &view, &LastTarget::default()).at;
+        assert_eq!(started, if near.dist2(me) <= reach { near } else { me });
+        // A remembered creature out of range is skipped.
+        let mut last = LastTarget::default();
+        last.remember(&view, Aim { at: far, ..aim });
+        let started = Aim::start(kind, &view, &last).at;
+        let expect = if far.dist2(me) <= reach {
+            far
+        } else if near.dist2(me) <= reach {
+            near
+        } else {
+            me
+        };
+        assert_eq!(started, expect);
+        // Tab still reaches what is beyond it.
+        assert_eq!(
+            aim.cycle(&view, false).at,
+            targets(&view).last().expect("targets").0
         );
     }
 

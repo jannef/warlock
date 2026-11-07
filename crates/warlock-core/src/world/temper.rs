@@ -136,7 +136,7 @@ const WITHSTOOD: &str = "The work goes wrong, but no harm is done.";
 
 /// Whether `stack` is of a kind an anvil works at all: a weapon, a missile weapon, armour, or a
 /// shield (not ammunition, rings, or amulets).
-fn arms(content: &Content, stack: &Stack) -> bool {
+pub(super) fn arms(content: &Content, stack: &Stack) -> bool {
     content.object(stack.object).kind.is_some_and(|k| {
         matches!(k, ItemKind::Weapon | ItemKind::Launcher | ItemKind::Shield) || k.is_armour()
     })

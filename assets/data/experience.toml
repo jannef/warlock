@@ -154,3 +154,9 @@ zd = 24
 [[zero_difference]]
 from = 100
 zd = 25
+
+# Learning a spell by study (or a lucky mishap's insight) gives per_level × the spell's level
+# (at least one level's worth) once; spells a class, race, talent, or dev action hands out give
+# nothing.
+[spell]
+per_level = 5

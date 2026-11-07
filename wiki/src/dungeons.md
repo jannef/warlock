@@ -27,6 +27,16 @@ this way.
 
 {{#include generated/creature-rarities.md}}
 
+A dungeon is for fighting. Kinds that are not [hostile](creatures.md#factions) to you, the deer,
+bats, beetles, and other wild animals that leave you be, are chosen far less often when a floor is
+filled or a creature comes later: their weight is multiplied once more, by the share below, unless
+the [table of dungeons](#the-dungeons) says otherwise (the fey of Ælfhām are its folk and keep
+theirs). The draws they lose go to the hostile kinds, so a floor holds as many creatures as
+before. A [teeming den](teeming-dens.md) of wild beasts is still full of them, and on the land
+you explore from the overworld the wild animals are as common as ever.
+
+{{#include generated/neutral-weight.md}}
+
 ### Strays
 
 A dungeon holds mostly its own folk, but now and then something wanders in from elsewhere. One

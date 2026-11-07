@@ -649,6 +649,12 @@ pub enum Event {
         /// (`CreatureDef::natural_attacks`), which its words are said with; `None` otherwise.
         #[serde(default, skip_serializing_if = "Option::is_none")]
         natural: Option<u8>,
+        /// How the player's attack that rolled to hit (a blow, a shot, a throw, a spell) found
+        /// its target, told in the attack's own words ("You hit the sleeping kobold."): `None`
+        /// for an aware target and for anyone else's attack (spec §8 "Surprise and sneak
+        /// attacks"; `surprise.rs`).
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        caught: Option<Caught>,
     },
     /// A missile flew (spec §8 "Ranged combat"): a shot or a throw. As the player perceives it
     /// (the rest of the turn's events are kept only when seen; this one is cut to what was
@@ -729,6 +735,12 @@ pub enum Event {
         /// The affected cells the player can see; perception-filtered, never ground truth.
         cells: Vec<Pos>,
     },
+    /// The player identified inventory stack `item` by the Identify spell (a cast or the scroll
+    /// of identify) and learned something of it. The screen for that stack opens (the game's
+    /// description screen). Not sent for the other ways of identifying.
+    Identified {
+        item: usize,
+    },
     /// The player chatted with a creature, or asked it about a topic, and it answered (spec §8
     /// "Dialogue"): what it said and what the player may ask it about. One with topics opens
     /// the dialogue screen.
@@ -760,6 +772,21 @@ pub enum Event {
         actor: ActorId,
         at: Pos,
     },
+}
+
+/// How the player's attack found its target ([`Event::Attacked`]): what its words say of it,
+/// after the fact.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum Caught {
+    /// Asleep: "the sleeping kobold".
+    Asleep,
+    /// Awake but unaware of the player, and Surprised by it (it failed its initiative check),
+    /// or a disguised mimic: "the unsuspecting kobold".
+    Unaware,
+    /// Already suffering this flat-footed status (Surprised, Stunned), said by the status's
+    /// `seen` word: "the stunned kobold".
+    OffGuard(StatusId),
 }
 
 /// What became of a disease ([`Event::Disease`]).

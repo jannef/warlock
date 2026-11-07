@@ -162,6 +162,9 @@ mod free_blow;
 mod frenzy;
 pub(crate) mod freshness;
 mod gaze;
+pub(crate) mod gear_condition;
+#[cfg(test)]
+mod gear_condition_tests;
 mod gifts;
 mod glare;
 mod graveyard;
@@ -644,6 +647,9 @@ pub struct World {
     /// While the player strikes a free blow in another's turn (not saved): what is said
     /// meanwhile, to join the news (`free_blow.rs`).
     held: Option<Vec<String>>,
+    /// The sleeper the player's attack now under way found asleep (not saved; `surprise.rs`):
+    /// its waking is said after the attack's own line ("You hit the sleeping goblin.").
+    sleeper_struck: Option<ActorId>,
     /// Whether the missile that just reached someone was caught (not saved; Diamond soul,
     /// `ascetic.rs`): its flight ends there, and it falls.
     caught: bool,
@@ -1156,6 +1162,7 @@ impl World {
             news: Vec::new(),
             notes: Vec::new(),
             held: None,
+            sleeper_struck: None,
             caught: false,
             sprung: 0,
             spawned: 0,
@@ -2044,6 +2051,8 @@ mod summon_tests;
 mod sun_tests;
 #[cfg(test)]
 mod surprise_tests;
+#[cfg(test)]
+mod surprise_words_tests;
 #[cfg(test)]
 mod swim_deep_tests;
 #[cfg(test)]

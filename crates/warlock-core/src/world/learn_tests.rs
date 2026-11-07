@@ -636,3 +636,25 @@ fn level_one_casters_learn_their_kits_scrolls_and_keep_their_granted_spells() {
     assert!(!run(&mut w, &format!("study:{at}"))[0].took_turn);
     assert_eq!(last(&w), UNTRAINED);
 }
+
+#[test]
+fn learning_a_spell_by_study_pays_five_experience_a_spell_level_once() {
+    let mut w = identified(world());
+    set_spellcraft(&mut w, 40);
+    let before = w.state.experience;
+    // Frost is level 6.
+    run(&mut w, "study:c");
+    assert!(w.state.player().spells.contains(&sp("frost")));
+    assert_eq!(w.state.experience - before, 30);
+    // Fireball is level 11: 55. A level-0 spell pays 5.
+    let level = w.content.spell_of(sp("fireball")).expect("spell").level;
+    assert_eq!(level, 11);
+    let before = w.state.experience;
+    w.learn_spell(sp("fireball"));
+    assert_eq!(w.state.experience - before, 55);
+    assert_eq!(w.content.experience().spell_xp(0), 5);
+    // Learned again (a lucky mishap insight): nothing more.
+    let before = w.state.experience;
+    w.learn_spell(sp("fireball"));
+    assert_eq!(w.state.experience, before);
+}

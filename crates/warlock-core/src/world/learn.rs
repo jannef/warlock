@@ -287,12 +287,20 @@ impl World {
     }
 
     /// The player learns `spell` for good.
-    fn learn_spell(&mut self, spell: SpellId) {
+    pub(super) fn learn_spell(&mut self, spell: SpellId) {
         let name = (self.content.spell_of(spell)).map_or_else(String::new, |d| d.name.clone());
-        self.player_mut().spells.insert(spell);
+        let new = self.player_mut().spells.insert(spell);
         self.say(format!(
             "The scroll crumbles as its words settle in your mind: you have learned {name}."
         ));
+        // A spell learned by one's own effort pays once (a known spell is never studied again).
+        let level = self.content.spell_of(spell).map_or(0, |d| d.level);
+        let xp = self.content.experience().spell_xp(level);
+        if new && xp > 0 {
+            self.news
+                .push(format!("You gain {xp} experience for learning {name}."));
+            self.grant_xp(xp);
+        }
     }
 
     /// Takes one of inventory stack `item` from the pack (the last empties it).

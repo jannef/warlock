@@ -8,26 +8,26 @@ stairs Down at (68, 12) -> fennmynster:2
 stone_haunt at (7, 17) route E E N N S S S N N N S S W W
 stone_haunt at (56, 3) route S W N N S S E N
 sprite at (40, 14) route E E W W W W W E E E E E W W carrying a short bow (readied), 8 flint arrows (quivered)
-stone_haunt at (10, 17) route W W W E W E E E
+animated_book at (10, 17) route W W W E W E E E carrying a book
 stone_haunt at (58, 12) route N N E E E E E E E E W W W W W W W W S S
-sprite at (28, 5) route E S S S S N N N N W carrying a short bow (readied), 8 arrows (quivered)
-sprite at (44, 14) route N N E E E E W W W W S S carrying a short bow (readied), 8 arrows (quivered)
+corpse_candle at (28, 5) route E S S S S N N N N W
+sprite at (44, 14) route N N E E E E W W W W S S carrying a damaged short bow (readied), 8 arrows (quivered)
 corpse_candle at (9, 13) route E S S S S W N N W W E E S S E N N N N W
 animated_book at (8, 17) route E E S W W E E N W W carrying a book
-sprite at (19, 16) route E E W W W W W W E E E E E E W W carrying a short bow (readied), 15 arrows (quivered)
-sprite at (9, 15) route N W W S S S S N S N S N S N N N N E E S carrying a hardwood short bow (readied), 15 arrows (quivered)
+stone_haunt at (19, 16) route E E W W W W W W E E E E E E W W
+stone_haunt at (9, 15) route N W W S S S S N S N S N S N N N N E E S
 corpse_candle at (10, 18) route W W W N S E E E
-sprite at (7, 12) route S S S S S E E E S W E N W W W N N N N N carrying a short bow (readied), 15 arrows (quivered)
+stone_haunt at (7, 12) route S S S S S E E E S W E N W W W N N N N N
 sprite at (28, 12) route N N W N S E S S carrying a short bow (readied), 8 arrows (quivered)
 stone_haunt at (21, 16) route E E W W W W W W W W E E E E E E E E W W
-sprite at (54, 3) route W W W W W E E E W W W E E E E E carrying a short bow (readied), 15 arrows (quivered)
-stone_haunt at (10, 14) route S S S S W W E E N N N N
-sprite at (27, 10) route E E W W N N N S S S E E W W carrying a short bow (readied), 15 arrows (quivered)
+stone_haunt at (54, 3) route W W W W W E E E W W W E E E E E
+animated_book at (10, 14) route S S S S W W E E N N N N carrying a book
+stone_haunt at (27, 10) route E E W W N N N S S S E E W W
 corpse_candle at (59, 3) route W N S S W W E E N N S E
-sprite at (44, 13) route S N N E E W W S S N carrying a short bow (readied), 15 arrows (quivered)
-sprite at (6, 13) route E E E E S N W W W W carrying a short bow (readied), 8 arrows (quivered)
+corpse_candle at (44, 13) route S N N E E W W S S N
+sprite at (6, 13) route E E E E S N W W W W carrying a short bow (readied), 15 arrows (quivered)
 animated_book at (6, 17) route N N N S S N N S S N N S S S carrying a book
-sprite at (16, 4) route E E S N N S N S S N W W carrying a short bow (readied), 8 arrows (quivered)
+corpse_candle at (16, 4) route E E S N N S N S S N W W
 animated_book at (18, 5) route N N S S W W N E N S W S E E N N S S carrying a book
 corpse_candle at (31, 14) route S S N N E E W W S S N N
 alarm trap at (28, 7)
@@ -38,20 +38,20 @@ pit trap at (60, 12)
 
                                      ############    ########
                #####                 #.........¡######.....¡#
-               #¡..#                 #..........'.....f.G..y#
-               #f..#      #####      #^...<.....######......#
-               #..(#      #¡f.#      #..........#    #####'##
+               #¡..#                 #..........'.....G.G..y#
+               #y..#      #####      #^...<.....######......#
+               #..(#      #¡y.#      #..........#    #####'##
                ##'#########...#      #¡...^.....#        #.#
                 #.........'.^.#      ##.#########        #.#
                 ###########...###     #.#                #.#
                           #...'.#     #.#               ##'#############
-                          #f..#.#     #.#               #¡...........[.#
+                          #G..#.#     #.#               #¡...........[.#
      #######              ##.##.#     #.#  ##############.............(#
-     #.f..¡#               #f##.#    ##S####..............G.^.......>..#
-     #f..y.#               #.##.######.....#f############.............¡#
-     #....G#            ####.##y........f..Sf#          ################
-     #...f.##############.....#.######¡....###
-     #.....&.......f.G..S.?...'.#    #######
-     #(G(.G##############.....###
+     #.G..¡#               #f##.#    ##S####..............G.^.......>..#
+     #f..y.#               #.##.######.....#y############.............¡#
+     #....(#            ####.##y........f..Sf#          ################
+     #...G.##############.....#.######¡....###
+     #.....&.......G.G..S.?...'.#    #######
+     #(G(.(##############.....###
      #¡...y#            #######
      #######

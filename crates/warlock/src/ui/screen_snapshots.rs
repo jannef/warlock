@@ -1967,6 +1967,7 @@ pub(super) fn start(case: &Case, content: Arc<Content>) -> App {
                     screens::refresh,
                     screens::on_run_start,
                     screens::converse,
+                    screens::show_identified,
                     screens::on_death,
                     encounter::on_encounter,
                     screens::on_level_up,

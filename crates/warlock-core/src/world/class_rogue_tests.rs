@@ -545,7 +545,7 @@ fn lurking_a_hostile_stepping_up_takes_the_thiefs_blow_unawares_unless_it_hunts_
     let events = step_to(&mut w, kobold, here.step(Dir::E));
     assert!(struck(&events, player, kobold));
     let caught = |w: &World| {
-        (w.news.iter()).any(|m| m.contains("unawares") || m.contains("whirls to face you"))
+        (w.news.iter()).any(|m| m.contains("unsuspecting") || m.contains("whirls to face you"))
     };
     assert!(caught(&w), "{:?}", w.news);
     // One that hunts them is struck, but not caught unawares.

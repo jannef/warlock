@@ -14,7 +14,9 @@ Decipher ability's list (`ScreenName::Decipher`, `ObjectList::Decipher`: the scr
 not yet identified, `world::undeciphered`; choosing one sends `Action::Decipher`), the
 abilities menu (`a`), the
 dialogue screen (opened by
-`screens::converse` after an action this frame whose outcome is talk with topics,
+`screens::show_identified` opens the description screen (`DescribeScreen`) for the stack
+a cast of Identify (a cast or the scroll of identify) just told something of, from `Event::Identified { item }`
+(only when no screen is open; Esc returns to the map); `screens::converse` after an action this frame whose outcome is talk with topics,
 `Event::Talked`; asking is `ScreenAction::Act(Action::Ask)`, which closes it, and the answer
 reopens it on the topic asked, also when no topics are left), and the death screen (opened by
 `screens::on_death` when `World::death` is set; Enter/Esc is `MenuChoice::LeaveRun`, back to the

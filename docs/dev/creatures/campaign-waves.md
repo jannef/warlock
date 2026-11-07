@@ -49,3 +49,5 @@ status that `retaliates` acid `1d3`, #1128's innate statuses), and the marsh tro
 The will-o'-wisp (#1132, docs/dev/creatures.md "The unseen"): `[creature.invisible] cooldown =
 300`, it winks out with its light (an invisible creature sheds none of its own) and comes again
 unseen; its spark sets the struck one's mana ebbing (`ebbing`, 30 % of hits).
+
+Gear condition (#1193, `data/gear_condition.toml`): the scavengers' gear is often damaged, the kobolds' 55 % and the goblins' 50 % (Fine 1 % and 1.5 %); the undead's 95 % (docs/dev/creatures.md, "Gear condition").

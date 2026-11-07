@@ -721,6 +721,18 @@ developer notes (CLAUDE.md, `docs/dev/`).
   unique item (`unique:ID`, §8 "Magic items"): the Ascmearc's four wanted criminals (the
   `outlaws` faction, hostile to the player only and to no one else, with the footpads and
   footpad archers; #424, the guild design §8) each wield or wear their own this way.
+  **Condition** (`world/gear_condition.rs`, `data/gear_condition.toml`; #1193): every rolled
+  piece of arms or armour (not a stack of several, ammunition, rings, or a protected item: a
+  unique, of Proof, or anything a quest may ask for, §7 "Materials") draws a condition by the
+  creature's tribe (its first tag with a `[[tribe]]` row, else `[default]`; per mille): damaged
+  (the smith's state, §7 "Special rooms": a point worse, its word by its material: iron and steel
+  "rusted", other metals "corroded", wood, leather, and what withstands both plainly "damaged"),
+  Fine, Marvellous, or Masterwork (improvements as the Temper ability makes them, each counted as
+  an attempt), or as made. By default 30 % damaged, 4 % Fine, 0.8 % Marvellous, 0.2 % Masterwork;
+  the undead's gear 95 % damaged; scavengers' (kobolds, goblins, orcs, trolls) about half;
+  disciplined orders' (duergar, hobgoblins, drow, devils) 8 to 10 %, and Fine 10 to 15 %. A fixed
+  kit is never rolled and stays as made. The creature fights with the piece as it is, and it
+  drops as it is, its condition in its name. No talent (a sub-feature of item condition).
 - **Named monsters** (#424): a creature type whose `name` starts upper-case is a proper name
   ("Black Wystan"), said without an article wherever the game names a seen creature (combat,
   deaths, falls, waking, refusals, look mode: "Black Wystan (hostile, unhurt), ..."), as quest

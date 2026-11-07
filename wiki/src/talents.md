@@ -164,28 +164,14 @@ Some talents need a word more:
 
 {{#include generated/talents.md}}
 
-## Coverage
+## Talents by system
 
-Every part of the game has talents that make you better at it. Each talent names the parts it
-touches, from a fixed list, and every part on that list has at least one talent. Once
-[classes](classes.md) have their level tables, every part also has at least one
-[class ability](talents.md#class-abilities). Parts marked pending are still waiting for theirs.
+Each talent names the parts of the game it touches, from a list of broad parts: fighting,
+stealth, magic, light, hunger, and so on. A single kind of room, chest, or creature belongs to its
+part, not a part of its own. The table lists every part with the talents and
+[class abilities](talents.md#class-abilities) that touch it.
 
-The parts are broad: fighting, stealth, magic, light, hunger, and so on. A single kind of room,
-chest, or creature belongs to its part, not a part of its own. A talent is only made when it changes
-how a character plays, never for a number shown or a small gain in a rare place.
-
-This holds for the future too: **every new part of the game arrives with a talent**. That includes
-new [resources](resources.md). [Mana](mana.md#how-much) came with talents for a deeper pool, a
-quicker refill, and cheaper casting. [Spells](magic.md#the-spells) came with the Spellcraft tree
-([Quick study](talents.md#talent-quick-study), [Overreach](talents.md#talent-overreach),
-[School focus](talents.md#talent-school-focus)), and with talents for
-[wands](wands-and-rods.md#wands) and [rods](wands-and-rods.md#rods)
-([Wand mastery](talents.md#talent-wand-mastery), [Channeler](talents.md#talent-channeler)). Each
-[class](classes.md)'s own pool gets the same, such as a [berserker](classes.md#berserker)'s
-[rage](resources.md#rage) and a [ranger](classes.md#ranger)'s [focus](resources.md#resource-focus).
-
-[Abilities](abilities.md) that cost such a resource have no waiting time on top: the resource coming
-back with time is the limit.
+[Abilities](abilities.md) that cost a [resource](resources.md) have no waiting time on top: the
+resource coming back with time is the limit.
 
 {{#include generated/talents-by-system.md}}

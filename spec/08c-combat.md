@@ -266,7 +266,11 @@ developer notes (CLAUDE.md, `docs/dev/`).
   items": a branch level's depth, a hand-made level's `item_level`), "You gain 10 experience for
   finding your way here." as the turn is perceived; the level a run starts on, the overworld, and
   local areas give none, so walking the land is worth nothing. A level is new when this arrival
-  made its state (`World::travel`), so arrivals need no memory. A level
+  made its state (`World::travel`), so arrivals need no memory. **Learning a spell** by study
+  (or a lucky mishap's insight; never one a class, race, talent, or dev action hands out) gives
+  `[spell] per_level` (5) × the spell's level (a level-0 spell counts as 1), once, as the spell
+  joins the known set: "You gain 55 experience for learning Fireball." A failed study gives
+  nothing. A level
   gained says "You feel more experienced." and "Welcome to level N." (once per kill, naming the
   last level; after the attack's own messages, or as the turn is perceived for a creature that
   bled to death), and each level gained up to `hp_level` (50)
@@ -464,10 +468,15 @@ developer notes (CLAUDE.md, `docs/dev/`).
     like anyone. Vital strike or the finisher that hits one says "It has no vital spot." after
     the blow's line. The fleshy undead have vitals. Without `data/surprise.toml` everything has
     vitals and a missile's sneak attack has no reach limit.
-  - **Told after the fact**, never before, never a roll: "You catch the kobold unawares." / "The
-    kobold whirls to face you." before the player's blow's line (nothing more on a sleeper or a
-    mimic); "You are taken by surprise!" / "You keep your wits about you." before a creature's
-    attack line, after a trap's; look mode's "surprised"; Surprised in the status bar.
+  - **Told after the fact**, never before, never a roll: the player's attack that rolls to hit
+    (a blow, a shot, a throw, a spell) names its target, seen, by how it found it, in its own
+    line, hit or miss (#1211): "You hit the sleeping kobold." (asleep), "You hit the
+    unsuspecting kobold." (unaware and the check failed, or a mimic in disguise), "You miss the
+    surprised kobold." / "the stunned kobold" (already flat-footed by a status, by its `seen`
+    word); a check made is told by "The kobold whirls to face you." before the blow's line and
+    nothing more; an aware target or an unseen one, nothing. A creature's attack on the player
+    adds no such words: "You are taken by surprise!" / "You keep your wits about you." before
+    its attack line, after a trap's; look mode's "surprised"; Surprised in the status bar.
   - **Stalker's eye** (#687; the ranger's class ability at level 2 since #788): the perception snapshot carries `SeenActor::unaware` for each
     creature in view (`surprise::creature_unaware`, the creature half of `World::unaware`, a
     function of state: a sleeper, a mimic Chest-wise sees, one slipped past, one hunting no one

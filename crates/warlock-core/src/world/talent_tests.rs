@@ -290,10 +290,6 @@ fn a_pick_nothing_can_be_spent_on_is_dropped() {
             "needs = { level = 25 }\neffects = [\n    { kind = \"spell_mod\"",
             "needs = { level = 25, race = \"elf\" }\neffects = [\n    { kind = \"spell_mod\"",
         )
-        .replace(
-            "description = \"Items, scrolls, gems, and learning.\"",
-            "description = \"Items, scrolls, gems, and learning.\"\npending = true",
-        )
     });
     let content = Arc::new(Content::load(&files).expect("content"));
     let mut w = world_with(content);
