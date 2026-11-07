@@ -18,8 +18,8 @@ sight = 10
 footsteps = 40
 hearing = 20
 weight = 25000
-stats = { strength = 11, dexterity = 14, toughness = 10, intelligence = 3, willpower = 10, presence = 5 }
-base_hp = 2
+stats = { strength = 11, dexterity = 14, toughness = 4, intelligence = 3, willpower = 10, presence = 5 }
+base_hp = 1
 tameable = true
 nose = 6
 depart = "slinks away into the dark"

@@ -21,8 +21,8 @@ sight = 10
 hearing = 12
 weight = 50
 size = "small"
-stats = { strength = 8, dexterity = 14, toughness = 9, intelligence = 11, willpower = 17, presence = 11 }
-base_hp = 2
+stats = { strength = 8, dexterity = 14, toughness = 5, intelligence = 11, willpower = 17, presence = 11 }
+base_hp = 1
 attack = { damage = "1d4", damage_type = "cold", name = "touch", verb = "touches" }
 incorporeal = { wall_defence = 2 }
 resist = { cold = 50, poison = 100 }

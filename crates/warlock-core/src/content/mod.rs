@@ -161,6 +161,7 @@ mod spell_mod;
 mod spell_type;
 mod split;
 mod stance;
+pub mod starter;
 mod stat_training;
 mod status;
 mod steal;

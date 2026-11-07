@@ -17,8 +17,8 @@ sight = 8
 footsteps = 60
 hearing = 12
 weight = 90000
-stats = { strength = 15, dexterity = 11, toughness = 14, intelligence = 2, willpower = 11, presence = 4 }
-base_hp = 6
+stats = { strength = 15, dexterity = 11, toughness = 8, intelligence = 2, willpower = 11, presence = 4 }
+base_hp = 3
 tameable = true
 nose = 6
 depart = "crashes away through the brush"

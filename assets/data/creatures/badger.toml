@@ -18,8 +18,8 @@ footsteps = 40
 hearing = 15
 weight = 12000
 size = "small"
-stats = { strength = 13, dexterity = 10, toughness = 13, intelligence = 2, willpower = 13, presence = 4 }
-base_hp = 6
+stats = { strength = 13, dexterity = 10, toughness = 7, intelligence = 2, willpower = 13, presence = 4 }
+base_hp = 3
 natural = { defence = 1, protection = 0, name = "thick hide" }
 tameable = true
 nose = 6

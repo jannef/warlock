@@ -668,7 +668,7 @@ mod tests {
         // skill lowers its hearing from 5), and carrying limits.
         has(
             "creature-stats.md",
-            "| Giant rat | 1 | 5 | Common | 10 (+0) | 17 (+3) | 12 (+1) | 1 (\u{2212}5) | 12 (+1) | \
+            "| Giant rat | 1 | 5 | Common | 10 (+0) | 17 (+3) | 5 (\u{2212}3) | 1 (\u{2212}5) | 12 (+1) | \
              4 (\u{2212}3) | as its scores | - | - |",
         );
         has("creature-stats.md", "| Deer | 1 | 2 |");
@@ -685,16 +685,16 @@ mod tests {
         has("creature-stats.md", "| Listen 30 | - |");
         has(
             "creature-defences.md",
-            "| Giant rat | 12 | 13 (Dexterity +3) | - | - |",
+            "| Giant rat | 5 | 13 (Dexterity +3) | - | - |",
         );
         has(
             "creature-defences.md",
-            "| Cave beetle | 11 | 11 (Natural +1) | 3 (shell) | acid 50%, poison 25% |",
+            "| Cave beetle | 6 | 11 (Natural +1) | 3 (shell) | acid 50%, poison 25% |",
         );
         has(
             "creature-attacks.md",
-            "| Giant rat | up close | bite | 1d4 piercing | +0 | 22–24 ×2 | 5 seconds | 10% \
-             poisoned (2 degrees), 10% filth fever (unless resisted) |",
+            "| Giant rat | up close | bite | 1d4 piercing | +0 | 22–24 ×2 | 5 seconds | 1% filth \
+             fever (unless resisted) |",
         );
         has(
             "creature-attacks.md",
@@ -714,7 +714,7 @@ mod tests {
             "| Hound | 1200 | 5 seconds | 10 cells | Low-light | 20 | 40 | 6 cells | yes |",
         );
         has("companion-starts.md", "| Human | hound (1), boar (2) |");
-        has("companion-growth.md", "| hound | 1 | 12 hp,");
+        has("companion-growth.md", "| hound | 1 | 5 hp,");
         has(
             "familiar-starts.md",
             "| Human | cat (1), toad (1), hare (1) |",
@@ -1595,7 +1595,7 @@ mod tests {
                 "Big hits and confirmed criticals; ",
                 "the elder troll's claws (20%, 2 degrees)",
                 "the forest troll's claws (20%, 1 degree)",
-                "the giant leech's sucker (40%, 1 degree)",
+                "the giant leech's sucker (12%, 1 degree)",
                 "the two-headed troll's bites (20%, 1 degree)",
                 "| A hit point every 40 seconds, faster the worse it is | A degree a minute | Not at \
                  all | — | Bandage |",
@@ -1612,8 +1612,8 @@ mod tests {
             statuses,
             "| Poisoned | ",
             &[
-                "the giant rat's bite (10%, 2 degrees)",
-                "the grave worm's bite (20%, 1 degree)",
+                "the barrow spider's bite (10%, 1 degree)",
+                "the giant centipede's bite (10%, 1 degree)",
             ],
         );
         assert!(statuses.contains("| Diseased | no | Any disease, once it shows | Nothing |"));
@@ -1632,7 +1632,7 @@ mod tests {
             diseases,
             "| Filth fever | ",
             &[
-                "the giant rat's bite (10%)",
+                "the giant rat's bite (1%)",
                 "| Toughness, 54% | 1d3 days | Every day | 1d3 Dexterity, 1d3 Toughness | Two checks \
                  won in a row | no | Half as fast |",
             ],
@@ -1645,7 +1645,7 @@ mod tests {
         row_has(
             diseases,
             "| Grave rot | ",
-            &["the zombie's fist (15%)", "eating rotten food |"],
+            &["the zombie's fist (3%)", "eating rotten food |"],
         );
         row_has(
             diseases,

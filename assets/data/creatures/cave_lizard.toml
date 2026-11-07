@@ -18,8 +18,8 @@ footsteps = 30
 hearing = 10
 weight = 15000
 size = "small"
-stats = { strength = 12, dexterity = 12, toughness = 12, intelligence = 2, willpower = 10, presence = 4 }
-base_hp = 4
+stats = { strength = 12, dexterity = 12, toughness = 7, intelligence = 2, willpower = 10, presence = 4 }
+base_hp = 2
 natural = { defence = 1, protection = 0, name = "scales" }
 tameable = true
 depart = "slides back into a crack in the rock"

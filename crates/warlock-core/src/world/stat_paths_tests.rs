@@ -321,6 +321,11 @@ fn a_weapon_ability_paid_in_stamina_trains_toughness() {
     let stamina = content.resource_id("stamina").expect("stamina");
     let player = w.player_id();
     w.grant_resource(player, stamina);
+    // The kobold outlasts the first blow (a starter has few hit points, #1200).
+    for actor in w.state.actors.values_mut().filter(|a| a.id != player) {
+        actor.hp_base += 20;
+        actor.hp += 20;
+    }
     run(&mut w, "move:E");
     let got = earned(&mut w, |w| run(w, "use:lunge:E"));
     assert_eq!(got[Stat::Toughness], 1, "{:#?}", w.messages());

@@ -7,25 +7,25 @@
 use super::Content;
 use crate::stats::Stat;
 
-/// Every beast: its id, level, max hit points (Toughness + `base_hp`), attack dice, and whether
-/// it may be tamed, by id.
+/// Every beast: its id, level, max hit points (Toughness + `base_hp`; levels 1 to 5 cut to the
+/// starters' share, `content/starter.rs`, #1200), attack dice, and whether it may be tamed, by id.
 const BEASTS: &[(&str, u8, i32, &str, bool)] = &[
-    ("badger", 2, 19, "1d6", true),
+    ("badger", 2, 10, "1d6", true),
     ("bear", 12, 60, "2d6", true),
-    ("black_hound", 5, 24, "1d8", true),
-    ("boar", 2, 20, "1d8", true),
-    ("cat", 1, 10, "1d2", false),
-    ("cave_lizard", 2, 16, "1d6", true),
+    ("black_hound", 5, 22, "1d8", true),
+    ("boar", 2, 11, "1d8", true),
+    ("cat", 1, 4, "1d2", false),
+    ("cave_lizard", 2, 9, "1d6", true),
     ("great_boar", 6, 30, "2d6", true),
-    ("hare", 1, 10, "1d2", false),
-    ("hound", 1, 12, "1d4", true),
-    ("large_spider", 2, 13, "1d4", true),
-    ("lynx", 2, 13, "1d6", true),
+    ("hare", 1, 4, "1d2", false),
+    ("hound", 1, 5, "1d4", true),
+    ("large_spider", 2, 7, "1d4", true),
+    ("lynx", 2, 7, "1d6", true),
     ("panther", 6, 24, "1d8", true),
-    ("polecat", 1, 10, "1d4", true),
-    ("raven", 1, 9, "1d3", false),
-    ("toad", 1, 10, "1d2", false),
-    ("wolf", 4, 16, "1d6", true),
+    ("polecat", 1, 4, "1d4", true),
+    ("raven", 1, 4, "1d3", false),
+    ("toad", 1, 4, "1d2", false),
+    ("wolf", 4, 13, "1d6", true),
 ];
 
 #[test]

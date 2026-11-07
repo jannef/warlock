@@ -17,8 +17,8 @@ sight = 12
 footsteps = 40
 hearing = 22
 weight = 45000
-stats = { strength = 15, dexterity = 15, toughness = 14, intelligence = 4, willpower = 13, presence = 8 }
-base_hp = 10
+stats = { strength = 15, dexterity = 15, toughness = 13, intelligence = 4, willpower = 13, presence = 8 }
+base_hp = 9
 tameable = true
 nose = 10
 depart = "is gone into the fog"

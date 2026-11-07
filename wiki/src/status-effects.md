@@ -83,8 +83,8 @@ takes less. Look mode names it. It never eats armour.
 
 ## Poisoned
 
-Some creatures' attacks carry poison. Now and then a [giant rat](creatures.md#creature-rat)'s
-filthy bite leaves you sick: "You feel sick." So does bad food: [rotten food](food.md#food-spoils)
+Some creatures' attacks carry poison. Now and then a
+[barrow spider](creatures.md#creature-barrow-spider)'s bite leaves you sick: "You feel sick." So does bad food: [rotten food](food.md#food-spoils)
 (a [corpse](food.md#corpses) too) that stays down, or the flesh of some creatures (see
 [Food and corpses](food.md)).
 

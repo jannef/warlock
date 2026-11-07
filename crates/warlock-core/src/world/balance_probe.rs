@@ -79,6 +79,7 @@ mod familiar;
 mod ranger;
 mod schools;
 mod spread;
+mod starters;
 mod summons;
 mod tables;
 mod training;
@@ -1261,6 +1262,7 @@ fn balance_probe() {
     tables::fights(&p, &mut rng, &mut out);
     tables::depth(&p, &mut rng, &mut out);
     spread::spread(&p, &mut Rng::stream(1134, "spread"), &mut out);
+    starters::starters(&p, &mut Rng::stream(1200, "starters"), &mut out);
     dragon::dragons(&p, &mut Rng::stream(1099, "dragons"), &mut out);
     casters::casters(&p, &mut Rng::stream(1102, "casters"), &mut out);
     tables::bodies(&p, &mut rng, &mut out);

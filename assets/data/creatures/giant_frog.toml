@@ -18,8 +18,8 @@ footsteps = 40
 hearing = 12
 weight = 20000
 size = "small"
-stats = { strength = 12, dexterity = 15, toughness = 12, intelligence = 2, willpower = 8, presence = 3 }
-base_hp = 4
+stats = { strength = 12, dexterity = 15, toughness = 10, intelligence = 2, willpower = 8, presence = 3 }
+base_hp = 3
 on_eat = { message = "Like chicken, they say.", satiation = 300 }
 [creature.attack]
 damage = "1d6"

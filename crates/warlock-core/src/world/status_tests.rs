@@ -795,18 +795,19 @@ fn fights_with_wounds_and_poison_replay_exactly() {
 }
 
 #[test]
-fn the_built_in_rat_may_poison_and_wounds_may_bleed() {
+fn the_built_in_rat_may_sicken_and_wounds_may_bleed() {
     let content = Content::builtin().expect("builtin content");
     let rat = content.creature_id("rat").expect("rat");
     let bite = content.creature(rat).attack.as_ref().expect("a bite");
-    let poisoned = content.status_id("poisoned").expect("poisoned");
+    // A starter's rider (#1200): filth fever, 1 %; no poison.
+    let fever = content.disease_id("filth_fever").expect("filth fever");
     assert!(
-        bite.on_hit.iter().any(
-            |o| matches!(o.what, Affliction::Status { status, .. } if status == poisoned)
-                && o.chance < 100
-        ),
+        bite.on_hit
+            .iter()
+            .any(|o| o.what == Affliction::Disease(fever) && o.chance == 1),
         "a small chance"
     );
+    let poisoned = content.status_id("poisoned").expect("poisoned");
     let bleeding = content.status_id("bleeding").expect("bleeding");
     let def = content.status(bleeding);
     assert!(def.wound.is_some() && def.seen.is_some() && def.regen == 0);

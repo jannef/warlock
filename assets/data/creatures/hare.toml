@@ -19,7 +19,7 @@ footsteps = 20
 hearing = 4
 weight = 3500
 size = "small"
-stats = { strength = 4, dexterity = 17, toughness = 10, intelligence = 2, willpower = 10, presence = 5 }
+stats = { strength = 4, dexterity = 17, toughness = 4, intelligence = 2, willpower = 10, presence = 5 }
 depart = "bounds away into the dark"
 on_eat = { message = "Lean, gamey meat. It sits well." }
 [creature.attack]
