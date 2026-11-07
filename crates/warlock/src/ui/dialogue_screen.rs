@@ -107,8 +107,8 @@ impl DialogueScreen {
             return ScreenAction::Close;
         }
         let n = self.topics.len();
-        let number = press
-            .text
+        // The numpad moves the selection; only the top row's digits name topics.
+        let number = (press.text.filter(|_| !press.is_numpad()))
             .and_then(|c| c.to_digit(10))
             .and_then(|d| (d as usize).checked_sub(1))
             .filter(|&i| i < n);
@@ -458,6 +458,21 @@ mod tests {
         // not open to the showcase's character).
         assert_eq!(press(Press::nav(Nav::Up)), ScreenAction::Stay);
         assert_eq!(press(Press::nav(Nav::Enter)), ask("stairs"));
+        // The numpad moves the selection, whatever digit it types with Num Lock on: 2 wraps
+        // down to the first topic rather than asking the second (#1197).
+        let pad = Press::from_input(
+            &bevy::input::keyboard::KeyboardInput {
+                key_code: bevy::input::keyboard::KeyCode::Numpad2,
+                logical_key: bevy::input::keyboard::Key::Character("2".into()),
+                state: bevy::input::ButtonState::Pressed,
+                text: Some("2".into()),
+                repeat: false,
+                window: bevy::prelude::Entity::PLACEHOLDER,
+            },
+            &bindings,
+        );
+        assert_eq!(press(pad), ScreenAction::Stay);
+        assert_eq!(press(Press::nav(Nav::Enter)), ask("quest-rats"));
         assert_eq!(press(Press::nav(Nav::Back)), ScreenAction::Close);
     }
 
