@@ -452,7 +452,16 @@ role on #1097's `to_hit = L/4`; every roster test maps its roles onto a
 - **to-hit** of the natural attack: a striker (quick, assassin) `L/4 + L/8` (at most the data's
   20), a brute, shambler, or caster `L/4 − L/8`, everyone else `L/4`, each part rounded down. An
   armed type (`variance_roster_tests::armed`: a wielded weapon in its gear, the racial weapon
-  too) keeps `L/4`: its spread is the gear's and the weapon skill's.
+  too) keeps `L/4`: its spread is the gear's and the weapon skill's. **Armed types aim by
+  their ranks, never a flat to-hit** (#1169, `content/armed_roster_tests.rs`): the weapon's
+  skill (and Duelist, for a one-handed weapon fought with no shield in the gear) is raised to
+  the fewest ranks whose to-hit reaches `L/4` (a caster, a type with spells, `L/4 − L/8`), no
+  rank past what a trained warrior of the level holds (the balance probe's `rank`: 2 at level
+  1, 7 at 15–22, 10 from 42); a heavy weapon (great blades, axes, polearms: their ranks give
+  damage first) may stay below and holds the most the cap gives. The test pins every wielded
+  melee weapon's to-hit (its own, its skill's, its grip's style's, beside a shield whenever
+  the gear may give one) between that and `L/4 + 1`. A new armed type takes its ranks by the
+  same rule.
 - **threat and crit** of the natural attack: a striker `threat = 19` (crit ×2), a brute
   `threat = 24`, `crit = 3`, everyone else the defaults (22, ×2). The mean of the dice is the
   rosters' as before.
