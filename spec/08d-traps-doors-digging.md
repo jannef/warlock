@@ -137,8 +137,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     sees their side of it). Hidden, it looks like the door; searching and noticing in passing find
     it like any hidden trap ("Searching" below), and once known it shows as the trap's glyph in
     place of the door's, like any known trap (§4.2), and look mode names both ("An arrow trap, on
-    closed door."). A secret door is never trapped, as it is never locked (a content error in a
-    level file; generators never hide a trapped door). The trap hall's closets show them (§3).
+    closed door."). A secret door is never trapped, as it is never locked (generators never hide
+    a trapped door, and a level file's author does not trap one). The trap hall's closets show them (§3).
   - **Disarming traps** (`warlock-core/src/world/disarm.rs`; #232, the progression design's
     B7): the use of the Disable device skill, an ability (§6 "Abilities": `Ability::Disarm`,
     "Disarm a trap", in the Skills group; `KeyCommand::Disarm`, no key by default) and an action
@@ -194,7 +194,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     - **A try** at the locked closed door in a direction is a check (§8 "Checks"): 2d12 plus the
       Dexterity modifier (of the effective score) plus what Open lock gives (+8 at 100, +12 at
       200, at most 20) against the lock's **difficulty**: its own (`lock_difficulty` in level
-      and vault legends, 1 to 50; default 14, `door::LOCK_DIFFICULTY`), plus on a dungeon branch
+      and vault legends; default 14, `door::LOCK_DIFFICULTY`), plus on a dungeon branch
       its `locks_per_depth` for each level below the first (the Depths: 1, so 14 on the first
       level and 21 on the eighth). Two draws of the gameplay stream; a natural 2 fails and a
       natural 24 succeeds, as every check. It takes `pick_lock` whatever comes of it, may earn

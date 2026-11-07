@@ -229,11 +229,10 @@ fn tag_targets_are_checked_at_load() {
         "{error}"
     );
     let error = with_quest("tag:Goblin", 5).expect_err("refused");
-    assert!(error.contains("lower-case words"), "{error}");
-    let error = with_quest("tag:goblin", 1000).expect_err("refused");
-    assert!(error.contains("`count` is 1 to 999"), "{error}");
-    let error = with_quest("goblin", 100).expect_err("refused");
-    assert!(error.contains("`count` is 1 to 99"), "{error}");
+    assert!(
+        error.contains("tag `Goblin`: no creature carries it"),
+        "{error}"
+    );
     // A tag only another campaign's creatures carry: the hermit is the showcase's, so an
     // Ascmearc quest may not ask for it.
     let mut files = ContentFiles::builtin();

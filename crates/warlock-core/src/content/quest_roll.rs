@@ -23,17 +23,12 @@
 
 use super::Content;
 use super::creature::CreatureId;
-use super::dialogue::{MAX_REPLY, check_lines, is_id};
+use super::dialogue::{ID_SHAPE, is_id};
 use super::item_class::ItemClassId;
 use super::object::{ObjectId, article};
 use super::quest::{Goal, KillTarget, QuestDef, QuestKind, QuestTexts, Reveal, RevealSpec};
 use super::tag::TAG_TARGET;
 use serde::{Deserialize, Serialize};
-
-/// The most variants a quest has.
-pub const MAX_VARIANTS: usize = 32;
-/// The heaviest a variant's `weight` is.
-pub const MAX_WEIGHT: u32 = 1000;
 
 /// What a rolled quest drew as it was given (saved in its record): a creature type's, a tag's
 /// (`tag:goblin`), or an object type's id, the variant drawn, if any, and how many it asks for.
@@ -433,11 +428,6 @@ fn fill(text: &str, words: &Words) -> Result<String, String> {
     Ok(out)
 }
 
-/// Whether `text` has a placeholder.
-pub(super) fn has_placeholder(text: &str) -> bool {
-    text.contains('{') || text.contains('}')
-}
-
 /// Parses a quest's `pick` (for a quest of kind `kind` in campaign `campaign`).
 pub(super) fn parse_pick(
     spec: PickSpec,
@@ -455,31 +445,19 @@ pub(super) fn parse_pick(
     match (spec.creatures, spec.tags, spec.objects) {
         (Some(branches), None, None) => {
             want(QuestKind::Kill, "creatures")?;
-            if branches.is_empty() {
-                return Err("`pick.creatures` names no branch".into());
-            }
-            for (i, b) in branches.iter().enumerate() {
+            for b in &branches {
                 let d = (content.dungeon(b))
                     .ok_or_else(|| format!("`pick`: unknown dungeon branch `{b}`"))?;
                 if campaign.is_some() && d.campaign.is_some() && d.campaign.as_deref() != campaign {
                     return Err(format!("`pick`: branch `{b}` is another campaign's"));
-                }
-                if branches[..i].contains(b) {
-                    return Err(format!("`pick` names branch `{b}` twice"));
                 }
             }
             Ok(Pick::Creatures(branches))
         }
         (None, Some(tags), None) => {
             want(QuestKind::Kill, "tags")?;
-            if tags.is_empty() {
-                return Err("`pick.tags` names no tag".into());
-            }
-            for (i, tag) in tags.iter().enumerate() {
+            for tag in &tags {
                 super::quest::check_tag(content, campaign, tag)?;
-                if tags[..i].contains(tag) {
-                    return Err(format!("`pick` names tag `{tag}` twice"));
-                }
             }
             Ok(Pick::Tags(tags))
         }
@@ -503,16 +481,11 @@ pub(super) fn parse_variants(
     content: &Content,
     campaign: Option<&str>,
 ) -> Result<Vec<Variant>, String> {
-    if specs.len() > MAX_VARIANTS {
-        return Err(format!("a quest has at most {MAX_VARIANTS} variants"));
-    }
     let mut variants: Vec<Variant> = Vec::new();
     for spec in specs {
         let bad = |m: String| format!("variant `{}`: {m}", spec.id);
         if !is_id(&spec.id) {
-            return Err(bad(
-                "ids are lower-case letters, digits, and underscores".into()
-            ));
+            return Err(bad(ID_SHAPE.into()));
         }
         if variants.iter().any(|v| v.id == spec.id) {
             return Err(bad("a second variant of that id".into()));
@@ -528,10 +501,7 @@ pub(super) fn parse_variants(
             QuestKind::Bring => _ = object(content, &spec.target).map_err(bad)?,
             _ => return Err(format!("a {} quest has no variants", kind.id())),
         }
-        let weight = match spec.weight.unwrap_or(1) {
-            w @ 1..=MAX_WEIGHT => w,
-            _ => return Err(bad(format!("`weight` is 1 to {MAX_WEIGHT}"))),
-        };
+        let weight = spec.weight.unwrap_or(1);
         let reveals = match spec.reveals {
             Some(r) => Some(super::quest::reveal(content, campaign, r).map_err(bad)?),
             None => None,
@@ -552,15 +522,19 @@ pub(super) fn parse_variants(
     if variants.is_empty() {
         return Err("a quest's variants are at least one".into());
     }
-    if variants.iter().all(|v| v.fallback) {
-        return Err("a quest's variants are not all fallbacks".into());
+    // The draw sums the weights in a `u32`.
+    if (variants.iter())
+        .try_fold(0u32, |sum, v| sum.checked_add(v.weight))
+        .is_none()
+    {
+        return Err("the variants' weights add up past a u32".into());
     }
     Ok(variants)
 }
 
 /// The checks of a rolled quest `def`, made for every target its pool can hold (whatever the
-/// player can reach): its pool is not empty, a kill of a unique asks for one, and every text,
-/// filled, is one line of at most [`MAX_REPLY`] characters with no unknown placeholder.
+/// player can reach): its pool is not empty, and every text fills with no unknown or unclosed
+/// placeholder.
 pub(super) fn check(content: &Content, def: &QuestDef) -> Result<(), String> {
     let all = def.candidates(content, &|_| true);
     if all.is_empty() {
@@ -584,18 +558,7 @@ pub(super) fn check(content: &Content, def: &QuestDef) -> Result<(), String> {
 /// Checks one roll of `def`: as [`check`] says.
 fn check_roll(content: &Content, def: &QuestDef, roll: &Roll) -> Result<(), String> {
     let goal = goal_for(content, def, &roll.target, roll.count)?;
-    if let Goal::Kill {
-        target: KillTarget::Creature(c),
-        count,
-        ..
-    } = goal
-        && content.creature(c).unique
-        && count != 1
-    {
-        return Err("a unique is killed once: `count` is 1".into());
-    }
     // Fill as `rolled` does, but strictly, so a bad placeholder is an error.
-    let given = def.rolled(content, roll);
     let mut raw = def.clone();
     raw.goal = goal;
     let variant = roll
@@ -631,10 +594,6 @@ fn check_roll(content: &Content, def: &QuestDef, roll: &Roll) -> Result<(), Stri
     for text in texts.iter().chain(accept.iter()) {
         fill(text, &words)?;
     }
-    let mut said: Vec<&String> = vec![&given.texts.offer, &given.texts.reminder, &given.texts.done];
-    said.extend(given.texts.accept.iter());
-    said.extend(given.where_.iter());
-    check_lines(said, MAX_REPLY)?;
     Ok(())
 }
 

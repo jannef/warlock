@@ -10,11 +10,6 @@ use crate::geom::{Dir, Pos};
 use crate::grid::Grid;
 use serde::Deserialize;
 
-/// The most chests, heaps, or gems a treasure room's dice may give.
-pub const MAX_TREASURE: i32 = 16;
-/// The most gold coins one die of a heap may be worth.
-pub const MAX_COINS_EACH: u32 = 1000;
-
 /// How a special room's doors are hidden (`secret_doors = "all"`).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "snake_case")]
@@ -54,23 +49,17 @@ pub struct Heaps {
 }
 
 impl Treasury {
-    /// The fault in these numbers, if any: every count 0 to [`MAX_TREASURE`], a heap's dice
-    /// never below 0, and `each` 1 to [`MAX_COINS_EACH`].
+    /// The fault in these numbers, if any: every dice never below 0 (they roll counts).
     pub(super) fn check(&self) -> Result<(), String> {
         for (what, dice) in [
             ("chests", self.chests),
             ("gold.heaps", self.gold.heaps),
             ("gems", self.gems),
+            ("gold.dice", self.gold.dice),
         ] {
-            if dice.min() < 0 || dice.max() > MAX_TREASURE {
-                return Err(format!("treasure.{what} rolls 0 to {MAX_TREASURE}"));
+            if dice.min() < 0 {
+                return Err(format!("treasure.{what} never rolls below 0"));
             }
-        }
-        if self.gold.dice.min() < 0 {
-            return Err("treasure.gold.dice never rolls below 0".into());
-        }
-        if !(1..=MAX_COINS_EACH).contains(&self.gold.each) {
-            return Err(format!("treasure.gold.each is 1 to {MAX_COINS_EACH}"));
         }
         Ok(())
     }

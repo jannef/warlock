@@ -1,5 +1,5 @@
 //! A special room's `dressing` and a den's own `population` and `danger` (#487, animated
-//! objects A5: the armoury and the workshop): parsed, checked, and resolved against the
+//! objects A5: the armoury and the workshop): parsed and resolved against the
 //! creatures.
 
 use super::{Content, RoomEffectId, RoomEffects};
@@ -23,7 +23,7 @@ fn parse(extra: &str) -> Result<RoomEffects, String> {
 }
 
 #[test]
-fn dressing_parses_and_must_be_a_feature_terrain() {
+fn dressing_parses_and_divides_by_its_cells() {
     let effects =
         parse("dressing = { terrain = \"weapon_rack\", per_cells = 8, most = 6 }").expect("valid");
     let dressing = effects.get(RoomEffectId(0)).dressing.expect("dressing");
@@ -40,25 +40,15 @@ fn dressing_parses_and_must_be_a_feature_terrain() {
         ),
         (1, 2, 6)
     );
-    let floor = parse("dressing = { terrain = \"floor\", per_cells = 8, most = 6 }").unwrap_err();
-    assert!(floor.contains("dressing `floor`"), "{floor}");
-    let wall = parse("dressing = { terrain = \"wall\", per_cells = 8, most = 6 }").unwrap_err();
-    assert!(wall.contains("dressing `wall`"), "{wall}");
-    for bad in [
-        "per_cells = 0, most = 6",
-        "per_cells = 8, most = 0",
-        "per_cells = 8, most = 17",
-    ] {
+    for bad in ["per_cells = 0, most = 6", "per_cells = 8, most = 0"] {
         let text = format!("dressing = {{ terrain = \"workbench\", {bad} }}");
         assert!(parse(&text).is_err(), "{bad}");
     }
 }
 
 #[test]
-fn a_dens_own_population_and_danger_are_checked() {
+fn a_dens_own_population_and_factions_do_not_go_together() {
     assert!(parse(&format!("{DEN}, population = [\"kobold\"], danger = 10 }}")).is_ok());
-    let deep = parse(&format!("{DEN}, danger = 11 }}")).unwrap_err();
-    assert!(deep.contains("danger is at most 10"), "{deep}");
     let both = parse(&format!(
         "{DEN}, population = [\"kobold\"], factions = [\"vermin\"] }}"
     ));
@@ -86,11 +76,4 @@ fn a_dens_own_population_resolves_against_the_creatures() {
     );
     let unknown = resolve("\"no_such_thing\"").unwrap_err();
     assert!(unknown.contains("`no_such_thing` is unknown"), "{unknown}");
-    let twice = resolve("\"kobold\", \"kobold\"").unwrap_err();
-    assert!(twice.contains("named twice"), "{twice}");
-    let unique = (content.creature_defs().iter())
-        .find(|d| d.unique)
-        .expect("a unique");
-    let one = resolve(&format!("\"{}\"", unique.id)).unwrap_err();
-    assert!(one.contains("is unique"), "{one}");
 }

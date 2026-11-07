@@ -38,26 +38,15 @@
 //! `[[quest.variant]]`s ([`super::quest_roll`]), its texts naming the roll through placeholders.
 
 use super::creature::CreatureId;
-use super::dialogue::{DialogueId, MAX_LINE, MAX_REPLY, MAX_TOPICS, Speaker, check_lines, is_id};
-use super::object::{MAX_PLACED, ObjectId, parse_stacks};
+use super::dialogue::{DialogueId, ID_SHAPE, Speaker, is_id};
+use super::object::{ObjectId, parse_stacks};
 use super::quest_roll::{self, PickSpec, Rolled, Variant, VariantSpec};
-use super::tag::{MAX_TAG, TAG_TARGET, spoken};
+use super::tag::{TAG_TARGET, spoken};
 use super::{Content, ContentError};
 use crate::alignment::{MAX as ALIGNMENT_MAX, Requirement};
 use crate::object::Stack;
 use serde::Deserialize;
 
-/// The longest quest name, in characters: it is a topic ("Accept: …") and a log title.
-pub const MAX_NAME: usize = 32;
-/// The most creatures of a type a kill quest, or objects a bring quest, asks for (a tag's
-/// kill quest may ask for up to [`MAX_TAG_COUNT`]).
-pub const MAX_COUNT: u32 = 99;
-/// The most kills a tag's kill quest asks for.
-pub const MAX_TAG_COUNT: u32 = 999;
-/// The highest `min_level` a quest may ask for.
-pub const MAX_MIN_LEVEL: u8 = 100;
-/// The most experience a quest gives.
-pub const MAX_QUEST_XP: u32 = 1_000_000;
 /// The object a reward's `gold` is paid in.
 pub const GOLD: &str = "gold_coin";
 
@@ -531,9 +520,7 @@ pub(super) fn parse<'a>(
             let id = spec.id.clone();
             let bad = |m: String| err(format!("quest `{id}`: {m}"));
             if !is_id(&spec.id) {
-                return Err(bad(
-                    "ids are lower-case letters, digits, and underscores".into()
-                ));
+                return Err(bad(ID_SHAPE.into()));
             }
             if let Some(first) = seen.insert(spec.id.clone(), file) {
                 return Err(super::duplicate_id("quest", &spec.id, file, first));
@@ -551,7 +538,6 @@ pub(super) fn parse<'a>(
     if quests.len() > usize::from(u16::MAX) {
         return Err(err("too many quests".into()));
     }
-    check_topics(&quests, content).map_err(err)?;
     Ok(quests)
 }
 
@@ -564,20 +550,12 @@ fn resolve(
 ) -> Result<QuestDef, String> {
     let owner = campaign;
     let campaign = campaign.unwrap_or_default();
-    if spec.name.chars().count() > MAX_NAME {
-        return Err(format!("`name` is at most {MAX_NAME} characters"));
-    }
-    check_lines([&spec.name], MAX_LINE)?;
     let speaker = |name: &str| {
         content.speaker(name).ok_or_else(|| {
             format!("`{name}` is no one who talks (a creature or npc with a dialogue)")
         })
     };
     let giver = speaker(&spec.giver)?;
-    let count = |n: Option<u32>| match n.unwrap_or(1) {
-        n @ 1..=MAX_COUNT => Ok(n),
-        _ => Err(format!("`count` is 1 to {MAX_COUNT}")),
-    };
     let object = |id: &str| (content.object_id(id)).ok_or_else(|| format!("unknown object `{id}`"));
     let kind = spec.kind;
     let unused = |field: &str, given: bool| {
@@ -626,27 +604,7 @@ fn resolve(
                         .ok_or_else(|| format!("unknown creature `{target}`"))?,
                 ),
             };
-            let most = match target {
-                KillTarget::Creature(_) => MAX_COUNT,
-                KillTarget::Tag(_) => MAX_TAG_COUNT,
-            };
-            if let Some(what) = &spec.what {
-                let n = what.chars().count();
-                if n == 0 || n > MAX_TAG {
-                    return Err(format!("`what` is 1 to {MAX_TAG} characters"));
-                }
-                check_lines([what], MAX_LINE)?;
-            }
-            let count = match spec.count.unwrap_or(1) {
-                n @ 1.. if n <= most => n,
-                _ => return Err(format!("`count` is 1 to {most}")),
-            };
-            if let KillTarget::Creature(c) = target
-                && content.creature(c).unique
-                && count != 1
-            {
-                return Err("a unique is killed once: `count` is 1".into());
-            }
+            let count = spec.count.unwrap_or(1);
             if let Some(level) = &spec.level
                 && !content.has_level(campaign, level)
                 && content.dungeon(level).is_none()
@@ -666,7 +624,7 @@ fn resolve(
             let to = spec.to.as_deref().map(speaker).transpose()?;
             Goal::Bring {
                 object: object(&target)?,
-                count: count(spec.count)?,
+                count: spec.count.unwrap_or(1),
                 to: to.filter(|&to| to != giver),
             }
         }
@@ -678,15 +636,10 @@ fn resolve(
             if roll.is_some() {
                 return Err("a reach quest is not rolled".into());
             }
-            if !content.has_level(campaign, &target) {
-                return Err(format!("unknown level `{target}`"));
-            }
             // An endless branch's floor may be a target (#1119): it is forgotten on leaving, but
             // the arrival (`World::reach`) marks the quest, which is kept.
-            if spec.repeatable {
-                return Err(
-                    "a reach quest is not repeatable: a place once reached stays so".into(),
-                );
+            if !content.has_level(campaign, &target) {
+                return Err(format!("unknown level `{target}`"));
             }
             Goal::Reach { level: target }
         }
@@ -698,9 +651,6 @@ fn resolve(
                 return Err("a deliver quest is not rolled".into());
             }
             let to = speaker(spec.to.as_deref().ok_or("a deliver quest needs `to`")?)?;
-            if to == giver {
-                return Err("a delivery goes to someone other than the giver".into());
-            }
             Goal::Deliver {
                 object: object(&target)?,
                 to,
@@ -717,12 +667,6 @@ fn resolve(
             if !content.has_level(campaign, &target) {
                 return Err(format!("unknown level `{target}`"));
             }
-            // The one they are: a unique character, met once.
-            if spec.repeatable {
-                return Err(
-                    "an escort quest is not repeatable: its escort is one of a kind".into(),
-                );
-            }
             let name = spec
                 .escort
                 .as_deref()
@@ -733,12 +677,7 @@ fn resolve(
                     "`escort`: `{name}` is no unique character (an npc id)"
                 ));
             }
-            if escort == giver {
-                return Err("the escort is someone other than the giver".into());
-            }
             let joins = spec.joins.clone().ok_or("an escort quest needs `joins`")?;
-            check_lines([&joins], MAX_REPLY)?;
-            check_lines(spec.thanks.iter(), MAX_REPLY)?;
             let waits = (spec.waits.as_ref())
                 .map(|w| waits(content, campaign, w))
                 .transpose()?;
@@ -752,45 +691,17 @@ fn resolve(
         }
     };
     let reward = &spec.reward;
-    if reward.gold > MAX_PLACED {
-        return Err(format!("reward: `gold` is at most {MAX_PLACED}"));
-    }
     if reward.gold > 0 && content.object_id(GOLD).is_none() {
         return Err(format!("reward: gold needs the object `{GOLD}`"));
     }
-    if reward.xp > MAX_QUEST_XP {
-        return Err(format!("reward: `xp` is at most {MAX_QUEST_XP}"));
-    }
     let items = parse_stacks(&reward.items, content).map_err(|e| format!("reward: {e}"))?;
-    if roll.is_none() {
-        let mut said = vec![&texts.offer, &texts.reminder, &texts.done];
-        said.extend(texts.accept.iter());
-        said.extend(spec.where_.iter());
-        if said.iter().any(|t| quest_roll::has_placeholder(t)) {
-            return Err(
-                "placeholders (`{target}`) are for a quest with a `pick` or variants".into(),
-            );
-        }
-        check_lines(said, MAX_REPLY)?;
-    }
-    if let Some(r) = spec.requires_alignment {
-        r.check()?;
-    }
     let min_level = match (spec.min_level, &spec.early) {
         (None, None) => None,
-        (Some(level), Some(early)) => {
-            if !(1..=MAX_MIN_LEVEL).contains(&level) {
-                return Err(format!("`min_level` is 1 to {MAX_MIN_LEVEL}"));
-            }
-            if quest_roll::has_placeholder(early) {
-                return Err("`early` holds no placeholders".into());
-            }
-            check_lines([early], MAX_REPLY)?;
-            Some((level, early.clone()))
-        }
+        (Some(level), Some(early)) => Some((level, early.clone())),
         (Some(_), None) => return Err("`min_level` needs `early`, the giver's refusal".into()),
         (None, Some(_)) => return Err("`early` is for a quest with a `min_level`".into()),
     };
+    // The shift is multiplied by the scale (`Score::shifted`): past it, it would overflow.
     if spec.alignment.abs() > ALIGNMENT_MAX {
         return Err(format!(
             "`alignment` is -{ALIGNMENT_MAX} to {ALIGNMENT_MAX}"
@@ -801,9 +712,6 @@ fn resolve(
         let quest = (before.iter().position(|q| q.id == *id))
             .map(|i| QuestId(i as u16))
             .ok_or_else(|| format!("`requires`: no quest `{id}` before this one"))?;
-        if requires.contains(&quest) {
-            return Err(format!("`requires` names `{id}` twice"));
-        }
         requires.push(quest);
     }
     let reveals = spec
@@ -913,14 +821,13 @@ pub(super) fn reveal(
 }
 
 /// The tag a kill quest of campaign `owner` (`None`: outside every campaign) names, checked:
-/// written as a tag, and carried by a creature type a run of the campaign can meet (a typo is
-/// carried by none; another campaign's types do not count).
+/// carried by a creature type a run of the campaign can meet (a typo is carried by none;
+/// another campaign's types do not count).
 pub(super) fn check_tag(
     content: &Content,
     owner: Option<&str>,
     tag: &str,
 ) -> Result<String, String> {
-    super::tag::check(tag)?;
     if content.tagged_in(tag, owner).next().is_some() {
         return Ok(tag.to_string());
     }
@@ -931,23 +838,4 @@ pub(super) fn check_tag(
         )),
         None => Err(format!("tag `{tag}`: no creature carries it")),
     }
-}
-
-/// Everyone's topics fit the dialogue screen: their dialogue's own, and one per quest they give
-/// or take.
-fn check_topics(quests: &[QuestDef], content: &Content) -> Result<(), String> {
-    for (i, dialogue) in content.dialogues().iter().enumerate() {
-        let id = DialogueId(i as u16);
-        let theirs = (quests.iter())
-            .filter(|q| q.giver == id || q.turn_in() == id)
-            .count();
-        let topics = dialogue.topics.len() + theirs;
-        if topics > MAX_TOPICS {
-            return Err(format!(
-                "`{}` has {topics} topics with its quests; at most {MAX_TOPICS} fit",
-                content.speaker_name(id)
-            ));
-        }
-    }
-    Ok(())
 }

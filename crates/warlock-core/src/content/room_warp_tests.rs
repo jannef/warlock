@@ -1,4 +1,4 @@
-//! A special room's `warp` (spec §7 "Special rooms"): parsed, defaulted, refused over 100, and
+//! A special room's `warp` (spec §7 "Special rooms"): parsed, defaulted, refused below 0, and
 //! folded by [`Here::warp`].
 
 use super::{Here, RoomEffectId, RoomEffects};
@@ -23,9 +23,7 @@ fn warp_parses_and_defaults_to_never() {
 }
 
 #[test]
-fn warp_over_a_hundred_is_refused() {
-    let e = RoomEffects::parse("e.toml", &effect("x", 'x', 101), |_| None).unwrap_err();
-    assert!(e.message.contains("warp 101"), "{}", e.message);
+fn warp_below_zero_is_refused() {
     assert!(RoomEffects::parse("e.toml", &effect("x", 'x', -1), |_| None).is_err());
 }
 

@@ -7,7 +7,7 @@
 # takes no time. Distance counts diagonal steps as one (a creature two cells east and three
 # north is three away). The quick leave (`<` off any stairs) has its own, wider rule.
 
-# How near a hostile creature holds you at the edge, in cells (0 to 10; 0: never).
+# How near a hostile creature holds you at the edge, in cells (0: never).
 edge_reach = 3
 
 # Meeting someone on the way (#804). The tables below are all given or none (then nobody meets

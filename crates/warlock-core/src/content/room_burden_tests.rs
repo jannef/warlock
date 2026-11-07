@@ -1,7 +1,6 @@
-//! A special room's `burden` (spec §7 "Special rooms"): parsed, defaulted, refused out of range,
-//! and multiplied by [`Here::burden`].
+//! A special room's `burden` (spec §7 "Special rooms"): parsed, defaulted, and multiplied by
+//! [`Here::burden`].
 
-use super::room_effect::BURDEN;
 use super::{Here, RoomEffectId, RoomEffects};
 
 const PLAIN: &str = "[[effect]]\nid = \"plain\"\nname = \"plain room\"\nmark = \"p\"\n\
@@ -20,18 +19,6 @@ fn burden_parses_and_defaults_to_the_whole_limit() {
     let effects = RoomEffects::parse("e.toml", &text, |_| None).expect("valid");
     let burden = |i: u8| effects.get(RoomEffectId(i)).burden;
     assert_eq!((burden(0), burden(1)), (100, 50));
-    for b in [*BURDEN.start(), *BURDEN.end()] {
-        let text = effect("x", 'x', i32::from(b));
-        assert!(RoomEffects::parse("e.toml", &text, |_| None).is_ok(), "{b}");
-    }
-}
-
-#[test]
-fn burden_out_of_range_is_refused() {
-    for b in [0, 9, 1001] {
-        let e = RoomEffects::parse("e.toml", &effect("x", 'x', b), |_| None).unwrap_err();
-        assert!(e.message.contains(&format!("burden {b}")), "{}", e.message);
-    }
 }
 
 #[test]

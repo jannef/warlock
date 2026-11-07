@@ -184,7 +184,7 @@ fn creatures_inside_are_treated_by_their_own_side() {
 }
 
 #[test]
-fn a_level_files_shrine_needs_a_good_or_evil_side() {
+fn a_level_files_shrine_may_be_neutral() {
     for side in ["neutral", ""] {
         let mut files = ContentFiles::builtin();
         let side = if side.is_empty() {
@@ -201,8 +201,8 @@ fn a_level_files_shrine_needs_a_good_or_evil_side() {
                  \"S\" = \"shrine_stone\"\n\"k\" = \"floor\"\n"
             ),
         );
-        let e = Content::load(&files).unwrap_err();
-        assert!(e.to_string().contains("good or evil"), "{e}");
+        // A neutral shrine ignores everyone (`Regard::Ignored`).
+        assert!(Content::load(&files).is_ok(), "side `{side}`");
     }
 }
 

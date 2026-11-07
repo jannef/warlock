@@ -782,16 +782,8 @@ fn dialogue_data_is_validated() {
             "the player",
         ),
         (
-            "[[dialogue]]\nnpc = \"Old Tam\"\nlines = [\"x\"]\n",
-            "lower-case",
-        ),
-        (
             "[[dialogue]]\ncreature = \"sage\"\nlines = []\n",
             "at least one line",
-        ),
-        (
-            "[[dialogue]]\ncreature = \"sage\"\nlines = [\"\"]\n",
-            "not empty",
         ),
         (
             "[[dialogue]]\ncreature = \"sage\"\nlines = [\"x\"]\n\
@@ -800,8 +792,8 @@ fn dialogue_data_is_validated() {
         ),
         (
             "[[dialogue]]\ncreature = \"sage\"\nlines = [\"x\"]\n\
-             [[dialogue.topic]]\nid = \"A b\"\nname = \"n\"\nreply = \"r\"\n",
-            "lower-case",
+             [[dialogue.topic]]\nid = \"a b\"\nname = \"n\"\nreply = \"r\"\n",
+            "holds no `:` or whitespace",
         ),
         (
             "[[dialogue]]\ncreature = \"sage\"\nlines = [\"x\"]\n\
@@ -811,25 +803,14 @@ fn dialogue_data_is_validated() {
         ),
         (
             "[[dialogue]]\ncreature = \"sage\"\nlines = [\"x\"]\n\
-             mutter = { chance = 0, lines = [\"m\"] }\n",
-            "percent",
-        ),
-        (
-            "[[dialogue]]\ncreature = \"sage\"\nlines = [\"x\"]\n\
-             mutter = { chance = 5, verb = \"Hums loudly\", lines = [\"m\"] }\n",
-            "one lower-case word",
+             mutter = { chance = 5, lines = [] }\n",
+            "mutter: `lines` needs at least one line",
         ),
     ];
     for (text, message) in cases {
         let err = load(text).expect_err(text);
         assert!(err.contains(message), "{text}: {err}");
     }
-    let long = "x".repeat(crate::content::MAX_LINE + 1);
-    let err = load(&format!(
-        "[[dialogue]]\ncreature = \"sage\"\nlines = [\"{long}\"]\n"
-    ))
-    .expect_err("too long");
-    assert!(err.contains("at most 72"), "{err}");
     // A level's npc needs a dialogue of its own.
     let mut files = files();
     files.insert(

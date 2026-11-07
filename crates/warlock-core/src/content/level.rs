@@ -43,7 +43,7 @@ use super::danger::{
     CountSpec, DangerRule, DangerSpec, OddsSpec, SpawnSpec, Spawning, SpawningSpec, StrayPool,
 };
 use super::faction::FactionId;
-use super::flow::{FLOW_SPEEDS, Flow};
+use super::flow::Flow;
 use super::light::LightId;
 use super::monster_pool::{MonsterPoolSpec, VaultMonsters};
 use super::object::parse_stacks;
@@ -53,10 +53,7 @@ use super::shop::ShopPlan;
 use super::terrain::{StairsDir, TerrainDef, TerrainId};
 use super::trap::{Trap, TrapEffect};
 use super::unique::UNIQUE;
-use super::{
-    ActionKind, Content, ContentError, Cutting, DIFFICULTIES, MAX_ITEM_LEVEL, Rarity, Speaker,
-    StatusId,
-};
+use super::{Content, ContentError, Cutting, Rarity, Speaker, StatusId};
 use crate::alignment::Alignment;
 use crate::chest::Chest;
 use crate::door::{Lock, check_lock_id};
@@ -67,7 +64,7 @@ use crate::item_parts::{self, ItemPart};
 use crate::light::Light;
 use crate::magic::{Affix, LootGrade, LootPool, Magic};
 use crate::object::{Stack, add_to_pile};
-use crate::temperature::{LEVEL_TEMPERATURES, Temperature};
+use crate::temperature::Temperature;
 use serde::{Deserialize, Serialize};
 use std::collections::btree_map::Entry;
 use std::collections::{BTreeMap, BTreeSet};
@@ -386,10 +383,6 @@ impl ChestSpec {
     /// The level it gives: its own, or its band's least.
     fn level(&self, content: &Content) -> Result<u8, String> {
         match self {
-            ChestSpec::Level(0) => Err("`chest`: a level is 1 or more".into()),
-            ChestSpec::Level(level) if *level > MAX_ITEM_LEVEL => {
-                Err(format!("`chest`: a level is 1 to {MAX_ITEM_LEVEL}"))
-            }
             ChestSpec::Level(level) => Ok(*level),
             ChestSpec::Band(id) => (content.chests().band(id))
                 .map(|b| b.from)
@@ -840,12 +833,6 @@ pub(super) fn parse_level(
                 let id = content
                     .light_id(light)
                     .ok_or_else(|| err(format!("legend `{ch}` uses unknown light `{light}`")))?;
-                if !content.terrain(terrain).transparent {
-                    return Err(err(format!(
-                        "legend `{ch}` places a light on opaque terrain `{}`",
-                        entry.terrain()
-                    )));
-                }
                 lights.insert(pos, id);
             }
             if let Some(Spawn::Player) = detail.spawn
@@ -871,26 +858,12 @@ pub(super) fn parse_level(
                 traps.insert(pos, trap);
             }
             if let Some(spec) = &detail.loot {
-                if !content.terrain(terrain).walkable {
-                    return Err(err(format!(
-                        "legend `{ch}` places loot on terrain `{}`, which is not walkable",
-                        entry.terrain()
-                    )));
-                }
                 let pool = spec
                     .resolve(content)
                     .map_err(|m| err(format!("legend `{ch}`: {m}")))?;
                 loot.push((pos, pool));
             }
             if let Some(spec) = &detail.monsters {
-                let def = content.terrain(terrain);
-                if !def.walkable || def.is_door() {
-                    return Err(err(format!(
-                        "legend `{ch}` places monsters on terrain `{}`: they stand on walkable \
-                         ground, not a door",
-                        entry.terrain()
-                    )));
-                }
                 if detail.creature.is_some() || detail.trap.is_some() {
                     return Err(err(format!(
                         "legend `{ch}`: a cell of `monsters` holds no `creature` or `trap` too"
@@ -1049,16 +1022,6 @@ pub(super) fn parse_level(
             }
             (breach, _) => room.breach = breach.map(|[x, y]| Pos::new(x, y)),
         }
-        if def.shrine.is_some()
-            && room
-                .side
-                .is_none_or(|s| s == crate::alignment::Alignment::Neutral)
-        {
-            return Err(err(format!(
-                "room `{}` is a shrine: its `side` is good or evil",
-                spec.effect
-            )));
-        }
         if !room.is_valid_within(width, height) {
             return Err(err(format!(
                 "room `{}` area {:?} is not a rectangle inside the {width}x{height} map",
@@ -1113,9 +1076,6 @@ pub(super) fn parse_level(
         }
         let stacks =
             parse_stacks(&spec.objects, content).map_err(|m| err(format!("pile at {at}: {m}")))?;
-        if stacks.is_empty() {
-            return Err(err(format!("pile at {at} has no objects")));
-        }
         add_to_pile(objects.entry(at).or_default(), &stacks, content);
     }
     for spec in &parsed.item {
@@ -1129,9 +1089,6 @@ pub(super) fn parse_level(
         add_to_pile(objects.entry(at).or_default(), &[stack], content);
     }
     let item_level = parsed.item_level.unwrap_or(1);
-    if item_level == 0 || item_level > MAX_ITEM_LEVEL {
-        return Err(err(format!("`item_level` must be 1 to {MAX_ITEM_LEVEL}")));
-    }
     // A chest on every chest cell, of the level its legend gives, else the level's own.
     let chests: BTreeMap<Pos, Chest> = (terrain.iter())
         .filter(|(_, t)| content.terrain(**t).chest.is_some())
@@ -1141,18 +1098,8 @@ pub(super) fn parse_level(
             (p, Chest { level, holds })
         })
         .collect();
-    if let Some(at) = objects
-        .keys()
-        .find(|p| !content.terrain(terrain[**p]).walkable)
-    {
-        return Err(err(format!(
-            "objects at {at} lie on terrain `{}`, which is not walkable",
-            content.terrain(terrain[*at]).id
-        )));
-    }
     let shops =
         parse_shops(parsed.shop, &terrain, player_start, &mut creatures, content).map_err(err)?;
-    check_sealed(&terrain, &secrets, &rooms, player_start, content).map_err(err)?;
 
     let temperature = match parsed.temperature {
         Some(_) if parsed.kind.is_sky_exposed() => {
@@ -1161,13 +1108,6 @@ pub(super) fn parse_level(
                  the weather"
                     .into(),
             ));
-        }
-        Some(c) if !LEVEL_TEMPERATURES.contains(&c) => {
-            return Err(err(format!(
-                "`temperature` must be {} to {} (°C)",
-                LEVEL_TEMPERATURES.start(),
-                LEVEL_TEMPERATURES.end()
-            )));
         }
         c => c.map(|c| Temperature::degrees(c.into())),
     };
@@ -1255,8 +1195,7 @@ pub(super) fn parse_level(
     Ok(template)
 }
 
-/// A legend entry's named place (`name`, and `note` with it), if it has one. A hidden location
-/// takes its name from `hidden` once revealed: a `name` beside it would give it away.
+/// A legend entry's named place (`name`, and `note` with it), if it has one.
 fn parse_place(detail: &LegendDetail) -> Result<Option<Place>, String> {
     let Some(name) = &detail.name else {
         return match detail.note {
@@ -1264,15 +1203,6 @@ fn parse_place(detail: &LegendDetail) -> Result<Option<Place>, String> {
             None => Ok(None),
         };
     };
-    if name.trim().is_empty() {
-        return Err("the `name` is empty".into());
-    }
-    if detail.hidden.is_some() {
-        return Err("a hidden location has its name in `hidden` only".into());
-    }
-    if detail.note.as_ref().is_some_and(|n| n.trim().is_empty()) {
-        return Err("the `note` is empty".into());
-    }
     Ok(Some(Place {
         name: name.clone(),
         note: detail.note.clone(),
@@ -1294,7 +1224,8 @@ fn parse_hidden(
     }
     if !super::dialogue::is_id(id) {
         return Err(format!(
-            "hidden location `{id}`: ids are lower-case letters, digits, and underscores"
+            "hidden location `{id}`: {}",
+            super::dialogue::ID_SHAPE
         ));
     }
     let shown = content.terrain(terrain);
@@ -1312,9 +1243,6 @@ fn parse_hidden(
             "hidden location `{id}`: terrain `{}` is no way down",
             spec.terrain
         ));
-    }
-    if spec.name.trim().is_empty() {
-        return Err(format!("hidden location `{id}` has no name"));
     }
     Ok(HiddenLocation {
         id: id.clone(),
@@ -1342,9 +1270,6 @@ fn parse_shops(
         let kind = (shops.id(&spec.kind))
             .ok_or_else(|| format!("shop at {:?} is of unknown kind `{}`", spec.area, spec.kind))?;
         let bad = |m: &str| format!("shop `{}` at {:?}: {m}", spec.kind, spec.area);
-        if spec.keeper.trim().is_empty() {
-            return Err(bad("its `keeper` needs a name"));
-        }
         let [x0, y0, x1, y1] = spec.area;
         let plan = ShopPlan {
             kind,
@@ -1400,22 +1325,16 @@ fn parse_trap(
                 ground.id
             ));
         }
-        // A secret door is the wall it looks like until it is found; it is never trapped, as it is
-        // never locked.
-        if (detail.secret).is_some_and(|s| !matches!(s, SecretSpec::Default(false))) {
-            return Err("makes a door secret and trapped: a secret door is never trapped".into());
-        }
     } else if ground.chest.is_some() {
         // An open or smashed chest's trap went with its lid (spec §8 "Chests").
         return Err(format!(
             "places a trap on terrain `{}`: only a shut chest is trapped",
             ground.id
         ));
-    } else if !ground.walkable || ground.stairs.is_some() || ground.freeze.is_some() {
-        // Water that freezes is no place for a trap: ice may cover it, and a fall through the ice
-        // is its own (spec §5 "Ice").
+    } else if !ground.walkable {
+        // Nothing steps on it there.
         return Err(format!(
-            "places a trap on terrain `{}`, which is not walkable floor",
+            "places a trap on terrain `{}`, which is not walkable",
             ground.id
         ));
     }
@@ -1454,17 +1373,7 @@ fn parse_flow(
             Err(format!("legend `{ch}` has `flow_speed` but no `flow`"))
         }
         (None, false) => Ok(None),
-        (Some(dir), true) => {
-            let speed = speed.unwrap_or(100);
-            if !FLOW_SPEEDS.contains(&speed) {
-                return Err(format!(
-                    "legend `{ch}` has `flow_speed` {speed}; expected {} to {}",
-                    FLOW_SPEEDS.start(),
-                    FLOW_SPEEDS.end()
-                ));
-            }
-            Ok(Some(Flow::new(dir, speed)))
-        }
+        (Some(dir), true) => Ok(Some(Flow::new(dir, speed.unwrap_or(100)))),
     }
 }
 
@@ -1477,9 +1386,6 @@ fn parse_item(spec: &ItemSpec, content: &Content) -> Result<Stack, String> {
         .object_id(&spec.object)
         .ok_or_else(|| format!("unknown object `{}`", spec.object))?;
     let def = content.object(object);
-    if spec.affixes.is_empty() && spec.parts.is_empty() {
-        return Err("an item has `affixes` (magic), `parts` (gems, materials), or both".into());
-    }
     let count = spec.count.unwrap_or(1);
     if count == 0 || (count > 1 && !def.stackable) {
         return Err(format!(
@@ -1625,9 +1531,10 @@ fn parse_ice(ch: char, entry: &LegendEntry, terrain: &TerrainDef) -> Result<Opti
             terrain.id
         ));
     }
-    if !(1..=crate::ice::MAX_MM).contains(&mm) {
+    // The ice the simulation keeps is never thicker (`crate::ice::MAX`).
+    if mm > crate::ice::MAX_MM {
         return Err(format!(
-            "legend `{ch}` has `ice` {mm}; expected 1 to {} (mm)",
+            "legend `{ch}` has `ice` {mm}; at most {} (mm)",
             crate::ice::MAX_MM
         ));
     }
@@ -1684,17 +1591,10 @@ fn parse_lock(detail: &LegendDetail) -> Result<Option<Lock>, String> {
         }
         (Some(false) | None, None) => return Ok(None),
     };
-    let difficulty = match detail.lock_difficulty {
-        Some(d) if !DIFFICULTIES.contains(&i32::from(d)) => {
-            return Err(format!(
-                "`lock_difficulty` is {} to {}, not {d}",
-                DIFFICULTIES.start(),
-                DIFFICULTIES.end()
-            ));
-        }
-        d => d,
-    };
-    Ok(Some(Lock { difficulty, ..lock }))
+    Ok(Some(Lock {
+        difficulty: detail.lock_difficulty,
+        ..lock
+    }))
 }
 
 /// Hides the secret doors a legend placed (spec §8 "Searching"): each cell's terrain becomes the
@@ -1718,63 +1618,6 @@ fn hide_secret_doors(
         secrets.insert(pos, secret);
     }
     Ok(secrets)
-}
-
-/// Checks a level file's sealed rooms (`sealed = "dig"`, a greater treasure room; spec §7
-/// "Special rooms"), as `connect::validate` checks a generated one's: its `breach` opens it
-/// ([`super::breach_fault`]: a wall that breaks, beside a cell reached from the player's start
-/// and floor of the room), and none of its cells is reached from the start without breaking a
-/// wall. Reached is 4-connected through walkable cells, closed doors, and secret doors; a level
-/// without a start is reached from beside the breach.
-fn check_sealed(
-    terrain: &Grid<TerrainId>,
-    secrets: &BTreeMap<Pos, Secret>,
-    rooms: &[SpecialRoom],
-    start: Option<Pos>,
-    content: &Content,
-) -> Result<(), String> {
-    let open = |p: Pos| {
-        secrets.contains_key(&p)
-            || terrain.get(p).is_some_and(|t| {
-                let def = content.terrain(*t);
-                def.walkable || def.is_closed_door()
-            })
-    };
-    let sides = [Dir::N, Dir::E, Dir::S, Dir::W];
-    for room in rooms {
-        let Some(breach) = room.breach else {
-            continue;
-        };
-        let from: Vec<Pos> = match start {
-            Some(start) => vec![start],
-            None => (sides.iter().map(|d| breach.step(*d)))
-                .filter(|&p| !room.contains(p) && open(p))
-                .collect(),
-        };
-        let mut reached: std::collections::BTreeSet<Pos> = from.into_iter().collect();
-        let mut queue: Vec<Pos> = reached.iter().copied().collect();
-        while let Some(p) = queue.pop() {
-            for q in sides.map(|d| p.step(d)) {
-                if open(q) && reached.insert(q) {
-                    queue.push(q);
-                }
-            }
-        }
-        let fault = super::breach_fault(terrain, content, room, breach, |p| reached.contains(&p));
-        if let Some(fault) = fault {
-            return Err(format!(
-                "sealed room at {}-{}: its breach {breach} {fault}",
-                room.min, room.max
-            ));
-        }
-        if let Some(p) = room.cells().into_iter().find(|p| reached.contains(p)) {
-            return Err(format!(
-                "sealed room at {}-{} is reached at {p} without breaking a wall",
-                room.min, room.max
-            ));
-        }
-    }
-    Ok(())
 }
 
 /// A legend entry's monster pool with what its draws are given: its `status`, `carry`, and
@@ -1859,9 +1702,6 @@ fn parse_statuses(specs: &[String], content: &Content) -> Result<Vec<(StatusId, 
         if degrees > max {
             return Err(format!("`{spec}`: more than its {max} degrees"));
         }
-        if statuses.iter().any(|&(s, _)| s == id) {
-            return Err(format!("status `{name}` is placed twice"));
-        }
         statuses.push((id, degrees));
     }
     Ok(statuses)
@@ -1909,18 +1749,6 @@ pub(super) fn equip_ids(
             };
             let slot = equipment::free_slot(content, &equipment, object)
                 .ok_or_else(|| format!("cannot {verb} `{id}`: no free slot fits it"))?;
-            let held = matches!(
-                content.slot(slot).action,
-                ActionKind::Wield | ActionKind::Ready
-            );
-            if held != wields {
-                let (is, other) = if held {
-                    ("wielded, not worn", "wield")
-                } else {
-                    ("worn, not wielded", "wear")
-                };
-                return Err(format!("`{id}` is {is}: use `{other}`"));
-            }
             equipment.put(&equipment::slots_taken(content, object, slot), item);
         }
     }

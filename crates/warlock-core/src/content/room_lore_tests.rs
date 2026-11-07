@@ -2,7 +2,6 @@
 //! checked, resolved once the objects and skills are known, refused when they name nothing, never
 //! over a whole level, and `train` multiplied by [`Here::train`].
 
-use super::room_lore::{LOOT_COUNT, TRAIN};
 use super::{Content, ContentFiles, Here, ItemClassId, RoomEffectId, RoomEffects};
 use crate::skills::SkillId;
 
@@ -39,29 +38,12 @@ fn loot_and_train_are_checked_and_resolved() {
     let loot = def.loot.expect("loot");
     assert_eq!((loot.class, loot.count), (ItemClassId(7), [2, 4]));
     assert_eq!(def.train, vec![(SkillId(3), 200)]);
-    // The ends of the ranges parse.
-    let (least, most) = (LOOT_COUNT.start(), LOOT_COUNT.end());
-    assert!(
-        parse(&format!(
-            "loot = {{ class = \"c\", count = [{least}, {most}] }}"
-        ))
-        .is_ok()
-    );
-    for p in [TRAIN.start(), TRAIN.end()] {
-        assert!(parse(&format!("train = {{ s = {p} }}")).is_ok(), "{p}");
-    }
 }
 
 #[test]
 fn bad_numbers_and_unknown_names_are_refused() {
-    for bad in ["[0, 2]", "[3, 2]", "[1, 17]"] {
-        let e = parse(&format!("loot = {{ class = \"c\", count = {bad} }}")).unwrap_err();
-        assert!(e.contains("loot.count"), "{bad}: {e}");
-    }
-    for bad in [0, 1001] {
-        let e = parse(&format!("train = {{ stealth = {bad} }}")).unwrap_err();
-        assert!(e.contains(&format!("train.stealth {bad}")), "{e}");
-    }
+    let e = parse("loot = { class = \"c\", count = [3, 2] }").unwrap_err();
+    assert!(e.contains("loot.count"), "{e}");
     let e = parse("level_chance = 5\npervade = \"All.\"\nloot = { class = \"c\", count = [1, 1] }")
         .unwrap_err();
     assert!(e.contains("level_chance"), "{e}");

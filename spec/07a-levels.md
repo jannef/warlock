@@ -96,8 +96,8 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   stays empty). Only dungeon vaults
   draw them (in a level file or an outdoor vault it is a content error), and a pool that can hold
   nothing (an unknown tag, one no drawable type has, a tag pool of a campaign vault with no type
-  of its campaign), `"level"` beside tags, a `count` of 0 or over the cells, a cell that is a door
-  or not walkable, or one with a `creature` or `trap` too, is a content error. The entry may also
+  of its campaign), `"level"` beside tags, a `count` of 0 or over the cells, or a cell with a
+  `creature` or `trap` too, is a content error. The entry may also
   give what a placed creature's may, applied to what is drawn (the draw itself is the same):
   `status` (each draw is placed with it, `status = ["asleep"]`: a sleeping crowd), `carry` (the
   first one placed carries it on top of its gear, `carry = ["brass_key"]`: the key to the vault's
@@ -110,15 +110,15 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
 - **Locks in level files** (M19, §8 "Doors"): a legend entry on a closed door locks it with
   `lock = "pantry"` (a lock id: keys with that id open it, and skeleton keys) or `locked = true`
   (a lock without an id: only a skeleton key opens it), and `lock_difficulty = N` with either
-  sets how hard it is to pick (1 to 50; default 14, `door::LOCK_DIFFICULTY`; §8 "Doors"). A
+  sets how hard it is to pick (default 14, `door::LOCK_DIFFICULTY`; §8 "Doors"). A
   lock on anything but a closed door or a shut chest, an empty lock id or `*`, a `lock` with `locked = false`,
-  or a `lock_difficulty` without a lock or out of range is a content error. Hand-made levels
-  need not give a lock's key (a door may be meant to be kicked in, or picked); vaults must
-  (below). A shut chest is locked the same way.
+  or a `lock_difficulty` without a lock is a content error. Hand-made levels
+  need not give a lock's key (a door may be meant to be kicked in, or picked); vaults' authors
+  give it (below). A shut chest is locked the same way.
 - **Chests in level files** (§8 "Chests"): every cell of the shut `chest` terrain (or `chest_open`,
   `chest_smashed`) is a chest. A legend entry on a shut chest gives its level with `chest =
-  "kist"` (that band's least level, `data/chests.toml`) or `chest = 7` (1 to the item levels'
-  most; default the level's `item_level`), locks it as a door (`locked`, `lock`,
+  "kist"` (that band's least level, `data/chests.toml`) or `chest = 7` (clamped to the item
+  levels; default the level's `item_level`), locks it as a door (`locked`, `lock`,
   `lock_difficulty`), traps it as a door (`trap`, `known`, `dir`; any trap but a pit), and fills
   it with `objects` (what it holds, not a pile). A `chest` on any other terrain, an unknown band,
   a pit on a chest, or a trap on an open or smashed chest is a content error; vaults hold no
@@ -141,9 +141,9 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   Fennmynster."), and it is **marked on the player's map** (their memory of the overworld holds
   the entrance) wherever they are; revealed before the overworld is made, it is applied as it is
   made. A rumoured way (§8 "Dialogue") that passes it marks only its plain terrain. The id
-  (lower-case letters, digits, and underscores) is unique on the overworld; a hidden
+  (without `:` or whitespace: `reveal:ID`) is unique on the overworld; a hidden
   location on any other level, on a cell that is not walkable or is a location already, with an
-  unknown `terrain` or one that is no way down, an unknown `to`, or no `name` is a content error.
+  unknown `terrain` or one that is no way down, or an unknown `to` is a content error.
   Without `to` it leads nowhere yet (its level is not built), like stairs without one.
   The Ascmearc hides seven: Fennmynster and Fyrdelf, and the four lairs of the wanted (Wyrtholm,
   Wulfeshol, Bānfeld, Brocenburg; #426), each revealed by its own variant of Wat One-Eye's
@@ -202,8 +202,8 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   a flooded room's floor, §7 "Special rooms") steps at 150 and splashes like water. Running
   water (`running_water`, terrain with a `flow`
   animation) needs a flow on every cell, given by its legend entry: `flow` (the direction it runs,
-  `N` … `NW`) and an optional `flow_speed` (percent of the terrain's animation speed, 10–300,
-  default 100). The shared legend (`data/legend.toml`) draws running water as arrows pointing the
+  `N` … `NW`) and an optional `flow_speed` (percent of the terrain's animation speed, default
+  100). The shared legend (`data/legend.toml`) draws running water as arrows pointing the
   way it flows: `↑ ↗ → ↘ ↓ ↙ ← ↖` at normal speed and `⇑ ⇗ ⇒ ⇘ ⇓ ⇙ ⇐ ⇖` at double speed, so a
   stream reads in the map file as it flows, e.g. `~~~←←←~~~`. A `flow` on any other terrain, or
   running water without one, is a content error. Levels carry their flow into the game (saved with

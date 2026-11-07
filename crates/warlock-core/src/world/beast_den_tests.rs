@@ -48,18 +48,14 @@ fn a_beast_den_is_data() {
 }
 
 #[test]
-fn unknown_or_twice_named_factions_are_refused() {
+fn unknown_factions_are_refused() {
     let shipped = include_str!("../../../../assets/data/room_effects.toml");
     let good = r#"factions = ["wildlife", "vermin", "marsh"]"#;
     assert!(shipped.contains(good), "the shipped beast den");
-    for bad in [
-        r#"factions = ["wildlife", "dragons"]"#,
-        r#"factions = ["vermin", "vermin"]"#,
-    ] {
-        let mut files = ContentFiles::builtin();
-        files.insert("data/room_effects.toml", &shipped.replace(good, bad));
-        assert!(Content::load(&files).is_err(), "{bad}");
-    }
+    let bad = r#"factions = ["wildlife", "dragons"]"#;
+    let mut files = ContentFiles::builtin();
+    files.insert("data/room_effects.toml", &shipped.replace(good, bad));
+    assert!(Content::load(&files).is_err(), "{bad}");
     let mut files = ContentFiles::builtin();
     let text = shipped.replace(r#"hoard = "corpses""#, r#"hoard = "gold""#);
     files.insert("data/room_effects.toml", &text);

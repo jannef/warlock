@@ -14,7 +14,7 @@ legend; see `assets/campaigns/showcase/levels/hub.toml` and spec §7. A legend e
 to override its type's alignment the same way (`Actor::alignment_override`, read with
 `Actor::nature`; `docs/dev/alignment.md`), and `status = ["blessed", "weakened*2"]` to place it
 with statuses (`CreatureSpawn::status`, `level.rs::parse_statuses`: a status id, `*N` degrees,
-default one; unknown, over its `max`, or twice refused; added in `travel.rs::make_creature`
+default one; unknown or over its `max` refused; added in `travel.rs::make_creature`
 beside a den's `asleep`; the test world's `circles` hall, spec §4.8 "Spell circles"). The showcase (hub, vast, courtyard) is safe
 this way: `xtask/src/vast.rs` emits it for its rats and kobolds; fighting is the arena's and the Depths'. A level
 file's optional `arrival = "..."` line is said when the player arrives by stairs (a dungeon
@@ -46,8 +46,8 @@ each end included; absent, every danger) keeps a vault drawn at random to floors
 past danger 1, its `from`, and a shallow one its `to`. The level parser reads a top-level
 `danger` as a level's rule first (`level::DangerField`), then as this range, which
 `vault::parse_danger` reads again; refused at load: on a level, on an outdoor vault, on a vault
-a branch level names, with `from` above `to` or an end past 99, and a level's own rule
-(`danger = 3`) on a vault (`mapgen/vault_danger_tests.rs`). `secret =
+a branch level names, and a level's own rule (`danger = 3`) on a vault (the ends are the
+author's, #1205) (`mapgen/vault_danger_tests.rs`). `secret =
 true` (or a difficulty) on a closed door makes it a secret door: the cell shows the wall around
 it until found (`docs/dev/searching.md`). Water: `~` is still water; running water (terrain with a
 `flow` anim) needs a flow on every cell from its legend entry (`flow = "S"`, optional

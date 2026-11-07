@@ -715,7 +715,7 @@ fn bad_locks_and_keys_are_reported() {
 }
 
 #[test]
-fn a_vaults_locks_need_their_keys_within_reach() {
+fn a_vaults_locks_load_whether_or_not_their_keys_are_within_reach() {
     // The entrance at the bottom opens west of the locked door (`P`, the default legend's).
     let vault = |inner: &str| {
         format!(
@@ -725,13 +725,9 @@ fn a_vaults_locks_need_their_keys_within_reach() {
              \"S\" = {{ terrain = \"floor\", objects = [\"skeleton_key\"] }}\n"
         )
     };
-    // A key lies, or is carried (`q`), on this side of the lock: fine.
-    for inner in ["K.P..", "q.P..", "S.P.."] {
+    // A key on this side of the lock, carried (`q`), none, another lock's, or one behind the
+    // lock: the author places the keys; the loader does not judge it.
+    for inner in ["K.P..", "q.P..", "S.P..", "..P..", "B.P..", "..P.K"] {
         load_with("vaults/v.toml", &vault(inner)).unwrap_or_else(|e| panic!("{inner}: {e}"));
-    }
-    // No key, a key to another lock, or the key only behind the lock itself.
-    for inner in ["..P..", "B.P..", "..P.K"] {
-        let err = load_with("vaults/v.toml", &vault(inner)).unwrap_err();
-        assert!(err.contains("no key to the lock"), "{inner}: {err}");
     }
 }

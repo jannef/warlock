@@ -8,42 +8,32 @@ use super::{ContentError, ParticleEmitter, ParticleTrigger};
 use crate::time::MONTHS_PER_YEAR;
 use crate::weather::Weather;
 use serde::Deserialize;
-use std::ops::RangeInclusive;
 
-/// The most overworld sight a weather may take away, in cells.
-pub const MAX_SIGHT_LOSS: u8 = 8;
 /// Without a weather file, every month's mean temperature, in °C.
 pub const MILD: i8 = 10;
 /// Without a weather file, the day's swing of temperature under a clear sky, in °C.
 pub const MILD_SWING: u8 = 8;
-/// The coldest and warmest a month's mean temperature may be, in °C.
-pub const MONTH_TEMPERATURES: RangeInclusive<i8> = -40..=40;
-/// The largest daily swing of temperature under a clear sky, in °C.
-pub const MAX_SWING: u8 = 30;
-/// The most a weather may cool the air, in °C.
-pub const MAX_CHILL: i8 = 15;
 
 /// One weather's effects. Clear weather is the sky as it is: all of its light, no particles.
 #[derive(Clone, Debug, PartialEq, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct WeatherDef {
-    /// Percent of the direct light of the sun and the moons that gets through the clouds (1 to
-    /// 100).
+    /// Percent of the direct light of the sun and the moons that gets through the clouds.
     pub direct: u8,
-    /// Percent of the sky's own light that gets through (1 to 100).
+    /// Percent of the sky's own light that gets through.
     pub sky: u8,
     /// Percent of the direct light the clouds spread over the whole sky, as sky light: soft light
-    /// that reaches the shade too (0 to 100).
+    /// that reaches the shade too.
     #[serde(default)]
     pub scatter: u8,
-    /// Cells of overworld sight lost (0 to [`MAX_SIGHT_LOSS`]).
+    /// Cells of overworld sight lost.
     #[serde(default)]
     pub sight: u8,
-    /// How much of a clear sky's daily swing of temperature is left under it, in percent (0 to
-    /// 100): clouds keep the day cooler and the night milder.
+    /// How much of a clear sky's daily swing of temperature is left under it, in percent: clouds
+    /// keep the day cooler and the night milder.
     #[serde(default = "full_swing")]
     pub swing: u8,
-    /// How much cooler the air is under it, in °C (0 to [`MAX_CHILL`]): rain cools it.
+    /// How much cooler the air is under it, in °C: rain cools it.
     #[serde(default)]
     pub chill: i8,
     /// Presentation only: drops falling on every visible cell under the open sky (an ambient
@@ -80,21 +70,6 @@ impl WeatherDef {
     }
 
     fn check(&self) -> Result<(), String> {
-        if !(1..=100).contains(&self.direct) || !(1..=100).contains(&self.sky) {
-            return Err("`direct` and `sky` must be 1 to 100 (percent)".into());
-        }
-        if self.scatter > 100 {
-            return Err("`scatter` must be 0 to 100 (percent)".into());
-        }
-        if self.sight > MAX_SIGHT_LOSS {
-            return Err(format!("`sight` must be 0 to {MAX_SIGHT_LOSS} (cells)"));
-        }
-        if self.swing > 100 {
-            return Err("`swing` must be 0 to 100 (percent)".into());
-        }
-        if !(0..=MAX_CHILL).contains(&self.chill) {
-            return Err(format!("`chill` must be 0 to {MAX_CHILL} (°C)"));
-        }
         for (name, emitter) in [
             ("drops", &self.drops),
             ("splash", &self.splash),
@@ -181,20 +156,9 @@ impl Climate {
                 parsed.month.len()
             )));
         }
-        if parsed.swing > MAX_SWING {
-            return Err(err(format!("`swing` must be 0 to {MAX_SWING} (°C)")));
-        }
         let mut months = [[0; 4]; MONTHS_PER_YEAR as usize];
         let mut temperatures = [0; MONTHS_PER_YEAR as usize];
         for (i, m) in parsed.month.iter().enumerate() {
-            if !MONTH_TEMPERATURES.contains(&m.temperature) {
-                return Err(err(format!(
-                    "month {}: `temperature` must be {} to {} (°C)",
-                    i + 1,
-                    MONTH_TEMPERATURES.start(),
-                    MONTH_TEMPERATURES.end()
-                )));
-            }
             temperatures[i] = m.temperature;
             let chances = [m.clear, m.overcast, m.rain, m.heavy_rain];
             let sum: u32 = chances.iter().map(|&c| u32::from(c)).sum();
@@ -305,25 +269,9 @@ mod tests {
         for (bad, why) in [
             (file(&months([50, 25, 20, 6]), ""), "add up to 101"),
             (file(&some_months([50, 25, 20, 5], 11), ""), "expected 12"),
-            (file(&good, "scatter = 101"), "scatter"),
-            (file(&good, "sight = 9"), "sight"),
-            (file(&good, "swing = 101"), "swing"),
-            (file(&good, "chill = -1"), "chill"),
-            (
-                file(&good, "").replace("swing = 10\n", "swing = 31\n"),
-                "swing",
-            ),
-            (
-                file(&good, "").replace("temperature = -4", "temperature = 41"),
-                "temperature",
-            ),
             (
                 file(&good, "").replace("temperature = -4\n", ""),
                 "missing field `temperature`",
-            ),
-            (
-                file(&good, "").replace("direct = 10", "direct = 0"),
-                "direct",
             ),
             (file(&good, "fog = 1"), "unknown field"),
             (

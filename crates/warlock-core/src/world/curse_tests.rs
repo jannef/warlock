@@ -167,10 +167,8 @@ fn a_rise_is_refused_without_a_danger_or_with_a_bad_time_or_faction() {
     assert!(load(builtin.replace(cursed, "level_chance = 5")).is_err());
     let rise = "rise = { faction = \"undead\", after = \"2m\" }";
     assert!(builtin.contains(rise));
-    for bad in ["2h", "0s", "soon"] {
-        let text = builtin.replace(rise, &rise.replace("2m", bad));
-        assert!(load(text).is_err(), "{bad}");
-    }
+    // A time that does not parse.
+    assert!(load(builtin.replace(rise, &rise.replace("2m", "soon"))).is_err());
     // An unknown faction is refused once the factions load.
     assert!(load(builtin.replace(rise, &rise.replace("undead", "nobody"))).is_err());
 }

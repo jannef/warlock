@@ -1,5 +1,5 @@
-//! A special room's `collapse` (spec §7 "Special rooms"): parsed, refused without `needs_below`
-//! or over 100, never over a whole level, and read by [`Here::collapse`] of the room only.
+//! A special room's `collapse` (spec §7 "Special rooms"): parsed, refused without `needs_below`,
+//! never over a whole level, and read by [`Here::collapse`] of the room only.
 
 use super::{Here, RoomEffectId, RoomEffects};
 
@@ -22,7 +22,7 @@ fn collapse_parses_and_is_none_by_default() {
 }
 
 #[test]
-fn collapse_needs_a_level_below_and_a_percent() {
+fn collapse_needs_a_level_below() {
     let e = RoomEffects::parse(
         "e.toml",
         &effect("collapse = { chance = 15, damage = \"2d6\" }"),
@@ -30,13 +30,6 @@ fn collapse_needs_a_level_below_and_a_percent() {
     )
     .unwrap_err();
     assert!(e.message.contains("needs_below"), "{}", e.message);
-    let e = RoomEffects::parse(
-        "e.toml",
-        &effect("needs_below = true\ncollapse = { chance = 101, damage = \"2d6\" }"),
-        |_| None,
-    )
-    .unwrap_err();
-    assert!(e.message.contains("collapse.chance 101"), "{}", e.message);
 }
 
 #[test]

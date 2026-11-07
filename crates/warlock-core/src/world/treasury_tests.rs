@@ -188,18 +188,12 @@ fn the_greater_treasury_effect_is_data() {
 }
 
 #[test]
-fn a_level_file_s_sealed_room_needs_a_breach_that_opens_it() {
+fn a_level_file_s_sealed_room_needs_a_breach() {
     let refused = |room: &str| {
         let err = vault_content(room).expect_err("refused");
         err.message
     };
     assert!(refused("").contains("needs a `breach`"));
-    // On the far wall: beside nothing reached.
-    assert!(refused("breach = [12, 2]").contains("breach"));
-    // A corner touches no floor of the room.
-    assert!(refused("breach = [5, 0]").contains("breach"));
-    // Floor inside is no wall.
-    assert!(refused("breach = [7, 2]").contains("not a wall"));
     // Another effect has no breach.
     let mut files = ContentFiles::builtin();
     files.insert(
@@ -212,23 +206,6 @@ fn a_level_file_s_sealed_room_needs_a_breach_that_opens_it() {
     );
     let err = Content::load(&files).expect_err("refused");
     assert!(err.message.contains("not `sealed`"), "{}", err.message);
-    // A room reached without breaking a wall is no sealed room.
-    let open = VAULT.replace("#....#......#\n#....#", "#....#......#\n#.....");
-    let mut files = ContentFiles::builtin();
-    files.insert(
-        "levels/test_vault.toml",
-        &format!(
-            "name = \"Vault\"\nmap = '''\n{open}'''\n[[room]]\neffect = \"great_treasury\"\n\
-             area = [5, 0, 12, 4]\nbreach = [5, 2]\n[legend]\n\
-             \"@\" = {{ terrain = \"floor\", spawn = \"player\" }}\n"
-        ),
-    );
-    let err = Content::load(&files).expect_err("refused");
-    assert!(
-        err.message.contains("without breaking a wall"),
-        "{}",
-        err.message
-    );
 }
 
 #[test]

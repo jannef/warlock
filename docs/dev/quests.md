@@ -56,8 +56,8 @@ given quest: `Quests::given` makes it (a `Cow`, borrowed for every quest not rol
 `progress`, the log, `ask_quest`'s reminder, `complete`, and `quest_news` go through it.
 `Rolled::candidates(content, campaign, open)` is the pool in content order, animated objects left out (creature and
 object ids, sorted tags, variants in file order); `quest_roll::check` fills every text for
-every candidate at load (280 characters, no unknown or unclosed placeholder; a quest not rolled
-may hold none) and checks a unique kill asks for 1. `Roll { target, variant, count }`
+every candidate at load (no unknown or unclosed placeholder; nothing on the texts' length, #1205).
+`Roll { target, variant, count }`
 (`content::Roll`, slugs, saved in `QuestRecord::roll`; `roll_known` guards saves through
 `Quests::unknown_to`). `world/quest_roll.rs` is the play: `branch_open` (no unrevealed hidden
 location of the run's overworld leads into the branch), `quest_pool`, `roll_quest` (stream
@@ -86,7 +86,7 @@ cut in #774): Sworn foe (weaponcraft, `choice = "tag"`, a new `talent::Choice::T
 singular words, `content/tag.rs`: lower-case words joined by hyphens, 1 to `MAX_TAG` = 24
 characters, each once; nothing declares a tag, it exists because a creature carries it; one
 flat pool, no registry). A kill quest's `target = "tag:goblin"` makes `Goal::Kill`'s `target` a
-`KillTarget::Tag` (`count` up to `MAX_TAG_COUNT`, 999, against a type's 99); the quest is
+`KillTarget::Tag`; the quest is
 refused when no type a run of its campaign can meet carries the tag (`quest::check_tag`: a typo,
 or a tag only another campaign's types carry). `KillTarget::has` (`Content::has_tag`) is the one
 membership read, by creature type only, so an actor's `faction_override` changes nothing;
@@ -104,7 +104,7 @@ the override, `what`, load checks of tag targets and of creature tags); the wiki
 `creatures::creature_tags` (`creature-tags.md`).
 **Escort quests** (#1139, `world/escort.rs`): `Goal::Escort { escort, level, joins }`
 (`type = "escort"`, `target` a level as `reach` names one, `escort` a speaker that must be
-`Speaker::Npc` and not the giver, `joins` a reply; never rolled or repeatable; `escort` and
+`Speaker::Npc`, `joins` a reply; never rolled; `escort` and
 `joins` refused on other kinds). `QuestDef::escort()`; `speakers()` includes it (the campaign
 check). Hooks, one line each: `talk.rs::chat` → `World::escort_joins` (an active escort quest
 whose escort is the dialogue, the actor no one's ally, `allies.toml` present: the `joins` line
