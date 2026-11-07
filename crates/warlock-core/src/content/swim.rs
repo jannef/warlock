@@ -29,12 +29,13 @@ struct SwimFile {
 }
 
 impl SwimRules {
-    /// Parses `data/swim.toml`: the numbers must not be negative, and the damage type must exist.
+    /// Parses `data/swim.toml`: `cold` must not be negative (harm would turn into healing), and
+    /// the damage type must exist.
     pub(super) fn parse(file: &str, text: &str, content: &Content) -> Result<Self, ContentError> {
         let err = |m: String| ContentError::new(file, m);
         let parsed: SwimFile = toml::from_str(text).map_err(|e| err(e.to_string()))?;
-        if parsed.per_burden < 0 || parsed.cold < 0 {
-            return Err(err("`per_burden` and `cold` must not be negative".into()));
+        if parsed.cold < 0 {
+            return Err(err("`cold` must not be negative".into()));
         }
         let damage_type = (content.damage_type_id(&parsed.damage_type))
             .ok_or_else(|| err(format!("unknown damage type `{}`", parsed.damage_type)))?;

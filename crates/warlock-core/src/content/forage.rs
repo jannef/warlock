@@ -11,12 +11,6 @@ use super::{ContentError, Landscape, ObjectId};
 use crate::dice::Dice;
 use serde::Deserialize;
 
-/// The shortest and longest a forage may take, in seconds.
-pub const SECONDS: std::ops::RangeInclusive<u32> = 60..=3600;
-
-/// The most of a find one forage may bring.
-pub const MAX_COUNT: i32 = 10;
-
 /// The rules of foraging that live in data.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct ForageRules {
@@ -77,9 +71,8 @@ struct FindSpec {
 }
 
 impl ForageRules {
-    /// Parses `data/forage.toml`: a time within [`SECONDS`]; each ground on land, once, with a
-    /// chance of 1 to 100, a count of at least 1 and at most [`MAX_COUNT`], and finds that are
-    /// food objects of weight 1 or more.
+    /// Parses `data/forage.toml`: a time of at least a second, each ground once (a second
+    /// would never be read), and finds that are known objects.
     pub(super) fn parse(
         file: &str,
         text: &str,
@@ -87,46 +80,19 @@ impl ForageRules {
     ) -> Result<Self, ContentError> {
         let err = |m: String| ContentError::new(file, m);
         let parsed: ForageFile = toml::from_str(text).map_err(|e| err(e.to_string()))?;
-        if !SECONDS.contains(&parsed.seconds) {
-            return Err(err(format!(
-                "`seconds` must be {} to {}",
-                SECONDS.start(),
-                SECONDS.end()
-            )));
+        if parsed.seconds == 0 {
+            return Err(err("`seconds` must be at least 1".into()));
         }
         let mut grounds: Vec<ForageGround> = Vec::new();
         for spec in parsed.ground {
-            let name = spec.landscape.id();
-            if !spec.landscape.is_land() {
-                return Err(err(format!("ground `{name}`: only land can be foraged")));
-            }
             if grounds.iter().any(|g| g.landscape == spec.landscape) {
+                let name = spec.landscape.id();
                 return Err(err(format!("ground `{name}` is listed twice")));
-            }
-            if !(1..=100).contains(&spec.chance) {
-                return Err(err(format!("ground `{name}`: `chance` must be 1 to 100")));
-            }
-            if spec.count.min() < 1 || spec.count.max() > MAX_COUNT {
-                return Err(err(format!(
-                    "ground `{name}`: `count` must give 1 to {MAX_COUNT}"
-                )));
-            }
-            if spec.finds.is_empty() {
-                return Err(err(format!("ground `{name}`: `finds` is empty")));
             }
             let mut finds = Vec::new();
             for find in spec.finds {
                 let object = (content.object_id(&find.object))
                     .ok_or_else(|| err(format!("unknown object `{}`", find.object)))?;
-                if content.object(object).food.is_none() {
-                    return Err(err(format!("`{}` is no food", find.object)));
-                }
-                if find.weight == 0 {
-                    return Err(err(format!(
-                        "`{}`: `weight` must be at least 1",
-                        find.object
-                    )));
-                }
                 finds.push((object, find.weight));
             }
             grounds.push(ForageGround {
@@ -184,23 +150,9 @@ mod tests {
             )
         };
         for (text, why) in [
-            (row("river", 10, "1d2", "apple", 1), "only land"),
-            (
-                row("forest", 0, "1d2", "apple", 1),
-                "`chance` must be 1 to 100",
-            ),
-            (
-                row("forest", 10, "1d20", "apple", 1),
-                "`count` must give 1 to 10",
-            ),
-            (row("forest", 10, "1d2", "dagger", 1), "`dagger` is no food"),
             (
                 row("forest", 10, "1d2", "nothing", 1),
                 "unknown object `nothing`",
-            ),
-            (
-                row("forest", 10, "1d2", "apple", 0),
-                "`weight` must be at least 1",
             ),
             (
                 format!(
@@ -210,7 +162,7 @@ mod tests {
                 ),
                 "listed twice",
             ),
-            ("seconds = 5\n".to_string(), "`seconds` must be"),
+            ("seconds = 0\n".to_string(), "`seconds` must be"),
         ] {
             let mut files = ContentFiles::builtin();
             files.insert("data/forage.toml", &text);

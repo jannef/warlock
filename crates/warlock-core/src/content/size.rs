@@ -8,14 +8,9 @@
 
 use super::ContentError;
 use serde::Deserialize;
-use std::ops::RangeInclusive;
 
 /// The size of every race and creature type that names none; the file must have it.
 pub const MEDIUM: &str = "medium";
-/// What a size may carry, in percent of a medium one: a tenth to ten times as much.
-pub const CARRY: RangeInclusive<u16> = 10..=1000;
-/// How much blood a size may spill, in percent of a medium one: none to ten times as much.
-pub const BLOOD: RangeInclusive<u16> = 0..=1000;
 
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -63,24 +58,6 @@ pub(super) fn parse(file: &str, text: &str) -> Result<Vec<SizeDef>, ContentError
         if sizes.iter().any(|s| s.id == size.id) {
             return Err(err(format!("duplicate size id `{}`", size.id)));
         }
-        if !CARRY.contains(&size.carry) {
-            return Err(err(format!(
-                "size `{}`: carry {} is out of range ({} to {})",
-                size.id,
-                size.carry,
-                CARRY.start(),
-                CARRY.end()
-            )));
-        }
-        if !BLOOD.contains(&size.blood) {
-            return Err(err(format!(
-                "size `{}`: blood {} is out of range ({} to {})",
-                size.id,
-                size.blood,
-                BLOOD.start(),
-                BLOOD.end()
-            )));
-        }
         sizes.push(size);
     }
     if !sizes.iter().any(|s| s.id == MEDIUM) {
@@ -115,12 +92,6 @@ mod tests {
         for (text, why) in [
             (medium.replace("medium", "small"), "`medium` is required"),
             (format!("{medium}{medium}"), "duplicate size id `medium`"),
-            (medium.replace("100", "9"), "carry 9 is out of range"),
-            (medium.replace("100", "1001"), "carry 1001 is out of range"),
-            (
-                format!("{medium}blood = 1001\n"),
-                "blood 1001 is out of range",
-            ),
             (medium.replace("carry = 100\n", ""), "missing field `carry`"),
             (format!("{medium}weight = 3\n"), "unknown field `weight`"),
         ] {

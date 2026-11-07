@@ -11,13 +11,13 @@
 #   glyph, fg    how it shows once known (glyph default "^")
 #   message      said when the player perceives it go off (optional)
 #   difficulty   how hard it is to find while hidden (spec §8 "Searching"): what a search must
-#                reach, 1 to 50 (default 15); on a dungeon branch its `hidden_per_depth` adds to it
+#                reach (default 15); on a dungeon branch its `hidden_per_depth` adds to it
 #                (data/dungeons.toml)
 #   sign         what gives it away to whoever finds it: "You notice a tripwire: an alarm trap."
 #                (default "a pressure plate")
 #   charges      how often it goes off before it is spent and gone (default: it never runs out)
 #   noise        { sound, loudness }: what it sounds like going off (bowstring, explosion,
-#                thunder, bell, ...) and how loud on its cell, 1 to 300 (default: silent)
+#                thunder, bell, ...) and how loud on its cell, at most 300 (default: silent)
 #   kind         what it does:
 #     shot       `object` shoots out of a hidden slit in the nearest wall at whoever set it off:
 #                an attack roll (`to_hit`, `damage`) against their Defence; it lands as an object
@@ -41,16 +41,16 @@
 #                default: the damage type's); a shot uses its object's name
 #   [trap.grows] damage by the danger of the level the trap lies on (spec §7 "Danger levels"),
 #                in the style of a spell's [spell.grows]: `damage = "danger 3 1d4, 6 1d6"`,
-#                rungs `AT ROLL`, AT 1 to 99 rising strictly, at most 8; a level of danger D
+#                rungs `AT ROLL`, AT 1 to 99 rising strictly; a level of danger D
 #                deals the last rung at or below D, and below the first (a level without a
-#                danger is 0) the trap's own `damage`. No rung may do less on average than the
-#                one before it. Shallow traps hurt but should not kill a fresh character: the
-#                base (danger 0 to 2) never kills one at full health, crits included.
+#                danger is 0) the trap's own `damage`. No rung may roll below 0. Shallow traps
+#                hurt but should not kill a fresh character: the base (danger 0 to 2) never
+#                kills one at full health, crits included.
 
 # Stepping onto a known trap on purpose (a move onto it, after the question), you may avoid it:
 # it stays where it is, untouched. The chance in percent is `base` plus `per_point` for each point
 # of your dodge (your Dexterity modifier, capped by your armour and burden as in combat, plus your
-# Dodge: the Dodge skill, talents, magic, stance, statuses), never below `min` nor above `max`.
+# Dodge: the Dodge skill, talents, magic, stance, statuses), never below `min` nor above `max` (`min` no more than `max`).
 # Hidden traps and steps you did not choose get no chance. Every trap but a door's: those go off
 # as the door opens.
 [avoid]

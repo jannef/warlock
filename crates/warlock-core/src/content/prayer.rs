@@ -170,47 +170,23 @@ struct UseFile {
 }
 
 impl PrayerRules {
-    /// Parses `data/prayer.toml`: the numbers in range, the two faces' bands leaving no band
-    /// unanswered, the release list of known statuses (none twice, none the diseases' status,
-    /// bleeding, poisoned, or a status a resource brings), and every use named once.
+    /// Parses `data/prayer.toml`: the release list of known statuses, none the diseases' status
+    /// or a status a resource brings (each lasts exactly while its disease or pool does), and
+    /// each use named at most once (a second's words would never be read).
     pub(super) fn parse(file: &str, text: &str, content: &Content) -> Result<Self, ContentError> {
         let err = |m: String| ContentError::new(file, m);
         let parsed: PrayerFile = toml::from_str(text).map_err(|e| err(e.to_string()))?;
-        if !(1..=1000).contains(&parsed.strain) {
-            return Err(err("`strain` is 1 to 1000".into()));
-        }
         let decay: Duration = parsed.decay.parse().map_err(err)?;
-        if !(10..=3600).contains(&decay.as_seconds()) {
-            return Err(err("`decay` is 10s to 1h".into()));
-        }
-        if !(1..=100).contains(&parsed.fizzle_per_100) {
-            return Err(err("`fizzle_per_100` is 1 to 100".into()));
-        }
-        parsed.holy.check().map_err(err)?;
-        parsed.dark.check().map_err(err)?;
-        if let Some(band) =
-            (Band::ALL.into_iter()).find(|&b| !parsed.holy.allows(b) && !parsed.dark.allows(b))
-        {
-            return Err(err(format!(
-                "no face answers the {} band: `holy` and `dark` leave it out",
-                band.name()
-            )));
-        }
         let mut release = Vec::new();
         for id in &parsed.release {
             let status = (content.status_id(id))
                 .ok_or_else(|| err(format!("release: unknown status `{id}`")))?;
-            let theirs = ["bleeding", "poisoned"].contains(&id.as_str())
-                || content.disease_status() == Some(status);
-            let brought = (content.resources().iter()).any(|r| r.status == Some(status));
-            if theirs || brought {
+            let held = content.disease_status() == Some(status)
+                || (content.resources().iter()).any(|r| r.status == Some(status));
+            if held {
                 return Err(err(format!(
-                    "release: `{id}` is no hex or hold (a use of its own, the diseases', or a \
-                     resource's)"
+                    "release: `{id}` lasts while a disease or a resource does"
                 )));
-            }
-            if release.contains(&status) {
-                return Err(err(format!("release: `{id}` twice")));
             }
             release.push(status);
         }
@@ -228,9 +204,6 @@ impl PrayerRules {
                     dark: u.dark,
                 },
             });
-        }
-        if let Some(missing) = (PrayerUse::ALL.iter()).find(|&&u| !uses.iter().any(|d| d.id == u)) {
-            return Err(err(format!("use: `{}` is missing", missing.id())));
         }
         Ok(Self {
             strain: parsed.strain,
@@ -328,16 +301,11 @@ mod tests {
             })
             .expect_err(to)
         };
-        bad("strain = 100", "strain = 0");
-        bad("decay = \"1m\"", "decay = \"2h\"");
-        bad("fizzle_per_100 = 10", "fizzle_per_100 = 0");
-        bad("\"ill_wished\",", "\"ill_wished\", \"ill_wished\",");
-        bad("\"ill_wished\",", "\"bleeding\",");
+        bad("decay = \"1m\"", "decay = \"soon\"");
         bad("\"ill_wished\",", "\"raging\",");
         bad("\"ill_wished\",", "\"no_such_status\",");
         bad("id = \"mana\"", "id = \"wounds\"");
         bad("id = \"mana\"", "id = \"glory\"");
-        bad("max = \"callous\"", "max = \"evil\"");
         let mut files = ContentFiles::builtin();
         files.remove(PATH);
         let content = Content::load(&files).expect("content without the file");

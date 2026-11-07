@@ -22,7 +22,7 @@
 #     stability.dips = { depth, every, length } — about once every `every` seconds, at an
 #             irregular moment, the light eases down by up to `depth` (0.1 = 10 %) and back over
 #             `length` seconds; with hue drift the dip also turns it toward deeper red.
-#             `amount` and `depth` are at most 0.25 each, `degrees` at most 30.
+#             `length` is above 0 and at most `every`.
 
 # Tuning: open flames (torches, braziers, lava) are gently alive: a soft flicker, the hue drifting
 # between deeper orange and yellow, and a rare soft dip. Enclosed flames (lamps, the lantern) burn

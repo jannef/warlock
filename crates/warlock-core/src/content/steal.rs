@@ -10,14 +10,14 @@
 //! The file is optional: without it nobody steals, and the Steal skill stays a skill whose use
 //! is not in the game yet (the abilities menu's "not usable yet").
 
-use super::{ContentError, FactionId, PLAYER_FACTION, Stance};
+use super::{ContentError, FactionId};
 use serde::Deserialize;
 
 /// The rules of stealing that live in data.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct StealRules {
     /// The faction a creature that catches the player stealing joins (its `faction_override`):
-    /// one hostile to the player, so it turns on them.
+    /// by custom one hostile to the player, so it turns on them.
     pub caught: FactionId,
 }
 
@@ -28,7 +28,7 @@ struct StealFile {
 }
 
 impl StealRules {
-    /// Parses `data/steal.toml`: `caught` must be a faction hostile to the player.
+    /// Parses `data/steal.toml`: `caught` must be a known faction.
     pub(super) fn parse(
         file: &str,
         text: &str,
@@ -38,13 +38,6 @@ impl StealRules {
         let parsed: StealFile = toml::from_str(text).map_err(|e| err(e.to_string()))?;
         let caught = (factions.id(&parsed.caught))
             .ok_or_else(|| err(format!("unknown faction `{}`", parsed.caught)))?;
-        let player = factions.id(PLAYER_FACTION);
-        if player.is_none_or(|p| factions.stance(caught, p) != Stance::Hostile) {
-            return Err(err(format!(
-                "`caught`: the faction `{}` must be hostile to the player",
-                parsed.caught
-            )));
-        }
         Ok(Self { caught })
     }
 }
@@ -59,16 +52,15 @@ mod tests {
         let rules = content.steal().expect("stealing is in the game");
         let factions = content.factions();
         assert_eq!(factions.def(rules.caught).id, "outraged");
-        // A faction that would not mind, or none at all, is refused.
-        for (caught, why) in [
-            ("peaceful", "must be hostile to the player"),
-            ("nobody", "unknown faction `nobody`"),
-        ] {
-            let mut files = ContentFiles::builtin();
-            files.insert("data/steal.toml", &format!("caught = \"{caught}\"\n"));
-            let err = Content::load(&files).expect_err(caught);
-            assert!(err.message.contains(why), "{caught}: {}", err.message);
-        }
+        // An unknown faction is refused.
+        let mut files = ContentFiles::builtin();
+        files.insert("data/steal.toml", "caught = \"nobody\"\n");
+        let err = Content::load(&files).expect_err("nobody");
+        assert!(
+            err.message.contains("unknown faction `nobody`"),
+            "{}",
+            err.message
+        );
         // Without the file nobody steals.
         let mut files = ContentFiles::builtin();
         files.remove("data/steal.toml");

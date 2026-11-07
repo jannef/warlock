@@ -31,24 +31,13 @@ pub struct RangedRules {
 }
 
 impl RangedRules {
-    /// Parses `data/ranged.toml`: every to-hit a penalty, the bands rising and each harsher.
+    /// Parses `data/ranged.toml`: the bands rise in `beyond` ([`Self::to_hit_at`] reads them in
+    /// order).
     pub(super) fn parse(file: &str, text: &str) -> Result<Self, ContentError> {
-        let err = |m: &str| ContentError::new(file, m.to_string());
         let parsed: Self =
             toml::from_str(text).map_err(|e| ContentError::new(file, e.to_string()))?;
-        let penalty = |to_hit: i32| (-12..=0).contains(&to_hit);
-        if !penalty(parsed.adjacent) {
-            return Err(err("`adjacent` is -12 to 0"));
-        }
-        let bands = &parsed.bands;
-        if (bands.iter()).any(|b| !(1..=99).contains(&b.beyond) || !penalty(b.to_hit)) {
-            return Err(err(
-                "a band's `beyond` is 1 to 99 and its `to_hit` -12 to 0",
-            ));
-        }
-        let rising = |w: &[RangeBand]| w[0].beyond < w[1].beyond && w[0].to_hit > w[1].to_hit;
-        if !bands.windows(2).all(rising) {
-            return Err(err("the bands rise in `beyond`, each `to_hit` harsher"));
+        if !parsed.bands.windows(2).all(|w| w[0].beyond < w[1].beyond) {
+            return Err(ContentError::new(file, "the bands rise in `beyond`"));
         }
         Ok(parsed)
     }
@@ -132,12 +121,8 @@ mod tests {
     #[test]
     fn bad_numbers_are_refused() {
         for bad in [
-            "adjacent = 1\n",
             "adjacent = -2\nspare = 1\n",
-            "adjacent = 0\n[[band]]\nbeyond = 100\nto_hit = -1\n",
-            "adjacent = 0\n[[band]]\nbeyond = 50\nto_hit = 1\n",
             "adjacent = 0\n[[band]]\nbeyond = 75\nto_hit = -1\n[[band]]\nbeyond = 50\nto_hit = -2\n",
-            "adjacent = 0\n[[band]]\nbeyond = 50\nto_hit = -2\n[[band]]\nbeyond = 75\nto_hit = -1\n",
         ] {
             assert!(
                 RangedRules::parse("data/ranged.toml", bad).is_err(),

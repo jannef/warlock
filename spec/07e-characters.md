@@ -121,8 +121,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
   cured by `remove_disease`. Red ache, the shakes, and brain fever have no source yet.
 - **Sizes** (`data/sizes.toml`, optional; §8 "Burden"), in file order, smallest first (§8
   "Displacement" compares them): `id`, `name`, `carry`
-  (what it carries in percent of a medium one, 10 to 1000): small 75, medium 100; and `blood`
-  (how much blood it spills in percent of a medium one, 0 to 1000, default 100; §8 "Blood"):
+  (what it carries in percent of a medium one): small 75, medium 100; and `blood`
+  (how much blood it spills in percent of a medium one, default 100; §8 "Blood"):
   small 60. `medium` is
   required (the size of every race and creature type that names none); without the file there
   is only medium.

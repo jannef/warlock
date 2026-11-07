@@ -57,42 +57,15 @@ struct SurpriseTable {
 }
 
 impl SurpriseRules {
-    /// Parses `data/surprise.toml`: the status must be `per_action` with one degree, the numbers
-    /// in range, and each tag carried by some creature type.
+    /// Parses `data/surprise.toml`: the status must be known, and each tag of the tag form.
     pub(super) fn parse(file: &str, text: &str, content: &Content) -> Result<Self, ContentError> {
         let err = |m: String| ContentError::new(file, m);
         let parsed: SurpriseFile = toml::from_str(text).map_err(|e| err(e.to_string()))?;
         let table = &parsed.surprise;
         let status = (content.status_id(&table.status))
             .ok_or_else(|| err(format!("unknown status `{}`", table.status)))?;
-        let def = content.status(status);
-        if !def.per_action || def.max != 1 {
-            return Err(err(format!(
-                "`status`: `{}` must be `per_action` with `max = 1`",
-                table.status
-            )));
-        }
-        if !(1..=40).contains(&table.difficulty) {
-            return Err(err("`difficulty` is 1 to 40".into()));
-        }
-        if !(1..=20).contains(&table.missile_reach) {
-            return Err(err("`missile_reach` is 1 to 20".into()));
-        }
-        if !(1..=1000).contains(&table.memory_turns) {
-            return Err(err("`memory_turns` is 1 to 1000".into()));
-        }
         for tag in &table.no_vitals {
             super::tag::check(tag).map_err(|m| err(format!("`no_vitals`: {m}")))?;
-            if content.tagged(tag).next().is_none() {
-                return Err(err(format!(
-                    "`no_vitals`: tag `{tag}`: no creature carries it"
-                )));
-            }
-        }
-        if let Some(slip) = &parsed.slip
-            && !(1..=1000).contains(&slip.lasts_turns)
-        {
-            return Err(err("`slip.lasts_turns` is 1 to 1000".into()));
         }
         Ok(Self {
             status,
@@ -149,37 +122,7 @@ mod tests {
             .to_string();
         for (from, to, why) in [
             ("\"surprised\"", "\"nothing\"", "unknown status `nothing`"),
-            (
-                "\"surprised\"",
-                "\"bleeding\"",
-                "must be `per_action` with `max = 1`",
-            ),
-            (
-                "difficulty = 13",
-                "difficulty = 0",
-                "`difficulty` is 1 to 40",
-            ),
-            (
-                "missile_reach = 6",
-                "missile_reach = 99",
-                "`missile_reach` is 1 to 20",
-            ),
-            (
-                "memory_turns = 20",
-                "memory_turns = 0",
-                "`memory_turns` is 1 to 1000",
-            ),
-            (
-                "\"skeleton\"",
-                "\"no-such-thing\"",
-                "no creature carries it",
-            ),
             ("\"skeleton\"", "\"Skeleton\"", "lower-case words"),
-            (
-                "lasts_turns = 60",
-                "lasts_turns = 0",
-                "`slip.lasts_turns` is 1 to 1000",
-            ),
         ] {
             assert!(good.contains(from), "{from}");
             let mut files = ContentFiles::builtin();

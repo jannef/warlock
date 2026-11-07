@@ -183,20 +183,17 @@ fn a_tribe_with_nothing_at_the_danger_leaves_the_cells_bare_and_nothing_else_mov
 }
 
 #[test]
-fn a_pool_that_can_hold_nothing_is_refused() {
+fn a_bad_pool_is_refused_and_an_empty_one_loads() {
+    // A tag no type that may be drawn carries brings no one, and a count beyond the cells brings
+    // as many as they hold: the data author's choice.
+    content_with("monsters = { pool = [\"goblin\", \"nobody\"] }", 3).expect("loads");
+    content_with("monsters = { pool = \"level\", count = 13 }", 3).expect("loads");
     for (legend, says) in [
-        ("monsters = { pool = \"nobody\" }", "`nobody`"),
-        // A name that only people or uniques carry brings no one; so does a list with one.
-        ("monsters = { pool = [\"goblin\", \"nobody\"] }", "`nobody`"),
         (
             "monsters = { pool = [\"level\", \"goblin\"] }",
             "stands alone",
         ),
         ("monsters = { pool = \"level\", count = 0 }", "at least 1"),
-        (
-            "monsters = { pool = \"level\", count = 13 }",
-            "more than the 12",
-        ),
         ("monsters = { pool = \"level\", extra = 1 }", "extra"),
         (
             "monsters = { pool = \"level\" }, creature = \"kobold\"",

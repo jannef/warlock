@@ -378,11 +378,6 @@ fn levels_refuse_secrets_that_cannot_be() {
             ".....\n.@X..\n.....\n",
             "no wall beside it",
         ),
-        (
-            r#""X" = { terrain = "door_closed", secret = 51 }"#,
-            "#####\n#@X.#\n#####\n",
-            "secret difficulty 51",
-        ),
     ] {
         let mut files = ContentFiles::builtin();
         let spawn = r#""@" = { terrain = "floor", spawn = "player" }"#;

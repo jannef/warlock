@@ -278,7 +278,7 @@ pub use outcome::{
 pub use overworld::{Landscape, LocalArea, local_area_id, parse_local_area};
 pub use part::{MAX_OBJECT_PARTS, MAX_PARTS, Part, PartDef, PartId, PartRole, and_list};
 pub use particles::{ParticleEmitter, ParticleTrigger};
-pub use plural::{MAX_WORD, Plurals};
+pub use plural::Plurals;
 pub use potion::{Draught, Drink, Flask, MAX_POTION_MARKS, Splash};
 pub use prayer::{Face, FaceWords, Faced, PrayerRules, PrayerUse, UseDef};
 pub use prestige::{PrestigeDef, Table};
@@ -309,13 +309,11 @@ pub use ruin::{RuinOf, RuinRow, RuinRules};
 pub use scenario::ScenarioDef;
 pub use scroll::{Cleansing, Reading, SpellScroll};
 pub use scroll_label::ScrollLabelDef;
-pub use search::{
-    PASSIVE_PENALTIES, PassiveSearch, SEARCH_TURNS, SearchRules, Secret, secret_look,
-};
+pub use search::{PassiveSearch, SEARCH_TURNS, SearchRules, Secret, secret_look};
 pub use shop::{
     KEEPER, Keeper, MAX_FAVOUR, MAX_SHOPS, MOST_FAVOUR, ShopDef, ShopId, ShopPlan, Shops,
 };
-pub use size::{CARRY, MEDIUM, SizeDef};
+pub use size::{MEDIUM, SizeDef};
 pub use skill::{OptionalSkill, SkillBook, SkillDef};
 pub use sky::{MoonDef, PHASE_ONE, STANDARD_SIZE};
 pub use slot::{MAX_SLOTS, SlotDef, SlotId};
@@ -357,7 +355,7 @@ pub use terrain::{
 };
 pub use theft::{Blinks, SMALL as SMALL_LOOT, Steals, Takes};
 pub use throw::Throw;
-pub use trap::{MAX_CHARGES, Trap, TrapAvoid, TrapDef, TrapEffect, TrapId, TrapNoise};
+pub use trap::{Trap, TrapAvoid, TrapDef, TrapEffect, TrapId, TrapNoise};
 pub use unique::{Power, UNIQUE, UniqueDef, Uniques};
 pub use unseen::Invisible;
 pub use vault::{DangerRange, Vault};
@@ -1409,9 +1407,7 @@ impl Content {
         content.load_dungeons(files)?;
         content.fill_generic();
         for v in &content.vaults {
-            (v.check_dungeons(&content)
-                .and_then(|()| v.check_monsters(&content)))
-            .map_err(|m| ContentError::new(&v.file(), m))?;
+            (v.check_dungeons(&content)).map_err(|m| ContentError::new(&v.file(), m))?;
         }
         // A scenario outside every campaign (a test fixture) plays in its start level's.
         let loose: Vec<(String, Option<String>)> = (content.scenarios.values())
@@ -2530,12 +2526,6 @@ impl Content {
         let parsed: LightFile = toml::from_str(text).map_err(|e| err(e.to_string()))?;
         for (i, preset) in parsed.light.into_iter().enumerate() {
             let id = LightId(u16::try_from(i).map_err(|_| err("too many lights".into()))?);
-            if !(0..=MAX_LIGHT_RADIUS).contains(&preset.radius) {
-                return Err(err(format!(
-                    "light `{}` has radius {}; expected 0 to {MAX_LIGHT_RADIUS}",
-                    preset.id, preset.radius
-                )));
-            }
             preset
                 .stability
                 .check()
@@ -2757,12 +2747,6 @@ impl Content {
             return Err(err("at least one vision profile is required".into()));
         }
         for (i, profile) in profiles.into_iter().enumerate() {
-            if profile.darkvision < 0 {
-                return Err(err(format!(
-                    "vision `{}` has a negative darkvision radius",
-                    profile.id
-                )));
-            }
             if self.vision_ids.insert(profile.id.clone(), i).is_some() {
                 return Err(err(format!("duplicate vision id `{}`", profile.id)));
             }
@@ -5419,19 +5403,12 @@ mod tests {
         let mut files = minimal_files("#@#\n", "");
         files.insert(
             "data/lights.toml",
-            "[[light]]\nid = \"sun\"\ncolor = [1, 1, 1, 0]\nradius = 99\n",
-        );
-        let err = Content::load(&files).unwrap_err();
-        assert!(err.message.contains("radius 99"), "{}", err.message);
-
-        files.insert(
-            "data/lights.toml",
             "[[light]]\nid = \"fire\"\ncolor = [1, 1, 1, 0]\nradius = 3\n\
-             stability.hue = { degrees = 90, speed = 1 }\n",
+             stability.dips = { depth = 0.1, every = 1, length = 2 }\n",
         );
         let err = Content::load(&files).unwrap_err();
         assert!(
-            err.message.contains("light `fire`: stability: hue"),
+            err.message.contains("light `fire`: stability: dips"),
             "{}",
             err.message
         );

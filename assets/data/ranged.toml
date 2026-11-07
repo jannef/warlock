@@ -13,7 +13,7 @@
 # The to-hit of a shot at a target adjacent to the shooter.
 adjacent = -2
 
-# Beyond this percent of the weapon's range, this to-hit. Rising outward, each harsher.
+# Beyond this percent of the weapon's range, this to-hit. Rising outward (the farthest reached wins).
 [[band]]
 beyond = 50
 to_hit = -1

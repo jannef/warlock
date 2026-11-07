@@ -6,14 +6,14 @@
 # by chance, `fizzle_per_100` percent for every 100 points of strain it finds (100 % at most);
 # a fizzle locks the prayer, and every prayer fizzles until the strain has passed to 0. A prayer
 # with nothing to answer is refused and costs nothing.
-strain = 100           # added by every attempt, answered or not (1 to 1000)
-decay = "1m"           # a point of strain gone every this long (10s to 1h)
-fizzle_per_100 = 10    # percent chance a prayer fizzles per 100 points of strain (1 to 100)
-# The bands each face answers, by the priest's band at the moment; together they leave none out.
+strain = 100           # added by every attempt, answered or not
+decay = "1m"           # a point of strain gone every this long
+fizzle_per_100 = 10    # percent chance a prayer fizzles per 100 points of strain
+# The bands each face answers, by the priest's band at the moment (a band neither allows: holy).
 holy = { min = "neutral" }
 dark = { max = "callous" }
-# What the release use ends: hexes, holds, and webs (status ids; never bleeding, poison, the
-# diseases' status, or a status a resource brings).
+# What the release use ends: hexes, holds, and webs (status ids; never the diseases' status or a
+# status a resource brings, which last exactly while their disease or pool does).
 release = [
     "ill_wished",
     "weakened",
@@ -33,7 +33,7 @@ release = [
 holy = { pray = "You kneel and pray.", fizzle = "You pray, but nothing answers.", nothing = "You have nothing to pray for." }
 dark = { pray = "You whisper to the dark.", fizzle = "The dark is silent.", nothing = "You have nothing to ask of the dark." }
 
-# The order is the priority: the first that ails the priest is answered first. Every use once.
+# The order is the priority: the first that ails the priest is answered first. Each use at most once (one left out is never answered).
 # The dark powers answer with a twist (docs/dev/prayer.md "The dark face"): the diseases and the
 # poison cured pass to the nearest creature the priest sees, a hex released is laid on its caster
 # if seen (a hold's holder is webbed), and the hunger use feeds to the brim, one short of Bloated.

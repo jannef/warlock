@@ -3,14 +3,8 @@
 use crate::light::Light;
 use serde::{Deserialize, Serialize};
 
-/// Largest allowed light radius, in cells.
+/// Largest light radius the effects' lights were held to (`content/effect.rs`).
 pub const MAX_LIGHT_RADIUS: i32 = 32;
-
-/// Largest intensity variation ([`Drift::amount`]) and dip depth ([`Dips::depth`]): together they
-/// keep a source's brightness between half and one and a half times its steady light.
-pub const MAX_INTENSITY_VARIATION: f32 = 0.25;
-/// Largest hue drift, in degrees.
-pub const MAX_HUE_DRIFT: f32 = 30.0;
 
 /// Index of a light preset in [`super::Content::light_presets`].
 ///
@@ -75,37 +69,26 @@ impl Stability {
             && self.dips.is_none_or(|d| d.depth == 0.0)
     }
 
-    /// Checks the ranges, returning what is wrong.
+    /// Checks what the renderer's modulation needs (`render/modulation.rs`): finite numbers,
+    /// and a dip of a `length` above 0 that fits its slot of `every` seconds (it divides by
+    /// both). Returns what is wrong.
     pub fn check(&self) -> Result<(), String> {
-        let rate = |what: &str, speed: f32| {
-            if speed.is_finite() && speed > 0.0 && speed <= 20.0 {
+        let finite = |what: &str, values: &[f32]| {
+            if values.iter().all(|v| v.is_finite()) {
                 Ok(())
             } else {
-                Err(format!("{what} `speed` must be above 0 and at most 20"))
-            }
-        };
-        let relative = |what: &str, value: f32| {
-            if (0.0..=MAX_INTENSITY_VARIATION).contains(&value) {
-                Ok(())
-            } else {
-                Err(format!("{what} must be 0 to {MAX_INTENSITY_VARIATION}"))
+                Err(format!("{what}: every number must be finite"))
             }
         };
         if let Some(d) = self.intensity {
-            relative("intensity `amount`", d.amount)?;
-            rate("intensity", d.speed)?;
+            finite("intensity", &[d.amount, d.speed])?;
         }
         if let Some(h) = self.hue {
-            if !(0.0..=MAX_HUE_DRIFT).contains(&h.degrees) {
-                return Err(format!("hue `degrees` must be 0 to {MAX_HUE_DRIFT}"));
-            }
-            rate("hue", h.speed)?;
+            finite("hue", &[h.degrees, h.speed])?;
         }
         if let Some(d) = self.dips {
-            relative("dips `depth`", d.depth)?;
-            if !(d.length.is_finite() && d.length > 0.0 && d.every.is_finite())
-                || d.every < d.length
-            {
+            finite("dips", &[d.depth, d.every, d.length])?;
+            if d.length <= 0.0 || d.every < d.length {
                 return Err("dips need `length` above 0 and `every` at least `length`".into());
             }
         }
@@ -173,21 +156,7 @@ mod tests {
         let bad = [
             Stability {
                 intensity: Some(Drift {
-                    amount: 0.4,
-                    speed: 1.0,
-                }),
-                ..fire
-            },
-            Stability {
-                intensity: Some(Drift {
-                    amount: 0.1,
-                    speed: 0.0,
-                }),
-                ..fire
-            },
-            Stability {
-                hue: Some(HueDrift {
-                    degrees: 90.0,
+                    amount: f32::INFINITY,
                     speed: 1.0,
                 }),
                 ..fire
@@ -209,9 +178,9 @@ mod tests {
             },
             Stability {
                 dips: Some(Dips {
-                    depth: -0.1,
+                    depth: 0.1,
                     every: 5.0,
-                    length: 1.0,
+                    length: 0.0,
                 }),
                 ..fire
             },

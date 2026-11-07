@@ -4,7 +4,7 @@
 //! counts as Neutral, and nothing moves (`crate::alignment` holds the score, the bands, and the
 //! diminishing).
 
-use super::{ContentError, MAX_FAVOUR};
+use super::ContentError;
 use crate::alignment::{Alignment, Band, MAX, Score};
 use serde::Deserialize;
 use std::collections::BTreeMap;
@@ -125,25 +125,22 @@ impl AlignmentRules {
                     .into(),
             ));
         }
-        let mut above = MAX + 1;
+        let mut above = i32::MAX;
         for spec in &p.band {
             let id = spec.id.id();
-            if spec.from >= above || spec.from < -MAX {
+            if spec.from >= above {
                 return Err(err(format!(
-                    "band `{id}`: `from` is -{MAX} to {MAX} and below the band before's"
+                    "band `{id}`: `from` must be below the band before's"
                 )));
             }
             above = spec.from;
             let (best, worst) = (spec.id == Band::Saintly, spec.id == Band::Wicked);
-            if spec.rise.is_some() == worst || spec.fall.is_some() == best {
+            if (worst && spec.rise.is_some()) || (best && spec.fall.is_some()) {
                 return Err(err(format!(
-                    "band `{id}`: every band but the worst says something as the score rises \
-                     into it (`rise`), and every band but the best as it falls into it (`fall`)"
+                    "band `{id}`: nothing rises into the worst band (`rise`) or falls into the \
+                     best (`fall`)"
                 )));
             }
-        }
-        if above != -MAX {
-            return Err(err(format!("band `wicked` is `from` -{MAX}")));
         }
         let s = &p.shift;
         let amounts = [
@@ -162,11 +159,6 @@ impl AlignmentRules {
         ];
         if amounts.iter().any(|a| a.abs() > MAX) {
             return Err(err(format!("every [shift] is -{MAX} to {MAX}")));
-        }
-        if p.shops.favour.values().any(|f| f.abs() > MAX_FAVOUR) {
-            return Err(err(format!(
-                "[shops] favour is -{MAX_FAVOUR} to {MAX_FAVOUR} percent"
-            )));
         }
         let bands = (p.band.into_iter())
             .map(|b| BandDef {
@@ -269,16 +261,14 @@ mod tests {
         let good = FILE;
         let cases = [
             (
-                good.replace("from = 750", "from = 1001"),
+                good.replace("from = 400", "from = 750"),
                 "below the band before",
             ),
-            (good.replace("from = -1000", "from = -900"), "`from` -1000"),
             (
                 good.replacen("id = \"kind\"", "id = \"good\"", 1),
                 "in that order",
             ),
             (good.replace("theft = -100", "theft = -1001"), "[shift]"),
-            (good.replace("saintly = 10", "saintly = 51"), "favour"),
         ];
         for (text, expected) in cases {
             assert_ne!(text, good, "the case changes the file: {expected}");
