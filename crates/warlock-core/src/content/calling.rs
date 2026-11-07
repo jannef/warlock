@@ -2,7 +2,7 @@
 //! the **door** into a prestige class, never the deed. A calling names the prestige class, the
 //! base classes it is open to (`from`), the total level it asks (`level`, at least each base's
 //! `max_level`), and what is said when the character is called. How a world makes the calling
-//! (a dialogue word said to the right creature, a dev action) is that world's business, and
+//! (a dialogue topic asked of the right creature, a dev action) is that world's business, and
 //! there may be several ways to one door. A base class is named by at most one calling of a
 //! campaign: two doors for one class would need a choice, which prestige classes are not.
 //!

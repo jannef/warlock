@@ -739,38 +739,24 @@ developer notes (CLAUDE.md, `docs/dev/`).
     (§6). Asking (`Action::Ask { dir, topic }`, replay text `ask:E:rooms`) takes no time and gets
     the topic's reply; an unknown topic is "The sage knows nothing about that." `World::topics`
     is the one place topics come from: quests ("Quests" below) add theirs there, first.
-  - **Saying words** (`warlock-core/src/words.rs`, `content/word.rs`, `world/words.rs`;
-    docs/design/prestige-classes.md §6, #878): a dialogue may know words (`[[dialogue.word]]`,
-    §7 "Dialogue"). Saying something (`Action::Say { dir, words }`, replay text
-    `say:E:life_before_death`, the words normalised and joined by `_`) to the creature beside
-    the player is refused as a chat is (no one seen there: no time; no dialogue or a hostile:
-    the chat's words and its time). Else what was said is normalised (`words::normalise`:
-    Unicode lower case, every character that is not a letter or digit a space, runs of spaces
-    one, trimmed; so case and punctuation never matter) and matched against the dialogue's
-    words in order: the first whose normalised `phrase` equals it and whose `does` can be done
-    is heard. Its `reply` lines are said, each a message (`The spirit says: "…"`), the last the
-    dialogue screen's line; then what it `does`: `quest` gives that quest as asking its topic
-    would, if it could be asked for now (not active, its requirements and alignment met, the
-    player not too green; else the reply is all); `departs` sends the speaker away after the
-    reply (`World::departs`, as an ally whose time is up: no corpse, no pile, no experience, no
-    kill; the screen does not reopen); `calls` (a prestige class's calling, §8 "Prestige
-    classes", one of the dialogue's campaign) makes the calling after the reply, before
-    `quest` and `departs`, and the word is heard only while the calling is open (anyone else
-    gets `unheard`). The Ascmearc's **Strange Spirit** (`strange_spirit`, faction `spirits`,
-    hostile to no one; good; one hit point, no corpse, no blood, no experience; rooted,
-    `budge = never`) is met on the roads, vale, downs, and woods by day (`when = { calling =
-    "hunter" }`, weight 2), speaks only to the Kind or better (`speaks_to`), has no topics, and
-    knows one word, *life before death*: it echoes the oath's six lines, calls the bard into
-    the Hunter, and departs ("The strange spirit fades, and is gone."). Killed, it is a
-    peaceful good soul killed; its party is forgotten and it may be met again while the calling
-    is open. Look mode says ", who waits" after one whose dialogue has words and nothing else
-    to offer. No match: the
-    dialogue's `unheard` line (without one, "The sage says nothing.", told plainly, the
-    screen's line "…"). Either way it takes the time
-    of `chat`: no count of tries, no lock-out. Nothing is drawn, trained, or saved; others hear
-    a chat. A dialogue's `speaks_to` (an alignment range, §8 "Alignment") is the speaker's
-    reaction to the player: outside it a chat or a say gets only its `silent` line (a chat's
-    time; an ask, none), with no topics and no Say row.
+  - **Callings** (`world/calling.rs`, `World::ask_calling`; #1174): a topic may `calls` a
+    prestige class's calling (§8 "Prestige classes", one of the dialogue's campaign). It is
+    offered (`World::topics`) only while the calling is open to the player; asked, the topic's
+    reply is said, the calling made, and, with `departs`, the speaker sent away
+    (`World::departs`, as an ally whose time is up: no corpse, no pile, no experience, no kill;
+    the reply is a message only, and the screen does not reopen). It takes the time of `chat`.
+    Asked while not open (by replay text), it is unknown ("The sage knows nothing about
+    that."), and takes none. The Ascmearc's **Strange Spirit** (`strange_spirit`, faction
+    `spirits`, hostile to no one; good; one hit point, no corpse, no blood, no experience;
+    rooted, `budge = never`) is met on the roads, vale, downs, and woods by day (`when = {
+    calling = "hunter" }`, weight 2), speaks only to the Kind or better (`speaks_to`), and has
+    one topic, *Life before death* (`life_before_death`, `calls = "hunter"`, `departs`): it
+    echoes the oath, calls the bard into the Hunter, and departs ("The strange spirit fades,
+    and is gone."). Killed, it is a peaceful good soul killed; its party is forgotten and it
+    may be met again while the calling is open. Look mode says ", who waits" after one whose
+    dialogue's only topics are callings', with no service or wares. A dialogue's `speaks_to`
+    (an alignment range, §8 "Alignment") is the speaker's reaction to the player: outside it a
+    chat or an ask gets only its `silent` line (a chat's time; an ask, none), with no topics.
   - **Rumoured ways** (`world/rumour.rs`; the owner's request of 2026-10-27): a topic with a
     `route` (§7 "Dialogue") tells the way to a place. Asking it, every time, marks on the
     player's overworld map what walking the route by day would show: each cell in line of sight

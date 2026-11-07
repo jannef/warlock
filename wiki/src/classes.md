@@ -263,7 +263,6 @@ hands, and cannot be thrown (see [Spirit weapon](abilities.md#ability-spirit-wea
 
 ### Callings
 
-Each world calls in its own way. The words are stated plain here (see
-[Saying words](npcs.md#saying-words)):
+Each world calls in its own way:
 
 {{#include generated/callings.md}}

@@ -124,12 +124,10 @@ name = "These stairs"
 reply = "Five stairs down, two up. Down: the Vast Caverns, the quarry where they dig, the Frost Grotto, the trap hall, and the arena, where the fighting is. Up: the courtyard garden, and the road out into the Wildlands. Everything in this hall is safe. Down there, not everything is."
 
 # The oath's first words (docs/design/prestige-classes.md §4.2): the test world's way to the
-# Hunter's calling (data/callings/hunter.toml). Heard only while the calling is open to the player
-# (a bard whose class is full, not yet called); to anyone else he says nothing.
-[[dialogue.word]]
-phrase = "Life before death"
-reply = [
-    "Life before death. Hm. I swore that once, on a road far from here.",
-    "Journey before destination. Go on, then, hunter.",
-]
-does = { calls = "hunter" }
+# Hunter's calling (data/callings/hunter.toml). Offered only while the calling is open to the
+# player (a bard whose class is full, not yet called).
+[[dialogue.topic]]
+id = "life_before_death"
+name = "Life before death"
+reply = "Life before death. Hm. I swore that once, on a road far from here. Journey before destination. Go on, then, hunter."
+calls = "hunter"

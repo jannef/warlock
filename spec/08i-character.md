@@ -918,7 +918,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     lost level lowers the total and so the prestige level, and gives back as it returns; the
     choices were made the first time. Who calls: the dev action `call:ID` (`Action::Call`, no
     time, whatever the level; refused with no such class, one held, or no calling open to the
-    class), and a dialogue word's `calls` (§8 "Dialogue", "Saying words": the Ascmearc's
+    class), and a dialogue topic's `calls` (§8 "Dialogue", "Callings": the Ascmearc's
     Strange Spirit, §8 "Creatures"; the test world's hermit); an encounter entry's `when = {
     calling }` holds while a calling is open. Both worlds' Hunter callings ask for the bard's
     `max_level`, 30 (#874). The character screen's Class row:
