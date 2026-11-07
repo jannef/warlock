@@ -690,22 +690,12 @@ fn bad_locks_and_keys_are_reported() {
     let key = OBJECTS.replace("key = \"cellar\"", "key = \" \"");
     let err = load_with("data/objects.toml", &key).unwrap_err();
     assert!(err.contains("`key`"), "{err}");
-    for (from, to, expected) in [
-        ("sturdiness = 30\n", "", "go together"),
-        (
-            "sturdiness = 30\n",
-            "sturdiness = 0\n",
-            "`sturdiness` must be",
-        ),
-        (
-            "breaks_to = \"door_broken\"",
-            "breaks_to = \"door_open\"",
-            "walkable and no door",
-        ),
-    ] {
-        let err = load_with("data/terrain.toml", &TERRAIN.replacen(from, to, 1)).unwrap_err();
-        assert!(err.contains(expected), "{to}: {err}");
-    }
+    let err = load_with(
+        "data/terrain.toml",
+        &TERRAIN.replacen("sturdiness = 30\n", "", 1),
+    )
+    .unwrap_err();
+    assert!(err.contains("go together"), "{err}");
     let floor_breaks = TERRAIN.replace(
         "fg = \"#808080\"\n",
         "fg = \"#808080\"\nbreaks_to = \"door_broken\"\nsturdiness = 5\n",

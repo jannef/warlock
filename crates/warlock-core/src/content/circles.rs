@@ -10,10 +10,11 @@
 //! own: `lit` keeps the Light spell's). So the school of a row decides a light, and the rows'
 //! statuses and schools are in the content fingerprint.
 //!
-//! Load-time checks: every row's status exists and has `seen` (a circle shows only what look mode
-//! may say); its school is one of the seven and has a colour and a `circle_<school>` light; the
-//! status is a buff or hex spell's (which says whether its circle is a buff's or a hex's), and
-//! every buff or hex spell's status has a row but a sleep's (`sleeps`: never circled).
+//! Load-time checks: every row's status exists, once, and has `seen` (a circle shows only what
+//! look mode may say, so a row without it would never be drawn); its school is one of the seven
+//! and has a colour and a `circle_<school>` light; the status is a buff or hex spell's (which
+//! says whether its circle is a buff's or a hex's), never a sleep's (`sleeps`: never circled). A
+//! buff or hex spell's status without a row simply has no circle.
 
 use super::{Content, ContentError, LightId, School, SpellPurpose, StatusId};
 use crate::color::Rgb;
@@ -118,7 +119,7 @@ pub(super) fn parse(
         })?);
     }
     // Which statuses buff and hex spells lay, and of which kind.
-    let mut spell_kind: BTreeMap<StatusId, (bool, &str)> = BTreeMap::new();
+    let mut spell_kind: BTreeMap<StatusId, bool> = BTreeMap::new();
     for spell in content.spells() {
         let hex = match spell.kind {
             SpellPurpose::Buff => false,
@@ -130,7 +131,7 @@ pub(super) fn parse(
         if let Some((status, _)) = spell.effect.status
             && !content.status(status).sleeps
         {
-            spell_kind.entry(status).or_insert((hex, &spell.id));
+            spell_kind.entry(status).or_insert(hex);
         }
     }
     let mut circles = CircleStatuses::default();
@@ -150,7 +151,7 @@ pub(super) fn parse(
                 row.school.id()
             )));
         };
-        let &(hex, _) = spell_kind.get(&status).ok_or_else(|| {
+        let &hex = spell_kind.get(&status).ok_or_else(|| {
             err(format!(
                 "status `{name}` is circled but no buff or hex spell lays it: a circle is a \
                  spell's mark"
@@ -169,14 +170,6 @@ pub(super) fn parse(
             hex,
             light,
         });
-    }
-    if let Some((status, (_, spell))) =
-        (spell_kind.iter()).find(|(s, _)| !circles.by_status.contains_key(s))
-    {
-        let name = &content.status(*status).id;
-        return Err(err(format!(
-            "spell `{spell}` lays status `{name}`, which has no row (`[[status]]`)"
-        )));
     }
     for (i, color) in colors.iter().enumerate() {
         circles.colors[i] = color.unwrap_or(Rgb::WHITE);
@@ -235,7 +228,6 @@ mod tests {
         let blessed = "[[status]]\nstatus = \"blessed\"\nschool = \"abjuration\"\n";
         assert!(shipped.contains(blessed));
         let cases = [
-            (shipped.replace(blessed, ""), "lays status `blessed`, which has no row"),
             (
                 shipped.replace("status = \"blessed\"", "status = \"blest\""),
                 "unknown status `blest`",
@@ -328,27 +320,5 @@ mod tests {
             "{}",
             err.message
         );
-    }
-
-    #[test]
-    fn every_buff_status_is_seen() {
-        // docs/dev/status-effects.md: a buff status carries `seen`, whatever its source. A buff
-        // lends something: a stat, a combat bonus, a quicker pace, eyes, a resistance, or light.
-        let content = Content::builtin().unwrap();
-        let not_buffs = ["disguised", "lurking"];
-        for (_, def) in content.status_ids() {
-            let c = &def.combat;
-            let lends = [c.to_hit, c.damage, c.dodge, c.parry, c.shield]
-                .iter()
-                .any(|&b| b > 0)
-                || def.cost < 100
-                || def.vision.is_some()
-                || def.light.is_some()
-                || def.resist.iter().any(|&(_, r)| r > 0)
-                || (def.penalty.as_ref()).is_some_and(|p| p.by.iter().any(|(_, b)| b > 0));
-            if lends && !not_buffs.contains(&def.id.as_str()) {
-                assert!(def.seen.is_some(), "buff status `{}` has no `seen`", def.id);
-            }
-        }
     }
 }

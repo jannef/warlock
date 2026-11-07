@@ -83,8 +83,8 @@ buff and hex spell's status a school, whose colour its spell circle about the ac
 `fire_cloaked` (abjuration); `ill_wished`,
 `drowsy` (enchantment), `weakened` (necromancy), `sluggish`, `webbed` (transmutation). A circled
 status must have `seen` (a load-time check: the circle shows only what look mode may say) and be
-laid by a buff or hex spell (which makes its circle a buff's or a hex's); every buff and hex
-spell's status must have a row. **The circle's light** (docs/design/buff-circles.md §8):
+laid by a buff or hex spell (which makes its circle a buff's or a hex's); a buff or hex
+spell's status without a row has no circle. **The circle's light** (docs/design/buff-circles.md §8):
 `circles::shed_lights` fills `StatusDef::light` at load with the school's `circle_<school>` preset
 (`data/lights.toml`: radius 1, steady, luma 40 to 52 and UV 90 at the source) for every circled
 status without a light of its
@@ -104,8 +104,8 @@ action `afflict:ID` (`Action::Afflict`) gives the player a degree, for tests and
 
 Buffs, hexes, and cooldowns (spec §8 "Status effects"; #227, design
 `docs/design/progression.md` §4.1 B1) are statuses too, with four more optional fields
-(`StatusDef`): `combat` (`CombatBonus { to_hit, damage, dodge, parry }`, the stances' numbers
-and ranges), `cost` (percent of every price, `COST_PERCENT` 50 to 1000: below 100 only a spell's buff on
+(`StatusDef`): `combat` (`CombatBonus { to_hit, damage, dodge, parry }`, the stances' numbers),
+`cost` (percent of every price, above 0, a price of 0 being no time at all: below 100 only a spell's buff on
 its caster may be (and the potion of quickness's Hasted on the player, and Sic 'em's Savage on a companion), `spell_def` refusing a hex's or a damage spell's, so creatures that disturb a rest are never
 hastened and `World::out_of_view_for` stays exact), `auto_critical` (hits are criticals with no confirmation, a degree each: Savage, `world/sic.rs`), `blocks` (`Vec<ActionKind>`, ids from `data/actions.toml`),
 and `follows` (`Option<StatusId>`, resolved after the whole file, `resolve_follows`: no chain back
@@ -151,8 +151,8 @@ holds (`World::hold_harms`, read by the status pass; the rug of smothering's 1),
 status's `damage`. A tick at n degrees comes n times as often, so the harm
 is heaviest as the hold begins and eases with it. A blow and a spell still go from inside.
 `world/split_tests.rs` checks the data, the tick, and the holder's death letting go. **Holds** (#431, `world/hold.rs`): a status with `hold` (`content::Hold`:
-`check`, `difficulty`, `turns`; parse checks `eases`, `stacking = "highest"`, `blocks` step, and
-`turns` within 1..=`max`) is held by its effect's `by`. `World::afflict` draws a hold's degrees
+`check`, `difficulty`, `turns`; parse checks only that `turns` never rolls below 1; the data's
+holds ease, keep the highest dose, and block `step`) is held by its effect's `by`. `World::afflict` draws a hold's degrees
 from `turns` (`World::hold_turns`; the passed severity is ignored, so Drowning grip's
 `afflict(.., 1, ..)` draws too), so it eases away within a few turns. `World::loosen_holds` ends
 (through `ended`) every hold on the current level whose holder is gone, elsewhere, not adjacent,
@@ -166,8 +166,8 @@ owner: "an automatic skill check when player action is prevented/slowed because 
 fix"): `World::struggle` takes the action's `kind_of` and the first status `blocking` it. Trained
 (`trains_effect(Effect::Escape)`), a hold's check reads `World::slipping` (the better of its stat
 and Dexterity, each with `talents.check`, plus `Effect::Escape`) with Knowledge's `resisting` on
-top. A status with `StatusDef::escape` (Webbed, Pinned; parse checks 1 to 40, no `hold`, `blocks`
-or `cost` above 100, and `seen`) is checked the same way without Knowledge, trained only: made,
+top. A status with `StatusDef::escape` (Webbed, Pinned; parse checks no `hold`, and `blocks` or
+`cost` above 100, without which it is never struggled against) is checked the same way without Knowledge, trained only: made,
 it is removed and `ended` says its `end`, and `None` lets the action go on; failed,
 `Spent::Turn(price_of(kind))` and "You struggle, but you are still {seen}.". Untrained or
 unmarked, `struggle` returns `None` with no draw and `refuse_blocked` refuses. With nothing
@@ -175,7 +175,7 @@ blocking, a trained player's first marked status with `cost` above 100 (none in 
 is checked and `None` is returned either way. Each check marks `StatUse::Struggled` and
 `Use::Escape` (`World::struggled`). A second blocking status is refused this attempt and asks on
 the next. Tests: `world/escape_tests.rs`. A creature's `on_hit` names a
-hold as `{ status = "held", chance = 10, difficulty = 15 }` (no `severity`; `difficulty` 1 to 40,
+hold as `{ status = "held", chance = 10, difficulty = 15 }` (no `severity`; `difficulty`
 optional; `OnHitSpec::resolve` gives `Affliction::Hold`, and `difficulty` on a non-hold status is
 refused). Draws: the turns' dice as a hold begins or is renewed, two for a struggle. Tests:
 `world/hold_tests.rs`, the parse tests in `content/status.rs`, `world/lucky_tests.rs`. A status that `flees` (Frightened, Hound's bay's, #270; Frightened also costs `to_hit` 3, fear's teeth, #1124, the player too) makes a creature step
@@ -250,8 +250,7 @@ once known, else "sickness"); `world/heal.rs` the try (`World::heal`, dispatched
 `allies_beside`, #915: the healer's check, the patient's effect; the snapshot's `ally_ailments`
 are the allies' list, computed each turn; `kind_of`
 maps it to `ActionKind::Heal`, so a status may block it). A status is treatable by its `treat`
-table (`content::Treat`: `difficulty`, `per_degree`, `stops`, `made`, `failed`; parse checks 0
-to 40, 0 to 10, non-empty words): `stops` (bleeding) ends it through `ended` on a made check and
+table (`content::Treat`: `difficulty`, `per_degree`, `stops`, `made`, `failed`): `stops` (bleeding) ends it through `ended` on a made check and
 lets a failure be retried (as does every ailment: no try is spent); without it (poison) a made check lowers the severity a degree (ending
 it through `ended` at none); any failure may be retried at once (#1012: the one-try rule went). A shown
 disease is treated against its own `difficulty`: made, `streak + 1` while that stays below

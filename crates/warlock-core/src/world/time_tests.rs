@@ -386,8 +386,6 @@ fn move_costs_are_validated_and_levels_set_no_turn_length() {
         files.insert(path, &text.replace(from, to));
         Content::load(&files)
     };
-    let err = with("data/terrain.toml", "move_cost = 200", "move_cost = 0").unwrap_err();
-    assert!(err.message.contains("move_cost 0"), "{}", err.message);
     // Six seconds is the one base: a level cannot have turns of its own any more.
     let err = with(
         "levels/cellar.toml",

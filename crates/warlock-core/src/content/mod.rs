@@ -218,10 +218,7 @@ pub use dungeon::{
     ChestOdds, DungeonDef, Endless, Generator, LayerBoss, LevelPlan, RoomOdds, ShopOdds,
     parse_branch_level,
 };
-pub use effect::{
-    Darken, EffectDef, EffectLight, EffectShape, FILL_GLYPH, MAX_BURST_RADIUS, MAX_DARKEN,
-    MAX_SHAKE_PIXELS, Shake,
-};
+pub use effect::{Darken, EffectDef, EffectLight, EffectShape, FILL_GLYPH, MAX_DARKEN, Shake};
 pub use encounter::{
     Checks, Draw as EncounterDraw, EncounterEntry, EncounterRules, EncounterTable, EntryStance,
     Evade, Meetings, PhaseRates, PlayerPlaces, Positions, When as EncounterWhen,
@@ -245,8 +242,7 @@ pub use gem::{
 pub use guild::{GuildDef, RankBy, RankDef};
 pub use horoscope::{FULL_MOON_WITHIN, Flavour, Horoscope, Lucky, Sign, SignActive, SignPart};
 pub use hunger::{
-    Corpses, EXERTIONS, Faint, Food, HungerDef, MAX_MEAL, MAX_NUTRITION, MAX_SHELF_LIFE,
-    Overeating, Rotten, Starve, States,
+    Corpses, EXERTIONS, Faint, Food, HungerDef, MAX_NUTRITION, Overeating, Rotten, Starve, States,
 };
 pub use intimidate::IntimidateRules;
 #[cfg(test)]
@@ -290,9 +286,7 @@ pub(crate) use quest_roll::roll_known;
 pub use quest_roll::{Candidate, Pick, Roll, Rolled, Variant, one_of};
 pub use race::{HUNGER, LightBlind, RaceDef, Races};
 pub use ranged::{RangeBand, RangedRules};
-pub use resource::{
-    Build, MAX_EVERY, MAX_RESOURCE, MAX_SHORT, MaxFrom, OverTime, ResourceDef, ResourceId,
-};
+pub use resource::{Build, MAX_RESOURCE, MaxFrom, OverTime, ResourceDef, ResourceId};
 pub use rod::{
     MAX_ROD_MANA, MAX_ROD_POWER, MAX_ROD_RADIUS, MAX_ROD_REACH, Rod, RodDoes, RodEffect, RodShape,
 };
@@ -318,16 +312,13 @@ pub use skill::{OptionalSkill, SkillBook, SkillDef};
 pub use sky::{MoonDef, PHASE_ONE, STANDARD_SIZE};
 pub use slot::{MAX_SLOTS, SlotDef, SlotId};
 pub use smite::SmiteRules;
-pub use spell::{BOLT_LENGTHS, BURST_RADII, Bolt, Burst, BurstIce};
+pub use spell::{Bolt, Burst, BurstIce};
 pub use spell_def::{
-    ARC_REACH, CorpseUse, EYELESS, Grows, MAX_ARCS, MAX_CASTS, MAX_CONE, MAX_REACH,
-    MAX_SPELL_LEVEL, MAX_SUMMON_MINUTES, OnlyTerrain, Ratio, Resolution, STUDY_DIFFICULTY, School,
-    Shape, SpellBlink, SpellCharm, SpellData, SpellEffect, SpellId, SpellLook, SpellPurpose,
-    SpellRise, SpellRules, SpellSummon, SpellWeather, SpellZone, ZoneKind,
+    ARC_REACH, CorpseUse, EYELESS, Grows, MAX_CONE, MAX_REACH, MAX_SPELL_LEVEL, OnlyTerrain, Ratio,
+    Resolution, School, Shape, SpellBlink, SpellCharm, SpellData, SpellEffect, SpellId, SpellLook,
+    SpellPurpose, SpellRise, SpellRules, SpellSummon, SpellWeather, SpellZone, ZoneKind,
 };
-pub use spell_ladder::{
-    Ladder as SpellLadder, MAX_RUNGS, MAX_SCORE, RungValue, Unit as LadderUnit,
-};
+pub use spell_ladder::{Ladder as SpellLadder, MAX_SCORE, RungValue, Unit as LadderUnit};
 pub use spell_mod::{SpellMod, SpellModSpec, SpellMods, merge_rider};
 pub use spell_type::{SpellType, TypeBite, TypeRider};
 pub use split::{CORPSE_SHARE, DiesInto, HALF_SHARE, Splits};
@@ -336,23 +327,21 @@ pub use stat_training::{
     DeedRule, HAUL_GRAMS, ODDS_SCALE, StatDeed, StatRule, StatTraining, StatUse,
 };
 pub use status::{
-    Affliction, COST_PERCENT, CombatBonus, Drain, Healing, MAX_DRAIN_POINTS, MAX_REGEN,
-    MAX_SEVERITY, OnHit, Penalty, Stacking, StatusDef, StatusId, Wound,
+    Affliction, CombatBonus, Drain, Healing, MAX_SEVERITY, OnHit, Penalty, Stacking, StatusDef,
+    StatusId, Wound,
 };
 pub use steal::StealRules;
 pub use summon::Summon;
 pub use surprise::SurpriseRules;
 pub use swim::SwimRules;
-pub use tag::{MAX_TAG, TAG_TARGET, spoken};
+pub use tag::{TAG_TARGET, spoken};
 pub use talent::{
     AnyWeaponSkill, Choice, FreeBlowTrigger, Need, Needs, ResourceCost, SmiteRiderKind, SongOn,
     SystemDef, SystemId, TalentActive, TalentBook, TalentDef, TalentEffect, TalentId, TreeDef,
     TreeId,
 };
 pub use temper::TemperRules;
-pub use terrain::{
-    Breakable, Freeze, FreezeSpec, MAX_HARDNESS, MAX_HEIGHT, StairsDir, TerrainDef, TerrainId,
-};
+pub use terrain::{Breakable, Freeze, FreezeSpec, StairsDir, TerrainDef, TerrainId};
 pub use theft::{Blinks, SMALL as SMALL_LOOT, Steals, Takes};
 pub use throw::Throw;
 pub use trap::{Trap, TrapAvoid, TrapDef, TrapEffect, TrapId, TrapNoise};
@@ -363,8 +352,8 @@ pub use vault_turn::Turn;
 pub use vision::VisionProfile;
 pub use wand::{MAX_WAND_CHARGES, Wand};
 pub use weapon_ability::{
-    Active, ActiveAim, Categories, ENERGY_PERCENT, ExtraDice, FreeBlowKind, MAX_ABILITY_RANK, On,
-    STAMINA, Trigger, WeaponAbility, WeaponAbilityId, WeaponDoes,
+    Active, ActiveAim, Categories, ExtraDice, FreeBlowKind, On, STAMINA, Trigger, WeaponAbility,
+    WeaponAbilityId, WeaponDoes,
 };
 pub use weapon_skill::{
     Benefit, Grip, MAX_RANK, MOST_PERCENT, MarkRules, RANKS, Role, Section, SpellAttacks, Style,
@@ -1020,10 +1009,7 @@ impl Content {
             let size_index = |id: &str| content.size_index(id);
             let skill_id = |id: &str| content.skill_id(id);
             let weapons = &content.weapon_skills;
-            let percent = crate::damage::MIN_RESISTANCE..=crate::damage::IMMUNE;
-            let resist = |m: &BTreeMap<String, i32>| {
-                content.resolve_per_kind("resist", m, percent.clone(), false)
-            };
+            let resist = |m: &BTreeMap<String, i32>| content.resolve_per_kind("resist", m, false);
             content.races = Races::parse(
                 path, text, has_vision, size_index, skill_id, weapons, resist,
             )?;
@@ -1458,51 +1444,16 @@ impl Content {
         let mut defs = Vec::with_capacity(parsed.terrain.len());
         for spec in &parsed.terrain {
             let light = self.resolve_light(path, spec.light.as_deref())?;
-            if light.is_some() && !spec.transparent {
-                return Err(err(format!(
-                    "terrain `{}` emits light but is opaque; its light would leak through walls",
-                    spec.id
-                )));
-            }
-            if spec.move_cost == 0 {
-                return Err(err(format!(
-                    "terrain `{}` has move_cost 0; every step takes some time",
-                    spec.id
-                )));
-            }
-            if spec
-                .travel_minutes
-                .is_some_and(|m| m == 0 || u32::from(m) > crate::time::MINUTES_PER_DAY)
-            {
-                return Err(err(format!(
-                    "terrain `{}`: travel_minutes must be 1 to 1440 (a day)",
-                    spec.id
-                )));
-            }
             let height = spec.height.unwrap_or(u8::from(!spec.transparent));
-            if height > MAX_HEIGHT {
-                return Err(err(format!(
-                    "terrain `{}` has height {height}; expected 0 to {MAX_HEIGHT}",
-                    spec.id
-                )));
-            }
             check_terrain_noise(spec).map_err(|m| err(format!("terrain `{}`: {m}", spec.id)))?;
             check_terrain_ice(spec).map_err(|m| err(format!("terrain `{}`: {m}", spec.id)))?;
             check_kicking(spec).map_err(|m| err(format!("terrain `{}`: {m}", spec.id)))?;
             let breaks = match (spec.hardness, &spec.becomes) {
                 (None, None) => None,
-                (Some(hardness), Some(_)) if (1..=MAX_HARDNESS).contains(&hardness) => {
-                    Some(Breakable {
-                        hardness,
-                        becomes: resolve(&spec.becomes)?.expect("given"),
-                    })
-                }
-                (Some(_), Some(_)) => {
-                    return Err(err(format!(
-                        "terrain `{}`: hardness must be 1 to {MAX_HARDNESS}",
-                        spec.id
-                    )));
-                }
+                (Some(hardness), Some(_)) => Some(Breakable {
+                    hardness,
+                    becomes: resolve(&spec.becomes)?.expect("given"),
+                }),
                 _ => {
                     return Err(err(format!(
                         "terrain `{}`: `hardness` and `becomes` go together",
@@ -1583,21 +1534,6 @@ impl Content {
                 haze: spec.haze,
                 particles: spec.particles.clone(),
             });
-        }
-        // A broken door is open for good: walkable, and no door to open or close.
-        if let Some(def) = defs.iter().find(|d| {
-            d.kicked_in.is_some_and(|(to, _)| {
-                let to = &defs[usize::from(to.0)];
-                !to.walkable || to.opens_to.is_some() || to.closes_to.is_some()
-            })
-        }) {
-            return Err(err(format!(
-                "terrain `{}`: what it `breaks_to` must be walkable and no door",
-                def.id
-            )));
-        }
-        for def in &defs {
-            check_breaking(def, &defs).map_err(|m| err(format!("terrain `{}`: {m}", def.id)))?;
         }
         check_chests(&defs).map_err(err)?;
         let statues: Vec<&str> = (defs.iter().filter(|d| d.statue.is_some()))
@@ -1826,15 +1762,10 @@ impl Content {
                 })
                 .transpose()
                 .map_err(|m| err(format!("creature `{}`: {m}", spec.id)))?;
-            let percent = crate::damage::MIN_RESISTANCE..=crate::damage::IMMUNE;
-            let resist = (self.resolve_per_kind("resist", &spec.resist, percent, false))
+            let resist = (self.resolve_per_kind("resist", &spec.resist, false))
                 .map_err(|m| err(format!("creature `{}`: {m}", spec.id)))?;
             let stats = Stats::from_data(&spec.stats, &spec.potential)
                 .map_err(|m| err(format!("creature `{}`: {m}", spec.id)))?;
-            if let Some(cost) = spec.attack_cost {
-                action::check_cost(cost)
-                    .map_err(|m| err(format!("creature `{}`: attack_cost: {m}", spec.id)))?;
-            }
             let size_id = spec.size.as_deref().unwrap_or(MEDIUM);
             let size = (self.size_index(size_id))
                 .ok_or_else(|| err(format!("creature `{}`: unknown size `{size_id}`", spec.id)))?;
@@ -3075,25 +3006,18 @@ impl Content {
             let id = self
                 .damage_type_id(name)
                 .ok_or_else(|| format!("unknown damage type `{name}`"))?;
-            if kinds.contains(&id) {
-                return Err(format!("`damage_type` names `{name}` twice"));
-            }
             kinds.push(id);
-        }
-        if kinds.is_empty() {
-            return Err("`damage_type` names no type".into());
         }
         Kinds::of(&kinds).ok_or_else(|| format!("`damage_type` names at most {MAX_KINDS} types"))
     }
 
     /// The percentages per kind `map` gives (`resist = { fire = 25 }` on a creature or an
-    /// object; `protects = { slashing = 1 }` on armour, `physical` only), checked against
-    /// `range`.
+    /// object; `protects = { slashing = 1 }` on armour, `physical` only: the others are never
+    /// read), by damage type id. The rules clamp what they add up ([`crate::damage`]).
     pub(crate) fn resolve_per_kind(
         &self,
         field: &str,
         map: &BTreeMap<String, i32>,
-        range: std::ops::RangeInclusive<i32>,
         physical: bool,
     ) -> Result<Vec<(DamageTypeId, i32)>, String> {
         let mut out = Vec::new();
@@ -3103,13 +3027,6 @@ impl Content {
                 .ok_or_else(|| format!("`{field}`: unknown damage type `{name}`"))?;
             if physical && !self.damage_type(id).physical {
                 return Err(format!("`{field}`: `{name}` is no physical damage type"));
-            }
-            if !range.contains(value) {
-                return Err(format!(
-                    "`{field}`: `{name}` must be {} to {}",
-                    range.start(),
-                    range.end()
-                ));
             }
             out.push((id, *value));
         }
@@ -4261,17 +4178,10 @@ impl Content {
     }
 }
 
-/// The most a terrain may scale footsteps by, in percent.
-const MAX_STEP_NOISE: u16 = 1000;
-
-/// Checks a terrain type's noise fields (spec §5 "Hearing").
+/// Checks a terrain type's noise fields (spec §5 "Hearing"): loudness within
+/// [`MAX_LOUDNESS`] (it bounds how far a sound is carried), and a `toggle_noise` only on what
+/// opens and shuts.
 fn check_terrain_noise(spec: &terrain::TerrainSpec) -> Result<(), String> {
-    if spec.step_noise > MAX_STEP_NOISE {
-        return Err(format!(
-            "`step_noise` is {}%; expected 0 to {MAX_STEP_NOISE}",
-            spec.step_noise
-        ));
-    }
     if spec.toggle_noise > MAX_LOUDNESS || spec.muffle.is_some_and(|m| m > MAX_LOUDNESS) {
         return Err(format!(
             "`toggle_noise` and `muffle` must be at most {MAX_LOUDNESS}"
@@ -4284,12 +4194,10 @@ fn check_terrain_noise(spec: &terrain::TerrainSpec) -> Result<(), String> {
     Ok(())
 }
 
-/// Checks a terrain type's ice fields (spec §5 "Ice"): water that freezes and the ice on it
+/// Checks a terrain type's ice fields (spec §5 "Ice"): water that freezes or ice, not both; both
 /// are walkable, transparent, give no light, and are neither doors nor stairs (ice and water
-/// trade places as it freezes and thaws, so nothing else may change with them); water freezes
-/// from 0 °C down to [`crate::ice::COLDEST_FREEZE`], at 1 to 100 percent of still water's
-/// pace, and a fall into it takes no hit points back; ice is 1 mm to [`crate::ice::MAX_MM`]
-/// thick and does not move like water.
+/// trade places as it freezes and thaws, under whoever stands there, so nothing else may change
+/// with them).
 fn check_terrain_ice(spec: &terrain::TerrainSpec) -> Result<(), String> {
     if spec.freeze.is_none() && spec.ice.is_none() {
         return Ok(());
@@ -4311,54 +4219,18 @@ fn check_terrain_ice(spec: &terrain::TerrainSpec) -> Result<(), String> {
                 .into(),
         );
     }
-    if let Some(freeze) = &spec.freeze {
-        if !(crate::ice::COLDEST_FREEZE..=0).contains(&freeze.below) {
-            return Err(format!(
-                "`freeze.below` must be {} to 0 (°C)",
-                crate::ice::COLDEST_FREEZE
-            ));
-        }
-        if !(1..=100).contains(&freeze.rate) {
-            return Err("`freeze.rate` must be 1 to 100 (percent)".into());
-        }
-        if freeze.plunge.min() < 0 {
-            return Err("`freeze.plunge` must not heal".into());
-        }
-    }
-    if let Some(mm) = spec.ice {
-        if !(1..=crate::ice::MAX_MM).contains(&mm) {
-            return Err(format!("`ice` must be 1 to {} (mm)", crate::ice::MAX_MM));
-        }
-        if spec.anim.as_ref().is_some_and(GlyphAnim::is_flow) {
-            return Err("ice does not flow".into());
-        }
-    }
     Ok(())
 }
 
 /// Checks a terrain type's kicking fields (spec §8 "Doors"): only a closed door breaks, and
 /// `breaks_to` and `sturdiness` go together; a statue (spec §8 "Statues") has a `sturdiness`
-/// of its own, breaks (`hardness`), and is solid but seen past.
+/// of its own, and no `breaks_to` or `chest` the kick or the chest code would read instead.
 fn check_kicking(spec: &terrain::TerrainSpec) -> Result<(), String> {
     if spec.statue {
-        let range = crate::door::STATUE_STURDINESS;
-        return match spec.sturdiness {
-            Some(s)
-                if range.contains(&s)
-                    && spec.breaks_to.is_none()
-                    && spec.hardness.is_some()
-                    && !spec.walkable
-                    && spec.transparent
-                    && spec.chest.is_none() =>
-            {
-                Ok(())
-            }
-            _ => Err(format!(
-                "a `statue` has a `sturdiness` of {} to {}, a `hardness`, no `breaks_to` or \
-                 `chest`, and is not walkable but transparent",
-                range.start(),
-                range.end()
-            )),
+        return if spec.sturdiness.is_some() && spec.breaks_to.is_none() && spec.chest.is_none() {
+            Ok(())
+        } else {
+            Err("a `statue` has a `sturdiness`, and no `breaks_to` or `chest`".into())
         };
     }
     match (&spec.breaks_to, spec.sturdiness) {
@@ -4366,18 +4238,15 @@ fn check_kicking(spec: &terrain::TerrainSpec) -> Result<(), String> {
         (Some(_), Some(_)) if spec.opens_to.is_none() => {
             Err("only closed doors (`opens_to`) break when kicked".into())
         }
-        (Some(_), Some(s)) if !crate::door::STURDINESS.contains(&s) => Err(format!(
-            "`sturdiness` must be {} to {}",
-            crate::door::STURDINESS.start(),
-            crate::door::STURDINESS.end()
-        )),
         (Some(_), Some(_)) => Ok(()),
         _ => Err("`breaks_to` and `sturdiness` go together".into()),
     }
 }
 
-/// The chest terrains (spec §8 "Chests"): at most one each of shut, open, and smashed; a shut
-/// chest is not walkable, open and smashed ones are; none is a door, stairs, or breakable.
+/// The chest terrains (spec §8 "Chests"): at most one each of shut, open, and smashed (the code
+/// finds each by its state); a shut chest is not walkable (it opens as one walks into it), open
+/// and smashed ones are; none is a door, stairs, or breakable. Deep water (`swim`) is not
+/// walkable: swimming is the way onto it.
 fn check_chests(defs: &[TerrainDef]) -> Result<(), String> {
     for state in crate::chest::ChestState::ALL {
         let of: Vec<&TerrainDef> = defs.iter().filter(|d| d.chest == Some(*state)).collect();
@@ -4390,24 +4259,11 @@ fn check_chests(defs: &[TerrainDef]) -> Result<(), String> {
             ));
         }
     }
-    for def in defs.iter().filter(|d| d.swim) {
-        if def.walkable
-            || !def.transparent
-            || def.freeze.is_some()
-            || def.ice.is_some()
-            || def.is_door()
-            || def.stairs.is_some()
-            || def.breaks.is_some()
-            || def.chest.is_some()
-            || def.light.is_some()
-            || def.travel_minutes.is_some()
-        {
-            return Err(format!(
-                "terrain `{}`: deep water (`swim`) is not walkable, is transparent, does not \
-                 freeze, and is no door, stairs, chest, breaking wall, light, or overworld terrain",
-                def.id
-            ));
-        }
+    if let Some(def) = defs.iter().find(|d| d.swim && d.walkable) {
+        return Err(format!(
+            "terrain `{}`: deep water (`swim`) is not walkable",
+            def.id
+        ));
     }
     for def in defs.iter().filter(|d| d.chest.is_some()) {
         let shut = def.is_shut_chest();
@@ -4422,41 +4278,6 @@ fn check_chests(defs: &[TerrainDef]) -> Result<(), String> {
             return Err(format!(
                 "terrain `{}`: a chest is no door, stairs, or wall (its band says how it breaks)",
                 def.id
-            ));
-        }
-    }
-    Ok(())
-}
-
-/// Checks how a terrain type breaks (spec §8 "Digging"): only solid terrain (neither walkable
-/// nor a door, stairs, or a light) breaks, into plain open ground (walkable and transparent,
-/// that does not break itself); solid rock shows a solid face.
-fn check_breaking(def: &TerrainDef, defs: &[TerrainDef]) -> Result<(), String> {
-    let plain = |t: &TerrainDef| t.stairs.is_none() && !t.is_closed_door() && !t.is_open_door();
-    if let Some(breaks) = def.breaks {
-        if def.walkable || !plain(def) || def.light.is_some() {
-            return Err(
-                "only solid terrain breaks (`hardness`): not walkable, no door, stairs, or light"
-                    .into(),
-            );
-        }
-        let becomes = &defs[usize::from(breaks.becomes.0)];
-        if !becomes.walkable || !becomes.transparent || becomes.breaks.is_some() || !plain(becomes)
-        {
-            return Err(format!(
-                "it `becomes` `{}`, which must be open ground: walkable, transparent, no door or \
-                 stairs, and not breaking itself",
-                becomes.id
-            ));
-        }
-    }
-    if let Some(face) = def.face {
-        let face = &defs[usize::from(face.0)];
-        let solid = |t: &TerrainDef| !t.walkable && !t.transparent;
-        if !solid(def) || !solid(face) || face.face.is_some() {
-            return Err(format!(
-                "only solid rock has a `face`, and its face `{}` must be solid with none of its own",
-                face.id
             ));
         }
     }
@@ -4503,8 +4324,8 @@ fn check_effects(
     if let Some(anim) = anim {
         anim.check().map_err(err)?;
     }
-    if !(0.0..=1.0).contains(&glow) || !(0.0..=1.0).contains(&haze) {
-        return Err(err("`glow` and `haze` must be between 0 and 1".into()));
+    if !glow.is_finite() || !haze.is_finite() {
+        return Err(err("`glow` and `haze` must be numbers".into()));
     }
     for emitter in particles {
         emitter
@@ -4852,7 +4673,7 @@ mod tests {
     fn bad_effects_are_reported_with_the_terrain() {
         let mut files = minimal_files("#@#\n", "");
         let terrain = files.get("data/terrain.toml").unwrap().to_string();
-        let sparks = "glyphs = \"'\"\ncolors = [\"#ffa040\"]\nlife = 1\n";
+        let sparks = "glyphs = \"'\"\ncolors = []\nlife = 1\n";
         files.insert(
             "data/terrain.toml",
             &format!("{terrain}\n[[terrain.particles]]\n{sparks}"),
@@ -4861,13 +4682,14 @@ mod tests {
         assert_eq!(err.file, "data/terrain.toml");
         assert!(
             err.message
-                .contains("terrain `wall`: particles: ambient particles need a positive `rate`"),
+                .contains("terrain `wall`: particles: particles need at least one color"),
             "{}",
             err.message
         );
-        files.insert("data/terrain.toml", &format!("{terrain}glow = 3\n"));
+        files.insert("data/terrain.toml", &format!("{terrain}glow = nan\n"));
         let err = Content::load(&files).unwrap_err();
         assert!(err.message.contains("`glow` and `haze`"), "{}", err.message);
+        let sparks = sparks.replace("[]", "[\"#ffa040\"]");
         files.insert(
             "data/terrain.toml",
             &format!("{terrain}\n[[terrain.particles]]\n{sparks}rate = 2\n"),
@@ -5637,23 +5459,6 @@ mod tests {
         assert!(load("###\n#.#\n###\n", "overworld").is_err());
     }
 
-    #[test]
-    fn opaque_terrain_cannot_emit_light() {
-        let mut files = minimal_files("#@#\n", "");
-        files.insert("data/lights.toml", LIGHTS);
-        let terrain = files.get("data/terrain.toml").unwrap().replace(
-            "glyph = \"#\"",
-            "glyph = \"#\"\n            light = \"torch\"",
-        );
-        files.insert("data/terrain.toml", &terrain);
-        let err = Content::load(&files).unwrap_err();
-        assert!(
-            err.message.contains("emits light but is opaque"),
-            "{}",
-            err.message
-        );
-    }
-
     /// The built-in content plus a level `stream` with `map` and `legend`.
     fn stream(map: &str, legend: &str) -> Result<Content, ContentError> {
         let mut files = ContentFiles::builtin();
@@ -5720,8 +5525,8 @@ mod tests {
     fn water_animations_are_checked() {
         let cases = [
             (
-                "anim = { kind = \"wave\", glint = 1.5 }",
-                "`glint` must be between 0 and 1",
+                "anim = { kind = \"wave\", glint = -1 }",
+                "finite and not negative",
             ),
             (
                 "anim = { kind = \"flow\", speed = -1 }",

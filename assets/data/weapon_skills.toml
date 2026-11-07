@@ -31,14 +31,14 @@ school = [10, 20, 40, 80, 160, 320, 640, 1200, 2000, 3000]
 
 # Fighting with a weapon in each hand (two-weapon fighting; the off hand holds only a light
 # weapon, `light_weapon` in objects.toml): both hands strike every melee attack, the main hand
-# at `main` to hit, the off hand at `off` (D&D's -4 and -8; -20 to 0). The Twin Blades style
+# at `main` to hit, the off hand at `off` (D&D's -4 and -8). The Twin Blades style
 # eases both (`ease_main`, `ease_off` below), never past 0.
 [two_weapons]
 main = -4
 off = -8
 
 # Fighting with a shield in each hand (two-shield fighting, #611; any shield fits either hand):
-# every blow is a shield bash, at `to_hit` (-20 to 0), every attack `slow` percent dearer, and
+# every blow is a shield bash, at `to_hit`, every attack `slow` percent dearer, and
 # every spell its bearer casts with their own mana fails by a chance of `spell_failure` percent
 # (the mana and the time are spent all the same). The Two Shields style eases each (`ease_bash`,
 # `ease_slow`, `ease_spell` below), never past nothing.
@@ -73,12 +73,13 @@ far = 5
 #           unarmed, thrown, and shield_bash may have one skill each, and every
 #           school of magic one skill (`school`: its id, as the spells' `school` names it)
 #   curve   the curve above it trains along
-# and what each rank gives, as 11 numbers for ranks 0 to 10 (rank 0 gives nothing; a higher rank
-# never less; a list left out is all 0):
+# and what each rank gives, as 11 numbers for ranks 0 to 10 (a list left out is all 0; all but
+# `to_hit`, `damage`, `parry`, `shield`, `far_to_hit`, `bonus`, `cells`, and `degrees` are 0 to
+# 255):
 #   to_hit  added to the to-hit of attacks with it
 #   damage  added to every roll of their damage dice
 #   threat  how many natural rolls lower a critical threatens from (19-24 instead of 20-24)
-#   crit    added to a confirmed critical's damage multiplier (0 to 3; never past x5)
+#   crit    added to a confirmed critical's damage multiplier (never past x5)
 #   speed   percent off the attack's cost (melee, shoot, throw; actions.toml); a school's: off
 #           the cast's (never a caster style's)
 #   parry   melee: added to the wielded weapon's Parry bonus to Defence
@@ -86,15 +87,14 @@ far = 5
 #   shield  a shield style (sword_and_board, two_shields): added to the held shield's Shield
 #           bonus to Defence
 # and a school (never `damage`, `crit`, `parry`, `reload`, or `shield`), on its own spells,
-#   reroll  a die showing this or less is rolled again, once (0 to 3)
-#   sides   every die this many sizes bigger, a d6 a d7 (0 to 3)
-#   dice    this many dice more (0 to 3)
-#   bonus   added to every roll, harm or healing (0 to 6)
-#   cells   cells farther: a range, a length (0 to 3)
-#   degrees degrees longer: a buff's or a hex's status (0 to 3)
-#   mana    percent off the spell's mana (0 to 50; never below 1 mana)
-# (each range the table's own, not a bound on what a spell does), and its `to_hit` and `threat`
-# count for its spells that roll to hit.
+#   reroll  a die showing this or less is rolled again, once
+#   sides   every die this many sizes bigger, a d6 a d7
+#   dice    this many dice more
+#   bonus   added to every roll, harm or healing
+#   cells   cells farther: a range, a length
+#   degrees degrees longer: a buff's or a hex's status
+#   mana    percent off the spell's mana (never below 1 mana)
+# and its `to_hit` and `threat` count for its spells that roll to hit.
 # Rank 10 is where later active or triggered abilities will hang.
 
 # Melee
@@ -411,8 +411,8 @@ cells = [0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2]
 #   ease_spell two_shields: percent points off the chance a spell fails
 #   far_to_hit ranged_spell: added to the to-hit at a target [spell_attacks] `far` or more away
 #   far_threat ranged_spell: added to the threat widening at such a target
-#   cells      ranged_spell: cells farther (a range, a length), after the school's (0 to 3)
-#   bonus      touch_spell: added to the roll, harm or healing, after the school's (0 to 6)
+#   cells      ranged_spell: cells farther (a range, a length), after the school's
+#   bonus      touch_spell: added to the roll, harm or healing, after the school's
 #   armour     armoured_spell: percent off what worn armour adds to every spell's mana cost,
 #              whatever is cast (spells.toml's armour percents)
 #   hidden     true: listed (the weapon skills screen, the dumps, talents that ask for it) only

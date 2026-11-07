@@ -13,7 +13,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   single files. Creature types have a
   `name` and a `plural` (default by the plural dictionary, `data/plurals.toml` below: mostly the
   name plus `s`; the deer's is "deer"; quest messages count them), optional `tags` (plain
-  singular words, lower-case words joined by hyphens, 1 to 24 characters, each once: `["goblin",
+  singular words, lower-case words joined by hyphens, without `:` or whitespace: `["goblin",
   "archer"]`; nothing declares a tag, a creature carrying it is all there is; a kill quest may
   ask for a tag, §8 "Quests"; never shown to the player), a
   `speed` (never 0, default 1000, the player's; never shown to the player; §8 "Speed"): the
@@ -31,7 +31,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   "Alignment": its corpse is kin to a character of that race; the showcase's people are human;
   not checked in content without races), and
   optionally `attack_cost`, what its attacks cost
-  instead of the attack's cost in `data/actions.toml` (100 to 10 000; §8 "Time"; none of the
+  instead of the attack's cost in `data/actions.toml` (§8 "Time"; none of the
   built-in creatures has one yet). The kobold: darkvision, sight 10, melee, opens doors;
   the kobold archer: darkvision, sight 12, ranged 7; the kobold shaman (speed 800): darkvision,
   caster 5; the giant rat: low-light, sight 8; the cave bat: darkvision, sight 8; the cave
@@ -49,12 +49,12 @@ developer notes (CLAUDE.md, `docs/dev/`).
   types": the bites piercing, the deer's hoof bludgeoning),
   with optional `threat`, `crit`, and `to_hit` as for weapons, and `on_hit`, the status
   effects and diseases a hit with it may cause if the target lives: `[{ status = "poisoned",
-  chance = 10, severity = 2 }]`, the chance in percent (1 to 100) and the severity in degrees (1
-  to the status's `max`; §8 "Status effects"), or `{ disease = "filth_fever", chance = 10 }`
+  chance = 10, severity = 2 }]`, the chance in percent and the severity in degrees (§8
+  "Status effects"), or `{ disease = "filth_fever", chance = 10 }`
   (exposure to the disease, which the target then resists with a check; §8 "Diseases"; never the
   status diseases show as), or `{ drain = "strength", points = 1, chance = 100, check =
   "willpower", difficulty = 14 }` (a drain: unless the target makes a check of `check`, Willpower
-  by default, against `difficulty`, 1 to 40, `points`, 1 to 5 (default 1), come off its score in
+  by default, against `difficulty`, `points` (default 1) come off its score in
   the stat for good; `drain = "random"` draws one of the six each time; §8 "Stats": "Drain");
   without one, bare hands: 1d3, "fist", "hits"); and
   `natural`, its natural armour (`{ defence = 1, protection = 3, name = "shell" }`: `defence`
@@ -123,46 +123,45 @@ developer notes (CLAUDE.md, `docs/dev/`).
   violet sparkle). Terrain has a `move_cost`: what a step onto it costs in percent of a normal
   step (the `step` action; default 100; still and running water 200, shallow water 150; local
   levels only), a
-  `bounce` tint for the light it reflects (§5), a `height` in cells for sun shadows (default 1 if opaque, else 0; at most 4),
+  `bounce` tint for the light it reflects (§5), a `height` in cells for sun shadows (default 1 if opaque, else 0),
   `roofed` (never lit by the sun or the sky), `stone` (stone, worked or not: dwarves notice what
   is hidden on it in passing, §8 "Searching"; default false; floors, walls, granite, stairs,
   flagstones, rubble, rocky ground, boulders, and the like), `stains` (whether blood stains it,
   §8 "Blood"; default true; false for water, running water, lava, fountains, braziers, wall
   torches, solid rock, and the overworld's river and lake), and for hearing a `step_noise` (how loud steps onto
-  it are, in percent of the walker's footsteps, 0 to 1000; default 100), `swim` (deep water: not
-  walkable, transparent, no freeze, but a trained swimmer may dive in, §8 "Skills": Swim; default
+  it are, in percent of the walker's footsteps; default 100), `swim` (deep water: not
+  walkable, but a trained swimmer may dive in, §8 "Skills": Swim; default
   false), a door's `toggle_noise`
   (how loud opening the closed door or closing the open one is, at most 300; default 0, silent;
   only doors), and a `muffle` (the loudness a sound loses entering the cell, at most 300; default
   0, but solid terrain blocks sound unless it has one). A closed door may break when kicked
-  (§8 "Doors"): `breaks_to`, the terrain it becomes (walkable and no door: the broken door), and
-  `sturdiness` (1 to 100: a kick breaks it with a chance of the kicker's Strength score in it;
+  (§8 "Doors"): `breaks_to`, the terrain it becomes (the broken door), and
+  `sturdiness` (a kick breaks it with a chance of the kicker's Strength score in it;
   the closed door's is 30), both or neither, and only on closed doors. For digging (§8
-  "Digging"), terrain that breaks has a `hardness` (1 to 10 000, the work it takes: a pick-axe at
-  Strength 10 does 10 a turn) and what it `becomes` (walkable, transparent open ground that does
-  not break, no door or stairs: rubble), together; only solid terrain (not walkable, no door,
-  stairs, or light) breaks, so digging and blasts never break a door (but a force spell's blast, §8 "Spell types"). Stone walls 600, packed
+  "Digging"), terrain that breaks has a `hardness` (the work it takes: a pick-axe at
+  Strength 10 does 10 a turn) and what it `becomes` (rubble), together; the data breaks only
+  solid terrain, so digging and blasts never break a door (but a force spell's blast, §8 "Spell types"). Stone walls 600, packed
   earth 100, granite 3000. Solid rock may have a `face`, the solid terrain it shows as once a cell
   next to it is broken open (`void`: `wall`). Overworld terrain has
-  `travel_minutes` (1 to 1440; required for every walkable terrain on the overworld),
+  `travel_minutes` (required for every walkable terrain on the overworld),
   optionally `local`, the ground terrain of the local area entered from a cell of it (none:
   nothing to explore there; locations never have one), and `landscape`, what its land is like in
   local areas (required with `local`): `plains`, `grassland`, `forest`, `dense_forest`, `hills`,
   or `swamp` pick the generator of its own areas; `road` runs a road through them amid the
   neighbors' land; `river` and `lake` put running or still water along that side of the
   neighboring areas (§3). Water that freezes (§5 "Ice") has a `freeze` table: `below` (ice grows
-  while the air is colder than this, °C, 0 down to −30; it melts above 0), `rate` (percent of
-  still water's pace, 1 to 100, default 100), and `plunge` (dice: the hit points a fall through
+  while the air is colder than this, °C; it melts above 0), `rate` (percent of
+  still water's pace, default 100), and `plunge` (dice: the hit points a fall through
   the ice into it takes, never the last one), and `damage_type` (the kind of damage the plunge
   does, cold; §8 "Damage types"); still water `{ below = 0, plunge = "1d3", damage_type = "cold"
   }`,
   running water `{ below = -6, rate = 40, plunge = "1d3" }`, a flooded room's shallow water
   `{ below = 0, plunge = 1 }`. Ice is terrain with `ice`, the
-  thinnest ice in mm that looks like it (1 to 1000, distinct; the next one's takes over from
+  thinnest ice in mm that looks like it (distinct; the next one's takes over from
   its thickness): thin ice (10, hairline cracks `⁄ ∖ ·` over dark water), ice (50, a grey-blue
   sheet, a dot here and there), thick ice (150, pale and frosted all over), each `move_cost`
   120. Water that freezes and ice are walkable and transparent, give no light, and are neither
-  doors, stairs, nor overworld terrain; ice does not flow; if any water freezes, some terrain
+  doors, stairs, nor overworld terrain; if any water freezes, some terrain
   must be ice. Presentation-only, any terrain may have `variants`: glyphs the map draws in place
   of its `glyph`, one per cell picked by a hash of its position (a space for none; look mode
   and dumps use `glyph`). The calendar's month names are
@@ -447,10 +446,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
   `launches` (the kind a missile weapon shoots, `launches = "arrow"`; some object must be that
   ammunition). Launchers and ammunition pair by that kind (`Content::fires`). Food (§8
   "Hunger") has `food = { nutrition = 1500, turns = 4, keeps = "30d", lasts = "60d" }`: the
-  nutrition points it gives (1 to 100 000), the turns of eating it takes (1 to 100; never on
+  nutrition points it gives (at most 100 000), the turns of eating it takes (at least 1; never on
   things worn, wielded, shot, thrown, or burned), and its shelf life in whole hours or days
-  (`"8h"`, `"30d"`): how long after it was made it `keeps` (1 hour or more; old past half of it,
-  rotten after it) and `lasts` (longer than it keeps, at most 3600 days; then it has rotted
+  (`"8h"`, `"30d"`): how long after it was made it `keeps` (old past half of it,
+  rotten after it) and `lasts` (longer than it keeps; then it has rotted
   away): strips of dried meat (600, 2 turns, 60 and 120 days), apples (150, 1, 14 and 28), food
   rations (1500, 4, 30 and 60), loaves of bread (800, 3, 5 and 10), angelica roots (20, 1, 30
   and 60). A remedy also has `cures`, the means it
@@ -530,7 +529,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   `damage`; anything else is a content error): only things with a kind are ever magic or loot;
   `level`, the lowest item level loot holds it at (1 to 99, default 1), and `frequency`, how often
   (default 100, 0 never), both only with a kind. Weapons (things with `damage`) may have an
-  `attack_cost` (100 to 10 000; worn or wielded weapons only), what a blow with it (a missile
+  `attack_cost` (worn or wielded weapons only), what a blow with it (a missile
   weapon: a shot) costs instead of the `melee` (`shoot`) action, before its weapon skill's
   `speed` (a shield bash costs what a blow with the shield does: `melee`, never the wielded
   weapon's `attack_cost`). The built-in base items, folding in the test
@@ -626,20 +625,17 @@ developer notes (CLAUDE.md, `docs/dev/`).
   the kind a status is (`damage_type = "poison"`: poisoned).
 - **Resources** (`data/resources.toml`, optional; without it there are none; #225, §8
   "Resources"): an ordered list of `[[resource]]`s, each with `id`, `name` (the character
-  screen's), `short` (the status bar's label, at most 12 characters), `max` (1 to 1000), `start`
+  screen's), `short` (the status bar's label), `max`, `start`
   (what it holds when granted; default full, its maximum by data with what `max_from` adds;
-  at most `max`, above 0 for one that ends at zero), `max_from` (`{ stat, per_levels, least }`:
+  kept within the maximum), `max_from` (`{ stat, per_levels, least }`:
   the holder's modifier in that stat and a point per `per_levels` character levels add to `max`,
-  the sum at least `least`, before talents; a known stat, `per_levels` at least 1, `least` at
-  most `max`),
+  the sum at least `least`, before talents; a known stat, `per_levels` at least 1),
   `show_max` (the status bar shows `Focus 7/10` rather than `Rage 7`; default true),
-  `regenerates` or `decays` (a point back, or lost, every that many seconds of game time, 1 to
-  86400; at most one of the two), `resting` (it changes over time while the player rests;
+  `regenerates` or `decays` (a point back, or lost, every that many seconds of game time, at
+  least 1; at most one of the two), `resting` (it changes over time while the player rests;
   default true), `ends_at_zero` (default false), `ended` (what the player is told when it ends;
-  needs `ends_at_zero`), `builds` (`[{ on = "kill", amount = 5 }]`, each event once, amounts
-  1 to 1000; events `kill`, `hit`, `critical`, `struck`, `sneak_attack`), and `status` (a status
-  id: its holder suffers it while they hold the resource; it must not `eases`; Rage brings
-  Raging). A status that something `follows` into and that neither eases nor is cured must be
+  needs `ends_at_zero`), `builds` (`[{ on = "kill", amount = 5 }]`; events `kill`, `hit`, `critical`, `struck`, `sneak_attack`), and `status` (a status
+  id: its holder suffers it while they hold the resource; Rage brings Raging). A status that something `follows` into and that neither eases nor is cured must be
   some resource's status. Ids are indices (in
   the content fingerprint), so a new resource is a new entry. Built in, the progression design's
   first guesses (§4.18): Rage, Focus, Openings, Ki, Inspiration, and Stamina (the combat
@@ -647,34 +643,33 @@ developer notes (CLAUDE.md, `docs/dev/`).
   class tree with an active effect) may cost one: `resource = { id = "focus", cost = 6 }` (0
   asks only that it is held; at most its `max`).
 - **Weapon skills** (`data/weapon_skills.toml`, optional; without it nobody has weapon skills and
-  weapons name none; M22, §8 "Weapon skills"): `[marks]` (`attempt`, `hit`, `per_level`, at most
-  1000; the scale is kept within 0 and 100 percent, #1095), `[curves]` (named lists of the marks each rank asks
-  for, ranks 1 to 10: ten numbers, each more than the last, at most 1 000 000), `[[skill]]`s in
+  weapons name none; M22, §8 "Weapon skills"): `[marks]` (`attempt`, `hit`, `per_level`; the scale is kept within 0 and 100 percent, #1095), `[curves]` (named lists of the marks each rank asks
+  for, ranks 1 to 10: ten numbers, each 1 or more), `[[skill]]`s in
   the order the weapon skills screen lists them (at most 255): `id`, `name` (`Long blades`),
   `phrase` (the message's `with long blades`), `role` (`melee`, `launcher`, `thrown`, `unarmed`,
   `shield_bash`, `school`, `style`; `unarmed` and `shield_bash` at most one skill each),
-  `curve` (a key of `curves`), and its benefits as eleven numbers, ranks 0 to 10 (0 at rank 0,
-  never less at a higher rank; a list left out is all 0): `to_hit` and `damage` (0 to 20),
-  `threat` (0 to 10), `crit` (added to a confirmed critical's multiplier, 0 to 3, never past ×5),
-  and `speed` (percent off the attack's cost, 0 to 60) for the roles that attack (no `speed` for
-  `spell` or a caster grip); `parry` (0 to
-  20) for `melee`, `reload` (0 to 60) for `launcher`, `shield` (0 to 20) for a style of grip
+  `curve` (a key of `curves`), and its benefits as eleven numbers, ranks 0 to 10 (a list left out is all 0;
+  those held in a `u8`, all but `to_hit`, `damage`, `parry`, `shield`, `far_to_hit`, and a
+  school's `bonus`, `cells`, `degrees`, are 0 to 255): `to_hit` and `damage`,
+  `threat`, `crit` (added to a confirmed critical's multiplier, never past ×5),
+  and `speed` (percent off the attack's cost) for the roles that attack (no `speed` for
+  a caster grip); `parry` for `melee`, `reload` for `launcher`, `shield` for a style of grip
   `weapon_and_shield` or `two_shields` (a benefit the role does not use is an error). A fighting style (`role = "style"`, §8 "Fighting
   styles") also has its `grip` (`one_weapon`, `two_weapons`, `two_handed`, `weapon_and_shield`,
   `unarmed`, `launcher`, `thrown`, and the caster grips `ranged_spell`, `touch_spell`,
   `armoured_spell`) and may name `weapons` (weapon skill ids of the roles its
   grip fights with: `melee` for the hand grips, `launcher` for `launcher`, `melee` or `thrown`
-  for `thrown`, none for `unarmed` and the caster grips; each once; left out: every weapon of its grip that no other
+  for `thrown`, none for `unarmed` and the caster grips; left out: every weapon of its grip that no other
   style of the grip names; within a grip at most one style leaves it out and no weapon skill is
   named twice: one configuration, one style); its benefits may also be `parry` (grips that
-  wield a weapon), `shield` and `bash` (the chance in percent, 0 to 100, of a shield bash after
+  wield a weapon), `shield` and `bash` (the chance in percent of a shield bash after
   a blow that hits; `weapon_and_shield`), `reload` (`launcher`), `ease_main` and `ease_off`
-  (points off the two-weapon penalties, 0 to 20; `two_weapons`), `far_to_hit` (0 to 20) and
-  `far_threat` (0 to 10) (`ranged_spell`: added against a target `far` cells or more away),
-  `armour` (percent off worn armour's spell cost, 0 to 100; `armoured_spell`); `grip` and `weapons` on a
+  (points off the two-weapon penalties; `two_weapons`), `far_to_hit` and
+  `far_threat` (`ranged_spell`: added against a target `far` cells or more away),
+  `armour` (percent off worn armour's spell cost; `armoured_spell`); `grip` and `weapons` on a
   skill that is no style are errors. `[two_weapons]` (optional; default −4 and −8): `main` and
   `off`, the to-hit penalties of the main hand's and the off hand's blows with a weapon in each
-  hand (−20 to 0). `[spell_attacks]` (optional; default 5): `far`, the distance (1 or more, the
+  hand. `[spell_attacks]` (optional; default 5): `far`, the distance (the
   larger of the two) from which a ranged spell's far benefits apply. The built-in
   file: marks 1 an attempt, 2 more
   a hit, 20 % a level, at most 100 % (#1095); curves melee 15, 45, 190, 500, 1750, 4000,
@@ -694,7 +689,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   styles, the marks and curves, and the benefits per rank in generated tables.
 - **Weapon abilities** (`data/weapon_abilities/`, one `[[weapon_ability]]` a file named by its id,
   each campaign's too, read in path order; optional; #561, §8 "Weapon abilities"): `id`, `name`,
-  `description`, `skills` (weapon skills or styles, never both), `rank` (1 to 10), `kind`
+  `description`, `skills` (weapon skills, styles, or schools), `rank`, `kind`
   (`triggered` or `active`), `trigger` (one or a list: `hit`,
   `critical`, `big_hit`, `kill`, `struck`, `parried`, `blocked`, `dodged`, `both_hands_hit`,
   `approaches`; none for a switch), `systems` (the talent table's system ids), and
@@ -703,9 +698,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
   target or self), `extra_damage` (`dice`: main_hand, off_hand, or dice; optional `damage`
   type), `free_shot` (on `approaches`), `parry_missiles`. A triggered ability has no `aim`,
   `stamina`, `energy`, or `cooldown`; an active (#564) has `aim` (`nothing`, `direction`,
-  `cell`), `stamina` (1 to 50), `energy = { action, percent }` (an `actions.toml` id and 50 to
-  300), an optional `cooldown` (a status that eases and does not tick), no `trigger`, and one of
-  the actives' effects: `reach_blow` (`reach` 2 to 4), `sure_critical`, `ignore_defence`
+  `cell`), `stamina`, `energy = { action, percent }` (an `actions.toml` id and a percent),
+  an optional `cooldown` (a status), no `trigger`, and one of
+  the actives' effects: `reach_blow` (`reach`), `sure_critical`, `ignore_defence`
   (`categories`), `ignore_protection`, `sweep` (`to_hit`), `pierce_shot`, `knockback` (`cells`
   1, `bash`, `status`), `buff` (`status`, `severity`), `double_dice` (`to_hit`), each with the
   aim and action it fits (a shot aims at a cell, and only a shot). Its id is no spell's, class
@@ -868,21 +863,21 @@ developer notes (CLAUDE.md, `docs/dev/`).
 - **Spell circles' statuses** (`data/circles.toml`, optional; §4.8 "Spell circles"):
   `[[school]]` rows (`id`, a school of magic, and `color`, `"#rrggbb"`) and `[[status]]` rows
   (`status` and `school`). Checked at load: a known status that has `seen`, laid by a buff or hex
-  spell (which says whether its circle is a buff's or a hex's), listed once; every buff and hex
-  spell's status has a row; every school named has a colour and a light, `circle_<school>` in
+  spell (which says whether its circle is a buff's or a hex's), listed once (a buff or hex
+  spell's status without a row has no circle); every school named has a colour and a light, `circle_<school>` in
   `data/lights.toml`. One rule reads it: a circled status without a `light` of its own sheds its
   school's (§8 "Status effects"), so the rows' statuses and schools are in the content
   fingerprint.
 - **Spell effects** (`data/effects.toml`, optional; presentation only, no rule reads it, and it is
   not in the content fingerprint): `[[effect]]` with a unique `id` (no `:`, `@`, `>`, or spaces),
-  `shape` (`burst` or `bolt`), `radius` (bursts: the dev action's radius, 0 to 8, default 1),
-  `speed` (cells a second: a burst's projectile, a bolt drawing out), `grow` (bursts: seconds to
-  full size, at most `impact`), `impact` and `linger` (seconds, up to 2; `linger` may be 0),
-  `flashes` (bolts: 1 to 6), `flicker` (seconds a glyph shape lasts), `glyphs` (bursts: by heat,
-  hottest first; bolts: the line glyph, then the forks'), `projectile` (bursts), `colors`
-  (hottest first), `glow` and `fill` (bursts: the opacity of each cell's glowing body) and
-  `branches` (bolts: the chance of a fork at each corner) from 0 to 1, optional
-  `light = { color = [r, g, b], radius }` (255 = fully lit, up to 4000), `darken = { amount,
-  seconds }` (amount 0 to 0.9), `shake = { pixels, radius, seconds }` (pixels 0 to 12, radius up
-  to the view radius), and `[[effect.particles]]` emitters on `impact`, `linger`, or (with a
+  `shape` (`burst` or `bolt`), `radius` (bursts: the dev action's radius, default 1),
+  `speed` (cells a second, above 0: a burst's projectile, a bolt drawing out), `grow` (bursts:
+  seconds to full size), `impact` and `linger` (seconds; every time is 0 or more),
+  `flashes` (bolts), `flicker` (seconds a glyph shape lasts), `glyphs` (bursts: by heat,
+  hottest first, at least one; bolts: the line glyph, then the forks', one or two),
+  `projectile` (bursts), `colors` (hottest first, at least one), `glow` and `fill` (bursts: the
+  opacity of each cell's glowing body) and `branches` (bolts: the chance of a fork at each
+  corner) from 0 to 1, optional `light = { color = [r, g, b], radius }` (255 = fully lit),
+  `darken = { amount, seconds }` (the renderer dims at most 0.9), `shake = { pixels, radius,
+  seconds }`, and `[[effect.particles]]` emitters on `impact`, `linger`, or (with a
   `projectile`) `flight`. Every glyph joins the atlas. §4.8 "Spell effects".

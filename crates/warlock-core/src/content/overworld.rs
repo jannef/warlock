@@ -242,8 +242,6 @@ mod tests {
                 f.insert("data/terrain.toml", &text);
             })
         };
-        let err = terrain("travel_minutes = 45", "travel_minutes = 0");
-        assert!(err.is_err_and(|e| e.contains("travel_minutes must be 1 to 1440")));
         let err = terrain("local = \"grass\"", "local = \"wall\"");
         assert!(err.is_err_and(|e| e.contains("local area ground must be walkable")));
         let err = terrain("local = \"grass\"", "local = \"lawn\"");

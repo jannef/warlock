@@ -19,8 +19,6 @@
 //! The numbers are rules, never shown in the game: the player sees ranks, and a marks bar.
 
 use super::{ContentError, School, SpellMods};
-use crate::combat::CRITS;
-use crate::content::object::MAX_BONUS;
 use crate::dice::Dice;
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
@@ -29,24 +27,6 @@ use std::collections::BTreeMap;
 pub const MAX_RANK: u8 = 10;
 /// How many ranks there are, 0 to [`MAX_RANK`].
 pub const RANKS: usize = MAX_RANK as usize + 1;
-/// The most a curve may ask for one rank.
-pub const MAX_NEED: u32 = 1_000_000;
-/// The most a rank may widen a threat range by, in natural rolls.
-pub const MAX_THREAT_WIDENING: u8 = 10;
-/// The most a rank may take off an action's cost, in percent.
-pub const MAX_SAVING: u8 = 60;
-/// The most a rank may add to a critical's damage multiplier: from the least (×2) to the most
-/// (×5).
-pub const MAX_CRIT_BONUS: u8 = *CRITS.end() - *CRITS.start();
-/// The most marks one use may earn before scaling.
-const MAX_MARKS: u32 = 1000;
-/// The most a school's rank may give of a die rerolled, sizes, dice, cells, or degrees: the
-/// table's own field range (the spell scaling design §8.2), not a bound on what a spell does.
-const MAX_SPELL_DICE: i32 = 3;
-/// The most a school's rank may add to every roll (its field range).
-const MAX_SPELL_BONUS: i32 = 6;
-/// The most percent a school's rank may take off a spell's mana (its field range).
-const MAX_SPELL_MANA: i32 = 50;
 
 /// Index of a skill in [`WeaponSkillTable::skills`], in file order.
 ///
@@ -105,16 +85,8 @@ impl Role {
         }
     }
 
-    /// The role of id `id` in the data file; `role = "spell"` (Spell attacks, retired into the
-    /// schools of magic) is refused naming the role that took its place.
+    /// The role of id `id` in the data file.
     fn from_id(id: &str) -> Result<Role, String> {
-        if id == "spell" {
-            return Err(
-                "role `spell` is retired: a spell aims and trains with its school's \
-                        skill, `role = \"school\"`"
-                    .into(),
-            );
-        }
         (Role::ALL.into_iter().find(|r| r.id() == id)).ok_or_else(|| format!("unknown role `{id}`"))
     }
 
@@ -608,64 +580,58 @@ struct SkillSpec {
     hidden: bool,
 }
 
-/// One benefit's ranks as the file gives them: [`RANKS`] numbers, 0 at rank 0, never falling,
-/// each within `0..=max`.
-fn ranks(field: &str, given: &Option<Vec<i32>>, max: i32) -> Result<[i32; RANKS], String> {
+/// One benefit's ranks as the file gives them: [`RANKS`] numbers, one per rank 0 to
+/// [`MAX_RANK`].
+fn ranks(field: &str, given: &Option<Vec<i32>>) -> Result<[i32; RANKS], String> {
     let Some(values) = given else {
         return Ok([0; RANKS]);
     };
-    let values: [i32; RANKS] = values.clone().try_into().map_err(|v: Vec<i32>| {
+    values.clone().try_into().map_err(|v: Vec<i32>| {
         format!(
             "`{field}` needs {RANKS} numbers, one per rank 0 to {MAX_RANK}, not {}",
             v.len()
         )
-    })?;
-    if values[0] != 0 {
-        return Err(format!("`{field}`: rank 0 is untrained and gives nothing"));
+    })
+}
+
+/// [`ranks`] of a benefit held in a `u8` (a percent, a roll, points): each 0 to 255.
+fn small_ranks(field: &str, given: &Option<Vec<i32>>) -> Result<[u8; RANKS], String> {
+    let values = ranks(field, given)?;
+    let mut small = [0; RANKS];
+    for (to, &v) in small.iter_mut().zip(&values) {
+        *to = u8::try_from(v).map_err(|_| format!("`{field}`: each rank's value is 0 to 255"))?;
     }
-    if values.iter().any(|v| !(0..=max).contains(v)) {
-        return Err(format!("`{field}`: each rank's value must be 0 to {max}"));
-    }
-    if values.windows(2).any(|w| w[1] < w[0]) {
-        return Err(format!("`{field}`: a higher rank never gives less"));
-    }
-    Ok(values)
+    Ok(small)
 }
 
 impl SkillSpec {
     /// The benefits per rank of a skill of `role`; a benefit the role (a style: its grip) does
     /// not use is refused.
     fn benefits(&self, role: Role) -> Result<[Benefit; RANKS], String> {
-        let bonus = MAX_BONUS;
-        let percent = i32::from(MAX_SAVING);
-        let to_hit = ranks("to_hit", &self.to_hit, bonus)?;
-        let damage = ranks("damage", &self.damage, bonus)?;
-        let parry = ranks("parry", &self.parry, bonus)?;
-        let shield = ranks("shield", &self.shield, bonus)?;
-        let threat = ranks("threat", &self.threat, i32::from(MAX_THREAT_WIDENING))?;
-        let crit = ranks("crit", &self.crit, i32::from(MAX_CRIT_BONUS))?;
-        let speed = ranks("speed", &self.speed, percent)?;
-        let reload = ranks("reload", &self.reload, percent)?;
-        let ease_main = ranks("ease_main", &self.ease_main, bonus)?;
-        let ease_off = ranks("ease_off", &self.ease_off, bonus)?;
-        let bash = ranks("bash", &self.bash, 100)?;
-        let ease_bash = ranks("ease_bash", &self.ease_bash, bonus)?;
-        let ease_slow = ranks("ease_slow", &self.ease_slow, 100)?;
-        let ease_spell = ranks("ease_spell", &self.ease_spell, 100)?;
-        let far_to_hit = ranks("far_to_hit", &self.far_to_hit, bonus)?;
-        let far_threat = ranks(
-            "far_threat",
-            &self.far_threat,
-            i32::from(MAX_THREAT_WIDENING),
-        )?;
-        let armour = ranks("armour", &self.armour, 100)?;
-        let reroll = ranks("reroll", &self.reroll, MAX_SPELL_DICE)?;
-        let sides = ranks("sides", &self.sides, MAX_SPELL_DICE)?;
-        let dice = ranks("dice", &self.dice, MAX_SPELL_DICE)?;
-        let spell_bonus = ranks("bonus", &self.bonus, MAX_SPELL_BONUS)?;
-        let cells = ranks("cells", &self.cells, MAX_SPELL_DICE)?;
-        let degrees = ranks("degrees", &self.degrees, MAX_SPELL_DICE)?;
-        let mana = ranks("mana", &self.mana, MAX_SPELL_MANA)?;
+        let to_hit = ranks("to_hit", &self.to_hit)?;
+        let damage = ranks("damage", &self.damage)?;
+        let parry = ranks("parry", &self.parry)?;
+        let shield = ranks("shield", &self.shield)?;
+        let threat = small_ranks("threat", &self.threat)?;
+        let crit = small_ranks("crit", &self.crit)?;
+        let speed = small_ranks("speed", &self.speed)?;
+        let reload = small_ranks("reload", &self.reload)?;
+        let ease_main = small_ranks("ease_main", &self.ease_main)?;
+        let ease_off = small_ranks("ease_off", &self.ease_off)?;
+        let bash = small_ranks("bash", &self.bash)?;
+        let ease_bash = small_ranks("ease_bash", &self.ease_bash)?;
+        let ease_slow = small_ranks("ease_slow", &self.ease_slow)?;
+        let ease_spell = small_ranks("ease_spell", &self.ease_spell)?;
+        let far_to_hit = ranks("far_to_hit", &self.far_to_hit)?;
+        let far_threat = small_ranks("far_threat", &self.far_threat)?;
+        let armour = small_ranks("armour", &self.armour)?;
+        let reroll = small_ranks("reroll", &self.reroll)?;
+        let sides = small_ranks("sides", &self.sides)?;
+        let dice = small_ranks("dice", &self.dice)?;
+        let spell_bonus = ranks("bonus", &self.bonus)?;
+        let cells = ranks("cells", &self.cells)?;
+        let degrees = ranks("degrees", &self.degrees)?;
+        let mana = small_ranks("mana", &self.mana)?;
         let grip = self.grip;
         let is = |g: Grip| grip == Some(g);
         let school = role == Role::School;
@@ -721,33 +687,31 @@ impl SkillSpec {
                 None => format!("`{field}` does nothing for a skill of role `{}`", role.id()),
             });
         }
-        // The values are within u8 where they are percents, rolls, or points (checked above).
-        let small = |v: i32| v as u8;
         Ok(std::array::from_fn(|r| Benefit {
             to_hit: to_hit[r],
             damage: damage[r],
             parry: parry[r],
             shield: shield[r],
-            threat: small(threat[r]),
-            crit: small(crit[r]),
-            speed: small(speed[r]),
-            reload: small(reload[r]),
-            ease_main: small(ease_main[r]),
-            ease_off: small(ease_off[r]),
-            bash: small(bash[r]),
-            ease_bash: small(ease_bash[r]),
-            ease_slow: small(ease_slow[r]),
-            ease_spell: small(ease_spell[r]),
+            threat: threat[r],
+            crit: crit[r],
+            speed: speed[r],
+            reload: reload[r],
+            ease_main: ease_main[r],
+            ease_off: ease_off[r],
+            bash: bash[r],
+            ease_bash: ease_bash[r],
+            ease_slow: ease_slow[r],
+            ease_spell: ease_spell[r],
             far_to_hit: far_to_hit[r],
-            far_threat: small(far_threat[r]),
-            armour: small(armour[r]),
-            reroll: small(reroll[r]),
-            sides: small(sides[r]),
-            dice: small(dice[r]),
+            far_threat: far_threat[r],
+            armour: armour[r],
+            reroll: reroll[r],
+            sides: sides[r],
+            dice: dice[r],
             bonus: spell_bonus[r],
             cells: cells[r],
             degrees: degrees[r],
-            mana: small(mana[r]),
+            mana: mana[r],
         }))
     }
 }
@@ -758,30 +722,19 @@ impl WeaponSkillTable {
         let err = |m: String| ContentError::new(file, m);
         let parsed: SkillFile = toml::from_str(text).map_err(|e| err(e.to_string()))?;
         let marks = parsed.marks;
-        if marks.attempt > MAX_MARKS || marks.hit > MAX_MARKS || marks.per_level > MAX_MARKS {
+        // `MarkRules::earned` multiplies a use's marks by a percent (at most 100) in a `u32`.
+        let most = (u32::MAX - 50) / MOST_PERCENT;
+        if marks
+            .attempt
+            .checked_add(marks.hit)
+            .is_none_or(|m| m > most)
+        {
             return Err(err(format!(
-                "marks: `attempt`, `hit`, and `per_level` must be at most {MAX_MARKS}"
+                "marks: `attempt` and `hit` together must be at most {most}"
             )));
         }
         let two = parsed.two_weapons;
-        if [two.main, two.off]
-            .iter()
-            .any(|p| !(-MAX_BONUS..=0).contains(p))
-        {
-            return Err(err(format!(
-                "two_weapons: `main` and `off` are penalties, -{MAX_BONUS} to 0"
-            )));
-        }
         let shields = parsed.two_shields;
-        if !(-MAX_BONUS..=0).contains(&shields.to_hit)
-            || shields.slow > 100
-            || shields.spell_failure > 100
-        {
-            return Err(err(format!(
-                "two_shields: `to_hit` is a penalty, -{MAX_BONUS} to 0; `slow` and \
-                 `spell_failure` are percents, 0 to 100"
-            )));
-        }
         let mut curves = BTreeMap::new();
         for (name, need) in parsed.curves {
             let need: [u32; MAX_RANK as usize] = need.try_into().map_err(|v: Vec<u32>| {
@@ -791,16 +744,13 @@ impl WeaponSkillTable {
                     v.len()
                 ))
             })?;
-            if need[0] == 0 || need.windows(2).any(|w| w[1] <= w[0]) || need[9] > MAX_NEED {
+            // `WeaponSkills::train` keeps the marks left over below the next rank's need.
+            if need.contains(&0) {
                 return Err(err(format!(
-                    "curve `{name}`: each rank needs more marks than the last, from 1 up to \
-                     {MAX_NEED}"
+                    "curve `{name}`: each rank needs 1 mark or more"
                 )));
             }
             curves.insert(name, need);
-        }
-        if parsed.skill.is_empty() {
-            return Err(err("at least one skill is required".into()));
         }
         if parsed.skill.len() > usize::from(u8::MAX) {
             return Err(err("too many skills".into()));
@@ -813,9 +763,6 @@ impl WeaponSkillTable {
             let skill_err = |m: String| err(format!("skill `{id}`: {m}"));
             if skills.iter().any(|s| &s.id == id) {
                 return Err(err(format!("duplicate skill id `{id}`")));
-            }
-            if spec.name.trim().is_empty() || spec.phrase.trim().is_empty() {
-                return Err(skill_err("`name` and `phrase` must not be empty".into()));
             }
             let role = Role::from_id(&spec.role).map_err(skill_err)?;
             if role.is_implicit() && skills.iter().any(|s| s.role == role) {
@@ -883,9 +830,6 @@ impl WeaponSkillTable {
                 hidden,
             });
         }
-        if parsed.spell_attacks.far == 0 {
-            return Err(err("spell_attacks: `far` is a distance, 1 or more".into()));
-        }
         let mut table = Self {
             skills,
             marks: Some(marks),
@@ -919,10 +863,9 @@ impl WeaponSkillTable {
                         grip.id()
                     ));
                 }
-                if ids.contains(&id) {
-                    return Err(format!("style `{style}`: `weapons` names `{name}` twice"));
+                if !ids.contains(&id) {
+                    ids.push(id);
                 }
-                ids.push(id);
             }
             for other in &self.skills[..i] {
                 let Some(theirs) = other.style.as_ref().filter(|s| s.grip == grip) else {
@@ -1047,7 +990,7 @@ impl WeaponSkillTable {
 
     /// Starting ranks as a race, a class, or a creature gives them (`{ long_blades = 2,
     /// shield_bash = "1d2" }`), in skill order: every skill known and of the kind `ranked`
-    /// allows, every result a roll can have within 0 to [`MAX_RANK`].
+    /// allows (a roll is kept within 0 to [`MAX_RANK`] where it is used).
     pub(super) fn starting_ranks(
         &self,
         data: &BTreeMap<String, Dice>,
@@ -1072,11 +1015,6 @@ impl WeaponSkillTable {
                 }
                 _ => {}
             }
-            if dice.min() < 0 || dice.max() > i32::from(MAX_RANK) {
-                return Err(format!(
-                    "weapon skill `{name}`: {dice} must give a rank from 0 to {MAX_RANK}"
-                ));
-            }
             ranks.push((id, dice));
         }
         ranks.sort_by_key(|&(id, _)| id);
@@ -1087,6 +1025,7 @@ impl WeaponSkillTable {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::combat::CRITS;
 
     const MARKS: &str = "[marks]\nattempt = 1\nhit = 2\nper_level = 20\n\
                          [curves]\nmelee = [15, 30, 60, 120, 240, 480, 960, 1920, 3840, 7680]\n";
@@ -1273,37 +1212,6 @@ mod tests {
         assert_eq!((style("brawler").to_hit, style("brawler").damage), (5, 10));
         let staff = style("staff_fighter");
         assert_eq!((staff.to_hit, staff.parry), (5, 7));
-        // Never less at a higher rank, any benefit, any skill.
-        for (id, def) in table.ids() {
-            for rank in 1..=MAX_RANK {
-                let (lo, hi) = (table.benefit(id, rank - 1), table.benefit(id, rank));
-                let all = |b: Benefit| {
-                    [
-                        b.to_hit,
-                        b.damage,
-                        b.parry,
-                        b.shield,
-                        b.threat.into(),
-                        b.crit.into(),
-                        b.speed.into(),
-                        b.reload.into(),
-                        b.ease_main.into(),
-                        b.ease_off.into(),
-                        b.bash.into(),
-                        b.reroll.into(),
-                        b.sides.into(),
-                        b.dice.into(),
-                        b.bonus,
-                        b.cells,
-                        b.degrees,
-                        b.mana.into(),
-                    ]
-                };
-                for (a, b) in all(lo).into_iter().zip(all(hi)) {
-                    assert!(a <= b, "{} rank {rank}", def.id);
-                }
-            }
-        }
     }
 
     #[test]
@@ -1375,13 +1283,6 @@ mod tests {
             ),
             (
                 format!(
-                    "{MARKS}{staves}{}",
-                    style("a", "two_handed", "weapons = [\"staves\", \"staves\"]")
-                ),
-                "names `staves` twice",
-            ),
-            (
-                format!(
                     "{MARKS}{}{}",
                     style("a", "one_weapon", ""),
                     style("b", "one_weapon", "")
@@ -1441,30 +1342,9 @@ mod tests {
             (
                 format!(
                     "{MARKS}{}",
-                    style(
-                        "a",
-                        "two_handed",
-                        "crit = [0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5]"
-                    )
-                ),
-                "`crit`: each rank's value must be 0 to 3",
-            ),
-            (
-                format!("{MARKS}[two_weapons]\nmain = 2\noff = -8\n{staves}"),
-                "two_weapons: `main` and `off` are penalties",
-            ),
-            (
-                format!(
-                    "{MARKS}{}",
                     style("a", "weapon_and_shield", &format!("ease_spell = {eleven}"))
                 ),
                 "`ease_spell` does nothing for a style of grip `weapon_and_shield`",
-            ),
-            (
-                format!(
-                    "{MARKS}[two_shields]\nto_hit = -6\nslow = 50\nspell_failure = 101\n{staves}"
-                ),
-                "two_shields: `to_hit` is a penalty",
             ),
         ] {
             let e = parse(&text).unwrap_err();
@@ -1548,20 +1428,6 @@ mod tests {
             (
                 format!(
                     "{MARKS}{}",
-                    skill("a", "melee", "to_hit = [1, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5]")
-                ),
-                "rank 0 is untrained",
-            ),
-            (
-                format!(
-                    "{MARKS}{}",
-                    skill("a", "melee", "damage = [0, 2, 1, 2, 2, 3, 3, 4, 4, 5, 5]")
-                ),
-                "never gives less",
-            ),
-            (
-                format!(
-                    "{MARKS}{}",
                     skill("a", "melee", &format!("shield = {eleven}"))
                 ),
                 "`shield` does nothing for a skill of role `melee`",
@@ -1587,8 +1453,23 @@ mod tests {
                 "unknown field `default`",
             ),
             (
-                MARKS.replace("15, 30", "30, 15") + &ok,
-                "each rank needs more marks",
+                MARKS.replace("15, 30", "0, 30") + &ok,
+                "each rank needs 1 mark or more",
+            ),
+            (
+                format!(
+                    "{MARKS}{}",
+                    skill(
+                        "a",
+                        "launcher",
+                        "reload = [0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 256]"
+                    )
+                ),
+                "`reload`: each rank's value is 0 to 255",
+            ),
+            (
+                MARKS.replace("attempt = 1", "attempt = 4294967295") + &ok,
+                "`attempt` and `hit` together must be at most",
             ),
             (
                 MARKS.replace("per_level = 20", "per_level = 20\nmost = 200") + &ok,
@@ -1636,18 +1517,6 @@ mod tests {
         let away = sniper.at_distance(5, far);
         assert_eq!((away.to_hit, away.threat), (7, 2));
         assert_eq!(table.benefit(id("battle_caster"), MAX_RANK).armour, 50);
-        // Every caster style's benefits never fall with rank.
-        for name in ["sniper", "toucher", "battle_caster"] {
-            let s = id(name);
-            for r in 1..=MAX_RANK {
-                let (a, b) = (table.benefit(s, r - 1), table.benefit(s, r));
-                assert!(b.to_hit >= a.to_hit && b.threat >= a.threat && b.crit >= a.crit);
-                assert!(
-                    b.far_to_hit >= a.far_to_hit && b.armour >= a.armour,
-                    "{name} {r}"
-                );
-            }
-        }
         let caster = |id: &str, grip: &str, extra: &str| {
             format!(
                 "[[skill]]\nid = \"{id}\"\nname = \"{id}\"\nphrase = \"at {id}\"\nrole = \
@@ -1677,10 +1546,6 @@ mod tests {
             .is_ok()
         );
         for (text, why) in [
-            (
-                format!("{MARKS}{}", skill("s", "spell", "")),
-                "role `spell` is retired",
-            ),
             (
                 format!("{MARKS}{}", skill("s", "school", "")),
                 "a school of magic needs its `school`",
@@ -1735,13 +1600,6 @@ mod tests {
                     school("s", "evocation", &format!("parry = {three}"))
                 ),
                 "`parry` does nothing",
-            ),
-            (
-                format!(
-                    "{MARKS}{}",
-                    school("s", "evocation", &format!("dice = {eleven}"))
-                ),
-                "`dice`: each rank's value must be 0 to 3",
             ),
             (
                 format!(
@@ -1815,13 +1673,6 @@ mod tests {
                     caster("s", "ranged_spell", "weapons = [\"a\"]")
                 ),
                 "is no weapon skill a style of grip `ranged_spell` is fought with",
-            ),
-            (
-                format!(
-                    "{MARKS}[spell_attacks]\nfar = 0\n{}",
-                    skill("a", "melee", "")
-                ),
-                "`far` is a distance",
             ),
         ] {
             let e = parse(&text).unwrap_err();

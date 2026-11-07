@@ -17,7 +17,8 @@ confused with `content/spell.rs`, the bursts and bolts scrolls and traps cast, w
 cast path shares.
 
 - **Spell levels** (S1, #748; the spell scaling design §5, decisions 1, 9, 10, 16): every spell
-  has `level = N`, 0 to `MAX_SPELL_LEVEL` (70), one number with two meanings: its **base mana**
+  has `level = N` (the design's 0 to `MAX_SPELL_LEVEL`, 70; the loader reads any `u8`), one
+  number with two meanings: its **base mana**
   (`max(1, level)`) and the **learning at which a scroll of it teaches for certain**. A
   spell of level 0 or 1 is a cantrip (a spell's own `mana` still replaces the base: Burning
   hands and Grave breath, level 1 for the class tables' guard, cost 3, #979). There is no table of levels, no ceiling, no cap, and no
@@ -36,10 +37,10 @@ cast path shares.
 - **Data**:
   - `assets/data/spells.toml` (`SpellRules`, `content/spell_def.rs`): the cost table:
     `[shapes]` (cost percents: `ray`, `bolt`, `touch`, `self`, `cone`, `line`, and `burst` a
-    list by radius whose length is the largest radius, ascending, at most `BURST_RADII`'s end);
-    `[resolution]` (`attack`, `auto`, `area`, `touch`, each `{ cost }` in percent; a `damage`
-    key, the old cap's share, is refused). `[tiers]` and `overreach_cost` are refused (unknown
-    fields). Every check refuses with a `ContentError`.
+    list by radius whose length is the largest radius, at least one: `shape_cost` indexes it);
+    `[resolution]` (`attack`, `auto`, `area`, `touch`, each `{ cost }` in percent). Unknown
+    keys are refused by the parser; nothing bounds the percents (#1205). Every check refuses
+    with a `ContentError`.
   - `assets/data/spells/` (`SpellData`), one `[[spell]]` file each, the format, the ladder
     grammar, and the authoring conventions (templates, not checks: §6.4) in its `README.toml` (a
     comment-only file, like the classes'). Read by `ContentFiles::table("spells")`
@@ -52,8 +53,8 @@ cast path shares.
     damage types `force` and `necrotic` at the end of `data/damage_types.toml` (non-physical:
     `Choice::Element` offers them, so Elemental ward may be taken for them).
 - **Base rolls** (`spell_def::base_roll`, for `damage` and a heal's `[spell.effect] heal`): a
-  `Roll` (`dice/roll.rs`, S0) that can do something (`min` ≥ 0, `max` ≥ 1). The old table form
-  is refused naming the string form. Nothing bounds what they roll (decision 16).
+  `Roll` (`dice/roll.rs`, S0) that never rolls below 0 (a negative roll would turn harm into
+  healing). Nothing else bounds what they roll (decision 16).
   **Every damage spell's dice are doubled** (#1101, the owner, 2026-11-06: casters were far too
   weak): `1d4` is `2d4`, `4d6` is `8d6`, in the base and in every `[spell.grows]` rung, flat
   bonuses unchanged; heals and summons were left alone. Numbers quoted below and in older
@@ -64,34 +65,41 @@ cast path shares.
 - **Ladders** (`content/spell_ladder.rs`: `Ladder { stat, rungs: Vec<(u8, RungValue)> }`,
   `RungValue::{Roll, Cells, Degrees}`, `Ladder::parse(text, Unit)`, `rung_at(score)` (how many
   rungs are at or below the score), `value(rung)` (`None` at 0, the base), `words()` (the wiki's
-  `Intelligence 13: 3d6, 16: 4d6`), `Display` as data writes it, `MAX_RUNGS` 8, `MAX_SCORE` 40):
+  `Intelligence 13: 3d6, 16: 4d6`), `Display` as data writes it, `MAX_SCORE` 40):
   one string, the stat's id then `AT VALUE` rungs separated by commas, `AT` strictly
-  ascending. `SpellData::grows: Grows { damage, heal, count, jumps, range, length, radius, degrees }`, each
+  ascending (`rung_at` counts them). `SpellData::grows: Grows { damage, heal, count, jumps, range, length, radius, degrees }`, each
   optional (`Grows::roll`, `reach`, `named`). `spell_def::grows` checks them against the
   spell's `Bases` (§6.3): a ladder only for a dimension the spell has (`damage` a damage roll,
   `heal` a heal, `range` a ray, bolt, or burst, `length` a cone or line, `radius` a burst,
-  `degrees` a buff or a hex); rolls that never weaken (`min` and `max` non-decreasing from the
-  base, each rung different from the one before); cells and degrees strictly ascending from
-  the base and within the engine's limits (`MAX_REACH` 20, a cone `MAX_CONE` 5, a line 20, a
-  radius the burst table's length, degrees the status's `max` and `MAX_SEVERITY`). **No check
-  reads how much a rung does**, and none is to be added (decision 16). The wand's and the
+  `degrees` a buff or a hex; another would never be read), and an `arcs` spell's `count` in
+  whole numbers. **No check reads how much a rung does** (decision 16; #1205 took out the
+  rest: rungs that never weaken, the engine's limits, at most 8 rungs). Casting clamps reach
+  to the engine's limits (`MAX_REACH` 20, a cone `MAX_CONE` 5, a radius the burst table's
+  length; `world/spell_rung.rs`). The wand's and the
   scroll's `rungs` are checked against the roll ladder's length where they load
   (`content/wand.rs`, `content/scroll.rs`).
-- **Other checks** (`spell_def::resolve`): `level` present and 0 to 70; the retired fields
-  refused, each naming its replacement (`retired`: `tier`, `max_range`, `max_length`,
-  `max_radius`, `[spell.scales]`, `[spell.scroll]`); `Resolution::fits(shape)` (`area` exactly
-  for the area shapes, `touch` only for touch, `attack` for ray and bolt, `auto` for any single
-  target); the base reach each shape has exactly (`range` 1 to `MAX_REACH` for ray, bolt,
-  burst; `radius` 1 to the burst table's length; `length` 1 to `MAX_CONE` for a cone, to
-  `MAX_REACH` for a line), required; `casts` 1 to `MAX_CASTS`; a `damage` spell has `damage`
-  and a `damage_type`; `aim` (a stat id, default Dexterity) only on an `attack` or `touch`
-  damage spell; `[spell.effect]` holds only its kind's fields (heal: `heal`; buff, hex, and
-  damage: `status`, `severity` 1 to `MAX_SEVERITY`; cleanse: `cures`, `diseases`), the
-  statuses known; `[spell.cast]` (`SpellLook`): `effect` only for a shape cast at a distance
-  (none: nothing drawn), `noun` (default the name in lower case) and `verb` (default the damage
-  type's) not empty, a `noise` loudness 1 to `MAX_LOUDNESS`, `blast`/`heat`/`frost` only for a
-  burst and checked by `Burst::new`; its effect against `data/effects.toml` once effects load
-  (`spell_def::check_effects`: burst and cone a burst's, ray, bolt, line a bolt's).
+- **Other checks** (`spell_def::resolve`; #1205: only what the code needs, ids that resolve,
+  and fields that would otherwise go unread): `level` present; `Resolution::fits(shape)`
+  (`area` exactly for the area shapes, `touch` only for touch, `attack` for ray and bolt,
+  `auto` for any single target); the base reach each shape has exactly (`range` for ray, bolt,
+  burst; `radius` for a burst; `length` for a cone or a line), required, any size (casting
+  clamps it); `range = 0` (about the caster) only on a damage or heal burst, a heal over an
+  area only about its caster, and then no `range` ladder; `casts` at least 1 (a cast's time
+  is its price times it); a `damage` spell has `damage`, and only it; `aim` (a stat id,
+  default Dexterity) only on an `attack` or `touch` damage spell; `[spell.effect]` holds only
+  its kind's and shape's fields (heal: `heal`; buff, hex, and damage: `status`; cleanse:
+  `cures`, `diseases`; ...), the statuses known, a hastening status only a buff's (creatures
+  never step quicker than their type: a rest's batching counts on it); a summon on `self`
+  with `auto`, its `creatures` not empty, known, and never the player; `identify`, `blink`,
+  and `weather` on `self`; a `zone` on a burst or a line; `arcs` on a ray, bolt, touch, or
+  line of a type that arcs; `corpse` and `rise` where they are read
+  (`corpse_fits`); `[spell.cast]` (`SpellLook`): `effect` only for a shape cast at a
+  distance (none: nothing drawn), a `noise` loudness at most `MAX_LOUDNESS`,
+  `blast`/`heat`/`frost` only for a burst and checked by `Burst::new` (not both, `frost` at
+  most `ice::MAX_MM`); its effect against `data/effects.toml` once effects load
+  (`spell_def::check_effects`: burst and cone a burst's, ray, bolt, line a bolt's). A spell
+  of a kind with nothing in `[spell.effect]` simply does nothing; nothing bounds `casts`,
+  `mana`, `leech`, `push`, `arcs`, minutes, hours, cells, a severity, or `study_difficulty`.
 - **Pure helpers**: `SpellRules::shape_cost(shape, radius)`, `ratio`, `mana(spell, armour)` (the
   cost, below); `SpellData::roll` (the base roll, harm or healing), `roll_at(rung)` (the
   ladder's roll at a rung, before any hook; the wiki's scroll and wand columns), `tags`,
@@ -344,8 +352,7 @@ cast path shares.
     scroll of identify is its scroll (`read:b:c`, docs/dev/scrolls.md), keeping its own loot
     (frequency 300, no level; `spell_list_tests` leaves it out of the by-level loot order). In the
     game the abilities menu opens the identify list (`IdentifyBy::Spell`) on choosing it.
-    - **Its cost is explicit**: `mana` on a spell (`SpellData::mana`, 1 to `MAX_SPELL_MANA`
-      500) replaces its level's price in `SpellRules::mana` (no shape or resolution; the
+    - **Its cost is explicit**: `mana` on a spell (`SpellData::mana`) replaces its level's price in `SpellRules::mana` (no shape or resolution; the
       armour's percent still added), and the talents' percents and
       Frugal caster still apply (`Actor::spell_base`, `Actor::mana_cost`). Identify's is **60**
       (the owner, 2026-10-28: a large cost, not coupled with its difficulty). Measured with
@@ -409,12 +416,12 @@ cast path shares.
     `knows_spell`. `Content::spell_of(SpellId)` is a spell's data whoever has it;
     `Content::class_spell` stays "a class ability gives it".
   - **Data**: `data/study.toml` (`StudyRules`: `base` 12, `per_overreach` 1, `known_per_point`
-    20, `turns_base` 100, `turns_per_level` 20, `bad_from` 6, `terrible_from` 15 (at most 70),
+    20, `turns_base` 100, `turns_per_level` 20, `bad_from` 6, `terrible_from` 15,
     all in spell levels since S1, and the words' thresholds `easy`,
     `struggle` in ways of 144); `data/mishaps/` (`Mishap`, one `[[mishap]]` a file, its
     `README.toml` the format: `band` slight/bad/terrible/lucky, `weight`, `message`, `effect`
     by `kind`: nothing, status, backfire, mana, teleport, lose_mark, drain, summon, learn, mark;
-    only its kind's fields; `learn` and `mark` only lucky); `teaches` in a spell scroll's `read`
+    only its kind's fields; `learn` and `mark` lucky by custom); `teaches` in a spell scroll's `read`
     table (`ScrollSpell::teaches`, a `SpellId`, checked as objects load; `Reading::teaches`
     is what every caller asks, a `spell` reading teaching its own);
     a class's `affinity` (`ClassDef::affinity`, school → −10 to 10 study points); the skills'
@@ -447,7 +454,7 @@ cast path shares.
   - **Odds** (`study_odds(actor, content, character, spell) -> Option<Odds>`, pure;
     `World::player_study_odds`): `Odds::overreach` = the spell's level − the learning; at 0
     or less `check: None` (certain, no draw), unless the spell's `study_difficulty`
-    (`SpellData::study_difficulty`, −20 to 40, default 0; the owner's Q7 of #828: the calls'
+    (`SpellData::study_difficulty`, default 0; the owner's Q7 of #828: the calls'
     scrolls are very hard to learn) is above 0, which makes it a check at any learning with
     the overreach counted as at least 0; else `(bonus, difficulty)`: Intelligence
     modifier + `skill_effect(Effect::Study)` + the class's affinity with the school +
@@ -661,12 +668,11 @@ cast path shares.
   `spell_mod_text` (each hook a talent uses, in the cast's order); `magic.rs`'s affix words and
   the talents beside each affix; `learning.rs`'s `times` and `chances` one row per sampled
   spell level (0, 3, 6, 11, 16, 22, 29, 37, 46, 56).
-- **Tests**: `content/spell_def.rs` (the shipped cost table, the refused tables (`[tiers]`,
-  `overreach_cost`, a resolution's `damage`), the design's first spell list, no check on how
-  much a spell does (any roll, bonus, heal, or rung loads), malformed spells (a level of 71, a
-  `tier` key, no level, each retired field naming its replacement), the ladders' checks (a rung
-  below its base, a descending ladder, a ladder for a dimension the spell lacks, an unknown
-  stat, a radius past the burst table, a degree past the status's max, nine rungs, `aim` on an
+- **Tests**: `content/spell_def.rs` (the shipped cost table, the refused tables (an empty
+  `burst`, unknown keys), the design's first spell list, no check on how
+  much a spell does (any roll, bonus, heal, or rung loads), malformed spells (no level, an
+  unknown key, a roll below 0, `casts = 0`), the ladders' checks (a descending ladder, a ladder
+  for a dimension the spell lacks, an unknown stat, `aim` on an
   area), the cost by level, shape, resolution, and armour, the 26 shipped spells at §5.8's
   levels, costs, and base rolls, and every shipped ladder as §12 writes it),
   `content/spell_ladder.rs` (the grammar, `rung_at`, the refusals), `content/learning.rs` (the
@@ -739,11 +745,18 @@ What an area spell does to the items lying in it (#1100; spec §8 "Spells", "Rui
 An area that lies on the floor for a time (`world/zone.rs`; the design's §7 "Zones", #1000).
 Balefire, Reek, Mirk, Slick, and Fume (scroll only) lay one, and so do the flasks of Reek, Mirk, and Slick
 (stinking, darkness, oil: `docs/dev/potions.md`), with `[spell.effect] zone = { kind, turns }`
+<<<<<<< HEAD
+(`SpellZone`, `ZoneKind`; `content/spell_def.rs::resolve`: a burst or a line, on a `damage`
+spell or a `hex`; `turns` of 6 s; by custom `fire` a `damage` spell of fire, `fouled` of poison,
+`dark`, `slick`, and `smoke` a `hex` with no `status`; a fire's harm is the spell's roll, none
+without one).
+=======
 (`SpellZone`, `ZoneKind`; `content/spell_def.rs::check_zone`: a burst or a line; `turns` 1 to
 `MAX_ZONE_TURNS`, of 6 s; `fire` a `damage` spell of fire, `fouled` of poison, `dark`, `slick`, and
 `smoke` a `hex`, whose `status` is then not asked).
 Pitch fire (#1227, scroll and flask only) lays a `fire` zone of 6 turns on a burst's cells,
 radius 1: Balefire's zone in a pool.
+>>>>>>> origin/main
 
 - **State**: `LevelState::zones: Vec<Zone>` (`kind`, `cells`, `until`, `by`, `harm`, `light`,
   `spell`), saved, hashed, left out while empty, and `LevelState::zone_memory`, what the player saw.
@@ -851,7 +864,7 @@ What every spell of a damage type does beyond its damage (the design:
     flight only: an arc is told by `Event::Attacked`, as the owner's Q4 and the design's
     "Perception" have it, with no preview on aiming.
   - `SpellData::effect.arcs` and the `count` key of `[spell.grows]` on such a spell
-    (`Grows::jumps`, whole rungs, 1 to 12; `Grows::count` stays a summon's): `Actor::spell_reach`
+    (`Grows::jumps`, whole rungs; `Grows::count` stays a summon's): `Actor::spell_reach`
     gives them as `Reach::jumps`, climbed as a reach ladder, and `reach_words` says `jumps 3`.
     With `arcs` the reach is `ARC_REACH` (2) for every jump, certain or by the draw, and a jump
     needs a line clear of what is opaque (the design says only "within 2 cells"; a chain through
@@ -907,7 +920,7 @@ the shape too and refuses each field off its kind and shape).
   area heal): `cast_heal_about`, one roll for the caster and every ally of theirs
   (`Ally::master`, not in the retinue) in the burst who is hurt, in actor id order, each through
   `World::spell_heals` (the touch heal's tail, said). Refused, no mana, no time, when none is hurt.
-- **`leech`** (Leech; 1 to 100, a single-target damage spell's): `spell_strikes` now returns the hit
+- **`leech`** (Leech; a percent, a single-target damage spell's): `spell_strikes` now returns the hit
   points it took (after resistance and the bite; a kill's too), and `spell_attack`, the one place
   a single target's roll is made, gives that share, rounded down, back to the striker through
   `World::leech`, never past their maximum. Read there and not in `spell_strikes` (the design's

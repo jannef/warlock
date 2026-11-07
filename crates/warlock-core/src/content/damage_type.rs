@@ -19,8 +19,8 @@ use serde::{Deserialize, Serialize};
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize)]
 pub struct DamageTypeId(pub u8);
 
-/// The most damage types a content set may define (a resistance table is one value per type).
-pub const MAX_DAMAGE_TYPES: usize = 32;
+/// The most damage types a content set may define: their ids are `u8`s.
+pub const MAX_DAMAGE_TYPES: usize = u8::MAX as usize + 1;
 
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -58,8 +58,8 @@ pub struct DamageTypeDef {
     pub unarmed: bool,
 }
 
-/// Parses `data/damage_types.toml`: at most [`MAX_DAMAGE_TYPES`] types with unique ids, each
-/// with its words, at most one of them `unarmed`.
+/// Parses `data/damage_types.toml`: at most [`MAX_DAMAGE_TYPES`] types (their ids are `u8`s) with
+/// unique ids, at most one of them `unarmed` (the one bare hands do).
 pub(super) fn parse(file: &str, text: &str) -> Result<Vec<DamageTypeDef>, ContentError> {
     let err = |m: String| ContentError::new(file, m);
     let parsed: DamageTypeFile = toml::from_str(text).map_err(|e| err(e.to_string()))?;
@@ -75,12 +75,6 @@ pub(super) fn parse(file: &str, text: &str) -> Result<Vec<DamageTypeDef>, Conten
         }
         if list.iter().any(|t| t.id == id) {
             return Err(err("duplicate id"));
-        }
-        if [&spec.name, &spec.verb, &spec.you]
-            .iter()
-            .any(|s| s.trim().is_empty())
-        {
-            return Err(err("`name`, `verb`, and `you` must not be empty"));
         }
         if spec.unarmed && list.iter().any(|t| t.unarmed) {
             return Err(err("only one damage type is `unarmed`"));
@@ -141,10 +135,6 @@ mod tests {
         let one = "[[type]]\nid = \"fire\"\nname = \"fire\"\nverb = \"burns\"\nyou = \"burn\"\n";
         for (bad, why) in [
             (format!("{one}{one}"), "duplicate id"),
-            (
-                "[[type]]\nid = \"fire\"\nname = \"\"\nverb = \"burns\"\nyou = \"burn\"\n".into(),
-                "must not be empty",
-            ),
             (
                 format!(
                     "{one}[[type]]\nid = \"cold\"\nname = \"cold\"\nverb = \"chills\"\n\

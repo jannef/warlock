@@ -83,8 +83,8 @@ cut in #774): Sworn foe (weaponcraft, `choice = "tag"`, a new `talent::Choice::T
 `sworn_foe { to_hit, damage }`, read in `World::favoured` beside Favoured prey). Tests:
 `world/quest_roll_tests.rs`.
 **Creature tags** (#421, #441): a creature file's `tags = ["goblin", "archer"]` (plain
-singular words, `content/tag.rs`: lower-case words joined by hyphens, 1 to `MAX_TAG` = 24
-characters, each once; nothing declares a tag, it exists because a creature carries it; one
+singular words, by custom lower-case words joined by hyphens; `content/tag.rs` asks only for
+no `:` or whitespace, which action text splits on; nothing declares a tag, it exists because a creature carries it; one
 flat pool, no registry). A kill quest's `target = "tag:goblin"` makes `Goal::Kill`'s `target` a
 `KillTarget::Tag`; the quest is
 refused when no type a run of its campaign can meet carries the tag (`quest::check_tag`: a typo,

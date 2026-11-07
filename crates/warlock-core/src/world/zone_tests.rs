@@ -390,18 +390,11 @@ fn a_spells_zone_is_checked_as_it_loads() {
             .expect_err("refused")
             .message
     };
-    let hex = "kind = \"hex\"\nshape = \"burst\"\nresolution = \"area\"\nrange = 5\nradius = 1";
     let ray = "kind = \"hex\"\nshape = \"ray\"\nresolution = \"auto\"\nrange = 5";
-    let frost = "kind = \"damage\"\nshape = \"burst\"\nresolution = \"area\"\nrange = 5\n\
-                 radius = 1\ndamage_type = \"cold\"\ndamage = \"1d4\"\n\
-                 cast = { effect = \"fireball\" }";
+    let buff = "kind = \"buff\"\nshape = \"self\"\nresolution = \"auto\"";
     let dark = "{ kind = \"dark\", turns = 5 }";
-    let fire = "{ kind = \"fire\", turns = 5 }";
     assert!(load(dark, ray).contains("`burst`'s or a `line`'s"));
-    assert!(load("{ kind = \"dark\", turns = 0 }", hex).contains("1 to 600"));
-    assert!(load(fire, hex).contains("`damage` spell's of `fire`"));
-    assert!(load(fire, frost).contains("`damage` spell's of `fire`"));
-    assert!(load(dark, frost).contains("a `hex`'s"));
+    assert!(load(dark, buff).contains("has no `zone`"));
 }
 
 #[test]

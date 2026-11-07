@@ -122,7 +122,7 @@ mod tests {
             .to_string();
         for (from, to, why) in [
             ("\"surprised\"", "\"nothing\"", "unknown status `nothing`"),
-            ("\"skeleton\"", "\"Skeleton\"", "lower-case words"),
+            ("\"skeleton\"", "\"skel eton\"", "a word without"),
         ] {
             assert!(good.contains(from), "{from}");
             let mut files = ContentFiles::builtin();

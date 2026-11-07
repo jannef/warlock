@@ -169,11 +169,6 @@ fn bad_outcomes_are_refused() {
             "unknown object",
         ),
         (
-            "message = \"A.\"\neffect = { explode = { spell = \"fireball\", radius = 99, \
-             damage = \"1d6\" } }\n",
-            "radius",
-        ),
-        (
             "message = \"A.\"\neffect = { wish = true }\n",
             "unknown field",
         ),

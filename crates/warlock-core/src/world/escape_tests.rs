@@ -441,14 +441,8 @@ fn a_climb_marks_escape_artist_always_and_athletics_half_the_time_with_no_effect
 #[test]
 fn the_data_checks_refuse_a_bad_escape() {
     for (fields, why) in [
-        ("seen = \"x\"\nblocks = [\"step\"]\nescape = 0\n", "1 to 40"),
-        (
-            "seen = \"x\"\nblocks = [\"step\"]\nescape = 41\n",
-            "1 to 40",
-        ),
         ("seen = \"x\"\nescape = 13\n", "must block"),
         ("seen = \"x\"\ncost = 75\nescape = 13\n", "must block"),
-        ("blocks = [\"step\"]\nescape = 13\n", "seen"),
         (
             "seen = \"x\"\nescape = 13\nstacking = \"highest\"\neases = 6\nblocks = [\"step\"]\n\
              hold = { difficulty = 13, turns = \"1d2\" }\n",

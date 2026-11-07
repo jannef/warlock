@@ -314,10 +314,6 @@ fn builtin_traps_load_and_bad_ones_are_reported() {
             "damage",
         ),
         (
-            "kind = \"burst\"\nspell = \"x\"\nnoun = \"x\"\nradius = 9\ndamage = \"1d6\"\n",
-            "radius",
-        ),
-        (
             "kind = \"bolt\"\nnoun = \"x\"\nlength = 5\ndamage = \"1d6\"\n",
             "spell",
         ),
@@ -338,7 +334,7 @@ fn builtin_traps_load_and_bad_ones_are_reported() {
         ),
         (
             "kind = \"burst\"\nspell = \"x\"\nnoun = \"x\"\nradius = 2\ndamage = \"1d6\"\n\
-             frost = 0\n",
+             frost = 1001\n",
             "frost",
         ),
         ("kind = \"pit\"\ndamage = \"1d6\"\nheat = true\n", "heat"),

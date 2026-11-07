@@ -39,7 +39,7 @@
 //! reach = 2
 //! ```
 
-use super::{ActionKind, Content, ContentError, Role, StatusId, WeaponSkillId, duplicate_id};
+use super::{ActionKind, Content, ContentError, StatusId, WeaponSkillId, duplicate_id};
 use crate::combat::Category;
 use crate::dice::Dice;
 use serde::Deserialize;
@@ -47,9 +47,6 @@ use std::collections::BTreeMap;
 
 /// The resource (`data/resources.toml`) active abilities are paid from.
 pub const STAMINA: &str = "stamina";
-
-/// The highest rank an ability may ask for.
-pub const MAX_ABILITY_RANK: u8 = 10;
 
 /// A weapon ability: an index in [`Content::weapon_abilities`], in path order.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
@@ -267,9 +264,6 @@ pub struct Active {
     /// the optional per-ability limiter (none in the catalogue).
     pub cooldown: Option<StatusId>,
 }
-
-/// The lowest and highest energy percent of an active.
-pub const ENERGY_PERCENT: std::ops::RangeInclusive<u32> = 50..=300;
 
 /// What a weapon ability does (the design §4.4): a closed list, each on one existing mechanism.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -512,36 +506,17 @@ fn check_talents(all: &[WeaponAbility], content: &Content) -> Result<(), Content
 }
 
 fn resolve(spec: WeaponAbilitySpec, content: &Content) -> Result<WeaponAbility, String> {
-    if spec.name.trim().is_empty() || spec.description.trim().is_empty() {
-        return Err("`name` and `description` are not empty".into());
-    }
     let table = content.weapon_skills();
-    if spec.skills.is_empty() {
-        return Err("`skills` names one or more weapon skills, styles, or schools".into());
-    }
     let mut skills = Vec::new();
     for name in &spec.skills {
         let id = table
             .id(name)
             .ok_or_else(|| format!("unknown weapon skill `{name}`"))?;
-        if skills.contains(&id) {
-            return Err(format!("`{name}` twice in `skills`"));
+        if !skills.contains(&id) {
+            skills.push(id);
         }
-        skills.push(id);
-    }
-    // Weapon skills, styles, or schools of magic (spec §8 "Weapon abilities"): one kind.
-    let kind = |s: WeaponSkillId| match table.skill(s).role {
-        Role::Style => 1,
-        Role::School => 2,
-        _ => 0,
-    };
-    if skills.iter().any(|&s| kind(s) != kind(skills[0])) {
-        return Err("`skills` names weapon skills, styles, or schools, never two of them".into());
     }
     skills.sort();
-    if !(1..=MAX_ABILITY_RANK).contains(&spec.rank) {
-        return Err(format!("`rank` is 1 to {MAX_ABILITY_RANK}"));
-    }
     let costs = [
         ("aim", spec.aim.is_some()),
         ("stamina", spec.stamina.is_some()),
@@ -611,9 +586,6 @@ fn resolve(spec: WeaponAbilitySpec, content: &Content) -> Result<WeaponAbility, 
     {
         return Err("an active's id is no spell's, class active's, or birth sign gift's".into());
     }
-    if spec.systems.iter().any(|s| s.trim().is_empty()) {
-        return Err("`systems` names systems, not blanks".into());
-    }
     Ok(WeaponAbility {
         id: spec.id,
         name: spec.name,
@@ -651,20 +623,10 @@ fn active(
         None => return Err("an active needs an `aim` (nothing, direction, cell)".into()),
     };
     let stamina = stamina.ok_or("an active needs `stamina`")?;
-    if !(1..=50).contains(&stamina) {
-        return Err("`stamina` is 1 to 50".into());
-    }
     let energy = energy.ok_or("an active needs `energy`: no active is free of time")?;
     let action = (ActionKind::ALL.iter().copied())
         .find(|k| k.id() == energy.action)
         .ok_or_else(|| format!("unknown action `{}` in `energy`", energy.action))?;
-    if !ENERGY_PERCENT.contains(&energy.percent) {
-        return Err(format!(
-            "`energy`'s `percent` is {} to {}",
-            ENERGY_PERCENT.start(),
-            ENERGY_PERCENT.end()
-        ));
-    }
     // What each effect is: a blow aimed in a direction, a sweep or a buff aimed at nothing, a
     // shot aimed at a cell.
     let (aims, actions): (&[ActiveAim], &[ActionKind]) = match effect {
@@ -701,16 +663,7 @@ fn active(
     }
     let cooldown = match cooldown {
         None => None,
-        Some(name) => {
-            let id = (content.status_id(name)).ok_or(format!("unknown status `{name}`"))?;
-            let def = content.status(id);
-            if def.eases.is_none() || def.tick.is_some() {
-                return Err(format!(
-                    "a `cooldown` is a status that eases and does not tick: `{name}` is not"
-                ));
-            }
-            Some(id)
-        }
+        Some(name) => Some((content.status_id(name)).ok_or(format!("unknown status `{name}`"))?),
     };
     Ok(Active {
         aim,
@@ -780,19 +733,10 @@ fn effect(spec: EffectSpec, content: &Content) -> Result<WeaponDoes, String> {
         "status" => {
             let name = spec.status.ok_or("a `status` effect needs a `status`")?;
             let status = (content.status_id(&name)).ok_or(format!("unknown status `{name}`"))?;
-            let max = content.status(status).max;
             if spec.severity.is_some() && spec.turns.is_some() {
                 return Err("a `status` effect has a `severity` or `turns`, not both".into());
             }
             let severity = spec.severity.unwrap_or(1);
-            if severity < 1 || severity > max {
-                return Err(format!("`severity` is 1 to the status's max, {max}"));
-            }
-            if let Some(turns) = spec.turns
-                && (turns.min() < 1 || turns.max() > i32::from(max))
-            {
-                return Err(format!("`turns` roll 1 to the status's max, {max}"));
-            }
             let on = match spec.on.as_deref() {
                 None | Some("target") => On::Target,
                 Some("self") => On::Own,
@@ -825,25 +769,21 @@ fn effect(spec: EffectSpec, content: &Content) -> Result<WeaponDoes, String> {
             WeaponDoes::ExtraDamage { dice, kind }
         }
         "free_shot" => WeaponDoes::FreeShot,
-        "reflect_spell" => match spec.per_turn {
-            Some(per_turn @ 1..) => WeaponDoes::ReflectSpell { per_turn },
-            _ => return Err("a `reflect_spell` effect needs `per_turn`, 1 or more".into()),
-        },
+        "reflect_spell" => {
+            let per_turn = (spec.per_turn).ok_or("a `reflect_spell` effect needs `per_turn`")?;
+            WeaponDoes::ReflectSpell { per_turn }
+        }
         "parry_missiles" => WeaponDoes::ParryMissiles,
         "sure_critical" => WeaponDoes::SureCritical,
         "ignore_protection" => WeaponDoes::IgnoreProtection,
         "pierce_shot" => WeaponDoes::PierceShot,
         "reach_blow" => {
             let reach = spec.reach.ok_or("a `reach_blow` effect needs a `reach`")?;
-            if !(2..=4).contains(&reach) {
-                return Err("`reach` is 2 to 4".into());
-            }
             WeaponDoes::ReachBlow { reach }
         }
         "ignore_defence" => {
-            let names = (spec.categories)
-                .filter(|c| !c.is_empty())
-                .ok_or("an `ignore_defence` effect names its `categories`")?;
+            let names =
+                (spec.categories).ok_or("an `ignore_defence` effect names its `categories`")?;
             let mut categories = Categories::default();
             for name in &names {
                 let category = (Category::ALL.into_iter())
@@ -855,9 +795,6 @@ fn effect(spec: EffectSpec, content: &Content) -> Result<WeaponDoes, String> {
         }
         "sweep" | "double_dice" => {
             let to_hit = spec.to_hit.unwrap_or(0);
-            if !(-20..=20).contains(&to_hit) {
-                return Err("`to_hit` is -20 to 20".into());
-            }
             if spec.kind == "sweep" {
                 WeaponDoes::Sweep { to_hit }
             } else {
@@ -865,6 +802,7 @@ fn effect(spec: EffectSpec, content: &Content) -> Result<WeaponDoes, String> {
             }
         }
         "knockback" => {
+            // A knockback pushes one cell (`world/weapon_active.rs` never reads `cells`).
             let cells = spec.cells.unwrap_or(1);
             if cells != 1 {
                 return Err("`cells` is 1".into());
@@ -884,11 +822,7 @@ fn effect(spec: EffectSpec, content: &Content) -> Result<WeaponDoes, String> {
         _ => {
             let name = spec.status.ok_or("a `buff` effect needs a `status`")?;
             let status = (content.status_id(&name)).ok_or(format!("unknown status `{name}`"))?;
-            let max = content.status(status).max;
             let severity = spec.severity.unwrap_or(1);
-            if severity < 1 || severity > max {
-                return Err(format!("`severity` is 1 to the status's max, {max}"));
-            }
             WeaponDoes::Buff { status, severity }
         }
     })
@@ -1052,26 +986,10 @@ mod tests {
                 "unknown weapon skill",
             ),
             (
-                "skills = [\"duelist\", \"long_blades\"]\nrank = 4\nkind = \"triggered\"\n\
-                 [weapon_ability.effect]\nkind = \"parry_missiles\"",
-                "never two of them",
-            ),
-            (
-                "skills = [\"evocation\", \"long_blades\"]\nrank = 10\nkind = \"triggered\"\n\
-                 trigger = \"spell_lands\"\n[weapon_ability.effect]\nkind = \"status\"\n\
-                 status = \"staggered\"",
-                "never two of them",
-            ),
-            (
                 "skills = [\"conjuration\"]\nrank = 10\nkind = \"triggered\"\n\
                  trigger = \"spell_lands\"\n[weapon_ability.effect]\nkind = \"status\"\n\
                  status = \"staggered\"",
                 "unknown weapon skill `conjuration`",
-            ),
-            (
-                "skills = [\"duelist\"]\nrank = 11\nkind = \"triggered\"\n\
-                 [weapon_ability.effect]\nkind = \"parry_missiles\"",
-                "`rank` is 1 to 10",
             ),
             (
                 "skills = [\"spears\"]\nrank = 9\nkind = \"active\"\ntrigger = \"hit\"\n\
@@ -1088,25 +1006,6 @@ mod tests {
                 "skills = [\"spears\"]\nrank = 9\nkind = \"active\"\naim = \"direction\"\n\
                  stamina = 3\n[weapon_ability.effect]\nkind = \"reach_blow\"\nreach = 2",
                 "an active needs `energy`",
-            ),
-            (
-                "skills = [\"spears\"]\nrank = 9\nkind = \"active\"\naim = \"direction\"\n\
-                 stamina = 3\nenergy = { action = \"melee\", percent = 40 }\n\
-                 [weapon_ability.effect]\nkind = \"reach_blow\"\nreach = 2",
-                "`percent` is 50 to 300",
-            ),
-            (
-                "skills = [\"spears\"]\nrank = 9\nkind = \"active\"\naim = \"direction\"\n\
-                 stamina = 3\nenergy = { action = \"melee\", percent = 301 }\n\
-                 [weapon_ability.effect]\nkind = \"reach_blow\"\nreach = 2",
-                "`percent` is 50 to 300",
-            ),
-            (
-                "skills = [\"spears\"]\nrank = 9\nkind = \"active\"\naim = \"direction\"\n\
-                 stamina = 3\nenergy = { action = \"melee\", percent = 100 }\n\
-                 cooldown = \"bleeding\"\n[weapon_ability.effect]\nkind = \"reach_blow\"\n\
-                 reach = 2",
-                "a `cooldown` is a status that eases and does not tick",
             ),
             (
                 "skills = [\"spears\"]\nrank = 9\nkind = \"active\"\naim = \"cell\"\n\
@@ -1158,12 +1057,6 @@ mod tests {
                 "unknown trigger",
             ),
             (
-                "skills = [\"duelist\"]\nrank = 4\nkind = \"triggered\"\ntrigger = \"hit\"\n\
-                 [weapon_ability.effect]\nkind = \"status\"\nstatus = \"bleeding\"\n\
-                 severity = 9",
-                "`severity` is 1",
-            ),
-            (
                 "skills = [\"bows\"]\nrank = 4\nkind = \"triggered\"\ntrigger = \"hit\"\n\
                  [weapon_ability.effect]\nkind = \"free_shot\"",
                 "fires on `approaches`",
@@ -1176,21 +1069,9 @@ mod tests {
             ),
             (
                 "skills = [\"sword_and_board\"]\nrank = 10\nkind = \"triggered\"\n\
-                 trigger = \"spell_blocked\"\n[weapon_ability.effect]\nkind = \"reflect_spell\"\n\
-                 per_turn = 0",
-                "needs `per_turn`",
-            ),
-            (
-                "skills = [\"sword_and_board\"]\nrank = 10\nkind = \"triggered\"\n\
                  trigger = \"spell_blocked\"\n[weapon_ability.effect]\nkind = \"status\"\n\
                  status = \"staggered\"\nper_turn = 1",
                 "a `status` effect has no `per_turn`",
-            ),
-            (
-                "skills = [\"duelist\"]\nrank = 4\nkind = \"triggered\"\ntrigger = \"hit\"\n\
-                 systems = [\" \"]\n[weapon_ability.effect]\nkind = \"status\"\n\
-                 status = \"staggered\"",
-                "not blanks",
             ),
         ];
         for (body, want) in cases {

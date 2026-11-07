@@ -15,15 +15,9 @@ use super::status::StatusId;
 use super::{Content, CreatureId};
 use crate::dice::Dice;
 use serde::Deserialize;
-use std::ops::RangeInclusive;
 
 /// The cooldown status a summoning gives (`data/status.toml`).
 pub const STATUS: &str = "summoning";
-/// The most creatures a summoning spell may bring (`spell_def.rs`).
-pub const MAX_COUNT: i32 = 12;
-/// How far from the caster a summoning spell's summoned may appear, in cells (Chebyshev;
-/// `spell_def.rs`).
-pub const SPREADS: RangeInclusive<i32> = 1..=5;
 
 /// A summoning as written: `[creature.summon]` (`data/creatures/README.toml` has the fields).
 #[derive(Clone, Debug, Deserialize)]

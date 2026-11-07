@@ -3,28 +3,24 @@
 //! declares a tag: it exists because a creature carries it. A kill quest asks for one as
 //! `target = "tag:goblin"`, and any type that carries it counts.
 //!
-//! A tag is the base word, singular (`goblin`, not `goblins`): lower-case letters in words
-//! joined by hyphens (`marsh-thing`), 1 to [`MAX_TAG`] characters. Said to the player, its
+//! A tag is the base word, singular (`goblin`, not `goblins`), by custom lower-case words joined
+//! by hyphens (`marsh-thing`); the loader asks only that it is not empty and has no `:` or
+//! whitespace, since action text names it (`quest_roll:ID:tag:goblin`). Said to the player, its
 //! hyphens are spaces and its plural comes from the plural dictionary ([`super::Plurals`]).
 //! Membership is by creature **type**: an actor's `faction_override` changes nothing.
 
 use super::Content;
 use super::creature::CreatureId;
 
-/// The longest tag, in characters.
-pub const MAX_TAG: usize = 24;
 /// The prefix of a kill quest's `target` that names a tag (`tag:goblin`).
 pub const TAG_TARGET: &str = "tag:";
 
-/// Whether `tag` is written as a tag: lower-case words joined by hyphens, 1 to [`MAX_TAG`]
-/// characters. The error says what is wrong.
+/// Whether `tag` can be a tag: not empty, with no `:` or whitespace (action text splits on
+/// them). The error says what is wrong.
 pub fn check(tag: &str) -> Result<(), String> {
-    let words_ok = tag
-        .split('-')
-        .all(|w| !w.is_empty() && w.chars().all(|c| c.is_ascii_lowercase()));
-    if tag.is_empty() || tag.len() > MAX_TAG || !words_ok {
+    if tag.is_empty() || tag.contains(|c: char| c == ':' || c.is_whitespace()) {
         return Err(format!(
-            "tag `{tag}`: tags are lower-case words joined by hyphens, 1 to {MAX_TAG} characters"
+            "tag `{tag}`: a tag is a word without `:` or whitespace"
         ));
     }
     Ok(())
@@ -75,21 +71,11 @@ mod tests {
     use super::*;
 
     #[test]
-    fn tags_are_lower_case_words_and_hyphens() {
-        for good in ["goblin", "marsh-thing", "a", "abcdefghijklmnopqrstuvwx"] {
+    fn tags_are_words_without_colons_or_whitespace() {
+        for good in ["goblin", "marsh-thing", "a", "Goblin_chief2"] {
             assert_eq!(check(good), Ok(()), "{good}");
         }
-        for bad in [
-            "",
-            "Goblin",
-            "goblin_chief",
-            "goblin chief",
-            "-goblin",
-            "goblin-",
-            "marsh--thing",
-            "orc2",
-            "abcdefghijklmnopqrstuvwxy",
-        ] {
+        for bad in ["", "goblin chief", "tag:goblin", "goblin\t"] {
             assert!(check(bad).is_err(), "{bad:?}");
         }
         assert_eq!(spoken("marsh-thing"), "marsh thing");

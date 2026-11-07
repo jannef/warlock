@@ -19,21 +19,22 @@ cooldown }`).
 nothing in a save names an ability (free blows are bits on `FreeBlows`, statuses are statuses).
 An ability names its skills; a skill does not list its abilities.
 
-Loader checks: the skills exist and are weapon skills, styles, or schools of magic (role
-`school`: a school's abilities are its **school abilities**, the spell scaling design §8.5),
-never two of the kinds; `rank` 1 to 10;
+Loader checks (well-formedness only, #1205): the skills exist (weapon skills, styles, or
+schools of magic, role `school`: a school's abilities are its **school abilities**, the spell
+scaling design §8.5);
 `kind = "triggered"` has no `aim`, `stamina`, `energy`, or `cooldown`, and no active's effect;
-`kind = "active"` has no `trigger`, needs `aim`, `stamina` (1 to 50), and `energy` (an
-`actions.toml` id, `percent` 50 to 300: no active is free of time), an optional `cooldown` (a
-status with `eases` and no `tick`), and an active's effect, each with the aims and actions it
+`kind = "active"` has no `trigger`, needs `aim`, `stamina`, and `energy` (an
+`actions.toml` id and a `percent`), an optional `cooldown` (a status), and an active's effect, each with the aims and actions it
 fits (`active()`: a blow is `direction` and `melee`, a sweep `nothing` and `melee`, a buff
 `nothing` and `wait`, a shot `cell` and `shoot`; `ignore_protection` either a blow or a shot);
 an active's id is no spell's, class active's, or birth sign gift's (the action text reads those
 first); with any active, the `stamina` resource exists (`STAMINA`); a talent's
 `weapon_stamina { abilities }` names actives (`check_talents`, skipped for a content without
 weapon abilities); a switch effect (`free_blow`, `parry_missiles`) has no `trigger`, every
-other triggered effect needs one; `free_shot` fires on `approaches` only; an effect has only its kind's fields (as `RodDoes` is checked); a status
-effect's `severity` or `turns` (dice, one draw) fit the status's `max`. `systems` are the
+other triggered effect needs one; `free_shot` fires on `approaches` only; `reflect_spell` on `spell_blocked` only; an effect has only its kind's fields (as `RodDoes` is
+checked), and a `status` effect a `severity` or `turns`, not both; a knockback's `cells` is 1
+(the push is one cell and never reads it). The game clamps a severity or a draw of `turns` to
+the status's `max`. `systems` are the
 talent table's system ids (a test holds the shipped ones to the table; a test's own talent table
 may have others, so the loader does not). The shipped catalogue is in the wiki's tables
 (`xtask/src/wiki/weapon_abilities.rs`: `weapon-abilities.md` on the Weapon skills page,
