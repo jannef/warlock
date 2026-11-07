@@ -118,8 +118,8 @@ fn a_body_is_composed_from_the_actors_own_stream() {
 
 #[test]
 fn materials_are_drawn_by_the_gear_weights() {
-    // Over many streams a candlestick is mostly iron (300) and brass (30), now and then pewter
-    // (30), rarely silver (5).
+    // Over many streams a candlestick is mostly its own brass (#1191: 90 % at level 1), else
+    // iron (300) far more often than pewter (30) or silver (5).
     let w = hall(50);
     let content = w.content();
     let creature = content.creature_id("animated_candlestick").expect("type");
@@ -132,7 +132,7 @@ fn materials_are_drawn_by_the_gear_weights() {
     }
     let n = |m: &str| counts.get(m).copied().unwrap_or(0);
     assert!(
-        n("iron") > n("brass") && n("brass") > n("silver"),
+        n("brass") > 1600 && n("iron") > n("pewter") && n("pewter") >= n("silver"),
         "{counts:?}"
     );
     assert!(n("silver") > 0, "{counts:?}");

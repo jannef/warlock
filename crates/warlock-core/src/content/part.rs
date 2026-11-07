@@ -497,6 +497,7 @@ mod tests {
             protection: None,
             rarity: None,
             gear: None,
+            fit: Default::default(),
             resists: None,
         }
     }

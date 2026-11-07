@@ -8,7 +8,7 @@
 //!   order: one draw for its `chance`; one for its base item among the line's classes of level
 //!   at most the type's ([`loot::base_in`]); one for its grade (rare by the tier's `rare`, else
 //!   magic by its `magic`, else plain); then the piece made by [`loot::make_as`] at item level
-//!   L with a creature's materials (`Source::Gear(L)`), put in the pack and in its slot. No
+//!   L with a creature's materials (`Source::gear(L)`), put in the pack and in its slot. No
 //!   burden check: it carries itself. Its rank in the wielded weapon's skill is set as it is
 //!   placed ([`weapon_skills`]; no draws).
 //!
@@ -47,7 +47,7 @@ pub fn compose(content: &Content, rng: &mut Rng, creature: CreatureId) -> Option
     let def = content.object(body.object);
     let stack = Stack::new(body.object, count);
     Some(
-        match variant::draw(content, rng, def, Source::Gear(level), level) {
+        match variant::draw(content, rng, def, Source::gear(level), level) {
             Some(part) => stack.with_parts(vec![part]),
             None => stack,
         },
@@ -111,11 +111,11 @@ fn piece(
         None
     };
     let piece = match grade {
-        Some(grade) => loot::make_as(content, rng, object, 1, (level, grade), Source::Gear(level)),
+        Some(grade) => loot::make_as(content, rng, object, 1, (level, grade), Source::gear(level)),
         None => {
             let stack = Stack::new(object, 1);
             let def = content.object(object);
-            match variant::draw(content, rng, def, Source::Gear(level), level) {
+            match variant::draw(content, rng, def, Source::gear(level), level) {
                 Some(part) => stack.with_parts(vec![part]),
                 None => stack,
             }

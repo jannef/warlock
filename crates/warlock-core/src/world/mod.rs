@@ -1865,6 +1865,8 @@ mod mana_talent_tests;
 #[cfg(test)]
 mod mana_tests;
 #[cfg(test)]
+mod material_draw_tests;
+#[cfg(test)]
 mod merchants_eye_tests;
 #[cfg(test)]
 mod mimic_tests;

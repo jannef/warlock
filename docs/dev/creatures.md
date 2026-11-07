@@ -447,7 +447,9 @@ resolves `CreatureDef::gear`: the racial weapon's line first, `Keep` defaults by
 object fits, `kit::check_kept` shared with the starting kits, and the racial-weapon rank check).
 The rolls are `gear.rs`: `gear::roll(content, rng, creature, item_level) -> kit::Pack` (the
 kit's `Pack::put`/`equip`, `loot::make_as` for a magic piece, `variant::draw` with
-`Source::Gear(creature level)` for a plain one, the burden guard against `burden::limit` of the
+`Source::Gear { level, faction }` (the type's level and faction: a faction's `gear`
+favourites, `data/factions.toml`, #1191, `docs/dev/objects.md` "Materials and variants") for a
+plain one, the burden guard against `burden::limit` of the
 type's stats and size). Who rolls is `CreatureSpawn::rolls_gear` (true for a legend or vault
 entry without `carry`/`wield`/`wear`, `Canvas::add_patrol`, the local areas' deer; false for a
 keeper): a generated level clears it in `gear::arm` (stream `gear/<level id>`, after

@@ -95,3 +95,5 @@ The variance pass (#1134, `docs/dev/creatures.md` "Variance by role") sets the r
 **The disarming blow** (#1166, `docs/dev/creatures.md`): the blademaster and the captain carry `disarms = { chance, difficulty }`, a melee hit that may knock the player's main-hand weapon onto an open cell beside them (blademaster 15 % at 18, captain 15 % at 19).
 
 Gear condition (#1193, `data/gear_condition.toml`'s `drow` row): damaged 10 %, Fine 12 %, Marvellous 3 %, Masterwork 0.8 % (docs/dev/creatures.md, "Gear condition").
+
+Gear materials (#1191): the faction's `gear` in `data/factions.toml`: drow favour silk (30 %), chitin (15 %), and obsidian (10 %), the underdark's own, each its share of the draws for an item whose construction list holds it, the usual draw the rest (`docs/dev/objects.md` "Materials and variants").

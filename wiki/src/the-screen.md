@@ -109,7 +109,7 @@ turn them. In a small window the pages go by short names (`1 Char · 2 Inv · 3 
 · 6 Mag · 7 Qst · 8 Tal · 9 Story`), and in the narrowest by their numbers alone.
 
 While one of them is open, `1` to `9` switch to the page with that number. These are the number
-keys above the letters; the numpad still moves. `Tab` and `Shift`+`Tab` go to the next or previous
+keys above the letters; on a page the numpad moves the selection, as the arrows do. `Tab` and `Shift`+`Tab` go to the next or previous
 page, wrapping around. The new page replaces the one you were on, so `Esc` closes it and takes you
 back to where you opened the first one.
 

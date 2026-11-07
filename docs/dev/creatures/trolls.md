@@ -55,3 +55,5 @@ Spells (#1102, docs/dev/creatures.md "Casters"; in the order each prefers them):
 The variance pass (#1134, `docs/dev/creatures.md` "Variance by role") sets the roles' to-hit (striker `L/4 + L/8`, brute and caster `L/4 − L/8`, the armed `L/4`), threat and crit (striker 19, brute 24 at ×3), and hit-point factors (quick and caster 0.5, brute 2.0). **Speed**: heavy and long-legged, 900 (the stone troll) to 1050, the forest troll at 1250.
 
 Gear condition (#1193, `data/gear_condition.toml`'s `troll` row): damaged 50 %, Fine 1 %, Marvellous 0.1 % (docs/dev/creatures.md, "Gear condition").
+
+Gear materials (#1191): the faction's `gear` in `data/factions.toml`: trolls favour bone (30 %) and hardwood (20 %), each its share of the draws for an item whose construction list holds it, the usual draw the rest (`docs/dev/objects.md` "Materials and variants").
