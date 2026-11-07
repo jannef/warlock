@@ -41,9 +41,18 @@ rest every creature does.
 
 A rest stops early when:
 
-- A creature comes into view that you did not see the turn before ("A kobold comes into view; you
-  stop resting after 2 hours."). The exception is the people who talk and fight no one (see
-  [People and talk](npcs.md)): you see who it is, and rest on.
+- A creature [hostile](creatures.md#factions) to you comes into view within **5 steps** of you
+  ("A kobold comes into view; you stop resting after 2 hours."), or one you could already see
+  farther off comes that close ("The kobold comes close; you stop resting after 10 minutes.").
+  Steps count as you move, diagonals too: 5 steps is any cell up to 5 columns and 5 rows away.
+  A hostile farther off may be in view and you rest on. Creatures that are not hostile to you
+  (neutral beasts, the [people who talk](npcs.md), your [allies](allies.md)) never stop a rest by
+  being seen, however close.
+- Something attacks you: a blow, a shot, a throw, or a [spell](spellcasting.md), even one that misses
+  or that you resist, and even from something you cannot see. So does a shot or a spell landing
+  or flying within 5 steps of you, a spell cast by or at someone within 5 steps, and a fight or a
+  death you see within 5 steps. A fight you watch farther off is written to the message line,
+  and you rest on.
 - A message is written to the [message line](the-screen.md#messages), such as a new
   [sound](hearing.md#what-you-hear) ("You hear footsteps to the north-east.") or an attack you
   notice ("The kobold hits you."). A sound you have already been hearing does not stop you; see
@@ -64,11 +73,13 @@ A rest stops early when:
   foraging](encounters.md#camping-and-foraging)).
 
 So resting next to a creature that walks back and forth behind a [door](doors.md) is interrupted
-each time it comes back into [earshot](hearing.md). A [creature](creatures.md) already in view
+each time it comes back into [earshot](hearing.md). A hostile already within 5 steps and in view
 when you start does not stop the rest just by being there. It stops the rest only by leaving your
-[sight](sight.md#line-of-sight) and coming back, or by an attack you notice.
+[sight](sight.md#line-of-sight) (or going farther than 5 steps) and coming back, or by attacking
+you.
 
-[Digging](digging.md) goes on turn after turn the same way, and stops early for the same reasons.
+[Digging](digging.md), [eating](food.md#eating), [searching](searching.md), and every other
+long task go on turn after turn the same way, and stop early for the same reasons.
 
 When the rest ends, the game tells you how long you rested ("You rest for 1 hour.", "You rest
 until dawn."). Rest to wait out the night, to wait for the [light](light.md#what-light-is) to

@@ -1164,6 +1164,22 @@ const CASES: &[Case] = &[
         screen: Some("describe"),
         ..BASE
     },
+    // Flasks (spec §8 "Potions": "Flasks", #1223): the throw choice lists potions beside
+    // throwing weapons, and a known flask says what its throw does.
+    Case {
+        name: "throw-list-flasks",
+        actions: "drop:a move:N*3 open:N move:N*2 move:E*16 open:S move:S*3 open:S move:S*4 move:E*4 \
+            open:N move:N*2 move:E move:W*3 pickup identify",
+        keys: Some("T"),
+        ..BASE
+    },
+    Case {
+        name: "potion-description-flask",
+        actions: "drop move:N*3 open:N move:N*2 move:E*16 open:S move:S*3 open:S move:S*4 move:E*4 \
+            open:N move:N*2 move:E move:W*3 pickup:c identify",
+        screen: Some("describe"),
+        ..BASE
+    },
     Case {
         name: "item-description",
         actions: "drop:a move:N*3 open:N move:N*2 move:E*16 open:S move:S*4 open:W move:W*4 pickup \
@@ -1439,7 +1455,7 @@ const CASES: &[Case] = &[
         scenario: "arena",
         // Pip's birth sign has gifts (#265): seed 4 is one where the fight still ends in his death.
         seed: Some(4),
-        actions: "use_tool wait*20",
+        actions: "use_tool wait*27",
         ..BASE
     },
     // The death remembered in the graveyard (#1137).
@@ -1447,7 +1463,7 @@ const CASES: &[Case] = &[
         name: "death-screen-graveyard",
         scenario: "arena",
         seed: Some(4),
-        actions: "use_tool wait*20",
+        actions: "use_tool wait*27",
         graveyard: Some(GRAVEYARD),
         ..BASE
     },
@@ -1456,7 +1472,7 @@ const CASES: &[Case] = &[
         scenario: "arena",
         // Seed 142 gives Pip a lucky day, the Iron Scourge (#269), and the fight his death.
         seed: Some(142),
-        actions: "use_tool wait*14",
+        actions: "use_tool wait*16",
         ..BASE
     },
 ];

@@ -373,8 +373,8 @@ fn perceived_glyph(view: &PerceptionView<'_>, layer: Layer, p: Pos) -> char {
 /// A heard sound in the `sound` layer: `f` footsteps, `o` a door opening, `c` a door closing,
 /// `x` fighting, `b` a bowstring, `m` chanting (magic), `k` banging (a door kicked), `d` digging,
 /// `v` a voice, `h` a howl, `r` a roar, `z` buzzing, `g` giggling, `s` a hiss, `l` a rattle, `y` a
-/// scream, `w` a wail, `q` a heartbeat, `a` an alarm bell, `e` an explosion, `t` a thunderclap; upper
-/// case when loud.
+/// scream, `w` a wail, `j` a crash of glass (a flask shattering), `q` a heartbeat, `a` an alarm
+/// bell, `e` an explosion, `t` a thunderclap; upper case when loud.
 pub fn sound_char(sound: &PerceivedSound) -> char {
     let c = match sound.kind {
         SoundKind::Footsteps => 'f',
@@ -394,6 +394,7 @@ pub fn sound_char(sound: &PerceivedSound) -> char {
         SoundKind::Rattle => 'l',
         SoundKind::Scream => 'y',
         SoundKind::Wail => 'w',
+        SoundKind::Shatter => 'j',
         SoundKind::Heartbeat => 'q',
         SoundKind::Bell => 'a',
         SoundKind::Explosion => 'e',
@@ -877,6 +878,14 @@ fn numbers_json(stack: &Stack, content: &Content) -> Value {
     })
 }
 
+/// How far the player throws inventory stack `item`, a flask whose type they know.
+fn known_flask_range(view: &PerceptionView<'_>, item: usize) -> Option<i32> {
+    let stack = view.inventory().get(item)?;
+    let known = view.lore().is_identified(stack.object);
+    let flask = view.content().object(stack.object).flask.is_some();
+    (known && flask).then(|| view.throw_range(item)).flatten()
+}
+
 fn inventory_rows(view: &PerceptionView<'_>) -> Vec<String> {
     let content = view.content();
     let unpaid = view.unpaid();
@@ -894,6 +903,10 @@ fn inventory_rows(view: &PerceptionView<'_>) -> Vec<String> {
         // A wand's rung once its type is known (the spell scaling design §7.4).
         if let Some(rung) = s.known_wand_rung(view.lore()) {
             name += &format!(" (rung {rung})");
+        }
+        // A flask's throw once its type is known (spec §8 "Potions": "Flasks").
+        if let Some(range) = known_flask_range(view, i) {
+            name += &format!(" (throw {range})");
         }
         let weight = format_weight(s.weight(content));
         let mark = equipment::mark(content, view.equipment(), i)
@@ -2071,6 +2084,9 @@ pub fn json(world: &World, layers: &[Layer], include_state: bool) -> Value {
             if let Some(rung) = s.known_wand_rung(view.lore()) {
                 entry["wand_rung"] = json!(rung);
             }
+            if let Some(range) = known_flask_range(&view, i) {
+                entry["throw"] = json!({ "range": range });
+            }
             entry
         })
         .collect();
@@ -2620,8 +2636,9 @@ mod tests {
         );
         let kobold = actors.iter().find(|a| a.contains(" kobold at "));
         assert!(
-            kobold.is_some_and(|k| k
-                .ends_with("St 9/9 Dx 13/13 To 10/10 In 10/10 Wi 9/9 Pr 8/8; unaware of player")),
+            kobold
+                .is_some_and(|k| k
+                    .ends_with("St 9/9 Dx 13/13 To 6/6 In 10/10 Wi 9/9 Pr 8/8; unaware of player")),
             "{actors:#?}"
         );
         assert!(Layer::Actors.is_dev_only() && !Layer::Stats.is_dev_only());

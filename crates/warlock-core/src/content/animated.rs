@@ -8,6 +8,7 @@
 //! are the same on every load.
 
 use super::creature::CreatureSpec;
+use super::starter;
 use super::{Content, ContentError, ContentFiles, CreatureId, ItemClassId, ObjectId, SlotId};
 use crate::stats::Stat;
 use serde::Deserialize;
@@ -799,7 +800,8 @@ fn has_body(text: &str) -> bool {
 }
 
 /// An animated type's numbers at level L by its tier (the undead roster's formulas, #383, rounded
-/// down part by part): the wiki prints them.
+/// down part by part, Toughness and `base_hp` cut for levels 1 to 5, `starter.rs`): the wiki
+/// prints them.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Numbers {
     pub stats: BTreeMap<Stat, u8>,
@@ -827,13 +829,18 @@ impl Numbers {
         ];
         let stats = (base.into_iter())
             .map(|(stat, score)| {
-                let score = score + more.get(&stat).copied().unwrap_or(0);
+                let mut score = i64::from(score + more.get(&stat).copied().unwrap_or(0));
+                // The starters' cut (#1200) on the hit points' part of the stats.
+                if stat == Stat::Toughness {
+                    score = starter::cut(score, level);
+                }
                 (stat, u8::try_from(score.clamp(1, 40)).unwrap_or(1))
             })
             .collect();
-        // 2.5 × L × factor, the factor to a thousandth.
+        // 2.5 × L × factor, the factor to a thousandth, cut for a starter (#1200).
         let factor = (hp_factor * 1000.0).round() as i64;
-        let base_hp = u16::try_from(25 * i64::from(level) * factor / 10_000).unwrap_or(u16::MAX);
+        let base_hp = starter::cut(25 * i64::from(level) * factor / 10_000, level);
+        let base_hp = u16::try_from(base_hp).unwrap_or(u16::MAX);
         // The curve's target, in tenths: 2 + 0.55 L to L20, then 13 + 0.25 (L − 20).
         let target = if level <= 20 {
             20 + 55 * l / 10

@@ -516,6 +516,16 @@ role on #1097's `to_hit = L/4`; every roster test maps its roles onto a
   standard 1.0 (archer 0.9, officer 1.1), ±35 % kept; the brutes stand in its top part (every one at 1.25 to 1.35 of its formula, the
   dread brutes at the top, so the probe's slowest tenth reaches twice the median). The
   mimics' `hp_factor` is the brute's.
+- **the starters** (#1200, `content/starter.rs`): a type of level 1 to 5 has
+  `starter::hp_percent` of its formula's hit points (40 % at level 1, 55, 70, 80, 90 % at 5),
+  Toughness and `base_hp` alike: the generated families' `Numbers::of` cut both, each
+  hand-written file states its cut numbers, and every roster test multiplies its formula by
+  `variance_roster_tests::starter` (`starter::tests::starters_are_soft` holds every type's
+  Toughness to 20 × the share). Their riders are rare and mild
+  (`starter::tests::starter_riders_are_rare_and_mild`): at most `starter::rider_cap` (1 % at level
+  1, 3 % at 2 and 3, 4 % at 4, 5 % at 5), one degree, no drain; a rider that defines its creature
+  (the spiders' and the centipede's venom, the leech's latch and bleeding; the test's `DEFINING`)
+  up to `starter::DEFINING_CAP`, 12 %, from level 2. No poison at level 1.
 - **speed** (`the_speed_rule_holds_tribe_by_tribe`, every faction but the beasts, the people, the
   player, and the layer keepers; uniques and the generated families left out): the bulk between
   800 and 1250 by the tribe's temperament (each tribe file names it), the dread at 600 or 700

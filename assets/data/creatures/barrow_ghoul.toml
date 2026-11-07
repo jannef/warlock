@@ -19,8 +19,8 @@ opens_doors = true
 footsteps = 40
 hearing = 15
 weight = 45000
-stats = { strength = 13, dexterity = 14, toughness = 12, intelligence = 6, willpower = 12, presence = 4 }
-base_hp = 3
+stats = { strength = 13, dexterity = 14, toughness = 10, intelligence = 6, willpower = 12, presence = 4 }
+base_hp = 2
 attack = { damage = "1d6", damage_type = "slashing", name = "claws", verb = "claws", to_hit = 1, threat = 19 }
 resist = { poison = 100 }
 on_eat = { message = "Carrion upon carrion.", vomit = 70, harm = "1d3" }

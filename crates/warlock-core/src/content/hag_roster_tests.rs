@@ -111,7 +111,7 @@ fn the_hags_keep_to_the_formulas() {
         );
         let level = f64::from(def.level);
         let hp = f64::from(def.stats.score(Stat::Toughness)) + f64::from(def.base_hp);
-        let want = max_hp(level, role);
+        let want = max_hp(level, role) * super::variance_roster_tests::starter(def.level);
         assert!(within(hp, want), "{id}: max HP {hp}, the formula {want:.1}");
         variance_roster_tests::check(&content, def, role.shape());
         let attack = (def.attack.as_ref()).unwrap_or_else(|| panic!("{id}: no attack"));

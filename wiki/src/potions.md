@@ -28,6 +28,15 @@ Some potions work **for a while** instead of at once:
 - A **resistance** potion makes you [resist](damage-types.md#armour-and-resistance) an element
   by 50 % for half an hour. It counts the way armour's resistance does, so together with what
   you wear it never reaches immunity: 75 % at most.
+- A **helpful draught** lends you a [status effect](status-effects.md) a spell could also give:
+  the potion of barkskin [Barkskin](status-effects.md#status-barkskin) and the potion of glamour
+  [Glamoured](status-effects.md#status-glamoured) (both harder to hit, two minutes), the potion
+  of renewal [Renewing](status-effects.md#status-renewing) (wounds close faster, four minutes),
+  the potion of the quick [Quick-sensed](status-effects.md#status-quick-sensed) (you feel the
+  living about you, three minutes), the potion of the unseen
+  [Invisible](status-effects.md#status-invisible) (two minutes), and the potion of sea legs
+  [Water-borne](status-effects.md#status-water-borne) (you walk on water, six minutes). A
+  second one of the same kind starts its time over.
 
 Each of these shows by name on the [status bar](the-screen.md#the-screen) and the [character
 screen](the-screen.md#character): [Fortified](status-effects.md#status-fortified),
@@ -79,8 +88,10 @@ has a hue, and a potion with several effects mixes their hues.
 | [Vision](vision.md#the-four-types) | violet |
 | [Speed](turns.md#speed) | yellow |
 | [Resistance](damage-types.md#armour-and-resistance) | teal |
-| The unplaced ([blinking](#utility-potions)) | opal |
-| Utility ([sustenance](#utility-potions)) | sky blue |
+| Wards ([Barkskin](status-effects.md#status-barkskin), [Glamoured](status-effects.md#status-glamoured)) | bronze |
+| [Renewal](status-effects.md#status-renewing) | rose |
+| The unseen and the unplaced ([Quick-sensed](status-effects.md#status-quick-sensed), [Invisible](status-effects.md#status-invisible), [blinking](#utility-potions)) | opal |
+| Utility ([Water-borne](status-effects.md#status-water-borne), [sustenance](#utility-potions)) | sky blue |
 | [Restoration](#utility-potions) | mint |
 | [Elixirs](#elixirs) (a [stat](stats.md) for good) | gold |
 | Harm | brown |
@@ -130,6 +141,35 @@ They are found only deep ([item level](affixes.md#base-items) 8 and below), and 
 [forgotten altar](altars-forges-springs.md#forgotten-altars)'s great boon may leave one, and an
 alchemist very rarely has one for 2000 [gold](shops.md#money). A [general store](shops.md) or a
 provisioner never does.
+
+## Flasks
+
+Any potion can be **[thrown](ranged.md#shooting-and-throwing)**: `T` lists your potions beside
+your throwing weapons. A thrown potion never lands whole. It **shatters** where it comes down.
+
+A **flask** is a potion made for throwing, such as the sleeping draught. Where it shatters, it
+works as a [spell](magic.md#the-spells) does: the sleeping draught breathes the
+[Sleep](magic.md#spell-sleep) spell over everyone around the cell. The table's **Thrown** column
+gives each flask's spell, its numbers, and its range in cells.
+
+- **Where it breaks**: a flask breaks on the first creature in the line from you to the cell you
+  aim at, or before a wall, or on that cell. There is no roll to [hit](combat.md#hitting) and no
+  miss: what matters is who stands where.
+- **How far**: a flask flies its own range (6 cells for most), plus what
+  [talents](talents.md) and [magic items](affixes.md) add to your throws. Any other potion flies
+  only 3 cells.
+- **What it does**: the spell works as if you had cast it, but your [stats](stats.md) and talents
+  do not change it: a flask is always as strong as the table says. Its harm and its kills are
+  yours, [experience](experience.md) too. A burst that harms can catch you if you throw it too
+  close, and the game asks first. A flask that lays a [Drowsy](status-effects.md#status-drowsy)
+  cloud or another [status](status-effects.md) spares you. Throwing a flask takes a throw's time
+  and trains no [weapon skill](weapon-skills.md).
+- **Learning it**: if you see the cell where an unknown flask breaks, you learn what it was ("It
+  was a sleeping draught."). Thrown into the dark or round a corner, it is only heard, as "a crash
+  of glass" ([Hearing](hearing.md#what-makes-noise)), and you learn nothing.
+- **A potion that is no flask** spills uselessly: "The potion shatters; the draught soaks away."
+  You learn nothing from it either. It is a way to be rid of a potion you know is bad.
+- **Drinking a flask** is a poor idea: the sleeping draught makes you drowsy, as the table says.
 
 ## Where to find them
 

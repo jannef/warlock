@@ -25,6 +25,8 @@ around you hear too.
   [lightning](traps.md#trap-lightning-bolt) cracks like thunder, and an [arrow
   trap](traps.md#trap-arrow) twangs like a bowstring ("You hear an explosion to the west."). See
   [Traps](traps.md).
+- **[Flasks](potions.md#flasks).** A thrown potion shatters with a crash of glass where it
+  breaks, as loud as a throw.
 - **[Voices](npcs.md#muttering).** People muttering to themselves can be heard a few cells away.
   If you hear one you cannot see, you hear a voice, and its words unless it was faint: "You hear a voice to the
   north: "Weeds. Always the weeds."" See [People and talk](npcs.md#muttering).

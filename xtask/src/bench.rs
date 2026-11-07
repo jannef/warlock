@@ -74,8 +74,8 @@ const HEXED_LIGHT: &str = "circle_enchantment";
 /// night among 96 creatures (about 0.07 ms a turn, 500 ms or so), where `delf`'s is cut short
 /// at once; rested from the same state with the copies dark it is cut short too (60 turns), and
 /// no rest turn costs more lit than dark: a full night on that floor is the cost, not the light.
-/// `d-pet`'s rest now runs the whole night too, since fewer neutral animals interrupt it; its
-/// per-turn cost is unchanged.
+/// `d-pet`'s rest runs the whole night (7600 turns, about 0.33 ms a turn): fewer neutral animals
+/// interrupt it, and only a hostile within five steps stops it (#1216).
 const UNJUDGED_REST: [&str; 2] = ["d-hex", "d-pet"];
 
 /// The same cave floor at danger 40, all of it animated panoplies (spec §8 "Animated objects"):

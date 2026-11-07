@@ -11,8 +11,7 @@ into a threshold table once at load with exact integer math (`Experience::thresh
 once per level from the exact fraction; a test pins the table's hash, so a deliberate change to
 the curve updates it), the early levels' discount (`[early] percent`, owner 2026-10-27: level 2
 pays `percent[0]` % of its curve XP, level 3 `percent[1]`, and so on, levels past the list 100 %;
-folded into `kills_fraction`, so `xp_for`, `threshold`, and `kills_for` all see it; refused when
-longer than levels 2 to `max_level`, outside 1 to 100, or decreasing; the test
+folded into `kills_fraction`, so `xp_for`, `threshold`, and `kills_for` all see it; the test
 `early_levels_are_discounted` pins the owner's totals and checks that levels 12 and up cost what
 they would undiscounted), `hp_level` (50, #557: levels 51 to 60 add no hit points but Hardened's; the thief's class `hp` is 4), `mana_level` (mana per level: `World::level_up_mana`,
 `docs/dev/mana.md`), the WoW-style `kill_xp` scaling with its zero difference

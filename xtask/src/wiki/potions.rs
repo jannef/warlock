@@ -1,15 +1,17 @@
 //! Potions (spec §8 "Potions").
 
-use super::text::{Term, anchored, capital};
+use super::text::{Term, anchored, capital, damage_link, link};
 use std::fmt::Write as _;
-use warlock_core::content::{Content, Draught, StatusId};
+use warlock_core::combat::IMPROVISED_RANGE;
+use warlock_core::content::{Content, Draught, ObjectDef, SpellPurpose, StatusId};
 
 /// The potions: what drinking each does in numbers, its colour, the training marks it gives,
-/// from which item level (depth) loot holds it and how often, and what it is worth. By name.
+/// what throwing it does (a flask's splash, spec §8 "Potions": "Flasks"), from which item level
+/// (depth) loot holds it and how often, and what it is worth. By name.
 pub(super) fn potions(content: &Content) -> String {
     let mut out = String::from(
-        "| Potion | Kind | What drinking it does | Colour | Marks | Found from | Value |\n\
-         |---|---|---|---|---|---|---:|\n",
+        "| Potion | Kind | What drinking it does | Thrown | Colour | Marks | Found from | Value |\n\
+         |---|---|---|---|---|---|---|---:|\n",
     );
     let mut potions: Vec<_> = (content.object_defs().iter())
         .filter_map(|o| o.drink.as_ref().map(|d| (o, d)))
@@ -117,6 +119,14 @@ pub(super) fn potions(content: &Content) -> String {
             Draught::Blink => "You are moved at once to a random free cell of the level, as a \
                  [teleport trap](traps.md#trap-teleport) moves you; nothing on the overworld"
                 .to_string(),
+            Draught::Status { status, severity } => {
+                let def = content.status(*status);
+                format!(
+                    "{}, {severity} degree{}",
+                    link(Term::Status, &def.id, &def.name),
+                    plural(*severity)
+                ) + &lasting(content, *status, *severity)
+            }
         };
         let marks = match drink.marks.as_slice() {
             [] => "none".to_string(),
@@ -131,10 +141,11 @@ pub(super) fn potions(content: &Content) -> String {
         };
         let _ = writeln!(
             out,
-            "| {} `{}` | {} | {what} | {} (`{}`) | {marks} | {found} | {} gold |",
+            "| {} `{}` | {} | {what} | {} | {} (`{}`) | {marks} | {found} | {} gold |",
             anchored(Term::Potion, &o.id, &capital(&o.name)),
             o.glyph,
             drink.does.kind(),
+            thrown(content, o),
             drink.colour,
             o.fg,
             o.value
@@ -163,4 +174,46 @@ fn lasting(content: &Content, status: StatusId, severity: u16) -> String {
         _ => format!(", a degree lost every {every} seconds"),
     };
     format!("; lasts {n} {unit}{s}{per}")
+}
+
+/// What throwing potion `o` does: a flask's splash exactly (its spell at its rung, linked, and
+/// the numbers it casts with), else a spill. Both with the range before talents.
+fn thrown(content: &Content, o: &ObjectDef) -> String {
+    let Some(flask) = &o.flask else {
+        return format!("spills uselessly; range {IMPROVISED_RANGE}");
+    };
+    let spell = content.spell(flask.spell);
+    let splash = flask.splash(content);
+    let mut does = Vec::new();
+    if let Some(radius) = splash.radius {
+        does.push(format!("radius {radius}"));
+    }
+    if let (Some(roll), SpellPurpose::Damage, Some(kind)) =
+        (splash.roll, spell.kind, spell.damage_type)
+    {
+        let kind = damage_link(content, kind);
+        does.push(format!(
+            "{} {kind}",
+            roll.to_string().trim_start_matches('+')
+        ));
+    }
+    if let (Some((status, _)), Some(degrees)) = (spell.effect.status, splash.degrees) {
+        let def = content.status(status);
+        let name = link(Term::Status, &def.id, &def.name);
+        does.push(format!("{name} {degrees}"));
+    }
+    if let Some(zone) = spell.effect.zone {
+        does.push(format!(
+            "a {} zone for {} turns",
+            zone.kind.id(),
+            zone.turns
+        ));
+    }
+    format!(
+        "shatters into {} (rung {}): {}; range {}",
+        link(Term::Spell, &spell.id, &spell.name),
+        flask.rungs,
+        does.join(", "),
+        flask.range
+    )
 }

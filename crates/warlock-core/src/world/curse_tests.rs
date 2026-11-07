@@ -224,12 +224,6 @@ fn the_dead_rise_after_two_minutes_as_undead_of_their_level() {
         into.name
     );
     assert!(said(&w, &line), "{:?}", w.messages());
-    // The rest stopped for it.
-    assert!(
-        w.messages()
-            .iter()
-            .any(|m| m.text.contains("you stop resting"))
-    );
 }
 
 #[test]

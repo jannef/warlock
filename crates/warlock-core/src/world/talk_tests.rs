@@ -593,14 +593,10 @@ fn someone_who_talks_coming_into_view_does_not_stop_a_rest() {
     let mut w = world("cloister");
     w.apply(&Action::Rest(Rest::For(Duration::hours(1))));
     assert_eq!(last_message(&w), "You rest for 1 hour.");
-    // A goat on the same round does.
+    // Nor does a goat on the same round: it is no hostile (spec §8 "Rest", #1216).
     let mut w = world("pen");
     w.apply(&Action::Rest(Rest::For(Duration::hours(1))));
-    assert!(
-        last_message(&w).starts_with("A goat comes into view; you stop resting"),
-        "{}",
-        last_message(&w)
-    );
+    assert_eq!(last_message(&w), "You rest for 1 hour.");
 }
 
 #[test]

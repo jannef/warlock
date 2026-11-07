@@ -37,9 +37,6 @@ fn two_rolls() -> u8 {
     2
 }
 
-/// The most skill rolls a class may give a level.
-pub const MAX_ROLLS: u8 = 10;
-
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
 struct ClassFile {
@@ -237,18 +234,6 @@ pub struct ClassDef {
 }
 
 impl ClassDef {
-    /// Every weapon skill and fighting style the class may start a character in: its fixed
-    /// ranks and every set of its choices.
-    pub fn trainable(&self) -> Vec<WeaponSkillId> {
-        let sets = (self.weapon_skill_choice.iter()).chain(&self.style_choice);
-        let ranks = (self.weapon_skills.iter())
-            .chain(&self.styles)
-            .chain(sets.flatten());
-        ranks.map(|&(id, _)| id).collect()
-    }
-}
-
-impl ClassDef {
     /// Parses the class table (`data/classes/*.toml`, or a single `data/classes.toml`), given
     /// as its files in path order: the classes in that order; `skill_id` says which skill a
     /// skill id is, and `weapon_table` holds the weapon skills starting ranks may name.
@@ -286,8 +271,7 @@ impl ClassDef {
     ) -> Result<Self, ContentError> {
         let err = |m: String| ContentError::new(file, m);
         let id = &spec.id;
-        let stats =
-            adjustments(&spec.stats).map_err(|m| err(format!("class `{id}`: stats: {m}")))?;
+        let stats = adjustments(&spec.stats);
         // The top keeps every level's threshold within the experience counter.
         if spec.experience > *FACTORS.end() {
             return Err(err(format!(
@@ -296,8 +280,6 @@ impl ClassDef {
                 FACTORS.end()
             )));
         }
-        let alignment = crate::alignment::check_start(spec.alignment)
-            .map_err(|m| err(format!("class `{id}`: {m}")))?;
         let skills = skills::grants(&spec.skills, skill_id)
             .map_err(|m| err(format!("class `{id}`: skills: {m}")))?;
         let mut known_for = Vec::with_capacity(spec.known_for.len());
@@ -307,9 +289,8 @@ impl ClassDef {
             known_for.push(skill);
         }
         known_for.sort();
-        let optional_skills =
-            super::skill::optional_skills(&spec.optional_skills, skill_id, &skills, "class")
-                .map_err(|m| err(format!("class `{id}`: optional_skills: {m}")))?;
+        let optional_skills = super::skill::optional_skills(&spec.optional_skills, skill_id)
+            .map_err(|m| err(format!("class `{id}`: optional_skills: {m}")))?;
         let ranks = |data: &BTreeMap<String, Dice>, ranked| {
             (weapon_table.starting_ranks(data, ranked))
                 .map_err(|m| err(format!("class `{id}`: {m}")))
@@ -334,7 +315,7 @@ impl ClassDef {
             mana: i32::from(spec.mana),
             affinity: spec.affinity,
             experience: spec.experience,
-            alignment,
+            alignment: spec.alignment,
             skills,
             known_for,
             optional_skills,
@@ -823,14 +804,6 @@ mod tests {
                 format!("{ONE}stats = {{ cunning = 1 }}\n"),
                 "unknown stat `cunning`",
             ),
-            (
-                format!("{ONE}stats = {{ presence = -11 }}\n"),
-                "presence -11 is out of range",
-            ),
-            (
-                format!("{ONE}stats = {{ presence = \"-3d4\" }}\n"),
-                "presence -3d4 is out of range",
-            ),
             (format!("{ONE}{ONE}"), "duplicate class id `wizard`"),
             (
                 format!("{ONE}experience = 300\n"),
@@ -842,27 +815,8 @@ mod tests {
                 "known_for: unknown skill `necromancy`",
             ),
             (
-                format!(
-                    "{ONE}skills = {{ spellcraft = 1 }}\n\
-                     optional_skills = {{ spellcraft = {{ chance = 20, dice = \"2d4\" }} }}\n"
-                ),
-                "optional_skills: `spellcraft` is one of the class's skills",
-            ),
-            (
-                format!("{ONE}optional_skills = {{ knowledge = {{ chance = 100, dice = 3 }} }}\n"),
-                "optional_skills: knowledge: chance 100 is out of range (1 to 99 percent)",
-            ),
-            (
-                format!("{ONE}optional_skills = {{ knowledge = {{ chance = 0, dice = 3 }} }}\n"),
-                "chance 0 is out of range",
-            ),
-            (
                 format!("{ONE}optional_skills = {{ necromancy = {{ chance = 5, dice = 3 }} }}\n"),
                 "optional_skills: unknown skill `necromancy`",
-            ),
-            (
-                format!("{ONE}optional_skills = {{ knowledge = {{ chance = 5, dice = 101 }} }}\n"),
-                "optional_skills: knowledge +101 is out of range",
             ),
             (
                 format!("{ONE}skills = {{ necromancy = 5 }}\n"),

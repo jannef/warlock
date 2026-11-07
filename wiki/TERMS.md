@@ -131,6 +131,7 @@ above.
 | Scroll, reading, unknown scrolls | `scrolls.md`, `scrolls.md#unknown-scrolls` |
 | Making out a scroll, the check to read one (Decipher script's use) | `scrolls.md#making-out-a-scroll` |
 | Potion, elixir | `potions.md`, `potions.md#elixirs` |
+| Flask, throwing a potion | `potions.md#flasks` |
 | Equipment, slots, wielding and wearing | `equipment.md#what-fits-where` |
 | The equipment screen | `equipment.md#the-equipment-screen` |
 | Magic item, rarity | `magic-items.md`, `magic-items.md#rarity` |

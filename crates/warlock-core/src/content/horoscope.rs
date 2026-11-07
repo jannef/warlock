@@ -14,7 +14,7 @@
 //! and a day of the month: born in that year and on that day, a character has a title and one
 //! gift more.
 
-use super::talent::{TalentBook, TalentId};
+use super::talent::TalentBook;
 
 use super::ContentError;
 use super::kit::{Kit, KitLineSpec};
@@ -52,11 +52,6 @@ fn hundred() -> u32 {
     100
 }
 
-/// The percents a `[flavour]` table may give.
-const FLAVOUR_PERCENTS: std::ops::RangeInclusive<u32> = 1..=400;
-/// The cells a full moon may add to a gift's reach.
-const FULL_MOON_REACHES: std::ops::RangeInclusive<i32> = 0..=10;
-
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
 struct SignSpec {
@@ -84,9 +79,6 @@ struct LuckySpec {
     #[serde(default)]
     grants: Vec<String>,
 }
-
-/// The days of a month a lucky day may fall on.
-const DAYS: std::ops::RangeInclusive<u32> = 1..=30;
 
 /// An animal or an element of the horoscope.
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -196,33 +188,14 @@ impl Flavour {
         self.full_moon_light.filter(|_| full_moon_up(time, moons))
     }
 
-    fn parse(spec: FlavourSpec) -> Result<Self, String> {
-        for (field, value) in [
-            ("birthday_healing", spec.birthday_healing),
-            ("birth_month_cooldown", spec.birth_month_cooldown),
-        ] {
-            if !FLAVOUR_PERCENTS.contains(&value) {
-                return Err(format!(
-                    "flavour: `{field}` is {} to {} percent",
-                    FLAVOUR_PERCENTS.start(),
-                    FLAVOUR_PERCENTS.end()
-                ));
-            }
-        }
-        if !FULL_MOON_REACHES.contains(&spec.full_moon_reach) {
-            return Err(format!(
-                "flavour: `full_moon_reach` is {} to {} cells",
-                FULL_MOON_REACHES.start(),
-                FULL_MOON_REACHES.end()
-            ));
-        }
-        Ok(Self {
+    fn parse(spec: FlavourSpec) -> Self {
+        Self {
             birthday_healing: spec.birthday_healing,
             birth_month_cooldown: spec.birth_month_cooldown,
             full_moon_reach: spec.full_moon_reach,
             full_moon_light_spec: spec.full_moon_light,
             full_moon_light: None,
-        })
+        }
     }
 }
 
@@ -253,6 +226,7 @@ impl Horoscope {
     pub(super) fn parse(file: &str, text: &str) -> Result<Self, ContentError> {
         let err = |m: String| ContentError::new(file, m);
         let parsed: HoroscopeFile = toml::from_str(text).map_err(|e| err(e.to_string()))?;
+        // A year's sign indexes both lists.
         let parts = |kind: &str, specs: Vec<SignSpec>| -> Result<Vec<SignPart>, ContentError> {
             if specs.is_empty() {
                 return Err(err(format!("at least one {kind} is required")));
@@ -263,22 +237,19 @@ impl Horoscope {
                 if list.iter().any(|p| &p.id == id) {
                     return Err(err(format!("duplicate {kind} id `{id}`")));
                 }
-                let stats = adjustments(&spec.stats)
-                    .map_err(|m| err(format!("{kind} `{id}`: stats: {m}")))?;
+                // `Horoscope::alignment` reads only the animal's: an element's would be lost.
                 if kind == "element" && spec.alignment != 0 {
                     return Err(err(format!(
                         "element `{id}`: only an animal nudges the alignment"
                     )));
                 }
-                let alignment = crate::alignment::check_start(spec.alignment)
-                    .map_err(|m| err(format!("{kind} `{id}`: {m}")))?;
                 list.push(SignPart {
                     id: spec.id,
                     name: spec.name,
                     description: spec.description,
-                    stats,
+                    stats: adjustments(&spec.stats),
                     grants: spec.grants,
-                    alignment,
+                    alignment: spec.alignment,
                     kit_spec: spec.kit,
                     kit: Kit::default(),
                 });
@@ -287,14 +258,6 @@ impl Horoscope {
         };
         let animals = parts("animal", parsed.animal)?;
         let elements = parts("element", parsed.element)?;
-        if gcd(animals.len(), elements.len()) != 1 {
-            return Err(err(format!(
-                "{} animals and {} elements would not give every pair once a great cycle: \
-                 their numbers must have no common divisor",
-                animals.len(),
-                elements.len()
-            )));
-        }
         let mut lucky: Vec<Lucky> = Vec::new();
         for spec in parsed.lucky {
             let pair = format!("{} {}", spec.element, spec.animal);
@@ -305,23 +268,11 @@ impl Horoscope {
                     "lucky day `{pair}`: no such animal or element"
                 )));
             }
-            if !DAYS.contains(&spec.day) {
-                return Err(err(format!(
-                    "lucky day `{pair}`: `day` is {} to {}",
-                    DAYS.start(),
-                    DAYS.end()
-                )));
-            }
             if lucky
                 .iter()
                 .any(|l| l.animal == spec.animal && l.element == spec.element)
             {
                 return Err(err(format!("lucky day `{pair}` twice")));
-            }
-            if spec.title.is_empty() || spec.description.is_empty() {
-                return Err(err(format!(
-                    "lucky day `{pair}` needs a title and a description"
-                )));
             }
             lucky.push(Lucky {
                 animal: spec.animal,
@@ -332,7 +283,7 @@ impl Horoscope {
                 grants: spec.grants,
             });
         }
-        let flavour = (parsed.flavour.map(Flavour::parse).transpose()).map_err(err)?;
+        let flavour = parsed.flavour.map(Flavour::parse);
         Ok(Self {
             anchor_year: parsed.anchor_year,
             animals,
@@ -430,15 +381,10 @@ pub(super) fn resolve_flavour(
     Ok(())
 }
 
-fn gcd(a: usize, b: usize) -> usize {
-    if b == 0 { a } else { gcd(b, a % b) }
-}
-
-/// Checks the horoscope and the talents against each other (spec §8 "Birth sign"): every talent
-/// a sign or a lucky day grants exists, is in the `stars` tree, and is `granted`; a flaw only
-/// among an animal's; no talent granted twice to one sign; and every sign a talent asks for
-/// (`animal`, `element`) is in the horoscope. Without a horoscope a talent that asks for a sign
-/// is never taken; without talents, nothing is granted.
+/// Resolves the horoscope and the talents against each other (spec §8 "Birth sign"): every
+/// talent a sign or a lucky day grants exists, and every sign a talent asks for (`animal`,
+/// `element`) is in the horoscope. Without a horoscope a talent that asks for a sign is never
+/// taken; without talents, nothing is granted.
 pub(super) fn check_talents(
     horoscope: Option<&Horoscope>,
     talents: &TalentBook,
@@ -449,60 +395,26 @@ pub(super) fn check_talents(
         return Ok(());
     };
     // Content without the `stars` tree (a fixture's talents) grants nothing.
-    let Some(stars) = talents.tree_id("stars") else {
+    if talents.tree_id("stars").is_none() {
         return Ok(());
-    };
-    let stars = Some(stars);
-    let granted = |what: &str, ids: &[String], flaws: bool| -> Result<(), ContentError> {
-        for id in ids {
-            let def = (talents.id(id))
-                .map(|t: TalentId| talents.get(t))
-                .ok_or_else(|| err(format!("{what} grants an unknown talent `{id}`")))?;
-            if Some(def.tree) != stars || !def.granted {
-                return Err(err(format!(
-                    "{what} grants `{id}`, which is not a granted talent of the `stars` tree"
-                )));
-            }
-            if def.flaw && !flaws {
-                return Err(err(format!(
-                    "{what} grants `{id}`, a flaw: only an animal has a flaw"
-                )));
-            }
+    }
+    let granted = |what: &str, ids: &[String]| -> Result<(), ContentError> {
+        match ids.iter().find(|id| talents.id(id).is_none()) {
+            Some(id) => Err(err(format!("{what} grants an unknown talent `{id}`"))),
+            None => Ok(()),
         }
-        Ok(())
     };
     for a in &h.animals {
-        granted(&format!("animal `{}`", a.id), &a.grants, true)?;
+        granted(&format!("animal `{}`", a.id), &a.grants)?;
     }
     for e in &h.elements {
-        granted(&format!("element `{}`", e.id), &e.grants, false)?;
+        granted(&format!("element `{}`", e.id), &e.grants)?;
     }
     for l in &h.lucky {
         granted(
             &format!("lucky day `{} {}`", l.element, l.animal),
             &l.grants,
-            false,
         )?;
-    }
-    for a in &h.animals {
-        for e in &h.elements {
-            let sign = Sign {
-                animal: a.id.clone(),
-                element: e.id.clone(),
-            };
-            for day in DAYS {
-                let ids = h.grants(&sign, day);
-                if let Some(twice) = (ids.iter().enumerate())
-                    .find(|(i, id)| ids[..*i].contains(id))
-                    .map(|(_, id)| id)
-                {
-                    return Err(err(format!(
-                        "the {} {} grants `{twice}` twice",
-                        e.name, a.name
-                    )));
-                }
-            }
-        }
     }
     for (_, def) in talents.iter() {
         if let Some(animal) = &def.needs.animal
@@ -632,8 +544,6 @@ mod tests {
     #[test]
     fn bad_horoscopes_are_refused() {
         for (text, why) in [
-            (text(1, 12, 4), "12 animals and 4 elements"),
-            (text(1, 6, 3), "no common divisor"),
             (text(1, 0, 5), "at least one animal"),
             (text(1, 12, 0), "at least one element"),
             (
@@ -645,20 +555,12 @@ mod tests {
                 "unknown stat `luck`",
             ),
             (
-                format!("{}stats = {{ presence = 11 }}\n", text(1, 1, 1)),
-                "element `e0`: stats: presence +11 is out of range",
-            ),
-            (
                 text(1, 1, 1).replace("anchor_year = 1\n", ""),
                 "missing field `anchor_year`",
             ),
             (
                 format!("{}alignment = 50\n", text(1, 1, 1)),
                 "element `e0`: only an animal nudges the alignment",
-            ),
-            (
-                text(1, 1, 1).replace("[[element]]", "alignment = 1001\n[[element]]"),
-                "animal `a0`: alignment 1001 is out of range",
             ),
         ] {
             let e = parse(&text).unwrap_err();

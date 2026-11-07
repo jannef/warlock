@@ -29,7 +29,8 @@ map = '''
 "@" = { terrain = "floor", spawn = "player", objects = ["ration*2", "apple", "dagger"] }
 "##;
 
-/// Food underfoot, and a cave beetle that comes into view up the passage within a few turns.
+/// Food underfoot, and a giant rat that comes into view up the passage, close, within a few
+/// turns.
 const LARDER: &str = r##"
 name = "Larder"
 ambient = [200, 200, 200, 0]
@@ -43,7 +44,7 @@ map = '''
 '''
 [legend]
 "@" = { terrain = "floor", spawn = "player", objects = ["ration*2"] }
-"1" = { terrain = "floor", creature = "beetle", route = "N3 S3" }
+"1" = { terrain = "floor", creature = "rat", route = "N3 S3" }
 "##;
 
 /// A giant rat beside the player.
@@ -497,7 +498,7 @@ fn a_creature_coming_into_view_stops_a_meal_and_leaves_the_food() {
     assert!(out.elapsed < Duration::seconds(24), "{:?}", out.elapsed);
     assert_eq!(
         texts(&w).last().unwrap(),
-        "A cave beetle comes into view; you stop eating."
+        "A giant rat comes into view; you stop eating."
     );
     assert_eq!(count_of(&underfoot(&w), ration), 2, "nothing was eaten");
     assert!(nutrition(&w) <= before);

@@ -152,7 +152,8 @@ impl World {
             Draught::Boost { .. }
             | Draught::Vision { .. }
             | Draught::Haste { .. }
-            | Draught::Resistance { .. } => {
+            | Draught::Resistance { .. }
+            | Draught::Status { .. } => {
                 if let Some((status, severity)) = drink.does.lends() {
                     self.lend(status, severity, events);
                 }
@@ -185,9 +186,10 @@ impl World {
         Spent::Turn(price)
     }
 
-    /// A potion's status for a while (a boost, a vision, a haste, a resistance): `severity`
-    /// degrees of `status` on the player. Its start line is the action's event when it begins;
-    /// when it only grows stronger the line is said here, and when nothing changes, that.
+    /// A potion's status for a while (a boost, a vision, a haste, a resistance, a status):
+    /// `severity` degrees of `status` on the player. Its start line is the action's event when
+    /// it begins; when it only grows stronger the line is said here, and when nothing changes,
+    /// that.
     fn lend(&mut self, status: StatusId, severity: u16, events: &mut Vec<Event>) {
         let player = self.state.player;
         let before = self.state.player().effects.get(status).map(|e| e.severity);

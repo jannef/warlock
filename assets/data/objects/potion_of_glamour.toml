@@ -1,0 +1,21 @@
+# A potion of glamour (spec §8 "Potions", the potions wave 2 design §4.1): Glamoured for two minutes, a seeming to one side of where one stands. Wards are bronze.
+[[object]]
+id = "potion_of_glamour"
+name = "potion of glamour"
+plural = "potions of glamour"
+glyph = "!"
+fg = "#b07838"
+class = "potions"
+materials = ["glass"]
+weight = 250
+value = 150
+stackable = true
+level = 5
+frequency = 12
+
+[object.drink]
+kind = "status"
+status = "glamoured"
+severity = 2
+colour = "bronze"
+marks = { presence = 15 }

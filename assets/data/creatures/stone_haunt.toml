@@ -17,8 +17,8 @@ vision = "darkvision"
 sight = 8
 hearing = 15
 weight = 500
-stats = { strength = 8, dexterity = 13, toughness = 10, intelligence = 6, willpower = 16, presence = 12 }
-base_hp = 6
+stats = { strength = 8, dexterity = 13, toughness = 7, intelligence = 6, willpower = 16, presence = 12 }
+base_hp = 4
 attack = { damage = "1d4", damage_type = "cold", name = "touch", verb = "touches" }
 incorporeal = { wall_defence = 4 }
 resist = { cold = 50, poison = 100 }

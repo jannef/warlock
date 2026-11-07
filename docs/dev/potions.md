@@ -3,7 +3,8 @@
 Spec §8 "Potions" (`spec/08g-magic-items.md`); the combat progression design §10
 (`docs/design/combat-progression.md`); #565 (Q1: the kinds `heal`, `cure`, `mana`, `harm`); #567
 (Q2: `boost`, `vision`, `haste`, `resistance`, their thirteen statuses, Lasting draughts);
-#568 (Q3: `elixir`).
+#568 (Q3: `elixir`); the potions wave 2 design (`docs/design/potions-wave-2.md`) S2, #1224:
+`status`.
 
 ## Objects and data
 
@@ -19,10 +20,6 @@ Spec §8 "Potions" (`spec/08g-magic-items.md`); the combat progression design §
   `Harm { dice, status }` (status required: hunger is loaded after objects),
   `Boost { status, severity }` (the status must raise a stat), `Vision { status }` (it must
   have `vision`), `Haste { status, severity }` (status always `hasted`, the Haste spell's; data
-  writes only `severity`), `Resistance { status }` (it must have `resist`); a severity is 1 to
-  the status's `max`. `Draught::lends` is the status and degrees of the four that lend one.
-  The utility kinds (#1228, the potions wave 2 design §4.2): `Nourish { satiation }`
-  (`satiation` required, a field of no other kind), `Restore`, and `Blink` (no fields).
   `marks` are
   `(Stat, count)` in stat order, 1 to `MAX_POTION_MARKS` each.
 - Content checks (`content/mod.rs`): a drink's `cures` must be named in some status's or
@@ -36,8 +33,6 @@ Spec §8 "Potions" (`spec/08g-magic-items.md`); the combat progression design §
   `murky_draught`; the six `elixir_of_*`: might, grace, vigour, wit, will, presence; #567:
   `potion_of_might`, `_grace`, `_vigour`, `_wit`, `_will`, `_presence` and their
   `greater_potion_of_*`, `potion_of_cats_eyes`, `_owls_eyes`, `_moths_eyes`,
-  `potion_of_quickness`, `potion_of_warmth`, `_frost`, `_earthing`, `_proofing`; #1228:
-  `potion_of_sustenance`, `_restoration`, `_blinking`, `_clear_head`). The witch's old `red_potion` and `blue_potion` are now the potions of
   healing and mana (ids renamed; saves change).
 
 ## Drinking: `world/potion.rs`
@@ -63,8 +58,8 @@ Spec §8 "Potions" (`spec/08g-magic-items.md`); the combat progression design §
   given at once (as `stat_checks` does), and "You feel stronger[, and that you could be stronger
   yet]." (the clause when the potential rose by 2 or more; "You feel no different." at the top
   of the scores); its marks go through `StatUse::Elixir`, every other kind's through
-  `StatUse::Drank`; `Harm` rolls degrees and `afflict`s them. `Boost`, `Vision`, `Haste`, and
-  `Resistance` go through `World::lend`: `afflict` the
+  `StatUse::Drank`; `Harm` rolls degrees and `afflict`s them. `Boost`, `Vision`, `Haste`,
+  `Resistance`, and `Status` go through `World::lend`: `afflict` the
   status at its degrees; its start line is the event's when it begins, said here when an
   existing one grows stronger, and "Nothing more comes of it." when nothing changes (boosts
   stack `highest`, the others `refresh`). The statuses (`data/status.toml`, the potions' group
@@ -85,6 +80,50 @@ Spec §8 "Potions" (`spec/08g-magic-items.md`); the combat progression design §
   the name `restore`.
 - Creatures do not drink.
 
+## Flasks: `world/flask.rs`
+
+The potions wave 2 design §3, §5 (`docs/design/potions-wave-2.md`), slice S1 (#1223). The path
+every later flask (smoke, fire, frost, acid, the bombers) builds on.
+
+- **Data**: `[object.throw]` (`ThrowSpec` → `Flask { spell, rungs, range, noise, words }` on
+  `ObjectDef::flask`, resolved in `content/potion.rs`). The loader checks only that `spell`
+  names a spell (the owner, #1205: well-formedness only; `range` is a `u8`, so nothing
+  overflows). `Flask::splash(content)` gives the splash's numbers at its rung of each ladder
+  and nobody's stats (`Splash { roll, radius, degrees }`): what the cast, the describe line,
+  the aiming warning, and the wiki read. `ObjectDef::shatters()` (a drink or a flask) and
+  `ObjectDef::throw_range()` (a flask's `range`, any other potion `IMPROVISED_RANGE`).
+- **The throw**: `World::throw` hands a stack that `shatters()` to `World::throw_flask` (the one
+  line in `shoot.rs`): `throw_range` (talents and items added), `may_loose`, `within_reach`,
+  priced `attack_price(Throw, AttackSkills::default())`, one taken (no keep), "You throw the
+  …", the throw's noise, then `shatter_flask`, `say_news`, `exert`.
+- **`World::shatter_flask(by, object, (from, at, range), events)`**, general over the thrower (a
+  creature's hurl, S8, calls it too): the centre by `burst_center`, an `Event::Missile` of the
+  object along the line to it (`Struck` when someone stands there), the flask's noise there
+  (`sound_at`), and when the player sees the centre (`perception.is_visible`): its `words`, and
+  `learn_scroll` with "It was a sleeping draught.". Then `Cast::by_flask(by, content, flask)`
+  (`Pay::Flask`, `Cast::by` the thrower, `reroll` 0, no riders or skills, reach and degrees at the
+  rung) and `splash`: `SpellPurpose::Damage` → `cast_burst_at(Caster::Actor(by), (centre,
+  centre), …)`, `spell_type_spreads`, `spell_lands`, `lay_spell_zone`; any other kind → the
+  spell's effect over its cells (a burst's `burst_cells`, else the centre alone), then its zone
+  (`lay_spell_zone`, by `cast.by`) or its status on everyone there but the thrower
+  (`splash_hex`). A player killed by their own is `Cause::Flask(object)`.
+- **Not `perform`**: the cast kinds in `cast.rs` aim from the player's cell and check the
+  spell's own range; a flask's splash goes off where it broke, so `flask.rs` calls the shared
+  pieces (as `creature_cast.rs` does) instead.
+- **Noise**: `SoundKind::Shatter` ("a crash of glass", `j` in the `sound` layer),
+  `noise::SHATTER_NOISE` 30.
+- **UI**: the throw choice (`ObjectList::Throw`, `PerceptionView::is_throwing_weapon`) lists
+  potions; the aiming mode's range is `throw_range`; a known flask of a harmful burst that
+  would catch the thrower asks first (`Aim::catches_reader`). Text snapshots `throw-list-flasks`,
+  `potion-description-flask`.
+- **Content**: the sleeping draught (`sleeping_draught.toml`, Sleep at rung 0, range 6; drunk,
+  Drowsy 3; pink).
+- **Tests**: `world/flask_tests.rs` (fixture flasks on Fireball, Hex of weakness, and Slick):
+  the throw and the burst on the dummy, the first creature in the way, the thrower's kill and
+  experience, learned only when seen and heard when not, a ray's hex, a zone by the thrower, a
+  potion that spills, refusals, a death by one's own flask, saves and replays, the loader's
+  one refusal.
+
 ## Labels and colours
 
 - `scroll_label.rs`: `Labels::draw` draws potion words **after** the rods' from the same
@@ -98,7 +137,9 @@ Spec §8 "Potions" (`spec/08g-magic-items.md`); the combat progression design §
   kit scrolls; every class's, #1104).
 - The item description (`magic/describe.rs::potion_lines`): a known potion's effect in words
   ("Heals wounds at once, and cures bleeding"), never dice; an unknown one "You do not know what
-  this potion does."
+  this potion does." A `status` draught's words come from what its status does (`lent`: unseen,
+  wades free, senses, quicker regeneration, a defence or a blow bonus, a cheaper action), else
+  its name: "Makes you harder to hit for a while".
 
 ## Sources
 
@@ -138,7 +179,10 @@ effect kinds (`potion_marks_percent`, `potion_heals`, `potion_smell`) and `World
 - `world/potion_status_tests.rs` (#567): boosts raise and wear off, greater ones ease to
   common ones, `highest`, visions change `Actor::eyes` and what is seen in the dark,
   resistances add as gear and never reach immunity, haste, Lasting draughts, a save with a
-  lengthened easing, descriptions, drinks that lend the wrong status refused.
+  lengthened easing, descriptions, drinks that lend the wrong status refused; #1224's six
+  `status` draughts (each lends its degrees, marks, and wears off on time; the unseen and sea
+  legs do what their statuses do; a second dose adds nothing; their words; a draught that lacks a
+  severity refused, a `per_action` one allowed).
   `content/status.rs` tests `vision`, `resist`, and `per_degree`. Text snapshot
   `potion-boost` (the character screen and status bar with Fortified and Owl-eyed).
 - `world/potion_tests.rs`: every kind through `eat:`, a floor potion, food still eaten,

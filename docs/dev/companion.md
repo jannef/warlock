@@ -61,14 +61,14 @@ nothing on `from_state` (a saved run has its own, or lost it).
 3. **The name** (`companion::name_for`): one draw on `companion/name/<actor id>` from `names`.
 4. The line: "Snel, your hound, pads at your heel."
 
-**The data** (`companions.toml`): `[start] rare_per_mille` 0 to 1000, `rare` 1 to 8 known
-`tameable` beasts, `most_level` (2); `[start.by_race]` a list of 1 to 3 known `tameable` beasts
-of level at most `most_level` per race (a race the content lacks is refused; a shipped race
-without a list is a test's failure, `content/companion.rs::tests`, not a load error, so fixtures
-that add races load); `[tame]` ("Taming" below: `turns` 1 to 100, the rest 0 or more);
-`[growth]` (`grade_percent` 1 to 300, `hp_per_level` 0 or more, every `every` 1 to 60); `names`
-at least one, none empty. When the content tells stories and has the `companion` chapter, every
-beast a start may draw has an `only` line in it with `when = { companion = ["<id>"] }`.
+**The data** (`companions.toml`): `[start] rare_per_mille`, `rare` (known `tameable` beasts, at
+least one: the draw indexes it), `most_level` (2); `[start.by_race]` a list of known `tameable`
+beasts per race, at least one (a race the content lacks is refused; a shipped race without a
+list is a test's failure, `content/companion.rs::tests`, not a load error, so fixtures that add
+races load); `[tame]` ("Taming" below); `[growth]` (every `every` at least 1: they divide);
+`names` at least one. The rest is the author's (#1205): the numbers, the beasts' levels against
+`most_level`, and an `only` line in the `companion` chapter for every beast a start may draw
+(`when = { companion = ["<id>"] }`; a beast without one is told the chapter's other lines).
 
 ## Taming
 

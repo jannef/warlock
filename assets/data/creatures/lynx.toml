@@ -18,8 +18,8 @@ sight = 12
 footsteps = 20
 hearing = 25
 weight = 20000
-stats = { strength = 12, dexterity = 16, toughness = 11, intelligence = 3, willpower = 11, presence = 5 }
-base_hp = 2
+stats = { strength = 12, dexterity = 16, toughness = 6, intelligence = 3, willpower = 11, presence = 5 }
+base_hp = 1
 tameable = true
 depart = "melts back into the trees"
 on_eat = { message = "Lean cat meat, sour and stringy." }

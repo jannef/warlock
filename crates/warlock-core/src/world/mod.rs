@@ -153,6 +153,7 @@ mod feature;
 mod feint;
 mod fight;
 mod first_sight;
+mod flask;
 mod flavour;
 mod fletch;
 mod focus;
@@ -1780,6 +1781,8 @@ mod first_sight_tests;
 #[cfg(test)]
 mod fixture_factions;
 #[cfg(test)]
+mod flask_tests;
+#[cfg(test)]
 mod flavour_tests;
 #[cfg(test)]
 mod fletch_tests;
@@ -1923,6 +1926,8 @@ mod read_tests;
 mod resource_talent_tests;
 #[cfg(test)]
 mod resource_tests;
+#[cfg(test)]
+mod rest_close_tests;
 #[cfg(test)]
 mod retribution_tests;
 #[cfg(test)]

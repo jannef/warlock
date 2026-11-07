@@ -86,7 +86,7 @@ use super::light::LightId;
 use super::material::MaterialId;
 use super::part::{self, Part, PartEntry, PartId};
 use super::particles::ParticleEmitter;
-use super::potion::{Drink, DrinkSpec};
+use super::potion::{Drink, DrinkSpec, Flask, ThrowSpec};
 use super::rod::{Rod, RodSpec};
 use super::scroll::{ReadSpec, Reading};
 use super::slot::SlotDef;
@@ -312,6 +312,8 @@ pub(super) struct ObjectSpec {
     pub rod: Option<RodSpec>,
     /// What drinking it does, if it is a potion (spec §8 "Potions").
     pub drink: Option<DrinkSpec>,
+    /// What throwing it does, if it is a flask (spec §8 "Potions": "Flasks").
+    pub throw: Option<ThrowSpec>,
 }
 
 /// A resolved object type.
@@ -447,6 +449,8 @@ pub struct ObjectDef {
     pub rod: Option<Rod>,
     /// What drinking it does, if it is a potion (spec §8 "Potions").
     pub drink: Option<Drink>,
+    /// What throwing it does, if it is a flask (spec §8 "Potions": "Flasks"): a potion too.
+    pub flask: Option<Flask>,
 }
 
 /// Damage of another kind an attack with the object adds, as data writes it: `added = { type =
@@ -551,6 +555,7 @@ impl ObjectDef {
             wand: None,
             rod: None,
             drink: None,
+            flask: None,
             key: None,
             kind: None,
             attack_cost: None,
@@ -637,14 +642,22 @@ impl ObjectDef {
             && self.ammo.is_none()
     }
 
-    /// How far it is thrown, if it can be.
+    /// How far it is thrown, if it can be: a flask its own range, any other potion as far as an
+    /// improvised weapon (it shatters where it lands, spec §8 "Potions": "Flasks").
     pub fn throw_range(&self) -> Option<i32> {
-        if self.is_thrown() {
+        if let Some(flask) = &self.flask {
+            Some(flask.range)
+        } else if self.is_thrown() {
             self.range
         } else {
-            self.is_improvised()
-                .then_some(crate::combat::IMPROVISED_RANGE)
+            (self.is_improvised() || self.shatters()).then_some(crate::combat::IMPROVISED_RANGE)
         }
+    }
+
+    /// Whether it shatters where it is thrown: a potion or a flask (a flask casting its splash
+    /// there, any other spilling uselessly; `world/flask.rs`).
+    pub fn shatters(&self) -> bool {
+        self.drink.is_some() || self.flask.is_some()
     }
 
     /// Whether it flies: ammunition, or a throwing weapon.
@@ -877,6 +890,10 @@ impl ObjectSpec {
         let wand = self.wand_of(content).map_err(err)?;
         let rod = self.rod_of(content).map_err(err)?;
         let drink = self.drink_of(content).map_err(err)?;
+        let flask = (self.throw.clone())
+            .map(|spec| spec.resolve(content))
+            .transpose()
+            .map_err(err)?;
         let plural = self.plural.unwrap_or_else(|| content.plural(&self.name));
         // A blank scroll (nothing to read, `blank_scroll`) is loot as the scrolls are.
         let loot = self.kind.is_some()
@@ -948,6 +965,7 @@ impl ObjectSpec {
             wand,
             rod,
             drink,
+            flask,
         };
         Ok((def, self.lit))
     }
@@ -1472,6 +1490,7 @@ mod tests {
             wand: None,
             rod: None,
             drink: None,
+            flask: None,
         };
         assert_eq!(def("dagger", "daggers").describe(1), "a dagger");
         assert_eq!(def("iron key", "iron keys").describe(1), "an iron key");

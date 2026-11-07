@@ -133,6 +133,17 @@ weight = 1000
 base_hp = 1000
 faction = "wildlife"
 
+# The hall's walker: hostile, as only a hostile stops a rest (spec §8 "Rest").
+[[creature]]
+grades = false
+id = "stalker"
+name = "stalker"
+glyph = "w"
+fg = "#806040"
+weight = 1000
+base_hp = 1000
+faction = "foes"
+
 [[creature]]
 grades = false
 id = "grunt"
@@ -329,8 +340,8 @@ fn files(player_speed: u32) -> ContentFiles {
     files.insert("levels/pit.toml", PIT);
     files.insert("levels/wilds.toml", WILDS);
     files.insert("levels/keep.toml", KEEP);
-    // A hall far longer than the view range; the walker starts 94 cells from the player and
-    // walks towards them and back.
+    // A hall far longer than the view range; a hostile walker starts 94 cells from the player
+    // and walks to 4 cells from them and back.
     let row = format!("#@{}w{}#", ".".repeat(93), ".".repeat(5));
     let wall = "#".repeat(row.len());
     files.insert(
@@ -338,7 +349,7 @@ fn files(player_speed: u32) -> ContentFiles {
         &format!(
             "name = \"Hall\"\nmap = '''\n{wall}\n{row}\n{wall}\n'''\n[legend]\n\
              \"@\" = {{ terrain = \"floor\", spawn = \"player\" }}\n\
-             \"w\" = {{ terrain = \"floor\", creature = \"walker\", route = \"W60 E60\" }}\n"
+             \"w\" = {{ terrain = \"floor\", creature = \"stalker\", route = \"W90 E90\" }}\n"
         ),
     );
     for name in ["yard", "pit", "wilds", "hall"] {
@@ -588,10 +599,10 @@ fn rest_ends_exactly_at_its_goal_at_any_player_speed() {
 #[test]
 fn resting_stops_where_waiting_would_at_any_player_speed() {
     // In the hall the walker is far enough away for turns to pass between perceptions; at any
-    // speed of the player the rest stops on the very turn it comes into view, in the same state.
+    // speed of the player the rest stops on the very turn it comes close, in the same state.
     for speed in [900, 1111, 2000] {
         let mut waited = world("hall", speed);
-        while waited.creatures_in_view().is_empty() {
+        while waited.watched_in_view().is_empty() {
             waited.apply(&Action::Wait);
             assert!(waited.turn() < 2000, "the walker never came into view");
         }

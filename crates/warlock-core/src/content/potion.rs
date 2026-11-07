@@ -5,13 +5,15 @@
 //! ```toml
 //! [object.drink]
 //! kind = "heal"              # heal, cure, mana, elixir, harm, boost, vision, haste, resistance,
-//!                            # nourish, restore, blink
+//!                            # nourish, restore, blink, status
 //! dice = "2d8"               # heal: hit points back; mana: mana back; harm: degrees of sickness
 //! cures = ["bandage"]        # heal, cure: means named in the statuses' and diseases' `cured_by`
 //! diseases = true            # cure: ends every disease the drinker has
 //! status = "poisoned"        # harm: the status it gives, `dice` degrees of it; boost, vision,
-//!                            # resistance: the status it gives (a raise, eyes, a `resist`)
-//! severity = 1               # boost, haste: the degrees it gives (1 to the status's `max`)
+//!                            # resistance: the status it gives (a raise, eyes, a `resist`);
+//!                            # status: any status that ends (Barkskin)
+//! severity = 1               # boost, haste, status: the degrees it gives (1 to the status's
+//!                            # `max`)
 //! stat = "strength"          # elixir: the stat it raises for good
 //! points = 1                 # elixir: by how much (a trained rise each)
 //! potential = "1d2"          # elixir: the potential's further rise, rolled once
@@ -24,16 +26,41 @@
 //! `diseases`; a mana potion `dice`; an elixir `stat`, `points`, and `potential`; a harm `dice`
 //! and `status`; a boost `status` (one that raises a stat, `penalty`) and `severity`; a vision
 //! `status` (one with `vision`); a haste `severity` (of Hasted, the Haste spell's status); a
-//! resistance `status` (one with `resist`); a nourish `satiation`; a restore and a blink
-//! nothing. The colour's hue is its
+//! resistance `status` (one with `resist`); a status `status` and `severity`, of any status; a
+//! nourish `satiation`; a restore and a blink nothing. The colour's hue is its
 //! family's (the design's rule, kept in data as the object's `fg`): potions that share a colour
 //! name share their `fg`.
+//!
+//! **Flasks** (the potions wave 2 design §3): a potion with an `[object.throw]` table is thrown
+//! at a cell and casts a spell where it shatters, as a scroll casts one where it is read
+//! (`world/flask.rs`):
+//!
+//! ```toml
+//! [object.throw]
+//! spell = "sleep"            # the spell its splash casts, an id of data/spells/
+//! rungs = 0                  # the rung of each of the spell's ladders it casts at (default 0)
+//! range = 6                  # how far it is thrown, in cells (default 6)
+//! noise = { sound = "shatter", loudness = 30 }   # what its shattering is heard as (the default)
+//! words = "A sweet mist puffs from the shards."   # said to a thrower who sees it (default: the
+//!                                                 # spell's `cast.message`, if any)
+//! ```
+//!
+//! The splash is meant for a hex or a damage spell a cell can hold: a burst (of any range: one
+//! about its caster is centred where the flask breaks), or a hex that is a ray or a bolt (it
+//! falls on whoever stands where the flask breaks). The loader checks only that the spell exists
+//! (the owner, #1205: the data author is trusted); `world/flask.rs` casts whatever it names as a
+//! burst's damage or a hex's status or zone on the cells it reaches. A flask is meant to be a
+//! potion too, with a `drink` table.
 
-use super::{Content, StatusId};
-use crate::dice::Dice;
+use super::{Content, SpellId, StatusId, TrapNoise};
+use crate::dice::{Dice, Roll};
+use crate::noise::{SHATTER_NOISE, SoundKind};
 use crate::stats::Stat;
 use serde::Deserialize;
 use std::collections::BTreeMap;
+
+/// How far a flask is thrown unless its `range` says otherwise.
+const FLASK_RANGE: i32 = 6;
 
 /// The most marks a potion may give a stat.
 pub const MAX_POTION_MARKS: u16 = 100;
@@ -78,6 +105,9 @@ pub enum Draught {
     Restore,
     /// The drinker is elsewhere on the level at once, as a teleport trap moves its victim.
     Blink,
+    /// Any status that ends, lent for a while: `severity` degrees of `status` (Barkskin; the
+    /// potions wave 2 design §4.1).
+    Status { status: StatusId, severity: u16 },
 }
 
 impl Draught {
@@ -96,17 +126,18 @@ impl Draught {
             Draught::Nourish { .. } => "nourish",
             Draught::Restore => "restore",
             Draught::Blink => "blink",
+            Draught::Status { .. } => "status",
         }
     }
 
     /// The status it gives the drinker for a while and the degrees of it, for the kinds that
-    /// give one (boost, vision, haste, resistance); not a harm's sickness, whose degrees are
-    /// rolled.
+    /// give one (boost, vision, haste, resistance, status); not a harm's sickness, whose degrees
+    /// are rolled.
     pub fn lends(&self) -> Option<(StatusId, u16)> {
         match *self {
-            Draught::Boost { status, severity } | Draught::Haste { status, severity } => {
-                Some((status, severity))
-            }
+            Draught::Boost { status, severity }
+            | Draught::Haste { status, severity }
+            | Draught::Status { status, severity } => Some((status, severity)),
             Draught::Vision { status } | Draught::Resistance { status } => Some((status, 1)),
             _ => None,
         }
@@ -355,10 +386,18 @@ impl DrinkSpec {
                 only(&fixed)?;
                 Draught::Blink
             }
+            "status" => {
+                only(&lending)?;
+                let status = status(self.status.as_deref())?;
+                Draught::Status {
+                    status,
+                    severity: severity(status)?,
+                }
+            }
             other => {
                 return Err(format!(
                     "`drink`: unknown kind `{other}` (heal, cure, mana, elixir, harm, boost, \
-                     vision, haste, resistance, nourish, restore, blink)"
+                     vision, haste, resistance, status, nourish, restore, blink)"
                 ));
             }
         };
@@ -379,6 +418,90 @@ impl DrinkSpec {
             does,
             colour: self.colour,
             marks,
+        })
+    }
+}
+
+/// A flask (`[object.throw]`, module docs): what its splash casts, and how it is thrown.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct Flask {
+    /// The spell it casts where it shatters.
+    pub spell: SpellId,
+    /// The rung of each of the spell's ladders it casts at.
+    pub rungs: u8,
+    /// How far it is thrown, in cells, before the thrower's talents and items.
+    pub range: i32,
+    /// What its shattering is heard as, where it shatters.
+    pub noise: TrapNoise,
+    /// Said to a thrower who sees it shatter.
+    pub words: Option<String>,
+}
+
+/// What a flask's splash is, at its rung and nobody's stats (the spell's own numbers at that
+/// rung of each ladder): what the cast path, the item description, and the wiki read.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub struct Splash {
+    /// Its harm, a damage spell's.
+    pub roll: Option<Roll>,
+    /// A burst's radius.
+    pub radius: Option<i32>,
+    /// A hex's degrees of its status.
+    pub degrees: Option<u16>,
+}
+
+impl Flask {
+    /// Its splash's numbers (module docs).
+    pub fn splash(&self, content: &Content) -> Splash {
+        let def = content.spell(self.spell);
+        let rung = usize::from(self.rungs);
+        let at = |ladder: Option<&super::SpellLadder>, base: i32| {
+            (ladder.and_then(|l| l.value(rung.min(l.len()))))
+                .and_then(super::RungValue::number)
+                .unwrap_or(base)
+        };
+        let most = content
+            .spell_rules()
+            .map_or(1, |r| i32::from(r.max_radius()));
+        Splash {
+            roll: def.roll_at(rung),
+            radius: (def.radius)
+                .map(|base| at(def.grows.radius.as_ref(), i32::from(base)).clamp(1, most)),
+            degrees: (def.base_degrees())
+                .map(|base| at(def.grows.degrees.as_ref(), i32::from(base)).max(1))
+                .map(|d| u16::try_from(d).unwrap_or(u16::MAX)),
+        }
+    }
+}
+
+/// `[object.throw]` as data writes it.
+#[derive(Clone, Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct ThrowSpec {
+    spell: String,
+    #[serde(default)]
+    rungs: u8,
+    range: Option<u8>,
+    noise: Option<TrapNoise>,
+    words: Option<String>,
+}
+
+impl ThrowSpec {
+    /// Resolves it against the spells (loaded before objects): the spell id must name one. The
+    /// rest is the data author's (the owner, #1205): a rung past a ladder's end casts at its
+    /// last, and a splash of any spell goes off as `world/flask.rs` says.
+    pub(super) fn resolve(self, content: &Content) -> Result<Flask, String> {
+        let spell = (content.spell_id(&self.spell))
+            .ok_or_else(|| format!("`throw`: no spell `{}` in data/spells/", self.spell))?;
+        let def = content.spell(spell);
+        Ok(Flask {
+            spell,
+            rungs: self.rungs,
+            range: self.range.map_or(FLASK_RANGE, i32::from),
+            noise: self.noise.unwrap_or(TrapNoise {
+                sound: SoundKind::Shatter,
+                loudness: SHATTER_NOISE,
+            }),
+            words: self.words.or_else(|| def.look.message.clone()),
         })
     }
 }

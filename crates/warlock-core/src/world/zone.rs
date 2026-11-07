@@ -181,7 +181,7 @@ impl World {
             _ => 0,
         };
         let lasts = u64::from(zone.turns) * TURN_SECONDS;
-        let by = self.state.player;
+        let by = cast.by;
         let laid = (zone.kind, by, harm, Some(cast.spell));
         self.lay_cells(laid, cells, lasts, events);
     }

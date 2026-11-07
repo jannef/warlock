@@ -18,8 +18,8 @@ hearing = 8
 weight = 15000
 size = "small"
 stray = false
-stats = { strength = 12, dexterity = 10, toughness = 10, intelligence = 1, willpower = 6, presence = 2 }
-base_hp = 5
+stats = { strength = 12, dexterity = 10, toughness = 8, intelligence = 1, willpower = 6, presence = 2 }
+base_hp = 4
 natural = { defence = 1, protection = 0, name = "scales" }
 on_eat = { message = "Tough and bitter.", vomit = 30 }
 blood = "#4a6a2a"

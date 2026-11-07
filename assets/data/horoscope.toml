@@ -3,8 +3,8 @@
 # Every year has an animal and an element. Both advance one step a year, in the order below, on
 # the 1st of Frostmere: the animals in the order they finished the Great Race (the legend is on
 # the wiki's Horoscope page), the elements Wood, Fire, Earth, Metal, Water. With 12 animals and
-# 5 elements every pair comes exactly once in a great cycle of 60 years (their numbers must have
-# no common divisor). The player does not choose a sign: it follows from the birth year.
+# 5 elements every pair comes exactly once in a great cycle of 60 years (their numbers share no
+# divisor). The player does not choose a sign: it follows from the birth year.
 #
 # Fields:
 #   anchor_year   a year that starts a great cycle: the year of the first animal and the first

@@ -121,11 +121,8 @@ impl World {
         match ended {
             Ended::Died => {}
             _ if self.state.time >= until => self.deciphered(work.item),
-            Ended::Came(id) => {
-                let text = format!(
-                    "{} comes into view; you put the scroll away.",
-                    self.creature_called(id)
-                );
+            Ended::Came(came) => {
+                let text = format!("{}; you put the scroll away.", self.came_line(came));
                 self.say(text);
             }
             Ended::Said | Ended::Done => self.say("You put the scroll away."),

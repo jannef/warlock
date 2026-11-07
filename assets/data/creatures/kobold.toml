@@ -21,7 +21,7 @@ opens_doors = true
 # Clumsy and loud, and not the best listener.
 footsteps = 80
 hearing = 15
-stats = { strength = 9, dexterity = 13, toughness = 10, intelligence = 10, willpower = 9, presence = 8 }
+stats = { strength = 9, dexterity = 13, toughness = 6, intelligence = 10, willpower = 9, presence = 8 }
 on_eat = { message = "This kobold meat tastes terrible!", vomit = 40 }
 weapon_skills = { spears = 1 }
 # Its gear (spec §8 "Creature gear"): a spear as a rule, now and then a cap or a coat.

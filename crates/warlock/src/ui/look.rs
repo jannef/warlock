@@ -1011,7 +1011,10 @@ mod tests {
             Some((actor.health, describe(&view, actor.pos, true)))
         });
         let (health, text) = hurt.expect("someone in view was hurt");
-        assert!(text.contains(&format!(", {})", health.word())), "{text}");
+        // The health word, then what shows of its statuses (", bleeding") if any.
+        let word = health.word();
+        let named = [format!(", {word})"), format!(", {word}, ")];
+        assert!(named.iter().any(|n| text.contains(n)), "{text}");
         // Never a number of hit points.
         assert!(!text.chars().any(|c| c.is_ascii_digit()), "{text}");
     }

@@ -17,7 +17,7 @@ type's gimmick; `content/dread_roster_tests.rs` lists the five at their tiers an
 
 | Type | Level | Role | Tier | Faction | Max HP | Attack | Gimmick | Leavings |
 |---|---:|---|---|---|---:|---|---|---|
-| `hydra_head` | 4 | small | common (not dread; `stray = false`) | marsh | 15 | bite 1d6 | what a hydra dies into | — |
+| `hydra_head` | 4 | small | common (not dread; `stray = false`) | marsh | 12 | bite 1d6 | what a hydra dies into | — |
 | `cockatrice` | 7 | small | rare | vermin | 20 | beak 1d8, Stiffening 25 % behind Toughness 13 | stiffening by touch (D2); a hiss cry | statue |
 | `rust_monster` | 12 | standard | uncommon | vermin | 47 | feelers 2d6 bludgeoning | `corrodes = { chance = 50, what = "both", kind = "rust" }` (D7, #1168): its hits rust the armour worn, the weapon that strikes it rusts; quick (1200) | — |
 | `black_pudding` | 18 | shambler | rare | vermin | 92 | pseudopod 3d6 acid | `splits` under slashing and piercing (D5); `corrodes` both, 25 (D7); no vitals, no corpse, bloodless; slow (700) | acid pit |

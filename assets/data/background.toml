@@ -3,12 +3,12 @@
 # The chapters are `background/NN-<chapter>.toml`, told in file-name order, then a campaign's own
 # (`campaigns/<id>/data/background/`, after these; never a shared chapter's id).
 #
-# A chapter file holds `[chapter]` (`id`; `name`; `paragraph`, 1 to 4, never less than an earlier
-# chapter's; `defaults`, the words `{guardian}`, `{home}`, `{trade}` read while no line has set
+# A chapter file holds `[chapter]` (`id`; `name`; `paragraph`, 1 to 4 so far, never less than an
+# earlier chapter's; `defaults`, the words `{guardian}`, `{home}`, `{trade}` read while no line has set
 # them) and its `[[line]]`s:
 #   id        unique in the chapter; saves name it (`chapter/line`), so it never changes
 #   tier      common, uncommon, rare, or fateful (the odds below, drawn first)
-#   weight    1 to 20, among the fitting lines of its tier
+#   weight    its share among the fitting lines of its tier (1 to 20 so far)
 #   text      the sentence, second person, past tense; slots `{name}`, `{they}`, `{them}`,
 #             `{their}` (the gender's pronouns), `{guardian}`, `{home}`, `{trade}`, and the same
 #             capitalised for a sentence start (`{Guardian}`); never a number, a stat's name, or
@@ -18,20 +18,21 @@
 #             talents and skills (every one held; not_talents none); tags and not_tags (what
 #             earlier chapters' lines set); age = { min, max } (at the start); campaign (ids)
 #   only      true: when it fits, the chapter is told from the fitting `only` lines alone
-#             (common lines only: the heritage talents force their chapters so)
-#   effects   a list, each one kind: stat = { strength = 1 } (1 or 2 either way a stat, the score
+#             (common lines so far: the heritage talents force their chapters so)
+#   effects   a list, each one kind: stat = { strength = 1 } (1 or 2 either way so far, the score
 #             and its potential together, a score never below 1); gold = "4d6" or -20 (taken
 #             when negative, never below none); item = a kit line (classes/README.toml's syntax,
 #             `magic` too, made identified; `prefer_trained = true` prefers an alternative of a
 #             weapon skill the character has a rank in); skill = { heal = "2d4" }; weapon_marks
 #             = { spears = 3 } (marks, never a rank; `best` the weapon skill held highest);
 #             alignment = 25 (the starting score); talent = "hardy" (with what it hands
-#             out, kept for life; `"weapon_focus:long_blades"` names a choice; never a given,
-#             class, or flaw talent, and the line is never told to one who holds it); flaw =
-#             "slight" (a birth sign's flaw talent, likewise)
+#             out, kept for life; `"weapon_focus:long_blades"` names a choice; a pick, never a
+#             given, class, or flaw talent so far, and the line is never told to one who holds
+#             it); flaw = "slight" (a birth sign's flaw talent, likewise)
 #   tags, set what later lines may read: tags, and words for the slots (`set = { home = "the
 #             minster" }`, read from the next line on)
-# Every chapter has a plain line: common, no `when`, no effects.
+# Every chapter has a plain line so far: common, no `when`, no effects (a chapter where no line
+# fits tells nothing).
 
 # The tiers, per mille, drawn first for every chapter; common takes what is left.
 [tiers]
@@ -39,9 +40,9 @@ uncommon = 120
 rare = 30
 fateful = 5
 
-# What an effect is worth, in points: only for the check of each line's tier at load (common -4
-# to 2, uncommon 1 to 3, rare 3 to 5 and fateful 5 to 8, those two never costing anything) and
-# the wiki. No story's total is capped.
+# What an effect is worth, in points: the bands each line's tier is written to (common -4 to 2,
+# uncommon 1 to 3, rare 3 to 5 and fateful 5 to 8, those two never costing anything), which the
+# wiki shows. No story's total is capped.
 [points]
 stat = 2
 skill = 1

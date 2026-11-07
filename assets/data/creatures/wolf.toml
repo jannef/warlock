@@ -18,8 +18,8 @@ sight = 12
 footsteps = 60
 hearing = 20
 weight = 40000
-stats = { strength = 13, dexterity = 15, toughness = 12, intelligence = 3, willpower = 10, presence = 4 }
-base_hp = 4
+stats = { strength = 13, dexterity = 15, toughness = 10, intelligence = 3, willpower = 10, presence = 4 }
+base_hp = 3
 # A wolf cub may grow up at a hearth: a rare starting companion, and tameable (spec §8 "Allies").
 tameable = true
 nose = 8

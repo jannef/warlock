@@ -15,8 +15,8 @@ sight = 12
 footsteps = 50
 hearing = 5
 weight = 80000
-stats = { strength = 14, dexterity = 15, toughness = 12, intelligence = 2, willpower = 12, presence = 5 }
-base_hp = 4
+stats = { strength = 14, dexterity = 15, toughness = 5, intelligence = 2, willpower = 12, presence = 5 }
+base_hp = 2
 attack = { damage = "1d4", damage_type = "bludgeoning", name = "hoof", verb = "kicks" }
 # Wary game: it hears what others miss. It may be tamed (spec §8 "Allies").
 tameable = true

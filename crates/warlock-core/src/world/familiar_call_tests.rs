@@ -60,7 +60,7 @@ map = '''
 "k" = { terrain = "floor", creature = "kobold" }
 "##;
 
-/// A cave beetle that comes into view up the passage within a few turns.
+/// A giant rat that comes into view up the passage, close, within a few turns.
 const PASSAGE: &str = r##"
 name = "Passage"
 ambient = [200, 200, 200, 0]
@@ -74,7 +74,7 @@ map = '''
 '''
 [legend]
 "@" = { terrain = "floor", spawn = "player" }
-"1" = { terrain = "floor", creature = "beetle", route = "N3 S3" }
+"1" = { terrain = "floor", creature = "rat", route = "N3 S3" }
 "##;
 
 /// No cell but the player's.
@@ -287,7 +287,7 @@ fn a_creature_coming_into_view_breaks_it_off_with_the_time_spent() {
     assert!(w.familiar().is_none());
     assert_eq!(
         last(&w),
-        "A cave beetle comes into view; you break off your calling."
+        "A giant rat comes into view; you break off your calling."
     );
     let spent = w.state.time.since(time);
     assert!(spent > Duration::seconds(0) && spent < Duration::seconds(3600));

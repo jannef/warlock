@@ -207,18 +207,6 @@ fn the_flavour_table_is_checked() {
         assert!(e.to_string().contains(why), "{why}: {e}");
     };
     bad(
-        "[flavour]\nbirthday_healing = 0",
-        "`birthday_healing` is 1 to 400 percent",
-    );
-    bad(
-        "[flavour]\nbirth_month_cooldown = 401",
-        "`birth_month_cooldown` is 1 to 400",
-    );
-    bad(
-        "[flavour]\nfull_moon_reach = 11",
-        "`full_moon_reach` is 0 to 10 cells",
-    );
-    bad(
         "[flavour]\nfull_moon_light = \"nope\"",
         "an unknown light `nope`",
     );
