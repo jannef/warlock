@@ -58,6 +58,23 @@ village, the wood, and the fair folk, and will [talk](npcs.md) of them. A girl o
 [escort](quests.md#kinds-of-quests) of the march. Like the town, Holtwīc has no
 [stairs](terrain.md#stairs); walk off its edge to leave.
 
+### Līctūn
+
+Four cells down the south road from the town, beside the road, is **Līctūn**, Cēaptūn's
+churchyard. A drystone wall runs round it, with a gate on the road. Inside are fifty gravestones
+in rows, a yew in each corner, and a little stone chapel in the middle. Nothing comes there to
+fight you.
+
+Look at a stone to read it: "Here lies Ælfric Wudu, 1281–1336." Most name the town's own dead,
+with their years. About one stone in ten names one of your own past characters, if any have died:
+"Here lies Brakka the dwarf, killed by a kobold in Fyrdelf 3, The Ascmearc." Every character who
+dies goes into the graveyard, the same list that names
+[statues](creature-tricks.md#warning-signs). Each of your dead is on one stone at most.
+
+The sexton, **Old Dudda**, walks his rounds of the stones. He will [talk](npcs.md), grimly, but
+has nothing to sell and nothing to ask of you. Like the town, Līctūn has no
+[stairs](terrain.md#stairs); walk off its edge to leave.
+
 ### The dungeons
 
 A little cave, **[Lytelscræf](dungeons.md#the-dungeons)**, opens two cells from the pass where you
@@ -123,6 +140,7 @@ kind. Creatures keep their plain English names.
 | Fyrbeorg | *fȳr* + *beorg* | the fire mountain | the volcano |
 | Ūtgang | *ūtgang* "going out, exit" | the way out | the way up from the drake's deep |
 | Holtwīc | *holt* "wood" + *wīc* "dwelling" | the dwelling at the wood | the village at the north road's end |
+| Līctūn | *līc* "body, corpse" + *tūn* "enclosure" | the corpse-yard | Cēaptūn's churchyard |
 | Ælfhām | *ælf* "elf" + *hām* "home" | the elves' home | the fey hall under the mound |
 | Wyrtholm | *wyrt* "herb, root" + *holm* "islet" | the herb islet | Mother Sallow's lair |
 | Wulfeshol | *wulfes* "wolf's" + *hol* "hole, den" | the wolf's hole | Black Wystan's lair |
@@ -142,6 +160,7 @@ kind. Creatures keep their plain English names.
 | Godgifu | *god* + *gifu* "gift" | | the innkeeper |
 | Wynflæd | *wynn* "joy" + *flǣd* "beauty" | | the wise-woman of Holtwīc |
 | Ælfrun | *ælf* "elf" + *rūn* "secret, counsel" | | the girl the fair folk took |
+| Dudda | an old short name, a commoner's | | the sexton of Līctūn |
 
 The guild is younger than the town, so its names are Middle English, not Old. Its master, Wat
 One-Eye, is a commoner, called by a short name and a byname. The guild's [ranks](guild.md#ranks)

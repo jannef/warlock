@@ -66,7 +66,7 @@ Your own spells that harm an area hurt your allies in it too.
 {{#include generated/summon-spells.md}}
 
 "Learning" is what the spell adds to the difficulty of
-[learning it from its scroll](magic.md#learning-spells-from-scrolls). The calls are very hard to
+[learning it from its grimoire](magic.md#learning-spells-from-grimoires). The calls are very hard to
 learn, even for a caster well above their level.
 
 ### The risen

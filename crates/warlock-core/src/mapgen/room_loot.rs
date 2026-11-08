@@ -44,6 +44,7 @@ pub(super) fn fill(template: &mut LevelTemplate, content: &Content, seed: u64, p
             let Some(base) = loot::base_in(content, &mut rng, &[room_loot.class], level) else {
                 break;
             };
+            let base = content.grimoire_or(&mut rng, base);
             let stack = loot::make_as(
                 content,
                 &mut rng,

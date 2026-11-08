@@ -77,8 +77,10 @@ jerkin and iron-shod boots, a kobold's patched smock and footwraps.
   [witch](classes.md#witch) 1d3, a [priest](classes.md#priest), [druid](classes.md#druid), or
   [ranger](classes.md#ranger) 1d2, a [bard](classes.md#bard) 1d4 (the table above says the same).
   Each is the scroll of a spell of [spell level](magic.md#spell-levels) 0 to 9, every such spell as
-  likely as any other, so two may be the same. Read one, or
-  [study](magic.md#learning-spells-from-scrolls) it to learn its spell.
+  likely as any other, so two may be the same. Read one to cast its spell.
+- **Grimoires.** Every spell scroll your kit gives you, a fixed one or a random one, is that
+  spell's [grimoire](magic.md#learning-spells-from-grimoires) instead one time in ten, scroll by scroll. Read it to learn the spell
+  for good.
 - **Scrolls and potions you know.** You know every scroll, [potion](potions.md), wand, and rod you
   set out with, whatever you start with, by its true name from the first turn ("a scroll of magic
   missile", never an [unknown label](scrolls.md#unknown-scrolls)). So you know every other of its

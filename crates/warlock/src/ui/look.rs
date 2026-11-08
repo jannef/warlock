@@ -20,9 +20,11 @@ pub const CURSOR_BG: Rgb = Rgb::new(0xe0, 0xc0, 0x70);
 /// One line describing what the player knows about `p`: who is there, what lies there (as seen
 /// or remembered), on what (a known trap on its terrain: "on a pit on stone floor"), in which
 /// special room (once they have been in it), and what was heard there. Blood they know of there
-/// reads before the terrain ("on blood-stained stone floor") if `blood` is shown. A named place
+/// reads before the terrain ("on blood-stained stone floor"), and char before that ("on charred
+/// stone floor"), if `blood` is shown. A named place
 /// with a note adds it after: "A mountain pass, Beorggeat. The way you came; snow has closed it
-/// behind you."; so does terrain with a description (a forgotten altar's).
+/// behind you."; so does terrain with a description (a forgotten altar's), and then a
+/// gravestone's inscription.
 pub fn describe(view: &PerceptionView<'_>, p: Pos, blood: bool) -> String {
     let text = describe_cell(view, p, blood);
     let text = match view.place(p).and_then(|place| place.note.as_deref()) {
@@ -41,8 +43,14 @@ pub fn describe(view: &PerceptionView<'_>, p: Pos, blood: bool) -> String {
         Some(band) => Some(band.description.as_str()),
         None => terrain.and_then(|t| content.terrain(t).description.as_deref()),
     };
-    match described {
+    let text = match described {
         Some(description) => format!("{text} {description}"),
+        None => text,
+    };
+    // A gravestone's inscription last (spec §7 "Graves"): "A gravestone. Here lies Ælfric Wudu,
+    // 1381–1427."
+    match view.epitaph(p) {
+        Some(epitaph) => format!("{text} {epitaph}"),
         None => text,
     }
 }
@@ -136,6 +144,11 @@ fn describe_cell(view: &PerceptionView<'_>, p: Pos, blood: bool) -> String {
         let name = match view.blood(p).filter(|_| blood) {
             Some(stain) => format!("{} {def_name}", stain.word(!def.transparent)),
             None => def_name,
+        };
+        // Char reads before the blood: "charred blood-stained stone floor".
+        let name = match view.scorch(p).filter(|_| blood) {
+            Some(char) => format!("{} {name}", warlock_core::scorch::word(char)),
+            None => name,
         };
         match view.leads_to(p) {
             Some(to) => format!("{name}, leading to {to}"),
@@ -531,6 +544,27 @@ mod tests {
         assert_eq!(
             describe(&w.perception(), pass, true),
             "A mountain pass, Beorggeat. The way you came; snow has closed it behind you."
+        );
+    }
+
+    #[test]
+    fn a_gravestone_reads_its_inscription() {
+        // Līctūn, Cēaptūn's churchyard (spec §7 "Graves"): four cells down the south road.
+        let content = Arc::new(Content::builtin().expect("content"));
+        let mut w = World::new(content, "ascmearc", None).expect("the Ascmearc");
+        let walk = [(Dir::E, 6), (Dir::S, 4), (Dir::E, 1)];
+        for (dir, n) in walk {
+            for _ in 0..n {
+                w.apply(&Action::Move(dir));
+            }
+        }
+        w.apply(&Action::Descend);
+        assert_eq!(w.perception().level_id(), "lictun");
+        let stone = Pos::new(7, 19);
+        let cut = w.ground_truth().0.graves()[&stone].clone();
+        assert_eq!(
+            describe(&w.perception(), stone, true),
+            format!("A gravestone. {cut}")
         );
     }
 

@@ -80,6 +80,10 @@ pub(super) struct TerrainSpec {
     /// terrain, solid but seen past, breaking (`hardness`), with a `sturdiness`.
     #[serde(default)]
     pub statue: bool,
+    /// A gravestone (spec §7 "Graves"; `world/graves.rs`): its level's `graves` cut an
+    /// inscription in it, which look mode reads.
+    #[serde(default)]
+    pub grave: bool,
     pub stairs: Option<StairsDir>,
     /// Light preset the terrain emits (torch sconce, glowing fungus, rune). Must be transparent.
     pub light: Option<String>,
@@ -240,6 +244,9 @@ pub struct TerrainDef {
     /// kick breaks it against as digging would ([`crate::door::kick_breaks`]); what it held is
     /// per-cell state (`LevelState::statues`). `None`: no statue.
     pub statue: Option<u8>,
+    /// Presentation-only: a gravestone (spec §7 "Graves"), which its level's `graves` cut an
+    /// inscription in as the level is made (`world/graves.rs`).
+    pub grave: bool,
     pub stairs: Option<StairsDir>,
     /// Light this terrain emits, if any.
     pub light: Option<LightId>,

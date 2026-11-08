@@ -1,5 +1,5 @@
-# A scroll of charnel burst (spec §8 "Scrolls", "Spells"): read it (`r`) at a corpse you see, and
-# it casts Charnel burst, free of mana; study it (`L`), and you may learn the spell for good.
+# A scroll of charnel burst (spec §8 "Scrolls", "Spells"): read it (`r`) at a corpse you see, and it
+# casts Charnel burst, free of mana; its grimoire teaches the spell for good.
 [[object]]
 id = "scroll_of_charnel_burst"
 name = "scroll of charnel burst"

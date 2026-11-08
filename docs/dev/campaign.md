@@ -226,6 +226,30 @@ peace, the wise-woman's name and topics with no reveal, the hidden mound until `
 and the way down, the three floors and the moss bed on the third, the view snapshot
 `holtwic_start`, a replay).
 
+## Līctūn, Cēaptūn's churchyard (#1258)
+
+`campaigns/ascmearc/levels/lictun.toml` (46×25, `kind = "outdoor"`, `item_level = 1`, no
+danger, no shop), entered from the overworld's `g` (19, 32), beside the south road four cells
+out of Cēaptūn (overworld terrain `graveyard`, `†`), arriving on the road outside the gate (its
+`@`, (2, 12)), and, with no stairs, left by its edge back to that cell. A `drystone_wall` (new,
+shared: stone, seen past, not walked through) with a `gate_open` lych-gate on the road; fifty
+`gravestone`s (new, shared: `grave = true`, `∩` with a cross now and then by `variants`) in four
+rows of twelve and two beside the chapel; yews (`tree`) in the corners; a little stone chapel
+in the middle (a door between two sconces, stools for pews, the altar between two lamps). The
+level's `[graves]` table gives the stones their words: given names and bynames of Cēaptūn's
+folk (Old and Middle English), seven epitaphs with `{name}`, `{born}`, `{died}`, the `fallen`
+words (`Here lies {name}, {death}.`), `died = [1, 150]`, `age = [1, 80]` (`world/graves.rs`,
+spec §7 "Graves"). The keeper is the campaign creature type `sexton`
+(`data/creatures/sexton.toml`), npc `dudda`, **Old Dudda**, on a `route` round the chapel
+(`E30 S11 W30 N11`); his words are `data/dialogue/lictun.toml`: greetings, nine one-liners and
+five mutters ("grumbles") in the commoner register, no topic, no service, no quest. No dev
+scenario: tests and captures walk from the Ascmearc's start (`move:E*6 move:S*4 move:E
+descend`). Tests: `world/lictun_tests.rs` (the way in and out, the sexton alone and at peace,
+his line, fifty stones each cut, one in ten for the graveyard and never twice, a stranger's
+stone the same under any graveyard, the hash, a graveyard given late, a save, the view
+snapshot `lictun_arrival`, a replay verified without the graveyard), `ui/look.rs`
+(`a_gravestone_reads_its_inscription`).
+
 ## The wiki (`xtask/src/wiki/order.rs::campaigns`)
 
 The wiki describes the campaigns of kind `campaign` (while there is none, every campaign): the

@@ -66,8 +66,9 @@ to open, read keys for, or draw one:
   `MenuChoice`, or `Act(Action)`: close and apply a gameplay action, e.g. `pickup:ac`,
   `equip:body:b`; the screens beneath stay, and `screens::refresh`, after `SimSet`, shows the
   equipment screen the result, as in ADOM, and reads every open object list again
-  (`ObjectScreen::refresh`: the study list stays beneath the dialog that studies, and a scroll
-  used up moves the stacks after it, so a row kept from before would name another stack, #591));
+  (`ObjectScreen::refresh`: the read list stays beneath the dialog that reads a grimoire, and a
+  scroll used up moves the stacks after it, so a row kept from before would name another stack,
+  #591));
   otherwise
   it is a gameplay command in the current `InputMode`. Opens and closes apply at once, so the next
   press in the same frame goes to the new top; menu choices (start, resume, save-and-quit to menu,
@@ -288,10 +289,10 @@ to open, read keys for, or draw one:
 
 Key commands `,`/`;` (pick up: one stack at once, else the `PickUp` screen), `d` (`Drop`: the inventory in its drop mode, #1196; `ObjectScreen::dropping`, Esc closes it; the inventory's own fixed `D`, upper case so it names no stack (letters are `a` to `z` down a page) and not Tab (a page key), turns the mode on in place, where Esc turns it off again with nothing dropped and the marks gone; the mode shows the title "Inventory: drop", no page tabs (the info-page keys do nothing there: `Screen::name` calls it `Drop`, no page), and marks, Enter dropping the marked stacks as one `Action::Drop`, which in a shop the sale dialog takes over as before),
 `I` (`Inventory` screen), `i` (`Equipment` screen), `@` (`Character` screen), `W` (`WeaponSkills`
-screen), `v` (`KeyCommand::Messages`: the `Messages` screen), `r` (`Read` screen, `KeyCommand::Read`: a basic command, not an ability), `L` (`Study` screen,
-`KeyCommand::Study`, next to Read: `ObjectList::Study` from `PerceptionView::studies`, each row
-marked with its spell and the chance in words, a pick asking in the one dialog before
-`Action::Study`), `p`
+screen), `v` (`KeyCommand::Messages`: the `Messages` screen), `r` (`Read` screen, `KeyCommand::Read`: a basic command, not an ability; the scrolls and the
+grimoires carried, a grimoire in `PerceptionView::studies` marked with the chance in words and
+asking in the one dialog before its `Action::Read`; the Study command, `L`, and its list are gone
+since #1260), `p`
 (`KeyCommand::Pay`), `a` (`KeyCommand::Abilities`: the `Abilities` screen), `X`
 (`KeyCommand::RepeatAbility`), bash (`KeyCommand::Bash`, unbound), disarm
 (`KeyCommand::Disarm`, unbound), picking a lock (`KeyCommand::PickLock`, unbound), steal

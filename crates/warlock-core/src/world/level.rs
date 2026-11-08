@@ -10,8 +10,8 @@ use crate::blood::{Spatter, Stain};
 use crate::chest::Chest;
 use crate::color::Rgb;
 use crate::content::{
-    Content, EdgeExit, Flow, Here, HiddenLocation, LevelKind, LevelTemplate, LightId, Place,
-    RoomEffectId, Secret, SpecialRoom, StairsLink, TerrainDef, TerrainId, Trap, TrapId,
+    CharColors, Content, EdgeExit, Flow, Here, HiddenLocation, LevelKind, LevelTemplate, LightId,
+    Place, RoomEffectId, Secret, SpecialRoom, StairsLink, TerrainDef, TerrainId, Trap, TrapId,
 };
 use crate::door::Lock;
 use crate::geom::Pos;
@@ -19,6 +19,7 @@ use crate::grid::Grid;
 use crate::ice::Ice;
 use crate::light::Light;
 use crate::object::Stack;
+use crate::scorch::{self, Burn};
 use crate::temperature::{self, Temperature};
 use crate::time::GameTime;
 use serde::{Deserialize, Serialize};
@@ -89,6 +90,15 @@ pub struct LevelState {
     /// sees.
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty", with = "by_pos")]
     pub(crate) statues: BTreeMap<Pos, super::statue::Statue>,
+    /// What is cut in its gravestones, by position (spec §7 "Graves"; `world/graves.rs`): one
+    /// inscription on every grave terrain cell, when the level has words for them. Decoration,
+    /// read by no rule and left out of the state hash; the player reads one in look mode.
+    #[serde(
+        default,
+        skip_serializing_if = "super::hash::unhashed_map",
+        with = "by_pos"
+    )]
+    pub(crate) graves: BTreeMap<Pos, String>,
     /// Secret doors not yet found, by position (spec §8 "Searching"): the cell's terrain is the
     /// wall each looks like; found, it becomes its door and is gone from here. Ground truth.
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty", with = "by_pos")]
@@ -113,6 +123,13 @@ pub struct LevelState {
     /// Blood as the player last saw it, by position (like remembered piles).
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty", with = "by_pos")]
     pub(crate) blood_memory: BTreeMap<Pos, Stain>,
+    /// Char on cells, by position (spec §8 "Blood", [`crate::scorch`]). Presentation-only: no
+    /// rule reads it.
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty", with = "by_pos")]
+    pub(crate) scorch: BTreeMap<Pos, Stain>,
+    /// Char as the player last saw it, by position (as blood's).
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty", with = "by_pos")]
+    pub(crate) scorch_memory: BTreeMap<Pos, Stain>,
     /// Walls dug into and still standing, by position (spec §8 "Digging"): the work done on each,
     /// in [`super::dig::WORK_SCALE`]ths of the work its hardness counts.
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty", with = "by_pos")]
@@ -200,6 +217,7 @@ impl LevelState {
             wedged: BTreeMap::new(),
             chests: template.chests.clone(),
             statues: template.statues.clone(),
+            graves: BTreeMap::new(),
             secrets: template.secrets.clone(),
             hidden: template.hidden.clone(),
             // A hand-made level's places are read from its template in `Content`.
@@ -210,6 +228,8 @@ impl LevelState {
             hollows: BTreeSet::new(),
             blood: BTreeMap::new(),
             blood_memory: BTreeMap::new(),
+            scorch: BTreeMap::new(),
+            scorch_memory: BTreeMap::new(),
             dug: BTreeMap::new(),
             rooms: template.rooms.clone(),
             pervading: template.pervading,
@@ -309,6 +329,11 @@ impl LevelState {
         &self.statues
     }
 
+    /// What is cut in its gravestones, by position (spec §7 "Graves"; `world/graves.rs`).
+    pub fn graves(&self) -> &BTreeMap<Pos, String> {
+        &self.graves
+    }
+
     /// The secret door at `p`, if one is there and not yet found (ground truth: it looks like
     /// the wall around it). Only reachable through [`crate::World::ground_truth`] outside the
     /// rules, **for developer tools only**.
@@ -346,6 +371,24 @@ impl LevelState {
             .entry(at)
             .and_modify(|s| s.add(amount, color, now, face))
             .or_insert_with(|| Stain::new(amount, color, now, face));
+    }
+
+    /// Char of `colors` lands here at `now` (spec §8 "Blood", [`crate::scorch`]): on a cell whose
+    /// terrain holds stains, it adds to the char there; water, lava, and the like take none.
+    pub(crate) fn char(
+        &mut self,
+        content: &Content,
+        burn: Burn,
+        colors: CharColors,
+        now: GameTime,
+    ) {
+        let holds = (self.terrain.get(burn.at)).is_some_and(|t| content.terrain(*t).stains);
+        if !holds || burn.amount == 0 {
+            return;
+        }
+        let old = self.scorch.get(&burn.at).copied();
+        self.scorch
+            .insert(burn.at, scorch::add(old, burn, colors, now));
     }
 
     /// Replaces the pile at `p`; an empty pile removes it.

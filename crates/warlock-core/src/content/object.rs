@@ -91,7 +91,7 @@ use super::scroll::{ReadSpec, Reading};
 use super::slot::SlotDef;
 use super::wand::{Wand, WandSpec};
 use super::weapon_skill::{WeaponSkillId, WeaponSkillTable};
-use super::{Content, ContentError, CreatureId, DamageTypeId};
+use super::{Content, ContentError, CreatureId, DamageTypeId, SpellId};
 use crate::color::Rgb;
 use crate::combat::{Attack, DEFAULT_CRIT, DEFAULT_THREAT};
 use crate::damage::{Kinds, Rider};
@@ -428,6 +428,9 @@ pub struct ObjectDef {
     pub corpse: Option<CreatureId>,
     /// What reading it does, if it is a scroll (spec §8 "Scrolls").
     pub read: Option<Reading>,
+    /// The spell it teaches, if it is a grimoire (spec §8 "Spells": "Learning";
+    /// [`super::grimoire`]): read, it is a study of that spell. Generated, never written.
+    pub grimoire: Option<SpellId>,
     /// The spell it holds, its charges, and its rungs, if it is a wand (spec §8 "Magic
     /// items": "Wands").
     pub wand: Option<Wand>,
@@ -532,6 +535,7 @@ impl ObjectDef {
             cures: Vec::new(),
             corpse: Some(id),
             read: None,
+            grimoire: None,
             wand: None,
             rod: None,
             drink: None,
@@ -670,6 +674,12 @@ pub fn article(noun: &str) -> &'static str {
 }
 
 impl ObjectSpec {
+    /// Whether it is a scroll of a spell (its `read` of kind `spell`): what a grimoire is
+    /// generated for ([`super::grimoire`]).
+    pub(super) fn casts_spell(&self) -> bool {
+        self.read.as_ref().is_some_and(ReadSpec::casts)
+    }
+
     /// Checks the definition and resolves its class, parts, light, and weapon skill;
     /// `classes` are the item classes, `parts` resolves its `materials` ([`part::resolve`]),
     /// `slots` are where things may be worn or wielded, `skills` the weapon skills. Returns the
@@ -904,6 +914,7 @@ impl ObjectSpec {
             cures: self.cures,
             corpse: None,
             read,
+            grimoire: None,
             wand,
             rod,
             drink,
@@ -1317,6 +1328,7 @@ mod tests {
             cures: Vec::new(),
             corpse: None,
             read: None,
+            grimoire: None,
             wand: None,
             rod: None,
             drink: None,

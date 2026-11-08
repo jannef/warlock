@@ -267,10 +267,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
   items": a branch level's depth, a hand-made level's `item_level`), "You gain 10 experience for
   finding your way here." as the turn is perceived; the level a run starts on, the overworld, and
   local areas give none, so walking the land is worth nothing. A level is new when this arrival
-  made its state (`World::travel`), so arrivals need no memory. **Learning a spell** by study
-  (or a lucky mishap's insight; never one a class, race, talent, or dev action hands out) gives
+  made its state (`World::travel`), so arrivals need no memory. **Learning a spell** from its
+  grimoire (or a lucky mishap's insight; never one a class, race, talent, or dev action hands out) gives
   `[spell] per_level` (5) × the spell's level (a level-0 spell counts as 1), once, as the spell
-  joins the known set: "You gain 55 experience for learning Fireball." A failed study gives
+  joins the known set: "You gain 55 experience for learning Fireball." A failed reading gives
   nothing. A level
   gained says "You feel more experienced." and "Welcome to level N." (once per kill, naming the
   last level; after the attack's own messages, or as the turn is perceived for a creature that

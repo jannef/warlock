@@ -5,22 +5,22 @@ expression: words
 [
     (
         Fire,
-        "A stone floor wreathed in fire.",
+        "A scorched stone floor wreathed in fire.",
     ),
     (
         Fouled,
-        "A stone floor under a foul reek.",
+        "A scorched stone floor under a foul reek.",
     ),
     (
         Slick,
-        "A stone floor slick underfoot.",
+        "A scorched stone floor slick underfoot.",
     ),
     (
         Dark,
-        "You remember a stone floor here, slick underfoot.",
+        "You remember a scorched stone floor here, slick underfoot.",
     ),
     (
         Smoke,
-        "A stone floor in thick smoke.",
+        "A scorched stone floor in thick smoke.",
     ),
 ]

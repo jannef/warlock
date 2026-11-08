@@ -1,7 +1,7 @@
-# A scroll of lightning (spec §8 "Scrolls", "Spells"): read it (`r`) and aim, and it casts
-# Lightning bolt, free of mana, two rungs up its ladder (4d6; the spell scaling design §7.4): a
-# bolt runs from you through the cell aimed at and on, striking everyone on its line. Study it
-# (`L`), and you may learn the spell for good.
+# A scroll of lightning (spec §8 "Scrolls", "Spells"): read it (`r`) and aim, and it casts Lightning
+# bolt, free of mana, two rungs up its ladder (4d6; the spell scaling design §7.4): a bolt runs from
+# you through the cell aimed at and on, striking everyone on its line. Its grimoire teaches the
+# spell for good.
 [[object]]
 id = "scroll_of_lightning"
 name = "scroll of lightning"

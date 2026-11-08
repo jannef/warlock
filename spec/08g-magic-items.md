@@ -286,10 +286,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
     (a chosen character of any class knows their kit's scrolls, a caster's random ones too), or by the dev `identify` (and F8). Reading an
     unknown scroll works as reading a known one does (a gamble: what it does is not known until
     it is done); a label changes no outcome, only names. A scroll that cannot be read (a
-    sealed letter) has no label and is known on sight. **Identified is not learned**: a spell
-    scroll whose type is identified shows by its name and can be studied (§8 "Spells":
-    "Learning") by anyone who has not learned its spell; study is refused only for a scroll still under its label and for
-    a spell already learned. `Lore::is_identified(object)` is what the study list asks.
+    sealed letter) has no label and is known on sight. **Identified is not learned**: no
+    scroll teaches its spell, known or not; the spell's grimoire does (§8 "Spells": "Learning"),
+    and a grimoire is never labelled: its title is plain words, known on sight.
   - **Scrolls of spells** (#397): every spell of `data/spells/` comes on a scroll of its own
     (`read` of kind `spell`), which casts it through the one cast path (§8 "Spells") at its
     scroll level, free of mana: aimed as the spell is (`read:b:12,5`), or at once for a spell on
@@ -321,7 +320,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     item's affixes, a labelled scroll's, wand's, or rod's type, or a wand's charges
     (`World::identify`: "This is a Sharp dagger of the Lynx!"); a stronger "identify all" can
     come later. It is a scroll of the spell Identify (#592, §8 "Spells"): read, it casts it free
-    of mana through the one cast path (`read:b:c`); studied, it teaches it. It is the commonest scroll in loot (`frequency` 300 against the spell scrolls'
+    of mana through the one cast path (`read:b:c`); the grimoire of identify teaches it. It is the commonest scroll in loot (`frequency` 300 against the spell scrolls'
     20 to 60, by tier) and a regular general-store item.
   - **The scroll of restoration** (#887; the priest design §11) casts no spell (`read` of kind
     `cleanse`, `mends` and `restores`; `world/restore.rs`): read on oneself (`read:b`; refused,
@@ -330,25 +329,24 @@ developer notes (CLAUDE.md, `docs/dev/`).
     `World::restore_drained`), a disease showing or not; each stat that comes back is said ("You
     feel your strength return."). It also ends Stiffening (every status `cured_by`
     `restoration`, its end line said: "Your limbs move freely again."). With none of these to
-    mend or end it is refused, takes no time, and keeps the scroll ("There is nothing to restore."). It teaches nothing, so study refuses it
-    ("There is no spell in a scroll of restoration to learn."). Rare and dear: item level 8, frequency 10, 300 gold.
+    mend or end it is refused, takes no time, and keeps the scroll ("There is nothing to restore."). No spell is behind it, so it has no
+    grimoire. Rare and dear: item level 8, frequency 10, 300 gold.
   - **Blank scrolls** (`blank_scroll`; #906, the witch and wizard design §6.1): paper with
     nothing on it (the scrolls class, no `read`: never labelled, known on sight). Read, it is
-    refused, takes no time, and keeps the scroll ("There is nothing written on it."); there is
-    nothing in it to study. Loot and general-store stock as the scrolls are (item level 1,
+    refused, takes no time, and keeps the scroll ("There is nothing written on it."). Loot and general-store stock as the scrolls are (item level 1,
     frequency 30, 15 gold).
   - **Writing scrolls** (`world/scribe.rs`): the wizard's **Scribe** (§8 "Class abilities", at
     12; `Action::Scribe`, replay text `scribe:SPELL`, `scribe:fireball`) writes a scroll of a
     spell the player knows on the first blank scroll they carry. The price is the talent's
     `mana_times` (3) times the spell's mana before Frugal caster (`Actor::spell_base`: the cost
     table with the armour worn, School focus, Empower, Archmage), spent through the one mana
-    spend (Frugal caster's cut, the marks); the time is a study's of the spell (`study.toml`'s
+    spend (Frugal caster's cut, the marks); the time is a study's of the spell (reading its grimoire) (`study.toml`'s
     `turns_base + turns_per_level × level` turns of the `scribe` action; Quick study's cut not
     applied), turn after turn like a study, stopping early as one does ("You stop writing.":
     the time lost, the blank and the mana kept). The mana is spent and the blank used up only
     at the end: "You write a scroll of fireball." The scroll is the spell's ordinary
     `scroll_of_ID` (`Content::scroll_of`), at its own rung, its type known (the writer knows
-    what he wrote); it reads, studies, and sells as any (shops buy it at the usual offer).
+    what he wrote); it reads and sells as any (shops buy it at the usual offer).
     Refused, no time or mana, without the ability, for a spell not known or no scroll holds,
     with no blank scroll ("You have nothing to write on."), while a status blocks casting
     (Raging), or short of the price ("You lack the mana to write it."); nothing about light or
@@ -358,8 +356,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
     and buy the scrolls class, and a generated one always lays out scrolls of identify, §7
     "Shops"; Cēaptūn's general store, a town store, has three), and the trap hall beside its arrival (two each of fireball,
     lightning, and frost, three scrolls of identify, and an unidentified dagger). The showcase
-    has none. Spellcraft (§8 "Skills") helps studying a scroll (§8 "Spells": "Learning") and
-    reading one; Decipher script helps reading one, not studying it.
+    has none. Spellcraft (§8 "Skills") helps learning from a grimoire (§8 "Spells": "Learning")
+    and reading a scroll; Decipher script helps reading a scroll, not learning from a grimoire.
+    A spell scroll made at random is its grimoire one time in ten (§8 "Spells": "Learning").
 
 - **Wands** (`warlock-core/src/world/zap.rs`, data `wand` in `data/objects/` §7, `content/wand.rs`;
   the magic design §9; #398): objects (`-`, the wands class, one at a time) whose `[object.wand]`

@@ -58,12 +58,12 @@ eat = 1000
 # item. The scroll is used up, unless the reader fails to make it out (decipher.toml): the time is
 # spent all the same.
 read = 1000
-# A turn of studying a spell from a scroll (spec §8 "Spells"): a study takes study.toml's
+# A turn of reading a grimoire to learn its spell (spec §8 "Spells"): a study takes study.toml's
 # turns_base of them and turns_per_level more for each level of the spell (100 and 20: 10
 # minutes and 2 a level).
 study = 1000
 # A turn of writing a scroll (the wizard's Scribe ability; spec §8 "Scrolls"): a scroll takes as
-# many turns as a study of its spell would (study.toml's turns_base and turns_per_level).
+# many turns as reading its spell's grimoire would (study.toml's turns_base and turns_per_level).
 scribe = 1000
 # A turn of calling a familiar (the witch's Call familiar; spec §8 "Class abilities"): the ritual
 # takes familiars.toml's call_turns of these.

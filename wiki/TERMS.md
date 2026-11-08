@@ -214,6 +214,7 @@ above.
 | Hit points, regeneration | `hit-points.md#hit-points`, `healing.md#how-fast` |
 | Death, permadeath | `hit-points.md#death`, `saving.md` |
 | Blood, stains | `hit-points.md#blood` |
+| Char, scorch marks | `hit-points.md#char` |
 | Ranged combat, shooting, throwing | `ranged.md#shooting-and-throwing` |
 | Missile weapon, launcher, readied missiles | `ranged.md#getting-ready` |
 | Shot distance, long range, a shot from beside the target | `ranged.md#distance` |
@@ -242,8 +243,8 @@ above.
 | Burning | `status-effects.md#burning` |
 | Corroded | `status-effects.md#corroded` |
 | How a spell resolves (attack, auto, area, touch) | `spellcasting.md#how-a-spell-finds-its-target` |
-| Mishap | `magic.md#learning-spells-from-scrolls` |
-| Studying a spell from a scroll, overreach | `magic.md#learning-spells-from-scrolls` |
+| Mishap | `magic.md#learning-spells-from-grimoires` |
+| Learning a spell from a grimoire, overreach | `magic.md#learning-spells-from-grimoires` |
 | Wand, rod, charges | `wands-and-rods.md#wands`, `wands-and-rods.md#rods` |
 | Spell circle, buff, hex (as seen on a creature) | `spell-circles.md#spell-circles` |
 | Resource (Rage, Ki, Focus, …) | `resources.md` (a resource: its row; Rage: `resources.md#rage`) |

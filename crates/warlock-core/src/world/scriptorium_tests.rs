@@ -137,7 +137,15 @@ fn a_check_inside_marks_decipher_script_and_a_study_does_not() {
     // Spellcraft 40: learning 6, Frost's level.
     let spellcraft = skill(&w, "spellcraft");
     w.player_mut().skills.add(spellcraft, 40);
-    run(&mut w, "study:c");
+    let grimoire = w.content.object_id("grimoire_of_frost").expect("object");
+    w.player_mut()
+        .inventory
+        .push(crate::object::Stack::new(grimoire, 1));
+    let at = w.state.player().inventory.len() - 1;
+    run(
+        &mut w,
+        &format!("read:{}", crate::action::position_text(at)),
+    );
     assert!(!w.state.player().spells.is_empty(), "frost learned");
     assert_eq!(
         marks(&w, "decipher_script"),

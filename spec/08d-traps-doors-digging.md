@@ -285,7 +285,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     `statue-names/<level id>`. Look mode then says "a statue of Brakka the dwarf, mouth open";
     the `truth` dump `statue (kobold, Brakka the dwarf) at (12, 5): empty`. The name is
     decoration: no rule reads it, and it and the run's list are out of the state hash, so a
-    replay verifies under any graveyard (`warlock-cli --fallen NAME:RACE,...` gives a run one).
+    replay verifies under any graveyard (`warlock-cli --fallen NAME:RACE:stone,...` gives a run
+    one; `:stone` marks the petrified).
   - **Leavings** (#1133, the dread design §9): a type's `leavings` are laid by the generator
     within a few cells of each one a population or a vault places: statues of the floor's own
     nobodies, holding nothing (the basilisk's), old webs that catch no one (`web`), acid-pitted

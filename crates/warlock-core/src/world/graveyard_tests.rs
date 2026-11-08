@@ -23,10 +23,13 @@ fn content() -> Arc<Content> {
     Arc::new(Content::load(&files).expect("test content is valid"))
 }
 
+/// One turned to stone: only these name statues.
 fn fallen(name: &str, race: &str) -> Fallen {
     Fallen {
         name: name.into(),
         race: race.into(),
+        petrified: true,
+        death: "Turned to stone".into(),
     }
 }
 
@@ -55,7 +58,13 @@ fn a_floor_s_statues_take_the_petrified_names_most_recent_first_never_twice() {
     let count = w.ground_truth().0.statues().len();
     let hash = w.state_hash();
     // Brakka twice: one statue of her only. Wynn is the oldest, left over on a small floor.
+    // Osk, the most recent, was not turned to stone: no statue of his (a gravestone's, #1258).
     let graveyard = vec![
+        Fallen {
+            petrified: false,
+            death: "Killed by a kobold".into(),
+            ..fallen("Osk", "halfling")
+        },
         fallen("Brakka", "dwarf"),
         fallen("Brakka", "dwarf"),
         fallen("Tamsin", "elf"),
@@ -70,6 +79,7 @@ fn a_floor_s_statues_take_the_petrified_names_most_recent_first_never_twice() {
         "{shown:?}"
     );
     assert!(named.contains(&&"Tamsin the elf".to_string()), "{shown:?}");
+    assert!(!named.iter().any(|n| n.starts_with("Osk")), "{shown:?}");
     if count >= 3 {
         assert!(named.contains(&&"Wynn the no_such_race".to_string()));
     }

@@ -146,18 +146,14 @@ pub enum Action {
     /// using it up: a spell scroll at the cell `target` names (it flies or runs there from the
     /// player, with the traps' rules), the scroll of identify on the inventory stack it names.
     /// Takes the time of `read`; refused (no time, the scroll kept) without a fitting target.
+    /// A grimoire (spec §8 "Spells": "Learning") is read with no target, and its reading is a
+    /// study of its spell (`world/learn.rs`): turn after turn of the `study` action, stopping
+    /// early like a rest; at the end, above the player's learning, a check decides whether they
+    /// learn it or a mishap befalls them. The grimoire is kept either way. Refused (no time) for
+    /// a spell already known, or without training in Spellcraft.
     Read {
         item: usize,
         target: Option<ReadTarget>,
-    },
-    /// Study one of inventory stack `item`, a scroll whose type the player knows, to learn the
-    /// spell it teaches for good (spec §8 "Spells"): turn after turn of the `study` action (by
-    /// the spell's level), stopping early like a rest (the scroll kept); at the end the scroll is
-    /// used up, and above the player's learning a check decides whether they learn it or a mishap
-    /// befalls them. Refused (no time) for a scroll that is not known or teaches nothing, or a
-    /// spell already known.
-    Study {
-        item: usize,
     },
     /// Write a scroll of `spell` (a spell's id), one the player knows, on the first blank scroll
     /// they carry (spec §8 "Scrolls": the wizard's Scribe, `scribe:fireball`): turn after turn of
@@ -940,7 +936,6 @@ impl fmt::Display for Action {
                     Some(ReadTarget::Item(i)) => write!(f, ":{}", position_text(*i)),
                 }
             }
-            Action::Study { item } => write!(f, "study:{}", position_text(*item)),
             Action::Scribe { spell } => write!(f, "scribe:{spell}"),
             Action::Rest(Rest::For(d)) => write!(f, "rest:{d}"),
             Action::Rest(Rest::Dawn) => f.write_str("rest:dawn"),
@@ -1419,11 +1414,6 @@ impl FromStr for Action {
                     target,
                 })
             }
-            "study" => {
-                let usage = || "`study` needs a letter, e.g. `study:b`".to_string();
-                let item = arg.and_then(parse_position).ok_or_else(usage)?;
-                Ok(Action::Study { item })
-            }
             "scribe" => {
                 let usage = || "`scribe` needs a spell's id, e.g. `scribe:fireball`".to_string();
                 let spell = arg.filter(|s| {
@@ -1788,8 +1778,6 @@ mod tests {
                 item: 27,
                 target: Some(ReadTarget::Item(30)),
             },
-            Action::Study { item: 1 },
-            Action::Study { item: 30 },
             Action::Scribe {
                 spell: "fireball".into(),
             },
@@ -2184,9 +2172,6 @@ mod tests {
             "read:a:bc",
             "read:a:1,b",
             "read:a:1,2,3",
-            "study",
-            "study:",
-            "study:ab",
             "scribe",
             "scribe:",
             "scribe:fire-ball",

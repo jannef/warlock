@@ -16,6 +16,12 @@
 #              slashes you.", "You slash the kobold." (a weapon may name its own `verb`:
 #              "cleaves")
 #   unarmed    bare hands, kicks, and shield bashes do this kind (one type at most)
+#   blood      whether its harm draws blood (default true; a blow of two kinds draws it if the
+#              kind that struck does): fire sears, cold and lightning numb and burn, poison and
+#              the withering of life leave no wound to bleed
+#   char       the char it leaves on floors and walls where it burns, `{ light, heavy }`: its
+#              colour where a little has burned (soot) and where a cell is charred through,
+#              mixed between by how much has burned there (none: it leaves none)
 
 [[type]]
 id = "slashing"
@@ -44,18 +50,22 @@ id = "fire"
 name = "fire"
 verb = "burns"
 you = "burn"
+blood = false
+char = { light = "#3a2a1e", heavy = "#0c0a08" }
 
 [[type]]
 id = "cold"
 name = "cold"
 verb = "chills"
 you = "chill"
+blood = false
 
 [[type]]
 id = "electricity"
 name = "electricity"
 verb = "shocks"
 you = "shock"
+blood = false
 
 [[type]]
 id = "acid"
@@ -68,6 +78,7 @@ id = "poison"
 name = "poison"
 verb = "poisons"
 you = "poison"
+blood = false
 
 # Force (the magic design §6): raw magical force, a spell's (magic missile).
 [[type]]
@@ -82,3 +93,4 @@ id = "necrotic"
 name = "necrotic"
 verb = "withers"
 you = "wither"
+blood = false

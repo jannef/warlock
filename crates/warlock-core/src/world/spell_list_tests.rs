@@ -100,20 +100,15 @@ fn a_spell_scroll_casts_its_spell_free_of_mana_and_teaches_it() {
         said.iter().any(|m| m == "It is a scroll of magic missile."),
         "{said:?}"
     );
-    // Read, its type is known; it teaches its spell to whoever trained in Spellcraft studies it.
-    let spellcraft = w.content.skill_id("spellcraft").expect("skill");
-    w.player_mut().skills.add(spellcraft, 0);
+    // Its grimoire teaches its spell.
     let scroll = w
         .content
         .object_id("scroll_of_magic_missile")
         .expect("scroll");
-    let teaches = (w.content.object(scroll).read.as_ref()).and_then(Reading::teaches);
-    assert_eq!(teaches, w.content.spell_id("magic_missile"));
-    let studies = w.perception().studies();
-    assert!(
-        studies.iter().any(|s| Some(s.spell) == teaches),
-        "{studies:?}"
-    );
+    let casts = (w.content.object(scroll).read.as_ref()).and_then(Reading::spell);
+    assert_eq!(casts, w.content.spell_id("magic_missile"));
+    let grimoire = w.content.grimoires().of(scroll).expect("a grimoire");
+    assert_eq!(w.content.object(grimoire).grimoire, casts);
 }
 
 #[test]
@@ -184,7 +179,7 @@ fn every_spell_comes_on_one_scroll_and_every_scroll_names_a_spell() {
     for (i, spell) in content.spells().iter().enumerate() {
         let id = crate::content::SpellId(i as u16);
         let scrolls: Vec<&str> = (content.object_defs().iter())
-            .filter(|o| o.read.as_ref().and_then(Reading::teaches) == Some(id))
+            .filter(|o| o.read.as_ref().and_then(Reading::spell) == Some(id))
             .map(|o| o.id.as_str())
             .collect();
         assert_eq!(scrolls.len(), 1, "{}: {scrolls:?}", spell.id);
@@ -201,7 +196,7 @@ fn every_spell_comes_on_one_scroll_and_every_scroll_names_a_spell() {
     // The scroll of identify keeps its own loot (the commonest scroll, #592), whatever its level.
     let scrolls: Vec<(u8, u8, u32, &str)> = (content.object_defs().iter())
         .filter(|o| o.id != "scroll_of_identify")
-        .filter_map(|o| Some((o, content.spell(o.read.as_ref()?.teaches()?))))
+        .filter_map(|o| Some((o, content.spell(o.read.as_ref()?.spell()?))))
         .map(|(o, s)| (s.level, o.level, o.frequency, o.id.as_str()))
         .collect();
     for lower in &scrolls {

@@ -239,7 +239,7 @@ impl StatUse {
             StatUse::Found => "finding something hidden by searching",
             StatUse::Read => "reading a scroll",
             StatUse::Identified => "identifying an item",
-            StatUse::Study => "studying a spell from a scroll",
+            StatUse::Study => "learning a spell from a grimoire",
             StatUse::Scribe => "writing a scroll of a spell you know",
             StatUse::Discovered => "your first kill of a kind of creature",
             StatUse::Spell => {

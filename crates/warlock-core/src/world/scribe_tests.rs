@@ -207,8 +207,6 @@ fn a_blank_scroll_has_nothing_to_read() {
     assert!(!out.took_turn);
     assert_eq!(last(&w), "There is nothing written on it.");
     assert_eq!(count(&w, "blank_scroll"), 2);
-    // Nor is there anything in it to study.
-    assert!(!run(&mut w, "study:a")[0].took_turn);
 }
 
 #[test]
@@ -219,7 +217,7 @@ fn every_shipped_spell_has_a_scroll_to_write() {
         let id = &content.spell(spell).id;
         assert!(scroll.is_some(), "{id}");
         let read = scroll.and_then(|s| content.object(s).read.as_ref());
-        assert_eq!(read.and_then(Reading::teaches), Some(spell), "{id}");
+        assert_eq!(read.and_then(Reading::spell), Some(spell), "{id}");
     }
     assert!(content.blank_scroll().is_some());
 }

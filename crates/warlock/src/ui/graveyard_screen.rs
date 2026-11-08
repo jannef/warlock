@@ -63,12 +63,7 @@ impl Entry {
                 .map_or(fallen.prestige.as_str(), |p| p.name.as_str());
             what = format!("{what} and {prestige}");
         }
-        let cause = cause_words(fallen, content);
-        let death = if fallen.place.is_empty() {
-            format!("{cause}.")
-        } else {
-            format!("{cause} in {}.", fallen.place)
-        };
+        let death = format!("{}.", death_words(fallen, content));
         let name = if fallen.name.is_empty() {
             "Someone".to_string()
         } else {
@@ -100,6 +95,17 @@ impl Entry {
         let mut lines = wrap(&self.death, width - INDENT);
         lines.extend(self.died(clock));
         lines
+    }
+}
+
+/// What killed `fallen` and where, in words without a full stop: `Killed by a kobold in Fyrdelf
+/// 3, The Ascmearc`; this screen's line, and a gravestone's (`graveyard::GraveyardStore::dead`).
+pub(crate) fn death_words(fallen: &Fallen, content: &Content) -> String {
+    let cause = cause_words(fallen, content);
+    if fallen.place.is_empty() {
+        cause
+    } else {
+        format!("{cause} in {}", fallen.place)
     }
 }
 

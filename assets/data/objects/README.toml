@@ -178,10 +178,10 @@
 # Scrolls (spec §8 "Scrolls"; read with `r`):
 #   [object.read]  what reading it does (never on things worn, wielded, eaten, shot, or thrown);
 #              reading takes the `read` action (actions.toml) and uses one up. `kind = "spell"`:
-#              `spell`, a spell of spells/ it casts free of mana through the one cast path and
-#              teaches when studied, and `rungs` (default 0, the base; one past the spell's
+#              `spell`, a spell of spells/ it casts free of mana through the one cast path (its
+#              grimoire, ../grimoires.toml, teaches it), and `rungs` (default 0, the base; one past the spell's
 #              damage or heal ladder casts at its last), the rung it casts at, before the
-#              reader's Scroll adept. `kind = "cleanse"` (no spell, nothing to study; read on
+#              reader's Scroll adept. `kind = "cleanse"` (no spell, no grimoire; read on
 #              oneself): `mends = true`, every point of stat damage mends, and
 #              `restores = true`, every point drains took comes back (the scroll of
 #              restoration). A scroll may have `level` and `frequency`, as base items do: it

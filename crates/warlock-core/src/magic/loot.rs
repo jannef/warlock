@@ -7,7 +7,9 @@
 //!    (one draw, then the gem's draws: [`crate::gem::find`]), and that is all;
 //! 1. **the base item**: one draw among the objects that are loot (base items, with a `kind`,
 //!    and scrolls, which are never magic and so left out when the grade asks for magic or
-//!    better) whose `level` is at most the item level, weighted by their `frequency`;
+//!    better) whose `level` is at most the item level, weighted by their `frequency`; a scroll
+//!    of a spell is its grimoire instead by the grimoires' `chance` (one draw, a spell scroll's
+//!    only: [`Content::grimoire_or`]);
 //! 2. **the count**: ammunition comes in stacks of [`AMMO`] (one draw); anything else is one;
 //! 3. **the rarity**: one draw over the weights of `[rarity]` in `data/affixes.toml` (those below
 //!    the grade asked for left out); none for what is never magic (a scroll), which is normal;
@@ -207,7 +209,9 @@ fn drawn(
     (level, grade, luck): (u8, LootGrade, Luck),
     source: Source,
 ) -> Option<Stack> {
+    // A spell scroll may be its grimoire (spec §8 "Spells": "Learning"): one draw, a scroll's.
     let object = *pick_weighted(rng, bases)?;
+    let object = content.grimoire_or(rng, object);
     let count = if content.object(object).kind == Some(ItemKind::Ammo) {
         u32::try_from(rng.range(*AMMO.start(), *AMMO.end())).unwrap_or(1)
     } else {

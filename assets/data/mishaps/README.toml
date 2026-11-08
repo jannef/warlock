@@ -1,5 +1,5 @@
-# Mishaps (spec §8 "Spells", the magic design §4): what may befall a reader whose study of a
-# spell fails (study.toml). One `[[mishap]]` per file; a campaign's data/mishaps/ may add more.
+# Mishaps (spec §8 "Spells", the magic design §4): what may befall a reader of a grimoire who
+# fails to learn its spell (study.toml). One `[[mishap]]` per file; a campaign's data/mishaps/ may add more.
 #
 # Fields:
 #   id        the mishap's id

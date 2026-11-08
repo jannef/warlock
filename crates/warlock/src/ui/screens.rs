@@ -148,12 +148,10 @@ pub enum ScreenName {
     Throw,
     /// Choose what to eat (`E` in play): food lying here, then food in the pack.
     Eat,
-    /// Choose a scroll to read (`r` in play): a spell scroll is aimed next, the scroll of
-    /// identify asks what to read it on.
+    /// Choose a scroll or grimoire to read (`r` in play): a spell scroll is aimed next, the
+    /// scroll of identify asks what to read it on, a grimoire whose spell may be learned asks
+    /// first, with the chance in words.
     Read,
-    /// Choose a scroll to study (`L` in play, spec §8 "Spells"): the scrolls whose type is
-    /// known and whose spell is not; choosing one asks first, with the chance in words.
-    Study,
     /// Choose what to read the scroll of identify on: the unidentified stacks carried. It takes
     /// the place of the read list where that scroll was chosen (as `--screen`, the first stack's
     /// scroll).
@@ -219,7 +217,6 @@ impl ScreenName {
                 | ScreenName::Throw
                 | ScreenName::Eat
                 | ScreenName::Read
-                | ScreenName::Study
                 | ScreenName::Identify
                 | ScreenName::Temper
                 | ScreenName::Whittle
@@ -455,7 +452,6 @@ impl Screen {
             ScreenName::Throw => objects(ObjectList::Throw),
             ScreenName::Eat => objects(ObjectList::Eat),
             ScreenName::Read => objects(ObjectList::Read),
-            ScreenName::Study => objects(ObjectList::Study),
             ScreenName::Identify => objects(ObjectList::Identify(IdentifyBy::Scroll(
                 beneath.item.unwrap_or(0),
             ))),
@@ -496,7 +492,6 @@ impl Screen {
                 ObjectList::Throw => ScreenName::Throw,
                 ObjectList::Eat => ScreenName::Eat,
                 ObjectList::Read => ScreenName::Read,
-                ObjectList::Study => ScreenName::Study,
                 ObjectList::Identify(_) => ScreenName::Identify,
                 ObjectList::Temper => ScreenName::Temper,
                 ObjectList::Whittle => ScreenName::Whittle,
@@ -675,8 +670,8 @@ impl ScreenStack {
 
     /// Reads the run again into the screens that stay open while it changes: the equipment
     /// screen beneath a choice that was just done, and any object list, which names stacks by
-    /// position (the study list beneath the dialog that studied: the scroll used up moves the
-    /// stacks after it, #591).
+    /// position (the read list beneath the dialog that reads a grimoire: a scroll used up moves
+    /// the stacks after it, #591).
     fn refresh(&mut self, view: &PerceptionView<'_>) {
         for screen in &mut self.screens {
             match screen {
@@ -1197,8 +1192,9 @@ pub(super) fn apply_choice(
                 let (character, name) = (character.as_ref(), name.as_deref());
                 match Game::new_run(content, &screens.store, scenario, *seed, character, name) {
                     Ok(mut game) => {
-                        // The petrified dead name its statues (`graveyard.rs`).
-                        game.world.set_graveyard(screens.graveyard.petrified());
+                        // The dead name its statues and gravestones (`graveyard.rs`).
+                        let dead = screens.graveyard.dead(game.world.content());
+                        game.world.set_graveyard(dead);
                         commands.insert_resource(game);
                         screens.stack.clear();
                     }

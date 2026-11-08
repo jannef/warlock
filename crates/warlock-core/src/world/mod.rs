@@ -61,7 +61,8 @@
 //! Digging (`dig.rs`): walls that break give way to a digging tool, turn after turn like a rest,
 //! and to explosions stronger than they are hard; they become rubble.
 //! Blood (`bleed.rs`, [`crate::blood`]): big hits and kills stain the floor and the walls around
-//! the victim. Presentation state kept with the level; no rule reads it.
+//! the victim. Presentation state kept with the level; no rule reads it. Char (`sear.rs`,
+//! [`crate::scorch`]): fire scorches the floor and walls it burns, the same way.
 //! Status effects and healing (spec §8 "Status effects", "Healing", `status.rs`): big hits and
 //! criticals make their targets bleed, a giant rat's bite may poison; effects cost hit points
 //! and ease as the clock moves, slow healing, and can kill. Hit points come back with game
@@ -170,6 +171,7 @@ mod gear_condition_tests;
 mod gifts;
 mod glare;
 mod goodwill;
+mod graves;
 mod graveyard;
 #[cfg(test)]
 mod graveyard_tests;
@@ -234,6 +236,7 @@ mod rumour;
 mod sanctuary;
 mod schedule;
 mod scribe;
+mod sear;
 mod search;
 mod second_wind;
 mod service;
@@ -1507,7 +1510,6 @@ impl World {
             Action::Order(command) => return self.order(*command, events),
             Action::Eat(meal) => return self.eat(*meal, events),
             Action::Read { item, target } => return self.read(*item, *target, events),
-            Action::Study { item } => return self.start_study(*item),
             Action::Scribe { spell } => return self.start_scribe(spell),
             Action::Dig(dir) => return self.start_dig(*dir),
             Action::Search(_) if self.refused_afloat("You cannot search in deep water.") => {
@@ -1865,6 +1867,8 @@ mod layer_boss_tests;
 #[cfg(test)]
 mod learn_tests;
 #[cfg(test)]
+mod lictun_tests;
+#[cfg(test)]
 mod light_tests;
 #[cfg(test)]
 mod lockpick_tests;
@@ -1962,6 +1966,8 @@ mod scribe_tests;
 mod scriptorium_tests;
 #[cfg(test)]
 mod scroll_label_tests;
+#[cfg(test)]
+mod sear_tests;
 #[cfg(test)]
 mod search_tests;
 #[cfg(test)]

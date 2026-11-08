@@ -20,6 +20,7 @@
 //! **Blood** (spec §8 "Blood", [`crate::blood`]): a stain on an open cell is seen where objects
 //! are; one on a wall only when a stained face is seen (a visible open cell next to the wall on
 //! that side), so blood on the far side of a wall stays hidden. Blood is remembered like piles.
+//! Char ([`crate::scorch`]) is seen and remembered by the same rules.
 //!
 //! A cell is **visible** iff it is in line of sight within [`VIEW_RADIUS`] **and** its perceived
 //! light is at least the vision profile's threshold or it lies within the darkvision radius. The
@@ -147,9 +148,9 @@ pub struct OwnResource {
     pub max: u16,
 }
 
-/// A scroll the player could study (spec §8 "Spells"): one whose type they know, teaching a
-/// spell they do not know, with the chance in words ("easy", "a struggle", "far beyond you",
-/// or "certain"). Never the number.
+/// A grimoire the player could learn from (spec §8 "Spells": "Learning"): one teaching a spell
+/// they do not know, with the chance in words ("easy", "a struggle", "far beyond you", or
+/// "certain"). Never the number.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct OwnStudy {
     /// The inventory stack, by position.
@@ -534,6 +535,8 @@ pub(crate) struct Perception {
     sounds: Vec<PerceivedSound>,
     /// Cells whose blood the player sees, in position order.
     blood: Vec<Pos>,
+    /// Cells whose char the player sees, in position order (as blood).
+    scorch: Vec<Pos>,
     /// Cells where the player sees an image of a hall of mirrors (shown among `actors`).
     images: Vec<Pos>,
     /// Whether strong light dazzles the player's light-blind eyes (their race's `light_blind`).
@@ -1087,22 +1090,26 @@ impl Perception {
         actors.sort_by_key(|a| a.id);
         let images = images.into_iter().map(|(_, _, p)| p).collect();
 
-        // Blood: on an open cell in sight; on a wall, where a stained face is seen.
-        let blood = (level.blood.iter())
-            .filter(|(p, stain)| {
-                let p = **p;
-                if !is_opaque(p) {
-                    return sight.get(p) == Some(&Sight::Seen);
-                }
-                let faces = |d: Dir| stain.faces == 0 || stain.on_face(d);
-                sight.get(p).is_some_and(|s| *s != Sight::Hidden)
-                    && Dir::ALL.into_iter().filter(|d| faces(*d)).any(|d| {
-                        let q = p.step(d);
-                        sight.get(q) == Some(&Sight::Seen) && !is_opaque(q)
-                    })
-            })
-            .map(|(p, _)| *p)
-            .collect();
+        // Blood and char: on an open cell in sight; on a wall, where a stained face is seen.
+        let stained = |stains: &BTreeMap<Pos, Stain>| -> Vec<Pos> {
+            (stains.iter())
+                .filter(|(p, stain)| {
+                    let p = **p;
+                    if !is_opaque(p) {
+                        return sight.get(p) == Some(&Sight::Seen);
+                    }
+                    let faces = |d: Dir| stain.faces == 0 || stain.on_face(d);
+                    sight.get(p).is_some_and(|s| *s != Sight::Hidden)
+                        && Dir::ALL.into_iter().filter(|d| faces(*d)).any(|d| {
+                            let q = p.step(d);
+                            sight.get(q) == Some(&Sight::Seen) && !is_opaque(q)
+                        })
+                })
+                .map(|(p, _)| *p)
+                .collect()
+        };
+        let blood = stained(&level.blood);
+        let scorch = stained(&level.scorch);
 
         // Sounds the player heard whose source they do not see, placed roughly.
         let player = state.player();
@@ -1144,6 +1151,7 @@ impl Perception {
             effects,
             sounds,
             blood,
+            scorch,
             images,
             dazzled: dazzled.is_some(),
             averted,
@@ -1246,6 +1254,11 @@ impl Perception {
         self.blood.binary_search(&p).is_ok()
     }
 
+    /// Whether the player sees the char at `p` (as blood).
+    pub(crate) fn sees_scorch_at(&self, p: Pos) -> bool {
+        self.scorch.binary_search(&p).is_ok()
+    }
+
     /// Writes currently visible terrain, the piles and known traps on cells in sight, and the
     /// blood seen into the level's memory. Blood on a wall seen only from its clean side is
     /// remembered as it was.
@@ -1255,6 +1268,13 @@ impl Perception {
                 && level.blood_memory.get(&p) != Some(stain)
             {
                 level.blood_memory.insert(p, *stain);
+            }
+        }
+        for &p in &self.scorch {
+            if let Some(stain) = level.scorch.get(&p)
+                && level.scorch_memory.get(&p) != Some(stain)
+            {
+                level.scorch_memory.insert(p, *stain);
             }
         }
         // The zones seen; with none seen and none remembered, nothing to look at.
@@ -1279,6 +1299,9 @@ impl Perception {
             level.memory.set(p, Some(terrain));
             if !level.blood.contains_key(&p) {
                 level.blood_memory.remove(&p);
+            }
+            if !level.scorch.contains_key(&p) {
+                level.scorch_memory.remove(&p);
             }
             if !self.sees_actors_at(p) {
                 continue;
@@ -1584,6 +1607,18 @@ impl<'a> PerceptionView<'a> {
         }
     }
 
+    /// The char at `p` as the player knows it (spec §8 "Blood", [`crate::scorch`]): by
+    /// [`Self::blood`]'s rules.
+    pub fn scorch(&self, p: Pos) -> Option<&'a Stain> {
+        if self.snapshot.sees_scorch_at(p) {
+            self.level.scorch.get(&p)
+        } else if self.snapshot.is_visible(p) {
+            None
+        } else {
+            self.level.scorch_memory.get(&p)
+        }
+    }
+
     /// The chest at `p` as the player sees or remembers it (spec §8 "Chests"): its band and
     /// whether it is shut, open, or smashed (as the cell looks to them), and, with Chest-wise,
     /// on a cell in sight, whether a shut one is locked. Never its level or what it holds.
@@ -1624,6 +1659,21 @@ impl<'a> PerceptionView<'a> {
         };
         self.content.terrain(terrain).statue?;
         self.level.statues.get(&p).map(|s| s.of)
+    }
+
+    /// What is cut in the gravestone at `p` (spec §7 "Graves"; `world/graves.rs`), where the
+    /// player sees or remembers one: "Here lies Ælfric Wudu, 1381–1427." `None` elsewhere, or
+    /// on a blank stone.
+    pub fn epitaph(&self, p: Pos) -> Option<&'a str> {
+        let terrain = match self.cell(p) {
+            CellView::Visible(t) | CellView::Remembered(t) => t,
+            CellView::Unknown => return None,
+        };
+        self.content
+            .terrain(terrain)
+            .grave
+            .then(|| self.level.graves.get(&p).map(String::as_str))
+            .flatten()
     }
 
     /// Whom the statue at `p` is of, where it bears a past character's name from the graveyard
@@ -2050,26 +2100,17 @@ impl<'a> PerceptionView<'a> {
         self.player.known_spells(self.content)
     }
 
-    /// Whether the player may learn from a scroll at all (spec §8 "Spells": "Learning"): trained
-    /// in Spellcraft.
-    pub fn can_learn(&self) -> bool {
-        self.player.learning(self.content).is_some()
-    }
-
-    /// The scrolls the player could study now (spec §8 "Spells"), in pack order: those whose
-    /// type they know that teach a spell they do not know, each with its chance in words; none
-    /// for a character not trained in Spellcraft. What the study list offers.
+    /// The grimoires the player could learn from now (spec §8 "Spells": "Learning"), in pack
+    /// order: those that teach a spell they do not know, each with its chance in words; none for
+    /// a character not trained in Spellcraft. What the read list tells of a grimoire.
     pub fn studies(&self) -> Vec<OwnStudy> {
         let Some(rules) = self.content.study_rules() else {
             return Vec::new();
         };
         (self.player.inventory.iter().enumerate())
             .filter_map(|(item, stack)| {
-                let reading = self.content.object(stack.object).read.as_ref()?;
-                let spell = reading.teaches()?;
-                if !self.lore.is_identified(stack.object)
-                    || self.player.knows_spell(self.content, spell)
-                {
+                let spell = self.content.object(stack.object).grimoire?;
+                if self.player.knows_spell(self.content, spell) {
                     return None;
                 }
                 let odds =

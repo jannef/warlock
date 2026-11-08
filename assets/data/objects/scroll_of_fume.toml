@@ -1,7 +1,7 @@
 # A scroll of fume (spec §8 "Scrolls", "Spells"): read it (`r`) and aim, and it casts Fume, a
-# level-4 spell, at its own rungs, free of mana: thick smoke lies where it was aimed. Study it
-# (`L`), and you may learn the spell for good. Level and frequency by its spell's level
-# (README.toml): the lower, the commoner the scroll.
+# level-4 spell, at its own rungs, free of mana: thick smoke lies where it was aimed. Its grimoire
+# teaches the spell for good. Level and frequency by its spell's level (README.toml): the lower, the
+# commoner the scroll.
 [[object]]
 id = "scroll_of_fume"
 name = "scroll of fume"
