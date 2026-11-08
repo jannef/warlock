@@ -2,6 +2,8 @@
 id = "merchant"
 name = "Merchant"
 description = "A trader who knows the price of everything: shrewd and persuasive, softened by years behind a counter."
+# Not offered at character creation, for now.
+hidden = true
 stats = { strength = -1, dexterity = -1, toughness = -1, intelligence = "1d2", presence = "1d3" }
 hp = 2
 mana = 2

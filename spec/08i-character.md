@@ -8,6 +8,14 @@ developer notes (CLAUDE.md, `docs/dev/`).
   race (`data/races.toml`), a gender (male, female, or other), and a class
   (`data/classes/`), chosen on New run (§6) or given on the command line (`--character
   dwarf,female,warrior`, §9); otherwise the scenario's character (§7). It decides:
+  - **Class limits** (#1279): a class may be closed to races (`races_not`: no goblin, drow,
+    kobold, lizardfolk, duergar, or ratfolk paladin; no elven or dwarven witch) or open to a
+    race only with some genders (`only`: a drow priest is female), and may be `hidden` (the
+    commoner, craftsperson, and merchant, for now). New run's class step lists only the classes
+    open to the race and gender chosen, never a hidden one, so its Random draws only those;
+    `--character` refuses a closed pair with the reason in words (`a drow may be a priest only
+    if female`) but takes a hidden class, and a scenario's own character is never checked
+    (the test world's craftspeople at the forge and the quarry).
   - **Name** (#218): the character has a name, 1 to 20 characters, typed on New run's Name step
     (after the class, before the summary; §6) or given on the command line (`--name Brakka`).
     The step's Random, and an empty field, give one of the race's names for the gender

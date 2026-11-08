@@ -322,6 +322,52 @@ pub(super) fn classes(content: &Content) -> String {
     out
 }
 
+/// Which classes each race may take (spec §8 "Character creation", #1279): per race, by name, the
+/// classes closed to it (`races_not`) and those open only with some genders (`only`); then the
+/// classes New run never offers (`hidden`).
+pub(super) fn class_limits(content: &Content) -> String {
+    let mut races: Vec<_> = content.races().list.iter().collect();
+    races.sort_by(|a, b| a.name.cmp(&b.name));
+    let mut out = String::from("| Race | Classes closed to them |\n|---|---|\n");
+    for r in races {
+        let mut closed: Vec<String> = Vec::new();
+        for c in content.classes().iter().filter(|c| !c.hidden) {
+            if c.races_not.contains(&r.id) {
+                closed.push(c.name.clone());
+            } else if let Some(only) = c.only.iter().find(|o| o.race == r.id) {
+                let genders: Vec<String> = (only.genders.iter())
+                    .map(|g| g.name().to_lowercase())
+                    .collect();
+                closed.push(format!("{} (unless {})", c.name, genders.join(" or ")));
+            }
+        }
+        closed.sort();
+        let closed = if closed.is_empty() {
+            "—".to_string()
+        } else {
+            closed.join(", ")
+        };
+        let _ = writeln!(
+            out,
+            "| <a id=\"limits-{}\"></a>{} | {closed} |",
+            r.id, r.name
+        );
+    }
+    let mut hidden: Vec<&str> = (content.classes().iter())
+        .filter(|c| c.hidden)
+        .map(|c| c.name.as_str())
+        .collect();
+    hidden.sort();
+    if !hidden.is_empty() {
+        let _ = writeln!(
+            out,
+            "\nNot offered at character creation for now: {}.",
+            hidden.join(", ")
+        );
+    }
+    out
+}
+
 /// The prestige classes (spec §8 "Prestige classes", `data/prestige/`), in file order as the
 /// classes are: how many levels each has, what each level adds to the hit points and mana (half
 /// of it a level, as a class's), its skill rolls, the skills it is known for; then each one's

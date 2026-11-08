@@ -2,6 +2,8 @@
 id = "witch"
 name = "Witch"
 description = "A hedge-magician of herbs, hexes, and old bargains: cunning, wise in strange ways, and feared."
+# The elves and the dwarves keep no witches.
+races_not = ["elf", "dwarf"]
 stats = { strength = -2, toughness = -1, intelligence = "1d3", willpower = "1d3", presence = "1d3-2" }
 hp = 1
 mana = 10

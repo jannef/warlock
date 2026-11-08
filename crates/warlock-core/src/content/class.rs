@@ -17,12 +17,15 @@
 //! the order (adventurers first, then everyday folk) and a new class picks its place.
 
 use super::kit::{Kit, KitLineSpec, RandomScrolls, RandomScrollsSpec};
+use super::object::article;
+use super::race::RaceDef;
 use super::skill::{OptionalSkill, OptionalSpec};
 use super::weapon_skill::Ranked;
 use super::{
     ActionKind, ContentError, FACTORS, TalentBook, TalentId, TreeId, WeaponSkillId,
     WeaponSkillTable, duplicate_id,
 };
+use crate::character::Gender;
 use crate::dice::Dice;
 use crate::skills::{self, SkillId};
 use crate::stats::{PerStat, Stat, adjustments};
@@ -88,6 +91,21 @@ struct ClassSpec {
     bonus_talents: Option<BonusSpec>,
     max_level: Option<u8>,
     ally_share: Option<u8>,
+    #[serde(default)]
+    races_not: Vec<String>,
+    #[serde(default)]
+    only: Vec<OnlySpec>,
+    #[serde(default)]
+    hidden: bool,
+}
+
+/// `{ race = "drow", genders = ["female"] }`: a character of that race may take the class
+/// only with one of those genders.
+#[derive(Clone, Debug, PartialEq, Eq, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct OnlySpec {
+    pub race: String,
+    pub genders: Vec<Gender>,
 }
 
 /// `{ level = 6, talent = "fencing" }`: at that level the class gives that talent.
@@ -229,6 +247,13 @@ pub struct ClassDef {
     /// "Allies"): the pet classes' 100 (the ranger, the druid); `None` for `[xp] ally_percent`
     /// of `data/allies.toml`, everyone else's.
     pub ally_share: Option<u8>,
+    /// The races that may not take it, by id (spec §8 "Character creation": no goblin paladin).
+    pub races_not: Vec<String>,
+    /// The races that may take it only with some genders (a drow priest is a woman).
+    pub only: Vec<OnlySpec>,
+    /// Never offered at character creation (the everyday folk, for now); still taken by
+    /// `--character` and a scenario's own character.
+    pub hidden: bool,
     /// The file it was read from, for the errors of [`ClassDef::check_table`].
     pub(super) file: String,
 }
@@ -306,6 +331,14 @@ impl ClassDef {
         let style_choice = choice(&spec.style_choice, Ranked::Styles)?;
         let abilities = table_rows(spec.abilities);
         let bonus_talents = bonus_rows(spec.bonus_talents);
+        for o in &spec.only {
+            if o.genders.is_empty() {
+                return Err(err(format!(
+                    "class `{id}`: only: race `{}` names no gender",
+                    o.race
+                )));
+            }
+        }
         Ok(ClassDef {
             id: spec.id,
             name: spec.name,
@@ -333,6 +366,9 @@ impl ClassDef {
             bonus_talents,
             max_level: spec.max_level.unwrap_or(0),
             ally_share: spec.ally_share,
+            races_not: spec.races_not,
+            only: spec.only,
+            hidden: spec.hidden,
             file: file.to_string(),
         })
     }
@@ -353,6 +389,52 @@ impl ClassDef {
             )));
         }
         Ok(())
+    }
+
+    /// Checks the races its `races_not` and `only` name against `is_race` (once the races are
+    /// read).
+    pub(super) fn check_races(&self, is_race: impl Fn(&str) -> bool) -> Result<(), ContentError> {
+        let named = (self.races_not.iter()).chain(self.only.iter().map(|o| &o.race));
+        for race in named {
+            if !is_race(race) {
+                return Err(ContentError::new(
+                    &self.file,
+                    format!("class `{}`: unknown race `{race}`", self.id),
+                ));
+            }
+        }
+        Ok(())
+    }
+
+    /// Why a character of `race` and `gender` may not take it, in words (`a goblin cannot be a
+    /// paladin`); `None` when they may. Hidden classes are not refused here: they are only left
+    /// out of character creation ([`ClassDef::offered_to`]).
+    pub fn refuses(&self, race: &RaceDef, gender: Gender) -> Option<String> {
+        let who = race.name.to_lowercase();
+        let class = self.name.to_lowercase();
+        let a = |noun: &str| format!("{} {noun}", article(noun));
+        if self.races_not.contains(&race.id) {
+            return Some(format!("{} cannot be {}", a(&who), a(&class)));
+        }
+        let only = self.only.iter().find(|o| o.race == race.id)?;
+        if only.genders.contains(&gender) {
+            return None;
+        }
+        let genders: Vec<String> = (only.genders.iter())
+            .map(|g| g.name().to_lowercase())
+            .collect();
+        Some(format!(
+            "{} may be {} only if {}",
+            a(&who),
+            a(&class),
+            genders.join(" or ")
+        ))
+    }
+
+    /// Whether character creation offers it to a character of `race` and `gender`: not hidden
+    /// and not refused.
+    pub fn offered_to(&self, race: &RaceDef, gender: Gender) -> bool {
+        !self.hidden && self.refuses(race, gender).is_none()
     }
 
     /// Whether it trains skill `skill` (any of its grants, known for or not).

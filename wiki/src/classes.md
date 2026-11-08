@@ -20,7 +20,8 @@ later open onto a [prestige class](prestige-classes.md).
 The first eleven classes are adventurers. The last four are everyday folk: an
 [aristocrat](classes.md#aristocrat), a [commoner](classes.md#commoner), a
 [craftsperson](classes.md#craftsperson), and a [merchant](classes.md#merchant). They were never
-trained for this, and it mostly shows.
+trained for this, and it mostly shows. For now a new run offers only the aristocrat of them (see
+[Who may take which](#who-may-take-which)).
 
 {{#include generated/classes.md}}
 
@@ -29,6 +30,16 @@ gender's, and your [birth sign's](horoscope.md#what-a-sign-does). Each class rol
 stats, and sometimes for a weakness too: `1d3+1` is two to four, `−1d2` takes away one or two (see
 [How your stats add up](character.md#how-your-stats-add-up)). Classes are not balanced against
 each other, and some are poor choices on purpose.
+
+## Who may take which
+
+Not every class is open to everyone. A new run lists only the classes open to the
+[race](races.md) and gender you chose, and its Random picks only among those. No goblin, drow,
+kobold, lizardfolk, duergar, or ratfolk is taken into a [paladin](classes.md#paladin)'s order.
+Elves and dwarves keep no [witches](classes.md#witch). Among the drow, only women are
+[priests](classes.md#priest).
+
+{{#include generated/class-limits.md}}
 
 ## Levels
 

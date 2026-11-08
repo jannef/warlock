@@ -11,23 +11,23 @@ expression: "render(case, content.clone())"
         │   Race      Halfling                                                             │
         │   Sign      Earth Kraken                                                         │
         │   Gender    Male                                                                 │
-        │   Class     Merchant                                                             │
-        │   Talents   Pious, Treasure hunter                                               │
+        │   Class     Aristocrat                                                           │
+        │   Talents   Healthy, Far shot                                                    │
         │                                                                                  │
         │   Age 41 · born 2 Harvestide 1403 · year of the Earth Kraken                     │
         │                                                                                  │
-        │   St  Strength       8    Appraise       20   Listen         10                  │
-        │   Dx  Dexterity     11    Bluff          17   Negotiation    20                  │
-        │   To  Toughness     10    Handle animal   6   Stealth        10                  │
-        │   In  Intelligence  11    Knowledge      10                                      │
-        │   Wi  Willpower     12                                                           │
-        │   Pr  Presence      11                                                           │
+        │   St  Strength       7    Bluff             7   Listen           10              │
+        │   Dx  Dexterity     12    Decipher script   8   Music             5              │
+        │   To  Toughness      9    Intimidate        9   Spellcraft        7              │
+        │   In  Intelligence  11    Knowledge        17   Stealth          10              │
+        │   Wi  Willpower     11                                                           │
+        │   Pr  Presence      12                                                           │
         │                                                                                  │
-        │   Kit       a dagger (wielded), a travelling cloak (being worn),                 │
-        │             a long coat (being worn), 2 garnets, 120 gold coins, a wool cloak,   │
-        │             10 wax candles, a coil of rope, 4 strips of dried meat,              │
-        │             a scroll of identify, a sling (readied), 10 sling stones (quivered), │
-        │             a lantern (in use), a long-stemmed pipe                              │
+        │   Kit       a rapier (wielded),                                                  │
+        │             a gold and smokestone ring (magic) (on left hand),                   │
+        │             a fur cloak (being worn), a gown (being worn), a sapphire,           │
+        │             250 gold coins, 2 apples, a sling (readied),                         │
+        │             10 sling stones (quivered), a lantern (in use), a long-stemmed pipe  │
         │             Fate will have its say when you set out.                             │
         │   Alignment Neutral                                                              │
         │   Vision    Normal                                                               │

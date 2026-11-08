@@ -154,6 +154,7 @@ above.
 | Race | `races.md` (a race: its row) |
 | Evil races | `races.md#the-evil-races` |
 | Class, class levels | `classes.md`, `classes.md#levels` (a class: its heading, `classes.md#berserker`) |
+| Which classes a race and gender may take, classes not offered | `classes.md#who-may-take-which` (a race's row: `classes.md#limits-drow`) |
 | Starting kit | `starting-kit.md` |
 | Background story, its chapters, how rare | `background.md`, `background.md#how-rare` |
 | Story, a story's sentence (line), its kind (tier: common, uncommon, rare, fateful) | `background.md#how-rare` |

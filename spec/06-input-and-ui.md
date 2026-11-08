@@ -118,7 +118,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
   seed (Tab; never the one shown; again for another), and back out (Esc, always). Held keys type
   and erase again but never accept. An empty field shows, dimmed, the name accepting it gives:
   the race's first random name. Each choice step lists
-  its options in data order with a `>` marker, the selected option's one-line description, and
+  its options in data order with a `>` marker (the class step only the classes open to the
+  chosen race and gender, never a hidden one: §8 "Character creation"), the selected option's one-line description, and
   for races and classes their stat adjustments as written in data, dice included
   (`St 1d3+1  Dx −1`), for races their vision, and for both how fast levels come, in words
   ("Levels come slowly." for an `experience` of 115 % and above, "Levels come quickly." for 95 %
@@ -130,7 +131,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   (#256). Up/Down (or
   `k`/`j`) choose, Enter goes on, Esc goes back a step as it was left. A step opens on the
   choice made there before going back, else on the scenario's character's, else on the first
-  option; the Name step opens on what was typed there before going back, else empty. The summary
+  option (a class no longer offered, after the race or gender changed, gives way to the first); the Name step opens on what was typed there before going back, else empty. The summary
   lists Start the run, then Name, Race, Sign (`Metal Manticore`, with a lucky day's title:
   `Metal Manticore, the Iron Scourge`; Enter on it returns to the reveal), Gender, Class, and Talents
   (`Healthy, Lean`; "chosen by chance" with none marked) with their choices (Enter on one returns to that step as it was left; the steps after it close),

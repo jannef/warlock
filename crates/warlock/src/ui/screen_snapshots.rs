@@ -288,6 +288,20 @@ const CASES: &[Case] = &[
         screen: Some("class"),
         ..BASE
     },
+    // Only the classes open to the race and gender (#1279): a drow man is no priest or
+    // paladin, a dwarf no witch; the everyday folk are never listed.
+    Case {
+        name: "class-screen-drow-male",
+        screen: Some("race"),
+        keys: Some("Down Down Down Down Down Down Enter Enter Up Enter"),
+        ..BASE
+    },
+    Case {
+        name: "class-screen-dwarf",
+        screen: Some("race"),
+        keys: Some("Down Enter Enter Enter"),
+        ..BASE
+    },
     // The showcase's thief: Random preselected; a letter marks a talent.
     Case {
         name: "chargen-talents-screen",
@@ -324,8 +338,7 @@ const CASES: &[Case] = &[
         scenario: "world",
         screen: Some("new-run"),
         keys: Some(
-            "Up Enter Down Down Enter Enter Enter Down Down Down Down Down Down Down Down Enter \
-             Enter Enter",
+            "Up Enter Down Down Enter Enter Enter Down Down Down Down Down Enter Enter Enter",
         ),
         size: (100, 36),
         ..BASE

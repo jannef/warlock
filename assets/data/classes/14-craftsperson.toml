@@ -2,6 +2,8 @@
 id = "craftsperson"
 name = "Craftsperson"
 description = "A smith, carpenter, or weaver who knows a trade inside out: sure hands, a patient mind, and few words."
+# Not offered at character creation, for now.
+hidden = true
 stats = { strength = 1, dexterity = "1d3", intelligence = 1, presence = "-1d2" }
 hp = 3
 mana = 1
