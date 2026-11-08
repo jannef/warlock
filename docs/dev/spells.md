@@ -378,7 +378,7 @@ cast path shares.
     `pale_ray`, its old line).
   - **The data-only fourteen** (#998; the spell types design §7 entries 5, 7 to 10, 12, 13, 17,
     19, 20, 22, 23, 27, 28; tests `world/spell_data_tests.rs` and the content tables in
-    `content/spell_def.rs`): 4 Nightsight (buff, `cat_eyed`, one degree so no ladder); 5 Acid
+    `content/spell_def.rs`): 4 Nightsight (buff, `cat_eyed`, one degree so no ladder; its ranks add three, the status's `max` 4 since #1268); 5 Acid
     arrow (bolt, attack, acid; its own bolt look `acid_arrow` in `data/effects.toml`), Mesmerise
     (ray hex, `transfixed`); 8 Flay (ray, auto, necrotic 1d4, Bleeding 2 to 4 by Presence),
     Glamour (buff, new `glamoured`: Dodge +3), Unbinding (cleanse of the eight hex statuses); 9

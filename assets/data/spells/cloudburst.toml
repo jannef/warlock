@@ -15,3 +15,14 @@ effect = { weather = { kind = "rain", hours = 1 } }
 [spell.cast]
 message = "The sky darkens, and the rain comes."
 noise = { sound = "thunder", loudness = 60 }
+
+[spell.ranks]
+2 = { mana_off = 10 }
+3 = { time_off = 10 }
+4 = { mana_off = 10 }
+5 = { time_off = 10 }
+6 = { mana_off = 10 }
+7 = { time_off = 10 }
+8 = { mana_off = 10 }
+9 = { time_off = 20 }
+10 = { mana_off = 10 }

@@ -12,3 +12,14 @@ effect = { status = "water_borne" }
 
 [spell.grows]
 degrees = "presence 14 2, 18 3"
+
+[spell.ranks]
+2 = { degrees = 1 }
+3 = { mana_off = 10 }
+4 = { time_off = 15 }
+5 = { degrees = 1 }
+6 = { mana_off = 10 }
+7 = { time_off = 15 }
+8 = { degrees = 1 }
+9 = { mana_off = 10 }
+10 = { time_off = 20 }
