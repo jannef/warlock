@@ -237,7 +237,11 @@ Effects (spec §4.8), each off with its own switch (`particles`, `glow`, `distor
   takes no turn, `ui/spells.rs` reads each outcome once by `Game::applied`, not by the turn. The
   model is pure in `render/spells.rs` (`Timeline` travel/impact/linger, `strength`, `burst_heat`
   with `burst_distance` measured on screen, `bolt_strokes` (turned `━` strokes about a cell wide,
-  a slow wander plus jitter, forks only into `open` cells), `darken_curve`, `shake_offset`);
+  a slow wander plus jitter, forks only into `open` cells), `ray_strokes`/`ray_line`/`ray_share`/
+  `ray_tail` (a ray, a bolt with a `head`: straight from the origin's center to the end's, not
+  through the path's cell centers; each stroke fades over `tail` seconds after the head passed
+  it; `ui/spells.rs::ray` draws the shaft, then the head turned along the line; its `impact`
+  particles start as the head passes each cell), `darken_curve`, `shake_offset`);
   `ui/spells.rs` (`Spells`) starts casts (one after another; frozen time: all at visual time 0, so
   `--freeze-time T` shows T s after), writes `render::lighting::SpellLights` (lights, `dim`, and
   the cells seen, which spell light passes even when unknown), and draws glyphs and particles last
@@ -250,7 +254,7 @@ Effects (spec §4.8), each off with its own switch (`particles`, `glow`, `distor
   `camera_split`, so the grid, free glyphs, and light move together and the viewport edges never
   gap. `motion` off: a still flash (`Timeline::still`); `screen_fades` off: no darkening;
   `screen_shake` off: no shake. Tune with `--content-dir` and captures across freeze times (e.g.
-  `effect:fireball@30,14` and `effect:lightning_bolt@21,17>58,17` in the arena, 0.03 to 0.6 s).
+  `effect:fireball@30,14` and `effect:lightning_bolt@21,17>58,17` in the arena, 0.03 to 0.6 s; a ray, `effect:frost_ray@21,17>35,11`).
 
 `ui/` decides what is drawn from the perception snapshot: `ui/mod.rs` (UI console, map grid in
 base colors, the status bar: `status_segments`), `ui/circles.rs` (spell circles), `ui/glyphs.rs` (free glyphs), `ui/motion.rs`

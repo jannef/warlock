@@ -103,6 +103,14 @@ pub struct EffectDef {
     /// Bolts: the chance, per cell and flash, of a short fork off the line, 0 to 1.
     #[serde(default)]
     pub branches: f32,
+    /// Bolts: the glyph of a ray's head (an icicle's point). With one the bolt is a **ray**: a
+    /// straight line, not a jagged one, whose head flies along it at `speed`, the line behind it
+    /// fading over `tail` seconds; it strikes once at the end.
+    #[serde(default)]
+    pub head: Option<char>,
+    /// Rays: seconds each stretch of the line takes to fade after the head has passed it.
+    #[serde(default)]
+    pub tail: f32,
     #[serde(default)]
     pub light: Option<EffectLight>,
     #[serde(default)]
@@ -124,6 +132,7 @@ impl EffectDef {
         (self.glyphs.chars())
             .chain((self.fill > 0.0).then_some(FILL_GLYPH))
             .chain(self.projectile)
+            .chain(self.head)
             .chain(self.particles.iter().flat_map(|e| e.glyphs.chars()))
     }
 
@@ -140,6 +149,7 @@ impl EffectDef {
             self.linger,
             self.flicker,
             self.grow,
+            self.tail,
             self.darken.map_or(0.0, |d| d.seconds),
             self.shake.map_or(0.0, |s| s.seconds),
         ];
@@ -158,6 +168,9 @@ impl EffectDef {
                 if glyphs == 0 {
                     return Err("a burst needs at least one glyph".into());
                 }
+                if self.head.is_some() || self.tail > 0.0 {
+                    return Err("a burst has no `head` or `tail`".into());
+                }
             }
             EffectShape::Bolt => {
                 if !(1..=2).contains(&glyphs) {
@@ -165,6 +178,12 @@ impl EffectDef {
                 }
                 if self.projectile.is_some() || self.fill > 0.0 {
                     return Err("a bolt has no `projectile` or `fill`".into());
+                }
+                if self.head.is_some() && self.branches > 0.0 {
+                    return Err("a ray (a bolt with a `head`) is straight: no `branches`".into());
+                }
+                if self.head.is_none() && self.tail > 0.0 {
+                    return Err("only a ray (a bolt with a `head`) has a `tail`".into());
                 }
             }
         }
@@ -295,6 +314,12 @@ branches = 0.3
             (BOLT.replace("\"━─\"", "\"\""), "one or two glyphs"),
             (format!("{BOLT}projectile = \"*\"\n"), "projectile"),
             (format!("{BOLT}sparkle = 1\n"), "unknown field"),
+            (format!("{BOLT}head = \"▶\"\n"), "straight"),
+            (format!("{BOLT}tail = 0.3\n"), "tail"),
+            (
+                BALL.replace("projectile = \"*\"\n", "projectile = \"*\"\nhead = \"▶\"\n"),
+                "head",
+            ),
         ] {
             let e = parse("effects", &bad).expect_err(why);
             assert!(e.message.contains(why), "{why}: {}", e.message);

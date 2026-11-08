@@ -24,6 +24,11 @@
 #   fill           bursts: how opaque each cell's glowing body (a solid block a shade cooler than
 #                  its glyph, thinner toward the edge) is at its hottest, 0 to 1
 #   branches       bolts: the chance, per cell and flash, of a short fork off the line
+#   head           bolts: the glyph of a ray's head. With one the bolt is a ray: straight, its head
+#                  flying along at `speed`, its line behind fading over `tail` seconds (its glyphs
+#                  then: the shaft, then the dimming tail), its `impact` particles as the head
+#                  passes each cell, and one flash where it strikes; no `branches`
+#   tail           rays: seconds each stretch of the line takes to fade after the head passed it
 #   light          { color = [r, g, b], radius }: the light it gives at full strength (255 = fully
 #                  lit, more = overbright; as in lights.toml), from a burst's center
 #                  or along a bolt every other cell. It lights the scene like any light, but
@@ -286,10 +291,44 @@ glow = 0.7
 branches = 0.02
 light = { color = [520, 380, 820], radius = 3 }
 
-# The cantrips' rays (spec §8 "Spells"): Ray of frost's pale, quick line of cold, and Spark's
-# small crackle; dimmer and shorter than the bolts above, no shake.
+# Ray of frost's (spec §8 "Spells", #1249): a ray, a long icicle flying straight from the caster:
+# a glint of white at its thin point, a pale solid shaft behind it thinning to a fading tail of
+# frost, rime settling where it passed; struck once at the end. Dimmer than the bolts above, no
+# shake.
 [[effect]]
 id = "frost_ray"
+shape = "bolt"
+speed = 45
+impact = 0.12
+flashes = 1
+linger = 0.3
+flicker = 0.05
+glyphs = "━─"
+head = "◆"
+tail = 0.35
+colors = ["#ffffff", "#e4f4ff", "#b4daf6", "#82b0dc", "#4e74a6", "#22344a"]
+glow = 0.5
+light = { color = [340, 420, 580], radius = 2 }
+
+# Rime settling and fading along the path as the head passes.
+[[effect.particles]]
+on = "impact"
+glyphs = "·'*"
+colors = ["#f0f8ff", "#a8d0f4", "#5a80b8"]
+count = 1
+life = 0.6
+velocity = [0.0, 0.3]
+spread = [0.4, 0.3]
+gravity = 0.4
+area = [0.4, 0.2]
+scale = 0.5
+fade = 0.7
+glow = 0.4
+
+# Flay's and Leech's for now (no look of their own yet): the pale, quick line Ray of frost had
+# before its icicle.
+[[effect]]
+id = "pale_ray"
 shape = "bolt"
 speed = 400
 impact = 0.16
@@ -301,6 +340,8 @@ colors = ["#f4fbff", "#d4ecff", "#a8d0f4", "#7aa8d8", "#4a70a0", "#22344a"]
 glow = 0.5
 branches = 0.0
 light = { color = [380, 460, 620], radius = 2 }
+
+# Spark's small crackle (spec §8 "Spells"): dimmer and shorter than the bolts above, no shake.
 
 [[effect]]
 id = "spark"
