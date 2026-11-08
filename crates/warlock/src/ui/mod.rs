@@ -59,6 +59,7 @@ mod object_screen;
 mod paged_list;
 mod quest_screen;
 mod rain;
+mod scorch;
 #[cfg(test)]
 mod screen_snapshots;
 mod screens;
@@ -407,8 +408,8 @@ fn camera_origin(view: i32, level: i32, viewer: i32) -> i32 {
 /// object or a trap lies there. What a missile still in flight lands as (`arriving`) is not drawn
 /// until it arrives. Only visible terrain without objects or traps animates. Visible cells keep
 /// their base colors (the shader lights them); remembered ones, objects and traps included, are
-/// dimmed here. Blood the player knows of tints its cell first ([`blood::stained`]), unless
-/// `show_blood` is off.
+/// dimmed here. Char and then blood the player knows of tint its cell first
+/// ([`scorch::charred`], [`blood::stained`]), unless `show_blood` is off.
 fn draw_map(
     grid: &mut MapGrid,
     view: &PerceptionView<'_>,
@@ -439,6 +440,7 @@ fn draw_map(
             let band = chest.and_then(|c| content.chests().bands.get(c.band));
             let trap = (view.trap(p).filter(|_| chest.is_none())).map(|t| content.trap(t));
             let stain = view.blood(p).filter(|_| show_blood);
+            let char = view.scorch(p).filter(|_| show_blood);
             let zone = view.zone_at(p);
             let glyph = |t| {
                 let def = content.terrain(t);
@@ -451,12 +453,15 @@ fn draw_map(
                 };
                 // An object or a trap lies in the blood: only the background takes it.
                 let over = top.is_some() || trap.is_some();
-                let (fg, bg) = match stain {
-                    Some(stain) => {
-                        let wall = !def.transparent;
-                        blood::stained((fg, def.bg), stain, view.time(), wall, over)
-                    }
+                // Char first, the blood over it (`scorch.rs`).
+                let wall = !def.transparent;
+                let (fg, bg) = match char {
+                    Some(char) => scorch::charred((fg, def.bg), char, wall, over),
                     None => (fg, def.bg),
+                };
+                let (fg, bg) = match stain {
+                    Some(stain) => blood::stained((fg, bg), stain, view.time(), wall, over),
+                    None => (fg, bg),
                 };
                 (ch, fg, zone.map_or(bg, |kind| zone_tint::tinted(bg, kind)))
             };

@@ -47,6 +47,9 @@ pub enum Layer {
     /// Blood the player sees or remembers ([`blood_digit`]: `1` a few drops to `9` soaked), over
     /// the view.
     Blood,
+    /// Char the player sees or remembers ([`blood_digit`]: `1` a little soot to `9` charred
+    /// through), over the view.
+    Scorch,
     /// Not a map: the player's inventory, one line per stack (marked when worn or wielded), then
     /// what they carry and weigh.
     Inventory,
@@ -148,6 +151,7 @@ impl Layer {
         Layer::Light,
         Layer::Sound,
         Layer::Blood,
+        Layer::Scorch,
         Layer::Inventory,
         Layer::Equipment,
         Layer::Stats,
@@ -180,6 +184,7 @@ impl Layer {
             Layer::Light => "light",
             Layer::Sound => "sound",
             Layer::Blood => "blood",
+            Layer::Scorch => "scorch",
             Layer::Inventory => "inventory",
             Layer::Equipment => "equipment",
             Layer::Stats => "stats",
@@ -224,7 +229,7 @@ impl FromStr for Layer {
             .ok_or_else(|| {
                 format!(
                     "unknown layer `{s}` (expected view, fov, memory, light, sound, blood, \
-                     inventory, equipment, stats, skills, weapon_skills, schools, attacks, talents, \
+                     scorch, inventory, equipment, stats, skills, weapon_skills, schools, attacks, talents, \
                      abilities, traps, locations, quests, story, companion, familiar, truth, actors, \
                      progress, rooms, ice)"
                 )
@@ -344,6 +349,10 @@ fn perceived_glyph(view: &PerceptionView<'_>, layer: Layer, p: Pos) -> char {
             None => perceived_glyph(view, Layer::View, p),
         },
         Layer::Blood => match view.blood(p) {
+            Some(stain) => blood_digit(stain),
+            None => perceived_glyph(view, Layer::View, p),
+        },
+        Layer::Scorch => match view.scorch(p) {
             Some(stain) => blood_digit(stain),
             None => perceived_glyph(view, Layer::View, p),
         },

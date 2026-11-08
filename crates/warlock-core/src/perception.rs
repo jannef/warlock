@@ -20,6 +20,7 @@
 //! **Blood** (spec §8 "Blood", [`crate::blood`]): a stain on an open cell is seen where objects
 //! are; one on a wall only when a stained face is seen (a visible open cell next to the wall on
 //! that side), so blood on the far side of a wall stays hidden. Blood is remembered like piles.
+//! Char ([`crate::scorch`]) is seen and remembered by the same rules.
 //!
 //! A cell is **visible** iff it is in line of sight within [`VIEW_RADIUS`] **and** its perceived
 //! light is at least the vision profile's threshold or it lies within the darkvision radius. The
@@ -534,6 +535,8 @@ pub(crate) struct Perception {
     sounds: Vec<PerceivedSound>,
     /// Cells whose blood the player sees, in position order.
     blood: Vec<Pos>,
+    /// Cells whose char the player sees, in position order (as blood).
+    scorch: Vec<Pos>,
     /// Cells where the player sees an image of a hall of mirrors (shown among `actors`).
     images: Vec<Pos>,
     /// Whether strong light dazzles the player's light-blind eyes (their race's `light_blind`).
@@ -1087,22 +1090,26 @@ impl Perception {
         actors.sort_by_key(|a| a.id);
         let images = images.into_iter().map(|(_, _, p)| p).collect();
 
-        // Blood: on an open cell in sight; on a wall, where a stained face is seen.
-        let blood = (level.blood.iter())
-            .filter(|(p, stain)| {
-                let p = **p;
-                if !is_opaque(p) {
-                    return sight.get(p) == Some(&Sight::Seen);
-                }
-                let faces = |d: Dir| stain.faces == 0 || stain.on_face(d);
-                sight.get(p).is_some_and(|s| *s != Sight::Hidden)
-                    && Dir::ALL.into_iter().filter(|d| faces(*d)).any(|d| {
-                        let q = p.step(d);
-                        sight.get(q) == Some(&Sight::Seen) && !is_opaque(q)
-                    })
-            })
-            .map(|(p, _)| *p)
-            .collect();
+        // Blood and char: on an open cell in sight; on a wall, where a stained face is seen.
+        let stained = |stains: &BTreeMap<Pos, Stain>| -> Vec<Pos> {
+            (stains.iter())
+                .filter(|(p, stain)| {
+                    let p = **p;
+                    if !is_opaque(p) {
+                        return sight.get(p) == Some(&Sight::Seen);
+                    }
+                    let faces = |d: Dir| stain.faces == 0 || stain.on_face(d);
+                    sight.get(p).is_some_and(|s| *s != Sight::Hidden)
+                        && Dir::ALL.into_iter().filter(|d| faces(*d)).any(|d| {
+                            let q = p.step(d);
+                            sight.get(q) == Some(&Sight::Seen) && !is_opaque(q)
+                        })
+                })
+                .map(|(p, _)| *p)
+                .collect()
+        };
+        let blood = stained(&level.blood);
+        let scorch = stained(&level.scorch);
 
         // Sounds the player heard whose source they do not see, placed roughly.
         let player = state.player();
@@ -1144,6 +1151,7 @@ impl Perception {
             effects,
             sounds,
             blood,
+            scorch,
             images,
             dazzled: dazzled.is_some(),
             averted,
@@ -1246,6 +1254,11 @@ impl Perception {
         self.blood.binary_search(&p).is_ok()
     }
 
+    /// Whether the player sees the char at `p` (as blood).
+    pub(crate) fn sees_scorch_at(&self, p: Pos) -> bool {
+        self.scorch.binary_search(&p).is_ok()
+    }
+
     /// Writes currently visible terrain, the piles and known traps on cells in sight, and the
     /// blood seen into the level's memory. Blood on a wall seen only from its clean side is
     /// remembered as it was.
@@ -1255,6 +1268,13 @@ impl Perception {
                 && level.blood_memory.get(&p) != Some(stain)
             {
                 level.blood_memory.insert(p, *stain);
+            }
+        }
+        for &p in &self.scorch {
+            if let Some(stain) = level.scorch.get(&p)
+                && level.scorch_memory.get(&p) != Some(stain)
+            {
+                level.scorch_memory.insert(p, *stain);
             }
         }
         // The zones seen; with none seen and none remembered, nothing to look at.
@@ -1279,6 +1299,9 @@ impl Perception {
             level.memory.set(p, Some(terrain));
             if !level.blood.contains_key(&p) {
                 level.blood_memory.remove(&p);
+            }
+            if !level.scorch.contains_key(&p) {
+                level.scorch_memory.remove(&p);
             }
             if !self.sees_actors_at(p) {
                 continue;
@@ -1581,6 +1604,18 @@ impl<'a> PerceptionView<'a> {
             None
         } else {
             self.level.blood_memory.get(&p)
+        }
+    }
+
+    /// The char at `p` as the player knows it (spec §8 "Blood", [`crate::scorch`]): by
+    /// [`Self::blood`]'s rules.
+    pub fn scorch(&self, p: Pos) -> Option<&'a Stain> {
+        if self.snapshot.sees_scorch_at(p) {
+            self.level.scorch.get(&p)
+        } else if self.snapshot.is_visible(p) {
+            None
+        } else {
+            self.level.scorch_memory.get(&p)
         }
     }
 

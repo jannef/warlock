@@ -61,7 +61,8 @@
 //! Digging (`dig.rs`): walls that break give way to a digging tool, turn after turn like a rest,
 //! and to explosions stronger than they are hard; they become rubble.
 //! Blood (`bleed.rs`, [`crate::blood`]): big hits and kills stain the floor and the walls around
-//! the victim. Presentation state kept with the level; no rule reads it.
+//! the victim. Presentation state kept with the level; no rule reads it. Char (`sear.rs`,
+//! [`crate::scorch`]): fire scorches the floor and walls it burns, the same way.
 //! Status effects and healing (spec §8 "Status effects", "Healing", `status.rs`): big hits and
 //! criticals make their targets bleed, a giant rat's bite may poison; effects cost hit points
 //! and ease as the clock moves, slow healing, and can kill. Hit points come back with game
@@ -235,6 +236,7 @@ mod rumour;
 mod sanctuary;
 mod schedule;
 mod scribe;
+mod sear;
 mod search;
 mod second_wind;
 mod service;
@@ -1968,6 +1970,8 @@ mod scribe_tests;
 mod scriptorium_tests;
 #[cfg(test)]
 mod scroll_label_tests;
+#[cfg(test)]
+mod sear_tests;
 #[cfg(test)]
 mod search_tests;
 #[cfg(test)]

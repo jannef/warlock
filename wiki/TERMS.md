@@ -215,6 +215,7 @@ above.
 | Hit points, regeneration | `hit-points.md#hit-points`, `healing.md#how-fast` |
 | Death, permadeath | `hit-points.md#death`, `saving.md` |
 | Blood, stains | `hit-points.md#blood` |
+| Char, scorch marks | `hit-points.md#char` |
 | Ranged combat, shooting, throwing | `ranged.md#shooting-and-throwing` |
 | Missile weapon, launcher, readied missiles | `ranged.md#getting-ready` |
 | Shot distance, long range, a shot from beside the target | `ranged.md#distance` |

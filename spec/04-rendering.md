@@ -298,9 +298,12 @@ glow, barely perceptible distortion, short fades.
   its own colour over a stained background — before the grid shader lights them like the
   terrain they lie on, so stains fade into the dark, show in darkvision's monochrome, and dim
   with the cell in memory. Old blood dries darker and browner over about six hours of game time
-  (fastest at first). A few drops are barely there; only many deaths in one place look gory. A
-  **Blood** switch in the settings (on by default) hides stains, in look mode too; it is a
-  content preference, not an effect, so reduced effects leaves it as it is.
+  (fastest at first). A few drops are barely there; only many deaths in one place look gory.
+  Char (§8 "Char") shifts a cell the same way first, toward brown soot where a little has burned
+  and near black where it is charred through: a floor's dots darken into it and its ground goes
+  darker (never lighter), a wall's face is tinted more lightly; blood is drawn over the char. A
+  **Blood** switch in the settings (on by default) hides stains and char, in look mode too; it
+  is a content preference, not an effect, so reduced effects leaves it as it is.
 - **Spell circles** (`data/circles.toml`, §7; design: `docs/design/buff-circles.md`): about every
   actor the player sees with a buff's or a hex's status (a circled status: one of a buff or hex
   spell's, whatever laid it, a potion or an altar too), a thin, slowly turning transmutation

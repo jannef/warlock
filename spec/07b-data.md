@@ -610,9 +610,11 @@ developer notes (CLAUDE.md, `docs/dev/`).
   resists anything, and no data may name a kind; #151, §8 "Damage types"): an ordered list of
   `[[type]]`s, each with `id`, `name`, `physical` (Protection soaks it; default false), `verb`
   and `you` (what a blow of it does, in the third and the second person: "slashes", "slash"),
-  and `unarmed` (bare hands, kicks, and shield bashes do this kind; one at most). Ids are
-  indices (in the content fingerprint), so a new type is a new entry at the end of the list, at
-  most 32. Built in: slashing, piercing, bludgeoning (`physical`, `unarmed`), fire, cold,
+  `unarmed` (bare hands, kicks, and shield bashes do this kind; one at most), `blood` (whether
+  its harm draws blood; default true; false for fire, cold, electricity, poison, necrotic), and
+  `char` (the char it leaves where it burns, `{ light, heavy }` colours; fire's; §8 "Char"). Ids
+  are indices (in the content fingerprint), so a new type is a new entry at the end of the list,
+  at most 32. Built in: slashing, piercing, bludgeoning (`physical`, `unarmed`), fire, cold,
   electricity, acid, poison, force, necrotic (the last two the spells', §8 "Spells"). The status effects (`data/status.toml`, §8 "Status effects") name
   the kinds that wound (`wound.from = ["slashing", "piercing"]`: bleeding; none named: any) and
   the kind a status is (`damage_type = "poison"`: poisoned).

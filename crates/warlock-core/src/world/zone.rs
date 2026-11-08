@@ -244,6 +244,11 @@ impl World {
             for &p in &cells {
                 self.burst_ice(p, 0, Some(BurstIce::Melts), events);
             }
+            // It chars what it burns on, more than a passing blast (`sear.rs`).
+            let fire = content.damage_type_id("fire");
+            let laid: Vec<Pos> = cells.iter().copied().collect();
+            let center = laid[laid.len() / 2];
+            self.sear_area(fire, center, (&laid, crate::scorch::ZONE));
         }
         let until = self.state.time + Duration::seconds(seconds);
         self.state.current_mut().lay_zone(Zone {

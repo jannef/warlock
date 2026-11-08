@@ -5,7 +5,7 @@ kinds: [slashing](damage-types.md#damage-slashing), [piercing](damage-types.md#d
 Two more kinds come only from [magic](magic.md): [force](damage-types.md#damage-force) and [necrotic](damage-types.md#damage-necrotic).
 
 The kind decides what armour does against the damage, what resists it, and whether it makes you
-[bleed](status-effects.md#bleeding). It also decides how the message reads: "The kobold stabs you.", "You cleave the giant
+[bleed](status-effects.md#bleeding), and whether it spills [blood](hit-points.md#blood) on the floor or leaves [char](hit-points.md#char). It also decides how the message reads: "The kobold stabs you.", "You cleave the giant
 rat.", "The fireball burns the kobold."
 
 {{#include generated/damage-types.md}}

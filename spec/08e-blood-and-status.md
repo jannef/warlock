@@ -10,6 +10,11 @@ developer notes (CLAUDE.md, `docs/dev/`).
   - **When**: a blow that kills leaves a pool on the victim's cell and spray around it; a big hit
     (damage of at least a third of the target's maximum hit points, or any confirmed critical) a
     little spatter. Lesser blows leave nothing; spells, which do no harm, none.
+  - **By damage type** (`blood` in `data/damage_types.toml`, default true): only a blow of a
+    kind that draws blood spills any. Fire sears, cold and lightning numb and burn, poison and
+    the withering of life (necrotic) leave no wound to bleed: those draw none. The physical
+    kinds, acid, and force do. A blow of two kinds (a sword's slashing or piercing) draws blood
+    if the kind that struck does; an untyped blow (no damage types) always may.
   - **How much**: a kill spills 30 (a stain amount; a cell holds at most 100, soaked), a big hit
     10, scaled by the victim's size (`blood` in `data/sizes.toml`, percent of a medium one's:
     small 60), then by overkill (damage past 0 hit points: up to twice as much for a whole
@@ -44,6 +49,33 @@ developer notes (CLAUDE.md, `docs/dev/`).
     wall."): blood-spattered, blood-stained, or blood-soaked by amount, a wall spattered or
     smeared. The `blood` dump layer shows it as a digit, `1` a few drops to `9` soaked. Drawn
     subtly (§4.8 "Blood").
+- **Char** (`warlock-core/src/scorch.rs`, the pattern; `world/sear.rs`, applying it; #1255):
+  fire leaves scorch marks on the floor it burns and on the walls facing it, building up the more
+  a cell burns. Blood's sibling, by its rules: presentation state no rule reads.
+  - **Who chars**: a damage type with a `char` in `data/damage_types.toml` (`{ light, heavy }`
+    colours): fire.
+  - **Where and how much**: every open cell an area of it reaches takes a share, jittered 60 to
+    140 %: a burst's 20 (half at its edge, beyond radius − 1), a cone's 20, a fire zone's 24 as
+    it is laid (it burns there for turns). The walls beside those cells take 75 % of the cell's
+    share on the face toward it (half again across a corner), the most any neighbour gives. A
+    creature struck by a charring kind chars its own cell: 3, and a third of the blood the blow
+    would have spilled had it bled (a big hit's or a kill's). Bolts char only the cells of those
+    they strike. Terrain without `stains` takes none; nothing on the overworld.
+  - **Accumulation**: amounts add up per cell to 100 (charred through), and the colour follows
+    the amount from the type's `light` colour (brown soot) to its `heavy` one (near black):
+    light soot, then blackened, then charred. One fireball scorches; a room fought through with
+    fire is black.
+  - **Deterministic, gameplay-neutral**: `LevelState::scorch` (sparse by cell, blood's `Stain`:
+    amount, colour, when, faces), saved and covered by the state hash; how much lands where is a
+    hash of the turn, the moment, and the cell the fire centres on, never the gameplay random
+    stream: a fight goes exactly the same with or without char.
+  - **What the player perceives** (`PerceptionView::scorch`): by blood's rules exactly (an open
+    cell in sight, a wall's face seen; remembered as last seen, `LevelState::scorch_memory`).
+    Look mode names it before the blood and the terrain: scorched, blackened, or charred by
+    amount ("A charred blood-stained stone floor."). The `scorch` dump layer shows it as a digit,
+    `1` a little soot to `9` charred through. Drawn subtly (§4.8 "Blood").
+  - **With blood**: both are kept on a cell, neither erases the other; blood is drawn over the
+    char.
 - **Status effects** (`warlock-core/src/status.rs`, the rules of one actor's effects;
   `world/status.rs`, applying them; data `data/status.toml`, §7; M24, #138): what ails an actor.
   Diseases ("Diseases" below) build on it: they show as one status, Diseased.
