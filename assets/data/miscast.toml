@@ -1,0 +1,30 @@
+# Miscasts (#1271; spec §8 "Spells": "Miscasts"; `world/miscast.rs`): every spell cast with the
+# caster's own mana, the player's or a creature's, makes a Spellcraft check once it has gone off.
+# Scrolls, wands, and flasks make none: their magic is the item's.
+#
+# The check rolls 2d12 + the modifier of `stat` + Spellcraft's `cast` points (skills.toml: +2 at
+# 20, +14 at 100, +34 at 200; magic items and talents that raise Spellcraft count) against:
+#
+#   difficulty = base + per_level × the spell's level
+#                + 1 for each `armour_percent` percent the armour worn adds to a spell's cost
+#                  (after Battle caster's ease)
+#
+# A natural 2 (1 and 1) always fails, whatever the bonus. A failure is a miscast: the spell has
+# already gone off in full, and then the caster rolls on the miscast table (miscasts/):
+#
+#   total = 1d`die` (on its highest face rolled again and added, again and again)
+#           + per_margin × how far the check fell short
+#           − Spellcraft's `ward` points (skills.toml: 10 at 100, 20 at 200)
+#           − the stance's `miscast` (stances.toml: Defensive 5, Aggressive −5, Frenzy −10)
+#
+# at least 1. Higher totals are worse, and the top of the table can kill.
+#
+# Tuned so a starting wizard (Spellcraft about 17 with what their kit adds, Intelligence about 14:
+# a bonus of about 5) miscasts a level-1 spell about one cast in fifteen, a spell ten levels above
+# that most of the time, and a master only on the 1 and 1 (docs/balance.md "Miscasts").
+stat = "intelligence"
+base = 10
+per_level = 1
+armour_percent = 10
+die = 66
+per_margin = 3

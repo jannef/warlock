@@ -141,6 +141,7 @@ fn cause_id(world: &World, cause: warlock_core::world::Cause) -> String {
         Cause::Trap(t) => content.trap(t).id.clone(),
         Cause::Scroll(o) | Cause::Flask(o) => content.object(o).id.clone(),
         Cause::Spell(_) => "own_spell".into(),
+        Cause::Miscast(_) => "miscast".into(),
         Cause::Altar => "altar".into(),
     }
 }

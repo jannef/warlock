@@ -1,0 +1,7 @@
+[[miscast]]
+id = "scorch"
+from = 42
+to = 47
+message = "Your weave snaps back and lashes you."
+seen = "{who}'s weave snaps back and lashes it."
+effect = { kind = "harm", dice = "2d4" }

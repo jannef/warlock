@@ -443,6 +443,11 @@ mark = [{ on = "study", chance = 100 }, { on = "cast", chance = 25 }]
 benefit = [
     { effect = "learn", curve = [[0, 0], [10, 0], [60, 10], [100, 30], [150, 70]] },
     { effect = "study", curve = [[0, 0], [200, 20]] },
+    # Casting (spec §8 "Spells": "Miscasts"; miscast.toml): `cast` is added to the Spellcraft check
+    # every cast with one's own mana makes, +2 at 20, +14 at 100, +34 at 200; `ward` is taken off
+    # a miscast's total on the table, 10 at 100, 20 at 200.
+    { effect = "cast", curve = [[0, 0], [20, 2], [60, 8], [100, 14], [150, 24], [200, 34]] },
+    { effect = "ward", curve = [[0, 0], [200, 20]] },
 ]
 
 [[skill]]

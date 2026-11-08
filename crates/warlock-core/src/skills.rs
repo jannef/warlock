@@ -62,6 +62,13 @@ pub const MAX_CLIMB_CUT: i32 = 2;
 /// The most a skill takes off the difficulty of studying a spell (spec §8 "Spells").
 pub const MAX_STUDY_BONUS: i32 = 20;
 
+/// The most a skill adds to the Spellcraft check every cast makes (spec §8 "Spells": "Miscasts";
+/// `world/miscast.rs`).
+pub const MAX_CAST_BONUS: i32 = 40;
+
+/// The most a skill takes off a miscast's total (spec §8 "Spells": "Miscasts").
+pub const MAX_WARD_BONUS: i32 = 30;
+
 /// The most a skill adds to a character's learning (spec §8 "Spells": "Learning"), the last spell
 /// level.
 pub const MAX_LEARNING: i32 = crate::content::MAX_SPELL_LEVEL as i32;
@@ -175,6 +182,11 @@ pub enum Effect {
     /// Points taken off the difficulty of studying a spell (spec §8 "Spells";
     /// `world/learn.rs`).
     Study,
+    /// Points added to the Spellcraft check every cast with one's own mana makes (spec §8
+    /// "Spells": "Miscasts"; `world/miscast.rs`).
+    Cast,
+    /// Points taken off a miscast's total on the miscast table (spec §8 "Spells": "Miscasts").
+    Ward,
     /// The spell level up to which a scroll teaches for certain (spec §8 "Spells": "Learning";
     /// `world/learn.rs`); a skill with it, trained, lets the actor learn from a scroll at all.
     Learn,
@@ -329,6 +341,8 @@ impl Effect {
             Effect::Kick => *crate::stats::SCORES.end() as i32,
             Effect::Search | Effect::Spot | Effect::DetectTraps => MAX_SEARCH_BONUS,
             Effect::Study => MAX_STUDY_BONUS,
+            Effect::Cast => MAX_CAST_BONUS,
+            Effect::Ward => MAX_WARD_BONUS,
             Effect::Learn => MAX_LEARNING,
             Effect::Decipher => MAX_DECIPHER_BONUS,
             Effect::Slip => MAX_SLIP_BONUS,
@@ -675,6 +689,8 @@ impl Effect {
             Effect::Spot => "spot",
             Effect::DetectTraps => "detect_traps",
             Effect::Study => "study",
+            Effect::Cast => "cast",
+            Effect::Ward => "ward",
             Effect::Learn => "learn",
             Effect::Decipher => "decipher",
             Effect::Disarm => "disarm",

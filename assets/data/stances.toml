@@ -17,6 +17,8 @@
 #   weapon_mark  weapon skill marks count this much (percent): used once weapon skills exist
 #   gatekeeper   the Gatekeeper gift's chance of a blow at a foe stepping up counts this much
 #                (percent; the talent's one in four, so 400 is always, and more is still always)
+#   miscast      taken off a miscast's total on the miscast table (spec §8 "Spells": "Miscasts"):
+#                a calm stance softens a miscast, a wild one worsens it (negative)
 
 [[stance]]
 id = "aggressive"
@@ -26,6 +28,7 @@ damage = 2
 dodge = -3
 weapon_mark = 125
 gatekeeper = 200
+miscast = -5
 
 # Aggressive and more, at a higher price: blows that land harder and more often, a guard all but
 # given up, and no thought of running (a step away from a foe costs half again as much).
@@ -38,6 +41,7 @@ dodge = -6
 flee_cost = 150
 weapon_mark = 125
 gatekeeper = 400
+miscast = -10
 
 [[stance]]
 id = "neutral"
@@ -51,6 +55,7 @@ damage = -1
 dodge = 2
 parry = 1
 gatekeeper = 50
+miscast = 5
 
 [[stance]]
 id = "coward"

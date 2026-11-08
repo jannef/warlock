@@ -1,0 +1,7 @@
+[[miscast]]
+id = "sparks"
+from = 9
+to = 14
+message = "Your weave slips: sparks bite your fingers."
+seen = "{who}'s weave slips: sparks bite at it."
+effect = { kind = "harm", dice = "1d2", damage = "fire" }

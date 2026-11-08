@@ -639,7 +639,32 @@ developer notes (CLAUDE.md, `docs/dev/`).
       around the caster over its cells; a ray or a bolt flies to the first creature on its line.
     - **Determinism**: a cast draws only its own rolls (the attack roll, the dice, one draw a
       die in group order and one more a die the reroll hook sends back, an area's one roll for
-      all); a spell without a roll, and a rider, draw nothing. Nothing new is saved.
+      all); a spell without a roll, and a rider, draw nothing; then the miscast's Spellcraft
+      check (below). Nothing new is saved.
+    - **Miscasts** (#1271; `world/miscast.rs`, `content/miscast.rs`; `data/miscast.toml`,
+      `data/miscasts/`): every spell cast with the caster's own mana, the player's and a
+      creature's alike (creatures carry Spellcraft values), makes a **Spellcraft check** once
+      it has gone off in full; a scroll, a wand, a flask, and a miscast's echo make none.
+      2d12 + the modifier of the rules' `stat` (Intelligence) + the talents' checks of it +
+      Spellcraft's `cast` benefit against `base` + `per_level` × the spell's level + a point
+      per `armour_percent` of the armour's spell cost (after Battle caster). A natural 2 (1 and
+      1) always fails, so a cast always may miscast. A failure never cancels or weakens the
+      spell: it rolls on **one ordered table** of `[[miscast]]` entries (a file each, ranges
+      `from`–`to` tiling the totals from 1 up, the last open): **total** = 1d66 (on a 66
+      rolled again and added, again and again) + 3 × the margin the check missed by −
+      Spellcraft's `ward` benefit − the stance's `miscast` (Defensive 5, Aggressive −5, Frenzy
+      −10), at least 1. Higher totals are worse, with boons and chaos spread among the harms (a
+      glamour, the mana refunded, the spell again for free, a blessing on someone near, a swap
+      of places, a wild surge of another damage spell at someone near) and the top deadly (a
+      full backfire, a summoned vrock, 8d10 force on the caster). The entries' effects are the
+      mishaps' kinds (`MishapEffect`, `resolve_effect`) and the miscast's own (`harm`,
+      `refund`, `twice`, `surge`, `swap`, `boon`, `backfire`'s `full`), applied to any caster;
+      "near" is within 6 cells in a clear line, in actor-id order. The player is told in words
+      ("Your weave slips: sparks bite your fingers."); a creature's miscast is told by its
+      entry's `seen` line when the player sees it. A death of the player by their own miscast
+      is `Cause::Miscast` ("Killed by their own miscast fireball"). Determinism: the check's two
+      draws, the die's, then the effect's own, all on the gameplay stream; none without
+      `data/miscast.toml`.
   - **Learning, the number** (`Actor::learning`, `world/learn.rs`; derived, never stored;
     `docs/design/no-caster-level.md`, #987): what a grimoire teaches for certain comes from the
     Spellcraft skill and nothing else, its `learn` benefit (`data/skills.toml`: 0 to 10, 10 at 60,

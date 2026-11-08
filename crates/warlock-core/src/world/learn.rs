@@ -315,7 +315,7 @@ impl World {
             MishapEffect::Status { status, severity } => {
                 self.afflict(player, status, severity, None, events);
             }
-            MishapEffect::Backfire => self.backfire(lesson, events),
+            MishapEffect::Backfire { .. } => self.backfire(lesson, events),
             MishapEffect::Mana { percent } => {
                 let me = self.player_mut();
                 let lost = (me.mana.max(0) * i32::from(percent) + 99) / 100;
@@ -351,6 +351,13 @@ impl World {
             }
             MishapEffect::Summon { creature } => self.summon(creature),
             MishapEffect::Learn => self.learn_spell(lesson.spell),
+            // The miscast's only (`world/miscast.rs`): the loader keeps them off the study's table.
+            MishapEffect::Harm { .. }
+            | MishapEffect::Refund
+            | MishapEffect::Twice
+            | MishapEffect::Surge
+            | MishapEffect::Swap
+            | MishapEffect::Boon { .. } => {}
         }
     }
 

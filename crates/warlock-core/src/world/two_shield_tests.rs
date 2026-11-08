@@ -12,7 +12,7 @@ use crate::equipment::{self, Equipment};
 use crate::weapon_skills::WeaponSkills;
 
 fn builtin() -> Arc<Content> {
-    Arc::new(Content::builtin().expect("content"))
+    Arc::new(super::caster_tests::quiet())
 }
 
 fn shield(w: &World) -> ObjectId {

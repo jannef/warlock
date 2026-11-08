@@ -1,0 +1,7 @@
+[[miscast]]
+id = "gate"
+from = 115
+to = 124
+message = "Your weave rips a gate wide open, and something terrible steps through!"
+seen = "{who}'s weave rips a gate wide open, and something terrible steps through!"
+effect = { kind = "summon", creature = "vrock" }
