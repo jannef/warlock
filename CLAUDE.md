@@ -111,7 +111,7 @@ Headless dev loop (`warlock-cli`, no window; `--content-dir` works here too):
 
 | Task | Command |
 |---|---|
-| ASCII dump after actions | `cargo run -p warlock-cli -- dump --scenario showcase --actions "move:N move:N" --layers view,fov,memory` (`--character dwarf,female,warrior` starts as that character and `--name Brakka` names them, `--talents healthy,lean` picks their creation talents, `--fallen Brakka:dwarf,Tamsin:elf` gives the run the graveyard's petrified dead to name statues from (out of the state hash; docs/dev/saves.md "The graveyard"), here and in `replay --create`) |
+| ASCII dump after actions | `cargo run -p warlock-cli -- dump --scenario showcase --actions "move:N move:N" --layers view,fov,memory` (`--character dwarf,female,warrior` starts as that character and `--name Brakka` names them, `--talents healthy,lean` picks their creation talents, `--fallen Brakka:dwarf:stone,Tamsin:elf` gives the run the graveyard's dead, `:stone` the petrified, to name statues (the petrified) and gravestones (all) from (out of the state hash; docs/dev/saves.md "The graveyard"), here and in `replay --create`) |
 | Dump a replay's end state | `... dump --replay runs/x.json [--actions "wait"] --format ascii\|json [--state]` |
 | Create a replay | `... replay --create --scenario showcase --actions "move:N wait" -o runs/x.json` |
 | Verify a replay | `... replay --verify runs/x.json` (exit 1 and first diverging step on mismatch) |
@@ -256,7 +256,7 @@ player's animal companion as they know it, `Snel, a hound (grade 12) at (12, 5):
 follow`, the cell only where they see it, `Snel, a hound (grade 12): with you` in the retinue,
 `no companion` without one; docs/dev/companion.md), `familiar` (the witch's familiar, in the same
 words; `no familiar` without one; docs/dev/familiar.md), `truth`
-(ground truth, hidden traps and secret doors (`S`) too, a sealed room's standing breach (`H`), a line per chest after the map, `chest 7 (hutch) at (12, 5): shut, locked, holds 3 stacks`, a line per zone, `zone fire by #0 until 08:01:00, harm 4: (30, 14)`, and hidden locations by their entrance's
+(ground truth, hidden traps and secret doors (`S`) too, a sealed room's standing breach (`H`), a line per chest after the map, `chest 7 (hutch) at (12, 5): shut, locked, holds 3 stacks`, a line per gravestone with its inscription, `grave at (7, 3): Here lies …`, a line per zone, `zone fire by #0 until 08:01:00, harm 4: (30, 14)`, and hidden locations by their entrance's
 glyph, **dev-only**; on a level with a danger
 it and `actors` start with `danger 3 population 2/6 spawn next 08:15:00`), `actors` (every actor on the level with its hit points, mana, its resources (`resources rage
 11/20 (0)`, with progress), and

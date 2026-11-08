@@ -479,6 +479,18 @@ glyph = "#"
 fg = "#8a6a44"
 bg = "#22401a"
 
+# A drystone wall (#1258, Līctūn's): fieldstone laid without mortar, about waist high. Like a
+# fence it stops a step, never sight or sound.
+[[terrain]]
+id = "drystone_wall"
+name = "drystone wall"
+description = "Fieldstone laid without mortar, about waist high, grown over with moss."
+stone = true
+walkable = false
+glyph = "#"
+fg = "#9a958a"
+bg = "#22401a"
+
 # The fence's gate: a door that is seen through (spec §8 "Doors"; opened and closed as one).
 # Creatures that open no doors (hens) stay behind it.
 [[terrain]]
@@ -534,6 +546,20 @@ bg = "#0d0d10"
 hardness = 1500
 becomes = "rubble"
 sturdiness = 200
+
+# A gravestone (spec §7 "Graves"; #1258, Līctūn): a headstone, here and there a cross, on the
+# churchyard grass. Solid, seen past. Its level's `[graves]` words cut an inscription in each as
+# the level is made (`world/graves.rs`), which look mode reads.
+[[terrain]]
+id = "gravestone"
+name = "gravestone"
+stone = true
+grave = true
+walkable = false
+glyph = "∩"
+variants = "∩∩∩∩∩†∩∩∩∩∩∩†∩"
+fg = "#aaa69c"
+bg = "#22401a"
 
 # Chests (spec §8 "Chests"; chests.toml): a fixture of the cell, as a door is. The chest on the
 # cell (`LevelState::chests`) has a level, whose band names it and colours it (its `fg` wins over
@@ -1265,6 +1291,17 @@ fg = "#e4e8d4"
 bg = "#1a1c12"
 stairs = "down"
 glow = 0.2
+travel_minutes = 30
+
+# A churchyard by a road (#1258, Līctūn): a cross pale on the grass, a way into its walls.
+[[terrain]]
+id = "graveyard"
+name = "graveyard"
+glyph = "†"
+fg = "#d8d4c8"
+bg = "#1a2412"
+stairs = "down"
+glow = 0.15
 travel_minutes = 30
 
 [[terrain]]

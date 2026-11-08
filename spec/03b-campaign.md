@@ -53,7 +53,13 @@ every new run starts in it.
   hens (the shared `chicken`, which opens no gate), and a dog and a cat live in the village
   (#1248; like the town's, wildlife in no population, never a quest's kill). Seven cells north-east in the wood, hidden, is the fairy mound over
   **Ælfhām**, the Unseelie court's hall (§7 "Ælfhām"), which her quest reveals (#1141). Its dev
-  scenario is `holtwic`. The rest of the design's forty sites are reserved: plain
+  scenario is `holtwic`. **Līctūn** (#1258, "the corpse-yard"), Cēaptūn's churchyard, stands
+  beside the south road four cells out of town (19, 32; overworld terrain `graveyard`, the one
+  place besides the starter cave closer than six cells to another): a hand-made outdoor level
+  (`levels/lictun.toml`, 46×25, no stairs, no danger) inside a drystone wall with a lych-gate on
+  the road, fifty gravestones in rows (§7 "Graves"), a yew in each corner, a little stone chapel
+  in the middle with its altar, and **Old Dudda** the sexton (npc `dudda`, type `sexton`) on his
+  rounds of the stones, with grim, dry one-liners and mutters and no topics. The rest of the design's forty sites are reserved: plain
   cells today, spaced so a later level drops in without moving anything.
 - **Quests** (#340, design §6.2; `campaigns/ascmearc/data/quests/`): three people in Cēaptūn
   give a chain each (three quests, Wulfrun's two), every quest offered once the one before it

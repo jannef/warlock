@@ -1,0 +1,96 @@
+# Līctūn, "the corpse-yard" (#1258): Cēaptūn's churchyard, beside the road that runs south from
+# the town, four cells out (the Ascmearc's overworld, g, at 19, 32). A hand-made outdoor level
+# (sky, sun, weather), entered from that cell, arriving on the road outside the gate (@). It has
+# no stairs: like any outdoor area it is left by walking off its edge (or with `<` when no enemy
+# is about), back to its overworld cell (spec §7 "Leaving an outdoor area"). No danger: nothing
+# comes, and nobody here but the sexton.
+#
+# A drystone wall round the yard, the lych-gate on the road; inside, fifty gravestones in four
+# rows of twelve on the grass and two beside the chapel, a yew in each corner, flowers on the
+# newer graves. The path runs from the gate to the chapel in the middle: stone, a door between
+# two sconces, stools for pews, and the altar between two lamps. Old Dudda the sexton (K) walks
+# his rounds of the stones.
+#
+# The stones (spec §7 "Graves"; `world/graves.rs`): each gravestone cell gets an inscription as
+# the yard is made, from the `[graves]` words at the end: one stone in ten names one of the
+# graveyard's fallen (every character who has died, as the game's graveyard file remembers them),
+# the rest the town's own dead, a name and a byname of Cēaptūn's folk and plausible years before
+# the year the yard is first seen. Look mode reads them.
+name = "Līctūn"
+kind = "outdoor"
+arrival = "Līctūn, Cēaptūn's churchyard: rows of stones in the grass, and a little chapel."
+item_level = 1
+map = '''
+.,............................................
+.,..#########################################.
+.,..#.......................................#.
+.,..#..G..G..G..G..G..G..G..G..G..G..G..G...#.
+.,..#.......................................#.
+.,..#..G..G..G..G..G..G..G..G..G..G..G..G...#.
+.,..#.......................................#.
+.,..#...K...................................#.
+.,..#.Y.............WWWWWWWWWWW...........Y.#.
+.,..#...............WpppppppppW.............#.
+.,..#.....*.........WpsspsspppW...G...*.....#.
+.,..#...............tppppppplpW.............#.
+.,@:':::::::::::::::+ppppppp_pW.............#.
+.,..#...............tppppppplpW.............#.
+.,..#.....*.........WpsspsspppW...G...*.....#.
+.,..#...............WpppppppppW.............#.
+.,..#.Y.............WWWWWWWWWWW...........Y.#.
+.,..#.......................................#.
+.,..#.......................................#.
+.,..#..G..G..G..G..G..G..G..G..G..G..G..G...#.
+.,..#.......................................#.
+.,..#..G..G..G..G..G..G..G..G..G..G..G..G...#.
+.,..#.......................................#.
+.,..#########################################.
+.,............................................
+'''
+
+[legend]
+"." = "grass"
+"," = "dirt_road"
+":" = "flagstones"
+"*" = "flowers"
+"#" = "drystone_wall"
+"'" = "gate_open"
+"G" = "gravestone"
+"Y" = "tree"
+"W" = "wall"
+"p" = "plank_floor"
+"l" = { terrain = "plank_floor", light = "lamp" }
+"s" = "stool"
+"t" = "sconce"
+"_" = "altar"
+"+" = "door_closed"
+"@" = { terrain = "dirt_road", spawn = "player" }
+# Old Dudda, the sexton, on his rounds of the stones (campaigns/ascmearc/data/dialogue/lictun.toml).
+"K" = { terrain = "grass", creature = "sexton", npc = "dudda", route = "E30 S11 W30 N11" }
+
+# What the stones say (spec §7 "Graves"): a given name and a byname of Cēaptūn's folk (Old and
+# Middle English, as the town's commoners are named), an epitaph with their years, and the words
+# for one of the graveyard's fallen.
+[graves]
+names = [
+    "Ælfric", "Æthelwine", "Beornwulf", "Brihtwold", "Cēolmund", "Dunstan", "Eadric", "Godwine",
+    "Hereward", "Leofwine", "Ordgar", "Osmund", "Sigeric", "Wulfgar", "Wulfstan", "Ælfgifu",
+    "Æthelgyth", "Beorhtgifu", "Cēolwynn", "Ēadburh", "Eadgyth", "Ealhswith", "Leofrun",
+    "Mildred", "Osgifu", "Wulfwynn", "Wynburh",
+]
+bynames = [
+    "Wudu", "atte Welle", "atte Mylne", "atte Brigge", "Hwīta", "Read", "Lang", "Lytel", "Crump",
+    "Smyth", "Webbe", "Bacere", "Fugelere", "Fiscere", "Cartere", "Hunta", "Cēapmann", "Swān",
+]
+epitaphs = [
+    "Here lies {name}, {born}–{died}.",
+    "Here lieth {name}, {born}–{died}. God rest them.",
+    "Pray for the soul of {name}, {born}–{died}.",
+    "Here resteth {name}, {born}–{died}. Gone home.",
+    "{name}, {born}–{died}. Much missed.",
+    "{name}, {born}–{died}. The fen fever took them.",
+    "In memory of {name}, {born}–{died}. Gone under the hill.",
+]
+fallen = "Here lies {name}, {death}."
+died = [1, 150]
+age = [1, 80]

@@ -1,0 +1,30 @@
+# The sexton of Līctūn, Cēaptūn's churchyard (#1258; the fields: data/dialogue.toml): Old Dudda,
+# placed by the churchyard's legend with `npc = "dudda"`, on his rounds of the stones. He talks
+# as the commoners of the march do, grim and dry: one-liners and mutters, no topics, no quest,
+# no service.
+[[dialogue]]
+npc = "dudda"
+name = "Old Dudda"
+greet = "Mornin'. Or evenin'. All the same to my lot."
+greet_evil = [
+    "Come to fill a plot, 'ave yer? I've room.",
+    "Keep yer 'ands off the stones, you. They've 'ad enough bother.",
+]
+lines = [
+    "Mind where yer tread. Everyone under 'ere was somebody's.",
+    "Six foot down, square sides. Nobody's ever sent one back.",
+    "Busy year. It's always a busy year.",
+    "Ground's 'ard as iron in Frostmere. My lot wait for the thaw. Patient folk, the dead.",
+    "Adventurers? Got a row of 'em along the wall. Brave lot. Quiet now.",
+    "I'll dig yours when it comes to it. Won't charge for the first foot.",
+    "Sister Hild says the words, I does the diggin'. Fair split, that.",
+    "Lights in the yard at night? Marsh gas. Mostly.",
+    "Forty year I've kept this yard. Nobody's got out yet.",
+]
+mutter = { chance = 2, verb = "grumbles", lines = [
+    "Moss on 'em again.",
+    "Spade wants sharpenin'.",
+    "Another one by the thaw, I shouldn't wonder.",
+    "Rest easy, old son. Rest easy.",
+    "Shoulda been a baker. Warm work, bakin'.",
+] }

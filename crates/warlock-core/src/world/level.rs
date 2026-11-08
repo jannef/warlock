@@ -89,6 +89,15 @@ pub struct LevelState {
     /// sees.
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty", with = "by_pos")]
     pub(crate) statues: BTreeMap<Pos, super::statue::Statue>,
+    /// What is cut in its gravestones, by position (spec §7 "Graves"; `world/graves.rs`): one
+    /// inscription on every grave terrain cell, when the level has words for them. Decoration,
+    /// read by no rule and left out of the state hash; the player reads one in look mode.
+    #[serde(
+        default,
+        skip_serializing_if = "super::hash::unhashed_map",
+        with = "by_pos"
+    )]
+    pub(crate) graves: BTreeMap<Pos, String>,
     /// Secret doors not yet found, by position (spec §8 "Searching"): the cell's terrain is the
     /// wall each looks like; found, it becomes its door and is gone from here. Ground truth.
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty", with = "by_pos")]
@@ -200,6 +209,7 @@ impl LevelState {
             wedged: BTreeMap::new(),
             chests: template.chests.clone(),
             statues: template.statues.clone(),
+            graves: BTreeMap::new(),
             secrets: template.secrets.clone(),
             hidden: template.hidden.clone(),
             // A hand-made level's places are read from its template in `Content`.
@@ -307,6 +317,11 @@ impl LevelState {
     /// only**.
     pub fn statues(&self) -> &BTreeMap<Pos, super::Statue> {
         &self.statues
+    }
+
+    /// What is cut in its gravestones, by position (spec §7 "Graves"; `world/graves.rs`).
+    pub fn graves(&self) -> &BTreeMap<Pos, String> {
+        &self.graves
     }
 
     /// The secret door at `p`, if one is there and not yet found (ground truth: it looks like

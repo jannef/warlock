@@ -1,0 +1,17 @@
+# The sexton of Līctūn, Cēaptūn's churchyard by the south road (#1258): Old Dudda, who digs the
+# graves and keeps the grass, and has a dry word for anyone who stops (his npc dialogue,
+# campaigns/ascmearc/data/dialogue/lictun.toml). Peaceful, no quest, no service.
+[[creature]]
+id = "sexton"
+name = "sexton"
+glyph = "@"
+fg = "#9c9488"
+faction = "peaceful"
+# One of the people: never greater or lesser than their kind.
+grades = false
+alignment = "good"
+race = "human"
+footsteps = 45
+hearing = 8
+weight = 68000
+stats = { strength = 13, toughness = 13, willpower = 13 }
