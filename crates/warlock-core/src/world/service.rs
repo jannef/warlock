@@ -24,7 +24,9 @@
 //! the data's, moved by the player's favour (their Presence, skills, and talents; a keeper's
 //! alignment is a shop's, not a service's) for a healer's or a sage's, and never for a
 //! `temple` service (a temple does not haggle, #1031): the price less the favour in percent,
-//! rounded up, at least 1. Every service paid trains Negotiation ([`Use::Deal`]). Pious halves
+//! rounded up, at least 1. Then the goodwill of the speaker's town (`goodwill.rs`, #1247) takes
+//! its percent off that, rounded up: only 100% off makes it free, and a free service changes no
+//! hands and trains nothing. Every service paid trains Negotiation ([`Use::Deal`]). Pious halves
 //! a cure's or a mending's price (rounded up) first, and with Pious a cure also mends a point of each
 //! damaged stat ([`TalentMods::services`], the one hook). Lore and Connoisseur do not move an
 //! identification's price. No stream is drawn, and nothing new is saved: a service changes only what is
@@ -33,6 +35,7 @@
 //! [`TalentMods::services`]: crate::talent::TalentMods::services
 
 use super::actor::undrained;
+use super::goodwill::discounted;
 use super::shop::{count_of, haggling};
 use super::{ActorId, Spent, World};
 use crate::action::Event;
@@ -46,10 +49,16 @@ pub const PRAYER: &str = "prayer";
 const CURE_FIRST: &str = "Be cured first.";
 
 impl World {
-    /// What `service` costs the player now, per stack for an identification: a cure's or a
-    /// mending's half, rounded up, with Pious; then, unless a temple sells it, less the player's
-    /// favour (see the module docs).
-    pub fn service_price(&self, service: &Service) -> u32 {
+    /// What `service`, sold by whoever speaks `dialogue`, costs the player now, per stack for an
+    /// identification: a cure's or a mending's half, rounded up, with Pious; then, unless a
+    /// temple sells it, less the player's favour; then less their town's goodwill (see the
+    /// module docs).
+    pub fn service_price(&self, dialogue: DialogueId, service: &Service) -> u32 {
+        discounted(self.haggled_price(service), self.goodwill_off(dialogue))
+    }
+
+    /// [`World::service_price`] before the goodwill.
+    fn haggled_price(&self, service: &Service) -> u32 {
         let healing = service.does != ServiceKind::Identify;
         let price = if healing && self.state.player().talent_mods(&self.content).services {
             service.price.div_ceil(2)
@@ -111,17 +120,20 @@ impl World {
             return Some(Spent::Nothing);
         }
         let items = self.service_items(&service).unwrap_or(1);
-        let price = self.service_price(&service).saturating_mul(items);
+        let price = self.service_price(dialogue, &service).saturating_mul(items);
         let currency = self.content.shops().map(|s| s.currency);
         let gold = currency.map_or(0, |c| count_of(&self.state.player().inventory, c));
         if gold < price {
             self.say("You cannot pay.");
             return Some(Spent::Nothing);
         }
-        self.hand_over(player, id, price);
-        let who = self.called(&self.state.actors[&id]);
-        self.say(format!("You pay {who} {price} gold."));
-        self.train(Use::Deal);
+        // Free for the town's goodwill (`goodwill.rs`): nothing changes hands.
+        if price > 0 {
+            self.hand_over(player, id, price);
+            let who = self.called(&self.state.actors[&id]);
+            self.say(format!("You pay {who} {price} gold."));
+            self.train(Use::Deal);
+        }
         match service.does {
             ServiceKind::Cure => {
                 self.cure(player, PRAYER, events);

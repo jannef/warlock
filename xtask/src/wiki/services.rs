@@ -36,3 +36,35 @@ pub(super) fn services(content: &Content) -> String {
     }
     out
 }
+
+/// The towns (a campaign's `data/towns/`): their people, the percent their services cost less
+/// per quest of theirs completed, and how many quests make them free, sorted by name.
+pub(super) fn towns(content: &Content) -> String {
+    let mut rows: Vec<_> = content.towns().iter().collect();
+    if rows.is_empty() {
+        return "No town keeps goodwill yet.\n".to_string();
+    }
+    rows.sort_by(|a, b| a.name.cmp(&b.name));
+    let mut out =
+        String::from("| Town | Its people | Off per quest | Free after |\n|---|---|---:|---:|\n");
+    for town in rows {
+        let mut people: Vec<String> = (0..content.dialogues().len())
+            .map(|i| DialogueId(i as u16))
+            .filter(|&d| content.town_of(d) == Some(town))
+            .map(|d| content.speaker_name(d))
+            .collect();
+        people.sort();
+        let free = match town.goodwill {
+            0 => "never".to_string(),
+            n => format!("{} quests", 100u32.div_ceil(n)),
+        };
+        let _ = writeln!(
+            out,
+            "| {} | {} | {}% | {free} |",
+            town.name,
+            people.join(", "),
+            town.goodwill
+        );
+    }
+    out
+}

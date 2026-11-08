@@ -167,7 +167,8 @@ and the npcs `hild` (Sister Hild: two topics, the `cure` 60 and `mend` 40 servic
 guildmaster, in the Gildhalle of the south-east corner, `[77, 22, 85, 28]`, its door north on the
 lane and the bounty board, a named place on the wall beside it: `docs/dev/guild.md`), each with a proper `name`
 (`Dialogue::name`: `World::called`, `Content::speaker_name`/`speaker_called`, look mode and the
-dialogue screen through `SeenActor::dialogue`). Their quests are below ("Cēaptūn's quests"). The dev
+dialogue screen through `SeenActor::dialogue`). Their quests are below ("Cēaptūn's quests"); each one
+done makes their services 5% cheaper (`data/towns/ceaptun.toml`, docs/dev/npcs.md "Goodwill"). The dev
 scenario `ceaptun` starts on the square (seed 2, a warrior, 60 gold). Tests:
 `world/ceaptun_tests.rs` (the way in and out, the shops' goods, everyone at peace, names, the
 sanctuary and the services, Godgifu's topics, the view snapshot `ceaptun_start`, a replay),

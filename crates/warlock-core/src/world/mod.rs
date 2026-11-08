@@ -168,6 +168,7 @@ pub(crate) mod gear_condition;
 mod gear_condition_tests;
 mod gifts;
 mod glare;
+mod goodwill;
 mod graveyard;
 #[cfg(test)]
 mod graveyard_tests;
@@ -1812,6 +1813,8 @@ mod gear_tests;
 mod gem_tests;
 #[cfg(test)]
 mod gifts_tests;
+#[cfg(test)]
+mod goodwill_tests;
 #[cfg(test)]
 mod guild_tests;
 #[cfg(test)]

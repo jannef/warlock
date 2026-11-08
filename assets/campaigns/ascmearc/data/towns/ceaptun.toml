@@ -1,0 +1,13 @@
+# Cēaptūn, the market town (levels/ceaptun.toml; spec §8 "Dialogue": "Goodwill", #1247). Every
+# quest its people give that the player completes (the Weyfarers' Gilde's, Wat's, included) makes
+# their services 5% cheaper, on top of any other discount, up to free (world/goodwill.rs).
+#
+# Fields: id, name, people (who speaks for the town: npc or creature ids, as a quest's `giver`
+# names them), goodwill (percent off their services per quest of theirs completed), told (said
+# as such a quest is completed).
+[[town]]
+id = "ceaptun"
+name = "Cēaptūn"
+people = ["godgifu", "hild", "leofric", "wat", "wulfrun"]
+goodwill = 5
+told = "Cēaptūn's folk think the better of you."

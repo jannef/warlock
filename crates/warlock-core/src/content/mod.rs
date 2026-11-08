@@ -164,6 +164,7 @@ mod temper;
 mod terrain;
 mod theft;
 mod throw;
+mod town;
 mod trap;
 mod unique;
 mod unseen;
@@ -338,6 +339,7 @@ pub use temper::TemperRules;
 pub use terrain::{Breakable, Freeze, FreezeSpec, StairsDir, TerrainDef, TerrainId};
 pub use theft::{Blinks, SMALL as SMALL_LOOT, Steals, Takes};
 pub use throw::Throw;
+pub use town::TownDef;
 pub use trap::{Trap, TrapAvoid, TrapDef, TrapEffect, TrapId, TrapNoise};
 pub use unique::{Power, UNIQUE, UniqueDef, Uniques};
 pub use unseen::Invisible;
@@ -817,6 +819,8 @@ pub struct Content {
     quests: Vec<QuestDef>,
     /// Guilds and their ranks (`data/guilds/`, each campaign's too), in table order.
     guilds: Vec<GuildDef>,
+    /// Towns and the goodwill their quests earn (each campaign's `data/towns/`), in table order.
+    towns: Vec<TownDef>,
     /// The callings into prestige classes (each campaign's `data/callings/`), in table order.
     callings: Vec<CallingDef>,
     /// Shops (`data/shops.toml`); none without the file.
@@ -932,6 +936,7 @@ impl Content {
             plurals: Plurals::default(),
             quests: Vec::new(),
             guilds: Vec::new(),
+            towns: Vec::new(),
             callings: Vec::new(),
             shops: None,
         };
@@ -1402,6 +1407,7 @@ impl Content {
         }
         content.quests = quest::parse(files.table("quests"), &content)?;
         content.guilds = guild::parse(files.table("guilds"), &content)?;
+        content.towns = town::parse(files.table("towns"))?;
         content.callings = calling::parse(files.table("callings"), &content)?;
         content.encounter_tables = encounter::parse(files.table("encounters"), &content)?;
         content.validate()?;

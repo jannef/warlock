@@ -812,6 +812,17 @@ developer notes (CLAUDE.md, `docs/dev/`).
     the gold only `Go back`). All or nothing: refused with the `nothing` line when everything is
     known and with "You cannot pay." short of the total, neither taking time. Pious does not
     halve it (a temple's talent).
+  - **Goodwill** (`world/goodwill.rs`, `content/town.rs`; #1247): a campaign's `data/towns/`
+    `[[town]]`s (`id`, `name`, `people`: npc or creature ids, `goodwill`: percent, `told`) name a
+    town's people. Every quest one of them gives that the player completes (each completion of a
+    repeatable one) adds one to the town's goodwill, derived from the quest records (nothing new
+    saved), and the town's `told` line is said after "Quest complete" ("Cēaptūn's folk think the
+    better of you."). Its people's services cost `goodwill × count` percent less, at most 100%,
+    taken off the price after Pious and favour and rounded up, so only 100% off makes one free;
+    a free service is listed "(free)", asks no pay dialog, moves no gold, says no "You pay", and
+    trains nothing. Shop goods and offers keep their prices. Built in: Cēaptūn, 5% a quest for
+    Sister Hild's, Reeve Leofric's, Factor Wulfrun's, and Wat One-Eye's (the Gilde's) quests:
+    twenty make its services free.
   - **An offer** (`world/wares.rs`; #808, docs/design/overworld-encounters.md §15 Q7: the
     pedlar): a dialogue's `[dialogue.offer]` is one item at a fixed price, take it or leave it,
     asked for like a topic (`ask:E:wares`) and listed after the services. It is made the first

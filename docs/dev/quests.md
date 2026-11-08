@@ -42,6 +42,9 @@ brought or delivered (`World::quest_objects`) is protected from all item damage,
 heat, and a failed temper alike (`world/item_damage.rs`, #1170; docs/dev/objects.md
 "Protection"); a quest's reward is an ordinary item unless another quest's `hand_in` names it
 (the owner: no special quest items for rewards).
+A quest done for one of a town's people (`data/towns/`) also raises that town's goodwill, its
+services cheaper by its percent: `World::tell_goodwill` after "Quest complete", the count derived
+from `QuestRecord::completed` (#1247; docs/dev/npcs.md "Goodwill").
 The log's objective is the **first breadcrumb**, `world::quest_wants`: "<Giver> wants you to
 <asks, lower-cased>." (a bring to the giver names no recipient); `quest_asks` stays the plain
 goal, and for a rolled quest describes its pool (the wiki's goal column).

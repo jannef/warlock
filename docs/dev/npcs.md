@@ -63,6 +63,22 @@ Nothing is saved that was not before, and no stream is drawn. Tests: `world/serv
 scroll types identified, the replay and the save), Wulfrun's in `world/ceaptun_tests.rs`,
 the screen's row in `ui/dialogue_screen.rs`; the wiki's table is `xtask/src/wiki/services.rs`.
 
+**Goodwill** (#1247; spec §8 "Dialogue": "Goodwill"): `content/town.rs` (`TownDef`, a
+campaign's `data/towns/`, one file per town: `id`, `name`, `people`, `goodwill` in percent,
+`told`; well-formedness only, #1205: a name in `people` that speaks no dialogue just matches
+nobody) and `world/goodwill.rs`. `Content::town_of(dialogue)` is the town whose `people` name
+the speaker (an npc id, or a creature id for a type's dialogue). `World::goodwill(town)` sums
+`QuestRecord::completed` over the quests whose `giver` is one of its people: derived, never
+saved, so the save and the state hash are unchanged. `World::goodwill_off(dialogue)` is that
+times the town's `goodwill`, at most 100; `service_price(dialogue, service)` takes it off the
+haggled price last (`goodwill::discounted`: rounded up, so free only at 100%). `ask_service`
+with a price of 0 hands nothing over and says and trains nothing; the dialogue screen lists
+such a service "(free)" and asks no pay dialog. `World::complete_saying` calls
+`tell_goodwill(giver)` after "Quest complete" (the one line in `quest.rs`). Tests:
+`world/goodwill_tests.rs` (Cēaptūn: the rounding, a quest done for the reeve, every completion
+and the Gilde's counting but Holtwīc's not, the cap and a free cure), the screen's row in
+`ui/dialogue_screen.rs`; the wiki's table is `xtask/src/wiki/services.rs::towns`.
+
 **A trader's offer** (#808, docs/design/overworld-encounters.md §15 Q7; spec §8 "Dialogue"):
 `content/offer.rs` (`TradeOffer`, a dialogue's `[dialogue.offer]`: `id`, `name`, `reply` said on
 a sale, `sold` said after, `level = { bonus, least }`, `affixes` as `[count, weight]` pairs,
