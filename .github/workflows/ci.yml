@@ -183,8 +183,8 @@ jobs:
       # downloading their GitHub release archives failed for hours on 2026-11-08 (504s).
       - name: Install cargo-deny and cargo-about
         run: |
-          cargo install --locked cargo-deny@0.20.2
-          cargo install --locked cargo-about --features cli
+          cargo deny --version 2>/dev/null | grep -q ' 0\.20\.2' || cargo install --locked --force cargo-deny@0.20.2
+          command -v cargo-about >/dev/null || cargo install --locked cargo-about --features cli
       - name: cargo deny check
         run: cargo deny --all-features check
       # Third-party notices: fail when THIRD_PARTY_LICENSES.html is stale (run
