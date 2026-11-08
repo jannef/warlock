@@ -5,7 +5,7 @@
 use super::*;
 use crate::ability::{Ability, Aim};
 use crate::action::parse_actions;
-use crate::content::{ContentFiles, Rarity, SpellId};
+use crate::content::{Rarity, SpellId};
 use crate::magic::{Affix, Magic};
 
 /// The pack: a, two scrolls of identify.
@@ -13,7 +13,7 @@ const PACK: &str = "carry = [\"scroll_of_identify*2\"]";
 
 /// A lit hall, the player with `mana` mana.
 fn world(mana: u16) -> World {
-    let mut files = ContentFiles::builtin();
+    let mut files = super::caster_tests::files();
     files.insert(
         "levels/hall.toml",
         "name = \"Hall\"\nambient = [255, 255, 255, 0]\nmap = '''\n#####\n#@..#\n#####\n'''\n\

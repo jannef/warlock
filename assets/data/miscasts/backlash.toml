@@ -1,0 +1,7 @@
+[[miscast]]
+id = "backlash"
+from = 77
+to = 83
+message = "Your weave turns on you, and the spell breaks over your own head!"
+seen = "{who}'s weave turns on it, and the spell breaks over its own head!"
+effect = { kind = "backfire" }

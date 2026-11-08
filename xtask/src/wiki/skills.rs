@@ -94,6 +94,8 @@ fn effect_name(effect: Effect) -> &'static str {
         Effect::Spot => "noticing hidden things in passing, not traps",
         Effect::DetectTraps => "finding hidden traps, searching and in passing",
         Effect::Study => "learning spells from grimoires",
+        Effect::Cast => "the Spellcraft check every cast makes: fewer miscasts",
+        Effect::Ward => "milder miscasts",
         Effect::Learn => "what a scroll teaches for certain, and reads for certain",
         Effect::Decipher => "reading a scroll you cannot simply read",
         Effect::Disarm => "disarming traps",
@@ -162,6 +164,8 @@ pub(super) fn skill_benefits(content: &Content) -> String {
             Effect::Spot => "noticing",
             Effect::DetectTraps => "finding traps",
             Effect::Study => "study check",
+            Effect::Cast => "casting check",
+            Effect::Ward => "off a miscast's total",
             Effect::Learn => "learning",
             Effect::Decipher => "reading scrolls",
             Effect::Disarm => "disarming traps",
@@ -219,6 +223,7 @@ pub(super) fn skill_benefits(content: &Content) -> String {
                 | Effect::Spot
                 | Effect::DetectTraps
                 | Effect::Study
+                | Effect::Cast
                 | Effect::Decipher
                 | Effect::Slip
                 | Effect::Lookout
@@ -251,6 +256,7 @@ pub(super) fn skill_benefits(content: &Content) -> String {
                 Effect::SearchReach => format!("+{n} cell{}", if n == 1 { "" } else { "s" }),
                 Effect::Kick => format!("+{n} Strength"),
                 Effect::Quiet | Effect::Travel => format!("\u{2212}{n}%"),
+                Effect::Ward => format!("\u{2212}{n}"),
                 Effect::Bargain => format!("{n}% better"),
                 Effect::Forage => format!("+{n}%"),
                 Effect::Freshness | Effect::Identify => format!("{n}%"),

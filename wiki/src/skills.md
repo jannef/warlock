@@ -154,6 +154,11 @@ The passive skills help you more the higher they are:
   against: the Willpower check they ask is 8 harder at 100 and 12 at 200 (at most 20). A threat
   also frightens longer the more the skill adds. Every threat and every cry trains it, whatever
   comes of it.
+- **[Spellcraft](skills.md#skill-spellcraft)** steadies your casting. Every spell you cast with
+  your own [mana](mana.md) makes a check after it goes off, and a failed one is a
+  [miscast](miscasts.md). The skill adds to that check (+14 at 100, +34 at 200) and makes a
+  miscast milder (10 off the [miscast table](miscasts.md#the-miscast-table)'s total at 100, 20 at
+  200). Untrained, you still cast, with nothing added.
 
 [Skill focus](talents.md#talent-skill-focus) makes one skill you are trained in count 25 higher in the table below, the way a
 [magic item](magic-items.md)'s bonus does. It works past 100 too, since 100 only slows a skill's [growth](skills.md#getting-better) and is no

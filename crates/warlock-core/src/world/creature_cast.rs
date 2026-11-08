@@ -30,7 +30,8 @@
 //! as a melee creature.
 //!
 //! **What** ([`World::creature_casts`]): the mana is spent, the chanting heard (a spell's
-//! noise), and the cast said; then the spell does what the player's would. An `attack` spell's
+//! noise), and the cast said; then the spell does what the player's would. Then its Spellcraft
+//! check, as the player's: a failure miscasts (`miscast.rs`). An `attack` spell's
 //! roll adds its level's quarter, as its natural attacks do ([`World::creature_aim`]). A cast
 //! trains nothing. The action costs a `cast`.
 //!
@@ -244,17 +245,9 @@ impl World {
         let far = on != self.state.player && !self.near_player(id) && !self.near_player(on);
         let outer = far.then(|| self.held.replace(Vec::new()));
         self.say_cast(id, def, on);
-        match def.kind {
-            SpellPurpose::Buff => {
-                if let (Some((status, _)), Some(degrees)) = (def.effect.status, cast.degrees) {
-                    self.afflict(id, status, degrees, Some(id), events);
-                }
-            }
-            SpellPurpose::Heal => self.creature_heals(&cast, on),
-            SpellPurpose::Hex => self.creature_hexes(id, &cast, (here, at), events),
-            SpellPurpose::Damage => self.creature_harms(id, &cast, (here, at), events),
-            _ => {}
-        }
+        self.creature_spell_does((id, here), &cast, (on, at), events);
+        // Gone off in full: now its Spellcraft check, and perhaps a miscast (`miscast.rs`).
+        self.after_cast(id, &cast, super::miscast::Aim::Creature(on), events);
         if let Some(outer) = outer {
             let lines = std::mem::replace(&mut self.held, outer).unwrap_or_default();
             match &mut self.held {
@@ -263,6 +256,29 @@ impl World {
             }
         }
         price
+    }
+
+    /// What creature `id`, standing on `here`, does with `cast` at `on`, standing on `at`, by
+    /// its kind (paid and said already).
+    pub(super) fn creature_spell_does(
+        &mut self,
+        (id, here): (ActorId, Pos),
+        cast: &Cast<'_>,
+        (on, at): (ActorId, Pos),
+        events: &mut Vec<Event>,
+    ) {
+        let def = cast.def;
+        match def.kind {
+            SpellPurpose::Buff => {
+                if let (Some((status, _)), Some(degrees)) = (def.effect.status, cast.degrees) {
+                    self.afflict(id, status, degrees, Some(id), events);
+                }
+            }
+            SpellPurpose::Heal => self.creature_heals(cast, on),
+            SpellPurpose::Hex => self.creature_hexes(id, cast, (here, at), events),
+            SpellPurpose::Damage => self.creature_harms(id, cast, (here, at), events),
+            _ => {}
+        }
     }
 
     /// Whether actor `id` stands within [`super::rest::CLOSE`] of the player.

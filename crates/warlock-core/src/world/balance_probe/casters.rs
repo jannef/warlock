@@ -19,7 +19,7 @@ const CLASSES: [&str; 2] = ["warrior", "wizard"];
 /// One spell of a caster's list as it casts it.
 #[derive(Clone)]
 pub(super) struct Spell {
-    name: String,
+    pub(super) name: String,
     kind: SpellPurpose,
     resolution: Resolution,
     /// Its roll's mean, and the roll as text.
@@ -28,6 +28,8 @@ pub(super) struct Spell {
     /// Its to-hit (an `attack` or `touch` spell's), its level's quarter on top.
     to_hit: i32,
     cost: i32,
+    /// The difficulty of its Spellcraft check on a cast (`miscasts.rs`).
+    pub(super) difficulty: i32,
 }
 
 /// A caster's spells and pool, made bare in `w` as `id`.
@@ -47,6 +49,7 @@ pub(super) fn spells_of(w: &World, id: ActorId) -> (Vec<Spell>, i32) {
                 roll: roll.map_or_else(String::new, |r| r.to_string()),
                 to_hit: me.spell_to_hit(content, spell) + i32::from(def.level) / 4,
                 cost: me.spell_cost(content, spell),
+                difficulty: me.cast_difficulty(content, spell).unwrap_or(0),
             }
         })
         .collect();

@@ -1,0 +1,7 @@
+[[miscast]]
+id = "displaced"
+from = 71
+to = 76
+message = "Your weave folds the world, and you are flung through it!"
+seen = "{who}'s weave folds the world, and it is flung away!"
+effect = { kind = "teleport" }

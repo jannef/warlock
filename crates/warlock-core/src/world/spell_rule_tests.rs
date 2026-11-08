@@ -7,7 +7,7 @@ use super::caster_tests::{kobold_at, run, said, sp};
 use super::spell_type_tests::{cell, start, status};
 use super::*;
 use crate::action::{Action, Event};
-use crate::content::{ContentFiles, ZoneKind};
+use crate::content::ZoneKind;
 use crate::noise::SoundKind;
 use crate::stats::{PerStat, Stats};
 
@@ -31,7 +31,7 @@ const CLOSET: &str = "name = \"Closet\"\nambient = [255, 255, 255, 0]\nmap = '''
     \"K\" = { terrain = \"floor\", creature = \"kobold\" }\n";
 
 fn world(seed: u64, level: &str) -> World {
-    let mut files = ContentFiles::builtin();
+    let mut files = super::caster_tests::files();
     files.insert("levels/hall.toml", level);
     files.insert(
         "scenarios/hall.toml",
@@ -423,7 +423,7 @@ fn a_cloudburst_needs_the_open_sky_rains_for_an_hour_and_puts_out_what_burns() {
     assert_eq!(w.state.player().mana, mana, "a hall has no sky");
     assert!(w.state.weather_override.is_none());
 
-    let content = Arc::new(Content::builtin().expect("content"));
+    let content = Arc::new(super::caster_tests::quiet());
     let spec: crate::character::CharacterSpec = "human,female,wizard".parse().expect("a character");
     let spec = spec.with_talents(vec!["keen_ears".into(), "lean".into(), "pious".into()]);
     let mut w = World::start_run(content, "courtyard", Some(9), Some(&spec), None, true)

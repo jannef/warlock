@@ -244,6 +244,7 @@ above.
 | Corroded | `status-effects.md#corroded` |
 | How a spell resolves (attack, auto, area, touch) | `spellcasting.md#how-a-spell-finds-its-target` |
 | Mishap | `magic.md#learning-spells-from-grimoires` |
+| Miscast, the Spellcraft check on casting, the miscast table | `miscasts.md#the-check`, `miscasts.md#the-miscast-table` |
 | Learning a spell from a grimoire, overreach | `magic.md#learning-spells-from-grimoires` |
 | Spell rank, deepening a spell, rereading a grimoire | `magic.md#spell-ranks` |
 | Wand, rod, charges | `wands-and-rods.md#wands`, `wands-and-rods.md#rods` |

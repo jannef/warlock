@@ -1,0 +1,7 @@
+[[miscast]]
+id = "rift"
+from = 97
+to = 104
+message = "Your weave tears open a rift, and something crawls through!"
+seen = "{who}'s weave tears open a rift, and something crawls through!"
+effect = { kind = "summon", creature = "dretch" }

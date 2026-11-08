@@ -187,7 +187,7 @@ fn effect_text(content: &Content, effect: MishapEffect) -> String {
         MishapEffect::Status { status, severity } => {
             format!("{} ×{severity}", content.status(status).name)
         }
-        MishapEffect::Backfire => {
+        MishapEffect::Backfire { .. } => {
             "the scroll's own spell goes off on you (its burst around you, its bolt through you), \
              never past the cap of the spell it teaches"
                 .into()
@@ -211,5 +211,12 @@ fn effect_text(content: &Content, effect: MishapEffect) -> String {
         }
         MishapEffect::Learn => "you learn the spell anyway".into(),
         MishapEffect::Mark { stat } => format!("a training mark of {}", stat.name()),
+        // The miscast table's only (`miscast.rs` says them).
+        MishapEffect::Harm { .. }
+        | MishapEffect::Refund
+        | MishapEffect::Twice
+        | MishapEffect::Surge
+        | MishapEffect::Swap
+        | MishapEffect::Boon { .. } => effect.kind().into(),
     }
 }

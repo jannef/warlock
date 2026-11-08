@@ -1496,7 +1496,7 @@ const CASES: &[Case] = &[
         scenario: "arena",
         // Seed 142 gives Pip a lucky day, the Iron Scourge (#269), and the fight his death.
         seed: Some(142),
-        actions: "use_tool wait*16",
+        actions: "use_tool wait*20",
         ..BASE
     },
 ];

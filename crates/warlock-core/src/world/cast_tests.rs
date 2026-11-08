@@ -7,13 +7,13 @@ use super::caster_tests::{kobold, kobold_at, last, reach, run, sp, world_with};
 use super::*;
 use crate::action::Event;
 use crate::combat::Strike;
-use crate::content::ContentFiles;
+
 use crate::stats::{PerStat, Stat, Stats};
 
 /// The built-in content with the wizard's Arcane bolt (level 6) as `body` says: its shape,
 /// resolution, and dice.
 fn content_with_bolt(body: &str) -> Arc<Content> {
-    let mut files = ContentFiles::builtin();
+    let mut files = super::caster_tests::files();
     let text = format!(
         "[[spell]]\nid = \"arcane_bolt\"\nname = \"Arcane bolt\"\ndescription = \"x\"\n\
          level = 6\nschool = \"evocation\"\nkind = \"damage\"\ndamage_type = \"force\"\n{body}\n"
@@ -124,7 +124,7 @@ fn auto_and_area_spells_never_miss_nor_critical() {
 fn empower_climbs_a_rung_and_nothing_holds_it() {
     // The shipped Arcane bolt: a line of 4d6, then 6d6 at Intelligence 13; Empower's rung
     // reaches 6d6 at Intelligence 10, 18 at most.
-    let mut w = world_with(Arc::new(Content::builtin().expect("content")), "wizard");
+    let mut w = world_with(Arc::new(super::caster_tests::quiet()), "wizard");
     reach(&mut w, 32);
     scores(&mut w, &[]);
     let content = w.content().clone();
@@ -241,7 +241,7 @@ fn a_touch_reaches_only_the_next_cell() {
 
 #[test]
 fn armour_makes_spells_dearer() {
-    let mut w = world_with(Arc::new(Content::builtin().expect("content")), "wizard");
+    let mut w = world_with(Arc::new(super::caster_tests::quiet()), "wizard");
     reach(&mut w, 18);
     // `levelup:auto` takes Frugal caster at 18 (it took Attuned before it went); these tests
     // read the plain costs.
@@ -262,7 +262,7 @@ fn armour_makes_spells_dearer() {
 
 #[test]
 fn willpower_climbs_the_reach_ladder_to_its_last_rung() {
-    let mut w = world_with(Arc::new(Content::builtin().expect("content")), "wizard");
+    let mut w = world_with(Arc::new(super::caster_tests::quiet()), "wizard");
     reach(&mut w, 18);
     // The shipped Arcane bolt: length 6; `willpower 14 7, 18 8`, the old rounding's values.
     let mut reach_at = |score: u8| {
@@ -288,7 +288,7 @@ fn willpower_climbs_the_reach_ladder_to_its_last_rung() {
 
 #[test]
 fn a_spell_without_a_roll_draws_nothing() {
-    let mut w = world_with(Arc::new(Content::builtin().expect("content")), "priest");
+    let mut w = world_with(Arc::new(super::caster_tests::quiet()), "priest");
     reach(&mut w, 3);
     let rng = w.state.rng.clone();
     let mut events = Vec::new();
@@ -373,7 +373,7 @@ fn a_cast_at_every_rung_draws_the_dice_of_that_rung() {
 /// the cost, the to-hit stay.
 #[test]
 fn a_rungs_boundary_changes_the_roll_and_nothing_else() {
-    let mut w = wizard(Arc::new(Content::builtin().expect("content")));
+    let mut w = wizard(Arc::new(super::caster_tests::quiet()));
     let content = w.content().clone();
     let fireball = content.spell(sp("fireball"));
     let read = |w: &World| {

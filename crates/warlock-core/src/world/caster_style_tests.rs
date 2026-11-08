@@ -9,13 +9,13 @@ use super::caster_tests::{kobold, reach, run, said, sp, world_with};
 use super::*;
 use crate::action::Event;
 use crate::combat::Strike;
-use crate::content::{ContentFiles, Role, WeaponSkillId};
+use crate::content::{Role, WeaponSkillId};
 use crate::weapon_skills::WeaponSkills;
 
 /// The built-in content with the wizard's Arcane bolt (level 6) as `body` says: its shape,
 /// resolution, and dice (as `cast_tests` tries the spells the casters do not have).
 fn content_with_bolt(body: &str) -> Arc<Content> {
-    let mut files = ContentFiles::builtin();
+    let mut files = super::caster_tests::files();
     let text = format!(
         "[[spell]]\nid = \"arcane_bolt\"\nname = \"Arcane bolt\"\ndescription = \"x\"\n\
          level = 6\nschool = \"evocation\"\nkind = \"damage\"\ndamage_type = \"force\"\n{body}\n"
@@ -103,7 +103,7 @@ fn criticals(strikes: &[Strike]) -> usize {
 
 #[test]
 fn the_classes_that_cast_start_on_the_ladder_and_warriors_do_not() {
-    let content = Arc::new(Content::builtin().expect("content"));
+    let content = Arc::new(super::caster_tests::quiet());
     // A character of `class` with their creation picks drawn at random.
     let start = |class: &str| {
         let spec: crate::character::CharacterSpec = format!("human,female,{class}")
@@ -448,7 +448,7 @@ fn a_touch_critical_is_said_and_never_passes_the_cap() {
 
 #[test]
 fn sniper_and_toucher_teach_no_ability() {
-    let content = Content::builtin().expect("content");
+    let content = super::caster_tests::quiet();
     let table = content.weapon_skills();
     let styles = [table.id("sniper"), table.id("toucher")];
     assert!(styles.iter().all(Option::is_some));

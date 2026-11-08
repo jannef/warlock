@@ -427,6 +427,86 @@ Silence, resistances, and closing in (a caster holds back an area that would cat
 are the counters. Attack spells (acid arrow, leech, cause wounds, scorching ray) land on a
 plate-clad warrior about half as often as on a wizard.
 
+## Miscasts
+
+Each class's Spellcraft, the bonus of its check on a cast and its ward (trained, plain gear, the seeds' mean, the bonus rounded), and the chance of a miscast for a spell of level 1, of level 11, and of the highest level it knows (that level in brackets).
+
+| Class | L | Spellcraft | Bonus | Ward | Level 1 | Level 11 | Highest known |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| wizard | 1 | 20 | +3.7 | 2 | 4.2 % | 61.8 % | 4.2 % (1) |
+| wizard | 5 | 20 | +3.8 | 2 | 4.2 % | 61.8 % | 10.4 % (3) |
+| wizard | 10 | 20 | +4.3 | 2 | 4.2 % | 61.8 % | 38.2 % (8) |
+| wizard | 15 | 20 | +5.2 | 2 | 2.1 % | 54.2 % | 31.2 % (8) |
+| wizard | 20 | 20 | +5.5 | 2 | 0.7 % | 45.8 % | 25.0 % (8) |
+| wizard | 30 | 20 | +6.5 | 2 | 0.7 % | 38.2 % | 93.1 % (20) |
+| wizard | 40 | 20 | +7.0 | 2 | 0.7 % | 38.2 % | 99.3 % (30) |
+| wizard | 50 | 20 | +7.5 | 2 | 0.7 % | 31.2 % | 99.3 % (30) |
+| wizard | 60 | 20 | +8.0 | 2 | 0.7 % | 31.2 % | 99.3 % (30) |
+| priest | 1 | 22 | +2.2 | 2 | 10.4 % | 75.0 % | 10.4 % (1) |
+| priest | 5 | 22 | +2.2 | 2 | 10.4 % | 75.0 % | 19.4 % (3) |
+| priest | 10 | 22 | +3.0 | 2 | 6.9 % | 68.8 % | 61.8 % (10) |
+| priest | 15 | 22 | +3.3 | 2 | 6.9 % | 68.8 % | 68.8 % (11) |
+| priest | 20 | 22 | +3.7 | 2 | 4.2 % | 61.8 % | 80.6 % (14) |
+| priest | 30 | 22 | +4.0 | 2 | 4.2 % | 61.8 % | 80.6 % (14) |
+| priest | 40 | 22 | +4.8 | 2 | 2.1 % | 54.2 % | 75.0 % (14) |
+| priest | 50 | 22 | +5.0 | 2 | 2.1 % | 54.2 % | 75.0 % (14) |
+| priest | 60 | 22 | +5.5 | 2 | 0.7 % | 45.8 % | 68.8 % (14) |
+| witch | 1 | 20 | +2.7 | 2 | 6.9 % | 68.8 % | 6.9 % (1) |
+| witch | 5 | 20 | +2.7 | 2 | 6.9 % | 68.8 % | 14.6 % (3) |
+| witch | 10 | 20 | +3.0 | 2 | 6.9 % | 68.8 % | 45.8 % (8) |
+| witch | 15 | 20 | +3.7 | 2 | 4.2 % | 61.8 % | 38.2 % (8) |
+| witch | 20 | 20 | +4.0 | 2 | 4.2 % | 61.8 % | 45.8 % (9) |
+| witch | 30 | 20 | +4.7 | 2 | 2.1 % | 54.2 % | 99.3 % (24) |
+| witch | 40 | 20 | +5.0 | 2 | 2.1 % | 54.2 % | 99.3 % (24) |
+| witch | 50 | 20 | +5.5 | 2 | 0.7 % | 45.8 % | 99.3 % (24) |
+| witch | 60 | 20 | +5.7 | 2 | 0.7 % | 45.8 % | 99.3 % (24) |
+
+Creature casters: the chance of a miscast for each spell of their lists (their Spellcraft and Intelligence as their type makes them).
+
+| Creature | L | Spellcraft | Bonus | Spells |
+|---|---:|---:|---:|---|
+| arcanaloth | 46 | 153 | +35 | fire cloak 0.7 %, chain lightning 0.7 %, fireball 0.7 %, magic missile 0.7 % |
+| archlich | 54 | 177 | +42 | haste 0.7 %, silence 0.7 %, sunfire 0.7 %, chain lightning 0.7 %, grave spear 0.7 % |
+| ash wraith | 15 | 50 | +9 | scorching ray 6.9 %, grave breath 0.7 % |
+| barrow king | 42 | 141 | +32 | fear 0.7 %, grave spear 0.7 %, rime 0.7 % |
+| bheur hag | 42 | 141 | +32 | curse of sloth 0.7 %, rime 0.7 %, frost 0.7 % |
+| dark wizard | 24 | 98 | +17 | haste 0.7 %, fireball 0.7 %, lightning bolt 0.7 %, magic missile 0.7 % |
+| deathless king | 66 | 213 | +49 | haste 0.7 %, fear 0.7 %, sunfire 0.7 %, grave spear 0.7 %, chain lightning 0.7 % |
+| demilich | 70 | 225 | +49 | silence 0.7 %, sunfire 0.7 %, chain lightning 0.7 %, leech 0.7 %, grave spear 0.7 % |
+| drow archmage | 40 | 115 | +27 | haste 0.7 %, web 0.7 %, chain lightning 0.7 %, fireball 0.7 % |
+| drow high priestess | 44 | 123 | +29 | cure wounds 0.7 %, silence 0.7 %, web 0.7 %, leech 0.7 % |
+| drow mage | 22 | 79 | +16 | web 0.7 %, lightning bolt 0.7 %, magic missile 0.7 % |
+| drow matron | 50 | 135 | +33 | cure wounds 0.7 %, silence 0.7 %, web 0.7 %, chain lightning 0.7 %, leech 0.7 % |
+| drow priestess | 24 | 83 | +18 | cure wounds 0.7 %, silence 0.7 %, leech 0.7 % |
+| dryad | 19 | 72 | +15 | barkskin 0.7 %, bind 0.7 %, acid arrow 0.7 % |
+| duergar mindbreaker | 29 | 102 | +18 | fear 0.7 %, bind 0.7 %, flay 0.7 % |
+| duergar priest | 19 | 72 | +12 | cure wounds 0.7 %, blessing 0.7 %, flay 2.1 %, cause wounds 0.7 % |
+| ghost lord | 53 | 174 | +40 | fear 0.7 %, slumber 0.7 %, grave spear 0.7 % |
+| giant shaman | 36 | 123 | +27 | cure wounds 0.7 %, rime 0.7 %, lightning bolt 0.7 % |
+| goblin wizard | 8 | 34 | +6 | burning hands 0.7 %, spark 0.7 % |
+| green hag | 18 | 69 | +14 | curse of sloth 0.7 %, mesmerise 0.7 %, blight 0.7 % |
+| hobgoblin warcaster | 14 | 57 | +10 | frost 2.1 %, arcane bolt 2.1 %, magic missile 0.7 % |
+| kobold shaman | 4 | 25 | +3 | mend 6.9 %, spark 6.9 % |
+| lich | 30 | 105 | +23 | haste 0.7 %, chain lightning 4.2 %, fireball 0.7 %, grave spear 0.7 % |
+| mummy king | 56 | 183 | +45 | fear 0.7 %, flame 0.7 %, grave spear 0.7 % |
+| mummy lord | 36 | 123 | +27 | fear 0.7 %, blight 0.7 %, grave spear 0.7 % |
+| mummy priest | 20 | 75 | +16 | fear 0.7 %, cause wounds 0.7 %, blight 0.7 % |
+| necromancer | 18 | 73 | +12 | hex of weakness 0.7 %, leech 6.9 %, blight 0.7 % |
+| night hag | 33 | 114 | +24 | slumber 0.7 %, leech 0.7 %, blight 0.7 % |
+| nymph | 22 | 81 | +17 | mesmerise 0.7 %, magic missile 0.7 % |
+| ogre mage | 18 | 69 | +12 | rime 4.2 %, frost 0.7 %, magic missile 0.7 % |
+| orc high shaman | 24 | 87 | +15 | cure wounds 0.7 %, blessing 0.7 %, fireball 2.1 % |
+| orc shaman | 10 | 45 | +7 | mend 0.7 %, burning hands 0.7 %, spark 0.7 % |
+| pixie | 4 | 27 | +4 | evil eye 2.1 %, spark 4.2 % |
+| rakshasa | 52 | 171 | +40 | glamour 0.7 %, mesmerise 0.7 %, flame 0.7 %, lightning bolt 0.7 % |
+| troll shaman | 21 | 78 | +12 | cure wounds 0.7 %, rime 4.2 %, lightning bolt 10.4 % |
+| will-o'-wisp | 7 | 30 | +4 | spark 4.2 % |
+| wormlord | 47 | 156 | +36 | fear 0.7 %, leech 0.7 %, blight 0.7 % |
+| barrow wight | 6 | 35 | +6 | hex of weakness 4.2 %, grave breath 0.7 % |
+| bog hag | 11 | 60 | +11 | hex of weakness 0.7 %, acid arrow 0.7 %, grave breath 0.7 % |
+| cult priest | 9 | 45 | +7 | mend 0.7 %, evil eye 0.7 %, grave breath 0.7 % |
+| Līgetdrȳ the Storm-Wright | 61 | 195 | +48 | haste 0.7 %, silence 0.7 %, chain lightning 0.7 %, lightning bolt 0.7 % |
+
 ## Protection by body
 
 Rounds for the plain warrior (trained) to kill the monsters of their level: as shipped, then with every monster's Protection set to §8.2's body line at its level.

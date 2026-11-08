@@ -69,6 +69,9 @@
 //!   (`Actor::spell_roll` at its stats), what its pool pays for, and its damage a round against
 //!   the trained players of its level.
 //!
+//! - **Miscasts** (#1271, `miscasts.rs`): the casting classes' Spellcraft check on a cast (bonus
+//!   and ward) and the chance of a miscast by spell level, for the highest spell they know.
+//!
 //! Not modelled: triggered and active weapon abilities, stances (but the rage table's), talents chosen for a build
 //! (`levelup:auto` takes the first it may), the initiative check's Surprised after the first
 //! blow, potions, and resistances against spells.
@@ -77,6 +80,7 @@ mod caster_pace;
 mod casters;
 mod dragon;
 mod familiar;
+mod miscasts;
 mod ranger;
 mod spread;
 mod starters;
@@ -513,6 +517,8 @@ struct Monster {
     /// A caster's spells as it casts them, bare, and its full pool (`casters.rs`).
     spells: Vec<casters::Spell>,
     mana: i32,
+    /// Its Spellcraft and the bonus of its check on a cast (`miscasts.rs`).
+    cast: (i32, i32),
 }
 
 /// Every creature type with a level, made in one world.
@@ -530,6 +536,7 @@ fn monsters(content: &Arc<Content>) -> Vec<Monster> {
         let il = def.level.clamp(1, 99);
         let mut sides = Vec::new();
         let mut spells = (Vec::new(), 0);
+        let mut cast = (0, 0);
         for seed in 0..=SEEDS {
             let (carry, equipment) = if seed == 0 {
                 (Vec::new(), Default::default())
@@ -554,6 +561,7 @@ fn monsters(content: &Arc<Content>) -> Vec<Monster> {
             sides.push(side_of(&w, id));
             if seed == 0 {
                 spells = casters::spells_of(&w, id);
+                cast = miscasts::cast_of(&w, id);
             }
             w.state.actors.remove(&id);
         }
@@ -566,6 +574,7 @@ fn monsters(content: &Arc<Content>) -> Vec<Monster> {
             geared: sides,
             spells: spells.0,
             mana: spells.1,
+            cast,
         });
     }
     out
@@ -696,7 +705,14 @@ struct Snap {
     mana: i32,
     /// Its Decipher script (0 untrained) and its learning (0 when it cannot learn; #1270).
     decipher: i32,
+    /// Its Spellcraft (0 untrained).
+    spellcraft: i32,
     learning: i32,
+    /// Its Spellcraft check's bonus on a cast (`Actor::cast_bonus`), what wards its miscasts
+    /// (`Actor::miscast_ward`), and the levels of the spells it knows (#1271, "Miscasts").
+    cast_bonus: i32,
+    ward: i32,
+    known_levels: Vec<u8>,
     casts: Vec<Cast>,
     /// The level before this one's casting (`caster_pace`) and its spell casts in the fights
     /// (`training`; a healer's one a kill), a day.
@@ -1025,7 +1041,15 @@ fn career(
                 decipher: (content.skill_id("decipher_script"))
                     .and_then(|id| me.skills.value(id))
                     .map_or(0, i32::from),
+                spellcraft: (content.skill_id("spellcraft"))
+                    .and_then(|id| me.skills.value(id))
+                    .map_or(0, i32::from),
                 learning: me.learning(content).unwrap_or(0),
+                cast_bonus: me.cast_bonus(content),
+                ward: me.miscast_ward(content),
+                known_levels: (me.known_spells(content).into_iter())
+                    .map(|s| content.spell(s).level)
+                    .collect(),
                 casts: if gear == Gear::Plain {
                     casts(&w2)
                 } else {
@@ -1265,6 +1289,7 @@ fn balance_probe() {
     casters::casters(&p, &mut Rng::stream(1102, "casters"), &mut out);
     tables::bodies(&p, &mut rng, &mut out);
     tables::spells(&p, &mut out);
+    miscasts::miscasts(&p, &mut out);
     tables::caster_pace(&p, &mut out);
     tables::weapon_pace(&p, &mut out);
     tables::sneak_attacks(&p, &mut rng, &mut out);

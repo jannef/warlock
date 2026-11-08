@@ -207,6 +207,7 @@ mod mana;
 mod merchants_eye;
 mod mimic;
 pub(crate) mod mirrors;
+mod miscast;
 mod natural;
 mod openings;
 mod orison;
@@ -335,6 +336,7 @@ pub use learn::{Odds, UNTRAINED, study_odds, study_turns};
 pub use level::{Fire, LevelState};
 pub use loot::Identified;
 pub use mirrors::Image;
+pub use miscast::{NEAR as MISCAST_NEAR, entry_for as miscast_entry};
 pub use orison::PrayerState;
 pub use quest::{QuestRecord, QuestView, Quests, Stage, asks as quest_asks, wants as quest_wants};
 use rest::Ended;
@@ -1895,6 +1897,8 @@ mod merchants_eye_tests;
 mod mimic_tests;
 #[cfg(test)]
 mod mirrors_tests;
+#[cfg(test)]
+mod miscast_tests;
 #[cfg(test)]
 mod moon_tests;
 #[cfg(test)]

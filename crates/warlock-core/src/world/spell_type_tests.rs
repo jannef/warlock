@@ -20,7 +20,7 @@ const HALL: &str = "name = \"Hall\"\nambient = [255, 255, 255, 0]\nmap = '''\n\
     \"K\" = { terrain = \"floor\", creature = \"kobold\" }\n";
 
 pub(super) fn files() -> ContentFiles {
-    let mut files = ContentFiles::builtin();
+    let mut files = super::caster_tests::files();
     files.insert("levels/hall.toml", HALL);
     files.insert(
         "scenarios/hall.toml",

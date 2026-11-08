@@ -35,7 +35,7 @@ fn zap(id: &str, more: &str) -> String {
 }
 
 fn files() -> ContentFiles {
-    let mut files = ContentFiles::builtin();
+    let mut files = super::caster_tests::files();
     files.insert("levels/hall.toml", HALL);
     files.insert(
         "scenarios/hall.toml",

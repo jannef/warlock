@@ -4,7 +4,7 @@
 
 use super::*;
 use crate::action::parse_actions;
-use crate::content::{ContentFiles, Stance};
+use crate::content::Stance;
 
 /// A lit hall: the player at the west end, a kobold a few cells east, its fellow farther on, a
 /// skeleton in the corner, and stairs down beside the player's start.
@@ -42,7 +42,7 @@ map = '''
 "##;
 
 fn content() -> Arc<Content> {
-    let mut files = ContentFiles::builtin();
+    let mut files = super::caster_tests::files();
     files.insert("levels/hall.toml", HALL);
     files.insert("levels/below.toml", BELOW);
     files.insert(

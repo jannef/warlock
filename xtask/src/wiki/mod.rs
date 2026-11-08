@@ -46,6 +46,7 @@ mod magic;
 mod mana;
 mod materials;
 mod mimics;
+mod miscast;
 mod moons;
 mod objects;
 mod order;
@@ -377,6 +378,8 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("deepening.md", learning::deepening),
         ("study-affinities.md", learning::affinities),
         ("mishaps.md", learning::mishaps),
+        ("miscast-chances.md", miscast::chances),
+        ("miscast-table.md", miscast::table),
         ("resources.md", resources::resources),
         ("experience-levels.md", experience::experience_levels),
         ("experience-factors.md", experience::experience_factors),

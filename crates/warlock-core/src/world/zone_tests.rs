@@ -5,7 +5,7 @@ use super::caster_tests::{kobold_at, sp};
 use super::spell_type_tests::{cast, cell, files, start, status};
 use super::*;
 use crate::action::{Action, parse_actions};
-use crate::content::{ContentFiles, ZoneKind};
+use crate::content::ZoneKind;
 use crate::light::Light;
 use crate::stats::{PerStat, Stat, Stats};
 
@@ -343,7 +343,7 @@ fn a_scroll_lays_it_too_and_the_overworld_takes_none() {
     assert!(out.took_turn);
     assert_eq!(zone_kind(&w, at), Some(ZoneKind::Slick));
 
-    let content = Arc::new(Content::builtin().expect("content"));
+    let content = Arc::new(super::caster_tests::quiet());
     let mut world = World::new(content, "world", None).expect("the overworld");
     run(&mut world, "zone:fire@45,23,1");
     assert!(world.zones().is_empty());
@@ -379,7 +379,7 @@ fn hidden_cells_show_nothing_and_seen_ones_are_remembered_until_seen_clear() {
 #[test]
 fn a_spells_zone_is_checked_as_it_loads() {
     let load = |effect: &str, rest: &str| {
-        let mut files = ContentFiles::builtin();
+        let mut files = super::caster_tests::files();
         let text = format!(
             "[[spell]]\nid = \"test_zone\"\nname = \"Test\"\ndescription = \"T.\"\nlevel = 5\n\
              school = \"evocation\"\n{rest}\neffect = {{ zone = {effect} }}\n"

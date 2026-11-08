@@ -239,6 +239,57 @@ cast path shares.
   for creatures (refused at load, `content/creature_spells.rs`): zones, corpses, the open sky,
   pushes, charms, ground- or tag-bound hexes, heals not by touch, summons, cleansings, and
   utilities.
+- **Miscasts** (#1271; `world/miscast.rs`, `content/miscast.rs`, tests `world/miscast_tests.rs`;
+  spec §8 "Spells": "Casting"):
+  - **Data**: `data/miscast.toml` (`MiscastRules`: `stat`, `base`, `per_level`, `armour_percent`,
+    `die`, `per_margin`; optional: without it no cast checks and nothing draws) and
+    `data/miscasts/` (`Miscast`, one `[[miscast]]` a file, `README.toml` the format: `from`, `to`
+    (left out on the last only), `message` (the player's), `seen` (a creature's, `{who}` its
+    name), `effect`). The loader orders the table by `from` and refuses a gap, an overlap, a
+    closed last entry, an open one before it, and a `seen` without `{who}`. The effects are the
+    mishaps' (`MishapEffect`, `content/learning.rs::resolve_effect` shared, with `miscast`
+    true): the miscast's own kinds `harm` (`dice`, `damage`), `refund`, `twice`, `surge`,
+    `swap`, `boon` (`status`, `severity`), and `backfire`'s `full`, which the study's table
+    refuses; `learn`, which the miscast's refuses. Spellcraft's `cast` and `ward` benefits
+    (`skills::Effect::{Cast, Ward}`, `data/skills.toml`) and `StanceDef::miscast`
+    (`data/stances.toml`).
+  - **The hooks**: `World::cast_spell` calls `World::after_cast(player, &cast,
+    Aim::Player(target))` after the spell went off and trained (`train_spell`, `practise_cast`);
+    `World::creature_casts` calls it with `Aim::Creature(on)` after `creature_spell_does` (its
+    kind's match, split out so the echo reuses it), inside the held lines of a far cast. A
+    scroll's (`read_cast`), a wand's (`wand_cast`), and a flask's casts never reach it.
+  - **The check** (`Actor::cast_bonus`, `Actor::cast_difficulty`, `check::roll`): the stat's
+    modifier + `TalentMods::check(stat)` + `skill_effect(Effect::Cast)`, against
+    `MiscastRules::difficulty(level, armour_spell_cost)`. A natural 2 always fails
+    (`check::makes`), by `difficulty − 2 − bonus` or 0.
+  - **The total** (`World::miscast_total`): `rng.below(die) + 1`, again and added while it shows
+    `die`, + `per_margin × by` − `Actor::miscast_ward` (`ward` + the stance's `miscast`), at
+    least 1; `miscast_entry` (`world::miscast::entry_for`) finds the entry covering it.
+  - **The entry** (`World::miscast`, any caster): the message (the player's, or `seen` with
+    `{who}` when the player sees the creature), then the effect: `afflict`, the mana cut,
+    `teleport`, a stat mark off or on, `drain`, a summon at the first free cell around the
+    caster (its type's faction), `harm` (`dice` through `World::resisted` of `damage` or the
+    spell's type, then `hurt` with `Harm::Place`), `refund` (`Actor::spell_cost` back, to the
+    maximum), `twice` (`Cast::by_creature` of the same spell, `Pay::Creature`, through `perform`
+    for the player or `creature_spell_does` for a creature: no mana, no training, no check),
+    `surge` (a damage spell with a roll, drawn by index, as a burst at its base roll around
+    someone near), `swap` (`teleport_to` both ways), `boon` (the caster or someone near), and
+    `backfire` (a damage spell as a burst around the caster at its base roll, or with `full`
+    the cast's own roll; a hex on the caster at the cast's degrees; others nothing). "Near"
+    (`near_caster`): actors on the caster's level within `world::MISCAST_NEAR` (6) cells with a
+    `clear_shot`, in actor-id order. A player who dies of it: `Cause::Miscast(spell)`.
+  - **Determinism**: two draws for the check, one a face of the die, then the effect's own
+    (dice, a pick among those near, a surge's spell then its target). Nothing new is saved.
+  - **Choices** (the issue's open points): creatures check too, with their own Spellcraft
+    (every shipped caster has one) and Intelligence; the casting stat is Intelligence for
+    every spell (data's `stat`); the mitigations are Spellcraft's `ward` (so skill affixes and
+    talents' skill bonuses count) and the stance (Defensive softens, Aggressive and Frenzy
+    worsen); the echo makes no check of its own (no chains); a summon is of its type's own
+    faction (hostile to the player; to a creature caster, as the factions stand).
+  - **Tests and fixtures**: the cast tests' fixtures load content without `data/miscast.toml`
+    (`caster_tests::files`, `quiet`), so their draws and effects stay the cast's alone.
+  - **Wiki**: `xtask/src/wiki/miscast.rs` (`miscast-chances.md`, `miscast-table.md`) on
+    `wiki/src/miscasts.md`.
 - **Choices** (design §14 and the issue's open points, decided here):
   - The attack roll's skill: rays, bolts, and touches aim with their `aim` stat (Dexterity unless
     the spell names another; none does), threat and critical at the blows' defaults, plus since

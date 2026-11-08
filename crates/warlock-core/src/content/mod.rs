@@ -85,6 +85,7 @@ mod material;
 pub mod mimic;
 #[cfg(test)]
 mod mimic_roster_tests;
+mod miscast;
 mod monster_pool;
 mod names;
 mod object;
@@ -262,6 +263,7 @@ pub use light::{Dips, Drift, HueDrift, LightId, LightPreset, Stability};
 pub use material::{
     ANY, Fit, Fits, Found, ItemHarm, MaterialDef, MaterialId, ODD, POOR, Resists, VERY_RARE,
 };
+pub use miscast::{Miscast, MiscastRules};
 pub use monster_pool::{MonsterPool, VaultMonsters};
 pub use names::{NameLists, Names};
 pub use object::{MAX_VALUE, ObjectDef, ObjectId, article, counted, weapon_noun};
@@ -777,6 +779,11 @@ pub struct Content {
     decipher: Option<DecipherRules>,
     /// What a failed study may bring (`data/mishaps/`), in path order.
     mishaps: Vec<Mishap>,
+    /// The Spellcraft check every cast makes (`data/miscast.toml`, spec §8 "Spells": "Miscasts");
+    /// none without it, and then no cast miscasts.
+    miscast: Option<MiscastRules>,
+    /// The miscast table (`data/miscasts/`), ordered by its totals.
+    miscasts: Vec<Miscast>,
     /// What rods do (`data/rod_effects/`, spec §8 "Magic items": "Rods"), in path order.
     rod_effects: Vec<RodEffect>,
     /// Spells (`data/spells/`, spec §8 "Spells"), in path order; none without the files.
@@ -921,6 +928,8 @@ impl Content {
             spell_rules: None,
             study: None,
             mishaps: Vec::new(),
+            miscast: None,
+            miscasts: Vec::new(),
             rod_effects: Vec::new(),
             weapon_abilities: Vec::new(),
             spells: Vec::new(),
@@ -1187,6 +1196,13 @@ impl Content {
             content.study = Some(StudyRules::parse(path, text)?);
         }
         content.mishaps = learning::parse(files.table("mishaps"), &content)?;
+        // Miscasts (spec §8 "Spells": "Miscasts"): the table names statuses, creatures, and damage
+        // types.
+        let path = "data/miscast.toml";
+        if let Some(text) = files.get_optional(path) {
+            content.miscast = Some(MiscastRules::parse(path, text)?);
+        }
+        content.miscasts = miscast::parse(files.table("miscasts"), &content)?;
         let path = "data/decipher.toml";
         if let Some(text) = files.get_optional(path) {
             content.decipher = Some(DecipherRules::parse(path, text)?);
@@ -3822,6 +3838,17 @@ impl Content {
     /// What a failed study may bring (`data/mishaps/`), in path order.
     pub fn mishaps(&self) -> &[Mishap] {
         &self.mishaps
+    }
+
+    /// The Spellcraft check every cast makes (`data/miscast.toml`): none without it, and then no
+    /// cast miscasts.
+    pub fn miscast_rules(&self) -> Option<&MiscastRules> {
+        self.miscast.as_ref()
+    }
+
+    /// The miscast table (`data/miscasts/`), ordered by its totals.
+    pub fn miscasts(&self) -> &[Miscast] {
+        &self.miscasts
     }
 
     /// What rods do (`data/rod_effects/`), in path order: a [`Rod`]'s `effect` is an index.
