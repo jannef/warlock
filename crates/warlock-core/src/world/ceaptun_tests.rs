@@ -1,5 +1,6 @@
 //! Cēaptūn, the Ascmearc's market town (#336; docs/design/campaign.md §6): entered from its
-//! overworld cell and left by its edge, its four shops and their goods, everyone in it at
+//! overworld cell and left by its edge, its two shops and their goods (and nothing sold before
+//! #1248 left unsold), the private houses, the town's animals (never a quest's kill), everyone in it at
 //! peace with the player, the Mynster a sanctuary where Sister Hild cures and mends for gold, the
 //! people known by their proper names, Godgifu's rumours (never a reveal; the ways they mark are `rumour_tests.rs`), the dev scenario, and
 //! a replay.
@@ -100,17 +101,14 @@ fn the_dev_scenario_starts_on_the_square() {
 }
 
 #[test]
-fn four_shops_lay_out_only_what_they_trade() {
+fn two_shops_lay_out_only_what_they_trade() {
     let w = town();
     let shops = CONTENT.shops().expect("shops");
     let level = w.state.current();
     let kinds: Vec<&str> = (level.shops.iter())
         .map(|s| shops.get(s.kind).id.as_str())
         .collect();
-    assert_eq!(
-        kinds,
-        ["general_store", "weaponsmith", "armourer", "provisioner"]
-    );
+    assert_eq!(kinds, ["town_store", "smithy"]);
     for shop in &level.shops {
         let def = shops.get(shop.kind);
         let goods: Vec<&Stack> = (level.objects.iter())
@@ -129,7 +127,7 @@ fn four_shops_lay_out_only_what_they_trade() {
         let keeper = &w.state.actors[&shop.keeper];
         assert_eq!(keeper.pos, shop.post, "{}'s keeper at the post", def.id);
     }
-    // Angelica root, the remedy, in the general store and the provisioner's.
+    // Angelica root, the remedy, in the general store.
     let root = CONTENT.object_id("angelica_root").expect("root");
     let selling: Vec<&str> = (level.shops.iter())
         .filter(|s| {
@@ -138,7 +136,149 @@ fn four_shops_lay_out_only_what_they_trade() {
         })
         .map(|s| shops.get(s.kind).id.as_str())
         .collect();
-    assert_eq!(selling, ["general_store", "provisioner"]);
+    assert_eq!(selling, ["town_store"]);
+    // Arms and armour at the smithy, the rest at the general store, and nothing the four shops
+    // before #1248 sold is missing.
+    let sold_at = |id: &str| -> Vec<&str> {
+        let object = CONTENT.object_id(id).expect(id);
+        (level.shops.iter())
+            .filter(|s| {
+                (level.objects.iter())
+                    .any(|(p, pile)| s.contains(*p) && pile.iter().any(|st| st.object == object))
+            })
+            .map(|s| shops.get(s.kind).id.as_str())
+            .collect()
+    };
+    for id in [
+        "dagger",
+        "quarterstaff",
+        "sling",
+        "short_bow",
+        "arrow",
+        "leather_jerkin",
+        "small_shield",
+        "short_sword",
+        "long_sword",
+        "spear",
+        "war_hammer",
+        "hand_axe",
+        "mace",
+        "battle_axe",
+        "javelin",
+        "bolt",
+        "leather_cap",
+        "iron_helm",
+        "padded_coat",
+        "studded_leather",
+        "chain_mail",
+        "buckler",
+        "large_shield",
+        "leather_gloves",
+        "leather_boots",
+        "iron_shod_boots",
+    ] {
+        assert_eq!(sold_at(id), ["smithy"], "{id}");
+    }
+    for id in [
+        "wool_cloak",
+        "travelling_cloak",
+        "fur_cloak",
+        "potion_of_healing",
+        "angelica_root",
+        "rope",
+        "candle",
+        "scroll_of_light",
+        "scroll_of_identify",
+        "ration",
+        "bread",
+        "dried_meat",
+        "apple",
+        "pick_axe",
+    ] {
+        assert_eq!(sold_at(id), ["town_store"], "{id}");
+    }
+    // The two kinds are the town's own: no generated level draws them.
+    let shared = crate::content::ShopOdds::shared(shops);
+    for id in ["town_store", "smithy"] {
+        let kind = (0..shops.defs().len())
+            .map(|i| crate::content::ShopId(i as u8))
+            .find(|&k| shops.get(k).id == id)
+            .expect(id);
+        assert!(!shared.kinds.contains(&kind), "{id} is generated");
+    }
+}
+
+/// The houses freed by the shops (#1248): closed doors, furniture, and a townsman at home, no
+/// shop.
+#[test]
+fn the_private_houses_have_doors_furniture_and_folk() {
+    let w = town();
+    let level = w.state.current();
+    let terrain = |x, y| CONTENT.terrain(level.terrain[Pos::new(x, y)]).id.as_str();
+    for door in [(53, 9), (65, 9), (70, 9)] {
+        assert_eq!(terrain(door.0, door.1), "door_closed", "{door:?}");
+    }
+    for (x, y, what) in [(49, 4), (51, 4), (63, 4), (68, 8)].map(|(x, y)| (x, y, "bed")) {
+        assert_eq!(terrain(x, y), what, "({x}, {y})");
+    }
+    assert_eq!(terrain(53, 6), "table");
+    assert_eq!(terrain(52, 6), "stool");
+    for at in [Pos::new(56, 8), Pos::new(70, 7)] {
+        assert_eq!(
+            CONTENT.creature(w.state.actors[&who(&w, at)].creature).id,
+            "villager"
+        );
+        assert!(
+            !level.shops.iter().any(|s| s.contains(at)),
+            "{at:?} is no shop"
+        );
+    }
+}
+
+/// The dogs and cats of Cēaptūn and Holtwīc and Holtwīc's hens (#1248) are at peace with the
+/// player, and no quest of any campaign, fixed or rolled (with every branch open), ever has
+/// them killed.
+#[test]
+fn the_town_animals_are_never_a_quests_kill() {
+    use crate::content::Goal;
+    let animals: Vec<_> = ["hound", "cat", "chicken"]
+        .map(|id| CONTENT.creature_id(id).expect(id))
+        .to_vec();
+    let w = town();
+    let player = w.state.player;
+    let kinds = |w: &World, level: &str| -> Vec<String> {
+        let mut kinds: Vec<String> = (w.state.actors.values())
+            .filter(|a| a.level == level && animals.contains(&a.creature))
+            .map(|a| {
+                assert_ne!(w.stance(a.id, player), Stance::Hostile);
+                CONTENT.creature(a.creature).id.clone()
+            })
+            .collect();
+        kinds.sort();
+        kinds
+    };
+    assert_eq!(kinds(&w, "ceaptun"), ["cat", "cat", "hound", "hound"]);
+    for def in CONTENT.quests() {
+        if let Goal::Kill { target, .. } = &def.goal {
+            for &a in &animals {
+                assert!(!target.has(&CONTENT, a), "{}", def.id);
+            }
+        }
+        for candidate in def.candidates(&CONTENT, &|_| true) {
+            let members: Vec<_> = match candidate.target.strip_prefix("tag:") {
+                Some(tag) => CONTENT.tagged_in(tag, def.campaign.as_deref()).collect(),
+                None => CONTENT.creature_id(&candidate.target).into_iter().collect(),
+            };
+            for a in &animals {
+                assert!(
+                    !members.contains(a),
+                    "{} draws {}",
+                    def.id,
+                    candidate.target
+                );
+            }
+        }
+    }
 }
 
 #[test]
@@ -148,8 +288,8 @@ fn everyone_in_town_is_at_peace_with_the_player() {
     let others: Vec<&Actor> = (w.state.actors.values())
         .filter(|a| a.level == "ceaptun" && a.id != player)
         .collect();
-    // Six townsfolk, five people, four keepers, four training dummies.
-    assert_eq!(others.len(), 19);
+    // Eight townsfolk, five people, two keepers, four training dummies, two dogs, and two cats.
+    assert_eq!(others.len(), 23);
     for actor in others {
         assert_ne!(
             w.stance(actor.id, player),

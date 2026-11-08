@@ -356,7 +356,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     draws.
   - **Where**: loot (by `level` and `frequency`, never magic), general stores' stock (they sell
     and buy the scrolls class, and a generated one always lays out scrolls of identify, §7
-    "Shops"; Cēaptūn's has three), and the trap hall beside its arrival (two each of fireball,
+    "Shops"; Cēaptūn's general store, a town store, has three), and the trap hall beside its arrival (two each of fireball,
     lightning, and frost, three scrolls of identify, and an unidentified dagger). The showcase
     has none. Spellcraft (§8 "Skills") helps studying a scroll (§8 "Spells": "Learning") and
     reading one; Decipher script helps reading one, not studying it.
@@ -515,7 +515,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   - **Elixirs** (#568): the elixirs of might, grace, vigour, wit, will, and presence (Strength,
     Dexterity, Toughness, Intelligence, Willpower, Presence), gold `#e8c860`, item level 8,
     frequency 2, value 2000: deep loot, the forgotten altar's great boon `elixir` (§7 "Special
-    rooms"), and very rarely an alchemist's stock; never a general store's or a provisioner's
+    rooms"), and very rarely an alchemist's stock; never a general store's, a town store's, or a provisioner's
     (their `never` list, `data/shops.toml`). The description says "Makes you stronger for
     good"; never a number, never the potential.
   - **Drinking: Consume** (§6 "Consume"): no action of its own. `Action::Eat` (`eat:b`,
@@ -555,7 +555,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     bronze; Presence), of renewal (Renewing 2; 4, 15; 120; rose; Toughness), of the quick
     (Quick-sensed 3; 5, 10; 150; opal; Willpower), of the unseen (Invisible 1; 7, 6; 300; opal;
     Dexterity), and of sea legs (Water-borne 3; 4, 10; 100; sky blue; Dexterity); the gambles
-    (kind `gamble`, iridescent `#c0a0e0`, never a general store's or a provisioner's): the
+    (kind `gamble`, iridescent `#c0a0e0`, never a general store's, a town store's, or a provisioner's): the
     draught of chance (boon 50: 4d8 hit points 30, half the mana 15, a boost at 1, 5 each of
     six; nothing 20; bane 30: Poisoned 2 15, Drowsy 2 10, Weakened 1 5; 2, 20; 30), troll's
     blood (one outcome: Renewing 3 and Poisoned 2 at once; 5, 10; 120; Toughness), and the

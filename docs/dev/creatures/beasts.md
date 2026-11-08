@@ -40,7 +40,15 @@ Levels 1 to 5 are cut to the starters' share of their hit points (#1200, `docs/d
 | `toad` | 1 | 15 | 900 | 4 | bite 1d2 piercing | — | low-light, hearing 15, silent, small; a familiar's kind only; its flesh poisons |
 | `raven` | 1 | 15 | 1300 | 4 | beak 1d3 piercing | — | normal eyes, sight 12, hearing 8, silent (it flies), small; a familiar's kind only |
 | `hare` | 1 | 15 | 1600 | 4 | kick 1d2 bludgeoning | — | low-light, hearing 4, footsteps 20, small; a familiar's kind only |
+| `chicken` | 1 | 5 | 1000 | 3 | beak 1d2 piercing | — | normal eyes, sight 8, hearing 10, footsteps 15, small; not tameable; Holtwīc's pen only (#1248), opens no gate |
 | `bear` | 12 | 70 | 1000 | 60 | claws 2d6 slashing | 6 | low-light eyes, a thick hide (Defence 1; the body rule's Protection 0 at 12), footsteps 70; Call of the forest's |
+
+In the towns (#1248): `hound`s and `cat`s walk Cēaptūn's lanes and Holtwīc's green, placed by
+the level files (routes, or idle indoors: the granary's mouser), and Holtwīc's three `chicken`s
+keep to a fenced pen behind a shut gate (terrain `fence`, `gate_closed`/`gate_open`, a door that
+is seen through). Wildlife and in no population, they are drawn by no rolled quest and named by
+no fixed one; `ceaptun_tests::the_town_animals_are_never_a_quests_kill` checks every quest of
+every campaign, all branches open.
 
 Call the elements draws from the elemental roster (`elementals.md`): the greater earth (24),
 water (26), air (31), and fire (38) elementals. In the land (#922, the companion design's C7): the boar

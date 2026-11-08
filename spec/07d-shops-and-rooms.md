@@ -32,7 +32,12 @@ developer notes (CLAUDE.md, `docs/dev/`).
     cloaks, gloves, and boots), a provisioner ("{keeper}'s Provisions": light sources, tools,
     food, and a few potions, §8 "Potions"; 120 %, 30 %), an alchemist ("{keeper}'s Apothecary":
     potions only, a stack of potions of healing always first; 140 %, 40 %), and a fletcher ("{keeper}'s Fletchery": missile weapons and missiles;
-    125 %, 40 %). General stores stock and buy scrolls (§8 "Scrolls"), and a generated one always lays out a
+    125 %, 40 %). Two kinds are a town's own (`generated = false`: the shared odds, and a branch
+    without `kinds` of its own, never draw them; #1248), Cēaptūn's: a smithy ("{keeper}'s
+    Smithy": melee weapons, missile weapons, missiles, and armour of every kind but cloaks; 130 %,
+    40 %) and a town store ("{keeper}'s General Store": everything else a general store sells,
+    cloaks, light sources, tools, food, potions, scrolls, wands, and rods; buys clothing, household
+    goods, and gems too, and never lays out an elixir; 140 %, 30 %). General stores stock and buy scrolls (§8 "Scrolls"), and a generated one always lays out a
     stack of scrolls of identify first (the kind's `always`, as many as its count of stacks allows); scribes wait for more scrolls.
     A kind's `never` lists objects of a stocked class it never lays out: general stores and
     provisioners never have an elixir (§8 "Potions"; #568).
@@ -541,7 +546,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   - **Forges and tempering** (`offers = { temper = true }`, #418, #1022; `world/temper.rs`,
     `magic/worked.rs`, `data/temper.toml`; the owner's rule, `docs/design/skill-uses.md` §6.7 M0):
     the forge's feature is an **anvil** (terrain `anvil`, `π`, cold, no light; look mode adds its
-    description); Cēaptūn's Forge (the weaponsmith's shop) has one too, beside the smith's fire (#1023), free to use. **Temper** (`Action::Temper { item }`, `temper:LETTER` in action text) is offered
+    description); Cēaptūn's smithy has one too, beside the smith's fire (#1023), free to use. **Temper** (`Action::Temper { item }`, `temper:LETTER` in action text) is offered
     in the abilities menu's *Here* group while the player stands next to an anvil, to anyone; it
     asks for an item (`Aim::Item`: the Temper list, what the anvil accepts now). It takes a weapon,
     missile weapon, armour, or shield whose main part (the first of `Stack::parts`) is of a

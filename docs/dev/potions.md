@@ -155,7 +155,7 @@ every later flask (smoke, fire, frost, acid, the bombers) builds on.
   fire burst of radius 1, 2d6, and a `fire` zone of 6 turns on its cells, a plain spell with
   its `scroll_of_pitch_fire`, Q4 and Q11; `range = 4`; drunk, Burning 2; scarlet). No new
   rule: the splash is `flask.rs`'s damage branch (`cast_burst_at`, the type's rules, then
-  `lay_spell_zone`). All three in the general store's and the provisioner's `never` lists.
+  `lay_spell_zone`). All three in the general store's, the town store's, and the provisioner's `never` lists.
   Tests: `world/flask_fire_tests.rs` (each throw and drink, the pool's cells, turns, harm, and
   owner, pitch fire's range, the scroll's cast).
 - **Tests**: `world/flask_tests.rs` (fixture flasks on Fireball, Hex of weakness, and Slick;

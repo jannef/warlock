@@ -1,0 +1,28 @@
+# The beasts (docs/dev/creatures/beasts.md): the farmyard hen (#1248), kept in Holtwīc's pen. It
+# opens no gate, so it stays behind the fence. Wildlife: it fights no one, strays nowhere, and no
+# population names it, so no quest ever draws it; never tamed.
+[[creature]]
+id = "chicken"
+level = 1
+xp = 5
+name = "chicken"
+glyph = "c"
+fg = "#d8c49a"
+speed = 1000
+faction = "wildlife"
+tags = ["beast"]
+alignment = "neutral"
+sight = 8
+footsteps = 15
+hearing = 10
+weight = 2000
+size = "small"
+stats = { strength = 2, dexterity = 10, toughness = 3, intelligence = 1, willpower = 4, presence = 4 }
+base_hp = 0
+depart = "runs off clucking"
+on_eat = { message = "Raw chicken. It would have been better roasted." }
+[creature.attack]
+damage = "1d2"
+damage_type = "piercing"
+name = "beak"
+verb = "pecks"

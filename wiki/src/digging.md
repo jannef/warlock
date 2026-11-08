@@ -9,7 +9,7 @@ slowly, and [see across](sight.md#line-of-sight).
 
 1. **Get a digging tool.** A pick-axe or a mattock goes in the Tool slot of your
    [equipment](equipment.md): press `i`, then `m` ([Tool](equipment.md#what-fits-where)), then the
-   tool's letter. Cyneburg's Provisions in Cēaptūn sells a pick-axe.
+   tool's letter. Ælfric's General Store in Cēaptūn sells a pick-axe.
 2. **Dig.** Press `u` (use a tool), then a direction: "Dig in which direction?". You start digging
    into the wall next to you ("You dig into the stone wall.").
 3. **Keep at it.** Digging goes on by itself, turn after turn, as [resting](resting.md) does,

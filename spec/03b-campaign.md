@@ -49,7 +49,9 @@ every new run starts in it.
   shop): cottages round a green with a well, fields behind hedges, cottars (the `cottar` type) who
   talk and mutter, a hoar-stone at the wood's edge, and the wise-woman **Gammer Wynflæd** (npc
   `wynflaed`, type `wise_woman`) in her cottage under the trees, with three topics (the village,
-  the wood, the fair folk). Seven cells north-east in the wood, hidden, is the fairy mound over
+  the wood, the fair folk). A fenced pen south-east of the green, its gate shut, keeps three
+  hens (the shared `chicken`, which opens no gate), and a dog and a cat live in the village
+  (#1248; like the town's, wildlife in no population, never a quest's kill). Seven cells north-east in the wood, hidden, is the fairy mound over
   **Ælfhām**, the Unseelie court's hall (§7 "Ælfhām"), which her quest reveals (#1141). Its dev
   scenario is `holtwic`. The rest of the design's forty sites are reserved: plain
   cells today, spaced so a later level drops in without moving anything.

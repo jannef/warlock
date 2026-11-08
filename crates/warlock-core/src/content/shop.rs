@@ -83,6 +83,12 @@ struct ShopSpec {
     items: [u8; 2],
     markup: u16,
     pays: u8,
+    #[serde(default = "yes")]
+    generated: bool,
+}
+
+fn yes() -> bool {
+    true
 }
 
 /// A kind of shop.
@@ -109,6 +115,10 @@ pub struct ShopDef {
     pub markup: u16,
     /// What it pays for what it buys, in percent of the value.
     pub pays: u8,
+    /// Whether generated levels draw it by default (the shared odds, a branch without `kinds`
+    /// of its own); `false` for a town's own kinds, laid out by level files: Cēaptūn's smithy
+    /// and town store.
+    pub generated: bool,
 }
 
 impl ShopDef {
@@ -330,6 +340,7 @@ impl Shops {
                 items: (least, most),
                 markup: spec.markup,
                 pays: spec.pays,
+                generated: spec.generated,
             });
         }
         Ok(Self {
@@ -378,8 +389,10 @@ mod tests {
             ids,
             [
                 "general_store",
+                "town_store",
                 "weaponsmith",
                 "armourer",
+                "smithy",
                 "provisioner",
                 "alchemist",
                 "fletcher"

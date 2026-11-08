@@ -207,7 +207,7 @@ fn the_scroll_handed_in_leaves_the_pack_and_an_unpaid_one_stays_billed() {
     );
     // The general store's scrolls, picked up and not paid for.
     let id = w.state.player;
-    w.state.actors.get_mut(&id).expect("player").pos = Pos::new(29, 8);
+    w.state.actors.get_mut(&id).expect("player").pos = Pos::new(27, 4);
     act(&mut w, "pickup");
     let identify = CONTENT.object_id("scroll_of_identify").expect("a scroll");
     let billed = |w: &World| {

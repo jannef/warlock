@@ -85,7 +85,7 @@
 #              room_effects.toml's, e.g. `room_effects = { chance = 25, favoured = { flooded = 40 } }`
 #   shops      the branch's own shop odds (spec §7 "Shops"), a table: `chance` (percent of its
 #              rooms levels with a shop), `kinds` (ids in shops.toml, picked
-#              uniformly), `names` (the keepers' names), `keeper` (the keepers' creature type;
+#              uniformly; default every kind with `generated`), `names` (the keepers' names), `keeper` (the keepers' creature type;
 #              they carry the shared `[keeper]`'s kit); each field defaults to shops.toml's,
 #              e.g. `shops = { chance = 0 }` for none
 #   [[dungeon.levels]]  per-depth overrides, first match wins:

@@ -22,7 +22,7 @@ can hold may come back up ("You vomit!"), leaving you [hungry](hunger.md#how-hun
 fed nothing. If it stays down, whatever does not fit is lost. See
 [Hunger](hunger.md#how-hungry-you-are).
 
-Cyneburg's Provisions in Cēaptūn ([The Ascmearc](ascmearc.md)) [sells](shops.md#buying) food
+Ælfric's General Store in Cēaptūn ([The Ascmearc](ascmearc.md)) [sells](shops.md#buying) food
 for the road. Your [starting kit](starting-kit.md) may include some food too.
 
 ## Food spoils
