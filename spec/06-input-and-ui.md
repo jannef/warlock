@@ -755,7 +755,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
   bone amulet, ...", "A kobold archer (hostile, unhurt), with a short bow and 20 arrows ready,
   ..."; never what else it carries), terrain (a wall in sight the player has dug into: "a stone
   wall, partly dug"), remembered terrain, blood seen or remembered there ("on blood-stained stone
-  floor", "A blood-smeared stone wall."; §8 "Blood"; not with the blood switch off), where
+  floor", "A blood-smeared stone wall."; char before it, "A charred stone floor."; §8 "Blood",
+  "Char"; not with the blood switch off), where
   stairs lead, a known trap as part of the ground ("A fireball trap, on stone floor.", "A kobold
   (hostile, unhurt), on a pit on stone floor.", "You remember a pit here, on stone floor."; §8
   "Traps"), the special room walkable ground lies in once the player has been inside it (or, with Sense

@@ -312,6 +312,8 @@ impl World {
         }
         // What lies on the floor it reached may be lost (`ruin.rs`).
         self.ruin_items(caster, burst.kind, &cells);
+        // Fire chars the floor it reached and the walls beside it (`sear.rs`).
+        self.sear_burst(burst.kind, (center, radius), &cells);
         // A spell's type (`spell_type.rs`), a spell's own `heat` or `frost` standing in for its;
         // a trap's or a place's burst is no spell.
         let typed = matches!(caster, Caster::Actor(_)).then_some(burst.kind);
@@ -424,6 +426,7 @@ impl World {
             self.spell_hurts(caster, id, (here, false), damage, events);
         }
         self.ruin_items(caster, kind, &cells);
+        self.sear_area(kind, here, (&cells, crate::scorch::AREA));
         roll
     }
 
