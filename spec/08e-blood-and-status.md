@@ -645,7 +645,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
       held only by the engine's limits (`Actor::spell_reach`). A burst still costs by its base
       radius. A buff's or a hex's degrees: the base severity climbed on its degrees ladder,
       then the degrees hook (the worn `spell_duration`, of Lingering), at least 1; the status's
-      `max` holds it (Blessed, Hexed, Weakened, and Sluggish go to 3, each degree its `eases`
+      `max` holds it (Blessed, Hexed, and Weakened go to 3, Sluggish to 6 for its spell's ranks, each degree its `eases`
       again; `Actor::spell_degrees`).
     - **Dice**: the roll at the rung reached (a scroll's own rungs, or the rung a wand drew as
       it was made, §8 "Magic items": "Wands", plus the reader's scroll or wand rungs in place of

@@ -14,3 +14,14 @@ effect = { blink = { cells = 5, ends = ["held", "webbed", "pinned"] } }
 [spell.cast]
 message = "You blink."
 noise = { sound = "chanting", loudness = 10 }
+
+[spell.ranks]
+2 = { time_off = 10 }
+3 = { mana_off = 10 }
+4 = { time_off = 10 }
+5 = { mana_off = 10 }
+6 = { time_off = 10 }
+7 = { mana_off = 10 }
+8 = { time_off = 10 }
+9 = { mana_off = 10 }
+10 = { time_off = 20 }
