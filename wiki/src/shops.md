@@ -4,13 +4,16 @@ Some rooms are shops: a room full of goods, with a shopkeeper standing by the do
 store** sells a bit of everything, and a **specialty shop** sells one kind of thing. Every
 shopkeeper has a name, and every shop has a sign: "Ælfric's General Store".
 
-Cēaptūn, the market town of the [Ascmearc](ascmearc.md#the-places), has four shops on its
+Cēaptūn, the market town of the [Ascmearc](ascmearc.md#the-places), has two shops on its
 square:
 
-- Ælfric's General Store
-- Eadric's Forge (weapons and missiles)
-- Beornwyn's Armoury
-- Cyneburg's Provisions (food for the road, candles, rope, and tools)
+- Ælfric's General Store sells everything but arms and armour: food for the road, angelica root,
+  candles, rope, a pick-axe, potions, scrolls, and cloaks.
+- Eadric's Smithy sells weapons, bows and slings, arrows and bolts, armour, helms, shields,
+  gloves, and boots. The smith's [anvil](altars-forges-springs.md#forges) stands in its corner.
+
+These two kinds of shop are found only in the town. The table below lists them as the town store
+and the smithy.
 
 [Dungeons](dungeons.md) have a shop now and then. About one level in six has one, in a room with
 a single door. It is never in the caverns and never in the room you arrive in. Each dungeon has

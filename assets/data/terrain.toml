@@ -440,6 +440,69 @@ glyph = "≡"
 fg = "#a08458"
 bg = "#0d0d10"
 
+# The furniture of a house (#1248, Cēaptūn's private houses): scenery the player cannot pass
+# but sees over.
+[[terrain]]
+id = "bed"
+name = "bed"
+description = "A straw mattress on a wooden frame, a blanket folded at its foot."
+walkable = false
+glyph = "="
+fg = "#9a6a58"
+bg = "#2c1e10"
+
+[[terrain]]
+id = "table"
+name = "table"
+description = "A plain table of scrubbed boards, marked with knife cuts and cup rings."
+walkable = false
+glyph = "Π"
+fg = "#c09a68"
+bg = "#2c1e10"
+
+[[terrain]]
+id = "stool"
+name = "stool"
+description = "A three-legged stool, worn smooth."
+walkable = false
+glyph = "╥"
+fg = "#a8845a"
+bg = "#2c1e10"
+
+# A wooden fence (#1248, Holtwīc's chicken pen): it stops a step, never sight or sound.
+[[terrain]]
+id = "fence"
+name = "fence"
+description = "Split rails lashed to stakes, about waist high."
+walkable = false
+glyph = "#"
+fg = "#8a6a44"
+bg = "#22401a"
+
+# The fence's gate: a door that is seen through (spec §8 "Doors"; opened and closed as one).
+# Creatures that open no doors (hens) stay behind it.
+[[terrain]]
+id = "gate_closed"
+name = "closed gate"
+description = "A gate of rails on leather hinges, tied shut with a loop of rope."
+walkable = false
+glyph = "+"
+fg = "#a07a4a"
+bg = "#22401a"
+opens_to = "gate_open"
+toggle_noise = 30
+breaks_to = "door_broken"
+sturdiness = 20
+
+[[terrain]]
+id = "gate_open"
+name = "open gate"
+glyph = "'"
+fg = "#a07a4a"
+bg = "#22401a"
+closes_to = "gate_closed"
+toggle_noise = 30
+
 # A statue (spec §7, a vault's; terrain.toml `announce`): a figure of stone, seen past, not walked through. Arriving beside
 # it says so; a vault may cut an inscription into it (its legend cell's `note`).
 [[terrain]]

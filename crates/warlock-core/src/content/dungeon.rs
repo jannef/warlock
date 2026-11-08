@@ -74,7 +74,7 @@
 //!
 //! [dungeon.shops]               # optional: the branch's own shop odds
 //! chance = 100                  # percent of rooms levels with a shop; default the shared
-//! kinds = ["general_store"]     # ids in shops.toml, picked uniformly; default all
+//! kinds = ["general_store"]     # ids in shops.toml, picked uniformly; default all generated
 //! names = ["Durin"]             # the keepers' names; default the shared `names`
 //! keeper = "shopkeeper"         # the keepers' creature type; default the shared `[keeper]`'s
 //! ```
@@ -316,13 +316,14 @@ pub struct ShopOdds {
 }
 
 impl ShopOdds {
-    /// The shared odds: `shops.toml`'s `chance`, every kind in file order, its `names`, and its
-    /// `[keeper]`'s creature.
+    /// The shared odds: `shops.toml`'s `chance`, every kind it generates (`generated`, the
+    /// default) in file order, its `names`, and its `[keeper]`'s creature.
     pub fn shared(shops: &Shops) -> Self {
         Self {
             chance: shops.chance,
             kinds: (0..shops.defs().len())
                 .filter_map(|i| u8::try_from(i).ok().map(ShopId))
+                .filter(|&id| shops.get(id).generated)
                 .collect(),
             names: shops.names.clone(),
             keeper: shops.keeper.creature,

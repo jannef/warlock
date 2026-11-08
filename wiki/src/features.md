@@ -148,7 +148,7 @@ place](overworld.md#hidden-locations) lies.
 
 [Shops](shops.md) show the [price](shops.md#prices) of their goods. What you pick up you owe until
 you pay (`p`). Your [Presence](stats.md#stat-presence) and the [Negotiation](skills.md#skill-negotiation)
-skill get you better prices. Cēaptūn has four shops on its square, and now and then a dungeon
+skill get you better prices. Cēaptūn has two shops on its square, and now and then a dungeon
 level has one.
 
 ## Effects and settings

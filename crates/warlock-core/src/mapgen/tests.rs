@@ -477,7 +477,8 @@ fn special_rooms_come_about_three_levels_in_five() {
     assert!(by_generator.iter().all(|n| *n > 30), "{by_generator:?}");
 }
 
-/// Shops are rare: about one generated level in six (rooms levels only), every kind turns up,
+/// Shops are rare: about one generated level in six (rooms levels only), every generated kind
+/// turns up,
 /// and each is a lit room with one door, its keeper beside the way in, and its floor laid with
 /// what its kind stocks.
 #[test]
@@ -505,7 +506,12 @@ fn shops_come_about_one_level_in_seven() {
         (11..=20).contains(&percent),
         "{with_shop} of {levels} levels ({percent} %) have a shop"
     );
-    assert!(by_kind.iter().all(|n| *n > 5), "{by_kind:?}");
+    // Every kind generated levels draw turns up; a town's own never does (#1248).
+    let generated = |i: usize| shops.get(crate::content::ShopId(i as u8)).generated;
+    assert!(
+        (by_kind.iter().enumerate()).all(|(i, n)| (*n > 5) == generated(i)),
+        "{by_kind:?}"
+    );
 }
 
 /// The built-in content plus two branches with odds of their own (spec §7 "Shops", "Special

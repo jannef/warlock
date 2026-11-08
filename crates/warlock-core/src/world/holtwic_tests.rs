@@ -100,13 +100,38 @@ fn everyone_in_the_village_is_at_peace_with_the_player() {
     let others: Vec<&Actor> = (w.state.actors.values())
         .filter(|a| a.level == "holtwic" && a.id != player)
         .collect();
-    // Five cottars and the wise-woman.
-    assert_eq!(others.len(), 6);
+    // Five cottars, the wise-woman, a dog, a cat, and three hens (#1248).
+    assert_eq!(others.len(), 11);
     for actor in others {
         assert_ne!(w.stance(actor.id, player), Stance::Hostile);
     }
     assert_eq!(w.danger("holtwic"), 0, "nothing comes to the village");
     assert!(w.state.current().shops.is_empty(), "no shop");
+}
+
+/// The chicken pen (#1248): three hens behind a fence, its gate shut, and they stay in it while
+/// the day goes by; the player opens the gate like a door.
+#[test]
+fn the_hens_keep_to_their_pen() {
+    let mut w = village();
+    let content = w.content().clone();
+    let pen = |p: Pos| (51..=55).contains(&p.x) && (18..=20).contains(&p.y);
+    let hens = |w: &World| -> Vec<Pos> {
+        (w.state.actors.values())
+            .filter(|a| a.level == "holtwic" && content.creature(a.creature).id == "chicken")
+            .map(|a| a.pos)
+            .collect()
+    };
+    assert_eq!(hens(&w).len(), 3);
+    let gate = Pos::new(53, 21);
+    let at = |w: &World, p: Pos| content.terrain(w.state.current().terrain[p]).id.clone();
+    assert_eq!(at(&w, gate), "gate_closed");
+    assert_eq!(at(&w, Pos::new(50, 19)), "fence");
+    act(&mut w, "wait*200");
+    assert!(hens(&w).into_iter().all(pen), "{:?}", hens(&w));
+    put_player(&mut w, gate.step(Dir::S));
+    act(&mut w, "open:N");
+    assert_eq!(at(&w, gate), "gate_open");
 }
 
 #[test]
@@ -122,13 +147,10 @@ fn gammer_wynflaed_talks_of_the_village_the_wood_and_the_fair_folk() {
         ["quest-taken_under_the_hill", "holtwic", "wood", "fair_folk"]
     );
     put_player(&mut w, WYNFLAED.step(Dir::W));
+    let before = said(&w).len();
     act(&mut w, "chat:E");
-    assert!(
-        said(&w)
-            .last()
-            .unwrap()
-            .starts_with("Gammer Wynflæd says: \"")
-    );
+    // What she says first (a mutter of hers may follow it in the same turn).
+    assert!(said(&w)[before].starts_with("Gammer Wynflæd says: \""));
     // Her quest is `wynflaed_quest_tests.rs`'s.
     for topic in &topics[1..] {
         let before = said(&w).len();

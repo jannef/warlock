@@ -15,7 +15,10 @@ unarmed blow whatever is wielded: `Actor::kick` (bare hands with unarmed fightin
 the stance), training unarmed fighting, priced `kick` by `attack_price` (so the stance and
 attack speed change its time), said with `Words::kick`). A kick at a door is no attack
 (`price_of`: the plain `kick`); the player's athletics (`skills::Effect::Kick`) adds to the
-Strength it is rolled against, and the kick earns athletics marks (`Use::Kick`). Locks are per-cell state, never terrain: `locks` on
+Strength it is rolled against, and the kick earns athletics marks (`Use::Kick`). A door is any terrain with `opens_to` (closed) or `closes_to` (open),
+`TerrainDef::is_closed_door`/`is_open_door`: besides `door_closed`/`door_open`, Holtwīc's pen gate
+(`gate_closed`/`gate_open`, #1248), transparent, kicked in to `door_broken`; the open and close
+messages say "door" for it too. Locks are per-cell state, never terrain: `locks` on
 `LevelTemplate` and `LevelState` (by position, saved, hashed; ground truth only, so perception,
 memory, look mode, and dumps show a locked door as any closed door); `World::set_terrain` drops a
 lock whenever the cell stops being a closed door. Secret doors (`docs/dev/searching.md`) are

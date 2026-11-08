@@ -10,11 +10,19 @@
 # The square: the well, two braziers, and the townsfolk (villagers, 1-6) on their rounds of the
 # square, the lanes, and the main street.
 #
-# North of the square, four shops (spec §7 "Shops"), each a timber house with its door open on
-# the lane and its goods on the plank floor (the [[shop]] and [[pile]] tables at the end): the
-# general store (west), the Forge (a fire and an anvil in the smith's corner; Temper works at the anvil), the Armourer's, and the
-# Provisioner's (food for the road; angelica root here and at the general store). Their keepers
-# are the shopkeepers of data/shops.toml, named here.
+# North of the square, two shops (spec §7 "Shops"; #1248), each a timber house with its door
+# open on the lane and its goods on the plank floor (the [[shop]] and [[pile]] tables at the
+# end): the general store (west; everything but arms and armour: food for the road, angelica
+# root, light, tools, potions, scrolls, and cloaks) and the smithy (arms, missiles, and armour; a
+# fire and an anvil in the smith's corner, Temper works at the anvil). Their keepers are the
+# shopkeepers of data/shops.toml, named here. East of them, private houses behind closed doors:
+# a family's house with its hearth, beds, and table, and two cottages under one roof, a
+# townsman at home in two of them.
+#
+# The town's animals (#1248), wildlife at peace with everyone and in no population, so no quest
+# draws them: a dog along the lane north of the shops (e), another on the green east of the
+# square (d), a cat on the strip south of the Mynster and the inn (c), and the granary's mouser
+# (C).
 #
 # South of the square: the Mynster (stone), the temple, a sanctuary (the [[room]] table: wounds
 # heal faster and nothing hostile steps in) where Sister Hild (H) cures and mends for gold; the
@@ -33,18 +41,18 @@ arrival = "Market day in Cēaptūn: the square is loud."
 item_level = 1
 map = '''
 TTTTTT#TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT↓↓TT
-......#...............................................................................↓↓..
+......#.............e.................................................................↓↓..
 ......#.WWWWWWWW...............................................................*......↓↓..
 .rrrr.#.WppppppW...WWWWWWWWWWWWW..WWWWWWWWWWW...WWWWWWWWWWW...WWWWWWWWWWW.....~~~~~...↓↓..
-.rxrr.#.WppppppW...WpppppppppppW..WBppppppppW...WpppppppppW...WpppppppppW....~~~~~~~.T↓↓..
-.rrrr.#.WppppppW...WppppplpppppW..WAppppppppW...WpppplppppW...WpppplppppW....~~~~~~~..↓↓.T
-.rrrr.#.WppppppW...WpppppppppppW..WpppplppppW...WpppppppppW...WpppppppppW.....~~~~~...↓↓..
-......#.WppppppW...WpppppppppppW..WpppppppppW...WpppppppppW...WpppppppppW........6....↓↓..
-......#.WWW+WWWW...WpppppppppppW..WpppppppppW...WpppppppppW...WpppppppppW...T...**....↓↓..
-.T....#............WWWWWt'tWWWWW..WWWWt'tWWWW...WWWWt'tWWWW...WWWWt'tWWWW.............↓↓..
+.rxrr.#.WppppppW...WpppppppppppW..WBppppppppW...W=p=pppppBW...W=pp=W=pppW....~~~~~~~.T↓↓..
+.rrrr.#.WpppCppW...WppppplpppppW..WAppppppppW...WppppplpppW...WplppWpplpW....~~~~~~~..↓↓.T
+.rrrr.#.WppppppW...WpppppppppppW..WpppplppppW...WpppsΠΠsppW...WpΠspWpppsW.....~~~~~...↓↓..
+......#.WppppppW...WpppppppppppW..WpppppppppW...WpppppppppW...WppppWpΠ8pW........6....↓↓..
+......#.WWW+WWWW...WpppppppppppW..WpppppppppW...W=pppppp7pW...WppppW=pppW...T...**....↓↓..
+.T....#............WWWWWt'tWWWWW..WWWWt'tWWWW...WWWWW+WWWWW...WWW+WWWW+WW.............↓↓..
 ......#..........:3::::::::::::::::::::::::::::::::::::::::::::::::::::::::::.........↓↓..
 ...T..#."""""""..:................:::::::::::::::::::::::.............................↓↓..
-......#."""""""..:..............T.::1::::::::::::::::::::.T...........T...............↓↓T.
+......#."""""""..:..............T.::1::::::::::::::::::::.Td..........T...............↓↓T.
 ......#."""""""..:.............*..:::::::::::~:::::::::::..*...T..............T.......↓↓..
 ......#..........:.............*..:::::::::::::::::::::::..*..........................↓↓..
 ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::↓↓..
@@ -62,7 +70,7 @@ TTTTTT#TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT
 ......#.""""""""...#pplppp_ppplpp#....WpppppppppppppW...WpppppppW...WpppppppWWpppMpppW↓↓T.
 .T....#.""""""""T..#ppppppppppppp#....WpppppppppppppW...WWWWWWWWW...WWWWWWWWWWWWWWWWWW↓↓..
 ......#.""""""""...###############..T.WWWWWWWWWWWWWWW..T..............................↓↓..
-......#...............................................................................↓↓..
+......#.................................c.............................................↓↓..
 TTTTTT#TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT↓↓TT
 '''
 
@@ -92,6 +100,18 @@ TTTTTT#TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT
 "4" = { terrain = "flagstones", creature = "villager", route = "E22 W22" }
 "5" = { terrain = "flagstones", creature = "villager", route = "E58 W58" }
 "6" = { terrain = "grass", creature = "villager" }
+# At home in the private houses.
+"7" = { terrain = "plank_floor", creature = "villager" }
+"8" = { terrain = "plank_floor", creature = "villager" }
+# The houses' furniture.
+"=" = "bed"
+"Π" = "table"
+"s" = "stool"
+# The town's dogs and cats.
+"d" = { terrain = "grass", creature = "hound", route = "E10 W10" }
+"e" = { terrain = "grass", creature = "hound", route = "E40 W40" }
+"c" = { terrain = "grass", creature = "cat", route = "E30 W30" }
+"C" = { terrain = "plank_floor", creature = "cat" }
 # The town's people (campaigns/ascmearc/data/dialogue/ceaptun.toml).
 "H" = { terrain = "plank_floor", creature = "sister", npc = "hild" }
 "G" = { terrain = "plank_floor", creature = "innkeeper", npc = "godgifu" }
@@ -115,74 +135,93 @@ area = [19, 22, 33, 29]
 at = [44, 26]
 objects = ["bread*2", "apple*3"]
 
-# The general store: a bit of everything.
+# The general store: everything but arms and armour (the smithy's): potions, scrolls, food for
+# the road (docs/design/campaign.md §5.6; angelica root, the remedy), light, rope and tools, and
+# cloaks.
 [[shop]]
-kind = "general_store"
+kind = "town_store"
 keeper = "Ælfric"
 area = [20, 4, 30, 8]
 post = [25, 8]
 
 [[pile]]
 at = [21, 4]
-objects = ["dagger"]
-
-[[pile]]
-at = [23, 4]
-objects = ["quarterstaff"]
-
-[[pile]]
-at = [27, 4]
-objects = ["sling"]
-
-[[pile]]
-at = [29, 4]
-objects = ["short_bow"]
-
-[[pile]]
-at = [21, 6]
-objects = ["arrow*20"]
-
-[[pile]]
-at = [23, 6]
-objects = ["leather_jerkin"]
-
-[[pile]]
-at = [27, 6]
-objects = ["small_shield"]
-
-[[pile]]
-at = [29, 6]
-objects = ["wool_cloak"]
-
-[[pile]]
-at = [21, 8]
 objects = ["potion_of_healing"]
 
 [[pile]]
+at = [23, 4]
+objects = ["scroll_of_light"]
+
+[[pile]]
+at = [27, 4]
+objects = ["scroll_of_identify*3"]
+
+[[pile]]
+at = [29, 4]
+objects = ["angelica_root*2"]
+
+[[pile]]
+at = [29, 5]
+objects = ["wool_cloak"]
+
+[[pile]]
+at = [21, 6]
+objects = ["ration*8"]
+
+[[pile]]
+at = [23, 6]
+objects = ["bread*6"]
+
+[[pile]]
+at = [27, 6]
+objects = ["dried_meat*10"]
+
+[[pile]]
+at = [29, 6]
+objects = ["apple*12"]
+
+[[pile]]
+at = [29, 7]
+objects = ["travelling_cloak"]
+
+[[pile]]
+at = [21, 8]
+objects = ["rope"]
+
+[[pile]]
+at = [22, 8]
+objects = ["rope"]
+
+[[pile]]
 at = [23, 8]
-objects = ["angelica_root"]
+objects = ["candle*10"]
 
 [[pile]]
 at = [27, 8]
-objects = ["rope", "candle*4"]
+objects = ["pick_axe"]
 
 [[pile]]
 at = [29, 8]
-objects = ["scroll_of_light", "scroll_of_identify*3"]
+objects = ["fur_cloak"]
 
-# The Forge: arms and missiles. The smith's fire burns in the corner.
+# The smithy: arms, missiles, and armour, helms, shields, gloves, and boots. The smith's fire
+# burns in the corner beside the anvil.
 [[shop]]
-kind = "weaponsmith"
+kind = "smithy"
 keeper = "Eadric"
 area = [35, 4, 43, 8]
 post = [39, 8]
 
 [[pile]]
 at = [37, 4]
+objects = ["dagger"]
+
+[[pile]]
+at = [38, 4]
 objects = ["short_sword"]
 
 [[pile]]
-at = [39, 4]
+at = [40, 4]
 objects = ["long_sword"]
 
 [[pile]]
@@ -190,123 +229,89 @@ at = [41, 4]
 objects = ["spear"]
 
 [[pile]]
-at = [43, 4]
+at = [42, 4]
 objects = ["war_hammer"]
 
 [[pile]]
-at = [36, 6]
-objects = ["hand_axe"]
-
-[[pile]]
-at = [38, 6]
-objects = ["mace"]
-
-[[pile]]
-at = [41, 6]
+at = [43, 4]
 objects = ["battle_axe"]
 
 [[pile]]
-at = [43, 6]
+at = [37, 5]
+objects = ["hand_axe"]
+
+[[pile]]
+at = [38, 5]
+objects = ["mace"]
+
+[[pile]]
+at = [40, 5]
+objects = ["quarterstaff"]
+
+[[pile]]
+at = [41, 5]
 objects = ["javelin*3"]
 
 [[pile]]
-at = [36, 8]
-objects = ["arrow*30"]
+at = [42, 5]
+objects = ["sling"]
 
 [[pile]]
-at = [42, 8]
+at = [43, 5]
+objects = ["short_bow"]
+
+[[pile]]
+at = [37, 6]
+objects = ["arrow*50"]
+
+[[pile]]
+at = [38, 6]
 objects = ["bolt*20"]
 
-# The Armourer's: armour, helms, shields, gloves, boots, and cloaks.
-[[shop]]
-kind = "armourer"
-keeper = "Beornwyn"
-area = [49, 4, 57, 8]
-post = [53, 8]
+[[pile]]
+at = [40, 6]
+objects = ["leather_jerkin"]
 
 [[pile]]
-at = [49, 4]
-objects = ["leather_cap"]
-
-[[pile]]
-at = [51, 4]
-objects = ["iron_helm"]
-
-[[pile]]
-at = [55, 4]
+at = [41, 6]
 objects = ["padded_coat"]
 
 [[pile]]
-at = [57, 4]
+at = [42, 6]
 objects = ["studded_leather"]
 
 [[pile]]
-at = [49, 6]
+at = [43, 6]
 objects = ["chain_mail"]
 
 [[pile]]
-at = [51, 6]
+at = [37, 7]
+objects = ["leather_cap"]
+
+[[pile]]
+at = [38, 7]
+objects = ["iron_helm"]
+
+[[pile]]
+at = [40, 7]
+objects = ["small_shield"]
+
+[[pile]]
+at = [41, 7]
 objects = ["buckler"]
 
 [[pile]]
-at = [55, 6]
+at = [42, 7]
 objects = ["large_shield"]
 
 [[pile]]
-at = [57, 6]
+at = [43, 7]
 objects = ["leather_gloves"]
 
 [[pile]]
-at = [49, 8]
+at = [41, 8]
 objects = ["leather_boots"]
 
 [[pile]]
-at = [51, 8]
+at = [43, 8]
 objects = ["iron_shod_boots"]
-
-[[pile]]
-at = [55, 8]
-objects = ["travelling_cloak"]
-
-[[pile]]
-at = [57, 8]
-objects = ["fur_cloak"]
-
-# The Provisioner's: food for the road (docs/design/campaign.md §5.6), light, and tools.
-[[shop]]
-kind = "provisioner"
-keeper = "Cyneburg"
-area = [63, 4, 71, 8]
-post = [67, 8]
-
-[[pile]]
-at = [63, 4]
-objects = ["ration*8"]
-
-[[pile]]
-at = [65, 4]
-objects = ["bread*6"]
-
-[[pile]]
-at = [69, 4]
-objects = ["dried_meat*10"]
-
-[[pile]]
-at = [71, 4]
-objects = ["apple*12"]
-
-[[pile]]
-at = [63, 6]
-objects = ["angelica_root"]
-
-[[pile]]
-at = [65, 6]
-objects = ["candle*6"]
-
-[[pile]]
-at = [69, 6]
-objects = ["rope"]
-
-[[pile]]
-at = [71, 6]
-objects = ["pick_axe"]

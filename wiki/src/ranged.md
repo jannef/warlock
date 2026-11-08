@@ -110,5 +110,5 @@ Its [light](light.md#what-light-is) works like any other light: you see by it, a
 dark to see what waits there, or to show your friends who is watching from the dark. But anything
 in its light can be seen, including you if you stand in it.
 
-Ælfric's General Store and Eadric's Forge in Cēaptūn ([Shops](shops.md)) sell slings, bows,
-and [arrows](ammunition.md).
+Eadric's Smithy in Cēaptūn ([Shops](shops.md)) sells slings, bows, [arrows](ammunition.md), and
+bolts.

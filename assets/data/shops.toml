@@ -50,6 +50,9 @@
 #   items     [least, most]: how many stacks of goods a generated shop lays out
 #   markup    its prices, in percent of the value
 #   pays      what it pays for what it buys, in percent of the value
+#   generated whether generated levels draw the kind (default true; a branch's own `kinds`,
+#             dungeons.toml, may still name it): false for a town's own kinds, laid out by its
+#             level file, Cēaptūn's smithy and town store
 
 currency = "gold_coin"
 outraged = "outraged"
@@ -94,6 +97,28 @@ items = [6, 10]
 markup = 150
 pays = 30
 
+# Cēaptūn's general store (#1248): everything but arms and armour, which its smithy sells. A
+# town's own kind: no generated level has one.
+[[shop]]
+id = "town_store"
+name = "town store"
+title = "{keeper}'s General Store"
+stock = ["cloaks", "light_sources", "tools", "food", "potions", "scrolls", "wands", "rods"]
+never = [
+    "blasting_flask", "brewers_blunder", "draught_of_chance", "elixir_of_grace",
+    "elixir_of_might", "elixir_of_presence", "elixir_of_vigour", "elixir_of_will",
+    "elixir_of_wit", "flask_of_fire", "flask_of_frost", "flask_of_thunder", "pitch_fire",
+    "trolls_blood",
+]
+buys = [
+    "cloaks", "clothing", "light_sources", "tools", "household", "food", "potions", "scrolls",
+    "wands", "rods", "gems",
+]
+items = [6, 10]
+markup = 140
+pays = 30
+generated = false
+
 [[shop]]
 id = "weaponsmith"
 name = "weaponsmith"
@@ -113,6 +138,26 @@ buys = ["shields", "body_armour", "helmets", "cloaks", "gloves", "boots"]
 items = [5, 9]
 markup = 130
 pays = 40
+
+# Cēaptūn's smithy (#1248): arms, missiles, and armour, the weaponsmith's and the armourer's
+# trades under one roof (cloaks are the general store's). A town's own kind: no generated level
+# has one.
+[[shop]]
+id = "smithy"
+name = "smithy"
+title = "{keeper}'s Smithy"
+stock = [
+    "melee_weapons", "missile_weapons", "missiles", "shields", "body_armour", "helmets", "gloves",
+    "boots",
+]
+buys = [
+    "melee_weapons", "missile_weapons", "missiles", "shields", "body_armour", "helmets", "gloves",
+    "boots",
+]
+items = [5, 9]
+markup = 130
+pays = 40
+generated = false
 
 # A provisioner's potions are few among its wares, the commoner the more often (healing,
 # antidote: spec §8 "Potions").

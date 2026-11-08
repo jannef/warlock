@@ -63,7 +63,7 @@ The outcomes, by kind and tier ("Of its kind" is its share of its kind's draws):
 ## Forges
 
 A forge is a cold smithy: soot on the walls and an **anvil**, its hammer chained beside it. One
-more anvil stands in Cēaptūn, in Eadric's Forge beside the smith's fire. It is free to use; it is
+more anvil stands in Cēaptūn, in Eadric's Smithy beside the smith's fire. It is free to use; it is
 not the shop's service.
 
 To temper, walk into the anvil and say yes when asked, or stand beside it and choose

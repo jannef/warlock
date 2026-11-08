@@ -27,7 +27,8 @@ bridge and the ford.
 ### Cēaptūn
 
 **Cēaptūn** is the first place to go. It is a walled market town, and safe. On its square stand
-four [shops](shops.md); the Mynster, the temple, where you may
+two [shops](shops.md), a general store and a smithy, with private houses beside them; dogs and
+cats wander its lanes; the Mynster, the temple, where you may
 [rest](resting.md#how-resting-works) and Sister Hild [cures and mends](npcs.md#services) for
 [gold](shops.md#money); the Gæsthūs, the inn, where Godgifu has news of the march; and the
 Gildhalle of the [Weyfarers' Gilde](guild.md), where Wat One-Eye gives out work, with its
@@ -42,8 +43,14 @@ enemy is about ([Leaving an area](overworld.md#leaving-an-area)).
 
 At the end of the north road, some three hours' walk from the town on the edge of the holly wood,
 lies **Holtwīc**, a farming village. It has cottages round a green and a well, barley fields
-behind their hedges, and cottars who will pass the time of day. It is safe, and has no
+behind their hedges, and cottars who will pass the time of day. A dog and a cat live there, and
+three hens scratch about in a fenced pen; its gate opens like a door. It is safe, and has no
 [shop](shops.md).
+
+The dogs and cats of both places and the village's hens are
+[hounds](creatures.md#creature-hound), [cats](creatures.md#creature-cat), and
+[chickens](creatures.md#creature-chicken). They are wildlife: they mean you no harm, and no quest
+ever asks you to kill them.
 
 Its wise-woman, **Gammer Wynflæd**, keeps a cottage apart under the first trees. She knows the
 village, the wood, and the fair folk, and will [talk](npcs.md) of them. A girl of the village,

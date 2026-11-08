@@ -11,7 +11,9 @@
 # type) go about the green, the lanes, and the fields. East, the wood comes right up to the
 # village: at its edge, apart from the rest, is the cottage of the village's wise-woman, Gammer
 # Wynflæd (H), a hearth fire and a lamp inside and her herb garden at the door, and north of it an
-# old hoar-stone with rowan hung on it. The fairy mound she knows of lies seven cells north-east
+# old hoar-stone with rowan hung on it. South-east of the green, the chicken pen: a fence, a
+# gate, and the village's hens (#1248); a dog on the grass south of the green and a cat in a
+# cottage, wildlife at peace with everyone and in no population, so no quest draws them. The fairy mound she knows of lies seven cells north-east
 # on the overworld, hidden (`ascmearc.toml`, E).
 name = "Holtwīc"
 kind = "outdoor"
@@ -26,7 +28,7 @@ map = '''
 ..""""""""""""""""b.dddddddddddddddb.""""""""""""........T.TTTFTTTFTPPFF
 .bb.bbbbb.bbbbbbbb.bb.bbbbbb,bbbbbbbbb..b.bbbbbbbb............FFTTTTPFTT
 ........4...........WWWWWW..,....WWWWWWW.....................TFFFFPFFFFT
-....................WppppW..,....WpppppW..................T.TTTTTTTTTTTF
+....................WpCppW..,....WpppppW..................T.TTTTTTTTTTTF
 ....................WWW'WW..,....WWW'WWW...........WWWWWWW....FPTPFPTTFF
 .............WWWWWW.............................**.WplppBW.TTFPTPTPFFFTT
 .............WppppW...*..............*...........*.WpppppW.PFFFFTTPFTPFF
@@ -35,12 +37,12 @@ map = '''
 .............WWWWWW.....*.............*.........**.WpppppWTFFTFFFTPTTFFP
 ...................................................WWWWWWW.TTTTFTPTFTPFF
 ...................,,,,,,,,,,,,,,2,,,,,,,,..................TTPFFFFTTFTT
-..""""""""""".b...............,............WW'WWW.............FTTTTPTFTT
-..""""""""""".b.....WWW'WWW...,...WWW'WWW..WppppW...........T.PFPTPFFFFT
-..""""""""""".b.....WpppppW...,...WpppppW..WppppW.........TT.TTTFFFTFFTF
-..""""""""""".b.....WpppppW...,...WpppppW..WWWWWW.........T..PFFTPPTTTFT
-..""""""""""".b.....WWWWWWW...,...WWWWWWW.....................PTFTFTFTTF
-..""""""""""".................,..........................T.FFTTFFFTTFPTF
+..""""""""""".b...............,............WW'WWW.fffffff.....FTTTTPTFTT
+..""""""""""".b.....WWW'WWW...,...WWW'WWW..WppppW.f,c,,,f...T.PFPTPFFFFT
+..""""""""""".b.....WpppppW...,...WpppppW..WppppW.f,,h,,f.TT.TTTFFFTFFTF
+..""""""""""".b.....WpppppW...,...WpppppW..WWWWWW.f,,,,kf.T..PFFTPPTTTFT
+..""""""""""".b.....WWWWWWW...,...WWWWWWW.........fffgfff.....PTFTFTFTTF
+..""""""""""".................,.D........................T.FFTTFFFTTFPTF
 ..............b...............,.........................T.TFPTFFTTPTTTTT
 ..............................@............................TPFTFFTTPFPTP
 ..............................,..............................FTTTTFFTFFF
@@ -71,5 +73,15 @@ map = '''
 "3" = { terrain = "dirt_road", creature = "cottar", route = "E7 W7" }
 "4" = { terrain = "grass", creature = "cottar", route = "E10 W10" }
 "5" = { terrain = "dry_grass", creature = "cottar", route = "E6 W6" }
+# The chicken pen (#1248): a fence round a patch of scratched earth, its gate shut, and three
+# hens, two pecking up and down and one sitting.
+"f" = "fence"
+"g" = "gate_closed"
+"c" = { terrain = "dirt_road", creature = "chicken", route = "E3 W3" }
+"k" = { terrain = "dirt_road", creature = "chicken", route = "W4 E4" }
+"h" = { terrain = "dirt_road", creature = "chicken" }
+# The village's dog on the grass south of the green, and a cat at home in a cottage.
+"D" = { terrain = "grass", creature = "hound", route = "E20 W20" }
+"C" = { terrain = "plank_floor", creature = "cat" }
 # The village's wise-woman (campaigns/ascmearc/data/dialogue/holtwic.toml).
 "H" = { terrain = "plank_floor", creature = "wise_woman", npc = "wynflaed" }
