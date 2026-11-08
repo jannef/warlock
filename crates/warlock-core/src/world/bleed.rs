@@ -3,7 +3,9 @@
 //! [`World::bleed`] turns a blow about to be dealt into stains on the victim's level
 //! ([`crate::blood::Wound::spatter`], [`super::LevelState::stain`]): how much by the blow and the
 //! victim's size, where by the blow's direction and a hash of the blow (never the gameplay random
-//! stream), so blood never changes what happens next. No rule reads it.
+//! stream), so blood never changes what happens next. No rule reads it. A blow of a kind that
+//! draws no blood (`blood = false` in `data/damage_types.toml`: fire, cold, electricity, poison,
+//! necrotic) spills none; one that chars sears its target's cell instead (`sear.rs`).
 
 use super::{ActorId, World};
 use crate::action::AttackKind;
@@ -68,9 +70,6 @@ impl World {
         let Some(victim) = self.state.actors.get(&target) else {
             return;
         };
-        let Some(color) = self.content.creature(victim.creature).blood else {
-            return;
-        };
         let size = self.state.size_of(&self.content, victim);
         let wound = Wound {
             from,
@@ -83,9 +82,18 @@ impl World {
             size: self.content.size(size).blood,
             seed: blood::seed(self.state.turn, self.state.time, source, target.0),
         };
+        let color = self.content.creature(victim.creature).blood;
+        let level = victim.level.clone();
+        // Fire sears where it strikes (`sear.rs`); a kind that draws no blood stops here (spec
+        // §8 "Blood": a blow of two kinds draws it if the kind that struck does).
+        self.sear_blow(blow.kind, (&level, wound.at), wound.volume());
+        let draws = blow.kind.is_none_or(|k| self.content.damage_type(k).blood);
+        let Some(color) = color.filter(|_| draws) else {
+            return;
+        };
         let now = self.state.time;
         let content = &self.content;
-        let Some(level) = self.state.levels.get_mut(&victim.level) else {
+        let Some(level) = self.state.levels.get_mut(&level) else {
             return;
         };
         if level.kind == LevelKind::Overworld {

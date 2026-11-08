@@ -128,7 +128,7 @@ pub fn seed(turn: u64, time: GameTime, attacker: u32, victim: u32) -> u64 {
 }
 
 /// SplitMix64's finalizer: a well-mixed 64-bit hash of `z`.
-fn mix(z: u64) -> u64 {
+pub(crate) fn mix(z: u64) -> u64 {
     let z = z.wrapping_add(0x9e37_79b9_7f4a_7c15);
     let z = (z ^ (z >> 30)).wrapping_mul(0xbf58_476d_1ce4_e5b9);
     let z = (z ^ (z >> 27)).wrapping_mul(0x94d0_49bb_1331_11eb);
@@ -288,7 +288,7 @@ fn clamp_amount(amount: u32) -> u8 {
     amount.min(u32::from(CAP)) as u8
 }
 
-fn cell_key(p: Pos) -> u64 {
+pub(crate) fn cell_key(p: Pos) -> u64 {
     (u64::from(p.x as u32) << 32) | u64::from(p.y as u32)
 }
 

@@ -7,11 +7,15 @@
 //! (as the player reads it: "fire"), whether it is `physical` (Protection soaks only physical
 //! damage), and the verbs its blows are said with (`verb` "burns", `you` "burn"). Exactly one
 //! type may be marked `unarmed = true`: bare hands, kicks, and shield bashes do that kind.
+//! Presentation reads two more (spec §8 "Blood"): whether its harm draws `blood` (default yes;
+//! fire sears), and the `char` it leaves where it burns, a light and a heavy colour (none: it
+//! leaves none).
 //!
 //! Without the file nothing is typed: weapons and attacks name no type, nobody resists
 //! anything, and every blow is soaked and wounds as before.
 
 use super::ContentError;
+use crate::color::Rgb;
 use serde::{Deserialize, Serialize};
 
 /// Index of a damage type in [`super::Content::damage_types`], in file order (in the content
@@ -40,6 +44,24 @@ struct DamageTypeSpec {
     you: String,
     #[serde(default)]
     unarmed: bool,
+    #[serde(default = "yes")]
+    blood: bool,
+    #[serde(default)]
+    char: Option<CharColors>,
+}
+
+fn yes() -> bool {
+    true
+}
+
+/// The char a type leaves on what it burns (`data/damage_types.toml` `char`): its colour where
+/// a little has burned (soot), and where the cell is charred through; between, mixed by amount
+/// ([`crate::scorch`]).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct CharColors {
+    pub light: Rgb,
+    pub heavy: Rgb,
 }
 
 /// A damage type, in file order.
@@ -56,6 +78,11 @@ pub struct DamageTypeDef {
     pub you: String,
     /// Whether bare hands, kicks, and shield bashes do this kind (one type at most).
     pub unarmed: bool,
+    /// Whether its harm draws blood (spec §8 "Blood"): a blow of two kinds draws it if the kind
+    /// that struck does. Fire sears instead.
+    pub blood: bool,
+    /// The char it leaves on floors and walls where it burns (spec §8 "Blood": fire's), if any.
+    pub char: Option<CharColors>,
 }
 
 /// Parses `data/damage_types.toml`: at most [`MAX_DAMAGE_TYPES`] types (their ids are `u8`s) with
@@ -86,6 +113,8 @@ pub(super) fn parse(file: &str, text: &str) -> Result<Vec<DamageTypeDef>, Conten
             verb: spec.verb,
             you: spec.you,
             unarmed: spec.unarmed,
+            blood: spec.blood,
+            char: spec.char,
         });
     }
     Ok(list)

@@ -209,7 +209,7 @@ pub use creature::{
     the_start,
 };
 pub use creature_rarity::{COMMON, CreatureRarity};
-pub use damage_type::{DamageTypeDef, DamageTypeId, MAX_DAMAGE_TYPES};
+pub use damage_type::{CharColors, DamageTypeDef, DamageTypeId, MAX_DAMAGE_TYPES};
 pub use danger::{Count, DangerRule, PlayerScale, Spawning};
 pub use decipher::DecipherRules;
 pub use dialogue::{Dialogue, DialogueId, Mutter, Service, ServiceKind, Speaker, Topic};

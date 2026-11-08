@@ -233,6 +233,7 @@ mod rumour;
 mod sanctuary;
 mod schedule;
 mod scribe;
+mod sear;
 mod search;
 mod second_wind;
 mod service;
@@ -1967,6 +1968,8 @@ mod scribe_tests;
 mod scriptorium_tests;
 #[cfg(test)]
 mod scroll_label_tests;
+#[cfg(test)]
+mod sear_tests;
 #[cfg(test)]
 mod search_tests;
 #[cfg(test)]

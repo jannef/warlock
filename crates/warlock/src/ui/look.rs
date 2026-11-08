@@ -20,7 +20,8 @@ pub const CURSOR_BG: Rgb = Rgb::new(0xe0, 0xc0, 0x70);
 /// One line describing what the player knows about `p`: who is there, what lies there (as seen
 /// or remembered), on what (a known trap on its terrain: "on a pit on stone floor"), in which
 /// special room (once they have been in it), and what was heard there. Blood they know of there
-/// reads before the terrain ("on blood-stained stone floor") if `blood` is shown. A named place
+/// reads before the terrain ("on blood-stained stone floor"), and char before that ("on charred
+/// stone floor"), if `blood` is shown. A named place
 /// with a note adds it after: "A mountain pass, Beorggeat. The way you came; snow has closed it
 /// behind you."; so does terrain with a description (a forgotten altar's).
 pub fn describe(view: &PerceptionView<'_>, p: Pos, blood: bool) -> String {
@@ -136,6 +137,11 @@ fn describe_cell(view: &PerceptionView<'_>, p: Pos, blood: bool) -> String {
         let name = match view.blood(p).filter(|_| blood) {
             Some(stain) => format!("{} {def_name}", stain.word(!def.transparent)),
             None => def_name,
+        };
+        // Char reads before the blood: "charred blood-stained stone floor".
+        let name = match view.scorch(p).filter(|_| blood) {
+            Some(char) => format!("{} {name}", warlock_core::scorch::word(char)),
+            None => name,
         };
         match view.leads_to(p) {
             Some(to) => format!("{name}, leading to {to}"),
