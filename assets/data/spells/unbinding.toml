@@ -10,3 +10,17 @@ kind = "cleanse"
 shape = "self"
 resolution = "auto"
 effect = { cures = ["ill_wished", "weakened", "sluggish", "drowsy", "webbed", "frightened", "transfixed", "pinned"] }
+
+# What rereading its grimoire adds, rank by rank (spec §8 "Spells": "Ranks"; README.toml
+# `[spell.ranks]`). A cleanse has nothing to roll or reach, so its ranks make it cheaper and
+# quicker. At rank 10: half the mana and 60 percent off the casting time.
+[spell.ranks]
+2 = { time_off = 15 }
+3 = { mana_off = 10 }
+4 = { time_off = 15 }
+5 = { mana_off = 10 }
+6 = { time_off = 15 }
+7 = { mana_off = 10 }
+8 = { time_off = 15 }
+9 = { mana_off = 10 }
+10 = { mana_off = 10 }

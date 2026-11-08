@@ -19,3 +19,17 @@ noise = { sound = "chanting", loudness = 20 }
 
 [spell.grows]
 degrees = "presence 14 8, 18 12, 22 16"
+
+# What rereading its grimoire adds, rank by rank (spec §8 "Spells": "Ranks"; README.toml
+# `[spell.ranks]`). A call keeps one bear at most, so its ranks lengthen the stay. At rank 10: ten
+# minutes longer, 30 percent off the mana, and two fifths off the casting time.
+[spell.ranks]
+2 = { mana_off = 10 }
+3 = { degrees = 2 }
+4 = { time_off = 20 }
+5 = { degrees = 2 }
+6 = { mana_off = 10 }
+7 = { degrees = 2 }
+8 = { time_off = 20 }
+9 = { mana_off = 10 }
+10 = { degrees = 4 }

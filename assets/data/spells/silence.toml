@@ -19,3 +19,18 @@ noise = { sound = "chanting", loudness = 10 }
 [spell.grows]
 range = "willpower 14 9, 18 10"
 radius = "willpower 18 2"
+
+# What rereading its grimoire adds, rank by rank (spec §8 "Spells": "Ranks"; README.toml
+# `[spell.ranks]`). Silenced holds one degree at most, so its ranks go to the reach and the price.
+# At rank 10: three cells farther, a cell wider, 30 percent off the mana, and half the casting
+# time.
+[spell.ranks]
+2 = { cells = 1 }
+3 = { mana_off = 10 }
+4 = { time_off = 20 }
+5 = { radius = 1 }
+6 = { cells = 1 }
+7 = { mana_off = 10 }
+8 = { time_off = 20 }
+9 = { mana_off = 10 }
+10 = { cells = 1, time_off = 10 }
