@@ -10,7 +10,7 @@
 //! uses' own chances. Each day ends with `World::daily_stat_check`; the level's check is
 //! `levelup:auto`'s.
 
-use super::{Build, Gear, Monster, Side, dress, schools, side_of};
+use super::{Build, Gear, Monster, Side, caster_pace, dress, side_of};
 use crate::action::AttackKind;
 use crate::burden::Burden;
 use crate::combat::{self, Category, Profile, Strike, Target};
@@ -186,7 +186,7 @@ pub(super) fn live_level(
     }
     let slowed = load.penalty() != Burden::Unburdened;
     let spell = (build.fights_with_spells)
-        .then(|| schools::pace_spell(&dressed, build))
+        .then(|| caster_pace::pace_spell(&dressed, build))
         .flatten();
     let foes = foes(monsters, level);
     // The weapon skill and the style its blows train (#1095): the main hand's, for both hands.

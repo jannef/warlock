@@ -365,9 +365,7 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("familiar-starts.md", familiars::starts),
         ("familiar-growth.md", familiars::growth),
         ("familiar-rules.md", familiars::rules),
-        ("school-skills.md", schools::skills),
-        ("school-benefits.md", schools::benefits),
-        ("school-abilities.md", schools::abilities),
+        ("schools.md", schools::schools),
         ("caster-style-benefits.md", schools::caster_style_benefits),
         (
             "caster-style-abilities.md",

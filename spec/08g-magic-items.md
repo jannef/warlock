@@ -592,7 +592,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     aimed at, else before something solid, else on that cell. Nothing lands. Its shattering is
     heard there, and its spell is cast there by the thrower (its blows, kills, experience, and
     zone are theirs) at the flask's rung and nobody's stats or hooks (`Cast::by_flask`,
-    `Pay::Flask`: no school marks, no triggers, no Empower): a burst damage spell strikes as a
+    `Pay::Flask`: no style marks, no triggers, no Empower): a burst damage spell strikes as a
     scroll's burst (its type's rules, riders, and zone), a burst hex lays its zone or its status
     on everyone in its cells but the thrower, a ray's or bolt's hex falls on whoever stands where
     it broke. Priced as a throw (`attack_price(Throw)`, no weapon skill), one taken from the stack

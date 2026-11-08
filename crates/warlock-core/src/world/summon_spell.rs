@@ -119,7 +119,7 @@ impl World {
         let list = and_list(&words.iter().map(String::as_str).collect::<Vec<_>>());
         let verb = if count == 1 { "comes" } else { "come" };
         self.say(format!("{} {verb} to your call.", capital(&list)));
-        self.spell_landed(cast, player, true, events);
+        self.spell_landed(cast, player, true);
         true
     }
 

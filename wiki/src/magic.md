@@ -13,7 +13,7 @@ More about magic:
 
 - [How spells work](spellcasting.md): shapes, targeting, spell types, zones, and how a spell grows
   with your stats.
-- [Schools and caster styles](schools.md): the seven schools of magic you train by casting, and the
+- [Schools and caster styles](schools.md): the seven schools of magic, the Magic page, and the
   styles you cast in.
 - [Miscasts](miscasts.md): what can go wrong when you cast, and the miscast table.
 - [Wands and rods](wands-and-rods.md): magic anyone can use.
@@ -77,8 +77,7 @@ others.
 
 {{#include generated/spell-list.md}}
 
-Every spell belongs to one of seven [schools of magic](schools.md). Each school is a skill you train
-by casting its spells, and your rank in it makes them stronger, cheaper, or quicker.
+Every spell belongs to one of seven [schools of magic](schools.md): the kind of magic it is.
 
 The abilities menu shows a spell's roll as you would cast it now, with its damage type, the way the
 [character screen](character.md) shows a weapon's (`4d6 fire, 26 mana, aimed`). It also shows what

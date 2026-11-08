@@ -279,7 +279,7 @@ pub(super) fn bodies(p: &Probe, rng: &mut Rng, out: &mut String) {
     }
 }
 
-/// The casters, by class name and title, and the school each casts in.
+/// The casters, by class name and title, and the school whose spells each casts most.
 const CASTERS: [(&str, &str, &str); 3] = [
     ("wizard", "Wizard", "evocation"),
     ("priest", "Priest", "restoration"),
@@ -309,18 +309,18 @@ fn again(reroll: u32) -> String {
     }
 }
 
-/// The casters' spells that roll: the roll with the school's rank, and at rank 0.
+/// The casters' spells that roll: the roll with the caster style's rank, and at rank 0.
 pub(super) fn spells(p: &Probe, out: &mut String) {
     writeln!(out, "\n## Spells\n").unwrap();
     writeln!(
         out,
-        "Each spell that rolls (harm or healing) of the schools the trained caster knows or has an affinity with, as `Actor::spell_roll` makes it in plain gear, per cast on one target: the rung of its ladder the stats reach (the seeds' range), the school's rank the pace below reached (and the rank of the caster style it is cast in, if any), the roll (seed 1's dice, the seeds' mean) and the same roll at rank 0 (the ladder alone), its mean on a target under a hex (Malison's bite; `–` without it), and its mana (the cost table's price with no rank's cut in brackets) over the pool.\n"
+        "Each spell that rolls (harm or healing) of the schools the trained caster knows or has an affinity with, as `Actor::spell_roll` makes it in plain gear, per cast on one target: the rung of its ladder the stats reach (the seeds' range), the caster style it is cast in and the rank the pace below reached (`–` for a spell cast in no style), the roll (seed 1's dice, the seeds' mean) and the same roll at style rank 0, its mean on a target under a hex (Malison's bite; `–` without it), and its mana (the cost table's price with no talent in brackets) over the pool.\n"
     )
     .unwrap();
     for (class, title, _) in CASTERS {
         writeln!(
             out,
-            "**{title}**\n\n| Spell (level, res) | L | rung | school rank | roll | hexed | mana / pool |\n|---|---|---|---|---|---|---|"
+            "**{title}**\n\n| Spell (level, res) | L | rung | style rank | roll | hexed | mana / pool |\n|---|---|---|---|---|---|---|"
         )
         .unwrap();
         let mut names: Vec<String> = Vec::new();
@@ -347,11 +347,13 @@ pub(super) fn spells(p: &Probe, out: &mut String) {
                 let Some(first) = c.first() else {
                     continue;
                 };
-                let mut rank = span(c.iter().map(|c| c.school_rank));
-                if let Some((style, _)) = &first.style {
-                    let ranks = span(c.iter().filter_map(|c| c.style.as_ref().map(|s| s.1)));
-                    rank = format!("{rank} ({style} {ranks})");
-                }
+                let rank = match &first.style {
+                    Some((style, _)) => {
+                        let ranks = span(c.iter().filter_map(|c| c.style.as_ref().map(|s| s.1)));
+                        format!("{style} {ranks}")
+                    }
+                    None => "–".into(),
+                };
                 let mana = avg(s.iter().map(|s| f64::from(s.mana)));
                 let mean = avg(c.iter().map(|c| roll_mean(c.dice, c.reroll)));
                 let hexed = match first.hexed {
@@ -404,22 +406,20 @@ fn prayer_rows(p: &Probe, class: &str, out: &mut String) {
     }
 }
 
-/// The schools' pace: the ranks a pool a day reaches by level, and the pool check.
-pub(super) fn school_pace(p: &Probe, out: &mut String) {
-    writeln!(out, "\n## School pace\n").unwrap();
+/// The caster styles' pace: the ranks a pool a day reaches by level, and the pool check.
+pub(super) fn caster_pace(p: &Probe, out: &mut String) {
+    writeln!(out, "\n## Caster style pace\n").unwrap();
     writeln!(
         out,
-        "The trained caster's school and caster style as their casting trained them (`balance_probe/schools.rs`): each day of each level, one pool spent on the pace spell (of the school's spells, the most a cast among those costing at most a fifth of the pool, never one cast only under the open sky; for the priest a heal, at most one a kill), every cast landing on a monster of the caster's level through `World::practise`. Each row: the pace spell over the level before and its cost (seed 1's); casts a day from the pool, and the spell casts a day the same level's fights took (the stat training's careers, which refill the pool before every cast; the priest's one a kill); the school's rank and the caster style's at the level (the seeds' range); and the pool check, the pool over a single-target spell of the caster's own level (its base mana: the level; no rank's cut, no talent).\n"
+        "The trained caster's caster style as their casting trained it (`balance_probe/caster_pace.rs`): each day of each level, one pool spent on the pace spell (of the school's spells, the most a cast among those costing at most a fifth of the pool, never one cast only under the open sky; for the priest a heal, at most one a kill), every cast landing on a monster of the caster's level through `World::practise`. Each row: the pace spell over the level before and its cost (seed 1's); casts a day from the pool, and the spell casts a day the same level's fights took (the stat training's careers, which refill the pool before every cast; the priest's one a kill); the caster style's rank at the level (the seeds' range); and the pool check, the pool over a single-target spell of the caster's own level (its base mana: the level; no talent).\n"
     )
     .unwrap();
-    let table = p.content.weapon_skills();
     for (class, title, school) in CASTERS {
         writeln!(
             out,
-            "**{title}** ({school})\n\n| L | pace spell (mana) | casts a day: pool / fights | school rank | style rank | pool / level-L casts |\n|---|---|---|---|---|---|"
+            "**{title}** ({school})\n\n| L | pace spell (mana) | casts a day: pool / fights | style rank | pool / level-L casts |\n|---|---|---|---|---|"
         )
         .unwrap();
-        let id = table.id(school).expect("school");
         for level in LEVELS {
             let s = p.of(class, level, Gear::Plain, true);
             let Some(first) = s.first() else {
@@ -439,10 +439,9 @@ pub(super) fn school_pace(p: &Probe, out: &mut String) {
             let mana = avg(s.iter().map(|s| f64::from(s.mana)));
             writeln!(
                 out,
-                "| {level} | {spell} | {:.1} / {:.1} | {} | {style} | {mana:.0} / {level} = {:.1} |",
+                "| {level} | {spell} | {:.1} / {:.1} | {style} | {mana:.0} / {level} = {:.1} |",
                 avg(s.iter().map(|s| s.paced.casts_a_day)),
                 avg(s.iter().map(|s| s.fought_a_day)),
-                span(s.iter().map(|s| s.ranks.rank(id))),
                 mana / f64::from(level.max(1)),
             )
             .unwrap();

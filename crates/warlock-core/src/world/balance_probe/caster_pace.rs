@@ -1,13 +1,12 @@
-//! The balance probe's school pace (the spell scaling design §8.4, §12.4; S7): the ranks a
-//! caster's school and caster style really reach by level, measured on the real curve. Each game
-//! day of a level ([`super::training::days`]) the caster spends one pool (the night's rest
-//! refills it) on its pace spell ([`pace_spell`]): the casts are its maximum mana over the
-//! spell's cost (the rank's mana cut included, as in play), a healer's never more than the day's
-//! kills (one heal a fight, as the probe's priest casts). Each cast lands on a monster of the
-//! caster's level and goes through `World::practise`, the hook `practise_cast` calls: once for
-//! the spell's school, once for the caster style the spell is cast in by the caster in
-//! plain gear (`Actor::spell_grip`: armoured in hindering armour), so `[marks]`, the school's
-//! curve, and the talents' marks (Weapon drill) are the game's own.
+//! The balance probe's caster style pace (the spell scaling design §12.4; S7): the ranks a
+//! caster's caster style really reaches by level, measured on the real curve. Each game day of a
+//! level ([`super::training::days`]) the caster spends one pool (the night's rest refills it) on
+//! its pace spell ([`pace_spell`]): the casts are its maximum mana over the spell's cost, a
+//! healer's never more than the day's kills (one heal a fight, as the probe's priest casts). Each
+//! cast lands on a monster of the caster's level and goes through `World::practise`, the hook
+//! `practise_cast` calls, for the caster style the spell is cast in by the caster in plain gear
+//! (`Actor::spell_grip`: armoured in hindering armour), so `[marks]`, the caster curve, and the
+//! talents' marks are the game's own.
 
 use super::{Build, Cast, Gear, casts, dress, roll_mean};
 use crate::content::WeaponSkillId;
@@ -26,19 +25,18 @@ pub(super) struct Paced {
 }
 
 /// The spell `w`'s player of `build` casts most, if the build casts: of its school's heals for a
-/// healer, else of its school's damage spells, the one of the most mean roll a cast among those
+/// healer, else of its school's damage spells (the school as the spells' category), the one of the most mean roll a cast among those
 /// costing at most a fifth of the pool (else the cheapest). Never one cast only under the open
 /// sky (Call lightning): the fights are in a dungeon.
 pub(super) fn pace_spell(w: &World, build: &Build) -> Option<Cast> {
     let content = &w.content;
-    let table = content.weapon_skills();
-    let school = table.id(build.school?);
+    let school = build.school?;
     let pool = w.state.player().max_mana(content);
     let (cheap, dear): (Vec<_>, Vec<_>) = (casts(w).into_iter())
         .filter(|c| c.cost > 0 && c.heals == build.casts_a_kill)
         .filter(|c| {
             let def = content.spell(c.spell);
-            !def.open_sky && table.of_school(def.school) == school
+            !def.open_sky && def.school.id() == school
         })
         .partition(|c| c.cost * 5 <= pool);
     let mean = |c: &Cast| roll_mean(c.dice, c.reroll);
@@ -58,17 +56,11 @@ pub(super) fn first_spell(w: &World, build: &Build, seed: u64) -> Paced {
     let mut dressed = w.clone();
     dress(&mut dressed, build, 1, Gear::Plain, seed);
     let content = &dressed.content;
-    let school = content.weapon_skills().id(school);
     let me = dressed.state.player();
     let best = (casts(&dressed).into_iter())
         .filter(|c| c.cost > 0 && c.heals == build.casts_a_kill)
         .filter(|c| me.knows_spell(content, c.spell))
-        .filter(|c| {
-            content
-                .weapon_skills()
-                .of_school(content.spell(c.spell).school)
-                == school
-        })
+        .filter(|c| content.spell(c.spell).school.id() == school)
         .max_by(|a, b| {
             let area = |c: &Cast| content.spell(c.spell).shape.is_area();
             let mean = |c: &Cast| roll_mean(c.dice, c.reroll);
@@ -91,7 +83,7 @@ pub(super) fn first_spell(w: &World, build: &Build, seed: u64) -> Paced {
 }
 
 /// Casts the days that bring `w`'s player (of `build`, at level `level`) to the next level, each
-/// day's pool on the pace spell, practising its school and caster style.
+/// day's pool on the pace spell, practising its caster style.
 pub(super) fn cast_level(w: &mut World, build: &Build, level: u8, seed: u64) -> Paced {
     if build.school.is_none() {
         return Paced::default();
@@ -115,8 +107,8 @@ pub(super) fn cast_level(w: &mut World, build: &Build, level: u8, seed: u64) -> 
             today = today.min(kills * (d + 1) / days - kills * d / days);
         }
         for _ in 0..today {
-            for skill in [skills.skill, skills.style].into_iter().flatten() {
-                w.practise(skill, true, u32::from(level));
+            if let Some(style) = skills.style {
+                w.practise(style, true, u32::from(level));
             }
         }
         cast += today;

@@ -2,8 +2,8 @@
 source: crates/warlock/src/ui/screen_snapshots.rs
 expression: "render(case, content.clone())"
 ---
- You dodge the kobold archer's fist.
- The kobold archer hits you. You die...
+ Something shoots you.
+ You die...
 
 
 
@@ -15,10 +15,10 @@ expression: "render(case, content.clone())"
                         │                                                  │
                         │                  Here lies Pip,                  │
                         │                     a thief,                     │
-                        │            killed by a kobold archer,            │
+                        │       killed by something you did not see,       │
                         │                  in The Arena,                   │
                         │      on 11 Darkening, Year 1444, at 08:02,       │
-                        │                 after 28 turns.                  │
+                        │                 after 22 turns.                  │
                         │             You had reached level 1.             │
                         │                                                  │
                         │       Your run is over; its save is gone.        │

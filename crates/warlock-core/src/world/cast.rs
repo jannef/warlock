@@ -65,7 +65,6 @@ use super::reflect::{Shot, Turned};
 use super::spell::{Caster, burst_cells};
 use super::spell_rung::CastBy;
 use super::talk::capitalized;
-use super::weapon_ability::Fired;
 use super::{Actor, ActorId, AttackSkills, Cause, Spent, World};
 use crate::ability::{Ability, Unavailable};
 use crate::action::position_text;
@@ -73,7 +72,7 @@ use crate::action::{AttackKind, Event, ReadTarget, SpellShape};
 use crate::combat::{self, Attack, Category, Profile, Strike};
 use crate::content::{
     Bolt, Burst, Content, Flask, Grip, Resolution, Shape, SpellData, SpellPurpose, Stance,
-    StatusId, Trigger, merge_rider,
+    StatusId, merge_rider,
 };
 use crate::content::{Effect as ItemEffect, ObjectId, SpellId};
 use crate::damage::{Damage, Kinds};
@@ -307,8 +306,8 @@ impl World {
         };
         let done = match cast.def.kind {
             SpellPurpose::Buff => self.cast_buff(cast, events),
-            SpellPurpose::Heal if cast.def.aims_corpse() => self.cast_feast(cast, at, events),
-            SpellPurpose::Heal => self.cast_heal(cast, at, events),
+            SpellPurpose::Heal if cast.def.aims_corpse() => self.cast_feast(cast, at),
+            SpellPurpose::Heal => self.cast_heal(cast, at),
             SpellPurpose::Cleanse => self.cleanse(cast, events),
             SpellPurpose::Hex => self.cast_hex(cast, at, events),
             SpellPurpose::Damage => self.cast_damage(cast, at, events),
@@ -374,14 +373,12 @@ impl World {
         true
     }
 
-    /// The player's cast `cast` went off (spec §8 "Weapon skills": "Schools of magic",
-    /// "Fighting styles"; the spell scaling design §8.4, §10.2): one paid in mana practises its
-    /// school once, as a blow practises its weapon skill, by the [`Outcome`] its kind filled (an
-    /// attempt, and a success when it landed, weighed by the strongest creature it struck at,
-    /// else the player's own level), then the caster style it was cast in (`cast_style.rs`) by
-    /// the same outcome, lands or not, as a blow's style. A spell that rolls no attack, out of
-    /// armour that hinders casting, trains no style. A scroll read or a wand used trains
-    /// nothing.
+    /// The player's cast `cast` went off (spec §8 "Fighting styles"): one paid in mana
+    /// practises the caster style it was cast in (`cast_style.rs`) once, as a blow practises
+    /// its style, by the [`Outcome`] its kind filled (an attempt, and a success when it landed,
+    /// weighed by the strongest creature it struck at, else the player's own level). A spell
+    /// that rolls no attack, out of armour that hinders casting, trains no style. A scroll read
+    /// or a wand used trains nothing.
     fn practise_cast(&mut self, cast: &Cast<'_>) {
         if !matches!(cast.pay, Pay::Mana(_)) || self.state.death.is_some() {
             return;
@@ -394,41 +391,16 @@ impl World {
         }
     }
 
-    /// `cast` reached creature `other` (spec §8 "Weapon skills": "Schools of magic"): its
-    /// [`Outcome`] weighs the strongest creature struck at, and `landed` (a harm done, a hex
-    /// taken, a heal given, a buff or a cure or a utility's work done) makes it a success. The
-    /// one place every kind reports a landing, and so where a cast paid in mana that `landed`
-    /// raises the school abilities' trigger (spec §8 "Weapon abilities": `spell_lands`; the
-    /// spell scaling design §8.5) with the cast's school and caster style, for `other` if it
-    /// lives. A lookup when nothing has the trigger: no draw.
-    pub(super) fn spell_landed(
-        &mut self,
-        cast: &Cast<'_>,
-        other: ActorId,
-        landed: bool,
-        events: &mut Vec<Event>,
-    ) {
+    /// `cast` reached creature `other` (spec §8 "Fighting styles"): its [`Outcome`] weighs
+    /// the strongest creature struck at, and `landed` (a harm done, a hex taken, a heal given,
+    /// a buff or a cure or a utility's work done) makes it a success. The one place every kind
+    /// reports a landing.
+    pub(super) fn spell_landed(&mut self, cast: &Cast<'_>, other: ActorId, landed: bool) {
         let mut outcome = cast.outcome.get();
         let level = self.level_of(other);
         outcome.level = Some(outcome.level.map_or(level, |l| l.max(level)));
         outcome.landed |= landed;
         cast.outcome.set(outcome);
-        if !landed
-            || !matches!(cast.pay, Pay::Mana(_))
-            || self.state.death.is_some()
-            || !self.state.actors.contains_key(&other)
-        {
-            return;
-        }
-        let player = self.state.player;
-        let skills = cast.skills;
-        let fired = Fired {
-            other,
-            kind: AttackKind::Spell,
-            skills,
-            blow: None,
-        };
-        self.weapon_trigger(player, Trigger::SpellLands, fired, events);
     }
 
     /// A buff: its status on the caster, at the degrees its ladder and hooks give.
@@ -441,7 +413,7 @@ impl World {
             return true;
         }
         self.afflict(player, status, severity, Some(player), events);
-        self.spell_landed(cast, player, true, events);
+        self.spell_landed(cast, player, true);
         true
     }
 
@@ -483,15 +455,15 @@ impl World {
             self.train_stat(crate::content::StatUse::Identified);
             events.push(Event::Identified { item: on });
         }
-        self.spell_landed(cast, self.state.player, true, events);
+        self.spell_landed(cast, self.state.player, true);
         true
     }
 
     /// A heal: its dice back to the caster (self), or to the one it touches
     /// (a touch: the cell next to the caster, or their own).
-    fn cast_heal(&mut self, cast: &Cast<'_>, at: Option<Pos>, events: &mut Vec<Event>) -> bool {
+    fn cast_heal(&mut self, cast: &Cast<'_>, at: Option<Pos>) -> bool {
         if cast.def.about_caster() {
-            return self.cast_heal_about(cast, events);
+            return self.cast_heal_about(cast);
         }
         let player = self.state.player;
         let target = match (cast.def.shape, at) {
@@ -531,7 +503,7 @@ impl World {
         }
         let back = heal.roll(&mut self.state.rng, cast.reroll).max(0);
         self.spell_heals(target, back);
-        self.spell_landed(cast, target, back > 0, events);
+        self.spell_landed(cast, target, back > 0);
         true
     }
 
@@ -600,7 +572,7 @@ impl World {
         for text in said {
             self.say(text);
         }
-        self.spell_landed(cast, player, true, events);
+        self.spell_landed(cast, player, true);
         true
     }
 
@@ -611,7 +583,7 @@ impl World {
             return self.cast_gale(cast, at, push, events);
         }
         if let (Some(at), Some(charm)) = (at, &cast.def.effect.charm) {
-            return self.cast_charm(cast, charm, at, events);
+            return self.cast_charm(cast, charm, at);
         }
         if let (Some(at), Some(_)) = (at, cast.def.effect.zone) {
             let (range, radius) = (
@@ -647,7 +619,7 @@ impl World {
         let content = self.content.clone();
         let word = (content.status(status).seen.clone()).unwrap_or_else(|| "hexed".into());
         self.say(format!("{who} is {word}."));
-        self.spell_landed(cast, target, self.suffers(target, status), events);
+        self.spell_landed(cast, target, self.suffers(target, status));
         true
     }
 
@@ -707,7 +679,7 @@ impl World {
                 let who = capitalized(&self.called(&self.state.actors[&id]));
                 self.say(format!("{who} is {word}."));
             }
-            self.spell_landed(cast, id, self.suffers(id, status), events);
+            self.spell_landed(cast, id, self.suffers(id, status));
         }
         true
     }
@@ -932,7 +904,7 @@ impl World {
         self.spell_type_lands(by, def.damage_type, &harmed, events);
         if let Some(cast) = cast {
             for (target, hit) in struck {
-                self.spell_landed(cast, target, hit, events);
+                self.spell_landed(cast, target, hit);
             }
         }
     }

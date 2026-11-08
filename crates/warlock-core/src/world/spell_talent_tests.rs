@@ -10,8 +10,7 @@ use super::*;
 use crate::content::Choice;
 use std::sync::LazyLock;
 
-static BUILTIN: LazyLock<Arc<Content>> =
-    LazyLock::new(|| Arc::new(Content::builtin().expect("content")));
+static BUILTIN: LazyLock<Arc<Content>> = LazyLock::new(|| Arc::new(super::caster_tests::quiet()));
 
 /// What the player's `spell` costs them now, and how far it reaches.
 fn cost_and_range(w: &World, spell: &str) -> (i32, Option<i32>) {

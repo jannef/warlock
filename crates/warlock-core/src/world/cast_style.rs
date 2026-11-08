@@ -5,7 +5,7 @@
 //! Battle caster's. Out of such armour, a spell that rolls to hit ([`SpellData::rolls_to_hit`])
 //! is a Toucher's when its shape is `touch` and a Sniper's otherwise (a ray, a bolt); every other
 //! spell (an area, a bolt that never misses, a heal, a buff, a hex) is cast in **no style**. The
-//! style's benefit joins the cast's hooks after the school's ([`Actor::spell_mods_in_style`]:
+//! style's benefit joins the cast's hooks after the talents' and items' ([`Actor::spell_mods_in_style`]:
 //! Sniper's `cells`, Toucher's `bonus`), its `to_hit` and `threat` a rolling spell's attack, and
 //! every spell paid in mana trains it (`World::practise_cast`). The player's casts and the
 //! creatures' are decided alike. Nothing is saved.
@@ -28,21 +28,19 @@ impl Actor {
         }
     }
 
-    /// The skill and the caster style a cast of `spell` draws on and trains (spec §8 "Weapon
-    /// skills": "Schools of magic", "Fighting styles"): its school's skill, and the style it is
-    /// cast in (module docs).
+    /// The skills a cast of `spell` draws on and trains (spec §8 "Fighting styles"): no weapon
+    /// skill, only the caster style it is cast in (module docs).
     pub fn spell_skills(&self, content: &Content, spell: &SpellData) -> AttackSkills {
         let table = content.weapon_skills();
         AttackSkills {
-            skill: table.of_school(spell.school),
+            skill: None,
             style: (self.spell_grip(content, spell)).and_then(|grip| table.style_for(grip, &[])),
         }
     }
 
-    /// What its talents, worn items, school rank, and the caster style it casts `spell` in do to
-    /// it ([`Actor::spell_mods`]'s sum, then the style's benefit: a style adds to the school as a
-    /// weapon style adds to the weapon skill). What a cast settles with, and what the menu, the
-    /// dumps, and the aiming mode show.
+    /// What its talents, worn items, and the caster style it casts `spell` in do to it
+    /// ([`Actor::spell_mods`]'s sum, then the style's benefit). What a cast settles with, and
+    /// what the menu, the dumps, and the aiming mode show.
     pub fn spell_mods_in_style(&self, content: &Content, spell: &SpellData) -> SpellMods {
         let mut mods = self.spell_mods(content, spell);
         let style = self.spell_skills(content, spell).style;

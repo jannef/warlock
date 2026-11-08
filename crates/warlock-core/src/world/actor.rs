@@ -8,8 +8,8 @@ use crate::combat::{self, Attack, Category, Defence, Health, Profile, Target};
 use crate::content::Effect as ItemEffect;
 use crate::content::{
     ActionKind, Benefit, CombatStance, Content, CreatureId, DamageTypeId, FactionId, Grip, Hide,
-    MAX_SPEED, ObjectDef, ObjectId, RaceDef, Role, SpellData, SpellId, StatusId, TwoWeapons,
-    VisionProfile, WeaponSkillId,
+    MAX_SPEED, ObjectDef, ObjectId, RaceDef, Role, SpellId, StatusId, TwoWeapons, VisionProfile,
+    WeaponSkillId,
 };
 use crate::damage::{Protection, Resistances};
 use crate::disease::Diseases;
@@ -983,8 +983,7 @@ impl Actor {
     /// The weapon skill an attack of `kind` made `with` (a missile, a shield for a bash, the
     /// off hand's weapon for its blow, or nothing for a blow) draws on and trains: a blow's
     /// ([`Actor::melee_skill`]), a bash's shield bashing, an off-hand blow's its weapon's, a
-    /// shot's the launcher's, a throw's thrown; a spell's none here (its school's, through
-    /// [`Actor::spell_skills`]).
+    /// shot's the launcher's, a throw's thrown; a spell's none.
     pub fn attack_skill(
         &self,
         content: &Content,
@@ -1004,14 +1003,6 @@ impl Actor {
             (AttackKind::Thrown, _) => skills.of_role(Role::Thrown),
             (AttackKind::Spell, _) => None,
         }
-    }
-
-    /// What its rank in `spell`'s school gives (spec §8 "Weapon skills": "Schools of magic"),
-    /// read as every weapon skill's is ([`Actor::benefit`]: Schooled's and Magister's ranks
-    /// count): the spell hooks' part through [`Benefit::spell_mods`], the cast's `speed`, and
-    /// the `to_hit` and `threat` of a spell that rolls to hit.
-    pub fn school_benefit(&self, content: &Content, spell: &SpellData) -> Benefit {
-        self.benefit(content, content.weapon_skills().of_school(spell.school))
     }
 
     /// What is in its hands: each thing once (a two-handed weapon is in both), in hand order,
