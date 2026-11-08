@@ -257,6 +257,7 @@ mod spawn;
 mod spell;
 mod spell_arc;
 mod spell_mods;
+mod spell_rank;
 mod spell_rule;
 mod spell_rung;
 mod spell_type;
@@ -980,7 +981,7 @@ impl World {
             talk: Talk::default(),
             home: None,
             // The scenario's spells, known from the start (a test world's fixture).
-            spells: def.spells.iter().copied().collect(),
+            spells: def.spells.iter().map(|&s| (s, 1)).collect(),
             streak: None,
             satiation: content.hunger().map(|h| Satiation::new(h.start)),
             stance: CombatStance::Neutral,
@@ -2022,6 +2023,8 @@ mod spell_arc_tests;
 mod spell_data_tests;
 #[cfg(test)]
 mod spell_list_tests;
+#[cfg(test)]
+mod spell_rank_tests;
 #[cfg(test)]
 mod spell_rule_tests;
 #[cfg(test)]

@@ -392,7 +392,7 @@ fn the_spells_cast_on_oneself_and_the_presence_lengthens_them() {
         ("brand", "branded_blade"),
     ] {
         let mut w = showcase(1);
-        w.player_mut().spells.insert(sp(spell));
+        w.player_mut().spells.insert(sp(spell), 1);
         w.player_mut().mana_base = 100;
         w.player_mut().mana = 100;
         look(&mut w);

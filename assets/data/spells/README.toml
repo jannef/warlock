@@ -8,9 +8,10 @@
 # Fields:
 #   id, name      the spell's id and its name
 #   description   one line
-#   level         its spell level, 0 to 70 by design: its base mana (the level, at least 1)
-#                 and the learning at which a scroll of it teaches for certain (../study.toml).
-#                 0 and 1 are cantrips.
+#   level         its spell level, 0 to 70 by design: its base mana (the level, at least the
+#                 cost table's `[mana] floor`, 4: every spell of level 0 to 4 costs as one of
+#                 level 4) and the learning at which its grimoire teaches for certain
+#                 (../study.toml). 0 and 1 are cantrips.
 #   The tags (talents, abilities, items, and the wiki key on them; magic design §6):
 #   school        evocation, necromancy, abjuration, restoration, transmutation, enchantment,
 #                 or divination
@@ -29,9 +30,9 @@
 #                 by its `radius`.
 #   casts         its time, in `cast` actions (at least 1; default 1)
 #   open_sky      true: it is cast only under the open sky (default false)
-#   mana          its base mana cost given outright, in place of its level's: the
-#                 shape and resolution do not count; the armour worn and the talents still do.
-#                 For a spell whose price is not its difficulty (Identify; Burning hands and Grave breath)
+#   mana          its base mana cost given outright, in place of its level's: the floor, the
+#                 shape, and the resolution do not count; the armour worn, the talents, and the
+#                 ranks still do. For a spell whose price is not its difficulty (Identify)
 #   damage        a `damage` spell's base roll: a roll, `"2d6"`, `"3d6+1d10"`, `"5d6+2"` (dice
 #                 of 2 to 20 sides, a d7 or a d9 like any other; never below 0)
 #   aim           an `attack` or `touch` damage spell's: the stat whose modifier is added to
@@ -108,6 +109,47 @@
 #                 `max`). A caster whose effective score reaches a rung's `AT` casts that rung;
 #                 below the first, the base. Talents and items may add rungs and change the
 #                 roll (the six hooks, ../talents/README.toml `spell_mod`).
+#   [spell.ranks]  its ranks (spec §8 "Spells": "Ranks"; #1264): what a caster gains as they
+#                 deepen the spell by reading its grimoire again. A spell is known at rank 1 as
+#                 it is learned (or as a class gives it), up to rank 10. One entry a rank, keyed
+#                 by the rank (`2` to `10`, any of them, in any order), each an inline table of
+#                 what REACHING THAT RANK ADDS. Entries are cumulative: a cast at rank N has
+#                 everything the entries for ranks 2 to N add. Rank 1 is the spell as written
+#                 above and never has an entry. A spell with no `[spell.ranks]` gains nothing
+#                 from its ranks (it still has them). Only a cast from mana reads them: a scroll
+#                 or a wand casts at rank 1. Every field a whole number, each optional, an entry
+#                 never empty:
+#     reroll      faces rolled again: a die of the roll showing this or less is drawn once more
+#                 (`reroll = 1`: 1s rolled again; cumulative, so a second `reroll = 1` makes 2s)
+#     sides       every die of the roll this many sides bigger (`sides = 2`: d6s are d8s)
+#     dice        this many dice more, of the roll's first group's kind
+#     bonus       added to the roll (`bonus = 1`: 2d6 is 2d6+1)
+#                 (the four above only on a spell that rolls: `damage`, `heal`, or a `summon`)
+#     cells       cells farther: a ray's, bolt's, or burst's range, a cone's or line's length
+#                 (only on a spell with a `range` or a `length`; casting still holds reach to 20)
+#     radius      cells wider on a burst's radius (a `burst` only; held to the table's length)
+#     degrees     degrees longer a buff's or a hex's status, minutes longer a summon's or a
+#                 charm's stay (only with a status or minutes; the status's `max` still holds)
+#     mana_off    percent off the spell's mana, with the talents' percents (`mana_off = 10`)
+#     time_off    percent off the casting time (`time_off = 50`: half the time; never more than
+#                 nine tenths off in all)
+#     to_hit      added to the attack roll (an `attack` or `touch` damage spell only)
+#     threat      the critical threat range this much wider: a natural 22 threatens for anyone,
+#                 `threat = 1` makes it 21 too (the same spells; never below the blows' floor)
+#                 Each entry is checked as it loads, like a ladder: a field the spell could never
+#                 read is refused ("ranks: rank 3: `radius` is for a `burst`"). Nothing bounds
+#                 how much a rank adds. A worked example, magic_missile.toml (an auto bolt) and
+#                 ray_of_frost.toml (an attack ray, which may take `to_hit` and `threat`):
+#                   [spell.ranks]
+#                   2 = { bonus = 1 }
+#                   3 = { cells = 1 }
+#                   4 = { dice = 1 }
+#                   5 = { mana_off = 10 }
+#                   ...
+#                   10 = { time_off = 50 }
+#                 Rank 1 is the baseline. A spell that is too strong at rank 1 may hold some of
+#                 its power back for its ranks (a smaller base roll, a rung moved to rank 5).
+#                 The deepening itself (the time, the check) is ../study.toml's.
 #
 # Authoring conventions (templates, not checks; the spell scaling design §6.4):
 #   [A] cells or degrees, one more a rung: Willpower for reach at 14, 18, 22, 26

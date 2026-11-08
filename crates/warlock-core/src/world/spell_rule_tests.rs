@@ -49,7 +49,7 @@ fn world(seed: u64, level: &str) -> World {
         "benison",
         "rebuke",
     ] {
-        w.player_mut().spells.insert(sp(spell));
+        w.player_mut().spells.insert(sp(spell), 1);
     }
     w.player_mut().mana_base = 400;
     w.player_mut().mana = 400;
@@ -416,7 +416,7 @@ fn a_gale_tears_clouds_fire_and_darkness_off_its_line_and_leaves_slick_ground() 
 #[test]
 fn a_cloudburst_needs_the_open_sky_rains_for_an_hour_and_puts_out_what_burns() {
     let mut w = hall(8);
-    w.player_mut().spells.insert(sp("cloudburst"));
+    w.player_mut().spells.insert(sp("cloudburst"), 1);
     let mana = w.state.player().mana;
     see(&mut w);
     w.apply(&Action::Cast("cloudburst".into(), None));
@@ -429,7 +429,7 @@ fn a_cloudburst_needs_the_open_sky_rains_for_an_hour_and_puts_out_what_burns() {
     let mut w = World::start_run(content, "courtyard", Some(9), Some(&spec), None, true)
         .expect("the courtyard");
     w.player_mut().stats = Stats::new(PerStat::splat(14), PerStat::splat(40));
-    w.player_mut().spells.insert(sp("cloudburst"));
+    w.player_mut().spells.insert(sp("cloudburst"), 1);
     w.player_mut().mana_base = 400;
     w.player_mut().mana = 400;
     let player = w.state.player;

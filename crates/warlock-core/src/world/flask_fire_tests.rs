@@ -189,7 +189,7 @@ fn pitch_fire_is_heavy_and_flies_only_four_cells() {
 fn the_scroll_of_pitch_fire_casts_the_pool_too() {
     let mut w = hall(ROW);
     // One who knows the spell reads its scroll without the reading check (`decipher.rs`).
-    w.player_mut().spells.insert(sp("pitch_fire"));
+    w.player_mut().spells.insert(sp("pitch_fire"), 1);
     run(&mut w, "read:d:5,1");
     assert_eq!(
         zones_at(&w, DUMMY_AT),

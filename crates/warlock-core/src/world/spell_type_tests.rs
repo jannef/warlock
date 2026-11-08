@@ -42,7 +42,7 @@ pub(super) fn start(content: Arc<Content>, seed: u64) -> World {
         .into_iter()
         .chain(["magic_missile", "blight", "grave_breath"])
     {
-        w.player_mut().spells.insert(sp(spell));
+        w.player_mut().spells.insert(sp(spell), 1);
     }
     w
 }

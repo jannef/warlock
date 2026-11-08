@@ -63,7 +63,11 @@ fn school_focus_cheapens_and_lengthens_only_its_own_spells() {
     let cold = cost_and_range(&w, "ray_of_frost");
     assert_eq!(cost_and_range(&w, "magic_missile"), missile);
     assert_eq!(cold.1, frost.1.map(|r| r + 1), "a step farther");
-    assert_eq!(cold.0, frost.0, "a 1-mana cantrip stays at 1");
+    assert_eq!(
+        (frost.0, cold.0),
+        (4, 3),
+        "a tenth off the floor's 4, rounded down"
+    );
     // Evocation: Magic missile too, a cell past its ladder (only the engine's reach holds it).
     w.player_mut()
         .talents
@@ -128,7 +132,7 @@ fn every_talent_combination_casts_with_nothing_holding_it() {
     reach(&mut w, 60);
     w.player_mut().mana_base = 500;
     for spell in ["fireball", "magic_missile", "ray_of_frost"] {
-        w.player_mut().spells.insert(sp(spell));
+        w.player_mut().spells.insert(sp(spell), 1);
     }
     let target = kobold(&mut w, 3, 10_000);
     let optional: [(&str, Option<&str>); 5] = [

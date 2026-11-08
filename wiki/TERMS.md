@@ -247,6 +247,7 @@ above.
 | Mishap | `magic.md#learning-spells-from-grimoires` |
 | Miscast, the Spellcraft check on casting, the miscast table | `miscasts.md#the-check`, `miscasts.md#the-miscast-table` |
 | Learning a spell from a grimoire, overreach | `magic.md#learning-spells-from-grimoires` |
+| Spell rank, deepening a spell, rereading a grimoire | `magic.md#spell-ranks` |
 | Wand, rod, charges | `wands-and-rods.md#wands`, `wands-and-rods.md#rods` |
 | Spell circle, buff, hex (as seen on a creature) | `spell-circles.md#spell-circles` |
 | Resource (Rage, Ki, Focus, …) | `resources.md` (a resource: its row; Rage: `resources.md#rage`) |

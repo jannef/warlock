@@ -22,3 +22,18 @@ noise = { sound = "chanting", loudness = 30 }
 [spell.grows]
 damage = "intelligence 13 4d4, 16 6d4, 22 6d4+1"
 range = "willpower 14 9, 18 10"
+
+# What rereading its grimoire adds, rank by rank (spec §8 "Spells": "Ranks"; README.toml
+# `[spell.ranks]`): a worked example. Each entry is what reaching that rank adds; a cast at rank
+# N has everything listed up to N. At rank 10: +2 on the roll, two dice more, two cells farther,
+# a fifth off the mana, and half the casting time.
+[spell.ranks]
+2 = { bonus = 1 }
+3 = { cells = 1 }
+4 = { dice = 1 }
+5 = { mana_off = 10 }
+6 = { bonus = 1 }
+7 = { cells = 1 }
+8 = { dice = 1 }
+9 = { mana_off = 10 }
+10 = { time_off = 50 }

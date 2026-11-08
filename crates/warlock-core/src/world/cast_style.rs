@@ -10,7 +10,7 @@
 //! every spell paid in mana trains it (`World::practise_cast`). The player's casts and the
 //! creatures' are decided alike. Nothing is saved.
 
-use super::{Actor, AttackSkills};
+use super::{Actor, AttackSkills, CastBy};
 use crate::content::{Content, Grip, Shape, SpellData, SpellMods};
 
 impl Actor {
@@ -42,7 +42,18 @@ impl Actor {
     /// ([`Actor::spell_mods`]'s sum, then the style's benefit). What a cast settles with, and
     /// what the menu, the dumps, and the aiming mode show.
     pub fn spell_mods_in_style(&self, content: &Content, spell: &SpellData) -> SpellMods {
-        let mut mods = self.spell_mods(content, spell);
+        self.spell_mods_in_style_by(content, spell, CastBy::Own)
+    }
+
+    /// [`Actor::spell_mods_in_style`] for a cast as `by` ([`Actor::spell_mods_by`]: a scroll's
+    /// or a wand's cast has no rank).
+    pub fn spell_mods_in_style_by(
+        &self,
+        content: &Content,
+        spell: &SpellData,
+        by: CastBy,
+    ) -> SpellMods {
+        let mut mods = self.spell_mods_by(content, spell, by);
         let style = self.spell_skills(content, spell).style;
         if style.is_some() {
             mods.add(&self.benefit(content, style).spell_mods());

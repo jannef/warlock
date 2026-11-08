@@ -11,7 +11,7 @@ expression: "render(case, content.clone())"
           │   c  Inspire            not enough inspiration                              │
           │   d  Lullaby            you have too little mana                            │
           │ Spells                                                                      │
-          │   e  Mend               1d3 healed, 1 mana, aimed                           │
+          │   e  Mend               1d3 healed, 3 mana, aimed                           │
           │   f  Mesmerise          5 mana: you have 4                                  │
           │   g  Sense the quick    5 mana: you have 4                                  │
           │   h  Thunderclap        4d6 force, shoves on a big hit, 13 mana: you have 4 │

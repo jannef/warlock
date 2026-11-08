@@ -36,8 +36,8 @@ fn begun(app: &App) -> usize {
         .count()
 }
 
-/// A cantrip learned: the list beneath is read again and tells no chance any more, and picking
-/// the grimoire again reads nothing.
+/// A cantrip learned: the list beneath is read again and tells the rank the grimoire would now
+/// deepen the spell to (#1264), and picking it again asks about the deepening, not the learning.
 #[test]
 fn the_list_after_a_grimoire_is_read_tells_what_is_known_now() {
     let mut app = reading("[\"grimoire_of_light\", \"candle*3\"]");
@@ -51,13 +51,20 @@ fn the_list_after_a_grimoire_is_read_tells_what_is_known_now() {
     let shown = screen(&app);
     assert!(shown.contains("a - ? a grimoire of light"), "kept: {shown}");
     assert!(!shown.contains("(learning:"), "{shown}");
+    assert!(shown.contains("(rank 2 of 10:"), "{shown}");
     insta::assert_snapshot!("grimoire-read-list-after", shown);
     press_keys(&mut app, "a");
+    let shown = screen(&app);
+    assert!(
+        shown.contains("Deepening") && shown.contains("rank 2 of 10"),
+        "{shown}"
+    );
+    press_keys(&mut app, "y");
     let messages = said(&app);
-    assert_eq!(begun(&app), 1, "{messages:?}");
     assert_eq!(
-        messages.last().map(String::as_str),
-        Some("You know this spell already.")
+        begun(&app),
+        2,
+        "the second reading, for rank 2: {messages:?}"
     );
     assert!(
         !messages.iter().any(|m| m.contains("candle")),

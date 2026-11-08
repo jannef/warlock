@@ -18,7 +18,8 @@
 //! - **The degrees** ([`Actor::spell_degrees`]): the degrees ladder's value (`degree_rungs` on
 //!   top), then `degrees`; the status's own `max` holds it as it is given (`Effects::add`).
 //! - **The aim** ([`Actor::spell_to_hit`]): the spell's `aim` stat's modifier (Dexterity unless
-//!   it names another) and the worn `spell_to_hit` (of the Magus).
+//!   it names another), the worn `spell_to_hit` (of the Magus), and the rank's `to_hit`; the
+//!   threat ([`Actor::spell_threat`]) 22 less Baleful's and the rank's `threat`.
 //!
 //! Integers only: a count, a sum, a minimum. Nothing holds what the hooks add (decision 16).
 
@@ -88,7 +89,7 @@ impl Actor {
             content,
             spell,
             by,
-            &self.spell_mods_in_style(content, spell),
+            &self.spell_mods_in_style_by(content, spell, by),
         )
     }
 
@@ -180,11 +181,13 @@ impl Actor {
     }
 
     /// What it adds to the attack roll of an `attack` or `touch` `spell` of its own: the
-    /// spell's `aim` stat's modifier (Dexterity unless it names another), and its magic items'
-    /// `spell_to_hit` (of the Magus). A scroll's or a wand's aim is Dexterity's alone.
+    /// spell's `aim` stat's modifier (Dexterity unless it names another), its magic items'
+    /// `spell_to_hit` (of the Magus), and its rank's `to_hit` (`spell_rank.rs`). A scroll's or
+    /// a wand's aim is Dexterity's alone.
     pub fn spell_to_hit(&self, content: &Content, spell: &SpellData) -> i32 {
         self.effective_stats(content).modifier(spell.aim)
             + self.mods(content).get(ItemEffect::SpellToHit)
+            + self.spell_mods(content, spell).to_hit
     }
 
     /// The to-hit of a scroll read or a wand used: Dexterity's modifier.
@@ -192,12 +195,13 @@ impl Actor {
         self.effective_stats(content).modifier(Stat::Dexterity)
     }
 
-    /// The natural roll from which an `attack` or `touch` spell of its own threatens a critical
-    /// ([`combat::DEFAULT_THREAT`] for anyone): 22 less its magic items' `spell_threat`
-    /// (Baleful), never below the blows' floor, [`combat::THREATS`]. A scroll read or a wand
-    /// used keeps 22.
-    pub fn spell_threat(&self, content: &Content) -> u8 {
-        let wider = self.mods(content).get(ItemEffect::SpellThreat).max(0);
+    /// The natural roll from which an `attack` or `touch` `spell` of its own threatens a
+    /// critical ([`combat::DEFAULT_THREAT`] for anyone): 22 less its magic items' `spell_threat`
+    /// (Baleful) and its rank's `threat` (`spell_rank.rs`), never below the blows' floor,
+    /// [`combat::THREATS`]. A scroll read or a wand used keeps 22.
+    pub fn spell_threat(&self, content: &Content, spell: &SpellData) -> u8 {
+        let wider = self.mods(content).get(ItemEffect::SpellThreat).max(0)
+            + self.spell_mods(content, spell).threat.max(0);
         let threat = i32::from(combat::DEFAULT_THREAT) - wider;
         u8::try_from(threat.max(i32::from(*combat::THREATS.start())))
             .unwrap_or(combat::DEFAULT_THREAT)

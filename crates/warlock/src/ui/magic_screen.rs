@@ -4,9 +4,9 @@
 //! styles (Sniper, Toucher, Battle caster; spec §8 "Fighting styles"), each with its rank and the
 //! faint bar of its marks toward the next, as the Weapons page draws a skill, the one cast in now
 //! marked; and the spells known, by level then name (the abilities
-//! menu's order), each with the roll it makes now and its mana as the menu's row says them
-//! ("4d6 fire, 26 mana, aimed"). Never what a rank gives: perception has none of it, and the wiki
-//! documents the rules.
+//! menu's order), each with its rank (spec §8 "Spells": "Ranks", `rank 3`) and the roll it makes
+//! now and its mana as the menu's row says them ("4d6 fire, 26 mana, aimed"). Never what a rank
+//! gives: perception has none of it, and the wiki documents the rules.
 //!
 //! A character with no mana and no spells sees no styles and "You know no spells." No key opens
 //! it in play: it is reached by its number or Tab from any info page (the Weapons page's hint
@@ -26,8 +26,11 @@ use warlock_core::perception::PerceptionView;
 
 /// Width of the name column (a skill's, a spell's).
 const NAME_W: i32 = 24;
-/// Width of a line: indent, name, and a spell's roll and mana; legends end at its right edge.
-const LINE_W: i32 = 2 + NAME_W + 36;
+/// Width of a spell's rank column (`rank 10`, a space).
+const RANK_W: i32 = 8;
+/// Width of a line: indent, name, and a spell's rank, roll, and mana; legends end at its right
+/// edge.
+const LINE_W: i32 = 2 + NAME_W + RANK_W + 36;
 /// Width of the panel's own: the line in the frame and its margins.
 const WIDTH: i32 = LINE_W + 6;
 /// What the caster styles' heading says while one is marked.
@@ -50,8 +53,12 @@ enum Row {
         filled: Option<u32>,
         in_use: bool,
     },
-    /// A spell known: its name and what the abilities menu says of it.
-    Spell { name: String, detail: String },
+    /// A spell known: its name, its rank, and what the abilities menu says of it.
+    Spell {
+        name: String,
+        rank: u8,
+        detail: String,
+    },
     /// A line of its own, dim ("You know no spells.").
     Note(&'static str),
     /// A gap between sections.
@@ -151,6 +158,7 @@ fn rows(view: &PerceptionView<'_>) -> Vec<Row> {
                 };
                 Some(Row::Spell {
                     name: a.name(content).to_string(),
+                    rank: view.own_spell_rank(spell).unwrap_or(1),
                     detail,
                 })
             }
@@ -222,9 +230,10 @@ fn draw_row(console: &mut Console, x: i32, y: i32, row: &Row) {
                 draw_bar(console, x + NAME_W + 6, y, *filled);
             }
         }
-        Row::Spell { name, detail } => {
+        Row::Spell { name, rank, detail } => {
             console.print(x + 2, y, name, TEXT);
-            console.print(x + 2 + NAME_W, y, detail, TEXT_DIM);
+            console.print(x + 2 + NAME_W, y, &format!("rank {rank}"), TEXT_DIM);
+            console.print(x + 2 + NAME_W + RANK_W, y, detail, TEXT_DIM);
         }
         Row::Note(text) => {
             console.print(x + 2, y, text, TEXT_DIM);

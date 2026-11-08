@@ -129,7 +129,7 @@ mod tests {
             w.player_mut().talents.take(id, None);
         }
         for spell in ["fireball", "cure_wounds", "haste"] {
-            w.player_mut().spells.insert(sp(spell));
+            w.player_mut().spells.insert(sp(spell), 1);
         }
         w
     }

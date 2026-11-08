@@ -22,12 +22,12 @@ expression: "render(case, content.clone())"
 │   Battle caster            0  ──────────                                                                    │
 │                                                                                                             │
 │ Spells                                                                                                      │
-│   Burning hands           2d6 fire, burns one in four, 2 mana, aimed                                        │
-│   Ray of frost            2d6 cold, numbs, 1 mana, aimed                                                    │
-│   Magic missile           4d4 force, shoves on a big hit, 2 mana, aimed                                     │
-│   Arcane bolt             6d6 force, shoves on a big hit, 9 mana, aimed                                     │
-│   Blink                   5 mana                                                                            │
-│   Shatter                 6d6 force, shoves on a big hit, 11 mana, aimed                                    │
+│   Burning hands           rank 1  2d6 fire, burns one in four, 5 mana, aimed                                │
+│   Ray of frost            rank 1  2d6 cold, numbs, 3 mana, aimed                                            │
+│   Magic missile           rank 1  4d4 force, shoves on a big hit, 3 mana, aimed                             │
+│   Arcane bolt             rank 1  6d6 force, shoves on a big hit, 9 mana, aimed                             │
+│   Blink                   rank 1  5 mana                                                                    │
+│   Shatter                 rank 1  6d6 force, shoves on a big hit, 11 mana, aimed                            │
 │                                                                                                             │
 │ Esc close                                                                                                   │
 └─ 1 Character · 2 Inventory · 3 Equipment · 4 Skills · 5 Weapons · 6 Magic · 7 Quests · 8 Talents · 9 Story ─┘

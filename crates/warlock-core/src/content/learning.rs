@@ -52,6 +52,8 @@ pub struct StudyRules {
     pub per_overreach: i32,
     /// Levels of the spells known per point harder (at least 1).
     pub known_per_point: i32,
+    /// Harder per rank already held, for a deepening (#1264).
+    pub per_rank: i32,
     /// Turns of the `study` action for any spell, and more per spell level.
     pub turns_base: u32,
     pub turns_per_level: u32,
@@ -69,6 +71,7 @@ struct StudyFile {
     base: i32,
     per_overreach: i32,
     known_per_point: i32,
+    per_rank: i32,
     turns_base: u32,
     turns_per_level: u32,
     bad_from: i32,
@@ -90,6 +93,7 @@ impl StudyRules {
             base: f.base,
             per_overreach: f.per_overreach,
             known_per_point: f.known_per_point,
+            per_rank: f.per_rank,
             turns_base: f.turns_base,
             turns_per_level: f.turns_per_level,
             bad_from: f.bad_from,
@@ -104,6 +108,12 @@ impl StudyRules {
     /// overreach + known ÷ known_per_point`.
     pub fn difficulty(&self, overreach: i32, known: i32) -> i32 {
         self.base + self.per_overreach * overreach + known / self.known_per_point
+    }
+
+    /// What a deepening to `rank` adds to the difficulty (#1264): `per_rank` for each rank
+    /// already held, `per_rank × (rank − 1)`.
+    pub fn rank_difficulty(&self, rank: u8) -> i32 {
+        self.per_rank * (i32::from(rank) - 1).max(0)
     }
 
     /// The band of a failure at `overreach` (1 or more).
@@ -435,7 +445,7 @@ pub fn drawn_among(mishaps: &[Mishap], band: Band) -> impl Iterator<Item = &Mish
 mod tests {
     use super::*;
 
-    const RULES: &str = "base = 12\nper_overreach = 1\nknown_per_point = 20\n\
+    const RULES: &str = "base = 12\nper_overreach = 1\nknown_per_point = 20\nper_rank = 2\n\
         turns_base = 100\nturns_per_level = 20\nbad_from = 6\nterrible_from = 15\neasy = 96\n\
         struggle = 36\n";
 
@@ -444,6 +454,9 @@ mod tests {
         let r = StudyRules::parse("study.toml", RULES).expect("valid");
         assert_eq!(r.difficulty(1, 0), 13);
         assert_eq!(r.difficulty(2, 45), 16, "45 levels known: 2 points harder");
+        assert_eq!(r.rank_difficulty(1), 0, "a learning adds nothing");
+        assert_eq!(r.rank_difficulty(2), 2);
+        assert_eq!(r.rank_difficulty(10), 18, "per_rank for each rank held");
         assert_eq!(r.band(5), Band::Slight);
         assert_eq!(r.band(6), Band::Bad);
         assert_eq!(r.band(14), Band::Bad);

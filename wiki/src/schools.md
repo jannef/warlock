@@ -30,8 +30,9 @@ column, which scrolls (↑↓) when the window is too small for it. From the top
 - the [caster styles](#caster-styles), each with your rank and a faint bar of your marks toward the
   next, with a `•` on Battle caster while your armour hinders casting ("• the style you cast in
   now"). They are shown to anyone who knows a spell or has trained a caster style;
-- every spell you know, by level then name, with the roll it makes now and its mana, as the
-  [abilities menu](abilities.md) shows them ("Magic missile   4d4 force, 3 mana, aimed").
+- every spell you know, by level then name, with its [rank](magic.md#spell-ranks) and the roll it
+  makes now and its mana, as the [abilities menu](abilities.md) shows them ("Magic missile
+  rank 1   4d4 force, 4 mana, aimed").
 
 The page is for reading only: spells are cast from the abilities menu. Looking at it takes no time.
 A character who knows no spells sees "You know no spells."

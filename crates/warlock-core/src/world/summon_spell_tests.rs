@@ -115,7 +115,7 @@ fn world_on(scenario: &str) -> World {
     let mut w = World::new(content.clone(), scenario, None).expect("world");
     for id in ["zz_call_rats", "zz_call_one", "zz_call_mixed"] {
         let spell = content.spell_id(id).expect("a fixture spell");
-        w.player_mut().spells.insert(spell);
+        w.player_mut().spells.insert(spell, 1);
     }
     w.player_mut().mana = 300;
     w
@@ -292,7 +292,7 @@ fn the_draw_bias_weighs_the_pool() {
 fn a_slain_call_leaves_no_corpse_and_nothing_else() {
     let mut w = world();
     let missile = w.content().spell_id("magic_missile").expect("shipped");
-    w.player_mut().spells.insert(missile);
+    w.player_mut().spells.insert(missile, 1);
     run(&mut w, "use:zz_call_one");
     let rat = calls(&w)[0].id;
     let at = w.state.actors[&rat].pos;
