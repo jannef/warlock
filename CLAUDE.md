@@ -118,8 +118,7 @@ Headless dev loop (`warlock-cli`, no window; `--content-dir` works here too):
 | Preview a generated level | `... gen --level depths:3 --seed warlock` (ground truth; `*` = light placed on floor, `&` = locked door, `S` = secret door; `^` = a trap, hidden ones too; a layer boss's lair prints its `hidden stairs` line; `⊟` = a chest, locked or trapped or not; a special room's floor by its effect's letter; also local areas of a campaign's overworld, `--level local:49,23`, `--campaign showcase` the default) |
 
 Dump layers beyond the map ones: `inventory`, `equipment`, `stats`, `skills` (the player's
-trained skills, `Stealth 17`), `schools` (the schools of magic, every one, then the caster
-styles, `Evocation 5 (40%)`, `Sniper 2 (10%)`; JSON `schools` and `caster_styles`), `abilities` (the abilities menu's list), and `quests` (the quest
+trained skills, `Stealth 17`), `abilities` (the abilities menu's list), and `quests` (the quest
 log, active first) from perception;
 `actors` (dev-only: every actor's hit points, mana, load, stats, and skills with their marks).
 
@@ -240,7 +239,7 @@ Weyfarers' Gilde, Tin`, then
 `Effects Bleeding, Diseased` when they suffer any, then `Diseases filth fever`, the diseases they
 know they have, then what they resist in words, `Resistant to cold`, `Vulnerable to fire`,
 `Immune to poison`), `weapon_skills` (the player's
-ranks and progress toward the next, `Long blades 2 (40%)`, fighting styles too, those in use
+ranks and progress toward the next, `Long blades 2 (40%)`, fighting styles too (the caster styles among them, `Sniper 2 (10%)`; JSON `caster_styles` has those alone), those in use
 marked `Duelist 1 (0%), in use`), `attacks` (the player's ready attacks as the character
 screen shows them: `Main hand long sword: +4 to hit, 1d9+2 slashing`, `Off hand dagger: ...`,
 `Missile short bow: +3 to hit, 1d6 piercing, range 10`, a spirit weapon's ending `, pierces armour`; unidentified magic left out), `talents` (the player's talents in the order taken, `Hardy`, `Skill focus (stealth)`,
@@ -274,7 +273,7 @@ the run's campaign and where the player stands with it, `calling hunter: open`, 
 level 30 not met`, `calling hunter: not for a thief`, `called hunter at 30`, the named
 monsters dead, `slain fire_drake`, the stat training
 marks with the price in force (the drop's for a negative pile), `stat marks St 120/160, To -30/75`,
-each school of magic's marks of the next rank's need, `evocation marks 312/630`, each known spell's rung of its roll's ladder with the score and the outside rungs, `fireball rung 2/4 (In 16; +1 Empower)`, the learning, `learning 36 (Decipher script 108)` (the skill's trained value) or `cannot learn: not trained in Decipher script`, **dev-only**),
+each known spell's rung of its roll's ladder with the score and the outside rungs, `fireball rung 2/4 (In 16; +1 Empower)`, the learning, `learning 36 (Decipher script 108)` (the skill's trained value) or `cannot learn: not trained in Decipher script`, **dev-only**),
 `rooms`
 (the level's special rooms: their plain ground as the effect's `mark`, then a line per room,
 **dev-only**), `ice` (the level's temperature and the thickness of the ice on its water in cm,
@@ -367,7 +366,7 @@ file). Topics:
 - `docs/dev/progression.md` — talents (data, `TalentMods`, the hooks), the picks a level brings and their refusal, the `levels` stream
 - `docs/dev/status-effects.md` — statuses and severities, healing paces, checks, diseases and stat damage
 - `docs/dev/mana.md` — the second pool: its maximum, regeneration in the status loop, every modifier's one hook, spending, the dev drain
-- `docs/dev/magic-skills.md` — the schools of magic as skills: the `school` rows, `Benefit::spell_mods`, `practise_cast` and the `Outcome`, the `schools` talents and dump layer, the Magic page
+- `docs/dev/caster-styles.md` — the caster styles (Sniper, Toucher, Battle caster): the grip by the spell, their benefit in the hooks, `practise_cast` and the `Outcome`, the caster curve, the Magic page (the schools of magic are only spell categories since #1263)
 - `docs/dev/spells.md` — the spell data: spell levels (0 to 70), the cost table, the `[[spell]]` files and their checks (none on strength), tags, learning
 - `docs/dev/resources.md` — alternative resources: the data, `Actor::resources`, grant, gain, spend, and end, time in the status loop, ability costs, the dev grant
 - `docs/dev/blood.md` — wounds and stains, bleeding, how blood is drawn, blood by damage type, fire's char

@@ -1,6 +1,5 @@
 ---
 source: crates/warlock/src/ui/screen_snapshots.rs
-assertion_line: 1519
 expression: "render(case, content.clone())"
 ---
  Brūn, your hound, pads at your heel.

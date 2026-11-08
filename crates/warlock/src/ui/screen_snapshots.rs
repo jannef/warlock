@@ -482,8 +482,8 @@ const CASES: &[Case] = &[
         screen: Some("weapon-skills"),
         ..BASE
     },
-    // A wizard's (#571): Sniper from the class among the styles; evocation, a school of magic,
-    // is not listed here (the spell scaling design §11).
+    // A wizard's (#571): Sniper from the class, not listed here (the caster styles are the
+    // Magic page's).
     Case {
         name: "weapon-skills-screen-wizard",
         character: Some("human,female,wizard"),
@@ -499,8 +499,8 @@ const CASES: &[Case] = &[
         screen: Some("weapon-skills"),
         ..BASE
     },
-    // The Magic page (the spell scaling design §11): the showcase wizard's mana, the schools
-    // (evocation from the class), the caster styles (Sniper), and the spells with their rolls.
+    // The Magic page (the spell scaling design §11): the showcase wizard's mana, the caster
+    // styles (Sniper from the class), and the spells with their rolls.
     Case {
         name: "magic-screen",
         character: Some("human,female,wizard"),
@@ -509,12 +509,11 @@ const CASES: &[Case] = &[
         size: (112, 40),
         ..BASE
     },
-    // A wizard of level 18 with ranks set as risen ones are: more spells, climbed bars, a
-    // bigger die in evocation's rows.
+    // A wizard of level 18 with ranks set as risen ones are: more spells, climbed bars.
     Case {
         name: "magic-screen-trained",
         character: Some("human,female,wizard"),
-        actions: "xp:200000 levelup:auto rank:evocation:5 rank:restoration:3",
+        actions: "xp:200000 levelup:auto rank:sniper:5 rank:toucher:3",
         screen: Some("magic"),
         size: (112, 40),
         ..BASE
@@ -529,7 +528,7 @@ const CASES: &[Case] = &[
         size: (112, 40),
         ..BASE
     },
-    // A warrior: the schools at rank 0, no caster styles, no spells.
+    // A warrior: no caster styles, no spells.
     Case {
         name: "magic-screen-none",
         character: Some("human,male,warrior"),
@@ -538,14 +537,14 @@ const CASES: &[Case] = &[
         size: (112, 40),
         ..BASE
     },
-    // An 80 by 20 console: the short tab line, and the page of a wizard of level 18 scrolls,
-    // its gaps given way (at 80 by 24 it fits so).
+    // An 80 by 14 console: the short tab line, and the page of a wizard of level 18 scrolls,
+    // its gaps given way (at 80 by 20 it fits).
     Case {
         name: "magic-screen-short",
         character: Some("human,female,wizard"),
         actions: "xp:200000 levelup:auto",
         screen: Some("magic"),
-        size: (80, 20),
+        size: (80, 14),
         ..BASE
     },
     Case {
@@ -560,16 +559,6 @@ const CASES: &[Case] = &[
     Case {
         name: "abilities-menu-weapon-skills",
         actions: "rank:long_blades:5 rank:sword_and_board:4 rank:shield_bash:5",
-        screen: Some("abilities"),
-        ..BASE
-    },
-    // A school ability (the spell scaling design §8.5): a wizard at evocation 10 has
-    // Thunderstruck, greyed under the school's name as firing by itself.
-    Case {
-        name: "abilities-menu-school-ability",
-        character: Some("human,male,wizard"),
-        kit: true,
-        actions: "rank:evocation:10",
         screen: Some("abilities"),
         ..BASE
     },

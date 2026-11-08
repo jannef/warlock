@@ -486,7 +486,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   styles the player fights in now (`PerceptionView::own_styles_in_use`: their hands', their
   readied missile weapon's, throwing's while something is ready to throw) are marked with an
   accent `•` before the name, and the Fighting styles heading then has the legend `• in use`.
-  The schools of magic and the caster styles are the Magic page's, and the footer names it
+  The caster styles are the Magic page's, and the footer names it
   (`6 Magic`). Where the console is wide enough (88 columns) the sections are in two columns, Melee and
   Missile and thrown on the left, Shields and Fighting styles on the right; else one. A
   `hidden` style (Two Shields, #611) is left out until the player has marks in it. Never what
@@ -498,9 +498,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
 - **Magic** (page 6; no command of its own; the spell scaling design §11; §8 "Weapon skills",
   "Fighting styles", "Spells"): one column, scrolled with ↑↓ when it does not fit (the gaps
   giving way first, as on the weapon skills screen), in order: `Mana 47/106` (`own_mana`, as the
-  status bar); Schools, the seven `school` skills in data order, each with its rank and marks bar
-  as the weapon skills screen draws a skill; Caster styles (Sniper, Toucher, Battle caster), the
-  same, Battle caster marked `•` while what is worn hinders casting (`own_styles_in_use`) with
+  status bar); Caster styles (Sniper, Toucher, Battle caster), each with its rank and marks bar
+  as the weapon skills screen draws a skill, Battle caster marked `•` while what is worn hinders casting (`own_styles_in_use`) with
   the heading's legend `• the style you cast in now`, listed only for a player who knows a spell
   or has a rank or marks in a caster style; Spells, every spell known in the abilities menu's
   order (by level, then name), each with the menu's words (`Magic missile   2d4 force, 3 mana,

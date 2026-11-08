@@ -111,11 +111,11 @@ the banes in `style-benefits.md` (`rank_table`'s bane columns).
 
 Caster styles (#571, combat progression family): spells that roll to hit
 (`SpellData::rolls_to_hit`: a damage spell, a ray, a bolt, or a touch, resolved by the attack
-roll) draw on their school's skill (`Role::School`, docs/dev/magic-skills.md; Spell attacks,
-is retired into the schools) and a style of a caster grip (`Grip::RangedSpell`,
+roll) draw on no weapon skill (the schools' skills went with #1263, docs/dev/caster-styles.md)
+and a style of a caster grip (`Grip::RangedSpell`,
 `TouchSpell`, `ArmouredSpell`; `Grip::casts`; their styles name no weapons).
-`Actor::spell_skills(content, spell)` picks them: the spell's school, and the style the spell
-is cast in (`world/cast_style.rs`'s `Actor::spell_grip`, docs/dev/magic-skills.md "How one
+`Actor::spell_skills(content, spell)` picks the style the spell
+is cast in (`world/cast_style.rs`'s `Actor::spell_grip`, docs/dev/caster-styles.md "How one
 casts"): armoured first (`Actor::worn_spell_cost` above 0: anything worn with a
 `spell_cost_percent` not eased to 0 by its own Mage-wrought, #629), else for a spell that rolls
 to hit a touch's Toucher or any other shape's Sniper, none for a spell that rolls no attack
@@ -129,23 +129,20 @@ default 5: Sniper's `far_to_hit` and `far_threat` from there) goes into `Profile
 spell's to-hit scales; `World::spell_practised` calls `resolve_triggers` with `AttackKind::Spell`
 (Spell guard; `struck` fires for the one struck
 as for a blow; `kill` and `big_hit` are not raised for spells, decided). The marks are the whole
-cast's, once, at its end (`World::practise_cast`): the school, then the style it was cast
-in, on every spell paid in mana, by the same outcome, lands or not, along the `school` curve
+cast's, once, at its end (`World::practise_cast`): the style it was cast
+in, on every spell paid in mana, by its outcome, lands or not, along the `caster` curve
 (three times its first marks since #1251). Battle caster's `armour`
 (percent off the
 armour's percent) is read by `Actor::armour_spell_cost` whatever is cast. No `speed` for the
-caster grips (the loader refuses it: where one casts from never quickens a cast; a school's
-`speed` may). `Benefit` fields of theirs: `far_to_hit`, `far_threat`, `cells` (Sniper's
+caster grips (the loader refuses it: where one casts from never quickens a cast). `Benefit` fields of theirs: `far_to_hit`, `far_threat`, `cells` (Sniper's
 reach), `bonus` (Toucher's roll), `armour` (checked per grip like the others; `cells` and
-`bonus` join the cast's hooks after the school's, `Actor::spell_mods_from`). Creatures' spells (`world/creature_cast.rs`) practise nothing and read no caster style, so no
+`bonus` join the cast's hooks after the talents' and items', `Actor::spell_mods_in_style`). Creatures' spells (`world/creature_cast.rs`) practise nothing and read no caster style, so no
 creature data gives ranks in them. Classes: wizard and druid Sniper 1, witch and priest
-Toucher 1, paladin Battle caster 1 (their schools: docs/dev/magic-skills.md). Talents: none new;
+Toucher 1, paladin Battle caster 1. Talents: none new;
 Stylist (a chosen style) may choose a caster style, raising it a rank. Tests:
 `content/weapon_skill.rs` (`the_caster_ladder_loads_and_is_checked`),
 `world/caster_style_tests.rs`.
 
-Schools of magic (the spell scaling design §8): the seven rows of `Role::School`, one a school,
-are weapon skills in everything but what a rank gives; their rows, `Benefit::spell_mods`,
-`World::practise_cast`, and the `Outcome` are docs/dev/magic-skills.md's. No section of the
-weapon skills screen lists them (`Role::section` is `None`; the Magic page, S9, will), and the
-`weapon_skills` dump layer leaves them out (the `schools` layer has them).
+The schools of magic were rows of `Role::School` (the spell scaling design §8) until #1263
+removed them, with their benefits, talents, and abilities; a spell's school is only its category
+now (docs/dev/caster-styles.md).

@@ -8,7 +8,7 @@ use crate::ability::{Ability, Unavailable};
 use crate::action::parse_actions;
 use crate::character::CharacterSpec;
 use crate::combat::{Blow, Strike};
-use crate::content::{ClassActive, ContentFiles, Factor, Role};
+use crate::content::{ClassActive, ContentFiles, Factor};
 use crate::dump::{self, Layer};
 use crate::noise::{self, Act};
 use crate::replay::Replay;
@@ -197,9 +197,9 @@ fn travelled_hands_raises_every_weapon_skill_and_style_held_at_nothing_to_one() 
     reach(&mut b, 3);
     for ((id, skill), was) in table.ids().zip(&before) {
         let now = b.state.player().weapon_skills.rank(id);
-        let left = skill.role == Role::School || skill.hidden;
+        let left = skill.hidden;
         match left {
-            // The schools of magic and hidden styles (Two Shields) are no weapon.
+            // Hidden styles (Two Shields) are left out.
             true => assert_eq!(now, *was, "{} untouched", skill.id),
             // Every other row at 1 at least; a rank held already is untouched.
             false => assert_eq!(now, (*was).max(1), "{}", skill.id),

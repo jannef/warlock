@@ -1,6 +1,5 @@
 ---
 source: crates/warlock/src/ui/screen_snapshots.rs
-assertion_line: 1519
 expression: "render(case, content.clone())"
 ---
  Your appraise impro┌─ Abilities ─────────────────────────────────── Page 1/2 ─┐ learn Steady hand.

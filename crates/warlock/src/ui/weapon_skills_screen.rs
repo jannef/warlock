@@ -2,8 +2,8 @@
 //! skills") and fighting styles (spec §8 "Fighting styles"), ADOM-like: by section (melee,
 //! missile and thrown, shields, fighting styles), each with its rank, 0 to 10, and a faint bar of
 //! their marks toward the next rank; the styles the player fights in now are marked. Never what a
-//! rank gives: perception has none of it, and the wiki documents the rules. The schools of magic
-//! and the caster styles are on the Magic page (`magic_screen`), which the hint line names.
+//! rank gives: perception has none of it, and the wiki documents the rules. The caster styles
+//! are on the Magic page (`magic_screen`), which the hint line names.
 //!
 //! Two columns where the console is wide enough (the weapons on the left, shields and styles on
 //! the right), else one. In a console too short for every row the gaps and margins give way,
@@ -105,7 +105,7 @@ impl WeaponSkillsScreen {
             let casts = |def: &WeaponSkillDef| def.style.as_ref().is_some_and(|s| s.grip.casts());
             let skills: Vec<Row> = (table.ids())
                 .filter(|&(id, def)| {
-                    def.role.section() == Some(section) && !casts(def) && own.shows(table, id)
+                    def.role.section() == section && !casts(def) && own.shows(table, id)
                 })
                 .map(|(id, def)| Row::Skill {
                     name: def.name.clone(),
@@ -326,11 +326,10 @@ mod tests {
         let at = |needle: &str| text.iter().position(|l| l.contains(needle));
         assert!(at("Melee") < at("Missile and thrown") && at("Missile and thrown") < at("Shields"));
         assert!(at("Shields") < at("Fighting styles") && at("Fighting styles") < at("Duelist"));
-        // Every skill once but Two Shields, hidden until its first marks (#611), and the seven
-        // schools of magic and the three caster styles, which are the Magic page's.
+        // Every skill once but Two Shields, hidden until its first marks (#611), and the three
+        // caster styles, which are the Magic page's.
         let skills = world.content().weapon_skills().skills().len();
-        assert_eq!(skill_rows(&screen), skills - 1 - 7 - 3);
-        assert!(at("Evocation").is_none());
+        assert_eq!(skill_rows(&screen), skills - 1 - 3);
         assert!(at("Two Shields").is_none());
         assert!(at("Battle caster").is_none() && at("Sniper").is_none());
         row("6 Magic");

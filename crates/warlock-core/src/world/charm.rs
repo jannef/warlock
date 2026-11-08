@@ -26,20 +26,13 @@
 use super::ally::{Ally, AllySource, Order, capital};
 use super::cast::Cast;
 use super::{ActorId, World};
-use crate::action::Event;
 use crate::content::SpellCharm;
 use crate::geom::Pos;
 use crate::time::Duration;
 
 impl World {
     /// A charm hex at `at` (the module docs). Returns whether the action took its time.
-    pub(super) fn cast_charm(
-        &mut self,
-        cast: &Cast<'_>,
-        charm: &SpellCharm,
-        at: Pos,
-        events: &mut Vec<Event>,
-    ) -> bool {
+    pub(super) fn cast_charm(&mut self, cast: &Cast<'_>, charm: &SpellCharm, at: Pos) -> bool {
         let Some(rules) = self.content.allies().cloned() else {
             self.say("Nothing answers your call.");
             return false;
@@ -89,7 +82,7 @@ impl World {
         }
         let who = capital(&self.called(&self.state.actors[&target]));
         self.say(format!("{who} {}.", charm.message));
-        self.spell_landed(cast, target, true, events);
+        self.spell_landed(cast, target, true);
         true
     }
 

@@ -22,7 +22,7 @@ reached is skipped, even if it ails you.
 
 {{#include generated/prayer-uses.md}}
 
-A prayer trains nothing: no [stat](stats.md#training) and no [school of magic](schools.md). It does
+A prayer trains nothing: no [stat](stats.md#training) and no [caster style](schools.md#caster-styles). It does
 not move your [alignment](alignment.md#what-moves-you).
 
 ## How it grows

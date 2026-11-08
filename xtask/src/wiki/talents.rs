@@ -777,7 +777,7 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
         TalentEffect::ExtraPick { level } => format!("one more talent at level {level}"),
         TalentEffect::WeaponRanks { to, skills, .. } if skills.is_empty() => format!(
             "every [weapon skill](weapon-skills.md) and [fighting style](fighting-styles.md) \
-             (not the schools of magic or a hidden style) below rank {to} rises to rank {to}, \
+             (not a hidden style) below rank {to} rises to rank {to}, \
              once, as it is given"
         ),
         TalentEffect::WeaponRanks { to, skills, .. } => {
@@ -1008,7 +1008,6 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
                 (Some(Role::Thrown), _) => "throws".to_string(),
                 (Some(Role::Unarmed), _) => "unarmed fighting".to_string(),
                 (Some(Role::ShieldBash), _) => "shield bashing".to_string(),
-                (Some(Role::School), _) => "every school of magic".to_string(),
                 (Some(Role::Style), _) => "every fighting style".to_string(),
             };
             let mut gains = Vec::new();
@@ -1064,9 +1063,6 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
                 Some(r) => r.id().replace('_', " "),
             };
             format!("marks in every {role} weapon skill {}", percent(value))
-        }
-        TalentEffect::SchoolMarksPercent { value } => {
-            format!("marks in every school of magic {}", percent(value))
         }
         TalentEffect::TwoHandedCrit { value } => {
             format!("critical multiplier +{value} with a two-handed weapon (at most \u{d7}5)")

@@ -74,12 +74,7 @@ impl World {
 
     /// Grave feast at `at` (module docs); whether it went off. Refused, said, beyond a touch,
     /// with no corpse there, and with nothing to give back.
-    pub(super) fn cast_feast(
-        &mut self,
-        cast: &Cast<'_>,
-        at: Option<Pos>,
-        events: &mut Vec<Event>,
-    ) -> bool {
+    pub(super) fn cast_feast(&mut self, cast: &Cast<'_>, at: Option<Pos>) -> bool {
         let (Some(at), Some(heal)) = (at, cast.roll) else {
             return false;
         };
@@ -111,7 +106,7 @@ impl World {
         me.mana = (me.mana + mana).min(max_mana).max(me.mana);
         let name = &content.object(corpse).name;
         self.say(format!("You draw what life is left out of the {name}."));
-        self.spell_landed(cast, self.state.player, back + mana > 0, events);
+        self.spell_landed(cast, self.state.player, back + mana > 0);
         true
     }
 
@@ -197,7 +192,7 @@ impl World {
             }
         };
         self.stands_risen(risen, rise);
-        self.spell_landed(cast, player, true, events);
+        self.spell_landed(cast, player, true);
         true
     }
 

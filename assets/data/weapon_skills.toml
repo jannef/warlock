@@ -21,14 +21,14 @@ per_level = 20
 # The marks each rank asks for, ranks 1 to 10 (#1095): the weapons' curves steepen sharply from
 # rank 7, so that for a fighter who fights the monsters of their level rank 6 comes about level
 # 10, rank 8 about 25, and rank 10 about 45 (docs/balance.md "Weapon pace"). Missile weapons ask
-# two thirds of the melee marks. The schools of magic and the caster styles, trained by far fewer
-# casts than blows, keep a gentle curve, doubling to rank 7 and flatter after it, at three times
-# the marks it first asked (#1251: ranks came too fast), so that rank 10 is the end of a long
-# career (docs/balance.md "School pace").
+# two thirds of the melee marks. The caster styles, trained by far fewer casts than blows, keep a
+# gentle curve, doubling to rank 7 and flatter after it, at three times the marks it first asked
+# (#1251: ranks came too fast), so that rank 10 is the end of a long career (docs/balance.md
+# "Caster style pace").
 [curves]
 melee = [15, 45, 190, 500, 1750, 4000, 17500, 38000, 68000, 88000]
 missile = [10, 30, 125, 330, 1170, 2670, 11700, 25300, 45300, 58700]
-school = [30, 60, 120, 240, 480, 960, 1920, 3600, 6000, 9000]
+caster = [30, 60, 120, 240, 480, 960, 1920, 3600, 6000, 9000]
 
 # Fighting with a weapon in each hand (two-weapon fighting; the off hand holds only a light
 # weapon, `light_weapon` in objects.toml): both hands strike every melee attack, the main hand
@@ -49,9 +49,9 @@ slow = 50
 spell_failure = 75
 
 # Spells that roll to hit (a ray, a bolt, or a touch whose resolution is an attack roll; spells/)
-# aim with their school's skill (role `school`, below); every spell is cast in the caster style
-# of where it is cast from (the caster styles below). A spell cast from afar is at a Sniper's best
-# (`far_to_hit`, `far_threat`) from `far` cells away (the larger of the two distances).
+# aim with the caster style they are cast in (the caster styles below). A spell cast from afar is
+# at a Sniper's best (`far_to_hit`, `far_threat`) from `far` cells away (the larger of the two
+# distances).
 [spell_attacks]
 far = 5
 
@@ -67,35 +67,21 @@ far = 5
 #             thrown       every throw trains it (things only thrown, a rock, name it too)
 #             unarmed      bare hands and natural attacks
 #             shield_bash  bashing with a held shield (an ability; spec §6 "Abilities")
-#             school       a school of magic (below): every spell of its school the caster
-#                          casts with their own mana trains it (a scroll read or a wand used
-#                          trains nothing), and its ranks lift that school's spells
 #             style        a fighting style (below)
-#           unarmed, thrown, and shield_bash may have one skill each, and every
-#           school of magic one skill (`school`: its id, as the spells' `school` names it)
+#           unarmed, thrown, and shield_bash may have one skill each
 #   curve   the curve above it trains along
 # and what each rank gives, as 11 numbers for ranks 0 to 10 (a list left out is all 0; all but
-# `to_hit`, `damage`, `parry`, `shield`, `far_to_hit`, `bonus`, `cells`, and `degrees` are 0 to
-# 255):
+# `to_hit`, `damage`, `parry`, `shield`, `far_to_hit`, `bonus`, and `cells` are 0 to 255):
 #   to_hit  added to the to-hit of attacks with it
 #   damage  added to every roll of their damage dice
 #   threat  how many natural rolls lower a critical threatens from (19-24 instead of 20-24)
 #   crit    added to a confirmed critical's damage multiplier (never past x5)
-#   speed   percent off the attack's cost (melee, shoot, throw; actions.toml); a school's: off
-#           the cast's (never a caster style's)
+#   speed   percent off the attack's cost (melee, shoot, throw; actions.toml; never a caster
+#           style's)
 #   parry   melee: added to the wielded weapon's Parry bonus to Defence
 #   reload  launcher: percent off the cost of reloading (a crossbow)
 #   shield  a shield style (sword_and_board, two_shields): added to the held shield's Shield
 #           bonus to Defence
-# and a school (never `damage`, `crit`, `parry`, `reload`, or `shield`), on its own spells,
-#   reroll  a die showing this or less is rolled again, once
-#   sides   every die this many sizes bigger, a d6 a d7
-#   dice    this many dice more
-#   bonus   added to every roll, harm or healing
-#   cells   cells farther: a range, a length
-#   degrees degrees longer: a buff's or a hex's status
-#   mana    percent off the spell's mana (never below 1 mana)
-# and its `to_hit` and `threat` count for its spells that roll to hit.
 # Rank 10 is where later active or triggered abilities will hang.
 
 # Melee
@@ -264,112 +250,6 @@ to_hit = [0, 1, 1, 2, 2, 2, 3, 4, 4, 5, 6]
 damage = [0, 0, 1, 1, 1, 2, 2, 3, 3, 4, 5]
 threat = [0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1]
 
-# Schools of magic (spec §8 "Weapon skills": "Schools of magic"; the spell scaling design §8): a
-# skill of ten ranks per school, trained as a weapon skill is: every spell of its school cast with
-# one's own mana earns marks (an attempt, more when it lands: a harm, a hex taken, a heal, a buff
-# or a cure done), weighed by the strongest creature it struck at (else the caster's own level).
-# A rank lifts every spell of the school through the spell hooks. The missile curve, as Spell
-# attacks', which these replace (its to-hit and threat rows are every school's). The harm schools
-# grow their dice, the mending school its heals and its pace, the lasting schools their degrees
-# and reach, divination its price and pace. First guesses, measured by the balance probe.
-[[skill]]
-id = "evocation"
-name = "Evocation"
-phrase = "at evocation"
-role = "school"
-school = "evocation"
-curve = "school"
-to_hit = [0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 6]
-threat = [0, 0, 0, 0, 1, 1, 1, 2, 2, 2, 3]
-reroll = [0, 0, 0, 1, 1, 1, 1, 1, 2, 2, 2]
-sides = [0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 2]
-dice = [0, 0, 0, 0, 0, 0, 1, 1, 1, 2, 2]
-mana = [0, 0, 0, 0, 5, 5, 5, 10, 10, 10, 15]
-
-[[skill]]
-id = "necromancy"
-name = "Necromancy"
-phrase = "at necromancy"
-role = "school"
-school = "necromancy"
-curve = "school"
-to_hit = [0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 6]
-threat = [0, 0, 0, 0, 1, 1, 1, 2, 2, 2, 3]
-bonus = [0, 0, 1, 1, 1, 2, 2, 2, 3, 3, 4]
-reroll = [0, 0, 0, 1, 1, 1, 1, 1, 2, 2, 2]
-dice = [0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1]
-degrees = [0, 0, 0, 1, 1, 1, 2, 2, 2, 3, 3]
-mana = [0, 0, 0, 0, 5, 5, 5, 10, 10, 10, 15]
-
-[[skill]]
-id = "abjuration"
-name = "Abjuration"
-phrase = "at abjuration"
-role = "school"
-school = "abjuration"
-curve = "school"
-to_hit = [0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 6]
-threat = [0, 0, 0, 0, 1, 1, 1, 2, 2, 2, 3]
-degrees = [0, 0, 1, 1, 1, 2, 2, 2, 3, 3, 3]
-speed = [0, 0, 0, 5, 5, 10, 10, 15, 15, 20, 20]
-mana = [0, 0, 5, 5, 10, 10, 15, 15, 20, 20, 25]
-
-[[skill]]
-id = "restoration"
-name = "Restoration"
-phrase = "at restoration"
-role = "school"
-school = "restoration"
-curve = "school"
-to_hit = [0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 6]
-threat = [0, 0, 0, 0, 1, 1, 1, 2, 2, 2, 3]
-bonus = [0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3]
-reroll = [0, 0, 0, 1, 1, 1, 1, 1, 2, 2, 2]
-sides = [0, 0, 0, 0, 1, 1, 1, 1, 1, 2, 2]
-dice = [0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1]
-speed = [0, 0, 0, 10, 10, 20, 20, 25, 25, 33, 33]
-mana = [0, 0, 0, 0, 5, 5, 5, 10, 10, 10, 15]
-
-[[skill]]
-id = "transmutation"
-name = "Transmutation"
-phrase = "at transmutation"
-role = "school"
-school = "transmutation"
-curve = "school"
-to_hit = [0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 6]
-threat = [0, 0, 0, 0, 1, 1, 1, 2, 2, 2, 3]
-degrees = [0, 0, 1, 1, 1, 2, 2, 2, 3, 3, 3]
-cells = [0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2]
-speed = [0, 0, 0, 0, 5, 5, 10, 10, 15, 15, 20]
-mana = [0, 0, 0, 0, 5, 5, 5, 10, 10, 10, 15]
-
-[[skill]]
-id = "enchantment"
-name = "Enchantment"
-phrase = "at enchantment"
-role = "school"
-school = "enchantment"
-curve = "school"
-to_hit = [0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 6]
-threat = [0, 0, 0, 0, 1, 1, 1, 2, 2, 2, 3]
-degrees = [0, 0, 1, 1, 1, 2, 2, 2, 3, 3, 3]
-cells = [0, 0, 0, 1, 1, 1, 2, 2, 2, 3, 3]
-mana = [0, 0, 0, 0, 5, 5, 5, 10, 10, 10, 15]
-
-[[skill]]
-id = "divination"
-name = "Divination"
-phrase = "at divination"
-role = "school"
-school = "divination"
-curve = "school"
-to_hit = [0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 6]
-threat = [0, 0, 0, 0, 1, 1, 1, 2, 2, 2, 3]
-mana = [0, 0, 5, 10, 10, 15, 20, 20, 25, 30, 40]
-speed = [0, 0, 0, 10, 10, 20, 20, 30, 30, 40, 50]
-cells = [0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2]
-
 # Fighting styles (spec §8 "Fighting styles"), after AD&D 2e's Complete Fighter's Handbook: skills
 # of how weapons are held and used, with the same ranks, marks, curves, and benefits as weapon
 # skills. Every attack the player makes in a style's configuration (a blow, a bash, a shot or a
@@ -412,8 +292,8 @@ cells = [0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2]
 #   ease_spell two_shields: percent points off the chance a spell fails
 #   far_to_hit ranged_spell: added to the to-hit at a target [spell_attacks] `far` or more away
 #   far_threat ranged_spell: added to the threat widening at such a target
-#   cells      ranged_spell: cells farther (a range, a length), after the school's
-#   bonus      touch_spell: added to the roll, harm or healing, after the school's
+#   cells      ranged_spell: cells farther (a range, a length)
+#   bonus      touch_spell: added to the roll, harm or healing
 #   armour     armoured_spell: percent off what worn armour adds to every spell's mana cost,
 #              whatever is cast (spells.toml's armour percents)
 #   hidden     true: listed (the weapon skills screen, the dumps, talents that ask for it) only
@@ -529,7 +409,7 @@ parry = [0, 1, 1, 2, 2, 2, 3, 4, 5, 6, 7]
 # is a Battle caster's. Out of it, a spell that rolls to hit is a Toucher's when its shape is
 # `touch` and a Sniper's otherwise (a ray, a bolt); a spell that rolls no attack (an area, a bolt
 # that never misses, a heal, a buff, a hex) is no style's. Every spell paid in mana trains the
-# style it was cast in, an attempt and a success as it landed, as its school does. Every class
+# style it was cast in, an attempt and a success as it landed. Every class
 # that casts starts in one or may advance in one.
 [[skill]]
 id = "sniper"
@@ -537,7 +417,7 @@ name = "Sniper"
 phrase = "at casting from afar"
 role = "style"
 grip = "ranged_spell"
-curve = "school"
+curve = "caster"
 to_hit = [0, 1, 1, 1, 2, 2, 2, 3, 3, 4, 4]
 far_to_hit = [0, 0, 1, 1, 1, 2, 2, 2, 3, 3, 3]
 far_threat = [0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2]
@@ -549,7 +429,7 @@ name = "Toucher"
 phrase = "at casting up close"
 role = "style"
 grip = "touch_spell"
-curve = "school"
+curve = "caster"
 to_hit = [0, 1, 1, 2, 2, 2, 3, 3, 4, 4, 5]
 threat = [0, 0, 0, 0, 0, 1, 1, 1, 1, 2, 2]
 crit = [0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 2]
@@ -561,6 +441,6 @@ name = "Battle caster"
 phrase = "at casting in armour"
 role = "style"
 grip = "armoured_spell"
-curve = "school"
+curve = "caster"
 to_hit = [0, 0, 1, 1, 1, 2, 2, 2, 3, 3, 4]
 armour = [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50]

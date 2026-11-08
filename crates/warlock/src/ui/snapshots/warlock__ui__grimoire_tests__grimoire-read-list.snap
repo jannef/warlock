@@ -1,6 +1,5 @@
 ---
 source: crates/warlock/src/ui/grimoire_tests.rs
-assertion_line: 63
 expression: shown
 ---
  Welcome to Hall. Press ? for controls.
