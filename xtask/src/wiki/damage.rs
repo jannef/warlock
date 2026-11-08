@@ -7,10 +7,12 @@ use std::fmt::Write as _;
 use warlock_core::content::{Content, DamageTypeId, Effect};
 
 /// The damage types, in content order: whether armour (Protection) soaks the kind, whether its
-/// big hits and criticals bleed, and how a blow of it is said.
+/// big hits and criticals bleed, whether it spills blood and leaves char (spec §8 "Blood",
+/// "Char"), and how a blow of it is said.
 pub(super) fn damage_types(content: &Content) -> String {
     let mut out = String::from(
-        "| Kind | Armour soaks it | Wounds bleed | A blow of it |\n|---|:---:|:---:|---|\n",
+        "| Kind | Armour soaks it | Wounds bleed | Spills blood | Leaves char | A blow of it |\n\
+         |---|:---:|:---:|:---:|:---:|---|\n",
     );
     let bleeds: Vec<DamageTypeId> = (content.status_defs().iter())
         .filter_map(|s| s.wound.as_ref())
@@ -24,10 +26,12 @@ pub(super) fn damage_types(content: &Content) -> String {
         let bleed = any_wound_bleeds_all || bleeds.contains(&id);
         let _ = writeln!(
             out,
-            "| {} | {} | {} | \"The kobold {} you.\" |",
+            "| {} | {} | {} | {} | {} | \"The kobold {} you.\" |",
             anchored(Term::Damage, &t.id, &capital(&t.name)),
             yes(t.physical),
             yes(bleed),
+            yes(t.blood),
+            yes(t.char.is_some()),
             t.verb
         );
     }

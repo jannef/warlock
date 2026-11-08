@@ -61,6 +61,12 @@ Big hits and kills leave blood where they land:
 - A kill leaves a pool where the victim fell, and a spray behind it, away from whoever struck the
   blow.
 
+Only some [kinds of damage](damage-types.md) spill blood. Blades, blunt blows, [acid](damage-types.md#damage-acid), and
+[force](damage-types.md#damage-force) do. [Fire](damage-types.md#damage-fire) sears the wound shut, and [cold](damage-types.md#damage-cold), [electricity](damage-types.md#damage-electricity),
+[poison](damage-types.md#damage-poison), and [necrotic](damage-types.md#damage-necrotic) harm leave no wound to bleed: a creature killed by a fireball leaves no
+blood, only [char](#char). A sword that cuts or stabs spills blood either way. The table on
+[Damage types](damage-types.md) lists every kind.
+
 How much blood depends on how big the victim was and how it died. A blow far beyond what was needed
 to kill, or a critical, spills more. An arrow or a thrown weapon spills less, sprayed along its
 flight. Blood that sprays into a wall right beside the victim stains that wall on the side facing
@@ -75,3 +81,24 @@ remember blood as you last saw it, and [look mode](controls.md#look-mode) mentio
 
 Blood is only for show. It never changes a fight, and the Blood switch in the
 [settings](settings.md) hides it.
+
+## Char
+
+[Fire](damage-types.md#damage-fire) leaves scorch marks where it burns. The more a spot burns, the darker it gets: first a little
+brown soot, then blackened, then charred through.
+
+- A [fireball](magic.md#spell-fireball) or a fire flask chars every floor cell its blast reaches: 20, half that at the
+  blast's edge.
+- A cone of fire, such as [Burning hands](magic.md#spell-burning-hands) or a dragon's breath, chars every cell it covers: 20.
+- A [fire zone](spellcasting.md#zones) chars the cells it burns on: 24 as it is laid.
+- A creature burned by fire chars the cell it stands on: 3, plus a third of the blood the blow
+  would have spilled.
+- Walls beside a burning cell take 75 % of that cell's char on the side facing it (half that
+  across a corner).
+
+Each share is 60 to 140 % of the number above, at random. A cell holds at most 100: under 30 it
+is scorched, under 65 blackened, then charred. Water, lava, and fire take no char.
+
+You see and remember char the way you see and remember blood, and look mode names it first:
+"A charred blood-stained stone floor." Blood on a charred floor is drawn over the char. Char is
+only for show, never changes a fight, and the Blood switch hides it too.

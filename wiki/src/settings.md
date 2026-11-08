@@ -19,7 +19,7 @@ changed in the Controls screen instead; see [Controls](controls.md#rebinding-key
 | Screen shake | The view shakes for a moment when a [fireball](magic.md#spell-fireball) or a [lightning bolt](magic.md#spell-lightning-bolt) goes off near you; the nearer, the harder. |
 | Weather | [Rain](weather.md#how-the-weather-changes) falling, splashing, and ringing on water. |
 | Spell circles | The turning circles about everyone who has a [buff or a hex](spell-circles.md#spell-circles) on them. Reduced effects (or Slides, camera off) only stops them turning, since they tell you something. Off, they are not drawn, but [look mode](controls.md#look-mode) still says what each creature suffers. |
-| Blood | The stains big hits and kills leave on floors and walls (see [Combat](hit-points.md#blood)). Not one of the effects: Reduced effects leaves it as it is. |
+| Blood | The stains big hits and kills leave on floors and walls (see [Combat](hit-points.md#blood)), and the [char](hit-points.md#char) fire leaves. Not one of the effects: Reduced effects leaves it as it is. |
 | Color palette | The colors: Default, High contrast, or Colorblind (red-green). See below. |
 | Clock | How the [time of day](time.md#days) is written: 24-hour (`14:32`, the default) or 12-hour (`2:32 PM`). It changes the [status bar](the-screen.md#the-screen) and the death screen; the game itself keeps one clock. |
 | Temperature | The unit the [status bar](the-screen.md#the-screen) shows the [temperature](temperature.md) in: °C (Celsius, to start with) or °F (Fahrenheit). See [Temperature and ice](temperature.md). |

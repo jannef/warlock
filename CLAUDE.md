@@ -222,7 +222,8 @@ visible cells as a digit, `0` dark to `9` fully lit), `sound` (heard sounds at t
 over the view: `f` footsteps, `o`/`c` a door opening/closing, `x` fighting, `b` a bowstring, `m`
 chanting, `k` banging (a door kicked), `d` digging, `v` a voice, `h` a howl, `r` a roar (a dragon's breath), a creature's cries `z` buzzing, `g` giggling, `s` a hiss, `l` a rattle, `y` a scream, `w` a wail, `j` a crash of glass (a flask breaking), `q` a heartbeat, `a` an alarm bell, `e` an
 explosion, `t` a thunderclap, upper case when loud), `blood` (blood the
-player sees or remembers as a digit over the view, `1` a few drops to `9` soaked), `inventory`
+player sees or remembers as a digit over the view, `1` a few drops to `9` soaked), `scorch` (fire's
+char, the same way, `1` a little soot to `9` charred through), `inventory`
 (what the player
 carries, grouped by item class under `Class:` header lines as the screens group it, each stack by
 its position as action text names it with its numbers as the lists show them, `a long sword (+0
@@ -371,7 +372,7 @@ file). Topics:
 - `docs/dev/magic-skills.md` — the schools of magic as skills: the `school` rows, `Benefit::spell_mods`, `practise_cast` and the `Outcome`, the `schools` talents and dump layer, the Magic page
 - `docs/dev/spells.md` — the spell data: spell levels (0 to 70), the cost table, the `[[spell]]` files and their checks (none on strength), tags, learning
 - `docs/dev/resources.md` — alternative resources: the data, `Actor::resources`, grant, gain, spend, and end, time in the status loop, ability costs, the dev grant
-- `docs/dev/blood.md` — wounds and stains, bleeding, how blood is drawn
+- `docs/dev/blood.md` — wounds and stains, bleeding, how blood is drawn, blood by damage type, fire's char
 - `docs/dev/creatures.md` — factions and stance, the AI, paths, creature sight, spawning, gear (a stable index: roster PRs edit only their own `docs/dev/creatures/<tribe>.md`, e.g. `undead.md`, never this file)
 - `docs/dev/summoning.md` — creatures' summoning (enemy-only): the `summon` table, the cooldown status, who summoned whom, the AI hook, the words
 - `docs/dev/allies.md` — allies: `Actor::ally`, the side, the ally arm of the AI, the three orders, following across levels and the retinue, the clock, an ally's kill, Beast-bond, the dev `ally:`
