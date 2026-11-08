@@ -1096,7 +1096,7 @@ impl Actor {
                 .and_then(|_| self.style(content, AttackKind::Ranged, None)),
             thrown.and_then(|t| self.style(content, AttackKind::Thrown, Some(t))),
             // Battle caster while what it wears hinders casting (a standing fact, as a grip
-            // is); never Sniper or Toucher, which each cast's aim decides (`spell_aim.rs`).
+            // is); never Sniper or Toucher, which each spell cast decides (`cast_style.rs`).
             (self.worn_spell_cost(content) > 0)
                 .then(|| content.weapon_skills().style_for(Grip::ArmouredSpell, &[]))
                 .flatten(),

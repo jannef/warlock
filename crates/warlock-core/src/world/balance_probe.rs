@@ -581,7 +581,7 @@ struct Cast {
     heals: bool,
     /// The rung of its ladder the caster's stats and talents reach.
     rung: usize,
-    /// Its school's rank and the caster style's it is cast in from where the caster stands.
+    /// Its school's rank and the caster style's it is cast in.
     school_rank: u8,
     style: Option<(String, u8)>,
     /// The roll (`Actor::spell_roll`) and the face it draws again at or under (the hooks'
@@ -631,14 +631,14 @@ fn casts(w: &World) -> Vec<Cast> {
         if !me.knows_spell(content, spell) && affinity.unwrap_or(0) <= 0 {
             continue;
         }
-        let mods = me.standing_spell_mods(content, def);
+        let mods = me.spell_mods_in_style(content, def);
         let rung = me.spell_rung(content, def, CastBy::Own, &mods);
-        let skills = me.spell_skills(content, def, me.standing_aim(content, def));
+        let skills = me.spell_skills(content, def);
         let mut bare = me.clone();
         for id in [skills.skill, skills.style].into_iter().flatten() {
             bare.weapon_skills.raise(id, 0);
         }
-        let bare_reroll = bare.standing_spell_mods(content, def).reroll;
+        let bare_reroll = bare.spell_mods_in_style(content, def).reroll;
         let bare = (bare.spell_roll(content, def, CastBy::Own)).unwrap_or(rolled);
         let style = skills
             .style

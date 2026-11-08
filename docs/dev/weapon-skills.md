@@ -114,11 +114,12 @@ Caster styles (#571, combat progression family): spells that roll to hit
 roll) draw on their school's skill (`Role::School`, docs/dev/magic-skills.md; Spell attacks,
 is retired into the schools) and a style of a caster grip (`Grip::RangedSpell`,
 `TouchSpell`, `ArmouredSpell`; `Grip::casts`; their styles name no weapons).
-`Actor::spell_skills(content, spell, aim)` picks them: the spell's school, and the style of
-where the spell is cast from (`world/spell_aim.rs`'s `SpellAim`, docs/dev/magic-skills.md
-"Where one casts from"): armoured first (`Actor::worn_spell_cost` above 0: anything worn with a
-`spell_cost_percent` not eased to 0 by its own Mage-wrought, #629), else beside (a creature next
-to the caster: Toucher) or afar (Sniper), none on oneself;
+`Actor::spell_skills(content, spell)` picks them: the spell's school, and the style the spell
+is cast in (`world/cast_style.rs`'s `Actor::spell_grip`, docs/dev/magic-skills.md "How one
+casts"): armoured first (`Actor::worn_spell_cost` above 0: anything worn with a
+`spell_cost_percent` not eased to 0 by its own Mage-wrought, #629), else for a spell that rolls
+to hit a touch's Toucher or any other shape's Sniper, none for a spell that rolls no attack
+(#1251);
 `Actor::attack_skill(Spell, _)` is `None`, `Actor::style(Spell, _)` stays `None`
 (`styles_in_use` marks Battle caster in such armour, never Sniper or Toucher). The one reader
 of the roll's benefit is
@@ -126,10 +127,11 @@ of the roll's benefit is
 roll): `benefit_of(skills).at_distance(distance, table.spell_attacks())` (`[spell_attacks] far`,
 default 5: Sniper's `far_to_hit` and `far_threat` from there) goes into `Profile::with` after the
 spell's to-hit scales; `World::spell_practised` calls `resolve_triggers` with `AttackKind::Spell`
-(Pinning ray, Staggering touch, Withering touch, Spell guard; `struck` fires for the one struck
+(Spell guard; `struck` fires for the one struck
 as for a blow; `kill` and `big_hit` are not raised for spells, decided). The marks are the whole
 cast's, once, at its end (`World::practise_cast`): the school, then the style it was cast
-in, on every spell paid in mana, by the same outcome, lands or not. Battle caster's `armour`
+in, on every spell paid in mana, by the same outcome, lands or not, along the `school` curve
+(three times its first marks since #1251). Battle caster's `armour`
 (percent off the
 armour's percent) is read by `Actor::armour_spell_cost` whatever is cast. No `speed` for the
 caster grips (the loader refuses it: where one casts from never quickens a cast; a school's

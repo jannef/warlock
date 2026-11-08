@@ -38,7 +38,7 @@ hold, so it trains only [unarmed fighting](weapon-skills.md#the-skills), and [Br
 
 ## Caster styles
 
-Spells have styles too, decided by where you cast from: Sniper, Toucher, and Battle caster. They
+Spells have styles too, decided by the spell and your armour: Sniper, Toucher, and Battle caster. They
 are on the [Schools of magic](schools.md#caster-styles) page, with their tables.
 
 ## Two weapons

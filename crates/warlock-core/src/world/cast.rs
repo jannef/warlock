@@ -60,7 +60,6 @@
 
 use super::reflect::{Shot, Turned};
 use super::spell::{Caster, burst_cells};
-use super::spell_aim::SpellAim;
 use super::spell_rung::CastBy;
 use super::talk::capitalized;
 use super::weapon_ability::Fired;
@@ -199,7 +198,6 @@ impl World {
             &content,
             (spell, def),
             Pay::Mana(me.spell_base(&content, def)),
-            self.spell_aim(target),
         );
         let price = self.cast_price(player, def);
         // Hands full of shields may spoil it (`two_shields.rs`): the mana and the time spent.
@@ -263,8 +261,8 @@ impl World {
         let Some(target) = self.cast_aim(def, target, &usage) else {
             return false;
         };
-        let pay = (Pay::Scroll(item, rungs), self.spell_aim(target));
-        let cast = Cast::settle(self.state.player(), &content, (spell, def), pay.0, pay.1);
+        let pay = Pay::Scroll(item, rungs);
+        let cast = Cast::settle(self.state.player(), &content, (spell, def), pay);
         self.perform(&cast, target, events)
     }
 
@@ -285,8 +283,8 @@ impl World {
             return false;
         };
         let target = Some(ReadTarget::Cell(at));
-        let pay = (Pay::Wand(item, rungs), self.spell_aim(target));
-        let cast = Cast::settle(self.state.player(), &content, (spell, def), pay.0, pay.1);
+        let pay = Pay::Wand(item, rungs);
+        let cast = Cast::settle(self.state.player(), &content, (spell, def), pay);
         self.perform(&cast, target, events)
     }
 
@@ -375,9 +373,10 @@ impl World {
     /// "Fighting styles"; the spell scaling design §8.4, §10.2): one paid in mana practises its
     /// school once, as a blow practises its weapon skill, by the [`Outcome`] its kind filled (an
     /// attempt, and a success when it landed, weighed by the strongest creature it struck at,
-    /// else the player's own level), then the caster style it was cast in (`spell_aim.rs`) by
-    /// the same outcome, lands or not, as a blow's style. A spell on oneself out of armour that
-    /// hinders casting trains no style. A scroll read or a wand used trains nothing.
+    /// else the player's own level), then the caster style it was cast in (`cast_style.rs`) by
+    /// the same outcome, lands or not, as a blow's style. A spell that rolls no attack, out of
+    /// armour that hinders casting, trains no style. A scroll read or a wand used trains
+    /// nothing.
     fn practise_cast(&mut self, cast: &Cast<'_>) {
         if !matches!(cast.pay, Pay::Mana(_)) || self.state.death.is_some() {
             return;
@@ -1100,7 +1099,7 @@ impl World {
 impl World {
     /// The player's spell that rolls to hit came to `blow` against `target`, made with
     /// `skills`: the weapon abilities of `skills` fire on a hit and a critical (spec §8 "Weapon
-    /// abilities": Pinning ray, Staggering touch, Spell guard). Its marks are the whole cast's
+    /// abilities": Spell guard). Its marks are the whole cast's
     /// ([`World::practise_cast`]).
     fn spell_practised(
         &mut self,
@@ -1141,7 +1140,7 @@ pub(super) struct Cast<'c> {
     pub(super) by: ActorId,
     pay: Pay,
     pub(super) reach: Reach,
-    /// The school and the caster style it is cast in (`spell_aim.rs`), decided once before its
+    /// The school and the caster style it is cast in (`cast_style.rs`), decided once before its
     /// kind runs: its marks, a rolling spell's attack and triggers.
     skills: AttackSkills,
     /// Its roll, harm, healing, or a summon's count, at the rung reached with the dice hook
@@ -1169,16 +1168,15 @@ struct Outcome {
 }
 
 impl<'c> Cast<'c> {
-    /// Creature `caster`'s own cast of `spell` (`creature_cast.rs`), aimed from `aim`: its
+    /// Creature `caster`'s own cast of `spell` (`creature_cast.rs`): its
     /// reach, roll, and degrees at its own stats, as the player's own cast is at theirs; paid
     /// by the creature before it goes off.
     pub(super) fn by_creature(
         caster: &Actor,
         content: &Content,
         spell: (SpellId, &'c SpellData),
-        aim: SpellAim,
     ) -> Self {
-        Self::settle(caster, content, spell, Pay::Creature, aim)
+        Self::settle(caster, content, spell, Pay::Creature)
     }
 
     /// The splash of `flask` thrown by `by` (`flask.rs`): the spell it names at its rung of
@@ -1207,17 +1205,16 @@ impl<'c> Cast<'c> {
         }
     }
 
-    /// `caster`'s cast of `def`, paid by `pay`, from `aim`: its hooks summed once with the
-    /// caster style's ([`Actor::spell_mods_from`]), the roll at the rung of who casts it (its
+    /// `caster`'s cast of `def`, paid by `pay`: its hooks summed once with the caster style's
+    /// ([`Actor::spell_mods_in_style`]), the roll at the rung of who casts it (its
     /// own, a scroll's, a wand's), the reach and the degrees the caster's own.
     fn settle(
         caster: &Actor,
         content: &Content,
         (spell, def): (SpellId, &'c SpellData),
         pay: Pay,
-        aim: SpellAim,
     ) -> Self {
-        let mods = caster.spell_mods_from(content, def, aim);
+        let mods = caster.spell_mods_in_style(content, def);
         let by = match pay {
             Pay::Mana(_) | Pay::Creature | Pay::Flask => CastBy::Own,
             Pay::Scroll(_, rungs) => CastBy::Scroll(rungs),
@@ -1228,7 +1225,7 @@ impl<'c> Cast<'c> {
             def,
             by: caster.id,
             pay,
-            skills: caster.spell_skills(content, def, aim),
+            skills: caster.spell_skills(content, def),
             reach: caster.spell_reach_with(content, def, &mods),
             roll: caster.spell_roll_with(content, def, by, &mods),
             reroll: mods.reroll,

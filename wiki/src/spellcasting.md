@@ -252,9 +252,9 @@ their own way, listed in their own row:
 - **A die rolled again.** *[Sure hand](talents.md#talent-sure-hand)* rolls a spell die that shows a
   1 once more, and that roll stands.
 - **Reach and degrees.** *[School focus](talents.md#talent-school-focus)*, taken for a school or an
-  element, makes those spells reach a cell farther (range or length, not a burst's radius) and cost
-  10 % less. [Magic items](affixes.md#suffixes) *of Farcasting* add their cells to every spell's
-  reach, and *of Lingering* their degrees to every blessing and hex.
+  element, makes those spells reach a cell farther (range or length, not a burst's radius, and
+  never a touch's) and cost 10 % less. [Magic items](affixes.md#suffixes) *of Farcasting* add their cells to every spell's
+  reach but a touch's, and *of Lingering* their degrees to every blessing and hex.
 
 They apply in this order: the rung, then the dice, then the roll (with its rerolls), then the harm,
 then the extra effects. A [critical](combat.md#criticals) rolls the dice twice, as a blow's does.

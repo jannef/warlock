@@ -349,8 +349,8 @@ pub(super) fn grip_text(grip: Grip) -> &'static str {
         Grip::Unarmed => "nothing in your hands",
         Grip::Launcher => "shooting a missile weapon",
         Grip::Thrown => "throwing",
-        Grip::RangedSpell => "a spell aimed farther than beside you, out of hindering armour",
-        Grip::TouchSpell => "a spell aimed at a creature beside you, out of hindering armour",
+        Grip::RangedSpell => "a ray or a bolt that rolls to hit, out of hindering armour",
+        Grip::TouchSpell => "a touch that rolls to hit, out of hindering armour",
         Grip::ArmouredSpell => "any spell cast in armour that hinders casting",
     }
 }

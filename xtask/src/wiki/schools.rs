@@ -69,13 +69,13 @@ pub fn benefits(content: &Content) -> String {
     out
 }
 
-/// The caster styles (where a spell is cast from; the spell scaling design §10.2), in file
-/// order: each by name with where it is cast from and the curve it trains along, and what each
+/// The caster styles (how a spell is cast; #1251), in file order: each by name with the spells
+/// cast in it and the curve it trains along, and what each
 /// rank gives, a table per style.
 pub fn caster_style_benefits(content: &Content) -> String {
     let table = content.weapon_skills();
     let mut out = format!(
-        "A spell cast from afar is far away at **{}** cells or more (the larger of the two \
+        "A Sniper's target is far away at **{}** cells or more (the larger of the two \
          distances).\n\n",
         table.spell_attacks().far
     );

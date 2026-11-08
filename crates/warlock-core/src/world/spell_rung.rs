@@ -11,8 +11,9 @@
 //! - **The roll** ([`Actor::spell_roll`]): the ladder's value at the rung (the base at 0), then
 //!   the dice hook, `grow(sides).more(dice).plus(bonus)`. What the abilities menu will show.
 //! - **The reach** ([`Actor::spell_reach`]): the range or length ladder's value (`reach_rungs`
-//!   on top of the stats' rungs), then `cells`; the radius ladder's, then `radius_cells`. Held
-//!   only by the engine's limits: [`MAX_REACH`] (a cone [`MAX_CONE`]), the burst table's length.
+//!   on top of the stats' rungs), then `cells`; the radius ladder's, then `radius_cells`. A
+//!   touch reaches the cell beside its caster and no farther: no hook gives it a cell (#1251).
+//!   Held only by the engine's limits: [`MAX_REACH`] (a cone [`MAX_CONE`]), the burst table's length.
 //!   A spell with `arcs`: its certain jumps, its `count` ladder's value at the same rungs.
 //! - **The degrees** ([`Actor::spell_degrees`]): the degrees ladder's value (`degree_rungs` on
 //!   top), then `degrees`; the status's own `max` holds it as it is given (`Effects::add`).
@@ -79,21 +80,16 @@ impl Actor {
         }
     }
 
-    /// The roll `spell` makes as it casts it as `by` (module docs), harm or healing, from where
-    /// it stands ([`Actor::standing_aim`]); `None` for a spell that rolls nothing.
+    /// The roll `spell` makes as it casts it as `by` (module docs), harm or healing, in the
+    /// caster style it casts it in ([`Actor::spell_mods_in_style`]); `None` for a spell that
+    /// rolls nothing.
     pub fn spell_roll(&self, content: &Content, spell: &SpellData, by: CastBy) -> Option<Roll> {
         self.spell_roll_with(
             content,
             spell,
             by,
-            &self.standing_spell_mods(content, spell),
+            &self.spell_mods_in_style(content, spell),
         )
-    }
-
-    /// Its hooks for `spell` from where it stands ([`Actor::spell_mods_from`] at
-    /// [`Actor::standing_aim`]): what the menu, the dumps, and the aiming mode show.
-    pub fn standing_spell_mods(&self, content: &Content, spell: &SpellData) -> SpellMods {
-        self.spell_mods_from(content, spell, self.standing_aim(content, spell))
     }
 
     /// [`Actor::spell_roll`] with its `mods` already summed.
@@ -109,11 +105,11 @@ impl Actor {
         Some(roll.grow(mods.sides).more(mods.dice).plus(mods.bonus))
     }
 
-    /// How far `spell` reaches as it casts it from where it stands (module docs;
-    /// [`Actor::standing_aim`]): the farthest cell it may be aimed at (a touch's 1), and a
-    /// burst's radius; each `None` where the spell has no such reach.
+    /// How far `spell` reaches as it casts it (module docs; [`Actor::spell_mods_in_style`]):
+    /// the farthest cell it may be aimed at (a touch's always 1), and a burst's radius; each
+    /// `None` where the spell has no such reach.
     pub fn spell_reach(&self, content: &Content, spell: &SpellData) -> Reach {
-        self.spell_reach_with(content, spell, &self.standing_spell_mods(content, spell))
+        self.spell_reach_with(content, spell, &self.spell_mods_in_style(content, spell))
     }
 
     /// [`Actor::spell_reach`] with its `mods` already summed.
@@ -165,7 +161,7 @@ impl Actor {
     /// docs): its base, the degrees ladder's value, then `degrees`; at least 1. `None` for a
     /// spell with neither.
     pub fn spell_degrees(&self, content: &Content, spell: &SpellData) -> Option<u16> {
-        self.spell_degrees_with(content, spell, &self.standing_spell_mods(content, spell))
+        self.spell_degrees_with(content, spell, &self.spell_mods_in_style(content, spell))
     }
 
     /// [`Actor::spell_degrees`] with its `mods` already summed.

@@ -46,35 +46,38 @@ at 0. Since the hooks are `Cast::settle`'s for every cast, a scroll read or a wa
 ranked caster rolls with the rank's dice too (the design's §8.7, unfiltered); they train
 nothing.
 
-## Where one casts from: the caster styles
+## How one casts: the caster styles
 
-`world/spell_aim.rs` (S10, #757; the design's §10.2). `SpellAim` is `Armoured` (the player's
-`worn_spell_cost` above 0: Battle caster, wherever the spell is aimed), `Beside` (a cell next to
-the player with a creature on it: Toucher), `Afar` (any other cell but their own: Sniper; an
-empty cell next to them too, and every area spell, which is aimed at a cell), or `Myself` (their
-own cell, a stack, no target: no style). `World::spell_aim(target)` decides it once, in
-`cast_spell`, `read_cast`, and `wand_cast`, before `Cast::settle`; the `Cast` keeps
-`skills: AttackSkills` (`Actor::spell_skills(content, spell, aim)`: the school's skill and
-`style_for(aim.grip())`) for the whole cast: its marks, a rolling spell's to-hit and its `hit`
-and `critical` triggers (`cast_single` takes it for an own cast), S11's `spell_lands`.
+`world/cast_style.rs` (S10, #757; reworked by #1251, the design's §10.2 is history).
+`Actor::spell_grip(content, spell)` is the caster style's grip, decided by the spell and the
+armour alone, never by where the spell is aimed: `ArmouredSpell` (`worn_spell_cost` above 0:
+Battle caster, whatever the spell), else for a spell that rolls to hit
+(`SpellData::rolls_to_hit`: a damage spell resolved by the attack roll) `TouchSpell` (shape
+`touch`: Toucher) or `RangedSpell` (a ray, a bolt: Sniper), else `None` (an area, a bolt that
+never misses, a heal, a buff, a hex, a touch heal: no style). The player's casts (`cast_spell`,
+`read_cast`, `wand_cast`) and the creatures' (`creature_cast.rs`) are decided alike in
+`Cast::settle`; the `Cast` keeps `skills: AttackSkills` (`Actor::spell_skills(content, spell)`:
+the school's skill and `style_for(spell_grip)`) for the whole cast: its marks, a rolling
+spell's to-hit and its `hit` and `critical` triggers (`cast_single` takes it for an own cast),
+S11's `spell_lands`.
 
-- **The style's benefit**: `Actor::spell_mods_from(content, spell, aim)` is `spell_mods` (the
+- **The style's benefit**: `Actor::spell_mods_in_style(content, spell)` is `spell_mods` (the
   talents', the items', the school's) plus the style's `Benefit::spell_mods()` (read through
   `Actor::benefit`, so Stylist's ranks count). Sniper's `cells` (rank 5 one, rank 9 two) and
-  Toucher's `bonus` (rank 4 one, 7 two, 10 three) are its only spell fields; the loader allows
-  `cells` for `ranged_spell` and `bonus` for `touch_spell` (beside a school), refuses either on
-  any other grip, and `speed` on every caster grip. `Cast::settle` sums the mods once with the
-  aim and hands them to `spell_reach_with`, `spell_roll_with`, and `spell_degrees_with`.
-- **What is shown** (the menu, `PerceptionView::own_spell_reach`, the dumps, the aiming mode's
-  reach): the standing aim, `Actor::standing_aim` (armoured in such armour, a touch `Beside`,
-  any other aimed spell `Afar`, else `Myself`), through `Actor::standing_spell_mods`;
-  `spell_roll`, `spell_reach`, and `spell_degrees` read it. So a Sniper's reach is in the
-  aiming mode's range, and a touch heal's roll shows the Toucher's point (cast on oneself it
-  has none).
+  Toucher's `bonus` (rank 4 one, 7 two, 10 three) are its only spell fields, so they reach only
+  the spells that roll to hit; the loader allows `cells` for `ranged_spell` and `bonus` for
+  `touch_spell` (beside a school), refuses either on any other grip, and `speed` on every caster
+  grip. `Cast::settle` sums the mods once and hands them to `spell_reach_with`,
+  `spell_roll_with`, and `spell_degrees_with`. The cast, the menu, `PerceptionView::own_spell_reach`,
+  the dumps, and the aiming mode all read the same sum, so what is shown is what is cast.
+- **A touch's reach is fixed** (#1251): `spell_reach_with` gives a `touch` spell a range of 1
+  whatever the hooks say (School focus's `cells`, Sniper's, a school rank's, an item's), and no
+  touch spell has a radius or arcs.
 - **In use**: `Actor::styles_in_use` (`own_styles_in_use`) marks Battle caster while the armour
-  worn hinders casting, never Sniper or Toucher (each cast's target decides them).
-- The grips keep their ids, so no row moved and no save changed (the content fingerprint did:
-  the two arrays).
+  worn hinders casting, never Sniper or Toucher (each spell cast decides them).
+- No caster style but Battle caster teaches an ability (Spell guard, rank 4); Sniper's and
+  Toucher's (Pinning ray, Staggering touch, Withering touch) were removed by #1251.
+- The grips keep their ids, so no row moved.
 
 ## Marks
 
@@ -94,15 +97,20 @@ weapon skill's marks go through), then the caster style.
   struck. A reflected spell reports nothing (`spell_lands`' `cast` is `None` for it).
 - **The school abilities' trigger** (S11): `spell_landed` also raises `Trigger::SpellLands`
   through `World::weapon_trigger` for every landing of a `Pay::Mana` cast on a creature that
-  lives, with the cast's `skills` (the school and the caster style, by where it was cast from); see
+  lives, with the cast's `skills` (the school and the caster style it was cast in); see
   `docs/dev/weapon-abilities.md` "School abilities" (Thunderstruck, Wasting, Aegis, Lulling).
-- **The style**: the cast's `skills.style` (where it was cast from, above), practised after the
-  school by the same outcome and level, lands or not, as a blow's style; none for a spell on
-  oneself out of hindering armour. Battle caster earns full marks (an attempt and a success
+- **The style**: the cast's `skills.style` (above), practised after the school by the same
+  outcome and level, lands or not, as a blow's style; none for a spell that rolls no attack out
+  of hindering armour. Battle caster earns full marks (an attempt and a success
   as the cast landed) like the others. `spell_practised` keeps only `resolve_triggers`.
 - **Talents**: `TalentMods::marks(Role::School, n)` adds `school_marks_percent` (Devotee) and
   leaves a role-less `weapon_marks` (Forge-born) out of the schools.
 - No daily band, no limit, no draw: marks are counts.
+- **The pace** (#1251): the schools and the caster styles train along `[curves] school`, three
+  times the marks it first asked (`[30, 60, 120, 240, 480, 960, 1920, 3600, 6000, 9000]`; 450
+  marks to rank 4 and 22,410 to rank 10). A cast that lands on a foe whose level is at least
+  the rank earns 3 marks (`[marks]`: an attempt and a hit), so rank 1 takes 10 such casts, rank 4
+  150, and rank 10 7,470 (it was 4, 50, and 2,490). Weapon skills keep their own curves.
 
 ## Talents (the `schools` system)
 
@@ -139,10 +147,11 @@ the seven schools, `the_caster_ladder_loads_and_is_checked`: the rows, `spell_mo
 refusals), `world/school_skill_tests.rs` (marks per kind of cast, a miss, an area,
 scrolls and wands, a rank's roll, mana, and time, Schooled, Devotee, Magister, the
 dumps and `rank:evocation:5`, a school forgotten), `world/caster_style_tests.rs` (the styles
-by where one casts from: a Fireball from afar trains Sniper, a Blessing on oneself none, a heal
-and a ray at the creature beside Toucher, every spell in hindering armour Battle caster with full
-marks; Sniper's cells and Toucher's bonus in the reach and the roll; Battle caster in use in
-such armour only; the abilities, the armour's cost), `content/weapon_skill.rs`'s refusals of
+by the spell: a ray trains Sniper wherever it is aimed, a Fireball, Magic missile, and a Blessing
+none, a touch that rolls to hit Toucher and a touch heal none, every spell in hindering armour
+Battle caster with full marks; Sniper's cells and Toucher's bonus in the reach and the roll; a
+touch's reach fixed at 1; Battle caster in use in such armour only; Sniper and Toucher teach no
+ability, Spell guard; the armour's cost), `content/weapon_skill.rs`'s refusals of
 `cells` and `bonus` on other grips, `world/school_ability_tests.rs` (the school abilities).
 Wiki: `xtask/src/wiki/schools.rs` (`school-skills.md`, `school-benefits.md`,
 `school-abilities.md`, `caster-style-benefits.md`) and `weapon_abilities.rs`

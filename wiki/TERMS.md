@@ -44,7 +44,7 @@ table on its page, or grep the built page: `grep -o 'id="status-[a-z-]*"' wiki/b
 | A fighting style | `fighting-styles.md#style-ID` | `fighting-styles.md#style-sword-and-board` |
 | A fighting style's ability (Riposte, False lead, …) | `fighting-styles.md#style-ability-ID` | `fighting-styles.md#style-ability-riposte` |
 | A caster style (Sniper, Toucher, Battle caster) | `schools.md#style-ID` | `schools.md#style-battle-caster` |
-| A caster style's ability (Pinning ray, Spell guard, …) | `schools.md#style-ability-ID` | `schools.md#style-ability-spell-guard` |
+| A caster style's ability (Spell guard) | `schools.md#style-ability-ID` | `schools.md#style-ability-spell-guard` |
 | A special room | `special-rooms.md#room-ID` | `special-rooms.md#room-draining` |
 | A trap | `traps.md#trap-ID` | `traps.md#trap-pit` |
 | A creature | `creatures.md#creature-ID` | `creatures.md#creature-kobold` |

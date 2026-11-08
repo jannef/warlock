@@ -958,11 +958,12 @@ fn a_miss_by_parry_is_not_turned_back() {
     me.equipment = Default::default();
     give(&mut w, kobold, "wa_foil");
     give(&mut w, kobold, "wa_shield");
-    let here = w.player_pos();
-    w.state.actors.get_mut(&kobold).expect("kobold").pos = Pos::new(here.x + 1, here.y);
-    *w.perception = crate::perception::Perception::compute(&w.state, &content, &mut w.lights);
     let (mut parried, mut blocked) = (0, 0);
     for _ in 0..80 {
+        // Beside the player every time (a bolt turned back may drive them off).
+        let here = w.player_pos();
+        w.state.actors.get_mut(&kobold).expect("kobold").pos = Pos::new(here.x + 1, here.y);
+        *w.perception = crate::perception::Perception::compute(&w.state, &content, &mut w.lights);
         w.spend_actions(kobold, &mut Vec::new());
         let blows = cast_at_kobold(&mut w, kobold, "use:arcane_bolt");
         let back = blows.iter().filter(|b| b.0 == kobold).count();
