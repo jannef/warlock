@@ -2102,7 +2102,7 @@ impl<'a> PerceptionView<'a> {
 
     /// The grimoires the player could learn from now (spec §8 "Spells": "Learning"), in pack
     /// order: those that teach a spell they do not know, each with its chance in words; none for
-    /// a character not trained in Spellcraft. What the read list tells of a grimoire.
+    /// a character not trained in Decipher script. What the read list tells of a grimoire.
     pub fn studies(&self) -> Vec<OwnStudy> {
         let Some(rules) = self.content.study_rules() else {
             return Vec::new();

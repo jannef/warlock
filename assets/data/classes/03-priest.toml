@@ -7,7 +7,7 @@ hp = 4
 mana = 9
 affinity = { restoration = 3, abjuration = 2, divination = 1, necromancy = -2 }
 experience = 115
-skills = { heal = "2d6+10", knowledge = "2d6+10", concentration = "2d4+4", decipher_script = "2d4+4", spellcraft = "2d6+10" }
+skills = { heal = "2d6+10", knowledge = "2d6+10", concentration = "2d4+4", decipher_script = "2d6+10", spellcraft = "2d6+10" }
 known_for = ["heal", "knowledge"]
 optional_skills = { listen = { chance = 15, dice = "2d4" } }
 rolls = 2

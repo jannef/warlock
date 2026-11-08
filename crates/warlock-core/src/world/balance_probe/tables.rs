@@ -48,12 +48,12 @@ pub(super) fn players(p: &Probe, out: &mut String) {
 
     writeln!(
         out,
-        "\nStats, hit points, and mana (plain gear; trained → untrained). Scores St/Dx/To/In/Wi/Pr, the seeds' mean. Spellcraft (learning): the trained Spellcraft and the learning it gives; the auto-rolls spend every level-up roll on the first trained skill (Concentration for both), so it stays where it starts.\n"
+        "\nStats, hit points, and mana (plain gear; trained → untrained). Scores St/Dx/To/In/Wi/Pr, the seeds' mean. Decipher script (learning): the trained Decipher script and the learning it gives; the auto-rolls spend every level-up roll on the first trained skill (Concentration for both), so it stays where it starts.\n"
     )
     .unwrap();
     writeln!(
         out,
-        "| L | Warrior | Thief | Wizard | Priest | HP W/T/Wz/P | MP Wz/P | Spellcraft (learning) Wz/P | Blows a round W/T |"
+        "| L | Warrior | Thief | Wizard | Priest | HP W/T/Wz/P | MP Wz/P | Decipher script (learning) Wz/P | Blows a round W/T |"
     )
     .unwrap();
     writeln!(out, "|---|---|---|---|---|---|---|---|---|").unwrap();
@@ -83,9 +83,9 @@ pub(super) fn players(p: &Probe, out: &mut String) {
                 .iter()
                 .map(|s| f64::from(s.mana)))
         };
-        let spellcraft = |class| {
+        let decipher = |class| {
             let seeds = p.of(class, level, Gear::Plain, true);
-            let skill = avg(seeds.iter().map(|s| f64::from(s.spellcraft)));
+            let skill = avg(seeds.iter().map(|s| f64::from(s.decipher)));
             let learning = avg(seeds.iter().map(|s| f64::from(s.learning)));
             format!("{skill:.0} ({learning:.0})")
         };
@@ -100,8 +100,8 @@ pub(super) fn players(p: &Probe, out: &mut String) {
             "{row} {:.0}/{:.0} | {}/{} | {:.2}/{:.2} |",
             mp("wizard"),
             mp("priest"),
-            spellcraft("wizard"),
-            spellcraft("priest"),
+            decipher("wizard"),
+            decipher("priest"),
             blows("warrior"),
             blows("thief")
         )

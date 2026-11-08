@@ -84,7 +84,7 @@ Build the engine and framework, not the game. Everything built is production qua
   `docs/design/spell-scaling.md`): spells of levels 0 (cantrips at 0 and 1) to 70, cast for
   their level's mana by a few kinds of shape and resolution, with no cap on what they do; a few
   guaranteed by the casting classes, the rest learned by reading grimoires (one spell scroll in ten found is one), certain
-  at or below one's learning (by Spellcraft) and at a risk of mishaps above it; unidentified
+  at or below one's learning (by Decipher script) and at a risk of mishaps above it; unidentified
   scrolls, wands (charges, a rung of their own), and rods (effects no spell has, the user's mana);
   Spellcraft talents (§8 "Spells", "Scrolls", "Wands", "Rods")
 - Damage types (#151): every blow, burst, bolt, fall, and plunge is slashing, piercing,

@@ -1349,7 +1349,7 @@ fn progress_rows(world: &World) -> Vec<String> {
             world.content().skill(id).name,
             skill.value
         ),
-        _ => "cannot learn: not trained in Spellcraft".to_string(),
+        _ => "cannot learn: not trained in Decipher script".to_string(),
     });
     rows
 }

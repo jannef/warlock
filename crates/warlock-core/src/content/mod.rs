@@ -4744,6 +4744,7 @@ mod tests {
             class("ranger"),
             [
                 "athletics",
+                "decipher_script",
                 "handle_animal",
                 "initiative",
                 "listen",

@@ -143,9 +143,9 @@ fn casting_identify_names_a_stack_and_spends_its_mana() {
 #[test]
 fn the_grimoire_of_identify_teaches_identify() {
     let mut w = world(100);
-    // Spellcraft 40: learning 6, the spell's level, so the lesson is certain.
-    let spellcraft = w.content.skill_id("spellcraft").expect("skill");
-    w.player_mut().skills.add(spellcraft, 40);
+    // Decipher script 40: learning 6, the spell's level, so the lesson is certain.
+    let decipher = w.content.skill_id("decipher_script").expect("skill");
+    w.player_mut().skills.add(decipher, 40);
     let id = spell(&w);
     assert!(!w.state.player().knows_spell(&w.content, id));
     let grimoire = w.content.object_id("grimoire_of_identify").expect("object");

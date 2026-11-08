@@ -9,7 +9,7 @@ use crate::game::Game;
 use crate::render::console::Console;
 use bevy::prelude::App;
 
-/// The hall, the player a wizard (trained in Spellcraft) carrying `carry`, nothing open yet.
+/// The hall, the player a wizard (trained in Decipher script) carrying `carry`, nothing open yet.
 fn reading(carry: &str) -> App {
     let case = Case {
         scenario: "hall",

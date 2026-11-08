@@ -219,10 +219,25 @@ id = "decipher_script"
 name = "Decipher script"
 description = "Making sense of old writing, strange alphabets, and codes."
 kind = "action"
-mark = [{ on = "decipher", chance = 100 }]
+# All reading trains it (#1270): a check to make a scroll out (and a scroll of a spell one knows,
+# read), any scroll read and used up, and a grimoire read to its end, whatever came of it.
+mark = [
+  { on = "decipher", chance = 100 },
+  { on = "read", chance = 50 },
+  { on = "study", chance = 100 },
+]
 # How those who cannot simply read a scroll read it (spec §8 "Scrolls", `data/decipher.toml`):
-# points on the check, +8 at 100, +12 at 200.
-benefit = [{ effect = "decipher", curve = [[0, 0], [100, 8], [200, 12]] }]
+# `decipher` points on the check, +8 at 100, +12 at 200.
+# Learning a spell from a grimoire (spec §8 "Spells": "Learning"; #1270): `learn` is the spell
+# level up to which a grimoire teaches for certain, 10 at 60, 30 at the soft cap, the last spell
+# level at 150 (at least 1 for anyone trained in the skill; those who are not cannot learn from a
+# grimoire at all), and up to which a scroll is read with no check (spec §8 "Scrolls"). `study` is
+# the skill's value / 10 off the check above that, +10 at 100, +20 at 200.
+benefit = [
+    { effect = "decipher", curve = [[0, 0], [100, 8], [200, 12]] },
+    { effect = "learn", curve = [[0, 0], [10, 0], [60, 10], [100, 30], [150, 70]] },
+    { effect = "study", curve = [[0, 0], [200, 20]] },
+]
 
 [[skill]]
 id = "detect_traps"
@@ -434,16 +449,9 @@ id = "spellcraft"
 name = "Spellcraft"
 description = "Understanding spells: how they are woven and what they do."
 kind = "rules"
-# Reading a grimoire is practice, and so is spending mana on a spell (#989), as Concentration's.
-mark = [{ on = "study", chance = 100 }, { on = "cast", chance = 25 }]
-# Learning a spell from a grimoire (spec §8 "Spells": "Learning"): `learn` is the spell level up to
-# which a grimoire teaches for certain, 10 at 60, 30 at the soft cap, the last spell level at 150
-# (at least 1 for anyone trained in the skill; those who are not cannot learn from a grimoire at
-# all), and up to which a scroll is read with no check (spec §8 "Scrolls"). `study` is the skill's value / 10 off the check above that, +10 at 100, +20 at 200.
-benefit = [
-    { effect = "learn", curve = [[0, 0], [10, 0], [60, 10], [100, 30], [150, 70]] },
-    { effect = "study", curve = [[0, 0], [200, 20]] },
-]
+# Spending mana on a spell trains it (#989), as Concentration's. Learning spells is Decipher
+# script's since #1270, and the skill gives nothing of its own until a rule reads it.
+mark = [{ on = "cast", chance = 25 }]
 
 [[skill]]
 id = "spot"

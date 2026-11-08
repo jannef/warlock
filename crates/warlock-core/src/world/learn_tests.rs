@@ -36,21 +36,21 @@ fn seeded(map: &str, mana: u16, seed: Option<u64>) -> World {
     );
     let content = Arc::new(Content::load(&files).expect("test content is valid"));
     let mut w = World::new(content, "hall", seed).expect("world");
-    // Trained in Spellcraft, at nothing: learning's floor of 1.
-    set_spellcraft(&mut w, 0);
+    // Trained in Decipher script, at nothing: learning's floor of 1.
+    set_decipher(&mut w, 0);
     w
 }
 
-/// The player is trained in Spellcraft at `value`.
-fn set_spellcraft(w: &mut World, value: u16) {
-    let spellcraft = spellcraft(w);
+/// The player is trained in Decipher script, the skill of learning (#1270), at `value`.
+fn set_decipher(w: &mut World, value: u16) {
+    let decipher = decipher(w);
     let skills = &mut w.player_mut().skills;
-    let by = i32::from(value) - skills.value(spellcraft).map_or(0, i32::from);
-    skills.add(spellcraft, by);
+    let by = i32::from(value) - skills.value(decipher).map_or(0, i32::from);
+    skills.add(decipher, by);
 }
 
-fn spellcraft(w: &World) -> crate::skills::SkillId {
-    w.content.skill_id("spellcraft").expect("skill")
+fn decipher(w: &World) -> crate::skills::SkillId {
+    w.content.skill_id("decipher_script").expect("skill")
 }
 
 const HALL: &str = "#######\n#.....#\n#..@..#\n#.....#\n#######\n";
@@ -122,14 +122,14 @@ fn the_check_grows_with_overreach_and_the_levels_known() {
     let me = w.state.player().clone();
     let odds = |me: &Actor, value: u16, spell| {
         let mut me = me.clone();
-        let spellcraft = content.skill_id("spellcraft").expect("skill");
-        me.skills.add(spellcraft, i32::from(value));
+        let decipher = content.skill_id("decipher_script").expect("skill");
+        me.skills.add(decipher, i32::from(value));
         study_odds(&me, &content, None, spell).expect("odds")
     };
     let int = me
         .effective_stats(&content)
         .modifier(crate::stats::Stat::Intelligence);
-    // (Spellcraft, spell): overreach in spell levels and difficulty (12 and a point a level
+    // (Decipher script, spell): overreach in spell levels and difficulty (12 and a point a level
     // over), nothing known. Learning: 1 at 15, 2 at 20, 3 at 25, 6 at 40, 12 at 64.
     let table = [
         (15, sp("evil_eye"), -1, None),
@@ -148,7 +148,11 @@ fn the_check_grows_with_overreach_and_the_levels_known() {
         assert_eq!(o.check.map(|c| c.1), difficulty, "{spell:?} at {value}");
         if let Some((bonus, _)) = o.check {
             let tenth = i32::from(value) / 10;
-            assert_eq!(bonus, int + tenth, "Intelligence and Spellcraft's tenth");
+            assert_eq!(
+                bonus,
+                int + tenth,
+                "Intelligence and Decipher script's tenth"
+            );
         } else {
             assert_eq!(o.ways(), 144, "certain");
         }
@@ -169,7 +173,7 @@ fn the_check_grows_with_overreach_and_the_levels_known() {
         "11 + 11 + 6 + 3 + 1 = 32 levels: a point"
     );
     assert!(after.ways() < before.ways());
-    // Quick study's bonus and Spellcraft's tenth count.
+    // Quick study's bonus and Decipher script's tenth count.
     let mut studious = me.clone();
     studious.talents.take("quick_study", None);
     let o = odds(&studious, 59, sp("call_lightning"));
@@ -180,7 +184,7 @@ fn the_check_grows_with_overreach_and_the_levels_known() {
 fn a_spell_within_reach_is_learned_for_certain_in_its_time() {
     let mut w = identified(world());
     // Learning 6: Frost's level.
-    set_spellcraft(&mut w, 40);
+    set_decipher(&mut w, 40);
     assert!(w.state.player().max_mana(&w.content) > 0);
     let hash = w.state_hash();
     let out = run(&mut w, "read:c").remove(0);
@@ -214,7 +218,7 @@ fn a_spell_within_reach_is_learned_for_certain_in_its_time() {
 #[test]
 fn quick_study_halves_the_time() {
     let mut w = identified(world());
-    set_spellcraft(&mut w, 40);
+    set_decipher(&mut w, 40);
     w.player_mut().talents.take("quick_study", None);
     let out = run(&mut w, "read:c").remove(0);
     assert_eq!(out.elapsed, crate::time::Duration::minutes(11));
@@ -224,7 +228,7 @@ fn quick_study_halves_the_time() {
 fn a_blow_interrupts_the_study() {
     let map = "#######\n#.....#\n#..@r.#\n#.....#\n#######\n";
     let mut w = identified(world_with(map, 10));
-    set_spellcraft(&mut w, 40);
+    set_decipher(&mut w, 40);
     let out = run(&mut w, "read:c").remove(0);
     assert!(out.took_turn);
     assert!(out.elapsed < crate::time::Duration::minutes(22));
@@ -354,7 +358,7 @@ fn each_mishap_does_what_it_says() {
 #[test]
 fn learned_spells_survive_saves_and_replays() {
     let mut w = identified(world());
-    set_spellcraft(&mut w, 40);
+    set_decipher(&mut w, 40);
     let empty = serde_json::to_string(w.state.player()).expect("json");
     assert!(!empty.contains("spells"), "left out while empty");
     run(&mut w, "read:c");
@@ -395,7 +399,7 @@ fn the_dumps_say_the_spells_known_and_the_learning() {
     assert!(rows[0].starts_with("Blessing (level 3, "), "{rows:?}");
     let dev = layer_rows(&w, progress);
     assert!(
-        dev.iter().any(|r| r == "learning 1 (Spellcraft 0)"),
+        dev.iter().any(|r| r == "learning 1 (Decipher script 0)"),
         "{dev:?}"
     );
     let value = json(&w, &[spells], false);
@@ -407,7 +411,7 @@ fn the_dumps_say_the_spells_known_and_the_learning() {
     let dev = layer_rows(&w, progress);
     assert!(
         dev.iter()
-            .any(|r| r == "cannot learn: not trained in Spellcraft"),
+            .any(|r| r == "cannot learn: not trained in Decipher script"),
         "{dev:?}"
     );
 }
@@ -448,7 +452,7 @@ fn wear_scholar(w: &mut World, value: i32) {
 }
 
 #[test]
-fn learning_is_spellcrafts_curve_at_least_one_for_the_trained() {
+fn learning_is_decipher_scripts_curve_at_least_one_for_the_trained() {
     let mut w = world();
     let learning = |w: &World| w.state.player().learning(&w.content);
     // The design's table: 0 below 10, 10 at 60, 30 at 100, 70 from 150; 0 is floored to 1.
@@ -473,8 +477,8 @@ fn learning_is_spellcrafts_curve_at_least_one_for_the_trained() {
         (999, 70),
     ];
     for (value, reach) in table {
-        set_spellcraft(&mut w, value);
-        assert_eq!(learning(&w), Some(reach), "Spellcraft {value}");
+        set_decipher(&mut w, value);
+        assert_eq!(learning(&w), Some(reach), "Decipher script {value}");
     }
     // Not trained: none at all, which is not the floor.
     w.player_mut().skills = crate::skills::Skills::default();
@@ -482,18 +486,18 @@ fn learning_is_spellcrafts_curve_at_least_one_for_the_trained() {
 }
 
 #[test]
-fn study_odds_read_spellcraft_a_priest_at_17_a_wizard_at_108() {
+fn study_odds_read_decipher_script_a_priest_at_17_a_wizard_at_108() {
     let mut w = world();
     let content = w.content.clone();
     let odds = |w: &World, spell| study_odds(w.state.player(), &content, None, spell);
-    set_spellcraft(&mut w, 17);
+    set_decipher(&mut w, 17);
     assert_eq!(
         odds(&w, sp("spark")).expect("odds").check,
         None,
         "a cantrip"
     );
     assert_eq!(odds(&w, sp("fireball")).expect("odds").overreach, 10);
-    set_spellcraft(&mut w, 108);
+    set_decipher(&mut w, 108);
     let far = odds(&w, sp("fireball")).expect("odds");
     assert_eq!((far.overreach, far.check), (-25, None), "learning 36");
     assert_eq!(odds(&w, sp("call_lightning")).expect("odds").overreach, -25);
@@ -502,14 +506,14 @@ fn study_odds_read_spellcraft_a_priest_at_17_a_wizard_at_108() {
     for (spell, hard) in [("call_of_the_forest", 10), ("call_the_elements", 12)] {
         let def = content.spell(sp(spell));
         assert_eq!(def.study_difficulty, hard, "{spell}");
-        set_spellcraft(&mut w, 999);
+        set_decipher(&mut w, 999);
         let (_, top) = odds(&w, sp(spell)).expect("odds").check.expect("a check");
         assert_eq!(top, 12 + hard, "{spell} at learning 70");
     }
 }
 
 #[test]
-fn a_character_not_trained_in_spellcraft_cannot_study_cantrips_included() {
+fn a_character_not_trained_in_decipher_script_cannot_study_cantrips_included() {
     let mut w = identified(world());
     w.player_mut().skills = crate::skills::Skills::default();
     let (time, spells) = (w.state.time, w.state.player().spells.clone());
@@ -543,18 +547,18 @@ fn a_bonus_alone_opens_nothing_and_counts_for_the_trained() {
     assert!(!run(&mut w, "read:c")[0].took_turn);
     assert_eq!(last(&w), UNTRAINED);
     // Skill-raising talents do not train it either.
-    let spellcraft = spellcraft(&w);
-    assert_eq!(w.state.player().skills.value(spellcraft), None);
+    let decipher = decipher(&w);
+    assert_eq!(w.state.player().skills.value(decipher), None);
     // Once trained, the ring counts: 0 + 50 is learning 8.
-    set_spellcraft(&mut w, 0);
+    set_decipher(&mut w, 0);
     assert_eq!(w.state.player().learning(&w.content), Some(8));
 }
 
 #[test]
-fn the_nine_classes_start_with_their_spellcraft() {
+fn the_classes_that_learn_start_with_decipher_script() {
     let w = world();
     let content = w.content.clone();
-    let spellcraft = spellcraft(&w);
+    let decipher = decipher(&w);
     let class = |name: &str| {
         (content.classes().iter())
             .find(|c| c.id == name)
@@ -569,38 +573,29 @@ fn the_nine_classes_start_with_their_spellcraft() {
         ("paladin", "2d4+4"),
         ("ranger", "2d4+4"),
     ] {
-        let grant = (class(name).skills.iter()).find(|(s, _)| *s == spellcraft);
+        let grant = (class(name).skills.iter()).find(|(s, _)| *s == decipher);
         let dice: crate::dice::Dice = dice.parse().expect("dice");
         assert_eq!(grant.map(|&(_, d)| d), Some(dice), "{name}");
     }
-    for (name, chance, dice) in [("aristocrat", 35, "2d4+4"), ("ascetic", 20, "2d4")] {
-        let grant = (class(name).optional_skills.iter()).find(|o| o.skill == spellcraft);
+    for (name, chance, dice) in [
+        ("aristocrat", 35, "2d4+4"),
+        ("ascetic", 20, "2d4"),
+        ("merchant", 25, "2d4"),
+    ] {
+        let grant = (class(name).optional_skills.iter()).find(|o| o.skill == decipher);
         let grant = grant.unwrap_or_else(|| panic!("{name}"));
         let dice: crate::dice::Dice = dice.parse().expect("dice");
         assert_eq!((grant.chance, grant.dice), (chance, dice), "{name}");
     }
-    // Everyone else: none, for sure or by chance; the priest's old chance is gone with it.
-    for name in [
-        "berserker",
-        "thief",
-        "warrior",
-        "commoner",
-        "craftsperson",
-        "merchant",
-    ] {
+    // Everyone else: none, for sure or by chance.
+    for name in ["berserker", "thief", "warrior", "commoner", "craftsperson"] {
         let c = class(name);
-        assert!(c.skills.iter().all(|(s, _)| *s != spellcraft), "{name}");
+        assert!(c.skills.iter().all(|(s, _)| *s != decipher), "{name}");
         assert!(
-            c.optional_skills.iter().all(|o| o.skill != spellcraft),
+            c.optional_skills.iter().all(|o| o.skill != decipher),
             "{name}"
         );
     }
-    assert!(
-        class("priest")
-            .optional_skills
-            .iter()
-            .all(|o| o.skill != spellcraft)
-    );
 }
 
 /// A level-1 `class` with its kit (spells from the class's table).
@@ -627,12 +622,12 @@ fn level_one_casters_learn_cantrips_and_keep_their_granted_spells() {
         assert!(run(&mut w, &format!("read:{at}"))[0].took_turn, "{class}");
         assert!(w.state.player().spells.contains(&sp("light")), "{class}");
     }
-    // The class gives its spell whatever the Spellcraft: taken away, it stays known and cast.
+    // The class gives its spell whatever the Decipher script: taken away, it stays known and cast.
     let mut w = kitted("wizard");
     w.player_mut().skills = crate::skills::Skills::default();
     assert!(w.state.player().knows_spell(&w.content, sp("ray_of_frost")));
-    // And a class without Spellcraft is refused.
-    let mut w = kitted("merchant");
+    // And a class without Decipher script is refused.
+    let mut w = kitted("warrior");
     assert_eq!(w.state.player().learning(&w.content), None);
     let at = given(&mut w, "grimoire_of_identify");
     assert!(!run(&mut w, &format!("read:{at}"))[0].took_turn);
@@ -642,7 +637,7 @@ fn level_one_casters_learn_cantrips_and_keep_their_granted_spells() {
 #[test]
 fn learning_a_spell_from_a_grimoire_pays_five_experience_a_spell_level_once() {
     let mut w = identified(world());
-    set_spellcraft(&mut w, 40);
+    set_decipher(&mut w, 40);
     let before = w.state.experience;
     // Frost is level 6.
     run(&mut w, "read:c");

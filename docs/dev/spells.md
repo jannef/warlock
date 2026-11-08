@@ -48,7 +48,7 @@ cast path shares.
     is an error. Ids are `SpellId` indices in path order and enter the content fingerprint (saves
     name them: `Actor::spells`); a spell file added, removed, or renamed changes saves (S1
     edits the 26 in place: `tier = N` became `level = N`, path order kept).
-  - Arcane training, the wizard's, is `skill { spellcraft, 10 }` (#988).
+  - Arcane training, the wizard's, is `skill { decipher_script, 10 }` (#988; Spellcraft until #1270).
   - `mana_level = 60` in `data/experience.toml` (the last level), and the
     damage types `force` and `necrotic` at the end of `data/damage_types.toml` (non-physical:
     `Choice::Element` offers them, so Elemental ward may be taken for them).
@@ -232,8 +232,8 @@ cast path shares.
   - The attack roll's skill: rays, bolts, and touches aim with their `aim` stat (Dexterity unless
     the spell names another; none does), threat and critical at the blows' defaults, plus since
     #571 the school's skill (Spell attacks until the schools of magic) and a caster style;
-    Spellcraft does not aim spells (its
-    benefit is the study check's, #396).
+    Spellcraft does not aim spells (it has no benefit since #1270, when learning went to
+    Decipher script).
   - A critical rolls the damage again, and nothing holds it (decision 4).
   - S2's decisions (the issue's open points): **School focus's cost** is a `cost` field on the
     one `SpellMods` (the design §7.2 writes it so), not a separate effect; the hooks are six
@@ -378,7 +378,7 @@ cast path shares.
   - **Guaranteed spells**: class abilities in the class tables, one talent file per spell
     (`assets/data/talents/`, `tree = "class"`, `granted`, systems `spells` first), shared by
     the classes that give it. A spell a class gives is its holder's at that level, whatever
-    their Spellcraft: its level is the author's call (`docs/design/no-caster-level.md` §4). The
+    their Decipher script: its level is the author's call (`docs/design/no-caster-level.md` §4). The
     content test (`every_class_has_mana_and_its_guaranteed_spells`) holds a full caster (its
     `FULL` list: druid, priest, witch, wizard) to a cantrip (level 0 or 1) at 1 and three to twelve spells (the priest's three:
     their rite is the Orison, `docs/dev/prayer.md`), and the others to at
@@ -441,8 +441,9 @@ cast path shares.
     by `kind`: nothing, status, backfire, mana, teleport, lose_mark, drain, summon, learn, mark;
     only its kind's fields; `learn` and `mark` lucky by custom); `ObjectDef::grimoire` (above);
     a class's `affinity` (`ClassDef::affinity`, school → −10 to 10 study points); the skills'
-    `study` benefit (`skills::Effect::Study`, Spellcraft's since #1024, a curve to 20 at
-    200) and `study` mark (`Use::Study`, which is also `StatUse::Study`: Intelligence 100 %);
+    `study` benefit (`skills::Effect::Study`, Decipher script's since #1270, Spellcraft's from #1024, a
+    curve to 20 at 200) and `study` mark (`Use::Study`, Decipher script's 100 % since #1270, and
+    also `StatUse::Study`: Intelligence 100 %; Spellcraft marks only on `cast`);
     `ActionKind::Study` (`study` in `data/actions.toml`, a turn); Raging blocks `study`.
   - **The action** (`Action::Read { item, target: None }` of a grimoire, `read:b`;
     `World::read` → `World::start_study(item, spell)` → `Spent::Study(Lesson)` →
@@ -459,16 +460,21 @@ cast path shares.
     5 × max(level, 1)) through `grant_xp` when the spell was not known; class grants and dev
     actions insert into `spells` directly or via `TalentMods` and pay nothing.
   - **Learning, the number** (`Actor::learning(content) -> Option<i32>`, #987,
-    `docs/design/no-caster-level.md` §2): the `learn` benefit (`skills::Effect::Learn`, Spellcraft's
-    in `data/skills.toml`; ceiling `MAX_SPELL_LEVEL`) through `Actor::skill_effect`, so skill
+    `docs/design/no-caster-level.md` §2): the `learn` benefit (`skills::Effect::Learn`, Decipher script's
+    since #1270, in `data/skills.toml`; ceiling `MAX_SPELL_LEVEL`) through `Actor::skill_effect`, so skill
     affixes and the talents' `skill` bonuses count, at least 1; `None` when
     `Skills::trains_effect(Effect::Learn)` is false, whatever bonuses are worn. `None` means no
     learning at all: `study_odds` gives none, `PerceptionView::studies` lists nothing (the read
     list marks no grimoire, which is then read at once and refused), `start_study` refuses with
-    `UNTRAINED` after the other refusals and before any time. The dev `progress` layer prints `learning 36 (Spellcraft 108)` (the trained value,
-    before what items and talents add) or `cannot learn: not trained in Spellcraft`. Study is no
+    `UNTRAINED` after the other refusals and before any time. The dev `progress` layer prints `learning 36 (Decipher script 108)` (the trained value,
+    before what items and talents add) or `cannot learn: not trained in Decipher script`. Study is no
     ability, so the `abilities` layer and `Unavailable` have no row for it. A class's granted spells (`TalentMods::has_spell`) never read this.
-    Starting Spellcraft is the class files' (`docs/dev/character-creation.md`).
+    Starting Decipher script is the class files' (`docs/dev/character-creation.md`): every class
+    that casts starts trained in it (#1270: the druid and the witch 2d6+10, raised from 2d4+4 for
+    the wizard and the priest; the paladin and the ranger 2d4+4; the ascetic and the aristocrat
+    by chance, as their Spellcraft; the merchant by chance already). Spellcraft keeps its dice
+    everywhere, its `cast` mark (25 %), and no benefit: nothing reads it until the owner gives it
+    a rule (#1270).
   - **Odds** (`study_odds(actor, content, character, spell) -> Option<Odds>`, pure;
     `World::player_study_odds`): `Odds::overreach` = the spell's level − the learning; at 0
     or less `check: None` (certain, no draw), unless the spell's `study_difficulty`
@@ -626,7 +632,7 @@ cast path shares.
   (each hook ships with a user, but the rider: "Spell types" below took Numbing cold's): Sure
   hand (level 12, `spell_mod { reroll = 1 }`), Brimming (level 25, `spell_mod { dice = 1 }` and `spell_mana_percent` +10; systems `spells`
   and `mana`). The wizard's class talents: Scroll adept (at 1, reading −50 % and `spell_mod {
-  scroll_rungs = 1 }`: scrolls only, decision 12), Arcane training (at 1: Spellcraft +10), Empower (at 32, `spell_mod { rungs = 1 }`, mana −10 %), Archmage
+  scroll_rungs = 1 }`: scrolls only, decision 12), Arcane training (at 1: Decipher script +10), Empower (at 32, `spell_mod { rungs = 1 }`, mana −10 %), Archmage
   (at 60, `spell_mod { rungs = 2 }`, mana −50 %); its bonus talents from Scholar and
   Spellcraft. Empower, Archmage, and Frugal caster name `spells` beside `mana` (Empower and
   Archmage no longer touch scrolls, so no longer `scrolls`); Scroll savant (which took in

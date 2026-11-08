@@ -1,7 +1,7 @@
 //! Grimoires in the read list (spec §8 "Spells": "Learning"; #1260): listed with the scrolls, a
 //! grimoire whose spell could be learned tells the chance in words, and choosing it asks in the
-//! one dialog; one that cannot teach (the spell known, no Spellcraft) is read at once, which says
-//! why.
+//! one dialog; one that cannot teach (the spell known, no Decipher script) is read at once,
+//! which says why.
 
 use super::screen_snapshots::{BASE, Case, press_keys, start, text};
 use crate::game::Game;
@@ -72,7 +72,7 @@ fn choosing_a_grimoire_asks_first() {
 }
 
 #[test]
-fn without_spellcraft_a_grimoire_is_read_at_once_and_refused() {
+fn without_decipher_script_a_grimoire_is_read_at_once_and_refused() {
     let app = reading("warrior", "r");
     let shown = screen(&app);
     assert!(!shown.contains("(learning:"), "{shown}");

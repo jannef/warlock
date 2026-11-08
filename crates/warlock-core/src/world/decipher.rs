@@ -3,9 +3,10 @@
 //!
 //! A scroll of a spell the reader knows reads at once: no draw, and [`Use::Decipher`] still marks
 //! (a trained skill only, as any mark; a scroll they wrote themselves too). Failing that, one
-//! trained in Spellcraft whose learning (`Actor::learning`) is at least the scroll's spell level
-//! reads it at once: no draw, no mark, no words. A scroll with no spell behind it counts as level
-//! 0. Everyone else makes a check, never a refusal: 2d12 + the Intelligence modifier + what
+//! trained in Decipher script whose learning (`Actor::learning`, #1270) is at least the scroll's
+//! spell level reads it at once: no draw, no check's mark, no words (a read used up marks
+//! `read`, #1270). A scroll with no spell behind it counts as level 0. Everyone else makes a
+//! check, never a refusal: 2d12 + the Intelligence modifier + what
 //! talents add to its checks + Decipher script's points ([`Effect::Decipher`]; an untrained
 //! reader has none, whatever they wear that raises the skill), against
 //! [`DecipherRules::difficulty`](crate::content::DecipherRules::difficulty). Two draws of the

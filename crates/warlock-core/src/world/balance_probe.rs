@@ -696,8 +696,8 @@ struct Snap {
     first_rise: [Option<u32>; 6],
     marks_a_day: [f64; 6],
     mana: i32,
-    /// Its Spellcraft (0 untrained) and its learning (0 when it cannot learn).
-    spellcraft: i32,
+    /// Its Decipher script (0 untrained) and its learning (0 when it cannot learn; #1270).
+    decipher: i32,
     learning: i32,
     casts: Vec<Cast>,
     /// The level before this one's casting (`schools`) and its spell casts in the fights
@@ -1024,7 +1024,7 @@ fn career(
                 first_rise: log.first_rise,
                 marks_a_day: log.earned.map(|m| m as f64 / days),
                 mana: me.max_mana(content),
-                spellcraft: (content.skill_id("spellcraft"))
+                decipher: (content.skill_id("decipher_script"))
                     .and_then(|id| me.skills.value(id))
                     .map_or(0, i32::from),
                 learning: me.learning(content).unwrap_or(0),

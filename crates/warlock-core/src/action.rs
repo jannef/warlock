@@ -150,7 +150,7 @@ pub enum Action {
     /// study of its spell (`world/learn.rs`): turn after turn of the `study` action, stopping
     /// early like a rest; at the end, above the player's learning, a check decides whether they
     /// learn it or a mishap befalls them. The grimoire is kept either way. Refused (no time) for
-    /// a spell already known, or without training in Spellcraft.
+    /// a spell already known, or without training in Decipher script.
     Read {
         item: usize,
         target: Option<ReadTarget>,

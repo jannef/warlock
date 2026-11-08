@@ -72,8 +72,7 @@ The skill suffixes raise one [skill](skills.md) each:
 | of Disarming | [Disable device](skills.md#skill-disable-device) |
 | of Appraisal | [Appraise](skills.md#skill-appraise) |
 | of Haggling | [Negotiation](skills.md#skill-negotiation) |
-| of the Scholar | [Spellcraft](skills.md#skill-spellcraft) |
-| of Letters | [Decipher script](skills.md#skill-decipher-script) |
+| of the Scholar | [Decipher script](skills.md#skill-decipher-script) |
 | of the Cutpurse | [Steal](skills.md#skill-steal) |
 
 *Of Shadows*, *of the Hare*, *of the Fox*, *of the Wanderer*, and *of Balance* raise skills too.

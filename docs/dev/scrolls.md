@@ -31,8 +31,9 @@ The rules are `world/read.rs`: `Action::Read { item, target: Option<ReadTarget> 
 `player_acts`, priced `ActionKind::Read` (`read` in `data/actions.toml`; `read_price` scales it
 by `TalentMods::read_percent`, Scroll savant's and Scroll adept's halves, never below
 `READ_FLOOR`, a quarter) before the scroll is
-used up (`use_up`, which follows the equipment's letters). Refusals take no time and keep the
-scroll. A read is a cast (`World::read_cast`, below): a damage spell checks `can_loose_here`
+used up (`use_up`, which follows the equipment's letters; it reports the Read stat use and
+`Use::Read`, Decipher script's 50 % mark, #1270: all reading trains it). Refusals take no time
+and keep the scroll. A read is a cast (`World::read_cast`, below): a damage spell checks `can_loose_here`
 and `within_reach` (`shoot.rs`, shared with missiles), then casts its shape through **the one
 shared spell code** in `world/spell.rs`: `World::cast_burst(caster,
 (origin, center), burst)` and `World::cast_bolt(caster, origin, path, bolt)` (the effect's
@@ -67,13 +68,13 @@ calls `deciphers` with the scroll's spell and level (`Reading::Cast`, else none 
 **Making out a scroll** (#1024, `world/decipher.rs`, `content/decipher.rs`,
 `data/decipher.toml`; the skill uses design §6.6): `World::deciphers(spell, level)` stands between a
 reading's refusals and its `use_up`. A spell the player knows (`Actor::knows_spell`, a scroll they
-wrote too): true, no draw, and `Use::Decipher` still marks (a trained skill only). Else trained in Spellcraft with `Actor::learning` at least `level`:
-true, no draw, no mark, no words. Otherwise a `check::check` of the Intelligence modifier +
+wrote too): true, no draw, and `Use::Decipher` still marks (a trained skill only). Else trained in Decipher script (the skill of learning since #1270) with `Actor::learning` at
+least `level`: true, no draw, no mark, no words. Otherwise a `check::check` of the Intelligence modifier +
 `TalentMods::check(Intelligence)` + `skill_effect(Effect::Decipher)` (0 unless trained in Decipher script) against
 `DecipherRules::difficulty` (`base` + level ÷ `levels_per_point`), then `Use::Decipher` (100 %,
-whatever came of it; the only mark Decipher script has, and none for Spellcraft), and on a failure
+whatever came of it; none for Spellcraft), and on a failure
 "The writing swims before your eyes." An untrained reader's points are 0, whatever
-they wear that raises the skill (a suffix of Letters does nothing without the skill). The hook is
+they wear that raises the skill (a suffix of the Scholar does nothing without the skill). The hook is
 **`World::pay_cast`**, where every kind of cast has finished refusing: it returns false for a scroll
 not made out, and its eight callers end the cast with `return true`, so `read` still answers
 `Spent::Turn(price)` and nothing has been used up, said read, or cast (`Cast::read` stays `None`).
@@ -82,7 +83,7 @@ failure saves nothing new; the labels stay as they were, because `say_read` neve
 
 Under this rule **the scroll of identify** still lists and refuses as it did (`cast_identify`'s
 refusals come before `pay_cast`, so a stack with nothing to tell draws nothing); read and failed, it
-is kept and identifies nothing. It is a spell of level 6, so a character trained in Spellcraft below
+is kept and identifies nothing. It is a spell of level 6, so a character trained in Decipher script below
 learning 6 makes the check. **Scribe** (`world/scribe.rs`, below) reads nothing and asks no check:
 it needs the spell known, the blank, and the mana, as before, and its scroll is an ordinary scroll,
 which reads by this rule for its writer too (the spell is known, so it reads at once, whatever their learning).

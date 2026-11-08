@@ -8,7 +8,7 @@ mana = 3
 affinity = { restoration = 2, abjuration = 1, necromancy = -3 }
 experience = 110
 alignment = 550
-skills = { intimidate = "2d6+10", concentration = "2d4+4", handle_animal = "2d4+4", heal = "2d4+4", spellcraft = "2d4+4" }
+skills = { intimidate = "2d6+10", concentration = "2d4+4", decipher_script = "2d4+4", handle_animal = "2d4+4", heal = "2d4+4", spellcraft = "2d4+4" }
 known_for = ["intimidate"]
 optional_skills = { athletics = { chance = 25, dice = "2d4" }, knowledge = { chance = 25, dice = "2d4" } }
 rolls = 2

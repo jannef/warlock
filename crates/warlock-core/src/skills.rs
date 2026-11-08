@@ -377,6 +377,8 @@ pub enum Use {
     Study,
     /// A check made to read a scroll (spec §8 "Scrolls"), whatever comes of it.
     Decipher,
+    /// A scroll read and used up (spec §8 "Scrolls"): a spell scroll, identify, restoration.
+    Read,
     /// Mana spent (spec §8 "Mana"): a spell cast, an ability paid in mana, whatever it costs.
     Cast,
     /// An attempt to disarm a trap (spec §8 "Disarming traps"), whatever comes of it.
@@ -479,8 +481,9 @@ impl Use {
             Use::Search => "a turn spent searching",
             Use::Spot => "noticing something hidden in passing",
             Use::FindTrap => "finding a hidden trap, searching or in passing",
-            Use::Study => "learning a spell from a grimoire",
+            Use::Study => "reading a grimoire through, whatever comes of it",
             Use::Decipher => "making out a scroll you cannot simply read",
+            Use::Read => "reading a scroll and using it up",
             Use::Cast => "spending mana: a spell, or an ability paid in it",
             Use::Disarm => "trying to disarm a trap",
             Use::Dodge => "dodging an attack or a known trap",
@@ -620,6 +623,7 @@ impl Use {
             Use::FindTrap => "find_trap",
             Use::Study => "study",
             Use::Decipher => "decipher",
+            Use::Read => "read",
             Use::Cast => "cast",
             Use::Disarm => "disarm",
             Use::Dodge => "dodge",

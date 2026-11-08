@@ -308,14 +308,14 @@ fn a_slain_call_leaves_no_corpse_and_nothing_else() {
 fn study_difficulty_makes_a_study_a_check_at_any_learning() {
     let content = content();
     let w = World::new(content.clone(), "circles", None).expect("world");
-    let spellcraft = content.skill_id("spellcraft").expect("skill");
+    let decipher = content.skill_id("decipher_script").expect("skill");
     // Two spells of level 1, one made ten harder.
     let hard = content.spell_id("zz_hard").expect("the spell");
     let plain = content.spell_id("zz_call_one").expect("the spell");
     let odds = |value: u16, spell| {
         let mut me = w.state.player().clone();
         me.skills = crate::skills::Skills::default();
-        me.skills.add(spellcraft, i32::from(value));
+        me.skills.add(decipher, i32::from(value));
         // Nothing known, so the known levels add nothing to the difficulty.
         me.spells.clear();
         super::learn::study_odds(&me, &content, None, spell).expect("odds")

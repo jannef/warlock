@@ -123,7 +123,7 @@ fn other_skills_train_inside_as_anywhere() {
 }
 
 #[test]
-fn a_check_inside_marks_decipher_script_and_a_study_does_not() {
+fn a_check_inside_marks_decipher_script_twice_and_a_study_too() {
     let mut w = world(10);
     run(&mut w, "identify");
     trained(&mut w);
@@ -134,9 +134,9 @@ fn a_check_inside_marks_decipher_script_and_a_study_does_not() {
         2,
         "a read by the check: two marks"
     );
-    // Spellcraft 40: learning 6, Frost's level.
-    let spellcraft = skill(&w, "spellcraft");
-    w.player_mut().skills.add(spellcraft, 40);
+    // Decipher script 40 more: learning 6, Frost's level.
+    let decipher = skill(&w, "decipher_script");
+    w.player_mut().skills.add(decipher, 40);
     let grimoire = w.content.object_id("grimoire_of_frost").expect("object");
     w.player_mut()
         .inventory
@@ -147,10 +147,11 @@ fn a_check_inside_marks_decipher_script_and_a_study_does_not() {
         &format!("read:{}", crate::action::position_text(at)),
     );
     assert!(!w.state.player().spells.is_empty(), "frost learned");
+    // A study marks Decipher script too (#1270), twice inside.
     assert_eq!(
         marks(&w, "decipher_script"),
-        2,
-        "a study marks only Spellcraft"
+        4,
+        "a study inside: two marks more"
     );
 }
 

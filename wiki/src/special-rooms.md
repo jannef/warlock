@@ -209,8 +209,10 @@ where a dungeon favours or bans nothing. "Only" says where it can come at all.
   you may smell the dust and old vellum before you see it. Two to four [scrolls](scrolls.md) lie on
   its floor, unread, of the kinds the level would give anyway. Inside, the chance of a
   [training mark](skills.md#getting-better) in
-  [Decipher script](skills.md#skill-decipher-script) is higher:
-  [making out a scroll](scrolls.md#making-out-a-scroll) earns a mark every time, and two here.
+  [Decipher script](skills.md#skill-decipher-script) is doubled:
+  [making out a scroll](scrolls.md#making-out-a-scroll) or reading a
+  [grimoire](magic.md#learning-spells-from-grimoires) through earns two marks here instead of one,
+  and reading a scroll earns one every time instead of half the time.
   Only rooms of 9 floor cells or more can be one.
 
 The [Old delver](talents.md#talent-old-delver) talent (Delver; [Willpower](stats.md#stat-willpower)

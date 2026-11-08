@@ -1,5 +1,6 @@
 ---
 source: crates/warlock/src/ui/screen_snapshots.rs
+assertion_line: 1519
 expression: "render(case, content.clone())"
 ---
  Dandy grows ┌─ Abilities ───────────────────────────────────────────────── Page 1/2 ─┐
@@ -15,16 +16,16 @@ expression: "render(case, content.clone())"
              │   f  Hex of weakness    3 mana, aimed                                  │
              │   g  Flay               2d4 necrotic, bites the wounded, 8 mana, aimed │
              │ Skills                                                                 │
-             │   h  Heal               nothing to treat                               │
-             │   i  Intimidate         at a place you see                             │
-             │   j  Forage             not usable here                                │
-             │   k  Fletch             you have no bow or crossbow ready              │
-             │   l  Whittle            on something you carry                         │
+             │   h  Decipher           no unknown scroll                              │
+             │   i  Heal               nothing to treat                               │
+             │   j  Intimidate         at a place you see                             │
+             │   k  Forage             not usable here                                │
+             │   l  Fletch             you have no bow or crossbow ready              │
+             │   m  Whittle            on something you carry                         │
              │ Weapon skills                                                          │
-             │   m  Shield bash        you hold no shield                             │
+             │   n  Shield bash        you hold no shield                             │
              │ Allies                                                                 │
-             │   n  Come to heel                                                      │
-             │   o  Hold here                                                         │
+             │   o  Come to heel                                                      │
              │                                                                        │
              │ The basilisk's stare: a foe nearby that sees you slows to a crawl a    │
              │ moment; your eyes then rest two hours.                                 │

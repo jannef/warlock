@@ -128,8 +128,8 @@ cargo xtask golden [--update | --local]                   # compare golden scree
   `progress` (the level-up choices due, `due level 3: 1 talent`, the talents the player may
   take now by id with the choices each may be taken for, `takeable healthy,
   weapon_focus:{bows,slings}`, the creature types whose first kill has paid, and the stat
-  training marks, `stat marks St 3, To 1`, and the learning, `learning 36 (Spellcraft 108)` or
-  `cannot learn: not trained in Spellcraft`; §8 "Talents", "Stats", "Spells"),
+  training marks, `stat marks St 3, To 1`, and the learning, `learning 36 (Decipher script 108)` or
+  `cannot learn: not trained in Decipher script`; §8 "Talents", "Stats", "Spells"),
   and `actors` (every actor on
   the level with its hit
   points, mana, its alternative resources with their progress (`resources rage 11/20 (0)`), and Defence, `hp 8/12 mp 0/0 dv 13`, its alignment (`alignment evil`; the player's score and
