@@ -1,0 +1,29 @@
+---
+source: crates/warlock/src/ui/screen_snapshots.rs
+expression: "render(case, content.clone())"
+---
+
+
+
+
+
+          ┌─ Graveyard ──────────────────────────────────────────────────────────────────┐
+          │                                                                              │
+          │ Tamsin              Elf Bard and Hunter                 level 31   412000 xp │
+          │   Killed by a kobold in Cēaptūn, The Ascmearc.                               │
+          │   Died 2026-10-31 00:00 UTC, aged 140.                                       │
+          │                                                                              │
+          │ Brakka              Dwarf Warrior                        level 7     2900 xp │
+          │   Turned to stone in Fyrdelf 3, The Ascmearc.                                │
+          │   Died 2026-10-30 00:00 UTC, aged 31.                                        │
+          │                                                                              │
+          │ Hild                Human Priest                         level 5     1450 xp │
+          │   Bled to death in Holtwīc, The Ascmearc.                                    │
+          │   Died 2026-11-06 21:20 UTC, aged 22.                                        │
+          │                                                                              │
+          │ Wynn                Human Thief                          level 4        0 xp │
+          │   Starved to death in Cealdhlāw 2, The Ascmearc.                             │
+          │   Died 2026-09-21 14:13 UTC, aged 19.                                        │
+          │                                                                              │
+          │ Esc back                                                                     │
+          └──────────────────────────────────────────────────────────────────────────────┘

@@ -131,8 +131,9 @@ menu.
 `Esc` during play, when no prompt is open, opens the pause menu: Resume, Settings, Controls, Save
 and quit to menu, and Quit, which saves too.
 
-The main menu, where the game opens, has Continue (when there is a saved run), New run, Settings,
-Controls, and Quit; see [Saving](saving.md) and [Settings](settings.md). New run goes on to
+The main menu, where the game opens, has Continue (when there is a saved run), Characters (when
+any character is saved), Graveyard (once any character has died), New run, Settings, Controls, and
+Quit; see [Saving](saving.md) and [Settings](settings.md). New run goes on to
 creating your character, one step at a time. The arrow keys (or `j` and `k`) choose, `Enter` goes
 on, and `Esc` goes back a step (see [Your character](character.md)).
 

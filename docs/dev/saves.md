@@ -110,14 +110,16 @@ for the page being hidden.
 `on_death` also appends the character to `graveyard.toml` beside `settings.toml` (the config
 folder; portable mode's `warlock-data/config`; the web's `localStorage` key
 `warlock/graveyard.toml`), one `[[fallen]]` table each (`name`, `race`, `gender`, `class`,
-`prestige`, `level`, `cause` (`stone`, a status id, `starved`, a trap's id, a creature's id, ...),
+`prestige`, `level`, `xp` (the experience total at death, #1252; 0 in older entries), `cause` (`stone`, a status id, `starved`, a trap's id, a creature's id, ...),
 `killer`, `place`, `turn`, `age`, `when`, `version`), through `Backend::append`: the file is
 never rewritten, and the death screen says "Remembered in the graveyard." when the entry went in.
 Captures and replays keep none unless `--config-dir` names one. **This file is the one
 deliberate exception to version pinning** (the owner's word): its reader (`graveyard::parse`)
 ignores unknown fields, defaults missing ones, and skips an entry it cannot read; a field is
 never renamed or re-meant; no format number, no migration. `a_fixture_written_by_0_11_reads`
-pins it. The core never reads it: as a run begins (`Game::start`, New run) the app gives the run
+pins it, and `the_experience_field_reads_and_defaults` pins `xp` beside it. The main menu's
+Graveyard screen reads it whole, ordered by `graveyard::by_experience` (`xp`, then `level`, then
+`when`, all most first; ties the last written first; `docs/dev/screens.md`). The core never reads it: as a run begins (`Game::start`, New run) the app gives the run
 the petrified entries, most recent first (`World::set_graveyard`), kept in
 `WorldState::graveyard` so a resumed run sees the list it began with; statues are named from it
 (`docs/dev/mapgen.md`). Both the list and `Statue::name` are left out of the state hash

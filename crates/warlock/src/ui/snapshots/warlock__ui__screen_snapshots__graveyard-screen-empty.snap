@@ -1,0 +1,22 @@
+---
+source: crates/warlock/src/ui/screen_snapshots.rs
+expression: "render(case, content.clone())"
+---
+
+
+
+
+
+
+
+
+
+
+
+
+          ┌─ Graveyard ──────────────────────────────────────────────────────────────────┐
+          │                                                                              │
+          │ No one lies here yet.                                                        │
+          │                                                                              │
+          │ Esc back                                                                     │
+          └──────────────────────────────────────────────────────────────────────────────┘

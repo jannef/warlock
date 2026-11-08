@@ -195,6 +195,7 @@ impl Args {
             Some(
                 ScreenName::Main
                 | ScreenName::Characters
+                | ScreenName::Graveyard
                 | ScreenName::NewRun
                 | ScreenName::Race
                 | ScreenName::Sign
@@ -292,6 +293,7 @@ mod tests {
             "name",
             "summary",
             "characters",
+            "graveyard",
         ] {
             assert!(menu(&["--screen", creation, "--capture", "x.png"]));
             assert!(menu(&["--screen", creation, "--replay", "r.json"]));

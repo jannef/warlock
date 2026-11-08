@@ -3,7 +3,7 @@
 //!
 //! [`Press`] is a key press as screens see it, and [`Panel`] a centered frame with row helpers.
 //! [`MainMenu`] is the main menu (Continue, as the character played last that this version can
-//! continue, and Characters when any character is saved; New run, Settings, Controls, Quit) or, over a run, the pause menu (Resume, Settings, Controls, Save and quit to menu, Quit). Like
+//! continue, Characters when any character is saved, and Graveyard once anyone has died; New run, Settings, Controls, Quit) or, over a run, the pause menu (Resume, Settings, Controls, Save and quit to menu, Quit). Like
 //! every screen it is a plain state machine: it takes presses and answers with a
 //! [`ScreenAction`], so it is testable without a window. Selection is always shown by text (a `>`
 //! marker), never by color alone.
@@ -283,6 +283,7 @@ enum MainItem {
     SaveToMenu,
     Continue,
     Characters,
+    Graveyard,
     NewRun,
     Settings,
     Controls,
@@ -296,6 +297,7 @@ impl MainItem {
             MainItem::SaveToMenu => "Save and quit to menu",
             MainItem::Continue => "Continue",
             MainItem::Characters => "Characters",
+            MainItem::Graveyard => "Graveyard",
             MainItem::NewRun => "New run",
             MainItem::Settings => "Settings",
             MainItem::Controls => "Controls",
@@ -316,6 +318,8 @@ pub struct MainMenu {
     last: Option<String>,
     /// Any character is saved (of this version or another): the main menu offers the list.
     saved: bool,
+    /// Anyone has died (the graveyard, `graveyard.rs`): the main menu offers the Graveyard.
+    dead: bool,
 }
 
 impl MainMenu {
@@ -327,7 +331,13 @@ impl MainMenu {
             pause: false,
             saved: saved || last.is_some(),
             last,
+            dead: false,
         }
+    }
+
+    /// The menu, offering the Graveyard when `dead` (anyone has died).
+    pub fn graveyard(self, dead: bool) -> Self {
+        Self { dead, ..self }
     }
 
     pub fn pause() -> Self {
@@ -336,6 +346,7 @@ impl MainMenu {
             pause: true,
             last: None,
             saved: false,
+            dead: false,
         }
     }
 
@@ -360,6 +371,9 @@ impl MainMenu {
         if self.saved {
             items.push(MainItem::Characters);
         }
+        if self.dead {
+            items.push(MainItem::Graveyard);
+        }
         items.extend([MainItem::NewRun, MainItem::Settings, MainItem::Controls]);
         // A web page cannot quit: closing the tab is the browser's job.
         if !cfg!(target_arch = "wasm32") {
@@ -380,6 +394,7 @@ impl MainMenu {
                     MainItem::Resume => ScreenAction::Close,
                     MainItem::Continue => ScreenAction::Choose(MenuChoice::Continue),
                     MainItem::Characters => ScreenAction::Open(ScreenName::Characters),
+                    MainItem::Graveyard => ScreenAction::Open(ScreenName::Graveyard),
                     MainItem::SaveToMenu => save_to_menu_dialog().into(),
                     MainItem::NewRun => ScreenAction::Open(ScreenName::NewRun),
                     MainItem::Settings => ScreenAction::Open(ScreenName::Settings),
@@ -693,6 +708,25 @@ mod tests {
         assert_eq!(
             press(&mut with_save, Nav::Enter),
             ScreenAction::Open(ScreenName::Characters)
+        );
+    }
+
+    #[test]
+    fn the_graveyard_is_offered_once_anyone_has_died() {
+        assert!(
+            !MainMenu::main(None, true)
+                .items()
+                .contains(&MainItem::Graveyard)
+        );
+        let mut m = MainMenu::main(None, true).graveyard(true);
+        assert_eq!(
+            m.items()[..3],
+            [MainItem::Characters, MainItem::Graveyard, MainItem::NewRun]
+        );
+        press(&mut m, Nav::Down);
+        assert_eq!(
+            press(&mut m, Nav::Enter),
+            ScreenAction::Open(ScreenName::Graveyard)
         );
     }
 
