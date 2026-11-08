@@ -118,9 +118,8 @@ fn a_starting_wizard_miscasts_a_first_spell_rarely_and_a_far_one_often() {
         let difficulty = me.cast_difficulty(&content, &def).expect("rules");
         144 - check::ways(bonus, difficulty)
     };
-    // 1 in 20 to 1 in 6 for a level-1 spell (#1270 took the kit's Spellcraft away); most of the
-    // time ten levels on.
-    assert!((7..=24).contains(&rate(1)), "{} of 144", rate(1));
+    // 1 in 20 to 1 in 10 for a level-1 spell; most of the time ten levels on.
+    assert!((7..=15).contains(&rate(1)), "{} of 144", rate(1));
     assert!(rate(11) > 72, "{} of 144", rate(11));
 }
 

@@ -27,7 +27,7 @@ out of armour:
 
 {{#include generated/miscast-chances.md}}
 
-A new [wizard](classes.md#wizard) has a bonus of about 5, so about one cast in fifteen of a level-1
+A new [wizard](classes.md#wizard) has a bonus of about 3, so about one cast in fourteen of a level-1
 spell goes wrong. A spell ten levels above that miscasts most of the time.
 
 ## The miscast table
