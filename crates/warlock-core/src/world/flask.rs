@@ -229,7 +229,7 @@ impl World {
                 let who = capitalized(&self.called(them));
                 self.say(format!("{who} is {word}."));
             }
-            self.spell_landed(cast, id, true, events);
+            self.spell_landed(cast, id, true);
         }
     }
 }

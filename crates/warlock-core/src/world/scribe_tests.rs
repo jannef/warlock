@@ -225,7 +225,7 @@ fn every_shipped_spell_has_a_scroll_to_write() {
 }
 
 #[test]
-fn the_wizard_writes_from_12_and_is_magister_from_40() {
+fn the_wizard_writes_from_12() {
     let content = Arc::new(Content::builtin().expect("content"));
     let spec: crate::character::CharacterSpec = "human,female,wizard".parse().expect("spec");
     let mut w = World::with_character(content, "showcase", None, Some(&spec)).expect("world");
@@ -241,16 +241,6 @@ fn the_wizard_writes_from_12_and_is_magister_from_40() {
     let abilities = w.perception().abilities();
     let scribe = crate::ability::Ability::Class(crate::content::ClassActive::Scribe);
     assert!(abilities.iter().any(|a| a.ability == scribe));
-    while w.player_level() < 39 {
-        run(&mut w, "xp:200000 levelup:auto");
-    }
-    if w.player_level() == 39 {
-        assert!(!has(&w, "magister"));
-        while w.player_level() < 40 {
-            run(&mut w, "xp:20000 levelup:auto");
-        }
-    }
-    assert!(has(&w, "magister"));
 }
 
 #[test]

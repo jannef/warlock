@@ -593,7 +593,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   path order; optional, without them no level asks for a pick; M30, #229; §8 "Talents"):
   `[[tree]]`s (`id`, `name`, `description`, `class`) in display order, and `[[system]]`s (`id`,
   `name`), the list a talent's `systems` may name (the wiki's talents-by-system table). A `[[talent]]`: `id`,
-  `name`, `tree`, `description`, `choice` (`weapon_skill`, `style`, `skill`, `element`, `school`, `school_skill`, `tag`), `needs`
+  `name`, `tree`, `description`, `choice` (`weapon_skill`, `style`, `skill`, `element`, `school`, `tag`), `needs`
   (`talents = ["dodge"]`, `stats = { toughness = 14 }`, `skills = { stealth = 25 }`,
   `weapon_skills = { bows = 3 }`, `chosen`, `level`, `race`, `class`, `eyes`), `effects`
   (`{ kind = "dodge", value = 1 }`: `dodge`, `natural`, `melee_damage`, `max_hp_per_levels
@@ -640,10 +640,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
   for, ranks 1 to 10: ten numbers, each 1 or more), `[[skill]]`s in
   the order the weapon skills screen lists them (at most 255): `id`, `name` (`Long blades`),
   `phrase` (the message's `with long blades`), `role` (`melee`, `launcher`, `thrown`, `unarmed`,
-  `shield_bash`, `school`, `style`; `unarmed` and `shield_bash` at most one skill each),
+  `shield_bash`, `style`; `unarmed` and `shield_bash` at most one skill each),
   `curve` (a key of `curves`), and its benefits as eleven numbers, ranks 0 to 10 (a list left out is all 0;
-  those held in a `u8`, all but `to_hit`, `damage`, `parry`, `shield`, `far_to_hit`, and a
-  school's `bonus`, `cells`, `degrees`, are 0 to 255): `to_hit` and `damage`,
+  those held in a `u8`, all but `to_hit`, `damage`, `parry`, `shield`, `far_to_hit`, `bonus`,
+  and `cells`, are 0 to 255): `to_hit` and `damage`,
   `threat`, `crit` (added to a confirmed critical's multiplier, never past ×5),
   and `speed` (percent off the attack's cost) for the roles that attack (no `speed` for
   a caster grip); `parry` for `melee`, `reload` for `launcher`, `shield` for a style of grip
@@ -658,7 +658,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
   wield a weapon), `shield` and `bash` (the chance in percent of a shield bash after
   a blow that hits; `weapon_and_shield`), `reload` (`launcher`), `ease_main` and `ease_off`
   (points off the two-weapon penalties; `two_weapons`), `far_to_hit` and
-  `far_threat` (`ranged_spell`: added against a target `far` cells or more away),
+  `far_threat` (`ranged_spell`: added against a target `far` cells or more away), `cells`
+  (`ranged_spell`: cells farther), `bonus` (`touch_spell`: added to the roll),
   `armour` (percent off worn armour's spell cost; `armoured_spell`); `grip` and `weapons` on a
   skill that is no style are errors. `[two_weapons]` (optional; default −4 and −8): `main` and
   `off`, the to-hit penalties of the main hand's and the off hand's blows with a weapon in each
@@ -666,23 +667,21 @@ developer notes (CLAUDE.md, `docs/dev/`).
   larger of the two) from which a ranged spell's far benefits apply. The built-in
   file: marks 1 an attempt, 2 more
   a hit, 20 % a level, at most 100 % (#1095); curves melee 15, 45, 190, 500, 1750, 4000,
-  17 500, 38 000, 68 000, 88 000, missile 10, 30, 125, … 58 700, and school 10, 20, … 640,
-  1200, 2000, 3000;
+  17 500, 38 000, 68 000, 88 000, missile 10, 30, 125, … 58 700, and caster 30, 60, 120, … 1920,
+  3600, 6000, 9000;
   fifteen skills: daggers and knives, short blades, long
   blades, great blades, axes, maces and clubs, spears, polearms, staves (`melee`), unarmed;
   bows, crossbows, slings (`launcher`, missile curve), thrown weapons (missile curve); shield
-  bashing; the seven schools of magic (`school`, school curve, the spell scaling
-  design §8: evocation, necromancy, abjuration, restoration, transmutation, enchantment,
-  divination); two weapons −4 and −8; two shields −6, 50 %,
+  bashing; two weapons −4 and −8; two shields −6, 50 %,
   75 % (`[two_shields]`: `to_hit`, `slow`, `spell_failure`); far 5; twelve styles after the
-  fifteen skills and seven schools (§8 "Fighting styles": Duelist, Twin Blades, Great Weapon, Sword and Board,
+  fifteen skills (§8 "Fighting styles": Duelist, Twin Blades, Great Weapon, Sword and Board,
   Two Shields (`hidden = true`: listed only once its owner has marks in it), Marksman (bows, crossbows, slings; missile curve), Skirmisher (missile curve),
   Brawler, Staff Fighter (staves), and the caster styles Sniper, Toucher, Battle caster
-  (school curve)). The wiki shows the skills, the
+  (caster curve)). The wiki shows the skills, the
   styles, the marks and curves, and the benefits per rank in generated tables.
 - **Weapon abilities** (`data/weapon_abilities/`, one `[[weapon_ability]]` a file named by its id,
   each campaign's too, read in path order; optional; #561, §8 "Weapon abilities"): `id`, `name`,
-  `description`, `skills` (weapon skills, styles, or schools), `rank`, `kind`
+  `description`, `skills` (weapon skills or styles), `rank`, `kind`
   (`triggered` or `active`), `trigger` (one or a list: `hit`,
   `critical`, `big_hit`, `kill`, `struck`, `parried`, `blocked`, `dodged`, `both_hands_hit`,
   `approaches`; none for a switch), `systems` (the talent table's system ids), and

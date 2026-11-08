@@ -51,8 +51,7 @@ Only attack and touch spells can be critical hits. Like a blow, they threaten a
 - *Baleful* items widen the threat range by their number (a Baleful +2 threatens from 20), never
   below 2.
 - Neither helps a spell scroll you read or a wand you use.
-- Your rank in the spell's [school](schools.md) and your [caster style](schools.md#caster-styles)
-  add to the roll when you cast the spell yourself.
+- Your [caster style](schools.md#caster-styles) adds to the roll when you cast the spell yourself.
 
 [Resistances](damage-types.md#armour-and-resistance) take their share of any spell's damage.
 [Armour](objects.md#class-body-armour) takes none.

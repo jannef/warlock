@@ -8,7 +8,7 @@ use crate::ability::Aim;
 use crate::action::{letter, position_text};
 use crate::blood::{self, Stain};
 use crate::character::Gender;
-use crate::content::{Content, Role, SpecialRoom, WeaponSkillId, article};
+use crate::content::{Content, SpecialRoom, WeaponSkillId, article};
 use crate::equipment;
 use crate::geom::Pos;
 use crate::hunger::Hunger;
@@ -65,12 +65,9 @@ pub enum Layer {
     Skills,
     /// Not a map: the player's weapon skills and fighting styles, one a line with its rank and
     /// how far its marks are toward the next (`Long blades 2 (40%)`), the styles they fight in
-    /// now marked (`Duelist 1 (0%), in use`); never what a rank gives, and no school of magic.
+    /// now marked (`Duelist 1 (0%), in use`), the caster styles among them; never what a rank
+    /// gives.
     WeaponSkills,
-    /// Not a map: the player's schools of magic, every one, with its rank and how far its marks
-    /// are toward the next (`Evocation 5 (40%)`), then the caster styles (`Sniper 2 (10%)`) as
-    /// [`Layer::WeaponSkills`] lists them; never what a rank gives.
-    Schools,
     /// Not a map: the player's attacks as the character screen shows them, one a line: where it
     /// comes from, what it is made with, its to-hit, damage, and range (`Main hand long sword: +4
     /// to hit, 1d8+2 slashing`, `Missile short bow: +3 to hit, 1d6 piercing, range 10`).
@@ -124,8 +121,7 @@ pub enum Layer {
     /// each may be taken for (`takeable healthy, weapon_focus:{bows,slings}`), and the creature
     /// types whose first kill has paid (`discovered kobold, rat`), the animal types a
     /// Beast-friend attacked (`empathy broken rat`), and the stat training marks the player holds
-    /// (`stat marks St 3, To 1`), each school of magic's marks of the next rank's need
-    /// (`evocation marks 312/630`), each rolled quest's draw with the size of the pool it could
+    /// (`stat marks St 3, To 1`), each rolled quest's draw with the size of the pool it could
     /// draw from now (`roll verses scroll_of_frost x1 of 4`), and the named monsters dead
     /// (`slain fire_drake`). **Dev-only.**
     Progress,
@@ -153,7 +149,6 @@ impl Layer {
         Layer::Stats,
         Layer::Skills,
         Layer::WeaponSkills,
-        Layer::Schools,
         Layer::Attacks,
         Layer::Talents,
         Layer::Abilities,
@@ -185,7 +180,6 @@ impl Layer {
             Layer::Stats => "stats",
             Layer::Skills => "skills",
             Layer::WeaponSkills => "weapon_skills",
-            Layer::Schools => "schools",
             Layer::Attacks => "attacks",
             Layer::Talents => "talents",
             Layer::Abilities => "abilities",
@@ -224,8 +218,8 @@ impl FromStr for Layer {
             .ok_or_else(|| {
                 format!(
                     "unknown layer `{s}` (expected view, fov, memory, light, sound, blood, \
-                     inventory, equipment, stats, skills, weapon_skills, schools, attacks, talents, \
-                     abilities, traps, locations, quests, story, companion, familiar, truth, actors, \
+                     inventory, equipment, stats, skills, weapon_skills, attacks, talents, abilities, \
+                     traps, locations, quests, story, companion, familiar, truth, actors, \
                      progress, rooms, ice)"
                 )
             })
@@ -284,7 +278,6 @@ pub fn layer_rows(world: &World, layer: Layer) -> Vec<String> {
         Layer::Stats => stat_rows(&world.perception()),
         Layer::Skills => skill_rows(&world.perception()),
         Layer::WeaponSkills => weapon_skill_rows(&world.perception()),
-        Layer::Schools => school_rows(&world.perception()),
         Layer::Attacks => attack_rows(&world.perception()),
         Layer::Talents => talent_rows(&world.perception()),
         Layer::Abilities => ability_rows(&world.perception()),
@@ -351,7 +344,6 @@ fn perceived_glyph(view: &PerceptionView<'_>, layer: Layer, p: Pos) -> char {
         | Layer::Stats
         | Layer::Skills
         | Layer::WeaponSkills
-        | Layer::Schools
         | Layer::Attacks
         | Layer::Talents
         | Layer::Abilities
@@ -1047,20 +1039,7 @@ fn progress_percent(view: &PerceptionView<'_>, id: WeaponSkillId) -> Option<u32>
 /// toward the next (`Long blades 2 (40%)`, `Daggers and knives 10` at the last rank), and the
 /// styles they fight in now marked (`Duelist 1 (0%), in use`).
 fn weapon_skill_rows(view: &PerceptionView<'_>) -> Vec<String> {
-    let table = view.content().weapon_skills();
-    ranked_rows(view, |id| table.skill(id).role != Role::School)
-}
-
-/// The player's schools of magic, every one, then the caster styles, in file order, each as
-/// [`weapon_skill_rows`] writes it (`Evocation 5 (40%)`, `Sniper 2 (10%)`).
-fn school_rows(view: &PerceptionView<'_>) -> Vec<String> {
-    let table = view.content().weapon_skills();
-    let caster = |id| (table.skill(id).style.as_ref()).is_some_and(|s| s.grip.casts());
-    [
-        ranked_rows(view, |id| table.skill(id).role == Role::School),
-        ranked_rows(view, caster),
-    ]
-    .concat()
+    ranked_rows(view, |_| true)
 }
 
 /// The player's skills of the weapon skill table that `pick` takes and that show, in file
@@ -1281,17 +1260,6 @@ fn progress_rows(world: &World) -> Vec<String> {
         .collect();
     if !marked.is_empty() {
         rows.push(format!("stat marks {}", marked.join(", ")));
-    }
-    // Each school of magic with marks or a rank: its marks of what the next rank asks.
-    let table = world.content().weapon_skills();
-    for (id, _) in player.weapon_skills.trained() {
-        let def = table.skill(id);
-        if def.role != Role::School {
-            continue;
-        }
-        if let Some((marks, need)) = player.weapon_skills.progress(table, id) {
-            rows.push(format!("{} marks {marks}/{need}", def.id));
-        }
     }
     // The rung each known spell's roll is cast at (the spell scaling design §11): of its
     // ladder's length, with the score that reached it and the rungs from outside the stats.
@@ -2130,7 +2098,7 @@ pub fn json(world: &World, layers: &[Layer], include_state: bool) -> Value {
         .collect();
     let table = content.weapon_skills();
     let weapon_skills: serde_json::Map<String, Value> = (table.ids())
-        .filter(|&(id, def)| def.role != Role::School && view.own_weapon_skills().shows(table, id))
+        .filter(|&(id, _)| view.own_weapon_skills().shows(table, id))
         .map(|(id, def)| {
             let rank = view.own_weapon_skills().rank(id);
             let progress = progress_percent(&view, id);
@@ -2140,7 +2108,7 @@ pub fn json(world: &World, layers: &[Layer], include_state: bool) -> Value {
             )
         })
         .collect();
-    // The schools of magic, every one, and the caster styles (the `schools` layer).
+    // The caster styles, as `weapon_skills` holds them too.
     let ranked = |id: WeaponSkillId| {
         let def = table.skill(id);
         json!({
@@ -2149,10 +2117,6 @@ pub fn json(world: &World, layers: &[Layer], include_state: bool) -> Value {
             "progress": progress_percent(&view, id),
         })
     };
-    let schools: Vec<Value> = (table.ids())
-        .filter(|(_, def)| def.role == Role::School)
-        .map(|(id, _)| ranked(id))
-        .collect();
     let caster_styles: Vec<Value> = (table.styles())
         .filter(|(id, _, style)| style.grip.casts() && view.own_weapon_skills().shows(table, *id))
         .map(|(id, ..)| ranked(id))
@@ -2254,7 +2218,6 @@ pub fn json(world: &World, layers: &[Layer], include_state: bool) -> Value {
         "effects": effects,
         "diseases": diseases,
         "weapon_skills": weapon_skills,
-        "schools": schools,
         "caster_styles": caster_styles,
         "styles_in_use": (view.own_styles_in_use().into_iter())
             .map(|id| content.weapon_skills().skill(id).id.clone())

@@ -828,7 +828,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     a status's or starving's harm is no hit); `resist` (Elemental ward: 25 % against
     the chosen element, any damage type that is no physical kind, summed and capped with the
     gear's). A weapon-skill choice is a skill that attacks: never a style (chosen as a
-    style) nor a school of magic (chosen as a school). Steady hand (the ranger's focus) came with the
+    style). Steady hand (the ranger's focus) came with the
     resource talents (R5, §8 "Resources").
   - **Vigour, Might, Finesse** (#237; the design's §7.5; Battle trance and Inner calm, on the
     class resources, came with R5, §8 "Resources"): `resting_percent` (Fast healer: resting's pace
@@ -1089,15 +1089,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     design §7.2: every spell hook ships with a user); the casters' Empower, Archmage, Scroll
     adept, Frugal caster, the wizard's Arcane training, and every class spell name it too. Wand mastery comes with
     wands (#398) and Channeler with rods (#399), whose hooks they need.
-    The `schools` system (the schools of magic, the spell scaling design §8.6; §8 "Weapon
-    skills": "Schools of magic"): **Schooled** (Spellcraft, `choice = "school_skill"`, one of
-    the seven schools' skills, `needs = { chosen = 2 }`: `weapon { ranks = 1 }`, the chosen
-    school's benefits read a rank higher), **Devotee** (Spellcraft, level 9:
-    `school_marks_percent = 50`, every school's marks half again; Forge-born's marks in every
-    skill leave the schools out), and the wizard's class ability **Magister** (level 40, moved
-    from 45 by the witch and wizard design §6.2:
-    `weapon { role = "school", ranks = 1 }`, every school a rank higher); Early mastery's
-    description names the schools too (their abilities, a later slice).
+    The `schools` system (Schooled, Devotee, and the wizard's Magister) was removed with the
+    schools of magic as trained skills (#1263).
     The Defence by attack kind of the design's B5 landed with Deflect missiles (#237,
     `World::target_against`).
   - **Racial talents** (#241; the design's §7.5 Racial): the `racial` tree (`no_free`), each
@@ -1490,7 +1483,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     `Profile::sure_critical`, for a melee attack's time; `world/openings.rs`); Travelled hands
     (the bard's at 3, in Blessing's place, #871: a hand-out once, `weapon_ranks { to = 1 }`:
     every weapon skill and fighting style the bard holds at rank 0, whatever rows the content
-    has, but the schools of magic and hidden styles, rises to rank 1 by
+    has, but the hidden styles, rises to rank 1 by
     `WeaponSkills::raise_to`; "Your hands know every weapon a little.";
     the optional `skills` names the rows instead, for a later class's trade); Fast healer
     (the Vigour talent, given at 6; its copy Song of rest until #790: resting heals half again
@@ -1513,9 +1506,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     throw, whatever is thrown; `unarmed` bare hands, natural attacks, and kicks, whatever is
     wielded (§8 "Doors"); `shield_bash` a held shield's bashes (there is no skill of blocking with
     a shield: the shield's own Defence and the shield styles' `shield` are the Shield category,
-    #1093);
-    `school` (a school of magic, one skill each of the seven) every spell of its school the
-    caster casts with their own mana ("Schools of magic" below).
+    #1093). The schools of magic are no skills (#1263): a spell's school is its category (§8
+    "Spells"), and a spell trains only the caster style it is cast in ("Fighting styles" below).
   - **Ranks**: 0 (untrained: no benefits; marks still count) to 10, on every actor
     (`Actor::weapon_skills`, a rank and marks per skill): the player's from race and class, a
     creature's from its type (§7). A skill's rank comes only from its own training, starting
@@ -1531,16 +1523,15 @@ developer notes (CLAUDE.md, `docs/dev/`).
     to 70, ranks to 10, so a cap above 100 % paid nearly double from the middle levels on). The opponent's level is its creature type's `level`
     (§8 "Experience"; the one attacked): a level-1 giant rat
     teaches nothing past rank 5, a level-4 kobold shaman nothing past rank 8.
-    A missile that reaches no one earns nothing; nothing rolls for marks. A spell earns marks
-    in its school, whatever it does ("Schools of magic" below).
+    A missile that reaches no one earns nothing; nothing rolls for marks.
   - **Curve**: the marks to go from a rank to the next, by the skill's `curve` (#1095): melee
     15, 45, 190, 500, 1750, 4000, 17 500, 38 000, 68 000, 88 000 (rank 10 at 218 000 in all),
     steep from rank 7 so that ranks 7 to 10 take most of a career (a fighter of the monsters of
     their level: rank 6 about level 10, 8 about 25, 10 about 45; docs/balance.md "Weapon pace");
-    missile two thirds of it, 10, 30, … 58 700; the schools of magic and the caster styles,
-    trained by far fewer casts than blows, `school`: 30, 60, 120, … 1920 doubling, then 3600,
-    6000, 9000 (#1251: three times what it first asked; rank 1 ten casts that land on a foe of
-    the rank's level or more, rank 4 150, rank 10 7470; docs/balance.md "School pace"). Marks
+    missile two thirds of it, 10, 30, … 58 700; the caster styles, trained by far fewer casts
+    than blows, `caster`: 30, 60, 120, … 1920 doubling, then 3600, 6000, 9000 (#1251: three
+    times what it first asked; rank 1 ten casts that land on a foe of the rank's level or more,
+    rank 4 150, rank 10 7470; docs/balance.md "Caster style pace"). Marks
     past the need count toward the next rank (one rank at a time); rank 10 earns no more.
   - **Target dummies** (#1199; `world/dummy.rs`): a creature type with a `training` table
     (`{ percent, melee, ranged, breaks }`, §7) is a dummy, the straw men in the Weyfarers' Gilde's
@@ -1582,43 +1573,12 @@ developer notes (CLAUDE.md, `docs/dev/`).
     skilled with long blades." No numbers.
   - **What the player perceives**: their own ranks and marks
     (`PerceptionView::own_weapon_skills`), shown as ranks and a bar on the weapon skills screen
-    (§6) and in the `weapon_skills` dump layer (the schools of magic, which no section of that
-    screen lists, in the `schools` layer, with the caster styles; JSON `schools` and
-    `caster_styles`; the dev `progress` layer adds `evocation marks 312/630`); never a benefit
+    (§6) and in the `weapon_skills` dump layer (the caster styles among them; JSON
+    `weapon_skills` and `caster_styles`); never a benefit
     as such (the character
     screen's attacks show the to-hit and damage the ranks add up to, §6) or a creature's ranks (the
     `actors` dev layer shows every actor's). Ranks and marks are part of the world state
     (saved, hashed).
-  - **Schools of magic** (the spell scaling design §8, decision 17; `Role::School`,
-    `WeaponSkillDef::school`, `Benefit::spell_mods`, `Actor::spell_skills`,
-    `Actor::school_benefit`, `World::practise_cast` in `world/cast.rs`;
-    docs/dev/magic-skills.md): the seven schools (evocation, necromancy, abjuration,
-    restoration, transmutation, enchantment, divination) are rows of role `school`, one each,
-    weapon skills in everything but what a rank gives (ranks, the school curve, `[marks]`,
-    `rank:evocation:5`). A spell whose school has no row is refused at load. A rank
-    lifts every spell of its school through the spell hooks (§8 "Spells": "Hooks"): `reroll`,
-    `sides`, `dice`, `bonus`, `cells`, `degrees` into `SpellMods` (`Actor::spell_mods`, beside
-    the talents' and items'), `mana` percent off the spell's mana (the floor of 1 holds),
-    `speed` percent off the cast's time (`World::cast_price`), and `to_hit` and `threat` (every
-    school's, Spell attacks' rows) for its spells that roll to hit, in the roll's `Profile`
-    with the caster style's (`benefit_of`). The harm schools grow their dice, restoration its
-    heals and pace, the lasting schools their degrees and reach, divination its price and pace
-    (the wiki has every number). **Marks**: a cast paid in the caster's own mana practises its
-    school once (`practise_cast`, at the end of the cast, by the `Outcome` its kind filled
-    through `World::spell_landed`): an attempt, and a success when it landed (a harm on
-    someone, a hex that took, a heal of a point or more, a buff, a cure, or an identify done),
-    weighed by the strongest creature it struck at (harmed, missed, hexed, or healed), else the
-    caster's own level. A miss is an attempt; an area is one practise, weighed by the strongest
-    struck; a cast at nothing an attempt against one's own level. A scroll read or a wand used
-    trains nothing. Then the caster style it was cast in ("Fighting styles" below), by the same
-    outcome, lands or not; none for a spell on oneself out of hindering armour. No daily band,
-    no limit: time and mana are the price.
-    **Starting ranks**: wizard evocation 2, druid evocation 1, priest and bard restoration 1, witch
-    necromancy 1, paladin abjuration 1; the ranger none; no race and no creature. A rank says
-    "You feel more skilled at evocation."; nothing says what it gives. Spell attacks (#571's
-    one skill of role `spell`, which trained on three spells) is retired into the schools: a
-    `role = "spell"` row is refused naming `school`, `[spell_attacks] far` stays (Sniper's),
-    and a save's Spell attacks training is dropped, not converted (saves change).
 - **Fighting styles** (#135; `content/weapon_skill.rs`: `Role::Style`, `Grip`, `Style`,
   `TwoWeapons`; `world/actor.rs`: `Actor::grip`, `style`, `styles_in_use`, `attack_skills`
   (`AttackSkills`: an attack's weapon skill and style), `attack_benefit`, `off_hand`,
@@ -1643,13 +1603,17 @@ developer notes (CLAUDE.md, `docs/dev/`).
     (a ray, a bolt), wherever it is aimed; every other spell (an area, a bolt that never misses, a
     heal, a buff, a hex, a touch heal) is cast in no style, and neither trains nor gains from
     Sniper or Toucher. The style is decided once a cast, by the player's and the creatures' alike,
-    so the school and the style are one `AttackSkills` for the whole cast: its hooks (the style's
-    benefit after the school's, `Actor::spell_mods_in_style`), a rolling spell's to-hit and
-    triggers, and its marks. Every spell paid in mana trains the style it was cast in, lands or
-    not, as every blow trains its style (by the school's outcome: an attempt, a success as it
-    landed). Caster styles name no weapons. What the menu and the aiming mode show is what is
-    cast. A **touch** reaches the cell beside its caster and no farther: nothing gives it a cell
-    (School focus, Sniper, a school's rank, an item).
+    so the style is the cast's `AttackSkills` (no weapon skill) for the whole cast: its hooks (the
+    style's benefit after the talents' and items', `Actor::spell_mods_in_style`), a rolling
+    spell's to-hit and triggers, and its marks. Every spell paid in mana trains the style it was
+    cast in, lands or not, as every blow trains its style (`World::practise_cast`, at the end of
+    the cast, by the `Outcome` its kind filled through `World::spell_landed`: an attempt, and a
+    success when it landed, a harm on someone, a hex that took, a heal of a point or more, a
+    buff, a cure, or an identify done, weighed by the strongest creature it struck at, else the
+    caster's own level; a scroll read or a wand used trains nothing). Caster styles name no
+    weapons. What the menu and the aiming mode show is what is cast. A spell that rolls to hit
+    aims with its stat, the caster style, talents, and items. A **touch** reaches the cell beside
+    its caster and no farther: nothing gives it a cell (School focus, Sniper, an item).
   - **The twelve** (data): **Duelist** (`one_weapon`: to-hit, Parry), **Twin Blades**
     (`two_weapons`: eases both two-weapon penalties, none left from rank 9; from rank 7 to-hit too), **Great Weapon**
     (`two_handed`, any weapon but a staff: damage, from rank 8 a critical rolls its damage once
@@ -1662,8 +1626,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     **Brawler** (`unarmed`: to-hit and damage), **Staff Fighter** (`two_handed`, staves: to-hit,
     Parry); and the caster styles (#571): **Sniper** (`ranged_spell`: to-hit, and against a
     target `far` (5) cells or more away more to-hit and a wider threat range,
-    `[spell_attacks]`; `cells`, a cell farther from rank 5 and two from rank 9, after the
-    school's), **Toucher** (`touch_spell`: to-hit, threat, a critical's damage up to twice
+    `[spell_attacks]`; `cells`, a cell farther from rank 5 and two from rank 9), **Toucher** (`touch_spell`: to-hit, threat, a critical's damage up to twice
     more; `bonus`, a point on the roll of every touch cast so, from rank 4, up to 3 at rank 10);
     Sniper and Toucher teach no abilities (#1251),
     **Battle caster** (`armoured_spell`: to-hit, and `armour`, percent off what worn armour adds
@@ -1673,8 +1636,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     for no caster grip. `own_styles_in_use` marks Battle caster while the armour worn hinders
     casting (a standing fact), never Sniper or Toucher (decided cast by cast). The
     classes that cast start in one: the wizard and the druid Sniper 1, the witch and the priest
-    Toucher 1, the paladin Battle caster 1 (with their schools, "Schools of magic" above); a
-    ranger advances by casting.
+    Toucher 1, the paladin Battle caster 1; a ranger advances by casting.
     Defaults: duelist ↔ sword and board −3, duelist ↔ twin blades −3, great weapon ↔ staff
     fighter −3, marksman ↔ skirmisher −4, sniper ↔ toucher −4, toucher ↔ battle caster −3;
     never to a weapon skill.
@@ -1737,10 +1699,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
     Never a benefit, a penalty, a chance, or a creature's ranks.
 - **Weapon abilities** (#561; the combat progression design §4, §6;
   `content/weapon_ability.rs`, `world/weapon_ability.rs`, docs/dev/weapon-abilities.md): what a
-  rank in a weapon skill, a style, or a school of magic teaches (a school's are its **school
-  abilities**, the spell scaling design §8.5), one `[[weapon_ability]]` a file in
-  `data/weapon_abilities/` (§7; a campaign's may add more), naming its skills (weapon skills,
-  styles, or schools, never two of the kinds) and the rank (1 to 10, per file, so each group and style sets its own).
+  rank in a weapon skill or a style teaches, one `[[weapon_ability]]` a file in
+  `data/weapon_abilities/` (§7; a campaign's may add more), naming its skills (weapon skills or
+  styles, never both kinds) and the rank (1 to 10, per file, so each group and style sets its own).
   - **Who has one**: an actor whose rank in one of its skills, as abilities read it
     (`Actor::ability_rank`: a weapon talent's ranks, Stylist and Fencing, count, and Early
     mastery's one more), reaches it: the player and every creature with the rank alike
@@ -1758,13 +1719,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     a shield bash is no second hand); `approaches` (a hostile steps up beside the actor, the
     player's step too); `spell_blocked` (a hostile's spell that rolls an attack against the
     actor's Defence, a bolt, a ray, or a touch, a scroll's or a wand's too, missed by its
-    Shield); `spell_lands` (a spell the actor casts with its own mana lands on a creature: harms
-    it, takes on it as a hex, or heals it; a buff, a cure, or Identify lands on the caster; once
-    per creature, an area's in ascending actor id, which `hit` never covered, an area having no
-    roll; never a miss, a scroll, a wand, or a reflected spell; the cast's school and caster
-    style count; raised from `World::spell_landed`, the one place the kinds report a landing,
-    which also weighs the cast's marks; a `status` meant for the other end is never laid on the
-    caster). Deciding never draws: a fight with no qualifying rank keeps its draws.
+    Shield). The school abilities' `spell_lands` trigger was removed with them (#1263). Deciding
+    never draws: a fight with no qualifying rank keeps its draws.
   - **Effects** (closed): `free_blow` (switches a free blow on while the actor wields a weapon
     of the skill or fights in the style: Brace's gatekeeper, Riposte, Cleaving sweep, Great
     cleave; `World::free_blows_of` folds them in, so a riposte from the style and one from a
@@ -1792,21 +1748,15 @@ developer notes (CLAUDE.md, `docs/dev/`).
     dagger leaves the foe bleeding a degree) and Hunter's shot (Marksman 6: a sneak attack that
     hits with a shot pins the foe 1d2 actions); the caster styles' (#571), fired by a spell that rolls to hit:
     Spell guard alone (Battle caster 4: a spell that lands wards its caster, Spell ward, a Dodge point until
-    their next action); the schools' (`spell_lands`, the spell scaling design §8.5):
-    Thunderstruck (evocation 10: what it harms is staggered), Wasting (necromancy 10: weakened
-    a degree), Aegis (abjuration 7: a buff wards its caster, Spell ward), Lulling (enchantment
-    10: a creature a hex takes on is sluggish a degree too); restoration, transmutation, and
-    divination teach none yet. Staggered, Pinned, Spell ward, and Light-footed ease by the sufferer's actions
+    their next action). Staggered, Pinned, Spell ward, and Light-footed ease by the sufferer's actions
     (§8 "Status effects": `per_action`), so a staggered foe's next action is the slowed one,
     however many blows staggered it.
   - **What the player perceives**: a rank that teaches one says so with its own line ("You feel
     more skilled with long blades. You have learned the deep cut."); the abilities menu (§6)
     lists each under *Weapon skills* after the skill it is listed under ("Long blades: Deep
-    cut", "Evocation: Thunderstruck"; a school's news names it, "You have learned
-    Thunderstruck."), greyed "fires by itself", never usable (`Ability::Weapon`,
+    cut"), greyed "fires by itself", never usable (`Ability::Weapon`,
     `Unavailable::FiresByItself`); Rend says "Your blades rend the orc.", Staggering block "The
-    orc staggers from your shield.", a school ability on what its spell landed on "The orc
-    staggers." ("The orc is sluggish."), Spell reflection "Your shield turns the scorching ray back
+    orc staggers from your shield.", Spell reflection "Your shield turns the scorching ray back
     at the shaman." ("The champion's shield turns your scorching ray back at you."), a free blow or shot as one is. Never a rank threshold, a
     chance, or a creature's abilities. The dev action `rank:SKILL:N` sets a rank (§6, replays).
   - **Actives** (#564; the design §4.5, §4.6; `world/weapon_active.rs`): used from the abilities

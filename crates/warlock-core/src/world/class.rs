@@ -13,7 +13,7 @@
 
 use super::{Actor, World, focus};
 use crate::character::Character;
-use crate::content::{Content, Role, TalentDef, TalentEffect, TalentId};
+use crate::content::{Content, TalentDef, TalentEffect, TalentId};
 use crate::talent::TalentMods;
 
 /// Hands out what holding `def` gives once, as it is taken or given at character
@@ -39,13 +39,13 @@ pub(super) fn hand_out(content: &Content, actor: &mut Actor, def: &TalentDef, le
 }
 
 /// A `weapon_ranks` hand-out (Travelled hands): every weapon skill and style `skills` names
-/// (none: every row but the schools of magic and hidden styles, whatever the content holds)
+/// (none: every row but the hidden styles, whatever the content holds)
 /// held below rank `to` rises to it, in file order.
 fn raise_ranks(content: &Content, actor: &mut Actor, to: u8, skills: &[String]) {
     let table = content.weapon_skills();
     let rows: Vec<_> = match skills.is_empty() {
         true => (table.ids())
-            .filter(|(_, s)| s.role != Role::School && !s.hidden)
+            .filter(|(_, s)| !s.hidden)
             .map(|(id, _)| id)
             .collect(),
         false => skills.iter().filter_map(|s| table.id(s)).collect(),

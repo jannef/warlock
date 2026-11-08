@@ -81,7 +81,7 @@ impl World {
 
     /// A heal over a burst about the caster (Benison): one roll, back to the caster and every
     /// ally of theirs in it, each said. Refused (said, `false`) when none of them is hurt.
-    pub(super) fn cast_heal_about(&mut self, cast: &Cast<'_>, events: &mut Vec<Event>) -> bool {
+    pub(super) fn cast_heal_about(&mut self, cast: &Cast<'_>) -> bool {
         let Some(heal) = cast.roll else {
             return false;
         };
@@ -111,7 +111,7 @@ impl World {
         let back = heal.roll(&mut self.state.rng, cast.reroll).max(0);
         for id in hurt {
             self.spell_heals(id, back);
-            self.spell_landed(cast, id, back > 0, events);
+            self.spell_landed(cast, id, back > 0);
         }
         true
     }
@@ -158,7 +158,7 @@ impl World {
                 self.provoke(id);
                 self.provoke_court(id);
             }
-            self.spell_landed(cast, id, moved, events);
+            self.spell_landed(cast, id, moved);
         }
         if cast.def.effect.douses {
             for &p in &path {
@@ -227,7 +227,7 @@ impl World {
             me.effects.remove(e.status);
         }
         self.ended(player, &ended, events);
-        self.spell_landed(cast, player, true, events);
+        self.spell_landed(cast, player, true);
         true
     }
 
@@ -278,7 +278,7 @@ impl World {
         if weather.kind >= Weather::Rain {
             self.rain_begins(events);
         }
-        self.spell_landed(cast, self.state.player, true, events);
+        self.spell_landed(cast, self.state.player, true);
         true
     }
 

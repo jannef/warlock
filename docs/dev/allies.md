@@ -188,7 +188,7 @@ own refusals (unknown, silenced, too little mana):
    1), or `None` with `ally_mod`'s `lasting`. `Actor::summoner` stays unset (the master is the
    ally's own field).
 6. Said: "Two wolves come to your call." (`few`, by type, `and_list`); landed on the player
-   (`spell_landed`), so the school is practised as any cast, and a self spell trains no style.
+   (`spell_landed`), a success as any cast; a self spell trains no style.
 
 **The draw's bias** (the owner's Q9: an item that guarantees fire, someday):
 `TalentEffect::SummonBias { tag, weight }` → `TalentMods::summon_bias` (in the order taken). An

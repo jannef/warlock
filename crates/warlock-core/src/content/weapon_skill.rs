@@ -18,7 +18,7 @@
 //!
 //! The numbers are rules, never shown in the game: the player sees ranks, and a marks bar.
 
-use super::{ContentError, School, SpellMods};
+use super::{ContentError, SpellMods};
 use crate::dice::Dice;
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
@@ -52,23 +52,18 @@ pub enum Role {
     Unarmed,
     /// Bashing with a held shield (the bash attack).
     ShieldBash,
-    /// A school of magic (spec §8 "Weapon skills": "Schools of magic"): every spell of its
-    /// school the caster casts with their own mana trains it, and its ranks lift those spells
-    /// through the spell hooks (`content/spell_mod.rs`). One skill a school.
-    School,
     /// A fighting style (spec §8 "Fighting styles"): every attack made in its configuration
     /// ([`Style`]) trains it, and its benefits add to the weapon skill's.
     Style,
 }
 
 impl Role {
-    pub const ALL: [Role; 7] = [
+    pub const ALL: [Role; 6] = [
         Role::Melee,
         Role::Launcher,
         Role::Thrown,
         Role::Unarmed,
         Role::ShieldBash,
-        Role::School,
         Role::Style,
     ];
 
@@ -80,7 +75,6 @@ impl Role {
             Role::Thrown => "thrown",
             Role::Unarmed => "unarmed",
             Role::ShieldBash => "shield_bash",
-            Role::School => "school",
             Role::Style => "style",
         }
     }
@@ -93,21 +87,16 @@ impl Role {
     /// Whether no weapon names it and it is used by an attack or a defence of its own, so there
     /// is at most one skill of it.
     pub const fn is_implicit(self) -> bool {
-        !matches!(
-            self,
-            Role::Melee | Role::Launcher | Role::School | Role::Style
-        )
+        !matches!(self, Role::Melee | Role::Launcher | Role::Style)
     }
 
-    /// The section of the weapon skills screen it is listed in; `None` for a school of magic,
-    /// which is magic's, not the weapons'.
-    pub const fn section(self) -> Option<Section> {
+    /// The section of the weapon skills screen it is listed in.
+    pub const fn section(self) -> Section {
         match self {
-            Role::Melee | Role::Unarmed => Some(Section::Melee),
-            Role::Launcher | Role::Thrown => Some(Section::Missile),
-            Role::ShieldBash => Some(Section::Shields),
-            Role::Style => Some(Section::Styles),
-            Role::School => None,
+            Role::Melee | Role::Unarmed => Section::Melee,
+            Role::Launcher | Role::Thrown => Section::Missile,
+            Role::ShieldBash => Section::Shields,
+            Role::Style => Section::Styles,
         }
     }
 }
@@ -358,22 +347,10 @@ pub struct Benefit {
     pub far_threat: u8,
     /// Percent off what worn armour adds to every spell's mana cost (`spell_cost_percent`).
     pub armour: u8,
-    /// A school's spells: a die showing this or less is rolled again, once (the roll hook).
-    pub reroll: u8,
-    /// A school's spells: every die this many sizes bigger (the dice hook).
-    pub sides: u8,
-    /// A school's spells: this many dice more (the dice hook).
-    pub dice: u8,
-    /// A school's spells, and a Toucher's (a touch that rolls to hit): added to every roll (the
-    /// dice hook).
+    /// A Toucher's spells (a touch that rolls to hit): added to every roll (the dice hook).
     pub bonus: i32,
-    /// A school's spells, and a Sniper's (a ray or a bolt that rolls to hit): cells farther (the reach
-    /// hook).
+    /// A Sniper's spells (a ray or a bolt that rolls to hit): cells farther (the reach hook).
     pub cells: i32,
-    /// A school's spells: degrees longer (the degrees hook).
-    pub degrees: i32,
-    /// A school's spells: percent off their mana.
-    pub mana: u8,
 }
 
 impl Benefit {
@@ -397,29 +374,18 @@ impl Benefit {
             far_to_hit: self.far_to_hit + other.far_to_hit,
             far_threat: self.far_threat.saturating_add(other.far_threat),
             armour: self.armour.saturating_add(other.armour).min(100),
-            reroll: self.reroll.saturating_add(other.reroll),
-            sides: self.sides.saturating_add(other.sides),
-            dice: self.dice.saturating_add(other.dice),
             bonus: self.bonus + other.bonus,
             cells: self.cells + other.cells,
-            degrees: self.degrees + other.degrees,
-            mana: self.mana.saturating_add(other.mana).min(100),
         }
     }
 
-    /// What it does to a spell through the spell hooks (`content/spell_mod.rs`; a school's
-    /// rank, the spell scaling design §8.2): `reroll`, `sides`, `dice`, `bonus`, `cells`, and
-    /// `degrees` one to one, `mana` as the percent less the spell costs. Its `speed` is the cast
-    /// price's ([`Benefit::saving`]), its `to_hit` and `threat` the attack roll's.
+    /// What it does to a spell through the spell hooks (`content/spell_mod.rs`; a caster
+    /// style's rank): `bonus` and `cells` one to one. Its `to_hit` and `threat` are the attack
+    /// roll's.
     pub fn spell_mods(&self) -> SpellMods {
         SpellMods {
-            reroll: u32::from(self.reroll),
-            sides: u32::from(self.sides),
-            dice: u32::from(self.dice),
             bonus: self.bonus,
             cells: self.cells,
-            degrees: self.degrees,
-            cost: -i32::from(self.mana),
             ..SpellMods::default()
         }
     }
@@ -484,8 +450,6 @@ pub struct WeaponSkillDef {
     /// What "You feel more skilled ..." says of it: `with long blades`.
     pub phrase: String,
     pub role: Role,
-    /// The school of magic it is the skill of (`Some` exactly for [`Role::School`]).
-    pub school: Option<School>,
     /// A fighting style's configuration (`Some` exactly for [`Role::Style`]).
     pub style: Option<Style>,
     /// The curve it trains along (a key of the file's `curves`).
@@ -548,7 +512,6 @@ struct SkillSpec {
     name: String,
     phrase: String,
     role: String,
-    school: Option<School>,
     grip: Option<Grip>,
     weapons: Option<Vec<String>>,
     curve: String,
@@ -569,13 +532,8 @@ struct SkillSpec {
     far_to_hit: Option<Vec<i32>>,
     far_threat: Option<Vec<i32>>,
     armour: Option<Vec<i32>>,
-    reroll: Option<Vec<i32>>,
-    sides: Option<Vec<i32>>,
-    dice: Option<Vec<i32>>,
     bonus: Option<Vec<i32>>,
     cells: Option<Vec<i32>>,
-    degrees: Option<Vec<i32>>,
-    mana: Option<Vec<i32>>,
     #[serde(default)]
     hidden: bool,
 }
@@ -625,21 +583,13 @@ impl SkillSpec {
         let far_to_hit = ranks("far_to_hit", &self.far_to_hit)?;
         let far_threat = small_ranks("far_threat", &self.far_threat)?;
         let armour = small_ranks("armour", &self.armour)?;
-        let reroll = small_ranks("reroll", &self.reroll)?;
-        let sides = small_ranks("sides", &self.sides)?;
-        let dice = small_ranks("dice", &self.dice)?;
         let spell_bonus = ranks("bonus", &self.bonus)?;
         let cells = ranks("cells", &self.cells)?;
-        let degrees = ranks("degrees", &self.degrees)?;
-        let mana = small_ranks("mana", &self.mana)?;
         let grip = self.grip;
         let is = |g: Grip| grip == Some(g);
-        let school = role == Role::School;
-        // A caster style never quickens a cast (a caster grip); a school's practice may.
+        // A caster style never quickens a cast (a caster grip).
         let casts = grip.is_some_and(Grip::casts);
         let unused = [
-            ("damage", &self.damage, !school),
-            ("crit", &self.crit, !school),
             ("speed", &self.speed, !casts),
             (
                 "parry",
@@ -669,14 +619,9 @@ impl SkillSpec {
             ("far_to_hit", &self.far_to_hit, is(Grip::RangedSpell)),
             ("far_threat", &self.far_threat, is(Grip::RangedSpell)),
             ("armour", &self.armour, is(Grip::ArmouredSpell)),
-            ("reroll", &self.reroll, school),
-            ("sides", &self.sides, school),
-            ("dice", &self.dice, school),
             // The caster styles: a ray's or a bolt's reach (Sniper), a touch's roll (Toucher).
-            ("bonus", &self.bonus, school || is(Grip::TouchSpell)),
-            ("cells", &self.cells, school || is(Grip::RangedSpell)),
-            ("degrees", &self.degrees, school),
-            ("mana", &self.mana, school),
+            ("bonus", &self.bonus, is(Grip::TouchSpell)),
+            ("cells", &self.cells, is(Grip::RangedSpell)),
         ];
         if let Some((field, ..)) = unused
             .iter()
@@ -705,13 +650,8 @@ impl SkillSpec {
             far_to_hit: far_to_hit[r],
             far_threat: far_threat[r],
             armour: armour[r],
-            reroll: reroll[r],
-            sides: sides[r],
-            dice: dice[r],
             bonus: spell_bonus[r],
             cells: cells[r],
-            degrees: degrees[r],
-            mana: mana[r],
         }))
     }
 }
@@ -771,26 +711,6 @@ impl WeaponSkillTable {
                     role.id()
                 )));
             }
-            match (role, spec.school) {
-                (Role::School, None) => {
-                    return Err(skill_err("a school of magic needs its `school`".into()));
-                }
-                (Role::School, Some(school)) => {
-                    if let Some(other) = skills.iter().find(|s| s.school == Some(school)) {
-                        return Err(skill_err(format!(
-                            "school `{}` already has its skill, `{}`: one skill a school",
-                            school.id(),
-                            other.id
-                        )));
-                    }
-                }
-                (_, Some(_)) => {
-                    return Err(skill_err(
-                        "`school` is for schools of magic (`role = \"school\"`)".into(),
-                    ));
-                }
-                (_, None) => {}
-            }
             let style = match (role, spec.grip) {
                 (Role::Style, Some(grip)) => Some(Style {
                     grip,
@@ -822,7 +742,6 @@ impl WeaponSkillTable {
                 name: spec.name,
                 phrase: spec.phrase,
                 role,
-                school: spec.school,
                 style,
                 curve: spec.curve,
                 need,
@@ -920,14 +839,6 @@ impl WeaponSkillTable {
     /// The skill with data id `name`.
     pub fn id(&self, name: &str) -> Option<WeaponSkillId> {
         self.ids().find(|(_, s)| s.id == name).map(|(id, _)| id)
-    }
-
-    /// The skill of school of magic `school`, if the table has one (it has every one once
-    /// there are spells: `Content`'s load checks it).
-    pub fn of_school(&self, school: School) -> Option<WeaponSkillId> {
-        (self.ids())
-            .find(|(_, s)| s.school == Some(school))
-            .map(|(id, _)| id)
     }
 
     /// The skill of an implicit role ([`Role::is_implicit`]): bare hands, throws, shields.
@@ -1045,8 +956,8 @@ mod tests {
     fn the_builtin_table_loads() {
         let text = include_str!("../../../../assets/data/weapon_skills.toml");
         let table = parse(text).expect("valid");
-        // Fifteen weapon skills, the seven schools of magic, and twelve fighting styles.
-        assert_eq!(table.skills().len(), 34);
+        // Fifteen weapon skills and twelve fighting styles.
+        assert_eq!(table.skills().len(), 27);
         assert_eq!(table.styles().count(), 12);
         let id = |name: &str| table.id(name).expect(name);
         for role in Role::ALL.into_iter().filter(|r| r.is_implicit()) {
@@ -1133,42 +1044,6 @@ mod tests {
                     b.to_hit, b.damage, b.threat, b.speed, b.parry, b.shield, b.reload
                 ),
                 (to_hit, damage, threat, speed, parry, shield, reload),
-                "{name}"
-            );
-        }
-        // The schools of magic (the spell scaling design §8.3): every one aims as Spell attacks
-        // did, and each grows its own way.
-        // (id, reroll, sides, dice, bonus, cells, degrees, mana, speed)
-        #[rustfmt::skip]
-        let schools: [(&str, u8, u8, u8, i32, i32, i32, u8, u8); 7] = [
-            ("evocation", 2, 2, 2, 0, 0, 0, 15, 0),
-            ("necromancy", 2, 0, 1, 4, 0, 3, 15, 0),
-            ("abjuration", 0, 0, 0, 0, 0, 3, 25, 20),
-            ("restoration", 2, 2, 1, 3, 0, 0, 15, 33),
-            ("transmutation", 0, 0, 0, 0, 2, 3, 15, 20),
-            ("enchantment", 0, 0, 0, 0, 3, 3, 15, 0),
-            ("divination", 0, 0, 0, 0, 2, 0, 40, 50),
-        ];
-        for (name, reroll, sides, dice, bonus, cells, degrees, mana, speed) in schools {
-            let id = table.id(name).expect(name);
-            let def = table.skill(id);
-            assert_eq!(
-                (def.role, def.curve.as_str()),
-                (Role::School, "school"),
-                "{name}"
-            );
-            assert_eq!(def.school.map(School::id), Some(name));
-            let b = table.benefit(id, MAX_RANK);
-            assert_eq!(
-                (
-                    b.reroll, b.sides, b.dice, b.bonus, b.cells, b.degrees, b.mana, b.speed
-                ),
-                (reroll, sides, dice, bonus, cells, degrees, mana, speed),
-                "{name}"
-            );
-            assert_eq!(
-                (b.to_hit, b.threat, b.damage, b.crit),
-                (6, 3, 0, 0),
                 "{name}"
             );
         }
@@ -1486,20 +1361,6 @@ mod tests {
         let text = include_str!("../../../../assets/data/weapon_skills.toml");
         let table = parse(text).expect("valid");
         let id = |name: &str| table.id(name).expect(name);
-        // Every school of magic has its skill, in no section of the weapon skills screen.
-        for school in School::ALL {
-            let skill = table.of_school(school).expect("a school's skill");
-            assert_eq!(table.skill(skill).id, school.id());
-            assert_eq!(table.skill(skill).role.section(), None);
-        }
-        // A school's rank is a `SpellMods` for the fields they share; its mana a cost cut.
-        let five = table.benefit(id("evocation"), 5).spell_mods();
-        assert_eq!(
-            (five.reroll, five.sides, five.dice, five.cost),
-            (1, 1, 0, -5)
-        );
-        let ten = table.benefit(id("restoration"), MAX_RANK).spell_mods();
-        assert_eq!((ten.bonus, ten.dice, ten.sides), (3, 1, 2));
         // One configuration, one caster style.
         let style = |grip| {
             table
@@ -1523,83 +1384,23 @@ mod tests {
                  \"style\"\ngrip = \"{grip}\"\ncurve = \"melee\"\n{extra}\n"
             )
         };
-        let school = |id: &str, of: &str, extra: &str| {
-            skill(id, "school", &format!("school = \"{of}\"\n{extra}"))
-        };
         let eleven = "[0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5]";
         let three = "[0, 1, 1, 1, 2, 2, 2, 3, 3, 3, 3]";
-        // A school takes the spell fields and a speed; the caster styles and the weapon skills
-        // take none of them, and a school none of a weapon's damage.
-        assert!(
-            parse(&format!(
-                "{MARKS}{}",
-                school(
-                    "e",
-                    "evocation",
-                    &format!(
-                        "reroll = {three}\nsides = {three}\ndice = {three}\nbonus = {three}\n\
-             cells = {three}\ndegrees = {three}\nmana = {three}\nspeed = {three}\n\
-             to_hit = {three}\nthreat = {three}"
-                    )
-                )
-            ))
-            .is_ok()
-        );
+        // A caster style's spell fields are its grip's; a weapon skill takes none of them.
         for (text, why) in [
-            (
-                format!("{MARKS}{}", skill("s", "school", "")),
-                "a school of magic needs its `school`",
-            ),
-            (
-                format!("{MARKS}{}", school("s", "astrology", "")),
-                "unknown variant `astrology`",
-            ),
-            (
-                format!(
-                    "{MARKS}{}{}",
-                    school("a", "evocation", ""),
-                    school("b", "evocation", "")
-                ),
-                "school `evocation` already has its skill, `a`",
-            ),
-            (
-                format!("{MARKS}{}", skill("a", "melee", "school = \"evocation\"")),
-                "`school` is for schools of magic",
-            ),
             (
                 format!(
                     "{MARKS}{}",
-                    skill("a", "melee", &format!("sides = {three}"))
+                    skill("a", "melee", &format!("bonus = {three}"))
                 ),
-                "`sides` does nothing for a skill of role `melee`",
+                "`bonus` does nothing for a skill of role `melee`",
             ),
             (
                 format!(
                     "{MARKS}{}",
                     caster("s", "ranged_spell", &format!("mana = {three}"))
                 ),
-                "`mana` does nothing for a style of grip `ranged_spell`",
-            ),
-            (
-                format!(
-                    "{MARKS}{}",
-                    school("s", "evocation", &format!("damage = {three}"))
-                ),
-                "`damage` does nothing for a skill of role `school`",
-            ),
-            (
-                format!(
-                    "{MARKS}{}",
-                    school("s", "evocation", &format!("crit = {three}"))
-                ),
-                "`crit` does nothing for a skill of role `school`",
-            ),
-            (
-                format!(
-                    "{MARKS}{}",
-                    school("s", "evocation", &format!("parry = {three}"))
-                ),
-                "`parry` does nothing",
+                "unknown field `mana`",
             ),
             (
                 format!(
@@ -1669,7 +1470,7 @@ mod tests {
             (
                 format!(
                     "{MARKS}{}{}",
-                    school("a", "evocation", ""),
+                    skill("a", "melee", ""),
                     caster("s", "ranged_spell", "weapons = [\"a\"]")
                 ),
                 "is no weapon skill a style of grip `ranged_spell` is fought with",

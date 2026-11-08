@@ -1,4 +1,4 @@
-# A weapon skill's only, never a style's or a school's: Stylist and Schooled are those
+# A weapon skill's only, never a style's: Stylist is that
 # (docs/design/talent-ranks.md).
 [[talent]]
 id = "weapon_specialization"

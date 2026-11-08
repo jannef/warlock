@@ -19,9 +19,7 @@ cooldown }`).
 nothing in a save names an ability (free blows are bits on `FreeBlows`, statuses are statuses).
 An ability names its skills; a skill does not list its abilities.
 
-Loader checks (well-formedness only, #1205): the skills exist (weapon skills, styles, or
-schools of magic, role `school`: a school's abilities are its **school abilities**, the spell
-scaling design §8.5);
+Loader checks (well-formedness only, #1205): the skills exist (weapon skills or styles);
 `kind = "triggered"` has no `aim`, `stamina`, `energy`, or `cooldown`, and no active's effect;
 `kind = "active"` has no `trigger`, needs `aim`, `stamina`, and `energy` (an
 `actions.toml` id and a `percent`), an optional `cooldown` (a status), and an active's effect, each with the aims and actions it
@@ -38,8 +36,8 @@ the status's `max`. `systems` are the
 talent table's system ids (a test holds the shipped ones to the table; a test's own talent table
 may have others, so the loader does not). The shipped catalogue is in the wiki's tables
 (`xtask/src/wiki/weapon_abilities.rs`: `weapon-abilities.md` on the Weapon skills page,
-`style-abilities.md` on the Fighting styles page; `schools.rs`'s `school-abilities.md` on the
-Schools of magic page, through the same `table`).
+`style-abilities.md` on the Fighting styles page; `caster-style-abilities.md` on the Schools
+and caster styles page, through the same `table`).
 
 Readers: `Content::weapon_abilities`, `weapon_ability(id)`, `weapon_ability_id(name)`, and
 `weapon_abilities_for(skill, rank)` (a lookup, no draw).
@@ -94,9 +92,8 @@ for the one attacked). Where each is raised (a line that already marks the event
 | `parried` | `second_blow(Cue::Attacked { parried: true })`, before the cleave or riposte | the target's held |
 | `both_hands_hit` | `World::both_hands`, from `World::attack` and `player_attacks` after the second blow: both `Strike::Hit`, the second made with a weapon (not a shield: a bash is no second hand; not a flurry's fist), the target alive; once an attack | the attack's |
 | `approaches` | `World::approached`, from `World::step_up` (the creature's step in `ai.rs` and now the player's in `travel.rs`) | the approached's missile weapon (`Ranged`), else what it has ready to throw (`Thrown`) |
-| `hit`, `critical` (spells) | `world/cast.rs::spell_practised` → `World::resolve_triggers` with `AttackKind::Spell`, before `spell_strikes` (a spell that rolls to hit, an own cast; #571; of the caster styles only Battle caster's Spell guard is raised here, Sniper and Toucher teaching none since #1251) | the school and the caster style the cast was made in (`Cast::skills`, `Actor::spell_skills`; `world/cast_style.rs`) |
+| `hit`, `critical` (spells) | `world/cast.rs::spell_practised` → `World::resolve_triggers` with `AttackKind::Spell`, before `spell_strikes` (a spell that rolls to hit, an own cast; #571; of the caster styles only Battle caster's Spell guard is raised here, Sniper and Toucher teaching none since #1251) | the caster style the cast was made in (`Cast::skills`, `Actor::spell_skills`; `world/cast_style.rs`) |
 | `spell_blocked` | `cast.rs::cast_single` → `World::spell_blocked` (`reflect.rs`), on an attack or touch spell's miss by the target's Shield (a bolt, a ray, a touch; a scroll's or a wand's too); never for a reflected flight | the target's held |
-| `spell_lands` | `cast.rs::spell_landed`, the one place every kind reports a landing (it also fills the cast's `Outcome` for its marks): a cast paid in mana (`Pay::Mana`) that harmed a creature, a hex that took on it, a heal that restored a point; a buff, a cure, or an identify lands on the caster. Once per creature, after the spell's messages and riders (`spell_lands`, in the order struck: an area's ascending actor id), for one that still lives; never a miss, a scroll, a wand, or a reflected flight. A `status` effect `on = "target"` is never laid on the caster itself (Thunderstruck on Light); the player's, on one they see, says "The orc staggers." (`staggers_from`) | the cast's (`Actor::spell_skills`: the school and the caster style) |
 
 Effects (`WeaponDoes`, closed; a kind with no catalogue entry is not written): `Status` (on the
 other end or the actor, `World::afflict`; `turns` dice drawn once, clamped to the status's
@@ -186,25 +183,18 @@ the line "You learn to pace your breath." follows that active's "You have learne
 
 `Ability::Weapon(skill, id)` (`ability.rs`), one row per (skill, ability) pair in `every`, had
 only through the first skill that teaches it, so each ability is one row; its name is the skill's
-and the ability's ("Long blades: Deep cut", a school's "Evocation: Thunderstruck"); a triggered one is `Unavailable::FiresByItself`
+and the ability's ("Long blades: Deep cut"); a triggered one is `Unavailable::FiresByItself`
 ("fires by itself"), no action, no aim; an active one has its data's aim and action (above), and
 the menu row shows its stamina first ("3 stamina, in a direction"). The abilities screen widens
 its panel to fit such rows.
 `World::ranks_news(risen, before)` (`fight.rs`) says a rank risen ("You feel more skilled with
 long blades.") with what it taught appended to that line ("You have learned the deep
-cut."; a school's by name, "You have learned Thunderstruck."); `practise` computes `before` only
+cut."); `practise` computes `before` only
 when a rank rose. The dev action `rank:SKILL:N`
 (`Action::SetRank`, `World::set_rank_dev`) sets a rank as a rank risen would, said the same way.
 
-## School abilities
-
-Four ship (`data/weapon_abilities/`, each `systems = ["weapon_abilities", "schools", "spells",
-"status"]`), all `spell_lands` with a `status` effect and no draw (no `turns`): Thunderstruck
-(evocation 10, Staggered on the other), Wasting (necromancy 10, Weakened), Aegis (abjuration 7,
-Spell ward on self: abjuration's one spell is Blessing, a buff), Lulling (enchantment 10,
-Sluggish). Restoration, transmutation, and divination teach none yet. A talent's rider (`SpellMods`),
-a spell type's (`docs/dev/spells.md` "Spell types"), and a school ability coexist; no talent of their own (Early mastery reaches
-them through `ability_rank`).
+The school abilities (Thunderstruck, Wasting, Aegis, Lulling) and their `spell_lands` trigger
+were removed with the schools of magic as trained skills (#1263).
 
 ## Talents
 
@@ -223,7 +213,4 @@ wand, and draws, creatures' Brace and Point-blank, no draws without a rank, the 
 the menu and the news), `world/weapon_active_tests.rs` (each active, its costs and refusals, the
 greyed rows, Practised technique, Drillmaster, Armour-breaker, the pool granted, the action
 text), `ability.rs` (the menu's order), the screen snapshots `abilities-menu-weapon-skills`,
-`abilities-menu-weapon-actives`, `-short`, `abilities-menu-school-ability`, the wiki test
-(`xtask/src/wiki/mod.rs`). `world/school_ability_tests.rs`: the school abilities on hand-made
-casts (an area in actor id order, a buff on its caster, a hex and a harm, a miss, a scroll and a
-wand, no draws without a rank, Early mastery, the news and the menu).
+`abilities-menu-weapon-actives`, `-short`, the wiki test (`xtask/src/wiki/mod.rs`).

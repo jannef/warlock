@@ -38,9 +38,9 @@
 //! - **Spells** (the spell scaling design §12.4, S7): the wizard's, the witch's, and the
 //!   priest's own casts of every spell that rolls (harm or healing) of the schools they know or
 //!   have an affinity with, as `Actor::spell_roll` makes it: the rung their trained stats reach,
-//!   their school's and caster style's ranks, the talents' and items' hooks, nothing holding the
-//!   roll; beside it the same roll at rank 0 (the ladder alone). The ranks are not set by level:
-//!   each level's days are cast through `World::practise`, a pool a day (`schools`), so the pace
+//!   their caster style's rank, the talents' and items' hooks, nothing holding the roll; beside
+//!   it the same roll at style rank 0. The ranks are not set by level: each level's days are
+//!   cast through `World::practise`, a pool a day (`caster_pace`), so the pace
 //!   is the real curve's. No casts to kill: the probe prints the roll and the pool. The
 //!   priest's prayer (#886, `world/orison.rs`) has no roll: a line a level says its name and
 //!   what one prayer answers (`World::prayer_state`).
@@ -73,11 +73,11 @@
 //! (`levelup:auto` takes the first it may), the initiative check's Surprised after the first
 //! blow, potions, and resistances against spells.
 
+mod caster_pace;
 mod casters;
 mod dragon;
 mod familiar;
 mod ranger;
-mod schools;
 mod spread;
 mod starters;
 mod summons;
@@ -151,7 +151,8 @@ struct Build {
     /// Whether it spends mana on an ability (a heal, a blessing) once a fight; with a `school`,
     /// its pace spell is a heal.
     casts_a_kill: bool,
-    /// The school it casts in (`schools`: its rank comes of the pool a day), if it casts.
+    /// The school whose spells it casts (`caster_pace`: its caster style's rank comes of the
+    /// pool a day), if it casts.
     school: Option<&'static str>,
     /// Whether it fights with its pace spell instead of blows (`training`).
     fights_with_spells: bool,
@@ -581,19 +582,17 @@ struct Cast {
     heals: bool,
     /// The rung of its ladder the caster's stats and talents reach.
     rung: usize,
-    /// Its school's rank and the caster style's it is cast in.
-    school_rank: u8,
+    /// The caster style it is cast in and its rank.
     style: Option<(String, u8)>,
     /// The roll (`Actor::spell_roll`) and the face it draws again at or under (the hooks'
-    /// `reroll`), and the same at school and style rank 0.
+    /// `reroll`), and the same at style rank 0.
     dice: Roll,
     reroll: u32,
     bare: Roll,
     bare_reroll: u32,
-    /// The attack roll's profile (to-hit and the school's benefit), for attack and touch.
+    /// The attack roll's profile (to-hit and the caster style's benefit), for attack and touch.
     aim: Profile,
-    /// What a cast costs (`Actor::spell_cost`), and its cost table's price with no school rank
-    /// (the ranks' mana off) and no talent.
+    /// What a cast costs (`Actor::spell_cost`), and its cost table's price with no talent.
     cost: i32,
     base_cost: i32,
     /// What its harm does more to a target under one hex (Malison's bite, `status_damage` on a
@@ -662,7 +661,6 @@ fn casts(w: &World) -> Vec<Cast> {
             resolution: def.resolution,
             heals: def.kind == SpellPurpose::Heal,
             rung,
-            school_rank: skills.skill.map_or(0, |id| me.weapon_skills.rank(id)),
             style,
             dice: rolled,
             reroll: mods.reroll,
@@ -700,9 +698,9 @@ struct Snap {
     spellcraft: i32,
     learning: i32,
     casts: Vec<Cast>,
-    /// The level before this one's casting (`schools`) and its spell casts in the fights
+    /// The level before this one's casting (`caster_pace`) and its spell casts in the fights
     /// (`training`; a healer's one a kill), a day.
-    paced: schools::Paced,
+    paced: caster_pace::Paced,
     fought_a_day: f64,
     /// Its weapon skills and styles, and the rank of the caster style it was paced in.
     ranks: crate::weapon_skills::WeaponSkills,
@@ -959,7 +957,7 @@ fn career(
     let player = w.state.player;
     let mut out = Vec::new();
     let mut log = training::Log::default();
-    let mut paced = schools::first_spell(&w, build, seed);
+    let mut paced = caster_pace::first_spell(&w, build, seed);
     for level in 1..=*LEVELS.last().expect("levels") {
         if level > 1 {
             if trained {
@@ -967,7 +965,7 @@ fn career(
             } else {
                 log.day += training::days(level);
             }
-            paced = schools::cast_level(&mut w, build, level - 1, seed);
+            paced = caster_pace::cast_level(&mut w, build, level - 1, seed);
             let need = content.experience().threshold_for(level, factor);
             let more = need.saturating_sub(w.player_xp());
             let before = training::scores(&w);
@@ -1267,7 +1265,7 @@ fn balance_probe() {
     casters::casters(&p, &mut Rng::stream(1102, "casters"), &mut out);
     tables::bodies(&p, &mut rng, &mut out);
     tables::spells(&p, &mut out);
-    tables::school_pace(&p, &mut out);
+    tables::caster_pace(&p, &mut out);
     tables::weapon_pace(&p, &mut out);
     tables::sneak_attacks(&p, &mut rng, &mut out);
     tables::rage(&p, &mut rng, &mut out);

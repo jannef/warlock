@@ -1,14 +1,14 @@
 //! The weapon abilities tables (spec §8 "Weapon skills", "Fighting styles"; the combat
 //! progression design §4, §6), from `data/weapon_abilities/`: what each rank teaches, the weapon
-//! skills' on the Weapon skills page, the styles' on the Fighting styles page, and the schools'
-//! and the caster styles' on the Schools of magic page (`schools.rs`), with the rank, the kind,
+//! skills' on the Weapon skills page, the styles' on the Fighting styles page, and the caster
+//! styles' on the Schools and caster styles page (`schools.rs`), with the rank, the kind,
 //! the trigger, exactly what it does, and its costs (a triggered ability has none).
 
 use super::text::{Term, anchored, link, table_text};
 use super::weapon_skills::is_caster_style;
 use std::fmt::Write as _;
 use warlock_core::content::{
-    ActiveAim, Content, ExtraDice, FreeBlowKind, On, Role, Trigger, WeaponAbility, WeaponDoes,
+    ActiveAim, Content, ExtraDice, FreeBlowKind, On, Role, WeaponAbility, WeaponDoes,
     WeaponSkillId, WeaponSkillTable,
 };
 
@@ -18,7 +18,6 @@ pub(super) enum Taught {
     Weapons,
     Styles,
     CasterStyles,
-    Schools,
 }
 
 impl Taught {
@@ -26,7 +25,6 @@ impl Taught {
         match skills.skill(id).role {
             Role::Style if is_caster_style(skills, id) => Taught::CasterStyles,
             Role::Style => Taught::Styles,
-            Role::School => Taught::Schools,
             _ => Taught::Weapons,
         }
     }
@@ -47,7 +45,7 @@ pub(super) fn caster_style_abilities(content: &Content) -> String {
     table(content, Taught::CasterStyles)
 }
 
-/// The abilities of the weapon skills, the styles, the caster styles, or the schools (`taught`),
+/// The abilities of the weapon skills, the styles, or the caster styles (`taught`),
 /// by their first skill in file order, then rank, then name.
 pub(super) fn table(content: &Content, taught: Taught) -> String {
     let skills = content.weapon_skills();
@@ -64,7 +62,6 @@ pub(super) fn table(content: &Content, taught: Taught) -> String {
         Taught::Weapons => (Term::WeaponAbility, Term::WeaponSkill),
         Taught::Styles => (Term::StyleAbility, Term::Style),
         Taught::CasterStyles => (Term::CasterStyleAbility, Term::CasterStyle),
-        Taught::Schools => (Term::SchoolAbility, Term::School),
     };
     for (_, rank, a) in rows {
         let taught: Vec<String> = (a.skills.iter())
@@ -155,10 +152,8 @@ fn does(content: &Content, a: &WeaponAbility) -> String {
             on,
         } => {
             let name = &content.status(status).name;
-            let lands = a.triggers.contains(&Trigger::SpellLands);
             let whom = match on {
                 On::Target if defending => "your attacker",
-                On::Target if lands => "the one the spell lands on (never you)",
                 On::Target => "the one you struck",
                 On::Own => "you",
             };

@@ -139,13 +139,13 @@ to open, read keys for, or draw one:
   magic`; spec §6 "Magic"; the spell scaling design §11): page 6, no `KeyCommand` of its own
   (reached by its number or Tab; the weapon skills screen's footer names it with
   `info_tabs::hint`). One column of rows built once when it opens (`rows`): `Mana a/b`, the
-  `Role::School` skills, the caster styles (the styles whose `Grip::casts`; only for a player who
+  caster styles (the styles whose `Grip::casts`; only for a player who
   knows a spell or has a rank or marks in one), and the spells, filtered from
   `PerceptionView::abilities` in its order with `abilities_screen::spell_head` (the menu's row,
   "2d4 force, 3 mana", plus ", aimed" where `needs(aim)` says anything). Scrolls as the weapon
   skills screen does (gaps give way, then ↑↓, `most` stored at draw). The weapon skills screen
   leaves the caster styles out. Snapshots `magic-screen` (the showcase wizard at level 1),
-  `-trained` (level 18, `rank:evocation:5 rank:restoration:3`), `-armoured` (a paladin in the
+  `-trained` (level 18, `rank:sniper:5 rank:toucher:3`), `-armoured` (a paladin in the
   forge's chain mail: Battle caster marked), `-none` (a warrior), `-short` (80 × 20: the scroll).
 - **The story** (`ui/story_screen.rs`, `StoryScreen`, `ScreenName::Story`; spec §6 "Your story",
   #703; `docs/dev/background.md` "Shown"): the paragraphs of `PerceptionView::story`, wrapped,
