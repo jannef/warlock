@@ -176,15 +176,19 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
-      - uses: EmbarkStudios/cargo-deny-action@v2
-      # Third-party notices: fail when THIRD_PARTY_LICENSES.html is stale (run
-      # `cargo xtask licenses` after changing dependencies).
       - name: Install pinned toolchain
         run: rustup toolchain install
       - uses: Swatinem/rust-cache@v2
-      - uses: taiki-e/install-action@v2
-        with:
-          tool: cargo-about
+      # Both tools are built from crates.io (rust-cache keeps ~/.cargo/bin between runs):
+      # downloading their GitHub release archives failed for hours on 2026-11-08 (504s).
+      - name: Install cargo-deny and cargo-about
+        run: |
+          cargo install --locked cargo-deny@0.20.2
+          cargo install --locked cargo-about --features cli
+      - name: cargo deny check
+        run: cargo deny --all-features check
+      # Third-party notices: fail when THIRD_PARTY_LICENSES.html is stale (run
+      # `cargo xtask licenses` after changing dependencies).
       - name: Third-party licenses are current
         run: cargo xtask licenses --check
 
