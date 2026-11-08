@@ -12,8 +12,9 @@
 //!   written is never renamed or given another meaning. No format number, no migration. The
 //!   test `a_fixture_written_by_0_11_reads` pins it.
 //! - **Read** for the main menu's Graveyard row and screen ([`by_experience`]), the Characters
-//!   screen's count, and, as a run begins, for the run's petrified dead ([`GraveyardStore::petrified`], `cause = "stone"`, the most
-//!   recent first), which the core keeps with the run and names statues from
+//!   screen's count, and, as a run begins, for the run's dead ([`GraveyardStore::dead`], the
+//!   most recent first, the petrified, `cause = "stone"`, marked), which the core keeps with
+//!   the run and names statues (the petrified) and gravestones (all) from
 //!   (`warlock_core::world::Fallen`).
 
 use crate::cli::Args;
@@ -21,6 +22,7 @@ use crate::storage::Backend;
 use bevy::prelude::*;
 use serde::{Deserialize, Serialize};
 use warlock_core::World;
+use warlock_core::content::Content;
 
 /// The file's name, beside `settings.toml`.
 pub const FILE_NAME: &str = "graveyard.toml";
@@ -208,16 +210,18 @@ impl GraveyardStore {
         }
     }
 
-    /// The petrified among the dead, the most recent first, as the core names statues from
-    /// them (`World::set_graveyard`).
-    pub fn petrified(&self) -> Vec<warlock_core::world::Fallen> {
+    /// The dead, the most recent first, as the core names statues (the petrified) and
+    /// gravestones (all of them) from them (`World::set_graveyard`), each with how they died in
+    /// the Graveyard screen's words.
+    pub fn dead(&self, content: &Content) -> Vec<warlock_core::world::Fallen> {
         let mut all = self.read();
-        all.retain(Fallen::petrified);
         // The file is in the order written; an entry's own time breaks no tie it makes.
         all.reverse();
         all.sort_by_key(|f| std::cmp::Reverse(f.when));
         (all.into_iter())
             .map(|f| warlock_core::world::Fallen {
+                petrified: f.petrified(),
+                death: crate::ui::graveyard_screen::death_words(&f, content),
                 name: f.name,
                 race: f.race,
             })
@@ -366,7 +370,7 @@ version = "0.14.0"
     }
 
     #[test]
-    fn deaths_are_appended_and_the_petrified_come_most_recent_first() {
+    fn deaths_are_appended_and_the_dead_come_most_recent_first_the_petrified_marked() {
         let dir = std::env::temp_dir().join(format!("warlock-graveyard-{}", std::process::id()));
         let _ = std::fs::remove_dir_all(&dir);
         let store = GraveyardStore::at(dir.clone());
@@ -386,8 +390,16 @@ version = "0.14.0"
         let text = std::fs::read_to_string(dir.join(FILE_NAME)).expect("read");
         assert!(text.starts_with(FIXTURE_0_11), "{text}");
         assert_eq!(store.read().len(), 5);
-        let petrified: Vec<String> = (store.petrified().iter()).map(|f| f.name.clone()).collect();
+        // All the dead go to the run, the petrified marked, each with how they died in words.
+        let content = Content::builtin().expect("content");
+        let dead = store.dead(&content);
+        assert_eq!(dead.len(), 5);
+        let petrified: Vec<&str> = (dead.iter())
+            .filter(|f| f.petrified)
+            .map(|f| f.name.as_str())
+            .collect();
         assert_eq!(petrified, ["Osric", "Brakka", "Eadgyth"]);
+        assert_eq!(dead[0].death, "Turned to stone");
         let _ = std::fs::remove_dir_all(&dir);
     }
 

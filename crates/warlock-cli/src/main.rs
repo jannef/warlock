@@ -69,9 +69,10 @@ struct RunArgs {
     /// starts the run with the character's kit (ignored when `--replay` is given).
     #[arg(long)]
     talents: Option<String>,
-    /// The petrified dead of past runs, as the game's graveyard file gives a run them, the most
-    /// recent first: NAME:RACE separated by commas (`Brakka:dwarf,Tamsin:elf`). Statues are
-    /// named from them; the names are out of the state hash.
+    /// The dead of past runs, as the game's graveyard file gives a run them, the most recent
+    /// first: NAME:RACE[:stone] separated by commas (`Brakka:dwarf:stone,Tamsin:elf`), `stone`
+    /// for one turned to stone. Statues are named from the petrified, gravestones from them all;
+    /// the names are out of the state hash.
     #[arg(long)]
     fallen: Option<String>,
     /// Actions as text, e.g. "move:E move:SE wait open:E close:W kick:N descend ascend pickup:ab
@@ -220,15 +221,22 @@ fn start(content: Arc<Content>, args: &RunArgs) -> Result<World, String> {
     Ok(world)
 }
 
-/// `--fallen`'s petrified dead, the most recent first: `Brakka:dwarf` each.
+/// `--fallen`'s dead, the most recent first: `Brakka:dwarf` each, `Brakka:dwarf:stone` for one
+/// turned to stone (who died "Turned to stone"; the rest die untold).
 fn fallen(args: &RunArgs) -> Vec<Fallen> {
     let text = args.fallen.as_deref().unwrap_or("");
     (text.split(',').map(str::trim).filter(|s| !s.is_empty()))
         .map(|entry| {
-            let (name, race) = entry.split_once(':').unwrap_or((entry, ""));
+            let mut parts = entry.split(':').map(str::trim);
+            let name = parts.next().unwrap_or("").to_string();
+            let race = parts.next().unwrap_or("").to_string();
+            let petrified = parts.next() == Some("stone");
+            let death = if petrified { "Turned to stone" } else { "" };
             Fallen {
-                name: name.trim().to_string(),
-                race: race.trim().to_string(),
+                name,
+                race,
+                petrified,
+                death: death.to_string(),
             }
         })
         .collect()

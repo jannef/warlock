@@ -170,6 +170,7 @@ mod gear_condition_tests;
 mod gifts;
 mod glare;
 mod goodwill;
+mod graves;
 mod graveyard;
 #[cfg(test)]
 mod graveyard_tests;
@@ -1863,6 +1864,8 @@ mod land_talent_tests;
 mod layer_boss_tests;
 #[cfg(test)]
 mod learn_tests;
+#[cfg(test)]
+mod lictun_tests;
 #[cfg(test)]
 mod light_tests;
 #[cfg(test)]

@@ -254,8 +254,8 @@ pub use learning::{Band, Mishap, MishapEffect, StudyRules, drawn_among};
 pub use leaving::{Laid, Leaving};
 pub(crate) use level::validate_route;
 pub use level::{
-    CreatureSpawn, EdgeExit, HiddenLocation, LevelKind, LevelTemplate, Place, Region, StairsLink,
-    parse_route,
+    CreatureSpawn, EdgeExit, Graves, HiddenLocation, LevelKind, LevelTemplate, Place, Region,
+    StairsLink, parse_route,
 };
 pub use light::{Dips, Drift, HueDrift, LightId, LightPreset, Stability};
 pub use material::{
@@ -1495,6 +1495,7 @@ impl Content {
                 },
                 chest: spec.chest,
                 statue: spec.sturdiness.filter(|_| spec.statue),
+                grave: spec.grave,
                 stairs: spec.stairs,
                 light,
                 bounce: spec.bounce,

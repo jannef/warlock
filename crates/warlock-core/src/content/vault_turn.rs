@@ -149,6 +149,7 @@ fn turned_template(template: &LevelTemplate, turn: Turn) -> LevelTemplate {
         temperature,
         ice,
         spawning,
+        graves,
     } = template;
     let (w, h) = (terrain.width(), terrain.height());
     let at = |p: Pos| turn.pos(p, w, h);
@@ -218,6 +219,7 @@ fn turned_template(template: &LevelTemplate, turn: Turn) -> LevelTemplate {
         temperature: *temperature,
         ice: moved(ice, at),
         spawning: spawning.clone(),
+        graves: graves.clone(),
     }
 }
 

@@ -136,7 +136,10 @@ is revealed by its own variant of `guild_wanted` (`mapgen/lairs_tests.rs` walks 
 down once `reveal:ID` marks it). `V` Holtwīc (`town`, (18, 17), #1140) is the village at the north
 road's end, leading into `holtwic` (`docs/dev/campaign.md` "Holtwīc"); `E` Ælfhām (25, 13, forest →
 `barrow`, `to = "aelfham:1"`) is the hidden fairy mound seven cells north-east of it, for the
-wise-woman's quest to reveal (#1141; `world/holtwic_tests.rs`).
+wise-woman's quest to reveal (#1141; `world/holtwic_tests.rs`). `g` Līctūn (`graveyard`, (19, 32),
+#1258) is Cēaptūn's churchyard beside the south road, four cells out of town, leading into
+`lictun` (`docs/dev/campaign.md` "Līctūn"): with the starter cave, the one location closer than
+six cells to another (`ascmearc_tests`: four from the town, at least five from every other).
 
 Rumoured ways (spec §8 "Dialogue"; `docs/dev/npcs.md`): a dialogue topic's `route` marks the
 overworld's memory as day sight along it would (`world/rumour.rs`), reading only the terrain

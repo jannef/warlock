@@ -270,6 +270,7 @@ pub fn layer_rows(world: &World, layer: Layer) -> Vec<String> {
             truth_rows(world),
             chest_rows(world),
             statue_rows(world),
+            grave_rows(world),
             leaving_rows(world),
             hallow_rows(world),
             zone_rows(world),
@@ -572,6 +573,15 @@ fn statue_rows(world: &World) -> Vec<String> {
                 content.creature(statue.of).id
             )
         })
+        .collect()
+}
+
+/// A line per gravestone on the level with what is cut in it (spec §7 "Graves"; ground truth
+/// for every stone, read or not): `grave at (12, 5): Here lies Ælfric Wudu, 1381–1427.`
+fn grave_rows(world: &World) -> Vec<String> {
+    let (level, _) = world.ground_truth();
+    (level.graves().iter())
+        .map(|(p, text)| format!("grave at {p}: {text}"))
         .collect()
 }
 

@@ -164,6 +164,8 @@ struct LevelFile {
     /// `vault::parse_turns`; refused on a level).
     #[serde(rename = "turns")]
     _turns: Option<bool>,
+    /// The words its gravestones are cut with (spec §7 "Graves"); default none: blank stones.
+    graves: Option<Graves>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -545,6 +547,43 @@ pub struct Place {
     pub note: Option<String>,
 }
 
+/// The words a hand-made level's gravestones are cut with (spec §7 "Graves"; a level file's
+/// `[graves]`): every cell of a `grave` terrain gets one inscription as the level is made
+/// (`world/graves.rs`), a stranger of these folk's or one of the run's graveyard.
+#[derive(Clone, Debug, PartialEq, Eq, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct Graves {
+    /// The given names of the folk buried here, one drawn a stone.
+    pub names: Vec<String>,
+    /// The bynames after them (`Wudu`, `atte Welle`), one drawn a stone; none: the given name
+    /// alone.
+    #[serde(default)]
+    pub bynames: Vec<String>,
+    /// A stranger's inscriptions, one drawn a stone: `{name}`, `{born}`, and `{died}` stand for
+    /// the drawn name and years.
+    pub epitaphs: Vec<String>,
+    /// The inscription for one of the run's graveyard: `{name}` ("Brakka the dwarf") and
+    /// `{death}` ("killed by a kobold in Fyrdelf 3, The Ascmearc").
+    pub fallen: String,
+    /// How many years before the year the level is made a stranger died, `[least, most]`.
+    pub died: [u16; 2],
+    /// How old a stranger was at death, in years, `[least, most]`.
+    pub age: [u16; 2],
+}
+
+impl Graves {
+    /// Well-formedness: something to draw from, and ranges that run upward.
+    fn check(&self) -> Result<(), String> {
+        if self.names.is_empty() || self.epitaphs.is_empty() {
+            return Err("`graves` needs `names` and `epitaphs`".into());
+        }
+        if self.died[0] > self.died[1] || self.age[0] > self.age[1] {
+            return Err("`graves`: `died` and `age` are `[least, most]`".into());
+        }
+        Ok(())
+    }
+}
+
 /// A parsed, validated level ready to instantiate: from a level file, or generated (see
 /// [`crate::mapgen`]).
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -619,6 +658,8 @@ pub struct LevelTemplate {
     /// danger 0, nothing comes. A generated level's is its branch's
     /// ([`Content::spawning`]).
     pub spawning: Option<(DangerRule, Spawning)>,
+    /// A hand-made level's words for its gravestones (spec §7 "Graves"); `None`: blank stones.
+    pub graves: Option<Graves>,
 }
 
 impl LevelTemplate {
@@ -1135,6 +1176,9 @@ pub(super) fn parse_level(
     if spawning.is_some() && parsed.kind == LevelKind::Overworld {
         return Err(err("the overworld has no `danger`".into()));
     }
+    if let Some(graves) = &parsed.graves {
+        graves.check().map_err(err)?;
+    }
     let template = LevelTemplate {
         id: id.to_string(),
         name: parsed.name,
@@ -1167,6 +1211,7 @@ pub(super) fn parse_level(
         temperature,
         ice,
         spawning,
+        graves: parsed.graves,
     };
     for spawn in &template.creatures {
         validate_route(&template, content, spawn).map_err(err)?;

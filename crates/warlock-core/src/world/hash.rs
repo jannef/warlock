@@ -19,6 +19,11 @@ pub(crate) fn unhashed_option<T>(value: &Option<T>) -> bool {
     value.is_none() || HASHING.with(Cell::get)
 }
 
+/// [`unhashed_vec`] for a map (a level's gravestones, `world/graves.rs`).
+pub(crate) fn unhashed_map<K, V>(map: &std::collections::BTreeMap<K, V>) -> bool {
+    map.is_empty() || HASHING.with(Cell::get)
+}
+
 /// Clears [`HASHING`] when dropped, so a panic while hashing leaves it as it was.
 struct Hashing;
 
@@ -41,8 +46,8 @@ pub(crate) fn fnv1a(bytes: &[u8]) -> u64 {
 
 impl WorldState {
     /// FNV-1a over the canonical JSON encoding of the state. All maps are `BTreeMap`s, so the
-    /// encoding is deterministic. Decoration marked [`unhashed_vec`] or [`unhashed_option`] is
-    /// left out.
+    /// encoding is deterministic. Decoration marked [`unhashed_vec`], [`unhashed_option`], or
+    /// [`unhashed_map`] is left out.
     pub fn hash(&self) -> u64 {
         HASHING.with(|h| h.set(true));
         let _reset = Hashing;
