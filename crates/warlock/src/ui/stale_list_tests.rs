@@ -1,42 +1,22 @@
-//! An object list left open while the run changes reads it again (#591): the study list stays
-//! beneath the dialog that studies, the scroll studied is used up whether the study fails or
-//! not, and the stacks after it move up a position. The list then shows what is carried now, so
-//! its letters never name another stack (the owner's report: the next pick studied a wax candle).
+//! An object list left open while the run changes reads it again (#591): the read list stays
+//! beneath the dialog that reads a grimoire, and shows what is carried and known now, so its
+//! letters never name another stack (the owner's report: the next pick studied a wax candle) and
+//! its marks never tell a chance that is gone.
 
+use super::grimoire_tests::hall;
 use super::screen_snapshots::{BASE, Case, press_keys, start, text};
 use crate::game::Game;
 use crate::render::console::Console;
 use bevy::prelude::App;
-use std::sync::Arc;
-use warlock_core::content::{Content, ContentFiles};
 
-/// A quiet lit hall, the player a wizard (trained in Spellcraft) with mana and `carry` in the
-/// pack (as a scenario's `carry`).
-fn hall(carry: &str) -> Arc<Content> {
-    let mut files = ContentFiles::builtin();
-    files.insert(
-        "levels/hall.toml",
-        "name = \"Hall\"\nambient = [255, 255, 255, 0]\nmap = '''\n#######\n#.....#\n#..@..#\n\
-         #.....#\n#######\n'''\n[legend]\n\"@\" = { terrain = \"floor\", spawn = \"player\" }\n",
-    );
-    files.insert(
-        "scenarios/hall.toml",
-        &format!(
-            "name = \"Hall\"\nstart_level = \"hall\"\ncarry = {carry}\n\
-             character = {{ race = \"human\", gender = \"female\", class = \"wizard\", name = \"Ada\" }}\n"
-        ),
-    );
-    Arc::new(Content::load(&files).expect("test content is valid"))
-}
-
-/// The hall, every scroll type known, nothing open yet.
-fn studying(carry: &str) -> App {
+/// The hall, the player a wizard (trained in Spellcraft) carrying `carry`, nothing open yet.
+fn reading(carry: &str) -> App {
     let case = Case {
         scenario: "hall",
-        actions: "identify",
+        run: true,
         ..BASE
     };
-    start(&case, hall(carry))
+    start(&case, hall(carry, "wizard"))
 }
 
 fn said(app: &App) -> Vec<String> {
@@ -50,71 +30,49 @@ fn screen(app: &App) -> String {
     text(app.world().resource::<Console>())
 }
 
-/// The owner's case: the one scroll studied, the wax candles after it. The list afterwards is
-/// empty and says so, and picking its old letter again studies nothing.
+fn begun(app: &App) -> usize {
+    (said(app).iter())
+        .filter(|m| m.contains("You begin to read"))
+        .count()
+}
+
+/// A cantrip learned: the list beneath is read again and tells no chance any more, and picking
+/// the grimoire again reads nothing.
 #[test]
-fn the_last_scroll_studied_leaves_the_list_empty() {
-    let mut app = studying("[\"scroll_of_fireball\", \"candle*3\"]");
-    press_keys(&mut app, "L");
+fn the_list_after_a_grimoire_is_read_tells_what_is_known_now() {
+    let mut app = reading("[\"grimoire_of_light\", \"candle*3\"]");
+    press_keys(&mut app, "r");
     assert!(
-        screen(&app).contains("a - ? a scroll of fireball"),
+        screen(&app).contains("a - ? a grimoire of light (learning: certain)"),
         "{}",
         screen(&app)
     );
     press_keys(&mut app, "a y");
     let shown = screen(&app);
-    assert!(!shown.contains("scroll of fireball ("), "{shown}");
-    insta::assert_snapshot!("scroll-study-used-up", shown);
-    press_keys(&mut app, "a y");
+    assert!(shown.contains("a - ? a grimoire of light"), "kept: {shown}");
+    assert!(!shown.contains("(learning:"), "{shown}");
+    insta::assert_snapshot!("grimoire-read-list-after", shown);
+    press_keys(&mut app, "a");
     let messages = said(&app);
+    assert_eq!(begun(&app), 1, "{messages:?}");
     assert_eq!(
-        (messages.iter())
-            .filter(|m| m.contains("You begin to study"))
-            .count(),
-        1,
-        "{messages:?}"
+        messages.last().map(String::as_str),
+        Some("You know this spell already.")
     );
     assert!(
         !messages.iter().any(|m| m.contains("candle")),
-        "a stale letter studied the candles: {messages:?}"
+        "a stale letter read the candles: {messages:?}"
     );
 }
 
-/// Two scrolls: after the first is used up, the list's `a` is the second, and choosing it
-/// studies that one, at its new position.
+/// Presses typed after a read in the same frame never reach the list before it is read again:
+/// they are dropped, so one read is made.
 #[test]
-fn the_list_after_a_study_names_what_is_carried_now() {
-    let mut app = studying("[\"scroll_of_fireball\", \"scroll_of_frost\", \"candle*3\"]");
-    press_keys(&mut app, "L a y");
-    let shown = screen(&app);
-    assert!(shown.contains("a - ? a scroll of frost"), "{shown}");
-    assert!(!shown.contains("scroll of fireball ("), "{shown}");
-    press_keys(&mut app, "a y");
+fn presses_after_a_read_in_the_same_frame_are_dropped() {
+    let mut app = reading("[\"grimoire_of_light\", \"candle*3\"]");
+    press_keys(&mut app, "r a y a y");
     let messages = said(&app);
-    assert!(
-        (messages.iter()).any(|m| m == "You begin to study the scroll of frost."),
-        "{messages:?}"
-    );
-    assert!(
-        !messages.iter().any(|m| m.contains("candle")),
-        "{messages:?}"
-    );
-}
-
-/// Presses typed after a study in the same frame never reach the list before it is read again:
-/// they are dropped, so one study is made.
-#[test]
-fn presses_after_a_study_in_the_same_frame_are_dropped() {
-    let mut app = studying("[\"scroll_of_fireball\", \"candle*3\"]");
-    press_keys(&mut app, "L a y a y");
-    let messages = said(&app);
-    assert_eq!(
-        (messages.iter())
-            .filter(|m| m.contains("You begin to study"))
-            .count(),
-        1,
-        "{messages:?}"
-    );
+    assert_eq!(begun(&app), 1, "{messages:?}");
     assert!(
         !messages.iter().any(|m| m.contains("candle")),
         "{messages:?}"

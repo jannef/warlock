@@ -5,7 +5,8 @@
 //!
 //! [`roll`] goes through the lines in order. Per line: one draw for its `chance`; one to pick
 //! among its alternatives when it has several; for a line with a `magic` chance, one draw for
-//! it, and for a magic piece the loot draws that make it ([`loot::make_as`]: at least magic, at
+//! it; for a spell scroll one draw for its grimoire ([`Content::grimoire_or`]); for a magic
+//! piece the loot draws that make it ([`loot::make_as`]: at least magic, at
 //! the floor's item level, with nobody's luck) with its material; for a plain one only its
 //! material, by the materials' `gear` weights at the creature's level and its type's faction's
 //! favoured materials ([`variant::draw`]; none
@@ -76,6 +77,10 @@ fn make(
     magic: bool,
     placed: (u8, Source),
 ) -> Stack {
+    // A spell scroll may be its grimoire (spec §8 "Spells": "Learning"): one draw, a scroll's.
+    let object = content.grimoire_or(rng, stack.object);
+    let grimoire = (object != stack.object).then(|| Stack::new(object, stack.count));
+    let stack = grimoire.as_ref().unwrap_or(stack);
     let mut made = make_piece(content, rng, stack, magic, placed);
     made.draw_wand_rung(content, rng);
     made

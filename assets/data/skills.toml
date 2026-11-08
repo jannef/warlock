@@ -30,7 +30,7 @@
 #                 "wedge" (a door wedged shut),
 #                 "steal" (an attempt to steal from someone, whatever comes of
 #                 it), "heal" (a try at treating yourself, whatever comes of it), "kick" (a kick
-#                 at a closed door), "study" (a spell studied from a scroll,
+#                 at a closed door), "study" (a grimoire read to learn its spell,
 #                 whatever comes of it), "pick" (a try at picking a
 #                 lock), "deal" (a deal made in a shop: goods paid for, or your own sold),
 #                 "appraise" (something you carry told for what it is: "identify" below),
@@ -434,11 +434,11 @@ id = "spellcraft"
 name = "Spellcraft"
 description = "Understanding spells: how they are woven and what they do."
 kind = "rules"
-# Studying a scroll is practice, and so is spending mana on a spell (#989), as Concentration's.
+# Reading a grimoire is practice, and so is spending mana on a spell (#989), as Concentration's.
 mark = [{ on = "study", chance = 100 }, { on = "cast", chance = 25 }]
-# Learning a spell from a scroll (spec §8 "Spells": "Learning"): `learn` is the spell level up to
-# which a scroll teaches for certain, 10 at 60, 30 at the soft cap, the last spell level at 150
-# (at least 1 for anyone trained in the skill; those who are not cannot learn from a scroll at
+# Learning a spell from a grimoire (spec §8 "Spells": "Learning"): `learn` is the spell level up to
+# which a grimoire teaches for certain, 10 at 60, 30 at the soft cap, the last spell level at 150
+# (at least 1 for anyone trained in the skill; those who are not cannot learn from a grimoire at
 # all), and up to which a scroll is read with no check (spec §8 "Scrolls"). `study` is the skill's value / 10 off the check above that, +10 at 100, +20 at 200.
 benefit = [
     { effect = "learn", curve = [[0, 0], [10, 0], [60, 10], [100, 30], [150, 70]] },

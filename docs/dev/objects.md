@@ -7,7 +7,9 @@ Objects (spec §5, §6, §7; M11): every object in `data/objects/` (one file per
 its id; a family file only for variants always edited together, `arrows.toml`) defines its glyph,
 color, item class (`class`, below), what it is made of (`materials`, its parts, below; materials
 in `data/materials/`, one file per material), and weight in grams (a scroll also what reading it
-does, `read`: `docs/dev/scrolls.md`)
+does, `read`: `docs/dev/scrolls.md`; a grimoire, generated for each spell scroll by
+`content/grimoire.rs` from `data/grimoires.toml`, the spell it teaches, `ObjectDef::grimoire`:
+`docs/dev/spells.md` "Learning")
 (`content/object.rs`: `ObjectDef`, `ObjectId`, and the `"id*N"` placement strings;
 `content/material.rs`); the tables are directories read in path order, see "Content
 directories" in `docs/dev/content.md`. Every creature has a base `weight`. `object.rs` holds the runtime side: `Stack` (object + count; stackable objects join,

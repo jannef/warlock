@@ -217,6 +217,8 @@ impl Shops {
         object != self.currency
             && def.value > 0
             && def.burning.is_none()
+            // A grimoire is stocked only as a spell scroll drawn that turns out to be one.
+            && def.grimoire.is_none()
             && self.get(kind).stock.contains(&def.class)
             && !self.get(kind).never.contains(&object)
     }

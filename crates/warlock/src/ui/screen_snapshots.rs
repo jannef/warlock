@@ -1343,42 +1343,6 @@ const CASES: &[Case] = &[
         keys: Some("r a k Enter"),
         ..BASE
     },
-    // Studying (spec §8 "Spells"): the scrolls whose type is known and whose spell is not, with
-    // the chance in words; an unknown scroll is not offered.
-    Case {
-        name: "scroll-study-list",
-        scenario: "traps",
-        character: Some("human,female,wizard"),
-        actions: "move:E pickup identify",
-        keys: Some("L"),
-        ..BASE
-    },
-    Case {
-        name: "scroll-study-dialog",
-        scenario: "traps",
-        character: Some("human,female,wizard"),
-        actions: "move:E pickup identify",
-        keys: Some("L a"),
-        ..BASE
-    },
-    // A paladin: trained in Spellcraft, and no caster's random scrolls (#1104) to study.
-    Case {
-        name: "scroll-study-none",
-        scenario: "traps",
-        character: Some("human,male,paladin"),
-        actions: "move:E pickup",
-        keys: Some("L"),
-        ..BASE
-    },
-    // A character not trained in Spellcraft is told so, whatever they carry.
-    Case {
-        name: "scroll-study-untrained",
-        scenario: "traps",
-        character: Some("human,male,warrior"),
-        actions: "move:E pickup identify",
-        keys: Some("L"),
-        ..BASE
-    },
     // Wands (spec §8 "Magic items": "Wands"): the trap hall's two, unknown, then identified;
     // aiming one from the missile weapon slot.
     Case {

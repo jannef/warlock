@@ -10,7 +10,9 @@
 //! (a stackable one joins a stack of the same), and a `wield` or `wear` line's item into the first
 //! free slot it fits; one that finds none stays in the pack. Then come the class's random spell
 //! scrolls, if it has any (`random_scrolls`, the casters'): its count rolled, then one draw per
-//! scroll among the spells below its level, each carried. Last the `fill` lines, the kits in the
+//! scroll among the spells below its level, each carried. Every spell scroll a kit gives, a
+//! line's or a random one, is its grimoire instead by the grimoires' chance (one draw a scroll,
+//! after the scroll is made; spec §8 "Spells": "Learning"). Last the `fill` lines, the kits in the
 //! same order: a fill line that applies draws its alternative, and its item is made and worn or
 //! wielded only if a slot it fits is still free, else left out (a race's everyday clothes and
 //! shoes, which yield to the class's). Nothing of any kit is worn or wielded in a slot the race
@@ -125,6 +127,7 @@ pub fn roll(
     {
         for _ in 0..random.count.roll(&mut rng) {
             let scroll = random.scrolls[rng.index(random.scrolls.len())];
+            let scroll = content.grimoire_or(&mut rng, scroll);
             pack.put(Stack::new(scroll, 1), content);
         }
     }
@@ -168,11 +171,31 @@ fn give(
                 plain
             }
         };
-        let at = pack.put(stack, content);
-        if line.keep != Keep::Carry {
-            pack.equip(at, content);
+        for stack in with_grimoires(content, rng, stack) {
+            let at = pack.put(stack, content);
+            if line.keep != Keep::Carry {
+                pack.equip(at, content);
+            }
         }
     }
+}
+
+/// `stack` as a kit gives it (spec §8 "Spells": "Learning"): each spell scroll in it is its
+/// grimoire with the grimoires' chance, one draw a scroll, so a stack may part in two (the
+/// scrolls, then the grimoires); anything else as it is, with no draw.
+fn with_grimoires(content: &Content, rng: &mut Rng, stack: Stack) -> Vec<Stack> {
+    let Some(grimoire) = content.grimoires().of(stack.object) else {
+        return vec![stack];
+    };
+    let books = (0..stack.count)
+        .filter(|_| content.grimoire_or(rng, stack.object) == grimoire)
+        .count() as u32;
+    let scrolls = Stack::new(stack.object, stack.count - books);
+    (scrolls.count > 0)
+        .then_some(scrolls)
+        .into_iter()
+        .chain((books > 0).then(|| Stack::new(grimoire, books)))
+        .collect()
 }
 
 /// The types a run starts knowing (spec §8 "Scrolls", "Potions"): every type with a label that
@@ -336,8 +359,9 @@ mod tests {
                 "scroll_of_frost",
                 "scroll_of_lightning",
             ];
+            // A grimoire counts as its scroll: one in ten is (`with_grimoires`).
             let found: Vec<_> = (pack.items.iter())
-                .map(|s| CONTENT.object(s.object).id.as_str())
+                .map(|s| CONTENT.object(as_scroll(s.object)).id.as_str())
                 .filter(|o| spells.contains(o))
                 .map(str::to_string)
                 .collect();
@@ -762,6 +786,43 @@ mod tests {
         assert!(rapiers[0] > 0 && rapiers[1] > 0, "{rapiers:?}");
     }
 
+    /// A grimoire as the spell scroll a kit names (`grimoire_of_X` is `scroll_of_X`); anything
+    /// else as it is.
+    fn as_scroll(object: ObjectId) -> ObjectId {
+        let id = &CONTENT.object(object).id;
+        (id.strip_prefix("grimoire_of_"))
+            .and_then(|rest| CONTENT.object_id(&format!("scroll_of_{rest}")))
+            .unwrap_or(object)
+    }
+
+    /// Whether `object` is read: a scroll, or a grimoire.
+    fn readable(object: ObjectId) -> bool {
+        let def = CONTENT.object(object);
+        def.read.is_some() || def.grimoire.is_some()
+    }
+
+    #[test]
+    fn a_kits_spell_scrolls_are_grimoires_one_in_ten() {
+        let (mut scrolls, mut grimoires) = (0, 0);
+        for seed in 0..400 {
+            let pack = start(&CONTENT, "human,female,wizard", seed).kit;
+            for stack in &pack.items {
+                let def = CONTENT.object(stack.object);
+                if def.grimoire.is_some() {
+                    grimoires += stack.count;
+                } else if matches!(def.read, Some(crate::content::Reading::Cast(_))) {
+                    scrolls += stack.count;
+                }
+            }
+        }
+        let share = grimoires * 100 / (scrolls + grimoires);
+        assert!(
+            (6..=14).contains(&share),
+            "{grimoires} of {}",
+            scrolls + grimoires
+        );
+    }
+
     /// How many scrolls the kit lines of `s` give (each line's first alternative: the wizard's
     /// attack scroll is one whichever it is).
     fn fixed_scrolls(s: &Start) -> u32 {
@@ -787,7 +848,7 @@ mod tests {
             for seed in 0..120 {
                 let s = start(&CONTENT, &format!("human,female,{}", class.id), seed);
                 let scrolls: u32 = (s.kit.items.iter())
-                    .filter(|st| CONTENT.object(st.object).read.is_some())
+                    .filter(|st| readable(st.object))
                     .map(|st| st.count)
                     .sum();
                 let extra = scrolls - fixed_scrolls(&s);
@@ -801,11 +862,11 @@ mod tests {
                 };
                 for stack in &s.kit.items {
                     let Some(crate::content::Reading::Cast(cast)) =
-                        &CONTENT.object(stack.object).read
+                        &CONTENT.object(as_scroll(stack.object)).read
                     else {
                         continue;
                     };
-                    if !named(stack.object) {
+                    if !named(as_scroll(stack.object)) {
                         assert!(CONTENT.spell(cast.spell).level < 10, "{}", class.id);
                     }
                 }

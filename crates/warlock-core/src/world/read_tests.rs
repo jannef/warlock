@@ -119,7 +119,7 @@ fn builtin_scrolls_cast_their_spells_at_their_rungs() {
         let at = def.roll_at(usize::from(cast.rungs)).expect("a roll");
         assert_eq!(at.to_string(), roll, "{scroll}");
         assert_eq!(
-            reading(scroll).teaches(),
+            reading(scroll).spell(),
             Some(cast.spell),
             "{scroll} teaches its spell"
         );
@@ -244,7 +244,7 @@ fn the_scroll_of_restoration_mends_and_restores() {
         reading,
         Reading::Cleanse(c) if c.mends && c.restores
     ));
-    assert_eq!(reading.teaches(), None);
+    assert_eq!(reading.spell(), None);
     let item = w.state.player().inventory.len();
     w.player_mut().inventory.push(Stack::new(id, 2));
     let action = format!("read:{}", crate::action::position_text(item));
@@ -259,13 +259,6 @@ fn the_scroll_of_restoration_mends_and_restores() {
     // Aimed, it is refused too.
     let aimed = run(&mut w, &format!("{action}:2,1"));
     assert!(!aimed[0].took_turn);
-    // Studied, it teaches nothing.
-    let study = run(
-        &mut w,
-        &format!("study:{}", crate::action::position_text(item)),
-    );
-    assert!(!study[0].took_turn);
-    assert_eq!(count(&w, "scroll_of_restoration"), 2);
     // Damaged Dexterity, drained Strength.
     let strength = w.state.player().stats.score(Stat::Strength);
     let me = w.player_mut();

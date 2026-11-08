@@ -9,7 +9,8 @@ Magic items (spec §8 "Magic items", #149) live in `warlock-core`: `content/affi
 "Content directories" in `docs/dev/content.md`: `ItemKind`, `Effect`, `AffixDef` with tiers,
 `Rarity`), base item fields in `content/object.rs` (`kind`, `level`, `frequency`,
 `attack_cost`; the weapon skill `category` names the item in descriptions, `weapon_noun`; loot
-also draws scrolls, which have no `kind` and are never magic), and
+also draws scrolls, which have no `kind` and are never magic, a spell scroll its grimoire one
+time in ten, `Content::grimoire_or`, docs/dev/spells.md "Learning"), and
 `magic/` (`mod.rs`: `Magic`/`Affix`, the instance on a `Stack` (saved, hashed), `check`;
 `mods.rs`: `Mods::local` (an item's own and its attacks', with what an anvil's work added,
 `magic/worked.rs`, docs/dev/special-rooms.md) and `Mods::worn` (what an actor wears

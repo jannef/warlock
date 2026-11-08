@@ -388,6 +388,6 @@ fn a_backfired_scroll_of_a_type_carries_its_rule() {
     };
     w.player_mut().hp = 1000;
     let mut events = Vec::new();
-    w.backfire_spell(scroll, object, &mut events);
+    w.backfire_spell(scroll.spell, object, &mut events);
     assert!(w.state.player().effects.has(sluggish));
 }

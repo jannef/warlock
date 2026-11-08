@@ -1,38 +1,35 @@
-//! Learning spells (spec §8 "Spells", the magic design §4, the spell scaling design §5.4):
-//! [`Action::Study`](crate::Action::Study).
+//! Learning spells (spec §8 "Spells", the magic design §4, the spell scaling design §5.4): reading
+//! a grimoire ([`Action::Read`](crate::Action::Read) of one, `read.rs`; #1260).
 //!
 //! A character knows a set of spells for good: their class abilities' (talents) and those
-//! learned by study ([`Actor::spells`], saved). A spell scroll whose `read` table `teaches` a
-//! spell can be studied once the player knows the scroll's type (identified by reading any copy
-//! or by a scroll of identify), unless they know its spell already:
+//! learned from grimoires ([`Actor::spells`], saved). A grimoire ([`crate::content::grimoire`])
+//! teaches the spell of its scroll, and is known on sight (no label):
 //!
-//! - **Refusals** (no time, the scroll kept): no such stack, a thing that teaches nothing ("There
-//!   is no spell in it to learn."), a scroll under its label ("You do not know what this says."),
-//!   a spell known ("You know this spell already."), no mana at all ("You have no gift for
-//!   magic."), no training in Spellcraft ([`UNTRAINED`]), and whatever a status blocks (Raging
-//!   blocks `study`).
-//! - **Learning** ([`Actor::learning`]): the spell level up to which a scroll teaches for certain,
-//!   the `learn` benefit of the skill that has one (Spellcraft) at the skill's value with what
-//!   items and talents add, at least 1. A character not trained in that skill has none and cannot
-//!   study at all, cantrips included; an item's or a talent's bonus alone trains nobody. Reading a
-//!   scroll to cast it, and the spells a class grants, need none of this.
+//! - **Refusals** (no time): a spell known ("You know this spell already."), no mana at all ("You
+//!   have no gift for magic."), no training in Spellcraft ([`UNTRAINED`]), and whatever a status
+//!   blocks (Raging blocks `study`).
+//! - **Learning** ([`Actor::learning`]): the spell level up to which a grimoire teaches for
+//!   certain, the `learn` benefit of the skill that has one (Spellcraft) at the skill's value with
+//!   what items and talents add, at least 1. A character not trained in that skill has none and
+//!   cannot learn at all, cantrips included; an item's or a talent's bonus alone trains nobody.
+//!   Reading a scroll to cast it, and the spells a class grants, need none of this.
 //! - **Time**: turn after turn of the `study` action ([`World::keep_at`], like a meal),
 //!   `turns_base + turns_per_level × level` of them (`data/study.toml`), Quick study's `percent`
-//!   less. It stops
-//!   early as a rest does (a creature that disturbs a rest comes into view, a message is said:
-//!   a blow, a status); then the time is lost and the scroll kept (design §14 q1's default).
-//! - **The check** at the end, on the scroll used up (Scroll savant never keeps it: §14 q7):
-//!   overreach is the spell's level less the learning. At 0 or less the spell is learned, no
-//!   draw. Above, a 2d12 check ([`check::check`]) with the bonuses (Intelligence's modifier, the
-//!   skills' `study` benefit (Spellcraft, Decipher script), the class's affinity with the
-//!   school, Quick study) against [`StudyRules::difficulty`] (the overreach, Overreach's third
-//!   off, and the levels of the spells known). Made: learned.
+//!   less. It stops early as a rest does (a creature that disturbs a rest comes into view, a
+//!   message is said: a blow, a status); then the time is lost.
+//! - **The check** at the end: overreach is the spell's level less the learning. At 0 or less
+//!   the spell is learned, no draw. Above, a 2d12 check ([`check::check`]) with the bonuses
+//!   (Intelligence's modifier, the skills' `study` benefit (Spellcraft, Decipher script), the
+//!   class's affinity with the school, Quick study) against [`StudyRules::difficulty`] (the
+//!   overreach, Overreach's third off, and the levels of the spells known). Made: learned.
 //! - **Failure**: a mishap (`data/mishaps/`), one draw by weight among the band's and the lucky
 //!   ones ([`crate::content::Band`], by the overreach), then its effect, through the code the
-//!   game has: a status ([`World::afflict`]), the scroll's own spell going off on the reader
-//!   (its burst around them, or its bolt on them; a death by it is [`Cause::Scroll`]), mana lost,
-//!   a teleport (the trap's), a stat training mark lost or won, a drain ([`World::drain`]: a
-//!   Willpower check), a hostile summoned next to the reader, or the spell learned anyway.
+//!   game has: a status ([`World::afflict`]), the spell going off on the reader (its burst around
+//!   them; a death by it is [`Cause::Scroll`], the grimoire's), mana lost, a teleport (the trap's),
+//!   a stat training mark lost or won, a drain ([`World::drain`]: a Willpower check), a hostile
+//!   summoned next to the reader, or the spell learned anyway.
+//! - **The grimoire is kept** whatever comes of it: it may be read again after a failure (no
+//!   limit but the time), and sold or kept after it taught.
 //!
 //! Determinism: the check's two draws only when there is a check, the mishap's one draw only on
 //! a failure, then the effect's own (a backfire's damage roll, a drain's, a teleport's hash).
@@ -41,22 +38,22 @@
 
 use super::spell::Caster;
 use super::{Actor, Cause, Ended, Spent, World};
-use crate::action::{Event, Positions};
+use crate::action::Event;
 use crate::character::Character;
 use crate::check;
 use crate::content::{
-    ActionKind, Band, Content, CreatureSpawn, Drain, Mishap, MishapEffect, ObjectId, Reading,
-    SpellId, StudyRules,
+    ActionKind, Band, Content, CreatureSpawn, Drain, Mishap, MishapEffect, ObjectId, SpellId,
+    StudyRules,
 };
 use crate::geom::Dir;
 use crate::skills::{Effect, Use};
 use crate::stats::Stat;
 use std::cell::Cell;
 
-/// What a character not trained in Spellcraft is told when they would study a scroll.
-pub const UNTRAINED: &str = "You have no training in Spellcraft; you cannot make sense of how to learn a spell from a scroll.";
+/// What a character not trained in Spellcraft is told when they would read a grimoire.
+pub const UNTRAINED: &str = "You have no training in Spellcraft; you cannot make sense of how to learn a spell from a grimoire.";
 
-/// A study under way: the stack studied (its position and object as the study began), the
+/// A study under way: the grimoire read (its position and object as the study began), the
 /// spell it teaches, and the turns it takes.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub(super) struct Lesson {
@@ -177,8 +174,9 @@ impl World {
         study_odds(self.state.player(), &self.content, character, spell)
     }
 
-    /// The player begins to study inventory stack `item` (module docs), or is refused.
-    pub(super) fn start_study(&mut self, item: usize) -> Spent {
+    /// The player begins to read grimoire stack `item`, which teaches `spell` (module docs), or
+    /// is refused.
+    pub(super) fn start_study(&mut self, item: usize, spell: SpellId) -> Spent {
         let content = self.content.clone();
         let me = self.state.player();
         let Some(stack) = me.inventory.get(item) else {
@@ -186,20 +184,6 @@ impl World {
             return Spent::Nothing;
         };
         let object = stack.object;
-        let what = self.lore().describe(&stack.single());
-        let teaches = (content.object(object).read.as_ref()).and_then(Reading::teaches);
-        let Some(spell) = teaches.filter(|&s| content.spell_of(s).is_some()) else {
-            if self.lore().label(object).is_some() {
-                self.say("You do not know what this says.");
-            } else {
-                self.say(format!("There is no spell in {what} to learn."));
-            }
-            return Spent::Nothing;
-        };
-        if self.lore().label(object).is_some() {
-            self.say("You do not know what this says.");
-            return Spent::Nothing;
-        }
         if me.knows_spell(&content, spell) {
             self.say("You know this spell already.");
             return Spent::Nothing;
@@ -213,13 +197,13 @@ impl World {
             return Spent::Nothing;
         }
         let (Some(rules), Some(def)) = (content.study_rules(), content.spell_of(spell)) else {
-            self.say("You cannot study it.");
+            self.say("You cannot make sense of it.");
             return Spent::Nothing;
         };
         let percent = me.talent_mods(&content).study_percent;
         let turns = study_turns(rules, def.level, percent);
         let title = self.lore().title(&stack.single());
-        self.say(format!("You begin to study the {title}."));
+        self.say(format!("You begin to read the {title}."));
         Spent::Study(Lesson {
             item,
             object,
@@ -243,30 +227,29 @@ impl World {
             Ended::Died => {}
             _ if left.get() == 0 => self.finish_study(lesson, events),
             Ended::Came(came) => {
-                let text = format!("{}; you stop studying.", self.came_line(came));
+                let text = format!("{}; you stop reading.", self.came_line(came));
                 self.say(text);
             }
-            Ended::Said | Ended::Done => self.say("You stop studying."),
+            Ended::Said | Ended::Done => self.say("You stop reading."),
         }
     }
 
-    /// The last turn of a study is done: the scroll is used up, then the check, and the spell
-    /// learned or a mishap.
+    /// The last turn of a study is done: the check, and the spell learned or a mishap; the
+    /// grimoire is kept.
     fn finish_study(&mut self, lesson: Lesson, events: &mut Vec<Event>) {
         let pack = &self.state.player().inventory;
         let at = match pack.get(lesson.item) {
             Some(s) if s.object == lesson.object => Some(lesson.item),
             _ => pack.iter().position(|s| s.object == lesson.object),
         };
-        let Some(at) = at else {
-            self.say("The scroll is gone.");
+        if at.is_none() {
+            self.say("The grimoire is gone.");
             return;
-        };
+        }
         if self.trains(Use::Study) {
             self.train(Use::Study);
         }
         let odds = self.player_study_odds(lesson.spell);
-        self.use_scroll(at);
         let learned = match odds.and_then(|o| o.check) {
             None => true,
             Some((bonus, difficulty)) => check::check(&mut self.state.rng, bonus, difficulty),
@@ -275,7 +258,7 @@ impl World {
             self.learn_spell(lesson.spell);
             return;
         }
-        self.say("The words twist away from you, and the scroll crumbles to dust.");
+        self.say("The words twist away from you.");
         let overreach = odds.map_or(1, |o| o.overreach);
         let band = self
             .content
@@ -291,28 +274,15 @@ impl World {
         let name = (self.content.spell_of(spell)).map_or_else(String::new, |d| d.name.clone());
         let new = self.player_mut().spells.insert(spell);
         self.say(format!(
-            "The scroll crumbles as its words settle in your mind: you have learned {name}."
+            "The words settle in your mind: you have learned {name}."
         ));
-        // A spell learned by one's own effort pays once (a known spell is never studied again).
+        // A spell learned by one's own effort pays once (a known spell is never read again).
         let level = self.content.spell_of(spell).map_or(0, |d| d.level);
         let xp = self.content.experience().spell_xp(level);
         if new && xp > 0 {
             self.news
                 .push(format!("You gain {xp} experience for learning {name}."));
             self.grant_xp(xp);
-        }
-    }
-
-    /// Takes one of inventory stack `item` from the pack (the last empties it).
-    fn use_scroll(&mut self, item: usize) {
-        let player = self.player_mut();
-        let Some(stack) = player.inventory.get_mut(item) else {
-            return;
-        };
-        stack.count -= 1;
-        if stack.count == 0 {
-            player.inventory.remove(item);
-            player.equipment.after_removal(&Positions::of([item]));
         }
     }
 
@@ -384,28 +354,24 @@ impl World {
         }
     }
 
-    /// The spell of the scroll studied goes off on its reader (`backfire_spell`). A death by it
-    /// is the scroll's.
+    /// The spell of the grimoire read goes off on its reader (`backfire_spell`). A death by it
+    /// is the grimoire's.
     fn backfire(&mut self, lesson: Lesson, events: &mut Vec<Event>) {
-        let content = self.content.clone();
-        let object = lesson.object;
-        if let Some(Reading::Cast(scroll)) = &content.object(object).read {
-            self.backfire_spell(*scroll, object, events);
-        }
+        self.backfire_spell(lesson.spell, lesson.object, events);
     }
 
-    /// A scroll of a spell of `data/spells/` backfires: a damage spell goes off as a burst
+    /// Spell `spell`, of the grimoire `object`, backfires: a damage spell goes off as a burst
     /// around the reader (its own radius, else 1) at the spell's base, no rung and no hooks (the
     /// spell scaling design §7.5); a spell of any other kind only fizzles (the mishap's message
     /// is all).
     pub(super) fn backfire_spell(
         &mut self,
-        scroll: crate::content::SpellScroll,
+        spell: SpellId,
         object: ObjectId,
         events: &mut Vec<Event>,
     ) {
         let content = self.content.clone();
-        let def = content.spell(scroll.spell);
+        let def = content.spell(spell);
         let Some(damage) = def.damage else {
             return;
         };

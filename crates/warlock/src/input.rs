@@ -91,12 +91,9 @@ pub enum KeyCommand {
     MoreSkip,
     /// Choose something to consume (eat), from the floor or the pack.
     Eat,
-    /// Choose a scroll to read: a spell is aimed next (a cursor on the map), the scroll of
-    /// identify asks what to read it on.
+    /// Choose a scroll or grimoire to read: a spell is aimed next (a cursor on the map), the
+    /// scroll of identify asks what to read it on, a grimoire asks whether to learn its spell.
     Read,
-    /// Choose a scroll to study, to learn its spell for good (spec §8 "Spells"): the scrolls
-    /// whose type is known and whose spell is not, then a dialog with the chance in words.
-    Study,
     /// Move a cursor over the map to read what is there (no time passes).
     Look,
     /// Shoot or throw what is in the missile weapon slot (a cursor on the map): a launcher
@@ -331,7 +328,6 @@ impl KeyCommand {
             KeyCommand::MoreSkip => "Skip the rest (Esc always works)",
             KeyCommand::Eat => "Consume",
             KeyCommand::Read => "Read a scroll",
-            KeyCommand::Study => "Study a scroll's spell",
             KeyCommand::Look => "Look around",
             KeyCommand::Missile => "Throw or shoot the missile weapon",
             KeyCommand::Throw => "Throw from the pack",
@@ -480,7 +476,6 @@ impl Default for Bindings {
             (ch("b"), Rest),
             (ch("e"), Eat),
             (ch("r"), Read),
-            (ch("L"), Study),
             (ch("l"), Look),
             (ch("t"), Missile),
             (ch("T"), Throw),
@@ -1048,10 +1043,6 @@ impl Gameplay<'_> {
             }
             (InputMode::Normal, KeyCommand::Eat) => {
                 open = Some(ScreenAction::Open(ScreenName::Eat));
-                InputMode::Normal
-            }
-            (InputMode::Normal, KeyCommand::Study) => {
-                open = Some(ScreenAction::Open(ScreenName::Study));
                 InputMode::Normal
             }
             (InputMode::Normal, KeyCommand::Read) => {

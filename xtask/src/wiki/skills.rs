@@ -93,7 +93,7 @@ fn effect_name(effect: Effect) -> &'static str {
         Effect::SearchReach => "searching farther around you",
         Effect::Spot => "noticing hidden things in passing, not traps",
         Effect::DetectTraps => "finding hidden traps, searching and in passing",
-        Effect::Study => "studying spells from scrolls",
+        Effect::Study => "learning spells from grimoires",
         Effect::Learn => "what a scroll teaches for certain, and reads for certain",
         Effect::Decipher => "reading a scroll you cannot simply read",
         Effect::Disarm => "disarming traps",

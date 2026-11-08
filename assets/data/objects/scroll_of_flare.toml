@@ -1,7 +1,7 @@
 # A scroll of flare (spec §8 "Scrolls", "Spells"): read it (`r`) and aim, and it casts Flare, a
-# level-2 spell, at its own rungs, free of mana: a flash that stuns all it reaches with eyes.
-# Study it (`L`), and you may learn the spell for good. Level and frequency by its spell's level
-# (README.toml): the lower, the commoner the scroll.
+# level-2 spell, at its own rungs, free of mana: a flash that stuns all it reaches with eyes. Its
+# grimoire teaches the spell for good. Level and frequency by its spell's level (README.toml): the
+# lower, the commoner the scroll.
 [[object]]
 id = "scroll_of_flare"
 name = "scroll of flare"

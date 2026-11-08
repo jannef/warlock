@@ -1317,8 +1317,7 @@ fn progress_rows(world: &World) -> Vec<String> {
             why.join("; ")
         ));
     }
-    // What a scroll teaches for certain (spec §8 "Spells": "Learning"), then the study check's
-    // exact odds for each scroll the player could study.
+    // What a grimoire teaches for certain (spec §8 "Spells": "Learning").
     let trained = (player.skills.iter()).find(|&(id, _)| {
         let benefits = &world.content().skill(id).benefits;
         benefits
@@ -1333,28 +1332,12 @@ fn progress_rows(world: &World) -> Vec<String> {
         ),
         _ => "cannot learn: not trained in Spellcraft".to_string(),
     });
-    for study in view.studies() {
-        if let Some(odds) = world.player_study_odds(study.spell) {
-            let check = match odds.check {
-                None => "certain".to_string(),
-                Some((bonus, difficulty)) => {
-                    format!("{bonus:+} against {difficulty}, {}/144", odds.ways())
-                }
-            };
-            rows.push(format!(
-                "study {} {}: overreach {}, {check}",
-                position_text(study.item),
-                world.content().spell_of(study.spell).map_or("", |d| &d.id),
-                odds.overreach
-            ));
-        }
-    }
     rows
 }
 
 /// The spells the player knows, one a line with its spell level and cost, then what it does now
 /// as the abilities menu will show it (`Fireball (level 11, 26 mana): 4d6 fire, range 11,
-/// radius 2`), then the scrolls they could study with the chance in words.
+/// radius 2`).
 fn spell_rows(view: &PerceptionView<'_>) -> Vec<String> {
     let content = view.content();
     let known = (view.own_spells().into_iter()).filter_map(|spell| {
@@ -1371,18 +1354,7 @@ fn spell_rows(view: &PerceptionView<'_>) -> Vec<String> {
             def.name, def.level
         ))
     });
-    let studies = (view.studies().into_iter()).filter_map(|s| {
-        let def = content.spell_of(s.spell)?;
-        let stack = view.inventory().get(s.item)?;
-        Some(format!(
-            "study {}, {}: {}, {}",
-            position_text(s.item),
-            view.lore().describe(&stack.single()),
-            def.name,
-            s.chance
-        ))
-    });
-    let rows: Vec<String> = known.chain(studies).collect();
+    let rows: Vec<String> = known.collect();
     if rows.is_empty() {
         vec!["no spells".into()]
     } else {
@@ -1411,9 +1383,8 @@ fn spell_does(view: &PerceptionView<'_>, spell: crate::content::SpellId) -> Vec<
 /// The spells the player knows (`[{"id", "level", "cost", "roll", "damage_type", "reach"}]`:
 /// the roll's text as the abilities menu shows it, `"healed"` for a heal's type, `"called"` for
 /// a summon's count, `reach` with
-/// `range`, `length`, `radius`, `jumps`; each null where none) and the scrolls they could study
-/// (`[{"letter", "spell", "chance"}]`).
-fn spells_json(view: &PerceptionView<'_>) -> (Value, Value) {
+/// `range`, `length`, `radius`, `jumps`; each null where none).
+fn spells_json(view: &PerceptionView<'_>) -> Value {
     use crate::content::Shape;
     let content = view.content();
     let known: Vec<Value> = (view.own_spells().into_iter())
@@ -1445,16 +1416,7 @@ fn spells_json(view: &PerceptionView<'_>) -> (Value, Value) {
             }))
         })
         .collect();
-    let studies: Vec<Value> = (view.studies().into_iter())
-        .map(|s| {
-            json!({
-                "letter": position_text(s.item),
-                "spell": content.spell_of(s.spell).map(|d| d.id.clone()),
-                "chance": s.chance,
-            })
-        })
-        .collect();
-    (Value::Array(known), Value::Array(studies))
+    Value::Array(known)
 }
 
 /// The player's abilities, one a line in menu order: its name, its source, and what it asks for
@@ -2263,8 +2225,7 @@ pub fn json(world: &World, layers: &[Layer], include_state: bool) -> Value {
         "talents": talents,
         "due": view.due(),
         "abilities": abilities_json(&view),
-        "spells": spells_json(&view).0,
-        "studies": spells_json(&view).1,
+        "spells": spells_json(&view),
         "quests": quests_json(&view),
         "story": story_json(world),
     });

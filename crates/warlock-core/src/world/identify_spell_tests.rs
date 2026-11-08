@@ -141,22 +141,28 @@ fn casting_identify_names_a_stack_and_spends_its_mana() {
 }
 
 #[test]
-fn the_scroll_of_identify_teaches_identify() {
+fn the_grimoire_of_identify_teaches_identify() {
     let mut w = world(100);
     // Spellcraft 40: learning 6, the spell's level, so the lesson is certain.
     let spellcraft = w.content.skill_id("spellcraft").expect("skill");
     w.player_mut().skills.add(spellcraft, 40);
     let id = spell(&w);
     assert!(!w.state.player().knows_spell(&w.content, id));
+    let grimoire = w.content.object_id("grimoire_of_identify").expect("object");
+    w.player_mut().inventory.push(Stack::new(grimoire, 1));
+    let at = w.state.player().inventory.len() - 1;
     let studies = w.perception().studies();
     assert!(
-        studies.iter().any(|s| s.item == 0 && s.spell == id),
-        "on the study list"
+        studies.iter().any(|s| s.item == at && s.spell == id),
+        "the read list tells its chance"
     );
-    let out = run(&mut w, "study:a");
+    let out = run(
+        &mut w,
+        &format!("read:{}", crate::action::position_text(at)),
+    );
     assert!(out[0].took_turn);
     assert!(w.state.player().knows_spell(&w.content, id), "{}", last(&w));
-    assert_eq!(w.state.player().inventory[0].count, 1, "one scroll used up");
+    assert_eq!(w.state.player().inventory[at].count, 1, "the grimoire kept");
 }
 
 #[test]

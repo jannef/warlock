@@ -636,8 +636,13 @@ fn check_shop(level: &LevelTemplate, shop: &ShopPlan) {
         .collect();
     let (least, _) = shops.get(shop.kind).items;
     assert!(goods.len() >= usize::from(least).min(4), "{goods:?}");
+    // A grimoire is a spell scroll drawn that turned out to be one.
     for stack in goods {
-        assert!(shops.stocks(&CONTENT, shop.kind, stack.object), "{stack:?}");
+        let grimoire = CONTENT.object(stack.object).grimoire.is_some();
+        assert!(
+            grimoire || shops.stocks(&CONTENT, shop.kind, stack.object),
+            "{stack:?}"
+        );
     }
     let others = (level.creatures.iter()).filter(|c| shop.contains(c.pos) && c.pos != shop.post);
     assert_eq!(others.count(), 0);

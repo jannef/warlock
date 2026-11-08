@@ -59,8 +59,8 @@ pub(super) fn scrolls(content: &Content) -> String {
                     n => format!("{n} rungs up its ladder"),
                 };
                 let what = format!(
-                    "Casts {} {rung}, free of mana (see the spell list), and teaches it if \
-                     studied",
+                    "Casts {} {rung}, free of mana (see the spell list); its grimoire teaches \
+                     it",
                     def.name
                 );
                 let roll = def.roll_at(usize::from(scroll.rungs)).map_or_else(
@@ -87,8 +87,8 @@ pub(super) fn scrolls(content: &Content) -> String {
                     _ => "Gives back every point [drains](stats.md#drained-stats) took",
                 };
                 let what = format!(
-                    "{does}; casts no spell, so there is nothing to study. Refused, and kept, \
-                     with nothing to restore"
+                    "{does}; casts no spell, so it has no grimoire. Refused, and kept, with \
+                     nothing to restore"
                 );
                 (
                     what,

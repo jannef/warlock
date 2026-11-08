@@ -1,0 +1,22 @@
+# Grimoires (spec §8 "Spells": "Learning"; #1260): the books spells are learned from. When content
+# loads, every scroll of a spell (`read` of kind `spell`, objects/scroll_of_*.toml) gets a grimoire
+# beside it: `grimoire_of_X` for `scroll_of_X`, named "grimoire of X", at the scroll's level, worth
+# `value` times the scroll, and otherwise what `[object]` below says (the objects' fields,
+# objects/README.toml). A grimoire teaches its scroll's spell: reading it (`r`) is a study
+# (study.toml). Its title is plain, as books are written in words, not runes: a grimoire is known
+# on sight and never labelled. It is kept after it teaches, and may be read again after a failure.
+#
+# A grimoire is never loot by itself: whenever a scroll of a spell is made at random (loot, a
+# chest, a hoard, a vault's loot pool, a shop's stock, a creature's gear, a starting kit, scroll by
+# scroll), it is its grimoire instead with `chance` in a hundred. A scroll that a level, a shop, or
+# a scenario names by hand stays a scroll.
+chance = 10
+value = 5
+
+[object]
+glyph = "?"
+fg = "#b5835a"
+class = "scrolls"
+materials = ["paper", { part = "trim", of = "leather", share = 30 }]
+weight = 800
+stackable = true

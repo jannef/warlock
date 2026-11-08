@@ -1,5 +1,5 @@
 # A scroll of grave feast (spec §8 "Scrolls", "Spells"): read it (`r`) at a corpse beside you, and
-# it casts Grave feast, free of mana; study it (`L`), and you may learn the spell for good.
+# it casts Grave feast, free of mana; its grimoire teaches the spell for good.
 [[object]]
 id = "scroll_of_grave_feast"
 name = "scroll of grave feast"

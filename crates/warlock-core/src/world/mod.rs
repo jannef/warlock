@@ -1507,7 +1507,6 @@ impl World {
             Action::Order(command) => return self.order(*command, events),
             Action::Eat(meal) => return self.eat(*meal, events),
             Action::Read { item, target } => return self.read(*item, *target, events),
-            Action::Study { item } => return self.start_study(*item),
             Action::Scribe { spell } => return self.start_scribe(spell),
             Action::Dig(dir) => return self.start_dig(*dir),
             Action::Search(_) if self.refused_afloat("You cannot search in deep water.") => {

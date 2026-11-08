@@ -209,7 +209,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   outdoor area"),
   pick up (`,` or `;`), drop (`d`), equipment (`i`), inventory (`I`), character (`@`), skills
   (`A`), weapon skills (`W`), quest log (`q`), talents (`G`, a key ADOM leaves free; #644), rest (`b`), consume (`e`, food; the command that was Eat), read (`r`; a basic
-  command, not an ability), study (`L`, next to read; a basic command), look (`l`), shoot or throw what
+  command, not an ability; it also reads grimoires, which teach spells), look (`l`), shoot or throw what
   is in the missile weapon slot
   (`t`), throw from the pack (`T`), fire (unbound by default: `t` does it), more aggressive / more
   defensive combat stance (`+` / `-`; §8 "Stances"), the abilities menu (`a`, below) and the
@@ -626,22 +626,21 @@ developer notes (CLAUDE.md, `docs/dev/`).
   eating.") when not, the food left as it was. A potion is drunk at once, in a turn, and says
   what it does ("You drink the fizzy red potion. It is a potion of healing. You feel your wounds
   close."). What is neither is refused and takes no time ("You cannot consume a dagger.").
-- **Read** (`r`; §8 "Scrolls") opens the choice of what to read: the scrolls in the inventory
-  (what has something to read on it; an unidentified one by its label, §8 "Scrolls"), in the
-  item list; with nothing, "You have nothing to
+- **Read** (`r`; §8 "Scrolls") opens the choice of what to read: the scrolls and grimoires in
+  the inventory (what has something to read on it; an unidentified scroll by its label, §8
+  "Scrolls"), in the item list; with nothing, "You have nothing to
   read." A letter, or Enter on the `>` row, chooses: a spell scroll is then aimed (Targeting,
   below), and the scroll of identify replaces the list with the unidentified stacks the player
   carries (magic items not identified, and scrolls still under their labels; "You carry nothing
   unidentified."), where a letter or Enter reads it on that stack
-  (replay text `read:LETTER:LETTER`, the scroll then the stack). Esc cancels either list.
-- **Study** (`L`; §8 "Spells": "Learning") opens the choice of what to study: the scrolls the
-  player carries whose type they know and whose spell they do not, each marked with the spell
-  it teaches and the chance in words ("Frost: a struggle"); with none, "You carry no scroll
-  whose spell you could learn." A letter, or Enter on the `>` row, asks first in the one dialog
-  ("Study the scroll of frost? Learning Frost will be a struggle. The scroll will be used up,
-  and once you begin you cannot stop of your own accord.": Study it / Don't study it, the safe
-  answer selected first); studying is `study:LETTER`. The list's keys are fixed (letters,
-  Enter, the list keys, Esc).
+  (replay text `read:LETTER:LETTER`, the scroll then the stack). Esc cancels either list. A
+  grimoire whose spell the player could learn (§8 "Spells": "Learning") is marked with the
+  chance in words ("learning: a struggle"), and choosing it asks first in the one dialog ("Read
+  the grimoire of frost? Learning Frost will be a struggle. Once you begin you cannot stop of
+  your own accord.": Read it / Don't read it, the safe answer selected first); any other
+  grimoire is read at once, which says why it teaches nothing. Reading one is `read:LETTER`.
+  The list's keys are fixed (letters, Enter, the list keys, Esc). There is no Study command
+  (#1260).
 - **Dig** (`u`, "use a tool", ADOM's use-tool key, an item's use rather than an ability; §8
   "Digging") asks in the message line `Dig in which direction? (Esc to cancel)`; a direction
   digs (replay text `dig:E`), any other command cancels. With no digging tool ready nothing is

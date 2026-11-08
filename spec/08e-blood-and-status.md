@@ -405,8 +405,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     `rungs` of the spell's damage or heal ladder (default 0, the base; at most the ladder's
     length) plus the reader's `scroll_rungs` (Scroll adept), the reader's other hooks applying
     and their reach and degrees, free of mana and never refused for what the reader knows
-    (Scroll savant may keep it; a death by it is the scroll's), and teaches it to whoever
-    studies it. The scrolls of fireball (`rungs = 1`, 3d6), lightning (`rungs = 2`, 4d6), and
+    (Scroll savant may keep it; a death by it is the scroll's); it teaches nothing (its grimoire
+    does, below). The scrolls of fireball (`rungs = 1`, 3d6), lightning (`rungs = 2`, 4d6), and
     frost (0, 2d6) are spell scrolls like the rest (the spell scaling design §7.4: their burst
     and bolt readings went; a `read` of kind `burst` or `bolt` is refused naming the
     replacement).
@@ -609,14 +609,15 @@ developer notes (CLAUDE.md, `docs/dev/`).
       die in group order and one more a die the reroll hook sends back, an area's one roll for
       all); a spell without a roll, and a rider, draw nothing. Nothing new is saved.
   - **Learning, the number** (`Actor::learning`, `world/learn.rs`; derived, never stored;
-    `docs/design/no-caster-level.md`, #987): what a scroll teaches for certain comes from the
+    `docs/design/no-caster-level.md`, #987): what a grimoire teaches for certain comes from the
     Spellcraft skill and nothing else, its `learn` benefit (`data/skills.toml`: 0 to 10, 10 at 60,
     30 at the soft cap 100, 70, the last spell level, from 150) at the skill's value with what
     skill affixes and the talents' `skill` bonuses add (`Actor::skill_effect`), **at least 1** for a
     character trained in Spellcraft. A character **not trained** in it (the skill not in their
     trained set: an item's or a talent's bonus to a skill they do not have trains nobody) has no
-    learning and cannot study a scroll at all, cantrips included: refused, no time, "You have no
-    training in Spellcraft; you cannot make sense of how to learn a spell from a scroll." The
+    learning and cannot learn from a grimoire at all, cantrips included: refused, no time, "You
+    have no training in Spellcraft; you cannot make sense of how to learn a spell from a
+    grimoire." The
     spells a class grants need no Spellcraft, nor does reading a scroll to cast it, though with
     no learning that reaches its level the reader must make it out by a check (§8 "Scrolls":
     "Making out a scroll"). Starting Spellcraft by
@@ -624,28 +625,35 @@ developer notes (CLAUDE.md, `docs/dev/`).
     35 % `2d4+4`, ascetic 20 % `2d4` (optional skills); no other class, race, or birth sign gives
     any; two background lines add to it (both name classes that have it already), and it grows by
     level-up rolls as any skill. Nothing else trains it: a character without it stays without it.
-  - **Learning** (`world/learn.rs`, `content/learning.rs`; #396): a character knows a set of
-    spells for good: those their class abilities give and those they learned
-    (`Actor::spells`, saved by id, left out of the JSON while empty). Either kind is cast from
-    the abilities menu's *Spells* group. A spell scroll **teaches** its own spell (fireball
-    Fireball, lightning Lightning bolt, frost Frost). Every scroll is a real spell (#592): each
-    teaches one, the scroll of identify Identify and the scroll of light Light.
-    - **Study** (`Action::Study`, `study:b`; the `Study` key command, `L`, next to Read):
-      refused with no time, the scroll kept, for no such stack, a thing that teaches nothing
-      ("There is no spell in a dagger to learn."), a scroll still under its label ("You do not
-      know what this says."), a spell known ("You know this spell already."), a character with
-      no mana at all ("You have no gift for magic."), and what a status blocks (Raging blocks
-      `study`). Identification and learning are separate: any identified scroll whose spell the
-      player does not know may be studied, read or not. A scroll of a known spell still reads,
-      sells, and gives as any other.
+  - **Learning** (`world/learn.rs`, `content/learning.rs`, `content/grimoire.rs`; #396,
+    grimoires #1260): a character knows a set of spells for good: those their class abilities
+    give and those they learned (`Actor::spells`, saved by id, left out of the JSON while
+    empty). Either kind is cast from the abilities menu's *Spells* group. Spells are learned
+    from **grimoires**, never from scrolls: a scroll only casts its spell.
+    - **Grimoires** (`data/grimoires.toml`): every scroll of a spell has a grimoire, generated
+      as content loads (`grimoire_of_X` beside `scroll_of_X`, "a grimoire of fireball", the
+      scroll's level, `value` (5) times its value, the rest the file's `[object]`: `?`, class
+      Scrolls, paper and leather, 800 g, stackable), teaching the scroll's spell. Its title is
+      plain words, so it is known on sight and never labelled. It is never loot by itself:
+      wherever a spell scroll is made at random (loot, chests, hoards, dens, a vault's loot
+      pool, a creature's drop, a special room's loot, a generated shop's stock, a creature's
+      gear line, a starting kit, scroll by scroll), it is its grimoire instead with `chance`
+      (10) in a hundred, one draw for a spell scroll only. A scroll a level, a shop's `always`,
+      a scenario, or a background story names stays a scroll.
+    - **Reading a grimoire** (`Action::Read` of one, `read:b`, with no target; the read list,
+      `r`): a study. Refused with no time for a spell known ("You know this spell already."),
+      a character with no mana at all ("You have no gift for magic."), no training in
+      Spellcraft (above), a target ("A grimoire is read, not aimed: `read:a`."), and what a
+      status blocks (a grimoire's read is the `study` kind: Raging blocks it). The grimoire is
+      **kept** whatever comes of it: read again after a failure (no limit but the time), or
+      sold once it has taught.
     - **Time**: `turns_base + turns_per_level × level` (100 and 20: ten minutes and two a spell
       level; Fireball, level 11, 32 minutes) turns of the `study` action (`data/actions.toml`,
       1000), passed like a meal (`World::keep_at`); Quick study takes
       half. It stops as a rest does (a creature that disturbs a rest comes into view, a message
-      is said: a blow lands, a status begins); an interrupted study loses the time and keeps the
-      scroll (design §14 q1). Once begun, the player cannot stop it themselves.
-    - **The check**, as the last turn ends, on the scroll used up (Scroll savant never keeps a
-      studied scroll, design §14 q7): overreach is the spell's level less the learning. At
+      is said: a blow lands, a status begins); an interrupted reading loses the time ("You stop
+      reading."). Once begun, the player cannot stop it themselves.
+    - **The check**, as the last turn ends: overreach is the spell's level less the learning. At
       0 or less the spell is learned, no draw, unless the spell is made hard to learn
       (`study_difficulty` above 0: a check at any learning, overreach counted as at least
       0). Above, a 2d12 check with
@@ -655,32 +663,33 @@ developer notes (CLAUDE.md, `docs/dev/`).
       `per_overreach` (1) × overreach′ + the sum of the levels of the spells known ÷
       `known_per_point` (20) (`data/study.toml`) + the spell's `study_difficulty` (−20 to 40,
       default 0), overreach′ being the overreach with
-      Overreach's third off, rounded down (`study { overreach_percent = -33 }`). Made: "…you
-      have learned Frost."
-    - **Failure**: "The words twist away from you, and the scroll crumbles to dust.", then a
+      Overreach's third off, rounded down (`study { overreach_percent = -33 }`). Made: "The
+      words settle in your mind: you have learned Frost."
+    - **Failure**: "The words twist away from you.", then a
       **mishap** (`data/mishaps/`, one file each): one draw by weight among those of the band
       (slight below `bad_from` (6) levels of overreach, bad from it, terrible from
       `terrible_from` (15)) and
       the lucky ones, its message, then its effect: nothing; a status (Sluggish, Weakened,
-      Hexed; Blessed for a lucky one); the scroll's own spell going off on the reader (a damage
-      spell's base roll as a burst around them; a death by it is the scroll's); a share of
+      Hexed; Blessed for a lucky one); the grimoire's spell going off on the reader (a damage
+      spell's base roll as a burst around them; a death by it is the grimoire's); a share of
       the mana lost; a teleport on the level (the teleport trap's); a stat training mark lost;
       a drain (`World::drain`: a Willpower check or points off a stat for good); a hostile
       summoned next to the reader (a dretch); or, lucky, a training mark of Intelligence or the
-      spell learned anyway. A failure loses only that scroll: the spell can come again.
+      spell learned anyway.
     - **Training**: the `study` use (Spellcraft's mark; an Intelligence mark), whatever comes
       of it. Spending mana on a spell is practice for Spellcraft too (its `cast`
       mark, 25 %, as Concentration's); reading a scroll to cast it marks nothing of its own.
     - **Determinism**: the check's two gameplay draws only when there is a check, the mishap's
       one only on a failure, then its effect's own.
     - **Shown**: the chance in words only (`StudyRules::words`: "certain", "easy" from 96 of 144
-      ways, "a struggle" from 36, "far beyond you"); the study list
-      (`PerceptionView::studies`) and its dialog; the dump `spells` layer (known spells with
-      spell level and cost and their roll and reach now, `Fireball (level 11, 26 mana): 4d6 fire,
-      range 11, radius 2`, then the scrolls one could study
-      with the chance in words) and JSON's
-      `spells` (each with `level`, `cost`, `roll`, `damage_type`, and `reach`) and `studies`; the
-      exact odds only in the dev `progress` layer.
+      ways, "a struggle" from 36, "far beyond you"): the read list marks each grimoire the
+      player could learn from (`PerceptionView::studies`) "(learning: a struggle)" and asks in
+      the one dialog before reading it ("Read the grimoire of frost? Learning Frost will be a
+      struggle. Once you begin you cannot stop of your own accord.": Read it / Don't read it,
+      the safe answer selected first); the dump `spells` layer (known spells with spell level
+      and cost and their roll and reach now, `Fireball (level 11, 26 mana): 4d6 fire, range 11,
+      radius 2`) and JSON's `spells` (each with `level`, `cost`, `roll`, `damage_type`, and
+      `reach`); the dev `progress` layer's learning.
 - **Resources** (`warlock-core/src/resource.rs`, the pools and time's rules;
   `content/resource.rs`, the data; `world/resource.rs`, applying them; #225): alternative
   resources, integer pools beside hit points and mana (which everyone has) that a character holds

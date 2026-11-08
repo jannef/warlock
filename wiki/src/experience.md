@@ -34,9 +34,9 @@ Meeting something new teaches you a little.
   below you it is ("You learn something of kobolds.").
 - The first time you arrive on a level, you gain a little for finding your way there ("You gain 10
   experience for finding your way here.").
-- The first time you learn a spell by studying a scroll, you gain 5 XP for each level of the spell
+- The first time you learn a spell by reading its [grimoire](magic.md#learning-spells-from-grimoires), you gain 5 XP for each level of the spell
   (at least 5): 55 for a level 11 spell, 350 for a level 70 one. Spells a class gives you cost
-  nothing and pay nothing; a failed study pays nothing.
+  nothing and pay nothing; a failed reading pays nothing.
 
 Only the first time counts. A second [kobold](creatures.md#creature-kobold), or a level you have
 been on before, is worth nothing more.

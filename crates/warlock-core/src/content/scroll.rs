@@ -1,12 +1,12 @@
 //! What reading does (`read` in an object's file, spec §8 "Scrolls"): a scroll casts a spell
-//! of `data/spells/` through the one cast path at its own rungs, free of mana, and teaches it
-//! (`study:b`). The one other kind, `cleanse`, has no spell behind it and teaches nothing: the
-//! scroll of restoration mends the reader's stat damage and gives back what drains took (the
-//! priest design §11).
+//! of `data/spells/` through the one cast path at its own rungs, free of mana. A scroll teaches
+//! nothing: its spell's grimoire does (`grimoire.rs`). The one other kind, `cleanse`, has no
+//! spell behind it: the scroll of restoration mends the reader's stat damage and gives back what
+//! drains took (the priest design §11).
 //!
 //! ```toml
 //! [object.read]
-//! kind = "spell"        # the spell of data/spells/ named by `spell`, which it also teaches
+//! kind = "spell"        # the spell of data/spells/ named by `spell`
 //! spell = "fireball"
 //! rungs = 1             # the rung of the spell's damage or heal ladder it casts at (default 0,
 //!                       # the base; one past the ladder casts at its last); the reader's Scroll
@@ -34,7 +34,7 @@ enum Kind {
 #[serde(deny_unknown_fields)]
 pub(super) struct ReadSpec {
     kind: Kind,
-    /// The spell of `data/spells/` it casts and teaches.
+    /// The spell of `data/spells/` it casts.
     spell: Option<String>,
     /// The rung of the spell's roll ladder a read casts at (default 0).
     rungs: Option<u8>,
@@ -49,9 +49,9 @@ pub(super) struct ReadSpec {
 /// What reading a scroll does.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum Reading {
-    /// It casts a spell of `data/spells/` through the one cast path, and teaches it.
+    /// It casts a spell of `data/spells/` through the one cast path.
     Cast(SpellScroll),
-    /// No spell: it cleanses its reader (the scroll of restoration), and teaches nothing.
+    /// No spell: it cleanses its reader (the scroll of restoration).
     Cleanse(Cleansing),
 }
 
@@ -65,7 +65,7 @@ pub struct Cleansing {
 }
 
 /// A scroll of a spell of `data/spells/` (spec §8 "Scrolls", "Spells"): read, it casts the
-/// spell at its `rungs`, free of mana; studied, it teaches it.
+/// spell at its `rungs`, free of mana.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct SpellScroll {
     pub spell: SpellId,
@@ -109,14 +109,19 @@ impl Reading {
         }
     }
 
-    /// The spell of `data/spells/` studying it teaches (spec §8 "Spells"); none for a
+    /// The spell of `data/spells/` it casts (its grimoire teaches it); none for a
     /// cleansing.
-    pub fn teaches(&self) -> Option<SpellId> {
+    pub fn spell(&self) -> Option<SpellId> {
         self.scroll().map(|scroll| scroll.spell)
     }
 }
 
 impl ReadSpec {
+    /// Whether it casts a spell (kind `spell`).
+    pub(super) fn casts(&self) -> bool {
+        self.kind == Kind::Spell
+    }
+
     /// Resolves the spec: a `spell` reading of a spell of `data/spells/` (spells load before
     /// objects); a `cleanse` reading with no spell or rungs, and `mends` and `restores` only on
     /// it (neither would be read on the other kind).

@@ -78,9 +78,8 @@ You learn what a kind of scroll is, for good, in any of these ways:
 - **Your [starting kit](starting-kit.md).** You know the scrolls you start with, including a
   caster's random ones.
 
-Knowing what a scroll is does not teach you its spell. A scroll you know by name is still only a
-scroll, but once you know it you may study it to learn its spell for good (see
-[Magic](magic.md#learning-spells-from-scrolls)). A scroll that cannot be read, such as a sealed
+Knowing what a scroll is does not teach you its spell. No scroll does: the spell's
+[grimoire](magic.md#learning-spells-from-grimoires) teaches it. A scroll that cannot be read, such as a sealed
 letter, has no label and is known on sight. A [shop](shops.md#prices) charges its true price for
 an unknown scroll.
 
@@ -157,8 +156,7 @@ Reading a scroll uses it up, but scholars do better (see [Talents](talents.md)).
 savant](talents.md#talent-scroll-savant) reads in half the time, and together with the
 [wizard](classes.md#wizard)'s Scroll adept in a quarter, but no less. With [Spell
 recall](talents.md#talent-spell-recall) on top, one read in four leaves the scroll as it was:
-"The writing does not fade from the scroll." A scroll you study is always used up, Scroll savant
-or not.
+"The writing does not fade from the scroll."
 
 ## The scroll of identify
 
@@ -173,8 +171,8 @@ It is [made out](#making-out-a-scroll) like any other scroll, as a spell of leve
 writing swims, you keep the scroll and learn nothing about what you chose.
 
 Reading it casts the spell **[Identify](magic.md#spell-identify)** for you, free of
-[mana](mana.md#spending-it), and studying it may teach you the spell for good (see
-[Magic](magic.md#learning-spells-from-scrolls)). Cast for [mana](mana.md#how-much), Identify is
+[mana](mana.md#spending-it). The grimoire of identify teaches the spell for good (see
+[Magic](magic.md#learning-spells-from-grimoires)). Cast for [mana](mana.md#how-much), Identify is
 dear at 60 mana, so only an experienced caster can afford it (see [Magic](magic.md#what-a-spell-costs)).
 
 The scroll of identify is the most common scroll. It turns up more often than any other in
@@ -191,14 +189,14 @@ Hild's mending in Cēaptūn does (see [Services](npcs.md#services)), but whereve
 
 It works even with a [disease](diseases.md) still on you, though the disease may damage the stat
 again. With nothing to restore, it is not read ("There is nothing to restore."), and you keep it.
-As no spell is behind it, there is nothing in it to [study](magic.md#learning-spells-from-scrolls).
+As no spell is behind it, it has no [grimoire](magic.md#learning-spells-from-grimoires).
 It is rare, found from [item level](affixes.md#base-items) 8, and dear (see the table above).
 
 ## Writing scrolls
 
 A **blank scroll** is paper with nothing on it. It is never labelled, it is known on sight, and
 it weighs 50 g and is worth 15 gold. Read it and nothing happens ("There is nothing written on
-it."), and you keep it. There is nothing in it to [study](magic.md#learning-spells-from-scrolls).
+it."), and you keep it.
 
 The [wizard](classes.md#wizard)'s **[Scribe](abilities.md#ability-scribe)** (from level 12)
 writes on one. Choose it in the abilities menu and a list of the spells you know opens, sorted by
@@ -209,14 +207,15 @@ Choose one, and you write its scroll on the first blank scroll you carry.
   [Frugal caster](talents.md#talent-frugal-caster), with your armour, School focus, Empower, and
   Archmage counted, and then the whole is cut by Frugal caster. Fireball's 26 becomes 78, Magic
   missile's 3 becomes 9, and Identify's 60 becomes 180.
-- **The time** is the time a study of the spell takes: 100 turns plus 20 for each spell level,
+- **The time** is the time reading the spell's [grimoire](magic.md#learning-spells-from-grimoires) takes: 100 turns plus 20 for
+  each spell level,
   or 10 minutes plus 2 a level at a normal pace. Magic missile takes 16 minutes and Fireball 32.
   [Quick study](talents.md#talent-quick-study) does not shorten it.
 - **If you are interrupted** (a creature coming into view, anything said, a blow), you stop
   writing. The time is lost, but you keep the blank and the mana. The mana is spent and the
   blank used up only when the scroll is done: "You write a scroll of fireball."
 - **The scroll** is the ordinary scroll of that spell, at its own [rung](#spell-scrolls), as one
-  you found would be, and you know what it is. It reads, studies, and sells like any other (a
+  you found would be, and you know what it is. It reads and sells like any other (a
   shop buys it at its usual offer). [Scroll adept](talents.md#talent-scroll-adept) adds its rung
   when you read it. Neither writing nor reading it asks a [check](#making-out-a-scroll): you know the
   spell, so you read it at once, even one you learned beyond your [learning](magic.md#learning).
@@ -224,7 +223,7 @@ Choose one, and you write its scroll on the first blank scroll you carry.
   scroll ("You have nothing to write on."), while raging, or with too little mana ("You lack the
   mana to write it."). Light and place do not matter.
 
-Each scroll written always trains [Intelligence](stats.md#training), as a study does, besides
+Each scroll written always trains [Intelligence](stats.md#training), as reading a grimoire does, besides
 what spending the mana trains. There is no roll: a scroll begun and finished is a scroll made.
 
 ## Where scrolls are
