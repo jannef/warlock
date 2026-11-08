@@ -26,3 +26,18 @@ noise = { sound = "thunder", loudness = 120 }
 damage = "intelligence 13 8d6, 16 10d6, 19 12d6, 25 12d6+3"
 range = "willpower 14 9, 18 10"
 count = "willpower 14 4, 18 5, 22 6"
+
+# What rereading its grimoire adds, rank by rank (spec §8 "Spells": "Ranks"; README.toml
+# `[spell.ranks]`). At rank 10: +2 on the roll, two cells farther, 1s rolled again, two dice
+# more, a fifth off the mana, and a third off the casting time. Its leaps grow with Willpower
+# alone ([spell.grows] `count`): a rank adds no leap.
+[spell.ranks]
+2 = { bonus = 2 }
+3 = { cells = 1 }
+4 = { reroll = 1 }
+5 = { mana_off = 10 }
+6 = { dice = 1 }
+7 = { cells = 1 }
+8 = { dice = 1 }
+9 = { mana_off = 10 }
+10 = { time_off = 33 }

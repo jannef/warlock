@@ -25,3 +25,17 @@ noise = { sound = "explosion", loudness = 150 }
 [spell.grows]
 damage = "intelligence 13 6d6, 16 8d6, 19 10d6, 25 10d6+2"
 range = "willpower 14 11, 18 12"
+
+# What rereading its grimoire adds, rank by rank (spec §8 "Spells": "Ranks"; README.toml
+# `[spell.ranks]`). At rank 10: two cells farther, 1s rolled again, +2 on the roll, two dice more, a
+# fifth off the mana, and a burst a cell wider.
+[spell.ranks]
+2 = { cells = 1 }
+3 = { reroll = 1 }
+4 = { bonus = 2 }
+5 = { dice = 1 }
+6 = { mana_off = 10 }
+7 = { cells = 1 }
+8 = { dice = 1 }
+9 = { mana_off = 10 }
+10 = { radius = 1 }

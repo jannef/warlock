@@ -23,3 +23,17 @@ noise = { sound = "thunder", loudness = 140 }
 [spell.grows]
 damage = "willpower 13 6d6, 16 8d6, 19 10d6, 25 10d6+2"
 length = "willpower 14 9, 18 10"
+
+# What rereading its grimoire adds, rank by rank (spec §8 "Spells": "Ranks"; README.toml
+# `[spell.ranks]`). At rank 10: two cells longer, 1s and 2s rolled again, +2 on the roll,
+# two dice more, a tenth off the mana, and a third off the casting time: the sky answers sooner.
+[spell.ranks]
+2 = { cells = 1 }
+3 = { reroll = 1 }
+4 = { bonus = 2 }
+5 = { mana_off = 10 }
+6 = { dice = 1 }
+7 = { cells = 1 }
+8 = { reroll = 1 }
+9 = { time_off = 33 }
+10 = { dice = 1 }
