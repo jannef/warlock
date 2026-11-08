@@ -840,6 +840,7 @@ impl World {
         }
         self.reveal_at(id, def, RevealWhen::Done);
         self.say(format!("Quest complete: {}.", def.name));
+        self.tell_goodwill(def.giver);
         self.train_stat(StatUse::Quest);
         let who = capitalized(&self.called(&self.state.actors[&id]));
         // A talent (spec §8 "Talents": the half-elf's Diplomat) makes a quest pay more gold.

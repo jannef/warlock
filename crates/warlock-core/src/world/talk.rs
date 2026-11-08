@@ -224,7 +224,7 @@ impl World {
         topics.extend(dialogue.services.iter().map(|s| TopicView {
             id: s.id.clone(),
             name: s.name.clone(),
-            price: Some(self.service_price(s)),
+            price: Some(self.service_price(id, s)),
             items: self.service_items(s),
             ware: None,
         }));

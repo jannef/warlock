@@ -73,7 +73,9 @@ impl DialogueScreen {
         };
         let topics: Vec<(String, String)> = (talk.topics.iter())
             .map(|t| match (t.price, t.items) {
-                // A service (`world/service.rs`) with its price, per thing or once.
+                // A service (`world/service.rs`) with its price, per thing or once; free for
+                // a town's goodwill (`world/goodwill.rs`).
+                (Some(0), _) => (t.id.clone(), format!("{} (free)", t.name)),
                 (Some(price), Some(_)) => (t.id.clone(), format!("{} ({price} gold each)", t.name)),
                 (Some(price), None) => (t.id.clone(), format!("{} ({price} gold)", t.name)),
                 (None, _) => (t.id.clone(), t.name.clone()),
@@ -143,7 +145,7 @@ impl DialogueScreen {
             return ScreenAction::Dialog(Box::new(self.offer_dialog(price, &ware, ask)));
         }
         match self.per_item.get(i).copied().flatten() {
-            Some((price, items)) if items > 0 => {
+            Some((price, items)) if items > 0 && price > 0 => {
                 ScreenAction::Dialog(Box::new(self.pay_dialog(price, items, ask)))
             }
             _ => ScreenAction::Act(ask),
@@ -332,6 +334,40 @@ mod tests {
         assert!(
             shown.contains("  7  A cure for what ails you (60 gold)"),
             "{shown}"
+        );
+    }
+
+    /// A service a town's goodwill made free (`world/goodwill.rs`) says so, and an appraisal at
+    /// no price asks straight away, with nothing to pay for.
+    #[test]
+    fn a_free_service_says_so_and_asks_at_once() {
+        let (world, outcome) = at_the_hermit();
+        let view = world.perception();
+        let mut talk = last_talk(&outcome).expect("talked").clone();
+        talk.topics.push(warlock_core::world::TopicView {
+            id: "identify".into(),
+            name: "An appraisal of your goods".into(),
+            price: Some(0),
+            items: Some(3),
+            ware: None,
+        });
+        let mut screen = DialogueScreen::new(Some(&talk), Some(&view));
+        let mut console = Console::default();
+        console.resize(80, 30);
+        let bindings = Bindings::default();
+        screen.draw(&mut console, &bindings);
+        let shown = text(&console);
+        assert!(
+            shown.contains("  7  An appraisal of your goods (free)"),
+            "{shown}"
+        );
+        let ask = Action::Ask {
+            dir: Dir::SE,
+            topic: "identify".into(),
+        };
+        assert_eq!(
+            screen.handle(&Press::typed('7'), &bindings),
+            ScreenAction::Act(ask)
         );
     }
 

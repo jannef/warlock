@@ -270,6 +270,7 @@ above.
 | Hunter's bond, shared sight, shared buffs | `companions.md#hunters-bond` |
 | People, townsfolk, chatting, topics | `npcs.md#chatting` |
 | Services (cure, mending, identification) | `npcs.md#services` |
+| Goodwill (a town's, cheaper services) | `npcs.md#goodwill` |
 | The pedlar's offer, his wares | `npcs.md#the-pedlars-offer` |
 | Quest, quest log | `quests.md`, `quests.md#the-quest-log` |
 | Sorts of creatures (a quest's), drawn quests | `quests.md#sorts-of-creatures`, `quests.md#drawn-quests` |

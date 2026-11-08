@@ -220,6 +220,7 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("guild-ranks.md", guild::guild_ranks),
         ("guild-draws.md", guild::guild_draws),
         ("services.md", services::services),
+        ("towns.md", services::towns),
         ("footsteps.md", terrain::footsteps),
         ("noises.md", hearing::noises),
         ("sound-travel.md", hearing::sound_travel),

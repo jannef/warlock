@@ -111,6 +111,24 @@ Negotiation now and then.
 
 {{#include generated/services.md}}
 
+### Goodwill
+
+A town remembers who helps it. Every [quest](quests.md) you complete for one of a town's people
+earns it **goodwill**, and its people's services get cheaper: **5% off per quest** in Cēaptūn.
+Its people are Sister Hild, Reeve Leofric, Factor Wulfrun, Godgifu, and Wat One-Eye, so the
+[Weyfarers' Gilde's](guild.md) work counts too. A quest you do again counts again. Quests from
+elsewhere, such as Holtwīc's, do not count. You are told when it rises: "Cēaptūn's folk think
+the better of you."
+
+- The goodwill comes off **last**, after [Pious](talents.md#talent-pious) and any haggling, and
+  the price is rounded up. One quest takes Sister Hild's 60-gold cure down to 57 gold.
+- It stops at **100% off**: after twenty quests the town's services are **free**. They are listed
+  as `(free)`, you pay nothing, and a free service does not train
+  [Negotiation](skills.md#skill-negotiation).
+- Only services get cheaper. [Shop](shops.md) goods keep their prices.
+
+{{#include generated/towns.md}}
+
 ## The pedlar's offer
 
 The **[pedlar](creatures.md#creature-pedlar)** met on the roads
