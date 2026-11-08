@@ -1902,6 +1902,8 @@ mod miscast_tests;
 #[cfg(test)]
 mod moon_tests;
 #[cfg(test)]
+mod necromancy_rank_tests;
+#[cfg(test)]
 mod numbers_tests;
 #[cfg(test)]
 mod object_tests;

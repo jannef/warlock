@@ -18,3 +18,16 @@ noise = { sound = "chanting", loudness = 30 }
 
 [spell.grows]
 degrees = "presence 14 15, 18 20, 22 30"
+
+# What rereading its grimoire adds, rank by rank (README.toml `[spell.ranks]`). At rank 10:
+# the dead stand ten minutes longer, three tenths off the mana, and half the casting time.
+[spell.ranks]
+2 = { degrees = 2 }
+3 = { time_off = 15 }
+4 = { mana_off = 10 }
+5 = { degrees = 3 }
+6 = { time_off = 15 }
+7 = { mana_off = 10 }
+8 = { degrees = 5 }
+9 = { time_off = 20 }
+10 = { mana_off = 10 }
