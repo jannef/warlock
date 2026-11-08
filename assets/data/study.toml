@@ -5,22 +5,30 @@
 # A study takes turns_base turns of the `study` action (actions.toml) and turns_per_level more
 # for each level of the spell: 100 turns are 10 minutes, so a level-11 spell takes 320 turns, 32
 # minutes (Quick study: half). The grimoire is kept whatever comes of it. Only a character
-# trained in Spellcraft may study at all (spec §8 "Spells": "Learning"). A spell of a level at most
-# the learning (Spellcraft's `learn` curve, skills.toml; at least 1) is learned for certain. Above
-# it, by `overreach` levels (the spell's level less the learning; Overreach counts a third fewer,
-# rounded down), a 2d12 check decides:
+# trained in Decipher script may study at all (spec §8 "Spells": "Learning"). A spell of a level
+# at most the learning (Decipher script's `learn` curve, skills.toml; at least 1) is learned for
+# certain. Above it, by `overreach` levels (the spell's level less the learning; Overreach counts
+# a third fewer, rounded down), a 2d12 check decides:
 #
 #   difficulty = base + per_overreach × overreach + (the levels of the spells known, added up) ÷
 #                known_per_point (rounded down)
 #
-# against which the roll adds the Intelligence modifier, Spellcraft's `study` benefit (its value
-# ÷ 10), the class's affinity with the spell's school
+# against which the roll adds the Intelligence modifier, Decipher script's `study` benefit (its
+# value ÷ 10), the class's affinity with the spell's school
 # (classes/), and Quick study's bonus. A failure draws a mishap (mishaps/) by the overreach:
 # slight below bad_from levels, bad below terrible_from, terrible from there, lucky ones beside
 # any.
+#
+# Reading the grimoire of a spell already known deepens it (spec §8 "Spells": "Ranks"; #1264):
+# rank 1 as learned, up to 10, each rank what the spell's own `[spell.ranks]` table gives. A
+# deepening to rank N reads the whole book over N times (N × the learning time) and is always a
+# check, the same one with `per_rank × (N − 1)` added to the difficulty (the overreach counted
+# as at least 0). Failed, the time is gone and nothing else: no mishap, and the book may be read
+# again at once.
 base = 12
 per_overreach = 1
 known_per_point = 20
+per_rank = 2
 turns_base = 100
 turns_per_level = 20
 bad_from = 6

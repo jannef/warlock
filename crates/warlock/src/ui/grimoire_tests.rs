@@ -1,7 +1,8 @@
 //! Grimoires in the read list (spec §8 "Spells": "Learning"; #1260): listed with the scrolls, a
 //! grimoire whose spell could be learned tells the chance in words, and choosing it asks in the
-//! one dialog; one that cannot teach (the spell known, no Decipher script) is read at once,
-//! which says why.
+//! one dialog; one of a spell known below its last rank tells the rank it would bring ("Ranks",
+//! #1264) and the dialog asks about the deepening; one that cannot teach (no Decipher script)
+//! is read at once, which says why.
 
 use super::screen_snapshots::{BASE, Case, press_keys, start, text};
 use crate::game::Game;
@@ -79,4 +80,34 @@ fn without_decipher_script_a_grimoire_is_read_at_once_and_refused() {
     insta::assert_snapshot!("grimoire-read-list-untrained", shown);
     let app = reading("warrior", "r a");
     assert_eq!(last(&app), warlock_core::world::UNTRAINED);
+}
+
+/// The wizard's pack: the grimoire of Ray of frost, her class's spell (known at rank 1), and
+/// the grimoire of light.
+const KNOWN: &str = "[\"grimoire_of_ray_of_frost\", \"grimoire_of_light\"]";
+
+#[test]
+fn a_known_spells_grimoire_tells_the_rank_it_would_bring() {
+    let case = Case {
+        scenario: "hall",
+        run: true,
+        ..BASE
+    };
+    let mut app = start(&case, hall(KNOWN, "wizard"));
+    press_keys(&mut app, "r");
+    let shown = screen(&app);
+    assert!(
+        shown.contains("a grimoire of ray of frost (rank 2 of 10:"),
+        "{shown}"
+    );
+    assert!(
+        shown.contains("a grimoire of light (learning: certain)"),
+        "{shown}"
+    );
+    insta::assert_snapshot!("grimoire-read-list-known", shown);
+    press_keys(&mut app, "a");
+    let shown = screen(&app);
+    assert!(shown.contains("Deepening Ray of frost"), "{shown}");
+    assert!(shown.contains("rank 2 of 10"), "{shown}");
+    insta::assert_snapshot!("grimoire-read-dialog-deepen", shown);
 }

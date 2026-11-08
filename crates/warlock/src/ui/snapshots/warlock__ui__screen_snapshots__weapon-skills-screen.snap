@@ -2,8 +2,8 @@
 source: crates/warlock/src/ui/screen_snapshots.rs
 expression: "render(case, content.clone())"
 ---
- The giant rat dies.
- You shoot an arrow. (×3) You have no arrows left.
+ You shoot an arrow. You have no arrows left. The giant rat bites the kobold archer. The kobold
+ archer misses the giant rat. The giant rat bites the kobold archer.
 
 
 ┌─ Weapon skills ──────────────────────────────────────────────────────────────────────────────────┐

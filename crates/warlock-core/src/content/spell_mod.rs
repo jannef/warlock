@@ -15,7 +15,9 @@
 //! | 6 | degrees | `degrees` | after the degrees ladder; the status's `max` holds it |
 //!
 //! Besides the six, `cost` is the percent more mana (School focus's), summed into the one cost
-//! hook beside `spell_mana_percent` (`Actor::spell_base`).
+//! hook beside `spell_mana_percent` (`Actor::spell_base`); and a spell's ranks (`spell_rank.rs`,
+//! #1264) add `time` (percent more casting time, negative less), `to_hit`, and `threat` (an
+//! attack's), which no talent writes.
 //!
 //! A talent writes one as `{ kind = "spell_mod", rungs = 1 }`, `{ kind = "spell_mod", sides = 1
 //! }` on a talent chosen for a school or an element (the choice is its filter), or `{ kind =
@@ -55,6 +57,12 @@ pub struct SpellMods {
     pub degrees: i32,
     /// Percent more mana (negative: less; School focus).
     pub cost: i32,
+    /// Percent more casting time (negative: less; a spell's ranks).
+    pub time: i32,
+    /// Added to an own attack spell's roll to hit (a spell's ranks).
+    pub to_hit: i32,
+    /// An own attack spell's threat range this much wider (a spell's ranks).
+    pub threat: i32,
 }
 
 impl SpellMods {
@@ -77,6 +85,9 @@ impl SpellMods {
         self.radius_cells += other.radius_cells;
         self.degrees += other.degrees;
         self.cost += other.cost;
+        self.time += other.time;
+        self.to_hit += other.to_hit;
+        self.threat += other.threat;
     }
 }
 
@@ -180,6 +191,7 @@ impl SpellModSpec {
                 radius_cells: self.radius_cells,
                 degrees: self.degrees,
                 cost: self.cost,
+                ..SpellMods::default()
             },
             when,
         }

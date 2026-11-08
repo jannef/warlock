@@ -57,7 +57,7 @@ fn world() -> World {
     let spec = "human,female,witch".parse().expect("a character");
     let mut w = World::with_character(content(), "hall", Some(7), Some(&spec)).expect("world");
     let beguile = w.content().spell_id("beguile").expect("the spell");
-    w.player_mut().spells.insert(beguile);
+    w.player_mut().spells.insert(beguile, 1);
     w.player_mut().mana_base = 400;
     w.player_mut().mana = 400;
     see(&mut w);
@@ -290,7 +290,7 @@ fn a_save_keeps_the_charm_and_a_replay_verifies() {
     let spec = "human,female,witch".parse().expect("a character");
     let mut a = World::with_character(content(), "hall", Some(7), Some(&spec)).expect("world");
     let beguile = a.content().spell_id("beguile").expect("the spell");
-    a.player_mut().spells.insert(beguile);
+    a.player_mut().spells.insert(beguile, 1);
     a.player_mut().mana_base = 400;
     a.player_mut().mana = 400;
     let mut b = World::from_state(a.content().clone(), a.state().clone()).expect("restores");

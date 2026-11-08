@@ -82,7 +82,7 @@ fn identify_costs_its_own_large_mana_whatever_its_level() {
 fn casting_identify_with_too_little_mana_is_refused_with_no_time() {
     let mut w = world(59);
     let id = spell(&w);
-    w.player_mut().spells.insert(id);
+    w.player_mut().spells.insert(id, 1);
     let on = ring(&mut w);
     let before = w.state.time;
     let action = format!("use:identify:{}", crate::action::position_text(on));
@@ -105,7 +105,7 @@ fn casting_identify_with_too_little_mana_is_refused_with_no_time() {
 fn casting_identify_names_a_stack_and_spends_its_mana() {
     let mut w = world(100);
     let id = spell(&w);
-    w.player_mut().spells.insert(id);
+    w.player_mut().spells.insert(id, 1);
     assert_eq!(Ability::Spell(id).aim(&w.content), Aim::Item);
     let layer = crate::dump::parse_layers("abilities").expect("layer")[0];
     let rows = crate::dump::layer_rows(&w, layer);

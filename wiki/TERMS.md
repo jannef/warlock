@@ -245,6 +245,7 @@ above.
 | How a spell resolves (attack, auto, area, touch) | `spellcasting.md#how-a-spell-finds-its-target` |
 | Mishap | `magic.md#learning-spells-from-grimoires` |
 | Learning a spell from a grimoire, overreach | `magic.md#learning-spells-from-grimoires` |
+| Spell rank, deepening a spell, rereading a grimoire | `magic.md#spell-ranks` |
 | Wand, rod, charges | `wands-and-rods.md#wands`, `wands-and-rods.md#rods` |
 | Spell circle, buff, hex (as seen on a creature) | `spell-circles.md#spell-circles` |
 | Resource (Rage, Ki, Focus, …) | `resources.md` (a resource: its row; Rage: `resources.md#rage`) |

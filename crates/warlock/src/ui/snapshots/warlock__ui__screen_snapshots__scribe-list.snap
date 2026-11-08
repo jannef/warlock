@@ -14,9 +14,9 @@ expression: "render(case, content.clone())"
                   │   You carry no blank scroll to write on.                     │
                   │                                                              │
                   │ Evocation                                                    │
-                  │ > a - Burning hands              7 mana    about 12 minutes  │
-                  │   b - Ray of frost               2 mana    about 12 minutes  │
-                  │   c - Magic missile              7 mana    about 16 minutes  │
+                  │ > a - Burning hands             14 mana    about 12 minutes  │
+                  │   b - Ray of frost              10 mana    about 12 minutes  │
+                  │   c - Magic missile             10 mana    about 16 minutes  │
                   │   d - Arcane bolt               26 mana    about 22 minutes  │
                   │   e - Shatter                   34 mana    about 26 minutes  │
                   │ Transmutation                                                │

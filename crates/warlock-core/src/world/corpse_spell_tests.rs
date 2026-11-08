@@ -16,7 +16,7 @@ fn world(seed: u64) -> World {
     let content = Arc::new(Content::load(&files()).expect("content"));
     let mut w = start(content, seed);
     for spell in ["charnel_burst", "grave_feast", "rouse_the_dead"] {
-        w.player_mut().spells.insert(sp(spell));
+        w.player_mut().spells.insert(sp(spell), 1);
     }
     w.player_mut().mana_base = 400;
     w.player_mut().mana = 400;

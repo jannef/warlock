@@ -320,7 +320,7 @@ fn scribe_asks_no_check_and_what_it_writes_reads_by_the_rule() {
         let mut w = world("\"blank_scroll\"", reader, seed);
         let me = w.player_mut();
         me.talents.take("scribe", None);
-        me.spells.insert(sp("fireball"));
+        me.spells.insert(sp("fireball"), 1);
         me.mana = me.mana_base;
         let rng = w.state.rng.clone();
         run(&mut w, "scribe:fireball");
@@ -358,7 +358,7 @@ fn a_known_spell_succeeds_with_no_draw_and_still_marks() {
     // Untrained reader who would fail on some seed: the spell they know always reads.
     let seed = seed_where(true, reader);
     let mut w = world(HASTE, reader, seed);
-    w.player_mut().spells.insert(sp("haste"));
+    w.player_mut().spells.insert(sp("haste"), 1);
     let rng = w.state.rng.clone();
     run(&mut w, "read:a");
     assert!(!said(&w, SWIMS));
@@ -371,7 +371,7 @@ fn a_known_spell_succeeds_with_no_draw_and_still_marks() {
     );
     // Untrained in Decipher script: nothing to mark.
     let mut w = world(HASTE, UNTRAINED, seed);
-    w.player_mut().spells.insert(sp("haste"));
+    w.player_mut().spells.insert(sp("haste"), 1);
     run(&mut w, "read:a");
     assert_eq!(carried(&w, "scroll_of_haste"), 1, "read");
     assert_eq!(marks(&w, "decipher_script"), 0);

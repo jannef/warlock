@@ -7,8 +7,8 @@ expression: "render(case, content.clone())"
           │ Birth sign                                                                  │
           │ > a  Transfixing stare   at a place you see                                 │
           │ Spells                                                                      │
-          │   b  Spark               2d4 electricity, may arc, conducts, 1 mana, aimed  │
-          │   c  Barkskin            3 mana                                             │
+          │   b  Spark               2d4 electricity, may arc, conducts, 4 mana, aimed  │
+          │   c  Barkskin            4 mana                                             │
           │   d  Call of the wild    2 called, 5 mana                                   │
           │   e  Water walking       5 mana                                             │
           │   f  Bramble             19 mana, aimed                                     │

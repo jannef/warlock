@@ -280,6 +280,8 @@ pub struct Ratio {
 struct RulesFile {
     shapes: ShapesSpec,
     resolution: ResolutionSpec,
+    #[serde(default)]
+    mana: ManaSpec,
     /// Read by [`super::spell_type::parse`], once the statuses it names are known.
     #[serde(default, rename = "types")]
     _types: serde::de::IgnoredAny,
@@ -296,6 +298,19 @@ struct ShapesSpec {
     cone: u16,
     line: u16,
     burst: Vec<u16>,
+}
+
+/// `[mana]`: the floor under a spell's base mana (#1264).
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields, default)]
+struct ManaSpec {
+    floor: u16,
+}
+
+impl Default for ManaSpec {
+    fn default() -> Self {
+        Self { floor: 1 }
+    }
 }
 
 #[derive(Deserialize)]
@@ -317,6 +332,8 @@ pub struct SpellRules {
     pub burst: Vec<u16>,
     /// Each resolution's cost, by [`Resolution::ALL`] order.
     resolutions: [Ratio; 4],
+    /// The floor under a spell's base mana: its level, at least this (`[mana] floor`; #1264).
+    pub floor: u16,
     /// What every spell of a damage type does beyond its damage (`[types]`).
     pub types: BTreeMap<DamageTypeId, SpellType>,
 }
@@ -339,6 +356,7 @@ impl SpellRules {
             shapes,
             burst: s.burst.clone(),
             resolutions,
+            floor: file.mana.floor.max(1),
             types: BTreeMap::new(),
         })
     }
@@ -387,7 +405,8 @@ impl SpellRules {
             u64::from(self.ratio(spell.resolution).cost),
             100 + u64::from(armour),
         ];
-        let num = factors.iter().product::<u64>() * u64::from(spell.level.max(1));
+        let base = u64::from(spell.level).max(u64::from(self.floor));
+        let num = factors.iter().product::<u64>() * base;
         let den = 100u64.pow(3);
         i32::try_from((num + den / 2) / den)
             .unwrap_or(i32::MAX)
@@ -429,6 +448,8 @@ struct SpellSpec {
     effect: Option<EffectSpec>,
     cast: Option<CastSpec>,
     grows: Option<GrowsSpec>,
+    /// `[spell.ranks]`: what each rank from 2 adds (`spell_rank.rs`).
+    ranks: Option<std::collections::BTreeMap<String, super::RankSpec>>,
 }
 
 #[derive(Deserialize)]
@@ -812,6 +833,8 @@ pub struct SpellData {
     pub effect: SpellEffect,
     /// Its ladders (`[spell.grows]`).
     pub grows: Grows,
+    /// Its ranks (`[spell.ranks]`): what a caster who has deepened it gains (`spell_rank.rs`).
+    pub ranks: super::Ranks,
     /// The stat whose modifier aims an `attack` or `touch` spell of its caster's own (default
     /// Dexterity; a scroll's or a wand's always Dexterity).
     pub aim: Stat,
@@ -1096,6 +1119,22 @@ fn resolve(spec: SpellSpec, rules: &SpellRules, content: &Content) -> Result<Spe
         Some(g) => grows(g, &bases)?,
         None => Grows::default(),
     };
+    let rolls_to_hit = spec.kind == SpellPurpose::Damage
+        && matches!(spec.resolution, Resolution::Attack | Resolution::Touch)
+        && matches!(shape, Shape::Ray | Shape::Bolt | Shape::Touch);
+    let ranks = match spec.ranks {
+        Some(table) => super::Ranks::parse(
+            table,
+            super::spell_rank::RankBases {
+                roll: bases.damage || bases.heal || (bases.count && !bases.jumps),
+                reach: bases.range || bases.length,
+                radius: bases.radius,
+                degrees: bases.degrees,
+                to_hit: rolls_to_hit,
+            },
+        )?,
+        None => super::Ranks::default(),
+    };
     let look = look(spec.cast, shape, radius, damage_type, content)?;
     let look = SpellLook {
         noun: look.noun.unwrap_or_else(|| spec.name.to_lowercase()),
@@ -1121,6 +1160,7 @@ fn resolve(spec: SpellSpec, rules: &SpellRules, content: &Content) -> Result<Spe
         damage,
         effect,
         grows,
+        ranks,
         aim,
         study_difficulty,
     })
@@ -2138,16 +2178,17 @@ damage = "2d6"
         let list = spells(FIRST_LIST).expect("the first list");
         let spell = |id: &str| list.iter().find(|s| s.id == id).expect("a spell").clone();
         let at = |id: &str, armour: u32| r.mana(&spell(id), armour);
-        // (spell, armour %, mana): the spell scaling design §5.3 and §5.8.
+        // (spell, armour %, mana): the spell scaling design §5.3 and §5.8, at the mana floor of
+        // 4 (#1264: a level below it counts as 4).
         let table = [
-            ("spark", 0, 1),           // level 1, single target
-            ("magic_missile", 0, 3),   // level 3
+            ("spark", 0, 4),           // level 1, single target: the floor
+            ("magic_missile", 0, 4),   // level 3: the floor
             ("scorching_ray", 0, 7),   // level 7
             ("burning_hands", 0, 6),   // a cone: 4 × 1.6 = 6.4
             ("cause_wounds", 0, 3),    // touch: 4 × 0.7 = 2.8
             ("fireball", 0, 26),       // a burst of radius 2: 11 × 2.4 = 26.4
             ("lightning_bolt", 0, 20), // a line: 11 × 1.8 = 19.8
-            ("magic_missile", 40, 4),  // plate: 3 × 1.4 = 4.2
+            ("magic_missile", 40, 6),  // plate: 4 × 1.4 = 5.6
             ("fireball", 30, 34),      // banded mail: 26.4 × 1.3 = 34.32
         ];
         for (id, armour, mana) in table {
@@ -2156,12 +2197,21 @@ damage = "2d6"
         // Area is dearer than a single target of its level.
         let ball = spell("fireball");
         assert!(r.mana(&ball, 0) > i32::from(ball.level));
-        // A level-0 spell still costs 1.
+        // A level-0 spell costs the floor; without a `[mana]` table the floor is 1.
         let light = SpellData {
             level: 0,
             ..spell("spark")
         };
-        assert_eq!(r.mana(&light, 0), 1);
+        assert_eq!(r.mana(&light, 0), 4);
+        let plain = SpellRules::parse(
+            "data/spells.toml",
+            "[shapes]\nray = 100\nbolt = 100\ntouch = 100\nself = 100\ncone = 160\nline = 180\n\
+             burst = [180]\n[resolution]\nattack = { cost = 100 }\nauto = { cost = 100 }\n\
+             area = { cost = 100 }\ntouch = { cost = 70 }\n",
+        )
+        .expect("valid");
+        assert_eq!(plain.floor, 1);
+        assert_eq!(plain.mana(&light, 0), 1);
     }
 
     #[test]
@@ -2172,19 +2222,19 @@ damage = "2d6"
         // learned from scrolls only): the spell scaling design §5.8, §12.1.
         let table = [
             ("acid_arrow", 5, Some("2d6"), 5, false),
-            ("acid_splash", 3, Some("2d4"), 5, false),
+            ("acid_splash", 3, Some("2d4"), 7, false),
             ("arcane_bolt", 6, Some("4d6"), 11, true),
             ("balefire", 16, Some("4d6"), 29, false),
-            ("barkskin", 3, None, 3, true),
+            ("barkskin", 3, None, 4, true),
             ("beguile", 18, None, 18, true),
             ("benison", 12, Some("2d6"), 22, true),
             ("bind", 9, None, 9, true),
-            ("blessing", 3, None, 3, true),
+            ("blessing", 3, None, 4, true),
             ("blight", 7, Some("4d6"), 17, true),
             ("blink", 6, None, 6, true),
             ("bramble", 8, None, 19, true),
             ("brand", 7, None, 7, true),
-            ("burning_hands", 1, Some("2d4"), 3, true),
+            ("burning_hands", 1, Some("2d4"), 6, true),
             ("call_lightning", 11, Some("4d6"), 20, true),
             ("call_of_the_forest", 20, Some("+1"), 20, true),
             ("call_of_the_wild", 5, Some("+1"), 5, true),
@@ -2193,34 +2243,34 @@ damage = "2d6"
             ("call_the_elements", 35, Some("+1"), 35, true),
             ("cause_wounds", 4, Some("2d6"), 3, true),
             ("cloudburst", 20, None, 20, true),
-            ("cure_wounds", 3, Some("2d6"), 2, true),
-            ("curse_of_sloth", 3, None, 3, true),
-            ("evil_eye", 0, None, 1, true),
+            ("cure_wounds", 3, Some("2d6"), 3, true),
+            ("curse_of_sloth", 3, None, 4, true),
+            ("evil_eye", 0, None, 4, true),
             ("fear", 10, None, 18, true),
             ("fire_cloak", 12, None, 12, false),
             ("fireball", 11, Some("4d6"), 26, false),
             ("flame", 12, Some("6d6"), 29, true),
-            ("flare", 2, None, 4, false),
+            ("flare", 2, None, 7, false),
             ("flay", 8, Some("2d4"), 8, true),
             ("frost", 6, Some("4d6"), 14, true),
             ("fume", 4, None, 10, false),
             ("gale", 11, None, 20, true),
             ("glamour", 8, None, 8, false),
-            ("grave_breath", 1, Some("2d4"), 3, true),
+            ("grave_breath", 1, Some("2d4"), 6, true),
             ("grave_feast", 6, Some("2d6"), 4, true),
             ("grave_spear", 14, Some("4d6"), 25, false),
             ("leech", 10, Some("4d6"), 10, true),
             ("haste", 11, None, 11, false),
-            ("hex_of_weakness", 3, None, 3, true),
-            ("light", 0, None, 1, false),
+            ("hex_of_weakness", 3, None, 4, true),
+            ("light", 0, None, 4, false),
             ("lightning_bolt", 11, Some("4d6"), 20, false),
-            ("magic_missile", 3, Some("2d4"), 3, true),
-            ("mend", 1, Some("1d3"), 1, true),
+            ("magic_missile", 3, Some("2d4"), 4, true),
+            ("mend", 1, Some("1d3"), 3, true),
             ("mesmerise", 5, None, 5, true),
             ("mirk", 12, None, 29, false),
             ("nightsight", 4, None, 4, true),
             ("pitch_fire", 8, Some("2d6"), 14, false),
-            ("ray_of_frost", 1, Some("2d6"), 1, true),
+            ("ray_of_frost", 1, Some("2d6"), 4, true),
             ("rebuke", 14, Some("4d6"), 34, true),
             ("identify", 6, None, 60, false),
             ("reek", 13, Some("2d4"), 31, false),
@@ -2236,7 +2286,7 @@ damage = "2d6"
             ("sleep", 6, None, 11, false),
             ("slick", 6, None, 11, false),
             ("slumber", 15, None, 15, false),
-            ("spark", 1, Some("2d4"), 1, true),
+            ("spark", 1, Some("2d4"), 4, true),
             ("sunfire", 30, Some("10d6"), 90, true),
             ("thunderclap", 7, Some("2d6"), 13, true),
             ("unbinding", 8, None, 8, true),

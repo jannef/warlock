@@ -963,7 +963,7 @@ impl World {
         let skills = (own.filter(|_| def.rolls_to_hit())).unwrap_or_default();
         // Baleful's wider threat (`spell_threat`): an own cast only, as its aim.
         let threat = if own.is_some() {
-            me.spell_threat(&self.content)
+            me.spell_threat(&self.content, def)
         } else {
             combat::DEFAULT_THREAT
         };
@@ -1178,20 +1178,21 @@ impl<'c> Cast<'c> {
     }
 
     /// `caster`'s cast of `def`, paid by `pay`: its hooks summed once with the caster style's
-    /// ([`Actor::spell_mods_in_style`]), the roll at the rung of who casts it (its
-    /// own, a scroll's, a wand's), the reach and the degrees the caster's own.
+    /// ([`Actor::spell_mods_in_style_by`]: the caster's rank counts for an own cast only), the
+    /// roll at the rung of who casts it (its own, a scroll's, a wand's), the reach and the
+    /// degrees the caster's own.
     fn settle(
         caster: &Actor,
         content: &Content,
         (spell, def): (SpellId, &'c SpellData),
         pay: Pay,
     ) -> Self {
-        let mods = caster.spell_mods_in_style(content, def);
         let by = match pay {
             Pay::Mana(_) | Pay::Creature | Pay::Flask => CastBy::Own,
             Pay::Scroll(_, rungs) => CastBy::Scroll(rungs),
             Pay::Wand(_, rungs) => CastBy::Wand(rungs),
         };
+        let mods = caster.spell_mods_in_style_by(content, def, by);
         Cast {
             spell,
             def,

@@ -19,9 +19,13 @@ cast path shares.
 - **Spell levels** (S1, #748; the spell scaling design §5, decisions 1, 9, 10, 16): every spell
   has `level = N` (the design's 0 to `MAX_SPELL_LEVEL`, 70; the loader reads any `u8`), one
   number with two meanings: its **base mana**
-  (`max(1, level)`) and the **learning at which its grimoire teaches for certain**. A
-  spell of level 0 or 1 is a cantrip (a spell's own `mana` still replaces the base: Burning
-  hands and Grave breath, level 1 for the class tables' guard, cost 3, #979). There is no table of levels, no ceiling, no cap, and no
+  (`max(floor, level)`, the floor `[mana] floor` of `data/spells.toml`, 4 since #1264:
+  `SpellRules::floor`, default 1 without the table, so every spell of level 0 to 4 is priced as
+  a level-4 spell and a starting caster's pool buys four to eight casts of a cantrip, not twenty)
+  and the **learning at which its grimoire teaches for certain**. A
+  spell of level 0 or 1 is a cantrip (a spell's own `mana` still replaces the base, Identify's;
+  Burning hands' and Grave breath's `mana = 3` went with the floor, #1264: the cone price at the
+  floor, 6, is theirs). There is no table of levels, no ceiling, no cap, and no
   load-time check on how much a spell does, now or in any later slice (decision 16): authors
   write the strength they intend. Each tier column became a rule of the level (§5.2): the
   comfortable level is the spell's level; the cost is the level; the overreach surcharge,
@@ -107,7 +111,8 @@ cast path shares.
   none: what a cast trains).
 - **The hooks** (`content/spell_mod.rs`, `world/spell_mods.rs`; the spell scaling design §7.1):
   `SpellMods { rungs, scroll_rungs, wand_rungs, reach_rungs, degree_rungs, sides, dice, bonus,
-  reroll, riders, cells, radius_cells, degrees, cost }`, `SpellMods::add` (riders of a status
+  reroll, riders, cells, radius_cells, degrees, cost, time, to_hit, threat }` (the last three
+  the ranks' alone, #1264: no talent writes them), `SpellMods::add` (riders of a status
   merged, `merge_rider`). `SpellMod { mods, when }` is one source with its tag filter
   (`fits(tags)`: any tag, or every spell without one). Talents: `TalentEffect::SpellMod(SpellModSpec)`
   (`{ kind = "spell_mod", rungs = 1 }`), checked by `SpellModSpec::check` (something to do, the
@@ -118,8 +123,11 @@ cast path shares.
   SpellSides, SpellDice, SpellReroll, WandRungs}` and `SpellReach` (cells), `SpellDuration`
   (degrees), worn, unidentified too, with no tag filter (no shipped affix needs one; one is a
   field on the affix when it does). `Actor::spell_mods(content, spell)` is the one sum of
-  the two (the caster style's `Benefit::spell_mods` joins in `Actor::spell_mods_in_style`,
-  docs/dev/caster-styles.md; the schools' ranks went with #1263). `cost` is the one field beside the six: School
+  the two and the caster's **rank** in the spell (`Actor::rank_mods`, "Ranks" below; the
+  caster style's `Benefit::spell_mods` joins in `Actor::spell_mods_in_style`,
+  docs/dev/caster-styles.md; the schools' ranks went with #1263). `spell_mods_by(content,
+  spell, by)` and `spell_mods_in_style_by` take the `CastBy`: the rank joins an own cast only,
+  never a scroll's or a wand's (`Cast::settle` passes its `by`; `spell_roll(by)` too). `cost` is the one field beside the six: School
   focus's percent, summed into `spell_mana_percent` in `Actor::spell_base` (the decision of this
   slice: the design's §7.2 writes School focus as a `spell_mod` with a cost, so the struct
   carries it rather than a seventh effect kind).
@@ -133,19 +141,21 @@ cast path shares.
   `cells`; the radius on its own ladder plus `radius_cells`; clamped only to `MAX_REACH`, a
   cone `MAX_CONE`, the burst table's length; a touch 1); `spell_degrees` (the base severity
   climbed, plus `degrees`, at least 1; the status's `max` holds it in `Effects::add`);
-  `spell_to_hit` (the `aim` stat's modifier plus the worn `spell_to_hit`, of the Magus),
-  `item_spell_to_hit` (a scroll's or a wand's: Dexterity's alone), `spell_threat` (22 less
-  Baleful's, never below `combat::THREATS`' floor). The dev `progress` layer's `fireball rung
+  `spell_to_hit` (the `aim` stat's modifier plus the worn `spell_to_hit`, of the Magus, plus
+  the rank's `to_hit`), `item_spell_to_hit` (a scroll's or a wand's: Dexterity's alone),
+  `spell_threat(content, spell)` (22 less Baleful's and the rank's `threat`, never below
+  `combat::THREATS`' floor). The dev `progress` layer's `fireball rung
   2/4 (In 16; +1 Empower)` (`Actor::spell_rung_sources`).
 - **The one cast path** (`world/cast.rs`, `World::cast_spell` from `Action::Cast`; decisions the
   design left open are under "Choices" below):
-  - **Cost**, the one hook `Actor::spell_cost(content, spell)` (decisions 1 and 10): `SpellRules::mana` (`max(1, level)`, or the spell's own `mana`, ×
+  - **Cost**, the one hook `Actor::spell_cost(content, spell)` (decisions 1 and 10): `SpellRules::mana` (`max(floor, level)`, or the spell's own `mana`, ×
     `shape_cost(shape, its own radius)` × the resolution's `cost` ×
     (100 + `Actor::armour_spell_cost`, the summed `spell_cost_percent` of what is worn, each
     piece's less its own Mage-wrought `spell_ease`, never below 0: `Actor::worn_spell_cost`) / 100³,
     rounded to the nearest once, at least 1), then `TalentMods::spell_mana_with`:
     `spell_mana_percent` (Archmage −50, Empower −10) plus School focus's cost for a spell of
-    its tag (`TalentMods::focus(spell.tags)`), rounded down, at least 1 (`Actor::spell_base`,
+    its tag (`TalentMods::focus(spell.tags)`) and the rank's `mana_off` (the `cost` field of
+    `rank_mods`, negative), rounded down, at least 1 (`Actor::spell_base`,
     what `World::spend_mana` is given), then `Actor::mana_cost` (Frugal caster and the worn
     `mana_cost`, of Thrift, summed, at most 50 % off) inside
     `spend_mana`. `ability::spell_unavailable(actor, content, spell)` is
@@ -409,6 +419,42 @@ cast path shares.
   no "your spell grows" line anywhere: the menu shows the new dice when it next opens; the
   aiming mode by shape
   (`ui/target.rs`: `cast_spell`, `Aim::spell_line`; a cone's dots are its cells).
+- **Ranks** (#1264; `content/spell_rank.rs`, `world/spell_rank.rs`, tests
+  `world/spell_rank_tests.rs` and `content/spell_rank.rs`): every known spell has a rank, 1 to
+  `MAX_SPELL_RANK` (10), kept in `Actor::spells: BTreeMap<SpellId, u8>` beside the spell and
+  saved (JSON `"spells":{"12":3}`, by index; a spell a class grants is not there until a
+  reading deepens it: `Actor::spell_rank` reads 1 for any known spell not in the map, `None`
+  for one not known). `Actor::set_spell_rank` is the one writer (`learn_spell` at 1,
+  `deepen_spell` above). Casting trains no rank (#1270's Spellcraft `cast` mark is not a
+  rank's); only the grimoire raises it ("Learning": "Deepening").
+  - **The data**: `[spell.ranks]` (`SpellSpec::ranks`, a `BTreeMap<String, RankSpec>`, keys
+    `"2"` to `"10"`), resolved into `SpellData::ranks: Ranks` (`Vec<(u8, SpellMods)>` in rank
+    order) by `Ranks::parse` against `RankBases` (roll, reach, radius, degrees, to-hit: a field
+    the spell could never read is refused, an entry outside 2–10 or empty too). A rank's entry
+    is **what reaching it adds**; `Ranks::at(rank)` sums the entries up to `rank`
+    (cumulative). Fields, as the README documents them: `reroll`, `sides`, `dice`, `bonus`
+    (the dice hook), `cells`, `radius` (→ `radius_cells`), `degrees`, `mana_off` (→ `cost`,
+    negated), `time_off` (→ `time`, negated), `to_hit`, `threat`. Two worked examples ship:
+    Magic missile (an auto bolt) and Ray of frost (an attack ray, with `to_hit` and `threat`);
+    the per-school tables are #1265 to #1269.
+  - **Where they apply**: `Actor::rank_mods(content, spell)` (the sum at the caster's rank;
+    nothing at rank 1, for a spell with no table, or for one not known) joins
+    `Actor::spell_mods_by` for `CastBy::Own` only, so every hook reads it: the roll, reach,
+    degrees, riders, the cost (`spell_base`), the aim (`spell_to_hit`), the threat
+    (`spell_threat`), and the cast's time (`World::cast_price`: `full × (100 + time) / 100`,
+    `time` never below −90, at least 1). Scrolls and wands keep their rung rules and get no
+    rank; a creature's `spells` are `(id, 1)`, so creatures gain nothing.
+  - **Shown**: the Magic page's spell rows (`rank 3` in a column of its own, `RANK_W`), the
+    dump `spells` layer (`Fireball (level 11, rank 1, 26 mana): ...`) and JSON `spells[].rank`,
+    the read list (`(rank 3 of 10: a struggle)`) and its dialog ("Deepening Frost to rank 3 of
+    10 will be a struggle."), and a grimoire's description (`describe::grimoire_lines`:
+    `Teaches Frost (level 6): ...`, then `You know it at rank 3 of 10: reading it again would
+    deepen it.`, `... rank 10 of 10: it has nothing more to teach.`, or `You do not know it:
+    reading it is a study.`). `PerceptionView::own_spell_rank`.
+  - **Wiki**: `spell-ranks.md` (`xtask/src/wiki/spells.rs::ranks`: every spell with a table,
+    rank by rank, and the rank-10 sum in words, `rank_words`) and `deepening.md`
+    (`learning.rs::deepening`: the time and the difficulty per rank) on `wiki/src/magic.md`
+    "Spell ranks".
 - **Learning** (#396, grimoires #1260; `world/learn.rs`, `content/learning.rs`,
   `content/grimoire.rs`, tests `world/learn_tests.rs` and `content/learning.rs`):
   - **Grimoires** (`content/grimoire.rs`, `data/grimoires.toml`): spells are learned from
@@ -435,7 +481,8 @@ cast path shares.
     `knows_spell`. `Content::spell_of(SpellId)` is a spell's data whoever has it;
     `Content::class_spell` stays "a class ability gives it".
   - **Data**: `data/study.toml` (`StudyRules`: `base` 12, `per_overreach` 1, `known_per_point`
-    20, `turns_base` 100, `turns_per_level` 20, `bad_from` 6, `terrible_from` 15,
+    20, `per_rank` 2 (a deepening's, `rank_difficulty(rank)` = `per_rank × (rank − 1)`),
+    `turns_base` 100, `turns_per_level` 20, `bad_from` 6, `terrible_from` 15,
     all in spell levels since S1, and the words' thresholds `easy`,
     `struggle` in ways of 144); `data/mishaps/` (`Mishap`, one `[[mishap]]` a file, its
     `README.toml` the format: `band` slight/bad/terrible/lucky, `weight`, `message`, `effect`
@@ -450,13 +497,23 @@ cast path shares.
     `World::read` → `World::start_study(item, spell)` → `Spent::Study(Lesson)` →
     `World::study`, through `keep_at` like a meal; a grimoire read with a target is refused;
     `World::read_kind` makes a grimoire's read the `study` kind for a status's `blocks`):
-    refusals (no time) as the spec lists them: a spell known, no mana, untrained; `study_turns(rules, level, percent)` turns (`turns_base + turns_per_level ×
+    refusals (no time) as the spec lists them: a spell known at its last rank ("You know all
+    there is of Frost."), no mana, untrained; `study_turns(rules, level, percent)` turns (`turns_base + turns_per_level ×
     level`, Quick study's
-    `TalentMods::study_percent`); interrupted (`Ended::Came`/`Said`): "…you stop reading.",
+    `TalentMods::study_percent`), times the rank sought for a deepening; interrupted (`Ended::Came`/`Said`): "…you stop reading.",
     time lost (design §14 q1, the default). Done: the grimoire is found again by object
     (positions may shift; gone, nothing), the `study` use is trained, the odds are taken now,
     then the check. The grimoire is kept either way (#1260: read again after a failure, no
     limit but the time; kept after it taught, to sell).
+  - **Deepening** (#1264, "Ranks" above): the grimoire of a spell known below `MAX_SPELL_RANK`
+    is read for its next rank (`Lesson::rank: Some(sought)`, `Actor::rank_sought`): the same
+    reading, `sought` times as long, and `study_odds` makes it a check at any learning
+    (`Odds::rank: Some(sought)`; the overreach counted as at least 0, `StudyRules::rank_difficulty`
+    added). Made: `deepen_spell` ("The words settle deeper: you know Frost at rank 3 of 10."),
+    no experience. Failed: "The words add nothing new.", no mishap (the issue: the time is the
+    cost), read again at once. A class's spell is deepened like any other (it enters the map
+    at rank 2). `PerceptionView::studies` lists such a grimoire with `OwnStudy::rank:
+    Some(sought)` (a spell to learn: `None`).
   - **Experience** (#1212): `learn_spell` pays `Experience::spell_xp(level)` (`[spell] per_level`
     5 × max(level, 1)) through `grant_xp` when the spell was not known; class grants and dev
     actions insert into `spells` directly or via `TalentMods` and pay nothing.
@@ -480,7 +537,8 @@ cast path shares.
     `World::player_study_odds`): `Odds::overreach` = the spell's level − the learning; at 0
     or less `check: None` (certain, no draw), unless the spell's `study_difficulty`
     (`SpellData::study_difficulty`, default 0; the owner's Q7 of #828: the calls'
-    scrolls are very hard to learn) is above 0, which makes it a check at any learning with
+    scrolls are very hard to learn) is above 0 or the reading is a deepening (`Odds::rank`),
+    which makes it a check at any learning with
     the overreach counted as at least 0; else `(bonus, difficulty)`: Intelligence
     modifier + `skill_effect(Effect::Study)` + the class's affinity with the school +
     `TalentMods::study_bonus`, against `StudyRules::difficulty(overreach′, known levels)`, where
@@ -500,13 +558,17 @@ cast path shares.
     "learned anyway, one tier lower in power" is learned as is (no per-spell power yet);
     "a wild surge casts another spell" is not a mishap yet.
   - **Presentation**: `PerceptionView::own_spells`, `studies()` (`OwnStudy { item, spell,
-    chance }`: grimoires teaching an unknown spell, pack order; none untrained); the dump
-    `spells` layer and JSON `spells` (the spells known; no study lines since #1260); the dev
+    rank, chance }`: grimoires teaching an unknown spell or deepening a known one below rank
+    10, pack order; none untrained); the dump
+    `spells` layer and JSON `spells` (the spells known with their ranks; no study lines since
+    #1260); the dev
     `progress` layer's `learning` line. The read list (`ui/object_screen.rs`, `ObjectList::Read`)
-    lists grimoires with the scrolls, marks each in `studies()` `(learning: a struggle)`, and asks
+    lists grimoires with the scrolls, marks each in `studies()` `(learning: a struggle)` or
+    `(rank 3 of 10: a struggle)`, and asks
     in the one dialog (Read it / Don't read it) before reading one; a grimoire it does not mark
     is read at once and its refusal said. Snapshots `grimoire-read-list`, `grimoire-read-dialog`,
-    `grimoire-read-list-untrained` (`ui/grimoire_tests.rs`), `grimoire-read-list-after`
+    `grimoire-read-list-untrained`, `grimoire-read-list-known`, `grimoire-read-dialog-deepen`
+    (`ui/grimoire_tests.rs`), `grimoire-read-list-after`
     (`ui/stale_list_tests.rs`).
   - **Wiki**: `xtask/src/wiki/learning.rs` (`study-chances.md`, `study-times.md`,
     `study-affinities.md`, `mishaps.md`) on `wiki/src/magic.md`'s "Learning spells from

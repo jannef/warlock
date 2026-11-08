@@ -12,7 +12,7 @@ expression: "render(case, content.clone())"
                     │ Class                                                    │
                     │ > b  Orison                                              │
                     │ Spells                                                   │
-                    │   c  Mend               1d4 healed, 1 mana, aimed        │
+                    │   c  Mend               1d4 healed, 3 mana, aimed        │
                     │ Skills                                                   │
                     │   d  Decipher           no unknown scroll                │
                     │   e  Heal               nothing to treat                 │

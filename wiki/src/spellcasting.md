@@ -254,6 +254,9 @@ their own way, listed in their own row:
   element, makes those spells reach a cell farther (range or length, not a burst's radius, and
   never a touch's) and cost 10 % less. [Magic items](affixes.md#suffixes) *of Farcasting* add their cells to every spell's
   reach but a touch's, and *of Lingering* their degrees to every blessing and hex.
+- **The spell's rank.** Reading a spell's grimoire again deepens it, and each rank adds what the
+  spell's own table says, in any of these ways and a few more (the aim, the critical range, the
+  casting time, the mana): see [Spell ranks](magic.md#spell-ranks).
 
 They apply in this order: the rung, then the dice, then the roll (with its rerolls), then the harm,
 then the extra effects. A [critical](combat.md#criticals) rolls the dice twice, as a blow's does.

@@ -168,7 +168,7 @@ fn level_of(w: &World, id: ActorId) -> u32 {
 /// themselves), mana topped up; what the cast's events were.
 fn cast(w: &mut World, name: &str, at: Option<(i32, i32)>) -> Vec<Event> {
     let spell = w.content().spell_id(name).expect(name);
-    w.player_mut().spells.insert(spell);
+    w.player_mut().spells.insert(spell, 1);
     w.player_mut().mana = 60;
     let here = w.player_pos();
     *w.perception = crate::perception::Perception::compute(&w.state, &w.content, &mut w.lights);
@@ -304,7 +304,7 @@ fn snipers_reach_a_cell_farther_from_rank_five() {
     // The cast reaches it: a cell one past the base range is refused at rank 4 and goes off at
     // rank 5 (an open row of floor east of the showcase's start).
     let at = Some(Pos::new(w.player_pos().x + base + 1, w.player_pos().y));
-    w.player_mut().spells.insert(sp("arcane_bolt"));
+    w.player_mut().spells.insert(sp("arcane_bolt"), 1);
     w.player_mut().mana = 60;
     ranks(&mut w, &[("sniper", 4)]);
     assert!(!w.apply(&Action::Cast("arcane_bolt".into(), at)).took_turn);

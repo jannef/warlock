@@ -2892,9 +2892,13 @@ mod tests {
     fn more_waits_for_its_keys_and_nothing_else_acts_meanwhile() {
         const SPACE: (KeyCode, &str) = (KeyCode::Space, "");
         let mut app = arena_app();
-        // A turn of the fight says more than the message line holds at once.
+        // A turn of the fight soon says more than the message line holds at once.
         frame(&mut app, &[WAIT]);
+        while mode(&app) == InputMode::Normal && actions(&app).len() < 30 {
+            frame(&mut app, &[WAIT]);
+        }
         assert_eq!(mode(&app), InputMode::More(0));
+        let taken = actions(&app).len();
         let stops = {
             let (game, bindings) = (app.world().resource::<Game>(), Bindings::default());
             super::super::more::stops(game, 80, &bindings)
@@ -2905,7 +2909,7 @@ mod tests {
             &mut app,
             &[(KeyCode::Numpad2, "2"), WAIT, HELP, (KeyCode::KeyV, "v")],
         );
-        assert_eq!(actions(&app).len(), 1);
+        assert_eq!(actions(&app).len(), taken);
         assert!(names(&app).is_empty());
         assert_eq!(mode(&app), InputMode::More(0));
         // A held key's repeats never turn a page.
@@ -2924,8 +2928,8 @@ mod tests {
         // Play goes on, until a turn says too much again; Esc skips the rest of its messages
         // without opening the pause menu.
         frame(&mut app, &[WAIT]);
-        assert_eq!(actions(&app).len(), 2);
-        while mode(&app) == InputMode::Normal && actions(&app).len() < 30 {
+        assert_eq!(actions(&app).len(), taken + 1);
+        while mode(&app) == InputMode::Normal && actions(&app).len() < taken + 30 {
             frame(&mut app, &[WAIT]);
         }
         assert_eq!(mode(&app), InputMode::More(0));

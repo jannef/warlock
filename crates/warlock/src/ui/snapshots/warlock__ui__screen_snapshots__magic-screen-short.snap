@@ -9,10 +9,10 @@ expression: "render(case, content.clone())"
 │   Toucher                  0  ──────────                                     │
 │   Battle caster            0  ──────────                                     │
 │ Spells                                                                       │
-│   Burning hands           2d6 fire, burns one in four, 2 mana, aimed         │
-│   Ray of frost            2d6 cold, numbs, 1 mana, aimed                     │
-│   Magic missile           4d4 force, shoves on a big hit, 2 mana, aimed      │
-│   Arcane bolt             6d6 force, shoves on a big hit, 9 mana, aimed      │
-│   Blink                   5 mana                                             ↓
+│   Burning hands           rank 1  2d6 fire, burns one in four, 5 mana, aimed │
+│   Ray of frost            rank 1  2d6 cold, numbs, 3 mana, aimed             │
+│   Magic missile           rank 1  4d4 force, shoves on a big hit, 3 mana, aime
+│   Arcane bolt             rank 1  6d6 force, shoves on a big hit, 9 mana, aime
+│   Blink                   rank 1  5 mana                                     ↓
 │ ↑↓ scroll   Esc close                                                        │
 └─ 1 Char · 2 Inv · 3 Eqp · 4 Skl · 5 Weap · 6 Mag · 7 Qst · 8 Tal · 9 Story ──┘
