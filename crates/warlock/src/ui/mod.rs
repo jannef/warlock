@@ -42,6 +42,8 @@ mod equipment_screen;
 mod files_screen;
 mod glyphs;
 pub(crate) mod graveyard_screen;
+#[cfg(test)]
+mod grimoire_tests;
 mod info_tabs;
 mod level_up_screen;
 mod look;

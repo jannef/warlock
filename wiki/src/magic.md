@@ -2,7 +2,7 @@
 
 You cast a **spell** from the [abilities menu](abilities.md#the-abilities-menu) (`a`), where spells
 have their own heading, *Spells*. Spells are paid for in [mana](mana.md). You know a spell for good
-once your class gives it to you or once you have learned it from a scroll (below).
+once your class gives it to you or once you have learned it from a grimoire (below).
 
 Every spell follows the same rules: its [spell level](#spell-levels), its
 [shape](spellcasting.md#shapes), and how it finds its target. Your [learning](#learning) decides
@@ -30,10 +30,10 @@ Each casting class gives only a few spells, at the levels in its [class table](c
 - A bard, a paladin, or a ranger gets a few boons and hexes.
 - The other classes get none.
 
-A class's spells are only where it starts. Any spell can be learned from a scroll, and some come
-only from scrolls ([Acid arrow](#spell-acid-arrow), [Grave spear](#spell-grave-spear),
-[Slumber](#spell-slumber), [Glamour](#spell-glamour), and others). A caster who finds few scrolls
-stays a modest one. A spell your class gives is yours at that level, whatever your
+A class's spells are only where it starts. Any spell can be learned from a grimoire, and some come
+only from grimoires ([Acid arrow](#spell-acid-arrow), [Grave spear](#spell-grave-spear),
+[Slumber](#spell-slumber), [Glamour](#spell-glamour), and others). A caster who finds few
+grimoires stays a modest one. A spell your class gives is yours at that level, whatever your
 [Spellcraft](skills.md#skill-spellcraft).
 
 {{#include generated/class-spells.md}}
@@ -54,7 +54,7 @@ itself again, wherever it stands.
 ## The spells
 
 Every spell has a **[level](#spell-levels)**, from 0 to 70. The level sets its cost in
-[mana](mana.md#spending-it), and how learned a caster must be to learn it from a scroll for
+[mana](mana.md#spending-it), and how learned a caster must be to learn it from a grimoire for
 certain.
 
 Every spell has a **base**: what it does for anyone who casts it. It may also have **ladders** for
@@ -88,15 +88,14 @@ far it reaches now and which dice you roll again.
 unidentified opens, as for the [scroll of identify](scrolls.md#scroll-of-identify) (see
 [Scrolls](scrolls.md#the-scroll-of-identify)). When it tells you something new, the thing's description opens.
 
-Every [scroll](scrolls.md) holds a spell. Each one you can read casts its spell, and each teaches
-its spell if you study it. The [scroll of identify](scrolls.md#scroll-of-identify) teaches
-[Identify](#spell-identify), and the [scroll of light](scrolls.md#scroll-of-light) teaches
-[Light](#spell-light).
+Every [scroll](scrolls.md) holds a spell, and reading it casts that spell once. Spells are learned
+for good from [grimoires](#learning-spells-from-grimoires): the grimoire of identify teaches
+[Identify](#spell-identify), and the grimoire of light teaches [Light](#spell-light).
 
 ## Spell levels
 
 Every spell has a level, from 0 to 70. It is the spell's base [mana](mana.md#spending-it) cost, and
-the [learning](#learning) at which you learn it from a scroll for certain.
+the [learning](#learning) at which you learn it from a grimoire for certain.
 
 A spell of level 0 or 1 is a *cantrip*. It costs 1 mana, apart from the few that set a price of
 their own ([Burning hands](#spell-burning-hands) and [Grave breath](#spell-grave-breath) cost 3).
@@ -106,9 +105,9 @@ What a spell does comes from its own roll and ladders (the list above), whatever
 
 ## Learning
 
-Your **learning** is how far your study of magic reaches. A scroll of a spell at or below your
-learning teaches you for certain. Above it, the study is a check (see
-[Learning spells from scrolls](#learning-spells-from-scrolls)).
+Your **learning** is how far your study of magic reaches. A grimoire of a spell at or below your
+learning teaches you for certain. Above it, reading it is a check (see
+[Learning spells from grimoires](#learning-spells-from-grimoires)).
 
 Learning never changes what a spell does or costs. Your [stats](stats.md) make a spell grow (see
 [How a spell grows](spellcasting.md#how-a-spell-grows)), and your [mana](mana.md#how-much) is what
@@ -121,8 +120,8 @@ the first spells. The soft cap of 100 reaches level 30, and 150 reaches the last
 
 {{#include generated/learning.md}}
 
-**A character not trained in Spellcraft cannot learn a spell from a scroll at all**, not even a
-cantrip. The study is refused and takes no time. "Trained" means the skill is among your
+**A character not trained in Spellcraft cannot learn a spell from a grimoire at all**, not even a
+cantrip. Reading one is refused and takes no time. "Trained" means the skill is among your
 [skills](skills.md); an item's or a talent's bonus to a skill you do not have does not train you.
 
 Without the skill you can still read a scroll to [cast it](scrolls.md#spell-scrolls), which needs
@@ -178,40 +177,39 @@ another.
 
 {{#include generated/spell-armour.md}}
 
-## Learning spells from scrolls
+## Learning spells from grimoires
 
-Every spell comes on a scroll of its own. The
-[scroll of magic missile](scrolls.md#scroll-of-magic-missile) teaches
-*[Magic missile](#spell-magic-missile)*, the [scroll of fireball](scrolls.md#scroll-of-fireball)
-teaches *[Fireball](#spell-fireball)*, the [scroll of lightning](scrolls.md#scroll-of-lightning)
-*[Lightning bolt](#spell-lightning-bolt)*, and the [scroll of frost](scrolls.md#scroll-of-frost)
-*[Frost](#spell-frost)*.
+You learn a spell from its **grimoire**, a book written for teaching it. Every spell with a scroll
+has a grimoire too: the grimoire of fireball teaches *[Fireball](#spell-fireball)*, the grimoire of
+identify *[Identify](#spell-identify)*, the grimoire of lightning
+*[Lightning bolt](#spell-lightning-bolt)*. A [scroll](scrolls.md) teaches nothing: reading one
+casts its spell once.
 
-There are two things you can do with a scroll:
+Grimoires are rare. Wherever a scroll of a spell turns up by chance (in loot, a chest, a shop, a
+creature's pack, or your [starting kit](starting-kit.md)), it is its grimoire instead one time in
+ten. A scroll placed by hand stays a scroll. A grimoire weighs 800 g and is worth five times its
+scroll.
 
-- **[Reading](scrolls.md)** it casts its spell once, at the scroll's own rung, and costs no
-  [mana](mana.md#spending-it) (see [Scrolls](scrolls.md#spell-scrolls)).
-- **Studying** it (`L`, then the scroll) teaches you its spell for good. It uses up the scroll,
-  whatever comes of it.
+A grimoire is written in plain words, so you know which spell it teaches as soon as you see it.
 
-You can study a scroll once you know what it is (you have read one like it, or
-[identified](magic-items.md#unidentified-items) it), and only if you do not know its spell yet. An
-unknown scroll is refused ("You do not know what this says."), so identify your scrolls first. A
-scroll of a spell you already know can still be read, sold, or given away.
+**Reading** a grimoire (`r`, then the grimoire) is how you learn from it. The read list shows your
+chance beside each grimoire you could learn from, and asks before you begin. You keep the grimoire
+whatever comes of it: read it again after a failure, or sell it once it has taught you. Reading the
+grimoire of a spell you already know only tells you so, and takes no time.
 
 To learn at all you need some [mana](mana.md#how-much), and training in
-[Spellcraft](skills.md#skill-spellcraft). Without the training, the study is refused and takes no
-time ("You have no training in Spellcraft; you cannot make sense of how to learn a spell from a
-scroll.").
+[Spellcraft](skills.md#skill-spellcraft). Without the training, reading a grimoire is refused and
+takes no time ("You have no training in Spellcraft; you cannot make sense of how to learn a spell
+from a grimoire.").
 
-A study takes time, by the spell's level: 10 minutes plus 2 more per level, at a normal pace. For
-Fireball, level 11, that is 32 minutes:
+Reading a grimoire takes time, by the spell's level: 10 minutes plus 2 more per level, at a normal
+pace. For Fireball, level 11, that is 32 minutes:
 
 {{#include generated/study-times.md}}
 
-The world goes on around you while you study. A creature coming into view, a blow, or anything
-else that would stop a rest stops the study. The time is lost, but you keep the scroll. Once you
-begin, you cannot stop of your own accord.
+The world goes on around you while you read. A creature coming into view, a blow, or anything
+else that would stop a rest stops the reading. The time is lost. Once you begin, you cannot stop
+of your own accord.
 
 A spell whose level is at most your [learning](#learning) is learned for certain. Above that, every
 level too high (the **overreach**) makes it harder:
@@ -235,15 +233,15 @@ The game tells you the chance in words: *certain*, *easy*, *a struggle*, or *far
 
 {{#include generated/study-affinities.md}}
 
-If you fail, the scroll crumbles to dust and a **mishap** befalls you. The farther the spell was
-beyond you, the worse it is: *slight* below 6 levels of overreach, *bad* from 6, and *terrible*
-from 15. A few lucky mishaps can come with any of them. A failure costs only that scroll: the spell
-may come your way again.
+If you fail, a **mishap** befalls you. The farther the spell was beyond you, the worse it is:
+*slight* below 6 levels of overreach, *bad* from 6, and *terrible* from 15. A few lucky mishaps can
+come with any of them. A failure costs only the time and the mishap: you keep the grimoire, and may
+read it again.
 
 {{#include generated/mishaps.md}}
 
-Studying trains *[Spellcraft](skills.md#skill-spellcraft)* and your
+Reading a grimoire trains *[Spellcraft](skills.md#skill-spellcraft)* and your
 [Intelligence](stats.md#stat-intelligence), whatever comes of it.
-*[Decipher script](skills.md#skill-decipher-script)* plays no part in a study: it is for
+*[Decipher script](skills.md#skill-decipher-script)* plays no part in it: it is for
 [making out a scroll](scrolls.md#making-out-a-scroll) you only want to read. Spending
 [mana](mana.md) on a spell also trains Spellcraft, one time in four.

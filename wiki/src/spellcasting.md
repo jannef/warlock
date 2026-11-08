@@ -64,7 +64,7 @@ What each resolution does to a spell's cost:
 ## Spell types
 
 Every spell of a [damage type](damage-types.md) carries that type's rule, whether it is cast from
-[mana](mana.md#spending-it), a [scroll](magic.md#learning-spells-from-scrolls), or a
+[mana](mana.md#spending-it), a [scroll](scrolls.md#spell-scrolls), or a
 [wand](wands-and-rods.md#wands). The rules belong to magic alone: a
 [Flaming](affixes.md#prefixes) sword's blow follows none of them. They spare no one: you and
 your [allies](allies.md) are struck like anyone else the spell reaches.
@@ -143,7 +143,7 @@ damaged is eaten away. Acid eats no creature's gear.
 An area spell (a burst, a cone, or a line; see [shapes](#shapes)) with a
 [damage type](damage-types.md) may destroy [items lying on the floor](objects.md#piles) it reaches,
 whether it is cast from [mana](mana.md#spending-it), a
-[scroll](magic.md#learning-spells-from-scrolls), or a [wand](wands-and-rods.md#wands). So may a
+[scroll](scrolls.md#spell-scrolls), or a [wand](wands-and-rods.md#wands). So may a
 dragon's breath. A [Fireball](magic.md#the-spells) can burn the scrolls it lands on, and a blast of
 [Frost](magic.md#the-spells) can shatter potions.
 
@@ -206,7 +206,7 @@ Some [spells](magic.md#the-spells) do something no other spell does. None of the
 A **zone** is an area that lies on the floor for a while. [Balefire](magic.md#the-spells) burns,
 [Reek](magic.md#the-spells) poisons, [Mirk](magic.md#the-spells) darkens,
 [Slick](magic.md#the-spells) trips, and [Fume](magic.md#the-spells) smokes. All five come only
-from [scrolls](magic.md#learning-spells-from-scrolls) you find (and a flask of smoke lays Fume's).
+from the [grimoires](magic.md#learning-spells-from-grimoires) and [scrolls](scrolls.md#spell-scrolls) you find (and a flask of smoke lays Fume's).
 [Pitch fire](magic.md#spell-pitch-fire) burns too, in a pool where it bursts; it comes from a scroll or
 a [flask](potions.md#flasks) of it.
 

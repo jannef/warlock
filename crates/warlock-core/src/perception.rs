@@ -148,9 +148,9 @@ pub struct OwnResource {
     pub max: u16,
 }
 
-/// A scroll the player could study (spec §8 "Spells"): one whose type they know, teaching a
-/// spell they do not know, with the chance in words ("easy", "a struggle", "far beyond you",
-/// or "certain"). Never the number.
+/// A grimoire the player could learn from (spec §8 "Spells": "Learning"): one teaching a spell
+/// they do not know, with the chance in words ("easy", "a struggle", "far beyond you", or
+/// "certain"). Never the number.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct OwnStudy {
     /// The inventory stack, by position.
@@ -2100,26 +2100,17 @@ impl<'a> PerceptionView<'a> {
         self.player.known_spells(self.content)
     }
 
-    /// Whether the player may learn from a scroll at all (spec §8 "Spells": "Learning"): trained
-    /// in Spellcraft.
-    pub fn can_learn(&self) -> bool {
-        self.player.learning(self.content).is_some()
-    }
-
-    /// The scrolls the player could study now (spec §8 "Spells"), in pack order: those whose
-    /// type they know that teach a spell they do not know, each with its chance in words; none
-    /// for a character not trained in Spellcraft. What the study list offers.
+    /// The grimoires the player could learn from now (spec §8 "Spells": "Learning"), in pack
+    /// order: those that teach a spell they do not know, each with its chance in words; none for
+    /// a character not trained in Spellcraft. What the read list tells of a grimoire.
     pub fn studies(&self) -> Vec<OwnStudy> {
         let Some(rules) = self.content.study_rules() else {
             return Vec::new();
         };
         (self.player.inventory.iter().enumerate())
             .filter_map(|(item, stack)| {
-                let reading = self.content.object(stack.object).read.as_ref()?;
-                let spell = reading.teaches()?;
-                if !self.lore.is_identified(stack.object)
-                    || self.player.knows_spell(self.content, spell)
-                {
+                let spell = self.content.object(stack.object).grimoire?;
+                if self.player.knows_spell(self.content, spell) {
                     return None;
                 }
                 let odds =

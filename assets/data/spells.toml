@@ -4,7 +4,7 @@
 #
 # A spell has a level, 0 to 70 by design (spells/README.toml). It is one number with two
 # meanings: the spell's base mana (its level, at least 1: a cantrip of level 0 or 1 costs 1), and the learning
-# at which a scroll of it teaches for certain (study.toml). Nothing says how much a spell
+# at which its grimoire teaches for certain (study.toml). Nothing says how much a spell
 # of a level may do: its own data does.
 #
 # A cast's mana (the one cost, magic design §5): the spell's base mana, × its shape's percent (a

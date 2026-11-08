@@ -1,5 +1,5 @@
-# A scroll of water walking (spec §8 "Scrolls", "Spells"): read it (`r`), and it casts Water walking, a
-# level-5 spell, free of mana; study it (`L`), and you may learn the spell for good. Level and
+# A scroll of water walking (spec §8 "Scrolls", "Spells"): read it (`r`), and it casts Water
+# walking, a level-5 spell, free of mana; its grimoire teaches the spell for good. Level and
 # frequency by its spell's level (README.toml): the lower, the commoner the scroll.
 [[object]]
 id = "scroll_of_water_walking"

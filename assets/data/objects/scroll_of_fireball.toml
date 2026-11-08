@@ -1,7 +1,7 @@
-# A scroll of fireball (spec §8 "Scrolls", "Spells"): read it (`r`) and aim, and it casts
-# Fireball, free of mana, a rung up its ladder (3d6; the spell scaling design §7.4): a fireball
-# flies to the cell aimed at, or the first creature in its way, and explodes. Study it (`L`), and
-# you may learn the spell for good.
+# A scroll of fireball (spec §8 "Scrolls", "Spells"): read it (`r`) and aim, and it casts Fireball,
+# free of mana, a rung up its ladder (3d6; the spell scaling design §7.4): a fireball flies to the
+# cell aimed at, or the first creature in its way, and explodes. Its grimoire teaches the spell for
+# good.
 [[object]]
 id = "scroll_of_fireball"
 name = "scroll of fireball"

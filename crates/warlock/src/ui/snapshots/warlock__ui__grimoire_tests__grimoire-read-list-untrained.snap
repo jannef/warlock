@@ -1,0 +1,34 @@
+---
+source: crates/warlock/src/ui/grimoire_tests.rs
+expression: shown
+---
+ Welcome to Hall. Press ? for controls.
+
+
+
+
+
+
+
+
+
+           ┌─ Read ─────────────────────────────────────────────────────────────────────┐
+           │                                                                            │
+           │ Scrolls                                                                    │
+           │ > a - ? a grimoire of light                                         800 g  │
+           │   b - ? a grimoire of fireball                                      800 g  │
+           │   c - ? a scroll of frost                                            50 g  │
+           │                                                                            │
+           │ a-c or Enter read   Esc cancel                                             │
+           └────────────────────────────────────────────────────────────────────────────┘
+
+
+
+
+
+
+
+
+
+
+ Hall  ·  HP 23/23  ·  MP 2/2  ·  Sta 11/11  ·  Lv 1  ·  08:00  ·  11 Darkening          ? controls

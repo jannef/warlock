@@ -514,7 +514,7 @@ fn spell_scrolls_drop_by_level() {
     // The spell level of the spell a stack's scroll teaches, if it is one.
     let level = |s: &Stack| {
         let reading = c.object(s.object).read.as_ref()?;
-        Some(c.spell(reading.teaches()?).level)
+        Some(c.spell(reading.spell()?).level)
     };
     // Shallow: no level-11 scroll (item level 6) yet, but cantrips.
     let shallow: Vec<u8> = (roll_many(&c, 4000, 3, LootGrade::Any).iter())

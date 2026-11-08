@@ -479,7 +479,7 @@ impl Use {
             Use::Search => "a turn spent searching",
             Use::Spot => "noticing something hidden in passing",
             Use::FindTrap => "finding a hidden trap, searching or in passing",
-            Use::Study => "studying a spell from a scroll",
+            Use::Study => "learning a spell from a grimoire",
             Use::Decipher => "making out a scroll you cannot simply read",
             Use::Cast => "spending mana: a spell, or an ability paid in it",
             Use::Disarm => "trying to disarm a trap",

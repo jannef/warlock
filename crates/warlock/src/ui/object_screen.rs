@@ -19,22 +19,20 @@
 //! marked); marks belong to stacks, so they stay as the pages turn. That is one action, recorded
 //! like any other, naming the stacks by position. Esc cancels. The list is read from the
 //! perception snapshot when the screen opens, and read again whenever the run changes while it
-//! is open ([`ObjectScreen::refresh`]): the study list stays beneath the dialog that studies, and
-//! a scroll used up shifts the positions of the stacks after it, so a row kept from before would
-//! name another stack (#591).
+//! is open ([`ObjectScreen::refresh`]): the read list stays beneath the dialog that reads a
+//! grimoire, and a scroll used up shifts the positions of the stacks after it, so a row kept from
+//! before would name another stack (#591).
 //!
 //! The eat screen (`E`, spec §8 "Hunger") lists what can be eaten: first what lies here
 //! ("lying here"; the cursor starts on it, as ADOM asks about the floor first), then what the
 //! player carries. A letter or Enter on the `>` row eats it.
 //!
-//! The read screen (`r`, spec §8 "Scrolls") lists the scrolls the player carries: choosing a
-//! spell scroll aims it (`ui::target`), choosing the scroll of identify replaces the list with
-//! the unidentified stacks carried, and choosing one of those reads the scroll on it.
-//!
-//! The study screen (`L`, spec §8 "Spells") lists the scrolls the player could study (their
-//! type known, their spell not: `PerceptionView::studies`), each marked with the spell it
-//! teaches and the chance in words; choosing one asks in the one dialog (study it, or not),
-//! and a study is [`Action::Study`].
+//! The read screen (`r`, spec §8 "Scrolls") lists the scrolls and grimoires the player carries:
+//! choosing a spell scroll aims it (`ui::target`), choosing the scroll of identify replaces the
+//! list with the unidentified stacks carried, and choosing one of those reads the scroll on it.
+//! A grimoire whose spell the player could learn (`PerceptionView::studies`, spec §8 "Spells":
+//! "Learning") is marked with the chance in words, and choosing it asks in the one dialog (read
+//! it, or not); any other grimoire is read at once, which says why it teaches nothing.
 //!
 //! The temper screen (the Temper ability beside a forge's anvil, spec §7 "Special rooms") lists
 //! the metal arms and armour the player carries that can be made finer; choosing one tempers it
@@ -70,10 +68,8 @@ pub enum ObjectList {
     Throw,
     /// Food lying here, then food in the pack: choose one to eat.
     Eat,
-    /// The scrolls in the pack: choose one to read.
+    /// The scrolls and grimoires in the pack: choose one to read.
     Read,
-    /// The scrolls the player could study: choose one to learn its spell.
-    Study,
     /// The unidentified stacks in the pack: choose one to read the scroll of identify on, or to
     /// cast Identify on.
     Identify(IdentifyBy),
@@ -107,7 +103,6 @@ impl ObjectList {
             ObjectList::Throw => " Throw ",
             ObjectList::Eat => " Consume what? ",
             ObjectList::Read => " Read ",
-            ObjectList::Study => " Study ",
             ObjectList::Identify(_) => " Identify ",
             ObjectList::Temper => " Temper ",
             ObjectList::Whittle => " Whittle ",
@@ -123,7 +118,6 @@ impl ObjectList {
             ObjectList::Throw => "You have nothing to throw.",
             ObjectList::Eat => "You have nothing to consume.",
             ObjectList::Read => "You have nothing to read.",
-            ObjectList::Study => "You carry no scroll whose spell you could learn.",
             ObjectList::Identify(_) => "You carry nothing unidentified.",
             ObjectList::Temper => "You carry no metal arms or armour to work.",
             ObjectList::Whittle => "You carry no wooden weapon to whittle.",
@@ -148,8 +142,6 @@ impl ObjectList {
             | ObjectList::Whittle
             | ObjectList::Decipher
             | ObjectList::Give => 78,
-            // Room for the spell each teaches and the chance.
-            ObjectList::Study => 80,
         }
     }
 
@@ -160,7 +152,6 @@ impl ObjectList {
             ObjectList::Throw
                 | ObjectList::Eat
                 | ObjectList::Read
-                | ObjectList::Study
                 | ObjectList::Identify(_)
                 | ObjectList::Temper
                 | ObjectList::Whittle
@@ -217,8 +208,8 @@ struct Entry {
     /// The scroll of identify: choosing it to read asks what to read it on (any other scroll
     /// not aimed, a spell on oneself, is read at once).
     identify: bool,
-    /// A scroll to study: what it is ("scroll of frost"), the spell it teaches, and the chance
-    /// in words, for the dialog.
+    /// A grimoire whose spell may be learned: what it is ("grimoire of frost"), the spell it
+    /// teaches, and the chance in words, for the dialog.
     study: Option<(String, String, &'static str)>,
 }
 
@@ -227,7 +218,7 @@ pub struct ObjectScreen {
     list: ObjectList,
     /// The stacks listed, grouped by class and paged (`paged_list`).
     entries: PagedList<Entry>,
-    /// What an empty list says: [`ObjectList::empty`], or why studying is refused outright.
+    /// What an empty list says: [`ObjectList::empty`].
     empty: &'static str,
     /// The marked stacks of a selection screen, by position: marks belong to stacks, not to
     /// the letters a page gives them, so they stay across pages.
@@ -271,6 +262,8 @@ impl ObjectScreen {
             def.food.is_some() || def.drink.is_some()
         };
         let reading = |s: &Stack| content.object(s.object).read.as_ref();
+        let readable =
+            |s: &Stack| reading(s).is_some() || content.object(s.object).grimoire.is_some();
         let studies = view.studies();
         let items: Vec<Item> = match list {
             ObjectList::PickUp => (0..pile.len()).map(Item::Floor).collect(),
@@ -289,10 +282,9 @@ impl ObjectScreen {
             )
             .collect(),
             ObjectList::Read => (0..pack.len())
-                .filter(|&i| reading(&pack[i]).is_some())
+                .filter(|&i| readable(&pack[i]))
                 .map(Item::Pack)
                 .collect(),
-            ObjectList::Study => studies.iter().map(|s| Item::Pack(s.item)).collect(),
             // The scroll read is not among them: reading it names its own kind anyway.
             ObjectList::Identify(by) => (0..pack.len())
                 .filter(|&i| by != IdentifyBy::Scroll(i) && !view.lore().knows(&pack[i]))
@@ -354,9 +346,9 @@ impl ObjectScreen {
                     .then(|| view.judge(s))
                     .flatten()
                     .map(|w| format!("looks {w}"));
-                // The study list: the spell it teaches, and the chance in words.
+                // A grimoire in the read list: the spell it teaches, and the chance in words.
                 let study = match (list, item) {
-                    (ObjectList::Study, Item::Pack(i)) => {
+                    (ObjectList::Read, Item::Pack(i)) => {
                         (studies.iter()).find(|s| s.item == i).and_then(|study| {
                             let spell = content.spell_of(study.spell)?.name.clone();
                             Some((view.lore().title(s), spell, study.chance))
@@ -364,8 +356,7 @@ impl ObjectScreen {
                     }
                     _ => None,
                 };
-                let teaches =
-                    (study.as_ref()).map(|(_, spell, chance)| format!("{spell}: {chance}"));
+                let teaches = (study.as_ref()).map(|(_, _, chance)| format!("learning: {chance}"));
                 let marks: Vec<String> = (teaches.into_iter())
                     .chain(mark)
                     .chain(smell)
@@ -390,11 +381,7 @@ impl ObjectScreen {
         Self {
             list,
             entries: PagedList::new(entries, content),
-            empty: if list == ObjectList::Study && !view.can_learn() {
-                warlock_core::world::UNTRAINED
-            } else {
-                list.empty()
-            },
+            empty: list.empty(),
             marked: Positions::default(),
             weight: view.own_weight(),
             load: Some(view.own_load()),
@@ -436,7 +423,7 @@ impl ObjectScreen {
     }
 
     /// Reads the list again from what the player perceives now: an action taken from it (a
-    /// study chosen in the dialog over it) may have used up or moved the stacks it named by
+    /// grimoire read from the dialog over it) may have used up or moved the stacks it named by
     /// position, so a row kept from before would name another stack. The cursor stays on its
     /// row (or the last one); marks, which name positions, are dropped.
     pub fn refresh(&mut self, view: &PerceptionView<'_>) {
@@ -449,15 +436,36 @@ impl ObjectScreen {
     }
 
     /// What choosing `item` does on a screen of one pick: aim it to throw, eat it, aim the
-    /// spell scroll to read it, pick what to read the scroll of identify on (which remembers
-    /// the scroll), or read that scroll on it.
+    /// spell scroll to read it, ask whether to read the grimoire, pick what to read the scroll
+    /// of identify on (which remembers the scroll), or read that scroll on it.
     fn pick(&mut self, item: Item) -> ScreenAction {
         let aimed = self.entries.iter().any(|e| e.item == item && e.aimed);
         let identify = self.entries.iter().any(|e| e.item == item && e.identify);
+        let study = (self.entries.iter().find(|e| e.item == item)).and_then(|e| e.study.clone());
         match (self.list, item) {
             (ObjectList::Eat, Item::Floor(i)) => ScreenAction::Act(Action::Eat(Meal::Floor(i))),
             (ObjectList::Eat, Item::Pack(i)) => ScreenAction::Act(Action::Eat(Meal::Pack(i))),
             (ObjectList::Read, item) if aimed => ScreenAction::Aim(AimKind::Read(item.position())),
+            (ObjectList::Read, item) if study.is_some() => {
+                let Some((grimoire, spell, chance)) = study else {
+                    return ScreenAction::Stay;
+                };
+                let text = format!(
+                    "Read the {grimoire}? Learning {spell} will be {chance}. Once you begin you \
+                     cannot stop of your own accord."
+                );
+                ScreenAction::Dialog(Box::new(
+                    super::dialog_screen::Dialog::new("Read", text)
+                        .accept(
+                            "Read it",
+                            Action::Read {
+                                item: item.position(),
+                                target: None,
+                            },
+                        )
+                        .cancel("Don't read it", ScreenAction::Close),
+                ))
+            }
             (ObjectList::Read, item) if !identify => ScreenAction::Act(Action::Read {
                 item: item.position(),
                 target: None,
@@ -465,26 +473,6 @@ impl ObjectScreen {
             (ObjectList::Read, item) => {
                 self.looked = Some(item.position());
                 ScreenAction::Replace(super::ScreenName::Identify)
-            }
-            (ObjectList::Study, item) => {
-                let entry = self.entries.iter().find(|e| e.item == item);
-                let Some((scroll, spell, chance)) = entry.and_then(|e| e.study.clone()) else {
-                    return ScreenAction::Stay;
-                };
-                let text = format!(
-                    "Study the {scroll}? Learning {spell} will be {chance}. The scroll will be \
-                     used up, and once you begin you cannot stop of your own accord."
-                );
-                ScreenAction::Dialog(Box::new(
-                    super::dialog_screen::Dialog::new("Study", text)
-                        .accept(
-                            "Study it",
-                            Action::Study {
-                                item: item.position(),
-                            },
-                        )
-                        .cancel("Don't study it", ScreenAction::Close),
-                ))
             }
             (ObjectList::Identify(IdentifyBy::Scroll(scroll)), item) => {
                 ScreenAction::Act(Action::Read {
@@ -618,7 +606,6 @@ impl ObjectScreen {
                     | ObjectList::Throw
                     | ObjectList::Eat
                     | ObjectList::Read
-                    | ObjectList::Study
                     | ObjectList::Identify(_)
                     | ObjectList::Temper
                     | ObjectList::Whittle
@@ -821,7 +808,6 @@ impl ObjectScreen {
             ObjectList::Eat => format!("{}   {page}Esc cancel", either("consume")),
             ObjectList::Throw => format!("{}   {page}Esc cancel", either("choose")),
             ObjectList::Read => format!("{}   {page}Esc cancel", either("read")),
-            ObjectList::Study => format!("{}   {page}Esc cancel", either("study")),
             ObjectList::Identify(_) => format!("{}   {page}Esc cancel", either("identify")),
             ObjectList::Temper => format!("{}   {page}Esc cancel", either("temper")),
             ObjectList::Whittle => format!("{}   {page}Esc cancel", either("whittle")),

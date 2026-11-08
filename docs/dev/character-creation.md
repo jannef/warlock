@@ -162,7 +162,7 @@ than a kit's flag): `World::begin` puts `kit::known_types(content, &pack.items)`
 (docs/dev/scrolls.md); a background story's items the same way (`world/background.rs::story_item`).
 Magic items stay unidentified. A scenario's `spells` (`ScenarioDef::spells`, `spells = ["haste"]`, resolved by
 the loader, an unknown id refused) go into `Actor::spells` in `World::begin`, for its own
-character and a chosen one alike, on top of the class's: known from the start as a studied spell
+character and a chosen one alike, on top of the class's: known from the start as a spell learned from a grimoire
 is (saved and hashed as `Actor::spells` always is). Only the test world's `circles` uses it, and
 it is the one built-in scenario with no `character` (it gives the eyes, stats, hit points, and
 300 mana itself; `world/character_tests.rs` and `content/mod.rs`'s scenario test name it). The heritage talents (Family wealth's gold and gems, Father's sword's

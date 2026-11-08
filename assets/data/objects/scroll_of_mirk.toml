@@ -1,6 +1,6 @@
 # A scroll of mirk (spec §8 "Scrolls", "Spells"): read it (`r`) and aim, and it casts Mirk, free of
-# mana, at its base: a pall of darkness lies where it was aimed. Study it (`L`), and you may learn
-# the spell for good.
+# mana, at its base: a pall of darkness lies where it was aimed. Its grimoire teaches the spell for
+# good.
 [[object]]
 id = "scroll_of_mirk"
 name = "scroll of mirk"

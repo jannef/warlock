@@ -102,8 +102,9 @@ pub(super) fn place(canvas: &mut Canvas, rng: &mut Rng, candidates: &[Candidate]
     for (i, &p) in cells.iter().take(count).enumerate() {
         let object = match always.get(i) {
             Some(&object) => object,
+            // A spell scroll drawn may be its grimoire (spec §8 "Spells": "Learning").
             None => match pick_weighted(rng, &goods) {
-                Some(&object) => object,
+                Some(&object) => content.grimoire_or(rng, object),
                 None => break,
             },
         };

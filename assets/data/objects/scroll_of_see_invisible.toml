@@ -1,6 +1,6 @@
 # A scroll of see invisible (spec §8 "Scrolls", "Spells"): read it (`r`), and it casts See
-# invisible, a level-7 spell, free of mana; study it (`L`), and you may learn the spell for good.
-# Level and frequency by its spell's level (README.toml): the lower, the commoner the scroll.
+# invisible, a level-7 spell, free of mana; its grimoire teaches the spell for good. Level and
+# frequency by its spell's level (README.toml): the lower, the commoner the scroll.
 [[object]]
 id = "scroll_of_see_invisible"
 name = "scroll of see invisible"

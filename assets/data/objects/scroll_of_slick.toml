@@ -1,6 +1,6 @@
 # A scroll of slick (spec §8 "Scrolls", "Spells"): read it (`r`) and aim, and it casts Slick, free
-# of mana, at its base: the ground turns slick where it was aimed. Study it (`L`), and you may learn
-# the spell for good.
+# of mana, at its base: the ground turns slick where it was aimed. Its grimoire teaches the spell
+# for good.
 [[object]]
 id = "scroll_of_slick"
 name = "scroll of slick"

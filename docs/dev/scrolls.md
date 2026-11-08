@@ -11,8 +11,9 @@ Scrolls (spec §8 "Scrolls") are objects with a `read` table (`content/scroll.rs
 (`scroll_of_fireball`, `scroll_of_lightning`, `scroll_of_frost`) are spell scrolls too, at a
 rung of their spells' ladders (1, 2, and 0: 3d6, 4d6, 2d6, as they rolled); their `burst` and
 `bolt` readings are gone (a `read` of either kind is refused, naming the `spell` kind and
-`rungs`). **Every scroll is a real spell** (#592), but the scroll of restoration (below, #887): each teaches its spell
-(`read_tests.rs::every_builtin_scroll_can_be_read` holds every `scroll_of_*` to it); the
+`rungs`). **Every scroll is a real spell** (#592), but the scroll of restoration (below, #887): each casts its spell
+(`read_tests.rs::every_builtin_scroll_can_be_read` holds every `scroll_of_*` to it), and none
+teaches it: its grimoire does (#1260, "Grimoires" below); the
 `identify` reading kind is gone, and `scroll_of_identify` is a `spell` scroll of Identify
 (below). `scroll_of_light` casts the cantrip Light (#589: until then it had no `read` and could
 not be read at all): a buff whose status, Lit, has a `light` (`StatusDef::light`), which the
@@ -92,10 +93,9 @@ Tests: `world/decipher_tests.rs`.
 
 **The scroll of restoration** (#887, the priest design §11) is the one scroll with no spell
 behind it: `read` of kind `cleanse` (`Reading::Cleanse(Cleansing { mends, restores })`; one of
-the two at least, neither with `spell` or `rungs`, nor they on a `spell` reading). `teaches()`
+the two at least, neither with `spell` or `rungs`, nor they on a `spell` reading). `spell()`
 is `None`, `scroll()` (the `SpellScroll`) is `None`, `range()` and `on_item()` are a cast's
-only, so the read list reads it at once, study refuses it ("There is no spell in ... to
-learn."), a mishap never backfires it, and the aiming mode never sees it. `World::read` sends it
+only, so the read list reads it at once, it has no grimoire, and the aiming mode never sees it. `World::read` sends it
 to `World::read_cleanse` (`world/restore.rs`): refused, no time, with a target or with nothing to
 mend (no stat damage while `mends`, no drained point while `restores`, and no status
 `cured_by` `restore::RESTORATION`, Stiffening: "There is nothing to restore."); otherwise `deciphers(None, 0)` (above), `use_up` (Scroll savant's keep, the Read stat training), `say_read`, then
@@ -115,7 +115,7 @@ wand words. `read_tests.rs::the_scroll_of_restoration_mends_and_restores`;
 label) and known on sight; `content/object.rs` lets a scrolls-class object without a `read` be
 loot (`level`, `frequency`: a `frequency` given makes it loot, so the sealed letter, which has
 none, stays out). `World::read` refuses it before anything else ("There is nothing written on
-it."), study finds nothing in it to teach. **Writing scrolls** is `world/scribe.rs`, the
+it."). **Writing scrolls** is `world/scribe.rs`, the
 wizard's Scribe (`scribe` talent at 12, `TalentEffect::Scribe { mana_times }`,
 `TalentMods::scribe`): `Action::Scribe { spell }` (`scribe:fireball`, its own action, as the
 active asks for a spell: `ClassActive::aims_spell`, `Aim::Spell`), `World::start_scribe`
@@ -156,9 +156,8 @@ potion", docs/dev/potions.md), learned by drinking.
 
 `Lore` (`World::lore()`, `PerceptionView::lore()`) is how everything the player is shown names
 a stack: `describe`, `title`, `names`, `fg`, `describe_object(object, count)`, `knows(stack)`
-(type and magic both), `is_identified(object)` (the type: what the study list, #396, asks;
-identified is not learned, so an identified spell scroll may be studied by one who has not
-learned its spell, a labelled one by nobody), `label(object)`. Use it, never
+(type and magic both), `is_identified(object)` (the type; identified is not learned: no scroll
+teaches), `label(object)`. Use it, never
 `Stack::describe`, wherever a name reaches the player: messages (`object::phrase` and
 `phrase_with` take a `Lore`), screens (`object_screen`, `describe_screen` through
 `describe::appraised`, the map's pile colour, look), and player-facing dumps (`inventory`,
@@ -200,11 +199,16 @@ is read with none (`read:b`; the read list acts at once, `ObjectScreen`'s `ident
 telling it from the scroll of identify). A death by it is `Cause::Scroll`. The aiming mode
 aims it as the spell (`ui/target.rs::spell_of`, the player's own reach).
 
-**Study** (#396, docs/dev/spells.md "Learning"): a scroll teaches what `Reading::teaches` says,
-its own spell (fireball Fireball, lightning Lightning bolt, frost Frost). `Action::Study` uses
-the scroll up its own way (`World::use_scroll` in `world/learn.rs`: no Scroll savant keeping it, no Read
-training), and a mishap's backfire casts the scroll's damage spell as a burst around the reader
-(its own radius or 1) at the spell's base, no rung and no hooks; any other kind fizzles.
+**Grimoires** (#1260, docs/dev/spells.md "Learning"): a scroll teaches nothing; the spell is
+learned from its grimoire (`grimoire_of_X`, generated from `scroll_of_X` by
+`content/grimoire.rs`; `ObjectDef::grimoire`, no `read`). `World::read` sends a grimoire, read
+with no target, to `World::start_study` before anything about `read` (a target: "A grimoire is
+read, not aimed: `read:a`."); the study keeps the grimoire, and a mishap's backfire casts the
+grimoire's damage spell as a burst around the reader (its own radius or 1) at the spell's base,
+no rung and no hooks; any other kind fizzles. A grimoire is never labelled (known on sight: the
+title is plain words), so `Lore`, `kit::is_labelled`, decipher, and the identify list never see
+it. The read list (`ObjectList::Read`) lists it with the scrolls (`ObjectDef::grimoire` as well
+as `read`).
 
 Spells (the one cast path, `world/cast.rs`, docs/dev/spells.md) share this code: a burst spell
 goes through `burst_center` and `cast_burst`, a line through `bolt_line` and `cast_bolt`, and

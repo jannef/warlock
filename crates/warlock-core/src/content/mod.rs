@@ -67,6 +67,7 @@ mod gaze;
 mod gear;
 mod gear_condition;
 mod gem;
+pub mod grimoire;
 mod guild;
 #[cfg(test)]
 mod hag_roster_tests;
@@ -644,6 +645,9 @@ pub struct Content {
     item_classes: Vec<ItemClassDef>,
     objects: Vec<ObjectDef>,
     object_ids: BTreeMap<String, ObjectId>,
+    /// Grimoires (`data/grimoires.toml`, spec §8 "Spells": "Learning"): generated into
+    /// [`Content::objects`] after every object file, one for each spell scroll.
+    grimoires: grimoire::Grimoires,
     /// Gem sizes, cuts, and ornaments (`data/gems.toml`); none without the file.
     gems: Option<Gems>,
     /// Unique items (`data/uniques/`, each campaign's too; spec §8 "Magic items").
@@ -849,6 +853,7 @@ impl Content {
             item_classes: Vec::new(),
             objects: Vec::new(),
             object_ids: BTreeMap::new(),
+            grimoires: grimoire::Grimoires::default(),
             gems: None,
             uniques: Uniques::default(),
             slots: Vec::new(),
@@ -2218,7 +2223,12 @@ impl Content {
         if let Some(text) = files.get_optional(path) {
             self.item_classes = item_class::parse(path, text)?;
         }
-        let specs = load_table(files, "objects", |f: ObjectFile| f.object)?;
+        let mut specs = load_table(files, "objects", |f: ObjectFile| f.object)?;
+        // A grimoire for every spell scroll, after every object file (`grimoire.rs`).
+        let grimoires = grimoire::specs(files, &specs)?;
+        if let Some(generated) = &grimoires {
+            specs.extend(generated.specs.iter().cloned());
+        }
         let mut seen: BTreeMap<String, &str> = BTreeMap::new();
         // Each object's file, for the errors found once every object is known.
         let mut paths = Vec::with_capacity(specs.len());
@@ -2298,6 +2308,18 @@ impl Content {
                 ));
             };
             self.objects[i].lit = Some(target);
+        }
+        if let Some(generated) = grimoires {
+            let mut of = BTreeMap::new();
+            for (grimoire, scroll) in &generated.pairs {
+                let (g, s) = (self.object_ids[grimoire], self.object_ids[scroll]);
+                let spell = (self.objects[usize::from(s.0)].read.as_ref())
+                    .and_then(|r| r.scroll())
+                    .map(|scroll| scroll.spell);
+                self.objects[usize::from(g.0)].grimoire = spell;
+                of.insert(s, g);
+            }
+            self.grimoires = grimoire::Grimoires::new(generated.chance, of);
         }
         // Potions of one colour show in one colour (spec §8 "Potions": the colour is the hint).
         for (o, path) in self.objects.iter().zip(&paths) {
@@ -5514,7 +5536,8 @@ mod tests {
         let content = Content::builtin().unwrap();
         let objects = content.object_defs();
         // With a corpse for every creature type but the player, and the magic base items.
-        assert!((15..=600).contains(&objects.len()), "{}", objects.len());
+        // And a grimoire for every spell scroll.
+        assert!((15..=800).contains(&objects.len()), "{}", objects.len());
         let glyphs = content.glyphs();
         for def in objects {
             assert!(def.weight > 0 && glyphs.contains(&def.glyph), "{}", def.id);

@@ -1,6 +1,6 @@
-# A scroll of benison (spec §8 "Scrolls", "Spells"): read it (`r`), and it casts Benison, a
-# level-12 spell, free of mana; study it (`L`), and you may learn the spell for good. Level and
-# frequency by its spell's level (README.toml): the lower, the commoner the scroll.
+# A scroll of benison (spec §8 "Scrolls", "Spells"): read it (`r`), and it casts Benison, a level-12
+# spell, free of mana; its grimoire teaches the spell for good. Level and frequency by its spell's
+# level (README.toml): the lower, the commoner the scroll.
 [[object]]
 id = "scroll_of_benison"
 name = "scroll of benison"

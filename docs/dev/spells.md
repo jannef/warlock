@@ -19,7 +19,7 @@ cast path shares.
 - **Spell levels** (S1, #748; the spell scaling design §5, decisions 1, 9, 10, 16): every spell
   has `level = N` (the design's 0 to `MAX_SPELL_LEVEL`, 70; the loader reads any `u8`), one
   number with two meanings: its **base mana**
-  (`max(1, level)`) and the **learning at which a scroll of it teaches for certain**. A
+  (`max(1, level)`) and the **learning at which its grimoire teaches for certain**. A
   spell of level 0 or 1 is a cantrip (a spell's own `mana` still replaces the base: Burning
   hands and Grave breath, level 1 for the class tables' guard, cost 3, #979). There is no table of levels, no ceiling, no cap, and no
   load-time check on how much a spell does, now or in any later slice (decision 16): authors
@@ -385,7 +385,7 @@ cast path shares.
     most two boons of level 5 or less. Every class has `mana`
     at least 1 (the berserker and the warrior gained theirs); races keep their own.
   - **Choices** (design §14, the defaults): q1, q2, q3, q5, q7 as above (interrupted study
-    keeps the scroll; Dexterity aims; no talent lifts a cap (since S1 there is none); `force` and `necrotic` stay; Scroll savant
+    keeps the scroll, now the grimoire, which is never used up since #1260; Dexterity aims; no talent lifts a cap (since S1 there is none); `force` and `necrotic` stay; Scroll savant
     never keeps a studied scroll); q4: the guaranteed lists as §8, the paladin's and ranger's boons Blessing and Barkskin at 6, the bard's Mend and
     Blessing; q6: the mishap table unchanged. Sleep has no level limit (the design's "creatures
     of low level"): it slows rather than stops, so any creature may be caught.
@@ -408,8 +408,25 @@ cast path shares.
   no "your spell grows" line anywhere: the menu shows the new dice when it next opens; the
   aiming mode by shape
   (`ui/target.rs`: `cast_spell`, `Aim::spell_line`; a cone's dots are its cells).
-- **Learning** (#396; `world/learn.rs`, `content/learning.rs`, tests `world/learn_tests.rs`
-  and `content/learning.rs`):
+- **Learning** (#396, grimoires #1260; `world/learn.rs`, `content/learning.rs`,
+  `content/grimoire.rs`, tests `world/learn_tests.rs` and `content/learning.rs`):
+  - **Grimoires** (`content/grimoire.rs`, `data/grimoires.toml`): spells are learned from
+    grimoires, never from scrolls. `grimoire::specs` generates, as objects load, a
+    `grimoire_of_X` for every object whose `read` is of kind `spell` (`ObjectSpec::casts_spell`):
+    the rules file's `[object]` table with the scroll's names ("scroll of" made "grimoire of"),
+    level, and `value` times its value, built as a TOML table and deserialized, so it is checked
+    as a written object; appended after every object file, in path order (ids and the
+    fingerprint the same on every load). `ObjectDef::grimoire` is the scroll's spell; a grimoire
+    has no `read`, so it is never labelled (`Labels::draw` reads `read`), never loot by itself (no
+    `frequency`), and the scroll reading code never sees it. `Content::grimoires()`
+    (`Grimoires { chance, of }`, scroll → grimoire) and `Content::grimoire_or(rng, object)`: one
+    draw, only for a spell scroll, by `chance` (10) percent, its grimoire. Called where a spell
+    scroll is made at random: `magic/loot.rs::drawn` (loot, chests, hoards, dens, vault pools,
+    drops), `mapgen/room_loot.rs`, `mapgen/shop.rs` (a drawn good; `Shops::stocks` leaves
+    grimoires out, so one is stocked only so), `gear.rs::make` (a creature's gear line), and
+    `kit.rs` (`with_grimoires`, one draw a scroll of a line's stack, and the random scrolls'). A
+    scroll a level, a shop's `always`, a scenario, or a background story names stays a scroll.
+    Without the file there are none.
   - **Known spells**: `Actor::spells` (`BTreeSet<SpellId>`, saved by index, left out while
     empty, so actors without hash as before; saves change) holds the learned ones;
     `Actor::knows_spell` is that or a class ability's `spell` effect (`TalentMods::has_spell`);
@@ -422,21 +439,22 @@ cast path shares.
     `struggle` in ways of 144); `data/mishaps/` (`Mishap`, one `[[mishap]]` a file, its
     `README.toml` the format: `band` slight/bad/terrible/lucky, `weight`, `message`, `effect`
     by `kind`: nothing, status, backfire, mana, teleport, lose_mark, drain, summon, learn, mark;
-    only its kind's fields; `learn` and `mark` lucky by custom); `teaches` in a spell scroll's `read`
-    table (`ScrollSpell::teaches`, a `SpellId`, checked as objects load; `Reading::teaches`
-    is what every caller asks, a `spell` reading teaching its own);
+    only its kind's fields; `learn` and `mark` lucky by custom); `ObjectDef::grimoire` (above);
     a class's `affinity` (`ClassDef::affinity`, school → −10 to 10 study points); the skills'
     `study` benefit (`skills::Effect::Study`, Spellcraft's since #1024, a curve to 20 at
     200) and `study` mark (`Use::Study`, which is also `StatUse::Study`: Intelligence 100 %);
     `ActionKind::Study` (`study` in `data/actions.toml`, a turn); Raging blocks `study`.
-  - **The action** (`Action::Study { item }`, `study:b`; `World::start_study` →
-    `Spent::Study(Lesson)` → `World::study`, through `keep_at` like a meal): refusals as the
-    spec lists them; `study_turns(rules, level, percent)` turns (`turns_base + turns_per_level ×
+  - **The action** (`Action::Read { item, target: None }` of a grimoire, `read:b`;
+    `World::read` → `World::start_study(item, spell)` → `Spent::Study(Lesson)` →
+    `World::study`, through `keep_at` like a meal; a grimoire read with a target is refused;
+    `World::read_kind` makes a grimoire's read the `study` kind for a status's `blocks`):
+    refusals (no time) as the spec lists them: a spell known, no mana, untrained; `study_turns(rules, level, percent)` turns (`turns_base + turns_per_level ×
     level`, Quick study's
-    `TalentMods::study_percent`); interrupted (`Ended::Came`/`Said`): "…you stop studying.",
-    time lost, scroll kept (design §14 q1, the default). Done: the scroll is found again by
-    object (positions may shift), the `study` use is trained, the odds are taken now, the
-    scroll used up (`use_scroll`, never Scroll savant's keeping: §14 q7, decided no), then the check.
+    `TalentMods::study_percent`); interrupted (`Ended::Came`/`Said`): "…you stop reading.",
+    time lost (design §14 q1, the default). Done: the grimoire is found again by object
+    (positions may shift; gone, nothing), the `study` use is trained, the odds are taken now,
+    then the check. The grimoire is kept either way (#1260: read again after a failure, no
+    limit but the time; kept after it taught, to sell).
   - **Experience** (#1212): `learn_spell` pays `Experience::spell_xp(level)` (`[spell] per_level`
     5 × max(level, 1)) through `grant_xp` when the spell was not known; class grants and dev
     actions insert into `spells` directly or via `TalentMods` and pay nothing.
@@ -445,10 +463,9 @@ cast path shares.
     in `data/skills.toml`; ceiling `MAX_SPELL_LEVEL`) through `Actor::skill_effect`, so skill
     affixes and the talents' `skill` bonuses count, at least 1; `None` when
     `Skills::trains_effect(Effect::Learn)` is false, whatever bonuses are worn. `None` means no
-    learning at all: `study_odds` gives none, `PerceptionView::studies` lists nothing,
-    `PerceptionView::can_learn` is false (the study list says `world::UNTRAINED` instead of its
-    empty words), `start_study` refuses with `UNTRAINED` after the other refusals and before any
-    time. The dev `progress` layer prints `learning 36 (Spellcraft 108)` (the trained value,
+    learning at all: `study_odds` gives none, `PerceptionView::studies` lists nothing (the read
+    list marks no grimoire, which is then read at once and refused), `start_study` refuses with
+    `UNTRAINED` after the other refusals and before any time. The dev `progress` layer prints `learning 36 (Spellcraft 108)` (the trained value,
     before what items and talents add) or `cannot learn: not trained in Spellcraft`. Study is no
     ability, so the `abilities` layer and `Unavailable` have no row for it. A class's granted spells (`TalentMods::has_spell`) never read this.
     Starting Spellcraft is the class files' (`docs/dev/character-creation.md`).
@@ -467,24 +484,26 @@ cast path shares.
     "easy", "a struggle", "far beyond you".
   - **Mishaps** (`World::draw_mishap`, `World::mishap`): one `rng.below(total weight)` among
     `drawn_among(mishaps, band)` (the band's and the lucky ones, in path order); the message,
-    then the effect through existing code: `afflict`; backfire (the scroll's own `Cast`:
-    `cast_burst` centred on the reader, or `cast_bolt` on a path of their own cell, nothing
-    holding the roll; `say_spell`;
-    a death is `Cause::Scroll`); mana cut directly (no Frugal caster, no training); the teleport
+    then the effect through existing code: `afflict`; backfire (`backfire_spell(spell, object)`:
+    the grimoire's spell as a burst centred on the reader, nothing holding the roll; `say_spell`;
+    a death is `Cause::Scroll` of the grimoire); mana cut directly (no Frugal caster, no training); the teleport
     trap's `teleport` (made `pub(super)`); a stat mark off one drawn among the marked stats; a
     `Drain` (Willpower check); `travel::make_creature` at the first free cell around the reader
     (faction its type's, `spawned` bumped); `learn_spell`; a stat mark. Choices: the design's
     "learned anyway, one tier lower in power" is learned as is (no per-spell power yet);
     "a wild surge casts another spell" is not a mishap yet.
   - **Presentation**: `PerceptionView::own_spells`, `studies()` (`OwnStudy { item, spell,
-    chance }`: identified scrolls teaching an unknown spell, pack order); the dump `spells`
-    layer and JSON `spells`/`studies`; the dev `progress` layer's `study c frost: overreach 5,
-    +0 against 17, 36/144` (overreach in spell levels). The study list (`ui/object_screen.rs`, `ObjectList::Study`, the
-    `Study` key command `L`) and its dialog; snapshots `scroll-study-list`,
-    `scroll-study-dialog`, `scroll-study-none`.
+    chance }`: grimoires teaching an unknown spell, pack order; none untrained); the dump
+    `spells` layer and JSON `spells` (the spells known; no study lines since #1260); the dev
+    `progress` layer's `learning` line. The read list (`ui/object_screen.rs`, `ObjectList::Read`)
+    lists grimoires with the scrolls, marks each in `studies()` `(learning: a struggle)`, and asks
+    in the one dialog (Read it / Don't read it) before reading one; a grimoire it does not mark
+    is read at once and its refusal said. Snapshots `grimoire-read-list`, `grimoire-read-dialog`,
+    `grimoire-read-list-untrained` (`ui/grimoire_tests.rs`), `grimoire-read-list-after`
+    (`ui/stale_list_tests.rs`).
   - **Wiki**: `xtask/src/wiki/learning.rs` (`study-chances.md`, `study-times.md`,
     `study-affinities.md`, `mishaps.md`) on `wiki/src/magic.md`'s "Learning spells from
-    scrolls".
+    grimoires"; the grimoires' weight and value in the objects table.
   - **Talents**: Quick study (`quick_study`, the new Spellcraft tree's first talent:
     `TalentEffect::Study { bonus, percent, overreach_percent }`, +2 and −50 %), systems
     `spells` and `scrolls`; Overreach is the same effect's `overreach_percent` (S1).

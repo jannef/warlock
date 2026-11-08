@@ -22,6 +22,9 @@
 //! scroll by its label ("You read the scroll labelled ZUNBAR.") and identifies its type ("It is a
 //! scroll of fireball."), the scroll of identify's own too.
 //!
+//! **Grimoires** (`learn.rs`) are read too, with no target: the reading is a study of the spell
+//! the grimoire teaches, and the grimoire is kept.
+//!
 //! **The scroll of restoration** casts no spell ([`Reading::Cleanse`], `restore.rs`): read on
 //! oneself, it mends every point of stat damage and gives back every point drains took.
 
@@ -40,6 +43,16 @@ const READ_FLOOR: i32 = 25;
 pub(super) const KEPT: &str = "The writing does not fade from the scroll.";
 
 impl World {
+    /// The kind of action reading inventory stack `item` is, as a status's `blocks` names it:
+    /// `study` for a grimoire, else `read`.
+    pub(super) fn read_kind(&self, item: usize) -> ActionKind {
+        let pack = &self.state.player().inventory;
+        match pack.get(item) {
+            Some(s) if self.content.object(s.object).grimoire.is_some() => ActionKind::Study,
+            _ => ActionKind::Read,
+        }
+    }
+
     /// The player reads one of inventory stack `item` at `target` (module docs).
     pub(super) fn read(
         &mut self,
@@ -57,6 +70,14 @@ impl World {
         if content.blank_scroll() == Some(stack.object) {
             self.say("There is nothing written on it.");
             return Spent::Nothing;
+        }
+        // A grimoire's reading is a study of its spell (`learn.rs`).
+        if let Some(spell) = def.grimoire {
+            if target.is_some() {
+                self.say("A grimoire is read, not aimed: `read:a`.");
+                return Spent::Nothing;
+            }
+            return self.start_study(item, spell);
         }
         let Some(reading) = &def.read else {
             let what = self.lore().describe(&stack.single());
