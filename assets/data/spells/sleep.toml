@@ -19,3 +19,18 @@ noise = { sound = "chanting", loudness = 20 }
 [spell.grows]
 range = "willpower 14 9, 18 10"
 degrees = "presence 14 3"
+
+# What rereading its grimoire adds, rank by rank (spec §8 "Spells": "Ranks"; README.toml
+# `[spell.ranks]`). Drowsy holds three degrees at most, so a degree is all its ranks add to the
+# drowse. At rank 10: a degree longer, a cell wider, three cells farther, 30 percent off the mana,
+# and a quarter off the casting time.
+[spell.ranks]
+2 = { mana_off = 10 }
+3 = { cells = 1 }
+4 = { degrees = 1 }
+5 = { radius = 1 }
+6 = { mana_off = 10 }
+7 = { cells = 1 }
+8 = { time_off = 25 }
+9 = { cells = 1 }
+10 = { mana_off = 10 }

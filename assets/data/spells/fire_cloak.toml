@@ -12,3 +12,17 @@ effect = { status = "fire_cloaked" }
 
 [spell.grows]
 degrees = "presence 14 2, 18 3"
+
+# What rereading its grimoire adds, rank by rank (spec §8 "Spells": "Ranks"; README.toml
+# `[spell.ranks]`). At rank 10: two degrees longer, 45 percent off the mana, and half the casting
+# time.
+[spell.ranks]
+2 = { degrees = 1 }
+3 = { mana_off = 10 }
+4 = { time_off = 20 }
+5 = { degrees = 1 }
+6 = { mana_off = 10 }
+7 = { time_off = 15 }
+8 = { mana_off = 10 }
+9 = { mana_off = 15 }
+10 = { time_off = 15 }
