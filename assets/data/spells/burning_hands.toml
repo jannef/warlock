@@ -23,3 +23,18 @@ noise = { sound = "explosion", loudness = 40 }
 
 [spell.grows]
 damage = "intelligence 13 2d6, 16 4d4, 22 4d4+2"
+
+# What rereading its grimoire adds, rank by rank (spec §8 "Spells": "Ranks"; README.toml
+# `[spell.ranks]`). At rank 10: +2 on the roll, 1s rolled again, d6s for d4s, a die more, a
+# fan two cells longer (the most a cone reaches), 15 % off the mana, and a quarter off the casting
+# time.
+[spell.ranks]
+2 = { bonus = 1 }
+3 = { reroll = 1 }
+4 = { cells = 1 }
+5 = { sides = 2 }
+6 = { mana_off = 15 }
+7 = { bonus = 1 }
+8 = { dice = 1 }
+9 = { time_off = 25 }
+10 = { cells = 1 }

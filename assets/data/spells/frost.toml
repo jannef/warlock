@@ -22,3 +22,17 @@ message = "Bitter cold bursts from your hands!"
 [spell.grows]
 damage = "intelligence 13 6d6, 19 6d6+2, 25 6d6+4"
 range = "willpower 14 11, 18 12"
+
+# What rereading its grimoire adds, rank by rank (spec §8 "Spells": "Ranks"; README.toml
+# `[spell.ranks]`). At rank 10: +2 on the roll, two cells farther, 1s rolled again, two dice more, a
+# quarter off the mana, and d8s for d6s.
+[spell.ranks]
+2 = { bonus = 1 }
+3 = { cells = 1 }
+4 = { reroll = 1 }
+5 = { dice = 1 }
+6 = { mana_off = 15 }
+7 = { bonus = 1 }
+8 = { dice = 1 }
+9 = { mana_off = 10, cells = 1 }
+10 = { sides = 2 }

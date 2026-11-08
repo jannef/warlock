@@ -24,3 +24,18 @@ noise = { sound = "explosion", loudness = 60 }
 [spell.grows]
 damage = "intelligence 13 6d6, 16 8d6, 25 8d6+2"
 length = "willpower 14 6, 18 7"
+
+# What rereading its grimoire adds, rank by rank (spec §8 "Spells": "Ranks"; README.toml
+# `[spell.ranks]`). At rank 10: two cells longer, 1s rolled again, two dice more, +2 on the roll,
+# a fifth off the mana, and a quarter off the casting time. The fire left burning rolls as the
+# spell does, so it burns hotter with it.
+[spell.ranks]
+2 = { cells = 1 }
+3 = { reroll = 1 }
+4 = { dice = 1 }
+5 = { mana_off = 10 }
+6 = { cells = 1 }
+7 = { bonus = 2 }
+8 = { dice = 1 }
+9 = { time_off = 25 }
+10 = { mana_off = 10 }
