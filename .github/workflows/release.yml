@@ -119,7 +119,7 @@ jobs:
         run: |
           version=133
           archive="binaryen-version_${version}-x86_64-linux.tar.gz"
-          curl -sSfL -o "$archive" "https://github.com/WebAssembly/binaryen/releases/download/version_${version}/${archive}"
+          curl -sSfL --retry 5 --retry-all-errors --retry-delay 10 -o "$archive" "https://github.com/WebAssembly/binaryen/releases/download/version_${version}/${archive}"
           echo "2dc9c7813f5375db93d96ead4b78222fcc3e2677bbb832297af4797782a37489  ${archive}" | sha256sum -c -
           tar -xzf "$archive"
           echo "$PWD/binaryen-version_${version}/bin" >> "$GITHUB_PATH"
