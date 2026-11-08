@@ -41,7 +41,7 @@ mod encounter;
 mod equipment_screen;
 mod files_screen;
 mod glyphs;
-mod graveyard_screen;
+pub(crate) mod graveyard_screen;
 mod info_tabs;
 mod level_up_screen;
 mod look;

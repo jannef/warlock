@@ -1198,8 +1198,9 @@ pub(super) fn apply_choice(
                 let (character, name) = (character.as_ref(), name.as_deref());
                 match Game::new_run(content, &screens.store, scenario, *seed, character, name) {
                     Ok(mut game) => {
-                        // The petrified dead name its statues (`graveyard.rs`).
-                        game.world.set_graveyard(screens.graveyard.petrified());
+                        // The dead name its statues and gravestones (`graveyard.rs`).
+                        let dead = screens.graveyard.dead(game.world.content());
+                        game.world.set_graveyard(dead);
                         commands.insert_resource(game);
                         screens.stack.clear();
                     }

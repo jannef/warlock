@@ -1626,6 +1626,21 @@ impl<'a> PerceptionView<'a> {
         self.level.statues.get(&p).map(|s| s.of)
     }
 
+    /// What is cut in the gravestone at `p` (spec §7 "Graves"; `world/graves.rs`), where the
+    /// player sees or remembers one: "Here lies Ælfric Wudu, 1381–1427." `None` elsewhere, or
+    /// on a blank stone.
+    pub fn epitaph(&self, p: Pos) -> Option<&'a str> {
+        let terrain = match self.cell(p) {
+            CellView::Visible(t) | CellView::Remembered(t) => t,
+            CellView::Unknown => return None,
+        };
+        self.content
+            .terrain(terrain)
+            .grave
+            .then(|| self.level.graves.get(&p).map(String::as_str))
+            .flatten()
+    }
+
     /// Whom the statue at `p` is of, where it bears a past character's name from the graveyard
     /// (`world/graveyard.rs`): "Brakka the dwarf". `None` where they know no statue there, or
     /// it bears no name.

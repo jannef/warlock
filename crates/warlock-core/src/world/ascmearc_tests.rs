@@ -22,6 +22,8 @@ const VILLAGE: Pos = Pos::new(18, 17);
 const MOUND: Pos = Pos::new(25, 13);
 /// Lytelscræf, the starter cave (#792): two cells from the pass, in sight of the start.
 const CAVE: Pos = Pos::new(14, 27);
+/// Līctūn, Cēaptūn's churchyard (#1258): beside the south road, four cells out of town.
+const YARD: Pos = Pos::new(19, 32);
 /// Grundlēas, the endless branch (#1010): open to anyone, far from the pass.
 const GROUNDLESS: Pos = Pos::new(52, 52);
 const FENNMYNSTER: Pos = Pos::new(70, 48);
@@ -229,6 +231,7 @@ fn the_locations_are_named_and_six_cells_apart() {
             (BARROW, ("barrow", "Cealdhlāw")),
             (GROUNDLESS, ("dungeon_entrance", "Grundlēas")),
             (TOWN, ("town", "Cēaptūn")),
+            (YARD, ("graveyard", "Līctūn")),
             (VILLAGE, ("town", "Holtwīc"))
         ])
     );
@@ -265,6 +268,15 @@ fn the_locations_are_named_and_six_cells_apart() {
     assert_eq!(PASS.chebyshev(CAVE), 2);
     for at in &all[1..] {
         assert!(at.chebyshev(CAVE) >= 4, "{at} is too close to the cave");
+    }
+    // The churchyard is the other (#1258): four cells down the south road from the town, and
+    // farther from every other place.
+    assert_eq!(YARD.chebyshev(TOWN), 4);
+    for at in all.iter().chain([&CAVE]).filter(|at| **at != TOWN) {
+        assert!(
+            at.chebyshev(YARD) >= 5,
+            "{at} is too close to the churchyard"
+        );
     }
     // No road leads to a hidden dungeon.
     for hidden in [FENNMYNSTER, FYRDELF]

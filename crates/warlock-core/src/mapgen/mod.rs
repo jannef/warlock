@@ -622,6 +622,7 @@ pub fn generate_for(
             ice: Default::default(),
             // Its branch's, asked of [`Content::spawning`].
             spawning: None,
+            graves: None,
         };
         if connect::validate(&template, content).is_ok() {
             treasury::seal(&mut template, content, pal);

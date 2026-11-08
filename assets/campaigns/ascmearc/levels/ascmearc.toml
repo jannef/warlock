@@ -8,7 +8,8 @@
 # another, on purpose (#792). The road runs five cells east to Cēaptūn (T), the market town at the
 # crossroads, then on east over Hlāwdūn, the barrow downs, past Cealdhlāw (1, the cold barrow), to
 # the ford (%) over Blæcwæter and the village beyond (Fordwīc's site, the road's end at 94, 28).
-# South, the road crosses Beorhtburna by the bridge (b) and follows its south bank to Fennhām's
+# South, past Līctūn (g, #1258), the town's churchyard beside the road four cells out, the road
+# crosses Beorhtburna by the bridge (b) and follows its south bank to Fennhām's
 # site (the road's end at 62, 43); north, it runs to Holtwīc (V, #1140), the village at its end
 # on the edge of Holegnwudu. In the wood seven cells north-east of the village, hidden until the
 # village's wise-woman tells of it, is the fairy mound over Ælfhām (E), the Unseelie court's hall.
@@ -70,7 +71,7 @@ MMMMMMMMMMMMP=====T=============================================================
 MMMMMMMMMMMMMM""""="""""hhhhhhhhhhhhhhhhhhhhhhh"""""""""""""""""""""""""""""""hhhhhh↓↓hh""""""""""""""""""""""""""""....
 MMMMMMMMMMMMMM""""=""""""hhhhhhhhhhhhhhhhhhh"h""""""""""""""""""""""""""""""""""....↓↓""""""""""""""""""""""""""""""""..
 MMMMMMMMMMMM""""""=""""""""hh"hhhhhhhhhhhh6h""""""""""""""""""""""""""""""""""""....↙↙"""""""""""""""""""""""""""""""...
-MMMMMMMMMM"""""hh"="""""""""h""""hhh""hh"".."""""""""""""""""""""""""""""""""".....↙↙.""""""""""""""""""""""""""""""....
+MMMMMMMMMM"""""hh"=g""""""""h""""hhh""hh"".."""""""""""""""""""""""""""""""""".....↙↙.""""""""""""""""""""""""""""""....
 MMMMMMMMMMh"""hhhh="h"""""""""""""h"""""""".""""""""""""""""""""""""""""""""""....↓↓..""""""""""""""""""""""""""""""....
 MMMMMMMMMMhhh""hhh="hhhhhh""""""""""""""""..""""""""""""""""""""""""""""""""""....↓↓....""""""""""""""""""""""""".......
 MMMMMMMMMMMhhhhhhh=hhhhhhhh"""""""""""""""..".""""""""""""""""""""""""""""""".....↓↓....""""""""""""""""""""""""""......
@@ -121,6 +122,9 @@ MMMMMMMMMMMMMMMMMMM.ff..................................."......................
 "^" = { terrain = "volcano", name = "Fyrbeorg" }
 "P" = { terrain = "mountain_pass", spawn = "player", name = "Beorggeat", note = "The way you came; snow has closed it behind you." }
 "T" = { terrain = "town", name = "Cēaptūn", to = "ceaptun" }
+# Cēaptūn's churchyard beside the south road, four cells out of town (#1258): the one place
+# besides the starter cave closer than six cells to another, on purpose.
+"g" = { terrain = "graveyard", name = "Līctūn", to = "lictun" }
 # The village at the north road's end, on the edge of the holly wood (#1140).
 "V" = { terrain = "town", name = "Holtwīc", to = "holtwic" }
 "1" = { terrain = "barrow", name = "Cealdhlāw", to = "cealdhlaw:1" }

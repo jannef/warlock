@@ -37,8 +37,11 @@ developer notes (CLAUDE.md, `docs/dev/`).
   pinned to the version**: unknown fields are ignored, missing ones default, an unreadable entry is
   skipped, no field is renamed or re-meant. The main menu's Graveyard lists the dead, the most
   experienced first (§6 "Graveyard"), the Characters screen counts them ("Twelve
-  characters have died."), the death screen says "Remembered in the graveyard.", and a run's
-  statues are named from the petrified (§8 "Statues"). `--paths` names it.
+  characters have died."), the death screen says "Remembered in the graveyard.", and as a run
+  begins the app gives it every one of the dead, the most recent first, each with whether they
+  were turned to stone and how they died in the Graveyard screen's words: its statues are named
+  from the petrified (§8 "Statues"), its gravestones from them all (§7 "Graves"). `--paths`
+  names it.
 - **Saves**: suspend-only. One save per character, written as a run starts, on quit, and by
   periodic autosave; loading continues the run. Dev builds add named snapshots. Format: an envelope (magic, game
   version) around a JSON payload, gzip-compressed with a pure-Rust backend, written
