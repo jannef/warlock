@@ -142,8 +142,10 @@ to open, read keys for, or draw one:
   `info_tabs::hint`). One column of rows built once when it opens (`rows`): `Mana a/b`, the
   caster styles (the styles whose `Grip::casts`; only for a player who
   knows a spell or has a rank or marks in one), and the spells, filtered from
-  `PerceptionView::abilities` in its order with `abilities_screen::spell_head` (the menu's row,
-  "2d4 force, 3 mana", plus ", aimed" where `needs(aim)` says anything). Scrolls as the weapon
+  `PerceptionView::abilities` in its order, each with its rank (`PerceptionView::own_spell_rank`,
+  `rank 3` in a column of `RANK_W`; spec §8 "Spells": "Ranks", #1264) and
+  `abilities_screen::spell_head` (the menu's row,
+  "2d4 force, 4 mana", plus ", aimed" where `needs(aim)` says anything). Scrolls as the weapon
   skills screen does (gaps give way, then ↑↓, `most` stored at draw). The weapon skills screen
   leaves the caster styles out. Snapshots `magic-screen` (the showcase wizard at level 1),
   `-trained` (level 18, `rank:sniper:5 rank:toucher:3`), `-armoured` (a paladin in the
@@ -290,7 +292,8 @@ to open, read keys for, or draw one:
 Key commands `,`/`;` (pick up: one stack at once, else the `PickUp` screen), `d` (`Drop`: the inventory in its drop mode, #1196; `ObjectScreen::dropping`, Esc closes it; the inventory's own fixed `D`, upper case so it names no stack (letters are `a` to `z` down a page) and not Tab (a page key), turns the mode on in place, where Esc turns it off again with nothing dropped and the marks gone; the mode shows the title "Inventory: drop", no page tabs (the info-page keys do nothing there: `Screen::name` calls it `Drop`, no page), and marks, Enter dropping the marked stacks as one `Action::Drop`, which in a shop the sale dialog takes over as before),
 `I` (`Inventory` screen), `i` (`Equipment` screen), `@` (`Character` screen), `W` (`WeaponSkills`
 screen), `v` (`KeyCommand::Messages`: the `Messages` screen), `r` (`Read` screen, `KeyCommand::Read`: a basic command, not an ability; the scrolls and the
-grimoires carried, a grimoire in `PerceptionView::studies` marked with the chance in words and
+grimoires carried, a grimoire in `PerceptionView::studies` marked with the chance in words
+(`learning: a struggle`, or `rank 3 of 10: a struggle` for a spell known that it would deepen, #1264) and
 asking in the one dialog before its `Action::Read`; the Study command, `L`, and its list are gone
 since #1260), `p`
 (`KeyCommand::Pay`), `a` (`KeyCommand::Abilities`: the `Abilities` screen), `X`

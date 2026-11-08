@@ -29,7 +29,7 @@ use crate::time::GameTime;
 use crate::weapon_skills::WeaponSkills;
 use serde::{Deserialize, Serialize};
 use std::borrow::Cow;
-use std::collections::BTreeSet;
+use std::collections::BTreeMap;
 use std::fmt;
 use std::sync::LazyLock;
 
@@ -278,11 +278,13 @@ pub struct Actor {
     /// (`world/stars.rs`), and marked as the altar's where talents are shown.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub boons: Vec<crate::talent::Taken>,
-    /// The spells it has learned for good (spec §8 "Spells"; `world/learn.rs`): studied from
-    /// scrolls. A class ability's spells are not here (its talents give them); both are what
-    /// [`Actor::knows_spell`] asks.
-    #[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
-    pub spells: BTreeSet<SpellId>,
+    /// The spells it has learned for good (spec §8 "Spells"; `world/learn.rs`), each with the
+    /// rank it knows it at (1 to `MAX_SPELL_RANK`; `world/spell_rank.rs`): learned from
+    /// grimoires, and a class ability's spell once its grimoire has deepened it (at rank 1 a
+    /// class's spell is not here: its talents give it); both are what [`Actor::knows_spell`]
+    /// asks, and [`Actor::spell_rank`] reads the rank.
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+    pub spells: BTreeMap<SpellId, u8>,
     /// Its streak of melee blows at one creature (Relentless, spec §8 "Birth sign"): `None`
     /// for an actor without the talent, or before its first blow.
     #[serde(default, skip_serializing_if = "Option::is_none")]

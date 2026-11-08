@@ -272,8 +272,9 @@ fn every_caster_has_its_table_by_level_sixty() {
     );
 }
 
-/// The wizard's and the witch's first harm (#979): known at level 1, 3 mana, and everyone in the
-/// fan is hurt by the one roll, with no hit roll to miss; whoever stands aside is not.
+/// The wizard's and the witch's first harm (#979): known at level 1, 6 mana (the cost table's
+/// cone price at the mana floor, #1264), and everyone in the fan is hurt by the one roll, with no
+/// hit roll to miss; whoever stands aside is not.
 #[test]
 fn a_starting_caster_breathes_a_short_fan_that_needs_no_hit_roll() {
     for (class, spell) in [("wizard", "burning_hands"), ("witch", "grave_breath")] {
@@ -293,7 +294,7 @@ fn a_starting_caster_breathes_a_short_fan_that_needs_no_hit_roll() {
                 Some(Pos::new(here.x + 3, here.y)),
             ));
             assert!(out.took_turn, "{class}: {:?}", said(&w));
-            assert_eq!(mana - w.state.player().mana, 3, "{class}'s {spell}");
+            assert_eq!(mana - w.state.player().mana, 6, "{class}'s {spell}");
             let lost = |id: ActorId| 100 - w.state.actors[&id].hp;
             assert!(lost(mine) >= 1, "{class}: {:?}", said(&w));
             assert_eq!(lost(mine), lost(yours), "{class}: one roll for the fan");
@@ -303,8 +304,8 @@ fn a_starting_caster_breathes_a_short_fan_that_needs_no_hit_roll() {
     }
 }
 
-/// The size of it (#979): a pool buys several casts, and at the same price Magic missile always
-/// rolls more, a target at a time, and reaches further.
+/// The size of it (#979, #1264): a pool buys several casts, and Magic missile, cheaper (4 to the
+/// fan's 6: no area), always rolls more, a target at a time, and reaches further.
 #[test]
 fn the_first_fan_does_not_outclass_magic_missile() {
     let content = BUILTIN.clone();
@@ -313,7 +314,8 @@ fn the_first_fan_does_not_outclass_magic_missile() {
     let missile = def("magic_missile");
     for fan in ["burning_hands", "grave_breath"] {
         let fan = def(fan);
-        assert_eq!(rules.mana(fan, 0), rules.mana(missile, 0), "{}", fan.id);
+        assert!(rules.mana(fan, 0) > rules.mana(missile, 0), "{}", fan.id);
+        assert_eq!((rules.mana(fan, 0), rules.mana(missile, 0)), (6, 4));
         assert!(i32::from(fan.level) <= 1, "{} from level 1", fan.id);
         assert!(fan.length.map(i32::from) < missile.range.map(i32::from));
         let rungs = |d: &crate::content::SpellData| {
@@ -464,7 +466,7 @@ fn blessing_costs_mana_and_wants_more_than_there_is() {
     assert_eq!(own(&w, sp("blessing")), Some(None));
     let time = w.time();
     run(&mut w, "use:blessing");
-    assert_eq!(w.state.player().mana, 37, "level 3's 3");
+    assert_eq!(w.state.player().mana, 36, "level 3 at the floor: 4");
     assert!(suffers(&w, player, "blessed"));
     assert!(said(&w).contains(&"You feel blessed.".to_string()));
     assert!(w.time() > time, "it took time");
@@ -507,9 +509,9 @@ fn cure_wounds_heals_by_touch_in_two_casts() {
     run(&mut w, &on_me);
     assert_eq!(last(&w), "Your wounds close.");
     let back = w.state.player().hp - 1;
-    // 2d6 (level 3, a touch: 3 × 0.7 mana).
+    // 2d6 (level 3 at the floor, a touch: 4 × 0.7 mana).
     assert!((2..=12).contains(&back), "{back}");
-    assert_eq!(w.state.player().mana, 38);
+    assert_eq!(w.state.player().mana, 37);
     let cure = w.time().seconds() - time.seconds();
     let time = w.time();
     run(&mut w, "use:blessing");
@@ -522,7 +524,7 @@ fn remove_disease_ends_diseases_and_poison() {
     let mut w = world("priest");
     reach(&mut w, 12);
     // The priest's table no longer gives it (the prayer does its work); its scroll teaches it.
-    w.player_mut().spells.insert(sp("remove_disease"));
+    w.player_mut().spells.insert(sp("remove_disease"), 1);
     run(&mut w, "use:remove_disease");
     assert_eq!(last(&w), "There is nothing to cure.");
     assert_eq!(w.state.player().mana, 40);
@@ -561,14 +563,18 @@ fn hexes_fall_on_a_foe_the_witch_sees_within_reach() {
     cast(&mut w, "evil_eye", cell(3));
     assert_eq!(last(&w), "The kobold is hexed.");
     assert!(suffers(&w, near, "ill_wished"));
-    assert_eq!(w.state.player().mana, 39, "level 0 or 1: 1");
+    assert_eq!(
+        w.state.player().mana,
+        37,
+        "level 0 at the floor, 4, less Frugal caster's fifth: 3"
+    );
     cast(&mut w, "hex_of_weakness", cell(3));
     assert!(suffers(&w, near, "weakened"), "{:?}", said(&w));
     cast(&mut w, "curse_of_sloth", cell(3));
     assert!(suffers(&w, near, "sluggish"));
     assert!(w.state.player().talents.has("frugal_caster"));
-    // Level 3's 3 each, less Frugal caster's fifth (`levelup:auto` took it).
-    assert_eq!(w.state.player().mana, 35, "2 each");
+    // Level 3 at the floor, 4 each, less Frugal caster's fifth (`levelup:auto` took it).
+    assert_eq!(w.state.player().mana, 31, "3 each");
     // Presence 14 (+2): one degree more of each hex, so it lasts twice as long.
     let sluggish = status(&w, "sluggish");
     assert_eq!(
@@ -608,7 +614,7 @@ fn bolts_and_bursts_strike_as_scrolls_do_and_cost_mana() {
     );
     // Fireball, learned, at 40: a burst.
     reach(&mut w, 40);
-    w.player_mut().spells.insert(sp("fireball"));
+    w.player_mut().spells.insert(sp("fireball"), 1);
     let far = Pos::new(here.x + 2, here.y);
     let before = w.state.actors[&target].hp;
     w.apply(&Action::Cast("fireball".into(), Some(far)));
@@ -777,7 +783,7 @@ fn a_spell_is_paid_through_the_talents_mana_cost() {
     let mut w = world("priest");
     reach(&mut w, 12);
     let content = w.content().clone();
-    w.player_mut().spells.insert(sp("remove_disease"));
+    w.player_mut().spells.insert(sp("remove_disease"), 1);
     w.player_mut().talents.take("frugal_caster", None);
     let cleanse = content
         .class_spell(sp("remove_disease"))

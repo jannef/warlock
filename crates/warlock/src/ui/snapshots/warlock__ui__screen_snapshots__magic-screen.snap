@@ -24,8 +24,8 @@ expression: "render(case, content.clone())"
 │   Battle caster            0  ──────────                                                                    │
 │                                                                                                             │
 │ Spells                                                                                                      │
-│   Burning hands           2d6 fire, burns one in four, 3 mana, aimed                                        │
-│   Ray of frost            2d6 cold, numbs, 1 mana, aimed                                                    │
+│   Burning hands           rank 1  2d6 fire, burns one in four, 6 mana, aimed                                │
+│   Ray of frost            rank 1  2d6 cold, numbs, 4 mana, aimed                                            │
 │                                                                                                             │
 │ Esc close                                                                                                   │
 └─ 1 Character · 2 Inventory · 3 Equipment · 4 Skills · 5 Weapons · 6 Magic · 7 Quests · 8 Talents · 9 Story ─┘

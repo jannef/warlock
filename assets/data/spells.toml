@@ -3,16 +3,20 @@
 # spells themselves are in spells/, one file each.
 #
 # A spell has a level, 0 to 70 by design (spells/README.toml). It is one number with two
-# meanings: the spell's base mana (its level, at least 1: a cantrip of level 0 or 1 costs 1), and the learning
-# at which its grimoire teaches for certain (study.toml). Nothing says how much a spell
-# of a level may do: its own data does.
+# meanings: the spell's base mana (its level, at least `[mana] floor` below: every spell of level
+# 0 to 4 costs as a level-4 spell, so a cantrip is a meaningful share of a starting pool; #1264),
+# and the learning at which its grimoire teaches for certain (study.toml). Nothing says how much
+# a spell of a level may do: its own data does.
 #
 # A cast's mana (the one cost, magic design §5): the spell's base mana, × its shape's percent (a
 # burst's at its radius), × its resolution's `cost` percent, × (100 + the `spell_cost_percent` of
 # the armour worn) %, rounded to the nearest and at least 1; then the talents (Archmage, Empower,
-# Brimming, School focus, Frugal caster) and the items (of Thrift). A spell's own `mana` (Identify's)
+# Brimming, School focus, Frugal caster), the spell's rank (spells/README.toml `[spell.ranks]`,
+# `mana_off`), and the items (of Thrift). A spell's own `mana` (Identify's)
 # stands in for its level, shape, and resolution: a known spell costs the same whoever casts it,
 # and the mana pool is the gate.
+#
+# [mana]: `floor`, the least a spell's level counts as for its base mana (default 1).
 #
 # What the stats do to a spell's roll, reach, and duration is each spell's own ladders,
 # `[spell.grows]` (spells/README.toml): a score reached, a rung cast. An attack aims with its
@@ -45,6 +49,9 @@ attack = { cost = 100 }
 auto = { cost = 100 }
 area = { cost = 100 }
 touch = { cost = 70 }
+
+[mana]
+floor = 4
 
 # [types]: what every spell of a damage type does beyond its damage, whether cast from mana, a
 # scroll, or a wand (the spell types design docs/design/spell-types-and-new-spells.md §3, §4). It

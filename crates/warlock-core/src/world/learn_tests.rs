@@ -1,6 +1,7 @@
 //! Learning spells from grimoires (spec §8 "Spells": "Learning"): refusals, the check by
 //! overreach and known levels, the time, interruption, the grimoire kept, mishaps by band, saves
-//! and replays.
+//! and replays. Deepening a known spell by reading its grimoire again ("Ranks", #1264) is
+//! `spell_rank_tests.rs`.
 
 use super::caster_tests::sp;
 use super::learn::Lesson;
@@ -16,11 +17,11 @@ const PACK: &str = "carry = [\"grimoire_of_fireball*2\", \"grimoire_of_lightning
      \"grimoire_of_frost*2\", \"grimoire_of_identify\", \"dagger\", \"scroll_of_frost*2\"]";
 
 /// A lit hall of `map` (`@` the player, `r` a giant rat), the player with `mana` base mana.
-fn world_with(map: &str, mana: u16) -> World {
+pub(super) fn world_with(map: &str, mana: u16) -> World {
     seeded(map, mana, None)
 }
 
-fn seeded(map: &str, mana: u16, seed: Option<u64>) -> World {
+pub(super) fn seeded(map: &str, mana: u16, seed: Option<u64>) -> World {
     let mut files = ContentFiles::builtin();
     files.insert(
         "levels/hall.toml",
@@ -42,7 +43,7 @@ fn seeded(map: &str, mana: u16, seed: Option<u64>) -> World {
 }
 
 /// The player is trained in Decipher script, the skill of learning (#1270), at `value`.
-fn set_decipher(w: &mut World, value: u16) {
+pub(super) fn set_decipher(w: &mut World, value: u16) {
     let decipher = decipher(w);
     let skills = &mut w.player_mut().skills;
     let by = i32::from(value) - skills.value(decipher).map_or(0, i32::from);
@@ -53,19 +54,19 @@ fn decipher(w: &World) -> crate::skills::SkillId {
     w.content.skill_id("decipher_script").expect("skill")
 }
 
-const HALL: &str = "#######\n#.....#\n#..@..#\n#.....#\n#######\n";
+pub(super) const HALL: &str = "#######\n#.....#\n#..@..#\n#.....#\n#######\n";
 
 fn world() -> World {
     world_with(HALL, 10)
 }
 
-fn run(w: &mut World, actions: &str) -> Vec<Outcome> {
+pub(super) fn run(w: &mut World, actions: &str) -> Vec<Outcome> {
     (parse_actions(actions).expect("actions").iter())
         .map(|a| w.apply(a))
         .collect()
 }
 
-fn last(w: &World) -> String {
+pub(super) fn last(w: &World) -> String {
     w.messages()
         .iter()
         .last()
@@ -73,7 +74,7 @@ fn last(w: &World) -> String {
         .unwrap_or_default()
 }
 
-fn count(w: &World, object: &str) -> u32 {
+pub(super) fn count(w: &World, object: &str) -> u32 {
     let id = w.content.object_id(object).expect("object");
     (w.state.player().inventory.iter())
         .filter(|s| s.object == id)
@@ -82,7 +83,7 @@ fn count(w: &World, object: &str) -> u32 {
 }
 
 /// Knows every scroll type carried (the dev identify).
-fn identified(mut w: World) -> World {
+pub(super) fn identified(mut w: World) -> World {
     run(&mut w, "identify");
     w
 }
@@ -102,12 +103,13 @@ fn refusals_take_no_time_and_keep_the_grimoire() {
         "read:c:3,1",
         "A grimoire is read, not aimed: `read:a`.",
     );
-    // The grimoire of identify teaches Identify (#592).
+    // The grimoire of identify teaches Identify (#592); known at the last rank, it has nothing
+    // more to teach (below it, a reading deepens the spell: `spell_rank_tests.rs`).
     let mut knows = w.clone();
-    knows.player_mut().spells.insert(sp("identify"));
-    refused(&mut knows, "read:d", "You know this spell already.");
-    w.player_mut().spells.insert(sp("frost"));
-    refused(&mut w, "read:c", "You know this spell already.");
+    knows.player_mut().spells.insert(sp("identify"), 10);
+    refused(&mut knows, "read:d", "You know all there is of Identify.");
+    w.player_mut().spells.insert(sp("frost"), 10);
+    refused(&mut w, "read:c", "You know all there is of Frost.");
     assert_eq!(count(&w, "grimoire_of_frost"), 2, "kept");
     // No mana at all: no gift for magic.
     let mut w = identified(world_with(HALL, 0));
@@ -161,8 +163,10 @@ fn the_check_grows_with_overreach_and_the_levels_known() {
     let mut learned = me.clone();
     learned
         .spells
-        .extend([sp("call_lightning"), sp("fireball"), sp("frost")]);
-    learned.spells.extend([sp("blessing"), sp("mend")]);
+        .extend([sp("call_lightning"), sp("fireball"), sp("frost")].map(|s| (s, 1)));
+    learned
+        .spells
+        .extend([sp("blessing"), sp("mend")].map(|s| (s, 1)));
     let (before, after) = (
         odds(&me, 0, sp("hex_of_weakness")),
         odds(&learned, 0, sp("hex_of_weakness")),
@@ -191,7 +195,7 @@ fn a_spell_within_reach_is_learned_for_certain_in_its_time() {
     assert_ne!(w.state_hash(), hash);
     // Frost is level 6: 100 + 6 × 20 = 220 turns, 22 minutes.
     assert_eq!(out.elapsed, crate::time::Duration::minutes(22));
-    assert!(w.state.player().spells.contains(&sp("frost")));
+    assert!(w.state.player().spells.contains_key(&sp("frost")));
     assert_eq!(count(&w, "grimoire_of_frost"), 2, "kept");
     let said: Vec<String> = w.messages().iter().map(|m| m.display()).collect();
     assert!(
@@ -202,15 +206,21 @@ fn a_spell_within_reach_is_learned_for_certain_in_its_time() {
         said.iter().any(|m| m.ends_with("you have learned Frost.")),
         "{said:?}"
     );
-    // It is in the abilities menu, and the grimoire teaches it no more.
+    // It is in the abilities menu at rank 1, and the grimoire now deepens it (a reading twice as
+    // long, for rank 2; `spell_rank_tests.rs`).
     let abilities = w.perception().abilities();
     assert!(
         abilities
             .iter()
             .any(|a| a.ability == crate::ability::Ability::Spell(sp("frost")))
     );
-    assert!(!run(&mut w, "read:c")[0].took_turn);
-    assert_eq!(last(&w), "You know this spell already.");
+    assert_eq!(
+        w.state.player().spell_rank(&w.content, sp("frost")),
+        Some(1)
+    );
+    let again = run(&mut w, "read:c").remove(0);
+    assert!(again.took_turn);
+    assert_eq!(again.elapsed, crate::time::Duration::minutes(44));
     // A scroll of a known spell still reads.
     assert!(run(&mut w, "read:f:3,1")[0].took_turn);
 }
@@ -234,7 +244,7 @@ fn a_blow_interrupts_the_study() {
     assert!(out.elapsed < crate::time::Duration::minutes(22));
     assert_eq!(last(&w), "You stop reading.");
     assert_eq!(count(&w, "grimoire_of_frost"), 2, "kept");
-    assert!(!w.state.player().spells.contains(&sp("frost")));
+    assert!(!w.state.player().spells.contains_key(&sp("frost")));
 }
 
 #[test]
@@ -303,6 +313,7 @@ fn each_mishap_does_what_it_says() {
         item: 0,
         object: w.content.object_id(object).expect("object"),
         spell,
+        rank: None,
         turns: 1,
     };
     let mut w = identified(world());
@@ -330,7 +341,7 @@ fn each_mishap_does_what_it_says() {
     );
     // Learned anyway.
     w.mishap(&mishap(&w, "learned_anyway"), frost, &mut events);
-    assert!(w.state.player().spells.contains(&sp("frost")));
+    assert!(w.state.player().spells.contains_key(&sp("frost")));
     // A teleport moves the reader.
     let from = w.player_pos();
     w.mishap(&mishap(&w, "twisted_space"), frost, &mut events);
@@ -363,8 +374,8 @@ fn learned_spells_survive_saves_and_replays() {
     assert!(!empty.contains("spells"), "left out while empty");
     run(&mut w, "read:c");
     let json = serde_json::to_string(w.state.player()).expect("json");
-    let saved = format!("\"spells\":[{}]", sp("frost").0);
-    assert!(json.contains(&saved), "by index: {json}");
+    let saved = format!("\"spells\":{{\"{}\":1}}", sp("frost").0);
+    assert!(json.contains(&saved), "by index, with the rank: {json}");
     let back: Actor = serde_json::from_str(&json).expect("loads");
     assert_eq!(back.spells, w.state.player().spells);
     let content = w.content.clone();
@@ -393,7 +404,7 @@ fn the_dumps_say_the_spells_known_and_the_learning() {
         vec!["no spells"],
         "grimoires are no spells"
     );
-    w.player_mut().spells.insert(sp("blessing"));
+    w.player_mut().spells.insert(sp("blessing"), 1);
     let rows = layer_rows(&w, spells);
     assert_eq!(rows.len(), 1, "{rows:?}");
     assert!(rows[0].starts_with("Blessing (level 3, "), "{rows:?}");
@@ -419,12 +430,18 @@ fn the_dumps_say_the_spells_known_and_the_learning() {
 #[test]
 fn the_read_list_tells_the_chance_of_each_grimoire_to_learn() {
     let mut w = world();
-    w.player_mut().spells.insert(sp("identify"));
+    w.player_mut().spells.insert(sp("identify"), 10);
     let studies = w.perception().studies();
-    // Fireball, lightning, and frost; not identify, known.
+    // Fireball, lightning, and frost, each to learn; not identify, known at its last rank.
     let items: Vec<usize> = studies.iter().map(|s| s.item).collect();
     assert_eq!(items, vec![0, 1, 2]);
+    assert!(studies.iter().all(|s| s.rank.is_none()));
     assert_eq!(studies[2].chance, "a struggle");
+    // Known below it, identify's grimoire is listed for its next rank.
+    w.player_mut().spells.insert(sp("identify"), 3);
+    let studies = w.perception().studies();
+    assert_eq!(studies[3].item, 3);
+    assert_eq!(studies[3].rank, Some(4));
 }
 
 /// A ring of the Scholar worth `value` on the player's left hand.
@@ -599,13 +616,13 @@ fn the_classes_that_learn_start_with_decipher_script() {
 }
 
 /// A level-1 `class` with its kit (spells from the class's table).
-fn kitted(class: &str) -> World {
+pub(super) fn kitted(class: &str) -> World {
     let content = Arc::new(Content::builtin().expect("content"));
     super::caster_tests::world_with(content, class)
 }
 
 /// Gives the player one `object` and says where it is.
-fn given(w: &mut World, object: &str) -> usize {
+pub(super) fn given(w: &mut World, object: &str) -> usize {
     let object = w.content.object_id(object).expect("object");
     let me = w.player_mut();
     me.inventory.push(Stack::new(object, 1));
@@ -620,7 +637,10 @@ fn level_one_casters_learn_cantrips_and_keep_their_granted_spells() {
         assert!(w.state.player().learning(&w.content).is_some(), "{class}");
         let at = given(&mut w, "grimoire_of_light");
         assert!(run(&mut w, &format!("read:{at}"))[0].took_turn, "{class}");
-        assert!(w.state.player().spells.contains(&sp("light")), "{class}");
+        assert!(
+            w.state.player().spells.contains_key(&sp("light")),
+            "{class}"
+        );
     }
     // The class gives its spell whatever the Decipher script: taken away, it stays known and cast.
     let mut w = kitted("wizard");
@@ -641,7 +661,7 @@ fn learning_a_spell_from_a_grimoire_pays_five_experience_a_spell_level_once() {
     let before = w.state.experience;
     // Frost is level 6.
     run(&mut w, "read:c");
-    assert!(w.state.player().spells.contains(&sp("frost")));
+    assert!(w.state.player().spells.contains_key(&sp("frost")));
     assert_eq!(w.state.experience - before, 30);
     // Fireball is level 11: 55. A level-0 spell pays 5.
     let level = w.content.spell_of(sp("fireball")).expect("spell").level;

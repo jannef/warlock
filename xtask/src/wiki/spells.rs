@@ -1,12 +1,12 @@
 //! Spells (spec §8 "Spells"): the shapes' and resolutions' cost multipliers, the
-//! spell list by spell level, the classes' guaranteed spells, the armour
+//! spell list by spell level, each spell's ranks, the classes' guaranteed spells, the armour
 //! that makes casting dearer, and the wands.
 
 use super::text::{Term, anchored, damage_link, link};
 use std::fmt::Write as _;
 use warlock_core::content::{
-    BurstIce, Content, Resolution, RodDoes, RodShape, RuinOf, Shape, SpellData, SpellPurpose,
-    TalentEffect, ZoneKind,
+    BurstIce, Content, MAX_SPELL_RANK, Resolution, RodDoes, RodShape, RuinOf, Shape, SpellData,
+    SpellMods, SpellPurpose, TalentEffect, ZoneKind,
 };
 
 /// What each shape multiplies the base cost by; a burst by radius.
@@ -215,6 +215,101 @@ pub(super) fn list(content: &Content) -> String {
         );
     }
     out
+}
+
+/// Every spell with a rank table (`[spell.ranks]`, spec §8 "Spells": "Ranks"), by level then
+/// name: what reaching each rank adds, and what a cast at rank 10 has in all. A spell without a
+/// table is left out (its ranks give nothing).
+pub(super) fn ranks(content: &Content) -> String {
+    let mut spells: Vec<&SpellData> = (content.spells().iter())
+        .filter(|s| !s.ranks.is_empty())
+        .collect();
+    spells.sort_by(|a, b| a.level.cmp(&b.level).then(a.name.cmp(&b.name)));
+    if spells.is_empty() {
+        return "No spell has a rank table yet: every spell casts the same at every rank.\n".into();
+    }
+    let mut out = String::from(
+        "| Spell | Level | Rank | Adds | At rank 10, in all |\n|---|:---:|:---:|---|---|\n",
+    );
+    for spell in spells {
+        let steps = spell.ranks.steps();
+        let all = rank_words(&spell.ranks.at(MAX_SPELL_RANK));
+        for (i, (rank, mods)) in steps.iter().enumerate() {
+            let (name, level, total) = if i == 0 {
+                (
+                    link(super::text::Term::Spell, &spell.id, &spell.name),
+                    spell.level.to_string(),
+                    all.clone(),
+                )
+            } else {
+                (String::new(), String::new(), String::new())
+            };
+            let _ = writeln!(
+                out,
+                "| {name} | {level} | {rank} | {} | {total} |",
+                rank_words(mods)
+            );
+        }
+    }
+    out
+}
+
+/// What a rank's [`SpellMods`] add, in words (`+1 on the roll; a cell farther; 10 % less mana`).
+fn rank_words(mods: &SpellMods) -> String {
+    let count = |n: i32, one: &str, many: &str| {
+        if n == 1 {
+            one.to_string()
+        } else {
+            format!("{n} {many}")
+        }
+    };
+    let mut parts = Vec::new();
+    if mods.reroll > 0 {
+        parts.push(format!("dice showing {} or less rolled again", mods.reroll));
+    }
+    if mods.sides > 0 {
+        parts.push(format!("every die {} sides bigger", mods.sides));
+    }
+    if mods.dice > 0 {
+        parts.push(count(mods.dice as i32, "a die more", "dice more"));
+    }
+    if mods.bonus != 0 {
+        parts.push(format!("{:+} on the roll", mods.bonus));
+    }
+    if mods.cells != 0 {
+        parts.push(count(mods.cells, "a cell farther", "cells farther"));
+    }
+    if mods.radius_cells != 0 {
+        parts.push(count(mods.radius_cells, "a cell wider", "cells wider"));
+    }
+    if mods.degrees != 0 {
+        parts.push(count(mods.degrees, "a degree longer", "degrees longer"));
+    }
+    if mods.cost != 0 {
+        parts.push(format!(
+            "{} % {} mana",
+            mods.cost.abs(),
+            if mods.cost < 0 { "less" } else { "more" }
+        ));
+    }
+    if mods.time != 0 {
+        parts.push(format!(
+            "{} % {} casting time",
+            mods.time.abs(),
+            if mods.time < 0 { "less" } else { "more" }
+        ));
+    }
+    if mods.to_hit != 0 {
+        parts.push(format!("{:+} to hit", mods.to_hit));
+    }
+    if mods.threat != 0 {
+        parts.push(format!("criticals from a natural {}", 22 - mods.threat));
+    }
+    if parts.is_empty() {
+        "—".into()
+    } else {
+        parts.join("; ")
+    }
 }
 
 /// The spell circles' statuses (`data/circles.toml`): each buff's and hex's spell, the status it

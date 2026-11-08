@@ -48,7 +48,7 @@ fn content(base: i32, only: Option<&str>) -> Arc<Content> {
 fn wizard(content: Arc<Content>) -> (World, ActorId) {
     let mut w = world_with(content, "wizard");
     let spark = w.content.spell_id("spark").expect("spark");
-    w.player_mut().spells.insert(spark);
+    w.player_mut().spells.insert(spark, 1);
     let k = kobold(&mut w, 2, 10_000);
     (w, k)
 }

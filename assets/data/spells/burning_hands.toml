@@ -1,12 +1,12 @@
 # Burning hands (spec §8 "Spells", the first spell list; #979): the wizard's first real spell, a
 # short fan of flame from the caster's hands. No hit roll and a little area, so dearer than Ray of
-# frost, and at Magic missile's price it rolls less than Magic missile and reaches far less.
+# frost: the cost table's cone price at the mana floor (6; its own `mana = 3` went with the floor,
+# #1264), half again Magic missile's, for less reach and no aim to miss.
 [[spell]]
 id = "burning_hands"
 name = "Burning hands"
 description = "A fan of flame from your hands toward a place you aim at: everyone in it is burnt."
 level = 1
-mana = 3
 school = "evocation"
 kind = "damage"
 shape = "cone"

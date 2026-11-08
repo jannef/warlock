@@ -10,7 +10,7 @@ expression: "render(case, content.clone())"
                     │   b  Volley             at a place you see               │
                     │   c  Sic 'em            at a place you see               │
                     │ Spells                                                   │
-                    │   d  Barkskin           3 mana                           │
+                    │   d  Barkskin           4 mana                           │
                     │   e  Nightsight         4 mana                           │
                     │   f  Water walking      5 mana                           │
                     │ Skills                                                   │

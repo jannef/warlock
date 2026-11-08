@@ -71,6 +71,7 @@ pub(crate) fn appraised_for(
 ) -> Vec<Line> {
     let content = lore.content;
     let mut out = lines_named(stack, content, lore.names(stack));
+    out.extend(grimoire_lines(stack, lore, user));
     out.extend(wand_lines(stack, lore, user));
     out.extend(rod_lines(stack, lore));
     out.extend(potion_lines(stack, lore));
@@ -89,6 +90,35 @@ pub(crate) fn appraised_for(
             line.text += &format!(" (worth {worth} gold)");
         }
     }
+    out
+}
+
+/// What a grimoire teaches (spec §8 "Spells": "Learning", "Ranks"): its spell and level, then
+/// where `user` stands with it: a spell they know at its rank and that reading it would
+/// deepen (`You know it at rank 3 of 10: reading it again would deepen it.`), one known at the
+/// last rank, or one they could learn. Nothing for anything else.
+fn grimoire_lines(stack: &Stack, lore: Lore<'_>, user: Option<&Actor>) -> Vec<Line> {
+    let content = lore.content;
+    let Some(spell) = content.object(stack.object).grimoire else {
+        return Vec::new();
+    };
+    let def = content.spell(spell);
+    let mut out = vec![line(
+        LineKind::Stat,
+        format!(
+            "Teaches {} (level {}): {}",
+            def.name, def.level, def.description
+        ),
+    )];
+    let most = crate::content::MAX_SPELL_RANK;
+    let standing = match user.and_then(|u| u.spell_rank(content, spell)) {
+        Some(rank) if rank < most => {
+            format!("You know it at rank {rank} of {most}: reading it again would deepen it.")
+        }
+        Some(_) => format!("You know it at rank {most} of {most}: it has nothing more to teach."),
+        None => "You do not know it: reading it is a study.".to_string(),
+    };
+    out.push(line(LineKind::Note, standing));
     out
 }
 

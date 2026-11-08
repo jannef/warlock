@@ -486,7 +486,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
   styles the player fights in now (`PerceptionView::own_styles_in_use`: their hands', their
   readied missile weapon's, throwing's while something is ready to throw) are marked with an
   accent `•` before the name, and the Fighting styles heading then has the legend `• in use`.
-  The caster styles are the Magic page's, and the footer names it
+  The caster styles are the Magic page's, which also lists every spell known with its rank
+  (§8 "Spells": "Ranks"), and the footer names it
   (`6 Magic`). Where the console is wide enough (88 columns) the sections are in two columns, Melee and
   Missile and thrown on the left, Shields and Fighting styles on the right; else one. A
   `hidden` style (Two Shields, #611) is left out until the player has marks in it. Never what
@@ -502,9 +503,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
   as the weapon skills screen draws a skill, Battle caster marked `•` while what is worn hinders casting (`own_styles_in_use`) with
   the heading's legend `• the style you cast in now`, listed only for a player who knows a spell
   or has a rank or marks in a caster style; Spells, every spell known in the abilities menu's
-  order (by level, then name), each with the menu's words (`Magic missile   2d4 force, 3 mana,
-  aimed`), or "You know no spells.". No cursor and no description: spells are cast from the
-  abilities menu. Never what a rank gives. Enter or Esc closes it.
+  order (by level, then name), each with its rank (§8 "Spells": "Ranks"; #1264) and the menu's
+  words (`Magic missile   rank 1  2d4 force, 4 mana, aimed`), or "You know no spells.". No
+  cursor and no description: spells are cast from the abilities menu. Never what a rank gives. Enter or Esc closes it.
 - **Quest log** (`q`; §8 "Quests"): the quests the player was given ("Active"), then those
   they have done ("Done"), by name, each in the order of `data/quests.toml` ("You have taken
   up no quests." when there are none). ↑↓ choose one; below the list it shows what it asks, as
@@ -634,9 +635,12 @@ developer notes (CLAUDE.md, `docs/dev/`).
   unidentified."), where a letter or Enter reads it on that stack
   (replay text `read:LETTER:LETTER`, the scroll then the stack). Esc cancels either list. A
   grimoire whose spell the player could learn (§8 "Spells": "Learning") is marked with the
-  chance in words ("learning: a struggle"), and choosing it asks first in the one dialog ("Read
+  chance in words ("learning: a struggle"), and one of a spell they know below rank 10 with the
+  rank it would bring them to (§8 "Spells": "Ranks"; "rank 3 of 10: a struggle"); choosing
+  either asks first in the one dialog ("Read
   the grimoire of frost? Learning Frost will be a struggle. Once you begin you cannot stop of
-  your own accord.": Read it / Don't read it, the safe answer selected first); any other
+  your own accord."; "… Deepening Frost to rank 3 of 10 will be a struggle. …": Read it / Don't
+  read it, the safe answer selected first); any other
   grimoire is read at once, which says why it teaches nothing. Reading one is `read:LETTER`.
   The list's keys are fixed (letters, Enter, the list keys, Esc). There is no Study command
   (#1260).

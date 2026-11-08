@@ -5,9 +5,9 @@
 //! learned from grimoires ([`Actor::spells`], saved). A grimoire ([`crate::content::grimoire`])
 //! teaches the spell of its scroll, and is known on sight (no label):
 //!
-//! - **Refusals** (no time): a spell known ("You know this spell already."), no mana at all ("You
-//!   have no gift for magic."), no training in Decipher script ([`UNTRAINED`]), and whatever a
-//!   status blocks (Raging blocks `study`).
+//! - **Refusals** (no time): a spell known at its last rank ("You know all there is of Frost."),
+//!   no mana at all ("You have no gift for magic."), no training in Decipher script
+//!   ([`UNTRAINED`]), and whatever a status blocks (Raging blocks `study`).
 //! - **Learning** ([`Actor::learning`]): the spell level up to which a grimoire teaches for
 //!   certain, the `learn` benefit of the skill that has one (Decipher script; #1270) at the
 //!   skill's value with what items and talents add, at least 1. A character not trained in that
@@ -31,6 +31,13 @@
 //!   summoned next to the reader, or the spell learned anyway.
 //! - **The grimoire is kept** whatever comes of it: it may be read again after a failure (no
 //!   limit but the time), and sold or kept after it taught.
+//! - **Deepening** (#1264, `spell_rank.rs`): the grimoire of a spell already known, below
+//!   [`MAX_SPELL_RANK`], is read for the next rank. The same reading, `rank` times as long (the
+//!   rank sought) and always a check, [`StudyRules::rank_difficulty`] harder (`per_rank` for
+//!   each rank held); the overreach counts as at least 0. Made: the rank is one higher ("The
+//!   words settle deeper: you know Frost at rank 3 of 10."). Failed: "The words add nothing
+//!   new.", the time gone, no mishap, and it may be read again at once (no limit but the
+//!   time). A spell a class gives is deepened like any other.
 //!
 //! Determinism: the check's two draws only when there is a check, the mishap's one draw only on
 //! a failure, then the effect's own (a backfire's damage roll, a drain's, a teleport's hash).
@@ -43,8 +50,8 @@ use crate::action::Event;
 use crate::character::Character;
 use crate::check;
 use crate::content::{
-    ActionKind, Band, Content, CreatureSpawn, Drain, Mishap, MishapEffect, ObjectId, SpellId,
-    StudyRules,
+    ActionKind, Band, Content, CreatureSpawn, Drain, MAX_SPELL_RANK, Mishap, MishapEffect,
+    ObjectId, SpellId, StudyRules,
 };
 use crate::geom::Dir;
 use crate::skills::{Effect, Use};
@@ -55,23 +62,26 @@ use std::cell::Cell;
 pub const UNTRAINED: &str = "You have no training in Decipher script; you cannot make sense of how to learn a spell from a grimoire.";
 
 /// A study under way: the grimoire read (its position and object as the study began), the
-/// spell it teaches, and the turns it takes.
+/// spell it teaches, the rank it is read for (`None`: to learn it), and the turns it takes.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub(super) struct Lesson {
     pub(super) item: usize,
     pub(super) object: ObjectId,
     pub(super) spell: SpellId,
+    pub(super) rank: Option<u8>,
     pub(super) turns: u32,
 }
 
-/// How a study of a spell would go: its overreach, and the check above the learning (`None`:
-/// certain).
+/// How a study of a spell would go: its overreach, the rank it would bring (`None`: it would
+/// teach the spell), and the check above the learning (`None`: certain).
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Odds {
     /// The spell's level less the learning (before Overreach's cut, which only the check's
     /// difficulty reads).
     pub overreach: i32,
-    /// The check's bonus and difficulty, at overreach 1 or more.
+    /// The rank a deepening would reach, for a spell known; `None` for one to learn.
+    pub rank: Option<u8>,
+    /// The check's bonus and difficulty, at overreach 1 or more, and for any deepening.
     pub check: Option<(i32, i32)>,
 }
 
@@ -88,7 +98,16 @@ impl Odds {
 impl Actor {
     /// Whether it knows `spell` (spec §8 "Spells"): learned, or its class abilities give it.
     pub fn knows_spell(&self, content: &Content, spell: SpellId) -> bool {
-        self.spells.contains(&spell) || self.talent_mods(content).has_spell(spell)
+        self.spells.contains_key(&spell) || self.talent_mods(content).has_spell(spell)
+    }
+
+    /// The rank a reading of `spell`'s grimoire would bring it to: the next, for a spell known
+    /// below [`MAX_SPELL_RANK`]; `None` for one not known (a reading would teach it) or at
+    /// its last rank (nothing to read for).
+    fn rank_sought(&self, content: &Content, spell: SpellId) -> Option<u8> {
+        (self.spell_rank(content, spell))
+            .filter(|&rank| rank < MAX_SPELL_RANK)
+            .map(|rank| rank + 1)
     }
 
     /// The spells it knows that the content has, in menu order (by spell level, then path
@@ -128,8 +147,10 @@ fn affinity(content: &Content, character: Option<&Character>, spell: SpellId) ->
         .map_or(0, i32::from)
 }
 
-/// How `actor` (of `character`) would study `spell` (module docs); `None` when it cannot learn
-/// from a scroll ([`Actor::learning`]), or without the study rules or the spell's file.
+/// How `actor` (of `character`) would study `spell` (module docs): to learn it, or, knowing
+/// it, to deepen it to the next rank (always a check); `None` when it cannot learn from a
+/// grimoire ([`Actor::learning`]), knows the spell at its last rank, or without the study rules
+/// or the spell's file.
 pub fn study_odds(
     actor: &Actor,
     content: &Content,
@@ -138,11 +159,17 @@ pub fn study_odds(
 ) -> Option<Odds> {
     let (study, def) = (content.study_rules()?, content.spell_of(spell)?);
     let overreach = i32::from(def.level) - actor.learning(content)?;
+    let rank = if actor.knows_spell(content, spell) {
+        Some(actor.rank_sought(content, spell)?)
+    } else {
+        None
+    };
     // A spell made hard to learn (`study_difficulty`, the owner's Q7 of #828) is a check at any
-    // learning.
-    if overreach <= 0 && def.study_difficulty <= 0 {
+    // learning, and so is a deepening.
+    if overreach <= 0 && def.study_difficulty <= 0 && rank.is_none() {
         return Some(Odds {
             overreach,
+            rank,
             check: None,
         });
     }
@@ -153,9 +180,12 @@ pub fn study_odds(
         + mods.study_bonus;
     // Overreach's third off, rounded down (the spell scaling design §7.2).
     let counted = overreach.max(0) * (100 + mods.study_overreach_percent).max(0) / 100;
-    let difficulty = study.difficulty(counted, actor.known_levels(content)) + def.study_difficulty;
+    let difficulty = study.difficulty(counted, actor.known_levels(content))
+        + def.study_difficulty
+        + rank.map_or(0, |r| study.rank_difficulty(r));
     Some(Odds {
         overreach,
+        rank,
         check: Some((bonus, difficulty)),
     })
 }
@@ -185,8 +215,13 @@ impl World {
             return Spent::Nothing;
         };
         let object = stack.object;
-        if me.knows_spell(&content, spell) {
-            self.say("You know this spell already.");
+        // A spell known is read for its next rank; at the last there is nothing to read for.
+        let rank = me.rank_sought(&content, spell);
+        if me.knows_spell(&content, spell) && rank.is_none() {
+            let name = content
+                .spell_of(spell)
+                .map_or("this spell", |d| d.name.as_str());
+            self.say(format!("You know all there is of {name}."));
             return Spent::Nothing;
         }
         if me.max_mana(&content) <= 0 {
@@ -202,13 +237,15 @@ impl World {
             return Spent::Nothing;
         };
         let percent = me.talent_mods(&content).study_percent;
-        let turns = study_turns(rules, def.level, percent);
+        // A deepening reads the whole book over, rank times.
+        let turns = study_turns(rules, def.level, percent) * u32::from(rank.unwrap_or(1));
         let title = self.lore().title(&stack.single());
         self.say(format!("You begin to read the {title}."));
         Spent::Study(Lesson {
             item,
             object,
             spell,
+            rank,
             turns,
         })
     }
@@ -235,8 +272,8 @@ impl World {
         }
     }
 
-    /// The last turn of a study is done: the check, and the spell learned or a mishap; the
-    /// grimoire is kept.
+    /// The last turn of a study is done: the check, and the spell learned or a mishap (a
+    /// deepening: the rank gained, or nothing); the grimoire is kept.
     fn finish_study(&mut self, lesson: Lesson, events: &mut Vec<Event>) {
         let pack = &self.state.player().inventory;
         let at = match pack.get(lesson.item) {
@@ -255,6 +292,14 @@ impl World {
             None => true,
             Some((bonus, difficulty)) => check::check(&mut self.state.rng, bonus, difficulty),
         };
+        if let Some(rank) = lesson.rank {
+            if learned {
+                self.deepen_spell(lesson.spell, rank);
+            } else {
+                self.say("The words add nothing new.");
+            }
+            return;
+        }
         if learned {
             self.learn_spell(lesson.spell);
             return;
@@ -270,10 +315,22 @@ impl World {
         }
     }
 
-    /// The player learns `spell` for good.
+    /// The player knows `spell` at `rank` from now on (module docs: "Deepening").
+    fn deepen_spell(&mut self, spell: SpellId, rank: u8) {
+        let name = (self.content.spell_of(spell)).map_or_else(String::new, |d| d.name.clone());
+        self.player_mut().set_spell_rank(spell, rank);
+        self.say(format!(
+            "The words settle deeper: you know {name} at rank {rank} of {MAX_SPELL_RANK}."
+        ));
+    }
+
+    /// The player learns `spell` for good, at rank 1 (a spell known already keeps its rank).
     pub(super) fn learn_spell(&mut self, spell: SpellId) {
         let name = (self.content.spell_of(spell)).map_or_else(String::new, |d| d.name.clone());
-        let new = self.player_mut().spells.insert(spell);
+        let new = !self.state.player().spells.contains_key(&spell);
+        if new {
+            self.player_mut().set_spell_rank(spell, 1);
+        }
         self.say(format!(
             "The words settle in your mind: you have learned {name}."
         ));

@@ -10,7 +10,7 @@ use crate::stats::{PerStat, Stat, Stats};
 fn hall() -> World {
     let mut w = start(Arc::new(Content::load(&files()).expect("content")), 7);
     for spell in ["flay", "bind", "renewal", "unbinding", "barkskin"] {
-        w.player_mut().spells.insert(sp(spell));
+        w.player_mut().spells.insert(sp(spell), 1);
     }
     w
 }

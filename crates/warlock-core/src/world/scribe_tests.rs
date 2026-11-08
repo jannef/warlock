@@ -34,8 +34,8 @@ fn world_with(map: &str, mana: u16, pack: &str) -> World {
     let mut w = World::new(content, "hall", None).expect("world");
     let me = w.player_mut();
     me.talents.take("scribe", None);
-    me.spells.insert(sp("magic_missile"));
-    me.spells.insert(sp("fireball"));
+    me.spells.insert(sp("magic_missile"), 1);
+    me.spells.insert(sp("fireball"), 1);
     me.mana = me.mana_base;
     w
 }
@@ -73,7 +73,7 @@ fn cost(w: &World, spell: &str) -> i32 {
 fn the_price_is_three_casts_of_the_spell() {
     let w = world();
     let me = w.state.player();
-    for (spell, cast, written) in [("fireball", 26, 78), ("magic_missile", 3, 9)] {
+    for (spell, cast, written) in [("fireball", 26, 78), ("magic_missile", 4, 12)] {
         let def = w.content.spell(sp(spell));
         assert_eq!(me.spell_cost(&w.content, def), cast, "{spell}");
         assert_eq!(cost(&w, spell), written, "{spell}");
@@ -105,7 +105,7 @@ fn a_scroll_is_written_in_a_studys_time_and_known() {
     let out = run(&mut w, "scribe:magic_missile").remove(0);
     // Magic missile is level 3: 100 + 3 × 20 = 160 turns, 16 minutes.
     assert_eq!(out.elapsed, Duration::minutes(16));
-    assert_eq!(w.state.player().mana, mana - 9);
+    assert_eq!(w.state.player().mana, mana - 12);
     assert_eq!(count(&w, "blank_scroll"), 1, "one used up");
     assert_eq!(count(&w, "scroll_of_magic_missile"), 1);
     assert!(
@@ -256,7 +256,7 @@ fn the_dumps_and_the_scribe_list_say_it() {
     let mm = (scribes.iter()).find(|s| s.spell == sp("magic_missile"));
     assert_eq!(
         mm.map(|s| (s.mana, s.time)),
-        Some((9, Duration::minutes(16)))
+        Some((12, Duration::minutes(16)))
     );
     assert_eq!(view.blank_scrolls(), 2);
 }

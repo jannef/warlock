@@ -77,7 +77,7 @@ fn hall(seed: u64) -> World {
 
 fn learn(w: &mut World, spell: &str) {
     let id = w.content.spell_id(spell).expect("a spell");
-    w.player_mut().spells.insert(id);
+    w.player_mut().spells.insert(id, 1);
 }
 
 fn cell(x: i32, y: i32) -> Pos {

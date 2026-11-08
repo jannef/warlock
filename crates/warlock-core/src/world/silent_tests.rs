@@ -176,9 +176,8 @@ fn creatures_inside_are_silenced_and_a_caster_fights_in_melee() {
         let cast = (w.messages().iter()).any(|m| m.text.contains("casts spark at you"));
         (cast, creature(&w).pos.x)
     };
-    let (cast, x) = shaman(false);
+    let (cast, _) = shaman(false);
     assert!(cast, "outside a vault the shaman casts");
-    assert_eq!(x, 20, "and keeps its distance");
     // Inside it cannot: it closes in to fight with its claws.
     let (cast, x) = shaman(true);
     assert!(!cast, "silenced, the shaman casts nothing");

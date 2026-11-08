@@ -8,20 +8,32 @@
 //!   (Potent), `spell_sides`, `spell_dice`, `spell_reroll`, `wand_rungs` (of Wands), and
 //!   `spell_reach` (of Farcasting) as cells and `spell_duration` (of Lingering) as degrees.
 //!   Items carry no tag filter yet: each acts on every spell.
+//! - its **rank** in the spell (`spell_rank.rs`, #1264; the spell's own `[spell.ranks]` table
+//!   summed up to the rank), for a cast of its own only ([`Actor::spell_mods_by`]): a scroll
+//!   read or a wand used casts at rank 1.
 //!
 //! The caster style's benefit joins them in [`Actor::spell_mods_in_style`] (`cast_style.rs`).
 //!
 //! Derived at cast time; nothing is saved. Nothing is clamped (decision 16).
 
-use super::Actor;
+use super::{Actor, CastBy};
 use crate::content::{Content, Effect as ItemEffect, SpellData, SpellMods};
 
 impl Actor {
-    /// What its talents and worn items do to `spell` (module docs), summed.
+    /// What its talents, worn items, and rank do to a cast of `spell` of its own (module
+    /// docs), summed.
     pub fn spell_mods(&self, content: &Content, spell: &SpellData) -> SpellMods {
+        self.spell_mods_by(content, spell, CastBy::Own)
+    }
+
+    /// [`Actor::spell_mods`] for a cast as `by`: its rank counts for an own cast only.
+    pub fn spell_mods_by(&self, content: &Content, spell: &SpellData, by: CastBy) -> SpellMods {
         let tags = spell.tags(content);
         let mut mods = self.talent_mods(content).spell_mods(&tags);
         mods.add(&self.worn_spell_mods(content));
+        if by == CastBy::Own {
+            mods.add(&self.rank_mods(content, spell));
+        }
         mods
     }
 

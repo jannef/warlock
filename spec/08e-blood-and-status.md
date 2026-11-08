@@ -449,11 +449,33 @@ developer notes (CLAUDE.md, `docs/dev/`).
     levels more often (§7 "Shops").
   - **Levels** (the spell scaling design §5, decisions 1, 9, 10, 16): a spell has a **level**,
     0 to 70 (`MAX_SPELL_LEVEL`), one number with two meanings: its **base mana** (the level, at
-    least 1) and the **learning at which a scroll of it teaches for certain** ("Learning" below). A spell of
-    level 0 or 1 is a *cantrip* (1 mana unless it names its own `mana`, as Burning hands and Grave
-    breath do, 3; anyone trained in Decipher script learns it for certain). There is no
+    least the cost table's **floor**, `[mana] floor` = 4 (#1264): every spell of level 0 to 4
+    is priced as a level-4 spell, so a starting caster's pool buys four to eight casts of a
+    cantrip rather than twenty) and the **learning at which a grimoire of it teaches for
+    certain** ("Learning" below). A spell of
+    level 0 or 1 is a *cantrip* (4 base mana, times its shape: Ray of frost 4, Burning hands and
+    Grave breath 6, Mend 3; a spell's own `mana` still stands in for its level's, Identify's;
+    anyone trained in Decipher script learns it for certain). There is no
     table of levels, no ceiling, and no check on how much a spell of a level may do: its own
     data says it (decision 16).
+  - **Ranks** (#1264; `content/spell_rank.rs`, `world/spell_rank.rs`): every spell a character
+    knows has a **rank**, 1 to 10. A spell is known at rank 1 as it is learned, or as a class
+    gives it. **Reading its grimoire again deepens it** to the next rank ("Learning" below:
+    "Deepening"); casting trains no rank, and nothing else raises it. What a rank gives is the
+    spell's own `[spell.ranks]` table (`data/spells/README.toml`): one entry a rank from 2 to
+    10, each what reaching that rank **adds**, cumulative (a cast at rank N has everything the
+    entries for ranks 2 to N add); a spell with no table gains nothing from its ranks. An entry
+    may add, through the hooks: faces rolled again (`reroll`), bigger dice (`sides`), dice
+    (`dice`), a bonus on the roll (`bonus`), cells of range or length (`cells`), a wider
+    burst (`radius`), degrees or minutes (`degrees`), a percent off the mana (`mana_off`) or
+    the casting time (`time_off`, never more than nine tenths off), and, on a spell that rolls
+    to hit, `to_hit` and a wider threat range (`threat`); each only where the spell could read
+    it (checked at load), and nothing bounds how much (decision 16). **Only a cast of one's
+    own known spell reads its rank**: a scroll read or a wand used keeps its own rung rules at
+    rank 1, and creatures' spells are at rank 1. Shown: the Magic page's spell list (each
+    spell's rank), the `spells` dump and JSON (`rank`), the read list and its dialog ("rank 3
+    of 10"), and a grimoire's description. The wiki's `spell-ranks.md` lists every spell's
+    table. Two worked tables ship (Magic missile, Ray of frost); the rest are #1265 to #1269.
   - **Cost table** (`data/spells.toml`): the **shapes** multiply the base mana (ray, bolt,
     touch, self ×1; cone ×1.6; line ×1.8; a burst ×1.8, ×2.4, ×3 by radius 1 to 3, its
     largest), and each **resolution** multiplies it (`attack`, `auto` ×1, `area` at its shape's
@@ -701,12 +723,12 @@ developer notes (CLAUDE.md, `docs/dev/`).
       (10) in a hundred, one draw for a spell scroll only. A scroll a level, a shop's `always`,
       a scenario, or a background story names stays a scroll.
     - **Reading a grimoire** (`Action::Read` of one, `read:b`, with no target; the read list,
-      `r`): a study. Refused with no time for a spell known ("You know this spell already."),
-      a character with no mana at all ("You have no gift for magic."), no training in
-      Decipher script (above), a target ("A grimoire is read, not aimed: `read:a`."), and what a
-      status blocks (a grimoire's read is the `study` kind: Raging blocks it). The grimoire is
-      **kept** whatever comes of it: read again after a failure (no limit but the time), or
-      sold once it has taught.
+      `r`): a study. Refused with no time for a spell known at its last rank ("You know all
+      there is of Frost."), a character with no mana at all ("You have no gift for magic."),
+      no training in Decipher script (above), a target ("A grimoire is read, not aimed:
+      `read:a`."), and what a status blocks (a grimoire's read is the `study` kind: Raging
+      blocks it). The grimoire is **kept** whatever comes of it: read again after a failure (no
+      limit but the time), or kept to deepen the spell ("Deepening" below), or sold.
     - **Time**: `turns_base + turns_per_level × level` (100 and 20: ten minutes and two a spell
       level; Fireball, level 11, 32 minutes) turns of the `study` action (`data/actions.toml`,
       1000), passed like a meal (`World::keep_at`); Quick study takes
@@ -736,6 +758,16 @@ developer notes (CLAUDE.md, `docs/dev/`).
       a drain (`World::drain`: a Willpower check or points off a stat for good); a hostile
       summoned next to the reader (a dretch); or, lucky, a training mark of Intelligence or the
       spell learned anyway.
+    - **Deepening** (#1264, "Ranks" above): the grimoire of a spell known below rank 10 is read
+      for its **next rank**: the same reading, as many times as long as the rank sought (rank 2
+      twice the learning time, rank 10 ten times), and always a check, whatever the learning
+      (the overreach counted as at least 0), with `per_rank` (2, `data/study.toml`) added to the
+      difficulty for each rank already held (+2 for rank 2, +18 for rank 10). Made: "The words
+      settle deeper: you know Frost at rank 3 of 10.", the rank one higher; no experience.
+      Failed: "The words add nothing new.": the time is gone and nothing else (no mishap), and
+      the grimoire may be read again at once (no limit but the time, the owner's rule). A spell a
+      class gives is deepened like any other. The read list marks such a grimoire "(rank 3 of
+      10: a struggle)" and the dialog asks "Deepening Frost to rank 3 of 10 will be a struggle."
     - **Training**: the `study` use (Decipher script's mark, 100 %; an Intelligence mark),
       whatever comes of it. Spending mana on a spell is practice for Spellcraft (its `cast`
       mark, 25 %, as Concentration's); reading a scroll to cast it marks Decipher script (the
@@ -747,10 +779,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
       player could learn from (`PerceptionView::studies`) "(learning: a struggle)" and asks in
       the one dialog before reading it ("Read the grimoire of frost? Learning Frost will be a
       struggle. Once you begin you cannot stop of your own accord.": Read it / Don't read it,
-      the safe answer selected first); the dump `spells` layer (known spells with spell level
-      and cost and their roll and reach now, `Fireball (level 11, 26 mana): 4d6 fire, range 11,
-      radius 2`) and JSON's `spells` (each with `level`, `cost`, `roll`, `damage_type`, and
-      `reach`); the dev `progress` layer's learning.
+      the safe answer selected first); the dump `spells` layer (known spells with spell level,
+      rank, and cost and their roll and reach now, `Fireball (level 11, rank 1, 26 mana): 4d6
+      fire, range 11, radius 2`) and JSON's `spells` (each with `level`, `rank`, `cost`,
+      `roll`, `damage_type`, and `reach`); the dev `progress` layer's learning.
 - **Resources** (`warlock-core/src/resource.rs`, the pools and time's rules;
   `content/resource.rs`, the data; `world/resource.rs`, applying them; #225): alternative
   resources, integer pools beside hit points and mana (which everyone has) that a character holds

@@ -340,7 +340,7 @@ fn poison_poisons_a_degree_and_blight_still_poisons_two() {
     let poisoned = status(&w, "poisoned");
     let id = kobold_at(&mut w, (5, 0), 10_000);
     let at = pos(&w, id);
-    w.player_mut().spells.insert(sp("blight"));
+    w.player_mut().spells.insert(sp("blight"), 1);
     let content = w.content().clone();
     let by = w.state.player;
     w.spell_type_lands(by, kind(&w, "poison"), &[id], &mut Vec::new());

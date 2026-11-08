@@ -1287,8 +1287,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     one that kills its caster is `Cause::Spell` ("Killed by their own fireball"). Too close a
     burst asks first, as a scroll's does ("Cast it anyway?").
   - **Priest** (the priest design, `docs/design/priest.md`; #883): Mend (level 1, at 1: a
-    touch, 1d3 back; 1 mana), Blessing (level 3, at 3: Blessed 10 min a degree: +1 to hit,
-    Willpower +1; 3 mana), Cure wounds (level 3, at 3: a touch, 2d6; 2 casts; 2 mana),
+    touch, 1d3 back; 3 mana), Blessing (level 3, at 3: Blessed 10 min a degree: +1 to hit,
+    Willpower +1; 4 mana), Cure wounds (level 3, at 3: a touch, 2d6; 2 casts; 3 mana),
     Consecrate (9), Communion with the dark (9: Consecrate's dark twin, a passive working only
     for a Callous or worse priest: in an unholy place, a room's or a whole level's, their prayers
     add no strain and the place's status, Ebbing, never touches them), and **the prayer** (`use:orison` at every tier; `docs/dev/prayer.md`; the wiki's Prayer page states its numbers): one
@@ -1323,7 +1323,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     overworld, in water, in a shop, or on hallowed ground. Remove disease, Purify, Purity of body, Smite, the
     reprieve, and Saint left the table (the spell and its scroll stay).
   - **Druid**: Beast-friend (the Wayfarer talent, given; its copy Wild empathy until #790), Spark (level 1, at 1: a bolt, 1d4 electricity;
-    1 mana), Barkskin (level 3, at 3: Dodge +2 a minute a degree; 3 mana), Nature's ward
+    4 mana), Barkskin (level 3, at 3: Dodge +2 a minute a degree; 4 mana), Nature's ward
     (wading never sickens; poison eases twice as fast), Call lightning (at 12; level 11: a line of
     8 cells, 2d6 electricity, its ladder Willpower 13: 3d6 to 25: 5d6+2, a thunderclap; open
     sky only; 20 mana), Flame and frost (two spells, Flame: level 12, the fireball's
@@ -1338,11 +1338,11 @@ developer notes (CLAUDE.md, `docs/dev/`).
     Pack leader; its scroll is very hard to learn (`study_difficulty` 8, 10, 12).
   - **Wizard**: Scroll adept (reading −50 %; the spell scrolls read a rung higher, scrolls only:
     the spell scaling design, decision 12),
-    Ray of frost (level 1, at 1: a ray that rolls to hit, 1d6 cold; 1 mana), Burning hands
+    Ray of frost (level 1, at 1: a ray that rolls to hit, 1d6 cold; 4 mana), Burning hands
     (level 1, at 1, #979: a cone of 3 cells, no hit roll, 1d4 fire, its ladder Intelligence 13:
-    1d6 to 22: 2d4+2; 3 mana, its own price), Arcane training
+    1d6 to 22: 2d4+2; 6 mana, the cone price at the floor, #1264), Arcane training
     (at 1: Decipher script +10 since #1270, a `skill` effect: it helps only a character trained in it), Magic missile
-    (level 3, at 3: never misses, 1d4 force, its ladder Intelligence 13: 2d4 to 22: 3d4+1; 3
+    (level 3, at 3: never misses, 1d4 force, its ladder Intelligence 13: 2d4 to 22: 3d4+1; 4
     mana), Arcane bolt (level 6, at
     18: a line of 6 cells, 2d6 force, its ladder to 3d6+4; 11 mana), Scribe (at 12: a scroll of
     a spell known written on a blank scroll, three times its mana; §8 "Scrolls"), Mage armour (Deflection +2 in no body armour),
@@ -1352,10 +1352,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
     design, decisions 5 and 16). The wizard's bonus talents
     come from the Scholar and Spellcraft trees.
   - **Witch**: Herb lore (rotten food −50 %, a corpse's `on_eat` harm and vomiting never, the
-    angelica root heals 1d6), Evil eye (level 0, at 1: Hexed 1 min a degree: −2 to hit; 1 mana),
+    angelica root heals 1d6), Evil eye (level 0, at 1: Hexed 1 min a degree: −2 to hit; 4 mana),
     Grave breath (level 1, at 1, #979: a cone of 3 cells, no hit roll, 1d4 necrotic, its ladder
-    Willpower 13: 1d6 to 22: 2d4+2; 3 mana, its own price),
-    Hex of weakness (level 3, at 3: Weakened 2 min a degree: St −2, Dx −2; 3 mana), Cackle (at
+    Willpower 13: 1d6 to 22: 2d4+2; 6 mana, the cone price at the floor, #1264),
+    Hex of weakness (level 3, at 3: Weakened 2 min a degree: St −2, Dx −2; 4 mana), Cackle (at
     6, #904: `use:cackle`, nothing to aim, the time of a cast, no mana or cooldown; a voice 60
     loud, `Act::Cackle`; every effect on a creature the player's perception sees whose status a
     hex lays, `Content::hex_statuses()`, and whose giver is the player grows a degree, to its

@@ -313,15 +313,25 @@ fn of_farcasting_reaches_farther_on_the_range_never_the_radius() {
 fn baleful_widens_an_own_spells_threat_down_to_the_floor() {
     let mut w = wizard(content(true));
     let content = w.content().clone();
-    assert_eq!(w.state.player().spell_threat(&content), DEFAULT_THREAT);
+    let bolt = content.spell(sp("arcane_bolt"));
+    assert_eq!(
+        w.state.player().spell_threat(&content, bolt),
+        DEFAULT_THREAT
+    );
     ring(&mut w, "fixture_baleful", 2);
-    assert_eq!(w.state.player().spell_threat(&content), DEFAULT_THREAT - 2);
+    assert_eq!(
+        w.state.player().spell_threat(&content, bolt),
+        DEFAULT_THREAT - 2
+    );
     let player = w.player_id();
     for (slot, object) in [("right_ring", "iron_ring"), ("neck", "jade_amulet")] {
         let more = item(&w, object, "fixture_baleful", 30);
         wear(&mut w, player, slot, more);
     }
-    assert_eq!(w.state.player().spell_threat(&content), *THREATS.start());
+    assert_eq!(
+        w.state.player().spell_threat(&content, bolt),
+        *THREATS.start()
+    );
 }
 
 /// Criticals in 300 casts of the ray at a kobold next to the player.
@@ -432,5 +442,5 @@ fn a_creature_wearing_them_reads_them_too() {
     assert_eq!(before.0, 10);
     assert_eq!(k.mana_cost(&content, 10), 7);
     assert_eq!(k.spell_to_hit(&content, bolt), before.1 + 2);
-    assert_eq!(k.spell_threat(&content), DEFAULT_THREAT - 1);
+    assert_eq!(k.spell_threat(&content, bolt), DEFAULT_THREAT - 1);
 }

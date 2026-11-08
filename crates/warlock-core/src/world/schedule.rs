@@ -76,10 +76,16 @@ impl World {
     }
 
     /// The energy price of actor `id`'s cast of `spell`: the `cast` action for each of the
-    /// spell's `casts`, slowed by its burden.
+    /// spell's `casts`, slowed by its burden, then its rank's `time` percent off (or on;
+    /// `spell_rank.rs`), never more than nine tenths off.
     pub(super) fn cast_price(&self, id: ActorId, spell: &crate::content::SpellData) -> i64 {
         let cost = self.cost_of(id, ActionKind::Cast);
-        self.burdened(id, price(cost, BASE_TURN)) * i64::from(spell.casts)
+        let full = self.burdened(id, price(cost, BASE_TURN)) * i64::from(spell.casts);
+        let percent = self.state.actors[&id]
+            .spell_mods(&self.content, spell)
+            .time
+            .max(-90);
+        (full * i64::from(100 + percent) / 100).max(1)
     }
 
     /// What action `kind` costs actor `id`: its creature type's cost of it (spec §8 "Time"); a

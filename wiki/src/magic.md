@@ -94,14 +94,17 @@ for good from [grimoires](#learning-spells-from-grimoires): the grimoire of iden
 
 ## Spell levels
 
-Every spell has a level, from 0 to 70. It is the spell's base [mana](mana.md#spending-it) cost, and
-the [learning](#learning) at which you learn it from a grimoire for certain.
+Every spell has a level, from 0 to 70. It is the spell's base [mana](mana.md#spending-it) cost
+(at least 4: see [What a spell costs](#what-a-spell-costs)), and the [learning](#learning) at which
+you learn it from a grimoire for certain.
 
-A spell of level 0 or 1 is a *cantrip*. It costs 1 mana, apart from the few that set a price of
-their own ([Burning hands](#spell-burning-hands) and [Grave breath](#spell-grave-breath) cost 3).
-Anyone trained in [Decipher script](skills.md#skill-decipher-script) learns a cantrip for certain.
+A spell of level 0 or 1 is a *cantrip*. It is priced as a level-4 spell, like every spell below
+level 4: [Ray of frost](#spell-ray-of-frost) costs 4 mana, [Burning hands](#spell-burning-hands)
+6 (a cone), [Mend](#spell-mend) 3 (a touch). Anyone trained in
+[Decipher script](skills.md#skill-decipher-script) learns a cantrip for certain.
 
-What a spell does comes from its own roll and ladders (the list above), whatever its level.
+What a spell does comes from its own roll and ladders (the list above) and its
+[rank](#spell-ranks), whatever its level.
 
 ## Learning
 
@@ -146,15 +149,19 @@ level-up rolls raise it like any other skill. So does reading: see
 
 A spell's mana cost is worked out in steps:
 
-1. Start with its [level](#spell-levels), at least 1.
+1. Start with its [level](#spell-levels), at least 4: a spell of level 0 to 4 counts as level 4,
+   so a cantrip is never a trifle. A starting [wizard](classes.md#wizard)'s pool buys four to
+   eight casts of [Ray of frost](#spell-ray-of-frost).
 2. Multiply by its [shape](spellcasting.md#shapes)'s share and by its
    [resolution](spellcasting.md#how-a-spell-finds-its-target)'s share (a touch is cheaper).
 3. Multiply by what your [armour](objects.md#class-body-armour) adds.
 4. Round to the nearest point, once, and never below 1.
-5. Apply your talents, their percents added together, rounding down and never below 1:
+5. Apply your talents and the spell's [rank](#spell-ranks), their percents added together,
+   rounding down and never below 1:
    *[School focus](talents.md#talent-school-focus)* takes 10 % off the spells of its school or
    element, *[Archmage](talents.md#talent-archmage)* 50 %, and *[Empower](talents.md#talent-empower)*
-   10 %, while *[Brimming](talents.md#talent-brimming)* adds 10 %.
+   10 %, while *[Brimming](talents.md#talent-brimming)* adds 10 %; a rank takes off what the
+   spell's own table says.
 6. Last, *[Frugal caster](talents.md#talent-frugal-caster)* takes a fifth off, and
    [magic items](magic-items.md) *of Thrift* their percent with it, never more than half together
    (see [Mana](mana.md)).
@@ -196,8 +203,9 @@ A grimoire is written in plain words, so you know which spell it teaches as soon
 
 **Reading** a grimoire (`r`, then the grimoire) is how you learn from it. The read list shows your
 chance beside each grimoire you could learn from, and asks before you begin. You keep the grimoire
-whatever comes of it: read it again after a failure, or sell it once it has taught you. Reading the
-grimoire of a spell you already know only tells you so, and takes no time.
+whatever comes of it: read it again after a failure, or keep it to deepen the spell (see
+[Spell ranks](#spell-ranks)), or sell it. Reading the grimoire of a spell you know at rank 10
+only tells you so, and takes no time.
 
 To learn at all you need some [mana](mana.md#how-much), and training in
 [Decipher script](skills.md#skill-decipher-script). Without the training, reading a grimoire is refused and
@@ -249,3 +257,33 @@ always does.
 
 Casting trains *[Spellcraft](skills.md#skill-spellcraft)*: spending [mana](mana.md) on a spell
 trains it one time in four. Spellcraft does nothing else for now.
+
+## Spell ranks
+
+Every spell you know has a **rank**, from 1 to 10. You know a spell at rank 1 when you learn it,
+or when your class gives it to you. The [Magic page](schools.md#the-magic-page) shows each spell's
+rank, and so does the grimoire's description.
+
+**Reading a spell's grimoire again raises its rank.** Nothing else does: casting a spell a thousand
+times leaves it where it was. Reading for rank 2 takes twice the
+[learning time](#learning-spells-from-grimoires), rank 3 three times, and so on to rank 10, and the
+check is always made, however high your [learning](#learning): the same 2d12 check as learning the
+spell, 2 harder for every rank you already hold (the overreach counts as 0 when the spell is within
+your learning). The read list shows the rank a grimoire would bring you to and your chance
+("rank 3 of 10: a struggle"), and asks before you begin.
+
+{{#include generated/deepening.md}}
+
+If you fail, you lose only the time. There is no mishap, and you may read the book again at once,
+as often as you like. If you succeed, the spell is yours at the next rank: "The words settle
+deeper: you know Frost at rank 3 of 10." A rank brings no experience.
+
+**What a rank gives** is the spell's own. Each spell has a table of what each rank from 2 adds,
+and the additions stack: at rank 5 you have everything ranks 2 to 5 added. A rank may add to the
+roll (a bonus, a die more, bigger dice, dice rolled again), to the reach, to how long a blessing or
+hex lasts, take a share off the mana or the casting time, or, for a spell that must hit, sharpen
+the aim or widen the [critical](combat.md#criticals) range. A spell with no table casts the same
+at every rank. Only your own casts gain: a [scroll](scrolls.md#spell-scrolls) you read or a
+[wand](wands-and-rods.md#wands) you use casts at rank 1, and so do creatures.
+
+{{#include generated/spell-ranks.md}}

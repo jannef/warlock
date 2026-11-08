@@ -200,7 +200,7 @@ fn what_is_carried_is_untouched_and_traps_ruin_nothing() {
 fn a_fireball_cast_burns_and_draws_from_its_own_stream() {
     let mut w = wizard();
     reach(&mut w, 40);
-    w.player_mut().spells.insert(sp("fireball"));
+    w.player_mut().spells.insert(sp("fireball"), 1);
     w.player_mut().mana = 100;
     let at = lay(&mut w, "scroll_of_fireball", 100);
     let rng = w.state.rng.clone();

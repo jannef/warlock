@@ -30,7 +30,7 @@
 //! The read screen (`r`, spec §8 "Scrolls") lists the scrolls and grimoires the player carries:
 //! choosing a spell scroll aims it (`ui::target`), choosing the scroll of identify replaces the
 //! list with the unidentified stacks carried, and choosing one of those reads the scroll on it.
-//! A grimoire whose spell the player could learn (`PerceptionView::studies`, spec §8 "Spells":
+//! A grimoire whose spell the player could learn or deepen (`PerceptionView::studies`, spec §8 "Spells":
 //! "Learning") is marked with the chance in words, and choosing it asks in the one dialog (read
 //! it, or not); any other grimoire is read at once, which says why it teaches nothing.
 //!
@@ -51,7 +51,7 @@ use crate::input::{Bindings, KeyCommand};
 use crate::render::console::Console;
 use warlock_core::burden::{Burden, Load};
 use warlock_core::color::Rgb;
-use warlock_core::content::{ClassActive, Rarity, SpellId};
+use warlock_core::content::{ClassActive, MAX_SPELL_RANK, Rarity, SpellId};
 use warlock_core::equipment;
 use warlock_core::object::{Stack, Weight, format_weight};
 use warlock_core::perception::PerceptionView;
@@ -208,9 +208,10 @@ struct Entry {
     /// The scroll of identify: choosing it to read asks what to read it on (any other scroll
     /// not aimed, a spell on oneself, is read at once).
     identify: bool,
-    /// A grimoire whose spell may be learned: what it is ("grimoire of frost"), the spell it
-    /// teaches, and the chance in words, for the dialog.
-    study: Option<(String, String, &'static str)>,
+    /// A grimoire whose spell may be learned or deepened: what it is ("grimoire of frost"), the
+    /// spell it teaches, the rank a reading would bring (`None`: it would teach the spell), and
+    /// the chance in words, for the dialog.
+    study: Option<(String, String, Option<u8>, &'static str)>,
 }
 
 #[derive(Debug)]
@@ -346,17 +347,21 @@ impl ObjectScreen {
                     .then(|| view.judge(s))
                     .flatten()
                     .map(|w| format!("looks {w}"));
-                // A grimoire in the read list: the spell it teaches, and the chance in words.
+                // A grimoire in the read list: the spell it teaches, or the rank it would bring a
+                // known spell to, and the chance in words.
                 let study = match (list, item) {
                     (ObjectList::Read, Item::Pack(i)) => {
                         (studies.iter()).find(|s| s.item == i).and_then(|study| {
                             let spell = content.spell_of(study.spell)?.name.clone();
-                            Some((view.lore().title(s), spell, study.chance))
+                            Some((view.lore().title(s), spell, study.rank, study.chance))
                         })
                     }
                     _ => None,
                 };
-                let teaches = (study.as_ref()).map(|(_, _, chance)| format!("learning: {chance}"));
+                let teaches = (study.as_ref()).map(|(_, _, rank, chance)| match rank {
+                    Some(rank) => format!("rank {rank} of {MAX_SPELL_RANK}: {chance}"),
+                    None => format!("learning: {chance}"),
+                });
                 let marks: Vec<String> = (teaches.into_iter())
                     .chain(mark)
                     .chain(smell)
@@ -447,12 +452,16 @@ impl ObjectScreen {
             (ObjectList::Eat, Item::Pack(i)) => ScreenAction::Act(Action::Eat(Meal::Pack(i))),
             (ObjectList::Read, item) if aimed => ScreenAction::Aim(AimKind::Read(item.position())),
             (ObjectList::Read, item) if study.is_some() => {
-                let Some((grimoire, spell, chance)) = study else {
+                let Some((grimoire, spell, rank, chance)) = study else {
                     return ScreenAction::Stay;
                 };
+                let what = match rank {
+                    Some(rank) => format!("Deepening {spell} to rank {rank} of {MAX_SPELL_RANK}"),
+                    None => format!("Learning {spell}"),
+                };
                 let text = format!(
-                    "Read the {grimoire}? Learning {spell} will be {chance}. Once you begin you \
-                     cannot stop of your own accord."
+                    "Read the {grimoire}? {what} will be {chance}. Once you begin you cannot \
+                     stop of your own accord."
                 );
                 ScreenAction::Dialog(Box::new(
                     super::dialog_screen::Dialog::new("Read", text)

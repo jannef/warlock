@@ -149,13 +149,16 @@ pub struct OwnResource {
 }
 
 /// A grimoire the player could learn from (spec §8 "Spells": "Learning"): one teaching a spell
-/// they do not know, with the chance in words ("easy", "a struggle", "far beyond you", or
-/// "certain"). Never the number.
+/// they do not know, or one of a spell they know below its last rank (a deepening, "Ranks"),
+/// with the chance in words ("easy", "a struggle", "far beyond you", or "certain"). Never the
+/// number.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct OwnStudy {
     /// The inventory stack, by position.
     pub item: usize,
     pub spell: crate::content::SpellId,
+    /// The rank reading it would bring the spell to; `None` for a spell to learn.
+    pub rank: Option<u8>,
     pub chance: &'static str,
 }
 
@@ -2101,8 +2104,9 @@ impl<'a> PerceptionView<'a> {
     }
 
     /// The grimoires the player could learn from now (spec §8 "Spells": "Learning"), in pack
-    /// order: those that teach a spell they do not know, each with its chance in words; none for
-    /// a character not trained in Decipher script. What the read list tells of a grimoire.
+    /// order: those that teach a spell they do not know, and those of a spell they know below
+    /// its last rank ("Ranks": a reading would deepen it), each with its chance in words; none
+    /// for a character not trained in Decipher script. What the read list tells of a grimoire.
     pub fn studies(&self) -> Vec<OwnStudy> {
         let Some(rules) = self.content.study_rules() else {
             return Vec::new();
@@ -2110,18 +2114,22 @@ impl<'a> PerceptionView<'a> {
         (self.player.inventory.iter().enumerate())
             .filter_map(|(item, stack)| {
                 let spell = self.content.object(stack.object).grimoire?;
-                if self.player.knows_spell(self.content, spell) {
-                    return None;
-                }
                 let odds =
                     crate::world::study_odds(self.player, self.content, self.character, spell)?;
                 Some(OwnStudy {
                     item,
                     spell,
+                    rank: odds.rank,
                     chance: rules.words(odds.ways()),
                 })
             })
             .collect()
+    }
+
+    /// The rank the player knows `spell` at (spec §8 "Spells": "Ranks"; they know their own
+    /// spells), 1 to `MAX_SPELL_RANK`; `None` for a spell they do not know.
+    pub fn own_spell_rank(&self, spell: crate::content::SpellId) -> Option<u8> {
+        self.player.spell_rank(self.content, spell)
     }
 
     /// The spells the player could write a scroll of (spec §8 "Scrolls": Scribe), in menu

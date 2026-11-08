@@ -1,6 +1,6 @@
 //! Learning spells (spec §8 "Spells"): Decipher script's curve, the study check's chances by overreach
-//! and bonus, how long a study takes by spell level, the classes' affinities with the schools,
-//! and the mishaps.
+//! and bonus, how long a study takes by spell level, what a deepening to each rank adds to the
+//! time and the check, the classes' affinities with the schools, and the mishaps.
 
 use std::fmt::Write as _;
 use warlock_core::check;
@@ -97,6 +97,24 @@ pub(super) fn times(content: &Content) -> String {
             |p| took(warlock_core::world::study_turns(rules, level, p)),
         );
         let _ = writeln!(out, "| {level} | {turns} | {} | {quick} |", took(turns));
+    }
+    out
+}
+
+/// What reading a grimoire again for each rank asks (spec §8 "Spells": "Ranks"): the time, as a
+/// multiple of the learning time, and what the rank adds to the check's difficulty.
+pub(super) fn deepening(content: &Content) -> String {
+    let Some(rules) = content.study_rules() else {
+        return String::new();
+    };
+    let mut out =
+        String::from("| Rank sought | Time | Added to the difficulty |\n|:---:|:---:|:---:|\n");
+    for rank in 2..=warlock_core::content::MAX_SPELL_RANK {
+        let _ = writeln!(
+            out,
+            "| {rank} | {rank} × the learning time | +{} |",
+            rules.rank_difficulty(rank)
+        );
     }
     out
 }
