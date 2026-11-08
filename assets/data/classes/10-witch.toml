@@ -8,8 +8,8 @@ mana = 10
 affinity = { necromancy = 3, enchantment = 2, transmutation = 1, restoration = -1 }
 experience = 115
 alignment = -200
-skills = { heal = "2d6+10", spellcraft = "2d6+10", concentration = "2d4+4", intimidate = "2d4+4" }
-known_for = ["heal", "spellcraft"]
+skills = { heal = "2d6+10", spellcraft = "2d6+10", decipher_script = "2d6+10", concentration = "2d4+4", intimidate = "2d4+4" }
+known_for = ["decipher_script", "heal", "spellcraft"]
 optional_skills = { bluff = { chance = 25, dice = "2d4" }, handle_animal = { chance = 25, dice = "2d4" }, knowledge = { chance = 20, dice = "2d4" } }
 rolls = 2
 weapon_skills = { daggers = 1, staves = 1 }

@@ -1341,7 +1341,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     Ray of frost (level 1, at 1: a ray that rolls to hit, 1d6 cold; 1 mana), Burning hands
     (level 1, at 1, #979: a cone of 3 cells, no hit roll, 1d4 fire, its ladder Intelligence 13:
     1d6 to 22: 2d4+2; 3 mana, its own price), Arcane training
-    (at 1: Spellcraft +10, a `skill` effect: it helps only a character trained in it), Magic missile
+    (at 1: Decipher script +10 since #1270, a `skill` effect: it helps only a character trained in it), Magic missile
     (level 3, at 3: never misses, 1d4 force, its ladder Intelligence 13: 2d4 to 22: 3d4+1; 3
     mana), Arcane bolt (level 6, at
     18: a line of 6 cells, 2d6 force, its ladder to 3d6+4; 11 mana), Scribe (at 12: a scroll of

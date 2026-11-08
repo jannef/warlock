@@ -18,13 +18,13 @@ expression: "render(case, content.clone())"
           │   j  Call of the forest  2 called, 20 mana                                  │
           │   k  Cloudburst          20 mana                                            │
           │ Skills                                                                      │
-          │   l  Tame                in a direction                                     │
-          │   m  Heal                nothing to treat                                   │
-          │   n  Listen at a door    in a direction                                     │
-          │   o  Pick lock           in a direction                                     │
-          │   p  Forage              not usable here                                    │
-          │   q  Fletch              you have no knife                                  │
-          │   r  Whittle             you have no knife                                  │
+          │   l  Decipher            no unknown scroll                                  │
+          │   m  Tame                in a direction                                     │
+          │   n  Heal                nothing to treat                                   │
+          │   o  Listen at a door    in a direction                                     │
+          │   p  Pick lock           in a direction                                     │
+          │   q  Forage              not usable here                                    │
+          │   r  Fletch              you have no knife                                  │
           │                                                                             │
           │ The basilisk's stare: a foe nearby that sees you slows to a crawl a moment; │
           │ your eyes then rest two hours.                                              │

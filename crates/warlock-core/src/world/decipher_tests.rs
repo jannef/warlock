@@ -22,17 +22,10 @@ const HASTE: &str = "\"scroll_of_haste*2\"";
 const FIREBALL: &str = "\"scroll_of_fireball\"";
 const RESTORATION: &str = "\"scroll_of_restoration\"";
 
-/// Who reads: untrained in both skills, or at these values.
-#[derive(Clone, Copy, Default)]
-struct Reader {
-    spellcraft: Option<u16>,
-    decipher: Option<u16>,
-}
+/// Who reads: their Decipher script, the skill of learning too (#1270), or untrained.
+type Reader = Option<u16>;
 
-const UNTRAINED: Reader = Reader {
-    spellcraft: None,
-    decipher: None,
-};
+const UNTRAINED: Reader = None;
 
 fn files(carry: &str) -> ContentFiles {
     let mut files = ContentFiles::builtin();
@@ -61,8 +54,8 @@ fn content(carry: &str) -> Arc<Content> {
 
 fn world(carry: &str, reader: Reader, seed: u64) -> World {
     let mut w = World::new(content(carry), "hall", None).expect("world");
-    train(&mut w, "spellcraft", reader.spellcraft);
-    train(&mut w, "decipher_script", reader.decipher);
+    train(&mut w, "spellcraft", None);
+    train(&mut w, "decipher_script", reader);
     w.state.rng = Rng::gameplay(seed);
     w
 }
@@ -113,12 +106,12 @@ fn seed_where(failed: bool, reader: Reader) -> u64 {
         .expect("a seed goes that way")
 }
 
-/// The Spellcraft value whose learning is exactly `level`.
-fn spellcraft_for(level: i32) -> u16 {
+/// The Decipher script value whose learning is exactly `level`.
+fn decipher_for(level: i32) -> u16 {
     let mut w = world("", UNTRAINED, 0);
     (0..=200)
         .find(|&v| {
-            train(&mut w, "spellcraft", Some(v));
+            train(&mut w, "decipher_script", Some(v));
             w.state.player().learning(&w.content) == Some(level)
         })
         .expect("a value teaches exactly this level")
@@ -152,12 +145,9 @@ fn the_numbers_are_the_designs() {
 
 #[test]
 fn a_learning_at_or_above_the_level_reads_at_once_and_below_it_does_not() {
-    let exact = spellcraft_for(11);
+    let exact = decipher_for(11);
     for value in [exact, 200] {
-        let reader = Reader {
-            spellcraft: Some(value),
-            decipher: Some(10),
-        };
+        let reader = Some(value);
         for seed in 0..40 {
             let mut w = world(HASTE, reader, seed);
             let rng = w.state.rng.clone();
@@ -166,17 +156,12 @@ fn a_learning_at_or_above_the_level_reads_at_once_and_below_it_does_not() {
             assert_eq!(carried(&w, "scroll_of_haste"), 1, "read, at {value}");
             assert!(!said(&w, SWIMS));
             assert_eq!(rng, w.state.rng, "no draw");
-            assert_eq!(marks(&w, "decipher_script"), 0, "no check, no mark");
+            let marks = marks(&w, "decipher_script");
+            assert!(marks <= 1, "no check's mark, at most the read's: {marks}");
         }
     }
     // One short of it: a check, which some seed fails.
-    seed_where(
-        true,
-        Reader {
-            spellcraft: Some(exact - 1),
-            decipher: None,
-        },
-    );
+    seed_where(true, Some(exact - 1));
 }
 
 #[test]
@@ -212,10 +197,7 @@ fn a_made_check_reads_as_any_other() {
 #[test]
 fn a_refusal_comes_first_with_no_draw_and_no_mark() {
     let carry = format!("{FIREBALL}, {RESTORATION}");
-    let reader = Reader {
-        spellcraft: None,
-        decipher: Some(10),
-    };
+    let reader = Some(10);
     let mut w = world(&carry, reader, 1);
     let rng = w.state.rng.clone();
     // No cell, the reader's own cell, and nothing to restore.
@@ -235,11 +217,8 @@ fn a_scroll_with_no_spell_counts_as_level_0() {
         w.player_mut().damage.take(Stat::Strength, 1, 10);
         w
     };
-    // Any Spellcraft reads it for certain.
-    let reader = Reader {
-        spellcraft: Some(0),
-        decipher: None,
-    };
+    // Any Decipher script reads it for certain.
+    let reader = Some(0);
     for seed in 0..40 {
         let mut w = hurt(reader, seed);
         run(&mut w, "read:a");
@@ -261,16 +240,27 @@ fn a_scroll_with_no_spell_counts_as_level_0() {
 
 #[test]
 fn every_check_marks_decipher_script_and_spellcraft_gets_nothing() {
-    let reader = Reader {
-        spellcraft: Some(0),
-        decipher: Some(10),
-    };
+    let reader = Some(10);
     for failed in [true, false] {
         let mut w = world(HASTE, reader, seed_where(failed, reader));
+        train(&mut w, "spellcraft", Some(0));
         run(&mut w, "read:a");
-        assert_eq!(marks(&w, "decipher_script"), 1, "failed {failed}");
+        // The check's mark, and a made read's own by its chance (#1270).
+        let marks_now = marks(&w, "decipher_script");
+        let want = if failed { 1..=1 } else { 1..=2 };
+        assert!(want.contains(&marks_now), "failed {failed}: {marks_now}");
         assert_eq!(marks(&w, "spellcraft"), 0, "failed {failed}");
     }
+}
+
+#[test]
+fn every_scroll_read_and_used_up_may_mark_decipher_script() {
+    // A learning that reaches haste: no check, so every mark is a read's, half of them.
+    let mut w = world("\"scroll_of_haste*20\"", Some(decipher_for(11)), 0);
+    run(&mut w, "read:a*20");
+    assert_eq!(carried(&w, "scroll_of_haste"), 0, "all read");
+    let marks = marks(&w, "decipher_script");
+    assert!((3..=17).contains(&marks), "{marks} of 20");
 }
 
 #[test]
@@ -278,20 +268,17 @@ fn decipher_scripts_points_are_on_the_check() {
     let fails = |decipher| {
         (0..300)
             .filter(|&seed| {
-                let reader = Reader {
-                    spellcraft: None,
-                    decipher,
-                };
-                let mut w = world(HASTE, reader, seed);
+                let mut w = world(HASTE, decipher, seed);
                 run(&mut w, "read:a");
                 said(&w, SWIMS)
             })
             .count()
     };
-    let (untrained, trained) = (fails(None), fails(Some(200)));
-    // Level 11 (difficulty 12) at +0 and +12: 38 % and 1 %.
+    // At 55 the learning (9) is short of the level, so a check, with 4 points on it.
+    let (untrained, trained) = (fails(None), fails(Some(55)));
+    // Level 11 (difficulty 12) at +0 and +4: 38 % and 15 %.
     assert!((80..=150).contains(&untrained), "{untrained}");
-    assert!(trained < 15, "{trained}");
+    assert!(trained * 2 < untrained, "{trained}");
 }
 
 #[test]
@@ -342,10 +329,7 @@ fn scribe_asks_no_check_and_what_it_writes_reads_by_the_rule() {
         assert_eq!(marks(&w, "decipher_script"), 0);
         w
     };
-    let reader = Reader {
-        spellcraft: Some(spellcraft_for(11)),
-        decipher: None,
-    };
+    let reader = Some(decipher_for(11));
     let mut w = scribe(reader, 0);
     run(&mut w, "read:a:6,1");
     assert_eq!(
@@ -355,24 +339,22 @@ fn scribe_asks_no_check_and_what_it_writes_reads_by_the_rule() {
     );
     // A writer whose learning does not reach their own spell still knows it: it reads at once.
     for seed in 0..40 {
-        let reader = Reader {
-            spellcraft: Some(0),
-            decipher: Some(10),
-        };
+        let reader = Some(10);
         let mut w = scribe(reader, seed);
         run(&mut w, "read:a:6,1");
         assert!(!said(&w, SWIMS));
         assert_eq!(carried(&w, "scroll_of_fireball"), 0);
-        assert_eq!(marks(&w, "decipher_script"), 1, "a known spell still marks");
+        let marks = marks(&w, "decipher_script");
+        assert!(
+            (1..=2).contains(&marks),
+            "a known spell still marks, and the read: {marks}"
+        );
     }
 }
 
 #[test]
 fn a_known_spell_succeeds_with_no_draw_and_still_marks() {
-    let reader = Reader {
-        spellcraft: None,
-        decipher: Some(10),
-    };
+    let reader = Some(10);
     // Untrained reader who would fail on some seed: the spell they know always reads.
     let seed = seed_where(true, reader);
     let mut w = world(HASTE, reader, seed);
@@ -382,7 +364,11 @@ fn a_known_spell_succeeds_with_no_draw_and_still_marks() {
     assert!(!said(&w, SWIMS));
     assert_eq!(carried(&w, "scroll_of_haste"), 1, "read");
     assert_eq!(rng, w.state.rng, "no draw");
-    assert_eq!(marks(&w, "decipher_script"), 1);
+    let marks_now = marks(&w, "decipher_script");
+    assert!(
+        (1..=2).contains(&marks_now),
+        "the known spell's, and the read's: {marks_now}"
+    );
     // Untrained in Decipher script: nothing to mark.
     let mut w = world(HASTE, UNTRAINED, seed);
     w.player_mut().spells.insert(sp("haste"));
@@ -393,30 +379,27 @@ fn a_known_spell_succeeds_with_no_draw_and_still_marks() {
 
 #[test]
 fn a_learning_that_reaches_the_level_without_the_spell_keeps_the_bypass() {
-    let reader = Reader {
-        spellcraft: Some(spellcraft_for(11)),
-        decipher: Some(10),
-    };
+    let reader = Some(decipher_for(11));
     let mut w = world(HASTE, reader, 0);
     let rng = w.state.rng.clone();
     run(&mut w, "read:a");
     assert_eq!(rng, w.state.rng, "no draw");
-    assert_eq!(marks(&w, "decipher_script"), 0, "no mark");
+    let marks = marks(&w, "decipher_script");
+    assert!(marks <= 1, "no check's mark, at most the read's: {marks}");
 }
 
 #[test]
-fn study_odds_read_only_spellcrafts_tenth() {
-    let odds = |decipher| {
-        let reader = Reader {
-            spellcraft: Some(10),
-            decipher,
-        };
-        let w = world(FIREBALL, reader, 0);
+fn study_odds_read_decipher_scripts_tenth_not_its_reading_points() {
+    let bonus = |decipher| {
+        let w = world(FIREBALL, Some(decipher), 0);
         let spell = w.content.spell_id("fireball").expect("fireball");
-        w.player_study_odds(spell)
+        let odds = w.player_study_odds(spell).expect("odds");
+        odds.check
+            .expect("a check: learning 1 and 4 are short of 11")
+            .0
     };
-    let check = odds(None).and_then(|o| o.check).expect("a check to read");
-    assert_eq!(odds(Some(200)).and_then(|o| o.check), Some(check));
+    // 0 to 30: the study tenth 0 to 3; the reading points (0 to 2) are not on it.
+    assert_eq!(bonus(30) - bonus(0), 3);
 }
 
 #[test]
@@ -462,10 +445,7 @@ fn seed_deciphering(made: bool, reader: Reader) -> u64 {
 
 #[test]
 fn the_ability_learns_the_type_unread_and_a_failure_keeps_the_label() {
-    let reader = Reader {
-        spellcraft: None,
-        decipher: Some(10),
-    };
+    let reader = Some(10);
     let object = |w: &World| w.content.object_id("scroll_of_haste").expect("object");
     let mut w = world(HASTE, reader, seed_deciphering(true, reader));
     let out = run(&mut w, "decipher:a");
@@ -492,10 +472,7 @@ fn the_ability_learns_the_type_unread_and_a_failure_keeps_the_label() {
 #[test]
 fn the_ability_is_listed_for_the_trained_and_greyed_out_without_a_scroll() {
     use crate::ability::{Ability, Unavailable};
-    let reader = Reader {
-        spellcraft: None,
-        decipher: Some(10),
-    };
+    let reader = Some(10);
     let row = |w: &World| {
         (w.perception().abilities().iter())
             .find(|a| a.ability == Ability::Decipher)
@@ -515,10 +492,7 @@ fn the_ability_is_listed_for_the_trained_and_greyed_out_without_a_scroll() {
 
 #[test]
 fn the_ability_is_refused_with_no_time_for_a_non_scroll() {
-    let reader = Reader {
-        spellcraft: None,
-        decipher: Some(10),
-    };
+    let reader = Some(10);
     let mut w = world(&format!("{HASTE}, \"dagger\""), reader, 0);
     let before = w.state.time;
     let stack = w

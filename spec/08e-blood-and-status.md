@@ -359,7 +359,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     serializes as before).
 - **Spells** (the magic design, `docs/design/magic.md` §3 to §8, as the spell scaling design,
   `docs/design/spell-scaling.md`, revised it: levels for tiers, ladders and hooks for the cap
-  and the lift, and learning by Spellcraft, `docs/design/no-caster-level.md`; `content/spell_def.rs`,
+  and the lift, and learning by Spellcraft (Decipher script since #1270), `docs/design/no-caster-level.md`; `content/spell_def.rs`,
   `world/cast.rs`, `world/learn.rs`; #394, #395, #396, #397, #759): the
   spell data, the one cast path, learning, and the first spell list. A spell's growth is
   written in its own file as ladders on the caster's stats and printed in the wiki as written;
@@ -419,7 +419,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     without the mana, without a stack, or on one already known.
   - **Guaranteed spells** (design §8): a class's level table (`abilities`, §8 "Class
     abilities") gives its spells as class abilities with a `spell` effect, at the level each
-    comes at, whatever the character's Spellcraft: a spell a class gives is its holder's at that
+    comes at, whatever the character's Decipher script: a spell a class gives is its holder's at that
     level, and the level is the author's call. Wizard: Ray of
     frost (1), Burning hands (1), Magic missile (3), Arcane bolt (18), Chain lightning (24),
     Sunfire (36). Priest: Mend (1), Blessing (3), Cure wounds (3), Renewal (9), Silence (12)
@@ -451,7 +451,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     0 to 70 (`MAX_SPELL_LEVEL`), one number with two meanings: its **base mana** (the level, at
     least 1) and the **learning at which a scroll of it teaches for certain** ("Learning" below). A spell of
     level 0 or 1 is a *cantrip* (1 mana unless it names its own `mana`, as Burning hands and Grave
-    breath do, 3; anyone trained in Spellcraft learns it for certain). There is no
+    breath do, 3; anyone trained in Decipher script learns it for certain). There is no
     table of levels, no ceiling, and no check on how much a spell of a level may do: its own
     data says it (decision 16).
   - **Cost table** (`data/spells.toml`): the **shapes** multiply the base mana (ray, bolt,
@@ -667,21 +667,24 @@ developer notes (CLAUDE.md, `docs/dev/`).
       `data/miscast.toml`.
   - **Learning, the number** (`Actor::learning`, `world/learn.rs`; derived, never stored;
     `docs/design/no-caster-level.md`, #987): what a grimoire teaches for certain comes from the
-    Spellcraft skill and nothing else, its `learn` benefit (`data/skills.toml`: 0 to 10, 10 at 60,
+    Decipher script skill and nothing else (#1270; Spellcraft's before), its `learn` benefit (`data/skills.toml`: 0 to 10, 10 at 60,
     30 at the soft cap 100, 70, the last spell level, from 150) at the skill's value with what
     skill affixes and the talents' `skill` bonuses add (`Actor::skill_effect`), **at least 1** for a
-    character trained in Spellcraft. A character **not trained** in it (the skill not in their
+    character trained in Decipher script. A character **not trained** in it (the skill not in their
     trained set: an item's or a talent's bonus to a skill they do not have trains nobody) has no
     learning and cannot learn from a grimoire at all, cantrips included: refused, no time, "You
-    have no training in Spellcraft; you cannot make sense of how to learn a spell from a
+    have no training in Decipher script; you cannot make sense of how to learn a spell from a
     grimoire." The
-    spells a class grants need no Spellcraft, nor does reading a scroll to cast it, though with
+    spells a class grants need no Decipher script, nor does reading a scroll to cast it, though with
     no learning that reaches its level the reader must make it out by a check (§8 "Scrolls":
-    "Making out a scroll"). Starting Spellcraft by
+    "Making out a scroll"). Starting Decipher script by
     class (§7e): wizard, witch, priest, druid `2d6+10`; bard, paladin, ranger `2d4+4`; aristocrat
-    35 % `2d4+4`, ascetic 20 % `2d4` (optional skills); no other class, race, or birth sign gives
-    any; two background lines add to it (both name classes that have it already), and it grows by
-    level-up rolls as any skill. Nothing else trains it: a character without it stays without it.
+    35 % `2d4+4`, ascetic 20 % `2d4`, merchant 25 % `2d4` (optional skills); no other class gives
+    any; background lines add to it, and a literate caster's corpse may teach it (§8 "Hunger"),
+    and it grows by level-up rolls as any skill. **All reading trains it**: a check to make a
+    scroll out (and a scroll of a spell one knows, read), 100 %; any scroll read and used up,
+    50 %; a grimoire read to its end, 100 %. **Casting trains Spellcraft** (its one mark, `cast`,
+    25 %); Spellcraft has no benefit of its own since #1270 and waits for a rule.
   - **Learning** (`world/learn.rs`, `content/learning.rs`, `content/grimoire.rs`; #396,
     grimoires #1260): a character knows a set of spells for good: those their class abilities
     give and those they learned (`Actor::spells`, saved by id, left out of the JSON while
@@ -700,7 +703,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     - **Reading a grimoire** (`Action::Read` of one, `read:b`, with no target; the read list,
       `r`): a study. Refused with no time for a spell known ("You know this spell already."),
       a character with no mana at all ("You have no gift for magic."), no training in
-      Spellcraft (above), a target ("A grimoire is read, not aimed: `read:a`."), and what a
+      Decipher script (above), a target ("A grimoire is read, not aimed: `read:a`."), and what a
       status blocks (a grimoire's read is the `study` kind: Raging blocks it). The grimoire is
       **kept** whatever comes of it: read again after a failure (no limit but the time), or
       sold once it has taught.
@@ -714,7 +717,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
       0 or less the spell is learned, no draw, unless the spell is made hard to learn
       (`study_difficulty` above 0: a check at any learning, overreach counted as at least
       0). Above, a 2d12 check with
-      the Intelligence modifier + Spellcraft's `study` benefit (value ÷ 10, at most 20) + the
+      the Intelligence modifier + Decipher script's `study` benefit (value ÷ 10, at most 20) + the
       class's `affinity` with the spell's school
       (`data/classes/`, −10 to 10) + Quick study's bonus (2), against `base` (12) +
       `per_overreach` (1) × overreach′ + the sum of the levels of the spells known ÷
@@ -733,9 +736,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
       a drain (`World::drain`: a Willpower check or points off a stat for good); a hostile
       summoned next to the reader (a dretch); or, lucky, a training mark of Intelligence or the
       spell learned anyway.
-    - **Training**: the `study` use (Spellcraft's mark; an Intelligence mark), whatever comes
-      of it. Spending mana on a spell is practice for Spellcraft too (its `cast`
-      mark, 25 %, as Concentration's); reading a scroll to cast it marks nothing of its own.
+    - **Training**: the `study` use (Decipher script's mark, 100 %; an Intelligence mark),
+      whatever comes of it. Spending mana on a spell is practice for Spellcraft (its `cast`
+      mark, 25 %, as Concentration's); reading a scroll to cast it marks Decipher script (the
+      `read` use, 50 %) and Intelligence.
     - **Determinism**: the check's two gameplay draws only when there is a check, the mishap's
       one only on a failure, then its effect's own.
     - **Shown**: the chance in words only (`StudyRules::words`: "certain", "easy" from 96 of 144

@@ -9,26 +9,26 @@ expression: "render(case, content.clone())"
                     │ Birth sign                                               │
                     │ > a  Transfixing stare  at a place you see               │
                     │ Skills                                                   │
-                    │   b  Tame               you already have a companion     │
-                    │   c  Listen at a door   in a direction                   │
-                    │   d  Forage                                              │
-                    │   e  Fletch             you have no knife                │
-                    │   f  Whittle            you have no knife                │
-                    │   g  Wedge a door       in a direction                   │
+                    │   b  Decipher           no unknown scroll                │
+                    │   c  Tame               you already have a companion     │
+                    │   d  Listen at a door   in a direction                   │
+                    │   e  Forage                                              │
+                    │   f  Fletch             you have no knife                │
+                    │   g  Whittle            you have no knife                │
+                    │   h  Wedge a door       in a direction                   │
                     │ Weapon skills                                            │
-                    │   h  Shield bash        you hold no shield               │
+                    │   i  Shield bash        you hold no shield               │
                     │ Allies                                                   │
-                    │   i  Come to heel                                        │
-                    │   j  Hold here                                           │
-                    │   k  Set on             at a place you see               │
-                    │   l  Give               on something you carry           │
+                    │   j  Come to heel                                        │
+                    │   k  Hold here                                           │
+                    │   l  Set on             at a place you see               │
+                    │   m  Give               on something you carry           │
                     │                                                          │
                     │ The basilisk's stare: a foe nearby that sees you slows   │
                     │ to a crawl a moment; your eyes then rest two hours.      │
                     │                                                          │
                     │                                                          │
-                    │ a-l or Enter use   Esc close                             │
+                    │ a-m or Enter use   Esc close                             │
                     └──────────────────────────────────────────────────────────┘
-
 
  Forest  ·  HP 20/20  ·  MP 3/3  ·  Sta 10/10  ·  Lv 1  ·  Beald: unhurt  ·  06:40       ? controls

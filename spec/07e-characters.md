@@ -177,10 +177,11 @@ developer notes (CLAUDE.md, `docs/dev/`).
   disable device, escape artist, initiative, negotiation, search, and spot a little (the thief
   alone of the classes starts trained in detect traps, #663, and in sneak attack, #682); the
   ranger initiative, spot, survival, and woodcraft well, athletics, handle animal, listen, and
-  swim a little (the ascetic initiative well too; the bard, warrior, and berserker a little); the wizard concentration, knowledge, and spellcraft well,
-  decipher script a little; every class that casts starts trained in Spellcraft, the one way to
-  learn a spell from a scroll (§8 "Spells": "Learning, the number": the witch, priest, and druid
-  well, the bard, paladin, and ranger a little, the aristocrat and ascetic by chance); the commoner athletics and handle animal a
+  swim a little (the ascetic initiative well too; the bard, warrior, and berserker a little); the wizard concentration, knowledge, spellcraft, and
+  decipher script well; every class that casts starts trained in Decipher script, the one way to
+  learn a spell from a grimoire (#1270; §8 "Spells": "Learning, the number": the witch, priest, and
+  druid well, the bard, paladin, and ranger a little, the aristocrat, ascetic, and merchant by
+  chance), and in Spellcraft, which casting trains; the commoner athletics and handle animal a
   little. Each class also has two to five optional skills, modest ones at `2d4` (10 to 35 %;
   the thief balance, bluff, and listen; the warrior heal, metalcraft, and survival; the commoner
   heal, metalcraft, survival, swim, and woodcraft; the full lists are in the wiki). Weapon skills: berserker unarmed 1 and axes 2 or great blades 2, bard short blades 1

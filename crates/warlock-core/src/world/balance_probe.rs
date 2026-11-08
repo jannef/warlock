@@ -703,7 +703,9 @@ struct Snap {
     first_rise: [Option<u32>; 6],
     marks_a_day: [f64; 6],
     mana: i32,
-    /// Its Spellcraft (0 untrained) and its learning (0 when it cannot learn).
+    /// Its Decipher script (0 untrained) and its learning (0 when it cannot learn; #1270).
+    decipher: i32,
+    /// Its Spellcraft (0 untrained).
     spellcraft: i32,
     learning: i32,
     /// Its Spellcraft check's bonus on a cast (`Actor::cast_bonus`), what wards its miscasts
@@ -1036,6 +1038,9 @@ fn career(
                 first_rise: log.first_rise,
                 marks_a_day: log.earned.map(|m| m as f64 / days),
                 mana: me.max_mana(content),
+                decipher: (content.skill_id("decipher_script"))
+                    .and_then(|id| me.skills.value(id))
+                    .map_or(0, i32::from),
                 spellcraft: (content.skill_id("spellcraft"))
                     .and_then(|id| me.skills.value(id))
                     .map_or(0, i32::from),

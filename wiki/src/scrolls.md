@@ -16,11 +16,12 @@ writing depends on one of three things:
 - **A spell you know.** If the scroll holds a spell you already know (including one you wrote
   yourself), you simply read it. It still counts as a use of [Decipher
   script](skills.md#skill-decipher-script) if you are trained in it.
-- **Enough [Spellcraft](skills.md#skill-spellcraft).** If you are trained in it and your
+- **Enough learning.** If you are trained in [Decipher
+  script](skills.md#skill-decipher-script) and your
   [learning](magic.md#learning) is at least the scroll's [spell level](magic.md#spell-levels),
   you simply read it. What you could learn for certain, you can read for certain. A scroll with
   no spell behind it ([restoration](#the-scroll-of-restoration)) counts as level 0, so any
-  Spellcraft will do.
+  training in Decipher script will do.
 - **Everyone else makes a check.** Roll 2d12 and add your
   [Intelligence](stats.md#stat-intelligence) [modifier](stats.md#modifiers), whatever your
   [talents](talents.md) add to its checks, and your points of [Decipher
@@ -33,8 +34,9 @@ swims before your eyes.". The [turn](time.md#what-takes-time) is spent, you keep
 [label](#unknown-scrolls) stays unknown, and nothing else happens. You may try again at once.
 
 Every check, made or failed, earns those trained in Decipher script a [training
-mark](skills.md#getting-better) in it, or two in a [scriptorium](special-rooms.md). Reading a
-scroll trains no Spellcraft.
+mark](skills.md#getting-better) in it, or two in a [scriptorium](special-rooms.md). Every scroll
+you read and use up, check or not, earns one more half the time. Reading a scroll trains no
+[Spellcraft](skills.md#skill-spellcraft): only casting does.
 
 {{#include generated/decipher-chances.md}}
 
@@ -46,7 +48,7 @@ have not [identified](#unknown-scrolls) its kind yet. It takes ten minutes. A cr
 into view, or a blow, stops it, and then nothing comes of it.
 
 After the ten minutes you make the same check as for reading, with the same rules: a scroll of a
-spell you know, or one within your Spellcraft's learning, is made out at once. If you make it,
+spell you know, or one within your [learning](magic.md#learning), is made out at once. If you make it,
 you learn the kind: every scroll of that kind shows by its name from now on, and you keep this
 one, unread. If you fail, the ten minutes are gone and the scroll stays a label. You may try
 again. Every check earns a [training mark](skills.md#getting-better) in Decipher script, just as

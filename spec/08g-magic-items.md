@@ -91,7 +91,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     each acts on every spell): `spell_rungs` rungs, `spell_bonus` (Potent: +1, +2, +3 at item
     levels 3, 7, 11) on the roll, `spell_sides`, `spell_dice`, `spell_reroll`, `spell_reach`
     cells of range or length with School focus's, `spell_duration` degrees. Of the
-    Scholar (Spellcraft) is the one affix of learning, on staffs too.
+    Scholar (Decipher script since #1270) is the one affix of learning, on staffs too.
     The utility hooks
     are in (#631), worn by the player or a creature, identified or not: `door_kick` adds to a
     kick's Strength as Lockbreaker's does (a door's and a chest's), `dig_percent` is that much
@@ -120,7 +120,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     at item level 1 to 42–45 % at 12, #638); of Shadows (stealth), the Hare (tumble), the Fox (listen), the Wanderer
     (survival), Balance (balance); the skills' (#636): of Seeking (search), the Eagle (spot), the
     Stag (athletics), the Leech (heal), the Picklock (open lock), Disarming (disable device),
-    Appraisal (appraise), Haggling (negotiation, #666), the Scholar (spellcraft), Letters (decipher script), the Cutpurse
+    Appraisal (appraise), Haggling (negotiation, #666), the Scholar (decipher script; of Letters, the same skill's, folded into it in #1270), the Cutpurse
     (steal), on the ladder (Spot, Open lock, Disable device, Heal, Steal, and Appraise give nothing to the
     untrained, so their suffixes help the trained only); of Wounding (an extra damage die); the systems' (#635): of Thrift (mana costs), of the Magus (spell to-hit), of Farcasting
     (spell reach), of Lingering (spell degrees), of Siphoning (mana on a kill), of Wands (wand
@@ -247,10 +247,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
   there is nothing to learn about ("You already know what a dagger is.").
   - **Making out a scroll** (`world/decipher.rs`, data `data/decipher.toml`; #1024, the skill
     uses design §6.6, the owner's rule: Decipher script is how non-casters use scrolls, by a
-    check; a caster with enough Spellcraft bypasses it; this overrides the no-caster-level
+    check; one with enough learning (Decipher script's, since #1270) bypasses it; this overrides the no-caster-level
     design's line that reading works for anyone). Once nothing refuses the reading and before the
     scroll is used up: **a known spell** reads at once, no draw, and still marks Decipher script
-    (on a trained skill; a scroll the player wrote too); else **a bypass**, trained in Spellcraft with a learning (§8 "Spells":
+    (on a trained skill; a scroll the player wrote too); else **a bypass**, trained in Decipher script with a learning (§8 "Spells":
     "Learning, the number") of at least the scroll's spell level, no draw, no mark, no words; a
     scroll with no spell behind it (restoration) counts as level 0. **Otherwise a check**, never
     a refusal: 2d12 + the Intelligence modifier + talents' additions to its checks + Decipher
@@ -259,7 +259,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     section (Scroll adept, Scroll savant, an unknown type identified). **Failed**, "The writing
     swims before your eyes.": a read's price, the scroll kept, a label still unknown, no cast, no
     Scroll savant draw, no Read training; try again. **Marks**: `Use::Decipher` 100 % per check
-    (Decipher script's only mark; the training stream); Spellcraft gets none from a read. The
+    (the training stream), and a made read, as any scroll read and used up, `Use::Read` 50 %
+    (#1270: all reading trains Decipher script); Spellcraft gets none from a read. The
     scroll of identify is read by the same rule on the stack named, after its own refusals.
     Scribe (below) writes with no check; what it writes reads by the rule, for the writer too.
     Without the file every scroll simply reads. **The Decipher ability** (#1025, design §6.6
@@ -267,7 +268,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     a scroll of the pack whose type is not yet identified, unavailable with none): `seconds`
     (600) of turns of the `decipher` action, stopped by anything that stops a rest (and then
     nothing comes of it); done, the same check by the same rule (a known spell or enough
-    Spellcraft reads at once); made, the type is learned (`learn_scroll`) and the scroll kept,
+    learning reads at once); made, the type is learned (`learn_scroll`) and the scroll kept,
     unread; failed, "The writing swims before your eyes." and the time gone, try again.
     The mark is the check's own.
   - **Unidentified scrolls** (`scroll_label.rs`, data `data/scroll_labels.toml`; #393): a
@@ -356,8 +357,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     and buy the scrolls class, and a generated one always lays out scrolls of identify, §7
     "Shops"; Cēaptūn's general store, a town store, has three), and the trap hall beside its arrival (two each of fireball,
     lightning, and frost, three scrolls of identify, and an unidentified dagger). The showcase
-    has none. Spellcraft (§8 "Skills") helps learning from a grimoire (§8 "Spells": "Learning")
-    and reading a scroll; Decipher script helps reading a scroll, not learning from a grimoire.
+    has none. Decipher script (§8 "Skills") is the skill of learning from a grimoire (§8 "Spells":
+    "Learning", #1270) and of reading a scroll; Spellcraft, which casting trains, helps neither.
     A spell scroll made at random is its grimoire one time in ten (§8 "Spells": "Learning").
 
 - **Wands** (`warlock-core/src/world/zap.rs`, data `wand` in `data/objects/` §7, `content/wand.rs`;

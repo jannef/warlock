@@ -6,12 +6,13 @@
 //! teaches the spell of its scroll, and is known on sight (no label):
 //!
 //! - **Refusals** (no time): a spell known ("You know this spell already."), no mana at all ("You
-//!   have no gift for magic."), no training in Spellcraft ([`UNTRAINED`]), and whatever a status
-//!   blocks (Raging blocks `study`).
+//!   have no gift for magic."), no training in Decipher script ([`UNTRAINED`]), and whatever a
+//!   status blocks (Raging blocks `study`).
 //! - **Learning** ([`Actor::learning`]): the spell level up to which a grimoire teaches for
-//!   certain, the `learn` benefit of the skill that has one (Spellcraft) at the skill's value with
-//!   what items and talents add, at least 1. A character not trained in that skill has none and
-//!   cannot learn at all, cantrips included; an item's or a talent's bonus alone trains nobody.
+//!   certain, the `learn` benefit of the skill that has one (Decipher script; #1270) at the
+//!   skill's value with what items and talents add, at least 1. A character not trained in that
+//!   skill has none and cannot learn at all, cantrips included; an item's or a talent's bonus
+//!   alone trains nobody.
 //!   Reading a scroll to cast it, and the spells a class grants, need none of this.
 //! - **Time**: turn after turn of the `study` action ([`World::keep_at`], like a meal),
 //!   `turns_base + turns_per_level × level` of them (`data/study.toml`), Quick study's `percent`
@@ -19,7 +20,7 @@
 //!   message is said: a blow, a status); then the time is lost.
 //! - **The check** at the end: overreach is the spell's level less the learning. At 0 or less
 //!   the spell is learned, no draw. Above, a 2d12 check ([`check::check`]) with the bonuses
-//!   (Intelligence's modifier, the skills' `study` benefit (Spellcraft, Decipher script), the
+//!   (Intelligence's modifier, the skills' `study` benefit (Decipher script), the
 //!   class's affinity with the school, Quick study) against [`StudyRules::difficulty`] (the
 //!   overreach, Overreach's third off, and the levels of the spells known). Made: learned.
 //! - **Failure**: a mishap (`data/mishaps/`), one draw by weight among the band's and the lucky
@@ -33,8 +34,8 @@
 //!
 //! Determinism: the check's two draws only when there is a check, the mishap's one draw only on
 //! a failure, then the effect's own (a backfire's damage roll, a drain's, a teleport's hash).
-//! Training: the `study` use (Spellcraft, Decipher script, Intelligence) at the end, whatever
-//! comes of it.
+//! Training: the `study` use (Decipher script, Intelligence) at the end, whatever comes of it;
+//! casting, not learning, trains Spellcraft (#1270).
 
 use super::spell::Caster;
 use super::{Actor, Cause, Ended, Spent, World};
@@ -50,8 +51,8 @@ use crate::skills::{Effect, Use};
 use crate::stats::Stat;
 use std::cell::Cell;
 
-/// What a character not trained in Spellcraft is told when they would read a grimoire.
-pub const UNTRAINED: &str = "You have no training in Spellcraft; you cannot make sense of how to learn a spell from a grimoire.";
+/// What a character not trained in Decipher script is told when they would read a grimoire.
+pub const UNTRAINED: &str = "You have no training in Decipher script; you cannot make sense of how to learn a spell from a grimoire.";
 
 /// A study under way: the grimoire read (its position and object as the study began), the
 /// spell it teaches, and the turns it takes.

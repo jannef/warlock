@@ -329,8 +329,9 @@ without the loot.
 
 Training (`world/train.rs`, the one hook): `World::train` scales each mark rule's chance by
 `Here::train(skill)` at the player's cell (percents multiply, room and level); each whole hundred is a mark for certain and the rest a chance
-of one more. Decipher script's one mark, a check to read a scroll (100 %, #1024), is one mark
-anywhere and two in the scriptorium (200). Nothing is saved; no action, no ability.
+of one more. Decipher script's marks (#1270: all reading) double inside: a check to read a scroll and a
+grimoire read to its end (100 %) are one mark anywhere and two in the scriptorium (200), a
+scroll read and used up (50 %) a mark there for certain. Nothing is saved; no action, no ability.
 
 ## Forgotten altars and prayer
 

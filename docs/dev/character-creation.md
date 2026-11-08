@@ -20,10 +20,11 @@ potentials `base_potential` + the race's, never below the score. Flags for rules
 `ClassDef` with `stats`, `hp`, `alignment`, `known_for`, `optional_skills` (#662, rolled from
 their own stream `character/optional-skills/<spec>`, so adding or changing one moves no other
 roll; a race's `optional_skills`, #682, come after the class's from the same stream;
-`docs/dev/skills.md`; Spellcraft, the one way to learn from a scroll, `docs/dev/spells.md`
-"Learning": wizard, witch, priest, druid `2d6+10` in `skills`, bard, paladin, ranger `2d4+4`,
-aristocrat `{ chance = 35, dice = "2d4+4" }` and ascetic `{ chance = 20, dice = "2d4" }` in
-`optional_skills`, #987), `rolls`, and the level table's
+`docs/dev/skills.md`; Decipher script, the one way to learn from a grimoire since #1270,
+`docs/dev/spells.md` "Learning": wizard, witch, priest, druid `2d6+10` in `skills`, bard,
+paladin, ranger `2d4+4`, aristocrat `{ chance = 35, dice = "2d4+4" }`, ascetic `{ chance = 20,
+dice = "2d4" }`, and merchant `{ chance = 25, dice = "2d4" }` in `optional_skills`; Spellcraft,
+which only casting trains, keeps the dice it had, #987), `rolls`, and the level table's
 `abilities` and `bonus_talents` (`docs/dev/progression.md` "Class tables"; level 1's are given
 in `start_run`); one file per class, `NN-id.toml` in the order offered; `Start::hp` is their sum, and `Start::alignment` the
 sum of their `alignment`s and the birth animal's, the starting score, `docs/dev/alignment.md`),
