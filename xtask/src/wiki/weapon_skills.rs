@@ -20,16 +20,13 @@ fn trained_by(role: Role) -> &'static str {
         Role::Thrown => "every throw",
         Role::Unarmed => "blows with bare hands",
         Role::ShieldBash => "bashing with a shield",
-        Role::School => "every spell of its school you cast with your own mana",
         Role::Style => "every attack in its configuration",
     }
 }
 
-/// The weapon skills, in file order, without the fighting styles and the schools of magic.
+/// The weapon skills, in file order, without the fighting styles.
 fn weapons(table: &WeaponSkillTable) -> impl Iterator<Item = (WeaponSkillId, &WeaponSkillDef)> {
-    table
-        .ids()
-        .filter(|(_, s)| !s.is_style() && s.role != Role::School)
+    table.ids().filter(|(_, s)| !s.is_style())
 }
 
 /// The objects that draw on skill `id`: the weapons that name it, or for shield bashing the
@@ -196,31 +193,11 @@ fn percent(v: i32) -> String {
     format!("{v}%")
 }
 
-fn rerolled(v: i32) -> String {
-    match v {
-        1 => "1s".to_string(),
-        2 => "1s and 2s".to_string(),
-        v => format!("1s to {v}s"),
-    }
-}
-
-fn sizes(v: i32) -> String {
-    format!("+{v} {}", if v == 1 { "size" } else { "sizes" })
-}
-
-fn more_dice(v: i32) -> String {
-    format!("+{v} {}", if v == 1 { "die" } else { "dice" })
-}
-
 fn cells(v: i32) -> String {
     format!("+{v} {}", if v == 1 { "cell" } else { "cells" })
 }
 
-fn degrees(v: i32) -> String {
-    format!("+{v} {}", if v == 1 { "degree" } else { "degrees" })
-}
-
-const COLUMNS: [Column; 19] = [
+const COLUMNS: [Column; 14] = [
     ("To hit", |b| b.to_hit, plus),
     ("Damage", |b| b.damage, plus),
     ("Critical range", |b| i32::from(b.threat), wider),
@@ -237,14 +214,9 @@ const COLUMNS: [Column; 19] = [
         wider,
     ),
     ("Armour's extra mana cost", |b| i32::from(b.armour), faster),
-    // A school of magic's, on its own spells.
-    ("Rolled again", |b| i32::from(b.reroll), rerolled),
-    ("Dice size", |b| i32::from(b.sides), sizes),
-    ("Dice", |b| i32::from(b.dice), more_dice),
+    // A caster style's, on the spells cast in it.
     ("Every roll", |b| b.bonus, plus),
     ("Reach", |b| b.cells, cells),
-    ("Lasts", |b| b.degrees, degrees),
-    ("Mana", |b| i32::from(b.mana), faster),
 ];
 
 /// A two-weapon penalty as it reads: `−4`, or `none`.
@@ -431,7 +403,6 @@ pub fn ranks_text(content: &Content, ranks: &[(WeaponSkillId, Dice)]) -> String 
             let term = match skill.role {
                 Role::Style if is_caster_style(table, id) => Term::CasterStyle,
                 Role::Style => Term::Style,
-                Role::School => Term::School,
                 _ => Term::WeaponSkill,
             };
             format!("{} {rank}", link(term, &skill.id, &skill.name))

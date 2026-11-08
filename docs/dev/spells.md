@@ -117,8 +117,9 @@ cast path shares.
   (`TalentMods::spell_mods(tags)` sums them). Items: `Effect::{SpellRungs, SpellBonus,
   SpellSides, SpellDice, SpellReroll, WandRungs}` and `SpellReach` (cells), `SpellDuration`
   (degrees), worn, unidentified too, with no tag filter (no shipped affix needs one; one is a
-  field on the affix when it does). `Actor::spell_mods(content, spell)` is the one sum, with
-  the school's rank as its third source (`Benefit::spell_mods`, docs/dev/magic-skills.md). `cost` is the one field beside the six: School
+  field on the affix when it does). `Actor::spell_mods(content, spell)` is the one sum of
+  the two (the caster style's `Benefit::spell_mods` joins in `Actor::spell_mods_in_style`,
+  docs/dev/caster-styles.md; the schools' ranks went with #1263). `cost` is the one field beside the six: School
   focus's percent, summed into `spell_mana_percent` in `Actor::spell_base` (the decision of this
   slice: the design's §7.2 writes School focus as a `spell_mod` with a cost, so the struct
   carries it rather than a seventh effect kind).
@@ -180,8 +181,8 @@ cast path shares.
     }).with(benefit)` against
     `combat::Target::bare(target_against(target, missile).defence)` (no Protection; the strike's
     damage, crit included, is then resisted in `spell_strikes`, nothing holding it). The
-    `benefit` (#571) is the spell's school's and the caster style's (`Actor::spell_skills`:
-    the school's skill, docs/dev/magic-skills.md; the style the spell is cast in, decided
+    `benefit` (#571) is the caster style's (`Actor::spell_skills`: no weapon skill since #1263,
+    docs/dev/caster-styles.md; the style the spell is cast in, decided
     once a cast, `world/cast_style.rs`: Battle caster in armour that hinders casting, else
     Toucher for a touch, Sniper for a ray or a bolt (#1251); `Benefit::at_distance` adds Sniper's
     far benefits from `[spell_attacks] far`), for a cast paid in mana of a spell that
@@ -224,14 +225,14 @@ cast path shares.
   (reach, roll, degrees at its stats, `Pay::Creature`, `CastBy::Own`), its mana spent first with
   `Actor::spell_base` through `World::spend_mana`, then the shared strikes (`cast_burst_at`,
   `cast_bolt`, `cast_cone`, `cast_single` with the caster's id) and `spell_lands`. Its casts
-  train nothing and raise no school trigger (`spell_landed` returns for any pay but mana). Not
+  train nothing (`practise_cast` returns for any pay but mana). Not
   for creatures (refused at load, `content/creature_spells.rs`): zones, corpses, the open sky,
   pushes, charms, ground- or tag-bound hexes, heals not by touch, summons, cleansings, and
   utilities.
 - **Choices** (design §14 and the issue's open points, decided here):
   - The attack roll's skill: rays, bolts, and touches aim with their `aim` stat (Dexterity unless
     the spell names another; none does), threat and critical at the blows' defaults, plus since
-    #571 the school's skill (Spell attacks until the schools of magic) and a caster style;
+    #571 a caster style (the schools' skills, which aimed too, went with #1263);
     Spellcraft does not aim spells (its
     benefit is the study check's, #396).
   - A critical rolls the damage again, and nothing holds it (decision 4).
@@ -657,16 +658,15 @@ cast path shares.
      pool, and an area (Fireball, 26 mana) four. Passes: spells cost real mana. No spell
      above tier 3 exists yet, so a caster past level 18 reached no higher ceiling.
   5. **The probe** (the spell scaling design §12.4, S7, #754; `docs/balance.md` "Spells" and
-     "School pace"; `world/balance_probe.rs`, `balance_probe/schools.rs`): the trained
+     "Caster style pace"; `world/balance_probe.rs`, `balance_probe/caster_pace.rs`): the trained
      wizard's, priest's, and witch's roll of every spell that rolls, `Actor::spell_roll` in
-     plain gear (`| Spell (level, res) | L | rung | school rank | roll | mana / pool |`, the roll
-     beside its rank-0 roll, a reroll's mean exact), at the school and caster-style ranks their
-     casting reaches: each day of a level, one pool on the school's pace spell, every cast
-     through `World::practise` as `practise_cast` does. The pool check by level: the pool over a
-     single-target spell of the caster's own level (base mana = the level, the ranks' mana
-     off), 10 to 13 for the wizard from level 5 to 60, 8 to 9 the priest, 8.5 to 12 the witch.
-     Measured pace (the wizard): evocation 5 at level 10, 7 at 20, 8 at 30, 10 from 50, §8.4's
-     estimate; the schools stayed on the missile curve (no row tuned; their own `school` curve since #1095). No casts-to-kill column.
+     plain gear (`| Spell (level, res) | L | rung | style rank | roll | hexed | mana / pool |`,
+     the roll beside its style-rank-0 roll, a reroll's mean exact), at the caster-style rank
+     their casting reaches: each day of a level, one pool on the pace spell (of the school the
+     build casts, as a category), every cast through `World::practise` as `practise_cast` does.
+     The pool check by level: the pool over a single-target spell of the caster's own level
+     (base mana = the level). The schools' ranks it measured until #1263 are gone. No
+     casts-to-kill column.
   6. **Tests**: since S1 `the_shipped_cost_table_reads_as_the_design_has_it` and
      `the_shipped_table_makes_areas_dearer_and_touches_cheaper` (the cap check at load and the
      tier table's went with the table, and nothing replaces them: decision 16).

@@ -75,9 +75,6 @@ pub enum Choice {
     /// A spell tag a talent may focus on (magic design §6): a school (`evocation`), or an
     /// element as [`Choice::Element`] offers them (`fire`).
     School,
-    /// A school of magic as a skill: a weapon skill of role `school` (`evocation`), the one
-    /// whose ranks the talent lifts (Schooled).
-    SchoolSkill,
 }
 
 impl Choice {
@@ -90,23 +87,18 @@ impl Choice {
             Choice::Element => "an element",
             Choice::Tag => "a kind of creature",
             Choice::School => "a school of magic or an element",
-            Choice::SchoolSkill => "a school of magic",
         }
     }
 
     /// Whether a weapon skill of `role` may be chosen as a weapon skill: one that attacks (a
-    /// style is chosen as a style, and a school of magic as a school).
+    /// style is chosen as a style).
     fn attacks(role: Role) -> bool {
-        !matches!(role, Role::Style | Role::School)
+        role != Role::Style
     }
 
-    /// Whether it chooses a row of the weapon skill table: a weapon skill, a style, or a
-    /// school of magic's skill.
+    /// Whether it chooses a row of the weapon skill table: a weapon skill or a style.
     pub fn is_weapon_skill(self) -> bool {
-        matches!(
-            self,
-            Choice::WeaponSkill | Choice::Style | Choice::SchoolSkill
-        )
+        matches!(self, Choice::WeaponSkill | Choice::Style)
     }
 
     /// Every valid choice of this kind, by id, in file order.
@@ -118,10 +110,6 @@ impl Choice {
                 .collect(),
             Choice::Style => (content.weapon_skills().styles())
                 .map(|(_, def, _)| def.id.clone())
-                .collect(),
-            Choice::SchoolSkill => (content.weapon_skills().ids())
-                .filter(|(_, def)| def.role == Role::School)
-                .map(|(_, def)| def.id.clone())
                 .collect(),
             Choice::Skill => content.skills().iter().map(|s| s.id.clone()).collect(),
             Choice::Element => (content.damage_types().iter())
@@ -138,12 +126,11 @@ impl Choice {
     /// The name of the choice `id`, if it is one of this kind.
     pub fn name<'c>(self, content: &'c Content, id: &str) -> Option<&'c str> {
         match self {
-            Choice::WeaponSkill | Choice::Style | Choice::SchoolSkill => {
+            Choice::WeaponSkill | Choice::Style => {
                 let skill = content.weapon_skills().id(id)?;
                 let def = content.weapon_skills().skill(skill);
                 let fits = match self {
                     Choice::Style => def.role == Role::Style,
-                    Choice::SchoolSkill => def.role == Role::School,
                     _ => Choice::attacks(def.role),
                 };
                 fits.then_some(def.name.as_str())
@@ -378,7 +365,7 @@ pub enum TalentEffect {
     /// One more talent pick at character level `level` (1: at creation; Versatile).
     ExtraPick { level: u8 },
     /// Handed out once, as the talent is taken or given: every weapon skill and style of
-    /// `skills` (none named: every row of `weapon_skills.toml` but the schools of magic and
+    /// `skills` (none named: every row of `weapon_skills.toml` but the
     /// hidden styles, whatever the content holds) held below rank `to` rises to it (Travelled
     /// hands; `WeaponSkills::raise_to`). `news` is said when a class table gives it.
     WeaponRanks {
@@ -557,15 +544,12 @@ pub enum TalentEffect {
         at_rank: u8,
     },
     /// The marks its attacks earn in the weapon skills of `role`, this percent more (Weapon
-    /// drill); without a `role`, in every weapon skill and fighting style (Forge-born), never a
-    /// school of magic.
+    /// drill); without a `role`, in every weapon skill and fighting style (Forge-born).
     WeaponMarks {
         #[serde(default)]
         role: Option<Role>,
         value: i32,
     },
-    /// The marks its casts earn in every school of magic, this percent more (Devotee).
-    SchoolMarksPercent { value: i32 },
     /// A confirmed critical's multiplier with a two-handed weapon, this much more (never past
     /// ×5; Brutal critical).
     TwoHandedCrit { value: u8 },
@@ -1550,8 +1534,8 @@ impl TalentEffect {
                 Some(id) => weapon_skill(id),
                 None if role.is_some() || choice.is_some_and(Choice::is_weapon_skill) => Ok(()),
                 None => Err(
-                    "`weapon` without a `role` or a `skill` is for the chosen weapon skill, \
-                     style, or school skill: it needs that `choice`"
+                    "`weapon` without a `role` or a `skill` is for the chosen weapon skill \
+                     or style: it needs that `choice`"
                         .into(),
                 ),
             },

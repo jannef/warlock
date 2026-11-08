@@ -272,7 +272,7 @@ through `World::spend_mana`, a spell's noise, the words, then by kind: a buff or
 `World::afflict`, a heal, or harm through the shared `cast_burst_at`, `cast_bolt`, `cast_cone`,
 and `cast.rs::cast_single`, which now takes its caster's id, then `spell_type_spreads` and
 `spell_lands`). `Cast::by_creature` settles reach, roll, and degrees at the creature's stats
-(`Pay::Creature`: nothing paid there, nothing practised, no school trigger);
+(`Pay::Creature`: nothing paid there, nothing practised);
 `World::creature_aim` adds the level's quarter to an `attack` spell's to-hit. Spell reflection
 (`reflect.rs`) turns a caster's rays and bolts back at it. **Wiki**: `creature_spells`
 (`creature-spells.md`, "Spells" in `creature-numbers.md`). **Probe**:

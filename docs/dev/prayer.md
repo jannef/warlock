@@ -57,7 +57,7 @@ list is never answered. A prayer effect: `tier` 1–5 with a
    (the temple's: `StatDamage::mend_all`, `restore_drained`). With `all`, every resource pool
    held fills to `World::resource_max`. The `Status`-ended and `Disease`-recovered events the
    fixes raise are dropped: the prayer's line covers them (a status that `follows` still begins).
-5. Nothing trains (no stat mark, no school), and no alignment moves.
+5. Nothing trains (no stat mark, no caster style), and no alignment moves.
 
 The face (`Actor::prayer_face`): the player's band within `holy` → Holy, else within `dark` →
 Dark, else Holy; Holy without alignment rules or the file.

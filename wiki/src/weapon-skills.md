@@ -28,9 +28,9 @@ bash is an *ability*: choose it from the abilities menu (`a`, see [Abilities](ab
 direction. It has no key of its own by default. You can give it one in the
 [Controls screen](controls.md#rebinding-keys) ("Bash with your shield").
 
-Spells have their own page. Each [school of magic](schools.md) is a skill trained the same way, by
-casting, and a spell that rolls to hit aims with its school's rank. The schools and the caster
-styles are on the [Magic page](schools.md#the-magic-page), page 6.
+Spells have their own page. The [caster styles](schools.md#caster-styles) are trained the same way,
+by casting, and a spell that rolls to hit aims with its caster style's rank. They are on the
+[Magic page](schools.md#the-magic-page), page 6.
 
 ## Seeing your skills
 
@@ -57,8 +57,8 @@ all. One at your rank or above teaches you the full marks, but never more. Past 
 
 Marks you earn beyond what a rank needs count toward the next one. The first ranks come within a
 few levels. From rank 7 on, each rank asks for far more, and the last ranks take most of a career.
-Missile weapons need fewer marks than weapons up close. The schools of magic and the caster
-styles, trained by casting, follow a gentler curve of their own. You start every skill with no
+Missile weapons need fewer marks than weapons up close. The caster styles, trained by casting,
+follow a gentler curve of their own (the Caster columns). You start every skill with no
 marks.
 
 ## Target dummies

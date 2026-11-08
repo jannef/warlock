@@ -1,16 +1,16 @@
 //! The Magic page (spec §6; page 6 of the info pages; the spell scaling design §11): what the
 //! player has trained of magic and what they cast with it, read, never used. One column that
-//! scrolls (↑↓) on every console, in order: their mana as the status bar shows it; the seven
-//! schools of magic (spec §8 "Weapon skills"), each with its rank and the faint bar of its marks
-//! toward the next, as the Weapons page draws a skill; the caster styles (Sniper, Toucher, Battle
-//! caster), the one cast in now marked; and the spells known, by level then name (the abilities
+//! scrolls (↑↓) on every console, in order: their mana as the status bar shows it; the caster
+//! styles (Sniper, Toucher, Battle caster; spec §8 "Fighting styles"), each with its rank and the
+//! faint bar of its marks toward the next, as the Weapons page draws a skill, the one cast in now
+//! marked; and the spells known, by level then name (the abilities
 //! menu's order), each with the roll it makes now and its mana as the menu's row says them
 //! ("4d6 fire, 26 mana, aimed"). Never what a rank gives: perception has none of it, and the wiki
 //! documents the rules.
 //!
-//! A character with no mana and no spells sees the schools at rank 0, no styles, and "You know no
-//! spells." No key opens it in play: it is reached by its number or Tab from any info page (the
-//! Weapons page's hint line names it). Esc or Enter closes it. It is read from the perception
+//! A character with no mana and no spells sees no styles and "You know no spells." No key opens
+//! it in play: it is reached by its number or Tab from any info page (the Weapons page's hint
+//! line names it). Esc or Enter closes it. It is read from the perception
 //! snapshot when it opens; no game time passes while it is open, so it cannot go stale.
 
 use super::abilities_screen::{needs, spell_head};
@@ -22,7 +22,6 @@ use crate::input::Bindings;
 use crate::render::console::Console;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use warlock_core::ability::Ability;
-use warlock_core::content::Role;
 use warlock_core::perception::PerceptionView;
 
 /// Width of the name column (a skill's, a spell's).
@@ -163,15 +162,6 @@ fn rows(view: &PerceptionView<'_>) -> Vec<Row> {
     if max > 0 {
         rows.extend([Row::Mana(format!("Mana {mana}/{max}")), Row::Gap]);
     }
-    rows.push(Row::Section {
-        name: "Schools",
-        legend: false,
-    });
-    rows.extend(
-        (table.ids())
-            .filter(|&(id, def)| def.role == Role::School && own.shows(table, id))
-            .map(|(id, _)| skill(id)),
-    );
     // The caster styles, for a caster: one who knows a spell, or has marks or a rank in one of
     // them (everyone has a little mana; a warrior is no caster).
     let casters: Vec<_> = (table.styles())
@@ -183,22 +173,17 @@ fn rows(view: &PerceptionView<'_>) -> Vec<Row> {
     let styles: Vec<Row> = casters.into_iter().map(skill).collect();
     if !spells.is_empty() || trained {
         let legend = (styles.iter()).any(|r| matches!(r, Row::Skill { in_use: true, .. }));
-        rows.extend([
-            Row::Gap,
-            Row::Section {
-                name: "Caster styles",
-                legend,
-            },
-        ]);
+        rows.push(Row::Section {
+            name: "Caster styles",
+            legend,
+        });
         rows.extend(styles);
+        rows.push(Row::Gap);
     }
-    rows.extend([
-        Row::Gap,
-        Row::Section {
-            name: "Spells",
-            legend: false,
-        },
-    ]);
+    rows.push(Row::Section {
+        name: "Spells",
+        legend: false,
+    });
     if spells.is_empty() {
         rows.push(Row::Note(NO_SPELLS));
     }
@@ -290,18 +275,16 @@ mod tests {
     }
 
     #[test]
-    fn a_wizard_sees_mana_schools_styles_and_spells_in_order() {
+    fn a_wizard_sees_mana_styles_and_spells_in_order() {
         let world = world("showcase", "human,female,wizard", LEVELLED);
         let screen = MagicScreen::new(Some(&world.perception()));
         let text = drawn(&screen, 120, 50);
         let at = |needle: &str| text.iter().position(|l| l.contains(needle));
         assert!(find(&text, " Magic ").contains('─'));
         assert!(find(&text, "Mana ").contains('/'));
-        assert!(at("Mana ") < at("Schools") && at("Schools") < at("Caster styles"));
+        assert!(at("Mana ") < at("Caster styles"));
         assert!(at("Caster styles") < at("Spells") && at("Spells") < at("Magic missile"));
-        for school in ["Evocation", "Necromancy", "Divination"] {
-            find(&text, school);
-        }
+        assert!(at("Evocation").is_none(), "no schools: {text:#?}");
         assert!(find(&text, "Sniper").contains("Sniper                   1"));
         // A spell's row is the abilities menu's: its roll, its mana, aimed.
         let missile = find(&text, "Magic missile");
@@ -331,12 +314,11 @@ mod tests {
     }
 
     #[test]
-    fn a_warrior_sees_the_schools_unranked_and_no_spells() {
+    fn a_warrior_sees_no_styles_and_no_spells() {
         let world = world("showcase", "human,male,warrior", "");
         let screen = MagicScreen::new(Some(&world.perception()));
         let text = drawn(&screen, 120, 50);
         find(&text, NO_SPELLS);
-        find(&text, "Evocation");
         let at = |needle: &str| text.iter().position(|l| l.contains(needle));
         assert!(at("Caster styles").is_none() && at("Sniper").is_none());
         for hidden in ["+", "%", "to-hit", "marks"] {
@@ -348,18 +330,18 @@ mod tests {
     fn a_page_too_long_scrolls_and_closes_on_esc_or_enter() {
         let world = world("showcase", "human,female,wizard", LEVELLED);
         let mut screen = MagicScreen::new(Some(&world.perception()));
-        let text = drawn(&screen, 80, 16);
+        let text = drawn(&screen, 80, 12);
         let has = |text: &[String], needle: &str| text.iter().any(|l| l.contains(needle));
-        assert!(has(&text, "Schools") && !has(&text, "Magic missile"));
+        assert!(
+            has(&text, "Caster styles") && !has(&text, "Shatter"),
+            "{text:#?}"
+        );
         assert!(has(&text, "↑↓ scroll"));
         for _ in 0..60 {
             assert_eq!(screen.handle(&Press::nav(Nav::Down)), ScreenAction::Stay);
         }
-        let text = drawn(&screen, 80, 16);
-        assert!(
-            has(&text, "Magic missile") && !has(&text, "Schools"),
-            "{text:#?}"
-        );
+        let text = drawn(&screen, 80, 12);
+        assert!(has(&text, "Shatter") && !has(&text, "Mana "), "{text:#?}");
         assert_eq!(screen.handle(&Press::nav(Nav::Back)), ScreenAction::Close);
         assert_eq!(screen.handle(&Press::nav(Nav::Enter)), ScreenAction::Close);
         // Outside a run, and in tiny consoles, it draws without a panic.

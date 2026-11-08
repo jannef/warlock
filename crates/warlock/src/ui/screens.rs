@@ -126,8 +126,7 @@ pub enum ScreenName {
     Skills,
     /// The player's weapon skills: ranks and marks (`W` in play).
     WeaponSkills,
-    /// The player's magic (page 6): the schools of magic and the caster styles with their
-    /// ranks and marks, and the spells known with their rolls. No key of its own in play.
+    /// The player's magic (page 6): the caster styles with their ranks and marks, and the spells known with their rolls. No key of its own in play.
     Magic,
     /// The player's quests, active and done (`q` in play).
     Quests,

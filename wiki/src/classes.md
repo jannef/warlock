@@ -100,7 +100,7 @@ The bard has two **[songs](abilities.md#songs)**:
 
 **[Travelled hands](talents.md#talent-travelled-hands)** (level 3) raises, once, every
 [weapon skill](weapon-skills.md) and [fighting style](fighting-styles.md) the bard has at rank 0 to
-rank 1. It never raises a [school of magic](schools.md) or a hidden style. The bard is a point
+rank 1. It never raises a hidden style. The bard is a point
 surer with whatever comes to hand.
 
 **[Jack of all trades](talents.md#talent-jack-of-all-trades)** (level 12) trains every
@@ -301,7 +301,7 @@ in a direction. It opens nothing by itself (see [Chests](chests.md#locked-chests
 The wizard's **[Scribe](abilities.md#ability-scribe)** (from level 12) writes a scroll of a spell he
 knows on a blank scroll. It costs three times the spell's [mana](mana.md#spending-it) and the time
 its grimoire takes to read (see [Scrolls](scrolls.md#writing-scrolls)). It is mana banked between fights, to be read in
-the next. His **[Magister](talents.md#talent-magister)** comes at level 40.
+the next.
 
 {{#include generated/class-levels.md:witch}}
 
