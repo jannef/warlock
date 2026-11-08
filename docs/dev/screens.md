@@ -250,8 +250,14 @@ to open, read keys for, or draw one:
   characters, the one played last first; Enter is `MenuChoice::Resume(id)`, the Erase key asks the
   dialog whose Delete is `MenuChoice::DeleteCharacter(id)`, after which the main menu and the list
   open afresh; `--screen characters`, with `--capture` over a read-only `--save-dir`; under the
-  details the graveyard's count, "Twelve characters have died.", while any has (`Launch::died`,
-  read as the screen opens; `CharactersScreen::died`); the death screen's "Remembered in the
+  details the graveyard's count, "Twelve characters have died.", while any has (`Launch::fallen`,
+  read as the screen opens; `CharactersScreen::died`), `ui/graveyard_screen.rs` (`GraveyardScreen`,
+  `ScreenName::Graveyard`, `--screen graveyard`, reading the graveyard from `--config-dir` under
+  `--capture`: the fallen, `graveyard::by_experience`, offered on the main menu after Characters
+  only while `Launch::fallen` has any (`MainMenu::graveyard`); a few lines each, the cause in words
+  from the content's ids with the entry's `killer` or "Died" for ids it lacks; read-only, paged by
+  what fits the console, the pages counted as last drawn; Up/Down and the list page keys turn the
+  page, Esc or Enter closes; "No one lies here yet." with none); the death screen's "Remembered in the
   graveyard." is `DeathScreen::remembered`, set by `on_death` once the entry is written,
   `docs/dev/saves.md` "The graveyard"),
   `ui/quest_screen.rs`

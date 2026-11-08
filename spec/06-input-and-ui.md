@@ -62,7 +62,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
   "Scrolls") never asks: reading it is a gamble.
 - **Main menu** (drawn in glyphs; the game opens on it unless `--scenario`, `--new`, `--replay`,
   `--record`, or `--capture` name what to run): Continue (only if a character is saved: it
-  resumes the one played last, and names them), Characters (likewise), New run (scenario list
+  resumes the one played last, and names them), Characters (likewise), Graveyard (only once
+  anyone has died, §7 "The graveyard"), New run (scenario list
   from content, then character creation; with one scenario to choose, as in a release build,
   which lists only the campaign's start, the list is skipped and New run opens on the race,
   where Esc goes back to the menu, §3 "The Ascmearc"), Settings, Controls, Quit. A new run's seed is no
@@ -80,6 +81,13 @@ developer notes (CLAUDE.md, `docs/dev/`).
   good."; Keep is selected first), Esc goes back. A save whose summary cannot be read is listed
   by its file's id; one that cannot be resumed is kept as unusable and leaves the list, and the
   main menu says why.
+- **Graveyard** (#1252, §7 "The graveyard"): every character who has died, the most experience at
+  death first, then (entries written before experience was kept, which read 0) the highest level,
+  then the most recent. Each takes a few lines: the name, race and class (and prestige class),
+  level, and experience; what killed them in words and where ("Killed by a kobold in Fyrdelf 3,
+  The Ascmearc."); when (wall-clock, in UTC) and at what age. Read-only: as many entries as fit
+  make a page ("Page 1/3" on the frame), Up/Down and the list page keys turn it, Esc or Enter
+  goes back. With none: "No one lies here yet."
 - **Character creation** (§8 "Character creation"): after the scenario and seed, New run asks for
   a **race**, a **gender**, and a **class**, one screen each and in that order (race first: it
   is the biggest choice and sets the player's eyes), then the **talents**, then a **name**, then

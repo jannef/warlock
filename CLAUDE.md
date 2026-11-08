@@ -79,8 +79,9 @@ Game flags (`cargo run -p warlock -- --help`):
   show a fixed moment of their life; fades complete instantly.
 - Without `--scenario`, `--new`, `--replay`, `--record`, or `--capture` the game opens on the main
   menu. Dev: `--screen NAME` opens a screen at startup, even with `--capture`: `main`,
-  `new-run`, and `characters` (the saved characters; a capture reads them, never writes, from
-  `--save-dir`, e.g. `tests/golden/saved-characters`) on the main menu (e.g. `--scale 1 --screen
+  `new-run`, `characters` (the saved characters; a capture reads them, never writes, from
+  `--save-dir`, e.g. `tests/golden/saved-characters`), and `graveyard` (the fallen, most
+  experienced first; a capture reads `graveyard.toml` from `--config-dir`) on the main menu (e.g. `--scale 1 --screen
   new-run --capture target/menu.png`; a release build, which skips New run, shows the race),
   and character creation's `race`, `sign` (the birth
   sign's reveal), `gender`, `class`, `chargen-talents` (the creation picks), `name`, and

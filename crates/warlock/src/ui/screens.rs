@@ -37,6 +37,7 @@ use super::dialog_screen::{Dialog, DialogScreen};
 use super::dialogue_screen::{DialogueScreen, last_talk};
 use super::equipment_screen::{EquipmentScreen, ItemScreen};
 use super::files_screen::FilesScreen;
+use super::graveyard_screen::GraveyardScreen;
 use super::info_tabs;
 use super::level_up_screen::LevelUpScreen;
 use super::magic_screen::MagicScreen;
@@ -83,6 +84,8 @@ pub enum ScreenName {
     Main,
     /// The saved characters, from the main menu: resume one, or delete it.
     Characters,
+    /// The fallen, from the main menu once anyone has died: the most experienced first.
+    Graveyard,
     NewRun,
     /// Character creation, over New run: choose a race.
     Race,
@@ -303,9 +306,10 @@ struct Launch {
     /// The saved characters, the one played last first (the main menu offers Continue and
     /// Characters with any); only read for the screens that show them.
     characters: Vec<SavedCharacter>,
-    /// How many characters have died (the graveyard's entries, `graveyard.rs`); only read for
-    /// the Characters screen.
-    died: usize,
+    /// The characters who have died (the graveyard's entries, `graveyard.rs`), the most
+    /// experienced first; only read for the screens that show them (the main menu offers the
+    /// Graveyard with any, the Characters screen counts them).
+    fallen: Vec<graveyard::Fallen>,
     /// A developer build or `--dev`: the developer keys work (the controls and the help list
     /// them), and New run has a seed field.
     dev: bool,
@@ -320,6 +324,8 @@ enum Screen {
     Menu(MainMenu),
     /// The saved characters.
     Characters(CharactersScreen),
+    /// The fallen.
+    Graveyard(GraveyardScreen),
     NewRun(NewRunScreen),
     /// A step of character creation.
     Choice(ChoiceScreen),
@@ -396,12 +402,17 @@ impl Screen {
                 let last = (launch.characters.iter())
                     .find(|c| c.playable())
                     .map(|c| c.name().to_string());
-                Screen::Menu(MainMenu::main(last, !launch.characters.is_empty()))
+                let saved = !launch.characters.is_empty();
+                Screen::Menu(MainMenu::main(last, saved).graveyard(!launch.fallen.is_empty()))
             }
             ScreenName::Characters => {
                 let campaigns = content.campaigns().len() > 1;
                 let characters = launch.characters.clone();
-                Screen::Characters(CharactersScreen::new(characters, campaigns).died(launch.died))
+                let died = launch.fallen.len();
+                Screen::Characters(CharactersScreen::new(characters, campaigns).died(died))
+            }
+            ScreenName::Graveyard => {
+                Screen::Graveyard(GraveyardScreen::new(&launch.fallen, content))
             }
             ScreenName::Pause => Screen::Menu(MainMenu::pause()),
             // A release build's new run gets a seed no one chooses; a developer may type one.
@@ -468,6 +479,7 @@ impl Screen {
             Screen::Menu(menu) if menu.is_pause() => ScreenName::Pause,
             Screen::Menu(_) => ScreenName::Main,
             Screen::Characters(_) => ScreenName::Characters,
+            Screen::Graveyard(_) => ScreenName::Graveyard,
             Screen::NewRun(_) => ScreenName::NewRun,
             Screen::Choice(screen) => screen.step().screen(),
             Screen::ChargenTalents(_) => ScreenName::ChargenTalents,
@@ -704,6 +716,7 @@ impl ScreenStack {
             None => ScreenAction::Stay,
             Some(Screen::Menu(menu)) => menu.handle(press),
             Some(Screen::Characters(screen)) => screen.handle(press),
+            Some(Screen::Graveyard(screen)) => screen.handle(press),
             Some(Screen::NewRun(screen)) => screen.handle(press),
             Some(Screen::Choice(screen)) => {
                 let action = screen.handle(press);
@@ -826,6 +839,7 @@ impl ScreenStack {
             None => {}
             Some(Screen::Menu(menu)) => menu.draw(console, self.notice.as_deref(), bindings),
             Some(Screen::Characters(screen)) => screen.draw(console, settings.clock, bindings),
+            Some(Screen::Graveyard(screen)) => screen.draw(console, settings.clock, bindings),
             Some(Screen::NewRun(screen)) => screen.draw(console, bindings),
             Some(Screen::Choice(screen)) => screen.draw(console, bindings),
             Some(Screen::ChargenTalents(screen)) => screen.draw(console, bindings),
@@ -911,13 +925,15 @@ impl Screens<'_> {
             ScreenName::Main | ScreenName::Characters => self.store.characters(),
             _ => Vec::new(),
         };
-        let died = match name {
-            ScreenName::Characters => self.graveyard.count(),
-            _ => 0,
+        let fallen = match name {
+            ScreenName::Main | ScreenName::Characters | ScreenName::Graveyard => {
+                graveyard::by_experience(self.graveyard.read())
+            }
+            _ => Vec::new(),
         };
         let launch = Launch {
             characters,
-            died,
+            fallen,
             dev: dev_keys(&self.args),
             keymap: self.settings.keymap(),
         };
@@ -1048,7 +1064,9 @@ fn startup_screens(screen: Option<ScreenName>, in_run: bool) -> Vec<ScreenName> 
                 .chain([s])
                 .collect()
         }
-        (false, Some(s @ (Characters | NewRun | Settings | Controls | Dialog))) => vec![Main, s],
+        (false, Some(s @ (Characters | Graveyard | NewRun | Settings | Controls | Dialog))) => {
+            vec![Main, s]
+        }
         (false, Some(Files)) => vec![Main, Settings, Files],
         (false, _) => vec![Main],
         (true, Some(s @ (Settings | Controls | Dialog))) => vec![Pause, s],
@@ -1262,7 +1280,7 @@ mod tests {
             };
             let launch = Launch {
                 characters: has_save.then_some(saved).into_iter().collect(),
-                died: 0,
+                fallen: Vec::new(),
                 dev: true,
                 keymap: KeymapFile::Nowhere,
             };
@@ -1401,6 +1419,7 @@ mod tests {
         );
         assert_eq!(startup_screens(Some(Characters), false), [Main, Characters]);
         assert_eq!(startup_screens(Some(Characters), true), []);
+        assert_eq!(startup_screens(Some(Graveyard), false), [Main, Graveyard]);
     }
 
     #[test]

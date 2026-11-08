@@ -1,0 +1,34 @@
+---
+source: crates/warlock/src/ui/screen_snapshots.rs
+expression: "render(case, content.clone())"
+---
+          ┌─ Graveyard ─────────────────────────────────────────────────────── Page 1/2 ─┐
+          │                                                                              │
+          │ Sigeberht                                                level 0        0 xp │
+          │   Died.                                                                      │
+          │                                                                              │
+          │ Godgifu                                                  level 0        0 xp │
+          │   Died.                                                                      │
+          │                                                                              │
+          │ Wulfstan                                                 level 0        0 xp │
+          │   Died.                                                                      │
+          │                                                                              │
+          │ Aelfgifu                                                 level 0        0 xp │
+          │   Died.                                                                      │
+          │                                                                              │
+          │ Cyneric                                                  level 0        0 xp │
+          │   Died.                                                                      │
+          │                                                                              │
+          │ Hild                                                     level 0        0 xp │
+          │   Died.                                                                      │
+          │                                                                              │
+          │ Leofric                                                  level 0        0 xp │
+          │   Died.                                                                      │
+          │                                                                              │
+          │ Eadgyth                                                  level 0        0 xp │
+          │   Died.                                                                      │
+          │                                                                              │
+          │                                                                              │
+          │                                                                              │
+          │ ↑↓ > < page   Esc back                                                       │
+          └──────────────────────────────────────────────────────────────────────────────┘

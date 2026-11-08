@@ -11,8 +11,8 @@
 //!   defaults those it misses, and an entry it cannot read is skipped, not the file; a field once
 //!   written is never renamed or given another meaning. No format number, no migration. The
 //!   test `a_fixture_written_by_0_11_reads` pins it.
-//! - **Read** for the Characters screen's count ([`GraveyardStore::count`]) and, as a run begins,
-//!   for the run's petrified dead ([`GraveyardStore::petrified`], `cause = "stone"`, the most
+//! - **Read** for the main menu's Graveyard row and screen ([`by_experience`]), the Characters
+//!   screen's count, and, as a run begins, for the run's petrified dead ([`GraveyardStore::petrified`], `cause = "stone"`, the most
 //!   recent first), which the core keeps with the run and names statues from
 //!   (`warlock_core::world::Fallen`).
 
@@ -47,6 +47,8 @@ pub struct Fallen {
     pub prestige: String,
     /// The experience level reached.
     pub level: u32,
+    /// The experience total at the moment of death (#1252); 0 in entries written before it.
+    pub xp: u32,
     /// What killed them, the death line's id: `stone` (turned to stone), a status's id
     /// (`bleeding`), `starved`, `fell`, `choked`, `altar`, `own_spell`, a trap's id, a scroll's
     /// object id, a creature's id (`kobold`), or `unseen`.
@@ -86,6 +88,7 @@ impl Fallen {
             }
             (None, None, None) => ("unseen".to_string(), String::new()),
         };
+        let progress = world.perception().own_experience();
         let campaign = (content.campaign(world.campaign())).map(|c| c.name.clone());
         let place = match campaign {
             Some(campaign) => format!("{}, {campaign}", death.place),
@@ -97,7 +100,8 @@ impl Fallen {
             gender: character.spec.gender.id().to_string(),
             class: character.spec.class.clone(),
             prestige: character.prestige.clone().unwrap_or_default(),
-            level: u32::from(world.perception().own_experience().level),
+            level: u32::from(progress.level),
+            xp: progress.xp,
             cause,
             killer,
             place,
@@ -153,6 +157,15 @@ pub fn parse(text: &str) -> Vec<Fallen> {
         .collect()
 }
 
+/// `all` (as [`parse`] reads them, the oldest first) as the Graveyard screen lists them: the
+/// most experience at death first, then (entries written before `xp` was, which read 0) the
+/// highest level, then the most recent; ties keep the most recently written first.
+pub fn by_experience(mut all: Vec<Fallen>) -> Vec<Fallen> {
+    all.reverse();
+    all.sort_by_key(|f| std::cmp::Reverse((f.xp, f.level, f.when)));
+    all
+}
+
 /// Where the graveyard lives; `None` keeps none (captures and replays, no config folder).
 #[derive(Resource, Debug, Clone, Default)]
 pub struct GraveyardStore {
@@ -193,11 +206,6 @@ impl GraveyardStore {
                 Vec::new()
             }
         }
-    }
-
-    /// How many characters have died.
-    pub fn count(&self) -> usize {
-        self.read().len()
     }
 
     /// The petrified among the dead, the most recent first, as the core names statues from
@@ -310,12 +318,59 @@ name = 12
         assert!(parse("this is [not toml").is_empty());
     }
 
+    /// An entry as version 0.14 writes it, with its experience (#1252), after the 0.11 ones.
+    const FIXTURE_0_14: &str = r#"
+[[fallen]]
+name = "Hild"
+race = "human"
+gender = "female"
+class = "priest"
+level = 5
+xp = 1450
+cause = "bleeding"
+place = "Cēaptūn, The Ascmearc"
+turn = 2048
+age = 22
+when = 1794000000
+version = "0.14.0"
+"#;
+
+    #[test]
+    fn the_experience_field_reads_and_defaults() {
+        let all = parse(&format!("{FIXTURE_0_11}{FIXTURE_0_14}"));
+        let xp: Vec<(&str, u32)> = all.iter().map(|f| (f.name.as_str(), f.xp)).collect();
+        // The broken entry between them is skipped; entries from before the field read 0.
+        assert_eq!(
+            xp,
+            [("Brakka", 0), ("Tamsin", 0), ("Wynn", 0), ("Hild", 1450)]
+        );
+    }
+
+    #[test]
+    fn the_most_experienced_come_first_then_the_highest_level_then_the_most_recent() {
+        let all = parse(&format!("{FIXTURE_0_11}{FIXTURE_0_14}"));
+        let names = |all: Vec<Fallen>| -> Vec<String> {
+            by_experience(all).into_iter().map(|f| f.name).collect()
+        };
+        // Hild has experience; the rest read 0 and go by level: Tamsin 31, Brakka 7, Wynn 0.
+        assert_eq!(names(all.clone()), ["Hild", "Tamsin", "Brakka", "Wynn"]);
+        // Equal level: the most recent first; equal in all, the last written first.
+        let at = |name: &str, when| Fallen {
+            name: name.into(),
+            level: 3,
+            when,
+            ..Fallen::default()
+        };
+        let all = vec![at("Old", 10), at("New", 20), at("Twin", 10)];
+        assert_eq!(names(all), ["New", "Twin", "Old"]);
+    }
+
     #[test]
     fn deaths_are_appended_and_the_petrified_come_most_recent_first() {
         let dir = std::env::temp_dir().join(format!("warlock-graveyard-{}", std::process::id()));
         let _ = std::fs::remove_dir_all(&dir);
         let store = GraveyardStore::at(dir.clone());
-        assert_eq!(store.count(), 0);
+        assert_eq!(store.read().len(), 0);
         std::fs::create_dir_all(&dir).expect("dir");
         std::fs::write(dir.join(FILE_NAME), FIXTURE_0_11).expect("fixture");
         let stone = |name: &str, when| Fallen {
@@ -330,7 +385,7 @@ name = 12
         // Append-only: what was there is there still, byte for byte.
         let text = std::fs::read_to_string(dir.join(FILE_NAME)).expect("read");
         assert!(text.starts_with(FIXTURE_0_11), "{text}");
-        assert_eq!(store.count(), 5);
+        assert_eq!(store.read().len(), 5);
         let petrified: Vec<String> = (store.petrified().iter()).map(|f| f.name.clone()).collect();
         assert_eq!(petrified, ["Osric", "Brakka", "Eadgyth"]);
         let _ = std::fs::remove_dir_all(&dir);
@@ -343,11 +398,13 @@ name = 12
         let mut w = World::start_run(content, "showcase", None, Some(&spec), Some("Brakka"), true)
             .expect("world");
         assert!(Fallen::of_death(&w, 0).is_none(), "not dead yet");
+        w.apply(&Action::GrantXp(50));
         for _ in 0..4 {
             w.apply(&Action::Afflict("stiffening".into()));
         }
         let fallen = Fallen::of_death(&w, 1_793_318_400).expect("dead");
         assert_eq!(fallen.name, "Brakka");
+        assert_eq!(fallen.xp, 50);
         assert_eq!(
             (fallen.race.as_str(), fallen.class.as_str()),
             ("dwarf", "warrior")

@@ -30,6 +30,13 @@ played them (in UTC). Press `Enter` to resume one, or `Delete` to delete one for
 asks first). A character saved by another version of the game is listed as made by that version.
 It cannot be continued, and Continue skips it, but you can still delete it.
 
+**Graveyard** appears once any character has died. It lists every fallen character, the one with
+the most [experience](experience.md#levels) at the moment of death first: name, race and class,
+level, and experience, then what killed them, where, when (in UTC), and how old they were.
+Characters who died before the game began keeping their experience count as 0 and come last, the
+highest level first. If the list is longer than the screen, the arrow keys or `>` and `<` turn the
+page; `Esc` goes back.
+
 **New run** lets you [create a character](character.md) for [the Ascmearc](ascmearc.md) and starts
 a fresh run with a save of its own. It never touches your other characters.
 
