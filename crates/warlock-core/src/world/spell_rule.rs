@@ -3,7 +3,8 @@
 //!
 //! - **Leech** ([`World::leech`], from `spell_attack`): a share of the harm done comes back.
 //! - **Benison** ([`World::cast_heal_about`], from `cast_heal`): one roll, for the caster and
-//!   each of their allies in the burst about them. Hostiles nothing.
+//!   each of their living allies in the burst about them; every undead in it, friend or foe,
+//!   takes it as harm (`heal_harm.rs`). Living hostiles nothing.
 //! - **Rebuke and Bramble**: `only_tags` ([`World::is_of_tags`]) and `only_terrain`
 //!   ([`World::stands_on`]) filter whom a burst takes; everything else of it stands.
 //! - **Flare**: `only_sighted` ([`World::sees_flash`]) passes the eyeless by: a flash is light.
@@ -80,8 +81,9 @@ impl World {
     }
 
     /// A heal over a burst about the caster (Benison): one roll, back to the caster and every
-    /// ally of theirs in it, each said. Refused (said, `false`) when none of them is hurt.
-    pub(super) fn cast_heal_about(&mut self, cast: &Cast<'_>) -> bool {
+    /// living ally of theirs in it, each said, and harm to every undead in it, friend or foe
+    /// (`heal_harm.rs`). Refused (said, `false`) when none is hurt and no undead is there.
+    pub(super) fn cast_heal_about(&mut self, cast: &Cast<'_>, events: &mut Vec<Event>) -> bool {
         let Some(heal) = cast.roll else {
             return false;
         };
@@ -91,13 +93,19 @@ impl World {
         let level = self.state.current();
         let opaque = |p: Pos| p != here && level.is_opaque(&content, p);
         let cells = burst_cells(here, cast.reach.radius.unwrap_or(1), opaque);
-        let hurt: Vec<ActorId> = (self.state.actors.values())
+        let within: Vec<&Actor> = (self.state.actors.values())
             .filter(|a| a.level == level.id && cells.contains(&a.pos) && !a.in_retinue())
-            .filter(|a| a.id == player || a.ally.as_ref().is_some_and(|x| x.master == player))
-            .filter(|a| a.hp < a.max_hp(&content))
+            .collect();
+        let undead: Vec<ActorId> = (within.iter())
+            .filter(|a| a.id != player && self.is_undead(a))
             .map(|a| a.id)
             .collect();
-        if hurt.is_empty() {
+        let hurt: Vec<ActorId> = (within.iter())
+            .filter(|a| a.id == player || a.ally.as_ref().is_some_and(|x| x.master == player))
+            .filter(|a| a.hp < a.max_hp(&content) && !undead.contains(&a.id))
+            .map(|a| a.id)
+            .collect();
+        if hurt.is_empty() && undead.is_empty() {
             self.say("No one here is hurt.");
             return false;
         }
@@ -113,6 +121,7 @@ impl World {
             self.spell_heals(id, back);
             self.spell_landed(cast, id, back > 0);
         }
+        self.heal_sears_about(cast, (&undead, back, here), events);
         true
     }
 

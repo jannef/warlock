@@ -170,8 +170,9 @@ Some [spells](magic.md#the-spells) do something no other spell does. None of the
 - **Thunderclap** and **Benison** go off around you. They need no aim, and you are at their centre.
   - Thunderclap strikes you with the full roll, as it does everyone at a burst's centre, and leaves
     you [Stunned](status-effects.md#status-stunned) along with the rest. The whole level hears it.
-  - Benison's one roll heals you and every ally of yours within it who is hurt. It does nothing to
-    anyone else, and it is not cast when no one there is hurt.
+  - Benison's one roll heals you and every ally of yours within it who is hurt. It
+    [sears every undead](#healing-harms-the-undead) within it, yours or not. It does nothing to
+    anyone else, and it is not cast when no one there is hurt and no undead is there.
 - **Leech** gives you back half the [hit points](hit-points.md#hit-points) it takes, rounded down,
   never past your maximum. The undead are immune to [necrotic](#spell-types) harm, so they give
   nothing.
@@ -199,6 +200,23 @@ Some [spells](magic.md#the-spells) do something no other spell does. None of the
 - **Cloudburst**, cast under the open sky, brings an hour of [rain](weather.md). It at once puts
   out every fire, and everyone [burning](status-effects.md#burning), under the open sky on the
   level.
+
+## Healing harms the undead
+
+Mend, Cure wounds, and Benison are healing spells. On the undead they work backwards: the roll
+that would close wounds is [fire](#spell-types) harm instead. "The light of mending sears the
+skeleton." Grave feast is not a healing spell: it drains a corpse, so this does not apply to it.
+
+- **A touch** (Mend, Cure wounds) on an undead beside you is an attack. It must hit, as
+  [Cause wounds](magic.md#the-spells) must: your roll against its [Defence](combat.md#defence). A
+  [critical](combat.md#criticals) rolls the harm again. It works on an undead that is not hurt.
+- **Benison** sears every undead within it, yours or not, and heals the living allies there.
+- The harm is the heal's whole roll, grown by your [scores](#how-a-spell-grows) and the spell's
+  rank. It is fire, so creatures that resist fire take less, and it may leave one
+  [burning](status-effects.md#burning).
+- Scrolls and wands of these spells do the same.
+- The living are healed as before, friend or foe.
+- Creatures that heal never heal an undead, and undead creatures cast no healing spells.
 
 ## Zones
 

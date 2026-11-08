@@ -317,7 +317,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
   nothing and costs a `cast`. In step 2, after a summoning, a throw, and a breath, it casts the
   first spell of its list that it has the mana for, its casting not blocked (Silenced, a silent
   vault), off the overworld, and that goes from where it stands: a buff it lacks, on itself; a
-  heal by touch on itself or a friend beside it below half its hit points; a hex at its target
+  heal by touch on itself or a friend beside it below half its hit points (never an undead,
+  whom a heal harms, and an undead caster heals no one: §8e "Spells"); a hex at its target
   if the target lacks the status and its type is not immune to it, in reach; harm in reach. In
   reach is the shape's: a ray or a bolt within its range with a clear line, a touch beside it,
   a burst within range with a clear line and the caster outside its cells (one about the caster:

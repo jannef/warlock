@@ -397,6 +397,15 @@ developer notes (CLAUDE.md, `docs/dev/`).
     (one heal roll for the caster and their allies in a burst about them, two casts' time); 14
     Rebuke (fire on the undead in a burst alone, friend or foe, and Frightened 3); 20 Cloudburst
     (an hour of rain under the open sky, putting out what burns there).
+    **Healing harms the undead** (#1278): a healing spell (a `heal` that feeds on no corpse:
+    Mend, Cure wounds, Benison; never Grave feast) that lands on a creature tagged `undead` does
+    its roll (its rung, rank, and hooks) as fire harm instead ("The light of mending sears the
+    skeleton."), fire's resistances and rule standing (no holy type, as Rebuke). A touch on an
+    undead beside the caster is an attack (the touch's roll against its Defence, a critical
+    rolling again); Benison sears every undead in its burst, friend or foe, and is cast with only
+    undead there. The living are healed as before, friend or foe. Scrolls, wands, and miscasts
+    follow the cast path's rules. A creature healer heals no undead, and an undead caster casts no
+    heal (§8b "Creature spells"). No player race is undead.
     The potions wave 2 (#1227, its design §9.3) adds 8 Pitch fire (a fire burst of radius 1 that
     leaves a pool of fire, a `fire` zone of 6 turns, on its cells: Balefire's zone in a burst;
     from its scroll and the pitch fire flask only). No spell protects its

@@ -174,7 +174,8 @@ cast path shares.
     critical repeats the whole roll stage. A heal rolls the same way. The mishap backfire casts
     the spell's base, no hooks (`learn.rs::backfire_spell`).
   - **Kinds**: buff (its status on the caster), heal (self: the caster, refused when whole;
-    touch: the creature at the adjacent cell, or the caster), cleanse (as the placeholder's),
+    touch: the creature at the adjacent cell, or the caster; an undead there is struck instead,
+    "Healing harms the undead" below), cleanse (as the placeholder's),
     hex (the hostile the player sees at the cell, `hex_target`), utility (Identify, below;
     any other: nothing yet), damage
     (by shape: `Shape::Burst` → `burst_center` + `cast_burst`; `Line` → `bolt_line` +
@@ -1045,7 +1046,22 @@ the shape too and refuses each field off its kind and shape).
 - **A heal over an area** (Benison) is only a burst about its caster (`spell_def` refuses any other
   area heal): `cast_heal_about`, one roll for the caster and every ally of theirs
   (`Ally::master`, not in the retinue) in the burst who is hurt, in actor id order, each through
-  `World::spell_heals` (the touch heal's tail, said). Refused, no mana, no time, when none is hurt.
+  `World::spell_heals` (the touch heal's tail, said); every undead in it, friend or foe, is seared
+  (below). Refused, no mana, no time, when none is hurt and no undead is there.
+- **Healing harms the undead** (#1278, `world/heal_harm.rs`): `SpellData::heals_wounds` (kind
+  `heal`, not `aims_corpse`: Mend, Cure wounds, Benison; Grave feast drains, it does not heal)
+  decides a healing spell from its effect, no data field. On an actor whose creature carries the
+  `undead` tag (`heal_harm::UNDEAD`, `World::is_undead`) the heal is `heal_harm::harm_of(def)`:
+  the same spell as a `damage` spell of the `fire` type (no holy type, the owner's Q2, as Rebuke),
+  noun "light of mending", verb "sears". A touch (`cast_heal` → `World::heal_sears`) goes through
+  `cast_single` with that def: the touch's attack roll, `Cast::roll` (rung, rank, hooks) as the
+  dice, `Cast::own_skills` for the aim, reflection as `cast_damage`'s; never refused as "not
+  hurt". Benison (`cast_heal_about` → `World::heal_sears_about`) strikes each undead in its cells
+  (the caster aside) through `spell_hurts` at the one roll, Evasion halving it, then `spell_lands`
+  says it and lays fire's rider. Scrolls and wands reach the same code through `perform`; a cast
+  paid in mana makes its miscast check as any other. Creatures: `creature_cast::wounded_friend`
+  returns none for an undead caster and skips undead friends, so no creature heals an undead. No
+  race is undead (the player's creature carries no such tag). Tests: `heal_harm_tests.rs`.
 - **`leech`** (Leech; a percent, a single-target damage spell's): `spell_strikes` now returns the hit
   points it took (after resistance and the bite; a kill's too), and `spell_attack`, the one place
   a single target's roll is made, gives that share, rounded down, back to the striker through

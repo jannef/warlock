@@ -157,7 +157,12 @@ impl World {
     /// first friend beside it (lowest id) below half theirs.
     fn wounded_friend(&self, id: ActorId) -> Option<ActorId> {
         let me = &self.state.actors[&id];
-        let hurt = |a: &super::Actor| a.hp * 2 < a.max_hp(&self.content);
+        // A heal harms the undead (`heal_harm.rs`): an undead caster heals no one, and no one
+        // heals an undead.
+        if self.is_undead(me) {
+            return None;
+        }
+        let hurt = |a: &super::Actor| a.hp * 2 < a.max_hp(&self.content) && !self.is_undead(a);
         if hurt(me) {
             return Some(id);
         }
