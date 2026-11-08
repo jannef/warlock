@@ -24,3 +24,18 @@ noise = { sound = "explosion", loudness = 200 }
 [spell.grows]
 damage = "intelligence 16 12d6, 19 14d6, 22 16d6, 25 16d6+4"
 range = "willpower 14 11, 18 12"
+
+# What rereading its grimoire adds, rank by rank (spec §8 "Spells": "Ranks"; README.toml
+# `[spell.ranks]`): its great price is what eases most: at rank 10 three tenths off the
+# mana, two dice more, every die a side bigger, 1s rolled again, +2 on the roll, and a cell
+# farther (its radius is the bursts' widest already).
+[spell.ranks]
+2 = { bonus = 2 }
+3 = { cells = 1 }
+4 = { mana_off = 10 }
+5 = { reroll = 1 }
+6 = { dice = 1 }
+7 = { mana_off = 10 }
+8 = { sides = 1 }
+9 = { dice = 1 }
+10 = { mana_off = 10 }

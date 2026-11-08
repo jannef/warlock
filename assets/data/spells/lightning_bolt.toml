@@ -23,3 +23,18 @@ noise = { sound = "thunder", loudness = 120 }
 [spell.grows]
 damage = "intelligence 13 6d6, 16 8d6, 19 10d6, 25 10d6+2"
 length = "willpower 14 9, 18 10, 22 11, 26 12"
+
+# What rereading its grimoire adds, rank by rank (spec §8 "Spells": "Ranks"; README.toml
+# `[spell.ranks]`): the bolt reaches farther above all: at rank 10 four cells longer,
+# 1s rolled again, +2 on the roll, a die more, every die a side bigger, and a fifth off the
+# mana.
+[spell.ranks]
+2 = { cells = 1 }
+3 = { reroll = 1 }
+4 = { bonus = 2 }
+5 = { cells = 1 }
+6 = { mana_off = 10 }
+7 = { dice = 1 }
+8 = { cells = 2 }
+9 = { mana_off = 10 }
+10 = { sides = 1 }

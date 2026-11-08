@@ -25,3 +25,18 @@ noise = { sound = "thunder", loudness = 150 }
 [spell.grows]
 damage = "presence 13 4d6, 19 4d6+2"
 radius = "willpower 18 2"
+
+# What rereading its grimoire adds, rank by rank (spec §8 "Spells": "Ranks"; README.toml
+# `[spell.ranks]`): it starts weak (2d6 until Presence 13) and grows the most of the
+# evocations: at rank 10 two dice more, every die two sides bigger, 1s rolled again, +1 on the
+# roll, a cell wider, three tenths off the mana, and a quarter off the casting time.
+[spell.ranks]
+2 = { bonus = 1 }
+3 = { dice = 1 }
+4 = { mana_off = 15 }
+5 = { radius = 1 }
+6 = { sides = 2 }
+7 = { reroll = 1 }
+8 = { dice = 1 }
+9 = { time_off = 25 }
+10 = { mana_off = 15 }

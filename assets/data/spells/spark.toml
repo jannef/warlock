@@ -21,3 +21,18 @@ noise = { sound = "chanting", loudness = 20 }
 [spell.grows]
 damage = "intelligence 16 2d6"
 range = "willpower 14 6"
+
+# What rereading its grimoire adds, rank by rank (spec §8 "Spells": "Ranks"; README.toml
+# `[spell.ranks]`): the cheap crackle grows hot and long: at rank 10 every die two sides bigger,
+# 1s rolled again, a die more, +2 on the roll, two cells farther, a quarter off the mana, and a
+# fifth off the casting time.
+[spell.ranks]
+2 = { bonus = 1 }
+3 = { cells = 1 }
+4 = { sides = 2 }
+5 = { mana_off = 25 }
+6 = { reroll = 1 }
+7 = { cells = 1 }
+8 = { dice = 1 }
+9 = { time_off = 20 }
+10 = { bonus = 1 }

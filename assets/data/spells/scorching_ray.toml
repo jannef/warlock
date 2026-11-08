@@ -21,3 +21,18 @@ noise = { sound = "chanting", loudness = 30 }
 [spell.grows]
 damage = "intelligence 13 4d6, 16 6d6, 19 8d6, 25 6d6+2d10"
 range = "willpower 14 9, 18 10"
+
+# What rereading its grimoire adds, rank by rank (spec §8 "Spells": "Ranks"; README.toml
+# `[spell.ranks]`): an attack ray's table: at rank 10 +3 to hit, criticals from 20,
+# 1s rolled again, every die a side bigger, a die more, +2 on the roll, a cell farther, and 15 %
+# off the mana.
+[spell.ranks]
+2 = { to_hit = 1 }
+3 = { bonus = 2 }
+4 = { cells = 1 }
+5 = { threat = 1 }
+6 = { reroll = 1 }
+7 = { to_hit = 2 }
+8 = { dice = 1 }
+9 = { mana_off = 15 }
+10 = { threat = 1, sides = 1 }
