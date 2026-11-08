@@ -4,6 +4,10 @@ Lost [hit points](hit-points.md#hit-points) come back by themselves over time. [
 (`b`) is the quickest way to let that time pass. A [potion of healing](potions.md#potion-of-healing)
 brings some back at once (see [Potions](potions.md)).
 
+The healing spells, [Mend](magic.md#spell-mend), [Cure wounds](magic.md#spell-cure-wounds), and
+[Benison](magic.md#spell-benison), bring some back too. On the undead they
+[harm instead](spellcasting.md#healing-harms-the-undead).
+
 ## How fast
 
 At the usual pace you get a [hit point](hit-points.md#hit-points) back every so often. The tougher

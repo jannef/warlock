@@ -244,6 +244,7 @@ above.
 | Burning | `status-effects.md#burning` |
 | Corroded | `status-effects.md#corroded` |
 | How a spell resolves (attack, auto, area, touch) | `spellcasting.md#how-a-spell-finds-its-target` |
+| Healing spells on the undead (harm instead of healing) | `spellcasting.md#healing-harms-the-undead` |
 | Mishap | `magic.md#learning-spells-from-grimoires` |
 | Miscast, the Spellcraft check on casting, the miscast table | `miscasts.md#the-check`, `miscasts.md#the-miscast-table` |
 | Learning a spell from a grimoire, overreach | `magic.md#learning-spells-from-grimoires` |

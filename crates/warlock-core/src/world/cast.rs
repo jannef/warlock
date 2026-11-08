@@ -307,7 +307,7 @@ impl World {
         let done = match cast.def.kind {
             SpellPurpose::Buff => self.cast_buff(cast, events),
             SpellPurpose::Heal if cast.def.aims_corpse() => self.cast_feast(cast, at),
-            SpellPurpose::Heal => self.cast_heal(cast, at),
+            SpellPurpose::Heal => self.cast_heal(cast, at, events),
             SpellPurpose::Cleanse => self.cleanse(cast, events),
             SpellPurpose::Hex => self.cast_hex(cast, at, events),
             SpellPurpose::Damage => self.cast_damage(cast, at, events),
@@ -460,10 +460,10 @@ impl World {
     }
 
     /// A heal: its dice back to the caster (self), or to the one it touches
-    /// (a touch: the cell next to the caster, or their own).
-    fn cast_heal(&mut self, cast: &Cast<'_>, at: Option<Pos>) -> bool {
+    /// (a touch: the cell next to the caster, or their own); on an undead, harm (`heal_harm.rs`).
+    fn cast_heal(&mut self, cast: &Cast<'_>, at: Option<Pos>, events: &mut Vec<Event>) -> bool {
         if cast.def.about_caster() {
-            return self.cast_heal_about(cast);
+            return self.cast_heal_about(cast, events);
         }
         let player = self.state.player;
         let target = match (cast.def.shape, at) {
@@ -483,6 +483,9 @@ impl World {
             }
             _ => player,
         };
+        if let Some(at) = at.filter(|_| self.heal_hurts(target)) {
+            return self.heal_sears(cast, at, events);
+        }
         let content = self.content.clone();
         let Some(actor) = self.state.actors.get(&target) else {
             return false;
@@ -1145,6 +1148,12 @@ struct Outcome {
 }
 
 impl<'c> Cast<'c> {
+    /// The school and caster style it is cast in when paid in mana (the caster's own spell: its
+    /// aim and triggers), else none (a scroll, a wand, a creature's, a flask's).
+    pub(super) fn own_skills(&self) -> Option<AttackSkills> {
+        matches!(self.pay, Pay::Mana(_)).then_some(self.skills)
+    }
+
     /// Creature `caster`'s own cast of `spell` (`creature_cast.rs`): its
     /// reach, roll, and degrees at its own stats, as the player's own cast is at theirs; paid
     /// by the creature before it goes off.

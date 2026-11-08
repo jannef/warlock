@@ -870,6 +870,13 @@ impl SpellData {
         self.effect.corpse.is_some()
     }
 
+    /// Whether it is a healing spell (Cure wounds, Mend, Benison): a `heal` that does not feed
+    /// on a corpse (Grave feast drains life, it does not heal). One on an undead harms it
+    /// (`world/heal_harm.rs`).
+    pub fn heals_wounds(&self) -> bool {
+        self.kind == SpellPurpose::Heal && !self.aims_corpse()
+    }
+
     /// Whether it asks for a stack the caster carries when cast (Identify).
     pub fn aims_item(&self) -> bool {
         self.effect.identify

@@ -179,6 +179,7 @@ mod guild;
 mod hash;
 mod haunt;
 mod heal;
+mod heal_harm;
 mod hearing;
 mod heirloom;
 mod hoard;
@@ -1825,6 +1826,8 @@ mod guild_tests;
 mod guild_wanted_tests;
 #[cfg(test)]
 mod haunt_tests;
+#[cfg(test)]
+mod heal_harm_tests;
 #[cfg(test)]
 mod heal_tests;
 #[cfg(test)]
