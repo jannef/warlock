@@ -15,7 +15,7 @@ damage = "2d4"
 effect = { status = "bleeding", severity = 2 }
 
 [spell.cast]
-effect = "frost_ray"
+effect = "pale_ray"
 noun = "flaying"
 verb = "flays"
 noise = { sound = "chanting", loudness = 20 }

@@ -14,7 +14,7 @@ damage = "4d6"
 effect = { leech = 50 }
 
 [spell.cast]
-effect = "frost_ray"
+effect = "pale_ray"
 noun = "leeching ray"
 verb = "drains"
 noise = { sound = "chanting", loudness = 20 }

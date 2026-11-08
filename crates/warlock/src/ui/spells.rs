@@ -9,7 +9,9 @@
 //!   rises as it fades (its `impact` and `linger` particles).
 //! - A **bolt** (a lightning bolt) draws out along its path and flashes `flashes` times: a jagged
 //!   line of line glyphs that changes shape with every flash and flicker, forking now and then,
-//!   then a dying afterglow.
+//!   then a dying afterglow. A **ray** (a bolt with a `head`: Ray of frost) is straight instead: an
+//!   icicle whose head flies along the line, the shaft behind it fading over its `tail` seconds
+//!   (its `impact` particles, rime, settle as the head passes each cell), striking once at the end.
 //! - Both are light themselves (drawn unlit, glowing, on top of everything else on the map), light
 //!   the scene ([`SpellLights`], visual only), and while they peak darken everything else
 //!   (`darken`, with the `screen_fades` effect). Landing near the player they shake the view
@@ -31,7 +33,8 @@ use crate::render::particles::{self, Particle, Source, gradient};
 use crate::render::post::emissive;
 use crate::render::spells::{
     self as model, JAG, Phase, Stroke, Timeline, bolt_strokes, burst_distance, burst_heat,
-    heat_glyph, shake_amplitude, shake_offset, shape_slot, still_heat, strength,
+    heat_glyph, ray_line, ray_share, ray_strokes, ray_tail, shake_amplitude, shake_offset,
+    shape_slot, still_heat, strength,
 };
 use crate::render::{Effects, VisualTime};
 use crate::settings::{Role, Settings};
@@ -53,6 +56,10 @@ const FAINT: f32 = 0.02;
 const FILL_FULL: f32 = 0.5;
 /// A burst's body is drawn a little larger than its cell, so neighbors blend without seams.
 const FILL_SCALE: f32 = 1.1;
+/// How long a ray's thin point is behind its head, in cell widths on screen.
+const TIP: f32 = 1.0;
+/// How large a ray's head glyph is drawn: a glint at the point, not an arrowhead.
+const HEAD_SCALE: f32 = 0.6;
 /// How bright a bolt's still flash is (the `motion` effect off), as a strength.
 const STILL_BOLT: f32 = 0.8;
 
@@ -264,6 +271,16 @@ impl Spells {
                     }
                 }
                 (SpellShape::Burst { center, .. }, _) => add(cell(*center)),
+                (SpellShape::Bolt { path }, phase) if def.head.is_some() => {
+                    // A ray: from its head as it flies, then from where it struck.
+                    if let Some(line) = ray_line(c.origin, path) {
+                        let x = match phase {
+                            Phase::Travel(x) => x,
+                            _ => 1.0,
+                        };
+                        add(line.0.lerp(line.1, x) - 0.5);
+                    }
+                }
                 (SpellShape::Bolt { path }, phase) => {
                     let shown = match phase {
                         Phase::Travel(x) => ((x * path.len() as f32).ceil() as usize).max(1),
@@ -424,6 +441,11 @@ pub(super) fn emit(
                     burst_cell(&mut put, p, heat, alpha, def, &glyphs_of, &glow, paint);
                 }
             }
+            (SpellShape::Bolt { path }, true) if def.head.is_some() => {
+                ray(
+                    &mut put, c, def, path, age, aspect, &glyphs_of, &glow, paint,
+                );
+            }
             (SpellShape::Bolt { path }, true) => {
                 let k = strength(def, phase);
                 if k <= 0.0 {
@@ -448,7 +470,12 @@ pub(super) fn emit(
                     bolt_strokes(c.origin, path, aspect, JAG, branches, c.key, slot, open);
                 for s in strokes {
                     if s.index < shown && (s.fork || c.shows(path[s.index])) {
-                        bolt_stroke(&mut put, s, k, def, &glyphs_of, &glow, paint, aspect);
+                        let ch = match (s.fork, glyphs_of.last()) {
+                            (true, Some(&fork)) => fork,
+                            _ => glyphs_of[0],
+                        };
+                        let k = if s.fork { k * FORK } else { k };
+                        bolt_stroke(&mut put, s, ch, k, def, &glow, paint, aspect);
                     }
                 }
             }
@@ -467,11 +494,22 @@ pub(super) fn emit(
                     }
                     SpellShape::Bolt { path } => {
                         let never = |_: Pos| false;
-                        for s in bolt_strokes(c.origin, path, aspect, 0.0, 0.0, c.key, 0, never) {
+                        let strokes = if def.head.is_some() {
+                            ray_strokes(c.origin, path, aspect)
+                        } else {
+                            bolt_strokes(c.origin, path, aspect, 0.0, 0.0, c.key, 0, never)
+                        };
+                        let (ch, k) = (glyphs_of[0], STILL_BOLT);
+                        for s in strokes {
                             if c.shows(path[s.index]) {
-                                let k = STILL_BOLT;
-                                bolt_stroke(&mut put, s, k, def, &glyphs_of, &glow, paint, aspect);
+                                bolt_stroke(&mut put, s, ch, k, def, &glow, paint, aspect);
                             }
+                        }
+                        // A ray's head where it struck.
+                        if let (Some(head), Some(line)) = (def.head, ray_line(c.origin, path))
+                            && path.last().is_some_and(|&p| c.shows(p))
+                        {
+                            ray_head(&mut put, head, line, 1.0, k, def, &glow, paint, aspect);
                         }
                     }
                 }
@@ -508,30 +546,109 @@ fn burst_cell(
     );
 }
 
-/// Draws one stroke of a bolt at strength `k`: its line glyph (its forks' for a fork) turned along
-/// it and stretched to its length, white at its brightest, through blue to violet as it dims;
-/// forks dimmer. Cells are `aspect` times taller than wide.
+/// Draws one stroke of a bolt at strength `k` with line glyph `ch` (its line's, or its forks'),
+/// turned along it and stretched to its length, white at its brightest, through blue to violet
+/// as it dims. Cells are `aspect` times taller than wide.
 fn bolt_stroke(
     put: &mut impl FnMut(Vec2, char, LinearRgba, f32, f32),
     s: Stroke,
+    ch: char,
     k: f32,
     def: &EffectDef,
-    glyphs: &[char],
     glow: &impl Fn(LinearRgba, f32) -> LinearRgba,
     paint: impl Fn(Rgb) -> Rgb,
     aspect: f32,
 ) {
-    let k = if s.fork { k * FORK } else { k };
     let mut color = glow(gradient(&def.colors, 1.0 - k, paint), k);
     color.alpha = (k / 0.1).min(1.0);
-    let ch = match (s.fork, glyphs.last()) {
-        (true, Some(&fork)) => fork,
-        _ => glyphs[0],
-    };
     // In cell widths on screen: a glyph is one cell width across at scale 1.
     let run = (s.to - s.from) * Vec2::new(1.0, aspect);
     let mid = (s.from + s.to) * 0.5;
     put(mid - 0.5, ch, color, run.length(), run.y.atan2(run.x));
+}
+
+/// Draws ray `c` (a bolt with a `head`, effect `def`) along `path` `age` seconds after it began:
+/// its straight shaft from the caster to its head, each stretch fading over the `tail` seconds
+/// after the head passed it (in its line glyph, then its tail's as it dims, and thin at its
+/// point), and the head (small: a glint),
+/// flying along the line, then striking at its end and dying down with the impact's flash.
+fn ray(
+    put: &mut impl FnMut(Vec2, char, LinearRgba, f32, f32),
+    c: &Cast,
+    def: &EffectDef,
+    path: &[Pos],
+    age: f32,
+    aspect: f32,
+    glyphs: &[char],
+    glow: &impl Fn(LinearRgba, f32) -> LinearRgba,
+    paint: impl Fn(Rgb) -> Rgb + Copy,
+) {
+    let (Some(head), Some(line)) = (def.head, ray_line(c.origin, path)) else {
+        return;
+    };
+    let phase = c.timeline.phase(age);
+    let x = match phase {
+        Phase::Before | Phase::Done => return,
+        Phase::Travel(x) => x,
+        _ => 1.0,
+    };
+    // Whatever is left of it is gone by the end of the linger.
+    let fade = match phase {
+        Phase::Linger(l) => 1.0 - l,
+        _ => 1.0,
+    };
+    let tip = line.0.lerp(line.1, x);
+    let span = ((line.1 - line.0) * Vec2::new(1.0, aspect)).length();
+    for s in ray_strokes(c.origin, path, aspect) {
+        let from = ray_share(line, s.from);
+        if from >= x || !c.shows(path[s.index]) {
+            continue;
+        }
+        let to = ray_share(line, s.to);
+        // Up to the head, and how long ago the head passed its end.
+        let (end, since) = if to <= x {
+            (s.to, age - to * c.timeline.travel)
+        } else {
+            (tip, 0.0)
+        };
+        let k = ray_tail(since, def.tail) * fade;
+        if k <= FAINT {
+            continue;
+        }
+        // Thin at its point and in its dimming tail, solid between.
+        let point = (x - to) * span < TIP;
+        let ch = if k >= 0.5 && !point {
+            glyphs[0]
+        } else {
+            glyphs[glyphs.len() - 1]
+        };
+        let s = Stroke { to: end, ..s };
+        bolt_stroke(put, s, ch, k, def, glow, paint, aspect);
+    }
+    let home = Pos::new(tip.x.floor() as i32, tip.y.floor() as i32);
+    let k = strength(def, phase);
+    if c.shows(home) && k > FAINT {
+        ray_head(put, head, line, x, k, def, glow, paint, aspect);
+    }
+}
+
+/// Draws a ray's `head` glyph `x` (0 to 1) along its `line` at strength `k`, turned along it.
+fn ray_head(
+    put: &mut impl FnMut(Vec2, char, LinearRgba, f32, f32),
+    head: char,
+    line: (Vec2, Vec2),
+    x: f32,
+    k: f32,
+    def: &EffectDef,
+    glow: &impl Fn(LinearRgba, f32) -> LinearRgba,
+    paint: impl Fn(Rgb) -> Rgb,
+    aspect: f32,
+) {
+    let mut color = glow(gradient(&def.colors, 1.0 - k, paint), k);
+    color.alpha = (k / 0.1).min(1.0);
+    let run = (line.1 - line.0) * Vec2::new(1.0, aspect);
+    let at = line.0.lerp(line.1, x);
+    put(at - 0.5, head, color, HEAD_SCALE, run.y.atan2(run.x));
 }
 
 /// The particles of cast `c` (effect `def`) `age` seconds after it began: its projectile's
@@ -558,6 +675,11 @@ fn particles_of(
         SpellShape::Burst { center, .. } => Some(center),
         SpellShape::Bolt { .. } => None,
     };
+    // A ray's head reaches each cell in turn.
+    let ray = match &c.shape {
+        SpellShape::Bolt { path } if def.head.is_some() => ray_line(c.origin, path),
+        _ => None,
+    };
     for (n, e) in def.particles.iter().enumerate() {
         let key = c.key ^ ((n as u64) << 32);
         match e.on {
@@ -571,13 +693,17 @@ fn particles_of(
             }
             ParticleTrigger::Impact | ParticleTrigger::Linger => {
                 for &p in &c.cells {
-                    // A burst reaches its cells as it grows; a bolt strikes them all at once.
+                    // A burst reaches its cells as it grows; a ray's head as it passes them; a
+                    // bolt strikes them all at once.
+                    let passes = |line| ray_share(line, cell(p) + 0.5) * c.timeline.travel;
                     let reach = center.map_or(0.0, |o| {
                         let d = burst_distance(p.x - o.x, p.y - o.y, aspect);
                         def.grow * (d / edge).min(1.0)
                     });
                     let at = match e.on {
-                        ParticleTrigger::Impact if c.animated => c.timeline.impact_start() + reach,
+                        ParticleTrigger::Impact if c.animated => {
+                            ray.map_or(c.timeline.impact_start() + reach, passes)
+                        }
                         ParticleTrigger::Impact => 0.0,
                         _ => c.timeline.linger_start(),
                     };
@@ -696,6 +822,34 @@ mod tests {
         alone.casts.push(bolt.clone());
         let lit = alone.lights(&content, bolt.timeline.impact_start() + 0.01, true);
         assert_eq!(lit.lights.len(), path.len() / 2 + path.len() % 2);
+    }
+
+    #[test]
+    fn a_ray_lights_its_head_as_it_flies_and_lays_rime_as_it_passes() {
+        let mut world = arena();
+        let spells = cast_of(&mut world, "effect:frost_ray@21,17>36,17", 0.0, false, true);
+        let content = world.content().clone();
+        let c = &spells.casts[0];
+        let def = c.def(&content);
+        assert!(
+            def.head.is_some() && def.tail > 0.0,
+            "Ray of frost's is a ray"
+        );
+        assert!(
+            c.timeline.travel > 0.2,
+            "its head flies at a speed the eye can follow"
+        );
+        // One light, at its head: near the caster early, near the end late.
+        let early = spells.lights(&content, c.timeline.travel * 0.1, true);
+        let late = spells.lights(&content, c.timeline.travel * 0.9, true);
+        assert_eq!((early.lights.len(), late.lights.len()), (1, 1));
+        assert!(early.lights[0].at.x < 24.0 && late.lights[0].at.x > 33.0);
+        // Rime only where the head has been.
+        let paint = |c: Rgb| c;
+        let mut out = Vec::new();
+        particles_of(c, def, c.timeline.travel * 0.5, 2.0, paint, &mut out);
+        assert!(!out.is_empty());
+        assert!(out.iter().all(|p| p.pos.x < 30.0), "none ahead of the head");
     }
 
     #[test]

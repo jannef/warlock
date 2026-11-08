@@ -312,7 +312,8 @@ cast path shares.
     Burning hands 5 → 6, Scorching ray 6 → 7, Web 11 → 13, Blight 14 → 17, Flame 26 → 29. New statuses: `drowsy` (cost 300), `webbed`
     (blocks `step`), `hasted` (cost 75: `COST_PERCENT` is now 50 to 1000, and `spell_def`
     refuses a status below 100 on anything but a buff, so only the caster is hastened and the
-    rest batching stays exact), `barkskin` (Dodge +2). New effects: `frost_ray`, `spark` (bolts).
+    rest batching stays exact), `barkskin` (Dodge +2). New effects: `frost_ray`, `spark` (bolts; `frost_ray` a ray since #1249, Flay and Leech on
+    `pale_ray`, its old line).
   - **The data-only fourteen** (#998; the spell types design §7 entries 5, 7 to 10, 12, 13, 17,
     19, 20, 22, 23, 27, 28; tests `world/spell_data_tests.rs` and the content tables in
     `content/spell_def.rs`): 4 Nightsight (buff, `cat_eyed`, one degree so no ladder); 5 Acid

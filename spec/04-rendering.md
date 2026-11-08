@@ -250,6 +250,11 @@ glow, barely perceptible distortion, short fades.
     each, the corners pushed sideways by a slow wander and a sharp jitter) that takes a new shape
     with every flash and flicker and forks now and then into the cells the player sees, very
     bright blue-white, then a violet afterglow.
+  - A **ray of frost** (`frost_ray`, a bolt with a `head`: a ray) is straight, never jagged: a
+    long icicle whose sharp white point (`▶`, turned along the line) flies from the caster to
+    the end at a speed the eye can follow, on a pale solid shaft (`━`) that thins (`─`) and
+    fades behind it over a short tail, rime (`·'*`) settling where it passed; it strikes once at
+    the end and dies down. Reduced effects: a still flash of the straight line and its point.
   - A **frost burst** (`frost_burst`, a burst; §5 "Ice") is the quiet one: a cold flash of rime
     (`✳*·`, white to deep blue, a thin glowing body, a little cold light) over the cells it
     reached, with a few frost crystals drifting down as it fades; no darkening and no shake. The

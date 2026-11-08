@@ -348,6 +348,65 @@ pub fn bolt_strokes(
     strokes
 }
 
+/// A ray's line (a bolt with a `head`, spec §4.8): straight from the center of `origin` to the
+/// center of the path's last cell, never through the cell centers between (the path may step),
+/// in level cells; `None` without a path.
+pub fn ray_line(origin: Pos, path: &[Pos]) -> Option<(Vec2, Vec2)> {
+    let center = |p: Pos| Vec2::new(p.x as f32, p.y as f32) + 0.5;
+    let last = path.last().copied()?;
+    let (from, to) = (center(origin), center(last));
+    (from != to).then_some((from, to))
+}
+
+/// How far along the ray `line` point `at` is, 0 (its origin's center) to 1 (its end).
+pub fn ray_share(line: (Vec2, Vec2), at: Vec2) -> f32 {
+    let way = line.1 - line.0;
+    ((at - line.0).dot(way) / way.length_squared().max(f32::EPSILON)).clamp(0.0, 1.0)
+}
+
+/// The strokes of a ray from `origin` along `path`: its straight [`ray_line`] cut into strokes
+/// about a cell wide on screen (cells `aspect` times taller than wide), each belonging to the
+/// path cell nearest its middle, so it shows when that cell does.
+pub fn ray_strokes(origin: Pos, path: &[Pos], aspect: f32) -> Vec<Stroke> {
+    let Some((from, to)) = ray_line(origin, path) else {
+        return Vec::new();
+    };
+    let screen = Vec2::new(1.0, aspect.max(f32::EPSILON));
+    let n = ((to - from) * screen).length().round().max(1.0) as usize;
+    let at = |k: usize| from.lerp(to, k as f32 / n as f32);
+    let nearest = |v: Vec2| {
+        (path.iter().enumerate())
+            .map(|(i, p)| {
+                (
+                    i,
+                    (Vec2::new(p.x as f32, p.y as f32) + 0.5 - v).length_squared(),
+                )
+            })
+            .fold((0, f32::MAX), |best, x| if x.1 < best.1 { x } else { best })
+            .0
+    };
+    (0..n)
+        .map(|k| Stroke {
+            from: at(k),
+            to: at(k + 1),
+            index: nearest((at(k) + at(k + 1)) * 0.5),
+            fork: false,
+        })
+        .collect()
+}
+
+/// How bright a stretch of a ray's line is `since` seconds after its head passed it, with a
+/// `tail` of that many seconds: full until the head passes, then fading to nothing.
+pub fn ray_tail(since: f32, tail: f32) -> f32 {
+    if since <= 0.0 {
+        1.0
+    } else if tail <= 0.0 {
+        0.0
+    } else {
+        (1.0 - since / tail).clamp(0.0, 1.0).powi(2)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -545,5 +604,37 @@ mod tests {
         let walls = bolt_strokes(origin, &path, 2.0, JAG, 1.0, 1, 0, |p: Pos| p.y == 5);
         assert!(walls.iter().all(|s| !s.fork || s.to.y.floor() == 5.0));
         assert!(bolt_strokes(origin, &[], 2.0, JAG, 1.0, 1, 0, open).is_empty());
+    }
+
+    #[test]
+    fn a_ray_runs_straight_and_its_tail_fades_behind_its_head() {
+        // A path that steps (two cells across for each one down) still makes one straight line.
+        let path: Vec<Pos> = (1..=8).map(|x| Pos::new(x, 5 + x / 2)).collect();
+        let origin = Pos::new(0, 5);
+        let strokes = ray_strokes(origin, &path, 2.0);
+        let (from, to) = ray_line(origin, &path).expect("a line");
+        assert_eq!((from, to), (Vec2::new(0.5, 5.5), Vec2::new(8.5, 9.5)));
+        let way = (to - from).normalize();
+        for s in &strokes {
+            let off = (s.to - from).perp_dot(way).abs();
+            assert!(off < 1e-4, "off the line by {off}");
+            assert!(s.index < path.len());
+        }
+        assert_eq!(strokes[0].from, from);
+        assert_eq!(strokes.last().map(|s| s.to), Some(to));
+        for pair in strokes.windows(2) {
+            assert_eq!(pair[0].to, pair[1].from, "one connected line");
+            assert!(pair[0].index <= pair[1].index, "in order along the path");
+        }
+        assert_eq!(strokes.last().map(|s| s.index), Some(path.len() - 1));
+        assert_eq!(ray_share((from, to), from), 0.0);
+        assert_eq!(ray_share((from, to), to), 1.0);
+        assert!((ray_share((from, to), from.lerp(to, 0.25)) - 0.25).abs() < 1e-5);
+        assert!(ray_strokes(origin, &[], 2.0).is_empty());
+        // Full until the head passes, then fading to nothing over the tail.
+        assert_eq!(ray_tail(-0.1, 0.3), 1.0);
+        assert!(ray_tail(0.1, 0.3) < 1.0 && ray_tail(0.1, 0.3) > ray_tail(0.2, 0.3));
+        assert_eq!(ray_tail(0.3, 0.3), 0.0);
+        assert_eq!(ray_tail(0.1, 0.0), 0.0);
     }
 }

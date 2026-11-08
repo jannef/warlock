@@ -870,7 +870,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
   hottest first, at least one; bolts: the line glyph, then the forks', one or two),
   `projectile` (bursts), `colors` (hottest first, at least one), `glow` and `fill` (bursts: the
   opacity of each cell's glowing body) and `branches` (bolts: the chance of a fork at each
-  corner) from 0 to 1, optional `light = { color = [r, g, b], radius }` (255 = fully lit),
+  corner) from 0 to 1, `head` (bolts: a ray's head glyph; with one the bolt is a ray: straight,
+  its head flying along it, no `branches`, its `glyphs` the shaft's then the fading tail's, its
+  `impact` particles as the head passes each cell) and `tail` (rays: seconds each stretch fades
+  after the head passed it), optional `light = { color = [r, g, b], radius }` (255 = fully lit),
   `darken = { amount, seconds }` (the renderer dims at most 0.9), `shake = { pixels, radius,
   seconds }`, and `[[effect.particles]]` emitters on `impact`, `linger`, or (with a
   `projectile`) `flight`. Every glyph joins the atlas. §4.8 "Spell effects".
