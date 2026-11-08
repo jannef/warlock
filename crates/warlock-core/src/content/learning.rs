@@ -32,8 +32,14 @@
 //! with any, is lost); `drain` (`stat` or `"random"`, `points`, `difficulty`: a
 //! Willpower check or the points are lost for good); `summon` (`creature`, hostile, next to the
 //! reader); `learn` (the spell is learned anyway); `mark` (`stat`: a training mark more).
+//!
+//! The miscast table (`data/miscasts/`, `content/miscast.rs`) writes its entries' effects the
+//! same way ([`resolve_effect`]), with kinds of its own: `harm` (`dice`, `damage`), `refund`,
+//! `twice`, `surge`, `swap`, `boon` (`status`, `severity`), and `backfire`'s `full`; `learn` is
+//! the study's only.
 
-use super::{Content, ContentError, CreatureId, StatusId, duplicate_id};
+use super::{Content, ContentError, CreatureId, DamageTypeId, StatusId, duplicate_id};
+use crate::dice::Dice;
 use crate::stats::Stat;
 use serde::Deserialize;
 use std::collections::BTreeMap;
@@ -149,7 +155,8 @@ impl Band {
     }
 }
 
-/// What a mishap does.
+/// What a mishap does, or a miscast (`content/miscast.rs`): those from `Harm` on are the
+/// miscast's only, `Learn` the study's.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum MishapEffect {
     Nothing,
@@ -157,7 +164,11 @@ pub enum MishapEffect {
         status: StatusId,
         severity: u16,
     },
-    Backfire,
+    /// The spell goes off on its caster: at its base roll, or `full`, at the roll it was cast
+    /// with (a miscast's only).
+    Backfire {
+        full: bool,
+    },
     Mana {
         percent: u8,
     },
@@ -175,6 +186,24 @@ pub enum MishapEffect {
     Mark {
         stat: Stat,
     },
+    /// `dice` of harm to the caster, of type `damage` (the spell's own when `None`).
+    Harm {
+        dice: Dice,
+        damage: Option<DamageTypeId>,
+    },
+    /// The mana the cast cost comes back.
+    Refund,
+    /// The spell goes off a second time, at no cost.
+    Twice,
+    /// Another spell, drawn at random, goes off at someone near the caster (a wild surge).
+    Surge,
+    /// The caster changes places with someone near them.
+    Swap,
+    /// `status` falls on someone near the caster, drawn at random (the caster too).
+    Boon {
+        status: StatusId,
+        severity: u16,
+    },
 }
 
 impl MishapEffect {
@@ -183,7 +212,7 @@ impl MishapEffect {
         match self {
             MishapEffect::Nothing => "nothing",
             MishapEffect::Status { .. } => "status",
-            MishapEffect::Backfire => "backfire",
+            MishapEffect::Backfire { .. } => "backfire",
             MishapEffect::Mana { .. } => "mana",
             MishapEffect::Teleport => "teleport",
             MishapEffect::LoseMark => "lose_mark",
@@ -191,6 +220,12 @@ impl MishapEffect {
             MishapEffect::Summon { .. } => "summon",
             MishapEffect::Learn => "learn",
             MishapEffect::Mark { .. } => "mark",
+            MishapEffect::Harm { .. } => "harm",
+            MishapEffect::Refund => "refund",
+            MishapEffect::Twice => "twice",
+            MishapEffect::Surge => "surge",
+            MishapEffect::Swap => "swap",
+            MishapEffect::Boon { .. } => "boon",
         }
     }
 }
@@ -223,9 +258,10 @@ struct MishapSpec {
     effect: EffectSpec,
 }
 
+/// An effect as data writes it: its `kind` and only that kind's fields.
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
-struct EffectSpec {
+pub(super) struct EffectSpec {
     kind: String,
     status: Option<String>,
     severity: Option<u16>,
@@ -234,6 +270,9 @@ struct EffectSpec {
     points: Option<u8>,
     difficulty: Option<i32>,
     creature: Option<String>,
+    dice: Option<String>,
+    damage: Option<String>,
+    full: Option<bool>,
 }
 
 /// Parses the mishap files, in path order; statuses and creatures must be loaded.
@@ -261,7 +300,30 @@ pub(super) fn parse<'a>(
 }
 
 fn resolve(spec: MishapSpec, content: &Content) -> Result<Mishap, String> {
-    let e = spec.effect;
+    let effect = resolve_effect(spec.effect, content, false)?;
+    Ok(Mishap {
+        id: spec.id,
+        band: spec.band,
+        weight: spec.weight,
+        message: spec.message,
+        effect,
+    })
+}
+
+/// An effect of a mishap (`miscast` false) or of a miscast (true): each kind for its table only
+/// (module docs), with only its own fields.
+pub(super) fn resolve_effect(
+    e: EffectSpec,
+    content: &Content,
+    miscast: bool,
+) -> Result<MishapEffect, String> {
+    let only_miscast = ["harm", "refund", "twice", "surge", "swap", "boon"];
+    if !miscast && only_miscast.contains(&e.kind.as_str()) {
+        return Err(format!("a `{}` effect is a miscast's only", e.kind));
+    }
+    if miscast && e.kind == "learn" {
+        return Err("a `learn` effect is a failed study's only".into());
+    }
     // Only the fields its kind reads.
     let fields = [
         ("status", e.status.is_some()),
@@ -271,9 +333,14 @@ fn resolve(spec: MishapSpec, content: &Content) -> Result<Mishap, String> {
         ("points", e.points.is_some()),
         ("difficulty", e.difficulty.is_some()),
         ("creature", e.creature.is_some()),
+        ("dice", e.dice.is_some()),
+        ("damage", e.damage.is_some()),
+        ("full", e.full.is_some()),
     ];
     let reads: &[&str] = match e.kind.as_str() {
-        "status" => &["status", "severity"],
+        "status" | "boon" => &["status", "severity"],
+        "harm" => &["dice", "damage"],
+        "backfire" if miscast => &["full"],
         "mana" => &["percent"],
         "drain" => &["stat", "points", "difficulty"],
         "summon" => &["creature"],
@@ -294,7 +361,31 @@ fn resolve(spec: MishapSpec, content: &Content) -> Result<Mishap, String> {
     };
     let effect = match e.kind.as_str() {
         "nothing" => MishapEffect::Nothing,
-        "backfire" => MishapEffect::Backfire,
+        "backfire" => MishapEffect::Backfire {
+            full: e.full.unwrap_or(false),
+        },
+        "refund" => MishapEffect::Refund,
+        "twice" => MishapEffect::Twice,
+        "surge" => MishapEffect::Surge,
+        "swap" => MishapEffect::Swap,
+        "boon" => {
+            let name = e.status.ok_or("a `boon` effect needs a `status`")?;
+            let status = (content.status_id(&name)).ok_or(format!("unknown status `{name}`"))?;
+            let severity = e.severity.unwrap_or(1);
+            MishapEffect::Boon { status, severity }
+        }
+        "harm" => {
+            let text = e.dice.ok_or("a `harm` effect needs `dice`")?;
+            let dice: Dice = text.parse().map_err(|m| format!("dice `{text}`: {m}"))?;
+            let damage = match e.damage {
+                Some(name) => Some(
+                    (content.damage_type_id(&name))
+                        .ok_or(format!("unknown damage type `{name}`"))?,
+                ),
+                None => None,
+            };
+            MishapEffect::Harm { dice, damage }
+        }
         "teleport" => MishapEffect::Teleport,
         "lose_mark" => MishapEffect::LoseMark,
         "learn" => MishapEffect::Learn,
@@ -330,13 +421,7 @@ fn resolve(spec: MishapSpec, content: &Content) -> Result<Mishap, String> {
         },
         other => return Err(format!("unknown effect kind `{other}`")),
     };
-    Ok(Mishap {
-        id: spec.id,
-        band: spec.band,
-        weight: spec.weight,
-        message: spec.message,
-        effect,
-    })
+    Ok(effect)
 }
 
 /// The mishaps a failure of `band` draws among: the band's and the lucky ones, in order.

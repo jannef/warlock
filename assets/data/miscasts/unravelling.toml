@@ -1,0 +1,6 @@
+[[miscast]]
+id = "unravelling"
+from = 125
+message = "Your weave unravels through you, and the raw magic burns you from within!"
+seen = "{who}'s weave unravels, and the raw magic burns it from within!"
+effect = { kind = "harm", dice = "8d10", damage = "force" }

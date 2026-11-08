@@ -1,0 +1,7 @@
+[[miscast]]
+id = "senseless"
+from = 84
+to = 89
+message = "Your weave bursts in your hands, and the blast leaves you senseless."
+seen = "{who}'s weave bursts, and the blast leaves it senseless."
+effect = { kind = "status", status = "stunned", severity = 2 }

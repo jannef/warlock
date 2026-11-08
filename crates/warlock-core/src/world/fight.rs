@@ -109,6 +109,8 @@ pub enum Cause {
     Fall,
     /// A spell of their own caught them (spec §8 "Class abilities").
     Spell(crate::content::SpellId),
+    /// A spell of their own they miscast tore through them (spec §8 "Spells": "Miscasts").
+    Miscast(crate::content::SpellId),
     /// A forgotten altar they prayed at struck them down (spec §7 "Special rooms").
     Altar,
 }
@@ -134,6 +136,11 @@ impl Cause {
                     .map_or_else(|| "spell".into(), |s| s.look.noun.clone());
                 format!("Killed by their own {noun}")
             }
+            Cause::Miscast(spell) => {
+                let name = (content.spell_of(spell))
+                    .map_or_else(|| "spell".into(), |s| s.name.to_lowercase());
+                format!("Killed by their own miscast {name}")
+            }
             Cause::Altar => "Struck down at a forgotten altar".into(),
         }
     }
@@ -149,6 +156,7 @@ impl Cause {
             | Cause::Scroll(_)
             | Cause::Flask(_)
             | Cause::Spell(_)
+            | Cause::Miscast(_)
             | Cause::Altar
             | Cause::Fall => "You die...".into(),
         }

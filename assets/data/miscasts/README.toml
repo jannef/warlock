@@ -1,0 +1,34 @@
+# The miscast table (#1271; spec §8 "Spells": "Miscasts"): what befalls a caster whose
+# Spellcraft check failed (miscast.toml), after the spell has gone off in full. One `[[miscast]]`
+# per file; a campaign's data/miscasts/ may add more. The total rolled (miscast.toml) picks the
+# one entry whose range holds it: higher is worse, with boons and plain chaos spread among the
+# harms.
+#
+# Fields:
+#   id        the entry's id
+#   from, to  the totals it covers; the entries tile 1 and up with no gap or overlap, and only
+#             the last leaves out `to` (every total from its `from` up)
+#   message   said to the player who miscast
+#   seen      said of a creature that miscast where the player sees it; `{who}` is its name
+#   effect    what it does, by `kind` (the mishaps' kinds, mishaps/README.toml, and these):
+#             nothing
+#             status     `status` (an id of status.toml) on the caster at `severity` (default 1)
+#             backfire   the spell goes off on its caster: a damage spell as a burst around them
+#                        (its radius, else 1), a hex on them; at the spell's base roll, or with
+#                        `full = true` at the roll it was cast with
+#             mana       `percent` of the caster's mana left is lost
+#             teleport   the caster, to a free cell of the level, as a teleport trap does
+#             lose_mark  one stat training mark of the caster's is lost
+#             drain      `stat` (or "random") loses `points` for good unless the caster makes a
+#                        Willpower check against `difficulty`
+#             summon     a `creature` (an id of creatures/) hostile to the caster comes next to them
+#             mark       a training mark of `stat` more
+#             harm       `dice` of harm to the caster, of `damage` (a damage type; the spell's own
+#                        when left out, none for a spell without one); it can kill
+#             refund     the mana the cast cost comes back
+#             twice      the spell goes off again at what it was aimed at, at no cost
+#             surge      a damage spell drawn at random goes off as a burst around someone within
+#                        six cells of the caster in a clear line (not the caster)
+#             swap       the caster changes places with someone within six cells in a clear line
+#             boon       `status` at `severity` falls on someone within six cells of the caster in
+#                        a clear line, the caster too, drawn at random

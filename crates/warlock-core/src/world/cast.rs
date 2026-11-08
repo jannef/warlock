@@ -43,6 +43,9 @@
 //!   reflection's trigger, and a spell turned back is cast again at its caster with the same
 //!   roll, rerolls, to-hit, and riders (`reflect.rs`).
 //!
+//! - **Miscasts**: a cast paid in mana that went off makes its Spellcraft check afterwards, and a
+//!   failure rolls on the miscast table (`miscast.rs`, #1271); the spell is never weakened.
+//!
 //! A scroll read and a wand used cast through the same path at their own rungs, paid by the
 //! scroll or a charge instead of mana ([`World::read_cast`], [`World::wand_cast`]).
 //!
@@ -208,6 +211,8 @@ impl World {
         if self.perform(&cast, target, events) {
             self.train_spell(def);
             self.practise_cast(&cast);
+            // Gone off in full: now its Spellcraft check, and perhaps a miscast (`miscast.rs`).
+            self.after_cast(player, &cast, super::miscast::Aim::Player(target), events);
             Spent::Turn(price)
         } else {
             Spent::Nothing
@@ -289,7 +294,7 @@ impl World {
 
     /// Casts `cast` at `at` by its kind (module docs); whether it went off. A scroll read is
     /// said kept by Scroll savant afterwards, and a death by it is put down to the scroll.
-    fn perform(
+    pub(super) fn perform(
         &mut self,
         cast: &Cast<'_>,
         target: Option<ReadTarget>,

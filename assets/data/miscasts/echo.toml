@@ -1,0 +1,7 @@
+[[miscast]]
+id = "echo"
+from = 37
+to = 41
+message = "Your weave rings, and the spell goes off again!"
+seen = "{who}'s weave rings, and the spell goes off again!"
+effect = { kind = "twice" }

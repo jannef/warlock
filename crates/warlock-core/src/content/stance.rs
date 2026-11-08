@@ -162,6 +162,10 @@ pub struct StanceDef {
     /// (percent), at most always (`world/free_blow.rs::gatekeeper_odds`).
     #[serde(default = "hundred")]
     pub gatekeeper: u32,
+    /// Taken off a miscast's total on the miscast table (spec §8 "Spells": "Miscasts";
+    /// `world/miscast.rs`): a calm stance softens a miscast, a wild one worsens it.
+    #[serde(default)]
+    pub miscast: i32,
 }
 
 impl StanceDef {
@@ -181,6 +185,7 @@ impl StanceDef {
             flee_noise: 100,
             weapon_mark: 100,
             gatekeeper: 100,
+            miscast: 0,
         }
     }
 

@@ -1,0 +1,7 @@
+[[miscast]]
+id = "rebound"
+from = 105
+to = 114
+message = "Your weave rebounds, and the spell's full force falls on you!"
+seen = "{who}'s weave rebounds, and the spell's full force falls on it!"
+effect = { kind = "backfire", full = true }

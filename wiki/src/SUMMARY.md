@@ -77,6 +77,7 @@
     - [How spells work](spellcasting.md)
     - [Schools and caster styles](schools.md)
     - [Wands and rods](wands-and-rods.md)
+    - [Miscasts](miscasts.md)
     - [Spell circles](spell-circles.md)
   - [Resources](resources.md)
 - [Creatures](creatures.md)

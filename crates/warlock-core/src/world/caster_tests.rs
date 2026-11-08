@@ -12,8 +12,20 @@ use crate::replay::Replay;
 use crate::stats::{PerStat, Stat, Stats};
 use std::sync::LazyLock;
 
-static BUILTIN: LazyLock<Arc<Content>> =
-    LazyLock::new(|| Arc::new(Content::builtin().expect("content")));
+static BUILTIN: LazyLock<Arc<Content>> = LazyLock::new(|| Arc::new(quiet()));
+
+/// The built-in files without `data/miscast.toml`: no Spellcraft check after a cast, so the tests
+/// of a cast's own draws and effects read the cast alone (miscasts are `miscast_tests.rs`').
+pub(super) fn files() -> crate::content::ContentFiles {
+    let mut files = crate::content::ContentFiles::builtin();
+    files.remove("data/miscast.toml");
+    files
+}
+
+/// The built-in content as [`files`] has it: no miscasts.
+pub(super) fn quiet() -> Content {
+    Content::load(&files()).expect("content")
+}
 
 /// A human of `class` in the showcase (seed 7), with their kit, born under no sign, every score
 /// 14, and plenty of mana.

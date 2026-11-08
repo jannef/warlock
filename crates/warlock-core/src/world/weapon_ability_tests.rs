@@ -10,7 +10,7 @@ use super::*;
 use crate::ability::{Ability, Unavailable};
 use crate::action::AttackKind;
 use crate::combat::{Category, Strike};
-use crate::content::{ContentFiles, Trigger};
+use crate::content::Trigger;
 use crate::equipment;
 use crate::weapon_skills::WeaponSkills;
 
@@ -187,7 +187,7 @@ map = '''
 /// The game's content with the test objects, creatures, and `map`; `abilities` false leaves the
 /// weapon abilities out (every file emptied).
 fn content(map: &str, abilities: bool) -> Arc<Content> {
-    let mut files = ContentFiles::builtin();
+    let mut files = super::caster_tests::files();
     files.insert("data/objects/zz_wa_test.toml", OBJECTS);
     files.insert("data/creatures/zz_wa_test.toml", CREATURES);
     files.insert("levels/wa_yard.toml", &level(map));
@@ -763,7 +763,7 @@ fn the_menu_lists_what_ranks_teach_greyed_as_firing_by_itself() {
 /// The game's content with the test objects and the wizard's Arcane bolt as `bolt` says (its
 /// shape, resolution, and dice); `abilities` false leaves the weapon abilities out.
 fn spell_content(bolt: &str, abilities: bool) -> Arc<Content> {
-    let mut files = ContentFiles::builtin();
+    let mut files = super::caster_tests::files();
     files.insert("data/objects/zz_wa_test.toml", OBJECTS);
     let text = format!(
         "[[spell]]\nid = \"arcane_bolt\"\nname = \"Arcane bolt\"\ndescription = \"x\"\n\
@@ -1069,7 +1069,7 @@ fn reflection_draws_nothing_without_a_qualifying_rank() {
 fn a_creature_turns_the_players_wand_back_and_the_replay_verifies() {
     // A champion with a knife, a shield, and Sword and Board 10, who fights; the player zaps a
     // wand of scorching ray at it.
-    let mut files = ContentFiles::builtin();
+    let mut files = super::caster_tests::files();
     files.insert("data/objects/zz_wa_test.toml", OBJECTS);
     files.insert(
         "data/creatures/zz_wa_champion.toml",

@@ -1,0 +1,7 @@
+[[miscast]]
+id = "swap"
+from = 48
+to = 52
+message = "Your weave twists space, and you stand somewhere else!"
+seen = "{who}'s weave twists space, and it stands somewhere else!"
+effect = { kind = "swap" }

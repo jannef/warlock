@@ -15,6 +15,7 @@ More about magic:
   with your stats.
 - [Schools and caster styles](schools.md): the seven schools of magic, the Magic page, and the
   styles you cast in.
+- [Miscasts](miscasts.md): what can go wrong when you cast, and the miscast table.
 - [Wands and rods](wands-and-rods.md): magic anyone can use.
 - [Spell circles](spell-circles.md): the rings that show buffs and hexes on the map.
 
