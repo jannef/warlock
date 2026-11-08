@@ -78,9 +78,10 @@ against your weight: a laden dwarf breaks through where a light elf crosses, and
 ## Your character
 
 You make a [character](character.md) at the start of every run. There are thirteen
-[races](races.md), each with its own eyes, three [genders](character.md#gender), and fifteen
-[classes](classes.md), from [berserker](classes.md#berserker) and [wizard](classes.md#wizard) to
-[merchant](classes.md#merchant) and [commoner](classes.md#commoner). Your year of birth gives you a
+[races](races.md), each with its own eyes, three [genders](character.md#gender), and twelve
+[classes](classes.md) to choose from, from [berserker](classes.md#berserker) and
+[wizard](classes.md#wizard) to [aristocrat](classes.md#aristocrat), though not every class is open
+to every race ([Who may take which](classes.md#who-may-take-which)). Your year of birth gives you a
 [horoscope](horoscope.md) sign. Characters are not balanced, on purpose: some are a challenge.
 
 Six [stats](stats.md) describe you and every creature. [Skills](skills.md) such as

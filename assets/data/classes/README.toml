@@ -11,6 +11,15 @@
 # Fields:
 #   id, name      the class's id (for the command line and saves) and its name
 #   description   one line, shown when choosing
+#   races_not     the races that may not take the class, by id in ../races.toml (the paladin's
+#                 `["goblin", "drow", ...]`; default none): character creation does not list it
+#                 for them, its Random never draws it, and `--character` refuses the pair
+#   only          races that may take the class only with some genders: `[{ race = "drow",
+#                 genders = ["female"] }]` (the priest; default none), refused and left out
+#                 the same way for the other genders
+#   hidden        `true`: never offered at character creation (the everyday folk, for now); the
+#                 class keeps its data and stays usable through `--character` and a scenario's
+#                 own character, for development and tests (default false)
 #   stats         adjustments to the starting scores by stat id (strength, dexterity, toughness,
 #                 intelligence, willpower, presence; a missing one 0): a number (`1`, `-2`) or
 #                 dice (`"1d3+1"`, `"-1d2"`), rolled in the background when the character is made,

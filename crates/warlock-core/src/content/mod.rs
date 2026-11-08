@@ -1036,6 +1036,9 @@ impl Content {
             let skill_id = |id: &str| content.skill_id(id);
             let table = files.table("classes");
             content.classes = ClassDef::parse(table, skill_id, &content.weapon_skills)?;
+            for class in &content.classes {
+                class.check_races(|id| content.race(id).is_some())?;
+            }
         }
         // Prestige classes (spec §8 "Prestige classes"): a class in what a level reads.
         {
@@ -3699,6 +3702,18 @@ impl Content {
     /// The class with id `id`.
     pub fn class(&self, id: &str) -> Option<&ClassDef> {
         self.classes.iter().find(|c| c.id == id)
+    }
+
+    /// The classes character creation offers a character of race `race` and `gender`, in the
+    /// order offered: none hidden or refused to them (spec §8 "Character creation"); none for
+    /// an unknown race.
+    pub fn classes_offered(&self, race: &str, gender: crate::character::Gender) -> Vec<&ClassDef> {
+        let Some(race) = self.race(race) else {
+            return Vec::new();
+        };
+        (self.classes.iter())
+            .filter(|c| c.offered_to(race, gender))
+            .collect()
     }
 
     /// The prestige classes of `data/prestige/`, in table order (spec §8 "Prestige classes").

@@ -59,7 +59,9 @@ Game flags (`cargo run -p warlock -- --help`):
   every buff and hex spell with 300 mana, for the spell circles), `--seed S`
   (default: the scenario's seed; a number, or a word hashed with FNV-1a, e.g. `--seed warlock`),
   `--character RACE,GENDER,CLASS` (e.g. `dwarf,female,warrior`; default: the scenario's
-  character; like `--seed` it shapes the run other flags start and alone does not skip the menu),
+  character; like `--seed` it shapes the run other flags start and alone does not skip the menu;
+  a class closed to the race and gender, `drow,male,priest`, is refused, while the classes hidden
+  from New run, commoner, craftsperson, and merchant, are taken; `assets/data/classes/README.toml`),
   `--name NAME` (the character's name, up to 20 characters; default: the scenario's for its own
   character, else one of the race's names picked from the seed; like `--character`). A run
   started with `--character` or `--name` (or from New run) has a chosen character and starts with

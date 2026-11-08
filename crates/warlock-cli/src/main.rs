@@ -195,6 +195,9 @@ fn parse_run_actions(args: &RunArgs) -> Result<Vec<Action>, String> {
 /// pack (spec §8 "Character creation").
 fn start(content: Arc<Content>, args: &RunArgs) -> Result<World, String> {
     let kit = args.character.is_some() || args.name.is_some() || args.talents.is_some();
+    if let Some(spec) = &args.character {
+        spec.check_open(&content)?;
+    }
     let talents = args
         .talents
         .as_deref()
@@ -397,6 +400,15 @@ mod tests {
         let orc = run(&["--character", "orc,male,warrior"]).expect("parses");
         let err = start(content.clone(), &orc).expect_err("refused");
         assert!(err.contains("unknown race `orc`"), "{err}");
+        // A class closed to the race and gender is refused; a hidden one is not.
+        let drow = run(&["--character", "drow,male,priest"]).expect("parses");
+        let err = start(content.clone(), &drow).expect_err("refused");
+        assert!(
+            err.contains("a drow may be a priest only if female"),
+            "{err}"
+        );
+        let folk = run(&["--character", "human,male,merchant"]).expect("parses");
+        assert!(start(content.clone(), &folk).is_ok());
         // `--talents` names the creation picks, of the scenario's own character without one.
         let picks = &[
             "--character",

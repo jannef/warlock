@@ -257,6 +257,7 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("races.md", character::races),
         ("race-traits.md", character::race_traits),
         ("classes.md", character::classes),
+        ("class-limits.md", character::class_limits),
         ("prestige-classes.md", character::prestige_classes),
         ("prestige-levels.md", talents::prestige_levels),
         ("callings.md", dialogue::callings),

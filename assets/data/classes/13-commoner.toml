@@ -2,6 +2,8 @@
 id = "commoner"
 name = "Commoner"
 description = "A farmhand, laborer, or servant with no training to speak of: used to hard work, not to being heard."
+# Not offered at character creation, for now.
+hidden = true
 stats = { toughness = "1d3-1", intelligence = -1, presence = -1 }
 hp = 3
 mana = 1

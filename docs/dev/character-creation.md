@@ -57,6 +57,24 @@ wiki show adjustments as written in data; the wiki also gives the modifiers and 
 potentials exactly). Balance is not a goal; classes only adjust starting scores, give hit
 points, train skills and weapon skills, and give a starting kit.
 
+**Class limits** (#1279): a class file's `races_not` (race ids), `only` (`[{ race, genders }]`,
+`content/class.rs::OnlySpec`), and `hidden` are `ClassDef::races_not`, `only`, and `hidden`; the
+loader checks every race they name (`ClassDef::check_races`, right after the classes parse).
+`ClassDef::refuses(race, gender)` is the one rule, the reason in words (`a goblin cannot be a
+paladin`, `a drow may be a priest only if female`); `ClassDef::offered_to` adds `hidden`, and
+`Content::classes_offered(race, gender)` is the list New run's class step shows
+(`ui/chargen_screen.rs::classes_offered`; its Random rolls among the rows, so it never draws a
+closed or hidden class). `Draft::spec` falls back from a preselected class not offered (the
+scenario's, or one remembered before the race or gender changed) to the first offered.
+`CharacterSpec::check_open` (`check` plus `refuses`) is what the game's and `warlock-cli`'s
+`--character` ask; hidden classes pass it, so dev runs, tests, replays, and scenarios keep the
+everyday folk. A scenario's own character, a replay, and a save are never checked (the test
+world's forge and quarry keep their craftspeople). Tests: `character.rs`
+(`classes_are_closed_to_some_races_and_genders`, `class_limits_name_known_races`),
+`chargen_screen.rs` (`the_class_step_lists_and_draws_only_classes_open_to_the_race_and_gender`),
+`warlock-cli`'s `characters_are_race_gender_class`, the text snapshots `class-screen-drow-male`
+and `class-screen-dwarf`; the wiki's `class-limits.md` (`xtask/src/wiki/character.rs`).
+
 **Races in the rules** (#255). `WorldState::race_of(content, actor)` is the one lookup of the
 player's race (`None` for a creature, or a run without a character); `load`, `size_of`, and every
 race trait go through it. The traits, each read in one place:

@@ -488,6 +488,18 @@ impl CharacterSpec {
         self.race(content).and(self.class(content)).map(|_| ())
     }
 
+    /// [`CharacterSpec::check`], and that the class is open to the race and gender (spec §8
+    /// "Character creation": no goblin paladin): what `--character` asks of a character. A
+    /// hidden class passes (the everyday folk stay usable there, for development and tests).
+    pub fn check_open(&self, content: &Content) -> Result<(), String> {
+        let race = self.race(content)?;
+        let class = self.class(content)?;
+        match class.refuses(race, self.gender) {
+            Some(why) => Err(format!("`{self}` is refused: {why}")),
+            None => Ok(()),
+        }
+    }
+
     /// What this character starts a run with `seed` on `today` (the run's start) with: see the
     /// module docs. Its name is the first random name ([`random_name`]) until the caller names
     /// it.
@@ -1128,6 +1140,74 @@ mod tests {
             "unknown class `necromancer`"
         );
         assert!(spec("half_orc,other,witch").check(&content).is_ok());
+    }
+
+    #[test]
+    fn classes_are_closed_to_some_races_and_genders() {
+        let content = content();
+        let refused = |text: &str| spec(text).check_open(&content).err();
+        assert_eq!(
+            refused("drow,male,priest").as_deref(),
+            Some("`drow,male,priest` is refused: a drow may be a priest only if female")
+        );
+        assert!(refused("drow,other,priest").is_some());
+        assert_eq!(refused("drow,female,priest"), None);
+        assert_eq!(refused("human,male,priest"), None);
+        for race in [
+            "goblin",
+            "drow",
+            "kobold",
+            "lizardfolk",
+            "duergar",
+            "ratfolk",
+        ] {
+            for gender in ["male", "female", "other"] {
+                let why = refused(&format!("{race},{gender},paladin"));
+                assert!(why.is_some_and(|w| w.contains("cannot be a paladin")));
+            }
+        }
+        assert_eq!(
+            refused("elf,female,witch").as_deref(),
+            Some("`elf,female,witch` is refused: an elf cannot be a witch")
+        );
+        assert!(refused("dwarf,male,witch").is_some());
+        assert_eq!(refused("human,female,paladin"), None);
+        assert_eq!(refused("half_orc,other,witch"), None);
+        // Hidden classes are never offered, but `--character` still takes them.
+        for hidden in ["commoner", "craftsperson", "merchant"] {
+            assert!(content.class(hidden).expect("a class").hidden);
+            assert_eq!(refused(&format!("human,male,{hidden}")), None);
+        }
+        // What character creation offers is exactly what is open and not hidden.
+        for race in &content.races().list {
+            for gender in Gender::ALL {
+                let offered: Vec<&str> = (content.classes_offered(&race.id, gender).iter())
+                    .map(|c| c.id.as_str())
+                    .collect();
+                assert!(!offered.is_empty(), "{} {gender:?}", race.id);
+                for class in content.classes() {
+                    let open = (CharacterSpec::new(&race.id, gender, &class.id))
+                        .check_open(&content)
+                        .is_ok();
+                    assert_eq!(offered.contains(&class.id.as_str()), open && !class.hidden);
+                }
+            }
+        }
+        let drow_men: Vec<&str> = (content.classes_offered("drow", Gender::Male).iter())
+            .map(|c| c.id.as_str())
+            .collect();
+        assert!(!drow_men.contains(&"priest") && !drow_men.contains(&"paladin"));
+        assert!(drow_men.contains(&"witch"));
+    }
+
+    #[test]
+    fn class_limits_name_known_races() {
+        let mut files = ContentFiles::builtin();
+        let paladin = "data/classes/06-paladin.toml";
+        let text = include_str!("../../../assets/data/classes/06-paladin.toml");
+        files.insert(paladin, &text.replace("\"goblin\"", "\"orc\""));
+        let err = Content::load(&files).expect_err("refused");
+        assert!(err.to_string().contains("unknown race `orc`"), "{err}");
     }
 
     /// The built-in content without skills: no skills file, and no race or class training any.

@@ -152,6 +152,9 @@ impl Game {
             None => {
                 let scenario = &args.scenario_name(&content).to_owned();
                 let name = args.name.as_deref();
+                if let Some(spec) = &args.character {
+                    spec.check_open(&content)?;
+                }
                 // `--talents` picks for `--character`, else for the scenario's own character.
                 let talents = args
                     .talents

@@ -25,7 +25,7 @@ use super::{ACCENT, TEXT, TEXT_DIM};
 use crate::input::Bindings;
 use crate::render::console::Console;
 use warlock_core::character::{CharacterSpec, Gender, NAMELESS, Start, check_name, random_name};
-use warlock_core::content::{Content, pace_words};
+use warlock_core::content::{ClassDef, Content, pace_words};
 use warlock_core::dice::Dice;
 use warlock_core::kit;
 use warlock_core::rng::Rng;
@@ -198,19 +198,40 @@ impl Draft {
     /// The character as chosen so far; a step not on the stack takes its preselection, else the
     /// first option. `None` when the content has no races or classes.
     pub fn spec(&self, content: &Content) -> Option<CharacterSpec> {
-        let pick = |step: Step, first: Option<&String>| {
-            (self.chosen.get(step).map(str::to_string))
-                .or_else(|| self.preselect(step))
-                .or_else(|| first.cloned())
-        };
-        let race = pick(Step::Race, content.races().list.first().map(|r| &r.id))?;
-        let class = pick(Step::Class, content.classes().first().map(|c| &c.id))?;
+        let (race, gender) = self.race_and_gender(content)?;
+        // A class preselected (the scenario's, or remembered before the race or gender changed)
+        // only if it is offered to them, else the first offered.
+        let offered = classes_offered(content, Some((&race, gender)));
+        let class = (self.chosen.get(Step::Class).map(str::to_string))
+            .or_else(|| {
+                (self.preselect(Step::Class)).filter(|id| offered.iter().any(|c| c.id == *id))
+            })
+            .or_else(|| offered.first().map(|c| c.id.clone()))
+            .or_else(|| content.classes().first().map(|c| c.id.clone()))?;
+        let talents = self.talents.clone().unwrap_or_default();
+        Some(CharacterSpec::new(race, gender, class).with_talents(talents))
+    }
+
+    /// The race and gender as chosen so far; a step not on the stack takes its preselection,
+    /// else the first option. `None` when the content has no races.
+    fn race_and_gender(&self, content: &Content) -> Option<(String, Gender)> {
+        let race = (self.chosen.get(Step::Race).map(str::to_string))
+            .or_else(|| self.preselect(Step::Race))
+            .or_else(|| content.races().list.first().map(|r| r.id.clone()))?;
         let gender = (self.chosen.get(Step::Gender).map(str::to_string))
             .or_else(|| self.preselect(Step::Gender))
             .and_then(|id| Gender::from_id(&id))
             .unwrap_or(Gender::Male);
-        let talents = self.talents.clone().unwrap_or_default();
-        Some(CharacterSpec::new(race, gender, class).with_talents(talents))
+        Some((race, gender))
+    }
+}
+
+/// The classes the Class step lists for a race and gender (spec §8 "Character creation"): those
+/// offered to them; without a race, every class not hidden.
+fn classes_offered<'c>(content: &'c Content, who: Option<(&str, Gender)>) -> Vec<&'c ClassDef> {
+    match who {
+        Some((race, gender)) => content.classes_offered(race, gender),
+        None => content.classes().iter().filter(|c| !c.hidden).collect(),
     }
 }
 
@@ -283,17 +304,22 @@ impl ChoiceScreen {
                     details: Vec::new(),
                 })
                 .collect(),
-            Step::Class => (content.classes().iter())
-                .map(|c| Choice {
-                    id: c.id.clone(),
-                    name: c.name.clone(),
-                    description: c.description.clone(),
-                    details: [adjustments(&c.stats)]
-                        .into_iter()
-                        .chain(pace_words(c.experience).map(String::from))
-                        .collect(),
-                })
-                .collect(),
+            Step::Class => {
+                let who = draft.race_and_gender(content);
+                let who = who.as_ref().map(|(race, gender)| (race.as_str(), *gender));
+                classes_offered(content, who)
+            }
+            .into_iter()
+            .map(|c| Choice {
+                id: c.id.clone(),
+                name: c.name.clone(),
+                description: c.description.clone(),
+                details: [adjustments(&c.stats)]
+                    .into_iter()
+                    .chain(pace_words(c.experience).map(String::from))
+                    .collect(),
+            })
+            .collect(),
             // The name is typed, on a screen of its own.
             Step::Name => Vec::new(),
         };
@@ -837,7 +863,7 @@ mod tests {
         let gender = ChoiceScreen::new(Step::Gender, &CONTENT, &d);
         assert_eq!(gender.chosen(), Some("female"));
         let class = ChoiceScreen::new(Step::Class, &CONTENT, &d);
-        assert_eq!(class.choices.len(), 15);
+        assert_eq!(class.choices.len(), 12, "the everyday folk hidden");
         assert_eq!(class.chosen(), Some("thief"));
         // A remembered choice wins; without either, the first option.
         let mut remembered = d.clone();
@@ -893,6 +919,45 @@ mod tests {
         assert_eq!(pick(5), pick(5));
         let many: std::collections::BTreeSet<String> = (0..20).flat_map(pick).collect();
         assert!(many.len() > 5, "{many:?}");
+    }
+
+    #[test]
+    fn the_class_step_lists_and_draws_only_classes_open_to_the_race_and_gender() {
+        let mut d = draft(3);
+        d.chosen.set(Step::Race, "drow");
+        d.chosen.set(Step::Gender, "male");
+        let ids =
+            |s: &ChoiceScreen| -> Vec<String> { s.choices.iter().map(|c| c.id.clone()).collect() };
+        let mut class = ChoiceScreen::new(Step::Class, &CONTENT, &d);
+        let listed = ids(&class);
+        for closed in ["priest", "paladin", "commoner", "craftsperson", "merchant"] {
+            assert!(
+                !listed.iter().any(|id| id == closed),
+                "{closed}: {listed:?}"
+            );
+        }
+        assert!(listed.iter().any(|id| id == "witch"));
+        // The showcase's thief is still preselected; Random draws only listed classes.
+        assert_eq!(class.chosen(), Some("thief"));
+        for _ in 0..40 {
+            class.selected = class.choices.len();
+            press(&mut class, Nav::Enter);
+            let pick = class.chosen().expect("a class");
+            let spec = CharacterSpec::new("drow", Gender::Male, pick);
+            assert!(spec.check_open(&CONTENT).is_ok(), "{pick}");
+        }
+        d.chosen.set(Step::Gender, "female");
+        let class = ChoiceScreen::new(Step::Class, &CONTENT, &d);
+        assert!(ids(&class).iter().any(|id| id == "priest"));
+        // A preselection closed to them gives way to the first class offered: a dwarf witch.
+        let mut d = draft(3);
+        d.chosen.set(Step::Race, "dwarf");
+        d.remembered.set(Step::Class, "witch");
+        let class = ChoiceScreen::new(Step::Class, &CONTENT, &d);
+        assert!(!ids(&class).iter().any(|id| id == "witch"));
+        assert_eq!(class.chosen(), Some("berserker"));
+        let spec = d.spec(&CONTENT).expect("a character");
+        assert_eq!(spec.class, "berserker");
     }
 
     #[test]

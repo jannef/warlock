@@ -13,6 +13,8 @@ things:
 - It adds a few things to your [starting kit](starting-kit.md): an [elf](races.md#race-elf)'s
   waybread, a [dwarf](races.md#race-dwarf)'s pick-axe, a [halfling](races.md#race-halfling)'s pipe. It also gives the everyday clothes and shoes of
   your folk where your class gives none ([halflings](races.md#race-halfling) go barefoot).
+- It may close a few [classes](classes.md) to you: no drow paladins, no elven witches (see
+  [Who may take which](classes.md#who-may-take-which)).
 
 {{#include generated/races.md}}
 
