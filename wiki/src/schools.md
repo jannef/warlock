@@ -165,37 +165,31 @@ A rank a talent adds counts only for a school you have trained.
 
 ## Caster styles
 
-**Where you cast from is your style.** A caster style is a [fighting style](fighting-styles.md) of
-its own, alongside the school:
+**The spell you cast decides your style.** A caster style is a [fighting style](fighting-styles.md)
+of its own, alongside the school:
 
-- A spell you aim at a creature **beside you**, a touch or anything else, is cast as a
-  **[Toucher](#style-toucher)**.
-- A spell you aim **farther** than that, at a creature or a cell, a ray or a burst alike, is cast
-  as a **[Sniper](#style-sniper)**. A Sniper is at their best from five cells away.
+- A spell that [rolls to hit](spellcasting.md#how-a-spell-finds-its-target) and is a **touch** is
+  cast as a **[Toucher](#style-toucher)**.
+- A spell that rolls to hit and is anything else (a ray, a bolt) is cast as a
+  **[Sniper](#style-sniper)**, wherever you aim it, even at the creature beside you.
 - A spell cast in **armour that hinders casting** is a **[Battle caster](#style-battle-caster)**'s,
-  wherever it is aimed.
-- A spell on yourself, out of such armour, is cast in no style.
+  whatever the spell.
+- Every other spell, out of such armour, is cast in no style: a burst, a cone, a line, a bolt that
+  never misses, a heal (a touch heal too), a buff, or a hex. It trains no style, and no style helps
+  it.
 
 Every spell you cast with your own [mana](mana.md#how-much) trains the style it was cast in,
 whether it lands or not, just as every blow trains its style. It earns the same marks its school
-earns, weighed the same way. A spell read from a scroll or used from a wand trains no style.
+earns, weighed the same way, on the same slow curve. A spell read from a scroll or used from a
+wand trains no style.
 
-- **[Sniper](#style-sniper)**: a spell aimed farther than beside you, out of such armour. That is
-  a ray, a bolt, a burst, a cone, a line, a hex on a foe across the room, or a cell with nobody in
-  it. Its spells that [roll to hit](spellcasting.md#how-a-spell-finds-its-target) hit more often,
-  and better still against a target five cells away or more, where its
-  [critical range](combat.md#criticals) is wider too. From rank 5 every spell cast this way reaches
-  a cell farther, and from rank 9 two. From rank 4 its best shots pin the target where it stands
-  (*[Pinning ray](#style-ability-pinning-ray)*).
-- **[Toucher](#style-toucher)**: a spell aimed at a creature beside you, out of such armour. That is
-  a touch, a heal laid on the one next to you, or a ray or a hex at them. Its spells that roll to
-  hit hit more often, its critical range is wider, and its criticals roll the damage up to twice
-  more. From rank 4 every spell cast this way does a point more, harm or healing, pressed home;
-  from rank 7 two, and at rank 10 three. From rank 4 its criticals
-  [stagger](status-effects.md#status-staggered)
-  (*[Staggering touch](#style-ability-staggering-touch)*). At rank 10, every spell cast this way
-  that rolls to hit and hits [weakens](status-effects.md#status-weakened) the foe
-  (*[Withering touch](#style-ability-withering-touch)*).
+- **[Sniper](#style-sniper)**: a ray or a bolt that rolls to hit, out of such armour. It hits more
+  often, and better still against a target five cells away or more, where its
+  [critical range](combat.md#criticals) is wider too. From rank 5 these spells reach a cell
+  farther, and from rank 9 two.
+- **[Toucher](#style-toucher)**: a touch that rolls to hit, out of such armour. It hits more often,
+  its critical range is wider, and its criticals roll the damage up to twice more. From rank 4 it
+  does a point more harm, pressed home; from rank 7 two, and at rank 10 three.
 - **[Battle caster](#style-battle-caster)**: any spell cast while you wear armour that makes spells
   cost more (mail, plate, a great helm, a large shield), a buff on yourself as much as a bolt at a
   foe. Its spells that roll to hit hit more often, and it shrinks your armour's extra mana cost for
@@ -204,21 +198,25 @@ earns, weighed the same way. A spell read from a scroll or used from a wand trai
   (*[Spell guard](#style-ability-spell-guard)*). A *Mage-wrought* piece eased so far that it makes
   spells cost no more does not count as such armour: in it you cast as a Sniper or a Toucher.
 
+A touch reaches only the creature beside you. Nothing makes it reach farther: not
+[School focus](talents.md#talent-school-focus), not a school's rank, not a style, not an item.
+
 The [wizard](classes.md#wizard) and the [druid](classes.md#druid) start in Sniper, the
 [witch](classes.md#witch) and the [priest](classes.md#priest) in Toucher, and the
 [paladin](classes.md#paladin) in Battle caster. Any caster may advance in any of them by casting
 that way.
 
 The [Magic page](#the-magic-page) marks Battle caster as the style you cast in while you wear
-such armour. Sniper and Toucher depend on each cast's target, so it never marks them.
+such armour. Sniper and Toucher depend on the spell, so it never marks them.
 
 What each rank gives, exactly: *To hit far away* and *Critical range far away* count from five
-cells. *Reach* is cells farther (a range, a length), on top of the school's. *Every roll* is a point
-on every roll, on top of the school's. *Armour's extra mana cost* is the percent taken off what
-your armour adds.
+cells. *Reach* is cells farther (a range), on top of the school's. *Every roll* is a point on the
+roll, on top of the school's. *Armour's extra mana cost* is the percent taken off what your armour
+adds.
 
 {{#include generated/caster-style-benefits.md}}
 
-What a rank teaches, as with a weapon style ([What a rank teaches](fighting-styles.md#what-a-rank-teaches)):
+What a rank teaches, as with a weapon style ([What a rank teaches](fighting-styles.md#what-a-rank-teaches)).
+Only Battle caster teaches an ability:
 
 {{#include generated/caster-style-abilities.md}}

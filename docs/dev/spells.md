@@ -181,9 +181,9 @@ cast path shares.
     `combat::Target::bare(target_against(target, missile).defence)` (no Protection; the strike's
     damage, crit included, is then resisted in `spell_strikes`, nothing holding it). The
     `benefit` (#571) is the spell's school's and the caster style's (`Actor::spell_skills`:
-    the school's skill, docs/dev/magic-skills.md; the style of where it is cast from, decided
-    once a cast, `world/spell_aim.rs`: Battle caster in armour that hinders casting, else
-    Toucher at a creature beside, Sniper farther; `Benefit::at_distance` adds Sniper's
+    the school's skill, docs/dev/magic-skills.md; the style the spell is cast in, decided
+    once a cast, `world/cast_style.rs`: Battle caster in armour that hinders casting, else
+    Toucher for a touch, Sniper for a ray or a bolt (#1251); `Benefit::at_distance` adds Sniper's
     far benefits from `[spell_attacks] far`), for a cast paid in mana of a spell that
     `rolls_to_hit` only; then `World::spell_practised` fires their triggered abilities
     (`resolve_triggers`); the marks are the cast's, once, at its end (`World::practise_cast`). A scroll or a wand
@@ -907,7 +907,7 @@ the shape too and refuses each field off its kind and shape).
 - **`range = 0` on a burst** (Thunderclap, Benison): `SpellData::about_caster`. Allowed on a
   `damage` or a `heal` burst only, with no `range` ladder; `aimed()` is false (the menu's
   `Aim::Nothing`, a scroll read at once), `base_range()` and `Actor::spell_reach`'s range `None`
-  (so no "range" in the words), `standing_aim` and `spell_aim` say `Myself`. `cast_damage` takes the
+  (so no "range" in the words); out of hindering armour it is cast in no caster style (it rolls no attack). `cast_damage` takes the
   caster's cell for the missing aim and skips `within_reach`. No cell is left out: the caster is
   in it and takes the centre's full roll (the edge's half is everyone else's at radius 1) and its
   status (Thunderclap's Stunned 1; the owner's Q14). Force's shove has no away for the one at the

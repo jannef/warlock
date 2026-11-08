@@ -364,10 +364,10 @@ pub struct Benefit {
     pub sides: u8,
     /// A school's spells: this many dice more (the dice hook).
     pub dice: u8,
-    /// A school's spells, and a Toucher's (a spell cast up close): added to every roll (the
+    /// A school's spells, and a Toucher's (a touch that rolls to hit): added to every roll (the
     /// dice hook).
     pub bonus: i32,
-    /// A school's spells, and a Sniper's (a spell cast from afar): cells farther (the reach
+    /// A school's spells, and a Sniper's (a ray or a bolt that rolls to hit): cells farther (the reach
     /// hook).
     pub cells: i32,
     /// A school's spells: degrees longer (the degrees hook).
@@ -635,7 +635,7 @@ impl SkillSpec {
         let grip = self.grip;
         let is = |g: Grip| grip == Some(g);
         let school = role == Role::School;
-        // Where one casts from never quickens a cast (a caster grip); a school's practice may.
+        // A caster style never quickens a cast (a caster grip); a school's practice may.
         let casts = grip.is_some_and(Grip::casts);
         let unused = [
             ("damage", &self.damage, !school),
@@ -672,7 +672,7 @@ impl SkillSpec {
             ("reroll", &self.reroll, school),
             ("sides", &self.sides, school),
             ("dice", &self.dice, school),
-            // Where one casts from (the caster styles): from afar a reach, up close a roll.
+            // The caster styles: a ray's or a bolt's reach (Sniper), a touch's roll (Toucher).
             ("bonus", &self.bonus, school || is(Grip::TouchSpell)),
             ("cells", &self.cells, school || is(Grip::RangedSpell)),
             ("degrees", &self.degrees, school),

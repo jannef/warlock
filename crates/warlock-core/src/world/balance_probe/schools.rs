@@ -5,8 +5,8 @@
 //! spell's cost (the rank's mana cut included, as in play), a healer's never more than the day's
 //! kills (one heal a fight, as the probe's priest casts). Each cast lands on a monster of the
 //! caster's level and goes through `World::practise`, the hook `practise_cast` calls: once for
-//! the spell's school, once for the caster style it is cast in from where the caster stands in
-//! plain gear (`Actor::standing_aim`: armoured in hindering armour), so `[marks]`, the school's
+//! the spell's school, once for the caster style the spell is cast in by the caster in
+//! plain gear (`Actor::spell_grip`: armoured in hindering armour), so `[marks]`, the school's
 //! curve, and the talents' marks (Weapon drill) are the game's own.
 
 use super::{Build, Cast, Gear, casts, dress, roll_mean};
@@ -78,7 +78,7 @@ pub(super) fn first_spell(w: &World, build: &Build, seed: u64) -> Paced {
         return Paced::default();
     };
     let def = content.spell(spell.spell);
-    let skills = me.spell_skills(content, def, me.standing_aim(content, def));
+    let skills = me.spell_skills(content, def);
     let pool = me.max_mana(content);
     Paced {
         casts_a_day: f64::from(pool / spell.cost.max(1)),
@@ -104,7 +104,7 @@ pub(super) fn cast_level(w: &mut World, build: &Build, level: u8, seed: u64) -> 
     };
     let def = content.spell(spell.spell);
     let me = dressed.state.player();
-    let skills = me.spell_skills(&content, def, me.standing_aim(&content, def));
+    let skills = me.spell_skills(&content, def);
     let pool = me.max_mana(&content);
     let days = super::training::days(level + 1);
     let kills = content.experience().kills_for(level + 1);

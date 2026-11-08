@@ -1538,8 +1538,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
     steep from rank 7 so that ranks 7 to 10 take most of a career (a fighter of the monsters of
     their level: rank 6 about level 10, 8 about 25, 10 about 45; docs/balance.md "Weapon pace");
     missile two thirds of it, 10, 30, … 58 700; the schools of magic and the caster styles,
-    trained by far fewer casts than blows, `school`: 10, 20, 40, … 640 doubling, then 1200,
-    2000, 3000 (docs/balance.md "School pace"). Marks
+    trained by far fewer casts than blows, `school`: 30, 60, 120, … 1920 doubling, then 3600,
+    6000, 9000 (#1251: three times what it first asked; rank 1 ten casts that land on a foe of
+    the rank's level or more, rank 4 150, rank 10 7470; docs/balance.md "School pace"). Marks
     past the need count toward the next rank (one rank at a time); rank 10 earns no more.
   - **Target dummies** (#1199; `world/dummy.rs`): a creature type with a `training` table
     (`{ percent, melee, ranged, breaks }`, §7) is a dummy, the straw men in the Weyfarers' Gilde's
@@ -1634,21 +1635,21 @@ developer notes (CLAUDE.md, `docs/dev/`).
     style is how the hands are used).
     A style may name the weapon skills it is fought with; the style of a grip that names none
     takes every other weapon (`WeaponSkillTable::style_for`), so one configuration is always at
-    most one style. **Where you cast from is your style** (#571; the spell scaling design
-    §10.2; `world/spell_aim.rs`): a spell aimed at a creature **beside** its caster, a touch or
-    anything else, is cast as a Toucher (`touch_spell`); one aimed **farther**, at a creature or
-    a cell, a ray or a burst alike (an empty cell next to one too), as a Sniper
-    (`ranged_spell`); any spell cast in **armour that hinders casting** (anything worn with a
-    `spell_cost_percent`, §8 "Spells") as a Battle caster (`armoured_spell`), wherever it is
-    aimed; a spell on oneself (one's own cell, a stack, no target) out of such armour in no
-    style. `SpellAim` is decided once in `cast_spell` (and a scroll's or a wand's cast) before
-    its kind runs, so the school and the style are one `AttackSkills` for the whole cast: its
-    hooks (the style's benefit after the school's, `Actor::spell_mods_from`), a rolling spell's
-    to-hit and triggers, and its marks. Every spell paid in mana trains the style it was cast
-    in, lands or not, as every blow trains its style (by the school's outcome: an attempt, a
-    success as it landed). Caster styles name no weapons. What the menu and the aiming mode
-    show is the standing aim (`Actor::standing_aim`: armoured in such armour, a touch beside,
-    any other aimed spell afar).
+    most one style. **The spell decides the caster style** (#571, #1251; `world/cast_style.rs`):
+    any spell cast in **armour that hinders casting** (anything worn with a
+    `spell_cost_percent`, §8 "Spells") is cast as a Battle caster (`armoured_spell`); out of such
+    armour, a spell that **rolls to hit** (a damage spell resolved by the attack roll) is cast as a
+    Toucher (`touch_spell`) when its shape is `touch` and as a Sniper (`ranged_spell`) otherwise
+    (a ray, a bolt), wherever it is aimed; every other spell (an area, a bolt that never misses, a
+    heal, a buff, a hex, a touch heal) is cast in no style, and neither trains nor gains from
+    Sniper or Toucher. The style is decided once a cast, by the player's and the creatures' alike,
+    so the school and the style are one `AttackSkills` for the whole cast: its hooks (the style's
+    benefit after the school's, `Actor::spell_mods_in_style`), a rolling spell's to-hit and
+    triggers, and its marks. Every spell paid in mana trains the style it was cast in, lands or
+    not, as every blow trains its style (by the school's outcome: an attempt, a success as it
+    landed). Caster styles name no weapons. What the menu and the aiming mode show is what is
+    cast. A **touch** reaches the cell beside its caster and no farther: nothing gives it a cell
+    (School focus, Sniper, a school's rank, an item).
   - **The twelve** (data): **Duelist** (`one_weapon`: to-hit, Parry), **Twin Blades**
     (`two_weapons`: eases both two-weapon penalties, none left from rank 9; from rank 7 to-hit too), **Great Weapon**
     (`two_handed`, any weapon but a staff: damage, from rank 8 a critical rolls its damage once
@@ -1662,9 +1663,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
     Parry); and the caster styles (#571): **Sniper** (`ranged_spell`: to-hit, and against a
     target `far` (5) cells or more away more to-hit and a wider threat range,
     `[spell_attacks]`; `cells`, a cell farther from rank 5 and two from rank 9, after the
-    school's; rank 4 Pinning ray), **Toucher** (`touch_spell`: to-hit, threat, a critical's
-    damage up to twice more; `bonus`, a point on the roll of every spell cast so, harm or
-    healing, from rank 4, up to 3 at rank 10; rank 4 Staggering touch, rank 10 Withering touch),
+    school's), **Toucher** (`touch_spell`: to-hit, threat, a critical's damage up to twice
+    more; `bonus`, a point on the roll of every touch cast so, from rank 4, up to 3 at rank 10);
+    Sniper and Toucher teach no abilities (#1251),
     **Battle caster** (`armoured_spell`: to-hit, and `armour`, percent off what worn armour adds
     to every spell's mana cost, read by `Actor::armour_spell_cost` whatever is cast, up to half
     at rank 10; rank 4 Spell guard; full marks on every spell cast in such armour). `cells` is
@@ -1790,9 +1791,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     critical pins an action), Knife in the dark (Daggers 5: a sneak attack that hits with a
     dagger leaves the foe bleeding a degree) and Hunter's shot (Marksman 6: a sneak attack that
     hits with a shot pins the foe 1d2 actions); the caster styles' (#571), fired by a spell that rolls to hit:
-    Pinning ray (Sniper 4: a critical pins 1d2 actions), Staggering touch (Toucher 4: a critical
-    staggers), Withering touch (Toucher 10: a spell cast up close that hits weakens a degree), Spell guard
-    (Battle caster 4: a spell that lands wards its caster, Spell ward, a Dodge point until
+    Spell guard alone (Battle caster 4: a spell that lands wards its caster, Spell ward, a Dodge point until
     their next action); the schools' (`spell_lands`, the spell scaling design §8.5):
     Thunderstruck (evocation 10: what it harms is staggered), Wasting (necromancy 10: weakened
     a degree), Aegis (abjuration 7: a buff wards its caster, Spell ward), Lulling (enchantment

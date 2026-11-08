@@ -41,7 +41,6 @@
 
 use super::cast::Cast;
 use super::spell::{Caster, burst_cells, cone_cells};
-use super::spell_aim::SpellAim;
 use super::talk::capitalized;
 use super::{ActorId, AttackSkills, World};
 use crate::action::{AttackKind, Event, SpellShape};
@@ -234,12 +233,7 @@ impl World {
             return price;
         };
         let here = me.pos;
-        let aim = match () {
-            _ if on == id => SpellAim::Myself,
-            _ if here.chebyshev(at) <= 1 => SpellAim::Beside,
-            _ => SpellAim::Afar,
-        };
-        let cast = Cast::by_creature(me, &content, (spell, def), aim);
+        let cast = Cast::by_creature(me, &content, (spell, def));
         if !self.spend_mana(id, me.spell_base(&content, def)) {
             return price;
         }
