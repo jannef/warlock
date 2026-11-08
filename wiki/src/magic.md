@@ -34,7 +34,7 @@ A class's spells are only where it starts. Any spell can be learned from a grimo
 only from grimoires ([Acid arrow](#spell-acid-arrow), [Grave spear](#spell-grave-spear),
 [Slumber](#spell-slumber), [Glamour](#spell-glamour), and others). A caster who finds few
 grimoires stays a modest one. A spell your class gives is yours at that level, whatever your
-[Spellcraft](skills.md#skill-spellcraft).
+[Decipher script](skills.md#skill-decipher-script).
 
 {{#include generated/class-spells.md}}
 
@@ -98,7 +98,7 @@ the [learning](#learning) at which you learn it from a grimoire for certain.
 
 A spell of level 0 or 1 is a *cantrip*. It costs 1 mana, apart from the few that set a price of
 their own ([Burning hands](#spell-burning-hands) and [Grave breath](#spell-grave-breath) cost 3).
-Anyone trained in [Spellcraft](skills.md#skill-spellcraft) learns a cantrip for certain.
+Anyone trained in [Decipher script](skills.md#skill-decipher-script) learns a cantrip for certain.
 
 What a spell does comes from its own roll and ladders (the list above), whatever its level.
 
@@ -112,14 +112,14 @@ Learning never changes what a spell does or costs. Your [stats](stats.md) make a
 [How a spell grows](spellcasting.md#how-a-spell-grows)), and your [mana](mana.md#how-much) is what
 holds you back.
 
-Learning comes from the [Spellcraft](skills.md#skill-spellcraft) skill and nothing else. Take the
+Learning comes from the [Decipher script](skills.md#skill-decipher-script) skill and nothing else. Take the
 skill's value, add what [magic items](magic-items.md) (*of the Scholar*) and [talents](talents.md)
 add to it, and read it on this curve; it is at least 1. The first fifty points buy the cantrips and
 the first spells. The soft cap of 100 reaches level 30, and 150 reaches the last spell level:
 
 {{#include generated/learning.md}}
 
-**A character not trained in Spellcraft cannot learn a spell from a grimoire at all**, not even a
+**A character not trained in Decipher script cannot learn a spell from a grimoire at all**, not even a
 cantrip. Reading one is refused and takes no time. "Trained" means the skill is among your
 [skills](skills.md); an item's or a talent's bonus to a skill you do not have does not train you.
 
@@ -127,17 +127,19 @@ Without the skill you can still read a scroll to [cast it](scrolls.md#spell-scro
 [a check](scrolls.md#making-out-a-scroll) (with learning, you read a scroll at or below it with no
 check). Your class's own spells still come at their levels.
 
-Every class that casts starts trained in Spellcraft, with the dice given in
+Every class that casts starts trained in Decipher script, with the dice given in
 [the class table](skills.md):
 
 - [wizards](classes.md#wizard), [witches](classes.md#witch), [priests](classes.md#priest), and
   [druids](classes.md#druid): 2d6+10;
 - [bards](classes.md#bard), [paladins](classes.md#paladin), and [rangers](classes.md#ranger): 2d4+4;
 - an [aristocrat](classes.md#aristocrat) one time in three (35 %, 2d4+4);
-- an [ascetic](classes.md#ascetic) one time in five (20 %, 2d4).
+- an [ascetic](classes.md#ascetic) one time in five (20 %, 2d4);
+- a [merchant](classes.md#merchant) one time in four (25 %, 2d4).
 
-Other classes do not start with it. Two [background stories](background.md) add to it for classes
-that already have it, and level-up rolls raise it like any other skill.
+Other classes do not start with it. Some [background stories](background.md) add to it, and
+level-up rolls raise it like any other skill. So does reading: see
+[Learning spells from grimoires](#learning-spells-from-grimoires).
 
 ## What a spell costs
 
@@ -197,9 +199,9 @@ whatever comes of it: read it again after a failure, or sell it once it has taug
 grimoire of a spell you already know only tells you so, and takes no time.
 
 To learn at all you need some [mana](mana.md#how-much), and training in
-[Spellcraft](skills.md#skill-spellcraft). Without the training, reading a grimoire is refused and
-takes no time ("You have no training in Spellcraft; you cannot make sense of how to learn a spell
-from a grimoire.").
+[Decipher script](skills.md#skill-decipher-script). Without the training, reading a grimoire is refused and
+takes no time ("You have no training in Decipher script; you cannot make sense of how to learn a
+spell from a grimoire.").
 
 Reading a grimoire takes time, by the spell's level: 10 minutes plus 2 more per level, at a normal
 pace. For Fireball, level 11, that is 32 minutes:
@@ -218,7 +220,7 @@ level too high (the **overreach**) makes it harder:
   (*[Overreach](talents.md#talent-overreach)* counts a third fewer levels, rounded down), plus a
   point for every 20 levels of the spells you already know, added together.
 - Your bonus is your [Intelligence](stats.md#stat-intelligence) [modifier](stats.md#modifiers), a
-  tenth of your *[Spellcraft](skills.md#skill-spellcraft)* (at most +20), your class's affinity with
+  tenth of your *[Decipher script](skills.md#skill-decipher-script)* (at most +20), your class's affinity with
   the spell's school, and *[Quick study](talents.md#talent-quick-study)*'s +2.
 - A natural 24 always succeeds, and a natural 2 always fails.
 
@@ -239,8 +241,10 @@ read it again.
 
 {{#include generated/mishaps.md}}
 
-Reading a grimoire trains *[Spellcraft](skills.md#skill-spellcraft)* and your
-[Intelligence](stats.md#stat-intelligence), whatever comes of it.
-*[Decipher script](skills.md#skill-decipher-script)* plays no part in it: it is for
-[making out a scroll](scrolls.md#making-out-a-scroll) you only want to read. Spending
-[mana](mana.md) on a spell also trains Spellcraft, one time in four.
+All reading trains *[Decipher script](skills.md#skill-decipher-script)*. Reading a grimoire to its end
+trains it and your [Intelligence](stats.md#stat-intelligence), whatever comes of it. Reading a
+scroll trains it one time in two, and [making out a scroll](scrolls.md#making-out-a-scroll)
+always does.
+
+Casting trains *[Spellcraft](skills.md#skill-spellcraft)*: spending [mana](mana.md) on a spell
+trains it one time in four. Spellcraft does nothing else for now.

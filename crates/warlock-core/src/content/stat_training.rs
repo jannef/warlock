@@ -107,7 +107,7 @@ pub enum StatUse {
     Read,
     /// An item identified by reading.
     Identified,
-    /// A spell studied from a scroll, whatever comes of it (Spellcraft's use too).
+    /// A grimoire read to its end, whatever comes of it (Decipher script's use too).
     Study,
     /// A scroll written to its end (the wizard's Scribe).
     Scribe,

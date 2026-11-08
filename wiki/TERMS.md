@@ -233,7 +233,7 @@ above.
 | Mana on a kill | `mana.md#mana-on-a-kill` |
 | Spending mana | `mana.md#spending-it` |
 | Magic, spells, casting | `magic.md`, `magic.md#the-spells` |
-| Learning (what a scroll teaches for certain, Spellcraft's curve) | `magic.md#learning` |
+| Learning (what a grimoire teaches for certain, Decipher script's curve) | `magic.md#learning` |
 | Spell level, cantrip | `magic.md#spell-levels` |
 | Ladder, rung, base | `magic.md#the-spells`, `spellcasting.md#how-a-spell-grows` |
 | What talents and items do to a spell (a rung, bigger dice, a bonus, a reroll, a rider) | `spellcasting.md#how-a-spell-grows` |

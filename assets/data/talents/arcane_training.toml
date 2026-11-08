@@ -1,10 +1,11 @@
 # Arcane training (the learning design §5.2; #988): the wizard's class ability, ten
-# points deeper in Spellcraft (a bonus alone never trains it).
+# points deeper in Decipher script, the skill spells are learned by (#1270; a bonus alone never
+# trains it).
 [[talent]]
 id = "arcane_training"
 name = "Arcane training"
 tree = "class"
 granted = true
-description = "Your learning outruns your training: you read spells as one ten points deeper in Spellcraft."
-effects = [{ kind = "skill", skill = "spellcraft", value = 10 }]
+description = "Your learning outruns your training: you read spells as one ten points deeper in Decipher script."
+effects = [{ kind = "skill", skill = "decipher_script", value = 10 }]
 systems = ["spells"]

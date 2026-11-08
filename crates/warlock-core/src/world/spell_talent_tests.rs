@@ -1,6 +1,6 @@
 //! The Spellcraft talents and the casters' reworked ones (#400; the magic design §10, the spell
 //! scaling design §7.2): Overreach on the study check, School focus on its tag's cost and
-//! reach, Arcane training's ten points of Spellcraft, every talent combination casting with
+//! reach, Arcane training's ten points of Decipher script, every talent combination casting with
 //! nothing holding its roll (decision 16), and the six spell hooks by their shipped users:
 //! Empower's and Archmage's rungs, Keen mind's dice, Sure hand's reroll, Brimming's die and
 //! cost, Scroll adept's scroll rung.
@@ -27,10 +27,10 @@ fn cost_and_range(w: &World, spell: &str) -> (i32, Option<i32>) {
 #[test]
 fn overreach_counts_a_third_less_in_the_study_and_never_touches_mana() {
     let mut w = world_with(BUILTIN.clone(), "wizard");
-    // At Spellcraft's floor: learning 1, whatever this run's dice gave.
-    let spellcraft = BUILTIN.skill_id("spellcraft").expect("skill");
+    // At Decipher script's floor: learning 1, whatever this run's dice gave.
+    let decipher = BUILTIN.skill_id("decipher_script").expect("skill");
     w.player_mut().skills = crate::skills::Skills::default();
-    w.player_mut().skills.add(spellcraft, 0);
+    w.player_mut().skills.add(decipher, 0);
     let odds = |w: &World| {
         let character = w.state.character.as_ref();
         study_odds(w.state.player(), &BUILTIN, character, sp("fireball")).expect("odds")
@@ -92,17 +92,17 @@ fn school_focus_is_chosen_among_schools_and_elements() {
 }
 
 #[test]
-fn arcane_training_reads_spellcraft_ten_points_deeper_for_the_trained_only() {
+fn arcane_training_reads_decipher_script_ten_points_deeper_for_the_trained_only() {
     let mut w = world_with(BUILTIN.clone(), "wizard");
     assert!(w.state.player().talents.holds("arcane_training", None));
-    let spellcraft = w.content.skill_id("spellcraft").expect("skill");
+    let decipher = w.content.skill_id("decipher_script").expect("skill");
     let learning = |w: &World| w.state.player().learning(&w.content);
     for (raw, reach) in [(50, 10), (90, 30), (140, 70)] {
         let me = w.player_mut();
-        let by = raw - i32::from(me.skills.value(spellcraft).unwrap_or(0));
-        me.skills.add(spellcraft, by);
+        let by = raw - i32::from(me.skills.value(decipher).unwrap_or(0));
+        me.skills.add(decipher, by);
         // The curve reads 10 points more: 60 gives 10, 100 gives 30, 150 gives 70.
-        assert_eq!(learning(&w), Some(reach), "Spellcraft {raw} + 10");
+        assert_eq!(learning(&w), Some(reach), "Decipher script {raw} + 10");
     }
     // A bonus alone never trains the skill.
     w.player_mut().skills = crate::skills::Skills::default();

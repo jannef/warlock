@@ -2,8 +2,8 @@
 id = "of_the_scholar"
 name = "of the Scholar"
 effect = "skill"
-category = "spellcraft"
-skill = "spellcraft"
+category = "decipher_script"
+skill = "decipher_script"
 bases = ["weapon", "helmet", "ring", "amulet"]
 weight = 60
 tiers = [

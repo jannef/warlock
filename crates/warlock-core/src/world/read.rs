@@ -15,7 +15,7 @@
 //! Sharp long sword of the Bear!", or the type of a scroll still under its label.
 //!
 //! **Who can read one** (`decipher.rs`): once nothing refuses a reading, one trained in
-//! Spellcraft whose learning reaches the scroll's spell level reads it at once; anyone else
+//! Decipher script whose learning reaches the scroll's spell level reads it at once; anyone else
 //! makes a check. A failure takes the read's time and keeps the scroll, its label unknown.
 //!
 //! **Unknown scrolls** ([`crate::scroll_label`]) read just as known ones do; the read names the
@@ -35,6 +35,7 @@ use crate::content::StatUse;
 use crate::content::{ActionKind, Reading, percent_of};
 use crate::geom::Pos;
 use crate::object::Stack;
+use crate::skills::Use;
 
 /// The least of a read's price that talents leave, in percent.
 const READ_FLOOR: i32 = 25;
@@ -257,9 +258,11 @@ impl World {
     /// Takes one of inventory stack `item` from the pack (the last empties it, and what was worn
     /// follows its letters); returns it, and whether it was kept instead: with Scroll savant
     /// (spec §8 "Talents") a read keeps its scroll by the talent's chance, one draw of the
-    /// gameplay stream a read (none without it).
+    /// gameplay stream a read (none without it). The read marks Intelligence and the skills that
+    /// mark on `read` (Decipher script; #1270).
     pub(super) fn use_up(&mut self, item: usize) -> Option<(Stack, bool)> {
         self.train_stat(StatUse::Read);
+        self.train(Use::Read);
         let one = self.state.player().inventory.get(item)?.single();
         let keep = self.state.player().talent_mods(&self.content).scroll_kept;
         if keep > 0 && self.state.rng.chance(u32::from(keep)) {

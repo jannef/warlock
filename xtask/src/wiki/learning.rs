@@ -1,4 +1,4 @@
-//! Learning spells (spec §8 "Spells"): Spellcraft's curve, the study check's chances by overreach
+//! Learning spells (spec §8 "Spells"): Decipher script's curve, the study check's chances by overreach
 //! and bonus, how long a study takes by spell level, the classes' affinities with the schools,
 //! and the mishaps.
 
