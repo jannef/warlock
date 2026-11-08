@@ -2,8 +2,8 @@
 source: crates/warlock/src/ui/screen_snapshots.rs
 expression: "render(case, content.clone())"
 ---
- You call,┌─ Abilities ────────────────────────────────────────────────────── Page 1/2 ─┐lashes
- you.     │                                                                             │
+ You call,┌─ Abilities ────────────────────────────────────────────────────── Page 1/2 ─┐nd you
+ stand som│                                                                             │
           │ Birth sign                                                                  │
           │ > a  Transfixing stare   at a place you see                                 │
           │ Spells                                                                      │
