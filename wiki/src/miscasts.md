@@ -36,6 +36,13 @@ out of armour, at rank 1:
 A new [wizard](classes.md#wizard) has a bonus of about 3, so about one cast in fourteen of a level-1
 spell goes wrong. A spell ten levels above that miscasts most of the time.
 
+Spellcraft is how you move the odds. A wizard who puts every [skill
+roll](skills.md#getting-better) on Spellcraft has a bonus of about 20 at level 10 and 28 at level
+20. At level 10 only a roll of 1 and 1 goes wrong on any spell up to level 15, and at level 20 on
+any spell up to level 23. A spell twenty levels above them still goes wrong four casts in five,
+and one in five at [rank](magic.md#spell-ranks) 10. A wizard who puts no roll on it stays at
+about 5 to 8 all career.
+
 Classes that cast on the side start with little Spellcraft. A [ranger](classes.md#ranger) of
 level 6 casting Barkskin miscasts about one cast in four, and a new [bard](classes.md#bard)
 casting Mend about one in seven. That is intended. Their miscasts stay in the protected rows (see

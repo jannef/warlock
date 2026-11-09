@@ -429,85 +429,158 @@ plate-clad warrior about half as often as on a wizard.
 
 ## Miscasts
 
-The wizard spends every level's skill rolls on Spellcraft (#1288, the miscasts design §1.2: a career that plays the miscast system); the priest and the witch spend theirs where `levelup:auto` puts them. With every roll on it the wizard's bonus reaches the check's floor by level 10: from then only the 1 and 1 miscasts. Re-measured at #1288; the other sections are as their last PRs left them.
+The wizard is measured on two careers (#1299, the miscasts design §1.2): Spellcraft first, every level's skill rolls on Spellcraft (#1288), and Concentration first, the same wizard with its rolls where `levelup:auto` puts them, so its Spellcraft stays at its level-1 value (the design's neglecter). The priest, the witch, and the paladin (a half-caster) spend theirs where `levelup:auto` puts them. Re-measured at #1299, after Spellcraft's `cast` curve was slowed past 100 (+22 at 200, +40 at 999, was +34 at 200 and flat after): the Spellcraft-first wizard reaches 139 at level 10 and 293 at 20, so on the old curve it cast every spell up to level 19 at the floor (only the 1 and 1 miscasts) from level 10 and every spell in the game from level 15, and every roll after 200 was wasted. Now it is at the floor for spells up to level 15 at level 10, 23 at level 20, and 28 at level 30; at level 10 a level-30 spell still miscasts four times in five at rank 1 (one miscast in twenty-five severe) and one in five at rank 10, those all protected;and every roll counts to the end.Spellcraft up to 100 is unchanged, so the half-casters, the neglecter, and every creature caster below 100 are too; the creature casters above 100 lose up to 12 points of bonus and stay at the floor but for the lich's Chain lightning (6.9 %) and the archlich's Sunfire (4.2 %). The other sections are as their last PRs left them.
 
-Each class's Spellcraft, the bonus of its check on a cast and its ward (trained, plain gear, the seeds' mean, the bonus rounded), and the chance of a miscast for a spell of level 1, of level 11, and of the highest level it knows (that level in brackets).
+Each class's Spellcraft, the bonus of its check on a cast and its ward (trained, plain gear, the seeds' mean, the bonus rounded), and the chance of a miscast for a spell of level 1, of level 11, and of the highest level it knows (that level in brackets), at rank 1. The wizard twice: every skill roll on Spellcraft, and the same wizard with its rolls on Concentration (its Spellcraft stays where it started).
 
 | Class | L | Spellcraft | Bonus | Ward | Level 1 | Level 11 | Highest known |
 |---|---:|---:|---:|---:|---:|---:|---:|
 | wizard | 1 | 20 | +3.7 | 2 | 4.2 % | 61.8 % | 4.2 % (1) |
-| wizard | 5 | 60 | +10.2 | 6 | 0.7 % | 19.4 % | 0.7 % (3) |
-| wizard | 10 | 137 | +24.0 | 13 | 0.7 % | 0.7 % | 0.7 % (8) |
-| wizard | 15 | 210 | +37.7 | 20 | 0.7 % | 0.7 % | 0.7 % (8) |
-| wizard | 20 | 292 | +38.2 | 20 | 0.7 % | 0.7 % | 0.7 % (8) |
-| wizard | 30 | 475 | +39.0 | 20 | 0.7 % | 0.7 % | 0.7 % (20) |
-| wizard | 40 | 679 | +39.7 | 20 | 0.7 % | 0.7 % | 0.7 % (30) |
-| wizard | 50 | 898 | +40.2 | 20 | 0.7 % | 0.7 % | 0.7 % (30) |
-| wizard | 60 | 999 | +40.7 | 20 | 0.7 % | 0.7 % | 0.7 % (30) |
+| wizard | 5 | 60 | +10.0 | 6 | 0.7 % | 19.4 % | 0.7 % (3) |
+| wizard | 10 | 139 | +19.5 | 13 | 0.7 % | 0.7 % | 0.7 % (8) |
+| wizard | 15 | 211 | +25.3 | 20 | 0.7 % | 0.7 % | 0.7 % (8) |
+| wizard | 20 | 293 | +27.7 | 20 | 0.7 % | 0.7 % | 0.7 % (8) |
+| wizard | 30 | 474 | +33.0 | 20 | 0.7 % | 0.7 % | 0.7 % (20) |
+| wizard | 40 | 681 | +38.2 | 20 | 0.7 % | 0.7 % | 0.7 % (30) |
+| wizard | 50 | 902 | +43.5 | 20 | 0.7 % | 0.7 % | 0.7 % (30) |
+| wizard | 60 | 999 | +46.7 | 20 | 0.7 % | 0.7 % | 0.7 % (30) |
+| wizard (Concentration first) | 1 | 20 | +3.7 | 2 | 4.2 % | 61.8 % | 4.2 % (1) |
+| wizard (Concentration first) | 5 | 20 | +3.8 | 2 | 4.2 % | 61.8 % | 10.4 % (3) |
+| wizard (Concentration first) | 10 | 20 | +4.5 | 2 | 2.1 % | 54.2 % | 31.2 % (8) |
+| wizard (Concentration first) | 15 | 20 | +5.0 | 2 | 2.1 % | 54.2 % | 31.2 % (8) |
+| wizard (Concentration first) | 20 | 20 | +5.7 | 2 | 0.7 % | 45.8 % | 25.0 % (8) |
+| wizard (Concentration first) | 30 | 20 | +6.7 | 2 | 0.7 % | 38.2 % | 93.1 % (20) |
+| wizard (Concentration first) | 40 | 20 | +7.2 | 2 | 0.7 % | 38.2 % | 99.3 % (30) |
+| wizard (Concentration first) | 50 | 20 | +7.7 | 2 | 0.7 % | 31.2 % | 99.3 % (30) |
+| wizard (Concentration first) | 60 | 20 | +8.2 | 2 | 0.7 % | 31.2 % | 99.3 % (30) |
 | priest | 1 | 22 | +2.2 | 2 | 10.4 % | 75.0 % | 10.4 % (1) |
 | priest | 5 | 22 | +2.2 | 2 | 10.4 % | 75.0 % | 19.4 % (3) |
 | priest | 10 | 22 | +3.0 | 2 | 6.9 % | 68.8 % | 61.8 % (10) |
-| priest | 15 | 22 | +3.3 | 2 | 6.9 % | 68.8 % | 68.8 % (11) |
-| priest | 20 | 22 | +3.7 | 2 | 4.2 % | 61.8 % | 80.6 % (14) |
-| priest | 30 | 22 | +4.0 | 2 | 4.2 % | 61.8 % | 80.6 % (14) |
+| priest | 15 | 22 | +3.2 | 2 | 6.9 % | 68.8 % | 68.8 % (11) |
+| priest | 20 | 22 | +3.8 | 2 | 4.2 % | 61.8 % | 80.6 % (14) |
+| priest | 30 | 22 | +4.3 | 2 | 4.2 % | 61.8 % | 80.6 % (14) |
 | priest | 40 | 22 | +4.8 | 2 | 2.1 % | 54.2 % | 75.0 % (14) |
-| priest | 50 | 22 | +5.0 | 2 | 2.1 % | 54.2 % | 75.0 % (14) |
-| priest | 60 | 22 | +5.5 | 2 | 0.7 % | 45.8 % | 68.8 % (14) |
+| priest | 50 | 22 | +5.2 | 2 | 2.1 % | 54.2 % | 75.0 % (14) |
+| priest | 60 | 22 | +5.3 | 2 | 2.1 % | 54.2 % | 75.0 % (14) |
 | witch | 1 | 20 | +2.7 | 2 | 6.9 % | 68.8 % | 6.9 % (1) |
-| witch | 5 | 20 | +2.7 | 2 | 6.9 % | 68.8 % | 14.6 % (3) |
-| witch | 10 | 20 | +3.2 | 2 | 6.9 % | 68.8 % | 45.8 % (8) |
-| witch | 15 | 20 | +3.7 | 2 | 4.2 % | 61.8 % | 38.2 % (8) |
-| witch | 20 | 20 | +4.2 | 2 | 4.2 % | 61.8 % | 45.8 % (9) |
-| witch | 30 | 20 | +4.3 | 2 | 4.2 % | 61.8 % | 99.3 % (24) |
+| witch | 5 | 20 | +3.0 | 2 | 6.9 % | 68.8 % | 14.6 % (3) |
+| witch | 10 | 20 | +3.0 | 2 | 6.9 % | 68.8 % | 45.8 % (8) |
+| witch | 15 | 20 | +3.5 | 2 | 4.2 % | 61.8 % | 38.2 % (8) |
+| witch | 20 | 20 | +4.0 | 2 | 4.2 % | 61.8 % | 45.8 % (9) |
+| witch | 30 | 20 | +4.8 | 2 | 2.1 % | 54.2 % | 99.3 % (24) |
 | witch | 40 | 20 | +4.8 | 2 | 2.1 % | 54.2 % | 99.3 % (24) |
 | witch | 50 | 20 | +5.2 | 2 | 2.1 % | 54.2 % | 99.3 % (24) |
-| witch | 60 | 20 | +5.3 | 2 | 2.1 % | 54.2 % | 99.3 % (24) |
+| witch | 60 | 20 | +5.5 | 2 | 0.7 % | 45.8 % | 99.3 % (24) |
+| paladin | 1 | 10 | -0.3 | 0 | 19.4 % | 85.4 % | — |
+| paladin | 5 | 10 | -0.2 | 0 | 19.4 % | 85.4 % | — |
+| paladin | 10 | 10 | +0.5 | 0 | 14.6 % | 80.6 % | 25.0 % (3) |
+| paladin | 15 | 10 | +1.0 | 0 | 14.6 % | 80.6 % | 54.2 % (7) |
+| paladin | 20 | 10 | +1.3 | 0 | 14.6 % | 80.6 % | 61.8 % (8) |
+| paladin | 30 | 10 | +2.3 | 0 | 10.4 % | 75.0 % | 54.2 % (8) |
+| paladin | 40 | 10 | +3.0 | 0 | 6.9 % | 68.8 % | 45.8 % (8) |
+| paladin | 50 | 10 | +3.3 | 0 | 6.9 % | 68.8 % | 45.8 % (8) |
+| paladin | 60 | 10 | +3.8 | 0 | 4.2 % | 61.8 % | 38.2 % (8) |
+
+Where a wizard's miscast lands (the miscasts design's bands: harmless 1–16, mild 17–40, annoying 41–70, severe 71–90, deadly 91–110, catastrophe 111+; below 71 is the protected half), out of armour, in the neutral stance: the chance of a miscast, each band's share of the miscasts in percent, and the worst total.
+
+| Wizard | L | Bonus | Ward | Spell (level, rank) | Miscast | Harmless | Mild | Annoying | Severe | Deadly | Catastrophe | Worst |
+|---|---:|---:|---:|---|---:|---:|---:|---:|---:|---:|---:|---:|
+| Spellcraft first | 1 | +4 | 2 | 11, r1 | 61.8 % | 9.6 | 53.1 | 34.4 | 2.9 | 0.0 | 0.0 | 87 |
+| Spellcraft first | 1 | +4 | 2 | 20, r1 | 99.3 % | 1.2 | 15.0 | 40.4 | 25.4 | 14.3 | 3.6 | 132 |
+| Spellcraft first | 1 | +4 | 2 | 20, r5 | 89.6 % | 3.7 | 31.0 | 45.5 | 15.8 | 4.0 | 0.0 | 112 |
+| Spellcraft first | 1 | +4 | 2 | 30, r1 | 99.3 % | 0.0 | 0.0 | 2.5 | 13.7 | 24.9 | 58.9 | 182 |
+| Spellcraft first | 1 | +4 | 2 | 30, r10 | 99.3 % | 0.3 | 11.4 | 37.1 | 27.9 | 17.1 | 6.2 | 137 |
+| Spellcraft first | 10 | +20 | 13 | 11, r1 | 0.7 % | 100.0 | 0.0 | 0.0 | 0.0 | 0.0 | 0.0 | 11 |
+| Spellcraft first | 10 | +20 | 13 | 20, r1 | 14.6 % | 65.6 | 34.3 | 0.0 | 0.0 | 0.0 | 0.0 | 41 |
+| Spellcraft first | 10 | +20 | 13 | 20, r5 | 2.1 % | 96.5 | 3.5 | 0.0 | 0.0 | 0.0 | 0.0 | 21 |
+| Spellcraft first | 10 | +20 | 13 | 30, r1 | 80.6 % | 22.0 | 43.6 | 30.5 | 3.9 | 0.0 | 0.0 | 91 |
+| Spellcraft first | 10 | +20 | 13 | 30, r10 | 19.4 % | 59.3 | 40.2 | 0.6 | 0.0 | 0.0 | 0.0 | 46 |
+| Spellcraft first | 20 | +28 | 20 | 11, r1 | 0.7 % | 100.0 | 0.0 | 0.0 | 0.0 | 0.0 | 0.0 | 4 |
+| Spellcraft first | 20 | +28 | 20 | 20, r1 | 0.7 % | 100.0 | 0.0 | 0.0 | 0.0 | 0.0 | 0.0 | 4 |
+| Spellcraft first | 20 | +28 | 20 | 20, r5 | 0.7 % | 100.0 | 0.0 | 0.0 | 0.0 | 0.0 | 0.0 | 4 |
+| Spellcraft first | 20 | +28 | 20 | 30, r1 | 25.0 % | 73.2 | 26.6 | 0.2 | 0.0 | 0.0 | 0.0 | 44 |
+| Spellcraft first | 20 | +28 | 20 | 30, r10 | 0.7 % | 100.0 | 0.0 | 0.0 | 0.0 | 0.0 | 0.0 | 4 |
+| Spellcraft first | 30 | +33 | 20 | 11, r1 | 0.7 % | 100.0 | 0.0 | 0.0 | 0.0 | 0.0 | 0.0 | 4 |
+| Spellcraft first | 30 | +33 | 20 | 20, r1 | 0.7 % | 100.0 | 0.0 | 0.0 | 0.0 | 0.0 | 0.0 | 4 |
+| Spellcraft first | 30 | +33 | 20 | 20, r5 | 0.7 % | 100.0 | 0.0 | 0.0 | 0.0 | 0.0 | 0.0 | 4 |
+| Spellcraft first | 30 | +33 | 20 | 30, r1 | 4.2 % | 99.3 | 0.7 | 0.0 | 0.0 | 0.0 | 0.0 | 19 |
+| Spellcraft first | 30 | +33 | 20 | 30, r10 | 0.7 % | 100.0 | 0.0 | 0.0 | 0.0 | 0.0 | 0.0 | 4 |
+| Spellcraft first | 60 | +47 | 20 | 11, r1 | 0.7 % | 100.0 | 0.0 | 0.0 | 0.0 | 0.0 | 0.0 | 4 |
+| Spellcraft first | 60 | +47 | 20 | 20, r1 | 0.7 % | 100.0 | 0.0 | 0.0 | 0.0 | 0.0 | 0.0 | 4 |
+| Spellcraft first | 60 | +47 | 20 | 20, r5 | 0.7 % | 100.0 | 0.0 | 0.0 | 0.0 | 0.0 | 0.0 | 4 |
+| Spellcraft first | 60 | +47 | 20 | 30, r1 | 0.7 % | 100.0 | 0.0 | 0.0 | 0.0 | 0.0 | 0.0 | 4 |
+| Spellcraft first | 60 | +47 | 20 | 30, r10 | 0.7 % | 100.0 | 0.0 | 0.0 | 0.0 | 0.0 | 0.0 | 4 |
+| Concentration first | 1 | +4 | 2 | 11, r1 | 61.8 % | 9.6 | 53.1 | 34.4 | 2.9 | 0.0 | 0.0 | 87 |
+| Concentration first | 1 | +4 | 2 | 20, r1 | 99.3 % | 1.2 | 15.0 | 40.4 | 25.4 | 14.3 | 3.6 | 132 |
+| Concentration first | 1 | +4 | 2 | 20, r5 | 89.6 % | 3.7 | 31.0 | 45.5 | 15.8 | 4.0 | 0.0 | 112 |
+| Concentration first | 1 | +4 | 2 | 30, r1 | 99.3 % | 0.0 | 0.0 | 2.5 | 13.7 | 24.9 | 58.9 | 182 |
+| Concentration first | 1 | +4 | 2 | 30, r10 | 99.3 % | 0.3 | 11.4 | 37.1 | 27.9 | 17.1 | 6.2 | 137 |
+| Concentration first | 10 | +5 | 2 | 11, r1 | 54.2 % | 11.3 | 55.8 | 31.6 | 1.3 | 0.0 | 0.0 | 82 |
+| Concentration first | 10 | +5 | 2 | 20, r1 | 97.9 % | 1.8 | 18.5 | 43.3 | 23.0 | 11.6 | 1.8 | 127 |
+| Concentration first | 10 | +5 | 2 | 20, r5 | 85.4 % | 4.5 | 36.0 | 44.0 | 13.3 | 2.1 | 0.0 | 107 |
+| Concentration first | 10 | +5 | 2 | 30, r1 | 99.3 % | 0.0 | 0.0 | 4.9 | 16.5 | 27.5 | 51.2 | 177 |
+| Concentration first | 10 | +5 | 2 | 30, r10 | 99.3 % | 1.2 | 15.0 | 40.4 | 25.4 | 14.3 | 3.6 | 132 |
+| Concentration first | 20 | +6 | 2 | 11, r1 | 45.8 % | 12.3 | 58.9 | 28.5 | 0.4 | 0.0 | 0.0 | 77 |
+| Concentration first | 20 | +6 | 2 | 20, r1 | 95.8 % | 2.4 | 22.2 | 45.1 | 20.6 | 9.0 | 0.7 | 122 |
+| Concentration first | 20 | +6 | 2 | 20, r5 | 80.6 % | 5.4 | 41.1 | 41.9 | 10.7 | 0.9 | 0.0 | 102 |
+| Concentration first | 20 | +6 | 2 | 30, r1 | 99.3 % | 0.0 | 0.0 | 8.0 | 19.3 | 29.4 | 43.4 | 172 |
+| Concentration first | 20 | +6 | 2 | 30, r10 | 97.9 % | 1.8 | 18.5 | 43.3 | 23.0 | 11.6 | 1.8 | 127 |
+| Concentration first | 30 | +7 | 2 | 11, r1 | 38.2 % | 13.3 | 62.3 | 24.4 | 0.0 | 0.0 | 0.0 | 72 |
+| Concentration first | 30 | +7 | 2 | 20, r1 | 93.1 % | 3.0 | 26.4 | 45.8 | 18.2 | 6.4 | 0.2 | 117 |
+| Concentration first | 30 | +7 | 2 | 20, r5 | 75.0 % | 6.5 | 45.8 | 39.5 | 7.9 | 0.2 | 0.0 | 97 |
+| Concentration first | 30 | +7 | 2 | 30, r1 | 99.3 % | 0.0 | 0.0 | 11.7 | 22.1 | 30.2 | 36.0 | 167 |
+| Concentration first | 30 | +7 | 2 | 30, r10 | 95.8 % | 2.4 | 22.2 | 45.1 | 20.6 | 9.0 | 0.7 | 122 |
+| Concentration first | 60 | +8 | 2 | 11, r1 | 31.2 % | 14.6 | 65.8 | 19.6 | 0.0 | 0.0 | 0.0 | 67 |
+| Concentration first | 60 | +8 | 2 | 20, r1 | 89.6 % | 3.7 | 31.0 | 45.5 | 15.8 | 4.0 | 0.0 | 112 |
+| Concentration first | 60 | +8 | 2 | 20, r5 | 68.8 % | 7.9 | 49.9 | 37.0 | 5.2 | 0.0 | 0.0 | 92 |
+| Concentration first | 60 | +8 | 2 | 30, r1 | 99.3 % | 0.0 | 0.2 | 16.0 | 24.9 | 29.7 | 29.3 | 162 |
+| Concentration first | 60 | +8 | 2 | 30, r10 | 93.1 % | 3.0 | 26.4 | 45.8 | 18.2 | 6.4 | 0.2 | 117 |
 
 Creature casters: the chance of a miscast for each spell of their lists (their Spellcraft and Intelligence as their type makes them).
 
 | Creature | L | Spellcraft | Bonus | Spells |
 |---|---:|---:|---:|---|
-| arcanaloth | 46 | 153 | +35 | fire cloak 0.7 %, chain lightning 0.7 %, fireball 0.7 %, magic missile 0.7 % |
-| archlich | 54 | 177 | +42 | haste 0.7 %, silence 0.7 %, sunfire 0.7 %, chain lightning 0.7 %, grave spear 0.7 % |
+| arcanaloth | 46 | 153 | +29 | fire cloak 0.7 %, chain lightning 0.7 %, fireball 0.7 %, magic missile 0.7 % |
+| archlich | 54 | 177 | +33 | haste 0.7 %, silence 0.7 %, sunfire 4.2 %, chain lightning 0.7 %, grave spear 0.7 % |
 | ash wraith | 15 | 50 | +9 | scorching ray 6.9 %, grave breath 0.7 % |
-| barrow king | 42 | 141 | +32 | fear 0.7 %, grave spear 0.7 %, rime 0.7 % |
-| bheur hag | 42 | 141 | +32 | curse of sloth 0.7 %, rime 0.7 %, frost 0.7 % |
+| barrow king | 42 | 141 | +27 | fear 0.7 %, grave spear 0.7 %, rime 0.7 % |
+| bheur hag | 42 | 141 | +27 | curse of sloth 0.7 %, rime 0.7 %, frost 0.7 % |
 | dark wizard | 24 | 98 | +17 | haste 0.7 %, fireball 0.7 %, lightning bolt 0.7 %, magic missile 0.7 % |
-| deathless king | 66 | 213 | +49 | haste 0.7 %, fear 0.7 %, sunfire 0.7 %, grave spear 0.7 %, chain lightning 0.7 % |
-| demilich | 70 | 225 | +49 | silence 0.7 %, sunfire 0.7 %, chain lightning 0.7 %, leech 0.7 %, grave spear 0.7 % |
-| drow archmage | 40 | 115 | +27 | haste 0.7 %, web 0.7 %, chain lightning 0.7 %, fireball 0.7 % |
-| drow high priestess | 44 | 123 | +29 | cure wounds 0.7 %, silence 0.7 %, web 0.7 %, leech 0.7 % |
+| deathless king | 66 | 213 | +37 | haste 0.7 %, fear 0.7 %, sunfire 0.7 %, grave spear 0.7 %, chain lightning 0.7 % |
+| demilich | 70 | 225 | +37 | silence 0.7 %, sunfire 0.7 %, chain lightning 0.7 %, leech 0.7 %, grave spear 0.7 % |
+| drow archmage | 40 | 115 | +25 | haste 0.7 %, web 0.7 %, chain lightning 0.7 %, fireball 0.7 % |
+| drow high priestess | 44 | 123 | +26 | cure wounds 0.7 %, silence 0.7 %, web 0.7 %, leech 0.7 % |
 | drow mage | 22 | 79 | +16 | web 0.7 %, lightning bolt 0.7 %, magic missile 0.7 % |
-| drow matron | 50 | 135 | +33 | cure wounds 0.7 %, silence 0.7 %, web 0.7 %, chain lightning 0.7 %, leech 0.7 % |
+| drow matron | 50 | 135 | +28 | cure wounds 0.7 %, silence 0.7 %, web 0.7 %, chain lightning 0.7 %, leech 0.7 % |
 | drow priestess | 24 | 83 | +18 | cure wounds 0.7 %, silence 0.7 %, leech 0.7 % |
 | dryad | 19 | 72 | +15 | barkskin 0.7 %, bind 0.7 %, acid arrow 0.7 % |
 | duergar mindbreaker | 29 | 102 | +18 | fear 0.7 %, bind 0.7 %, flay 0.7 % |
 | duergar priest | 19 | 72 | +12 | cure wounds 0.7 %, blessing 0.7 %, flay 2.1 %, cause wounds 0.7 % |
-| ghost lord | 53 | 174 | +40 | fear 0.7 %, slumber 0.7 %, grave spear 0.7 % |
-| giant shaman | 36 | 123 | +27 | cure wounds 0.7 %, rime 0.7 %, lightning bolt 0.7 % |
+| ghost lord | 53 | 174 | +31 | fear 0.7 %, slumber 0.7 %, grave spear 0.7 % |
+| giant shaman | 36 | 123 | +24 | cure wounds 0.7 %, rime 0.7 %, lightning bolt 0.7 % |
 | goblin wizard | 8 | 34 | +6 | burning hands 0.7 %, spark 0.7 % |
 | green hag | 18 | 69 | +14 | curse of sloth 0.7 %, mesmerise 0.7 %, blight 0.7 % |
 | hobgoblin warcaster | 14 | 57 | +10 | frost 2.1 %, arcane bolt 2.1 %, magic missile 0.7 % |
 | kobold shaman | 4 | 25 | +3 | mend 6.9 %, spark 6.9 % |
-| lich | 30 | 105 | +23 | haste 0.7 %, chain lightning 4.2 %, fireball 0.7 %, grave spear 0.7 % |
-| mummy king | 56 | 183 | +45 | fear 0.7 %, flame 0.7 %, grave spear 0.7 % |
-| mummy lord | 36 | 123 | +27 | fear 0.7 %, blight 0.7 %, grave spear 0.7 % |
+| lich | 30 | 105 | +22 | haste 0.7 %, chain lightning 6.9 %, fireball 0.7 %, grave spear 0.7 % |
+| mummy king | 56 | 183 | +35 | fear 0.7 %, flame 0.7 %, grave spear 0.7 % |
+| mummy lord | 36 | 123 | +24 | fear 0.7 %, blight 0.7 %, grave spear 0.7 % |
 | mummy priest | 20 | 75 | +16 | fear 0.7 %, cause wounds 0.7 %, blight 0.7 % |
 | necromancer | 18 | 73 | +12 | hex of weakness 0.7 %, leech 6.9 %, blight 0.7 % |
-| night hag | 33 | 114 | +24 | slumber 0.7 %, leech 0.7 %, blight 0.7 % |
+| night hag | 33 | 114 | +23 | slumber 0.7 %, leech 0.7 %, blight 0.7 % |
 | nymph | 22 | 81 | +17 | mesmerise 0.7 %, magic missile 0.7 % |
 | ogre mage | 18 | 69 | +12 | rime 4.2 %, frost 0.7 %, magic missile 0.7 % |
 | orc high shaman | 24 | 87 | +15 | cure wounds 0.7 %, blessing 0.7 %, fireball 2.1 % |
 | orc shaman | 10 | 45 | +7 | mend 0.7 %, burning hands 0.7 %, spark 0.7 % |
 | pixie | 4 | 27 | +4 | evil eye 2.1 %, spark 4.2 % |
-| rakshasa | 52 | 171 | +40 | glamour 0.7 %, mesmerise 0.7 %, flame 0.7 %, lightning bolt 0.7 % |
+| rakshasa | 52 | 171 | +31 | glamour 0.7 %, mesmerise 0.7 %, flame 0.7 %, lightning bolt 0.7 % |
 | troll shaman | 21 | 78 | +12 | cure wounds 0.7 %, rime 4.2 %, lightning bolt 10.4 % |
 | will-o'-wisp | 7 | 30 | +4 | spark 4.2 % |
-| wormlord | 47 | 156 | +36 | fear 0.7 %, leech 0.7 %, blight 0.7 % |
+| wormlord | 47 | 156 | +29 | fear 0.7 %, leech 0.7 %, blight 0.7 % |
 | barrow wight | 6 | 35 | +6 | hex of weakness 4.2 %, grave breath 0.7 % |
 | bog hag | 11 | 60 | +11 | hex of weakness 0.7 %, acid arrow 0.7 %, grave breath 0.7 % |
 | cult priest | 9 | 45 | +7 | mend 0.7 %, evil eye 0.7 %, grave breath 0.7 % |
-| Līgetdrȳ the Storm-Wright | 61 | 195 | +48 | haste 0.7 %, silence 0.7 %, chain lightning 0.7 %, lightning bolt 0.7 % |
+| Līgetdrȳ the Storm-Wright | 61 | 195 | +36 | haste 0.7 %, silence 0.7 %, chain lightning 0.7 %, lightning bolt 0.7 % |
 
 ## Protection by body
 

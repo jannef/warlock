@@ -156,7 +156,7 @@ The passive skills help you more the higher they are:
   comes of it.
 - **[Spellcraft](skills.md#skill-spellcraft)** steadies your casting. Every spell you cast with
   your own [mana](mana.md) makes a check after it goes off, and a failed one is a
-  [miscast](miscasts.md). The skill adds to that check (+14 at 100, +34 at 200) and makes a
+  [miscast](miscasts.md). The skill adds to that check (+14 at 100, +22 at 200, +40 at 999) and makes a
   miscast milder (10 off the [miscast table](miscasts.md#the-miscast-table)'s total at 100, 20 at
   200). Untrained, you still cast, with nothing added.
 

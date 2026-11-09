@@ -454,9 +454,11 @@ kind = "rules"
 mark = [{ on = "cast", chance = 25 }]
 benefit = [
     # Casting (spec §8 "Spells": "Miscasts"; miscast.toml): `cast` is added to the Spellcraft check
-    # every cast with one's own mana makes, +2 at 20, +14 at 100, +34 at 200; `ward` is taken off
-    # a miscast's total on the table, 10 at 100, 20 at 200.
-    { effect = "cast", curve = [[0, 0], [20, 2], [60, 8], [100, 14], [150, 24], [200, 34]] },
+    # every cast with one's own mana makes, +2 at 20, +14 at 100, +22 at 200, +40 at 999 (#1299:
+    # slower past 100, so a wizard who puts every roll on Spellcraft is not past every spell's
+    # reach by level 15, and every roll still counts); `ward` is taken off a miscast's total on
+    # the table, 10 at 100, 20 at 200.
+    { effect = "cast", curve = [[0, 0], [20, 2], [60, 8], [100, 14], [200, 22], [999, 40]] },
     { effect = "ward", curve = [[0, 0], [200, 20]] },
 ]
 
