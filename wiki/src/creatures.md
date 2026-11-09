@@ -82,9 +82,6 @@ a hostile faction), it goes for the nearest one:
   [calls others](creature-powers.md#summoning) from where it is. Nothing
   moves it: it never [makes way](npcs.md#getting-past) for you, no blow or spell drives it back,
   no teleport takes it, and it never follows you on the [stairs](terrain.md#stairs).
-- A few creatures are **left alone**: no other creature attacks them, not even your
-  [allies](allies.md), though you can. The [gates](miscasts.md#gates) a miscast opens are left
-  alone.
 - When it loses sight of its target, it goes to where it last saw it. If someone it cannot see
   stands on that spot, it goes next to it instead. If it finds no one there, or cannot get there,
   it gives up.

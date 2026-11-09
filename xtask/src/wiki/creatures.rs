@@ -172,10 +172,19 @@ pub(super) fn factions(content: &Content) -> String {
             .filter(|&(j, _)| factions.stance(id, FactionId(j as u16)) == Stance::Hostile)
             .map(|(_, e)| e.name.clone())
             .collect();
+        // The factions at peace with everyone, the berserk and the loosed too (the gates).
+        let spared: Vec<&str> = (factions.defs().iter())
+            .filter(|e| e.friendly_to_all)
+            .map(|e| e.name.as_str())
+            .collect();
+        let and_spared: String = spared.iter().map(|s| format!(" and {s}")).collect();
         let enemies = if f.hostile_to_all {
-            "everyone, its own too".to_string()
+            match spared.is_empty() {
+                true => "everyone, its own too".to_string(),
+                false => format!("everyone, its own too, but {}", spared.join(" and ")),
+            }
         } else if f.hostile_to_others {
-            "everyone but its own".to_string()
+            format!("everyone but its own{and_spared}")
         } else if enemies.is_empty() {
             "nobody".to_string()
         } else {

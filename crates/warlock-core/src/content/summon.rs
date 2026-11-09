@@ -12,7 +12,7 @@
 
 use super::creature::CreatureDef;
 use super::status::StatusId;
-use super::{Content, CreatureId};
+use super::{Content, CreatureId, FactionId};
 use crate::dice::Dice;
 use serde::Deserialize;
 
@@ -34,6 +34,8 @@ pub(super) struct SummonSpec {
     pub spread: Option<i32>,
     pub most: Option<u8>,
     pub verb: Option<String>,
+    /// The faction the summoned fight for; none: the summoner's.
+    pub faction: Option<String>,
 }
 
 /// A creature type's summoning, resolved.
@@ -58,6 +60,9 @@ pub struct Summon {
     pub most: u8,
     /// What it does, in the message: "calls forth".
     pub verb: String,
+    /// The faction the summoned come in (a gate's fiends `loosed`, #1316); `None`: the
+    /// summoner's.
+    pub faction: Option<FactionId>,
 }
 
 impl SummonSpec {
@@ -125,6 +130,13 @@ pub(super) fn resolve(
     if pool.is_empty() {
         return Err("summon: no creature fits the pool".into());
     }
+    let faction = match &spec.faction {
+        None => None,
+        Some(name) => Some(
+            (content.factions().id(name))
+                .ok_or_else(|| format!("summon: unknown faction `{name}`"))?,
+        ),
+    };
     let mana = spec.mana.unwrap_or(0);
     let status = (content.status_id(STATUS))
         .ok_or_else(|| format!("summon: needs the `{STATUS}` status in data/status.toml"))?;
@@ -152,6 +164,7 @@ pub(super) fn resolve(
         spread: spec.spread.unwrap_or(2),
         most: spec.most.unwrap_or(6),
         verb: spec.verb.clone().unwrap_or_else(|| "summons".into()),
+        faction,
     })
 }
 

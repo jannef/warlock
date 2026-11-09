@@ -83,10 +83,12 @@ Nine of the worst results open a **gate** beside you: a rift, a hellmouth, a gat
 abyssal, iron, black, or dire gate, an arch-gate, or the lords' gate. A gate is a
 [rooted](creatures.md#what-they-do) creature with no attack of its own. Instead it [lets fiends
 through](creature-powers.md#summoning), one or two at a time, every minute or more, as long as it
-sees anyone, since everyone is its enemy. The fiends it lets through belong to the gate's own
-[faction](creatures.md#factions), the loosed: they attack you, your enemies, and every other fiend
-alike, but never each other or the gate. No other creature attacks a gate itself, though they
-fight the fiends it lets through: only you can close it. The deeper the result, the stronger the fiends: a rift lets
+sees you or one of your [allies](allies.md). The gates are a [faction](creatures.md#factions) of
+their own, at peace with every monster and an enemy to you and your side alone. So no monster
+attacks a gate, but you, your allies, and your [companion](companions.md) can, whether you set it on
+the gate or not. A blast, such as a thunderclap, hurts a gate caught in it like anything else, even
+one a monster cast (gates shrug off fire and poison). The fiends it lets through are the loosed: they attack you, your enemies, and
+every other fiend alike, but never each other or a gate. The deeper the result, the stronger the fiends: a rift lets
 dretches and quasits through, the lords' gate a balor or a pit fiend.
 
 A gate never closes on its own. Kill it and no more come, but the fiends already through stay. The
