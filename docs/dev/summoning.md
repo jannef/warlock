@@ -42,6 +42,11 @@ creatures of its side, with no ability in the abilities menu, no action, no key,
   `summoner` set and `World::spawned` bumped), and `say_summoning` (the words from the last
   turn's `perception.sees_actors_at`). The draws come from the gameplay stream, after the AI
   decided without drawing.
+- **Rooted summoners** (#1294, `world/rooted.rs`, docs/dev/creatures.md "Rooted"): a type with
+  `rooted = true` and no `mana` (a breeder's rule: its cooldown and `most` its only limits) is
+  a gate: its turn is a summon when `summons_at` allows, else a wait, never a step. The
+  miscast gates (docs/design/miscasts-review.md §6.2, #1295) are such; `world/rooted_tests.rs`
+  has a fixture one.
 - **Experience**: nothing special: `World::creature_dies` pays a summoned creature's kill like
   any other's (first-kill bonus included).
 - **Banishing** (#913, `docs/dev/progression.md` "`smite_mode`"): the paladin's Banishing smite

@@ -465,7 +465,8 @@ impl World {
                 Budge::Always => true,
                 Budge::OffPost => !actor.mind.is_calm(),
                 Budge::Never => false,
-            };
+            }
+            && !self.is_rooted(id);
         if !budges || !self.load_of(id).penalty().can_move() {
             return Some(Refusal::Budge);
         }

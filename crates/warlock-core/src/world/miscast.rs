@@ -218,8 +218,10 @@ impl World {
             MishapEffect::Twice => self.miscast_echo(caster, cast, aim, events),
             MishapEffect::Surge => self.miscast_surge(caster, events),
             MishapEffect::Swap => {
-                let near = self.near_caster(caster);
-                if !near.is_empty() {
+                // A rooted one never swaps (`rooted.rs`).
+                let mut near = self.near_caster(caster);
+                near.retain(|&(id, _)| !self.is_rooted(id));
+                if !near.is_empty() && !self.is_rooted(caster) {
                     let i = self.state.rng.below(near.len() as u32) as usize;
                     let (other, there) = near[i];
                     self.teleport_to(caster, (here, there), events);

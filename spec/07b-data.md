@@ -25,7 +25,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
   `combat = "melee"` (default), `"ranged"`, or `"caster"`, the latter two with a `range` (2 to its
   sight), `opens_doors` (default false), `budge` (whether the player may swap places with it
   when it is not hostile, §8 "Displacement": `always`, the default; `off_post`, not while it keeps
-  its post, going about its routine, as a shopkeeper at its counter will; `never`), its
+  its post, going about its routine, as a shopkeeper at its counter will; `never`), `rooted`
+  (default false: rooted, it never moves, never gives way, is never pushed, swapped, or
+  teleported, and never follows on stairs, but strikes and summons where it stands, as a
+  miscast's gate; §8 "Spells": "Miscasts"), its
   `alignment` (`good`, `neutral`, the default, or `evil`; §8 "Alignment": the kobolds evil, the
   beasts neutral, the showcase's people good; never shown), an optional `race` (a race id; §8
   "Alignment": its corpse is kin to a character of that race; the showcase's people are human;

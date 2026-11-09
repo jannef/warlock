@@ -161,6 +161,8 @@ impl World {
         let plan = self.decide(id, &heard);
         let plan = self.frightened(id, plan);
         let plan = self.held_back(id, plan);
+        // Rooted, it never moves (`rooted.rs`).
+        let plan = self.rooted_plan(id, plan);
         let price = match plan {
             Plan::Attack {
                 target,
