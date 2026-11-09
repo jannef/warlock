@@ -1,0 +1,7 @@
+[[miscast]]
+id = "singe"
+from = 19
+to = 20
+message = "The weave snaps back and singes you."
+seen = "{who}'s own spell singes it."
+effect = { kind = "harm", dice = "1d3" }

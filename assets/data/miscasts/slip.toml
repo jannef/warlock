@@ -1,0 +1,7 @@
+[[miscast]]
+id = "slip"
+from = 35
+to = 36
+message = "Space knots, and you are standing where another stood."
+seen = "{who} and another change places in a blink."
+effect = { kind = "swap" }

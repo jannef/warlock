@@ -1,0 +1,7 @@
+[[miscast]]
+id = "rend"
+from = 83
+to = 84
+message = "The raw power rends you."
+seen = "{who} is rent by its own power."
+effect = { kind = "harm", dice = "4d6", damage = "force" }

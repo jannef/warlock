@@ -1,0 +1,7 @@
+[[miscast]]
+id = "burn"
+from = 53
+to = 54
+message = "The weave bursts in your hands and burns you."
+seen = "{who}'s spell bursts in its hands."
+effect = { kind = "harm", dice = "2d6" }

@@ -1,0 +1,7 @@
+[[miscast]]
+id = "falter"
+from = 63
+to = 64
+message = "The spell's shape falters in your mind, and most of your power runs out with it."
+seen = "{who} falters."
+effect = { kind = "mana", percent = 75 }

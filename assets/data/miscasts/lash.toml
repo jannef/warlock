@@ -1,0 +1,7 @@
+[[miscast]]
+id = "lash"
+from = 27
+to = 28
+message = "The spell turns and lashes you."
+seen = "{who}'s spell lashes it."
+effect = { kind = "harm", dice = "1d4" }

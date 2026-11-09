@@ -4,7 +4,7 @@
 
 use std::fmt::Write as _;
 use warlock_core::check;
-use warlock_core::content::{Content, MishapEffect};
+use warlock_core::content::{Content, MishapEffect, ZoneKind};
 use warlock_core::skills::Effect;
 
 /// The bonuses the chance table shows a column for.
@@ -30,7 +30,7 @@ pub(super) fn chances(content: &Content) -> String {
     out.push_str(&":---:|".repeat(BONUSES.len()));
     out.push('\n');
     for level in LEVELS {
-        let difficulty = rules.difficulty(level, 0);
+        let difficulty = rules.difficulty(level, 0, 1);
         let _ = write!(out, "| {level} | {difficulty} |");
         for b in BONUSES {
             let fails = 144 - check::ways(b, difficulty);
@@ -63,20 +63,27 @@ pub(super) fn chances(content: &Content) -> String {
     out
 }
 
-/// The whole miscast table, in order: each entry's range of totals, what it does, and what you
-/// are told.
+/// The whole miscast table, in order: each entry's range of totals, what it does (the protected
+/// ones marked), and what you are told.
 pub(super) fn table(content: &Content) -> String {
     let Some(rules) = content.miscast_rules() else {
         return String::new();
     };
     let mut out = format!(
-        "The total is 1d{die} (a {die} is rolled again and added, again and again) + {per} for \
-         each point the check missed by − what wards you. It is never below 1.\n\n\
+        "The total is {die} + {per} for each point the check missed by − what wards you. It is \
+         never below 1. Results below {safe} (marked *protected*) cannot kill you: their harm \
+         always leaves you at least 1 hit point.\n\n\
          | Total | What happens | You are told |\n|:---:|---|---|\n",
         die = rules.die,
         per = rules.per_margin,
+        safe = rules.safe_below,
     );
     for m in content.miscasts() {
+        let protected = if rules.protects(m) {
+            " (*protected*)"
+        } else {
+            ""
+        };
         let range = match m.to {
             Some(to) if to == m.from => m.from.to_string(),
             Some(to) => format!("{}–{to}", m.from),
@@ -84,8 +91,8 @@ pub(super) fn table(content: &Content) -> String {
         };
         let _ = writeln!(
             out,
-            "| {range} | {} | {} |",
-            effect_text(content, m.effect),
+            "| {range} | {}{protected} | {} |",
+            effect_text(content, m.effect, rules.protects(m)),
             m.message
         );
     }
@@ -104,7 +111,12 @@ pub(super) fn table(content: &Content) -> String {
 }
 
 /// What an entry's effect does, in words.
-fn effect_text(content: &Content, effect: MishapEffect) -> String {
+fn effect_text(content: &Content, effect: MishapEffect, protected: bool) -> String {
+    let kills = if protected {
+        "never below 1 hit point"
+    } else {
+        "it can kill"
+    };
     let near = warlock_core::world::MISCAST_NEAR;
     match effect {
         MishapEffect::Nothing | MishapEffect::Learn => "nothing more: a harmless glamour".into(),
@@ -139,19 +151,15 @@ fn effect_text(content: &Content, effect: MishapEffect) -> String {
         MishapEffect::Mark { stat } => format!("a training mark of {}", stat.name()),
         MishapEffect::Harm { dice, damage } => match damage {
             Some(d) => format!(
-                "{dice} {} damage to you; it can kill",
+                "{dice} {} damage to you; {kills}",
                 content.damage_type(d).name.to_lowercase()
             ),
-            None => format!("{dice} damage of the spell's own type to you; it can kill"),
+            None => format!("{dice} damage of the spell's own type to you; {kills}"),
         },
         MishapEffect::Refund => "the mana the spell cost comes back (a boon)".into(),
         MishapEffect::Twice => {
             "the spell goes off a second time at the same target, free (a boon)".into()
         }
-        MishapEffect::Surge => format!(
-            "a wild surge: a random damage spell bursts around someone within {near} cells of you \
-             in a clear line"
-        ),
         MishapEffect::Swap => {
             format!("you change places with someone within {near} cells in a clear line")
         }
@@ -160,5 +168,27 @@ fn effect_text(content: &Content, effect: MishapEffect) -> String {
              ×{severity}",
             content.status(status).name
         ),
+        MishapEffect::Noise { loudness } => format!(
+            "a loud noise (loudness {loudness}) that creatures nearby may [hear](hearing.md)"
+        ),
+        MishapEffect::Zone {
+            kind,
+            radius,
+            turns,
+        } => format!(
+            "a [zone](spellcasting.md#zones) of {} lies around you for {turns} turns, radius {radius}",
+            zone_name(kind)
+        ),
+    }
+}
+
+/// A zone kind in words.
+fn zone_name(kind: ZoneKind) -> &'static str {
+    match kind {
+        ZoneKind::Fire => "fire",
+        ZoneKind::Fouled => "foul air",
+        ZoneKind::Slick => "slick ground",
+        ZoneKind::Dark => "darkness",
+        ZoneKind::Smoke => "smoke that blocks sight",
     }
 }

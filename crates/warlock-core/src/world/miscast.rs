@@ -6,20 +6,26 @@
 //!   `data/miscast.toml`'s `stat`, what talents add to its checks, and Spellcraft's `cast`
 //!   points, [`Effect::Cast`]) against [`Actor::cast_difficulty`] (the rules' `base` +
 //!   `per_level` × the spell's level + a point for each `armour_percent` of
-//!   [`Actor::armour_spell_cost`]). A natural 2 always fails, so a cast always may miscast.
-//! - **The table**: a failure rolls the table's die (`die`, rolled again and added on its highest
-//!   face), adds `per_margin` × how far the check fell short, and takes off
-//!   [`Actor::miscast_ward`] (Spellcraft's `ward` points, [`Effect::Ward`], and the stance's
-//!   `miscast`); the total, at least 1, picks the one entry of `data/miscasts/` whose range
-//!   holds it ([`crate::content::Miscast`]).
+//!   [`Actor::armour_spell_cost`] − `rank_ease` × the caster's rank in the spell above the first,
+//!   [`Actor::spell_rank`]; a creature's spells are rank 1). A natural 2 always fails, so a cast
+//!   always may miscast.
+//! - **The table**: a failure rolls the table's die (`die`, a dice expression: 2d12), adds
+//!   `per_margin` × how far the check fell short, and takes off [`Actor::miscast_ward`]
+//!   (Spellcraft's `ward` points, [`Effect::Ward`], and the stance's `miscast`); the total, at
+//!   least 1, picks the one entry of `data/miscasts/` whose range holds it
+//!   ([`crate::content::Miscast`]).
 //! - **The entry**: its message (the player's own, or its `seen` line of a creature the player
 //!   sees), then its effect, the mishaps' machinery generalized to any caster: statuses, mana,
 //!   the teleport trap's [`World::teleport`], stat marks, a [`Drain`], a summon beside the
 //!   caster, harm through [`World::resisted`] and [`World::hurt`], the mana refunded, the spell
-//!   again ([`Cast::by_creature`]: already paid), a wild surge (a damage spell drawn among all
-//!   with a roll, as a burst at someone near), a swap of places, and a boon on someone near.
-//!   "Near" is within [`NEAR`] cells in a clear line ([`World::clear_shot`]), in actor-id order.
-//!   A death of the player by their own miscast is [`Cause::Miscast`].
+//!   again ([`Cast::by_creature`]: already paid), a swap of places (a creature's never with the
+//!   player), a boon on someone near, a thunderclap's sound of the entry's loudness on the
+//!   caster's cell ([`World::sound_at`]), and a zone around the caster (`zone.rs`; none on the
+//!   overworld). "Near" is within [`NEAR`] cells in a clear line ([`World::clear_shot`]), in
+//!   actor-id order. A death of the player by their own miscast is [`Cause::Miscast`].
+//! - **Protected entries** ([`crate::content::MiscastRules::protects`], those ending below
+//!   `safe_below`): their harm takes the caster to 1 hit point at the least, nothing at 1; the
+//!   loader keeps every effect that could kill or cost for good off them.
 //!
 //! Determinism: the check's two draws, the table's die, then the effect's own draws, all from the
 //! gameplay stream, in that order; no draw without `data/miscast.toml`.
@@ -33,15 +39,16 @@ use crate::action::{Event, ReadTarget};
 use crate::check::{self, Checked};
 use crate::content::{
     Burst, Content, CreatureId, CreatureSpawn, Drain, Miscast, MishapEffect, SpellData, SpellId,
-    SpellPurpose,
+    SpellPurpose, TrapNoise,
 };
 use crate::damage::Damage;
-use crate::dice::Roll;
+use crate::dice::{Dice, Roll};
 use crate::geom::{Dir, Pos};
+use crate::noise::SoundKind;
 use crate::skills::Effect;
 use crate::stats::Stat;
 
-/// How far "near the caster" reaches for a surge, a swap, and a boon.
+/// How far "near the caster" reaches for a swap and a boon.
 pub const NEAR: i32 = 6;
 
 /// What a cast was aimed at, so a miscast's echo goes the same way.
@@ -64,11 +71,16 @@ impl Actor {
             + self.skill_effect(content, Effect::Cast)
     }
 
-    /// The difficulty of its Spellcraft check on a cast of `def`, in what it wears; `None`
-    /// without the rules (no check).
-    pub fn cast_difficulty(&self, content: &Content, def: &SpellData) -> Option<i32> {
+    /// The difficulty of its Spellcraft check on a cast of `spell` (`def`), at its rank in it,
+    /// in what it wears; `None` without the rules (no check).
+    pub fn cast_difficulty(
+        &self,
+        content: &Content,
+        (spell, def): (SpellId, &SpellData),
+    ) -> Option<i32> {
         let rules = content.miscast_rules()?;
-        Some(rules.difficulty(def.level, self.armour_spell_cost(content)))
+        let rank = self.spell_rank(content, spell).unwrap_or(1);
+        Some(rules.difficulty(def.level, self.armour_spell_cost(content), rank))
     }
 
     /// What it takes off a miscast's total: Spellcraft's `ward` and its stance's `miscast`.
@@ -103,7 +115,7 @@ impl World {
             return;
         };
         let (bonus, ward) = (me.cast_bonus(&content), me.miscast_ward(&content));
-        let Some(difficulty) = me.cast_difficulty(&content, cast.def) else {
+        let Some(difficulty) = me.cast_difficulty(&content, (cast.spell, cast.def)) else {
             return;
         };
         let Checked::Failed { by } = check::roll(&mut self.state.rng, bonus, difficulty) else {
@@ -116,17 +128,9 @@ impl World {
         self.miscast(caster, cast, aim, &entry, events);
     }
 
-    /// The table's total: the die, rolled again and added on its highest face, + `margin` −
-    /// `ward`, at least 1.
-    pub(super) fn miscast_total(&mut self, die: u32, margin: i32, ward: i32) -> i32 {
-        let mut rolled: i32 = 0;
-        loop {
-            let face = self.state.rng.below(die) + 1;
-            rolled = rolled.saturating_add(i32::try_from(face).unwrap_or(i32::MAX));
-            if face < die {
-                break;
-            }
-        }
+    /// The table's total: the die + `margin` − `ward`, at least 1.
+    pub(super) fn miscast_total(&mut self, die: Dice, margin: i32, ward: i32) -> i32 {
+        let rolled = die.roll(&mut self.state.rng);
         rolled.saturating_add(margin).saturating_sub(ward).max(1)
     }
 
@@ -144,6 +148,9 @@ impl World {
             return;
         };
         let here = me.pos;
+        // Noise and zones go off on the level in play only (a creature's miscast elsewhere is
+        // unheard and lays nothing).
+        let in_play = me.level == self.state.current().id;
         if caster == player {
             self.say(entry.message.clone());
         } else if self.perception.sees_actors_at(here) {
@@ -152,6 +159,7 @@ impl World {
         }
         let alive = self.state.death.is_none();
         let content = self.content.clone();
+        let protected = (content.miscast_rules()).is_some_and(|r| r.protects(entry));
         match entry.effect {
             MishapEffect::Nothing | MishapEffect::Learn => {}
             MishapEffect::Status { status, severity } => {
@@ -201,7 +209,10 @@ impl World {
             MishapEffect::Harm { dice, damage } => {
                 let amount = dice.roll(&mut self.state.rng).max(1);
                 let kind = damage.or(cast.def.damage_type);
-                let amount = self.resisted(caster, Damage::new(amount, kind));
+                let mut amount = self.resisted(caster, Damage::new(amount, kind));
+                if protected && let Some(me) = self.state.actors.get(&caster) {
+                    amount = amount.min(me.hp - 1);
+                }
                 if amount > 0 {
                     self.hurt(caster, amount, Harm::Place, events);
                 }
@@ -216,11 +227,11 @@ impl World {
                 }
             }
             MishapEffect::Twice => self.miscast_echo(caster, cast, aim, events),
-            MishapEffect::Surge => self.miscast_surge(caster, events),
             MishapEffect::Swap => {
-                // A rooted one never swaps (`rooted.rs`).
+                // A creature's swap never drags the player in among its friends,
+                // and a rooted one never swaps (`rooted.rs`).
                 let mut near = self.near_caster(caster);
-                near.retain(|&(id, _)| !self.is_rooted(id));
+                near.retain(|&(id, _)| (caster == player || id != player) && !self.is_rooted(id));
                 if !near.is_empty() && !self.is_rooted(caster) {
                     let i = self.state.rng.below(near.len() as u32) as usize;
                     let (other, there) = near[i];
@@ -234,6 +245,22 @@ impl World {
                 let i = self.state.rng.below(near.len() as u32) as usize;
                 self.afflict(near[i], status, severity, None, events);
             }
+            MishapEffect::Noise { loudness } if in_play => {
+                let sound = TrapNoise {
+                    sound: SoundKind::Thunder,
+                    loudness,
+                };
+                self.sound_at(Some(sound), here);
+            }
+            MishapEffect::Zone {
+                kind,
+                radius,
+                turns,
+            } if in_play => {
+                let around = (here, i32::from(radius));
+                self.lay_zone_around((kind, caster), around, u64::from(turns), events);
+            }
+            MishapEffect::Noise { .. } | MishapEffect::Zone { .. } => {}
         }
         if caster == player
             && alive
@@ -339,30 +366,6 @@ impl World {
                 self.creature_spell_does((caster, here), &echo, (on, at), events);
             }
         }
-    }
-
-    /// A wild surge: a damage spell drawn among all that roll one goes off as a burst around
-    /// someone near the caster, drawn the same way, at its base roll; no one near, nothing.
-    fn miscast_surge(&mut self, caster: ActorId, events: &mut Vec<Event>) {
-        let content = self.content.clone();
-        let near = self.near_caster(caster);
-        if near.is_empty() {
-            return;
-        }
-        let spells: Vec<SpellId> = (content.spells().iter().enumerate())
-            .filter(|(_, s)| s.kind == SpellPurpose::Damage && s.damage.is_some())
-            .map(|(i, _)| SpellId(u16::try_from(i).unwrap_or(u16::MAX)))
-            .collect();
-        if spells.is_empty() {
-            return;
-        }
-        let spell = spells[self.state.rng.below(spells.len() as u32) as usize];
-        let (_, at) = near[self.state.rng.below(near.len() as u32) as usize];
-        let def = content.spell(spell);
-        let Some(roll) = def.damage else {
-            return;
-        };
-        self.miscast_burst(caster, def, (at, roll), events);
     }
 
     /// A `creature` comes to the first free cell around `here`, of its own kind's faction.

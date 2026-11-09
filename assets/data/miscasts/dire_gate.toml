@@ -1,0 +1,7 @@
+[[miscast]]
+id = "dire_gate"
+from = 101
+to = 102
+message = "The weave rips open, and what pours through it tears at you!"
+seen = "The weave rips open beside {who} and tears at it!"
+effect = { kind = "harm", dice = "8d10", damage = "force" }

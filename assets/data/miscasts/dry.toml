@@ -1,0 +1,7 @@
+[[miscast]]
+id = "dry"
+from = 65
+to = 66
+message = "Every drop of your power is torn out of you."
+seen = "{who} goes grey."
+effect = { kind = "mana", percent = 100 }

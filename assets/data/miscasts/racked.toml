@@ -1,0 +1,7 @@
+[[miscast]]
+id = "racked"
+from = 69
+to = 70
+message = "You are racked, and your strength runs out of you."
+seen = "{who} is racked."
+effect = { kind = "status", status = "weakened", severity = 3 }

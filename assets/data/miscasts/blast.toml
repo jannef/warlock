@@ -1,0 +1,7 @@
+[[miscast]]
+id = "blast"
+from = 67
+to = 68
+message = "The spell bursts, and the blast hurls you back."
+seen = "{who}'s spell bursts, and the blast hurls it back."
+effect = { kind = "harm", dice = "3d6", damage = "force" }

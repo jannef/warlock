@@ -1,0 +1,7 @@
+[[miscast]]
+id = "iron_gate"
+from = 91
+to = 92
+message = "The ground grinds open, and the heat of the hells sears you!"
+seen = "The ground grinds open beside {who}, and heat sears it!"
+effect = { kind = "harm", dice = "6d10", damage = "fire" }

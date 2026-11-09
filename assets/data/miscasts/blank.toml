@@ -1,0 +1,7 @@
+[[miscast]]
+id = "blank"
+from = 115
+to = 116
+message = "Every spell you know burns through your mind at once!"
+seen = "{who} stares, empty-eyed, as its own power burns through it!"
+effect = { kind = "harm", dice = "12d10", damage = "force" }

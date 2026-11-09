@@ -49,7 +49,7 @@ pub(super) fn spells_of(w: &World, id: ActorId) -> (Vec<Spell>, i32) {
                 roll: roll.map_or_else(String::new, |r| r.to_string()),
                 to_hit: me.spell_to_hit(content, spell) + i32::from(def.level) / 4,
                 cost: me.spell_cost(content, spell),
-                difficulty: me.cast_difficulty(content, spell).unwrap_or(0),
+                difficulty: me.cast_difficulty(content, (s, spell)).unwrap_or(0),
             }
         })
         .collect();

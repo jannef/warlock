@@ -1,0 +1,7 @@
+[[miscast]]
+id = "hellmouth"
+from = 77
+to = 78
+message = "The ground splits, and fire leaps out of it at you!"
+seen = "The ground splits beside {who}, and fire leaps out at it!"
+effect = { kind = "harm", dice = "4d6", damage = "fire" }

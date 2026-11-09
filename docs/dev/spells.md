@@ -240,18 +240,24 @@ cast path shares.
   for creatures (refused at load, `content/creature_spells.rs`): zones, corpses, the open sky,
   pushes, charms, ground- or tag-bound hexes, heals not by touch, summons, cleansings, and
   utilities.
-- **Miscasts** (#1271; `world/miscast.rs`, `content/miscast.rs`, tests `world/miscast_tests.rs`;
-  spec §8 "Spells": "Casting"):
+- **Miscasts** (#1271, #1288; `world/miscast.rs`, `content/miscast.rs`, tests
+  `world/miscast_tests.rs`; spec §8 "Spells": "Casting"; the design
+  `docs/design/miscasts-review.md`, of which #1288 is §10 PR 1):
   - **Data**: `data/miscast.toml` (`MiscastRules`: `stat`, `base`, `per_level`, `armour_percent`,
-    `die`, `per_margin`; optional: without it no cast checks and nothing draws) and
+    `rank_ease`, `die` (a `Dice`, `"2d12"`), `per_margin`, `safe_below`; optional: without it
+    no cast checks and nothing draws) and
     `data/miscasts/` (`Miscast`, one `[[miscast]]` a file, `README.toml` the format: `from`, `to`
     (left out on the last only), `message` (the player's), `seen` (a creature's, `{who}` its
     name), `effect`). The loader orders the table by `from` and refuses a gap, an overlap, a
     closed last entry, an open one before it, and a `seen` without `{who}`. The effects are the
     mishaps' (`MishapEffect`, `content/learning.rs::resolve_effect` shared, with `miscast`
-    true): the miscast's own kinds `harm` (`dice`, `damage`), `refund`, `twice`, `surge`,
-    `swap`, `boon` (`status`, `severity`), and `backfire`'s `full`, which the study's table
-    refuses; `learn`, which the miscast's refuses. Spellcraft's `cast` and `ward` benefits
+    true): the miscast's own kinds `harm` (`dice`, `damage`), `refund`, `twice`, `swap`, `boon`
+    (`status`, `severity`), `noise` (`loudness`, 1 to `noise::MAX_LOUDNESS`), `zone` (`zone`, a
+    `ZoneKind` id, `radius` 0 to 20, `turns` at least 1), and `backfire`'s `full`, which the
+    study's table refuses; `learn`, which the miscast's refuses. **The whitelist**
+    (`content/miscast.rs::check_protected`): an entry `MiscastRules::protects` (its `to` below
+    `safe_below`) is refused with `backfire`, `drain`, `summon`, a `fire` zone, or a `status` or
+    `boon` whose `StatusDef` has `damage` or `mana_damage`. Spellcraft's `cast` and `ward` benefits
     (`skills::Effect::{Cast, Ward}`, `data/skills.toml`) and `StanceDef::miscast`
     (`data/stances.toml`).
   - **The hooks**: `World::cast_spell` calls `World::after_cast(player, &cast,
@@ -261,26 +267,39 @@ cast path shares.
     scroll's (`read_cast`), a wand's (`wand_cast`), and a flask's casts never reach it.
   - **The check** (`Actor::cast_bonus`, `Actor::cast_difficulty`, `check::roll`): the stat's
     modifier + `TalentMods::check(stat)` + `skill_effect(Effect::Cast)`, against
-    `MiscastRules::difficulty(level, armour_spell_cost)`. A natural 2 always fails
-    (`check::makes`), by `difficulty − 2 − bonus` or 0.
-  - **The total** (`World::miscast_total`): `rng.below(die) + 1`, again and added while it shows
-    `die`, + `per_margin × by` − `Actor::miscast_ward` (`ward` + the stance's `miscast`), at
-    least 1; `miscast_entry` (`world::miscast::entry_for`) finds the entry covering it.
+    `MiscastRules::difficulty(level, armour_spell_cost, rank)`, `rank` the caster's
+    `Actor::spell_rank` (1 for a spell it does not hold: a creature's), less `rank_ease` a rank
+    above the first. A natural 2 always fails (`check::makes`), by `difficulty − 2 − bonus` or 0.
+  - **The total** (`World::miscast_total`): `die.roll`, + `per_margin × by` −
+    `Actor::miscast_ward` (`ward` + the stance's `miscast`), at least 1; `miscast_entry`
+    (`world::miscast::entry_for`) finds the entry covering it.
   - **The entry** (`World::miscast`, any caster): the message (the player's, or `seen` with
     `{who}` when the player sees the creature), then the effect: `afflict`, the mana cut,
     `teleport`, a stat mark off or on, `drain`, a summon at the first free cell around the
     caster (its type's faction), `harm` (`dice` through `World::resisted` of `damage` or the
-    spell's type, then `hurt` with `Harm::Place`), `refund` (`Actor::spell_cost` back, to the
+    spell's type, then `hurt` with `Harm::Place`; for a protected entry at most `hp − 1`),
+    `refund` (`Actor::spell_cost` back, to the
     maximum), `twice` (`Cast::by_creature` of the same spell, `Pay::Creature`, through `perform`
     for the player or `creature_spell_does` for a creature: no mana, no training, no check),
-    `surge` (a damage spell with a roll, drawn by index, as a burst at its base roll around
-    someone near), `swap` (`teleport_to` both ways), `boon` (the caster or someone near), and
+    `swap` (`teleport_to` both ways; a creature caster's list leaves the player out), `boon`
+    (the caster or someone near), `noise` (`World::sound_at` of a `SoundKind::Thunder` at the
+    loudness, on the caster's cell), `zone` (`World::lay_zone_around`, `zone.rs`: the dev
+    zone's cells, `burst` in line of sight, by the caster, no harm, none on the overworld),
+    and
     `backfire` (a damage spell as a burst around the caster at its base roll, or with `full`
     the cast's own roll; a hex on the caster at the cast's degrees; others nothing). "Near"
     (`near_caster`): actors on the caster's level within `world::MISCAST_NEAR` (6) cells with a
-    `clear_shot`, in actor-id order. A player who dies of it: `Cause::Miscast(spell)`.
+    `clear_shot`, in actor-id order. `noise` and `zone` act only when the caster stands on the
+    current level. A player who dies of it: `Cause::Miscast(spell)`.
+  - **The table** (#1288): 65 rows of two totals; the 35 below 71 protected. The rows the
+    design's later PRs fill stand in with existing kinds under their final ids: `stumble`
+    (`lose_mark`), `falter` (`mana` 75 %), `ache` and `racked` (Weakened 2 and 3) until rank
+    loss and stat damage (#1289, #1290); `twofold_`, `threefold_`, `ruinous_withering` as one
+    `drain` each until `times` (#1290); `forgetting`, `amnesia`, `blank`, and the gate and pit
+    rows (`rift` … `pit_and_lords`) as `harm` of their neighbours' dice until forgetting
+    (#1289), the gates, and the Pits. Their words are working lines until #1292.
   - **Determinism**: two draws for the check, one a face of the die, then the effect's own
-    (dice, a pick among those near, a surge's spell then its target). Nothing new is saved.
+    (dice, a pick among those near). Nothing new is saved.
   - **Choices** (the issue's open points): creatures check too, with their own Spellcraft
     (every shipped caster has one) and Intelligence; the casting stat is Intelligence for
     every spell (data's `stat`); the mitigations are Spellcraft's `ward` (so skill affixes and

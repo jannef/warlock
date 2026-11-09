@@ -1,7 +1,7 @@
 [[miscast]]
 id = "rift"
-from = 97
-to = 104
-message = "Your weave tears open a rift, and something crawls through!"
-seen = "{who}'s weave tears open a rift, and something crawls through!"
-effect = { kind = "summon", creature = "dretch" }
+from = 75
+to = 76
+message = "The weave tears, and raw power pours through the rift onto you!"
+seen = "The weave tears about {who}, and raw power pours onto it!"
+effect = { kind = "harm", dice = "4d6", damage = "force" }

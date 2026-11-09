@@ -1,0 +1,7 @@
+[[miscast]]
+id = "black_gate"
+from = 93
+to = 94
+message = "A black tear opens in the air and lashes you!"
+seen = "A black tear opens beside {who} and lashes it!"
+effect = { kind = "harm", dice = "6d10", damage = "force" }

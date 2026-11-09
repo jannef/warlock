@@ -429,19 +429,21 @@ plate-clad warrior about half as often as on a wizard.
 
 ## Miscasts
 
+The wizard spends every level's skill rolls on Spellcraft (#1288, the miscasts design §1.2: a career that plays the miscast system); the priest and the witch spend theirs where `levelup:auto` puts them. With every roll on it the wizard's bonus reaches the check's floor by level 10: from then only the 1 and 1 miscasts. Re-measured at #1288; the other sections are as their last PRs left them.
+
 Each class's Spellcraft, the bonus of its check on a cast and its ward (trained, plain gear, the seeds' mean, the bonus rounded), and the chance of a miscast for a spell of level 1, of level 11, and of the highest level it knows (that level in brackets).
 
 | Class | L | Spellcraft | Bonus | Ward | Level 1 | Level 11 | Highest known |
 |---|---:|---:|---:|---:|---:|---:|---:|
 | wizard | 1 | 20 | +3.7 | 2 | 4.2 % | 61.8 % | 4.2 % (1) |
-| wizard | 5 | 20 | +3.8 | 2 | 4.2 % | 61.8 % | 10.4 % (3) |
-| wizard | 10 | 20 | +4.5 | 2 | 2.1 % | 54.2 % | 31.2 % (8) |
-| wizard | 15 | 20 | +5.0 | 2 | 2.1 % | 54.2 % | 31.2 % (8) |
-| wizard | 20 | 20 | +5.7 | 2 | 0.7 % | 45.8 % | 25.0 % (8) |
-| wizard | 30 | 20 | +6.3 | 2 | 0.7 % | 45.8 % | 95.8 % (20) |
-| wizard | 40 | 20 | +7.0 | 2 | 0.7 % | 38.2 % | 99.3 % (30) |
-| wizard | 50 | 20 | +7.5 | 2 | 0.7 % | 31.2 % | 99.3 % (30) |
-| wizard | 60 | 20 | +7.8 | 2 | 0.7 % | 31.2 % | 99.3 % (30) |
+| wizard | 5 | 60 | +10.2 | 6 | 0.7 % | 19.4 % | 0.7 % (3) |
+| wizard | 10 | 137 | +24.0 | 13 | 0.7 % | 0.7 % | 0.7 % (8) |
+| wizard | 15 | 210 | +37.7 | 20 | 0.7 % | 0.7 % | 0.7 % (8) |
+| wizard | 20 | 292 | +38.2 | 20 | 0.7 % | 0.7 % | 0.7 % (8) |
+| wizard | 30 | 475 | +39.0 | 20 | 0.7 % | 0.7 % | 0.7 % (20) |
+| wizard | 40 | 679 | +39.7 | 20 | 0.7 % | 0.7 % | 0.7 % (30) |
+| wizard | 50 | 898 | +40.2 | 20 | 0.7 % | 0.7 % | 0.7 % (30) |
+| wizard | 60 | 999 | +40.7 | 20 | 0.7 % | 0.7 % | 0.7 % (30) |
 | priest | 1 | 22 | +2.2 | 2 | 10.4 % | 75.0 % | 10.4 % (1) |
 | priest | 5 | 22 | +2.2 | 2 | 10.4 % | 75.0 % | 19.4 % (3) |
 | priest | 10 | 22 | +3.0 | 2 | 6.9 % | 68.8 % | 61.8 % (10) |

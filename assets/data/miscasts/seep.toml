@@ -1,0 +1,7 @@
+[[miscast]]
+id = "seep"
+from = 45
+to = 46
+message = "Half your power drains out through the broken weave."
+seen = "{who} dims."
+effect = { kind = "mana", percent = 50 }

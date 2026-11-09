@@ -1,0 +1,7 @@
+[[miscast]]
+id = "lords_gate"
+from = 123
+to = 124
+message = "The weave tears open for something vast, and its passing breaks you!"
+seen = "The weave tears open beside {who} for something vast!"
+effect = { kind = "harm", dice = "12d10", damage = "force" }

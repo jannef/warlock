@@ -70,7 +70,8 @@
 //!   the trained players of its level.
 //!
 //! - **Miscasts** (#1271, `miscasts.rs`): the casting classes' Spellcraft check on a cast (bonus
-//!   and ward) and the chance of a miscast by spell level, for the highest spell they know.
+//!   and ward) and the chance of a miscast by spell level, for the highest spell they know, at rank
+//!   1. The wizard spends every level's skill rolls on Spellcraft (`SPELLCRAFT_ROLLS`, #1288).
 //!
 //! Not modelled: triggered and active weapon abilities, stances (but the rage table's), talents chosen for a build
 //! (`levelup:auto` takes the first it may), the initiative check's Surprised after the first
@@ -142,6 +143,34 @@ fn rank(level: u8) -> u8 {
         23..=31 => 8,
         32..=41 => 9,
         _ => 10,
+    }
+}
+
+/// The classes whose level-up skill rolls all go on Spellcraft (the miscasts design §1.2: a
+/// career that plays the miscast system); every other class's go where `levelup:auto` puts them.
+const SPELLCRAFT_ROLLS: [&str; 1] = ["wizard"];
+
+/// Spends every skill roll due on Spellcraft.
+fn spellcraft_rolls(w: &mut World) {
+    while w.state.progress.due.iter().any(|d| d.rolls > 0) {
+        let before: u32 = w
+            .state
+            .progress
+            .due
+            .iter()
+            .map(|d| u32::from(d.rolls))
+            .sum();
+        act(w, "advance:spellcraft");
+        let after: u32 = w
+            .state
+            .progress
+            .due
+            .iter()
+            .map(|d| u32::from(d.rolls))
+            .sum();
+        if after >= before {
+            break;
+        }
     }
 }
 
@@ -986,6 +1015,9 @@ fn career(
             let more = need.saturating_sub(w.player_xp());
             let before = training::scores(&w);
             act(&mut w, &format!("xp:{more}"));
+            if SPELLCRAFT_ROLLS.contains(&build.class) {
+                spellcraft_rolls(&mut w);
+            }
             act(&mut w, "levelup:auto levelup:auto");
             log.rises(&w, before);
             log.note_ranks(&w, level);

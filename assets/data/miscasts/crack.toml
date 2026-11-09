@@ -1,0 +1,7 @@
+[[miscast]]
+id = "crack"
+from = 23
+to = 24
+message = "The spell ends with a crack like a whip."
+seen = "{who}'s spell ends with a crack."
+effect = { kind = "noise", loudness = 60 }

@@ -1,7 +1,7 @@
 [[miscast]]
 id = "withering"
-from = 90
-to = 96
-message = "Your weave feeds on you, and something of you goes with it."
-seen = "{who}'s weave feeds on it, and it withers."
+from = 73
+to = 74
+message = "The weave feeds on you, and something of you goes with it."
+seen = "{who} withers."
 effect = { kind = "drain", stat = "random", points = 1, difficulty = 16 }

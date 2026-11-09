@@ -1,0 +1,7 @@
+[[miscast]]
+id = "quickened"
+from = 15
+to = 16
+message = "Power hums through your limbs, and they quicken."
+seen = "{who} quickens."
+effect = { kind = "status", status = "hasted", severity = 1 }

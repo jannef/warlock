@@ -1,0 +1,7 @@
+[[miscast]]
+id = "fog"
+from = 33
+to = 34
+message = "Grey fog boils from the spell and wraps you."
+seen = "Grey fog boils up about {who}."
+effect = { kind = "zone", zone = "smoke", radius = 1, turns = 5 }

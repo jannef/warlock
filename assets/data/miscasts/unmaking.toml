@@ -1,0 +1,7 @@
+[[miscast]]
+id = "unmaking"
+from = 117
+to = 118
+message = "The power unmakes you from within."
+seen = "{who} is unmade from within!"
+effect = { kind = "harm", dice = "12d10", damage = "force" }

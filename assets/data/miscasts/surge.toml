@@ -1,7 +1,0 @@
-[[miscast]]
-id = "surge"
-from = 59
-to = 63
-message = "Wild magic surges out of your weave!"
-seen = "Wild magic surges out of {who}'s weave!"
-effect = { kind = "surge" }

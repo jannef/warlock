@@ -1,7 +1,0 @@
-[[miscast]]
-id = "glamour"
-from = 1
-to = 8
-message = "Your weave slips: the air glitters with harmless motes of colour."
-seen = "{who}'s weave slips: the air glitters with harmless motes of colour."
-effect = { kind = "nothing" }

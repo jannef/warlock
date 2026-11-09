@@ -1,0 +1,7 @@
+[[miscast]]
+id = "hum"
+from = 7
+to = 8
+message = "A low hum hangs in the air after the spell."
+seen = "A low hum hangs about {who}."
+effect = { kind = "noise", loudness = 30 }

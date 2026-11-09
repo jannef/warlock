@@ -1,0 +1,7 @@
+[[miscast]]
+id = "thunder"
+from = 39
+to = 40
+message = "The spell breaks with a clap of thunder."
+seen = "{who}'s spell breaks with a clap of thunder!"
+effect = { kind = "noise", loudness = 100 }

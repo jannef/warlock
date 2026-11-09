@@ -1,0 +1,7 @@
+[[miscast]]
+id = "ruin"
+from = 109
+to = 110
+message = "Ruin pours through the broken weave."
+seen = "Ruin pours through {who}!"
+effect = { kind = "harm", dice = "10d10", damage = "force" }

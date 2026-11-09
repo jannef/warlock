@@ -1,7 +1,0 @@
-[[miscast]]
-id = "mana_drain"
-from = 64
-to = 70
-message = "Your weave drinks deep of your mana."
-seen = "{who}'s weave drinks deep of its power."
-effect = { kind = "mana", percent = 75 }

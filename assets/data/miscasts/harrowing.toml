@@ -1,0 +1,7 @@
+[[miscast]]
+id = "harrowing"
+from = 103
+to = 104
+message = "You are harrowed by your own power."
+seen = "{who} is harrowed by its own power!"
+effect = { kind = "harm", dice = "8d10", damage = "force" }
