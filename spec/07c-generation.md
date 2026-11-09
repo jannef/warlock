@@ -88,7 +88,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
   Pits, and a record whose mouth is gone (opened on a forgotten floor) is dropped on the next
   arrival outside every Pit. **The warden** (#1298; `[dungeon.portal] boss`): every Pit's fifth
   floor is kept by its own warden of the gate (`gatewarden`, a level-50 devil-bodied fiend with
-  claws and a whip that holds, which opens rifts and hellmouths on its side; no unique, in no
+  claws and a whip that holds, which opens rifts and hellmouths on its side, their fiends too (a summoner set on another side
+  than its type's brings its summons to that side, over its summoning's `faction`); no unique, in no
   population, never a stray; faction `layer_keepers`, so the Pit's folk leave it be) in its hall
   (`wardens_hall`, lava in its corners, four locked chests of the floor's band and a hoard), stamped
   for certain like a layer boss's lair but hiding no stairs: the floor leads nowhere. Its death

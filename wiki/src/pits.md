@@ -43,7 +43,9 @@ The fifth floor is the last. It leads nowhere deeper. Its hall belongs to the
 [warden of the gate](creatures.md#creature-gatewarden), a level-50 fiend with claws and a barbed
 whip that can [hold](status-effects.md#status-held) you. Every two minutes it tears open a new
 gate, a [rift](creatures.md#creature-rift) or a [hellmouth](creatures.md#creature-hellmouth), two
-at most at once, and what comes through fights for it. The Pit's other fiends leave it alone. The
+at most at once, and what comes through fights for it. The Pit's other fiends leave it alone.
+A gate your own [miscast](miscasts.md) opens is different: the fiends it lets through attack the
+warden too. The
 hall has lava in its corners, four locked [chests](chests.md), and a hoard of finds.
 
 Every Pit has its own warden. Killing one **seals** that Pit, and only that Pit. Make the fifth

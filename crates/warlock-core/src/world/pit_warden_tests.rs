@@ -4,9 +4,10 @@
 //! the next arrival outside; the content's checks of a portal branch's boss row.
 
 use super::caster_tests::said;
+use super::stance_between;
 use super::*;
 use crate::action::{Action, parse_actions};
-use crate::content::{Content, ContentFiles, LevelTemplate, StairsDir};
+use crate::content::{Content, ContentFiles, CreatureSpawn, LevelTemplate, StairsDir, Stance};
 use crate::mapgen::Visit;
 use std::collections::BTreeSet;
 use std::sync::{Arc, LazyLock};
@@ -213,4 +214,132 @@ fn a_portal_branchs_boss_need_not_be_unique_but_its_lair_must_fit_the_floor() {
     assert!(err.contains("marks no stairs down"), "{err}");
     let err = with(6, None).expect_err("no sixth floor");
     assert!(err.contains("does not have"), "{err}");
+}
+
+/// The stance of actor `a` toward actor `b`.
+fn stance(w: &World, a: ActorId, b: ActorId) -> Stance {
+    let s = &w.state;
+    stance_between(s, &CONTENT, &s.actors[&a], &s.actors[&b])
+}
+
+fn summoned_by(w: &World, by: ActorId) -> Vec<ActorId> {
+    (w.state.actors.values())
+        .filter(|a| a.summoner == Some(by))
+        .map(|a| a.id)
+        .collect()
+}
+
+/// Run `seed` with a Pit open and the player on its fifth floor; the warden.
+fn at_the_hall(seed: u64) -> (World, ActorId) {
+    let mut w = start(seed);
+    portal(&mut w);
+    let s = *w.state.pits.keys().next().expect("a Pit");
+    jump(&mut w, &format!("hellegeat@{s}:5"));
+    let warden = warden_here(&w).expect("the warden");
+    (w, warden)
+}
+
+#[test]
+fn the_gates_a_warden_opens_and_what_they_let_through_fight_on_its_side() {
+    let (mut w, warden) = at_the_hall(5);
+    let player = w.state.player;
+    w.creature_summons(warden, &mut Vec::new());
+    let gates = summoned_by(&w, warden);
+    assert!(!gates.is_empty(), "it opened a gate");
+    for &gate in &gates {
+        w.creature_summons(gate, &mut Vec::new());
+        let fiends = summoned_by(&w, gate);
+        assert!(!fiends.is_empty(), "the gate let fiends through");
+        for fiend in fiends {
+            assert_ne!(
+                stance(&w, fiend, warden),
+                Stance::Hostile,
+                "fiend to warden"
+            );
+            assert_ne!(
+                stance(&w, warden, fiend),
+                Stance::Hostile,
+                "warden to fiend"
+            );
+            assert_ne!(
+                stance(&w, fiend, gate),
+                Stance::Hostile,
+                "fiend to its gate"
+            );
+            assert_eq!(
+                stance(&w, fiend, player),
+                Stance::Hostile,
+                "fiend to player"
+            );
+        }
+    }
+    // None of the Pit's folk fall on the warden or its gates, nor they on them.
+    let here = w.state.current_level.clone();
+    let folk: Vec<ActorId> = (w.state.actors.values())
+        .filter(|a| a.level == here && a.id != player && a.summoner.is_none())
+        .map(|a| a.id)
+        .collect();
+    for &keeper in gates.iter().chain([&warden]) {
+        for &other in &folk {
+            assert_ne!(
+                stance(&w, other, keeper),
+                Stance::Hostile,
+                "{other:?} to {keeper:?}"
+            );
+            assert_ne!(
+                stance(&w, keeper, other),
+                Stance::Hostile,
+                "{keeper:?} to {other:?}"
+            );
+        }
+        assert_eq!(stance(&w, keeper, player), Stance::Hostile);
+    }
+}
+
+#[test]
+fn a_miscasts_gate_in_a_pit_lets_loosed_fiends_through_who_fall_on_the_warden() {
+    let (mut w, warden) = at_the_hall(5);
+    // A rift a miscast tore open beside the warden: in the gates' faction, its own.
+    let spawn = CreatureSpawn {
+        creature: CONTENT.creature_id("rift").expect("rift"),
+        faction: None,
+        alignment: None,
+        npc: None,
+        pos: w.state.actors[&warden].pos,
+        route: Vec::new(),
+        carry: Vec::new(),
+        equipment: Default::default(),
+        rolls_gear: false,
+        asleep: false,
+        status: Vec::new(),
+    };
+    let here = w.state.current_level.clone();
+    let gate_id = travel::make_creature(&mut w.state, &CONTENT, &here, &spawn);
+    w.creature_summons(gate_id, &mut Vec::new());
+    let fiends = summoned_by(&w, gate_id);
+    assert!(!fiends.is_empty(), "the gate let fiends through");
+    let loosed = CONTENT.factions().id("loosed");
+    for fiend in fiends {
+        assert_eq!(w.state.actors[&fiend].faction(&CONTENT), loosed);
+        assert_eq!(
+            stance(&w, fiend, warden),
+            Stance::Hostile,
+            "fiend to warden"
+        );
+        assert_eq!(
+            stance(&w, warden, fiend),
+            Stance::Hostile,
+            "warden to fiend"
+        );
+        assert_ne!(
+            stance(&w, fiend, gate_id),
+            Stance::Hostile,
+            "fiend to its gate"
+        );
+    }
+    assert_ne!(
+        stance(&w, warden, gate_id),
+        Stance::Hostile,
+        "warden to the gate"
+    );
 }
