@@ -205,6 +205,15 @@ fn a_rooted_hostile_never_steps_toward_the_player() {
 }
 
 #[test]
+fn the_actors_dump_marks_a_rooted_creature() {
+    let w = world("######\n#@Tw.#\n######\n");
+    let rows = crate::dump::layer_rows(&w, crate::dump::Layer::Actors);
+    let line_of = |name: &str| rows.iter().find(|r| r.contains(name)).expect("a line");
+    assert!(line_of("thorn").contains("; rooted"), "{rows:?}");
+    assert!(!line_of("wolf").contains("; rooted"), "{rows:?}");
+}
+
+#[test]
 fn a_rooted_hostile_strikes_whoever_comes_beside_it() {
     let mut w = world("######\n#@T..#\n######\n");
     let hp = w.state.player().hp;

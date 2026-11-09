@@ -1663,6 +1663,12 @@ fn actor_rows(world: &World) -> Vec<String> {
                 (false, true) => format!("{court}; shadowy"),
                 (false, false) => court,
             };
+            // Rooted (`world/rooted.rs`): `; rooted`, a creature that never moves from its cell.
+            let court = if def.rooted {
+                format!("{court}; rooted")
+            } else {
+                court
+            };
             // Who summoned it (spec §8 "Summoning"), and so whose side it took.
             let court = match a.summoner {
                 Some(by) => format!("{court}; summoned by {by}"),
