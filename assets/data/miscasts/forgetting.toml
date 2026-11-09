@@ -2,6 +2,6 @@
 id = "forgetting"
 from = 81
 to = 82
-message = "The spell is gone from you: you cannot recall a word of it."
+message = "The spell tears loose from your mind."
 seen = "{who} stares at its hands."
 effect = { kind = "forget", spells = 1 }

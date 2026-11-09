@@ -2,6 +2,6 @@
 id = "backlash"
 from = 71
 to = 72
-message = "The spell turns and breaks over your own head!"
-seen = "{who}'s spell breaks over its own head!"
+message = "The spell twists in your grip and turns on you!"
+seen = "{who}'s spell twists and turns on it!"
 effect = { kind = "backfire" }

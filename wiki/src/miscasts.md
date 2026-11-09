@@ -6,7 +6,10 @@ happens as well, from a harmless shimmer to a blast that can kill you. Only a sp
 your [Spellcraft](skills.md#skill-spellcraft) can kill you this way.
 
 [Scrolls](scrolls.md) and [wands](wands-and-rods.md#wands) never miscast: their magic is the
-item's, not yours. [Creatures](creature-tricks.md#spells) that cast miscast just as you do, and you
+item's, not yours. That holds for a scroll you wrote yourself with the wizard's
+[Scribe](abilities.md#ability-scribe) too, and writing it makes no check either. You pay
+[three times the mana](scrolls.md#writing-scrolls) for it, and in return the spell is safe to
+read later, even in the middle of a fight. [Creatures](creature-tricks.md#spells) that cast miscast just as you do, and you
 are told when you see it happen.
 
 ## The check
@@ -33,6 +36,13 @@ out of armour, at rank 1:
 A new [wizard](classes.md#wizard) has a bonus of about 3, so about one cast in fourteen of a level-1
 spell goes wrong. A spell ten levels above that miscasts most of the time.
 
+Classes that cast on the side start with little Spellcraft. A [ranger](classes.md#ranger) of
+level 6 casting Barkskin miscasts about one cast in four, and a new [bard](classes.md#bard)
+casting Mend about one in seven. That is intended. Their miscasts stay in the protected rows (see
+below), and a [skill roll](skills.md#getting-better) or two on Spellcraft at a level-up moves the
+odds a long way. So does [deepening the spell](magic.md#spell-ranks): every rank above the first
+counts as one point of bonus.
+
 ## The miscast table
 
 A miscast rolls on one table, ordered from mild to deadly. The total is a 2d12 roll, plus five
@@ -54,6 +64,12 @@ A [Defensive stance](stances.md#stances) takes 5 off every total, even when you 
 "Someone near" is anyone within 6 cells of you in a clear line, friend or foe.
 
 {{#include generated/miscast-table.md}}
+
+Each result has its own line, the one in the table. When a result takes something, the next line
+says what: the [stat](stats.md) in words ("You feel duller."), a [drain](stats.md#drained-stats)
+you resisted as a chill that passes, the spell whose rank fell ("You know Fireball less well than
+you did."), or the spells forgotten by name. A creature's miscast you see has a line of its own:
+"Sparks bite the kobold shaman's fingers."
 
 A summoning that backfires brings its creatures [berserk](creatures.md#factions): they attack you,
 your foes, and one another alike, whatever their kind. A wolf called this way is no longer a

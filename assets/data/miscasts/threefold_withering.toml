@@ -2,6 +2,6 @@
 id = "threefold_withering"
 from = 107
 to = 108
-message = "The weave feeds on you until you shrivel."
-seen = "{who} shrivels."
+message = "The spell feeds on you like a leech that will not let go."
+seen = "A grey shadow passes over {who}, again and again."
 effect = { kind = "drain", stat = "random", points = 1, difficulty = 18, times = 3 }

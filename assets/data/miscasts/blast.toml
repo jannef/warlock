@@ -2,6 +2,6 @@
 id = "blast"
 from = 67
 to = 68
-message = "The spell bursts, and the blast hurls you back."
-seen = "{who}'s spell bursts, and the blast hurls it back."
+message = "The spell bursts with a force that drives the breath from you."
+seen = "{who}'s spell bursts in its face."
 effect = { kind = "harm", dice = "3d6", damage = "force" }

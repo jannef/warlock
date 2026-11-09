@@ -2,6 +2,6 @@
 id = "ruinous_withering"
 from = 119
 to = 120
-message = "The weave feeds on you until there is little left."
-seen = "{who} is wasted to the bone."
+message = "The spell gorges on you, and every bite goes deep."
+seen = "{who} is gnawed by its own spell."
 effect = { kind = "drain", stat = "random", points = 2, difficulty = 20, times = 2 }

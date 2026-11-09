@@ -427,6 +427,33 @@ fn a_creature_miscasts_too_and_is_told_when_seen() {
 }
 
 #[test]
+fn a_seen_line_names_the_caster_in_lower_case_inside_it() {
+    let c = content(1000, Some("sparks"));
+    let (mut w, _) = wizard(c.clone());
+    let shaman = kobold(&mut w, 3, 50);
+    let spark = c.spell_id("spark").expect("spark");
+    *w.perception = crate::perception::Perception::compute(&w.state, &w.content, &mut w.lights);
+    let player = w.state.player;
+    let me = w.state.actors[&shaman].clone();
+    let cast = super::cast::Cast::by_creature(&me, &c, (spark, c.spell(spark)));
+    let entry: Miscast = c.miscasts()[0].clone();
+    w.miscast(
+        shaman,
+        &cast,
+        Aim::Creature(player),
+        &entry,
+        &mut Vec::new(),
+    );
+    assert!(
+        said(&w)
+            .iter()
+            .any(|l| l == "Sparks bite the kobold's fingers."),
+        "{:?}",
+        said(&w)
+    );
+}
+
+#[test]
 fn a_run_that_miscasts_replays_the_same() {
     // The circles' caster knows every buff and hex but is no master of Spellcraft: casting
     // Haste and Fire cloak again and again miscasts.

@@ -2,6 +2,6 @@
 id = "falter"
 from = 63
 to = 64
-message = "The spell's shape falters in your mind: two ranks of it are gone."
+message = "The spell's shape crumbles in your mind."
 seen = "{who} falters."
 effect = { kind = "rank_loss", ranks = 2 }

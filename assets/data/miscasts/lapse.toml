@@ -2,6 +2,6 @@
 id = "lapse"
 from = 59
 to = 60
-message = "Something you had learned slips your mind."
+message = "A little of your hard-won training slips away."
 seen = "{who} shakes its head."
 effect = { kind = "lose_mark" }

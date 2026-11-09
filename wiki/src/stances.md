@@ -16,7 +16,8 @@ does. The game never shows what a stance adds. You feel it in the fight.
   for more, because you swing harder.
 - **Neutral**: no effect.
 - **Defensive**: you hit less often and less hard, but [dodge](combat.md#defence) better. You also [parry](combat.md#defence) a little
-  better, unless your weapon already turns blows aside as well.
+  better, unless your weapon already turns blows aside as well. Your
+  [miscasts](miscasts.md#the-miscast-table) are milder too.
 - **Coward**: you hit much less often and less hard, and your attacks take longer. But you [dodge](combat.md#defence)
   best, and stepping away from a hostile creature next to you is quicker and quieter.
 - **Frenzy**: the [berserker's](classes.md#berserker) alone, and only while they rage. Flying into a [rage](resources.md#rage) puts you in it

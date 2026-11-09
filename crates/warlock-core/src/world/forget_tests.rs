@@ -4,7 +4,7 @@
 //! experience; `amnesia` takes one more, `blank` every spell; a creature loses nothing; the
 //! protected half may lose ranks but never forget.
 
-use super::caster_tests::{kobold, sp};
+use super::caster_tests::{kobold, said, sp};
 use super::learn_tests::{given, kitted, run, set_decipher};
 use super::miscast::Aim;
 use super::*;
@@ -151,6 +151,22 @@ fn amnesia_takes_one_more_and_blank_takes_every_spell() {
         w.state.player().known_spells(&w.content)
     };
     assert_eq!(draw(7), draw(7));
+}
+
+#[test]
+fn the_player_is_told_what_was_lost_by_name() {
+    let mut w = kitted("wizard");
+    let player = w.state.player;
+    let last = |w: &World| said(w).last().cloned().unwrap_or_default();
+    // At rank 1 nothing is lost, and only the entry's own line is said.
+    befall(&mut w, player, "ray_of_frost", "stumble");
+    assert_eq!(last(&w), entry(&w, "stumble").message);
+    w.player_mut().spells.insert(sp("ray_of_frost"), 4);
+    befall(&mut w, player, "ray_of_frost", "falter");
+    assert_eq!(last(&w), "You know Ray of frost less well than you did.");
+    w.player_mut().spells.insert(sp("frost"), 1);
+    befall(&mut w, player, "frost", "forgetting");
+    assert_eq!(last(&w), "You have forgotten Frost.");
 }
 
 #[test]

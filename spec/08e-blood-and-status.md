@@ -729,7 +729,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
       cooldown at no cost, `loosed` (its summoning's `faction`), until it is killed
       (`assets/data/creatures/`, tag `gate`). No monster takes a gate for a target; the player,
       their companion (set on it with Sic 'em or not), and their allies fight it, and a blast
-      hurts it as it hurts anything in it. The player is told in words ("Sparks leap from your fingers and bite."); a
+      hurts it as it hurts anything in it. The player is told in words ("Sparks leap from your fingers and bite."), each
+      entry its own line (the words vary, never a number), then what was lost where the
+      effect knows it: a stat in words, the spell whose rank fell or the spells forgotten by
+      name (#1292); a
       creature's miscast is told by its entry's `seen` line when the player sees it. A death of the player by their own miscast
       is `Cause::Miscast` ("Killed by their own miscast fireball"). Determinism: the check's two
       draws, the die's, then the effect's own, all on the gameplay stream; none without

@@ -2,6 +2,6 @@
 id = "stumble"
 from = 51
 to = 52
-message = "The words slip from you: you know this spell less well than you did."
+message = "The spell's shape blurs in your mind."
 seen = "{who} looks puzzled."
 effect = { kind = "rank_loss", ranks = 1 }

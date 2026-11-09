@@ -248,7 +248,11 @@ cast path shares.
     no cast checks and nothing draws) and
     `data/miscasts/` (`Miscast`, one `[[miscast]]` a file, `README.toml` the format: `from`, `to`
     (left out on the last only), `message` (the player's), `seen` (a creature's, `{who}` its
-    name), `effect`). The loader orders the table by `from` and refuses a gap, an overlap, a
+    name), `effect`). The lines (#1292, the design §8) vary by row, never a number, and are
+    said before the effect, so each stays true whether or not it lands (a drain resisted, a
+    swap with no one near, a rank already 1): what was lost follows
+    from the engine (a stat's `drop_news` or `drained_message`, a status's `start`, the
+    backfire's whom, the rank and the forgotten spells). The loader orders the table by `from` and refuses a gap, an overlap, a
     closed last entry, an open one before it, and a `seen` without `{who}`. The effects are the
     mishaps' (`MishapEffect`, `content/learning.rs::resolve_effect` shared, with `miscast`
     true): the miscast's own kinds `harm` (`dice`, `damage`), `stat_damage` (`stat`, a stat id
@@ -321,7 +325,9 @@ cast path shares.
     `!knows_spell`: rank 1 and the spell's experience again; no guard against it, the owner).
     A creature's caster holds nothing in `Actor::spells`, so both do nothing to it (no draw).
     Rows: `stumble` (1 rank), `falter` (2), `forgetting` (1 spell), `amnesia` (2), `blank`
-    (all).
+    (all). The player is told after the entry's line what was lost by name ("You know Fireball
+    less well than you did.", "You have forgotten Fireball and Haste."; #1292), nothing more
+    when nothing was (a spell at rank 1), so the entries' lines say only how it felt.
   - **The portal** (#1297; `world/pit.rs`, tests `world/pit_tests.rs`; the design §7.2–§7.3;
     `docs/dev/mapgen.md` "The Pits" for the floors): on the caster's level, in play,
     `World::open_pit` draws the Pit's integer `S` (`rng.below(u32::MAX) + 1`, again while taken),

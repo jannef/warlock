@@ -2,6 +2,6 @@
 id = "blank"
 from = 115
 to = 116
-message = "Every spell you ever learned is torn from you."
+message = "Your mind is wiped as clean as a slate."
 seen = "{who} stares, empty-eyed."
 effect = { kind = "forget", all = true }

@@ -2,6 +2,6 @@
 id = "withering"
 from = 73
 to = 74
-message = "The weave feeds on you, and something of you goes with it."
-seen = "{who} withers."
+message = "The spell turns and feeds on you."
+seen = "A grey shadow passes over {who}."
 effect = { kind = "drain", stat = "random", points = 1, difficulty = 16 }

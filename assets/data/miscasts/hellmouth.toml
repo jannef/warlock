@@ -2,6 +2,6 @@
 id = "hellmouth"
 from = 77
 to = 78
-message = "The ground splits into a mouth of brass and fire!"
+message = "The ground beside you splits into a mouth of brass and fire!"
 seen = "The ground splits beside {who} into a mouth of brass and fire!"
 effect = { kind = "summon", creature = "hellmouth" }
