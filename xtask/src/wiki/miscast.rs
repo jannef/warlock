@@ -198,6 +198,11 @@ fn effect_text(content: &Content, effect: MishapEffect, protected: bool) -> Stri
             "a [zone](spellcasting.md#zones) of {} lies around you for {turns} turns, radius {radius}",
             zone_name(kind)
         ),
+        MishapEffect::Portal { gate } => format!(
+            "stairs down into a [Pit](pits.md) of its own open beside you, and a hostile {} at their head; \
+             on the overworld or a Pit's own floor, only the gate",
+            content.creature(gate).name
+        ),
     }
 }
 

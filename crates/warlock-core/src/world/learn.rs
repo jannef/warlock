@@ -425,7 +425,8 @@ impl World {
             | MishapEffect::Swap
             | MishapEffect::Boon { .. }
             | MishapEffect::Noise { .. }
-            | MishapEffect::Zone { .. } => {}
+            | MishapEffect::Zone { .. }
+            | MishapEffect::Portal { .. } => {}
         }
     }
 

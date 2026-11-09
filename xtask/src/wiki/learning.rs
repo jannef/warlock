@@ -220,6 +220,7 @@ fn effect_text(content: &Content, effect: MishapEffect) -> String {
         | MishapEffect::Swap
         | MishapEffect::Boon { .. }
         | MishapEffect::Noise { .. }
-        | MishapEffect::Zone { .. } => effect.kind().into(),
+        | MishapEffect::Zone { .. }
+        | MishapEffect::Portal { .. } => effect.kind().into(),
     }
 }

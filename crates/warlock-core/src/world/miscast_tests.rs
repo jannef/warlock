@@ -254,6 +254,7 @@ fn the_loader_keeps_what_could_kill_off_the_protected_half() {
         "kind = \"backfire\"",
         "kind = \"drain\", stat = \"random\", points = 1, difficulty = 16",
         "kind = \"summon\", creature = \"kobold\"",
+        "kind = \"portal\", gate = \"rift\"",
         "kind = \"zone\", zone = \"fire\", radius = 1, turns = 5",
         "kind = \"status\", status = \"bleeding\"",
     ] {

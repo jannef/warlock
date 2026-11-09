@@ -3,8 +3,8 @@
 # per file; a campaign's data/miscasts/ may add more. The total rolled (miscast.toml) picks the
 # one entry whose range holds it: higher is worse. Boons stop at 16; the rows ending below
 # miscast.toml's `safe_below` (71) are protected: their harm never takes the caster below 1 hit
-# point, and none of them may backfire, drain, forget, summon, lay a fire zone, or put on a
-# status that ticks harm or mana (the loader refuses it, a campaign's entries too).
+# point, and none of them may backfire, drain, forget, summon, open a Pit, lay a fire zone, or
+# put on a status that ticks harm or mana (the loader refuses it, a campaign's entries too).
 #
 # Fields:
 #   id        the entry's id
@@ -48,3 +48,7 @@
 #             zone       a zone of kind `zone` (fire, fouled, slick, dark, smoke) around the
 #                        caster, within `radius` (0 to 20) in its line of sight, for `turns`; no
 #                        harm, and none on the overworld (docs/dev/spells.md "Zones")
+#             portal     stairs down into a Pit of its own (Hellegeat, spec §7 "The Pits") open
+#                        beside the caster, and a `gate` (an id of creatures/) comes beside them;
+#                        on the overworld or a Pit's own floor, or with no plain cell within 3,
+#                        the gate alone
