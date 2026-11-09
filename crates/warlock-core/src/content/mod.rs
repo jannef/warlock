@@ -1207,7 +1207,7 @@ impl Content {
         // types.
         let path = "data/miscast.toml";
         if let Some(text) = files.get_optional(path) {
-            content.miscast = Some(MiscastRules::parse(path, text)?);
+            content.miscast = Some(MiscastRules::parse(path, text, &content.factions)?);
         }
         content.miscasts = miscast::parse(files.table("miscasts"), &content)?;
         let path = "data/decipher.toml";

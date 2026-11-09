@@ -1924,6 +1924,8 @@ mod mimic_tests;
 #[cfg(test)]
 mod mirrors_tests;
 #[cfg(test)]
+mod miscast_stat_tests;
+#[cfg(test)]
 mod miscast_tests;
 #[cfg(test)]
 mod moon_tests;

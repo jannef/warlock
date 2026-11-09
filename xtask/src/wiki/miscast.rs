@@ -142,8 +142,10 @@ fn effect_text(content: &Content, effect: MishapEffect, protected: bool) -> Stri
             stat,
             points,
             difficulty,
-        } => format!(
-            "{} loses {points} for good unless you make a Willpower check against {difficulty}",
+            times,
+        } => super::learning::drain_words(stat, points, difficulty, times),
+        MishapEffect::StatDamage { stat, points } => format!(
+            "{} takes {points} [stat damage](diseases.md#stat-damage), which mends a point a day",
             stat.map_or("a random stat", |s| s.name())
         ),
         MishapEffect::Summon { creature } => {
@@ -215,7 +217,8 @@ fn backfire_words(full: bool) -> String {
     };
     format!(
         "a damage spell bursts around you, a hex falls on you, a heal mends the nearest foe you \
-         see, a buff takes hold of that foe, and a summon's creatures come but not to your side; \
+         see, a buff takes hold of that foe, and a summon's creatures come hostile to everyone, \
+         you, your foes, and one another; \
          any other spell, a heal or buff with no foe in sight, or a summon with no room deals \
          ({dice})d6 force to you, by the spell's level"
     )

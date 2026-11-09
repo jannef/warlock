@@ -45,13 +45,19 @@ The results below 71 are **protected**. Their harm always leaves you at least 1 
 of them takes anything from you for good. To roll 71 or more you must miss the check by 10 or more:
 a spell about ten levels beyond what your Spellcraft and the spell's rank carry. Below that, the
 worst a miscast does is leave you hurt, drained of mana, or hindered in a fight that can still kill
-you.
+you. A stat it takes is [stat damage](diseases.md#stat-damage), which mends a point a day. From 71,
+a stat can be [drained for good](stats.md#drained-stats) unless you make a Willpower check, and the
+worst rows drain two or three stats, each with its own check.
 
 A [Defensive stance](stances.md#stances) takes 5 off every total, even when you cast from safety.
 
 "Someone near" is anyone within 6 cells of you in a clear line, friend or foe.
 
 {{#include generated/miscast-table.md}}
+
+A summoning that backfires brings its creatures [berserk](creatures.md#factions): they attack you,
+your foes, and one another alike, whatever their kind. A wolf called this way is no longer a
+harmless beast of the wild.
 
 A miscast that kills you is put down to your own miscast spell.
 
@@ -79,7 +85,8 @@ abyssal, iron, black, or dire gate, an arch-gate, or the lords' gate. A gate is 
 through](creature-powers.md#summoning), one or two at a time, every minute or more, as long as it
 sees anyone, since everyone is its enemy. The fiends it lets through belong to the gate's own
 [faction](creatures.md#factions), the loosed: they attack you, your enemies, and every other fiend
-alike, but never each other or the gate. The deeper the result, the stronger the fiends: a rift lets
+alike, but never each other or the gate. No other creature attacks a gate itself, though they
+fight the fiends it lets through: only you can close it. The deeper the result, the stronger the fiends: a rift lets
 dretches and quasits through, the lords' gate a balor or a pit fiend.
 
 Four results go further: the floor splits and **a stair down into a [Pit](pits.md)** opens beside

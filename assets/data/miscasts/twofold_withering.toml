@@ -4,4 +4,4 @@ from = 85
 to = 86
 message = "The weave feeds on you deeply."
 seen = "{who} withers before your eyes."
-effect = { kind = "drain", stat = "random", points = 1, difficulty = 17 }
+effect = { kind = "drain", stat = "random", points = 1, difficulty = 16, times = 2 }

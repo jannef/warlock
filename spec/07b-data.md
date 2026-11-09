@@ -29,7 +29,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
   (default false: rooted, it never moves, never gives way, is never pushed, swapped, or
   teleported, and never follows on stairs, but strikes and summons where it stands, as a
   miscast's gate; one with no natural attack and no weapon strikes no blow; §8 "Spells":
-  "Miscasts"), its
+  "Miscasts"), `left_alone` (default false: no other creature, ally or foe, ever takes it for a
+  target, though it may be hostile to them; the player may still attack it; the miscast's
+  gates), its
   `alignment` (`good`, `neutral`, the default, or `evil`; §8 "Alignment": the kobolds evil, the
   beasts neutral, the showcase's people good; never shown), an optional `race` (a race id; §8
   "Alignment": its corpse is kin to a character of that race; the showcase's people are human;

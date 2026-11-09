@@ -689,14 +689,32 @@ developer notes (CLAUDE.md, `docs/dev/`).
       −10), at least 1. The miss carries the total and the die is the small variance; higher
       totals are worse: nothing and boons to 16 (the mana refunded, the spell again for free, a
       blessing, haste), then small harms, mana, hindering statuses, noise, zones, a swap, a
-      teleport, up to 70; from 71 backfires, drains for good, and harm climbing from 4d6 to
+      teleport, stat damage that mends a point a day (#1290), up to 70; from 71 backfires, drains
+      for good (`times` over for the worst: each its own random stat and Willpower check), and
+      harm climbing from 4d6 to
       20d10 force. **Protected entries**: one whose `to` is below `safe_below` (71) cannot kill
       its caster (its harm takes them to 1 hit point at the least, nothing at 1) and the loader
       refuses one that would backfire, drain, forget, summon, open a Pit, lay a fire zone, or put on a status
       that ticks harm or mana, a campaign's too (a rank loss is allowed: it never forgets); only a spell missed by 10 or more reaches past it.
       The entries' effects are the mishaps' kinds (`MishapEffect`, `resolve_effect`) and the
-      miscast's own (`harm`, `refund`, `twice`, `swap`, `boon`, `noise` (`loudness`: a
+      miscast's own (`harm`, `stat_damage` (`stat`, `points`: §8 "Stats"' stat damage, never a
+      score below 1, mending as a disease's does once none shows), `refund`, `twice`, `swap`, `boon`, `noise` (`loudness`: a
       thunderclap's sound on the caster's cell), `zone` (`zone`, `radius`, `turns`: a zone
+<<<<<<< HEAD
+      around the caster, no harm), `backfire`'s `full`: a damage spell bursts on its caster, a hex falls on them, a heal
+      mends the nearest hostile they see, a buff takes hold of it, a summon's creatures come
+      berserk, hostile to everyone (the caster, the caster's foes, and one another, whatever
+      their kind; `miscast.toml`'s `backfire_faction`), and anything else, or nothing to land on, is
+      (level ÷ 3 + 1)d6 force, (level ÷ 2 + 1)d6 at full), applied to any caster; "near" is
+      within 6 cells in a clear line, in actor-id order, and a creature's swap never takes the
+      player. The rows that later phases of the design fill (rank loss, forgetting, stat damage,
+      the drain's repeats, the Pits) stand in for now as existing kinds under their final ids.
+      The nine gate rows (#1295) `summon` a gate beside the caster: a rooted creature of the
+      `loosed` faction, with no attack, that lets fiends through on its cooldown at no cost,
+      `loosed` as it is, until it is killed (`assets/data/creatures/`, tag `gate`). It is
+      `left_alone` (#1312): no other creature, foe or ally, takes it for a target, though they
+      fight what it lets through; only the player attacks it. The player is told in words ("Sparks leap from your fingers and bite."); a
+=======
       around the caster, no harm), `rank_loss` (`ranks`: the spell cast known that many ranks
       lower, never below 1), `forget` (`spells = N`: the spell cast and `N − 1` more known
       spells drawn at random forgotten; `all = true`: every spell known; #1289,
@@ -724,6 +742,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
       beside the caster: a rooted creature of the `loosed` faction, with no attack, that lets
       fiends through on its cooldown at no cost, `loosed` as it is, until it is killed
       (`assets/data/creatures/`, tag `gate`). The player is told in words ("Sparks leap from your fingers and bite."); a
+>>>>>>> origin/main
       creature's miscast is told by its entry's `seen` line when the player sees it. A death of the player by their own miscast
       is `Cause::Miscast` ("Killed by their own miscast fireball"). Determinism: the check's two
       draws, the die's, then the effect's own, all on the gameplay stream; none without

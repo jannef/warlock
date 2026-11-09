@@ -17,6 +17,7 @@ faction = "loosed"
 tags = ["summoner", "fiend", "gate"]
 alignment = "evil"
 rooted = true
+left_alone = true
 vision = "darkvision"
 sight = 8
 footsteps = 0

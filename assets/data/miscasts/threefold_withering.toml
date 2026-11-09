@@ -4,4 +4,4 @@ from = 107
 to = 108
 message = "The weave feeds on you until you shrivel."
 seen = "{who} shrivels."
-effect = { kind = "drain", stat = "random", points = 2, difficulty = 19 }
+effect = { kind = "drain", stat = "random", points = 1, difficulty = 18, times = 3 }
