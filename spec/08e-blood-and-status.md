@@ -696,7 +696,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
       The entries' effects are the mishaps' kinds (`MishapEffect`, `resolve_effect`) and the
       miscast's own (`harm`, `refund`, `twice`, `swap`, `boon`, `noise` (`loudness`: a
       thunderclap's sound on the caster's cell), `zone` (`zone`, `radius`, `turns`: a zone
-      around the caster, no harm), `backfire`'s `full`), applied to any caster; "near" is
+      around the caster, no harm), `backfire`'s `full`: a damage spell bursts on its caster, a hex falls on them, a heal
+      mends the nearest hostile they see, a buff takes hold of it, a summon's creatures come of
+      their own faction and on no one's side, and anything else, or nothing to land on, is
+      (level ÷ 3 + 1)d6 force, (level ÷ 2 + 1)d6 at full), applied to any caster; "near" is
       within 6 cells in a clear line, in actor-id order, and a creature's swap never takes the
       player. The rows that later phases of the design fill (rank loss, forgetting, stat damage,
       the drain's repeats, the gates, the Pits) stand in for now as existing kinds under their

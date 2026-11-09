@@ -16,8 +16,11 @@
 #             nothing
 #             status     `status` (an id of status.toml) on the caster at `severity` (default 1)
 #             backfire   the spell goes off on its caster: a damage spell as a burst around them
-#                        (its radius, else 1), a hex on them; at the spell's base roll, or with
-#                        `full = true` at the roll it was cast with
+#                        (its radius, else 1), a hex on them; a heal mends the nearest hostile the
+#                        caster sees, a buff falls on it, a summon's creatures come not as allies;
+#                        anything else, or with no hostile in sight or no room, (level / 3 + 1)d6
+#                        force on the caster ((level / 2 + 1)d6 with `full`); at the spell's base
+#                        roll, or with `full = true` at the roll it was cast with
 #             mana       `percent` of the caster's mana left is lost
 #             teleport   the caster, to a free cell of the level, as a teleport trap does
 #             lose_mark  one stat training mark of the caster's is lost
