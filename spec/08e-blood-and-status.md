@@ -705,21 +705,16 @@ developer notes (CLAUDE.md, `docs/dev/`).
       their own faction and on no one's side, and anything else, or nothing to land on, is
       (level ÷ 3 + 1)d6 force, (level ÷ 2 + 1)d6 at full), applied to any caster; "near" is
       within 6 cells in a clear line, in actor-id order, and a creature's swap never takes the
-<<<<<<< HEAD
       player. **Forgetting** takes a class's spell as much as a learned one (a learned spell
       leaves `Actor::spells`; a class's is kept there at rank 0, read as not known): it is no
       longer listed or cast, and is learned again only from its grimoire, exactly as the first
       time (a study at rank 1, its experience paid again; no guard against it, the owner). A
       creature's rank loss and forgetting do nothing (its spells are its kind's). The rows that
-      later phases of the design fill (stat damage, the drain's repeats, the gates, the Pits)
-      stand in for now as existing kinds under their final ids. The player is told in words ("Sparks leap from your fingers and bite."); a
-=======
-      player. The rows that later phases of the design fill (rank loss, forgetting, stat damage,
-      the drain's repeats, the Pits) stand in for now as existing kinds under their final ids.
-      The nine gate rows (#1295) `summon` a gate beside the caster: a rooted creature of the
-      `loosed` faction, with no attack, that lets fiends through on its cooldown at no cost,
-      `loosed` as it is, until it is killed (`assets/data/creatures/`, tag `gate`). The player is told in words ("Sparks leap from your fingers and bite."); a
->>>>>>> origin/main
+      later phases of the design fill (stat damage, the drain's repeats, the Pits) stand in for
+      now as existing kinds under their final ids. The nine gate rows (#1295) `summon` a gate
+      beside the caster: a rooted creature of the `loosed` faction, with no attack, that lets
+      fiends through on its cooldown at no cost, `loosed` as it is, until it is killed
+      (`assets/data/creatures/`, tag `gate`). The player is told in words ("Sparks leap from your fingers and bite."); a
       creature's miscast is told by its entry's `seen` line when the player sees it. A death of the player by their own miscast
       is `Cause::Miscast` ("Killed by their own miscast fireball"). Determinism: the check's two
       draws, the die's, then the effect's own, all on the gameplay stream; none without
