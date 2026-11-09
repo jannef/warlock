@@ -1,7 +1,6 @@
 # The yugoloths (#446): mercenary fiends of the lower planes. The nycaloth is their killer: a
 # muscular green-black fiend on great leathery wings, its claws leaving wounds that do not stop
-# bleeding, and an enormous axe in its hands. Not yet in any dungeon's population: no danger
-# window reaches it.
+# bleeding, and an enormous axe in its hands. It lives in Hellegeat's Pits (#1296).
 [[creature]]
 id = "nycaloth"
 level = 36

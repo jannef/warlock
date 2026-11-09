@@ -112,6 +112,7 @@ above.
 | Dread, a dread draw | `dungeons.md#dread` |
 | Lairs of the wanted | `dungeon-guide.md#the-lairs-of-the-wanted` |
 | Grundlēas, floors forgotten | `dungeon-guide.md#grundlēas` |
+| Hellegeat, a Pit | `pits.md`, `pits.md#floors-that-forget` |
 | Special room | `special-rooms.md` (a room: its row) |
 | Forgotten altar, praying | `altars-forges-springs.md#forgotten-altars` |
 | Forge, tempering, Fine, Marvellous, Masterwork, damaged items | `altars-forges-springs.md#forges` |

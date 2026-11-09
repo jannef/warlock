@@ -18,8 +18,12 @@ fn caves_levels() -> Vec<(String, String)> {
             let campaign = def.campaign.clone().unwrap_or_else(|| "showcase".into());
             (1..=def.depth).filter_map(move |depth| {
                 let plan = def.plan(depth)?;
-                (plan.generator == Generator::Caves)
-                    .then(|| (campaign.clone(), def.level_id(depth)))
+                // A portal branch's floors are a Pit's: the first's stand for them all.
+                let id = match def.portal {
+                    Some(_) => def.pit_level_id(1, depth),
+                    None => def.level_id(depth),
+                };
+                (plan.generator == Generator::Caves).then(|| (campaign.clone(), id))
             })
         })
         .collect()
@@ -54,7 +58,10 @@ fn rooms_floors_have_none() {
     for def in CONTENT.dungeons() {
         let campaign = def.campaign.clone().unwrap_or_else(|| "showcase".into());
         for depth in 1..=def.depth {
-            let id = def.level_id(depth);
+            let id = match def.portal {
+                Some(_) => def.pit_level_id(1, depth),
+                None => def.level_id(depth),
+            };
             if caves.iter().any(|(_, c)| *c == id) {
                 continue;
             }

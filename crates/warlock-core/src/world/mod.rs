@@ -1843,6 +1843,8 @@ mod heavy_hall_tests;
 #[cfg(test)]
 mod heirloom_tests;
 #[cfg(test)]
+mod hellegeat_tests;
+#[cfg(test)]
 mod hoard_tests;
 #[cfg(test)]
 mod hold_tests;

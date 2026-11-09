@@ -1,6 +1,5 @@
 # The devil roster (#448). A gaunt devil of hide stretched over bone, with a scorpion's tail
-# whose sting is a strong poison. Its body falls to dry ash. Not yet in any dungeon's
-# population.
+# whose sting is a strong poison. Its body falls to dry ash. It lives in Hellegeat's Pits (#1296).
 [[creature]]
 id = "bone_devil"
 level = 32

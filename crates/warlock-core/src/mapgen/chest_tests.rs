@@ -15,7 +15,12 @@ fn content(odds: Option<&str>) -> Content {
     files.remove("vaults/");
     if let Some(odds) = odds {
         files.edit_table("dungeons", |text| {
-            text.replace("[[dungeon]]\n", &format!("[[dungeon]]\nchests = {odds}\n"))
+            // A branch's own odds (Hellegeat's) give way to the fixture's.
+            let own: Vec<&str> = (text.lines())
+                .filter(|l| !l.starts_with("chests = "))
+                .collect();
+            (own.join("\n") + "\n")
+                .replace("[[dungeon]]\n", &format!("[[dungeon]]\nchests = {odds}\n"))
         });
     }
     Content::load(&files).expect("fixture content")

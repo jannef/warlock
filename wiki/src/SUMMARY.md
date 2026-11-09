@@ -25,6 +25,7 @@
   - [Chests](chests.md)
 - [Dungeons and danger](dungeons.md)
   - [The dungeons one by one](dungeon-guide.md)
+    - [Hellegeat, the Pits](pits.md)
 - [Special rooms](special-rooms.md)
   - [Teeming dens](teeming-dens.md)
   - [Altars, forges, and springs](altars-forges-springs.md)

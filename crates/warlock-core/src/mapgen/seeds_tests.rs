@@ -17,7 +17,11 @@ fn levels(bottom: bool) -> Vec<(String, String)> {
         .flat_map(|def| {
             let campaign = def.campaign.clone().unwrap_or_else(|| "showcase".into());
             let first = if bottom { def.depth } else { 1 };
-            (first..=def.depth).map(move |depth| (campaign.clone(), def.level_id(depth)))
+            // A portal branch's floors are a Pit's: the first's stand for them all.
+            (first..=def.depth).map(move |depth| match def.portal {
+                Some(_) => (campaign.clone(), def.pit_level_id(1, depth)),
+                None => (campaign.clone(), def.level_id(depth)),
+            })
         })
         .collect()
 }

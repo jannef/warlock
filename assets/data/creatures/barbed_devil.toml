@@ -1,6 +1,6 @@
 # The devil roster (#448). Hell's watchman, covered in spines: its claws and barbs tear wounds
-# that bleed. Spines that hurt whoever strikes it wait for a mechanic of their own. Not yet in
-# any dungeon's population.
+# that bleed. Spines that hurt whoever strikes it wait for a mechanic of their own. It lives in
+# Hellegeat's Pits (#1296).
 [[creature]]
 id = "barbed_devil"
 level = 26
