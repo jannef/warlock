@@ -166,13 +166,16 @@ pub(super) fn factions(content: &Content) -> String {
     for (i, f) in factions.defs().iter().enumerate() {
         let id = FactionId(i as u16);
         let enemies: Vec<String> = (factions.defs().iter().enumerate())
-            // Everyone is at war with the berserk: said on its own row, not on every row.
-            .filter(|&(_, e)| !e.hostile_to_all)
+            // Everyone is at war with the berserk and the loosed: said on their own rows, not on
+            // every row.
+            .filter(|&(_, e)| !e.hates_everyone())
             .filter(|&(j, _)| factions.stance(id, FactionId(j as u16)) == Stance::Hostile)
             .map(|(_, e)| e.name.clone())
             .collect();
         let enemies = if f.hostile_to_all {
             "everyone, its own too".to_string()
+        } else if f.hostile_to_others {
+            "everyone but its own".to_string()
         } else if enemies.is_empty() {
             "nobody".to_string()
         } else {

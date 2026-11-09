@@ -225,6 +225,14 @@ id = "yugoloth"
 name = "yugoloths"
 hostile = ["player"]
 
+# What a miscast lets through (spec §8 "Spells": "Miscasts"): the gates and every fiend they
+# call. Loyal to one another and to nothing else: they fall on the player, the kobolds, the
+# townsfolk, and the fiends of the ordered hells alike.
+[[faction]]
+id = "loosed"
+name = "the loosed"
+hostile_to_others = true
+
 # The layer bosses of Grundlēas (#1118; spec §7 "The endless branch"): each the one keeper of
 # its layer, alone in its lair, and what it calls up fights at its side. They hunt the player and
 # no one else. Not animals: a Beast-friend calms no rat king.

@@ -4,7 +4,9 @@
 //! Relations are pairwise and symmetric: if faction A lists B as `hostile`, A and B are hostile
 //! to each other. Every pair that is not listed (a faction and itself included) is neutral. A
 //! faction with `hostile_to_all` is hostile to every faction and to itself: friendly to nothing
-//! (the berserk risen, `world/corpse_spell.rs`).
+//! (the berserk risen, `world/corpse_spell.rs`). A faction with `hostile_to_others` is hostile to
+//! every other faction but neutral to itself: loyal to its own and to nothing else (the loosed,
+//! what a miscast lets through; spec §8 "Spells").
 //!
 //! The file is optional: without it there are no factions and everyone is neutral to everyone.
 
@@ -47,6 +49,9 @@ pub(super) struct FactionSpec {
     /// Hostile to every faction, itself too.
     #[serde(default)]
     pub hostile_to_all: bool,
+    /// Hostile to every other faction, neutral to itself.
+    #[serde(default)]
+    pub hostile_to_others: bool,
     /// The materials its creatures favour for their gear (#1191): a material's percent of the
     /// draws for an item that may be made of it, `gear = { bone = 40, iron = 25 }`
     /// ([`FactionDef::gear`]).
@@ -72,6 +77,8 @@ pub struct FactionDef {
     pub provoked: Option<FactionId>,
     /// Hostile to every faction, itself too.
     pub hostile_to_all: bool,
+    /// Hostile to every other faction, neutral to itself.
+    pub hostile_to_others: bool,
     /// The materials its creatures favour for their gear and drops (#1191), by material id,
     /// each with its percent of the draws for an item whose main part may be made of it
     /// ([`crate::variant::weights`]); together at most 100. Resolved once the materials are
@@ -80,13 +87,21 @@ pub struct FactionDef {
     gear_names: BTreeMap<String, u8>,
 }
 
+impl FactionDef {
+    /// Hostile to every other faction (`hostile_to_all` or `hostile_to_others`).
+    pub fn hates_everyone(&self) -> bool {
+        self.hostile_to_all || self.hostile_to_others
+    }
+}
+
 /// Every faction and the hostility between them.
 #[derive(Clone, Debug, Default)]
 pub struct Factions {
     defs: Vec<FactionDef>,
     ids: BTreeMap<String, FactionId>,
     /// Row-major `defs.len()²` matrix, symmetric, false on the diagonal but a `hostile_to_all`
-    /// faction's.
+    /// faction's; a `hostile_to_all` or `hostile_to_others` faction's row and column all true
+    /// (but the latter's own diagonal cell).
     hostile: Vec<bool>,
 }
 
@@ -120,8 +135,8 @@ impl Factions {
                 hostile[a * n + b] = true;
                 hostile[b * n + a] = true;
             }
-            if spec.hostile_to_all {
-                for b in 0..n {
+            if spec.hostile_to_all || spec.hostile_to_others {
+                for b in (0..n).filter(|&b| b != a || spec.hostile_to_all) {
                     hostile[a * n + b] = true;
                     hostile[b * n + a] = true;
                 }
@@ -144,6 +159,7 @@ impl Factions {
                 animal: s.animal,
                 provoked,
                 hostile_to_all: s.hostile_to_all,
+                hostile_to_others: s.hostile_to_others,
                 gear: Vec::new(),
                 gear_names: s.gear,
             });
@@ -199,13 +215,14 @@ impl Factions {
     }
 
     /// Whether faction `a` is hostile to anyone at all, by its own quarrels: being on a
-    /// `hostile_to_all` faction's list is no quarrel of its own, or no one would be peaceable.
+    /// `hostile_to_all` or `hostile_to_others` faction's list is no quarrel of its own, or no one
+    /// would be peaceable.
     pub fn has_enemies(&self, a: FactionId) -> bool {
         let n = self.defs.len();
         let a = usize::from(a.0);
         a < n
-            && (self.defs[a].hostile_to_all
-                || (0..n).any(|b| self.hostile[a * n + b] && !self.defs[b].hostile_to_all))
+            && (self.defs[a].hates_everyone()
+                || (0..n).any(|b| self.hostile[a * n + b] && !self.defs[b].hates_everyone()))
     }
 
     /// How factions `a` and `b` stand toward each other; symmetric.
@@ -260,6 +277,73 @@ hostile_to_all = true
         assert!(f.has_enemies(id("berserk")));
         assert!(!f.has_enemies(id("villagers")), "still peaceable");
         assert!(f.def(id("berserk")).hostile_to_all);
+    }
+
+    #[test]
+    fn hostile_to_others_is_loyal_to_its_own_alone() {
+        let f = resolve(
+            r#"
+[[faction]]
+id = "player"
+name = "you"
+
+[[faction]]
+id = "villagers"
+name = "villagers"
+
+[[faction]]
+id = "demons"
+name = "demons"
+hostile = ["player"]
+
+[[faction]]
+id = "loosed"
+name = "the loosed"
+hostile_to_others = true
+
+[[faction]]
+id = "berserk"
+name = "the berserk"
+hostile_to_all = true
+"#,
+        )
+        .expect("valid");
+        let id = |n: &str| f.id(n).expect("known");
+        let loosed = id("loosed");
+        assert_eq!(
+            f.stance(loosed, loosed),
+            Stance::Neutral,
+            "loyal to its own"
+        );
+        for other in ["player", "villagers", "demons", "berserk"] {
+            assert_eq!(f.stance(loosed, id(other)), Stance::Hostile, "{other}");
+            assert_eq!(f.stance(id(other), loosed), Stance::Hostile, "{other}");
+        }
+        // The rest of the matrix is as their own lists make it.
+        assert_eq!(f.stance(id("demons"), id("player")), Stance::Hostile);
+        assert_eq!(f.stance(id("villagers"), id("demons")), Stance::Neutral);
+        assert_eq!(f.stance(id("berserk"), id("berserk")), Stance::Hostile);
+        // Being on the loosed's list makes no one a fighter.
+        assert!(f.has_enemies(loosed));
+        assert!(!f.has_enemies(id("villagers")), "still peaceable");
+        let def = f.def(loosed);
+        assert!(def.hostile_to_others && !def.hostile_to_all && def.hates_everyone());
+    }
+
+    #[test]
+    fn the_shipped_loosed_are_hostile_to_every_other_faction() {
+        let f = resolve(include_str!("../../../../assets/data/factions.toml")).expect("valid");
+        let loosed = f.id("loosed").expect("the loosed are shipped");
+        assert!(f.def(loosed).hostile_to_others);
+        for (i, other) in f.defs().iter().enumerate() {
+            let other_id = FactionId(i as u16);
+            let expected = if other_id == loosed {
+                Stance::Neutral
+            } else {
+                Stance::Hostile
+            };
+            assert_eq!(f.stance(loosed, other_id), expected, "{}", other.id);
+        }
     }
 
     fn resolve(text: &str) -> Result<Factions, String> {

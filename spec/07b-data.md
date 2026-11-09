@@ -726,7 +726,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
   player alone, its old raids and grudges kept as lore in the file's comments (a `rivalry`
   chance, a skirmish now and then, is deferred). Two are rules: `merchants` (shopkeepers; hostile to no one) and `outraged` ("outraged
   shopkeepers", hostile to the player), which a robbed or attacked shopkeeper joins (§7
-  "Shops"). A level
+  "Shops"). A faction may be `hostile_to_all` (hostile to every faction and to itself: the
+  berserk risen, §8 "Creatures") or `hostile_to_others` (hostile to every other faction, neutral to
+  itself: `loosed`, what a miscast lets through, §8 "Spells"). A level
   legend entry with a `creature` may name a `faction` (a known faction id; an unknown one is a
   content error) that replaces its type's for that creature: it is stored on the actor
   (`faction_override`, saved and hashed only when set), used wherever stance is computed (AI
