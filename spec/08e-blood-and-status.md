@@ -700,7 +700,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
       around the caster, no harm), `rank_loss` (`ranks`: the spell cast known that many ranks
       lower, never below 1), `forget` (`spells = N`: the spell cast and `N − 1` more known
       spells drawn at random forgotten; `all = true`: every spell known; #1289,
-      `world/forget.rs`), `backfire`'s `full`), applied to any caster; "near" is
+      `world/forget.rs`), `backfire`'s `full`: a damage spell bursts on its caster, a hex falls on them, a heal
+      mends the nearest hostile they see, a buff takes hold of it, a summon's creatures come of
+      their own faction and on no one's side, and anything else, or nothing to land on, is
+      (level ÷ 3 + 1)d6 force, (level ÷ 2 + 1)d6 at full), applied to any caster; "near" is
       within 6 cells in a clear line, in actor-id order, and a creature's swap never takes the
       player. **Forgetting** takes a class's spell as much as a learned one (a learned spell
       leaves `Actor::spells`; a class's is kept there at rank 0, read as not known): it is no
