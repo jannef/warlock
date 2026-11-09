@@ -273,6 +273,7 @@ pub fn layer_rows(world: &World, layer: Layer) -> Vec<String> {
             leaving_rows(world),
             hallow_rows(world),
             zone_rows(world),
+            pit_rows(world),
         ]
         .concat(),
         Layer::Actors => [spawn_header(world), actor_rows(world), rising_rows(world)].concat(),
@@ -573,6 +574,17 @@ fn statue_rows(world: &World) -> Vec<String> {
                 "statue ({}{name}) at {p}: {holds}",
                 content.creature(statue.of).id
             )
+        })
+        .collect()
+}
+
+/// Dev: a line per Pit the run keeps a record of, wherever the player is (spec §7 "The Pits";
+/// `world/pit.rs`): `pit 7 from depths:3: open` (`sealed` once its warden is dead).
+fn pit_rows(world: &World) -> Vec<String> {
+    (world.state().pits().iter())
+        .map(|(s, pit)| {
+            let state = if pit.sealed() { "sealed" } else { "open" };
+            format!("pit {s} from {}: {state}", pit.from())
         })
         .collect()
 }

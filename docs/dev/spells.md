@@ -255,11 +255,12 @@ cast path shares.
     or `random`, and `points`, at least 1; #1290), `refund`, `twice`, `swap`, `boon`
     (`status`, `severity`), `noise` (`loudness`, 1 to `noise::MAX_LOUDNESS`), `zone` (`zone`, a
     `ZoneKind` id, `radius` 0 to 20, `turns` at least 1), `rank_loss` (`ranks`, at least 1),
-    `forget` (`spells`, at least 1, or `all = true`), and `backfire`'s `full`, which the
+    `forget` (`spells`, at least 1, or `all = true`), `portal` (`gate`, a creature id), and
+    `backfire`'s `full`, which the
     study's table refuses; `drain`'s `times` (at least 1, default 1: the draw and the check made
     that many times, the study's too); `learn`, which the miscast's refuses. **The whitelist**
     (`content/miscast.rs::check_protected`): an entry `MiscastRules::protects` (its `to` below
-    `safe_below`) is refused with `backfire`, `drain`, `forget`, `summon`, a `fire` zone (a
+    `safe_below`) is refused with `backfire`, `drain`, `forget`, `summon`, `portal`, a `fire` zone (a
     `rank_loss` is allowed: it never forgets), or a `status` or
     `boon` whose `StatusDef` has `damage` or `mana_damage`. Spellcraft's `cast` and `ward` benefits
     (`skills::Effect::{Cast, Ward}`, `data/skills.toml`) and `StanceDef::miscast`
@@ -321,13 +322,38 @@ cast path shares.
     A creature's caster holds nothing in `Actor::spells`, so both do nothing to it (no draw).
     Rows: `stumble` (1 rank), `falter` (2), `forgetting` (1 spell), `amnesia` (2), `blank`
     (all).
+  - **The portal** (#1297; `world/pit.rs`, tests `world/pit_tests.rs`; the design §7.2–§7.3;
+    `docs/dev/mapgen.md` "The Pits" for the floors): on the caster's level, in play,
+    `World::open_pit` draws the Pit's integer `S` (`rng.below(u32::MAX) + 1`, again while taken),
+    records `WorldState::pits[S] = Pit { from: the level, sealed: false }`, turns the first plain
+    free cell within `pit::MOUTH_REACH` (3) of the caster (walkable; no one on it; no stairs,
+    door, chest, statue, grave, light, trap, hidden location, place, or flow) into `stairs_down`
+    (`set_terrain`) and pushes a `StairsLink` down to `hellegeat@S:1` named "the Pit", as
+    `open_lair` opens a lair; then the gate comes to the first free cell around the caster but
+    the mouth (`miscast_summon`'s `besides`). **Refused** (`World::pit_refused`) on the
+    overworld, on a Pit's own floor (`is_portal_floor`), and with no plain cell: no draw, no
+    record, the gate alone, and the entry's lines replaced by the refusal's ("The ground heaves
+    but will not open, and a gate tears through beside you instead!", "The floor here is the
+    Pit's already: …"; a seen creature's "The ground heaves beside {who}, and a gate tears
+    through!"). Towns, hand-made levels, branch floors, and endless floors take it. A creature's
+    portal off the level in play does nothing. **The way out**: `World::visit` makes a Pit's
+    first floor with `entered_from` = its record's `from` (`WorldState::pit_way_out`), so a climb
+    from the second floor makes the first with its `<` to the mouth, and climbing that arrives
+    on the mouth (the `>` back to the floor left). **The orphan rule**
+    (`World::drop_orphan_pits`, one line in `World::apply` after `forget_floors`): after an
+    action that changed level, on a level that is no Pit's floor, a record whose `from` is no
+    longer in `levels` or holds no `>` to its Pit's first floor is dropped (a Pit opened on
+    Grundlēas, whose mouth was forgotten with the floor). No cap on Pits.
   - **The table** (#1288): 65 rows of two totals; the 35 below 71 protected. The rows the
-    design's later PRs fill stand in with existing kinds under their final ids: the pit rows
-    (`pit` … `pit_and_lords`) as `harm` of their neighbours' dice until the Pits. The nine gate
-    rows (`rift` … `lords_gate`) `summon` their gates (#1295, `docs/dev/creatures/gates.md`),
-    with the design's words. Their words are working lines until #1292.
+    design's later PRs fill stand in with existing kinds under their final ids. The four pit rows
+    (`pit` 105–106, `pit_yawning` 113–114, `pit_roaring` 121–122, `pit_and_lords` 127–128) are
+    `portal`s with a `rift`, an `abyssal_gate`, a `dire_gate`, and a `lords_gate` at the mouth
+    (#1297, below). The nine gate rows (`rift` … `lords_gate`) `summon` their gates (#1295,
+    `docs/dev/creatures/gates.md`), with the design's words. Their words are working lines until
+    #1292.
   - **Determinism**: two draws for the check, one a face of the die, then the effect's own
-    (dice, a pick among those near). Nothing new is saved.
+    (dice, a pick among those near). A portal draws its Pit's integer after the message;
+    the Pits' records (`WorldState::pits`, left out while empty) are the one thing saved.
   - **Choices** (the issue's open points): creatures check too, with their own Spellcraft
     (every shipped caster has one) and Intelligence; the casting stat is Intelligence for
     every spell (data's `stat`); the mitigations are Spellcraft's `ward` (so skill affixes and

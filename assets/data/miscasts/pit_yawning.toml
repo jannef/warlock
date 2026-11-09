@@ -2,6 +2,6 @@
 id = "pit_yawning"
 from = 113
 to = 114
-message = "The floor yawns open, and the fire of the pit roars over you!"
-seen = "The floor yawns open beside {who}, and fire roars over it!"
-effect = { kind = "harm", dice = "10d10", damage = "fire" }
+message = "The floor yawns open, and a stair goes down into red dark. A great gate stands at its head!"
+seen = "The floor yawns open beside {who}, and a great gate stands at the stair's head!"
+effect = { kind = "portal", gate = "abyssal_gate" }
