@@ -295,9 +295,10 @@ cast path shares.
     design's later PRs fill stand in with existing kinds under their final ids: `stumble`
     (`lose_mark`), `falter` (`mana` 75 %), `ache` and `racked` (Weakened 2 and 3) until rank
     loss and stat damage (#1289, #1290); `twofold_`, `threefold_`, `ruinous_withering` as one
-    `drain` each until `times` (#1290); `forgetting`, `amnesia`, `blank`, and the gate and pit
-    rows (`rift` … `pit_and_lords`) as `harm` of their neighbours' dice until forgetting
-    (#1289), the gates, and the Pits. Their words are working lines until #1292.
+    `drain` each until `times` (#1290); `forgetting`, `amnesia`, `blank`, and the pit rows
+    (`pit` … `pit_and_lords`) as `harm` of their neighbours' dice until forgetting (#1289) and
+    the Pits. The nine gate rows (`rift` … `lords_gate`) `summon` their gates (#1295,
+    `docs/dev/creatures/gates.md`), with the design's words. Their words are working lines until #1292.
   - **Determinism**: two draws for the check, one a face of the die, then the effect's own
     (dice, a pick among those near). Nothing new is saved.
   - **Choices** (the issue's open points): creatures check too, with their own Spellcraft

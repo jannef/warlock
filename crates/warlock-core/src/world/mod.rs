@@ -1812,6 +1812,8 @@ mod frenzy_tests;
 #[cfg(test)]
 mod freshness_tests;
 #[cfg(test)]
+mod gate_tests;
+#[cfg(test)]
 mod gaze_tests;
 #[cfg(test)]
 mod gear_tests;

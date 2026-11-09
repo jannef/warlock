@@ -2,6 +2,6 @@
 id = "dire_gate"
 from = 101
 to = 102
-message = "The weave rips open, and what pours through it tears at you!"
-seen = "The weave rips open beside {who} and tears at it!"
-effect = { kind = "harm", dice = "8d10", damage = "force" }
+message = "A dire gate rips open, and what steps through has a name."
+seen = "A dire gate rips open beside {who}!"
+effect = { kind = "summon", creature = "dire_gate" }

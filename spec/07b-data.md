@@ -28,7 +28,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
   its post, going about its routine, as a shopkeeper at its counter will; `never`), `rooted`
   (default false: rooted, it never moves, never gives way, is never pushed, swapped, or
   teleported, and never follows on stairs, but strikes and summons where it stands, as a
-  miscast's gate; §8 "Spells": "Miscasts"), its
+  miscast's gate; one with no natural attack and no weapon strikes no blow; §8 "Spells":
+  "Miscasts"), its
   `alignment` (`good`, `neutral`, the default, or `evil`; §8 "Alignment": the kobolds evil, the
   beasts neutral, the showcase's people good; never shown), an optional `race` (a race id; §8
   "Alignment": its corpse is kin to a character of that race; the showcase's people are human;

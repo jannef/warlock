@@ -247,6 +247,7 @@ above.
 | Healing spells on the undead (harm instead of healing) | `spellcasting.md#healing-harms-the-undead` |
 | Mishap | `magic.md#learning-spells-from-grimoires` |
 | Miscast, the Spellcraft check on casting, the miscast table, protected results | `miscasts.md#the-check`, `miscasts.md#the-miscast-table` |
+| Gate (a miscast's: rift, hellmouth, ... lords' gate), the loosed | `miscasts.md#gates` |
 | Learning a spell from a grimoire, overreach | `magic.md#learning-spells-from-grimoires` |
 | Spell rank, deepening a spell, rereading a grimoire | `magic.md#spell-ranks` |
 | Wand, rod, charges | `wands-and-rods.md#wands`, `wands-and-rods.md#rods` |
