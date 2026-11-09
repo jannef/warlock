@@ -70,3 +70,18 @@ A miscast that costs you ranks never takes a spell below rank 1, and it can happ
 protected rows. Read the grimoire again to [win the ranks back](magic.md#spell-ranks).
 
 Every cast trains Spellcraft the same whether it miscasts or not.
+
+## Gates
+
+Nine of the worst results open a **gate** beside you: a rift, a hellmouth, a gate of gloom, an
+abyssal, iron, black, or dire gate, an arch-gate, or the lords' gate. A gate is a
+[rooted](creatures.md#what-they-do) creature with no attack of its own. Instead it [lets fiends
+through](creature-powers.md#summoning), one or two at a time, every minute or more, as long as it
+sees anyone, since everyone is its enemy. The fiends it lets through belong to the gate's own
+[faction](creatures.md#factions), the loosed: they attack you, your enemies, and every other fiend
+alike, but never each other or the gate. The deeper the result, the stronger the fiends: a rift lets
+dretches and quasits through, the lords' gate a balor or a pit fiend.
+
+A gate never closes on its own. Kill it and no more come, but the fiends already through stay. The
+gates' numbers and the fiends each lets through are in [Creatures in numbers](creature-numbers.md)
+and [Creature powers](creature-powers.md#summoning).

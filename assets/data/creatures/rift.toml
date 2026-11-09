@@ -1,0 +1,37 @@
+# The gates (#1295, docs/design/miscasts-review.md §6; docs/dev/creatures/gates.md). A tear in the
+# air that stinks of the Abyss, the lesser demons crawling out of it. Made only by a miscast
+# (miscasts/rift.toml): rooted, with no attack of its own, it lets fiends through on its cooldown at
+# no cost, as `loosed` as it is. Killing it is the fix: what came through stays, but no more come.
+[[creature]]
+id = "rift"
+level = 10
+xp = 60
+rarity = "very_rare"
+stray = false
+grades = false
+name = "rift"
+glyph = "0"
+fg = "#c05030"
+faction = "loosed"
+tags = ["summoner", "fiend", "gate"]
+alignment = "evil"
+rooted = true
+vision = "darkvision"
+sight = 8
+footsteps = 0
+weight = 1000000
+stats = { strength = 10, dexterity = 3, toughness = 17, intelligence = 3, willpower = 17, presence = 13 }
+base_hp = 13
+natural = { defence = 0, protection = 4, name = "warded rim" }
+resist = { fire = 100, poison = 100, cold = 50 }
+immune = ["asleep", "bleeding", "diseased", "frightened", "held", "poisoned", "stunned", "transfixed"]
+cry = { kind = "wail", loudness = 50, every = 90 }
+corpse = false
+blood = "none"
+dies = "shudders and closes"
+[creature.summon]
+creatures = ["dretch", "quasit"]
+count = "1d2"
+cooldown = 60
+most = 4
+verb = "lets through"

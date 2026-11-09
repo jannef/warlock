@@ -100,7 +100,11 @@ fn the_outlaws_are_the_ascmearcs_own_and_hunt_only_the_player() {
     let outlaws = CONTENT.factions().id("outlaws").expect("the faction");
     // No faction lists the outlaws as hostile: they are hostile to the player alone.
     for (i, def) in CONTENT.creature_defs().iter().enumerate() {
-        if def.id == "player" || def.faction == Some(outlaws) {
+        // The loosed (a miscast's gates, #1295) hate everyone, the outlaws too.
+        let loosed = def
+            .faction
+            .is_some_and(|f| CONTENT.factions().def(f).hates_everyone());
+        if def.id == "player" || def.faction == Some(outlaws) || loosed {
             continue;
         }
         let other = CONTENT.creature(crate::content::CreatureId(i as u16));

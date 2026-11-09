@@ -1,0 +1,38 @@
+# The gates (#1295, docs/design/miscasts-review.md §6; docs/dev/creatures/gates.md). An iron gate
+# ground open on the hells, the greater devils marching out of it. Made only by a miscast
+# (miscasts/iron_gate.toml): rooted, with no attack of its own, it lets fiends through on its
+# cooldown at no cost, as `loosed` as it is. Killing it is the fix: what came through stays, but no
+# more come.
+[[creature]]
+id = "iron_gate"
+level = 30
+xp = 160
+rarity = "very_rare"
+stray = false
+grades = false
+name = "iron gate"
+glyph = "0"
+fg = "#9a9aa8"
+faction = "loosed"
+tags = ["summoner", "fiend", "gate"]
+alignment = "evil"
+rooted = true
+vision = "darkvision"
+sight = 8
+footsteps = 0
+weight = 1000000
+stats = { strength = 10, dexterity = 3, toughness = 27, intelligence = 3, willpower = 27, presence = 20 }
+base_hp = 63
+natural = { defence = 0, protection = 8, name = "warded rim" }
+resist = { fire = 100, poison = 100, cold = 50 }
+immune = ["asleep", "bleeding", "diseased", "frightened", "held", "poisoned", "stunned", "transfixed"]
+cry = { kind = "banging", loudness = 70, every = 90 }
+corpse = false
+blood = "none"
+dies = "shudders and closes"
+[creature.summon]
+creatures = ["bearded_devil", "barbed_devil", "bone_devil", "erinyes"]
+count = "1"
+cooldown = 90
+most = 4
+verb = "lets through"

@@ -1,5 +1,5 @@
 //! The summoners (#520): every type with a summoning carries the `summoner` tag and one of
-//! another tribe, and every `summoner` summons.
+//! another tribe, and every `summoner` summons; every one but a rooted gate (#1295) has mana.
 
 use super::Content;
 
@@ -25,7 +25,12 @@ fn every_summoner_summons_and_belongs_to_another_tribe() {
                 "{}: a summoner is of some other tribe too",
                 def.id
             );
-            assert!(def.base_mana > 0, "{}: summoning costs mana", def.id);
+            // A rooted gate's summoning costs nothing (#1295): its cooldown and `most` limit it.
+            assert!(
+                def.base_mana > 0 || def.rooted,
+                "{}: summoning costs mana",
+                def.id
+            );
         }
     }
 }
