@@ -1,7 +1,9 @@
-//! The checks of an endless branch's layer bosses (spec §7 "The endless branch",
-//! `world/layer_boss.rs`): each boss a unique type, each lair a dungeon vault of the branch's
-//! campaign (or shared) that places its boss once and marks the hidden stairs, `>`, and stamps
-//! nowhere else (it is pinned); no other vault has a `>`.
+//! The checks of a branch's bosses (spec §7 "The endless branch", "The Pits";
+//! `world/layer_boss.rs`, `world/pit.rs`): an endless branch's layer bosses, each a unique type,
+//! and a portal branch's warden, of any type (every Pit has its own); each lair a dungeon vault of
+//! the branch's campaign (or shared) that places its boss once, stamps nowhere else (it is
+//! pinned), and marks the hidden stairs, `>`, exactly where the floor leads down (a Pit's last
+//! floor leads nowhere, and its lair has none); no other vault has a `>`.
 
 use super::{Content, CreatureId, DungeonDef};
 
@@ -11,7 +13,7 @@ impl Content {
         for boss in &def.bosses {
             let creature = self.creature(boss.creature);
             let id = creature.id.clone();
-            if !creature.unique {
+            if def.portal.is_none() && !creature.unique {
                 return Err(format!("layer boss `{id}` is not `unique`"));
             }
             let name = &boss.vault;
@@ -23,10 +25,19 @@ impl Content {
                     "layer boss `{id}`: vault `{name}` is no dungeon vault of the branch's campaign"
                 ));
             }
-            if vault.down.is_none() {
-                return Err(format!(
-                    "layer boss `{id}`: lair `{name}` marks no stairs down (`>`)"
-                ));
+            match (def.leads_down(boss.depth), vault.down.is_some()) {
+                (true, false) => {
+                    return Err(format!(
+                        "layer boss `{id}`: lair `{name}` marks no stairs down (`>`)"
+                    ));
+                }
+                (false, true) => {
+                    return Err(format!(
+                        "layer boss `{id}`: lair `{name}` marks stairs down (`>`) on a floor \
+                         that leads nowhere"
+                    ));
+                }
+                _ => {}
             }
             if vault.danger.is_given() {
                 return Err(format!(
@@ -60,9 +71,20 @@ impl Content {
         }
     }
 
-    /// Whether creature type `c` is some endless branch's layer boss: it keeps to its lair
+    /// Whether creature type `c` is some branch's boss (a layer boss, a Pit's warden): it keeps
+    /// to its lair
     /// (`world/stair_followers.rs`).
     pub fn is_layer_boss(&self, c: CreatureId) -> bool {
         (self.dungeons.values()).any(|d| d.bosses.iter().any(|b| b.creature == c))
+    }
+}
+
+#[cfg(test)]
+impl super::ContentFiles {
+    /// Every shared vault removed but the Pits' warden's hall, which Hellegeat's boss row names:
+    /// for fixtures that want no vault in their way.
+    pub(crate) fn remove_shared_vaults(&mut self) {
+        self.files
+            .retain(|p, _| !p.starts_with("vaults/") || p == "vaults/wardens_hall.toml");
     }
 }

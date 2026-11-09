@@ -17,7 +17,7 @@ fn vault_file(head: &str) -> String {
 /// of the four phases), and a rooms branch `graded` of twelve floors whose danger is its depth.
 fn content_with(head: &str) -> Result<Content, String> {
     let mut files = ContentFiles::builtin();
-    files.remove("vaults");
+    files.remove_shared_vaults();
     files.insert("vaults/marked.toml", &vault_file(head));
     for plain in ["plain_a", "plain_b", "plain_c"] {
         files.insert(
@@ -152,7 +152,7 @@ fn what_the_field_refuses_is_refused_with_a_message() {
 #[test]
 fn a_vault_a_branch_level_names_takes_no_danger() {
     let mut files = ContentFiles::builtin();
-    files.remove("vaults");
+    files.remove_shared_vaults();
     files.insert("vaults/marked.toml", &vault_file("danger = { from = 6 }"));
     let branch = "\n[[dungeon]]\nid = \"pinning\"\nname = \"Pinning\"\ngenerator = \"rooms\"\n\
          depth = 1\nsize = [80, 21]\n[[dungeon.levels]]\nfrom = 1\nvaults = [\"marked\"]\n";

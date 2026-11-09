@@ -28,7 +28,8 @@ const DEEP_SEEDS: u64 = 100;
 #[test]
 fn every_shared_dungeon_vault_stamps_on_rooms_and_caves_floors() {
     let shared: Vec<&Vault> = (CONTENT.vaults().iter())
-        .filter(|v| !v.is_outdoor() && v.campaign.is_none())
+        // A lair (the Pits' warden's hall) is stamped only where its branch names it.
+        .filter(|v| !v.is_outdoor() && v.campaign.is_none() && !v.pinned)
         .collect();
     assert!(shared.len() >= 25, "{}", shared.len());
     // Some floor of the test suits every vault: a shallow one (the Tithe-barn, to danger 6)

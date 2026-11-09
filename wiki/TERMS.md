@@ -113,6 +113,7 @@ above.
 | Lairs of the wanted | `dungeon-guide.md#the-lairs-of-the-wanted` |
 | Grundlēas, floors forgotten | `dungeon-guide.md#grundlēas` |
 | Hellegeat, a Pit | `pits.md`, `pits.md#how-a-pit-opens`, `pits.md#floors-that-forget` |
+| A Pit's warden, a sealed Pit | `pits.md#the-warden` |
 | Special room | `special-rooms.md` (a room: its row) |
 | Forgotten altar, praying | `altars-forges-springs.md#forgotten-altars` |
 | Forge, tempering, Fine, Marvellous, Masterwork, damaged items | `altars-forges-springs.md#forges` |

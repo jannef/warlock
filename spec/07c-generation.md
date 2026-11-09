@@ -86,7 +86,17 @@ developer notes (CLAUDE.md, `docs/dev/`).
   however that floor was reached. All a run keeps of a Pit is its record (`WorldState::pits`:
   the integer, the mouth's level, and whether it is sealed) and the mouth; there is no cap on
   Pits, and a record whose mouth is gone (opened on a forgotten floor) is dropped on the next
-  arrival outside every Pit. A warden keeps the fifth floor (#1298). The dev scenario
+  arrival outside every Pit. **The warden** (#1298; `[dungeon.portal] boss`): every Pit's fifth
+  floor is kept by its own warden of the gate (`gatewarden`, a level-50 devil-bodied fiend with
+  claws and a whip that holds, which opens rifts and hellmouths on its side; no unique, in no
+  population, never a stray; faction `layer_keepers`, so the Pit's folk leave it be) in its hall
+  (`wardens_hall`, lava in its corners, four locked chests of the floor's band and a hoard), stamped
+  for certain like a layer boss's lair but hiding no stairs: the floor leads nowhere. Its death
+  seals its own Pit and no other ("The Pit shudders. Far above, stone grinds on stone."); no
+  slain list is written. A sealed Pit's fifth floor is made again with the hall and a new hoard
+  but no warden. On the next arrival outside every Pit a sealed Pit's mouth crumbles to rubble
+  ("The stair crumbles to rubble behind you." if the player stands there) and its record is
+  dropped, so the player is never sealed in and nothing of that Pit remains. The dev scenario
   `hellegeat` (the showcase's) starts on `hellegeat@1:1`, its record's mouth the hub.
   **Ways up** (`below = "fyrdelf:12"`, #1117; `mapgen/way_up.rs`, `world/reveal.rs`): a bounded
   branch whose `below` names a level of another bounded branch of its campaign is a way between

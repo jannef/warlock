@@ -4943,7 +4943,9 @@ mod tests {
             // hydra's heads).
             let offspring = (content.creature_defs().iter())
                 .any(|d| d.dies_into.as_ref().is_some_and(|i| i.pool.contains(&c)));
-            let gate = def.tags.iter().any(|t| t == "gate") && !def.stray;
+            // A Pit's warden only through its hall (#1298).
+            let gate =
+                (def.tags.iter().any(|t| t == "gate") || content.is_layer_boss(c)) && !def.stray;
             let placed =
                 def.animated.is_some() || def.mimic.is_some() || gate || (offspring && !def.stray);
             if hostile && !def.unique && !placed && campaign != Some("showcase") {
@@ -5432,6 +5434,7 @@ mod tests {
                 "the_mere",
                 "tithe_barn",
                 "trolls_bridge",
+                "wardens_hall",
                 "watch_fire",
                 "watchmen",
                 "well_house",

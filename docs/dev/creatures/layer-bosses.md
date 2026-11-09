@@ -39,3 +39,22 @@ among them; the depths list runs to 100), `summoner_roster_tests`
 (the four summoners carry `summoner` and another tribe's tag).
 
 **The disarming blow** (#1166, `docs/dev/creatures.md`): Wælcyrge carries `disarms = { chance, difficulty }`, a melee hit that may knock the player's main-hand weapon onto an open cell beside them (20 % at 28).
+
+## The Pits' warden (#1298)
+
+Every Pit (spec §7 "The Pits", `docs/dev/mapgen.md` "A Pit's warden", `world/pit.rs`) has its own
+warden on its fifth floor, so the type is **no unique** (`content/layer_boss.rs` asks `unique` only
+of an endless branch's bosses), and is shared (`assets/data/creatures/gatewarden.toml`, the lair
+`assets/vaults/wardens_hall.toml`, `dungeons = ["hellegeat"]`, pinned by the boss row). It is
+`stray = false` and in no population, so only the hall places it (`content/mod.rs`'s stray-list
+test counts a branch's boss as placed). Faction `layer_keepers`, not `loosed`: the Pit's folk keep
+their own factions and would fall on a `loosed` warden; the gates it summons take its faction
+(`world/summon.rs`), and so does what comes through them. Tags `fiend`, `summoner` (not `devil`:
+the dark wizard's devil summons draw by tag). Named with no capital, "warden of the gate", so it
+takes an article.
+
+| Depth | Id | Name | Level | What sets the fight apart | Lair |
+|---|---|---|---|---|---|
+| 5 of a Pit | `gatewarden` | warden of the gate | 50 | 180 hit points, Protection 10; 3d10 claws and a barbed whip that may hold (20 % at 22); opens a rift or a hellmouth every 120 s (10 mana of 60, 2 at most); fire and poison 100, cold 50 | `wardens_hall`, lava in its corners, four locked chests, a hoard; no `>` |
+
+Its death seals its own Pit (`World::seal_pit`), never `Quests::slain`.

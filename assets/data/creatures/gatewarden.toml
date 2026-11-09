@@ -1,0 +1,65 @@
+# The Warden of the Gate (#1298; docs/design/miscasts-review.md §7.4; spec §7 "The Pits"): the
+# boss of every Pit, the fiends' dungeons a miscast portal tears open. A title, not a name: each
+# Pit has its own, so the type is no unique, and like the gates it is in no population and never
+# strays. Only its hall, the Warden's hall on a Pit's fifth floor, places it. A devil's body, horned
+# and winged, with a whip that drags its victim close, and it opens gates of its own on its
+# cooldown. Its death seals its Pit, and that Pit only (`world/pit.rs`): the mouth closes behind
+# the player once they are out.
+#
+# Its faction: the keepers of the layers, who hunt the player and no one else, as Grundlēas's
+# bosses do. The Pit's folk keep their own factions and fight each other (the Blood War), but none
+# of them falls on its warden, and the gates it opens and what comes through them are its own.
+[[creature]]
+id = "gatewarden"
+level = 50
+xp = 260
+xp_percent = 200
+rarity = "very_rare"
+stray = false
+grades = false
+loot = 100
+name = "warden of the gate"
+plural = "wardens of the gate"
+glyph = "U"
+fg = "#ff5030"
+speed = 1050
+faction = "layer_keepers"
+tags = ["fiend", "summoner"]
+alignment = "evil"
+vision = "darkvision"
+sight = 16
+opens_doors = true
+footsteps = 90
+hearing = 12
+weight = 320000
+stats = { strength = 36, dexterity = 21, toughness = 36, intelligence = 30, willpower = 34, presence = 32 }
+base_hp = 180
+mana = 60
+skills = { initiative = 40, spot = 40 }
+natural = { defence = 3, protection = 10, name = "hide" }
+resist = { fire = 100, poison = 100, cold = 50 }
+corpse = false
+blood = "#4a1010"
+# Its claws, and its whip in turn.
+[[creature.attack]]
+damage = "3d10"
+damage_type = "slashing"
+name = "claws"
+verb = "rakes"
+to_hit = 8
+[[creature.attack]]
+damage = "2d8"
+damage_type = "slashing"
+name = "barbed whip"
+verb = "lashes"
+to_hit = 8
+on_hit = [{ status = "held", chance = 20, difficulty = 22 }]
+# The warden opens gates: a rift or a hellmouth every two minutes while its breath lasts, two at
+# most at once. Gates of its own, they are on its side, and so is what comes through them.
+[creature.summon]
+creatures = ["rift", "hellmouth"]
+count = "1"
+cooldown = 120
+mana = 10
+most = 2
+verb = "tears open"
