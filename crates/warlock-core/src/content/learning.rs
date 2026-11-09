@@ -36,7 +36,8 @@
 //! The miscast table (`data/miscasts/`, `content/miscast.rs`) writes its entries' effects the
 //! same way ([`resolve_effect`]), with kinds of its own: `harm` (`dice`, `damage`), `refund`,
 //! `twice`, `swap`, `boon` (`status`, `severity`), `noise` (`loudness`), `zone` (`zone`,
-//! `radius`, `turns`), and `backfire`'s `full`; `learn` is the study's only.
+//! `radius`, `turns`), `rank_loss` (`ranks`), `forget` (`spells` or `all = true`), and
+//! `backfire`'s `full`; `learn` is the study's only.
 
 use super::{Content, ContentError, CreatureId, DamageTypeId, StatusId, ZoneKind, duplicate_id};
 use crate::dice::Dice;
@@ -165,7 +166,7 @@ impl Band {
     }
 }
 
-/// What a mishap does, or a miscast (`content/miscast.rs`): those from `Harm` on are the
+/// What a mishap does, or a miscast (`content/miscast.rs`): those from `RankLoss` on are the
 /// miscast's only, `Learn` the study's.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum MishapEffect {
@@ -195,6 +196,15 @@ pub enum MishapEffect {
     Learn,
     Mark {
         stat: Stat,
+    },
+    /// The spell cast loses `ranks` ranks, never below 1 (a miscast's only).
+    RankLoss {
+        ranks: u8,
+    },
+    /// The spell cast is forgotten, and `spells − 1` more known spells drawn at random; every
+    /// spell known when `spells` is `None` (a miscast's only).
+    Forget {
+        spells: Option<u8>,
     },
     /// `dice` of harm to the caster, of type `damage` (the spell's own when `None`).
     Harm {
@@ -238,6 +248,8 @@ impl MishapEffect {
             MishapEffect::Summon { .. } => "summon",
             MishapEffect::Learn => "learn",
             MishapEffect::Mark { .. } => "mark",
+            MishapEffect::RankLoss { .. } => "rank_loss",
+            MishapEffect::Forget { .. } => "forget",
             MishapEffect::Harm { .. } => "harm",
             MishapEffect::Refund => "refund",
             MishapEffect::Twice => "twice",
@@ -296,6 +308,9 @@ pub(super) struct EffectSpec {
     zone: Option<String>,
     radius: Option<u8>,
     turns: Option<u16>,
+    ranks: Option<u8>,
+    spells: Option<u8>,
+    all: Option<bool>,
 }
 
 /// Parses the mishap files, in path order; statuses and creatures must be loaded.
@@ -340,7 +355,17 @@ pub(super) fn resolve_effect(
     content: &Content,
     miscast: bool,
 ) -> Result<MishapEffect, String> {
-    let only_miscast = ["harm", "refund", "twice", "swap", "boon", "noise", "zone"];
+    let only_miscast = [
+        "harm",
+        "refund",
+        "twice",
+        "swap",
+        "boon",
+        "noise",
+        "zone",
+        "rank_loss",
+        "forget",
+    ];
     if !miscast && only_miscast.contains(&e.kind.as_str()) {
         return Err(format!("a `{}` effect is a miscast's only", e.kind));
     }
@@ -363,6 +388,9 @@ pub(super) fn resolve_effect(
         ("zone", e.zone.is_some()),
         ("radius", e.radius.is_some()),
         ("turns", e.turns.is_some()),
+        ("ranks", e.ranks.is_some()),
+        ("spells", e.spells.is_some()),
+        ("all", e.all.is_some()),
     ];
     let reads: &[&str] = match e.kind.as_str() {
         "status" | "boon" => &["status", "severity"],
@@ -374,6 +402,8 @@ pub(super) fn resolve_effect(
         "mark" => &["stat"],
         "noise" => &["loudness"],
         "zone" => &["zone", "radius", "turns"],
+        "rank_loss" => &["ranks"],
+        "forget" => &["spells", "all"],
         _ => &[],
     };
     if let Some((name, _)) = fields.iter().find(|(n, set)| *set && !reads.contains(n)) {
@@ -472,6 +502,19 @@ pub(super) fn resolve_effect(
         }
         "mark" => MishapEffect::Mark {
             stat: stat(&e.stat, false)?.expect("not random"),
+        },
+        "rank_loss" => {
+            let ranks = e.ranks.filter(|&r| r > 0);
+            MishapEffect::RankLoss {
+                ranks: ranks.ok_or("a `rank_loss` effect needs `ranks`, at least 1")?,
+            }
+        }
+        "forget" => match (e.spells, e.all) {
+            (Some(n), None) if n > 0 => MishapEffect::Forget { spells: Some(n) },
+            (None, Some(true)) => MishapEffect::Forget { spells: None },
+            _ => {
+                return Err("a `forget` effect needs `spells`, at least 1, or `all = true`".into());
+            }
         },
         other => return Err(format!("unknown effect kind `{other}`")),
     };

@@ -282,7 +282,8 @@ pub struct Actor {
     /// rank it knows it at (1 to `MAX_SPELL_RANK`; `world/spell_rank.rs`): learned from
     /// grimoires, and a class ability's spell once its grimoire has deepened it (at rank 1 a
     /// class's spell is not here: its talents give it); both are what [`Actor::knows_spell`]
-    /// asks, and [`Actor::spell_rank`] reads the rank.
+    /// asks, and [`Actor::spell_rank`] reads the rank. Rank 0 is a class's spell forgotten by a
+    /// miscast (`world/forget.rs`): not known.
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
     pub spells: BTreeMap<SpellId, u8>,
     /// Its streak of melee blows at one creature (Relentless, spec §8 "Birth sign"): `None`

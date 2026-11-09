@@ -2,7 +2,8 @@
 
 You cast a **spell** from the [abilities menu](abilities.md#the-abilities-menu) (`a`), where spells
 have their own heading, *Spells*. Spells are paid for in [mana](mana.md). You know a spell for good
-once your class gives it to you or once you have learned it from a grimoire (below).
+once your class gives it to you or once you have learned it from a grimoire (below), unless a
+[miscast](miscasts.md#forgotten-spells) makes you forget it.
 
 Every spell follows the same rules: its [spell level](#spell-levels), its
 [shape](spellcasting.md#shapes), and how it finds its target. Your [learning](#learning) decides
@@ -276,7 +277,9 @@ your learning). The read list shows the rank a grimoire would bring you to and y
 
 If you fail, you lose only the time. There is no mishap, and you may read the book again at once,
 as often as you like. If you succeed, the spell is yours at the next rank: "The words settle
-deeper: you know Frost at rank 3 of 10." A rank brings no experience.
+deeper: you know Frost at rank 3 of 10." A rank brings no experience. A bad
+[miscast](miscasts.md#forgotten-spells) can cost you ranks, never below rank 1; you win them back
+the same way.
 
 **What a rank gives** is the spell's own. Each spell has a table of what each rank from 2 adds,
 and the additions stack: at rank 5 you have everything ranks 2 to 5 added. A rank may add to the

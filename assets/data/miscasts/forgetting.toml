@@ -2,6 +2,6 @@
 id = "forgetting"
 from = 81
 to = 82
-message = "The spell tears loose from your mind, and the raw power tears you!"
-seen = "{who} clutches its head and is torn by its own power."
-effect = { kind = "harm", dice = "4d6", damage = "force" }
+message = "The spell is gone from you: you cannot recall a word of it."
+seen = "{who} stares at its hands."
+effect = { kind = "forget", spells = 1 }

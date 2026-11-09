@@ -470,7 +470,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
   - **Ranks** (#1264; `content/spell_rank.rs`, `world/spell_rank.rs`): every spell a character
     knows has a **rank**, 1 to 10. A spell is known at rank 1 as it is learned, or as a class
     gives it. **Reading its grimoire again deepens it** to the next rank ("Learning" below:
-    "Deepening"); casting trains no rank, and nothing else raises it. What a rank gives is the
+    "Deepening"); casting trains no rank, and nothing else raises it. A miscast may take ranks
+    away (never below 1) or make the spell forgotten ("Miscasts" below). What a rank gives is the
     spell's own `[spell.ranks]` table (`data/spells/README.toml`): one entry a rank from 2 to
     10, each what reaching that rank **adds**, cumulative (a cast at rank N has everything the
     entries for ranks 2 to N add); a spell with no table gains nothing from its ranks. An entry
@@ -691,21 +692,29 @@ developer notes (CLAUDE.md, `docs/dev/`).
       teleport, up to 70; from 71 backfires, drains for good, and harm climbing from 4d6 to
       20d10 force. **Protected entries**: one whose `to` is below `safe_below` (71) cannot kill
       its caster (its harm takes them to 1 hit point at the least, nothing at 1) and the loader
-      refuses one that would backfire, drain, summon, lay a fire zone, or put on a status that
-      ticks harm or mana, a campaign's too; only a spell missed by 10 or more reaches past it.
+      refuses one that would backfire, drain, forget, summon, lay a fire zone, or put on a status
+      that ticks harm or mana, a campaign's too (a rank loss is allowed: it never forgets); only a spell missed by 10 or more reaches past it.
       The entries' effects are the mishaps' kinds (`MishapEffect`, `resolve_effect`) and the
       miscast's own (`harm`, `refund`, `twice`, `swap`, `boon`, `noise` (`loudness`: a
       thunderclap's sound on the caster's cell), `zone` (`zone`, `radius`, `turns`: a zone
-      around the caster, no harm), `backfire`'s `full`: a damage spell bursts on its caster, a hex falls on them, a heal
+      around the caster, no harm), `rank_loss` (`ranks`: the spell cast known that many ranks
+      lower, never below 1), `forget` (`spells = N`: the spell cast and `N − 1` more known
+      spells drawn at random forgotten; `all = true`: every spell known; #1289,
+      `world/forget.rs`), `backfire`'s `full`: a damage spell bursts on its caster, a hex falls on them, a heal
       mends the nearest hostile they see, a buff takes hold of it, a summon's creatures come of
       their own faction and on no one's side, and anything else, or nothing to land on, is
       (level ÷ 3 + 1)d6 force, (level ÷ 2 + 1)d6 at full), applied to any caster; "near" is
       within 6 cells in a clear line, in actor-id order, and a creature's swap never takes the
-      player. The rows that later phases of the design fill (rank loss, forgetting, stat damage,
-      the drain's repeats, the Pits) stand in for now as existing kinds under their final ids.
-      The nine gate rows (#1295) `summon` a gate beside the caster: a rooted creature of the
-      `loosed` faction, with no attack, that lets fiends through on its cooldown at no cost,
-      `loosed` as it is, until it is killed (`assets/data/creatures/`, tag `gate`). The player is told in words ("Sparks leap from your fingers and bite."); a
+      player. **Forgetting** takes a class's spell as much as a learned one (a learned spell
+      leaves `Actor::spells`; a class's is kept there at rank 0, read as not known): it is no
+      longer listed or cast, and is learned again only from its grimoire, exactly as the first
+      time (a study at rank 1, its experience paid again; no guard against it, the owner). A
+      creature's rank loss and forgetting do nothing (its spells are its kind's). The rows that
+      later phases of the design fill (stat damage, the drain's repeats, the Pits) stand in for
+      now as existing kinds under their final ids. The nine gate rows (#1295) `summon` a gate
+      beside the caster: a rooted creature of the `loosed` faction, with no attack, that lets
+      fiends through on its cooldown at no cost, `loosed` as it is, until it is killed
+      (`assets/data/creatures/`, tag `gate`). The player is told in words ("Sparks leap from your fingers and bite."); a
       creature's miscast is told by its entry's `seen` line when the player sees it. A death of the player by their own miscast
       is `Cause::Miscast` ("Killed by their own miscast fireball"). Determinism: the check's two
       draws, the die's, then the effect's own, all on the gameplay stream; none without

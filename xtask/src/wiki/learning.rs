@@ -213,6 +213,8 @@ fn effect_text(content: &Content, effect: MishapEffect) -> String {
         MishapEffect::Mark { stat } => format!("a training mark of {}", stat.name()),
         // The miscast table's only (`miscast.rs` says them).
         MishapEffect::Harm { .. }
+        | MishapEffect::RankLoss { .. }
+        | MishapEffect::Forget { .. }
         | MishapEffect::Refund
         | MishapEffect::Twice
         | MishapEffect::Swap
