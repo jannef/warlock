@@ -226,6 +226,19 @@ fn a_rooted_gate_summons_to_its_cap_and_stays() {
 }
 
 #[test]
+fn a_rooted_gate_with_no_attack_strikes_no_blow() {
+    // No free cell to call into: beside the player, it would strike with bare hands if it could.
+    let mut w = world("####\n#@G#\n####\n");
+    let hp = w.state.player().hp;
+    run(&mut w, "wait*20");
+    assert_eq!(
+        w.state.player().hp,
+        hp,
+        "a gate has no hands to strike with"
+    );
+}
+
+#[test]
 fn a_rooted_one_never_gives_way_to_the_player() {
     let mut w = world("######\n#@s..#\n######\n");
     let shrub = first_of(&w, "shrub");

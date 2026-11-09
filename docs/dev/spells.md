@@ -305,10 +305,10 @@ cast path shares.
     `clear_shot`, in actor-id order. `noise` and `zone` act only when the caster stands on the
     current level. A player who dies of it: `Cause::Miscast(spell)`.
   - **The table** (#1288): 65 rows of two totals; the 35 below 71 protected. The rows the
-    design's later PRs fill stand in with existing kinds under their final ids: `stumble`
-    (`lose_mark`), `falter` (`mana` 75 %) until rank loss (#1289); `forgetting`, `amnesia`, `blank`, and the gate and pit
-    rows (`rift` … `pit_and_lords`) as `harm` of their neighbours' dice until forgetting
-    (#1289), the gates, and the Pits. Their words are working lines until #1292.
+    design's later PRs fill stand in with existing kinds under their final ids: the pit rows
+    (`pit` … `pit_and_lords`) as `harm` of their neighbours' dice until the Pits. The nine gate
+    rows (`rift` … `lords_gate`) `summon` their gates (#1295, `docs/dev/creatures/gates.md`),
+    with the design's words. Their words are working lines until #1292.
   - **Determinism**: two draws for the check, one a face of the die, then the effect's own
     (dice, a pick among those near). Nothing new is saved.
   - **Choices** (the issue's open points): creatures check too, with their own Spellcraft

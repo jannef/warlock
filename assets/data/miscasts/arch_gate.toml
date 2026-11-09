@@ -2,6 +2,6 @@
 id = "arch_gate"
 from = 111
 to = 112
-message = "The weave splits wide, and what pours through it crushes you!"
-seen = "The weave splits wide beside {who} and crushes it!"
-effect = { kind = "harm", dice = "10d10", damage = "force" }
+message = "An arch-gate opens beside you, wide enough for a lord of the hells."
+seen = "An arch-gate opens beside {who}!"
+effect = { kind = "summon", creature = "arch_gate" }

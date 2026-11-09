@@ -78,7 +78,8 @@ a hostile faction), it goes for the nearest one:
   hunts like any other creature. The table in
   [Creatures in numbers](creature-numbers.md#surprise) says which creatures lurk.
 - A **rooted** creature never leaves the cell it stands on. It strikes whatever comes beside it,
-  and shoots, casts, or [calls others](creature-powers.md#summoning) from where it is. Nothing
+  unless it has nothing to strike with, and shoots, casts, or
+  [calls others](creature-powers.md#summoning) from where it is. Nothing
   moves it: it never [makes way](npcs.md#getting-past) for you, no blow or spell drives it back,
   no teleport takes it, and it never follows you on the [stairs](terrain.md#stairs).
 - When it loses sight of its target, it goes to where it last saw it. If someone it cannot see
