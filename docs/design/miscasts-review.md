@@ -1,11 +1,14 @@
-# Warlock — Miscasts, revision 2
+# Warlock — Miscasts, revision 3
 
-Design for the owner's line-by-line review (revision 2, 2026-11-09). Revision 1 (2026-11-08) was
+Design for the owner's line-by-line review (revision 3, 2026-11-09). Revision 1 (2026-11-08) was
 a review of the miscast system #1275 built; the owner answered its seven questions and gave a
-direction and a list of new entries. This revision is the design that adopts them, written
-against `main` at 1eb04a6b (ranks #1276 and the rank tables #1280–#1286 landed since revision 1).
-Nothing here is implemented. Numbers come from an exact enumeration of the rules (2d12 × 2d12,
-§2.4); the review's findings that still hold are summarised in §1.2, not repeated.
+direction and a list of new entries; revision 2 adopted them and asked six more, and the owner
+answered those too (§1.1). This revision works the answers in: class spells can be forgotten and
+are relearned as any spell is (§5.1); the Pit is no longer one per run but **a Pit per portal,
+each made from one integer and forgotten floor by floor as Grundlēas is** (§7, rewritten against
+`world/endless.rs`, `mapgen::generate_for`, and `World::travel` as they are on `main` at
+1eb04a6b). Nothing here is implemented. Numbers come from an exact enumeration of the rules
+(2d12 × 2d12, §2.4); the review's findings that still hold are summarised in §1.2, not repeated.
 
 ## Brief for the owner
 
@@ -29,12 +32,15 @@ into an infernal dungeon** with a boss on its last floor.
    1–70 are **protected**: a harm there cannot take the caster below 1 hit point, and no row
    there summons, drains for good, backfires, forgets a spell, or opens a pit; the loader
    refuses one that would (§4).
-4. New effects: **rank loss and forgetting** (§5.1), **stat damage** (mends) below 70 and the
-   permanent **drain** above (§5.2), the **rebound heal** and the other backfire fallbacks
-   (§5.3), **noise and zones** in Surge's place (§5.4); the **gates**: nine rooted gate
-   monsters of a new faction hostile to everyone but itself, summoning fiends by tier (§6); and
-   **the Pit**, Hellegeat: a shared five-floor fiend branch opened by stairs the miscast makes,
-   its warden on the last floor, whose death seals it (§7).
+4. New effects: **rank loss and forgetting** (§5.1; a class spell too, relearned from its
+   grimoire as any spell is), **stat damage** (mends) below 70 and the permanent **drain** above
+   (§5.2), the **rebound heal** and the other backfire fallbacks (§5.3), **noise and zones** in
+   Surge's place (§5.4); the **gates**: nine rooted gate monsters of a new faction hostile to
+   everyone but itself, summoning fiends by tier (§6); and **the Pits**: Hellegeat, a shared
+   five-floor fiend branch of which **every portal opens an instance of its own**, made from one
+   integer drawn at the miscast, its floors forgotten when left as Grundlēas's are, so a run
+   saves one small record per open Pit; a warden on each one's last floor, whose death seals that
+   Pit (§7).
 5. **Fourteen small PRs** in five phases; the first (the rules and the protected half of the
    table) stands alone and is nearly all data (§10).
 
@@ -46,7 +52,7 @@ into an infernal dungeon** with a boss on its last floor.
 4. Death protection
 5. New effects: ranks, stats, backfires, chaos
 6. The gates (fiend portals)
-7. The Pit: Hellegeat
+7. The Pits: Hellegeat
 8. Words
 9. Creatures' miscasts
 10. Implementation plan
@@ -69,6 +75,17 @@ into an infernal dungeon** with a boss on its last floor.
 | (direction) | penalise casting high-level spells without Spellcraft; overhaul freely | §2, §3 |
 | (direction) | 60–125 rows, small variance, no instant death below ~70 | §3 (65 rows), §4 (`safe_below`) |
 | (entries) | rank loss, forgetting; stat drain; gate monsters with a cooldown; every fiend kind; fiends friendly only to each other; the infernal portal | §5.1, §5.2, §6, §7 |
+
+Revision 2's six questions and the owner's answers (PR #1277, 2026-11-09):
+
+| Revision 2 asked | Answer | Where it lands |
+|---|---|---|
+| Class-granted spells: forgotten, or only back to rank 1? | **forgotten**, like any spell; relearned from a grimoire, the one way any spell is learned; no guard against relearning for experience ("so little that guarding is pointless") | §5.1, the `forgetting`/`amnesia`/`blank` rows |
+| The die: 2d12 + 5 × miss, the d66 explosion gone? | yes | §2.2 |
+| Where the Pit may open? | **anywhere but the overworld and a Pit's own floors**: endless floors ("I don't see why endless levels would be exempt") and towns included | §7.3 |
+| Gates close on their own? | never; only when killed | §6.2 |
+| One Pit per run, sealed for good? | **no**: made on demand, each from **one random integer**, the generator seeded by it so nothing but the integer is persisted, the floors behaving like the endless branch's so little state is kept | §7, rewritten |
+| Hellegeat the first shared branch? | yes | §7.1 (one shared definition; a Pit is an instance of it) |
 
 ### 1.2 What revision 1 found that still shapes this
 
@@ -184,7 +201,7 @@ Reading:
   what the table says.
 - **Ranks are a real lever.** The new wizard with a Fireball grimoire goes from 69 % with 6.5 %
   severe at rank 1 to 10 % and nothing worse than annoying at rank 10, for nine rereadings.
-- **The hopeless case is hopeless.** A level-1 wizard forcing Sunfire from a grimoire has the
+- **The hopeless case is hopeless.** A level-1 wizard forcing Sunfire from a grimoire has a
   Pit open under them one cast in four. That is intended: they were told in the read list that
   the spell was far above them.
 - **Half-casters** at 1 in 4 to 1 in 7 with Spellcraft 9: the whole miscast lands in rows 1–64.
@@ -243,7 +260,7 @@ damage type of the spell cast (force for one with none, as `harm` does now).
 | 75–76 | `rift` | summon the `rift` gate (lesser demons) | severe | 11 (13) |
 | 77–78 | `hellmouth` | summon the `hellmouth` gate (lesser devils) | severe | 11 (13) |
 | 79–80 | `gloom_gate` | summon the `gloom_gate` (lesser yugoloths and fiends) | severe | 11 (13) |
-| 81–82 | `forgetting` | forget 1: the spell is forgotten (a class spell: back to rank 1) | severe | 12 (14) |
+| 81–82 | `forgetting` | forget 1: the spell is forgotten (a class spell too) | severe | 12 (14) |
 | 83–84 | `rend` | harm 4d6 force | severe | 12 (14) |
 | 85–86 | `twofold_withering` | drain 1 of each of two random stats, Willpower vs 16 each | severe | 13 (15) |
 | 87–88 | `abyssal_gate` | summon the `abyssal_gate` (greater demons) | severe | 13 (15) |
@@ -255,7 +272,7 @@ damage type of the spell cast (force for one with none, as `harm` does now).
 | 99–100 | `amnesia` | forget 2: the spell and one more learned spell | deadly | 15 (17) |
 | 101–102 | `dire_gate` | summon the `dire_gate` (fiends of level 36 to 44) | deadly | 16 (18) |
 | 103–104 | `harrowing` | harm 8d10 force | deadly | 16 (18) |
-| 105–106 | `pit` | portal: stairs down into Hellegeat, and a `rift` at their mouth | deadly | 17 (19) |
+| 105–106 | `pit` | portal: stairs down into a Pit of its own (Hellegeat, §7), and a `rift` at their mouth | deadly | 17 (19) |
 | 107–108 | `threefold_withering` | drain 1 of each of three random stats, Willpower vs 18 | deadly | 17 (19) |
 | 109–110 | `ruin` | harm 10d10 force | deadly | 17 (19) |
 | 111–112 | `arch_gate` | summon the `arch_gate` (fiends of level 46 to 58) | catastrophe | 18 (20) |
@@ -323,18 +340,17 @@ their own spell unless they cast one that far beyond them.
   well.") and shown on the Magic page's rank column. Getting it back is the deepening reading
   (#1264): `rank × (100 + 20 × level)` turns and a check, which is what makes the loss hurt
   without being final (and no farming limit, as the house rule says).
-- **`forget { spells = N | all = true }`** (new kind): the spell cast is **forgotten**: removed
-  from `Actor::spells` (a new `Actor::forget_spell`, the second writer beside
-  `set_spell_rank`), so `knows_spell` is false, the Magic page and the abilities menu lose it,
-  and casting it is refused. `spells = 2` forgets one more **learned** spell drawn at random
-  (`rng.below` over the learned ones in menu order); `all` forgets every learned spell. A spell a
-  **class grants** (`TalentMods::has_spell`) **cannot be forgotten**: it falls to rank 1 instead
-  (what one's class taught is in the bones; also the only thing the data model allows without a
-  "forgotten" exclusion set). Learned again from its grimoire as any spell is (`learn_spell`,
-  a study at rank 1), **paying no experience the second time**: a new `Actor::forgotten:
-  BTreeSet<SpellId>` (saved, left out while empty) records what was once known and
-  `learn_spell` skips `spell_xp` for a member; without it, forget-and-relearn would mint
-  experience. Open question 1 asks the owner to confirm the class-spell rule.
+- **`forget { spells = N | all = true }`** (new kind): the spell cast is **forgotten**, a class's
+  spell as much as a learned one (the owner). `Actor::forget_spell` (the second writer of
+  `Actor::spells` beside `set_spell_rank`) removes the spell's entry, and for a spell the class
+  grants (`TalentMods::has_spell`) writes **rank 0** instead, the one value that means
+  "forgotten": `knows_spell` and `spell_rank` read it as not known, so the Magic page and the
+  abilities menu lose it and casting it is refused. No other field, no save change (`spells` is
+  saved already). `spells = 2` forgets one more known spell drawn at random (`rng.below` over
+  `known_spells` in menu order); `all` forgets every spell known. Getting it back is **learning
+  it from its grimoire**, exactly as any spell is learned (`learn_spell`: a study at rank 1,
+  its experience paid as for any spell learned; the owner: it is too little to guard). There is
+  no other way to learn a spell, and the design adds none.
 - **A creature's** rank loss and forgetting do nothing (its spells are the type's list, at rank
   1); the `seen` line still speaks.
 - Where they sit: `stumble` 51 (1 rank), `falter` 63 (2), `forgetting` 81, `amnesia` 99,
@@ -475,8 +491,9 @@ the gate is the fix: what it called remains, but no more come.
 - **Death**: "The rift shudders and closes." (its death line); no corpse, no drop; experience
   by level. What it called stays, now without a summoner (the record stands, as summoning.md
   says).
-- **Not timed out**: a gate lives until killed or the level is left and comes back to; it does
-  not close on its own. Open question 4 offers the alternative.
+- **Not timed out**: a gate lives until killed; it never closes on its own (the owner, revision
+  2's question 4). A gate on a floor that is forgotten (an endless floor, a Pit's) goes with
+  the floor, as everything on it does.
 
 ### 6.3 Who reaches a gate
 
@@ -487,19 +504,25 @@ Spellcraft 20 on Chain lightning: a gate on about one cast in nine, a greater on
 twenty-five. The level-1 wizard forcing Sunfire: `lords_gate` or a Pit with lords at its mouth
 on one cast in six.
 
-## 7. The Pit: Hellegeat
+## 7. The Pits: Hellegeat
 
-The owner: a portal to an infernal dimension creates stairs down to a fiend-themed dungeon, with a
-boss on its last floor.
+The owner: a portal creates stairs down to a fiend-themed dungeon with a boss on its last floor;
+**not one per run**: "create more on demand", each Pit made from **one random integer**, the
+generator seeded by it so the dungeon is deterministic without serialising it, and the floors
+behaving **like the endless branch's** so little state is kept; it may open **anywhere but the
+overworld and the Pit itself**, endless floors and towns included.
 
-### 7.1 The branch (data)
+### 7.1 One shared branch, a Pit per portal (data)
 
-A new bounded branch, **Hellegeat** (Old English *helle-geat*, hell-gate; the levels "Hellegeat
-1" to "Hellegeat 5"), shared: `assets/data/dungeons/hellegeat.toml`. The loader already gives a
-branch outside a campaign `campaign = None` (`load_dungeons`: `campaign::of_path`), and
-`has_level` finds a branch level by id whatever the campaign; the first PR confirms a shared
-branch passes every check (vault pinning for a shared vault, the stray list), else one copy per
-campaign in `campaigns/<id>/data/dungeons/` is the fallback (two files today).
+**Hellegeat** (Old English *helle-geat*, hell-gate) is one shared branch definition,
+`assets/data/dungeons/hellegeat.toml` (the loader gives a branch outside a campaign `campaign =
+None`, `load_dungeons`: `campaign::of_path`; `has_level` finds a branch level whatever the
+campaign; its creatures are the shared fiends and its one vault a shared vault, so the
+cross-campaign checks of `docs/dev/campaign.md` have nothing to refuse; the first PR confirms it).
+**Every portal opens an instance of it**: a Pit of its own, five floors, told apart by the
+integer drawn at the miscast. "Shared across campaigns" means one definition that any run of any
+campaign opens Pits from; no campaign holds a Pit, and a campaign's levels never name one (a
+quest cannot lead there, as none may name an endless floor).
 
 ```toml
 [[dungeon]]
@@ -523,83 +546,166 @@ population = ["lemure", "dretch", "imp", "quasit", "hell_hound", "bearded_devil"
   "bone_devil", "night_hag", "vrock", "nycaloth", "erinyes"]
 stray = 0
 out_of_depth = 10
-shops = { chance = 0 }
-room_effects = { chance = 0 }    # or a fire-only table, a later PR
+shops = { chance = 0 }            # a forgotten floor keeps no trade, as Grundlēas's
+room_effects = { chance = 0 }     # or a fire-only table, a later PR
 
-[[dungeon.levels]]
-from = 5
-vaults = ["wardens_hall"]
+# A portal branch (new; spec §7 "The Pits"): opened only by a `portal` miscast, an instance per
+# opening, its floors forgotten when left as an endless branch's are, and a boss on its last
+# floor whose death seals that instance.
+[dungeon.portal]
+boss = { depth = 5, creature = "gatewarden", vault = "wardens_hall" }
 ```
 
-- **Why a branch and not a hand-made level**: the Pit can open at any character level, and
+- **`[dungeon.portal]`** (new; `DungeonDef::portal: Option<Portal>`): marks the branch as one
+  that exists only as instances. The loader refuses it beside `[dungeon.endless]` or `below`,
+  and refuses any `StairsLink`, `HiddenLocation`, or quest naming its levels (nothing leads into
+  a Pit but a `portal` miscast). Its `boss` row resolves into `DungeonDef::bosses` through the
+  layer bosses' `content/layer_boss.rs` (today "none for any other branch": the check opens for a
+  portal branch), with one easing: its lair may have **no `>`** when the floor leads nowhere
+  (`leads_down(5)` is false), where `check_lairs` today asks for one.
+- **Why a branch and not a hand-made level**: a Pit can open at any character level, and
   `danger`'s `player` term is the one place in the data that scales with the player (the
-  README: "an area that grows with the player"). Everything else (generation on first visit,
-  persistence, the `<` of the first floor, the `>` down, loot, chests, traps, danger) is the
-  existing branch machinery.
-- **The population is `loosed`?** No: the Pit's own inhabitants keep their factions (demons,
+  README's "an area that grows with the player"). Generation, loot, chests, traps, danger, the
+  `<` of the first floor and the `>` down are the existing branch machinery.
+- **The population is not `loosed`**: a Pit's own inhabitants keep their factions (demons,
   devils, yugoloths, fiends), so the Blood War is fought on its floors (demons and devils are
-  hostile both ways) and the player can slip past a brawl. Only what a gate calls is `loosed`.
-  The two gates a miscast makes at the Pit's mouth are `loosed`.
+  hostile both ways) and the player can slip past a brawl. Only what a gate calls is `loosed`,
+  the gate at the mouth among them.
 - **Temperature 45 °C**: the temperature system reads a branch's `temperature`; what heat does to
   the player is the existing rules' business (nothing yet beyond the °C shown; a later issue).
 
-### 7.2 The portal (engine)
+### 7.2 Instances: one integer, deterministic floors, forgotten when left (engine)
+
+**The id.** A Pit's floors are `hellegeat@S:N`: the branch id, `@`, the Pit's integer `S`, then
+the depth as on every branch. `parse_branch_level` (`rsplit_once(':')`) already gives
+`("hellegeat@S", N)`; `Content::branch_level` learns to strip `@S` when the branch has `portal`
+(one `split_once('@')`), and everything that reads a level by `(def, depth)` then works unasked:
+`spawning`, `floor_danger`, `item_level`, `level_display_name` ("Hellegeat 3"), `arrival` on
+depth 1, `Vault::stamps_on` (a vault naming `"hellegeat"` or `"hellegeat:5"` matches
+`def.level_id(5)`), the spawner, the `truth` dump. Two places build **neighbour ids** from
+`def.level_id(depth ± 1)` (`generate_for`'s `up_to` and `down_to`, and the `>`'s link) and must
+build them from the floor's own id instead, so the instance is kept (`sibling(id, depth ± 1)`:
+one helper, three call sites).
+
+**The seed.** Every generator stream is already `label/<level id>` of the run seed
+(`Rng::map(seed, id, attempt)`, `population/<id>`, `objects`, `traps`, ...): with `S` in the id,
+a Pit's floor is a pure function of **the run seed, `S`, and the depth**, differing from every
+other Pit's and from every other depth's, and `level_seed`/`floor_seed` need no new arm (a Pit
+floor is not an endless floor's `endless/<n>` stream: the same floor made twice is the same
+floor). That is the owner's (a) and (b): the integer is the only parameter; the generator's
+randomness comes from it; nothing of the dungeon is serialised. `warlock-cli gen --level
+hellegeat@7:3 --seed S` prints exactly the floor a run of seed `S` makes of Pit 7's third floor.
+
+**What the inhabitants scale with.** The population and the vaults' pools draw at
+`DangerRule::at(depth, visit.player_level)`: the player's level **as the floor is made**, read
+from the saved character, so a replay makes the same floor and a save needs nothing more. A floor
+made again after a level-up has the same map and a stronger population: Hellegeat is "an area
+that grows with the player" as the `player` term is meant (§12.1 asks whether to freeze it at
+the opening instead).
+
+**Forgotten when left.** `Content::is_endless_floor(id)` becomes true of a portal floor too
+(`def.endless.is_some() || def.portal.is_some()`), and the endless machinery does the rest as it
+stands: `World::forget_floors` drops every such floor but the current one after a level change
+(its actors, piles, chests, memory, lights, wares; a kept beast crosses, any other ally left is
+gone and said so, a unique may come again: `world/endless.rs`), and `EndlessFloors::made` and
+`pays` key their `deepest` by the parsed branch, `hellegeat@S`, so **each Pit pays its five
+arrivals once** and a staircase walked up and down pays nothing twice. Climbing from floor 3 to
+floor 2 makes floor 2 again: the same map (the seed), its dead come back and its hoard re-rolls
+(the owner's rule: time is the penalty; Grundlēas does the same), its player memory blank.
+
+**The record.** `WorldState::pits: BTreeMap<u32, Pit>` (saved; left out while empty, so a run
+with no Pit hashes as before), `Pit { from: String, sealed: bool }`:
+- the key `S` is the integer, drawn from the gameplay stream at the miscast (`rng.below(u32::MAX)
+  + 1`; drawn again on the one-in-four-billion collision);
+- `from` is the level the mouth is on: what the first floor's `<` must lead to (below);
+- `sealed` is set by the warden's death (§7.4).
+That is all a save holds of a Pit beyond the mouth on its level: three words a Pit, as the owner
+asked ("cheap to persist per dungeon in the savegame").
+
+**How many.** As many as there are mouths, plus the one the player is in: no cap. A record lives
+while its mouth stands on a kept level or the player is inside; the rest are dropped by the
+orphan rule below. In play a Pit costs a total of 105 or more (§2.4: the neglecter on a spell twenty levels above
+him, or the hopeless case), so a run sees a handful at most.
+
+### 7.3 The portal
 
 **`portal { gate = "<gate id>" }`** (new kind): on the caster's level,
-1. the free cell around the caster nearest the first free one becomes **stairs down**
+1. `S` is drawn and `pits[S] = Pit { from: this level, sealed: false }`;
+2. the free cell around the caster nearest the first free one becomes **stairs down**
    (`LevelState::terrain.set(stairs)` and `LevelState::stairs.push(StairsLink { Down, to:
-   "hellegeat:1", name: Some("the Pit") })`: exactly what `World::open_lair` does for a layer
-   boss's lair, `world/layer_boss.rs`), and
-2. the `gate` comes to the next free cell (`miscast_summon`).
-3. Said: "The floor splits, and a stair goes down into red dark. Something waits at its head."
+   "hellegeat@S:1", name: Some("the Pit") })`: what `World::open_lair` does for a lair,
+   `world/layer_boss.rs`), saved with the level as every link is;
+3. the `gate` comes to the next free cell (`miscast_summon`), `loosed`;
+4. said: "The floor splits, and a stair goes down into red dark. Something waits at its head."
 
-Refused, the gate alone made, and said so, when: the level is the **overworld** (no cell to
-dig a stair in; the gate stands on the map cell), an **endless floor** (Grundlēas forgets the
-floor left: the Pit's `<` would lead to a floor that is gone), or the Pit is **sealed** (§7.3). A
-town, a hand-made level, a branch floor, the showcase: all take it, townsfolk and all.
+**Refused, the gate alone made, and said so**, when the level is the **overworld** (no cell to
+dig a stair in; the gate stands on the map cell) or **a Pit's floor** (`is_portal_floor(id)`:
+"The floor here is the Pit's already"). Everything else takes it: a town (a hellmouth among
+Cēaptūn's stalls, the townsfolk paying), a hand-made level, a branch floor, the showcase, and an
+**endless floor** (the owner: no exemption; what follows there is told below).
 
-**Travel**: `World::travel` already resolves `hellegeat:1` (a branch level), generates it on the
-first visit with `entered_from = the level the stairs are on`, and arrives on its `<`; climbing
-out arrives on the `>` whose `to` is `hellegeat:1`. One engine change: **a later portal from
-another level** arrives at the same first floor, whose `<` still points at the first level. On
-arrival into a branch's first floor from a level that is not where its `<` leads, **retarget
-the `<`** (`stairs[up].to = from`; one line in `travel` after `visit`, for a branch marked
-`portal = true` in its `[[dungeon]]`, so no other branch changes). Several levels may then hold
-a `>` into Hellegeat; the Pit has one mouth at a time, the last one used.
+**Travel.** `World::travel("hellegeat@S:1")` generates the floor on the first visit and arrives on
+its `<`; the `>` into a Pit works as any stairs, and the player climbs out onto the mouth's cell
+(the `>` whose `to` is the floor left). The first floor's `<` must lead to `pits[S].from`
+whenever the floor is made, on the first descent and after every climb from the second (when
+`visit`'s `from` is `hellegeat@S:2`): `generate_for`'s `up_to` for depth 1 of a portal branch
+reads the `entered_from` it is given, and `visit` passes `pits[S].from` for a portal first floor
+(one line; `Content::way_into` is for a branch some hand-made level leads into, which no Pit
+has). Hostile stair followers cross with the player as ever (a fiend may follow the player out
+onto the mouth's level); a gate is rooted and never does.
 
-**Saves**: nothing new but the stairs on the level (already saved in `LevelState::stairs`) and
-the warden's death in `Quests::slain` (already saved).
+**A Pit opened on an endless floor** (Grundlēas 7, say): descending forgets Grundlēas 7, mouth
+and all; climbing out leads to `grundleas:7`, which is made anew (Grundlēas's own rule, "no stair
+goes twice to one place"), and the player arrives on its `<` as `travel` falls back to (no stairs
+there lead to the Pit, so `start`, else the first staircase). The Pit's record is then an orphan:
+**on every arrival outside any Pit, a record whose `from` level is not in `levels`, or holds no
+`>` to it, is dropped** (the orphan rule). Nothing else is needed: the floor the player is on is
+the only Pit floor there is, and the records are the only other state.
 
-### 7.3 The warden and the sealing
+### 7.4 The warden and the sealing
 
-- **The Warden of the Gate** (`gatewarden`; a name in the campaigns' register comes with the
-  roster PR, e.g. *Hellweard*): a **unique fiend of level 50**, faction `loosed`, a horned
-  devil's body (hp 180, Protection 10, 3d10 claws, a `held` whip, fire 100, poison 100), with a
-  `summon` of its own (`rift` and `hellmouth` gates, 1 every 120 s, most 2: the warden opens
-  gates), in the vault `wardens_hall` on floor 5 (a hall of basalt with a hoard: chests of the
-  floor's band and `loot` cells at item level 30). The vault is pinned by floor 5's `vaults`, as
-  Fyrdelf's drake is.
-- **Its death seals the Pit** (`Quests::slain` records it, as every unique's death is): from then
-  on `portal` makes the gate alone ("The ground shudders, but the Pit is sealed."), and every
-  `>` into `hellegeat:1` **closes when the player next stands on its level** (arrival from the
-  Pit included: "The stair crumbles to rubble behind you."): the stairs cell becomes floor and
-  the link is removed (`close_pit`, the reverse of `open_lair`, one line in `travel`'s arrival).
-  Closing on arrival rather than at the kill is what keeps the player from being sealed in.
-  Hellegeat's floors persist like any branch's; nothing leads to them again.
-- **Experience**: the warden's kill pays as a unique's does; `discover_level` pays the five
-  floors; the hoard is the loot. Sealing the Pit is the reward in the fiction and could later be
-  a quest's objective (not in this design).
+- **The Warden of the Gate** (`gatewarden`; a title, not a name: every Pit has one, so the type
+  is **not `unique`**, and like the gates it is in no population and never strays): a fiend of
+  level 50, faction `loosed`, a horned devil's body (hp 180, Protection 10, 3d10 claws, a `held`
+  whip, fire 100, poison 100), with a `summon` of its own (`rift` and `hellmouth` gates, 1 every
+  120 s, most 2: the warden opens gates), placed by the vault `wardens_hall` on floor 5 (a hall of
+  basalt with a hoard: chests of the floor's band and `loot` cells at item level 30), the lair of
+  the branch's `portal.boss` row, stamped for certain as a layer boss's is.
+- **Its death seals its Pit, and that Pit only**: `creature_dies` (where `open_lair` is called,
+  one line) sets `pits[S].sealed` when the dead is the portal boss of the floor's branch and the
+  floor is `hellegeat@S:N`; said "The Pit shudders. Far above, stone grinds on stone." Another
+  Pit's warden stands; another Pit may still be opened. `Quests::slain` is not written (it is by
+  type, for uniques, and would seal every Pit at once).
+- **A sealed Pit's floor 5 is made without its warden**: `visit` gives `Visit::slain` for a
+  portal floor the Pit's own answer (the set holding the boss when `sealed`, else empty: what the
+  lair filter in `generate_for` reads today), so going up and down to farm the warden makes an
+  ordinary floor with its hoard and no boss (the hoard re-rolls, as every forgotten floor's loot
+  does; §12.2).
+- **The mouth closes on the player's next arrival outside the Pit** (`travel`'s end, with the
+  orphan rule): a `sealed` record's mouth (`levels[from]`'s `>` to `hellegeat@S:1`) becomes
+  floor, the link is removed, the record dropped; if the player stands on that level, "The stair
+  crumbles to rubble behind you." Closing on arrival rather than at the kill is what keeps the
+  player from being sealed in. Nothing then leads to that Pit, and nothing of it remains in the
+  save.
+- **Experience**: the warden's kill pays by its level; `discover_level` pays the five floors once
+  per Pit; the hoard is the loot. Sealing a Pit is the reward in the fiction and could later be a
+  quest's objective (not in this design).
 
-### 7.4 What is new engine work, what is data
+### 7.5 What is new engine work, what is data
 
 | Piece | Kind |
 |---|---|
 | `hellegeat.toml`, the `wardens_hall` vault, the `gatewarden` type | data |
-| the `portal` kind: stairs + gate, the refusals | code, small: `open_lair`'s body reused |
-| `portal = true` on `[[dungeon]]` and the `<` retarget on arrival | code, one field and one line |
-| `close_pit` on arrival once the warden is slain | code, one function and one line |
-| the `truth` dump showing the Pit's stairs, `gen --level hellegeat:3` | free (branch machinery) |
-| the scenario `--scenario hellegeat` (the first floor, a dev scenario of the showcase) | data |
+| `[dungeon.portal]` → `DungeonDef::portal`; the loader: exclusive with `endless`/`below`, no link or quest may name its levels, its boss row allowed (`content/layer_boss.rs`), a lair with no `>` on a floor that leads nowhere | code, small |
+| instance ids `hellegeat@S:N`: `branch_level` strips `@S` for a portal branch; `generate_for` builds `up_to`, `down_to`, and the `>`'s link from the floor's id | code, small (one helper, four sites) |
+| `is_endless_floor` true of a portal floor: forgetting, `made`, `pays` per Pit | code, one line |
+| `WorldState::pits` and `Pit { from, sealed }` (saved, left out while empty) | code, small |
+| the `portal` kind: the draw, the record, stairs + gate, the two refusals | code, small: `open_lair`'s body reused |
+| `visit`: `entered_from = pits[S].from` and the Pit's `slain` for a portal floor | code, two lines |
+| `creature_dies`: `sealed` on the portal boss's death | code, one line |
+| arrival outside a Pit: sealed mouths closed, orphan records dropped | code, one function and one line in `travel` |
+| the `truth` dump: a line per record, `pit 7 from depths:3: open` / `sealed`; `gen --level hellegeat@7:3` | code, small; free |
+| the scenario `--scenario hellegeat` (a dev scenario of the showcase whose start is `hellegeat@1:1`, the scenario loader making `pits[1] = { from: the hub }`) | data, and one line in the scenario loader |
 
 ## 8. Words
 
@@ -695,7 +801,7 @@ it. Per kind:
 | lose_mark, mark | nothing for a creature (marks are the player's training); already so |
 | backfire | as the player's; a creature's heal rebounds on the nearest actor hostile **to it** (the player, often) |
 | summon (a gate) | the gate is `loosed`: hostile to the creature and its kin too |
-| portal | the gate alone: a creature never opens the Pit |
+| portal | the gate alone: a creature never opens a Pit |
 
 The `seen` lines are rare flavour and may be a little longer than the player's, as §8 writes
 them.
@@ -718,9 +824,9 @@ smallest).
    `docs/balance.md`'s probe spends the wizard's rolls on Spellcraft. *Data mostly; code: the
    `Roll` die, `rank_ease`, the cap, the whitelist, `noise`, `zone`, the creature-swap
    exclusion.*
-2. **Rank loss and forgetting** (§5.1): `rank_loss`, `forget`, `Actor::forget_spell`,
-   `Actor::forgotten`; rows `stumble`, `falter`, `forgetting`, `amnesia`, `blank`. *Code and
-   data.*
+2. **Rank loss and forgetting** (§5.1): `rank_loss`, `forget`, `Actor::forget_spell` (and
+   `knows_spell`/`spell_rank` reading rank 0 as forgotten); rows `stumble`, `falter`,
+   `forgetting`, `amnesia`, `blank`. *Code, small; data.*
 3. **Stat damage and the drain's `times`** (§5.2): `stat_damage`; `drain { times }`; the five
    withering rows and the two aches. *Code, small; data.*
 4. **Backfire fallbacks** (§5.3): the rebound heal, the buff on a hostile, the hostile summon, the
@@ -737,13 +843,20 @@ beside phase 1's later PRs.
 7. **The nine gate types** and their rows (`summon` of a gate; the stand-ins from PR 1 replaced).
    *Data; a roster-style PR with `docs/dev/creatures/gates.md`.*
 
-**Phase 4: the Pit** (§7), after phase 3 (the Pit's mouth is a gate).
-8. **Hellegeat the branch**, reachable by a dev scenario and `gen --level hellegeat:N`; the
-   shared-branch question settled. *Data, and a loader fix if a shared branch fails a check.*
-9. **The `portal` kind**: stairs + gate, the refusals, `portal = true` and the `<` retarget; the
-   four pit rows. *Code, small; data.*
-10. **The warden and the sealing**: the `gatewarden` type, `wardens_hall`, `close_pit`. *Data;
-    code, small.*
+**Phase 4: the Pits** (§7), after phase 3 (a Pit's mouth is a gate).
+8. **Hellegeat, the portal branch**: `hellegeat.toml` with `[dungeon.portal]`, the shared-branch
+   checks settled; `DungeonDef::portal`, the instance ids `hellegeat@S:N` (`branch_level`,
+   the neighbour ids in `generate_for`), `is_endless_floor` true of a portal floor (the
+   forgetting and the arrival pay per Pit for free); `gen --level hellegeat@7:3`. *Data; code,
+   small (§7.5's first three rows).*
+9. **The `portal` kind and the Pit records**: `WorldState::pits`, the integer drawn, the stairs
+   and the gate, the refusals (the overworld, a Pit floor), the first floor's `<` from the
+   record, the orphan rule; the four pit rows; the `truth` dump's `pit` lines; the dev scenario.
+   *Code, small; data.*
+10. **The warden and the sealing**: the `gatewarden` type, `wardens_hall`, the boss row on a
+    portal branch (a lair with no `>` on a last floor), `sealed` set in `creature_dies`, the
+    sealed Pit's floor made without its warden, the mouth closed on the next arrival outside.
+    *Data; code, small.*
 
 **Phase 5: polish**, any time after phase 1.
 11. **Balance pass**: rerun the probe's Miscasts table (the wizard's rolls on Spellcraft; a
@@ -758,12 +871,15 @@ Fourteen numbered pieces; PRs 1–4 and 11–12 touch no creature or level, PRs 
 
 - **Spec**: `spec/08e-blood-and-status.md` "Miscasts" (the total, the protected rule, the new
   kinds, the gates and the Pit in a sentence each); `spec/07b-data.md` points at the new faction
-  flag and the `rooted` field; spec §7 gains "The Pit" beside "The endless branch".
+  flag and the `rooted` field; spec §7 gains "The Pits" beside "The endless branch".
 - **`docs/dev/spells.md` "Miscasts"**: the data (`rank_ease`, `die` as a `Roll`, `safe_below`),
   the kinds, the fallbacks, the whitelist; **`docs/dev/summoning.md`**: gates as summoners with
   no cost, `rooted`; **`docs/dev/creatures.md`**: `hostile_to_others`, `rooted`, and a line for
-  `docs/dev/creatures/gates.md`; **`docs/dev/mapgen.md`**: Hellegeat under the branches, the
-  `portal` flag and the `<` retarget, `close_pit` beside `open_lair`; **`docs/dev/stats.md`**:
+  `docs/dev/creatures/gates.md`; **`docs/dev/mapgen.md`**: Hellegeat under the branches as the
+  portal branch (`[dungeon.portal]`, the instance ids, the boss row's lair with no `>`, what
+  `generate_for` reads of the id), the forgetting shared with the endless branch;
+  **`docs/dev/saves.md`**: `WorldState::pits` beside `WorldState::endless` (what a save holds of
+  a Pit: the record, the mouth on its level, the current floor); **`docs/dev/stats.md`**:
   `stat_damage` as a second source of `Actor::damage`, `drain`'s `times`;
   **`docs/dev/skills.md`**: nothing (Concentration unchanged).
 - **Wiki**: `miscasts.md` (the generated table grows to 65 rows with the protected half marked;
@@ -775,15 +891,22 @@ Fourteen numbered pieces; PRs 1–4 and 11–12 touch no creature or level, PRs 
 - **Tests** (`world/miscast_tests.rs` and new files): the rank ease in the difficulty; the 2d12
   total and the margin's weight; the cap (a 1-hp caster takes nothing; a 5-hp one is left at
   1); the loader's whitelist (a protected `summon`, `drain`, `backfire`, ticking status, fire
-  zone refused; `rank_loss` allowed); rank loss stopping at 1, forgetting removing the spell and
-  `forgotten` skipping the experience; `stat_damage` mending; `drain { times = 2 }` drawing
-  twice; the rebound heal on the nearest hostile and the fallback harm; `noise` heard, `zone`
-  laid; a creature's swap never the player; the `loosed` matrix (neutral on the diagonal,
-  hostile everywhere else); a rooted gate that never moves and summons `loosed` dretches to its
-  cap and cooldown; the Pit opening (stairs and gate), refused on the overworld and an endless
-  floor, the `<` retargeted on a second mouth, `close_pit` on arrival once the warden is slain;
-  `mapgen/hellegeat_tests.rs` (the warden's hall on floor 5 over ten seeds, the first-floor
-  snapshot); determinism by `replay --verify` for a run that miscasts into the Pit and back.
+  zone refused; `rank_loss` allowed); rank loss stopping at 1, forgetting removing a learned
+  spell and marking a class's at rank 0 (not known, not cast, not listed), and the grimoire
+  teaching either again at rank 1 with its experience; `stat_damage` mending; `drain { times =
+  2 }` drawing twice; the rebound heal on the nearest hostile and the fallback harm; `noise`
+  heard, `zone` laid; a creature's swap never the player; the `loosed` matrix (neutral on the
+  diagonal, hostile everywhere else); a rooted gate that never moves and summons `loosed`
+  dretches to its cap and cooldown; a Pit opening (the record, the stairs, the gate), refused on
+  the overworld and on a Pit floor, taken on an endless floor and in a town; two portals making
+  two Pits with different floors, the same Pit's floor made twice the same map; a floor left
+  forgotten and the player's allies' fate as on Grundlēas; the first floor's `<` leading to the
+  record's `from` after a climb from the second; a Pit opened on Grundlēas whose mouth is gone
+  with the floor, its record dropped once the player is out; the warden's death sealing its Pit
+  alone (another's warden stands), the sealed floor made without a warden, the mouth closed and
+  the record dropped on the next arrival outside; `mapgen/hellegeat_tests.rs` (the warden's
+  hall on floor 5 of ten instances, the first-floor snapshot of one); determinism by `replay
+  --verify` for a run that miscasts into a Pit, climbs out, and opens another.
 - **The balance probe** (`world/balance_probe/miscasts.rs`): the wizard's rolls on Spellcraft
   (or both careers), the band distribution per miscast as §2.4 prints it.
 
@@ -791,24 +914,13 @@ Fourteen numbered pieces; PRs 1–4 and 11–12 touch no creature or level, PRs 
 
 Only what is still undecided; each with a recommendation.
 
-1. **Class-granted spells and forgetting.** `forget` cannot remove a spell the class grants
-   (it is not in `Actor::spells`); the design makes such a spell fall to rank 1 instead (§5.1).
-   The alternative is a saved exclusion set so a wizard can lose Magic missile too.
-   **Recommendation**: rank 1 only; what the class taught stays.
-2. **The die.** 2d12 + 5 × miss (§2.2), or keep the exploding d66 with a bigger `per_margin`?
-   The d66 keeps a 1-in-66 chance of any near miss landing anywhere, which the owner's "ordered"
-   argues against. **Recommendation**: 2d12; the explosion goes.
-3. **Where the Pit may open.** Anywhere but the overworld and an endless floor (§7.2), towns
-   included: a Sunfire miscast in Cēaptūn's market puts a hellmouth among the stalls.
-   **Recommendation**: yes, towns included; the gate at the mouth is `loosed` and the
-   townsfolk pay, which is the story the owner's fiends tell.
-4. **Do gates close on their own?** The design: never, until killed (§6.2). The alternative is
-   a lifetime (an hour of game time) after which the gate closes and what it called stays.
-   **Recommendation**: never; a gate left behind is a reason to come back with a bigger sword.
-5. **The Pit is one per run, sealed for good by the warden's death** (§7.3), later portals then
-   making the gate alone. The alternative is a Pit that can be reopened unsealed (a new warden
-   each time). **Recommendation**: sealed for good; a run has one descent into the hells.
-6. **Shared branch or per campaign.** Hellegeat as the first shared branch
-   (`assets/data/dungeons/hellegeat.toml`) if the loader's checks allow it (§7.1), else one copy
-   in each campaign. **Recommendation**: shared, fixing the loader if one check refuses it; the
-   Pit belongs to no world in particular.
+1. **What a Pit's inhabitants scale with.** The design reads the player's level as each floor is
+   made (§7.2), so a floor made again after a level-up has the same map and a stronger
+   population; the alternative freezes it at the opening (one more number in the record, read in
+   place of `visit.player_level` for a portal floor). **Recommendation**: as each floor is made;
+   it is what the `player` term does everywhere, and the record stays three words.
+2. **A forgotten floor's hoard comes back.** A Pit floor made again (a climb and a descent, or
+   floor 5 after its warden is slain) re-rolls its loot and chests like any forgotten floor
+   (§7.2, §7.4), as Grundlēas does today. **Recommendation**: accept it (the house rule: time is
+   the penalty, never a lock-out); if the owner wants the bottom floor's hoard once, the
+   `sealed` record can make floor 5 without the vault's loot cells, one condition in the stamp.
