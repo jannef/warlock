@@ -237,6 +237,10 @@ pub(super) struct CreatureSpec {
     /// Whether it is rooted: it never moves (docs/dev/creatures.md "Rooted").
     #[serde(default)]
     pub rooted: bool,
+    /// Whether other creatures leave it alone: none takes it for a target (docs/dev/creatures.md
+    /// "Left alone").
+    #[serde(default)]
+    pub left_alone: bool,
     /// What its attacks cost, in energy; none: the attack's cost in `data/actions.toml`.
     pub attack_cost: Option<u32>,
     /// Light preset the creature carries.
@@ -705,6 +709,7 @@ impl CreatureSpec {
             invisible: r.invisible,
             budge: self.budge,
             rooted: self.rooted,
+            left_alone: self.left_alone,
             attack_cost: self.attack_cost,
             light: r.light,
             footsteps: self.footsteps,
@@ -866,6 +871,10 @@ pub struct CreatureDef {
     /// never steps, never gives way, is never driven, swapped, or teleported, and never follows
     /// on stairs; it still strikes, shoots, casts, and summons from where it stands.
     pub rooted: bool,
+    /// Gameplay: whether other creatures leave it alone (docs/dev/creatures.md "Left alone"):
+    /// no creature nor ally takes it for a target (`ai.rs::nearest_in_sight`, the nose's
+    /// `companion.rs::smelled`, the far look of `stride.rs`); the player may still attack it.
+    pub left_alone: bool,
     /// What its attacks (melee, shooting, or casting) cost in energy, if its type says
     /// ([`super::Content::action_cost`]); `None`: the cost of the attack in `data/actions.toml`.
     /// Rules only.

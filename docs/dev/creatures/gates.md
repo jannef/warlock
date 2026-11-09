@@ -35,6 +35,9 @@ Common to all:
   default range 8 and spread 2, verb "lets through" ("The rift lets through a dretch!"). The
   `summoning` status is its cooldown; none at birth, so the first comes on its first turn with a
   hostile in sight.
+- **Left alone** (#1312, `left_alone = true`; docs/dev/creatures.md "Left alone"): no other
+  creature, foe or ally, takes a gate for a target. They fight the fiends it lets through and
+  leave the gate itself to the player.
 - **Out of every draw**: `stray = false` and in no population, so only a miscast makes one;
   `rarity = "very_rare"` besides. `grades = false`.
 - **Body**: glyph `0` in a colour each, darkvision, sight 8, no footsteps, a ton's weight, a
@@ -56,4 +59,5 @@ corpse, no mana, its pool as above; each opened by its one row, of its id, above
 half); `world/gate_tests.rs` (a `rift` row on the built-in content opens the rift beside the
 caster, hostile to the player and the kobold; it lets dretches and quasits through, `loosed`, at
 no cost, never more than four, and never moves); `world/rooted_tests.rs` (a gate with no attack
-strikes no blow beside the player).
+strikes no blow beside the player); `world/gate_tests.rs` again (a kobold beside a rift never
+picks it for a target, the player's blows land on it).

@@ -292,7 +292,9 @@ cast path shares.
     Chebyshev distance, then actor id; the player's sight is the perception snapshot, a
     creature's `sees_now`), said by name; a buff on that hostile at the cast's degrees; a summon
     call brings its count (at most its `most` and the free cells of its `spread`) of its pool
-    beside the caster as plain creatures of their own faction, no ally, no summoner, no gear,
+    beside the caster in `data/miscast.toml`'s `backfire_faction` (the berserk, `hostile_to_all`:
+    hostile to the caster, the caster's foes, and one another; #1311; left out, their type's own
+    faction; `MiscastRules::backfire_faction`, resolved at load), no ally, no summoner, no gear,
     on the level in play off the overworld; anything else, or any of these with nothing to
     land on, the fallback harm, `(level ÷ 3 + 1)d6` force, `(level ÷ 2 + 1)d6` with `full`). "Near"
     (`near_caster`): actors on the caster's level within `world::MISCAST_NEAR` (6) cells with a

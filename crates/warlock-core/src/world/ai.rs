@@ -305,7 +305,7 @@ impl World {
 
     /// The nearest actor creature `id` sees that `wanted` (of the state, the content, the
     /// creature, and the other) says it is after (ties: the lower id), and where it stands; a
-    /// disguised mimic never. Sight as [`World::nearest_hostile_in_sight`] computes it.
+    /// disguised mimic never, nor one [`left_alone`]. Sight as [`World::nearest_hostile_in_sight`] computes it.
     pub(super) fn nearest_in_sight(
         &mut self,
         id: ActorId,
@@ -324,8 +324,9 @@ impl World {
         let from = me.pos;
         let mut hostiles: Vec<(i32, ActorId, Pos)> = (state.actors.values())
             .filter(|a| a.level == me.level && a.id != id && a.pos.dist2(me.pos) <= reach2)
-            // A disguised mimic is a chest to every eye (`mimic.rs`).
-            .filter(|a| !a.effects.hides(content) && wanted(state, content, me, a))
+            // A disguised mimic is a chest to every eye (`mimic.rs`); a gate is left alone.
+            .filter(|a| !a.effects.hides(content) && !left_alone(content, a))
+            .filter(|a| wanted(state, content, me, a))
             .map(|a| (a.pos.dist2(me.pos), a.id, a.pos))
             .collect();
         if hostiles.is_empty() {
@@ -661,4 +662,11 @@ impl World {
         }
         price
     }
+}
+
+/// Whether `a` is left alone: of a type no creature nor ally takes for a target (a gate,
+/// docs/dev/creatures.md "Left alone"). Read wherever one picks a target: the look above, the
+/// nose (`companion.rs::smelled`), and the far look (`stride.rs`).
+pub(super) fn left_alone(content: &Content, a: &Actor) -> bool {
+    content.creature(a.creature).left_alone
 }

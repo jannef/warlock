@@ -267,7 +267,11 @@ impl World {
         wanted: &dyn Fn(&WorldState, &Content, &Actor, &Actor) -> bool,
     ) -> Option<(ActorId, Pos)> {
         let me = &self.state.actors[&id];
-        smelt(&self.state, &self.content, me, wanted)
+        // A gate is left alone (`ai.rs::left_alone`).
+        let wanted = |s: &WorldState, c: &Content, me: &Actor, a: &Actor| {
+            !super::ai::left_alone(c, a) && wanted(s, c, me, a)
+        };
+        smelt(&self.state, &self.content, me, &wanted)
             .into_iter()
             .next()
     }

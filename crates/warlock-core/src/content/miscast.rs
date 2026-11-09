@@ -13,6 +13,7 @@
 //! die = "2d12"          # the table's die, a dice expression
 //! per_margin = 5        # the total's points for each point the check missed by
 //! safe_below = 71       # an entry ending below this is protected (below)
+//! backfire_faction = "berserk" # what a backfired summon's creatures come as (optional)
 //! ```
 //!
 //! ```toml
@@ -36,7 +37,7 @@
 //! (`check_protected`), so a campaign's table cannot break the promise either.
 
 use super::learning::{EffectSpec, resolve_effect};
-use super::{Content, ContentError, MishapEffect, ZoneKind, duplicate_id};
+use super::{Content, ContentError, FactionId, Factions, MishapEffect, ZoneKind, duplicate_id};
 use crate::dice::Dice;
 use crate::stats::Stat;
 use serde::Deserialize;
@@ -62,13 +63,28 @@ pub struct MiscastRules {
     pub per_margin: i32,
     /// An entry whose `to` is below this is protected (module docs).
     pub safe_below: i32,
+    /// The faction a backfired summon's creatures come in (`world/backfire.rs`), hostile to
+    /// everyone; `None`: their type's own.
+    #[serde(skip)]
+    pub backfire_faction: Option<FactionId>,
 }
 
 impl MiscastRules {
-    /// Parses `data/miscast.toml`: `armour_percent` positive, a die that rolls at least 1.
-    pub(super) fn parse(file: &str, text: &str) -> Result<Self, ContentError> {
+    /// Parses `data/miscast.toml`: `armour_percent` positive, a die that rolls at least 1, a
+    /// `backfire_faction` that is a known faction.
+    pub(super) fn parse(file: &str, text: &str, factions: &Factions) -> Result<Self, ContentError> {
         let err = |m: &str| ContentError::new(file, m);
-        let parsed: Self = toml::from_str(text).map_err(|e| err(&e.to_string()))?;
+        let mut table: toml::Table = toml::from_str(text).map_err(|e| err(&e.to_string()))?;
+        let faction = match table.remove("backfire_faction") {
+            None => None,
+            Some(toml::Value::String(name)) => Some(
+                (factions.id(&name))
+                    .ok_or_else(|| err(&format!("unknown `backfire_faction` `{name}`")))?,
+            ),
+            Some(_) => return Err(err("`backfire_faction` must be a faction id")),
+        };
+        let mut parsed: Self = table.try_into().map_err(|e| err(&e.to_string()))?;
+        parsed.backfire_faction = faction;
         if parsed.armour_percent < 1 {
             return Err(err("`armour_percent` must be at least 1"));
         }
@@ -254,7 +270,9 @@ mod tests {
     fn the_rules_say_the_difficulty() {
         let text = "stat = \"intelligence\"\nbase = 8\nper_level = 1\narmour_percent = 10\n\
             rank_ease = 1\ndie = \"2d12\"\nper_margin = 5\nsafe_below = 71\n";
-        let r = MiscastRules::parse("miscast.toml", text).expect("valid");
+        let none = Factions::default();
+        let r = MiscastRules::parse("miscast.toml", text, &none).expect("valid");
+        assert_eq!(r.backfire_faction, None, "left out: the type's own");
         assert_eq!(r.difficulty(0, 0, 1), 8);
         assert_eq!(r.difficulty(11, 0, 1), 19);
         assert_eq!(r.difficulty(1, 25, 1), 11);
@@ -267,6 +285,18 @@ mod tests {
             !r.protects(&entry("c", 1, None)),
             "the open last entry is not"
         );
+    }
+
+    #[test]
+    fn the_backfire_faction_is_a_known_one() {
+        let c = Content::builtin().expect("content");
+        let rules = c.miscast_rules().expect("rules");
+        let berserk = rules.backfire_faction.expect("the built-in names one");
+        assert_eq!(c.factions().def(berserk).id, "berserk");
+        let text = "stat = \"intelligence\"\nbase = 8\nper_level = 1\narmour_percent = 10\n\
+            rank_ease = 1\ndie = \"2d12\"\nper_margin = 5\nsafe_below = 71\n\
+            backfire_faction = \"nobody\"\n";
+        assert!(MiscastRules::parse("miscast.toml", text, c.factions()).is_err());
     }
 
     #[test]
