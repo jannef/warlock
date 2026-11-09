@@ -1,6 +1,7 @@
 # Dungeon branches (spec §7): stacks of procedurally generated levels. This file is the field
 # reference: the branches are a campaign's, in its data/dungeons/ (the showcase's Depths:
-# campaigns/showcase/data/dungeons/showcase.toml; spec §3). Stairs lead into a branch
+# campaigns/showcase/data/dungeons/showcase.toml; spec §3), but for the shared portal branch,
+# data/dungeons/hellegeat.toml. Stairs lead into a branch
 # with `to = "<id>:<depth>"` (e.g. `to = "depths:1"`), and a scenario may start in one. Each level
 # is generated on its first visit from the run seed and its id, then persists like a hand-made
 # level. Its `<` leads one level up (on depth 1: back where the player came from), its `>` one
@@ -94,6 +95,10 @@
 #              dread_one_in here needs the branch's danger; a table field by field), and `vaults` (vault ids, shared or the branch's
 #              campaign's: each stamped on every level of the range for certain, and never drawn
 #              at random anywhere, e.g. `vaults = ["drakes_hoard"]`)
+#   [dungeon.portal]  (an empty table, with `depth`; no `endless`, no `below`) a branch of Pits
+#              (spec §7 "The Pits"): it exists only as instances opened by a portal, Pit S's
+#              levels "<id>@S:1" to "<id>@S:<depth>", each made from the run seed and its id and
+#              forgotten when left; no stairs, hidden location, or quest may name them
 #
 # [defaults] (this file only; required once any branch or level has a danger): the odds every
 # area with a danger draws by unless it gives its own `stray`, `out_of_depth`, `deeper`,

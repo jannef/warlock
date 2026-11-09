@@ -212,6 +212,33 @@ secret, `connect::validate`). Grundlēas gets its draws by `stray = 100` over th
 list and names only the rat as a `population`, which every other branch's strays already hold, so
 none of their lists move.
 
+**The Pits** (#1296; spec §7 "The Pits", docs/design/miscasts-review.md §7): a branch with
+`[dungeon.portal]` (`DungeonDef::portal`, `Portal`; exclusive with `endless` and `below`, its id,
+like every branch's, without `@`) exists only as instances. Hellegeat
+(`data/dungeons/hellegeat.toml`) is the one, shared: `campaign` `None`, so it is in every
+campaign's fingerprint and `has_level` finds its floors whatever the campaign; its population and
+traps are shared, so the cross-campaign checks refuse nothing. A Pit's floors are
+`hellegeat@S:N`: `parse_branch_level` gives `("hellegeat@S", N)`, `parse_instance` splits `S` (a
+positive `u32`, no leading zeros, so a Pit has one id), and `Content::branch_level` accepts the
+`@S` form for a portal branch only and only that form for it (`hellegeat:3` is no level), so
+everything that reads `(def, depth)` (spawning, danger, item level, names, arrival, vaults by
+`def.level_id(depth)`, `hellegeat:5`) works unasked. `generate_for` builds the neighbours from the
+floor's own id (`content::sibling`: `up_to` past the first floor, and `DungeonDef::down_to(id,
+depth)`), so a Pit's stairs stay in it; its first floor's `<` is `entered_from`. Every stream is
+labelled by the id, and `floor_seed` gives a Pit's floor the run seed (not `endless/<n>`), so a
+floor is a pure function of the run seed, `S`, and the depth: `warlock-cli gen --level
+hellegeat@7:3 --seed S` prints what a run of seed `S` makes of Pit 7's third floor (but for the
+population, read at the player's level as the floor is made, and the first floor's `<`).
+`Content::is_endless_floor` is true of a Pit's floor (`is_portal_floor` tells them apart), so
+`World::forget_floors` forgets it when left and `EndlessFloors` keeps its `deepest` by
+`hellegeat@S`, each Pit paying once; `EndlessFloors::made` counts only the endless branches'
+floors. The loader refuses stairs and hidden locations naming a Pit's floor (`Content::validate`),
+quests naming one or the branch (`quest.rs::names_level`, a kill quest's `level`, a pick's
+`creatures`), and `below` naming one; `fill_generic` leaves a portal branch's population out of
+every other area's lists, and `branches_of` (rolled quests) leaves the branch out. Tests:
+`mapgen/hellegeat_tests.rs`, `content/hellegeat_tests.rs`, `world/hellegeat_tests.rs`; the seeds
+and deep-water tests generate Pit 1's floors for the branch.
+
 **Layer bosses** (#1118; spec §7 "The endless branch"): `[[dungeon.endless.boss]]` rows resolve to
 `DungeonDef::bosses` (`LayerBoss { depth, creature, vault }`, `boss_at`); `content/layer_boss.rs`
 checks each boss unique and each lair a dungeon vault of the branch's campaign with no `danger`,
