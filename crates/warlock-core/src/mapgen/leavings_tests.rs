@@ -18,7 +18,7 @@ fn content(population: &str, danger: u8, one_in: u16, vault: Option<&str>) -> Co
     files.insert("data/creatures/webber.toml", &webber());
     let mut levels = String::new();
     if let Some(vault) = vault {
-        files.remove("vaults/");
+        files.remove_shared_vaults();
         files.insert("vaults/den.toml", vault);
         levels = "[[dungeon.levels]]\nfrom = 1\nvaults = [\"den\"]\n".into();
     }

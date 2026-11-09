@@ -1952,6 +1952,8 @@ mod parts_tests;
 #[cfg(test)]
 mod pit_tests;
 #[cfg(test)]
+mod pit_warden_tests;
+#[cfg(test)]
 mod potion_gamble_tests;
 #[cfg(test)]
 mod potion_status_tests;

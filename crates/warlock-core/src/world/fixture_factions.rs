@@ -29,5 +29,5 @@ pub(super) fn peaceful_factions() -> String {
 pub(super) fn make_peace(files: &mut crate::content::ContentFiles) {
     files.insert("data/factions.toml", &peaceful_factions());
     files.remove_encounter_tables();
-    files.remove("vaults/");
+    files.remove_shared_vaults();
 }

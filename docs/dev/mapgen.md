@@ -254,6 +254,20 @@ the next floor, name the boss's), which `connect::validate` reaches as it does s
 `hide_traps` keeps clear. `world/layer_boss.rs::open_lair` (one line in `fight.rs::creature_dies`)
 turns it into stairs. `warlock-cli gen --level grundleas:10` prints `hidden stairs at ...`.
 
+**A Pit's warden** (#1298; spec §7 "The Pits"): `[dungeon.portal] boss = { depth, creature,
+vault }` resolves into the same `DungeonDef::bosses` (`resolve_bosses` takes the rows of either
+table and refuses a depth the branch has not). `pin_lairs` asks no `unique` of a portal branch's
+boss (every Pit has its own warden: `gatewarden`), and asks the lair's `>` exactly where
+`leads_down(depth)`: Hellegeat's fifth floor leads nowhere, so `wardens_hall` has none, and the
+template's `hidden` is empty (`generate_for` expects `Canvas::lair` only for a boss on a floor
+that leads down). For a portal branch the lair is stamped whether the warden lives or not;
+`Visit::slain` (from `WorldState::pit_slain`, the warden's id once the Pit is sealed, else empty;
+never `Quests::slain`) only takes the warden out of the creatures after the build, so a sealed
+Pit's fifth floor is the same map with the hall and a re-rolled hoard. The sealing and the mouth's
+closing are `world/pit.rs` (`seal_pit`, one line in `fight.rs::creature_dies`; `close_mouth` in
+`drop_orphan_pits`). Fixtures that drop the shared vaults keep the hall
+(`ContentFiles::remove_shared_vaults`, test-only). Tests: `world/pit_warden_tests.rs`.
+
 The Ascmearc's branches (campaign design §7): Cealdhlāw (`cealdhlaw`, #337;
 `campaigns/ascmearc/data/dungeons/cealdhlaw.toml`), six floors of danger 1 to 6, rooms 80×21 on
 1–2 and caves 100×40 on 3–6, 30 creatures a thousand walkable cells (25 on the rooms floors,

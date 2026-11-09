@@ -60,8 +60,8 @@ pub struct Summon {
     pub most: u8,
     /// What it does, in the message: "calls forth".
     pub verb: String,
-    /// The faction the summoned come in (a gate's fiends `loosed`, #1316); `None`: the
-    /// summoner's.
+    /// The faction the summoned come in (a gate's fiends `loosed`, #1316) while the summoner is
+    /// of its type's faction; `None`, or a summoner set on another side: the summoner's.
     pub faction: Option<FactionId>,
 }
 

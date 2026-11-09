@@ -37,5 +37,8 @@ shops = { chance = 0 }
 room_effects = { chance = 0 }
 
 # A branch of Pits: opened only by a portal miscast, a Pit for each opening, its floors forgotten
-# when left. The Warden of the Gate on the fifth floor comes with #1298.
+# when left. Every Pit's fifth floor is kept by its own warden of the gate in its hall (#1298):
+# its death seals that Pit, which then makes its fifth floor without it, and the mouth closes
+# once the player is out. The floor leads nowhere deeper, so the hall hides no stair.
 [dungeon.portal]
+boss = { depth = 5, creature = "gatewarden", vault = "wardens_hall" }

@@ -68,6 +68,10 @@
 //!                               # (`super::dread`), as `[[dungeon.levels]]` give it elsewhere
 //!
 //! [dungeon.portal]              # with `depth`: a branch of Pits (no `endless`, no `below`)
+//! boss = { depth = 5, creature = "gatewarden", vault = "wardens_hall" }
+//!                               # optional: every Pit's boss and its lair, as a layer boss's row
+//!                               # but of any type, its lair with no `>` on a floor that leads
+//!                               # nowhere; its death seals its own Pit (`world/pit.rs`)
 //!
 //! [[dungeon.endless.boss]]      # optional, one per layer: a layer boss and its lair
 //! depth = 10                    # the floor (each depth once)
@@ -482,10 +486,14 @@ struct LevelsSpec {
     vaults: Vec<String>,
 }
 
-/// A branch's `[dungeon.portal]` table (nothing in it yet: the warden's row comes with #1298).
+/// A branch's `[dungeon.portal]` table.
 #[derive(Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
-struct PortalSpec {}
+struct PortalSpec {
+    /// Each Pit's boss and its lair (spec §7 "The Pits", #1298): a layer boss's row, but its
+    /// type need not be unique, and its death seals only its own Pit (`world/pit.rs`).
+    boss: Option<BossSpec>,
+}
 
 /// What makes a branch a branch of Pits (spec §7 "The Pits"): it exists only as instances
 /// `id@S:N`, opened by a portal, each floor forgotten when left.
@@ -523,7 +531,8 @@ pub struct DungeonDef {
     pub endless: Option<Endless>,
     /// A branch of Pits (spec §7 "The Pits"): its levels are `id@S:N`, never `id:N`.
     pub portal: Option<Portal>,
-    /// An endless branch's layer bosses, by depth (none for any other branch).
+    /// An endless branch's layer bosses, by depth, or a portal branch's one (every Pit's
+    /// warden); none for any other branch.
     pub bosses: Vec<LayerBoss>,
     /// An endless branch's `dread_one_in` by depth (`[dungeon.endless.dread]`), if it gives one.
     pub dread: Option<DreadCurve>,
@@ -663,15 +672,23 @@ impl DungeonDef {
     }
 }
 
-/// An endless branch's `[[dungeon.endless.boss]]` rows, by depth: each depth once, each creature
+/// An endless branch's `[[dungeon.endless.boss]]` rows, or a portal branch's `boss`, by depth:
+/// each depth once and one the branch has (`deepest`: none for an endless branch), each creature
 /// known. What the content alone can tell (unique, the lair's marks) `Content` checks.
 fn resolve_bosses(
     id: &str,
-    endless: Option<&EndlessSpec>,
+    rows: &[BossSpec],
+    deepest: Option<u32>,
     creature_id: impl Fn(&str) -> Option<(CreatureId, u8)>,
 ) -> Result<Vec<LayerBoss>, String> {
     let mut bosses: Vec<LayerBoss> = Vec::new();
-    for row in endless.map_or(&[][..], |e| &e.boss) {
+    for row in rows {
+        if row.depth == 0 || deepest.is_some_and(|d| row.depth > d) {
+            return Err(format!(
+                "dungeon `{id}`: a boss at depth {}, which it does not have",
+                row.depth
+            ));
+        }
         if bosses.iter().any(|b| b.depth == row.depth) {
             return Err(format!(
                 "dungeon `{id}`: two layer bosses at depth {}",
@@ -946,7 +963,13 @@ impl DungeonFile {
                 })?),
                 None => None,
             };
-            let bosses = resolve_bosses(&id, spec.endless.as_ref(), &creature_id).map_err(err)?;
+            let rows = match (&spec.endless, &spec.portal) {
+                (Some(e), _) => e.boss.as_slice(),
+                (None, Some(p)) => p.boss.as_slice(),
+                (None, None) => &[],
+            };
+            let deepest = spec.endless.is_none().then_some(depth_of);
+            let bosses = resolve_bosses(&id, rows, deepest, &creature_id).map_err(err)?;
             let dread = (spec.endless.as_mut())
                 .and_then(|e| e.dread.take())
                 .map(DreadCurveSpec::resolve)
@@ -965,7 +988,7 @@ impl DungeonFile {
                     caves_size: (e.caves_size[0], e.caves_size[1]),
                     roster_depth: u32::MAX,
                 }),
-                portal: spec.portal.map(|PortalSpec {}| Portal),
+                portal: spec.portal.map(|_| Portal),
                 ambient: spec.ambient,
                 creatures,
                 traps,

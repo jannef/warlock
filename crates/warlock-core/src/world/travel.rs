@@ -486,11 +486,13 @@ impl World {
             // A Pit's first floor climbs out to its mouth, however it is reached (`pit.rs`).
             let out = self.state.pit_way_out(&self.content, id);
             let from = out.as_deref().or(from);
+            // A Pit's floor reads its own warden's death, never the slain list (`pit.rs`).
+            let pit_slain = self.state.pit_slain(&self.content, id);
             let visit = crate::mapgen::Visit {
                 luck: Luck::of(&self.state.player().talent_mods(&self.content)),
                 player_level: self.player_level(),
                 uniques: Some(&self.state.progress.uniques),
-                slain: Some(self.state.quests.slain_set()),
+                slain: Some(pit_slain.as_ref().unwrap_or(self.state.quests.slain_set())),
             };
             let template = level_template(
                 &self.content,

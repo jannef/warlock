@@ -178,7 +178,8 @@ pub(super) fn layer_bosses(content: &Content) -> String {
         String::from("| Place | Floor | Keeper | Level | Lair |\n|---|:---:|---|:---:|---|\n");
     let mut branches: Vec<_> = content.dungeons().collect();
     branches.sort_by(|a, b| a.id.cmp(&b.id));
-    for d in branches {
+    // A Pit's warden is told on the Pits' page.
+    for d in branches.into_iter().filter(|d| d.endless.is_some()) {
         for boss in &d.bosses {
             let creature = content.creature(boss.creature);
             let lair = (content.vaults().iter())

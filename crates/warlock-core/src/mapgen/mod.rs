@@ -466,7 +466,8 @@ fn spaced_vaults<'a>(
 
 /// Whom a level is generated for, as they first come: what their talents give their finds
 /// (`luck`), their level (a player-scaled danger reads it), the unique creature types the
-/// run has met (none comes twice), and those slain (a slain layer boss's floor has no lair). Only
+/// run has met (none comes twice), and those slain (a slain layer boss's floor has no lair; a
+/// Pit's floor is given its own warden here once the Pit is sealed: its hall is made without it). Only
 /// the loot, the initial population, and a layer boss's lair read it, so the map is otherwise
 /// the same for anyone.
 #[derive(Clone, Copy, Debug, Default)]
@@ -504,10 +505,16 @@ pub fn generate_for(
     let odds = (room_odds, def.shop_odds(depth));
     // A layer boss not yet slain keeps its lair here, with the floor's way down hidden in it
     // (spec §7 "The endless branch", `world/layer_boss.rs`).
-    let boss = (def.boss_at(depth)).filter(|b| {
+    // A Pit's warden's hall is stamped whether the warden lives or not; slain (its Pit sealed),
+    // the hall is made without it (spec §7 "The Pits", `world/pit.rs`).
+    let slain = |b: &&crate::content::LayerBoss| {
         let id = &content.creature(b.creature).id;
-        !visit.slain.is_some_and(|s| s.contains(id))
-    });
+        visit.slain.is_some_and(|s| s.contains(id))
+    };
+    let boss = (def.boss_at(depth)).filter(|b| def.portal.is_some() || !slain(b));
+    let warden_gone = boss.filter(|b| slain(b)).map(|b| b.creature);
+    // Its lair hides the floor's way down, where the floor leads anywhere.
+    let lair = boss.is_some() && def.leads_down(depth);
     let needs = Needs {
         down: def.leads_down(depth) && boss.is_none(),
         creatures: &def.creatures,
@@ -560,8 +567,11 @@ pub fn generate_for(
         let (Some(up), down) = (canvas.up, canvas.down) else {
             continue;
         };
-        if down.is_some() != needs.down || canvas.lair.is_some() != boss.is_some() {
+        if down.is_some() != needs.down || canvas.lair.is_some() != lair {
             continue;
+        }
+        if let Some(gone) = warden_gone {
+            canvas.creatures.retain(|c| c.creature != gone);
         }
         let mut stairs = vec![StairsLink {
             pos: up,

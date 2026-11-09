@@ -12,7 +12,7 @@ use crate::content::{ContentFiles, GOLD, Rarity};
 /// (the Reeve's Strong-room's).
 fn content(odds: Option<&str>) -> Content {
     let mut files = ContentFiles::builtin();
-    files.remove("vaults/");
+    files.remove_shared_vaults();
     if let Some(odds) = odds {
         files.edit_table("dungeons", |text| {
             // A branch's own odds (Hellegeat's) give way to the fixture's.

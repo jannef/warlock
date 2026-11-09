@@ -5,8 +5,8 @@
 //!
 //! - **The record** ([`WorldState::pits`], saved; left out while empty): `S`, the Pit's integer,
 //!   drawn from the gameplay stream at the miscast (`rng.below(u32::MAX) + 1`, drawn again while
-//!   it is taken), and [`Pit`]: `from`, the level the mouth is on, and `sealed` (the warden's,
-//!   #1298; false until then).
+//!   it is taken), and [`Pit`]: `from`, the level the mouth is on, and `sealed` (its warden is
+//!   dead, below).
 //! - **The portal** ([`World::open_pit`]): on the caster's level, in play, the first plain free
 //!   cell around the caster ([`World::pit_mouth`]: walkable, no one on it, no stairs, door,
 //!   chest, statue, grave, light, trap, hidden location, place, or flow; out to [`MOUTH_REACH`])
@@ -22,6 +22,15 @@
 //!   the floors left are forgotten): on an arrival outside every Pit, a record whose `from` level
 //!   is gone or holds no `>` into its Pit is dropped (a Pit opened on an endless floor, left and
 //!   forgotten with its mouth).
+//! - **The warden** (#1298): the portal branch's boss row places each Pit's warden in its hall on
+//!   the last floor (`mapgen::generate_for`). Its death ([`World::seal_pit`], one line in
+//!   `fight.rs::creature_dies`) seals its own Pit and no other: `sealed` is set, and the slain
+//!   list (`Quests::slain`, by type) is never written. A sealed Pit's floor made again reads the
+//!   warden as slain ([`WorldState::pit_slain`], `Visit::slain`): the hall without it.
+//! - **The mouth closes** ([`World::close_mouth`], in [`World::drop_orphan_pits`]): on an arrival
+//!   outside every Pit, a sealed Pit's `>` on its `from` level becomes rubble and its link goes,
+//!   so the orphan rule drops the record. Closing on arrival, not at the kill, never seals the
+//!   player in.
 //! - **The dev scenario** `hellegeat` (the showcase's) starts on `hellegeat@1:1`: a run that
 //!   starts on a Pit's floor records it with `from` the level its campaign's own start scenario
 //!   begins on ([`start_from`]), the hub.
@@ -36,6 +45,7 @@ use crate::content::{
 };
 use crate::geom::Pos;
 use serde::{Deserialize, Serialize};
+use std::collections::BTreeSet;
 
 /// How far from the caster a Pit's mouth may open.
 pub const MOUTH_REACH: i32 = 3;
@@ -102,6 +112,20 @@ impl WorldState {
             (s, 1) => self.pits.get(&s).map(|p| p.from.clone()),
             _ => None,
         }
+    }
+
+    /// What a floor of level `id` made now counts as slain, if it is a Pit's floor: its warden
+    /// when the Pit is sealed, else no one (module docs; `mapgen::Visit::slain`).
+    pub(super) fn pit_slain(&self, content: &Content, id: &str) -> Option<BTreeSet<String>> {
+        let (s, _) = pit_of(content, id)?;
+        let sealed = self.pits.get(&s).is_some_and(|p| p.sealed);
+        let (def, _) = content.branch_level(id)?;
+        Some(
+            (def.bosses.iter())
+                .filter(|_| sealed)
+                .map(|b| content.creature(b.creature).id.clone())
+                .collect(),
+        )
     }
 
     /// Dev: the Pits' records, by their integers.
@@ -179,14 +203,71 @@ impl World {
         self.miscast_summon(here, gate, mouth);
     }
 
-    /// After an action that changed level, on an arrival outside every Pit: the orphan rule
-    /// (module docs).
+    /// Creature type `creature` died on level `level`: if it is the warden of the Pit that level
+    /// is a floor of, that Pit is sealed, and the player is told if they are there (module docs).
+    pub(super) fn seal_pit(&mut self, level: &str, creature: CreatureId) {
+        let Some((s, depth)) = pit_of(&self.content, level) else {
+            return;
+        };
+        let Some((def, _)) = self.content.branch_level(level) else {
+            return;
+        };
+        if def.boss_at(depth).is_none_or(|b| b.creature != creature) {
+            return;
+        }
+        let Some(pit) = self.state.pits.get_mut(&s) else {
+            return;
+        };
+        pit.sealed = true;
+        if self.state.current_level == level {
+            self.say("The Pit shudders. Far above, stone grinds on stone.");
+        }
+    }
+
+    /// Sealed Pit `s`'s mouth closes: its `>` on the level it opened on becomes rubble and leads
+    /// nowhere, and the player is told if they stand on that level (module docs).
+    fn close_mouth(&mut self, s: u32) {
+        let Some(from) = self.state.pits.get(&s).map(|p| p.from.clone()) else {
+            return;
+        };
+        let content = self.content.clone();
+        let Some(level) = self.state.levels.get_mut(&from) else {
+            return;
+        };
+        let Some(i) = (level.stairs.iter()).position(|link| {
+            link.dir == StairsDir::Down
+                && (link.to.as_deref()).and_then(|to| pit_of(&content, to)) == Some((s, 1))
+        }) else {
+            return;
+        };
+        let at = level.stairs.remove(i).pos;
+        let Some(rubble) = content.terrain_id("rubble").or(content.terrain_id("floor")) else {
+            return;
+        };
+        if self.state.current_level != from {
+            if let Some(level) = self.state.levels.get_mut(&from) {
+                level.terrain.set(at, rubble);
+            }
+            return;
+        }
+        self.set_terrain(at, rubble);
+        self.say("The stair crumbles to rubble behind you.");
+    }
+
+    /// After an action that changed level, on an arrival outside every Pit: a sealed Pit's mouth
+    /// closes, and the orphan rule (module docs).
     pub(super) fn drop_orphan_pits(&mut self, events: &[Event]) {
         if self.state.pits.is_empty()
             || !(events.iter()).any(|e| matches!(e, Event::LevelChanged { .. }))
             || self.content.is_portal_floor(&self.state.current_level)
         {
             return;
+        }
+        let sealed: Vec<u32> = (self.state.pits.iter())
+            .filter_map(|(&s, pit)| pit.sealed.then_some(s))
+            .collect();
+        for s in sealed {
+            self.close_mouth(s);
         }
         let content = self.content.clone();
         let levels = &self.state.levels;

@@ -35,7 +35,7 @@ fn content_in(vault: &str, danger: u8, levels: &str) -> Result<Content, String> 
     // The shared vaults have pools of their own (the guard post, the Kennels ...): here only the
     // crowd's are drawn. Two without keep it company, so that the phase a floor offers (one vault
     // in four, `spaced_vaults`) may hold the crowd.
-    files.remove("vaults/");
+    files.remove_shared_vaults();
     let quiet = [
         (
             "flooded_cell",

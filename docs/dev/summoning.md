@@ -21,7 +21,10 @@ creatures of its side, with no ability in the abilities menu, no action, no key,
   (`SummonSpec::mana: Option`; left out, 0: a breeder's, limited by its cooldown and `most`),
   `range` (default 8), `spread` (default 2), `most` (default 6), `verb` (default "summons"),
   `faction` (`Summon::faction`, a faction id, an unknown one refused; left out, the summoner's:
-  the gates let theirs through `loosed`, #1316).
+  the gates let theirs through `loosed`, #1316). It holds only for a summoner in its type's own
+  faction: one set on another side (`Actor::faction_override`, as a gate the Pit's warden opens
+  comes in the warden's `layer_keepers`) brings its summons to that side instead, so the warden's
+  gates let fiends through on the warden's side (#1298).
   Refused: no pool or both kinds, `tag` without `levels` or `levels` without `tag`, an unknown or
   another campaign's creature, the player, an empty pool, and a missing `summoning` status
   (`summon::STATUS`), one that ticks or never eases, or one too short for the cooldown. The
@@ -40,7 +43,8 @@ creatures of its side, with no ability in the abilities menu, no action, no key,
   sorted by Chebyshev distance, squared distance, y, x), `creature_summons` (`spend_mana`,
   `afflict` the status, `make_noise(Act::Attack(Spell))`, `count.roll` on `state.rng`, capped
   by `most − live`, one `rng.below(pool.len())` per creature, `travel::make_creature` with
-  `rolls_gear` and the summoning's `faction`, else the summoner's, as `faction` when it differs
+  `rolls_gear` and the summoner's `faction_override` if it has one, else the summoning's `faction`,
+  else the summoner's, as `faction` when it differs
   from the type's, then
   `summoner` set and `World::spawned` bumped), and `say_summoning` (the words from the last
   turn's `perception.sees_actors_at`). The draws come from the gameplay stream, after the AI

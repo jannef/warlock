@@ -33,6 +33,12 @@ Common to all:
   Banishing smite unmakes it. The loosed are hostile to every faction but their own and the
   gates': the player's, the kobolds', and the ordered fiends' alike, never the gate that let them
   through. A kobold shaman's own rift eats the kobolds, and the kobolds leave the rift be.
+- **A gate on another side lets its fiends through on that side** (#1298): `Summon::faction`
+  holds only while the gate stands in its own `gates`; a gate set in another faction
+  (`Actor::faction_override`) brings its fiends to that one. A gate the Pit's warden opens comes
+  in the warden's `layer_keepers`, and so do its fiends: they fight on the warden's side, hunt the
+  player, and fall on no one else. A miscast's gate in a Pit still lets its fiends through
+  `loosed`, and those fall on the warden as on all else (`world/pit_warden_tests.rs`).
 - **Rooted** (#1294, `world/rooted.rs`): it never moves or is moved. A rooted type with **no
   natural attack and no weapon in hand strikes no blow** (`World::rooted_plan`: a melee
   `Plan::Attack` is a wait; this PR's one line of code beside the data), so a gate's turn is a

@@ -1283,6 +1283,8 @@ impl World {
             // A layer boss's death opens its lair's way down (`layer_boss.rs`).
             self.open_lair(&actor.level, &slain);
         }
+        // A Pit's warden's death seals its own Pit, never the slain list (`pit.rs`).
+        self.seal_pit(&actor.level, actor.creature);
         // A summoned ally leaves nothing: no corpse, no pile (spec §8 "Allies": "Summons"). Nor
         // does one risen berserk (`corpse_spell.rs`).
         if actor.risen.is_some()
