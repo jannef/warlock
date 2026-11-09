@@ -7,7 +7,10 @@
 //! (the berserk risen, `world/corpse_spell.rs`, and a backfired summon's creatures,
 //! `world/backfire.rs`). A faction with `hostile_to_others` is hostile to
 //! every other faction but neutral to itself: loyal to its own and to nothing else (the loosed,
-//! what a miscast lets through; spec §8 "Spells").
+//! what a miscast lets through; spec §8 "Spells"). A faction with `friendly_to_all` is neutral to
+//! every faction but those its own `hostile` names, whatever theirs says: the other two flags
+//! pass it by (the gates a miscast opens, at peace with every monster and hostile to the player
+//! and the player's side alone; #1316).
 //!
 //! The file is optional: without it there are no factions and everyone is neutral to everyone.
 
@@ -53,6 +56,10 @@ pub(super) struct FactionSpec {
     /// Hostile to every other faction, neutral to itself.
     #[serde(default)]
     pub hostile_to_others: bool,
+    /// Neutral to every faction but its own `hostile` list, a `hostile_to_all` or
+    /// `hostile_to_others` one too.
+    #[serde(default)]
+    pub friendly_to_all: bool,
     /// The materials its creatures favour for their gear (#1191): a material's percent of the
     /// draws for an item that may be made of it, `gear = { bone = 40, iron = 25 }`
     /// ([`FactionDef::gear`]).
@@ -80,6 +87,8 @@ pub struct FactionDef {
     pub hostile_to_all: bool,
     /// Hostile to every other faction, neutral to itself.
     pub hostile_to_others: bool,
+    /// Neutral to every faction but those it lists hostile, whatever theirs says.
+    pub friendly_to_all: bool,
     /// The materials its creatures favour for their gear and drops (#1191), by material id,
     /// each with its percent of the draws for an item whose main part may be made of it
     /// ([`crate::variant::weights`]); together at most 100. Resolved once the materials are
@@ -102,7 +111,7 @@ pub struct Factions {
     ids: BTreeMap<String, FactionId>,
     /// Row-major `defs.len()²` matrix, symmetric, false on the diagonal but a `hostile_to_all`
     /// faction's; a `hostile_to_all` or `hostile_to_others` faction's row and column all true
-    /// (but the latter's own diagonal cell).
+    /// (but the latter's own diagonal cell, and a `friendly_to_all` faction's cells).
     hostile: Vec<bool>,
 }
 
@@ -122,6 +131,14 @@ impl Factions {
                 "a faction with id `{PLAYER_FACTION}` (the player's) is required"
             ));
         }
+        if let Some(spec) =
+            (specs.iter()).find(|s| s.friendly_to_all && (s.hostile_to_all || s.hostile_to_others))
+        {
+            return Err(format!(
+                "faction `{}`: `friendly_to_all` goes with neither `hostile_to_all` nor `hostile_to_others`",
+                spec.id
+            ));
+        }
         let n = specs.len();
         let mut hostile = vec![false; n * n];
         for (a, spec) in specs.iter().enumerate() {
@@ -137,7 +154,9 @@ impl Factions {
                 hostile[b * n + a] = true;
             }
             if spec.hostile_to_all || spec.hostile_to_others {
-                for b in (0..n).filter(|&b| b != a || spec.hostile_to_all) {
+                let at_war =
+                    |b: usize| (b != a || spec.hostile_to_all) && !specs[b].friendly_to_all;
+                for b in (0..n).filter(|&b| at_war(b)) {
                     hostile[a * n + b] = true;
                     hostile[b * n + a] = true;
                 }
@@ -161,6 +180,7 @@ impl Factions {
                 provoked,
                 hostile_to_all: s.hostile_to_all,
                 hostile_to_others: s.hostile_to_others,
+                friendly_to_all: s.friendly_to_all,
                 gear: Vec::new(),
                 gear_names: s.gear,
             });
@@ -332,13 +352,13 @@ hostile_to_all = true
     }
 
     #[test]
-    fn the_shipped_loosed_are_hostile_to_every_other_faction() {
+    fn the_shipped_loosed_are_hostile_to_every_other_faction_but_the_gates() {
         let f = resolve(include_str!("../../../../assets/data/factions.toml")).expect("valid");
         let loosed = f.id("loosed").expect("the loosed are shipped");
         assert!(f.def(loosed).hostile_to_others);
         for (i, other) in f.defs().iter().enumerate() {
             let other_id = FactionId(i as u16);
-            let expected = if other_id == loosed {
+            let expected = if other_id == loosed || other.friendly_to_all {
                 Stance::Neutral
             } else {
                 Stance::Hostile
@@ -399,6 +419,58 @@ name = "wildlife"
         let f = resolve(&text).unwrap();
         let (seelie, wrathful) = (f.id("seelie").unwrap(), f.id("wrathful").unwrap());
         assert_eq!(f.def(seelie).provoked, Some(wrathful));
+    }
+
+    #[test]
+    fn friendly_to_all_keeps_its_own_quarrels_alone() {
+        let f = resolve(
+            r#"
+[[faction]]
+id = "player"
+name = "you"
+
+[[faction]]
+id = "demons"
+name = "demons"
+hostile = ["player"]
+
+[[faction]]
+id = "loosed"
+name = "the loosed"
+hostile_to_others = true
+
+[[faction]]
+id = "berserk"
+name = "the berserk"
+hostile_to_all = true
+
+[[faction]]
+id = "gates"
+name = "the gates"
+hostile = ["player"]
+friendly_to_all = true
+"#,
+        )
+        .expect("valid");
+        let id = |n: &str| f.id(n).expect("known");
+        let gates = id("gates");
+        assert_eq!(f.stance(gates, id("player")), Stance::Hostile);
+        assert_eq!(f.stance(id("player"), gates), Stance::Hostile);
+        for other in ["demons", "loosed", "berserk", "gates"] {
+            assert_eq!(f.stance(gates, id(other)), Stance::Neutral, "{other}");
+            assert_eq!(f.stance(id(other), gates), Stance::Neutral, "{other}");
+        }
+        // The loosed and the berserk keep their war with everyone else.
+        assert_eq!(f.stance(id("loosed"), id("demons")), Stance::Hostile);
+        assert_eq!(f.stance(id("berserk"), id("berserk")), Stance::Hostile);
+        assert!(f.has_enemies(gates));
+        assert!(f.def(gates).friendly_to_all);
+        let err = resolve(
+            "[[faction]]\nid = \"player\"\nname = \"p\"\n[[faction]]\nid = \"g\"\nname = \"g\"\n\
+             friendly_to_all = true\nhostile_to_others = true\n",
+        )
+        .unwrap_err();
+        assert!(err.contains("`friendly_to_all` goes with neither"), "{err}");
     }
 
     #[test]

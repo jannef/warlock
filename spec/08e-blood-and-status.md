@@ -700,36 +700,20 @@ developer notes (CLAUDE.md, `docs/dev/`).
       miscast's own (`harm`, `stat_damage` (`stat`, `points`: §8 "Stats"' stat damage, never a
       score below 1, mending as a disease's does once none shows), `refund`, `twice`, `swap`, `boon`, `noise` (`loudness`: a
       thunderclap's sound on the caster's cell), `zone` (`zone`, `radius`, `turns`: a zone
-<<<<<<< HEAD
-      around the caster, no harm), `backfire`'s `full`: a damage spell bursts on its caster, a hex falls on them, a heal
-      mends the nearest hostile they see, a buff takes hold of it, a summon's creatures come
-      berserk, hostile to everyone (the caster, the caster's foes, and one another, whatever
-      their kind; `miscast.toml`'s `backfire_faction`), and anything else, or nothing to land on, is
-      (level ÷ 3 + 1)d6 force, (level ÷ 2 + 1)d6 at full), applied to any caster; "near" is
-      within 6 cells in a clear line, in actor-id order, and a creature's swap never takes the
-      player. The rows that later phases of the design fill (rank loss, forgetting, stat damage,
-      the drain's repeats, the Pits) stand in for now as existing kinds under their final ids.
-      The nine gate rows (#1295) `summon` a gate beside the caster: a rooted creature of the
-      `loosed` faction, with no attack, that lets fiends through on its cooldown at no cost,
-      `loosed` as it is, until it is killed (`assets/data/creatures/`, tag `gate`). It is
-      `left_alone` (#1312): no other creature, foe or ally, takes it for a target, though they
-      fight what it lets through; only the player attacks it. The player is told in words ("Sparks leap from your fingers and bite."); a
-=======
       around the caster, no harm), `rank_loss` (`ranks`: the spell cast known that many ranks
       lower, never below 1), `forget` (`spells = N`: the spell cast and `N − 1` more known
       spells drawn at random forgotten; `all = true`: every spell known; #1289,
       `world/forget.rs`), `backfire`'s `full`: a damage spell bursts on its caster, a hex falls on them, a heal
-      mends the nearest hostile they see, a buff takes hold of it, a summon's creatures come of
-      their own faction and on no one's side, and anything else, or nothing to land on, is
+      mends the nearest hostile they see, a buff takes hold of it, a summon's creatures come
+      berserk, hostile to everyone (the caster, the caster's foes, and one another, whatever
+      their kind; `miscast.toml`'s `backfire_faction`), and anything else, or nothing to land on, is
       (level ÷ 3 + 1)d6 force, (level ÷ 2 + 1)d6 at full), applied to any caster; "near" is
       within 6 cells in a clear line, in actor-id order, and a creature's swap never takes the
       player. **Forgetting** takes a class's spell as much as a learned one (a learned spell
       leaves `Actor::spells`; a class's is kept there at rank 0, read as not known): it is no
       longer listed or cast, and is learned again only from its grimoire, exactly as the first
       time (a study at rank 1, its experience paid again; no guard against it, the owner). A
-      creature's rank loss and forgetting do nothing (its spells are its kind's). The rows that
-      later phases of the design fill (stat damage, the drain's repeats) stand in for now as
-      existing kinds under their final ids. The four pit rows (105–106, 113–114, 121–122,
+      creature's rank loss and forgetting do nothing (its spells are its kind's). The four pit rows (105–106, 113–114, 121–122,
       127–128; #1297, `world/pit.rs`) are `portal`s (`gate`): stairs down into a Pit of its own
       (spec §7 "The Pits") open on the first plain free cell within 3 of the caster, and a rift,
       an abyssal gate, a dire gate, or the lords' gate stands at their head. The Pit's integer is
@@ -739,10 +723,13 @@ developer notes (CLAUDE.md, `docs/dev/`).
       told so instead of the entry's words. Towns and endless floors take it. A record is
       dropped on an arrival outside every Pit once its mouth is gone (a Pit opened on a floor
       that forgets). The nine gate rows (#1295) `summon` a gate
-      beside the caster: a rooted creature of the `loosed` faction, with no attack, that lets
-      fiends through on its cooldown at no cost, `loosed` as it is, until it is killed
-      (`assets/data/creatures/`, tag `gate`). The player is told in words ("Sparks leap from your fingers and bite."); a
->>>>>>> origin/main
+      beside the caster: a rooted creature of the `gates` faction (#1316, `friendly_to_all`: at
+      peace with every monster faction, the loosed and the berserk too, and hostile to the
+      player and the player's side alone), with no attack, that lets fiends through on its
+      cooldown at no cost, `loosed` (its summoning's `faction`), until it is killed
+      (`assets/data/creatures/`, tag `gate`). No monster takes a gate for a target; the player,
+      their companion (set on it with Sic 'em or not), and their allies fight it, and a blast
+      hurts it as it hurts anything in it. The player is told in words ("Sparks leap from your fingers and bite."); a
       creature's miscast is told by its entry's `seen` line when the player sees it. A death of the player by their own miscast
       is `Cause::Miscast` ("Killed by their own miscast fireball"). Determinism: the check's two
       draws, the die's, then the effect's own, all on the gameplay stream; none without

@@ -473,3 +473,32 @@ fn a_replay_of_it_verifies() {
     assert!(divergence.is_none(), "{divergence:?}");
     assert_eq!(again.state_hash(), w.state_hash());
 }
+
+/// A rift (#1316: of the `gates` faction, hostile to the player's side alone) at `at`, its
+/// summoning held back so no fiend comes between.
+fn rift_at(w: &mut World, at: Pos) -> ActorId {
+    let gate = creature_at(w, "rift", at);
+    let cooldown = w.content().status_id("summoning").expect("summoning");
+    w.afflict(gate, cooldown, 100, None, &mut Vec::new());
+    look(w);
+    gate
+}
+
+#[test]
+fn the_companion_goes_for_a_gate_on_its_own_and_when_set_on_it() {
+    for set_on in [false, true] {
+        let mut w = ranger();
+        let gate = rift_at(&mut w, Pos::new(11, 15));
+        if set_on {
+            let at = w.state.actors[&gate].pos;
+            w.apply(&sic(at));
+            assert_eq!(quarry(&w), Some(gate), "set on the gate");
+        }
+        let hp = w.state.actors[&gate].hp;
+        let struck = (0..40).any(|_| {
+            w.apply(&Action::Wait);
+            w.state.actors.get(&gate).is_none_or(|a| a.hp < hp)
+        });
+        assert!(struck, "set on it {set_on}: the companion struck the gate");
+    }
+}

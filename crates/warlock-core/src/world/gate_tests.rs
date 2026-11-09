@@ -1,7 +1,8 @@
 //! The gates (#1295, docs/dev/creatures/gates.md; design `docs/design/miscasts-review.md` §6):
-//! a gate row of the miscast table puts its gate beside the caster, and the gate, rooted and
-//! `loosed`, lets its fiends through on its cooldown at no cost, as `loosed` as itself, to its
-//! `most`, hostile to the caster and to everyone else but its own.
+//! a gate row of the miscast table puts its gate beside the caster, and the gate, rooted and of
+//! the `gates` faction (#1316: friendly to every monster, hostile to the player's side), lets its
+//! fiends through on its cooldown at no cost, `loosed`, to its `most`; no creature but the
+//! player's side picks it for a target, and a blast hurts it as anything.
 
 use super::caster_tests::{kobold, world_with};
 use super::*;
@@ -64,14 +65,14 @@ fn opened(gate: &str) -> (World, ActorId, ActorId) {
 }
 
 #[test]
-fn a_gate_row_opens_its_gate_beside_the_caster_hostile_to_all_but_its_own() {
+fn a_gate_row_opens_its_gate_beside_the_caster_hostile_to_the_caster_alone() {
     let (w, k, g) = opened("rift");
     let gate = &w.state.actors[&g];
     assert!(gate.pos.chebyshev(w.player_pos()) <= 1, "beside the caster");
     let content = w.content();
     assert!(content.creature(gate.creature).rooted);
-    let loosed = content.factions().id("loosed").expect("the loosed");
-    assert_eq!(gate.faction(content), Some(loosed));
+    let gates = content.factions().id("gates").expect("the gates");
+    assert_eq!(gate.faction(content), Some(gates));
     let player = w.state.player();
     let kobold = &w.state.actors[&k];
     assert_eq!(
@@ -80,7 +81,7 @@ fn a_gate_row_opens_its_gate_beside_the_caster_hostile_to_all_but_its_own() {
     );
     assert_eq!(
         stance_between(&w.state, content, kobold, gate),
-        Stance::Hostile
+        Stance::Neutral
     );
 }
 
@@ -110,12 +111,12 @@ fn a_gate_lets_its_fiends_through_loosed_to_its_most_and_never_moves() {
         assert_eq!(
             fiend.faction(&content),
             Some(loosed),
-            "as loosed as the gate"
+            "loosed, by the summoning's faction"
         );
         assert_eq!(
             stance_between(&w.state, &content, fiend, &w.state.actors[&g]),
             Stance::Neutral,
-            "loyal to the gate"
+            "at peace with the gate"
         );
         if let Some(kobold) = w.state.actors.get(&k) {
             assert_eq!(
@@ -127,21 +128,23 @@ fn a_gate_lets_its_fiends_through_loosed_to_its_most_and_never_moves() {
     }
 }
 
-#[test]
-fn other_creatures_leave_a_gate_alone_and_the_player_may_strike_it() {
-    let (mut w, k, g) = opened("rift");
-    let content = w.content().clone();
-    assert!(content.creature(w.state.actors[&g].creature).left_alone);
-    // The kobold, made peaceful to the player but hostile to the gate, stands beside it.
-    let peaceful = content.factions().id("peaceful").expect("peaceful folk");
-    let gate_at = w.state.actors[&g].pos;
-    let free = (Dir::ALL.iter())
-        .map(|&d| gate_at.step(d))
+/// A free cell beside actor `of`.
+fn beside(w: &World, of: ActorId) -> Pos {
+    let content = w.content();
+    let at = w.state.actors[&of].pos;
+    (Dir::ALL.iter())
+        .map(|&d| at.step(d))
         .find(|&p| {
-            w.state.current().is_walkable(&content, p)
+            w.state.current().is_walkable(content, p)
                 && w.state.actor_at(&w.state.current_level, p).is_none()
         })
-        .expect("a free cell beside the gate");
+        .expect("a free cell beside it")
+}
+
+#[test]
+fn a_monster_or_a_loosed_fiend_beside_a_gate_never_attacks_it_and_the_player_may() {
+    let (mut w, k, g) = opened("rift");
+    let content = w.content().clone();
     // Everyone else (a fiend already through, the showcase's folk) sent far off.
     let player = w.state.player;
     for a in w.state.actors.values_mut() {
@@ -149,25 +152,44 @@ fn other_creatures_leave_a_gate_alone_and_the_player_may_strike_it() {
             a.pos = Pos::new(-100, -100);
         }
     }
-    let kobold = w.state.actors.get_mut(&k).expect("the kobold");
-    kobold.faction_override = Some(peaceful);
-    kobold.pos = free;
-    let (kobold, gate) = (&w.state.actors[&k], &w.state.actors[&g]);
-    assert_eq!(
-        stance_between(&w.state, &content, kobold, gate),
-        Stance::Hostile
-    );
-    assert_eq!(
-        w.nearest_hostile_in_sight(k),
-        None,
-        "it never picks the gate"
-    );
+    // The kobold, of its own faction, beside the gate; a dretch let through, loosed, beside it too.
+    let free = beside(&w, g);
+    w.state.actors.get_mut(&k).expect("the kobold").pos = free;
+    let spawn = crate::content::CreatureSpawn {
+        creature: content.creature_id("dretch").expect("a dretch"),
+        faction: content.factions().id("loosed"),
+        alignment: None,
+        npc: None,
+        pos: beside(&w, g),
+        route: Vec::new(),
+        carry: Vec::new(),
+        equipment: Default::default(),
+        rolls_gear: false,
+        asleep: false,
+        status: Vec::new(),
+    };
+    let level = w.state.current_level.clone();
+    let fiend = travel::make_creature(&mut w.state, &content, &level, &spawn);
+    w.state.actors.get_mut(&fiend).expect("the fiend").hp = 100_000;
+    *w.perception = crate::perception::Perception::compute(&w.state, &w.content, &mut w.lights);
+    for other in [k, fiend] {
+        let (them, gate) = (&w.state.actors[&other], &w.state.actors[&g]);
+        assert_eq!(
+            stance_between(&w.state, &content, them, gate),
+            Stance::Neutral
+        );
+        assert_ne!(
+            w.nearest_hostile_in_sight(other).map(|(id, _)| id),
+            Some(g),
+            "it never picks the gate"
+        );
+    }
     let hp = w.state.actors[&g].hp;
     for _ in 0..20 {
         w.apply(&Action::Wait);
     }
     assert_eq!(w.state.actors[&g].hp, hp, "no creature struck the gate");
-    // The player still may: their blows land on it.
+    // The player may: their blows land on it.
     let to = Dir::ALL
         .into_iter()
         .find(|&d| w.player_pos().step(d) == w.state.actors[&g].pos)
@@ -179,4 +201,25 @@ fn other_creatures_leave_a_gate_alone_and_the_player_may_strike_it() {
         }
     }
     panic!("the player never struck the gate");
+}
+
+#[test]
+fn a_monsters_blast_hurts_a_gate_in_it() {
+    let (mut w, k, g) = opened("rift");
+    let content = w.content().clone();
+    // The rift shrugs off fire (resist 100), so the blast is acid: a kobold's Acid splash at the
+    // player, the gate beside them.
+    let splash = content.spell_id("acid_splash").expect("acid splash");
+    w.state.actors.get_mut(&g).expect("the gate").hp = 100_000;
+    let player = w.state.player;
+    for _ in 0..30 {
+        let kobold = w.state.actors.get_mut(&k).expect("the kobold");
+        kobold.mana = 1000;
+        let mut events = Vec::new();
+        w.creature_casts(k, (splash, player), &mut events);
+        if w.state.actors[&g].hp < 100_000 {
+            return;
+        }
+    }
+    panic!("the blast never hurt the gate");
 }

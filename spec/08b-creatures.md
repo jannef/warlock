@@ -123,8 +123,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
   the summoner's own type, a breeder's, docs/design/monster-dread.md §5.5 G5c), `count` (dice, 1
   to 12), `cooldown` (6 to 600 s), `mana` (its cost, 1 to 1000; the type must then have mana;
   left out, none: a breeder's, whose cooldown and `most` are its limits), and optionally
-  `range` (default 8), `spread` (default 2), `most` (default 6), and `verb` (default
-  "summons"). As step 2 begins, a creature with one summons when it sees a hostile within
+  `range` (default 8), `spread` (default 2), `most` (default 6), `verb` (default
+  "summons"), and `faction` (default the summoner's; a miscast's gates let theirs through
+  `loosed`, #1316). As step 2 begins, a creature with one summons when it sees a hostile within
   `range`, its casting is not blocked (a status that blocks `cast`: Silenced), its cooldown
   status `summoning` is off, it has the mana (`World::spend_mana`, its cut included), fewer than
   `most` of those it summoned live (on any level), and a free cell lies within `spread`; deciding
@@ -134,7 +135,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   `below(pool.len())` draw, made like a spawn (gear rolled from `gear/<actor id>`) on the next
   free cell: within `spread` (Chebyshev) in its line of sight, walkable, no one there, not a
   sanctuary it would shun, nearest first (Chebyshev distance, squared distance, row order). Fewer
-  cells, fewer come. The summoned take the summoner's faction (a `faction_override` when it is
+  cells, fewer come. The summoned take the summoning's `faction`, else the summoner's (a `faction_override` when it is
   not their type's) and remember who called them (`Actor::summoner`, saved, left out while
   `None`); they act from their next turn, and nothing else sets them apart: they stay when the
   summoner dies, and their kills pay full experience. The action costs a `cast`. Words: the
