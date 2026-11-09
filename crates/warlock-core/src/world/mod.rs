@@ -232,6 +232,7 @@ mod restore;
 mod reveal;
 mod rod;
 mod rooms;
+mod rooted;
 mod rot;
 mod ruin;
 mod rumour;
@@ -1962,6 +1963,8 @@ mod rod_tests;
 mod room_temperature_tests;
 #[cfg(test)]
 mod room_tests;
+#[cfg(test)]
+mod rooted_tests;
 #[cfg(test)]
 mod rot_tests;
 #[cfg(test)]

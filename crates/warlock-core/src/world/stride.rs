@@ -88,6 +88,10 @@ impl World {
     /// Idle creature `id`'s action as a stride, kept clear of `foes` (the module docs); returns
     /// its price, or `None` when it cannot take a step of it and acts as usual.
     fn stride(&mut self, id: ActorId, foes: &[Pos], events: &mut Vec<Event>) -> Option<i64> {
+        // A rooted one never strides (`rooted.rs`).
+        if let Some(price) = self.rooted_stride(id) {
+            return Some(price);
+        }
         let Some(route) = self.state.actors[&id].patrol.clone() else {
             return Some(self.price_of(id, ActionKind::Wait) * i64::from(STRIDE));
         };

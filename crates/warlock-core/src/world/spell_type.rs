@@ -120,13 +120,15 @@ impl World {
         }
     }
 
-    /// Whether a status holds actor `id` where it stands, so nothing drives it on.
+    /// Whether a status or its kind (`rooted.rs`) holds actor `id` where it stands, so nothing
+    /// drives it on.
     pub(super) fn rooted(&self, id: ActorId) -> bool {
-        (self.state.actors.get(&id)).is_some_and(|a| {
-            (a.effects)
-                .blocking(&self.content, ActionKind::Step)
-                .is_some()
-        })
+        self.is_rooted(id)
+            || (self.state.actors.get(&id)).is_some_and(|a| {
+                (a.effects)
+                    .blocking(&self.content, ActionKind::Step)
+                    .is_some()
+            })
     }
 
     /// The shut doors a blast of a spell of `kind` around `center` would break, if its type's

@@ -234,6 +234,9 @@ pub(super) struct CreatureSpec {
     /// Whether it lets the player swap places with it.
     #[serde(default)]
     pub budge: Budge,
+    /// Whether it is rooted: it never moves (docs/dev/creatures.md "Rooted").
+    #[serde(default)]
+    pub rooted: bool,
     /// What its attacks cost, in energy; none: the attack's cost in `data/actions.toml`.
     pub attack_cost: Option<u32>,
     /// Light preset the creature carries.
@@ -701,6 +704,7 @@ impl CreatureSpec {
             shadowy: self.shadowy,
             invisible: r.invisible,
             budge: self.budge,
+            rooted: self.rooted,
             attack_cost: self.attack_cost,
             light: r.light,
             footsteps: self.footsteps,
@@ -858,6 +862,10 @@ pub struct CreatureDef {
     /// Gameplay: whether the player may swap places with it when it is not hostile (spec §8
     /// "Displacement").
     pub budge: Budge,
+    /// Gameplay: whether it is rooted (docs/dev/creatures.md "Rooted", `world/rooted.rs`): it
+    /// never steps, never gives way, is never driven, swapped, or teleported, and never follows
+    /// on stairs; it still strikes, shoots, casts, and summons from where it stands.
+    pub rooted: bool,
     /// What its attacks (melee, shooting, or casting) cost in energy, if its type says
     /// ([`super::Content::action_cost`]); `None`: the cost of the attack in `data/actions.toml`.
     /// Rules only.

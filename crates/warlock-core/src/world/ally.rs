@@ -607,7 +607,9 @@ impl World {
             } else if a.level == from {
                 let held = a.effects.blocking(&content, ActionKind::Step).is_some();
                 let kept = a.kept().is_some();
-                if kept || (a.pos.chebyshev(old) <= rules.comes_along && !held) {
+                // A rooted one stays where it stands (`rooted.rs`).
+                let rooted = content.creature(a.creature).rooted;
+                if !rooted && (kept || (a.pos.chebyshev(old) <= rules.comes_along && !held)) {
                     coming.push(a.id);
                 } else {
                     left.push(a.id);

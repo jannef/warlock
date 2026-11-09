@@ -62,6 +62,10 @@
 #   budge       whether you can swap places with it when it is not hostile to you (spec §8
 #                "Displacement"): "always" (default), "off_post" (not while it keeps its post,
 #                going about its routine: a shopkeeper at its counter), or "never" (rooted)
+#   rooted      whether it never moves (default false; docs/dev/creatures.md "Rooted"): it
+#                never steps, never makes way, is never driven back, swapped, or teleported, and
+#                never follows on stairs; it still strikes, shoots, casts, and summons where it
+#                stands (a miscast's gate)
 #   attack_cost  what its attacks cost in energy, instead of the attack's cost in
 #                actions.toml (melee, shoot, or cast; 1000 is a normal action)
 #   training    makes it a target dummy (spec §8 "Weapon skills": "Target dummies"): it never

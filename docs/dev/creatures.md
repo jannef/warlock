@@ -179,6 +179,21 @@ sees or remembers (`PerceptionView::known_leavings`). **Wiki**: `creature_signs`
 (`creature-signs.md`, "Warning signs" in `creature-numbers.md`). **Tests**:
 `mapgen/leavings_tests.rs`, `world/first_sight_tests.rs`, `ui/look.rs`.
 
+Rooted (#1294, design `docs/design/miscasts-review.md` §6.2: a miscast's gates). **Data**:
+`rooted = true` (`CreatureDef::rooted`, default false). **Rules**: `world/rooted.rs`, one check
+in each place that moves an actor: `World::rooted_plan` in `ai.rs::creature_turn` after the
+fear and the hold (a `Step`, `Patrol`, or `Blink` is a `Wait`; it still strikes, shoots,
+breathes, gazes, casts, and summons where it stands), `World::rooted_stride` in `stride.rs`
+(a coarse turn is a stride's waits), `talk.rs::refusal` (it never gives way, as `budge =
+"never"`: no swap), `weapon_active.rs::drive_back` (no knockback, shove, or spell's push; the
+status `spell_type.rs::rooted` reads it too), `trap.rs::teleport_to` (no teleport of any kind:
+a rod's says "The X holds fast."; a miscast's swap passes it by, and a rooted caster swaps with
+no one), `stair_followers.rs::may_follow` (never a follower), and `ally.rs::follow_along` (a
+rooted ally stays behind). **Dump**: the dev `actors` layer adds `; rooted`. **Tests**:
+`world/rooted_tests.rs` (a fixture: a rooted thorn that never steps and strikes beside it, a
+rooted gate that summons to its cap, a rooted shrub that never gives way, never driven or
+teleported, never a stair follower beside a wolf that is).
+
 Gazes and averted eyes (spec §8 "Creature behavior": "Gazes", #1125, design
 `docs/design/monster-dread.md` §5.1). **Data**: `[creature.gaze]` (`content/gaze.rs`:
 `GazeSpec` resolved in the creature loop into `CreatureDef::gaze: Option<Gaze>`; `range` 1 to 8,
