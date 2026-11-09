@@ -64,6 +64,10 @@ Common to all:
 
 The miscast rows' words are the design's §8 lines.
 
+Wiki: the creature tables say a gate fights "never" and its attack row has no blow
+(`xtask/src/wiki/creatures.rs::strikes_nothing`, the wiki's mirror of `World::rooted_plan`);
+its summons are in `creature-summons.md`, and `wiki/src/miscasts.md` "Gates" tells the rest.
+
 Tests: `content/gate_roster_tests.rs` (every gate rooted, of the `gates`, letting its pool
 through `loosed`, with no attack, no stray, no
 corpse, no mana, its pool as above; each opened by its one row, of its id, above the protected

@@ -350,13 +350,14 @@ cast path shares.
     action that changed level, on a level that is no Pit's floor, a record whose `from` is no
     longer in `levels` or holds no `>` to its Pit's first floor is dropped (a Pit opened on
     Grundlēas, whose mouth was forgotten with the floor). No cap on Pits.
-  - **The table** (#1288): 65 rows of two totals; the 35 below 71 protected. The rows the
-    design's later PRs fill stand in with existing kinds under their final ids. The four pit rows
+  - **The table** (#1288): 65 rows of two totals; the 35 below 71 protected. The four pit rows
     (`pit` 105–106, `pit_yawning` 113–114, `pit_roaring` 121–122, `pit_and_lords` 127–128) are
     `portal`s with a `rift`, an `abyssal_gate`, a `dire_gate`, and a `lords_gate` at the mouth
     (#1297, below). The nine gate rows (`rift` … `lords_gate`) `summon` their gates (#1295,
-    `docs/dev/creatures/gates.md`), with the design's words. Their words are working lines until
-    #1292.
+    `docs/dev/creatures/gates.md`): rooted creatures of the `gates` faction (`friendly_to_all`,
+    #1316) whose summons come `loosed`; a gate the Pit's warden opens carries the warden's
+    `faction_override` instead (`docs/dev/summoning.md`). Every row's words are the design's §8
+    (#1292).
   - **Determinism**: two draws for the check, one a face of the die, then the effect's own
     (dice, a pick among those near). A portal draws its Pit's integer after the message;
     the Pits' records (`WorldState::pits`, left out while empty) are the one thing saved.
@@ -365,7 +366,8 @@ cast path shares.
     every spell (data's `stat`); the mitigations are Spellcraft's `ward` (so skill affixes and
     talents' skill bonuses count) and the stance (Defensive softens, Aggressive and Frenzy
     worsen); the echo makes no check of its own (no chains); a summon is of its type's own
-    faction (hostile to the player; to a creature caster, as the factions stand).
+    faction (a gate's `gates`: hostile to the player's side alone, so at peace with a creature
+    caster, whose own gate's `loosed` fiends still fall on it).
   - **Tests and fixtures**: the cast tests' fixtures load content without `data/miscast.toml`
     (`caster_tests::files`, `quiet`), so their draws and effects stay the cast's alone.
   - **Wiki**: `xtask/src/wiki/miscast.rs` (`miscast-chances.md`, `miscast-table.md`) on

@@ -65,7 +65,7 @@ fn creature_table(content: &Content, campaign: Option<&str>) -> String {
         };
         let vortex = (c.burst.as_ref()).is_some_and(|b| b.when == BurstWhen::Touches);
         let mut attacks = match c.combat {
-            _ if !fights(content, c) => "never",
+            _ if !fights(content, c) || strikes_nothing(c) => "never",
             _ if vortex => "bursts beside you",
             Combat::Melee => "up close",
             Combat::Ranged => "shoots from afar",
@@ -235,6 +235,12 @@ fn listed(content: &Content) -> Vec<(CreatureId, &CreatureDef)> {
 /// Whether creatures of type `c` fight at all: their faction has enemies.
 fn fights(content: &Content, c: &CreatureDef) -> bool {
     c.faction.is_some_and(|f| content.factions().has_enemies(f))
+}
+
+/// Whether a creature of type `c` strikes no blow: rooted, with no natural attack, and holding
+/// nothing (a miscast's gate; `World::rooted_plan`), so it only summons or waits.
+fn strikes_nothing(c: &CreatureDef) -> bool {
+    c.rooted && c.attack.is_none() && c.gear.is_empty()
 }
 
 /// A creature of type `id` as a level spawns it, but bare: carrying, wearing, and wielding
@@ -491,7 +497,7 @@ pub(super) fn creature_attacks(content: &Content) -> String {
     );
     for (id, c) in listed(content) {
         let fight = match c.combat {
-            _ if !fights(content, c) => "never".to_string(),
+            _ if !fights(content, c) || strikes_nothing(c) => "never".to_string(),
             Combat::Melee => "up close".to_string(),
             Combat::Ranged => format!("shoots, up to {} cells", c.range),
             Combat::Caster => format!("casts spells, up to {} cells", c.range),
@@ -508,6 +514,15 @@ pub(super) fn creature_attacks(content: &Content) -> String {
                 "| {} | {fight} | its burst | the bursts' table | - | - | {} | - |",
                 link(Term::Creature, &c.id, &capital(&c.name)),
                 at_speed(blow_price(content, &actor), c.speed),
+            );
+            continue;
+        }
+        // A gate has no blow at all: it only lets others through (the summons' table).
+        if strikes_nothing(c) {
+            let _ = writeln!(
+                out,
+                "| {} | {fight} | none | - | - | - | - | - |",
+                link(Term::Creature, &c.id, &capital(&c.name)),
             );
             continue;
         }

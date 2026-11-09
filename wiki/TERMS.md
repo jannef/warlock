@@ -34,7 +34,7 @@ table on its page, or grep the built page: `grep -o 'id="status-[a-z-]*"' wiki/b
 | A damage type (fire, slashing, …) | `damage-types.md#damage-ID` | `damage-types.md#damage-fire` |
 | A resource (Rage, Stamina, Ki, Focus, Inspiration, Openings, Zeal) | `resources.md#resource-ID` | `resources.md#resource-ki` |
 | The unholy (what holy wrath falls hardest on) | `classes.md#paladin` | |
-| A stance | `combat.md#stance-NAME` | `stances.md#stance-frenzy` |
+| A stance | `stances.md#stance-NAME` | `stances.md#stance-frenzy` |
 | A stat | `stats.md#stat-NAME` | `stats.md#stat-toughness` |
 | A race | `races.md#race-ID` | `races.md#race-half-elf` |
 | A weapon skill | `weapon-skills.md#weapon-skill-ID` | `weapon-skills.md#weapon-skill-long-blades` |
@@ -248,8 +248,10 @@ above.
 | How a spell resolves (attack, auto, area, touch) | `spellcasting.md#how-a-spell-finds-its-target` |
 | Healing spells on the undead (harm instead of healing) | `spellcasting.md#healing-harms-the-undead` |
 | Mishap | `magic.md#learning-spells-from-grimoires` |
-| Miscast, the Spellcraft check on casting, the miscast table, protected results | `miscasts.md#the-check`, `miscasts.md#the-miscast-table` |
-| Gate (a miscast's: rift, hellmouth, ... lords' gate), the loosed | `miscasts.md#gates` |
+| Miscast, the Spellcraft check on casting, the miscast table | `miscasts.md#the-check`, `miscasts.md#the-miscast-table` |
+| Protected results, the protected half (a miscast that cannot kill) | `miscasts.md#the-protected-half` |
+| Gate (a miscast's: rift, hellmouth, ... lords' gate), the loosed | `miscasts.md#gates` (a gate: `creatures.md#creature-ID`) |
+| A miscast's Pit stair | `miscasts.md#pits` |
 | Learning a spell from a grimoire, overreach | `magic.md#learning-spells-from-grimoires` |
 | Spell rank, deepening a spell, rereading a grimoire | `magic.md#spell-ranks` |
 | Forgetting a spell, a forgotten spell, ranks lost to a miscast | `miscasts.md#forgotten-spells` |
@@ -258,7 +260,7 @@ above.
 | Resource (Rage, Ki, Focus, …) | `resources.md` (a resource: its row; Rage: `resources.md#rage`) |
 | **Creatures and people** | |
 | Creature, monster | `creatures.md` (a creature: its row) |
-| Faction, hostile, peaceful | `creatures.md#factions` |
+| Faction, hostile, peaceful, the berserk, the loosed, the gates | `creatures.md#factions` |
 | What creatures do, lurking | `creatures.md#what-they-do` |
 | Peaceful folk, the fey courts | `creatures.md#factions` |
 | Incorporeal | `creature-bodies.md#incorporeal-creatures` |

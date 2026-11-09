@@ -6,7 +6,7 @@ floor open, and every such opening is a Pit of its own. Pits can open in any wor
 
 ## How a Pit opens
 
-One of the four worst kinds of miscast splits the floor beside the caster. Stairs go down into the
+Four of the worst [miscast results](miscasts.md#pits) split the floor beside the caster. Stairs go down into the
 Pit, and a [gate](miscasts.md#gates) stands at their head, letting fiends through. A creature that
 miscasts can open one too.
 
@@ -44,7 +44,7 @@ The fifth floor is the last. It leads nowhere deeper. Its hall belongs to the
 whip that can [hold](status-effects.md#status-held) you. Every two minutes it tears open a new
 gate, a [rift](creatures.md#creature-rift) or a [hellmouth](creatures.md#creature-hellmouth), two
 at most at once, and what comes through fights for it. The Pit's other fiends leave it alone.
-A gate your own [miscast](miscasts.md) opens is different: the fiends it lets through attack the
+A gate a [miscast](miscasts.md#gates) opens is different: the fiends it lets through attack the
 warden too. The
 hall has lava in its corners, four locked [chests](chests.md), and a hoard of finds.
 

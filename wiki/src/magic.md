@@ -277,7 +277,7 @@ your learning). The read list shows the rank a grimoire would bring you to and y
 
 If you fail, you lose only the time. There is no mishap, and you may read the book again at once,
 as often as you like. If you succeed, the spell is yours at the next rank: "The words settle
-deeper: you know Frost at rank 3 of 10." A rank brings no experience. A bad
+deeper: you know Frost at rank 3 of 10." A rank brings no experience. A
 [miscast](miscasts.md#forgotten-spells) can cost you ranks, never below rank 1; you win them back
 the same way.
 
