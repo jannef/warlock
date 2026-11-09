@@ -10,7 +10,8 @@
 //! cooldown status, makes a spell's noise, and rolls `count` on the gameplay stream; then each
 //! creature is one of the pool (`below(pool.len())`), made (`travel::make_creature`, its gear
 //! rolled as a spawn's) on the next of the free cells ([`World::summon_cells`]). Fewer cells than
-//! the roll, or than `most` leaves room for: fewer come. The summoned take the summoner's faction and remember who called them
+//! the roll, or than `most` leaves room for: fewer come. The summoned take the summoning's `faction`, else the
+//! summoner's (a gate's fiends come `loosed`, #1316), and remember who called them
 //! ([`super::Actor::summoner`]); a kill of one pays its experience like any other. The action
 //! costs a `cast`.
 //!
@@ -128,7 +129,7 @@ impl World {
         self.afflict(id, summon.status, summon.degrees, None, events);
         self.make_noise(id, Act::Attack(AttackKind::Spell));
         let me = &self.state.actors[&id];
-        let (pos, faction) = (me.pos, me.faction(&content));
+        let (pos, faction) = (me.pos, summon.faction.or_else(|| me.faction(&content)));
         let rolled = summon.count.roll(&mut self.state.rng);
         let count = usize::try_from(rolled.max(1)).unwrap_or(1);
         // Never more live at once than `most`.

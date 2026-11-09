@@ -207,8 +207,7 @@ impl World {
         }
         let radius = self.sight_of(id);
         let foes: Vec<(i32, Pos)> = (state.actors.values())
-            // A gate is left alone (`ai.rs::left_alone`).
-            .filter(|a| a.id != id && !super::ai::left_alone(content, a))
+            .filter(|a| a.id != id)
             .map(|a| (a.pos.chebyshev(me.pos), a))
             .filter(|(d, a)| *d <= radius + STRIDE && a.level == me.level)
             .filter(|(_, a)| match a.id == state.player {

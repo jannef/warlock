@@ -195,15 +195,6 @@ rooted ally stays behind). **Dump**: the dev `actors` layer adds `; rooted`. **T
 rooted gate that summons to its cap, a rooted shrub that never gives way, never driven or
 teleported, never a stair follower beside a wolf that is).
 
-Left alone (#1312: a miscast's gates). **Data**: `left_alone = true` (`CreatureDef::left_alone`,
-default false). **Rules**: `ai.rs::left_alone`, read wherever a creature or an ally picks a
-target: `World::nearest_in_sight` (every creature's look, and through it the ally arm and a
-familiar's quarry), `companion.rs::smelled` (an ally's nose), and `stride.rs::idle` (the far
-look of a coarse turn). Such a one may be hostile to them and they to it; they never go for it,
-and fight what stands around it. The player may still attack it. **Tests**:
-`world/gate_tests.rs` (a kobold hostile to a rift, beside it, never picks it, and the player's
-blows land on it).
-
 Gazes and averted eyes (spec §8 "Creature behavior": "Gazes", #1125, design
 `docs/design/monster-dread.md` §5.1). **Data**: `[creature.gaze]` (`content/gaze.rs`:
 `GazeSpec` resolved in the creature loop into `CreatureDef::gaze: Option<Gaze>`; `range` 1 to 8,
@@ -583,12 +574,24 @@ spell's `berserk_faction` is read at the cast (none: it rises serving) and check
 data by a test rather than at load.
 
 **`hostile_to_others`** (`content/faction.rs`, beside `hostile_to_all`): a faction with it
-(`loosed`, what a miscast lets through: the gates and the fiends they call, #1293,
+(`loosed`, what a miscast lets through: the fiends the gates call, #1293,
 `docs/design/miscasts-review.md` §6.1) fills its row and column of the hostility matrix **but not
 its own diagonal**: the loosed are neutral to each other and hostile to every other faction, the
-player's, the demons', and the berserk included. `FactionDef::hates_everyone` is either flag:
+player's, the demons', and the berserk included, but a `friendly_to_all` one (the gates). `FactionDef::hates_everyone` is either flag:
 `has_enemies` and the wiki's table treat the two alike (being on the loosed's list is no quarrel
 of one's own), and the wiki's row says "everyone but its own". `fixture_factions.rs` strips the
 line as it strips the berserk's (every `hostile…` line), so a fixture's loosed are at peace. No
-creature type names the faction yet (the gates and their summons come with #1295); a test checks
-the shipped matrix (`faction.rs`, `the_shipped_loosed_are_hostile_to_every_other_faction`).
+creature type names the faction: the gates' summonings name it (`[creature.summon] faction`); a
+test checks the shipped matrix (`faction.rs`,
+`the_shipped_loosed_are_hostile_to_every_other_faction_but_the_gates`).
+
+**`friendly_to_all`** (`content/faction.rs`, #1316): a faction with it (`gates`, the miscast's
+gates, `docs/dev/creatures/gates.md`) is neutral to every faction but those its own `hostile`
+lists (the player's) and those that list it: the `hostile_to_all` and `hostile_to_others` rows
+pass it by (`Factions::resolve`), so the berserk and the loosed are at peace with it too. It goes
+with neither of those flags (a load error). So no monster takes a gate for a target, while the
+player's side (allies take the player's faction, and an ally's target is its master's stance,
+`docs/dev/allies.md`) fights it, the companion's own pick, its nose, and Sic 'em alike; a blast
+hurts it as any creature in it. Tests: `faction.rs` (`friendly_to_all_keeps_its_own_quarrels_alone`),
+`content/gate_roster_tests.rs` (the shipped gates at peace with every faction but the player's),
+`world/gate_tests.rs`, `world/sic_tests.rs` (the companion goes for a rift on its own and set on it).

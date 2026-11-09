@@ -19,7 +19,9 @@ creatures of its side, with no ability in the abilities menu, no action, no key,
   breeder, docs/design/monster-dread.md §5.5 G5c, #1129), `count` (dice),
   `cooldown` and the degrees of the cooldown status it gives (`ceil(cooldown / eases)`), `mana`
   (`SummonSpec::mana: Option`; left out, 0: a breeder's, limited by its cooldown and `most`),
-  `range` (default 8), `spread` (default 2), `most` (default 6), `verb` (default "summons").
+  `range` (default 8), `spread` (default 2), `most` (default 6), `verb` (default "summons"),
+  `faction` (`Summon::faction`, a faction id, an unknown one refused; left out, the summoner's:
+  the gates let theirs through `loosed`, #1316).
   Refused: no pool or both kinds, `tag` without `levels` or `levels` without `tag`, an unknown or
   another campaign's creature, the player, an empty pool, and a missing `summoning` status
   (`summon::STATUS`), one that ticks or never eases, or one too short for the cooldown. The
@@ -38,7 +40,8 @@ creatures of its side, with no ability in the abilities menu, no action, no key,
   sorted by Chebyshev distance, squared distance, y, x), `creature_summons` (`spend_mana`,
   `afflict` the status, `make_noise(Act::Attack(Spell))`, `count.roll` on `state.rng`, capped
   by `most − live`, one `rng.below(pool.len())` per creature, `travel::make_creature` with
-  `rolls_gear` and the summoner's faction as `faction` when it differs from the type's, then
+  `rolls_gear` and the summoning's `faction`, else the summoner's, as `faction` when it differs
+  from the type's, then
   `summoner` set and `World::spawned` bumped), and `say_summoning` (the words from the last
   turn's `perception.sees_actors_at`). The draws come from the gameplay stream, after the AI
   decided without drawing.
