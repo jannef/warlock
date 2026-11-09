@@ -78,6 +78,16 @@ const CRIES: &[(&str, SoundKind)] = &[
     ("hound_of_the_hunt", SoundKind::Howl),
     ("warg", SoundKind::Howl),
     ("dire_warg", SoundKind::Howl),
+    // The miscast's gates (#1295), heard through the walls.
+    ("rift", SoundKind::Wail),
+    ("hellmouth", SoundKind::Howl),
+    ("gloom_gate", SoundKind::Howl),
+    ("abyssal_gate", SoundKind::Scream),
+    ("iron_gate", SoundKind::Banging),
+    ("black_gate", SoundKind::Wail),
+    ("dire_gate", SoundKind::Scream),
+    ("arch_gate", SoundKind::Howl),
+    ("lords_gate", SoundKind::Scream),
 ];
 
 #[test]

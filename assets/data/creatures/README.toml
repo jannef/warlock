@@ -468,6 +468,13 @@
 # frightened for the rakshasa. Glyphs: C the hell hound (flame red), u the nightmare, n the
 # succubus and incubus, h the night hag, p the cambion, f the rakshasa.
 #
+# The gates (#1295; content::gate_roster_tests checks them; docs/dev/creatures/gates.md): nine
+# rooted summoners a miscast opens (miscasts/<id>.toml, the row of the same id), never drawn
+# otherwise (stray = false, in no population). Faction "loosed", tags ["summoner", "fiend",
+# "gate"], alignment "evil", no attack (a rooted type with none strikes no blow), no mana (their
+# summoning costs nothing: its cooldown and `most` are its limits), id pools of the shared fiends.
+# No corpse, no blood, no grades; resist fire and poison 100, cold 50. Glyph 0, a colour each.
+#
 # The troll tribe (#456; content::troll_roster_tests checks the numbers): levels 13 to 42, faction
 # "troll" (the marsh troll stays a marsh thing, the rotting troll undead; both carry the tag),
 # tags ["troll", ...], alignment "evil", vision "darkvision", xp = 5 × level + 10. Numbers are

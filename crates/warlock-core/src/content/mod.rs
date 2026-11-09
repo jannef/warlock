@@ -63,6 +63,8 @@ mod flow;
 mod forage;
 #[cfg(test)]
 mod forge_tests;
+#[cfg(test)]
+mod gate_roster_tests;
 mod gaze;
 mod gear;
 mod gear_condition;
@@ -4905,11 +4907,14 @@ mod tests {
             let player = content.creature_id("player").expect("player");
             let c = content.creature_id(id).expect("id");
             let hostile = content.stance(c, player) == Stance::Hostile;
-            // The mimics come only through chests (`stray = false`), and what another type dies
-            // into only out of its corpse (the hydra's heads).
+            // The mimics come only through chests (`stray = false`), the gates only through a
+            // miscast (#1295), and what another type dies into only out of its corpse (the
+            // hydra's heads).
             let offspring = (content.creature_defs().iter())
                 .any(|d| d.dies_into.as_ref().is_some_and(|i| i.pool.contains(&c)));
-            let placed = def.animated.is_some() || def.mimic.is_some() || (offspring && !def.stray);
+            let gate = def.tags.iter().any(|t| t == "gate") && !def.stray;
+            let placed =
+                def.animated.is_some() || def.mimic.is_some() || gate || (offspring && !def.stray);
             if hostile && !def.unique && !placed && campaign != Some("showcase") {
                 assert!(
                     def.stray,

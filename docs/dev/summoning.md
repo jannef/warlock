@@ -45,8 +45,9 @@ creatures of its side, with no ability in the abilities menu, no action, no key,
 - **Rooted summoners** (#1294, `world/rooted.rs`, docs/dev/creatures.md "Rooted"): a type with
   `rooted = true` and no `mana` (a breeder's rule: its cooldown and `most` its only limits) is
   a gate: its turn is a summon when `summons_at` allows, else a wait, never a step. The
-  miscast gates (docs/design/miscasts-review.md §6.2, #1295) are such; `world/rooted_tests.rs`
-  has a fixture one.
+  miscast gates (docs/design/miscasts-review.md §6.2, #1295; `docs/dev/creatures/gates.md`)
+  are such; `world/rooted_tests.rs` has a fixture one. A rooted type with no natural attack and
+  no weapon strikes no blow either (`World::rooted_plan`), so a gate only summons or waits.
 - **Experience**: nothing special: `World::creature_dies` pays a summoned creature's kill like
   any other's (first-kill bonus included).
 - **Banishing** (#913, `docs/dev/progression.md` "`smite_mode`"): the paladin's Banishing smite

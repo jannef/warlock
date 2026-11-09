@@ -4,7 +4,8 @@
 //! shoots, breathes, gazes, casts, and summons from there. One check a place that moves an actor:
 //! - its own turn ([`World::creature_turn`] through [`World::rooted_plan`]): a step, a patrol, or
 //!   a blink its AI or its fear chose is a wait instead; a coarse turn while the player rests
-//!   (`stride.rs`) is a stride's waits;
+//!   (`stride.rs`) is a stride's waits; one with no natural attack and no weapon in hand (a
+//!   gate, #1295) strikes no blow either: it has no hands to strike with, so a blow is a wait;
 //! - it never gives way to the player (`talk.rs::refusal`, as `budge = "never"`), so no swap;
 //! - it is never driven back (`weapon_active.rs::drive_back`: knockback, a shove, a spell's
 //!   push), teleported (`trap.rs::teleport_to`, so every teleport, a rod's or a trap's, and a
@@ -13,6 +14,7 @@
 
 use super::ai::Plan;
 use super::{ActorId, World};
+use crate::action::AttackKind;
 use crate::content::ActionKind;
 
 impl World {
@@ -27,8 +29,20 @@ impl World {
     pub(super) fn rooted_plan(&self, id: ActorId, plan: Plan) -> Plan {
         match plan {
             Plan::Step(_) | Plan::Patrol | Plan::Blink(_) if self.is_rooted(id) => Plan::Wait,
+            Plan::Attack {
+                kind: AttackKind::Melee,
+                ..
+            } if self.is_rooted(id) && self.strikes_nothing(id) => Plan::Wait,
             plan => plan,
         }
+    }
+
+    /// Whether actor `id` has nothing to strike a blow with: no natural attack of its type and no
+    /// weapon in hand (a gate's case, module docs).
+    fn strikes_nothing(&self, id: ActorId) -> bool {
+        (self.state.actors.get(&id)).is_some_and(|a| {
+            self.content.creature(a.creature).attack.is_none() && a.weapon(&self.content).is_none()
+        })
     }
 
     /// The price of a stride's waits for rooted creature `id`, which never strides (`stride.rs`).

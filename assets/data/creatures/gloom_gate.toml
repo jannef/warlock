@@ -1,0 +1,39 @@
+# The gates (#1295, docs/design/miscasts-review.md §6; docs/dev/creatures/gates.md). A gate of gloom
+# where there was none; hell hounds bay beyond it, and the lesser yugoloths come at their heels.
+# Made only by a miscast (miscasts/gloom_gate.toml): rooted, with no attack of its own, it lets
+# fiends through on its cooldown at no cost, as `loosed` as it is. Killing it is the fix: what came
+# through stays, but no more come.
+[[creature]]
+id = "gloom_gate"
+level = 16
+xp = 90
+rarity = "very_rare"
+stray = false
+grades = false
+name = "gate of gloom"
+plural = "gates of gloom"
+glyph = "0"
+fg = "#8a7aa8"
+faction = "loosed"
+tags = ["summoner", "fiend", "gate"]
+alignment = "evil"
+rooted = true
+vision = "darkvision"
+sight = 8
+footsteps = 0
+weight = 1000000
+stats = { strength = 10, dexterity = 3, toughness = 20, intelligence = 3, willpower = 20, presence = 15 }
+base_hp = 20
+natural = { defence = 0, protection = 5, name = "warded rim" }
+resist = { fire = 100, poison = 100, cold = 50 }
+immune = ["asleep", "bleeding", "diseased", "frightened", "held", "poisoned", "stunned", "transfixed"]
+cry = { kind = "howl", loudness = 56, every = 90 }
+corpse = false
+blood = "none"
+dies = "shudders and closes"
+[creature.summon]
+creatures = ["hell_hound", "nightmare", "mezzoloth"]
+count = "1"
+cooldown = 60
+most = 4
+verb = "lets through"

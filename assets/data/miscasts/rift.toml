@@ -2,6 +2,6 @@
 id = "rift"
 from = 75
 to = 76
-message = "The weave tears, and raw power pours through the rift onto you!"
-seen = "The weave tears about {who}, and raw power pours onto it!"
-effect = { kind = "harm", dice = "4d6", damage = "force" }
+message = "A rift tears open beside you, and the stink of the Abyss pours out!"
+seen = "A rift tears open beside {who}!"
+effect = { kind = "summon", creature = "rift" }

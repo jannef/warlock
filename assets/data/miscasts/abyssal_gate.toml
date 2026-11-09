@@ -2,6 +2,6 @@
 id = "abyssal_gate"
 from = 87
 to = 88
-message = "The weave yawns open, and what pours through it batters you!"
-seen = "The weave yawns open beside {who} and batters it!"
-effect = { kind = "harm", dice = "6d10", damage = "force" }
+message = "A gate yawns open beside you, and the Abyss looks through!"
+seen = "A gate yawns open beside {who}!"
+effect = { kind = "summon", creature = "abyssal_gate" }

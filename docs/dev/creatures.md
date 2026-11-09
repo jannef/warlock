@@ -24,6 +24,7 @@ Per-tribe notes:
 - `docs/dev/creatures/layer-bosses.md`: the layer bosses of Grundlēas (#1118; faction, the five bosses and their lairs)
 - `docs/dev/creatures/second-wave.md`: the dread design's second wave (#1138; the black pudding, cockatrice, hydra and its heads, rust monster, gorgon)
 - `docs/dev/creatures/summoners.md`: the summoners (#520; the `summoner` tag, the three types; the mechanism is `docs/dev/summoning.md`)
+- `docs/dev/creatures/gates.md`: the miscast's gates (#1295; the nine rooted `loosed` summoners, their pools, their rows)
 
 ## Overview
 
