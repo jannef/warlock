@@ -81,7 +81,13 @@ developer notes (CLAUDE.md, `docs/dev/`).
   when left (the same rules for allies and uniques), and each Pit pays a floor's first arrival once.
   Climbing back up makes the floor above again: the same map, its dead back, its loot drawn anew,
   its memory blank. No stairs, hidden location, or quest names a Pit's floor; only a `portal`
-  miscast opens one (#1297), and a warden keeps the fifth floor (#1298).
+  miscast opens one (#1297, spec §8 "Miscasts"): its mouth, a `>` named "the Pit" on the level
+  the miscast fell on, is the way in, and the first floor's `<` always leads back out to it,
+  however that floor was reached. All a run keeps of a Pit is its record (`WorldState::pits`:
+  the integer, the mouth's level, and whether it is sealed) and the mouth; there is no cap on
+  Pits, and a record whose mouth is gone (opened on a forgotten floor) is dropped on the next
+  arrival outside every Pit. A warden keeps the fifth floor (#1298). The dev scenario
+  `hellegeat` (the showcase's) starts on `hellegeat@1:1`, its record's mouth the hub.
   **Ways up** (`below = "fyrdelf:12"`, #1117; `mapgen/way_up.rs`, `world/reveal.rs`): a bounded
   branch whose `below` names a level of another bounded branch of its campaign is a way between
   that level and the overworld. Its deepest level's `>` leads to that level, which gains a `<` back

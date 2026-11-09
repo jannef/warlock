@@ -694,7 +694,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
       harm climbing from 4d6 to
       20d10 force. **Protected entries**: one whose `to` is below `safe_below` (71) cannot kill
       its caster (its harm takes them to 1 hit point at the least, nothing at 1) and the loader
-      refuses one that would backfire, drain, forget, summon, lay a fire zone, or put on a status
+      refuses one that would backfire, drain, forget, summon, open a Pit, lay a fire zone, or put on a status
       that ticks harm or mana, a campaign's too (a rank loss is allowed: it never forgets); only a spell missed by 10 or more reaches past it.
       The entries' effects are the mishaps' kinds (`MishapEffect`, `resolve_effect`) and the
       miscast's own (`harm`, `stat_damage` (`stat`, `points`: §8 "Stats"' stat damage, never a
@@ -728,8 +728,17 @@ developer notes (CLAUDE.md, `docs/dev/`).
       longer listed or cast, and is learned again only from its grimoire, exactly as the first
       time (a study at rank 1, its experience paid again; no guard against it, the owner). A
       creature's rank loss and forgetting do nothing (its spells are its kind's). The rows that
-      later phases of the design fill (stat damage, the drain's repeats, the Pits) stand in for
-      now as existing kinds under their final ids. The nine gate rows (#1295) `summon` a gate
+      later phases of the design fill (stat damage, the drain's repeats) stand in for now as
+      existing kinds under their final ids. The four pit rows (105–106, 113–114, 121–122,
+      127–128; #1297, `world/pit.rs`) are `portal`s (`gate`): stairs down into a Pit of its own
+      (spec §7 "The Pits") open on the first plain free cell within 3 of the caster, and a rift,
+      an abyssal gate, a dire gate, or the lords' gate stands at their head. The Pit's integer is
+      drawn then, and the run records it with the level the mouth is on (`WorldState::pits`; the
+      Pit's first floor's `<` always climbs out to that mouth). On the overworld, on a Pit's own
+      floor, or with no plain cell near, no Pit opens: the gate comes alone, and the player is
+      told so instead of the entry's words. Towns and endless floors take it. A record is
+      dropped on an arrival outside every Pit once its mouth is gone (a Pit opened on a floor
+      that forgets). The nine gate rows (#1295) `summon` a gate
       beside the caster: a rooted creature of the `loosed` faction, with no attack, that lets
       fiends through on its cooldown at no cost, `loosed` as it is, until it is killed
       (`assets/data/creatures/`, tag `gate`). The player is told in words ("Sparks leap from your fingers and bite."); a

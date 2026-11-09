@@ -224,7 +224,9 @@ positive `u32`, no leading zeros, so a Pit has one id), and `Content::branch_lev
 everything that reads `(def, depth)` (spawning, danger, item level, names, arrival, vaults by
 `def.level_id(depth)`, `hellegeat:5`) works unasked. `generate_for` builds the neighbours from the
 floor's own id (`content::sibling`: `up_to` past the first floor, and `DungeonDef::down_to(id,
-depth)`), so a Pit's stairs stay in it; its first floor's `<` is `entered_from`. Every stream is
+depth)`), so a Pit's stairs stay in it; its first floor's `<` is `entered_from`, which
+`World::visit` sets to the Pit's record's `from` (its mouth's level, `world/pit.rs`, #1297) however
+the floor is reached, a climb from the second included. Every stream is
 labelled by the id, and `floor_seed` gives a Pit's floor the run seed (not `endless/<n>`), so a
 floor is a pure function of the run seed, `S`, and the depth: `warlock-cli gen --level
 hellegeat@7:3 --seed S` prints what a run of seed `S` makes of Pit 7's third floor (but for the

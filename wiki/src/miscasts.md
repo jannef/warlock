@@ -89,6 +89,10 @@ alike, but never each other or the gate. No other creature attacks a gate itself
 fight the fiends it lets through: only you can close it. The deeper the result, the stronger the fiends: a rift lets
 dretches and quasits through, the lords' gate a balor or a pit fiend.
 
+Four results go further: the floor splits and **a stair down into a [Pit](pits.md)** opens beside
+you, with a rift, an abyssal gate, a dire gate, or the lords' gate at its head. Every one is a Pit
+of its own. On the overworld or on a Pit's own floor no stair opens, and only the gate comes.
+
 A gate never closes on its own. Kill it and no more come, but the fiends already through stay. The
 gates' numbers and the fiends each lets through are in [Creatures in numbers](creature-numbers.md)
 and [Creature powers](creature-powers.md#summoning).

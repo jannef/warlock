@@ -241,6 +241,11 @@ pub enum MishapEffect {
         radius: u8,
         turns: u16,
     },
+    /// Stairs down into a Pit of its own beside the caster, with `gate` at their head (a
+    /// miscast's only; `world/pit.rs`).
+    Portal {
+        gate: CreatureId,
+    },
 }
 
 impl MishapEffect {
@@ -267,6 +272,7 @@ impl MishapEffect {
             MishapEffect::Boon { .. } => "boon",
             MishapEffect::Noise { .. } => "noise",
             MishapEffect::Zone { .. } => "zone",
+            MishapEffect::Portal { .. } => "portal",
         }
     }
 }
@@ -322,6 +328,7 @@ pub(super) struct EffectSpec {
     ranks: Option<u8>,
     spells: Option<u8>,
     all: Option<bool>,
+    gate: Option<String>,
 }
 
 /// Parses the mishap files, in path order; statuses and creatures must be loaded.
@@ -377,6 +384,7 @@ pub(super) fn resolve_effect(
         "zone",
         "rank_loss",
         "forget",
+        "portal",
     ];
     if !miscast && only_miscast.contains(&e.kind.as_str()) {
         return Err(format!("a `{}` effect is a miscast's only", e.kind));
@@ -404,6 +412,7 @@ pub(super) fn resolve_effect(
         ("ranks", e.ranks.is_some()),
         ("spells", e.spells.is_some()),
         ("all", e.all.is_some()),
+        ("gate", e.gate.is_some()),
     ];
     let reads: &[&str] = match e.kind.as_str() {
         "status" | "boon" => &["status", "severity"],
@@ -418,6 +427,7 @@ pub(super) fn resolve_effect(
         "zone" => &["zone", "radius", "turns"],
         "rank_loss" => &["ranks"],
         "forget" => &["spells", "all"],
+        "portal" => &["gate"],
         _ => &[],
     };
     if let Some((name, _)) = fields.iter().find(|(n, set)| *set && !reads.contains(n)) {
@@ -526,6 +536,11 @@ pub(super) fn resolve_effect(
             let creature =
                 (content.creature_id(&name)).ok_or(format!("unknown creature `{name}`"))?;
             MishapEffect::Summon { creature }
+        }
+        "portal" => {
+            let name = e.gate.ok_or("a `portal` effect needs a `gate`")?;
+            let gate = (content.creature_id(&name)).ok_or(format!("unknown creature `{name}`"))?;
+            MishapEffect::Portal { gate }
         }
         "mark" => MishapEffect::Mark {
             stat: stat(&e.stat, false)?.expect("not random"),

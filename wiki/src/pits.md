@@ -1,8 +1,23 @@
 # Hellegeat, the Pits
 
 **Hellegeat**, the hell-gate, is not a place on any map. It is the fiends' own dungeon, and no
-stair, road, or quest leads there. A Pit opens only when a [miscast](miscasts.md) tears the floor
-open, and every such opening is a Pit of its own. Pits can open in any world you play.
+stair, road, or quest leads there. A Pit opens only when a [miscast](miscasts.md#gates) tears the
+floor open, and every such opening is a Pit of its own. Pits can open in any world you play.
+
+## How a Pit opens
+
+One of the four worst kinds of miscast splits the floor beside the caster. Stairs go down into the
+Pit, and a [gate](miscasts.md#gates) stands at their head, letting fiends through. A creature that
+miscasts can open one too.
+
+A Pit opens anywhere but on the overworld and on a Pit's own floor: in a town, in a dungeon, even
+on a floor of [Grundlēas](dungeon-guide.md#grundlēas). Where it cannot open, the gate comes alone.
+There is no limit to how many Pits a run can have.
+
+The stairs stay where they opened. Climb out of the Pit's first floor and you come back up those
+stairs, however you reached that floor. A Pit opened on a floor that forgets, such as Grundlēas's,
+is forgotten with that floor. Go down into it and the floor above is forgotten, stairs and all:
+climbing out brings you to a new floor, with no way back into that Pit.
 
 A Pit has five floors of hot, red-lit caves (45 °C). Its [traps](traps.md) are
 [fireballs](traps.md#trap-fireball) and [pits](traps.md#trap-pit). Two floors in five hold
