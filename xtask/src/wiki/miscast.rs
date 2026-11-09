@@ -124,12 +124,16 @@ fn effect_text(content: &Content, effect: MishapEffect, protected: bool) -> Stri
             format!("you are {} ×{severity}", content.status(status).name)
         }
         MishapEffect::Backfire { full: false } => {
-            "the spell goes off on you at its base strength: a damage spell bursts around you, a \
-             hex falls on you"
-                .into()
+            format!(
+                "the spell goes off on you at its base strength: {}",
+                backfire_words(false)
+            )
         }
         MishapEffect::Backfire { full: true } => {
-            "the spell goes off on you at the full strength you cast it with".into()
+            format!(
+                "the spell goes off on you at the full strength you cast it with: {}",
+                backfire_words(true)
+            )
         }
         MishapEffect::Mana { percent } => format!("{percent} % of your mana left is lost"),
         MishapEffect::Teleport => "you are flung to a random free place on the level".into(),
@@ -182,6 +186,21 @@ fn effect_text(content: &Content, effect: MishapEffect, protected: bool) -> Stri
             zone_name(kind)
         ),
     }
+}
+
+/// What a backfire does by the spell's kind (`world/backfire.rs`), at its base or `full`.
+fn backfire_words(full: bool) -> String {
+    let dice = if full {
+        "level ÷ 2 + 1"
+    } else {
+        "level ÷ 3 + 1"
+    };
+    format!(
+        "a damage spell bursts around you, a hex falls on you, a heal mends the nearest foe you \
+         see, a buff takes hold of that foe, and a summon's creatures come but not to your side; \
+         any other spell, a heal or buff with no foe in sight, or a summon with no room deals \
+         ({dice})d6 force to you, by the spell's level"
+    )
 }
 
 /// A zone kind in words.

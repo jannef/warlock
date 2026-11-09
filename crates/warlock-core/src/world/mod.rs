@@ -98,6 +98,7 @@ mod aura;
 #[cfg(test)]
 mod aura_tests;
 mod avert;
+mod backfire;
 mod background;
 mod beast_friend;
 mod bleed;
@@ -1653,6 +1654,8 @@ mod ascmearc_encounter_tests;
 mod ascmearc_tests;
 #[cfg(test)]
 mod attacks_tests;
+#[cfg(test)]
+mod backfire_tests;
 #[cfg(test)]
 mod balance_probe;
 #[cfg(test)]

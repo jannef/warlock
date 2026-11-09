@@ -292,8 +292,15 @@ cast path shares.
     loudness, on the caster's cell), `zone` (`World::lay_zone_around`, `zone.rs`: the dev
     zone's cells, `burst` in line of sight, by the caster, no harm, none on the overworld),
     and
-    `backfire` (a damage spell as a burst around the caster at its base roll, or with `full`
-    the cast's own roll; a hex on the caster at the cast's degrees; others nothing). "Near"
+    `backfire` (`backfire.rs`, #1291: at the spell's base roll, or with `full` the cast's own;
+    a damage spell as a burst around the caster; a hex on the caster at the cast's degrees; a
+    heal mends the nearest actor hostile to the caster that it sees (`nearest_hostile`:
+    Chebyshev distance, then actor id; the player's sight is the perception snapshot, a
+    creature's `sees_now`), said by name; a buff on that hostile at the cast's degrees; a summon
+    call brings its count (at most its `most` and the free cells of its `spread`) of its pool
+    beside the caster as plain creatures of their own faction, no ally, no summoner, no gear,
+    on the level in play off the overworld; anything else, or any of these with nothing to
+    land on, the fallback harm, `(level ÷ 3 + 1)d6` force, `(level ÷ 2 + 1)d6` with `full`). "Near"
     (`near_caster`): actors on the caster's level within `world::MISCAST_NEAR` (6) cells with a
     `clear_shot`, in actor-id order. `noise` and `zone` act only when the caster stands on the
     current level. A player who dies of it: `Cause::Miscast(spell)`.

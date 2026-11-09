@@ -40,7 +40,7 @@ use crate::action::{Event, ReadTarget};
 use crate::check::{self, Checked};
 use crate::content::{
     Burst, Content, CreatureId, CreatureSpawn, Drain, Miscast, MishapEffect, SpellData, SpellId,
-    SpellPurpose, TrapNoise,
+    TrapNoise,
 };
 use crate::damage::Damage;
 use crate::dice::{Dice, Roll};
@@ -317,39 +317,9 @@ impl World {
         }
     }
 
-    /// The spell of `cast` goes off on its caster: a damage spell as a burst around them (its
-    /// radius, else 1) at its base roll, or the roll it was cast with when `full`; a hex on
-    /// them at its degrees; any other kind does nothing more than the entry's words.
-    fn miscast_backfire(
-        &mut self,
-        caster: ActorId,
-        cast: &Cast<'_>,
-        full: bool,
-        events: &mut Vec<Event>,
-    ) {
-        let def = cast.def;
-        match def.kind {
-            SpellPurpose::Damage => {
-                let roll = if full { cast.roll } else { def.damage };
-                if let Some(roll) = roll {
-                    let Some(here) = self.state.actors.get(&caster).map(|a| a.pos) else {
-                        return;
-                    };
-                    self.miscast_burst(caster, def, (here, roll), events);
-                }
-            }
-            SpellPurpose::Hex => {
-                if let (Some((status, _)), Some(degrees)) = (def.effect.status, cast.degrees) {
-                    self.afflict(caster, status, degrees, None, events);
-                }
-            }
-            _ => {}
-        }
-    }
-
     /// `def` goes off as a burst of `roll` centred on `center`, by `caster` (its radius, else
     /// 1), said as any spell's blows are.
-    fn miscast_burst(
+    pub(super) fn miscast_burst(
         &mut self,
         caster: ActorId,
         def: &SpellData,
