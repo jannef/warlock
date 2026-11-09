@@ -39,7 +39,11 @@ does not load in a build before it (the variant is new), as the version pin alre
 
 A save holds only the current floor of an endless branch (`docs/dev/mapgen.md`,
 `world/endless.rs`): `WorldState::endless` is a count of floors made and the deepest depth by
-branch, left out while empty, so its size does not grow with depth.
+branch, left out while empty, so its size does not grow with depth. A Pit (spec §7 "The Pits",
+`world/pit.rs`) is kept the same way: `WorldState::pits` holds a record per Pit by its integer
+(`Pit { from, sealed }`: the mouth's level and the warden's death; left out while empty), the
+mouth is a `StairsLink` saved with its level as every link is, and the only Pit floor in the
+save is the current one.
 
 The summary beside a save records the version too (`Summary::version`; empty in a summary from
 before the pin, which counts as another version). `SavedCharacter::playable` is true when the

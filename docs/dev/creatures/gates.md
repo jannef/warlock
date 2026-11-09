@@ -7,7 +7,7 @@ The gates (#1295): nine shared creature types in `assets/data/creatures/`, one f
 only by a miscast. Each is opened by the miscast row of its own id (`assets/data/miscasts/<id>.toml`,
 `effect = { kind = "summon", creature = "<id>" }`, all above the protected half), which puts it
 on the first free cell around the caster (`world/miscast.rs::miscast_summon`, of its own
-faction). They replace the `harm` stand-ins #1288 laid under the same ids.
+faction, `gates`). They replace the `harm` stand-ins #1288 laid under the same ids.
 
 | L | id | name | hp (base + To) | Prot. | lets through | count | every | most | row |
 |---|---|---|---|---|---|---|---|---|---|
@@ -22,10 +22,17 @@ faction). They replace the `harm` stand-ins #1288 laid under the same ids.
 | 64 | `lords_gate` | lords' gate | 160 + 40 | 14 | balor, pit fiend | 1 | 300 s | 2 | 123 |
 
 Common to all:
-- **Faction `loosed`** (#1301, `hostile_to_others`): hostile to every faction but its own, the
-  player's, the kobolds', and the ordered fiends' alike. What it lets through comes `loosed` too
-  (`creature_summons` passes the summoner's faction when it differs from the type's), with
-  `summoner` the gate, so Banishing smite unmakes it. A kobold shaman's own rift eats the kobolds.
+- **Faction `gates`** (#1316, `friendly_to_all`; docs/dev/creatures.md): at peace with every
+  monster faction, the loosed and the berserk included, and hostile to the player's alone, so
+  only the player's side fights it: the player, their allies, and their companion (on its own,
+  by its nose, or set on it with Sic 'em). No other creature takes it for a target (stance does
+  it; there is no exemption in the target picks), and a blast hurts it as it hurts anything
+  in it, a monster's too (fire and poison it resists in full).
+- **What it lets through comes `loosed`** (#1301, `hostile_to_others`): its summoning's
+  `faction = "loosed"` (`Summon::faction`, else the summoner's), with `summoner` the gate, so
+  Banishing smite unmakes it. The loosed are hostile to every faction but their own and the
+  gates': the player's, the kobolds', and the ordered fiends' alike, never the gate that let them
+  through. A kobold shaman's own rift eats the kobolds, and the kobolds leave the rift be.
 - **Rooted** (#1294, `world/rooted.rs`): it never moves or is moved. A rooted type with **no
   natural attack and no weapon in hand strikes no blow** (`World::rooted_plan`: a melee
   `Plan::Attack` is a wait; this PR's one line of code beside the data), so a gate's turn is a
@@ -51,9 +58,13 @@ Common to all:
 
 The miscast rows' words are the design's §8 lines.
 
-Tests: `content/gate_roster_tests.rs` (every gate rooted, `loosed`, with no attack, no stray, no
+Tests: `content/gate_roster_tests.rs` (every gate rooted, of the `gates`, letting its pool
+through `loosed`, with no attack, no stray, no
 corpse, no mana, its pool as above; each opened by its one row, of its id, above the protected
-half); `world/gate_tests.rs` (a `rift` row on the built-in content opens the rift beside the
-caster, hostile to the player and the kobold; it lets dretches and quasits through, `loosed`, at
+half; the `gates` at peace with every faction but the player's); `world/gate_tests.rs` (a `rift`
+row on the built-in content opens the rift beside the caster, hostile to the player and neutral
+to the kobold; it lets dretches and quasits through, `loosed`, at
 no cost, never more than four, and never moves); `world/rooted_tests.rs` (a gate with no attack
-strikes no blow beside the player).
+strikes no blow beside the player); `world/gate_tests.rs` again (a kobold and a loosed dretch
+beside a rift never pick it for a target, the player's blows land on it; a kobold's Acid splash
+hurts it); `world/sic_tests.rs` (the ranger's companion strikes a rift on its own and set on it).

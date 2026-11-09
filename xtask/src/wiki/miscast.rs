@@ -200,6 +200,11 @@ fn effect_text(content: &Content, effect: MishapEffect, protected: bool) -> Stri
             "a [zone](spellcasting.md#zones) of {} lies around you for {turns} turns, radius {radius}",
             zone_name(kind)
         ),
+        MishapEffect::Portal { gate } => format!(
+            "stairs down into a [Pit](pits.md) of its own open beside you, and a hostile {} at their head; \
+             on the overworld or a Pit's own floor, only the gate",
+            content.creature(gate).name
+        ),
     }
 }
 
@@ -212,7 +217,8 @@ fn backfire_words(full: bool) -> String {
     };
     format!(
         "a damage spell bursts around you, a hex falls on you, a heal mends the nearest foe you \
-         see, a buff takes hold of that foe, and a summon's creatures come but not to your side; \
+         see, a buff takes hold of that foe, and a summon's creatures come hostile to everyone, \
+         you, your foes, and one another; \
          any other spell, a heal or buff with no foe in sight, or a summon with no room deals \
          ({dice})d6 force to you, by the spell's level"
     )

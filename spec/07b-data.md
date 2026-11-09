@@ -732,7 +732,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
   shopkeepers", hostile to the player), which a robbed or attacked shopkeeper joins (§7
   "Shops"). A faction may be `hostile_to_all` (hostile to every faction and to itself: the
   berserk risen, §8 "Creatures") or `hostile_to_others` (hostile to every other faction, neutral to
-  itself: `loosed`, what a miscast lets through, §8 "Spells"). A level
+  itself: `loosed`, what a miscast lets through, §8 "Spells"), or `friendly_to_all` (neutral to
+  every faction but those its own `hostile` names, whatever theirs says, the other two flags
+  included: `gates`, the miscast's gates, hostile to the player's side alone; #1316). A level
   legend entry with a `creature` may name a `faction` (a known faction id; an unknown one is a
   content error) that replaces its type's for that creature: it is stored on the actor
   (`faction_override`, saved and hashed only when set), used wherever stance is computed (AI

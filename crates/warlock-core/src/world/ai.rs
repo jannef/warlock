@@ -325,7 +325,8 @@ impl World {
         let mut hostiles: Vec<(i32, ActorId, Pos)> = (state.actors.values())
             .filter(|a| a.level == me.level && a.id != id && a.pos.dist2(me.pos) <= reach2)
             // A disguised mimic is a chest to every eye (`mimic.rs`).
-            .filter(|a| !a.effects.hides(content) && wanted(state, content, me, a))
+            .filter(|a| !a.effects.hides(content))
+            .filter(|a| wanted(state, content, me, a))
             .map(|a| (a.pos.dist2(me.pos), a.id, a.pos))
             .collect();
         if hostiles.is_empty() {

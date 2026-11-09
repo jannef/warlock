@@ -483,6 +483,9 @@ impl World {
         from: Option<&str>,
     ) -> Result<&LevelState, WorldError> {
         if !self.state.levels.contains_key(id) {
+            // A Pit's first floor climbs out to its mouth, however it is reached (`pit.rs`).
+            let out = self.state.pit_way_out(&self.content, id);
+            let from = out.as_deref().or(from);
             let visit = crate::mapgen::Visit {
                 luck: Luck::of(&self.state.player().talent_mods(&self.content)),
                 player_level: self.player_level(),

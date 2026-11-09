@@ -225,9 +225,19 @@ id = "yugoloth"
 name = "yugoloths"
 hostile = ["player"]
 
-# What a miscast lets through (spec §8 "Spells": "Miscasts"): the gates and every fiend they
-# call. Loyal to one another and to nothing else: they fall on the player, the kobolds, the
-# townsfolk, and the fiends of the ordered hells alike.
+# The gates a miscast opens (#1316; docs/dev/creatures/gates.md): at peace with every monster,
+# the loosed they let through and the berserk too (`friendly_to_all`: no other faction's flag
+# makes it a foe), and hostile to the player and the player's side alone, so only those attack
+# one. A blast hurts a gate as it hurts anything in it.
+[[faction]]
+id = "gates"
+name = "the gates"
+hostile = ["player"]
+friendly_to_all = true
+
+# What a miscast lets through (spec §8 "Spells": "Miscasts"): every fiend the gates let through
+# (their summoning's `faction`). Loyal to one another and to nothing else but the gates: they
+# fall on the player, the kobolds, the townsfolk, and the fiends of the ordered hells alike.
 [[faction]]
 id = "loosed"
 name = "the loosed"
@@ -275,8 +285,9 @@ id = "outraged"
 name = "outraged shopkeepers"
 hostile = ["player"]
 
-# The dead a spell raises and fails to hold (Rouse the dead's `berserk_faction`): friendly to
-# nothing, each other included.
+# The dead a spell raises and fails to hold (Rouse the dead's `berserk_faction`), and what a
+# backfired summon brings (miscast.toml's `backfire_faction`): friendly to nothing, each other
+# included.
 [[faction]]
 id = "berserk"
 name = "the berserk"

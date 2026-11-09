@@ -22,7 +22,8 @@
 //!   again ([`Cast::by_creature`]: already paid), a swap of places (a creature's never with the
 //!   player), a boon on someone near, a thunderclap's sound of the entry's loudness on the
 //!   caster's cell ([`World::sound_at`]), a zone around the caster (`zone.rs`; none on the
-//!   overworld), and the spell's rank lost or the spell forgotten (`forget.rs`). "Near" is within [`NEAR`] cells in a clear line ([`World::clear_shot`]), in
+//!   overworld), the spell's rank lost or the spell forgotten (`forget.rs`), and a Pit opened
+//!   beside the caster with a gate at its mouth (`pit.rs`; the gate alone where refused). "Near" is within [`NEAR`] cells in a clear line ([`World::clear_shot`]), in
 //!   actor-id order. A death of the player by their own miscast is [`Cause::Miscast`].
 //! - **Protected entries** ([`crate::content::MiscastRules::protects`], those ending below
 //!   `safe_below`): their harm takes the caster to 1 hit point at the least, nothing at 1; the
@@ -33,6 +34,7 @@
 
 use super::cast::Cast;
 use super::fight::Harm;
+use super::pit::Refused;
 use super::spell::Caster;
 use super::talk::capitalized;
 use super::{Actor, ActorId, Cause, World};
@@ -87,6 +89,21 @@ impl Actor {
     /// What it takes off a miscast's total: Spellcraft's `ward` and its stance's `miscast`.
     pub fn miscast_ward(&self, content: &Content) -> i32 {
         self.skill_effect(content, Effect::Ward) + content.stance_def(self.stance).miscast
+    }
+}
+
+/// What the player is told of a portal the level refuses (`pit.rs`): their own line, and the
+/// line of a creature's they see.
+fn pit_refused_words(why: Refused) -> (&'static str, &'static str) {
+    match why {
+        Refused::Ground => (
+            "The ground heaves but will not open, and a gate tears through beside you instead!",
+            "The ground heaves beside {who}, and a gate tears through!",
+        ),
+        Refused::InPit => (
+            "The floor here is the Pit's already: a gate tears open beside you instead!",
+            "The floor heaves beside {who}, and a gate tears open!",
+        ),
     }
 }
 
@@ -152,17 +169,26 @@ impl World {
         // Noise and zones go off on the level in play only (a creature's miscast elsewhere is
         // unheard and lays nothing).
         let in_play = me.level == self.state.current().id;
+        // A portal the level refuses is told as the gate it makes alone (`pit.rs`).
+        let refused = match entry.effect {
+            MishapEffect::Portal { .. } if in_play => self.pit_refused(here),
+            _ => None,
+        };
+        let (message, seen) = match refused {
+            Some(why) => pit_refused_words(why),
+            None => (entry.message.as_str(), entry.seen.as_str()),
+        };
         if caster == player {
-            self.say(entry.message.clone());
+            self.say(message.to_string());
         } else if self.perception.sees_actors_at(here) {
             // Upper case only where the name opens the line ("Sparks bite the kobold's …").
             let called = self.called(me);
-            let who = if entry.seen.starts_with("{who}") {
+            let who = if seen.starts_with("{who}") {
                 capitalized(&called)
             } else {
                 called
             };
-            self.say(entry.seen.replace("{who}", &who));
+            self.say(seen.replace("{who}", &who));
         }
         let alive = self.state.death.is_none();
         let content = self.content.clone();
@@ -220,7 +246,8 @@ impl World {
             MishapEffect::StatDamage { stat, points } => {
                 self.miscast_stat_damage(caster, stat, points);
             }
-            MishapEffect::Summon { creature } => self.miscast_summon(here, creature),
+            MishapEffect::Summon { creature } => self.miscast_summon(here, creature, None),
+            MishapEffect::Portal { gate } if in_play => self.open_pit(here, gate),
             MishapEffect::Harm { dice, damage } => {
                 let amount = dice.roll(&mut self.state.rng).max(1);
                 let kind = damage.or(cast.def.damage_type);
@@ -275,7 +302,9 @@ impl World {
                 let around = (here, i32::from(radius));
                 self.lay_zone_around((kind, caster), around, u64::from(turns), events);
             }
-            MishapEffect::Noise { .. } | MishapEffect::Zone { .. } => {}
+            MishapEffect::Noise { .. }
+            | MishapEffect::Zone { .. }
+            | MishapEffect::Portal { .. } => {}
         }
         if caster == player
             && alive
@@ -377,11 +406,14 @@ impl World {
         }
     }
 
-    /// A `creature` comes to the first free cell around `here`, of its own kind's faction.
-    fn miscast_summon(&mut self, here: Pos, creature: CreatureId) {
+    /// A `creature` comes to the first free cell around `here` but `besides`, of its own kind's
+    /// faction.
+    pub(super) fn miscast_summon(&mut self, here: Pos, creature: CreatureId, besides: Option<Pos>) {
         let level = self.state.current();
         let free = (Dir::ALL.iter().map(|&d| here.step(d))).find(|&p| {
-            level.is_walkable(&self.content, p) && self.state.actor_at(&level.id, p).is_none()
+            Some(p) != besides
+                && level.is_walkable(&self.content, p)
+                && self.state.actor_at(&level.id, p).is_none()
         });
         let Some(pos) = free else {
             return;

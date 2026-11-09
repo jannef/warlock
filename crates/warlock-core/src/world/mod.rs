@@ -218,6 +218,7 @@ mod outcome;
 mod pack;
 mod path;
 mod perceive;
+mod pit;
 mod potion;
 mod pray;
 mod quest;
@@ -342,6 +343,7 @@ pub use loot::Identified;
 pub use mirrors::Image;
 pub use miscast::{NEAR as MISCAST_NEAR, entry_for as miscast_entry};
 pub use orison::PrayerState;
+pub use pit::Pit;
 pub use quest::{QuestRecord, QuestView, Quests, Stage, asks as quest_asks, wants as quest_wants};
 use rest::Ended;
 pub use sanctuary::Hallow;
@@ -465,6 +467,9 @@ pub struct WorldState {
     /// The endless branches' floors made and depths reached (`world/endless.rs`).
     #[serde(default, skip_serializing_if = "endless::EndlessFloors::is_empty")]
     pub(crate) endless: endless::EndlessFloors,
+    /// The Pits' records by their integers (`world/pit.rs`; left out while there are none).
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+    pub(crate) pits: BTreeMap<u32, pit::Pit>,
     /// The parties encounters made, by their areas (`world/encounter.rs`).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub(crate) parties: Vec<encounter::Party>,
@@ -892,6 +897,8 @@ impl World {
                 ),
             };
         let campaign = def.campaign.clone().unwrap_or_default();
+        // A run that starts on a Pit's floor (a dev scenario) climbs out to its campaign's start.
+        let pit_from = pit::start_from(&content, &campaign, &def.start_level);
         let start = level_template(
             &content,
             (
@@ -899,7 +906,7 @@ impl World {
                 endless::floor_seed(&content, seed, &def.start_level, 0),
             ),
             &def.start_level,
-            (None, &Default::default()),
+            (pit_from.as_deref(), &Default::default()),
         )?;
         let player_pos = start
             .player_start
@@ -934,6 +941,7 @@ impl World {
             encounters: None,
             encounter: None,
             endless: Default::default(),
+            pits: BTreeMap::new(),
             parties: Vec::new(),
             wares: BTreeMap::new(),
             uniques_offered: BTreeSet::new(),
@@ -1001,6 +1009,9 @@ impl World {
         player.mana = player.max_mana(&content);
         crate::rot::made_at(&mut player.inventory, &content, def.start);
         state.actors.insert(ActorId(0), player);
+        if let (Some(from), Some((s, _))) = (pit_from, pit::pit_of(&content, &start.id)) {
+            state.pits.insert(s, pit::Pit::new(from));
+        }
         instantiate_level(&mut state, &content, &start);
         drop(start); // It may borrow `content`, which `assemble` takes.
         let help = crate::messages::key("help");
@@ -1353,6 +1364,7 @@ impl World {
         let spent = self.player_acts(action, &mut events);
         self.waiting = false;
         self.forget_floors(&events);
+        self.drop_orphan_pits(&events);
         // Taking off what raised them lowers the player's maximum hit points, mana, and pools.
         self.keep_hp_within_max(self.state.player);
         self.keep_mana_within_max(self.state.player);
@@ -1937,6 +1949,8 @@ mod overworld_tests;
 mod pack_tests;
 #[cfg(test)]
 mod parts_tests;
+#[cfg(test)]
+mod pit_tests;
 #[cfg(test)]
 mod potion_gamble_tests;
 #[cfg(test)]

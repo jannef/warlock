@@ -142,16 +142,27 @@ fn a_summon_comes_hostile() {
     for &id in &came {
         let it = &w.state.actors[&id];
         assert_eq!(w.content().creature(it.creature).id, "kobold");
-        assert!(it.ally.is_none() && it.summoner.is_none() && it.faction_override.is_none());
+        assert!(it.ally.is_none() && it.summoner.is_none());
+        // Berserk (#1311): hostile to the caster, to a kobold of its own kind, and to the other.
+        assert_eq!(
+            w.content()
+                .factions()
+                .def(it.faction_override.expect("a faction"))
+                .id,
+            "berserk"
+        );
         assert_eq!(w.stance(id, player), Stance::Hostile);
     }
+    assert_eq!(w.stance(came[0], came[1]), Stance::Hostile);
+    let kin = kobold(&mut w, 3, 50);
+    assert_eq!(w.stance(came[0], kin), Stance::Hostile);
     assert!(
         lines.contains(&"Two kobolds come to your call, but not to your side!".to_string()),
         "{lines:?}"
     );
     assert!(w.allies_of(player).is_empty());
 
-    // A backfired wolf is a wolf: of the wildlife, no ally of anyone's.
+    // A backfired wolf is no wildlife: berserk, hostile to the player (#1311), no ally of anyone's.
     let mut w = alone();
     let before: Vec<ActorId> = w.state.actors.keys().copied().collect();
     backfire(&mut w, "call_of_the_wild", "rebound");
@@ -160,7 +171,9 @@ fn a_summon_comes_hostile() {
     let wolf = &w.state.actors[&came[0]];
     assert_eq!(w.content().creature(wolf.creature).id, "wolf");
     assert!(wolf.ally.is_none());
-    assert!(w.allies_of(player).is_empty());
+    let wolf = wolf.id;
+    assert_eq!(w.stance(wolf, w.state.player), Stance::Hostile);
+    assert!(w.allies_of(w.state.player).is_empty());
 }
 
 #[test]

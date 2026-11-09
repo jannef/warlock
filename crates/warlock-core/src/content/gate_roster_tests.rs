@@ -1,8 +1,9 @@
 //! The gates (#1295, docs/dev/creatures/gates.md; design `docs/design/miscasts-review.md` §6.2):
-//! nine rooted, `loosed` summoners with no attack and no mana, met only through a miscast, each
-//! opened by the one miscast row of its id.
+//! nine rooted summoners of the `gates` faction (#1316) with no attack and no mana, letting
+//! their fiends through `loosed`, met only through a miscast, each opened by the one miscast row
+//! of its id.
 
-use super::{Content, MishapEffect};
+use super::{Content, FactionId, MishapEffect, PLAYER_FACTION, Stance};
 
 /// The gates by id with the fiends each lets through, as the design's table has them.
 const GATES: &[(&str, &[&str])] = &[
@@ -44,9 +45,11 @@ const GATES: &[(&str, &[&str])] = &[
 ];
 
 #[test]
-fn every_gate_is_a_rooted_loosed_summoner_of_its_fiends_at_no_cost() {
+fn every_gate_is_a_rooted_summoner_of_loosed_fiends_at_no_cost() {
     let content = Content::builtin().expect("content");
     let loosed = content.factions().id("loosed").expect("the loosed");
+    let gates = content.factions().id("gates").expect("the gates");
+    assert!(content.factions().def(gates).friendly_to_all);
     let tagged: Vec<_> = content.tagged("gate").collect();
     assert_eq!(tagged.len(), GATES.len(), "the nine gates carry the tag");
     for &(id, pool) in GATES {
@@ -54,7 +57,7 @@ fn every_gate_is_a_rooted_loosed_summoner_of_its_fiends_at_no_cost() {
         assert!(tagged.contains(&c), "{id}: tagged `gate`");
         let def = content.creature(c);
         assert!(def.rooted, "{id}: rooted");
-        assert_eq!(def.faction, Some(loosed), "{id}: loosed");
+        assert_eq!(def.faction, Some(gates), "{id}: of the gates");
         assert!(
             def.attack.is_none() && def.more_attacks.is_empty(),
             "{id}: no attack"
@@ -62,6 +65,11 @@ fn every_gate_is_a_rooted_loosed_summoner_of_its_fiends_at_no_cost() {
         assert!(!def.stray && !def.unique && !def.corpse, "{id}");
         let summon = def.summon.as_ref().expect("a summoning");
         assert_eq!(summon.mana, 0, "{id}: it costs nothing");
+        assert_eq!(
+            summon.faction,
+            Some(loosed),
+            "{id}: lets them through loosed"
+        );
         let named: Vec<_> = pool
             .iter()
             .map(|p| content.creature_id(p).expect(p))
@@ -94,5 +102,23 @@ fn each_gate_is_opened_by_its_one_unprotected_miscast_row() {
         assert_eq!(rows.len(), 1, "{id}: one row opens it");
         assert_eq!(rows[0].id, id, "{id}: the row of its id");
         assert!(rows[0].from >= safe_below, "{id}: above the protected half");
+    }
+}
+
+#[test]
+fn the_gates_are_at_peace_with_every_faction_but_the_players() {
+    let content = Content::builtin().expect("content");
+    let factions = content.factions();
+    let gates = factions.id("gates").expect("the gates");
+    let player = factions.id(PLAYER_FACTION).expect("the player's");
+    for (i, def) in factions.defs().iter().enumerate() {
+        let other = FactionId(i as u16);
+        let want = if other == player {
+            Stance::Hostile
+        } else {
+            Stance::Neutral
+        };
+        assert_eq!(factions.stance(gates, other), want, "{}", def.id);
+        assert_eq!(factions.stance(other, gates), want, "{}", def.id);
     }
 }

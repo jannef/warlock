@@ -1,7 +1,7 @@
 # The gates (#1295, docs/design/miscasts-review.md §6; docs/dev/creatures/gates.md). A gate opened
 # for the lords of the hells: a balor or a pit fiend comes through it. Made only by a miscast
 # (miscasts/lords_gate.toml): rooted, with no attack of its own, it lets fiends through on its
-# cooldown at no cost, as `loosed` as it is. Killing it is the fix: what came through stays, but no
+# cooldown at no cost, `loosed`, at peace with them. Killing it is the fix: what came through stays, but no
 # more come.
 [[creature]]
 id = "lords_gate"
@@ -14,7 +14,7 @@ name = "lords' gate"
 plural = "lords' gates"
 glyph = "0"
 fg = "#ff5028"
-faction = "loosed"
+faction = "gates"
 tags = ["summoner", "fiend", "gate"]
 alignment = "evil"
 rooted = true
@@ -32,6 +32,7 @@ corpse = false
 blood = "none"
 dies = "shudders and closes"
 [creature.summon]
+faction = "loosed"
 creatures = ["balor", "pit_fiend"]
 count = "1"
 cooldown = 300
