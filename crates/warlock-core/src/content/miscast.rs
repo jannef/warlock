@@ -32,9 +32,10 @@
 //! **Protected entries** (the miscasts design §4): an entry whose `to` is below `safe_below` can
 //! never kill its caster nor cost them anything they cannot get back. Its harm is capped at the
 //! caster's hit points less one (`world/miscast.rs`), and the loader refuses one whose effect is
-//! a `backfire`, a `drain`, a `summon`, a fire `zone`, or a status that ticks harm or mana
-//! (`check_protected`), so a campaign's table cannot break the promise either. A stat loss there
-//! is `stat_damage`, which mends.
+//! a `backfire`, a `drain`, a `forget`, a `summon`, a fire `zone`, or a status that ticks harm
+//! or mana (`check_protected`), so a campaign's table cannot break the promise either; a
+//! `rank_loss` is allowed, as it never takes a spell below rank 1. A stat loss there is
+//! `stat_damage`, which mends.
 
 use super::learning::{EffectSpec, resolve_effect};
 use super::{Content, ContentError, MishapEffect, ZoneKind, duplicate_id};
@@ -180,12 +181,13 @@ pub(super) fn parse<'a>(
     Ok(all)
 }
 
-/// Whether a protected entry may do `effect` (module docs): never a backfire, a drain, a summon,
-/// a fire zone, or a status that ticks harm or mana.
+/// Whether a protected entry may do `effect` (module docs): never a backfire, a drain, a
+/// forgetting, a summon, a fire zone, or a status that ticks harm or mana.
 fn check_protected(content: &Content, effect: MishapEffect) -> Result<(), String> {
     match effect {
         MishapEffect::Backfire { .. }
         | MishapEffect::Drain { .. }
+        | MishapEffect::Forget { .. }
         | MishapEffect::Summon { .. } => Err(format!("it does `{}`", effect.kind())),
         MishapEffect::Zone {
             kind: ZoneKind::Fire,

@@ -21,8 +21,8 @@
 //!   caster, harm through [`World::resisted`] and [`World::hurt`], the mana refunded, the spell
 //!   again ([`Cast::by_creature`]: already paid), a swap of places (a creature's never with the
 //!   player), a boon on someone near, a thunderclap's sound of the entry's loudness on the
-//!   caster's cell ([`World::sound_at`]), and a zone around the caster (`zone.rs`; none on the
-//!   overworld). "Near" is within [`NEAR`] cells in a clear line ([`World::clear_shot`]), in
+//!   caster's cell ([`World::sound_at`]), a zone around the caster (`zone.rs`; none on the
+//!   overworld), and the spell's rank lost or the spell forgotten (`forget.rs`). "Near" is within [`NEAR`] cells in a clear line ([`World::clear_shot`]), in
 //!   actor-id order. A death of the player by their own miscast is [`Cause::Miscast`].
 //! - **Protected entries** ([`crate::content::MiscastRules::protects`], those ending below
 //!   `safe_below`): their harm takes the caster to 1 hit point at the least, nothing at 1; the
@@ -193,6 +193,8 @@ impl World {
                     me.stat_marks[stat] = me.stat_marks[stat].saturating_add(1);
                 }
             }
+            MishapEffect::RankLoss { ranks } => self.miscast_rank_loss(caster, cast.spell, ranks),
+            MishapEffect::Forget { spells } => self.miscast_forget(caster, cast.spell, spells),
             MishapEffect::Drain {
                 stat,
                 points,

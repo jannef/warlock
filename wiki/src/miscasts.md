@@ -57,6 +57,20 @@ A [Defensive stance](stances.md#stances) takes 5 off every total, even when you 
 
 A miscast that kills you is put down to your own miscast spell.
 
+## Forgotten spells
+
+Some miscasts make you forget spells: the spell you cast, sometimes another, and at worst every
+spell you know. A spell your [class](magic.md#what-your-class-gives) gave you is forgotten just
+the same. A forgotten spell is gone from the [Magic page](schools.md#the-magic-page) and the
+[abilities menu](abilities.md#the-abilities-menu), and you cannot cast it.
+
+The only way back is its [grimoire](magic.md#learning-spells-from-grimoires), exactly as you
+learned it the first time: the same reading, the same check, and the same experience. It comes
+back at rank 1, whatever rank you had.
+
+A miscast that costs you ranks never takes a spell below rank 1, and it can happen in the
+protected rows. Read the grimoire again to [win the ranks back](magic.md#spell-ranks).
+
 Every cast trains Spellcraft the same whether it miscasts or not.
 
 ## Gates

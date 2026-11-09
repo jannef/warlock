@@ -212,6 +212,8 @@ fn effect_text(content: &Content, effect: MishapEffect) -> String {
         // The miscast table's only (`miscast.rs` says them).
         MishapEffect::Harm { .. }
         | MishapEffect::StatDamage { .. }
+        | MishapEffect::RankLoss { .. }
+        | MishapEffect::Forget { .. }
         | MishapEffect::Refund
         | MishapEffect::Twice
         | MishapEffect::Swap

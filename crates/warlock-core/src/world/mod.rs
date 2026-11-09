@@ -162,6 +162,7 @@ mod fletch;
 mod focus;
 mod footing;
 mod forage;
+mod forget;
 mod free_blow;
 mod frenzy;
 pub(crate) mod freshness;
@@ -1808,6 +1809,8 @@ mod focus_tests;
 mod footing_tests;
 #[cfg(test)]
 mod forage_tests;
+#[cfg(test)]
+mod forget_tests;
 #[cfg(test)]
 mod free_blow_tests;
 #[cfg(test)]

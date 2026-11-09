@@ -155,6 +155,21 @@ fn effect_text(content: &Content, effect: MishapEffect, protected: bool) -> Stri
             )
         }
         MishapEffect::Mark { stat } => format!("a training mark of {}", stat.name()),
+        MishapEffect::RankLoss { ranks } => format!(
+            "you know the spell {ranks} [rank{}](magic.md#spell-ranks) lower, never below rank 1",
+            if ranks == 1 { "" } else { "s" }
+        ),
+        MishapEffect::Forget { spells: Some(1) } => {
+            "you [forget](#forgotten-spells) the spell".into()
+        }
+        MishapEffect::Forget { spells: Some(n) } => format!(
+            "you [forget](#forgotten-spells) the spell and {} more of the spells you know, \
+             drawn at random",
+            n - 1
+        ),
+        MishapEffect::Forget { spells: None } => {
+            "you [forget](#forgotten-spells) every spell you know".into()
+        }
         MishapEffect::Harm { dice, damage } => match damage {
             Some(d) => format!(
                 "{dice} {} damage to you; {kills}",

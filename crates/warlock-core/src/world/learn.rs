@@ -96,9 +96,13 @@ impl Odds {
 }
 
 impl Actor {
-    /// Whether it knows `spell` (spec §8 "Spells"): learned, or its class abilities give it.
+    /// Whether it knows `spell` (spec §8 "Spells"): learned, or its class abilities give it,
+    /// and not forgotten (rank 0 in [`Actor::spells`], `spell_rank.rs`).
     pub fn knows_spell(&self, content: &Content, spell: SpellId) -> bool {
-        self.spells.contains_key(&spell) || self.talent_mods(content).has_spell(spell)
+        match self.spells.get(&spell) {
+            Some(&rank) => rank > 0,
+            None => self.talent_mods(content).has_spell(spell),
+        }
     }
 
     /// The rank a reading of `spell`'s grimoire would bring it to: the next, for a spell known
@@ -325,16 +329,19 @@ impl World {
     }
 
     /// The player learns `spell` for good, at rank 1 (a spell known already keeps its rank).
+    /// A forgotten spell (`spell_rank.rs`) is learned again as if for the first time, its
+    /// experience paid again: there is no guard against it (the owner, #1289).
     pub(super) fn learn_spell(&mut self, spell: SpellId) {
         let name = (self.content.spell_of(spell)).map_or_else(String::new, |d| d.name.clone());
-        let new = !self.state.player().spells.contains_key(&spell);
+        let new = !self.state.player().knows_spell(&self.content, spell);
         if new {
             self.player_mut().set_spell_rank(spell, 1);
         }
         self.say(format!(
             "The words settle in your mind: you have learned {name}."
         ));
-        // A spell learned by one's own effort pays once (a known spell is never read again).
+        // A spell learned by one's own effort pays each time it is learned: once, unless a
+        // miscast made the caster forget it.
         let level = self.content.spell_of(spell).map_or(0, |d| d.level);
         let xp = self.content.experience().spell_xp(level);
         if new && xp > 0 {
@@ -415,6 +422,8 @@ impl World {
             // The miscast's only (`world/miscast.rs`): the loader keeps them off the study's table.
             MishapEffect::Harm { .. }
             | MishapEffect::StatDamage { .. }
+            | MishapEffect::RankLoss { .. }
+            | MishapEffect::Forget { .. }
             | MishapEffect::Refund
             | MishapEffect::Twice
             | MishapEffect::Swap
