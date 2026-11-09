@@ -4,7 +4,7 @@
 # their magic is the item's.
 #
 # The check rolls 2d12 + the modifier of `stat` + Spellcraft's `cast` points (skills.toml: +2 at
-# 20, +14 at 100, +34 at 200; magic items and talents that raise Spellcraft count) against:
+# 20, +14 at 100, +22 at 200, +40 at 999; magic items and talents that raise Spellcraft count) against:
 #
 #   difficulty = base + per_level × the spell's level
 #                + 1 for each `armour_percent` percent the armour worn adds to a spell's cost

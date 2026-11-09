@@ -70,8 +70,10 @@
 //!   the trained players of its level.
 //!
 //! - **Miscasts** (#1271, `miscasts.rs`): the casting classes' Spellcraft check on a cast (bonus
-//!   and ward) and the chance of a miscast by spell level, for the highest spell they know, at rank
-//!   1. The wizard spends every level's skill rolls on Spellcraft (`SPELLCRAFT_ROLLS`, #1288).
+//!   and ward) and the chance of a miscast by spell level, for the highest spell they know, at
+//!   rank 1. The wizard spends every level's skill rolls on Spellcraft (`SPELLCRAFT_ROLLS`,
+//!   #1288), and is measured again as if they had gone on Concentration (its Spellcraft held at
+//!   its level-1 value, #1299), with where its miscasts land on the table, band by band.
 //!
 //! Not modelled: triggered and active weapon abilities, stances (but the rage table's), talents chosen for a build
 //! (`levelup:auto` takes the first it may), the initiative check's Surprised after the first
