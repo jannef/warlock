@@ -717,7 +717,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
       now as existing kinds under their final ids. The nine gate rows (#1295) `summon` a gate
       beside the caster: a rooted creature of the `loosed` faction, with no attack, that lets
       fiends through on its cooldown at no cost, `loosed` as it is, until it is killed
-      (`assets/data/creatures/`, tag `gate`). The player is told in words ("Sparks leap from your fingers and bite."); a
+      (`assets/data/creatures/`, tag `gate`). The player is told in words ("Sparks leap from your fingers and bite."), each
+      entry its own line (the words vary, never a number), then what was lost where the
+      effect knows it: a stat in words, the spell whose rank fell or the spells forgotten by
+      name (#1292); a
       creature's miscast is told by its entry's `seen` line when the player sees it. A death of the player by their own miscast
       is `Cause::Miscast` ("Killed by their own miscast fireball"). Determinism: the check's two
       draws, the die's, then the effect's own, all on the gameplay stream; none without

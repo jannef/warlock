@@ -2,6 +2,6 @@
 id = "scorch"
 from = 41
 to = 42
-message = "The weave snaps back and scores you."
-seen = "{who}'s own spell scores it."
+message = "The spell kicks like a mule and scores you."
+seen = "{who}'s spell kicks back and scores it."
 effect = { kind = "harm", dice = "2d4" }

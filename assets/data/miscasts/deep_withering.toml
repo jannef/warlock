@@ -2,6 +2,6 @@
 id = "deep_withering"
 from = 97
 to = 98
-message = "The spell feeds deep, and takes what will not come back."
-seen = "{who} withers horribly."
+message = "The spell bites deep, reaching for what does not grow back."
+seen = "{who} shudders to the bone."
 effect = { kind = "drain", stat = "random", points = 2, difficulty = 18 }

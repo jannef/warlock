@@ -2,6 +2,6 @@
 id = "drowse"
 from = 37
 to = 38
-message = "A great weariness settles over you."
+message = "The spell drags at you as it goes."
 seen = "{who}'s eyes droop."
 effect = { kind = "status", status = "drowsy", severity = 1 }

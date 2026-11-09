@@ -10,11 +10,14 @@
 //!   A forgotten spell is learned again only from its grimoire, as the first time, experience
 //!   and all (no guard: the owner).
 //! - **A creature's** do nothing: its spells are its type's list, never in [`Actor::spells`].
+//! - **The words**: the entry's own line says how it felt; the player is then told what was
+//!   lost by name ("You know Fireball less well than you did.", "You have forgotten Fireball and
+//!   Haste."), nothing more when nothing was.
 //!
 //! Determinism: one gameplay draw for each further spell forgotten, none otherwise.
 
 use super::{ActorId, World};
-use crate::content::SpellId;
+use crate::content::{SpellId, and_list};
 
 impl World {
     /// `caster` knows `spell` `ranks` ranks lower, never below 1 (module docs).
@@ -23,8 +26,15 @@ impl World {
         let Some(me) = self.state.actors.get_mut(&caster) else {
             return;
         };
-        if let Some(rank) = me.spell_rank(&content, spell).filter(|&r| r > 1) {
-            me.set_spell_rank(spell, rank.saturating_sub(ranks).max(1));
+        let Some(rank) = me.spell_rank(&content, spell).filter(|&r| r > 1) else {
+            return;
+        };
+        me.set_spell_rank(spell, rank.saturating_sub(ranks).max(1));
+        if caster == self.state.player {
+            let name = content
+                .spell_of(spell)
+                .map_or("the spell", |d| d.name.as_str());
+            self.say(format!("You know {name} less well than you did."));
         }
     }
 
@@ -55,9 +65,15 @@ impl World {
             }
         }
         if let Some(me) = self.state.actors.get_mut(&caster) {
-            for s in gone {
+            for &s in &gone {
                 me.forget_spell(&content, s);
             }
+        }
+        if caster == self.state.player {
+            let names: Vec<&str> = (gone.iter())
+                .filter_map(|&s| content.spell_of(s).map(|d| d.name.as_str()))
+                .collect();
+            self.say(format!("You have forgotten {}.", and_list(&names)));
         }
     }
 }

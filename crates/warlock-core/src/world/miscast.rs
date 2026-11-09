@@ -155,7 +155,13 @@ impl World {
         if caster == player {
             self.say(entry.message.clone());
         } else if self.perception.sees_actors_at(here) {
-            let who = capitalized(&self.called(me));
+            // Upper case only where the name opens the line ("Sparks bite the kobold's …").
+            let called = self.called(me);
+            let who = if entry.seen.starts_with("{who}") {
+                capitalized(&called)
+            } else {
+                called
+            };
             self.say(entry.seen.replace("{who}", &who));
         }
         let alive = self.state.death.is_none();

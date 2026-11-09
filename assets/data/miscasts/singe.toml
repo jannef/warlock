@@ -2,6 +2,6 @@
 id = "singe"
 from = 19
 to = 20
-message = "The weave snaps back and singes you."
-seen = "{who}'s own spell singes it."
+message = "The spell snaps back and stings you."
+seen = "{who}'s spell snaps back and stings it."
 effect = { kind = "harm", dice = "1d3" }

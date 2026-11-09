@@ -2,6 +2,6 @@
 id = "rebound"
 from = 89
 to = 90
-message = "The spell rebounds, and its full force falls on you!"
-seen = "{who}'s spell falls on it with its full force!"
+message = "The spell rebounds on you with all its force!"
+seen = "{who}'s spell rebounds on it with all its force!"
 effect = { kind = "backfire", full = true }

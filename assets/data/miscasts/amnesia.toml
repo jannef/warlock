@@ -2,6 +2,6 @@
 id = "amnesia"
 from = 99
 to = 100
-message = "The spell tears loose from your mind and takes another with it."
+message = "The spell rips through your memory, and what it tears loose is gone."
 seen = "{who} clutches its head."
 effect = { kind = "forget", spells = 2 }

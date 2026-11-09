@@ -2,6 +2,6 @@
 id = "unravelling"
 from = 95
 to = 96
-message = "The weave unravels through you, and the raw power burns you from within!"
-seen = "{who} burns from within!"
+message = "The weave unravels through you, and raw power tears you from within!"
+seen = "Raw power tears through {who}!"
 effect = { kind = "harm", dice = "6d10", damage = "force" }

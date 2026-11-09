@@ -2,6 +2,6 @@
 id = "blessing"
 from = 13
 to = 14
-message = "Stray power settles on someone as a blessing."
-seen = "A stray blessing settles near {who}."
+message = "Stray power drifts loose and settles as a blessing."
+seen = "Stray power drifts loose about {who}."
 effect = { kind = "boon", status = "blessed", severity = 1 }
