@@ -571,3 +571,14 @@ berserk's list makes no one a fighter (`disturbs_rest`, hearing, `stride.rs`, th
 the fixtures that write their own `data/factions.toml` have no such faction, which is why the
 spell's `berserk_faction` is read at the cast (none: it rises serving) and checked on the shipped
 data by a test rather than at load.
+
+**`hostile_to_others`** (`content/faction.rs`, beside `hostile_to_all`): a faction with it
+(`loosed`, what a miscast lets through: the gates and the fiends they call, #1293,
+`docs/design/miscasts-review.md` §6.1) fills its row and column of the hostility matrix **but not
+its own diagonal**: the loosed are neutral to each other and hostile to every other faction, the
+player's, the demons', and the berserk included. `FactionDef::hates_everyone` is either flag:
+`has_enemies` and the wiki's table treat the two alike (being on the loosed's list is no quarrel
+of one's own), and the wiki's row says "everyone but its own". `fixture_factions.rs` strips the
+line as it strips the berserk's (every `hostile…` line), so a fixture's loosed are at peace. No
+creature type names the faction yet (the gates and their summons come with #1295); a test checks
+the shipped matrix (`faction.rs`, `the_shipped_loosed_are_hostile_to_every_other_faction`).
