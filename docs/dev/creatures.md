@@ -195,6 +195,15 @@ rooted ally stays behind). **Dump**: the dev `actors` layer adds `; rooted`. **T
 rooted gate that summons to its cap, a rooted shrub that never gives way, never driven or
 teleported, never a stair follower beside a wolf that is).
 
+Left alone (#1312: a miscast's gates). **Data**: `left_alone = true` (`CreatureDef::left_alone`,
+default false). **Rules**: `ai.rs::left_alone`, read wherever a creature or an ally picks a
+target: `World::nearest_in_sight` (every creature's look, and through it the ally arm and a
+familiar's quarry), `companion.rs::smelled` (an ally's nose), and `stride.rs::idle` (the far
+look of a coarse turn). Such a one may be hostile to them and they to it; they never go for it,
+and fight what stands around it. The player may still attack it. **Tests**:
+`world/gate_tests.rs` (a kobold hostile to a rift, beside it, never picks it, and the player's
+blows land on it).
+
 Gazes and averted eyes (spec §8 "Creature behavior": "Gazes", #1125, design
 `docs/design/monster-dread.md` §5.1). **Data**: `[creature.gaze]` (`content/gaze.rs`:
 `GazeSpec` resolved in the creature loop into `CreatureDef::gaze: Option<Gaze>`; `range` 1 to 8,

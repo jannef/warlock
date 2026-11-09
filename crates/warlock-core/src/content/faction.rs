@@ -4,7 +4,8 @@
 //! Relations are pairwise and symmetric: if faction A lists B as `hostile`, A and B are hostile
 //! to each other. Every pair that is not listed (a faction and itself included) is neutral. A
 //! faction with `hostile_to_all` is hostile to every faction and to itself: friendly to nothing
-//! (the berserk risen, `world/corpse_spell.rs`). A faction with `hostile_to_others` is hostile to
+//! (the berserk risen, `world/corpse_spell.rs`, and a backfired summon's creatures,
+//! `world/backfire.rs`). A faction with `hostile_to_others` is hostile to
 //! every other faction but neutral to itself: loyal to its own and to nothing else (the loosed,
 //! what a miscast lets through; spec §8 "Spells").
 //!

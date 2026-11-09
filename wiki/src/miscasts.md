@@ -55,6 +55,10 @@ A [Defensive stance](stances.md#stances) takes 5 off every total, even when you 
 
 {{#include generated/miscast-table.md}}
 
+A summoning that backfires brings its creatures [berserk](creatures.md#factions): they attack you,
+your foes, and one another alike, whatever their kind. A wolf called this way is no longer a
+harmless beast of the wild.
+
 A miscast that kills you is put down to your own miscast spell.
 
 ## Forgotten spells
@@ -81,7 +85,8 @@ abyssal, iron, black, or dire gate, an arch-gate, or the lords' gate. A gate is 
 through](creature-powers.md#summoning), one or two at a time, every minute or more, as long as it
 sees anyone, since everyone is its enemy. The fiends it lets through belong to the gate's own
 [faction](creatures.md#factions), the loosed: they attack you, your enemies, and every other fiend
-alike, but never each other or the gate. The deeper the result, the stronger the fiends: a rift lets
+alike, but never each other or the gate. No other creature attacks a gate itself, though they
+fight the fiends it lets through: only you can close it. The deeper the result, the stronger the fiends: a rift lets
 dretches and quasits through, the lords' gate a balor or a pit fiend.
 
 A gate never closes on its own. Kill it and no more come, but the fiends already through stay. The

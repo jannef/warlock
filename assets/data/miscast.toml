@@ -32,3 +32,7 @@ rank_ease = 1
 die = "2d12"
 per_margin = 5
 safe_below = 71
+# A backfired summon (`backfire` on a call; `world/backfire.rs`) brings its creatures in this
+# faction, not their own kind's: the berserk, hostile to everyone, the caster, the caster's foes,
+# and one another alike (#1311). Left out: their type's own faction.
+backfire_faction = "berserk"

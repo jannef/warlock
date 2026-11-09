@@ -12,8 +12,10 @@
 //! - **summon** (a call, not a rise): the call's count (its base, or the cast's roll when `full`;
 //!   at least 1, at most the call's `most` and the free cells of its `spread`) of creatures
 //!   drawn from its pool as the call draws them (`summon.rs::summon_draw`, the caster's bias),
-//!   made beside the caster **hostile**: of their type's own faction, no ally, no summoner, no
-//!   gear. Only on the level in play, never on the overworld.
+//!   made beside the caster **hostile to everyone**: of `data/miscast.toml`'s `backfire_faction`
+//!   (the berserk, `hostile_to_all`: the caster, the caster's foes, and one another alike; #1311;
+//!   their type's own faction where it names none), no ally, no summoner, no gear. Only on the
+//!   level in play, never on the overworld.
 //! - Anything else (a cleanse, a utility, a rise, a heal or buff with no hostile in sight, a
 //!   summon with no room, a damage spell or hex with nothing to roll or lay): the **fallback
 //!   harm**, `(level ÷ 3 + 1)d6` force at base, `(level ÷ 2 + 1)d6` when `full`, through
@@ -157,6 +159,7 @@ impl World {
         }
         let level = level.id.clone();
         let bias = me.talent_mods(&content).summon_bias.clone();
+        let faction = content.miscast_rules().and_then(|r| r.backfire_faction);
         let cells = self.summon_cells(caster, call.spread);
         let rolled = if full {
             (cast.roll).map_or(1, |r| r.roll(&mut self.state.rng, cast.reroll))
@@ -175,7 +178,7 @@ impl World {
             let creature = self.summon_draw(&call.pool, &bias);
             let spawn = CreatureSpawn {
                 creature,
-                faction: None,
+                faction,
                 alignment: None,
                 npc: None,
                 pos,

@@ -126,3 +126,57 @@ fn a_gate_lets_its_fiends_through_loosed_to_its_most_and_never_moves() {
         }
     }
 }
+
+#[test]
+fn other_creatures_leave_a_gate_alone_and_the_player_may_strike_it() {
+    let (mut w, k, g) = opened("rift");
+    let content = w.content().clone();
+    assert!(content.creature(w.state.actors[&g].creature).left_alone);
+    // The kobold, made peaceful to the player but hostile to the gate, stands beside it.
+    let peaceful = content.factions().id("peaceful").expect("peaceful folk");
+    let gate_at = w.state.actors[&g].pos;
+    let free = (Dir::ALL.iter())
+        .map(|&d| gate_at.step(d))
+        .find(|&p| {
+            w.state.current().is_walkable(&content, p)
+                && w.state.actor_at(&w.state.current_level, p).is_none()
+        })
+        .expect("a free cell beside the gate");
+    // Everyone else (a fiend already through, the showcase's folk) sent far off.
+    let player = w.state.player;
+    for a in w.state.actors.values_mut() {
+        if ![player, k, g].contains(&a.id) {
+            a.pos = Pos::new(-100, -100);
+        }
+    }
+    let kobold = w.state.actors.get_mut(&k).expect("the kobold");
+    kobold.faction_override = Some(peaceful);
+    kobold.pos = free;
+    let (kobold, gate) = (&w.state.actors[&k], &w.state.actors[&g]);
+    assert_eq!(
+        stance_between(&w.state, &content, kobold, gate),
+        Stance::Hostile
+    );
+    assert_eq!(
+        w.nearest_hostile_in_sight(k),
+        None,
+        "it never picks the gate"
+    );
+    let hp = w.state.actors[&g].hp;
+    for _ in 0..20 {
+        w.apply(&Action::Wait);
+    }
+    assert_eq!(w.state.actors[&g].hp, hp, "no creature struck the gate");
+    // The player still may: their blows land on it.
+    let to = Dir::ALL
+        .into_iter()
+        .find(|&d| w.player_pos().step(d) == w.state.actors[&g].pos)
+        .expect("the gate beside the player");
+    for _ in 0..40 {
+        w.apply(&Action::Move(to));
+        if w.state.actors.get(&g).is_none_or(|a| a.hp < hp) {
+            return;
+        }
+    }
+    panic!("the player never struck the gate");
+}

@@ -54,6 +54,7 @@ fn every_gate_is_a_rooted_loosed_summoner_of_its_fiends_at_no_cost() {
         assert!(tagged.contains(&c), "{id}: tagged `gate`");
         let def = content.creature(c);
         assert!(def.rooted, "{id}: rooted");
+        assert!(def.left_alone, "{id}: left alone by other creatures");
         assert_eq!(def.faction, Some(loosed), "{id}: loosed");
         assert!(
             def.attack.is_none() && def.more_attacks.is_empty(),
