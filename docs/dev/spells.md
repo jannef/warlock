@@ -253,10 +253,12 @@ cast path shares.
     mishaps' (`MishapEffect`, `content/learning.rs::resolve_effect` shared, with `miscast`
     true): the miscast's own kinds `harm` (`dice`, `damage`), `refund`, `twice`, `swap`, `boon`
     (`status`, `severity`), `noise` (`loudness`, 1 to `noise::MAX_LOUDNESS`), `zone` (`zone`, a
-    `ZoneKind` id, `radius` 0 to 20, `turns` at least 1), and `backfire`'s `full`, which the
+    `ZoneKind` id, `radius` 0 to 20, `turns` at least 1), `rank_loss` (`ranks`, at least 1),
+    `forget` (`spells`, at least 1, or `all = true`), and `backfire`'s `full`, which the
     study's table refuses; `learn`, which the miscast's refuses. **The whitelist**
     (`content/miscast.rs::check_protected`): an entry `MiscastRules::protects` (its `to` below
-    `safe_below`) is refused with `backfire`, `drain`, `summon`, a `fire` zone, or a `status` or
+    `safe_below`) is refused with `backfire`, `drain`, `forget`, `summon`, a `fire` zone (a
+    `rank_loss` is allowed: it never forgets), or a `status` or
     `boon` whose `StatusDef` has `damage` or `mana_damage`. Spellcraft's `cast` and `ward` benefits
     (`skills::Effect::{Cast, Ward}`, `data/skills.toml`) and `StanceDef::miscast`
     (`data/stances.toml`).
@@ -285,19 +287,31 @@ cast path shares.
     (the caster or someone near), `noise` (`World::sound_at` of a `SoundKind::Thunder` at the
     loudness, on the caster's cell), `zone` (`World::lay_zone_around`, `zone.rs`: the dev
     zone's cells, `burst` in line of sight, by the caster, no harm, none on the overworld),
-    and
+    `rank_loss` and `forget` (`world/forget.rs`, below), and
     `backfire` (a damage spell as a burst around the caster at its base roll, or with `full`
     the cast's own roll; a hex on the caster at the cast's degrees; others nothing). "Near"
     (`near_caster`): actors on the caster's level within `world::MISCAST_NEAR` (6) cells with a
     `clear_shot`, in actor-id order. `noise` and `zone` act only when the caster stands on the
     current level. A player who dies of it: `Cause::Miscast(spell)`.
+  - **Rank loss and forgetting** (#1289; `world/forget.rs`, tests `world/forget_tests.rs`; the
+    design §5.1): `World::miscast_rank_loss` sets the spell cast `ranks` lower, never below 1
+    (`set_spell_rank`; a spell at 1 is untouched). `World::miscast_forget` forgets the spell cast
+    (`Actor::forget_spell`, the second writer of `Actor::spells`: a learned spell's entry
+    removed, a class's spell (`TalentMods::has_spell`) written at **rank 0**, which
+    `knows_spell` and `spell_rank` read as not known, so it leaves `known_spells`, the Magic
+    page, the abilities menu, and casting); `spells = N` forgets `N − 1` more, each one
+    `rng.below` over the rest of `known_spells` (menu order); `all` every spell known. A
+    forgotten spell is learned again only from its grimoire (`learn_spell`, whose `new` is
+    `!knows_spell`: rank 1 and the spell's experience again; no guard against it, the owner).
+    A creature's caster holds nothing in `Actor::spells`, so both do nothing to it (no draw).
+    Rows: `stumble` (1 rank), `falter` (2), `forgetting` (1 spell), `amnesia` (2), `blank`
+    (all).
   - **The table** (#1288): 65 rows of two totals; the 35 below 71 protected. The rows the
-    design's later PRs fill stand in with existing kinds under their final ids: `stumble`
-    (`lose_mark`), `falter` (`mana` 75 %), `ache` and `racked` (Weakened 2 and 3) until rank
-    loss and stat damage (#1289, #1290); `twofold_`, `threefold_`, `ruinous_withering` as one
-    `drain` each until `times` (#1290); `forgetting`, `amnesia`, `blank`, and the gate and pit
-    rows (`rift` … `pit_and_lords`) as `harm` of their neighbours' dice until forgetting
-    (#1289), the gates, and the Pits. Their words are working lines until #1292.
+    design's later PRs fill stand in with existing kinds under their final ids: `ache` and
+    `racked` (Weakened 2 and 3) until stat damage (#1290); `twofold_`, `threefold_`,
+    `ruinous_withering` as one `drain` each until `times` (#1290); the gate and pit rows
+    (`rift` … `pit_and_lords`) as `harm` of their neighbours' dice until the gates and the
+    Pits. Their words are working lines until #1292.
   - **Determinism**: two draws for the check, one a face of the die, then the effect's own
     (dice, a pick among those near). Nothing new is saved.
   - **Choices** (the issue's open points): creatures check too, with their own Spellcraft
@@ -495,8 +509,9 @@ cast path shares.
   `MAX_SPELL_RANK` (10), kept in `Actor::spells: BTreeMap<SpellId, u8>` beside the spell and
   saved (JSON `"spells":{"12":3}`, by index; a spell a class grants is not there until a
   reading deepens it: `Actor::spell_rank` reads 1 for any known spell not in the map, `None`
-  for one not known). `Actor::set_spell_rank` is the one writer (`learn_spell` at 1,
-  `deepen_spell` above). Casting trains no rank (#1270's Spellcraft `cast` mark is not a
+  for one not known). `Actor::set_spell_rank` is the writer (`learn_spell` at 1,
+  `deepen_spell` above, a miscast's `rank_loss` below), beside `Actor::forget_spell` (rank 0:
+  a class's spell forgotten, "Miscasts"). Casting trains no rank (#1270's Spellcraft `cast` mark is not a
   rank's); only the grimoire raises it ("Learning": "Deepening").
   - **The data**: `[spell.ranks]` (`SpellSpec::ranks`, a `BTreeMap<String, RankSpec>`, keys
     `"2"` to `"10"`), resolved into `SpellData::ranks: Ranks` (`Vec<(u8, SpellMods)>` in rank

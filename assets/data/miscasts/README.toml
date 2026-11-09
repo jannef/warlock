@@ -3,8 +3,8 @@
 # per file; a campaign's data/miscasts/ may add more. The total rolled (miscast.toml) picks the
 # one entry whose range holds it: higher is worse. Boons stop at 16; the rows ending below
 # miscast.toml's `safe_below` (71) are protected: their harm never takes the caster below 1 hit
-# point, and none of them may backfire, drain, summon, lay a fire zone, or put on a status that
-# ticks harm or mana (the loader refuses it, a campaign's entries too).
+# point, and none of them may backfire, drain, forget, summon, lay a fire zone, or put on a
+# status that ticks harm or mana (the loader refuses it, a campaign's entries too).
 #
 # Fields:
 #   id        the entry's id
@@ -25,6 +25,12 @@
 #                        Willpower check against `difficulty`
 #             summon     a `creature` (an id of creatures/) hostile to the caster comes next to them
 #             mark       a training mark of `stat` more
+#             rank_loss  the spell cast is known `ranks` ranks lower, never below rank 1 (allowed
+#                        in the protected half: it never forgets)
+#             forget     the spell cast is forgotten, a class's spell too, and with `spells = N`
+#                        N − 1 more known spells drawn at random; `all = true` every spell known.
+#                        A forgotten spell is learned again only from its grimoire. A creature's
+#                        caster loses nothing
 #             harm       `dice` of harm to the caster, of `damage` (a damage type; the spell's own
 #                        when left out, none for a spell without one); it can kill, but a
 #                        protected entry's leaves the caster 1 hit point at the least
