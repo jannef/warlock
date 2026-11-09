@@ -325,6 +325,22 @@ impl World {
         Spent::NoTime
     }
 
+    /// A miscast's zone (`miscast.rs`): `kind` by `by` around `center`, within `radius` in its
+    /// line of sight, for `turns`; no harm, and none on the overworld. Draws nothing.
+    pub(super) fn lay_zone_around(
+        &mut self,
+        (kind, by): (ZoneKind, ActorId),
+        (center, radius): (Pos, i32),
+        turns: u64,
+        events: &mut Vec<Event>,
+    ) {
+        if self.state.current().kind == crate::content::LevelKind::Overworld {
+            return;
+        }
+        let cells: Vec<Pos> = self.burst(center, radius).into_iter().collect();
+        self.lay_cells((kind, by, 0, None), cells, turns * TURN_SECONDS, events);
+    }
+
     /// Actor `id`'s turn starts where it stands: a fire burns it, a cloud poisons it.
     pub(super) fn zone_turn_start(&mut self, id: ActorId, events: &mut Vec<Event>) {
         let Some(pos) = self.zoned(id) else {

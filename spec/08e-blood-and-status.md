@@ -672,27 +672,36 @@ developer notes (CLAUDE.md, `docs/dev/`).
       die in group order and one more a die the reroll hook sends back, an area's one roll for
       all); a spell without a roll, and a rider, draw nothing; then the miscast's Spellcraft
       check (below). Nothing new is saved.
-    - **Miscasts** (#1271; `world/miscast.rs`, `content/miscast.rs`; `data/miscast.toml`,
-      `data/miscasts/`): every spell cast with the caster's own mana, the player's and a
+    - **Miscasts** (#1271, #1288; `world/miscast.rs`, `content/miscast.rs`; `data/miscast.toml`,
+      `data/miscasts/`; `docs/design/miscasts-review.md`): every spell cast with the caster's own mana, the player's and a
       creature's alike (creatures carry Spellcraft values), makes a **Spellcraft check** once
       it has gone off in full; a scroll, a wand, a flask, and a miscast's echo make none.
       2d12 + the modifier of the rules' `stat` (Intelligence) + the talents' checks of it +
-      Spellcraft's `cast` benefit against `base` + `per_level` × the spell's level + a point
-      per `armour_percent` of the armour's spell cost (after Battle caster). A natural 2 (1 and
-      1) always fails, so a cast always may miscast. A failure never cancels or weakens the
-      spell: it rolls on **one ordered table** of `[[miscast]]` entries (a file each, ranges
-      `from`–`to` tiling the totals from 1 up, the last open): **total** = 1d66 (on a 66
-      rolled again and added, again and again) + 3 × the margin the check missed by −
+      Spellcraft's `cast` benefit against `base` (8) + `per_level` (1) × the spell's level + a
+      point per `armour_percent` of the armour's spell cost (after Battle caster) − `rank_ease`
+      (1) × the caster's rank in the spell above the first (a creature's spells are rank 1). A
+      natural 2 (1 and 1) always fails, so a cast always may miscast. A failure never cancels or
+      weakens the spell: it rolls on **one ordered table** of 65 `[[miscast]]` entries (a file
+      each, two totals each, ranges `from`–`to` tiling the totals from 1 up, the last open at
+      129): **total** = `die` (2d12) + `per_margin` (5) × the margin the check missed by −
       Spellcraft's `ward` benefit − the stance's `miscast` (Defensive 5, Aggressive −5, Frenzy
-      −10), at least 1. Higher totals are worse, with boons and chaos spread among the harms (a
-      glamour, the mana refunded, the spell again for free, a blessing on someone near, a swap
-      of places, a wild surge of another damage spell at someone near) and the top deadly (a
-      full backfire, a summoned vrock, 8d10 force on the caster). The entries' effects are the
-      mishaps' kinds (`MishapEffect`, `resolve_effect`) and the miscast's own (`harm`,
-      `refund`, `twice`, `surge`, `swap`, `boon`, `backfire`'s `full`), applied to any caster;
-      "near" is within 6 cells in a clear line, in actor-id order. The player is told in words
-      ("Your weave slips: sparks bite your fingers."); a creature's miscast is told by its
-      entry's `seen` line when the player sees it. A death of the player by their own miscast
+      −10), at least 1. The miss carries the total and the die is the small variance; higher
+      totals are worse: nothing and boons to 16 (the mana refunded, the spell again for free, a
+      blessing, haste), then small harms, mana, hindering statuses, noise, zones, a swap, a
+      teleport, up to 70; from 71 backfires, drains for good, and harm climbing from 4d6 to
+      20d10 force. **Protected entries**: one whose `to` is below `safe_below` (71) cannot kill
+      its caster (its harm takes them to 1 hit point at the least, nothing at 1) and the loader
+      refuses one that would backfire, drain, summon, lay a fire zone, or put on a status that
+      ticks harm or mana, a campaign's too; only a spell missed by 10 or more reaches past it.
+      The entries' effects are the mishaps' kinds (`MishapEffect`, `resolve_effect`) and the
+      miscast's own (`harm`, `refund`, `twice`, `swap`, `boon`, `noise` (`loudness`: a
+      thunderclap's sound on the caster's cell), `zone` (`zone`, `radius`, `turns`: a zone
+      around the caster, no harm), `backfire`'s `full`), applied to any caster; "near" is
+      within 6 cells in a clear line, in actor-id order, and a creature's swap never takes the
+      player. The rows that later phases of the design fill (rank loss, forgetting, stat damage,
+      the drain's repeats, the gates, the Pits) stand in for now as existing kinds under their
+      final ids. The player is told in words ("Sparks leap from your fingers and bite."); a
+      creature's miscast is told by its entry's `seen` line when the player sees it. A death of the player by their own miscast
       is `Cause::Miscast` ("Killed by their own miscast fireball"). Determinism: the check's two
       draws, the die's, then the effect's own, all on the gameplay stream; none without
       `data/miscast.toml`.

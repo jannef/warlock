@@ -1,7 +1,7 @@
 [[miscast]]
 id = "refund"
-from = 15
-to = 19
-message = "Your weave slips, and the spent mana flows back into you."
-seen = "{who}'s weave slips, and its glow flows back into it."
+from = 5
+to = 6
+message = "The weave slackens, and the spent power runs back into you."
+seen = "{who} brightens for a moment."
 effect = { kind = "refund" }

@@ -215,8 +215,9 @@ fn effect_text(content: &Content, effect: MishapEffect) -> String {
         MishapEffect::Harm { .. }
         | MishapEffect::Refund
         | MishapEffect::Twice
-        | MishapEffect::Surge
         | MishapEffect::Swap
-        | MishapEffect::Boon { .. } => effect.kind().into(),
+        | MishapEffect::Boon { .. }
+        | MishapEffect::Noise { .. }
+        | MishapEffect::Zone { .. } => effect.kind().into(),
     }
 }

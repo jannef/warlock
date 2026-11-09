@@ -1,0 +1,7 @@
+[[miscast]]
+id = "pit_roaring"
+from = 121
+to = 122
+message = "The floor splits with a roar, and the fire of the pit engulfs you!"
+seen = "The floor splits beside {who} with a roar, and fire engulfs it!"
+effect = { kind = "harm", dice = "12d10", damage = "fire" }

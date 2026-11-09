@@ -49,7 +49,7 @@ pub(super) fn miscasts(p: &Probe, out: &mut String) {
                 .filter_map(|s| s.known_levels.iter().copied().max())
                 .max();
             let b = bonus.round() as i32;
-            let at = |l: u8| chance(b, rules.difficulty(l, 0));
+            let at = |l: u8| chance(b, rules.difficulty(l, 0, 1));
             let highest = top.map_or_else(|| "—".to_string(), |l| format!("{:.1} % ({l})", at(l)));
             writeln!(
                 out,

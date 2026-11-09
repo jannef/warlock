@@ -1,0 +1,7 @@
+[[miscast]]
+id = "blessing"
+from = 13
+to = 14
+message = "Stray power settles on someone as a blessing."
+seen = "A stray blessing settles near {who}."
+effect = { kind = "boon", status = "blessed", severity = 1 }

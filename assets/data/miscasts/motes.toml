@@ -1,0 +1,7 @@
+[[miscast]]
+id = "motes"
+from = 3
+to = 4
+message = "Motes of colour drift from your hands and fade."
+seen = "Motes of colour drift from {who}'s hands."
+effect = { kind = "nothing" }

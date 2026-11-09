@@ -1,7 +1,0 @@
-[[miscast]]
-id = "dread"
-from = 53
-to = 58
-message = "Your weave tears, and something cold looks back through it."
-seen = "{who}'s weave tears, and it cowers."
-effect = { kind = "status", status = "frightened", severity = 2 }

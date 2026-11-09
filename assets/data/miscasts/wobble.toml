@@ -1,0 +1,7 @@
+[[miscast]]
+id = "wobble"
+from = 21
+to = 22
+message = "The world lurches, and you with it."
+seen = "{who} reels."
+effect = { kind = "status", status = "staggered", severity = 1 }

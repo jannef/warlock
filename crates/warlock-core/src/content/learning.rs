@@ -35,10 +35,10 @@
 //!
 //! The miscast table (`data/miscasts/`, `content/miscast.rs`) writes its entries' effects the
 //! same way ([`resolve_effect`]), with kinds of its own: `harm` (`dice`, `damage`), `refund`,
-//! `twice`, `surge`, `swap`, `boon` (`status`, `severity`), and `backfire`'s `full`; `learn` is
-//! the study's only.
+//! `twice`, `swap`, `boon` (`status`, `severity`), `noise` (`loudness`), `zone` (`zone`,
+//! `radius`, `turns`), and `backfire`'s `full`; `learn` is the study's only.
 
-use super::{Content, ContentError, CreatureId, DamageTypeId, StatusId, duplicate_id};
+use super::{Content, ContentError, CreatureId, DamageTypeId, StatusId, ZoneKind, duplicate_id};
 use crate::dice::Dice;
 use crate::stats::Stat;
 use serde::Deserialize;
@@ -205,14 +205,22 @@ pub enum MishapEffect {
     Refund,
     /// The spell goes off a second time, at no cost.
     Twice,
-    /// Another spell, drawn at random, goes off at someone near the caster (a wild surge).
-    Surge,
-    /// The caster changes places with someone near them.
+    /// The caster changes places with someone near them (a creature never with the player).
     Swap,
     /// `status` falls on someone near the caster, drawn at random (the caster too).
     Boon {
         status: StatusId,
         severity: u16,
+    },
+    /// A sound of `loudness` on the caster's cell, a thunderclap's.
+    Noise {
+        loudness: u16,
+    },
+    /// A zone of `kind` around the caster, within `radius`, for `turns`.
+    Zone {
+        kind: ZoneKind,
+        radius: u8,
+        turns: u16,
     },
 }
 
@@ -233,9 +241,10 @@ impl MishapEffect {
             MishapEffect::Harm { .. } => "harm",
             MishapEffect::Refund => "refund",
             MishapEffect::Twice => "twice",
-            MishapEffect::Surge => "surge",
             MishapEffect::Swap => "swap",
             MishapEffect::Boon { .. } => "boon",
+            MishapEffect::Noise { .. } => "noise",
+            MishapEffect::Zone { .. } => "zone",
         }
     }
 }
@@ -283,6 +292,10 @@ pub(super) struct EffectSpec {
     dice: Option<String>,
     damage: Option<String>,
     full: Option<bool>,
+    loudness: Option<u16>,
+    zone: Option<String>,
+    radius: Option<u8>,
+    turns: Option<u16>,
 }
 
 /// Parses the mishap files, in path order; statuses and creatures must be loaded.
@@ -327,7 +340,7 @@ pub(super) fn resolve_effect(
     content: &Content,
     miscast: bool,
 ) -> Result<MishapEffect, String> {
-    let only_miscast = ["harm", "refund", "twice", "surge", "swap", "boon"];
+    let only_miscast = ["harm", "refund", "twice", "swap", "boon", "noise", "zone"];
     if !miscast && only_miscast.contains(&e.kind.as_str()) {
         return Err(format!("a `{}` effect is a miscast's only", e.kind));
     }
@@ -346,6 +359,10 @@ pub(super) fn resolve_effect(
         ("dice", e.dice.is_some()),
         ("damage", e.damage.is_some()),
         ("full", e.full.is_some()),
+        ("loudness", e.loudness.is_some()),
+        ("zone", e.zone.is_some()),
+        ("radius", e.radius.is_some()),
+        ("turns", e.turns.is_some()),
     ];
     let reads: &[&str] = match e.kind.as_str() {
         "status" | "boon" => &["status", "severity"],
@@ -355,6 +372,8 @@ pub(super) fn resolve_effect(
         "drain" => &["stat", "points", "difficulty"],
         "summon" => &["creature"],
         "mark" => &["stat"],
+        "noise" => &["loudness"],
+        "zone" => &["zone", "radius", "turns"],
         _ => &[],
     };
     if let Some((name, _)) = fields.iter().find(|(n, set)| *set && !reads.contains(n)) {
@@ -376,8 +395,33 @@ pub(super) fn resolve_effect(
         },
         "refund" => MishapEffect::Refund,
         "twice" => MishapEffect::Twice,
-        "surge" => MishapEffect::Surge,
         "swap" => MishapEffect::Swap,
+        "noise" => {
+            let loudness = e.loudness.ok_or("a `noise` effect needs a `loudness`")?;
+            if !(1..=crate::noise::MAX_LOUDNESS).contains(&loudness) {
+                return Err(format!(
+                    "a `noise` effect's `loudness` is 1 to {}",
+                    crate::noise::MAX_LOUDNESS
+                ));
+            }
+            MishapEffect::Noise { loudness }
+        }
+        "zone" => {
+            let name = e.zone.ok_or("a `zone` effect needs a `zone`")?;
+            let kind = (ZoneKind::ALL.iter())
+                .find(|k| k.id() == name)
+                .copied()
+                .ok_or(format!("unknown zone kind `{name}`"))?;
+            let radius = e.radius.filter(|&r| r <= 20);
+            let radius = radius.ok_or("a `zone` effect needs a `radius`, 0 to 20")?;
+            let turns = e.turns.filter(|&t| t > 0);
+            let turns = turns.ok_or("a `zone` effect needs `turns`, at least 1")?;
+            MishapEffect::Zone {
+                kind,
+                radius,
+                turns,
+            }
+        }
         "boon" => {
             let name = e.status.ok_or("a `boon` effect needs a `status`")?;
             let status = (content.status_id(&name)).ok_or(format!("unknown status `{name}`"))?;

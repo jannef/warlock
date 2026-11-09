@@ -6,11 +6,13 @@
 //! ```toml
 //! # data/miscast.toml
 //! stat = "intelligence" # the stat whose modifier the check adds, with Spellcraft's `cast`
-//! base = 10             # the difficulty of a spell of level 0
+//! base = 8              # the difficulty of a spell of level 0
 //! per_level = 1         # and more per spell level
 //! armour_percent = 10   # +1 for each this many percent armour adds to a spell's cost
-//! die = 66              # the table's die, rolled again and added on its highest face
-//! per_margin = 3        # the total's points for each point the check missed by
+//! rank_ease = 1         # and less for each rank of the spell above the first
+//! die = "2d12"          # the table's die, a dice expression
+//! per_margin = 5        # the total's points for each point the check missed by
+//! safe_below = 71       # an entry ending below this is protected (below)
 //! ```
 //!
 //! ```toml
@@ -26,9 +28,16 @@
 //!
 //! The entries tile the totals from 1 up with no gap or overlap; their effects are the mishaps'
 //! ([`super::learning::resolve_effect`]) with the miscast's own kinds.
+//!
+//! **Protected entries** (the miscasts design §4): an entry whose `to` is below `safe_below` can
+//! never kill its caster nor cost them anything they cannot get back. Its harm is capped at the
+//! caster's hit points less one (`world/miscast.rs`), and the loader refuses one whose effect is
+//! a `backfire`, a `drain`, a `summon`, a fire `zone`, or a status that ticks harm or mana
+//! (`check_protected`), so a campaign's table cannot break the promise either.
 
 use super::learning::{EffectSpec, resolve_effect};
-use super::{Content, ContentError, MishapEffect, duplicate_id};
+use super::{Content, ContentError, MishapEffect, ZoneKind, duplicate_id};
+use crate::dice::Dice;
 use crate::stats::Stat;
 use serde::Deserialize;
 use std::collections::BTreeMap;
@@ -45,31 +54,41 @@ pub struct MiscastRules {
     pub per_level: i32,
     /// One point harder for each this many percent the armour worn adds to a spell's cost.
     pub armour_percent: u32,
-    /// The table's die (1 to `die`), rolled again and added while it shows `die`.
-    pub die: u32,
+    /// Easier for each rank of the spell cast above the first.
+    pub rank_ease: i32,
+    /// The table's die.
+    pub die: Dice,
     /// Points on the table for each point the check missed by.
     pub per_margin: i32,
+    /// An entry whose `to` is below this is protected (module docs).
+    pub safe_below: i32,
 }
 
 impl MiscastRules {
-    /// Parses `data/miscast.toml`: `armour_percent` positive, a die of at least 2.
+    /// Parses `data/miscast.toml`: `armour_percent` positive, a die that rolls at least 1.
     pub(super) fn parse(file: &str, text: &str) -> Result<Self, ContentError> {
         let err = |m: &str| ContentError::new(file, m);
         let parsed: Self = toml::from_str(text).map_err(|e| err(&e.to_string()))?;
         if parsed.armour_percent < 1 {
             return Err(err("`armour_percent` must be at least 1"));
         }
-        if parsed.die < 2 {
-            return Err(err("`die` must be at least 2"));
+        if parsed.die.min() < 1 {
+            return Err(err("`die` must roll at least 1"));
         }
         Ok(parsed)
     }
 
-    /// The difficulty of casting a spell of `level` in armour adding `armour` percent to its
-    /// cost.
-    pub fn difficulty(&self, level: u8, armour: u32) -> i32 {
+    /// The difficulty of casting a spell of `level`, known at `rank` (1 for a creature's), in
+    /// armour adding `armour` percent to its cost.
+    pub fn difficulty(&self, level: u8, armour: u32, rank: u8) -> i32 {
         let armour = i32::try_from(armour / self.armour_percent).unwrap_or(i32::MAX);
-        self.base + self.per_level * i32::from(level) + armour
+        let ease = self.rank_ease * i32::from(rank.saturating_sub(1));
+        self.base + self.per_level * i32::from(level) + armour - ease
+    }
+
+    /// Whether `entry` is protected: it ends below `safe_below` (module docs).
+    pub fn protects(&self, entry: &Miscast) -> bool {
+        entry.to.is_some_and(|to| to < self.safe_below)
     }
 }
 
@@ -134,19 +153,53 @@ pub(super) fn parse<'a>(
             if !spec.seen.contains("{who}") {
                 return Err(err("its `seen` must name `{who}`".into()));
             }
-            all.push(Miscast {
+            let entry = Miscast {
                 id: spec.id,
                 from: spec.from,
                 to: spec.to,
                 message: spec.message,
                 seen: spec.seen,
                 effect,
-            });
+            };
+            if let Some(rules) = content.miscast_rules()
+                && rules.protects(&entry)
+            {
+                check_protected(content, entry.effect).map_err(|m| {
+                    err(format!(
+                        "{m}, which an entry below {} may not do",
+                        rules.safe_below
+                    ))
+                })?;
+            }
+            all.push(entry);
         }
     }
     all.sort_by_key(|m| m.from);
     check_tiles(&all).map_err(|m| ContentError::new("data/miscasts", m))?;
     Ok(all)
+}
+
+/// Whether a protected entry may do `effect` (module docs): never a backfire, a drain, a summon,
+/// a fire zone, or a status that ticks harm or mana.
+fn check_protected(content: &Content, effect: MishapEffect) -> Result<(), String> {
+    match effect {
+        MishapEffect::Backfire { .. }
+        | MishapEffect::Drain { .. }
+        | MishapEffect::Summon { .. } => Err(format!("it does `{}`", effect.kind())),
+        MishapEffect::Zone {
+            kind: ZoneKind::Fire,
+            ..
+        } => Err("it lays a fire zone".into()),
+        MishapEffect::Status { status, .. } | MishapEffect::Boon { status, .. } => {
+            let def = content.status(status);
+            if def.damage > 0 || def.mana_damage > 0 {
+                Err(format!("its status `{}` ticks", def.id))
+            } else {
+                Ok(())
+            }
+        }
+        _ => Ok(()),
+    }
 }
 
 /// Whether `table` (ordered by `from`) covers every total from 1 up exactly once.
@@ -200,11 +253,20 @@ mod tests {
     #[test]
     fn the_rules_say_the_difficulty() {
         let text = "stat = \"intelligence\"\nbase = 8\nper_level = 1\narmour_percent = 10\n\
-            die = 66\nper_margin = 3\n";
+            rank_ease = 1\ndie = \"2d12\"\nper_margin = 5\nsafe_below = 71\n";
         let r = MiscastRules::parse("miscast.toml", text).expect("valid");
-        assert_eq!(r.difficulty(0, 0), 8);
-        assert_eq!(r.difficulty(11, 0), 19);
-        assert_eq!(r.difficulty(1, 25), 11);
+        assert_eq!(r.difficulty(0, 0, 1), 8);
+        assert_eq!(r.difficulty(11, 0, 1), 19);
+        assert_eq!(r.difficulty(1, 25, 1), 11);
+        // Each rank above the first eases it by one: rank 10 is a spell nine levels lower.
+        assert_eq!(r.difficulty(11, 0, 10), 10);
+        assert_eq!(r.difficulty(11, 0, 0), 19, "rank 0 reads as the first");
+        assert!(r.protects(&entry("a", 69, Some(70))));
+        assert!(!r.protects(&entry("b", 71, Some(72))));
+        assert!(
+            !r.protects(&entry("c", 1, None)),
+            "the open last entry is not"
+        );
     }
 
     #[test]

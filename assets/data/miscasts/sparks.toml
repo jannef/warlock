@@ -1,7 +1,7 @@
 [[miscast]]
 id = "sparks"
-from = 9
-to = 14
-message = "Your weave slips: sparks bite your fingers."
-seen = "{who}'s weave slips: sparks bite at it."
+from = 11
+to = 12
+message = "Sparks leap from your fingers and bite."
+seen = "Sparks bite {who}'s fingers."
 effect = { kind = "harm", dice = "1d2", damage = "fire" }

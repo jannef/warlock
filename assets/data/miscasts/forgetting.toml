@@ -1,0 +1,7 @@
+[[miscast]]
+id = "forgetting"
+from = 81
+to = 82
+message = "The spell tears loose from your mind, and the raw power tears you!"
+seen = "{who} clutches its head and is torn by its own power."
+effect = { kind = "harm", dice = "4d6", damage = "force" }

@@ -1,0 +1,7 @@
+[[miscast]]
+id = "pit_and_lords"
+from = 127
+to = 128
+message = "The floor splits, and the fire of the deepest pit pours up over you!"
+seen = "The floor splits beside {who}, and the deepest fire pours over it!"
+effect = { kind = "harm", dice = "15d10", damage = "fire" }

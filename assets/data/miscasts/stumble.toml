@@ -1,0 +1,7 @@
+[[miscast]]
+id = "stumble"
+from = 51
+to = 52
+message = "The words slip from you, and something you had learned goes with them."
+seen = "{who} looks puzzled."
+effect = { kind = "lose_mark" }

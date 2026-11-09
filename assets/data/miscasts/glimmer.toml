@@ -1,0 +1,7 @@
+[[miscast]]
+id = "glimmer"
+from = 1
+to = 2
+message = "The air glimmers for a moment and is still."
+seen = "The air glimmers about {who}."
+effect = { kind = "nothing" }

@@ -1,0 +1,7 @@
+[[miscast]]
+id = "gloom_gate"
+from = 79
+to = 80
+message = "The air darkens and tears, and the tear rakes you!"
+seen = "The air tears beside {who} and rakes it!"
+effect = { kind = "harm", dice = "4d6", damage = "force" }

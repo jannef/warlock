@@ -1,0 +1,7 @@
+[[miscast]]
+id = "pit_yawning"
+from = 113
+to = 114
+message = "The floor yawns open, and the fire of the pit roars over you!"
+seen = "The floor yawns open beside {who}, and fire roars over it!"
+effect = { kind = "harm", dice = "10d10", damage = "fire" }

@@ -1,0 +1,7 @@
+[[miscast]]
+id = "shiver"
+from = 31
+to = 32
+message = "A shiver runs through you and leaves you weak."
+seen = "{who} shivers and sags."
+effect = { kind = "status", status = "weakened", severity = 1 }

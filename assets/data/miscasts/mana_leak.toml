@@ -1,7 +1,0 @@
-[[miscast]]
-id = "mana_leak"
-from = 31
-to = 36
-message = "Your weave frays, and your mana leaks away through it."
-seen = "{who}'s weave frays."
-effect = { kind = "mana", percent = 25 }

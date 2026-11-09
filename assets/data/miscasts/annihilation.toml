@@ -1,0 +1,7 @@
+[[miscast]]
+id = "annihilation"
+from = 125
+to = 126
+message = "The power annihilates everything it touches, and it touches you."
+seen = "{who} is torn apart by its own power!"
+effect = { kind = "harm", dice = "15d10", damage = "force" }

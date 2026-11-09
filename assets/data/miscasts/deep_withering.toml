@@ -1,0 +1,7 @@
+[[miscast]]
+id = "deep_withering"
+from = 97
+to = 98
+message = "The spell feeds deep, and takes what will not come back."
+seen = "{who} withers horribly."
+effect = { kind = "drain", stat = "random", points = 2, difficulty = 18 }

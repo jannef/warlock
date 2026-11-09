@@ -1,7 +1,0 @@
-[[miscast]]
-id = "boon"
-from = 26
-to = 30
-message = "Your weave slips, and stray power settles as a blessing."
-seen = "{who}'s weave slips, and stray power settles as a blessing."
-effect = { kind = "boon", status = "blessed", severity = 2 }

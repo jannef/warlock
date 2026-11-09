@@ -413,9 +413,10 @@ impl World {
             MishapEffect::Harm { .. }
             | MishapEffect::Refund
             | MishapEffect::Twice
-            | MishapEffect::Surge
             | MishapEffect::Swap
-            | MishapEffect::Boon { .. } => {}
+            | MishapEffect::Boon { .. }
+            | MishapEffect::Noise { .. }
+            | MishapEffect::Zone { .. } => {}
         }
     }
 
