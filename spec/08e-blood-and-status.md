@@ -687,8 +687,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
       129): **total** = `die` (2d12) + `per_margin` (5) × the margin the check missed by −
       Spellcraft's `ward` benefit − the stance's `miscast` (Defensive 5, Aggressive −5, Frenzy
       −10), at least 1. The miss carries the total and the die is the small variance; higher
-      totals are worse: nothing and boons to 16 (the mana refunded, the spell again for free, a
-      blessing, haste), then small harms, mana, hindering statuses, noise, zones, a swap, a
+      totals are worse: mostly nothing and boons to 16 (a glamour, the mana refunded, the spell
+      again for free, a blessing, haste, with a hum and a 1d2 spark among them), then small harms, mana, hindering statuses, noise, zones, a swap, a
       teleport, stat damage that mends a point a day (#1290), up to 70; from 71 backfires, drains
       for good (`times` over for the worst: each its own random stat and Willpower check), and
       harm climbing from 4d6 to
@@ -727,7 +727,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
       peace with every monster faction, the loosed and the berserk too, and hostile to the
       player and the player's side alone), with no attack, that lets fiends through on its
       cooldown at no cost, `loosed` (its summoning's `faction`), until it is killed
-      (`assets/data/creatures/`, tag `gate`). No monster takes a gate for a target; the player,
+      (`assets/data/creatures/`, tag `gate`). A gate the Pit's warden opens (§7 "The Pits") comes on
+      the warden's side instead, `layer_keepers`, and so do the fiends it lets through (§8
+      "Summoning"). No monster takes a gate for a target; the player,
       their companion (set on it with Sic 'em or not), and their allies fight it, and a blast
       hurts it as it hurts anything in it. The player is told in words ("Sparks leap from your fingers and bite."), each
       entry its own line (the words vary, never a number), then what was lost where the

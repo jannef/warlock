@@ -23,6 +23,13 @@ floor leave each other alone, and so do an orc band and the dead. There are two 
 fey courts are at war, and so are the demons and the devils. Wildlife leaves everyone alone, and
 everyone leaves it alone.
 
+[Miscasts](miscasts.md) and [necromancy](allies.md#the-risen) bring three factions of their own
+that break these rules. **The berserk** (the dead that rise beyond control, and a summoning
+turned on its caster) attack everyone, each other too, and leave only the gates alone. **The
+loosed**, the fiends a miscast's [gate](miscasts.md#gates) lets through, attack everyone but each
+other and the gates. **The gates** themselves are at peace with every monster and an enemy to you
+and your side alone.
+
 {{#include generated/factions.md}}
 
 **Animals.** The factions marked as animals above leave a character with the

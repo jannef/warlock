@@ -13,18 +13,20 @@ The [status bar](the-screen.md#the-screen) names your stance when it is not neut
 does. The game never shows what a stance adds. You feel it in the fight.
 
 - **Aggressive**: you hit more often and harder, but are easier to hit. [Weapon skill marks](weapon-skills.md#marks-and-ranks) count
-  for more, because you swing harder.
+  for more, because you swing harder. Your [miscasts](miscasts.md#the-miscast-table) are worse:
+  5 more on the total.
 - **Neutral**: no effect.
 - **Defensive**: you hit less often and less hard, but [dodge](combat.md#defence) better. You also [parry](combat.md#defence) a little
   better, unless your weapon already turns blows aside as well. Your
-  [miscasts](miscasts.md#the-miscast-table) are milder too.
+  [miscasts](miscasts.md#the-miscast-table) are milder too: 5 off the total.
 - **Coward**: you hit much less often and less hard, and your attacks take longer. But you [dodge](combat.md#defence)
   best, and stepping away from a hostile creature next to you is quicker and quieter.
 - **Frenzy**: the [berserker's](classes.md#berserker) alone, and only while they rage. Flying into a [rage](resources.md#rage) puts you in it
   at once, whatever your stance was. `+` and `-` cannot take you out of it ("Your rage holds you
   in the frenzy."). No other class, talent, item, or creature ever has it. You hit more often and
   harder than an aggressive fighter, at a greater cost to your guard, and stepping away from a foe
-  beside you takes longer. When the rage ends, however it ends, you drop into the aggressive
+  beside you takes longer. Your [miscasts](miscasts.md#the-miscast-table) are worse still: 10 more
+  on the total. When the rage ends, however it ends, you drop into the aggressive
   stance, not the one you had before. The berserker's [Wild guard](talents.md#talent-wild-guard) talent halves its cost to
   your [Dodge](combat.md#defence).
 
