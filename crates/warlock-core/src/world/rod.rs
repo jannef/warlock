@@ -191,7 +191,10 @@ impl World {
         self.provoke(target);
         self.provoke_court(target);
         self.break_empathy(target);
-        if seen {
+        if seen && self.is_rooted(target) {
+            // A rooted one is never moved (`rooted.rs`).
+            self.say(format!("{who} holds fast."));
+        } else if seen {
             self.say(format!("{who} vanishes!"));
         }
     }

@@ -505,6 +505,10 @@ impl World {
         (from, to): (Pos, Pos),
         events: &mut Vec<Event>,
     ) {
+        // A rooted one is never moved (`rooted.rs`).
+        if self.is_rooted(victim) {
+            return;
+        }
         // A creature goes on from where it lands (back to its post, if it had left one).
         if let Some(actor) = self.state.actors.get_mut(&victim) {
             actor.pos = to;

@@ -1,8 +1,9 @@
 //! Test support: the shipped factions with every grudge removed, so a fixture's creatures stand
 //! by. Built from `assets/data/factions.toml`, so a new faction edits no fixture.
 
-/// The shipped factions at peace: no `hostile` and no `provoked` lines, except that the outraged
-/// (shopkeepers who come after the player) stay hostile to the player.
+/// The shipped factions at peace: no `hostile` (`hostile_to_all` and `hostile_to_others` too) and
+/// no `provoked` lines, except that the outraged (shopkeepers who come after the player) stay
+/// hostile to the player.
 pub(super) fn peaceful_factions() -> String {
     let real = include_str!("../../../../assets/data/factions.toml");
     let mut id = "";

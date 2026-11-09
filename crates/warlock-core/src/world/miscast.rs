@@ -228,10 +228,11 @@ impl World {
             }
             MishapEffect::Twice => self.miscast_echo(caster, cast, aim, events),
             MishapEffect::Swap => {
-                // A creature's swap never drags the player in among its friends.
+                // A creature's swap never drags the player in among its friends,
+                // and a rooted one never swaps (`rooted.rs`).
                 let mut near = self.near_caster(caster);
-                near.retain(|&(id, _)| caster == player || id != player);
-                if !near.is_empty() {
+                near.retain(|&(id, _)| (caster == player || id != player) && !self.is_rooted(id));
+                if !near.is_empty() && !self.is_rooted(caster) {
                     let i = self.state.rng.below(near.len() as u32) as usize;
                     let (other, there) = near[i];
                     self.teleport_to(caster, (here, there), events);

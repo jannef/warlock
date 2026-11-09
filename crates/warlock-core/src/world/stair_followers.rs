@@ -10,7 +10,7 @@
 //! read from its statuses' data: one that `sleeps` (Asleep), `hides` (Disguised), `blocks` steps
 //! (Held, Webbed, Pinned), is `flat_footed` (Stunned, Surprised), or `flees` (Frightened). Never
 //! one of a type that keeps its place: `budge` other than `always` (`off_post`, a shopkeeper,
-//! a guildmaster; `never`, rooted), a mimic, even found out, or a lurker no one has hurt
+//! a guildmaster; `never`), a rooted one (`rooted.rs`), a mimic, even found out, or a lurker no one has hurt
 //! (`lurk.rs`). Never an NPC, a shop's keeper, an ally, or a layer boss, which keeps to its
 //! lair (`layer_boss.rs`). Slowed creatures do come (Transfixed,
 //! Staggered), paying their slowed price for the stairs.
@@ -63,6 +63,7 @@ impl World {
             status.sleeps || status.hides || status.flees || status.flat_footed
         }) || me.effects.blocking(content, ActionKind::Step).is_some();
         let keeps_place = def.budge != Budge::Always
+            || def.rooted
             || def.mimic.is_some()
             || (def.lurks && me.hp >= me.max_hp(content))
             || me.npc.is_some()

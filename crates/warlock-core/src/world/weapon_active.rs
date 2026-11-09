@@ -396,6 +396,10 @@ impl World {
             return None;
         }
         let from = self.state.actors.get(&target)?.pos;
+        // A rooted one is never driven (`rooted.rs`).
+        if self.is_rooted(target) {
+            return None;
+        }
         let to = from.step(dir);
         let level = self.state.current();
         let free = level.is_walkable(&self.content, to)

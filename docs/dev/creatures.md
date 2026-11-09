@@ -179,6 +179,21 @@ sees or remembers (`PerceptionView::known_leavings`). **Wiki**: `creature_signs`
 (`creature-signs.md`, "Warning signs" in `creature-numbers.md`). **Tests**:
 `mapgen/leavings_tests.rs`, `world/first_sight_tests.rs`, `ui/look.rs`.
 
+Rooted (#1294, design `docs/design/miscasts-review.md` §6.2: a miscast's gates). **Data**:
+`rooted = true` (`CreatureDef::rooted`, default false). **Rules**: `world/rooted.rs`, one check
+in each place that moves an actor: `World::rooted_plan` in `ai.rs::creature_turn` after the
+fear and the hold (a `Step`, `Patrol`, or `Blink` is a `Wait`; it still strikes, shoots,
+breathes, gazes, casts, and summons where it stands), `World::rooted_stride` in `stride.rs`
+(a coarse turn is a stride's waits), `talk.rs::refusal` (it never gives way, as `budge =
+"never"`: no swap), `weapon_active.rs::drive_back` (no knockback, shove, or spell's push; the
+status `spell_type.rs::rooted` reads it too), `trap.rs::teleport_to` (no teleport of any kind:
+a rod's says "The X holds fast."; a miscast's swap passes it by, and a rooted caster swaps with
+no one), `stair_followers.rs::may_follow` (never a follower), and `ally.rs::follow_along` (a
+rooted ally stays behind). **Dump**: the dev `actors` layer adds `; rooted`. **Tests**:
+`world/rooted_tests.rs` (a fixture: a rooted thorn that never steps and strikes beside it, a
+rooted gate that summons to its cap, a rooted shrub that never gives way, never driven or
+teleported, never a stair follower beside a wolf that is).
+
 Gazes and averted eyes (spec §8 "Creature behavior": "Gazes", #1125, design
 `docs/design/monster-dread.md` §5.1). **Data**: `[creature.gaze]` (`content/gaze.rs`:
 `GazeSpec` resolved in the creature loop into `CreatureDef::gaze: Option<Gaze>`; `range` 1 to 8,
@@ -556,3 +571,14 @@ berserk's list makes no one a fighter (`disturbs_rest`, hearing, `stride.rs`, th
 the fixtures that write their own `data/factions.toml` have no such faction, which is why the
 spell's `berserk_faction` is read at the cast (none: it rises serving) and checked on the shipped
 data by a test rather than at load.
+
+**`hostile_to_others`** (`content/faction.rs`, beside `hostile_to_all`): a faction with it
+(`loosed`, what a miscast lets through: the gates and the fiends they call, #1293,
+`docs/design/miscasts-review.md` §6.1) fills its row and column of the hostility matrix **but not
+its own diagonal**: the loosed are neutral to each other and hostile to every other faction, the
+player's, the demons', and the berserk included. `FactionDef::hates_everyone` is either flag:
+`has_enemies` and the wiki's table treat the two alike (being on the loosed's list is no quarrel
+of one's own), and the wiki's row says "everyone but its own". `fixture_factions.rs` strips the
+line as it strips the berserk's (every `hostile…` line), so a fixture's loosed are at peace. No
+creature type names the faction yet (the gates and their summons come with #1295); a test checks
+the shipped matrix (`faction.rs`, `the_shipped_loosed_are_hostile_to_every_other_faction`).

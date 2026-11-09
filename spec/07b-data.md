@@ -25,7 +25,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
   `combat = "melee"` (default), `"ranged"`, or `"caster"`, the latter two with a `range` (2 to its
   sight), `opens_doors` (default false), `budge` (whether the player may swap places with it
   when it is not hostile, §8 "Displacement": `always`, the default; `off_post`, not while it keeps
-  its post, going about its routine, as a shopkeeper at its counter will; `never`), its
+  its post, going about its routine, as a shopkeeper at its counter will; `never`), `rooted`
+  (default false: rooted, it never moves, never gives way, is never pushed, swapped, or
+  teleported, and never follows on stairs, but strikes and summons where it stands, as a
+  miscast's gate; §8 "Spells": "Miscasts"), its
   `alignment` (`good`, `neutral`, the default, or `evil`; §8 "Alignment": the kobolds evil, the
   beasts neutral, the showcase's people good; never shown), an optional `race` (a race id; §8
   "Alignment": its corpse is kin to a character of that race; the showcase's people are human;
@@ -726,7 +729,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
   player alone, its old raids and grudges kept as lore in the file's comments (a `rivalry`
   chance, a skirmish now and then, is deferred). Two are rules: `merchants` (shopkeepers; hostile to no one) and `outraged` ("outraged
   shopkeepers", hostile to the player), which a robbed or attacked shopkeeper joins (§7
-  "Shops"). A level
+  "Shops"). A faction may be `hostile_to_all` (hostile to every faction and to itself: the
+  berserk risen, §8 "Creatures") or `hostile_to_others` (hostile to every other faction, neutral to
+  itself: `loosed`, what a miscast lets through, §8 "Spells"). A level
   legend entry with a `creature` may name a `faction` (a known faction id; an unknown one is a
   content error) that replaces its type's for that creature: it is stored on the actor
   (`faction_override`, saved and hashed only when set), used wherever stance is computed (AI
