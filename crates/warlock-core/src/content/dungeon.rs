@@ -16,6 +16,12 @@
 //! floor is drawn rooms or caves as it is made. It has one row of per-depth tables, read at every
 //! depth, and so no `[[dungeon.levels]]`, and with them no pinned vault.
 //!
+//! A branch with `[dungeon.portal]` (Hellegeat, spec §7 "The Pits") exists only as instances: a
+//! Pit `S` (a positive integer) has the levels `id@S:1` … `id@S:depth`, each a pure function of
+//! the run seed and its id, forgotten when left as an endless branch's floors are
+//! (`world/endless.rs`). No stairs, hidden location, or quest names its levels: only a `portal`
+//! miscast opens one. Its floors' stairs lead to their own Pit's ([`sibling`]).
+//!
 //! ```toml
 //! [[dungeon]]
 //! id = "depths"
@@ -60,6 +66,8 @@
 //! caves_size = [100, 40]        # the caves' size; the rooms' is the branch's `size`
 //! dread = { steps = [[70, 40]], halves = 10, least = 5 }   # `dread_one_in` by depth
 //!                               # (`super::dread`), as `[[dungeon.levels]]` give it elsewhere
+//!
+//! [dungeon.portal]              # with `depth`: a branch of Pits (no `endless`, no `below`)
 //!
 //! [[dungeon.endless.boss]]      # optional, one per layer: a layer boss and its lair
 //! depth = 10                    # the floor (each depth once)
@@ -143,6 +151,8 @@ struct DungeonSpec {
     below: Option<String>,
     /// Floors without end, instead of `depth`.
     endless: Option<EndlessSpec>,
+    /// A branch of Pits, opened only by a portal (spec §7 "The Pits").
+    portal: Option<PortalSpec>,
     size: [i32; 2],
     #[serde(default)]
     ambient: Light,
@@ -472,6 +482,16 @@ struct LevelsSpec {
     vaults: Vec<String>,
 }
 
+/// A branch's `[dungeon.portal]` table (nothing in it yet: the warden's row comes with #1298).
+#[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+struct PortalSpec {}
+
+/// What makes a branch a branch of Pits (spec §7 "The Pits"): it exists only as instances
+/// `id@S:N`, opened by a portal, each floor forgotten when left.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct Portal;
+
 /// How one level of a branch is generated.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct LevelPlan {
@@ -501,6 +521,8 @@ pub struct DungeonDef {
     pub below: Option<String>,
     /// Floors without end (spec §7 "The endless branch"); `None`: `depth` levels.
     pub endless: Option<Endless>,
+    /// A branch of Pits (spec §7 "The Pits"): its levels are `id@S:N`, never `id:N`.
+    pub portal: Option<Portal>,
     /// An endless branch's layer bosses, by depth (none for any other branch).
     pub bosses: Vec<LayerBoss>,
     /// An endless branch's `dread_one_in` by depth (`[dungeon.endless.dread]`), if it gives one.
@@ -565,12 +587,13 @@ impl DungeonDef {
         self.endless.is_some() || depth < self.depth || self.below.is_some()
     }
 
-    /// Where level `depth`'s `>` leads: the next level, or below the deepest, [`Self::below`].
-    pub fn down_to(&self, depth: u32) -> Option<String> {
+    /// Where the `>` of level `id`, at `depth`, leads: the next level of its own instance
+    /// ([`sibling`]), or below the deepest, [`Self::below`].
+    pub fn down_to(&self, id: &str, depth: u32) -> Option<String> {
         if self.endless.is_none() && depth >= self.depth {
             return self.below.clone();
         }
-        Some(self.level_id(depth + 1))
+        Some(sibling(id, depth + 1))
     }
 
     /// Level `depth`'s own `dread_one_in` (1-based): an endless branch's curve there, else its
@@ -610,9 +633,16 @@ impl DungeonDef {
         self.vaults.iter().flatten().map(String::as_str)
     }
 
-    /// The level id of `depth`, e.g. `depths:3`.
+    /// The level id of `depth`, e.g. `depths:3`; of a portal branch, what a vault or a dungeon
+    /// list names its floors by (no level is called so: see [`Self::pit_level_id`]).
     pub fn level_id(&self, depth: u32) -> String {
         format!("{}:{depth}", self.id)
+    }
+
+    /// The level id of floor `depth` of Pit `pit` of a portal branch, e.g. `hellegeat@7:3`
+    /// (spec §7 "The Pits").
+    pub fn pit_level_id(&self, pit: u32, depth: u32) -> String {
+        format!("{}@{pit}:{depth}", self.id)
     }
 
     /// What finding a hidden feature on level `depth` takes beyond its own difficulty (spec §8
@@ -666,6 +696,25 @@ fn per_level_below(per_level: u8, depth: u32) -> i32 {
     i32::from(per_level).saturating_mul(below)
 }
 
+/// The level `depth` of the branch (or Pit) branch level `id` is in: `depths:3` → `depths:4`,
+/// `hellegeat@7:3` → `hellegeat@7:2`. A Pit's floors lead only to its own.
+pub fn sibling(id: &str, depth: u32) -> String {
+    let branch = id.rsplit_once(':').map_or(id, |(branch, _)| branch);
+    format!("{branch}:{depth}")
+}
+
+/// Splits a Pit's branch `hellegeat@7` (what [`parse_branch_level`] gives of `hellegeat@7:3`) into
+/// the branch id and the Pit's integer, if it is one: a positive `u32` written without leading
+/// zeros, so one Pit has one id.
+pub fn parse_instance(branch: &str) -> Option<(&str, u32)> {
+    let (id, pit) = branch.split_once('@')?;
+    if id.is_empty() || pit.starts_with('0') || !pit.bytes().all(|b| b.is_ascii_digit()) {
+        return None;
+    }
+    let pit: u32 = pit.parse().ok()?;
+    (pit >= 1).then_some((id, pit))
+}
+
 /// Splits a branch level id `branch:N` into the branch id and the depth `N` (≥ 1).
 pub fn parse_branch_level(id: &str) -> Option<(&str, u32)> {
     let (branch, depth) = id.rsplit_once(':')?;
@@ -694,9 +743,9 @@ impl DungeonFile {
         let mut defs: Vec<DungeonDef> = Vec::new();
         for mut spec in self.dungeon {
             let id = spec.id;
-            if id.is_empty() || id.contains(':') || id.chars().any(char::is_whitespace) {
+            if id.is_empty() || id.contains([':', '@']) || id.chars().any(char::is_whitespace) {
                 return Err(err(format!(
-                    "dungeon id `{id}` must be non-empty, without `:` or spaces"
+                    "dungeon id `{id}` must be non-empty, without `:`, `@`, or spaces"
                 )));
             }
             if defs.iter().any(|d| d.id == id) {
@@ -715,6 +764,12 @@ impl DungeonFile {
             if spec.below.is_some() && spec.endless.is_some() {
                 return Err(err(format!(
                     "dungeon `{id}`: an endless branch has no deepest level for `below`"
+                )));
+            }
+            // Nothing leads out of a Pit but its own `<`, and it ends (spec §7 "The Pits").
+            if spec.portal.is_some() && (spec.endless.is_some() || spec.below.is_some()) {
+                return Err(err(format!(
+                    "dungeon `{id}`: a portal branch has neither `endless` nor `below`"
                 )));
             }
             let check_size = |generator: Generator, [w, h]: [i32; 2]| {
@@ -910,6 +965,7 @@ impl DungeonFile {
                     caves_size: (e.caves_size[0], e.caves_size[1]),
                     roster_depth: u32::MAX,
                 }),
+                portal: spec.portal.map(|PortalSpec {}| Portal),
                 ambient: spec.ambient,
                 creatures,
                 traps,
@@ -1079,6 +1135,48 @@ mod tests {
             "traps_per_level = [1, 2]\n",
         ] {
             assert!(resolve(&format!("{base}{bad}")).is_err(), "{bad}");
+        }
+    }
+
+    #[test]
+    fn a_portal_branch_ends_and_leads_nowhere_else() {
+        let base = "[[dungeon]]\nid = \"p\"\ngenerator = \"rooms\"\nsize = [80, 21]\n";
+        let pits = resolve(&format!("{base}depth = 5\n[dungeon.portal]\n")).unwrap();
+        assert_eq!((pits[0].portal, pits[0].depth), (Some(Portal), 5));
+        assert_eq!(
+            resolve(&format!("{base}depth = 5\n")).unwrap()[0].portal,
+            None
+        );
+        for bad in [
+            "depth = 5\nbelow = \"d:3\"\n[dungeon.portal]\n",
+            "[dungeon.endless]\ncaves = 0\ncaves_size = [100, 40]\n[dungeon.portal]\n",
+            "depth = 5\n[dungeon.portal]\nboss = 1\n",
+        ] {
+            assert!(resolve(&format!("{base}{bad}")).is_err(), "{bad}");
+        }
+        let at = "[[dungeon]]\nid = \"p@1\"\ngenerator = \"rooms\"\ndepth = 1\nsize = [80, 21]\n";
+        assert!(resolve(at).is_err(), "`@` belongs to a Pit's levels");
+    }
+
+    #[test]
+    fn a_pits_floors_are_siblings_and_its_integer_is_written_one_way() {
+        assert_eq!(sibling("depths:3", 4), "depths:4");
+        assert_eq!(sibling("hellegeat@7:3", 2), "hellegeat@7:2");
+        assert_eq!(parse_instance("hellegeat@7"), Some(("hellegeat", 7)));
+        assert_eq!(
+            parse_instance("hellegeat@4294967295"),
+            Some(("hellegeat", u32::MAX))
+        );
+        for bad in [
+            "hellegeat",
+            "hellegeat@",
+            "@7",
+            "hellegeat@0",
+            "hellegeat@07",
+            "hellegeat@+7",
+            "hellegeat@4294967296",
+        ] {
+            assert_eq!(parse_instance(bad), None, "{bad}");
         }
     }
 

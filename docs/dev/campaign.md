@@ -277,6 +277,13 @@ A branch level's `vaults` (#339, docs/dev/mapgen.md) keeps the vaults it names t
 never another's (Fyrdelf's cabin and hoard, Fennmynster's sunken crypt, #338; the four lairs'
 still-room, robbers' hoard, unhallowed chapel, and captain's hall, #426, `docs/dev/guild.md`).
 
+Hellegeat (`hellegeat`, #1296, `docs/dev/mapgen.md` "The Pits") is the one shared branch:
+`data/dungeons/hellegeat.toml`, outside every campaign (`DungeonDef::campaign` `None`), its
+population shared fiends, so the cross-campaign checks have nothing to refuse and every
+campaign's runs may open its Pits. No campaign's level or quest may name it or its floors. Its
+population is in no other area's lists (`Content::fill_generic`), so a campaign's
+`stray_pool = "populations"` branches do not gain its fiends.
+
 Grundlēas (`grundleas`, #1010, `docs/dev/mapgen.md`, `world/endless.rs`) is the Ascmearc's
 endless branch: an ordinary location (`9` at (52, 52) on the overworld, no `hidden`), 40 cells from
 Beorggeat, so no reveal is needed and no one starts beside it. No quest names it: a reach quest

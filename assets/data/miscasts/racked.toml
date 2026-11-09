@@ -2,6 +2,6 @@
 id = "racked"
 from = 69
 to = 70
-message = "You are racked, and your strength runs out of you."
+message = "You are racked with pain."
 seen = "{who} is racked."
-effect = { kind = "status", status = "weakened", severity = 3 }
+effect = { kind = "stat_damage", stat = "random", points = 2 }

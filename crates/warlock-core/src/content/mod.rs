@@ -73,6 +73,8 @@ pub mod grimoire;
 mod guild;
 #[cfg(test)]
 mod hag_roster_tests;
+#[cfg(test)]
+mod hellegeat_tests;
 mod horoscope;
 mod hunger;
 mod intimidate;
@@ -221,8 +223,8 @@ pub use dialogue::{Dialogue, DialogueId, Mutter, Service, ServiceKind, Speaker, 
 pub use disease::{DiseaseDef, DiseaseId, SOURCES, Wading};
 pub use dummy::DummyTraining;
 pub use dungeon::{
-    ChestOdds, DungeonDef, Endless, Generator, LayerBoss, LevelPlan, RoomOdds, ShopOdds,
-    parse_branch_level,
+    ChestOdds, DungeonDef, Endless, Generator, LayerBoss, LevelPlan, Portal, RoomOdds, ShopOdds,
+    parse_branch_level, parse_instance, sibling,
 };
 pub use effect::{Darken, EffectDef, EffectLight, EffectShape, FILL_GLYPH, MAX_DARKEN, Shake};
 pub use encounter::{
@@ -2548,14 +2550,17 @@ impl Content {
     /// Fills every area's generic creature list (spec §7 "Danger levels",
     /// [`danger::Spawning::generic`]). The populations' list of a campaign is every type that
     /// lives in some area with a danger (a branch's or a hand-made level's `population`) of that
-    /// campaign or of no campaign, uniques left out. An area's list is that one
+    /// campaign or of no campaign, uniques and a portal branch's left out. An area's list is that one
     /// ([`danger::StrayPool::Populations`]), or by default ([`danger::StrayPool::All`]) that one
     /// and every type of the campaign or of none that may stray ([`Content::may_stray`]):
     /// hostile to the player, no unique, no animated object (those come by their own
     /// populations), and not marked `stray = false` (people, keepers, guardians, test types).
     fn fill_generic(&mut self) {
         let mut lives: BTreeMap<Option<String>, BTreeSet<CreatureId>> = BTreeMap::new();
+        // A Pit's folk stay in it (spec §7 "The Pits"): though shared, its population is in no
+        // other area's list.
         let branches = (self.dungeons.values())
+            .filter(|d| d.portal.is_none())
             .filter_map(|d| Some((d.campaign.clone(), d.spawning.as_ref()?)));
         let levels = (self.levels.iter()).filter_map(|(id, l)| {
             let campaign = self.level_campaigns.get(id).cloned().flatten();
@@ -2723,6 +2728,16 @@ impl Content {
         }
         for level in self.levels.values() {
             let campaign = self.level_campaign(&level.id).unwrap_or_default();
+            // Nothing leads into a Pit but a portal (spec §7 "The Pits").
+            let pit = (level.stairs.iter().filter_map(|l| l.to.as_deref()))
+                .chain(level.hidden.values().filter_map(|h| h.to.as_deref()))
+                .find(|to| self.is_portal_floor(to));
+            if let Some(to) = pit {
+                return Err(ContentError::new(
+                    &self.level_file(&level.id),
+                    format!("leads to `{to}`, a Pit's floor: only a portal opens one"),
+                ));
+            }
             for link in &level.stairs {
                 if let Some(to) = &link.to
                     && !self.has_level(campaign, to)
@@ -2752,7 +2767,10 @@ impl Content {
         for def in self.dungeons.values() {
             let Some(below) = &def.below else { continue };
             let fits = self.branch_level(below).is_some_and(|(other, _)| {
-                other.id != def.id && other.endless.is_none() && other.campaign == def.campaign
+                other.id != def.id
+                    && other.endless.is_none()
+                    && other.portal.is_none()
+                    && other.campaign == def.campaign
             });
             if !fits {
                 return Err(ContentError::new(
@@ -3576,10 +3594,16 @@ impl Content {
     }
 
     /// The branch and depth of a generated level id such as `depths:3`, if the branch exists and
-    /// has that depth.
+    /// has that depth. A portal branch's levels are a Pit's, `hellegeat@7:3` (spec §7 "The
+    /// Pits"), and only those: `hellegeat:3` is no level, nor is `depths@7:3`.
     pub fn branch_level(&self, id: &str) -> Option<(&DungeonDef, u32)> {
         let (branch, depth) = parse_branch_level(id)?;
+        let (branch, pit) = match parse_instance(branch) {
+            Some((branch, _)) => (branch, true),
+            None => (branch, false),
+        };
         let def = self.dungeons.get(branch)?;
+        (def.portal.is_some() == pit).then_some(())?;
         def.plan(depth).map(|_| (def, depth))
     }
 
@@ -3627,11 +3651,18 @@ impl Content {
         (self.spawning(id)).map_or(0, |(rule, depth, _)| rule.at(depth, player_level).into())
     }
 
-    /// Whether `id` is a floor of an endless branch: made when it is reached, gone when it is
-    /// left (`world/endless.rs`).
+    /// Whether `id` is a floor that is gone when it is left (`world/endless.rs`): an endless
+    /// branch's, made anew from a stream of its own on every arrival, or a Pit's, made the same
+    /// again from its id (spec §7 "The Pits").
     pub fn is_endless_floor(&self, id: &str) -> bool {
         self.branch_level(id)
-            .is_some_and(|(def, _)| def.endless.is_some())
+            .is_some_and(|(def, _)| def.endless.is_some() || def.portal.is_some())
+    }
+
+    /// Whether `id` is a floor of a Pit, an instance of a portal branch (spec §7 "The Pits").
+    pub fn is_portal_floor(&self, id: &str) -> bool {
+        self.branch_level(id)
+            .is_some_and(|(def, _)| def.portal.is_some())
     }
 
     /// The hand-made level whose stairs (or hidden location) lead to level `id`, if one does:

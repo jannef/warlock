@@ -16,12 +16,13 @@
 //!   ([`crate::content::Miscast`]).
 //! - **The entry**: its message (the player's own, or its `seen` line of a creature the player
 //!   sees), then its effect, the mishaps' machinery generalized to any caster: statuses, mana,
-//!   the teleport trap's [`World::teleport`], stat marks, a [`Drain`], a summon beside the
+//!   the teleport trap's [`World::teleport`], stat marks, a [`Drain`] (`times` over, each its
+//!   own draw and check), stat damage that mends (`miscast_stat_damage`), a summon beside the
 //!   caster, harm through [`World::resisted`] and [`World::hurt`], the mana refunded, the spell
 //!   again ([`Cast::by_creature`]: already paid), a swap of places (a creature's never with the
 //!   player), a boon on someone near, a thunderclap's sound of the entry's loudness on the
-//!   caster's cell ([`World::sound_at`]), and a zone around the caster (`zone.rs`; none on the
-//!   overworld). "Near" is within [`NEAR`] cells in a clear line ([`World::clear_shot`]), in
+//!   caster's cell ([`World::sound_at`]), a zone around the caster (`zone.rs`; none on the
+//!   overworld), and the spell's rank lost or the spell forgotten (`forget.rs`). "Near" is within [`NEAR`] cells in a clear line ([`World::clear_shot`]), in
 //!   actor-id order. A death of the player by their own miscast is [`Cause::Miscast`].
 //! - **Protected entries** ([`crate::content::MiscastRules::protects`], those ending below
 //!   `safe_below`): their harm takes the caster to 1 hit point at the least, nothing at 1; the
@@ -192,10 +193,13 @@ impl World {
                     me.stat_marks[stat] = me.stat_marks[stat].saturating_add(1);
                 }
             }
+            MishapEffect::RankLoss { ranks } => self.miscast_rank_loss(caster, cast.spell, ranks),
+            MishapEffect::Forget { spells } => self.miscast_forget(caster, cast.spell, spells),
             MishapEffect::Drain {
                 stat,
                 points,
                 difficulty,
+                times,
             } => {
                 let drain = Drain {
                     stat,
@@ -203,7 +207,12 @@ impl World {
                     check: Stat::Willpower,
                     difficulty,
                 };
-                self.drain(caster, drain, None, events);
+                for _ in 0..times {
+                    self.drain(caster, drain, None, events);
+                }
+            }
+            MishapEffect::StatDamage { stat, points } => {
+                self.miscast_stat_damage(caster, stat, points);
             }
             MishapEffect::Summon { creature } => self.miscast_summon(here, creature),
             MishapEffect::Harm { dice, damage } => {
@@ -284,6 +293,30 @@ impl World {
             .filter(|a| self.clear_shot(here, a.pos, caster, a.id))
             .map(|a| (a.id, a.pos))
             .collect()
+    }
+
+    /// `points` of stat damage to `caster`'s `stat` (one of the six drawn for `None`), never
+    /// below a score of 1 ([`crate::stats::StatDamage::take`]); hit points and mana are cut to
+    /// the new maxima, never below 1. The damage mends a point a day (`disease.rs`'s mending,
+    /// which runs with no disease at all). The player is told the stat in words.
+    fn miscast_stat_damage(&mut self, caster: ActorId, stat: Option<Stat>, points: u8) {
+        let stat = match stat {
+            Some(stat) => stat,
+            None => Stat::ALL[self.state.rng.below(Stat::COUNT as u32) as usize],
+        };
+        let content = self.content.clone();
+        let Some(me) = self.state.actors.get_mut(&caster) else {
+            return;
+        };
+        let before = me.damage.get(stat);
+        me.damage
+            .take(stat, i32::from(points), me.stats.score(stat));
+        let took = me.damage.get(stat) > before;
+        me.hp = me.hp.min(me.max_hp(&content)).max(1);
+        me.mana = me.mana.min(me.max_mana(&content));
+        if took && caster == self.state.player {
+            self.say(super::stat_deeds::drop_news(stat).to_string());
+        }
     }
 
     /// `def` goes off as a burst of `roll` centred on `center`, by `caster` (its radius, else

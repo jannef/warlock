@@ -66,6 +66,22 @@ developer notes (CLAUDE.md, `docs/dev/`).
   fast as anyone, a spear whose wounds bleed) on the field of the slain, and 100 Nīðdraca the
   Hate-Wyrm (a fire dragon's breath, demons called up, claws that set alight) on the burning
   hoard (#1122). Past 100 a tenth floor is ordinary.
+  **The Pits** (`[dungeon.portal]`, #1296; docs/design/miscasts-review.md §7): a portal branch
+  exists only as instances. **Hellegeat** (`data/dungeons/hellegeat.toml`) is one shared branch,
+  of no campaign, that any run of any campaign opens Pits of: five caves floors 80×40, 45 °C, a dull
+  red glow, fire and pit traps, chests on two floors in five, no shops or special rooms, danger 12
+  on the first floor and 4 more a floor, plus half the player's levels past 10 (at most 30 more),
+  read as each floor is made, so a Pit grows with the player. Its folk are fiends (lemures and
+  dretches up to vrocks, nycaloths, and erinyes) keeping their own factions, so demons and devils
+  fight each other there; they never stray out of a Pit and nothing strays in. Every opening is a
+  Pit of its own, named by a positive integer `S` drawn then: its floors are `hellegeat@S:1` to
+  `hellegeat@S:5` (`hellegeat:3` names no level), and their stairs lead only within the Pit. A
+  Pit's floor is made from the run seed and its id alone, so the same Pit's floor is the same map
+  each time it is made, and two Pits differ. Like the endless branch's, its floors are forgotten
+  when left (the same rules for allies and uniques), and each Pit pays a floor's first arrival once.
+  Climbing back up makes the floor above again: the same map, its dead back, its loot drawn anew,
+  its memory blank. No stairs, hidden location, or quest names a Pit's floor; only a `portal`
+  miscast opens one (#1297), and a warden keeps the fifth floor (#1298).
   **Ways up** (`below = "fyrdelf:12"`, #1117; `mapgen/way_up.rs`, `world/reveal.rs`): a bounded
   branch whose `below` names a level of another bounded branch of its campaign is a way between
   that level and the overworld. Its deepest level's `>` leads to that level, which gains a `<` back

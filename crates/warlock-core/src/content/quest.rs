@@ -606,8 +606,8 @@ fn resolve(
             };
             let count = spec.count.unwrap_or(1);
             if let Some(level) = &spec.level
-                && !content.has_level(campaign, level)
-                && content.dungeon(level).is_none()
+                && !names_level(content, campaign, level)
+                && content.dungeon(level).is_none_or(|d| d.portal.is_some())
             {
                 return Err(format!("unknown level or dungeon branch `{level}`"));
             }
@@ -638,7 +638,7 @@ fn resolve(
             }
             // An endless branch's floor may be a target (#1119): it is forgotten on leaving, but
             // the arrival (`World::reach`) marks the quest, which is kept.
-            if !content.has_level(campaign, &target) {
+            if !names_level(content, campaign, &target) {
                 return Err(format!("unknown level `{target}`"));
             }
             Goal::Reach { level: target }
@@ -664,7 +664,7 @@ fn resolve(
             if roll.is_some() {
                 return Err("an escort quest is not rolled".into());
             }
-            if !content.has_level(campaign, &target) {
+            if !names_level(content, campaign, &target) {
                 return Err(format!("unknown level `{target}`"));
             }
             let name = spec
@@ -741,6 +741,12 @@ fn resolve(
     })
 }
 
+/// Whether a quest of campaign `campaign` may name level `id`: one it can reach, and no Pit's
+/// floor (spec §7 "The Pits": nothing leads into a Pit but a portal).
+fn names_level(content: &Content, campaign: &str, id: &str) -> bool {
+    content.has_level(campaign, id) && !content.is_portal_floor(id)
+}
+
 /// An escort quest's `waits`, checked: a known creature type, a level of the campaign, and a
 /// place of that name on it (a hand-made level's, or a vault's its branch level stamps for
 /// certain), exactly one.
@@ -748,7 +754,7 @@ fn waits(content: &Content, campaign: &str, w: &WaitsSpec) -> Result<Waits, Stri
     let creature = (content.creature_id(&w.creature))
         .filter(|_| w.creature != "player")
         .ok_or_else(|| format!("`waits`: unknown creature `{}`", w.creature))?;
-    if !content.has_level(campaign, &w.level) {
+    if !names_level(content, campaign, &w.level) {
         return Err(format!("`waits`: unknown level `{}`", w.level));
     }
     let named = |places: &std::collections::BTreeMap<crate::geom::Pos, super::Place>| {

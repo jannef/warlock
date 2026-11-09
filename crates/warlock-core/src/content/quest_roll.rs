@@ -185,9 +185,11 @@ impl Rolled {
 
 impl Content {
     /// The dungeon branches of campaign `campaign`'s runs (its own and those outside every
-    /// campaign), in table order.
+    /// campaign), in table order; no portal branch, where no quest sends anyone (spec §7 "The
+    /// Pits").
     fn branches_of<'a>(&'a self, campaign: Option<&'a str>) -> impl Iterator<Item = &'a str> + 'a {
         (self.dungeons())
+            .filter(|d| d.portal.is_none())
             .filter(move |d| {
                 d.campaign.is_none() || campaign.is_none() || d.campaign.as_deref() == campaign
             })
@@ -447,6 +449,7 @@ pub(super) fn parse_pick(
             want(QuestKind::Kill, "creatures")?;
             for b in &branches {
                 let d = (content.dungeon(b))
+                    .filter(|d| d.portal.is_none())
                     .ok_or_else(|| format!("`pick`: unknown dungeon branch `{b}`"))?;
                 if campaign.is_some() && d.campaign.is_some() && d.campaign.as_deref() != campaign {
                     return Err(format!("`pick`: branch `{b}` is another campaign's"));

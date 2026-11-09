@@ -4,4 +4,4 @@ from = 119
 to = 120
 message = "The weave feeds on you until there is little left."
 seen = "{who} is wasted to the bone."
-effect = { kind = "drain", stat = "random", points = 3, difficulty = 20 }
+effect = { kind = "drain", stat = "random", points = 2, difficulty = 20, times = 2 }

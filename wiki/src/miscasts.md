@@ -45,7 +45,9 @@ The results below 71 are **protected**. Their harm always leaves you at least 1 
 of them takes anything from you for good. To roll 71 or more you must miss the check by 10 or more:
 a spell about ten levels beyond what your Spellcraft and the spell's rank carry. Below that, the
 worst a miscast does is leave you hurt, drained of mana, or hindered in a fight that can still kill
-you.
+you. A stat it takes is [stat damage](diseases.md#stat-damage), which mends a point a day. From 71,
+a stat can be [drained for good](stats.md#drained-stats) unless you make a Willpower check, and the
+worst rows drain two or three stats, each with its own check.
 
 A [Defensive stance](stances.md#stances) takes 5 off every total, even when you cast from safety.
 
@@ -58,6 +60,20 @@ your foes, and one another alike, whatever their kind. A wolf called this way is
 harmless beast of the wild.
 
 A miscast that kills you is put down to your own miscast spell.
+
+## Forgotten spells
+
+Some miscasts make you forget spells: the spell you cast, sometimes another, and at worst every
+spell you know. A spell your [class](magic.md#what-your-class-gives) gave you is forgotten just
+the same. A forgotten spell is gone from the [Magic page](schools.md#the-magic-page) and the
+[abilities menu](abilities.md#the-abilities-menu), and you cannot cast it.
+
+The only way back is its [grimoire](magic.md#learning-spells-from-grimoires), exactly as you
+learned it the first time: the same reading, the same check, and the same experience. It comes
+back at rank 1, whatever rank you had.
+
+A miscast that costs you ranks never takes a spell below rank 1, and it can happen in the
+protected rows. Read the grimoire again to [win the ranks back](magic.md#spell-ranks).
 
 Every cast trains Spellcraft the same whether it miscasts or not.
 

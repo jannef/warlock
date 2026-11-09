@@ -56,6 +56,7 @@ use crate::content::{
     Content, CreatureId, CreatureSpawn, DungeonDef, Flow, Generator, LevelKind, LevelTemplate,
     LightId, ObjectId, Place, RoomEffectId, RoomOdds, Secret, ShopOdds, ShopPlan, Spawning,
     SpecialRoom, StairsDir, StairsLink, TerrainId, Trap, Vault, VaultMonsters, secret_look,
+    sibling,
 };
 use crate::door::Lock;
 use crate::geom::{Dir, Pos};
@@ -513,15 +514,20 @@ pub fn generate_for(
         key: def.key,
         vaults: boss.map_or(def.vaults(depth), |b| std::slice::from_ref(&b.vault)),
     };
+    // A Pit's floors lead only to its own (spec §7 "The Pits"): the neighbours are the floor's
+    // siblings, and its first floor's `<` is where it was entered from.
     let up_to = match (depth > 1, def.endless.is_some() || def.below.is_some()) {
-        (true, _) => Some(def.level_id(depth - 1)),
+        (true, _) => Some(sibling(id, depth - 1)),
         // However the first floor was reached (from the second, it may be), it climbs out: an
         // endless branch's, and a way up's (spec §7 "Ways up").
         (false, true) => content.way_into(id).map(str::to_string),
         (false, false) => entered_from.map(str::to_string),
     };
     // A lair's hidden way down leads where the `>` would (the stairs need not be placed).
-    let down_to = def.leads_down(depth).then(|| def.down_to(depth)).flatten();
+    let down_to = def
+        .leads_down(depth)
+        .then(|| def.down_to(id, depth))
+        .flatten();
     let ways_up = content.ways_up_from(id);
 
     // The danger the floor's pools draw at, which a vault's `danger` asks (`Vault::suits`).
@@ -989,6 +995,8 @@ mod deep_tests;
 mod fennmynster_tests;
 #[cfg(test)]
 mod fyrdelf_tests;
+#[cfg(test)]
+mod hellegeat_tests;
 #[cfg(test)]
 mod homes_tests;
 #[cfg(test)]

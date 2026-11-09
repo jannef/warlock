@@ -1,0 +1,41 @@
+# Hellegeat, "hell-gate" (#1296; docs/design/miscasts-review.md §7; spec §7 "The Pits"; the
+# fields: data/dungeons.toml): the shared branch of the Pits, the fiends' dungeons a miscast
+# portal tears open. It belongs to no campaign: any run of any campaign may open Pits of it. No
+# stair, hidden location, or quest leads here; only a portal does, and every portal opens a Pit of
+# its own, `hellegeat@S:1` to `hellegeat@S:5`, told apart by the integer drawn at the opening. A
+# Pit's floor is made the same from that integer each time, and forgotten when the player leaves
+# it, as Grundlēas's floors are: climbing back up makes the floor above again, its dead risen and
+# its loot drawn anew.
+
+[[dungeon]]
+id = "hellegeat"
+name = "Hellegeat"
+arrival = "The heat hits you like a door. The air stinks of brimstone."
+generator = "caves"
+depth = 5
+size = [80, 40]
+temperature = 45
+# A dull red glow everywhere.
+ambient = [40, 8, 4, 0]
+traps = ["fireball", "pit", "pit"]
+traps_per_level = [3, 5]
+loot = [2, 5]
+chests = { chance = 40, count = [1, 2] }
+# Danger 12 on the first floor, 4 more a floor, and half the player's levels past 10, at most 30
+# more, read as each floor is made: a level-1 fool meets lemures and dretches, a level-40 one
+# hezrous and bone devils. The folk keep their own factions, so demons and devils fight each
+# other on its floors (the Blood War); only what a gate calls is `loosed`. None of them strays out
+# of a Pit, and nothing strays in.
+danger = { base = 12, per_depth = 4, player = { percent = 50, from = 10, max = 30 } }
+population = ["lemure", "dretch", "imp", "quasit", "hell_hound", "bearded_devil", "nightmare",
+  "mezzoloth", "balgura", "barbed_devil", "incubus", "succubus", "chasme", "canoloth", "hezrou",
+  "bone_devil", "night_hag", "vrock", "nycaloth", "erinyes"]
+stray = 0
+out_of_depth = 10
+# A forgotten floor keeps no trade, as Grundlēas's.
+shops = { chance = 0 }
+room_effects = { chance = 0 }
+
+# A branch of Pits: opened only by a portal miscast, a Pit for each opening, its floors forgotten
+# when left. The Warden of the Gate on the fifth floor comes with #1298.
+[dungeon.portal]

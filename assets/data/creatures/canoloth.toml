@@ -1,7 +1,7 @@
 # The yugoloths (#446): mercenary fiends of the lower planes. The canoloth is their watchdog: squat,
 # doglike, eyeless and armoured in hide, it hears what it cannot see and lashes its long barbed
-# tongue out to catch an intruder and drag it in, tearing as it goes. Not yet in any dungeon's
-# population: no danger window reaches it.
+# tongue out to catch an intruder and drag it in, tearing as it goes. It lives in Hellegeat's Pits
+# (#1296).
 [[creature]]
 id = "canoloth"
 level = 29

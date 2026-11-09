@@ -1,6 +1,6 @@
 # The devil roster (#448). The lowest of the damned: a shapeless mass of flesh that crawls where
-# it is driven, mindless and slow, in herds. Its body burns away to brimstone when it dies. Not
-# yet in any dungeon's population.
+# it is driven, mindless and slow, in herds. Its body burns away to brimstone when it dies. It lives
+# in Hellegeat's Pits (#1296).
 [[creature]]
 id = "lemure"
 level = 5

@@ -162,6 +162,7 @@ mod fletch;
 mod focus;
 mod footing;
 mod forage;
+mod forget;
 mod free_blow;
 mod frenzy;
 pub(crate) mod freshness;
@@ -1809,6 +1810,8 @@ mod footing_tests;
 #[cfg(test)]
 mod forage_tests;
 #[cfg(test)]
+mod forget_tests;
+#[cfg(test)]
 mod free_blow_tests;
 #[cfg(test)]
 mod frenzy_tests;
@@ -1842,6 +1845,8 @@ mod hearing_tests;
 mod heavy_hall_tests;
 #[cfg(test)]
 mod heirloom_tests;
+#[cfg(test)]
+mod hellegeat_tests;
 #[cfg(test)]
 mod hoard_tests;
 #[cfg(test)]
@@ -1906,6 +1911,8 @@ mod merchants_eye_tests;
 mod mimic_tests;
 #[cfg(test)]
 mod mirrors_tests;
+#[cfg(test)]
+mod miscast_stat_tests;
 #[cfg(test)]
 mod miscast_tests;
 #[cfg(test)]

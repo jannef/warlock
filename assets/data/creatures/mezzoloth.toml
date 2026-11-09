@@ -1,7 +1,7 @@
 # The yugoloths (#446): mercenary fiends of the lower planes, who fight for whoever pays. The
 # mezzoloth is their foot soldier: a man-sized insect in a hard chitin shell, four-armed, that
-# fights with a trident in two of its hands and claws with the others. Not yet in any dungeon's
-# population: no danger window reaches it.
+# fights with a trident in two of its hands and claws with the others. It lives in Hellegeat's Pits
+# (#1296).
 [[creature]]
 id = "mezzoloth"
 level = 22

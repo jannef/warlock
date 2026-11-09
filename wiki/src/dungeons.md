@@ -7,7 +7,8 @@ their own, from the endless Grundlēas to the lairs of the wanted, are on
 
 Every place has a **danger level**, a number the game never shows you. On a dungeon floor it is
 the dungeon's base danger plus a step for every floor down. A hand-made place has one of its own.
-The overworld and the land you explore from it have none. No place grows more dangerous as you do.
+The overworld and the land you explore from it have none. Only the
+[Pits](pits.md#who-lives-there) grow more dangerous as you do.
 
 ## Who lives there, and how many
 

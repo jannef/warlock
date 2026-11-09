@@ -24,6 +24,12 @@
 //! **Paid**: a level is worth its arrival's experience once. Here "a level" is a depth: only a
 //! floor deeper than any reached before pays ([`EndlessFloors::pays`]), or going up and down one
 //! staircase, which always arrives on the way back, would pay for every step.
+//!
+//! **A Pit's floors** (spec §7 "The Pits", `hellegeat@S:N`) are forgotten and paid the same way
+//! ([`Content::is_endless_floor`] is true of them), `deepest` kept per Pit (`hellegeat@S`, the
+//! parsed branch), so each Pit pays its floors once. They are not made from the `endless/<n>`
+//! stream: a Pit's floor is a pure function of the run seed and its id, the same each time it is
+//! made, and the count of floors made does not go on.
 
 use super::{ActorId, World, WorldState};
 use crate::action::Event;
@@ -34,7 +40,7 @@ use std::collections::BTreeMap;
 /// The seed of level `id` for a run of `seed`, `made` floors made so far: a floor of an endless
 /// branch's own (the module docs), the run's for every other level.
 pub(super) fn floor_seed(content: &Content, seed: u64, id: &str, made: u32) -> u64 {
-    if content.is_endless_floor(id) {
+    if content.is_endless_floor(id) && !content.is_portal_floor(id) {
         crate::rng::stream_key(seed, &format!("endless/{made}"))
     } else {
         seed
@@ -45,9 +51,9 @@ pub(super) fn floor_seed(content: &Content, seed: u64, id: &str, made: u32) -> u
 /// empty, so a run that never goes there hashes as before).
 #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
 pub struct EndlessFloors {
-    /// Floors made so far in the run: the next floor's stream.
+    /// Floors of endless branches made so far in the run: the next floor's stream.
     made: u32,
-    /// The deepest floor reached, by branch.
+    /// The deepest floor reached, by branch (a Pit's by `branch@S`).
     deepest: BTreeMap<String, u32>,
 }
 
@@ -61,7 +67,9 @@ impl EndlessFloors {
         if !content.is_endless_floor(id) {
             return;
         }
-        self.made = self.made.saturating_add(1);
+        if !content.is_portal_floor(id) {
+            self.made = self.made.saturating_add(1);
+        }
         if let Some((branch, depth)) = parse_branch_level(id) {
             let deepest = self.deepest.entry(branch.to_string()).or_default();
             *deepest = depth.max(*deepest);

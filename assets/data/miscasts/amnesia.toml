@@ -2,6 +2,6 @@
 id = "amnesia"
 from = 99
 to = 100
-message = "The spell tears through your mind, and the raw power through the rest of you!"
-seen = "{who} clutches its head and is torn by its own power!"
-effect = { kind = "harm", dice = "8d10", damage = "force" }
+message = "The spell tears loose from your mind and takes another with it."
+seen = "{who} clutches its head."
+effect = { kind = "forget", spells = 2 }
