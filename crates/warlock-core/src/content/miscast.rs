@@ -33,7 +33,8 @@
 //! never kill its caster nor cost them anything they cannot get back. Its harm is capped at the
 //! caster's hit points less one (`world/miscast.rs`), and the loader refuses one whose effect is
 //! a `backfire`, a `drain`, a `summon`, a fire `zone`, or a status that ticks harm or mana
-//! (`check_protected`), so a campaign's table cannot break the promise either.
+//! (`check_protected`), so a campaign's table cannot break the promise either. A stat loss there
+//! is `stat_damage`, which mends.
 
 use super::learning::{EffectSpec, resolve_effect};
 use super::{Content, ContentError, MishapEffect, ZoneKind, duplicate_id};

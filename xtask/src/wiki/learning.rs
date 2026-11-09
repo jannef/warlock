@@ -199,10 +199,8 @@ fn effect_text(content: &Content, effect: MishapEffect) -> String {
             stat,
             points,
             difficulty,
-        } => format!(
-            "{} loses {points} for good unless you make a Willpower check against {difficulty}",
-            stat.map_or("a random stat", |s| s.name())
-        ),
+            times,
+        } => drain_words(stat, points, difficulty, times),
         MishapEffect::Summon { creature } => {
             format!(
                 "a hostile {} comes next to you",
@@ -213,11 +211,42 @@ fn effect_text(content: &Content, effect: MishapEffect) -> String {
         MishapEffect::Mark { stat } => format!("a training mark of {}", stat.name()),
         // The miscast table's only (`miscast.rs` says them).
         MishapEffect::Harm { .. }
+        | MishapEffect::StatDamage { .. }
         | MishapEffect::Refund
         | MishapEffect::Twice
         | MishapEffect::Swap
         | MishapEffect::Boon { .. }
         | MishapEffect::Noise { .. }
         | MishapEffect::Zone { .. } => effect.kind().into(),
+    }
+}
+
+/// A drain in words: `points` off a stat for good unless a Willpower check against `difficulty`
+/// is made, `times` over (a mishap's and a miscast's).
+pub(super) fn drain_words(
+    stat: Option<warlock_core::stats::Stat>,
+    points: u8,
+    difficulty: i32,
+    times: u8,
+) -> String {
+    let check = format!("unless you make a Willpower check against {difficulty}");
+    match (stat, times) {
+        (Some(stat), _) => format!(
+            "{} loses {points} [for good](stats.md#drained-stats) {check}",
+            stat.name()
+        ),
+        (None, 1) => {
+            format!("a random stat loses {points} [for good](stats.md#drained-stats) {check}")
+        }
+        (None, n) => {
+            let times = match n {
+                2 => "twice".to_string(),
+                n => format!("{n} times"),
+            };
+            format!(
+                "{times} over, a random stat (perhaps the same each time) loses {points} \
+                 [for good](stats.md#drained-stats) {check}, each its own check"
+            )
+        }
     }
 }

@@ -4,4 +4,4 @@ from = 55
 to = 56
 message = "A deep ache settles in your bones."
 seen = "{who} stoops."
-effect = { kind = "status", status = "weakened", severity = 2 }
+effect = { kind = "stat_damage", stat = "random", points = 1 }

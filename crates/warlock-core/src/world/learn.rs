@@ -398,6 +398,7 @@ impl World {
                 stat,
                 points,
                 difficulty,
+                times,
             } => {
                 let drain = Drain {
                     stat,
@@ -405,12 +406,15 @@ impl World {
                     check: Stat::Willpower,
                     difficulty,
                 };
-                self.drain(player, drain, None, events);
+                for _ in 0..times {
+                    self.drain(player, drain, None, events);
+                }
             }
             MishapEffect::Summon { creature } => self.summon(creature),
             MishapEffect::Learn => self.learn_spell(lesson.spell),
             // The miscast's only (`world/miscast.rs`): the loader keeps them off the study's table.
             MishapEffect::Harm { .. }
+            | MishapEffect::StatDamage { .. }
             | MishapEffect::Refund
             | MishapEffect::Twice
             | MishapEffect::Swap
