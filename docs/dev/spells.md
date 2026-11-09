@@ -251,11 +251,13 @@ cast path shares.
     name), `effect`). The loader orders the table by `from` and refuses a gap, an overlap, a
     closed last entry, an open one before it, and a `seen` without `{who}`. The effects are the
     mishaps' (`MishapEffect`, `content/learning.rs::resolve_effect` shared, with `miscast`
-    true): the miscast's own kinds `harm` (`dice`, `damage`), `refund`, `twice`, `swap`, `boon`
+    true): the miscast's own kinds `harm` (`dice`, `damage`), `stat_damage` (`stat`, a stat id
+    or `random`, and `points`, at least 1; #1290), `refund`, `twice`, `swap`, `boon`
     (`status`, `severity`), `noise` (`loudness`, 1 to `noise::MAX_LOUDNESS`), `zone` (`zone`, a
     `ZoneKind` id, `radius` 0 to 20, `turns` at least 1), `rank_loss` (`ranks`, at least 1),
     `forget` (`spells`, at least 1, or `all = true`), and `backfire`'s `full`, which the
-    study's table refuses; `learn`, which the miscast's refuses. **The whitelist**
+    study's table refuses; `drain`'s `times` (at least 1, default 1: the draw and the check made
+    that many times, the study's too); `learn`, which the miscast's refuses. **The whitelist**
     (`content/miscast.rs::check_protected`): an entry `MiscastRules::protects` (its `to` below
     `safe_below`) is refused with `backfire`, `drain`, `forget`, `summon`, a `fire` zone (a
     `rank_loss` is allowed: it never forgets), or a `status` or
@@ -277,7 +279,11 @@ cast path shares.
     (`world::miscast::entry_for`) finds the entry covering it.
   - **The entry** (`World::miscast`, any caster): the message (the player's, or `seen` with
     `{who}` when the player sees the creature), then the effect: `afflict`, the mana cut,
-    `teleport`, a stat mark off or on, `drain`, a summon at the first free cell around the
+    `teleport`, a stat mark off or on, `drain` (`times` over), `stat_damage`
+    (`miscast_stat_damage`: a `random` stat draws `below(6)`, then `StatDamage::take` against the
+    score, never below 1, hit points and mana cut to the new maxima, never below 1, and the player
+    told `stat_deeds::drop_news` when a point was taken; it mends a point a day through
+    `disease.rs`'s `mending`, which needs no disease), a summon at the first free cell around the
     caster (its type's faction), `harm` (`dice` through `World::resisted` of `damage` or the
     spell's type, then `hurt` with `Harm::Place`; for a protected entry at most `hp − 1`),
     `refund` (`Actor::spell_cost` back, to the
@@ -314,9 +320,7 @@ cast path shares.
     Rows: `stumble` (1 rank), `falter` (2), `forgetting` (1 spell), `amnesia` (2), `blank`
     (all).
   - **The table** (#1288): 65 rows of two totals; the 35 below 71 protected. The rows the
-    design's later PRs fill stand in with existing kinds under their final ids: `ache` and
-    `racked` (Weakened 2 and 3) until stat damage (#1290); `twofold_`, `threefold_`,
-    `ruinous_withering` as one `drain` each until `times` (#1290); the pit rows
+    design's later PRs fill stand in with existing kinds under their final ids: the pit rows
     (`pit` … `pit_and_lords`) as `harm` of their neighbours' dice until the Pits. The nine gate
     rows (`rift` … `lords_gate`) `summon` their gates (#1295, `docs/dev/creatures/gates.md`),
     with the design's words. Their words are working lines until #1292.

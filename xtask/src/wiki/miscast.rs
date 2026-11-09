@@ -142,8 +142,10 @@ fn effect_text(content: &Content, effect: MishapEffect, protected: bool) -> Stri
             stat,
             points,
             difficulty,
-        } => format!(
-            "{} loses {points} for good unless you make a Willpower check against {difficulty}",
+            times,
+        } => super::learning::drain_words(stat, points, difficulty, times),
+        MishapEffect::StatDamage { stat, points } => format!(
+            "{} takes {points} [stat damage](diseases.md#stat-damage), which mends a point a day",
             stat.map_or("a random stat", |s| s.name())
         ),
         MishapEffect::Summon { creature } => {

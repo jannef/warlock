@@ -34,7 +34,8 @@
 //! caster's hit points less one (`world/miscast.rs`), and the loader refuses one whose effect is
 //! a `backfire`, a `drain`, a `forget`, a `summon`, a fire `zone`, or a status that ticks harm
 //! or mana (`check_protected`), so a campaign's table cannot break the promise either; a
-//! `rank_loss` is allowed, as it never takes a spell below rank 1.
+//! `rank_loss` is allowed, as it never takes a spell below rank 1. A stat loss there is
+//! `stat_damage`, which mends.
 
 use super::learning::{EffectSpec, resolve_effect};
 use super::{Content, ContentError, MishapEffect, ZoneKind, duplicate_id};

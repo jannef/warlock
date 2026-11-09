@@ -689,13 +689,16 @@ developer notes (CLAUDE.md, `docs/dev/`).
       −10), at least 1. The miss carries the total and the die is the small variance; higher
       totals are worse: nothing and boons to 16 (the mana refunded, the spell again for free, a
       blessing, haste), then small harms, mana, hindering statuses, noise, zones, a swap, a
-      teleport, up to 70; from 71 backfires, drains for good, and harm climbing from 4d6 to
+      teleport, stat damage that mends a point a day (#1290), up to 70; from 71 backfires, drains
+      for good (`times` over for the worst: each its own random stat and Willpower check), and
+      harm climbing from 4d6 to
       20d10 force. **Protected entries**: one whose `to` is below `safe_below` (71) cannot kill
       its caster (its harm takes them to 1 hit point at the least, nothing at 1) and the loader
       refuses one that would backfire, drain, forget, summon, lay a fire zone, or put on a status
       that ticks harm or mana, a campaign's too (a rank loss is allowed: it never forgets); only a spell missed by 10 or more reaches past it.
       The entries' effects are the mishaps' kinds (`MishapEffect`, `resolve_effect`) and the
-      miscast's own (`harm`, `refund`, `twice`, `swap`, `boon`, `noise` (`loudness`: a
+      miscast's own (`harm`, `stat_damage` (`stat`, `points`: §8 "Stats"' stat damage, never a
+      score below 1, mending as a disease's does once none shows), `refund`, `twice`, `swap`, `boon`, `noise` (`loudness`: a
       thunderclap's sound on the caster's cell), `zone` (`zone`, `radius`, `turns`: a zone
       around the caster, no harm), `rank_loss` (`ranks`: the spell cast known that many ranks
       lower, never below 1), `forget` (`spells = N`: the spell cast and `N − 1` more known

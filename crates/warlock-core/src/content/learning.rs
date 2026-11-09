@@ -185,10 +185,13 @@ pub enum MishapEffect {
     },
     Teleport,
     LoseMark,
+    /// `points` off `stat` (a random one when `None`) for good unless a Willpower check against
+    /// `difficulty` is made, `times` over, each its own draw and check.
     Drain {
         stat: Option<Stat>,
         points: u8,
         difficulty: i32,
+        times: u8,
     },
     Summon {
         creature: CreatureId,
@@ -210,6 +213,12 @@ pub enum MishapEffect {
     Harm {
         dice: Dice,
         damage: Option<DamageTypeId>,
+    },
+    /// `points` of stat damage to `stat` (a random one when `None`), which mends (a miscast's
+    /// only).
+    StatDamage {
+        stat: Option<Stat>,
+        points: u8,
     },
     /// The mana the cast cost comes back.
     Refund,
@@ -251,6 +260,7 @@ impl MishapEffect {
             MishapEffect::RankLoss { .. } => "rank_loss",
             MishapEffect::Forget { .. } => "forget",
             MishapEffect::Harm { .. } => "harm",
+            MishapEffect::StatDamage { .. } => "stat_damage",
             MishapEffect::Refund => "refund",
             MishapEffect::Twice => "twice",
             MishapEffect::Swap => "swap",
@@ -300,6 +310,7 @@ pub(super) struct EffectSpec {
     stat: Option<String>,
     points: Option<u8>,
     difficulty: Option<i32>,
+    times: Option<u8>,
     creature: Option<String>,
     dice: Option<String>,
     damage: Option<String>,
@@ -357,6 +368,7 @@ pub(super) fn resolve_effect(
 ) -> Result<MishapEffect, String> {
     let only_miscast = [
         "harm",
+        "stat_damage",
         "refund",
         "twice",
         "swap",
@@ -380,6 +392,7 @@ pub(super) fn resolve_effect(
         ("stat", e.stat.is_some()),
         ("points", e.points.is_some()),
         ("difficulty", e.difficulty.is_some()),
+        ("times", e.times.is_some()),
         ("creature", e.creature.is_some()),
         ("dice", e.dice.is_some()),
         ("damage", e.damage.is_some()),
@@ -397,7 +410,8 @@ pub(super) fn resolve_effect(
         "harm" => &["dice", "damage"],
         "backfire" if miscast => &["full"],
         "mana" => &["percent"],
-        "drain" => &["stat", "points", "difficulty"],
+        "drain" => &["stat", "points", "difficulty", "times"],
+        "stat_damage" => &["stat", "points"],
         "summon" => &["creature"],
         "mark" => &["stat"],
         "noise" => &["loudness"],
@@ -488,10 +502,23 @@ pub(super) fn resolve_effect(
             let difficulty = e
                 .difficulty
                 .ok_or("a `drain` effect needs a `difficulty`")?;
+            let times = e.times.unwrap_or(1);
+            if times < 1 {
+                return Err("a `drain` effect's `times` is at least 1".into());
+            }
             MishapEffect::Drain {
                 stat: stat(&e.stat, true)?,
                 points,
                 difficulty,
+                times,
+            }
+        }
+        "stat_damage" => {
+            let points = e.points.filter(|&p| p > 0);
+            let points = points.ok_or("a `stat_damage` effect needs `points`, at least 1")?;
+            MishapEffect::StatDamage {
+                stat: stat(&e.stat, true)?,
+                points,
             }
         }
         "summon" => {
