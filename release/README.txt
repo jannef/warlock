@@ -7,8 +7,11 @@ Run
 ---
 - Linux / Windows: run the `warlock` / `warlock.exe` binary in this folder.
 - macOS: open `Warlock.app`, or run the bare `warlock` binary from a terminal. The app is
-  unsigned, so macOS will refuse to open it the first time: right-click it and choose Open, or run
-  `xattr -dr com.apple.quarantine Warlock.app`.
+  unsigned, so macOS will refuse to open it the first time: open System Settings > Privacy &
+  Security and choose Open Anyway, or run `xattr -dr com.apple.quarantine Warlock.app`.
+
+To build a version from source instead, see the README on GitHub ("Install a specific version
+from source": `cargo install --git ... --tag vX.Y.Z --locked --no-default-features warlock`).
 
 Run `warlock --help` for command-line options. `warlock-cli` is the headless development tool.
 
