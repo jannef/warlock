@@ -52,14 +52,14 @@ fn how_often(weight: u32) -> &'static str {
 
 /// Every material by group, then name: its group, colour, weight, weapon modifiers, the
 /// Protection an armour of it keeps, and worth, all on steel's scale; whether it is precious
-/// (shown in names); its chance to withstand each kind of item damage (acid, rust, fire); and
-/// the objects made of it, in part or whole.
+/// (shown in names); its chance to withstand each kind of item damage (acid, rust, fire); its
+/// `work` (added to the difficulty of working it); and the objects made of it, in part or whole.
 pub(super) fn materials(content: &Content) -> String {
     let mut out = String::from(
         "| Material | Group | Colour | Weight | Weapon (to hit / damage) | Armour | Worth | \
-         Precious (shown in names) | Withstands acid | Withstands rust | Withstands fire | Objects \
-         made of it, in part or whole |\n\
-         |---|---|---|---:|:---:|---:|---:|:---:|---:|---:|---:|---|\n",
+         Precious (shown in names) | Withstands acid | Withstands rust | Withstands fire | Work | \
+         Objects made of it, in part or whole |\n\
+         |---|---|---|---:|:---:|---:|---:|:---:|---:|---:|---:|---:|---|\n",
     );
     // A loose gem is made of its gem, never of what its object would be without one.
     let loose = content.gems().map(|g| g.object);
@@ -95,14 +95,15 @@ pub(super) fn materials(content: &Content) -> String {
         let _ = writeln!(
             out,
             "| {} | {group} | {colour} | {}% | {weapon} | {armour} | {} | {} | {}% | {}% | {}% \
-             | {made} |",
+             | {} | {made} |",
             capital(&m.name),
             m.weight,
             times(m.value),
             yes(m.precious),
             resists.acid,
             resists.rust,
-            resists.fire
+            resists.fire,
+            signed(m.work),
         );
     }
     out
@@ -351,10 +352,14 @@ pub(super) fn variants(content: &Content) -> String {
     out
 }
 
-/// What a piece of each material with a group weighs and is worth (`objects/piece.toml`: what a
-/// broken item falls to), metals first, then by group and name.
+/// What a piece of each material with a group is called, weighs, and is worth, and the skill
+/// and stat that work it (`objects/piece.toml`, `stock.toml`: what a broken item falls to, the
+/// material stock), metals first, then by group and name.
 pub(super) fn pieces(content: &Content) -> String {
-    let mut out = String::from("| Piece of | Group | Weight | Worth |\n|---|---|---:|---:|\n");
+    let mut out = String::from(
+        "| Material | Group | A piece | Weight | Worth | Worked by |\n\
+         |---|---|---|---:|---:|---|\n",
+    );
     for (id, m) in by_group(content) {
         let (Some(group), Some(piece)) = (&m.group, warlock_core::piece::make(content, id, 1))
         else {
@@ -364,10 +369,14 @@ pub(super) fn pieces(content: &Content) -> String {
             0 => "nothing".to_string(),
             n => format!("{n} gold"),
         };
+        let worked = (content.stock().profession_of(content, id)).map_or("-".to_string(), |p| {
+            format!("{} ({})", content.skill(p.skill).name, p.stat.name())
+        });
         let _ = writeln!(
             out,
-            "| {} | {group} | {} | {worth} |",
+            "| {} | {group} | {} | {} | {worth} | {worked} |",
             capital(&m.name),
+            piece.names(content).0,
             format_weight(piece.weight(content)),
         );
     }

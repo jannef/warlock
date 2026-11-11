@@ -235,13 +235,13 @@ fn a_broken_body_falls_as_the_parts_it_is_made_of() {
         let said = w.messages().iter().nth(before).expect("a line");
         assert_eq!(said.text, format!("The {name} breaks apart."));
     }
-    // The candlestick of silver: pieces of silver, worth real coin.
+    // The candlestick of silver: a silver ingot, worth real coin.
     let silver = content.material_id("silver").expect("silver");
     let mut w = hall(0);
     let pile = kill_at(&mut w, Pos::new(2, 2));
     assert_eq!(pile.len(), 1);
     assert_eq!(pile[0].parts(&content)[0].material, silver);
-    assert_eq!(pile[0].describe(&content), "4 pieces of silver");
+    assert_eq!(pile[0].describe(&content), "a silver ingot");
     assert!(pile[0].value(&content) > 0);
 }
 
@@ -268,7 +268,7 @@ fn a_gem_falls_loose_and_paper_falls_as_nothing() {
     assert!(body.is_valid_for(&content));
     let pile = kill_at(&mut w, Pos::new(2, 2));
     let names: Vec<String> = pile.iter().map(|s| s.describe(&content)).collect();
-    assert_eq!(names, ["4 pieces of silver", "a ruby"]);
+    assert_eq!(names, ["a silver ingot", "a ruby"]);
     // A book is paper with a leather trim: the leather falls, nothing of the paper.
     let book = content.object_id("book").expect("a book");
     let teapot = at(&w, Pos::new(4, 2));
@@ -278,7 +278,7 @@ fn a_gem_falls_loose_and_paper_falls_as_nothing() {
     actor.inventory = vec![crate::object::Stack::one(book)];
     let pile = kill_at(&mut w2, Pos::new(4, 2));
     let names: Vec<String> = pile.iter().map(|s| s.describe(&content)).collect();
-    assert_eq!(names, ["3 pieces of leather"]);
+    assert_eq!(names, ["a leather hide"]);
 }
 
 #[test]

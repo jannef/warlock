@@ -328,19 +328,31 @@ developer notes (CLAUDE.md, `docs/dev/`).
   material, gems show at once, identified or not. Loot rolls them (§8 "Magic items"), general
   stores buy them (§7 "Shops"), and level files place them (§7 "Levels").
 - **Pieces and breaking** (#484): nothing in the world is raw material but **a piece**, the one
-  generic object `piece` (`objects/piece.toml`: `,`, item class miscellaneous, 100 g and 1 gold
+  generic object `piece` (`objects/piece.toml`: `,`, item class materials, 500 g and 1 gold
   of steel, `made_of = ["any"]`), made of whatever material with a group its main part carries,
-  as the loose gem is made of its gem: named by it ("a piece of tin", "3 pieces of silk"), drawn
-  in its colour, weighing its `weight` % and worth its `value` % of the steel piece's (a piece of
-  gold 246 g and 20 gold; of tin 93 g and nothing). Pieces of one material stack. **Breaking**
+  as the loose gem is made of its gem: named by it with its group's form word (**material
+  stock**, #1332, `data/stock.toml`: "a steel ingot", "3 hardwood billets", "a leather hide", "a
+  bone shard", "a block of jade", "a lump of amber", "a bolt of wool", "a lump of glass"; "a
+  piece of X" for a group without a row), drawn in its colour, weighing its `weight` % and worth
+  its `value` % of the steel piece's (a gold ingot 1230 g and 20 gold; a tin ingot 465 g and
+  nothing). Pieces of one material stack. The piece is the stock the professions' salvage gives
+  and their recipes take (docs/design/professions.md §3): how many pieces some grams of a
+  material make is `max(1, round(grams / one piece's grams))` (a dagger's steel 1, a long sword's
+  3, a great sword's 7, a quarterstaff's wood 10 billets). `stock.toml` also names the
+  profession that works each group (§4): its skill, the stat of its checks, and its verb (metal:
+  Metalcraft and Strength; wood, bone, and hide: Woodcraft and Dexterity; stone, resin, and the
+  gems wait for Jewelcraft; cloth and glass have none yet), and a material's `work` (below) makes
+  its checks harder or easier. The smithy, the weaponsmith, the armourer, the fletcher, and the
+  general stores buy materials; the smithy and the general stores stock them (Cēaptūn's smithy
+  steel and iron ingots; what is worth nothing, a wood billet, no shop trades). **Breaking**
   an item (`object::break_up`; an animated thing's broken component, §8 "Animated objects")
   turns it into the parts it is made of, part by part: a gem part falls as its loose gem (size
   and cut kept; a base item's gem part the plain ones), a material with a group as pieces of it,
   `max(1, round(its grams × percent / 100 / one piece's grams))` (its parts of that material
   summed, the whole stack's; an animated thing's percent is `[drops] pieces`, 50), and a
   material without one (paper, wax, flesh) as nothing. Its magic is lost. A broken tin dagger
-  with a ruby pommel gives 2 pieces of tin and the ruby; a steel long sword 8 pieces of steel and
-  3 of leather.
+  with a ruby pommel gives a tin ingot and the ruby; a steel long sword 2 steel ingots and a
+  leather hide.
 - **Materials** (#193, #194): a material's properties are on one scale, steel's (all optional,
   so a material without them is as it was): `group` (metal, wood, bone,
   stone, hide, cloth, glass, resin; none for paper, wax, food, and the gems, which are set in
@@ -351,6 +363,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
   cannot be armour), `value` (above), `rarity` and `gear` (how often loot, by item
   level, and creatures' gear, by creature level, make an item of it: `{ weight, deeper, level }`,
   the weight at level 1, `deeper` per level past the first, never below 0, none below `level`),
+  `work` (#1332: how hard it is to work, a signed modifier on every salvage and recipe check that
+  works it, steel 0; the soft metals −3, copper and gold −2, mithril, ruby, and sapphire +4,
+  adamantium +8; docs/design/professions.md §4),
   `resists` (#1168: `{ acid, rust, fire }`, its chance in percent to withstand each kind of item damage, none withstood without it; withstood, nothing happens, else the item is damaged, the
   anvil's one state that Temper or Whittle mends, and one damaged already is destroyed; a failed
   Temper or Whittle is item damage no material withstands. Noble metals, mithril, adamantium,

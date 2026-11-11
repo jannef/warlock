@@ -160,6 +160,7 @@ pub mod starter;
 mod stat_training;
 mod status;
 mod steal;
+mod stock;
 mod summon;
 #[cfg(test)]
 mod summoner_roster_tests;
@@ -335,6 +336,7 @@ pub use status::{
     StatusId, Wound,
 };
 pub use steal::StealRules;
+pub use stock::{Profession, Stock, StockGroup};
 pub use summon::Summon;
 pub use surprise::SurpriseRules;
 pub use swim::SwimRules;
@@ -658,6 +660,8 @@ pub struct Content {
     grimoires: grimoire::Grimoires,
     /// Gem sizes, cuts, and ornaments (`data/gems.toml`); none without the file.
     gems: Option<Gems>,
+    /// Material stock's words and professions (`data/stock.toml`); empty without the file.
+    stock: Stock,
     /// Unique items (`data/uniques/`, each campaign's too; spec §8 "Magic items").
     uniques: Uniques,
     /// Equipment slots, in display order.
@@ -868,6 +872,7 @@ impl Content {
             object_ids: BTreeMap::new(),
             grimoires: grimoire::Grimoires::default(),
             gems: None,
+            stock: Stock::default(),
             uniques: Uniques::default(),
             slots: Vec::new(),
             chests: ChestRules::default(),
@@ -1144,6 +1149,11 @@ impl Content {
         content.room_effects.check_factions(&content.factions)?;
         // Objects before creatures: an animated type is generated from its body's object.
         content.load_objects(files)?;
+        // Stock after objects and skills: its rows name material groups and skills.
+        let path = "data/stock.toml";
+        if let Some(text) = files.get_optional(path) {
+            content.stock = Stock::parse(path, text, &content)?;
+        }
         let ids = &content.material_ids;
         (content.factions)
             .resolve_gear(|name| ids.get(name).copied())
@@ -3306,6 +3316,12 @@ impl Content {
     /// file: no gems are found or set.
     pub fn gems(&self) -> Option<&Gems> {
         self.gems.as_ref()
+    }
+
+    /// Material stock's form words and professions (`data/stock.toml`; docs/dev/objects.md
+    /// "Stock"); empty without the file.
+    pub fn stock(&self) -> &Stock {
+        &self.stock
     }
 
     /// The unique items (spec §8 "Magic items"), in table order.

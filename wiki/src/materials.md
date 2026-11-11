@@ -181,22 +181,36 @@ A long sword and a chain mail shirt in each metal:
 
 ## Pieces
 
-Raw material never lies about by itself, except as **pieces**: what a broken thing falls to (an
-animated thing that does not fall whole, for example; see [Animated objects](animated.md)). A
-piece is a piece of one material, such as *a piece of tin* or *3 pieces of silk*, shown as `,`
-in its material's colour.
+Raw material comes in **pieces**: what a broken thing falls to (an animated thing that does not
+fall whole, for example; see [Animated objects](animated.md)), and the stock smiths and other
+crafters work with. A piece is one material, shown as `,` in its material's colour, and named by
+its group: *a steel ingot*, *3 hardwood billets*, *a leather hide*, *a bone shard*, *a block of
+jade*, *a lump of amber*, *a bolt of wool*, *a lump of glass*.
 
-- A piece weighs what 100 g of steel would weigh in that material.
-- It is worth what a piece of steel (1 gold) would be worth in that material, rounded. A piece of
-  tin is worth nothing, and one of gold 20 [gold](shops.md#money).
-- Pieces of one material stack. They are miscellaneous goods, which no [shop](shops.md#selling)
-  buys yet.
+- A piece weighs what 500 g of steel would weigh in that material: a wood billet 200 g, a gold
+  ingot 1230 g.
+- It is worth what a steel ingot (1 gold) would be worth in that material, rounded. A tin ingot
+  is worth nothing, and a gold one 20 [gold](shops.md#money).
+- Pieces of one material stack. They are listed under **Materials**. A smithy and a general
+  store sell them, and a smithy, a weaponsmith, an armourer, a fletcher, and a general store buy
+  them (see [Shops](shops.md#selling)), unless they are worth nothing, like a wood billet. In
+  Cēaptūn the smithy has steel and iron ingots.
+
+How many pieces a thing holds goes by weight: its weight in a material divided by one piece of
+it, rounded, and at least one. A dagger's steel is one ingot, a long sword's blade three, a great
+sword seven, and a quarterstaff ten wood billets.
 
 A broken thing falls apart into the parts it was made of. A [gem](gems.md) set in it falls
 loose, keeping its [size and cut](gems.md#size-and-cut). Each other part becomes pieces of its
 material: half the part's weight in pieces, at least one, with parts of the same material counted
 together. Paper, wax, and the like leave nothing. Any [magic](magic-items.md) is lost. A tin
-dagger with a ruby pommel breaks into 2 pieces of tin and the ruby. A steel long sword breaks
-into 8 pieces of steel and 3 of leather.
+dagger with a ruby pommel breaks into a tin ingot and the ruby. A steel long sword breaks into
+2 steel ingots and a leather hide.
+
+Each group is worked by one skill: metal by [Metalcraft](skills.md#skill-metalcraft), with
+Strength; wood, bone, and hide by [Woodcraft](skills.md#skill-woodcraft), with Dexterity. Stone,
+amber, gems, cloth, and glass have no crafting skill yet. Some materials are harder to work than
+others: the **work** column of the materials table is added to the difficulty of working them
+(steel 0, tin −3, adamantium +8). Nothing uses these yet; crafting is still to come.
 
 {{#include generated/pieces.md}}

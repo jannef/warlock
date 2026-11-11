@@ -63,7 +63,10 @@
 #             its alloys corrode but hardly rust; the soft metals (tin, pewter, lead, zinc,
 #             cadmium, bendalloy) melt; cloth, flesh, plant, paper, and wax nothing but rust;
 #             wood burns; stone and glass stand acid and heat
-#   gem       makes it a gem (spec §7 "Gems"; precious, with no group): an inline
+#   work      how hard it is to work (default 0, steel's): a signed modifier on the check of every
+#             salvage and recipe that works it (docs/design/professions.md §4; the profession
+#             that works it is its group's in stock.toml). Soft metals −3, adamantium +8
+#   gem      makes it a gem (spec §7 "Gems"; precious, with no group): an inline
 #             table of
 #               color   "#rrggbb": a loose gem's glyph, and a ring set with it
 #               value   what a plain one (of the plain size and cut in gems.toml) is worth, in

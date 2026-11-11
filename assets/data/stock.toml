@@ -1,0 +1,82 @@
+# Material stock (the design: docs/design/professions.md §3, §4; content/stock.rs): what a piece
+# of each material group is called, and the profession that works the group. The stock is the
+# one `piece` object (objects/piece.toml: 500 g of steel, another material 500 g × its `weight`
+# %), made of any grouped material and stacking by material; this file names it by its group's
+# form word: "a steel ingot", "3 hardwood billets", "a bolt of wool". A group without a row keeps
+# the object's own name, "a piece of X". The file is optional: without it every piece is a piece,
+# and no material has a profession.
+#
+# Each [[group]]:
+#   group     a material group (materials/README.toml), once
+#   name      the form word, singular, and
+#   plural    plural
+#   of        true: the material after the word ("a lump of amber"); default false, before it
+#             ("a steel ingot")
+#   skill     the skill (skills.toml) that works the group's materials: salvage and recipes
+#   stat      the stat its checks are made by
+#   verb      the verb of its menu rows and dialogs ("Forge", "Make", "Cut")
+#   skill, stat, and verb go together: a group no profession takes yet (cloth, glass) has none.
+#   A skill is named with one stat only, everywhere in the file.
+#
+# gems = { skill, stat, verb }: the profession of the gems (materials with a `gem` table, no
+# group). Jewelcraft (#1331) takes the gems, stone (stone, flint, obsidian, jade), and resin
+# (amber) once it is a skill; until then those rows have their words only.
+
+[[group]]
+group = "metal"
+name = "ingot"
+plural = "ingots"
+skill = "metalcraft"
+stat = "strength"
+verb = "Forge"
+
+[[group]]
+group = "wood"
+name = "billet"
+plural = "billets"
+skill = "woodcraft"
+stat = "dexterity"
+verb = "Make"
+
+# Bone, horn, ivory, chitin, dragonbone: carved by hand, Woodcraft's.
+[[group]]
+group = "bone"
+name = "shard"
+plural = "shards"
+skill = "woodcraft"
+stat = "dexterity"
+verb = "Make"
+
+# Leather, hardened leather, fur, dragonscale: primitive gear, made by hand without a smith
+# (#1337's answers: Woodcraft takes hide, sinew, and horn).
+[[group]]
+group = "hide"
+name = "hide"
+plural = "hides"
+skill = "woodcraft"
+stat = "dexterity"
+verb = "Make"
+
+[[group]]
+group = "stone"
+name = "block"
+plural = "blocks"
+of = true
+
+[[group]]
+group = "resin"
+name = "lump"
+plural = "lumps"
+of = true
+
+[[group]]
+group = "cloth"
+name = "bolt"
+plural = "bolts"
+of = true
+
+[[group]]
+group = "glass"
+name = "lump"
+plural = "lumps"
+of = true

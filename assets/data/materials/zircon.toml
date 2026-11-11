@@ -4,3 +4,4 @@ name = "zircon"
 resists = { acid = 100, rust = 100, fire = 100 }
 precious = true
 gem = { color = "#5fc7d9", value = 70, rarity = 20 }
+work = 1

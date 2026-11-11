@@ -78,8 +78,8 @@ name = "general store"
 title = "{keeper}'s General Store"
 stock = [
     "melee_weapons", "missile_weapons", "missiles", "shields", "body_armour", "helmets",
-    "cloaks", "gloves", "boots", "light_sources", "tools", "food", "potions", "scrolls", "wands",
-    "rods",
+    "cloaks", "gloves", "boots", "light_sources", "tools", "materials", "food", "potions",
+    "scrolls", "wands", "rods",
 ]
 always = ["scroll_of_identify"]
 never = [
@@ -90,8 +90,8 @@ never = [
 ]
 buys = [
     "melee_weapons", "missile_weapons", "missiles", "shields", "body_armour", "helmets",
-    "cloaks", "gloves", "boots", "clothing", "light_sources", "tools", "household", "food",
-    "potions", "scrolls", "wands", "rods", "gems",
+    "cloaks", "gloves", "boots", "clothing", "light_sources", "tools", "household", "materials",
+    "food", "potions", "scrolls", "wands", "rods", "gems",
 ]
 items = [6, 10]
 markup = 150
@@ -103,7 +103,9 @@ pays = 30
 id = "town_store"
 name = "town store"
 title = "{keeper}'s General Store"
-stock = ["cloaks", "light_sources", "tools", "food", "potions", "scrolls", "wands", "rods"]
+stock = [
+    "cloaks", "light_sources", "tools", "materials", "food", "potions", "scrolls", "wands", "rods",
+]
 never = [
     "blasting_flask", "brewers_blunder", "draught_of_chance", "elixir_of_grace",
     "elixir_of_might", "elixir_of_presence", "elixir_of_vigour", "elixir_of_will",
@@ -111,8 +113,8 @@ never = [
     "trolls_blood",
 ]
 buys = [
-    "cloaks", "clothing", "light_sources", "tools", "household", "food", "potions", "scrolls",
-    "wands", "rods", "gems",
+    "cloaks", "clothing", "light_sources", "tools", "household", "materials", "food", "potions",
+    "scrolls", "wands", "rods", "gems",
 ]
 items = [6, 10]
 markup = 140
@@ -124,7 +126,7 @@ id = "weaponsmith"
 name = "weaponsmith"
 title = "{keeper}'s Forge"
 stock = ["melee_weapons", "missiles"]
-buys = ["melee_weapons", "missiles"]
+buys = ["melee_weapons", "missiles", "materials"]
 items = [5, 9]
 markup = 130
 pays = 40
@@ -134,13 +136,13 @@ id = "armourer"
 name = "armourer"
 title = "{keeper}'s Armoury"
 stock = ["shields", "body_armour", "helmets", "cloaks", "gloves", "boots"]
-buys = ["shields", "body_armour", "helmets", "cloaks", "gloves", "boots"]
+buys = ["shields", "body_armour", "helmets", "cloaks", "gloves", "boots", "materials"]
 items = [5, 9]
 markup = 130
 pays = 40
 
 # Cēaptūn's smithy (#1248): arms, missiles, and armour, the weaponsmith's and the armourer's
-# trades under one roof (cloaks are the general store's). A town's own kind: no generated level
+# trades under one roof (cloaks are the general store's), and ingots to forge with. A town's own kind: no generated level
 # has one.
 [[shop]]
 id = "smithy"
@@ -148,11 +150,11 @@ name = "smithy"
 title = "{keeper}'s Smithy"
 stock = [
     "melee_weapons", "missile_weapons", "missiles", "shields", "body_armour", "helmets", "gloves",
-    "boots",
+    "boots", "materials",
 ]
 buys = [
     "melee_weapons", "missile_weapons", "missiles", "shields", "body_armour", "helmets", "gloves",
-    "boots",
+    "boots", "materials",
 ]
 items = [5, 9]
 markup = 130
@@ -195,7 +197,7 @@ id = "fletcher"
 name = "fletcher"
 title = "{keeper}'s Fletchery"
 stock = ["missile_weapons", "missiles"]
-buys = ["missile_weapons", "missiles"]
+buys = ["missile_weapons", "missiles", "materials"]
 items = [5, 8]
 markup = 125
 pays = 40

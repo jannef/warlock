@@ -12,3 +12,4 @@ value = 300
 rarity = { weight = 40, deeper = 3 }
 gear = { weight = 20, deeper = 3 }
 fit = { armour = "poor" }
+work = 3

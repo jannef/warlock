@@ -276,6 +276,7 @@ mod stat_training;
 mod statue;
 mod status;
 mod steal;
+mod stock;
 mod stride;
 mod summon;
 mod summon_spell;

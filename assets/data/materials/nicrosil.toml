@@ -12,3 +12,4 @@ protection = 110
 value = 1000
 rarity = { weight = 10, deeper = 1, level = 8 }
 gear = { weight = 5, deeper = 1, level = 8 }
+work = 3

@@ -4,3 +4,4 @@ name = "diamond"
 resists = { acid = 100, rust = 100, fire = 100 }
 precious = true
 gem = { color = "#e8f4ff", value = 400, rarity = 2 }
+work = 6
