@@ -871,6 +871,11 @@ developer notes (CLAUDE.md, `docs/dev/`).
     wielded first), they say `done`, "Quest complete: Three apples.", the reward goes into the
     pack ("The gardener gives you 10 gold coins.", what has no room lies at the player's feet),
     and the XP is gained ("You gain 15 experience.", with any levels it earns, §8 "Experience").
+    A reward may also teach skills (`skills`, by skill id; #1329): a skill the player is untrained
+    in is trained at its `start` roll (drawn on the `levels` stream, never the gameplay one), a
+    trained one gets `marks` training marks instead, each as a mark earned by use (§8 "Skills");
+    told in words, never numbers ("Sister Hild shows you how to dress a wound.", "You learn more
+    of healing."). Sister Hild's Grave goods teaches Heal: `1d4`, or 100 marks.
     Topics the speaker does not have now are refused ("… knows nothing about that.") and change
     nothing. Talk about quests takes no time.
   - **Goals**: *kill* counts the player's own kills (§8 "Experience": melee, shots, throws, and a

@@ -256,7 +256,8 @@ pub(super) fn quests(content: &Content) -> String {
     out
 }
 
-/// A quest's reward in words: "20 gold, 30 XP, jade amulet".
+/// A quest's reward in words: "20 gold, 30 XP, jade amulet", "Heal skill (1d4 untrained, 100
+/// marks trained)".
 fn reward(content: &Content, reward: &Reward) -> String {
     let mut parts = Vec::new();
     if reward.gold > 0 {
@@ -267,6 +268,17 @@ fn reward(content: &Content, reward: &Reward) -> String {
     }
     for stack in &reward.items {
         parts.push(content.object(stack.object).describe(stack.count));
+    }
+    for taught in &reward.skills {
+        let name = &content.skill(taught.skill).name;
+        let mut how = Vec::new();
+        if let Some(start) = taught.start {
+            how.push(format!("{start} untrained"));
+        }
+        if taught.marks > 0 {
+            how.push(format!("{} marks trained", taught.marks));
+        }
+        parts.push(format!("{name} skill ({})", how.join(", ")));
     }
     if parts.is_empty() {
         "—".to_string()

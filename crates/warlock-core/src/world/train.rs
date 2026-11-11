@@ -16,7 +16,7 @@
 use super::{ActorId, World};
 use crate::combat::{Blow, Category, Strike};
 use crate::content::StatUse;
-use crate::skills::Use;
+use crate::skills::{SkillId, Use};
 
 impl World {
     /// `blow`, a plain miss at the player (`Missed { by: None }`) made a dodge one time in
@@ -54,7 +54,6 @@ impl World {
     /// gives two marks; `Here::train`).
     pub(super) fn train(&mut self, used: Use) {
         let content = self.content.clone();
-        let player = self.state.player;
         let (level, at) = (self.state.player().level.clone(), self.state.player().pos);
         let trained: Vec<_> = (self.state.player().skills.iter())
             .map(|(id, _)| id)
@@ -72,13 +71,19 @@ impl World {
                     if !self.state.training.chance(step) {
                         continue;
                     }
-                    let actor = self.state.actors.get_mut(&player).expect("the player");
-                    actor.skills.mark(id);
+                    self.mark_skill(id);
                 }
             }
         }
         if let Some(stat) = StatUse::of_skill(used) {
             self.train_stat(stat);
         }
+    }
+
+    /// One training mark for the player's skill `id`, if trained: the one place the player's
+    /// skills are marked (by use here, by a quest's reward in `quest.rs`). Returns whether it
+    /// was trained.
+    pub(super) fn mark_skill(&mut self, id: SkillId) -> bool {
+        self.player_mut().skills.mark(id)
     }
 }
