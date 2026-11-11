@@ -30,6 +30,7 @@ attacks, and senses ([Creatures in numbers](creature-numbers.md)).
 
 - **Play in your browser:** <https://jannef.github.io/warlock/> (needs a browser with WebGPU)
 - **Download for Windows, macOS, and Linux:** <https://github.com/jannef/warlock/releases>
+- **Build a version from source:** `cargo install --git https://github.com/jannef/warlock --tag v0.16.0 --locked --no-default-features warlock` (details in the [README](https://github.com/jannef/warlock#install-a-specific-version-from-source))
 - **Source and issues:** <https://github.com/jannef/warlock>
 
 ## Where to start
