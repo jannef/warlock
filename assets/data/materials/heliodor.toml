@@ -4,3 +4,4 @@ name = "heliodor"
 resists = { acid = 100, rust = 100, fire = 100 }
 precious = true
 gem = { color = "#e8d44d", value = 110, rarity = 10 }
+work = 2

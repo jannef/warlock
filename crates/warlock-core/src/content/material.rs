@@ -82,6 +82,10 @@ pub struct MaterialDef {
     /// `good` by default.
     #[serde(default)]
     pub fit: Fits,
+    /// How hard it is to work, a signed modifier on the check of every salvage and recipe that
+    /// works it (docs/design/professions.md §4; steel 0, the default; tin −3, adamantium +8).
+    #[serde(default)]
+    pub work: i32,
     /// How it withstands each kind of item damage, in percent (spec §7 "Materials";
     /// `world/item_damage.rs`): `resists = { acid = 20, rust = 10, fire = 95 }`, every kind
     /// given. One without withstands nothing.

@@ -69,7 +69,9 @@ fn check_stack(content: &Content, stack: &Stack) {
     } else {
         &def.plural
     };
-    assert!(stack.describe(content).contains(name), "{}", def.id);
+    // A piece is named by its group's form word ("a steel ingot", data/stock.toml).
+    let named = stack.describe(content).contains(name) || def.id == crate::piece::ID;
+    assert!(named, "{}", def.id);
 }
 
 #[test]

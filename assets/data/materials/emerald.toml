@@ -4,3 +4,4 @@ name = "emerald"
 resists = { acid = 100, rust = 100, fire = 100 }
 precious = true
 gem = { color = "#2ea05a", value = 300, rarity = 5 }
+work = 3

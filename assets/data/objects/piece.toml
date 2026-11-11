@@ -1,17 +1,20 @@
-# A piece of some material (spec §7 "Objects and materials"; the design:
-# docs/design/animated-objects.md §9.2): what a broken item falls to, by the parts it was made of
-# (crate::piece::break_up). One object for every material with a group, as the loose gem is one
-# object for every gem: its material names it ("a piece of tin", "3 pieces of silk"), colours it,
-# weighs it (its `weight` % of these 100 g of steel), and prices it (its `value` % of this coin).
-# A piece of steel is drawn in steel's colour, here.
+# A piece of some material (spec §7 "Objects and materials"; the designs:
+# docs/design/animated-objects.md §9.2, docs/design/professions.md §3): what a broken item falls
+# to, by the parts it was made of (crate::piece::break_up), and the material stock salvage gives
+# and recipes take. One object for every material with a group, as the loose gem is one object
+# for every gem: its material names it by its group's form word ("a steel ingot", "3 hardwood
+# billets", "a bolt of wool"; stock.toml; "a piece of X" for a group without one), colours it,
+# weighs it (its `weight` % of these 500 g of steel), and prices it (its `value` % of this coin).
+# A piece of steel is drawn in steel's colour, here. It is never loot (it has no `kind`); a shop
+# that stocks materials lays it out as often as any other good that is no loot.
 [[object]]
 id = "piece"
 name = "piece"
 glyph = ","
 fg = "#a8b0b8"
-class = "miscellaneous"
+class = "materials"
 materials = ["steel"]
 made_of = ["any"]
-weight = 100
+weight = 500
 value = 1
 stackable = true
