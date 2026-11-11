@@ -9,6 +9,10 @@
 //! the same skill is smaller: the shrinking dice are the only brake. Rolls draw from the
 //! `levels` stream, never the gameplay stream, and only when the player chooses the skill.
 //!
+//! A skill also rolls by itself, mid-game, when its marks reach `[rolls] auto_at`
+//! ([`World::mark_skill`], where every mark is added): the same roll, on the same stream, with
+//! the same words, and in addition to the level's rolls (#1328).
+//!
 //! The level-up screen shows both (the owner, 2026-10-27: numbers on that screen): each skill's
 //! dice and what set them, and where the level's rolls came from. [`roll_count`] and
 //! [`skill_roll`] are the one place each is computed, for the rule and the screen alike. The
@@ -172,6 +176,21 @@ impl World {
             ));
             return Spent::Nothing;
         };
+        self.roll_skill(id, trained);
+        let due = &mut self.state.progress.due[at];
+        due.rolls -= 1;
+        if due.is_spent() {
+            self.state.progress.due.remove(at);
+        }
+        self.settle_due();
+        Spent::NoTime
+    }
+
+    /// One skill roll on the player's skill `id`, trained as `trained`: [`skill_roll`]'s dice
+    /// on the `levels` stream, the value grown and the marks spent ([`crate::skills::Skills::roll`]),
+    /// and the words, never the number. The one path of a level-up roll and an automatic one.
+    fn roll_skill(&mut self, id: SkillId, trained: Trained) {
+        let content = self.content.clone();
         let roll = skill_roll(&content, self.state.character.as_ref(), id, trained);
         let seed = self.state.seed;
         let rng = (self.state.levels_rng).get_or_insert_with(|| Rng::levels(seed));
@@ -179,14 +198,31 @@ impl World {
         self.player_mut()
             .skills
             .roll(id, rolled, content.skill_rolls());
-        let due = &mut self.state.progress.due[at];
-        due.rolls -= 1;
-        if due.is_spent() {
-            self.state.progress.due.remove(at);
+        let name = content.skill(id).name.to_lowercase();
+        self.say(format!("Your {name} improves."));
+    }
+
+    /// `by` training marks for the player's skill `id`, if trained: the one place marks are
+    /// added (`World::train`, and any other gift of marks). A skill whose marks reach `[rolls]
+    /// auto_at` rolls at once, by itself ([`crate::skills::RollRules::auto_at`]), the same
+    /// roll a level-up's
+    /// would be, and again while its spent marks are still at the threshold. Whatever level-up
+    /// is due, its rolls are untouched. Returns whether the skill was trained.
+    pub(super) fn mark_skill(&mut self, id: SkillId, by: u32) -> bool {
+        if !self.player_mut().skills.add_marks(id, by) {
+            return false;
         }
-        self.say(format!("Your {} improves.", def.name.to_lowercase()));
-        self.settle_due();
-        Spent::NoTime
+        let rules = *self.content.skill_rolls();
+        while let Some(trained) = self.state.player().skills.get(id) {
+            if rules.auto_at == 0
+                || trained.marks < rules.auto_at
+                || rules.spent(trained.marks) == 0
+            {
+                break;
+            }
+            self.roll_skill(id, trained);
+        }
+        true
     }
 
     /// The dev action `levelup:auto`'s part for skill rolls: every roll due on the player's

@@ -10,7 +10,7 @@ treating a wound; those uses are explained on [Using your skills](skill-uses.md)
 - A trained skill has a **value**, usually between 5 and 30 when you start. 100 is a master. Past
   100 a skill still grows, but slowly.
 - `A` shows your **[Skills](the-screen.md#skills)** screen. It lists every skill you are trained in, with its value and a
-  small meter (`━━──`) of how practised it is, which is how big its next roll at a level-up will
+  small meter (`━━──`) of how practised it is, which is how big its next roll will
   be (see [Getting better](#getting-better)). Use the arrow keys to read what each skill is about. Looking takes no
   time. `A` on the [character screen](character.md) (`@`) opens it too, and the summary at the end of character
   creation lists the skills you will start with.
@@ -217,9 +217,15 @@ mark**. The chance is in the table of skills above. Skills you use all the time,
 - **[Open lock](skills.md#skill-open-lock)**: a try at picking a lock, whether it works or not.
 - **[Heal](skills.md#skill-heal)**: a try at treating yourself, whether it works or not.
 
-Only skills you are trained in earn marks. Marks raise nothing by themselves: they gather until
-your next level. The Skills screen's meter shows how practised a skill is (the step its marks have
-reached on the ladder below), never the marks.
+Only skills you are trained in earn marks. They gather until a roll on the skill spends them. The
+Skills screen's meter shows how practised a skill is (the step its marks have reached on the ladder
+below), never the marks.
+
+**Rolls of their own.** When a skill's marks reach 100, it gets a roll at once, by itself, without
+waiting for your next level. It is the same roll as a level-up's (below), and it is told the same
+way: "Your stealth improves." It spends half the marks, so the skill drops back below 100 and must
+earn its next one. It comes on top of your level's rolls, never instead of one, and it does not
+wait for a level-up you have not finished.
 
 **Skill rolls.** Every level gives you a number of **skill rolls** (see [Experience](experience.md)). You spend each
 one on a trained skill of your choice, before you do anything else. Nothing stops you putting every

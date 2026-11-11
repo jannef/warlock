@@ -45,9 +45,10 @@ heat, and a failed temper alike (`world/item_damage.rs`, #1170; docs/dev/objects
 A reward's `skills` (#1329, `Reward::skills`, a `SkillReward` each: Grave goods teaches Heal)
 are applied in `complete_saying` after the items, by `World::teach_skills`: a skill the player is
 untrained in is trained at `start` (`Skills::add`, rolled on `levels_rng`, the stream background
-and level rolls use, never the gameplay one), a trained one gets `marks` training marks one by one
-through `World::mark_skill` (`world/train.rs`, the one hook every mark of the player's goes
-through, so whatever a mark sets off fires for these too); never both. The words are the
+and level rolls use, never the gameplay one), a trained one gets `marks` training marks at once,
+after the reward's words, through `World::mark_skill(id, by)` (`world/skill_roll.rs`, the one hook
+every mark of the player's goes through), so marks reaching `[rolls] auto_at` roll the skill at
+once (#1328; Grave goods' 100 marks roll a trained Heal once); never both. The words are the
 reward's `taught` and `more`, else defaults; never numbers. Load refuses an unknown skill and an
 entry with neither `start` nor `marks`.
 A quest done for one of a town's people (`data/towns/`) also raises that town's goodwill, its
