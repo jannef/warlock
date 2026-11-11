@@ -298,3 +298,27 @@ fn rolls_survive_saves_and_replays() {
     let played = replay.run(content).expect("the replay verifies");
     assert_eq!(played.state(), a.state());
 }
+
+#[test]
+fn the_professions_skills_load_can_be_trained_and_rolled() {
+    // Jewelcraft, Mining, Herbalism, Alchemy, and Enchanting (#1331): data only, no effect yet.
+    let mut w = world("human,male,warrior");
+    for id in ["alchemy", "enchanting", "herbalism", "jewelcraft", "mining"] {
+        let def = w.content().skill(skill(&w, id));
+        assert!(
+            def.marks.is_empty() && def.benefits.is_empty(),
+            "{id}: no effect yet"
+        );
+        assert_eq!(trained(&w, id), None, "{id}: nobody starts trained");
+    }
+    reach(&mut w, 2);
+    for id in ["alchemy", "enchanting", "herbalism", "jewelcraft", "mining"] {
+        let mut probe = w.clone();
+        set(&mut probe, id, 10, 0);
+        run(&mut probe, &format!("advance:{id}"));
+        assert!(
+            trained(&probe, id).expect("trained").value > 10,
+            "{id} rolled"
+        );
+    }
+}
