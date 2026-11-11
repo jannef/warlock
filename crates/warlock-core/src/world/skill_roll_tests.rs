@@ -299,17 +299,119 @@ fn rolls_survive_saves_and_replays() {
     assert_eq!(played.state(), a.state());
 }
 
+/// The automatic roll (#1328): marks reaching `[rolls] auto_at` roll once, at once.
+#[test]
+fn marks_reaching_the_threshold_roll_once_and_spend_half() {
+    let mut w = world("human,male,warrior");
+    let auto_at = w.content().skill_rolls().auto_at;
+    assert_eq!(auto_at, 100, "the data's threshold");
+    set(&mut w, "stealth", 20, auto_at - 2);
+    let id = skill(&w, "stealth");
+    let gameplay = w.state.rng.clone();
+    assert!(w.mark_skill(id, 1));
+    assert_eq!(
+        trained(&w, "stealth"),
+        Some(Trained {
+            value: 20,
+            marks: auto_at - 1
+        }),
+        "below the threshold, nothing"
+    );
+    assert!(w.mark_skill(id, 1));
+    let after = trained(&w, "stealth").expect("trained");
+    assert_eq!(after.marks, auto_at / 2, "the roll spent half");
+    assert!(after.value > 20, "and raised the value");
+    assert_eq!(last(&w), "Your stealth improves.");
+    assert_eq!(w.state.rng, gameplay, "the gameplay stream is untouched");
+    // One more mark does not fire it again.
+    let value = after.value;
+    assert!(w.mark_skill(id, 1));
+    assert_eq!(trained(&w, "stealth").map(|t| t.value), Some(value));
+    // A big gift rolls until the marks are under the threshold: 300 → 150 → 75.
+    set(&mut w, "stealth", 20, 0);
+    assert!(w.mark_skill(id, 300));
+    assert_eq!(trained(&w, "stealth").map(|t| t.marks), Some(75));
+    // An untrained skill earns nothing and rolls nothing.
+    let mut bare = world("human,male,warrior");
+    bare.player_mut().skills = Default::default();
+    assert!(!bare.mark_skill(id, 500));
+    assert_eq!(trained(&bare, "stealth"), None);
+}
+
+#[test]
+fn the_automatic_roll_is_a_level_up_rolls_dice_and_leaves_the_due_alone() {
+    for character in ["human,male,warrior", "halfling,female,thief"] {
+        for seed in 0..6 {
+            let mut w = world(character);
+            reach(&mut w, 2);
+            let due = w.due();
+            assert!(due.is_some(), "rolls due");
+            // Both worlds draw the same levels stream from here.
+            w.state.levels_rng = Some(crate::rng::Rng::levels(seed));
+            let mut chosen = w.clone();
+            let mut auto = w;
+            set(&mut chosen, "stealth", 20, 100);
+            run(&mut chosen, "advance:stealth");
+            set(&mut auto, "stealth", 20, 99);
+            let id = skill(&auto, "stealth");
+            auto.mark_skill(id, 1);
+            assert_eq!(
+                trained(&auto, "stealth"),
+                trained(&chosen, "stealth"),
+                "{character} {seed}: the same roll"
+            );
+            assert_eq!(auto.state.levels_rng, chosen.state.levels_rng);
+            assert_eq!(auto.due(), due, "the level's rolls untouched");
+        }
+    }
+}
+
+#[test]
+fn training_rolls_by_itself_and_replays() {
+    // A dwarf searches (Search: a mark one search in ten) until the marks reach the threshold.
+    let content = BUILTIN.clone();
+    let spec: CharacterSpec = "dwarf,male,warrior".parse().expect("a character");
+    let mut a =
+        World::with_character(content.clone(), "showcase", Some(3), Some(&spec)).expect("world");
+    let search = skill(&a, "search");
+    let start = a.state.player().skills.value(search).expect("trained");
+    let mut replay = Replay::new(&a);
+    let mut improved = false;
+    for _ in 0..30 {
+        for action in parse_actions("search:100").expect("actions") {
+            a.apply(&action);
+            replay.push(&action, &a);
+        }
+        improved |= (a.messages().iter()).any(|m| m.display() == "Your search improves.");
+        if improved {
+            break;
+        }
+    }
+    assert!(improved, "the search skill rolled by itself");
+    assert!(a.state.player().skills.value(search).expect("trained") > start);
+    assert_eq!(a.due(), None, "no level-up was needed");
+    let played = replay.run(content).expect("the replay verifies");
+    assert_eq!(played.state(), a.state());
+}
+
 #[test]
 fn the_professions_skills_load_can_be_trained_and_rolled() {
-    // Jewelcraft, Mining, Herbalism, Alchemy, and Enchanting (#1331): data only, no effect yet.
+    // Jewelcraft, Mining, Herbalism, Alchemy, and Enchanting (#1331): every one but Jewelcraft
+    // has its first effect (#1343); only Mining and Herbalism mark yet.
     let mut w = world("human,male,warrior");
     for id in ["alchemy", "enchanting", "herbalism", "jewelcraft", "mining"] {
         let def = w.content().skill(skill(&w, id));
-        assert!(
-            def.marks.is_empty() && def.benefits.is_empty(),
-            "{id}: no effect yet"
+        assert_eq!(def.benefits.is_empty(), id == "jewelcraft", "{id}");
+        assert_eq!(
+            def.marks.is_empty(),
+            !["herbalism", "mining"].contains(&id),
+            "{id}"
         );
-        assert_eq!(trained(&w, id), None, "{id}: nobody starts trained");
+        assert_eq!(
+            trained(&w, id),
+            None,
+            "{id}: a human warrior starts untrained"
+        );
     }
     reach(&mut w, 2);
     for id in ["alchemy", "enchanting", "herbalism", "jewelcraft", "mining"] {

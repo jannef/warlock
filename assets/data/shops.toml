@@ -87,6 +87,10 @@ never = [
     "elixir_of_might", "elixir_of_presence", "elixir_of_vigour", "elixir_of_will",
     "elixir_of_wit", "flask_of_fire", "flask_of_frost", "flask_of_thunder", "pitch_fire",
     "trolls_blood",
+    # Herbs and essences: the alchemist's, and gathered or taken from the dead (recipes.md §8, §9).
+    "bog_myrtle", "comfrey", "essence_of_air", "essence_of_earth", "essence_of_fire",
+    "essence_of_ice", "essence_of_lightning", "essence_of_water", "eyebright", "feverfew",
+    "glowcap", "henbane", "mandrake", "moonwort", "vervain",
 ]
 buys = [
     "melee_weapons", "missile_weapons", "missiles", "shields", "body_armour", "helmets",
@@ -179,15 +183,16 @@ items = [6, 10]
 markup = 120
 pays = 30
 
-# The alchemist sells and buys potions only (spec §8 "Potions"), healing first; an elixir
-# (frequency 2 among the potions' hundreds) lies there very rarely.
+# The alchemist sells potions (spec §8 "Potions"), healing first, and the two common herbs; an
+# elixir (frequency 2 among the potions' hundreds) lies there very rarely. It buys potions and
+# materials: herbs, essences, and stock (docs/design/recipes.md §8).
 [[shop]]
 id = "alchemist"
 name = "alchemist"
 title = "{keeper}'s Apothecary"
 stock = ["potions"]
-always = ["potion_of_healing"]
-buys = ["potions"]
+always = ["potion_of_healing", "glowcap", "moonwort"]
+buys = ["potions", "materials"]
 items = [5, 8]
 markup = 140
 pays = 40

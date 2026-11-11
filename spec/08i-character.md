@@ -453,7 +453,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     class's draws move; the drow's Sneak attack (40 %, `2d4`), summed with a thief's own. A creature type's skills are fixed values. A scenario without a
     character gives a player trained in nothing.
   - **Values** run 0 to 999 (`MAX_VALUE`), 100 a master; there is no hard cap, but points come
-    slowly past the soft cap (100). A value grows **only by level-up rolls** (below).
+    slowly past the soft cap (100). A value grows **only by skill rolls**: a level's and the
+    automatic ones (below).
   - **Training marks**: a meaningful use of a trained skill may earn it a mark, with its rule's
     chance (§7), one draw of the run's **training stream** (`training`, kept in the world state;
     never the gameplay stream, so training never changes a fight's rolls) per rule: a step of the
@@ -481,7 +482,13 @@ developer notes (CLAUDE.md, `docs/dev/`).
     taken Staggered (`staggered`; Balance). Only
     the player trains for now; creatures keep their type's
     skills. Marks are a **reservoir**: they raise nothing by
-    themselves and nothing is said; they gather until a level-up roll on the skill spends them.
+    themselves and nothing is said; they gather until a roll on the skill spends them.
+  - **Automatic rolls** (#1328): when a trained skill's marks reach `auto_at` (`[rolls]` in
+    `data/skills.toml`: 100, the ladder's `3d4` step) the skill rolls at once, with no choice:
+    the same roll as a level-up roll (below: its die, the class and race affinities, the soft
+    cap, the `spend` of the marks, the levels stream, "Your stealth improves."), so it falls back
+    below the threshold. It is checked wherever marks are added (`World::mark_skill`), for every
+    skill and way of training, and comes on top of the level's rolls, whatever level-up is due.
   - **Balance** (#1029): sure footing under a load, on bad ground, and after a stagger. Besides
     the burden's slowdown (`burden`), a step onto rough ground (off the overworld, `move_cost` over
     100 and not wading: bush, reeds, rubble, ice) spares a percent of what the terrain adds over
@@ -630,6 +637,20 @@ developer notes (CLAUDE.md, `docs/dev/`).
     rotten food 25 points easier, at most 95 %); eating such food marks Appraise (`judged`, 10 %). A healer's and a
     sage's service price follows the same favour as a shop's (a `temple` service stays flat), and a service paid
     marks Negotiation (`deal`).
+  - **The professions' skills** (#1331, #1343; `docs/design/professions.md` §9): **Alchemy**
+    (`identify_potion`) and **Enchanting** (`identify_magic`) look the same way each hour, after
+    Appraise and from the same stream, each at its own things (5 / 25 / 40 % at 0 / 100 / 200):
+    Alchemy at potions and flasks of an unknown kind ("You recognise your fizzy scarlet potion:
+    a flask of fire."), Enchanting at unknown magic that is no potion or scroll (arms, armour,
+    jewellery, wands, rods: "You read the magic bound in your long sword: …"); neither marks
+    until its craft comes. **Mining** adds its `dig` percent to a dig turn's work (25 at 100,
+    40 at 200; §8 "Digging"), marked by every wall dug through (`dug`). **Herbalism** gives a
+    forage that found something a chance of a herb besides ("Foraging" below). **Jewelcraft**
+    has no use yet. Who trains them: gnomes Jewelcraft, dwarves and duergar Mining (dwarves
+    Jewelcraft now and then), kobolds Mining, halflings Herbalism; druids and witches Herbalism,
+    witches Alchemy; optional for the craftsperson (Jewelcraft, Mining), merchant (Jewelcraft),
+    commoner (Mining), ranger (Herbalism), wizard (Alchemy, Enchanting), druid (Alchemy), witch
+    (Enchanting), and aristocrat (Enchanting); and a story line each.
 - **Treating oneself** (`heal.rs`, `world/heal.rs`; #549, the owner 2026-10-27): the Heal
   skill's use, the abilities menu's **Heal** (`Ability::Heal`, in the skill's place among the
   Skills; `Action::Heal`, replay text `heal`, `heal:ID`, or `heal:ID:DIR`; cost `heal`, 2500: a
@@ -737,6 +758,11 @@ developer notes (CLAUDE.md, `docs/dev/`).
     most 100, one gameplay draw; found, one of the row's `finds` by weight (one draw) and its
     `count` dice. The food is fresh (made now) and goes into the pack: "You gather 2 handfuls of
     berries."; else "You find nothing worth eating.". Then Survival may earn a mark (`forage`).
+  - **Herbs** (#1343): a forage that found something, by one trained in Herbalism, on ground
+    with a `herbs` list, has Herbalism's `herbs` percent (25 / 60 / 80 at 0 / 100 / 200) of one
+    herb besides, by weight, one of it: "Your eye for herbs finds an angelica root besides." Two
+    more gameplay draws, a herbalist's only: anyone else's forage draws as before. Angelica root
+    is the only herb until brewing's herbs come (#1340). Herbalism marks on a forage, 25 %.
     Nothing is remembered: the same spot may be tried again at once (no anti-farming limit, the
     time is the price). Presentation shows the outcome only, never the chance.
   - **Food** found is ordinary food (§8 "Hunger"): berries, mushrooms, and hazelnuts (new), and

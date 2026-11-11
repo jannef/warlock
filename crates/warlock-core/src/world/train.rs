@@ -1,6 +1,6 @@
 //! Training (spec §8 "Skills"): meaningful uses of the player's skills earn training marks,
-//! which gather until a level-up roll spends them (`world/skill_roll.rs`): the more marks, the
-//! bigger the roll's die. Marks raise nothing by themselves.
+//! which gather until a skill roll spends them (`world/skill_roll.rs`): a level-up's, or the
+//! automatic one when they reach `[rolls] auto_at`. The more marks, the bigger the roll's die.
 //!
 //! A use ([`Use`]) is reported where it happens: a step within earshot of a creature
 //! (`make_noise`), a sound that is news (`hear`), a dodged attack (`fight.rs`), an action under a
@@ -16,7 +16,7 @@
 use super::{ActorId, World};
 use crate::combat::{Blow, Category, Strike};
 use crate::content::StatUse;
-use crate::skills::{SkillId, Use};
+use crate::skills::Use;
 
 impl World {
     /// `blow`, a plain miss at the player (`Missed { by: None }`) made a dodge one time in
@@ -71,19 +71,12 @@ impl World {
                     if !self.state.training.chance(step) {
                         continue;
                     }
-                    self.mark_skill(id);
+                    self.mark_skill(id, 1);
                 }
             }
         }
         if let Some(stat) = StatUse::of_skill(used) {
             self.train_stat(stat);
         }
-    }
-
-    /// One training mark for the player's skill `id`, if trained: the one place the player's
-    /// skills are marked (by use here, by a quest's reward in `quest.rs`). Returns whether it
-    /// was trained.
-    pub(super) fn mark_skill(&mut self, id: SkillId) -> bool {
-        self.player_mut().skills.mark(id)
     }
 }

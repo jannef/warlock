@@ -1380,7 +1380,11 @@ mod tests {
                         match optional {
                             None => assert_eq!(added, 0, "{spec} {id}"),
                             Some((owner, o)) if added > 0 => {
-                                assert!((o.dice.min()..=o.dice.max()).contains(&added));
+                                // Both the class and the race may add it (a dwarf merchant's
+                                // Jewelcraft): their sum at most.
+                                let both = of_class.and(of_race).map_or(0, |r| r.dice.max());
+                                let most = o.dice.max() + both;
+                                assert!((o.dice.min()..=most).contains(&added), "{spec} {id}");
                                 *came.entry((owner.clone(), id)).or_default() += 1;
                             }
                             Some(_) => assert_eq!(added, 0),
@@ -1444,11 +1448,14 @@ mod tests {
                     let before = spec
                         .start(&classes_only, seed, start_date())
                         .expect("starts");
-                    if race.id != "drow" {
+                    if race.optional_skills.is_empty() {
                         // A race without optional skills draws nothing more: the class's
                         // optional rolls are where they were.
                         assert_eq!(with.skills, before.skills, "{spec} seed {seed}");
                         continue;
+                    }
+                    if race.id != "drow" {
+                        continue; // the dwarf's Jewelcraft (#1343)
                     }
                     for (id, t) in with.skills.iter() {
                         let was = before.skills.value(id).unwrap_or(0);

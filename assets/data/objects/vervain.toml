@@ -1,0 +1,13 @@
+# A herb (docs/design/recipes.md §8): an Alchemy input. A wiry herb of the old rites. Never floor loot (no
+# `level` or `frequency`); the alchemist sells glowcap and moonwort, and gathering is to come.
+[[object]]
+id = "vervain"
+name = "sprig of vervain"
+plural = "sprigs of vervain"
+glyph = '"'
+fg = "#7aa862"
+class = "materials"
+materials = ["plant"]
+weight = 20
+value = 25
+stackable = true

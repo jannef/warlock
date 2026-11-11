@@ -11,6 +11,7 @@ use super::*;
 use crate::cli::Args;
 use crate::game::{GameContent, PlayerAction};
 use crate::save::{SaveCommand, SaveStore};
+use crate::settings::mods::Mods;
 use crate::ui::screens::{MenuChoice, ScreenStack};
 use bevy::input::ButtonState;
 use bevy::input::keyboard::{Key, KeyboardInput, NativeKeyCode};
@@ -250,6 +251,16 @@ const CASES: &[Case] = &[
         actions: "wait",
         screen: Some("controls"),
         keys: Some("Up"),
+        size: (120, 44),
+        ..BASE
+    },
+    // A play key rebound with Ctrl held (#1323): Move north's first key becomes Ctrl+k, and the
+    // message says so (Search for a while's Ctrl keys are its defaults).
+    Case {
+        name: "controls-screen-ctrl-key",
+        actions: "wait",
+        screen: Some("controls"),
+        keys: Some("Enter Ctrl+k"),
         size: (120, 44),
         ..BASE
     },
@@ -2077,12 +2088,43 @@ fn graveyard(case: &Case) -> crate::graveyard::GraveyardStore {
 
 /// Presses `keys` (as `--keys` writes them) in one frame, then lets the run and the screens
 /// catch up.
+/// Presses `keys` (as `--keys` names them; `Ctrl+k` holds Ctrl for the `k`): each run of keys
+/// with the same modifiers held in one frame, then a frame with none held.
 pub(super) fn press_keys(app: &mut App, keys: &str) {
+    let mut runs: Vec<(Mods, Vec<KeyboardInput>)> = Vec::new();
     for key in keys.split_whitespace() {
-        app.world_mut().write_message(press(key));
+        let (mods, key) = Mods::split(key);
+        match runs.last_mut() {
+            Some((held, presses)) if *held == mods => presses.push(press(key)),
+            _ => runs.push((mods, vec![press(key)])),
+        }
     }
+    for (mods, presses) in runs {
+        hold(app, mods);
+        for key in presses {
+            app.world_mut().write_message(key);
+        }
+        app.update();
+    }
+    hold(app, Mods::NONE);
     app.update();
-    app.update();
+}
+
+/// Holds exactly the modifiers `mods`, as the keyboard state the router reads.
+fn hold(app: &mut App, mods: Mods) {
+    let mut held = app.world_mut().resource_mut::<ButtonInput<KeyCode>>();
+    held.release_all();
+    let keys = [
+        (mods.ctrl, KeyCode::ControlLeft),
+        (mods.alt, KeyCode::AltLeft),
+        (mods.shift, KeyCode::ShiftLeft),
+        (mods.sup, KeyCode::SuperLeft),
+    ];
+    for (on, key) in keys {
+        if on {
+            held.press(key);
+        }
+    }
 }
 
 /// Applies the actions input asked for, as the game plugin does.

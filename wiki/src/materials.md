@@ -184,13 +184,15 @@ A long sword and a chain mail shirt in each metal:
 Raw material comes in **pieces**: what a broken thing falls to (an animated thing that does not
 fall whole, for example; see [Animated objects](animated.md)), and the stock smiths and other
 crafters work with. A piece is one material, shown as `,` in its material's colour, and named by
-its group: *a steel ingot*, *3 hardwood billets*, *a leather hide*, *a bone shard*, *a block of
-jade*, *a lump of amber*, *a bolt of wool*, *a lump of glass*.
+its group: *a steel ingot*, *3 hardwood billets*, *a leather hide*, *a fur pelt*, *a bone
+shard*, *a length of sinew*, *a block of jade*, *a lump of amber*, *a bolt of wool*, *a lump of
+glass*.
 
 - A piece weighs what 500 g of steel would weigh in that material: a wood billet 200 g, a gold
-  ingot 1230 g.
-- It is worth what a steel ingot (1 gold) would be worth in that material, rounded. A tin ingot
-  is worth nothing, and a gold one 20 [gold](shops.md#money).
+  ingot 1230 g. Hides and bolts of cloth are bigger: a hide is worth 8 pieces (a leather hide
+  weighs 1400 g) and a bolt 4. The **Unit** column below gives this.
+- It is worth what a steel ingot (1 gold) would be worth in that material, rounded, times its
+  unit. A tin ingot is worth nothing, and a gold one 20 [gold](shops.md#money).
 - Pieces of one material stack. They are listed under **Materials**. A smithy and a general
   store sell them, and a smithy, a weaponsmith, an armourer, a fletcher, and a general store buy
   them (see [Shops](shops.md#selling)), unless they are worth nothing, like a wood billet. In
@@ -208,9 +210,25 @@ dagger with a ruby pommel breaks into a tin ingot and the ruby. A steel long swo
 2 steel ingots and a leather hide.
 
 Each group is worked by one skill: metal by [Metalcraft](skills.md#skill-metalcraft), with
-Strength; wood, bone, and hide by [Woodcraft](skills.md#skill-woodcraft), with Dexterity. Stone,
-amber, gems, cloth, and glass have no crafting skill yet. Some materials are harder to work than
+Strength; wood, bone, hide, and sinew by [Woodcraft](skills.md#skill-woodcraft), with Dexterity;
+jade, amber, and [gems](gems.md) by [Jewelcraft](skills.md#skill-jewelcraft), with Dexterity.
+Stone, flint, and obsidian are knapped by hand, so Woodcraft works them, not Jewelcraft. Cloth
+and glass have no crafting skill yet. Some materials are harder to work than
 others: the **work** column of the materials table is added to the difficulty of working them
 (steel 0, tin −3, adamantium +8). Nothing uses these yet; crafting is still to come.
 
 {{#include generated/pieces.md}}
+
+### Herbs and essences
+
+Herbs and elemental essences are listed under **Materials** too, but they are things of their
+own, not pieces: nothing is made *of* moonwort. Each stacks, and none lies about as loot.
+
+- **Herbs** (`"`, 20 g each): glowcap and moonwort (5 gold), comfrey (8), feverfew and henbane
+  (15), eyebright, bog myrtle, and vervain (25), and mandrake root (60). An alchemist always has
+  glowcap and moonwort for sale.
+- **Essences** (`*` in their element's colour, 50 g, 30 gold each): essence of fire, ice,
+  lightning, air, water, and earth.
+
+An alchemist buys herbs, essences, and pieces (see [Shops](shops.md#selling)). Brewing with them
+is still to come.

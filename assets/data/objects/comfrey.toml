@@ -1,0 +1,13 @@
+# A herb (docs/design/recipes.md §8): an Alchemy input. Knitbone, broad-leaved and bristly. Never floor loot (no
+# `level` or `frequency`); the alchemist sells glowcap and moonwort, and gathering is to come.
+[[object]]
+id = "comfrey"
+name = "sprig of comfrey"
+plural = "sprigs of comfrey"
+glyph = '"'
+fg = "#5f9a4a"
+class = "materials"
+materials = ["plant"]
+weight = 20
+value = 8
+stackable = true

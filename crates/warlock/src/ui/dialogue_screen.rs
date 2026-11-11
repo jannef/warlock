@@ -505,6 +505,7 @@ mod tests {
                 repeat: false,
                 window: bevy::prelude::Entity::PLACEHOLDER,
             },
+            crate::settings::mods::Mods::NONE,
             &bindings,
         );
         assert_eq!(press(pad), ScreenAction::Stay);

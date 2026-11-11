@@ -61,6 +61,9 @@ pub(super) fn gated_effect(effect: Effect) -> bool {
             | Effect::Learn
             | Effect::Freshness
             | Effect::Identify
+            | Effect::IdentifyPotion
+            | Effect::IdentifyMagic
+            | Effect::Herbs
             | Effect::Disarm
             | Effect::Escape
             | Effect::Climb
@@ -105,6 +108,10 @@ fn effect_name(effect: Effect) -> &'static str {
         Effect::Bargain => "better prices in shops, and at a healer's or a sage's",
         Effect::Freshness => "telling how fresh food and corpses are",
         Effect::Identify => "now and then telling something you carry for what it is",
+        Effect::IdentifyPotion => "now and then telling a potion or flask you carry for what it is",
+        Effect::IdentifyMagic => "now and then telling a magic thing you carry for what it is",
+        Effect::Herbs => "now and then a herb besides on a forage that finds something",
+        Effect::Dig => "digging: more work a turn",
         Effect::Kick => "more Strength for kicking doors in",
         Effect::Slip => "slipping past eyes that see in the dark",
         Effect::Lookout => "seeing those you meet on the overworld before they see you",
@@ -175,6 +182,10 @@ pub(super) fn skill_benefits(content: &Content) -> String {
             Effect::Bargain => "prices",
             Effect::Freshness => "telling freshness, each hour",
             Effect::Identify => "identifying, each hour",
+            Effect::IdentifyPotion => "telling potions, each hour",
+            Effect::IdentifyMagic => "telling magic, each hour",
+            Effect::Herbs => "a herb besides",
+            Effect::Dig => "digging",
             Effect::Kick => "kicking doors in",
             Effect::Slip => "slipping past",
             Effect::Lookout => "lookout",
@@ -259,7 +270,12 @@ pub(super) fn skill_benefits(content: &Content) -> String {
                 Effect::Ward => format!("\u{2212}{n}"),
                 Effect::Bargain => format!("{n}% better"),
                 Effect::Forage => format!("+{n}%"),
-                Effect::Freshness | Effect::Identify => format!("{n}%"),
+                Effect::Freshness
+                | Effect::Identify
+                | Effect::IdentifyPotion
+                | Effect::IdentifyMagic
+                | Effect::Herbs => format!("{n}%"),
+                Effect::Dig => format!("+{n}%"),
                 Effect::Speed | Effect::ManaRegen => format!("+{n}%"),
                 Effect::MaxMana => format!("+{n} mana"),
                 Effect::Hearing | Effect::Learn => n.to_string(),
@@ -472,7 +488,7 @@ pub(super) fn foraging(content: &Content) -> String {
         return "Nobody forages.\n".into();
     };
     let mut out = format!(
-        "A forage takes {} minutes.\n\n| Land | Chance | How many | Finds |\n|---|:---:|:---:|---|\n",
+        "A forage takes {} minutes.\n\n| Land | Chance | How many | Finds | Herbs (Herbalism) |\n|---|:---:|:---:|---|---|\n",
         rules.seconds / 60
     );
     let mut grounds: Vec<_> = rules.grounds.iter().collect();
@@ -486,9 +502,22 @@ pub(super) fn foraging(content: &Content) -> String {
         let finds: Vec<String> = (finds.iter())
             .map(|(name, w)| format!("{name} {}", percent(*w, total)))
             .collect();
+        let herb_total: u32 = g.herbs.iter().map(|(_, w)| *w).sum();
+        let mut herbs: Vec<(String, u32)> = (g.herbs.iter())
+            .map(|&(o, w)| (content.object(o).name.clone(), w))
+            .collect();
+        herbs.sort_by(|a, b| b.1.cmp(&a.1).then_with(|| a.0.cmp(&b.0)));
+        let herbs: Vec<String> = (herbs.iter())
+            .map(|(name, w)| format!("{name} {}", percent(*w, herb_total)))
+            .collect();
+        let herbs = if herbs.is_empty() {
+            "—".to_string()
+        } else {
+            herbs.join(", ")
+        };
         let _ = writeln!(
             out,
-            "| {} | {}% | `{}` | {} |",
+            "| {} | {}% | `{}` | {} | {herbs} |",
             g.landscape.id().replace('_', " "),
             g.chance,
             g.count,
@@ -689,5 +718,12 @@ pub(super) fn skill_rolls(content: &Content) -> String {
         u16::from(rules.intelligence_from) + u16::from(rules.intelligence_every),
         u16::from(rules.intelligence_from) + 2 * u16::from(rules.intelligence_every),
     );
+    if rules.auto_at > 0 {
+        let _ = writeln!(
+            out,
+            "\nA skill whose marks reach {} rolls at once by itself, besides these.",
+            rules.auto_at
+        );
+    }
     out
 }

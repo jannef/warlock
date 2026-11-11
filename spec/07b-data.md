@@ -340,9 +340,14 @@ developer notes (CLAUDE.md, `docs/dev/`).
   material make is `max(1, round(grams / one piece's grams))` (a dagger's steel 1, a long sword's
   3, a great sword's 7, a quarterstaff's wood 10 billets). `stock.toml` also names the
   profession that works each group (§4): its skill, the stat of its checks, and its verb (metal:
-  Metalcraft and Strength; wood, bone, and hide: Woodcraft and Dexterity; stone, resin, and the
-  gems wait for Jewelcraft; cloth and glass have none yet), and a material's `work` (below) makes
-  its checks harder or easier. The smithy, the weaponsmith, the armourer, the fletcher, and the
+  Metalcraft and Strength; wood, bone, hide, and sinew: Woodcraft and Dexterity; stone, resin,
+  and the gems: Jewelcraft and Dexterity; cloth and glass have none yet), a group's `unit`, how
+  many pieces' worth one of its pieces is (default 1; a hide 8, 1.4 kg of leather, three to a
+  jerkin; a bolt of cloth 4), and per-material overrides (flint, stone, and obsidian are knapped,
+  Woodcraft's, while jade stays Jewelcraft's; fur comes in pelts), and a material's `work`
+  (below) makes its checks harder or easier. Herbs (nine, `"`) and elemental essences (six, `*`)
+  are objects of the materials class, never loot; the alchemist sells glowcap and moonwort and
+  buys materials. The smithy, the weaponsmith, the armourer, the fletcher, and the
   general stores buy materials; the smithy and the general stores stock them (Cēaptūn's smithy
   steel and iron ingots; what is worth nothing, a wood billet, no shop trades). **Breaking**
   an item (`object::break_up`; an animated thing's broken component, §8 "Animated objects")
@@ -355,7 +360,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   leather hide.
 - **Materials** (#193, #194): a material's properties are on one scale, steel's (all optional,
   so a material without them is as it was): `group` (metal, wood, bone,
-  stone, hide, cloth, glass, resin; none for paper, wax, food, and the gems, which are set in
+  stone, hide, sinew, cloth, glass, resin; none for paper, wax, food, and the gems, which are set in
   items but never made into them), `color` (an item of it drawn so where its base item is of
   another material), `weight` (percent of steel's for an item of it, at least 1; metals by real
   density, the rest an effective weight), `to_hit` and `damage` (as a weapon's working part;

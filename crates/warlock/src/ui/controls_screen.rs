@@ -5,7 +5,9 @@
 //! the very bottom, the abilities' own keys (play commands, unbound by default: the abilities
 //! menu has them all; #644); a key is unique within its context only. Enter on a command waits
 //! for a key, which becomes the command's primary key (its other keys, such as the numpad,
-//! stay). A key another command of the same context uses moves to this one, and the message
+//! stay); a play command's key keeps the modifiers held with it (`Ctrl+r`; a modifier alone
+//! never binds, and kept shortcuts and modifiers on other contexts' keys are refused with the
+//! reason: `settings::mods`). A key another command of the same context uses moves to this one, and the message
 //! says so; Esc (fixed) and the last key of a vital command (`settings::keys::VITAL`) are
 //! refused, so the player cannot lock themselves out. Esc cancels, Delete resets one command,
 //! and "Reset all keys" restores the defaults. "Export keys" and "Import keys" write and read
@@ -22,6 +24,7 @@ use crate::input::{Bindings, Context, KeyCommand};
 use crate::render::console::Console;
 use crate::settings::keymap::{self, KeymapFile};
 use crate::settings::keys::{ABILITY_KEYS, Bound, REBINDABLE};
+use crate::settings::mods;
 use bevy::prelude::*;
 
 /// What the screen is doing.
@@ -270,6 +273,16 @@ impl ControlsScreen {
             self.mode = Mode::Browse;
             return;
         };
+        // Shift counts with a physical key bound in play (Shift+ArrowUp); a character carries
+        // it, and elsewhere Shift reverses a key (Shift+Tab), so it is left out there.
+        let key = match press.shift && command.context() == Context::Play {
+            true => mods::with_shift(key),
+            false => key,
+        };
+        if let Some(why) = key.refused_for(command) {
+            self.message = vec![format!("! {why}. Try another, or Esc to cancel.")];
+            return;
+        }
         let shown = key.display();
         self.mode = Mode::Browse;
         self.message = vec![match bindings.bind_primary(command, key) {
@@ -561,6 +574,50 @@ mod tests {
         assert_eq!(b.owner_in(Context::Menu, &w), Some(KeyCommand::MenuUp));
         assert_eq!(b.owner(&w), None);
         assert_eq!(b.keys_of(KeyCommand::MenuUp)[1].display(), "k");
+    }
+
+    #[test]
+    fn a_modified_key_binds_in_play_and_is_refused_elsewhere() {
+        let (mut screen, mut b) = (
+            ControlsScreen::new(false, KeymapFile::Nowhere),
+            Bindings::default(),
+        );
+        select(&mut screen, Row::Command(KeyCommand::Read));
+        nav(&mut screen, &mut b, Nav::Enter);
+        key(&mut screen, &mut b, "Ctrl+r");
+        let name = KeyCommand::Read.name();
+        assert_eq!(message(&screen), format!("{name} is now Ctrl+r."));
+        let ctrl_r = KeyBinding::from_text("Ctrl+r").unwrap();
+        assert_eq!(b.owner(&ctrl_r), Some(KeyCommand::Read));
+        assert_eq!(key_list(&b, KeyCommand::Read), "Ctrl+r");
+        // A menu key takes no modifiers: refused, and the screen waits on for another key.
+        select(&mut screen, Row::Command(KeyCommand::MenuUp));
+        nav(&mut screen, &mut b, Nav::Enter);
+        let before = b.0.clone();
+        key(&mut screen, &mut b, "Ctrl+w");
+        assert_eq!(b.0, before);
+        assert_eq!(screen.mode, Mode::Capture);
+        assert!(message(&screen).starts_with("! Up takes plain keys only"));
+    }
+
+    #[test]
+    fn shift_counts_with_a_physical_key_in_play() {
+        let (mut screen, mut b) = (
+            ControlsScreen::new(false, KeymapFile::Nowhere),
+            Bindings::default(),
+        );
+        select(&mut screen, Row::Command(KeyCommand::Look));
+        nav(&mut screen, &mut b, Nav::Enter);
+        let press = Press {
+            shift: true,
+            binding: KeyBinding::from_text("ArrowUp"),
+            ..Press::nav(Nav::Other)
+        };
+        screen.handle(&press, &mut b);
+        assert_eq!(key_list(&b, KeyCommand::Look), "Shift+↑");
+        // The plain arrow still moves north.
+        let up = KeyBinding::from_text("ArrowUp").unwrap();
+        assert_eq!(b.owner(&up), Some(KeyCommand::Move(Dir::N)));
     }
 
     #[test]

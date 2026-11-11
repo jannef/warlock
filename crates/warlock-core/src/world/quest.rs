@@ -874,7 +874,7 @@ impl World {
 
     /// A reward's skills, taught by `who`: an untrained one trained at its `start`, rolled from
     /// the `levels` stream as background and level rolls are, a trained one given its `marks`
-    /// one by one through [`World::mark_skill`]. Told in words, never numbers.
+    /// through [`World::mark_skill`] (which may roll it at once). Told in words, never numbers.
     fn teach_skills(&mut self, content: &Content, who: &str, skills: &[SkillReward]) {
         for taught in skills {
             let name = content.skill(taught.skill).name.to_lowercase();
@@ -882,12 +882,10 @@ impl World {
                 if taught.marks == 0 {
                     continue;
                 }
-                for _ in 0..taught.marks {
-                    self.mark_skill(taught.skill);
-                }
                 let more =
                     (taught.more.clone()).unwrap_or_else(|| format!("You learn more of {name}."));
                 self.say(more);
+                self.mark_skill(taught.skill, taught.marks);
             } else if let Some(start) = taught.start {
                 let seed = self.state.seed;
                 let rng = (self.state.levels_rng).get_or_insert_with(|| Rng::levels(seed));

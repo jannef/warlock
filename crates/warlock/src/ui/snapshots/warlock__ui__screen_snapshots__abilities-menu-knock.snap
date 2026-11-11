@@ -3,7 +3,7 @@ source: crates/warlock/src/ui/screen_snapshots.rs
 expression: "render(case, content.clone())"
 ---
  You gain Knock.
- Your appraise improves. (×12) You learn Deep lungs.
+ Your alchemy improves. (×12) You learn Deep lungs.
              ┌─ Abilities ───────────────────────────────────────────────────────────┐
              │                                                                       │
              │ Birth sign                                                            │
@@ -15,11 +15,11 @@ expression: "render(case, content.clone())"
              │   d  Ray of frost       2d6 cold, numbs, 4 mana, aimed                │
              │   e  Magic missile      4d4 force, shoves on a big hit, 4 mana, aimed │
              │ Skills                                                                │
-             │   f  Decipher           no unknown scroll                             │
-             │   g  Knowledge          not usable yet                                │
-             │   h  Metalcraft…                                                      │
-             │   i  Pick lock          in a direction                                │
-             │   j  Woodcraft…                                                       │
+             │   f  Alchemy            not usable yet                                │
+             │   g  Decipher           no unknown scroll                             │
+             │   h  Knowledge          not usable yet                                │
+             │   i  Fletch             you have no knife                             │
+             │   j  Whittle            you have no knife                             │
              │ Weapon skills                                                         │
              │   k  Shield bash        you hold no shield                            │
              │                                                                       │

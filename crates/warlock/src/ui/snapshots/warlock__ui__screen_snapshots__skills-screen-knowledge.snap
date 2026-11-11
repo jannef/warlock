@@ -16,7 +16,7 @@ expression: "render(case, content.clone())"
 │   Decipher script    20  ────                                                                    │
 │ > Heal                4  ────                                                                    │
 │   Knowledge          17  ────                                                                    │
-│   Open lock           1  ────                                                                    │
+│   Mining              2  ────                                                                    │
 │   Spellcraft         13  ────                                                                    │
 │                                                                                                  │
 │ Binding wounds and tending the sick.                                                             │

@@ -1,0 +1,14 @@
+# An elemental essence (docs/design/recipes.md §9): an Alchemy and Enchanting input, drawn in its
+# element's colour. Never floor loot (no `level` or `frequency`); creature drops are to come. Made
+# of stone, as the loose gem is, so it neither burns nor rusts.
+[[object]]
+id = "essence_of_ice"
+name = "essence of ice"
+plural = "essences of ice"
+glyph = "*"
+fg = "#a8e0ff"
+class = "materials"
+materials = ["stone"]
+weight = 50
+value = 30
+stackable = true
