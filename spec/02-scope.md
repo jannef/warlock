@@ -68,7 +68,7 @@ Build the engine and framework, not the game. Everything built is production qua
   creatures walk onto them too; a few hidden on every generated Depths level, and a trap hall to
   try them (§8 "Traps"). No saving throws
 - Searching (#140): secret doors (level legends, vaults, a door or two on each Depths rooms level)
-  and hidden traps, found with one check: searching (`s`, `S` for a while; Intelligence and the
+  and hidden traps, found with one check: searching (`s` or Num5, a wait being a search; Ctrl+s for a while; Intelligence and the
   Search skill) or in passing (Willpower and Spot; elves, dwarves on stone, anyone trained in
   Spot), hidden traps with the Detect traps skill in place of both, rolled afresh every turn
   (§8 "Searching")

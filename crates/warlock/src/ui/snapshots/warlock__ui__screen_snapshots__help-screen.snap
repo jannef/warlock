@@ -17,8 +17,7 @@ expression: "render(case, content.clone())"
                               │   Move southwest                       Num1              │
                               │   Move west                            Num4 ←            │
                               │   Move northwest                       Num7              │
-                              │   Wait a turn                          . Num5            │
-                              │   Search                               s                 │
+                              │   Wait/search                          Num5 s            │
                               │   Search for a while                   Ctrl+Num5 Ctrl+s  │
                               │   Open a door                          o                 │
                               │   Close a door                         c                 │
@@ -44,5 +43,6 @@ expression: "render(case, content.clone())"
                               │   More aggressive stance               +                 │
                               │   More defensive stance                -                 │
                               │   Abilities                            a                 │
+                              │   Use the last ability again           X                 │
                               │ ↑↓ scroll   ? or Esc close                             ↓ │
  The Hub  ·  HP 18/18  ·  MP 2└──────────────────────────────────────────────────────────┘Darkening          ? controls

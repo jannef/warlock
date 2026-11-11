@@ -371,11 +371,18 @@ fn in_the_water_nothing_is_dropped_or_taken_and_no_one_rests_or_searches_or_digs
     refused(&mut w, rest, "You cannot rest in deep water.");
     refused(
         &mut w,
-        Action::Search(1),
+        Action::Search(10),
         "You cannot search in deep water.",
     );
     refused(&mut w, Action::Dig(Dir::E), "You cannot dig in deep water.");
+    // A wait (a turn of searching, #1326) goes on, treading water, without looking around.
+    let training = w.state.training.clone();
     assert!(w.apply(&Action::Wait).took_turn, "a wait goes on");
+    assert!(
+        w.apply(&Action::Search(1)).took_turn,
+        "so does a search's turn"
+    );
+    assert_eq!(w.state.training, training, "no search's marks");
 }
 
 /// A world whose player has a lantern ready in the Tool slot, lit or not.

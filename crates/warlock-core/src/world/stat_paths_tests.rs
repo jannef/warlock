@@ -270,7 +270,8 @@ fn acting_while_hungry_trains_toughness_and_waiting_or_weakness_does_not() {
     };
     feed(&mut w, 1000);
     assert_eq!(w.player_hunger(), Some(crate::hunger::Hunger::Hungry));
-    assert_eq!(earned(&mut w, |w| run(w, "wait")), only(&[], 0));
+    // A wait is a search (#1326): it may earn a search's marks, but never Toughness's.
+    assert_eq!(earned(&mut w, |w| run(w, "wait"))[Stat::Toughness], 0);
     assert_eq!(earned(&mut w, |w| run(w, "move:S"))[Stat::Toughness], 1);
     feed(&mut w, 100);
     assert!(w.player_hunger() < Some(crate::hunger::Hunger::Hungry));

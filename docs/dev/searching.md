@@ -70,12 +70,19 @@ dwarves do not notice their traps in passing.
 **Invariants**: checks draw from the gameplay stream (`crate::check`, two draws each) only for
 hidden features in reach, so runs without any nearby keep their hashes; no memory of failed
 checks and no cooldown (the owner's rule: no anti-farming limits); presentation never sees a
-difficulty, a modifier, or a roll. The app binds `s` (`KeyCommand::Search`, `search`) and Ctrl+Num5 and Ctrl+s
+difficulty, a modifier, or a roll. Waiting is searching (#1326): `Action::Wait` (action text `wait`, kept as a spelling) is
+`Action::Search(1)`, one code path (`player_acts` gives both `Spent::Search(1)`): a turn of it
+is the active check, its training marks, and its messages; it sets `World::waiting`, so a sound
+heard again trains Listen a little (`perceive.rs`); and it does not count as acting (no Balance
+mark under a load, no Dexterity mark lost while Overloaded, no hungry step). Rest does not
+search, nor do creatures' waits or the abilities priced as a wait. Treading deep water, a wait
+passes the turn without the checks (`search_turn`), and searching for a while is refused. The
+app binds Num5 and `s` (`KeyCommand::Wait`, "Wait/search", `wait`) and Ctrl+Num5 and Ctrl+s
 (`KeyCommand::SearchLong`, `search:N` with `SearchRules::turns`); basic commands, not
 abilities. `dump`'s `truth` layer and `warlock-cli gen` mark secret doors `S`; `truth` marks a
 standing breach `H`.
 
-**Tests**: `world/search_tests.rs` (looks, finding, draws, who notices, traps and the skill each
+**Tests**: `world/search_tests.rs` (looks, finding, waiting is searching (`waiting_is_searching`), draws, who notices, traps and the skill each
 look reads (`traps_are_detect_traps_to_find_and_the_rest_spot_and_search`), long searches,
 rests, reach, `set_terrain`, depth, saves and replays, legend errors), `content/search.rs`,
 `mapgen/tests.rs` (`rooms_levels_hide_a_few_doors_of_their_own`, the secret checks in

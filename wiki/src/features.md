@@ -136,7 +136,7 @@ You get [hungry](hunger.md). [Eat](food.md#eating) rations, bread, and apples be
 Some [doors](doors.md) are [locked](doors.md#locked-doors): open them with a [key](doors.md#keys),
 or [kick](doors.md#kicking) them in (`k`). [Traps](traps.md) lie hidden until someone steps on
 them. [Secret doors](doors.md#secret-doors) look like the wall until you
-[search](searching.md#searching-1) (`s`) or [notice them in passing](searching.md#noticing-in-passing).
+[search](searching.md#searching-1) (`s`, or any wait) or [notice them in passing](searching.md#noticing-in-passing).
 With a pick-axe you can [dig](digging.md) through walls.
 
 ## People, quests, and shops

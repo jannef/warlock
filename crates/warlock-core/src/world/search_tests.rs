@@ -115,14 +115,38 @@ fn a_secret_door_is_a_wall_until_it_is_found() {
 }
 
 #[test]
+fn waiting_is_searching() {
+    // #1326: a wait is a turn of searching, the same action: the same state from the same state.
+    for (map, found) in [(HALL, true), (HALL.replace('S', "H").as_str(), false)] {
+        let mut waited = world(map, WARRIOR);
+        run(&mut waited, "move:S");
+        let mut searched = waited.clone();
+        let expected = after_checks(&waited, 1);
+        let out = run(&mut waited, "wait");
+        assert!(out[0].took_turn);
+        run(&mut searched, "search");
+        assert_eq!(waited.state_hash(), searched.state_hash());
+        assert_eq!(texts(&waited), texts(&searched));
+        // The active check, once: the door of difficulty 1 is found, the one of 50 not.
+        assert_eq!(waited.state.rng, expected);
+        assert_eq!(waited.state.current().secrets.is_empty(), found, "{map}");
+        assert_eq!(
+            texts(&waited).last().map(String::as_str) == Some("You find a secret door!"),
+            found
+        );
+    }
+}
+
+#[test]
 fn checks_draw_only_when_something_hidden_is_in_reach() {
-    // The warrior notices nothing in passing: waiting beside the secret door draws nothing.
+    // The warrior notices nothing in passing: resting beside the secret door draws nothing (a
+    // wait would search, #1326).
     let mut w = world(
         "#######\n#@#...#\n#.H...#\n#.#...#\n#.#...#\n#######\n",
         WARRIOR,
     );
     let before = w.state.rng.clone();
-    run(&mut w, "wait*3");
+    run(&mut w, "rest:18s");
     assert_eq!(w.state.rng, before, "no passive check for the warrior");
     // A search checks it once a turn: two draws (the natural roll).
     let expected = after_checks(&w, 1);
@@ -167,7 +191,8 @@ fn who_notices_in_passing() {
     ] {
         let mut w = world(map, character);
         let before = w.state.rng.clone();
-        run(&mut w, "wait");
+        // A turn of rest, in passing: a wait would search (#1326).
+        run(&mut w, "rest:6s");
         let found = w.state.current().secrets.is_empty();
         assert_eq!(found, notices, "{character} in {map}");
         assert_eq!(w.state.rng != before, notices, "{character}: drew a check");
@@ -194,7 +219,7 @@ fn traps_are_detect_traps_to_find_and_the_rest_spot_and_search() {
             w.player_mut().skills.add(id, 1);
         }
         let before = w.state.rng.clone();
-        run(&mut w, "wait");
+        run(&mut w, "rest:6s");
         assert_eq!(w.state.rng != before, notices, "{character} with {skill:?}");
     }
     // The skill each check reads: Detect traps for a trap, both ways; Search and Spot for the

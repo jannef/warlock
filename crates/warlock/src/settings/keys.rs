@@ -30,7 +30,6 @@ pub const REBINDABLE: &[KeyCommand] = &[
     KeyCommand::Move(Dir::W),
     KeyCommand::Move(Dir::NW),
     KeyCommand::Wait,
-    KeyCommand::Search,
     KeyCommand::SearchLong,
     KeyCommand::Open,
     KeyCommand::Close,
@@ -140,6 +139,48 @@ pub const ABILITY_KEYS: &[KeyCommand] = &[
 /// they are dropped without a warning. Add an id here when a command is deleted.
 pub const RETIRED: &[&str] = &["fire", "hood_lantern", "lantern"];
 
+/// Ids of commands merged into another: an old settings or keymap file's keys for one go to the
+/// command that took it over, after that command's own (Search into Wait/search, #1326).
+const MERGED: &[(&str, KeyCommand)] = &[("search", KeyCommand::Wait)];
+
+/// `table` (a `[bindings]` table, or a keymap with its context tables) with the keys of every
+/// merged id ([`MERGED`]) moved to the command that took it over, or `table` itself when it lists
+/// none. A command the file does not list starts from its defaults.
+pub fn fold_merged(table: &toml::Table) -> std::borrow::Cow<'_, toml::Table> {
+    let has_merged = |t: &toml::Table| MERGED.iter().any(|(old, _)| t.contains_key(*old));
+    let nested = table.values().any(|v| v.as_table().is_some_and(has_merged));
+    if !has_merged(table) && !nested {
+        return std::borrow::Cow::Borrowed(table);
+    }
+    let mut folded = table.clone();
+    fold_into(&mut folded);
+    for (_, value) in folded.iter_mut() {
+        if let toml::Value::Table(inner) = value {
+            fold_into(inner);
+        }
+    }
+    std::borrow::Cow::Owned(folded)
+}
+
+fn fold_into(table: &mut toml::Table) {
+    for (old, command) in MERGED {
+        let Some(toml::Value::Array(keys)) = table.remove(*old) else {
+            continue;
+        };
+        let Some(id) = command.id() else { continue };
+        let defaults = || {
+            let defaults = Bindings::default();
+            (defaults.keys_of(*command).iter())
+                .map(|k| toml::Value::String(k.to_text()))
+                .collect()
+        };
+        let entry = (table.entry(id.to_string())).or_insert_with(|| toml::Value::Array(defaults()));
+        if let toml::Value::Array(own) = entry {
+            own.extend(keys);
+        }
+    }
+}
+
 /// The settings ids of [`KeyCommand::Page`] 1 to 9.
 const PAGE_IDS: [&str; 9] = [
     "page_1", "page_2", "page_3", "page_4", "page_5", "page_6", "page_7", "page_8", "page_9",
@@ -224,7 +265,6 @@ impl KeyCommand {
             Move(Dir::W) => "move_w",
             Move(Dir::NW) => "move_nw",
             Wait => "wait",
-            Search => "search",
             SearchLong => "search_long",
             Open => "open",
             Close => "close",
@@ -558,6 +598,7 @@ impl Bindings {
     /// invalid is skipped with a warning. An empty list leaves a command unbound; a command whose
     /// listed keys are all unusable gets its defaults back.
     pub fn from_table(table: &toml::Table, warnings: &mut Vec<String>) -> Self {
+        let table = &*fold_merged(table);
         let mut bindings = Bindings::default();
         for id in table.keys() {
             if KeyCommand::from_id(id).is_none() && !RETIRED.contains(&id.as_str()) {
@@ -815,7 +856,7 @@ mod tests {
         b.bind_primary(KeyCommand::Wait, ch("w")).unwrap();
         b.bind_primary(KeyCommand::Open, ch("O")).unwrap();
         b.reset_command(KeyCommand::Wait);
-        assert_eq!(b.keys_of(KeyCommand::Wait)[0], &ch("."));
+        assert_eq!(b.keys_of(KeyCommand::Wait)[1], &ch("s"));
         b.reset_all();
         assert_eq!(b.to_map(), before);
     }
@@ -878,6 +919,39 @@ mod tests {
         // Commands it does not list and nobody took a key from have the new defaults.
         assert_eq!(b.keys_of(KeyCommand::Equipment), vec![&ch("i")]);
         assert!(b.conflicts().is_empty());
+    }
+
+    #[test]
+    fn an_old_files_search_keys_go_to_wait_search() {
+        // A file from before #1326, when Search was a command of its own: its keys join
+        // Wait/search after Wait's, without a warning.
+        let table: toml::Table = toml::from_str(
+            r#"
+            wait = [".", "Numpad5"]
+            search = ["s", "f"]
+            "#,
+        )
+        .unwrap();
+        let mut warnings = Vec::new();
+        let b = Bindings::from_table(&table, &mut warnings);
+        assert!(warnings.is_empty(), "{warnings:?}");
+        let keys: Vec<String> = (b.keys_of(KeyCommand::Wait).iter())
+            .map(|k| k.to_text())
+            .collect();
+        assert_eq!(keys, [".", "Numpad5", "s", "f"]);
+        // Without `wait`, Wait/search keeps its defaults and takes the old keys too.
+        let table: toml::Table = toml::from_str("search = [\"f\"]").unwrap();
+        let b = Bindings::from_table(&table, &mut warnings);
+        assert!(warnings.is_empty(), "{warnings:?}");
+        let keys: Vec<String> = (b.keys_of(KeyCommand::Wait).iter())
+            .map(|k| k.to_text())
+            .collect();
+        assert_eq!(keys, ["Numpad5", "s", "f"]);
+        // A keymap's context table too.
+        let mut b = Bindings::default();
+        let report = crate::settings::keymap::import(&mut b, "[play]\nsearch = [\"f\"]\n").unwrap();
+        assert!(report.warnings.is_empty(), "{:?}", report.warnings);
+        assert_eq!(b.owner(&ch("f")), Some(KeyCommand::Wait));
     }
 
     #[test]
