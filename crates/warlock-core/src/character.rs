@@ -1233,6 +1233,16 @@ mod tests {
         files.edit_table("classes", untrained);
         files.edit_table("prestige", untrained);
         files.edit_table("creatures", untrained);
+        // Quest rewards teach none (Grave goods' Heal, #1329): the reward's other fields kept.
+        files.edit_table("quests", |text| {
+            let kept: Vec<String> = (text.lines())
+                .map(|l| match l.split_once(", skills = ") {
+                    Some((reward, _)) if l.starts_with("reward = ") => format!("{reward} }}"),
+                    _ => l.to_string(),
+                })
+                .collect();
+            kept.join("\n")
+        });
         // A trader's offer names no unique then (the pedlar's, #808).
         files.edit_table("dialogue", |text| {
             let kept: Vec<&str> = (text.lines())

@@ -8,12 +8,12 @@ name = "Grave goods"
 giver = "hild"
 type = "bring"
 target = "silver_chalice"
-reward = { gold = 40, xp = 60 }
+reward = { gold = 40, xp = 60, skills = { heal = { start = "1d4", marks = 100, taught = "Sister Hild shows you how to dress a wound.", more = "You learn more of healing." } } }
 alignment = 20
 offer = "A silver chalice was taken from the Mynster in my mother's time and buried with a lord in Cealdhlāw, the cold barrow. It was ours, given to God, not to him. Bring it back to me. The barrow's chamber lies two levels down."
 accept = "Thank you. The chamber is locked, they say, and something keeps the key. Go carefully."
 reminder = "The silver chalice, from the barrow's chamber in Cealdhlāw, two levels down."
-done = "Our chalice. It is cold even now. I will wash it and pray over it. Take this, for the road."
+done = "Our chalice. It is cold even now. I will wash it and pray over it. Sit a moment first: let me show you how we tend the wounded here, for you will meet wounds on your road. Take this, too."
 where = "The barrow chamber lies on Cealdhlāw's second level."
 
 [[quest]]

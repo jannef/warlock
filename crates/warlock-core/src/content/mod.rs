@@ -285,7 +285,7 @@ pub use prayer::{Face, FaceWords, Faced, PrayerRules, PrayerUse, UseDef};
 pub use prestige::{PrestigeDef, Table};
 pub use quest::{
     GOLD, Goal, KillTarget, QuestDef, QuestId, QuestKind, QuestTexts, Reveal, RevealWhen, Reward,
-    Waits,
+    SkillReward, Waits,
 };
 pub(crate) use quest_roll::roll_known;
 pub use quest_roll::{Candidate, Pick, Roll, Rolled, Variant, one_of};

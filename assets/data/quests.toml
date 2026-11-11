@@ -44,8 +44,13 @@
 #                hand-made level or a vault the branch level stamps for certain, exactly one)
 #                of level `level`, or the nearest free cell; made when that level is first made
 #                if it is not yet
-#   reward     { gold, items, xp }, each optional: gold coins, objects as levels place them
-#              (`["potion_of_healing*2"]`), and experience
+#   reward     { gold, items, xp, skills }, each optional: gold coins, objects as levels place them
+#              (`["potion_of_healing*2"]`), experience, and skills taught, by skill id
+#              (`skills = { heal = { start = "1d4", marks = 100 } }`): a skill the player is
+#              untrained in is trained at the `start` roll (dice; left out, it is not taught), a
+#              trained one gets `marks` training marks (at least one of the two); `taught` and
+#              `more` (optional) are what is said of each, else "<giver> trains you in heal." and
+#              "You learn more of heal."
 #   offer, accept, reminder   what the giver says when you ask about it (giving it), after the
 #              offer in the same reply (accept, optional), and when you ask again before it is
 #              done

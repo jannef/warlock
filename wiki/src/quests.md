@@ -125,6 +125,11 @@ they asked. Once it is done, they take what they asked for, thank you, and pay: 
 Rats in the barrows.", "Reeve Leofric gives you 25 gold coins.", "You gain 30 experience." What
 does not fit in your [pack](objects.md#your-pack) is put at your feet.
 
+Some quests also teach you a [skill](skills.md). If you are not trained in it, you are now,
+starting at `1d4`. If you are, you get 100 [training marks](skills.md#getting-better) in it
+instead. Sister Hild's Grave goods teaches [Heal](skills.md#skill-heal) this way. The Reward
+column of the [quest table](#who-gives-quests) names the skill.
+
 A few quests can be done again once they are done.
 
 ## The quest log

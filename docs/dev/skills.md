@@ -8,7 +8,7 @@ skills only, a missing one is untrained and gives nothing; `Effect` and `Use`, t
 and training-mark hooks; `Benefit` growth by `steps` or a `curve`; `Ladder` and `RollRules`, the
 level-up rolls' data; `Skills::mark` adds a mark, `Skills::roll` applies a roll and spends the
 marks), `content/skill.rs` (`data/skills.toml`: the skills, `[ladder]`, `[rolls]`; adding a skill
-is one entry), `world/train.rs` (marks for the player only, drawn from the `training` stream in
+is one entry), `world/train.rs` (marks for the player only, each through `World::mark_skill`, the one hook (a quest's `skills` reward marks there too, docs/dev/quests.md), drawn from the `training` stream in
 `WorldState`, never the gameplay stream; nothing said), and `world/skill_roll.rs` (#230: the
 level-up rolls, below).
 
