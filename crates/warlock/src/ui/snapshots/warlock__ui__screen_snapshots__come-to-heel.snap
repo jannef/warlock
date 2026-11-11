@@ -4,7 +4,6 @@ expression: "render(case, content.clone())"
 ---
  Welcome to Showcase. Press ? for controls.
  Two dire wargs come to your side.
-
                     ┌─ Abilities ──────────────────────────────────────────────┐
                     │                                                          │
                     │ Birth sign                                               │
@@ -16,18 +15,19 @@ expression: "render(case, content.clone())"
                     │   e  Steal              in a direction                   │
                     │ > f  Fletch             you have no knife                │
                     │   g  Whittle            you have no knife                │
+                    │   h  Salvage            on something you carry           │
                     │ Weapon skills                                            │
-                    │   h  Shield bash        you hold no shield               │
+                    │   i  Shield bash        you hold no shield               │
                     │ Allies                                                   │
-                    │   i  Come to heel                                        │
-                    │   j  Hold here                                           │
-                    │   k  Set on             at a place you see               │
+                    │   j  Come to heel                                        │
+                    │   k  Hold here                                           │
+                    │   l  Set on             at a place you see               │
                     │                                                          │
                     │ Fletch: you have no knife.                               │
                     │                                                          │
                     │                                                          │
                     │                                                          │
-                    │ a-k or Enter use   Esc close                             │
+                    │ a-l or Enter use   Esc close                             │
                     └──────────────────────────────────────────────────────────┘
 
 

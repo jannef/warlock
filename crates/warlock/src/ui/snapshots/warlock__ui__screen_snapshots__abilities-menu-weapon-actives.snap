@@ -13,22 +13,22 @@ expression: "render(case, content.clone())"
          │   c  Intimidate                         at a place you see                    │
          │   d  Fletch                             you have no knife                     │
          │   e  Whittle                            you have no knife                     │
+         │   f  Salvage                            on something you carry                │
          │ Weapon skills                                                                 │
-         │   f  Shield bash                        in a direction                        │
-         │   g  Long blades: Deep cut              fires by itself                       │
-         │   h  Long blades: Vital strike          4 stamina, in a direction             │
-         │   i  Spears: Brace                      fires by itself                       │
-         │   j  Spears: Lunge                      3 stamina: your hands are not so held │
-         │   k  Sword and Board: Staggering block  fires by itself                       │
-         │   l  Sword and Board: Shield rush       4 stamina, in a direction             │
-         │   m  Sword and Board: Shield wall       5 stamina                             │
+         │   g  Shield bash                        in a direction                        │
+         │   h  Long blades: Deep cut              fires by itself                       │
+         │   i  Long blades: Vital strike          4 stamina, in a direction             │
+         │   j  Spears: Brace                      fires by itself                       │
+         │   k  Spears: Lunge                      3 stamina: your hands are not so held │
+         │   l  Sword and Board: Staggering block  fires by itself                       │
+         │   m  Sword and Board: Shield rush       4 stamina, in a direction             │
+         │   n  Sword and Board: Shield wall       5 stamina                             │
          │                                                                               │
          │ The basilisk's stare: a foe nearby that sees you slows to a crawl a moment;   │
          │ your eyes then rest two hours.                                                │
          │                                                                               │
          │                                                                               │
-         │ a-m or Enter use   Esc close                                                  │
+         │ a-n or Enter use   Esc close                                                  │
          └───────────────────────────────────────────────────────────────────────────────┘
-
 
  The Hub  ·  HP 25/25  ·  MP 3/3  ·  Sta 10/10  ·  Lv 1  ·  08:00  ·  11 Darkening       ? controls

@@ -197,6 +197,8 @@ above.
 | Treating yourself, binding a wound | `skill-uses.md#treating-yourself` |
 | Fletching, brittle arrows and bolts, a knife | `skill-uses.md#fletching` |
 | Foraging | `skill-uses.md#foraging` |
+| Crafting, a craft skill, craft points, who works which material, a material's work | `crafting.md`, `crafting.md#who-works-what` |
+| Salvage, taking an item apart, a gem chipped or shattered | `crafting.md#salvage` |
 | Abilities, the abilities menu | `abilities.md#the-abilities-menu` |
 | Experience, XP, levels | `experience.md`, `experience.md#levels` |
 | The level curve to 100, the XP of every level | `experience.md#levels` |

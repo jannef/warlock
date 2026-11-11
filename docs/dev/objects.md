@@ -261,12 +261,12 @@ and `verb` together (`Profession`); `gems = { skill, stat, verb }` is the gems' 
 loader refuses a group twice or one no material has, empty words, a partial profession, unknown
 skills, and a skill named with two stats. `Stock::profession_of(content, material)` (a gem the
 gems' row, else its group's) and `World::profession_of(material) -> Option<(SkillId, Stat)>`
-(`world/stock.rs`) are the one read: nothing in code names a group or a skill. Jewelcraft is not
-a skill yet (#1331), so stone, resin, and the gems have their words and no profession; adding
-it is three lines of `stock.toml`. `piece::count_for(content, grams, material)` =
+(`world/stock.rs`) are the one read: nothing in code names a group or a skill. Jewelcraft
+(Dexterity, verb "Cut") works stone, resin, and the gems (#1333). `piece::count_for(content,
+grams, material)` =
 `max(1, round(grams / one piece's grams))`, the rounding `break_up` shares (`count_of_share`).
 `MaterialDef::work` (optional, signed, default 0) is the material's modifier on every salvage
-and recipe check (none reads it yet: P3). Shops (`shops.toml`): the smithy and the general
+and recipe check (salvage reads it, docs/dev/crafting.md). Shops (`shops.toml`): the smithy and the general
 stores stock `materials`; they, the weaponsmith, the armourer, and the fletcher buy them;
 Cēaptūn lays out steel and iron ingots in its smithy (a wood billet is worth nothing yet, so no shop trades it). Tests:
 `piece.rs` (names with and without a row, the §3 counts), `content/stock.rs` (professions, the

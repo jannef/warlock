@@ -214,6 +214,7 @@ fn the_player_perceives_only_their_own_trained_skills() {
             Ability::PickLock,
             Ability::Fletch,
             Ability::Whittle,
+            Ability::Salvage,
             Ability::ShieldBash
         ]
     );

@@ -4,7 +4,6 @@ expression: "render(case, content.clone())"
 ---
  Welcome to Showcase. Press ? for controls.
 
-
                     ┌─ Abilities ──────────────────────────────────────────────┐
                     │                                                          │
                     │ Birth sign                                               │
@@ -20,14 +19,15 @@ expression: "render(case, content.clone())"
                     │   g  Listen at a door   in a direction                   │
                     │   h  Fletch             you have no knife                │
                     │   i  Whittle            you have no knife                │
+                    │   j  Salvage            on something you carry           │
                     │ Weapon skills                                            │
-                    │   j  Shield bash        in a direction                   │
+                    │   k  Shield bash        in a direction                   │
                     │                                                          │
                     │ Pray (a cast's time, no mana): what ails you most is     │
                     │ answered, as far as your prayers reach; for now, your    │
                     │ wounds. Pray too often and nothing answers a while.      │
                     │                                                          │
-                    │ a-j or Enter use   Esc close                             │
+                    │ a-k or Enter use   Esc close                             │
                     └──────────────────────────────────────────────────────────┘
 
 

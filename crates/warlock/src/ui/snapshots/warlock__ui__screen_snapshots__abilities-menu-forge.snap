@@ -6,7 +6,6 @@ expression: "render(case, content.clone())"
  You pick up a dagger.
 
 
-
                    ┌─ Abilities ───────────────────────────────────────────────┐
                    │                                                           │
                    │ Birth sign                                                │
@@ -16,16 +15,17 @@ expression: "render(case, content.clone())"
                    │   c  Fletch             you have no bow or crossbow ready │
                    │   d  Whittle            on something you carry            │
                    │   e  Wedge a door       in a direction                    │
+                   │   f  Salvage            on something you carry            │
                    │ Weapon skills                                             │
-                   │   f  Shield bash        you hold no shield                │
+                   │   g  Shield bash        you hold no shield                │
                    │ Here                                                      │
-                   │   g  Temper             on something you carry            │
+                   │   h  Temper             on something you carry            │
                    │                                                           │
                    │ The basilisk's stare: a foe nearby that sees you slows to │
                    │ a crawl a moment; your eyes then rest two hours.          │
                    │                                                           │
                    │                                                           │
-                   │ a-g or Enter use   Esc close                              │
+                   │ a-h or Enter use   Esc close                              │
                    └───────────────────────────────────────────────────────────┘
 
 

@@ -136,6 +136,7 @@ mod room_treasury_tests;
 #[cfg(test)]
 mod room_warp_tests;
 mod ruin;
+mod salvage;
 mod scenario;
 mod scroll;
 mod scroll_label;
@@ -304,6 +305,7 @@ pub use room_shrine::{Regard, Shrine};
 pub(crate) use room_treasury::breach_fault;
 pub use room_treasury::{Heaps, Sealed, SecretDoors, Treasury};
 pub use ruin::{RuinOf, RuinRow, RuinRules};
+pub use salvage::SalvageRules;
 pub use scenario::ScenarioDef;
 pub use scroll::{Cleansing, Reading, SpellScroll};
 pub use scroll_label::ScrollLabelDef;
@@ -696,6 +698,9 @@ pub struct Content {
     /// How arrows and bolts are made (`data/fletch.toml`, spec §8 "Fletching"); without it
     /// nobody fletches.
     fletch: Option<FletchRules>,
+    /// The numbers of salvaging an item for its materials (`data/salvage.toml`); without it
+    /// nobody salvages.
+    salvage: Option<SalvageRules>,
     /// What foraging in the wild gives (`data/forage.toml`, spec §8 "Foraging"); none without
     /// the file.
     forage: Option<ForageRules>,
@@ -888,6 +893,7 @@ impl Content {
             smite: None,
             encounter_tables: Vec::new(),
             fletch: None,
+            salvage: None,
             forage: None,
             feint: None,
             intimidate: None,
@@ -1255,6 +1261,10 @@ impl Content {
         let path = "data/fletch.toml";
         if let Some(text) = files.get_optional(path) {
             content.fletch = Some(FletchRules::parse(path, text, &content)?);
+        }
+        let path = "data/salvage.toml";
+        if let Some(text) = files.get_optional(path) {
+            content.salvage = Some(SalvageRules::parse(path, text)?);
         }
         let path = "data/forage.toml";
         if let Some(text) = files.get_optional(path) {
@@ -3224,6 +3234,12 @@ impl Content {
     /// file, when nobody fletches.
     pub fn fletch(&self) -> Option<&FletchRules> {
         self.fletch.as_ref()
+    }
+
+    /// The numbers of salvaging an item for its materials (`data/salvage.toml`); `None` without
+    /// the file, when nobody salvages.
+    pub fn salvage(&self) -> Option<&SalvageRules> {
+        self.salvage.as_ref()
     }
 
     /// Whether `object` is a knife, to fletch with (`data/fletch.toml`'s `knives`, a weapon

@@ -301,9 +301,10 @@ fn rolls_survive_saves_and_replays() {
 
 #[test]
 fn the_professions_skills_load_can_be_trained_and_rolled() {
-    // Jewelcraft, Mining, Herbalism, Alchemy, and Enchanting (#1331): data only, no effect yet.
+    // Jewelcraft, Mining, Herbalism, Alchemy, and Enchanting (#1331): data only, no effect yet,
+    // but Jewelcraft's craft and salvage mark (#1333, `world/salvage_tests.rs`).
     let mut w = world("human,male,warrior");
-    for id in ["alchemy", "enchanting", "herbalism", "jewelcraft", "mining"] {
+    for id in ["alchemy", "enchanting", "herbalism", "mining"] {
         let def = w.content().skill(skill(&w, id));
         assert!(
             def.marks.is_empty() && def.benefits.is_empty(),

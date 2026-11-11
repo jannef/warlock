@@ -208,9 +208,10 @@ dagger with a ruby pommel breaks into a tin ingot and the ruby. A steel long swo
 2 steel ingots and a leather hide.
 
 Each group is worked by one skill: metal by [Metalcraft](skills.md#skill-metalcraft), with
-Strength; wood, bone, and hide by [Woodcraft](skills.md#skill-woodcraft), with Dexterity. Stone,
-amber, gems, cloth, and glass have no crafting skill yet. Some materials are harder to work than
-others: the **work** column of the materials table is added to the difficulty of working them
-(steel 0, tin −3, adamantium +8). Nothing uses these yet; crafting is still to come.
+Strength; wood, bone, and hide by [Woodcraft](skills.md#skill-woodcraft), with Dexterity; stone,
+amber, and gems by [Jewelcraft](skills.md#skill-jewelcraft), with Dexterity. Cloth and glass have
+no crafting skill yet. Some materials are harder to work than others: the **work** column of the
+materials table is added to the difficulty of working them (steel 0, tin −3, adamantium +8).
+[Salvage](crafting.md#salvage) uses both: it takes an item apart into these pieces.
 
 {{#include generated/pieces.md}}

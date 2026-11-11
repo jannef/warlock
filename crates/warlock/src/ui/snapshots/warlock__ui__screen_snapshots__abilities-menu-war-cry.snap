@@ -19,16 +19,16 @@ expression: "render(case, content.clone())"
                     │   g  Forage             not usable here                  │
                     │   h  Fletch             you have no knife                │
                     │   i  Whittle            you have no knife                │
+                    │   j  Salvage            on something you carry           │
                     │ Weapon skills                                            │
-                    │   j  Shield bash        you hold no shield               │
+                    │   k  Shield bash        you hold no shield               │
                     │                                                          │
                     │ The basilisk's stare: a foe nearby that sees you slows   │
                     │ to a crawl a moment; your eyes then rest two hours.      │
                     │                                                          │
                     │                                                          │
-                    │ a-j or Enter use   Esc close                             │
+                    │ a-k or Enter use   Esc close                             │
                     └──────────────────────────────────────────────────────────┘
-
 
 
  The Hub  ·  HP 155/155  ·  MP 51/51  ·  Sta 11/17  ·  Lv 26  ·  08:00                   ? controls

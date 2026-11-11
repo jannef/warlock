@@ -6,7 +6,6 @@ expression: "render(case, content.clone())"
  grace is spent.
 
 
-
                     ┌─ Abilities ──────────────────────────────────────────────┐
                     │                                                          │
                     │ Birth sign                                               │
@@ -18,14 +17,15 @@ expression: "render(case, content.clone())"
                     │   e  Forage        not usable here                       │
                     │   f  Fletch        you have no knife                     │
                     │   g  Whittle       you have no knife                     │
+                    │   h  Salvage       on something you carry                │
                     │ Weapon skills                                            │
-                    │   h  Shield bash   in a direction                        │
+                    │   i  Shield bash   in a direction                        │
                     │                                                          │
                     │ Threaten a foe you see nearby: unless it keeps its       │
                     │ nerve, it flees from you a moment, longer the better you │
                     │ intimidate.                                              │
                     │                                                          │
-                    │ a-h or Enter use   Esc close                             │
+                    │ a-i or Enter use   Esc close                             │
                     └──────────────────────────────────────────────────────────┘
 
 

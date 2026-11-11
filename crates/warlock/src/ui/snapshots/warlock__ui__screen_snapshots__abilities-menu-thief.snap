@@ -4,7 +4,6 @@ expression: "render(case, content.clone())"
 ---
  Your appraise improves. (×56) You learn Light step. You learn Opportunist. You learn Quick. You
  learn Keen ears. You learn Lamplighter. You learn Petrifying gaze. You learn Undertow.
-
                    ┌─ Abilities ───────────────────────────────────────────────┐
                    │                                                           │
                    │ Birth sign                                                │
@@ -20,14 +19,15 @@ expression: "render(case, content.clone())"
                    │   h  Steal              in a direction                    │
                    │   i  Fletch             you have no bow or crossbow ready │
                    │   j  Whittle            on something you carry            │
+                   │   k  Salvage            on something you carry            │
                    │ Weapon skills                                             │
-                   │   k  Shield bash        you hold no shield                │
+                   │   l  Shield bash        you hold no shield                │
                    │                                                           │
                    │ The basilisk's stare: a foe nearby that sees you slows to │
                    │ a crawl a moment; your eyes then rest two hours.          │
                    │                                                           │
                    │                                                           │
-                   │ a-k or Enter use   Esc close                              │
+                   │ a-l or Enter use   Esc close                              │
                    └───────────────────────────────────────────────────────────┘
 
 

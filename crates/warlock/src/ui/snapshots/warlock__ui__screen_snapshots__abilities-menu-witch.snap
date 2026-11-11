@@ -21,14 +21,14 @@ expression: "render(case, content.clone())"
              │   k  Forage             not usable here                                │
              │   l  Fletch             you have no bow or crossbow ready              │
              │   m  Whittle            on something you carry                         │
+             │   n  Salvage            on something you carry                         │
              │ Weapon skills                                                          │
-             │   n  Shield bash        you hold no shield                             │
-             │ Allies                                                                 │
-             │   o  Come to heel                                                      │
+             │   o  Shield bash        you hold no shield                             │
              │                                                                        │
              │ The basilisk's stare: a foe nearby that sees you slows to a crawl a    │
              │ moment; your eyes then rest two hours.                                 │
              │                                                                        │
              │                                                                        │
              │ a-o or Enter use   > < page   Esc close                                │
- The Hub  ·  └────────────────────────────────────────────────────────────────────────┘  ? controls
+             └────────────────────────────────────────────────────────────────────────┘
+ The Hub  ·  HP 20/20  ·  MP 62/64  ·  Lv 8  ·  Dandy: unhurt  ·  08:00                  ? controls

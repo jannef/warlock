@@ -187,9 +187,12 @@ mod tests {
         assert_eq!(of("hardwood"), Some(("woodcraft", Stat::Dexterity, "Make")));
         assert_eq!(of("horn"), Some(("woodcraft", Stat::Dexterity, "Make")));
         assert_eq!(of("leather"), Some(("woodcraft", Stat::Dexterity, "Make")));
-        // No profession takes cloth or glass yet; paper has no group; Jewelcraft is not a skill
-        // yet (#1331), so stone, amber, and the gems wait for it.
-        for none in ["wool", "glass", "paper", "jade", "amber", "ruby"] {
+        // Jewelcraft takes stone, amber, and the gems.
+        for id in ["jade", "amber", "ruby"] {
+            assert_eq!(of(id), Some(("jewelcraft", Stat::Dexterity, "Cut")), "{id}");
+        }
+        // No profession takes cloth or glass yet; paper has no group.
+        for none in ["wool", "glass", "paper"] {
             assert_eq!(of(none), None, "{none}");
         }
     }
@@ -224,10 +227,13 @@ mod tests {
 
     #[test]
     fn the_gems_have_a_profession_of_their_own() {
+        const OURS: &str =
+            "gems = { skill = \"jewelcraft\", stat = \"dexterity\", verb = \"Cut\" }";
+        assert!(TEXT.contains(OURS));
         let gems = |stat: &str| {
-            format!(
-                "gems = {{ skill = \"metalcraft\", stat = \"{stat}\", verb = \"Cut\" }}\n{TEXT}"
-            )
+            let line =
+                format!("gems = {{ skill = \"metalcraft\", stat = \"{stat}\", verb = \"Cut\" }}");
+            TEXT.replacen(OURS, &line, 1)
         };
         let text = gems("strength");
         let mut files = ContentFiles::builtin();

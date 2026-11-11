@@ -246,6 +246,14 @@ pub enum Action {
     Whittle {
         item: usize,
     },
+    /// Salvage the carried stack at this position (one of it), anywhere (the Salvage ability,
+    /// the Skills group; `world/salvage.rs`): ten minutes of turns of the `salvage` action, then
+    /// a check per material a profession works, each made one giving its stock; the item is
+    /// destroyed either way. Interrupted, nothing happens. Refused (no time) with a stack worn or
+    /// wielded, protected, unpaid, a spirit weapon, or with nothing a profession works.
+    Salvage {
+        item: usize,
+    },
     /// Give the carried stack at this position (one of it) to the player's companion beside them,
     /// for its neck (spec §8 "Allies"; the Give ability, the abilities menu's Allies group;
     /// `world/collar.rs`): priced as a `wear`, and what it wore falls on its cell. `ally` is the
@@ -974,6 +982,7 @@ impl fmt::Display for Action {
             Action::Decipher { item } => write!(f, "decipher:{}", position_text(*item)),
             Action::Temper { item } => write!(f, "temper:{}", position_text(*item)),
             Action::Whittle { item } => write!(f, "whittle:{}", position_text(*item)),
+            Action::Salvage { item } => write!(f, "salvage:{}", position_text(*item)),
             Action::Give { item, ally } => {
                 write!(f, "give:{}", position_text(*item))?;
                 match ally {
@@ -1144,6 +1153,11 @@ impl FromStr for Action {
                 let usage = || "`whittle` needs a letter, e.g. `whittle:b`".to_string();
                 let item = arg.and_then(parse_position).ok_or_else(usage)?;
                 Ok(Action::Whittle { item })
+            }
+            "salvage" => {
+                let usage = || "`salvage` needs a letter, e.g. `salvage:b`".to_string();
+                let item = arg.and_then(parse_position).ok_or_else(usage)?;
+                Ok(Action::Salvage { item })
             }
             "give" => {
                 let usage = || "`give:LETTER[:DIR]` names a stack, e.g. `give:b`".to_string();
@@ -1823,6 +1837,7 @@ mod tests {
             Action::Temper { item: 0 },
             Action::Temper { item: 27 },
             Action::Whittle { item: 3 },
+            Action::Salvage { item: 2 },
             Action::Give {
                 item: 1,
                 ally: None,

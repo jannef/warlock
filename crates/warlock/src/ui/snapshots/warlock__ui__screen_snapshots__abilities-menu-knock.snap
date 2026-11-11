@@ -20,15 +20,15 @@ expression: "render(case, content.clone())"
              │   h  Pick lock          in a direction                                │
              │   i  Fletch             you have no knife                             │
              │   j  Whittle            you have no knife                             │
+             │   k  Salvage            on something you carry                        │
              │ Weapon skills                                                         │
-             │   k  Shield bash        you hold no shield                            │
+             │   l  Shield bash        you hold no shield                            │
              │                                                                       │
              │ The basilisk's stare: a foe nearby that sees you slows to a crawl a   │
              │ moment; your eyes then rest two hours.                                │
              │                                                                       │
              │                                                                       │
-             │ a-k or Enter use   Esc close                                          │
+             │ a-l or Enter use   Esc close                                          │
              └───────────────────────────────────────────────────────────────────────┘
-
 
  The Hub  ·  HP 18/18  ·  MP 40/40  ·  Lv 4  ·  08:00  ·  11 Darkening, Year 1444        ? controls

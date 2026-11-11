@@ -1265,6 +1265,9 @@ impl Gameplay<'_> {
                 if ability == Ability::Whittle {
                     return Some(ScreenAction::Open(ScreenName::Whittle));
                 }
+                if ability == Ability::Salvage {
+                    return Some(ScreenAction::Open(ScreenName::Salvage));
+                }
                 if ability == Ability::Decipher {
                     return Some(ScreenAction::Open(ScreenName::Decipher));
                 }

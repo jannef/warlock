@@ -81,6 +81,9 @@ pub(super) fn abilities(content: &Content) -> String {
             Ability::Whittle => {
                 "everyone (usable with a knife carried; whittling takes ten minutes)".into()
             }
+            Ability::Salvage => {
+                "everyone (anywhere, with nothing; see [Crafting](crafting.md#salvage))".into()
+            }
             Ability::Temper => {
                 "everyone beside a forge's anvil (tempering takes ten minutes)".into()
             }
@@ -162,6 +165,10 @@ pub(super) fn abilities(content: &Content) -> String {
             }
             Some(_) if a == Ability::Whittle => {
                 let minutes = content.temper().seconds / 60;
+                (aim(a.aim(content)), format!("{minutes} minutes (a try)"))
+            }
+            Some(_) if a == Ability::Salvage => {
+                let minutes = content.salvage().map_or(0, |r| r.seconds / 60);
                 (aim(a.aim(content)), format!("{minutes} minutes (a try)"))
             }
             Some(_) if a == Ability::Forage => {

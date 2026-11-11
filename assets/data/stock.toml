@@ -19,8 +19,9 @@
 #   A skill is named with one stat only, everywhere in the file.
 #
 # gems = { skill, stat, verb }: the profession of the gems (materials with a `gem` table, no
-# group). Jewelcraft (#1331) takes the gems, stone (stone, flint, obsidian, jade), and resin
-# (amber) once it is a skill; until then those rows have their words only.
+# group). Jewelcraft takes the gems, stone (stone, flint, obsidian, jade), and resin (amber).
+
+gems = { skill = "jewelcraft", stat = "dexterity", verb = "Cut" }
 
 [[group]]
 group = "metal"
@@ -62,12 +63,18 @@ group = "stone"
 name = "block"
 plural = "blocks"
 of = true
+skill = "jewelcraft"
+stat = "dexterity"
+verb = "Cut"
 
 [[group]]
 group = "resin"
 name = "lump"
 plural = "lumps"
 of = true
+skill = "jewelcraft"
+stat = "dexterity"
+verb = "Cut"
 
 [[group]]
 group = "cloth"

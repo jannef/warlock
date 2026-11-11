@@ -136,7 +136,9 @@ with every attempt on the item, docs/dev/special-rooms.md); Metalcraft
 stays a skill "not usable yet" in the abilities menu, since Temper is offered by the anvil to
 anyone. The professions' skills (#1331, epic #1337) **Alchemy, Enchanting, Herbalism, Jewelcraft,
 and Mining** are data only for now, **no effect yet**: no marks, no benefit, and no class, race,
-or story trains them. Kinds as `docs/design/professions.md` §9: Mining `rules`, Herbalism
+or story trains them; but Jewelcraft, like Metalcraft and Woodcraft, has the `craft` benefit and
+a `salvage` mark (#1333: salvage, `docs/dev/crafting.md`; `Effect::Craft` is read per skill by
+`Actor::skill_effect_of`, never summed across skills). Kinds as `docs/design/professions.md` §9: Mining `rules`, Herbalism
 `passive`, the others `action` (shown "not usable yet"). Skill ids are file order (alphabetical),
 and `Skills` is saved and hashed by that index, so inserting them shifted the later skills'
 indices: state hashes and saves of runs with skills change (saves are pinned to the version).

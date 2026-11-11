@@ -441,6 +441,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
     **Whittle** (`Ability::Whittle`, §8 "Skills", Woodcraft's second use), beside it, which everyone has,
     asking for an item (the Whittle list: wooden weapons, `world::workable_wood`), greyed out "you
     have no knife" (`Unavailable::NoKnife`);
+    **Salvage** (`Ability::Salvage`, §8 "Skills", every profession's), after the skills' own uses,
+    which everyone has, asking for an item (the Salvage list: what `world::salvageable` accepts,
+    less what is worn or wielded), never greyed out;
     and each other skill used as
     an action (`kind = "action"`, §8 "Skills") the player
     is trained in, listed but never available until its use comes (it then becomes an ability of

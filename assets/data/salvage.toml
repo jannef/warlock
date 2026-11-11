@@ -1,0 +1,23 @@
+# Salvage (docs/design/professions.md §5; docs/dev/crafting.md): breaking an item into the
+# materials it is made of, the Salvage ability of the abilities menu's Skills group. Anyone may,
+# anywhere, with no tool; the item is destroyed whatever comes of it.
+#
+# An attempt takes `seconds` of game time, in turns of the `salvage` action (actions.toml); a
+# creature coming into view, a message, or a blow stops it, and an attempt cut short does nothing
+# (the time is spent). One that runs its time rolls one check for each material of the item that
+# a profession works (stock.toml), in part order: 2d12 + the profession's stat modifier + the
+# talents' checks of that stat + the profession's `craft` points (skills.toml) against
+# `difficulty` + the material's `work` (materials/). A natural 2 always fails, a natural 24
+# always succeeds. A made check gives `yield` % of the material's grams back as stock (at least
+# one piece); a gem comes out whole. A failed check loses the material; a failed gem loses a cut
+# (down to crude) or else a size (down to tiny) instead, and is lost only when it has neither to
+# lose or on a natural 2, which shatters it.
+#
+# Fields:
+#   seconds     how long an attempt takes, in seconds (at least 1)
+#   difficulty  what each check must reach, before the material's `work`
+#   yield       the percent of a material's grams given back (1 to 100)
+
+seconds = 600
+difficulty = 12
+yield = 50
