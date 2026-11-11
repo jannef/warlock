@@ -433,7 +433,8 @@ mod tests {
         b.bind_primary(KeyCommand::Read, chord("Ctrl+r")).unwrap();
         b.bind_primary(KeyCommand::Look, chord("Shift+ArrowUp"))
             .unwrap();
-        b.bind_primary(KeyCommand::Eat, chord("Super+e")).unwrap();
+        // Super+s: no platform keeps it (Super+e is Windows' Explorer, refused there).
+        b.bind_primary(KeyCommand::Eat, chord("Super+s")).unwrap();
         b.bind_primary(KeyCommand::Wait, ch("k")).unwrap(); // Kick is left without a key.
         b
     }
