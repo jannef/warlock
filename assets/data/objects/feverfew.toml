@@ -1,0 +1,13 @@
+# A herb (docs/design/recipes.md §8): an Alchemy input. A small daisy, bitter to the tongue. Never floor loot (no
+# `level` or `frequency`); the alchemist sells glowcap and moonwort, and gathering is to come.
+[[object]]
+id = "feverfew"
+name = "sprig of feverfew"
+plural = "sprigs of feverfew"
+glyph = '"'
+fg = "#a6c46e"
+class = "materials"
+materials = ["plant"]
+weight = 20
+value = 15
+stackable = true

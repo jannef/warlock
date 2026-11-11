@@ -336,7 +336,7 @@ pub use status::{
     StatusId, Wound,
 };
 pub use steal::StealRules;
-pub use stock::{Profession, Stock, StockGroup};
+pub use stock::{Profession, Stock, StockGroup, StockMaterial};
 pub use summon::Summon;
 pub use surprise::SurpriseRules;
 pub use swim::SwimRules;

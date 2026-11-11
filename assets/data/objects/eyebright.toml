@@ -1,0 +1,13 @@
+# A herb (docs/design/recipes.md §8): an Alchemy input. A tiny white flower of the hills. Never floor loot (no
+# `level` or `frequency`); the alchemist sells glowcap and moonwort, and gathering is to come.
+[[object]]
+id = "eyebright"
+name = "sprig of eyebright"
+plural = "sprigs of eyebright"
+glyph = '"'
+fg = "#c2d2b8"
+class = "materials"
+materials = ["plant"]
+weight = 20
+value = 25
+stackable = true

@@ -375,7 +375,8 @@ impl Stack {
     }
 
     /// Grams: its object's weight (a loose gem: its size's; made of other materials, scaled by
-    /// them, [`variant::weight`]), less what a weight affix takes off, times the count.
+    /// them, [`variant::weight`]; a piece times its unit, [`crate::piece::unit`]), less what a
+    /// weight affix takes off, times the count.
     pub fn weight(&self, content: &Content) -> u64 {
         let def = content.object(self.object);
         let each = match (self.gem(content), content.gems()) {
@@ -384,7 +385,7 @@ impl Stack {
                 u64::from(variant::weight(def, &self.parts(content), content))
             }
             _ => u64::from(def.weight),
-        };
+        } * u64::from(crate::piece::unit(content, def, self));
         let lighter = match self.magic {
             Some(_) => Mods::local(self, content).get(Effect::Weight),
             None => 0,
@@ -455,11 +456,13 @@ impl Stack {
     }
 
     /// What it is worth, in gold coins: each one's value, made of its [`Stack::parts`]
-    /// ([`crate::content::ObjectDef::value_with`]: a gem by its size and cut), times the count.
+    /// ([`crate::content::ObjectDef::value_with`]: a gem by its size and cut; a piece times its
+    /// unit, [`crate::piece::unit`]), times the count.
     /// Magic does not change it; an anvil's work does ([`Worked::value`]).
     pub fn value(&self, content: &Content) -> u64 {
         let def = content.object(self.object);
-        let each = u64::from(def.value_with(&self.parts(content), content));
+        let each = u64::from(def.value_with(&self.parts(content), content))
+            * u64::from(crate::piece::unit(content, def, self));
         let each = self.worked().map_or(each, |w| w.value(each));
         each * u64::from(self.count)
     }

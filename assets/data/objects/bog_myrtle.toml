@@ -1,0 +1,13 @@
+# A herb (docs/design/recipes.md §8): an Alchemy input. A resinous shrub of the fens. Never floor loot (no
+# `level` or `frequency`); the alchemist sells glowcap and moonwort, and gathering is to come.
+[[object]]
+id = "bog_myrtle"
+name = "sprig of bog myrtle"
+plural = "sprigs of bog myrtle"
+glyph = '"'
+fg = "#4f7d52"
+class = "materials"
+materials = ["plant"]
+weight = 20
+value = 25
+stackable = true
