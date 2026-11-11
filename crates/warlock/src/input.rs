@@ -21,6 +21,7 @@ use crate::game::{Game, PlayerAction, SimSet};
 use crate::render::console::Console;
 use crate::save::SaveCommand;
 use crate::settings::Settings;
+use crate::settings::mods::{self, Mods, Platform};
 use crate::ui::{
     Aim, AimKind, DevOverlays, Dialog, IdentifyBy, LastTarget, MenuChoice, Press, ScreenAction,
     ScreenName, Screens, more, quit_dialog,
@@ -388,13 +389,57 @@ pub enum KeyBinding {
     Char(String),
     /// A physical key (arrows, numpad, function keys).
     Code(KeyCode),
+    /// A key held with modifiers, `Ctrl+r` (play commands only; `settings::mods`). Made by
+    /// [`KeyBinding::chord`]: the modifiers are never none, the key never a chord, and Shift
+    /// only with a physical key.
+    Chord(Mods, Box<KeyBinding>),
 }
 
 impl KeyBinding {
-    /// Human-readable key name for the controls screen and help.
+    /// `key` held with `mods`: the plain key without modifiers.
+    pub fn chord(mods: Mods, key: KeyBinding) -> Self {
+        let mods = mods.union(key.mods());
+        let base = key.base().clone();
+        let mods = match base {
+            KeyBinding::Code(_) => mods,
+            _ => mods.without_shift(),
+        };
+        if mods.is_empty() {
+            base
+        } else {
+            KeyBinding::Chord(mods, Box::new(base))
+        }
+    }
+
+    /// The modifiers held with the key (none for a plain key).
+    pub fn mods(&self) -> Mods {
+        match self {
+            KeyBinding::Chord(mods, _) => *mods,
+            _ => Mods::NONE,
+        }
+    }
+
+    /// The key without its modifiers.
+    pub fn base(&self) -> &KeyBinding {
+        match self {
+            KeyBinding::Chord(_, key) => key,
+            plain => plain,
+        }
+    }
+
+    /// Human-readable key name for the controls screen and help, the modifiers named as this
+    /// platform names them (`Cmd+s` on macOS).
     pub fn display(&self) -> String {
+        self.display_on(Platform::current())
+    }
+
+    /// The key's name as `platform` names its modifiers.
+    pub fn display_on(&self, platform: Platform) -> String {
         match self {
             KeyBinding::Char(s) => s.clone(),
+            KeyBinding::Chord(mods, key) => {
+                format!("{}{}", mods.display_on(platform), key.display())
+            }
             KeyBinding::Code(code) => match code {
                 KeyCode::ArrowUp => "↑".into(),
                 KeyCode::ArrowDown => "↓".into(),
@@ -414,15 +459,6 @@ impl KeyBinding {
                 KeyCode::Delete => "Del".into(),
                 other => format!("{other:?}"),
             },
-        }
-    }
-
-    fn matches(&self, input: &KeyboardInput) -> bool {
-        match self {
-            KeyBinding::Code(code) => input.key_code == *code,
-            KeyBinding::Char(s) => {
-                matches!(&input.logical_key, Key::Character(c) if c.as_str() == s)
-            }
         }
     }
 }
@@ -456,7 +492,11 @@ impl Default for Bindings {
             (ch("."), Wait),
             (Code(KeyCode::Numpad5), Wait),
             (ch("s"), Search),
-            (ch("S"), SearchLong),
+            (
+                KeyBinding::chord(Mods::CTRL, Code(KeyCode::Numpad5)),
+                SearchLong,
+            ),
+            (KeyBinding::chord(Mods::CTRL, ch("s")), SearchLong),
             (ch("o"), Open),
             (ch("c"), Close),
             (ch("k"), Kick),
@@ -551,26 +591,22 @@ pub fn dev_keys(args: &Args) -> bool {
 }
 
 impl Bindings {
-    /// The command a key press stands for in play.
-    pub fn lookup(&self, input: &KeyboardInput) -> Option<KeyCommand> {
-        self.lookup_in(Context::Play, input)
+    /// The command a key press stands for in play, `mods` the modifiers held.
+    pub fn lookup(&self, input: &KeyboardInput, mods: Mods) -> Option<KeyCommand> {
+        self.lookup_in(Context::Play, input, mods)
     }
 
-    /// The command a key press stands for in `context`.
-    pub fn lookup_in(&self, context: Context, input: &KeyboardInput) -> Option<KeyCommand> {
-        // Physical bindings first: numpad keys also produce digit characters.
-        self.0
-            .iter()
-            .filter(|(_, c)| c.context() == context)
-            .filter(|(k, _)| matches!(k, KeyBinding::Code(_)))
-            .chain(
-                self.0
-                    .iter()
-                    .filter(|(_, c)| c.context() == context)
-                    .filter(|(k, _)| matches!(k, KeyBinding::Char(_))),
-            )
-            .find(|(k, _)| k.matches(input))
-            .map(|(_, c)| *c)
+    /// The command a key press stands for in `context`, `mods` the modifiers held: the first
+    /// of the bindings the press may stand for that a command of `context` has
+    /// ([`mods::press_candidates`]; matching is exact, so `Ctrl+r` never fires `r`).
+    pub fn lookup_in(
+        &self,
+        context: Context,
+        input: &KeyboardInput,
+        mods: Mods,
+    ) -> Option<KeyCommand> {
+        (mods::press_candidates(input, mods, crate::settings::keys::CODES).iter())
+            .find_map(|key| self.owner_in(context, key))
     }
 }
 
@@ -700,7 +736,9 @@ pub fn route_keys(
     }
     let mut chosen = false;
     for key in keys.read() {
-        if chosen || key.state != ButtonState::Pressed {
+        // A modifier alone means nothing anywhere (and never binds: Controls waits on for the
+        // key it is held with).
+        if chosen || key.state != ButtonState::Pressed || mods::is_modifier(key.key_code) {
             continue;
         }
         let action = if screens.stack.is_empty() {
@@ -712,10 +750,7 @@ pub fn route_keys(
             // changed them.
             let (mut new_settings, mut new_bindings) = (settings.clone(), bindings.clone());
             let action = screens.stack.handle(
-                &Press {
-                    shift: play.shift(),
-                    ..Press::from_input(key, &bindings)
-                },
+                &Press::from_input(key, play.mods(), &bindings),
                 &mut new_settings,
                 &mut new_bindings,
             );
@@ -787,9 +822,14 @@ pub struct Gameplay<'w> {
 }
 
 impl Gameplay<'_> {
+    /// The modifiers held.
+    fn mods(&self) -> Mods {
+        Mods::held(&self.held)
+    }
+
     /// Whether Shift is held.
     fn shift(&self) -> bool {
-        self.held.pressed(KeyCode::ShiftLeft) || self.held.pressed(KeyCode::ShiftRight)
+        self.mods().shift
     }
 
     /// Applies one key press in play, `last` the ability used last (for the quick repeat).
@@ -802,7 +842,8 @@ impl Gameplay<'_> {
         last: Option<Ability>,
     ) -> Option<ScreenAction> {
         let game = self.game.as_ref()?;
-        let command = command_in(*self.mode, key, bindings, dev_keys(&self.args))?;
+        let mods = self.mods();
+        let command = command_in(*self.mode, key, mods, bindings, dev_keys(&self.args))?;
         // Held keys repeat only for movement, waiting, and searching, and the aiming cursor's
         // moves.
         let moves = matches!(
@@ -1440,6 +1481,7 @@ pub const REST_CHOICES: [(KeyCommand, Rest, &str); 3] = [
 fn command_in(
     mode: InputMode,
     key: &KeyboardInput,
+    mods: Mods,
     bindings: &Bindings,
     dev: bool,
 ) -> Option<KeyCommand> {
@@ -1453,11 +1495,12 @@ fn command_in(
         | InputMode::GiveWay(_)
         | InputMode::Look(_) => None,
     };
-    (own.and_then(|context| bindings.lookup_in(context, key)))
-        .or_else(|| bindings.lookup(key))
+    (own.and_then(|context| bindings.lookup_in(context, key, mods)))
+        .or_else(|| bindings.lookup(key, mods))
         .or_else(|| {
             let dev = dev && mode == InputMode::Normal;
-            dev.then(|| bindings.lookup_in(Context::Dev, key)).flatten()
+            dev.then(|| bindings.lookup_in(Context::Dev, key, mods))
+                .flatten()
         })
 }
 
@@ -1673,7 +1716,7 @@ mod tests {
         assert_eq!(keys(&b, KeyCommand::Cancel), ["Esc"]);
         assert_eq!(keys(&b, KeyCommand::Rest), ["b"]);
         assert_eq!(keys(&b, KeyCommand::Search), ["s"]);
-        assert_eq!(keys(&b, KeyCommand::SearchLong), ["S"]);
+        assert_eq!(keys(&b, KeyCommand::SearchLong), ["Ctrl+Num5", "Ctrl+s"]);
         assert_eq!(keys(&b, KeyCommand::PickUp), [",", ";"]);
         assert_eq!(keys(&b, KeyCommand::Drop), ["d"]);
         assert_eq!(keys(&b, KeyCommand::Inventory), ["I"]);
@@ -1782,7 +1825,7 @@ mod tests {
             .perception(),
             &LastTarget::default(),
         ));
-        let read = |mode, key: &KeyboardInput, dev| command_in(mode, key, &b, dev);
+        let read = |mode, key: &KeyboardInput, dev| command_in(mode, key, Mods::NONE, &b, dev);
         assert_eq!(read(InputMode::Normal, &d, false), Some(KeyCommand::Drop));
         assert_eq!(read(InputMode::Rest, &d, false), Some(KeyCommand::RestDawn));
         assert_eq!(read(InputMode::Rest, &n, false), Some(KeyCommand::RestDusk));

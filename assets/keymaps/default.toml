@@ -1,6 +1,7 @@
 # Warlock keymap: every command's keys, by where they are read. A key is the character it
-# types ("k", ">", "?") or a key name ("ArrowUp", "Numpad8", "Enter", "F5"); an empty
-# list leaves a command without a key. Import it in Controls or with
+# types ("k", ">", "?") or a key name ("ArrowUp", "Numpad8", "Enter", "F5"); in play
+# it may be held with Ctrl, Alt, Super, or Shift ("Ctrl+r", "Alt+ArrowUp", "Super+s").
+# An empty list leaves a command without a key. Import it in Controls or with
 # `warlock --import-keys FILE`: commands it does not list keep their keys. Esc is fixed.
 version = 1
 
@@ -15,7 +16,7 @@ move_w = ["Numpad4", "ArrowLeft"]
 move_nw = ["Numpad7"]
 wait = [".", "Numpad5"]
 search = ["s"]
-search_long = ["S"]
+search_long = ["Ctrl+Numpad5", "Ctrl+s"]
 open = ["o"]
 close = ["c"]
 kick = ["k"]
