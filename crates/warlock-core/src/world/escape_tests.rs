@@ -421,7 +421,8 @@ fn a_climb_marks_escape_artist_always_and_athletics_half_the_time_with_no_effect
     train(&mut w, "escape_artist", 1);
     train(&mut w, "athletics", 1);
     let start = w.player_pos();
-    for _ in 0..100 {
+    // 99 climbs: the 100th mark would roll Escape artist by itself (`[rolls] auto_at`).
+    for _ in 0..99 {
         w.player_mut().pos = start;
         // Hidden again, with no surprise left from the last: the player cannot sidestep it.
         let surprised = status(&w, "surprised");
@@ -433,7 +434,7 @@ fn a_climb_marks_escape_artist_always_and_athletics_half_the_time_with_no_effect
         let max = w.state.player().max_hp(w.content());
         w.player_mut().hp = max;
     }
-    assert_eq!(marks(&w, "escape_artist"), 100);
+    assert_eq!(marks(&w, "escape_artist"), 99);
     let athletics = marks(&w, "athletics");
     assert!((30..=70).contains(&athletics), "{athletics}");
 }

@@ -25,7 +25,9 @@
 //! giver says `offer`, then `accept` (optional) in the same reply, and it is active at once.
 //! `reminder` is what they say asked again; `done` is said by whoever the quest is handed in to (the recipient of a bring with `to` or a delivery,
 //! else the giver). The `reward` is `gold` (gold coins), `items` (placement strings, `"apple*2"`),
-//! and `xp`, each optional. `requires` names a quest, or a list of them (loaded before this
+//! `xp`, and `skills` (by skill id: `start`, the dice an untrained skill is trained at, `marks`,
+//! the training marks a trained one gets, and `taught`/`more`, what is said of each), each
+//! optional. `requires` names a quest, or a list of them (loaded before this
 //! one), that must all be done before this one is offered, and `requires_alignment` the bands the player must be in for it
 //! to be offered (spec §8 "Alignment"); `min_level` the character level the player must have
 //! reached for it to be given, with `early`, what the giver says asked about it before then (the
@@ -44,8 +46,11 @@ use super::quest_roll::{self, PickSpec, Rolled, Variant, VariantSpec};
 use super::tag::{TAG_TARGET, spoken};
 use super::{Content, ContentError};
 use crate::alignment::{MAX as ALIGNMENT_MAX, Requirement};
+use crate::dice::Dice;
 use crate::object::Stack;
+use crate::skills::SkillId;
 use serde::Deserialize;
+use std::collections::BTreeMap;
 
 /// The object a reward's `gold` is paid in.
 pub const GOLD: &str = "gold_coin";
@@ -208,6 +213,19 @@ struct RewardSpec {
     xp: u32,
     #[serde(default)]
     items: Vec<String>,
+    /// Skills taught, by skill id, in id order.
+    #[serde(default)]
+    skills: BTreeMap<String, SkillRewardSpec>,
+}
+
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct SkillRewardSpec {
+    start: Option<Dice>,
+    #[serde(default)]
+    marks: u32,
+    taught: Option<String>,
+    more: Option<String>,
 }
 
 /// What a kill quest is after.
@@ -283,6 +301,23 @@ pub struct Reward {
     pub gold: u32,
     pub xp: u32,
     pub items: Vec<Stack>,
+    /// The skills it teaches (`world/quest.rs`): a skill the player is untrained in is trained
+    /// at `start`, a trained one gets `marks`.
+    pub skills: Vec<SkillReward>,
+}
+
+/// A skill a quest's reward teaches.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct SkillReward {
+    pub skill: SkillId,
+    /// The roll an untrained skill starts at; `None`: an untrained one is not taught.
+    pub start: Option<Dice>,
+    /// The training marks a trained skill gets.
+    pub marks: u32,
+    /// What is said as it is taught (untrained); `None`: the default words.
+    pub taught: Option<String>,
+    /// What is said as a trained one gets its marks; `None`: the default words.
+    pub more: Option<String>,
 }
 
 impl Reward {
@@ -695,6 +730,21 @@ fn resolve(
         return Err(format!("reward: gold needs the object `{GOLD}`"));
     }
     let items = parse_stacks(&reward.items, content).map_err(|e| format!("reward: {e}"))?;
+    let mut skills = Vec::new();
+    for (name, s) in &reward.skills {
+        let skill =
+            (content.skill_id(name)).ok_or_else(|| format!("reward: unknown skill `{name}`"))?;
+        if s.start.is_none() && s.marks == 0 {
+            return Err(format!("reward: skill `{name}` needs `start` or `marks`"));
+        }
+        skills.push(SkillReward {
+            skill,
+            start: s.start,
+            marks: s.marks,
+            taught: s.taught.clone(),
+            more: s.more.clone(),
+        });
+    }
     let min_level = match (spec.min_level, &spec.early) {
         (None, None) => None,
         (Some(level), Some(early)) => Some((level, early.clone())),
@@ -727,6 +777,7 @@ fn resolve(
             gold: spec.reward.gold,
             xp: spec.reward.xp,
             items,
+            skills,
         },
         texts,
         requires,

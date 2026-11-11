@@ -236,6 +236,11 @@ objects = ["war_hammer"]
 at = [43, 4]
 objects = ["battle_axe"]
 
+# Steel and iron ingots beside the anvil, to forge with.
+[[pile]]
+at = [36, 5]
+objects = ["piece*6"]
+
 [[pile]]
 at = [37, 5]
 objects = ["hand_axe"]
@@ -259,6 +264,10 @@ objects = ["sling"]
 [[pile]]
 at = [43, 5]
 objects = ["short_bow"]
+
+[[pile]]
+at = [36, 6]
+objects = ["piece:iron*6"]
 
 [[pile]]
 at = [37, 6]

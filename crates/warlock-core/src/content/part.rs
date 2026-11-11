@@ -484,6 +484,7 @@ mod tests {
             rarity: None,
             gear: None,
             fit: Default::default(),
+            work: 0,
             resists: None,
         }
     }

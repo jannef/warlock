@@ -2,11 +2,14 @@
 //! materials"; the design: docs/design/animated-objects.md §9.2).
 //!
 //! A **piece** is the one generic object [`ID`] (`data/objects/piece.toml`), made of whatever
-//! material its main part carries, as the loose gem is made of its gem: "a piece of tin", "3
-//! pieces of silk". Its material names it ([`names`]), colours it, weighs it (its `weight` % of
-//! the object's steel), and prices it (its `value` %), all through the existing variant
-//! machinery ([`crate::variant`], [`crate::content::ObjectDef::value_with`]); pieces of one
-//! material stack. A piece of steel, the object's own material, carries no part of its own.
+//! material its main part carries, as the loose gem is made of its gem. It is the material stock
+//! salvage gives and recipes take (docs/design/professions.md §3): 500 g of steel, named by its
+//! group's form word in `data/stock.toml` ("a steel ingot", "3 hardwood billets", "a bolt of
+//! wool"; [`names`]), "a piece of glass" for a group without one. Its material colours it, weighs
+//! it (its `weight` % of the object's steel), and prices it (its `value` %), all through the
+//! existing variant machinery ([`crate::variant`], [`crate::content::ObjectDef::value_with`]);
+//! pieces of one material stack. A piece of steel, the object's own material, carries no part of
+//! its own. How many pieces some grams of a material make is [`count_for`].
 //!
 //! [`break_up`] is what an item falls to when it breaks (an animated thing's broken component,
 //! `world/animated.rs`; later sundering and fire): for each of its resolved parts, in part order,
@@ -20,14 +23,44 @@ use crate::object::Stack;
 /// The piece object's id.
 pub const ID: &str = "piece";
 
-/// What a piece of `material` is called, singular and plural, without an article or a count:
-/// "piece of tin"/"pieces of tin".
+/// What a piece of `material` is called, singular and plural, without an article or a count: by
+/// its group's form word ("steel ingot"/"steel ingots", "lump of amber"/"lumps of amber"), else
+/// the object's own ("piece of glass"/"pieces of glass").
 pub fn names(content: &Content, def: &ObjectDef, material: MaterialId) -> (String, String) {
-    let of = &content.material(material).name;
-    (
-        format!("{} of {of}", def.name),
-        format!("{} of {of}", def.plural),
-    )
+    let m = content.material(material);
+    let row = (m.group.as_deref()).and_then(|g| content.stock().group(g));
+    match row {
+        Some(row) if !row.of => (
+            format!("{} {}", m.name, row.name),
+            format!("{} {}", m.name, row.plural),
+        ),
+        Some(row) => (
+            format!("{} of {}", row.name, m.name),
+            format!("{} of {}", row.plural, m.name),
+        ),
+        None => (
+            format!("{} of {}", def.name, m.name),
+            format!("{} of {}", def.plural, m.name),
+        ),
+    }
+}
+
+/// How many pieces of `material` `grams` of it make: `max(1, round(grams / one piece's
+/// grams))`, the rule salvage and recipes share; `None` for a material no piece is made of.
+pub fn count_for(content: &Content, grams: u64, material: MaterialId) -> Option<u32> {
+    count_of_share(content, grams, 100, material)
+}
+
+/// [`count_for`] of `percent` % of `grams`, rounded once.
+fn count_of_share(
+    content: &Content,
+    grams: u64,
+    percent: u64,
+    material: MaterialId,
+) -> Option<u32> {
+    let one = make(content, material, 1)?.weight(content).max(1);
+    let n = (grams * percent + one * 50) / (one * 100);
+    Some(u32::try_from(n.max(1)).unwrap_or(u32::MAX))
 }
 
 /// `count` pieces of `material`; `None` without the piece object or for a material it cannot be
@@ -103,13 +136,8 @@ pub fn break_up(stack: &Stack, content: &Content, percent: u8) -> Vec<Stack> {
         .filter_map(|fall| match fall {
             Fall::Gem(gem) => Some(gem),
             Fall::Pieces(material, grams) => {
-                let one = make(content, material, 1)?.weight(content).max(1);
-                let n = (grams * u64::from(percent) + one * 50) / (one * 100);
-                make(
-                    content,
-                    material,
-                    u32::try_from(n.max(1)).unwrap_or(u32::MAX),
-                )
+                let n = count_of_share(content, grams, u64::from(percent), material)?;
+                make(content, material, n)
             }
         })
         .collect()
@@ -156,26 +184,71 @@ mod tests {
     fn a_piece_is_named_weighed_and_priced_by_its_material() {
         let content = content();
         let tin = pieces(&content, "tin", 1);
-        assert_eq!(tin.describe(&content), "a piece of tin");
+        assert_eq!(tin.describe(&content), "a tin ingot");
         assert_eq!(
             pieces(&content, "silk", 3).describe(&content),
-            "3 pieces of silk"
+            "3 bolts of silk"
+        );
+        assert_eq!(
+            pieces(&content, "hardwood", 3).describe(&content),
+            "3 hardwood billets"
+        );
+        assert_eq!(
+            pieces(&content, "amber", 1).describe(&content),
+            "a lump of amber"
+        );
+        assert_eq!(
+            pieces(&content, "leather", 1).describe(&content),
+            "a leather hide"
+        );
+        assert_eq!(
+            pieces(&content, "iron", 2).describe(&content),
+            "2 iron ingots"
         );
         // Steel is the object's own material: no part of its own, named all the same.
         let steel = pieces(&content, "steel", 1);
         assert!(steel.own_parts().is_none());
-        assert_eq!(steel.describe(&content), "a piece of steel");
-        assert_eq!((steel.weight(&content), steel.value(&content)), (100, 1));
+        assert_eq!(steel.describe(&content), "a steel ingot");
+        assert_eq!((steel.weight(&content), steel.value(&content)), (500, 1));
         // Tin weighs 93 % of steel and is worth 40 %: nothing, a coin rounded.
-        assert_eq!((tin.weight(&content), tin.value(&content)), (93, 0));
+        assert_eq!((tin.weight(&content), tin.value(&content)), (465, 0));
         // Gold: 246 % and 2000 %, real coin.
         let gold = pieces(&content, "gold", 1);
-        assert_eq!((gold.weight(&content), gold.value(&content)), (246, 20));
+        assert_eq!((gold.weight(&content), gold.value(&content)), (1230, 20));
         let gold_color = content.material(material(&content, "gold")).color;
         assert_eq!(Some(gold.fg(&content)), gold_color);
         assert!(tin.is_valid_for(&content) && steel.is_valid_for(&content));
         // Paper has no group: nothing is a piece of it.
         assert!(make(&content, material(&content, "paper"), 1).is_none());
+        // Stock is a class of its own.
+        let class = content.object(steel.object).class;
+        assert_eq!(content.item_class(class).id, "materials");
+    }
+
+    #[test]
+    fn a_group_without_a_row_keeps_the_pieces_name() {
+        let text = include_str!("../../../assets/data/stock.toml");
+        let row = "[[group]]\ngroup = \"glass\"\nname = \"lump\"\nplural = \"lumps\"\nof = true\n";
+        let without = text.replace(row, "");
+        assert_ne!(without, text);
+        let mut files = crate::content::ContentFiles::builtin();
+        files.insert("data/stock.toml", &without);
+        let content = Content::load(&files).expect("content");
+        assert_eq!(
+            pieces(&content, "glass", 1).describe(&content),
+            "a piece of glass"
+        );
+        assert_eq!(
+            pieces(&content, "glass", 2).describe(&content),
+            "2 pieces of glass"
+        );
+        // Without the file at all, every piece is a piece.
+        files.remove("data/stock.toml");
+        let content = Content::load(&files).expect("content");
+        assert_eq!(
+            pieces(&content, "steel", 1).describe(&content),
+            "a piece of steel"
+        );
     }
 
     #[test]
@@ -189,6 +262,35 @@ mod tests {
         let counts: Vec<u32> = pack.iter().map(|s| s.count).collect();
         assert_eq!(counts, [5, 2], "tin together, steel together");
         assert!(pack[0].same_goods(&pieces(&content, "tin", 1)));
+        assert!(!pack[0].same_goods(&pack[1]));
+    }
+
+    #[test]
+    fn an_items_stock_is_counted_by_weight() {
+        let content = content();
+        // The design's table (docs/design/professions.md §3): a part's grams over one piece's.
+        let main = |id: &str| {
+            let def = content.object(content.object_id(id).expect(id));
+            let part = &def.parts[0];
+            let grams = u64::from(def.weight) * u64::from(part.share) / 100;
+            count_for(&content, grams, part.material).expect("a piece")
+        };
+        for (item, count) in [
+            ("knife", 1),
+            ("dagger", 1),
+            ("short_sword", 2),
+            ("scimitar", 3),
+            ("long_sword", 3),
+            ("great_sword", 7),
+            ("quarterstaff", 10),
+            ("short_bow", 4),
+            ("long_bow", 7),
+        ] {
+            assert_eq!(main(item), count, "{item}");
+        }
+        // However little, one; nothing of a material no piece is made of.
+        assert_eq!(count_for(&content, 1, material(&content, "steel")), Some(1));
+        assert_eq!(count_for(&content, 999, material(&content, "paper")), None);
     }
 
     #[test]
@@ -205,10 +307,10 @@ mod tests {
             ItemPart::material(&content, None, material(&content, "tin")),
             ItemPart::gem(&content, Some(pommel), ruby, cutting),
         ]);
-        // 450 g of steel is 418 g of tin; half of it in pieces of 93 g: 2.
+        // 450 g of steel is 418 g of tin; half of it in ingots of 465 g: one at least.
         assert_eq!(
             broken(&content, &dagger),
-            ["2 pieces of tin", "a large fine ruby"]
+            ["a tin ingot", "a large fine ruby"]
         );
         let fell = break_up(&dagger, &content, 50);
         assert_eq!(
@@ -223,18 +325,18 @@ mod tests {
     fn a_long_sword_breaks_into_steel_and_leather_by_weight() {
         let content = content();
         let sword = object(&content, "long_sword");
-        // 1.8 kg: a 90 % blade of steel (810 g of pieces: 8), a 10 % grip of leather (90 g
-        // in pieces of 35 g: 3).
+        // 1.8 kg: a 90 % blade of steel (half, 810 g, in ingots of 500 g: 2), a 10 % grip of
+        // leather (90 g in hides of 175 g: 1).
         assert_eq!(
             broken(&content, &sword),
-            ["8 pieces of steel", "3 pieces of leather"]
+            ["2 steel ingots", "a leather hide"]
         );
-        // A stack breaks whole: three swords' worth of pieces.
+        // A stack breaks whole: three swords' worth.
         let mut three = sword.clone();
         three.count = 3;
         assert_eq!(
             broken(&content, &three),
-            ["24 pieces of steel", "8 pieces of leather"]
+            ["5 steel ingots", "2 leather hides"]
         );
     }
 
@@ -244,7 +346,7 @@ mod tests {
         // A book is paper with a leather trim: the leather only.
         assert_eq!(
             broken(&content, &object(&content, "book")),
-            ["3 pieces of leather"]
+            ["a leather hide"]
         );
         // A scroll is paper: nothing at all.
         assert!(broken(&content, &object(&content, "scroll_of_blessing")).is_empty());

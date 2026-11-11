@@ -4,3 +4,4 @@ name = "ruby"
 resists = { acid = 100, rust = 100, fire = 100 }
 precious = true
 gem = { color = "#d3213b", value = 300, rarity = 5, plural = "rubies" }
+work = 4

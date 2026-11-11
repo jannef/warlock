@@ -9,15 +9,16 @@
 //!   actor, is never shown, and gives nothing. That is not the same as a value of 0, which is
 //!   trained (and shown) but gives little.
 //! - **Values** start from what the race and the class grant (dice, rolled when the character is
-//!   made, [`roll_grants`]), or what a creature type lists, and grow only by **level-up rolls**
+//!   made, [`roll_grants`]), or what a creature type lists, and grow only by **skill rolls**
 //!   (spec §8 "Skills"; `world/skill_roll.rs`): past the soft cap (100) a roll adds half
 //!   ([`RollRules`]). At most [`MAX_VALUE`].
 //! - **Training marks**: a meaningful use of a skill ([`Use`]) may earn it a mark, with the
 //!   chance its rule in data gives ([`MarkRule`]), drawn from the run's own training stream
 //!   (never the gameplay stream, so training never changes a fight's rolls). Marks are a
-//!   reservoir ([`Skills::mark`]): they raise nothing by themselves but set the die of the
-//!   skill's next level-up roll on the [`Ladder`], and the roll consumes half of them
-//!   ([`Skills::roll`]). Only the player trains, for now.
+//!   reservoir ([`Skills::mark`]): they set the die of the skill's next roll on the
+//!   [`Ladder`], and the roll consumes half of them ([`Skills::roll`]); at
+//!   [`RollRules::auto_at`] the skill rolls by itself (`World::mark_skill`). Only the player
+//!   trains, for now.
 //! - **Benefits**: a skill may give passive effects ([`Effect`]) that grow with its value
 //!   ([`Benefit`]). The rules ask an actor's skills for an effect ([`Skills::effect`]); its
 //!   untrained skills add nothing.
@@ -876,16 +877,21 @@ pub struct RollRules {
     pub spend: u8,
     /// From this value on a roll adds half its result, rounded up.
     pub soft_cap: u16,
+    /// A skill whose marks reach this many rolls at once, by itself, between level-ups
+    /// (`World::mark_skill`); 0: never.
+    pub auto_at: u32,
 }
 
 impl Default for RollRules {
-    /// +1 at Intelligence 14, +2 at 18, …; a roll spends half the marks; halved from 100.
+    /// +1 at Intelligence 14, +2 at 18, …; a roll spends half the marks; halved from 100; a
+    /// skill rolls by itself at 100 marks.
     fn default() -> Self {
         Self {
             intelligence_from: 14,
             intelligence_every: 4,
             spend: 50,
             soft_cap: 100,
+            auto_at: 100,
         }
     }
 }
@@ -967,10 +973,16 @@ impl Skills {
     /// One training mark for skill `id`, if trained (they gather until a level-up roll spends
     /// them, [`Skills::roll`]). Returns whether it was trained.
     pub fn mark(&mut self, id: SkillId) -> bool {
+        self.add_marks(id, 1)
+    }
+
+    /// `by` training marks for skill `id`, if trained ([`Skills::mark`]). Returns whether it
+    /// was trained.
+    pub fn add_marks(&mut self, id: SkillId, by: u32) -> bool {
         let Some(trained) = self.0.get_mut(&id) else {
             return false;
         };
-        trained.marks = trained.marks.saturating_add(1);
+        trained.marks = trained.marks.saturating_add(by);
         true
     }
 

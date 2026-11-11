@@ -124,6 +124,12 @@ name = "Wands"
 id = "rods"
 name = "Rods"
 
+# Material stock (the design: docs/design/professions.md §3): pieces of a material, by weight,
+# what salvage gives and recipes take ("a steel ingot", stock.toml).
+[[class]]
+id = "materials"
+name = "Materials"
+
 [[class]]
 id = "gems"
 name = "Gems"

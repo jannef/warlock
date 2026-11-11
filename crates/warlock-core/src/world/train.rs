@@ -1,6 +1,6 @@
 //! Training (spec §8 "Skills"): meaningful uses of the player's skills earn training marks,
-//! which gather until a level-up roll spends them (`world/skill_roll.rs`): the more marks, the
-//! bigger the roll's die. Marks raise nothing by themselves.
+//! which gather until a skill roll spends them (`world/skill_roll.rs`): a level-up's, or the
+//! automatic one when they reach `[rolls] auto_at`. The more marks, the bigger the roll's die.
 //!
 //! A use ([`Use`]) is reported where it happens: a step within earshot of a creature
 //! (`make_noise`), a sound that is news (`hear`), a dodged attack (`fight.rs`), an action under a
@@ -54,7 +54,6 @@ impl World {
     /// gives two marks; `Here::train`).
     pub(super) fn train(&mut self, used: Use) {
         let content = self.content.clone();
-        let player = self.state.player;
         let (level, at) = (self.state.player().level.clone(), self.state.player().pos);
         let trained: Vec<_> = (self.state.player().skills.iter())
             .map(|(id, _)| id)
@@ -72,8 +71,7 @@ impl World {
                     if !self.state.training.chance(step) {
                         continue;
                     }
-                    let actor = self.state.actors.get_mut(&player).expect("the player");
-                    actor.skills.mark(id);
+                    self.mark_skill(id, 1);
                 }
             }
         }

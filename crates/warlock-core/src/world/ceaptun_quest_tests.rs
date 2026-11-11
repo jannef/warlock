@@ -195,6 +195,75 @@ fn the_fen_minster_is_marked_as_sister_hild_sends_the_player() {
     assert!(!said(&w).last().unwrap().contains("marks"));
 }
 
+/// Hands Sister Hild the chalice for Grave goods (#1329).
+fn hand_in_the_chalice(w: &mut World) {
+    beside(w, HILD);
+    act(w, "ask:E:quest-grave_goods");
+    let chalice = CONTENT.object_id("silver_chalice").expect("the chalice");
+    let id = w.state.player;
+    (w.state.actors.get_mut(&id).expect("player").inventory).push(Stack::new(chalice, 1));
+    act(w, "ask:E:quest-grave_goods");
+}
+
+#[test]
+fn grave_goods_trains_heal_in_one_untrained() {
+    let heal = CONTENT.skill_id("heal").expect("heal");
+    let mut w = town();
+    assert_eq!(w.state.player().skills.get(heal), None);
+    let levels = w.state.levels_rng.clone();
+    hand_in_the_chalice(&mut w);
+    let value = (w.state.player().skills.value(heal)).expect("trained now");
+    assert!((1..=4).contains(&value), "1d4: {value}");
+    assert_eq!(w.state.player().skills.get(heal).expect("heal").marks, 0);
+    assert_ne!(w.state.levels_rng, levels, "rolled on the levels stream");
+    let log = said(&w);
+    assert!(
+        log.contains(&"Sister Hild shows you how to dress a wound.".to_string()),
+        "{log:?}"
+    );
+    assert!(!log.iter().any(|m| m.contains("more of healing")));
+}
+
+#[test]
+fn grave_goods_gives_a_trained_healer_a_hundred_marks() {
+    let heal = CONTENT.skill_id("heal").expect("heal");
+    let mut w = town();
+    w.player_mut().skills.add(heal, 30);
+    w.player_mut().skills.mark(heal);
+    hand_in_the_chalice(&mut w);
+    // 101 marks reach `[rolls] auto_at` (100): Heal rolls once at once (#1328), and the roll
+    // spends its share of the marks.
+    let rules = CONTENT.skill_rolls();
+    assert_eq!(rules.auto_at, 100);
+    let trained = w.state.player().skills.get(heal).expect("heal");
+    assert!(trained.value > 30, "the automatic roll raised Heal");
+    assert_eq!(trained.marks, 101 - rules.spent(101));
+    assert!(trained.marks < rules.auto_at, "one roll, not two");
+    let log = said(&w);
+    let learn = log.iter().position(|m| m == "You learn more of healing.");
+    let improves = log.iter().position(|m| m == "Your heal improves.");
+    assert!(learn.is_some() && learn < improves, "{log:?}");
+    assert!(!log.iter().any(|m| m.contains("dress a wound")));
+}
+
+#[test]
+fn a_reward_naming_an_unknown_skill_is_refused() {
+    let hild = "campaigns/ascmearc/data/quests/hild.toml";
+    let text = include_str!("../../../../assets/campaigns/ascmearc/data/quests/hild.toml");
+    let mut files = ContentFiles::builtin();
+    for (from, expect) in [
+        ("skills = { healing = ", "reward: unknown skill `healing`"),
+        (
+            "skills = { heal = { taught = \"T.\" }, heal_x = ",
+            "reward: skill `heal` needs `start` or `marks`",
+        ),
+    ] {
+        files.insert(hild, &text.replace("skills = { heal = ", from));
+        let err = Content::load(&files).expect_err(expect);
+        assert!(err.to_string().contains(expect), "{err}");
+    }
+}
+
 #[test]
 fn kills_in_cealdhlaw_count_for_the_reeve() {
     let mut w = town();

@@ -11,3 +11,4 @@ protection = 45
 value = 50
 rarity = { weight = 100 }
 gear = { weight = 150 }
+work = -1

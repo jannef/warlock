@@ -249,3 +249,26 @@ material without a group and a non-gem part beyond the base parts give nothing. 
 survives. Tests: `piece.rs` (names, weight, value, colour, stacking, the dagger with a ruby, the
 long sword, a stack, paper, the one-piece floor).
 
+**Stock** (#1332; the design: docs/design/professions.md §3, §4): the piece is the professions'
+material stock, by weight; no other stock object exists. One piece is 500 g of steel
+(`weight = 500`; another material 500 × its `weight` %), item class `materials` (before `gems`
+in `item_classes.toml`), and never loot (no `kind`, so no `frequency`: a shop lays it out at the
+no-loot weight, 100). `data/stock.toml` (`content/stock.rs`, `Content::stock`, optional) has a
+`[[group]]` row per material group: the form word (`name`, `plural`; `of = true` puts the
+material after it), which `piece::names` reads ("steel ingot", "lump of amber"; a group without a
+row keeps "piece of X"), and optionally the profession that works the group, `skill`, `stat`,
+and `verb` together (`Profession`); `gems = { skill, stat, verb }` is the gems' (no group). The
+loader refuses a group twice or one no material has, empty words, a partial profession, unknown
+skills, and a skill named with two stats. `Stock::profession_of(content, material)` (a gem the
+gems' row, else its group's) and `World::profession_of(material) -> Option<(SkillId, Stat)>`
+(`world/stock.rs`) are the one read: nothing in code names a group or a skill. Jewelcraft is not
+a skill yet (#1331), so stone, resin, and the gems have their words and no profession; adding
+it is three lines of `stock.toml`. `piece::count_for(content, grams, material)` =
+`max(1, round(grams / one piece's grams))`, the rounding `break_up` shares (`count_of_share`).
+`MaterialDef::work` (optional, signed, default 0) is the material's modifier on every salvage
+and recipe check (none reads it yet: P3). Shops (`shops.toml`): the smithy and the general
+stores stock `materials`; they, the weaponsmith, the armourer, and the fletcher buy them;
+Cēaptūn lays out steel and iron ingots in its smithy (a wood billet is worth nothing yet, so no shop trades it). Tests:
+`piece.rs` (names with and without a row, the §3 counts), `content/stock.rs` (professions, the
+loader's refusals), `world/stock.rs` (`profession_of`, Cēaptūn's piles through a save, the shops).
+

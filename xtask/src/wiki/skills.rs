@@ -718,5 +718,12 @@ pub(super) fn skill_rolls(content: &Content) -> String {
         u16::from(rules.intelligence_from) + u16::from(rules.intelligence_every),
         u16::from(rules.intelligence_from) + 2 * u16::from(rules.intelligence_every),
     );
+    if rules.auto_at > 0 {
+        let _ = writeln!(
+            out,
+            "\nA skill whose marks reach {} rolls at once by itself, besides these.",
+            rules.auto_at
+        );
+    }
     out
 }

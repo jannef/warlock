@@ -1,7 +1,8 @@
 //! Rebindable commands and their text form in the settings file (spec §6).
 //!
 //! A key is written as the character it produces (`"k"`, `">"`) or as a physical key name
-//! (`"ArrowUp"`, `"Numpad8"`, `"Enter"`, `"F5"`). Commands have stable ids (`"move_n"`,
+//! (`"ArrowUp"`, `"Numpad8"`, `"Enter"`, `"F5"`), a play command's perhaps after modifiers
+//! (`"Ctrl+r"`, `"Alt+ArrowUp"`, `"Super+s"`; `settings::mods`). Commands have stable ids (`"move_n"`,
 //! `"wait"`, `"menu_up"`), unique across contexts.
 //!
 //! No lockout (#159): Esc cannot be bound (it always backs out, cancels, and opens the pause
@@ -9,7 +10,8 @@
 //! never lose their last key.
 
 use crate::input::{Bindings, Context, KeyBinding, KeyCommand};
-use bevy::input::keyboard::{Key, KeyboardInput};
+use crate::settings::mods::{self, Mods, Platform};
+use bevy::input::keyboard::KeyboardInput;
 use bevy::prelude::*;
 use std::collections::BTreeMap;
 use warlock_core::Dir;
@@ -163,7 +165,7 @@ pub const UNBOUND: &[KeyCommand] = &[
 ];
 
 /// Physical keys a command may be bound to.
-const CODES: &[KeyCode] = &[
+pub(crate) const CODES: &[KeyCode] = &[
     KeyCode::ArrowUp,
     KeyCode::ArrowDown,
     KeyCode::ArrowLeft,
@@ -327,40 +329,47 @@ fn direction_name(dir: Dir) -> &'static str {
 }
 
 impl KeyBinding {
-    /// The settings-file spelling.
+    /// The settings-file spelling: `"k"`, `"ArrowUp"`, `"Ctrl+r"` (`settings::mods`).
     pub fn to_text(&self) -> String {
         match self {
             KeyBinding::Char(s) => s.clone(),
             KeyBinding::Code(code) => format!("{code:?}"),
+            KeyBinding::Chord(mods, key) => format!("{}{}", mods.to_text(), key.to_text()),
         }
     }
 
-    /// Parses the settings-file spelling. Esc is reserved, so it cannot be bound.
+    /// Parses the settings-file spelling. Esc is reserved, so it cannot be bound, alone or with
+    /// modifiers.
     pub fn from_text(text: &str) -> Option<Self> {
-        let mut chars = text.chars();
-        match (chars.next(), chars.next()) {
+        let (mods, key) = Mods::split(text);
+        let mut chars = key.chars();
+        let key = match (chars.next(), chars.next()) {
             (Some(c), None) => {
                 (!c.is_control() && !c.is_whitespace()).then(|| KeyBinding::Char(c.to_string()))
             }
             (Some(_), Some(_)) => CODES
                 .iter()
-                .find(|code| format!("{code:?}") == text)
+                .find(|code| format!("{code:?}") == key)
                 .map(|code| KeyBinding::Code(*code)),
             (None, _) => None,
-        }
+        }?;
+        Some(KeyBinding::chord(mods, key))
     }
 
-    /// The binding a key press stands for, if it can be bound. Printable keys bind by the
-    /// character they produce; numpad keys (which also produce digits), arrows, and function
-    /// keys bind by physical key.
-    pub fn from_input(input: &KeyboardInput) -> Option<Self> {
-        let numpad = format!("{:?}", input.key_code).starts_with("Numpad");
-        if !numpad && let Key::Character(c) = &input.logical_key {
-            return KeyBinding::from_text(c.as_str());
-        }
-        CODES
-            .contains(&input.key_code)
-            .then_some(KeyBinding::Code(input.key_code))
+    /// The binding a key press stands for, if it can be bound, `mods` the modifiers held.
+    /// Printable keys bind by the character they produce; numpad keys (which also produce
+    /// digits), arrows, and function keys bind by physical key; Ctrl, Alt, and Super make a
+    /// chord (`settings::mods::press_binding`). Shift is left out: see [`Press::shift`].
+    ///
+    /// [`Press::shift`]: crate::ui::Press
+    pub fn from_input(input: &KeyboardInput, mods: Mods) -> Option<Self> {
+        mods::press_binding(input, mods, CODES)
+    }
+
+    /// Why this key may not be a key of `command` here, if it may not
+    /// (`settings::mods::refusal`).
+    pub fn refused_for(&self, command: KeyCommand) -> Option<String> {
+        mods::refusal(self, command, Platform::current())
     }
 }
 
@@ -567,7 +576,10 @@ impl Bindings {
             for item in items {
                 match item.as_str().and_then(KeyBinding::from_text) {
                     Some(key) if keys.contains(&key) => {}
-                    Some(key) => keys.push(key),
+                    Some(key) => match key.refused_for(command) {
+                        Some(why) => warnings.push(format!("bindings.{id}: {why}")),
+                        None => keys.push(key),
+                    },
                     None => warnings.push(format!("bindings.{id}: invalid key {item}")),
                 }
             }
@@ -837,13 +849,14 @@ mod tests {
     #[test]
     fn an_old_files_keys_win_over_new_defaults() {
         // A file written before #350: the old keys, and no `quit` (unbound then). Its keys stay
-        // the player's own; Search for a while, unlisted, gives up its new default `S` to Skills.
+        // the player's own; Search for a while, unlisted, gives up its new default `Ctrl+s` to
+        // Skills.
         let table: toml::Table = toml::from_str(
             r#"
             move_n = ["k", "Numpad8", "ArrowUp"]
             kick = ["K"]
             look = ["x"]
-            skills = ["S"]
+            skills = ["S", "Ctrl+s"]
             "#,
         )
         .unwrap();
@@ -853,8 +866,15 @@ mod tests {
         assert_eq!(b.owner(&ch("k")), Some(KeyCommand::Move(Dir::N)));
         assert_eq!(b.keys_of(KeyCommand::Kick), vec![&ch("K")]);
         assert_eq!(b.keys_of(KeyCommand::Look), vec![&ch("x")]);
-        assert_eq!(b.keys_of(KeyCommand::Skills), vec![&ch("S")]);
-        assert!(b.keys_of(KeyCommand::SearchLong).is_empty());
+        let ctrl = |text| KeyBinding::from_text(text).unwrap();
+        assert_eq!(
+            b.keys_of(KeyCommand::Skills),
+            vec![&ch("S"), &ctrl("Ctrl+s")]
+        );
+        assert_eq!(
+            b.keys_of(KeyCommand::SearchLong),
+            vec![&ctrl("Ctrl+Numpad5")]
+        );
         // Commands it does not list and nobody took a key from have the new defaults.
         assert_eq!(b.keys_of(KeyCommand::Equipment), vec![&ch("i")]);
         assert!(b.conflicts().is_empty());
@@ -864,7 +884,14 @@ mod tests {
     fn map_round_trips_through_the_table() {
         let mut b = Bindings::default();
         b.bind_primary(KeyCommand::Descend, ch("D")).unwrap();
+        let chord = KeyBinding::from_text("Ctrl+Alt+ArrowUp").unwrap();
+        b.bind_primary(KeyCommand::Look, chord).unwrap();
         let text = toml::to_string(&b.to_map()).unwrap();
+        assert!(text.contains(r#"look = ["Ctrl+Alt+ArrowUp"]"#), "{text}");
+        assert!(
+            text.contains(r#"search_long = ["Ctrl+Numpad5", "Ctrl+s"]"#),
+            "{text}"
+        );
         let table: toml::Table = toml::from_str(&text).unwrap();
         let mut warnings = Vec::new();
         let back = Bindings::from_table(&table, &mut warnings);

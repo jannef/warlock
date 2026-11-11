@@ -453,7 +453,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     class's draws move; the drow's Sneak attack (40 %, `2d4`), summed with a thief's own. A creature type's skills are fixed values. A scenario without a
     character gives a player trained in nothing.
   - **Values** run 0 to 999 (`MAX_VALUE`), 100 a master; there is no hard cap, but points come
-    slowly past the soft cap (100). A value grows **only by level-up rolls** (below).
+    slowly past the soft cap (100). A value grows **only by skill rolls**: a level's and the
+    automatic ones (below).
   - **Training marks**: a meaningful use of a trained skill may earn it a mark, with its rule's
     chance (§7), one draw of the run's **training stream** (`training`, kept in the world state;
     never the gameplay stream, so training never changes a fight's rolls) per rule: a step of the
@@ -481,7 +482,13 @@ developer notes (CLAUDE.md, `docs/dev/`).
     taken Staggered (`staggered`; Balance). Only
     the player trains for now; creatures keep their type's
     skills. Marks are a **reservoir**: they raise nothing by
-    themselves and nothing is said; they gather until a level-up roll on the skill spends them.
+    themselves and nothing is said; they gather until a roll on the skill spends them.
+  - **Automatic rolls** (#1328): when a trained skill's marks reach `auto_at` (`[rolls]` in
+    `data/skills.toml`: 100, the ladder's `3d4` step) the skill rolls at once, with no choice:
+    the same roll as a level-up roll (below: its die, the class and race affinities, the soft
+    cap, the `spend` of the marks, the levels stream, "Your stealth improves."), so it falls back
+    below the threshold. It is checked wherever marks are added (`World::mark_skill`), for every
+    skill and way of training, and comes on top of the level's rolls, whatever level-up is due.
   - **Balance** (#1029): sure footing under a load, on bad ground, and after a stagger. Besides
     the burden's slowdown (`burden`), a step onto rough ground (off the overworld, `move_cost` over
     100 and not wading: bush, reeds, rubble, ice) spares a percent of what the terrain adds over

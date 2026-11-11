@@ -15,7 +15,7 @@ bar, and the info pages.
 | [Chat](npcs.md#chatting) with someone next to you | `C` (then a direction, if several are near) |
 | Wait a [turn](time.md#what-takes-time) | `.` or numpad `5` |
 | [Search](searching.md#searching-1) the cells around you (a [turn](time.md#what-takes-time)) | `s` (see [Searching](searching.md)) |
-| [Search](searching.md#searching-1) for a while (up to 10 [turns](time.md#what-takes-time), stops when something turns up) | `S` |
+| [Search](searching.md#searching-1) for a while (up to 10 [turns](time.md#what-takes-time), stops when something turns up) | `Ctrl` with `s` or numpad `5` |
 | Open a [door](doors.md) | `o`, then a direction (or walk into the door) |
 | Close a [door](doors.md) | `c`, then a direction |
 | [Kick](doors.md#kicking) (a [door](doors.md), to break it in, or a [creature](creatures.md)) | `k`, then a direction (see [Doors](doors.md)) |
@@ -60,12 +60,11 @@ arrows move in four directions only. If you prefer the vi keys (`hjklyubn`), bin
 Controls. Give Kick, Look around, and Use a tool other keys first, since they use `k`, `l`, and
 `u`, as in ADOM.
 
-Some commands ADOM does not have, or has only behind a prefix or `Ctrl`, which this game does not
-bind. They get keys ADOM leaves free: the [message history](the-screen.md#messages) `v`,
-[rest](resting.md#how-resting-works) `b`, the [talents](talents.md) `G`, and repeating an
-[ability](abilities.md) `X`. Searching for a while is `S`, search's key in capitals. In ADOM that
-key saves and quits; here you save and quit from the pause menu (`Esc`), or bind a key for it in
-Controls.
+Some commands ADOM does not have, or has only behind a prefix. They get keys ADOM leaves free:
+the [message history](the-screen.md#messages) `v`, [rest](resting.md#how-resting-works) `b`, the
+[talents](talents.md) `G`, and repeating an [ability](abilities.md) `X`. Searching for a while is
+`Ctrl` with search's `s` or with numpad `5`. You save and quit from the pause menu (`Esc`), or
+bind a key for it in Controls.
 
 Symbol keys such as `<`, `>`, and `?` are matched by the character they type, so they work on any
 keyboard layout.
@@ -123,6 +122,14 @@ To rebind, select a command, press `Enter`, then press the new key. It becomes t
 key, and its other keys (such as the numpad) stay. If another command in the same group already
 uses that key, the key moves to the new command and the screen says what moved. The old command
 keeps its other keys, or shows `(none)` if that was its only one.
+
+A key of play can be held with `Ctrl`, `Alt`, or `Super` (on a Mac `Ctrl`, `Option`, or `Cmd`):
+hold them while you press the new key, as in `Ctrl+r`. A modified key is its own key: `Ctrl+r`
+never does what `r` does, and `r` does nothing while `Ctrl` is held. `Shift` counts with keys
+that type no character, such as `Shift+Up`; a letter carries it already (`K` is not `k`). Keys
+your system or browser keeps for itself, such as `Cmd+Q`, `Alt+F4`, or `Ctrl+W` in the browser,
+cannot be bound, and the screen says why. The keys of menus, screens, and prompts take no
+modifiers.
 
 The same key can mean different things in different groups. `Tab` is the next target while
 [aiming](#aiming) and the next page on an [info screen](the-screen.md#info-pages). `d`

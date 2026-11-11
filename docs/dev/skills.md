@@ -6,14 +6,14 @@ rules it implements are in spec/08i-character.md. Keep it current with the code,
 Skills (spec §8 "Skills", #132) live in `warlock-core`: `skills.rs` (`Skills` per actor: trained
 skills only, a missing one is untrained and gives nothing; `Effect` and `Use`, the typed benefit
 and training-mark hooks; `Benefit` growth by `steps` or a `curve`; `Ladder` and `RollRules`, the
-level-up rolls' data; `Skills::mark` adds a mark, `Skills::roll` applies a roll and spends the
+skill rolls' data; `Skills::mark` adds a mark, `Skills::roll` applies a roll and spends the
 marks), `content/skill.rs` (`data/skills.toml`: the skills, `[ladder]`, `[rolls]`; adding a skill
-is one entry), `world/train.rs` (marks for the player only, drawn from the `training` stream in
+is one entry), `world/train.rs` (marks for the player only, each through `World::mark_skill` in `world/skill_roll.rs`, the one hook (a quest's `skills` reward marks there too, docs/dev/quests.md), drawn from the `training` stream in
 `WorldState`, never the gameplay stream; nothing said), and `world/skill_roll.rs` (#230: the
 level-up rolls, below).
 
-**Growth is level-up rolls only** (design `docs/design/progression.md` §5). Marks are a
-reservoir: `World::level_up` (`world/talent.rs`) puts `World::level_rolls()` rolls (class
+**Growth is skill rolls only** (design `docs/design/progression.md` §5): a level's, and the
+automatic one (#1328). Marks are a reservoir: `World::level_up` (`world/talent.rs`) puts `World::level_rolls()` rolls (class
 `rolls` + race `rolls` + `RollRules::for_intelligence` of the raised Intelligence; 0 when the
 player is trained in nothing) into each level's `Due::rolls`; `refuse_due` refuses everything
 else ("You have skill rolls to spend."); `advance:SKILL` (`World::advance_skill`) throws
@@ -25,7 +25,13 @@ marks, the practice die, the known-for step, the die, the `RollBonus` and why, `
 `world::roll_count` (a `RollCount`: class, race, Intelligence, talents), read by the screen
 through `PerceptionView::skill_roll`/`roll_count` and by the dev `progress` dump (`rolls a
 level ...`, `roll dice athletics 1d3, ...`). `levelup:auto` spends rolls on the first trained skill
-(`advance_auto`). The Skills screen's meter (`skills::progress`) is the ladder step in quarters.
+(`advance_auto`). **Automatic rolls** (#1328): every mark is added through
+`World::mark_skill(id, by)` (`world/skill_roll.rs`; `World::train` calls it a mark at a time, and
+`World::teach_skills` with a quest reward's `marks` at once, after its words). Once the skill's marks reach `RollRules::auto_at` (`[rolls]
+auto_at`, 100; 0 turns it off) it rolls at once through `World::roll_skill`, the one path
+`advance_skill` uses too: the same dice, `levels_rng`, words, and spend, again while the spent
+marks are still at the threshold (a big gift). No `Due` is touched, and a pending level-up does
+not hold it back. The Skills screen's meter (`skills::progress`) is the ladder step in quarters.
 Tests: `skills.rs` (ladder, rolls, meter), `content/skill.rs`, `content/class.rs`
 (`known_for`, `rolls`), `world/skill_roll_tests.rs` (counts, refusals, dice and affinities,
 streams, saves and replays), `world/skills_tests.rs` (marks by use). Race and class grants are dice rolled in `character.rs` after every
