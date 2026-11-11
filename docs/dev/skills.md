@@ -8,7 +8,7 @@ skills only, a missing one is untrained and gives nothing; `Effect` and `Use`, t
 and training-mark hooks; `Benefit` growth by `steps` or a `curve`; `Ladder` and `RollRules`, the
 skill rolls' data; `Skills::mark` adds a mark, `Skills::roll` applies a roll and spends the
 marks), `content/skill.rs` (`data/skills.toml`: the skills, `[ladder]`, `[rolls]`; adding a skill
-is one entry), `world/train.rs` (marks for the player only, each through `World::mark_skill`, the one hook (a quest's `skills` reward marks there too, docs/dev/quests.md), drawn from the `training` stream in
+is one entry), `world/train.rs` (marks for the player only, each through `World::mark_skill` in `world/skill_roll.rs`, the one hook (a quest's `skills` reward marks there too, docs/dev/quests.md), drawn from the `training` stream in
 `WorldState`, never the gameplay stream; nothing said), and `world/skill_roll.rs` (#230: the
 level-up rolls, below).
 
@@ -26,8 +26,8 @@ marks, the practice die, the known-for step, the die, the `RollBonus` and why, `
 through `PerceptionView::skill_roll`/`roll_count` and by the dev `progress` dump (`rolls a
 level ...`, `roll dice athletics 1d3, ...`). `levelup:auto` spends rolls on the first trained skill
 (`advance_auto`). **Automatic rolls** (#1328): every mark is added through
-`World::mark_skill(id, by)` (`world/skill_roll.rs`; `World::train` calls it, and any other gift
-of marks, a quest's, must too). Once the skill's marks reach `RollRules::auto_at` (`[rolls]
+`World::mark_skill(id, by)` (`world/skill_roll.rs`; `World::train` calls it a mark at a time, and
+`World::teach_skills` with a quest reward's `marks` at once, after its words). Once the skill's marks reach `RollRules::auto_at` (`[rolls]
 auto_at`, 100; 0 turns it off) it rolls at once through `World::roll_skill`, the one path
 `advance_skill` uses too: the same dice, `levels_rng`, words, and spend, again while the spent
 marks are still at the threshold (a big gift). No `Due` is touched, and a pending level-up does
