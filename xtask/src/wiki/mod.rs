@@ -1268,7 +1268,7 @@ mod tests {
             "{skills}"
         );
         assert!(skills.contains("| Swim | read by rules |"));
-        assert_eq!(skills.matches("\n| ").count(), 1 + 29, "{skills}");
+        assert_eq!(skills.matches("\n| ").count(), 1 + 34, "{skills}");
         // Checked by column header and row value, so a column added elsewhere changes nothing.
         let benefits = text("skill-benefits.md");
         let benefit = |value: &str, column: &str| -> String {

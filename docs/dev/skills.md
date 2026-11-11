@@ -134,7 +134,14 @@ Metalcraft's `temper` benefit is read in
 `world/temper.rs::tempered` (the Strength check of an attempt at an anvil, whose difficulty rises
 with every attempt on the item, docs/dev/special-rooms.md); Metalcraft
 stays a skill "not usable yet" in the abilities menu, since Temper is offered by the anvil to
-anyone. A new
+anyone. The professions' skills (#1331, epic #1337) **Alchemy, Enchanting, Herbalism, Jewelcraft,
+and Mining** are data only for now, **no effect yet**: no marks, no benefit, and no class, race,
+or story trains them. Kinds as `docs/design/professions.md` §9: Mining `rules`, Herbalism
+`passive`, the others `action` (shown "not usable yet"). Skill ids are file order (alphabetical),
+and `Skills` is saved and hashed by that index, so inserting them shifted the later skills'
+indices: state hashes and saves of runs with skills change (saves are pinned to the version).
+Effects and training grants are deferred to a follow-up issue.
+A new
 effect or use is a variant there plus its one hook. The player sees values only
 (`PerceptionView::own_skills`, the Skills screen `ui/skills_screen.rs`, `A`); never marks or
 benefit numbers. Skills get no keys of their own: active uses are chosen from the one abilities

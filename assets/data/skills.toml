@@ -128,6 +128,14 @@ spend = 50
 soft_cap = 100
 
 [[skill]]
+id = "alchemy"
+name = "Alchemy"
+description = "Brewing potions, and telling one draught from another."
+kind = "action"
+# Professions (#1331, epic #1337): no marks, benefit, or ability yet; nothing trains it
+# until the professions land.
+
+[[skill]]
 id = "appraise"
 name = "Appraise"
 description = "Judging what a thing is worth and what it is made of."
@@ -268,6 +276,14 @@ mark = [{ on = "disarm", chance = 20 }]
 benefit = [{ effect = "disarm", curve = [[0, 0], [100, 8], [200, 12]] }]
 
 [[skill]]
+id = "enchanting"
+name = "Enchanting"
+description = "The binding of magic into things, and the reading of what is bound."
+kind = "action"
+# Professions (#1331, epic #1337): no marks, benefit, or ability yet; nothing trains it
+# until the professions land.
+
+[[skill]]
 id = "escape_artist"
 name = "Escape artist"
 description = "Slipping out of bonds, grabs, and tight places."
@@ -312,6 +328,14 @@ mark = [{ on = "heal", chance = 30 }]
 benefit = [{ effect = "heal", curve = [[0, 0], [100, 8], [200, 12]] }]
 
 [[skill]]
+id = "herbalism"
+name = "Herbalism"
+description = "Knowing the plants: what heals, what harms, and where it grows."
+kind = "passive"
+# Professions (#1331, epic #1337): no marks, benefit, or ability yet; nothing trains it
+# until the professions land.
+
+[[skill]]
 id = "initiative"
 name = "Initiative"
 description = "Keeping your wits when something falls on you unseen."
@@ -341,6 +365,14 @@ kind = "action"
 # in intimidate.toml). Being trained in it gives the Intimidate ability.
 mark = [{ on = "intimidate", chance = 100 }]
 benefit = [{ effect = "intimidate", curve = [[0, 0], [100, 8], [200, 12]] }]
+
+[[skill]]
+id = "jewelcraft"
+name = "Jewelcraft"
+description = "Cutting and setting gems, and the working of stone and amber."
+kind = "action"
+# Professions (#1331, epic #1337): no marks, benefit, or ability yet; nothing trains it
+# until the professions land.
 
 [[skill]]
 id = "knowledge"
@@ -376,6 +408,14 @@ mark = [{ on = "temper", chance = 100 }]
 # Working an item at a forge's anvil (spec §7 "Special rooms"; the Temper ability, offered there
 # to anyone): added to the Strength check of an attempt, +8 at 100, +12 at 200.
 benefit = [{ effect = "temper", curve = [[0, 0], [100, 8], [200, 12]] }]
+
+[[skill]]
+id = "mining"
+name = "Mining"
+description = "Finding ore in the rock and breaking it out: digging comes easier."
+kind = "rules"
+# Professions (#1331, epic #1337): no marks, benefit, or ability yet; nothing trains it
+# until the professions land.
 
 [[skill]]
 id = "music"

@@ -1379,12 +1379,15 @@ mod tests {
         assert_eq!(
             skills,
             [
+                "alchemy",
                 "feint",
                 "decipher",
                 "disarm",
+                "enchanting",
                 "tame",
                 "heal",
                 "intimidate",
+                "jewelcraft",
                 "knowledge",
                 "listen",
                 "metalcraft",

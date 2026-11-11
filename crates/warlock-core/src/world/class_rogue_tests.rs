@@ -715,8 +715,9 @@ fn jack_of_all_trades_takes_up_every_skill_but_sneak_attack_then_master_of_none_
             ("sneak_attack", _) => assert_eq!(now, None, "never Sneak attack"),
             // A skill held already is not taken up again (the level's rolls may raise it).
             (_, Some((_, v))) => assert!(now >= Some(*v), "{}", skill.id),
-            // Every other is taken up at 1d4+1.
-            (_, None) => assert!((2..=5).contains(&now.expect("taken up")), "{id:?}"),
+            // Every other is taken up at 1d4+1 (the level's auto roll lands on the first skill
+            // trained in file order, so that one may be raised past it).
+            (_, None) => assert!(now.expect("taken up") >= 2, "{id:?}"),
         }
     }
     assert!(said(&b).contains(&"You gain Jack of all trades.".to_string()));
