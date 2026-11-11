@@ -164,7 +164,7 @@ mod tests {
     fn skills_read_their_marks_and_benefits() {
         let book = parse(&format!(
             "[ladder]\ndice = [1, \"1d3\"]\nmarks = [0, 4]\n\
-             [rolls]\nintelligence_from = 12\nintelligence_every = 3\nspend = 40\nsoft_cap = 50\n{ONE}\
+             [rolls]\nintelligence_from = 12\nintelligence_every = 3\nspend = 40\nsoft_cap = 50\nauto_at = 30\n{ONE}\
              mark = [{{ on = \"sneak\", chance = 20 }}]\n\
              benefit = [{{ effect = \"quiet\", curve = [[0, 0], [100, 60]] }}]\n"
         ))
@@ -172,6 +172,7 @@ mod tests {
         assert_eq!(book.ladder.die(book.ladder.step(4)).to_string(), "1d3");
         assert_eq!(book.rolls.for_intelligence(15), 2);
         assert_eq!(book.rolls.spent(10), 4);
+        assert_eq!(book.rolls.auto_at, 30);
         let stealth = &book.list[0];
         assert_eq!(stealth.kind, SkillKind::Passive);
         assert_eq!(

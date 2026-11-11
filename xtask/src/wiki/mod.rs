@@ -1422,6 +1422,7 @@ mod tests {
             rolls.contains("at 14 and one more for every 4 points"),
             "{rolls}"
         );
+        assert!(rolls.contains("marks reach 100 rolls at once"), "{rolls}");
         assert!(
             text("races.md")
                 .contains("| Race | St | Dx | To | In | Wi | Pr | Vision | Starting age |"),
