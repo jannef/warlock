@@ -21,6 +21,11 @@
 #     count        dice: how many of the find (a result below 1 is 1)
 #     finds        what may be found: { object = ID, weight = N }, objects (objects/), each
 #                  as likely as its weight among the row's
+#     herbs        what a herbalist may find besides (default none), in the same form: on a
+#                  forage that found something, a player trained in Herbalism (skills.toml: the
+#                  skill with the `herbs` benefit) has its percent chance (one draw) of one of
+#                  these too, by weight (one draw), one of it. Only angelica root so far: the
+#                  herbs of brewing come with Alchemy's recipes (#1340)
 
 seconds = 600
 
@@ -42,6 +47,7 @@ finds = [
     { object = "mushroom", weight = 2 },
     { object = "angelica_root", weight = 1 },
 ]
+herbs = [{ object = "angelica_root", weight = 1 }]
 
 [[ground]]
 landscape = "forest"
@@ -54,6 +60,7 @@ finds = [
     { object = "apple", weight = 1 },
     { object = "angelica_root", weight = 1 },
 ]
+herbs = [{ object = "angelica_root", weight = 1 }]
 
 [[ground]]
 landscape = "dense_forest"
@@ -65,6 +72,7 @@ finds = [
     { object = "berries", weight = 2 },
     { object = "angelica_root", weight = 1 },
 ]
+herbs = [{ object = "angelica_root", weight = 1 }]
 
 [[ground]]
 landscape = "hills"
@@ -84,3 +92,4 @@ finds = [
     { object = "angelica_root", weight = 2 },
     { object = "berries", weight = 1 },
 ]
+herbs = [{ object = "angelica_root", weight = 1 }]

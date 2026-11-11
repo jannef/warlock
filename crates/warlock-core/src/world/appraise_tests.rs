@@ -205,3 +205,87 @@ fn an_appraisal_replays() {
     let json = serde_json::to_string(&w.state).expect("saved");
     assert!(!json.contains("appraise/"), "no state of its own");
 }
+
+/// The player carries a flask of fire whose kind they do not know; its position.
+fn carry_flask(w: &mut World) -> usize {
+    let flask = BUILTIN.object_id("flask_of_fire").expect("flask");
+    assert!(!w.lore().is_identified(flask), "unknown to begin with");
+    w.player_mut().inventory.push(Stack::new(flask, 1));
+    w.state.player().inventory.len() - 1
+}
+
+/// Skills the warrior has none of: whatever they are trained in now, less `ids`.
+fn untrain(w: &mut World, ids: &[&str]) {
+    let gone: Vec<_> = ids.iter().map(|id| skill(id)).collect();
+    let kept: crate::skills::Skills = (w.state.player().skills.iter())
+        .filter(|(s, _)| !gone.contains(s))
+        .collect();
+    w.player_mut().skills = kept;
+}
+
+#[test]
+fn an_alchemist_tells_potions_and_only_potions() {
+    let mut w = world("warrior");
+    untrain(&mut w, &["appraise", "alchemy", "enchanting"]);
+    let (sword, flask) = (carry_sword(&mut w), carry_flask(&mut w));
+    let object = w.state.player().inventory[flask].object;
+    let before = w.lore().describe(&w.state.player().inventory[flask]);
+    w.player_mut().skills.add(skill("alchemy"), 200);
+    assert_eq!(
+        w.state
+            .player()
+            .skill_effect(&BUILTIN, Effect::IdentifyPotion),
+        40
+    );
+    let now = w.state.time;
+    w.appraise_hours(now, 200 * HOUR);
+    assert!(w.lore().is_identified(object), "{:?}", said(&w));
+    assert!(!known(&w, sword), "a sword is no potion");
+    let line = format!(
+        "You recognise your {}: a flask of fire.",
+        before.trim_start_matches("a ")
+    );
+    assert!(said(&w).contains(&line), "{line} in {:?}", said(&w));
+    // No marks until brewing comes.
+    let marks = w
+        .state
+        .player()
+        .skills
+        .get(skill("alchemy"))
+        .map(|t| t.marks);
+    assert_eq!(marks, Some(0));
+}
+
+#[test]
+fn an_enchanter_tells_magic_and_not_potions() {
+    let mut w = world("warrior");
+    untrain(&mut w, &["appraise", "alchemy", "enchanting"]);
+    let (sword, flask) = (carry_sword(&mut w), carry_flask(&mut w));
+    let object = w.state.player().inventory[flask].object;
+    w.player_mut().skills.add(skill("enchanting"), 200);
+    let now = w.state.time;
+    w.appraise_hours(now, 200 * HOUR);
+    assert!(known(&w, sword), "{:?}", said(&w));
+    assert!(!w.lore().is_identified(object), "a flask is no magic thing");
+    assert!(
+        said(&w)
+            .iter()
+            .any(|m| m.starts_with("You read the magic bound in your long sword")),
+        "{:?}",
+        said(&w)
+    );
+}
+
+#[test]
+fn untrained_nobody_tells_a_potion_or_magic() {
+    // Without Appraise, Alchemy, or Enchanting the hours draw nothing and tell nothing, with
+    // the professions' unknown things carried.
+    let mut w = world("warrior");
+    untrain(&mut w, &["appraise", "alchemy", "enchanting"]);
+    carry_flask(&mut w);
+    carry_sword(&mut w);
+    let hash = w.state_hash();
+    let now = w.state.time;
+    w.appraise_hours(now, 50 * HOUR);
+    assert_eq!(w.state_hash(), hash, "nothing trained, nothing told");
+}

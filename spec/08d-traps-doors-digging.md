@@ -486,7 +486,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     the same loop (perception batched while no creature can come into view): each turn is a `dig`
     action (1000: 6 s at normal speed, slowed by burden like every price), does work of the tool's
     power × (Strength + 10) / 20 (the score, never the modifier: a pick-axe at Strength 10 does 10,
-    at 18 14), that much more by the talents' `dig_percent` (Tunneler's 50) and what is worn
+    at 18 14), that much more by the talents' `dig_percent` (Tunneler's 50), Mining (25 % at 100, 40 % at 200; §8 "Skills") and what is worn
     (§8 "Magic items": a Delving pick-axe), and makes the digging noise where the digger stands (80; §5 "Hearing"). The wall
     gives way, as the player acts, once the work done on it reaches its hardness: a pick-axe at
     Strength 10 digs through packed earth in 1 minute, a stone wall in 6, granite in 30; a mattock

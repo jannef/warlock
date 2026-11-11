@@ -197,6 +197,11 @@ one of the land's finds is picked by the shares shown, and you gather a few of i
 pack ("You gather 2 handfuls of berries."). Otherwise: "You find nothing worth eating." Either way,
 your [Survival](skills.md#skill-survival) may earn a training mark.
 
+If you are also trained in **[Herbalism](skills.md#skill-herbalism)**, a forage that finds something may find a herb
+besides: one of the land's herbs below, picked by the shares shown ("Your eye for herbs finds an
+angelica root besides."). The chance is 25 % at 0, 60 % at 100, and 80 % at 200. Land with no herbs
+gives none. A forage trains Herbalism one time in four, whatever it finds.
+
 {{#include generated/foraging.md}}
 
 What you find is ordinary [food](food.md) (see [Hunger](hunger.md)). Berries and mushrooms spoil within days, hazelnuts

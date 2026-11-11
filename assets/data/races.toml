@@ -193,7 +193,8 @@ stats = { strength = 1, dexterity = -1, toughness = "1d2+2", willpower = 1, pres
 potential = { strength = 2, dexterity = -2, toughness = 4, willpower = 1, presence = -2 }
 hp = 6
 size = "medium"
-skills = { metalcraft = "1d6+4", search = "1d6+4" }
+skills = { metalcraft = "1d6+4", mining = "1d6+4", search = "1d6+4" }
+optional_skills = { jewelcraft = { chance = 20, dice = "2d4" } }
 weapon_skills = { axes = 1, crossbows = 1 }
 # Dwarves carry loads all their lives: being Burdened costs them nothing.
 ignores_burdened = true
@@ -227,7 +228,7 @@ hp = 2
 mana = 1
 alignment = 50
 size = "small"
-skills = { listen = "1d6+4", stealth = "1d6+4" }
+skills = { herbalism = "1d4+2", listen = "1d6+4", stealth = "1d6+4" }
 # Second breakfast.
 hunger = 125
 experience = 95
@@ -255,7 +256,7 @@ potential = { strength = -3, dexterity = 1, toughness = 1, intelligence = 3 }
 hp = 3
 mana = 3
 size = "small"
-skills = { appraise = "1d6+4", listen = "1d6+4" }
+skills = { appraise = "1d6+4", jewelcraft = "1d6+4", listen = "1d6+4" }
 hunger = 90
 experience = 120
 weapon_skills = { crossbows = 1 }
@@ -370,7 +371,7 @@ potential = { strength = -4, dexterity = 1, toughness = -2, intelligence = 1, pr
 hp = 1
 alignment = -200
 size = "small"
-skills = { detect_traps = "1d4+2", disable_device = "1d6+4" }
+skills = { detect_traps = "1d4+2", disable_device = "1d6+4", mining = "1d4+2" }
 # Good with traps: they notice hidden traps in passing (not secret doors), trained in finding
 # them, and find hidden things more easily.
 passive_search = "traps"
@@ -424,7 +425,7 @@ potential = { strength = 1, toughness = 3, willpower = 2, presence = -3 }
 hp = 6
 alignment = -450
 size = "medium"
-skills = { metalcraft = "1d6+4", stealth = "1d4+2" }
+skills = { metalcraft = "1d6+4", mining = "1d6+4", stealth = "1d4+2" }
 weapon_skills = { crossbows = 1, maces = 1 }
 # Like dwarves, they carry loads all their lives and know stonework.
 ignores_burdened = true

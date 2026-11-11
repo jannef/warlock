@@ -13,7 +13,6 @@ expression: "render(case, content.clone())"
 
 
 
-
             ┌─ Level 3 · Talent 1 ─────────────────────────────────────────────────────┐
             │                                                                          │
             │ Skill focus                                                              │
@@ -22,13 +21,14 @@ expression: "render(case, content.clone())"
             │   c  Heal                                                                │
             │   d  Initiative                                                          │
             │   e  Intimidate                                                          │
-            │   f  Swim                                                                │
+            │   f  Negotiation                                                         │
+            │   g  Swim                                                                │
             │                                                                          │
             │ You have a knack for one trade you know: your chosen skill counts higher │
             │ than its training alone, however far that training goes.                 │
             │                                                                          │
             │                                                                          │
-            │ a-f or Enter choose   Esc back                                           │
+            │ a-g or Enter choose   Esc back                                           │
             └──────────────────────────────────────────────────────────────────────────┘
 
 

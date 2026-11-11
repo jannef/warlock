@@ -4,16 +4,16 @@ expression: "render(case, content.clone())"
 ---
  You gain 600000 experience (dev). You feel more experienced. Welcome to level
  37. You gain Armour drill. You gain Drillmaster. You gain Weapon mastery.
-
   ┌─ Level 24 · Skill rolls 3 · Talent 1 ────────────────────────────────────┐
   │                                                                          │
   │ Skills                                                                   │
-  │ > a  Athletics   144  ────  (1d3)/2                                      │
-  │   b  Balance       9  ────  +2                                           │
-  │   c  Heal          8  ────  +1                                           │
-  │   d  Initiative    8  ────  +2                                           │
-  │   e  Intimidate   11  ────  +2                                           │
-  │   f  Swim         10  ────  +2                                           │
+  │ > a  Athletics    144  ────  (1d3)/2                                     │
+  │   b  Balance        9  ────  +2                                          │
+  │   c  Heal           8  ────  +1                                          │
+  │   d  Initiative     8  ────  +2                                          │
+  │   e  Intimidate    11  ────  +2                                          │
+  │   f  Negotiation    1  ────  +1                                          │
+  │   g  Swim          10  ────  +2                                          │
   │                                                                          │
   │ 3 skill rolls a level: class 2, race 1                                   │
   │                                                                          │
@@ -22,7 +22,7 @@ expression: "render(case, content.clone())"
   │ Running, jumping, climbing, and kicking: strength put to use.            │
   │                                                                          │
   │                                                                          │
-  │ a-f or Enter roll   Levels 25 to 37 next                                 │
+  │ a-g or Enter roll   Levels 25 to 37 next                                 │
   └──────────────────────────────────────────────────────────────────────────┘
 
 

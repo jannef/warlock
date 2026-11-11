@@ -630,6 +630,20 @@ developer notes (CLAUDE.md, `docs/dev/`).
     rotten food 25 points easier, at most 95 %); eating such food marks Appraise (`judged`, 10 %). A healer's and a
     sage's service price follows the same favour as a shop's (a `temple` service stays flat), and a service paid
     marks Negotiation (`deal`).
+  - **The professions' skills** (#1331, #1343; `docs/design/professions.md` §9): **Alchemy**
+    (`identify_potion`) and **Enchanting** (`identify_magic`) look the same way each hour, after
+    Appraise and from the same stream, each at its own things (5 / 25 / 40 % at 0 / 100 / 200):
+    Alchemy at potions and flasks of an unknown kind ("You recognise your fizzy scarlet potion:
+    a flask of fire."), Enchanting at unknown magic that is no potion or scroll (arms, armour,
+    jewellery, wands, rods: "You read the magic bound in your long sword: …"); neither marks
+    until its craft comes. **Mining** adds its `dig` percent to a dig turn's work (25 at 100,
+    40 at 200; §8 "Digging"), marked by every wall dug through (`dug`). **Herbalism** gives a
+    forage that found something a chance of a herb besides ("Foraging" below). **Jewelcraft**
+    has no use yet. Who trains them: gnomes Jewelcraft, dwarves and duergar Mining (dwarves
+    Jewelcraft now and then), kobolds Mining, halflings Herbalism; druids and witches Herbalism,
+    witches Alchemy; optional for the craftsperson (Jewelcraft, Mining), merchant (Jewelcraft),
+    commoner (Mining), ranger (Herbalism), wizard (Alchemy, Enchanting), druid (Alchemy), witch
+    (Enchanting), and aristocrat (Enchanting); and a story line each.
 - **Treating oneself** (`heal.rs`, `world/heal.rs`; #549, the owner 2026-10-27): the Heal
   skill's use, the abilities menu's **Heal** (`Ability::Heal`, in the skill's place among the
   Skills; `Action::Heal`, replay text `heal`, `heal:ID`, or `heal:ID:DIR`; cost `heal`, 2500: a
@@ -735,6 +749,11 @@ developer notes (CLAUDE.md, `docs/dev/`).
     most 100, one gameplay draw; found, one of the row's `finds` by weight (one draw) and its
     `count` dice. The food is fresh (made now) and goes into the pack: "You gather 2 handfuls of
     berries."; else "You find nothing worth eating.". Then Survival may earn a mark (`forage`).
+  - **Herbs** (#1343): a forage that found something, by one trained in Herbalism, on ground
+    with a `herbs` list, has Herbalism's `herbs` percent (25 / 60 / 80 at 0 / 100 / 200) of one
+    herb besides, by weight, one of it: "Your eye for herbs finds an angelica root besides." Two
+    more gameplay draws, a herbalist's only: anyone else's forage draws as before. Angelica root
+    is the only herb until brewing's herbs come (#1340). Herbalism marks on a forage, 25 %.
     Nothing is remembered: the same spot may be tried again at once (no anti-farming limit, the
     time is the price). Presentation shows the outcome only, never the chance.
   - **Food** found is ordinary food (§8 "Hunger"): berries, mushrooms, and hazelnuts (new), and
