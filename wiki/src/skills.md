@@ -105,7 +105,7 @@ The passive skills help you more the higher they are:
     60 % at 100, and 80 % at 200. Survival gives 15 %, 35 %, and 50 %. Rotten food is easier to
     tell, 25 points more, and no chance is above 95 %. Eating food whose freshness you could tell
     trains Appraise now and then.
-- **[Search](skills.md#skill-search)** helps you find [secret doors](doors.md#secret-doors) and other hidden things when you search (`s`, `S`). A
+- **[Search](skills.md#skill-search)** helps you find [secret doors](doors.md#secret-doors) and other hidden things when you search (`s`, `Ctrl+s`). A
   master's search reaches one cell farther (see [Searching](searching.md)).
 - **[Spot](skills.md#skill-spot)** lets you [notice hidden things in passing](searching.md#noticing-in-passing) at all, except traps. The higher it is, the more you
   notice.

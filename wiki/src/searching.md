@@ -15,7 +15,7 @@ here sounds hollow*. It stays a stone wall until you [dig](digging.md#digging) o
 ## Searching
 
 - `s` searches the cells around you, once: it takes a [turn](time.md#what-takes-time) (6 seconds).
-- `S` **searches for a while**: turn after turn, up to 10 turns, and it stops at once when you
+- `Ctrl+s` (or `Ctrl` with numpad `5`) **searches for a while**: turn after turn, up to 10 turns, and it stops at once when you
   find something. Like a [rest](resting.md#how-resting-works), it also stops when a hostile creature comes close in view or something
   happens worth a message.
 
@@ -64,7 +64,7 @@ Either way you remember it at once, even in the dark.
 ## How hard things are to find
 
 Each hidden thing has its own difficulty. The table gives the chances for an average, untrained
-character with Intelligence and Willpower 10. It shows one turn of searching, ten turns (one `S`),
+character with Intelligence and Willpower 10. It shows one turn of searching, ten turns (one search for a while),
 and one turn of noticing in passing. Better scores, a trained skill, and an
 [elf's](races.md#race-elf) eye all do better.
 
