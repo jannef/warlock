@@ -224,7 +224,14 @@ to open, read keys for, or draw one:
   letters, Reset all keys, Export keys…, Import keys…; also the `?` help: the same list,
   read-only, the developer keys only where they work), `ui/shape_screen.rs` (the shape list of the Hunter's Spirit weapon, `Aim::Shape`, opened by
   `use_ability`: every melee weapon, `PerceptionView::weapon_shapes`, in a `PagedList` grouped by
-  weapon skill; a letter or Enter sends `Action::Shape`; `--screen shape`), `ui/object_screen.rs` (inventory, pick up,
+  weapon skill; a letter or Enter sends `Action::Shape`; `--screen shape`),
+  `ui/profession_screen.rs` (a profession's recipes, `Aim::Recipes`, opened by `use_ability` as
+  `ScreenName::Profession(skill)`: `PerceptionView::recipes` in a `PagedList` grouped by the
+  result's item class, the built-in recipes first under "Work", each row its name and what it
+  takes, greyed with its reason in its place when it cannot be made; the selected row's takes
+  under the list; a letter or Enter on an available row opens Temper's or Whittle's list over it
+  or sends `Action::Fletch`; fixed keys; `--screen profession`, the first profession's, is
+  `ScreenName::FirstProfession`; `docs/dev/crafting.md`), `ui/object_screen.rs` (inventory, pick up,
   drop, throw, consume (the eat command renamed, key and id `eat` unchanged); in the choices letters always name stacks, even `h j k l`; the consume choice
   lists food lying here first ("lying here"), then the pack's; in the inventory a letter opens
   the stack's description, and `I` closes it; marks belong to stacks

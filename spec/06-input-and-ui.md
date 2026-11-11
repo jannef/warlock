@@ -435,12 +435,16 @@ developer notes (CLAUDE.md, `docs/dev/`).
     it has, at a place they see (the aiming mode), in that skill's place; **Forage** (`Ability::Forage`,
     §8 "Foraging"), Survival's use, which whoever is trained in it has, asking for nothing, in
     that skill's place, greyed out "not usable here" (`Unavailable::NotHere`) outside the wild;
-    **Fletch** (`Ability::Fletch`, §8 "Fletching"), Woodcraft's use, which everyone has, trained
-    or not, asking for nothing, in that skill's place, greyed out "you have no knife"
-    (`Unavailable::NoKnife`) or "you have no bow or crossbow ready" (`Unavailable::NoLauncher`);
-    **Whittle** (`Ability::Whittle`, §8 "Skills", Woodcraft's second use), beside it, which everyone has,
-    asking for an item (the Whittle list: wooden weapons, `world::workable_wood`), greyed out "you
-    have no knife" (`Unavailable::NoKnife`);
+    a **profession** (`Ability::Profession`, §8 "Skills"; #1334), a skill with recipes, as one
+    row in that skill's place named with an ellipsis ("Metalcraft…", "Woodcraft…"), which
+    whoever is trained in the skill has, and everyone while one of its recipes is open to all
+    (Temper, Whittle, Fletch); never greyed, it opens the **profession screen**: its recipes the
+    player may see, grouped by what they make (the built-in Temper, Whittle, and Fletch first
+    under "Work"), each with what it takes in words ("a metal weapon or armour, an anvil, about
+    10 minutes"; never a difficulty or odds), greyed with the first reason it cannot be made now
+    ("beyond your skill", "no anvil beside you", "no knife", "no bow or crossbow ready", "no metal
+    to hand", "no arrowheads"); a letter or Enter makes an available one (Temper's and Whittle's
+    lists ask which item over it; Fletch begins at once); fixed keys, named in its footer;
     and each other skill used as
     an action (`kind = "action"`, §8 "Skills") the player
     is trained in, listed but never available until its use comes (it then becomes an ability of

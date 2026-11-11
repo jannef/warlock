@@ -108,6 +108,9 @@ mod quest;
 mod quest_roll;
 mod race;
 mod ranged;
+mod recipe;
+#[cfg(test)]
+mod recipe_tests;
 mod resource;
 mod rod;
 #[cfg(test)]
@@ -292,6 +295,10 @@ pub(crate) use quest_roll::roll_known;
 pub use quest_roll::{Candidate, Pick, Roll, Rolled, Variant, one_of};
 pub use race::{HUNGER, LightBlind, RaceDef, Races};
 pub use ranged::{RangeBand, RangedRules};
+pub use recipe::{
+    PartSource, ProfessionText, RecipeDef, RecipeId, RecipeInput, RecipePart, RecipeResult,
+    RecipeUse, Recipes,
+};
 pub use resource::{Build, MAX_RESOURCE, MaxFrom, OverTime, ResourceDef, ResourceId};
 pub use rod::{Rod, RodDoes, RodEffect, RodShape};
 pub use room_effect::{
@@ -662,6 +669,8 @@ pub struct Content {
     gems: Option<Gems>,
     /// Material stock's words and professions (`data/stock.toml`); empty without the file.
     stock: Stock,
+    /// The professions' recipes (`data/recipes/<skill>/`, `data/recipes.toml`); none without them.
+    recipes: Recipes,
     /// Unique items (`data/uniques/`, each campaign's too; spec §8 "Magic items").
     uniques: Uniques,
     /// Equipment slots, in display order.
@@ -873,6 +882,7 @@ impl Content {
             grimoires: grimoire::Grimoires::default(),
             gems: None,
             stock: Stock::default(),
+            recipes: Recipes::default(),
             uniques: Uniques::default(),
             slots: Vec::new(),
             chests: ChestRules::default(),
@@ -1174,6 +1184,10 @@ impl Content {
         room_effects.resolve_populations(creature)?;
         content.room_effects = room_effects;
         content.load_gems(files)?;
+        // Recipes after stock, terrain, and gems: a stock part's materials must be the
+        // profession's, and an ornament needs the result's ornament part.
+        let settings = (files.get_optional(recipe::SETTINGS)).map(|text| (recipe::SETTINGS, text));
+        content.recipes = recipe::parse(settings, files.table("recipes"), &content)?;
         // Unique items before everything that may place one (gear, shops, levels, kits, quests).
         content.uniques = unique::parse(files.table("uniques"), &content)?;
         content.load_gear()?;
@@ -3322,6 +3336,15 @@ impl Content {
     /// "Stock"); empty without the file.
     pub fn stock(&self) -> &Stock {
         &self.stock
+    }
+
+    /// The professions' recipes (`data/recipes/<skill>/`; docs/dev/crafting.md), in path order.
+    pub fn recipes(&self) -> &Recipes {
+        &self.recipes
+    }
+
+    pub fn recipe(&self, id: RecipeId) -> &RecipeDef {
+        &self.recipes.list[usize::from(id.0)]
     }
 
     /// The unique items (spec §8 "Magic items"), in table order.

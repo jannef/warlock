@@ -96,14 +96,12 @@ pub enum Ability {
     /// this in its place while `data/intimidate.toml` exists). Had by whoever is trained in it;
     /// usable whenever they have it (the rules refuse, taking no time, without a foe there).
     Intimidate,
-    /// Make arrows or bolts (spec §8 "Fletching"): [`Action::Fletch`], in Woodcraft's place,
-    /// though anyone has it.
-    Fletch,
-    /// Whittle a wooden weapon with a knife (spec §8 "Skills": Woodcraft; `world/temper.rs`):
-    /// [`Action::Whittle`], Temper's twin for wood, in Woodcraft's place beside Fletch, though
-    /// anyone has it. Unavailable ([`Unavailable::NoKnife`]) without a knife carried; it asks
-    /// which item ([`Aim::Item`]).
-    Whittle,
+    /// A profession (spec §8 "Skills"; docs/design/professions.md §8): a skill with a directory
+    /// of recipes (`data/recipes/<skill>/`), listed in that skill's place as "Metalcraft…". Had
+    /// by whoever is trained in the skill, or by everyone while any of its recipes is `anyone`
+    /// (Temper, Whittle, Fletch); never unavailable: it opens the profession's screen
+    /// ([`Aim::Recipes`]), which says why each recipe cannot be made now.
+    Profession(SkillId),
     /// Forage for food in the wild (spec §8 "Foraging"): [`Action::Forage`], Survival's use (the
     /// skill with the `forage` benefit, listed as this in its place, while `data/forage.toml`
     /// exists). Had by whoever is trained in it; unavailable ([`Unavailable::NotHere`]) anywhere
@@ -148,10 +146,6 @@ pub enum Ability {
     /// it ([`Ability::here`]): listed only while the player stands next to such an altar (never
     /// a spent one), absent elsewhere.
     Pray,
-    /// Work a carried metal weapon or armour at a forge's anvil (spec §7 "Special rooms"):
-    /// [`Action::Temper`]. A place offers it ([`Ability::here`]): listed only while the player
-    /// stands next to an anvil; it asks which item ([`Aim::Item`]).
-    Temper,
     /// Drink at a healing spring (spec §7 "Special rooms"): [`Action::Drink`]. A place offers
     /// it, as Pray: listed only while the player stands next to a spring.
     Drink,
@@ -266,7 +260,7 @@ pub enum Aim {
     /// ability).
     Ailment,
     /// A stack the player carries, from a list of those it may work on (the Identify spell on
-    /// the identify list; Temper: metal arms or armour, [`crate::world::workable`];
+    /// the identify list; Decipher: the scrolls of a type not yet known;
     /// [`Ability::action_on`]).
     Item,
     /// A weapon's shape, from the list of every one there is (the Hunter's Spirit weapon:
@@ -275,6 +269,9 @@ pub enum Aim {
     /// A spell the player knows, from the list of them with each one's price (the wizard's
     /// Scribe: [`crate::perception::PerceptionView::scribes`], `scribe:fireball`).
     Spell,
+    /// A recipe of the profession, from its screen
+    /// ([`crate::perception::PerceptionView::recipes`]).
+    Recipes,
 }
 
 /// Why an ability cannot be used now: the abilities menu shows it beside the greyed-out row.
@@ -391,17 +388,19 @@ impl Ability {
     /// Every ability there is, in menu order: by [`Source`], then as each source lists its own.
     /// The one place abilities are registered (the wiki's table lists these).
     pub fn every(content: &Content) -> Vec<Ability> {
-        // Skills: those used as actions, in skill order, each as its use once that is in the game,
-        // and a passive skill with a use of its own (Survival's Forage) as that use.
-        // Woodcraft has two: Fletch, and Whittle beside it.
-        let skills = (content.skills().iter().enumerate()).flat_map(|(i, def)| {
-            let id = u8::try_from(i).map(SkillId).ok();
-            let ability = match Ability::use_of(def, content) {
+        // Skills: those used as actions, in skill order, each as its profession when it has a
+        // recipe directory, else as its use once that is in the game, and a passive skill with a
+        // use of its own (Survival's Forage) as that use.
+        let professions = content.recipes().professions();
+        let skills = (content.skills().iter().enumerate()).filter_map(|(i, def)| {
+            let id = u8::try_from(i).map(SkillId).ok()?;
+            if professions.contains(&id) {
+                return Some(Ability::Profession(id));
+            }
+            match Ability::use_of(def, content) {
                 Some(ability) => Some(ability),
-                None => id.filter(|_| def.is_active()).map(Ability::Skill),
-            };
-            let whittle = (ability == Some(Ability::Fletch)).then_some(Ability::Whittle);
-            ability.into_iter().chain(whittle)
+                None => def.is_active().then_some(Ability::Skill(id)),
+            }
         });
         // Woodcraft's second use: wedging a door, while some skill gives it.
         let wedge = (content.skills().iter())
@@ -447,10 +446,10 @@ impl Ability {
             (content.room_effects().defs().iter())
                 .any(|e| e.offers.as_ref().is_some_and(|(o, _)| *o == offer))
         };
-        let here = [Offer::Pray, Offer::Temper, Offer::Drink]
+        let here = [Offer::Pray, Offer::Drink]
             .into_iter()
             .filter(|&offer| offers(offer))
-            .map(Ability::offered);
+            .filter_map(Ability::offered);
         let mut all: Vec<Ability> = (signs.chain(class))
             .chain(classes)
             .chain(spells)
@@ -476,8 +475,7 @@ impl Ability {
     /// `tame` benefit, with `data/companions.toml` and `data/allies.toml`) [`Ability::Tame`],
     /// Intimidate's (the
     /// `intimidate` benefit, with `data/intimidate.toml`) [`Ability::Intimidate`], Survival's (the
-    /// `forage` benefit, with `data/forage.toml`) [`Ability::Forage`], Woodcraft's (the `fletch`
-    /// benefit, with `data/fletch.toml`) [`Ability::Fletch`], Decipher script's (the `decipher`
+    /// `forage` benefit, with `data/forage.toml`) [`Ability::Forage`], Decipher script's (the `decipher`
     /// benefit, with `data/decipher.toml`) [`Ability::Decipher`]. `None` for a skill whose
     /// use is to come, or that has none.
     fn use_of(def: &SkillDef, content: &Content) -> Option<Ability> {
@@ -509,9 +507,6 @@ impl Ability {
             .or_else(|| {
                 (gives(Effect::Forage) && content.forage().is_some()).then_some(Ability::Forage)
             })
-            .or_else(|| {
-                (gives(Effect::Fletch) && content.fletch().is_some()).then_some(Ability::Fletch)
-            })
     }
 
     /// The abilities the place offers to whoever stands at `at` on `level` (spec §7 "Special
@@ -521,19 +516,21 @@ impl Ability {
         let mut found: Vec<Ability> = (Dir::ALL.iter().map(|&d| at.step(d)))
             .filter_map(|p| level.terrain_at(p))
             .filter_map(|t| content.offer(t))
-            .map(Ability::offered)
+            .filter_map(Ability::offered)
             .collect();
         found.sort();
         found.dedup();
         found
     }
 
-    /// The ability a place's `offer` is used through.
-    pub fn offered(offer: Offer) -> Ability {
+    /// The ability a place's `offer` is used through; `None` for an anvil's Temper, a recipe of
+    /// Metalcraft's (`data/recipes/metalcraft/temper.toml`): walking into the anvil asks for it
+    /// all the same.
+    pub fn offered(offer: Offer) -> Option<Ability> {
         match offer {
-            Offer::Pray => Ability::Pray,
-            Offer::Temper => Ability::Temper,
-            Offer::Drink => Ability::Drink,
+            Offer::Pray => Some(Ability::Pray),
+            Offer::Temper => None,
+            Offer::Drink => Some(Ability::Drink),
         }
     }
 
@@ -562,8 +559,9 @@ impl Ability {
     /// (the `steal` effect; it is listed only when stealing is in the game); treating
     /// oneself, if they are trained in a skill with the `heal` effect; foraging, if they are
     /// trained in Survival (the forage benefit's); second wind,
-    /// if they hold the talent; throwing one's voice, if a talent gives it (the bard's); the
-    /// shield bash and fletching, everyone.
+    /// if they hold the talent; throwing one's voice, if a talent gives it (the bard's); a
+    /// profession, if they are trained in its skill or one of its recipes is anyone's; the
+    /// shield bash, everyone.
     pub(crate) fn had_by(self, actor: &Actor, content: &Content) -> bool {
         match self {
             Ability::Sign(active) => actor.talent_mods(content).has_sign_active(active),
@@ -594,11 +592,15 @@ impl Ability {
             Ability::SecondWind => actor.talent_mods(content).second_wind.is_some(),
             Ability::BloodMagic => actor.talent_mods(content).blood_magic.is_some(),
             Ability::ThrowVoice => actor.talent_mods(content).throw_voice,
-            Ability::ShieldBash | Ability::Fletch | Ability::Whittle => true,
+            Ability::Profession(skill) => {
+                actor.skills.get(skill).is_some()
+                    || (content.recipes().of(skill)).any(|(_, recipe)| recipe.anyone)
+            }
+            Ability::ShieldBash => true,
             Ability::Weapon(skill, id) => actor.weapon_abilities(content).contains(&(skill, id)),
             // A place offers it, not who one is ([`Ability::here`]); an order needs allies
             // ([`Ability::orders`]).
-            Ability::Pray | Ability::Temper | Ability::Drink => false,
+            Ability::Pray | Ability::Drink => false,
             Ability::Heel | Ability::Hold | Ability::SetOn | Ability::Give => false,
         }
     }
@@ -609,7 +611,7 @@ impl Ability {
             Ability::Sign(active) => active.id(),
             Ability::Class(active) => active.id(),
             Ability::Spell(spell) => content.spell_of(spell).map_or("", |s| &s.id),
-            Ability::Skill(id) => &content.skill(id).id,
+            Ability::Skill(id) | Ability::Profession(id) => &content.skill(id).id,
             Ability::ThrowVoice => "throw_voice",
             Ability::Disarm => "disarm",
             Ability::Listen => "listen",
@@ -620,8 +622,6 @@ impl Ability {
             Ability::Tame => "tame",
             Ability::Intimidate => "intimidate",
             Ability::Forage => "forage",
-            Ability::Fletch => "fletch",
-            Ability::Whittle => "whittle",
             Ability::Decipher => "decipher",
             Ability::Heal => "heal",
             Ability::SecondWind => "second_wind",
@@ -629,7 +629,6 @@ impl Ability {
             Ability::ShieldBash => "shield_bash",
             Ability::Weapon(_, id) => &content.weapon_ability(id).id,
             Ability::Pray => "pray",
-            Ability::Temper => "temper",
             Ability::Drink => "drink",
             Ability::Heel => "heel",
             Ability::Hold => "hold",
@@ -646,6 +645,8 @@ impl Ability {
                 let name = &content.weapon_ability(id).name;
                 return format!("{skill}: {name}").into();
             }
+            // It opens a list: "Metalcraft…".
+            Ability::Profession(id) => return format!("{}…", content.skill(id).name).into(),
             Ability::Sign(active) => content.sign_active(active).map_or("", |a| &a.name),
             Ability::Class(active) => content.class_active(active).map_or("", |a| {
                 // Stillness is named apart from Still mind, its talent.
@@ -663,15 +664,12 @@ impl Ability {
             Ability::Tame => "Tame",
             Ability::Intimidate => "Intimidate",
             Ability::Forage => "Forage",
-            Ability::Fletch => "Fletch",
-            Ability::Whittle => "Whittle",
             Ability::Decipher => "Decipher",
             Ability::Heal => "Heal",
             Ability::SecondWind => "Second wind",
             Ability::BloodMagic => "Blood magic",
             Ability::ShieldBash => "Shield bash",
             Ability::Pray => "Pray",
-            Ability::Temper => "Temper",
             Ability::Drink => "Drink",
             Ability::Heel => "Come to heel",
             Ability::Hold => "Hold here",
@@ -688,6 +686,9 @@ impl Ability {
             Ability::Class(active) => content.class_active(active).map_or("", |a| &a.description),
             Ability::Spell(spell) => content.spell_of(spell).map_or("", |s| &s.description),
             Ability::Skill(id) => &content.skill(id).description,
+            Ability::Profession(id) => {
+                (content.recipes().description(id)).unwrap_or(&content.skill(id).description)
+            }
             Ability::ThrowVoice => {
                 "Make a voice sound at a place you see nearby: those who hear it go and look there."
             }
@@ -724,16 +725,6 @@ impl Ability {
                 "Spend a while searching the wild around you for something to eat: berries, \
                  nuts, mushrooms, roots."
             }
-            Ability::Fletch => {
-                "Spend a while with a knife and a bow to hand, cutting arrows or bolts for it \
-                 from what wood there is. Anyone can, after a fashion."
-            }
-            Ability::Whittle => {
-                "Work a wooden weapon you carry with your knife for ten minutes. It may come out \
-                 finer, or damaged and stripped of what was done to it; damaged, the next try \
-                 mends it or breaks it. Each try is harder than the last. Anyone can, after a \
-                 fashion."
-            }
             Ability::Decipher => {
                 "Pore over a scroll you carry, of a kind you have not identified, for ten \
                  minutes: if you make out the writing, you learn what it is without reading it. \
@@ -756,12 +747,6 @@ impl Ability {
             Ability::Pray => {
                 "Kneel at the forgotten altar beside you and pray for a minute. Something may \
                  answer, for good or ill."
-            }
-            Ability::Temper => {
-                "Work a metal weapon or piece of armour you carry at the anvil beside you for \
-                 ten minutes. It may come out finer, or damaged and stripped of what was done to \
-                 it; damaged, the next try mends it or breaks it. Each try is harder than the \
-                 last."
             }
             Ability::Drink => {
                 "Drink from the spring beside you. Its water is mostly good, and now and then \
@@ -803,14 +788,13 @@ impl Ability {
             | Ability::Tame
             | Ability::Intimidate
             | Ability::Forage
-            | Ability::Fletch
-            | Ability::Whittle
+            | Ability::Profession(_)
             | Ability::Decipher
             | Ability::Heal => Source::Skill,
             Ability::ThrowVoice => Source::Class,
             Ability::SecondWind | Ability::BloodMagic => Source::Talent,
             Ability::ShieldBash | Ability::Weapon(..) => Source::WeaponSkill,
-            Ability::Pray | Ability::Temper | Ability::Drink => Source::Place,
+            Ability::Pray | Ability::Drink => Source::Place,
             Ability::Heel | Ability::Hold | Ability::SetOn | Ability::Give => Source::Ally,
         }
     }
@@ -839,12 +823,12 @@ impl Ability {
             | Ability::SecondWind
             | Ability::BloodMagic
             | Ability::Forage
-            | Ability::Fletch
             | Ability::Pray
             | Ability::Heel
             | Ability::Hold
             | Ability::Drink => Aim::Nothing,
-            Ability::Temper | Ability::Whittle | Ability::Give | Ability::Decipher => Aim::Item,
+            Ability::Give | Ability::Decipher => Aim::Item,
+            Ability::Profession(_) => Aim::Recipes,
             Ability::ThrowVoice | Ability::SetOn | Ability::Intimidate => Aim::Cell,
             Ability::Heal => Aim::Ailment,
             Ability::Disarm
@@ -865,7 +849,8 @@ impl Ability {
             Ability::Sign(active) => Some(active.cost()),
             Ability::Class(active) => Some(active.cost()),
             Ability::Spell(_) => Some(ActionKind::Cast),
-            Ability::Skill(_) | Ability::Weapon(..) => None,
+            // A profession's recipes are priced as their own actions.
+            Ability::Skill(_) | Ability::Weapon(..) | Ability::Profession(_) => None,
             Ability::ThrowVoice => Some(ActionKind::ThrowVoice),
             Ability::Disarm => Some(ActionKind::Disarm),
             // A listen is a turn of keeping still.
@@ -878,14 +863,11 @@ impl Ability {
             Ability::Tame => Some(ActionKind::Tame),
             Ability::Intimidate => Some(ActionKind::Intimidate),
             Ability::Forage => Some(ActionKind::Forage),
-            Ability::Fletch => Some(ActionKind::Fletch),
-            Ability::Whittle => Some(ActionKind::Whittle),
             Ability::Decipher => Some(ActionKind::Decipher),
             Ability::Heal => Some(ActionKind::Heal),
             Ability::SecondWind | Ability::BloodMagic => Some(ActionKind::Wait),
             Ability::ShieldBash => Some(ActionKind::Melee),
             Ability::Pray => Some(ActionKind::Pray),
-            Ability::Temper => Some(ActionKind::Temper),
             Ability::Give => Some(ActionKind::Wear),
             Ability::Drink => Some(ActionKind::Drink),
             // An order takes no time (spec §8 "Allies"): it is priced as nothing.
@@ -915,8 +897,7 @@ impl Ability {
             | Ability::Tame
             | Ability::Intimidate
             | Ability::Forage
-            | Ability::Fletch
-            | Ability::Whittle
+            | Ability::Profession(_)
             | Ability::Decipher
             | Ability::Heal
             | Ability::SecondWind
@@ -924,7 +905,6 @@ impl Ability {
             | Ability::ShieldBash
             | Ability::Weapon(..)
             | Ability::Pray
-            | Ability::Temper
             | Ability::Drink
             | Ability::Heel
             | Ability::Hold
@@ -981,7 +961,14 @@ impl Ability {
                     _ => None,
                 }
             }
-            (Ability::Skill(_) | Ability::ThrowVoice | Ability::Intimidate, _) => None,
+            // A profession opens its screen.
+            (
+                Ability::Skill(_)
+                | Ability::Profession(_)
+                | Ability::ThrowVoice
+                | Ability::Intimidate,
+                _,
+            ) => None,
             // The first thing there is to treat; the menu names one when there are several.
             (Ability::Heal, _) => Some(Action::Heal {
                 what: None,
@@ -1011,9 +998,8 @@ impl Ability {
             (Ability::Pray, _) => Some(Action::Pray),
             (Ability::Drink, _) => Some(Action::Drink),
             (Ability::Forage, _) => Some(Action::Forage),
-            (Ability::Fletch, _) => Some(Action::Fletch),
             // It asks for an item ([`Ability::action_on`]).
-            (Ability::Temper | Ability::Whittle | Ability::Decipher, _) => None,
+            (Ability::Decipher, _) => None,
             (Ability::Heel, _) => Some(Action::Order(Command::Heel)),
             (Ability::Hold, _) => Some(Action::Order(Command::Hold)),
             // It asks for a cell ([`Ability::action_at`]).
@@ -1022,12 +1008,10 @@ impl Ability {
     }
 
     /// The action it is, worked or cast on inventory stack `item`, for one that asks for a stack
-    /// the player carries (Identify, Temper, Merchant's eye); `None` for any other.
+    /// the player carries (Identify, Decipher, Merchant's eye); `None` for any other.
     pub fn action_on(self, content: &Content, item: usize) -> Option<Action> {
         match self {
             Ability::Decipher => Some(Action::Decipher { item }),
-            Ability::Temper => Some(Action::Temper { item }),
-            Ability::Whittle => Some(Action::Whittle { item }),
             Ability::Give => Some(Action::Give { item, ally: None }),
             Ability::Class(active) if active.aims_item() => Some(Action::UseOn(active, item)),
             Ability::Spell(spell) if aims_item(content, spell) => {
@@ -1066,15 +1050,13 @@ impl Ability {
             | Ability::Feint
             | Ability::Tame
             | Ability::Forage
-            | Ability::Fletch
-            | Ability::Whittle
+            | Ability::Profession(_)
             | Ability::Decipher
             | Ability::Heal
             | Ability::SecondWind
             | Ability::BloodMagic
             | Ability::ShieldBash
             | Ability::Pray
-            | Ability::Temper
             | Ability::Drink
             | Ability::Heel
             | Ability::Hold
@@ -1142,8 +1124,6 @@ impl Ability {
                 .filter(|&cooldown| actor.effects.has(cooldown))
                 .map(Unavailable::While),
             Ability::Skill(_) => Some(Unavailable::NotYet),
-            Ability::Fletch => crate::world::fletch_lack(actor, content),
-            Ability::Whittle => crate::world::whittle_lack(actor, content),
             Ability::Weapon(_, id) => weapon_unavailable(actor, content, id),
             Ability::Heal => (crate::heal::treatable(actor, content).is_empty())
                 .then_some(Unavailable::NothingToTreat),
@@ -1162,8 +1142,9 @@ impl Ability {
             // Whether the player has a companion is the perception's to say.
             | Ability::Tame
             | Ability::Pray
-            | Ability::Temper
             | Ability::Drink
+            // The profession's screen says why each recipe cannot be made now.
+            | Ability::Profession(_)
             // Whether anyone is there to hear an order is the perception's to say.
             | Ability::Heel
             | Ability::Hold
@@ -1394,17 +1375,22 @@ mod tests {
                 "pick_lock",
                 "steal",
                 "forage",
-                "fletch",
-                "whittle",
+                "woodcraft",
                 "wedge",
             ]
         );
-        let last: Vec<Ability> = every.iter().rev().take(7).rev().copied().collect();
+        // Metalcraft and Woodcraft are professions (a recipe directory each), in their skills'
+        // places; Temper, Whittle, and Fletch are their recipes, no rows of their own.
+        for skill in ["metalcraft", "woodcraft"] {
+            let id = content.skill_id(skill).expect("a skill");
+            assert!(every.contains(&Ability::Profession(id)), "{skill}");
+            assert!(!every.contains(&Ability::Skill(id)), "{skill}");
+        }
+        let last: Vec<Ability> = every.iter().rev().take(6).rev().copied().collect();
         assert_eq!(
             last,
             [
                 Ability::Pray,
-                Ability::Temper,
                 Ability::Drink,
                 Ability::Heel,
                 Ability::Hold,

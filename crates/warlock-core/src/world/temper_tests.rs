@@ -130,9 +130,13 @@ fn said(w: &World, line: &str) -> bool {
     w.messages().iter().any(|m| m.text == line)
 }
 
-fn here(w: &World) -> Vec<Ability> {
-    let at = w.player_pos();
-    Ability::here(w.state.current(), &w.content, at)
+/// Why Metalcraft's Temper row cannot be made now (`None`: it can).
+fn here(w: &World) -> Option<RecipeLack> {
+    let metal = w.content.skill_id("metalcraft").expect("metalcraft");
+    (w.perception().recipes(metal).into_iter())
+        .find(|r| r.name == "Temper")
+        .expect("everyone sees Temper")
+        .unavailable
 }
 
 /// What came of an attempt, by what it did to the item.
@@ -186,18 +190,16 @@ fn set_worked(w: &mut World, improved: Vec<Aspect>, attempts: u8, damaged: bool)
 }
 
 #[test]
-fn temper_is_listed_only_beside_an_anvil() {
+fn temper_can_be_made_only_beside_an_anvil() {
     let mut w = world(false);
-    assert_eq!(here(&w), vec![Ability::Temper]);
-    assert!(Ability::every(&w.content).contains(&Ability::Temper));
-    assert_eq!(
-        Ability::Temper.aim(&w.content),
-        crate::ability::Aim::Item,
-        "it asks for an item"
-    );
+    assert_eq!(here(&w), None);
+    // A recipe of Metalcraft's, no row of the Here group.
+    let at = w.player_pos();
+    assert!(Ability::here(w.state.current(), &w.content, at).is_empty());
     give(&mut w, "long_sword");
     w.apply(&Action::Move(Dir::S));
-    assert!(here(&w).is_empty(), "two cells away");
+    let anvil = w.content.terrain_id("anvil").expect("anvil");
+    assert_eq!(here(&w), Some(RecipeLack::Station(anvil)), "two cells away");
     let before = w.state.time;
     w.apply(&Action::Temper { item: 0 });
     assert!(said(&w, "There is no anvil here."));
@@ -276,7 +278,7 @@ fn an_attempt_takes_ten_minutes_identifies_and_trains_metalcraft() {
     assert!(marks(&w) > before, "every attempt marks Metalcraft");
     let anvil = w.state.current().terrain_at(ANVIL).expect("cell");
     assert_eq!(w.content.terrain(anvil).id, "anvil", "never spent");
-    assert_eq!(here(&w), vec![Ability::Temper]);
+    assert_eq!(here(&w), None);
 }
 
 #[test]

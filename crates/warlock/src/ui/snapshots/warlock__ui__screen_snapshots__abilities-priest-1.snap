@@ -18,8 +18,8 @@ expression: "render(case, content.clone())"
                     │   e  Heal               nothing to treat                 │
                     │   f  Knowledge          not usable yet                   │
                     │   g  Listen at a door   in a direction                   │
-                    │   h  Fletch             you have no knife                │
-                    │   i  Whittle            you have no knife                │
+                    │   h  Metalcraft…                                         │
+                    │   i  Woodcraft…                                          │
                     │ Weapon skills                                            │
                     │   j  Shield bash        in a direction                   │
                     │                                                          │

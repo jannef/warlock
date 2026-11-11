@@ -546,9 +546,11 @@ developer notes (CLAUDE.md, `docs/dev/`).
   - **Forges and tempering** (`offers = { temper = true }`, #418, #1022; `world/temper.rs`,
     `magic/worked.rs`, `data/temper.toml`; the owner's rule, `docs/design/skill-uses.md` §6.7 M0):
     the forge's feature is an **anvil** (terrain `anvil`, `π`, cold, no light; look mode adds its
-    description); Cēaptūn's smithy has one too, beside the smith's fire (#1023), free to use. **Temper** (`Action::Temper { item }`, `temper:LETTER` in action text) is offered
-    in the abilities menu's *Here* group while the player stands next to an anvil, to anyone; it
-    asks for an item (`Aim::Item`: the Temper list, what the anvil accepts now). It takes a weapon,
+    description); Cēaptūn's smithy has one too, beside the smith's fire (#1023), free to use. **Temper** (`Action::Temper { item }`, `temper:LETTER` in action text) is a recipe
+    of Metalcraft's open to anyone (§8 "Skills": professions; #1334), its row on Metalcraft's
+    profession screen greyed "no anvil beside you" unless the player stands next to an anvil, and
+    walking into the anvil asks for it too (§6 "Walking into what offers an action"); it asks for
+    an item (the Temper list, what the anvil accepts now). It takes a weapon,
     missile weapon, armour, or shield whose main part (the first of `Stack::parts`) is of a
     material of `group = "metal"`. Refused, taking no time: no anvil beside the player ("There is
     no anvil here."), no arms or armour ("Only weapons and armour can be tempered."), not metal, or

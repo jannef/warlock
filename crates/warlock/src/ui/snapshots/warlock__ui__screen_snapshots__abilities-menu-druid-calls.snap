@@ -22,9 +22,9 @@ expression: "render(case, content.clone())"
           │   m  Tame                in a direction                                     │
           │   n  Heal                nothing to treat                                   │
           │   o  Listen at a door    in a direction                                     │
-          │   p  Pick lock           in a direction                                     │
-          │   q  Forage              not usable here                                    │
-          │   r  Fletch              you have no knife                                  │
+          │   p  Metalcraft…                                                            │
+          │   q  Pick lock           in a direction                                     │
+          │   r  Forage              not usable here                                    │
           │                                                                             │
           │ The basilisk's stare: a foe nearby that sees you slows to a crawl a moment; │
           │ your eyes then rest two hours.                                              │

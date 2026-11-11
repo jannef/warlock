@@ -454,12 +454,13 @@ on retrying). Data: the `forge` effect, the terrain `anvil` (`π`, no light, a `
 Metalcraft's `temper` benefit and mark (`data/skills.toml`; `skills::Effect::Temper`, `Use::Temper`,
 which is `StatUse::Forged` too). No outcome table, and no `spent`: the anvil is never spent.
 
-`Ability::Temper` (`Source::Place`, had by no one, listed by `Ability::here` beside an anvil) is
-an ability with `Aim::Item` (as the Identify spell is): the abilities menu (`input.rs::use_ability`)
-or a walk into the anvil (`input.rs::offer_dialog`, #975, reading `Content::offer`) opens
-`ScreenName::Temper` (`ObjectList::Temper`, the stacks `world::workable` accepts), and choosing one
-applies `Ability::action_on(content, item)`, `Action::Temper { item }`. The dump's aim word is
-`an item you carry`.
+Temper is a recipe of Metalcraft's (#1334, `docs/dev/crafting.md`:
+`data/recipes/metalcraft/temper.toml`, `anyone`, `station = "anvil"`), no row of the Here group
+(`Ability::offered(Offer::Temper)` is `None`): its row on Metalcraft's screen, greyed "no anvil
+beside you" away from one, or a walk into the anvil (`input.rs::offer_dialog`, #975, reading
+`Content::offer`: "Would you like to temper something at the anvil?") opens `ScreenName::Temper`
+(`ObjectList::Temper`, the stacks `world::workable` accepts), and choosing one applies
+`Action::Temper { item }`.
 
 `world/temper.rs`: `temperable` (an item kind of weapon, launcher, shield, or armour, main part of
 `group = "metal"`, not a spirit weapon, and with an aspect to better), `workable` (and under

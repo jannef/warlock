@@ -12,9 +12,9 @@ expression: "render(case, content.clone())"
                     │   b  Decipher           no unknown scroll                │
                     │   c  Tame               you already have a companion     │
                     │   d  Listen at a door   in a direction                   │
-                    │   e  Forage                                              │
-                    │   f  Fletch             you have no knife                │
-                    │   g  Whittle            you have no knife                │
+                    │   e  Metalcraft…                                         │
+                    │   f  Forage                                              │
+                    │   g  Woodcraft…                                          │
                     │   h  Wedge a door       in a direction                   │
                     │ Weapon skills                                            │
                     │   i  Shield bash        you hold no shield               │

@@ -19,9 +19,9 @@ expression: "render(case, content.clone())"
                     │   i  Tame            in a direction                      │
                     │   j  Heal            nothing to treat                    │
                     │   k  Intimidate      at a place you see                  │
-                    │   l  Forage          not usable here                     │
-                    │   m  Fletch          you have no knife                   │
-                    │   n  Whittle         you have no knife                   │
+                    │   l  Metalcraft…                                         │
+                    │   m  Forage          not usable here                     │
+                    │   n  Woodcraft…                                          │
                     │ Weapon skills                                            │
                     │   o  Shield bash     in a direction                      │
                     │                                                          │

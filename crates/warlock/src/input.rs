@@ -30,7 +30,7 @@ use bevy::input::ButtonState;
 use bevy::input::keyboard::{Key, KeyboardInput};
 use bevy::prelude::*;
 use warlock_core::ability::{self, Ability};
-use warlock_core::content::{LevelKind, VisionProfile};
+use warlock_core::content::{LevelKind, RecipeUse, VisionProfile};
 use warlock_core::hunger::Hunger;
 use warlock_core::perception::{CellView, PerceptionView};
 use warlock_core::time::Duration;
@@ -1253,17 +1253,11 @@ impl Gameplay<'_> {
             (true, ability::Aim::Cell | ability::Aim::Corpse) => {
                 self.aim(AimKind::Ability(ability));
             }
-            // Temper's and Give's lists; the identify list asks which stack (`identify_by`,
+            // Give's and Decipher's lists; the identify list asks which stack (`identify_by`,
             // before this).
             (true, ability::Aim::Item) => {
-                if ability == Ability::Temper {
-                    return Some(ScreenAction::Open(ScreenName::Temper));
-                }
                 if ability == Ability::Give {
                     return Some(ScreenAction::Open(ScreenName::Give));
-                }
-                if ability == Ability::Whittle {
-                    return Some(ScreenAction::Open(ScreenName::Whittle));
                 }
                 if ability == Ability::Decipher {
                     return Some(ScreenAction::Open(ScreenName::Decipher));
@@ -1278,6 +1272,12 @@ impl Gameplay<'_> {
             (true, ability::Aim::Shape) => return Some(ScreenAction::Open(ScreenName::Shape)),
             // The scribe list asks which spell (the wizard's Scribe).
             (true, ability::Aim::Spell) => return Some(ScreenAction::Open(ScreenName::Scribe)),
+            // A profession's row opens its recipes.
+            (true, ability::Aim::Recipes) => {
+                if let Ability::Profession(skill) = ability {
+                    return Some(ScreenAction::Open(ScreenName::Profession(skill)));
+                }
+            }
             (true, ability::Aim::Ailment) => {
                 let view = game.world.perception();
                 let ailments = view.own_ailments();
@@ -1586,8 +1586,8 @@ fn hunger_dialog(view: &PerceptionView<'_>, dir: Dir) -> Option<Dialog> {
 /// that offers an action (spec §7 "Special rooms"; what the abilities menu's Here group reads, so
 /// a spent altar blocks as any wall does), where no one they see stands (moving there would be an
 /// attack, or stop): "Would you like to pray at the forgotten altar?", to use its ability, just as
-/// the menu does (Temper goes on to its list), or leave it (the safe answer, selected first, and
-/// Esc's; it takes no time).
+/// the menu does, or leave it (the safe answer, selected first, and Esc's; it takes no time). An
+/// anvil's Temper, a recipe of Metalcraft's with no row of its own, goes on to its list.
 fn offer_dialog(view: &PerceptionView<'_>, dir: Dir) -> Option<Dialog> {
     let to = view.viewer().step(dir);
     let terrain = match view.cell(to) {
@@ -1598,7 +1598,16 @@ fn offer_dialog(view: &PerceptionView<'_>, dir: Dir) -> Option<Dialog> {
     if view.actor_at(to).is_some() {
         return None;
     }
-    let ability = Ability::offered(offer);
+    let (label, then) = match Ability::offered(offer) {
+        Some(ability) => (
+            ability.name(view.content()).into_owned(),
+            ScreenAction::UseAbility(ability),
+        ),
+        None => (
+            RecipeUse::Temper.name().to_string(),
+            ScreenAction::Replace(ScreenName::Temper),
+        ),
+    };
     let name = &view.content().terrain(terrain).name;
     let mut letters = name.chars();
     let title: String = (letters.next().iter().flat_map(|c| c.to_uppercase()))
@@ -1609,10 +1618,7 @@ fn offer_dialog(view: &PerceptionView<'_>, dir: Dir) -> Option<Dialog> {
             title,
             format!("Would you like to {} the {name}?", offer.asks()),
         )
-        .accept(
-            ability.name(view.content()).into_owned(),
-            ScreenAction::UseAbility(ability),
-        )
+        .accept(label, then)
         .cancel("Leave it", ScreenAction::Close),
     )
 }
@@ -2011,14 +2017,6 @@ mod tests {
                 "Drink",
                 Ability::Drink,
             ),
-            (
-                "forge",
-                "move:E",
-                "Anvil",
-                "Would you like to temper something at the anvil?",
-                "Temper",
-                Ability::Temper,
-            ),
         ];
         for (scenario, walk, title, text, label, ability) in cases {
             let world = walked_to(scenario, walk);
@@ -2037,6 +2035,25 @@ mod tests {
             // Any other way is plain floor.
             assert!(offer_dialog(&view, Dir::S).is_none(), "{scenario}");
         }
+        // An anvil's Temper is a recipe of Metalcraft's, no row of the Here group: walking into
+        // the anvil still asks, and goes on to the Temper list.
+        let world = walked_to("forge", "move:E");
+        let view = world.perception();
+        let place = ability::Source::Place;
+        assert!(
+            !view
+                .abilities()
+                .iter()
+                .any(|own| own.ability.source() == place)
+        );
+        assert_eq!(
+            offer_dialog(&view, Dir::N),
+            Some(
+                Dialog::new("Anvil", "Would you like to temper something at the anvil?")
+                    .accept("Temper", ScreenAction::Replace(ScreenName::Temper))
+                    .cancel("Leave it", ScreenAction::Close)
+            )
+        );
     }
 
     #[test]

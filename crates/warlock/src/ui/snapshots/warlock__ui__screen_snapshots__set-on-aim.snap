@@ -12,10 +12,10 @@ expression: "render(case, content.clone())"
                     │ Skills                                                   │
                     │   b  Disarm a trap      in a direction                   │
                     │   c  Listen at a door   in a direction                   │
-                    │   d  Pick lock          in a direction                   │
-                    │   e  Steal              in a direction                   │
-                    │   f  Fletch             you have no knife                │
-                    │   g  Whittle            you have no knife                │
+                    │   d  Metalcraft…                                         │
+                    │   e  Pick lock          in a direction                   │
+                    │   f  Steal              in a direction                   │
+                    │   g  Woodcraft…                                          │
                     │ Weapon skills                                            │
                     │ > h  Shield bash        you hold no shield               │
                     │ Allies                                                   │

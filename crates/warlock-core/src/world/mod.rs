@@ -124,6 +124,7 @@ mod consecrate;
 mod corpse_spell;
 mod corrode;
 mod court;
+mod craft;
 mod creation;
 mod creature_burst;
 mod creature_cast;
@@ -316,6 +317,8 @@ pub use cast::Reach;
 pub use collar::fits_neck;
 pub(crate) use companion::smelt_within;
 pub use companion::{CompanionData, draw as companion_draw, name_for as companion_name};
+pub(crate) use craft::recipe_rows;
+pub use craft::{RecipeLack, RecipeRow};
 pub use creation::{chosen_with_talents, creation_count, parse_talents, pick_text};
 pub use curse::{Rising, rise_candidates, rises_as};
 pub use decipher::undeciphered;
@@ -330,7 +333,6 @@ pub use escort::{escort_slot, fits_escort};
 pub use experience::{Discovered, Progress};
 pub use familiar::{draw as familiar_draw, name_for as familiar_name};
 pub use fight::{Cause, Death};
-pub(crate) use fletch::fletch_lack;
 pub(crate) use forage::forage_ground;
 pub use free_blow::FreeBlows;
 pub use gifts::{STARE_RANGE, Streak};
@@ -363,7 +365,6 @@ pub(crate) use swim::shore_refusal;
 pub use talent::Due;
 pub use talk::{Conversation, Talk, TopicView};
 pub(crate) use talk_past::offered as encounter_choices;
-pub(crate) use temper::whittle_lack;
 pub use temper::{temperable, workable, workable_wood};
 use travel::{enter_room, instantiate_level, level_template};
 pub(crate) use unseen::{Concealed, DRAUGHT, unseen_by_player};
@@ -1544,6 +1545,7 @@ impl World {
             Action::Drink => return self.start_drink(),
             Action::Forage => return self.start_forage(),
             Action::Fletch => return self.start_fletch(),
+            Action::Craft { recipe, picks } => return self.start_craft(recipe, picks),
             Action::Decipher { item } => return self.start_decipher(*item),
             Action::Temper { item } => return self.start_temper(*item),
             Action::Whittle { item } => return self.start_whittle(*item),
@@ -1736,6 +1738,8 @@ mod corrode_tests;
 mod cost_tests;
 #[cfg(test)]
 mod court_tests;
+#[cfg(test)]
+mod craft_tests;
 #[cfg(test)]
 mod creation_tests;
 #[cfg(test)]
