@@ -34,10 +34,11 @@ use crate::action::{Event, Positions};
 use crate::content::StatUse;
 use crate::content::{
     Content, DialogueId, Goal, KillTarget, Pick, QuestDef, QuestId, QuestKind, RevealWhen, Roll,
-    Rolled,
+    Rolled, SkillReward,
 };
 use crate::object::{self, Stack};
 use crate::perception::PerceptionView;
+use crate::rng::Rng;
 use crate::talent::TalentMods;
 use serde::{Deserialize, Serialize};
 use std::borrow::Cow;
@@ -861,6 +862,7 @@ impl World {
             ));
             self.give_player(&stacks);
         }
+        self.teach_skills(&content, &who, &def.reward.skills);
         if xp > 0 {
             self.say(format!("You gain {xp} experience."));
             self.grant_xp(xp);
@@ -868,6 +870,32 @@ impl World {
         }
         self.shift_alignment(self.state.player, def.alignment, Deed::Quest);
         self.promote(&standing);
+    }
+
+    /// A reward's skills, taught by `who`: an untrained one trained at its `start`, rolled from
+    /// the `levels` stream as background and level rolls are, a trained one given its `marks`
+    /// through [`World::mark_skill`] (which may roll it at once). Told in words, never numbers.
+    fn teach_skills(&mut self, content: &Content, who: &str, skills: &[SkillReward]) {
+        for taught in skills {
+            let name = content.skill(taught.skill).name.to_lowercase();
+            if self.state.player().skills.get(taught.skill).is_some() {
+                if taught.marks == 0 {
+                    continue;
+                }
+                let more =
+                    (taught.more.clone()).unwrap_or_else(|| format!("You learn more of {name}."));
+                self.say(more);
+                self.mark_skill(taught.skill, taught.marks);
+            } else if let Some(start) = taught.start {
+                let seed = self.state.seed;
+                let rng = (self.state.levels_rng).get_or_insert_with(|| Rng::levels(seed));
+                let rolled = start.roll(rng);
+                self.player_mut().skills.add(taught.skill, rolled);
+                let said = (taught.taught.clone())
+                    .unwrap_or_else(|| format!("{who} trains you in {name}."));
+                self.say(said);
+            }
+        }
     }
 
     /// Takes `count` of `object` out of the player's pack (stacks not worn or wielded first, the

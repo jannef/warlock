@@ -285,7 +285,7 @@ pub use prayer::{Face, FaceWords, Faced, PrayerRules, PrayerUse, UseDef};
 pub use prestige::{PrestigeDef, Table};
 pub use quest::{
     GOLD, Goal, KillTarget, QuestDef, QuestId, QuestKind, QuestTexts, Reveal, RevealWhen, Reward,
-    Waits,
+    SkillReward, Waits,
 };
 pub(crate) use quest_roll::roll_known;
 pub use quest_roll::{Candidate, Pick, Roll, Rolled, Variant, one_of};
@@ -4741,6 +4741,7 @@ mod tests {
         assert_eq!(
             ids,
             [
+                "alchemy",
                 "appraise",
                 "athletics",
                 "balance",
@@ -4749,14 +4750,18 @@ mod tests {
                 "decipher_script",
                 "detect_traps",
                 "disable_device",
+                "enchanting",
                 "escape_artist",
                 "handle_animal",
                 "heal",
+                "herbalism",
                 "initiative",
                 "intimidate",
+                "jewelcraft",
                 "knowledge",
                 "listen",
                 "metalcraft",
+                "mining",
                 "music",
                 "negotiation",
                 "open_lock",

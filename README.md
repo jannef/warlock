@@ -30,6 +30,25 @@ run from source with a recent Rust toolchain (the exact version is pinned in
 cargo run --release -p warlock
 ```
 
+### Install a specific version from source
+
+To play a locked release from source, install it with `cargo install` (a tag picks the version):
+
+```sh
+cargo install --git https://github.com/jannef/warlock --tag v0.16.0 --locked --no-default-features warlock
+```
+
+- `--locked` uses the release's `Cargo.lock`. `--no-default-features` leaves out the test world,
+  as the release builds do. Add `warlock-cli` after `warlock` for the headless tool too.
+- It needs a Rust toolchain of at least 1.97 (`rust-version`); outside the repository,
+  `rust-toolchain.toml` does not apply.
+- The result is a bare binary in `~/.cargo/bin`, not a macOS `.app`; a local build has no
+  quarantine flag, so Gatekeeper does not block it.
+- It shares settings and saves with the downloaded game, which use the same data folder. Saves are
+  shared between builds of the same major.minor version, and an older tag cannot load newer saves;
+  `--portable DIR` keeps an old version's saves and settings apart.
+- `cargo install warlock` from crates.io is not offered: the crates are not published.
+
 ## Develop
 
 - What we are building: [`specification.md`](specification.md) (the index; the sections are in
