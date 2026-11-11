@@ -352,13 +352,14 @@ pub(super) fn variants(content: &Content) -> String {
     out
 }
 
-/// What a piece of each material with a group is called, weighs, and is worth, and the skill
-/// and stat that work it (`objects/piece.toml`, `stock.toml`: what a broken item falls to, the
-/// material stock), metals first, then by group and name.
+/// What a piece of each material with a group is called, how many pieces' worth it is (its
+/// group's `unit`), what it weighs and is worth, and the skill and stat that work it
+/// (`objects/piece.toml`, `stock.toml`: what a broken item falls to, the material stock), metals
+/// first, then by group and name.
 pub(super) fn pieces(content: &Content) -> String {
     let mut out = String::from(
-        "| Material | Group | A piece | Weight | Worth | Worked by |\n\
-         |---|---|---|---:|---:|---|\n",
+        "| Material | Group | A piece | Unit | Weight | Worth | Worked by |\n\
+         |---|---|---|---:|---:|---:|---|\n",
     );
     for (id, m) in by_group(content) {
         let (Some(group), Some(piece)) = (&m.group, warlock_core::piece::make(content, id, 1))
@@ -374,9 +375,10 @@ pub(super) fn pieces(content: &Content) -> String {
         });
         let _ = writeln!(
             out,
-            "| {} | {group} | {} | {} | {worth} | {worked} |",
+            "| {} | {group} | {} | {} | {} | {worth} | {worked} |",
             capital(&m.name),
             piece.names(content).0,
+            content.stock().unit_of(content, id),
             format_weight(piece.weight(content)),
         );
     }

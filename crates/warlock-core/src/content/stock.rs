@@ -3,9 +3,12 @@
 //!
 //! The stock is the one [`crate::piece`] object, by weight; this file gives each group its form
 //! word ("a steel ingot", "3 hardwood billets", "a bolt of wool") and, where a profession works
-//! the group, its skill, the stat its checks are made by, and the verb its menu row uses. The gems
-//! (no group) have a profession of their own, `gems`. The file is optional: without it every piece
-//! is "a piece of X" and no material has a profession. Nothing in code names a group or a skill:
+//! the group, its skill, the stat its checks are made by, and the verb its menu row uses, and its
+//! `unit`, how many pieces' worth one of its pieces is (a hide is eight: 1.4 kg of leather). The
+//! gems (no group) have a profession of their own, `gems`. `[[material]]` rows override one
+//! material's profession or form word (flint is knapped, Woodcraft's, though stone is
+//! Jewelcraft's; fur comes in pelts). The file is optional: without it every piece is "a piece
+//! of X" and no material has a profession. Nothing in code names a group or a skill:
 //! [`Stock::profession_of`] reads this table.
 
 use super::{Content, ContentError, MaterialId, SkillId};
@@ -33,13 +36,28 @@ pub struct StockGroup {
     pub of: bool,
     /// What works the group; none for a group no profession takes yet (cloth, glass).
     pub profession: Option<Profession>,
+    /// How many pieces' worth one piece of the group is (default 1, at least 1): a piece weighs
+    /// and is worth `unit` times what 500 g of steel would in its material (hide 8, cloth 4).
+    pub unit: u32,
 }
 
-/// The stock table: the groups in file order, and the gems' profession.
+/// One material's own row, over its group's.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct StockMaterial {
+    pub material: MaterialId,
+    /// What works it instead of its group's profession: the skill's stat and verb as the file's
+    /// other rows name them.
+    pub profession: Option<Profession>,
+    /// Its own form word, singular and plural, instead of its group's ("pelt"/"pelts").
+    pub name: Option<(String, String)>,
+}
+
+/// The stock table: the groups in file order, the gems' profession, and the materials' own rows.
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub struct Stock {
     pub groups: Vec<StockGroup>,
     pub gems: Option<Profession>,
+    pub materials: Vec<StockMaterial>,
 }
 
 impl Stock {
@@ -48,19 +66,52 @@ impl Stock {
         self.groups.iter().find(|g| g.group == group)
     }
 
-    /// What works `material`: the gems' profession for a gem, else its group's; none for a
-    /// material with no group, a group without a row, or a row without a profession.
+    /// The material's own row, if the file has one.
+    pub fn material(&self, material: MaterialId) -> Option<&StockMaterial> {
+        self.materials.iter().find(|m| m.material == material)
+    }
+
+    /// The row of `material`'s group, if it has a group and the file a row for it.
+    pub fn group_of(&self, content: &Content, material: MaterialId) -> Option<&StockGroup> {
+        self.group(content.material(material).group.as_deref()?)
+    }
+
+    /// What works `material`: its own row's profession if it names one, else the gems'
+    /// profession for a gem, else its group's; none for a material with no group, a group
+    /// without a row, or a row without a profession.
     pub fn profession_of(&self, content: &Content, material: MaterialId) -> Option<&Profession> {
-        let def = content.material(material);
-        if def.gem.is_some() {
+        if let Some(own) = self.material(material).and_then(|m| m.profession.as_ref()) {
+            return Some(own);
+        }
+        if content.material(material).gem.is_some() {
             return self.gems.as_ref();
         }
-        self.group(def.group.as_deref()?)?.profession.as_ref()
+        self.group_of(content, material)?.profession.as_ref()
+    }
+
+    /// The form word of a piece of `material`, singular and plural, and whether the material
+    /// comes after it ("lump of amber"): its own row's word if it has one, else its group's;
+    /// none for a material whose group has no row.
+    pub fn form_of(&self, content: &Content, material: MaterialId) -> Option<(&str, &str, bool)> {
+        let group = self.group_of(content, material)?;
+        let (name, plural) = match self.material(material).and_then(|m| m.name.as_ref()) {
+            Some((name, plural)) => (name.as_str(), plural.as_str()),
+            None => (group.name.as_str(), group.plural.as_str()),
+        };
+        Some((name, plural, group.of))
+    }
+
+    /// How many pieces' worth one piece of `material` is: its group's `unit`, 1 without a row.
+    pub fn unit_of(&self, content: &Content, material: MaterialId) -> u32 {
+        self.group_of(content, material).map_or(1, |g| g.unit)
     }
 
     /// Parses `data/stock.toml`: each group once and one some material has, non-empty words,
-    /// `skill`, `stat`, and `verb` all three or none, known skills, and no skill worked by two
-    /// stats. Without `data/skills.toml` the professions are left out.
+    /// a `unit` of at least 1, `skill`, `stat`, and `verb` all three or none, known skills, and
+    /// no skill worked by two stats; each material row once, of a known material with a group,
+    /// naming a skill some group or the gems name (its stat and verb are theirs) or a form word
+    /// (`name` and `plural` together), or both. Without `data/skills.toml` the professions are
+    /// left out.
     pub(super) fn parse(file: &str, text: &str, content: &Content) -> Result<Self, ContentError> {
         let err = |m: String| ContentError::new(file, m);
         let parsed: StockFile = toml::from_str(text).map_err(|e| err(e.to_string()))?;
@@ -90,6 +141,9 @@ impl Stock {
             if row.name.is_empty() || row.plural.is_empty() {
                 return Err(err(format!("{of}: `name` and `plural` must not be empty")));
             }
+            if row.unit == 0 {
+                return Err(err(format!("{of}: `unit` must be at least 1")));
+            }
             let profession = match (row.skill, row.stat, row.verb) {
                 (None, None, None) => None,
                 (Some(skill), Some(stat), Some(verb)) if skills => {
@@ -108,6 +162,7 @@ impl Stock {
                 plural: row.plural,
                 of: row.of,
                 profession,
+                unit: row.unit,
             });
         }
         if let Some(gems) = parsed.gems.as_ref().filter(|_| skills) {
@@ -126,6 +181,52 @@ impl Stock {
             }
             seen.push(p);
         }
+        for row in parsed.material {
+            let of = format!("material `{}`", row.material);
+            let material = (content.material_id(&row.material))
+                .ok_or_else(|| err(format!("{of}: unknown material")))?;
+            if content.material(material).group.is_none() {
+                return Err(err(format!("{of} has no group")));
+            }
+            if stock.material(material).is_some() {
+                return Err(err(format!("{of} is listed twice")));
+            }
+            let name = match (row.name, row.plural) {
+                (None, None) => None,
+                (Some(name), Some(plural)) if !name.is_empty() && !plural.is_empty() => {
+                    Some((name, plural))
+                }
+                _ => {
+                    return Err(err(format!(
+                        "{of}: `name` and `plural` go together, neither empty"
+                    )));
+                }
+            };
+            if row.skill.is_none() && name.is_none() {
+                return Err(err(format!("{of}: names neither a skill nor a form word")));
+            }
+            let profession = match row.skill {
+                // Content without skills (a fixture) has no professions.
+                Some(skill) if skills => {
+                    let id = (content.skill_id(&skill))
+                        .ok_or_else(|| err(format!("{of}: unknown skill `{skill}`")))?;
+                    let named = (stock.groups.iter().filter_map(|g| g.profession.as_ref()))
+                        .chain(&stock.gems)
+                        .find(|p| p.skill == id);
+                    Some(named.cloned().ok_or_else(|| {
+                        err(format!(
+                            "{of}: skill `{skill}` works no group, so it has no stat or verb"
+                        ))
+                    })?)
+                }
+                _ => None,
+            };
+            stock.materials.push(StockMaterial {
+                material,
+                profession,
+                name,
+            });
+        }
         Ok(stock)
     }
 }
@@ -137,6 +238,24 @@ struct StockFile {
     gems: Option<ProfessionSpec>,
     #[serde(default)]
     group: Vec<GroupSpec>,
+    #[serde(default)]
+    material: Vec<MaterialSpec>,
+}
+
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct MaterialSpec {
+    material: String,
+    #[serde(default)]
+    skill: Option<String>,
+    #[serde(default)]
+    name: Option<String>,
+    #[serde(default)]
+    plural: Option<String>,
+}
+
+fn one() -> u32 {
+    1
 }
 
 #[derive(Deserialize)]
@@ -155,6 +274,8 @@ struct GroupSpec {
     plural: String,
     #[serde(default)]
     of: bool,
+    #[serde(default = "one")]
+    unit: u32,
     #[serde(default)]
     skill: Option<String>,
     #[serde(default)]
@@ -187,11 +308,51 @@ mod tests {
         assert_eq!(of("hardwood"), Some(("woodcraft", Stat::Dexterity, "Make")));
         assert_eq!(of("horn"), Some(("woodcraft", Stat::Dexterity, "Make")));
         assert_eq!(of("leather"), Some(("woodcraft", Stat::Dexterity, "Make")));
-        // No profession takes cloth or glass yet; paper has no group; Jewelcraft is not a skill
-        // yet (#1331), so stone, amber, and the gems wait for it.
-        for none in ["wool", "glass", "paper", "jade", "amber", "ruby"] {
+        assert_eq!(of("sinew"), Some(("woodcraft", Stat::Dexterity, "Make")));
+        // Jewelcraft cuts jade, amber, and the gems; flint, stone, and obsidian are knapped by
+        // hand, Woodcraft's by their own rows, with Woodcraft's stat and verb.
+        for cut in ["jade", "amber", "ruby"] {
+            assert_eq!(
+                of(cut),
+                Some(("jewelcraft", Stat::Dexterity, "Cut")),
+                "{cut}"
+            );
+        }
+        for knapped in ["flint", "stone", "obsidian"] {
+            assert_eq!(
+                of(knapped),
+                Some(("woodcraft", Stat::Dexterity, "Make")),
+                "{knapped}"
+            );
+        }
+        // No profession takes cloth or glass yet; paper has no group.
+        for none in ["wool", "glass", "paper"] {
             assert_eq!(of(none), None, "{none}");
         }
+    }
+
+    #[test]
+    fn units_and_form_words() {
+        let content = content();
+        let stock = content.stock();
+        let m = |id: &str| content.material_id(id).expect(id);
+        let units: Vec<u32> = (["steel", "leather", "fur", "wool", "sinew", "paper"].iter())
+            .map(|id| stock.unit_of(&content, m(id)))
+            .collect();
+        assert_eq!(units, [1, 8, 8, 4, 1, 1]);
+        assert_eq!(
+            stock.form_of(&content, m("fur")),
+            Some(("pelt", "pelts", false))
+        );
+        assert_eq!(
+            stock.form_of(&content, m("leather")),
+            Some(("hide", "hides", false))
+        );
+        assert_eq!(
+            stock.form_of(&content, m("sinew")),
+            Some(("length", "lengths", true))
+        );
+        assert_eq!(stock.form_of(&content, m("paper")), None);
     }
 
     #[test]
@@ -212,6 +373,35 @@ mod tests {
             ("verb = \"Forge\"", "#", "go together"),
             ("stat = \"dexterity\"", "stat = \"strength\"", "two stats"),
             ("stat = \"strength\"", "stat = \"brawn\"", "unknown stat"),
+            ("unit = 8", "unit = 0", "at least 1"),
+            ("unit = 8", "unit = -1", "invalid value"),
+            (
+                "material = \"flint\"",
+                "material = \"flintstone\"",
+                "unknown material",
+            ),
+            (
+                "material = \"flint\"",
+                "material = \"paper\"",
+                "has no group",
+            ),
+            ("material = \"flint\"", "material = \"fur\"", "listed twice"),
+            (
+                "material = \"flint\"\nskill = \"woodcraft\"",
+                "material = \"flint\"\nskill = \"heal\"",
+                "works no group",
+            ),
+            (
+                "material = \"flint\"\nskill = \"woodcraft\"",
+                "material = \"flint\"\nskill = \"knapping\"",
+                "unknown skill",
+            ),
+            (
+                "material = \"flint\"\nskill = \"woodcraft\"",
+                "material = \"flint\"",
+                "names neither",
+            ),
+            ("plural = \"pelts\"", "#", "go together"),
         ] {
             let bad = TEXT.replacen(from, to, 1);
             assert_ne!(bad, TEXT, "{from}");
@@ -224,10 +414,12 @@ mod tests {
 
     #[test]
     fn the_gems_have_a_profession_of_their_own() {
+        let line = "gems = { skill = \"jewelcraft\", stat = \"dexterity\", verb = \"Cut\" }";
+        assert!(TEXT.contains(line));
         let gems = |stat: &str| {
-            format!(
-                "gems = {{ skill = \"metalcraft\", stat = \"{stat}\", verb = \"Cut\" }}\n{TEXT}"
-            )
+            let to =
+                format!("gems = {{ skill = \"metalcraft\", stat = \"{stat}\", verb = \"Cut\" }}");
+            TEXT.replace(line, &to)
         };
         let text = gems("strength");
         let mut files = ContentFiles::builtin();

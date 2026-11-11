@@ -971,14 +971,20 @@ mod tests {
             "| Ruby | - | `#d3213b` | 100% | - | - | ×1 | yes | 100% | 100% | 100% | +4 | gold and ruby \
              amulets, loose gems, and items set with one |"
         ));
-        // Material stock (#1332): the form word and the profession by group.
+        // Material stock (#1332, #1349): the form word, the unit, and the profession by group
+        // or by the material's own row.
         let pieces = text("pieces.md");
-        assert!(
-            pieces.contains(
-                "| Steel | metal | steel ingot | 500 g | 1 gold | Metalcraft (Strength) |"
-            )
-        );
-        assert!(pieces.contains("| Amber | resin | lump of amber | 200 g | 3 gold | - |"));
+        assert!(pieces.contains(
+            "| Steel | metal | steel ingot | 1 | 500 g | 1 gold | Metalcraft (Strength) |"
+        ));
+        assert!(pieces.contains(
+            "| Amber | resin | lump of amber | 1 | 200 g | 3 gold | Jewelcraft (Dexterity) |"
+        ));
+        assert!(pieces.contains(
+            "| Leather | hide | leather hide | 8 | 1.4 kg | 8 gold | Woodcraft (Dexterity) |"
+        ));
+        assert!(pieces.contains("| Flint | stone | block of flint | 1 |"));
+        assert!(pieces.contains("| Fur | hide | fur pelt | 8 |"));
         // Materials (#193, #194): their properties on steel's scale, how often they are found,
         // what each item may be made of, and a long sword and chain mail in each metal.
         assert!(text("materials.md").contains(

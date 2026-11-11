@@ -15,7 +15,7 @@
 #             in an item's description, unless an item is made of one instead of its base
 #             item's material ("a bronze long sword")
 #   group     what construction lists name it by with the others of its kind (objects/README:
-#             `made_of`): metal, wood, bone, stone, hide, cloth, glass, resin. A material
+#             `made_of`): metal, wood, bone, stone, hide, sinew, cloth, glass, resin. A material
 #             without one (paper, wax, food, and the gems, which are set but never made into
 #             anything) is never another item's material: `made_of = ["any"]` (jewellery) is
 #             every material of a group
