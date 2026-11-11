@@ -16,11 +16,11 @@ expression: "render(case, content.clone())"
         │                                                                                  │
         │   Age 41 · born 2 Harvestide 1403 · year of the Earth Kraken                     │
         │                                                                                  │
-        │   St  Strength       7    Bluff             7   Listen           10              │
-        │   Dx  Dexterity     12    Decipher script   8   Music             5              │
-        │   To  Toughness      9    Intimidate        9   Spellcraft        7              │
-        │   In  Intelligence  11    Knowledge        17   Stealth          10              │
-        │   Wi  Willpower     11                                                           │
+        │   St  Strength       7    Bluff             9   Knowledge        17              │
+        │   Dx  Dexterity     12    Decipher script   8   Listen           10              │
+        │   To  Toughness      9    Handle animal     5   Music             3              │
+        │   In  Intelligence  11    Herbalism         6   Spellcraft        8              │
+        │   Wi  Willpower     11    Intimidate        9   Stealth           5              │
         │   Pr  Presence      12                                                           │
         │                                                                                  │
         │   Kit       a rapier (wielded),                                                  │

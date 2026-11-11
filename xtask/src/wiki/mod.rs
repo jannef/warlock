@@ -1401,7 +1401,10 @@ mod tests {
             "{races}"
         );
         let grants = text("skill-grants.md");
-        assert!(grants.contains("| Halfling | Listen `1d6+4`, Stealth `1d6+4` | - |"));
+        assert!(
+            grants
+                .contains("| Halfling | Herbalism `1d4+2`, Listen `1d6+4`, Stealth `1d6+4` | - |")
+        );
         assert!(
             grants.contains("| Human | one of the class's skills `+2d4+4`, picked at random | - |")
         );
@@ -1410,7 +1413,8 @@ mod tests {
         );
         assert!(grants.contains(
             "| Commoner | Athletics `2d4+4`, Handle animal `2d4+4` | Heal `2d4` (15 %), \
-             Metalcraft `2d4` (10 %), Survival `2d4` (30 %), Swim `2d4` (20 %), \
+             Metalcraft `2d4` (10 %), Mining `2d4` (10 %), Survival `2d4` (30 %), \
+             Swim `2d4` (20 %), \
              Woodcraft `2d4` (20 %) |"
         ));
         let ladder = text("skill-ladder.md");

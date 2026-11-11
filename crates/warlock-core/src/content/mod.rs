@@ -4850,11 +4850,11 @@ mod tests {
         assert_eq!(class("commoner"), ["athletics", "handle_animal"]);
         assert!(content.classes().iter().all(|c| !c.skills.is_empty()));
         assert_eq!(race("elf"), ["listen", "spot"]);
-        assert_eq!(race("dwarf"), ["metalcraft", "search"]);
-        assert_eq!(race("halfling"), ["listen", "stealth"]);
-        assert_eq!(race("gnome"), ["appraise", "listen"]);
+        assert_eq!(race("dwarf"), ["metalcraft", "mining", "search"]);
+        assert_eq!(race("halfling"), ["herbalism", "listen", "stealth"]);
+        assert_eq!(race("gnome"), ["appraise", "jewelcraft", "listen"]);
         assert_eq!(race("half_orc"), ["intimidate"]);
-        assert_eq!(race("kobold"), ["detect_traps", "disable_device"]);
+        assert_eq!(race("kobold"), ["detect_traps", "disable_device", "mining"]);
         assert!(race("human").is_empty());
         assert!(!content.race("human").expect("human").class_skill.is_zero());
         // Creatures may list skills; the player's come from the character.

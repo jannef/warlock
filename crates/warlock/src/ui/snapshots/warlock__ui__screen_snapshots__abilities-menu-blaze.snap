@@ -12,21 +12,21 @@ expression: "render(case, content.clone())"
                     │ Birth sign                                               │
                     │   a  Blaze        you are burnt out                      │
                     │ Skills                                                   │
-                    │ > b  Feint        in a direction                         │
-                    │   c  Heal         nothing to treat                       │
-                    │   d  Intimidate   at a place you see                     │
-                    │   e  Metalcraft   not usable yet                         │
-                    │   f  Fletch       you have no knife                      │
-                    │   g  Whittle      you have no knife                      │
+                    │   b  Heal         nothing to treat                       │
+                    │ > c  Intimidate   at a place you see                     │
+                    │   d  Metalcraft   not usable yet                         │
+                    │   e  Fletch       you have no knife                      │
+                    │   f  Whittle      you have no knife                      │
                     │ Weapon skills                                            │
-                    │   h  Shield bash  in a direction                         │
+                    │   g  Shield bash  in a direction                         │
                     │                                                          │
-                    │ Make a lying move at a foe next to you: fooled, it is    │
-                    │ off its guard for your next blow.                        │
+                    │ Threaten a foe you see nearby: unless it keeps its       │
+                    │ nerve, it flees from you a moment, longer the better you │
+                    │ intimidate.                                              │
                     │                                                          │
-                    │                                                          │
-                    │ a-h or Enter use   Esc close                             │
+                    │ a-g or Enter use   Esc close                             │
                     └──────────────────────────────────────────────────────────┘
+
 
 
 

@@ -2,7 +2,7 @@
 source: crates/warlock/src/ui/screen_snapshots.rs
 expression: "render(case, content.clone())"
 ---
- You spend 16┌─ Abilities ────────────────────────────────────────────────────────────┐
+ You spend 16┌─ Abilities ───────────────────────────────────────────────── Page 1/2 ─┐
  You give you│                                                                        │
              │ Birth sign                                                             │
              │ > a  Transfixing stare  at a place you see                             │
@@ -18,17 +18,17 @@ expression: "render(case, content.clone())"
              │ Talents                                                                │
              │   i  Blood magic                                                       │
              │ Skills                                                                 │
-             │   j  Decipher           no unknown scroll                              │
-             │   k  Knowledge          not usable yet                                 │
-             │   l  Listen at a door   in a direction                                 │
-             │   m  Fletch             you have no knife                              │
-             │   n  Whittle            you have no knife                              │
-             │ Weapon skills                                                          │
-             │   o  Shield bash        you hold no shield                             │
+             │   j  Alchemy            not usable yet                                 │
+             │   k  Decipher           no unknown scroll                              │
+             │   l  Knowledge          not usable yet                                 │
+             │   m  Listen at a door   in a direction                                 │
+             │   n  Fletch             you have no knife                              │
+             │   o  Whittle            you have no knife                              │
              │                                                                        │
              │ The basilisk's stare: a foe nearby that sees you slows to a crawl a    │
              │ moment; your eyes then rest two hours.                                 │
              │                                                                        │
              │                                                                        │
-             │ a-o or Enter use   Esc close                                           │
- The Hub  ·  └────────────────────────────────────────────────────────────────────────┘  ? controls
+             │ a-o or Enter use   > < page   Esc close                                │
+             └────────────────────────────────────────────────────────────────────────┘
+ The Hub  ·  HP 19/24  ·  MP 136/149  ·  Lv 15  ·  08:00  ·  11 Darkening, Year 1444     ? controls

@@ -26,6 +26,7 @@ use crate::content::{ActionKind, Effect, LevelKind};
 use crate::geom::{Dir, Pos};
 use crate::noise::Act;
 use crate::sight::LineOfSight;
+use crate::skills::{Effect as SkillEffect, Use};
 use crate::stats::Stat;
 use crate::talent::TalentMods;
 use crate::time::Duration;
@@ -143,10 +144,11 @@ impl World {
             return;
         };
         let strength = player.effective_stats(&self.content).score(Stat::Strength);
-        // Breaker (spec §8 "Talents") and a Delving tool or gear (spec §8 "Magic items"): more
-        // work a turn.
+        // Breaker (spec §8 "Talents"), a Delving tool or gear (spec §8 "Magic items"), and
+        // Mining (#1343): more work a turn.
         let faster = player.talent_mods(&self.content).dig_percent
-            + player.mods(&self.content).get(Effect::DigPercent);
+            + player.mods(&self.content).get(Effect::DigPercent)
+            + player.skill_effect(&self.content, SkillEffect::Dig);
         let work = TalentMods::scaled(u64::from(dig_work(power, strength)), faster);
         let work = u32::try_from(work).unwrap_or(u32::MAX);
         self.make_noise(self.state.player, Act::Dig);
@@ -161,6 +163,10 @@ impl World {
         *done = done.saturating_add(work);
         if *done >= u32::from(breaks.hardness) * WORK_SCALE {
             self.break_wall(at, Breach::Dug, events);
+            // Mining's mark: a wall dug through (not one a rod or a blast broke).
+            if self.trains(Use::Dug) {
+                self.train(Use::Dug);
+            }
         }
     }
 

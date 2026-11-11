@@ -18,11 +18,11 @@ expression: "render(case, content.clone())"
           │   j  Call of the forest  2 called, 20 mana                                  │
           │   k  Cloudburst          20 mana                                            │
           │ Skills                                                                      │
-          │   l  Decipher            no unknown scroll                                  │
-          │   m  Tame                in a direction                                     │
-          │   n  Heal                nothing to treat                                   │
-          │   o  Listen at a door    in a direction                                     │
-          │   p  Pick lock           in a direction                                     │
+          │   l  Alchemy             not usable yet                                     │
+          │   m  Decipher            no unknown scroll                                  │
+          │   n  Tame                in a direction                                     │
+          │   o  Heal                nothing to treat                                   │
+          │   p  Listen at a door    in a direction                                     │
           │   q  Forage              not usable here                                    │
           │   r  Fletch              you have no knife                                  │
           │                                                                             │

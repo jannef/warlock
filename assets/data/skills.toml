@@ -47,7 +47,8 @@
 #                 seen for the first time that has not noticed you), "sprung" (a hidden trap
 #                 going off under you, or under a creature you see, half as often), "overhear"
 #                 (a sound that is no news heard while resting or waiting), "listen" (a turn
-#                 spent listening at a closed door, whatever is heard). Marks gather until a level-up roll on the skill spends them ([ladder]
+#                 spent listening at a closed door, whatever is heard), "dug" (a wall you dig
+#                 through, breaking it). Marks gather until a level-up roll on the skill spends them ([ladder]
 #                 below). Only the player trains, for now.
 #   benefit       what it gives, by its value: a list of { effect = EFFECT, ... } growing either
 #                 by `steps` (one for each value reached, then one more for every `every` points
@@ -76,7 +77,13 @@
 #                 you forage at all: forage.toml), "bargain" (percent better
 #                 prices in shops, together with Presence at most half; shops.toml), "identify"
 #                 (percent chance, each game hour, of telling one unidentified thing you carry or
-#                 wear for what it is; trained only), "freshness" (percent chance, each game
+#                 wear for what it is; trained only), "identify_potion" (the same, of a potion or
+#                 flask whose kind you do not know; trained only), "identify_magic" (the same, of
+#                 a magic thing whose magic you do not know: arms, armour, rings and amulets,
+#                 wands, rods; trained only), "dig" (percent more work a turn of digging does,
+#                 added to talents' and items'), "herbs" (percent chance, on a forage that found
+#                 something, of one more find from the ground's `herbs`: forage.toml; trained
+#                 only), "freshness" (percent chance, each game
 #                 hour, of telling in words how fresh a corpse or food is; the skills' add up,
 #                 trained only), "kick"
 #                 (points added to the Strength a kick at a closed door is rolled against, at most
@@ -135,8 +142,10 @@ id = "alchemy"
 name = "Alchemy"
 description = "Brewing potions, and telling one draught from another."
 kind = "action"
-# Professions (#1331, epic #1337): no marks, benefit, or ability yet; nothing trains it
-# until the professions land.
+# Telling potions (#1343, professions §9): trained, each game hour this percent chance of telling
+# one potion or flask you carry whose kind you do not know (5 % at the lowest, 25 % at 100, 40 % at
+# 200), beside Appraise's look at anything. No marks until brewing comes.
+benefit = [{ effect = "identify_potion", curve = [[0, 5], [100, 25], [200, 40]] }]
 
 [[skill]]
 id = "appraise"
@@ -283,8 +292,10 @@ id = "enchanting"
 name = "Enchanting"
 description = "The binding of magic into things, and the reading of what is bound."
 kind = "action"
-# Professions (#1331, epic #1337): no marks, benefit, or ability yet; nothing trains it
-# until the professions land.
+# Reading what is bound (#1343, professions §9): trained, each game hour this percent chance of
+# telling one magic thing you carry or wear whose magic you do not know (5 % at the lowest, 25 % at
+# 100, 40 % at 200), beside Appraise's look at anything. No marks until its craft comes.
+benefit = [{ effect = "identify_magic", curve = [[0, 5], [100, 25], [200, 40]] }]
 
 [[skill]]
 id = "escape_artist"
@@ -335,8 +346,11 @@ id = "herbalism"
 name = "Herbalism"
 description = "Knowing the plants: what heals, what harms, and where it grows."
 kind = "passive"
-# Professions (#1331, epic #1337): no marks, benefit, or ability yet; nothing trains it
-# until the professions land.
+# An eye for herbs (#1343, professions §9): trained, a forage that found something has this
+# percent chance of one more find, from the ground's `herbs` (forage.toml): 25 % at the lowest,
+# 60 % at 100, 80 % at 200. Marked by a forage that ran its time, now and then.
+mark = [{ on = "forage", chance = 25 }]
+benefit = [{ effect = "herbs", curve = [[0, 25], [100, 60], [200, 80]] }]
 
 [[skill]]
 id = "initiative"
@@ -417,8 +431,11 @@ id = "mining"
 name = "Mining"
 description = "Finding ore in the rock and breaking it out: digging comes easier."
 kind = "rules"
-# Professions (#1331, epic #1337): no marks, benefit, or ability yet; nothing trains it
-# until the professions land.
+# Digging (#1343, professions §9; spec §8 "Digging"): percent more work each turn of digging does,
+# added to what talents and a Delving tool add: 25 at 100, 40 at 200. Marked by every wall dug
+# through.
+mark = [{ on = "dug", chance = 100 }]
+benefit = [{ effect = "dig", curve = [[0, 0], [100, 25], [200, 40]] }]
 
 [[skill]]
 id = "music"

@@ -396,15 +396,22 @@ fn training_rolls_by_itself_and_replays() {
 
 #[test]
 fn the_professions_skills_load_can_be_trained_and_rolled() {
-    // Jewelcraft, Mining, Herbalism, Alchemy, and Enchanting (#1331): data only, no effect yet.
+    // Jewelcraft, Mining, Herbalism, Alchemy, and Enchanting (#1331): every one but Jewelcraft
+    // has its first effect (#1343); only Mining and Herbalism mark yet.
     let mut w = world("human,male,warrior");
     for id in ["alchemy", "enchanting", "herbalism", "jewelcraft", "mining"] {
         let def = w.content().skill(skill(&w, id));
-        assert!(
-            def.marks.is_empty() && def.benefits.is_empty(),
-            "{id}: no effect yet"
+        assert_eq!(def.benefits.is_empty(), id == "jewelcraft", "{id}");
+        assert_eq!(
+            def.marks.is_empty(),
+            !["herbalism", "mining"].contains(&id),
+            "{id}"
         );
-        assert_eq!(trained(&w, id), None, "{id}: nobody starts trained");
+        assert_eq!(
+            trained(&w, id),
+            None,
+            "{id}: a human warrior starts untrained"
+        );
     }
     reach(&mut w, 2);
     for id in ["alchemy", "enchanting", "herbalism", "jewelcraft", "mining"] {

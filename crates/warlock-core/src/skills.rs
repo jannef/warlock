@@ -212,6 +212,10 @@ pub enum Effect {
     /// `world/forage.rs`); a skill with it, trained, lets the actor forage at all (the abilities
     /// menu's Forage).
     Forage,
+    /// Percent chance, on a forage that found something, of one more find from the ground's
+    /// `herbs` (spec §8 "Foraging": Herbalism; `world/forage.rs`); only a skill with it, trained,
+    /// gives it at all.
+    Herbs,
     /// Percent chance, an hour at a time, of telling how fresh a corpse or food is (spec §8
     /// "Hunger": Appraise, Survival; `world/freshness.rs`); only a skill with it, trained, gives
     /// it at all.
@@ -223,6 +227,13 @@ pub enum Effect {
     /// wears for what it is (spec §8 "Skills": Appraise; `world/appraise.rs`); only a skill with
     /// it, trained, gives it at all.
     Identify,
+    /// [`Effect::Identify`]'s chance for a potion or flask whose kind the actor does not know
+    /// (spec §8 "Skills": Alchemy; `world/appraise.rs`); only a skill with it, trained, gives it.
+    IdentifyPotion,
+    /// [`Effect::Identify`]'s chance for a magic thing whose magic the actor does not know
+    /// (spec §8 "Skills": Enchanting; `world/appraise.rs`); only a skill with it, trained, gives
+    /// it.
+    IdentifyMagic,
     /// Points added to the player's side of slipping past a creature that would see them by
     /// darkvision alone (spec §8 "Surprise and sneak attacks"; `world/slip.rs`).
     Slip,
@@ -279,6 +290,9 @@ pub enum Effect {
     /// Points added to the Strength score a kick at a closed door is rolled against (spec §8
     /// "Doors"; `world/door.rs`).
     Kick,
+    /// Percent more work a turn of digging does (spec §8 "Digging": Mining; `world/dig.rs`),
+    /// added to the talents' and items' `dig_percent`.
+    Dig,
     /// Points added to the check against bonds (spec §8 "Status effects"; `world/hold.rs`); a
     /// skill with it, trained, makes an action that bonds stop that check at all.
     Escape,
@@ -336,6 +350,10 @@ impl Effect {
             | Effect::Bargain
             | Effect::Freshness
             | Effect::Identify
+            | Effect::IdentifyPotion
+            | Effect::IdentifyMagic
+            | Effect::Herbs
+            | Effect::Dig
             | Effect::SurpriseEase => 100,
             Effect::SneakDice => MAX_SNEAK_DICE,
             Effect::Surprise | Effect::Initiative => MAX_SURPRISE_BONUS,
@@ -485,6 +503,8 @@ pub enum Use {
     Overhear,
     /// A turn spent listening at a closed door (spec §5 "Hearing"), whatever is heard.
     Listen,
+    /// A wall the player dug through, breaking it (spec §8 "Digging": Mining).
+    Dug,
 }
 
 impl Use {
@@ -540,6 +560,7 @@ impl Use {
             Use::Sprung => "a hidden trap going off under you, or under a creature you see",
             Use::Overhear => "hearing a sound that is no news while resting or waiting",
             Use::Listen => "a turn spent listening at a closed door",
+            Use::Dug => "digging through a wall",
         }
     }
 }
@@ -678,6 +699,7 @@ impl Use {
             Use::Sprung => "sprung",
             Use::Overhear => "overhear",
             Use::Listen => "listen",
+            Use::Dug => "dug",
         }
     }
 }
@@ -705,9 +727,12 @@ impl Effect {
             Effect::Footing => "footing",
             Effect::SteadyEase => "steady_ease",
             Effect::Forage => "forage",
+            Effect::Herbs => "herbs",
             Effect::Freshness => "freshness",
             Effect::Bargain => "bargain",
             Effect::Identify => "identify",
+            Effect::IdentifyPotion => "identify_potion",
+            Effect::IdentifyMagic => "identify_magic",
             Effect::Slip => "slip",
             Effect::Lookout => "lookout",
             Effect::Stalk => "stalk",
@@ -726,6 +751,7 @@ impl Effect {
             Effect::Escape => "escape",
             Effect::Climb => "climb",
             Effect::Kick => "kick",
+            Effect::Dig => "dig",
             Effect::Pick => "pick",
             Effect::Fletch => "fletch",
             Effect::Wedge => "wedge",
