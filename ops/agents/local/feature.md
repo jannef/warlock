@@ -25,3 +25,6 @@ CI compares every entry in `tests/golden/manifest/*.toml` with `tests/golden/<na
 
 ## Disk hygiene (the owner's rule)
 Before your final report: delete your incremental build output (`rm -rf "$CARGO_TARGET_DIR/debug/incremental"`) and any scratch files you made (prefixed with your SLUG). The integrator deletes your worktree and whole target dir once you've reported; don't leave other large files behind.
+
+## Background shells (the owner's rule)
+Wait on your own work, never on the machine's: start a long command with `run_in_background` and wait for its own completion, or poll its own output file. Never loop on `pgrep -f "cargo test --workspace"` or similar: other agents' builds keep such a loop alive for hours. Before your final report, stop every background shell and monitor you started (TaskStop) so none outlives you.
