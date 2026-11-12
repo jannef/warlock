@@ -1,0 +1,16 @@
+# Material drops of the `goblin` tag (README.toml). Goblins (the hobgoblins too: they carry both tags).
+
+[[drop]]
+material = "flint"
+count = "1"
+chance = 30
+
+[[drop]]
+material = "iron"
+count = "1"
+chance = 20
+
+[[drop]]
+material = "leather"
+count = "1"
+chance = 30

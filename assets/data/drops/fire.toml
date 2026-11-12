@@ -1,0 +1,7 @@
+# Material drops of the `fire` tag (README.toml). Fire elementals: an essence of fire.
+bodiless = true
+
+[[drop]]
+object = "essence_of_fire"
+count = "1"
+chance = 60

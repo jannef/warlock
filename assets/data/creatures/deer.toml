@@ -10,6 +10,7 @@ glyph = "d"
 fg = "#c89a64"
 speed = 1300
 faction = "wildlife"
+tags = ["beast"]
 alignment = "neutral"
 sight = 12
 footsteps = 50
@@ -23,3 +24,9 @@ tameable = true
 skills = { listen = 30 }
 # Very nourishing.
 on_eat = { message = "Venison! It does you good.", satiation = 1000, heal = "1d6" }
+
+# Tusks and antlers: horn, besides its tags' rows (material drops, data/drops/README.toml).
+[[creature.drops]]
+material = "horn"
+count = "1"
+chance = 50

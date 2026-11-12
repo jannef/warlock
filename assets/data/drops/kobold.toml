@@ -1,0 +1,16 @@
+# Material drops of the `kobold` tag (README.toml). What a kobold carries about it: knapped flint, a stick, a bone.
+
+[[drop]]
+material = "flint"
+count = "1"
+chance = 40
+
+[[drop]]
+material = "wood"
+count = "1"
+chance = 25
+
+[[drop]]
+material = "bone"
+count = "1"
+chance = 20

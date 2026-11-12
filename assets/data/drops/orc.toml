@@ -1,0 +1,16 @@
+# Material drops of the `orc` tag (README.toml). Orcs: scrap iron, hide, bone.
+
+[[drop]]
+material = "iron"
+count = "1"
+chance = 40
+
+[[drop]]
+material = "leather"
+count = "1"
+chance = 30
+
+[[drop]]
+material = "bone"
+count = "1"
+chance = 20

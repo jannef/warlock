@@ -47,3 +47,5 @@ The variance pass (#1134, `docs/dev/creatures.md` "Variance by role") sets the r
 Gear condition (#1193, `data/gear_condition.toml`'s `orc` row): damaged 45 %, Fine 2.5 %, Marvellous 0.4 %, Masterwork 0.1 % (docs/dev/creatures.md, "Gear condition").
 
 Gear materials (#1191): the faction's `gear` in `data/factions.toml`: orcs favour bone (55 %) and iron (15 %): crude weapons, a spear mostly bone-headed, each its share of the draws for an item whose construction list holds it, the usual draw the rest (`docs/dev/objects.md` "Materials and variants").
+
+**Material drops** (#1341; `data/drops/`, docs/dev/objects.md "Material drops"): `orc.toml`: iron 1 (40 %), leather 1 (30 %), bone 1 (20 %). The wargs carry `beast` now (they were untagged) and roll its rows.

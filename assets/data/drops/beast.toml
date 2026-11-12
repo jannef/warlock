@@ -1,0 +1,16 @@
+# Material drops of the `beast` tag (README.toml). Wild animals: hide, bone, and sinew. The furred, the horned, and the shelled add rows of their own in their files.
+
+[[drop]]
+material = "leather"
+count = "1"
+chance = 60
+
+[[drop]]
+material = "bone"
+count = "1d2"
+chance = 50
+
+[[drop]]
+material = "sinew"
+count = "1"
+chance = 40

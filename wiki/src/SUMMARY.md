@@ -86,6 +86,7 @@
   - [Creatures in numbers](creature-numbers.md)
     - [Creature powers](creature-powers.md)
     - [Creature tricks](creature-tricks.md)
+  - [What creatures leave](creature-drops.md)
   - [Animated objects](animated.md)
   - [Mimics](mimics.md)
   - [People and talk](npcs.md)

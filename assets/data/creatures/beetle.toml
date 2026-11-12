@@ -27,3 +27,9 @@ resist = { acid = 50, poison = 25 }
 on_eat = { message = "Crunchy.", train = { toughness = 60 } }
 # Greenish-black ichor.
 blood = "#38461a"
+
+# Its shell: chitin, besides its tags' rows (material drops, data/drops/README.toml).
+[[creature.drops]]
+material = "chitin"
+count = "1"
+chance = 50

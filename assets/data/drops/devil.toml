@@ -1,0 +1,6 @@
+# Material drops of the `devil` tag (README.toml). Devils: a horn now and then.
+
+[[drop]]
+material = "horn"
+count = "1"
+chance = 30

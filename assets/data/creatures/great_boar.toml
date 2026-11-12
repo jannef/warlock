@@ -30,3 +30,9 @@ damage_type = "piercing"
 name = "tusks"
 verb = "gores"
 to_hit = 1
+
+# Tusks and antlers: horn, besides its tags' rows (material drops, data/drops/README.toml).
+[[creature.drops]]
+material = "horn"
+count = "1"
+chance = 50

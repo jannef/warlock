@@ -47,6 +47,8 @@ table on its page, or grep the built page: `grep -o 'id="status-[a-z-]*"' wiki/b
 | A special room | `special-rooms.md#room-ID` | `special-rooms.md#room-draining` |
 | A trap | `traps.md#trap-ID` | `traps.md#trap-pit` |
 | A creature | `creatures.md#creature-ID` | `creatures.md#creature-kobold` |
+| What a creature's body leaves (its material drops) | `creature-drops.md#drops-ID` | `creature-drops.md#drops-wolf` |
+| A creature tag's material drops | `creature-drops.md#drops-tag-TAG` | `creature-drops.md#drops-tag-beast` |
 | An item class | `objects.md#class-ID` | `objects.md#class-melee-weapons` |
 | A potion | `potions.md#potion-ID` | `potions.md#potion-of-healing` |
 | A use of the priest's prayer (disease, poison, wounds, release, mana, hunger, restoration) | `prayer.md#prayer-ID` | `prayer.md#prayer-wounds` |
@@ -128,6 +130,7 @@ above.
 | Stack, pile | `objects.md#piles` |
 | Pack, inventory | `objects.md#your-pack` |
 | Material, pieces | `materials.md#materials`, `materials.md#pieces` |
+| Material drops (stock a body leaves) | `creature-drops.md` |
 | Gem, size and cut | `gems.md`, `gems.md#size-and-cut` |
 | Scroll, reading, unknown scrolls | `scrolls.md`, `scrolls.md#unknown-scrolls` |
 | Making out a scroll, the check to read one (Decipher script's use) | `scrolls.md#making-out-a-scroll` |

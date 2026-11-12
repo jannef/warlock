@@ -39,3 +39,5 @@ plus one naming rule (below).
   working for their owners, the proper names, the note); `world/bestiary_tests.rs`'s `WAVES`.
 
 Gear materials (#1191): the faction's `gear` in `data/factions.toml`: outlaws favour iron (25 %), the village smith's, each its share of the draws for an item whose construction list holds it, the usual draw the rest (`docs/dev/objects.md` "Materials and variants").
+
+**Material drops** (#1341; `data/drops/`, docs/dev/objects.md "Material drops"): `campaigns/ascmearc/data/drops/outlaw.toml` (the tag is the campaign's): iron 1 (20 %), leather 1 (30 %).

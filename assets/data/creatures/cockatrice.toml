@@ -40,3 +40,13 @@ to_hit = 2
 on_hit = [
     { status = "stiffening", chance = 25, severity = 1, check = "toughness", difficulty = 13 },
 ]
+
+# Bone and a hard hide, besides its tags' rows (material drops, data/drops/README.toml).
+[[creature.drops]]
+material = "bone"
+count = "1d2"
+chance = 50
+[[creature.drops]]
+material = "hardened_leather"
+count = "1"
+chance = 40

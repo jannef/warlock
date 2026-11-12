@@ -346,7 +346,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   jerkin; a bolt of cloth 4), and per-material overrides (flint, stone, and obsidian are knapped,
   Woodcraft's, while jade stays Jewelcraft's; fur comes in pelts), and a material's `work`
   (below) makes its checks harder or easier. Herbs (nine, `"`) and elemental essences (six, `*`)
-  are objects of the materials class, never loot; the alchemist sells glowcap and moonwort and
+  are objects of the materials class, never loot (but creatures' bodies leave some: below); the alchemist sells glowcap and moonwort and
   buys materials. The smithy, the weaponsmith, the armourer, the fletcher, and the
   general stores buy materials; the smithy and the general stores stock them (Cēaptūn's smithy
   steel and iron ingots; what is worth nothing, a wood billet, no shop trades). **Breaking**
@@ -358,6 +358,22 @@ developer notes (CLAUDE.md, `docs/dev/`).
   material without one (paper, wax, flesh) as nothing. Its magic is lost. A broken tin dagger
   with a ruby pommel gives a tin ingot and the ruby; a steel long sword 2 steel ingots and a
   leather hide.
+- **Material drops** (#1341; docs/design/recipes.md §9): a creature's body leaves crafting stock
+  where it dies, after what it carried falls and its loot rolls, whoever made the kill. The rows
+  are by creature tag, `data/drops/<tag>.toml` (one file per tag; a campaign's own tag in its
+  `data/drops/`): `[[drop]]` rows of pieces of a grouped material (never a gem) or an object,
+  each a count in dice and a chance in percent, and `bodiless` (default false). Every file of
+  every tag the creature carries applies, in path order, then its type's own `[[creature.drops]]`
+  rows; `drops_from_tags = false` switches its tags' rows off. A tag row reaches only a creature
+  that leaves a corpse unless its file is `bodiless` (a skeleton's bone, an elemental's
+  essence); an animated thing takes none (it breaks into its pieces). A size's `drops`
+  (`sizes.toml`, small 50) scales every chance: a rat or a kobold rolls at half. Each row is its
+  own draw and dice, from the creature's own stream `materials/<id>` (§8 "Determinism"); pieces
+  of one material join one stack. A body turned to stone, or a summoned ally, leaves none. Beasts
+  give hide, bone, and sinew (fur, horn, chitin by kind); kobolds flint; the iron-wearing tribes
+  iron and steel; the drow a little mithril; hags henbane; the undead with a body bone, every
+  skeleton bone; elementals their essence; dragons dragonbone and dragonscale always (the wiki's
+  "What creatures leave" gives every creature's rows).
 - **Materials** (#193, #194): a material's properties are on one scale, steel's (all optional,
   so a material without them is as it was): `group` (metal, wood, bone,
   stone, hide, sinew, cloth, glass, resin; none for paper, wax, food, and the gems, which are set in

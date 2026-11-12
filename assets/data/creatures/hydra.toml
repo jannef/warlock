@@ -60,3 +60,13 @@ damage_type = "piercing"
 name = "bite"
 verb = "bites"
 to_hit = 6
+
+# Bone and a hard hide, besides its tags' rows (material drops, data/drops/README.toml).
+[[creature.drops]]
+material = "bone"
+count = "1d2"
+chance = 50
+[[creature.drops]]
+material = "hardened_leather"
+count = "1"
+chance = 40

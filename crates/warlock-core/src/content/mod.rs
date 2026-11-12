@@ -38,6 +38,7 @@ mod disease;
 pub mod dread;
 #[cfg(test)]
 mod dread_roster_tests;
+mod drops;
 #[cfg(test)]
 mod drow_roster_tests;
 #[cfg(test)]
@@ -222,6 +223,7 @@ pub use danger::{Count, DangerRule, PlayerScale, Spawning};
 pub use decipher::DecipherRules;
 pub use dialogue::{Dialogue, DialogueId, Mutter, Service, ServiceKind, Speaker, Topic};
 pub use disease::{DiseaseDef, DiseaseId, SOURCES, Wading};
+pub use drops::{Drop, DropFrom, DropGoods, TagDrops};
 pub use dummy::DummyTraining;
 pub use dungeon::{
     ChestOdds, DungeonDef, Endless, Generator, LayerBoss, LevelPlan, Portal, RoomOdds, ShopOdds,
@@ -680,6 +682,9 @@ pub struct Content {
     /// The condition creature gear spawns in (`data/gear_condition.toml`, spec §8 "Creature
     /// gear"); without the file, as made.
     gear_condition: GearConditions,
+    /// Material drops by creature tag (`data/drops/`, `content/drops.rs`); each creature type's
+    /// resolved rows are on it ([`CreatureDef::drops`]).
+    drops: Vec<TagDrops>,
     /// The numbers of encounters (`data/encounters.toml`, spec §7 "Leaving an outdoor area").
     encounters: EncounterRules,
     /// What becomes of a creature that catches the player stealing (`data/steal.toml`, spec §8
@@ -882,6 +887,7 @@ impl Content {
             search: SearchRules::default(),
             temper: TemperRules::default(),
             gear_condition: GearConditions::default(),
+            drops: Vec::new(),
             encounters: EncounterRules::default(),
             steal: None,
             surprise: None,
@@ -1180,6 +1186,7 @@ impl Content {
         content.load_throws()?;
         content.load_summons()?;
         content.load_splits()?;
+        content.load_drops(files)?;
         // Summon spells' pools, once every creature type is known.
         spell_def::resolve_summons(&mut content)?;
         spell_def::check_only_tags(&content).map_err(|m| ContentError::new("data/spells", m))?;
@@ -3873,6 +3880,25 @@ impl Content {
     /// else [`TemperRules::default`]).
     pub fn temper(&self) -> &TemperRules {
         &self.temper
+    }
+
+    /// Material drops by creature tag (`data/drops/`, spec §7 "Material drops"), in path
+    /// order; a creature type's own resolved rows are [`CreatureDef::drops`].
+    pub fn tag_drops(&self) -> &[TagDrops] {
+        &self.drops
+    }
+
+    /// Reads `data/drops/` and resolves every creature type's drop rows (`content/drops.rs`).
+    fn load_drops(&mut self, files: &ContentFiles) -> Result<(), ContentError> {
+        self.drops = drops::parse(files.table("drops"), self)?;
+        let own: Vec<_> = (self.creatures.iter())
+            .map(|c| c.drop_spec.clone())
+            .collect();
+        let resolved = drops::resolve(self, &self.drops, &own)?;
+        for (def, rows) in self.creatures.iter_mut().zip(resolved) {
+            def.drops = rows;
+        }
+        Ok(())
     }
 
     /// The condition creature gear spawns in (spec §8 "Creature gear";

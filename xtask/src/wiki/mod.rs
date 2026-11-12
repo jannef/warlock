@@ -28,6 +28,7 @@ mod damage;
 mod dialogue;
 mod digging;
 mod doors;
+mod drops;
 mod dungeons;
 mod encounters;
 mod experience;
@@ -178,6 +179,8 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("factions.md", creatures::factions),
         ("creature-tags.md", creatures::creature_tags),
         ("gear-condition.md", gear_condition::gear_condition),
+        ("creature-drops.md", drops::creature_drops),
+        ("drops-by-tag.md", drops::tag_drops),
         ("creature-stats.md", creatures::creature_stats),
         ("creature-defences.md", creatures::creature_defences),
         ("creature-attacks.md", creatures::creature_attacks),

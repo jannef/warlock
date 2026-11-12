@@ -34,3 +34,9 @@ damage_type = "fire"
 name = "bite"
 verb = "bites"
 to_hit = 2
+
+# Its shell: chitin, besides its tags' rows (material drops, data/drops/README.toml).
+[[creature.drops]]
+material = "chitin"
+count = "1"
+chance = 50

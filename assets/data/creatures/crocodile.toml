@@ -27,3 +27,9 @@ damage_type = "piercing"
 name = "bite"
 verb = "bites"
 to_hit = 1
+
+# Its armoured hide, besides its tags' rows (material drops, data/drops/README.toml).
+[[creature.drops]]
+material = "hardened_leather"
+count = "1"
+chance = 60

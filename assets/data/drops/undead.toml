@@ -1,0 +1,6 @@
+# Material drops of the `undead` tag (README.toml). The corpse-leaving dead (zombies, ghouls, draugr, vampires); spirits and skeletons leave no corpse.
+
+[[drop]]
+material = "bone"
+count = "1d2"
+chance = 50

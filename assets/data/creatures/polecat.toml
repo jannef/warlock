@@ -29,3 +29,9 @@ damage = "1d4"
 damage_type = "piercing"
 name = "bite"
 verb = "bites"
+
+# A pelt: fur, besides its tags' rows (material drops, data/drops/README.toml).
+[[creature.drops]]
+material = "fur"
+count = "1"
+chance = 50

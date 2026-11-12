@@ -1298,6 +1298,10 @@ impl World {
         let (mut dropped, broken) = self.remains(&actor);
         let mut lines = self.break_lines(&actor.level, actor.pos, &broken);
         dropped.extend(self.loot_of(&actor));
+        // Its body's crafting stock, unless it is stone now (`material_drops.rs`).
+        if !stoned {
+            dropped.extend(self.drops_of(&actor));
+        }
         // An incorporeal creature dies inside a wall: what it carried falls out of it.
         let mut actor = actor;
         actor.pos = self.landing(&actor.level, actor.pos);
