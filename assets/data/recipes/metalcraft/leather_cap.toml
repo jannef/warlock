@@ -1,0 +1,12 @@
+# A cap of metal (a skull cap), forged at an anvil from the smith's metal stock
+# (docs/design/recipes.md §6 "Helmets", the metal route; docs/dev/crafting.md). The stock is priced
+# by the weight.
+[[recipe]]
+id = "leather_cap"
+result = { object = "leather_cap" }
+difficulty = 11
+seconds = 1800
+station = "anvil"
+
+[recipe.parts]
+main = "stock"

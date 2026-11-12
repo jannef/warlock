@@ -4,7 +4,7 @@ Three [skills](skills.md) are crafts that work materials: [Metalcraft](skills.md
 [Woodcraft](skills.md#skill-woodcraft), and [Jewelcraft](skills.md#skill-jewelcraft). Each works
 some [materials](materials.md#materials), and its checks use one [stat](stats.md). Everyone can
 take things apart for their materials: **salvage**. A smith trained in Metalcraft can also forge
-weapons at an anvil from metal **stock**: ingots of steel, iron, mithril, and the rest, which you
+weapons, armour, and tools at an anvil from metal **stock**: ingots of steel, iron, mithril, and the rest, which you
 can buy, find, or get by salvaging. Someone trained in Woodcraft can make knives, spears, clubs,
 and staves by hand, with a knife, from billets of wood, shards of bone, and blocks of flint or
 stone. The recipes are on the [Metalcraft…](abilities.md#ability-metalcraft) and
@@ -74,6 +74,27 @@ wooden haft, but it is a Metalcraft recipe all the same.
 Some weapons are never made by hand. A battle axe or a great axe of stone would shatter, a
 stiletto is a slim steel point, and a sword of dragonbone is only ever found.
 
+## Forging armour and tools
+
+At the [anvil](terrain.md#terrain-anvil) a smith also forges [armour](combat.md#defence): mail and
+plate, metal shields and helmets, gauntlets, and iron-shod boots. The smith forges tools too: a
+[lantern](lantern.md) of iron or brass, a [pick-axe](digging.md#digging), and a mattock. You choose
+the metal and, for a buckler, a tower shield, or a helm, a gem, just as for a weapon. The leather
+of a boot, a lantern's glass, and a pick's haft cost nothing.
+
+Metal is priced **by weight**, so mail is costly. A chain mail shirt weighs 11 kg and takes 22
+ingots and two hours. A suit of plate weighs 22 kg and takes 44 ingots and four hours, and it is
+listed only from Metalcraft 60. A [salvaged](#salvage) suit gives back half: a chain shirt gives
+11 ingots.
+
+A stone pick or mattock needs no forge. It is a digger's first tool, knapped by hand from blocks
+of stone or flint with [Woodcraft](skills.md#skill-woodcraft) and a knife, like the
+[hand-made weapons](#making-a-weapon-by-hand).
+
+Some things are never made. Candles are bought, since nobody works wax. Rope is cloth, which no
+craft works yet. Keys only open the locks they were made for. Household goods can only be
+salvaged.
+
 ## The recipes
 
 You know a recipe by your skill in its craft, never by learning it: each is listed from a skill
@@ -102,7 +123,9 @@ A **Fine**, **Marvellous**, or **Masterwork** weapon is exactly a weapon the anv
 twice, or three times (see [Forges](altars-forges-springs.md#forges)): each grade is one more
 improvement to one of its numbers, and the forge counts as that many attempts. So you can temper
 a Fine weapon further, but each attempt is as hard as on any once-tempered weapon, and a
-Masterwork can be made no finer. A failure makes nothing: you break the work up and get half the
+Masterwork can be made no finer. Armour improves in its [Defence](combat.md#defence) or
+[Protection](combat.md#protection). Something with no numbers to improve, like a lantern or a
+pick-axe, always comes out plain. A failure makes nothing: you break the work up and get half the
 stock back, and keep the gem.
 
 ## Batches: arrowheads, arrows, and stones

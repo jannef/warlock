@@ -348,8 +348,13 @@ fn stock_words(
             continue;
         }
         groups.push(group(first));
-        let material = (materials.iter().copied())
-            .find(|&m| m == base.material && group(m) == group(first))
+        // The base material when it is of this group, else the piece's own (steel: a wooden
+        // small shield in metal is "13 steel ingots", never adamantium's), else the first.
+        let named = |want: MaterialId| {
+            (materials.iter().copied()).find(|&m| m == want && group(m) == group(first))
+        };
+        let material = (named(base.material))
+            .or_else(|| piece.parts.first().and_then(|p| named(p.material)))
             .unwrap_or(first);
         let count = super::craft_make::stock_need(content, recipe, part, material, batch)?;
         let (one, many) = crate::piece::names(content, piece, material);
