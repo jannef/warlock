@@ -74,7 +74,7 @@ call_familiar = 1000
 # turn after turn until the wall gives way or something interrupts it.
 dig = 1000
 # A turn of searching for secret doors and hidden traps around you (`s` or numpad 5: waiting is
-# searching; spec §8 "Searching"): searching for a while (Ctrl+s) goes on turn after turn until something is found or interrupts it.
+# searching; spec §8 "Searching"): searching for a while (Alt+s) goes on turn after turn until something is found or interrupts it.
 search = 1000
 # A turn of making out a labelled scroll without reading it (the Decipher ability; spec §8
 # "Scrolls"): a try takes decipher.toml's `seconds`, a turn of this after another.

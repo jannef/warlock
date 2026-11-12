@@ -72,11 +72,16 @@ another context, and the shortcuts the system or the browser keeps (macOS: Cmd+Q
 Cmd+Space; Windows and Linux: Alt+F4, Alt+Tab, Ctrl+Alt+Delete, Super+D/E/L/R/Tab; the web:
 Ctrl or Cmd with N/Q/T/W, Ctrl+Tab, Alt+F4), in Controls' capture (with the reason) and when a
 settings file or keymap is read (a warning; the key is skipped). The default keys with
-modifiers: Search for a while is Ctrl+Num5 and Ctrl+s (#1323's comment, #1326); Run is Ctrl
-with each movement key, Ctrl+Num1-9 and Ctrl+arrows (`Bindings::default` derives them from the
-moves; #1325), none refused on any platform (`mods::tests::default_runs_are_never_refused`).
-macOS keeps Ctrl+arrows for Mission Control and Spaces by default, though `mods::reserved` does
-not refuse them: a Mac player turns those shortcuts off or runs with Ctrl+numpad or other keys.
+modifiers all hold Alt, on every platform and the web alike (#1385): Search for a while is Alt+Num5
+and Alt+s (#1323's comment, #1326); Run is Alt with each movement key, Alt+Num1-9 and Alt+arrows
+(`Bindings::default` derives them from the moves; #1325), none refused on any platform
+(`mods::tests::default_runs_are_never_refused`). They were Ctrl until #1385: macOS keeps
+Ctrl+arrows for Mission Control and Spaces, so they never reached the game there. Alt is Option on
+a Mac, named `Alt` there too (`Mods::display_on`; only Super is `Cmd`), and Option+letter is read
+from the physical key (`Alt+s`, never `Alt+ß`). In a browser, Alt+Left/Right (Back/Forward on
+Windows and Linux) never leave the canvas: winit cancels every keydown on it
+(`prevent_default_event_handling`, `main.rs`). A settings file written before #1385 lists the
+old Ctrl keys and keeps them (Controls' reset gives the new ones).
 Core knows no bindings, so a message names a key by its command's id (`messages::key("help")`
 writes `{key:help}`, as the welcome line does) and the message line fills it in as bound
 (`Message::display_with` with `ui::message_key`; dumps show the token).
@@ -102,7 +107,7 @@ The default keys (`Bindings::default`) are ADOM's (#350; the source is ADOM's ma
 "Miscellaneous commands" list): a command ADOM has takes ADOM's key in its context, one ADOM lacks
 (or has only behind a prefix like `:m` or `w s`) a key ADOM leaves free (`*`, `v`, `b`, `X`),
 and Throw is Missile's `t` in capitals, Wait/search numpad `5` and `s` (ADOM's search key; `.`
-is no longer bound, #1326), Search for a while Ctrl with either (Quit has no default key, the
+is no longer bound, #1326), Search for a while Alt with either (Quit has no default key, the
 pause menu quits). Movement is the
 numpad and the arrows only (ADOM's `k`, `l`, `u` are kick, look, use a tool). A new default
 key must not be an ADOM key of another command. Changing defaults never rewrites a player's file:

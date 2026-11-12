@@ -431,7 +431,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     10, untrained) finds a secret door of 14 with 46 % of their turns of searching.
   - **Searching** (Wait/search, Num5 or `s`: `Action::Search(1)`, replay text `search`, or
     `Action::Wait`, replay text `wait`, the same action by another spelling: waiting is searching,
-    #1326; rest does not search, nor creatures' waits; Ctrl+s or Ctrl+Num5, searching for a while:
+    #1326; rest does not search, nor creatures' waits; Alt+s or Alt+Num5, searching for a while:
     `search:N`, N up to 100, the key sending `data/search.toml`'s `turns`, 10): each turn is the
     `search` action (1000, 6 s; slowed by burden like every price) and gives every hidden feature
     within reach the active check: the eight cells around the player (never their own: a trap
