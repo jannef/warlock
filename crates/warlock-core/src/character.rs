@@ -1216,6 +1216,8 @@ mod tests {
         files.remove("data/skills.toml");
         // Background stories start skills.
         files.remove("data/background.toml");
+        // Mining names its skill.
+        files.remove("data/mining.toml");
         // Skill affixes go with the skills, and the uniques that have them.
         files.remove("campaigns/ascmearc/data/uniques");
         let untrained = |text: &str| -> String {

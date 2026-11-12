@@ -44,7 +44,7 @@ use warlock_core::{Action, Dir, Pos, Positions, Rest};
 pub enum KeyCommand {
     Move(Dir),
     /// Run in a direction: step after step until something worth stopping for (#1325,
-    /// `Action::Run`). Ctrl with a movement key by default.
+    /// `Action::Run`). Alt with a movement key by default.
     Run(Dir),
     /// Wait a turn, which is searching the cells around the player for secret doors and hidden
     /// traps (spec §8 "Searching"; #1326: one action, `Action::Wait`).
@@ -492,10 +492,11 @@ impl Default for Bindings {
             (Code(KeyCode::ArrowDown), Move(Dir::S)),
             (Code(KeyCode::ArrowLeft), Move(Dir::W)),
         ]);
-        // Running: Ctrl with each movement key (#1325).
+        // Running: Alt with each movement key (#1325; Alt, not Ctrl, since #1385: macOS keeps
+        // Ctrl+arrows for Spaces). Every default modifier is Alt, on every platform.
         let runs: Vec<_> = (table.0.iter())
             .filter_map(|(key, command)| match command {
-                Move(dir) => Some((KeyBinding::chord(Mods::CTRL, key.clone()), Run(*dir))),
+                Move(dir) => Some((KeyBinding::chord(Mods::ALT, key.clone()), Run(*dir))),
                 _ => None,
             })
             .collect();
@@ -504,10 +505,10 @@ impl Default for Bindings {
             (Code(KeyCode::Numpad5), Wait),
             (ch("s"), Wait),
             (
-                KeyBinding::chord(Mods::CTRL, Code(KeyCode::Numpad5)),
+                KeyBinding::chord(Mods::ALT, Code(KeyCode::Numpad5)),
                 SearchLong,
             ),
-            (KeyBinding::chord(Mods::CTRL, ch("s")), SearchLong),
+            (KeyBinding::chord(Mods::ALT, ch("s")), SearchLong),
             (ch("o"), Open),
             (ch("c"), Close),
             (ch("k"), Kick),
@@ -1771,8 +1772,8 @@ mod tests {
         let b = Bindings::default();
         assert_eq!(keys(&b, KeyCommand::Move(Dir::N)), ["Num8", "↑"]);
         assert_eq!(keys(&b, KeyCommand::Move(Dir::NE)), ["Num9"]);
-        assert_eq!(keys(&b, KeyCommand::Run(Dir::N)), ["Ctrl+Num8", "Ctrl+↑"]);
-        assert_eq!(keys(&b, KeyCommand::Run(Dir::NE)), ["Ctrl+Num9"]);
+        assert_eq!(keys(&b, KeyCommand::Run(Dir::N)), ["Alt+Num8", "Alt+↑"]);
+        assert_eq!(keys(&b, KeyCommand::Run(Dir::NE)), ["Alt+Num9"]);
         assert_eq!(keys(&b, KeyCommand::Descend), [">"]);
         assert!(keys(&b, KeyCommand::Quit).is_empty(), "the menu quits");
         assert_eq!(keys(&b, KeyCommand::Kick), ["k"]);
@@ -1780,7 +1781,7 @@ mod tests {
         assert_eq!(keys(&b, KeyCommand::Cancel), ["Esc"]);
         assert_eq!(keys(&b, KeyCommand::Rest), ["b"]);
         assert_eq!(keys(&b, KeyCommand::Wait), ["Num5", "s"]);
-        assert_eq!(keys(&b, KeyCommand::SearchLong), ["Ctrl+Num5", "Ctrl+s"]);
+        assert_eq!(keys(&b, KeyCommand::SearchLong), ["Alt+Num5", "Alt+s"]);
         assert_eq!(keys(&b, KeyCommand::PickUp), [",", ";"]);
         assert_eq!(keys(&b, KeyCommand::Drop), ["d"]);
         assert_eq!(keys(&b, KeyCommand::Inventory), ["I"]);

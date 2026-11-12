@@ -27,6 +27,8 @@ temperature = 6
 # bottom. Fey of damp and dark places (#452) haunt its cellars too: the pixie, the boggle, and the
 # darkling, each of either court. The drowned church's candlesticks, books, and lanterns stir too
 # (#483: animated objects).
+# Under the fen: bog iron and nothing else (#1389, data/mining.toml).
+ores = ["iron"]
 danger = 3
 population = [
     "corpse_candle", "giant_leech", "giant_frog", "pixie", "drowned", "crocodile", "cultist",

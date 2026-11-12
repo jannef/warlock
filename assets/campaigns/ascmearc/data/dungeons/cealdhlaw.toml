@@ -23,6 +23,9 @@ temperature = 8
 # hollows an orc war band (#455) camps beside the goblins. Among the grave goods, household
 # things that will not lie still (#483: animated objects), and blades that dance alone (#485:
 # the family `animated_blade`, levels 5 to 20, met from the fifth floor on).
+# Hlāwdūn's rock: the copper and tin the barrow-builders' bronze came from, and iron (#1389,
+# data/mining.toml).
+ores = ["iron", "copper", "tin"]
 danger = 1
 population = [
     "rat", "bat", "beetle", "kobold", "kobold_archer", "kobold_shaman", "kobold_alchemist",

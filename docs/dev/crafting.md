@@ -327,6 +327,18 @@ P8's hide routes (#1353) and the stone tools take `<base>_by_hand`.
   beyond skill below 60, a graded suit against a plain lantern and pick-axe, a helm forged and
   marked, salvage's half).
 
+## Smelt
+
+`recipes/metalcraft/smelt.toml` (#1389, `docs/design/professions.md` §9): Metalcraft's, the
+trained's (no `anyone`), from 0, at an anvil, 600 s, difficulty 8 (+ the metal's `work`). Its
+`result` is the `piece`, its one input a lump of `ore`, and its `main = { input = "ore" }` gives
+the ingot the lump's metal (the input's material, as an arrow's head takes the arrowhead's): the
+wizard's one step lists the ore stacks carried ("lumps of copper ore"). No new code: a graded
+recipe whose result has no aspect, so plain; a failure gives back `1 × yield / 100`, none, and
+says "The work goes wrong, and you save what you can of it." The ore comes from Mining
+(`docs/dev/digging.md` "Mining"). Tests: `world/mine_tests.rs` (copper ore to a copper ingot, one
+lump spent; not listed for the untrained).
+
 ## The rows: `Ability::Profession`
 
 `ability.rs`: `Ability::Profession(SkillId)`, `Source::Skill`, named "Metalcraft…" (the skill's

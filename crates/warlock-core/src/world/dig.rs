@@ -134,6 +134,12 @@ impl World {
             (true, Ended::Said | Ended::Done) => format!("You stop digging after {took}."),
         };
         self.say(text);
+        // Dug through: what Mining breaks out of it (`world/mine.rs`).
+        if !standing(self)
+            && let Some(wall) = wall
+        {
+            self.mine(at, wall);
+        }
     }
 
     /// One turn of the player's digging into the wall at `at`: the noise, the work, and the wall

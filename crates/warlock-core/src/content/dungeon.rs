@@ -181,6 +181,8 @@ struct DungeonSpec {
     hidden_per_depth: u8,
     #[serde(default)]
     locks_per_depth: u8,
+    /// The only ores its walls give a miner (`data/mining.toml`); none: every ore.
+    ores: Option<Vec<String>>,
     /// How dangerous its floors are (spec §7 "Danger levels"); none: 0, nothing comes.
     danger: Option<DangerSpec>,
     /// The creature types that live there; default: `creatures`.
@@ -552,6 +554,9 @@ pub struct DungeonDef {
     /// How much harder the locks on a level are to pick for each level below the first (spec §8
     /// "Doors"; [`DungeonDef::locks_at`]).
     pub locks_per_depth: u8,
+    /// The only ores (metal ids) its walls give a miner (spec §8 "Digging", `world/mine.rs`;
+    /// checked against `data/mining.toml`'s ore rows); `None`: every ore of the table.
+    pub ores: Option<Vec<String>>,
     /// How many items of loot lie on the floor of each level, fewest and most (spec §8 "Magic
     /// items"; item level: the depth).
     pub loot: [u8; 2],
@@ -996,6 +1001,7 @@ impl DungeonFile {
                 secret_doors: spec.secret_doors,
                 hidden_per_depth: spec.hidden_per_depth,
                 locks_per_depth: spec.locks_per_depth,
+                ores: spec.ores,
                 loot: spec.loot,
                 chests: spec.chests,
                 key,

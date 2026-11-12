@@ -995,14 +995,14 @@ mod tests {
     #[test]
     fn an_old_files_keys_win_over_new_defaults() {
         // A file written before #350: the old keys, and no `quit` (unbound then). Its keys stay
-        // the player's own; Search for a while, unlisted, gives up its new default `Ctrl+s` to
+        // the player's own; Search for a while, unlisted, gives up its new default `Alt+s` to
         // Skills.
         let table: toml::Table = toml::from_str(
             r#"
             move_n = ["k", "Numpad8", "ArrowUp"]
             kick = ["K"]
             look = ["x"]
-            skills = ["S", "Ctrl+s"]
+            skills = ["S", "Alt+s"]
             "#,
         )
         .unwrap();
@@ -1015,11 +1015,11 @@ mod tests {
         let ctrl = |text| KeyBinding::from_text(text).unwrap();
         assert_eq!(
             b.keys_of(KeyCommand::Skills),
-            vec![&ch("S"), &ctrl("Ctrl+s")]
+            vec![&ch("S"), &ctrl("Alt+s")]
         );
         assert_eq!(
             b.keys_of(KeyCommand::SearchLong),
-            vec![&ctrl("Ctrl+Numpad5")]
+            vec![&ctrl("Alt+Numpad5")]
         );
         // Commands it does not list and nobody took a key from have the new defaults.
         assert_eq!(b.keys_of(KeyCommand::Equipment), vec![&ch("i")]);
@@ -1068,7 +1068,7 @@ mod tests {
         let text = toml::to_string(&b.to_map()).unwrap();
         assert!(text.contains(r#"look = ["Ctrl+Alt+ArrowUp"]"#), "{text}");
         assert!(
-            text.contains(r#"search_long = ["Ctrl+Numpad5", "Ctrl+s"]"#),
+            text.contains(r#"search_long = ["Alt+Numpad5", "Alt+s"]"#),
             "{text}"
         );
         let table: toml::Table = toml::from_str(&text).unwrap();

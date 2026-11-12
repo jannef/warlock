@@ -49,6 +49,7 @@ mod magic;
 mod mana;
 mod materials;
 mod mimics;
+mod mining;
 mod miscast;
 mod moons;
 mod objects;
@@ -425,6 +426,9 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("corpse-effects.md", hunger::corpse_effects),
         ("digging.md", digging::digging),
         ("digging-strength.md", digging::digging_strength),
+        ("mining-walls.md", mining::mining_walls),
+        ("mining-finds.md", mining::mining_finds),
+        ("mining-dungeons.md", mining::mining_dungeons),
         ("special-rooms.md", rooms::special_rooms),
         ("branch-odds.md", rooms::branch_odds),
         ("teeming-dens.md", rooms::teeming_dens),

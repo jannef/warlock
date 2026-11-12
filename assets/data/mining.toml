@@ -1,0 +1,115 @@
+# Mining (spec §8 "Digging" and "Skills": Mining; #1389, docs/design/professions.md §9): what a
+# wall a miner digs through gives. Only one trained in `skill` gets anything, and only on a floor
+# of a dungeon branch (data/dungeons.toml), never on a hand-made level or the overworld; a wall a
+# blast or a rod breaks gives nothing, nor does a statue.
+#
+# When a miner breaks through a wall by digging, its hardness (terrain.toml) picks a band: the
+# hardest band not harder than the wall. The band's `chance` is the percent chance that the rock
+# held anything; if it did, the miner makes a check: 2d12 + the `stat`'s modifier + the skill's
+# `craft` benefit (skills.toml) against the band's `difficulty` (a natural 2 fails, a natural 24
+# succeeds). Failed, nothing, and nothing is said. Made, one draw by weight from the `[[find]]`
+# rows at the floor's danger (spec §7 "Danger levels"; an endless branch's keeps rising floor by
+# floor): an ore or stone row gives one lump (or block), one more for every `more_every` the check
+# was made by, at most `most`; the gem row one uncut loose gem, its gem by rarity and its size by
+# the floor's depth as gems.toml finds them. What is found lies on the rubble.
+#
+# A branch may name the only ores its rock holds (`ores` in its dungeon file); the other ore rows
+# are left out there. Stone and gems are found everywhere.
+#
+# Fields:
+#   skill       the skill a miner must be trained in (skills.toml)
+#   stat        the stat whose modifier the check adds
+#   ore         the ore object (objects/ore.toml): made of a metal, it is that metal's ore
+#   more_every  the check's margin that gives one more lump (above 0)
+#   most        the most lumps one wall gives (at least 1)
+#   [[band]]    hardness (from), chance (percent, 0 to 100), difficulty; rising in hardness
+#   [[find]]    one row per find, exactly one of:
+#     ore       a metal: lumps of its ore (smelted at an anvil into its ingots: Smelt)
+#     piece     a material: pieces of it (stock.toml names them: "a block of stone")
+#     gem       true: an uncut loose gem
+#   and:
+#     rarity    its weight at its first danger (above 0)
+#     deeper    added to the weight for each danger past its first (default 0; it may be
+#               negative, and the weight never goes below 0)
+#     danger    the first danger it is found at (default 0): none on a floor less dangerous
+
+skill = "mining"
+stat = "strength"
+ore = "ore"
+more_every = 6
+most = 3
+
+# Packed earth: soft, and seldom holds anything.
+[[band]]
+hardness = 0
+chance = 5
+difficulty = 8
+
+# The dungeon's stone walls.
+[[band]]
+hardness = 400
+chance = 20
+difficulty = 12
+
+# Granite: slow to dig, and the richest.
+[[band]]
+hardness = 2000
+chance = 40
+difficulty = 14
+
+# Plain stone, everywhere: a mason's or a slinger's.
+[[find]]
+piece = "stone"
+rarity = 30
+
+# The common ores, at every depth.
+[[find]]
+ore = "iron"
+rarity = 40
+
+[[find]]
+ore = "copper"
+rarity = 30
+
+[[find]]
+ore = "tin"
+rarity = 20
+
+[[find]]
+ore = "zinc"
+rarity = 10
+
+# The precious metals: rare near the surface, more common the deeper.
+[[find]]
+ore = "silver"
+rarity = 4
+deeper = 1
+danger = 3
+
+[[find]]
+ore = "gold"
+rarity = 2
+deeper = 1
+danger = 6
+
+# Uncut gems: a few near the surface, more deeper (and larger: gems.toml sizes by depth).
+[[find]]
+gem = true
+rarity = 3
+deeper = 1
+danger = 1
+
+# Mithril and adamantium lie deeper than any bounded branch reaches (the deepest, a Pit of
+# Hellegeat, stands at 30 at most, whatever the player's level): in practice only Grundlēas's
+# floors from 60 and 80 down.
+[[find]]
+ore = "mithril"
+rarity = 2
+deeper = 1
+danger = 60
+
+[[find]]
+ore = "adamantium"
+rarity = 1
+deeper = 1
+danger = 80

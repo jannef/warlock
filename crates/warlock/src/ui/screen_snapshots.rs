@@ -264,7 +264,7 @@ const CASES: &[Case] = &[
         ..BASE
     },
     // A play key rebound with Ctrl held (#1323): Move north's first key becomes Ctrl+k, and the
-    // message says so (Search for a while's Ctrl keys are its defaults).
+    // message says so (the Run and Search for a while defaults hold Alt, #1385).
     Case {
         name: "controls-screen-ctrl-key",
         actions: "wait",
