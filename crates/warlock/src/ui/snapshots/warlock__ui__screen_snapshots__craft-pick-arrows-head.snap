@@ -1,0 +1,34 @@
+---
+source: crates/warlock/src/ui/screen_snapshots.rs
+expression: "render(case, content.clone())"
+---
+ Welcome to Forest. Press ? for controls.
+ Beald, your hound, pads at your heel.
+
+
+
+
+
+
+
+
+                  ┌─ Arrows: head ───────────────────────────────────────────────┐
+                  │                                                              │
+                  │ Arrows                                                       │
+                  │                                                              │
+                  │   - - None                                                   │
+                  │   Nothing carried would do; None makes them brittle.         │
+                  │                                                              │
+                  │                                                              │
+                  │ - none   Esc back                                            │
+                  └──────────────────────────────────────────────────────────────┘
+
+
+
+
+
+
+
+
+
+ Forest  ·  HP 20/20  ·  MP 4/4  ·  Sta 10/14  ·  Lv 1  ·  Beald: unhurt  ·  06:30       ? controls

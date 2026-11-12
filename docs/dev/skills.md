@@ -145,7 +145,7 @@ Woodcraft are
 **professions** (#1334, `docs/dev/crafting.md`): each has a recipe directory
 (`data/recipes/<skill>/`), so the abilities menu lists it as one `Ability::Profession` row in the
 skill's place ("Metalcraft…", "Woodcraft…"), which opens its recipe screen; Temper, Whittle, and
-Fletch are recipes there, open to everyone. The professions' skills (#1331, epic #1337) **Alchemy, Enchanting, Herbalism, Jewelcraft,
+the arrows and bolts are recipes there, open to everyone. The professions' skills (#1331, epic #1337) **Alchemy, Enchanting, Herbalism, Jewelcraft,
 and Mining**: kinds as `docs/design/professions.md` §9: Mining `rules`, Herbalism `passive`, the
 others `action` (shown "not usable yet"). Skill ids are file order (alphabetical), and `Skills` is
 saved and hashed by that index. Their first effects (#1343, one hook each):
@@ -200,28 +200,16 @@ directory is `Ability::Profession` instead, before any use (Metalcraft, Woodcraf
 (`Ability::every` adds it right after the skills while some skill gives `Effect::Wedge`; see
 `docs/dev/doors.md` "Wedging").
 
-**Fletching** (spec §8 "Fletching", #1021, design `docs/design/skill-uses.md` §6.5 W1):
-`Action::Fletch` (replay text `fletch`, cost `fletch` a turn, `ActionKind::Fletch`), dispatched by
-one arm in `World::player_acts` to `World::start_fletch` in `world/fletch.rs` (`Spent::Fletch(seconds)`,
-then `World::fletch`, a `keep_at` loop with the forage's `Watch::Forage`; tests
-`world/fletch_tests.rs`). Data `data/fletch.toml` (`content/fletch.rs`, `FletchRules`,
-`Content::fletch`; optional: without it Woodcraft is a skill with no use): `seconds`, `difficulty`,
-`count`, `value_per_count`, `half_within`, `one_within` (`FletchRules::made`, the margin's bands),
-`plain_from`, `knives` (a weapon skill: `Content::is_knife`), and `[[makes]]` by what a launcher's
-`launches` is. The Fletch recipe (`data/recipes/woodcraft/fletch.toml`: `anyone`, `knife`,
-`launcher`) is its row on Woodcraft's screen, greyed by `world/craft.rs` ("no knife", "no bow or
-crossbow ready": `fletch::fletch_makes`, the same test); `world::fletch_lack` is the rules'
-refusal (`Unavailable::NoKnife` / `NoLauncher`, "You have no knife."). The check reads Dexterity's modifier, `TalentMods::check`, `skill_effect(Effect::Fletch)`
-(Woodcraft's curve, Skill focus through it), and `TalentMods::fletcher`; the count and the brittle
-line read the trained value, `Skills::value_of_effect`, so no item or talent bonus moves them.
-Marks: `Use::Fletch` for every batch that ran its time, whatever it made. Fletcher's numbers are
-its effect's (`talents/fletcher.toml`).
+**Fletching** (spec §8 "Fletching", #1021) is no action of its own since #1336: arrows and bolts
+are Woodcraft's recipes (`recipes/woodcraft/arrows.toml`, `bolts.toml`, `count = "fletch"`), made
+as any generic recipe is; `data/fletch.toml` keeps the count, the knives, and the launchers' words,
+and the ranger's Fletcher is read there. All of it is in `docs/dev/crafting.md` "Arrows and bolts".
 
 A damaged item (Temper's failure, or acid, rust, or heat: `world/item_damage.rs`, #1131, #1168) is a point worse until
 mended (`Mods::add_worked`: its Protection if it gives some, else its Defence, else its damage).
 Mithril and adamantium are metals, so Temper works them as steel.
 
-**Whittling** (#1028, design W3): `Action::Whittle { item }` (replay text `whittle:LETTER`, cost `whittle` a turn, `ActionKind::Whittle`) is Temper's twin for wood: `world/temper.rs` keeps both, a `Craft` (`Temper` or `Whittle`) in `Tempering` choosing the material group (`metal` or `wood`), the stat and effect (Strength and `Effect::Temper`, or Dexterity and `Effect::Whittle`), the mark (`Use::Temper`, `Use::Whittle`), the turn price, and the message lines. Both share `data/temper.toml` and `magic/worked.rs`, so one item has one state. The Whittle recipe (`data/recipes/woodcraft/whittle.toml`: `anyone`, `knife`) stands beside Fletch on Woodcraft's screen (`docs/dev/crafting.md`), opens the Whittle list over it (`ObjectList::Whittle`, `ScreenName::Whittle`, the list `world::workable_wood`), and is greyed "no knife" without one (the rules' refusal is `world::whittle_lack`). Tests: `world/whittle_tests.rs`.
+**Whittling** (#1028, design W3): `Action::Whittle { item }` (replay text `whittle:LETTER`, cost `whittle` a turn, `ActionKind::Whittle`) is Temper's twin for wood: `world/temper.rs` keeps both, a `Craft` (`Temper` or `Whittle`) in `Tempering` choosing the material group (`metal` or `wood`), the stat and effect (Strength and `Effect::Temper`, or Dexterity and `Effect::Whittle`), the mark (`Use::Temper`, `Use::Whittle`), the turn price, and the message lines. Both share `data/temper.toml` and `magic/worked.rs`, so one item has one state. The Whittle recipe (`data/recipes/woodcraft/whittle.toml`: `anyone`, `knife`) stands beside the arrows on Woodcraft's screen (`docs/dev/crafting.md`), opens the Whittle list over it (`ObjectList::Whittle`, `ScreenName::Whittle`, the list `world::workable_wood`), and is greyed "no knife" without one (the rules' refusal is `world::whittle_lack`). Tests: `world/whittle_tests.rs`.
 
 **Balance** (spec §8 "Skills", #1029, `docs/design/skill-uses.md` §6.13): besides `burden`,
 `Effect::Footing` is read in `World::step_price` (`world/schedule.rs`) in the `else` of the wading

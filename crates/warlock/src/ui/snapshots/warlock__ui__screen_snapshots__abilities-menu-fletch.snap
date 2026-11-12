@@ -2,8 +2,8 @@
 source: crates/warlock/src/ui/screen_snapshots.rs
 expression: "render(case, content.clone())"
 ---
- Brūn, your hound, pads at your heel.
- You sit down with your knife and some straight wood. You make 6 arrows.
+ Beald, your hound, pads at your heel.
+ You set to work on the brittle arrows. You make 6 brittle arrows.
                     ┌─ Abilities ──────────────────────────────────────────────┐
                     │                                                          │
                     │ Birth sign                                               │
@@ -12,7 +12,7 @@ expression: "render(case, content.clone())"
                     │   b  Decipher           no unknown scroll                │
                     │   c  Tame               you already have a companion     │
                     │   d  Metalcraft…                                         │
-                    │   e  Forage             not usable here                  │
+                    │   e  Forage                                              │
                     │   f  Woodcraft…                                          │
                     │   g  Salvage            on something you carry           │
                     │ Weapon skills                                            │
@@ -31,4 +31,4 @@ expression: "render(case, content.clone())"
                     └──────────────────────────────────────────────────────────┘
 
 
- The Hub  ·  HP 20/20  ·  MP 4/4  ·  Sta 14/14  ·  Lv 1  ·  Brūn: unhurt  ·  08:05       ? controls
+ Forest  ·  HP 20/20  ·  MP 4/4  ·  Sta 14/14  ·  Lv 1  ·  Beald: unhurt  ·  06:35       ? controls

@@ -10,6 +10,8 @@ and staves by hand, with a knife, from billets of wood, shards of bone, and bloc
 stone. The recipes are on the [Metalcraft…](abilities.md#ability-metalcraft) and
 [Woodcraft…](abilities.md#ability-woodcraft) lists in the
 [abilities menu](abilities.md#the-abilities-menu) (see [Professions](skill-uses.md#professions)).
+An alchemist brews potions from herbs: see [Brewing potions](recipes-alchemy.md).
+One trained in Jewelcraft can cut loose gems: see [Gem cutting](gem-cutting.md).
 
 ## Who works what
 
@@ -125,6 +127,30 @@ Masterwork can be made no finer. Armour improves in its [Defence](combat.md#defe
 [Protection](combat.md#protection). Something with no numbers to improve, like a lantern or a
 pick-axe, always comes out plain. A failure makes nothing: you break the work up and get half the
 stock back, and keep the gem.
+
+## Batches: arrowheads, arrows, and stones
+
+Some recipes make a **batch** of many: [arrowheads](#recipe-arrowheads) by the score at an anvil,
+[arrows](#recipe-arrows) and [crossbow bolts](#recipe-bolts) (see
+[Fletching](skill-uses.md#fletching)), [sling stones](#recipe-sling-stones) chipped from a block
+of stone (no knife needed), and [flaming arrows](#recipe-flaming-arrows), arrows wrapped in rag
+and soaked in a flask of oil. A batch has no grade. Your check sets how many you get:
+
+- beat the difficulty, and you get the whole count;
+- fall up to 3 short, half of it, rounded up;
+- fall up to 6 short, one;
+- fall further, none: "You spoil the whole batch."
+
+A natural 2 always spoils the batch; a natural 24 always makes the whole count.
+
+An **arrowhead** is the one thing a smith makes for someone else: one ingot of any metal makes
+twenty, of that metal. A fletcher puts one on each arrow, and the arrow takes its metal. Bone and
+flint need no smith: a shard or a block heads a whole batch of arrows by itself.
+
+A batch only uses what it makes. One billet of wood is enough for up to 11 arrows or 4 bolts; a
+batch makes no more than your billets and arrowheads cover. Flaming arrows take one arrow each, so
+four arrows make at most four. If the batch is spoiled you keep your arrowheads and arrows, and
+get half of the wood or the metal back (a single billet or ingot always comes back whole).
 
 ## Salvage
 

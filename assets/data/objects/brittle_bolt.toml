@@ -1,5 +1,6 @@
-# A crossbow bolt whittled by someone who has not learned how: it flies once, and is not sold
-# (no `kind` or `frequency`, as the flaming arrow).
+# A crossbow bolt with no head, its tip whittled sharp: what the bolts recipe makes when no head
+# is chosen (recipes/woodcraft/bolts.toml's `brittle`), of the shaft's wood. It flies once, and is
+# not sold (no `kind` or `frequency`, as the flaming arrow).
 [[object]]
 id = "brittle_bolt"
 name = "brittle bolt"
@@ -7,6 +8,7 @@ glyph = "/"
 fg = "#a89c8c"
 class = "missiles"
 materials = ["wood"]
+made_of = ["wood"]
 weight = 50
 value = 0
 stackable = true

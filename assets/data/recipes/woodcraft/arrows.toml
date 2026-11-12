@@ -1,0 +1,21 @@
+# Arrows, by anyone with a knife and a bow ready (spec §8 "Fletching"; docs/design/recipes.md §6
+# "Missiles"; docs/dev/crafting.md "Arrows and bolts"). The head is a metal arrowhead (one an
+# arrow), a bone shard or a stone block (one heads the whole batch), or none: a sharpened shaft,
+# the brittle arrow. The shaft is a billet of wood, priced by the batch's weight, and free on
+# wooded ground (data/recipes.toml's `free_wood`). The count is Fletch's (fletch.toml), and the
+# ranger's Fletcher reads it.
+[[recipe]]
+id = "arrows"
+name = "Arrows"
+result = { object = "arrow", count = "fletch" }
+inputs = [{ object = "arrowhead", count = 1, per_made = true }]
+difficulty = 12
+seconds = 600
+knife = true
+launcher = true
+anyone = true
+brittle = "brittle_arrow"
+
+[recipe.parts]
+head = { input = "arrowhead", stock = ["bone", "stone"], optional = true }
+shaft = "stock"
