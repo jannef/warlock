@@ -457,6 +457,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
     ("beyond your skill", "no anvil beside you", "no knife", "no bow or crossbow ready", "no metal
     to hand", "no arrowheads"); a letter or Enter makes an available one (Temper's and Whittle's
     lists ask which item over it; Fletch begins at once); fixed keys, named in its footer;
+    **Salvage** (`Ability::Salvage`, §8 "Skills", every profession's), after the skills' own uses,
+    which everyone has, asking for an item (the Salvage list: what `world::salvageable` accepts,
+    less what is worn or wielded), never greyed out;
     and each other skill used as
     an action (`kind = "action"`, §8 "Skills") the player
     is trained in, listed but never available until its use comes (it then becomes an ability of

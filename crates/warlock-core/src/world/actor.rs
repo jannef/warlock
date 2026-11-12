@@ -498,17 +498,21 @@ impl Actor {
         self.skill_effect_above(content, effect, 0)
     }
 
-    /// What skill `skill` alone gives of `effect`, as [`Actor::skill_effect`] counts it (a
-    /// profession's [`Effect::Craft`]: the forge reads Metalcraft's, never another craft's).
+    /// What the one skill `skill` gives of `effect`, with what affixes and talents add to that
+    /// skill's value (as [`Actor::skill_effect`] counts them), never what other skills giving the
+    /// same effect add: a profession's [`Effect::Craft`] on a check of its own material
+    /// (docs/design/professions.md §4). An untrained skill reads from 0 plus its bonus.
     pub fn skill_effect_of(&self, content: &Content, skill: SkillId, effect: Effect) -> i32 {
-        let bonus: Vec<(SkillId, i32)> = (self.skill_bonus(content).into_iter())
-            .filter(|&(s, _)| s == skill)
-            .collect();
-        let mut only = crate::skills::Skills::default();
-        if let Some(trained) = self.skills.get(skill) {
-            only = std::iter::once((skill, trained)).collect();
-        }
-        only.effect_above(content, effect, &bonus, 0)
+        let base = self.skills.value(skill).map_or(0, i32::from);
+        let more: i32 = (self.skill_bonus(content).iter())
+            .filter(|&&(id, _)| id == skill)
+            .map(|&(_, v)| v)
+            .sum();
+        let value = (base + more).clamp(0, i32::from(crate::skills::MAX_VALUE)) as u16;
+        (content.skill(skill).benefits.iter())
+            .filter(|b| b.effect == effect)
+            .map(|b| b.at(value))
+            .sum()
     }
 
     /// What its skills give of `effect`, as [`Actor::skill_effect`], each read at how far its

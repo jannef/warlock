@@ -23,6 +23,7 @@ mod character;
 mod chests;
 mod combat;
 mod companions;
+mod crafting;
 mod creatures;
 mod damage;
 mod dialogue;
@@ -303,6 +304,11 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("prayer-levels.md", prayer::prayer_levels),
         ("prayer-rites.md", prayer::prayer_rites),
         ("fletching.md", skills::fletching),
+        ("crafting-groups.md", crafting::crafting_groups),
+        ("crafting-work.md", crafting::crafting_work),
+        ("salvage.md", crafting::salvage),
+        ("recipes.md", recipes::recipes),
+        ("crafting-grades.md", recipes::crafting_grades),
         ("foraging.md", skills::foraging),
         ("skills.md", skills::skills),
         ("skill-benefits.md", skills::skill_benefits),
@@ -421,8 +427,6 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("altar-shares.md", outcomes::altar_shares),
         ("temper-odds.md", temper::temper_odds),
         ("temper-grades.md", temper::temper_grades),
-        ("recipes.md", recipes::recipes),
-        ("crafting-grades.md", recipes::crafting_grades),
         ("spring-outcomes.md", outcomes::spring_outcomes),
         ("risings.md", rooms::risings),
         ("magic-rarity.md", magic::magic_rarity),
@@ -994,6 +998,11 @@ mod tests {
         ));
         assert!(pieces.contains("| Flint | stone | block of flint | 1 |"));
         assert!(pieces.contains("| Fur | hide | fur pelt | 8 |"));
+        // Crafting (#1333): who works what, the work, the salvage odds.
+        assert!(
+            text("crafting-groups.md").contains("| Gems | loose gems | Jewelcraft | Dexterity |")
+        );
+        assert!(text("salvage.md").contains("Salvaging takes 600 seconds (10 minutes)."));
         // Materials (#193, #194): their properties on steel's scale, how often they are found,
         // what each item may be made of, and a long sword and chain mail in each metal.
         assert!(text("materials.md").contains(

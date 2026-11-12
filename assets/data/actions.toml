@@ -108,6 +108,9 @@ whittle = 1000
 # A turn of making a recipe (a profession's: the forge's swords, docs/dev/crafting.md): the work
 # takes the recipe's `seconds`, a turn of this after another.
 craft = 1000
+# A turn of salvaging an item for its materials (the Salvage ability): an attempt takes
+# salvage.toml's `seconds`, a turn of this after another.
+salvage = 1000
 # Trying to disarm a trap you know of next to you (the Disarm ability; spec §8 "Disarming traps"):
 # careful work, whether it comes off, fails, or sets the trap off.
 disarm = 2000

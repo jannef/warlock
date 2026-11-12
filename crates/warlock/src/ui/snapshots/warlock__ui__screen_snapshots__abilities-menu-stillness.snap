@@ -19,16 +19,16 @@ expression: "render(case, content.clone())"
                     │   g  Listen at a door   in a direction                   │
                     │   h  Metalcraft…                                         │
                     │   i  Woodcraft…                                          │
+                    │   j  Salvage            on something you carry           │
                     │ Weapon skills                                            │
-                    │   j  Shield bash        you hold no shield               │
+                    │   k  Shield bash        you hold no shield               │
                     │                                                          │
                     │ The basilisk's stare: a foe nearby that sees you slows   │
                     │ to a crawl a moment; your eyes then rest two hours.      │
                     │                                                          │
                     │                                                          │
-                    │ a-j or Enter use   Esc close                             │
+                    │ a-k or Enter use   Esc close                             │
                     └──────────────────────────────────────────────────────────┘
-
 
 
  The Hub  ·  HP 117/117  ·  MP 227/227  ·  Ki 6/17  ·  Sta 10/19  ·  Lv 56  ·  08:00     ? controls

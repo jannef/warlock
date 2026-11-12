@@ -374,7 +374,7 @@ impl World {
 
     /// The stack at `item`, one of it set apart at the end of the pack when there are several:
     /// the position of the one to work.
-    fn set_apart(&mut self, item: usize) -> usize {
+    pub(super) fn set_apart(&mut self, item: usize) -> usize {
         let pack = &mut self.player_mut().inventory;
         match pack.get_mut(item) {
             Some(stack) if stack.count > 1 => {

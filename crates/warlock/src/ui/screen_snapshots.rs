@@ -805,6 +805,14 @@ const CASES: &[Case] = &[
         screen: Some("whittle"),
         ..BASE
     },
+    // A ranger's Salvage list (#1333): what a craft works, carried, less what is worn or wielded.
+    Case {
+        name: "salvage-list",
+        character: Some("human,male,ranger"),
+        run: true,
+        screen: Some("salvage"),
+        ..BASE
+    },
     // A warrior carries no knife: Woodcraft's screen (its row in the abilities menu, `e`) greys
     // Fletch and Whittle, each with the reason in place of what it takes (#1334).
     Case {

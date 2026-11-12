@@ -2,7 +2,7 @@
 source: crates/warlock/src/ui/screen_snapshots.rs
 expression: "render(case, content.clone())"
 ---
- You learn┌─ Abilities ──────────────────────────────────────────────────────────────────┐
+ You learn┌─ Abilities ─────────────────────────────────────────────────────── Page 1/2 ─┐
  Your thou│                                                                              │
           │ Class                                                                        │
           │   a  Knock             in a direction                                        │
@@ -23,12 +23,12 @@ expression: "render(case, content.clone())"
           │   n  Listen at a door  in a direction                                        │
           │   o  Metalcraft…                                                             │
           │   p  Woodcraft…                                                              │
-          │ Weapon skills                                                                │
-          │   q  Shield bash       you hold no shield                                    │
+          │   q  Salvage           on something you carry                                │
           │                                                                              │
           │ A dart of force toward a place you aim at: it never misses the first         │
           │ creature in its way. Range 8.                                                │
           │                                                                              │
           │                                                                              │
-          │ a-q or Enter use   Esc close                                                 │
- The Hub  └──────────────────────────────────────────────────────────────────────────────┘ controls
+          │ a-q or Enter use   > < page   Esc close                                      │
+          └──────────────────────────────────────────────────────────────────────────────┘
+ The Hub  ·  HP 43/43  ·  MP 306/309  ·  Keen  ·  Lv 32  ·  08:00  ·  11 Darkening       ? controls

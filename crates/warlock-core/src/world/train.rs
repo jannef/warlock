@@ -16,7 +16,7 @@
 use super::{ActorId, World};
 use crate::combat::{Blow, Category, Strike};
 use crate::content::StatUse;
-use crate::skills::Use;
+use crate::skills::{SkillId, Use};
 
 impl World {
     /// `blow`, a plain miss at the player (`Missed { by: None }`) made a dodge one time in
@@ -53,10 +53,23 @@ impl World {
     /// scaled by the special rooms where they stand (a scriptorium's 200 for Decipher script
     /// gives two marks; `Here::train`).
     pub(super) fn train(&mut self, used: Use) {
+        self.train_some(used, None);
+    }
+
+    /// [`World::train`] for skill `only` alone: a use that practises one skill of several that
+    /// mark it (a salvage's check practises the profession that worked the material,
+    /// `world/salvage.rs`).
+    pub(super) fn train_skill(&mut self, used: Use, only: SkillId) {
+        self.train_some(used, Some(only));
+    }
+
+    /// [`World::train`], for every trained skill or for `only`.
+    fn train_some(&mut self, used: Use, only: Option<SkillId>) {
         let content = self.content.clone();
         let (level, at) = (self.state.player().level.clone(), self.state.player().pos);
         let trained: Vec<_> = (self.state.player().skills.iter())
             .map(|(id, _)| id)
+            .filter(|&id| only.is_none_or(|o| o == id))
             .collect();
         for id in trained {
             let def = content.skill(id);

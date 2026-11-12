@@ -216,7 +216,8 @@ jade, amber, and [gems](gems.md) by [Jewelcraft](skills.md#skill-jewelcraft), wi
 Stone, flint, and obsidian are knapped by hand, so Woodcraft works them, not Jewelcraft. Cloth
 and glass have no crafting skill yet. Some materials are harder to work than
 others: the **work** column of the materials table is added to the difficulty of working them
-(steel 0, tin −3, adamantium +8). Nothing uses these yet; crafting is still to come.
+(steel 0, tin −3, adamantium +8).
+[Salvage](crafting.md#salvage) uses both: it takes an item apart into these pieces.
 
 {{#include generated/pieces.md}}
 

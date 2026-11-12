@@ -21,14 +21,14 @@ expression: "render(case, content.clone())"
                     │   k  Forage             not usable here                  │
                     │   l  Woodcraft…                                          │
                     │   m  Wedge a door       in a direction                   │
+                    │   n  Salvage            on something you carry           │
                     │ Weapon skills                                            │
-                    │   n  Shield bash        you hold no shield               │
-                    │ Allies                                                   │
-                    │   o  Come to heel                                        │
+                    │   o  Shield bash        you hold no shield               │
                     │                                                          │
                     │ The basilisk's stare: a foe nearby that sees you slows   │
                     │ to a crawl a moment; your eyes then rest two hours.      │
                     │                                                          │
                     │                                                          │
                     │ a-o or Enter use   > < page   Esc close                  │
- The Hub  ·  HP 118/└──────────────────────────────────────────────────────────┘         ? controls
+                    └──────────────────────────────────────────────────────────┘
+ The Hub  ·  HP 118/118  ·  MP 181/181  ·  Focus 10/10  ·  Sta 10/20  ·  Lv 60           ? controls

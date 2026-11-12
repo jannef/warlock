@@ -244,6 +244,7 @@ mod rot;
 mod ruin;
 mod rumour;
 mod run;
+mod salvage;
 mod sanctuary;
 mod schedule;
 mod scribe;
@@ -356,6 +357,7 @@ pub use orison::PrayerState;
 pub use pit::Pit;
 pub use quest::{QuestRecord, QuestView, Quests, Stage, asks as quest_asks, wants as quest_wants};
 use rest::Ended;
+pub use salvage::{chipped, salvageable};
 pub use sanctuary::Hallow;
 pub use scribe::scribe_turns;
 pub use shop::{Shop, ShopStatus, count_of, favour, part_of, unpaid_parts};
@@ -770,6 +772,8 @@ enum Spent {
     Temper(temper::Tempering),
     /// Making a recipe (see [`World::make`]).
     Craft(craft_make::Crafting),
+    /// Salvaging an item for its materials (see [`World::salvage`]).
+    Salvage(salvage::Salvaging),
     /// Taming a beast beside the player (see [`World::tame`]).
     Tame(tame::Taming),
     /// Dev: the clock jumps ahead; nobody acts, then perception is recomputed.
@@ -1436,6 +1440,7 @@ impl World {
             Spent::Decipher(work) => self.decipher(work, &mut events),
             Spent::Temper(work) => self.temper(work, &mut events),
             Spent::Craft(work) => self.make(work, &mut events),
+            Spent::Salvage(work) => self.salvage(work, &mut events),
             Spent::Tame(taming) => self.tame(taming, &mut events),
             Spent::Skip(duration) => {
                 // Nobody acts or gains energy.
@@ -1580,6 +1585,7 @@ impl World {
             Action::Decipher { item } => return self.start_decipher(*item),
             Action::Temper { item } => return self.start_temper(*item),
             Action::Whittle { item } => return self.start_whittle(*item),
+            Action::Salvage { item } => return self.start_salvage(*item),
             Action::Give { item, ally } => return self.give_collar(*item, *ally),
             Action::UseTalent(TalentActive::SecondWind) => return self.second_wind(events),
             Action::UseTalent(TalentActive::BloodMagic) => return self.blood_magic(),
@@ -2043,6 +2049,8 @@ mod ruin_tests;
 mod rumour_tests;
 #[cfg(test)]
 mod run_tests;
+#[cfg(test)]
+mod salvage_tests;
 #[cfg(test)]
 mod sanctuary_tests;
 #[cfg(test)]

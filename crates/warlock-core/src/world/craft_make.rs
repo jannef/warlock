@@ -583,7 +583,7 @@ impl World {
         let margin = natural + modifier - (def.difficulty + work_of);
         self.make_out(resolved, natural, margin);
         if self.trains(Use::Craft) {
-            self.train(Use::Craft);
+            self.train_skill(Use::Craft, def.skill);
         }
     }
 
