@@ -1,0 +1,15 @@
+# Brewed by an alchemist (docs/design/recipes.md §6 "Potions (Alchemy)", §9; docs/dev/crafting.md
+# "Brewing"): an elemental's essence and what binds it, no station, the flask free. A failed brew
+# leaves a murky draught, a natural 2 a brewer's blunder; the inputs are spent either way.
+[[recipe]]
+id = "flask_of_smoke"
+result = { object = "flask_of_smoke" }
+inputs = [
+    { object = "essence_of_air", count = 1 },
+    { object = "henbane", count = 1 },
+]
+difficulty = 12
+seconds = 1200
+from = 25
+failure = { object = "murky_draught" }
+fumble = { object = "brewers_blunder" }

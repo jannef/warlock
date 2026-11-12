@@ -101,8 +101,67 @@ fn rows(w: &World) -> Vec<String> {
         .collect()
 }
 
+/// The design's essence rows (recipes.md §6; #1358): inputs, difficulty, from.
+type Row = (&'static str, &'static [(&'static str, u32)], i32, u16);
+const ESSENCE_ROWS: [Row; 9] = [
+    (
+        "potion_of_frost",
+        &[("bog_myrtle", 1), ("essence_of_ice", 1)],
+        13,
+        40,
+    ),
+    (
+        "potion_of_earthing",
+        &[("bog_myrtle", 1), ("essence_of_earth", 1)],
+        13,
+        40,
+    ),
+    (
+        "potion_of_sea_legs",
+        &[("essence_of_water", 1), ("glowcap", 1)],
+        13,
+        40,
+    ),
+    (
+        "flask_of_fire",
+        &[("essence_of_fire", 1), ("flask_of_oil", 1)],
+        14,
+        50,
+    ),
+    (
+        "flask_of_frost",
+        &[("essence_of_ice", 1), ("glowcap", 1)],
+        14,
+        50,
+    ),
+    (
+        "flask_of_thunder",
+        &[("essence_of_lightning", 1), ("glowcap", 1)],
+        15,
+        60,
+    ),
+    (
+        "flask_of_smoke",
+        &[("essence_of_air", 1), ("henbane", 1)],
+        12,
+        25,
+    ),
+    (
+        "pitch_fire",
+        &[("essence_of_fire", 2), ("flask_of_tar", 1)],
+        17,
+        100,
+    ),
+    (
+        "blasting_flask",
+        &[("essence_of_fire", 1), ("essence_of_lightning", 1)],
+        18,
+        100,
+    ),
+];
+
 #[test]
-fn the_herb_recipes_are_the_designs_table_and_nothing_else() {
+fn the_brews_are_the_designs_table_and_nothing_else() {
     let content = Content::builtin().expect("content");
     let skill = content.skill_id("alchemy").expect("alchemy");
     let murky = content.object_id("murky_draught");
@@ -124,7 +183,7 @@ fn the_herb_recipes_are_the_designs_table_and_nothing_else() {
             .collect();
         shown.push((r.id.clone(), inputs, r.difficulty, r.from));
     }
-    assert_eq!(shown.len(), 29);
+    assert_eq!(shown.len(), 38, "29 of herbs, 9 with an essence");
     let row = |id: &str| shown.iter().find(|r| r.0 == id).cloned().expect(id);
     let herbs = |list: &[(&str, u32)]| -> Vec<(String, u32)> {
         list.iter().map(|(h, n)| (h.to_string(), *n)).collect()
@@ -160,15 +219,24 @@ fn the_herb_recipes_are_the_designs_table_and_nothing_else() {
             10
         )
     );
-    // Never brewed: the essence rows (P14's), the elixirs, the gambles, the deeper draughts.
+    // The essence rows (#1358).
+    for (id, inputs, difficulty, from) in ESSENCE_ROWS {
+        assert_eq!(
+            row(id),
+            (id.into(), herbs(inputs), difficulty, from),
+            "{id}"
+        );
+    }
+    // Never brewed: the elixirs, the gambles, the deeper draughts, oil and tar, the hexing flasks.
     for never in [
-        "potion_of_frost",
-        "flask_of_fire",
+        "elixir_of_might",
         "draught_of_chance",
         "murky_draught",
         "potion_of_restoration",
         "potion_of_quickness",
         "flask_of_oil",
+        "flask_of_tar",
+        "flask_of_darkness",
     ] {
         assert!(content.recipes().id(never).is_none(), "{never}");
     }
@@ -356,4 +424,162 @@ fn a_brew_from_gathered_herbs_replays() {
     let (verified, divergence) = replay.play(content).expect("replays");
     assert_eq!(divergence, None);
     assert_eq!(verified.state_hash(), w.state_hash());
+}
+
+#[test]
+fn a_flask_of_fire_from_a_found_essence_replays() {
+    // A witch south of an essence of fire and a flask of oil lying on the floor.
+    let mut files = ContentFiles::builtin();
+    files.insert(
+        "levels/test_brewery.toml",
+        "name = \"Test\"\nambient = [120, 120, 120, 0]\nmap = '''\n#####\n#.@.#\n#.E.#\n#####\n'''\n\
+         [legend]\n\"@\" = { terrain = \"floor\", spawn = \"player\" }\n\
+         \"E\" = { terrain = \"floor\", objects = [\"essence_of_fire\", \"flask_of_oil\"] }\n",
+    );
+    files.insert(
+        "scenarios/test_brewery.toml",
+        "name = \"T\"\nstart_level = \"test_brewery\"\n\
+         character = { race = \"human\", gender = \"female\", class = \"witch\" }\n",
+    );
+    let content = Arc::new(Content::load(&files).expect("fixture content is valid"));
+    let mut w = World::new(content.clone(), "test_brewery", Some(3)).expect("world");
+    let mut replay = Replay::new(&w);
+    // Levels for Alchemy past the flask's 50 (the dev grant and the rolls), then the brew.
+    let text = "xp:30000 advance:alchemy*40 levelup:auto move:S pickup craft:flask_of_fire wait";
+    for action in crate::action::parse_actions(text).expect("actions") {
+        w.apply(&action);
+        replay.push(&action, &w);
+    }
+    let made = pack(&w);
+    assert!(
+        made.iter()
+            .any(|p| p == "a flask of fire" || p == "a murky draught"),
+        "{made:?}"
+    );
+    assert!(!made.iter().any(|p| p.contains("essence")), "{made:?}");
+    let (verified, divergence) = replay.play(content).expect("replays");
+    assert_eq!(divergence, None);
+    assert_eq!(verified.state_hash(), w.state_hash());
+}
+
+/// Every input of `inputs` given, each its count, in order.
+fn give_all(w: &mut World, inputs: &[(&str, u32)]) {
+    for (id, count) in inputs {
+        give(w, id, *count);
+    }
+}
+
+#[test]
+fn each_essence_recipe_makes_its_potion_or_flask_from_its_inputs() {
+    for (id, inputs, _, _) in ESSENCE_ROWS {
+        let mut w = world(100);
+        give_all(&mut w, inputs);
+        make_out_for_test(&mut w, id, &[], 12, 5);
+        let made = w.content.object_id(id).expect(id);
+        let pack = &w.state.player().inventory;
+        assert_eq!(pack.len(), 1, "{id}: the inputs spent, {pack:?}");
+        assert_eq!((pack[0].object, pack[0].count), (made, 1), "{id}");
+        assert!(pack[0].is_identified(), "{id}");
+        assert!(w.lore().label(made).is_none(), "{id}: its type known");
+    }
+}
+
+#[test]
+fn a_flask_of_fire_spends_an_essence_and_a_bought_flask_of_oil() {
+    let mut w = world(100);
+    // Bought oil is a potion of a type perhaps unknown; the recipe takes it all the same.
+    give(&mut w, "flask_of_oil", 2);
+    give(&mut w, "essence_of_fire", 1);
+    let start = w.state.time;
+    apply(&mut w, "craft:flask_of_fire");
+    assert_eq!(w.state.time.since(start).as_seconds(), 1200);
+    let ids: Vec<(String, u32)> = (w.state.player().inventory.iter())
+        .map(|s| (w.content.object(s.object).id.clone(), s.count))
+        .collect();
+    let made = (ids.iter()).any(|(id, _)| id == "flask_of_fire" || id == "murky_draught");
+    assert!(made, "{ids:?}");
+    assert!(
+        ids.contains(&("flask_of_oil".into(), 1)),
+        "one oil spent: {ids:?}"
+    );
+    assert!(
+        !ids.iter().any(|(id, _)| id == "essence_of_fire"),
+        "{ids:?}"
+    );
+}
+
+#[test]
+fn a_brew_is_refused_with_no_time_without_its_essence() {
+    let mut w = world(100);
+    give(&mut w, "flask_of_oil", 1);
+    give(&mut w, "essence_of_fire", 1);
+    let rows = rows(&w);
+    let pitch = (rows.iter())
+        .find(|r| r.starts_with("Pitch fire"))
+        .expect("listed");
+    assert!(pitch.ends_with("(not enough essences of fire)"), "{pitch}");
+    let thunder = (rows.iter())
+        .find(|r| r.starts_with("Flask of thunder"))
+        .expect("listed");
+    assert!(
+        thunder.ends_with("(not enough essences of lightning)"),
+        "{thunder}"
+    );
+    let start = w.state.time;
+    apply(&mut w, "craft:flask_of_thunder");
+    assert_eq!(said(&w, 0), "You have too few essences of lightning.");
+    apply(&mut w, "craft:pitch_fire");
+    assert_eq!(said(&w, 0), "You have too few essences of fire.");
+    assert_eq!(w.state.time, start);
+    assert_eq!(w.state.player().inventory.len(), 2, "nothing spent");
+}
+
+#[test]
+fn a_failed_essence_brew_spends_its_essences_for_a_murky_draught_or_a_blunder() {
+    let mut w = world(100);
+    give(&mut w, "essence_of_fire", 2);
+    give(&mut w, "essence_of_lightning", 2);
+    make_out_for_test(&mut w, "blasting_flask", &[], 12, -1);
+    assert_eq!(
+        pack(&w),
+        [
+            "an essence of fire",
+            "an essence of lightning",
+            "a murky draught"
+        ]
+    );
+    make_out_for_test(&mut w, "blasting_flask", &[], 2, 30);
+    assert_eq!(pack(&w), ["a murky draught", "a brewer's blunder"]);
+    assert_eq!(said(&w, 0), "You are left with a brewer's blunder.");
+}
+
+#[test]
+fn every_essence_a_brew_takes_drops_from_some_creature_and_oil_and_tar_are_sold() {
+    let content = Content::builtin().expect("content");
+    let skill = content.skill_id("alchemy").expect("alchemy");
+    let shops = content.shops().expect("shops");
+    let dropped = |object| {
+        (content.creature_defs().iter())
+            .any(|c| (c.drops.iter()).any(|d| d.goods == crate::content::DropGoods::Object(object)))
+    };
+    let sold = |object| {
+        (0..shops.defs().len()).any(|i| {
+            let kind = crate::content::ShopId(i as u8);
+            shops.get(kind).generated && shops.stocks(&content, kind, object)
+        })
+    };
+    let mut essences = 0;
+    for (_, r) in content.recipes().of(skill) {
+        for input in &r.inputs {
+            let object = input.object().expect("an object input");
+            let def = content.object(object);
+            if def.id.starts_with("essence_of_") {
+                essences += 1;
+                assert!(dropped(object), "{}: {} drops from nothing", r.id, def.id);
+            } else if content.item_class(def.class).id == "potions" {
+                assert!(sold(object), "{}: {} is sold nowhere", r.id, def.id);
+            }
+        }
+    }
+    assert_eq!(essences, 10, "the essence inputs of the nine rows");
 }

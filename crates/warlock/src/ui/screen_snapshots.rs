@@ -936,7 +936,7 @@ const CASES: &[Case] = &[
         character: Some("human,female,witch"),
         actions: "move:N*6 move:E*30 move:N*3 move:W*6 gather:W*3",
         screen: Some("profession"),
-        keys: Some("o"),
+        keys: Some("> b"),
         ..BASE
     },
     // The smith's javelin after its iron head (#1351): the haft, Woodcraft's wood billets on a

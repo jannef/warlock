@@ -220,7 +220,8 @@ of healing first, and buys them too (see [Shops](shops.md)). Some [quests](quest
 potions.
 
 If you know [Alchemy](skills.md#skill-alchemy), you can brew many of them yourself from
-[herbs](herbs.md) (see [Brewing potions](recipes-alchemy.md)). A potion you brew is known to you
+[herbs](herbs.md), and the battle flasks from an elemental's
+[essence](materials.md#herbs-and-essences) (see [Brewing potions](recipes-alchemy.md)). A potion you brew is known to you
 from then on, even if you had never seen one.
 
 ## Talents

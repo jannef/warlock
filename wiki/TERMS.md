@@ -51,6 +51,7 @@ table on its page, or grep the built page: `grep -o 'id="status-[a-z-]*"' wiki/b
 | A creature tag's material drops | `creature-drops.md#drops-tag-TAG` | `creature-drops.md#drops-tag-beast` |
 | An item class | `objects.md#class-ID` | `objects.md#class-melee-weapons` |
 | A herb (glowcap, moonwort, mandrake, …) | `herbs.md#herb-ID` | `herbs.md#herb-moonwort` |
+| An essence (of fire, ice, lightning, air, water, earth) | `materials.md#herbs-and-essences` | `materials.md#herbs-and-essences` |
 | A potion | `potions.md#potion-ID` | `potions.md#potion-of-healing` |
 | A use of the priest's prayer (disease, poison, wounds, release, mana, hunger, restoration) | `prayer.md#prayer-ID` | `prayer.md#prayer-wounds` |
 | A scroll | `scrolls.md#scroll-ID` | `scrolls.md#scroll-of-identify` |
