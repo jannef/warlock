@@ -5,7 +5,8 @@
 use super::text::{Term, anchored, link};
 use std::fmt::Write as _;
 use warlock_core::combat::HIGHEST;
-use warlock_core::content::{Content, PartSource, counted};
+use warlock_core::content::{Content, PartSource, RecipeCount, counted};
+use warlock_core::dice::Dice;
 use warlock_core::time::Duration;
 use warlock_core::world::{Grade, grade};
 
@@ -22,32 +23,52 @@ const BONUSES: [(i32, &str); 4] = [
 const ODDS_FOR: &str = "long_sword";
 
 /// Every generic recipe, by profession (skill order), then by the skill it is listed from and
-/// its name: what it makes, what is chosen, the stock it takes in its base material, its
-/// station, time, and difficulty.
+/// its name: what it makes and how many, what is chosen, the stock it takes in its base
+/// material (a batch's at its most for an untrained maker), what else it uses, its station,
+/// time, and difficulty.
 pub(super) fn recipes(content: &Content) -> String {
     let recipes = content.recipes();
     let mut out = String::from(
-        "| Recipe | Listed from | Chosen | Stock | Ornament | Station | Time | Difficulty |\n\
-         |---|:---:|---|---|:---:|---|---|:---:|\n",
+        "| Recipe | Listed from | Makes | Chosen | Stock | Uses up | Ornament | Station | Time | \
+         Difficulty |\n|---|:---:|:---:|---|---|---|:---:|---|---|:---:|\n",
     );
     let mut rows: Vec<_> = (recipes.list.iter())
         .filter(|r| r.result.is_some())
         .collect();
     rows.sort_by(|a, b| (a.skill, a.from, &a.name).cmp(&(b.skill, b.from, &b.name)));
+    let fletch = content.fletch();
     for r in rows {
         let Some(result) = r.result.as_ref() else {
             continue;
         };
+        let skill = content.skill(r.skill);
         let def = content.object(result.object);
+        let (makes, most) = match result.count {
+            RecipeCount::Dice(dice) if dice.is_fixed() => {
+                (dice.max().to_string(), dice.max().max(1).unsigned_abs())
+            }
+            RecipeCount::Dice(dice) => (dice.to_string(), dice.max().max(1).unsigned_abs()),
+            RecipeCount::Fletch => {
+                let (dice, per) =
+                    fletch.map_or((Dice::fixed(1), 1), |f| (f.count, f.value_per_count));
+                (
+                    format!("{dice} + {} ÷ {per}", skill.name),
+                    dice.max().max(1).unsigned_abs(),
+                )
+            }
+        };
         let mut chosen = Vec::new();
         let mut stock = Vec::new();
         for part in &r.parts {
             let base = &def.parts[part.part];
-            let name = (base.part).map_or("the weapon".to_string(), |p| {
+            let name = (base.part).map_or("the item".to_string(), |p| {
                 content.part_defs()[usize::from(p.0)].name.clone()
             });
             chosen.push(format!("{name} ({})", source(content, &part.source)));
-            let grams = u64::from(def.weight) * u64::from(base.share) / 100;
+            if part.source != PartSource::Stock {
+                continue;
+            }
+            let grams = u64::from(def.weight) * u64::from(base.share) / 100 * u64::from(most);
             let piece = content
                 .object_id(warlock_core::piece::ID)
                 .map(|o| content.object(o));
@@ -57,20 +78,45 @@ pub(super) fn recipes(content: &Content) -> String {
                 stock.push(counted(&one, &many, n));
             }
         }
-        let station = (r.station).map_or("—".to_string(), |t| {
-            let t = content.terrain(t);
-            link(Term::Terrain, &t.id, &t.name)
-        });
-        let skill = content.skill(r.skill);
+        let uses: Vec<String> = (r.inputs.iter())
+            .filter_map(|i| {
+                let o = content.object(i.object()?);
+                let words = counted(&o.name, &o.plural, i.count);
+                Some(match i.per_made {
+                    true => format!("{words} for each made"),
+                    false => words,
+                })
+            })
+            .collect();
+        let mut station: Vec<String> = (r.station.iter())
+            .map(|&t| {
+                let t = content.terrain(t);
+                link(Term::Terrain, &t.id, &t.name)
+            })
+            .collect();
+        if r.knife {
+            station.push("a knife".into());
+        }
+        if r.launcher {
+            station.push("a launcher for it, ready".into());
+        }
+        let listed = match r.anyone {
+            true => "anyone".to_string(),
+            false => format!("{} {}", link(Term::Skill, &skill.id, &skill.name), r.from),
+        };
+        let or_dash = |list: Vec<String>| match list.is_empty() {
+            true => "—".to_string(),
+            false => list.join(", "),
+        };
         let _ = writeln!(
             out,
-            "| {} | {} {} | {} | {} | {} | {station} | {} | {} |",
+            "| {} | {listed} | {makes} | {} | {} | {} | {} | {} | {} | {} |",
             anchored(Term::Recipe, &r.id, &r.name),
-            link(Term::Skill, &skill.id, &skill.name),
-            r.from,
-            chosen.join(", "),
-            stock.join(", "),
+            or_dash(chosen),
+            or_dash(stock),
+            or_dash(uses),
             if r.ornament { "yes" } else { "no" },
+            or_dash(station),
             Duration::seconds(u64::from(r.seconds)).spoken(),
             r.difficulty,
         );
@@ -78,7 +124,9 @@ pub(super) fn recipes(content: &Content) -> String {
     out.push_str(
         "\nStock is counted in pieces of the base material (an ingot is 500 g of steel). Another \
          material takes as many pieces of its own: a mithril ingot is lighter, and so is the \
-         blade made of it.\n",
+         blade made of it. A batch's stock is what the most it can make weighs, for a maker \
+         untrained in the skill; a smaller batch takes less, and one piece always covers at \
+         least one.\n",
     );
     out
 }
@@ -87,12 +135,19 @@ pub(super) fn recipes(content: &Content) -> String {
 fn source(content: &Content, source: &PartSource) -> String {
     match source {
         PartSource::Stock => "stock".into(),
-        PartSource::Sources { input, stock, .. } => {
+        PartSource::Sources {
+            input,
+            stock,
+            optional,
+        } => {
             let mut from: Vec<String> = input
                 .iter()
                 .map(|&o| content.object(o).name.clone())
                 .collect();
             from.extend(stock.iter().map(|&m| content.material(m).name.clone()));
+            if *optional {
+                from.push("none".into());
+            }
             from.join(" or ")
         }
         PartSource::Gem => "a cut gem".into(),

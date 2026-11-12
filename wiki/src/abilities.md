@@ -90,9 +90,9 @@ you never choose them, they work by themselves as you fight. They have their own
 - **Metalcraft…** and **Woodcraft…**: everyone has these two rows, in the skills' places among
   the Skills. Each opens that [profession](skill-uses.md#professions)'s list of recipes.
   Metalcraft's holds **Temper** (see [Forges](altars-forges-springs.md#forges)); Woodcraft's
-  holds **Fletch** (see [Fletching](skill-uses.md#fletching)) and **Whittle** (see
-  [Whittling](skill-uses.md#whittling)). A recipe you cannot make now is greyed out with the
-  reason: "no anvil beside you", "no knife", "no bow or crossbow ready".
+  holds **Arrows** and **Crossbow bolts** (see [Fletching](skill-uses.md#fletching)), **Sling
+  stones**, and **Whittle** (see [Whittling](skill-uses.md#whittling)). A recipe you cannot make
+  now is greyed out with the reason: "no anvil beside you", "no knife", "no bow ready".
 - **Wedge a door**: anyone trained in [Woodcraft](skills.md#skill-woodcraft) has it, in the skill's place among the Skills. Choose
   a direction, and you spend a turn wedging the closed door that way shut, so that creatures must
   kick it in (see [Wedging a door](doors.md#wedging-a-door)).

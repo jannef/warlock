@@ -7,25 +7,25 @@ expression: "render(case, content.clone())"
 
 
 
-
             ┌─ Metalcraft: recipes ────────────────────────────────────────────────────┐
             │                                                                          │
             │ Work                                                                     │
-            │ > a - Temper        a metal weapon or armour, an anvil, about 10 minutes │
+            │ > a - Temper          a metal weapon or armour, an anvil, about 10 minut │
             │ Melee weapons                                                            │
-            │   b - Dagger        no metal to hand                                     │
-            │   c - Great sword   beyond your skill                                    │
-            │   d - Knife         no metal to hand                                     │
-            │   e - Long sword    beyond your skill                                    │
-            │   f - Rapier        beyond your skill                                    │
-            │   g - Scimitar      beyond your skill                                    │
-            │   h - Short sword   no metal to hand                                     │
+            │   b - Dagger          no metal to hand                                   │
+            │   c - Great sword     beyond your skill                                  │
+            │   d - Knife           no metal to hand                                   │
+            │   e - Long sword      beyond your skill                                  │
+            │   f - Rapier          beyond your skill                                  │
+            │   g - Scimitar        beyond your skill                                  │
+            │   h - Short sword     no metal to hand                                   │
+            │ Materials                                                                │
+            │   i - Arrowheads      no metal to hand                                   │
             │                                                                          │
             │ Takes a metal weapon or armour, an anvil, about 10 minutes.              │
             │                                                                          │
-            │ a-h or Enter make   Esc back                                             │
+            │ a-i or Enter make   Esc back                                             │
             └──────────────────────────────────────────────────────────────────────────┘
-
 
 
 

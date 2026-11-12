@@ -111,8 +111,6 @@ pub enum ActionKind {
     /// A turn of gathering herbs from the glowing fungus (spec §8 "Skills": Herbalism): a
     /// gather takes several.
     Gather,
-    /// A turn of fletching (spec §8 "Fletching"): a batch takes several.
-    Fletch,
     /// A turn of working an item at a forge's anvil (spec §7 "Special rooms"): an attempt
     /// takes many.
     Temper,
@@ -184,7 +182,6 @@ impl ActionKind {
         ActionKind::Drink,
         ActionKind::Forage,
         ActionKind::Gather,
-        ActionKind::Fletch,
         ActionKind::Temper,
         ActionKind::Whittle,
         ActionKind::Craft,
@@ -238,7 +235,6 @@ impl ActionKind {
             ActionKind::Drink => "drink",
             ActionKind::Forage => "forage",
             ActionKind::Gather => "gather",
-            ActionKind::Fletch => "fletch",
             ActionKind::Temper => "temper",
             ActionKind::Whittle => "whittle",
             ActionKind::Craft => "craft",
@@ -311,7 +307,6 @@ impl ActionKind {
             ActionKind::Drink => "drink",
             ActionKind::Forage => "forage",
             ActionKind::Gather => "gather",
-            ActionKind::Fletch => "fletch",
             ActionKind::Temper => "temper",
             ActionKind::Whittle => "whittle",
             ActionKind::Craft => "make things by a recipe",

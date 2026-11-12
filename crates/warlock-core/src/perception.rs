@@ -2183,7 +2183,7 @@ impl<'a> PerceptionView<'a> {
     /// take (`world/craft_make.rs`): the forging wizard's steps. Empty for a recipe with none
     /// (or one not made yet).
     pub fn craft_steps(&self, recipe: crate::content::RecipeId) -> Vec<crate::world::CraftStep> {
-        crate::world::craft_steps(self.content, self.lore, self.player, recipe)
+        crate::world::craft_steps(self.content, self.lore, self.level, self.player, recipe)
     }
 
     /// What `recipe` made with `picks` (inventory positions in step order, `None` a skipped
@@ -2193,7 +2193,14 @@ impl<'a> PerceptionView<'a> {
         recipe: crate::content::RecipeId,
         picks: &[Option<usize>],
     ) -> Result<crate::world::CraftPlan, String> {
-        crate::world::craft_plan(self.content, self.lore, self.player, recipe, picks)
+        crate::world::craft_plan(
+            self.content,
+            self.lore,
+            self.level,
+            self.player,
+            recipe,
+            picks,
+        )
     }
 
     /// What the player's spell `spell` costs them now, in mana (spec §8 "Spells": they know

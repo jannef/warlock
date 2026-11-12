@@ -1,13 +1,13 @@
 //! A profession's screen (spec §8 "Skills"; docs/design/professions.md §8; #1334): what its row
 //! in the abilities menu ("Metalcraft…") opens. The recipes the player sees
 //! (`PerceptionView::recipes`), in the one paged list grouped by the result's item class, the
-//! built-in recipes (Temper, Whittle, Fletch) first under "Work". A row is the recipe's name and
+//! built-in recipes (Temper, Whittle) first under "Work". A row is the recipe's name and
 //! what it takes in words ("a metal weapon or armour, an anvil, about 10 minutes"), never a
 //! difficulty or the odds; one that cannot be made now is greyed with its reason in place of
 //! what it takes ("no anvil beside you"), which the line under the list then gives in full. A
 //! letter on the page, or Enter on the `>` row, makes a recipe that can be made: a built-in one
-//! runs as from its old row (Temper's and Whittle's lists over this screen, Fletch at once);
-//! a greyed one does nothing. The list keys turn the page; Esc closes it. Every key is the
+//! runs as from its old row (Temper's and Whittle's lists over this screen), a generic one opens
+//! the forging wizard (the arrows too); a greyed one does nothing. The list keys turn the page; Esc closes it. Every key is the
 //! list's own, fixed.
 
 use super::menu::{Hints, Nav, Panel, Press};
@@ -24,7 +24,7 @@ use warlock_core::skills::SkillId;
 /// Panel width: room for a recipe's name with what it takes.
 const WIDTH: i32 = 76;
 /// The name column's width, the letter's included.
-const NAME_W: i32 = 18;
+const NAME_W: i32 = 20;
 
 /// One recipe as the list shows it.
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -152,7 +152,6 @@ impl ProfessionScreen {
         match entry.uses {
             Some(RecipeUse::Temper) => ScreenAction::Open(ScreenName::Temper),
             Some(RecipeUse::Whittle) => ScreenAction::Open(ScreenName::Whittle),
-            Some(RecipeUse::Fletch) => ScreenAction::Act(Action::Fletch),
             // Greyed "not usable yet" until P10 and P11 build their actions.
             Some(RecipeUse::Cut | RecipeUse::Set) => ScreenAction::Stay,
             // The forging wizard asks for the picks, then the dialog; a recipe with none to make
@@ -262,11 +261,21 @@ mod tests {
             screen.handle(&press('a'), &Bindings::default()),
             ScreenAction::Open(ScreenName::Temper)
         );
-        // Woodcraft's rows, Fletch then Whittle (path order), both greyed without a knife.
+        // Woodcraft's rows, Whittle under "Work", then the missiles (path order), greyed
+        // without a knife.
         let mut screen = ProfessionScreen::new(Some(&world.perception()), Some(wood));
         screen.fit(100, 60);
         let names: Vec<&str> = screen.recipes.iter().map(|e| e.name.as_str()).collect();
-        assert_eq!(names, ["Fletch", "Whittle"]);
+        assert_eq!(
+            names,
+            [
+                "Whittle",
+                "Arrows",
+                "Crossbow bolts",
+                "Flaming arrows",
+                "Sling stones"
+            ]
+        );
         assert_eq!(
             screen.recipes.get(0).and_then(|e| e.why.as_deref()),
             Some("no knife")

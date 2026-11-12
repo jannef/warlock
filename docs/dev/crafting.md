@@ -13,8 +13,9 @@ forge, P5), the forging wizard, and salvage. Material stock (the piece) is in
   that work materials today (Alchemy, Enchanting, Herbalism, and Mining are skills with no craft
   yet, #1331). Each declares `{ effect = "craft", curve = [[0, 0], [100, 8], [200, 12]] }`
   (Temper's curve, read by salvage and by a recipe made) and a `salvage` mark rule at 100 %
-  (Metalcraft also a `craft` mark, for a recipe made). Temper's, Whittle's, and Fletch's own
-  effects (`Effect::Temper`, `Whittle`, `Fletch`) are unchanged.
+  (Metalcraft and Woodcraft also a `craft` mark, for a recipe made). Temper's and Whittle's own
+  effects (`Effect::Temper`, `Whittle`) are unchanged; Fletch's (`Effect::Fletch`, `Use::Fletch`)
+  went with the action in #1336: the arrows read Woodcraft's `craft`, the same curve.
 - **Who works what** is data, never code: `data/stock.toml`'s `[[group]]` rows name the skill,
   stat, and verb per material group, and `gems = { ... }` the gems' (no group). Today metal is
   Metalcraft (Strength); wood, bone, hide, and sinew are Woodcraft (Dexterity); stone, resin,
@@ -49,7 +50,7 @@ without a row shows its skill's description), and the bands (`RecipeSettings`,
 |---|---|---|
 | `fine`, `marvellous`, `masterwork` | 6, 12, 20 | the check's margin from which a made item is Fine, Marvellous, a Masterwork (recipes.md §4) |
 | `cut_step` | 5 | a gem's cut rises a grade every step of margin (§5) |
-| `half_within`, `one_within` | 3, 6 | how far below the difficulty a counted recipe still makes half its count, one (copies of `fletch.toml`'s, which P6 retires) |
+| `half_within`, `one_within` | 3, 6 | how far below the difficulty a counted recipe still makes half its count, one ("Counted recipes" below) |
 | `yield` | 50 | the percent of the stock and object inputs a failure gives back (`yield_percent`) |
 | `free_wood` | forest, dense forest, swamp | `Landscape`s where wood is free (an arrow's shaft takes no billet) |
 
@@ -57,8 +58,8 @@ without a row shows its skill's description), and the bands (`RecipeSettings`,
 |---|---|
 | `id` | the file name; `craft:ID` names it |
 | `name` | the row's name (default: the result object's, capitalized, or the use's) |
-| `use` | a **built-in** recipe: `temper`, `whittle`, `fletch`, `cut`, `set` (`RecipeUse`); its row runs that existing action with its own list and rules. Cut and Set (Jewelcraft's) have no action yet (`RecipeUse::usable` false): their rows are greyed "not usable yet" (`RecipeLack::NotYet`), `craft:cut` says "You cannot do that yet.", and the profession screen does nothing on them, until P10 and P11 (which add `recipes/jewelcraft/cut.toml` and `set.toml`: the loader needs no file now) |
-| `result` | `{ object, count }`: a **generic** recipe's result; `count` dice (`RecipeCount::Dice`) or `"fletch"` (`RecipeCount::Fletch`, Fletch's count) |
+| `use` | a **built-in** recipe: `temper`, `whittle`, `cut`, `set` (`RecipeUse`); its row runs that existing action with its own list and rules. Cut and Set (Jewelcraft's) have no action yet (`RecipeUse::usable` false): their rows are greyed "not usable yet" (`RecipeLack::NotYet`), `craft:cut` says "You cannot do that yet.", and the profession screen does nothing on them, until P10 and P11 (which add `recipes/jewelcraft/cut.toml` and `set.toml`: the loader needs no file now) |
+| `result` | `{ object, count }`: a **generic** recipe's result; `count` dice (`RecipeCount::Dice`) or `"fletch"` (`RecipeCount::Fletch`, Fletch's count: "Arrows and bolts" below); above 1 or `"fletch"` makes it **counted** |
 | `[recipe.parts]` | `main` is the first part; sorted into the result's part order. `blade = "stock"` (`PartSource::Stock`: the profession's stock), a **table of sources** `head = { input = "arrowhead", stock = ["bone", "stone"], optional = true }` (`PartSource::Sources`: the wizard's one step offers the input's stacks, then stock of the listed groups or materials of any profession, then None if `optional`; `stock` holds the materials of the part's `made_of` the list names, in `made_of` order; a name both a group and a material, `stone`, is the group), or `setting = { gem = true }` (`PartSource::Gem`: a cut loose gem, required) |
 | `inputs` | `[{ object, count, per_made }]`, or fixed stock: `{ material = "sinew", count }`, `{ group = "metal", count }` (`InputKind`; `RecipeInput::object()` for an object input) |
 | `failure`, `fumble` | `{ object }`: what a failed check, a natural 2, makes instead of nothing |
@@ -66,7 +67,7 @@ without a row shows its skill's description), and the bands (`RecipeSettings`,
 | `ornament` | an optional gem for the result's ornament part |
 | `difficulty`, `seconds` | a generic recipe's check base and time |
 | `station` | a terrain id that must stand beside the maker |
-| `knife`, `launcher` | a knife carried; a launcher ready that fletching makes ammunition for |
+| `knife`, `launcher` | a knife carried; a launcher ready that shoots the result (its `ammo`) |
 | `from` | the trained value it is listed from (default 0) |
 | `anyone` | listed for the untrained too |
 
@@ -95,17 +96,17 @@ refusal test:
 | `use` | not one of the five; with a result, parts, inputs, ornament, difficulty, seconds, failure, fumble, or brittle |
 | settings | `fine` not above 0, `marvellous` not above `fine`, `masterwork` not above `marvellous`, `cut_step` not above 0, `half_within` below 0, `one_within` not above `half_within`, `yield` above 100, a `free_wood` landscape twice or unknown, a band missing |
 
-No shipped recipe uses these yet. Each is used by the phase that makes the first recipe needing
-it, which also builds its wizard step and its row's words and lack: the head step and `brittle`
-with P6 (arrows), stock inputs with P7 (sinew, iron), `gem = true` with P11, `failure` and
-`fumble` with P13 (brewing). The bands and `yield` are read from P5 (the forge, "Making a
-recipe" below). Until then the rows and the wizard read only `"stock"` parts, object inputs, and
-the ornament. `data/stock.toml`'s `unit` and `[[material]]` overrides (P2b) are checked by
+Each is used by the phase that makes the first recipe needing it, which also builds its wizard
+step and its row's words and lack: the head step (a table of sources), `optional`, `brittle`,
+`per_made`, and counted results with P6 (#1336, the arrows: "Arrows and bolts" below), stock
+inputs with P7 (sinew, iron), `gem = true` with P11, `failure` and `fumble` with P13 (brewing).
+The bands and `yield` are read from P5 (the forge, "Making a recipe" below). Until then the rows
+and the wizard read `"stock"` parts, parts with sources, object inputs, and the ornament. `data/stock.toml`'s `unit` and `[[material]]` overrides (P2b) are checked by
 `content/stock.rs`.
 
-The three built-ins: `recipes/metalcraft/temper.toml` (`anyone`, `station = "anvil"`),
-`recipes/woodcraft/whittle.toml` (`anyone`, `knife`), `recipes/woodcraft/fletch.toml` (`anyone`,
-`knife`, `launcher`). Temper, Whittle, and Fletch stay open to everyone (#1337 Q3).
+The two built-ins: `recipes/metalcraft/temper.toml` (`anyone`, `station = "anvil"`) and
+`recipes/woodcraft/whittle.toml` (`anyone`, `knife`). Temper, Whittle, and the arrows and bolts
+(once Fletch's built-in, #1336) stay open to everyone (#1337 Q3).
 
 The generic recipes (P5, #1335; `docs/design/recipes.md` §6 "Melee weapons", the metal route):
 the seven swords under `recipes/metalcraft/`, each `station = "anvil"`, its main part (the long
@@ -149,14 +150,19 @@ the cells beside the player, and the skills: presentation never decides availabi
 - `takes`: what a built-in works on ("a metal weapon or armour", "a wooden weapon"), each stock
   part priced in pieces (`piece::count_for` of the part's share of the result's weight, named by
   `piece::names`: "3 steel ingots"), inputs ("20 arrowheads", "an arrowhead for each made"), the
-  station ("an anvil"), "a knife", "a bow or crossbow ready", then the time in
-  `Duration::spoken` ("about 10 minutes": Temper's and Whittle's `data/temper.toml`, Fletch's
-  `data/fletch.toml` cut by Fletcher, a generic recipe's `seconds`). Never a difficulty or odds.
+  station ("an anvil"), "a knife", "a bow ready" (`data/fletch.toml`'s word for what shoots the
+  result), then the time in `Duration::spoken` ("about 10 minutes": Temper's and Whittle's
+  `data/temper.toml`, a generic recipe's `seconds`, the arrows' cut by Fletcher). A part with
+  sources is its choices joined by "or" ("an arrowhead for each made or a bone shard or a block of
+  flint"); a counted recipe's stock is priced for the batch at its most; wood free here is not
+  said. Never a difficulty or odds.
 - `unavailable`: the first `RecipeLack` that applies, in this order: `NotYet` ("not usable
   yet": a built-in without its action, Cut and Set), `Skill` ("beyond your
   skill": the trained value below `from`), `Station` ("no anvil beside you"), `Knife` ("no
-  knife"), `Launcher` ("no bow or crossbow ready": `fletch::fletch_makes`), `Stock` ("no metal to
-  hand": no piece whose material fits a stock part), `Input` ("no arrowheads").
+  knife"), `Launcher(result)` ("no bow ready", "no crossbow ready": `fletch::shoots`), `Stock`
+  ("no metal to hand", "no wood to hand": no piece whose material fits a stock part, wood free on
+  wooded ground for the arrows; a required part with sources wants its input or its stock),
+  `Input` ("no arrowheads"; an input a part's sources name is that part's).
 
 ## The profession screen
 
@@ -166,11 +172,10 @@ Metalcraft). A `PagedList` grouped by the result's item class, the built-in reci
 "Work" (group `None`). A row: the letter and name, then what it takes; a row that cannot be made
 is greyed (`TEXT_DIM`) with its reason in place of what it takes, and the line under the list
 gives the selected row's `takes` in full. A letter or Enter on the `>` row makes an available
-recipe: Temper opens `ScreenName::Temper` over the screen, Whittle `ScreenName::Whittle`, Fletch
-applies `Action::Fletch`; a greyed one does nothing (its reason is on the row). The list keys
-page; Esc closes. Every key is fixed and named in the footer ("a-b or Enter make   Esc back"):
-no `KeyCommand`, no `Context` entry. A generic recipe's row applies `Action::Craft` with no
-picks for now; P5's wizard (`ui/craft_pick_screen.rs`) takes its place.
+recipe: Temper opens `ScreenName::Temper` over the screen, Whittle `ScreenName::Whittle`, a
+generic recipe the wizard (`ui/craft_pick_screen.rs`, below); a greyed one does nothing (its
+reason is on the row). The list keys page; Esc closes. Every key is fixed and named in the footer
+("a-b or Enter make   Esc back"): no `KeyCommand`, no `Context` entry.
 
 ## The action: `Action::Craft`
 
@@ -178,8 +183,8 @@ picks for now; P5's wizard (`ui/craft_pick_screen.rs`) takes its place.
 (positions as `position_text`, `-` a skipped optional: `craft:long_sword:c,f`,
 `craft:dagger:a,-`), dispatched by one arm in `World::player_acts` to `World::start_craft`
 (`world/craft.rs`). An unknown recipe is refused ("You know no such recipe."), and so is a
-built-in one ("Temper is done from its own list.": its row runs `temper:`, `whittle:`, or
-`fletch`), both taking no time; a generic one goes to `World::start_making` ("Making a recipe"
+built-in one ("Temper is done from its own list.": its row runs `temper:` or `whittle:`), both
+taking no time; a generic one goes to `World::start_making` ("Making a recipe"
 below). Its turns are `ActionKind::Craft` (`data/actions.toml` `craft = 1000`;
 `World::kind_of`).
 
@@ -189,40 +194,52 @@ below). Its turns are `ActionKind::Craft` (`data/actions.toml` `craft = 1000`;
 `world/craft_make_tests.rs`:
 
 - **Steps** (`craft_steps`, `PerceptionView::craft_steps(recipe)`): one `CraftStep` per choice in
-  the wizard's order: each `"stock"` part (`CraftStepKind::Stock`, labelled by the part's name,
-  "blade", or for an unnamed main part by its stock's group, "metal"), each object input
-  (`Input`), then the ornament (`Ornament`, `optional`; the part is `ObjectDef::ornament` or the
+  the wizard's order: each chosen part in part order, a `"stock"` part (`CraftStepKind::Stock`,
+  labelled by the part's name, "blade", or for an unnamed main part by its stock's group,
+  "metal"; none for wood free here, "Arrows and bolts") or a part with a table of sources
+  (`Sources`: the input's stacks whose material the part's `made_of` holds, then the pieces of
+  its `stock` materials as carried, `optional` when None may be chosen), each object input no
+  part's sources name (`Input`), then the ornament (`Ornament`, `optional`; the part is `ObjectDef::ornament` or the
   class's `[[ornament]]`). Each lists the stacks carried that fit, `CraftOption { at, name (as
-  the inventory lists it), short (the material: "steel", "ruby"), takes, enough }`: pieces whose
+  the inventory lists it), short (the material: "steel", "ruby"), takes, each (for every one
+  made: "uses 1 each"), enough }`: pieces whose
   material the part's `made_of` holds and the profession works (`worked_materials`), stacks of
   the input's object, cut loose gems (never an uncut one, `Cut::rough`). A part takes its share
   of the result's weight scaled by the material's weight over the base part's (as the made item
   weighs it), in pieces (`piece::count_for`): a mithril blade takes as many mithril ingots as a
-  steel one takes steel. A recipe with another part source, a stock input, a count above 1,
-  `failure`, `fumble`, or `brittle`, or more than `MAX_PICKS` (8) steps has no steps, and
-  `craft:` refuses it ("You cannot make that yet.") until the phase that builds its step.
+  steel one takes steel. A recipe with a gem part, a stock input, `failure`, or `fumble`, or
+  more than `MAX_PICKS` (8) steps has no steps, and `craft:` refuses it ("You cannot make that
+  yet.") until the phase that builds its step.
 - **The plan** (`craft_plan`, `PerceptionView::craft_plan(recipe, picks)`; `resolve`): every
   required step picked ("You must choose the metal."), the stack there ("You carry no such
   thing."), fitting ("That will not do for the blade.", "Only a cut gem can be set."), holding
   what it takes, summed over steps that pick it twice ("You have too few of those."); more picks
   than steps are refused ("That is more than the work takes."). The made item is the result's
   object with own parts (`ItemPart::material` for a chosen material other than the base part's,
-  `ItemPart::gem` for the ornament; `item_parts::check`). `CraftPlan { verb, name, uses,
-  station, time }`: the verb `stock.toml`'s for the main material's profession ("Forge"), the
-  name `Lore::describe` of the made item ("a ruby-pommelled mithril long sword"), `uses` the
-  pieces counted and "the ruby".
+  `ItemPart::gem` for the ornament; `item_parts::check`); None on an `optional` part makes the
+  recipe's `brittle` object instead, each of its parts of the first chosen material its
+  `made_of` holds (the brittle arrow of the shaft's wood). `CraftPlan { verb, name, uses,
+  station, time }`: the verb `stock.toml`'s for the recipe's profession (`craft_make::profession`:
+  the main material's when it is the recipe's skill's, else the skill's first stock group's, so a
+  steel-headed arrow is Woodcraft's "Make"), the name `Lore::describe` of the made item ("a
+  ruby-pommelled mithril long sword"; a counted recipe's plural, "flint arrows"), `uses` the
+  pieces counted, "an arrowhead for each made", and "the ruby".
 - **Start** (`World::start_making`): refused with no time by the row's `lack` (beyond skill: "That
-  is beyond your skill."; no station: "There is no anvil here."; no knife), then by the plan's
-  reason. Then "You set to work on the long sword at the anvil." and `Spent::Craft(Crafting)`
+  is beyond your skill."; no station: "There is no anvil here."; no knife; no launcher: "You
+  have no bow ready."), then by the plan's reason. Then "You set to work on the long sword at the anvil." and `Spent::Craft(Crafting)`
   (`Copy`: the picks in a `[Option<usize>; MAX_PICKS]`).
-- **The work** (`World::make`): `keep_at` for the recipe's `seconds` in `ActionKind::Craft`
-  turns; stopped early, "...; you put down your work." and nothing is spent. Done (`crafted`),
+- **The work** (`World::make`): `keep_at` for the recipe's `seconds` (`fletch::fletcher_seconds`:
+  Fletcher's share for the arrows) in `ActionKind::Craft` turns, watched on the overworld as a
+  forage is (`Watch::Forage`); stopped early, "...; you put down your work." and nothing is spent. Done (`crafted`),
   the plan is resolved again from the pack ("You have nothing left to work with."), then the
   check: two gameplay draws (`combat::roll_natural`), `craft_modifier` = the profession's stat
-  modifier (`stock.toml`'s `stat` for the main material: Strength for metal) +
+  modifier (`stock.toml`'s `stat` for the recipe's profession, above: Strength for metal,
+  Dexterity for Woodcraft's) +
   `Actor::skill_effect_of(skill, Effect::Craft)` (that skill's benefit alone, the items' skill
   bonus counted; Metalcraft's `craft` curve is Temper's, +8 at 100, +12 at 200) +
-  `TalentMods::check(stat)`, against `difficulty` + the main material's `work`.
+  `TalentMods::check(stat)` (+ Fletcher's `check` for a `count = "fletch"` recipe), against
+  `difficulty` + the main material's `work`. A graded recipe (a count of 1) goes on to its grade;
+  a counted one to "Counted recipes" below.
 - **The grade** (`grade(settings, natural, margin)`, `Grade`): below 0 `Failed`, from `fine`
   `Fine`, from `marvellous` `Marvellous`, from `masterwork` `Masterwork`, else `Plain`; a natural
   24 at least `Fine`, a natural 2 `Failed`. `make_out` spends the picks, highest position first.
@@ -236,21 +253,99 @@ below). Its turns are `ActionKind::Craft` (`data/actions.toml` `craft = 1000`;
   whatever the margin. The item is identified, joins the pack (`add_to_inventory`, over the limit
   as anything picked up), and is said: "You have made a Masterwork short sword!", "This is a
   Marvellous short sword!", "This is a Fine short sword.", "You have made a short sword.".
-- **Marks**: `Use::Craft` on the recipe's skill alone (`World::train_skill`; Metalcraft's
-  `mark`, 100 %), whatever came of it; no stat use. Metalcraft, Woodcraft, and Jewelcraft all
-  have the `craft` benefit (salvage reads it too), but only Metalcraft the `craft` mark today;
-  the profession whose generic recipes come next (P5b) adds its own, and `skill_effect_of` keeps
+- **Marks**: `Use::Craft` on the recipe's skill alone (`World::train_skill`; Metalcraft's and
+  Woodcraft's `mark`, 100 %), whatever came of it; no stat use. Metalcraft, Woodcraft, and
+  Jewelcraft all have the `craft` benefit (salvage reads it too), Metalcraft and Woodcraft the
+  `craft` mark (Woodcraft's in place of its `fletch` mark, #1336), and `skill_effect_of` keeps
   one profession's benefit from counting for another's recipe.
+
+## Counted recipes
+
+A result whose `count` is above 1, or `"fletch"`, is **counted** (`craft_make::is_counted`;
+`docs/design/professions.md` §7, `recipes.md` §4): the arrowheads, the arrows and bolts, the sling
+stones, the flaming arrows. No grades:
+
+- **The batch** (`resolve`): its most (`batch_most`: the dice's most, or `fletch::fletch_most`),
+  at most what each stack chosen covers: a `per_made` input's count over its `count`, a stock
+  pick's pieces by `covers` (the most whose weight its pieces hold, `piece::count_for`). A stock
+  part is priced for that batch (`count_for` of the part's grams times the batch: one billet of
+  wood covers up to 11 arrows, one bone shard a whole batch), and the plan asks for that; the
+  wizard's row says what the batch at its most takes of the stack, and is pickable with one
+  made's worth.
+- **The count** (`make_batch`, after the check): the dice rolled (a gameplay draw a die), or
+  `fletch::fletch_count` (`fletch.toml`'s dice, at least 1, plus the recipe skill's trained
+  value over `value_per_count`); then `batch_made(settings, natural, margin, count)`: all of it
+  from a margin of 0, half rounded up within `half_within`, one within `one_within`, else none; a
+  natural 2 none, a natural 24 all. Then Fletcher's `count_times` (a `count = "fletch"` recipe),
+  then at most the batch.
+- **What is spent** (`Spend::gone`): a stock pick the pieces of what was made (at least one), a
+  `per_made` input its `count` for each made, another input all of it. None made is a failure:
+  "You spoil the whole batch.", the stock and the whole inputs back at `yield` (a single piece
+  always comes back), the `per_made` ones untouched.
+- **Made**: the stack identified into the pack, "You make 20 steel arrowheads.", joining a stack
+  like it.
+
+The shipped ones (`docs/design/recipes.md` §6 "Missiles"):
+
+| Recipe | Profession | Chosen | Inputs | Count | Station, tools | Difficulty | Seconds | Listed |
+|---|---|---|---|---|---|---|---|---|
+| `arrowheads` | Metalcraft | `main` stock (metal) | — | 20 | anvil | 10 | 600 | from 0 |
+| `arrows` | Woodcraft | `head` sources (arrowheads; bone, stone; None: `brittle_arrow`), `shaft` stock (wood) | an arrowhead `per_made` | `fletch` | knife, a bow ready | 12 | 600 | anyone |
+| `bolts` | Woodcraft | the same; None: `brittle_bolt` | an arrowhead `per_made` | `fletch` | knife, a crossbow ready | 12 | 600 | anyone |
+| `sling_stones` | Woodcraft | `main` stock (stone) | — | 10 | — (no knife) | 6 | 600 | anyone |
+| `flaming_arrows` | Woodcraft | — | an arrow `per_made`, a flask of oil | 10 | — | 8 | 600 | from 0 |
+
+## Arrows and bolts
+
+Fletching (spec §8 "Fletching", #1021) is these two recipes since #1336; `Action::Fletch`, its
+`fletch` action text, `ActionKind::Fletch`, `Spent::Fletch`, `Effect::Fletch`, `Use::Fletch`,
+`Unavailable::NoLauncher`, and the built-in `use = "fletch"` recipe are gone. A replay's `fletch`
+step is now `craft:arrows:HEAD,SHAFT` (or `craft:bolts:...`), `-` for no head: `craft:arrows:-,c`
+for brittle arrows from billet `c`, `craft:arrows:-` where wood is free. `world/fletch.rs` holds
+what only they read:
+
+- **The head** (`head = { input = "arrowhead", stock = ["bone", "stone"], optional = true }`): the
+  wizard's one step offers the arrowheads carried (any metal, one an arrow, `per_made`; the
+  arrow's head takes the arrowhead's metal), then the bone shards and stone blocks (bone, horn,
+  chitin, ivory, dragonbone; stone, flint, obsidian: the listed groups within the arrow's
+  `made_of`; a shard or block heads the whole batch), then None (the `brittle` object,
+  `breaks = 100`, of the shaft's wood). The arrow's parts are the head's material and the shaft's
+  wood: their own goods, stacking only alike; a flint-headed arrow strikes as flint does (its
+  main part's `to_hit` and `damage`, `variant::weapon`). Names follow the variant naming
+  (`content/part.rs::names`): "flint arrows", "steel arrows"; the shaft's wood shows in the
+  description, not the name.
+- **The shaft** (`shaft = "stock"`, the part's `made_of = ["wood"]`): a billet of any wood, priced
+  by the batch's weight. **Wood where trees are** (`fletch::part_free`): for a `count = "fletch"`
+  recipe, a stock part all of whose worked materials are wood has no step and no lack on ground
+  whose landscape `data/recipes.toml`'s `free_wood` lists (`fletch::wood_free`, through
+  `forage::landscape_at`: the overworld's cell, or a local area's own); its part is the base wood.
+- **The launcher** (`fletch::shoots`): a missile weapon ready whose `launches` is the result's
+  `ammo`; `fletch.toml`'s `[[makes]]` gives its word ("no bow ready", "a crossbow ready").
+- **The count**: `fletch.toml`'s `count` (`1d4`) + Woodcraft's trained value ÷ `value_per_count`
+  (25), Fletcher ×2, half the time, +4 on the check (`TalentMods::fletcher`; its "never brittle"
+  is gone: no heads, brittle, whatever the skill). `fletch.toml` is now `count`,
+  `value_per_count`, `knives`, `[[makes]] { launches, launcher }` (`content/fletch.rs`); the time,
+  difficulty, bands, and brittle objects are the recipes' and `data/recipes.toml`'s.
+
+Tests: `world/fletch_tests.rs` (the head step's order and None; an arrow from an arrowhead with
+both parts; a shard or block heading a batch, spent once; flint and bone arrows apart and flint's
+blows; brittle with no head, even for a master or a ranger; bolts for a crossbow; the knife, the
+launcher, and the wood asked for with no time; the rows' words; the bands; arrowheads at the
+anvil; sling stones with no knife; flaming arrows by the arrow; Fletcher's half time, double
+count, and better check; wood free in the forest area; the mark and an interruption; a replay),
+`content/recipe_tests.rs` (the shipped missiles; a head source off the arrow's `made_of`
+refused), `content/fletch.rs` (the trimmed file's refusals).
 
 ## The forging wizard
 
 `crates/warlock/src/ui/craft_pick_screen.rs`, `ScreenName::CraftPick(RecipeId)` (skipped by
 `--screen`; `--screen craft-pick` is `ScreenName::FirstCraftPick`, the first recipe with a
-choice: the dagger). The profession screen opens it for a generic recipe with steps
+choice: the arrowheads). The profession screen opens it for a generic recipe with steps
 (`Entry::wizard`; one without steps is applied at once, the rules saying why). One `PagedList`
 per step, grouped by the stacks' item class, read from `craft_steps` when it opens: a row is
-`letter - name` with "uses 3", greyed "too few" and unpickable when the stack holds too few; an
-optional step draws "- - None" above the list, picked by `-`. The header is the recipe's name and
+`letter - name` with "uses 3" ("uses 1 each" for a `per_made` input), greyed "too few" and unpickable when the stack holds too few; an
+optional step draws "- - None" above the list, picked by `-` (an empty one says "None leaves it
+plain." for the ornament, "None makes them brittle." for the arrows' head). The header is the recipe's name and
 the picks so far ("Short sword — metal: mithril"), the title the recipe and the step's label. A
 letter or Enter picks and goes on; Esc goes back a step, its pick kept (the cursor on it), and
 closes from the first. The last pick returns `ScreenAction::Open(ScreenName::CraftConfirm)`:
@@ -323,7 +418,8 @@ under a profession with none. The `abilities` layer lists `Metalcraft… (skill)
 fixtures of every new field and the old shape unchanged, each check's refusal, the settings
 file's bands and refusals), `world/craft_tests.rs` (rows by training and place, each reason,
 `craft:` refused with no time, the abilities menu's rows, Cut and Set not usable yet), `ability.rs`'s registry test (the
-profession rows in their skills' places, no Temper, Whittle, or Fletch row), `input.rs`'s
+profession rows in their skills' places, no Temper, Whittle, or Fletch row; `world/fletch_tests.rs`
+for the counted recipes), `input.rs`'s
 walk-in test (the anvil still asks, opening the Temper list), `ui/profession_screen.rs` (a
 built-in row's action, a greyed row), and the text snapshots `profession-*` in
 `ui/screen_snapshots.rs`. The forge's tests are under "Making a recipe" and "The forging wizard".

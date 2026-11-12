@@ -10,19 +10,19 @@ expression: "render(case, content.clone())"
 
 
 
-
-
             ┌─ Woodcraft: recipes ─────────────────────────────────────────────────────┐
             │                                                                          │
             │ Work                                                                     │
-            │ > a - Fletch        no knife                                             │
-            │   b - Whittle       no knife                                             │
+            │ > a - Whittle         no knife                                           │
+            │ Missiles                                                                 │
+            │   b - Arrows          no knife                                           │
+            │   c - Crossbow bolts  no knife                                           │
+            │   d - Sling stones    no stone to hand                                   │
             │                                                                          │
-            │ Takes a knife, a bow or crossbow ready, about 10 minutes.                │
+            │ Takes a wooden weapon, a knife, about 10 minutes.                        │
             │                                                                          │
-            │ a-b or Enter make   Esc back                                             │
+            │ a-d or Enter make   Esc back                                             │
             └──────────────────────────────────────────────────────────────────────────┘
-
 
 
 

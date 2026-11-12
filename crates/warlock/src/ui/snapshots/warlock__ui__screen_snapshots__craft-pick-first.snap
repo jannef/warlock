@@ -12,9 +12,9 @@ expression: "render(case, content.clone())"
 
 
 
-                  ┌─ Dagger: metal ──────────────────────────────────────────────┐
+                  ┌─ Arrowheads: metal ──────────────────────────────────────────┐
                   │                                                              │
-                  │ Dagger                                                       │
+                  │ Arrowheads                                                   │
                   │                                                              │
                   │   Nothing carried will do.                                   │
                   │                                                              │

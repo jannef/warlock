@@ -15,7 +15,7 @@ expression: "render(case, content.clone())"
             ┌─ Metalcraft: recipes ────────────────────────────────────────────────────┐
             │                                                                          │
             │ Work                                                                     │
-            │ > a - Temper        no anvil beside you                                  │
+            │ > a - Temper          no anvil beside you                                │
             │                                                                          │
             │ Takes a metal weapon or armour, an anvil, about 10 minutes.              │
             │                                                                          │

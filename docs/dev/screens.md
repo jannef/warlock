@@ -238,7 +238,7 @@ to open, read keys for, or draw one:
   result's item class, the built-in recipes first under "Work", each row its name and what it
   takes, greyed with its reason in its place when it cannot be made; the selected row's takes
   under the list; a letter or Enter on an available row opens Temper's or Whittle's list over it
-  or sends `Action::Fletch`; fixed keys; `--screen profession`, the first profession's, is
+  or a generic recipe's wizard (`ui/craft_pick_screen.rs`, the arrows too); fixed keys; `--screen profession`, the first profession's, is
   `ScreenName::FirstProfession`; `docs/dev/crafting.md`), `ui/object_screen.rs` (inventory, pick up,
   drop, throw, consume (the eat command renamed, key and id `eat` unchanged); in the choices letters always name stacks, even `h j k l`; the consume choice
   lists food lying here first ("lying here"), then the pack's; in the inventory a letter opens
@@ -399,9 +399,9 @@ owner's rule, #156) get no key of their own: they go into the one abilities menu
   every context's group, under "Ability keys" (`controls_screen::Row::AbilityKeys`; text
   snapshot `controls-screen-bottom`).
 
-**Fletch** (#1021) is the one skill's use anyone has: its row stands in Woodcraft's place, greyed
-out "you have no knife" or "you have no bow or crossbow ready" (`abilities-menu-fletch`, `-no-knife`,
-`-no-launcher`).
+**Fletching** (#1021) is Woodcraft's arrows and bolts recipes since #1336, open to anyone on
+Woodcraft's screen, greyed "no knife", "no bow ready", or "no wood to hand"
+(`profession-woodcraft-no-knife`, `-no-launcher`; `docs/dev/crafting.md` "Arrows and bolts").
 
 **Text snapshots** (#301): `ui/screen_snapshots.rs` (test only) checks the screens as text, in
 place of golden screenshots. Each `Case` starts a run the way a golden entry does (scenario,

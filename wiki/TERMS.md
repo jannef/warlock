@@ -201,6 +201,7 @@ above.
 | Intimidating (a threat at one foe) | `skill-uses.md#intimidating` |
 | Treating yourself, binding a wound | `skill-uses.md#treating-yourself` |
 | Fletching, brittle arrows and bolts, a knife | `skill-uses.md#fletching` |
+| Arrowhead, a batch (counted recipe), sling stones, flaming arrows (made) | `crafting.md#batches-arrowheads-arrows-and-stones` |
 | Profession, recipe | `skill-uses.md#professions` |
 | Crafting, forging, a recipe, stock to forge from | `crafting.md`, `crafting.md#forging-a-weapon` (a recipe: its row, `recipe-ID`) |
 | Masterwork (crafted), a crafted item's grade, margin | `crafting.md#how-well-it-comes-out` |

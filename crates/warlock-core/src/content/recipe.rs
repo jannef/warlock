@@ -6,7 +6,7 @@
 //! menu lists one row for it ([`crate::ability::Ability::Profession`]), which opens its screen.
 //! Each file holds one `[[recipe]]`, its file name its id (unique across professions); they are
 //! read in path order into [`Content::recipes`], a [`RecipeId`] being an index (never saved:
-//! actions name recipes by id). A recipe is either **built in** (`use`: Temper, Whittle, Fletch,
+//! actions name recipes by id). A recipe is either **built in** (`use`: Temper and Whittle,
 //! which run their own actions with their own lists and rules, and Jewelcraft's Cut and Set, not
 //! usable yet) or **generic** (a `result` made from stock and inputs in `seconds` against
 //! `difficulty`; parsed and checked now, made from P5). The format's second half (P4b) is parsed
@@ -33,8 +33,6 @@ pub enum RecipeUse {
     Temper,
     /// Whittle a wooden weapon with a knife (`world/temper.rs`).
     Whittle,
-    /// Make arrows or bolts for the launcher ready (`world/fletch.rs`).
-    Fletch,
     /// Cut a loose gem (Jewelcraft's, docs/design/recipes.md §5): not usable yet (P10).
     Cut,
     /// Set a cut gem in an item (Jewelcraft's, §5): not usable yet (P11).
@@ -42,10 +40,9 @@ pub enum RecipeUse {
 }
 
 impl RecipeUse {
-    pub const ALL: [RecipeUse; 5] = [
+    pub const ALL: [RecipeUse; 4] = [
         RecipeUse::Temper,
         RecipeUse::Whittle,
-        RecipeUse::Fletch,
         RecipeUse::Cut,
         RecipeUse::Set,
     ];
@@ -55,7 +52,6 @@ impl RecipeUse {
         match self {
             RecipeUse::Temper => "temper",
             RecipeUse::Whittle => "whittle",
-            RecipeUse::Fletch => "fletch",
             RecipeUse::Cut => "cut",
             RecipeUse::Set => "set",
         }
@@ -66,7 +62,6 @@ impl RecipeUse {
         match self {
             RecipeUse::Temper => "Temper",
             RecipeUse::Whittle => "Whittle",
-            RecipeUse::Fletch => "Fletch",
             RecipeUse::Cut => "Cut",
             RecipeUse::Set => "Set",
         }
@@ -152,7 +147,8 @@ pub enum RecipeCount {
     /// Dice (`count = 10`, `count = "2d6"`; 1 by default).
     Dice(Dice),
     /// Fletch's rule (`count = "fletch"`): `fletch.toml`'s count and Woodcraft's share, the
-    /// margin scaling it by the counted bands.
+    /// margin scaling it by the counted bands; the ranger's Fletcher read with it (the arrows
+    /// and bolts, `world/craft_make.rs`).
     Fletch,
 }
 
@@ -189,7 +185,7 @@ pub struct RecipeDef {
     pub station: Option<TerrainId>,
     /// A knife carried.
     pub knife: bool,
-    /// A bow or crossbow ready that fletching makes ammunition for.
+    /// A launcher ready that shoots the result (its `ammo`; `data/fletch.toml`'s `[[makes]]`).
     pub launcher: bool,
     /// The trained value the recipe is listed from (0: anyone with the skill).
     pub from: u16,

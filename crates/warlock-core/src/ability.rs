@@ -99,7 +99,7 @@ pub enum Ability {
     /// A profession (spec §8 "Skills"; docs/design/professions.md §8): a skill with a directory
     /// of recipes (`data/recipes/<skill>/`), listed in that skill's place as "Metalcraft…". Had
     /// by whoever is trained in the skill, or by everyone while any of its recipes is `anyone`
-    /// (Temper, Whittle, Fletch); never unavailable: it opens the profession's screen
+    /// (Temper, Whittle, the arrows); never unavailable: it opens the profession's screen
     /// ([`Aim::Recipes`]), which says why each recipe cannot be made now.
     Profession(SkillId),
     /// Break an item into its materials, anywhere (docs/dev/crafting.md; `world/salvage.rs`):
@@ -289,10 +289,8 @@ pub enum Aim {
 pub enum Unavailable {
     /// A shield bash without a shield to bash with.
     NoShield,
-    /// Fletch without a knife carried (spec §8 "Fletching").
+    /// Whittle without a knife carried.
     NoKnife,
-    /// Fletch without a bow or a crossbow ready (spec §8 "Fletching").
-    NoLauncher,
     /// A skill whose use is not in the game yet.
     NotYet,
     /// Decipher with no scroll of an unidentified type in the pack.
@@ -338,7 +336,6 @@ impl Unavailable {
         match self {
             Unavailable::NoShield => "you hold no shield".into(),
             Unavailable::NoKnife => "you have no knife".into(),
-            Unavailable::NoLauncher => "you have no bow or crossbow ready".into(),
             Unavailable::NotYet => "not usable yet".into(),
             Unavailable::NoUnknownScroll => "no unknown scroll".into(),
             Unavailable::NoMana => "you have too little mana".into(),
@@ -371,7 +368,6 @@ impl Unavailable {
         match self {
             Unavailable::NoShield => "no_shield".into(),
             Unavailable::NoKnife => "no_knife".into(),
-            Unavailable::NoLauncher => "no_launcher".into(),
             Unavailable::NotYet => "not_yet".into(),
             Unavailable::NoUnknownScroll => "no_unknown_scroll".into(),
             Unavailable::NoMana => "no_mana".into(),
@@ -1428,7 +1424,7 @@ mod tests {
             ]
         );
         // Metalcraft and Woodcraft are professions (a recipe directory each), in their skills'
-        // places; Temper, Whittle, and Fletch are their recipes, no rows of their own.
+        // places; Temper, Whittle, and the arrows are their recipes, no rows of their own.
         for skill in ["metalcraft", "woodcraft"] {
             let id = content.skill_id(skill).expect("a skill");
             assert!(every.contains(&Ability::Profession(id)), "{skill}");

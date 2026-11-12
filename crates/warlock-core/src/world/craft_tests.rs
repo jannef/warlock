@@ -75,19 +75,22 @@ fn everyone_sees_the_built_in_rows_with_what_they_take_and_why_not() {
     assert_eq!(
         rows(&w, "woodcraft"),
         [
-            "Fletch: a knife, a bow or crossbow ready, about 10 minutes (no knife)",
+            "Arrows: an arrowhead for each made or a bone shard or a block of flint, a wood \
+             billet, a knife, a bow ready, about 10 minutes (no knife)",
+            "Crossbow bolts: an arrowhead for each made or a bone shard or a block of flint, a \
+             wood billet, a knife, a crossbow ready, about 10 minutes (no knife)",
+            "Sling stones: a block of stone, about 10 minutes (no stone to hand)",
             "Whittle: a wooden weapon, a knife, about 10 minutes (no knife)",
         ]
     );
-    // A knife: Whittle can be; Fletch still wants a launcher.
+    // A knife: Whittle can be; the arrows still want a bow, the bolts a crossbow.
     give(&mut w, "knife", 1);
+    let rows_now = rows(&w, "woodcraft");
+    assert!(rows_now[0].ends_with("(no bow ready)"), "{rows_now:?}");
+    assert!(rows_now[1].ends_with("(no crossbow ready)"), "{rows_now:?}");
     assert_eq!(
-        rows(&w, "woodcraft"),
-        [
-            "Fletch: a knife, a bow or crossbow ready, about 10 minutes \
-             (no bow or crossbow ready)",
-            "Whittle: a wooden weapon, a knife, about 10 minutes",
-        ]
+        rows_now[3],
+        "Whittle: a wooden weapon, a knife, about 10 minutes"
     );
     // Beside the forge's anvil, Temper can be.
     let w = world(content, "forge");
@@ -111,22 +114,22 @@ fn the_untrained_see_only_what_anyone_may_make_and_the_trained_what_is_beyond_th
     // Trained below the long sword's `from`: listed, beyond them.
     train(&mut w, "metalcraft", 10);
     assert_eq!(
-        rows(&w, "metalcraft")[3],
+        rows(&w, "metalcraft")[4],
         "Long sword: 3 steel ingots, an anvil, about 1 hour (beyond your skill)"
     );
     // At it: the anvil, then the stock, is what is missing.
     train(&mut w, "metalcraft", 20);
-    assert!(rows(&w, "metalcraft")[3].ends_with("(no anvil beside you)"));
+    assert!(rows(&w, "metalcraft")[4].ends_with("(no anvil beside you)"));
     // Five arrows to tip: none carried, then too few, then enough.
     assert_eq!(
-        rows(&w, "metalcraft")[8],
+        rows(&w, "metalcraft")[9],
         "Tipped arrows: 5 arrows, about 10 minutes (no arrows)"
     );
     give(&mut w, "arrow", 4);
-    assert!(rows(&w, "metalcraft")[8].ends_with("(no arrows)"));
+    assert!(rows(&w, "metalcraft")[9].ends_with("(no arrows)"));
     give(&mut w, "arrow", 1);
     assert_eq!(
-        rows(&w, "metalcraft")[8],
+        rows(&w, "metalcraft")[9],
         "Tipped arrows: 5 arrows, about 10 minutes"
     );
 }
@@ -136,7 +139,7 @@ fn a_stock_part_wants_a_piece_the_profession_works_that_the_part_may_be_made_of(
     let mut w = world(FIXTURE.clone(), "forge");
     w.apply(&Action::Move(Dir::E));
     train(&mut w, "metalcraft", 20);
-    let sword = |w: &World| rows(w, "metalcraft")[3].clone();
+    let sword = |w: &World| rows(w, "metalcraft")[4].clone();
     assert!(sword(&w).ends_with("(no metal to hand)"), "{}", sword(&w));
     // Hardwood is no metal; iron is.
     let wood = w.content.material_id("hardwood").expect("hardwood");
