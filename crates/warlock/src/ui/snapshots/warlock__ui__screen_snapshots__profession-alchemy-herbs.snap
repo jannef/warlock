@@ -1,0 +1,34 @@
+---
+source: crates/warlock/src/ui/screen_snapshots.rs
+expression: "render(case, content.clone())"
+---
+ You gather ┌─ Alchemy: recipes ──────────────────────────────────────────── Page 1/2 ─┐
+ You search │                                                                          │
+            │ Potions                                                                  │
+            │ > a - Greater potion of grace    beyond your skill                       │
+            │   b - Greater potion of might    beyond your skill                       │
+            │   c - Greater potion of presence beyond your skill                       │
+            │   d - Greater potion of vigour   beyond your skill                       │
+            │   e - Greater potion of will     beyond your skill                       │
+            │   f - Greater potion of wit      beyond your skill                       │
+            │   g - Potion of antidote         not enough sprigs of feverfew           │
+            │   h - Potion of barkskin         beyond your skill                       │
+            │   i - Potion of cat's eyes       beyond your skill                       │
+            │   j - Potion of clear head       not enough sprigs of vervain            │
+            │   k - Potion of cure disease     beyond your skill                       │
+            │   l - Potion of full healing     beyond your skill                       │
+            │   m - Potion of grace            beyond your skill                       │
+            │   n - Potion of greater healing  beyond your skill                       │
+            │   o - Potion of healing          2 sprigs of moonwort, about 20 minutes  │
+            │   p - Potion of mana             not enough glowcaps                     │
+            │   q - Potion of might            beyond your skill                       │
+            │   r - Potion of moth's eyes      beyond your skill                       │
+            │   s - Potion of owl's eyes       beyond your skill                       │
+            │   t - Potion of presence         beyond your skill                       │
+            │   u - Potion of proofing         beyond your skill                       │
+            │                                                                          │
+            │ Takes 2 mandrake roots, 2 sprigs of eyebright, about 20 minutes.         │
+            │                                                                          │
+            │ a-u or Enter make   > < page   Esc back                                  │
+            └──────────────────────────────────────────────────────────────────────────┘
+ The Hub  ·  HP 13/13  ·  MP 13/13  ·  Lv 1  ·  Dandy: unhurt  ·  08:19                  ? controls

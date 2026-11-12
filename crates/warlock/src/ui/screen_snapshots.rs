@@ -920,6 +920,25 @@ const CASES: &[Case] = &[
         keys: Some("c c a"),
         ..BASE
     },
+    // A witch's Alchemy (#1357; `--screen profession`, the first profession she has recipes of)
+    // after three gathers at the hub's fungus: the brews, those from a higher Alchemy greyed
+    // "beyond your skill", those short of herbs "not enough".
+    Case {
+        name: "profession-alchemy-herbs",
+        character: Some("human,female,witch"),
+        actions: "move:N*6 move:E*30 move:N*3 move:W*6 gather:W*3",
+        screen: Some("profession"),
+        ..BASE
+    },
+    // A brew chooses nothing: its row asks at once in the one dialog, the potion named truly.
+    Case {
+        name: "brew-dialog",
+        character: Some("human,female,witch"),
+        actions: "move:N*6 move:E*30 move:N*3 move:W*6 gather:W*3",
+        screen: Some("profession"),
+        keys: Some("o"),
+        ..BASE
+    },
     // The smith's javelin after its iron head (#1351): the haft, Woodcraft's wood billets on a
     // Metalcraft recipe, never the ingots.
     Case {

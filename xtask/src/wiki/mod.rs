@@ -311,6 +311,7 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("recipes-woodcraft.md", recipes::recipes_woodcraft),
         ("crafting-grades.md", recipes::crafting_grades),
         ("gem-cutting.md", recipes::gem_cutting),
+        ("recipes-alchemy.md", recipes::brews),
         ("foraging.md", skills::foraging),
         ("skills.md", skills::skills),
         ("skill-benefits.md", skills::skill_benefits),

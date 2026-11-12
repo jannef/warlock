@@ -10,8 +10,9 @@ forge, P5), the forging wizard, and salvage. Material stock (the piece) is in
 ## Who works what: professions and stock
 
 - **The skills** (`data/skills.toml`): Metalcraft, Woodcraft, and Jewelcraft are the professions
-  that work materials today (Alchemy, Enchanting, Herbalism, and Mining are skills with no craft
-  yet, #1331). Each declares `{ effect = "craft", curve = [[0, 0], [100, 8], [200, 12]] }`
+  that work materials today; Alchemy is a profession that works no material (it brews from
+  herbs, "Brewing" below), and Enchanting, Herbalism, and Mining are skills with no craft yet
+  (#1331). Each of the three declares `{ effect = "craft", curve = [[0, 0], [100, 8], [200, 12]] }`
   (Temper's curve, read by salvage and by a recipe made) and a `salvage` mark rule at 100 %
   (Metalcraft, Woodcraft, and Jewelcraft also a `craft` mark, for a recipe made or a gem cut). Temper's, Whittle's, and Fletch's own
   effects (`Effect::Temper`, `Whittle`, `Fletch`) are unchanged.
@@ -42,7 +43,10 @@ after `data/stock.toml` (a stock part's materials must be the profession's) thro
 
 `data/recipes.toml` is the settings file the professions share: each profession's line in the
 abilities menu (`[[profession]] skill, description`, "Your recipes as a smith."; a profession
-without a row shows its skill's description), and the bands (`RecipeSettings`,
+without a row shows its skill's description), with the optional `stat` and `verb` (the check's
+stat and the dialog's verb when no chosen stock names them: Alchemy's Intelligence and "Brew")
+and `failed` and `fumbled` (the lines said when a `failure` or `fumble` object is made; refused
+when empty) on `ProfessionText` (`Recipes::profession`), and the bands (`RecipeSettings`,
 `Recipes::settings`, `None` only for content without the file), all required, struct
 `deny_unknown_fields`:
 
@@ -102,7 +106,7 @@ hafts, the hand recipes' narrowed lists; `craft::stock_only`, "Routes and the re
 profession" below). The rest is used by the phase that makes the first recipe needing it, which
 also builds its wizard step and its row's words and lack: the input step and `brittle` with P6
 (arrows), stock inputs with P7 (sinew, iron), `gem = true` with P11, `failure` and `fumble` with
-P13 (brewing). The bands and `yield` are read from P5 (the forge, "Making a recipe" below).
+P13 (brewing, "Brewing" below). The bands and `yield` are read from P5 (the forge, "Making a recipe" below).
 Until then the rows and the wizard read only stock parts, object inputs, and the ornament. `data/stock.toml`'s `unit` and `[[material]]` overrides (P2b) are checked by
 `content/stock.rs`.
 
@@ -174,8 +178,11 @@ so a hand knife may also be of ivory or dragonbone (both `bone`); jade is no wea
   `Stock::profession(skill)`: the first `stock.toml` row worked by the skill): the check's stat
   and the dialog's verb ("Make" for Woodcraft, "Forge" for Metalcraft), the `craft` points, and
   the mark (`Use::Craft` on `def.skill`). A flint knife is Woodcraft's with Dexterity, a steel
-  knife Metalcraft's with Strength. `work` stays the main chosen part's material's (a spear's
-  head, not its haft).
+  knife Metalcraft's with Strength. A profession row in `data/recipes.toml` that names a `stat`
+  or `verb` overrides the stock's (`craft_make::profession_stat`, `profession_verb`: Alchemy's
+  Intelligence and "Brew", herbs being no stock; "Brewing" below); without one, a skill that
+  works no stock falls back to the main material's profession, then Strength and "Make".
+  `work` stays the main chosen part's material's (a spear's head, not its haft).
 - **The row's words** (`craft::stock_words`) price a part once per material group it may be of,
   the base material's group first: "7 wood billets or 7 bone shards", "a bone shard or a block of
   flint". The greyed reason names the first material's group ("no bone to hand"; the haft's "no
@@ -221,13 +228,14 @@ the cells beside the player, and the skills: presentation never decides availabi
   yet": a built-in without its action, Set), `Skill` ("beyond your
   skill": the trained value below `from`), `Station` ("no anvil beside you"), `Knife` ("no
   knife"), `Launcher` ("no bow or crossbow ready": `fletch::fletch_makes`), `Stock` ("no metal to
-  hand": no piece whose material fits a stock part), `Input` ("no arrowheads").
+  hand": no piece whose material fits a stock part), `Input` ("not enough sprigs of moonwort": too few carried).
 
 ## The profession screen
 
 `crates/warlock/src/ui/profession_screen.rs`, `ScreenName::Profession(SkillId)` (skipped by
-`--screen`; `--screen profession` is `ScreenName::FirstProfession`, the first profession's,
-Metalcraft). A `PagedList` grouped by the result's item class, the built-in recipes first under
+`--screen`; `--screen profession` is `ScreenName::FirstProfession`, the first profession with a
+recipe the player sees: Metalcraft for most, Alchemy for one trained in it). The name column
+widens to the longest name ("Greater potion of presence"). A `PagedList` grouped by the result's item class, the built-in recipes first under
 "Work" (group `None`). A row: the letter and name, then what it takes; a row that cannot be made
 is greyed (`TEXT_DIM`) with its reason in place of what it takes, and the line under the list
 gives the selected row's `takes` in full. A letter or Enter on the `>` row makes an available
@@ -263,8 +271,9 @@ below). Its turns are `ActionKind::Craft` (`data/actions.toml` `craft = 1000`;
   the input's object, cut loose gems (never an uncut one, `Cut::rough`). A part takes its share
   of the result's weight scaled by the material's weight over the base part's (as the made item
   weighs it), in pieces (`piece::count_for`): a mithril blade takes as many mithril ingots as a
-  steel one takes steel. A recipe with another part source, a stock input, a count above 1,
-  `failure`, `fumble`, or `brittle`, or more than `MAX_PICKS` (8) steps has no steps, and
+  steel one takes steel. A recipe with no part and no ornament (a brew) has no steps ("Brewing"
+  below). A recipe with another part source, a stock input, a count above 1, or `brittle`, or
+  more than `MAX_PICKS` (8) steps has no steps either, and
   `craft:` refuses it ("You cannot make that yet.") until the phase that builds its step.
 - **The plan** (`craft_plan`, `PerceptionView::craft_plan(recipe, picks)`; `resolve`): every
   required step picked ("You must choose the metal."), the stack there ("You carry no such
@@ -303,9 +312,53 @@ below). Its turns are `ActionKind::Craft` (`data/actions.toml` `craft = 1000`;
   Marvellous short sword!", "This is a Fine short sword.", "You have made a short sword.".
 - **Marks**: `Use::Craft` on the recipe's skill alone (`World::train_skill`; Metalcraft's
   `mark`, 100 %), whatever came of it; no stat use. Metalcraft, Woodcraft, and Jewelcraft all
-  have the `craft` benefit (salvage reads it too), and Metalcraft, Woodcraft, and Jewelcraft (for
-  Cut) the `craft` mark (Woodcraft's from P5b); `skill_effect_of` keeps one profession's benefit
+  have the `craft` benefit (salvage reads it too), and Metalcraft, Woodcraft, Jewelcraft (for
+  Cut), and Alchemy the `craft` mark (Woodcraft's from P5b); `skill_effect_of` keeps one profession's benefit
   from counting for another's recipe.
+
+## Brewing
+
+P13 (#1357; `docs/design/recipes.md` §6 "Potions (Alchemy)", §4, §12 items 5, 6, 11): Alchemy's
+29 herb recipes, `data/recipes/alchemy/<potion>.toml`, each `result` the potion, `inputs` of
+herbs only (`docs/dev/objects.md`'s herb objects), `seconds = 1200`, no station or knife, `failure
+= { object = "murky_draught" }`, `fumble = { object = "brewers_blunder" }`, and the table's
+`difficulty` and `from`. The essence rows are P14's (#1358); the elixirs, gambles, deeper
+draughts, holy water, oil, tar, and the hexing flasks are never brewed. Alchemy in
+`data/skills.toml` gains the `craft` curve (Metalcraft's) and the `craft` mark (100 %);
+`data/recipes.toml`'s Alchemy row names `stat = "intelligence"`, `verb = "Brew"`, and its
+`failed` and `fumbled` lines. In `world/craft_make.rs`:
+
+- **Nothing chosen** (`chooses_nothing`: no part, no ornament): `steps` is empty (not `None`), and
+  `resolve` takes each object input from the pack (`taken`: the first stacks of the object,
+  across stacks, until its count; "You have too few sprigs of moonwort." when short; any pick is
+  "That is more than the work takes."). `craft_plan` tells stacks of one thing as one count
+  ("2 sprigs of moonwort") and names the result truly though its type is unknown (`made_name`:
+  `Stack::describe` for a labelled type, the lore's otherwise), as does "You set to work on the
+  potion of healing.". The check's stat and the verb are the profession row's
+  (`profession_stat`, `profession_verb`): a row's `stat` or `verb` overrides the stock's
+  profession ("Routes and the recipe's profession"), which decides where the row names none.
+- **The outcome** (`make_out`): failed with a `failure` object (or a natural 2 with a `fumble`,
+  else the failure's), the inputs are spent whole (`Spend::back` 0 for a recipe with a
+  `failure`), the profession's `failed` or `fumbled` line is said, and `brew_spoilt` puts the
+  object, identified and its type learned, in the pack ("You are left with a murky draught.").
+  Made: `learn_scroll` learns the result's type with `identify` (the maker knows their work: a
+  brewed potion of a type never met is known from then on; the decision for #1357: the recipe
+  names it, so making it teaches it), and a potion, with no `Aspect`, is plain at any margin
+  ("You have made a potion of healing."). A natural 24 always makes it.
+- **The screen**: a brew's row (`Entry::confirm`: generic, no steps, a plan that holds) opens
+  `ScreenName::CraftConfirm` straight from the profession screen; `ScreenStack::craft_chosen`
+  reads `ProfessionScreen::chosen` (the `>` row, no picks) when no wizard is open, so the one
+  dialog asks "Brew a potion of healing? It uses 2 sprigs of moonwort, and takes about 20
+  minutes." A row short of a herb is greyed by `RecipeLack::Input`, "not enough sprigs of
+  moonwort".
+- **Tests**: `world/brew_tests.rs` (the table's rows and the never-brewed, nothing chosen and the
+  plan's words, the potion known and the mark, no grade at margin 20, the murky draught and the
+  blunder with the herbs spent, the refusals with no time, Intelligence the stat, a replay of
+  gathers and a brew), `content/recipe_tests.rs` (Alchemy's row, a missing herb, an empty line),
+  the text snapshots `profession-alchemy-herbs` and `brew-dialog`. The wiki's brewing page,
+  `wiki/src/recipes-alchemy.md`, includes `xtask/src/wiki/recipes.rs::brews` (the odds at Alchemy
+  20, 50, 100 with an average Intelligence); the forge's tables (`recipes_of`) list each
+  profession's own.
 
 ## The forging wizard
 

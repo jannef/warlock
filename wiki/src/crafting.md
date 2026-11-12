@@ -10,6 +10,7 @@ and staves by hand, with a knife, from billets of wood, shards of bone, and bloc
 stone. The recipes are on the [Metalcraft…](abilities.md#ability-metalcraft) and
 [Woodcraft…](abilities.md#ability-woodcraft) lists in the
 [abilities menu](abilities.md#the-abilities-menu) (see [Professions](skill-uses.md#professions)).
+An alchemist brews potions from herbs: see [Brewing potions](recipes-alchemy.md).
 One trained in Jewelcraft can cut loose gems: see [Gem cutting](gem-cutting.md).
 
 ## Who works what

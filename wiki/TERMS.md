@@ -205,6 +205,7 @@ above.
 | Crafting, forging, a recipe, stock to forge from | `crafting.md`, `crafting.md#forging-a-weapon` (a recipe: its row, `recipe-ID`) |
 | Hand-made weapons, knapping flint, a bone or flint knife, a club, a staff by hand | `crafting.md#making-a-weapon-by-hand` |
 | Masterwork (crafted), a crafted item's grade, margin | `crafting.md#how-well-it-comes-out` |
+| Brewing, potion recipes, Alchemy's recipes, a failed brew (murky draught, brewer's blunder) | `recipes-alchemy.md`, `recipes-alchemy.md#how-a-brew-goes` (a recipe: its row, `brew-ID`) |
 | Foraging | `skill-uses.md#foraging` |
 | Crafting, a craft skill, craft points, who works which material, a material's work | `crafting.md`, `crafting.md#who-works-what` |
 | Salvage, taking an item apart, a gem chipped or shattered | `crafting.md#salvage` |

@@ -67,7 +67,7 @@ impl RecipeLack {
                 let def = content.material(m);
                 format!("no {} to hand", def.group.as_deref().unwrap_or(&def.name))
             }
-            RecipeLack::Input(o) => format!("no {}", content.object(o).plural),
+            RecipeLack::Input(o) => format!("not enough {}", content.object(o).plural),
         }
     }
 

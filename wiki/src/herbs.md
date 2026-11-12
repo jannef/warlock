@@ -4,8 +4,8 @@ Herbs are the plants of brewing: glowcap, moonwort, comfrey, and six more. You g
 ways: you **gather** them from the glowing fungus in the dungeons, or a
 [forage](skill-uses.md#foraging) in the wild turns one up now and then if you know
 [Herbalism](skills.md#skill-herbalism). Each herb is a [material](materials.md) (`"`, 20 g),
-stacks, and sells to an alchemist (see [Shops](shops.md#selling)). Brewing with them is still to
-come.
+stacks, and sells to an alchemist (see [Shops](shops.md#selling)). If you know
+[Alchemy](skills.md#skill-alchemy), you can [brew potions](recipes-alchemy.md) from them.
 
 ## Gathering
 

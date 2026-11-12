@@ -19,6 +19,7 @@
 use super::{Content, ContentError, Landscape, MaterialId, ObjectId, TerrainId, duplicate_id};
 use crate::dice::Dice;
 use crate::skills::SkillId;
+use crate::stats::Stat;
 use serde::Deserialize;
 use std::collections::BTreeMap;
 
@@ -219,6 +220,15 @@ pub struct ProfessionText {
     pub skill: SkillId,
     /// Its abilities-menu row's line ("Your recipes as a smith.").
     pub description: String,
+    /// The check's stat, over the stock's profession's (Alchemy's Intelligence: herbs are no
+    /// stock); without one the stock's decides (`world/craft_make.rs::profession_stat`).
+    pub stat: Option<Stat>,
+    /// The dialog's verb, the same way ("Brew").
+    pub verb: Option<String>,
+    /// What is said when a recipe with a `failure` object fails ("The brew clouds over.").
+    pub failed: Option<String>,
+    /// What is said when a recipe with a `fumble` object meets a natural 2.
+    pub fumbled: Option<String>,
 }
 
 /// The settings of `data/recipes.toml` the recipes share (docs/design/recipes.md §4, §5, §10).
@@ -284,6 +294,11 @@ impl Recipes {
             .find(|p| p.skill == skill)
             .map(|p| p.description.as_str())
     }
+
+    /// What `data/recipes.toml` says of profession `skill`, if it lists it.
+    pub fn profession(&self, skill: SkillId) -> Option<&ProfessionText> {
+        self.professions.iter().find(|p| p.skill == skill)
+    }
 }
 
 /// `data/recipes.toml`: the settings the recipes share (docs/design/recipes.md §10).
@@ -308,6 +323,14 @@ struct RecipesFile {
 struct ProfessionSpec {
     skill: String,
     description: String,
+    #[serde(default)]
+    stat: Option<Stat>,
+    #[serde(default)]
+    verb: Option<String>,
+    #[serde(default)]
+    failed: Option<String>,
+    #[serde(default)]
+    fumbled: Option<String>,
 }
 
 /// One file of `data/recipes/<skill>/`: one recipe (none in a file of comments only).
@@ -440,9 +463,17 @@ pub(super) fn parse<'a>(
                     row.skill
                 )));
             }
+            let empty = |line: &Option<String>| line.as_ref().is_some_and(String::is_empty);
+            if empty(&row.verb) || empty(&row.failed) || empty(&row.fumbled) {
+                return Err(err(format!("profession `{}`: an empty line", row.skill)));
+            }
             recipes.professions.push(ProfessionText {
                 skill,
                 description: row.description.clone(),
+                stat: row.stat,
+                verb: row.verb.clone(),
+                failed: row.failed.clone(),
+                fumbled: row.fumbled.clone(),
             });
         }
         recipes.settings = Some(settings_of(file).map_err(err)?);
