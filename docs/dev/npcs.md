@@ -161,8 +161,12 @@ with words) is written in the speaker's own register: commoners Cockney, the ric
 Geordie (#1391), and **elves Brummie** (the Birmingham accent and dialect). Readability comes
 first and the accent is hinted: "bab", "ar" (yes), "tara-a-bit" (goodbye), "yow" (you), "summat",
 "gambol" (a forward roll), "cob" (a bread roll), "bostin" (great), "babby", "ow am ya?", and the
-vowels only lightly ("loike", "noice"). Ids, topic names, and placeholders never change with the
-accent. The rule binds speakers whose data says they are elves (`race = "elf"`, or a creature
-that is one). As of #1392 none speaks: the campaigns have no elf NPC, and Ælfrun of Holtwīc is a
-human cottar; drow, half-elves, and the fey of Ælfhām are not elves by this rule. A new elf who
-speaks is written in Brummie from the start.
+vowels only lightly ("loike", "noice"); **halflings and gnomes Scouse** (the Liverpool accent
+and dialect), hinted the same way: "la", "lad", "der" (there), "made up" (delighted), "boss"
+(great), "sound", "me" for my, "ye" for you, "giz" (give us), "kecks" (trousers), "scran" (food),
+"arl feller" (old man). Ids, topic names, and placeholders never change with the
+accent. The rule binds speakers whose data says they are of that race (`race = "elf"`, `"halfling"`,
+`"gnome"`, or a creature that is one). As of #1392 none speaks: the campaigns have no elf,
+halfling, or gnome NPC, and Ælfrun of Holtwīc is a
+human cottar; drow, half-elves, and the fey of Ælfhām are not elves by this rule. A new elf,
+halfling, or gnome who speaks is written in its accent from the start.
