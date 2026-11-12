@@ -1,0 +1,13 @@
+# Sling stones, chipped round from a block of stone with another stone, by anyone: no knife
+# (docs/design/recipes.md §6 "Missiles"; docs/dev/crafting.md "Counted recipes"). Ten a batch,
+# the margin scaling them.
+[[recipe]]
+id = "sling_stones"
+name = "Sling stones"
+result = { object = "sling_stone", count = 10 }
+difficulty = 6
+seconds = 600
+anyone = true
+
+[recipe.parts]
+main = "stock"

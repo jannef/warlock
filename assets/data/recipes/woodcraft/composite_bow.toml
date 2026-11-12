@@ -1,0 +1,15 @@
+# A composite bow, backed with two lengths of sinew: of horn the real one, of wood a cheaper
+# variant (the wizard offers what is carried). Woodcraft's, with a knife carried and no station
+# (docs/design/recipes.md §6 "Missile weapons"; docs/dev/crafting.md). The stock is priced by the
+# weight.
+[[recipe]]
+id = "composite_bow"
+result = { object = "composite_bow" }
+difficulty = 15
+seconds = 5400
+from = 40
+knife = true
+inputs = [{ material = "sinew", count = 2 }]
+
+[recipe.parts]
+main = { stock = ["horn", "wood", "dragonbone"] }

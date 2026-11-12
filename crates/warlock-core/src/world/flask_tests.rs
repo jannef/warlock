@@ -36,6 +36,10 @@ fn files_with(more: &[(&str, &str)]) -> ContentFiles {
     make_peace(&mut files);
     for gone in ["wit", "will", "presence"] {
         files.remove(&format!("data/objects/greater_potion_of_{gone}.toml"));
+        // And the brew that makes it (#1357).
+        files.remove(&format!(
+            "data/recipes/alchemy/greater_potion_of_{gone}.toml"
+        ));
     }
     let fire = flask("fire_flask", "fireball", ("scarlet", "#e04020"));
     let weakness = flask("weakness_flask", "hex_of_weakness", ("indigo", "#4830a0"));

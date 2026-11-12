@@ -166,6 +166,8 @@ pub enum ScreenName {
     Whittle,
     /// Choose something carried to take apart for its materials (the Salvage ability).
     Salvage,
+    /// Choose a loose gem to cut (Jewelcraft's Cut recipe, from its profession's screen).
+    Cut,
     /// Choose a scroll to make out unread (the Decipher ability, spec §8 "Scrolls"): those of a
     /// type not yet identified.
     Decipher,
@@ -185,7 +187,8 @@ pub enum ScreenName {
     /// they make, each with what it takes, greyed with its reason when it cannot be made now.
     #[value(skip)]
     Profession(SkillId),
-    /// The first profession's screen (`--screen profession`), as [`ScreenName::Profession`].
+    /// The first profession's screen whose recipes the player sees (`--screen profession`), as
+    /// [`ScreenName::Profession`].
     #[value(name = "profession")]
     FirstProfession,
     /// The forging wizard of a generic recipe (its row on a profession's screen): one list for
@@ -245,6 +248,7 @@ impl ScreenName {
                 | ScreenName::Temper
                 | ScreenName::Whittle
                 | ScreenName::Salvage
+                | ScreenName::Cut
                 | ScreenName::Decipher
                 | ScreenName::Give
                 | ScreenName::Abilities
@@ -494,6 +498,7 @@ impl Screen {
             ScreenName::Temper => objects(ObjectList::Temper),
             ScreenName::Whittle => objects(ObjectList::Whittle),
             ScreenName::Salvage => objects(ObjectList::Salvage),
+            ScreenName::Cut => objects(ObjectList::Cut),
             ScreenName::Decipher => objects(ObjectList::Decipher),
             ScreenName::Give => objects(ObjectList::Give),
             ScreenName::Abilities => Screen::Abilities(AbilitiesScreen::new(run, beneath.ability)),
@@ -544,6 +549,7 @@ impl Screen {
                 ObjectList::Temper => ScreenName::Temper,
                 ObjectList::Whittle => ScreenName::Whittle,
                 ObjectList::Salvage => ScreenName::Salvage,
+                ObjectList::Cut => ScreenName::Cut,
                 ObjectList::Decipher => ScreenName::Decipher,
                 ObjectList::Give => ScreenName::Give,
             },
@@ -694,6 +700,7 @@ impl ScreenStack {
     fn craft_chosen(&self) -> Option<(RecipeId, Vec<Option<usize>>)> {
         self.screens.iter().rev().find_map(|s| match s {
             Screen::CraftPick(screen) => screen.chosen(),
+            Screen::Profession(screen) => screen.chosen(),
             _ => None,
         })
     }

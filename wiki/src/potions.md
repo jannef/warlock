@@ -219,6 +219,11 @@ An **alchemist** sells only potions, always potions
 of healing first, and buys them too (see [Shops](shops.md)). Some [quests](quests.md) pay in
 potions.
 
+If you know [Alchemy](skills.md#skill-alchemy), you can brew many of them yourself from
+[herbs](herbs.md), and the battle flasks from an elemental's
+[essence](materials.md#herbs-and-essences) (see [Brewing potions](recipes-alchemy.md)). A potion you brew is known to you
+from then on, even if you had never seen one.
+
 ## Talents
 
 - [Thrifty drinker](talents.md#talent-thrifty-drinker) (Delver): one potion in four is not used

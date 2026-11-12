@@ -1,7 +1,7 @@
 //! Hide gear by hand (docs/dev/crafting.md "Hide gear"; #1353): the shields, armour, helmets,
 //! cloaks, gloves, boots, and clothing Woodcraft makes with a knife, the stock each takes by the
 //! base's weight (hides by the group's `unit`), the grades for gear with an aspect and plain
-//! clothing, the greyings, and the recipes waiting on a stock input's step.
+//! clothing, the greyings, and the ingot a stock input takes.
 
 use super::craft::RecipeLack;
 use super::craft_make::{make_out_for_test, stock_need};
@@ -87,7 +87,7 @@ fn row_lack(w: &World, id: &str) -> Option<RecipeLack> {
 fn need(w: &World, id: &str, material: &str) -> u32 {
     let def = w.content.recipe(recipe(w, id));
     let m = w.content.material_id(material).expect(material);
-    stock_need(&w.content, def, 0, m).expect("priced").0
+    stock_need(&w.content, def, 0, m, 1).expect("priced")
 }
 
 fn last(w: &World) -> &Stack {
@@ -244,20 +244,30 @@ fn hide_gear_greys_without_a_knife_and_beyond_skill() {
 }
 
 #[test]
-fn the_ingot_inputs_wait_for_their_step_greyed_and_refused_with_no_time() {
-    // Studded leather's studs and hobnailed boots' nails are a stock input (an ingot of any
-    // metal), whose wizard step is P7's (#1352): until then the rows are "not usable yet".
-    let mut w = world();
-    carry(&mut w, "knife");
-    stock(&mut w, "leather", 5);
-    stock(&mut w, "iron", 1);
-    for id in ["studded_leather", "hobnailed_boots"] {
-        assert_eq!(row_lack(&w, id), Some(RecipeLack::NotYet), "{id}");
+fn studded_leather_and_hobnailed_boots_are_made_with_an_iron_ingot() {
+    // Studded leather's studs and hobnailed boots' nails are a stock input, an ingot of any
+    // metal: the wizard's input step takes the iron ingot (`input_fits`) and spends it.
+    for (id, hides) in [("studded_leather", 5), ("hobnailed_boots", 1)] {
+        let mut w = world();
+        train(&mut w, 200);
+        carry(&mut w, "knife");
+        stock(&mut w, "leather", hides);
+        stock(&mut w, "iron", 1);
+        let def = w.content.recipe(recipe(&w, id));
+        let iron = &w.state.player().inventory[2];
+        assert!(
+            super::craft::input_fits(&w.content, &def.inputs[0], iron),
+            "{id}"
+        );
+        assert_eq!(row_lack(&w, id), None, "{id}");
+        apply(&mut w, &format!("craft:{id}:b,c"));
+        let made = w.content.object_id(id).expect(id);
+        let pack = &w.state.player().inventory;
+        let objects: Vec<_> = pack.iter().map(|s| s.object).collect();
+        let knife = w.content.object_id("knife").expect("knife");
+        // The hides and the ingot are spent: the knife and what was made are left.
+        assert_eq!(objects, [knife, made], "{id}: {}", said(&w));
     }
-    let start = w.state.time;
-    apply(&mut w, "craft:hobnailed_boots:b,c");
-    assert_eq!(said(&w), "You cannot make that yet.");
-    assert_eq!(w.state.time, start);
 }
 
 #[test]

@@ -6,9 +6,9 @@
 //! menu lists one row for it ([`crate::ability::Ability::Profession`]), which opens its screen.
 //! Each file holds one `[[recipe]]`, its file name its id (unique across professions); they are
 //! read in path order into [`Content::recipes`], a [`RecipeId`] being an index (never saved:
-//! actions name recipes by id). A recipe is either **built in** (`use`: Temper, Whittle, Fletch,
-//! which run their own actions with their own lists and rules, and Jewelcraft's Cut and Set, not
-//! usable yet) or **generic** (a `result` made from stock and inputs in `seconds` against
+//! actions name recipes by id). A recipe is either **built in** (`use`: Temper and Whittle,
+//! which run their own actions with their own lists and rules, and Jewelcraft's Cut and Set,
+//! whose files give their `difficulty` and `seconds`) or **generic** (a `result` made from stock and inputs in `seconds` against
 //! `difficulty`; parsed and checked now, made from P5). The format's second half (P4b) is parsed
 //! and checked here, and used by the phases that make the recipes needing it: part sources
 //! (`input`, a `stock` list, `optional` with `brittle`), `gem` parts, inputs of a material or a
@@ -19,6 +19,7 @@
 use super::{Content, ContentError, Landscape, MaterialId, ObjectId, TerrainId, duplicate_id};
 use crate::dice::Dice;
 use crate::skills::SkillId;
+use crate::stats::Stat;
 use serde::Deserialize;
 use std::collections::BTreeMap;
 
@@ -33,19 +34,16 @@ pub enum RecipeUse {
     Temper,
     /// Whittle a wooden weapon with a knife (`world/temper.rs`).
     Whittle,
-    /// Make arrows or bolts for the launcher ready (`world/fletch.rs`).
-    Fletch,
-    /// Cut a loose gem (Jewelcraft's, docs/design/recipes.md §5): not usable yet (P10).
+    /// Cut or re-cut a loose gem (Jewelcraft's, docs/design/recipes.md §5; `world/cut.rs`).
     Cut,
-    /// Set a cut gem in an item (Jewelcraft's, §5): not usable yet (P11).
+    /// Set a cut gem in an item (Jewelcraft's, §5; `world/set.rs`).
     Set,
 }
 
 impl RecipeUse {
-    pub const ALL: [RecipeUse; 5] = [
+    pub const ALL: [RecipeUse; 4] = [
         RecipeUse::Temper,
         RecipeUse::Whittle,
-        RecipeUse::Fletch,
         RecipeUse::Cut,
         RecipeUse::Set,
     ];
@@ -55,7 +53,6 @@ impl RecipeUse {
         match self {
             RecipeUse::Temper => "temper",
             RecipeUse::Whittle => "whittle",
-            RecipeUse::Fletch => "fletch",
             RecipeUse::Cut => "cut",
             RecipeUse::Set => "set",
         }
@@ -66,15 +63,16 @@ impl RecipeUse {
         match self {
             RecipeUse::Temper => "Temper",
             RecipeUse::Whittle => "Whittle",
-            RecipeUse::Fletch => "Fletch",
             RecipeUse::Cut => "Cut",
             RecipeUse::Set => "Set",
         }
     }
 
-    /// Whether its action exists yet (Cut and Set come with P10 and P11).
-    pub const fn usable(self) -> bool {
-        !matches!(self, RecipeUse::Cut | RecipeUse::Set)
+    /// Whether its file gives the check's `difficulty` and the work's `seconds` (Jewelcraft's
+    /// Cut and Set, whose numbers live in their recipes; Temper and Whittle keep theirs
+    /// in their own data files).
+    pub const fn checked(self) -> bool {
+        matches!(self, RecipeUse::Cut | RecipeUse::Set)
     }
 
     fn parse(id: &str) -> Result<Self, String> {
@@ -152,7 +150,8 @@ pub enum RecipeCount {
     /// Dice (`count = 10`, `count = "2d6"`; 1 by default).
     Dice(Dice),
     /// Fletch's rule (`count = "fletch"`): `fletch.toml`'s count and Woodcraft's share, the
-    /// margin scaling it by the counted bands.
+    /// margin scaling it by the counted bands; the ranger's Fletcher read with it (the arrows
+    /// and bolts, `world/craft_make.rs`).
     Fletch,
 }
 
@@ -181,15 +180,16 @@ pub struct RecipeDef {
     pub inputs: Vec<RecipeInput>,
     /// The wizard offers an optional cut gem for the result's ornament part.
     pub ornament: bool,
-    /// The check's base (a generic recipe's).
+    /// The check's base (a generic recipe's, and Cut's and Set's).
     pub difficulty: i32,
-    /// The work's time, in seconds (a generic recipe's; a built-in one takes its action's).
+    /// The work's time, in seconds (a generic recipe's, and Cut's and Set's; another built-in
+    /// one takes its action's).
     pub seconds: u32,
     /// The terrain that must stand beside the maker.
     pub station: Option<TerrainId>,
     /// A knife carried.
     pub knife: bool,
-    /// A bow or crossbow ready that fletching makes ammunition for.
+    /// A launcher ready that shoots the result (its `ammo`; `data/fletch.toml`'s `[[makes]]`).
     pub launcher: bool,
     /// The trained value the recipe is listed from (0: anyone with the skill).
     pub from: u16,
@@ -197,6 +197,9 @@ pub struct RecipeDef {
     pub anyone: bool,
     /// The built-in action the row runs, if it is one.
     pub uses: Option<RecipeUse>,
+    /// The dialog's verb, where it is not the profession's (`stock.toml`): a ring is made, not
+    /// cut ("Make").
+    pub verb: Option<String>,
     /// What a failed check makes instead of nothing (stackable; the inputs are spent).
     pub failure: Option<ObjectId>,
     /// What a natural 2 makes instead of nothing (stackable).
@@ -211,6 +214,15 @@ pub struct ProfessionText {
     pub skill: SkillId,
     /// Its abilities-menu row's line ("Your recipes as a smith.").
     pub description: String,
+    /// The check's stat, over the stock's profession's (Alchemy's Intelligence: herbs are no
+    /// stock); without one the stock's decides (`world/craft_make.rs::profession_stat`).
+    pub stat: Option<Stat>,
+    /// The dialog's verb, the same way ("Brew").
+    pub verb: Option<String>,
+    /// What is said when a recipe with a `failure` object fails ("The brew clouds over.").
+    pub failed: Option<String>,
+    /// What is said when a recipe with a `fumble` object meets a natural 2.
+    pub fumbled: Option<String>,
 }
 
 /// The settings of `data/recipes.toml` the recipes share (docs/design/recipes.md §4, §5, §10).
@@ -259,6 +271,11 @@ impl Recipes {
             .map(|(i, r)| (RecipeId(i as u16), r))
     }
 
+    /// The first recipe running built-in `uses` (the Cut list's: what `craft:` names).
+    pub fn of_use(&self, uses: RecipeUse) -> Option<&RecipeDef> {
+        self.list.iter().find(|r| r.uses == Some(uses))
+    }
+
     /// The recipe with id `name`.
     pub fn id(&self, name: &str) -> Option<RecipeId> {
         let i = self.list.iter().position(|r| r.id == name)?;
@@ -270,6 +287,11 @@ impl Recipes {
         (self.professions.iter())
             .find(|p| p.skill == skill)
             .map(|p| p.description.as_str())
+    }
+
+    /// What `data/recipes.toml` says of profession `skill`, if it lists it.
+    pub fn profession(&self, skill: SkillId) -> Option<&ProfessionText> {
+        self.professions.iter().find(|p| p.skill == skill)
     }
 }
 
@@ -295,6 +317,14 @@ struct RecipesFile {
 struct ProfessionSpec {
     skill: String,
     description: String,
+    #[serde(default)]
+    stat: Option<Stat>,
+    #[serde(default)]
+    verb: Option<String>,
+    #[serde(default)]
+    failed: Option<String>,
+    #[serde(default)]
+    fumbled: Option<String>,
 }
 
 /// One file of `data/recipes/<skill>/`: one recipe (none in a file of comments only).
@@ -330,6 +360,7 @@ struct RecipeSpec {
     anyone: bool,
     #[serde(rename = "use")]
     uses: Option<String>,
+    verb: Option<String>,
     failure: Option<ObjectSpec>,
     fumble: Option<ObjectSpec>,
     brittle: Option<String>,
@@ -427,9 +458,17 @@ pub(super) fn parse<'a>(
                     row.skill
                 )));
             }
+            let empty = |line: &Option<String>| line.as_ref().is_some_and(String::is_empty);
+            if empty(&row.verb) || empty(&row.failed) || empty(&row.fumbled) {
+                return Err(err(format!("profession `{}`: an empty line", row.skill)));
+            }
             recipes.professions.push(ProfessionText {
                 skill,
                 description: row.description.clone(),
+                stat: row.stat,
+                verb: row.verb.clone(),
+                failed: row.failed.clone(),
+                fumbled: row.fumbled.clone(),
             });
         }
         recipes.settings = Some(settings_of(file).map_err(err)?);
@@ -531,8 +570,9 @@ fn place(path: &str) -> Option<(&str, &str)> {
     (segments.next()? == "recipes").then_some((dir, stem))
 }
 
-/// One recipe, checked: a known `use` with no result, parts, inputs, ornament, difficulty,
-/// seconds, failure, fumble, or brittle; a generic recipe with a result object, a count that
+/// One recipe, checked: a known `use` with no result, parts, inputs, ornament, failure, fumble,
+/// or brittle, and a `difficulty` and `seconds` of 1 or more exactly when it is
+/// [`RecipeUse::checked`] (Cut and Set); a generic recipe with a result object, a count that
 /// makes at least one and above 1 (or `fletch`) only on a stackable object, a `difficulty`, and
 /// `seconds` of 1 or more; inputs ([`input`]); parts ([`part_source`]); an ornament only on a
 /// result with an ornament part; `failure` and `fumble` stackable objects; `brittle` an object,
@@ -562,6 +602,7 @@ fn resolve(spec: RecipeSpec, skill: SkillId, content: &Content) -> Result<Recipe
         from: spec.from,
         anyone: spec.anyone,
         uses: None,
+        verb: spec.verb.clone(),
         failure: None,
         fumble: None,
         brittle: None,
@@ -572,8 +613,7 @@ fn resolve(spec: RecipeSpec, skill: SkillId, content: &Content) -> Result<Recipe
             || !spec.parts.is_empty()
             || !spec.inputs.is_empty()
             || spec.ornament
-            || spec.difficulty.is_some()
-            || spec.seconds.is_some()
+            || (!uses.checked() && (spec.difficulty.is_some() || spec.seconds.is_some()))
             || spec.failure.is_some()
             || spec.fumble.is_some()
             || spec.brittle.is_some();
@@ -584,9 +624,18 @@ fn resolve(spec: RecipeSpec, skill: SkillId, content: &Content) -> Result<Recipe
                 uses.id()
             ));
         }
+        let (difficulty, seconds) = match uses.checked() {
+            true => (
+                spec.difficulty.ok_or("needs a `difficulty`")?,
+                (spec.seconds.filter(|&s| s > 0)).ok_or("needs `seconds` of 1 or more")?,
+            ),
+            false => (0, 0),
+        };
         let name = spec.name.clone().unwrap_or_else(|| uses.name().into());
         return Ok(RecipeDef {
             uses: Some(uses),
+            difficulty,
+            seconds,
             ..common(name)
         });
     }

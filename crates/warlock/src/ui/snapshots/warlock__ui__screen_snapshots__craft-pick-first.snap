@@ -12,9 +12,9 @@ expression: "render(case, content.clone())"
 
 
 
-                  ┌─ Battle axe: metal ──────────────────────────────────────────┐
+                  ┌─ Amber amulet: pendant ──────────────────────────────────────┐
                   │                                                              │
-                  │ Battle axe                                                   │
+                  │ Amber amulet                                                 │
                   │                                                              │
                   │   Nothing carried will do.                                   │
                   │                                                              │

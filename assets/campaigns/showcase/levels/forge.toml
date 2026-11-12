@@ -4,9 +4,9 @@
 # attempt takes ten minutes and may improve or damage the piece, and mend a damaged one or break
 # it; data/temper.toml has the numbers. Beside the anvil lies the smith's stock to forge from
 # (Metalcraft's recipes, docs/dev/crafting.md): steel, iron, and mithril ingots, and a ruby and an
-# emerald for a pommel; and flint and wood billets for Woodcraft's hand-made weapons (a flint
-# spear, with the bench's dagger for a knife); past them, leather hides for Woodcraft's hide
-# gear (a leather jerkin).
+# emerald for a pommel; and flint, wood billets, and sinew for Woodcraft's hand-made weapons (a
+# flint spear, a short bow, with the bench's dagger for a knife); past them, leather hides for
+# Woodcraft's hide gear (a leather jerkin).
 arrival = "Soot blackens the walls of an old smithy. The anvil still stands."
 name = "The Forge"
 ambient = [6, 6, 8, 0]
@@ -49,7 +49,7 @@ objects = ["dagger"]
 
 [[pile]]
 at = [6, 4]
-objects = ["piece*8", "piece:iron*4", "piece:mithril*3", "piece:flint*2", "piece:wood*8", "gem:ruby", "gem:emerald"]
+objects = ["piece*8", "piece:iron*4", "piece:mithril*3", "piece:flint*2", "piece:wood*8", "gem:ruby", "gem:emerald", "piece:sinew*2"]
 
 [[pile]]
 at = [7, 4]

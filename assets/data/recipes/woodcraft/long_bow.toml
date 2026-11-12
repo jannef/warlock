@@ -1,0 +1,14 @@
+# A long war bow of wood, horn, or dragonbone, strung with a length of sinew (an input, never a
+# part): Woodcraft's, with a knife carried and no station (docs/design/recipes.md §6 "Missile
+# weapons"; docs/dev/crafting.md). The stock is priced by the weight.
+[[recipe]]
+id = "long_bow"
+result = { object = "long_bow" }
+difficulty = 13
+seconds = 3600
+from = 20
+knife = true
+inputs = [{ material = "sinew", count = 1 }]
+
+[recipe.parts]
+main = { stock = ["wood", "horn", "dragonbone"] }

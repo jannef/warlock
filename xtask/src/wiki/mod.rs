@@ -307,9 +307,13 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("crafting-groups.md", crafting::crafting_groups),
         ("crafting-work.md", crafting::crafting_work),
         ("salvage.md", crafting::salvage),
+        ("recipes-jewelcraft.md", recipes::recipes_jewelcraft),
         ("recipes-metalcraft.md", recipes::recipes_metalcraft),
         ("recipes-woodcraft.md", recipes::recipes_woodcraft),
         ("crafting-grades.md", recipes::crafting_grades),
+        ("gem-cutting.md", recipes::gem_cutting),
+        ("recipes-alchemy.md", recipes::brews),
+        ("gem-setting.md", recipes::gem_setting),
         ("foraging.md", skills::foraging),
         ("skills.md", skills::skills),
         ("skill-benefits.md", skills::skill_benefits),
@@ -1143,10 +1147,8 @@ mod tests {
             "{fletching}"
         );
         assert!(
-            fletching.contains(
-                "| What a launcher of arrows gets | brittle arrows; from Woodcraft 25, arrows | \
-                 arrows |"
-            ),
+            fletching
+                .contains("| Made, up to 3 short | half the count, rounded up | 2 times that |"),
             "{fletching}"
         );
         assert!(equipment.contains("| `m` | Tool | Lantern, pick-axe, mattock | 6 seconds |"));

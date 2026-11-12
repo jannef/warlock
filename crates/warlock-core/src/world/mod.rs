@@ -130,6 +130,7 @@ mod creation;
 mod creature_burst;
 mod creature_cast;
 mod curse;
+mod cut;
 mod dark_face;
 mod decipher;
 mod den;
@@ -252,6 +253,7 @@ mod sear;
 mod search;
 mod second_wind;
 mod service;
+mod set;
 mod shoot;
 mod shop;
 mod shrine;
@@ -328,6 +330,7 @@ pub use craft_make::{CraftOption, CraftPlan, CraftStep, CraftStepKind, Grade, gr
 pub(crate) use craft_make::{craft_plan, craft_steps};
 pub use creation::{chosen_with_talents, creation_count, parse_talents, pick_text};
 pub use curse::{Rising, rise_candidates, rises_as};
+pub use cut::{CutBand, cut_band, cut_outcome, cuttable};
 pub use decipher::undeciphered;
 pub use dig::{MAX_DIG, WORK_SCALE, dig_work, digs_to_break};
 pub use disarm::SPRINGS_SHORT_BY;
@@ -360,6 +363,7 @@ use rest::Ended;
 pub use salvage::{chipped, salvageable};
 pub use sanctuary::Hallow;
 pub use scribe::scribe_turns;
+pub use set::{SetBand, set_band, settable};
 pub use shop::{Shop, ShopStatus, count_of, favour, part_of, unpaid_parts};
 pub use sign_picks::BREATH_RANGE;
 pub use siphon::SIPHON_RANGE;
@@ -760,8 +764,6 @@ enum Spent {
     Pray(pray::Prayer),
     /// Drinking at a healing spring (see [`World::drink`]).
     Drink(drink::Draught),
-    /// Fletching for this many seconds (see [`World::fletch`]).
-    Fletch(u32),
     /// Foraging in the wild for this many seconds (see [`World::forage`]).
     Forage(u32),
     /// Gathering herbs from the glowing fungus for this many seconds (see [`World::gather`]).
@@ -772,8 +774,12 @@ enum Spent {
     Temper(temper::Tempering),
     /// Making a recipe (see [`World::make`]).
     Craft(craft_make::Crafting),
+    /// Cutting a loose gem (see [`World::cut`]).
+    Cut(cut::GemWork),
     /// Salvaging an item for its materials (see [`World::salvage`]).
     Salvage(salvage::Salvaging),
+    /// Setting a cut gem in an item (see [`World::set`]).
+    Set(set::Setting),
     /// Taming a beast beside the player (see [`World::tame`]).
     Tame(tame::Taming),
     /// Dev: the clock jumps ahead; nobody acts, then perception is recomputed.
@@ -1434,13 +1440,14 @@ impl World {
             Spent::Sanctuary(until) => self.sanctuary(until, &mut events),
             Spent::Pray(prayer) => self.pray(prayer, &mut events),
             Spent::Drink(draught) => self.drink(draught, &mut events),
-            Spent::Fletch(seconds) => self.fletch(seconds, &mut events),
             Spent::Forage(seconds) => self.forage(seconds, &mut events),
             Spent::Gather(seconds) => self.gather(seconds, &mut events),
             Spent::Decipher(work) => self.decipher(work, &mut events),
             Spent::Temper(work) => self.temper(work, &mut events),
             Spent::Craft(work) => self.make(work, &mut events),
+            Spent::Cut(work) => self.cut(work, &mut events),
             Spent::Salvage(work) => self.salvage(work, &mut events),
+            Spent::Set(work) => self.set(work, &mut events),
             Spent::Tame(taming) => self.tame(taming, &mut events),
             Spent::Skip(duration) => {
                 // Nobody acts or gains energy.
@@ -1580,7 +1587,6 @@ impl World {
             Action::Drink => return self.start_drink(),
             Action::Forage => return self.start_forage(),
             Action::Gather(dir) => return self.start_gather(*dir),
-            Action::Fletch => return self.start_fletch(),
             Action::Craft { recipe, picks } => return self.start_craft(recipe, picks),
             Action::Decipher { item } => return self.start_decipher(*item),
             Action::Temper { item } => return self.start_temper(*item),
@@ -1728,6 +1734,8 @@ mod branch_tests;
 #[cfg(test)]
 mod breath_tests;
 #[cfg(test)]
+mod brew_tests;
+#[cfg(test)]
 mod buff_field_tests;
 #[cfg(test)]
 mod buff_tests;
@@ -1778,6 +1786,10 @@ mod cost_tests;
 #[cfg(test)]
 mod court_tests;
 #[cfg(test)]
+mod craft_armour_tests;
+#[cfg(test)]
+mod craft_bow_tests;
+#[cfg(test)]
 mod craft_hand_tests;
 #[cfg(test)]
 mod craft_hide_tests;
@@ -1797,6 +1809,8 @@ mod creature_flask_tests;
 mod creature_magic_tests;
 #[cfg(test)]
 mod curse_tests;
+#[cfg(test)]
+mod cut_tests;
 #[cfg(test)]
 mod damage_talent_tests;
 #[cfg(test)]
@@ -2073,6 +2087,8 @@ mod search_tests;
 mod service_haggle_tests;
 #[cfg(test)]
 mod service_tests;
+#[cfg(test)]
+mod set_tests;
 #[cfg(test)]
 mod shoot_tests;
 #[cfg(test)]

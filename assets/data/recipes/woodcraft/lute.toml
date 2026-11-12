@@ -1,0 +1,14 @@
+# A lute, a bard's own instrument, of wood strung with sinew: Woodcraft's, with a knife carried
+# and no station (docs/design/recipes.md §6 "Gems, coins, miscellaneous"; docs/dev/crafting.md).
+# It has no aspect, so it comes out plain whatever the margin. The stock is priced by the weight.
+[[recipe]]
+id = "lute"
+result = { object = "lute" }
+difficulty = 14
+seconds = 7200
+from = 40
+knife = true
+inputs = [{ material = "sinew", count = 1 }]
+
+[recipe.parts]
+main = { stock = ["wood"] }

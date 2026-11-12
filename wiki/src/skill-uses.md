@@ -134,55 +134,82 @@ always succeeds.
 
 ## Professions
 
-[Metalcraft](skills.md#skill-metalcraft) and [Woodcraft](skills.md#skill-woodcraft) are
-**professions**: crafts with a list of **recipes**, the things you can make or do with them. Each
-has one row in the [abilities menu](abilities.md#the-abilities-menu), in the skill's place among
-the Skills: **[Metalcraft…](abilities.md#ability-metalcraft)** and
-**[Woodcraft…](abilities.md#ability-woodcraft)**. The row opens the profession's list.
+[Alchemy](skills.md#skill-alchemy), [Metalcraft](skills.md#skill-metalcraft), and
+[Woodcraft](skills.md#skill-woodcraft) are **professions**: crafts with a list of **recipes**, the
+things you can make or do with them. Each has one row in the
+[abilities menu](abilities.md#the-abilities-menu), in the skill's place among the Skills:
+**[Alchemy…](abilities.md#ability-alchemy)**, **[Metalcraft…](abilities.md#ability-metalcraft)**,
+and **[Woodcraft…](abilities.md#ability-woodcraft)**. The row opens the profession's list.
+Alchemy's recipes are potions, brewed from herbs by those trained in it (see
+[Brewing potions](recipes-alchemy.md)).
 
 You know a recipe by your skill, not by learning it. Some recipes are open to everyone, trained or
 not:
 
 - Metalcraft: **Temper**, a metal weapon or armour made finer at an anvil (see
   [Forges](altars-forges-springs.md#forges)).
-- Woodcraft: **Fletch**, arrows or bolts for your bow or crossbow (see [Fletching](#fletching)),
-  and **Whittle**, a wooden weapon made finer with a knife (see [Whittling](#whittling)).
+- Woodcraft: **Arrows** and **Crossbow bolts** for your bow or crossbow (see
+  [Fletching](#fletching)), **Sling stones** (see
+  [Crafting](crafting.md#batches-arrowheads-arrows-and-stones)), and **Whittle**, a wooden weapon
+  made finer with a knife (see [Whittling](#whittling)).
 
 Those trained in Metalcraft also forge weapons at an anvil from metal stock, and those trained in
 Woodcraft make knives, spears, clubs, staves, armour, and clothes by hand from wood, bone, flint,
 and hides (see
 [Crafting](crafting.md)).
 
+[Jewelcraft](skills.md#skill-jewelcraft) is a profession too, but only for those trained in it:
+its row, **[Jewelcraft…](abilities.md#ability-jewelcraft)**, holds **Cut**, which cuts a loose gem
+(see [Gem cutting](gem-cutting.md)), **Set**, which sets a cut gem in an item (see
+[Setting a gem](gem-cutting.md#setting-a-gem)), and rings and amulets (see
+[Making jewellery](crafting.md#making-jewellery)).
+
 Each row says what the recipe takes, such as "a metal weapon or armour, an anvil, about 10
 minutes". A recipe you cannot make now is greyed out with the reason: "no anvil beside you", "no
-knife", "no bow or crossbow ready". Choose a recipe by its letter, or move to it and press Enter.
+knife", "no bow ready". Choose a recipe by its letter, or move to it and press Enter.
 
 ## Fletching
 
-Anyone can make arrows and bolts, after a fashion. **Fletch** is a recipe on everyone's
+Anyone can make arrows and bolts. **Arrows** and **Crossbow bolts** are recipes on everyone's
 [Woodcraft…](abilities.md#ability-woodcraft) list (see [Professions](#professions)). You need:
 
-- a knife, in your [pack](objects.md#your-pack) or wielded. A dagger or a stiletto will do, or anything else of the
-  [Daggers and knives](weapon-skills.md#weapon-skill-daggers) skill; a short sword will not.
-- a bow or a crossbow [ready](ranged.md#getting-ready). Fletching makes [arrows or bolts](ammunition.md) for it (nothing for a sling).
+- a knife, in your [pack](objects.md#your-pack) or wielded. A dagger or a stiletto will do, or
+  anything else of the [Daggers and knives](weapon-skills.md#weapon-skill-daggers) skill; a short
+  sword will not.
+- a bow [ready](ranged.md#getting-ready) for arrows, a crossbow for bolts.
+- a billet of wood for the shafts, unless you are in a forest, a dense forest, or a swamp, where
+  you cut them from the trees.
+- a head for each arrow, if you want them to last (below).
 
-Without them the list greys it out: "no knife" or "no bow or crossbow ready". It uses up no
-material, and you can do it anywhere.
+Without them the list greys the recipe out: "no knife", "no bow ready", "no wood to hand".
 
-Something coming into view, or anything else that would wake you from a [rest](resting.md#how-resting-works), stops the work.
-The time is spent and nothing is made. A batch that runs its full time rolls a check on your
-[Dexterity](stats.md), helped by your Woodcraft, and the result decides how much of the count you get. Below
-Woodcraft 25 they come out brittle: they fly, but break on any hit. If you are trained in Woodcraft,
-it earns a training mark for every finished batch. Fletch as often as you like: the time is the
-price.
+You choose the head first:
 
-A [ranger](classes.md#ranger)'s [Fletcher](talents.md#talent-fletcher) makes this far quicker and surer, and rangers start with a knife.
+- **[Arrowheads](crafting.md#batches-arrowheads-arrows-and-stones)** a smith has forged: one for
+  each arrow, and the arrow takes the arrowhead's metal.
+- **A bone shard or a block of flint** (or obsidian, horn, ivory, and the like): one heads a whole
+  batch, and the arrows take its material. Flint-headed arrows strike as flint does.
+- **None**: a sharpened shaft. These [brittle arrows](ammunition.md) fly, but break on any hit.
+
+Arrows of different heads and woods are different goods: they do not stack together.
+
+A batch takes ten minutes. Something coming into view, or anything else that would wake you from
+a [rest](resting.md#how-resting-works), stops the work: the time is spent, and nothing else. A
+batch that runs its full time rolls a check on your [Dexterity](stats.md), helped by your
+Woodcraft, and the result decides how much of the count you get. If you are trained in
+Woodcraft, it earns a training mark for every finished batch. Fletch as often as you like: the
+time is the price.
+
+A [ranger](classes.md#ranger)'s [Fletcher](talents.md#talent-fletcher) makes this far quicker and
+surer, and rangers start with a knife. But even a ranger's arrows need heads not to be brittle.
+
+{{#include generated/fletching.md}}
 
 ## Whittling
 
 With a knife carried, anyone can improve a wooden weapon the way an [anvil](altars-forges-springs.md#forges) improves a metal one.
 **Whittle** is a recipe on everyone's [Woodcraft…](abilities.md#ability-woodcraft) list, beside
-Fletch (see [Professions](#professions)). It is greyed out with "no knife" if you have none.
+the arrows (see [Professions](#professions)). It is greyed out with "no knife" if you have none.
 
 Choose a weapon, a missile weapon, or a shield whose main part is wood: bows, crossbows, staves,
 clubs. An attempt takes ten minutes. Something coming into view stops it; then the item is
@@ -201,8 +228,6 @@ The check is 2d12 plus your [Dexterity](stats.md) modifier, what Woodcraft gives
 Dexterity checks, against 13 plus 2 for every attempt ever made on the item. The odds are those of
 the [forge table](altars-forges-springs.md#forges). Woodcraft's second benefit is +8 at 100 and +12 at 200. If you are trained in
 Woodcraft, it earns a training mark for every finished attempt.
-
-{{#include generated/fletching.md}}
 
 ## Foraging
 

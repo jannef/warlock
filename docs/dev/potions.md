@@ -182,7 +182,7 @@ every later flask (smoke, fire, frost, acid, the bombers) builds on.
 - `Lore::labelled_names` puts the type's `colour` in `{colour}`; `Lore::fg` keeps a labelled
   potion's own `fg` (the type's colour, its family's hue) instead of the file's single `fg`.
 - Known types live in `WorldState::known_scrolls` with scrolls, wands, and rods: learned by
-  drinking, by `World::identify` (the scroll of identify, the appraisal service, dev
+  drinking, by brewing one (`world/craft_make.rs`), by `World::identify` (the scroll of identify, the appraisal service, dev
   `identify`), and from a chosen character's kit (`World::begin` adds kit potions as it adds
   kit scrolls; every class's, #1104).
 - The item description (`magic/describe.rs::potion_lines`): a known potion's effect in words
@@ -194,6 +194,11 @@ every later flask (smoke, fire, frost, acid, the bombers) builds on.
 ## Sources
 
 - Loot by `level` and `frequency` (`magic::loot`), as scrolls.
+- Brewing (#1357, #1358; `docs/dev/crafting.md` "Brewing"): Alchemy's herb recipes make 29 potions
+  and flasks, and its essence recipes nine more (the potions of frost, earthing, and sea legs; the
+  flasks of fire, frost, thunder, and smoke, pitch fire, and the blasting flask; the flask of fire
+  and pitch fire spend a bought flask of oil or tar); a brewed one is identified and its type learned (`learn_scroll`), and a failed brew
+  makes a murky draught, a natural 2 a brewer's blunder, both known too.
 - Shops (`assets/data/shops.toml`): general stores and provisioners stock and buy the potions
   class (by loot frequency, so healing and antidote are the common ones); the `alchemist` kind
   stocks and buys potions only, a stack of potions of healing always first. Hand-made shops

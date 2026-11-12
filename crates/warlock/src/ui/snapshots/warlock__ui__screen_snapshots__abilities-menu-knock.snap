@@ -15,7 +15,7 @@ expression: "render(case, content.clone())"
              │   d  Ray of frost       2d6 cold, numbs, 4 mana, aimed                │
              │   e  Magic missile      4d4 force, shoves on a big hit, 4 mana, aimed │
              │ Skills                                                                │
-             │   f  Alchemy            not usable yet                                │
+             │   f  Alchemy…                                                         │
              │   g  Decipher           no unknown scroll                             │
              │   h  Knowledge          not usable yet                                │
              │   i  Metalcraft…                                                      │
