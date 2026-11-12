@@ -12,6 +12,8 @@ leave their element's essence when they die, and other fire creatures sometimes 
 of fire ([What creatures leave](creature-drops.md)). The flask of fire also takes a
 [flask of oil](potions.md#potion-flask-of-oil), and pitch fire a
 [flask of tar](potions.md#potion-flask-of-tar). You buy those; they are never brewed.
+A flask counts only once you know what it is: an [unknown potion](potions.md#unknown-potions)
+is no use to a recipe, even if it is in fact oil.
 
 ## How a brew goes
 

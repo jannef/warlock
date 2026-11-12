@@ -256,7 +256,7 @@ fn studded_leather_and_hobnailed_boots_are_made_with_an_iron_ingot() {
         let def = w.content.recipe(recipe(&w, id));
         let iron = &w.state.player().inventory[2];
         assert!(
-            super::craft::input_fits(&w.content, &def.inputs[0], iron),
+            super::craft::input_fits(w.lore(), &def.inputs[0], iron),
             "{id}"
         );
         assert_eq!(row_lack(&w, id), None, "{id}");

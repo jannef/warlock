@@ -12,6 +12,9 @@ clothes from hides. The recipes are on the [Metalcraft…](abilities.md#ability-
 [Woodcraft…](abilities.md#ability-woodcraft) lists in the
 [abilities menu](abilities.md#the-abilities-menu) (see [Professions](skill-uses.md#professions)).
 An alchemist brews potions from herbs: see [Brewing potions](recipes-alchemy.md).
+A recipe counts a potion, flask, or scroll you carry only once you know what it is
+([unknown potions](potions.md#unknown-potions), [unknown scrolls](scrolls.md#unknown-scrolls)):
+an unknown one is no use to it.
 One trained in Jewelcraft can cut loose gems and set them (see [Gem cutting](gem-cutting.md)),
 and make rings and amulets (see [Making jewellery](#making-jewellery)) on the
 [Jewelcraft…](abilities.md#ability-jewelcraft) list.
