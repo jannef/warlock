@@ -653,7 +653,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     witches Alchemy; optional for the craftsperson (Jewelcraft, Mining), merchant (Jewelcraft),
     commoner (Mining), ranger (Herbalism), wizard (Alchemy, Enchanting), druid (Alchemy), witch
     (Enchanting), and aristocrat (Enchanting); and a story line each. Alberich of Fyrdelf
-    teaches Mining for gold (§8 "Dialogue": "Training").
+    teaches Mining for gold, and Eadric, Cēaptūn's smith, Metalcraft (§8 "Dialogue": "Training").
 - **Treating oneself** (`heal.rs`, `world/heal.rs`; #549, the owner 2026-10-27): the Heal
   skill's use, the abilities menu's **Heal** (`Ability::Heal`, in the skill's place among the
   Skills; `Action::Heal`, replay text `heal`, `heal:ID`, or `heal:ID:DIR`; cost `heal`, 2500: a

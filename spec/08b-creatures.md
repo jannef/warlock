@@ -822,7 +822,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
     trains you in mining." Its price moves with favour as a healer's or a sage's does (not
     `temple`; Pious does not halve it), and with a town's goodwill. Built in: Alberich, the
     dwarven miser of Fyrdelf's fifth floor, teaches Mining for 500 gold (§7 "Dungeons"); digging
-    needs it (§8 "Digging").
+    needs it (§8 "Digging"). Eadric, Cēaptūn's smith and the keeper of its smithy (#1394; the
+    level's `[[shop]]` names him `npc = "eadric"`, §7 "Shops"), teaches Metalcraft for 2000 gold,
+    at 5, one of the town's people, so its goodwill takes its share off; every recipe needs
+    Metalcraft (§8 "Professions").
   - **Goodwill** (`world/goodwill.rs`, `content/town.rs`; #1247): a campaign's `data/towns/`
     `[[town]]`s (`id`, `name`, `people`: npc or creature ids, `goodwill`: percent, `told`) name a
     town's people. Every quest one of them gives that the player completes (each completion of a
@@ -833,7 +836,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     a free service is listed "(free)", asks no pay dialog, moves no gold, says no "You pay", and
     trains nothing. Shop goods and offers keep their prices. Built in: Cēaptūn, 5% a quest for
     Sister Hild's, Reeve Leofric's, Factor Wulfrun's, and Wat One-Eye's (the Gilde's) quests:
-    twenty make its services free.
+    twenty make its services free (Eadric the smith's teaching among them, though he gives no
+    quest).
   - **An offer** (`world/wares.rs`; #808, docs/design/overworld-encounters.md §15 Q7: the
     pedlar): a dialogue's `[dialogue.offer]` is one item at a fixed price, take it or leave it,
     asked for like a topic (`ask:E:wares`) and listed after the services. It is made the first

@@ -31,7 +31,8 @@
 //! (one that can, never on the overworld) covers the whole level. Optional `[[shop]]`
 //! tables mark shops (spec §7 "Shops"): `kind` (an id in `data/shops.toml`), the `keeper`'s
 //! name, the shop floor's `area` (inclusive: everything lying there is for sale), and the
-//! keeper's `post` on it, where the keeper (`data/shops.toml`'s `[keeper]`) is spawned.
+//! keeper's `post` on it, where the keeper (`data/shops.toml`'s `[keeper]`) is spawned, and
+//! optionally the unique character the keeper is (`npc`, whose dialogue it speaks).
 //! Optional `danger = N` (spec §7 "Danger levels"; 0 to 99, or `{ base, player }`) with
 //! `population` (creature ids), `population_count`, `stray`, `stray_pool`, `out_of_depth`,
 //! `deeper`, `deeper_cap`, `dread_one_in`, `neutral`, and `spawn`, as a dungeon branch gives them
@@ -179,6 +180,9 @@ struct ShopSpec {
     area: [i32; 4],
     /// `[x, y]`: where the keeper stands, on the shop floor beside the way in.
     post: [i32; 2],
+    /// The unique character the keeper is (`npc = "eadric"`, #1394): it speaks that npc's
+    /// dialogue, not the shopkeepers'; default none.
+    npc: Option<String>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -929,14 +933,12 @@ pub(super) fn parse_level(
                     Some(r) => parse_route(r).map_err(|m| err(format!("legend `{ch}`: {m}")))?,
                     None => Vec::new(),
                 };
-                if let Some(npc) = &detail.npc {
-                    let known = (content.dialogues().iter())
-                        .any(|d| d.speaker == Speaker::Npc(npc.clone()));
-                    if !known {
-                        return Err(err(format!(
-                            "legend `{ch}`: npc `{npc}` has no dialogue in data/dialogue.toml"
-                        )));
-                    }
+                if let Some(npc) = &detail.npc
+                    && !speaks(content, npc)
+                {
+                    return Err(err(format!(
+                        "legend `{ch}`: npc `{npc}` has no dialogue in data/dialogue.toml"
+                    )));
                 }
                 let mut carry = match &detail.carry {
                     Some(specs) => parse_stacks(specs, content)
@@ -1332,10 +1334,23 @@ fn parse_shops(
                 "the keeper's `post` must be walkable, on the shop floor, and free",
             ));
         }
-        creatures.push(shops.keeper_spawn(plan.post));
+        if let Some(npc) = &spec.npc
+            && !speaks(content, npc)
+        {
+            return Err(bad(&format!("npc `{npc}` has no dialogue")));
+        }
+        let mut keeper = shops.keeper_spawn(plan.post);
+        keeper.npc = spec.npc.clone();
+        creatures.push(keeper);
         plans.push(plan);
     }
     Ok(plans)
+}
+
+/// Whether unique character `npc` has a dialogue of its own (a legend's or a shop keeper's
+/// `npc`).
+fn speaks(content: &Content, npc: &str) -> bool {
+    (content.dialogues().iter()).any(|d| d.speaker == Speaker::Npc(npc.to_string()))
 }
 
 /// The trap a legend entry places on a cell of `terrain` (`trap = "fireball"`, optionally `known

@@ -1641,6 +1641,15 @@ const CASES: &[Case] = &[
         screen: Some("dialogue"),
         ..BASE
     },
+    // Cēaptūn's smith, Eadric, the smithy's keeper (#1394): his topics, then Metalcraft taught
+    // for 2000 gold.
+    Case {
+        name: "dialogue-smith",
+        scenario: "ceaptun",
+        actions: "move:NW*7 move:N chat:N",
+        screen: Some("dialogue"),
+        ..BASE
+    },
     Case {
         name: "quest-offer",
         actions: concat!(hermit!(), " chat:SE ask:SE:quest-rats"),
