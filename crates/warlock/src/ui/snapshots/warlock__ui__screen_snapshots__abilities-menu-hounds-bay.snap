@@ -16,8 +16,8 @@ expression: "render(case, content.clone())"
                     │ Skills                                                   │
                     │   c  Intimidate      at a place you see                  │
                     │   d  Jewelcraft      not usable yet                      │
-                    │   e  Fletch          you have no knife                   │
-                    │   f  Whittle         you have no knife                   │
+                    │   e  Metalcraft…                                         │
+                    │   f  Woodcraft…                                          │
                     │ Weapon skills                                            │
                     │   g  Shield bash     in a direction                      │
                     │                                                          │
